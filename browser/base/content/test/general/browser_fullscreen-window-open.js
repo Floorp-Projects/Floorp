@@ -179,7 +179,7 @@ function test_open_from_chrome() {
       title: "test_open_from_chrome",
       param: "",
     },
-    finalizeFn() {}
+    finalizeFn() {},
   });
 }
 

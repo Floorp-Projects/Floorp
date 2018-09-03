@@ -70,7 +70,7 @@ add_task(async function test_proxy_auth_redirect() {
 
   let server = httpd_setup({
     "/original": original,
-    "/pac3":     pacHandler
+    "/pac3":     pacHandler,
   });
   PACSystemSettings.PACURI = server.baseURI + "/pac3";
   installFakePAC();
@@ -238,7 +238,7 @@ add_task(async function test_post_utf8() {
   let data = {
     copyright: "©",
     // See the comment in test_get_utf8 about this string.
-    long: ("a" + "😺".repeat(2048)).repeat(10)
+    long: ("a" + "😺".repeat(2048)).repeat(10),
   };
   let request1 = new RESTRequest(server.baseURI + "/echo");
   await request1.post(data);
@@ -406,7 +406,7 @@ add_task(async function test_put_json() {
   let sample_data = {
     some: "sample_data",
     injson: "format",
-    number: 42
+    number: 42,
   };
   let request = new RESTRequest(server.baseURI + "/resource");
   await request.put(sample_data);
@@ -434,7 +434,7 @@ add_task(async function test_post_json() {
   let sample_data = {
     some: "sample_data",
     injson: "format",
-    number: 42
+    number: 42,
   };
   let request = new RESTRequest(server.baseURI + "/resource");
   await request.post(sample_data);

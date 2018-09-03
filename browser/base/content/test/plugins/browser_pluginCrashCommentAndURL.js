@@ -42,7 +42,7 @@ add_task(async function() {
   config = {
     shouldSubmissionUIBeVisible: true,
     comment: "",
-    urlOptIn: false
+    urlOptIn: false,
   };
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED);
@@ -79,7 +79,7 @@ add_task(async function() {
   config = {
     shouldSubmissionUIBeVisible: true,
     comment: "a test comment",
-    urlOptIn: true
+    urlOptIn: true,
   };
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED);
@@ -117,7 +117,7 @@ add_task(async function() {
   config = {
     shouldSubmissionUIBeVisible: false,
     comment: "",
-    urlOptIn: true
+    urlOptIn: true,
   };
 
   // Deferred promise object used by the test to wait for the crash handler

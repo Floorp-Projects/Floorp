@@ -1,11 +1,18 @@
 # atty
 
-[![Build Status](https://travis-ci.org/softprops/atty.svg?branch=master)](https://travis-ci.org/softprops/atty) [![Build status](https://ci.appveyor.com/api/projects/status/geggrsnsjsuse8cv?svg=true)](https://ci.appveyor.com/project/softprops/atty) [![Coverage Status](https://coveralls.io/repos/softprops/atty/badge.svg?branch=master&service=github)](https://coveralls.io/github/softprops/atty?branch=master) [![crates.io](http://meritbadge.herokuapp.com/atty)](https://crates.io/crates/atty)
+[![Build Status](https://travis-ci.org/softprops/atty.svg?branch=master)](https://travis-ci.org/softprops/atty) [![Build status](https://ci.appveyor.com/api/projects/status/geggrsnsjsuse8cv?svg=true)](https://ci.appveyor.com/project/softprops/atty) [![Coverage Status](https://coveralls.io/repos/softprops/atty/badge.svg?branch=master&service=github)](https://coveralls.io/github/softprops/atty?branch=master) [![crates.io](https://img.shields.io/crates/v/atty.svg)](https://crates.io/crates/atty) [![Released API docs](https://docs.rs/atty/badge.svg)](http://docs.rs/atty) [![Master API docs](https://img.shields.io/badge/docs-master-green.svg)](https://softprops.github.io/atty)
 
 > are you or are you not a tty?
 
 
-[Api documentation](http://softprops.github.io/atty)
+## install
+
+Add the following to your `Cargo.toml`
+
+```toml
+[dependencies]
+atty = "0.2"
+```
 
 ## usage
 
@@ -21,15 +28,6 @@ fn main() {
     println!("I'm not");
   }
 }
-```
-
-## install
-
-Add the following to your `Cargo.toml`
-
-```toml
-[dependencies]
-atty = "0.2"
 ```
 
 ## testing
@@ -75,4 +73,4 @@ stderr? false
 stdin? true
 ```
 
-Doug Tangren (softprops) 2015
+Doug Tangren (softprops) 2015-2017

@@ -31,7 +31,7 @@ add_task(async function test_cfg_enabled() {
 
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: "http://example.com"
+    url: "http://example.com",
   }, async function(browser) {
     // First, sanity check...
     Assert.ok(browser.isRemoteBrowser,
@@ -58,7 +58,7 @@ add_task(async function test_cfg_enabled() {
     let timeout = new Promise(resolve => setTimeout(resolve, 5000, [null]));
 
     // We crash or timeout
-    let [subject, /* , data */] = await Promise.race([timeout, contentProcessGone]);
+    let [subject /* , data */] = await Promise.race([timeout, contentProcessGone]);
 
     if (!subject) {
       // We timed out, or otherwise didn't crash properly

@@ -699,8 +699,8 @@ FxAccountsInternal.prototype = {
         deviceRegistrationVersion: null,
         device: {
           id: data.deviceId,
-          registrationVersion: data.deviceRegistrationVersion
-        }
+          registrationVersion: data.deviceRegistrationVersion,
+        },
       });
       data = await this.currentAccountState.getUserAccountData();
     }
@@ -810,7 +810,7 @@ FxAccountsInternal.prototype = {
   _destroyOAuthToken(tokenData) {
     let client = new FxAccountsOAuthGrantClient({
       serverURL: tokenData.server,
-      client_id: FX_OAUTH_CLIENT_ID
+      client_id: FX_OAUTH_CLIENT_ID,
     });
     return client.destroyToken(tokenData.token);
   },
@@ -973,7 +973,7 @@ FxAccountsInternal.prototype = {
           uid,
           ...this._deriveKeys(uid, CommonUtils.hexToBytes(kB)),
           kA: null, // Remove kA and kB from storage.
-          kB: null
+          kB: null,
         });
         userData = await this.getUserAccountData();
       }
@@ -1122,7 +1122,7 @@ FxAccountsInternal.prototype = {
     let options = {
       duration: ASSERTION_LIFETIME,
       localtimeOffsetMsec: this.localtimeOffsetMsec,
-      now: this.now()
+      now: this.now(),
     };
     let currentState = this.currentAccountState;
     // "audience" should look like "http://123done.org".
@@ -1181,7 +1181,7 @@ FxAccountsInternal.prototype = {
       log.debug("getKeypairAndCertificate: already have keyPair and certificate");
       return {
         keyPair: accountData.keyPair.rawKeyPair,
-        certificate: accountData.cert.rawCert
+        certificate: accountData.cert.rawCert,
       };
     }
     // We are definately going to generate a new cert, either because it has
@@ -1463,7 +1463,7 @@ FxAccountsInternal.prototype = {
         let defaultURL = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.oauth.uri");
         client = new FxAccountsOAuthGrantClient({
           serverURL: defaultURL,
-          client_id: FX_OAUTH_CLIENT_ID
+          client_id: FX_OAUTH_CLIENT_ID,
         });
       } catch (e) {
         throw this._error(ERROR_INVALID_PARAMETER, e);
@@ -1683,7 +1683,7 @@ FxAccountsInternal.prototype = {
 
   setProfileCache(profileCache) {
     return this.currentAccountState.updateUserAccountData({
-      profileCache
+      profileCache,
     });
   },
 
@@ -1701,7 +1701,7 @@ FxAccountsInternal.prototype = {
       return {};
     }
     return {
-      [COMMAND_SENDTAB]: sendTabKey
+      [COMMAND_SENDTAB]: sendTabKey,
     };
   },
 
@@ -1752,7 +1752,7 @@ FxAccountsInternal.prototype = {
           id: device.id,
           registrationVersion: this.DEVICE_REGISTRATION_VERSION,
           registeredCommandsKeys: availableCommandsKeys,
-        }
+        },
       });
       return device.id;
     } catch (error) {
@@ -1818,8 +1818,8 @@ FxAccountsInternal.prototype = {
         await this.currentAccountState.updateUserAccountData({
           device: {
             id: deviceId,
-            registrationVersion: null
-          }
+            registrationVersion: null,
+          },
         });
         return deviceId;
       }
@@ -1842,7 +1842,7 @@ FxAccountsInternal.prototype = {
     log.error("device registration failed", error);
     try {
       this.currentAccountState.updateUserAccountData({
-        device: null
+        device: null,
       });
     } catch (secondError) {
       log.error(

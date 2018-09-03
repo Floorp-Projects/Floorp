@@ -166,7 +166,7 @@ add_task(async function run_test() {
 // Tests that installing doesn't require a restart
 add_task(async function test_1() {
   prepare_test({}, [
-    "onNewInstall"
+    "onNewInstall",
   ]);
 
   let install = await AddonManager.getInstallForFile(XPIS.test_bootstrap1_1);
@@ -190,8 +190,8 @@ add_task(async function test_1() {
       prepare_test({
         [ID1]: [
           ["onInstalling", false],
-          "onInstalled"
-        ]
+          "onInstalled",
+        ],
       }, [
         "onInstallStarted",
         "onInstallEnded",
@@ -237,8 +237,8 @@ add_task(async function test_2() {
   prepare_test({
     [ID1]: [
       ["onDisabling", false],
-      "onDisabled"
-    ]
+      "onDisabled",
+    ],
   });
 
   equal(b1.operationsRequiringRestart &
@@ -304,8 +304,8 @@ add_task(async function test_4() {
   prepare_test({
     [ID1]: [
       ["onEnabling", false],
-      "onEnabled"
-    ]
+      "onEnabled",
+    ],
   });
 
   equal(b1.operationsRequiringRestart &
@@ -367,7 +367,7 @@ add_task(async function test_5() {
 // Tests that installing an upgrade doesn't require a restart
 add_task(async function test_6() {
   prepare_test({}, [
-    "onNewInstall"
+    "onNewInstall",
   ]);
 
   let install = await AddonManager.getInstallForFile(XPIS.test_bootstrap1_2);
@@ -385,8 +385,8 @@ add_task(async function test_6() {
       prepare_test({
         [ID1]: [
           ["onInstalling", false],
-          "onInstalled"
-        ]
+          "onInstalled",
+        ],
       }, [
         "onInstallStarted",
         "onInstallEnded",
@@ -422,8 +422,8 @@ add_task(async function test_7() {
   prepare_test({
     [ID1]: [
       ["onUninstalling", false],
-      "onUninstalled"
-    ]
+      "onUninstalled",
+    ],
   });
 
   equal(b1.operationsRequiringRestart &
@@ -495,7 +495,7 @@ add_task(async function test_9() {
 // Tests that installing a downgrade sends the right reason
 add_task(async function test_10() {
   prepare_test({}, [
-    "onNewInstall"
+    "onNewInstall",
   ]);
 
   let install = await AddonManager.getInstallForFile(XPIS.test_bootstrap1_2);
@@ -514,8 +514,8 @@ add_task(async function test_10() {
       prepare_test({
         [ID1]: [
           ["onInstalling", false],
-          "onInstalled"
-        ]
+          "onInstalled",
+        ],
       }, [
         "onInstallStarted",
         "onInstallEnded",
@@ -539,7 +539,7 @@ add_task(async function test_10() {
   do_check_in_crash_annotation(ID1, "2.0");
 
   prepare_test({}, [
-    "onNewInstall"
+    "onNewInstall",
   ]);
 
   install = await AddonManager.getInstallForFile(XPIS.test_bootstrap1_1);
@@ -557,8 +557,8 @@ add_task(async function test_10() {
       prepare_test({
         [ID1]: [
           ["onInstalling", false],
-          "onInstalled"
-        ]
+          "onInstalled",
+        ],
       }, [
         "onInstallStarted",
         "onInstallEnded",
@@ -596,8 +596,8 @@ add_task(async function test_11() {
       ["onDisabling", false],
       "onDisabled",
       ["onUninstalling", false],
-      "onUninstalled"
-    ]
+      "onUninstalled",
+    ],
   });
 
   await b1.disable();
@@ -651,7 +651,7 @@ add_task(async function test_12() {
 // entry doesn't call it's startup method
 add_task(async function test_13() {
   prepare_test({}, [
-    "onNewInstall"
+    "onNewInstall",
   ]);
 
   let install = await AddonManager.getInstallForFile(XPIS.test_bootstrap1_3);
@@ -668,8 +668,8 @@ add_task(async function test_13() {
     prepare_test({
       [ID1]: [
         ["onInstalling", false],
-        "onInstalled"
-      ]
+        "onInstalled",
+      ],
     }, [
       "onInstallStarted",
       "onInstallEnded",
@@ -758,7 +758,7 @@ add_task(async function test_15() {
   BootstrapMonitor.checkAddonNotStarted(ID1);
 
   prepare_test({}, [
-    "onNewInstall"
+    "onNewInstall",
   ]);
 
   let install = await AddonManager.getInstallForFile(XPIS.test_bootstrap1_2);
@@ -771,8 +771,8 @@ add_task(async function test_15() {
     prepare_test({
       [ID1]: [
         ["onInstalling", false],
-        "onInstalled"
-      ]
+        "onInstalled",
+      ],
     }, [
       "onInstallStarted",
       "onInstallEnded",
@@ -911,8 +911,8 @@ add_task(async function test_19() {
         ["onUninstalling", false],
         "onUninstalled",
         ["onInstalling", false],
-        "onInstalled"
-      ]
+        "onInstalled",
+      ],
     }, [], resolve);
 
     b1.uninstall();
@@ -1070,7 +1070,7 @@ add_task(async function test_22() {
 // Tests that installing from a URL doesn't require a restart
 add_task(async function test_23() {
   prepare_test({}, [
-    "onNewInstall"
+    "onNewInstall",
   ]);
 
   let url = "http://example.com/addons/test_bootstrap1_1.xpi";
@@ -1083,7 +1083,7 @@ add_task(async function test_23() {
   await new Promise(resolve => {
     prepare_test({}, [
       "onDownloadStarted",
-      "onDownloadEnded"
+      "onDownloadEnded",
     ], function() {
       equal(install.type, "extension");
       equal(install.version, "1.0");
@@ -1096,8 +1096,8 @@ add_task(async function test_23() {
       prepare_test({
         [ID1]: [
           ["onInstalling", false],
-          "onInstalled"
-        ]
+          "onInstalled",
+        ],
       }, [
         "onInstallStarted",
         "onInstallEnded",

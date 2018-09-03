@@ -91,7 +91,7 @@ const blacklist = {
     "@mozilla.org/base/telemetry-startup;1",
     "@mozilla.org/embedcomp/default-tooltiptextprovider;1",
     "@mozilla.org/push/Service;1",
-  ])
+  ]),
 };
 
 add_task(async function() {

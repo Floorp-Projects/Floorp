@@ -107,7 +107,7 @@ TestHangReport.prototype = {
 
   get scriptBrowser() {
     return this._browser;
-  }
+  },
 };
 
 // on dev edition we add a button for js debugging of hung scripts.

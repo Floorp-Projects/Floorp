@@ -6,7 +6,7 @@
 add_task(async function test_toolbar_element_restyles_on_activation() {
   let restyles = {
     win1:  {},
-    win2:  {}
+    win2:  {},
   };
 
   // create a window and snapshot the elementsStyled

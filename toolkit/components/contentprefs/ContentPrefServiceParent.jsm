@@ -85,7 +85,7 @@ var ContentPrefServiceParent = {
           // The names we're using this observer object for, used to keep track
           // of the number of names we care about as well as for removing this
           // observer if its associated process goes away.
-          _names: new Set()
+          _names: new Set(),
         };
 
         this._observers.set(msg.target, observer);
@@ -138,8 +138,8 @@ var ContentPrefServiceParent = {
                                       contentPref: {
                                         domain: pref.domain,
                                         name: pref.name,
-                                        value: pref.value
-                                      }
+                                        value: pref.value,
+                                      },
                                     });
       },
 
@@ -152,7 +152,7 @@ var ContentPrefServiceParent = {
         msg.target.sendAsyncMessage("ContentPrefs:HandleCompletion",
                                     { requestId,
                                       reason });
-      }
+      },
     };
 
     // Push our special listener.
@@ -166,7 +166,7 @@ var ContentPrefServiceParent = {
 
     // And call the function.
     this._cps2[data.call](...args);
-  }
+  },
 };
 
 XPCOMUtils.defineLazyServiceGetter(ContentPrefServiceParent, "_cps2",

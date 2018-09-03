@@ -21,7 +21,6 @@ module.exports = {
 
     "array-bracket-spacing": ["error", "never"],
     "block-scoped-var": "error",
-    "comma-dangle": ["error", "always-multiline"],
     complexity: ["error", {
       max: 20,
     }],

@@ -8,8 +8,7 @@
 #include "nsISHEntry.h"
 
 nsSHTransaction::nsSHTransaction()
-  : mPrev(nullptr)
-  , mPersist(true)
+  : mPersist(true)
 {
 }
 
@@ -26,18 +25,6 @@ NS_INTERFACE_MAP_BEGIN(nsSHTransaction)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-nsSHTransaction::Create(nsISHEntry* aSHEntry, nsISHTransaction* aPrev)
-{
-  SetSHEntry(aSHEntry);
-  if (aPrev) {
-    aPrev->SetNext(this);
-  }
-
-  SetPrev(aPrev);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSHTransaction::GetSHEntry(nsISHEntry** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -50,43 +37,6 @@ NS_IMETHODIMP
 nsSHTransaction::SetSHEntry(nsISHEntry* aSHEntry)
 {
   mSHEntry = aSHEntry;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHTransaction::GetNext(nsISHTransaction** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = mNext;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHTransaction::SetNext(nsISHTransaction* aNext)
-{
-  if (aNext) {
-    NS_ENSURE_SUCCESS(aNext->SetPrev(this), NS_ERROR_FAILURE);
-  }
-
-  mNext = aNext;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHTransaction::SetPrev(nsISHTransaction* aPrev)
-{
-  /* This is weak reference to parent. Do not Addref it */
-  mPrev = aPrev;
-  return NS_OK;
-}
-
-nsresult
-nsSHTransaction::GetPrev(nsISHTransaction** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = mPrev;
-  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 

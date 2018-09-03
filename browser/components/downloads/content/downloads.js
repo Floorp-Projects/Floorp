@@ -1344,7 +1344,7 @@ var DownloadsSummary = {
     }
     delete this._detailsNode;
     return this._detailsNode = node;
-  }
+  },
 };
 
 XPCOMUtils.defineConstant(this, "DownloadsSummary", DownloadsSummary);
@@ -1398,7 +1398,7 @@ var DownloadsFooter = {
     }
     delete this._footerNode;
     return this._footerNode = node;
-  }
+  },
 };
 
 XPCOMUtils.defineConstant(this, "DownloadsFooter", DownloadsFooter);

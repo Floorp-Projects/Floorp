@@ -44,7 +44,7 @@ function run_test() {
     "C:\\char.",
     "C:\\char+",
     "C:\\char~",
-    "C:\\char_"
+    "C:\\char_",
   ] : [
     "/",
     "/test",
@@ -55,7 +55,7 @@ function run_test() {
     "/test?action=index/",
     "/test\ test",
     '/punctuation/;,/?:@&=+$-_.!~*\'()[]"#',
-    "/CasePreserving"
+    "/CasePreserving",
   ];
 
   // some additional URIs to test, beyond those generated from paths
@@ -69,7 +69,7 @@ function run_test() {
     "file:///C:/%3c%3C", // not one of the special-cased ? or ;
     "file:///C:/%78", // 'x', not usually uri encoded
     "file:///C:/test#frag", // a fragment identifier
-    "file:///C:/test?action=index" // an actual query component
+    "file:///C:/test?action=index", // an actual query component
   ] : [
     "file:///test/",
     "file://localhost/test",
@@ -80,7 +80,7 @@ function run_test() {
     "file:///%3c%3C", // not one of the special-cased ? or ;
     "file:///%78", // 'x', not usually uri encoded
     "file:///test#frag", // a fragment identifier
-    "file:///test?action=index" // an actual query component
+    "file:///test?action=index", // an actual query component
   ];
 
   for (let path of paths) {

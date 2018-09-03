@@ -112,7 +112,7 @@ var Tabs = {
          {
            inBackground: true,
            replace: true,
-           triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal()
+           triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
         });
         browserWindow.gBrowser.pinTab(browserWindow.gBrowser.tabs[1]);
         browserWindow.gBrowser.pinTab(browserWindow.gBrowser.tabs[2]);
@@ -141,7 +141,7 @@ async function allTabTitlesDisplayed(browserWindow) {
     "about:home": "New Tab",
     "about:newtab": "New Tab",
     "about:addons": "Add-ons Manager",
-    "about:privatebrowsing": "about:privatebrowsing"
+    "about:privatebrowsing": "about:privatebrowsing",
   };
   specToTitleMap[PREFS_TAB] = "browser/skin/settings.svg";
   specToTitleMap[CUST_TAB] = "browser/skin/customize.svg";
@@ -180,7 +180,7 @@ function fiveTabsHelper() {
   {
     inBackground: true,
     replace: true,
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal()
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
   browserWindow.gBrowser.selectTabAtIndex(1);
 }

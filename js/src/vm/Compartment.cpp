@@ -348,7 +348,7 @@ Compartment::rewrap(JSContext* cx, MutableHandleObject obj, HandleObject existin
 }
 
 bool
-Compartment::wrap(JSContext* cx, MutableHandle<PropertyDescriptor> desc)
+Compartment::wrap(JSContext* cx, MutableHandle<JS::PropertyDescriptor> desc)
 {
     if (!wrap(cx, desc.object()))
         return false;

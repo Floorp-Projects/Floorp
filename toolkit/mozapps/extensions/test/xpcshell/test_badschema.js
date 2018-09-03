@@ -23,8 +23,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "2",
-        maxVersion: "2"
-      }]
+        maxVersion: "2",
+      }],
     },
     desiredValues: {
       isActive: true,
@@ -45,8 +45,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "2",
-        maxVersion: "2"
-      }]
+        maxVersion: "2",
+      }],
     },
     initialState: {
       userDisabled: true,
@@ -71,8 +71,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "1"
-      }]
+        maxVersion: "1",
+      }],
     },
     findUpdates: true,
     desiredValues: {
@@ -95,8 +95,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "1"
-      }]
+        maxVersion: "1",
+      }],
     },
     initialState: {
       userDisabled: true,
@@ -121,8 +121,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "1"
-      }]
+        maxVersion: "1",
+      }],
     },
     desiredValues: {
       isActive: true,
@@ -143,8 +143,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "2",
-        maxVersion: "2"
-      }]
+        maxVersion: "2",
+      }],
     },
     desiredValues: {
       isActive: true,
@@ -165,8 +165,8 @@ const ADDONS = {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "2",
-        maxVersion: "2"
-      }]
+        maxVersion: "2",
+      }],
     },
     initialState: {
       userDisabled: true,

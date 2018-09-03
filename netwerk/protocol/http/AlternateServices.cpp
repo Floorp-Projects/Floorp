@@ -769,13 +769,18 @@ TransactionObserver::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext
                                      nsIInputStream *aStream, uint64_t aOffset, uint32_t aCount)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  uint64_t newLen = aCount + mWKResponse.Length();
+  uint32_t oldLen = mWKResponse.Length();
+  uint64_t newLen = aCount + oldLen;
   if (newLen < MAX_WK) {
-    char *startByte =  reinterpret_cast<char *>(mWKResponse.BeginWriting()) + mWKResponse.Length();
+    nsresult rv;
+    auto handle = mWKResponse.BulkWrite(newLen, oldLen, false, rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
     uint32_t amtRead;
-    if (NS_SUCCEEDED(aStream->Read(startByte, aCount, &amtRead))) {
-      MOZ_ASSERT(mWKResponse.Length() + amtRead < MAX_WK);
-      mWKResponse.SetLength(mWKResponse.Length() + amtRead);
+    if (NS_SUCCEEDED(aStream->Read(handle.Elements() + oldLen, aCount, &amtRead))) {
+      MOZ_ASSERT(oldLen + amtRead <= newLen);
+      handle.Finish(oldLen + amtRead, false);
       LOG(("TransactionObserver onDataAvailable %p read %d of .wk [%d]\n",
            this, amtRead, mWKResponse.Length()));
     } else {

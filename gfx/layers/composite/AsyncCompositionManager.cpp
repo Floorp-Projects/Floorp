@@ -55,10 +55,10 @@ namespace layers {
 using namespace mozilla::gfx;
 
 static bool
-IsSameDimension(dom::ScreenOrientationInternal o1, dom::ScreenOrientationInternal o2)
+IsSameDimension(hal::ScreenOrientation o1, hal::ScreenOrientation o2)
 {
-  bool isO1portrait = (o1 == dom::eScreenOrientation_PortraitPrimary || o1 == dom::eScreenOrientation_PortraitSecondary);
-  bool isO2portrait = (o2 == dom::eScreenOrientation_PortraitPrimary || o2 == dom::eScreenOrientation_PortraitSecondary);
+  bool isO1portrait = (o1 == hal::eScreenOrientation_PortraitPrimary || o1 == hal::eScreenOrientation_PortraitSecondary);
+  bool isO2portrait = (o2 == hal::eScreenOrientation_PortraitPrimary || o2 == hal::eScreenOrientation_PortraitSecondary);
   return !(isO1portrait ^ isO2portrait);
 }
 
@@ -132,9 +132,8 @@ AsyncCompositionManager::ResolveRefLayers(CompositorBridgeParent* aCompositor,
       }
 
       if (!refLayer->GetLocalVisibleRegion().IsEmpty()) {
-        dom::ScreenOrientationInternal chromeOrientation =
-          mTargetConfig.orientation();
-        dom::ScreenOrientationInternal contentOrientation =
+        hal::ScreenOrientation chromeOrientation = mTargetConfig.orientation();
+        hal::ScreenOrientation contentOrientation =
           state->mTargetConfig.orientation();
         if (!IsSameDimension(chromeOrientation, contentOrientation) &&
             ContentMightReflowOnOrientationChange(mTargetConfig.naturalBounds())) {

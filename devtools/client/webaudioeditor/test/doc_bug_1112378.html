@@ -14,7 +14,7 @@
       "use strict";
 
       const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
+      const osc = ctx.createStereoPanner();
 
       function throwError() {
         try {
@@ -34,7 +34,7 @@
 
       function throwDOMException() {
         try {
-          osc.frequency.setValueAtTime(0, -1);
+          osc.channelCount = 3;
         } catch (e) {
           return {
             lineNumber: e.lineNumber,

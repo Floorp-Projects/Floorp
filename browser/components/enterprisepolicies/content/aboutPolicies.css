@@ -16,10 +16,12 @@ body {
 
 #sectionTitle {
   float: left;
+  padding-inline-start: 1rem;
 }
 
 #sectionTitle:dir(rtl) {
   float: right;
+  padding-inline-end: 1rem;
 }
 
 /** Categories **/
@@ -53,6 +55,10 @@ body {
   width: 100%;
 }
 
+tr:hover td {
+  background-color: #d7d7db;
+}
+
 th, td, table {
   border-collapse: collapse;
   border: none;
@@ -60,20 +66,13 @@ th, td, table {
 }
 
 th {
-  padding-bottom: 8px;
+  padding: 1rem;
   font-size: larger;
 }
 
 td {
-  padding-bottom: 8px;
-}
-
-.active-policies tr:nth-child(even) {
-  background-color: white;
-}
-
-.errors tr:nth-child(even) {
-  background-color: white;
+  padding: 1rem;
+  transition: background cubic-bezier(.07, .95, 0, 1) 250ms;
 }
 
 /*
@@ -83,21 +82,22 @@ td {
  * collapsible information block.
  */
 
+.active-policies tr.odd,
+.errors tr:nth-child(odd),
 tbody:nth-child(4n + 1) {
-  background-color: white;
+  background-color: #ededf0;
 }
 
-.lastpolicyrow {
-  border-bottom: 3px solid #0c0c0d;
+.arr_sep.odd:not(:last-child) td:not(:first-child) {
+  border-bottom: 2px solid #f9f9fa;
 }
 
-tr.lastpolicyrow td {
-  padding-bottom: 16px;
+.arr_sep.even:not(:last-child) td:not(:first-child) {
+  border-bottom: 2px solid #ededf0;
 }
 
-.array {
-  border-bottom: 1px solid var(--in-content-box-border-color);
-  padding-bottom: 4px;
+.last_row:not(:last-child) td {
+  border-bottom: 2px solid #d7d7db !important;
 }
 
 .icon {
@@ -110,6 +110,8 @@ tr.lastpolicyrow td {
   height: 14px;
   vertical-align: middle;
   width: 14px;
+  margin-top: -.125rem;
+  margin-left: .5rem;
 }
 
 .icon.machine-only {
@@ -132,7 +134,7 @@ tr.lastpolicyrow td {
 }
 
 tbody.collapsible td {
-  padding-bottom: 8px;
+  padding-bottom: 1rem;
 }
 
 .schema {

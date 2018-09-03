@@ -126,6 +126,6 @@ var Credentials = Object.freeze({
       Services.tm.dispatchToMainThread(runnable);
       log.debug("Dispatched thread for credentials setup crypto work");
     });
-  }
+  },
 });
 

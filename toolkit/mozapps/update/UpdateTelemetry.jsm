@@ -5,7 +5,7 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
-  "AUSTLMY"
+  "AUSTLMY",
 ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
@@ -473,6 +473,6 @@ var AUSTLMY = {
     } catch (e) {
       Cu.reportError(e);
     }
-  }
+  },
 };
 Object.freeze(AUSTLMY);

@@ -6,6 +6,7 @@
 
 const {
   CLEAR_FLEXBOX,
+  TOGGLE_FLEX_ITEM_SHOWN,
   UPDATE_FLEXBOX,
   UPDATE_FLEXBOX_COLOR,
   UPDATE_FLEXBOX_HIGHLIGHTED,
@@ -19,6 +20,21 @@ module.exports = {
   clearFlexbox() {
     return {
       type: CLEAR_FLEXBOX,
+    };
+  },
+
+  /**
+   * Toggles the display of flex item sizing information shown for the given flex item
+   * actor ID.
+   *
+   * @param  {NodeFront} nodeFront
+   *         The NodeFront of the flex item to toggle the sizing information displayed
+   *         for.
+   */
+  toggleFlexItemShown(nodeFront) {
+    return {
+      type: TOGGLE_FLEX_ITEM_SHOWN,
+      nodeFront,
     };
   },
 

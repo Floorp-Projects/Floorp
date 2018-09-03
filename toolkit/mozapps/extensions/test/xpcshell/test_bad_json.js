@@ -13,8 +13,8 @@ var addon1 = {
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
-    maxVersion: "1"
-  }]
+    maxVersion: "1",
+  }],
 };
 
 const profileDir = gProfD.clone();

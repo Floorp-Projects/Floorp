@@ -198,11 +198,6 @@ var ignoreFunctions = {
     // FIXME!
     "NS_DebugBreak": true,
 
-    // These are a little overzealous -- these destructors *can* GC if they end
-    // up wrapping a pending exception. See bug 898815 for the heavyweight fix.
-    "void js::AutoRealm::~AutoRealm(int32)" : true,
-    "void JSAutoRealmAllowCCW::~JSAutoRealmAllowCCW(int32)" : true,
-
     // Similar to heap snapshot mock classes, and GTests below. This posts a
     // synchronous runnable when a GTest fails, and we are pretty sure that the
     // particular runnable it posts can't even GC, but the analysis isn't

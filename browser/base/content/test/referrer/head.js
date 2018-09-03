@@ -28,12 +28,12 @@ var _referrerTests = [
   {
     fromScheme: "http://",
     toScheme: "http://",
-    result: "http://test1.example.com/browser"  // full referrer
+    result: "http://test1.example.com/browser",  // full referrer
   },
   {
     fromScheme: "https://",
     toScheme: "http://",
-    result: ""  // no referrer when downgrade
+    result: "",  // no referrer when downgrade
   },
   // 2. Origin referrer policy - we expect an origin referrer,
   //    even on downgrade.  But rel=noreferrer trumps this.
@@ -41,14 +41,14 @@ var _referrerTests = [
     fromScheme: "https://",
     toScheme: "http://",
     policy: "origin",
-    result: "https://test1.example.com/"  // origin, even on downgrade
+    result: "https://test1.example.com/",  // origin, even on downgrade
   },
   {
     fromScheme: "https://",
     toScheme: "http://",
     policy: "origin",
     rel: "noreferrer",
-    result: ""  // rel=noreferrer trumps meta-referrer
+    result: "",  // rel=noreferrer trumps meta-referrer
   },
   // 3. XXX: using no-referrer here until we support all attribute values (bug 1178337)
   //    Origin-when-cross-origin policy - this depends on the triggering
@@ -58,13 +58,13 @@ var _referrerTests = [
     fromScheme: "https://",
     toScheme: "https://",
     policy: "no-referrer",
-    result: ""  // same origin https://test1.example.com/browser
+    result: "",  // same origin https://test1.example.com/browser
   },
   {
     fromScheme: "http://",
     toScheme: "https://",
     policy: "no-referrer",
-    result: ""  // cross origin http://test1.example.com
+    result: "",  // cross origin http://test1.example.com
   },
 ];
 

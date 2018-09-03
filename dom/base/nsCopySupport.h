@@ -51,6 +51,7 @@ class nsCopySupport
                                               nsITransferable** aTransferable);
 
     // Same as GetTransferableForSelection, but doesn't skip invisible content.
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
     static nsresult GetTransferableForNode(nsINode* aNode,
                                            nsIDocument* aDoc,
                                            nsITransferable** aTransferable);

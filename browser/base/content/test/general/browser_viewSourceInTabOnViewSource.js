@@ -6,7 +6,7 @@ function wait_while_tab_is_busy() {
           gBrowser.removeProgressListener(this);
           setTimeout(resolve, 0);
         }
-      }
+      },
     };
     gBrowser.addProgressListener(progressListener);
   });

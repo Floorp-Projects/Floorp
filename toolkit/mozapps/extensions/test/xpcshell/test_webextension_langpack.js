@@ -25,26 +25,26 @@ const ADDONS = {
         "gecko": {
           "id": "langpack-und@test.mozilla.org",
           "strict_min_version": "58.0",
-          "strict_max_version": "58.*"
-        }
+          "strict_max_version": "58.*",
+        },
       },
       "sources": {
         "browser": {
-          "base_path": "browser/"
-        }
+          "base_path": "browser/",
+        },
       },
       "langpack_id": "und",
       "languages": {
         "und": {
           "chrome_resources": {
-            "global": "chrome/und/locale/und/global/"
+            "global": "chrome/und/locale/und/global/",
           },
-          "version": "20171001190118"
-        }
+          "version": "20171001190118",
+        },
       },
       "author": "Mozilla Localization Task Force",
-      "description": "Language pack for Testy for und"
-    }
+      "description": "Language pack for Testy for und",
+    },
   },
 };
 

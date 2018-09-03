@@ -90,7 +90,7 @@ add_task(async function init() {
                                    });
     searchbar.FormHistory.update(addOps, {
       handleCompletion: resolve,
-      handleError: reject
+      handleError: reject,
     });
   });
 });

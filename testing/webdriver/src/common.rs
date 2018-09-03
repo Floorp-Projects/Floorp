@@ -63,7 +63,7 @@ pub struct WebElement {
 
 impl WebElement {
     pub fn new(id: String) -> WebElement {
-        WebElement { id: id }
+        WebElement { id }
     }
 }
 

@@ -9,8 +9,8 @@ document.addEventListener("DOMContentLoaded", function() {
   SpecialPowers.pushPrefEnv({
     set: [
       ["dom.gamepad.test.enabled", true],
-      ["privacy.resistFingerprinting", true]
-    ]
+      ["privacy.resistFingerprinting", true],
+    ],
   }, function() {
     // This test loads in an iframe, to ensure that the navigator instance is
     // loaded with the correct value of the preference.

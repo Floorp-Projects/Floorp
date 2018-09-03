@@ -68,7 +68,7 @@
     {
       get() {
         return this.stack;
-      }
+      },
     });
     /**
      * A human-readable version of |fileName|.
@@ -83,7 +83,7 @@
           return match[1];
         }
         return "(unknown module)";
-      }
+      },
     });
 
     /**
@@ -111,7 +111,7 @@
       let module = {
         id: path,
         uri,
-        exports
+        exports,
       };
 
       // Make module available immediately
@@ -159,6 +159,6 @@
   Object.defineProperty(exports, "require", {
     value: require,
     enumerable: true,
-    configurable: false
+    configurable: false,
   });
 })(this);

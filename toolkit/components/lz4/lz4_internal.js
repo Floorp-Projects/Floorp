@@ -14,7 +14,7 @@ if (typeof Components != "undefined") {
   ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
 
   this.EXPORTED_SYMBOLS = [
-    "Primitives"
+    "Primitives",
   ];
   this.Primitives = Primitives;
   this.exports = {};
@@ -64,6 +64,6 @@ if (typeof module != "undefined") {
     },
     get maxCompressedSize() {
       return Primitives.maxCompressedSize;
-    }
+    },
   };
 }

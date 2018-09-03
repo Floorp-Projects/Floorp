@@ -43,9 +43,9 @@ const ADDONS = {
       "name": "Delay Upgrade",
       "version": "2.0",
       "applications": {
-        "gecko": {id: COMPLETE_ID}
-      }
-    }
+        "gecko": {id: COMPLETE_ID},
+      },
+    },
   },
   test_delay_update_defer_webextension_v2: {
     "manifest.json": {
@@ -53,9 +53,9 @@ const ADDONS = {
       "name": "Delay Upgrade",
       "version": "2.0",
       "applications": {
-        "gecko": {id: DEFER_ID}
-      }
-    }
+        "gecko": {id: DEFER_ID},
+      },
+    },
   },
   test_delay_update_ignore_webextension_v2: {
     "manifest.json": {
@@ -63,9 +63,9 @@ const ADDONS = {
       "name": "Delay Upgrade",
       "version": "2.0",
       "applications": {
-        "gecko": {id: IGNORE_ID}
-      }
-    }
+        "gecko": {id: IGNORE_ID},
+      },
+    },
   },
 };
 

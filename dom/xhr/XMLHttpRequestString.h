@@ -64,14 +64,14 @@ class MOZ_STACK_CLASS XMLHttpRequestStringWriterHelper final
 public:
   explicit XMLHttpRequestStringWriterHelper(XMLHttpRequestString& aString);
 
-  bool
-  AddCapacity(int32_t aCapacity);
+  /**
+   * The existing length of the string. Do not call during BulkWrite().
+   */
+  uint32_t
+  Length() const;
 
-  char16_t*
-  EndOfExistingData();
-
-  void
-  AddLength(int32_t aLength);
+  mozilla::BulkWriteHandle<char16_t>
+  BulkWrite(uint32_t aCapacity, nsresult& aRv);
 
 private:
   XMLHttpRequestStringWriterHelper(const XMLHttpRequestStringWriterHelper&) = delete;

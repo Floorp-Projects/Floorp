@@ -18,7 +18,6 @@
 
 #include <string.h>
 
-#include "jsapi.h"
 #include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -49,10 +48,7 @@
 #include "wasm/AsmJS.h"
 
 #include "frontend/ParseNode-inl.h"
-#include "vm/EnvironmentObject-inl.h"
-#include "vm/JSAtom-inl.h"
-#include "vm/JSScript-inl.h"
-#include "vm/NativeObject-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::gc;

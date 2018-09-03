@@ -4212,7 +4212,36 @@ ToColorRef(nscolor aColor)
 }
 
 static nscolor
-GetScrollbarArrowColor(nscolor aTrackColor)
+GetScrollbarButtonColor(nscolor aTrackColor, EventStates aStates)
+{
+  // See numbers in GetScrollbarArrowColor.
+  // This function is written based on ratios between values listed there.
+
+  bool isActive = aStates.HasState(NS_EVENT_STATE_ACTIVE);
+  bool isHover = aStates.HasState(NS_EVENT_STATE_HOVER);
+  if (!isActive && !isHover) {
+    return aTrackColor;
+  }
+  float luminance = RelativeLuminanceUtils::Compute(aTrackColor);
+  if (isActive) {
+    if (luminance >= 0.18f) {
+      luminance *= 0.134f;
+    } else {
+      luminance /= 0.134f;
+      luminance = std::min(luminance, 1.0f);
+    }
+  } else {
+    if (luminance >= 0.18f) {
+      luminance *= 0.805f;
+    } else {
+      luminance /= 0.805f;
+    }
+  }
+  return RelativeLuminanceUtils::Adjust(aTrackColor, luminance);
+}
+
+static nscolor
+GetScrollbarArrowColor(nscolor aButtonColor)
 {
   // In Windows 10 scrollbar, there are several gray colors used:
   //
@@ -4227,7 +4256,7 @@ GetScrollbarArrowColor(nscolor aTrackColor)
   //
   // This function is written based on these values.
 
-  float luminance = RelativeLuminanceUtils::Compute(aTrackColor);
+  float luminance = RelativeLuminanceUtils::Compute(aButtonColor);
   // Color with luminance larger than 0.72 has contrast ratio over 4.6
   // to color with luminance of gray 96, so this value is chosen for
   // this range. It is the luminance of gray 221.
@@ -4235,7 +4264,7 @@ GetScrollbarArrowColor(nscolor aTrackColor)
     // ComputeRelativeLuminanceFromComponents(96). That function cannot
     // be constexpr because of std::pow.
     const float GRAY96_LUMINANCE = 0.117f;
-    return RelativeLuminanceUtils::Adjust(aTrackColor, GRAY96_LUMINANCE);
+    return RelativeLuminanceUtils::Adjust(aButtonColor, GRAY96_LUMINANCE);
   }
   // The contrast ratio of a color to black equals that to white when its
   // luminance is around 0.18, with a contrast ratio ~4.6 to both sides,
@@ -4244,6 +4273,41 @@ GetScrollbarArrowColor(nscolor aTrackColor)
     return NS_RGB(0, 0, 0);
   }
   return NS_RGB(255, 255, 255);
+}
+
+static nscolor
+AdjustScrollbarFaceColor(nscolor aFaceColor, EventStates aStates)
+{
+  // In Windows 10, scrollbar thumb has the following colors:
+  //
+  // State  | Color    | Luminance
+  // -------+----------+----------
+  // Normal | Gray 205 |     61.0%
+  // Hover  | Gray 166 |     38.1%
+  // Active | Gray 96  |     11.7%
+  //
+  // This function is written based on the ratios between the values.
+
+  bool isActive = aStates.HasState(NS_EVENT_STATE_ACTIVE);
+  bool isHover = aStates.HasState(NS_EVENT_STATE_HOVER);
+  if (!isActive && !isHover) {
+    return aFaceColor;
+  }
+  float luminance = RelativeLuminanceUtils::Compute(aFaceColor);
+  if (isActive) {
+    if (luminance >= 0.18f) {
+      luminance *= 0.192f;
+    } else {
+      luminance /= 0.192f;
+    }
+  } else {
+    if (luminance >= 0.18f) {
+      luminance *= 0.625f;
+    } else {
+      luminance /= 0.625f;
+    }
+  }
+  return RelativeLuminanceUtils::Adjust(aFaceColor, luminance);
 }
 
 // This tries to draw a Windows 10 style scrollbar with given colors.
@@ -4258,6 +4322,8 @@ nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
   MOZ_ASSERT(!aStyle->StyleUI()->mScrollbarFaceColor.IsAuto() ||
              !aStyle->StyleUI()->mScrollbarTrackColor.IsAuto() ||
              IsScrollbarWidthThin(aStyle));
+
+  EventStates eventStates = GetContentState(aFrame, aWidgetType);
 
   gfxRect tr(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height()),
           dr(aClipRect.X(), aClipRect.Y(),
@@ -4288,28 +4354,37 @@ nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
     ::SelectObject(hdc, dcBrush);
     ::FillRect(hdc, &widgetRect, dcBrush);
 
+    RECT componentRect;
+    // Scrollbar thumb and button are two CSS pixels thinner than the track.
+    gfxRect tr2 = tr;
+    gfxFloat dev2css = round(AppUnitsPerCSSPixel() / p2a);
+    if (aWidgetType == StyleAppearance::ScrollbarthumbVertical ||
+        aWidgetType == StyleAppearance::ScrollbarbuttonUp ||
+        aWidgetType == StyleAppearance::ScrollbarbuttonDown) {
+        tr2.Deflate(dev2css, 0);
+    } else {
+      tr2.Deflate(0, dev2css);
+    }
+    nativeDrawing.TransformToNativeRect(tr2, componentRect);
+
     switch (aWidgetType) {
       case StyleAppearance::ScrollbarthumbVertical:
       case StyleAppearance::ScrollbarthumbHorizontal: {
-        // Scrollbar thumb is two CSS pixels thinner than the track.
-        gfxRect tr2 = tr;
-        gfxFloat dev2css = round(AppUnitsPerCSSPixel() / p2a);
-        if (aWidgetType == StyleAppearance::ScrollbarthumbVertical) {
-          tr2.Deflate(dev2css, 0);
-        } else {
-          tr2.Deflate(0, dev2css);
-        }
-        nativeDrawing.TransformToNativeRect(tr2, widgetRect);
         nscolor faceColor =
           GetScrollbarFaceColor(aStyle, &GetScrollbarFaceColorForAuto);
+        faceColor = AdjustScrollbarFaceColor(faceColor, eventStates);
         ::SetDCBrushColor(hdc, ToColorRef(faceColor));
-        ::FillRect(hdc, &widgetRect, dcBrush);
+        ::FillRect(hdc, &componentRect, dcBrush);
         break;
       }
       case StyleAppearance::ScrollbarbuttonUp:
       case StyleAppearance::ScrollbarbuttonDown:
       case StyleAppearance::ScrollbarbuttonLeft:
       case StyleAppearance::ScrollbarbuttonRight: {
+        nscolor buttonColor = GetScrollbarButtonColor(trackColor, eventStates);
+        ::SetDCBrushColor(hdc, ToColorRef(buttonColor));
+        ::FillRect(hdc, &componentRect, dcBrush);
+
         // kPath is the path of scrollbar up arrow on Windows 10
         // in a 17x17 area.
         const LONG kSize = 17;
@@ -4344,7 +4419,7 @@ nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
           path[i].y = top + (LONG) round(unit * path[i].y);
         }
         // Paint the arrow.
-        COLORREF arrowColor = ToColorRef(GetScrollbarArrowColor(trackColor));
+        COLORREF arrowColor = ToColorRef(GetScrollbarArrowColor(buttonColor));
         // XXX Somehow we need to paint with both pen and brush to get
         //     the desired shape. Can we do so only with brush?
         ::SetDCPenColor(hdc, arrowColor);

@@ -89,7 +89,7 @@ add_task(async function testScopeOverrides() {
         state: SitePermissions.ALLOW,
         scope: SitePermissions.SCOPE_PERSISTENT,
       },
-    }
+    },
   ]);
 });
 
@@ -130,7 +130,7 @@ add_task(async function testStateOverride() {
         state: SitePermissions.ALLOW,
         scope: SitePermissions.SCOPE_PERSISTENT,
       },
-    }
+    },
   ]);
 });
 

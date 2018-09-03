@@ -244,7 +244,7 @@ this.VideoControlsImplPageWidget = class {
         let adjustableControls = [
           ...this.prioritizedControls,
           this.controlBar,
-          this.clickToPlay
+          this.clickToPlay,
         ];
 
         for (let control of adjustableControls) {
@@ -274,18 +274,18 @@ this.VideoControlsImplPageWidget = class {
                 }
 
                 return parseInt(preDefinedSize, 10);
-              }
+              },
             },
             isAdjustableControl: {
-              value: true
+              value: true,
             },
             modifier: {
               value: "",
-              writable: true
+              writable: true,
             },
             isWanted: {
               value: true,
-              writable: true
+              writable: true,
             },
             hidden: {
               set: (v) => {
@@ -295,22 +295,22 @@ this.VideoControlsImplPageWidget = class {
               get: () => {
                 return control.hasAttribute("hidden") ||
                   control.classList.contains("fadeout");
-              }
+              },
             },
             hiddenByAdjustment: {
               set: (v) => {
                 control._isHiddenByAdjustment = v;
                 control._updateHiddenAttribute();
               },
-              get: () => control._isHiddenByAdjustment
+              get: () => control._isHiddenByAdjustment,
             },
             _isHiddenByAdjustment: {
               value: false,
-              writable: true
+              writable: true,
             },
             _isHiddenExplicitly: {
               value: false,
-              writable: true
+              writable: true,
             },
             _updateHiddenAttribute: {
               value: () => {
@@ -319,8 +319,8 @@ this.VideoControlsImplPageWidget = class {
                 } else {
                   control.removeAttribute("hidden");
                 }
-              }
-            }
+              },
+            },
           });
         }
         this.adjustControlSize();
@@ -687,7 +687,7 @@ this.VideoControlsImplPageWidget = class {
             try {
               this.video.removeEventListener(event, this, {
                 capture: true,
-                mozSystemGroup: true
+                mozSystemGroup: true,
               });
             } catch (ex) {}
           }
@@ -805,18 +805,18 @@ this.VideoControlsImplPageWidget = class {
 
         Object.defineProperties(this.positionDurationBox, {
           durationSpan: {
-            value: durationSpan
+            value: durationSpan,
           },
           position: {
             set: (v) => {
               positionTextNode.textContent = positionFormat.replace("#1", v);
-            }
+            },
           },
           duration: {
             set: (v) => {
               durationSpan.textContent = v ? durationFormat.replace("#2", v) : "";
-            }
-          }
+            },
+          },
         });
       },
 
@@ -1078,33 +1078,33 @@ this.VideoControlsImplPageWidget = class {
         clickToPlay: {
           keyframes: [
             { transform: "scale(3)", opacity: 0 },
-            { transform: "scale(1)", opacity: 0.55 }
+            { transform: "scale(1)", opacity: 0.55 },
           ],
           options: {
             easing: "ease",
-            duration: 400
-          }
+            duration: 400,
+          },
         },
         controlBar: {
           keyframes: [
             { opacity: 0 },
-            { opacity: 1 }
+            { opacity: 1 },
           ],
           options: {
             easing: "ease",
-            duration: 200
-          }
+            duration: 200,
+          },
         },
         statusOverlay: {
           keyframes: [
             { opacity: 0 },
             { opacity: 0, offset: .72 }, // ~750ms into animation
-            { opacity: 1 }
+            { opacity: 1 },
           ],
           options: {
-            duration: 1050
-          }
-        }
+            duration: 1050,
+          },
+        },
       },
 
       startFade(element, fadeIn, immediate = false) {
@@ -1646,7 +1646,7 @@ this.VideoControlsImplPageWidget = class {
         const offLabel = this.textTrackList.getAttribute("offlabel");
         this.addNewTextTrack({
           label: offLabel,
-          kind: "subtitles"
+          kind: "subtitles",
         });
 
         for (let tt of this.overlayableTextTracks) {
@@ -1834,7 +1834,7 @@ this.VideoControlsImplPageWidget = class {
           this.positionDurationBox,
           this.scrubberStack,
           this.durationSpan,
-          this.volumeStack
+          this.volumeStack,
         ];
 
         this.isAudioOnly = this.video instanceof this.window.HTMLAudioElement;
@@ -1849,7 +1849,7 @@ this.VideoControlsImplPageWidget = class {
         for (let event of this.videoEvents) {
           this.video.addEventListener(event, this, {
             capture: true,
-            mozSystemGroup: true
+            mozSystemGroup: true,
           });
         }
 
@@ -1889,7 +1889,7 @@ this.VideoControlsImplPageWidget = class {
           { el: this.video.textTracks, type: "removetrack" },
           { el: this.video.textTracks, type: "change" },
 
-          { el: this.video, type: "media-videoCasting", touchOnly: true }
+          { el: this.video, type: "media-videoCasting", touchOnly: true },
         ];
 
         for (let { el, type, nonTouchOnly = false, touchOnly = false,
@@ -1902,7 +1902,7 @@ this.VideoControlsImplPageWidget = class {
         }
 
         this.log("--- videocontrols initialized ---");
-      }
+      },
     };
 
     this.TouchUtils = {
@@ -2011,7 +2011,7 @@ this.VideoControlsImplPageWidget = class {
           { el: this.Utils.scrubber, type: "touchstart" },
           { el: this.Utils.scrubber, type: "touchend" },
           { el: this.Utils.muteButton, type: "click" },
-          { el: this.Utils.controlsSpacer, type: "mouseup" }
+          { el: this.Utils.controlsSpacer, type: "mouseup" },
         ];
 
         for (let { el, type, mozSystemGroup = true } of this.controlsEvents) {
@@ -2036,7 +2036,7 @@ this.VideoControlsImplPageWidget = class {
         if (this.video.currentTime !== 0) {
           this.delayHideControls(this.Utils.HIDE_CONTROLS_TIMEOUT_MS);
         }
-      }
+      },
     };
 
     this.Utils.init(this.shadowRoot);
@@ -2166,7 +2166,7 @@ this.NoControlsImplPageWidget = class {
           try {
             this.video.removeEventListener(event, this, {
               capture: true,
-              mozSystemGroup: true
+              mozSystemGroup: true,
             });
           } catch (ex) {}
         }
@@ -2242,10 +2242,10 @@ this.NoControlsImplPageWidget = class {
         for (let event of this.videoEvents) {
           this.video.addEventListener(event, this, {
             capture: true,
-            mozSystemGroup: true
+            mozSystemGroup: true,
           });
         }
-      }
+      },
     };
     this.Utils.init(this.shadowRoot);
     this.Utils.video.dispatchEvent(new this.window.CustomEvent("MozNoControlsVideoBindingAttached"));

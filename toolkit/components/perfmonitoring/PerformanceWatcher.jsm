@@ -97,7 +97,7 @@ ChildManager.prototype = {
 
   listeners() {
     return this._listeners.values();
-  }
+  },
 };
 
 /**

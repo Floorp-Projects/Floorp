@@ -47,6 +47,38 @@ protected:
 };
 
 /**
+ * Checkbox accessible.
+ */
+class CheckboxAccessible : public LeafAccessible
+{
+
+public:
+  enum { eAction_Click = 0 };
+
+  CheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+    LeafAccessible(aContent, aDoc)
+  {
+    // Ignore "CheckboxStateChange" DOM event in lieu of document observer
+    // state change notification.
+    if (aContent->IsHTMLElement()) {
+      mStateFlags |= eIgnoreDOMUIEvent;
+    }
+  }
+
+  // Accessible
+  virtual mozilla::a11y::role NativeRole() const override;
+  virtual uint64_t NativeState() const override;
+
+  // ActionAccessible
+  virtual uint8_t ActionCount() const override;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool DoAction(uint8_t aIndex) const override;
+
+  // Widgets
+  virtual bool IsWidget() const override;
+};
+
+/**
   * Generic class used for radio buttons.
   */
 class RadioButtonAccessible : public LeafAccessible

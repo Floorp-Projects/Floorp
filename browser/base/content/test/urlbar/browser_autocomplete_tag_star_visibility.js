@@ -8,7 +8,7 @@ add_task(async function() {
     await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url,
-      title: `test ${tagName}`
+      title: `test ${tagName}`,
     });
     PlacesUtils.tagging.tagURI(Services.io.newURI(url), [tagName]);
     await PlacesTestUtils.addVisits({uri: url, title: `Test page with tag ${tagName}`});

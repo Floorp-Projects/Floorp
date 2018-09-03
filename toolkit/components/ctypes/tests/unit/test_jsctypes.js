@@ -1735,7 +1735,7 @@ function run_PointerType_tests() {
          [new Int32Array(c_arraybuffer), ctypes.int32_t],
          [new Uint32Array(c_arraybuffer), ctypes.uint32_t],
          [new Float32Array(c_arraybuffer), ctypes.float32_t],
-         [new Float64Array(c_arraybuffer), ctypes.float64_t]
+         [new Float64Array(c_arraybuffer), ctypes.float64_t],
         ];
 
   if (typeof SharedArrayBuffer !== "undefined") {

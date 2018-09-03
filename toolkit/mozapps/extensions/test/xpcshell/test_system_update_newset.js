@@ -37,7 +37,7 @@ const TEST_CONDITIONS = {
       { isUpgrade: false, version: null},
       { isUpgrade: false, version: null},
       { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null}
+      { isUpgrade: false, version: null},
     ],
   },
   // Runs tests with default system add-ons installed
@@ -51,8 +51,8 @@ const TEST_CONDITIONS = {
       { isUpgrade: false, version: "2.0"},
       { isUpgrade: false, version: "2.0"},
       { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null}
-    ]
+      { isUpgrade: false, version: null},
+    ],
   },
 
   // Runs tests with updated system add-ons installed
@@ -66,8 +66,8 @@ const TEST_CONDITIONS = {
       { isUpgrade: true, version: "2.0"},
       { isUpgrade: true, version: "2.0"},
       { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null}
-    ]
+      { isUpgrade: false, version: null},
+    ],
   },
 
   // Runs tests with both default and updated system add-ons installed
@@ -81,8 +81,8 @@ const TEST_CONDITIONS = {
       { isUpgrade: true, version: "2.0"},
       { isUpgrade: true, version: "2.0"},
       { isUpgrade: false, version: null},
-      { isUpgrade: false, version: null}
-    ]
+      { isUpgrade: false, version: null},
+    ],
   },
 };
 
@@ -103,7 +103,7 @@ const TESTS = {
   newset: {
     updateList: [
       { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" },
-      { id: "system5@tests.mozilla.org", version: "1.0", path: "system5_1.xpi" }
+      { id: "system5@tests.mozilla.org", version: "1.0", path: "system5_1.xpi" },
     ],
     finalState: {
       blank: [
@@ -111,31 +111,31 @@ const TESTS = {
         { isUpgrade: false, version: null},
         { isUpgrade: false, version: null},
         { isUpgrade: true, version: "1.0"},
-        { isUpgrade: true, version: "1.0"}
+        { isUpgrade: true, version: "1.0"},
       ],
       withAppSet: [
         { isUpgrade: false, version: null},
         { isUpgrade: false, version: "2.0"},
         { isUpgrade: false, version: "2.0"},
         { isUpgrade: true, version: "1.0"},
-        { isUpgrade: true, version: "1.0"}
+        { isUpgrade: true, version: "1.0"},
       ],
       withProfileSet: [
         { isUpgrade: false, version: null},
         { isUpgrade: false, version: null},
         { isUpgrade: false, version: null},
         { isUpgrade: true, version: "1.0"},
-        { isUpgrade: true, version: "1.0"}
+        { isUpgrade: true, version: "1.0"},
       ],
       withBothSets: [
         { isUpgrade: false, version: "1.0"},
         { isUpgrade: false, version: "1.0"},
         { isUpgrade: false, version: null},
         { isUpgrade: true, version: "1.0"},
-        { isUpgrade: true, version: "1.0"}
-      ]
-    }
-  }
+        { isUpgrade: true, version: "1.0"},
+      ],
+    },
+  },
 };
 
 add_task(async function setup() {

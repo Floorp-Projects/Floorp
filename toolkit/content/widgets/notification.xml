@@ -136,16 +136,6 @@
                 buttonElem.setAttribute("label", button.label);
                 if (typeof button.accessKey == "string")
                   buttonElem.setAttribute("accesskey", button.accessKey);
-                if (typeof button.type == "string") {
-                  buttonElem.setAttribute("type", button.type);
-                  if ((button.type == "menu-button" || button.type == "menu") &&
-                      "popup" in button) {
-                    buttonElem.appendChild(button.popup);
-                    delete button.popup;
-                  }
-                  if (typeof button.anchor == "string")
-                    buttonElem.setAttribute("anchor", button.anchor);
-                }
                 buttonElem.classList.add("notification-button");
 
                 if (button.isDefault ||
@@ -498,6 +488,9 @@
 
   <binding id="popup-notification">
     <content orient="vertical">
+      <xul:hbox class="popup-notification-header-container">
+        <children includes="popupnotificationheader"/>
+      </xul:hbox>
       <xul:hbox align="start" class="popup-notification-body-container">
         <xul:image class="popup-notification-icon"
                    xbl:inherits="popupid,src=icon,class=iconclass"/>
@@ -527,6 +520,9 @@
                         xbl:inherits="hidden=checkboxhidden,checked=checkboxchecked,label=checkboxlabel,oncommand=checkboxcommand" />
           <xul:description class="popup-notification-warning" xbl:inherits="hidden=warninghidden,xbl:text=warninglabel"/>
         </xul:vbox>
+      </xul:hbox>
+      <xul:hbox class="popup-notification-footer-container">
+        <children includes="popupnotificationfooter"/>
       </xul:hbox>
       <xul:hbox class="popup-notification-button-container">
         <children includes="button"/>

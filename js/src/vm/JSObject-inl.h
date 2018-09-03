@@ -397,12 +397,6 @@ SetNewObjectMetadata(JSContext* cx, T* obj)
 } // namespace js
 
 inline js::GlobalObject&
-JSObject::deprecatedGlobal() const
-{
-    return *deprecatedRealm()->unsafeUnbarrieredMaybeGlobal();
-}
-
-inline js::GlobalObject&
 JSObject::nonCCWGlobal() const
 {
     /*

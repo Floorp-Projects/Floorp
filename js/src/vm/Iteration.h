@@ -15,7 +15,6 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "gc/Barrier.h"
-#include "vm/JSContext.h"
 #include "vm/ReceiverGuard.h"
 #include "vm/Stack.h"
 

@@ -10,10 +10,6 @@
 
 #include "../../../../C/CpuArch.h"
 
-#if defined( _7ZIP_LARGE_PAGES)
-#include "../../../../C/Alloc.h"
-#endif
-
 #include "../../../Common/MyInitGuid.h"
 
 #include "../../../Common/CommandLineParser.h"
@@ -24,10 +20,6 @@
 #include "../../../Common/UTFConvert.h"
 
 #include "../../../Windows/ErrorMsg.h"
-
-#ifdef _WIN32
-#include "../../../Windows/MemoryLock.h"
-#endif
 
 #include "../../../Windows/TimeUtils.h"
 
@@ -64,7 +56,7 @@ using namespace NCommandLineParser;
 HINSTANCE g_hInstance = 0;
 #endif
 
-bool g_LargePagesMode = false;
+extern bool g_LargePagesMode;
 
 extern CStdOutStream *g_StdStream;
 extern CStdOutStream *g_ErrStream;
@@ -244,7 +236,8 @@ static void PrintWarningsPaths(const CErrorPathCodes &pc, CStdOutStream &so)
 {
   FOR_VECTOR(i, pc.Paths)
   {
-    so << pc.Paths[i] << " : ";
+    so.NormalizePrint_UString(pc.Paths[i]);
+    so << " : ";
     so << NError::MyFormatMessage(pc.Codes[i]) << endl;
   }
   so << "----------------" << endl;
@@ -383,6 +376,8 @@ static void PrintMemUsage(const char *s, UInt64 val)
   *g_StdStream << "    " << s << " Memory =";
   PrintNum(SHIFT_SIZE_VALUE(val, 20), 7);
   *g_StdStream << " MB";
+  if (g_LargePagesMode)
+    *g_StdStream << " (LP)";
 }
 
 EXTERN_C_BEGIN
@@ -524,6 +519,8 @@ int Main2(
 
   parser.Parse1(commandStrings, options);
 
+  g_StdOut.IsTerminalMode = options.IsStdOutTerminal;
+  g_StdErr.IsTerminalMode = options.IsStdErrTerminal;
 
   if (options.Number_for_Out != k_OutStream_stdout)
     g_StdStream = (options.Number_for_Out == k_OutStream_stderr ? &g_StdErr : NULL);
@@ -540,24 +537,6 @@ int Main2(
     ShowCopyrightAndHelp(g_StdStream, true);
     return 0;
   }
-
-  #if defined(_WIN32) && !defined(UNDER_CE)
-  NSecurity::EnablePrivilege_SymLink();
-  #endif
-  
-  #ifdef _7ZIP_LARGE_PAGES
-  if (options.LargePages)
-  {
-    SetLargePageSize();
-    // note: this process also can inherit that Privilege from parent process
-    g_LargePagesMode =
-    #if defined(_WIN32) && !defined(UNDER_CE)
-      NSecurity::EnablePrivilege_LockMemory();
-    #else
-      true;
-    #endif
-  }
-  #endif
 
   if (options.EnableHeaders)
     ShowCopyrightAndHelp(g_StdStream, false);

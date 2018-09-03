@@ -20,7 +20,7 @@ CatapultEngine.prototype = {
   exception: null, // tests fill this in
   async _sync() {
     throw this.exception;
-  }
+  },
 };
 
 var scheduler = new SyncScheduler(Service);
@@ -32,7 +32,7 @@ async function sync_httpd_setup() {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,
     engines: {clients: {version: clientsEngine.version,
-                        syncID: clientsSyncID}}
+                        syncID: clientsSyncID}},
   });
   let clientsColl = new ServerCollection({}, true);
 
@@ -45,7 +45,7 @@ async function sync_httpd_setup() {
     "/1.1/johndoe@mozilla.com/info/collections": collectionsHelper.handler,
     "/1.1/johndoe@mozilla.com/storage/crypto/keys":
       upd("crypto", (new ServerWBO("keys")).handler()),
-    "/1.1/johndoe@mozilla.com/storage/clients": upd("clients", clientsColl.handler())
+    "/1.1/johndoe@mozilla.com/storage/clients": upd("clients", clientsColl.handler()),
   });
 }
 
@@ -535,7 +535,7 @@ add_task(async function test_autoconnect_mp_locked() {
     },
     getSignedInUser() {
       return origFxA.getSignedInUser();
-    }
+    },
   });
 
   // A locked master password will still trigger a sync, but then we'll hit
@@ -994,7 +994,7 @@ add_task(async function test_loginError_fatal_clearsTriggers() {
   await configureIdentity({username: "johndoe@mozilla.com"});
 
   let server = httpd_setup({
-    "/1.1/johndoe@mozilla.com/info/collections": httpd_handler(401, "Unauthorized")
+    "/1.1/johndoe@mozilla.com/info/collections": httpd_handler(401, "Unauthorized"),
   });
 
   Service.clusterURL = server.baseURI + "/";
@@ -1036,7 +1036,7 @@ add_task(async function test_proper_interval_on_only_failing() {
     succeeded: 0,
     failed: 2,
     newFailed: 2,
-    reconciled: 0
+    reconciled: 0,
   });
 
   await Async.promiseYield();

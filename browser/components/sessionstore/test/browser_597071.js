@@ -12,7 +12,7 @@ add_task(async function test_close_last_nonpopup_window() {
   let oldState = ss.getWindowState(window);
 
   let popupState = {windows: [
-    {tabs: [{entries: []}], isPopup: true, hidden: "toolbar"}
+    {tabs: [{entries: []}], isPopup: true, hidden: "toolbar"},
   ]};
 
   // Set this window to be a popup.

@@ -76,7 +76,7 @@ this.FxAccountsProfile.prototype = {
     }
     let profileCache = {
       profile,
-      etag: response.etag
+      etag: response.etag,
     };
     await this.fxa.setProfileCache(profileCache);
     if (profile.email != userData.email) {

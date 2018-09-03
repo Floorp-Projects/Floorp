@@ -12,7 +12,7 @@ ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   Feeds: "resource:///modules/Feeds.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm"
+  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 class PageInfoChild extends ActorChild {

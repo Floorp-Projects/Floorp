@@ -171,7 +171,7 @@ add_task(async function test_multiple_windows() {
   // Get the notification box for both windows.
   let notificationBoxes = [
     document.getElementById("global-notificationbox"),
-    otherWindow.document.getElementById("global-notificationbox")
+    otherWindow.document.getElementById("global-notificationbox"),
   ];
 
   Assert.ok(notificationBoxes[1], "2nd window has a global notification box.");
@@ -183,7 +183,7 @@ add_task(async function test_multiple_windows() {
 
   let showAlertPromises = [
     promiseWaitForAlertActive(notificationBoxes[0]),
-    promiseWaitForAlertActive(notificationBoxes[1])
+    promiseWaitForAlertActive(notificationBoxes[1]),
   ];
 
   Assert.ok(!TelemetryReportingPolicy.canUpload(),
@@ -196,7 +196,7 @@ add_task(async function test_multiple_windows() {
   // Both notification were displayed. Close one and check that both gets closed.
   let closeAlertPromises = [
     promiseWaitForNotificationClose(notificationBoxes[0].currentNotification),
-    promiseWaitForNotificationClose(notificationBoxes[1].currentNotification)
+    promiseWaitForNotificationClose(notificationBoxes[1].currentNotification),
   ];
   notificationBoxes[0].currentNotification.close();
   await Promise.all(closeAlertPromises);

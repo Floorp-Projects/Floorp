@@ -59,7 +59,7 @@ add_task(async function test_unsigned_no_id_temp_install() {
     name: "no ID",
     description: "extension without an ID",
     manifest_version: 2,
-    version: "1.0"
+    version: "1.0",
   };
 
   const addonDir = await promiseWriteWebManifestForExtension(manifest, gTmpD,
@@ -98,7 +98,7 @@ add_task(async function test_multiple_no_id_extensions() {
     name: "no ID",
     description: "extension without an ID",
     manifest_version: 2,
-    version: "1.0"
+    version: "1.0",
   };
 
   let extension1 = ExtensionTestUtils.loadExtension({
@@ -137,9 +137,9 @@ add_task(async function test_bss_id() {
 
     browser_specific_settings: {
       gecko: {
-        id: ID
-      }
-    }
+        id: ID,
+      },
+    },
   };
 
   let addon = await promiseAddonByID(ID);
@@ -171,15 +171,15 @@ add_task(async function test_two_ids() {
 
     applications: {
       gecko: {
-        id: BAD_ID
-      }
+        id: BAD_ID,
+      },
     },
 
     browser_specific_settings: {
       gecko: {
-        id: GOOD_ID
-      }
-    }
+        id: GOOD_ID,
+      },
+    },
   };
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -214,7 +214,7 @@ add_task(async function test_strict_min_max() {
       gecko: {
         id: addonId,
         strict_min_version: "1",
-        strict_max_version: "1"
+        strict_max_version: "1",
       },
     },
   };
@@ -240,7 +240,7 @@ add_task(async function test_strict_min_max() {
       gecko: {
         id: addonId,
         strict_min_version: "2",
-        strict_max_version: "2"
+        strict_max_version: "2",
       },
     },
   };
@@ -266,7 +266,7 @@ add_task(async function test_strict_min_max() {
       gecko: {
         id: addonId,
         strict_min_version: "2",
-        strict_max_version: "1"
+        strict_max_version: "1",
       },
     },
   };
@@ -291,7 +291,7 @@ add_task(async function test_strict_min_max() {
     applications: {
       gecko: {
         id: addonId,
-        strict_min_version: "2"
+        strict_min_version: "2",
       },
     },
   };
@@ -316,7 +316,7 @@ add_task(async function test_strict_min_max() {
     applications: {
       gecko: {
         id: addonId,
-        strict_max_version: "1"
+        strict_max_version: "1",
       },
     },
   };
@@ -342,7 +342,7 @@ add_task(async function test_strict_min_max() {
       gecko: {
         id: addonId,
         strict_min_version: "1",
-        strict_max_version: "2"
+        strict_max_version: "2",
       },
     },
   };

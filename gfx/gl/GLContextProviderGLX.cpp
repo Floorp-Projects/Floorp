@@ -210,6 +210,10 @@ GLXLibrary::EnsureInitialized()
         mHasRobustness = true;
     }
 
+    if (HasExtension(extensionsStr, "GLX_NV_robustness_video_memory_purge")) {
+        mHasVideoMemoryPurge = true;
+    }
+
     if (HasExtension(extensionsStr, "GLX_SGI_video_sync") &&
         fnLoadSymbols(symbols_videosync))
     {
@@ -511,7 +515,7 @@ GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
         error = false;
 
         if (glx.HasCreateContextAttribs()) {
-            AutoTArray<int, 11> attrib_list;
+            AutoTArray<int, 13> attrib_list;
             if (glx.HasRobustness()) {
                 const int robust_attribs[] = {
                     LOCAL_GLX_CONTEXT_FLAGS_ARB,
@@ -520,6 +524,13 @@ GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
                     LOCAL_GLX_LOSE_CONTEXT_ON_RESET_ARB,
                 };
                 attrib_list.AppendElements(robust_attribs, MOZ_ARRAY_LENGTH(robust_attribs));
+            }
+            if (glx.HasVideoMemoryPurge()) {
+                const int memory_purge_attribs[] = {
+                    LOCAL_GLX_GENERATE_RESET_ON_VIDEO_MEMORY_PURGE_NV,
+                    LOCAL_GL_TRUE,
+                };
+                attrib_list.AppendElements(memory_purge_attribs, MOZ_ARRAY_LENGTH(memory_purge_attribs));
             }
             if (!(flags & CreateContextFlags::REQUIRE_COMPAT_PROFILE)) {
                 int core_attribs[] = {

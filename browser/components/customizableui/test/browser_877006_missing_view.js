@@ -13,7 +13,7 @@ add_task(function testAddbrokenViewWidget() {
     viewId: "idontexist",
     /* Empty handler so we try to attach it maybe? */
     onViewShowing() {
-    }
+    },
   };
 
   let noError = true;

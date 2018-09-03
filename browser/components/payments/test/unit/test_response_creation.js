@@ -90,7 +90,6 @@ add_task(async function test_createPaymentAddress_basic() {
     dependentLocality: "N/A",
     postalCode: "94041",
     sortingCode: "1234",
-    languageCode: "en-CA",
     organization: "Mozilla Corporation",
     recipient: "John Smith",
     phone: "+15195555555",

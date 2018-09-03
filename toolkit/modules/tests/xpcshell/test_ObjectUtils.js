@@ -55,7 +55,7 @@ add_task(async function test_deepEqual() {
   Assert.ok(deepEqual(a1, a2));
 
   let nbRoot = {
-    toString() { return this.first + " " + this.last; }
+    toString() { return this.first + " " + this.last; },
   };
 
   function nameBuilder(first, last) {
@@ -122,7 +122,7 @@ add_task(async function test_isEmpty() {
     value: 1,
     enumerable: false,
     configurable: true,
-    writable: true
+    writable: true,
   })), "Objects without enumerable properties should be empty");
   Assert.ok(ObjectUtils.isEmpty([]), "Arrays without elements should be empty");
 

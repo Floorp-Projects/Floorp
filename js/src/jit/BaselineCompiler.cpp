@@ -86,11 +86,11 @@ BaselineCompiler::addPCMappingEntry(bool addIndexEntry)
 MethodStatus
 BaselineCompiler::compile()
 {
-    JitSpew(JitSpew_BaselineScripts, "Baseline compiling script %s:%u (%p)",
-            script->filename(), script->lineno(), script);
+    JitSpew(JitSpew_BaselineScripts, "Baseline compiling script %s:%u:%u (%p)",
+            script->filename(), script->lineno(), script->column(), script);
 
-    JitSpew(JitSpew_Codegen, "# Emitting baseline code for script %s:%u",
-            script->filename(), script->lineno());
+    JitSpew(JitSpew_Codegen, "# Emitting baseline code for script %s:%u:%u",
+            script->filename(), script->lineno(), script->column());
 
     TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
     TraceLoggerEvent scriptEvent(TraceLogger_AnnotateScripts, script);
@@ -222,9 +222,9 @@ BaselineCompiler::compile()
     baselineScript->setMethod(code);
     baselineScript->setTemplateEnvironment(templateEnv);
 
-    JitSpew(JitSpew_BaselineScripts, "Created BaselineScript %p (raw %p) for %s:%u",
+    JitSpew(JitSpew_BaselineScripts, "Created BaselineScript %p (raw %p) for %s:%u:%u",
             (void*) baselineScript.get(), (void*) code->raw(),
-            script->filename(), script->lineno());
+            script->filename(), script->lineno(), script->column());
 
     MOZ_ASSERT(pcMappingIndexEntries.length() > 0);
     baselineScript->copyPCMappingIndexEntries(&pcMappingIndexEntries[0]);
@@ -278,8 +278,8 @@ BaselineCompiler::compile()
     // Always register a native => bytecode mapping entry, since profiler can be
     // turned on with baseline jitcode on stack, and baseline jitcode cannot be invalidated.
     {
-        JitSpew(JitSpew_Profiling, "Added JitcodeGlobalEntry for baseline script %s:%u (%p)",
-                    script->filename(), script->lineno(), baselineScript.get());
+        JitSpew(JitSpew_Profiling, "Added JitcodeGlobalEntry for baseline script %s:%u:%u (%p)",
+                    script->filename(), script->lineno(), script->column(), baselineScript.get());
 
         // Generate profiling string.
         char* str = JitcodeGlobalEntry::createScriptString(cx, script);
@@ -4763,7 +4763,7 @@ BaselineCompiler::emit_JSOP_RESUME()
                                  scratch2);
     masm.subStackPtrFrom(scratch2);
     masm.store32(scratch2, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
-    masm.makeFrameDescriptor(scratch2, JitFrame_BaselineJS, JitFrameLayout::Size());
+    masm.makeFrameDescriptor(scratch2, FrameType::BaselineJS, JitFrameLayout::Size());
 
     masm.Push(Imm32(0)); // actual argc
     masm.PushCalleeToken(callee, /* constructing = */ false);
@@ -4894,7 +4894,7 @@ BaselineCompiler::emit_JSOP_RESUME()
 
         // Create the frame descriptor.
         masm.subStackPtrFrom(scratch1);
-        masm.makeFrameDescriptor(scratch1, JitFrame_BaselineJS, ExitFrameLayout::Size());
+        masm.makeFrameDescriptor(scratch1, FrameType::BaselineJS, ExitFrameLayout::Size());
 
         // Push the frame descriptor and a dummy return address (it doesn't
         // matter what we push here, frame iterators will use the frame pc

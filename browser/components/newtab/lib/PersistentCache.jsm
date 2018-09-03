@@ -35,7 +35,7 @@ this.PersistentCache = class PersistentCache {
   async set(key, value) {
     const data = await this._load();
     data[key] = value;
-    this._persist(data);
+    await this._persist(data);
   }
 
   /**
@@ -75,7 +75,7 @@ this.PersistentCache = class PersistentCache {
    */
   _persist(data) {
     const filepath = OS.Path.join(OS.Constants.Path.localProfileDir, this._filename);
-    OS.File.writeAtomic(filepath, JSON.stringify(data), {tmpPath: `${filepath}.tmp`});
+    return OS.File.writeAtomic(filepath, JSON.stringify(data), {tmpPath: `${filepath}.tmp`});
   }
 };
 

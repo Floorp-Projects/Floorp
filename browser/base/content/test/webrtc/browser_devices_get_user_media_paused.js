@@ -123,7 +123,7 @@ var gTests = [
       audio: STATE_CAPTURE_ENABLED,
     });
     await closeStream();
-  }
+  },
 },
 
 {
@@ -208,7 +208,7 @@ var gTests = [
       audio: STATE_CAPTURE_ENABLED,
     });
     await closeStream();
-  }
+  },
 },
 
 {
@@ -261,7 +261,7 @@ var gTests = [
     );
     await expectObserverCalled("recording-device-events");
     await checkSharingUI({screen: "Screen"});
-  }
+  },
 },
 ];
 

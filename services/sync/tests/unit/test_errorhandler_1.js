@@ -101,7 +101,7 @@ add_task(async function test_credentials_changed_logout() {
   equal(ping.status.sync, CREDENTIALS_CHANGED);
   deepEqual(ping.failureReason, {
     name: "unexpectederror",
-    error: "Error: Aborting sync, remote setup failed"
+    error: "Error: Aborting sync, remote setup failed",
   });
 
   Assert.equal(Status.sync, CREDENTIALS_CHANGED);
@@ -147,7 +147,7 @@ add_task(async function test_sync_non_network_error() {
   equal(ping.status.sync, CREDENTIALS_CHANGED);
   deepEqual(ping.failureReason, {
     name: "unexpectederror",
-    error: "Error: Aborting sync, remote setup failed"
+    error: "Error: Aborting sync, remote setup failed",
   });
 
   Assert.equal(Status.sync, CREDENTIALS_CHANGED);

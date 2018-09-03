@@ -3,7 +3,6 @@
 module.exports = {
   "rules": {
     "block-scoped-var": "error",
-    "comma-dangle": ["error", "always-multiline"],
     "complexity": ["error", {"max": 22}],
     "indent-legacy": ["error", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],
     "max-nested-callbacks": ["error", 3],
@@ -12,7 +11,6 @@ module.exports = {
     "no-fallthrough": ["error", { "commentPattern": ".*[Ii]ntentional(?:ly)?\\s+fall(?:ing)?[\\s-]*through.*" }],
     "no-multi-str": "error",
     "no-return-assign": "error",
-    "no-sequences": "error",
     "no-shadow": "error",
     "no-throw-literal": "error",
     "no-unused-vars": ["error", { "args": "after-used", "vars": "all" }],

@@ -1507,7 +1507,8 @@ void CThreadDecoder::Execute()
 
       _7Z_DECODER_CRYPRO_VARS
       #ifndef _7ZIP_ST
-        , MtMode, NumThreads
+        , MtMode, NumThreads,
+        0 // MemUsage
       #endif
 
       );
@@ -1696,13 +1697,14 @@ HRESULT Update(
 
   UInt64 inSizeForReduce = 0;
   {
+    bool isSolid = (numSolidFiles > 1 && options.NumSolidBytes != 0);
     FOR_VECTOR (i, updateItems)
     {
       const CUpdateItem &ui = updateItems[i];
       if (ui.NewData)
       {
         complexity += ui.Size;
-        if (numSolidFiles != 1)
+        if (isSolid)
           inSizeForReduce += ui.Size;
         else if (inSizeForReduce < ui.Size)
           inSizeForReduce = ui.Size;
@@ -2142,8 +2144,8 @@ HRESULT Update(
                   #ifndef _7ZIP_ST
                     , false // mtMode
                     , 1 // numThreads
+                    , 0 // memUsage
                   #endif
-
                 );
           
               RINOK(res);
@@ -2293,7 +2295,8 @@ HRESULT Update(
       continue;
     CRecordVector<CRefItem> refItems;
     refItems.ClearAndSetSize(numFiles);
-    bool sortByType = (options.UseTypeSorting && numSolidFiles > 1);
+    // bool sortByType = (options.UseTypeSorting && isSoid); // numSolidFiles > 1
+    bool sortByType = options.UseTypeSorting;
     
     unsigned i;
 

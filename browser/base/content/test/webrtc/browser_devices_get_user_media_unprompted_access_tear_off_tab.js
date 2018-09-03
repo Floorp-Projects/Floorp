@@ -46,8 +46,8 @@ var gTests = [
     await Promise.all(promises);
 
     await checkNotSharing();
-  }
-}
+  },
+},
 
 ];
 

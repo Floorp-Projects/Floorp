@@ -94,13 +94,13 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "M",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 1, "length": 0 },
             "key": { key: "M" },
           }, aWindow);
-      }, popup: false, value: "M", searchString: ""
+      }, popup: false, value: "M", searchString: "",
     },
     { description: "modifying composition string shouldn't open the popup",
       completeDefaultIndex: false,
@@ -110,19 +110,19 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "Mo",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 2, "length": 0 },
             "key": { key: "o" },
           }, aWindow);
-      }, popup: false, value: "Mo", searchString: ""
+      }, popup: false, value: "Mo", searchString: "",
     },
     { description: "compositionend should open the popup",
       completeDefaultIndex: false,
       execute(aWindow) {
         synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } }, aWindow);
-      }, popup: true, value: "Mo", searchString: "Mo"
+      }, popup: true, value: "Mo", searchString: "Mo",
     },
     // If composition starts when popup is shown, the compositionstart event
     // should cause closing the popup.
@@ -134,13 +134,13 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "z",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 1, "length": 0 },
             "key": { key: "z" },
           }, aWindow);
-      }, popup: false, value: "Moz", searchString: "Mo"
+      }, popup: false, value: "Moz", searchString: "Mo",
     },
     { description: "modifying composition string shouldn't reopen the popup",
       completeDefaultIndex: false,
@@ -150,19 +150,19 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "zi",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 2, "length": 0 },
             "key": { key: "i" },
           }, aWindow);
-      }, popup: false, value: "Mozi", searchString: "Mo"
+      }, popup: false, value: "Mozi", searchString: "Mo",
     },
     { description: "compositionend should research the result and open the popup",
       completeDefaultIndex: false,
       execute(aWindow) {
         synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } }, aWindow);
-      }, popup: true, value: "Mozi", searchString: "Mozi"
+      }, popup: true, value: "Mozi", searchString: "Mozi",
     },
     // If composition is cancelled, the value shouldn't be changed.
     { description: "compositionstart should reclose the popup",
@@ -173,13 +173,13 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "l",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 1, "length": 0 },
             "key": { key: "l" },
           }, aWindow);
-      }, popup: false, value: "Mozil", searchString: "Mozi"
+      }, popup: false, value: "Mozil", searchString: "Mozi",
     },
     { description: "modifying composition string shouldn't reopen the popup",
       completeDefaultIndex: false,
@@ -189,13 +189,13 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "ll",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 2, "length": 0 },
             "key": { key: "l" },
           }, aWindow);
-      }, popup: false, value: "Mozill", searchString: "Mozi"
+      }, popup: false, value: "Mozill", searchString: "Mozi",
     },
     { description: "modifying composition string to empty string shouldn't reopen the popup",
       completeDefaultIndex: false,
@@ -205,19 +205,19 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "",
               "clauses":
               [
-                { "length": 0, "attr": 0 }
-              ]
+                { "length": 0, "attr": 0 },
+              ],
             },
             "caret": { "start": 0, "length": 0 },
             "key": { key: "KEY_Backspace" },
           }, aWindow);
-      }, popup: false, value: "Mozi", searchString: "Mozi"
+      }, popup: false, value: "Mozi", searchString: "Mozi",
     },
     { description: "cancled compositionend should reopen the popup",
       completeDefaultIndex: false,
       execute(aWindow) {
         synthesizeComposition({ type: "compositioncommit", data: "", key: { key: "KEY_Escape" } }, aWindow);
-      }, popup: true, value: "Mozi", searchString: "Mozi"
+      }, popup: true, value: "Mozi", searchString: "Mozi",
     },
     // But if composition replaces some characters and canceled, the search
     // string should be the latest value.
@@ -231,13 +231,13 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "z",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 1, "length": 0 },
             "key": { key: "z" },
           }, aWindow);
-      }, popup: false, value: "Moz", searchString: "Mozi"
+      }, popup: false, value: "Moz", searchString: "Mozi",
     },
     { description: "modifying composition string shouldn't reopen the popup",
       completeDefaultIndex: false,
@@ -247,13 +247,13 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "zi",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 2, "length": 0 },
             "key": { key: "i" },
           }, aWindow);
-      }, popup: false, value: "Mozi", searchString: "Mozi"
+      }, popup: false, value: "Mozi", searchString: "Mozi",
     },
     { description: "modifying composition string to empty string shouldn't reopen the popup",
       completeDefaultIndex: false,
@@ -263,19 +263,19 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "",
               "clauses":
               [
-                { "length": 0, "attr": 0 }
-              ]
+                { "length": 0, "attr": 0 },
+              ],
             },
             "caret": { "start": 0, "length": 0 },
             "key": { key: "KEY_Backspace" },
           }, aWindow);
-      }, popup: false, value: "Mo", searchString: "Mozi"
+      }, popup: false, value: "Mo", searchString: "Mozi",
     },
     { description: "canceled compositionend should search the result with the latest value",
       completeDefaultIndex: false,
       execute(aWindow) {
         synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Escape" } }, aWindow);
-      }, popup: true, value: "Mo", searchString: "Mo"
+      }, popup: true, value: "Mo", searchString: "Mo",
     },
     // If all characters are removed, the popup should be closed.
     { description: "the value becomes empty by backspace, the popup should be closed",
@@ -283,7 +283,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       execute(aWindow) {
         synthesizeKey("KEY_Backspace", {}, aWindow);
         synthesizeKey("KEY_Backspace", {}, aWindow);
-      }, popup: false, value: "", searchString: ""
+      }, popup: false, value: "", searchString: "",
     },
     // composition which is canceled shouldn't cause opening the popup.
     { description: "compositionstart shouldn't open the popup",
@@ -294,13 +294,13 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "M",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 1, "length": 0 },
             "key": { key: "M" },
           }, aWindow);
-      }, popup: false, value: "M", searchString: ""
+      }, popup: false, value: "M", searchString: "",
     },
     { description: "modifying composition string shouldn't open the popup",
       completeDefaultIndex: false,
@@ -310,13 +310,13 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "Mo",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 2, "length": 0 },
             "key": { key: "o" },
           }, aWindow);
-      }, popup: false, value: "Mo", searchString: ""
+      }, popup: false, value: "Mo", searchString: "",
     },
     { description: "modifying composition string to empty string shouldn't open the popup",
       completeDefaultIndex: false,
@@ -326,26 +326,26 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "",
               "clauses":
               [
-                { "length": 0, "attr": 0 }
-              ]
+                { "length": 0, "attr": 0 },
+              ],
             },
             "caret": { "start": 0, "length": 0 },
             "key": { key: "KEY_Backspace" },
           }, aWindow);
-      }, popup: false, value: "", searchString: ""
+      }, popup: false, value: "", searchString: "",
     },
     { description: "canceled compositionend shouldn't open the popup if it was closed",
       completeDefaultIndex: false,
       execute(aWindow) {
         synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Escape" } }, aWindow);
-      }, popup: false, value: "", searchString: ""
+      }, popup: false, value: "", searchString: "",
     },
     // Down key should open the popup even if the editor is empty.
     { description: "DOWN key should open the popup even if the value is empty",
       completeDefaultIndex: false,
       execute(aWindow) {
         synthesizeKey("KEY_ArrowDown", {}, aWindow);
-      }, popup: true, value: "", searchString: ""
+      }, popup: true, value: "", searchString: "",
     },
     // If popup is open at starting composition, the popup should be reopened
     // after composition anyway.
@@ -357,13 +357,13 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "M",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 1, "length": 0 },
             "key": { key: "M" },
           }, aWindow);
-      }, popup: false, value: "M", searchString: ""
+      }, popup: false, value: "M", searchString: "",
     },
     { description: "modifying composition string shouldn't open the popup",
       completeDefaultIndex: false,
@@ -373,13 +373,13 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "Mo",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 2, "length": 0 },
             "key": { key: "o" },
           }, aWindow);
-      }, popup: false, value: "Mo", searchString: ""
+      }, popup: false, value: "Mo", searchString: "",
     },
     { description: "modifying composition string to empty string shouldn't open the popup",
       completeDefaultIndex: false,
@@ -389,19 +389,19 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "",
               "clauses":
               [
-                { "length": 0, "attr": 0 }
-              ]
+                { "length": 0, "attr": 0 },
+              ],
             },
             "caret": { "start": 0, "length": 0 },
             "key": { key: "KEY_Backspace" },
           }, aWindow);
-      }, popup: false, value: "", searchString: ""
+      }, popup: false, value: "", searchString: "",
     },
     { description: "canceled compositionend should open the popup if it was opened",
       completeDefaultIndex: false,
       execute(aWindow) {
         synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Escape" } }, aWindow);
-      }, popup: true, value: "", searchString: ""
+      }, popup: true, value: "", searchString: "",
     },
     // Type normally, and hit escape, the popup should be closed.
     { description: "ESCAPE should close the popup after typing something",
@@ -410,7 +410,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
         synthesizeKey("M", {}, aWindow);
         synthesizeKey("o", {}, aWindow);
         synthesizeKey("KEY_Escape", {}, aWindow);
-      }, popup: false, value: "Mo", searchString: "Mo"
+      }, popup: false, value: "Mo", searchString: "Mo",
     },
     // Even if the popup is closed, composition which is canceled should open
     // the popup if the value isn't empty.
@@ -423,13 +423,13 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "z",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 1, "length": 0 },
             "key": { key: "z" },
           }, aWindow);
-      }, popup: false, value: "Moz", searchString: "Mo"
+      }, popup: false, value: "Moz", searchString: "Mo",
     },
     { description: "modifying composition string shouldn't open the popup",
       completeDefaultIndex: false,
@@ -439,13 +439,13 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "zi",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 2, "length": 0 },
-            "key": { key: "i", },
+            "key": { key: "i" },
           }, aWindow);
-      }, popup: false, value: "Mozi", searchString: "Mo"
+      }, popup: false, value: "Mozi", searchString: "Mo",
     },
     { description: "modifying composition string to empty string shouldn't open the popup",
       completeDefaultIndex: false,
@@ -455,19 +455,19 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "",
               "clauses":
               [
-                { "length": 0, "attr": 0 }
-              ]
+                { "length": 0, "attr": 0 },
+              ],
             },
             "caret": { "start": 0, "length": 0 },
             "key": { key: "KEY_Backspace" },
           }, aWindow);
-      }, popup: false, value: "Mo", searchString: "Mo"
+      }, popup: false, value: "Mo", searchString: "Mo",
     },
     { description: "canceled compositionend shouldn't open the popup if the popup was closed",
       completeDefaultIndex: false,
       execute(aWindow) {
         synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Escape" } }, aWindow);
-      }, popup: true, value: "Mo", searchString: "Mo"
+      }, popup: true, value: "Mo", searchString: "Mo",
     },
     // House keeping...
     { description: "house keeping for next tests",
@@ -475,7 +475,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
       execute(aWindow) {
         synthesizeKey("KEY_Backspace", {}, aWindow);
         synthesizeKey("KEY_Backspace", {}, aWindow);
-      }, popup: false, value: "", searchString: ""
+      }, popup: false, value: "", searchString: "",
     },
     // Testing for nsIAutoCompleteInput.completeDefaultIndex being true.
     { description: "compositionstart shouldn't open the popup (completeDefaultIndex is true)",
@@ -486,13 +486,13 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "M",
               "clauses":
               [
-                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 1, "length": 0 },
             "key": { key: "M" },
           }, aWindow);
-      }, popup: false, value: "M", searchString: ""
+      }, popup: false, value: "M", searchString: "",
     },
     { description: "modifying composition string shouldn't open the popup (completeDefaultIndex is true)",
       completeDefaultIndex: true,
@@ -502,19 +502,19 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             { "string": "Mo",
               "clauses":
               [
-                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-              ]
+                { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+              ],
             },
             "caret": { "start": 2, "length": 0 },
             "key": { key: "o" },
           }, aWindow);
-      }, popup: false, value: "Mo", searchString: ""
+      }, popup: false, value: "Mo", searchString: "",
     },
     { description: "compositionend should open the popup (completeDefaultIndex is true)",
       completeDefaultIndex: true,
       execute(aWindow) {
         synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } }, aWindow);
-      }, popup: true, value: "Mozilla", searchString: "Mo"
+      }, popup: true, value: "Mozilla", searchString: "Mo",
     },
     // House keeping...
     { description: "house keeping for next tests",
@@ -526,7 +526,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
         synthesizeKey("KEY_Backspace", {}, aWindow);
         synthesizeKey("KEY_Backspace", {}, aWindow);
         synthesizeKey("KEY_Backspace", {}, aWindow);
-      }, popup: false, value: "", searchString: ""
-    }
-  ]
+      }, popup: false, value: "", searchString: "",
+    },
+  ],
 };

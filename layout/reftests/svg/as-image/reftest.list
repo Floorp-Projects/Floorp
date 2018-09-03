@@ -154,8 +154,8 @@ fuzzy-if(webrender,255-255,12-12) == img-width-slice-2.html  img-width-slice-2-r
 
 # Alternate versions of "only one dimension is non-%-valued" tests, but now
 # with no explicit viewBox, to trigger "synthesize-viewBox" behavior
-fuzzy-if(webrender,255-255,20-20) == img-novb-height-meet-1.html    img-novb-height-all-1-ref.html
-fuzzy-if(webrender,255-255,20-20) == img-novb-height-slice-1.html   img-novb-height-all-1-ref.html
+fuzzy-if(webrender,255-255,20-40) == img-novb-height-meet-1.html    img-novb-height-all-1-ref.html
+fuzzy-if(webrender,255-255,20-40) == img-novb-height-slice-1.html   img-novb-height-all-1-ref.html
 fuzzy-if(skiaContent,0-255,0-10) fuzzy-if(webrender,255-255,20-20) == img-novb-width-meet-1.html     img-novb-width-all-1-ref.html
 fuzzy-if(skiaContent,0-255,0-10) fuzzy-if(webrender,255-255,20-20) == img-novb-width-slice-1.html    img-novb-width-all-1-ref.html
 

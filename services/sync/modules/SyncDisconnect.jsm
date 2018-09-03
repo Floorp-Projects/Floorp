@@ -202,5 +202,5 @@ this.SyncDisconnect = {
 
     disconnect(options) {
       return SyncDisconnectInternal.disconnect(options);
-    }
+    },
 };

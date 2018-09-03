@@ -1183,9 +1183,11 @@ static HRESULT MethodBench(
   COneMethodInfo method = method2;
   UInt64 methodId;
   UInt32 numStreams;
-  if (!FindMethod(
+  int codecIndex = FindMethod_Index(
       EXTERNAL_CODECS_LOC_VARS
-      method.MethodName, methodId, numStreams))
+      method.MethodName, true,
+      methodId, numStreams);
+  if (codecIndex < 0)
     return E_NOTIMPL;
   if (numStreams != 1)
     return E_INVALIDARG;
@@ -1222,7 +1224,7 @@ static HRESULT MethodBench(
 
     {
       CCreatedCoder cod;
-      RINOK(CreateCoder(EXTERNAL_CODECS_LOC_VARS methodId, true, encoder._encoderFilter, cod));
+      RINOK(CreateCoder_Index(EXTERNAL_CODECS_LOC_VARS codecIndex, true, encoder._encoderFilter, cod));
       encoder._encoder = cod.Coder;
       if (!encoder._encoder && !encoder._encoderFilter)
         return E_NOTIMPL;
@@ -1239,7 +1241,7 @@ static HRESULT MethodBench(
     {
       CCreatedCoder cod;
       CMyComPtr<ICompressCoder> &decoder = encoder._decoders[j];
-      RINOK(CreateCoder(EXTERNAL_CODECS_LOC_VARS methodId, false, encoder._decoderFilter, cod));
+      RINOK(CreateCoder_Id(EXTERNAL_CODECS_LOC_VARS methodId, false, encoder._decoderFilter, cod));
       decoder = cod.Coder;
       if (!encoder._decoderFilter && !decoder)
         return E_NOTIMPL;
@@ -2600,7 +2602,8 @@ static void SysInfo_To_String(AString &s, const SYSTEM_INFO &si)
   PrintHex(s, si.wProcessorLevel);
   s += ".";
   PrintHex(s, si.wProcessorRevision);
-  if (si.dwActiveProcessorMask + 1 != ((UInt64)1 << si.dwNumberOfProcessors))
+  if ((UInt64)si.dwActiveProcessorMask + 1 != ((UInt64)1 << si.dwNumberOfProcessors))
+  if ((UInt64)si.dwActiveProcessorMask + 1 != 0 || si.dwNumberOfProcessors != sizeof(UInt64) * 8)
   {
     s += " act:";
     PrintHex(s, si.dwActiveProcessorMask);
@@ -2684,13 +2687,15 @@ void GetCpuName(AString &s)
       AString s2;
       x86cpuid_to_String(cpuid, s2);
       s += s2;
-      return;
     }
+    else
+    {
     #ifdef MY_CPU_AMD64
     s += "x64";
     #else
     s += "x86";
     #endif
+    }
   }
   #else
   
@@ -2701,6 +2706,9 @@ void GetCpuName(AString &s)
     #endif
 
   #endif
+
+  if (g_LargePagesMode)
+    s += " (LP)";
 }
 
 
@@ -2721,6 +2729,27 @@ void GetCpuFeatures(AString &s)
   }
   #endif
 }
+
+
+#ifdef _WIN32
+#ifndef UNDER_CE
+
+typedef void (WINAPI * Func_RtlGetVersion) (OSVERSIONINFOEXW *);
+
+static BOOL My_RtlGetVersion(OSVERSIONINFOEXW *vi)
+{
+  HMODULE ntdll = ::GetModuleHandleW(L"ntdll.dll");
+  if (!ntdll)
+    return FALSE;
+  Func_RtlGetVersion func = (Func_RtlGetVersion)GetProcAddress(ntdll, "RtlGetVersion");
+  if (!func)
+    return FALSE;
+  func(vi);
+  return TRUE;
+}
+
+#endif
+#endif
 
 
 HRESULT Bench(
@@ -2857,6 +2886,30 @@ HRESULT Bench(
 
   if (printCallback)
   {
+    #ifdef _WIN32
+    #ifndef UNDER_CE
+    {
+      AString s;
+      // OSVERSIONINFO vi;
+      OSVERSIONINFOEXW vi;
+      vi.dwOSVersionInfoSize = sizeof(vi);
+      // if (::GetVersionEx(&vi))
+      if (My_RtlGetVersion(&vi))
+      {
+        s += "Windows";
+        if (vi.dwPlatformId != VER_PLATFORM_WIN32_NT)
+          s.Add_UInt32(vi.dwPlatformId);
+        s += " "; s.Add_UInt32(vi.dwMajorVersion);
+        s += "."; s.Add_UInt32(vi.dwMinorVersion);
+        s += " "; s.Add_UInt32(vi.dwBuildNumber);
+        // s += " "; s += GetAnsiString(vi.szCSDVersion);
+      }
+      printCallback->Print(s);
+      printCallback->NewLine();
+    }
+    #endif
+    #endif
+
     {
       AString s1, s2;
       GetSysInfo(s1, s2);

@@ -168,7 +168,7 @@ var FullZoom = {
       handleCompletion: () => {
         if (!hasPref && token.isCurrent)
           this._applyPrefToZoom(undefined, browser);
-      }
+      },
     });
   },
 
@@ -252,7 +252,7 @@ var FullZoom = {
         }
         this._applyPrefToZoom(value, browser,
                               this._notifyOnLocationChange.bind(this, browser));
-      }
+      },
     });
   },
 
@@ -512,7 +512,7 @@ var FullZoom = {
         handleCompletion: (reason) => {
           this._globalValue = this._ensureValid(value);
           resolve(this._globalValue);
-        }
+        },
       });
     });
   },

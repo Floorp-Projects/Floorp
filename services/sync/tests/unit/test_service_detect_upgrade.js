@@ -37,7 +37,7 @@ add_task(async function v4_upgrade() {
     "/1.1/johndoe/storage/forms": new ServerCollection().handler(),
     "/1.1/johndoe/storage/history": new ServerCollection().handler(),
     "/1.1/johndoe/storage/passwords": new ServerCollection().handler(),
-    "/1.1/johndoe/storage/prefs": new ServerCollection().handler()
+    "/1.1/johndoe/storage/prefs": new ServerCollection().handler(),
   });
 
   try {

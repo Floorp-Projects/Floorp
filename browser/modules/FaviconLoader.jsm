@@ -361,7 +361,7 @@ function selectIcons(iconInfos, preferredWidth) {
 
   return {
     richIcon: largestRichIcon,
-    tabIcon
+    tabIcon,
   };
 }
 
@@ -384,6 +384,12 @@ class IconLoader {
       });
       return;
     }
+
+    // Let the main process that a tab icon is possibly coming.
+    this.mm.sendAsyncMessage("Link:LoadingIcon", {
+      originalURL: iconInfo.iconUri.spec,
+      canUseForTab: !iconInfo.isRichIcon,
+    });
 
     try {
       this._loader = new FaviconLoad(iconInfo);

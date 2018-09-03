@@ -12,7 +12,7 @@ ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
 
 var EXPORTED_SYMBOLS = [
-  "CrashSubmit"
+  "CrashSubmit",
 ];
 
 const SUCCESS = "success";
@@ -57,7 +57,7 @@ async function getL10nStrings() {
       // anyway, so just hardcode some fallback strings.
       return {
         "crashid": "Crash ID: %s",
-        "reporturl": "You can view details of this crash at %s"
+        "reporturl": "You can view details of this crash at %s",
       };
     }
   }
@@ -65,7 +65,7 @@ async function getL10nStrings() {
   let crstrings = parseINIStrings(path);
   let strings = {
     "crashid": crstrings.CrashID,
-    "reporturl": crstrings.CrashDetailsURL
+    "reporturl": crstrings.CrashDetailsURL,
   };
 
   path = OS.Path.join(Services.dirsvc.get("XCurProcD", Ci.nsIFile).path,
@@ -207,7 +207,7 @@ Submitter.prototype = {
     let promises = [
       File.createFromFileName(this.dump).then(file => {
         formData.append("upload_file_minidump", file);
-      })
+      }),
     ];
 
     if (this.memory) {
@@ -304,7 +304,7 @@ Submitter.prototype = {
     let [dumpExists, extraExists, memoryExists] = await Promise.all([
       OS.File.exists(dump),
       OS.File.exists(extra),
-      OS.File.exists(memory)
+      OS.File.exists(memory),
     ]);
 
     if (!dumpExists || !extraExists) {
@@ -357,7 +357,7 @@ Submitter.prototype = {
     }
 
     return this.submitStatusPromise;
-  }
+  },
 };
 
 // ===================================
@@ -548,7 +548,7 @@ var CrashSubmit = {
               name: entry.name,
               path: entry.path,
               // dispatch promise instead of blocking iteration on `await`
-              infoPromise: OS.File.stat(entry.path)
+              infoPromise: OS.File.stat(entry.path),
             });
           }
         }
@@ -598,5 +598,5 @@ var CrashSubmit = {
   },
 
   // List of currently active submit objects
-  _activeSubmissions: []
+  _activeSubmissions: [],
 };

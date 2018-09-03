@@ -93,7 +93,7 @@ add_task(async function test_set_watermark_after_all_tour_completed() {
   resetOnboardingDefaultState();
 
   await SpecialPowers.pushPrefEnv({set: [
-    ["browser.onboarding.tour-type", "new"]
+    ["browser.onboarding.tour-type", "new"],
   ]});
 
   let tabs = [];

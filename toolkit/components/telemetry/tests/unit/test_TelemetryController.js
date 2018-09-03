@@ -50,7 +50,7 @@ function sendPing(aSendClientId, aSendEnvironment) {
 
 function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
   const MANDATORY_PING_FIELDS = [
-    "type", "id", "creationDate", "version", "application", "payload"
+    "type", "id", "creationDate", "version", "application", "payload",
   ];
 
   const APPLICATION_TEST_DATA = {

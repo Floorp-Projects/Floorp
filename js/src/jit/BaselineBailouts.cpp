@@ -361,20 +361,20 @@ struct BaselineStackBuilder
         // in the baseline frame is meaningless, since Ion saves all registers
         // before calling other ion frames, and the entry frame saves all
         // registers too.
-        if (JSJitFrameIter::isEntry(type) || type == JitFrame_IonJS || type == JitFrame_IonICCall)
+        if (JSJitFrameIter::isEntry(type) || type == FrameType::IonJS || type == FrameType::IonICCall)
             return nullptr;
 
         // BaselineStub - Baseline calling into Ion.
         //  PrevFramePtr needs to point to the BaselineStubFrame's saved frame pointer.
         //      STACK_START_ADDR + JitFrameLayout::Size() + PREV_FRAME_SIZE
         //                      - BaselineStubFrameLayout::reverseOffsetOfSavedFramePtr()
-        if (type == JitFrame_BaselineStub) {
+        if (type == FrameType::BaselineStub) {
             size_t offset = JitFrameLayout::Size() + topFrame->prevFrameLocalSize() +
                             BaselineStubFrameLayout::reverseOffsetOfSavedFramePtr();
             return virtualPointerAtStackOffset(offset);
         }
 
-        MOZ_ASSERT(type == JitFrame_Rectifier);
+        MOZ_ASSERT(type == FrameType::Rectifier);
         // Rectifier - behaviour depends on the frame preceding the rectifier frame, and
         // whether the arch is x86 or not.  The x86 rectifier frame saves the frame pointer,
         // so we can calculate it directly.  For other archs, the previous frame pointer
@@ -394,12 +394,12 @@ struct BaselineStackBuilder
             pointerAtStackOffset<RectifierFrameLayout>(priorOffset);
         FrameType priorType = priorFrame->prevType();
         MOZ_ASSERT(JSJitFrameIter::isEntry(priorType) ||
-                   priorType == JitFrame_IonJS ||
-                   priorType == JitFrame_BaselineStub);
+                   priorType == FrameType::IonJS ||
+                   priorType == FrameType::BaselineStub);
 
         // If the frame preceding the rectifier is an IonJS or entry frame,
         // then once again the frame pointer does not matter.
-        if (priorType == JitFrame_IonJS || JSJitFrameIter::isEntry(priorType))
+        if (priorType == FrameType::IonJS || JSJitFrameIter::isEntry(priorType))
             return nullptr;
 
         // Otherwise, the frame preceding the rectifier is a BaselineStub frame.
@@ -647,7 +647,9 @@ InitFromBailout(JSContext* cx, size_t frameNo,
     // |  ReturnAddr   | <-- return into main jitcode after IC
     // +===============+
 
-    JitSpew(JitSpew_BaselineBailouts, "      Unpacking %s:%u", script->filename(), script->lineno());
+    JitSpew(JitSpew_BaselineBailouts, "      Unpacking %s:%u:%u", script->filename(),
+                                                                  script->lineno(), 
+                                                                  script->column());
     JitSpew(JitSpew_BaselineBailouts, "      [BASELINE-JS FRAME]");
 
     // Calculate and write the previous frame pointer value.
@@ -1045,9 +1047,9 @@ InitFromBailout(JSContext* cx, size_t frameNo,
 #endif
 
 #ifdef JS_JITSPEW
-    JitSpew(JitSpew_BaselineBailouts, "      Resuming %s pc offset %d (op %s) (line %d) of %s:%u",
+    JitSpew(JitSpew_BaselineBailouts, "      Resuming %s pc offset %d (op %s) (line %d) of %s:%u:%u",
                 resumeAfter ? "after" : "at", (int) pcOff, CodeName[op],
-                PCToLineNumber(script, pc), script->filename(), script->lineno());
+                PCToLineNumber(script, pc), script->filename(), script->lineno(), script->column());
     JitSpew(JitSpew_BaselineBailouts, "      Bailout kind: %s",
             BailoutKindString(bailoutKind));
 #endif
@@ -1240,7 +1242,7 @@ InitFromBailout(JSContext* cx, size_t frameNo,
 
     // Write out descriptor of BaselineJS frame.
     size_t baselineFrameDescr = MakeFrameDescriptor((uint32_t) builder.framePushed(),
-                                                    JitFrame_BaselineJS,
+                                                    FrameType::BaselineJS,
                                                     BaselineStubFrameLayout::Size());
     if (!builder.writeWord(baselineFrameDescr, "Descriptor"))
         return false;
@@ -1351,7 +1353,7 @@ InitFromBailout(JSContext* cx, size_t frameNo,
     // Calculate frame size for descriptor.
     size_t baselineStubFrameSize = builder.framePushed() - startOfBaselineStubFrame;
     size_t baselineStubFrameDescr = MakeFrameDescriptor((uint32_t) baselineStubFrameSize,
-                                                        JitFrame_BaselineStub,
+                                                        FrameType::BaselineStub,
                                                         JitFrameLayout::Size());
 
     // Push actual argc
@@ -1464,7 +1466,7 @@ InitFromBailout(JSContext* cx, size_t frameNo,
     // Calculate frame size for descriptor.
     size_t rectifierFrameSize = builder.framePushed() - startOfRectifierFrame;
     size_t rectifierFrameDescr = MakeFrameDescriptor((uint32_t) rectifierFrameSize,
-                                                     JitFrame_Rectifier,
+                                                     FrameType::Rectifier,
                                                      JitFrameLayout::Size());
 
     // Push actualArgc
@@ -1526,10 +1528,10 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
 #if defined(DEBUG) || defined(JS_JITSPEW)
     FrameType prevFrameType = iter.prevType();
     MOZ_ASSERT(JSJitFrameIter::isEntry(prevFrameType) ||
-               prevFrameType == JitFrame_IonJS ||
-               prevFrameType == JitFrame_BaselineStub ||
-               prevFrameType == JitFrame_Rectifier ||
-               prevFrameType == JitFrame_IonICCall);
+               prevFrameType == FrameType::IonJS ||
+               prevFrameType == FrameType::BaselineStub ||
+               prevFrameType == FrameType::Rectifier ||
+               prevFrameType == FrameType::IonICCall);
 #endif
 
     // All incoming frames are going to look like this:
@@ -1555,8 +1557,8 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
     //      |    |||||      |
     //      +---------------+
 
-    JitSpew(JitSpew_BaselineBailouts, "Bailing to baseline %s:%u (IonScript=%p) (FrameType=%d)",
-            iter.script()->filename(), iter.script()->lineno(), (void*) iter.ionScript(),
+    JitSpew(JitSpew_BaselineBailouts, "Bailing to baseline %s:%u:%u (IonScript=%p) (FrameType=%d)",
+            iter.script()->filename(), iter.script()->lineno(), iter.script()->column(), (void*) iter.ionScript(),
             (int) prevFrameType);
 
     bool catchingException;
@@ -1611,8 +1613,8 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
     RootedFunction callee(cx, iter.maybeCallee());
     RootedScript scr(cx, iter.script());
     if (callee) {
-        JitSpew(JitSpew_BaselineBailouts, "  Callee function (%s:%u)",
-                scr->filename(), scr->lineno());
+        JitSpew(JitSpew_BaselineBailouts, "  Callee function (%s:%u:%u)",
+                scr->filename(), scr->lineno(), scr->column());
     } else {
         JitSpew(JitSpew_BaselineBailouts, "  No callee!");
     }
@@ -1737,9 +1739,9 @@ InvalidateAfterBailout(JSContext* cx, HandleScript outerScript, const char* reas
 static void
 HandleBoundsCheckFailure(JSContext* cx, HandleScript outerScript, HandleScript innerScript)
 {
-    JitSpew(JitSpew_IonBailouts, "Bounds check failure %s:%u, inlined into %s:%u",
-            innerScript->filename(), innerScript->lineno(),
-            outerScript->filename(), outerScript->lineno());
+    JitSpew(JitSpew_IonBailouts, "Bounds check failure %s:%u:%u, inlined into %s:%u:%u",
+            innerScript->filename(), innerScript->lineno(), innerScript->column(),
+            outerScript->filename(), outerScript->lineno(), outerScript->column());
 
     if (!innerScript->failedBoundsCheck())
         innerScript->setFailedBoundsCheck();
@@ -1752,9 +1754,9 @@ HandleBoundsCheckFailure(JSContext* cx, HandleScript outerScript, HandleScript i
 static void
 HandleShapeGuardFailure(JSContext* cx, HandleScript outerScript, HandleScript innerScript)
 {
-    JitSpew(JitSpew_IonBailouts, "Shape guard failure %s:%u, inlined into %s:%u",
-            innerScript->filename(), innerScript->lineno(),
-            outerScript->filename(), outerScript->lineno());
+    JitSpew(JitSpew_IonBailouts, "Shape guard failure %s:%u:%u, inlined into %s:%u:%u",
+            innerScript->filename(), innerScript->lineno(), innerScript->column(),
+            outerScript->filename(), outerScript->lineno(), outerScript->column());
 
     // TODO: Currently this mimic's Ion's handling of this case.  Investigate setting
     // the flag on innerScript as opposed to outerScript, and maybe invalidating both
@@ -1767,9 +1769,9 @@ HandleShapeGuardFailure(JSContext* cx, HandleScript outerScript, HandleScript in
 static void
 HandleBaselineInfoBailout(JSContext* cx, HandleScript outerScript, HandleScript innerScript)
 {
-    JitSpew(JitSpew_IonBailouts, "Baseline info failure %s:%u, inlined into %s:%u",
-            innerScript->filename(), innerScript->lineno(),
-            outerScript->filename(), outerScript->lineno());
+    JitSpew(JitSpew_IonBailouts, "Baseline info failure %s:%u:%u, inlined into %s:%u:%u",
+            innerScript->filename(), innerScript->lineno(), innerScript->column(),
+            outerScript->filename(), outerScript->lineno(), outerScript->column());
 
     InvalidateAfterBailout(cx, outerScript, "invalid baseline info");
 }
@@ -1777,9 +1779,9 @@ HandleBaselineInfoBailout(JSContext* cx, HandleScript outerScript, HandleScript 
 static void
 HandleLexicalCheckFailure(JSContext* cx, HandleScript outerScript, HandleScript innerScript)
 {
-    JitSpew(JitSpew_IonBailouts, "Lexical check failure %s:%u, inlined into %s:%u",
-            innerScript->filename(), innerScript->lineno(),
-            outerScript->filename(), outerScript->lineno());
+    JitSpew(JitSpew_IonBailouts, "Lexical check failure %s:%u:%u, inlined into %s:%u:%u",
+            innerScript->filename(), innerScript->lineno(), innerScript->column(),
+            outerScript->filename(), outerScript->lineno(), outerScript->column());
 
     if (!innerScript->failedLexicalCheck())
         innerScript->setFailedLexicalCheck();
@@ -1993,9 +1995,9 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
     }
 
     JitSpew(JitSpew_BaselineBailouts,
-            "  Restored outerScript=(%s:%u,%u) innerScript=(%s:%u,%u) (bailoutKind=%u)",
-            outerScript->filename(), outerScript->lineno(), outerScript->getWarmUpCount(),
-            innerScript->filename(), innerScript->lineno(), innerScript->getWarmUpCount(),
+            "  Restored outerScript=(%s:%u:%u,%u) innerScript=(%s:%u:%u,%u) (bailoutKind=%u)",
+            outerScript->filename(), outerScript->lineno(), outerScript->column(), outerScript->getWarmUpCount(),
+            innerScript->filename(), innerScript->lineno(), innerScript->column(), innerScript->getWarmUpCount(),
             (unsigned) bailoutKind);
 
     switch (bailoutKind) {

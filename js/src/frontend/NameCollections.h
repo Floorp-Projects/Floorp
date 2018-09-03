@@ -10,10 +10,11 @@
 #include "ds/InlineTable.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "js/Vector.h"
-#include "vm/Stack.h"
 
 namespace js {
 namespace frontend {
+
+class FunctionBox;
 
 // A pool of recyclable containers for use in the frontend. The Parser and
 // BytecodeEmitter create many maps for name analysis that are short-lived
@@ -162,7 +163,6 @@ using RecyclableNameMap = InlineMap<JSAtom*,
                                     SystemAllocPolicy>;
 
 using DeclaredNameMap = RecyclableNameMap<DeclaredNameInfo>;
-using CheckTDZMap = RecyclableNameMap<MaybeCheckTDZ>;
 using NameLocationMap = RecyclableNameMap<NameLocation>;
 using AtomIndexMap = RecyclableNameMap<uint32_t>;
 
@@ -334,9 +334,6 @@ class PooledVectorPtr
 } // namespace js
 
 namespace mozilla {
-
-template <>
-struct IsPod<js::MaybeCheckTDZ> : TrueType {};
 
 template <typename T>
 struct IsPod<js::frontend::RecyclableAtomMapValueWrapper<T>> : IsPod<T> {};

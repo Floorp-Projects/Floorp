@@ -208,7 +208,7 @@ const gWindowObserver = {
       gDocElem = gWin.document.documentElement;
       gDocElem.addEventListener("pageshow", onPageShowDefault);
     }, {once: true});
-  }
+  },
 };
 
 /**
@@ -997,5 +997,5 @@ const errorsPrefObserver = {
         });
       }
     }
-  }
+  },
 };

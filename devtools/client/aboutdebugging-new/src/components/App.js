@@ -9,6 +9,9 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
+
 const { PAGES } = require("../constants");
 
 const ConnectPage = createFactory(require("./ConnectPage"));
@@ -22,6 +25,7 @@ class App extends PureComponent {
       // From that point, components are responsible for forwarding the dispatch
       // property to all components who need to dispatch actions.
       dispatch: PropTypes.func.isRequired,
+      messageContexts: PropTypes.arrayOf(PropTypes.object).isRequired,
       networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
       selectedPage: PropTypes.string.isRequired,
     };
@@ -42,14 +46,20 @@ class App extends PureComponent {
   }
 
   render() {
-    const { dispatch, networkLocations, selectedPage } = this.props;
+    const {
+      dispatch,
+      messageContexts,
+      networkLocations,
+      selectedPage,
+    } = this.props;
 
-    return dom.div(
-      {
-        className: "app",
-      },
-      Sidebar({ dispatch, networkLocations, selectedPage }),
-      this.getSelectedPageComponent(),
+    return LocalizationProvider(
+      { messages: messageContexts },
+      dom.div(
+        { className: "app" },
+        Sidebar({ dispatch, networkLocations, selectedPage }),
+        this.getSelectedPageComponent()
+      )
     );
   }
 }

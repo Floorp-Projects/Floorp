@@ -105,6 +105,14 @@ nsBaseContentList::IndexOf(nsIContent* aContent)
   return IndexOf(aContent, true);
 }
 
+size_t
+nsBaseContentList::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mElements.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  return n;
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsSimpleContentList, nsBaseContentList,
                                    mRoot)
 

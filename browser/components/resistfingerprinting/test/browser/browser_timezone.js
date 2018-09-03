@@ -8,7 +8,7 @@ const TEST_PATH = TEST_DOMAIN + "browser/browser/components/resistfingerprinting
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", true]]
+    [["privacy.resistFingerprinting", true]],
   });
 });
 

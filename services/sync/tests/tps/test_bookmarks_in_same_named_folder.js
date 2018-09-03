@@ -17,53 +17,53 @@ var phases = { "phase1": "profile1",
 var bookmarks_initial_1 = {
   "menu": [
     { folder: "aaa",
-      description: "foo"
+      description: "foo",
     },
-    { uri: "http://www.mozilla.com"
-    }
+    { uri: "http://www.mozilla.com",
+    },
   ],
   "menu/aaa": [
     { uri: "http://www.yahoo.com",
-      title: "testing Yahoo"
+      title: "testing Yahoo",
     },
     { uri: "http://www.google.com",
-      title: "testing Google"
-    }
-  ]
+      title: "testing Google",
+    },
+  ],
 };
 
 var bookmarks_initial_2 = {
   "menu": [
     { folder: "aaa",
-      description: "bar"
+      description: "bar",
     },
-    { uri: "http://www.mozilla.com"
-    }
+    { uri: "http://www.mozilla.com",
+    },
   ],
   "menu/aaa": [
     { uri: "http://bugzilla.mozilla.org/show_bug.cgi?id=%s",
-      title: "Bugzilla"
+      title: "Bugzilla",
     },
     { uri: "http://www.apple.com",
-      tags: [ "apple" ]
-    }
-  ]
+      tags: [ "apple" ],
+    },
+  ],
 };
 
 Phase("phase1", [
   [Bookmarks.add, bookmarks_initial_1],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase2", [
   [Sync],
   [Bookmarks.verify, bookmarks_initial_1],
   [Bookmarks.add, bookmarks_initial_2],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase3", [
   [Sync],
   // XXX [Bookmarks.verify, bookmarks_initial_1],
-  [Bookmarks.verify, bookmarks_initial_2]
+  [Bookmarks.verify, bookmarks_initial_2],
 ]);

@@ -140,7 +140,7 @@ var testDatas = [
     list: "mochi1-phish-simple",
     provider: "google",
     blockCreater: createBlockedPage,
-    expectedReportUri: "http://itisaphishingsite.org/phishing.html"
+    expectedReportUri: "http://itisaphishingsite.org/phishing.html",
   },
 
   // Non-google provider, no report button is showed.
@@ -150,7 +150,7 @@ var testDatas = [
     testUrl: "fakeitisaphishingsite.org/phishing.html",
     list: "fake-phish-simple",
     provider: "mozilla",
-    blockCreater: createBlockedPage
+    blockCreater: createBlockedPage,
   },
 
   // Iframe case:
@@ -163,7 +163,7 @@ var testDatas = [
     list: "mochi2-phish-simple",
     provider: "google4",
     blockCreater: createBlockedIframe,
-    expectedReportUri: "http://phishing.example.com/test.html"
+    expectedReportUri: "http://phishing.example.com/test.html",
   },
 
   // Redirect case:
@@ -176,7 +176,7 @@ var testDatas = [
     list: "mochi3-phish-simple",
     provider: "google4",
     blockCreater: createBlockedPage,
-    expectedReportUri: "http://prefixexample.com/chrome/toolkit/components/url-classifier/tests/mochitest/report.sjs"
+    expectedReportUri: "http://prefixexample.com/chrome/toolkit/components/url-classifier/tests/mochitest/report.sjs",
   },
 
 ];

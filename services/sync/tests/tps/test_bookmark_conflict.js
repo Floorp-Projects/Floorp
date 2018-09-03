@@ -27,7 +27,7 @@ var bookmarksInitial = {
   "menu/folderb": [{ uri: "http://www.apple.com", title: "Apple", tags: [] }],
   "menu/folderc": [{ uri: "http://www.yahoo.com", title: "Yahoo" }],
 
-  "menu/folderd": []
+  "menu/folderd": [],
 };
 
 // a list of bookmarks to delete during a 'delete' action on P2
@@ -55,7 +55,7 @@ var bookmarkMods = {
   "menu/foldera": [{
     uri: "http://www.cnn.com",
     title: "CNN",
-    changes: { location: "menu/folderd" }
+    changes: { location: "menu/folderd" },
   }],
 
   // we rename this child (p1) after deleting the folder (p2), and expect the child
@@ -64,7 +64,7 @@ var bookmarkMods = {
     uri: "http://www.apple.com",
     title: "Apple",
     tags: [],
-    changes: { title: "Mac" }
+    changes: { title: "Mac" },
   }],
 
 
@@ -72,10 +72,10 @@ var bookmarkMods = {
   "menu/folderc": [{
     uri: "http://www.yahoo.com",
     title: "Yahoo",
-    changes: { location: "menu/folderd" }
+    changes: { location: "menu/folderd" },
   }],
 
-  "menu/folderd": []
+  "menu/folderd": [],
 };
 
 // a list of bookmarks to delete during a 'delete' action
@@ -96,15 +96,15 @@ var bookmarksExpected = {
   "menu": [
     { folder: "folderc" },
     { folder: "folderd" },
-    { uri: "http://www.apple.com", title: "Mac", },
+    { uri: "http://www.apple.com", title: "Mac" },
   ],
 
   "menu/folderc": [],
 
   "menu/folderd": [
     { uri: "http://www.cnn.com", title: "CNN" },
-    { uri: "http://www.yahoo.com", title: "Yahoo" }
-  ]
+    { uri: "http://www.yahoo.com", title: "Yahoo" },
+  ],
 };
 
 // Add bookmarks to profile1 and sync.
@@ -122,7 +122,7 @@ Phase("phase2", [
   [Bookmarks.verify, bookmarksInitial],
   [Bookmarks.delete, bookmarksToDelete],
   [Bookmarks.verifyNot, bookmarksToDelete],
-  [Sync]
+  [Sync],
 ]);
 
 // Using profile1, modify the bookmarks, and sync *after* the modification,

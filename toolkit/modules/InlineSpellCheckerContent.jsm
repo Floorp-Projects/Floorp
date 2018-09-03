@@ -109,7 +109,7 @@ var InlineSpellCheckerContent = {
 
       "InlineSpellChecker:recheck",
 
-      "InlineSpellChecker:uninit"
+      "InlineSpellChecker:uninit",
     ],
 
   _addMessageListeners() {
@@ -139,5 +139,5 @@ var InlineSpellCheckerContent = {
         this.uninitContextMenu();
         break;
     }
-  }
+  },
 };

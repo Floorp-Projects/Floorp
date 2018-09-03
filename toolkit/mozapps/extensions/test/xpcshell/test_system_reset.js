@@ -190,12 +190,12 @@ add_task(async function test_updated() {
     directory: updatesDir.leafName,
     addons: {
       "system2@tests.mozilla.org": {
-        version: "2.0"
+        version: "2.0",
       },
       "system3@tests.mozilla.org": {
-        version: "2.0"
+        version: "2.0",
       },
-    }
+    },
   };
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(addonSet));
 
@@ -339,15 +339,15 @@ add_task(async function test_bad_profile_cert() {
     directory: updatesDir.leafName,
     addons: {
       "system1@tests.mozilla.org": {
-        version: "2.0"
+        version: "2.0",
       },
       "system2@tests.mozilla.org": {
-        version: "1.0"
+        version: "1.0",
       },
       "system3@tests.mozilla.org": {
-        version: "1.0"
+        version: "1.0",
       },
-    }
+    },
   };
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(addonSet));
 
@@ -411,12 +411,12 @@ add_task(async function test_updated_bad_update_set() {
     directory: updatesDir.leafName,
     addons: {
       "system2@tests.mozilla.org": {
-        version: "2.0"
+        version: "2.0",
       },
       "system_failed_update@tests.mozilla.org": {
-        version: "1.0"
+        version: "1.0",
       },
-    }
+    },
   };
   Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(addonSet));
 

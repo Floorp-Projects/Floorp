@@ -4308,14 +4308,13 @@ nsDOMWindowUtils::RemoveManuallyManagedState(Element* aElement,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetStorageUsage(nsIDOMStorage* aStorage, int64_t* aRetval)
+nsDOMWindowUtils::GetStorageUsage(Storage* aStorage, int64_t* aRetval)
 {
-  RefPtr<Storage> storage = static_cast<Storage*>(aStorage);
-  if (!storage) {
+  if (!aStorage) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  *aRetval = storage->GetOriginQuotaUsage();
+  *aRetval = aStorage->GetOriginQuotaUsage();
 
   return NS_OK;
 }

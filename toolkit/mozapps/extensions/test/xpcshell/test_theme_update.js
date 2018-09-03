@@ -29,7 +29,7 @@ add_task(async function test_theme_updates() {
       theme: {
         images: { headerURL: "webextension.png" },
       },
-    }
+    },
   });
   server.registerFile("/theme1.xpi", theme1XPI);
 
@@ -40,7 +40,7 @@ add_task(async function test_theme_updates() {
       theme: {
         images: { headerURL: "webextension.png" },
       },
-    }
+    },
   });
   server.registerFile("/theme2.xpi", theme2XPI);
 
@@ -48,7 +48,7 @@ add_task(async function test_theme_updates() {
     manifest: {
       name: "Theme 3",
       version: "2.0",
-    }
+    },
   });
   server.registerFile("/theme3.xpi", theme3XPI);
 

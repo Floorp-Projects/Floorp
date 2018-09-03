@@ -84,7 +84,7 @@ nsLoginInfo.prototype = {
   timeCreated: null,
   timeLastUsed: null,
   timePasswordChanged: null,
-  timesUsed: null
+  timesUsed: null,
 
 }; // end of nsLoginInfo implementation
 

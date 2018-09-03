@@ -235,14 +235,14 @@ add_task(async function sendToDevice_syncNotReady_other_states() {
         attrs: {
           label: "Account Not Verified",
         },
-        disabled: true
+        disabled: true,
       },
       null,
       {
         attrs: {
           label: "Verify Your Account...",
         },
-      }
+      },
     ];
     checkSendToDeviceItems(expectedItems);
 
@@ -320,7 +320,7 @@ add_task(async function sendToDevice_syncNotReady_configured() {
               clientId: client.id,
               label: client.name,
               clientType: client.type,
-              tooltiptext: gSync.formatLastSyncDate(new Date(lastModifiedFixture * 1000))
+              tooltiptext: gSync.formatLastSyncDate(new Date(lastModifiedFixture * 1000)),
             },
           });
         }
@@ -328,8 +328,8 @@ add_task(async function sendToDevice_syncNotReady_configured() {
           null,
           {
             attrs: {
-              label: "Send to All Devices"
-            }
+              label: "Send to All Devices",
+            },
           }
         );
         checkSendToDeviceItems(expectedItems);
@@ -373,19 +373,19 @@ add_task(async function sendToDevice_notSignedIn() {
         attrs: {
           label: "Not Connected to Sync",
         },
-        disabled: true
+        disabled: true,
       },
       null,
       {
         attrs: {
-          label: "Sign in to Sync..."
+          label: "Sign in to Sync...",
         },
       },
       {
         attrs: {
-          label: "Learn About Sending Tabs..."
+          label: "Learn About Sending Tabs...",
         },
-      }
+      },
     ];
     checkSendToDeviceItems(expectedItems);
 
@@ -435,19 +435,19 @@ add_task(async function sendToDevice_noDevices() {
         attrs: {
           label: "No Devices Connected",
         },
-        disabled: true
+        disabled: true,
       },
       null,
       {
         attrs: {
-          label: "Connect Another Device..."
-        }
+          label: "Connect Another Device...",
+        },
       },
       {
         attrs: {
-          label: "Learn About Sending Tabs..."
-        }
-      }
+          label: "Learn About Sending Tabs...",
+        },
+      },
     ];
     checkSendToDeviceItems(expectedItems);
 
@@ -512,8 +512,8 @@ add_task(async function sendToDevice_devices() {
       null,
       {
         attrs: {
-          label: "Send to All Devices"
-        }
+          label: "Send to All Devices",
+        },
       }
     );
     checkSendToDeviceItems(expectedItems);
@@ -583,8 +583,8 @@ add_task(async function sendToDevice_inUrlbar() {
       null,
       {
         attrs: {
-          label: "Send to All Devices"
-        }
+          label: "Send to All Devices",
+        },
       }
     );
     checkSendToDeviceItems(expectedItems, true);

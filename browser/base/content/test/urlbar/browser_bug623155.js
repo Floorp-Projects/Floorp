@@ -92,7 +92,7 @@ var gWebProgressListener = {
 
     let isSelectedTab = gNewTab.selected;
     setTimeout(delayed, 0, isSelectedTab);
-  }
+  },
 };
 
 function delayed(aIsSelectedTab) {

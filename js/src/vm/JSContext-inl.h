@@ -393,7 +393,7 @@ inline void
 JSContext::enterRealmOf(JSObject* target)
 {
     MOZ_ASSERT(JS::CellIsNotGray(target));
-    enterRealm(target->deprecatedRealm());
+    enterRealm(target->nonCCWRealm());
 }
 
 inline void

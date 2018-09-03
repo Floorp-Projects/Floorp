@@ -28,7 +28,7 @@ function expectCommandUpdate(count, testWindow = window) {
           testWindow.gBrowser.selectedBrowser.controllers.removeControllerAt(0, overrideController);
           resolve(true);
         }
-      }
+      },
     };
 
     if (!count) {

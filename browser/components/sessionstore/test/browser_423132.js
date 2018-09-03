@@ -12,7 +12,7 @@ add_task(async function() {
   // make sure that sessionstore.js can be forced to be created by setting
   // the interval pref to 0
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.sessionstore.interval", 0]]
+    set: [["browser.sessionstore.interval", 0]],
   });
 
   let tab = BrowserTestUtils.addTab(gBrowser, testURL);

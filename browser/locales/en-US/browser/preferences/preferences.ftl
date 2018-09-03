@@ -6,6 +6,8 @@ do-not-track-description = Send websites a “Do Not Track” signal that you do
 do-not-track-learn-more = Learn more
 do-not-track-option-default =
     .label = Only when using Tracking Protection
+do-not-track-option-default-content-blocking =
+    .label = Only when { -brand-short-name } is set to block Detected Trackers
 do-not-track-option-always =
     .label = Always
 
@@ -105,6 +107,10 @@ extension-controlled-privacy-containers = An extension, <img data-l10n-name="ico
 # This string is shown to notify the user that their tracking protection preferences
 # are being controlled by an extension.
 extension-controlled-websites-tracking-protection-mode = An extension, <img data-l10n-name="icon"/> { $name }, is controlling tracking protection.
+
+# This string is shown to notify the user that their content blocking "All Detected Trackers"
+# preferences are being controlled by an extension.
+extension-controlled-websites-content-blocking-all-trackers = An extension, <img data-l10n-name="icon"/> { $name }, is controlling this setting.
 
 # This string is shown to notify the user that their proxy configuration preferences
 # are being controlled by an extension.
@@ -252,6 +258,9 @@ choose-button =
     .accesskey = o
 
 choose-browser-language-description = Choose the languages used to display menus, messages, and notifications from { -brand-short-name }.
+manage-browser-languages-button =
+  .label = Set Alternatives…
+  .accesskey = l
 confirm-browser-language-change-description = Restart { -brand-short-name } to apply these changes
 confirm-browser-language-change-button = Apply and Restart
 
@@ -777,6 +786,11 @@ sitedata-cookies-exceptions =
     .label = Exceptions…
     .accesskey = E
 
+# This is a warning message shown next to a yellow warning icon when the Cookies and Site Data subsection
+# in Preferences has been disabled due to Content Blocking being disabled. It is displayed next to the
+# Cookies and Site Data section.
+sitedata-warning-your-settings-prevent-changes = Your settings in Content Blocking are preventing changes to Cookies and Site Data settings.
+
 ## Privacy Section - Address Bar
 
 addressbar-header = Address Bar
@@ -801,7 +815,7 @@ content-blocking-header = Content Blocking
 
 content-blocking-desc = Block third-party content, like ads or code, that can slow your browsing and track you around the web. Customize your settings for the best balance of protection and performance.
 
-content-blocking-learn-more = Learn More
+content-blocking-learn-more = Learn more
 content-blocking-restore-defaults =
   .label = Restore Defaults
   .accesskey = R
@@ -821,24 +835,40 @@ content-blocking-category-label = Choose what to block
 # "Slow" in this instance means "slow to load on the network".
 # FastBlock is a feature that blocks requests to tracking sites if they
 # have not finished loading after a certain threshold of seconds.
-content-blocking-fastblock-label = Slow Tracking Elements
+content-blocking-fastblock-slow-loading-label = Slow-Loading Trackers
   .accesskey = S
-content-blocking-fastblock-description = Blocks third-party content that takes longer than 5 seconds to load.
-content-blocking-fastblock-option-enabled =
-  .label = Always block
-content-blocking-fastblock-option-disabled =
-  .label = Never block
-
-content-blocking-tracking-protection-label = Trackers
+content-blocking-fastblock-new-description = Block just the trackers that keep pages from loading quickly.
+content-blocking-tracking-protection-all-label = All Detected Trackers
   .accesskey = T
-content-blocking-tracking-protection-description = Blocks all known trackers (Note: may also prevent some pages from loading).
-content-blocking-tracking-protection-option-enabled =
-  .label = Always block
-content-blocking-tracking-protection-option-pbm =
-  .label = Block only in private windows
-content-blocking-tracking-protection-option-disabled =
-  .label = Never block
-content-blocking-tracking-protection-change-blocklist = Change Block List…
+content-blocking-tracking-protection-new-description = Block all known trackers. (May prevent some pages from loading.)
+content-blocking-tracking-protection-option-always =
+  .label = Always
+  .accesskey = A
+content-blocking-tracking-protection-option-private =
+  .label = Only in private windows
+  .accesskey = p
+content-blocking-tracking-protection-change-block-list = Change block list
+
+content-blocking-reject-trackers-label = Third-Party Cookies
+  .accesskey = C
+content-blocking-reject-trackers-description = Block all third-party cookies or just those set by trackers.
+# This is a warning message shown next to a yellow warning icon when the Third-Party Cookies subsection
+# of the Content Blocking UI in Preferences has been disabled due to the either the "All cookies" option
+# or the "Cookies from unvisited websites" option being selected in the Cookies and Site Data section of
+# the UI.
+content-blocking-reject-trackers-warning-your-settings-prevent-changes = Your settings in Cookies and Site Data are preventing changes to Third-Party Cookies settings.
+content-blocking-change-cookie-settings =
+  .label = Change Cookie Settings
+  .accesskey = S
+content-blocking-reject-trackers-block-trackers-option-recommended =
+  .label = Trackers (recommended)
+  .accesskey = k
+content-blocking-reject-trackers-block-trackers-option =
+  .label = Trackers
+  .accesskey = k
+content-blocking-reject-trackers-all-third-parties-option =
+  .label = All third-party cookies (may cause websites to break)
+  .accesskey = A
 
 ## Privacy Section - Tracking
 

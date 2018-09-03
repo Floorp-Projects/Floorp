@@ -10,9 +10,9 @@
 #include <iostream>
 #include <string>
 
-#include "AccessibleCaretEventHub.h"
 #include "AccessibleCaretManager.h"
 #include "gfxPrefs.h"
+#include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"

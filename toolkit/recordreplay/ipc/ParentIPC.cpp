@@ -628,9 +628,15 @@ PreferencesLoaded()
     gRewindingEnabled = false;
   }
 
-  // If there is no recording child, we have now initialized enough state
-  // that we can start spawning replaying children.
-  if (!gRecordingChild) {
+  if (gRecordingChild) {
+    // Inform the recording child if we will be running devtools server code in
+    // this process.
+    if (DebuggerRunsInMiddleman()) {
+      gRecordingChild->SendMessage(SetDebuggerRunsInMiddlemanMessage());
+    }
+  } else {
+    // If there is no recording child, we have now initialized enough state
+    // that we can start spawning replaying children.
     if (CanRewind()) {
       SpawnReplayingChildren();
     } else {
@@ -644,6 +650,22 @@ CanRewind()
 {
   MOZ_RELEASE_ASSERT(gPreferencesLoaded);
   return gRewindingEnabled;
+}
+
+bool
+DebuggerRunsInMiddleman()
+{
+  if (IsRecordingOrReplaying()) {
+    // This can be called in recording/replaying processes as well as the
+    // middleman. Fetch the value which the middleman informed us of.
+    return child::DebuggerRunsInMiddleman();
+  }
+
+  // Middleman processes which are recording and can't rewind do not run
+  // developer tools server code. This will run in the recording process
+  // instead.
+  MOZ_RELEASE_ASSERT(IsMiddleman());
+  return !gRecordingChild || CanRewind();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -775,18 +797,6 @@ HasSavedCheckpointsInRange(ChildProcessInfo* aChild, size_t aStart, size_t aEnd)
   return true;
 }
 
-// Return whether a child is paused at a breakpoint set by the user or by
-// stepping around, at which point the debugger will send requests to the
-// child to inspect its state. This excludes breakpoints set for things
-// internal to the debugger.
-static bool
-IsUserBreakpoint(js::BreakpointPosition::Kind aKind)
-{
-  MOZ_RELEASE_ASSERT(aKind != js::BreakpointPosition::Invalid);
-  return aKind != js::BreakpointPosition::NewScript
-      && aKind != js::BreakpointPosition::ConsoleMessage;
-}
-
 static void
 MarkActiveChildExplicitPause()
 {
@@ -797,20 +807,6 @@ MarkActiveChildExplicitPause()
     // Make sure any replaying children can play forward to the same point as
     // the recording.
     FlushRecording();
-
-    // When paused at a breakpoint, the JS debugger may (indeed, will) send
-    // requests to the recording child which can affect the recording. These
-    // side effects won't be replayed later on, so the C++ side of the debugger
-    // will not provide a useful answer to these requests, reporting an
-    // unhandled divergence instead. To avoid this issue and provide a
-    // consistent debugger experience whether still recording or replaying, we
-    // switch the active child to a replaying child when pausing at a
-    // breakpoint.
-    if (CanRewind() && gActiveChild->IsPausedAtMatchingBreakpoint(IsUserBreakpoint)) {
-      ChildProcessInfo* child =
-        OtherReplayingChild(ReplayingChildResponsibleForSavingCheckpoint(targetCheckpoint));
-      SwitchActiveChild(child);
-    }
   } else if (CanRewind()) {
     // Make sure we have a replaying child that can rewind from this point.
     // Switch to the other one if (a) this process is responsible for rewinding
@@ -840,6 +836,18 @@ ActiveChildTargetCheckpoint()
     return Some(gActiveChild->RewindTargetCheckpoint());
   }
   return Nothing();
+}
+
+void
+MaybeSwitchToReplayingChild()
+{
+  if (gActiveChild->IsRecording() && CanRewind()) {
+    FlushRecording();
+    size_t checkpoint = gActiveChild->RewindTargetCheckpoint();
+    ChildProcessInfo* child =
+      OtherReplayingChild(ReplayingChildResponsibleForSavingCheckpoint(checkpoint));
+    SwitchActiveChild(child);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

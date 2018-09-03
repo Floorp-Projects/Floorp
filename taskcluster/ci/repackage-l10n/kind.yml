@@ -5,40 +5,62 @@
 loader: taskgraph.loader.single_dep:loader
 
 transforms:
-   - taskgraph.transforms.repackage_l10n:transforms
-   - taskgraph.transforms.name_sanity:transforms
-   - taskgraph.transforms.repackage:transforms
-   - taskgraph.transforms.use_toolchains:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.repackage_l10n:transforms
+    - taskgraph.transforms.name_sanity:transforms
+    - taskgraph.transforms.repackage:transforms
+    - taskgraph.transforms.use_toolchains:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - nightly-l10n-signing
-   - toolchain
+    - nightly-l10n-signing
+    - toolchain
 
 only-for-build-platforms:
-   - linux-nightly/opt
-   - linux64-nightly/opt
-   - macosx64-nightly/opt
-   - win32-nightly/opt
-   - win64-nightly/opt
-   - linux-devedition-nightly/opt
-   - linux64-devedition-nightly/opt
-   - macosx64-devedition-nightly/opt
-   - win32-devedition-nightly/opt
-   - win64-devedition-nightly/opt
+    - linux-nightly/opt
+    - linux64-nightly/opt
+    - macosx64-nightly/opt
+    - win32-nightly/opt
+    - win64-nightly/opt
+    - linux-devedition-nightly/opt
+    - linux64-devedition-nightly/opt
+    - macosx64-devedition-nightly/opt
+    - win32-devedition-nightly/opt
+    - win64-devedition-nightly/opt
 
 job-template:
-   mozharness:
-      config:
-         by-build-platform:
-            linux-.*:
-               - repackage/linux32_signed.py
-            linux64-.*:
-               - repackage/linux64_signed.py
-            macosx64-.*:
-               - repackage/osx_signed.py
-            win32-.*:
-               - repackage/win32_signed.py
-            win64-.*:
-               - repackage/win64_signed.py
+    mozharness:
+        config:
+            by-build-platform:
+                linux-.*:
+                    - repackage/base.py
+                    - repackage/linux32_signed.py
+                linux64-.*:
+                    - repackage/base.py
+                    - repackage/linux64_signed.py
+                macosx64-.*:
+                    - repackage/base.py
+                    - repackage/osx_signed.py
+                win32-.*:
+                    - repackage/base.py
+                    - repackage/win32_signed.py
+                win64-.*:
+                    - repackage/base.py
+                    - repackage/win64_signed.py
+    package-formats:
+        by-project:
+            # Build bz2 mar's on try to excerise the code
+            (mozilla-esr60|try):
+                by-build-platform:
+                    linux.*: [mar, mar-bz2]
+                    linux4\b.*: [mar, mar-bz2]
+                    macosx64\b.*: [mar, mar-bz2, dmg]
+                    win32\b.*: [mar, mar-bz2, installer]
+                    win64\b.*: [mar, mar-bz2, installer]
+            default:
+                by-build-platform:
+                    linux.*: [mar]
+                    linux4\b.*: [mar]
+                    macosx64\b.*: [mar, dmg]
+                    win32\b.*: [mar, installer]
+                    win64\b.*: [mar, installer]

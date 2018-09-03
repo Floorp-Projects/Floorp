@@ -86,12 +86,12 @@ function populateReportList() {
     dateFormatter = {
       format(date) {
         return date.toLocaleDateString();
-      }
+      },
     };
     timeFormatter = {
       format(date) {
         return date.toLocaleTimeString();
-      }
+      },
     };
   }
   var reportURI = Services.io.newURI(reportURL);

@@ -36,7 +36,7 @@ var gTests = [
     await indicator;
     await checkSharingUI({audio: true, video: true});
     await closeStream();
-  }
+  },
 },
 
 {
@@ -66,7 +66,7 @@ var gTests = [
     await indicator;
     await checkSharingUI({audio: true});
     await closeStream();
-  }
+  },
 },
 
 {
@@ -96,7 +96,7 @@ var gTests = [
     await indicator;
     await checkSharingUI({video: true});
     await closeStream();
-  }
+  },
 },
 
 {
@@ -143,7 +143,7 @@ var gTests = [
 
     SitePermissions.remove(browser.currentURI, "camera", browser);
     SitePermissions.remove(browser.currentURI, "microphone", browser);
-  }
+  },
 },
 
 {
@@ -189,7 +189,7 @@ var gTests = [
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
-  }
+  },
 },
 
 {
@@ -232,7 +232,7 @@ var gTests = [
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
-  }
+  },
 },
 
 {
@@ -307,7 +307,7 @@ var gTests = [
     await checkPerm(false, true, undefined, false, true);
     info("audio+video, user denies, expect both perms set to deny");
     await checkPerm(true, true, false, false, true);
-  }
+  },
 },
 
 {
@@ -428,7 +428,7 @@ var gTests = [
     await usePerm(undefined, false, true, false, undefined);
     info("deny video, request video, expect denied");
     await usePerm(undefined, false, false, true, false);
-  }
+  },
 },
 
 {
@@ -482,7 +482,7 @@ var gTests = [
     await stopAndCheckPerm(true, false);
     info("request video, stop sharing resets video only");
     await stopAndCheckPerm(false, true);
-  }
+  },
 },
 
 {
@@ -523,7 +523,7 @@ var gTests = [
     await expectNoObserverCalled();
 
     await closeStream();
-  }
+  },
 },
 
 {
@@ -562,7 +562,7 @@ var gTests = [
     await closeStream(true);
     Perms.remove(uri, "camera");
     Perms.remove(uri, "microphone");
-  }
+  },
 },
 
 ];

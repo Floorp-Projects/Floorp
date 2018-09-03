@@ -54,14 +54,14 @@ add_task(async function() {
       httpTab = await BrowserTestUtils.switchTab(gBrowser, httpTab);
       httpBrowser = httpTab.linkedBrowser;
     }
-    let promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser);
+    let promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser, false, TEST_HTTP);
     document.getElementById("reload-button").doCommand();
     await promiseLoad;
     await CheckBrowserInPid(httpBrowser, filePid,
       "Check that http tab still in file content process after reload.");
 
     // Check that same-origin load doesn't break the affinity.
-    promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser);
+    promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser, false, TEST_HTTP + "foo");
     httpBrowser.loadURI(TEST_HTTP + "foo");
     await promiseLoad;
     await CheckBrowserInPid(httpBrowser, filePid,
@@ -78,7 +78,7 @@ add_task(async function() {
     // Check that history forward doesn't break the affinity.
     promiseLocation =
       BrowserTestUtils.waitForLocationChange(gBrowser, TEST_HTTP + "foo");
-    promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser);
+    promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser, false, TEST_HTTP + "foo");
     httpBrowser.goForward();
     await promiseLocation;
     await CheckBrowserInPid(httpBrowser, filePid,
@@ -92,14 +92,14 @@ add_task(async function() {
       "Check that http tab still in file content process after history gotoIndex.");
 
     // Check that file:// URI load doesn't break the affinity.
-    promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser);
+    promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser, false, uriString);
     httpBrowser.loadURI(uriString);
     await promiseLoad;
     await CheckBrowserInPid(httpBrowser, filePid,
       "Check that http tab still in file content process after file:// load.");
 
     // Check that location change doesn't break the affinity.
-    promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser);
+    promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser, false, TEST_HTTP);
     await ContentTask.spawn(httpBrowser, TEST_HTTP, uri => {
       content.location = uri;
     });
@@ -108,7 +108,7 @@ add_task(async function() {
       "Check that http tab still in file content process after location change.");
 
     // Check that cross-origin load does break the affinity.
-    promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser);
+    promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser, false, TEST_CROSS_ORIGIN);
     httpBrowser.loadURI(TEST_CROSS_ORIGIN);
     await promiseLoad;
     await CheckBrowserNotInPid(httpBrowser, filePid,

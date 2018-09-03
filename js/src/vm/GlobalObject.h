@@ -17,7 +17,6 @@
 #include "vm/ErrorObject.h"
 #include "vm/JSFunction.h"
 #include "vm/Realm.h"
-#include "vm/RegExpStatics.h"
 #include "vm/Runtime.h"
 
 namespace js {
@@ -25,6 +24,7 @@ namespace js {
 class Debugger;
 class TypedObjectModuleObject;
 class LexicalEnvironmentObject;
+class RegExpStatics;
 
 /*
  * Global object slots are reserved as follows:

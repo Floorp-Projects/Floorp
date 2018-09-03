@@ -96,7 +96,7 @@ add_task(async function() {
     targetApplications: [{
       id: appId,
       minVersion: "0",
-      maxVersion: "0"
+      maxVersion: "0",
     }],
     name: "Test Addon 2",
   });
@@ -107,7 +107,7 @@ add_task(async function() {
     targetApplications: [{
       id: appId,
       minVersion: "5",
-      maxVersion: "5"
+      maxVersion: "5",
     }],
     name: "Test Addon 3",
   });
@@ -127,8 +127,8 @@ add_task(async function test_1() {
 
   prepare_test({
     "addon1@tests.mozilla.org": [
-      ["onPropertyChanged", ["applyBackgroundUpdates"]]
-    ]
+      ["onPropertyChanged", ["applyBackgroundUpdates"]],
+    ],
   });
   a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
   check_test_completed();
@@ -190,7 +190,7 @@ add_task(async function test_1() {
       "addon1@tests.mozilla.org": [
         ["onInstalling", false],
         "onInstalled",
-      ]
+      ],
     }, [
       "onInstallStarted",
       "onInstallEnded",
@@ -310,7 +310,7 @@ add_task(async function test_6() {
     targetApplications: [{
       id: appId,
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Addon 1",
   });
@@ -319,7 +319,7 @@ add_task(async function test_6() {
     prepare_test({}, [
       "onNewInstall",
       "onDownloadStarted",
-      "onDownloadEnded"
+      "onDownloadEnded",
     ], resolve);
 
     AddonManagerInternal.backgroundUpdateCheck();
@@ -333,7 +333,7 @@ add_task(async function test_6() {
       "addon1@tests.mozilla.org": [
         ["onInstalling", false],
         "onInstalled",
-      ]
+      ],
     }, [
       "onInstallStarted",
       "onInstallEnded",
@@ -374,7 +374,7 @@ const PARAM_ADDONS = {
       targetApplications: [{
         id: appId,
         minVersion: "1",
-        maxVersion: "2"
+        maxVersion: "2",
       }],
       name: "Test Addon 1",
     },
@@ -397,7 +397,7 @@ const PARAM_ADDONS = {
       targetApplications: [{
         id: "toolkit@mozilla.org",
         minVersion: "0",
-        maxVersion: "3"
+        maxVersion: "3",
       }],
       name: "Test Addon 2",
     },
@@ -424,11 +424,11 @@ const PARAM_ADDONS = {
       targetApplications: [{
         id: appId,
         minVersion: "0",
-        maxVersion: "0"
+        maxVersion: "0",
       }, {
         id: "toolkit@mozilla.org",
         minVersion: "0",
-        maxVersion: "3"
+        maxVersion: "3",
       }],
       name: "Test Addon 3",
     },
@@ -451,7 +451,7 @@ const PARAM_ADDONS = {
       targetApplications: [{
         id: appId,
         minVersion: "1",
-        maxVersion: "5"
+        maxVersion: "5",
       }],
       name: "Test Addon 4",
     },
@@ -474,7 +474,7 @@ const PARAM_ADDONS = {
       targetApplications: [{
         id: appId,
         minVersion: "1",
-        maxVersion: "1"
+        maxVersion: "1",
       }],
       name: "Test Addon 5",
     },
@@ -498,7 +498,7 @@ const PARAM_ADDONS = {
       targetApplications: [{
         id: appId,
         minVersion: "1",
-        maxVersion: "1"
+        maxVersion: "1",
       }],
       name: "Test Addon 6",
     },
@@ -521,7 +521,7 @@ const PARAM_ADDONS = {
       targetApplications: [{
         id: appId,
         minVersion: "1",
-        maxVersion: "2"
+        maxVersion: "2",
       }],
       name: "Test Addon 1",
     },
@@ -545,7 +545,7 @@ const PARAM_ADDONS = {
       targetApplications: [{
         id: appId,
         minVersion: "1",
-        maxVersion: "2"
+        maxVersion: "2",
       }],
       name: "Test Addon 1",
     },
@@ -648,7 +648,7 @@ add_task(async function test_9() {
     targetApplications: [{
       id: appId,
       minVersion: "0",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Addon 1",
   });
@@ -699,7 +699,7 @@ add_task(async function test_13() {
     targetApplications: [{
       id: appId,
       minVersion: "0",
-      maxVersion: "0"
+      maxVersion: "0",
     }],
     name: "Test Addon 7",
   });
@@ -741,7 +741,7 @@ add_task(async function test_14() {
     targetApplications: [{
       id: appId,
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Addon 1",
   });
@@ -754,7 +754,7 @@ add_task(async function test_14() {
     targetApplications: [{
       id: appId,
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Addon 8",
   });
@@ -855,7 +855,7 @@ add_task(async function test_17() {
     targetApplications: [{
       id: appId,
       minVersion: "0.1",
-      maxVersion: "0.2"
+      maxVersion: "0.2",
     }],
     name: "Test Addon 9",
   });
@@ -870,7 +870,7 @@ add_task(async function test_17() {
       },
       onDownloadFailed(aInstall) {
         resolve();
-      }
+      },
     };
     AddonManager.addInstallListener(listener);
 
@@ -900,7 +900,7 @@ add_task(async function test_18() {
     targetApplications: [{
       id: appId,
       minVersion: "0.1",
-      maxVersion: "0.2"
+      maxVersion: "0.2",
     }],
     name: "Test Addon 10",
   });
@@ -926,7 +926,7 @@ add_task(async function test_19() {
     targetApplications: [{
       id: appId,
       minVersion: "0.1",
-      maxVersion: "0.2"
+      maxVersion: "0.2",
     }],
     name: "Test Addon 11",
   });
@@ -952,7 +952,7 @@ add_task(async function test_20() {
     targetApplications: [{
       id: appId,
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Addon 12",
   });
@@ -961,7 +961,7 @@ add_task(async function test_20() {
     prepare_test({}, [
       "onNewInstall",
       "onDownloadStarted",
-      "onDownloadEnded"
+      "onDownloadEnded",
     ], resolve);
 
     AddonManagerPrivate.backgroundUpdateCheck();
@@ -975,7 +975,7 @@ add_task(async function test_20() {
       "addon12@tests.mozilla.org": [
         ["onInstalling", false],
         "onInstalled",
-      ]
+      ],
     }, [
       "onInstallStarted",
       "onInstallEnded",
@@ -1011,7 +1011,7 @@ add_task(async function test_7() {
     footerURL: "http://example.com/data/footer.png",
     previewURL: "http://example.com/data/preview.png",
     iconURL: "http://example.com/data/icon.png",
-    updateURL: "http://example.com/data/lwtheme.js"
+    updateURL: "http://example.com/data/lwtheme.js",
   };
 
   // XXX The lightweight theme manager strips non-https updateURLs so hack it
@@ -1037,7 +1037,7 @@ add_task(async function test_7() {
       footerURL: "http://example.com/data/footer.png",
       previewURL: "http://example.com/data/preview.png",
       iconURL: "http://example.com/data/icon2.png",
-      updateURL: "http://example.com/data/lwtheme.js"
+      updateURL: "http://example.com/data/lwtheme.js",
     }));
   });
 
@@ -1059,10 +1059,10 @@ add_task(async function test_7() {
     prepare_test({
       "1@personas.mozilla.org": [
         ["onInstalling", false],
-        "onInstalled"
-      ]
+        "onInstalled",
+      ],
     }, [
-      "onExternalInstall"
+      "onExternalInstall",
     ], resolve);
 
     AddonManagerInternal.backgroundUpdateCheck();
@@ -1105,7 +1105,7 @@ add_task(async function() {
       footerURL: "http://example.com/data/footer.png?v=3",
       previewURL: "http://example.com/data/preview.png?v=3",
       iconURL: "http://example.com/data/icon2.png?v=3",
-      updateURL: "https://example.com/data/lwtheme.js?v=3"
+      updateURL: "https://example.com/data/lwtheme.js?v=3",
     }));
   });
 
@@ -1121,10 +1121,10 @@ add_task(async function() {
     prepare_test({
       "1@personas.mozilla.org": [
         ["onInstalling", false],
-        "onInstalled"
-      ]
+        "onInstalled",
+      ],
     }, [
-      "onExternalInstall"
+      "onExternalInstall",
     ], resolve);
 
     AddonManagerInternal.backgroundUpdateCheck();
@@ -1166,7 +1166,7 @@ add_task(async function run_test_locked_install() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "0.1",
-      maxVersion: "0.2"
+      maxVersion: "0.2",
     }],
     name: "Test Addon 13",
   }, lockedDir);

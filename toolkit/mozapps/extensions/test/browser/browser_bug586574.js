@@ -36,7 +36,7 @@ async function test() {
     id: "addon1@tests.mozilla.org",
     name: "addon 1",
     version: "1.0",
-    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE,
   }]);
 
   let aWindow = await open_manager("addons://list/extension");
@@ -109,7 +109,7 @@ add_test(function() {
         aAddon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
 
         wait_for_hide(run_next_test);
-      }
+      },
     };
     AddonManager.addAddonListener(listener);
 
@@ -228,7 +228,7 @@ add_test(function() {
         aAddon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
 
         wait_for_hide(run_next_test);
-      }
+      },
     };
     AddonManager.addAddonListener(listener);
 

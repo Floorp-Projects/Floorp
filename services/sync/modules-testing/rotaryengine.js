@@ -26,7 +26,7 @@ function RotaryRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 RotaryRecord.prototype = {
-  __proto__: CryptoWrapper.prototype
+  __proto__: CryptoWrapper.prototype,
 };
 Utils.deferGetSet(RotaryRecord, "cleartext", ["denomination"]);
 
@@ -83,7 +83,7 @@ RotaryStore.prototype = {
 
   async wipe() {
     this.items = {};
-  }
+  },
 };
 
 function RotaryTracker(name, engine) {
@@ -120,5 +120,5 @@ RotaryEngine.prototype = {
       }
     }
     return null;
-  }
+  },
 };

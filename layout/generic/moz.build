@@ -109,6 +109,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'AutoCopyListener.h',
     'CSSAlignUtils.h',
     'CSSOrderAwareFrameIterator.h',
     'FrameTypeList.h',

@@ -51,7 +51,7 @@ var bundle;
 var certArray;
 /**
  * The checkbox storing whether the user wants to remember the selected cert.
- * @type nsIDOMXULCheckboxElement
+ * @type Element checkbox, has to have |checked| property.
  */
 var rememberBox;
 

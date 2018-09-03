@@ -100,7 +100,7 @@ var tabPreviewPanelHelper = {
       gBrowser.selectedTab = host.tabToSelect;
       host.tabToSelect = null;
     }
-  }
+  },
 };
 
 /**
@@ -600,5 +600,5 @@ var ctrlTab = {
       key_showAllTabs.removeAttribute("disabled");
     else
       key_showAllTabs.setAttribute("disabled", "true");
-  }
+  },
 };

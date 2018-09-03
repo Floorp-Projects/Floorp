@@ -37,7 +37,7 @@ SessionStorageManager::~SessionStorageManager()
 
 NS_IMETHODIMP
 SessionStorageManager::PrecacheStorage(nsIPrincipal* aPrincipal,
-                                       nsIDOMStorage** aRetval)
+                                       Storage** aRetval)
 {
   // Nothing to preload.
   return NS_OK;
@@ -48,7 +48,7 @@ SessionStorageManager::CreateStorage(mozIDOMWindow* aWindow,
                                      nsIPrincipal* aPrincipal,
                                      const nsAString& aDocumentURI,
                                      bool aPrivate,
-                                     nsIDOMStorage** aRetval)
+                                     Storage** aRetval)
 {
   nsAutoCString originKey;
   nsAutoCString originAttributes;
@@ -82,7 +82,7 @@ NS_IMETHODIMP
 SessionStorageManager::GetStorage(mozIDOMWindow* aWindow,
                                   nsIPrincipal* aPrincipal,
                                   bool aPrivate,
-                                  nsIDOMStorage** aRetval)
+                                  Storage** aRetval)
 {
   *aRetval = nullptr;
 
@@ -113,20 +113,19 @@ SessionStorageManager::GetStorage(mozIDOMWindow* aWindow,
 }
 
 NS_IMETHODIMP
-SessionStorageManager::CloneStorage(nsIDOMStorage* aStorage)
+SessionStorageManager::CloneStorage(Storage* aStorage)
 {
   if (NS_WARN_IF(!aStorage)) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  RefPtr<Storage> storage = static_cast<Storage*>(aStorage);
-  if (storage->Type() != Storage::eSessionStorage) {
+  if (aStorage->Type() != Storage::eSessionStorage) {
     return NS_ERROR_UNEXPECTED;
   }
 
   nsAutoCString originKey;
   nsAutoCString originAttributes;
-  nsresult rv = GenerateOriginKey(storage->Principal(), originAttributes,
+  nsresult rv = GenerateOriginKey(aStorage->Principal(), originAttributes,
                                   originKey);
   if (NS_FAILED(rv)) {
     return rv;
@@ -153,7 +152,7 @@ SessionStorageManager::CloneStorage(nsIDOMStorage* aStorage)
 
 NS_IMETHODIMP
 SessionStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
-                                    nsIDOMStorage* aStorage,
+                                    Storage* aStorage,
                                     bool* aRetval)
 {
   if (NS_WARN_IF(!aStorage)) {
@@ -183,8 +182,7 @@ SessionStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
-  RefPtr<Storage> storage = static_cast<Storage*>(aStorage);
-  if (storage->Type() != Storage::eSessionStorage) {
+  if (aStorage->Type() != Storage::eSessionStorage) {
     return NS_OK;
   }
 
@@ -194,7 +192,7 @@ SessionStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
-  if (!StorageUtils::PrincipalsEqual(storage->Principal(), aPrincipal)) {
+  if (!StorageUtils::PrincipalsEqual(aStorage->Principal(), aPrincipal)) {
     return NS_OK;
   }
 

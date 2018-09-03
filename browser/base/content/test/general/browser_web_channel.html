@@ -55,8 +55,8 @@
           something: {
             nested: "hello",
           },
-        }
-      })
+        },
+      }),
     });
 
     window.dispatchEvent(event);
@@ -69,7 +69,7 @@
         message: {
           command: "one",
         },
-      })
+      }),
     });
 
     window.addEventListener("WebChannelMessageToContent", function(e) {
@@ -96,14 +96,14 @@
       detail: JSON.stringify({
         id: "wrongchannel",
         message: {},
-      })
+      }),
     });
 
     var event2 = new window.CustomEvent("WebChannelMessageToChrome", {
       detail: JSON.stringify({
         id: "multichannel",
         message: {},
-      })
+      }),
     });
 
     window.dispatchEvent(event1);
@@ -143,9 +143,9 @@
       detail: JSON.stringify({
         id: "not_a_window",
         message: {
-          command: "start"
-        }
-      })
+          command: "start",
+        },
+      }),
     });
 
     var nonWindowTarget = document.getElementById("not_a_window");
@@ -162,15 +162,15 @@
     let objectMessage = new window.CustomEvent("WebChannelMessageToChrome", {
       detail: {
         id: "objects",
-        message: { type: "object" }
-      }
+        message: { type: "object" },
+      },
     });
 
     let stringMessage = new window.CustomEvent("WebChannelMessageToChrome", {
       detail: JSON.stringify({
         id: "objects",
-        message: { type: "string" }
-      })
+        message: { type: "string" },
+      }),
     });
     // Test fails if objectMessage is received, we send stringMessage to know
     // when we should stop listening for objectMessage
@@ -183,9 +183,9 @@
      detail: JSON.stringify({
        id: "error",
        message: {
-         command: "oops"
-       }
-     })
+         command: "oops",
+       },
+     }),
    });
 
    // echo the response back to chrome - chrome will check it is the
@@ -202,9 +202,9 @@
      detail: JSON.stringify({
        id: "invalid-channel",
        message: {
-         command: "oops"
-       }
-     })
+         command: "oops",
+       },
+     }),
    });
 
    // echo the response back to chrome - chrome will check it is the
@@ -221,7 +221,7 @@
       detail: JSON.stringify({
         id: channelId,
         message: e.detail.message,
-      })
+      }),
     });
 
     e.target.dispatchEvent(echoedEvent);

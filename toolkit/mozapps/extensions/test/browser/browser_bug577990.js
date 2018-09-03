@@ -11,7 +11,7 @@ var gProvider;
 var gInstall;
 var gInstallProperties = [{
   name: "Locale Category Test",
-  type: "locale"
+  type: "locale",
 }];
 
 async function test() {
@@ -40,7 +40,7 @@ function install_locale(aCallback) {
     onInstallEnded(aInstall) {
       gInstall.removeTestListener(this);
       executeSoon(aCallback);
-    }
+    },
   });
   gInstall.install();
 }

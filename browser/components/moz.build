@@ -52,6 +52,7 @@ DIRS += [
     'shell',
     'syncedtabs',
     'uitour',
+    'urlbar',
     'translation',
 ]
 

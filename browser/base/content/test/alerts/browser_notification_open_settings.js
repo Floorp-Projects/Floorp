@@ -7,7 +7,7 @@ add_task(async function test_settingsOpen_observer() {
   info("Opening a dummy tab so openPreferences=>switchToTabHavingURI doesn't use the blank tab.");
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: "about:robots"
+    url: "about:robots",
   }, async function dummyTabTask(aBrowser) {
     // Ensure preferences is loaded before removing the tab.
     let syncPaneLoadedPromise = TestUtils.topicObserved("sync-pane-loaded", () => true);
@@ -29,7 +29,7 @@ add_task(async function test_settingsOpen_button() {
 
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: notificationURL
+    url: notificationURL,
   }, async function tabTask(aBrowser) {
     // Ensure preferences is loaded before removing the tab.
     let syncPaneLoadedPromise = TestUtils.topicObserved("sync-pane-loaded", () => true);

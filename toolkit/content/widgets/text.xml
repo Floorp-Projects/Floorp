@@ -137,6 +137,8 @@
                 accessKeyIndex =
                   labelText.toUpperCase().indexOf(accessKey.toUpperCase());
               }
+            } else if (labelText.endsWith(`(${accessKey.toUpperCase()})`)) {
+              accessKeyIndex = labelText.length - (1 + accessKey.length); // = index of accessKey.
             }
 
             const HTML_NS = "http://www.w3.org/1999/xhtml";

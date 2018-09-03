@@ -294,7 +294,7 @@ var split = function(path) {
   return {
     absolute: this.winIsAbsolute(path),
     winDrive: this.winGetDrive(path),
-    components: path.split("\\")
+    components: path.split("\\"),
   };
 };
 exports.split = split;

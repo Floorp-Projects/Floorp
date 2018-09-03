@@ -25,36 +25,36 @@ const tests = [
   },
   {
     setting:  {dntPref: true,  tpPref: false, tppbPref: false, pbMode: false},
-    expected: {dnt: "1"}
+    expected: {dnt: "1"},
   },
   // DNT turned off and TP turned on globally, DNT signal sent in both private
   // browsing and normal mode.
   {
     setting:  {dntPref: false, tpPref: true,  tppbPref: false, pbMode: true},
-    expected: {dnt: "1"}
+    expected: {dnt: "1"},
   },
   {
     setting:  {dntPref: false, tpPref: true,  tppbPref: false, pbMode: false},
-    expected: {dnt: "1"}
+    expected: {dnt: "1"},
   },
   // DNT turned off and TP in Private Browsing only, DNT signal sent in private
   // browsing mode only.
   {
     setting:  {dntPref: false, tpPref: false, tppbPref: true,  pbMode: true},
-    expected: {dnt: "1"}
+    expected: {dnt: "1"},
   },
   {
     setting:  {dntPref: false, tpPref: false, tppbPref: true,  pbMode: false},
-    expected: {dnt: "unspecified"}
+    expected: {dnt: "unspecified"},
   },
   // DNT turned off and TP turned off, DNT signal is never sent.
   {
     setting:  {dntPref: false, tpPref: false, tppbPref: false, pbMode: true},
-    expected: {dnt: "unspecified"}
+    expected: {dnt: "unspecified"},
   },
   {
     setting:  {dntPref: false, tpPref: false, tppbPref: false, pbMode: false},
-    expected: {dnt: "unspecified"}
+    expected: {dnt: "unspecified"},
   },
 ];
 
@@ -72,7 +72,7 @@ function executeTest(test) {
   SpecialPowers.pushPrefEnv({"set": [
    [DNT_PREF, test.setting.dntPref],
    [TP_PREF, test.setting.tpPref],
-   [TP_PB_PREF, test.setting.tppbPref]
+   [TP_PB_PREF, test.setting.tppbPref],
   ]});
 
   var win = mainWindow.OpenBrowserWindow({private: test.setting.pbMode});

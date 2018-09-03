@@ -65,13 +65,13 @@ class Transaction
 public:
   Transaction()
     : mTargetRotation(ROTATION_0)
-    , mTargetOrientation(dom::eScreenOrientation_None)
+    , mTargetOrientation(hal::eScreenOrientation_None)
     , mOpen(false)
     , mRotationChanged(false)
   {}
 
   void Begin(const gfx::IntRect& aTargetBounds, ScreenRotation aRotation,
-             dom::ScreenOrientationInternal aOrientation)
+             hal::ScreenOrientation aOrientation)
   {
     mOpen = true;
     mTargetBounds = aTargetBounds;
@@ -142,7 +142,7 @@ public:
   ShadowableLayerSet mSimpleMutants;
   gfx::IntRect mTargetBounds;
   ScreenRotation mTargetRotation;
-  dom::ScreenOrientationInternal mTargetOrientation;
+  hal::ScreenOrientation mTargetOrientation;
 
 private:
   bool mOpen;
@@ -285,7 +285,7 @@ ShadowLayerForwarder::~ShadowLayerForwarder()
 void
 ShadowLayerForwarder::BeginTransaction(const gfx::IntRect& aTargetBounds,
                                        ScreenRotation aRotation,
-                                       dom::ScreenOrientationInternal aOrientation)
+                                       hal::ScreenOrientation aOrientation)
 {
   MOZ_ASSERT(IPCOpen(), "no manager to forward to");
   MOZ_ASSERT(mTxn->Finished(), "uncommitted txn?");

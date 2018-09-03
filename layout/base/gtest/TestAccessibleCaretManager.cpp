@@ -42,12 +42,6 @@ public:
       mAppearance = aAppearance;
     }
 
-    void SetSelectionBarEnabled(bool aEnabled) override
-    {
-      // A simplified version without touching CaretElement().
-      mSelectionBarEnabled = aEnabled;
-    }
-
     MOCK_METHOD2(SetPosition,
                  PositionChangedResult(nsIFrame* aFrame, int32_t aOffset));
 

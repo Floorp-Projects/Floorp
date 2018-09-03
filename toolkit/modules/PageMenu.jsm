@@ -163,7 +163,7 @@ PageMenu.prototype = {
         let windowUtils = win.windowUtils;
         this._browser.messageManager.sendAsyncMessage("ContextMenu:DoCustomCommand", {
           generatedItemId: target.getAttribute(this.GENERATEDITEMID_ATTR),
-          handlingUserInput: windowUtils.isHandlingUserInput
+          handlingUserInput: windowUtils.isHandlingUserInput,
         });
       }
     } else if (type == "popuphidden" && this._popup == target) {
@@ -235,7 +235,7 @@ PageMenu.prototype = {
         element.removeChild(child);
       }
     }
-  }
+  },
 };
 
 // This object is expected to be used from a parent process.
@@ -271,7 +271,7 @@ PageMenuParent.prototype = {
    */
   addToPopup(aMenu, aBrowser, aPopup) {
     return this.buildAndAttachMenuWithObject(aMenu, aBrowser, aPopup);
-  }
+  },
 };
 
 // This object is expected to be used from a child process.
@@ -310,5 +310,5 @@ PageMenuChild.prototype = {
       this._builder.click(aId);
       this._builder = null;
     }
-  }
+  },
 };

@@ -43,7 +43,7 @@ XPInstallConfirm.init = function() {
       itemList.removeChild(installMap.get(install));
       if (--numItemsToInstall == 0)
         window.close();
-    }
+    },
   };
 
   var numItemsToInstall = args.installs.length;

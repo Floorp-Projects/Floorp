@@ -8,7 +8,6 @@
 
 #include "nsFocusManager.h"
 
-#include "AccessibleCaretEventHub.h"
 #include "ChildIterator.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsGkAtoms.h"
@@ -46,6 +45,7 @@
 #include "nsNetUtil.h"
 #include "nsRange.h"
 
+#include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLImageElement.h"

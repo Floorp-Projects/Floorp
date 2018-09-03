@@ -171,7 +171,7 @@ let FormLikeFactory = {
           cleansed[key] = cleansedValue;
         }
         return cleansed;
-      }
+      },
     });
   },
 };

@@ -10,7 +10,7 @@ const TEST_URL = "http://" + TEST_HOST + "/browser/browser/components/contextual
 const USER_CONTEXTS = [
   "default",
   "personal",
-  "work"
+  "work",
 ];
 
 const DELETE_CONTEXT = 1;

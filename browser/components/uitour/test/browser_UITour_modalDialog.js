@@ -39,7 +39,7 @@ var observer = SpecialPowers.wrapCallbackObject({
             handleDialog(doc);
         else
             startCallbackTimer(); // try again in a bit
-    }
+    },
 });
 
 function getDialogDoc() {
@@ -93,5 +93,5 @@ var tests = [
     await panelShown;
 
     await hideInfoPromise();
-  })
+  }),
 ];

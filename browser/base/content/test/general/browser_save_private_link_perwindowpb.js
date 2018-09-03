@@ -23,7 +23,7 @@ function promiseNoCacheEntry(filename) {
       },
       onCacheEntryVisitCompleted() {
         resolve();
-      }
+      },
     };
     function Visitor() {}
 
@@ -80,7 +80,7 @@ add_task(async function() {
   let popupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
   await BrowserTestUtils.synthesizeMouseAtCenter("#img", {
     type: "contextmenu",
-    button: 2
+    button: 2,
   }, tab.linkedBrowser);
   await popupShown;
 

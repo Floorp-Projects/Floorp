@@ -30,7 +30,6 @@ shippingAddress.init("USA",              // country
                      "Test locality",    // dependent locality
                      "94066",            // postal code
                      "123456",           // sorting code
-                     "en",               // language code
                      "Testing Org",      // organization
                      "Bill A. Pacheco",  // recipient
                      "+1-434-441-3879"); // phone
@@ -150,6 +149,7 @@ const DummyUIService = {
   abortPayment: abortRequest,
   completePayment: completeRequest,
   updatePayment: updateRequest,
+  closePayment: function(requestId) {},
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 

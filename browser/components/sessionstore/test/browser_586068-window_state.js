@@ -24,7 +24,7 @@ add_task(async function test() {
     { entries: [{ url: "http://example.org#2", triggeringPrincipal_base64 }] },
     { entries: [{ url: "http://example.org#3", triggeringPrincipal_base64 }] },
     { entries: [{ url: "http://example.org#4", triggeringPrincipal_base64 }] },
-    { entries: [{ url: "http://example.org#5", triggeringPrincipal_base64 }] }
+    { entries: [{ url: "http://example.org#5", triggeringPrincipal_base64 }] },
   ] }] };
   let numTabs = state1.windows[0].tabs.length + state2.windows[0].tabs.length;
 

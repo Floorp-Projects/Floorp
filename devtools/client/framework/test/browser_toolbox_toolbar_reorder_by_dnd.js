@@ -26,21 +26,22 @@
 const { Toolbox } = require("devtools/client/framework/toolbox");
 
 const TEST_STARTING_ORDER = ["inspector", "webconsole", "jsdebugger", "styleeditor",
-                             "performance", "memory", "netmonitor", "storage"];
+                             "performance", "memory", "netmonitor", "storage",
+                             "accessibility"];
 const TEST_DATA = [
   {
     description: "DragAndDrop the target component to back",
     dragTarget: "webconsole",
     dropTarget: "jsdebugger",
     expectedOrder: ["inspector", "jsdebugger", "webconsole", "styleeditor",
-                    "performance", "memory", "netmonitor", "storage"],
+                    "performance", "memory", "netmonitor", "storage", "accessibility"],
   },
   {
     description: "DragAndDrop the target component to front",
     dragTarget: "webconsole",
     dropTarget: "inspector",
     expectedOrder: ["webconsole", "inspector", "jsdebugger", "styleeditor",
-                    "performance", "memory", "netmonitor", "storage"],
+                    "performance", "memory", "netmonitor", "storage", "accessibility"],
   },
   {
     description: "DragAndDrop the target component over the starting of the tab",
@@ -49,7 +50,7 @@ const TEST_DATA = [
                     "jsdebugger", "webconsole", "inspector"],
     dropTarget: "#toolbox-buttons-start",
     expectedOrder: ["netmonitor", "inspector", "webconsole", "jsdebugger",
-                    "styleeditor", "performance", "memory", "storage"],
+                    "styleeditor", "performance", "memory", "storage", "accessibility"],
   },
   {
     description: "DragAndDrop the target component over the ending of the tab",
@@ -58,7 +59,7 @@ const TEST_DATA = [
                     "memory", "netmonitor", "storage"],
     dropTarget: "#toolbox-buttons-end",
     expectedOrder: ["inspector", "jsdebugger", "styleeditor", "performance",
-                    "memory", "netmonitor", "storage", "webconsole", ],
+                    "memory", "netmonitor", "storage", "webconsole", "accessibility"],
   },
   {
     description: "Mouse was out from the document while dragging",
@@ -66,7 +67,7 @@ const TEST_DATA = [
     passedTargets: ["inspector"],
     dropTarget: null,
     expectedOrder: ["webconsole", "inspector", "jsdebugger", "styleeditor",
-                    "performance", "memory", "netmonitor", "storage"],
+                    "performance", "memory", "netmonitor", "storage", "accessibility"],
   },
 ];
 
@@ -99,7 +100,8 @@ add_task(async function() {
   const dragTarget = "storage";
   const dropTarget = "inspector";
   const expectedOrder = ["storage", "inspector", "webconsole", "jsdebugger",
-                         "styleeditor", "performance", "memory", "netmonitor"];
+                         "styleeditor", "performance", "memory", "netmonitor",
+                         "accessibility"];
   await dndToolTab(toolbox, dragTarget, dropTarget);
   assertToolTabSelected(toolbox, dragTarget);
   assertToolTabPreferenceOrder(expectedOrder);

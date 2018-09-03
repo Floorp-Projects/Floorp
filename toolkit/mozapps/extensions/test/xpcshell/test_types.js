@@ -28,17 +28,17 @@ add_task(async function setup() {
     onTypeRemoved(aType) {
       Assert.equal(aType.id, expectedRemove);
       expectedRemove = null;
-    }
+    },
   });
 
   AddonManagerPrivate.registerProvider(provider, [{
     id: "test",
     name: "Test",
-    uiPriority: 1
+    uiPriority: 1,
   }, {
     id: "t$e%st",
     name: "Test",
-    uiPriority: 1
+    uiPriority: 1,
   }]);
 
   Assert.equal(expectedAdd, null);

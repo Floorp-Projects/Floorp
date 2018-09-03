@@ -89,12 +89,9 @@ struct SafebrowsingHash
   void ToString(nsACString& aStr) const {
     uint32_t len = ((sHashSize + 2) / 3) * 4;
 
-    // Capacity should be one greater than length, because PL_Base64Encode
-    // will not be null-terminated, while nsCString requires it.
-    aStr.SetCapacity(len + 1);
-    PL_Base64Encode((char*)buf, sHashSize, aStr.BeginWriting());
-    aStr.BeginWriting()[len] = '\0';
     aStr.SetLength(len);
+    PL_Base64Encode((char*)buf, sHashSize, aStr.BeginWriting());
+    MOZ_ASSERT(aStr.BeginReading()[len] == '\0');
   }
 
   void ToHexString(nsACString& aStr) const {

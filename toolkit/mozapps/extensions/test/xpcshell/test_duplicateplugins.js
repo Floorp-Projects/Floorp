@@ -18,49 +18,49 @@ var PLUGINS = [{
   version: "1",
   blocklisted: false,
   enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/home/mozilla/.plugins/dupplugin1.so"
+  filename: "/home/mozilla/.plugins/dupplugin1.so",
 }, {
   name: "Duplicate Plugin 1",
   description: "A duplicate plugin",
   version: "1",
   blocklisted: false,
   enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/usr/lib/plugins/dupplugin1.so"
+  filename: "/usr/lib/plugins/dupplugin1.so",
 }, {
   name: "Duplicate Plugin 2",
   description: "Another duplicate plugin",
   version: "1",
   blocklisted: false,
   enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/home/mozilla/.plugins/dupplugin2.so"
+  filename: "/home/mozilla/.plugins/dupplugin2.so",
 }, {
   name: "Duplicate Plugin 2",
   description: "Another duplicate plugin",
   version: "1",
   blocklisted: false,
   enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/usr/lib/plugins/dupplugin2.so"
+  filename: "/usr/lib/plugins/dupplugin2.so",
 }, {
   name: "Non-duplicate Plugin", // 3
   description: "Not a duplicate plugin",
   version: "1",
   blocklisted: false,
   enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/home/mozilla/.plugins/dupplugin3.so"
+  filename: "/home/mozilla/.plugins/dupplugin3.so",
 }, {
   name: "Non-duplicate Plugin", // 4
   description: "Not a duplicate because the descriptions are different",
   version: "1",
   blocklisted: false,
   enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/usr/lib/plugins/dupplugin4.so"
+  filename: "/usr/lib/plugins/dupplugin4.so",
 }, {
   name: "Another Non-duplicate Plugin", // 5
   description: "Not a duplicate plugin",
   version: "1",
   blocklisted: false,
   enabledState: Ci.nsIPluginTag.STATE_ENABLED,
-  filename: "/home/mozilla/.plugins/dupplugin5.so"
+  filename: "/home/mozilla/.plugins/dupplugin5.so",
 }].map(opts => new MockPlugin(opts));
 
 mockPluginHost(PLUGINS);

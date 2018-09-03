@@ -7,7 +7,7 @@ add_task(async function() {
 
   // allow top level data: URI navigations, otherwise clicking data: link fails
   await SpecialPowers.pushPrefEnv({
-    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]]
+    "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]],
   });
 
   // Pinned: Link to the same domain should not open a new tab

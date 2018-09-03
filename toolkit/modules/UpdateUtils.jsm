@@ -127,7 +127,7 @@ var UpdateUtils = {
                    "application or GRE directories");
 
     return this._locale = null;
-  }
+  },
 };
 
 /* Get the distribution pref values, from defaults only */
@@ -195,7 +195,7 @@ XPCOMUtils.defineLazyGetter(this, "gWinCPUArch", function aus_gWinCPUArch() {
       {dwProcessorType: DWORD},
       {dwAllocationGranularity: DWORD},
       {wProcessorLevel: WORD},
-      {wProcessorRevision: WORD}
+      {wProcessorRevision: WORD},
       ]);
 
   let kernel32 = false;
@@ -291,7 +291,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
           {wServicePackMinor: WORD},
           {wSuiteMask: WORD},
           {wProductType: BYTE},
-          {wReserved: BYTE}
+          {wReserved: BYTE},
           ]);
 
       let kernel32 = false;

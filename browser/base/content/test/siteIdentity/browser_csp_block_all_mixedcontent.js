@@ -23,7 +23,7 @@ async function verifyUInotDegraded() {
     gTestBrowser,
     { activeLoaded: false,
       activeBlocked: false,
-      passiveLoaded: false
+      passiveLoaded: false,
     }
   );
   // clean up and finish test

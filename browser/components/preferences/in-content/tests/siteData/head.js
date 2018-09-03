@@ -185,7 +185,7 @@ const mockSiteDataManager = {
     this.fakeSites = null;
     this._SiteDataManager._qms = this._originalQMS;
     this._SiteDataManager._removeQuotaUsage = this._originalRemoveQuotaUsage;
-  }
+  },
 };
 
 function promiseCookiesCleared() {

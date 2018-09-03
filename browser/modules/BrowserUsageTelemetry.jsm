@@ -737,5 +737,5 @@ let BrowserUsageTelemetry = {
       Services.telemetry.getHistogramById("TAB_COUNT").add(tabCount);
       this._lastRecordTabCount = currentTime;
     }
-  }
+  },
 };

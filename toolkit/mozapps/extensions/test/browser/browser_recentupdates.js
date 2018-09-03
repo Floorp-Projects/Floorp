@@ -18,17 +18,17 @@ async function test() {
     name: "updated 6 hours ago",
     version: "1.0",
     updateDate: new Date(Date.now() - (1000 * 60 * 60 * 6)),
-    releaseNotesURI: Services.io.newURI(TESTROOT + "releaseNotes.xhtml")
+    releaseNotesURI: Services.io.newURI(TESTROOT + "releaseNotes.xhtml"),
   }, {
     id: "addon2@tests.mozilla.org",
     name: "updated 5 seconds ago",
     version: "1.0",
-    updateDate: new Date(Date.now() - (1000 * 5))
+    updateDate: new Date(Date.now() - (1000 * 5)),
   }, {
     id: "addon3@tests.mozilla.org",
     name: "updated 1 month ago",
     version: "1.0",
-    updateDate: new Date(Date.now() - (1000 * 60 * 60 * 25 * 30))
+    updateDate: new Date(Date.now() - (1000 * 60 * 60 * 25 * 30)),
   }]);
 
   let aWindow = await open_manager("addons://list/extension");

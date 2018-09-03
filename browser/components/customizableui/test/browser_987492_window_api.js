@@ -18,7 +18,7 @@ add_task(async function testOpenCloseWindow() {
   let openListener = {
     onWindowOpened(window) {
       newWindow = window;
-    }
+    },
   };
   CustomizableUI.addListener(openListener);
 
@@ -41,7 +41,7 @@ add_task(async function testOpenCloseWindow() {
   let closeListener = {
     onWindowClosed(window) {
       closedWindow = window;
-    }
+    },
   };
   CustomizableUI.addListener(closeListener);
   await promiseWindowClosed(newWindow);

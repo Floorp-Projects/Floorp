@@ -67,7 +67,7 @@
             reset() {
                 this.windowsOpen = 0;
                 this.windowsRegistered = 0;
-            }
+            },
         });
 
         var monitor = new dialogMonitor();
@@ -138,14 +138,14 @@
         onProxyAvailable(req, uri, pi, status) {
           initLogins(pi);
           doTest(testNum);
-        }
+        },
         });
 
         function startup() {
             // Need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
             var channel = NetUtil.newChannel({
                 uri: "http://example.com",
-                loadUsingSystemPrincipal: true
+                loadUsingSystemPrincipal: true,
             });
 
             var pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"]

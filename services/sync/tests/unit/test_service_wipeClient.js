@@ -21,7 +21,7 @@ CanDecryptEngine.prototype = {
   wasWiped: false,
   async wipeClient() {
     this.wasWiped = true;
-  }
+  },
 };
 
 
@@ -39,7 +39,7 @@ CannotDecryptEngine.prototype = {
   wasWiped: false,
   async wipeClient() {
     this.wasWiped = true;
-  }
+  },
 };
 
 let canDecryptEngine;

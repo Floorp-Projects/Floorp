@@ -76,7 +76,7 @@ add_task(async function test_responder_error() {
       extra: { flowID: request.flowID,
                numIDs: "0",
                failureReason: '{"name":"unexpectederror","error":"Error: oh no!"}',
-      }
+      },
     },
   ]);
 

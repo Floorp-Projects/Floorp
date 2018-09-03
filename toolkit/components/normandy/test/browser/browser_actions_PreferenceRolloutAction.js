@@ -332,7 +332,7 @@ decorate_task(
       arguments: {
         slug: "test-rollout",
         preferences: [{preferenceName: "test.pref", value: "rollout value"}],
-      }
+      },
     };
 
     const action = new PreferenceRolloutAction();

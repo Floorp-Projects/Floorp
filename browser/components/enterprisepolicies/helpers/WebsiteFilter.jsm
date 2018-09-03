@@ -53,9 +53,9 @@ function WebsiteFilter(blocklist, exceptionlist) {
     try {
       let pattern = new MatchPattern(blocklist[i]);
       blockArray.push(pattern);
-      log.debug(`Pattern added to WebsiteFilter.Block list: ${blocklist[i]}`);
+      log.debug(`Pattern added to WebsiteFilter. Block: ${blocklist[i]}`);
     } catch (e) {
-      log.error(`Invalid pattern on WebsiteFilter.Block: ${blocklist[i]}`);
+      log.error(`Invalid pattern on WebsiteFilter. Block: ${blocklist[i]}`);
     }
   }
 
@@ -65,9 +65,9 @@ function WebsiteFilter(blocklist, exceptionlist) {
     try {
       let pattern = new MatchPattern(exceptionlist[i]);
       exceptionArray.push(pattern);
-      log.debug(`Pattern added to WebsiteFilter.Exceptions list: ${exceptionlist[i]}`);
+      log.debug(`Pattern added to WebsiteFilter. Exception: ${exceptionlist[i]}`);
     } catch (e) {
-      log.error(`Invalid pattern on WebsiteFilter.Exceptions: ${exceptionlist[i]}`);
+      log.error(`Invalid pattern on WebsiteFilter. Exception: ${exceptionlist[i]}`);
     }
   }
 
@@ -104,5 +104,6 @@ WebsiteFilter.prototype = {
         channel.cancel(Cr.NS_ERROR_BLOCKED_BY_POLICY);
       }
     }
-  }
+  },
 };
+

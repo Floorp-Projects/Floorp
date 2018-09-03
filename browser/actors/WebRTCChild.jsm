@@ -232,7 +232,7 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
     sharingScreen,
     sharingAudio,
     audioDevices,
-    videoDevices
+    videoDevices,
   };
 
   let mm = getMessageManagerForWindow(aContentWindow);
@@ -292,7 +292,7 @@ function updateIndicators(aSubject, aTopic, aData) {
     showGlobalIndicator: count > 0,
     showCameraIndicator: false,
     showMicrophoneIndicator: false,
-    showScreenSharingIndicator: ""
+    showScreenSharingIndicator: "",
   };
 
   Services.cpmm.sendAsyncMessage("webrtc:UpdatingIndicators");

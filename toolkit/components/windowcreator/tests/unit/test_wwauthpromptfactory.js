@@ -29,7 +29,7 @@ var TestPromptFactory = {
     }
 
     throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  },
 }; // end of TestPromptFactory implementation
 
 /*

@@ -201,6 +201,37 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
+    @Test fun redirectLoad() {
+        val redirectUri = if (sessionRule.env.isAutomation) {
+            "http://example.org/tests/robocop/robocop_blank_02.html"
+        } else {
+            "http://jigsaw.w3.org/HTTP/300/Overview.html"
+        }
+        val uri = if (sessionRule.env.isAutomation) {
+            "http://example.org/tests/robocop/simple_redirect.sjs?$redirectUri"
+        } else {
+            "http://jigsaw.w3.org/HTTP/300/301.html"
+        }
+
+        sessionRule.session.loadUri(uri)
+        sessionRule.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 2, order = [1, 2])
+            override fun onLoadRequest(session: GeckoSession, uri: String,
+                                       where: Int, flags: Int): GeckoResult<Boolean>? {
+                assertThat("Session should not be null", session, notNullValue())
+                assertThat("URI should not be null", uri, notNullValue())
+                assertThat("URL should match", uri,
+                        equalTo(forEachCall(uri, redirectUri)))
+                assertThat("Where should not be null", where, notNullValue())
+                assertThat("Where should match", where,
+                        equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
+                return null
+            }
+        })
+    }
+
     @WithDevToolsAPI
     @Test fun desktopMode() {
         sessionRule.session.loadUri("https://example.com")

@@ -48,7 +48,7 @@ var gFontsDialog = {
         { format: kFontNameListFmtMonospace, type: "unichar",  element: null,         fonttype: "monospace"   },
         { format: kFontSizeFmtVariable,      type: "int",      element: "sizeVar",    fonttype: null          },
         { format: kFontSizeFmtFixed,         type: "int",      element: "sizeMono",   fonttype: null          },
-        { format: kFontMinSizeFmt,           type: "int",      element: "minSize",    fonttype: null          }
+        { format: kFontMinSizeFmt,           type: "int",      element: "minSize",    fonttype: null          },
       ];
       for (var i = 0; i < prefs.length; ++i) {
         var name = prefs[i].format.replace(/%LANG%/, aLanguageGroup);

@@ -54,6 +54,7 @@ except ImportError:
 
 from io import BytesIO
 
+import mozinfo
 from mozprocess import ProcessHandler
 from mozharness.base.config import BaseConfig
 from mozharness.base.log import SimpleFileLogger, MultiFileLogger, \
@@ -117,6 +118,17 @@ class PlatformMixin(object):
             return True
         if sys.platform.startswith("linux"):
             return True
+
+    def _is_redhat(self):
+        """ check if the current operating system is a Redhat derived Linux distribution.
+
+        Returns:
+            bool: True if the current platform is a Redhat Linux distro, False otherwise
+        """
+        if not self._is_linux():
+            return False
+        re_redhat_distro = re.compile('Redhat|Fedora|CentOS|Oracle')
+        return re_redhat_distro.match(mozinfo.linux_distro) is not None
 
     def _is_64_bit(self):
         if self._is_darwin():

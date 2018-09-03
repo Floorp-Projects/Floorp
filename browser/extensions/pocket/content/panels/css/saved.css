@@ -108,7 +108,6 @@
     max-height: 0;
     opacity: 0;
     position: relative;
-    z-index: 10;
 }
 .pkt_ext_container_detailactive .pkt_ext_initload {
     opacity: 0;

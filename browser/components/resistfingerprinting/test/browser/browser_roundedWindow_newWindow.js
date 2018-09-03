@@ -13,7 +13,7 @@ let gMaxAvailHeight;
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", true]]
+    [["privacy.resistFingerprinting", true]],
   });
 
   // Calculate the maximum available size.

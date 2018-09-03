@@ -15,16 +15,16 @@ let tests = [
     url: "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.pif",
     elements: {
       basicBox: { collapsed: false },
-      normalBox: { collapsed: true }
-    }
+      normalBox: { collapsed: true },
+    },
   },
   { // This URL will trigger the full UI
     url: "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.txt",
     elements: {
       basicBox: { collapsed: true },
-      normalBox: { collapsed: false }
-    }
-  }
+      normalBox: { collapsed: false },
+    },
+  },
 ];
 
 add_task(async function test_unknownContentType_dialog_layout() {
@@ -52,7 +52,7 @@ add_task(async function test_unknownContentType_dialog_layout() {
             }
             break;
         }
-      }
+      },
     };
 
     Services.ww.registerNotification(UCTObserver);

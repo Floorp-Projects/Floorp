@@ -27,14 +27,14 @@ var passwords_initial = [
     usernameField: "uname",
     passwordField: "pword",
     changes: {
-      password: "zippity-do-dah"
-    }
+      password: "zippity-do-dah",
+    },
   },
   { hostname: "http://www.example.com",
     realm: "login",
     username: "joe",
-    password: "secretlogin"
-  }
+    password: "secretlogin",
+  },
 ];
 
 // expected state of passwords after the changes in the above list are applied
@@ -44,29 +44,29 @@ var passwords_after_first_update = [
     username: "joe",
     password: "zippity-do-dah",
     usernameField: "uname",
-    passwordField: "pword"
+    passwordField: "pword",
   },
   { hostname: "http://www.example.com",
     realm: "login",
     username: "joe",
-    password: "secretlogin"
-  }
+    password: "secretlogin",
+  },
 ];
 
 var passwords_to_delete = [
   { hostname: "http://www.example.com",
     realm: "login",
     username: "joe",
-    password: "secretlogin"
-  }
+    password: "secretlogin",
+  },
 ];
 
 var passwords_absent = [
   { hostname: "http://www.example.com",
     realm: "login",
     username: "joe",
-    password: "secretlogin"
-  }
+    password: "secretlogin",
+  },
 ];
 
 // expected state of passwords after the delete operation
@@ -76,8 +76,8 @@ var passwords_after_second_update = [
     username: "joe",
     password: "zippity-do-dah",
     usernameField: "uname",
-    passwordField: "pword"
-  }
+    passwordField: "pword",
+  },
 ];
 
 /*
@@ -86,7 +86,7 @@ var passwords_after_second_update = [
 
 Phase("phase1", [
   [Passwords.add, passwords_initial],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase2", [
@@ -94,7 +94,7 @@ Phase("phase2", [
   [Passwords.verify, passwords_initial],
   [Passwords.modify, passwords_initial],
   [Passwords.verify, passwords_after_first_update],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase3", [
@@ -103,11 +103,11 @@ Phase("phase3", [
   [Passwords.delete, passwords_to_delete],
   [Passwords.verify, passwords_after_second_update],
   [Passwords.verifyNot, passwords_absent],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase4", [
   [Sync],
   [Passwords.verify, passwords_after_second_update],
-  [Passwords.verifyNot, passwords_absent]
+  [Passwords.verifyNot, passwords_absent],
 ]);

@@ -20,50 +20,50 @@ namespace jit {
 
 typedef void * CalleeToken;
 
-enum FrameType
+enum class FrameType
 {
     // A JS frame is analogous to a js::InterpreterFrame, representing one scripted
     // function activation. IonJS frames are used by the optimizing compiler.
-    JitFrame_IonJS,
+    IonJS,
 
     // JS frame used by the baseline JIT.
-    JitFrame_BaselineJS,
+    BaselineJS,
 
     // Frame pushed by Baseline stubs that make non-tail calls, so that the
     // return address -> ICEntry mapping works.
-    JitFrame_BaselineStub,
+    BaselineStub,
 
     // The entry frame is the initial prologue block transitioning from the VM
     // into the Ion world.
-    JitFrame_CppToJSJit,
+    CppToJSJit,
 
     // A rectifier frame sits in between two JS frames, adapting argc != nargs
     // mismatches in calls.
-    JitFrame_Rectifier,
+    Rectifier,
 
     // Ion IC calling a scripted getter/setter or a VMFunction.
-    JitFrame_IonICCall,
+    IonICCall,
 
     // An exit frame is necessary for transitioning from a JS frame into C++.
     // From within C++, an exit frame is always the last frame in any
     // JitActivation.
-    JitFrame_Exit,
+    Exit,
 
     // A bailout frame is a special IonJS jit frame after a bailout, and before
     // the reconstruction of the BaselineJS frame. From within C++, a bailout
     // frame is always the last frame in a JitActivation iff the bailout frame
     // information is recorded on the JitActivation.
-    JitFrame_Bailout,
+    Bailout,
 
     // A wasm to JS frame is constructed during fast calls from wasm to the JS
     // jits, used as a marker to interleave JS jit and wasm frames. From the
     // point of view of JS JITs, this is just another kind of entry frame.
-    JitFrame_WasmToJSJit,
+    WasmToJSJit,
 
     // A JS to wasm frame is constructed during fast calls from any JS jits to
     // wasm, and is a special kind of exit frame that doesn't have the exit
     // footer. From the point of view of the jit, it can be skipped as an exit.
-    JitFrame_JSJitToWasm,
+    JSJitToWasm,
 };
 
 enum ReadFrameArgsBehavior {
@@ -156,37 +156,37 @@ class JSJitFrameIter
     bool checkInvalidation() const;
 
     bool isExitFrame() const {
-        return type_ == JitFrame_Exit;
+        return type_ == FrameType::Exit;
     }
     bool isScripted() const {
-        return type_ == JitFrame_BaselineJS || type_ == JitFrame_IonJS || type_ == JitFrame_Bailout;
+        return type_ == FrameType::BaselineJS || type_ == FrameType::IonJS || type_ == FrameType::Bailout;
     }
     bool isBaselineJS() const {
-        return type_ == JitFrame_BaselineJS;
+        return type_ == FrameType::BaselineJS;
     }
     bool isIonScripted() const {
-        return type_ == JitFrame_IonJS || type_ == JitFrame_Bailout;
+        return type_ == FrameType::IonJS || type_ == FrameType::Bailout;
     }
     bool isIonJS() const {
-        return type_ == JitFrame_IonJS;
+        return type_ == FrameType::IonJS;
     }
     bool isIonICCall() const {
-        return type_ == JitFrame_IonICCall;
+        return type_ == FrameType::IonICCall;
     }
     bool isBailoutJS() const {
-        return type_ == JitFrame_Bailout;
+        return type_ == FrameType::Bailout;
     }
     bool isBaselineStub() const {
-        return type_ == JitFrame_BaselineStub;
+        return type_ == FrameType::BaselineStub;
     }
     bool isRectifier() const {
-        return type_ == JitFrame_Rectifier;
+        return type_ == FrameType::Rectifier;
     }
     bool isBareExit() const;
     template <typename T> bool isExitFrameLayout() const;
 
     static bool isEntry(FrameType type) {
-        return type == JitFrame_CppToJSJit || type == JitFrame_WasmToJSJit;
+        return type == FrameType::CppToJSJit || type == FrameType::WasmToJSJit;
     }
     bool isEntry() const {
         return isEntry(type_);

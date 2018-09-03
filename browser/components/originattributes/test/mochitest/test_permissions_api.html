@@ -21,24 +21,24 @@
     UNKNOWN_ACTION,
     PROMPT_ACTION,
     ALLOW_ACTION,
-    DENY_ACTION
+    DENY_ACTION,
   } = SpecialPowers.Ci.nsIPermissionManager;
 
   SimpleTest.waitForExplicitFinish();
 
   const PERMISSIONS = [{
     name: "geolocation",
-    type: "geo"
+    type: "geo",
   }, {
     name: "notifications",
-    type: "desktop-notification"
+    type: "desktop-notification",
   }, {
     name: "push",
-    type: "desktop-notification"
+    type: "desktop-notification",
   }, {
     name: "persistent-storage",
-    type: "persistent-storage"
-  }, ];
+    type: "persistent-storage",
+  } ];
 
   const UNSUPPORTED_PERMISSIONS = [
     "foobarbaz", // Not in spec, for testing only.
@@ -53,7 +53,7 @@
           return {
             type,
             allow,
-            "context": aWindow.document
+            "context": aWindow.document,
           };
         });
         return new Promise((resolve) => {

@@ -6,9 +6,9 @@ function test() {
     windows: [{
       tabs: [
         { entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }], hidden: true },
-        { entries: [{ url: "about:blank", triggeringPrincipal_base64 }], hidden: false }
-      ]
-    }]
+        { entries: [{ url: "about:blank", triggeringPrincipal_base64 }], hidden: false },
+      ],
+    }],
   };
   let url = "about:sessionrestore";
   let formdata = {id: {sessionData}, url};

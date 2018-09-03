@@ -48,7 +48,7 @@ add_task(async function setup() {
       ["browser.tabs.remote.separatePrivilegedContentProcess", true],
       ["dom.ipc.processCount.privileged", 1],
       ["dom.ipc.keepProcessesAlive.privileged", 1],
-    ]
+    ],
   });
 });
 
@@ -77,7 +77,7 @@ add_task(async function activity_stream_in_privileged_content_process() {
       `${ABOUT_HOME}#baz`,
       `${ABOUT_NEWTAB}?q=foo`,
       `${ABOUT_WELCOME}?q=bar`,
-      `${ABOUT_HOME}?q=baz`
+      `${ABOUT_HOME}?q=baz`,
     ]) {
       await BrowserTestUtils.withNewTab(url, async function(browser2) {
         is(browser2.frameLoader.tabParent.osPid, privilegedPid,
@@ -119,7 +119,7 @@ add_task(async function process_switching_through_loading_in_the_same_tab() {
       [`${ABOUT_WELCOME}?q=bar`, E10SUtils.PRIVILEGED_REMOTE_TYPE],
       [TEST_HTTP, E10SUtils.WEB_REMOTE_TYPE],
       [`${ABOUT_HOME}?q=baz`, E10SUtils.PRIVILEGED_REMOTE_TYPE],
-      [TEST_HTTP, E10SUtils.WEB_REMOTE_TYPE]
+      [TEST_HTTP, E10SUtils.WEB_REMOTE_TYPE],
     ]) {
       BrowserTestUtils.loadURI(browser, url);
       await BrowserTestUtils.browserLoaded(browser, false, url);

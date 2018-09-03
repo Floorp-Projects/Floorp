@@ -65,6 +65,7 @@ interface nsILoadURIDelegate;
 native TabChildRef(already_AddRefed<nsITabChild>);
 native nsDocShellLoadInfoPtr(nsDocShellLoadInfo*);
 
+webidl BrowsingContext;
 webidl ContentFrameMessageManager;
 webidl EventTarget;
 
@@ -1189,6 +1190,11 @@ interface nsIDocShell : nsIDocShellTreeItem
   void AttachBrowsingContext(nsIDocShell* aParentDocShell);
   void DetachBrowsingContext();
 %}
+
+  /**
+   * BrowsingContext associated with the DocShell.
+   */
+  readonly attribute BrowsingContext browsingContext;
 
   /**
    * Allowed CSS display modes. This needs to be kept in

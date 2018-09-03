@@ -157,7 +157,7 @@ this.BingTranslator.prototype = {
     if (--this._pendingRequests == 0) {
       if (this._partialSuccess) {
         this._onFinishedDeferred.resolve({
-          characterCount: this._translatedCharacterCount
+          characterCount: this._translatedCharacterCount,
         });
       } else {
         let error = this._serviceUnavailable ? "unavailable" : "failure";
@@ -246,7 +246,7 @@ this.BingTranslator.prototype = {
         return {
           data: output,
           finished: false,
-          lastIndex: i
+          lastIndex: i,
         };
       }
 
@@ -258,9 +258,9 @@ this.BingTranslator.prototype = {
     return {
       data: output,
       finished: true,
-      lastIndex: 0
+      lastIndex: 0,
     };
-  }
+  },
 };
 
 /**
@@ -327,7 +327,7 @@ BingRequest.prototype = {
             reject(xhr);
           },
           postData: requestString,
-          headers
+          headers,
         };
 
         // Fire the request.
@@ -338,7 +338,7 @@ BingRequest.prototype = {
         this.networkRequest = request;
       });
     })();
-  }
+  },
 };
 
 /**
@@ -386,7 +386,7 @@ var BingTokenManager = {
       ["client_id",
       getUrlParam("%BING_API_CLIENTID%", "browser.translation.bing.clientIdOverride")],
       ["client_secret",
-      getUrlParam("%BING_API_KEY%", "browser.translation.bing.apiKeyOverride")]
+      getUrlParam("%BING_API_KEY%", "browser.translation.bing.apiKeyOverride")],
     ];
 
     this._pendingRequest = new Promise((resolve, reject) => {
@@ -414,13 +414,13 @@ var BingTokenManager = {
           BingTokenManager._pendingRequest = null;
           reject(e);
         },
-        postData: params
+        postData: params,
       };
 
       httpRequest(url, options);
     });
     return this._pendingRequest;
-  }
+  },
 };
 
 /**

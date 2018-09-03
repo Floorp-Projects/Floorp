@@ -113,6 +113,9 @@ void ReportFatalError(const char* aFormat, ...);
 void BeginIdleTime();
 void EndIdleTime();
 
+// Whether the middleman runs developer tools server code.
+bool DebuggerRunsInMiddleman();
+
 } // namespace child
 
 } // namespace recordreplay

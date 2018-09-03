@@ -64,5 +64,5 @@ var CompactTheme = {
   uninit() {
     Services.obs.removeObserver(this, "lightweight-theme-styling-update");
     this.styleSheet = null;
-  }
+  },
 };

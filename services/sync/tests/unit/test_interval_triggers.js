@@ -19,7 +19,7 @@ async function sync_httpd_setup() {
     syncID: Service.syncID,
     storageVersion: STORAGE_VERSION,
     engines: {clients: {version: clientsEngine.version,
-                        syncID: clientsSyncID}}
+                        syncID: clientsSyncID}},
   });
   let clientsColl = new ServerCollection({}, true);
 
@@ -32,7 +32,7 @@ async function sync_httpd_setup() {
     "/1.1/johndoe/info/collections": collectionsHelper.handler,
     "/1.1/johndoe/storage/crypto/keys":
       upd("crypto", (new ServerWBO("keys")).handler()),
-    "/1.1/johndoe/storage/clients": upd("clients", clientsColl.handler())
+    "/1.1/johndoe/storage/clients": upd("clients", clientsColl.handler()),
   });
 }
 

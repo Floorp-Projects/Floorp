@@ -19,6 +19,21 @@ with Files('CSSRuleList.*'):
 with Files('nsDOM*'):
     BUG_COMPONENT = ('Core', 'DOM: CSS Object Model')
 
+with Files('AnimationCollection.*'):
+    BUG_COMPONENT = ('Core', 'CSS Transitions and Animations')
+
+with Files('AnimationCommon.*'):
+    BUG_COMPONENT = ('Core', 'CSS Transitions and Animations')
+
+with Files('nsAnimationManager.*'):
+    BUG_COMPONENT = ('Core', 'CSS Transitions and Animations')
+
+with Files('nsTransitionManager.*'):
+    BUG_COMPONENT = ('Core', 'CSS Transitions and Animations')
+
+with Files('StyleAnimationValue.*'):
+    BUG_COMPONENT = ('Core', 'CSS Transitions and Animations')
+
 DIRS += ['xbl-marquee']
 TEST_DIRS += ['test']
 

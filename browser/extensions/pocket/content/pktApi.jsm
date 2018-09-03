@@ -328,7 +328,7 @@ var pktApi = (function() {
         var sendData = {
             access_token: accessToken,
             url,
-            since: since ? since : 0
+            since: since ? since : 0,
         };
 
         if (options.title) {
@@ -367,7 +367,7 @@ var pktApi = (function() {
                     options.success.apply(options, Array.apply(null, arguments));
                 }
             },
-            error: options.error
+            error: options.error,
         });
     }
 
@@ -389,7 +389,7 @@ var pktApi = (function() {
                     options.success.apply(options, Array.apply(null, arguments));
                 }
             },
-            error: options.error
+            error: options.error,
         });
     }
 
@@ -402,14 +402,14 @@ var pktApi = (function() {
         return apiRequest({
             path: "/firefox/get-app",
             data: {
-                access_token: getAccessToken()
+                access_token: getAccessToken(),
             },
             success(data) {
                 if (options.success) {
                     options.success.apply(options, Array.apply(null, arguments));
                 }
             },
-            error: options.error
+            error: options.error,
         });
     }
 
@@ -424,7 +424,7 @@ var pktApi = (function() {
     function deleteItem(itemId, options) {
         var action = {
             action: "delete",
-            item_id: itemId
+            item_id: itemId,
         };
         return sendAction(action, options);
     }
@@ -440,7 +440,7 @@ var pktApi = (function() {
     function archiveItem(itemId, options) {
         var action = {
             action: "archive",
-            item_id: itemId
+            item_id: itemId,
         };
         return sendAction(action, options);
     }
@@ -476,10 +476,10 @@ var pktApi = (function() {
             path: "/send",
             data: {
                 access_token: getAccessToken(),
-                actions: JSON.stringify(actions)
+                actions: JSON.stringify(actions),
             },
             success: options.success,
-            error: options.error
+            error: options.error,
         });
     }
 
@@ -529,7 +529,7 @@ var pktApi = (function() {
         // Tags add action
         var action = {
             action: "tags_add",
-            tags
+            tags,
         };
         action = extend(action, actionPart);
 
@@ -548,7 +548,7 @@ var pktApi = (function() {
                 var tagToSave = tags[i].trim();
                 var newUsedTagObject = {
                     "tag": tagToSave,
-                    "timestamp": new Date().getTime()
+                    "timestamp": new Date().getTime(),
                 };
                 usedTags[tagToSave] = newUsedTagObject;
             }
@@ -656,7 +656,7 @@ var pktApi = (function() {
             path: "/getSuggestedTags",
             data,
             success: options.success,
-            error: options.error
+            error: options.error,
         });
     }
 
@@ -670,7 +670,7 @@ var pktApi = (function() {
             path: "/firefox/get",
             data: requestData,
             success: options.success,
-            error: options.error
+            error: options.error,
         });
     }
 
@@ -723,6 +723,6 @@ var pktApi = (function() {
         getSignupPanelTabTestVariant,
         retrieve,
         getArticleInfo,
-        getMobileDownload
+        getMobileDownload,
     };
 }());

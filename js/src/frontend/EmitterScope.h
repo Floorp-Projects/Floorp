@@ -18,9 +18,11 @@
 #include "frontend/ParseContext.h"
 #include "frontend/SharedContext.h"
 #include "js/TypeDecls.h"
-#include "vm/Scope.h"
 
 namespace js {
+
+class Scope;
+
 namespace frontend {
 
 // A scope that introduces bindings.

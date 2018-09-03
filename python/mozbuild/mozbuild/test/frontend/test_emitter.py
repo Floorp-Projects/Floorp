@@ -423,6 +423,13 @@ class TestEmitterBasic(unittest.TestCase):
         sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertEqual(flags.flags['WARNINGS_AS_ERRORS'], [])
 
+    def test_disable_compiler_warnings(self):
+        reader = self.reader('disable-compiler-warnings', extra_substs={
+            'WARNINGS_CFLAGS': '-Wall',
+        })
+        sources, ldflags, lib, flags = self.read_topsrcdir(reader)
+        self.assertEqual(flags.flags['WARNINGS_CFLAGS'], [])
+
     def test_use_yasm(self):
         # When yasm is not available, this should raise.
         reader = self.reader('use-yasm')

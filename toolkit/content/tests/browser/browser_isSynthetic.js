@@ -16,7 +16,7 @@ LocationChangeListener.prototype = {
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
-                                          Ci.nsISupportsWeakReference])
+                                          Ci.nsISupportsWeakReference]),
 };
 
 const FILES = gTestPath.replace("browser_isSynthetic.js", "")

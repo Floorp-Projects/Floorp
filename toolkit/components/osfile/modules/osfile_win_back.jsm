@@ -171,7 +171,7 @@
                     { dwReserved0:      Type.DWORD.implementation },
                     { dwReserved1:      Type.DWORD.implementation },
                     { cFileName:        ctypes.ArrayType(ctypes.char16_t, Const.MAX_PATH) },
-                    { cAlternateFileName: ctypes.ArrayType(ctypes.char16_t, 14) }
+                    { cAlternateFileName: ctypes.ArrayType(ctypes.char16_t, 14) },
                       ]));
 
        Type.FILE_INFORMATION =
@@ -185,7 +185,7 @@
                     { nFileSizeHigh:    Type.DWORD.implementation },
                     { nFileSizeLow:     Type.DWORD.implementation },
                     { nNumberOfLinks:   ctypes.uint32_t },
-                    { nFileIndex: ctypes.uint64_t }
+                    { nFileIndex: ctypes.uint64_t },
                    ]));
 
        Type.SystemTime =
@@ -198,7 +198,7 @@
                   { wHour:      ctypes.int16_t },
                   { wMinute:    ctypes.int16_t },
                   { wSecond:    ctypes.int16_t },
-                  { wMilliSeconds: ctypes.int16_t }
+                  { wMilliSeconds: ctypes.int16_t },
                   ]));
 
        // Special case: these functions are used by the
@@ -380,8 +380,8 @@
 
      exports.OS.Win = {
        File: {
-           _init:  init
-       }
+           _init:  init,
+       },
      };
    })(this);
 }

@@ -40,7 +40,7 @@ Queue.prototype = {
   },
   isEmpty: function isEmpty() {
     return this._array.length == 0;
-  }
+  },
 };
 
 /**
@@ -378,7 +378,7 @@ this.BasePromiseWorker.prototype = {
       let {deferred} = this._queue.pop();
       deferred.reject(error);
     }
-  }
+  },
 };
 
 /**

@@ -50,7 +50,7 @@ add_task(async function setup_test_preference() {
   await
     SpecialPowers.pushPrefEnv({"set": [
       ["dom.audiochannel.audioCompeting", true],
-      ["dom.ipc.processCount", 1]
+      ["dom.ipc.processCount", 1],
     ]});
 });
 

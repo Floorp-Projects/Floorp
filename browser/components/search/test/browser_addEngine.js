@@ -44,7 +44,7 @@ var gTests = [
       name: "Foo",
       alias: null,
       description: "Foo Search",
-      searchForm: "http://mochi.test:8888/browser/browser/components/search/test/"
+      searchForm: "http://mochi.test:8888/browser/browser/components/search/test/",
     },
     run() {
       Services.obs.addObserver(observer, "browser-search-engine-modified");
@@ -85,8 +85,8 @@ var gTests = [
       isnot(currentEngine.name, this.engine.name, "Current engine reset after removal");
 
       nextTest();
-    }
-  }
+    },
+  },
 ];
 
 var gCurrentTest = null;

@@ -69,11 +69,11 @@
   border-top: none;
 }
 
-#navigator-toolbox > toolbar {
+.browser-toolbar {
   padding: 0;
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+.browser-toolbar:not(.titlebar-color) {
   background-color: var(--toolbar-bgcolor);
   background-image: var(--toolbar-bgimage);
   color: var(--toolbar-color, inherit);
@@ -446,13 +446,8 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 
 %include ../shared/sidebar.inc.css
 
-#sidebar-box {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-}
-
-#sidebar-header {
-  border-bottom: 1px solid ThreeDShadow;
+#browser {
+  --sidebar-border-color: ThreeDShadow;
 }
 
 .sidebar-splitter {

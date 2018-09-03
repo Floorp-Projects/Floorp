@@ -21,7 +21,7 @@ RemoteWebProgressRequest.prototype = {
 
   get URI() { return this._uri; },
   get originalURI() { return this._originalURI; },
-  get matchedList() { return this._matchedList; }
+  get matchedList() { return this._matchedList; },
 };
 
 function RemoteWebProgress(aManager, aIsTopLevel) {
@@ -61,7 +61,7 @@ RemoteWebProgress.prototype = {
 
   removeProgressListener(aListener) {
     this._manager.removeProgressListener(aListener);
-  }
+  },
 };
 
 function RemoteWebProgressManager(aBrowser) {
@@ -100,7 +100,7 @@ RemoteWebProgressManager.prototype = {
     let listener = aListener.QueryInterface(Ci.nsIWebProgressListener);
     this._progressListeners.push({
       listener,
-      mask: aNotifyMask || Ci.nsIWebProgress.NOTIFY_ALL
+      mask: aNotifyMask || Ci.nsIWebProgress.NOTIFY_ALL,
     });
   },
 

@@ -1,7 +1,30 @@
-This directory contains the 7-zip code used in building the self-extracting Windows installer.
+This directory contains the LZMA SDK code used in building the self-extracting
+Windows installer.
 
-The src/ directory contains an almost-unmodified copy of the 7-zip source code version 18.01, as downloaded from http://7-zip.org/a/7z1801-src.7z on February 12, 2018. A few modifications have been made to this copy of the source code. Those modifications are contained in mozilla_customizations.diff, which should be found in the same directory as this file.
+The src/ directory contains an almost-unmodified copy of the 7-zip source code
+version 18.05, as downloaded from https://www.7-zip.org/a/lzma1805.7z (linked
+from https://www.7-zip.org/sdk.html) on August 30, 2018. As stated in
+DOC/lzma-sdk.txt and on the web page, this code is in the public domain. A few
+modifications have been made to this copy of the source code. Those
+modifications are contained in mozilla_customizations.diff, which should be
+found in the same directory as this file.
 
-The firefox/ directory contains 7zSD.sfx, a 32-bit Windows executable built from the Visual C++ 6 project found in the src/CPP/7zip/Bundles/SFXSetup/ directory. The "ReleaseD" configuration was used. Including a compiled binary in the source tree is certainly not preferred, but is necessary in this case because the code does not build cleanly under more recent compilers. Using an older toolchain also allows us to keep this executable running on older Windows versions which are no longer supported by the build system used for the main application; that means we can show an error message specifically informing users that their OS is too old, instead of the generic "not a valid Win32 application" error that Windows would generate if we used the newer toolchain and that isn't very helpful to most users.
+The firefox/ directory contains 7zSD.sfx, a 32-bit Windows executable built
+from the Visual C++ 6 project found in the src/CPP/7zip/Bundles/SFXSetup/
+directory. The "ReleaseD" configuration was used. Including a compiled binary
+in the source tree is certainly not preferred, but is necessary in this case
+because the code does not build cleanly under more recent compilers. Using an
+older toolchain also allows us to keep this executable running on older Windows
+versions which are no longer supported by the build system used for the main
+application; that means we can show an error message specifically informing
+users that their OS is too old, instead of the generic "not a valid Win32
+application" error that Windows would generate if we used the newer toolchain
+and that isn't very helpful to most users.
 
-The firefox/ directory also contains an icon and a manifest which were edited into 7zSD.sfx's resources after build time. The icon had to be added this way as opposed to just replacing the included 7-zip icon because the resource compiler included with VC6 does not support the 128x128 PNG image included in our icon file. Similarly, the manifest had to be edited in because the older resource compiler does not support manifests (and the 7-zip build files do not try to use any).
+The firefox/ directory also contains an icon and a manifest which were edited
+into 7zSD.sfx's resources after build time. The icon had to be added this way
+as opposed to just replacing the included 7-zip icon because the resource
+compiler included with VC6 does not support the 128x128 PNG image included in
+our icon file. Similarly, the manifest had to be edited in because the older
+resource compiler does not support manifests (and the 7-zip build files do not
+try to use any).

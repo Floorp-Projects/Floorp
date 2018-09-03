@@ -8,8 +8,16 @@
 #ifndef UNDER_CE
 #include <io.h>
 #endif
+#else
+// for isatty()
+#include <unistd.h>
 #endif
+
 #include <stdio.h>
+
+#ifdef _7ZIP_LARGE_PAGES
+#include "../../../../C/Alloc.h"
+#endif
 
 #include "../../../Common/ListFileUtils.h"
 #include "../../../Common/StringConvert.h"
@@ -19,17 +27,19 @@
 #include "../../../Windows/FileName.h"
 #ifdef _WIN32
 #include "../../../Windows/FileMapping.h"
+#include "../../../Windows/MemoryLock.h"
 #include "../../../Windows/Synchronization.h"
 #endif
 
 #include "ArchiveCommandLine.h"
 #include "EnumDirItems.h"
-#include "SortUtils.h"
 #include "Update.h"
 #include "UpdateAction.h"
 
 extern bool g_CaseSensitive;
 extern bool g_PathTrailReplaceMode;
+
+bool g_LargePagesMode = false;
 
 #ifdef UNDER_CE
 
@@ -60,15 +70,6 @@ static bool StringToUInt32(const wchar_t *s, UInt32 &v)
   return *end == 0;
 }
 
-CArcCmdLineException::CArcCmdLineException(const char *a, const wchar_t *u)
-{
-  (*this) += a;
-  if (u)
-  {
-    Add_LF();
-    (*this) += u;
-  }
-}
 
 int g_CodePage = -1;
 
@@ -240,7 +241,7 @@ static const CSwitchForm kSwitchForms[] =
   { "si", NSwitchType::kString },
   { "so" },
 
-  { "slp", NSwitchType::kMinus },
+  { "slp", NSwitchType::kString },
   { "scs", NSwitchType::kString },
   { "scc", NSwitchType::kString },
   { "slt" },
@@ -282,7 +283,6 @@ static const char * const kIncorrectListFile = "Incorrect item in listfile.\nChe
 static const char * const kTerminalOutError = "I won't write compressed data to a terminal";
 static const char * const kSameTerminalError = "I won't write data and program's messages to same stream";
 static const char * const kEmptyFilePath = "Empty file path";
-static const char * const kCannotFindArchive = "Cannot find archive";
 
 bool CArcCommand::IsFromExtractGroup() const
 {
@@ -615,84 +615,6 @@ static void AddSwitchWildcardsToCensor(
     throw CArcCmdLineException(errorMessage, strings[i]);
 }
 
-#ifdef _WIN32
-
-// This code converts all short file names to long file names.
-
-static void ConvertToLongName(const UString &prefix, UString &name)
-{
-  if (name.IsEmpty() || DoesNameContainWildcard(name))
-    return;
-  NFind::CFileInfo fi;
-  const FString path (us2fs(prefix + name));
-  #ifndef UNDER_CE
-  if (NFile::NName::IsDevicePath(path))
-    return;
-  #endif
-  if (fi.Find(path))
-    name = fs2us(fi.Name);
-}
-
-static void ConvertToLongNames(const UString &prefix, CObjectVector<NWildcard::CItem> &items)
-{
-  FOR_VECTOR (i, items)
-  {
-    NWildcard::CItem &item = items[i];
-    if (item.Recursive || item.PathParts.Size() != 1)
-      continue;
-    if (prefix.IsEmpty() && item.IsDriveItem())
-      continue;
-    ConvertToLongName(prefix, item.PathParts.Front());
-  }
-}
-
-static void ConvertToLongNames(const UString &prefix, NWildcard::CCensorNode &node)
-{
-  ConvertToLongNames(prefix, node.IncludeItems);
-  ConvertToLongNames(prefix, node.ExcludeItems);
-  unsigned i;
-  for (i = 0; i < node.SubNodes.Size(); i++)
-  {
-    UString &name = node.SubNodes[i].Name;
-    if (prefix.IsEmpty() && NWildcard::IsDriveColonName(name))
-      continue;
-    ConvertToLongName(prefix, name);
-  }
-  // mix folders with same name
-  for (i = 0; i < node.SubNodes.Size(); i++)
-  {
-    NWildcard::CCensorNode &nextNode1 = node.SubNodes[i];
-    for (unsigned j = i + 1; j < node.SubNodes.Size();)
-    {
-      const NWildcard::CCensorNode &nextNode2 = node.SubNodes[j];
-      if (nextNode1.Name.IsEqualTo_NoCase(nextNode2.Name))
-      {
-        nextNode1.IncludeItems += nextNode2.IncludeItems;
-        nextNode1.ExcludeItems += nextNode2.ExcludeItems;
-        node.SubNodes.Delete(j);
-      }
-      else
-        j++;
-    }
-  }
-  for (i = 0; i < node.SubNodes.Size(); i++)
-  {
-    NWildcard::CCensorNode &nextNode = node.SubNodes[i];
-    ConvertToLongNames(prefix + nextNode.Name + WCHAR_PATH_SEPARATOR, nextNode);
-  }
-}
-
-void ConvertToLongNames(NWildcard::CCensor &censor)
-{
-  FOR_VECTOR (i, censor.Pairs)
-  {
-    NWildcard::CPair &pair = censor.Pairs[i];
-    ConvertToLongNames(pair.Prefix, pair.Head);
-  }
-}
-
-#endif
-
 /*
 static NUpdateArchive::NPairAction::EEnum GetUpdatePairActionType(int i)
 {
@@ -922,9 +844,45 @@ void CArcCmdLineParser::Parse1(const UStringVector &commandStrings,
     options.CaseSensitive = g_CaseSensitive;
   }
 
-  options.LargePages = false;
+
+  #if defined(_WIN32) && !defined(UNDER_CE)
+  NSecurity::EnablePrivilege_SymLink();
+  #endif
+  
+  // options.LargePages = false;
+
   if (parser[NKey::kLargePages].ThereIs)
-    options.LargePages = !parser[NKey::kLargePages].WithMinus;
+  {
+    unsigned slp = 0;
+    const UString &s = parser[NKey::kLargePages].PostStrings[0];
+    if (s.IsEmpty())
+      slp = 1;
+    else if (s != L"-")
+    {
+      if (!StringToUInt32(s, slp))
+        throw CArcCmdLineException("Unsupported switch postfix for -slp", s);
+    }
+    
+    #ifdef _7ZIP_LARGE_PAGES
+    if (slp >
+          #ifndef UNDER_CE
+            (unsigned)NSecurity::Get_LargePages_RiskLevel()
+          #else
+            0
+          #endif
+        )
+    {
+      SetLargePageSize();
+      // note: this process also can inherit that Privilege from parent process
+      g_LargePagesMode =
+      #if defined(_WIN32) && !defined(UNDER_CE)
+        NSecurity::EnablePrivilege_LockMemory();
+      #else
+        true;
+      #endif
+    }
+    #endif
+  }
 
 
   #ifndef UNDER_CE
@@ -996,64 +954,6 @@ static Int32 FindCharset(const NCommandLineParser::CParser &parser, unsigned key
   }
 }
 
-HRESULT EnumerateDirItemsAndSort(
-    NWildcard::CCensor &censor,
-    NWildcard::ECensorPathMode censorPathMode,
-    const UString &addPathPrefix,
-    UStringVector &sortedPaths,
-    UStringVector &sortedFullPaths,
-    CDirItemsStat &st,
-    IDirItemsCallback *callback)
-{
-  FStringVector paths;
-  
-  {
-    CDirItems dirItems;
-    dirItems.Callback = callback;
-    {
-      HRESULT res = EnumerateItems(censor, censorPathMode, addPathPrefix, dirItems);
-      st = dirItems.Stat;
-      RINOK(res);
-    }
-  
-    FOR_VECTOR (i, dirItems.Items)
-    {
-      const CDirItem &dirItem = dirItems.Items[i];
-      if (!dirItem.IsDir())
-        paths.Add(dirItems.GetPhyPath(i));
-    }
-  }
-  
-  if (paths.Size() == 0)
-    throw CArcCmdLineException(kCannotFindArchive);
-  
-  UStringVector fullPaths;
-  
-  unsigned i;
-  
-  for (i = 0; i < paths.Size(); i++)
-  {
-    FString fullPath;
-    NFile::NDir::MyGetFullPathName(paths[i], fullPath);
-    fullPaths.Add(fs2us(fullPath));
-  }
-  
-  CUIntVector indices;
-  SortFileNames(fullPaths, indices);
-  sortedPaths.ClearAndReserve(indices.Size());
-  sortedFullPaths.ClearAndReserve(indices.Size());
-
-  for (i = 0; i < indices.Size(); i++)
-  {
-    unsigned index = indices[i];
-    sortedPaths.AddInReserved(fs2us(paths[index]));
-    sortedFullPaths.AddInReserved(fullPaths[index]);
-    if (i > 0 && CompareFileNames(sortedFullPaths[i], sortedFullPaths[i - 1]) == 0)
-      throw CArcCmdLineException("Duplicate archive path:", sortedFullPaths[i]);
-  }
-
-  return S_OK;
-}
 
 static void SetBoolPair(NCommandLineParser::CParser &parser, unsigned switchID, CBoolPair &bp)
 {

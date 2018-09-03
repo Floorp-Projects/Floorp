@@ -4,7 +4,7 @@ function getImageInfo(imageElement) {
     currentSrc: imageElement.currentSrc,
     width: imageElement.width,
     height: imageElement.height,
-    imageText: imageElement.title || imageElement.alt
+    imageText: imageElement.title || imageElement.alt,
   };
 }
 

@@ -6,7 +6,7 @@ let gTestURLsMap = new Map([
   ["about:about", null],
   ["about:license", null],
   ["about:robots", null],
-  ["about:mozilla", null]
+  ["about:mozilla", null],
 ]);
 let gBrowserState;
 

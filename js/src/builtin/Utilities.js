@@ -111,15 +111,6 @@ function ToLength(v) {
 }
 
 // ES2017 draft rev aebf014403a3e641fb1622aec47c40f051943527
-// 7.2.9 SameValue ( x, y )
-function SameValue(x, y) {
-    if (x === y) {
-        return (x !== 0) || (1 / x === 1 / y);
-    }
-    return (x !== x && y !== y);
-}
-
-// ES2017 draft rev aebf014403a3e641fb1622aec47c40f051943527
 // 7.2.10 SameValueZero ( x, y )
 function SameValueZero(x, y) {
     return x === y || (x !== x && y !== y);

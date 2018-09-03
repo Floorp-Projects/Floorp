@@ -36,6 +36,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       };
     }
 
+    function clearARIAActiveDescendant(aID) {
+      this.eventSeq = [
+        new focusChecker(aID)
+      ];
+
+      this.invoke = function clearARIAActiveDescendant_invoke() {
+        getNode(aID).removeAttribute("aria-activedescendant");
+      };
+
+      this.getID = function clearARIAActiveDescendant_getID() {
+        return "clear aria-activedescendant on container " + aID;
+      };
+    }
+
+    function changeARIAActiveDescendantInvalid(aID) {
+      this.eventSeq = [
+        new focusChecker(aID)
+      ];
+
+      this.invoke = function changeARIAActiveDescendant_invoke() {
+        getNode(aID).setAttribute("aria-activedescendant", "invalid");
+      };
+
+      this.getID = function changeARIAActiveDescendant_getID() {
+        return "change aria-activedescendant to invalid id";
+      };
+    }
+    
     function insertItemNFocus(aID, aNewItemID) {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, aNewItemID),
@@ -72,6 +100,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
 
       gQueue.push(new synthFocus("listbox", new focusChecker("item3")));
       gQueue.push(new insertItemNFocus("listbox", "item4"));
+
+      gQueue.push(new clearARIAActiveDescendant("listbox"));
+      gQueue.push(new changeARIAActiveDescendant("listbox", "item1"));
+      gQueue.push(new changeARIAActiveDescendantInvalid("listbox"));
+      gQueue.push(new changeARIAActiveDescendant("listbox", "item1"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }

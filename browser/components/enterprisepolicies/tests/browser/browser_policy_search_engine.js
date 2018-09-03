@@ -65,12 +65,12 @@ add_task(async function test_install_and_set_default() {
         "Add": [
           {
             "Name": "MozSearch",
-            "URLTemplate": "http://example.com/?q={searchTerms}"
-          }
+            "URLTemplate": "http://example.com/?q={searchTerms}",
+          },
         ],
-        "Default": "MozSearch"
-      }
-    }
+        "Default": "MozSearch",
+      },
+    },
   });
 
   // If this passes, it means that the new search engine was properly installed
@@ -97,13 +97,13 @@ add_task(async function test_install_and_set_default_prevent_installs() {
         "Add": [
           {
             "Name": "MozSearch",
-            "URLTemplate": "http://example.com/?q={searchTerms}"
-          }
+            "URLTemplate": "http://example.com/?q={searchTerms}",
+          },
         ],
         "Default": "MozSearch",
-        "PreventInstalls": true
-      }
-    }
+        "PreventInstalls": true,
+      },
+    },
   });
 
   is(Services.search.currentEngine.name, "MozSearch",
@@ -118,7 +118,7 @@ add_task(async function test_opensearch_works() {
   // Clear out policies so we can test with no policies applied
   await setupPolicyEngineWithJson({
     "policies": {
-    }
+    },
   });
   // Ensure that opensearch works before we make sure that it can be properly
   // disabled
@@ -129,9 +129,9 @@ add_task(async function setup_prevent_installs() {
   await setupPolicyEngineWithJson({
     "policies": {
       "SearchEngines": {
-        "PreventInstalls": true
-      }
-    }
+        "PreventInstalls": true,
+      },
+    },
   });
 });
 
@@ -206,11 +206,11 @@ add_task(async function test_install_and_remove() {
           {
             "Name": "Foo",
             "URLTemplate": "http://example.com/?q={searchTerms}",
-            "IconURL": iconURL
-          }
-        ]
-      }
-    }
+            "IconURL": iconURL,
+          },
+        ],
+      },
+    },
   });
 
   // If this passes, it means that the new search engine was properly installed
@@ -225,9 +225,9 @@ add_task(async function test_install_and_remove() {
   await setupPolicyEngineWithJson({
   "policies": {
       "SearchEngines": {
-        "Remove": ["Foo"]
-      }
-    }
+        "Remove": ["Foo"],
+      },
+    },
   });
 
   // If this passes, it means that the specified engine was properly removed

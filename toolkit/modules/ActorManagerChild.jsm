@@ -237,7 +237,7 @@ var ActorManagerChild = {
       }
     }
     return null;
-  }
+  },
 };
 
 ActorManagerChild.init();

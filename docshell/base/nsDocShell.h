@@ -8,6 +8,7 @@
 #define nsDocShell_h__
 
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/HalScreenConfiguration.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
@@ -69,7 +70,6 @@ namespace dom {
 class ClientInfo;
 class ClientSource;
 class EventTarget;
-typedef uint32_t ScreenOrientationInternal;
 } // namespace dom
 } // namespace mozilla
 
@@ -258,10 +258,12 @@ public:
 
   // Notify Scroll observers when an async panning/zooming transform
   // has started being applied
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void NotifyAsyncPanZoomStarted();
 
   // Notify Scroll observers when an async panning/zooming transform
   // is no longer applied
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void NotifyAsyncPanZoomStopped();
 
   void SetInFrameSwap(bool aInSwap)
@@ -1019,9 +1021,7 @@ private: // data members
 
   eCharsetReloadState mCharsetReloadState;
 
-  // The orientation lock as described by
-  // https://w3c.github.io/screen-orientation/
-  mozilla::dom::ScreenOrientationInternal mOrientationLock;
+  mozilla::hal::ScreenOrientation mOrientationLock;
 
   int32_t mParentCharsetSource;
   int32_t mMarginWidth;

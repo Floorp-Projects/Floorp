@@ -28,7 +28,7 @@ let mockResponse = function(response) {
       async get() {
         this.response = response;
         return this.response;
-      }
+      },
     };
   };
 
@@ -42,7 +42,7 @@ let mockFxa = {
   getOAuthToken(options) {
     Assert.equal(options.scope, "profile");
     return "token";
-  }
+  },
 };
 
 const PROFILE_OPTIONS = {
@@ -62,7 +62,7 @@ let mockResponseError = function(error) {
       setHeader() {},
       async get() {
         throw error;
-      }
+      },
     };
   };
 };
@@ -189,7 +189,7 @@ add_test(function server401ResponseThenSuccess() {
       // being revoked must always be the last token we handed out.
       Assert.equal(parseInt(options.token), lastToken);
       ++numTokensRemoved;
-    }
+    },
   };
   let profileOptions = {
     serverURL: "http://127.0.0.1:1111/v1",
@@ -226,7 +226,7 @@ add_test(function server401ResponseThenSuccess() {
         this.response = responses[numRequests];
         ++numRequests;
         return this.response;
-      }
+      },
     };
   };
 
@@ -263,7 +263,7 @@ add_test(function server401ResponsePersists() {
       // being revoked must always be the last token we handed out.
       Assert.equal(parseInt(options.token), lastToken);
       ++numTokensRemoved;
-    }
+    },
   };
   let profileOptions = {
     serverURL: "http://127.0.0.1:1111/v1",
@@ -290,7 +290,7 @@ add_test(function server401ResponsePersists() {
         this.response = response;
         ++numRequests;
         return this.response;
-      }
+      },
     };
   };
 

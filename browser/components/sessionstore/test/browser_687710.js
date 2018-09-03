@@ -20,8 +20,8 @@ var state = {windows: [{tabs: [{entries: [
         docIdentifier: 2,
         url: "http://example.com",
         triggeringPrincipal_base64,
-      }
-    ]
+      },
+    ],
   },
   {
     docIdentifier: 2,
@@ -32,9 +32,9 @@ var state = {windows: [{tabs: [{entries: [
         docIdentifier: 1,
         url: "http://example.com",
         triggeringPrincipal_base64,
-      }
-    ]
-  }
+      },
+    ],
+  },
 ]}]}]};
 
 add_task(async function test() {

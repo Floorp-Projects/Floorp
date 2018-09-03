@@ -9,7 +9,6 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIDOMXULButtonElement.idl',
-    'nsIDOMXULCheckboxElement.idl',
     'nsIDOMXULCommandDispatcher.idl',
     'nsIDOMXULContainerElement.idl',
     'nsIDOMXULControlElement.idl',

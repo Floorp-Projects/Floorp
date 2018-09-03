@@ -101,7 +101,7 @@ TaskbarPreview::SetVisible(bool visible) {
   // to use it then just pretend that everything succeeded.  The caller doesn't
   // actually have a way to detect this since it's the same case as when we
   // CanMakeTaskbarCalls returns false.
-  if (!mWnd)
+  if (!IsWindowAvailable())
     return NS_OK;
 
   return visible ? Enable() : Disable();
@@ -168,7 +168,7 @@ TaskbarPreview::Enable() {
   nsresult rv = NS_OK;
   if (CanMakeTaskbarCalls()) {
     rv = UpdateTaskbarProperties();
-  } else {
+  } else if (IsWindowAvailable()) {
     WindowHook &hook = GetWindowHook();
     hook.AddMonitor(nsAppShell::GetTaskbarButtonCreatedMessage(), MainWindowHook, this);
   }

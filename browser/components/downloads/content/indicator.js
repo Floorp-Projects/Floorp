@@ -226,13 +226,13 @@ const DownloadsButton = {
   get _navBar() {
     delete this._navBar;
     return this._navBar = document.getElementById("nav-bar");
-  }
+  },
 };
 
 Object.defineProperty(this, "DownloadsButton", {
   value: DownloadsButton,
   enumerable: true,
-  writable: false
+  writable: false,
 });
 
 // DownloadsIndicatorView
@@ -639,5 +639,5 @@ const DownloadsIndicatorView = {
 Object.defineProperty(this, "DownloadsIndicatorView", {
   value: DownloadsIndicatorView,
   enumerable: true,
-  writable: false
+  writable: false,
 });

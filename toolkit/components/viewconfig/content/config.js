@@ -112,7 +112,7 @@ var view = {
   performAction(action) {},
   performActionOnRow(action, row) {},
   performActionOnCell(action, row, col) {},
-  isSeparator(index) { return false; }
+  isSeparator(index) { return false; },
 };
 
 // find the index in gPrefView of a pref object
@@ -252,7 +252,7 @@ var gPrefListener =
           view.treebox.ensureRowIsVisible(selectedIndex);
       }
     }
-  }
+  },
 };
 
 function prefObject(prefName, prefIndex) {
@@ -263,7 +263,7 @@ prefObject.prototype =
 {
   lockCol: PREF_IS_DEFAULT_VALUE,
   typeCol: nsIPrefBranch.PREF_STRING,
-  valueCol: ""
+  valueCol: "",
 };
 
 function fetchPref(prefName, prefIndex) {
@@ -446,7 +446,7 @@ const gSortFunctions =
   prefCol: prefColSortFunction,
   lockCol: lockColSortFunction,
   typeCol: typeColSortFunction,
-  valueCol: valueColSortFunction
+  valueCol: valueColSortFunction,
 };
 
 const configController = {
@@ -460,7 +460,7 @@ const configController = {
     copyPref();
   },
   onEvent: function onEvent(event) {
-  }
+  },
 };
 
 function updateContextMenu() {

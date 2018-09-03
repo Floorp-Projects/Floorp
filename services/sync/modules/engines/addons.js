@@ -91,7 +91,7 @@ function AddonRecord(collection, id) {
 }
 AddonRecord.prototype = {
   __proto__: CryptoWrapper.prototype,
-  _logName: "Record.Addon"
+  _logName: "Record.Addon",
 };
 
 Utils.deferGetSet(AddonRecord, "cleartext", ["addonID",
@@ -242,7 +242,7 @@ AddonsEngine.prototype = {
   // Returns a promise
   isAddonSyncable(addon, ignoreRepoCheck) {
     return this._store.isAddonSyncable(addon, ignoreRepoCheck);
-  }
+  },
 };
 
 /**
@@ -738,7 +738,7 @@ class AddonValidator extends CollectionValidator {
       "addonID",
       "enabled",
       "applicationID",
-      "source"
+      "source",
     ]);
     this.engine = engine;
   }
@@ -760,7 +760,7 @@ class AddonValidator extends CollectionValidator {
       addonID: item.id,
       applicationID: Services.appinfo.ID,
       source: "amo", // check item.foreignInstall?
-      original: item
+      original: item,
     };
   }
 

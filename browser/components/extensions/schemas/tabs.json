@@ -101,7 +101,8 @@
           "cookieStoreId": {"type": "string", "optional": true, "description": "The CookieStoreId used for the tab."},
           "isArticle": {"type": "boolean", "optional": true, "description": "Whether the document in the tab can be rendered in reader mode."},
           "isInReaderMode": {"type": "boolean", "optional": true, "description": "Whether the document in the tab is being rendered in reader mode."},
-          "sharingState": {"$ref": "SharingState", "optional": true, "description": "Current tab sharing state for screen, microphone and camera."}
+          "sharingState": {"$ref": "SharingState", "optional": true, "description": "Current tab sharing state for screen, microphone and camera."},
+          "attention": {"type": "boolean", "optional": true, "description": "Whether the tab is drawing attention."}
         }
       },
       {
@@ -293,6 +294,7 @@
         "id": "UpdatePropertyName",
         "type": "string",
         "enum": [
+          "attention",
           "audible",
           "discarded",
           "favIconUrl",
@@ -655,6 +657,11 @@
                 "type": "boolean",
                 "optional": true,
                 "description": "Whether the tabs are active in their windows."
+              },
+              "attention": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether the tabs are drawing attention."
               },
               "pinned": {
                 "type": "boolean",
@@ -1409,6 +1416,11 @@
             "name": "changeInfo",
             "description": "Lists the changes to the state of the tab that was updated.",
             "properties": {
+              "attention": {
+                "type": "boolean",
+                "optional": true,
+                "description": "The tab's new attention state."
+              },
               "audible": {
                 "type": "boolean",
                 "optional": true,

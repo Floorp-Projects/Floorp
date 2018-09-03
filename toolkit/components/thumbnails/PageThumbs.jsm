@@ -69,7 +69,7 @@ const TaskUtils = {
       };
       reader.readAsArrayBuffer(blob);
     });
-  }
+  },
 };
 
 
@@ -191,7 +191,7 @@ var PageThumbs = {
   captureToCanvas(aBrowser, aCanvas, aCallback, aArgs) {
     let telemetryCaptureTime = new Date();
     let args = {
-      fullScale: aArgs ? aArgs.fullScale : false
+      fullScale: aArgs ? aArgs.fullScale : false,
     };
     this._captureToCanvas(aBrowser, aCanvas, args, (aCanvas) => {
       Services.telemetry
@@ -312,7 +312,7 @@ var PageThumbs = {
             let ctx = thumbnail.getContext("2d");
             ctx.drawImage(image, 0, 0);
             resolve({
-              thumbnail
+              thumbnail,
             });
           };
           image.src = reader.result;
@@ -328,7 +328,7 @@ var PageThumbs = {
         canvasHeight: aHeight,
         background: PageThumbUtils.THUMBNAIL_BG_COLOR,
         id: index,
-        additionalArgs: aArgs
+        additionalArgs: aArgs,
       });
 
     });
@@ -568,7 +568,7 @@ var PageThumbsStorage = {
         tmpPath: path + ".tmp",
         bytes: aData.byteLength,
         noOverwrite: aNoOverwrite,
-        flush: false /* thumbnails do not require the level of guarantee provided by flush*/
+        flush: false, /* thumbnails do not require the level of guarantee provided by flush*/
       }];
     return PageThumbsWorker.post("writeAtomic", msg,
       msg /* we don't want that message garbage-collected,
@@ -685,7 +685,7 @@ var PageThumbsStorage = {
                        "https://developer.mozilla.org/docs/JavaScript_OS.File");
     // Note: Once this method has been removed, we can get rid of the dependency towards FileUtils
     return new FileUtils.File(PageThumbsStorageService.getFilePathForURL(aURL));
-  }
+  },
 };
 
 var PageThumbsStorageMigrator = {
@@ -743,7 +743,7 @@ var PageThumbsStorageMigrator = {
       [OS.Path.join(roaming, THUMBNAIL_DIRECTORY),
        OS.Path.join(local, THUMBNAIL_DIRECTORY)]
     );
-  }
+  },
 };
 
 var PageThumbsExpiration = {
@@ -797,14 +797,14 @@ var PageThumbsExpiration = {
     let msg = [
       PageThumbsStorageService.path,
       keep,
-      EXPIRATION_MIN_CHUNK_SIZE
+      EXPIRATION_MIN_CHUNK_SIZE,
     ];
 
     return PageThumbsWorker.post(
       "expireFilesInDirectory",
       msg
     );
-  }
+  },
 };
 
 /**
@@ -831,5 +831,5 @@ var PageThumbsHistoryObserver = {
   onDeleteVisits() {},
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsINavHistoryObserver,
-                                          Ci.nsISupportsWeakReference])
+                                          Ci.nsISupportsWeakReference]),
 };

@@ -75,7 +75,7 @@ Narrator.prototype = {
           }
 
           return nf.FILTER_SKIP;
-        }
+        },
       };
 
       this._treeWalkerRef = new WeakMap();
@@ -178,7 +178,7 @@ Narrator.prototype = {
             voice: utterance.chosenVoiceURI,
             rate: utterance.rate,
             paragraph: paragraph.textContent,
-            tag: paragraph.localName
+            tag: paragraph.localName,
           });
         }
       });
@@ -220,7 +220,7 @@ Narrator.prototype = {
           if (this._inTest) {
             this._sendTestEvent("wordhighlight", {
               start: e.charIndex,
-              end: e.charIndex + e.charLength
+              end: e.charIndex + e.charLength,
             });
           }
         }
@@ -233,7 +233,7 @@ Narrator.prototype = {
   start(speechOptions) {
     this._speechOptions = {
       rate: speechOptions.rate,
-      voice: this._getVoice(speechOptions.voice)
+      voice: this._getVoice(speechOptions.voice),
     };
 
     this._stopped = false;
@@ -292,7 +292,7 @@ Narrator.prototype = {
       }
     }
     this._win.speechSynthesis.cancel();
-  }
+  },
 };
 
 /**
@@ -332,7 +332,7 @@ Highlighter.prototype = {
         "top": `${r.top - containerRect.top + r.height / 2}px`,
         "left": `${r.left - containerRect.left + r.width / 2}px`,
         "width": `${r.width}px`,
-        "height": `${r.height}px`
+        "height": `${r.height}px`,
       }, textStyle);
 
       // Enables us to vary the CSS transition on a line change.
@@ -431,5 +431,5 @@ Highlighter.prototype = {
    */
   get _nodes() {
     return this.container.querySelectorAll(".narrate-word-highlight");
-  }
+  },
 };

@@ -70,7 +70,7 @@ MockFxaStorageManager.prototype = {
   deleteAccountData() {
     this.accountData = null;
     return Promise.resolve();
-  }
+  },
 };
 
 /**
@@ -132,8 +132,8 @@ var makeIdentityConfig = function(overrides) {
         key: "key",
         hashed_fxa_uid: "f".repeat(32), // used during telemetry validation
         // uid will be set to the username.
-      }
-    }
+      },
+    },
   };
 
   // Now handle any specified overrides.
@@ -186,7 +186,7 @@ var configureFxAccountIdentity = function(authService,
     __proto__: FxAccountsClient.prototype,
     accountStatus() {
       return Promise.resolve(true);
-    }
+    },
   };
   let mockFxAClient = new MockFxAccountsClient();
   fxa.internal._fxAccountsClient = mockFxAClient;

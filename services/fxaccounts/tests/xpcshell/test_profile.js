@@ -20,7 +20,7 @@ const ACCOUNT_UID = "abc123";
 const ACCOUNT_EMAIL = "foo@bar.com";
 const ACCOUNT_DATA = {
   uid: ACCOUNT_UID,
-  email: ACCOUNT_EMAIL
+  email: ACCOUNT_EMAIL,
 };
 
 function FxaMock() {
@@ -30,7 +30,7 @@ FxaMock.prototype = {
     profile: null,
     get isCurrent() {
       return true;
-    }
+    },
   },
 
   getSignedInUser() {
@@ -44,7 +44,7 @@ FxaMock.prototype = {
   setProfileCache(profileCache) {
     this.profileCache = profileCache;
     return Promise.resolve();
-  }
+  },
 };
 
 let mockFxa = function() {
@@ -57,7 +57,7 @@ function CreateFxAccountsProfile(fxa = null, client = null) {
   }
   let options = {
     fxa,
-    profileServerUrl: "http://127.0.0.1:1111/v1"
+    profileServerUrl: "http://127.0.0.1:1111/v1",
   };
   if (client) {
     options.profileClient = client;

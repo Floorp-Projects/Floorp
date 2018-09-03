@@ -26,9 +26,9 @@ def do_unwinder_test():
         if first:
             assert_eq(frame.function().startswith("Something"), True)
             first = False
-        elif frame.function() == "<<JitFrame_Exit>>":
+        elif frame.function() == "<<FrameType::Exit>>":
             found_exit = True
-        elif frame.function() == "<<JitFrame_CppToJSJit>>":
+        elif frame.function() == "<<FrameType::CppToJSJit>>":
             found_entry = True
         elif frame.function() == "main":
             found_main = True

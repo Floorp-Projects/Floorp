@@ -592,7 +592,7 @@ endif
 $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS) $(call mkdir_deps,$(DEPTH)/dist/host/bin)
 	$(REPORT_BUILD)
 ifeq (_WINNT,$(GNU_CC)_$(HOST_OS_ARCH))
-	$(LINKER) -NOLOGO -OUT:$@ -PDB:$(HOST_PDBFILE) $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+	$(HOST_LINKER) -NOLOGO -OUT:$@ -PDB:$(HOST_PDBFILE) $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
 		if test -f '$(srcdir)/$(notdir $@).manifest'; then \
@@ -653,7 +653,7 @@ endif
 $(HOST_SIMPLE_PROGRAMS): host_%$(HOST_BIN_SUFFIX): host_%.$(OBJ_SUFFIX) $(HOST_LIBS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 ifeq (WINNT_,$(HOST_OS_ARCH)_$(GNU_CC))
-	$(LINKER) -NOLOGO -OUT:$@ -PDB:$(HOST_PDBFILE) $< $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+	$(HOST_LINKER) -NOLOGO -OUT:$@ -PDB:$(HOST_PDBFILE) $< $(WIN32_EXE_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
 ifneq (,$(HOST_CPPSRCS)$(USE_HOST_CXX))
 	$(HOST_CXX) $(HOST_OUTOPTION)$@ $(HOST_CXX_LDFLAGS) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
@@ -690,8 +690,7 @@ $(HOST_SHARED_LIBRARY): $(HOST_OBJS) Makefile
 	$(REPORT_BUILD)
 	$(RM) $@
 ifdef _MSC_VER
-	# /!\ We assume host and target are using the same compiler
-	$(LINKER) -NOLOGO -DLL -OUT:$@ $(HOST_OBJS) $(HOST_CXX_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+	$(HOST_LINKER) -NOLOGO -DLL -OUT:$@ $(HOST_OBJS) $(HOST_CXX_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
 	$(HOST_CXX) $(HOST_OUTOPTION)$@ $(HOST_OBJS) $(HOST_CXX_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 endif
@@ -905,13 +904,10 @@ ifdef MOZ_USING_SCCACHE
 sccache_wrap := RUSTC_WRAPPER='$(CCACHE)'
 endif
 
-ifneq (WINNT,$(HOST_OS_ARCH))
 ifndef MOZ_ASAN
 ifndef MOZ_TSAN
 ifndef MOZ_CODE_COVERAGE
 # Pass the compilers and flags in use to cargo for use in build scripts.
-# * Don't do this on Windows because msys path translation makes a mess of the paths, and
-#   we put MSVC in PATH there anyway.
 # * Don't do this for ASAN/TSAN builds because we don't pass our custom linker (see below)
 #   which will muck things up.
 # * Don't do this for code coverage builds because the way rustc invokes the linker doesn't
@@ -926,6 +922,14 @@ ifndef MOZ_CODE_COVERAGE
 # https://github.com/alexcrichton/cc-rs/blob/baa71c0e298d9ad7ac30f0ad78f20b4b3b3a8fb2/src/lib.rs#L1715
 rust_cc_env_name := $(subst -,_,$(RUST_TARGET))
 
+ifeq (WINNT,$(HOST_OS_ARCH))
+# Don't do most of this on Windows because msys path translation makes a mess of the paths, and
+# we put MSVC in PATH there anyway.  But we do suppress warnings, since all such warnings
+# are in third-party code.
+cargo_c_compiler_envs := \
+ CFLAGS_$(rust_cc_env_name)="-w" \
+ $(NULL)
+else
 cargo_c_compiler_envs := \
  CC_$(rust_cc_env_name)="$(CC)" \
  CXX_$(rust_cc_env_name)="$(CXX)" \
@@ -933,10 +937,10 @@ cargo_c_compiler_envs := \
  CXXFLAGS_$(rust_cc_env_name)="$(COMPUTED_CXXFLAGS)" \
  AR_$(rust_cc_env_name)="$(AR)" \
  $(NULL)
+endif # WINNT
 endif # MOZ_CODE_COVERAGE
 endif # MOZ_TSAN
 endif # MOZ_ASAN
-endif # WINNT
 
 # We use the + prefix to pass down the jobserver fds to cargo, but we
 # don't use the prefix when make -n is used, so that cargo doesn't run

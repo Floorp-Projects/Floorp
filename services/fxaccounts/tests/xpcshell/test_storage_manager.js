@@ -103,8 +103,8 @@ add_storage_task(async function checkNewUser(sm) {
     email: "someone@somewhere.com",
     kXCS: "kXCS",
     device: {
-      id: "device id"
-    }
+      id: "device id",
+    },
   };
   sm.plainStorage = new MockedPlainStorage();
   if (sm.secureStorage) {
@@ -136,8 +136,8 @@ add_storage_task(async function checkEverythingRead(sm) {
     email: "someone@somewhere.com",
     device: {
       id: "wibble",
-      registrationVersion: null
-    }
+      registrationVersion: null,
+    },
   });
   if (sm.secureStorage) {
     sm.secureStorage = new MockedSecureStorage(null);
@@ -158,8 +158,8 @@ add_storage_task(async function checkEverythingRead(sm) {
     kExtKbHash: "kExtKbHash",
     device: {
       id: "wibble",
-      registrationVersion: DEVICE_REGISTRATION_VERSION
-    }
+      registrationVersion: DEVICE_REGISTRATION_VERSION,
+    },
   });
   accountData = await sm.getAccountData();
   Assert.equal(accountData.kSync, "kSync");

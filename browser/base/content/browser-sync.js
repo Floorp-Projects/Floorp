@@ -26,7 +26,7 @@ var gSync = {
   _obs: [
     "weave:engine:sync:finish",
     "quit-application",
-    UIState.ON_UPDATE
+    UIState.ON_UPDATE,
   ],
 
   get fxaStrings() {
@@ -724,6 +724,6 @@ var gSync = {
 
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
-    Ci.nsISupportsWeakReference
-  ])
+    Ci.nsISupportsWeakReference,
+  ]),
 };

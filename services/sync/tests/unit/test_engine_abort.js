@@ -17,7 +17,7 @@ add_task(async function test_processIncoming_abort() {
   collection.insert(id, payload);
 
   let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
+      "/1.1/foo/storage/rotary": collection.handler(),
   });
 
   await SyncTestingInfrastructure(server);

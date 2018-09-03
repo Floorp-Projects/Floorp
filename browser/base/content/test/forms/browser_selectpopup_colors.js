@@ -302,8 +302,8 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     "set": [
       ["dom.select_popup_in_parent.enabled", true],
-      ["dom.forms.select.customstyling", true]
-    ]
+      ["dom.forms.select.customstyling", true],
+    ],
   });
 });
 
@@ -317,7 +317,7 @@ add_task(async function test_colors_applied_to_popup_items() {
 add_task(async function test_colors_applied_to_popup() {
   let options = {
     selectColor: "rgb(255, 255, 255)",
-    selectBgColor: "rgb(126, 58, 58)"
+    selectBgColor: "rgb(126, 58, 58)",
   };
   await testSelectColors(PAGECONTENT_COLORS_ON_SELECT, 4, options);
 });
@@ -326,7 +326,7 @@ add_task(async function test_colors_applied_to_popup() {
 add_task(async function test_transparent_applied_to_popup() {
   let options = {
     selectColor: getSystemColor("-moz-ComboboxText"),
-    selectBgColor: getSystemColor("-moz-Combobox")
+    selectBgColor: getSystemColor("-moz-Combobox"),
   };
   await testSelectColors(TRANSPARENT_SELECT, 2, options);
 });
@@ -340,7 +340,7 @@ add_task(async function test_options_inverted_from_select_background() {
   // options inside of it have flipped the colors.
   let options = {
     selectColor: "rgb(255, 255, 255)",
-    selectBgColor: "rgb(0, 0, 0)"
+    selectBgColor: "rgb(0, 0, 0)",
   };
   await testSelectColors(OPTION_COLOR_EQUAL_TO_UABACKGROUND_COLOR_SELECT,
                          2, options);
@@ -362,7 +362,7 @@ add_task(async function test_translucent_select_becomes_opaque() {
   // but we apply the requested background color on the system's base color.
   let options = {
     selectColor: "rgb(0, 0, 0)",
-    selectBgColor: "rgb(255, 255, 255)"
+    selectBgColor: "rgb(255, 255, 255)",
   };
   await testSelectColors(TRANSLUCENT_SELECT_BECOMES_OPAQUE, 2, options);
 });
@@ -375,7 +375,7 @@ add_task(async function test_translucent_select_applies_on_base_color() {
   // but we apply the requested background color on the system's base color.
   let options = {
     selectColor: "rgb(0, 0, 0)",
-    selectBgColor: "rgb(255, 115, 115)"
+    selectBgColor: "rgb(255, 115, 115)",
   };
   await testSelectColors(TRANSLUCENT_SELECT_APPLIES_ON_BASE_COLOR, 2, options);
 });
@@ -393,7 +393,7 @@ add_task(async function test_disabled_optgroup_and_options() {
 add_task(async function test_disabled_optgroup_and_options() {
   let options = {
     selectColor: "rgb(0, 0, 0)",
-    selectBgColor: "rgb(255, 165, 0)"
+    selectBgColor: "rgb(255, 165, 0)",
   };
 
   await testSelectColors(SELECT_CHANGES_COLOR_ON_FOCUS, 2, options);
@@ -402,7 +402,7 @@ add_task(async function test_disabled_optgroup_and_options() {
 add_task(async function test_bgcolor_on_select_color_on_options() {
   let options = {
     selectColor: "rgb(0, 0, 0)",
-    selectBgColor: "rgb(0, 0, 0)"
+    selectBgColor: "rgb(0, 0, 0)",
   };
 
   await testSelectColors(SELECT_BGCOLOR_ON_SELECT_COLOR_ON_OPTIONS, 2, options);
@@ -411,7 +411,7 @@ add_task(async function test_bgcolor_on_select_color_on_options() {
 add_task(async function test_style_of_options_is_dependent_on_focus_of_select() {
   let options = {
     selectColor: "rgb(0, 0, 0)",
-    selectBgColor: "rgb(58, 150, 221)"
+    selectBgColor: "rgb(58, 150, 221)",
   };
 
   await testSelectColors(SELECT_STYLE_OF_OPTION_IS_BASED_ON_FOCUS_OF_SELECT, 2, options);
@@ -422,8 +422,8 @@ add_task(async function test_style_of_options_is_dependent_on_focus_of_select_af
     skipSelectColorTest: true,
     waitForComputedStyle: {
       property: "color",
-      value: "rgb(255, 0, 0)"
-    }
+      value: "rgb(255, 0, 0)",
+    },
   };
   await testSelectColors(SELECT_STYLE_OF_OPTION_CHANGES_AFTER_FOCUS_EVENT, 2, options);
 });
@@ -434,8 +434,8 @@ add_task(async function test_color_of_options_is_dependent_on_transitionend() {
     selectBgColor: "rgb(255, 165, 0)",
     waitForComputedStyle: {
       property: "background-image",
-      value: "linear-gradient(rgb(255, 165, 0), rgb(255, 165, 0))"
-    }
+      value: "linear-gradient(rgb(255, 165, 0), rgb(255, 165, 0))",
+    },
   };
 
   await testSelectColors(SELECT_COLOR_OF_OPTION_CHANGES_AFTER_TRANSITIONEND, 2, options);
@@ -446,8 +446,8 @@ add_task(async function test_textshadow_of_options_is_dependent_on_transitionend
     skipSelectColorTest: true,
     waitForComputedStyle: {
       property: "text-shadow",
-      value: "rgb(48, 48, 48) 0px 0px 0px"
-    }
+      value: "rgb(48, 48, 48) 0px 0px 0px",
+    },
   };
 
   await testSelectColors(SELECT_TEXTSHADOW_OF_OPTION_CHANGES_AFTER_TRANSITIONEND, 2, options);
@@ -457,7 +457,7 @@ add_task(async function test_transparent_color_with_text_shadow() {
   let options = {
     selectColor: "rgba(0, 0, 0, 0)",
     selectTextShadow: "rgb(48, 48, 48) 0px 0px 0px",
-    selectBgColor: "rgb(255, 255, 255)"
+    selectBgColor: "rgb(255, 255, 255)",
   };
 
   await testSelectColors(SELECT_TRANSPARENT_COLOR_WITH_TEXT_SHADOW, 2, options);
@@ -469,9 +469,9 @@ add_task(async function test_select_with_transition_doesnt_lose_scroll_position(
     selectBgColor: "rgb(255, 255, 255)",
     waitForComputedStyle: {
       property: "color",
-      value: "rgb(128, 0, 128)"
+      value: "rgb(128, 0, 128)",
     },
-    leaveOpen: true
+    leaveOpen: true,
   };
 
   await testSelectColors(SELECT_LONG_WITH_TRANSITION, 76, options);
@@ -491,7 +491,7 @@ add_task(async function test_select_inherited_colors_on_options_dont_get_unique_
     selectColor: "rgb(0, 0, 255)",
     selectBgColor: "rgb(255, 255, 255)",
     selectTextShadow: "rgb(0, 0, 255) 1px 1px 2px",
-    leaveOpen: true
+    leaveOpen: true,
   };
 
   await testSelectColors(SELECT_INHERITED_COLORS_ON_OPTIONS_DONT_GET_UNIQUE_RULES_IF_RULE_SET_ON_SELECT, 4, options);
@@ -517,10 +517,10 @@ add_task(async function test_select_inherited_colors_on_options_dont_get_unique_
   is(hasMatchingRuleForOption(sheet.cssRules, 1), false,
     "There should be no rules specific to option1");
   is(hasMatchingRuleForOption(sheet.cssRules, 2, {
-    color: "rgb(255, 0, 0)"
+    color: "rgb(255, 0, 0)",
   }), true, "There should be a rule specific to option2 and it should have color: red");
   is(hasMatchingRuleForOption(sheet.cssRules, 3, {
-    "text-shadow": "rgb(0, 0, 0) 1px 1px 2px"
+    "text-shadow": "rgb(0, 0, 0) 1px 1px 2px",
   }), true, "There should be a rule specific to option3 and it should have text-shadow: rgb(0, 0, 0) 1px 1px 2px");
 
 

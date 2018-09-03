@@ -8,6 +8,7 @@ import base64
 import hashlib
 import imghdr
 import struct
+import tempfile
 import urllib
 
 from marionette_driver import By
@@ -294,6 +295,12 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
         self.assertRaises(NoSuchWindowException, self.marionette.screenshot)
         self.marionette.switch_to_window(self.start_tab)
 
+    @skip_if_mobile("Bug 1487124 - Android need its own maximum allowed dimensions")
+    def test_capture_vertical_bounds(self):
+        self.marionette.navigate(inline("<body style='margin-top: 32768px'>foo"))
+        screenshot = self.marionette.screenshot()
+        self.assert_png(screenshot)
+
     def test_capture_element(self):
         self.marionette.navigate(box)
         el = self.marionette.find_element(By.TAG_NAME, "div")
@@ -388,6 +395,15 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
                                                                     highlights=[paragraph])
         self.assertNotEqual(screenshot_element, screenshot_highlight_paragraph)
         self.assertNotEqual(screenshot_highlight, screenshot_highlight_paragraph)
+
+    def test_save_screenshot(self):
+        expected = self.marionette.screenshot(format="binary")
+        with tempfile.TemporaryFile('w+b') as fh:
+            self.marionette.save_screenshot(fh)
+            fh.flush()
+            fh.seek(0)
+            content = fh.read()
+            self.assertEqual(expected, content)
 
     def test_scroll_default(self):
         self.marionette.navigate(long)

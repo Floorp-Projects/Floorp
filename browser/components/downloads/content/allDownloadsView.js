@@ -613,7 +613,7 @@ DownloadsPlacesView.prototype = {
     this._downloadsData.removeFinished();
     if (this._place) {
       PlacesUtils.history.removeVisitsByFilter({
-        transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD
+        transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
       }).catch(Cu.reportError);
     }
     // There may be no selection or focus change as a result

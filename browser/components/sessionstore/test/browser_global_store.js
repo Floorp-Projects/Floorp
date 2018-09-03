@@ -16,10 +16,10 @@ add_task(async function() {
       {
         tabs: [
           { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
-        ]
-      }
+        ],
+      },
     ],
-    global
+    global,
   };
 
   function testRestoredState() {

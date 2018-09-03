@@ -373,7 +373,7 @@ BackgroundPageThumbs._init();
 Object.defineProperty(this, "BackgroundPageThumbs", {
   value: BackgroundPageThumbs,
   enumerable: true,
-  writable: false
+  writable: false,
 });
 
 /**
@@ -426,7 +426,7 @@ Capture.prototype = {
       url: this.url,
       isImage: this.options.isImage,
       targetWidth: this.options.targetWidth,
-      backgroundColor: this.options.backgroundColor
+      backgroundColor: this.options.backgroundColor,
     });
     this._msgMan.addMessageListener("BackgroundPageThumbs:didCapture", this);
   },

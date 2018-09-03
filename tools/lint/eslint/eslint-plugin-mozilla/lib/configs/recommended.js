@@ -116,6 +116,9 @@ module.exports = {
     // No newline before open brace for a block
     "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
 
+    // Require trailing commas for easy list extension and consistent style.
+    "comma-dangle": ["error", "always-multiline"],
+
     // No space before always a space after a comma
     "comma-spacing": ["error", {"after": true, "before": false}],
 
@@ -322,6 +325,9 @@ module.exports = {
 
     // No unnecessary comparisons
     "no-self-compare": "error",
+
+    // No comma sequenced statements
+    "no-sequences": "error",
 
     // No declaring variables from an outer scope
     // "no-shadow": "error",

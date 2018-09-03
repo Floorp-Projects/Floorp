@@ -23,7 +23,7 @@ add_task(async function test_watch_with_shared_callback() {
   let watchedDirs =
     [
       OS.Path.join(OS.Constants.Path.profileDir, "filewatcher_playground"),
-      OS.Path.join(OS.Constants.Path.profileDir, "filewatcher_playground2")
+      OS.Path.join(OS.Constants.Path.profileDir, "filewatcher_playground2"),
     ];
 
   await OS.File.makeDir(watchedDirs[0]);

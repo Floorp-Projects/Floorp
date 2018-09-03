@@ -660,6 +660,8 @@ interaction.isElementEnabled = function(el, strict = false) {
         enabled = false;
       }
     }
+  } else if (["application/xml", "text/xml"].includes(win.document.contentType)) {
+    enabled = false;
   } else {
     enabled = atom.isElementEnabled(el, {frame: win});
   }

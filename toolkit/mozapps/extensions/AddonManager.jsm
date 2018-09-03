@@ -94,7 +94,7 @@ const CATEGORY_PROVIDER_MODULE = "addon-provider-module";
 // A list of providers to load by default
 const DEFAULT_PROVIDERS = [
   "resource://gre/modules/addons/XPIProvider.jsm",
-  "resource://gre/modules/LightweightThemeManager.jsm"
+  "resource://gre/modules/LightweightThemeManager.jsm",
 ];
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -155,7 +155,7 @@ var PrefObserver = {
           parentLogger.level = Log.Level.Warn;
         }
       }
-    }
+    },
 };
 
 PrefObserver.init();
@@ -342,7 +342,7 @@ BrowserListener.prototype = {
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsWeakReference,
                                           Ci.nsIWebProgressListener,
-                                          Ci.nsIObserver])
+                                          Ci.nsIObserver]),
 };
 
 /**
@@ -365,7 +365,7 @@ AddonAuthor.prototype = {
   // Returns the author's name, defaulting to the empty string
   toString() {
     return this.name || "";
-  }
+  },
 };
 
 /**
@@ -409,7 +409,7 @@ AddonScreenshot.prototype = {
   // Returns the screenshot URL, defaulting to the empty string
   toString() {
     return this.url || "";
-  }
+  },
 };
 
 
@@ -469,7 +469,7 @@ AddonCompatibilityOverride.prototype = {
   /**
    * Max version of the application to match.
    */
-  appMaxVersion: null
+  appMaxVersion: null,
 };
 
 
@@ -880,7 +880,7 @@ var AddonManagerInternal = {
 
           this.types[type.id] = {
             type,
-            providers: [aProvider]
+            providers: [aProvider],
           };
 
           let typeListeners = new Set(this.typeListeners);
@@ -1013,12 +1013,12 @@ var AddonManagerInternal = {
     if (gShutdownBarrier) {
       state.push({
         name: gShutdownBarrier.client.name,
-        state: gShutdownBarrier.state
+        state: gShutdownBarrier.state,
       });
     }
     state.push({
       name: "AddonRepository: async shutdown",
-      state: gRepoShutdownState
+      state: gRepoShutdownState,
     });
     return state;
   },
@@ -1236,7 +1236,7 @@ var AddonManagerInternal = {
       let subject = {wrappedJSObject: {
         addon: info.addon,
         permissions: difference,
-        resolve, reject
+        resolve, reject,
       }};
       Services.obs.notifyObservers(subject, "webextension-update-permissions");
     });
@@ -1302,7 +1302,7 @@ var AddonManagerInternal = {
                 }
               },
 
-              onUpdateFinished: aAddon => { logger.debug("onUpdateFinished for ${id}", aAddon); resolve(); }
+              onUpdateFinished: aAddon => { logger.debug("onUpdateFinished for ${id}", aAddon); resolve(); },
             }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
           }));
         }
@@ -2411,7 +2411,7 @@ var AddonManagerInternal = {
           writable: false,
           // Claim configurability to maintain the proxy invariants.
           configurable: true,
-          enumerable: true
+          enumerable: true,
         };
       },
 
@@ -2428,7 +2428,7 @@ var AddonManagerInternal = {
       setPrototypeOf(target, prototype) {
         // Not allowed to change prototype
         return false;
-      }
+      },
     });
   },
 
@@ -2527,7 +2527,7 @@ var AddonManagerInternal = {
           wrappedJSObject: {
             target: browser,
             info: Object.assign({resolve, reject, source}, info),
-          }
+          },
         };
         subject.wrappedJSObject.info.permissions = info.addon.userPermissions;
         Services.obs.notifyObservers(subject, "webextension-permission-prompt");
@@ -2550,7 +2550,7 @@ var AddonManagerInternal = {
             }
             let result = target[property];
             return (typeof result == "function") ? result.bind(target) : result;
-          }
+          },
         });
 
         // Check for a custom installation prompt that may be provided by the
@@ -2897,7 +2897,7 @@ var AddonManagerPrivate = {
   recordException(aModule, aContext, aException) {
     let report = {
       module: aModule,
-      context: aContext
+      context: aContext,
     };
 
     if (typeof aException == "number") {
@@ -2930,7 +2930,7 @@ var AddonManagerPrivate = {
   simpleTimer(aName) {
     let startTime = Cu.now();
     return {
-      done: () => this.recordSimpleMeasure(aName, Math.round(Cu.now() - startTime))
+      done: () => this.recordSimpleMeasure(aName, Math.round(Cu.now() - startTime)),
     };
   },
 

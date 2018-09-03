@@ -88,6 +88,22 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// Clipboard prefs
+//---------------------------------------------------------------------------
+
+#if !defined(ANDROID) && !defined(XP_MACOSX) && defined(XP_UNIX)
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "clipboard.autocopy",
+   clipboard_autocopy,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+//---------------------------------------------------------------------------
 // DOM prefs
 //---------------------------------------------------------------------------
 
@@ -1266,7 +1282,10 @@ PREF("preferences.allow.omt-write", bool, true)
 // Privacy prefs
 //---------------------------------------------------------------------------
 
-// Whether Content Blocking has been enabled
+// Whether Content Blocking has been enabled.
+// Please note that privacy protections provided by Gecko may depend on this preference.
+// Turning this off may disable some protections.  Please do not turn this pref off without
+// realizing the implications of what you're doing.
 VARCACHE_PREF(
   "browser.contentblocking.enabled",
    browser_contentblocking_enabled,

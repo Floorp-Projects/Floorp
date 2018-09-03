@@ -79,9 +79,9 @@ function promiseNewEngine(basename, options = {}) {
           onError(errCode) {
             ok(false, "addEngine failed with error code " + errCode);
             reject();
-          }
+          },
         });
-      }
+      },
     });
   });
 }

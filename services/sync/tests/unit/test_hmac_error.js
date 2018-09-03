@@ -71,7 +71,7 @@ add_task(async function hmac_error_during_404() {
     "/1.1/foo/storage/meta/global": upd("meta", global.handler()),
     "/1.1/foo/storage/crypto/keys": upd("crypto", keys404Handler),
     "/1.1/foo/storage/clients": upd("clients", clientsColl.handler()),
-    "/1.1/foo/storage/rotary": upd("rotary", rotaryColl.handler())
+    "/1.1/foo/storage/rotary": upd("rotary", rotaryColl.handler()),
   };
 
   let server = sync_httpd_setup(handlers);
@@ -143,7 +143,7 @@ add_task(async function hmac_error_during_node_reassignment() {
     "/1.1/foo/storage/meta/global": upd("meta", global.handler()),
     "/1.1/foo/storage/crypto/keys": upd("crypto", keysWBO.handler()),
     "/1.1/foo/storage/clients":     upd401("clients", clientsColl.handler()),
-    "/1.1/foo/storage/rotary":      upd("rotary", rotaryColl.handler())
+    "/1.1/foo/storage/rotary":      upd("rotary", rotaryColl.handler()),
   };
 
   let server = sync_httpd_setup(handlers);
@@ -172,7 +172,7 @@ add_task(async function hmac_error_during_node_reassignment() {
           onSyncFinished();
           break;
       }
-    }
+    },
   };
 
   Svc.Obs.add("weave:service:sync:finish", obs);

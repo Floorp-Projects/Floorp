@@ -361,6 +361,10 @@ class FontPropertyValue extends PureComponent {
       return null;
     }
 
+    const propsValue = this.props.value !== null
+      ? this.props.value
+      : this.props.defaultValue;
+
     const defaults = {
       min: this.props.min,
       max: this.props.max,
@@ -370,9 +374,7 @@ class FontPropertyValue extends PureComponent {
       step: this.props.step,
       // While interacting with the range and number inputs, prevent updating value from
       // outside props which is debounced and causes jitter on successive renders.
-      value: this.state.interactive
-        ? this.state.value
-        : this.props.value || this.props.defaultValue,
+      value: this.state.interactive ? this.state.value : propsValue,
     };
 
     const range = dom.input(

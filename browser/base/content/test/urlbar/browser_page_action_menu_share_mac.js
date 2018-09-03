@@ -17,7 +17,7 @@ let mockShareData = [{
   name: "NSA",
   menuItemTitle: "National Security Agency",
   image: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEA" +
-    "LAAAAAABAAEAAAICTAEAOw=="
+    "LAAAAAABAAEAAAICTAEAOw==",
 }];
 
 let stub = sinon.stub(BrowserPageActions.shareURL, "_sharingService").get(() => {
@@ -32,7 +32,7 @@ let stub = sinon.stub(BrowserPageActions.shareURL, "_sharingService").get(() => 
     },
     openSharingPreferences() {
       sharingPreferencesCalled = true;
-    }
+    },
   };
 });
 

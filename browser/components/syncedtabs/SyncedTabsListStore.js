@@ -7,7 +7,7 @@
 let { EventEmitter } = ChromeUtils.import("resource:///modules/syncedtabs/EventEmitter.jsm", {});
 
 var EXPORTED_SYMBOLS = [
-  "SyncedTabsListStore"
+  "SyncedTabsListStore",
 ];
 
 /**
@@ -78,7 +78,7 @@ Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
       canUpdateAll: updateType === "all",
       canUpdateInput: updateType === "searchbox",
       filter: this.filter,
-      inputFocused: this.inputFocused
+      inputFocused: this.inputFocused,
     });
   },
 
@@ -229,5 +229,5 @@ Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
         this._change(updateType);
       })
       .catch(Cu.reportError);
-  }
+  },
 });

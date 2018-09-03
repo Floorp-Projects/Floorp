@@ -14,7 +14,7 @@ function triggerClickOn(target, options) {
   if (AppConstants.platform == "macosx") {
       options = {
           metaKey: options.ctrlKey,
-          shiftKey: options.shiftKey
+          shiftKey: options.shiftKey,
       };
   }
   EventUtils.synthesizeMouseAtCenter(target, options);

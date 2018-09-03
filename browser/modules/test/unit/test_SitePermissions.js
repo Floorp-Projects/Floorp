@@ -38,7 +38,7 @@ add_task(async function testGetAllByURI() {
 
   SitePermissions.set(uri, "camera", SitePermissions.ALLOW);
   Assert.deepEqual(SitePermissions.getAllByURI(uri), [
-      { id: "camera", state: SitePermissions.ALLOW, scope: SitePermissions.SCOPE_PERSISTENT }
+      { id: "camera", state: SitePermissions.ALLOW, scope: SitePermissions.SCOPE_PERSISTENT },
   ]);
 
   SitePermissions.set(uri, "microphone", SitePermissions.ALLOW, SitePermissions.SCOPE_SESSION);
@@ -47,13 +47,13 @@ add_task(async function testGetAllByURI() {
   Assert.deepEqual(SitePermissions.getAllByURI(uri), [
       { id: "camera", state: SitePermissions.ALLOW, scope: SitePermissions.SCOPE_PERSISTENT },
       { id: "microphone", state: SitePermissions.ALLOW, scope: SitePermissions.SCOPE_SESSION },
-      { id: "desktop-notification", state: SitePermissions.BLOCK, scope: SitePermissions.SCOPE_PERSISTENT }
+      { id: "desktop-notification", state: SitePermissions.BLOCK, scope: SitePermissions.SCOPE_PERSISTENT },
   ]);
 
   SitePermissions.remove(uri, "microphone");
   Assert.deepEqual(SitePermissions.getAllByURI(uri), [
       { id: "camera", state: SitePermissions.ALLOW, scope: SitePermissions.SCOPE_PERSISTENT },
-      { id: "desktop-notification", state: SitePermissions.BLOCK, scope: SitePermissions.SCOPE_PERSISTENT }
+      { id: "desktop-notification", state: SitePermissions.BLOCK, scope: SitePermissions.SCOPE_PERSISTENT },
   ]);
 
   SitePermissions.remove(uri, "camera");

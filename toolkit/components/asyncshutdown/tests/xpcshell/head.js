@@ -39,7 +39,7 @@ function makeLock(kind) {
       wait() {
         Services.obs.notifyObservers(null, topic);
         return Promise.resolve();
-      }
+      },
     };
   } else if (kind == "barrier") {
     let name = "test-Barrier-" + ++makeLock.counter;
@@ -49,7 +49,7 @@ function makeLock(kind) {
       removeBlocker: barrier.client.removeBlocker,
       wait() {
         return barrier.wait();
-      }
+      },
     };
   } else if (kind == "xpcom-barrier") {
     let name = "test-xpcom-Barrier-" + ++makeLock.counter;
@@ -98,7 +98,7 @@ function makeLock(kind) {
         return new Promise(resolve => {
           barrier.wait(resolve);
         });
-      }
+      },
     };
   } else if ("unwrapped-xpcom-barrier") {
     let name = "unwrapped-xpcom-barrier-" + ++makeLock.counter;
@@ -111,7 +111,7 @@ function makeLock(kind) {
         return new Promise(resolve => {
           barrier.wait(resolve);
         });
-      }
+      },
     };
   }
   throw new TypeError("Unknown kind " + kind);

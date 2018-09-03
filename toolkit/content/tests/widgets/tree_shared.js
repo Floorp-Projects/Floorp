@@ -7,7 +7,7 @@
 var columns_simpletree =
 [
   { name: "name", label: "Name", key: true, properties: "one two" },
-  { name: "address", label: "Address" }
+  { name: "address", label: "Address" },
 ];
 
 var columns_hiertree =
@@ -15,7 +15,7 @@ var columns_hiertree =
   { name: "name", label: "Name", primary: true, key: true, properties: "one two" },
   { name: "address", label: "Address" },
   { name: "planet", label: "Planet" },
-  { name: "gender", label: "Gender", cycler: true }
+  { name: "gender", label: "Gender", cycler: true },
 ];
 
 // XXXndeakin still to add some tests for:
@@ -876,7 +876,7 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow) {
     getRowProperties(row) { return row.properties; },
     getLevel(row) { return row.level; },
     getParentIndex(row) { return row.parent; },
-    hasNextSibling(row) { return r < startRow + length - 1; }
+    hasNextSibling(row) { return r < startRow + length - 1; },
   };
 
   var checkCellMethods =
@@ -1120,7 +1120,7 @@ function testtag_tree_wheel(aTree) {
   const deltaModes = [
     WheelEvent.DOM_DELTA_PIXEL,  // 0
     WheelEvent.DOM_DELTA_LINE,   // 1
-    WheelEvent.DOM_DELTA_PAGE    // 2
+    WheelEvent.DOM_DELTA_PAGE,    // 2
   ];
   function helper(aStart, aDelta, aIntDelta, aDeltaMode) {
     aTree.treeBoxObject.scrollToRow(aStart);

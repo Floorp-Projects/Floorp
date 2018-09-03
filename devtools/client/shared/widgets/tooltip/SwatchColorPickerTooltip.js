@@ -174,7 +174,7 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     // resolves. Flip the flag early to avoid issues with onTooltipHidden().
     this.eyedropperOpen = true;
 
-    inspector.pickColorFromPage(toolbox, {copyOnSelect: false}).then(() => {
+    inspector.pickColorFromPage({copyOnSelect: false}).then(() => {
       // close the colorpicker tooltip so that only the eyedropper is open.
       this.hide();
 

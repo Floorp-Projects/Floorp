@@ -6726,6 +6726,13 @@ nsWindow::ClearCachedResources()
 void
 nsWindow::UpdateClientOffsetForCSDWindow()
 {
+    // We update window offset on X11 as the window position is calculated
+    // relatively to mShell. We don't do that on Wayland as our wl_subsurface
+    // is attached to mContainer and mShell is ignored.
+    if (!mIsX11Display) {
+        return;
+    }
+
     // _NET_FRAME_EXTENTS is not set on client decorated windows,
     // so we need to read offset between mContainer and toplevel mShell
     // window.
@@ -7132,6 +7139,8 @@ nsWindow::GetSystemCSDSupportLevel() {
         // KDE Plasma
         } else if (strstr(currentDesktop, "KDE") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+        } else if (strstr(currentDesktop, "Enlightenment") != nullptr) {
+            sCSDSupportLevel = CSD_SUPPORT_CLIENT;
         } else if (strstr(currentDesktop, "LXDE") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_CLIENT;
         } else if (strstr(currentDesktop, "openbox") != nullptr) {
@@ -7142,11 +7151,13 @@ nsWindow::GetSystemCSDSupportLevel() {
             sCSDSupportLevel = CSD_SUPPORT_CLIENT;
         // Ubuntu Unity
         } else if (strstr(currentDesktop, "Unity") != nullptr) {
-            sCSDSupportLevel = CSD_SUPPORT_CLIENT;
+            sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
         // Elementary OS
         } else if (strstr(currentDesktop, "Pantheon") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
         } else if (strstr(currentDesktop, "LXQt") != nullptr) {
+            sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
+        } else if (strstr(currentDesktop, "Deepin") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_SYSTEM;
         } else {
 // Release or beta builds are not supposed to be broken

@@ -49,7 +49,7 @@ const tablePreferences = [
   "urlclassifier.flashExceptTable",
   "urlclassifier.flashSubDocTable",
   "urlclassifier.flashSubDocExceptTable",
-  "urlclassifier.flashInfobarTable"
+  "urlclassifier.flashInfobarTable",
 ];
 
 var SafeBrowsing = {
@@ -530,7 +530,7 @@ var SafeBrowsing = {
       },
       updateSuccess() {
         Services.obs.notifyObservers(db, "mozentries-update-finished", "success");
-      }
+      },
     };
 
     try {

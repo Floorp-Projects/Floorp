@@ -6,7 +6,7 @@ const kPrefModalHighlight = "findbar.modalHighlight";
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({ set: [
     [kPrefHighlightAll, true],
-    [kPrefModalHighlight, true]
+    [kPrefModalHighlight, true],
   ]});
 });
 
@@ -21,7 +21,7 @@ add_task(async function testIframeOffset() {
     let expectedResult = {
       rectCount: 12,
       insertCalls: [2, 4],
-      removeCalls: [0, 2]
+      removeCalls: [0, 2],
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult, (maskNode, outlineNode, rects) => {
       Assert.equal(rects.length, expectedResult.rectCount, "Rect counts should match");
@@ -36,7 +36,7 @@ add_task(async function testIframeOffset() {
         { x: 20, y: 534 },
         { x: 93, y: 534 },
         { x: 71, y: 577 },
-        { x: 145, y: 577 }
+        { x: 145, y: 577 },
       ];
       for (let i = 1, l = rects.length - 1; i < l; ++i) {
         let rect = rects[i];

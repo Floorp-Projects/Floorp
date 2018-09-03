@@ -411,7 +411,7 @@ CaptivePortalDetector.prototype = {
         if (this._runningRequest.hasOwnProperty("eventId")) {
           let details = {
             type: kAbortCaptivePortalLoginEvent,
-            id: this._runningRequest.eventId
+            id: this._runningRequest.eventId,
           };
           this._sendEvent(kAbortCaptivePortalLoginEvent, details);
         }

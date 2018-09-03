@@ -803,7 +803,7 @@
             throw new File.Error("iter (FindNextFile)", error, this._path);
 
 
-     },
+     };
 
      /**
       * Return the next entry in the directory, if any such entry is
@@ -826,7 +826,7 @@
            }
            return {
              value: new File.DirectoryIterator.Entry(entry, this._path),
-             done: false
+             done: false,
            };
          }
          return {value: undefined, done: true};
@@ -980,14 +980,14 @@
      // All of the following is required to ensure that File.stat
      // also works on directories.
      const FILE_STAT_MODE = {
-       read: true
+       read: true,
      };
      const FILE_STAT_OPTIONS = {
        // Directories can be opened neither for reading(!) nor for writing
        winAccess: 0,
        // Directories can only be opened with backup semantics(!)
        winFlags: Const.FILE_FLAG_BACKUP_SEMANTICS,
-       winDisposition: Const.OPEN_EXISTING
+       winDisposition: Const.OPEN_EXISTING,
      };
 
      /**
@@ -1042,13 +1042,13 @@
      // All of the following is required to ensure that File.setDates
      // also works on directories.
      const FILE_SETDATES_MODE = {
-       write: true
+       write: true,
      };
      const FILE_SETDATES_OPTIONS = {
        winAccess: Const.GENERIC_WRITE,
        // Directories can only be opened with backup semantics(!)
        winFlags: Const.FILE_FLAG_BACKUP_SEMANTICS,
-       winDisposition: Const.OPEN_EXISTING
+       winDisposition: Const.OPEN_EXISTING,
      };
 
      File.read = exports.OS.Shared.AbstractFile.read;
@@ -1142,7 +1142,7 @@
          },
          get() {
            return this.getCurrentDirectory();
-         }
+         },
        }
      );
 

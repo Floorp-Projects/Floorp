@@ -524,7 +524,7 @@ PaymentRequestManager::UpdatePayment(JSContext* aCx,
 }
 
 nsresult
-PaymentRequestManager::CleanupPayment(PaymentRequest* aRequest)
+PaymentRequestManager::ClosePayment(PaymentRequest* aRequest)
 {
   // for the case, the payment request is waiting for response from user.
   if (auto entry = mActivePayments.Lookup(aRequest)) {
@@ -535,7 +535,7 @@ PaymentRequestManager::CleanupPayment(PaymentRequest* aRequest)
   }
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
-  IPCPaymentCleanupActionRequest action(requestId);
+  IPCPaymentCloseActionRequest action(requestId);
   return SendRequestPayment(aRequest, action, false);
 }
 
@@ -619,7 +619,6 @@ PaymentRequestManager::ChangeShippingAddress(PaymentRequest* aRequest,
                                          aAddress.dependentLocality(),
                                          aAddress.postalCode(),
                                          aAddress.sortingCode(),
-                                         aAddress.languageCode(),
                                          aAddress.organization(),
                                          aAddress.recipient(),
                                          aAddress.phone());

@@ -79,7 +79,7 @@ add_task(async function() {
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.toolbarGuid,
     children: Array(BOOKMARKS_COUNT).fill("")
-                                    .map((_, i) => ({ url: `http://test.places.${i}/`}))
+                                    .map((_, i) => ({ url: `http://test.places.${i}/`})),
   });
 
   let wasCollapsed = gToolbar.collapsed;

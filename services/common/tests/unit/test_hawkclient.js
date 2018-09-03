@@ -12,7 +12,7 @@ const HOUR_MS = MINUTE_MS * 60;
 const TEST_CREDS = {
   id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
   key: "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=",
-  algorithm: "sha256"
+  algorithm: "sha256",
 };
 
 initTestLogging("Trace");
@@ -52,7 +52,7 @@ add_task(async function test_authenticated_get_request() {
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
 
   let client = new HawkClient(server.baseURI);
@@ -72,7 +72,7 @@ async function check_authenticated_request(method) {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
       response.bodyOutputStream.writeFrom(request.bodyInputStream, request.bodyInputStream.available());
-    }
+    },
   });
 
   let client = new HawkClient(server.baseURI);
@@ -106,7 +106,7 @@ add_task(async function test_extra_headers() {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
       response.bodyOutputStream.writeFrom(request.bodyInputStream, request.bodyInputStream.available());
-    }
+    },
   });
 
   let client = new HawkClient(server.baseURI);
@@ -130,7 +130,7 @@ add_task(async function test_credentials_optional() {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
 
   let client = new HawkClient(server.baseURI);
@@ -147,7 +147,7 @@ add_task(async function test_server_error() {
   let server = httpd_setup({"/foo": (request, response) => {
       response.setStatusLine(request.httpVersion, 418, "I am a Teapot");
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
 
   let client = new HawkClient(server.baseURI);
@@ -170,7 +170,7 @@ add_task(async function test_server_error_json() {
   let server = httpd_setup({"/foo": (request, response) => {
       response.setStatusLine(request.httpVersion, 400, "What wouldst thou deau?");
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
 
   let client = new HawkClient(server.baseURI);
@@ -192,7 +192,7 @@ add_task(async function test_offset_after_request() {
   let server = httpd_setup({"/foo": (request, response) => {
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
 
   let client = new HawkClient(server.baseURI);
@@ -230,7 +230,7 @@ add_task(async function test_offset_in_hawk_header() {
         response.setStatusLine(request.httpVersion, 400, "Delta: " + delta);
       }
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
 
   let client = new HawkClient(server.baseURI);
@@ -256,13 +256,13 @@ add_task(async function test_2xx_success() {
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
     key: "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=",
-    algorithm: "sha256"
+    algorithm: "sha256",
   };
   let method = "GET";
 
   let server = httpd_setup({"/foo": (request, response) => {
       response.setStatusLine(request.httpVersion, 202, "Accepted");
-    }
+    },
   });
 
   let client = new HawkClient(server.baseURI);
@@ -280,7 +280,7 @@ add_task(async function test_retry_request_on_fail() {
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
     key: "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=",
-    algorithm: "sha256"
+    algorithm: "sha256",
   };
   let method = "GET";
 
@@ -307,7 +307,7 @@ add_task(async function test_retry_request_on_fail() {
       let message = "i love you!!!";
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
 
   let client = new HawkClient(server.baseURI);
@@ -333,7 +333,7 @@ add_task(async function test_multiple_401_retry_once() {
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
     key: "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=",
-    algorithm: "sha256"
+    algorithm: "sha256",
   };
   let method = "GET";
 
@@ -348,7 +348,7 @@ add_task(async function test_multiple_401_retry_once() {
       let message = "never!!!";
       response.setStatusLine(request.httpVersion, 401, "Unauthorized");
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
 
   let client = new HawkClient(server.baseURI);
@@ -378,7 +378,7 @@ add_task(async function test_500_no_retry() {
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
     key: "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=",
-    algorithm: "sha256"
+    algorithm: "sha256",
   };
   let method = "GET";
 
@@ -387,7 +387,7 @@ add_task(async function test_500_no_retry() {
       let message = "Cannot get ye flask.";
       response.setStatusLine(request.httpVersion, 500, "Internal server error");
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
 
   let client = new HawkClient(server.baseURI);
@@ -417,7 +417,7 @@ add_task(async function test_401_then_500() {
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
     key: "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=",
-    algorithm: "sha256"
+    algorithm: "sha256",
   };
   let method = "GET";
 
@@ -446,7 +446,7 @@ add_task(async function test_401_then_500() {
       let message = "Cannot get ye flask.";
       response.setStatusLine(request.httpVersion, 500, "Internal server error");
       response.bodyOutputStream.write(message, message.length);
-    }
+    },
   });
 
   let client = new HawkClient(server.baseURI);

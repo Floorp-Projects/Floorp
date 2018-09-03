@@ -9,7 +9,7 @@ EnableEngines(["creditcards"]);
 var phases = {
   "phase1": "profile1",
   "phase2": "profile2",
-  "phase3": "profile1"
+  "phase3": "profile1",
 };
 
 const cc1 = [{
@@ -18,8 +18,8 @@ const cc1 = [{
   "cc-exp-month": 4,
   "cc-exp-year": 2050,
   "changes": {
-    "cc-exp-year": 2051
-  }
+    "cc-exp-year": 2051,
+  },
 }];
 
 const cc1_after = [{
@@ -38,7 +38,7 @@ const cc2 = [{
 
 Phase("phase1", [
   [CreditCards.add, cc1],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase2", [
@@ -46,12 +46,12 @@ Phase("phase2", [
   [CreditCards.verify, cc1],
   [CreditCards.modify, cc1],
   [CreditCards.add, cc2],
-  [Sync]
+  [Sync],
 ]);
 
 Phase("phase3", [
   [Sync],
   [CreditCards.verifyNot, cc1],
   [CreditCards.verify, cc1_after],
-  [CreditCards.verify, cc2]
+  [CreditCards.verify, cc2],
 ]);

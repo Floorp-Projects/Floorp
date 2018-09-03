@@ -32,13 +32,11 @@ const BUILT_IN_SECTIONS = {
     eventSource: "TOP_STORIES",
     icon: options.provider_icon,
     title: {id: "header_recommended_by", values: {provider: options.provider_name}},
-    disclaimer: {
-      text: {id: "section_disclaimer_topstories"},
+    learnMore: {
       link: {
         href: "https://getpocket.com/firefox/new_tab_learn_more",
-        id: "section_disclaimer_topstories_linktext"
-      },
-      button: {id: "section_disclaimer_topstories_buttontext"}
+        id: "pocket_learn_more"
+      }
     },
     privacyNoticeURL: "https://www.mozilla.org/privacy/firefox/#suggest-relevant-content",
     compactCards: false,

@@ -8,8 +8,8 @@
 #include "WindowIdentifier.h"
 #include "AndroidBridge.h"
 #include "mozilla/dom/network/Constants.h"
-#include "mozilla/dom/ScreenOrientation.h"
 #include "nsIScreenManager.h"
+#include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 
 using namespace mozilla::dom;
@@ -125,7 +125,7 @@ GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
 
   int32_t colorDepth, pixelDepth;
   int16_t angle;
-  ScreenOrientationInternal orientation;
+  ScreenOrientation orientation;
   nsCOMPtr<nsIScreen> screen;
 
   int32_t rectX, rectY, rectWidth, rectHeight;
@@ -135,7 +135,7 @@ GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
   screen->GetRect(&rectX, &rectY, &rectWidth, &rectHeight);
   screen->GetColorDepth(&colorDepth);
   screen->GetPixelDepth(&pixelDepth);
-  orientation = static_cast<ScreenOrientationInternal>(bridge->GetScreenOrientation());
+  orientation = static_cast<ScreenOrientation>(bridge->GetScreenOrientation());
   angle = bridge->GetScreenAngle();
 
   *aScreenConfiguration =
@@ -144,10 +144,10 @@ GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
 }
 
 bool
-LockScreenOrientation(const ScreenOrientationInternal& aOrientation)
+LockScreenOrientation(const ScreenOrientation& aOrientation)
 {
   // Force the default orientation to be portrait-primary.
-  ScreenOrientationInternal orientation =
+  ScreenOrientation orientation =
     aOrientation == eScreenOrientation_Default ? eScreenOrientation_PortraitPrimary
                                                : aOrientation;
 

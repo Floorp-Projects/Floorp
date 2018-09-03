@@ -262,12 +262,13 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
         const onMessage = ({ data }) => {
           const { channelId, stack } = data;
           if (channelId == this._channelId) {
-            messageManager.removeMessageListener("debug:request-stack", onMessage);
+            messageManager.removeMessageListener("debug:request-stack:response",
+              onMessage);
             resolve(stack);
           }
         };
-        messageManager.addMessageListener("debug:request-stack", onMessage);
-        messageManager.sendAsyncMessage("debug:request-stack", this._channelId);
+        messageManager.addMessageListener("debug:request-stack:response", onMessage);
+        messageManager.sendAsyncMessage("debug:request-stack:request", this._channelId);
       });
       this._stackTrace = stacktrace;
     }

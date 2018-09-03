@@ -49,8 +49,8 @@ function getDummyServerAndClient() {
         name: "foo3",
         fieldname: "foo3",
         value: "bar3",
-      }
-    ]
+      },
+    ],
   };
 }
 

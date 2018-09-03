@@ -11,8 +11,8 @@ add_task(async function test_policy_disable_telemetry() {
 
   await setupPolicyEngineWithJson({
     "policies": {
-      "DisableTelemetry": true
-    }
+      "DisableTelemetry": true,
+    },
   });
 
   is(TelemetryReportingPolicy.canUpload(), false, "Telemetry is disabled");

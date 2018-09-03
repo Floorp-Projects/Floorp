@@ -45,6 +45,7 @@ pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCAL
 pref("extensions.webservice.discoverURL", "https://discovery.addons.mozilla.org/%LOCALE%/firefox/discovery/pane/%VERSION%/%OS%/%COMPATIBILITY_MODE%");
 pref("extensions.getAddons.link.url", "https://addons.mozilla.org/%LOCALE%/firefox/");
 pref("extensions.getAddons.themes.browseURL", "https://addons.mozilla.org/%LOCALE%/firefox/themes/?src=firefox");
+pref("extensions.getAddons.langpacks.url", "https://services.addons.mozilla.org/api/v3/addons/language-tools/?app=firefox&type=language&appversion=%VERSION%");
 
 pref("extensions.update.autoUpdateDefault", true);
 
@@ -1082,6 +1083,16 @@ pref("security.sandbox.content.read_path_whitelist", "");
 pref("security.sandbox.content.syscall_whitelist", "");
 #endif
 
+#if defined(XP_OPENBSD) && defined(MOZ_SANDBOX)
+// default pledge strings for the main & content processes, cf bug 1457092
+// broad list for now, has to be refined over time
+pref("security.sandbox.pledge.main", "stdio rpath wpath cpath inet proc exec prot_exec flock ps sendfd recvfd dns vminfo tty drm unix fattr getpw mcast");
+#if defined(MOZ_CONTENT_SANDBOX)
+pref("security.sandbox.content.level", 1);
+pref("security.sandbox.pledge.content", "stdio rpath wpath cpath inet recvfd sendfd prot_exec unix drm ps");
+#endif
+#endif
+
 #if defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
 // ID (a UUID when set by gecko) that is used to form the name of a
 // sandbox-writable temporary directory to be used by content processes
@@ -1251,11 +1262,7 @@ pref("toolkit.startup.max_resumed_crashes", 3);
 // Whether to use RegisterApplicationRestart to restart the browser and resume
 // the session on next Windows startup
 #if defined(XP_WIN)
-#if defined(NIGHTLY_BUILD)
 pref("toolkit.winRegisterApplicationRestart", true);
-#else
-pref("toolkit.winRegisterApplicationRestart", false);
-#endif
 #endif
 
 // Whether we use pdfium to view content with the pdf mime type.
@@ -1487,24 +1494,32 @@ pref("browser.ping-centre.production.endpoint", "https://tiles.services.mozilla.
 // Enable GMP support in the addon manager.
 pref("media.gmp-provider.enabled", true);
 
-pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended", true);
-pref("browser.contentblocking.fastblock.control-center.ui.enabled", true);
-pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
+// Enable the new Content Blocking UI only on Nightly.
 #ifdef NIGHTLY_BUILD
 pref("browser.contentblocking.ui.enabled", true);
-pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", true);
-pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
 #else
 pref("browser.contentblocking.ui.enabled", false);
-pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", false);
-pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", false);
 #endif
-#ifdef NIGHTLY_BUILD
+
+// Define a set of default features for the Content Blocking UI
+pref("browser.contentblocking.fastblock.ui.enabled", true);
+pref("browser.contentblocking.fastblock.control-center.ui.enabled", true);
+pref("browser.contentblocking.trackingprotection.ui.enabled", true);
+pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
+pref("browser.contentblocking.rejecttrackers.ui.enabled", true);
+pref("browser.contentblocking.rejecttrackers.ui.recommended", true);
+pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
+pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended", true);
+pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.enabled", true);
+
+// Enable the Report Breakage UI on Nightly and Beta but not on Release yet.
+#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.contentblocking.reportBreakage.enabled", true);
 #else
 pref("browser.contentblocking.reportBreakage.enabled", false);
 #endif
 pref("browser.contentblocking.reportBreakage.url", "https://tracking-protection-issues.herokuapp.com/new");
+
 // Content Blocking has a separate pref for the intro count, since the former TP intro
 // was updated when we introduced content blocking and we want people to see it again.
 pref("browser.contentblocking.introCount", 0);
@@ -1744,3 +1759,8 @@ pref("intl.multilingual.enabled", false);
 // Curve25519 public keys for Prio servers
 pref("prio.publicKeyA", "35AC1C7576C7C6EDD7FED6BCFC337B34D48CB4EE45C86BEEFB40BD8875707733");
 pref("prio.publicKeyB", "26E6674E65425B823F1F1D5F96E3BB3EF9E406EC7FBA7DEF8B08A35DD135AF50");
+
+#ifdef NIGHTLY_BUILD
+pref("browser.fastblock.enabled", true);
+#endif
+

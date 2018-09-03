@@ -12,8 +12,8 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     "set": [
       ["dom.select_popup_in_parent.enabled", true],
-      ["dom.forms.selectSearch", true]
-    ]
+      ["dom.forms.selectSearch", true],
+    ],
   });
 });
 

@@ -1,3 +1,4 @@
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -473,7 +474,7 @@ GeolocationPermissionPrompt.prototype = {
     } else {
       // Don't offer "always remember" action in PB mode
       options.checkbox = {
-        show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal)
+        show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal),
       };
     }
 
@@ -643,7 +644,7 @@ PersistentStoragePermissionPrompt.prototype = {
   get popupOptions() {
     let checkbox = {
       // In PB mode, we don't want the "always remember" checkbox
-      show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal)
+      show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal),
     };
     if (checkbox.show) {
       checkbox.checked = true;
@@ -678,16 +679,16 @@ PersistentStoragePermissionPrompt.prototype = {
         label: gBrowserBundle.GetStringFromName("persistentStorage.allow"),
         accessKey:
           gBrowserBundle.GetStringFromName("persistentStorage.allow.accesskey"),
-        action: Ci.nsIPermissionManager.ALLOW_ACTION
+        action: Ci.nsIPermissionManager.ALLOW_ACTION,
       },
       {
         label: gBrowserBundle.GetStringFromName("persistentStorage.dontAllow"),
         accessKey:
           gBrowserBundle.GetStringFromName("persistentStorage.dontAllow.accesskey"),
-        action: Ci.nsIPermissionManager.DENY_ACTION
-      }
+        action: Ci.nsIPermissionManager.DENY_ACTION,
+      },
     ];
-  }
+  },
 };
 
 PermissionUI.PersistentStoragePermissionPrompt = PersistentStoragePermissionPrompt;
@@ -730,7 +731,7 @@ MIDIPermissionPrompt.prototype = {
     } else {
       // Don't offer "always remember" action in PB mode
       options.checkbox = {
-        show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal)
+        show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal),
       };
     }
 
@@ -771,12 +772,12 @@ MIDIPermissionPrompt.prototype = {
     return [{
         label: gBrowserBundle.GetStringFromName("midi.Allow.label"),
         accessKey: gBrowserBundle.GetStringFromName("midi.Allow.accesskey"),
-        action: Ci.nsIPermissionManager.ALLOW_ACTION
+        action: Ci.nsIPermissionManager.ALLOW_ACTION,
       },
       {
         label: gBrowserBundle.GetStringFromName("midi.DontAllow.label"),
         accessKey: gBrowserBundle.GetStringFromName("midi.DontAllow.accesskey"),
-        action: Ci.nsIPermissionManager.DENY_ACTION
+        action: Ci.nsIPermissionManager.DENY_ACTION,
     }];
   },
 

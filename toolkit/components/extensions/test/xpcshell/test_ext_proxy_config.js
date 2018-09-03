@@ -105,6 +105,9 @@ add_task(async function test_browser_settings() {
       ssl: "",
       socks: "",
     };
+
+    expectedConfig.proxyType = expectedConfig.proxyType || "system";
+
     return testSetting(
       config, expectedPrefs, Object.assign(proxyConfig, expectedConfig)
     );
@@ -131,6 +134,19 @@ add_task(async function test_browser_settings() {
   await testProxy(
     {
       proxyType: "system",
+      autoLogin: false,
+      proxyDNS: false,
+    },
+    {
+      "network.proxy.type": proxySvc.PROXYCONFIG_SYSTEM,
+      "signon.autologin.proxy": false,
+      "network.proxy.socks_remote_dns": false,
+    },
+  );
+
+  // Verify that proxyType is optional and it defaults to "system".
+  await testProxy(
+    {
       autoLogin: false,
       proxyDNS: false,
     },

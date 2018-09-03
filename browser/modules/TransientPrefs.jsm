@@ -20,5 +20,5 @@ var TransientPrefs = {
       prefVisibility.set(prefName, true);
 
     return !!prefVisibility.get(prefName);
-  }
+  },
 };

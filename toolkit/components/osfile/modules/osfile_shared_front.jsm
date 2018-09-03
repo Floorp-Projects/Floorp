@@ -115,7 +115,7 @@ AbstractFile.prototype = {
       pos += chunkSize;
     }
     return pos;
-  }
+  },
 };
 
 /**
@@ -135,7 +135,7 @@ AbstractFile.prototype = {
  */
 AbstractFile.openUnique = function openUnique(path, options = {}) {
   let mode = {
-    create: true
+    create: true,
   };
 
   let dirName = Path.dirname(path);
@@ -153,7 +153,7 @@ AbstractFile.openUnique = function openUnique(path, options = {}) {
   try {
     return {
       path,
-      file: OS.File.open(path, mode)
+      file: OS.File.open(path, mode),
     };
   } catch (ex) {
     if (ex instanceof OS.File.Error && ex.becauseExists) {
@@ -167,7 +167,7 @@ AbstractFile.openUnique = function openUnique(path, options = {}) {
           }
           return {
             path: uniquePath,
-            file: OS.File.open(uniquePath, mode)
+            file: OS.File.open(uniquePath, mode),
           };
         } catch (ex) {
           if (ex instanceof OS.File.Error && ex.becauseExists) {
@@ -232,7 +232,7 @@ AbstractFile.AbstractIterator.prototype = {
       }
     }
     return array;
-  }
+  },
 };
 
 /**
@@ -257,7 +257,7 @@ AbstractFile.normalizeOpenMode = function normalizeOpenMode(mode) {
     trunc: false,
     create: false,
     existing: false,
-    append: true
+    append: true,
   };
   for (let key in mode) {
     let val = !!mode[key]; // bool cast.
@@ -570,8 +570,8 @@ AbstractFile.makeDir = function(path, options = {}) {
   }
   let innerOptions = Object.create(options, {
     ignoreExisting: {
-      value: true
-    }
+      value: true,
+    },
   });
   // Compute the elements that appear in |path| but not in |from|.
   let items = Path.split(path).components.slice(Path.split(from).components.length);

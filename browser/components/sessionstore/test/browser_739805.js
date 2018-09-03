@@ -3,7 +3,7 @@
 
 var url = "data:text/html;charset=utf-8,<input%20id='foo'>";
 var tabState = {
-  entries: [{ url, triggeringPrincipal_base64 }], formdata: { id: { "foo": "bar" }, url }
+  entries: [{ url, triggeringPrincipal_base64 }], formdata: { id: { "foo": "bar" }, url },
 };
 
 function test() {

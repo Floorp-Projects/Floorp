@@ -20,7 +20,7 @@ function WebpageListener(windowId, accept) {
   info(`Creating WebpageListener for ${windowId}`);
   AlertListener.call(this, accept, {
     register: () => PerformanceWatcher.addPerformanceListener({windowId}, this.listener),
-    unregister: () => PerformanceWatcher.removePerformanceListener({windowId}, this.listener)
+    unregister: () => PerformanceWatcher.removePerformanceListener({windowId}, this.listener),
   });
 }
 WebpageListener.prototype = Object.create(AlertListener.prototype);

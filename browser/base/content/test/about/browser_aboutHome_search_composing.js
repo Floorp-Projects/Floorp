@@ -58,10 +58,10 @@ add_task(async function() {
       composition: {
         string: "x",
         clauses: [
-          { length: 1, attr: Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE }
-        ]
+          { length: 1, attr: Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE },
+        ],
       },
-      caret: { start: 1, length: 0 }
+      caret: { start: 1, length: 0 },
     }, browser);
 
     info("Waiting for search suggestion table unhidden");
@@ -72,7 +72,7 @@ add_task(async function() {
       .getSubmission("xbar", null, "homepage").uri.spec;
     let loadPromise = waitForDocLoadAndStopIt(expectedURL);
     await BrowserTestUtils.synthesizeMouseAtCenter("#TEMPID", {
-      button: 0
+      button: 0,
     }, browser);
     await loadPromise;
 

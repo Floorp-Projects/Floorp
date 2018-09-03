@@ -2,7 +2,7 @@
 
 const STATE = {
   entries: [{url: "about:robots"}, {url: "about:mozilla"}],
-  selected: 2
+  selected: 2,
 };
 
 /**

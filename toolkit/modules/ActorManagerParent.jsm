@@ -162,7 +162,7 @@ let ACTORS = {
         "ext-Finder:CollectResults",
         "ext-Finder:HighlightResults",
         "ext-Finder:clearHighlighting",
-      ]
+      ],
     },
   },
 

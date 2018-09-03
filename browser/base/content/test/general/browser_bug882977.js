@@ -10,7 +10,7 @@ add_task(async function() {
     "set": [
       ["browser.startup.homepage", homepage],
       ["browser.startup.page", 1],
-    ]
+    ],
   });
 
   let win = OpenBrowserWindow();

@@ -208,5 +208,5 @@ var SessionStorageInternal = {
     }
 
     return hostData;
-  }
+  },
 };

@@ -186,7 +186,7 @@ FeedWriter.prototype = {
     if (!this.__dateFormatter) {
       const dtOptions = {
         timeStyle: "short",
-        dateStyle: "long"
+        dateStyle: "long",
       };
       this.__dateFormatter = new Services.intl.DateTimeFormat(undefined, dtOptions);
     }
@@ -722,7 +722,7 @@ FeedWriter.prototype = {
       uri: "about:feeds",
       loadingPrincipal: nullPrincipal,
       securityFlags: Ci.nsILoadInfo.SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
     }).URI;
 
     if (resolvedURI.equals(chan.URI))
@@ -885,7 +885,7 @@ FeedWriter.prototype = {
         // Pull the title and subtitle out of the document
         feedTitle: this._document.getElementById(TITLE_ID).textContent,
         feedSubtitle: this._document.getElementById(SUBTITLE_ID).textContent,
-        feedLocation: this._window.location.href
+        feedLocation: this._window.location.href,
       };
       switch (selectedItem.id) {
         case "selectedAppMenuItem":
@@ -931,7 +931,7 @@ FeedWriter.prototype = {
 
   classID: FEEDWRITER_CID,
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
-                                          Ci.nsIDOMGlobalPropertyInitializer])
+                                          Ci.nsIDOMGlobalPropertyInitializer]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([FeedWriter]);

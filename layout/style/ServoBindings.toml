@@ -1,6 +1,6 @@
 [build]
 args = [
-    "-x", "c++", "-std=c++14", "-fno-sized-deallocation",
+    "-x", "c++", "-std=gnu++14", "-fno-sized-deallocation",
     "-DTRACING=1", "-DIMPL_LIBXUL", "-DMOZ_STYLO_BINDINGS=1",
     "-DMOZILLA_INTERNAL_API", "-DRUST_BINDGEN"
 ]
@@ -29,9 +29,13 @@ args = ["-DOS_ANDROID=1"]
 "arch=arm" = ["--target=armv7-linux-androideabi"]
 "arch=x86" = ["--target=i686-linux-android"]
 
-[build."os=windows"."env=msvc"]
+[build."os=windows"]
 args = [
     "-DOS_WIN=1", "-DWIN32=1",
+]
+
+[build."os=windows"."env=msvc"]
+args = [
     # For compatibility with MSVC 2015
     "-fms-compatibility-version=19",
     # To enable the builtin __builtin_offsetof so that CRT wouldn't
@@ -46,6 +50,10 @@ args = [
 "arch=x86" = ["--target=i686-pc-win32"]
 "arch=x86_64" = ["--target=x86_64-pc-win32"]
 "arch=aarch64" = ["--target=aarch64-pc-windows-msvc"]
+
+[build."os=windows"."env=gnu"]
+"arch=x86" = ["--target=i686-pc-mingw32"]
+"arch=x86_64" = ["--target=x86_64-w64-mingw32"]
 
 [structs]
 headers = [

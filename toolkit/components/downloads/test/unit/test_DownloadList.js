@@ -43,7 +43,7 @@ function promiseExpirableDownloadVisit(aSourceUrl) {
     visits: [{
       transition: PlacesUtils.history.TRANSITIONS.DOWNLOAD,
       date: getExpirableDate(),
-    }]
+    }],
   });
 }
 

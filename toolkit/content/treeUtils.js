@@ -69,5 +69,5 @@ var gTreeUtils = {
     aTree.treeBoxObject.ensureRowIsVisible(0);
 
     return ascending;
-  }
+  },
 };

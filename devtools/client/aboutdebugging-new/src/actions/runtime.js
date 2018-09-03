@@ -5,12 +5,15 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-const { BrowserToolboxProcess } =
-  require("resource://devtools/client/framework/ToolboxProcess.jsm");
-const { Cc, Ci } = require("chrome");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
 const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
+
+const {
+  debugLocalAddon,
+  openTemporaryExtension,
+  uninstallAddon,
+} = require("devtools/client/aboutdebugging-new/src/modules/extensions-helper");
 
 const {
   CONNECT_RUNTIME_FAILURE,
@@ -30,8 +33,6 @@ const {
   REQUEST_WORKERS_START,
   REQUEST_WORKERS_SUCCESS,
 } = require("../constants");
-
-let browserToolboxProcess = null;
 
 function connectRuntime() {
   return async (dispatch, getState) => {
@@ -80,17 +81,7 @@ function inspectDebugTarget(type, id) {
         break;
       }
       case DEBUG_TARGETS.EXTENSION: {
-        // Close current debugging toolbox and open a new one.
-        if (browserToolboxProcess) {
-          browserToolboxProcess.close();
-        }
-
-        browserToolboxProcess = BrowserToolboxProcess.init({
-          addonID: id,
-          onClose: () => {
-            browserToolboxProcess = null;
-          }
-        });
+        debugLocalAddon(id);
         break;
       }
       case DEBUG_TARGETS.WORKER: {
@@ -108,30 +99,15 @@ function inspectDebugTarget(type, id) {
 }
 
 function installTemporaryExtension() {
-  const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  fp.init(window, "Select Manifest File or Package (.xpi)", Ci.nsIFilePicker.modeOpen);
-  fp.open(async res => {
-    if (res == Ci.nsIFilePicker.returnCancel || !fp.file) {
-      return;
-    }
-
-    let file = fp.file;
-
-    // AddonManager.installTemporaryAddon accepts either
-    // addon directory or final xpi file.
-    if (!file.isDirectory() &&
-        !file.leafName.endsWith(".xpi") && !file.leafName.endsWith(".zip")) {
-      file = file.parent;
-    }
-
+  return async (dispatch, getState) => {
+    const message = "Select Manifest File or Package (.xpi)";
+    const file = await openTemporaryExtension(window, message);
     try {
       await AddonManager.installTemporaryAddon(file);
     } catch (e) {
       console.error(e);
     }
-  });
-
-  return () => {};
+  };
 }
 
 function pushServiceWorker(actor) {
@@ -161,11 +137,7 @@ function reloadTemporaryExtension(actor) {
 function removeTemporaryExtension(id) {
   return async () => {
     try {
-      const addon = await AddonManager.getAddonByID(id);
-
-      if (addon) {
-        await addon.uninstall();
-      }
+      await uninstallAddon(id);
     } catch (e) {
       console.error(e);
     }

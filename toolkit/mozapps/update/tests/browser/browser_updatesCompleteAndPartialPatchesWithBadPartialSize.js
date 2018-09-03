@@ -7,7 +7,7 @@ add_task(async function testCompleteAndPartialPatchesWithBadPartialSize() {
       button: "secondarybutton",
       cleanup() {
         AppMenuNotifications.removeNotification(/.*/);
-      }
+      },
     },
   ]);
 });

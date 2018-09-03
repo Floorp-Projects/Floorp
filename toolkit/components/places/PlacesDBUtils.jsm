@@ -455,7 +455,7 @@ var PlacesDBUtils = {
       // D.4 move orphan items to unsorted folder
       { query:
         `UPDATE moz_bookmarks SET
-          parent = :unsorted_folder
+          parent = (SELECT id FROM moz_bookmarks WHERE guid = :unfiledGuid)
         WHERE guid NOT IN (
           :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
         ) AND id IN (
@@ -464,7 +464,6 @@ var PlacesDBUtils = {
             (SELECT id FROM moz_bookmarks WHERE id = b.parent LIMIT 1)
         )`,
         params: {
-          unsorted_folder: PlacesUtils.unfiledBookmarksFolderId,
           rootGuid: PlacesUtils.bookmarks.rootGuid,
           menuGuid: PlacesUtils.bookmarks.menuGuid,
           toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
@@ -530,7 +529,7 @@ var PlacesDBUtils = {
       // as parent, if they have bad parent move them to unsorted bookmarks.
       { query:
         `UPDATE moz_bookmarks SET
-          parent = :unsorted_folder
+          parent = (SELECT id FROM moz_bookmarks WHERE guid = :unfiledGuid)
         WHERE guid NOT IN (
           :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
         ) AND id IN (
@@ -541,7 +540,6 @@ var PlacesDBUtils = {
               LIMIT 1)
         )`,
         params: {
-          unsorted_folder: PlacesUtils.unfiledBookmarksFolderId,
           bookmark_type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
           separator_type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
           rootGuid: PlacesUtils.bookmarks.rootGuid,

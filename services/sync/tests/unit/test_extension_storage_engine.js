@@ -22,7 +22,7 @@ function mock(options) {
     __proto__: Function.prototype,
     get calls() {
       return calls;
-    }
+    },
   });
   return ret;
 }

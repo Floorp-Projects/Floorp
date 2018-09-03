@@ -138,7 +138,7 @@ add_task(async function() {
       100, 200);
     });
 
-    let [subject, ] = await crashReportPromise;
+    let [subject ] = await crashReportPromise;
 
     ok(subject instanceof Ci.nsIPropertyBag,
        "The crash report subject should be an nsIPropertyBag.");
@@ -210,7 +210,7 @@ add_task(async function() {
     let submitButton = buttons[1];
     submitButton.click();
 
-    let [subject, ] = await crashReportPromise;
+    let [subject ] = await crashReportPromise;
 
     ok(subject instanceof Ci.nsIPropertyBag,
        "The crash report subject should be an nsIPropertyBag.");

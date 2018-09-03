@@ -109,5 +109,5 @@ var ZoomManager = {
       }
     }
     return values[i - 1];
-  }
+  },
 };

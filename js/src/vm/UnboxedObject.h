@@ -8,7 +8,6 @@
 #define vm_UnboxedObject_h
 
 #include "gc/DeletePolicy.h"
-#include "gc/Zone.h"
 #include "vm/JSObject.h"
 #include "vm/Runtime.h"
 #include "vm/TypeInference.h"
@@ -59,7 +58,7 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     typedef Vector<Property, 0, SystemAllocPolicy> PropertyVector;
 
   private:
-    Zone* zone_;
+    JS::Zone* zone_;
 
     // If objects in this group have ever been converted to native objects,
     // these store the corresponding native group and initial shape for such
@@ -99,13 +98,13 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     GCPtrJitCode constructorCode_;
 
   public:
-    explicit UnboxedLayout(Zone* zone)
+    explicit UnboxedLayout(JS::Zone* zone)
       : zone_(zone), nativeGroup_(nullptr), nativeShape_(nullptr),
         allocationScript_(nullptr), allocationPc_(nullptr), replacementGroup_(nullptr),
         size_(0), newScript_(nullptr), traceList_(nullptr), constructorCode_(nullptr)
     {}
 
-    Zone* zone() const { return zone_; }
+    JS::Zone* zone() const { return zone_; }
 
     bool initProperties(const PropertyVector& properties, size_t size) {
         size_ = size;

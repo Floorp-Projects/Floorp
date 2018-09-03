@@ -6,7 +6,6 @@
 //! It is currently mostly used in zip files.
 
 extern crate time;
-#[cfg(windows)] extern crate kernel32;
 #[cfg(windows)] extern crate winapi;
 
 use std::io;
@@ -93,8 +92,10 @@ mod sys {
 mod sys {
     use super::MsDosDateTime;
     use time::{self, Tm};
-    use winapi::*;
-    use kernel32::*;
+    use winapi::shared::minwindef::{WORD, FILETIME};
+    use winapi::um::minwinbase::SYSTEMTIME;
+    use winapi::um::timezoneapi::{FileTimeToSystemTime, SystemTimeToFileTime};
+    use winapi::um::winbase::{DosDateTimeToFileTime, FileTimeToDosDateTime};
     use std::io;
 
     pub fn msdos_to_tm(ms: MsDosDateTime) -> Result<Tm, io::Error> {

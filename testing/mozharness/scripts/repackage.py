@@ -33,7 +33,6 @@ class Repackage(BaseScript):
             mar_path += '.exe'
         if mar_path:
             self.chmod(mar_path, 0755)
-
         if self.config.get("run_configure", True):
             self._get_mozconfig()
             self._run_configure()
@@ -47,10 +46,7 @@ class Repackage(BaseScript):
         dirs = {}
         dirs['abs_tools_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tools')
         dirs['abs_mozilla_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'src')
-        dirs['abs_input_dir'] = os.path.join(
-            abs_dirs['base_work_dir'],
-            os.environ.get('MOZ_FETCHES_DIR', 'fetches'),
-        )
+        dirs['abs_input_dir'] = os.path.join(abs_dirs['base_work_dir'], 'fetches')
         output_dir_suffix = []
         if config.get('locale'):
             output_dir_suffix.append(config['locale'])
@@ -68,13 +64,27 @@ class Repackage(BaseScript):
         config = self.config
         dirs = self.query_abs_dirs()
 
+        subst = {
+            'sfx-stub': config['sfx-stub'],
+            'installer-tag': config['installer-tag'],
+            'stub-installer-tag': config['stub-installer-tag'],
+        }
+        subst.update(dirs)
+
         # Make sure the upload dir is around.
         self.mkdir_p(dirs['abs_output_dir'])
 
         for repack_config in config["repackage_config"]:
-            command = [sys.executable, 'mach', '--log-no-times', 'repackage'] + \
-                [arg.format(**dirs)
-                    for arg in list(repack_config)]
+            command = [sys.executable, 'mach', '--log-no-times', 'repackage']
+            command.extend([arg.format(**subst) for arg in repack_config['args']])
+            for arg, filename in repack_config['inputs'].items():
+                command.extend([
+                    '--{}'.format(arg),
+                    os.path.join(dirs['abs_input_dir'], filename),
+                ])
+            command.extend([
+                '--output', os.path.join(dirs['abs_output_dir'], repack_config['output']),
+            ])
             self.run_command(
                 command=command,
                 cwd=dirs['abs_mozilla_dir'],

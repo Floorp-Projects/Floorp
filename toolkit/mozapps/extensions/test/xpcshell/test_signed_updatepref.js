@@ -16,8 +16,8 @@ gServer.registerPathHandler("/update.rdf", function(request, response) {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "4",
-      maxVersion: "6"
-    }]
+      maxVersion: "6",
+    }],
   }];
 
   response.setStatusLine(request.httpVersion, 200, "OK");

@@ -6,78 +6,96 @@ var EXPORTED_SYMBOLS = ["ThemeVariableMap", "ThemeContentPropertyList"];
 
 const ThemeVariableMap = [
   ["--lwt-accent-color-inactive", {
-    lwtProperty: "accentcolorInactive"
+    lwtProperty: "accentcolorInactive",
   }],
   ["--lwt-background-alignment", {
     isColor: false,
-    lwtProperty: "backgroundsAlignment"
+    lwtProperty: "backgroundsAlignment",
   }],
   ["--lwt-background-tiling", {
     isColor: false,
-    lwtProperty: "backgroundsTiling"
+    lwtProperty: "backgroundsTiling",
   }],
   ["--tab-loading-fill", {
     lwtProperty: "tab_loading",
-    optionalElementID: "tabbrowser-tabs"
+    optionalElementID: "tabbrowser-tabs",
   }],
   ["--lwt-tab-text", {
-    lwtProperty: "tab_text"
+    lwtProperty: "tab_text",
   }],
   ["--tab-line-color", {
     lwtProperty: "tab_line",
-    optionalElementID: "tabbrowser-tabs"
+    optionalElementID: "tabbrowser-tabs",
   }],
   ["--lwt-background-tab-separator-color", {
     lwtProperty: "tab_background_separator",
   }],
   ["--toolbar-bgcolor", {
-    lwtProperty: "toolbarColor"
+    lwtProperty: "toolbarColor",
   }],
   ["--toolbar-color", {
-    lwtProperty: "toolbar_text"
+    lwtProperty: "toolbar_text",
   }],
   ["--urlbar-separator-color", {
-    lwtProperty: "toolbar_field_separator"
+    lwtProperty: "toolbar_field_separator",
   }],
   ["--tabs-border-color", {
     lwtProperty: "toolbar_top_separator",
-    optionalElementID: "navigator-toolbox"
+    optionalElementID: "navigator-toolbox",
   }],
   ["--lwt-toolbar-vertical-separator", {
-    lwtProperty: "toolbar_vertical_separator"
+    lwtProperty: "toolbar_vertical_separator",
   }],
   ["--toolbox-border-bottom-color", {
-    lwtProperty: "toolbar_bottom_separator"
+    lwtProperty: "toolbar_bottom_separator",
   }],
   ["--lwt-toolbarbutton-icon-fill", {
-    lwtProperty: "icon_color"
+    lwtProperty: "icon_color",
   }],
   ["--lwt-toolbarbutton-icon-fill-attention", {
-    lwtProperty: "icon_attention_color"
+    lwtProperty: "icon_attention_color",
   }],
   ["--lwt-toolbarbutton-hover-background", {
-    lwtProperty: "button_background_hover"
+    lwtProperty: "button_background_hover",
   }],
   ["--lwt-toolbarbutton-active-background", {
-    lwtProperty: "button_background_active"
+    lwtProperty: "button_background_active",
   }],
   ["--lwt-selected-tab-background-color", {
-    lwtProperty: "tab_selected"
+    lwtProperty: "tab_selected",
   }],
   ["--autocomplete-popup-background", {
-    lwtProperty: "popup"
+    lwtProperty: "popup",
   }],
   ["--autocomplete-popup-color", {
-    lwtProperty: "popup_text"
+    lwtProperty: "popup_text",
   }],
   ["--autocomplete-popup-border-color", {
-    lwtProperty: "popup_border"
+    lwtProperty: "popup_border",
   }],
   ["--autocomplete-popup-highlight-background", {
-    lwtProperty: "popup_highlight"
+    lwtProperty: "popup_highlight",
   }],
   ["--autocomplete-popup-highlight-color", {
-    lwtProperty: "popup_highlight_text"
+    lwtProperty: "popup_highlight_text",
+  }],
+  ["--sidebar-background-color", {
+    lwtProperty: "sidebar",
+    optionalElementID: "sidebar-box",
+    processColor(rgbaChannels, element) {
+      if (!rgbaChannels) {
+        element.removeAttribute("lwt-sidebar");
+        return null;
+      }
+      const {r, g, b} = rgbaChannels;
+      element.setAttribute("lwt-sidebar", "true");
+      // Drop alpha channel
+      return `rgb(${r}, ${g}, ${b})`;
+    },
+  }],
+  ["--sidebar-text-color", {
+    lwtProperty: "sidebar_text",
+    optionalElementID: "sidebar-box",
   }],
 ];
 

@@ -46,7 +46,7 @@ CPUBurner.prototype = {
   dispose() {
     info(`CPUBurner: Closing tab for ${this.url}\n`);
     gBrowser.removeTab(this.tab);
-  }
+  },
 };
 // This function is injected in all frames
 CPUBurner.frameScript = function() {
@@ -104,7 +104,7 @@ CPUBurner.frameScript = function() {
     };
 
     sendAsyncMessage("test-performance-watcher:cpow-init", {}, {
-      burnCPOWInSandbox: this.burnCPOWInSandbox
+      burnCPOWInSandbox: this.burnCPOWInSandbox,
     });
 
   } catch (ex) {
@@ -179,7 +179,7 @@ AddonBurner.prototype = Object.create(CPUBurner.prototype);
 Object.defineProperty(AddonBurner.prototype, "addonId", {
   get() {
     return this._addonId;
-  }
+  },
 });
 
 /**
@@ -231,7 +231,7 @@ function AddonListener(addonId, accept) {
     unregister: () => {
       info(`AddonListener: unregistering ${JSON.stringify(target, null, "\t")}`);
       PerformanceWatcher.removePerformanceListener({addonId}, this.listener);
-    }
+    },
   });
 }
 AddonListener.prototype = Object.create(AlertListener.prototype);

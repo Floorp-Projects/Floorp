@@ -61,5 +61,5 @@ let HomePage = {
 
   reset() {
     Services.prefs.clearUserPref(kPrefName);
-  }
+  },
 };

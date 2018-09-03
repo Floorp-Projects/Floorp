@@ -188,5 +188,5 @@ var PositionHandler = {
           Math.abs(this._startWindowX - window.screenX) >= this.threshold;
         break;
     }
-  }
+  },
 };

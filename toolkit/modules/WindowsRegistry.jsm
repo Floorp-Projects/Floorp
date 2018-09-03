@@ -85,5 +85,5 @@ var WindowsRegistry = {
       registry.close();
     }
     return result;
-  }
+  },
 };

@@ -66,6 +66,11 @@ FrameBuilder::Build()
 
   mWidgetRenderView = new RenderViewMLGPU(this, target, region);
 
+  // Traverse the layer tree and compute visible region for intermediate surfaces
+  if (ContainerLayerMLGPU* root = mRoot->AsLayerMLGPU()->AsContainerLayerMLGPU()) {
+    root->ComputeIntermediateSurfaceBounds();
+  }
+
   // Traverse the layer tree and assign each layer to tiles.
   {
     Maybe<gfx::Polygon> geometry;

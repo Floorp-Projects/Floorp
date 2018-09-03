@@ -112,7 +112,7 @@ add_task(async function setup() {
         ["full-screen-api.enabled", true],
         ["full-screen-api.allow-trusted-requests-only", false],
         ["full-screen-api.transition-duration.enter", "0 0"],
-        ["full-screen-api.transition-duration.leave", "0 0"]
+        ["full-screen-api.transition-duration.leave", "0 0"],
       ]});
   await new Promise(resolve => {
     video.addEventListener("canplaythrough", resolve, {once: true});

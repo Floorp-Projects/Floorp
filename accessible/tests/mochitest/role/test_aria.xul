@@ -25,7 +25,6 @@
 
       // aria-pressed
       testRole("pressed_button", ROLE_TOGGLE_BUTTON);
-      testRole("pressed_menu_button", ROLE_TOGGLE_BUTTON);
 
       SimpleTest.finish();
     }
@@ -59,11 +58,6 @@
     <label id="presentation_label" role="presentation" value="label"/>
     <description id="presentation_descr" role="presentation" value="description"/>
     <button id="pressed_button" aria-pressed="true" label="I am pressed" />
-    <button id="pressed_menu_button" aria-pressed="true" label="I am pressed" type="menu-button">
-      <menupopup>
-        <menuitem label="I am a menu item" />
-      </menupopup>
-    </button>
   </vbox>
 
   

@@ -59,8 +59,8 @@ add_task(async function has_embedded_webextension_persisted() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1.9.2"
-    }]
+      maxVersion: "1.9.2",
+    }],
   }, {
     "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
     "webextension/manifest.json": EMBEDDED_WEBEXT_MANIFEST,
@@ -132,8 +132,8 @@ add_task(async function run_embedded_webext_bootstrap() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1.9.2"
-    }]
+      maxVersion: "1.9.2",
+    }],
   }, {
     "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
     "webextension/manifest.json": EMBEDDED_WEBEXT_MANIFEST,
@@ -217,8 +217,8 @@ add_task(async function reload_embedded_webext_bootstrap() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1.9.2"
-    }]
+      maxVersion: "1.9.2",
+    }],
   }, {
     "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
     "webextension/manifest.json": EMBEDDED_WEBEXT_MANIFEST,
@@ -315,8 +315,8 @@ add_task(async function shutdown_embedded_webext_without_bootstrap_shutdown() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1.9.2"
-    }]
+      maxVersion: "1.9.2",
+    }],
   }, {
     "bootstrap.js": BOOTSTRAP_WITHOUT_SHUTDOWN,
     "webextension/manifest.json": EMBEDDED_WEBEXT_MANIFEST,

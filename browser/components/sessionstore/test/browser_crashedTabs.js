@@ -16,7 +16,7 @@ const PAGE_2 = "data:text/html,<html><body>Another%20regular,%20everyday,%20norm
 add_task(async function test_initialize() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      [ "toolkit.cosmeticAnimations.enabled", false]
+      [ "toolkit.cosmeticAnimations.enabled", false],
   ] });
 });
 

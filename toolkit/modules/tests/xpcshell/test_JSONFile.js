@@ -71,7 +71,7 @@ add_task(async function test_save_reload() {
 
 add_task(async function test_load_sync() {
   let storeForSave = new JSONFile({
-    path: getTempFile(TEST_STORE_FILE_NAME).path
+    path: getTempFile(TEST_STORE_FILE_NAME).path,
   });
   await storeForSave.load();
   Object.assign(storeForSave.data, TEST_DATA);
@@ -87,7 +87,7 @@ add_task(async function test_load_sync() {
 
 add_task(async function test_load_with_dataPostProcessor() {
   let storeForSave = new JSONFile({
-    path: getTempFile(TEST_STORE_FILE_NAME).path
+    path: getTempFile(TEST_STORE_FILE_NAME).path,
   });
   await storeForSave.load();
   Object.assign(storeForSave.data, TEST_DATA);

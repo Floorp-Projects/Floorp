@@ -17,7 +17,7 @@ async function test() {
     id: "addon1@tests.mozilla.org",
     name: "manually updating addon",
     version: "1.0",
-    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE,
   }]);
 
   let aWindow = await open_manager("addons://list/extension");
@@ -36,7 +36,7 @@ add_test(async function() {
   gProvider.createInstalls([{
     name: "updated add-on",
     existingAddon: gProvider.addons[0],
-    version: "2.0"
+    version: "2.0",
   }]);
   var newAddon = new MockAddon("addon2@tests.mozilla.org");
   newAddon.name = "updated add-on";

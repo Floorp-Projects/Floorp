@@ -46,8 +46,8 @@ add_task(async function test_initial_conditions() {
 add_task(async function test_policy_disable_reset() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "DisableProfileRefresh": true
-    }
+      "DisableProfileRefresh": true,
+    },
   });
   await test_reset_disabled({disabled: true});
 });

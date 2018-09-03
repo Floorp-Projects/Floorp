@@ -40,7 +40,7 @@ add_task(async function() {
     manifest: {
       "options_ui": {
         "page": "options.html",
-      }
+      },
     },
 
     files: {

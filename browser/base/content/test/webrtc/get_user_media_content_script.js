@@ -15,7 +15,7 @@ const kObservedTopics = [
   "getUserMedia:response:deny",
   "getUserMedia:request",
   "recording-device-events",
-  "recording-window-ended"
+  "recording-window-ended",
 ];
 
 var gObservedTopics = {};

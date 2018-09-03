@@ -33,7 +33,7 @@ add_task(async function() {
   // Add a typed visit, so it will be autofilled.
   await PlacesTestUtils.addVisits({
     uri: "http://example.com/",
-    transition: Ci.nsINavHistoryService.TRANSITION_TYPED
+    transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
   });
 
   await test_autocomplete({ desc: "CTRL+ENTER on the autofilled part should use autofill",
@@ -41,7 +41,7 @@ add_task(async function() {
                             autofilled: "example.com/",
                             modified: "example.com",
                             waitForUrl: "http://example.com/",
-                            keys: [["KEY_Enter"]]
+                            keys: [["KEY_Enter"]],
                           });
 
   await test_autocomplete({ desc: "CTRL+ENTER on the autofilled part should bypass autofill",
@@ -51,7 +51,7 @@ add_task(async function() {
                             waitForUrl: "http://www.exam.com/",
                             keys: [["KEY_Enter", AppConstants.platform === "macosx" ?
                                                    {metaKey: true} :
-                                                   {ctrlKey: true}]]
+                                                   {ctrlKey: true}]],
                           });
 
   await test_autocomplete({ desc: "SHIFT+ENTER on the autofilled part should bypass autofill",
@@ -59,6 +59,6 @@ add_task(async function() {
                             autofilled: "example.com/",
                             modified: "www.exam.net",
                             waitForUrl: "http://www.exam.net/",
-                            keys: [["KEY_Enter", {shiftKey: true}]]
+                            keys: [["KEY_Enter", {shiftKey: true}]],
                           });
 });

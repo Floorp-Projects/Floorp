@@ -56,7 +56,7 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: true,
@@ -67,7 +67,7 @@ let expectedResults = [
     items: [{
       value: "",
       label: "This connection is not secure. Logins entered here could be compromised. Learn More",
-      style: "insecureWarning"
+      style: "insecureWarning",
     }, {
       value: "",
       label: LABEL_NO_USERNAME,
@@ -88,7 +88,7 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: true,
@@ -116,7 +116,7 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: true,
@@ -127,7 +127,7 @@ let expectedResults = [
     items: [{
       value: "",
       label: "This connection is not secure. Logins entered here could be compromised. Learn More",
-      style: "insecureWarning"
+      style: "insecureWarning",
     }, {
       value: "emptypass1",
       label: LABEL_NO_USERNAME,
@@ -148,7 +148,7 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: false,
@@ -176,7 +176,7 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: false,
@@ -204,7 +204,7 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: false,
@@ -232,7 +232,7 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: false,
@@ -260,7 +260,7 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: true,
@@ -288,7 +288,7 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: true,
@@ -299,7 +299,7 @@ let expectedResults = [
     items: [{
       value: "",
       label: "This connection is not secure. Logins entered here could be compromised. Learn More",
-      style: "insecureWarning"
+      style: "insecureWarning",
     }, {
       value: "",
       label: LABEL_NO_USERNAME,
@@ -320,7 +320,7 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: true,
@@ -348,7 +348,7 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: true,
@@ -359,7 +359,7 @@ let expectedResults = [
     items: [{
       value: "",
       label: "This connection is not secure. Logins entered here could be compromised. Learn More",
-      style: "insecureWarning"
+      style: "insecureWarning",
     }, {
       value: "emptypass1",
       label: LABEL_NO_USERNAME,
@@ -380,7 +380,7 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: false,
@@ -408,7 +408,7 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: false,
@@ -416,7 +416,7 @@ let expectedResults = [
     isSecure: false,
     isPasswordField: false,
     matchingLogins,
-    items: []
+    items: [],
   },
   {
     insecureFieldWarningEnabled: false,
@@ -444,7 +444,7 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "login",
-    }]
+    }],
   },
   {
     insecureFieldWarningEnabled: false,
@@ -452,7 +452,7 @@ let expectedResults = [
     isSecure: false,
     isPasswordField: true,
     matchingLogins,
-    items: []
+    items: [],
   },
 ];
 
@@ -466,7 +466,7 @@ add_task(async function test_all_patterns() {
     let actual = new UserAutoCompleteResult("", pattern.matchingLogins,
                                             {
                                               isSecure: pattern.isSecure,
-                                              isPasswordField: pattern.isPasswordField
+                                              isPasswordField: pattern.isPasswordField,
                                             });
     pattern.items.forEach((item, index) => {
       equal(actual.getValueAt(index), item.value);

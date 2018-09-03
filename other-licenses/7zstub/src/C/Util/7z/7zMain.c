@@ -1,5 +1,5 @@
 /* 7zMain.c - Test application for 7z Decoder
-2017-08-26 : Igor Pavlov : Public domain */
+2018-04-19 : Igor Pavlov : Public domain */
 
 #include "Precomp.h"
 
@@ -606,6 +606,31 @@ int MY_CDECL main(int numargs, char *args[])
             res = SZ_ERROR_FAIL;
             break;
           }
+
+          #ifdef USE_WINDOWS_FILE
+          {
+            FILETIME mtime, ctime;
+            FILETIME *mtimePtr = NULL;
+            FILETIME *ctimePtr = NULL;
+
+            if (SzBitWithVals_Check(&db.MTime, i))
+            {
+              const CNtfsFileTime *t = &db.MTime.Vals[i];
+              mtime.dwLowDateTime = (DWORD)(t->Low);
+              mtime.dwHighDateTime = (DWORD)(t->High);
+              mtimePtr = &mtime;
+            }
+            if (SzBitWithVals_Check(&db.CTime, i))
+            {
+              const CNtfsFileTime *t = &db.CTime.Vals[i];
+              ctime.dwLowDateTime = (DWORD)(t->Low);
+              ctime.dwHighDateTime = (DWORD)(t->High);
+              ctimePtr = &ctime;
+            }
+            if (mtimePtr || ctimePtr)
+              SetFileTime(outFile.handle, ctimePtr, NULL, mtimePtr);
+          }
+          #endif
           
           if (File_Close(&outFile))
           {

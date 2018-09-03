@@ -22,7 +22,6 @@
     {
       // aria-pressed
       testStates("pressed_button", STATE_PRESSED, 0, STATE_CHECKABLE);
-      testStates("pressed_menu_button", STATE_PRESSED | STATE_HASPOPUP, 0, STATE_CHECKABLE);
 
       testStates("tabs", STATE_MULTISELECTABLE);
       // Make sure XUL selection works, since aria-selected defaults to false.
@@ -56,11 +55,6 @@
 
     <vbox flex="1">
       <button id="pressed_button" aria-pressed="true" label="I am pressed" />
-      <button id="pressed_menu_button" aria-pressed="true" label="I am pressed" type="menu-button">
-        <menupopup>
-          <menuitem label="I am a menu item" />
-        </menupopup>
-      </button>
 
       <tabbox>
         <tabs id="tabs" aria-multiselectable="true">

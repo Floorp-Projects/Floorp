@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MozAutoplayMediaBlocked test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript">
+/**
+ * This test is used to check whether 'MozAutoplayMediaBlocked' would be fired
+ * correctly when the media was blocked.
+ */
+"use strict";
+
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Task.jsm");
+
+let gChromeWin;
+let gBrowserApp;
+
+const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/media_playback.html";
+
+// Waiting for a tab to load or restore can be slow on the emulator.
+SimpleTest.requestLongerTimeout(2);
+
+(function setup_testing_env() {
+  gChromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  gBrowserApp = gChromeWin.BrowserApp;
+
+  Services.prefs.setIntPref("media.autoplay.default", 1 /* BLOCKED */);
+  Services.prefs.setBoolPref("media.autoplay.enabled.user-gestures-needed", true);
+})();
+
+add_task(async function test_MozAutoplayMediaBlocked() {
+  info("- open a new tab -");
+  let tab = gBrowserApp.addTab(URL);
+  let browser = tab.browser;
+
+  const mediaBlockedPromise = promiseBrowserEvent(browser, "MozAutoplayMediaBlocked");
+
+  info("- wait for loading tab's content -");
+  await promiseBrowserEvent(browser, "load");
+
+  info("- wait for 'MozAutoplayMediaBlocked' event -");
+  await mediaBlockedPromise;
+  ok(true, "got `MozAutoplayMediaBlocked` event");
+
+  info("- remove tab -");
+  gBrowserApp.closeTab(tab);
+});
+
+  </script>
+</head>
+<body>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

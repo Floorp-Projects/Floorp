@@ -191,5 +191,5 @@ var Utils = Object.freeze({
     }
 
     return objs.map((obj) => Object.getOwnPropertyNames(obj).length ? obj : null);
-  }
+  },
 });

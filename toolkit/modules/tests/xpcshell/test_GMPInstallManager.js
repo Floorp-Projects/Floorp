@@ -734,7 +734,7 @@ xhr.prototype = {
     // eslint-disable-next-line no-eval
     eval("this._on" + aEvent + " = aValue");
   },
-  get wrappedJSObject() { return this; }
+  get wrappedJSObject() { return this; },
 };
 
 /**

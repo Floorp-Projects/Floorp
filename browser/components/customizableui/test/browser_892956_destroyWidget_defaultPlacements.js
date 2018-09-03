@@ -12,7 +12,7 @@ add_task(async function() {
 
   let widgetSpec = {
     id: kWidgetId,
-    defaultArea: CustomizableUI.AREA_NAVBAR
+    defaultArea: CustomizableUI.AREA_NAVBAR,
   };
   CustomizableUI.createWidget(widgetSpec);
   CustomizableUI.destroyWidget(kWidgetId);

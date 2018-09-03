@@ -33,7 +33,7 @@ add_task(async function test_disable() {
       name: "Test Dictionary",
       version: "1.0",
       type: "64",
-    }
+    },
   ];
 
   function makeXPI(info) {
@@ -45,7 +45,7 @@ add_task(async function test_disable() {
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
-        maxVersion: "1"
+        maxVersion: "1",
       }],
     }));
   }

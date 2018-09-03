@@ -327,26 +327,6 @@ function visits_in_database(aURI) {
 }
 
 /**
- * Checks that we don't have any bookmark
- */
-function check_no_bookmarks() {
-  let query = PlacesUtils.history.getNewQuery();
-  let folders = [
-    PlacesUtils.bookmarks.toolbarFolder,
-    PlacesUtils.bookmarks.bookmarksMenuFolder,
-    PlacesUtils.bookmarks.unfiledBookmarksFolder,
-  ];
-  query.setFolders(folders, 3);
-  let options = PlacesUtils.history.getNewQueryOptions();
-  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-  let root = PlacesUtils.history.executeQuery(query, options).root;
-  root.containerOpen = true;
-  if (root.childCount != 0)
-    do_throw("Unable to remove all bookmarks");
-  root.containerOpen = false;
-}
-
-/**
  * Allows waiting for an observer notification once.
  *
  * @param aTopic

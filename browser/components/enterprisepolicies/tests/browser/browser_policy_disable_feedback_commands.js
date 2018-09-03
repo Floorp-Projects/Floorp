@@ -31,8 +31,8 @@ async function checkItemsAreDisabled(url) {
 add_task(async function test_policy_feedback_commands() {
   await setupPolicyEngineWithJson({
     "policies": {
-      "DisableFeedbackCommands": true
-    }
+      "DisableFeedbackCommands": true,
+    },
   });
 
   /* from browser/base/content/utilityOverlay.js */

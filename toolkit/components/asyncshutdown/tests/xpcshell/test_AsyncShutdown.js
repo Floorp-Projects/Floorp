@@ -132,7 +132,7 @@ add_task(async function test_phase_removeBlocker() {
         info("Attempt to remove non-registered blockers during wait()");
         do_remove_blocker(lock, "foo", false);
         do_remove_blocker(lock, null, false);
-      }
+      },
     ];
     for (let i in blockers) {
       lock.addBlocker("Wait forever again: " + i, blockers[i]);

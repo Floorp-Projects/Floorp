@@ -4,7 +4,7 @@
 
 XULMAP_TYPE(browser, OuterDocAccessible)
 XULMAP_TYPE(button, XULButtonAccessible)
-XULMAP_TYPE(checkbox, XULCheckboxAccessible)
+XULMAP_TYPE(checkbox, CheckboxAccessible)
 XULMAP_TYPE(description, XULLabelAccessible)
 XULMAP_TYPE(dropMarker, XULDropmarkerAccessible)
 XULMAP_TYPE(editor, OuterDocAccessible)

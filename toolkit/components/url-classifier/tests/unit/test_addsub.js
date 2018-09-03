@@ -9,12 +9,12 @@ function testSimpleAdds() {
   var update = buildPhishingUpdate(
         [
           { "chunkNum": 1,
-            "urls": addUrls
+            "urls": addUrls,
           }]);
 
   var assertions = {
     "tableData": "test-phish-simple;a:1",
-    "urlsExist": addUrls
+    "urlsExist": addUrls,
   };
 
   doTest([update], assertions);
@@ -33,7 +33,7 @@ function testMultipleAdds() {
         "urls": add2Urls }]);
   var assertions = {
     "tableData": "test-phish-simple;a:1-2",
-    "urlsExist": add1Urls.concat(add2Urls)
+    "urlsExist": add1Urls.concat(add2Urls),
   };
 
   doTest([update], assertions);
@@ -58,7 +58,7 @@ function testSimpleSub() {
     "tableData": "test-phish-simple;a:1:s:50",
     "urlsExist": [ "bar.com/b" ],
     "urlsDontExist": ["foo.com/a" ],
-    "subsDontExist": [ "foo.com/a" ]
+    "subsDontExist": [ "foo.com/a" ],
   };
 
   doTest([addUpdate, subUpdate], assertions);
@@ -83,7 +83,7 @@ function testSubEmptiesAdd() {
     "tableData": "test-phish-simple;a:1:s:50",
     "urlsExist": [ "bar.com/b" ],
     "urlsDontExist": ["foo.com/a" ],
-    "subsDontExist": [ "foo.com/a" ] // this sub was found, it shouldn't exist anymore
+    "subsDontExist": [ "foo.com/a" ], // this sub was found, it shouldn't exist anymore
   };
 
   doTest([subUpdate, addUpdate], assertions);
@@ -108,7 +108,7 @@ function testSubPartiallyEmptiesAdd() {
     "tableData": "test-phish-simple;a:1:s:1",
     "urlsExist": [ "foo.com/b", "bar.com/b" ],
     "urlsDontExist": ["foo.com/a" ],
-    "subsDontExist": [ "foo.com/a" ] // this sub was found, it shouldn't exist anymore
+    "subsDontExist": [ "foo.com/a" ], // this sub was found, it shouldn't exist anymore
   };
 
   doTest([subUpdate, addUpdate], assertions);
@@ -138,7 +138,7 @@ function testPendingSubRemoved() {
   var assertions = {
     "tableData": "test-phish-simple;a:1-2:s:1",
     "urlsExist": [ "foo.com/a", "foo.com/b" ],
-    "subsDontExist": [ "foo.com/a", "foo.com/b" ] // this sub was found, it shouldn't exist anymore
+    "subsDontExist": [ "foo.com/a", "foo.com/b" ], // this sub was found, it shouldn't exist anymore
   };
 
   doTest([subUpdate, addUpdate1, addUpdate2], assertions);
@@ -165,7 +165,7 @@ function testPendingSubExpire() {
   var assertions = {
     "tableData": "test-phish-simple;a:1",
     "urlsExist": [ "foo.com/a", "foo.com/b" ],
-    "subsDontExist": [ "foo.com/a", "foo.com/b" ] // this sub was expired
+    "subsDontExist": [ "foo.com/a", "foo.com/b" ], // this sub was expired
   };
 
   doTest([subUpdate, expireUpdate, addUpdate], assertions);
@@ -189,7 +189,7 @@ function testDuplicateAdds() {
   var assertions = {
     "tableData": "test-phish-simple;a:1-2:s:3",
     "urlsExist": [ "foo.com/a"],
-    "subsDontExist": [ "foo.com/a"]
+    "subsDontExist": [ "foo.com/a"],
   };
 
   doTest([addUpdate1, addUpdate2, subUpdate], assertions);
@@ -212,7 +212,7 @@ function testSubPartiallyMatches() {
     "tableData": "test-phish-simple;a:1:s:1",
     "urlsDontExist": ["foo.com/a"],
     "subsDontExist": ["foo.com/a"],
-    "subsExist": ["foo.com/b"]
+    "subsExist": ["foo.com/b"],
   };
 
   doTest([addUpdate, subUpdate], assertions);
@@ -242,7 +242,7 @@ function testSubPartiallyMatches2() {
   var assertions = {
     "tableData": "test-phish-simple;a:1-2:s:1",
     "urlsDontExist": ["foo.com/a", "foo.com/b"],
-    "subsDontExist": ["foo.com/a", "foo.com/b"]
+    "subsDontExist": ["foo.com/a", "foo.com/b"],
   };
 
   doTest([addUpdate, subUpdate, addUpdate2], assertions);
@@ -272,7 +272,7 @@ function testSubsDifferentChunks() {
     "tableData": "test-phish-simple;a:3:s:1-2",
     "urlsExist": [ "foo.com/c" ],
     "urlsDontExist": [ "foo.com/a", "foo.com/b" ],
-    "subsDontExist": [ "foo.com/a", "foo.com/b" ]
+    "subsDontExist": [ "foo.com/a", "foo.com/b" ],
   };
 
   doTest([subUpdate1, subUpdate2, addUpdate], assertions);
@@ -304,7 +304,7 @@ function testSubsDifferentChunksSameHostId() {
 
   var assertions = {
     "tableData": "test-phish-simple;a:1-2:s:1-2",
-    "urlsDontExist": [ "foo.com/c", "foo.com/b", "foo.com/a", ],
+    "urlsDontExist": [ "foo.com/c", "foo.com/b", "foo.com/a" ],
   };
 
   doTest([addUpdate, addUpdate2, subUpdate1, subUpdate2], assertions);
@@ -315,35 +315,35 @@ function testExpireLists() {
   var addUpdate = buildPhishingUpdate(
         [
           { "chunkNum": 1,
-            "urls": [ "foo.com/a" ]
+            "urls": [ "foo.com/a" ],
           },
           { "chunkNum": 3,
-            "urls": [ "bar.com/a" ]
+            "urls": [ "bar.com/a" ],
           },
           { "chunkNum": 4,
-            "urls": [ "baz.com/a" ]
+            "urls": [ "baz.com/a" ],
           },
           { "chunkNum": 5,
-            "urls": [ "blah.com/a" ]
+            "urls": [ "blah.com/a" ],
           },
           ]);
   var subUpdate = buildPhishingUpdate(
         [
           { "chunkNum": 1,
             "chunkType": "s",
-            "urls": [ "50:foo.com/1" ]
+            "urls": [ "50:foo.com/1" ],
           },
           { "chunkNum": 2,
             "chunkType": "s",
-            "urls": [ "50:bar.com/1" ]
+            "urls": [ "50:bar.com/1" ],
           },
           { "chunkNum": 3,
             "chunkType": "s",
-            "urls": [ "50:baz.com/1" ]
+            "urls": [ "50:baz.com/1" ],
           },
           { "chunkNum": 5,
             "chunkType": "s",
-            "urls": [ "50:blah.com/1" ]
+            "urls": [ "50:blah.com/1" ],
           },
           ]);
 
@@ -353,7 +353,7 @@ function testExpireLists() {
 
   var assertions = {
     //    "tableData" : "test-phish-simple;"
-    "tableData": ""
+    "tableData": "",
   };
 
   doTest([addUpdate, subUpdate, expireUpdate], assertions);
@@ -366,16 +366,16 @@ function testDuplicateAddChunks() {
   var update = buildPhishingUpdate(
         [
           { "chunkNum": 1,
-            "urls": addUrls1
+            "urls": addUrls1,
           },
           { "chunkNum": 1,
-            "urls": addUrls2
+            "urls": addUrls2,
           }]);
 
   var assertions = {
     "tableData": "test-phish-simple;a:1",
     "urlsExist": addUrls1,
-    "urlsDontExist": addUrls2
+    "urlsDontExist": addUrls2,
   };
 
   doTest([update], assertions);
@@ -392,11 +392,11 @@ function testExpireWholeSub() {
   var update = buildPhishingUpdate(
         [{ "chunkNum": 5,
            "chunkType": "s",
-           "urls": subUrls
+           "urls": subUrls,
           },
           // empty add chunk should still cause foo.com/a to go away.
           { "chunkNum": 1,
-            "urls": []
+            "urls": [],
           },
           // and now adding chunk 1 again with foo.com/a should succeed,
           // because the sub should have been expired with the empty
@@ -404,15 +404,15 @@ function testExpireWholeSub() {
 
           // we need to expire this chunk to let us add chunk 1 again.
           {
-            "chunkType": "ad:1"
+            "chunkType": "ad:1",
           },
           { "chunkNum": 1,
-            "urls": [ "foo.com/a" ]
+            "urls": [ "foo.com/a" ],
           }]);
 
   var assertions = {
     "tableData": "test-phish-simple;a:1:s:5",
-    "urlsExist": ["foo.com/a"]
+    "urlsExist": ["foo.com/a"],
   };
 
   doTest([update], assertions);
@@ -428,11 +428,11 @@ function testPreventWholeSub() {
   var update = buildPhishingUpdate(
         [  // empty add chunk should cause foo.com/a to not be saved
           { "chunkNum": 1,
-            "urls": []
+            "urls": [],
           },
           { "chunkNum": 5,
            "chunkType": "s",
-           "urls": subUrls
+           "urls": subUrls,
           },
           // and now adding chunk 1 again with foo.com/a should succeed,
           // because the sub should have been expired with the empty
@@ -440,15 +440,15 @@ function testPreventWholeSub() {
 
           // we need to expire this chunk to let us add chunk 1 again.
           {
-            "chunkType": "ad:1"
+            "chunkType": "ad:1",
           },
           { "chunkNum": 1,
-            "urls": [ "foo.com/a" ]
+            "urls": [ "foo.com/a" ],
           }]);
 
   var assertions = {
     "tableData": "test-phish-simple;a:1:s:5",
-    "urlsExist": ["foo.com/a"]
+    "urlsExist": ["foo.com/a"],
   };
 
   doTest([update], assertions);
@@ -468,7 +468,7 @@ function run_test() {
     testSubPartiallyMatches2,
     testSubsDifferentChunks,
     testSubsDifferentChunksSameHostId,
-    testExpireLists
+    testExpireLists,
   ]);
 }
 

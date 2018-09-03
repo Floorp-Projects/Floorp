@@ -69,5 +69,5 @@ var gSafeBrowsing = {
       reportInfo = { uri: pageUri.asciiSpec };
     }
     return SafeBrowsing.getReportURL(name, reportInfo);
-  }
+  },
 };

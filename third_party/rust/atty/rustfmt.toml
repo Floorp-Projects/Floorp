@@ -1,0 +1,10 @@
+# keep imports tidy
+reorder_imported_names = true
+reorder_imports = true
+reorder_imports_in_group = true
+# there is no try!
+use_try_shorthand = true
+# don't create rustfmt artifacts
+write_mode = "Replace"
+# reduce wide load
+max_width = 80

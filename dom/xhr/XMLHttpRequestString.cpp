@@ -38,6 +38,12 @@ public:
     return mData.Length();
   }
 
+  mozilla::BulkWriteHandle<char16_t>
+  UnsafeBulkWrite(uint32_t aCapacity, nsresult& aRv)
+  {
+    return mData.BulkWrite(aCapacity, UnsafeLength(), false, aRv);
+  }
+
   void
   Append(const nsAString& aString)
   {
@@ -226,22 +232,16 @@ XMLHttpRequestStringWriterHelper::XMLHttpRequestStringWriterHelper(XMLHttpReques
 {
 }
 
-bool
-XMLHttpRequestStringWriterHelper::AddCapacity(int32_t aCapacity)
+uint32_t
+XMLHttpRequestStringWriterHelper::Length() const
 {
-  return mBuffer->UnsafeData().SetCapacity(mBuffer->UnsafeLength() + aCapacity, fallible);
+  return mBuffer->UnsafeLength();
 }
 
-char16_t*
-XMLHttpRequestStringWriterHelper::EndOfExistingData()
+mozilla::BulkWriteHandle<char16_t>
+XMLHttpRequestStringWriterHelper::BulkWrite(uint32_t aCapacity, nsresult& aRv)
 {
-  return mBuffer->UnsafeData().BeginWriting() + mBuffer->UnsafeLength();
-}
-
-void
-XMLHttpRequestStringWriterHelper::AddLength(int32_t aLength)
-{
-  mBuffer->UnsafeData().SetLength(mBuffer->UnsafeLength() + aLength);
+  return mBuffer->UnsafeBulkWrite(aCapacity, aRv);
 }
 
 // ---------------------------------------------------------------------------

@@ -50,7 +50,7 @@ function promiseInstallPostponed(addonID1, addonID2) {
           AddonManager.removeInstallListener(listener);
           resolve();
         }
-      }
+      },
     };
 
     AddonManager.addInstallListener(listener);
@@ -76,7 +76,7 @@ function promiseInstallResumed(addonID1, addonID2) {
       },
       onInstallPostponed: (install) => {
         seenPostponed.push(install.addon.id);
-      }
+      },
     };
 
     AddonManager.addInstallListener(listener);

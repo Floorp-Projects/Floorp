@@ -217,7 +217,7 @@ decorate_task(
       [["unenroll", "addon_study", study.name, {
         addonId,
         addonVersion: study.addonVersion,
-        reason: "test-reason"
+        reason: "test-reason",
       }]],
       "an unenroll event should be sent",
     );
@@ -243,7 +243,7 @@ decorate_task(
       [["unenroll", "addon_study", study.name, {
         addonId: study.addonId,
         addonVersion: study.addonVersion,
-        reason: "unknown"
+        reason: "unknown",
       }]],
       "an unenroll event should be sent",
     );

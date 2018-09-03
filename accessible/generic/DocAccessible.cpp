@@ -1080,9 +1080,20 @@ DocAccessible::ARIAActiveDescendantChanged(Accessible* aAccessible)
             logging::ActiveItemChangeCausedBy("ARIA activedescedant changed",
                                               activeDescendant);
 #endif
+          return;
         }
       }
     }
+
+    // aria-activedescendant was cleared or changed to a non-existent node.
+    // Move focus back to the element itself.
+    FocusMgr()->ActiveItemChanged(aAccessible, false);
+#ifdef A11Y_LOG
+    if (logging::IsEnabled(logging::eFocus)) {
+      logging::ActiveItemChangeCausedBy("ARIA activedescedant cleared",
+                                        aAccessible);
+    }
+#endif
   }
 }
 

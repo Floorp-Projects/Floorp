@@ -10,9 +10,9 @@ add_task(async function test_sendtab_isDeviceCompatible() {
   const fxAccounts = {
     getKeys() {
       return {
-        kXCS: "abcd"
+        kXCS: "abcd",
       };
-    }
+    },
   };
   const sendTab = new SendTab(null, fxAccounts);
   let device = {name: "My device"};
@@ -21,14 +21,14 @@ add_task(async function test_sendtab_isDeviceCompatible() {
   Assert.ok(!(await sendTab.isDeviceCompatible(device)));
   device = {name: "My device", availableCommands: {
     "https://identity.mozilla.com/cmd/open-uri": JSON.stringify({
-      kid: "dcba"
-    })
+      kid: "dcba",
+    }),
   }};
   Assert.ok(!(await sendTab.isDeviceCompatible(device)));
   device = {name: "My device", availableCommands: {
     "https://identity.mozilla.com/cmd/open-uri": JSON.stringify({
-      kid: "abcd"
-    })
+      kid: "abcd",
+    }),
   }};
   Assert.ok((await sendTab.isDeviceCompatible(device)));
 });
@@ -40,7 +40,7 @@ add_task(async function test_sendtab_send() {
         throw new Error("Invoke error!");
       }
       Assert.equal(payload.encrypted, "encryptedpayload");
-    })
+    }),
   };
   const sendTab = new SendTab(commands, null);
   sendTab._encrypt = (bytes, device) => {
@@ -72,15 +72,15 @@ add_task(async function test_commands_fetchMissedRemoteCommands() {
       device: {
         handledCommands: [8, 9, 10, 11],
         lastCommandIndex: 11,
-      }
-    }
+      },
+    },
   };
   const fxAccounts = {
     async _withCurrentAccountState(cb) {
       const get = () => accountState.data;
       const set = (val) => { accountState.data = val; };
       await cb(get, set);
-    }
+    },
   };
   const commands = new FxAccountsCommands(fxAccounts);
   commands._fetchRemoteCommands = () => {
@@ -89,13 +89,13 @@ add_task(async function test_commands_fetchMissedRemoteCommands() {
       messages: [
         {
           index: 11,
-          data: {}
+          data: {},
         },
         {
           index: 12,
-          data: {}
-        }
-      ]
+          data: {},
+        },
+      ],
     };
   };
   commands._handleCommands = sinon.spy();

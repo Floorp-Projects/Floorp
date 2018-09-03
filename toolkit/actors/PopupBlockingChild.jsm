@@ -89,7 +89,7 @@ class PopupBlockingChild extends ActorChild {
     let obj = {
       popupWindowURIspec: ev.popupWindowURI ? ev.popupWindowURI.spec : "about:blank",
       popupWindowFeatures: ev.popupWindowFeatures,
-      popupWindowName: ev.popupWindowName
+      popupWindowName: ev.popupWindowName,
     };
 
     let internals = {
@@ -131,7 +131,7 @@ class PopupBlockingChild extends ActorChild {
     this.mm.sendAsyncMessage("PopupBlocking:UpdateBlockedPopups",
       {
         count: this.popupData ? this.popupData.length : 0,
-        freshPopup
+        freshPopup,
       });
   }
 }

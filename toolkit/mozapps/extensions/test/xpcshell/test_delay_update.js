@@ -67,7 +67,7 @@ async function createIgnoreAddon() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Delay Update Ignore",
   }, profileDir, IGNORE_ID, {
@@ -112,7 +112,7 @@ async function createCompleteAddon() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Delay Update Complete",
   }, profileDir, COMPLETE_ID, {
@@ -155,7 +155,7 @@ async function createDeferAddon() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Delay Update Defer",
   }, profileDir, DEFER_ID, {

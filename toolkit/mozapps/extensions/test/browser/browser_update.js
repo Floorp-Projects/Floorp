@@ -10,7 +10,7 @@ function test() {
 
   SpecialPowers.pushPrefEnv({"set": [
     ["extensions.checkUpdateSecurity", false],
-    ["xpinstall.signatures.required", false]
+    ["xpinstall.signatures.required", false],
   ]});
 
   run_next_test();

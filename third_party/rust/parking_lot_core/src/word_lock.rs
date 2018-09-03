@@ -5,10 +5,7 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-#[cfg(feature = "nightly")]
 use std::sync::atomic::{fence, AtomicUsize, Ordering};
-#[cfg(not(feature = "nightly"))]
-use stable::{fence, AtomicUsize, Ordering};
 use std::ptr;
 use std::mem;
 use std::cell::Cell;

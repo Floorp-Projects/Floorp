@@ -4,7 +4,7 @@ var SuspendedType = {
   NONE_SUSPENDED: 0,
   SUSPENDED_PAUSE: 1,
   SUSPENDED_BLOCK: 2,
-  SUSPENDED_PAUSE_DISPOSABLE: 3
+  SUSPENDED_PAUSE_DISPOSABLE: 3,
 };
 
 function wait_for_event(browser, event) {
@@ -111,27 +111,27 @@ async function suspended_stop_disposable(url, browser) {
 
 add_task(async function setup_test_preference() {
   await SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true]
+    ["media.useAudioChannelService.testing", true],
   ]});
 });
 
 add_task(async function test_suspended_pause() {
   await BrowserTestUtils.withNewTab({
       gBrowser,
-      url: "about:blank"
+      url: "about:blank",
     }, suspended_pause.bind(this, PAGE));
 });
 
 add_task(async function test_suspended_pause_disposable() {
   await BrowserTestUtils.withNewTab({
       gBrowser,
-      url: "about:blank"
+      url: "about:blank",
     }, suspended_pause_disposable.bind(this, PAGE));
 });
 
 add_task(async function test_suspended_stop_disposable() {
   await BrowserTestUtils.withNewTab({
       gBrowser,
-      url: "about:blank"
+      url: "about:blank",
     }, suspended_stop_disposable.bind(this, PAGE));
 });

@@ -14,10 +14,8 @@
 #include "ds/InlineTable.h"
 #include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
-#include "gc/Zone.h"
 #include "vm/BytecodeUtil.h"
-#include "vm/EnvironmentObject.h"
-#include "vm/JSAtom.h"
+#include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 
 namespace js {
@@ -410,18 +408,22 @@ class FunctionBox : public ObjectBox, public SharedContext
                 uint32_t toStringStart, Directives directives, bool extraWarnings,
                 GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
+#ifdef DEBUG
+    bool atomsAreKept();
+#endif
+
     MutableHandle<LexicalScope::Data*> namedLambdaBindings() {
-        MOZ_ASSERT(context->zone()->hasKeptAtoms());
+        MOZ_ASSERT(atomsAreKept());
         return MutableHandle<LexicalScope::Data*>::fromMarkedLocation(&namedLambdaBindings_);
     }
 
     MutableHandle<FunctionScope::Data*> functionScopeBindings() {
-        MOZ_ASSERT(context->zone()->hasKeptAtoms());
+        MOZ_ASSERT(atomsAreKept());
         return MutableHandle<FunctionScope::Data*>::fromMarkedLocation(&functionScopeBindings_);
     }
 
     MutableHandle<VarScope::Data*> extraVarScopeBindings() {
-        MOZ_ASSERT(context->zone()->hasKeptAtoms());
+        MOZ_ASSERT(atomsAreKept());
         return MutableHandle<VarScope::Data*>::fromMarkedLocation(&extraVarScopeBindings_);
     }
 

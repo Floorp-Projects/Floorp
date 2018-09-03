@@ -1,5 +1,5 @@
 /* CpuArch.h -- CPU specific code
-2017-06-30 : Igor Pavlov : Public domain */
+2017-09-04 : Igor Pavlov : Public domain */
 
 #ifndef __CPU_ARCH_H
 #define __CPU_ARCH_H
@@ -174,7 +174,7 @@ MY_CPU_LE_UNALIGN means that CPU is LITTLE ENDIAN and CPU supports unaligned mem
 #ifndef MY_CPU_NAME
   #ifdef MY_CPU_LE
     #define MY_CPU_NAME "LE"
-  #elif MY_CPU_BE
+  #elif defined(MY_CPU_BE)
     #define MY_CPU_NAME "BE"
   #else
     /*

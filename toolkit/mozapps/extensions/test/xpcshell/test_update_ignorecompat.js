@@ -34,7 +34,7 @@ add_test(async function() {
     targetApplications: [{
       id: appId,
       minVersion: "0.1",
-      maxVersion: "0.2"
+      maxVersion: "0.2",
     }],
     name: "Test Addon 9",
   }, profileDir);
@@ -49,7 +49,7 @@ add_test(async function() {
     },
     onDownloadFailed(aInstall) {
       run_next_test();
-    }
+    },
   });
 
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
@@ -71,7 +71,7 @@ add_test(async function() {
     targetApplications: [{
       id: appId,
       minVersion: "0.1",
-      maxVersion: "0.2"
+      maxVersion: "0.2",
     }],
     name: "Test Addon 11",
   }, profileDir);
@@ -92,6 +92,6 @@ add_test(async function() {
 
     onUpdateFinished() {
       run_next_test();
-    }
+    },
   }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
 });

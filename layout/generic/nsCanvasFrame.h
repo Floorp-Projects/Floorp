@@ -226,7 +226,9 @@ public:
   nsDisplayCanvasThemedBackground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayThemedBackground(aBuilder, aFrame,
                                 aFrame->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(aFrame))
-  {}
+  {
+    nsDisplayThemedBackground::Init(aBuilder);
+  }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 

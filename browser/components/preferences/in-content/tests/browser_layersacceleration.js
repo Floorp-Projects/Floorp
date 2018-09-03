@@ -1,7 +1,7 @@
 add_task(async function() {
   SpecialPowers.pushPrefEnv({set: [
     ["gfx.direct2d.disabled", false],
-    ["layers.acceleration.disabled", false]
+    ["layers.acceleration.disabled", false],
   ]});
 
   let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});

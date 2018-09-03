@@ -16,7 +16,7 @@ add_task(async function() {
     type: "button",
     onClick() {
       gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:addons");
-    }
+    },
   };
   CustomizableUI.createWidget(widgetSpec);
   CustomizableUI.addWidgetToArea(kButton, CustomizableUI.AREA_NAVBAR);

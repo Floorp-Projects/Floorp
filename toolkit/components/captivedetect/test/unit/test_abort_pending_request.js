@@ -57,7 +57,7 @@ function test_abort() {
     },
     complete: function complete(success) {
       do_throw("should not execute |complete| callback for " + kInterfaceName);
-    }
+    },
   };
 
   gCaptivePortalDetector.checkCaptivePortal(kInterfaceName, callback);

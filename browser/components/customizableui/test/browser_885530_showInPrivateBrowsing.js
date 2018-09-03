@@ -20,7 +20,7 @@ function assertWidgetExists(aWindow, aExists) {
 // have that value default to true.
 add_task(function() {
   let wrapper = CustomizableUI.createWidget({
-    id: kWidgetId
+    id: kWidgetId,
   });
   ok(wrapper.showInPrivateBrowsing,
      "showInPrivateBrowsing should have defaulted to true.");
@@ -36,7 +36,7 @@ add_task(async function() {
   CustomizableUI.createWidget({
     id: kWidgetId,
     removable: true,
-    showInPrivateBrowsing: false
+    showInPrivateBrowsing: false,
   });
   CustomizableUI.addWidgetToArea(kWidgetId,
                                  CustomizableUI.AREA_NAVBAR);
@@ -87,7 +87,7 @@ add_task(async function() {
   CustomizableUI.createWidget({
     id: kWidgetId,
     removable: true,
-    showInPrivateBrowsing: true
+    showInPrivateBrowsing: true,
   });
   CustomizableUI.addWidgetToArea(kWidgetId,
                                  CustomizableUI.AREA_NAVBAR);

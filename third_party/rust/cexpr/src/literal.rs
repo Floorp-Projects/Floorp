@@ -83,34 +83,6 @@ impl Into<Vec<u8>> for CChar {
 // ======== macros that shouldn't be necessary ========
 // ====================================================
 
-fn split_off_prefix<'a,T>(full: &'a [T], suffix: &'a [T]) -> &'a [T] {
-	let n=::std::mem::size_of::<T>();
-	let start=full.as_ptr() as usize;
-	let end=start+(full.len()*n);
-	let cur=suffix.as_ptr() as usize;
-	assert!(start<=cur && cur<=end);
-	&full[..(cur-start)/n]
-}
-
-// There is a HORRIBLE BUG in nom's recognize!
-// https://github.com/Geal/nom/issues/278
-#[macro_export]
-macro_rules! my_recognize (
-  ($i:expr, $submac:ident!( $($args:tt)* )) => (
-    {
-      match $submac!($i, $($args)*) {
-        IResult::Done(i,_)     => IResult::Done(i, split_off_prefix($i,i)),
-        IResult::Error(e)      => IResult::Error(e),
-        IResult::Incomplete(i) => IResult::Incomplete(i)
-      }
-    }
-  );
-  ($i:expr, $f:expr) => (
-    my_recognize!($i, call!($f))
-  );
-);
-
-
 macro_rules! force_type (
 	($input:expr,IResult<$i:ty,$o:ty,$e:ty>) => (IResult::Error::<$i,$o,$e>(Err::Position(ErrorKind::Fix,$input)))
 );
@@ -171,8 +143,8 @@ fn c_unicode_escape(n: Vec<u8>) -> Option<CChar> {
 
 named!(escaped_char<CChar>,
 	preceded!(char!('\\'),alt!(
-		map!(one_of!(br#"'"?\"#),CChar::Char) |
-		map!(one_of!(b"abfnrtv"),escape2char) |
+		map!(one_of!(r#"'"?\"#),CChar::Char) |
+		map!(one_of!("abfnrtv"),escape2char) |
 		map_opt!(many_m_n!(1,3,octal),|v|c_raw_escape(v,8)) |
 		map_opt!(preceded!(char!('x'),many1!(hexadecimal)),|v|c_raw_escape(v,16)) |
 		map_opt!(preceded!(char!('u'),many_m_n!(4,4,hexadecimal)),c_unicode_escape) |
@@ -200,13 +172,10 @@ named!(c_char<CChar>,
 named!(c_string<Vec<u8> >,
 	delimited!(
 		alt!( preceded!(c_width_prefix,char!('"')) | char!('"') ),
-		chain!(
-			mut vec: value!(vec![]) ~
-			many0!(alt!(
-				map!(tap!(c: escaped_char => { let v: Vec<u8>=c.into(); vec.extend_from_slice(&v) } ),|_|()) |
-				map!(tap!(s: is_not!(b"\"") => vec.extend_from_slice(s) ),|_|())
-			)),
-			||{return vec}
+		fold_many0!(
+			alt!(map!(escaped_char, |c:CChar| c.into()) | map!(is_not!("\""), |c: &[u8]| c.into())),
+			Vec::new(),
+			|mut v: Vec<u8>, res:Vec<u8>| { v.extend_from_slice(&res); v }
 		),
 		char!('"')
 	)
@@ -240,11 +209,11 @@ named!(float_exp<(Option<u8>,Vec<u8>)>,preceded!(byte!(b'e'|b'E'),pair!(opt!(byt
 
 named!(c_float<f64>,
 	map_opt!(alt!(
-		terminated!(my_recognize!(tuple!(many1!(decimal),byte!(b'.'),many0!(decimal))),opt!(float_width)) |
-		terminated!(my_recognize!(tuple!(many0!(decimal),byte!(b'.'),many1!(decimal))),opt!(float_width)) |
-		terminated!(my_recognize!(tuple!(many0!(decimal),opt!(byte!(b'.')),many1!(decimal),float_exp)),opt!(float_width)) |
-		terminated!(my_recognize!(tuple!(many1!(decimal),opt!(byte!(b'.')),many0!(decimal),float_exp)),opt!(float_width)) |
-		terminated!(my_recognize!(many1!(decimal)),float_width)
+		terminated!(recognize!(tuple!(many1!(decimal),byte!(b'.'),many0!(decimal))),opt!(float_width)) |
+		terminated!(recognize!(tuple!(many0!(decimal),byte!(b'.'),many1!(decimal))),opt!(float_width)) |
+		terminated!(recognize!(tuple!(many0!(decimal),opt!(byte!(b'.')),many1!(decimal),float_exp)),opt!(float_width)) |
+		terminated!(recognize!(tuple!(many1!(decimal),opt!(byte!(b'.')),many0!(decimal),float_exp)),opt!(float_width)) |
+		terminated!(recognize!(many1!(decimal)),float_width)
 	),|v|str::from_utf8(v).ok().and_then(|i|f64::from_str(i).ok()))
 );
 

@@ -59,26 +59,6 @@ protected:
   bool ContainsMenu() const;
 };
 
-
-/**
- * Used for XUL checkbox element.
- */
-class XULCheckboxAccessible : public LeafAccessible
-{
-public:
-  enum { eAction_Click = 0 };
-  XULCheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
-
-  // Accessible
-  virtual mozilla::a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() const override;
-
-  // ActionAccessible
-  virtual uint8_t ActionCount() const override;
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) const override;
-};
-
 /**
  * Used for XUL dropmarker element.
  */

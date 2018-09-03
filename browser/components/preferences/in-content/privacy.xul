@@ -162,7 +162,7 @@
 </groupbox>
 
 <!-- Site Data -->
-<groupbox id="siteDataGroup" data-category="panePrivacy" hidden="true">
+<groupbox id="siteDataGroup" data-category="panePrivacy" hidden="true" aria-describedby="totalSiteDataSize">
   <caption><label data-l10n-id="sitedata-header"/></caption>
 
   <hbox data-subcategory="sitedata" align="baseline">
@@ -279,7 +279,7 @@
 </groupbox>
 
 <!-- Tracking / Content Blocking -->
-<groupbox id="trackingGroup" data-category="panePrivacy" hidden="true">
+<groupbox id="trackingGroup" data-category="panePrivacy" hidden="true" aria-describedby="contentBlockingDescription">
   <caption>
     <label id="trackingProtectionHeader" hidden="true" data-l10n-id="tracking-header"/>
     <label id="contentBlockingHeader" data-l10n-id="content-blocking-header"/>
@@ -331,30 +331,20 @@
     </hbox>
     <vbox id="contentBlockingCategories">
       <label id="content-blocking-categories-label" data-l10n-id="content-blocking-category-label"/>
-      <hbox class="content-blocking-category">
+      <hbox class="content-blocking-category fast-block-ui">
+        <vbox class="content-blocking-category-checkbox">
+          <checkbox id="contentBlockingFastBlockCheckbox"
+                    class="content-blocking-checkbox"
+                    preference="browser.fastblock.enabled" />
+        </vbox>
         <vbox class="content-blocking-category-icon">
           <image class="fastblock-icon content-blocking-icon"/>
         </vbox>
         <vbox class="content-blocking-category-labels" flex="1">
-          <label data-l10n-id="content-blocking-fastblock-label"
+          <label data-l10n-id="content-blocking-fastblock-slow-loading-label"
                  class="content-blocking-category-name"
-                 control="fastBlockMenu"/>
-          <description data-l10n-id="content-blocking-fastblock-description" class="content-blocking-category-description"/>
-        </vbox>
-        <vbox>
-          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-          <hbox>
-            <menulist class="content-blocking-category-menu" id="fastBlockMenu" preference="browser.fastblock.enabled">
-              <menupopup>
-                <menuitem data-l10n-id="content-blocking-fastblock-option-enabled"
-                          value="true"
-                          search-l10n-ids=""/>
-                <menuitem data-l10n-id="content-blocking-fastblock-option-disabled"
-                          value="false"
-                          search-l10n-ids=""/>
-              </menupopup>
-            </menulist>
-          </hbox>
+                 control="contentBlockingFastBlockCheckbox"/>
+          <description data-l10n-id="content-blocking-fastblock-new-description" class="content-blocking-category-description"/>
         </vbox>
       </hbox>
       <vbox>
@@ -366,37 +356,89 @@
                   class="extension-controlled-button accessory-button"
                   data-l10n-id="disable-extension"/>
         </hbox>
-        <hbox class="content-blocking-category">
+        <hbox class="content-blocking-category tracking-protection-ui">
+          <vbox class="content-blocking-category-checkbox">
+            <checkbox id="contentBlockingTrackingProtectionCheckbox" class="content-blocking-checkbox" />
+          </vbox>
           <vbox class="content-blocking-category-icon">
             <image class="tracking-protection-icon content-blocking-icon" />
           </vbox>
           <vbox class="content-blocking-category-labels" flex="1">
-            <label data-l10n-id="content-blocking-tracking-protection-label"
+            <label data-l10n-id="content-blocking-tracking-protection-all-label"
                    class="content-blocking-category-name"
-                   control="trackingProtectionMenu"/>
-            <description data-l10n-id="content-blocking-tracking-protection-description" class="content-blocking-category-description"/>
-            <label id="changeBlockListLink" data-l10n-id="content-blocking-tracking-protection-change-blocklist" class="text-link"/>
-          </vbox>
-          <vbox>
-            <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-            <hbox>
-              <menulist class="content-blocking-category-menu" id="trackingProtectionMenu">
-                <menupopup>
-                  <menuitem data-l10n-id="content-blocking-tracking-protection-option-enabled"
-                            value="always"
-                            search-l10n-ids=""/>
-                  <menuitem data-l10n-id="content-blocking-tracking-protection-option-pbm"
-                            value="private"
-                            search-l10n-ids=""/>
-                  <menuitem data-l10n-id="content-blocking-tracking-protection-option-disabled"
-                            value="never"
-                            search-l10n-ids=""/>
-                </menupopup>
-              </menulist>
-            </hbox>
+                   control="contentBlockingTrackingProtectionCheckbox"/>
+            <description data-l10n-id="content-blocking-tracking-protection-new-description"
+                         class="content-blocking-category-description"
+                         id="trackingProtectionMenuDesc"/>
+            <radiogroup id="trackingProtectionMenu"
+                        aria-labelledby="trackingProtectionMenuDesc">
+              <radio value="private"
+                     data-l10n-id="content-blocking-tracking-protection-option-private"
+                     flex="1" />
+              <radio value="always"
+                     data-l10n-id="content-blocking-tracking-protection-option-always"
+                     flex="1" />
+            </radiogroup>
+            <label id="changeBlockListLink" data-l10n-id="content-blocking-tracking-protection-change-block-list" class="text-link"/>
           </vbox>
         </hbox>
       </vbox>
+      <hbox class="content-blocking-category reject-trackers-ui">
+        <hbox flex="1">
+          <vbox class="content-blocking-category-checkbox">
+            <checkbox id="contentBlockingBlockCookiesCheckbox" class="content-blocking-checkbox" />
+          </vbox>
+          <vbox class="content-blocking-category-icon">
+            <image class="reject-trackers-icon content-blocking-icon"/>
+          </vbox>
+          <vbox class="content-blocking-category-labels" flex="1">
+            <hbox>
+              <vbox>
+                <label data-l10n-id="content-blocking-reject-trackers-label"
+                       class="content-blocking-category-name"
+                       control="contentBlockingBlockCookiesCheckbox"/>
+                <deck id="blockCookiesCBDeck">
+                  <description id="blockCookiesCBDesc"
+                               data-l10n-id="content-blocking-reject-trackers-description"
+                               class="content-blocking-category-description"/>
+                  <hbox id="warningAllCookiesBlocked">
+                    <image class="reject-trackers-warning-icon"/>
+                    <description data-l10n-id="content-blocking-reject-trackers-warning-your-settings-prevent-changes"
+                                 class="content-blocking-category-description description-with-side-element"/>
+                  </hbox>
+                  <hbox id="warningFromVisitedCookiesBlocked">
+                    <image class="reject-trackers-warning-icon"/>
+                    <description data-l10n-id="content-blocking-reject-trackers-warning-your-settings-prevent-changes"
+                                 class="content-blocking-category-description description-with-side-element"/>
+                  </hbox>
+                </deck>
+              </vbox>
+              <hbox align="center">
+                <vbox align="center">
+                  <button id="contentBlockingChangeCookieSettings"
+                          class="accessory-button"
+                          flex="1"
+                          hidden="true"
+                          data-l10n-id="content-blocking-change-cookie-settings"/>
+                </vbox>
+              </hbox>
+            </hbox>
+            <radiogroup id="blockCookiesCB"
+                        aria-labelledby="blockCookiesCBDesc"
+                        preference="network.cookie.cookieBehavior"
+                        onsyncfrompreference="return gPrivacyPane.readBlockCookiesCB();"
+                        onsynctopreference="return gPrivacyPane.writeBlockCookiesCB();">
+              <radio value="trackers"
+                     id="blockCookiesFromTrackersCB"
+                     data-l10n-id="content-blocking-reject-trackers-block-trackers-option"
+                     flex="1" />
+              <radio value="all-third-parties"
+                     data-l10n-id="content-blocking-reject-trackers-all-third-parties-option"
+                     flex="1" />
+            </radiogroup>
+          </vbox>
+        </hbox>
+      </hbox>
     </vbox>
     <hbox id="trackingProtectionBox" hidden="true">
       <vbox flex="1">
@@ -439,7 +481,7 @@
       </vbox>
     </hbox>
     <vbox id="doNotTrackLearnMoreBox">
-      <label><label class="tail-with-learn-more" data-l10n-id="do-not-track-description"></label><label
+      <label><label class="tail-with-learn-more" data-l10n-id="do-not-track-description" id="doNotTrackDesc"></label><label
       class="learnMore text-link" href="https://www.mozilla.org/dnt"
       data-l10n-id="do-not-track-learn-more"></label></label>
       <radiogroup id="doNotTrackRadioGroup" aria-labelledby="doNotTrackDesc" preference="privacy.donottrackheader.enabled">
@@ -458,8 +500,8 @@
 </hbox>
 
 <!-- Permissions -->
-<groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true" data-subcategory="permissions">
-  <caption class="search-header" hidden="true"><label data-l10n-id="permissions-header"/></caption>
+<groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true" data-subcategory="permissions" aria-labelledby="permissionsGroupLabel">
+  <caption class="search-header" hidden="true"><label data-l10n-id="permissions-header" id="permissionsGroupLabel"/></caption>
 
   <grid>
     <columns>
@@ -467,7 +509,7 @@
       <column/>
     </columns>
     <rows>
-      <row id="locationSettingsRow" align="center">
+      <row id="locationSettingsRow" align="center" role="group" aria-labelledby="locationPermissionsLabel">
         <description flex="1">
           <image class="geo-icon permission-icon" />
           <separator orient="vertical" class="thin"/>
@@ -490,7 +532,7 @@
         </hbox>
       </row>
 
-      <row id="cameraSettingsRow" align="center">
+      <row id="cameraSettingsRow" align="center" role="group" aria-labelledby="cameraPermissionsLabel">
         <description flex="1">
           <image class="camera-icon permission-icon" />
           <separator orient="vertical" class="thin"/>
@@ -513,7 +555,7 @@
         </hbox>
       </row>
 
-      <row id="microphoneSettingsRow" align="center">
+      <row id="microphoneSettingsRow" align="center" role="group" aria-labelledby="microphonePermissionsLabel">
         <description flex="1">
           <image class="microphone-icon permission-icon" />
           <separator orient="vertical" class="thin"/>
@@ -536,7 +578,7 @@
         </hbox>
       </row>
 
-      <row id="notificationSettingsRow" align="center">
+      <row id="notificationSettingsRow" align="center" role="group" aria-labelledby="notificationPermissionsLabel">
         <description flex="1">
           <image class="desktop-notification-icon permission-icon" />
           <separator orient="vertical" class="thin"/>
@@ -688,8 +730,8 @@
   <label class="header-name" flex="1" data-l10n-id="collection-header"/>
 </hbox>
 
-<groupbox id="dataCollectionGroup" data-category="panePrivacy" hidden="true">
-  <caption class="search-header" hidden="true"><label data-l10n-id="collection-header"/></caption>
+<groupbox id="dataCollectionGroup" data-category="panePrivacy" hidden="true" aria-labelledby="dataCollectionGroupLabel">
+  <caption class="search-header" hidden="true"><label data-l10n-id="collection-header" id="dataCollectionGroupLabel"/></caption>
 
   <description>
     <label class="tail-with-learn-more" data-l10n-id="collection-description"/>

@@ -380,6 +380,35 @@ HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled()
 }
 
 bool
+HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked(uint32_t aRejectedReason)
+{
+  LOG(("HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked [this=%p]\n", this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
+    RefPtr<HttpBackgroundChannelParent> self = this;
+    nsresult rv = mBackgroundThread->Dispatch(
+      NS_NewRunnableFunction(
+        "net::HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked",
+        [self, aRejectedReason]() {
+          self->OnNotifyTrackingCookieBlocked(aRejectedReason);
+        }),
+      NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return SendNotifyTrackingCookieBlocked(aRejectedReason);
+}
+
+bool
 HttpBackgroundChannelParent::OnNotifyTrackingResource(bool aIsThirdParty)
 {
   LOG(("HttpBackgroundChannelParent::OnNotifyTrackingResource thirdparty=%d "

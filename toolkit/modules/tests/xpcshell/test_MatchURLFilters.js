@@ -41,7 +41,7 @@ add_task(async function test_match_url_filters() {
   var testCases = [
     // Empty, undefined and null filters.
     {shouldThrow, exceptionMessageContains: /filters array should not be empty/,
-     filters: [], url: "http://mozilla.org", },
+     filters: [], url: "http://mozilla.org" },
     {shouldThrow, exceptionMessageContains: /filters should be an array/,
      filters: undefined, url: "http://mozilla.org"},
     {shouldThrow, exceptionMessageContains: /filters should be an array/,
@@ -51,7 +51,7 @@ add_task(async function test_match_url_filters() {
     {shouldThrow, exceptionMessageContains: /filters should be an array/, filters: {},
      url: "http://mozilla.org"},
     {shouldThrow, exceptionMessageContains: /filters should be an array/,
-     filters: {nonExistentCriteria: true}, url: "http://mozilla.org", },
+     filters: {nonExistentCriteria: true}, url: "http://mozilla.org" },
     {shouldPass, filters: [{nonExistentCriteria: true}], url: "http://mozilla.org"},
 
     // Schemes filter over various url schemes.
@@ -249,7 +249,7 @@ add_task(async function test_match_url_filters() {
         urlPrefix: "https://moz",
         urlSuffix: "#ref",
         urlMatches: "v#ref$",
-        originAndPathMatches: ".*://moz.*/"
+        originAndPathMatches: ".*://moz.*/",
       },
     ], url: "https://www.mozilla.org/sub/path?p1=v#ref"},
     // None matches.
@@ -274,7 +274,7 @@ add_task(async function test_match_url_filters() {
         urlPrefix: "http://moz",
         urlSuffix: "#ref2",
         urlMatches: "value#ref2$",
-        originAndPathMatches: ".*://moz.*com/"
+        originAndPathMatches: ".*://moz.*com/",
       },
     ], url: "https://mozilla.org/sub/path?p1=v#ref"},
     // Some matches
@@ -299,7 +299,7 @@ add_task(async function test_match_url_filters() {
         urlPrefix: "http://moz",
         urlSuffix: "#ref2",
         urlMatches: "value#ref2$",
-        originAndPathMatches: ".*://moz.*com/"
+        originAndPathMatches: ".*://moz.*com/",
       },
     ], url: "https://mozilla.org/sub/path?p1=v#ref"},
 

@@ -1,0 +1,27 @@
+.more-recommendations {
+  @media (min-width: $break-point-large) {
+    // This is floating to accomodate a very large number of topics and/or
+    // very long topic names due to l10n.
+    float: right;
+
+    &:dir(rtl) {
+      float: left;
+    }
+  }
+
+  &::after {
+    background: url('#{$image-path}topic-show-more-12.svg') no-repeat center center;
+    content: '';
+    -moz-context-properties: fill;
+    display: inline-block;
+    fill: var(--newtab-link-secondary-color);
+    height: 16px;
+    margin-inline-start: 5px;
+    vertical-align: top;
+    width: 12px;
+  }
+
+  &:dir(rtl)::after  {
+    transform: scaleX(-1);
+  }
+}

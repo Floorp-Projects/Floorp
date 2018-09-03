@@ -58,7 +58,7 @@ var gTests = [
 
     // close the stream
     await closeStream(false, "frame1");
-  }
+  },
 },
 
 {
@@ -103,7 +103,7 @@ var gTests = [
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
-  }
+  },
 },
 
 {
@@ -155,7 +155,7 @@ var gTests = [
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
-  }
+  },
 },
 
 {
@@ -201,8 +201,8 @@ var gTests = [
     SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
     SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
-  }
-}
+  },
+},
 
 ];
 

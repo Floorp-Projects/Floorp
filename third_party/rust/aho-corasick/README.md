@@ -17,7 +17,7 @@ Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
 ### Documentation
 
-[http://burntsushi.net/rustdoc/aho_corasick/](http://burntsushi.net/rustdoc/aho_corasick/).
+[https://docs.rs/aho-corasick/](https://docs.rs/aho-corasick/).
 
 
 ### Example

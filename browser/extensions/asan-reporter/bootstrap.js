@@ -143,7 +143,7 @@ function submitToServer(data) {
       let versionArr = [
         Services.appinfo.version,
         Services.appinfo.appBuildID,
-        (AppConstants.SOURCE_REVISION_URL || "unknown")
+        (AppConstants.SOURCE_REVISION_URL || "unknown"),
       ];
 
       // Concatenate all relevant information as our server only
@@ -161,7 +161,7 @@ function submitToServer(data) {
         product_version,
         os,
         client,
-        tool: "asan-nightly-program"
+        tool: "asan-nightly-program",
       };
 
       var xhr = new XMLHttpRequest();

@@ -767,6 +767,9 @@ struct DIGroup
           }
           aContext->NewPath();
           GP("painting %s %p-%d\n", item->Name(), item->Frame(), item->GetPerFrameKey());
+          if (aGrouper->mDisplayListBuilder->IsPaintingToWindow()) {
+            item->Frame()->AddStateBits(NS_FRAME_PAINTED_THEBES);
+          }
           item->Paint(aGrouper->mDisplayListBuilder, aContext);
           if (currentClip.HasClip()) {
             aContext->Restore();
@@ -1650,6 +1653,9 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
 
   default:
     context->SetMatrix(context->CurrentMatrix().PreScale(aScale.width, aScale.height).PreTranslate(-aOffset.x, -aOffset.y));
+    if (aDisplayListBuilder->IsPaintingToWindow()) {
+      aItem->Frame()->AddStateBits(NS_FRAME_PAINTED_THEBES);
+    }
     aItem->Paint(aDisplayListBuilder, context);
     isInvalidated = true;
     break;

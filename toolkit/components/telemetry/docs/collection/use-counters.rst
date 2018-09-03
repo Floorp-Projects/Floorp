@@ -49,7 +49,7 @@ Use counters for WebIDL methods/attributes and CSS properties are registered in 
 
 CSS properties
 ~~~~~~~~~~~~~~
-The CSS property method name should be identical to the ``method`` argument of ``CSS_PROP()`` and related macros. The only differences are that all hyphens are removed and CamelCase naming is used.  See `nsCSSPropList.h <https://dxr.mozilla.org/mozilla-central/source/layout/style/nsCSSPropList.h>`_ for further details.
+The CSS property method name should be identical to the ``method`` argument of ``CSS_PROP()`` and related macros. The only differences are that all hyphens are removed and CamelCase naming is used.  See `ServoCSSPropList.h <https://searchfox.org/mozilla-central/source/__GENERATED__/layout/style/ServoCSSPropList.h>`_ for further details.
 
 Custom use counters
 ~~~~~~~~~~~~~~~~~~~

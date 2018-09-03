@@ -23,7 +23,7 @@ var SessionCookies = Object.freeze({
 
   restore(cookies) {
     SessionCookiesInternal.restore(cookies);
-  }
+  },
 });
 
 /**
@@ -52,7 +52,7 @@ var SessionCookiesInternal = {
       let cookieObj = {
         host: cookie.host,
         path: cookie.path || "",
-        name: cookie.name || ""
+        name: cookie.name || "",
       };
 
       let originAttributes = cookie.originAttributes || {};
@@ -179,7 +179,7 @@ var SessionCookiesInternal = {
     for (let cookie of Services.cookies.sessionEnumerator) {
       this._addCookie(cookie);
     }
-  }
+  },
 };
 
 /**
@@ -266,7 +266,7 @@ var CookieStore = {
       host: cookie.host,
       name: cookie.name,
       path: cookie.path,
-      attr: ChromeUtils.originAttributesToSuffix(cookie.originAttributes)
+      attr: ChromeUtils.originAttributesToSuffix(cookie.originAttributes),
     });
-  }
+  },
 };

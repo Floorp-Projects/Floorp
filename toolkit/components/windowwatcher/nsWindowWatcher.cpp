@@ -1199,7 +1199,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
       do_QueryInterface(newDocShell);
 
     if (parentStorageManager && newStorageManager) {
-      nsCOMPtr<nsIDOMStorage> storage;
+      RefPtr<Storage> storage;
       nsCOMPtr<nsPIDOMWindowInner> pInnerWin = parentWindow->GetCurrentInnerWindow();
       parentStorageManager->GetStorage(pInnerWin, subjectPrincipal,
                                        isPrivateBrowsingWindow,

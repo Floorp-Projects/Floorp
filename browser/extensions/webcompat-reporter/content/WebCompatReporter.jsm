@@ -33,7 +33,7 @@ Object.defineProperty(details, "blockList", {
     // If content-track-digest256 is in the tracking table,
     // the user has enabled the strict list.
     return trackingTable.includes("content") ? "strict" : "basic";
-  }
+  },
 });
 
 if (AppConstants.platform == "linux") {
@@ -53,7 +53,7 @@ let WebCompatReporter = {
       iconURL: "chrome://webcompat-reporter/skin/lightbulb.svg",
       labelForHistogram: "webcompat",
       onCommand: (e) => this.reportIssue(e.target.ownerGlobal),
-      onLocationChange: (window) => this.onLocationChange(window)
+      onLocationChange: (window) => this.onLocationChange(window),
     }));
   },
 
@@ -148,13 +148,13 @@ let WebCompatReporter = {
               mm.loadFrameScript(FRAMESCRIPT, false);
               mm.sendAsyncMessage(SCREENSHOT_MESSAGE, {
                 screenshot: tabData.blob,
-                origin: WEBCOMPAT_ORIGIN
+                origin: WEBCOMPAT_ORIGIN,
               });
 
               browser.removeProgressListener(this);
             }
           }
-        }
+        },
       };
 
       browser.addProgressListener(loadedListener);
@@ -164,5 +164,5 @@ let WebCompatReporter = {
   reportIssue(global) {
     this.getScreenshot(global.gBrowser).then(this.openWebCompatTab)
                                        .catch(Cu.reportError);
-  }
+  },
 };

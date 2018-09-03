@@ -29,7 +29,7 @@ var FormDB = {
         },
         handleCompletion(reason) {
           resolve();
-        }
+        },
       };
       FormHistory.update(data, handlers);
     });
@@ -94,7 +94,7 @@ var FormDB = {
         },
         handleCompletion(reason) {
           resolve(result);
-        }
+        },
       };
       FormHistory.search(["guid", "lastUsed", "firstUsed"], { fieldname, value }, handlers);
     });

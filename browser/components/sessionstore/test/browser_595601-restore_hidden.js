@@ -9,7 +9,7 @@ var windowState = {windows: [{tabs: [
   {entries: [{url: "http://example.com#5", triggeringPrincipal_base64}], hidden: true},
   {entries: [{url: "http://example.com#6", triggeringPrincipal_base64}], hidden: true},
   {entries: [{url: "http://example.com#7", triggeringPrincipal_base64}], hidden: true},
-  {entries: [{url: "http://example.com#8", triggeringPrincipal_base64}], hidden: true}
+  {entries: [{url: "http://example.com#8", triggeringPrincipal_base64}], hidden: true},
 ]}]};
 
 function test() {
@@ -93,7 +93,7 @@ var TabsProgressListener = {
     }
 
     return [needsRestore, isRestoring];
-  }
+  },
 };
 
 // ----------

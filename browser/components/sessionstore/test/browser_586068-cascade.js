@@ -16,7 +16,7 @@ add_task(async function test() {
     { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
     { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
     { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } }
+    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
   ] }] };
 
   let expectedCounts = [
@@ -25,7 +25,7 @@ add_task(async function test() {
     [1, 3, 2],
     [0, 3, 3],
     [0, 2, 4],
-    [0, 1, 5]
+    [0, 1, 5],
   ];
 
   let loadCount = 0;

@@ -169,5 +169,5 @@ var UITelemetry = {
       this._measurements = [];
     }
     return measurements;
-  }
+  },
 };

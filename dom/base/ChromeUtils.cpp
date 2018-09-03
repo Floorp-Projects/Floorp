@@ -17,6 +17,7 @@
 #include "mozilla/PerformanceMetricsCollector.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/IdleDeadline.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -779,6 +780,13 @@ ChromeUtils::RequestIOActivity(GlobalObject& aGlobal, ErrorResult& aRv)
   MOZ_ASSERT(domPromise);
   mozilla::net::IOActivityMonitor::RequestActivities(domPromise);
   return domPromise.forget();
+}
+
+/* static */ void
+ChromeUtils::GetRootBrowsingContexts(GlobalObject& aGlobal,
+                                     nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts)
+{
+  BrowsingContext::GetRootBrowsingContexts(aBrowsingContexts);
 }
 
 } // namespace dom

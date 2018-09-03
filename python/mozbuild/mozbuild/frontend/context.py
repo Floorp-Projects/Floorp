@@ -463,6 +463,8 @@ class CompileFlags(BaseCompileFlags):
              ('CFLAGS', 'CXXFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
             ('WARNINGS_AS_ERRORS', self._warnings_as_errors(),
              ('CXXFLAGS', 'CFLAGS', 'CXX_LDFLAGS', 'C_LDFLAGS')),
+            ('WARNINGS_CFLAGS', context.config.substs.get('WARNINGS_CFLAGS'),
+             ('CFLAGS', 'C_LDFLAGS')),
             ('MOZBUILD_CFLAGS', None, ('CFLAGS',)),
             ('MOZBUILD_CXXFLAGS', None, ('CXXFLAGS',)),
         )

@@ -11,16 +11,6 @@ SHistoryListener.prototype = {
     this.last = "newentry";
   },
 
-  OnHistoryGoBack: function (aBackURI) {
-    this.last = "goback";
-    return this.retval;
-  },
-
-  OnHistoryGoForward: function (aForwardURI) {
-    this.last = "goforward";
-    return this.retval;
-  },
-
   OnHistoryGotoIndex: function (aIndex, aGotoURI) {
     this.last = "gotoindex";
     return this.retval;
@@ -76,9 +66,9 @@ let testAPI = {
   },
 
   notifyReload() {
-    let internal = this.shistory.legacySHistory.QueryInterface(Ci.nsISHistoryInternal);
+    let history = this.shistory.legacySHistory;
     let rval =
-      internal.notifyOnHistoryReload(content.document.documentURIObject, 0);
+      history.notifyOnHistoryReload(content.document.documentURIObject, 0);
     sendAsyncMessage("bug422543:notifyReload:return", { rval });
   },
 

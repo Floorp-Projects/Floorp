@@ -22,7 +22,7 @@
 
 var EXPORTED_SYMBOLS = [
   "ClientEngine",
-  "ClientsRec"
+  "ClientsRec",
 ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -71,7 +71,7 @@ function ClientsRec(collection, id) {
 ClientsRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Sync.Record.Clients",
-  ttl: CLIENTS_TTL
+  ttl: CLIENTS_TTL,
 };
 
 Utils.deferGetSet(ClientsRec,
@@ -542,8 +542,8 @@ ClientEngine.prototype = {
       command: "sync:collection_changed",
       data: {
         collections: ["clients"],
-        reason
-      }
+        reason,
+      },
     };
     let excludedIds = null;
     if (!ids) {
@@ -926,7 +926,7 @@ ClientEngine.prototype = {
     uris.forEach(uri => {
       uri.sender = {
         id: uri.clientId,
-        name: this.getClientName(uri.clientId)
+        name: this.getClientName(uri.clientId),
       };
     });
     Svc.Obs.notify("weave:engine:clients:display-uris", uris);
@@ -1093,5 +1093,5 @@ ClientsTracker.prototype = {
         this.score += SINGLE_USER_THRESHOLD + 1; // ALWAYS SYNC NOW.
         break;
     }
-  }
+  },
 };

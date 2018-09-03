@@ -4670,16 +4670,6 @@ Tab.prototype = {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
   },
 
-  OnHistoryGoBack: function(backURI) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
-    return true;
-  },
-
-  OnHistoryGoForward: function(forwardURI) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
-    return true;
-  },
-
   OnHistoryReload: function(reloadURI, reloadFlags) {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
     return true;

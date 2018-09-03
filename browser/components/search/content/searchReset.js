@@ -11,7 +11,7 @@ const TELEMETRY_RESULT_ENUM = {
   KEPT_CURRENT: 1,
   CHANGED_ENGINE: 2,
   CLOSED_PAGE: 3,
-  OPENED_SETTINGS: 4
+  OPENED_SETTINGS: 4,
 };
 
 window.onload = function() {

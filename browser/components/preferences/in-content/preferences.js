@@ -42,7 +42,7 @@ function register_module(categoryName, categoryObject) {
     init() {
       categoryObject.init();
       this.inited = true;
-    }
+    },
   });
 }
 
@@ -89,7 +89,7 @@ function init_all() {
 
   document.dispatchEvent(new CustomEvent("Initialized", {
     "bubbles": true,
-    "cancelable": true
+    "cancelable": true,
   }));
 }
 
@@ -343,7 +343,7 @@ async function confirmRestartPrompt(aRestartToEnable, aDefaultButtonIndex,
                                     aWantRevertAsCancelButton,
                                     aWantRestartLaterButton) {
   let [
-    msg, title, restartButtonText, noRestartButtonText, restartLaterButtonText
+    msg, title, restartButtonText, noRestartButtonText, restartLaterButtonText,
   ] = await document.l10n.formatValues([
     {id: aRestartToEnable ?
       "feature-enable-requires-restart" : "feature-disable-requires-restart"},

@@ -1,7 +1,7 @@
 add_task(async function testUpdatesBackgroundWindow() {
   SpecialPowers.pushPrefEnv({set: [
     [PREF_APP_UPDATE_STAGING_ENABLED, false],
-    [PREF_APP_UPDATE_AUTO, false]
+    [PREF_APP_UPDATE_AUTO, false],
   ]});
 
   let updateParams = "promptWaitTime=0";
@@ -30,7 +30,7 @@ add_task(async function testUpdatesBackgroundWindow() {
       button: "secondarybutton",
       cleanup() {
         AppMenuNotifications.removeNotification(/.*/);
-      }
+      },
     },
   ]);
 });

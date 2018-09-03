@@ -88,7 +88,7 @@ FaviconObserver.prototype = {
 
   get promise() {
     return this._faviconLoaded.promise;
-  }
+  },
 };
 
 function waitOnFaviconLoaded(aFaviconURL) {
@@ -125,7 +125,7 @@ async function doTest(aTestPage, aFaviconURL, aTailingEnabled) {
 
 async function setupTailingPreference(aTailingEnabled) {
   await SpecialPowers.pushPrefEnv({"set": [
-      ["network.http.tailing.enabled", aTailingEnabled]
+      ["network.http.tailing.enabled", aTailingEnabled],
   ]});
 }
 

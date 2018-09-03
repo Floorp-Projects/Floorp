@@ -28,7 +28,7 @@ import java.util.List;
 public class GeckoScreenOrientation {
     private static final String LOGTAG = "GeckoScreenOrientation";
 
-    // Make sure that any change in dom/base/ScreenOrientation.h happens here too.
+    // Make sure that any change in hal/HalScreenConfiguration.h happens here too.
     public enum ScreenOrientation {
         NONE(0),
         PORTRAIT_PRIMARY(1 << 0),

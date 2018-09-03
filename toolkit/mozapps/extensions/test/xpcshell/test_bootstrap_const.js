@@ -9,7 +9,7 @@ const ADDONS = {
     "install.rdf": {
       "id": "bootstrap@tests.mozilla.org",
     },
-    "bootstrap.js": "ChromeUtils.import(\"resource://gre/modules/Services.jsm\");\n\nconst install = function() {\n  Services.obs.notifyObservers(null, \"addon-install\");\n};\n"
+    "bootstrap.js": "ChromeUtils.import(\"resource://gre/modules/Services.jsm\");\n\nconst install = function() {\n  Services.obs.notifyObservers(null, \"addon-install\");\n};\n",
   },
 };
 

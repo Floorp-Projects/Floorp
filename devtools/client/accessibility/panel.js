@@ -39,7 +39,7 @@ function AccessibilityPanel(iframeWindow, toolbox, startup) {
   this.onAccessibilityInspectorUpdated =
     this.onAccessibilityInspectorUpdated.bind(this);
   this.updateA11YServiceDurationTimer = this.updateA11YServiceDurationTimer.bind(this);
-  this.updatePickerButton = this.updatePickerButton.bind(this);
+  this.forceUpdatePickerButton = this.forceUpdatePickerButton.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -91,6 +91,9 @@ AccessibilityPanel.prototype = {
     this.updateA11YServiceDurationTimer();
     this.front.on("init", this.updateA11YServiceDurationTimer);
     this.front.on("shutdown", this.updateA11YServiceDurationTimer);
+
+    this.front.on("init", this.forceUpdatePickerButton);
+    this.front.on("shutdown", this.forceUpdatePickerButton);
 
     this.isReady = true;
     this.emit("ready");
@@ -181,6 +184,17 @@ AccessibilityPanel.prototype = {
     this.picker && this.picker.updateButton();
   },
 
+  forceUpdatePickerButton() {
+    // Only update picker button when the panel is selected.
+    if (!this.isVisible) {
+      return;
+    }
+
+    this.updatePickerButton();
+    // Calling setToolboxButtons to make sure toolbar is forced to re-render.
+    this._toolbox.component.setToolboxButtons(this._toolbox.toolbarButtons);
+  },
+
   togglePicker(focus) {
     this.picker && this.picker.toggle();
   },
@@ -241,6 +255,9 @@ AccessibilityPanel.prototype = {
     if (this.front) {
       this.front.off("init", this.updateA11YServiceDurationTimer);
       this.front.off("shutdown", this.updateA11YServiceDurationTimer);
+
+      this.front.off("init", this.forceUpdatePickerButton);
+      this.front.off("shutdown", this.forceUpdatePickerButton);
     }
 
     this._telemetry = null;

@@ -275,8 +275,8 @@
   @media (-moz-os-version: windows-win7),
          (-moz-os-version: windows-win8) {
     /* Vertical toolbar border */
-    #main-window[sizemode=normal] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme),
-    #main-window[sizemode=normal] #navigator-toolbox > toolbar:-moz-lwtheme {
+    #main-window[sizemode=normal] .browser-toolbar:not(.titlebar-color):not(:-moz-lwtheme),
+    #main-window[sizemode=normal] .browser-toolbar:-moz-lwtheme {
       border-left: 1px solid @glassShadowColor@;
       border-right: 1px solid @glassShadowColor@;
       background-clip: padding-box;

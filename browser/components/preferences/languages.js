@@ -106,7 +106,7 @@ var gLanguagesDialog = {
 
     // Sort the list of languages by name
     let comp = new Services.intl.Collator(undefined, {
-      usage: "sort"
+      usage: "sort",
     });
 
     let items = Array.from(frag.children);
@@ -335,5 +335,5 @@ var gLanguagesDialog = {
 
   writeSpoofEnglish() {
     return document.getElementById("spoofEnglish").checked ? 2 : 1;
-  }
+  },
 };

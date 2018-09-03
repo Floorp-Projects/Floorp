@@ -122,7 +122,7 @@ https://trac.torproject.org/projects/tor/ticket/1517
     await SpecialPowers.pushPrefEnv({
       "set": [["privacy.resistFingerprinting", resistFingerprinting],
               ["privacy.reduceTimerPrecision", reduceTimerPrecision],
-              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000],
               ]});
 
     // No matter what we set the precision to, if we're in ResistFingerprinting mode
@@ -161,7 +161,7 @@ https://trac.torproject.org/projects/tor/ticket/1517
     await SpecialPowers.pushPrefEnv({
       "set": [["privacy.resistFingerprinting", resistFingerprinting],
               ["privacy.reduceTimerPrecision", reduceTimerPrecision],
-              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000],
               ]});
 
     // No matter what we set the precision to, if we're in ResistFingerprinting mode

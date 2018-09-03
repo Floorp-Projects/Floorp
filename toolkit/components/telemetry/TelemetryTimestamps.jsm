@@ -48,5 +48,5 @@ var TelemetryTimestamps = {
   get: function TT_get() {
     // Return a copy of the object.
     return Cu.cloneInto(timeStamps, {});
-  }
+  },
 };

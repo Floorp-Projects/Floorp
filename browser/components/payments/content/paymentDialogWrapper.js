@@ -274,7 +274,6 @@ var paymentDialogWrapper = {
     dependentLocality = "",
     postalCode = "",
     sortingCode = "",
-    languageCode = "",
     organization = "",
     recipient = "",
     phone = "",
@@ -294,7 +293,6 @@ var paymentDialogWrapper = {
                         dependentLocality,
                         postalCode,
                         sortingCode,
-                        languageCode,
                         organization,
                         recipient,
                         phone);

@@ -19,7 +19,7 @@ add_task(async function test_show_tour_notifications_in_order() {
 
   expectedPrefUpdates = Promise.all([
     promisePrefUpdated("browser.onboarding.notification.finished", true),
-    promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK)
+    promisePrefUpdated("browser.onboarding.state", ICON_STATE_WATERMARK),
   ]);
   await reloadTab(tab);
   await promiseOnboardingOverlayLoaded(tab.linkedBrowser);

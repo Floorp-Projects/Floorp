@@ -121,7 +121,7 @@ this.SelectContentHelper.prototype = {
       uaBackgroundColor: this.uaBackgroundColor,
       uaColor: this.uaColor,
       uaSelectBackgroundColor: this.uaSelectBackgroundColor,
-      uaSelectColor: this.uaSelectColor
+      uaSelectColor: this.uaSelectColor,
     });
     this._clearPseudoClassStyles();
     gOpen = true;
@@ -191,7 +191,7 @@ this.SelectContentHelper.prototype = {
       uaBackgroundColor: this.uaBackgroundColor,
       uaColor: this.uaColor,
       uaSelectBackgroundColor: this.uaSelectBackgroundColor,
-      uaSelectColor: this.uaSelectColor
+      uaSelectColor: this.uaSelectColor,
     });
     this._clearPseudoClassStyles();
   },
@@ -365,7 +365,7 @@ this.SelectContentHelper.prototype = {
         }
         break;
     }
-  }
+  },
 
 };
 
@@ -409,7 +409,7 @@ function buildOptionListForChildren(node) {
         tooltip: child.title,
         backgroundColor: cs.backgroundColor,
         color: cs.color,
-        children: tagName == "OPTGROUP" ? buildOptionListForChildren(child) : []
+        children: tagName == "OPTGROUP" ? buildOptionListForChildren(child) : [],
       };
 
       if (cs.textShadow != "none") {

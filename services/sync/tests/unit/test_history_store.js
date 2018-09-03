@@ -74,7 +74,7 @@ add_task(async function test_store() {
     {id: fxguid,
      histUri: record.histUri,
      title: "Hol Dir Firefox!",
-     visits: [record.visits[0], secondvisit]}
+     visits: [record.visits[0], secondvisit]},
   ]);
   await onVisitObserved;
   let queryres = await PlacesUtils.history.fetch(fxuri.spec, {
@@ -101,7 +101,7 @@ add_task(async function test_store_create() {
      histUri: tburi.spec,
      title: "The bird is the word!",
      visits: [{date: TIMESTAMP3,
-               type: Ci.nsINavHistoryService.TRANSITION_TYPED}]}
+               type: Ci.nsINavHistoryService.TRANSITION_TYPED}]},
   ]);
   await onVisitObserved;
   Assert.ok((await store.itemExists(tbguid)));
@@ -126,7 +126,7 @@ add_task(async function test_null_title() {
      histUri: resuri.spec,
      title: null,
      visits: [{date: TIMESTAMP3,
-               type: Ci.nsINavHistoryService.TRANSITION_TYPED}]}
+               type: Ci.nsINavHistoryService.TRANSITION_TYPED}]},
   ]);
   do_check_attribute_count((await store.getAllIDs()), 1);
 
@@ -169,7 +169,7 @@ add_task(async function test_invalid_records() {
     histUri: ":::::::::::::::",
     title: "Doesn't have a valid URI",
     visits: [{date: TIMESTAMP3,
-              type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
+              type: Ci.nsINavHistoryService.TRANSITION_EMBED}]},
   ]);
   Assert.equal(failed.length, 1);
   Assert.equal(failed[0], invalid_uri_guid);
@@ -180,7 +180,7 @@ add_task(async function test_invalid_records() {
      histUri: "http://invalid.guid/",
      title: "Doesn't have a valid GUID",
      visits: [{date: TIMESTAMP3,
-               type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
+               type: Ci.nsINavHistoryService.TRANSITION_EMBED}]},
   ]);
 
   _("Make sure we handle records with invalid visit codes or visit dates, gracefully ignoring those visits.");
@@ -206,7 +206,7 @@ add_task(async function test_invalid_records() {
      histUri: "http://non.integer.visit/",
      title: "Visit has non-integer date",
      visits: [{date: 1234.567,
-               type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
+               type: Ci.nsINavHistoryService.TRANSITION_EMBED}]},
   ]);
   Assert.equal(failed.length, 0);
 
@@ -225,7 +225,7 @@ add_task(async function test_invalid_records() {
      histUri: "javascript:''",
      title: "javascript:''",
      visits: [{date: TIMESTAMP3,
-               type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
+               type: Ci.nsINavHistoryService.TRANSITION_EMBED}]},
   ]);
 
   _("Make sure we handle records without any visits gracefully.");
@@ -233,7 +233,7 @@ add_task(async function test_invalid_records() {
     {id: Utils.makeGUID(),
      histUri: "http://getfirebug.com",
      title: "Get Firebug!",
-     visits: []}
+     visits: []},
   ]);
 });
 
@@ -249,7 +249,7 @@ add_task(async function test_unknowingly_invalid_records() {
        histUri: "javascript:''",
        title: "javascript:''",
        visits: [{date: TIMESTAMP3,
-                 type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
+                 type: Ci.nsINavHistoryService.TRANSITION_EMBED}]},
     ]);
     deepEqual(result, [guid]);
   } finally {
@@ -377,15 +377,15 @@ add_task(async function test_chunking() {
     // 4 in the first and 1 in the second should be 2 chunks.
     checkChunks([
                   {visits: ["x", "x", "x", "x"]},
-                  {visits: ["x"]}
+                  {visits: ["x"]},
                 ],
                 // expected
                 [
                   [
-                    {visits: ["x", "x", "x", "x"]}
+                    {visits: ["x", "x", "x", "x"]},
                   ],
                   [
-                    {visits: ["x"]}
+                    {visits: ["x"]},
                   ],
                 ]
                );
@@ -424,7 +424,7 @@ add_task(async function test_getAllIDs_filters_file_uris() {
   await PlacesTestUtils.addVisits({
     uri,
     visitDate: Date.now() * 1000,
-    transition: PlacesUtils.history.TRANSITION_LINK
+    transition: PlacesUtils.history.TRANSITION_LINK,
   });
   await visitAddedPromise;
 
@@ -441,7 +441,7 @@ add_task(async function test_applyIncomingBatch_filters_file_uris() {
      histUri: uri.spec,
      title: "TPS CONFIG",
      visits: [{date: TIMESTAMP3,
-               type: Ci.nsINavHistoryService.TRANSITION_TYPED}]}
+               type: Ci.nsINavHistoryService.TRANSITION_TYPED}]},
   ]);
   Assert.equal(false, (await store.itemExists(guid)));
   let queryres = await PlacesUtils.history.fetch(uri.spec, {

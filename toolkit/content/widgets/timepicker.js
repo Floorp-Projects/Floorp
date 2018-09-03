@@ -53,7 +53,7 @@ function TimePicker(context) {
         min: new Date(Number.isNaN(min) ? 0 : min),
         max: new Date(Number.isNaN(max) ? DAY_IN_MS - 1 : max),
         step,
-        format: format || "12"
+        format: format || "12",
       });
       timeKeeper.setState({ hour: timerHour, minute: timerMinute });
 
@@ -90,22 +90,22 @@ function TimePicker(context) {
             const hourIn12 = hour % DAY_PERIOD_IN_HOURS;
             return hourIn12 == 0 ? numberFormat(12)
               : numberFormat(hourIn12);
-          }
+          },
         }, this.context),
         minute: new Spinner({
           setValue: wrapSetValueFn(value => {
             timeKeeper.setMinute(value);
             this.state.isMinuteSet = true;
           }),
-          getDisplayString: minute => numberFormat(minute)
-        }, this.context)
+          getDisplayString: minute => numberFormat(minute),
+        }, this.context),
       };
 
       this._insertLayoutElement({
         tag: "div",
         textContent: ":",
         className: "colon",
-        insertBefore: this.components.minute.elements.container
+        insertBefore: this.components.minute.elements.container,
       });
 
       // The AM/PM spinner is only available in 12hr mode
@@ -117,13 +117,13 @@ function TimePicker(context) {
             this.state.isDayPeriodSet = true;
           }),
           getDisplayString: dayPeriod => dayPeriod == 0 ? "AM" : "PM",
-          hideButtons: true
+          hideButtons: true,
         }, this.context);
 
         this._insertLayoutElement({
           tag: "div",
           className: "spacer",
-          insertBefore: this.components.dayPeriod.elements.container
+          insertBefore: this.components.dayPeriod.elements.container,
         });
       }
     },
@@ -160,7 +160,7 @@ function TimePicker(context) {
         items: timeKeeper.ranges.hours,
         isInfiniteScroll: true,
         isValueSet: isHourSet,
-        isInvalid
+        isInvalid,
       });
 
       this.components.minute.setState({
@@ -168,7 +168,7 @@ function TimePicker(context) {
         items: timeKeeper.ranges.minutes,
         isInfiniteScroll: true,
         isValueSet: isMinuteSet,
-        isInvalid
+        isInvalid,
       });
 
       // The AM/PM spinner is only available in 12hr mode
@@ -178,7 +178,7 @@ function TimePicker(context) {
           items: timeKeeper.ranges.dayPeriod,
           isInfiniteScroll: false,
           isValueSet: isDayPeriodSet,
-          isInvalid
+          isInvalid,
         });
       }
     },
@@ -198,8 +198,8 @@ function TimePicker(context) {
           minute,
           isHourSet,
           isMinuteSet,
-          isDayPeriodSet
-        }
+          isDayPeriodSet,
+        },
       }, "*");
     },
     _attachEventListeners() {
@@ -265,6 +265,6 @@ function TimePicker(context) {
       }
       this.state.timeKeeper.setState(timeState);
       this._setComponentStates();
-    }
+    },
   };
 }

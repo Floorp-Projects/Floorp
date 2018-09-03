@@ -27,9 +27,9 @@ async function run_test() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
-    name: "Test Addon - normal"
+    name: "Test Addon - normal",
   }, profileDir);
 
   await promiseWriteInstallRDFForExtension({
@@ -40,9 +40,9 @@ async function run_test() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
-    name: "Test Addon - strict"
+    name: "Test Addon - strict",
   }, profileDir);
 
   await promiseWriteInstallRDFForExtension({
@@ -53,10 +53,10 @@ async function run_test() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Addon - strict opt-in",
-    strictCompatibility: true
+    strictCompatibility: true,
   }, profileDir);
 
   await promiseWriteInstallRDFForExtension({
@@ -67,7 +67,7 @@ async function run_test() {
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
-      maxVersion: "1"
+      maxVersion: "1",
     }],
     name: "Test Addon - ignore",
   }, profileDir);
@@ -102,7 +102,7 @@ async function run_test_1() {
 
     onUpdateFinished() {
       run_test_2();
-    }
+    },
   }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
 }
 
@@ -127,7 +127,7 @@ async function run_test_2() {
 
     onUpdateFinished() {
       run_test_3();
-    }
+    },
   }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
 }
 
@@ -148,7 +148,7 @@ async function run_test_3() {
 
     onUpdateFinished() {
       run_test_4();
-    }
+    },
   }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
 }
 
@@ -173,6 +173,6 @@ async function run_test_4() {
 
     onUpdateFinished() {
       end_test();
-    }
+    },
   }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
 }

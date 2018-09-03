@@ -28,7 +28,7 @@ StackTraceCollector.prototype = {
     ChannelEventSinkFactory.getService().registerCollector(this);
     this.onGetStack = this.onGetStack.bind(this);
     for (const { messageManager } of this.netmonitors) {
-      messageManager.addMessageListener("debug:request-stack", this.onGetStack);
+      messageManager.addMessageListener("debug:request-stack:request", this.onGetStack);
     }
   },
 
@@ -36,7 +36,8 @@ StackTraceCollector.prototype = {
     Services.obs.removeObserver(this, "http-on-opening-request");
     ChannelEventSinkFactory.getService().unregisterCollector(this);
     for (const { messageManager } of this.netmonitors) {
-      messageManager.removeMessageListener("debug:request-stack", this.onGetStack);
+      messageManager.removeMessageListener("debug:request-stack:request",
+        this.onGetStack);
     }
   },
 
@@ -105,7 +106,7 @@ StackTraceCollector.prototype = {
     const messageManager = msg.target;
     const channelId = msg.data;
     const stack = this.getStackTrace(channelId);
-    messageManager.sendAsyncMessage("debug:request-stack", {
+    messageManager.sendAsyncMessage("debug:request-stack:response", {
       channelId,
       stack,
     });

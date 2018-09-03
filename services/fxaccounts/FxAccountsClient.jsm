@@ -287,7 +287,7 @@ this.FxAccountsClient.prototype = {
 
       return {
         kA: keyAWrapB.slice(0, 32),
-        wrapKB: keyAWrapB.slice(32)
+        wrapKB: keyAWrapB.slice(32),
       };
     });
   },
@@ -439,7 +439,7 @@ this.FxAccountsClient.prototype = {
     const body = {
       to: deviceIds || "all",
       payload,
-      TTL
+      TTL,
     };
     if (excludedIds) {
       body.excluded = excludedIds;
@@ -485,7 +485,7 @@ this.FxAccountsClient.prototype = {
     const body = {
       command,
       target,
-      payload
+      payload,
     };
     return this._request("/account/devices/invoke_command", "POST",
       deriveHawkCredentials(sessionTokenHex, "sessionToken"), body);

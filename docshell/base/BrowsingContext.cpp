@@ -6,6 +6,7 @@
 
 #include "BrowsingContext.h"
 
+#include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -131,8 +132,8 @@ BrowsingContext::Attach(BrowsingContext* aParent)
   MOZ_LOG(GetLog(),
           LogLevel::Debug,
           ("%s: %s 0x%08" PRIx64 " to 0x%08" PRIx64,
-           wasCached ? "Re-connecting" : "Connecting",
            XRE_IsParentProcess() ? "Parent" : "Child",
+           wasCached ? "Re-connecting" : "Connecting",
            Id(),
            aParent ? aParent->Id() : 0));
 
@@ -230,6 +231,22 @@ BrowsingContext::OwnerProcessId() const
   return mProcessId.value();
 }
 
+void
+BrowsingContext::GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren)
+{
+  for (BrowsingContext* context : mChildren) {
+    aChildren.AppendElement(context);
+  }
+}
+
+/* static */ void
+BrowsingContext::GetRootBrowsingContexts(nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts)
+{
+  for (BrowsingContext* context : *sRootBrowsingContexts) {
+    aBrowsingContexts.AppendElement(context);
+  }
+}
+
 BrowsingContext::~BrowsingContext()
 {
   MOZ_DIAGNOSTIC_ASSERT(!isInList());
@@ -237,6 +254,19 @@ BrowsingContext::~BrowsingContext()
   if (sBrowsingContexts) {
     sBrowsingContexts->Remove(mBrowsingContextId);
   }
+}
+
+nsISupports*
+BrowsingContext::GetParentObject() const
+{
+  return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+}
+
+JSObject*
+BrowsingContext::WrapObject(JSContext* aCx,
+                            JS::Handle<JSObject*> aGivenProto)
+{
+  return BrowsingContext_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 static void
@@ -257,7 +287,7 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION(BrowsingContext, mDocShell, mChildren)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BrowsingContext, mDocShell, mChildren)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(BrowsingContext, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(BrowsingContext, Release)
 

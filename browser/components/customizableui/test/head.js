@@ -47,7 +47,7 @@ function createToolbarWithPlacements(id, placements = []) {
   tb.setAttribute("customizable", "true");
   CustomizableUI.registerArea(id, {
     type: CustomizableUI.TYPE_TOOLBAR,
-    defaultPlacements: placements
+    defaultPlacements: placements,
   });
   gNavToolbox.appendChild(tb);
   return tb;

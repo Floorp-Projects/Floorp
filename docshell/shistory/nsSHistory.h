@@ -10,8 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsExpirationTracker.h"
 #include "nsISHistory.h"
-#include "nsISHistoryInternal.h"
-#include "nsIWebNavigation.h"
 #include "nsSHEntryShared.h"
 #include "nsSimpleEnumerator.h"
 #include "nsTObserverArray.h"
@@ -28,8 +26,6 @@ class nsISHTransaction;
 
 class nsSHistory final : public mozilla::LinkedListElement<nsSHistory>,
                          public nsISHistory,
-                         public nsISHistoryInternal,
-                         public nsIWebNavigation,
                          public nsSupportsWeakReference
 {
 public:
@@ -72,8 +68,10 @@ public:
   nsSHistory();
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHISTORY
-  NS_DECL_NSISHISTORYINTERNAL
-  NS_DECL_NSIWEBNAVIGATION
+
+  nsresult GotoIndex(int32_t aIndex);
+  nsresult Reload(uint32_t aReloadFlags);
+  nsresult GetCurrentURI(nsIURI** aResultURI);
 
   // One time initialization method called upon docshell module construction
   static nsresult Startup();
@@ -134,7 +132,6 @@ private:
   virtual ~nsSHistory();
   friend class nsSHistoryObserver;
 
-  nsresult GetTransactionAtIndex(int32_t aIndex, nsISHTransaction** aResult);
   nsresult LoadDifferingEntries(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
                                 nsIDocShell* aRootDocShell, long aLoadType,
                                 bool& aDifferenceFound);
@@ -175,10 +172,15 @@ private:
   // Track all bfcache entries and evict on expiration.
   mozilla::UniquePtr<HistoryTracker> mHistoryTracker;
 
-  nsCOMPtr<nsISHTransaction> mListRoot;
-  int32_t mIndex;
-  int32_t mLength;
-  int32_t mRequestedIndex;
+  nsTArray<nsCOMPtr<nsISHTransaction>> mTransactions;
+  int32_t mIndex;           // -1 means "no index"
+  int32_t mRequestedIndex;  // -1 means "no requested index"
+
+  void WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
+                     int32_t* aOutEndIndex);
+
+  // Length of mTransactions.
+  int32_t Length() { return int32_t(mTransactions.Length()); }
 
   // Session History listeners
   nsAutoTObserverArray<nsWeakPtr, 2> mListeners;

@@ -481,7 +481,7 @@ public:
 
 protected:
   nsresult DetectCharset();
-  nsresult AppendToResponseText(const char * aBuffer, uint32_t aBufferLen,
+  nsresult AppendToResponseText(Span<const uint8_t> aBuffer,
                                 bool aLast = false);
   static nsresult StreamReaderFunc(nsIInputStream* in,
                                    void* closure,

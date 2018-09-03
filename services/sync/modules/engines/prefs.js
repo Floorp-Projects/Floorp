@@ -66,7 +66,7 @@ PrefsEngine.prototype = {
       return true;
     }
     return SyncEngine.prototype._reconcile.call(this, item);
-  }
+  },
 };
 
 // We don't use services.sync.engine.tabs.filteredUrls since it includes
@@ -228,7 +228,7 @@ PrefStore.prototype = {
 
   async wipe() {
     this._log.trace("Ignoring wipe request");
-  }
+  },
 };
 
 function PrefTracker(name, engine) {
@@ -285,5 +285,5 @@ PrefTracker.prototype = {
         }
         break;
     }
-  }
+  },
 };

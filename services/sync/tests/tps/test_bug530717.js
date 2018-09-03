@@ -18,26 +18,26 @@ var phases = { "phase1": "profile1",
 
 var prefs1 = [
   { name: "browser.startup.homepage",
-    value: "http://www.getfirefox.com"
+    value: "http://www.getfirefox.com",
   },
   { name: "browser.urlbar.maxRichResults",
-    value: 20
+    value: 20,
   },
   { name: "privacy.clearOnShutdown.siteSettings",
-    value: true
-  }
+    value: true,
+  },
 ];
 
 var prefs2 = [
   { name: "browser.startup.homepage",
-    value: "http://www.mozilla.com"
+    value: "http://www.mozilla.com",
   },
   { name: "browser.urlbar.maxRichResults",
-    value: 18
+    value: 18,
   },
   { name: "privacy.clearOnShutdown.siteSettings",
-    value: false
-  }
+    value: false,
+  },
 ];
 
 /*
@@ -48,13 +48,13 @@ var prefs2 = [
 Phase("phase1", [
   [Prefs.modify, prefs1],
   [Prefs.verify, prefs1],
-  [Sync]
+  [Sync],
 ]);
 
 // Sync profile2 and verify same prefs are present.
 Phase("phase2", [
   [Sync],
-  [Prefs.verify, prefs1]
+  [Prefs.verify, prefs1],
 ]);
 
 // Using profile1, change some prefs, then do another sync with wipe-client.
@@ -64,6 +64,6 @@ Phase("phase3", [
   [Prefs.modify, prefs2],
   [Prefs.verify, prefs2],
   [Sync, SYNC_WIPE_CLIENT],
-  [Prefs.verify, prefs1]
+  [Prefs.verify, prefs1],
 ]);
 

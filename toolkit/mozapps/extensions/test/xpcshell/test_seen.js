@@ -20,7 +20,7 @@ const ADDONS = {
       "id": "bootstrap1@tests.mozilla.org",
       "name": "Test Bootstrap 1",
     },
-    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
   },
   test_bootstrap1_2: {
     "install.rdf": {
@@ -28,7 +28,7 @@ const ADDONS = {
       "version": "2.0",
       "name": "Test Bootstrap 1",
     },
-    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
   },
 };
 

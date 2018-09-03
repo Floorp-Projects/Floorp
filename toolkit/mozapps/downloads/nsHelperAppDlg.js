@@ -75,7 +75,7 @@ nsUnknownContentTypeDialogProgressListener.prototype = {
 
   onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
     return true;
-  }
+  },
 };
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -522,7 +522,7 @@ nsUnknownContentTypeDialog.prototype = {
       enableDialog: () => {
         this.mDialog.document.documentElement.getButton("accept").disabled = false;
       },
-      focusTarget: this.mDialog
+      focusTarget: this.mDialog,
     });
   },
 
