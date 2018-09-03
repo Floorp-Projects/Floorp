@@ -13,9 +13,9 @@ const PREFERENCE_NAME = "devtools.toolbox.tabsOrder";
  * Manage the order of devtools tabs.
  */
 class ToolboxTabsOrderManager {
-  constructor(onOrderUpdated) {
+  constructor(onOrderUpdated, panelDefinitions) {
     this.onOrderUpdated = onOrderUpdated;
-    this.currentPanelDefinitions = [];
+    this.currentPanelDefinitions = panelDefinitions || [];
 
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
@@ -53,6 +53,25 @@ class ToolboxTabsOrderManager {
   isLastTab(tabElement) {
     return !tabElement.nextSibling ||
            tabElement.nextSibling.id === "tools-chevron-menu-button";
+  }
+
+  saveOrderPreference() {
+    const tabs = [...this.toolboxTabsElement.querySelectorAll(".devtools-tab")];
+    const tabIds = tabs.map(tab => tab.dataset.extensionId || tab.dataset.id);
+    // Concat the overflowed tabs id since they are not contained in visible tabs.
+    // The overflowed tabs cannot be reordered so we just append the id from current
+    // panel definitions on their order.
+    const overflowedTabIds =
+      this.currentPanelDefinitions
+          .filter(definition => !tabs.some(tab => tab.dataset.id === definition.id))
+          .map(definition => definition.extensionId || definition.id);
+    const currentTabIds = tabIds.concat(overflowedTabIds);
+    const dragTargetId =
+      this.dragTarget.dataset.extensionId || this.dragTarget.dataset.id;
+    const prefIds = getTabsOrderFromPreference();
+
+    const result = toAbsoluteOrder(prefIds, currentTabIds, dragTargetId);
+    Services.prefs.setCharPref(PREFERENCE_NAME, result.join(","));
   }
 
   setCurrentPanelDefinitions(currentPanelDefinitions) {
@@ -131,17 +150,7 @@ class ToolboxTabsOrderManager {
     }
 
     if (this.isOrderUpdated) {
-      const tabs = [...this.toolboxTabsElement.querySelectorAll(".devtools-tab")];
-      const tabIds = tabs.map(tab => tab.dataset.extensionId || tab.dataset.id);
-      // Concat the overflowed tabs id since they are not contained in visible tabs.
-      // The overflowed tabs cannot be reordered so we just append the id from current
-      // panel definitions on their order.
-      const overflowedTabIds =
-        this.currentPanelDefinitions
-            .filter(definition => !tabs.some(tab => tab.dataset.id === definition.id))
-            .map(definition => definition.extensionId || definition.id);
-      const pref = tabIds.concat(overflowedTabIds).join(",");
-      Services.prefs.setCharPref(PREFERENCE_NAME, pref);
+      this.saveOrderPreference();
 
       // Log which tabs reordered. The question we want to answer is:
       // "How frequently are the tabs re-ordered, also which tabs get re-ordered?"
@@ -161,9 +170,13 @@ class ToolboxTabsOrderManager {
   }
 }
 
-function sortPanelDefinitions(definitions) {
+function getTabsOrderFromPreference() {
   const pref = Services.prefs.getCharPref(PREFERENCE_NAME, "");
-  const toolIds = pref.split(",");
+  return pref ? pref.split(",") : [];
+}
+
+function sortPanelDefinitions(definitions) {
+  const toolIds = getTabsOrderFromPreference();
 
   return definitions.sort((a, b) => {
     let orderA = toolIds.indexOf(a.extensionId || a.id);
@@ -174,5 +187,61 @@ function sortPanelDefinitions(definitions) {
   });
 }
 
+/*
+ * This function returns absolute tab ids that were merged the both ids that are in
+ * preference and tabs.
+ * Some tabs added with add-ons etc show/hide depending on conditions.
+ * However, all of tabs that include hidden tab always keep the relationship with
+ * left side tab, except in case the left tab was target of dragging. If the left
+ * tab has been moved, it keeps its relationship with the tab next to it.
+ *
+ * Case 1: Drag a tab to left
+ *   currentTabIds: [T1, T2, T3, T4, T5]
+ *   prefIds      : [T1, T2, T3, E1(hidden), T4, T5]
+ *   drag T4      : [T1, T2, T4, T3, T5]
+ *   result       : [T1, T2, T4, T3, E1, T5]
+ *
+ * Case 2: Drag a tab to right
+ *   currentTabIds: [T1, T2, T3, T4, T5]
+ *   prefIds      : [T1, T2, T3, E1(hidden), T4, T5]
+ *   drag T2      : [T1, T3, T4, T2, T5]
+ *   result       : [T1, T3, E1, T4, T2, T5]
+ *
+ * Case 3: Hidden tab was left end and drag a tab to left end
+ *   currentTabIds: [T1, T2, T3, T4, T5]
+ *   prefIds      : [E1(hidden), T1, T2, T3, T4, T5]
+ *   drag T4      : [T4, T1, T2, T3, T5]
+ *   result       : [E1, T4, T1, T2, T3, T5]
+ *
+ * Case 4: Hidden tab was right end and drag a tab to right end
+ *   currentTabIds: [T1, T2, T3, T4, T5]
+ *   prefIds      : [T1, T2, T3, T4, T5, E1(hidden)]
+ *   drag T1      : [T2, T3, T4, T5, T1]
+ *   result       : [T2, T3, T4, T5, E1, T1]
+ *
+ * @param Array - prefIds: id array of preference
+ * @param Array - currentTabIds: id array of appearanced tabs
+ * @param String - dragTargetId: id of dragged target
+ * @return Array
+ */
+function toAbsoluteOrder(prefIds, currentTabIds, dragTargetId) {
+  currentTabIds = [...currentTabIds];
+  let indexAtCurrentTabs = 0;
+
+  for (const prefId of prefIds) {
+    if (prefId === dragTargetId) {
+      // do nothing
+    } else if (currentTabIds.includes(prefId)) {
+      indexAtCurrentTabs = currentTabIds.indexOf(prefId) + 1;
+    } else {
+      currentTabIds.splice(indexAtCurrentTabs, 0, prefId);
+      indexAtCurrentTabs += 1;
+    }
+  }
+
+  return currentTabIds;
+}
+
 module.exports.ToolboxTabsOrderManager = ToolboxTabsOrderManager;
 module.exports.sortPanelDefinitions = sortPanelDefinitions;
+module.exports.toAbsoluteOrder = toAbsoluteOrder;
