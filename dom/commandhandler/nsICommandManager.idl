@@ -105,14 +105,3 @@ Arguments to observers "Observe" method are as follows:
 
 */
 
-// {64edb481-0c04-11d5-a73c-e964b968b0bc}
-%{C++
-#define NS_COMMAND_MANAGER_CID \
-{ 0x64edb481, 0x0c04, 0x11d5, { 0xa7, 0x3c, 0xe9, 0x64, 0xb9, 0x68, 0xb0, 0xbc } }
-
-#define NS_COMMAND_MANAGER_CONTRACTID \
- "@mozilla.org/embedcomp/command-manager;1"
-%}
-
-
-
