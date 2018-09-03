@@ -47,30 +47,15 @@ var addTab = async function(url) {
 
 async function initAnimationsFrontForUrl(url) {
   const {AnimationsFront} = require("devtools/shared/fronts/animation");
-  const {InspectorFront} = require("devtools/shared/fronts/inspector");
 
-  await addTab(url);
-
-  initDebuggerServer();
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  const form = await connectDebuggerClient(client);
-  const inspector = InspectorFront(client, form);
-  const walker = await inspector.getWalker();
+  const { inspector, walker, client, form } = await initInspectorFront(url);
   const animations = AnimationsFront(client, form);
 
   return {inspector, walker, animations, client};
 }
 
 async function initLayoutFrontForUrl(url) {
-  const {InspectorFront} = require("devtools/shared/fronts/inspector");
-
-  await addTab(url);
-
-  initDebuggerServer();
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  const form = await connectDebuggerClient(client);
-  const inspector = InspectorFront(client, form);
-  const walker = await inspector.getWalker();
+  const {inspector, walker, client} = await initInspectorFront(url);
   const layout = await walker.getLayoutInspector();
 
   return {inspector, walker, layout, client};
@@ -115,6 +100,20 @@ async function initPerfFront() {
   const rootForm = await getRootForm(client);
   const front = PerfFront(client, rootForm);
   return {front, client};
+}
+
+async function initInspectorFront(url) {
+  const { InspectorFront } = require("devtools/shared/fronts/inspector");
+  await addTab(url);
+
+  initDebuggerServer();
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const inspector = InspectorFront(client, form);
+
+  const walker = await inspector.getWalker();
+
+  return {inspector, walker, client, form};
 }
 
 /**

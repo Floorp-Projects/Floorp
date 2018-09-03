@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Inspector (empty page)</title>
+  <script>
+  "use strict";
+
+  window.onload = function() {
+    customElements.define("test-empty", class extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({mode: "open"});
+      }
+    });
+
+    customElements.define("test-empty-closed", class extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({mode: "closed"});
+      }
+    });
+
+    customElements.define("test-children", class extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({mode: "open"});
+        this.shadowRoot.innerHTML = `
+          <h1>One child</h1>
+          <p>A second child</p>`;
+      }
+    });
+
+    customElements.define("test-named-slot", class extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({mode: "open"});
+        this.shadowRoot.innerHTML = `
+          <h1>With slot</h1>
+          <slot name="slot1"></slot>`;
+      }
+    });
+
+    customElements.define("test-slot", class extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({mode: "open"});
+        this.shadowRoot.innerHTML = `
+        <style>
+          slot::before { content: "[SLOT BEFORE]"; color: red; }
+          slot::after { content: "[SLOT AFTER]"; color: blue; }
+        </style>
+        <slot></slot>`;
+      }
+    });
+  };
+  </script>
+  <style>
+    #host-pseudo::before { content: "[HOST BEFORE]"; color: red; }
+    #host-pseudo::after { content: "[HOST AFTER]"; color: blue; }
+  </style>
+</head>
+<body>
+  <test-empty id="empty"></test-empty>
+
+  <hr>
+
+  <test-empty id="one-child">
+    <h1>One child</h1>
+  </test-empty>
+
+  <hr>
+
+  <test-children id="shadow-children"></test-children>
+
+  <hr>
+
+  <test-named-slot id="named-slot">
+    <p class="slotted" slot="slot1">Slotted</p>
+  </test-named-slot>
+
+  <hr>
+
+  <test-slot id="slot-pseudo">
+    <span class="has-before">Slotted</span>
+  </test-slot>
+
+  <hr>
+
+  <test-empty id="host-pseudo"></test-empty>
+
+  <hr>
+
+  <test-empty id="mode-open"></test-empty>
+  <test-empty-closed id="mode-closed"></test-empty-closed>
+</body>
+</html>
