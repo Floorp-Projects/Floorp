@@ -243,7 +243,9 @@ function generateDocumentation() {
     } else {
       row.appendChild(col(policyName));
     }
-    row.appendChild(col(schema.properties[policyName].description));
+    let descriptionColumn = col("");
+    descriptionColumn.setAttribute("data-l10n-id", `policy-${policyName}`);
+    row.appendChild(descriptionColumn);
     main_tbody.appendChild(row);
     let sec_tbody = document.createElement("tbody");
     sec_tbody.classList.add("content");
