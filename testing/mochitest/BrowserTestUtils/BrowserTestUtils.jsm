@@ -710,9 +710,9 @@ var BrowserTestUtils = {
    *
    * @param {Object}
    *        Options to pass to OpenBrowserWindow. Additionally, supports:
-   *        - waitForNonAboutBlankLoad
+   *        - waitForTabURL
    *          Forces the initial browserLoaded check to wait for the tab to
-   *          load something other than about:blank.
+   *          load the given URL (instead of about:blank)
    *
    * @return {Promise}
    *         Resolves with the new window once it is loaded.
@@ -731,7 +731,9 @@ var BrowserTestUtils = {
       TestUtils.topicObserved("browser-delayed-startup-finished",
                               subject => subject == win).then(() => win);
 
-    let loadPromise = this.firstBrowserLoaded(win, !options.waitForNonAboutBlankLoad);
+    let loadPromise = this.firstBrowserLoaded(win, !options.waitForTabURL, browser => {
+      return !options.waitForTabURL || options.waitForTabURL == browser.currentURI.spec;
+    });
 
     await startupPromise;
     await loadPromise;
