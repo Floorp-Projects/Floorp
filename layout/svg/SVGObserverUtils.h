@@ -36,6 +36,7 @@ class nsSVGMaskFrame;
 namespace mozilla {
 class SVGFilterObserverList;
 namespace dom {
+class CanvasRenderingContext2D;
 class SVGGeometryElement;
 }
 }
@@ -530,6 +531,7 @@ private:
 class SVGObserverUtils
 {
 public:
+  typedef mozilla::dom::CanvasRenderingContext2D CanvasRenderingContext2D;
   typedef mozilla::dom::Element Element;
   typedef dom::SVGGeometryElement SVGGeometryElement;
   typedef nsInterfaceHashtable<nsRefPtrHashKey<URLAndReferrerInfo>,
@@ -729,6 +731,38 @@ public:
   static ReferenceState
   GetAndObserveFilters(nsIFrame* aFilteredFrame,
                        nsTArray<nsSVGFilterFrame*>* aFilterFrames);
+
+  /**
+   * Starts observing filters for a <canvas> element's CanvasRenderingContext2D.
+   *
+   * Returns a RAII object that the caller should make sure is released once
+   * the CanvasRenderingContext2D is no longer using them (that is, when the
+   * CanvasRenderingContext2D "drawing style state" on which the filters were
+   * set is destroyed or has its filter style reset).
+   *
+   * XXXjwatt: It's a bit unfortunate that both we and
+   * CanvasRenderingContext2D::UpdateFilter process the list of nsStyleFilter
+   * objects separately.  It would be better to refactor things so that we only
+   * do that work once.
+   */
+  static already_AddRefed<nsISupports>
+  ObserveFiltersForCanvasContext(CanvasRenderingContext2D* aContext,
+                                 Element* aCanvasElement,
+                                 nsTArray<nsStyleFilter>& aFilters);
+
+  /**
+   * Called when cycle collecting CanvasRenderingContext2D, and requires the
+   * RAII object returned from ObserveFiltersForCanvasContext to be passed in.
+   *
+   * XXXjwatt: I don't think this is doing anything useful.  All we do under
+   * this function is clear a raw C-style (i.e. not strong) pointer.  That's
+   * clearly not helping in breaking any cycles.  The fact that we MOZ_CRASH
+   * in OnRenderingChange if that pointer is null indicates that this isn't
+   * even doing anything useful in terms of preventing further invalidation
+   * from any observed filters.
+   */
+  static void
+  DetachFromCanvasContext(nsISupports* aAutoObserver);
 
   /**
    * Get the SVGGeometryElement that is referenced by aTextPathFrame, and make
