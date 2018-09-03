@@ -1118,16 +1118,42 @@ impl MarionetteConnection {
             }
         }
 
+        debug!(
+            "Connection established on {}:{}. Waiting for Marionette handshake",
+            DEFAULT_HOST, self.port,
+        );
+
         let data = self.handshake()?;
         self.session.application_type = Some(data.application_type);
         self.session.protocol = Some(data.protocol);
 
-        debug!("Connected to Marionette on {}:{}", DEFAULT_HOST, self.port);
+        debug!("Connected to Marionette");
         Ok(())
     }
 
     fn handshake(&mut self) -> WebDriverResult<MarionetteHandshake> {
-        let resp = self.read_resp()?;
+        let resp = (match self.stream.as_mut().unwrap().read_timeout() {
+            Ok(timeout) => {
+                // If platform supports changing the read timeout of the stream,
+                // use a short one only for the handshake with Marionette.
+                self.stream
+                    .as_mut()
+                    .unwrap()
+                    .set_read_timeout(Some(time::Duration::from_secs(10)))
+                    .ok();
+                let data = self.read_resp();
+                self.stream.as_mut().unwrap().set_read_timeout(timeout).ok();
+
+                data
+            }
+            _ => self.read_resp(),
+        }).or_else(|e| {
+            Err(WebDriverError::new(
+                ErrorStatus::UnknownError,
+                format!("Socket timeout reading Marionette handshake data: {}", e),
+            ))
+        })?;
+
         let data = serde_json::from_str::<MarionetteHandshake>(&resp)?;
 
         if data.application_type != "gecko" {
