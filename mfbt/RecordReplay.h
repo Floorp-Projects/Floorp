@@ -167,18 +167,6 @@ struct MOZ_RAII AutoDisallowThreadEvents
   ~AutoDisallowThreadEvents() { EndDisallowThreadEvents(); }
 };
 
-// Mark a region where thread events should have stack information captured.
-// These stacks help in tracking down record/replay inconsistencies.
-static inline void BeginCaptureEventStacks();
-static inline void EndCaptureEventStacks();
-
-// RAII class for a region where thread event stacks should be captured.
-struct MOZ_RAII AutoCaptureEventStacks
-{
-  AutoCaptureEventStacks() { BeginCaptureEventStacks(); }
-  ~AutoCaptureEventStacks() { EndCaptureEventStacks(); }
-};
-
 // Record or replay a value in the current thread's event stream.
 static inline size_t RecordReplayValue(size_t aValue);
 
@@ -430,8 +418,6 @@ MOZ_MakeRecordReplayWrapper(AreThreadEventsPassedThrough, bool, false, (), ())
 MOZ_MakeRecordReplayWrapperVoid(BeginDisallowThreadEvents, (), ())
 MOZ_MakeRecordReplayWrapperVoid(EndDisallowThreadEvents, (), ())
 MOZ_MakeRecordReplayWrapper(AreThreadEventsDisallowed, bool, false, (), ())
-MOZ_MakeRecordReplayWrapperVoid(BeginCaptureEventStacks, (), ())
-MOZ_MakeRecordReplayWrapperVoid(EndCaptureEventStacks, (), ())
 MOZ_MakeRecordReplayWrapper(RecordReplayValue, size_t, aValue, (size_t aValue), (aValue))
 MOZ_MakeRecordReplayWrapperVoid(RecordReplayBytes, (void* aData, size_t aSize), (aData, aSize))
 MOZ_MakeRecordReplayWrapper(HasDivergedFromRecording, bool, false, (), ())
