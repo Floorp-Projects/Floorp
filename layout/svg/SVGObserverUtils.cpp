@@ -566,26 +566,6 @@ nsSVGPaintingProperty::OnRenderingChange()
   }
 }
 
-// Note that the returned list will be empty in the case of a 'filter' property
-// that only specifies CSS filter functions (no url()'s to SVG filters).
-static SVGFilterObserverListForCSSProp*
-GetOrCreateFilterObserverListForCSS(nsIFrame* aFrame)
-{
-  const nsStyleEffects* effects = aFrame->StyleEffects();
-  if (!effects->HasFilters())
-    return nullptr;
-
-  SVGFilterObserverListForCSSProp* observers =
-    aFrame->GetProperty(SVGObserverUtils::FilterProperty());
-  if (observers) {
-    return observers;
-  }
-  observers = new SVGFilterObserverListForCSSProp(effects->mFilters, aFrame);
-  NS_ADDREF(observers);
-  aFrame->SetProperty(SVGObserverUtils::FilterProperty(), observers);
-  return observers;
-}
-
 static SVGMaskObserverList*
 GetOrCreateMaskProperty(nsIFrame* aFrame)
 {
@@ -650,20 +630,38 @@ SVGObserverUtils::GetMarkerFrames(nsIFrame* aMarkedFrame,
   return foundMarker;
 }
 
-SVGObserverUtils::ReferenceState
-SVGObserverUtils::GetAndObserveFilters(nsIFrame* aFilteredFrame,
-                                       nsTArray<nsSVGFilterFrame*>* aFilterFrames)
+// Note that the returned list will be empty in the case of a 'filter' property
+// that only specifies CSS filter functions (no url()'s to SVG filters).
+static SVGFilterObserverListForCSSProp*
+GetOrCreateFilterObserverListForCSS(nsIFrame* aFrame)
 {
-  SVGFilterObserverListForCSSProp* observerList =
-    GetOrCreateFilterObserverListForCSS(aFilteredFrame);
-  if (!observerList) {
-    return eHasNoRefs;
+  const nsStyleEffects* effects = aFrame->StyleEffects();
+  if (!effects->HasFilters()) {
+    return nullptr;
+  }
+  SVGFilterObserverListForCSSProp* observers =
+    aFrame->GetProperty(SVGObserverUtils::FilterProperty());
+  if (observers) {
+    return observers;
+  }
+  observers = new SVGFilterObserverListForCSSProp(effects->mFilters, aFrame);
+  NS_ADDREF(observers);
+  aFrame->SetProperty(SVGObserverUtils::FilterProperty(), observers);
+  return observers;
+}
+
+static SVGObserverUtils::ReferenceState
+GetFilters(SVGFilterObserverListForCSSProp* aObserverList,
+           nsTArray<nsSVGFilterFrame*>* aFilterFrames)
+{
+  if (!aObserverList) {
+    return SVGObserverUtils::eHasNoRefs;
   }
 
   const nsTArray<RefPtr<SVGFilterObserver>>& observers =
-    observerList->GetObservers();
+    aObserverList->GetObservers();
   if (observers.IsEmpty()) {
-    return eHasNoRefs;
+    return SVGObserverUtils::eHasNoRefs;
   }
 
   for (uint32_t i = 0; i < observers.Length(); i++) {
@@ -672,14 +670,32 @@ SVGObserverUtils::GetAndObserveFilters(nsIFrame* aFilteredFrame,
       if (aFilterFrames) {
         aFilterFrames->Clear();
       }
-      return eHasRefsSomeInvalid;
+      return SVGObserverUtils::eHasRefsSomeInvalid;
     }
     if (aFilterFrames) {
       aFilterFrames->AppendElement(filter);
     }
   }
 
-  return eHasRefsAllValid;
+  return SVGObserverUtils::eHasRefsAllValid;
+}
+
+SVGObserverUtils::ReferenceState
+SVGObserverUtils::GetAndObserveFilters(nsIFrame* aFilteredFrame,
+                                       nsTArray<nsSVGFilterFrame*>* aFilterFrames)
+{
+  SVGFilterObserverListForCSSProp* observerList =
+    GetOrCreateFilterObserverListForCSS(aFilteredFrame);
+  return GetFilters(observerList, aFilterFrames);
+}
+
+SVGObserverUtils::ReferenceState
+SVGObserverUtils::GetFiltersIfObserving(nsIFrame* aFilteredFrame,
+                                        nsTArray<nsSVGFilterFrame*>* aFilterFrames)
+{
+  SVGFilterObserverListForCSSProp* observerList =
+    aFilteredFrame->GetProperty(SVGObserverUtils::FilterProperty());
+  return GetFilters(observerList, aFilterFrames);
 }
 
 already_AddRefed<nsISupports>
