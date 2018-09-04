@@ -216,7 +216,7 @@ class UrlInputFragment :
         // Only make the second line clickable if applicable
         val linkStartIndex =
                 if (tipText.contains("\n")) tipText.indexOf("\n") + 2
-                else tipText.length
+                else 0
 
         keyboardLinearLayout.homeViewTipsLabel.movementMethod = LinkMovementMethod()
         homeViewTipsLabel.setText(tipText, TextView.BufferType.SPANNABLE)

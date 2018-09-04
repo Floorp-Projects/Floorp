@@ -23,6 +23,7 @@ import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.homeScreenTipsExperimentDescriptor
 import org.mozilla.focus.utils.isInExperiment
+import org.mozilla.focus.utils.Browsers
 import java.util.Random
 
 class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val deepLink: (() -> Unit)? = null) {
@@ -65,7 +66,7 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             val name = context.resources.getString(id, appName)
 
             val shouldDisplayDefaultBrowser = {
-                !Settings.getInstance(context).isDefaultBrowser()
+                !Browsers(context, Browsers.TRADITIONAL_BROWSER_URL).isDefaultBrowser(context)
             }
 
             val deepLinkDefaultBrowser = {
@@ -197,14 +198,12 @@ object TipManager {
         }
 
         // Always show the disable tip if it's ready to be displayed
-        listOfTips
-                .firstOrNull { it.id == tip_disable_tips }
-                ?.let {
-                    if (it.shouldDisplay()) {
-                        listOfTips.remove(it)
-                        return it
-                    }
-                }
+        for (tip in listOfTips) {
+            if (tip.id == tip_disable_tips && tip.shouldDisplay()) {
+                listOfTips.remove(tip)
+                return tip
+            }
+        }
 
         var tip = listOfTips[getRandomTipIndex()]
 
