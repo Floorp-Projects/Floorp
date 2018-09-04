@@ -11,7 +11,7 @@ interface nsISHEntry;
 interface nsISHTransaction : nsISupports
 {
   /**
-   * The nsISHEntry for the current transaction.
+   * The nsISHEntry for the current transaction. Never null.
    */
   [infallible] attribute nsISHEntry sHEntry;
 
