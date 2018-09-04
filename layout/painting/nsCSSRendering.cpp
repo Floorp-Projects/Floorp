@@ -84,9 +84,7 @@ struct InlineBackgroundData
   {
   }
 
-  ~InlineBackgroundData()
-  {
-  }
+  ~InlineBackgroundData() = default;
 
   void Reset()
   {
@@ -1465,10 +1463,10 @@ nsCSSRendering::FindBackgroundFrame(nsIFrame* aForFrame,
   if (IsCanvasFrame(aForFrame)) {
     *aBackgroundFrame = FindCanvasBackgroundFrame(aForFrame, rootElementFrame);
     return true;
-  } else {
-    *aBackgroundFrame = aForFrame;
-    return FindElementBackground(aForFrame, rootElementFrame);
   }
+
+  *aBackgroundFrame = aForFrame;
+  return FindElementBackground(aForFrame, rootElementFrame);
 }
 
 bool
@@ -1529,7 +1527,7 @@ nsCSSRendering::GetShadowColor(nsCSSShadowItem* aShadow,
 }
 
 nsRect
-nsCSSRendering::GetShadowRect(const nsRect aFrameArea,
+nsCSSRendering::GetShadowRect(const nsRect& aFrameArea,
                               bool aNativeTheme,
                               nsIFrame* aForFrame)
 {
@@ -1824,12 +1822,14 @@ nsCSSRendering::GetShadowInnerRadii(nsIFrame* aFrame,
     BoxDecorationRectForBorder(aFrame, aFrameArea, aFrame->GetSkipSides());
   nsSize sz = frameRect.Size();
   nsMargin border = aFrame->GetUsedBorder();
-  bool hasBorderRadius = aFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
+  aFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
   const nscoord oneDevPixel = aFrame->PresContext()->DevPixelsToAppUnits(1);
 
   RectCornerRadii borderRadii;
 
-  hasBorderRadius = GetBorderRadii(frameRect, aFrameArea, aFrame, borderRadii);
+  const bool hasBorderRadius =
+    GetBorderRadii(frameRect, aFrameArea, aFrame, borderRadii);
+
   if (hasBorderRadius) {
     ComputePixelRadii(twipsRadii, oneDevPixel, &borderRadii);
 
@@ -3200,10 +3200,10 @@ ComputeSpacedRepeatSize(nscoord aImageDimension,
   if (ratio < 2.0f) { // If you can't repeat at least twice, then don't repeat.
     aRepeat = false;
     return aImageDimension;
-  } else {
-    aRepeat = true;
-    return (aAvailableSpace - aImageDimension) / (NSToIntFloor(ratio) - 1);
   }
+
+  aRepeat = true;
+  return (aAvailableSpace - aImageDimension) / (NSToIntFloor(ratio) - 1);
 }
 
 /* static */ nscoord

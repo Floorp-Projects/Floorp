@@ -367,13 +367,13 @@ static void ResolveMidpoints(nsTArray<ColorStop>& stops)
     }
     // calculate colors
 
-    for (size_t y = 0; y < 9; y++) {
+    for (auto& newStop : newStops) {
       // Calculate the intermediate color stops per the formula of the CSS images
       // spec. http://dev.w3.org/csswg/css-images/#color-stop-syntax
       // 9 points were chosen since it is the minimum number of stops that always
       // give the smoothest appearace regardless of midpoint position and difference
       // in luminance of the end points.
-      float relativeOffset = (newStops[y].mPosition - offset1) / (offset2 - offset1);
+      float relativeOffset = (newStop.mPosition - offset1) / (offset2 - offset1);
       float multiplier = powf(relativeOffset, logf(.5f) / logf(midpoint));
 
       gfx::Float red = color1.r + multiplier * (color2.r - color1.r);
@@ -381,7 +381,7 @@ static void ResolveMidpoints(nsTArray<ColorStop>& stops)
       gfx::Float blue = color1.b + multiplier * (color2.b - color1.b);
       gfx::Float alpha = color1.a + multiplier * (color2.a - color1.a);
 
-      newStops[y].mColor = Color(red, green, blue, alpha);
+      newStop.mColor = Color(red, green, blue, alpha);
     }
 
     stops.ReplaceElementsAt(x, 1, newStops, 9);
@@ -844,7 +844,6 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
       mRadiusX = mRadiusY = 0.0;
     }
     stopDelta = 0.0;
-    lastStop = firstStop;
   }
 
   // Don't normalize non-repeating or degenerate gradients below 0..1

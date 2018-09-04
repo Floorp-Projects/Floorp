@@ -2684,7 +2684,8 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   }
 
   NotifySubDocInvalidationFunc computeInvalidFunc =
-    presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
+    presContext->MayHavePaintEventListenerInSubDocument()
+    ? nsPresContext::NotifySubDocInvalidation : nullptr;
 
   UniquePtr<LayerProperties> props;
 
@@ -2838,7 +2839,8 @@ GetMouseThrough(const nsIFrame* aFrame)
   while (frame) {
     if (frame->GetStateBits() & NS_FRAME_MOUSE_THROUGH_ALWAYS) {
       return true;
-    } else if (frame->GetStateBits() & NS_FRAME_MOUSE_THROUGH_NEVER) {
+    }
+    if (frame->GetStateBits() & NS_FRAME_MOUSE_THROUGH_NEVER) {
       return false;
     }
     frame = nsBox::GetParentXULBox(frame);
@@ -4393,13 +4395,6 @@ nsDisplayThemedBackground::nsDisplayThemedBackground(nsDisplayListBuilder* aBuil
   MOZ_COUNT_CTOR(nsDisplayThemedBackground);
 }
 
-nsDisplayThemedBackground::~nsDisplayThemedBackground()
-{
-#ifdef NS_BUILD_REFCNT_LOGGING
-  MOZ_COUNT_DTOR(nsDisplayThemedBackground);
-#endif
-}
-
 void
 nsDisplayThemedBackground::Init(nsDisplayListBuilder* aBuilder)
 {
@@ -5514,7 +5509,7 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
 
       // We don't move the shadow rect here since WR does it for us
       // Now translate everything to device pixels.
-      nsRect shadowRect = frameRect;
+      const nsRect& shadowRect = frameRect;
       LayoutDevicePoint shadowOffset = LayoutDevicePoint::FromAppUnits(
           nsPoint(shadow->mXOffset, shadow->mYOffset),
           appUnitsPerDevPixel);
@@ -5607,7 +5602,7 @@ nsDisplayBoxShadowInner::Paint(nsDisplayListBuilder* aBuilder,
 bool
 nsDisplayBoxShadowInner::CanCreateWebRenderCommands(nsDisplayListBuilder* aBuilder,
                                                     nsIFrame* aFrame,
-                                                    nsPoint aReferenceOffset)
+                                                    const nsPoint& aReferenceOffset)
 {
   nsCSSShadowArray *shadows = aFrame->StyleEffects()->mBoxShadow;
   if (!shadows) {
@@ -5633,7 +5628,7 @@ nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::Disp
                                                                const StackingContextHelper& aSc,
                                                                nsRegion& aVisibleRegion,
                                                                nsIFrame* aFrame,
-                                                               const nsRect aBorderRect)
+                                                               const nsRect& aBorderRect)
 {
   if (!nsCSSRendering::ShouldPaintBoxShadowInner(aFrame)) {
     return;
@@ -8111,8 +8106,11 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
   if (frameArea <= maxLimitArea && frameSize <= absoluteLimit) {
     *aDirtyRect = overflow;
     return FullPrerender;
-  } else if (gfxPrefs::PartiallyPrerenderAnimatedContent()) {
-    *aDirtyRect = nsLayoutUtils::ComputePartialPrerenderArea(*aDirtyRect, overflow, maxSize);
+  }
+
+  if (gfxPrefs::PartiallyPrerenderAnimatedContent()) {
+    *aDirtyRect = nsLayoutUtils::ComputePartialPrerenderArea(*aDirtyRect,
+                                                             overflow, maxSize);
     return PartialPrerender;
   }
 
@@ -9863,9 +9861,9 @@ nsDisplaySVGWrapper::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aB
                                              aSc,
                                              aManager,
                                              aDisplayListBuilder);
-  } else {
-    return false;
   }
+
+  return false;
 }
 
 namespace mozilla {

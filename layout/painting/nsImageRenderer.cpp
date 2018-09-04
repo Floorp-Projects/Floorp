@@ -70,10 +70,6 @@ nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame,
 {
 }
 
-nsImageRenderer::~nsImageRenderer()
-{
-}
-
 static bool
 ShouldTreatAsCompleteDueToSyncDecode(const nsStyleImage* aImage,
                                      uint32_t aFlags)

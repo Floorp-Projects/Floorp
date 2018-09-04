@@ -148,7 +148,7 @@ struct nsCSSRendering {
                              const nsRect& aBorderRect,
                              nsIFrame* aFrame,
                              RectCornerRadii& aOutRadii);
-  static nsRect GetShadowRect(const nsRect aFrameArea,
+  static nsRect GetShadowRect(const nsRect& aFrameArea,
                               bool aNativeTheme,
                               nsIFrame* aForFrame);
   static mozilla::gfx::Color GetShadowColor(nsCSSShadowItem* aShadow,

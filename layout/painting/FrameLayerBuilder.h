@@ -212,7 +212,7 @@ private:
 
 class RefCountedRegion {
 private:
-  ~RefCountedRegion() {}
+  ~RefCountedRegion() = default;
 public:
   NS_INLINE_DECL_REFCOUNTING(RefCountedRegion)
 
