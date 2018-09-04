@@ -89,7 +89,7 @@ var SessionHistoryInternal = {
           skippedCount++;
           continue;
         }
-        let entry = this.serializeEntry(txn.sHEntry);
+        let entry = this.serializeEntry(txn);
         data.entries.push(entry);
       }
 

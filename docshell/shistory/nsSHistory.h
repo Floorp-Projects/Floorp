@@ -22,7 +22,6 @@ class nsIDocShell;
 class nsDocShell;
 class nsSHistoryObserver;
 class nsISHEntry;
-class nsISHTransaction;
 
 class nsSHistory final : public mozilla::LinkedListElement<nsSHistory>,
                          public nsISHistory,
@@ -147,13 +146,13 @@ private:
   // Find the transaction for a given bfcache entry. It only looks up between
   // the range where alive viewers may exist (i.e nsISHistory::VIEWER_WINDOW).
   nsresult FindTransactionForBFCache(nsIBFCacheEntry* aEntry,
-                                     nsISHTransaction** aResult,
+                                     nsISHEntry** aResult,
                                      int32_t* aResultIndex);
 
   // Evict content viewers in this window which don't lie in the "safe" range
   // around aIndex.
   void EvictOutOfRangeWindowContentViewers(int32_t aIndex);
-  void EvictContentViewerForTransaction(nsISHTransaction* aTrans);
+  void EvictContentViewerForTransaction(nsISHEntry* aTrans);
   static void GloballyEvictContentViewers();
   static void GloballyEvictAllContentViewers();
 
@@ -172,7 +171,7 @@ private:
   // Track all bfcache entries and evict on expiration.
   mozilla::UniquePtr<HistoryTracker> mHistoryTracker;
 
-  nsTArray<nsCOMPtr<nsISHTransaction>> mTransactions; // entries are never null
+  nsTArray<nsCOMPtr<nsISHEntry>> mTransactions; // entries are never null
   int32_t mIndex;           // -1 means "no index"
   int32_t mRequestedIndex;  // -1 means "no requested index"
 
