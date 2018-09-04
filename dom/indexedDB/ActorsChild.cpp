@@ -3482,16 +3482,8 @@ PreprocessHelper::ProcessCurrentStream()
 
   MOZ_ASSERT(mCurrentBytecodeFileDesc);
 
-  JS::BuildIdCharVector buildId;
-  bool ok = GetBuildId(&buildId);
-  if (NS_WARN_IF(!ok)) {
-    ContinueWithStatus(NS_ERROR_FAILURE);
-    return;
-  }
-
   RefPtr<JS::WasmModule> module =
     JS::DeserializeWasmModule(mCurrentBytecodeFileDesc,
-                              std::move(buildId),
                               nullptr,
                               0);
   if (NS_WARN_IF(!module)) {

@@ -4695,8 +4695,7 @@ GetWasmModule(HandleObject obj);
  */
 
 extern JS_PUBLIC_API(RefPtr<WasmModule>)
-DeserializeWasmModule(PRFileDesc* bytecode, BuildIdCharVector&& buildId,
-                      JS::UniqueChars filename, unsigned line);
+DeserializeWasmModule(PRFileDesc* bytecode, JS::UniqueChars filename, unsigned line);
 
 /**
  * Convenience class for imitating a JS level for-of loop. Typical usage:

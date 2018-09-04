@@ -296,19 +296,7 @@ Module::testingBlockOnTier2Complete() const
 /* virtual */ size_t
 Module::compiledSerializedSize() const
 {
-    MOZ_ASSERT(!testingTier2Active_);
-
-    // The compiled debug code must not be saved, set compiled size to 0,
-    // so Module::assumptionsMatch will return false during assumptions
-    // deserialization.
-    if (metadata().debugEnabled)
-        return 0;
-
-    if (!code_->hasTier(Tier::Serialized))
-        return 0;
-
-    return assumptions_.serializedSize() +
-           linkData_.serializedSize() +
+    return linkData_.serializedSize() +
            SerializedVectorSize(imports_) +
            SerializedVectorSize(exports_) +
            SerializedPodVectorSize(dataSegments_) +
@@ -320,20 +308,11 @@ Module::compiledSerializedSize() const
 /* virtual */ void
 Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
 {
-    MOZ_ASSERT(!testingTier2Active_);
-
-    if (metadata().debugEnabled) {
-        MOZ_RELEASE_ASSERT(compiledSize == 0);
-        return;
-    }
-
-    if (!code_->hasTier(Tier::Serialized)) {
-        MOZ_RELEASE_ASSERT(compiledSize == 0);
-        return;
-    }
+    MOZ_RELEASE_ASSERT(!testingTier2Active_);
+    MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
+    MOZ_RELEASE_ASSERT(code_->hasTier(Tier::Serialized));
 
     uint8_t* cursor = compiledBegin;
-    cursor = assumptions_.serialize(cursor);
     cursor = linkData_.serialize(cursor);
     cursor = SerializeVector(cursor, imports_);
     cursor = SerializeVector(cursor, exports_);
@@ -342,16 +321,6 @@ Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
     cursor = SerializeVector(cursor, structTypes_);
     cursor = code_->serialize(cursor, linkData_);
     MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
-}
-
-/* static */ bool
-Module::assumptionsMatch(const Assumptions& current, const uint8_t* compiledBegin, size_t remain)
-{
-    Assumptions cached;
-    if (!cached.deserialize(compiledBegin, remain))
-        return false;
-
-    return current == cached;
 }
 
 /* static */ SharedModule
@@ -366,17 +335,14 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
     if (bytecodeSize)
         memcpy(bytecode->bytes.begin(), bytecodeBegin, bytecodeSize);
 
-    Assumptions assumptions;
-    const uint8_t* cursor = assumptions.deserialize(compiledBegin, compiledSize);
-    if (!cursor)
-        return nullptr;
-
     MutableMetadata metadata(maybeMetadata);
     if (!metadata) {
         metadata = js_new<Metadata>();
         if (!metadata)
             return nullptr;
     }
+
+    const uint8_t* cursor = compiledBegin;
 
     LinkData linkData;
     cursor = linkData.deserialize(cursor);
@@ -416,8 +382,7 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
     MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
     MOZ_RELEASE_ASSERT(!!maybeMetadata == code->metadata().isAsmJS());
 
-    return js_new<Module>(std::move(assumptions),
-                          *code,
+    return js_new<Module>(*code,
                           nullptr,            // Serialized code is never debuggable
                           std::move(linkData),
                           std::move(imports),
@@ -467,17 +432,12 @@ MapFile(PRFileDesc* file, PRFileInfo* info)
 }
 
 SharedModule
-wasm::DeserializeModule(PRFileDesc* bytecodeFile, JS::BuildIdCharVector&& buildId,
-                        UniqueChars filename, unsigned line)
+wasm::DeserializeModule(PRFileDesc* bytecodeFile, UniqueChars filename, unsigned line)
 {
     PRFileInfo bytecodeInfo;
     UniqueMapping bytecodeMapping = MapFile(bytecodeFile, &bytecodeInfo);
     if (!bytecodeMapping)
         return nullptr;
-
-    // Since the compiled file's assumptions don't match, we must recompile from
-    // bytecode. The bytecode file format is simply that of a .wasm (see
-    // Module::bytecodeSerialize).
 
     MutableBytes bytecode = js_new<ShareableBytes>();
     if (!bytecode || !bytecode->bytes.initLengthUninitialized(bytecodeInfo.size))
@@ -489,7 +449,7 @@ wasm::DeserializeModule(PRFileDesc* bytecodeFile, JS::BuildIdCharVector&& buildI
     scriptedCaller.filename = std::move(filename);
     scriptedCaller.line = line;
 
-    MutableCompileArgs args = js_new<CompileArgs>(Assumptions(std::move(buildId)), std::move(scriptedCaller));
+    MutableCompileArgs args = js_new<CompileArgs>(std::move(scriptedCaller));
     if (!args)
         return nullptr;
 
@@ -521,7 +481,6 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
 {
     code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenCode, code, data);
     *data += mallocSizeOf(this) +
-             assumptions_.sizeOfExcludingThis(mallocSizeOf) +
              linkData_.sizeOfExcludingThis(mallocSizeOf) +
              SizeOfVectorExcludingThis(imports_, mallocSizeOf) +
              SizeOfVectorExcludingThis(exports_, mallocSizeOf) +

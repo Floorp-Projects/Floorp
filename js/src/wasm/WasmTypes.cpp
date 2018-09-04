@@ -136,44 +136,6 @@ wasm::IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode)
     }
 }
 
-static uint32_t
-GetCPUID()
-{
-    enum Arch {
-        X86 = 0x1,
-        X64 = 0x2,
-        ARM = 0x3,
-        MIPS = 0x4,
-        MIPS64 = 0x5,
-        ARM64 = 0x6,
-        ARCH_BITS = 3
-    };
-
-#if defined(JS_CODEGEN_X86)
-    MOZ_ASSERT(uint32_t(jit::CPUInfo::GetSSEVersion()) <= (UINT32_MAX >> ARCH_BITS));
-    return X86 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
-#elif defined(JS_CODEGEN_X64)
-    MOZ_ASSERT(uint32_t(jit::CPUInfo::GetSSEVersion()) <= (UINT32_MAX >> ARCH_BITS));
-    return X64 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
-#elif defined(JS_CODEGEN_ARM)
-    MOZ_ASSERT(jit::GetARMFlags() <= (UINT32_MAX >> ARCH_BITS));
-    return ARM | (jit::GetARMFlags() << ARCH_BITS);
-#elif defined(JS_CODEGEN_ARM64)
-    MOZ_ASSERT(jit::GetARM64Flags() <= (UINT32_MAX >> ARCH_BITS));
-    return ARM64 | (jit::GetARM64Flags() << ARCH_BITS);
-#elif defined(JS_CODEGEN_MIPS32)
-    MOZ_ASSERT(jit::GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
-    return MIPS | (jit::GetMIPSFlags() << ARCH_BITS);
-#elif defined(JS_CODEGEN_MIPS64)
-    MOZ_ASSERT(jit::GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
-    return MIPS64 | (jit::GetMIPSFlags() << ARCH_BITS);
-#elif defined(JS_CODEGEN_NONE)
-    return 0;
-#else
-# error "unknown architecture"
-#endif
-}
-
 size_t
 FuncType::serializedSize() const
 {
@@ -522,74 +484,6 @@ ElemSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return elemFuncIndices.sizeOfExcludingThis(mallocSizeOf) +
            elemCodeRangeIndices(Tier::Serialized).sizeOfExcludingThis(mallocSizeOf);
-}
-
-Assumptions::Assumptions(JS::BuildIdCharVector&& buildId)
-  : cpuId(GetCPUID()),
-    buildId(std::move(buildId))
-{}
-
-Assumptions::Assumptions()
-  : cpuId(GetCPUID()),
-    buildId()
-{}
-
-bool
-Assumptions::initBuildIdFromContext(JSContext* cx)
-{
-    if (!cx->buildIdOp() || !cx->buildIdOp()(&buildId)) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
-    return true;
-}
-
-bool
-Assumptions::clone(const Assumptions& other)
-{
-    cpuId = other.cpuId;
-    return buildId.appendAll(other.buildId);
-}
-
-bool
-Assumptions::operator==(const Assumptions& rhs) const
-{
-    return cpuId == rhs.cpuId &&
-           buildId.length() == rhs.buildId.length() &&
-           ArrayEqual(buildId.begin(), rhs.buildId.begin(), buildId.length());
-}
-
-size_t
-Assumptions::serializedSize() const
-{
-    return sizeof(uint32_t) +
-           SerializedPodVectorSize(buildId);
-}
-
-uint8_t*
-Assumptions::serialize(uint8_t* cursor) const
-{
-    // The format of serialized Assumptions must never change in a way that
-    // would cause old cache files written with by an old build-id to match the
-    // assumptions of a different build-id.
-
-    cursor = WriteScalar<uint32_t>(cursor, cpuId);
-    cursor = SerializePodVector(cursor, buildId);
-    return cursor;
-}
-
-const uint8_t*
-Assumptions::deserialize(const uint8_t* cursor, size_t remain)
-{
-    (cursor = ReadScalarChecked<uint32_t>(cursor, &remain, &cpuId)) &&
-    (cursor = DeserializePodVectorChecked(cursor, &remain, &buildId));
-    return cursor;
-}
-
-size_t
-Assumptions::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
-{
-    return buildId.sizeOfExcludingThis(mallocSizeOf);
 }
 
 //  Heap length on ARM should fit in an ARM immediate. We approximate the set

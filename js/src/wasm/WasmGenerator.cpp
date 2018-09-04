@@ -191,9 +191,6 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
     if (!metadataTier_)
         return false;
 
-    if (!assumptions_.clone(compileArgs_->assumptions))
-        return false;
-
     // The funcToCodeRange_ maps function indices to code-range indices and all
     // elements will be initialized by the time module generation is finished.
 
@@ -979,8 +976,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
             return nullptr;
     }
 
-    SharedModule module(js_new<Module>(std::move(assumptions_),
-                                       *code,
+    SharedModule module(js_new<Module>(*code,
                                        std::move(maybeDebuggingBytes),
                                        LinkData(std::move(linkDataTier_)),
                                        std::move(env_->imports),
