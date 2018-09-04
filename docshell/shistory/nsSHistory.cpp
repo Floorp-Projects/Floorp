@@ -633,10 +633,8 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
     currentTxn->GetPersist(&currentPersist);
   }
 
-  int32_t currentIndex = mIndex;
-
   if (!currentPersist) {
-    NOTIFY_LISTENERS(OnHistoryReplaceEntry, (currentIndex));
+    NOTIFY_LISTENERS(OnHistoryReplaceEntry, (mIndex));
     NS_ENSURE_SUCCESS(currentTxn->SetSHEntry(aSHEntry), NS_ERROR_FAILURE);
     currentTxn->SetPersist(aPersist);
     return NS_OK;
@@ -644,10 +642,7 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
 
   nsCOMPtr<nsIURI> uri;
   aSHEntry->GetURI(getter_AddRefs(uri));
-  NOTIFY_LISTENERS(OnHistoryNewEntry, (uri, currentIndex));
-
-  // Note that a listener may have changed mIndex. So use mIndex instead of
-  // currentIndex.
+  NOTIFY_LISTENERS(OnHistoryNewEntry, (uri, mIndex));
 
   nsCOMPtr<nsISHTransaction> txn = new nsSHTransaction();
   txn->SetPersist(aPersist);
