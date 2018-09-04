@@ -68,14 +68,11 @@ interface nsISHistory: nsISupports
   attribute long maxLength;
 
   /**
-   * Get the history entry at a given index.
+   * Get the history entry at a given index. Returns non-null on success.
    *
    * @param index             The index value whose entry is requested.
    *                          The oldest entry is located at index == 0.
-   * @return                  <code>NS_OK</code> history entry for
-   *                          the index is obtained successfully.
-   *                          <code>NS_ERROR_FAILURE</code> Error in obtaining
-   *                          history entry for the given index.
+   * @return                  The found entry; never null.
    */
   nsISHEntry getEntryAtIndex(in long aIndex);
 
@@ -150,11 +147,6 @@ interface nsISHistory: nsISupports
    *                          appear in the session history list.
    */
   void addEntry(in nsISHEntry aEntry, in boolean aPersist);
-
-  /**
-   * Get the transaction at a particular index. Returns non-null on success.
-   */
-  nsISHEntry GetTransactionAtIndex(in int32_t aIndex);
 
   /**
    * Sets the toplevel docshell object to which this SHistory object belongs to.

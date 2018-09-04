@@ -143,16 +143,16 @@ private:
   nsresult PrintHistory();
 #endif
 
-  // Find the transaction for a given bfcache entry. It only looks up between
+  // Find the history entry for a given bfcache entry. It only looks up between
   // the range where alive viewers may exist (i.e nsISHistory::VIEWER_WINDOW).
-  nsresult FindTransactionForBFCache(nsIBFCacheEntry* aEntry,
-                                     nsISHEntry** aResult,
-                                     int32_t* aResultIndex);
+  nsresult FindEntryForBFCache(nsIBFCacheEntry* aBFEntry,
+                               nsISHEntry** aResult,
+                               int32_t* aResultIndex);
 
   // Evict content viewers in this window which don't lie in the "safe" range
   // around aIndex.
   void EvictOutOfRangeWindowContentViewers(int32_t aIndex);
-  void EvictContentViewerForTransaction(nsISHEntry* aTrans);
+  void EvictContentViewerForEntry(nsISHEntry* aEntry);
   static void GloballyEvictContentViewers();
   static void GloballyEvictAllContentViewers();
 
@@ -163,7 +163,7 @@ private:
   nsresult LoadNextPossibleEntry(int32_t aNewIndex, long aLoadType,
                                  uint32_t aHistCmd);
 
-  // aIndex is the index of the transaction which may be removed.
+  // aIndex is the index of the entry which may be removed.
   // If aKeepNext is true, aIndex is compared to aIndex + 1,
   // otherwise comparison is done to aIndex - 1.
   bool RemoveDuplicate(int32_t aIndex, bool aKeepNext);
@@ -171,15 +171,15 @@ private:
   // Track all bfcache entries and evict on expiration.
   mozilla::UniquePtr<HistoryTracker> mHistoryTracker;
 
-  nsTArray<nsCOMPtr<nsISHEntry>> mTransactions; // entries are never null
+  nsTArray<nsCOMPtr<nsISHEntry>> mEntries; // entries are never null
   int32_t mIndex;           // -1 means "no index"
   int32_t mRequestedIndex;  // -1 means "no requested index"
 
   void WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
                      int32_t* aOutEndIndex);
 
-  // Length of mTransactions.
-  int32_t Length() { return int32_t(mTransactions.Length()); }
+  // Length of mEntries.
+  int32_t Length() { return int32_t(mEntries.Length()); }
 
   // Session History listeners
   nsAutoTObserverArray<nsWeakPtr, 2> mListeners;
