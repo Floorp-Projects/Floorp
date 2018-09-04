@@ -2109,6 +2109,8 @@ public:
     MOZ_COUNT_CTOR(nsDisplayItem);
   }
 
+  nsDisplayItem() = delete;
+
 protected:
   virtual ~nsDisplayItem() {
     MOZ_COUNT_DTOR(nsDisplayItem);
@@ -2914,8 +2916,6 @@ public:
   }
 
 protected:
-  nsDisplayItem() = delete;
-
   typedef bool (*PrefFunc)(void);
   bool ShouldUseAdvancedLayer(LayerManager* aManager, PrefFunc aFunc) const;
   bool CanUseAdvancedLayer(LayerManager* aManager) const;
@@ -3407,8 +3407,8 @@ struct nsDisplayListCollection : public nsDisplayListSet {
    * Sort all lists by content order.
    */
   void SortAllByContentOrder(nsIContent* aCommonAncestor) {
-    for (int32_t i = 0; i < 6; ++i) {
-      mLists[i].SortByContentOrder(aCommonAncestor);
+    for (auto& mList : mLists) {
+      mList.SortByContentOrder(aCommonAncestor);
     }
   }
 
@@ -3431,7 +3431,7 @@ private:
  */
 class RetainedDisplayList : public nsDisplayList {
 public:
-  RetainedDisplayList() {}
+  RetainedDisplayList() = default;
   RetainedDisplayList(RetainedDisplayList&& aOther)
   {
     AppendToTop(&aOther);
@@ -3828,43 +3828,43 @@ protected:
     if (aStyleBorder.IsBorderImageLoaded()) {
       borderBounds.Inflate(aStyleBorder.GetImageOutset());
       return borderBounds;
-    } else {
-      nsMargin border = aStyleBorder.GetComputedBorder();
-      T result;
-      if (border.top > 0) {
-        result = nsRect(borderBounds.X(), borderBounds.Y(), borderBounds.Width(), border.top);
-      }
-      if (border.right > 0) {
-        result.OrWith(nsRect(borderBounds.XMost() - border.right, borderBounds.Y(), border.right, borderBounds.Height()));
-      }
-      if (border.bottom > 0) {
-        result.OrWith(nsRect(borderBounds.X(), borderBounds.YMost() - border.bottom, borderBounds.Width(), border.bottom));
-      }
-      if (border.left > 0) {
-        result.OrWith(nsRect(borderBounds.X(), borderBounds.Y(), border.left, borderBounds.Height()));
-      }
-
-      nscoord radii[8];
-      if (mFrame->GetBorderRadii(radii)) {
-        if (border.left > 0 || border.top > 0) {
-          nsSize cornerSize(radii[mozilla::eCornerTopLeftX], radii[mozilla::eCornerTopLeftY]);
-          result.OrWith(nsRect(borderBounds.TopLeft(), cornerSize));
-        }
-        if (border.top > 0 || border.right > 0) {
-          nsSize cornerSize(radii[mozilla::eCornerTopRightX], radii[mozilla::eCornerTopRightY]);
-          result.OrWith(nsRect(borderBounds.TopRight() - nsPoint(cornerSize.width, 0), cornerSize));
-        }
-        if (border.right > 0 || border.bottom > 0) {
-          nsSize cornerSize(radii[mozilla::eCornerBottomRightX], radii[mozilla::eCornerBottomRightY]);
-          result.OrWith(nsRect(borderBounds.BottomRight() - nsPoint(cornerSize.width, cornerSize.height), cornerSize));
-        }
-        if (border.bottom > 0 || border.left > 0) {
-          nsSize cornerSize(radii[mozilla::eCornerBottomLeftX], radii[mozilla::eCornerBottomLeftY]);
-          result.OrWith(nsRect(borderBounds.BottomLeft() - nsPoint(0, cornerSize.height), cornerSize));
-        }
-      }
-      return result;
     }
+
+    nsMargin border = aStyleBorder.GetComputedBorder();
+    T result;
+    if (border.top > 0) {
+      result = nsRect(borderBounds.X(), borderBounds.Y(), borderBounds.Width(), border.top);
+    }
+    if (border.right > 0) {
+      result.OrWith(nsRect(borderBounds.XMost() - border.right, borderBounds.Y(), border.right, borderBounds.Height()));
+    }
+    if (border.bottom > 0) {
+      result.OrWith(nsRect(borderBounds.X(), borderBounds.YMost() - border.bottom, borderBounds.Width(), border.bottom));
+    }
+    if (border.left > 0) {
+      result.OrWith(nsRect(borderBounds.X(), borderBounds.Y(), border.left, borderBounds.Height()));
+    }
+
+    nscoord radii[8];
+    if (mFrame->GetBorderRadii(radii)) {
+      if (border.left > 0 || border.top > 0) {
+        nsSize cornerSize(radii[mozilla::eCornerTopLeftX], radii[mozilla::eCornerTopLeftY]);
+        result.OrWith(nsRect(borderBounds.TopLeft(), cornerSize));
+      }
+      if (border.top > 0 || border.right > 0) {
+        nsSize cornerSize(radii[mozilla::eCornerTopRightX], radii[mozilla::eCornerTopRightY]);
+        result.OrWith(nsRect(borderBounds.TopRight() - nsPoint(cornerSize.width, 0), cornerSize));
+      }
+      if (border.right > 0 || border.bottom > 0) {
+        nsSize cornerSize(radii[mozilla::eCornerBottomRightX], radii[mozilla::eCornerBottomRightY]);
+        result.OrWith(nsRect(borderBounds.BottomRight() - nsPoint(cornerSize.width, cornerSize.height), cornerSize));
+      }
+      if (border.bottom > 0 || border.left > 0) {
+        nsSize cornerSize(radii[mozilla::eCornerBottomLeftX], radii[mozilla::eCornerBottomLeftY]);
+        result.OrWith(nsRect(borderBounds.BottomLeft() - nsPoint(0, cornerSize.height), cornerSize));
+      }
+    }
+    return result;
   }
 
   nsRect mBounds;
@@ -4312,7 +4312,15 @@ class nsDisplayThemedBackground : public nsDisplayItem {
 public:
   nsDisplayThemedBackground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             const nsRect& aBackgroundRect);
-  virtual ~nsDisplayThemedBackground();
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayThemedBackground() {
+    MOZ_COUNT_DTOR(nsDisplayThemedBackground);
+  }
+#else
+  virtual ~nsDisplayThemedBackground() = default;
+#endif
+
   void Init(nsDisplayListBuilder* aBuilder);
 
   void Destroy(nsDisplayListBuilder* aBuilder) override
@@ -4760,12 +4768,12 @@ public:
 
   static bool CanCreateWebRenderCommands(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame,
-                                         nsPoint aReferencePoint);
+                                         const nsPoint& aReferencePoint);
   static void CreateInsetBoxShadowWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                                     const StackingContextHelper& aSc,
                                                     nsRegion& aVisibleRegion,
                                                     nsIFrame* aFrame,
-                                                    const nsRect aBorderRect);
+                                                    const nsRect& aBorderRect);
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
@@ -4933,6 +4941,8 @@ public:
     mBaseBuildingRect = GetBuildingRect();
     mListPtr = &mList;
   }
+
+  nsDisplayWrapList() = delete;
 
   /**
    * A custom copy-constructor that does not copy mList, as this would mutate
@@ -5114,8 +5124,6 @@ public:
   const ActiveScrolledRoot* GetFrameActiveScrolledRoot() { return mFrameActiveScrolledRoot; }
 
 protected:
-  nsDisplayWrapList() = delete;
-
   void MergeFromTrackingMergedFrames(const nsDisplayWrapList* aOther)
   {
     mBounds.UnionRect(mBounds, aOther->mBounds);
@@ -6775,9 +6783,7 @@ public:
 
   nsDisplayPerspective(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                        nsDisplayList* aList);
-  ~nsDisplayPerspective()
-  {
-  }
+  ~nsDisplayPerspective() = default;
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override
