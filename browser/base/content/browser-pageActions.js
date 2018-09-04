@@ -58,9 +58,20 @@ var BrowserPageActions = {
   _onPanelShowing() {
     this.placeLazyActionsInPanel();
     for (let action of PageActions.actionsInPanel(window)) {
+      if (action.id == "sendToDevice") {
+        this.panelNode.removeAttribute(action.getTitle());
+        action.setTitle(this.getSendToDeviceString(), window);
+      }
       let buttonNode = this.panelButtonNodeForActionID(action.id);
       action.onShowingInPanel(buttonNode);
     }
+  },
+
+  getSendToDeviceString() {
+    let tabCount = gBrowser.multiSelectedTabsCount || 1;
+    return PluralForm.get(tabCount,
+                          gNavigatorBundle.getString("pageAction.sendTabsToDevice.label"))
+                     .replace("#1", tabCount.toLocaleString());
   },
 
   placeLazyActionsInPanel() {
@@ -1023,16 +1034,12 @@ BrowserPageActions.sendToDevice = {
   },
 
   onShowingSubview(panelViewNode) {
-    let browser = gBrowser.selectedBrowser;
-    let url = browser.currentURI.spec;
-    let title = browser.contentTitle;
-
     let bodyNode = panelViewNode.querySelector(".panel-subview-body");
     let panelNode = panelViewNode.closest("panel");
 
     // This is on top because it also clears the device list between state
     // changes.
-    gSync.populateSendTabToDevicesMenu(bodyNode, url, title, (clientId, name, clientType, lastModified) => {
+    gSync.populateSendTabToDevicesMenu(bodyNode, gBrowser.selectedTab, (clientId, name, clientType, lastModified) => {
       if (!name) {
         return document.createXULElement("toolbarseparator");
       }

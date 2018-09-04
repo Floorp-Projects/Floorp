@@ -142,11 +142,10 @@ xmlns="http://www.w3.org/1999/xhtml"
                 tbattr="tabbrowser-multiple"
                 oncommand="gBrowser.replaceTabsWithWindow(TabContextMenu.contextTab);"/>
       <menuseparator id="context_sendTabToDevice_separator" class="sync-ui-item"/>
-      <menu id="context_sendTabToDevice" label="&sendTabToDevice.label;"
-            class="sync-ui-item"
-            accesskey="&sendTabToDevice.accesskey;">
+      <menu id="context_sendTabToDevice"
+            class="sync-ui-item">
         <menupopup id="context_sendTabToDevicePopupMenu"
-                   onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI.spec, TabContextMenu.contextTab.linkedBrowser.contentTitle);"/>
+                   onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab);"/>
       </menu>
       <menuseparator/>
       <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
@@ -488,7 +487,7 @@ xmlns="http://www.w3.org/1999/xhtml"
            noautofocus="true"
            copyURL-title="&pageAction.copyLink.label;"
            emailLink-title="&emailPageCmd.label;"
-           sendToDevice-title="&pageAction.sendTabToDevice.label;"
+           sendToDevice-title=""
            sendToDevice-notReadyTitle="&sendToDevice.syncNotReady.label;"
            shareURL-title="&pageAction.shareUrl.label;"
            shareMore-label="&pageAction.shareMore.label;">
