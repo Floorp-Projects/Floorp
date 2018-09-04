@@ -124,8 +124,8 @@ class DebugState
     const CodeRangeVector& codeRanges(Tier t) const { return metadata(t).codeRanges; }
     const CallSiteVector& callSites(Tier t) const { return metadata(t).callSites; }
 
-    uint32_t debugFuncToCodeRangeIndex(uint32_t funcIndex) const {
-        return metadata(Tier::Debug).debugFuncToCodeRange[funcIndex];
+    uint32_t funcToCodeRangeIndex(uint32_t funcIndex) const {
+        return metadata(Tier::Debug).funcToCodeRange[funcIndex];
     }
 
     // about:memory reporting:
