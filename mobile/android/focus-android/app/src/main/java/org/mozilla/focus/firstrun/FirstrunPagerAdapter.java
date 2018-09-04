@@ -82,6 +82,7 @@ public class FirstrunPagerAdapter extends PagerAdapter {
         if (position == pages.length - 1) {
             buttonView.setText(R.string.firstrun_close_button);
             buttonView.setId(R.id.finish);
+            buttonView.setContentDescription(buttonView.getText().toString().toLowerCase());
         } else {
             buttonView.setText(R.string.firstrun_next_button);
             buttonView.setId(R.id.next);
