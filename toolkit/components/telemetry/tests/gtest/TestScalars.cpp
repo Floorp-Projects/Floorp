@@ -10,10 +10,10 @@
 #include "nsJSUtils.h" // nsAutoJSString
 #include "nsITelemetry.h"
 #include "nsThreadUtils.h"
-#include "Telemetry.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryProcessEnums.h"
 #include "TelemetryFixture.h"
-#include "TelemetryScalar.h"
+#include "core/TelemetryScalar.h"
 #include "TelemetryTestHelpers.h"
 
 using namespace mozilla;

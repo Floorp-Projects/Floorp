@@ -19,7 +19,6 @@
 }
 
 .sidebar-panel[lwt-sidebar-brighttext] .sidebar-placesTreechildren::-moz-tree-row(selected) {
-  -moz-appearance: none;
   background-color: rgba(249,249,250,.1);
 }
 
@@ -30,7 +29,6 @@
 }
 
 .sidebar-panel[lwt-sidebar-highlight] .sidebar-placesTreechildren::-moz-tree-row(selected,focus) {
-  -moz-appearance: none;
   background-color: var(--lwt-sidebar-highlight-background-color);
 }
 

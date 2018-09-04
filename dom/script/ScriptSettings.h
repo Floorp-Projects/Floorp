@@ -12,6 +12,7 @@
 #include "MainThreadUtils.h"
 #include "nsIGlobalObject.h"
 #include "nsIPrincipal.h"
+#include "xpcpublic.h"
 
 #include "mozilla/Maybe.h"
 
@@ -383,6 +384,7 @@ private:
   friend nsIPrincipal* GetWebIDLCallerPrincipal();
 
   Maybe<DocshellEntryMonitor> mDocShellEntryMonitor;
+  Maybe<xpc::AutoScriptActivity> mScriptActivity;
   JS::AutoHideScriptedCaller mCallerOverride;
 #ifdef MOZ_GECKO_PROFILER
   AutoProfilerLabel mAutoProfilerLabel;
@@ -455,17 +457,21 @@ private:
  * Use AutoSlowOperation when native side calls many JS callbacks in a row
  * and slow script dialog should be activated if too much time is spent going
  * through those callbacks.
- * AutoSlowOperation puts a JSAutoRequest on the stack so that we don't continue
- * to reset the watchdog and CheckForInterrupt can be then used to check whether
- * JS execution should be interrupted.
+ * AutoSlowOperation puts an AutoScriptActivity on the stack so that we don't
+ * continue to reset the watchdog. CheckForInterrupt can then be used to check
+ * whether JS execution should be interrupted.
+ * This class (including CheckForInterrupt) is a no-op when used off the main
+ * thread.
  */
-class MOZ_RAII AutoSlowOperation : public dom::AutoJSAPI
+class MOZ_RAII AutoSlowOperation
 {
 public:
   explicit AutoSlowOperation(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   void CheckForInterrupt();
 private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  bool mIsMainThread;
+  Maybe<xpc::AutoScriptActivity> mScriptActivity;
 };
 
 /**

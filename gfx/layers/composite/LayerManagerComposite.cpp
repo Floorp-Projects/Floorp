@@ -24,6 +24,7 @@
 #include "Units.h"                      // for ScreenIntRect
 #include "UnitTransforms.h"             // for ViewAs
 #include "apz/src/AsyncPanZoomController.h"  // for AsyncPanZoomController
+#include "gfxEnv.h"                     // for gfxEnv
 #include "gfxPrefs.h"                   // for gfxPrefs
 #ifdef XP_MACOSX
 #include "gfxPlatformMac.h"
@@ -477,6 +478,11 @@ LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
 void
 LayerManagerComposite::UpdateAndRender()
 {
+  if (gfxEnv::SkipComposition()) {
+    mInvalidRegion.SetEmpty();
+    return;
+  }
+
   nsIntRegion invalid;
   // The results of our drawing always go directly into a pixel buffer,
   // so we don't need to pass any global transform here.

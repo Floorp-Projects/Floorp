@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* This test ensures that pressing ctrl/shift+enter bypasses the autoFilled
+/* This test ensures that pressing ctrl+enter bypasses the autoFilled
  * value, and only considers what the user typed (but not just enter).
  */
 
@@ -49,16 +49,6 @@ add_task(async function() {
                             autofilled: "example.com/",
                             modified: "www.exam.com",
                             waitForUrl: "http://www.exam.com/",
-                            keys: [["KEY_Enter", AppConstants.platform === "macosx" ?
-                                                   {metaKey: true} :
-                                                   {ctrlKey: true}]],
-                          });
-
-  await test_autocomplete({ desc: "SHIFT+ENTER on the autofilled part should bypass autofill",
-                            typed: "exam",
-                            autofilled: "example.com/",
-                            modified: "www.exam.net",
-                            waitForUrl: "http://www.exam.net/",
-                            keys: [["KEY_Enter", {shiftKey: true}]],
+                            keys: [["KEY_Enter", {ctrlKey: true}]],
                           });
 });
