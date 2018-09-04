@@ -8,8 +8,8 @@
 #define mozilla_BorderConsts_h_
 
 // thickness of dashed line relative to dotted line
-#define DOT_LENGTH 1  // square
-#define DASH_LENGTH 3 // 3 times longer than dot
+#define DOT_LENGTH  1           // square
+#define DASH_LENGTH 3           // 3 times longer than dot
 
 #define C_TL mozilla::eCornerTopLeft
 #define C_TR mozilla::eCornerTopRight

@@ -57,8 +57,7 @@ public:
     Float r;
 
     Result(const Point& aC, Float aR)
-      : C(aC)
-      , r(aR)
+     : C(aC), r(aR)
     {
       MOZ_ASSERT(aR >= 0);
     }
@@ -117,15 +116,10 @@ public:
   //                                      |         |
   //                                      |<------->|
   //                                          aRn
-  DottedCornerFinder(const Bezier& aOuterBezier,
-                     const Bezier& aInnerBezier,
+  DottedCornerFinder(const Bezier& aOuterBezier, const Bezier& aInnerBezier,
                      mozilla::Corner aCorner,
-                     Float aBorderRadiusX,
-                     Float aBorderRadiusY,
-                     const Point& aC0,
-                     Float aR0,
-                     const Point& aCn,
-                     Float aRn,
+                     Float aBorderRadiusX, Float aBorderRadiusY,
+                     const Point& aC0, Float aR0, const Point& aCn, Float aRn,
                      const Size& aCornerDim);
 
   bool HasMore(void) const;
@@ -266,8 +260,7 @@ private:
   // The maximum number of filled/unfilled circles.
   size_t mMaxCount;
 
-  enum
-  {
+  enum {
     //                      radius.width
     //                 |<----------------->|
     //                 |                   |
@@ -425,25 +418,20 @@ private:
 
   // Find radius for the given tangent point on the inner curve such that the
   // circle is also tangent to the outer curve.
-  void FindPointAndRadius(Point& C,
-                          Float& r,
-                          const Point& innerTangent,
-                          const Point& normal,
-                          Float t);
+  void FindPointAndRadius(Point& C, Float& r, const Point& innerTangent,
+                          const Point& normal, Float t);
 
   // Find next dot.
   Float FindNext(Float overlap);
 
   // Find mBestOverlap for parameters.
   void FindBestOverlap(Float aMinR,
-                       Float aMinBorderRadius,
-                       Float aMaxBorderRadius);
+                       Float aMinBorderRadius, Float aMaxBorderRadius);
 
   // Fill corner with dots with given overlap, and return the number of dots
   // and last two dots's overlap.
   bool GetCountAndLastOverlap(Float aOverlap,
-                              size_t* aCount,
-                              Float* aActualOverlap);
+                              size_t* aCount, Float* aActualOverlap);
 };
 
 } // namespace mozilla
