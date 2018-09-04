@@ -817,12 +817,4 @@ CompareUTF8toUTF16(const nsACString& aUTF8String,
 
 void AppendUCS4ToUTF16(const uint32_t aSource, nsAString& aDest);
 
-template<class T>
-inline bool
-EnsureStringLength(T& aStr, uint32_t aLen)
-{
-  aStr.SetLength(aLen);
-  return (aStr.Length() == aLen);
-}
-
 #endif // !defined(nsReadableUtils_h___)
