@@ -3,11 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMXULDescriptionElement.idl"
+#include "nsISupports.idl"
 
 [scriptable, uuid(8b67286b-bf86-4808-8a68-ecdbc7d9877b)]
-interface nsIDOMXULLabelElement : nsIDOMXULDescriptionElement {
+interface nsIDOMXULLabelElement : nsISupports {
   attribute DOMString accessKey;
   attribute DOMString control;
 };
-
