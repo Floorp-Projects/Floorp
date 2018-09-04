@@ -4,10 +4,10 @@ target: obj-x86_64-pc-linux-gnu
 # in order to have consistency across the used checkers.
 # All the clang checks used by the static-analysis tools.
 platforms:
-  - macosx64
   - linux64
-  - win64
+  - macosx64
   - win32
+  - win64
 clang_checkers:
   - name: -*
     publish: !!bool no
@@ -27,6 +27,9 @@ clang_checkers:
   - name: clang-analyzer-cplusplus.NewDeleteLeaks
   - name: clang-analyzer-deadcode.DeadStores
   - name: clang-analyzer-security.FloatLoopCounter
+  - name: clang-analyzer-security.insecureAPI.bcmp
+  - name: clang-analyzer-security.insecureAPI.bcopy
+  - name: clang-analyzer-security.insecureAPI.bzero
   - name: clang-analyzer-security.insecureAPI.getpw
   # We don't add clang-analyzer-security.insecureAPI.gets here; it's deprecated.
   - name: clang-analyzer-security.insecureAPI.mkstemp
@@ -64,10 +67,16 @@ clang_checkers:
   - name: mozilla-*
   - name: performance-faster-string-find
   - name: performance-for-range-copy
-  # Only available from clang tidy 6.0. We are currently using 5.0
-  # - name: performance-implicit-conversion-in-loop
+  - name: performance-implicit-conversion-in-loop
+  - name: performance-inefficient-algorithm
+    restricted-platforms:
+      - linux64
+      - macosx64
   - name: performance-inefficient-string-concatenation
   - name: performance-inefficient-vector-operation
+  - name: performance-move-const-arg
+  - name: performance-move-constructor-init
+  - name: performance-noexcept-move-constructor
   - name: performance-type-promotion-in-math-fn
   - name: performance-unnecessary-copy-initialization
   - name: performance-unnecessary-value-param
@@ -79,9 +88,8 @@ clang_checkers:
     publish: !!bool no
   - name: readability-redundant-string-cstr
   - name: readability-redundant-string-init
+  - name: readability-static-accessed-through-instance
   - name: readability-uniqueptr-delete-release
-# Only available from clang tidy 6.0. We are currently using 5.0
-# - name: readability-static-accessed-through-instance
 
 # Third party files from mozilla-central
 third_party: tools/rewriting/ThirdPartyPaths.txt
