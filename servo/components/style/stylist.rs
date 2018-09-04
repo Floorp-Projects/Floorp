@@ -24,11 +24,11 @@ use properties::{self, CascadeMode, ComputedValues};
 use properties::{AnimationRules, PropertyDeclarationBlock};
 use rule_cache::{RuleCache, RuleCacheConditions};
 use rule_tree::{CascadeLevel, RuleTree, ShadowCascadeOrder, StrongRuleNode, StyleSource};
-use selector_map::{PrecomputedHashMap, SelectorMap, SelectorMapEntry};
+use selector_map::{PrecomputedHashMap, PrecomputedHashSet, SelectorMap, SelectorMapEntry};
 use selector_parser::{PerPseudoElementMap, PseudoElement, SelectorImpl, SnapshotMap};
 use selectors::NthIndexCache;
 use selectors::attr::{CaseSensitivity, NamespaceConstraint};
-use selectors::bloom::{BloomFilter, NonCountingBloomFilter};
+use selectors::bloom::BloomFilter;
 use selectors::matching::{matches_selector, ElementSelectorFlags, MatchingContext, MatchingMode};
 use selectors::matching::VisitedHandlingMode;
 use selectors::parser::{AncestorHashes, Combinator, Component, Selector};
@@ -824,9 +824,6 @@ impl Stylist {
     ///
     /// layout_parent_style is the style used for some property fixups.  It's
     /// the style of the nearest ancestor with a layout box.
-    ///
-    /// is_link should be true if we're computing style for a link; that affects
-    /// how :visited handling is done.
     pub fn cascade_style_and_visited<E>(
         &self,
         element: Option<E>,
@@ -1132,8 +1129,6 @@ impl Stylist {
         let rule_hash_target = element.rule_hash_target();
 
         let matches_user_rules = rule_hash_target.matches_user_and_author_rules();
-        let matches_author_rules =
-            matches_user_rules && self.author_styles_enabled == AuthorStylesEnabled::Yes;
 
         // Normal user-agent rules.
         if let Some(map) = self.cascade_data
@@ -1198,7 +1193,11 @@ impl Stylist {
             }
         }
 
-        let mut match_document_author_rules = matches_author_rules;
+        if self.author_styles_enabled == AuthorStylesEnabled::No {
+            return;
+        }
+
+        let mut match_document_author_rules = matches_user_rules;
         let mut shadow_cascade_order = 0;
 
         // XBL / Shadow DOM rules, which are author rules too.
@@ -1207,99 +1206,102 @@ impl Stylist {
         // particular, normally document rules override ::slotted() rules, but
         // for !important it should be the other way around. So probably we need
         // to add some sort of AuthorScoped cascade level or something.
-        if matches_author_rules {
-            if let Some(shadow) = rule_hash_target.shadow_root() {
-                if let Some(map) = shadow.style_data().and_then(|data| data.host_rules(pseudo_element)) {
-                    context.with_shadow_host(Some(rule_hash_target), |context| {
-                        map.get_all_matching_rules(
-                            element,
-                            rule_hash_target,
-                            applicable_declarations,
-                            context,
-                            flags_setter,
-                            CascadeLevel::InnerShadowNormal,
-                            shadow_cascade_order,
-                        );
-                    });
-                    shadow_cascade_order += 1;
-                }
-            }
-
-            // Match slotted rules in reverse order, so that the outer slotted
-            // rules come before the inner rules (and thus have less priority).
-            let mut slots = SmallVec::<[_; 3]>::new();
-            let mut current = rule_hash_target.assigned_slot();
-            while let Some(slot) = current {
-                slots.push(slot);
-                current = slot.assigned_slot();
-            }
-
-            for slot in slots.iter().rev() {
-                let shadow = slot.containing_shadow().unwrap();
-                if let Some(map) = shadow.style_data().and_then(|data| data.slotted_rules(pseudo_element)) {
-                    context.with_shadow_host(Some(shadow.host()), |context| {
-                        map.get_all_matching_rules(
-                            element,
-                            rule_hash_target,
-                            applicable_declarations,
-                            context,
-                            flags_setter,
-                            CascadeLevel::InnerShadowNormal,
-                            shadow_cascade_order,
-                        );
-                    });
-                    shadow_cascade_order += 1;
-                }
-            }
-
-            if let Some(containing_shadow) = rule_hash_target.containing_shadow() {
-                let cascade_data = containing_shadow.style_data();
-                let host = containing_shadow.host();
-                if let Some(map) = cascade_data.and_then(|data| data.normal_rules(pseudo_element)) {
-                    context.with_shadow_host(Some(host), |context| {
-                        map.get_all_matching_rules(
-                            element,
-                            rule_hash_target,
-                            applicable_declarations,
-                            context,
-                            flags_setter,
-                            CascadeLevel::SameTreeAuthorNormal,
-                            shadow_cascade_order,
-                        );
-                    });
-                    shadow_cascade_order += 1;
-                }
-
-                // NOTE(emilio): Hack so <svg:use> matches document rules as
-                // expected.
-                //
-                // This is not a problem for invalidation and that kind of stuff
-                // because they still don't match rules based on elements
-                // outside of the shadow tree, and because the <svg:use> subtree
-                // is immutable and recreated each time the source tree changes.
-                //
-                // See: https://github.com/w3c/svgwg/issues/504
-                //
-                // Note that we always resolve URLs against the document, so we
-                // can't get into a nested shadow situation here.
-                //
-                // See: https://github.com/w3c/svgwg/issues/505
-                //
-                // FIXME(emilio, bug 1487259): We now do after bug 1483882, we
-                // should jump out of the <svg:use> shadow tree chain now.
-                //
-                // Unless the used node is cross-doc, I guess, in which case doc
-                // rules are probably ok...
-                let host_is_svg_use =
-                    host.is_svg_element() &&
-                    host.local_name() == &*local_name!("use");
-
-                match_document_author_rules = host_is_svg_use;
+        if let Some(shadow) = rule_hash_target.shadow_root() {
+            if let Some(map) = shadow.style_data().and_then(|data| data.host_rules(pseudo_element)) {
+                context.with_shadow_host(Some(rule_hash_target), |context| {
+                    map.get_all_matching_rules(
+                        element,
+                        rule_hash_target,
+                        applicable_declarations,
+                        context,
+                        flags_setter,
+                        CascadeLevel::InnerShadowNormal,
+                        shadow_cascade_order,
+                    );
+                });
+                shadow_cascade_order += 1;
             }
         }
 
-        // FIXME(emilio): This doesn't account for the author_styles_enabled
-        // stuff...
+        // Match slotted rules in reverse order, so that the outer slotted
+        // rules come before the inner rules (and thus have less priority).
+        let mut slots = SmallVec::<[_; 3]>::new();
+        let mut current = rule_hash_target.assigned_slot();
+        while let Some(slot) = current {
+            slots.push(slot);
+            current = slot.assigned_slot();
+        }
+
+        for slot in slots.iter().rev() {
+            let shadow = slot.containing_shadow().unwrap();
+            if let Some(map) = shadow.style_data().and_then(|data| data.slotted_rules(pseudo_element)) {
+                context.with_shadow_host(Some(shadow.host()), |context| {
+                    map.get_all_matching_rules(
+                        element,
+                        rule_hash_target,
+                        applicable_declarations,
+                        context,
+                        flags_setter,
+                        CascadeLevel::InnerShadowNormal,
+                        shadow_cascade_order,
+                    );
+                });
+                shadow_cascade_order += 1;
+            }
+        }
+
+        let mut current_containing_shadow = rule_hash_target.containing_shadow();
+        while let Some(containing_shadow) = current_containing_shadow {
+            let cascade_data = containing_shadow.style_data();
+            let host = containing_shadow.host();
+            if let Some(map) = cascade_data.and_then(|data| data.normal_rules(pseudo_element)) {
+                context.with_shadow_host(Some(host), |context| {
+                    map.get_all_matching_rules(
+                        element,
+                        rule_hash_target,
+                        applicable_declarations,
+                        context,
+                        flags_setter,
+                        CascadeLevel::SameTreeAuthorNormal,
+                        shadow_cascade_order,
+                    );
+                });
+                shadow_cascade_order += 1;
+            }
+
+            let host_is_svg_use_element =
+                host.is_svg_element() &&
+                host.local_name() == &*local_name!("use");
+
+            if !host_is_svg_use_element {
+                match_document_author_rules = false;
+                break;
+            }
+
+            debug_assert!(
+                cascade_data.is_none(),
+                "We allow no stylesheets in <svg:use> subtrees"
+            );
+
+            // NOTE(emilio): Hack so <svg:use> matches the rules of the
+            // enclosing tree.
+            //
+            // This is not a problem for invalidation and that kind of stuff
+            // because they still don't match rules based on elements
+            // outside of the shadow tree, and because the <svg:use>
+            // subtrees are immutable and recreated each time the source
+            // tree changes.
+            //
+            // We historically allow cross-document <svg:use> to have these
+            // rules applied, but I think that's not great. Gecko is the
+            // only engine supporting that.
+            //
+            // See https://github.com/w3c/svgwg/issues/504 for the relevant
+            // spec discussion.
+            current_containing_shadow = host.containing_shadow();
+            match_document_author_rules = current_containing_shadow.is_none();
+        }
+
         let cut_xbl_binding_inheritance =
             element.each_xbl_cascade_data(|cascade_data, quirks_mode| {
                 if let Some(map) = cascade_data.normal_rules(pseudo_element) {
@@ -1399,8 +1401,7 @@ impl Stylist {
             CaseSensitivity::CaseSensitive => {},
         }
 
-        let hash = id.get_hash();
-        self.any_applicable_rule_data(element, |data| data.mapped_ids.might_contain_hash(hash))
+        self.any_applicable_rule_data(element, |data| data.mapped_ids.contains(id))
     }
 
     /// Returns the registered `@keyframes` animation for the specified name.
@@ -1756,11 +1757,9 @@ struct StylistSelectorVisitor<'a> {
     passed_rightmost_selector: bool,
     /// The filter with all the id's getting referenced from rightmost
     /// selectors.
-    mapped_ids: &'a mut NonCountingBloomFilter,
+    mapped_ids: &'a mut PrecomputedHashSet<Atom>,
     /// The filter with the local names of attributes there are selectors for.
-    attribute_dependencies: &'a mut NonCountingBloomFilter,
-    /// Whether there's any attribute selector for the [style] attribute.
-    style_attribute_dependency: &'a mut bool,
+    attribute_dependencies: &'a mut PrecomputedHashSet<LocalName>,
     /// All the states selectors in the page reference.
     state_dependencies: &'a mut ElementState,
     /// All the document states selectors in the page reference.
@@ -1825,13 +1824,8 @@ impl<'a> SelectorVisitor for StylistSelectorVisitor<'a> {
         name: &LocalName,
         lower_name: &LocalName,
     ) -> bool {
-        if *lower_name == local_name!("style") {
-            *self.style_attribute_dependency = true;
-        } else {
-            self.attribute_dependencies.insert_hash(name.get_hash());
-            self.attribute_dependencies
-                .insert_hash(lower_name.get_hash());
-        }
+        self.attribute_dependencies.insert(name.clone());
+        self.attribute_dependencies.insert(lower_name.clone());
         true
     }
 
@@ -1857,7 +1851,7 @@ impl<'a> SelectorVisitor for StylistSelectorVisitor<'a> {
                 //
                 // NOTE(emilio): See the comment regarding on when this may
                 // break in visit_complex_selector.
-                self.mapped_ids.insert_hash(id.get_hash());
+                self.mapped_ids.insert(id.clone());
             },
             _ => {},
         }
@@ -1957,18 +1951,9 @@ pub struct CascadeData {
 
     /// The attribute local names that appear in attribute selectors.  Used
     /// to avoid taking element snapshots when an irrelevant attribute changes.
-    /// (We don't bother storing the namespace, since namespaced attributes
-    /// are rare.)
-    #[ignore_malloc_size_of = "just an array"]
-    attribute_dependencies: NonCountingBloomFilter,
-
-    /// Whether `"style"` appears in an attribute selector.  This is not common,
-    /// and by tracking this explicitly, we can avoid taking an element snapshot
-    /// in the common case of style=""` changing due to modifying
-    /// `element.style`.  (We could track this in `attribute_dependencies`, like
-    /// all other attributes, but we should probably not risk incorrectly
-    /// returning `true` for `"style"` just due to a hash collision.)
-    style_attribute_dependency: bool,
+    /// (We don't bother storing the namespace, since namespaced attributes are
+    /// rare.)
+    attribute_dependencies: PrecomputedHashSet<LocalName>,
 
     /// The element state bits that are relied on by selectors.  Like
     /// `attribute_dependencies`, this is used to avoid taking element snapshots
@@ -1984,8 +1969,7 @@ pub struct CascadeData {
     /// hence in our selector maps).  Used to determine when sharing styles is
     /// safe: we disallow style sharing for elements whose id matches this
     /// filter, and hence might be in one of our selector maps.
-    #[ignore_malloc_size_of = "just an array"]
-    mapped_ids: NonCountingBloomFilter,
+    mapped_ids: PrecomputedHashSet<Atom>,
 
     /// Selectors that require explicit cache revalidation (i.e. which depend
     /// on state that is not otherwise visible to the cache, like attributes or
@@ -2022,11 +2006,10 @@ impl CascadeData {
             host_rules: None,
             slotted_rules: None,
             invalidation_map: InvalidationMap::new(),
-            attribute_dependencies: NonCountingBloomFilter::new(),
-            style_attribute_dependency: false,
+            attribute_dependencies: PrecomputedHashSet::default(),
             state_dependencies: ElementState::empty(),
             document_state_dependencies: DocumentState::empty(),
-            mapped_ids: NonCountingBloomFilter::new(),
+            mapped_ids: PrecomputedHashSet::default(),
             selectors_for_cache_revalidation: SelectorMap::new(),
             animations: Default::default(),
             extra_data: ExtraStyleData::default(),
@@ -2091,13 +2074,9 @@ impl CascadeData {
     /// selector of some rule.
     #[inline]
     pub fn might_have_attribute_dependency(&self, local_name: &LocalName) -> bool {
-        if *local_name == local_name!("style") {
-            return self.style_attribute_dependency;
-        }
-
-        self.attribute_dependencies
-            .might_contain_hash(local_name.get_hash())
+        self.attribute_dependencies.contains(local_name)
     }
+
     #[inline]
     fn normal_rules(&self, pseudo: Option<&PseudoElement>) -> Option<&SelectorMap<Rule>> {
         self.normal_rules.rules(pseudo)
@@ -2224,7 +2203,6 @@ impl CascadeData {
                                 needs_revalidation: false,
                                 passed_rightmost_selector: false,
                                 attribute_dependencies: &mut self.attribute_dependencies,
-                                style_attribute_dependency: &mut self.style_attribute_dependency,
                                 state_dependencies: &mut self.state_dependencies,
                                 document_state_dependencies: &mut self.document_state_dependencies,
                                 mapped_ids: &mut self.mapped_ids,
@@ -2434,7 +2412,6 @@ impl CascadeData {
         self.clear_cascade_data();
         self.invalidation_map.clear();
         self.attribute_dependencies.clear();
-        self.style_attribute_dependency = false;
         self.state_dependencies = ElementState::empty();
         self.document_state_dependencies = DocumentState::empty();
         self.mapped_ids.clear();
@@ -2530,16 +2507,14 @@ impl Rule {
 
 /// A function to be able to test the revalidation stuff.
 pub fn needs_revalidation_for_testing(s: &Selector<SelectorImpl>) -> bool {
-    let mut attribute_dependencies = NonCountingBloomFilter::new();
-    let mut mapped_ids = NonCountingBloomFilter::new();
-    let mut style_attribute_dependency = false;
+    let mut attribute_dependencies = Default::default();
+    let mut mapped_ids = Default::default();
     let mut state_dependencies = ElementState::empty();
     let mut document_state_dependencies = DocumentState::empty();
     let mut visitor = StylistSelectorVisitor {
         needs_revalidation: false,
         passed_rightmost_selector: false,
         attribute_dependencies: &mut attribute_dependencies,
-        style_attribute_dependency: &mut style_attribute_dependency,
         state_dependencies: &mut state_dependencies,
         document_state_dependencies: &mut document_state_dependencies,
         mapped_ids: &mut mapped_ids,

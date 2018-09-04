@@ -1,0 +1,24 @@
+<!doctype html>
+<style>
+  #shadow {
+    fill: red;
+  }
+</style>
+<div id="host"></div>
+<script>
+  host.attachShadow({ mode: "open" }).innerHTML = `
+    <style>
+      #shadow {
+        fill: lime;
+      }
+    </style>
+    <svg width="100" height="100">
+      <defs>
+        <g id="shadow" width="100" height="100">
+          <rect width="100" height="100" />
+        </g>
+      </defs>
+      <use href="#shadow" />
+    </svg>
+  `;
+</script>

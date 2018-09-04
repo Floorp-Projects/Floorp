@@ -49,7 +49,7 @@ let extensionControlledContentIds = {
   get "websites.trackingProtectionMode"() {
     return {
       button: contentBlockingUiEnabled ?
-        "contentBlockingTrackingProtectionExtensionContentButton" :
+        "contentBlockingDisableTrackingProtectionExtension" :
         "trackingProtectionExtensionContentButton",
       section: contentBlockingUiEnabled ?
         "contentBlockingTrackingProtectionExtensionContentLabel" :

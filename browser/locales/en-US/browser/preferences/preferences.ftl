@@ -835,10 +835,12 @@ content-blocking-category-label = Choose what to block
 # "Slow" in this instance means "slow to load on the network".
 # FastBlock is a feature that blocks requests to tracking sites if they
 # have not finished loading after a certain threshold of seconds.
-content-blocking-fastblock-slow-loading-label = Slow-Loading Trackers
+content-blocking-fastblock-slow-loading-trackers-label =
+  .label = Slow-Loading Trackers
   .accesskey = S
 content-blocking-fastblock-new-description = Block just the trackers that keep pages from loading quickly.
-content-blocking-tracking-protection-all-label = All Detected Trackers
+content-blocking-tracking-protection-all-detected-trackers-label =
+  .label = All Detected Trackers
   .accesskey = T
 content-blocking-tracking-protection-new-description = Block all known trackers. (May prevent some pages from loading.)
 content-blocking-tracking-protection-option-always =
@@ -849,7 +851,8 @@ content-blocking-tracking-protection-option-private =
   .accesskey = p
 content-blocking-tracking-protection-change-block-list = Change block list
 
-content-blocking-reject-trackers-label = Third-Party Cookies
+content-blocking-third-party-cookies-label =
+  .label = Third-Party Cookies
   .accesskey = C
 content-blocking-reject-trackers-description = Block all third-party cookies or just those set by trackers.
 # This is a warning message shown next to a yellow warning icon when the Third-Party Cookies subsection

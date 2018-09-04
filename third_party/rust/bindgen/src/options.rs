@@ -71,6 +71,13 @@ where
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
+            Arg::with_name("blacklist-function")
+                .long("blacklist-function")
+                .help("Mark <function> as hidden.")
+                .value_name("function")
+                .takes_value(true)
+                .multiple(true)
+                .number_of_values(1),
             Arg::with_name("no-layout-tests")
                 .long("no-layout-tests")
                 .help("Avoid generating layout tests for any type."),
@@ -350,6 +357,12 @@ where
         }
     }
 
+    if let Some(hidden_functions) = matches.values_of("blacklist-function") {
+        for fun in hidden_functions {
+            builder = builder.blacklist_function(fun);
+        }
+    }
+
     if matches.is_present("builtins") {
         builder = builder.emit_builtins();
     }
@@ -415,15 +428,15 @@ where
     }
 
     if let Some(what_to_generate) = matches.value_of("generate") {
-        let mut config = CodegenConfig::nothing();
+        let mut config = CodegenConfig::empty();
         for what in what_to_generate.split(",") {
             match what {
-                "functions" => config.functions = true,
-                "types" => config.types = true,
-                "vars" => config.vars = true,
-                "methods" => config.methods = true,
-                "constructors" => config.constructors = true,
-                "destructors" => config.destructors = true,
+                "functions" => config.insert(CodegenConfig::FUNCTIONS),
+                "types" => config.insert(CodegenConfig::TYPES),
+                "vars" => config.insert(CodegenConfig::VARS),
+                "methods" => config.insert(CodegenConfig::METHODS),
+                "constructors" => config.insert(CodegenConfig::CONSTRUCTORS),
+                "destructors" => config.insert(CodegenConfig::DESTRUCTORS),
                 otherwise => {
                     return Err(Error::new(
                         ErrorKind::Other,

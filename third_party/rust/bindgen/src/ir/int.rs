@@ -12,6 +12,12 @@ pub enum IntKind {
     /// An `unsigned char`.
     UChar,
 
+    /// An `wchar_t`.
+    WChar {
+        /// The size of the wchar_t in bytes, which will be 2 or 4.
+        size: usize,
+    },
+
     /// A platform-dependent `char` type, with the signedness support.
     Char {
         /// Whether the char is signed for the target platform.
@@ -87,15 +93,16 @@ impl IntKind {
     pub fn is_signed(&self) -> bool {
         use self::IntKind::*;
         match *self {
+            // TODO(emilio): wchar_t can in theory be signed, but we have no way
+            // to know whether it is or not right now (unlike char, there's no
+            // WChar_S / WChar_U).
             Bool | UChar | UShort | UInt | ULong | ULongLong | U8 | U16 |
-            U32 | U64 | U128 => false,
+            WChar { .. } | U32 | U64 | U128 => false,
 
             SChar | Short | Int | Long | LongLong | I8 | I16 | I32 | I64 |
             I128 => true,
 
-            Char {
-                is_signed,
-            } => is_signed,
+            Char { is_signed } => is_signed,
 
             Custom {
                 is_signed, ..

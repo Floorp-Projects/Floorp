@@ -56,6 +56,85 @@ add_task(async function testContentBlockingToggle() {
   gBrowser.removeCurrentTab();
 });
 
+// Tests that the content blocking main category checkboxes have the correct default state.
+add_task(async function testContentBlockingMainCategory() {
+  SpecialPowers.pushPrefEnv({set: [
+    [CB_UI_PREF, true],
+  ]});
+
+  let prefs = [
+    [CB_PREF, true],
+    [FB_PREF, true],
+    [TP_PREF, false],
+    [TP_PBM_PREF, true],
+    [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
+  ];
+
+  for (let pref of prefs) {
+    switch (typeof pref[1]) {
+      case "boolean":
+        SpecialPowers.setBoolPref(pref[0], pref[1]);
+        break;
+      case "number":
+        SpecialPowers.setIntPref(pref[0], pref[1]);
+        break;
+    }
+  }
+
+  let checkboxes = [
+    "#contentBlockingFastBlockCheckbox",
+    "#contentBlockingTrackingProtectionCheckbox",
+    "#contentBlockingBlockCookiesCheckbox",
+  ];
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  let doc = gBrowser.contentDocument;
+
+  for (let selector of checkboxes) {
+    let element = doc.querySelector(selector);
+    ok(element, "checkbox " + selector + " exists");
+    is(element.getAttribute("checked"), "true",
+       "checkbox " + selector + " is checked");
+  }
+
+  // Ensure the dependent controls of the tracking protection subsection behave properly.
+  let tpCheckbox = doc.querySelector(checkboxes[1]);
+
+  let dependentControls = [
+    "#trackingProtectionMenu",
+  ];
+  let alwaysEnabledControls = [
+    "#trackingProtectionMenuDesc",
+    ".content-blocking-category-name",
+    "#changeBlockListLink",
+  ];
+
+  tpCheckbox.checked = true;
+
+  // The first time, privacy-pane-tp-ui-updated won't be dispatched since the
+  // assignment above is a no-op.
+
+  // Ensure the dependent controls are enabled
+  checkControlStateWorker(doc, dependentControls, true);
+  checkControlStateWorker(doc, alwaysEnabledControls, true);
+
+  let promise = TestUtils.topicObserved("privacy-pane-tp-ui-updated");
+  EventUtils.synthesizeMouseAtCenter(tpCheckbox, {}, doc.defaultView);
+
+  await promise;
+  ok(!tpCheckbox.checked, "The checkbox should now be unchecked");
+
+  // Ensure the dependent controls are disabled
+  checkControlStateWorker(doc, dependentControls, false);
+  checkControlStateWorker(doc, alwaysEnabledControls, true);
+
+  gBrowser.removeCurrentTab();
+
+  for (let pref of prefs) {
+    SpecialPowers.clearUserPref(pref[0]);
+  }
+});
+
 // Tests that the content blocking "Restore Defaults" button does what it's supposed to.
 add_task(async function testContentBlockingRestoreDefaults() {
   SpecialPowers.pushPrefEnv({set: [
@@ -139,6 +218,22 @@ add_task(async function testContentBlockingRestoreDefaultsSkipExtensionControlle
   await extension.startup();
 
   await TestUtils.waitForCondition(() => Services.prefs.prefHasUserValue(TP_PREF));
+
+  let dependentControls = [
+    ".fast-block-ui .content-blocking-checkbox",
+    ".reject-trackers-ui .content-blocking-checkbox",
+    "#content-blocking-categories-label",
+    "#changeBlockListLink",
+    "#contentBlockingChangeCookieSettings",
+    "#blockCookiesCB, #blockCookiesCB > radio",
+  ];
+  let alwaysDisabledControls = [
+    ".tracking-protection-ui .content-blocking-checkbox",
+    "#trackingProtectionMenu",
+    "[control=trackingProtectionMenu]",
+  ];
+
+  await doDependentControlChecks(dependentControls, alwaysDisabledControls);
 
   await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
   let doc = gBrowser.contentDocument;
@@ -231,10 +326,8 @@ add_task(async function testContentBlockingDependentControls() {
   ]});
 
   let dependentControls = [
-    "#content-blocking-categories-label",
     ".content-blocking-checkbox",
-    ".content-blocking-icon",
-    ".content-blocking-category-name",
+    "#content-blocking-categories-label",
     "#changeBlockListLink",
     "#contentBlockingChangeCookieSettings",
   ];
@@ -255,10 +348,8 @@ add_task(async function testContentBlockingDependentControls() {
   ]});
 
   dependentControls = [
-    "#content-blocking-categories-label",
     ".content-blocking-checkbox",
-    ".content-blocking-icon",
-    ".content-blocking-category-name",
+    "#content-blocking-categories-label",
     "#changeBlockListLink",
     "#contentBlockingChangeCookieSettings",
     "#blockCookiesCB, #blockCookiesCB > radio",
@@ -281,16 +372,13 @@ add_task(async function testContentBlockingDependentTPControls() {
 
   let dependentControls = [
     "#content-blocking-categories-label",
-    ".content-blocking-checkbox",
-    ".content-blocking-icon",
-    ".content-blocking-category-name",
+    "[control=trackingProtectionMenu]",
     "#changeBlockListLink",
     "#contentBlockingChangeCookieSettings",
     "#blockCookiesCB, #blockCookiesCB > radio",
   ];
   let alwaysDisabledControls = [
     "#trackingProtectionMenu",
-    "[control=trackingProtectionMenu]",
   ];
 
   await doDependentControlChecks(dependentControls, alwaysDisabledControls);
@@ -328,8 +416,6 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
       "#contentBlockingChangeCookieSettings",
     ];
     let alwaysDisabledControls = [
-      ".reject-trackers-checkbox",
-      ".reject-trackers-icon",
       "[control=blockCookiesCB]",
       "#blockCookiesCBDeck",
       "#blockCookiesCB, #blockCookiesCB > radio",
@@ -355,8 +441,6 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
     let dependentControls = [
       "#content-blocking-categories-label",
       ".content-blocking-checkbox",
-      ".content-blocking-icon",
-      ".content-blocking-category-name",
       "#trackingProtectionMenu",
       "[control=trackingProtectionMenu]",
       "#changeBlockListLink",
@@ -388,8 +472,6 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
     let dependentControls = [
       "#content-blocking-categories-label",
       ".content-blocking-checkbox",
-      ".content-blocking-icon",
-      ".content-blocking-category-name",
       "#trackingProtectionMenu",
       "[control=trackingProtectionMenu]",
       "#changeBlockListLink",

@@ -146,6 +146,8 @@ SourceSurfaceD2D1::DrawTargetWillChange()
 
   DrawTargetD2D1::mVRAMUsageSS += mSize.width * mSize.height * BytesPerPixel(mFormat);
 
+  // Ensure the object stays alive for the duration of MarkIndependent.
+  RefPtr<SourceSurfaceD2D1> deathGrip = this;
   // We now no longer depend on the source surface content remaining the same.
   MarkIndependent();
 }

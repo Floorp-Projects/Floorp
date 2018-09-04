@@ -4,4 +4,9 @@
 
 .debug-target-list {
   margin-inline-start: 60px;
+  overflow: hidden;
+}
+
+.debug-target-list--collapsed {
+  max-height: 0;
 }

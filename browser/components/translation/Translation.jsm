@@ -82,16 +82,16 @@ var Translation = {
    * The list of translation engines and their attributions.
    */
   supportedEngines: {
-    "bing": "http://aka.ms/MicrosoftTranslatorAttribution",
-    "yandex": "http://translate.yandex.com/",
+    "Google": "",
+    "Bing": "http://aka.ms/MicrosoftTranslatorAttribution",
+    "Yandex": "http://translate.yandex.com/",
   },
 
   /**
-   * Fallback engine (currently Bing Translator) if the preferences seem
-   * confusing.
+   * Fallback engine (currently Google) if the preferences seem confusing.
    */
   get defaultEngine() {
-    return this.supportedEngines.keys[0];
+    return Object.keys(this.supportedEngines)[0];
   },
 
   /**

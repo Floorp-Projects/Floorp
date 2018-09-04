@@ -204,6 +204,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveDefault<'ctx> {
             TypeKind::Function(..) |
             TypeKind::Int(..) |
             TypeKind::Float(..) |
+            TypeKind::Vector(..) |
             TypeKind::Complex(..) => {
                 trace!("    simple type that can always derive Default");
                 ConstrainResult::Same

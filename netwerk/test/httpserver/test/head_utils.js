@@ -11,6 +11,7 @@ load(_HTTPD_JS_PATH.path);
 // if these tests fail, we'll want the debug output
 DEBUG = true;
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 /**

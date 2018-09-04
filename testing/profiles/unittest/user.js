@@ -63,7 +63,7 @@ user_pref("browser.tabs.remote.autostart", false);
 // Make sure Translation won't hit the network.
 user_pref("browser.translation.bing.authURL", "http://{server}/browser/browser/components/translation/test/bing.sjs");
 user_pref("browser.translation.bing.translateArrayURL", "http://{server}/browser/browser/components/translation/test/bing.sjs");
-user_pref("browser.translation.engine", "bing");
+user_pref("browser.translation.engine", "Bing");
 user_pref("browser.translation.yandex.translateURLOverride", "http://{server}/browser/browser/components/translation/test/yandex.sjs");
 user_pref("browser.ui.layout.tablet", 0); // force tablet UI off
 // Ensure UITour won't hit the network

@@ -1233,6 +1233,9 @@ class AstModule : public AstNode
     NameVector           funcImportNames_;
     AstResizableVector   tables_;
     AstResizableVector   memories_;
+#ifdef ENABLE_WASM_GC
+    uint32_t             gcFeatureOptIn_;
+#endif
     ExportVector         exports_;
     Maybe<AstStartFunc>  startFunc_;
     FuncVector           funcs_;
@@ -1251,6 +1254,9 @@ class AstModule : public AstNode
         funcImportNames_(lifo),
         tables_(lifo),
         memories_(lifo),
+#ifdef ENABLE_WASM_GC
+        gcFeatureOptIn_(0),
+#endif
         exports_(lifo),
         funcs_(lifo),
         dataSegments_(lifo),
@@ -1267,6 +1273,15 @@ class AstModule : public AstNode
     const AstResizableVector& memories() const {
         return memories_;
     }
+#ifdef ENABLE_WASM_GC
+    bool addGcFeatureOptIn(uint32_t version) {
+        gcFeatureOptIn_ = version;
+        return true;
+    }
+    uint32_t gcFeatureOptIn() const {
+        return gcFeatureOptIn_;
+    }
+#endif
     bool addTable(AstName name, const Limits& table) {
         return tables_.append(AstResizable(table, false, name));
     }

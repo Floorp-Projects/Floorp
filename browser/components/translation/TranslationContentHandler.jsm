@@ -64,9 +64,14 @@ TranslationContentHandler.prototype = {
         !this.global.content)
       return;
 
-    let url = aRequest.name;
-    if (!url.startsWith("http://") && !url.startsWith("https://"))
+    try {
+      let url = aRequest.name;
+      if (!url.startsWith("http://") && !url.startsWith("https://"))
+        return;
+    } catch (e) {
+      // nsIRequest.name throws NS_ERROR_NOT_IMPLEMENTED for view-source: tabs.
       return;
+    }
 
     let content = this.global.content;
     if (content.detectedLanguage)
@@ -120,19 +125,12 @@ TranslationContentHandler.prototype = {
         let translationDocument = this.global.content.translationDocument ||
                                   new TranslationDocument(this.global.content.document);
 
-        let preferredEngine = Services.prefs.getCharPref("browser.translation.engine");
-        let translator = null;
-        if (preferredEngine == "yandex") {
-          ChromeUtils.import("resource:///modules/translation/YandexTranslator.jsm");
-          translator = new YandexTranslator(translationDocument,
-                                            msg.data.from,
-                                            msg.data.to);
-        } else {
-          ChromeUtils.import("resource:///modules/translation/BingTranslator.jsm");
-          translator = new BingTranslator(translationDocument,
-                                          msg.data.from,
-                                          msg.data.to);
-        }
+        let engine = Services.prefs.getCharPref("browser.translation.engine");
+        let importScope =
+          ChromeUtils.import(`resource:///modules/translation/${engine}Translator.jsm`, {});
+        let translator = new importScope[engine + "Translator"](translationDocument,
+                                                                msg.data.from,
+                                                                msg.data.to);
 
         this.global.content.translationDocument = translationDocument;
         translationDocument.translatedFrom = msg.data.from;

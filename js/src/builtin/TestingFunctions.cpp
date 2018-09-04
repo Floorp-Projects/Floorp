@@ -1591,6 +1591,7 @@ RepresentativeStringArray(JSContext* cx, unsigned argc, Value* vp)
 }
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+
 static bool
 OOMThreadTypes(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -1690,64 +1691,45 @@ CountCompartments(JSContext* cx)
     return count;
 }
 
-static bool
-OOMTest(JSContext* cx, unsigned argc, Value* vp)
+// Iterative failure testing: test a function by simulating failures at indexed
+// locations throughout the normal execution path and checking that the
+// resulting state of the environment is consistent with the error result.
+//
+// For example, trigger OOM at every allocation point and test that the function
+// either recovers and succeeds or raises an exception and fails.
+
+struct MOZ_STACK_CLASS IterativeFailureTestParams
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    explicit IterativeFailureTestParams(JSContext* cx)
+      : testFunction(cx)
+    {}
 
-    if (args.length() < 1 || args.length() > 2) {
-        JS_ReportErrorASCII(cx, "oomTest() takes between 1 and 2 arguments.");
-        return false;
-    }
+    RootedFunction testFunction;
+    unsigned threadStart = 0;
+    unsigned threadEnd = 0;
+    bool expectExceptionOnFailure = false;
+    bool verbose = false;
+};
 
-    if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
-        JS_ReportErrorASCII(cx, "The first argument to oomTest() must be a function.");
-        return false;
-    }
+struct IterativeFailureSimulator
+{
+    virtual void setup(JSContext* cx) {}
+    virtual void teardown(JSContext* cx) {}
+    virtual void startSimulating(unsigned iteration, unsigned thread) = 0;
+    virtual bool stopSimulating() = 0;
+    virtual void cleanup(JSContext* cx) {}
+};
 
-    if (args.length() == 2 && !args[1].isBoolean()) {
-        JS_ReportErrorASCII(cx, "The optional second argument to oomTest() must be a boolean.");
-        return false;
-    }
-
-    if (!CheckCanSimulateOOM(cx))
-        return false;
-
-    bool expectExceptionOnFailure = true;
-    if (args.length() == 2)
-        expectExceptionOnFailure = args[1].toBoolean();
-
-    // There are some places where we do fail without raising an exception, so
-    // we can't expose this to the fuzzers by default.
-    if (fuzzingSafe)
-        expectExceptionOnFailure = false;
-
-    if (disableOOMFunctions) {
-        args.rval().setUndefined();
+bool
+RunIterativeFailureTest(JSContext* cx, const IterativeFailureTestParams& params,
+                        IterativeFailureSimulator& simulator)
+{
+    if (disableOOMFunctions)
         return true;
-    }
 
-    RootedFunction function(cx, &args[0].toObject().as<JSFunction>());
-
-    bool verbose = EnvVarIsDefined("OOM_VERBOSE");
-
-    unsigned threadStart = oom::FirstThreadTypeToTest;
-    unsigned threadEnd = oom::LastThreadTypeToTest;
-
-    // Test a single thread type if specified by the OOM_THREAD environment variable.
-    int threadOption = 0;
-    if (EnvVarAsInt("OOM_THREAD", &threadOption)) {
-        if (threadOption < oom::FirstThreadTypeToTest || threadOption > oom::LastThreadTypeToTest) {
-            JS_ReportErrorASCII(cx, "OOM_THREAD value out of range.");
-            return false;
-        }
-
-        threadStart = threadOption;
-        threadEnd = threadOption + 1;
-    }
-
+    // Disallow nested tests.
     if (cx->runningOOMTest) {
-        JS_ReportErrorASCII(cx, "Nested call to oomTest() is not allowed.");
+        JS_ReportErrorASCII(cx, "Nested call to iterative failure test is not allowed.");
         return false;
     }
     cx->runningOOMTest = true;
@@ -1755,33 +1737,34 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(!cx->isExceptionPending());
     cx->runtime()->hadOutOfMemory = false;
 
-    size_t compartmentCount = CountCompartments(cx);
-
 #ifdef JS_GC_ZEAL
     JS_SetGCZeal(cx, 0, JS_DEFAULT_ZEAL_FREQ);
 #endif
 
-    for (unsigned thread = threadStart; thread < threadEnd; thread++) {
-        if (verbose)
+    size_t compartmentCount = CountCompartments(cx);
+
+    simulator.setup(cx);
+
+    for (unsigned thread = params.threadStart; thread < params.threadEnd; thread++) {
+        if (params.verbose)
             fprintf(stderr, "thread %d\n", thread);
 
-        unsigned allocation = 1;
-        bool handledOOM;
+        unsigned iteration = 1;
+        bool failureWasSimulated;
         do {
-            if (verbose)
-                fprintf(stderr, "  allocation %d\n", allocation);
+            if (params.verbose)
+                fprintf(stderr, "  iteration %d\n", iteration);
 
             MOZ_ASSERT(!cx->isExceptionPending());
             MOZ_ASSERT(!cx->runtime()->hadOutOfMemory);
 
-            js::oom::SimulateOOMAfter(allocation, thread, false);
+            simulator.startSimulating(iteration, thread);
 
             RootedValue result(cx);
-            bool ok = JS_CallFunction(cx, cx->global(), function,
+            bool ok = JS_CallFunction(cx, cx->global(), params.testFunction,
                                       HandleValueArray::empty(), &result);
 
-            handledOOM = js::oom::HadSimulatedOOM();
-            js::oom::ResetSimulatedOOM();
+            failureWasSimulated = simulator.stopSimulating();
 
             MOZ_ASSERT_IF(ok, !cx->isExceptionPending());
 
@@ -1789,19 +1772,19 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
                 MOZ_ASSERT(!cx->isExceptionPending(),
                            "Thunk execution succeeded but an exception was raised - "
                            "missing error check?");
-            } else if (expectExceptionOnFailure) {
+            } else if (params.expectExceptionOnFailure) {
                 MOZ_ASSERT(cx->isExceptionPending(),
                            "Thunk execution failed but no exception was raised - "
                            "missing call to js::ReportOutOfMemory()?");
             }
 
             // Note that it is possible that the function throws an exception
-            // unconnected to OOM, in which case we ignore it. More correct
-            // would be to have the caller pass some kind of exception
-            // specification and to check the exception against it.
+            // unconnected to the simulated failure, in which case we ignore
+            // it. More correct would be to have the caller pass some kind of
+            // exception specification and to check the exception against it.
 
             cx->clearPendingException();
-            cx->runtime()->hadOutOfMemory = false;
+            simulator.cleanup(cx);
 
             // Some tests create a new compartment or zone on every
             // iteration. Our GC is triggered by GC allocations and not by
@@ -1823,292 +1806,179 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
             }
 #endif
 
-            allocation++;
-        } while (handledOOM);
+            iteration++;
+        } while (failureWasSimulated);
 
-        if (verbose) {
-            fprintf(stderr, "  finished after %d allocations\n", allocation - 2);
-        }
+        if (params.verbose)
+            fprintf(stderr, "  finished after %d iterations\n", iteration - 2);
     }
 
+    simulator.teardown(cx);
+
     cx->runningOOMTest = false;
+    return true;
+}
+
+bool
+ParseIterativeFailureTestParams(JSContext* cx, const CallArgs& args,
+                                IterativeFailureTestParams* params)
+{
+    MOZ_ASSERT(params);
+
+    if (args.length() < 1 || args.length() > 2) {
+        JS_ReportErrorASCII(cx, "function takes between 1 and 2 arguments.");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+        JS_ReportErrorASCII(cx, "The first argument must be the function to test.");
+        return false;
+    }
+    params->testFunction = &args[0].toObject().as<JSFunction>();
+
+    // There are some places where we do fail without raising an exception, so
+    // we can't expose this to the fuzzers by default.
+    params->expectExceptionOnFailure = !fuzzingSafe;
+    if (args.length() == 2) {
+        if (!args[1].isBoolean()) {
+            JS_ReportErrorASCII(cx, "The optional second argument must be a boolean.");
+            return false;
+        }
+        params->expectExceptionOnFailure = args[1].toBoolean();
+    }
+
+    // Test all threads by default.
+    params->threadStart = oom::FirstThreadTypeToTest;
+    params->threadEnd = oom::LastThreadTypeToTest;
+
+    // Test a single thread type if specified by the OOM_THREAD environment variable.
+    int threadOption = 0;
+    if (EnvVarAsInt("OOM_THREAD", &threadOption)) {
+        if (threadOption < oom::FirstThreadTypeToTest || threadOption > oom::LastThreadTypeToTest) {
+            JS_ReportErrorASCII(cx, "OOM_THREAD value out of range.");
+            return false;
+        }
+
+        params->threadStart = threadOption;
+        params->threadEnd = threadOption + 1;
+    }
+
+    params->verbose = EnvVarIsDefined("OOM_VERBOSE");
+
+    return true;
+}
+
+struct OOMSimulator : public IterativeFailureSimulator
+{
+    void startSimulating(unsigned i, unsigned thread) override {
+        js::oom::SimulateOOMAfter(i, thread, false);
+    }
+
+    bool stopSimulating() override {
+        bool handledOOM = js::oom::HadSimulatedOOM();
+        js::oom::ResetSimulatedOOM();
+        return handledOOM;
+    }
+
+    void cleanup(JSContext* cx) override {
+        cx->runtime()->hadOutOfMemory = false;
+    }
+};
+
+static bool
+OOMTest(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    IterativeFailureTestParams params(cx);
+    if (!ParseIterativeFailureTestParams(cx, args, &params))
+        return false;
+
+    OOMSimulator simulator;
+    if (!RunIterativeFailureTest(cx, params, simulator))
+        return false;
+
     args.rval().setUndefined();
     return true;
 }
+
+struct StackOOMSimulator : public IterativeFailureSimulator
+{
+    void startSimulating(unsigned i, unsigned thread) override {
+        js::oom::SimulateStackOOMAfter(i, thread, false);
+    }
+
+    bool stopSimulating() override {
+        bool handledOOM = js::oom::HadSimulatedStackOOM();
+        js::oom::ResetSimulatedStackOOM();
+        return handledOOM;
+    }
+};
 
 static bool
 StackTest(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (args.length() < 1 || args.length() > 2) {
-        JS_ReportErrorASCII(cx, "stackTest() takes between 1 and 2 arguments.");
+    IterativeFailureTestParams params(cx);
+    if (!ParseIterativeFailureTestParams(cx, args, &params))
         return false;
-    }
 
-    if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
-        JS_ReportErrorASCII(cx, "The first argument to stackTest() must be a function.");
+    StackOOMSimulator simulator;
+    if (!RunIterativeFailureTest(cx, params, simulator))
         return false;
-    }
 
-    if (args.length() == 2 && !args[1].isBoolean()) {
-        JS_ReportErrorASCII(cx, "The optional second argument to stackTest() must be a boolean.");
-        return false;
-    }
-
-    bool expectExceptionOnFailure = true;
-    if (args.length() == 2)
-        expectExceptionOnFailure = args[1].toBoolean();
-
-    // There are some places where we do fail without raising an exception, so
-    // we can't expose this to the fuzzers by default.
-    if (fuzzingSafe)
-        expectExceptionOnFailure = false;
-
-    if (disableOOMFunctions) {
-        args.rval().setUndefined();
-        return true;
-    }
-
-    RootedFunction function(cx, &args[0].toObject().as<JSFunction>());
-
-    bool verbose = EnvVarIsDefined("OOM_VERBOSE");
-
-    unsigned threadStart = oom::FirstThreadTypeToTest;
-    unsigned threadEnd = oom::LastThreadTypeToTest;
-
-    // Test a single thread type if specified by the OOM_THREAD environment variable.
-    int threadOption = 0;
-    if (EnvVarAsInt("OOM_THREAD", &threadOption)) {
-        if (threadOption < oom::FirstThreadTypeToTest || threadOption > oom::LastThreadTypeToTest) {
-            JS_ReportErrorASCII(cx, "OOM_THREAD value out of range.");
-            return false;
-        }
-
-        threadStart = threadOption;
-        threadEnd = threadOption + 1;
-    }
-
-    if (cx->runningOOMTest) {
-        JS_ReportErrorASCII(cx, "Nested call to oomTest() or stackTest() is not allowed.");
-        return false;
-    }
-    cx->runningOOMTest = true;
-
-    MOZ_ASSERT(!cx->isExceptionPending());
-
-    size_t compartmentCount = CountCompartments(cx);
-
-#ifdef JS_GC_ZEAL
-    JS_SetGCZeal(cx, 0, JS_DEFAULT_ZEAL_FREQ);
-#endif
-
-    for (unsigned thread = threadStart; thread < threadEnd; thread++) {
-        if (verbose)
-            fprintf(stderr, "thread %d\n", thread);
-
-        unsigned check = 1;
-        bool handledOOM;
-        do {
-            if (verbose)
-                fprintf(stderr, "  check %d\n", check);
-
-            MOZ_ASSERT(!cx->isExceptionPending());
-
-            js::oom::SimulateStackOOMAfter(check, thread, false);
-
-            RootedValue result(cx);
-            bool ok = JS_CallFunction(cx, cx->global(), function,
-                                      HandleValueArray::empty(), &result);
-
-            handledOOM = js::oom::HadSimulatedStackOOM();
-            js::oom::ResetSimulatedStackOOM();
-
-            MOZ_ASSERT_IF(ok, !cx->isExceptionPending());
-
-            if (ok) {
-                MOZ_ASSERT(!cx->isExceptionPending(),
-                           "Thunk execution succeeded but an exception was raised - "
-                           "missing error check?");
-            } else if (expectExceptionOnFailure) {
-                MOZ_ASSERT(cx->isExceptionPending(),
-                           "Thunk execution failed but no exception was raised - "
-                           "missing call to js::ReportOutOfMemory()?");
-            }
-
-            // Note that it is possible that the function throws an exception
-            // unconnected to OOM, in which case we ignore it. More correct
-            // would be to have the caller pass some kind of exception
-            // specification and to check the exception against it.
-
-            cx->clearPendingException();
-
-            // Some tests create a new compartment or zone on every
-            // iteration. Our GC is triggered by GC allocations and not by
-            // number of compartments or zones, so these won't normally get
-            // cleaned up. The check here stops some tests running out of
-            // memory.
-            if (CountCompartments(cx) > compartmentCount + 100) {
-                JS_GC(cx);
-                compartmentCount = CountCompartments(cx);
-            }
-
-#ifdef JS_TRACE_LOGGING
-            // Reset the TraceLogger state if enabled.
-            TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-            if (logger->enabled()) {
-                while (logger->enabled())
-                    logger->disable();
-                logger->enable(cx);
-            }
-#endif
-
-            check++;
-        } while (handledOOM);
-
-        if (verbose) {
-            fprintf(stderr, "  finished after %d checks\n", check - 2);
-        }
-    }
-
-    cx->runningOOMTest = false;
     args.rval().setUndefined();
     return true;
 }
 
-static bool
-FailingInterruptCallback(JSContext* cx)
+struct FailingIterruptSimulator : public IterativeFailureSimulator
 {
-    return false;
-}
+    JSInterruptCallback* prevEnd = nullptr;
+
+    static bool
+    failingInterruptCallback(JSContext* cx) {
+        return false;
+    }
+
+    void setup(JSContext* cx) override {
+        prevEnd = cx->interruptCallbacks().end();
+        JS_AddInterruptCallback(cx, failingInterruptCallback);
+    }
+
+    void teardown(JSContext* cx) override {
+        cx->interruptCallbacks().erase(prevEnd, cx->interruptCallbacks().end());
+    }
+
+    void startSimulating(unsigned i, unsigned thread) override {
+        js::oom::SimulateInterruptAfter(i, thread, false);
+    }
+
+    bool stopSimulating() override {
+        bool handledInterrupt = js::oom::HadSimulatedInterrupt();
+        js::oom::ResetSimulatedInterrupt();
+        return handledInterrupt;
+    }
+};
 
 static bool
 InterruptTest(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (args.length() < 1 || args.length() > 2) {
-        JS_ReportErrorASCII(cx, "interruptTest() takes exactly 1 argument.");
+    IterativeFailureTestParams params(cx);
+    if (!ParseIterativeFailureTestParams(cx, args, &params))
         return false;
-    }
 
-    if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
-        JS_ReportErrorASCII(cx, "The argument to interruptTest() must be a function.");
+    FailingIterruptSimulator simulator;
+    if (!RunIterativeFailureTest(cx, params, simulator))
         return false;
-    }
 
-    if (disableOOMFunctions) {
-        args.rval().setUndefined();
-        return true;
-    }
-
-    RootedFunction function(cx, &args[0].toObject().as<JSFunction>());
-
-    bool verbose = EnvVarIsDefined("OOM_VERBOSE");
-
-    unsigned threadStart = oom::FirstThreadTypeToTest;
-    unsigned threadEnd = oom::LastThreadTypeToTest;
-
-    // Test a single thread type if specified by the OOM_THREAD environment variable.
-    int threadOption = 0;
-    if (EnvVarAsInt("OOM_THREAD", &threadOption)) {
-        if (threadOption < oom::FirstThreadTypeToTest || threadOption > oom::LastThreadTypeToTest) {
-            JS_ReportErrorASCII(cx, "OOM_THREAD value out of range.");
-            return false;
-        }
-
-        threadStart = threadOption;
-        threadEnd = threadOption + 1;
-    }
-
-    if (cx->runningOOMTest) {
-        JS_ReportErrorASCII(cx, "Nested call to oomTest(), stackTest() or interruptTest() is not allowed.");
-        return false;
-    }
-    cx->runningOOMTest = true;
-
-    MOZ_ASSERT(!cx->isExceptionPending());
-
-    size_t compartmentCount = CountCompartments(cx);
-
-#ifdef JS_GC_ZEAL
-    JS_SetGCZeal(cx, 0, JS_DEFAULT_ZEAL_FREQ);
-#endif
-
-    JSInterruptCallback *prevEnd = cx->interruptCallbacks().end();
-    JS_AddInterruptCallback(cx, FailingInterruptCallback);
-
-    for (unsigned thread = threadStart; thread < threadEnd; thread++) {
-        if (verbose)
-            fprintf(stderr, "thread %d\n", thread);
-
-        unsigned check = 1;
-        bool handledInterrupt;
-        do {
-            if (verbose)
-                fprintf(stderr, "  check %d\n", check);
-
-            MOZ_ASSERT(!cx->isExceptionPending());
-
-            js::oom::SimulateInterruptAfter(check, thread, false);
-
-            RootedValue result(cx);
-            bool ok = JS_CallFunction(cx, cx->global(), function,
-                                      HandleValueArray::empty(), &result);
-
-            handledInterrupt = js::oom::HadSimulatedInterrupt();
-            js::oom::ResetSimulatedInterrupt();
-
-            MOZ_ASSERT_IF(ok, !cx->isExceptionPending());
-
-            if (ok) {
-                MOZ_ASSERT(!cx->isExceptionPending(),
-                           "Thunk execution succeeded but an exception was raised - "
-                           "missing error check?");
-            }
-
-            // Note that it is possible that the function throws an exception
-            // unconnected to OOM, in which case we ignore it. More correct
-            // would be to have the caller pass some kind of exception
-            // specification and to check the exception against it.
-
-            cx->clearPendingException();
-
-            // Some tests create a new compartment or zone on every
-            // iteration. Our GC is triggered by GC allocations and not by
-            // number of compartments or zones, so these won't normally get
-            // cleaned up. The check here stops some tests running out of
-            // memory.
-            if (CountCompartments(cx) > compartmentCount + 100) {
-                JS_GC(cx);
-                compartmentCount = CountCompartments(cx);
-            }
-
-#ifdef JS_TRACE_LOGGING
-            // Reset the TraceLogger state if enabled.
-            TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-            if (logger->enabled()) {
-                while (logger->enabled())
-                    logger->disable();
-                logger->enable(cx);
-            }
-#endif
-
-            check++;
-        } while (handledInterrupt);
-
-        if (verbose) {
-            fprintf(stderr, "  finished after %d checks\n", check - 2);
-        }
-    }
-
-    // Clear any interrupt callbacks we added within this function
-    cx->interruptCallbacks().erase(prevEnd, cx->interruptCallbacks().end());
-    cx->runningOOMTest = false;
     args.rval().setUndefined();
     return true;
 }
-#endif
+
+#endif // defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 
 static bool
 SettlePromiseNow(JSContext* cx, unsigned argc, Value* vp)
@@ -5420,6 +5290,7 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  types and character encodings."),
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+
     JS_FN_HELP("oomThreadTypes", OOMThreadTypes, 0, 0,
 "oomThreadTypes()",
 "  Get the number of thread types that can be used as an argument for\n"
@@ -5460,7 +5331,8 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("interruptTest", InterruptTest, 0, 0,
 "interruptTest(function)",
 "  This function simulates interrupts similar to how oomTest simulates OOM conditions."),
-#endif
+
+#endif // defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 
     JS_FN_HELP("newRope", NewRope, 3, 0,
 "newRope(left, right[, options])",

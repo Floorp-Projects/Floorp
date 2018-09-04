@@ -293,7 +293,7 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   clipState.ClipContentDescendants(bounds);
 
   aLists.Content()->AppendToTop(
-    MakeDisplayItem<nsDisplayRemote>(aBuilder, aFrame, this));
+    MakeDisplayItem<nsDisplayRemote>(aBuilder, aFrame));
 }
 
 void
@@ -344,10 +344,8 @@ RenderFrameParent::EnsureLayersConnected(CompositorOptions* aCompositorOptions)
 } // namespace mozilla
 
 nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
-                                 nsSubDocumentFrame* aFrame,
-                                 RenderFrameParent* aRemoteFrame)
+                                 nsSubDocumentFrame* aFrame)
   : nsDisplayItem(aBuilder, aFrame)
-  , mRemoteFrame(aRemoteFrame)
   , mEventRegionsOverride(EventRegionsOverride::NoOverride)
 {
   bool frameIsPointerEventsNone =
@@ -361,12 +359,24 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
   }
 }
 
+bool
+nsDisplayRemote::HasDeletedFrame() const
+{
+  // RenderFrameParent might change without invalidating nsSubDocumentFrame.
+  return !GetRenderFrameParent() || nsDisplayItem::HasDeletedFrame();
+}
+
 already_AddRefed<Layer>
 nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager,
                             const ContainerLayerParameters& aContainerParameters)
 {
-  RefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, this, aContainerParameters);
+  MOZ_ASSERT(GetRenderFrameParent());
+
+  RefPtr<Layer> layer =
+    GetRenderFrameParent()->BuildLayer(aBuilder, mFrame, aManager,
+                                       this, aContainerParameters);
+
   if (layer && layer->AsRefLayer()) {
     layer->AsRefLayer()->SetEventRegionsOverride(mEventRegionsOverride);
   }
@@ -409,5 +419,12 @@ nsDisplayRemote::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
 LayersId
 nsDisplayRemote::GetRemoteLayersId() const
 {
-  return mRemoteFrame->GetLayersId();
+  MOZ_ASSERT(GetRenderFrameParent());
+  return GetRenderFrameParent()->GetLayersId();
+}
+
+mozilla::layout::RenderFrameParent*
+nsDisplayRemote::GetRenderFrameParent() const
+{
+  return static_cast<nsSubDocumentFrame*>(Frame())->GetRenderFrameParent();
 }

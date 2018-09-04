@@ -23,6 +23,7 @@ import com.leanplum.annotations.Parser;
 import com.leanplum.callbacks.VariablesChangedCallback;
 import com.leanplum.internal.Constants;
 import com.leanplum.internal.LeanplumInternal;
+import com.leanplum.utils.BuildUtil;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.MmaConstants;
@@ -56,6 +57,10 @@ public class MmaLeanplumImp implements MmaInterface {
             Leanplum.setAppIdForProductionMode(MmaConstants.MOZ_LEANPLUM_SDK_CLIENTID, MmaConstants.MOZ_LEANPLUM_SDK_KEY);
         } else {
             Leanplum.setAppIdForDevelopmentMode(MmaConstants.MOZ_LEANPLUM_SDK_CLIENTID, MmaConstants.MOZ_LEANPLUM_SDK_KEY);
+        }
+
+        if (BuildUtil.isNotificationChannelSupported(activity)) {
+            Leanplum.setDefaultChannelId(NotificationHelper.getInstance(activity).getNotificationChannel(NotificationHelper.Channel.LP_DEFAULT).getId());
         }
 
         LeanplumPushService.setGcmSenderId(AppConstants.MOZ_ANDROID_GCM_SENDERIDS);

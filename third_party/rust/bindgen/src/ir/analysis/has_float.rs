@@ -148,6 +148,14 @@ impl<'ctx> MonotoneFramework for HasFloat<'ctx> {
                 trace!("    Array with type T that do not have float also do not have float");
                 ConstrainResult::Same
             }
+            TypeKind::Vector(t, _) => {
+                if self.has_float.contains(&t.into()) {
+                    trace!("    Vector with type T that has float also has float");
+                    return self.insert(id)
+                }
+                trace!("    Vector with type T that do not have float also do not have float");
+                ConstrainResult::Same
+            }
 
             TypeKind::ResolvedTypeRef(t) |
             TypeKind::TemplateAlias(t, _) |

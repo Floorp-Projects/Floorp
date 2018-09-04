@@ -204,12 +204,13 @@ var gPrivacyPane = {
       if (contentBlockingUiEnabled) {
         let tpCheckbox =
           document.getElementById("contentBlockingTrackingProtectionCheckbox");
-        if (!tpCheckbox.checked) {
-          disabled = true;
-        }
-        // Only enable the TP menu if content blocking is enabled.
+        // Only enable the TP menu if content blocking and Detect All Trackers
+        // are enabled.
         document.getElementById("trackingProtectionMenu").disabled = disabled ||
+          !tpCheckbox.checked ||
           !contentBlockingEnabled;
+        // Only enable the TP category checkbox if content blocking is enabled.
+        tpCheckbox.disabled = disabled || !contentBlockingEnabled;
       } else {
         document.querySelectorAll("#trackingProtectionRadioGroup > radio")
           .forEach((element) => {
@@ -529,10 +530,15 @@ var gPrivacyPane = {
     let siteDataGroup = document.getElementById("siteDataGroup");
     let browserPrivacyCategory = document.getElementById("browserPrivacyCategory");
 
-    browserPrivacyCategory.parentNode.insertBefore(siteDataGroup,
-                                                   browserPrivacyCategory.nextSibling);
-    browserPrivacyCategory.parentNode.insertBefore(trackingGroup,
-                                                   browserPrivacyCategory.nextSibling);
+    // If we do this without a timeout, trackingProtectionReadPrefs will set the checked
+    // attribute on our checkbox element before the XBL binding has had a chance to have
+    // been re-applied to it.
+    setTimeout(() => {
+      browserPrivacyCategory.parentNode.insertBefore(siteDataGroup,
+                                                     browserPrivacyCategory.nextSibling);
+      browserPrivacyCategory.parentNode.insertBefore(trackingGroup,
+                                                     browserPrivacyCategory.nextSibling);
+    }, 0);
   },
 
   /**
@@ -634,8 +640,6 @@ var gPrivacyPane = {
     let dependentControls = [
       "#content-blocking-categories-label",
       ".content-blocking-checkbox",
-      ".content-blocking-icon",
-      ".content-blocking-category-name",
       "#changeBlockListLink",
       "#contentBlockingChangeCookieSettings",
       "#blockCookiesCB, #blockCookiesCB > radio",
@@ -1157,8 +1161,6 @@ var gPrivacyPane = {
 
     let dependentControls = [
       ".reject-trackers-ui .content-blocking-checkbox",
-      ".reject-trackers-ui .content-blocking-icon",
-      ".reject-trackers-ui .content-blocking-category-name",
       "#blockCookiesCB, #blockCookiesCB > radio",
       "#blockCookiesCBDeck",
     ];
@@ -1181,8 +1183,6 @@ var gPrivacyPane = {
 
     let dependentControls = [
       ".reject-trackers-ui .content-blocking-checkbox",
-      ".reject-trackers-ui .content-blocking-icon",
-      ".reject-trackers-ui .content-blocking-category-name",
       "#blockCookiesCB, #blockCookiesCB > radio",
       "#blockCookiesCBDeck",
     ];

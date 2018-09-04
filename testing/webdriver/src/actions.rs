@@ -204,7 +204,6 @@ where
 {
     Option::deserialize(deserializer)?
         .ok_or_else(|| de::Error::custom("invalid type: null, expected i64"))
-        .map(|v: i64| Some(v))
 }
 
 fn deserialize_to_option_u64<'de, D>(deserializer: D) -> Result<Option<u64>, D::Error>
@@ -213,7 +212,6 @@ where
 {
     Option::deserialize(deserializer)?
         .ok_or_else(|| de::Error::custom("invalid type: null, expected i64"))
-        .map(|v: u64| Some(v))
 }
 
 #[cfg(test)]

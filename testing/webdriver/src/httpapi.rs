@@ -323,7 +323,7 @@ impl<U: WebDriverExtensionRoute> RequestMatcher<U> {
         }
     }
 
-    pub fn get_match<'t>(&'t self, method: Method, path: &'t str) -> (bool, Option<Captures>) {
+    pub fn get_match<'t>(&'t self, method: &Method, path: &'t str) -> (bool, Option<Captures>) {
         let captures = self.path_regexp.captures(path);
         (method == self.method, captures)
     }
@@ -333,8 +333,8 @@ impl<U: WebDriverExtensionRoute> RequestMatcher<U> {
         rv.push_str("^");
         let components = path.split('/');
         for component in components {
-            if component.starts_with("{") {
-                if !component.ends_with("}") {
+            if component.starts_with('{') {
+                if !component.ends_with('}') {
                     panic!("Invalid url pattern")
                 }
                 rv.push_str(&format!("(?P<{}>[^/]+)/", &component[1..component.len() - 1])[..]);
@@ -342,10 +342,10 @@ impl<U: WebDriverExtensionRoute> RequestMatcher<U> {
                 rv.push_str(&format!("{}/", component)[..]);
             }
         }
-        //Remove the trailing /
+        // Remove the trailing /
         rv.pop();
         rv.push_str("$");
-        //This will fail at runtime if the regexp is invalid
+        // This will fail at runtime if the regexp is invalid
         Regex::new(&rv[..]).unwrap()
     }
 }
@@ -379,18 +379,18 @@ impl<U: WebDriverExtensionRoute> WebDriverHttpApi<U> {
 
     pub fn decode_request(
         &self,
-        method: Method,
+        method: &Method,
         path: &str,
         body: &str,
     ) -> WebDriverResult<WebDriverMessage<U>> {
         let mut error = ErrorStatus::UnknownPath;
         for &(ref match_method, ref matcher) in self.routes.iter() {
             if method == *match_method {
-                let (method_match, captures) = matcher.get_match(method.clone(), path);
+                let (method_match, captures) = matcher.get_match(method, path);
                 if captures.is_some() {
                     if method_match {
                         return WebDriverMessage::from_http(
-                            matcher.match_type.clone(),
+                            &matcher.match_type,
                             &captures.unwrap(),
                             body,
                             method == Method::POST,

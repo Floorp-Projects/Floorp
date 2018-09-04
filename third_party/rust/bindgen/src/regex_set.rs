@@ -2,9 +2,6 @@
 
 use regex::RegexSet as RxSet;
 
-// Yeah, I'm aware this is sorta crappy, should be cheaper to compile a regex
-// ORing all the patterns, I guess...
-
 /// A dynamic set of regular expressions.
 #[derive(Debug)]
 pub struct RegexSet {

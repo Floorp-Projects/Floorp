@@ -37,13 +37,11 @@ ChromeUtils.defineModuleGetter(this, "ServiceWorkerCleanUp",
 ChromeUtils.defineModuleGetter(this, "PerTestCoverageUtils",
   "resource://testing-common/PerTestCoverageUtils.jsm");
 
-// We're loaded with "this" not set to the global in some cases, so we
-// have to play some games to get at the global object here.  Normally
-// we'd try "this" from a function called with undefined this value,
-// but this whole file is in strict mode.  So instead fall back on
-// returning "this" from indirect eval, which returns the global.
-if (!(function() { var e = eval; return e("this"); })().File) { // eslint-disable-line no-eval
+try {
     Cu.importGlobalProperties(["DOMParser", "File", "InspectorUtils", "NodeFilter"]);
+} catch (e) {
+ // We are in window scope hence DOMParser, File, InspectorUtils and NodeFilter
+ // are already defined, So do nothing.
 }
 
 // Allow stuff from this scope to be accessed from non-privileged scopes. This

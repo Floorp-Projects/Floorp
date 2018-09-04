@@ -9,6 +9,7 @@ EXTRA_JS_MODULES.translation = [
     'BingTranslator.jsm',
     'cld2/cld-worker.js',
     'cld2/cld-worker.js.mem',
+    'GoogleTranslator.jsm',
     'LanguageDetector.jsm',
     'Translation.jsm',
     'TranslationContentHandler.jsm',

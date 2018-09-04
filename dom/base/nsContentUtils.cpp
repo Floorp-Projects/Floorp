@@ -10057,6 +10057,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
 
     // Step 6.1.
     if (synchronousCustomElements) {
+      definition->mPrefixStack.AppendElement(nodeInfo->GetPrefixAtom());
       DoCustomElementCreate(aResult, nodeInfo->GetDocument(), nodeInfo,
                             definition->mConstructor, rv);
       if (rv.MaybeSetPendingException(cx)) {
@@ -10067,6 +10068,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
         }
         (*aResult)->SetDefined(false);
       }
+      definition->mPrefixStack.RemoveLastElement();
       return NS_OK;
     }
 

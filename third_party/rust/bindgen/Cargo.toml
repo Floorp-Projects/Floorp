@@ -12,7 +12,7 @@
 
 [package]
 name = "bindgen"
-version = "0.37.4"
+version = "0.39.0"
 authors = ["Jyun-Yan You <jyyou.tw@gmail.com>", "Emilio Cobos Álvarez <emilio@crisal.io>", "Nick Fitzgerald <fitzgen@gmail.com>", "The Servo project developers"]
 build = "build.rs"
 include = ["LICENSE", "README.md", "Cargo.toml", "build.rs", "src/*.rs", "src/**/*.rs"]
@@ -32,6 +32,9 @@ path = "src/lib.rs"
 name = "bindgen"
 path = "src/main.rs"
 doc = false
+[dependencies.bitflags]
+version = "1.0.3"
+
 [dependencies.cexpr]
 version = "0.2"
 
