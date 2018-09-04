@@ -55,8 +55,8 @@ class Instance
     const UniqueTlsData             tlsData_;
     GCPtrWasmMemoryObject           memory_;
     SharedTableVector               tables_;
-    DataSegmentInitVector           dataSegInitVec_;
-    ElemSegmentInitVector           elemSegInitVec_;
+    DataSegmentVector               passiveDataSegments_;
+    ElemSegmentVector               passiveElemSegments_;
     bool                            enterFrameTrapsEnabled_;
 
     // Internal helpers:
@@ -83,8 +83,9 @@ class Instance
              HandleValVector globalImportValues,
              const WasmGlobalObjectVector& globalObjs);
     ~Instance();
-    bool init(JSContext* cx, const ShareableBytes* bytecode,
-              Handle<FunctionVector> funcImports);
+    bool init(JSContext* cx,
+              const DataSegmentVector& dataSegments,
+              const ElemSegmentVector& elemSegments);
     void trace(JSTracer* trc);
 
     JS::Realm* realm() const { return realm_; }
@@ -100,8 +101,6 @@ class Instance
     const Metadata& metadata() const { return code_->metadata(); }
     bool isAsmJS() const { return metadata().isAsmJS(); }
     const SharedTableVector& tables() const { return tables_; }
-    DataSegmentInitVector& dataSegInitVec() { return dataSegInitVec_; }
-    ElemSegmentInitVector& elemSegInitVec() { return elemSegInitVec_; }
     SharedMem<uint8_t*> memoryBase() const;
     WasmMemoryObject* memory() const;
     size_t memoryMappedSize() const;
@@ -153,6 +152,11 @@ class Instance
 
     void onMovingGrowMemory(uint8_t* prevMemoryBase);
     void onMovingGrowTable();
+
+    // Called to apply a single ElemSegment at a given offset, assuming
+    // that all bounds validation has already been performed.
+
+    void initElems(const ElemSegment& seg, uint32_t dstOffset, uint32_t srcOffset, uint32_t len);
 
     // Debug support:
 

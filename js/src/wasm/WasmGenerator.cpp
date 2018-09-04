@@ -202,10 +202,10 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
         return false;
     }
 
-    // The funcToCodeRange_ maps function indices to code-range indices and all
+    // funcToCodeRange maps function indices to code-range indices and all
     // elements will be initialized by the time module generation is finished.
 
-    if (!funcToCodeRange_.appendN(BAD_CODE_RANGE, env_->funcTypes.length())) {
+    if (!metadataTier_->funcToCodeRange.appendN(BAD_CODE_RANGE, env_->funcTypes.length())) {
         return false;
     }
 
@@ -327,12 +327,12 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
         }
     }
 
-    for (ElemSegment& elems : env_->elemSegments) {
-        if (env_->tables[elems.tableIndex].external) {
-            if (!exportedFuncs.reserve(exportedFuncs.length() + elems.elemFuncIndices.length())) {
+    for (const ElemSegment* seg : env_->elemSegments) {
+        if (env_->tables[seg->tableIndex].external) {
+            if (!exportedFuncs.reserve(exportedFuncs.length() + seg->length())) {
                 return false;
             }
-            for (uint32_t funcIndex : elems.elemFuncIndices) {
+            for (uint32_t funcIndex : seg->elemFuncIndices) {
                 exportedFuncs.infallibleEmplaceBack(funcIndex, false);
             }
         }
@@ -414,14 +414,14 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
 bool
 ModuleGenerator::funcIsCompiled(uint32_t funcIndex) const
 {
-    return funcToCodeRange_[funcIndex] != BAD_CODE_RANGE;
+    return metadataTier_->funcToCodeRange[funcIndex] != BAD_CODE_RANGE;
 }
 
 const CodeRange&
 ModuleGenerator::funcCodeRange(uint32_t funcIndex) const
 {
     MOZ_ASSERT(funcIsCompiled(funcIndex));
-    const CodeRange& cr = metadataTier_->codeRanges[funcToCodeRange_[funcIndex]];
+    const CodeRange& cr = metadataTier_->codeRanges[metadataTier_->funcToCodeRange[funcIndex]];
     MOZ_ASSERT(cr.isFunction());
     return cr;
 }
@@ -538,8 +538,8 @@ ModuleGenerator::noteCodeRange(uint32_t codeRangeIndex, const CodeRange& codeRan
 {
     switch (codeRange.kind()) {
       case CodeRange::Function:
-        MOZ_ASSERT(funcToCodeRange_[codeRange.funcIndex()] == BAD_CODE_RANGE);
-        funcToCodeRange_[codeRange.funcIndex()] = codeRangeIndex;
+        MOZ_ASSERT(metadataTier_->funcToCodeRange[codeRange.funcIndex()] == BAD_CODE_RANGE);
+        metadataTier_->funcToCodeRange[codeRange.funcIndex()] = codeRangeIndex;
         break;
       case CodeRange::InterpEntry:
         metadataTier_->lookupFuncExport(codeRange.funcIndex())
@@ -922,31 +922,13 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
     // These Vectors can get large and the excess capacity can be significant,
     // so realloc them down to size.
 
+    metadataTier_->funcToCodeRange.podResizeToFit();
     metadataTier_->codeRanges.podResizeToFit();
     metadataTier_->callSites.podResizeToFit();
     metadataTier_->trapSites.podResizeToFit();
     metadataTier_->debugTrapFarJumpOffsets.podResizeToFit();
-    metadataTier_->debugFuncToCodeRange.podResizeToFit();
     for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
         metadataTier_->trapSites[trap].podResizeToFit();
-    }
-
-    // Complete function exports and element segments with code range indices,
-    // now that every function has a code range.
-
-    for (FuncExport& fe : metadataTier_->funcExports) {
-        fe.initFuncCodeRangeIndex(funcToCodeRange_[fe.funcIndex()]);
-    }
-
-    for (ElemSegment& elems : env_->elemSegments) {
-        Uint32Vector& codeRangeIndices = elems.elemCodeRangeIndices(tier());
-        MOZ_ASSERT(codeRangeIndices.empty());
-        if (!codeRangeIndices.reserve(elems.elemFuncIndices.length())) {
-            return false;
-        }
-        for (uint32_t funcIndex : elems.elemFuncIndices) {
-            codeRangeIndices.infallibleAppend(funcToCodeRange_[funcIndex]);
-        }
     }
 
     // Copy over additional debug information.
@@ -967,7 +949,6 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
             }
             metadata_->debugFuncReturnTypes[i] = env_->funcTypes[i]->ret();
         }
-        metadataTier_->debugFuncToCodeRange = std::move(funcToCodeRange_);
 
         static_assert(sizeof(ModuleHash) <= sizeof(mozilla::SHA1Sum::Hash),
                       "The ModuleHash size shall not exceed the SHA1 hash size.");
@@ -993,7 +974,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     }
 
 #ifdef DEBUG
-    for (uint32_t codeRangeIndex : funcToCodeRange_) {
+    for (uint32_t codeRangeIndex : metadataTier_->funcToCodeRange) {
         MOZ_ASSERT(codeRangeIndex != BAD_CODE_RANGE);
     }
 #endif
@@ -1051,10 +1032,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
         return nullptr;
     }
 
-    MutableCode code = js_new<Code>(std::move(codeTier), *metadata_,
-                                    std::move(jumpTables),
-                                    std::move(env_->dataSegments),
-                                    std::move(env_->elemSegments));
+    MutableCode code = js_new<Code>(std::move(codeTier), *metadata_, std::move(jumpTables));
     if (!code || !code->initialize(bytecode, *linkData_)) {
         return nullptr;
     }
@@ -1064,6 +1042,21 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
         if (td.isStructType() && !structTypes.append(std::move(td.structType()))) {
             return nullptr;
         }
+    }
+
+    DataSegmentVector dataSegments;
+    if (!dataSegments.reserve(env_->dataSegments.length())) {
+        return nullptr;
+    }
+    for (DataSegmentEnv& srcSeg : env_->dataSegments) {
+        MutableDataSegment dstSeg = js_new<DataSegment>(srcSeg);
+        if (!dstSeg) {
+            return nullptr;
+        }
+        if (!dstSeg->bytes.append(bytecode.begin() + srcSeg.bytecodeOffset, srcSeg.length)) {
+            return nullptr;
+        }
+        dataSegments.infallibleAppend(std::move(dstSeg));
     }
 
     UniqueBytes debugUnlinkedCode;
@@ -1086,6 +1079,8 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
                                        std::move(env_->imports),
                                        std::move(env_->exports),
                                        std::move(structTypes),
+                                       std::move(dataSegments),
+                                       std::move(env_->elemSegments),
                                        bytecode,
                                        std::move(debugUnlinkedCode),
                                        std::move(debugLinkData)));
@@ -1122,8 +1117,8 @@ ModuleGenerator::finishTier2(Module& module)
         return false;
     }
 
-    auto tier2 = js::MakeUnique<CodeTier>(std::move(metadataTier_), std::move(moduleSegment));
-    if (!tier2) {
+    auto code = js::MakeUnique<CodeTier>(std::move(metadataTier_), std::move(moduleSegment));
+    if (!code) {
         return false;
     }
 
@@ -1133,7 +1128,7 @@ ModuleGenerator::finishTier2(Module& module)
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
-    return module.finishTier2(*linkData_, std::move(tier2), std::move(*env_));
+    return module.finishTier2(*linkData_, std::move(code));
 }
 
 size_t

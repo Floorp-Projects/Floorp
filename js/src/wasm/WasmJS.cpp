@@ -1157,6 +1157,8 @@ WasmInstanceObject::trace(JSTracer* trc, JSObject* obj)
 /* static */ WasmInstanceObject*
 WasmInstanceObject::create(JSContext* cx,
                            SharedCode code,
+                           const DataSegmentVector& dataSegments,
+                           const ElemSegmentVector& elemSegments,
                            UniqueDebugState debug,
                            UniqueTlsData tlsData,
                            HandleWasmMemoryObject memory,
@@ -1165,7 +1167,6 @@ WasmInstanceObject::create(JSContext* cx,
                            const GlobalDescVector& globals,
                            HandleValVector globalImportValues,
                            const WasmGlobalObjectVector& globalObjs,
-                           const ShareableBytes* bytecode,
                            HandleObject proto)
 {
     UniquePtr<ExportMap> exports = js::MakeUnique<ExportMap>();
@@ -1240,7 +1241,7 @@ WasmInstanceObject::create(JSContext* cx,
     obj->initReservedSlot(INSTANCE_SLOT, PrivateValue(instance));
     MOZ_ASSERT(!obj->isNewborn());
 
-    if (!instance->init(cx, bytecode, funcImports)) {
+    if (!instance->init(cx, dataSegments, elemSegments)) {
         return nullptr;
     }
 
@@ -1487,12 +1488,12 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
 }
 
 const CodeRange&
-WasmInstanceObject::getExportedFunctionCodeRange(HandleFunction fun, Tier tier)
+WasmInstanceObject::getExportedFunctionCodeRange(JSFunction* fun, Tier tier)
 {
     uint32_t funcIndex = ExportedFunctionToFuncIndex(fun);
     MOZ_ASSERT(exports().lookup(funcIndex)->value() == fun);
-    const FuncExport& funcExport = instance().metadata(tier).lookupFuncExport(funcIndex);
-    return instance().metadata(tier).codeRanges[funcExport.funcCodeRangeIndex()];
+    const MetadataTier& metadata = instance().metadata(tier);
+    return metadata.codeRange(metadata.lookupFuncExport(funcIndex));
 }
 
 /* static */ WasmInstanceScope*
@@ -2202,8 +2203,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
         Instance& instance = instanceObj->instance();
         Tier tier = instance.code().bestTier();
         const MetadataTier& metadata = instance.metadata(tier);
-        const FuncExport& funcExport = metadata.lookupFuncExport(funcIndex);
-        const CodeRange& codeRange = metadata.codeRanges[funcExport.funcCodeRangeIndex()];
+        const CodeRange& codeRange = metadata.codeRange(metadata.lookupFuncExport(funcIndex));
         void* code = instance.codeBase(tier) + codeRange.funcTableEntry();
         table.set(index, code, &instance);
     } else {
