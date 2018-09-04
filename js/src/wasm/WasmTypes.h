@@ -1815,33 +1815,6 @@ enum class SymbolicAddress
 bool
 IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode);
 
-// Assumptions captures ambient state that must be the same when compiling and
-// deserializing a module for the compiled code to be valid. If it's not, then
-// the module must be recompiled from scratch.
-
-struct Assumptions
-{
-    uint32_t              cpuId;
-    JS::BuildIdCharVector buildId;
-
-    explicit Assumptions(JS::BuildIdCharVector&& buildId);
-
-    // If Assumptions is constructed without arguments, initBuildIdFromContext()
-    // must be called to complete initialization.
-    Assumptions();
-    bool initBuildIdFromContext(JSContext* cx);
-
-    bool clone(const Assumptions& other);
-
-    bool operator==(const Assumptions& rhs) const;
-    bool operator!=(const Assumptions& rhs) const { return !(*this == rhs); }
-
-    size_t serializedSize() const;
-    uint8_t* serialize(uint8_t* cursor) const;
-    const uint8_t* deserialize(const uint8_t* cursor, size_t remain);
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-};
-
 // Represents the resizable limits of memories and tables.
 
 struct Limits

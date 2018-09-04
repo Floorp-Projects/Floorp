@@ -34,8 +34,46 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
-bool
-CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
+uint32_t
+wasm::ObservedCPUFeatures()
+{
+    enum Arch {
+        X86 = 0x1,
+        X64 = 0x2,
+        ARM = 0x3,
+        MIPS = 0x4,
+        MIPS64 = 0x5,
+        ARM64 = 0x6,
+        ARCH_BITS = 3
+    };
+
+#if defined(JS_CODEGEN_X86)
+    MOZ_ASSERT(uint32_t(jit::CPUInfo::GetSSEVersion()) <= (UINT32_MAX >> ARCH_BITS));
+    return X86 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
+#elif defined(JS_CODEGEN_X64)
+    MOZ_ASSERT(uint32_t(jit::CPUInfo::GetSSEVersion()) <= (UINT32_MAX >> ARCH_BITS));
+    return X64 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
+#elif defined(JS_CODEGEN_ARM)
+    MOZ_ASSERT(jit::GetARMFlags() <= (UINT32_MAX >> ARCH_BITS));
+    return ARM | (jit::GetARMFlags() << ARCH_BITS);
+#elif defined(JS_CODEGEN_ARM64)
+    MOZ_ASSERT(jit::GetARM64Flags() <= (UINT32_MAX >> ARCH_BITS));
+    return ARM64 | (jit::GetARM64Flags() << ARCH_BITS);
+#elif defined(JS_CODEGEN_MIPS32)
+    MOZ_ASSERT(jit::GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
+    return MIPS | (jit::GetMIPSFlags() << ARCH_BITS);
+#elif defined(JS_CODEGEN_MIPS64)
+    MOZ_ASSERT(jit::GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
+    return MIPS64 | (jit::GetMIPSFlags() << ARCH_BITS);
+#elif defined(JS_CODEGEN_NONE)
+    return 0;
+#else
+# error "unknown architecture"
+#endif
+}
+
+CompileArgs::CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller)
+  : scriptedCaller(std::move(scriptedCaller))
 {
 #ifdef ENABLE_WASM_GC
     bool gcEnabled = cx->options().wasmGc();
@@ -54,9 +92,6 @@ CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
     // only enable it when a developer actually cares: when the debugger tab
     // is open.
     debugEnabled = cx->realm()->debuggerObservesAsmJS();
-
-    this->scriptedCaller = std::move(scriptedCaller);
-    return assumptions.initBuildIdFromContext(cx);
 }
 
 // Classify the current system as one of a set of recognizable classes.  This
