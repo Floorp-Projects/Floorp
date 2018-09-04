@@ -370,7 +370,6 @@
                        data-l10n-id="content-blocking-tracking-protection-option-always"
                        flex="1" />
               </radiogroup>
-              <label id="changeBlockListLink" data-l10n-id="content-blocking-tracking-protection-change-block-list" class="text-link"/>
               <label id="changeBlockListLink"
                      data-l10n-id="content-blocking-tracking-protection-change-block-list"
                      class="text-link"
