@@ -60,30 +60,11 @@ struct ModuleEnvironment
     const ModuleKind          kind;
     const CompileMode         mode;
     const Shareable           sharedMemoryEnabled;
-    // `gcTypesConfigured` reflects the value of the flags --wasm-gc and
-    // javascript.options.wasm_gc.  These flags will disappear eventually, thus
-    // allowing the removal of this variable and its replacement everywhere by
-    // the value HasGcTypes::True.
-    //
-    // For now, the value is used (a) in the value of gcTypesEnabled(), which
-    // controls whether ref types and struct types and associated instructions
-    // are accepted during validation, and (b) to control whether we emit code
-    // to suppress GC while wasm activations are on the stack.
-    const HasGcTypes          gcTypesConfigured;
+    const HasGcTypes          gcTypesEnabled;
     const Tier                tier;
 
     // Module fields decoded from the module environment (or initialized while
     // validating an asm.js module) and immutable during compilation:
-#ifdef ENABLE_WASM_GC
-    // `gcFeatureOptIn` reflects the presence in a module of a GcFeatureOptIn
-    // section.  This variable will be removed eventually, allowing it to be
-    // replaced everywhere by the value HasGcTypes::True.
-    //
-    // The flag is used in the value of gcTypesEnabled(), which controls whether
-    // ref types and struct types and associated instructions are accepted
-    // during validation.
-    HasGcTypes                gcFeatureOptIn;
-#endif
     MemoryUsage               memoryUsage;
     uint32_t                  minMemoryLength;
     Maybe<uint32_t>           maxMemoryLength;
@@ -115,11 +96,8 @@ struct ModuleEnvironment
         kind(kind),
         mode(mode),
         sharedMemoryEnabled(sharedMemoryEnabled),
-        gcTypesConfigured(hasGcTypes),
+        gcTypesEnabled(hasGcTypes),
         tier(tier),
-#ifdef ENABLE_WASM_GC
-        gcFeatureOptIn(HasGcTypes::False),
-#endif
         memoryUsage(MemoryUsage::None),
         minMemoryLength(0)
     {}
@@ -139,13 +117,6 @@ struct ModuleEnvironment
     size_t numFuncDefs() const {
         return funcTypes.length() - funcImportGlobalDataOffsets.length();
     }
-#ifdef ENABLE_WASM_GC
-    HasGcTypes gcTypesEnabled() const {
-        if (gcTypesConfigured == HasGcTypes::True)
-            return gcFeatureOptIn;
-        return HasGcTypes::False;
-    }
-#endif
     bool usesMemory() const {
         return memoryUsage != MemoryUsage::None;
     }
@@ -358,7 +329,6 @@ class Encoder
     // after the section length is the string id of the section.
 
     MOZ_MUST_USE bool startSection(SectionId id, size_t* offset) {
-        MOZ_ASSERT(uint32_t(id) < 128);
         return writeVarU32(uint32_t(id)) &&
                writePatchableVarU32(offset);
     }
