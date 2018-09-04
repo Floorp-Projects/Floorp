@@ -7626,9 +7626,9 @@ JS::FinishIncrementalEncoding(JSContext* cx, JS::HandleScript script, TranscodeB
 }
 
 JS_PUBLIC_API(void)
-JS::SetBuildIdOp(JSContext* cx, JS::BuildIdOp buildIdOp)
+JS::SetProcessBuildIdOp(JS::BuildIdOp buildIdOp)
 {
-    cx->runtime()->buildIdOp = buildIdOp;
+    GetBuildId = buildIdOp;
 }
 
 JS_PUBLIC_API(void)
