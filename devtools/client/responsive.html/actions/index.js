@@ -4,9 +4,9 @@
 
 "use strict";
 
-// This file lists all of the actions available in responsive design.  This
+// This file lists all of the actions available in responsive design. This
 // central list of constants makes it easy to see all possible action names at
-// a glance.  Please add a comment with each new action type.
+// a glance. Please add a comment with each new action type.
 
 const { createEnum } = require("devtools/client/shared/enum");
 
@@ -28,7 +28,7 @@ createEnum([
   // Change the device displayed in the viewport.
   "CHANGE_DEVICE",
 
-  // Change the location of the page.  This may be triggered by the user
+  // Change the location of the page. This may be triggered by the user
   // directly entering a new URL, navigating with links, etc.
   "CHANGE_LOCATION",
 
@@ -47,9 +47,6 @@ createEnum([
 
   // Change one of the reload conditions.
   "CHANGE_RELOAD_CONDITION",
-
-  // Change the touch simulation state.
-  "CHANGE_TOUCH_SIMULATION",
 
   // Indicates that the device list is being loaded.
   "LOAD_DEVICE_LIST_START",
@@ -83,6 +80,9 @@ createEnum([
 
   // Toggles the left alignment of the viewports.
   "TOGGLE_LEFT_ALIGNMENT",
+
+  // Toggles the touch simulation state of the viewports.
+  "TOGGLE_TOUCH_SIMULATION",
 
   // Update the device display state in the device selector.
   "UPDATE_DEVICE_DISPLAYED",

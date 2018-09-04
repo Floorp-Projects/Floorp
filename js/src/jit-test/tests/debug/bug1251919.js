@@ -1,7 +1,5 @@
-// |jit-test| error: out of memory
-
 if (!('oomTest' in this))
-    throw new Error("out of memory");
+    quit();
 
 // jsfunfuzz-generated
 fullcompartmentchecks(true);

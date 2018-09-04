@@ -265,8 +265,23 @@ nsSecureBrowserUIImpl::MapInternalToExternalState(uint32_t* aState, lockIconStat
   if (docShell->GetHasTrackingContentBlocked())
     *aState |= nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT;
 
+  if (docShell->GetHasSlowTrackingContentBlocked())
+    *aState |= nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT;
+
   if (docShell->GetHasTrackingContentLoaded())
     *aState |= nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT;
+
+  if (docShell->GetHasCookiesBlockedByPermission())
+    *aState |= nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION;
+
+  if (docShell->GetHasCookiesBlockedDueToTrackers())
+    *aState |= nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
+
+  if (docShell->GetHasForeignCookiesBeenBlocked())
+    *aState |= nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
+
+  if (docShell->GetHasAllCookiesBeenBlocked())
+    *aState |= nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL;
 
   // Copy forward any diagnostic flags for downstream use (e.g., warnings)
   if (mNewToplevelSecurityStateKnown &&
