@@ -132,7 +132,9 @@ public:
   static nsresult Create(const IPCPaymentDetails& aIPCDetails,
                          nsIPaymentDetails** aDetails);
   nsresult Update(nsIPaymentDetails* aDetails, const bool aRequestShipping);
-  nsString GetShippingAddressErrors() const;
+  const nsString& GetShippingAddressErrors() const;
+  const nsString& GetPayer() const;
+  const nsString& GetPaymentMethod() const;
   nsresult UpdateErrors(const nsAString& aError,
                         const nsAString& aPayerErrors,
                         const nsAString& aPaymentMethodErrors,
@@ -145,7 +147,9 @@ private:
                  nsIArray* aShippingOptions,
                  nsIArray* aModifiers,
                  const nsAString& aError,
-                 const nsAString& aShippingAddressError);
+                 const nsAString& aShippingAddressError,
+                 const nsAString& aPayerError,
+                 const nsAString& aPaymentMethodError);
 
   ~PaymentDetails() = default;
 
