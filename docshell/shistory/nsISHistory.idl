@@ -9,7 +9,6 @@ interface nsIBFCacheEntry;
 interface nsIDocShell;
 interface nsISHEntry;
 interface nsISHistoryListener;
-interface nsISHTransaction;
 interface nsIURI;
 
 %{C++
@@ -161,7 +160,7 @@ interface nsISHistory: nsISupports
   /**
    * Get the transaction at a particular index. Returns non-null on success.
    */
-  nsISHTransaction GetTransactionAtIndex(in int32_t aIndex);
+  nsISHEntry GetTransactionAtIndex(in int32_t aIndex);
 
   /**
    * Sets the toplevel docshell object to which this SHistory object belongs to.
