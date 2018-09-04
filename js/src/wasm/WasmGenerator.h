@@ -154,7 +154,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     ModuleEnvironment* const        env_;
 
     // Data that is moved into the result of finish()
-    Assumptions                     assumptions_;
     UniqueLinkDataTier              linkDataTier_;
     UniqueMetadataTier              metadataTier_;
     MutableMetadata                 metadata_;

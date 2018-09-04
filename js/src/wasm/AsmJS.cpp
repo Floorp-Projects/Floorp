@@ -2122,8 +2122,8 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
                 return nullptr;
         }
 
-        MutableCompileArgs args = cx_->new_<CompileArgs>();
-        if (!args || !args->initFromContext(cx_, std::move(scriptedCaller)))
+        MutableCompileArgs args = cx_->new_<CompileArgs>(cx_, std::move(scriptedCaller));
+        if (!args)
             return nullptr;
 
         uint32_t codeSectionSize = 0;
@@ -6326,6 +6326,72 @@ AsmJSMetadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 
 namespace {
 
+// Assumptions captures ambient state that must be the same when compiling and
+// deserializing a module for the compiled code to be valid. If it's not, then
+// the module must be recompiled from scratch.
+
+struct Assumptions
+{
+    uint32_t              cpuId;
+    JS::BuildIdCharVector buildId;
+
+    Assumptions();
+    bool init(JSContext* cx);
+
+    bool operator==(const Assumptions& rhs) const;
+    bool operator!=(const Assumptions& rhs) const { return !(*this == rhs); }
+
+    size_t serializedSize() const;
+    uint8_t* serialize(uint8_t* cursor) const;
+    const uint8_t* deserialize(const uint8_t* cursor, size_t remain);
+};
+
+Assumptions::Assumptions()
+  : cpuId(ObservedCPUFeatures()),
+    buildId()
+{}
+
+bool
+Assumptions::init(JSContext* cx)
+{
+    return cx->buildIdOp() && cx->buildIdOp()(&buildId);
+}
+
+bool
+Assumptions::operator==(const Assumptions& rhs) const
+{
+    return cpuId == rhs.cpuId &&
+           buildId.length() == rhs.buildId.length() &&
+           ArrayEqual(buildId.begin(), rhs.buildId.begin(), buildId.length());
+}
+
+size_t
+Assumptions::serializedSize() const
+{
+    return sizeof(uint32_t) +
+           SerializedPodVectorSize(buildId);
+}
+
+uint8_t*
+Assumptions::serialize(uint8_t* cursor) const
+{
+    // The format of serialized Assumptions must never change in a way that
+    // would cause old cache files written with by an old build-id to match the
+    // assumptions of a different build-id.
+
+    cursor = WriteScalar<uint32_t>(cursor, cpuId);
+    cursor = SerializePodVector(cursor, buildId);
+    return cursor;
+}
+
+const uint8_t*
+Assumptions::deserialize(const uint8_t* cursor, size_t remain)
+{
+    (cursor = ReadScalarChecked<uint32_t>(cursor, &remain, &cpuId)) &&
+    (cursor = DeserializePodVectorChecked(cursor, &remain, &buildId));
+    return cursor;
+}
+
 class ModuleChars
 {
   protected:
@@ -6528,7 +6594,12 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, JSContext* cx)
     size_t compiledSize = module.compiledSerializedSize();
     MOZ_RELEASE_ASSERT(compiledSize <= UINT32_MAX);
 
-    size_t serializedSize = sizeof(uint32_t) +
+    Assumptions assumptions;
+    if (!assumptions.init(cx))
+        return JS::AsmJSCache_InternalError;
+
+    size_t serializedSize = assumptions.serializedSize() +
+                            sizeof(uint32_t) +
                             compiledSize +
                             moduleChars.serializedSize();
 
@@ -6547,10 +6618,8 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, JSContext* cx)
 
     uint8_t* cursor = entry.memory;
 
-    // Everything serialized before the Module must not change incompatibly
-    // between any two builds (regardless of platform, architecture, ...).
-    // (The Module::assumptionsMatch() guard everything in the Module and
-    // afterwards.)
+    cursor = assumptions.serialize(cursor);
+
     cursor = WriteScalar<uint32_t>(cursor, compiledSize);
 
     module.compiledSerialize(cursor, compiledSize);
@@ -6582,19 +6651,20 @@ LookupAsmJSModuleInCache(JSContext* cx, AsmJSParser& parser, bool* loadedFromCac
     if (!open(cx->global(), begin, limit, &entry.serializedSize, &entry.memory, &entry.handle))
         return true;
 
-    size_t remain = entry.serializedSize;
     const uint8_t* cursor = entry.memory;
 
-    uint32_t compiledSize;
-    cursor = ReadScalarChecked<uint32_t>(cursor, &remain, &compiledSize);
+    Assumptions deserializedAssumptions;
+    cursor = deserializedAssumptions.deserialize(cursor, entry.serializedSize);
     if (!cursor)
         return true;
 
-    Assumptions assumptions;
-    if (!assumptions.initBuildIdFromContext(cx))
-        return false;
+    Assumptions currentAssumptions;
+    if (!currentAssumptions.init(cx) || currentAssumptions != deserializedAssumptions)
+        return true;
 
-    if (!Module::assumptionsMatch(assumptions, cursor, remain))
+    uint32_t compiledSize;
+    cursor = ReadScalar<uint32_t>(cursor, &compiledSize);
+    if (!cursor)
         return true;
 
     MutableAsmJSMetadata asmJSMetadata = cx->new_<AsmJSMetadata>();

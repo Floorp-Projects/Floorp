@@ -108,7 +108,6 @@ class LinkData
 
 class Module : public JS::WasmModule
 {
-    const Assumptions       assumptions_;
     const SharedCode        code_;
     const UniqueConstBytes  unlinkedCodeForDebugging_;
     const LinkData          linkData_;
@@ -147,8 +146,7 @@ class Module : public JS::WasmModule
     class Tier2GeneratorTaskImpl;
 
   public:
-    Module(Assumptions&& assumptions,
-           const Code& code,
+    Module(const Code& code,
            UniqueConstBytes unlinkedCodeForDebugging,
            LinkData&& linkData,
            ImportVector&& imports,
@@ -157,8 +155,7 @@ class Module : public JS::WasmModule
            ElemSegmentVector&& elemSegments,
            StructTypeVector&& structTypes,
            const ShareableBytes& bytecode)
-      : assumptions_(std::move(assumptions)),
-        code_(&code),
+      : code_(&code),
         unlinkedCodeForDebugging_(std::move(unlinkedCodeForDebugging)),
         linkData_(std::move(linkData)),
         imports_(std::move(imports)),
@@ -213,8 +210,6 @@ class Module : public JS::WasmModule
     size_t compiledSerializedSize() const;
     void compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const;
 
-    static bool assumptionsMatch(const Assumptions& current, const uint8_t* compiledBegin,
-                                 size_t remain);
     static RefPtr<Module> deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
                                       const uint8_t* compiledBegin, size_t compiledSize,
                                       Metadata* maybeMetadata = nullptr);
@@ -241,8 +236,7 @@ typedef RefPtr<Module> SharedModule;
 // JS API implementations:
 
 SharedModule
-DeserializeModule(PRFileDesc* bytecode, JS::BuildIdCharVector&& buildId, UniqueChars filename,
-                  unsigned line);
+DeserializeModule(PRFileDesc* bytecode, UniqueChars filename, unsigned line);
 
 } // namespace wasm
 } // namespace js
