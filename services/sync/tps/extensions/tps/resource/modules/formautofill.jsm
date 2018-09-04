@@ -10,12 +10,8 @@
 var EXPORTED_SYMBOLS = ["Address", "CreditCard", "DumpAddresses", "DumpCreditCards"];
 
 ChromeUtils.import("resource://tps/logger.jsm");
-
-ChromeUtils.defineModuleGetter(this, "formAutofillStorage",
-                               "resource://formautofill/FormAutofillStorage.jsm");
-
-ChromeUtils.defineModuleGetter(this, "MasterPassword",
-                               "resource://formautofill/MasterPassword.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm");
+ChromeUtils.import("resource://formautofill/MasterPassword.jsm");
 
 class FormAutofillBase {
   constructor(props, subStorageName, fields) {
