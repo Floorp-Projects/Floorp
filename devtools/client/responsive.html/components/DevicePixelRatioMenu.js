@@ -21,10 +21,10 @@ class DevicePixelRatioMenu extends PureComponent {
   static get propTypes() {
     return {
       devices: PropTypes.shape(Types.devices).isRequired,
-      displayPixelRatio: PropTypes.number.isRequired,
+      displayPixelRatio: Types.pixelRatio.value.isRequired,
       onChangePixelRatio: PropTypes.func.isRequired,
       selectedDevice: PropTypes.string.isRequired,
-      selectedPixelRatio: PropTypes.number.isRequired,
+      selectedPixelRatio: PropTypes.shape(Types.pixelRatio).isRequired,
     };
   }
 
@@ -44,8 +44,8 @@ class DevicePixelRatioMenu extends PureComponent {
       return {
         label: getFormatStr("responsive.devicePixelRatioOption", value),
         type: "checkbox",
-        checked: selectedPixelRatio > 0 ?
-          selectedPixelRatio === value :
+        checked: selectedPixelRatio.value > 0 ?
+          selectedPixelRatio.value === value :
           displayPixelRatio === value,
         click: () => onChangePixelRatio(+value),
       };
@@ -86,7 +86,7 @@ class DevicePixelRatioMenu extends PureComponent {
         },
         dom.span({ className: "title" },
           getFormatStr("responsive.devicePixelRatioOption",
-            selectedPixelRatio || displayPixelRatio)
+            selectedPixelRatio.value || displayPixelRatio)
         )
       )
     );
