@@ -7,6 +7,7 @@ package org.mozilla.gecko.firstrun;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.StrictMode;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
@@ -25,7 +26,6 @@ import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.mozilla.gecko.util.NetworkUtils;
-import org.mozilla.gecko.util.StrictModeContext;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.lang.ref.WeakReference;
@@ -79,7 +79,6 @@ public class OnboardingHelper implements MmaDelegate.MmaVariablesChangedListener
      * Check and show the firstrun pane if the browser has never been launched and
      * is not opening an external link from another application.
      */
-    @SuppressWarnings("try")
     public void checkFirstRun() {
         if (GeckoThread.getActiveProfile().inGuestMode()) {
             // We do not want to show any first run tour for guest profiles.
@@ -92,7 +91,9 @@ public class OnboardingHelper implements MmaDelegate.MmaVariablesChangedListener
             return;
         }
 
-        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+        final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
+
+        try {
             AppCompatActivity activity = activityRef.get();
             if (activity == null) {
                 return;
@@ -150,6 +151,8 @@ public class OnboardingHelper implements MmaDelegate.MmaVariablesChangedListener
                 // during firstrun will be tagged as FIRSTRUN.
                 Telemetry.startUISession(TelemetryContract.Session.FIRSTRUN);
             }
+        } finally {
+            StrictMode.setThreadPolicy(savedPolicy);
         }
     }
 

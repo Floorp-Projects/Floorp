@@ -9,7 +9,6 @@ import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.util.StrictModeContext;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -18,6 +17,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
@@ -37,7 +37,6 @@ public class ExternalIntentDuringPrivateBrowsingPromptFragment extends DialogFra
     private static final String KEY_APPLICATION_NAME = "matchingApplicationName";
     private static final String KEY_INTENT = "intent";
 
-    @SuppressWarnings("try")
     @Override
     public Dialog onCreateDialog(final Bundle savedInstanceState) {
         final Bundle args = getArguments();
@@ -55,9 +54,10 @@ public class ExternalIntentDuringPrivateBrowsingPromptFragment extends DialogFra
                         // Bug 1450449 - Downloaded files are already in a public directory and
                         // aren't really exclusively owned by Firefox, so there's no real benefit
                         // to using content:// URIs here.
-                        try (StrictModeContext unused = StrictModeContext.allowAllVmPolicies()) {
-                            context.startActivity(intent);
-                        }
+                        StrictMode.VmPolicy prevPolicy = StrictMode.getVmPolicy();
+                        StrictMode.setVmPolicy(StrictMode.VmPolicy.LAX);
+                        context.startActivity(intent);
+                        StrictMode.setVmPolicy(prevPolicy);
                     }
                 })
                 .setNegativeButton(R.string.button_no, null /* we do nothing if the user rejects */ );

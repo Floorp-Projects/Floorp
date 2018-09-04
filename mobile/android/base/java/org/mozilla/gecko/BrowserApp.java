@@ -34,6 +34,7 @@ import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
@@ -158,7 +159,6 @@ import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ShortcutUtils;
-import org.mozilla.gecko.util.StrictModeContext;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.WindowUtil;
@@ -3707,7 +3707,6 @@ public class BrowserApp extends GeckoApp
      * If the app has been launched a certain number of times, and we haven't asked for feedback before,
      * open a new tab with about:feedback when launching the app from the icon shortcut.
      */
-    @SuppressWarnings("try")
     @Override
     protected void onNewIntent(Intent externalIntent) {
 
@@ -3802,9 +3801,10 @@ public class BrowserApp extends GeckoApp
 
         // Check to see how many times the app has been launched.
         final String keyName = getPackageName() + ".feedback_launch_count";
+        final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
 
         // Faster on main thread with an async apply().
-        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+        try {
             SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
             int launchCount = settings.getInt(keyName, 0);
             if (launchCount < FEEDBACK_LAUNCH_COUNT) {
@@ -3817,6 +3817,8 @@ public class BrowserApp extends GeckoApp
                     EventDispatcher.getInstance().dispatch("Feedback:Show", null);
                 }
             }
+        } finally {
+            StrictMode.setThreadPolicy(savedPolicy);
         }
     }
 
