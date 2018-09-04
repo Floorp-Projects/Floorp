@@ -72,7 +72,9 @@ PaymentMethodChangeEvent::init(
   const PaymentMethodChangeEventInit& aEventInitDict)
 {
   mMethodName.Assign(aEventInitDict.mMethodName);
-  mMethodDetails = aEventInitDict.mMethodDetails;
+  if (aEventInitDict.mMethodDetails.WasPassed()) {
+    mMethodDetails = aEventInitDict.mMethodDetails.Value();
+  }
 }
 
 void
