@@ -17,11 +17,13 @@
 #include "nsGlobalWindowInner.h"
 #include "nsICookiePermission.h"
 #include "nsICookieService.h"
+#include "nsIDocShell.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIIOService.h"
 #include "nsIParentChannel.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
+#include "nsIScriptError.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIWebProgressListener.h"
@@ -186,6 +188,71 @@ CheckContentBlockingAllowList(nsIHttpChannel* aChannel)
   return false;
 }
 
+void
+ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIHttpChannel* aChannel,
+                        uint32_t aRejectedReason)
+{
+  MOZ_ASSERT(aWindow && aChannel);
+  MOZ_ASSERT(aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
+             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
+             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
+             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
+             aRejectedReason == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
+
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
+  if (NS_WARN_IF(!docShell)) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> doc = docShell->GetDocument();
+  if (NS_WARN_IF(!doc)) {
+    return;
+  }
+
+  const char* message = nullptr;
+  switch (aRejectedReason) {
+    case nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION:
+      message = "CookieBlockedByPermission";
+      break;
+
+    case nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER:
+      message = "CookieBlockedTracker";
+      break;
+
+    case nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL:
+      message = "CookieBlockedAll";
+      break;
+
+    case nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN:
+      message = "CookieBlockedForeign";
+      break;
+
+    case nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT:
+      message = "CookieBlockedSlowTrackingContent";
+      break;
+
+    default:
+      return;
+  }
+
+  MOZ_ASSERT(message);
+
+  nsCOMPtr<nsIURI> uri;
+  aChannel->GetURI(getter_AddRefs(uri));
+  NS_ConvertUTF8toUTF16 spec(uri->GetSpecOrDefault());
+  const char16_t* params[] = { spec.get() };
+
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("Content Blocking"),
+                                  doc,
+                                  nsContentUtils::eNECKO_PROPERTIES,
+                                  message,
+                                  params, ArrayLength(params));
+}
 } // anonymous
 
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
@@ -926,6 +993,8 @@ AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel,
   }
 
   pwin->NotifyContentBlockingState(aRejectedReason, aChannel);
+
+  ReportBlockingToConsole(pwin, httpChannel, aRejectedReason);
 }
 
 /* static */ void
@@ -956,7 +1025,11 @@ AntiTrackingCommon::NotifyRejection(nsPIDOMWindowInner* aWindow,
     pwin = outer->GetTopOuter();
   }
 
-  if (pwin) {
-    pwin->NotifyContentBlockingState(aRejectedReason, httpChannel);
+  if (!pwin) {
+    return;
   }
+
+  pwin->NotifyContentBlockingState(aRejectedReason, httpChannel);
+
+  ReportBlockingToConsole(pwin, httpChannel, aRejectedReason);
 }
