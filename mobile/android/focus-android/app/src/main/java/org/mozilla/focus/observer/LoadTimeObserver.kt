@@ -31,7 +31,6 @@ object LoadTimeObserver {
                     if (urlLoading != null &&
                             session.url.value == urlLoading &&
                             session.progress.value == MAX_PROGRESS) {
-                        Log.i(LOG_TAG, "Loaded page at $session.url.value")
                         val endTime = SystemClock.elapsedRealtime()
                         Log.i(LOG_TAG, "zerdatime $endTime - page load stop")
                         val elapsedLoad = endTime - startLoadTime
