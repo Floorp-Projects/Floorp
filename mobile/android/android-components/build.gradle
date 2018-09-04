@@ -108,12 +108,6 @@ subprojects {
                     warningsAsErrors true
                     abortOnError true
                 }
-
-                task docs(type: org.jetbrains.dokka.gradle.DokkaAndroidTask) {
-                    outputFormat = 'html'
-                    reportUndocumented = false
-                    outputDirectory = "${project.rootDir}/build/javadoc/${project.name}"
-                }
             }
 
             if (project.hasProperty("coverage") && project.name != "support-test") {
@@ -162,6 +156,40 @@ subprojects {
         }
     }
 }
+
+evaluationDependsOnChildren()
+
+task docs(type: org.jetbrains.dokka.gradle.DokkaAndroidTask, overwrite: true) {
+    moduleName = "$rootProject.name"
+    outputDirectory = "$buildDir/javadoc"
+    outputFormat = "html"
+    jdkVersion = 7
+
+    subprojects.findAll {
+        it.hasProperty("android") && !it.name.startsWith("samples")
+    }.each {
+        classpath += files(it.android.getBootClasspath().join(File.pathSeparator))
+        it.android.libraryVariants.all { variant ->
+            classpath += files(variant.javaCompile.classpath.files)
+        }
+    }
+
+    sourceDirs = files(subprojects.findAll {
+        !it.name.startsWith("samples")
+    }.collect { p ->
+        def path = new File(p.projectDir, "/src/main/java")
+
+        def relativePath = rootDir.toPath().relativize(path.toPath()).toString()
+        linkMapping {
+            dir = path
+            url = "https://github.com/mozilla-mobile/android-components/blob/master/$relativePath"
+            suffix = "#L"
+        }
+
+        return path
+    })
+}
+
 
 task clean(type: Delete) {
     delete rootProject.buildDir

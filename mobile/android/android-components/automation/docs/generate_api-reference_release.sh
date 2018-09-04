@@ -14,7 +14,7 @@ echo "API reference for version: $VERSION"
 
 # Move generated reference to destination
 mkdir -p ./docs/api/$VERSION
-cp -R ./build/javadoc/* ./docs/api/$VERSION/
+cp -R ./build/javadoc/android-components/* ./docs/api/$VERSION/
 
 # Generate a page that links to the reference pages for every module
 python automation/docs/generate_reference_page.py $VERSION
