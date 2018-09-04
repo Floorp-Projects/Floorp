@@ -1,15 +1,13 @@
-if (this.document === undefined) {
-  importScripts("/resources/testharness.js");
-}
+// META: title=StorageManager: estimate() for indexeddb
 
-test(function(t) {
+test(t => {
   assert_true('estimate' in navigator.storage);
   assert_equals(typeof navigator.storage.estimate, 'function');
   assert_true(navigator.storage.estimate() instanceof Promise);
 }, 'estimate() method exists and returns a Promise');
 
-promise_test(function(t) {
-  return navigator.storage.estimate().then(function(result) {
+promise_test(t => {
+  return navigator.storage.estimate().then(result => {
     assert_true(typeof result === 'object');
     assert_true('usage' in result);
     assert_equals(typeof result.usage, 'number');
@@ -18,20 +16,20 @@ promise_test(function(t) {
   });
 }, 'estimate() resolves to dictionary with members');
 
-promise_test(function(t) {
+promise_test(t => {
   const arraySize = 1e6;
   const objectStoreName = "storageManager";
   const dbname = this.window ? window.location.pathname :
-  	   "estimate-worker.https.html";
+        "estimate-worker.https.html";
 
   let db;
   let usageBeforeCreate, usageAfterCreate, usageAfterPut;
 
   function deleteDB(name) {
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
       let deleteRequest = indexedDB.deleteDatabase(name);
-      deleteRequest.onerror = function() { reject(deleteRequest.error); };
-      deleteRequest.onsuccess = function() { resolve(); };
+      deleteRequest.onerror = () => { reject(deleteRequest.error); };
+      deleteRequest.onsuccess = () => { resolve(); };
     });
   }
 
@@ -41,13 +39,13 @@ promise_test(function(t) {
   })
   .then(estimate => {
     usageBeforeCreate = estimate.usage;
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
       let openRequest = indexedDB.open(dbname);
-      openRequest.onerror = function() { reject(openRequest.error); };
-      openRequest.onupgradeneeded = function(event) {
+      openRequest.onerror = () => { reject(openRequest.error); };
+      openRequest.onupgradeneeded = event => {
         openRequest.result.createObjectStore(objectStoreName);
       };
-      openRequest.onsuccess = function() { resolve(openRequest.result); };
+      openRequest.onsuccess = () => { resolve(openRequest.result); };
     });
   })
   .then(connection => {
@@ -56,8 +54,9 @@ promise_test(function(t) {
   })
   .then(estimate => {
     usageAfterCreate = estimate.usage;
-    assert_greater_than(usageAfterCreate, usageBeforeCreate,
-  	                'estimated usage should increase after object store is created');
+    assert_greater_than(
+      usageAfterCreate, usageBeforeCreate,
+      'estimated usage should increase after object store is created');
 
     let txn = db.transaction(objectStoreName, 'readwrite');
     let buffer = new ArrayBuffer(arraySize);
@@ -70,9 +69,9 @@ promise_test(function(t) {
     let testBlob = new Blob([buffer], {type: "binary/random"});
     txn.objectStore(objectStoreName).add(testBlob, 1);
 
-    return new Promise(function(resolve, reject) {
-      txn.onabort = function() { reject(txn.error); };
-      txn.oncomplete = function() { resolve(); };
+    return new Promise((resolve, reject) => {
+      txn.onabort = () => { reject(txn.error); };
+      txn.oncomplete = () => { resolve(); };
     });
   })
   .then(() => {
@@ -80,15 +79,14 @@ promise_test(function(t) {
   })
   .then(estimate => {
     usageAfterPut = estimate.usage;
-    assert_greater_than(usageAfterPut, usageAfterCreate,
-  	                'estimated usage should increase after large value is stored');
+    assert_greater_than(
+      usageAfterPut, usageAfterCreate,
+      'estimated usage should increase after large value is stored');
 
     db.close();
-    return deleteDB(dbname)
+    return deleteDB(dbname);
   })
   .then(() => {
     t.done();
-  })
+  });
 }, 'estimate() shows usage increase after large value is stored');
-
-done();
