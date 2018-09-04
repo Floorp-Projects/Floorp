@@ -95,18 +95,26 @@ const L10nRegistry = {
     const sourcesOrder = Array.from(this.sources.keys()).reverse();
     const pseudoNameFromPref = Services.prefs.getStringPref("intl.l10n.pseudo", "");
     for (const locale of requestedLangs) {
-      for await (const dataSets of generateResourceSetsForLocale(locale, sourcesOrder, resourceIds)) {
-        const ctx = new MessageContext(locale, {
-          ...MSG_CONTEXT_OPTIONS,
-          transform: PSEUDO_STRATEGIES[pseudoNameFromPref],
-        });
-        for (const data of dataSets) {
-          if (data === null) {
-            return null;
-          }
-          ctx.addResource(data);
+      for (const fetchPromises of generateResourceSetsForLocale(locale, sourcesOrder, resourceIds)) {
+        const ctx = await Promise.all(fetchPromises).then(
+          dataSets => {
+            const ctx = new MessageContext(locale, {
+              ...MSG_CONTEXT_OPTIONS,
+              transform: PSEUDO_STRATEGIES[pseudoNameFromPref],
+            });
+            for (const data of dataSets) {
+              if (data === null) {
+                return null;
+              }
+              ctx.addResource(data);
+            }
+            return ctx;
+          },
+          () => null
+        );
+        if (ctx !== null) {
+          yield ctx;
         }
-        yield ctx;
       }
     }
   },
@@ -182,7 +190,7 @@ const L10nRegistry = {
  * @param {Array} [resolvedOrder]
  * @returns {AsyncIterator<MessageContext>}
  */
-async function* generateResourceSetsForLocale(locale, sourcesOrder, resourceIds, resolvedOrder = []) {
+function* generateResourceSetsForLocale(locale, sourcesOrder, resourceIds, resolvedOrder = []) {
   const resolvedLength = resolvedOrder.length;
   const resourcesLength = resourceIds.length;
 
@@ -192,36 +200,18 @@ async function* generateResourceSetsForLocale(locale, sourcesOrder, resourceIds,
   for (const sourceName of sourcesOrder) {
     const order = resolvedOrder.concat(sourceName);
 
-    // We want to bail out early if we know that any of
-    // the (res)x(source) combinations in the permutation
-    // are unavailable.
-    // The combination may have been `undefined` when we
-    // stepped into this branch, and now is resolved to
-    // `false`.
-    //
-    // If the combination resolved to `false` is the last
-    // in the resolvedOrder, we want to continue in this
-    // loop, but if it's somewhere in the middle, we can
-    // safely bail from the whole branch.
-    for (let [idx, sourceName] of order.entries()) {
-      if (L10nRegistry.sources.get(sourceName).hasFile(locale, resourceIds[idx]) === false) {
-        if (idx === order.length - 1) {
-          continue;
-        } else {
-          return;
-        }
-      }
+    // We bail only if the hasFile returns a strict false here,
+    // because for FileSource it may also return undefined, which means
+    // that we simply don't know if the source contains the file and we'll
+    // have to perform the I/O to learn.
+    if (L10nRegistry.sources.get(sourceName).hasFile(locale, resourceIds[resolvedOrder.length]) === false) {
+      continue;
     }
 
     // If the number of resolved sources equals the number of resources,
     // create the right context and return it if it loads.
     if (resolvedLength + 1 === resourcesLength) {
-      let dataSet = await generateResourceSet(locale, order, resourceIds);
-      // Here we check again to see if the newly resolved
-      // resources returned `false` on any position.
-      if (!dataSet.includes(false)) {
-        yield dataSet;
-      }
+      yield generateResourceSet(locale, order, resourceIds);
     } else if (resolvedLength < resourcesLength) {
       // otherwise recursively load another generator that walks over the
       // partially resolved list of sources.
@@ -356,10 +346,10 @@ const PSEUDO_STRATEGIES = {
  * @param {Array} resourceIds
  * @returns {Promise<MessageContext>}
  */
-async function generateResourceSet(locale, sourcesOrder, resourceIds) {
-  return Promise.all(resourceIds.map((resourceId, i) => {
+function generateResourceSet(locale, sourcesOrder, resourceIds) {
+  return resourceIds.map((resourceId, i) => {
     return L10nRegistry.sources.get(sourcesOrder[i]).fetchFile(locale, resourceId);
-  }));
+  });
 }
 
 /**
@@ -430,14 +420,14 @@ class FileSource {
 
   fetchFile(locale, path) {
     if (!this.locales.includes(locale)) {
-      return false;
+      return Promise.reject(`The source has no resources for locale "${locale}"`);
     }
 
     const fullPath = this.getPath(locale, path);
 
     if (this.cache.hasOwnProperty(fullPath)) {
       if (this.cache[fullPath] === false) {
-        return false;
+        return Promise.reject(`The source has no resources for path "${fullPath}"`);
       }
       // `true` means that the file is indexed, but hasn't
       // been fetched yet.
@@ -445,7 +435,7 @@ class FileSource {
         return this.cache[fullPath];
       }
     } else if (this.indexed) {
-        return false;
+        return Promise.reject(`The source has no resources for path "${fullPath}"`);
       }
     return this.cache[fullPath] = L10nRegistry.load(fullPath).then(
       data => {
@@ -453,7 +443,7 @@ class FileSource {
       },
       err => {
         this.cache[fullPath] = false;
-        return false;
+        return Promise.reject(err);
       }
     );
   }
