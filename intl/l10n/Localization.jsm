@@ -97,7 +97,7 @@ class CachedAsyncIterable extends CachedIterable {
     return {
       async next() {
         if (cached.length <= cur) {
-          cached.push(cached.iterator.next());
+          cached.push(await cached.iterator.next());
         }
         return cached[cur++];
       }
@@ -114,10 +114,10 @@ class CachedAsyncIterable extends CachedIterable {
     let idx = 0;
     while (idx++ < count) {
       const last = this[this.length - 1];
-      if (last && await (last).done) {
+      if (last && last.done) {
         break;
       }
-      this.push(this.iterator.next());
+      this.push(await this.iterator.next());
     }
     // Return the last cached {value, done} object to allow the calling
     // code to decide if it needs to call touchNext again.
@@ -322,6 +322,7 @@ class Localization {
   onChange() {
     this.ctxs = CachedAsyncIterable.from(
       this.generateMessages(this.resourceIds));
+    this.ctxs.touchNext(2);
   }
 }
 
