@@ -84,6 +84,8 @@ dictionary PayerErrorFields {
 dictionary PaymentDetailsUpdate : PaymentDetailsBase {
   DOMString     error;
   AddressErrors shippingAddressErrors;
+  PayerErrorFields payerErrors;
+  object paymentMethodErrors;
   PaymentItem   total;
 };
 
