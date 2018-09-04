@@ -23,7 +23,8 @@
       <caption><label data-l10n-id="search-engine-default-header" /></caption>
       <description data-l10n-id="search-engine-default-desc" />
 
-      <hbox id="browserDefaultSearchExtensionContent" align="center" hidden="true">
+      <hbox id="browserDefaultSearchExtensionContent"
+            align="center" hidden="true" class="extension-controlled">
         <description control="disableDefaultSearchExtension" flex="1"/>
       </hbox>
 

@@ -25,6 +25,9 @@ const { L10nRegistry, FileSource } =
 const actions = require("./src/actions/index");
 const { configureStore } = require("./src/create-store");
 const {
+  setDebugTargetCollapsibilities,
+} = require("./src/modules/debug-target-collapsibilities");
+const {
   addNetworkLocationsObserver,
   getNetworkLocations,
 } = require("./src/modules/network-locations");
@@ -83,6 +86,7 @@ const AboutDebugging = {
   },
 
   destroy() {
+    setDebugTargetCollapsibilities(this.store.getState().ui.debugTargetCollapsibilities);
     unmountComponentAtNode(this.mount);
   },
 

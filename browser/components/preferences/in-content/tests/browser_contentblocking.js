@@ -202,11 +202,9 @@ add_task(async function testContentBlockingRestoreDefaultsSkipExtensionControlle
   await TestUtils.waitForCondition(() => Services.prefs.prefHasUserValue(TP_PREF));
 
   let dependentControls = [
-    "#content-blocking-categories-label",
     ".fast-block-ui .content-blocking-checkbox",
     ".reject-trackers-ui .content-blocking-checkbox",
-    ".content-blocking-icon",
-    ".content-blocking-category-name",
+    "#content-blocking-categories-label",
     "#changeBlockListLink",
     "#contentBlockingChangeCookieSettings",
     "#blockCookiesCB, #blockCookiesCB > radio",
@@ -310,10 +308,8 @@ add_task(async function testContentBlockingDependentControls() {
   ]});
 
   let dependentControls = [
-    "#content-blocking-categories-label",
     ".content-blocking-checkbox",
-    ".content-blocking-icon",
-    ".content-blocking-category-name",
+    "#content-blocking-categories-label",
     "#changeBlockListLink",
     "#contentBlockingChangeCookieSettings",
   ];
@@ -334,10 +330,8 @@ add_task(async function testContentBlockingDependentControls() {
   ]});
 
   dependentControls = [
-    "#content-blocking-categories-label",
     ".content-blocking-checkbox",
-    ".content-blocking-icon",
-    ".content-blocking-category-name",
+    "#content-blocking-categories-label",
     "#changeBlockListLink",
     "#contentBlockingChangeCookieSettings",
     "#blockCookiesCB, #blockCookiesCB > radio",
@@ -404,8 +398,6 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
       "#contentBlockingChangeCookieSettings",
     ];
     let alwaysDisabledControls = [
-      ".reject-trackers-checkbox",
-      ".reject-trackers-icon",
       "[control=blockCookiesCB]",
       "#blockCookiesCBDeck",
       "#blockCookiesCB, #blockCookiesCB > radio",
@@ -431,8 +423,6 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
     let dependentControls = [
       "#content-blocking-categories-label",
       ".content-blocking-checkbox",
-      ".content-blocking-icon",
-      ".content-blocking-category-name",
       "#trackingProtectionMenu",
       "[control=trackingProtectionMenu]",
       "#changeBlockListLink",
@@ -464,8 +454,6 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
     let dependentControls = [
       "#content-blocking-categories-label",
       ".content-blocking-checkbox",
-      ".content-blocking-icon",
-      ".content-blocking-category-name",
       "#trackingProtectionMenu",
       "[control=trackingProtectionMenu]",
       "#changeBlockListLink",
