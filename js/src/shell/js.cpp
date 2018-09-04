@@ -4116,6 +4116,83 @@ SetInterruptCallback(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() != 2) {
+        ReportUsageErrorASCII(cx, callee, "Wrong number of arguments.");
+        return false;
+    }
+
+    if (!args[0].isString()) {
+        ReportUsageErrorASCII(cx, callee, "First argument must be a String.");
+        return false;
+    }
+
+    if (!args[1].isInt32()) {
+        ReportUsageErrorASCII(cx, callee, "Second argument must be an Int32.");
+        return false;
+    }
+
+    // Disallow setting JIT options when there are worker threads, to avoid
+    // races.
+    if (workerThreadsLock) {
+        ReportUsageErrorASCII(cx, callee,
+                              "Can't set JIT options when there are worker threads.");
+        return false;
+    }
+
+    JSFlatString* strArg = JS_FlattenString(cx, args[0].toString());
+    if (!strArg)
+        return false;
+
+#define JIT_COMPILER_MATCH(key, string)                 \
+    else if (JS_FlatStringEqualsAscii(strArg, string))  \
+        opt = JSJITCOMPILER_ ## key;
+
+    JSJitCompilerOption opt = JSJITCOMPILER_NOT_AN_OPTION;
+    if (false) {}
+    JIT_COMPILER_OPTIONS(JIT_COMPILER_MATCH);
+#undef JIT_COMPILER_MATCH
+
+    if (opt == JSJITCOMPILER_NOT_AN_OPTION) {
+        ReportUsageErrorASCII(cx, callee, "First argument does not name a valid option (see jsapi.h).");
+        return false;
+    }
+
+    int32_t number = args[1].toInt32();
+    if (number < 0)
+        number = -1;
+
+    // Throw if disabling the JITs and there's JIT code on the stack, to avoid
+    // assertion failures.
+    if ((opt == JSJITCOMPILER_BASELINE_ENABLE || opt == JSJITCOMPILER_ION_ENABLE) &&
+        number == 0)
+    {
+        js::jit::JitActivationIterator iter(cx);
+        if (!iter.done()) {
+            JS_ReportErrorASCII(cx, "Can't turn off JITs with JIT code on the stack.");
+            return false;
+        }
+    }
+
+    // JIT compiler options are process-wide, so we have to stop off-thread
+    // compilations for all runtimes to avoid races.
+    HelperThreadState().waitForAllThreads();
+
+    // Only release JIT code for the current runtime because there's no good
+    // way to discard code for other runtimes.
+    ReleaseAllJITCode(cx->runtime()->defaultFreeOp());
+
+    JS_SetGlobalJitCompilerOption(cx, opt, uint32_t(number));
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 EnableLastWarning(JSContext* cx, unsigned argc, Value* vp)
 {
     ShellContext* sc = GetShellContext(cx);
@@ -7579,6 +7656,10 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "setInterruptCallback(func)",
 "  Sets func as the interrupt callback function.\n"
 "  Calling this function will replace any callback set by |timeout|.\n"),
+
+    JS_FN_HELP("setJitCompilerOption", SetJitCompilerOption, 2, 0,
+"setJitCompilerOption(<option>, <number>)",
+"  Set a compiler option indexed in JSCompileOption enum to a number.\n"),
 
     JS_FN_HELP("enableLastWarning", EnableLastWarning, 0, 0,
 "enableLastWarning()",
