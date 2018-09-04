@@ -48,7 +48,7 @@ final public class NavigationHelper {
         fAssertNotNull("url is not null", url);
 
         if (url.startsWith("about:") || url.startsWith("chrome:") ||
-                url.startsWith("view-source:")) {
+                url.startsWith("intent:") || url.startsWith("view-source:")) {
             return url;
         }
 
