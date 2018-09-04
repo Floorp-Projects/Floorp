@@ -6,9 +6,12 @@
 
 DevToolsModules(
     'devices.js',
+    'display-pixel-ratio.js',
     'index.js',
+    'location.js',
     'reload-conditions.js',
     'screenshot.js',
+    'touch-simulation.js',
     'ui.js',
     'viewports.js',
 )

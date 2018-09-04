@@ -5,7 +5,9 @@
 
 // Test updating the touch simulation `enabled` property
 
-const { toggleTouchSimulation } = require("devtools/client/responsive.html/actions/touch-simulation");
+const {
+  changeTouchSimulation,
+} = require("devtools/client/responsive.html/actions/touch-simulation");
 
 add_task(async function() {
   const store = Store();
@@ -14,7 +16,7 @@ add_task(async function() {
   ok(!getState().touchSimulation.enabled,
     "Touch simulation is disabled by default.");
 
-  dispatch(toggleTouchSimulation(true));
+  dispatch(changeTouchSimulation(true));
 
   ok(getState().touchSimulation.enabled,
     "Touch simulation is enabled.");

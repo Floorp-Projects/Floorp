@@ -491,7 +491,8 @@ ResponsiveUI.prototype = {
   showReloadNotification() {
     if (Services.prefs.getBoolPref(RELOAD_NOTIFICATION_PREF, false)) {
       showNotification(this.browserWindow, this.tab, {
-        msg: l10n.getFormatStr("responsive.reloadNotification.description2"),
+        msg: l10n.getFormatStr("responsive.reloadNotification.description",
+                               l10n.getStr("responsive.reloadConditions.label")),
       });
       Services.prefs.setBoolPref(RELOAD_NOTIFICATION_PREF, false);
     }
@@ -580,7 +581,7 @@ ResponsiveUI.prototype = {
   async onChangeTouchSimulation(event) {
     const { enabled } = event.data;
     const reloadNeeded = await this.updateTouchSimulation(enabled) &&
-                         this.reloadOnChange("touchSimulation");
+                       this.reloadOnChange("touchSimulation");
     if (reloadNeeded) {
       this.getViewportBrowser().reload();
     }

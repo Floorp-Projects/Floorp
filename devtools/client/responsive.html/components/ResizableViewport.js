@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -18,7 +18,7 @@ const Types = require("../types");
 const VIEWPORT_MIN_WIDTH = Constants.MIN_VIEWPORT_DIMENSION;
 const VIEWPORT_MIN_HEIGHT = Constants.MIN_VIEWPORT_DIMENSION;
 
-class ResizableViewport extends PureComponent {
+class ResizableViewport extends Component {
   static get propTypes() {
     return {
       leftAlignmentEnabled: PropTypes.bool.isRequired,
