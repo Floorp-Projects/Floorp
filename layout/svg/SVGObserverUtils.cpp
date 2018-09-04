@@ -755,6 +755,15 @@ SVGObserverUtils::GetTextPathsReferencedPath(nsIFrame* aTextPathFrame)
 }
 
 void
+SVGObserverUtils::InitiateResourceDocLoads(nsIFrame* aFrame)
+{
+  // We create observer objects and attach them to aFrame, but we do not
+  // make aFrame start observing the referenced frames.
+  Unused << GetOrCreateFilterObserverListForCSS(aFrame);
+  Unused << GetEffectProperties(aFrame);
+}
+
+void
 SVGObserverUtils::RemoveTextPathObserver(nsIFrame* aTextPathFrame)
 {
   aTextPathFrame->DeleteProperty(HrefAsTextPathProperty());

@@ -641,6 +641,14 @@ public:
   static EffectProperties GetEffectProperties(nsIFrame* aFrame);
 
   /**
+   * Ensures that that if the given frame requires any resources that are in
+   * SVG resource documents that the loading of those documents is initiated.
+   * This does not make aFrame start to observe any elements that it
+   * references.
+   */
+  static void InitiateResourceDocLoads(nsIFrame* aFrame);
+
+  /**
    * Called when changes to an element (e.g. CSS property changes) cause its
    * frame to start/stop referencing (or reference different) SVG resource
    * elements. (_Not_ called for changes to referenced resource elements.)
