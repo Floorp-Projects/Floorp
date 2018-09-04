@@ -71,6 +71,7 @@
   <string name="preference_privacy_should_block_cookies_yes_option">అవును</string>
   <string name="preference_privacy_secure_mode">గోప్యత</string>
   <string name="preference_privacy_stealth_summary">యాప్స్ మధ్య మారేప్పుడు జాలపేజీలు కనబడకుండా దాచిపెట్టు, తెరపట్టు తీసుకోవడం నిరోధించు.</string>
+  <string name="preference_category_security">భద్రత</string>
   <string name="preference_category_performance">పనితనం</string>
   <string name="preference_performance_block_webfonts">జాల ఖతులను (వెబ్ ఫాంట్లను) నిరోధించు</string>
   <string name="preference_performance_block_webfonts_summary">దీనివల్ల ప్రతీకాలు లేదా బొమ్మలు కనబడకపోవచ్చు</string>
@@ -179,4 +180,11 @@
   <string name="http_auth_dialog_password">సంకేతపదం</string>
   <string name="preference_performance_request_desktop_site">డెస్క్‌టాప్ సైటును అభ్యర్థించు</string>
   <string name="custom_tab_copy_url_action">URL కాపీ అయ్యింది</string>
+  <string name="preference_advanced_summary">డెవలపర్ల పనిముట్లు</string>
+  <string name="preference_category_advanced">ఉన్నతం</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">ఇంకా తెలుసుకోండి</string>
+  <string name="enable_search_suggestions_no">వద్దు</string>
+  <string name="enable_search_suggestions_yes">అవును</string>
+  <string name="no_suggestions_message">కొన్ని సెర్చింజన్లు సలహాలను చూపించలేవు</string>
+  <string name="dismiss_no_suggestions_prompt_button">మూసివేయి</string>
 </resources>

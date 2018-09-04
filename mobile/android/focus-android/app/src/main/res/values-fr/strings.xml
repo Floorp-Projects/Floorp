@@ -80,7 +80,7 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Interdire les cookies tiers uniquement</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Oui</string>
   <string name="preference_security_biometric">Utiliser une empreinte digitale pour déverrouiller l’application</string>
-  <string name="preference_security_biometric_summary">Votre empreinte digitale peut déverrouiller %1$s si une URL est déjà ouverte au sein de l’application. Vous naviguerez ainsi de manière plus sécurisée.</string>
+  <string name="preference_security_biometric_summary">Votre empreinte digitale peut déverrouiller %1$s si une URL est déjà ouverte au sein de l’application. Le mode furtif sera activé.</string>
   <string name="preference_privacy_secure_mode">Mode furtif</string>
   <string name="preference_privacy_stealth_summary">Masquer les pages web lorsque vous changez d’application et empêcher les captures d’écran.</string>
   <string name="preference_category_security">Sécurité</string>
