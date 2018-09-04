@@ -34,56 +34,6 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
-template <class DecoderT>
-static bool
-DecodeFunctionBody(DecoderT& d, ModuleGenerator& mg, uint32_t funcIndex)
-{
-    uint32_t bodySize;
-    if (!d.readVarU32(&bodySize))
-        return d.fail("expected number of function body bytes");
-
-    if (bodySize > MaxFunctionBytes)
-        return d.fail("function body too big");
-
-    const size_t offsetInModule = d.currentOffset();
-
-    // Skip over the function body; it will be validated by the compilation thread.
-    const uint8_t* bodyBegin;
-    if (!d.readBytes(bodySize, &bodyBegin))
-        return d.fail("function body length too big");
-
-    return mg.compileFuncDef(funcIndex, offsetInModule, bodyBegin, bodyBegin + bodySize);
-}
-
-template <class DecoderT>
-static bool
-DecodeCodeSection(const ModuleEnvironment& env, DecoderT& d, ModuleGenerator& mg)
-{
-    if (!env.codeSection) {
-        if (env.numFuncDefs() != 0)
-            return d.fail("expected code section");
-
-        return mg.finishFuncDefs();
-    }
-
-    uint32_t numFuncDefs;
-    if (!d.readVarU32(&numFuncDefs))
-        return d.fail("expected function body count");
-
-    if (numFuncDefs != env.numFuncDefs())
-        return d.fail("function body count does not match function signature count");
-
-    for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
-        if (!DecodeFunctionBody(d, mg, env.numFuncImports() + funcDefIndex))
-            return false;
-    }
-
-    if (!d.finishSection(*env.codeSection, "code"))
-        return false;
-
-    return mg.finishFuncDefs();
-}
-
 bool
 CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
 {
@@ -417,6 +367,56 @@ InitialCompileFlags(const CompileArgs& args, Decoder& d, CompileMode* mode, Tier
     }
 
     *debug = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
+}
+
+template <class DecoderT>
+static bool
+DecodeFunctionBody(DecoderT& d, ModuleGenerator& mg, uint32_t funcIndex)
+{
+    uint32_t bodySize;
+    if (!d.readVarU32(&bodySize))
+        return d.fail("expected number of function body bytes");
+
+    if (bodySize > MaxFunctionBytes)
+        return d.fail("function body too big");
+
+    const size_t offsetInModule = d.currentOffset();
+
+    // Skip over the function body; it will be validated by the compilation thread.
+    const uint8_t* bodyBegin;
+    if (!d.readBytes(bodySize, &bodyBegin))
+        return d.fail("function body length too big");
+
+    return mg.compileFuncDef(funcIndex, offsetInModule, bodyBegin, bodyBegin + bodySize);
+}
+
+template <class DecoderT>
+static bool
+DecodeCodeSection(const ModuleEnvironment& env, DecoderT& d, ModuleGenerator& mg)
+{
+    if (!env.codeSection) {
+        if (env.numFuncDefs() != 0)
+            return d.fail("expected code section");
+
+        return mg.finishFuncDefs();
+    }
+
+    uint32_t numFuncDefs;
+    if (!d.readVarU32(&numFuncDefs))
+        return d.fail("expected function body count");
+
+    if (numFuncDefs != env.numFuncDefs())
+        return d.fail("function body count does not match function signature count");
+
+    for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
+        if (!DecodeFunctionBody(d, mg, env.numFuncImports() + funcDefIndex))
+            return false;
+    }
+
+    if (!d.finishSection(*env.codeSection, "code"))
+        return false;
+
+    return mg.finishFuncDefs();
 }
 
 SharedModule
