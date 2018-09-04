@@ -5,12 +5,14 @@
 "use strict";
 
 const {
+  DEBUG_TARGET_COLLAPSIBILITY_UPDATED,
   NETWORK_LOCATIONS_UPDATED,
   PAGE_SELECTED,
 } = require("../constants");
 
-function UiState(locations = []) {
+function UiState(locations = [], debugTargetCollapsibilities = {}) {
   return {
+    debugTargetCollapsibilities,
     networkLocations: locations,
     selectedPage: null,
   };
@@ -18,14 +20,21 @@ function UiState(locations = []) {
 
 function uiReducer(state = UiState(), action) {
   switch (action.type) {
-    case PAGE_SELECTED: {
-      const { page } = action;
-      return Object.assign({}, state, { selectedPage: page });
+    case DEBUG_TARGET_COLLAPSIBILITY_UPDATED: {
+      const { isCollapsed, key } = action;
+      const debugTargetCollapsibilities = new Map(state.debugTargetCollapsibilities);
+      debugTargetCollapsibilities.set(key, isCollapsed);
+      return Object.assign({}, state, { debugTargetCollapsibilities });
     }
 
     case NETWORK_LOCATIONS_UPDATED: {
       const { locations } = action;
       return Object.assign({}, state, { networkLocations: locations });
+    }
+
+    case PAGE_SELECTED: {
+      const { page } = action;
+      return Object.assign({}, state, { selectedPage: page });
     }
 
     default:

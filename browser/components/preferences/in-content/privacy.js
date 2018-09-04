@@ -640,8 +640,6 @@ var gPrivacyPane = {
     let dependentControls = [
       "#content-blocking-categories-label",
       ".content-blocking-checkbox",
-      ".content-blocking-icon",
-      ".content-blocking-category-name",
       "#changeBlockListLink",
       "#contentBlockingChangeCookieSettings",
       "#blockCookiesCB, #blockCookiesCB > radio",
@@ -1163,8 +1161,6 @@ var gPrivacyPane = {
 
     let dependentControls = [
       ".reject-trackers-ui .content-blocking-checkbox",
-      ".reject-trackers-ui .content-blocking-icon",
-      ".reject-trackers-ui .content-blocking-category-name",
       "#blockCookiesCB, #blockCookiesCB > radio",
       "#blockCookiesCBDeck",
     ];
@@ -1187,8 +1183,6 @@ var gPrivacyPane = {
 
     let dependentControls = [
       ".reject-trackers-ui .content-blocking-checkbox",
-      ".reject-trackers-ui .content-blocking-icon",
-      ".reject-trackers-ui .content-blocking-category-name",
       "#blockCookiesCB, #blockCookiesCB > radio",
       "#blockCookiesCBDeck",
     ];

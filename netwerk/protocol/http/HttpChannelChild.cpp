@@ -58,6 +58,7 @@
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "nsCORSListenerProxy.h"
+#include "nsApplicationCache.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -401,10 +402,7 @@ HttpChannelChild::AssociateApplicationCache(const nsCString &groupID,
                                             const nsCString &clientID)
 {
   LOG(("HttpChannelChild::AssociateApplicationCache [this=%p]\n", this));
-  nsresult rv;
-  mApplicationCache = do_CreateInstance(NS_APPLICATIONCACHE_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return;
+  mApplicationCache = new nsApplicationCache();
 
   mLoadedFromApplicationCache = true;
   mApplicationCache->InitAsHandle(groupID, clientID);
