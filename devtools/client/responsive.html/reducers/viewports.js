@@ -22,9 +22,7 @@ const INITIAL_VIEWPORT = {
   deviceType: "",
   width: 320,
   height: 480,
-  pixelRatio: {
-    value: 0,
-  },
+  pixelRatio: 0,
   userContextId: 0,
 };
 
@@ -60,9 +58,7 @@ const reducers = {
       }
 
       return Object.assign({}, viewport, {
-        pixelRatio: {
-          value: pixelRatio
-        },
+        pixelRatio,
       });
     });
   },

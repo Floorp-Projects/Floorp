@@ -1571,34 +1571,6 @@ nsINode::ComputeIndexOf(const nsINode* aChild) const
   return -1;
 }
 
-Element*
-nsINode::GetPreviousElementSibling() const
-{
-  nsIContent* previousSibling = GetPreviousSibling();
-  while (previousSibling) {
-    if (previousSibling->IsElement()) {
-      return previousSibling->AsElement();
-    }
-    previousSibling = previousSibling->GetPreviousSibling();
-  }
-
-  return nullptr;
-}
-
-Element*
-nsINode::GetNextElementSibling() const
-{
-  nsIContent* nextSibling = GetNextSibling();
-  while (nextSibling) {
-    if (nextSibling->IsElement()) {
-      return nextSibling->AsElement();
-    }
-    nextSibling = nextSibling->GetNextSibling();
-  }
-
-  return nullptr;
-}
-
 static already_AddRefed<nsINode>
 GetNodeFromNodeOrString(const OwningNodeOrString& aNode,
                         nsIDocument* aDocument)

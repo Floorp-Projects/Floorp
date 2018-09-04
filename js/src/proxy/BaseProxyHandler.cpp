@@ -310,8 +310,9 @@ BaseProxyHandler::fun_toString(JSContext* cx, HandleObject proxy, bool isToSourc
 {
     if (proxy->isCallable())
         return JS_NewStringCopyZ(cx, "function () {\n    [native code]\n}");
-    RootedValue v(cx, ObjectValue(*proxy));
-    ReportIsNotFunction(cx, v);
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                              js_Function_str, js_toString_str, "object");
     return nullptr;
 }
 

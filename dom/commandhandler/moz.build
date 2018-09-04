@@ -8,6 +8,8 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Embedding: APIs")
 
 EXPORTS += [
+    'nsBaseCommandController.h',
+    'nsCommandManager.h',
     'nsCommandParams.h',
 ]
 

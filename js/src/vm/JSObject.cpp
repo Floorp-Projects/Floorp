@@ -1831,15 +1831,6 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
     return true;
 }
 
-static bool
-DefineStandardSlot(JSContext* cx, HandleObject obj, JSAtom* atom,
-                   HandleValue v, uint32_t attrs, bool& named)
-{
-    RootedId id(cx, AtomToId(atom));
-    named = DefineDataProperty(cx, obj, id, v, attrs);
-    return named;
-}
-
 static void
 SetClassObject(JSObject* obj, JSProtoKey key, JSObject* cobj, JSObject* proto)
 {
@@ -1898,9 +1889,15 @@ DefineConstructorAndPrototype(JSContext* cx, HandleObject obj, JSProtoKey key, H
     if (!proto)
         return nullptr;
 
+    /*
+     * Whether we need to define a constructor property on |obj| and which
+     * attributes to use.
+     */
+    bool defineConstructorProperty = false;
+    uint32_t propertyAttrs = 0;
+
     /* After this point, control must exit via label bad or out. */
     RootedNativeObject ctor(cx);
-    bool named = false;
     bool cached = false;
     if (!constructor) {
         /*
@@ -1912,12 +1909,10 @@ DefineConstructorAndPrototype(JSContext* cx, HandleObject obj, JSProtoKey key, H
         if (!(clasp->flags & JSCLASS_IS_ANONYMOUS) || !obj->is<GlobalObject>() ||
             key == JSProto_Null)
         {
-            uint32_t attrs = (clasp->flags & JSCLASS_IS_ANONYMOUS)
-                           ? JSPROP_READONLY | JSPROP_PERMANENT
-                           : 0;
-            RootedValue value(cx, ObjectValue(*proto));
-            if (!DefineStandardSlot(cx, obj, atom, value, attrs, named))
-                goto bad;
+            defineConstructorProperty = true;
+            propertyAttrs = (clasp->flags & JSCLASS_IS_ANONYMOUS)
+                            ? JSPROP_READONLY | JSPROP_PERMANENT
+                            : 0;
         }
 
         ctor = proto;
@@ -1936,9 +1931,8 @@ DefineConstructorAndPrototype(JSContext* cx, HandleObject obj, JSProtoKey key, H
             cached = true;
         }
 
-        RootedValue value(cx, ObjectValue(*fun));
-        if (!DefineStandardSlot(cx, obj, atom, value, 0, named))
-            goto bad;
+        defineConstructorProperty = true;
+        propertyAttrs = 0;
 
         /*
          * Optionally construct the prototype object, before the class has
@@ -1961,6 +1955,13 @@ DefineConstructorAndPrototype(JSContext* cx, HandleObject obj, JSProtoKey key, H
         goto bad;
     }
 
+    if (defineConstructorProperty) {
+        RootedId id(cx, AtomToId(atom));
+        RootedValue value(cx, ObjectValue(*ctor));
+        if (!DefineDataProperty(cx, obj, id, value, propertyAttrs))
+            goto bad;
+    }
+
     /* If this is a standard class, cache its prototype. */
     if (!cached && key != JSProto_Null)
         SetClassObject(obj, key, ctor, proto);
@@ -1970,13 +1971,6 @@ DefineConstructorAndPrototype(JSContext* cx, HandleObject obj, JSProtoKey key, H
     return proto;
 
 bad:
-    if (named) {
-        ObjectOpResult ignored;
-        RootedId id(cx, AtomToId(atom));
-
-        // XXX FIXME - absurd to call this here; instead define the property last.
-        DeleteProperty(cx, obj, id, ignored);
-    }
     if (cached)
         ClearClassObject(obj, key);
     return nullptr;

@@ -25,11 +25,6 @@ exports.loadableState = createEnum([
 /* GLOBAL */
 
 /**
- * The location of the document displayed in the viewport(s).
- */
-exports.location = PropTypes.string;
-
-/**
  * Whether to reload the page automatically when certain actions occur.
  */
 exports.reloadConditions = {
@@ -131,16 +126,6 @@ exports.networkThrottling = {
 };
 
 /**
- * Device pixel ratio for a given viewport.
- */
-const pixelRatio = exports.pixelRatio = {
-
-  // The device pixel ratio value
-  value: PropTypes.number,
-
-};
-
-/**
  * Touch simulation state for a given viewport.
  */
 exports.touchSimulation = {
@@ -171,7 +156,7 @@ exports.viewport = {
   height: PropTypes.number,
 
   // The device pixel ratio of the viewport
-  pixelRatio: PropTypes.shape(pixelRatio),
+  pixelRatio: PropTypes.number,
 
   // The user context (container) ID for the viewport
   // Defaults to 0 meaning the default context

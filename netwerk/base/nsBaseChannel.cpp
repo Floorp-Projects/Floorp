@@ -9,7 +9,7 @@
 #include "nsURLHelper.h"
 #include "nsNetCID.h"
 #include "nsMimeTypes.h"
-#include "nsIContentSniffer.h"
+#include "nsUnknownDecoder.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsMimeTypes.h"
 #include "nsIHttpChannel.h"
@@ -824,10 +824,7 @@ CallUnknownTypeSniffer(void *aClosure, const uint8_t *aData, uint32_t aCount)
 {
   nsIChannel *chan = static_cast<nsIChannel*>(aClosure);
 
-  nsCOMPtr<nsIContentSniffer> sniffer =
-    do_CreateInstance(NS_GENERIC_CONTENT_SNIFFER);
-  if (!sniffer)
-    return;
+  RefPtr<nsUnknownDecoder> sniffer = new nsUnknownDecoder();
 
   nsAutoCString detected;
   nsresult rv = sniffer->GetMIMETypeFromContent(chan, aData, aCount, detected);
