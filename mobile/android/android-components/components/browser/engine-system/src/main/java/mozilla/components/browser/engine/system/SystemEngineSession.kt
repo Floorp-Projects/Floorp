@@ -29,6 +29,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
     internal var view: WeakReference<SystemEngineView>? = null
     internal var scheduledLoad = ScheduledLoad(null)
     @Volatile internal var trackingProtectionEnabled = false
+    @Volatile internal var webFontsEnabled = true
 
     /**
      * See [EngineSession.loadUrl]
@@ -176,6 +177,10 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
                     get() = it.domStorageEnabled
                     set(value) { it.domStorageEnabled = value }
 
+                override var webFontsEnabled: Boolean
+                    get() = this@SystemEngineSession.webFontsEnabled
+                    set(value) { this@SystemEngineSession.webFontsEnabled = value }
+
                 override var trackingProtectionPolicy: TrackingProtectionPolicy?
                     get() = if (trackingProtectionEnabled)
                             TrackingProtectionPolicy.all()
@@ -188,6 +193,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
                 defaultSettings?.let {
                     this.javascriptEnabled = defaultSettings.javascriptEnabled
                     this.domStorageEnabled = defaultSettings.domStorageEnabled
+                    this.webFontsEnabled = defaultSettings.webFontsEnabled
                     this.trackingProtectionPolicy = defaultSettings.trackingProtectionPolicy
                     this.requestInterceptor = defaultSettings.requestInterceptor
                 }

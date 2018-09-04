@@ -248,6 +248,12 @@ class SystemEngineSessionTest {
         engineSession.settings.domStorageEnabled = true
         verify(webViewSettings).domStorageEnabled = true
 
+        assertTrue(engineSession.webFontsEnabled)
+        assertTrue(engineSession.settings.webFontsEnabled)
+        engineSession.settings.webFontsEnabled = false
+        assertFalse(engineSession.webFontsEnabled)
+        assertFalse(engineSession.settings.webFontsEnabled)
+
         assertEquals(EngineSession.TrackingProtectionPolicy.none(), engineSession.settings.trackingProtectionPolicy)
         engineSession.settings.trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all()
         verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.all())
@@ -258,7 +264,11 @@ class SystemEngineSessionTest {
 
     @Test
     fun testDefaultSettings() {
-        val defaultSettings = DefaultSettings(false, false, EngineSession.TrackingProtectionPolicy.all())
+        val defaultSettings = DefaultSettings(
+                javascriptEnabled = false,
+                domStorageEnabled = false,
+                webFontsEnabled = false,
+                trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all())
         val engineSession = spy(SystemEngineSession(defaultSettings))
         val webView = mock(WebView::class.java)
         `when`(webView.context).thenReturn(RuntimeEnvironment.application)
@@ -271,6 +281,7 @@ class SystemEngineSessionTest {
         verify(webViewSettings).domStorageEnabled = false
         verify(webViewSettings).javaScriptEnabled = false
         verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.all())
+        assertFalse(engineSession.webFontsEnabled)
     }
 
     @Test

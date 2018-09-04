@@ -119,12 +119,11 @@ class UrlMatcher : SharedPreferences.OnSharedPreferenceChangeListener {
      */
     @Suppress("ReturnCount", "ComplexMethod")
     fun matches(resourceURI: Uri, pageURI: Uri): Boolean {
-        val path = resourceURI.path ?: return false
         val resourceURLString = resourceURI.toString()
         val resourceHost = resourceURI.host
         val pageHost = pageURI.host
 
-        if (blockWebfonts && WEBFONT_EXTENSIONS.find { path.endsWith(it) } != null) {
+        if (blockWebfonts && isWebFont(resourceURI)) {
             return true
         }
 
@@ -211,6 +210,17 @@ class UrlMatcher : SharedPreferences.OnSharedPreferenceChangeListener {
             var whiteList: WhiteList? = null
             JsonReader(white).use { jsonReader -> whiteList = WhiteList.fromJson(jsonReader) }
             return UrlMatcher(context, categoryPrefMap, categoryMap, whiteList)
+        }
+
+        /**
+         * Checks if the given URI points to a Web font.
+         * @param uri the URI to check.
+         *
+         * @return true if the URI is a Web font, otherwise false.
+         */
+        fun isWebFont(uri: Uri): Boolean {
+            val path = uri.path ?: return false
+            return WEBFONT_EXTENSIONS.find { path.endsWith(it) } != null
         }
 
         private fun loadCategories(

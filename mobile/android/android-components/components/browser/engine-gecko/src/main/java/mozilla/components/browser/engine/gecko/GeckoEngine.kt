@@ -46,9 +46,14 @@ class GeckoEngine(
         override var javascriptEnabled: Boolean
             get() = runtime.settings.javaScriptEnabled
             set(value) { runtime.settings.javaScriptEnabled = value }
+
+        override var webFontsEnabled: Boolean
+            get() = runtime.settings.webFontsEnabled
+            set(value) { runtime.settings.webFontsEnabled = value }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = defaultSettings.javascriptEnabled
+            this.webFontsEnabled = defaultSettings.webFontsEnabled
         }
     }
 }

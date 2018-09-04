@@ -28,6 +28,13 @@ interface Settings {
         set(_) = throw UnsupportedSettingException()
 
     /**
+     * Setting to control whether or not Web fonts are enabled.
+     */
+    var webFontsEnabled: Boolean
+        get() = throw UnsupportedSettingException()
+        set(_) = throw UnsupportedSettingException()
+
+    /**
      * Setting to control tracking protection.
      */
     var trackingProtectionPolicy: TrackingProtectionPolicy?
@@ -48,6 +55,7 @@ interface Settings {
 data class DefaultSettings(
     override var javascriptEnabled: Boolean = true,
     override var domStorageEnabled: Boolean = true,
+    override var webFontsEnabled: Boolean = true,
     override var trackingProtectionPolicy: TrackingProtectionPolicy? = null,
     override var requestInterceptor: RequestInterceptor? = null
 ) : Settings

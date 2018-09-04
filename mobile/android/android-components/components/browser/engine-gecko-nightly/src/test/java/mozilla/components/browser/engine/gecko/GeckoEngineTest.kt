@@ -45,6 +45,7 @@ class GeckoEngineTest {
         val runtime = mock(GeckoRuntime::class.java)
         val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
+        `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
         `when`(runtimeSettings.trackingProtectionCategories).thenReturn(TrackingProtectionPolicy.none().categories)
         `when`(runtime.settings).thenReturn(runtimeSettings)
         val engine = GeckoEngine(runtime)
@@ -52,6 +53,10 @@ class GeckoEngineTest {
         assertTrue(engine.settings.javascriptEnabled)
         engine.settings.javascriptEnabled = false
         verify(runtimeSettings).javaScriptEnabled = false
+
+        assertTrue(engine.settings.webFontsEnabled)
+        engine.settings.webFontsEnabled = false
+        verify(runtimeSettings).webFontsEnabled = false
 
         assertEquals(TrackingProtectionPolicy.none(), engine.settings.trackingProtectionPolicy)
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.all()
@@ -77,9 +82,11 @@ class GeckoEngineTest {
 
         GeckoEngine(runtime, DefaultSettings(
                 trackingProtectionPolicy = TrackingProtectionPolicy.all(),
-                javascriptEnabled = false))
+                javascriptEnabled = false,
+                webFontsEnabled = false))
 
         verify(runtimeSettings).javaScriptEnabled = false
+        verify(runtimeSettings).webFontsEnabled = false
         verify(runtimeSettings).trackingProtectionCategories = TrackingProtectionPolicy.all().categories
     }
 }

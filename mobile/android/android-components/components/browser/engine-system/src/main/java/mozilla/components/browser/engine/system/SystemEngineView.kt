@@ -128,6 +128,10 @@ class SystemEngineView @JvmOverloads constructor(
 
         @Suppress("ReturnCount")
         override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
+            if (session?.webFontsEnabled == false && UrlMatcher.isWebFont(request.url)) {
+                return WebResourceResponse(null, null, null)
+            }
+
             if (session?.trackingProtectionEnabled == true) {
                 val resourceUri = request.url
                 val scheme = resourceUri.scheme

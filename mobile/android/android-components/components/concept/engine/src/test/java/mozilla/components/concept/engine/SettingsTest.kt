@@ -25,6 +25,8 @@ class SettingsTest {
             { settings.javascriptEnabled = false },
             { settings.domStorageEnabled },
             { settings.domStorageEnabled = false },
+            { settings.webFontsEnabled },
+            { settings.webFontsEnabled = false },
             { settings.trackingProtectionPolicy },
             { settings.trackingProtectionPolicy = TrackingProtectionPolicy.all() },
             { settings.requestInterceptor },
@@ -49,13 +51,15 @@ class SettingsTest {
         val interceptor: RequestInterceptor = mock()
 
         val trackingProtectionSettings = DefaultSettings(
-            false,
-            false,
-            TrackingProtectionPolicy.all(),
-            interceptor)
+            javascriptEnabled = false,
+            domStorageEnabled = false,
+            webFontsEnabled = false,
+            trackingProtectionPolicy = TrackingProtectionPolicy.all(),
+            requestInterceptor = interceptor)
 
         assertFalse(trackingProtectionSettings.domStorageEnabled)
         assertFalse(trackingProtectionSettings.javascriptEnabled)
+        assertFalse(trackingProtectionSettings.webFontsEnabled)
         assertEquals(TrackingProtectionPolicy.all(), trackingProtectionSettings.trackingProtectionPolicy)
         assertEquals(interceptor, trackingProtectionSettings.requestInterceptor)
     }

@@ -44,12 +44,17 @@ class GeckoEngineTest {
         val runtime = mock(GeckoRuntime::class.java)
         val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
+        `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
         `when`(runtime.settings).thenReturn(runtimeSettings)
         val engine = GeckoEngine(runtime)
 
         assertTrue(engine.settings.javascriptEnabled)
         engine.settings.javascriptEnabled = false
         verify(runtimeSettings).javaScriptEnabled = false
+
+        assertTrue(engine.settings.webFontsEnabled)
+        engine.settings.webFontsEnabled = false
+        verify(runtimeSettings).webFontsEnabled = false
 
         try {
             engine.settings.domStorageEnabled
@@ -67,9 +72,11 @@ class GeckoEngineTest {
         val runtime = mock(GeckoRuntime::class.java)
         val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
+        `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
         `when`(runtime.settings).thenReturn(runtimeSettings)
 
-        GeckoEngine(runtime, DefaultSettings(javascriptEnabled = false))
+        GeckoEngine(runtime, DefaultSettings(javascriptEnabled = false, webFontsEnabled = false))
         verify(runtimeSettings).javaScriptEnabled = false
+        verify(runtimeSettings).webFontsEnabled = false
     }
 }

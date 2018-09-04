@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.system.matcher
 
+import android.net.Uri
 import android.preference.PreferenceManager
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -11,6 +12,7 @@ import org.junit.Assert.assertTrue
 
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import java.io.StringReader
@@ -247,5 +249,16 @@ class UrlMatcherTest {
         // Check that we find the social URIs we moved from Disconnect
         assertTrue(matcher.matches("http://facebook.com", "http://www.facebook.com"))
         assertFalse(matcher.matches("http://disconnect1.com", "http://www.disconnect1.com"))
+    }
+
+    @Test
+    fun testIsWebFont() {
+        assertFalse(UrlMatcher.isWebFont(mock(Uri::class.java)))
+        assertFalse(UrlMatcher.isWebFont(Uri.parse("mozilla.org")))
+        assertTrue(UrlMatcher.isWebFont(Uri.parse("/fonts/test.woff2")))
+        assertTrue(UrlMatcher.isWebFont(Uri.parse("/fonts/test.woff")))
+        assertTrue(UrlMatcher.isWebFont(Uri.parse("/fonts/test.eot")))
+        assertTrue(UrlMatcher.isWebFont(Uri.parse("/fonts/test.ttf")))
+        assertTrue(UrlMatcher.isWebFont(Uri.parse("/fonts/test.otf")))
     }
 }

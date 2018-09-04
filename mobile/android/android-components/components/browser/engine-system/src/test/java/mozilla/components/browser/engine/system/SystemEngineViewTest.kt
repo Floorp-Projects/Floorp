@@ -294,6 +294,31 @@ class SystemEngineViewTest {
     }
 
     @Test
+    fun testWebViewClientBlocksWebFonts() {
+        val engineSession = SystemEngineSession()
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        val webViewClient = engineView.currentWebView.webViewClient
+        val webFontRequest = mock(WebResourceRequest::class.java)
+        `when`(webFontRequest.url).thenReturn(Uri.parse("/fonts/test.woff"))
+        assertNull(webViewClient.shouldInterceptRequest(engineView.currentWebView, webFontRequest))
+
+        engineView.render(engineSession)
+        assertNull(webViewClient.shouldInterceptRequest(engineView.currentWebView, webFontRequest))
+
+        engineSession.settings.webFontsEnabled = false
+
+        val request = mock(WebResourceRequest::class.java)
+        `when`(request.url).thenReturn(Uri.parse("http://mozilla.org"))
+        assertNull(webViewClient.shouldInterceptRequest(engineView.currentWebView, request))
+
+        val response = webViewClient.shouldInterceptRequest(engineView.currentWebView, webFontRequest)
+        assertNotNull(response)
+        assertNull(response.data)
+        assertNull(response.encoding)
+        assertNull(response.mimeType)
+    }
+
+    @Test
     fun testFindListenerNotifiesObservers() {
         val engineSession = SystemEngineSession()
         val engineView = SystemEngineView(RuntimeEnvironment.application)
