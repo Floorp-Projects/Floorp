@@ -6,7 +6,7 @@
 #ifndef KeyedStackCapturer_h__
 #define KeyedStackCapturer_h__
 
-#include "mozilla/Telemetry.h"
+#include "Telemetry.h"
 #include "nsString.h"
 #include "nsClassHashtable.h"
 #include "mozilla/Mutex.h"

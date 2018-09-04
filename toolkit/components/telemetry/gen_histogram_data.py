@@ -6,10 +6,10 @@
 # in a file provided as a command-line argument.
 
 from __future__ import print_function
-from parsers.shared_telemetry_utils import StringTable, static_assert, ParserError
-from parsers import parse_histograms
+from shared_telemetry_utils import StringTable, static_assert, ParserError
 
 import sys
+import parse_histograms
 import buildconfig
 
 banner = """/* This file is auto-generated, see gen_histogram_data.py.  */

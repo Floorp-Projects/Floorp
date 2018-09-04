@@ -20,7 +20,7 @@
 #include "nsBaseHashtable.h"
 #include "nsClassHashtable.h"
 
-#include "core/TelemetryCommon.h"
+#include "TelemetryCommon.h"
 #include "mozilla/IOInterposer.h"
 
 namespace mozilla {

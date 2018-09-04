@@ -96,13 +96,8 @@ whitelists = None
 def load_whitelist():
     global whitelists
     try:
-        parsers_path = os.path.realpath(os.path.dirname(__file__))
-        # The parsers live in build_scripts/parsers in the Telemetry module, while
-        # the histogram-whitelists file lives in the root of the module. Account
-        # for that when looking for the whitelist.
-        # NOTE: if the parsers are moved, this logic will need to be updated.
-        telemetry_module_path = os.path.abspath(os.path.join(parsers_path, os.pardir, os.pardir))
-        whitelist_path = os.path.join(telemetry_module_path, 'histogram-whitelists.json')
+        whitelist_path = os.path.join(os.path.abspath(os.path.realpath(os.path.dirname(__file__))),
+                                      'histogram-whitelists.json')
         with open(whitelist_path, 'r') as f:
             try:
                 whitelists = json.load(f)

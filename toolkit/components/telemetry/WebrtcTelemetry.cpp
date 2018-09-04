@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#include "mozilla/Telemetry.h"
+#include "Telemetry.h"
+#include "TelemetryCommon.h"
 #include "WebrtcTelemetry.h"
 #include "jsapi.h"
 #include "nsPrintfCString.h"

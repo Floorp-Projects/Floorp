@@ -3,12 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import print_function
-from parsers.shared_telemetry_utils import ParserError
+from shared_telemetry_utils import ParserError
 from perfecthash import PerfectHash
 
 PHFSIZE = 512
 
-from parsers import parse_histograms
+import parse_histograms
 import sys
 import buildconfig
 
