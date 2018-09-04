@@ -8,11 +8,11 @@ import java.lang.reflect.Method;
 import java.util.Locale;
 
 import org.mozilla.gecko.LocaleManager;
-import org.mozilla.gecko.util.StrictModeContext;
 
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 
@@ -37,11 +37,14 @@ public class Locales {
         }
     }
 
-    @SuppressWarnings("try")
     public static void initializeLocale(Context context) {
         final LocaleManager localeManager = getLocaleManager();
-        try (StrictModeContext unused = StrictModeContext.allowDiskWrites()) {
+        final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
+        StrictMode.allowThreadDiskWrites();
+        try {
             localeManager.getAndApplyPersistedLocale(context);
+        } finally {
+            StrictMode.setThreadPolicy(savedPolicy);
         }
     }
 
