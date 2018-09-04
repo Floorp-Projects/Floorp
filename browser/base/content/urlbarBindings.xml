@@ -85,6 +85,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this._formattingEnabled = this._prefs.getBoolPref("formatting.enabled");
         this._mayTrimURLs = this._prefs.getBoolPref("trimURLs");
         this._adoptIntoActiveWindow = this._prefs.getBoolPref("switchTabs.adoptIntoActiveWindow");
+        this._ctrlCanonizesURLs = this._prefs.getBoolPref("ctrlCanonizesURLs");
         this.inputField.controllers.insertControllerAt(0, this._copyCutController);
         this.inputField.addEventListener("paste", this);
         this.inputField.addEventListener("mousedown", this);
@@ -713,11 +714,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           let isMouseEvent = event instanceof MouseEvent;
           let reuseEmpty = !isMouseEvent;
           let where = undefined;
-          if (isMouseEvent) {
-            where = whereToOpenLink(event, false, false);
+          if (!isMouseEvent && event && event.altKey) {
+            // We support using 'alt' to open in a tab, because ctrl/shift
+            // might be used for canonizing URLs:
+            where = event.shiftKey ? "tabshifted" : "tab";
+          } else if (!isMouseEvent && this._ctrlCanonizesURLs && event && event.ctrlKey) {
+            // If we're allowing canonization, and this is a key event with ctrl
+            // pressed, open in current tab to allow ctrl-enter to canonize URL.
+            where = "current";
           } else {
-            let altEnter = event && event.altKey;
-            where = altEnter ? "tab" : "current";
+            where = whereToOpenLink(event, false, false);
           }
           if (this.openInTab) {
             if (where == "current") {
@@ -848,6 +854,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   }
                   return;
                 }
+
+                // Once we get here, we got a switchtab action but the user
+                // bypassed it by pressing shift/meta/ctrl. Those modifiers
+                // might otherwise affect where we open - we always want to
+                // open in the current tab.
+                where = "current";
                 break;
               case "searchengine":
                 if (selectedOneOff && selectedOneOff.engine) {
@@ -1027,40 +1039,19 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // Only add the suffix when the URL bar value isn't already "URL-like",
           // and only if we get a keyboard event, to match user expectations.
           if (!/^\s*[^.:\/\s]+(?:\/.*|\s*)$/i.test(aUrl) ||
-              !(aTriggeringEvent instanceof KeyboardEvent)) {
+              !this._ctrlCanonizesURLs ||
+              !(aTriggeringEvent instanceof KeyboardEvent) ||
+              !aTriggeringEvent.ctrlKey) {
             return;
           }
 
-          let url = aUrl;
-          let accel = AppConstants.platform == "macosx" ?
-                      aTriggeringEvent.metaKey :
-                      aTriggeringEvent.ctrlKey;
-          let shift = aTriggeringEvent.shiftKey;
-          let suffix = "";
-
-          switch (true) {
-            case (accel && shift):
-              suffix = ".org/";
-              break;
-            case (shift):
-              suffix = ".net/";
-              break;
-            case (accel):
-              try {
-                suffix = Services.prefs.getCharPref("browser.fixup.alternate.suffix");
-                if (suffix.charAt(suffix.length - 1) != "/")
-                  suffix += "/";
-              } catch (e) {
-                suffix = ".com/";
-              }
-              break;
+          let suffix = Services.prefs.getCharPref("browser.fixup.alternate.suffix", ".com/");
+          if (!suffix.endsWith("/")) {
+            suffix += "/";
           }
-
-          if (!suffix)
-            return;
 
           // trim leading/trailing spaces (bug 233205)
-          url = url.trim();
+          let url = aUrl.trim();
 
           // Tack www. and suffix on.  If user has appended directories, insert
           // suffix before them (bug 279035).  Be careful not to get two slashes.
@@ -1330,6 +1321,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 break;
               case "formatting.enabled":
                 this._formattingEnabled = this._prefs.getBoolPref(aData);
+                break;
+              case "ctrlCanonizesURLs":
+                this._ctrlCanonizesURLs = this._prefs.getBoolPref(aData);
                 break;
               case "speculativeConnect.enabled":
                 this.speculativeConnectEnabled = this._prefs.getBoolPref(aData);
@@ -1657,9 +1651,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
 
           let canonizeValue = this.value;
-          if (event.shiftKey || (AppConstants.platform === "macosx" ?
-                                 event.metaKey :
-                                 event.ctrlKey)) {
+          if (event.ctrlKey) {
             let action = this._parseActionUrl(canonizeValue);
             if (action && "searchSuggestion" in action.params) {
               canonizeValue = action.params.searchSuggestion;
