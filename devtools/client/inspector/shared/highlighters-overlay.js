@@ -1007,9 +1007,6 @@ class HighlightersOverlay {
     this.editors = {};
   }
 
-  /**
-  * Destroy and clean-up all instances of highlighters.
-  */
   destroyHighlighters() {
     for (const type in this.highlighters) {
       if (this.highlighters[type]) {
@@ -1017,7 +1014,6 @@ class HighlightersOverlay {
         this.highlighters[type] = null;
       }
     }
-
     this.highlighters = null;
   }
 

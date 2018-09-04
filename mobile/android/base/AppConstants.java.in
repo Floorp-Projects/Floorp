@@ -128,6 +128,13 @@ public class AppConstants {
 //#endif
 //#endif
 
+    public static final boolean MOZ_ANDROID_MMA =
+//#ifdef MOZ_ANDROID_MMA
+    true;
+//#else
+    false;
+//#endif
+
     public static final String MOZ_CHILD_PROCESS_NAME = "@MOZ_CHILD_PROCESS_NAME@";
     public static final String MOZ_UPDATE_CHANNEL = "@MOZ_UPDATE_CHANNEL@";
     public static final String OMNIJAR_NAME = "@OMNIJAR_NAME@";

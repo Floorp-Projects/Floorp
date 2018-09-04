@@ -306,6 +306,44 @@ async function runTest8() {
   exitprintpreview();
   ok(compareCanvases(), "Printing pages with fonts loaded from CSS and JS should be the same.");
 
+  requestAnimationFrame(function() { setTimeout(runTest9); } );
+}
+
+// Test for bug 1487649
+async function runTest9() {
+  window.frames[0].document.body.innerHTML = `
+    <svg width="100" height="100">
+      <rect width='100' height='100' fill='lime'/>
+    </svg>
+  `;
+
+  printpreview();
+  ctx1.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+  exitprintpreview();
+
+  window.frames[0].document.body.innerHTML = `
+    <svg width="100" height="100">
+      <defs>
+        <g id="useme">
+          <rect width='100' height='100' fill='lime'/>
+        </g>
+      </defs>
+      <use />
+    </svg>
+  `;
+
+  // Set the attribute explicitly because this is a chrome document, and the
+  // href attribute would get sanitized.
+  window.frames[0].document.querySelector("use").setAttribute("href", "#useme");
+
+  // Ensure the <use> shadow tree is created so we test what we want to test.
+  window.frames[0].document.body.offsetTop;
+
+  printpreview();
+  ctx2.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(255,255,255)");
+  exitprintpreview();
+  ok(compareCanvases(), "Printing <use> subtrees should create same output");
+
   finish();
 }
 

@@ -9,7 +9,6 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 DevToolsModules(
     'original-source.js',
     'panel.js',
-    'styleeditor-commands.js',
     'StyleEditorUI.jsm',
     'StyleEditorUtil.jsm',
     'StyleSheetEditor.jsm',

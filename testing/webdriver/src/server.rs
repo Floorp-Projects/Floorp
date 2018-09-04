@@ -63,7 +63,7 @@ impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
         }
     }
 
-    fn run(&mut self, msg_chan: Receiver<DispatchMessage<U>>) {
+    fn run(&mut self, msg_chan: &Receiver<DispatchMessage<U>>) {
         loop {
             match msg_chan.recv() {
                 Ok(DispatchMessage::HandleWebDriver(msg, resp_chan)) => {
@@ -174,7 +174,7 @@ impl<U: WebDriverExtensionRoute + 'static> Service for HttpHandler<U> {
     type ResBody = Body;
 
     type Error = hyper::Error;
-    type Future = Box<future::Future<Item=Response<Self::ResBody>, Error=hyper::Error> + Send>;
+    type Future = Box<future::Future<Item = Response<Self::ResBody>, Error = hyper::Error> + Send>;
 
     fn call(&mut self, req: Request<Self::ReqBody>) -> Self::Future {
         let uri = req.uri().clone();
@@ -190,8 +190,8 @@ impl<U: WebDriverExtensionRoute + 'static> Service for HttpHandler<U> {
                 // The fact that this locks for basically the whole request doesn't
                 // matter as long as we are only handling one request at a time.
                 match api.lock() {
-                    Ok(ref api) => api.decode_request(method, &uri.path(), &body[..]),
-                    Err(_) => panic!("Something terrible happened"),
+                    Ok(ref api) => api.decode_request(&method, &uri.path(), &body[..]),
+                    Err(e) => panic!("Error decoding request: {:?}", e),
                 }
             };
 
@@ -200,13 +200,10 @@ impl<U: WebDriverExtensionRoute + 'static> Service for HttpHandler<U> {
                     let (send_res, recv_res) = channel();
                     match chan.lock() {
                         Ok(ref c) => {
-                            let res =
-                                c.send(DispatchMessage::HandleWebDriver(message, send_res));
+                            let res = c.send(DispatchMessage::HandleWebDriver(message, send_res));
                             match res {
                                 Ok(x) => x,
-                                Err(_) => {
-                                    panic!("Something terrible happened");
-                                }
+                                Err(e) => panic!("Error: {:?}", e),
                             }
                         }
                         Err(e) => panic!("Error reading response: {:?}", e),
@@ -217,14 +214,12 @@ impl<U: WebDriverExtensionRoute + 'static> Service for HttpHandler<U> {
                             Ok(response) => {
                                 (StatusCode::OK, serde_json::to_string(&response).unwrap())
                             }
-                            Err(err) => {
-                                (err.http_status(), serde_json::to_string(&err).unwrap())
-                            }
+                            Err(e) => (e.http_status(), serde_json::to_string(&e).unwrap()),
                         },
                         Err(e) => panic!("Error reading response: {:?}", e),
                     }
                 }
-                Err(err) => (err.http_status(), serde_json::to_string(&err).unwrap()),
+                Err(e) => (e.http_status(), serde_json::to_string(&e).unwrap()),
             };
 
             debug!("<- {} {}", status, resp_body);
@@ -289,7 +284,7 @@ where
     let builder = thread::Builder::new().name("webdriver dispatcher".to_string());
     builder.spawn(move || {
         let mut dispatcher = Dispatcher::new(handler);
-        dispatcher.run(msg_recv);
+        dispatcher.run(&msg_recv);
     })?;
 
     Ok(Listener { _guard: Some(handle), socket: addr })

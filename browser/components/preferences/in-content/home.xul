@@ -84,13 +84,15 @@
       </menulist>
     </hbox>
 
-    <hbox id="browserHomePageExtensionContent" align="center" hidden="true">
+    <hbox id="browserHomePageExtensionContent"
+          align="center" hidden="true" class="extension-controlled">
       <description control="disableHomePageExtension" flex="1" />
       <button id="disableHomePageExtension"
               class="extension-controlled-button accessory-button"
               data-l10n-id="disable-extension" />
     </hbox>
-    <hbox id="browserNewTabExtensionContent" align="center" hidden="true">
+    <hbox id="browserNewTabExtensionContent"
+          align="center" hidden="true" class="extension-controlled">
       <description control="disableNewTabExtension" flex="1" />
       <button id="disableNewTabExtension"
               class="extension-controlled-button accessory-button"

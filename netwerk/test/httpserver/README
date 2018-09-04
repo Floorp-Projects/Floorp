@@ -24,10 +24,10 @@ Firefox, these simply need to be added to the /components directory of your XPI.
 Other applications may require use of regxpcom or other techniques; consult the
 applicable documentation for further details.
 
-Finally, create an instance of the server using the following command:
+Finally, load httpd.js into the current file, and create an instance of the
+server using the following command:
 
-  var server = Components.classes["@mozilla.org/server/jshttp;1"]
-                         .createInstance(Components.interfaces.nsIHttpServer);
+  var server = new nsHttpServer();
 
 At this point you'll want to initialize the server, since by default it doesn't
 serve many useful paths.  For more information on this, see the IDL docs for the

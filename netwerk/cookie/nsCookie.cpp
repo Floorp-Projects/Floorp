@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Encoding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "nsAutoPtr.h"
 #include "nsCookie.h"
-#include "nsUTF8ConverterService.h"
 #include <stdlib.h>
 
 /******************************************************************************
@@ -97,9 +97,8 @@ nsCookie::Create(const nsACString &aName,
 {
   // Ensure mValue contains a valid UTF-8 sequence. Otherwise XPConnect will
   // truncate the string after the first invalid octet.
-  RefPtr<nsUTF8ConverterService> converter = new nsUTF8ConverterService();
   nsAutoCString aUTF8Value;
-  converter->ConvertStringToUTF8(aValue, "UTF-8", false, true, 1, aUTF8Value);
+  UTF_8_ENCODING->DecodeWithoutBOMHandling(aValue, aUTF8Value);
 
   // find the required string buffer size, adding 4 for the terminating nulls
   const uint32_t stringLength = aName.Length() + aUTF8Value.Length() +

@@ -50,13 +50,6 @@ impl Cursor {
         unsafe { clang_isDeclaration(self.kind()) != 0 }
     }
 
-    /// Get the null cursor, which has no referent.
-    pub fn null() -> Self {
-        Cursor {
-            x: unsafe { clang_getNullCursor() },
-        }
-    }
-
     /// Get this cursor's referent's spelling.
     pub fn spelling(&self) -> String {
         unsafe { cxstring_into_string(clang_getCursorSpelling(self.x)) }

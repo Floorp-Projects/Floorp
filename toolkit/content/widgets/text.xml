@@ -11,7 +11,7 @@
 
   <!-- bound to <description>s -->
   <binding id="text-base">
-    <implementation implements="nsIDOMXULDescriptionElement">
+    <implementation>
       <property name="disabled" onset="if (val) this.setAttribute('disabled', 'true');
                                        else this.removeAttribute('disabled');
                                        return val;"

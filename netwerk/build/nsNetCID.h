@@ -533,27 +533,6 @@
     {0xa5, 0x0c, 0x2c, 0xbb, 0x08, 0x5a, 0xb7, 0xa5} \
 }
 
-#define NS_APPLICATIONCACHENAMESPACE_CONTRACTID \
-    "@mozilla.org/network/application-cache-namespace;1"
-#define NS_APPLICATIONCACHENAMESPACE_CID             \
-{ /* b00ed78a-04e2-4f74-8e1c-d1af79dfd12f */         \
-    0xb00ed78a,                                      \
-    0x04e2,                                          \
-    0x4f74,                                          \
-   {0x8e, 0x1c, 0xd1, 0xaf, 0x79, 0xdf, 0xd1, 0x2f}  \
-}
-
-#define NS_APPLICATIONCACHE_CONTRACTID \
-    "@mozilla.org/network/application-cache;1"
-
-#define NS_APPLICATIONCACHE_CID             \
-{ /* 463440c5-baad-4f3c-9e50-0b107abe7183 */ \
-    0x463440c5, \
-    0xbaad, \
-    0x4f3c, \
-   {0x9e, 0x50, 0xb, 0x10, 0x7a, 0xbe, 0x71, 0x83 } \
-}
-
 /******************************************************************************
  * netwerk/protocol/http/ classes
  */

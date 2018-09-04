@@ -148,7 +148,7 @@ impl<'ctx> CannotDerivePartialEqOrPartialOrd<'ctx> {
         }
 
         match *ty.kind() {
-            // Handle the simple cases. These can derive partialeq without further
+            // Handle the simple cases. These can derive partialeq/partialord without further
             // information.
             TypeKind::Void |
             TypeKind::NullPtr |
@@ -198,6 +198,13 @@ impl<'ctx> CannotDerivePartialEqOrPartialOrd<'ctx> {
                     );
                     return CanDerive::ArrayTooLarge;
                 }
+            }
+            TypeKind::Vector(..) => {
+                // FIXME: vectors always can derive PartialEq, but they should
+                // not derive PartialOrd:
+                // https://github.com/rust-lang-nursery/packed_simd/issues/48
+                trace!("    vectors cannot derive `PartialEq`/`PartialOrd`");
+                return CanDerive::No;
             }
 
             TypeKind::Pointer(inner) => {

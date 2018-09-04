@@ -96,7 +96,7 @@ CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
     baselineEnabled = cx->options().wasmBaseline() || gcEnabled;
     ionEnabled = cx->options().wasmIon() && !gcEnabled;
     sharedMemoryEnabled = cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
-    gcTypesEnabled = gcEnabled ? HasGcTypes::True : HasGcTypes::False;
+    gcTypesConfigured = gcEnabled ? HasGcTypes::True : HasGcTypes::False;
     testTiering = (cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2) && !gcEnabled;
 
     // Debug information such as source view or debug traps will require
@@ -432,7 +432,7 @@ wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, Uni
     DebugEnabled debug;
     InitialCompileFlags(args, d, &mode, &tier, &debug);
 
-    ModuleEnvironment env(mode, tier, debug, args.gcTypesEnabled,
+    ModuleEnvironment env(mode, tier, debug, args.gcTypesConfigured,
                           args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
     if (!DecodeModuleEnvironment(d, &env))
         return nullptr;
@@ -458,7 +458,7 @@ wasm::CompileTier2(const CompileArgs& args, Module& module, Atomic<bool>* cancel
     UniqueChars error;
     Decoder d(module.bytecode().bytes, 0, &error);
 
-    MOZ_ASSERT(args.gcTypesEnabled == HasGcTypes::False, "can't ion-compile with gc types yet");
+    MOZ_ASSERT(args.gcTypesConfigured == HasGcTypes::False, "can't ion-compile with gc types yet");
 
     ModuleEnvironment env(CompileMode::Tier2, Tier::Ion, DebugEnabled::False, HasGcTypes::False,
                           args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
@@ -587,7 +587,7 @@ wasm::CompileStreaming(const CompileArgs& args,
         DebugEnabled debug;
         InitialCompileFlags(args, d, &mode, &tier, &debug);
 
-        env.emplace(mode, tier, debug, args.gcTypesEnabled,
+        env.emplace(mode, tier, debug, args.gcTypesConfigured,
                     args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
         if (!DecodeModuleEnvironment(d, env.ptr()))
             return nullptr;

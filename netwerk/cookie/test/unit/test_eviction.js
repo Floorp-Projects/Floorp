@@ -9,215 +9,69 @@ const cm = cs.QueryInterface(Ci.nsICookieManager);
 function run_test() {
     var tests = [];
     Services.prefs.setIntPref("network.cookie.staleThreshold", 0);
-    for (var host of BASE_HOSTNAMES) {
-        var base = SUBDOMAINS[0] + host;
-        var sub = SUBDOMAINS[1] + host;
-        var other = SUBDOMAINS[2] + host;
-        var another = SUBDOMAINS[3] + host;
-        tests.push([host, test_basic_eviction.bind(this, base, sub, other, another)]);
-        add_task(async function a() {
-            var t = tests.splice(0, 1)[0];
-            info('testing with host ' + t[0]);
-            await t[1]();
-            cm.removeAll();
-        });
-        tests.push([host, test_domain_or_path_matches_not_both.bind(this, base, sub, other, another)]);
-        add_task(async function() {
-            var t = tests.splice(0, 1)[0];
-            info('testing with host ' + t[0]);
-            await t[1]();
-            cm.removeAll();
-        });
-    }
     add_task(async function() {
-        await test_localdomain();
+        await test_basic_eviction("example.org");
         cm.removeAll();
-    });
-
-    add_task(async function() {
-        await test_path_prefix();
     });
 
     run_next_test();
 }
 
-// Verify that cookies that share a path prefix with the URI path are still considered
-// candidates for eviction, since the paths do not actually match.
-async function test_path_prefix() {
-    Services.prefs.setIntPref("network.cookie.maxPerHost", 2);
-
-    const BASE_URI = Services.io.newURI("http://example.org/");
-    const BASE_BAR = Services.io.newURI("http://example.org/bar/");
-    const BASE_BARBAR = Services.io.newURI("http://example.org/barbar/");
-
-    await setCookie("session_first", null, null, null, BASE_URI);
-    await setCookie("session_second", null, "/bar", null, BASE_BAR);
-    verifyCookies(['session_first', 'session_second'], BASE_URI);
-
-    await setCookie("session_third", null, "/barbar", null, BASE_BARBAR);
-    verifyCookies(['session_first', 'session_third'], BASE_URI);
-}
-
-// Verify that subdomains of localhost are treated as separate hosts and aren't considered
-// candidates for eviction.
-async function test_localdomain() {
-    Services.prefs.setIntPref("network.cookie.maxPerHost", 2);
-
-    const BASE_URI = Services.io.newURI("http://localhost");
-    const BASE_BAR = Services.io.newURI("http://localhost/bar");
-    const OTHER_URI = Services.io.newURI("http://other.localhost");
-    const OTHER_BAR = Services.io.newURI("http://other.localhost/bar");
-    
-    await setCookie("session_no_path", null, null, null, BASE_URI);
-    await setCookie("session_bar_path", null, "/bar", null, BASE_BAR);
-
-    await setCookie("session_no_path", null, null, null, OTHER_URI);
-    await setCookie("session_bar_path", null, "/bar", null, OTHER_BAR);
-
-    verifyCookies(['session_no_path',
-                   'session_bar_path'], BASE_URI);
-    verifyCookies(['session_no_path',
-                   'session_bar_path'], OTHER_URI);
-
-    await setCookie("session_another_no_path", null, null, null, BASE_URI);
-    verifyCookies(['session_no_path',
-                   'session_another_no_path'], BASE_URI);
-
-    await setCookie("session_another_no_path", null, null, null, OTHER_URI);
-    verifyCookies(['session_no_path',
-                   'session_another_no_path'], OTHER_URI);
-}
-
-// Ensure that cookies are still considered candidates for eviction if either the domain
-// or path matches, but not both.
-async function test_domain_or_path_matches_not_both(base_host,
-                                               subdomain_host,
-                                               other_subdomain_host,
-                                               another_subdomain_host) {
-    Services.prefs.setIntPref("network.cookie.maxPerHost", 2);
-
-    const BASE_URI = Services.io.newURI("http://" + base_host);
-    const PUB_FOO_PATH = Services.io.newURI("http://" + subdomain_host + "/foo/");
-    const WWW_BAR_PATH = Services.io.newURI("http://" + other_subdomain_host + "/bar/");
-    const OTHER_BAR_PATH = Services.io.newURI("http://" + another_subdomain_host + "/bar/");
-    const PUB_BAR_PATH = Services.io.newURI("http://" + subdomain_host + "/bar/");
-    const WWW_FOO_PATH = Services.io.newURI("http://" + other_subdomain_host + "/foo/");
-
-    await setCookie("session_pub_with_foo_path", subdomain_host, "/foo", null, PUB_FOO_PATH);
-    await setCookie("session_www_with_bar_path", other_subdomain_host, "/bar", null, WWW_BAR_PATH);
-    verifyCookies(['session_pub_with_foo_path',
-                   'session_www_with_bar_path'], BASE_URI);
-
-    await setCookie("session_pub_with_bar_path", subdomain_host, "/bar", null, PUB_BAR_PATH);
-    verifyCookies(['session_www_with_bar_path',
-                   'session_pub_with_bar_path'], BASE_URI);
-
-    await setCookie("session_other_with_bar_path", another_subdomain_host, "/bar", null, OTHER_BAR_PATH);
-    verifyCookies(['session_pub_with_bar_path',
-                   'session_other_with_bar_path'], BASE_URI);
-}
-
-async function test_basic_eviction(base_host, subdomain_host, other_subdomain_host) {
+async function test_basic_eviction(base_host) {
+    Services.prefs.setIntPref("network.cookie.quotaPerHost", 2);
     Services.prefs.setIntPref("network.cookie.maxPerHost", 5);
 
     const BASE_URI = Services.io.newURI("http://" + base_host);
-    const SUBDOMAIN_URI = Services.io.newURI("http://" + subdomain_host);
-    const OTHER_SUBDOMAIN_URI = Services.io.newURI("http://" + other_subdomain_host);
     const FOO_PATH = Services.io.newURI("http://" + base_host + "/foo/");
     const BAR_PATH = Services.io.newURI("http://" + base_host + "/bar/");
-    const ALL_SUBDOMAINS = '.' + base_host;
-    const OTHER_SUBDOMAIN = other_subdomain_host;
 
-    // Initialize the set of cookies with a mix of non-session cookies with no path,
-    // and session cookies with explicit paths. Any subsequent cookies added will cause
-    // existing cookies to be evicted.
-    await setCookie("non_session_non_path_non_domain", null, null, 100000, BASE_URI);
-    await setCookie("non_session_non_path_subdomain", ALL_SUBDOMAINS, null, 100000, SUBDOMAIN_URI);
-    await setCookie("session_non_path_pub_domain", OTHER_SUBDOMAIN, null, null, OTHER_SUBDOMAIN_URI);
-    await setCookie("session_foo_path", null, "/foo", null, FOO_PATH);
-    await setCookie("session_bar_path", null, "/bar", null, BAR_PATH);
-    verifyCookies(['non_session_non_path_non_domain',
-                   'non_session_non_path_subdomain',
-                   'session_non_path_pub_domain',
-                   'session_foo_path',
-                   'session_bar_path'], BASE_URI);
-
-    // Ensure that cookies set for the / path appear more recent.
-    cs.getCookieString(OTHER_SUBDOMAIN_URI, null)
-    verifyCookies(['non_session_non_path_non_domain',
-                   'session_foo_path',
-                   'session_bar_path',
-                   'non_session_non_path_subdomain',
-                   'session_non_path_pub_domain'], BASE_URI);
-
-    // Evict oldest cookie that does not match example.org/foo (session_bar_path)
+    await setCookie("session_foo_path_1", null, "/foo", null, FOO_PATH);
     await setCookie("session_foo_path_2", null, "/foo", null, FOO_PATH);
-    verifyCookies(['non_session_non_path_non_domain',
-                   'session_foo_path',
-                   'non_session_non_path_subdomain',
-                   'session_non_path_pub_domain',
-                   'session_foo_path_2'], BASE_URI);
-
-    // Evict oldest cookie that does not match example.org/bar (session_foo_path)
-    await setCookie("session_bar_path_2", null, "/bar", null, BAR_PATH);
-    verifyCookies(['non_session_non_path_non_domain',
-                   'non_session_non_path_subdomain',
-                   'session_non_path_pub_domain',
+    await setCookie("session_foo_path_3", null, "/foo", null, FOO_PATH);
+    await setCookie("session_foo_path_4", null, "/foo", null, FOO_PATH);
+    await setCookie("session_foo_path_5", null, "/foo", null, FOO_PATH);
+    verifyCookies(['session_foo_path_1',
                    'session_foo_path_2',
+                   'session_foo_path_3',
+                   'session_foo_path_4',
+                   'session_foo_path_5'], BASE_URI);
+
+    // Check if cookies are evicted by creation time.
+    await setCookie("session_foo_path_6", null, "/foo", null, FOO_PATH);
+    verifyCookies(['session_foo_path_4',
+                   'session_foo_path_5',
+                   'session_foo_path_6'], BASE_URI);
+
+    await setCookie("session_bar_path_1", null, "/bar", null, BAR_PATH);
+    await setCookie("session_bar_path_2", null, "/bar", null, BAR_PATH);
+
+    verifyCookies(['session_foo_path_4',
+                   'session_foo_path_5',
+                   'session_foo_path_6',
+                   'session_bar_path_1',
                    'session_bar_path_2'], BASE_URI);
 
-    // Evict oldest cookie that does not match example.org/ (session_non_path_pub_domain)
-    await setCookie("non_session_non_path_non_domain_2", null, null, 100000, BASE_URI);
-    verifyCookies(['non_session_non_path_non_domain',
-                   'non_session_non_path_subdomain',
-                   'session_foo_path_2',
-                   'session_bar_path_2',
-                   'non_session_non_path_non_domain_2'], BASE_URI);
+    // Check if cookies are evicted by last accessed time.
+    cs.getCookieString(FOO_PATH, null);
+    await setCookie("session_foo_path_7", null, "/foo", null, FOO_PATH);
+    verifyCookies(['session_foo_path_5',
+                   'session_foo_path_6',
+                   'session_foo_path_7'], BASE_URI);
 
-    // Evict oldest cookie that does not match example.org/ (session_foo_path_2)
-    await setCookie("session_non_path_non_domain_3", null, null, null, BASE_URI);
-    verifyCookies(['non_session_non_path_non_domain',
-                   'non_session_non_path_subdomain',
-                   'session_bar_path_2',
-                   'non_session_non_path_non_domain_2',
-                   'session_non_path_non_domain_3'], BASE_URI);
+    await setCookie("non_session_expired_foo_path_1", null, "/foo", 1, FOO_PATH);
+    await setCookie("non_session_expired_foo_path_2", null, "/foo", 1, FOO_PATH);
+    verifyCookies(['session_foo_path_5',
+                   'session_foo_path_6',
+                   'session_foo_path_7',
+                   'non_session_expired_foo_path_1',
+                   'non_session_expired_foo_path_2'], BASE_URI);
 
-    // Evict oldest cookie; all such cookies match example.org/bar (non_session_non_path_non_domain)
-    await setCookie("non_session_bar_path_non_domain", null, null, 100000, BAR_PATH);
-    verifyCookies(['non_session_non_path_subdomain',
-                   'session_bar_path_2',
-                   'non_session_non_path_non_domain_2',
-                   'session_non_path_non_domain_3',
-                   'non_session_bar_path_non_domain'], BASE_URI);
-
-    // Evict oldest cookie that deose not match example.org/ (session_bar_path_2)
-    await setCookie("non_session_non_path_pub_domain", null, null, 100000, OTHER_SUBDOMAIN_URI);
-    verifyCookies(['non_session_non_path_subdomain',
-                   'non_session_non_path_non_domain_2',
-                   'session_non_path_non_domain_3',
-                   'non_session_bar_path_non_domain',
-                   'non_session_non_path_pub_domain'], BASE_URI);
-
-    // Evict oldest cookie that does not match example.org/bar (non_session_non_path_pub_domain)
-    await setCookie("non_session_bar_path_non_domain_2", null, '/bar', 100000, BAR_PATH);
-    verifyCookies(['non_session_non_path_subdomain',
-                   'non_session_non_path_non_domain_2',
-                   'session_non_path_non_domain_3',
-                   'non_session_bar_path_non_domain',
-                   'non_session_bar_path_non_domain_2'], BASE_URI);
-
-    // Evict oldest cookie that does not match example.org/ (non_session_bar_path_non_domain)
-    await setCookie("non_session_non_path_non_domain_4", null, null, 100000, BASE_URI);
-    verifyCookies(['non_session_non_path_subdomain',
-                   'non_session_non_path_non_domain_2',
-                   'session_non_path_non_domain_3',
-                   'non_session_bar_path_non_domain_2',
-                   'non_session_non_path_non_domain_4'], BASE_URI);
-
-    // At this point all remaining cookies have a path of / and either don't have a domain
-    // or have one that matches subdomains.
-    // They will therefore be evicted from oldest to newest if all new cookies added share
-    // similar characteristics.
+    // Check if expired cookies are evicted first.
+    await new Promise(resolve => do_timeout(1000, resolve));
+    await setCookie("session_foo_path_8", null, "/foo", null, FOO_PATH);
+    verifyCookies(['session_foo_path_6',
+                   'session_foo_path_7',
+                   'session_foo_path_8'], BASE_URI);
 }
 
 // Verify that the given cookie names exist, and are ordered from least to most recently accessed

@@ -21,7 +21,7 @@ const kShowUIPref = "browser.translation.ui.show";
 const {Translation} = ChromeUtils.import("resource:///modules/translation/Translation.jsm", {});
 
 add_task(async function setup() {
-  Services.prefs.setCharPref(kEnginePref, "yandex");
+  Services.prefs.setCharPref(kEnginePref, "Yandex");
   Services.prefs.setCharPref(kApiKeyPref, "yandexValidKey");
   Services.prefs.setBoolPref(kShowUIPref, true);
 

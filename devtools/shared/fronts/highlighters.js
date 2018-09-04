@@ -24,11 +24,31 @@ const HighlighterFront = FrontClassWithSpec(highlighterSpec, {
     return this._pick();
   }, {
     impl: "_pick"
-  })
+  }),
 });
 
 exports.HighlighterFront = HighlighterFront;
 
-const CustomHighlighterFront = FrontClassWithSpec(customHighlighterSpec, {});
+const CustomHighlighterFront = FrontClassWithSpec(customHighlighterSpec, {
+  _isShown: false,
+
+  show: custom(function(...args) {
+    this._isShown = true;
+    return this._show(...args);
+  }, {
+    impl: "_show"
+  }),
+
+  hide: custom(function() {
+    this._isShown = false;
+    return this._hide();
+  }, {
+    impl: "_hide"
+  }),
+
+  isShown: function() {
+    return this._isShown;
+  }
+});
 
 exports.CustomHighlighterFront = CustomHighlighterFront;

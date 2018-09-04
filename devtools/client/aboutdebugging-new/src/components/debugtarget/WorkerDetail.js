@@ -27,15 +27,16 @@ class WorkerDetail extends PureComponent {
     const label = fetch === SERVICE_WORKER_FETCH_STATES.LISTENING
                     ? "Listening for fetch events"
                     : "Not listening for fetch events";
-    return this.renderField("Fetch", label);
+    return this.renderField("fetch", "Fetch", label);
   }
 
-  renderField(name, value) {
+  renderField(key, name, value) {
     return [
-      dom.dt({}, name),
+      dom.dt({ key: `${ key }-dt` }, name),
       dom.dd(
         {
           className: "ellipsis-text",
+          key: `${ key }-dd`,
           title: value,
         },
         value,
@@ -62,7 +63,7 @@ class WorkerDetail extends PureComponent {
         className: "worker-detail",
       },
       fetch ? this.renderFetch() : null,
-      scope ? this.renderField("Scope", scope) : null,
+      scope ? this.renderField("scope", "Scope", scope) : null,
       status ? this.renderStatus() : null,
     );
   }

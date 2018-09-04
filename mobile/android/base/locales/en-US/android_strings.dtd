@@ -899,5 +899,7 @@ Picture-in-picture mini window -->
 <!ENTITY mls_notification_channel "&vendorShortName; Location Service">
 <!ENTITY download_notification_channel "Downloads">
 <!ENTITY media_notification_channel "Media playback">
+<!-- These push notifications come without a specific channel and/or name from Leanplum -->
+<!ENTITY leanplum_default_notifications_channel "&brandShortName; Push notifications">
 <!ENTITY updater_notification_channel "App updates">
 <!ENTITY synced_tabs_notification_channel "Synced tabs">

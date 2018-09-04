@@ -604,8 +604,8 @@ function handleRequest(req, res) {
     return;
 
   }
-  // for use with test_trr.js, test8b
-  else if (u.path === "/dns-ecs?dns=AAABAAABAAAAAAABA2VjcwdleGFtcGxlA2NvbQAAAQABAAApEAAAAAAAAAgACAAEAAIAAA") {
+    // for use with test_trr.js, test8b
+  else if (u.path === "/dns-ecs?dns=AAABAAABAAAAAAABA2VjcwdleGFtcGxlA2NvbQAAAQABAAApEAAAAAAAAAgACAAEAAEAAA") {
     // the query string asks for an A entry for ecs.example.com
     // ecs.example.com has A entry 5.5.5.5
     var content= new Buffer("00000100000100010000000003656373076578616D706C6503636F6D0000010001C00C0001000100000037000405050505", "hex");

@@ -24,6 +24,7 @@ const startId          = 8;
 const elemId           = 9;
 const codeId           = 10;
 const dataId           = 11;
+const gcFeatureOptInId = 42;
 
 // User-defined section names
 const nameName         = "name";
@@ -175,6 +176,10 @@ function moduleWithSections(sectionArray) {
         bytes.push(...section.body);
     }
     return toU8(bytes);
+}
+
+function gcFeatureOptInSection(version) {
+    return { name: gcFeatureOptInId, body: [ version & 0x7F ] }
 }
 
 function sigSection(sigs) {

@@ -317,13 +317,14 @@ class nsCookieService final : public nsICookieService
     already_AddRefed<nsIArray>    PurgeCookies(int64_t aCurrentTimeInUsec);
     bool                          FindCookie(const nsCookieKey& aKey, const nsCString& aHost, const nsCString& aName, const nsCString& aPath, nsListIter &aIter);
     bool                          FindSecureCookie(const nsCookieKey& aKey, nsCookie* aCookie);
-    int64_t                       FindStaleCookie(nsCookieEntry *aEntry, int64_t aCurrentTime, nsIURI* aSource, const mozilla::Maybe<bool> &aIsSecure, nsListIter &aIter);
+    void                          FindStaleCookies(nsCookieEntry *aEntry, int64_t aCurrentTime, const mozilla::Maybe<bool> &aIsSecure, nsTArray<nsListIter>& aOutput, uint32_t aLimit);
     void                          TelemetryForEvictingStaleCookie(nsCookie* aEvicted, int64_t oldestCookieTime);
     void                          NotifyRejected(nsIURI *aHostURI, nsIChannel* aChannel, uint32_t aRejectedReason);
     void                          NotifyThirdParty(nsIURI *aHostURI, bool aAccepted, nsIChannel *aChannel);
     void                          NotifyChanged(nsISupports *aSubject, const char16_t *aData, bool aOldCookieIsSession = false, bool aFromHttp = false);
     void                          NotifyPurged(nsICookie2* aCookie);
     already_AddRefed<nsIArray>    CreatePurgeList(nsICookie2* aCookie);
+    void                          CreateOrUpdatePurgeList(nsIArray** aPurgeList, nsICookie2* aCookie);
     void                          UpdateCookieOldestTime(DBState* aDBState, nsCookie* aCookie);
 
     nsresult                      GetCookiesWithOriginAttributes(const mozilla::OriginAttributesPattern& aPattern, const nsCString& aBaseDomain, nsISimpleEnumerator **aEnumerator);
@@ -362,6 +363,7 @@ class nsCookieService final : public nsICookieService
     bool                          mLeaveSecureAlone;
     uint16_t                      mMaxNumberOfCookies;
     uint16_t                      mMaxCookiesPerHost;
+    uint16_t                      mCookieQuotaPerHost;
     int64_t                       mCookiePurgeAge;
 
     // thread
