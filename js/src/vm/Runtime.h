@@ -400,8 +400,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     void finishRoots();
 
   public:
-    js::UnprotectedData<JS::BuildIdOp> buildIdOp;
-
     /* AsmJSCache callbacks are runtime-wide. */
     js::UnprotectedData<JS::AsmJSCacheOps> asmJSCacheOps;
 
@@ -1192,6 +1190,9 @@ extern const JSSecurityCallbacks NullSecurityCallbacks;
 // This callback is set by JS::SetProcessLargeAllocationFailureCallback
 // and may be null. See comment in jsapi.h.
 extern mozilla::Atomic<JS::LargeAllocationFailureCallback> OnLargeAllocationFailure;
+
+// This callback is set by JS::SetBuildIdOp and may be null. See comment in jsapi.h.
+extern mozilla::Atomic<JS::BuildIdOp> GetBuildId;
 
 } /* namespace js */
 

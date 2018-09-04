@@ -3634,7 +3634,6 @@ WorkerMain(WorkerInput* input)
     JS_SetContextPrivate(cx, sc);
     JS_SetGrayGCRootsTracer(cx, TraceGrayRoots, nullptr);
     SetWorkerContextOptions(cx);
-    JS::SetBuildIdOp(cx, ShellBuildId);
 
     JS_SetFutexCanWait(cx);
     JS::SetWarningReporter(cx, WarningReporter);
@@ -9884,6 +9883,8 @@ main(int argc, char** argv, char** envp)
     if (!InitSharedObjectMailbox())
         return 1;
 
+    JS::SetProcessBuildIdOp(ShellBuildId);
+
     // The fake CPU count must be set before initializing the Runtime,
     // which spins up the thread pool.
     int32_t cpuCount = op.getIntOption("cpu-count"); // What we're really setting
@@ -9924,7 +9925,6 @@ main(int argc, char** argv, char** envp)
     JS_SetDestroyCompartmentCallback(cx, DestroyShellCompartmentPrivate);
 
     JS_AddInterruptCallback(cx, ShellInterruptCallback);
-    JS::SetBuildIdOp(cx, ShellBuildId);
     JS::SetAsmJSCacheOps(cx, &asmJSCacheOps);
 
     bufferStreamState =

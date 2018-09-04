@@ -6336,7 +6336,7 @@ struct Assumptions
     JS::BuildIdCharVector buildId;
 
     Assumptions();
-    bool init(JSContext* cx);
+    bool init();
 
     bool operator==(const Assumptions& rhs) const;
     bool operator!=(const Assumptions& rhs) const { return !(*this == rhs); }
@@ -6352,9 +6352,9 @@ Assumptions::Assumptions()
 {}
 
 bool
-Assumptions::init(JSContext* cx)
+Assumptions::init()
 {
-    return cx->buildIdOp() && cx->buildIdOp()(&buildId);
+    return GetBuildId && GetBuildId(&buildId);
 }
 
 bool
@@ -6595,7 +6595,7 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, JSContext* cx)
     MOZ_RELEASE_ASSERT(compiledSize <= UINT32_MAX);
 
     Assumptions assumptions;
-    if (!assumptions.init(cx))
+    if (!assumptions.init())
         return JS::AsmJSCache_InternalError;
 
     size_t serializedSize = assumptions.serializedSize() +
@@ -6659,7 +6659,7 @@ LookupAsmJSModuleInCache(JSContext* cx, AsmJSParser& parser, bool* loadedFromCac
         return true;
 
     Assumptions currentAssumptions;
-    if (!currentAssumptions.init(cx) || currentAssumptions != deserializedAssumptions)
+    if (!currentAssumptions.init() || currentAssumptions != deserializedAssumptions)
         return true;
 
     uint32_t compiledSize;
