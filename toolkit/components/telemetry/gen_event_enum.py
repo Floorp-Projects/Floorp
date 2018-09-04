@@ -7,10 +7,10 @@
 # The events are defined in files provided as command-line arguments.
 
 from __future__ import print_function
-from parsers.shared_telemetry_utils import ParserError
-from parsers import parse_events
+from shared_telemetry_utils import ParserError
 
 import sys
+import parse_events
 
 banner = """/* This file is auto-generated, see gen_event_enum.py.  */
 """

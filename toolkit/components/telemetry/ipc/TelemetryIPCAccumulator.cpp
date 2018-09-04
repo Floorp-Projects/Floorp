@@ -16,8 +16,8 @@
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
 #include "nsThreadUtils.h"
-#include "core/TelemetryHistogram.h"
-#include "core/TelemetryScalar.h"
+#include "TelemetryHistogram.h"
+#include "TelemetryScalar.h"
 
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;

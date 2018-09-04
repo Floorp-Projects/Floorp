@@ -9,7 +9,7 @@
 
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
-#include "core/TelemetryCommon.h"
+#include "TelemetryCommon.h"
 
 class WebrtcTelemetry {
 public:

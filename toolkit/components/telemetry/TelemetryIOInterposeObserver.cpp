@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TelemetryIOInterposeObserver.h"
-#include "core/TelemetryCommon.h"
+#include "TelemetryCommon.h"
 
 namespace mozilla {
 namespace Telemetry {
