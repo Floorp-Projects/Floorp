@@ -22,7 +22,7 @@ class Toolbar extends PureComponent {
   static get propTypes() {
     return {
       devices: PropTypes.shape(Types.devices).isRequired,
-      displayPixelRatio: Types.pixelRatio.value.isRequired,
+      displayPixelRatio: PropTypes.number.isRequired,
       leftAlignmentEnabled: PropTypes.bool.isRequired,
       networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
       onChangeDevice: PropTypes.func.isRequired,
@@ -40,8 +40,8 @@ class Toolbar extends PureComponent {
       reloadConditions: PropTypes.shape(Types.reloadConditions).isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
       selectedDevice: PropTypes.string.isRequired,
-      selectedPixelRatio: PropTypes.shape(Types.pixelRatio).isRequired,
-      touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
+      selectedPixelRatio: PropTypes.number.isRequired,
+      touchSimulationEnabled: PropTypes.bool.isRequired,
       viewport: PropTypes.shape(Types.viewport).isRequired,
     };
   }
@@ -68,7 +68,7 @@ class Toolbar extends PureComponent {
       screenshot,
       selectedDevice,
       selectedPixelRatio,
-      touchSimulation,
+      touchSimulationEnabled,
       viewport,
     } = this.props;
 
@@ -121,10 +121,10 @@ class Toolbar extends PureComponent {
           dom.button({
             id: "touch-simulation-button",
             className: "devtools-button" +
-                       (touchSimulation.enabled ? " checked" : ""),
-            title: (touchSimulation.enabled ?
+                       (touchSimulationEnabled ? " checked" : ""),
+            title: (touchSimulationEnabled ?
               getStr("responsive.disableTouch") : getStr("responsive.enableTouch")),
-            onClick: () => onChangeTouchSimulation(!touchSimulation.enabled),
+            onClick: () => onChangeTouchSimulation(!touchSimulationEnabled),
           })
         ),
         dom.div(
@@ -156,7 +156,9 @@ class Toolbar extends PureComponent {
 
 const mapStateToProps = state => {
   return {
+    displayPixelRatio: state.ui.displayPixelRatio,
     leftAlignmentEnabled: state.ui.leftAlignmentEnabled,
+    touchSimulationEnabled: state.ui.touchSimulationEnabled,
   };
 };
 

@@ -60,12 +60,26 @@ add_task(async function testContentBlockingToggle() {
 add_task(async function testContentBlockingMainCategory() {
   SpecialPowers.pushPrefEnv({set: [
     [CB_UI_PREF, true],
+  ]});
+
+  let prefs = [
     [CB_PREF, true],
     [FB_PREF, true],
     [TP_PREF, false],
     [TP_PBM_PREF, true],
     [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
-  ]});
+  ];
+
+  for (let pref of prefs) {
+    switch (typeof pref[1]) {
+      case "boolean":
+        SpecialPowers.setBoolPref(pref[0], pref[1]);
+        break;
+      case "number":
+        SpecialPowers.setIntPref(pref[0], pref[1]);
+        break;
+    }
+  }
 
   let checkboxes = [
     "#contentBlockingFastBlockCheckbox",
@@ -115,6 +129,10 @@ add_task(async function testContentBlockingMainCategory() {
   checkControlStateWorker(doc, alwaysEnabledControls, true);
 
   gBrowser.removeCurrentTab();
+
+  for (let pref of prefs) {
+    SpecialPowers.clearUserPref(pref[0]);
+  }
 });
 
 // Tests that the content blocking "Restore Defaults" button does what it's supposed to.

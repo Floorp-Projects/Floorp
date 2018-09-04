@@ -297,7 +297,16 @@
         let curveDurationShorter = 5;
         let curve = [1, 2, 3];
 
-        // An initial curve event
+        // Having an event that ends at time t and then starting a ramp at time
+        // t should work.
+        should(
+            () => {
+              g.gain.linearRampToValueAtTime(1.0, startTime);
+            },
+            `g.gain.linearRampToValueAtTime(1.0, ${startTime})`)
+            .notThrow();
+
+        // An initial curve event, starting from the end of the linear ramp.
         should(
             () => {
               g.gain.setValueCurveAtTime(curve, startTime, curveDuration);
@@ -322,14 +331,14 @@
             },
             `g.gain.setValueCurveAtTime([${curve}], ${startTime}, ${curveDurationShorter})`)
             .throw('NotSupportedError');
-        // Earlier start time, end time after the start time an another curve
+        // Earlier start time, end time after the start time of an another curve
         should(
             () => {
               g.gain.setValueCurveAtTime(curve, startTimeEarlier, curveDuration);
             },
             `g.gain.setValueCurveAtTime([${curve}], ${startTimeEarlier}, ${curveDuration})`)
             .throw('NotSupportedError');
-        // Start time after the start time of the other curve, but earlier that
+        // Start time after the start time of the other curve, but earlier than
         // its end.
         should(
             () => {
@@ -337,6 +346,13 @@
             },
             `g.gain.setValueCurveAtTime([${curve}], ${startTimeLater}, ${curveDuration})`)
             .throw('NotSupportedError');
+        // Setting an event exactly at the end of the curve should work.
+        should(
+            () => {
+              g.gain.setValueAtTime(1.0, startTime + curveDuration);
+            },
+            `g.gain.setValueAtTime(1.0, ${startTime + curveDuration})`)
+            .notThrow();
 
         task.done();
       });

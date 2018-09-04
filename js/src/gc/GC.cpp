@@ -7689,8 +7689,6 @@ GCRuntime::checkCanCallAPI()
 
     /* If we attempt to invoke the GC while we are running in the GC, assert. */
     MOZ_RELEASE_ASSERT(!JS::RuntimeHeapIsBusy());
-
-    MOZ_ASSERT(rt->mainContextFromOwnThread()->isAllocAllowed());
 }
 
 bool

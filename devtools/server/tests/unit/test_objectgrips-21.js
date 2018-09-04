@@ -178,8 +178,8 @@ const nullPrincipalTests = [{
   property: descriptor({value: "Error"}),
   afterTest: `trapDidRun === false`,
 }, {
-  // Like the previous test, but now the object has a Function class.
-  string: "[object Function]",
+  // Like the previous test, but now the object is a callable Proxy.
+  string: "function () {\n    [native code]\n}",
   isFunction: true,
   hasPreview: false,
   code: `
