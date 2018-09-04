@@ -251,9 +251,8 @@ module.exports = {
     // Disallow fallthrough of case statements
     "no-fallthrough": "off",
 
-    // XXX Bug 1487642 - decide if we want to enable this or not.
     // Disallow assignments to native objects or read-only global variables
-    "no-global-assign": "off",
+    "no-global-assign": "error",
 
     // Disallow eval and setInteral/setTimeout with strings
     "no-implied-eval": "error",
@@ -281,9 +280,6 @@ module.exports = {
       "ObjectExpression": true,
       "VariableDeclarator": true
     } }],
-
-    // No reassigning native JS objects
-    "no-native-reassign": "error",
 
     // Nested ternary statements are confusing
     "no-nested-ternary": "error",

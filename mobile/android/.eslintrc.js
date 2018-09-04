@@ -10,7 +10,6 @@ module.exports = {
     // re-enable these over time.
     "consistent-return": "off",
     "no-empty": "off",
-    "no-native-reassign": "off",
     "no-nested-ternary": "off",
     "no-new-object": "off",
     "no-octal": "off",
