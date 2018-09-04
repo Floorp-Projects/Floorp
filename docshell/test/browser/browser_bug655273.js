@@ -23,7 +23,7 @@ add_task(async function test() {
                          .QueryInterface(Ci.nsIWebNavigation)
                          .sessionHistory;
 
-        is(shistory.legacySHistory.getEntryAtIndex(shistory.index, false).title,
+        is(shistory.legacySHistory.getEntryAtIndex(shistory.index).title,
            oldTitle, 'SHEntry title after pushstate.');
       });
     });

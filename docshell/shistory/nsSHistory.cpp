@@ -661,12 +661,24 @@ nsSHistory::GetCount(int32_t* aResult)
   return NS_OK;
 }
 
-/* Get index of the history list */
 NS_IMETHODIMP
 nsSHistory::GetIndex(int32_t* aResult)
 {
   MOZ_ASSERT(aResult, "null out param?");
   *aResult = mIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHistory::SetIndex(int32_t aIndex)
+{
+  if (aIndex < 0 || aIndex >= Length()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mIndex = aIndex;
+  NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
+
   return NS_OK;
 }
 
@@ -679,23 +691,10 @@ nsSHistory::GetRequestedIndex(int32_t* aResult)
   return NS_OK;
 }
 
-/* Get the entry at a given index */
 NS_IMETHODIMP
-nsSHistory::GetEntryAtIndex(int32_t aIndex, bool aModifyIndex,
-                            nsISHEntry** aResult)
+nsSHistory::GetEntryAtIndex(int32_t aIndex, nsISHEntry** aResult)
 {
-  // GetTransactionAtIndex validates aIndex.
-  nsCOMPtr<nsISHEntry> txn;
-  nsresult rv = GetTransactionAtIndex(aIndex, aResult);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Set mIndex to the requested index, if asked to do so..
-  if (aModifyIndex) {
-    mIndex = aIndex;
-    NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
-  }
-
-  return NS_OK;
+  return GetTransactionAtIndex(aIndex, aResult);
 }
 
 /* Get the transaction at a given index */
@@ -1314,7 +1313,7 @@ RemoveChildEntries(nsISHistory* aHistory, int32_t aIndex,
                    nsTArray<nsID>& aEntryIDs)
 {
   nsCOMPtr<nsISHEntry> root;
-  aHistory->GetEntryAtIndex(aIndex, false, getter_AddRefs(root));
+  aHistory->GetEntryAtIndex(aIndex, getter_AddRefs(root));
   return root ? RemoveFromSessionHistoryEntry(root, aEntryIDs) : false;
 }
 
@@ -1363,9 +1362,9 @@ nsSHistory::RemoveDuplicate(int32_t aIndex, bool aKeepNext)
 
   nsresult rv;
   nsCOMPtr<nsISHEntry> root1, root2;
-  rv = GetEntryAtIndex(aIndex, false, getter_AddRefs(root1));
+  rv = GetEntryAtIndex(aIndex, getter_AddRefs(root1));
   NS_ENSURE_SUCCESS(rv, false);
-  rv = GetEntryAtIndex(compareIndex, false, getter_AddRefs(root2));
+  rv = GetEntryAtIndex(compareIndex, getter_AddRefs(root2));
   NS_ENSURE_SUCCESS(rv, false);
 
   if (IsSameTree(root1, root2)) {
@@ -1432,7 +1431,7 @@ nsSHistory::RemoveDynEntries(int32_t aIndex, nsISHEntry* aEntry)
   // Remove dynamic entries which are at the index and belongs to the container.
   nsCOMPtr<nsISHEntry> entry(aEntry);
   if (!entry) {
-    GetEntryAtIndex(aIndex, false, getter_AddRefs(entry));
+    GetEntryAtIndex(aIndex, getter_AddRefs(entry));
   }
 
   if (entry) {
@@ -1475,7 +1474,7 @@ nsSHistory::GetCurrentURI(nsIURI** aResultURI)
   nsresult rv;
 
   nsCOMPtr<nsISHEntry> currentEntry;
-  rv = GetEntryAtIndex(mIndex, false, getter_AddRefs(currentEntry));
+  rv = GetEntryAtIndex(mIndex, getter_AddRefs(currentEntry));
   if (NS_FAILED(rv) && !currentEntry) {
     return rv;
   }
@@ -1522,8 +1521,8 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
   // Keep note of requested history index in mRequestedIndex.
   mRequestedIndex = aIndex;
 
-  GetEntryAtIndex(mIndex, false, getter_AddRefs(prevEntry));
-  GetEntryAtIndex(mRequestedIndex, false, getter_AddRefs(nextEntry));
+  GetEntryAtIndex(mIndex, getter_AddRefs(prevEntry));
+  GetEntryAtIndex(mRequestedIndex, getter_AddRefs(nextEntry));
   if (!nextEntry || !prevEntry) {
     mRequestedIndex = -1;
     return NS_ERROR_FAILURE;
