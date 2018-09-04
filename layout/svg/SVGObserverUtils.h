@@ -75,16 +75,25 @@ private:
   mozilla::net::ReferrerPolicy mReferrerPolicy;
 };
 
-/*
+/**
  * This interface allows us to be notified when a piece of SVG content is
  * re-rendered.
  *
- * Concrete implementations of this interface need to implement
- * "GetTarget()" to specify the piece of SVG content that they'd like to
- * monitor, and they need to implement "OnRenderingChange" to specify how
- * we'll react when that content gets re-rendered. They also need to implement
- * a constructor and destructor, which should call StartObserving and
- * StopObserving, respectively.
+ * Concrete implementations of this base class need to implement
+ * GetReferencedElementWithoutObserving to specify the SVG element that
+ * they'd like to monitor for rendering changes, and they need to implement
+ * OnRenderingChange to specify how we'll react when that content gets
+ * re-rendered.  They also need to implement a constructor and destructor,
+ * which should call StartObserving and StopObserving, respectively.
+ *
+ * The referenced element is generally looked up and stored during
+ * construction.  If the referenced element is in an extenal SVG resource
+ * document, the lookup code will initiate loading of the external resource and
+ * OnRenderingChange will be called once the element in the external resource
+ * is available.
+ *
+ * Although the referenced element may be found and stored during construction,
+ * observing for rendering changes does not start until requested.
  */
 class SVGRenderingObserver : public nsStubMutationObserver
 {
@@ -120,14 +129,15 @@ public:
   // react.
   void NotifyEvictedFromRenderingObserverList();
 
-  nsIFrame* GetReferencedFrame();
+  nsIFrame* GetAndObserveReferencedFrame();
   /**
    * @param aOK this is only for the convenience of callers. We set *aOK to false
    * if the frame is the wrong type
    */
-  nsIFrame* GetReferencedFrame(mozilla::LayoutFrameType aFrameType, bool* aOK);
+  nsIFrame* GetAndObserveReferencedFrame(mozilla::LayoutFrameType aFrameType,
+                                         bool* aOK);
 
-  Element* GetReferencedElement();
+  Element* GetAndObserveReferencedElement();
 
   virtual bool ObservesReflow() { return true; }
 
@@ -149,9 +159,7 @@ protected:
    */
   virtual void OnRenderingChange() = 0;
 
-  // This is an internally-used version of GetReferencedElement that doesn't
-  // forcibly add us as an observer. (whereas GetReferencedElement does)
-  virtual Element* GetTarget() = 0;
+  virtual Element* GetReferencedElementWithoutObserving() = 0;
 
   // Whether we're in our referenced element's observer list at this time.
   bool mInObserverList;
@@ -160,7 +168,7 @@ protected:
 
 /*
  * SVG elements reference supporting resources by element ID. We need to
- * track when those resources change and when the DOM changes in ways
+ * track when those resources change and when the document changes in ways
  * that affect which element is referenced by a given ID (e.g., when
  * element IDs change). The code here is responsible for that.
  *
@@ -179,7 +187,9 @@ public:
   virtual ~SVGIDRenderingObserver();
 
 protected:
-  Element* GetTarget() override { return mObservedElementTracker.get(); }
+  Element* GetReferencedElementWithoutObserving() override {
+    return mObservedElementTracker.get();
+  }
 
   void OnRenderingChange() override;
 
@@ -314,14 +324,16 @@ public:
   {
   }
 
-  bool ReferencesValidResource() { return GetFilterFrame(); }
+  // XXXjwatt: This will return false if the reference is to a filter in an
+  // external resource document that hasn't loaded yet!
+  bool ReferencesValidResource() { return GetAndObserveFilterFrame(); }
 
   void DetachFromChainObserver() { mFilterObserverList = nullptr; }
 
   /**
    * @return the filter frame, or null if there is no filter frame
    */
-  nsSVGFilterFrame *GetFilterFrame();
+  nsSVGFilterFrame* GetAndObserveFilterFrame();
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
