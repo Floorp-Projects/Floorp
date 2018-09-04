@@ -72,7 +72,7 @@ enum TokenizerState {
     Error,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Position {
     line: u32,
     column: u32,
