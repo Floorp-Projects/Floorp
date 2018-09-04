@@ -120,12 +120,13 @@ public:
                                            aEventTarget)
     , mDestroying(false)
   {}
-  ~LayerActivityTracker() {
+  ~LayerActivityTracker() override
+  {
     mDestroying = true;
     AgeAllGenerations();
   }
 
-  virtual void NotifyExpired(LayerActivity* aObject) override;
+  void NotifyExpired(LayerActivity* aObject) override;
 
 public:
   WeakFrame mCurrentScrollHandlerFrame;
