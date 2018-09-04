@@ -373,7 +373,14 @@ public:
 
     PRTime GetWatchdogTimestamp(WatchdogTimestampCategory aCategory);
 
-    static void ActivityCallback(void* arg, bool active);
+    static bool RecordScriptActivity(bool aActive);
+
+    bool SetHasScriptActivity(bool aActive) {
+        bool oldValue = mHasScriptActivity;
+        mHasScriptActivity = aActive;
+        return oldValue;
+    }
+
     static bool InterruptCallback(JSContext* cx);
 
     // Mapping of often used strings to jsid atoms that live 'forever'.
@@ -460,6 +467,8 @@ private:
     // Accumulates total time we actually waited for telemetry
     mozilla::TimeDuration mSlowScriptActualWait;
     bool mTimeoutAccumulated;
+
+    bool mHasScriptActivity;
 
     // mPendingResult is used to implement Components.returnCode.  Only really
     // meaningful while calling through XPCWrappedJS.
