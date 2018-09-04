@@ -101,6 +101,12 @@ public:
   // Offscreen GL context for main layer manager
   DECL_GFX_ENV("MOZ_LAYERS_PREFER_OFFSCREEN", LayersPreferOffscreen);
 
+  // Skip final window composition
+  DECL_GFX_ENV("MOZ_SKIPCOMPOSITION", SkipComposition);
+
+  // Skip rasterizing painted layer contents
+  DECL_GFX_ENV("MOZ_SKIPRASTERIZATION", SkipRasterization);
+
   // Stop the VR rendering
   DECL_GFX_ENV("NO_VR_RENDERING", NoVRRendering);
 

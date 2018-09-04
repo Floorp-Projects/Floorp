@@ -2258,7 +2258,7 @@ DecompileExpressionFromStack(JSContext* cx, int spindex, int skipStackHits, Hand
 
     FrameIter frameIter(cx);
 
-    if (frameIter.done() || !frameIter.hasScript() || frameIter.compartment() != cx->compartment())
+    if (frameIter.done() || !frameIter.hasScript() || frameIter.realm() != cx->realm())
         return true;
 
     /*
@@ -2348,7 +2348,7 @@ DecompileArgumentFromStack(JSContext* cx, int formalIndex, UniqueChars* res)
     if (frameIter.done() ||
         !frameIter.hasScript() ||
         frameIter.script()->selfHosted() ||
-        frameIter.compartment() != cx->compartment())
+        frameIter.realm() != cx->realm())
     {
         return true;
     }

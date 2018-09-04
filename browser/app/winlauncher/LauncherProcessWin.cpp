@@ -219,7 +219,7 @@ LauncherMain(int argc, wchar_t* argv[])
   }
 
   const Maybe<bool> isSafeMode = IsSafeModeRequested(argc, argv,
-                                                     SafeModeFlag::None);
+                                                     SafeModeFlag::NoKeyPressCheck);
   if (!isSafeMode) {
     ShowError(ERROR_INVALID_PARAMETER);
     return 1;

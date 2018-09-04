@@ -459,44 +459,6 @@ FindCharInReadable(char aChar, nsACString::const_iterator& aSearchStart,
   return false;
 }
 
-uint32_t
-CountCharInReadable(const nsAString& aStr, char16_t aChar)
-{
-  uint32_t count = 0;
-  nsAString::const_iterator begin, end;
-
-  aStr.BeginReading(begin);
-  aStr.EndReading(end);
-
-  while (begin != end) {
-    if (*begin == aChar) {
-      ++count;
-    }
-    ++begin;
-  }
-
-  return count;
-}
-
-uint32_t
-CountCharInReadable(const nsACString& aStr, char aChar)
-{
-  uint32_t count = 0;
-  nsACString::const_iterator begin, end;
-
-  aStr.BeginReading(begin);
-  aStr.EndReading(end);
-
-  while (begin != end) {
-    if (*begin == aChar) {
-      ++count;
-    }
-    ++begin;
-  }
-
-  return count;
-}
-
 bool
 StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring)
 {

@@ -228,7 +228,7 @@ void
 ConstantSourceNode::Start(double aWhen, ErrorResult& aRv)
 {
   if (!WebAudioUtils::IsTimeValid(aWhen)) {
-    aRv.Throw(NS_ERROR_RANGE_ERR);
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(NS_LITERAL_STRING("start time"));
     return;
   }
 
@@ -252,7 +252,7 @@ void
 ConstantSourceNode::Stop(double aWhen, ErrorResult& aRv)
 {
   if (!WebAudioUtils::IsTimeValid(aWhen)) {
-    aRv.Throw(NS_ERROR_RANGE_ERR);
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(NS_LITERAL_STRING("stop time"));
     return;
   }
 

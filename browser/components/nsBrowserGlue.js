@@ -1047,6 +1047,8 @@ BrowserGlue.prototype = {
       toolbar_field_border: "rgba(249, 249, 250, 0.2)",
       ntp_background: "#2A2A2E",
       ntp_text: "rgb(249, 249, 250)",
+      sidebar: "#19191a",
+      sidebar_text: "rgb(249, 249, 250)",
       author: vendorShortName,
     }, {
       useInDarkMode: true,

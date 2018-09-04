@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-#include "CombinedStacks.h"
-#include "ProcessedStack.h"
+#include "other/CombinedStacks.h"
+#include "other/ProcessedStack.h"
 using namespace mozilla::Telemetry;
 using namespace TelemetryTestHelpers;
 

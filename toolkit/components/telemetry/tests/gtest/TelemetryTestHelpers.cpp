@@ -6,7 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/CycleCollectedJSContext.h"
-#include "TelemetryCommon.h"
+#include "core/TelemetryCommon.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;

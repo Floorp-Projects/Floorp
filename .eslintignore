@@ -22,7 +22,6 @@ gfx/layers/**
 gfx/tests/browser/**
 gfx/tests/chrome/**
 gfx/tests/mochitest/**
-gfx/tests/unit/**
 image/**
 layout/**
 memory/replace/dmd/test/**
@@ -38,7 +37,6 @@ netwerk/test/mochitests/**
 netwerk/test/unit*/**
 netwerk/wifi/**
 parser/**
-rdf/**
 tools/update-packaging/**
 uriloader/exthandler/**
 uriloader/exthandler/tests/mochitest/**
@@ -57,7 +55,6 @@ mfbt/**
 mozglue/**
 nsprpub/**
 other-licenses/**
-probes/**
 startupcache/**
 xpfe/**
 
@@ -104,8 +101,6 @@ devtools/client/performance/components/test/test_jit_optimizations_01.html
 devtools/client/responsive.html/test/browser/touch.html
 devtools/client/shared/components/test/mochitest/*.html
 !devtools/client/shared/components/test/mochitest/test_stack-trace.html
-devtools/client/shared/shim/test/test_*.html
-devtools/client/shared/test/browser_toolbar_webconsole_errors_count.html
 devtools/client/storage/test/*.html
 !devtools/client/storage/test/storage-cookies.html
 !devtools/client/storage/test/storage-overflow.html
@@ -176,7 +171,6 @@ devtools/server/tests/unit/xpcshell_debugging_script.js
 # dom/ exclusions
 dom/abort/**
 dom/animation/**
-dom/archivereader/**
 dom/asmjscache/**
 dom/audiochannel/**
 dom/base/**
@@ -190,7 +184,6 @@ dom/canvas/**
 dom/commandhandler/**
 dom/console/**
 dom/crypto/**
-dom/devicestorage/**
 dom/encoding/**
 dom/events/**
 dom/fetch/**
@@ -198,7 +191,6 @@ dom/file/**
 dom/filehandle/**
 dom/filesystem/**
 dom/flex/**
-dom/flyweb/**
 dom/gamepad/**
 dom/geolocation/**
 dom/grid/**
@@ -206,7 +198,6 @@ dom/html/**
 dom/imptests/**
 dom/interfaces/**
 dom/ipc/**
-dom/json/**
 dom/jsurl/**
 dom/locales/**
 dom/manifest/**
@@ -233,12 +224,9 @@ dom/promise/**
 dom/push/**
 dom/quota/**
 dom/res/**
-dom/secureelement/**
-dom/security/test/contentverifier/**
 dom/security/test/cors/**
 dom/security/test/csp/**
 dom/security/test/general/**
-dom/security/test/hsts/**
 dom/security/test/mixedcontentblocker/**
 dom/security/test/sri/**
 dom/security/test/unit/**
@@ -252,7 +240,6 @@ dom/tests/html/**
 dom/tests/js/**
 dom/tests/mochitest/**
 dom/tests/unit/**
-dom/time/**
 dom/u2f/**
 dom/url/**
 dom/vr/**
@@ -353,7 +340,6 @@ testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
 testing/talos/talos/scripts/jszip.min.js
 testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js
 testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js
-testing/talos/talos/tests/canvasmark/**
 testing/talos/talos/tests/devtools/addon/content/pages/**
 testing/talos/talos/tests/dromaeo/**
 testing/talos/talos/tests/v8_7/**
@@ -370,9 +356,6 @@ services/common/kinto-http-client.js
 services/common/kinto-offline-client.js
 
 # toolkit/ exclusions
-
-# Not part of the default build
-toolkit/components/help/**
 
 # Intentionally invalid JS
 toolkit/components/workerloader/tests/moduleF-syntax-error.js
