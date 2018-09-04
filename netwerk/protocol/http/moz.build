@@ -20,7 +20,6 @@ XPIDL_SOURCES += [
     'nsIHttpHeaderVisitor.idl',
     'nsIHttpProtocolHandler.idl',
     'nsIRaceCacheWithNetwork.idl',
-    'nsIRedirectProcessChooser.idl',
     'nsIWellKnownOpportunisticUtils.idl',
 ]
 
