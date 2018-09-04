@@ -76,7 +76,7 @@ function* runTest() {
                         .sessionHistory;
 
   // Get the title of the inner popup's current SHEntry
-  var sheTitle = sh.legacySHistory.getEntryAtIndex(sh.index, false).title;
+  var sheTitle = sh.legacySHistory.getEntryAtIndex(sh.index).title;
   is(sheTitle, "Changed", "SHEntry's title should change when we change.");
 
   popup.close();

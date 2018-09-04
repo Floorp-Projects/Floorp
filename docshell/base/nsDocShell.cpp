@@ -3824,7 +3824,7 @@ nsDocShell::AddChildSHEntryInternal(nsISHEntry* aCloneRef,
     }
 
     rv = mSessionHistory->LegacySHistory()->GetEntryAtIndex(
-      index, false, getter_AddRefs(currentHE));
+      index, getter_AddRefs(currentHE));
     NS_ENSURE_TRUE(currentHE, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsISHEntry> currentEntry(do_QueryInterface(currentHE));
@@ -8652,7 +8652,7 @@ nsDocShell::CreateContentViewer(const nsACString& aContentType,
         idx = mSessionHistory->Index();
       }
       mSessionHistory->LegacySHistory()->
-        GetEntryAtIndex(idx, false, getter_AddRefs(mLSHE));
+        GetEntryAtIndex(idx, getter_AddRefs(mLSHE));
     }
 
     mLoadType = LOAD_ERROR_PAGE;
@@ -10076,7 +10076,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
         int32_t index = mSessionHistory->Index();
         nsCOMPtr<nsISHEntry> shEntry;
         mSessionHistory->LegacySHistory()->GetEntryAtIndex(
-          index, false, getter_AddRefs(shEntry));
+          index, getter_AddRefs(shEntry));
         NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
         shEntry->SetTitle(mTitle);
       }
@@ -11573,7 +11573,7 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
     }
     nsCOMPtr<nsISHEntry> currentSH;
     mSessionHistory->LegacySHistory()->GetEntryAtIndex(
-      index, false, getter_AddRefs(currentSH));
+      index, getter_AddRefs(currentSH));
     if (currentSH != mLSHE) {
       mSessionHistory->LegacySHistory()->ReplaceEntry(index, mLSHE);
     }
