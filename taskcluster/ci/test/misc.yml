@@ -83,7 +83,7 @@ robocop:
 telemetry-tests-client:
     description: "Telemetry tests client run"
     suite: telemetry-tests-client
-    treeherder-symbol: tt-c()
+    treeherder-symbol: tt(c)
     max-run-time: 5400
     checkout: true
     tier: 3
