@@ -28,7 +28,6 @@ from mozbuild.frontend.data import (
     Exports,
     FinalTargetPreprocessedFiles,
     FinalTargetFiles,
-    GeneratedFile,
     GeneratedSources,
     GnProjectData,
     HostLibrary,
@@ -168,14 +167,6 @@ class CommonBackend(BuildBackend):
 
         elif isinstance(obj, (GeneratedSources, HostGeneratedSources)):
             self._handle_generated_sources(obj.files)
-            return False
-
-        elif isinstance(obj, GeneratedFile):
-            if obj.required_for_compile:
-                for f in obj.required_for_compile:
-                    fullpath = ObjDirPath(obj._context, '!' + f).full_path
-                    relpath = mozpath.relpath(fullpath, obj._context.config.topobjdir)
-                    self._handle_generated_sources([relpath])
             return False
 
         elif isinstance(obj, Exports):
