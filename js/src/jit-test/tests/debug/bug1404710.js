@@ -1,6 +1,5 @@
-// |jit-test| error:InternalError
 if (!('stackTest' in this))
-    throw InternalError();
+    quit();
 stackTest(new Function(`
     var g = newGlobal();
     var dbg = new Debugger(g);
