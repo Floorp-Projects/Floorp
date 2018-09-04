@@ -76,6 +76,11 @@ Preferences.addAll([
   // Tracking Protection
   { id: "privacy.trackingprotection.enabled", type: "bool" },
   { id: "privacy.trackingprotection.pbmode.enabled", type: "bool" },
+  // This isn't a configuration pref, rather it's for saving the previous state
+  // of the UI when we turn off the TP controls when the user checks off the
+  // All Detected Trackers under Content Blocking.  This pref isn't listed in
+  // all.js/firefox.js to make sure it doesn't appear in about:config by default.
+  { id: "browser.privacy.trackingprotection.menu", type: "string" },
 
   // Button prefs
   { id: "pref.privacy.disable_button.cookie_exceptions", type: "bool" },
@@ -678,6 +683,7 @@ var gPrivacyPane = {
   trackingProtectionReadPrefs() {
     let enabledPref = Preferences.get("privacy.trackingprotection.enabled");
     let pbmPref = Preferences.get("privacy.trackingprotection.pbmode.enabled");
+    let btpmPref = Preferences.get("browser.privacy.trackingprotection.menu");
     let tpControl,
         tpCheckbox;
     if (contentBlockingUiEnabled) {
@@ -685,6 +691,16 @@ var gPrivacyPane = {
       tpCheckbox = document.getElementById("contentBlockingTrackingProtectionCheckbox");
     } else {
       tpControl = document.getElementById("trackingProtectionRadioGroup");
+    }
+
+    let savedMenuValue;
+    if (contentBlockingUiEnabled) {
+      // Only look at the backup pref when restoring the checkbox next to
+      // "All Detected Trackers".
+      if (["always", "private"].includes(btpmPref.value) &&
+          tpCheckbox.checked) {
+        savedMenuValue = btpmPref.value;
+      }
     }
 
     this._updateTrackingProtectionUI();
@@ -703,6 +719,9 @@ var gPrivacyPane = {
     } else if (!tpCheckbox) {
       tpControl.value = "never";
     } else {
+      if (savedMenuValue) {
+        tpControl.value = savedMenuValue;
+      }
       tpCheckbox.checked = false;
     }
   },
@@ -758,6 +777,7 @@ var gPrivacyPane = {
   trackingProtectionWritePrefs() {
     let enabledPref = Preferences.get("privacy.trackingprotection.enabled");
     let pbmPref = Preferences.get("privacy.trackingprotection.pbmode.enabled");
+    let btpmPref = Preferences.get("browser.privacy.trackingprotection.menu");
     let tpControl,
         tpCheckbox;
     if (contentBlockingUiEnabled) {
@@ -771,6 +791,7 @@ var gPrivacyPane = {
     if (tpCheckbox) {
       if (tpCheckbox.checked) {
         value = tpControl.value;
+        btpmPref.value = value;
       } else {
         value = "never";
       }
