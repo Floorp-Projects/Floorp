@@ -33,6 +33,8 @@
 #include "nsINetworkPredictor.h"
 #include "nsINetworkPredictorVerifier.h"
 #include "nsINetworkLinkService.h"
+#include "nsIRedirectProcessChooser.h"
+#include "nsQueryObject.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsNetUtil.h"
 
@@ -369,6 +371,74 @@ bool
 NeckoChild::DeallocPTransportProviderChild(PTransportProviderChild* aActor)
 {
   return true;
+}
+
+mozilla::ipc::IPCResult
+NeckoChild::RecvCrossProcessRedirect(
+            const uint32_t& aRegistrarId,
+            nsIURI* aURI,
+            const uint32_t& aNewLoadFlags,
+            const OptionalLoadInfoArgs& aLoadInfo,
+            const uint64_t& aChannelId,
+            nsIURI* aOriginalURI,
+            const uint64_t& aIdentifier)
+{
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  nsresult rv = ipc::LoadInfoArgsToLoadInfo(aLoadInfo, getter_AddRefs(loadInfo));
+  if (NS_FAILED(rv)) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "LoadInfoArgsToLoadInfo failed");
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIChannel> newChannel;
+  rv = NS_NewChannelInternal(getter_AddRefs(newChannel),
+                             aURI,
+                             loadInfo,
+                             nullptr, // PerformanceStorage
+                             nullptr, // aLoadGroup
+                             nullptr, // aCallbacks
+                             aNewLoadFlags);
+
+  // We are sure this is a HttpChannelChild because the parent
+  // is always a HTTP channel.
+  RefPtr<HttpChannelChild> httpChild = do_QueryObject(newChannel);
+  if (NS_FAILED(rv) || !httpChild) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "NS_NewChannelInternal failed");
+    return IPC_OK();
+  }
+
+  // This is used to report any errors back to the parent by calling
+  // CrossProcessRedirectFinished.
+  auto scopeExit = MakeScopeExit([&]() {
+    httpChild->CrossProcessRedirectFinished(rv);
+  });
+
+  rv = httpChild->SetChannelId(aChannelId);
+  if (NS_FAILED(rv)) {
+    return IPC_OK();
+  }
+
+  rv = httpChild->SetOriginalURI(aOriginalURI);
+  if (NS_FAILED(rv)) {
+    return IPC_OK();
+  }
+
+  // connect parent.
+  rv = httpChild->ConnectParent(aRegistrarId); // creates parent channel
+  if (NS_FAILED(rv)) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIChildProcessChannelListener> processListener =
+      do_GetClassObject("@mozilla.org/network/childProcessChannelListener");
+  // The listener will call completeRedirectSetup on the channel.
+  rv = processListener->OnChannelReady(httpChild, aIdentifier);
+  if (NS_FAILED(rv)) {
+    return IPC_OK();
+  }
+
+  // scopeExit will call CrossProcessRedirectFinished(rv) here
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
