@@ -147,8 +147,9 @@
   opacity: 0.6;
 }
 
-.reject-trackers-warning-icon {
+.warning-description {
   background: url(chrome://browser/skin/controlcenter/warning.svg) no-repeat 0 5px;
+  opacity: 0.6;
   -moz-context-properties: fill, stroke;
   fill: #d7b600;
   stroke: white;
