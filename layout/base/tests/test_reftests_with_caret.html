@@ -61,11 +61,14 @@ const MAX_ITERATIONS = 1000;
 
 function createIframe(url,next) {
   var iframe = document.createElement("iframe");
-  iframe.src = url;
   iframe.remotePageLoaded = remotePageLoaded;
   var me = this;
   var currentIteration = 0;
   function iframeLoadCompleted() {
+    let loc = iframe.contentWindow.location;
+    if (loc && loc.href == "about:blank") {
+      return;
+    }
     var docEl = iframe.contentDocument.documentElement;
     if (docEl.className.includes("reftest-wait")) {
       if (currentIteration++ > MAX_ITERATIONS) {
@@ -84,6 +87,8 @@ function createIframe(url,next) {
   }
   iframe.addEventListener("load", iframeLoadCompleted);
   window.document.body.appendChild(iframe);
+  iframe.clientHeight; // flush layout.
+  iframe.src = url;
   iframe.focus();
 };
 

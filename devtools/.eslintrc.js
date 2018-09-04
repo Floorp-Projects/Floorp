@@ -253,6 +253,8 @@ module.exports = {
     // Allow using == instead of ===, in the interest of landing something since
     // the devtools codebase is split on convention here.
     "eqeqeq": "off",
+    // Disallow space between function identifier and application.
+    "func-call-spacing": "error",
     // Don't require function expressions to have a name.
     // This makes the code more verbose and hard to read. Our engine already
     // does a fantastic job assigning a name to the function, which includes
@@ -288,9 +290,6 @@ module.exports = {
     "new-parens": "error",
     // Allow use of bitwise operators.
     "no-bitwise": "off",
-    // Disallow the catch clause parameter name being the same as a variable in
-    // the outer scope, to avoid confusion.
-    "no-catch-shadow": "error",
     // Allow using the console API.
     "no-console": "off",
     // Allow using constant expressions in conditions like while (true)
@@ -341,8 +340,6 @@ module.exports = {
     "no-proto": "error",
     // Disallow multiple spaces in a regular expression literal.
     "no-regex-spaces": "off",
-    // Allow reserved words being used as object literal keys.
-    "no-reserved-keys": "off",
     // Don't restrict usage of specified node modules (not a node environment).
     "no-restricted-modules": "off",
     // Disallow use of assignment in return statement. It is preferable for a
@@ -356,8 +353,6 @@ module.exports = {
     // random name.
     // Still, making this a warning can help people avoid being confused.
     "no-shadow": "error",
-    // Disallow space between function identifier and application.
-    "no-spaced-func": "error",
     // Allow use of synchronous methods (not a node environment).
     "no-sync": "off",
     // Allow the use of ternary operators.
@@ -398,10 +393,6 @@ module.exports = {
     // Don't require to sort variables within the same declaration block.
     // Anyway, one-var is disabled.
     "sort-vars": "off",
-    // Disable the rule that checks if spaces inside {} and [] are there or not.
-    // Our code is split on conventions, and it'd be nice to have "error" rules
-    // instead, one for [] and one for {}. So, disabling until we write them.
-    "space-in-brackets": "off",
     // Disallow spaces inside parentheses.
     "space-in-parens": ["error", "never"],
     // Require spaces before/after unary operators (words on by default,
@@ -433,8 +424,6 @@ module.exports = {
     "computed-property-spacing": "off",
     // Require for-in loops to have an if statement.
     "guard-for-in": "off",
-    // allow/disallow an empty newline after var statement
-    "newline-after-var": "off",
     // disallow the use of alert, confirm, and prompt
     "no-alert": "off",
     // disallow comparisons to null without a type-checking operator
@@ -455,8 +444,6 @@ module.exports = {
     "no-lone-blocks": "off",
     // disallow creation of functions within loops
     "no-loop-func": "off",
-    // disallow negation of the left operand of an in expression
-    "no-negated-in-lhs": "off",
     // disallow use of new operator when not part of the assignment or
     // comparison
     "no-new": "off",
@@ -480,8 +467,6 @@ module.exports = {
     "no-useless-concat": "off",
     // disallow use of void operator
     "no-void": "off",
-    // disallow wrapping of non-IIFE statements in parens
-    "no-wrap-func": "off",
     // require assignment operator shorthand where possible or prohibit it
     // entirely
     "operator-assignment": "off",

@@ -61,8 +61,6 @@ can reach it easily. -->
 <!ENTITY  pinTab.accesskey                   "P">
 <!ENTITY  unpinTab.label                     "Unpin Tab">
 <!ENTITY  unpinTab.accesskey                 "b">
-<!ENTITY  sendTabToDevice.label              "Send Tab to Device">
-<!ENTITY  sendTabToDevice.accesskey          "n">
 <!ENTITY  sendPageToDevice.label             "Send Page to Device">
 <!ENTITY  sendPageToDevice.accesskey         "n">
 <!ENTITY  sendLinkToDevice.label             "Send Link to Device">
@@ -1088,7 +1086,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY pageAction.disallowInUrlbar.label "Don’t Show in Address Bar">
 <!ENTITY pageAction.manageExtension.label "Manage Extension…">
 
-<!ENTITY pageAction.sendTabToDevice.label "Send Tab to Device">
 <!ENTITY sendToDevice.syncNotReady.label "Syncing Devices…">
 
 <!ENTITY pageAction.shareUrl.label "Share">

@@ -81,16 +81,15 @@ jobs:
                firefox-latest: installer
                firefox-stub: stub-installer
             mozilla-esr60:
-               # convert to firefox-esr-latest when ESR52 stops
-               firefox-esr-next-latest-ssl: installer-ssl
-               firefox-esr-next-latest: installer
+               firefox-esr-latest-ssl: installer-ssl
+               firefox-esr-latest: installer
             birch:
                firefox-latest-ssl: installer-ssl
                firefox-latest: installer
                firefox-stub: stub-installer
             jamun:
-               firefox-esr-next-latest-ssl: installer-ssl
-               firefox-esr-next-latest: installer
+               firefox-esr-latest-ssl: installer-ssl
+               firefox-esr-latest: installer
             maple:
                firefox-beta-latest-ssl: installer-ssl
                firefox-beta-latest: installer

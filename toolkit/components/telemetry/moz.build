@@ -44,7 +44,7 @@ XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
 XPIDL_SOURCES += [
-    'nsITelemetry.idl',
+    'core/nsITelemetry.idl',
 ]
 
 XPIDL_MODULE = 'telemetry'
@@ -54,32 +54,32 @@ EXPORTS.mozilla += [
     '!TelemetryHistogramEnums.h',
     '!TelemetryProcessEnums.h',
     '!TelemetryScalarEnums.h',
-    'CombinedStacks.h',
-    'ipc/TelemetryComms.h',
-    'ipc/TelemetryIPC.h',
-    'ProcessedStack.h',
-    'Telemetry.h',
+    'core/ipc/TelemetryComms.h',
+    'core/ipc/TelemetryIPC.h',
+    'core/Telemetry.h',
+    'other/CombinedStacks.h',
+    'other/ProcessedStack.h',
 ]
 
 SOURCES += [
-    'CombinedStacks.cpp',
+    'core/ipc/TelemetryIPC.cpp',
+    'core/ipc/TelemetryIPCAccumulator.cpp',
+    'core/Telemetry.cpp',
+    'core/TelemetryCommon.cpp',
+    'core/TelemetryEvent.cpp',
+    'core/TelemetryHistogram.cpp',
+    'core/TelemetryScalar.cpp',
     'geckoview/TelemetryGeckoViewPersistence.cpp',
-    'ipc/TelemetryIPC.cpp',
-    'ipc/TelemetryIPCAccumulator.cpp',
-    'ProcessedStack.cpp',
-    'Telemetry.cpp',
-    'TelemetryCommon.cpp',
-    'TelemetryEvent.cpp',
-    'TelemetryHistogram.cpp',
-    'TelemetryIOInterposeObserver.cpp',
-    'TelemetryScalar.cpp',
-    'WebrtcTelemetry.cpp',
+    'other/CombinedStacks.cpp',
+    'other/ProcessedStack.cpp',
+    'other/TelemetryIOInterposeObserver.cpp',
+    'other/WebrtcTelemetry.cpp',
 ]
 
 # KeyedStackCapturer entirely relies on profiler to be enabled.
 if CONFIG['MOZ_GECKO_PROFILER']:
     SOURCES += [
-      'KeyedStackCapturer.cpp'
+      'other/KeyedStackCapturer.cpp'
     ]
 
 EXTRA_COMPONENTS += [
@@ -88,22 +88,22 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    'GCTelemetry.jsm',
-    'TelemetryArchive.jsm',
-    'TelemetryController.jsm',
-    'TelemetryEnvironment.jsm',
-    'TelemetryEventPing.jsm',
-    'TelemetryHealthPing.jsm',
-    'TelemetryModules.jsm',
-    'TelemetryReportingPolicy.jsm',
-    'TelemetrySend.jsm',
-    'TelemetrySession.jsm',
-    'TelemetryStopwatch.jsm',
-    'TelemetryStorage.jsm',
-    'TelemetryTimestamps.jsm',
-    'TelemetryUtils.jsm',
-    'UITelemetry.jsm',
-    'UpdatePing.jsm',
+    'app/TelemetryArchive.jsm',
+    'app/TelemetryController.jsm',
+    'app/TelemetryEnvironment.jsm',
+    'app/TelemetryReportingPolicy.jsm',
+    'app/TelemetrySend.jsm',
+    'app/TelemetryStopwatch.jsm',
+    'app/TelemetryStorage.jsm',
+    'app/TelemetryTimestamps.jsm',
+    'app/TelemetryUtils.jsm',
+    'other/GCTelemetry.jsm',
+    'other/UITelemetry.jsm',
+    'pings/EventPing.jsm',
+    'pings/HealthPing.jsm',
+    'pings/ModulesPing.jsm',
+    'pings/TelemetrySession.jsm',
+    'pings/UpdatePing.jsm',
 ]
 
 TESTING_JS_MODULES += [
@@ -136,15 +136,15 @@ histogram_files = [
 ]
 
 data = GENERATED_FILES['TelemetryHistogramData.inc']
-data.script = 'gen_histogram_data.py'
+data.script = 'build_scripts/gen_histogram_data.py'
 data.inputs = histogram_files
 
 enums = GENERATED_FILES['TelemetryHistogramEnums.h']
-enums.script = 'gen_histogram_enum.py'
+enums.script = 'build_scripts/gen_histogram_enum.py'
 enums.inputs = histogram_files
 
 data = GENERATED_FILES['TelemetryHistogramNameMap.h']
-data.script = 'gen_histogram_phf.py'
+data.script = 'build_scripts/gen_histogram_phf.py'
 data.inputs = histogram_files
 
 # Generate scalar files.
@@ -153,17 +153,17 @@ scalar_files = [
 ]
 
 scalar_data = GENERATED_FILES['TelemetryScalarData.h']
-scalar_data.script = 'gen_scalar_data.py'
+scalar_data.script = 'build_scripts/gen_scalar_data.py'
 scalar_data.inputs = scalar_files
 
 scalar_enums = GENERATED_FILES['TelemetryScalarEnums.h']
-scalar_enums.script = 'gen_scalar_enum.py'
+scalar_enums.script = 'build_scripts/gen_scalar_enum.py'
 scalar_enums.inputs = scalar_files
 
 # Generate the JSON scalar definitions. They will only be
 # used in artifact or "build faster" builds.
 scalar_json_data = GENERATED_FILES['ScalarArtifactDefinitions.json']
-scalar_json_data.script = 'gen_scalar_data.py:generate_JSON_definitions'
+scalar_json_data.script = 'build_scripts/gen_scalar_data.py:generate_JSON_definitions'
 scalar_json_data.inputs = scalar_files
 
 # Move the scalars JSON file to the directory where the Firefox binary is.
@@ -175,17 +175,17 @@ event_files = [
 ]
 
 event_data = GENERATED_FILES['TelemetryEventData.h']
-event_data.script = 'gen_event_data.py'
+event_data.script = 'build_scripts/gen_event_data.py'
 event_data.inputs = event_files
 
 event_enums = GENERATED_FILES['TelemetryEventEnums.h']
-event_enums.script = 'gen_event_enum.py'
+event_enums.script = 'build_scripts/gen_event_enum.py'
 event_enums.inputs = event_files
 
 # Generate the JSON event definitions. They will only be
 # used in artifact or "build faster" builds.
 event_json_data = GENERATED_FILES['EventArtifactDefinitions.json']
-event_json_data.script = 'gen_event_data.py:generate_JSON_definitions'
+event_json_data.script = 'build_scripts/gen_event_data.py:generate_JSON_definitions'
 event_json_data.inputs = event_files
 
 # Move the events JSON file to the directory where the Firefox binary is.
@@ -197,11 +197,11 @@ processes_files = [
 ]
 
 processes_enum = GENERATED_FILES['TelemetryProcessEnums.h']
-processes_enum.script = 'gen_process_enum.py'
+processes_enum.script = 'build_scripts/gen_process_enum.py'
 processes_enum.inputs = processes_files
 
 processes_data = GENERATED_FILES['TelemetryProcessData.h']
-processes_data.script = 'gen_process_data.py'
+processes_data.script = 'build_scripts/gen_process_data.py'
 processes_data.inputs = processes_files
 
 # Add support for GeckoView: please note that building GeckoView

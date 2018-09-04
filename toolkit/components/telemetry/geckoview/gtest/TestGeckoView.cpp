@@ -15,10 +15,10 @@
 #include "nsThreadUtils.h"
 #include "nsPrintfCString.h"
 #include "prenv.h"
-#include "Telemetry.h"
+#include "mozilla/Telemetry.h"
 #include "TelemetryFixture.h"
 #include "TelemetryGeckoViewPersistence.h"
-#include "TelemetryScalar.h"
+#include "core/TelemetryScalar.h"
 #include "TelemetryTestHelpers.h"
 
 using namespace mozilla;
