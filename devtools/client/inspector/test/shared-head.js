@@ -91,6 +91,9 @@ function openRuleView() {
     // through an additional ".flush()" property.
     view.debounce = manualDebounce();
 
+    // Adds the highlighters overlay in the rule view.
+    view.addHighlightersToView();
+
     return {
       toolbox: data.toolbox,
       inspector: data.inspector,
@@ -110,6 +113,8 @@ function openRuleView() {
 function openComputedView() {
   return openInspectorSidebarTab("computedview").then(data => {
     const view = data.inspector.getPanel("computedview").computedView;
+    // Adds the highlighters overlay in the computed view.
+    view.addHighlightersToView();
 
     return {
       toolbox: data.toolbox,
@@ -160,7 +165,9 @@ function openLayoutView() {
  * @return {CssRuleView} the rule view
  */
 function selectRuleView(inspector) {
-  return inspector.getPanel("ruleview").view;
+  const view = inspector.getPanel("ruleview").view;
+  view.addHighlightersToView();
+  return view;
 }
 
 /**
@@ -172,7 +179,9 @@ function selectRuleView(inspector) {
  */
 function selectComputedView(inspector) {
   inspector.sidebar.select("computedview");
-  return inspector.getPanel("computedview").computedView;
+  const view = inspector.getPanel("computedview").computedView;
+  view.addHighlightersToView();
+  return view;
 }
 
 /**
