@@ -51,7 +51,7 @@ const customHighlighterSpec = generateActorSpec({
     },
     show: {
       request: {
-        node: Arg(0, "domnode"),
+        node: Arg(0, "nullable:domnode"),
         options: Arg(1, "nullable:json")
       },
       response: {

@@ -12,6 +12,12 @@
   vertical-align: middle;
 }
 
+.content-blocking-checkbox .checkbox-icon {
+  margin-inline-end: 8px;
+  margin-inline-start: 4px;
+  width: 16px;
+}
+
 .content-blocking-icon,
 .permission-icon {
   -moz-context-properties: fill;
@@ -116,21 +122,18 @@
   margin: 16px 0;
 }
 
-.content-blocking-category-checkbox {
-  padding: 4px;
-}
-
-.content-blocking-category-icon {
-  padding: 4px;
-}
-
 .content-blocking-category-labels {
   padding-inline-start: 4px;
+  margin-inline-start: 25px !important;
 }
 
 #trackingProtectionMenu,
 #blockCookiesCB {
   margin-top: 0.75em;
+}
+
+#blockCookiesCBDeck {
+  max-width: 444px;
 }
 
 #changeBlockListLink {
@@ -144,24 +147,16 @@
   opacity: 0.6;
 }
 
-.fastblock-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/slowtrackers.svg);
-}
-
-.tracking-protection-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
-}
-
-.reject-trackers-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
-}
-
 .reject-trackers-warning-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/warning.svg);
+  background: url(chrome://browser/skin/controlcenter/warning.svg) no-repeat 0 5px;
   -moz-context-properties: fill, stroke;
   fill: #d7b600;
   stroke: white;
-  padding: 4px;
+  padding-inline-start: 20px;
+}
+
+.reject-trackers-warning-icon:-moz-locale-dir(rtl) {
+  background-position-x: right 0;
 }
 
 #contentBlockingChangeCookieSettings {

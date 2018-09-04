@@ -13,9 +13,21 @@ add_task(async function() {
  * Test for searching for the "Block Lists" subdialog.
  */
 add_task(async function() {
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  await evaluateSearchResults("block Web elements", "trackingGroup");
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  async function doTest() {
+    await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+    await evaluateSearchResults("block Web elements", "trackingGroup");
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  }
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["browser.contentblocking.ui.enabled", true],
+  ]});
+  info("Run the test with Content Blocking UI enabled");
+  await doTest();
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["browser.contentblocking.ui.enabled", false],
+  ]});
+  info("Run the test with Content Blocking UI disabled");
+  await doTest();
 });
 
 /**

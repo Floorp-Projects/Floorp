@@ -526,7 +526,7 @@ add_task(async function testExtensionControlledTrackingProtection() {
   };
   const CONTROLLED_BUTTON_ID = {
     old: "trackingProtectionExtensionContentButton",
-    new: "contentBlockingTrackingProtectionExtensionContentButton",
+    new: "contentBlockingDisableTrackingProtectionExtension",
   };
   const DISABLE_BUTTON_ID = {
     old: "disableTrackingProtectionExtension",

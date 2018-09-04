@@ -260,10 +260,11 @@ function test8()
 }
 
 // use GET and disable ECS (makes a larger request)
+// verify URI template cutoff
 function test8b()
 {
   prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-ecs");
+  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-ecs{?dns}");
   prefs.clearUserPref("network.trr.allow-rfc1918");
   prefs.setBoolPref("network.trr.useGET", true);
   prefs.setBoolPref("network.trr.disable-ECS", true);

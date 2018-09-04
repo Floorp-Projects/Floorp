@@ -188,6 +188,18 @@ struct CustomElementDefinition
   // A construction stack. Use nullptr to represent an "already constructed marker".
   nsTArray<RefPtr<Element>> mConstructionStack;
 
+  // See step 6.1.10 of https://dom.spec.whatwg.org/#concept-create-element
+  // which set up the prefix after a custom element is created. However, In Gecko,
+  // the prefix isn't allowed to be changed in NodeInfo, so we store the prefix
+  // information here and propagate to where NodeInfo is assigned to a custom
+  // element instead.
+  nsTArray<RefPtr<nsAtom>> mPrefixStack;
+
+  // This basically is used for distinguishing the custom element constructor
+  // is invoked from document.createElement or directly from JS, i.e.
+  // `new CustomElementConstructor()`.
+  uint32_t mConstructionDepth = 0;
+
   bool IsCustomBuiltIn()
   {
     return mType != mLocalName;

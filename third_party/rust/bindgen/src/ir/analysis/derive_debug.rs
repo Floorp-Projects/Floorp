@@ -182,6 +182,7 @@ impl<'ctx> MonotoneFramework for CannotDeriveDebug<'ctx> {
             TypeKind::Function(..) |
             TypeKind::Enum(..) |
             TypeKind::Reference(..) |
+            TypeKind::Vector(..) |
             TypeKind::BlockPointer |
             TypeKind::TypeParam |
             TypeKind::UnresolvedTypeRef(..) |

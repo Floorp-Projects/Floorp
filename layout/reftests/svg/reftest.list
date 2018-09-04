@@ -562,3 +562,5 @@ pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-5.html fragid-sh
 pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-6.html fragid-shadow-ref.html
 pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-7.html fragid-shadow-ref.html
 pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-8.html fragid-shadow-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-9.html fragid-shadow-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-10.html fragid-shadow-ref.html

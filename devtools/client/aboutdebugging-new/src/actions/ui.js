@@ -5,6 +5,7 @@
 "use strict";
 
 const {
+  DEBUG_TARGET_COLLAPSIBILITY_UPDATED,
   NETWORK_LOCATIONS_UPDATED,
   PAGE_SELECTED,
   PAGES,
@@ -30,11 +31,16 @@ function selectPage(page) {
   };
 }
 
+function updateDebugTargetCollapsibility(key, isCollapsed) {
+  return { type: DEBUG_TARGET_COLLAPSIBILITY_UPDATED, key, isCollapsed };
+}
+
 function updateNetworkLocations(locations) {
   return { type: NETWORK_LOCATIONS_UPDATED, locations };
 }
 
 module.exports = {
   selectPage,
+  updateDebugTargetCollapsibility,
   updateNetworkLocations,
 };

@@ -232,11 +232,11 @@ pub fn codegen_edges(ctx: &BindgenContext, edge: Edge) -> bool {
         EdgeKind::FunctionReturn |
         EdgeKind::FunctionParameter |
         EdgeKind::VarType |
-        EdgeKind::TypeReference => cc.types,
-        EdgeKind::InnerVar => cc.vars,
-        EdgeKind::Method => cc.methods,
-        EdgeKind::Constructor => cc.constructors,
-        EdgeKind::Destructor => cc.destructors,
+        EdgeKind::TypeReference => cc.types(),
+        EdgeKind::InnerVar => cc.vars(),
+        EdgeKind::Method => cc.methods(),
+        EdgeKind::Constructor => cc.constructors(),
+        EdgeKind::Destructor => cc.destructors()
     }
 }
 

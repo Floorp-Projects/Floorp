@@ -217,8 +217,22 @@
             // Show attribution for the preferred translator.
             let engineIndex = Object.keys(Translation.supportedEngines)
               .indexOf(Translation.translationEngine);
+            // We currently only have attribution for the Bing and Yandex engines.
+            if (engineIndex >= 0) {
+              --engineIndex;
+            }
+            let attributionNode = this._getAnonElt("translationEngine");
             if (engineIndex != -1) {
-              this._getAnonElt("translationEngine").selectedIndex = engineIndex;
+              attributionNode.selectedIndex = engineIndex;
+            } else {
+              // Hide the attribution menuitem
+              let footer = attributionNode.parentNode;
+              footer.hidden = true;
+              // Make the 'Translation preferences' item the new footer.
+              footer = footer.previousSibling;
+              footer.setAttribute("class", "subviewbutton panel-subview-footer");
+              // And hide the menuseparator.
+              footer.previousSibling.hidden = true;
             }
 
             const kWelcomePref = "browser.translation.ui.welcomeMessageShown";

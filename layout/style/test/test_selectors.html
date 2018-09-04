@@ -973,6 +973,8 @@ function runTests() {
     // Test serialization of ::-moz-placeholder.
     should_serialize_to("input::-moz-placeholder", "input::placeholder");
 
+    should_serialize_to(':lang("foo\\"bar")', ':lang(foo\\"bar)');
+
     // Test default namespaces, including inside :not().
     var html_default_ns = "@namespace url(http://www.w3.org/1999/xhtml);";
     var html_ns = "@namespace html url(http://www.w3.org/1999/xhtml);";

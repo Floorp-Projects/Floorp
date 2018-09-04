@@ -287,13 +287,13 @@ exports.getHighlighterUtils = function(toolbox) {
   };
 
   /**
-   * If the main, box-model, highlighter isn't enough, or if multiple
-   * highlighters are needed in parallel, this method can be used to return a
-   * new instance of a highlighter actor, given a type.
+   * If the main, box-model, highlighter isn't enough, or if multiple highlighters
+   * are needed in parallel, this method can be used to return a new instance of a
+   * highlighter actor, given a type.
    * The type of the highlighter passed must be known by the server.
    * The highlighter actor returned will have the show(nodeFront) and hide()
    * methods and needs to be released by the consumer when not needed anymore.
-   * @return a promise that resolves to the highlighter
+   * @return Promise a promise that resolves to the highlighter
    */
   exported.getHighlighterByType = requireInspector(async function(typeName) {
     const highlighter = await toolbox.inspector.getHighlighterByType(typeName);
@@ -301,6 +301,26 @@ exports.getHighlighterUtils = function(toolbox) {
     return highlighter || promise.reject("The target doesn't support " +
         `creating highlighters by types or ${typeName} is unknown`);
   });
+
+  /**
+   * Similar to getHighlighterByType, however it automatically memoizes and
+   * destroys highlighters with the inspector, instead of having to be manually
+   * managed by consumers.
+   * The type of the highlighter passed must be known by the server.
+   * The highlighter actor returned will have the show(nodeFront) and hide()
+   * methods and needs to be released by the consumer when not needed anymore.
+   * @return Promise a promise that resolves to the highlighter
+   */
+  exported.getOrCreateHighlighterByType = requireInspector(async function(typeName) {
+    const highlighter = await toolbox.inspector.getOrCreateHighlighterByType(typeName);
+
+    return highlighter || promise.reject("The target doesn't support " +
+        `creating highlighters by types or ${typeName} is unknown`);
+  });
+
+  exported.getKnownHighlighter = function(typeName) {
+    return toolbox.inspector && toolbox.inspector.getKnownHighlighter(typeName);
+  };
 
   // Return the public API
   return exported;

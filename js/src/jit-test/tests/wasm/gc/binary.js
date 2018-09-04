@@ -8,7 +8,10 @@ const v2vSig = {args:[], ret:VoidCode};
 const v2vSigSection = sigSection([v2vSig]);
 
 function checkInvalid(body, errorMessage) {
-    assertErrorMessage(() => new WebAssembly.Module(moduleWithSections([v2vSigSection, declSection([0]), bodySection([body])])), WebAssembly.CompileError, errorMessage);
+    assertErrorMessage(() => new WebAssembly.Module(
+        moduleWithSections([gcFeatureOptInSection(1), v2vSigSection, declSection([0]), bodySection([body])])),
+                       WebAssembly.CompileError,
+                       errorMessage);
 }
 
 const invalidRefNullBody = funcBody({locals:[], body:[

@@ -19,11 +19,11 @@ add_task(async function testAdoptedTwoWindows() {
   // being adopted from the main window which doesn't have a shown sidebar. See Bug 1407737.
   info("Ensure that sidebar state is adopted only from the opener");
 
-  let win1 = await BrowserTestUtils.openNewBrowserWindow({opener: window});
+  let win1 = await BrowserTestUtils.openNewBrowserWindow();
   await win1.SidebarUI.show("viewBookmarksSidebar");
   await BrowserTestUtils.closeWindow(win1);
 
-  let win2 = await BrowserTestUtils.openNewBrowserWindow({opener: window});
+  let win2 = await BrowserTestUtils.openNewBrowserWindow();
   ok(!win2.document.getElementById("sidebar-button").hasAttribute("checked"), "Sidebar button isn't checked");
   ok(!win2.SidebarUI.isOpen, "Sidebar is closed");
   await BrowserTestUtils.closeWindow(win2);
@@ -46,7 +46,7 @@ add_task(async function testEventReceivedInNewWindow() {
   info("Opening a new window and expecting the SidebarFocused event to not fire");
 
   let promiseNewWindow = BrowserTestUtils.waitForNewWindow();
-  BrowserTestUtils.openNewBrowserWindow({opener: window});
+  BrowserTestUtils.openNewBrowserWindow();
   let win = await promiseNewWindow;
 
   let adoptedShown = BrowserTestUtils.waitForEvent(win, "SidebarShown");

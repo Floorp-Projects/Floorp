@@ -1057,7 +1057,7 @@ nsSubDocumentFrame::GetMarginAttributes()
 }
 
 nsFrameLoader*
-nsSubDocumentFrame::FrameLoader()
+nsSubDocumentFrame::FrameLoader() const
 {
   nsIContent* content = GetContent();
   if (!content)
@@ -1070,6 +1070,12 @@ nsSubDocumentFrame::FrameLoader()
     }
   }
   return mFrameLoader;
+}
+
+mozilla::layout::RenderFrameParent*
+nsSubDocumentFrame::GetRenderFrameParent() const
+{
+  return FrameLoader() ? FrameLoader()->GetCurrentRenderFrame() : nullptr;
 }
 
 // XXX this should be called ObtainDocShell or something like that,

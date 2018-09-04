@@ -61,6 +61,7 @@
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "nsIConsoleService.h"
+#include "nsTPriorityQueue.h"
 #include "nsVariant.h"
 
 using namespace mozilla;
@@ -119,6 +120,7 @@ static const int64_t kCookiePurgeAge =
 // network.cookie.maxNumber and network.cookie.maxPerHost prefs respectively.
 static const uint32_t kMaxNumberOfCookies = 3000;
 static const uint32_t kMaxCookiesPerHost  = 180;
+static const uint32_t kCookieQuotaPerHost = 150;
 static const uint32_t kMaxBytesPerCookie  = 4096;
 static const uint32_t kMaxBytesPerPath    = 1024;
 
@@ -126,6 +128,7 @@ static const uint32_t kMaxBytesPerPath    = 1024;
 static const char kPrefCookieBehavior[]       = "network.cookie.cookieBehavior";
 static const char kPrefMaxNumberOfCookies[]   = "network.cookie.maxNumber";
 static const char kPrefMaxCookiesPerHost[]    = "network.cookie.maxPerHost";
+static const char kPrefCookieQuotaPerHost[]   = "network.cookie.quotaPerHost";
 static const char kPrefCookiePurgeAge[]       = "network.cookie.purgeAge";
 static const char kPrefThirdPartySession[]    = "network.cookie.thirdparty.sessionOnly";
 static const char kPrefThirdPartyNonsecureSession[] = "network.cookie.thirdparty.nonsecureSessionOnly";
@@ -516,6 +519,26 @@ public:
 
 NS_IMPL_ISUPPORTS(AppClearDataObserver, nsIObserver)
 
+// comparator class for sorting cookies by entry and index.
+class CompareCookiesByIndex {
+public:
+  bool Equals(const nsListIter &a, const nsListIter &b) const
+  {
+    NS_ASSERTION(a.entry != b.entry || a.index != b.index,
+      "cookie indexes should never be equal");
+    return false;
+  }
+
+  bool LessThan(const nsListIter &a, const nsListIter &b) const
+  {
+    // compare by entryclass pointer, then by index.
+    if (a.entry != b.entry)
+      return a.entry < b.entry;
+
+    return a.index < b.index;
+  }
+};
+
 } // namespace
 
 size_t
@@ -612,6 +635,7 @@ nsCookieService::nsCookieService()
  , mLeaveSecureAlone(true)
  , mMaxNumberOfCookies(kMaxNumberOfCookies)
  , mMaxCookiesPerHost(kMaxCookiesPerHost)
+ , mCookieQuotaPerHost(kCookieQuotaPerHost)
  , mCookiePurgeAge(kCookiePurgeAge)
  , mThread(nullptr)
  , mMonitor("CookieThread")
@@ -2387,6 +2411,25 @@ nsCookieService::CreatePurgeList(nsICookie2* aCookie)
   return removedList.forget();
 }
 
+void
+nsCookieService::CreateOrUpdatePurgeList(nsIArray** aPurgedList, nsICookie2* aCookie)
+{
+  if (!*aPurgedList) {
+    COOKIE_LOGSTRING(LogLevel::Debug, ("Creating new purge list"));
+    nsCOMPtr<nsIArray> purgedList = CreatePurgeList(aCookie);
+    purgedList.forget(aPurgedList);
+    return;
+  }
+
+  nsCOMPtr<nsIMutableArray> purgedList = do_QueryInterface(*aPurgedList);
+  if (purgedList) {
+    COOKIE_LOGSTRING(LogLevel::Debug, ("Updating existing purge list"));
+    purgedList->AppendElement(aCookie);
+  } else {
+    COOKIE_LOGSTRING(LogLevel::Debug, ("Could not QI aPurgedList!"));
+  }
+}
+
 /******************************************************************************
  * nsCookieService:
  * public transaction helper impl
@@ -2430,8 +2473,15 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefMaxNumberOfCookies, &val)))
     mMaxNumberOfCookies = (uint16_t) LIMIT(val, 1, 0xFFFF, kMaxNumberOfCookies);
 
-  if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefMaxCookiesPerHost, &val)))
-    mMaxCookiesPerHost = (uint16_t) LIMIT(val, 1, 0xFFFF, kMaxCookiesPerHost);
+  if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookieQuotaPerHost, &val))) {
+    mCookieQuotaPerHost =
+      (uint16_t) LIMIT(val, 1, mMaxCookiesPerHost - 1, kCookieQuotaPerHost);
+  }
+
+  if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefMaxCookiesPerHost, &val))) {
+    mMaxCookiesPerHost =
+      (uint16_t) LIMIT(val, mCookieQuotaPerHost + 1, 0xFFFF, kMaxCookiesPerHost);
+  }
 
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookiePurgeAge, &val))) {
     mCookiePurgeAge =
@@ -3783,15 +3833,16 @@ nsCookieService::AddInternal(const nsCookieKey &aKey,
     // check if we have to delete an old cookie.
     nsCookieEntry *entry = mDBState->hostTable.GetEntry(aKey);
     if (entry && entry->GetCookies().Length() >= mMaxCookiesPerHost) {
-      nsListIter iter;
+      nsTArray<nsListIter> removedIterList;
       // Prioritize evicting insecure cookies.
       // (draft-ietf-httpbis-cookie-alone section 3.3)
       mozilla::Maybe<bool> optionalSecurity = mLeaveSecureAlone ? Some(false) : Nothing();
-      int64_t oldestCookieTime = FindStaleCookie(entry, currentTime, aHostURI, optionalSecurity, iter);
-      if (iter.entry == nullptr) {
+      uint32_t limit = mMaxCookiesPerHost - mCookieQuotaPerHost;
+      FindStaleCookies(entry, currentTime, optionalSecurity, removedIterList, limit);
+      if (removedIterList.Length() == 0) {
         if (aCookie->IsSecure()) {
           // It's valid to evict a secure cookie for another secure cookie.
-          oldestCookieTime = FindStaleCookie(entry, currentTime, aHostURI, Some(true), iter);
+          FindStaleCookies(entry, currentTime, Some(true), removedIterList, limit);
         } else {
           Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
                                 EVICTING_SECURE_BLOCKED);
@@ -3801,17 +3852,22 @@ nsCookieService::AddInternal(const nsCookieKey &aKey,
         }
       }
 
-      MOZ_ASSERT(iter.entry);
-
-      oldCookie = iter.Cookie();
-      if (oldestCookieTime > 0 && mLeaveSecureAlone) {
-        TelemetryForEvictingStaleCookie(oldCookie, oldestCookieTime);
+      MOZ_ASSERT(!removedIterList.IsEmpty());
+      // Sort |removedIterList| by index again, since we have to remove the cookie
+      // in the reverse order.
+      removedIterList.Sort(CompareCookiesByIndex());
+      for (auto it = removedIterList.rbegin(); it != removedIterList.rend(); it++) {
+        RefPtr<nsCookie> evictedCookie = (*it).Cookie();
+        if (mLeaveSecureAlone && evictedCookie->Expiry() <= currentTime) {
+          TelemetryForEvictingStaleCookie(evictedCookie,
+                                          evictedCookie->LastAccessed());
+        }
+        COOKIE_LOGEVICTED(evictedCookie, "Too many cookies for this domain");
+        RemoveCookieFromList(*it);
+        CreateOrUpdatePurgeList(getter_AddRefs(purgedList), evictedCookie);
+        MOZ_ASSERT((*it).entry);
       }
 
-      // remove the oldest cookie from the domain
-      RemoveCookieFromList(iter);
-      COOKIE_LOGEVICTED(oldCookie, "Too many cookies for this domain");
-      purgedList = CreatePurgeList(oldCookie);
     } else if (mDBState->cookieCount >= ADD_TEN_PERCENT(mMaxNumberOfCookies)) {
       int64_t maxAge = aCurrentTimeInUsec - mDBState->cookieOldestTime;
       int64_t purgeAge = ADD_TEN_PERCENT(mCookiePurgeAge);
@@ -4573,26 +4629,6 @@ public:
   }
 };
 
-// comparator class for sorting cookies by entry and index.
-class CompareCookiesByIndex {
-public:
-  bool Equals(const nsListIter &a, const nsListIter &b) const
-  {
-    NS_ASSERTION(a.entry != b.entry || a.index != b.index,
-      "cookie indexes should never be equal");
-    return false;
-  }
-
-  bool LessThan(const nsListIter &a, const nsListIter &b) const
-  {
-    // compare by entryclass pointer, then by index.
-    if (a.entry != b.entry)
-      return a.entry < b.entry;
-
-    return a.index < b.index;
-  }
-};
-
 // purges expired and old cookies in a batch operation.
 already_AddRefed<nsIArray>
 nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
@@ -4775,94 +4811,75 @@ nsCookieService::CookieExistsNative(nsICookie2* aCookie,
   return NS_OK;
 }
 
-// For a given base domain, find either an expired cookie or the oldest cookie
-// by lastAccessed time.
-int64_t
-nsCookieService::FindStaleCookie(nsCookieEntry *aEntry,
-                                 int64_t aCurrentTime,
-                                 nsIURI* aSource,
-                                 const mozilla::Maybe<bool> &aIsSecure,
-                                 nsListIter &aIter)
-{
-  aIter.entry = nullptr;
-  bool requireHostMatch = true;
-  nsAutoCString baseDomain, sourceHost, sourcePath;
-  if (aSource) {
-    GetBaseDomain(mTLDService, aSource, baseDomain, requireHostMatch);
-    aSource->GetAsciiHost(sourceHost);
-    sourcePath = GetPathFromURI(aSource);
+// Cookie comparator for the priority queue used in FindStaleCookies.
+// Note that the expired cookie has the highest priority.
+// Other non-expired cookies are sorted by their age.
+class CookieIterComparator {
+private:
+  CompareCookiesByAge mAgeComparator;
+  int64_t mCurrentTime;
+
+public:
+  explicit CookieIterComparator(int64_t aTime)
+    : mCurrentTime(aTime) {}
+
+  bool LessThan(const nsListIter& lhs, const nsListIter& rhs)
+  {
+    bool lExpired = lhs.Cookie()->Expiry() <= mCurrentTime;
+    bool rExpired = rhs.Cookie()->Expiry() <= mCurrentTime;
+    if (lExpired && !rExpired) {
+      return true;
+    }
+
+    if (!lExpired && rExpired) {
+      return false;
+    }
+
+    return mAgeComparator.LessThan(lhs, rhs);
   }
+};
+
+// Given the output iter array and the count limit, find cookies
+// sort by expiry and lastAccessed time.
+void
+nsCookieService::FindStaleCookies(nsCookieEntry *aEntry,
+                                  int64_t aCurrentTime,
+                                  const mozilla::Maybe<bool> &aIsSecure,
+                                  nsTArray<nsListIter>& aOutput,
+                                  uint32_t aLimit)
+{
+  MOZ_ASSERT(aLimit);
 
   const nsCookieEntry::ArrayType &cookies = aEntry->GetCookies();
+  aOutput.Clear();
 
-  int64_t oldestNonMatchingCookieTime = 0;
-  nsListIter oldestNonMatchingCookie;
-  oldestNonMatchingCookie.entry = nullptr;
+  CookieIterComparator comp(aCurrentTime);
+  nsTPriorityQueue<nsListIter, CookieIterComparator> queue(comp);
 
-  int64_t oldestCookieTime = 0;
-  nsListIter oldestCookie;
-  oldestCookie.entry = nullptr;
-
-  int64_t actualOldestCookieTime = cookies.Length() ? cookies[0]->LastAccessed() : 0;
   for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
     nsCookie *cookie = cookies[i];
 
-    // If we found an expired cookie, we're done.
     if (cookie->Expiry() <= aCurrentTime) {
-      aIter.entry = aEntry;
-      aIter.index = i;
-      return -1;
+      queue.Push(nsListIter(aEntry, i));
+      continue;
     }
 
-    int64_t lastAccessed = cookie->LastAccessed();
-    // Record the age of the oldest cookie that is stored for this host.
-    // oldestCookieTime is the age of the oldest cookie with a matching
-    // secure flag, which may be more recent than an older cookie with
-    // a non-matching secure flag.
-    if (actualOldestCookieTime > lastAccessed) {
-      actualOldestCookieTime = lastAccessed;
-    }
     if (aIsSecure.isSome() && !aIsSecure.value()) {
-      // We want to look for the oldest non-secure cookie first time through,
-      // then find the oldest secure cookie the second time we are called.
+      // We want to look for the non-secure cookie first time through,
+      // then find the secure cookie the second time this function is called.
       if (cookie->IsSecure()) {
         continue;
       }
     }
 
-    // This cookie is a candidate for eviction if we have no information about
-    // the source request, or if it is not a path or domain match against the
-    // source request.
-    bool isPrimaryEvictionCandidate = true;
-    if (aSource) {
-      isPrimaryEvictionCandidate = !PathMatches(cookie, sourcePath) || !DomainMatches(cookie, sourceHost);
-    }
-
-    if (isPrimaryEvictionCandidate &&
-        (!oldestNonMatchingCookie.entry ||
-         oldestNonMatchingCookieTime > lastAccessed)) {
-      oldestNonMatchingCookieTime = lastAccessed;
-      oldestNonMatchingCookie.entry = aEntry;
-      oldestNonMatchingCookie.index = i;
-    }
-
-    // Check if we've found the oldest cookie so far.
-    if (!oldestCookie.entry || oldestCookieTime > lastAccessed) {
-      oldestCookieTime = lastAccessed;
-      oldestCookie.entry = aEntry;
-      oldestCookie.index = i;
-    }
+    queue.Push(nsListIter(aEntry, i));
   }
 
-  // Prefer to evict the oldest cookie with a non-matching path/domain,
-  // followed by the oldest matching cookie.
-  if (oldestNonMatchingCookie.entry) {
-    aIter = oldestNonMatchingCookie;
-  } else {
-    aIter = oldestCookie;
+  uint32_t count = 0;
+  while (!queue.IsEmpty() && count < aLimit) {
+    aOutput.AppendElement(queue.Pop());
+    count++;
   }
-
-  return actualOldestCookieTime;
 }
 
 void

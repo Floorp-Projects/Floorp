@@ -189,8 +189,8 @@ function renderToolboxButtons({focusedButton, toolboxButtons, focusButton}, isSt
         id,
         description,
         disabled,
-        onClick,
         isChecked,
+        onClick,
         className: buttonClass,
         onKeyDown
       } = command;

@@ -118,6 +118,11 @@ var whitelist = [
   // browser/extensions/pdfjs/content/web/viewer.js#7450
   {file: "resource://pdf.js/web/debugger.js"},
 
+  // resource://app/modules/translation/TranslationContentHandler.jsm
+  {file: "resource://app/modules/translation/BingTranslator.jsm"},
+  {file: "resource://app/modules/translation/GoogleTranslator.jsm"},
+  {file: "resource://app/modules/translation/YandexTranslator.jsm"},
+
   // Starting from here, files in the whitelist are bugs that need fixing.
   // Bug 1339424 (wontfix?)
   {file: "chrome://browser/locale/taskbar.properties",

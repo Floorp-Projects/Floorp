@@ -14,6 +14,7 @@ const debugTargetListenerMiddleware = require("./middleware/debug-target-listene
 const extensionComponentDataMiddleware = require("./middleware/extension-component-data");
 const tabComponentDataMiddleware = require("./middleware/tab-component-data");
 const workerComponentDataMiddleware = require("./middleware/worker-component-data");
+const { getDebugTargetCollapsibilities } = require("./modules/debug-target-collapsibilities");
 const { getNetworkLocations } = require("./modules/network-locations");
 
 function configureStore() {
@@ -32,8 +33,9 @@ function configureStore() {
 }
 
 function getUiState() {
+  const collapsibilities = getDebugTargetCollapsibilities();
   const locations = getNetworkLocations();
-  return new UiState(locations);
+  return new UiState(locations, collapsibilities);
 }
 
 exports.configureStore = configureStore;

@@ -3705,6 +3705,48 @@ GetDesiredProto(JSContext* aCx, const JS::CallArgs& aCallArgs,
   return true;
 }
 
+namespace {
+
+class MOZ_RAII AutoConstructionDepth final
+{
+public:
+  MOZ_IMPLICIT AutoConstructionDepth(CustomElementDefinition* aDefinition)
+    : mDefinition(aDefinition)
+  {
+    MOZ_ASSERT(mDefinition->mConstructionStack.IsEmpty());
+
+    mDefinition->mConstructionDepth++;
+    // If the mConstructionDepth isn't matched with the length of mPrefixStack,
+    // this means the constructor is called directly from JS, i.e.
+    // 'new CustomElementConstructor()', we have to push a dummy prefix into
+    // stack.
+    if (mDefinition->mConstructionDepth > mDefinition->mPrefixStack.Length()) {
+      mDidPush = true;
+      mDefinition->mPrefixStack.AppendElement(nullptr);
+    }
+
+    MOZ_ASSERT(mDefinition->mConstructionDepth == mDefinition->mPrefixStack.Length());
+  }
+
+  ~AutoConstructionDepth()
+  {
+    MOZ_ASSERT(mDefinition->mConstructionDepth > 0);
+    MOZ_ASSERT(mDefinition->mConstructionDepth == mDefinition->mPrefixStack.Length());
+
+    if (mDidPush) {
+      MOZ_ASSERT(mDefinition->mPrefixStack.LastElement() == nullptr);
+      mDefinition->mPrefixStack.RemoveLastElement();
+    }
+    mDefinition->mConstructionDepth--;
+  }
+
+private:
+  CustomElementDefinition* mDefinition;
+  bool mDidPush = false;
+};
+
+} // anonymous namespace
+
 // https://html.spec.whatwg.org/multipage/dom.html#htmlconstructor
 namespace binding_detail {
 bool
@@ -3909,10 +3951,11 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     // realm, not caller realm (the normal constructor behavior),
     // just in case those elements create JS things.
     JSAutoRealm ar(aCx, global.Get());
+    AutoConstructionDepth acd(definition);
 
     RefPtr<NodeInfo> nodeInfo =
       doc->NodeInfoManager()->GetNodeInfo(definition->mLocalName,
-                                          nullptr,
+                                          definition->mPrefixStack.LastElement(),
                                           ns,
                                           nsINode::ELEMENT_NODE);
     MOZ_ASSERT(nodeInfo);

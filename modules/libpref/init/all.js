@@ -2297,6 +2297,9 @@ pref("network.cookie.move.interval_sec",    10);
 
 pref("network.cookie.maxNumber", 3000);
 pref("network.cookie.maxPerHost", 180);
+// Cookies quota for each host. If cookies exceed the limit maxPerHost,
+// (maxPerHost - quotaPerHost) cookies will be evicted.
+pref("network.cookie.quotaPerHost", 150);
 
 // The PAC file to load.  Ignored unless network.proxy.type is 2.
 pref("network.proxy.autoconfig_url", "");

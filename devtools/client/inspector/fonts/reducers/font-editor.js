@@ -34,7 +34,7 @@ const INITIAL_STATE = {
   // Unique identifier for the selected element.
   id: "",
   // Warning message with the reason why the font editor cannot be shown.
-  warning: getStr("fontinspector.noFontsOnSelectedElement"),
+  warning: getStr("fontinspector.noFontsUsedOnCurrentElement"),
 };
 
 const reducers = {

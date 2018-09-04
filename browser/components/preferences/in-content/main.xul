@@ -100,7 +100,8 @@
 #endif
 
     <vbox id="browserContainersbox" hidden="true">
-      <hbox id="browserContainersExtensionContent" align="center">
+      <hbox id="browserContainersExtensionContent"
+            align="center" class="extension-controlled">
         <description control="disableContainersExtension" flex="1" />
         <button id="disableContainersExtension"
                 class="extension-controlled-button accessory-button"

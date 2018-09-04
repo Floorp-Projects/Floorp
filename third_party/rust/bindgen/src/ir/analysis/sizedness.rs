@@ -295,6 +295,10 @@ impl<'ctx> MonotoneFramework for SizednessAnalysis<'ctx> {
                 trace!("    arrays of > 0 elements are not zero-sized");
                 self.insert(id, SizednessResult::NonZeroSized)
             }
+            TypeKind::Vector(..) => {
+                trace!("    vectors are not zero-sized");
+                self.insert(id, SizednessResult::NonZeroSized)
+            }
 
             TypeKind::Comp(ref info) => {
                 trace!("    comp considers its own fields and bases");
