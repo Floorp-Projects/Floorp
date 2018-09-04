@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
@@ -27,8 +27,10 @@ const {
 } = require("../actions/devices");
 const { changeReloadCondition } = require("../actions/reload-conditions");
 const { takeScreenshot } = require("../actions/screenshot");
-const { changeTouchSimulation } = require("../actions/touch-simulation");
-const { toggleLeftAlignment } = require("../actions/ui");
+const {
+  toggleTouchSimulation,
+  toggleLeftAlignment,
+} = require("../actions/ui");
 const {
   changeDevice,
   changePixelRatio,
@@ -39,16 +41,14 @@ const {
 
 const Types = require("../types");
 
-class App extends Component {
+class App extends PureComponent {
   static get propTypes() {
     return {
       devices: PropTypes.shape(Types.devices).isRequired,
       dispatch: PropTypes.func.isRequired,
-      displayPixelRatio: Types.pixelRatio.value.isRequired,
       networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
       reloadConditions: PropTypes.shape(Types.reloadConditions).isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
-      touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
       viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
     };
   }
@@ -93,7 +93,7 @@ class App extends Component {
       device,
     }, "*");
     this.props.dispatch(changeDevice(id, device.name, deviceType));
-    this.props.dispatch(changeTouchSimulation(device.touch));
+    this.props.dispatch(toggleTouchSimulation(device.touch));
     this.props.dispatch(changePixelRatio(id, device.pixelRatio));
   }
 
@@ -123,7 +123,7 @@ class App extends Component {
       type: "change-touch-simulation",
       enabled,
     }, "*");
-    this.props.dispatch(changeTouchSimulation(enabled));
+    this.props.dispatch(toggleTouchSimulation(enabled));
   }
 
   onContentResize({ width, height }) {
@@ -150,7 +150,7 @@ class App extends Component {
     // TODO: Bug 1332754: Move messaging and logic into the action creator so that device
     // property changes are sent from there instead of this function.
     this.props.dispatch(removeDeviceAssociation(id));
-    this.props.dispatch(changeTouchSimulation(false));
+    this.props.dispatch(toggleTouchSimulation(false));
     this.props.dispatch(changePixelRatio(id, 0));
   }
 
@@ -181,11 +181,9 @@ class App extends Component {
   render() {
     const {
       devices,
-      displayPixelRatio,
       networkThrottling,
       reloadConditions,
       screenshot,
-      touchSimulation,
       viewports,
     } = this.props;
 
@@ -226,13 +224,11 @@ class App extends Component {
       dom.div({ id: "app" },
         Toolbar({
           devices,
-          displayPixelRatio,
           networkThrottling,
           reloadConditions,
           screenshot,
           selectedDevice,
           selectedPixelRatio,
-          touchSimulation,
           viewport: viewports[0],
           onChangeDevice,
           onChangeNetworkThrottling,

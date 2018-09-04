@@ -8243,12 +8243,19 @@ js::shell::AutoReportException::~AutoReportException()
         savedExc.restore();
     }
 
+    JS_ClearPendingException(cx);
+
+#if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+    // Don't quit the shell if an unhandled exception is reported during OOM
+    // testing.
+    if (cx->runningOOMTest)
+        return;
+#endif
+
     if (report.report()->errorNumber == JSMSG_OUT_OF_MEMORY)
         sc->exitCode = EXITCODE_OUT_OF_MEMORY;
     else
         sc->exitCode = EXITCODE_RUNTIME_ERROR;
-
-    JS_ClearPendingException(cx);
 }
 
 void

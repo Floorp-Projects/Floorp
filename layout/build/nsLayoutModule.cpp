@@ -155,6 +155,7 @@ static void Shutdown();
 #include "mozilla/dom/PresentationTCPSessionTransport.h"
 
 #include "nsScriptError.h"
+#include "nsBaseCommandController.h"
 
 #include "mozilla/TextInputProcessor.h"
 
@@ -606,12 +607,9 @@ static nsresult
 CreateWindowControllerWithSingletonCommandTable(nsISupports *aOuter,
                                       REFNSIID aIID, void **aResult)
 {
+  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
+
   nsresult rv;
-  nsCOMPtr<nsIController> controller =
-       do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
-
- if (NS_FAILED(rv)) return rv;
-
   nsCOMPtr<nsIControllerCommandTable> windowCommandTable = do_GetService(kNS_WINDOWCOMMANDTABLE_CID, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -632,10 +630,9 @@ CreateWindowControllerWithSingletonCommandTable(nsISupports *aOuter,
 static nsresult
 EditorControllerConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
-  nsresult rv;
-  nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
 
+  nsresult rv;
   nsCOMPtr<nsIControllerCommandTable> editorCommandTable = do_GetService(kNS_EDITORCOMMANDTABLE_CID, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -657,10 +654,9 @@ static nsresult
 nsEditingControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult)
 {
-  nsresult rv;
-  nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
 
+  nsresult rv;
   nsCOMPtr<nsIControllerCommandTable> editingCommandTable = do_GetService(kNS_EDITINGCOMMANDTABLE_CID, &rv);
   if (NS_FAILED(rv)) return rv;
 

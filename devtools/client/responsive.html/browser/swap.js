@@ -5,9 +5,9 @@
 "use strict";
 
 const { Ci } = require("chrome");
+const Services = require("Services");
 const { E10SUtils } = require("resource://gre/modules/E10SUtils.jsm");
 const { tunnelToInnerBrowser } = require("./tunnel");
-const Services = require("Services");
 
 function debug(msg) {
   // console.log(`RDM swap: ${msg}`);

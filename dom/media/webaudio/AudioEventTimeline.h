@@ -131,32 +131,28 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     auto TimeOf = [](const AudioTimelineEvent& aEvent) -> double {
-      return aEvent.template Time<double>();
+      return aEvent.Time<double>();
     };
 
     // Validate the event itself
     if (!WebAudioUtils::IsTimeValid(TimeOf(aEvent))) {
-      aRv.template ThrowRangeError<
+      aRv.ThrowRangeError<
         MSG_INVALID_AUDIOPARAM_METHOD_START_TIME_ERROR>();
       return false;
     }
     if (!WebAudioUtils::IsTimeValid(aEvent.mTimeConstant)) {
-      aRv.template ThrowRangeError<
+      aRv.ThrowRangeError<
         MSG_INVALID_AUDIOPARAM_EXPONENTIAL_CONSTANT_ERROR>();
       return false;
     }
 
     if (aEvent.mType == AudioTimelineEvent::SetValueCurve) {
-      if (!aEvent.mCurve || !aEvent.mCurveLength) {
-        aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-        return false;
-      }
-      if (aEvent.mCurveLength < 2) {
+      if (!aEvent.mCurve || aEvent.mCurveLength < 2) {
         aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
         return false;
       }
       if (aEvent.mDuration <= 0) {
-        aRv.template ThrowRangeError<MSG_INVALID_CURVE_DURATION_ERROR>();
+        aRv.ThrowRangeError<MSG_INVALID_CURVE_DURATION_ERROR>();
         return false;
       }
     }
@@ -174,12 +170,12 @@ public:
       }
     }
 
-    // Make sure that new curve events don't fall in a range which includes other
-    // events.
+    // Make sure that new curve events don't fall in a range which includes
+    // other events.
     if (aEvent.mType == AudioTimelineEvent::SetValueCurve) {
       for (unsigned i = 0; i < mEvents.Length(); ++i) {
         if (TimeOf(aEvent) < TimeOf(mEvents[i]) &&
-            TimeOf(aEvent) + aEvent.mDuration >= TimeOf(mEvents[i])) {
+            TimeOf(aEvent) + aEvent.mDuration > TimeOf(mEvents[i])) {
           aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
           return false;
         }
@@ -189,7 +185,7 @@ public:
     // Make sure that invalid values are not used for exponential curves
     if (aEvent.mType == AudioTimelineEvent::ExponentialRamp) {
       if (aEvent.mValue <= 0.f) {
-        aRv.template ThrowRangeError<
+        aRv.ThrowRangeError<
           MSG_INVALID_AUDIOPARAM_EXPONENTIAL_VALUE_ERROR>();
         return false;
       }
@@ -213,18 +209,18 @@ public:
   void InsertEvent(const AudioTimelineEvent& aEvent)
   {
     for (unsigned i = 0; i < mEvents.Length(); ++i) {
-      if (aEvent.template Time<TimeType>() == mEvents[i].template Time<TimeType>()) {
-          // If two events happen at the same time, have them in chronological
-          // order of insertion.
-          do {
-            ++i;
-          } while (i < mEvents.Length() &&
-                   aEvent.mType != mEvents[i].mType &&
-                   aEvent.template Time<TimeType>() == mEvents[i].template Time<TimeType>());
-          mEvents.InsertElementAt(i, aEvent);
+      if (aEvent.Time<TimeType>() == mEvents[i].Time<TimeType>()) {
+        // If two events happen at the same time, have them in chronological
+        // order of insertion.
+        do {
+          ++i;
+        } while (i < mEvents.Length() && aEvent.mType != mEvents[i].mType &&
+                 aEvent.Time<TimeType>() == mEvents[i].Time<TimeType>());
+        mEvents.InsertElementAt(i, aEvent);
+        return;
       }
       // Otherwise, place the event right after the latest existing event
-      if (aEvent.template Time<TimeType>() < mEvents[i].template Time<TimeType>()) {
+      if (aEvent.Time<TimeType>() < mEvents[i].Time<TimeType>()) {
         mEvents.InsertElementAt(i, aEvent);
         return;
       }
@@ -308,12 +304,12 @@ public:
   void CancelScheduledValues(TimeType aStartTime)
   {
     for (unsigned i = 0; i < mEvents.Length(); ++i) {
-      if (mEvents[i].template Time<TimeType>() >= aStartTime) {
+      if (mEvents[i].Time<TimeType>() >= aStartTime) {
 #ifdef DEBUG
         // Sanity check: the array should be sorted, so all of the following
         // events should have a time greater than aStartTime too.
         for (unsigned j = i + 1; j < mEvents.Length(); ++j) {
-          MOZ_ASSERT(mEvents[j].template Time<TimeType>() >= aStartTime);
+          MOZ_ASSERT(mEvents[j].Time<TimeType>() >= aStartTime);
         }
 #endif
         mEvents.TruncateLength(i);
@@ -364,13 +360,11 @@ public:
   template<class TimeType>
   void CleanupEventsOlderThan(TimeType aTime)
   {
-    while (mEvents.Length() > 1 &&
-        aTime > mEvents[1].template Time<TimeType>()) {
+    while (mEvents.Length() > 1 && aTime > mEvents[1].Time<TimeType>()) {
 
       if (mEvents[1].mType == AudioTimelineEvent::SetTarget) {
         mLastComputedValue = GetValuesAtTimeHelperInternal(
-                                mEvents[1].template Time<TimeType>(),
-                                &mEvents[0], nullptr);
+          mEvents[1].Time<TimeType>(), &mEvents[0], nullptr);
       }
 
       mEvents.RemoveElementAt(0);

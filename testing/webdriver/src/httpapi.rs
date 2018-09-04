@@ -359,10 +359,10 @@ impl<U: WebDriverExtensionRoute> WebDriverHttpApi<U> {
     pub fn new(extension_routes: &[(Method, &str, U)]) -> WebDriverHttpApi<U> {
         let mut rv = WebDriverHttpApi::<U> { routes: vec![] };
         debug!("Creating routes");
-        for &(ref method, ref url, ref match_type) in standard_routes::<U>().iter() {
+        for &(ref method, ref url, ref match_type) in &standard_routes::<U>() {
             rv.add(method.clone(), *url, (*match_type).clone());
         }
-        for &(ref method, ref url, ref extension_route) in extension_routes.iter() {
+        for &(ref method, ref url, ref extension_route) in extension_routes {
             rv.add(
                 method.clone(),
                 *url,
@@ -384,7 +384,7 @@ impl<U: WebDriverExtensionRoute> WebDriverHttpApi<U> {
         body: &str,
     ) -> WebDriverResult<WebDriverMessage<U>> {
         let mut error = ErrorStatus::UnknownPath;
-        for &(ref match_method, ref matcher) in self.routes.iter() {
+        for &(ref match_method, ref matcher) in &self.routes {
             if method == *match_method {
                 let (method_match, captures) = matcher.get_match(method, path);
                 if captures.is_some() {

@@ -625,6 +625,36 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [infallible] readonly attribute boolean hasTrackingContentLoaded;
 
+   /**
+   * This attribute determines whether a document has Slow Tracking Content
+   * that has been blocked from loading.
+   */
+   [infallible] readonly attribute boolean hasSlowTrackingContentBlocked;
+
+   /**
+   * This attribute determines whether a document seen cookies or storage
+   * blocked due to a site permission being denied.
+   */
+   [infallible] readonly attribute boolean hasCookiesBlockedByPermission;
+
+   /**
+   * This attribute determines whether a document seen cookies or storage
+   * blocked due to a the request being made by a tracker.
+   */
+   [infallible] readonly attribute boolean hasCookiesBlockedDueToTrackers;
+
+   /**
+   * This attribute determines whether a document seen cookies or storage
+   * blocked due to cookie behavior settings blocking all cookies.
+   */
+   [infallible] readonly attribute boolean hasAllCookiesBeenBlocked;
+
+   /**
+   * This attribute determines whether a document seen cookies or storage
+   * blocked due to cookie behavior settings blocking all third-party cookies.
+   */
+   [infallible] readonly attribute boolean hasForeignCookiesBeenBlocked;
+
   /**
    * Disconnects this docshell's editor from its window, and stores the
    * editor data in the open document's session history entry.  This

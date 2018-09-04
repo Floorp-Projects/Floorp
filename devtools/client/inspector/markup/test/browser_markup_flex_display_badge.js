@@ -17,6 +17,8 @@ const TEST_URI = `
 const HIGHLIGHTER_TYPE = "FlexboxHighlighter";
 
 add_task(async function() {
+  await pushPref("devtools.inspector.flexboxHighlighter.enabled", true);
+  await pushPref("devtools.flexboxinspector.enabled", true);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector } = await openLayoutView();
   const { highlighters, store } = inspector;

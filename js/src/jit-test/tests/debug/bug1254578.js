@@ -1,7 +1,7 @@
-// |jit-test| error:ReferenceError; slow
+// |jit-test| slow
 
 if (!('oomTest' in this))
-  throw (new ReferenceError);
+    quit();
 
 var g = newGlobal();
 g.debuggeeGlobal = this;

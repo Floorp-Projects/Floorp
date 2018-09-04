@@ -190,6 +190,26 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
     }
 }
 
+tasks.withType(Javadoc) {
+    // Implement warning-as-error for javadoc.
+    def warnings = 0
+    def listener = {
+        if (it.contains(': warning')) {
+            warnings++
+        }
+    } as StandardOutputListener
+
+    doFirst {
+        logging.addStandardErrorListener(listener)
+    }
+    doLast {
+        logging.removeStandardErrorListener(listener)
+        if (warnings > 0) {
+            throw new GradleException("Treating $warnings javadoc warning(s) as error(s)")
+        }
+    }
+}
+
 dependencies {
     implementation "com.android.support:support-v4:$support_library_version"
     implementation "com.android.support:palette-v7:$support_library_version"
