@@ -122,14 +122,17 @@ public:
     return mTarget == aOther.mTarget;
   }
 
-  bool LessThan(const OwningElementRef& aOther) const
+  bool LessThan(int32_t& aChildIndex, const OwningElementRef& aOther,
+                int32_t& aOtherChildIndex) const
   {
     MOZ_ASSERT(mTarget.mElement && aOther.mTarget.mElement,
                "Elements to compare should not be null");
 
     if (mTarget.mElement != aOther.mTarget.mElement) {
       return nsContentUtils::PositionIsBefore(mTarget.mElement,
-                                              aOther.mTarget.mElement);
+                                              aOther.mTarget.mElement,
+                                              &aChildIndex,
+                                              &aOtherChildIndex);
     }
 
     return mTarget.mPseudoType == CSSPseudoElementType::NotPseudo ||
