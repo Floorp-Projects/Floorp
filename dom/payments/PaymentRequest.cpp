@@ -745,10 +745,14 @@ PaymentRequest::Show(const Optional<OwningNonNull<Promise>>& aDetailsPromise,
 void
 PaymentRequest::RejectShowPayment(nsresult aRejectReason)
 {
-  MOZ_ASSERT(mAcceptPromise);
+  MOZ_ASSERT(mAcceptPromise || mResponse);
   MOZ_ASSERT(mState == eInteractive);
 
-  mAcceptPromise->MaybeReject(aRejectReason);
+  if (mResponse) {
+    mResponse->RejectRetry(aRejectReason);
+  } else {
+    mAcceptPromise->MaybeReject(aRejectReason);
+  }
   mState = eClosed;
   mAcceptPromise = nullptr;
 }
@@ -761,7 +765,7 @@ PaymentRequest::RespondShowPayment(const nsAString& aMethodName,
                                    const nsAString& aPayerPhone,
                                    nsresult aRv)
 {
-  MOZ_ASSERT(mAcceptPromise);
+  MOZ_ASSERT(mAcceptPromise || mResponse);
   MOZ_ASSERT(mState == eInteractive);
 
   if (NS_FAILED(aRv)) {
@@ -773,12 +777,17 @@ PaymentRequest::RespondShowPayment(const nsAString& aMethodName,
   mShippingAddress.swap(mFullShippingAddress);
   mFullShippingAddress = nullptr;
 
-  RefPtr<PaymentResponse> paymentResponse =
-    new PaymentResponse(GetOwner(), this, mId, aMethodName,
-                        mShippingOption, mShippingAddress, aDetails,
-                        aPayerName, aPayerEmail, aPayerPhone);
-  mResponse = paymentResponse;
-  mAcceptPromise->MaybeResolve(paymentResponse);
+  if (mResponse) {
+    mResponse->RespondRetry(aMethodName, mShippingOption, mShippingAddress,
+                            aDetails, aPayerName, aPayerEmail, aPayerPhone);
+  } else {
+    RefPtr<PaymentResponse> paymentResponse =
+      new PaymentResponse(GetOwner(), this, mId, aMethodName,
+                          mShippingOption, mShippingAddress, aDetails,
+                          aPayerName, aPayerEmail, aPayerPhone);
+    mResponse = paymentResponse;
+    mAcceptPromise->MaybeResolve(paymentResponse);
+  }
 
   mState = eClosed;
   mAcceptPromise = nullptr;
@@ -901,6 +910,22 @@ PaymentRequest::AbortUpdate(nsresult aRv, bool aDeferredShow)
   // 2. Reject the promise target.acceptPromise with exception "aRv"
   // 3. Abort the algorithm with update error
   mUpdateError = aRv;
+}
+
+nsresult
+PaymentRequest::RetryPayment(JSContext* aCx, const PaymentValidationErrors& aErrors)
+{
+  if (mState == eInteractive) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
+  MOZ_ASSERT(manager);
+  nsresult rv = manager->RetryPayment(aCx, this, aErrors);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  mState = eInteractive;
+  return NS_OK;
 }
 
 void

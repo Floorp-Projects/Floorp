@@ -63,6 +63,10 @@ interface nsIPaymentDetails : nsISupports
   readonly attribute AString error;
   [implicit_jscontext]
   readonly attribute jsval shippingAddressErrors;
+  [implicit_jscontext]
+  readonly attribute jsval payer;
+  [implicit_jscontext]
+  readonly attribute jsval paymentMethod;
 };
 
 [scriptable, builtinclass, uuid(d53f9f20-138e-47cc-9fd5-db16a3f6d301)]

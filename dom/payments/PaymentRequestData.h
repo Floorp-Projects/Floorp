@@ -133,6 +133,11 @@ public:
                          nsIPaymentDetails** aDetails);
   nsresult Update(nsIPaymentDetails* aDetails, const bool aRequestShipping);
   nsString GetShippingAddressErrors() const;
+  nsresult UpdateErrors(const nsAString& aError,
+                        const nsAString& aPayerErrors,
+                        const nsAString& aPaymentMethodErrors,
+                        const nsAString& aShippingAddressErrors);
+
 private:
   PaymentDetails(const nsAString& aId,
                  nsIPaymentItem* aTotalItem,
@@ -151,6 +156,8 @@ private:
   nsCOMPtr<nsIArray> mModifiers;
   nsString mError;
   nsString mShippingAddressErrors;
+  nsString mPayerErrors;
+  nsString mPaymentMethodErrors;
 };
 
 class PaymentOptions final : public nsIPaymentOptions
@@ -207,6 +214,12 @@ public:
 
   void
   SetCompleteStatus(const nsAString& aCompleteStatus);
+
+  nsresult
+  UpdateErrors(const nsAString& aError,
+               const nsAString& aPayerErrors,
+               const nsAString& aPaymentMethodErrors,
+               const nsAString& aShippingAddressErrors);
 
 private:
   ~PaymentRequest() = default;
