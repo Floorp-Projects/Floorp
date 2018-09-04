@@ -40,6 +40,73 @@ using mozilla::BinarySearch;
 using mozilla::MakeEnumeratedRange;
 using mozilla::PodAssign;
 
+size_t
+LinkData::SymbolicLinkArray::serializedSize() const
+{
+    size_t size = 0;
+    for (const Uint32Vector& offsets : *this)
+        size += SerializedPodVectorSize(offsets);
+    return size;
+}
+
+uint8_t*
+LinkData::SymbolicLinkArray::serialize(uint8_t* cursor) const
+{
+    for (const Uint32Vector& offsets : *this)
+        cursor = SerializePodVector(cursor, offsets);
+    return cursor;
+}
+
+const uint8_t*
+LinkData::SymbolicLinkArray::deserialize(const uint8_t* cursor)
+{
+    for (Uint32Vector& offsets : *this) {
+        cursor = DeserializePodVector(cursor, &offsets);
+        if (!cursor)
+            return nullptr;
+    }
+    return cursor;
+}
+
+size_t
+LinkData::SymbolicLinkArray::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    size_t size = 0;
+    for (const Uint32Vector& offsets : *this)
+        size += offsets.sizeOfExcludingThis(mallocSizeOf);
+    return size;
+}
+
+size_t
+LinkData::serializedSize() const
+{
+    return sizeof(pod()) +
+           SerializedPodVectorSize(internalLinks) +
+           symbolicLinks.serializedSize();
+}
+
+uint8_t*
+LinkData::serialize(uint8_t* cursor) const
+{
+    MOZ_ASSERT(tier == Tier::Serialized);
+
+    cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
+    cursor = SerializePodVector(cursor, internalLinks);
+    cursor = symbolicLinks.serialize(cursor);
+    return cursor;
+}
+
+const uint8_t*
+LinkData::deserialize(const uint8_t* cursor)
+{
+    MOZ_ASSERT(tier == Tier::Serialized);
+
+    (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
+    (cursor = DeserializePodVector(cursor, &internalLinks)) &&
+    (cursor = symbolicLinks.deserialize(cursor));
+    return cursor;
+}
+
 CodeSegment::~CodeSegment()
 {
     if (unregisterOnDestroy_)
@@ -134,9 +201,9 @@ FreeCode::operator()(uint8_t* bytes)
 }
 
 static bool
-StaticallyLink(const ModuleSegment& ms, const LinkDataTier& linkData)
+StaticallyLink(const ModuleSegment& ms, const LinkData& linkData)
 {
-    for (LinkDataTier::InternalLink link : linkData.internalLinks) {
+    for (LinkData::InternalLink link : linkData.internalLinks) {
         CodeLabel label;
         label.patchAt()->bind(link.patchAtOffset);
         label.target()->bind(link.targetOffset);
@@ -167,9 +234,9 @@ StaticallyLink(const ModuleSegment& ms, const LinkDataTier& linkData)
 }
 
 static void
-StaticallyUnlink(uint8_t* base, const LinkDataTier& linkData)
+StaticallyUnlink(uint8_t* base, const LinkData& linkData)
 {
-    for (LinkDataTier::InternalLink link : linkData.internalLinks) {
+    for (LinkData::InternalLink link : linkData.internalLinks) {
         CodeLabel label;
         label.patchAt()->bind(link.patchAtOffset);
         label.target()->bind(-size_t(base)); // to reset immediate to null
@@ -275,7 +342,7 @@ SendCodeRangesToProfiler(const ModuleSegment& ms, const Bytes& bytecode, const M
 ModuleSegment::ModuleSegment(Tier tier,
                              UniqueCodeBytes codeBytes,
                              uint32_t codeLength,
-                             const LinkDataTier& linkData)
+                             const LinkData& linkData)
   : CodeSegment(std::move(codeBytes), codeLength, CodeSegment::Kind::Module),
     tier_(tier),
     trapCode_(base() + linkData.trapOffset)
@@ -283,7 +350,7 @@ ModuleSegment::ModuleSegment(Tier tier,
 }
 
 /* static */ UniqueModuleSegment
-ModuleSegment::create(Tier tier, MacroAssembler& masm, const LinkDataTier& linkData)
+ModuleSegment::create(Tier tier, MacroAssembler& masm, const LinkData& linkData)
 {
     uint32_t codeLength = masm.bytesNeeded();
 
@@ -298,7 +365,7 @@ ModuleSegment::create(Tier tier, MacroAssembler& masm, const LinkDataTier& linkD
 }
 
 /* static */ UniqueModuleSegment
-ModuleSegment::create(Tier tier, const Bytes& unlinkedBytes, const LinkDataTier& linkData)
+ModuleSegment::create(Tier tier, const Bytes& unlinkedBytes, const LinkData& linkData)
 {
     uint32_t codeLength = unlinkedBytes.length();
 
@@ -314,7 +381,7 @@ ModuleSegment::create(Tier tier, const Bytes& unlinkedBytes, const LinkDataTier&
 bool
 ModuleSegment::initialize(const CodeTier& codeTier,
                           const ShareableBytes& bytecode,
-                          const LinkDataTier& linkData,
+                          const LinkData& linkData,
                           const Metadata& metadata,
                           const MetadataTier& metadataTier)
 {
@@ -347,7 +414,7 @@ ModuleSegment::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code, s
 }
 
 uint8_t*
-ModuleSegment::serialize(uint8_t* cursor, const LinkDataTier& linkData) const
+ModuleSegment::serialize(uint8_t* cursor, const LinkData& linkData) const
 {
     MOZ_ASSERT(tier() == Tier::Serialized);
 
@@ -359,7 +426,7 @@ ModuleSegment::serialize(uint8_t* cursor, const LinkDataTier& linkData) const
 }
 
 /* static */ const uint8_t*
-ModuleSegment::deserialize(const uint8_t* cursor, const LinkDataTier& linkData,
+ModuleSegment::deserialize(const uint8_t* cursor, const LinkData& linkData,
                            UniqueModuleSegment* segment)
 {
     uint32_t length;
@@ -981,7 +1048,7 @@ CodeTier::serializedSize() const
 }
 
 uint8_t*
-CodeTier::serialize(uint8_t* cursor, const LinkDataTier& linkData) const
+CodeTier::serialize(uint8_t* cursor, const LinkData& linkData) const
 {
     cursor = metadata_->serialize(cursor);
     cursor = segment_->serialize(cursor, linkData);
@@ -989,7 +1056,7 @@ CodeTier::serialize(uint8_t* cursor, const LinkDataTier& linkData) const
 }
 
 /* static */ const uint8_t*
-CodeTier::deserialize(const uint8_t* cursor, const LinkDataTier& linkData,
+CodeTier::deserialize(const uint8_t* cursor, const LinkData& linkData,
                       UniqueCodeTier* codeTier)
 {
     auto metadata = js::MakeUnique<MetadataTier>(Tier::Serialized);
@@ -1084,7 +1151,7 @@ Code::Code(UniqueCodeTier tier1, const Metadata& metadata, JumpTables&& maybeJum
 {}
 
 bool
-Code::initialize(const ShareableBytes& bytecode, const LinkDataTier& linkData)
+Code::initialize(const ShareableBytes& bytecode, const LinkData& linkData)
 {
     MOZ_ASSERT(!initialized());
 
@@ -1097,7 +1164,7 @@ Code::initialize(const ShareableBytes& bytecode, const LinkDataTier& linkData)
 
 bool
 Code::setTier2(UniqueCodeTier tier2, const ShareableBytes& bytecode,
-               const LinkDataTier& linkData) const
+               const LinkData& linkData) const
 {
     MOZ_RELEASE_ASSERT(!hasTier2());
     MOZ_RELEASE_ASSERT(tier2->tier() == Tier::Ion && tier1_->tier() == Tier::Baseline);
@@ -1361,7 +1428,7 @@ Code::addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
 bool
 CodeTier::initialize(const Code& code,
                      const ShareableBytes& bytecode,
-                     const LinkDataTier& linkData,
+                     const LinkData& linkData,
                      const Metadata& metadata)
 {
     MOZ_ASSERT(!initialized());
@@ -1390,7 +1457,7 @@ Code::serialize(uint8_t* cursor, const LinkData& linkData) const
     MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
 
     cursor = metadata().serialize(cursor);
-    cursor = codeTier(Tier::Serialized).serialize(cursor, linkData.tier(Tier::Serialized));
+    cursor = codeTier(Tier::Serialized).serialize(cursor, linkData);
     return cursor;
 }
 
@@ -1406,7 +1473,7 @@ Code::deserialize(const uint8_t* cursor,
         return nullptr;
 
     UniqueCodeTier codeTier;
-    cursor = CodeTier::deserialize(cursor, linkData.tier(Tier::Serialized), &codeTier);
+    cursor = CodeTier::deserialize(cursor, linkData, &codeTier);
     if (!cursor)
         return nullptr;
 
@@ -1415,7 +1482,7 @@ Code::deserialize(const uint8_t* cursor,
         return nullptr;
 
     MutableCode code = js_new<Code>(std::move(codeTier), metadata, std::move(jumpTables));
-    if (!code || !code->initialize(bytecode, linkData.tier(Tier::Serialized)))
+    if (!code || !code->initialize(bytecode, linkData))
         return nullptr;
 
     *out = code;
