@@ -172,7 +172,7 @@ private:
   // Track all bfcache entries and evict on expiration.
   mozilla::UniquePtr<HistoryTracker> mHistoryTracker;
 
-  nsTArray<nsCOMPtr<nsISHTransaction>> mTransactions;
+  nsTArray<nsCOMPtr<nsISHTransaction>> mTransactions; // entries are never null
   int32_t mIndex;           // -1 means "no index"
   int32_t mRequestedIndex;  // -1 means "no requested index"
 

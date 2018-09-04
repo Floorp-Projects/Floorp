@@ -159,7 +159,7 @@ interface nsISHistory: nsISupports
   void addEntry(in nsISHEntry aEntry, in boolean aPersist);
 
   /**
-   * Get the transaction at a particular index.
+   * Get the transaction at a particular index. Returns non-null on success.
    */
   nsISHTransaction GetTransactionAtIndex(in int32_t aIndex);
 
