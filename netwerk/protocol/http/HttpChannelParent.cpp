@@ -83,7 +83,6 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
   , mCacheNeedFlowControlInitialized(false)
   , mNeedFlowControl(true)
   , mSuspendedForFlowControl(false)
-  , mDoingCrossProcessRedirect(false)
 {
   LOG(("Creating HttpChannelParent [this=%p]\n", this));
 
@@ -314,8 +313,7 @@ NS_IMETHODIMP
 HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
 {
   if (aIID.Equals(NS_GET_IID(nsIAuthPromptProvider)) ||
-      aIID.Equals(NS_GET_IID(nsISecureBrowserUI)) ||
-      aIID.Equals(NS_GET_IID(nsITabParent))) {
+      aIID.Equals(NS_GET_IID(nsISecureBrowserUI))) {
     if (mTabParent) {
       return mTabParent->QueryInterface(aIID, result);
     }
@@ -1324,45 +1322,6 @@ HttpChannelParent::MaybeFlushPendingDiversion()
 
 }
 
-static void
-FinishCrossProcessRedirect(nsHttpChannel *channel, nsresult status)
-{
-  if (NS_SUCCEEDED(status)) {
-    nsCOMPtr<nsINetworkInterceptController> controller;
-    NS_QueryNotificationCallbacks(channel, controller);
-    RefPtr<HttpChannelParentListener> parentListener = do_QueryObject(controller);
-    MOZ_ASSERT(parentListener);
-
-    // This updates HttpChannelParentListener to point to this parent and at
-    // the same time cancels the old channel.
-    parentListener->OnRedirectResult(status == NS_OK);
-  }
-
-  channel->OnRedirectVerifyCallback(status);
-}
-
-mozilla::ipc::IPCResult
-HttpChannelParent::RecvCrossProcessRedirectDone(const nsresult& aResult)
-{
-  RefPtr<nsHttpChannel> chan = do_QueryObject(mChannel);
-  if (!mBgParent) {
-    RefPtr<GenericPromise> promise = WaitForBgParent();
-    RefPtr<HttpChannelParent> self = this;
-    promise->Then(GetMainThreadSerialEventTarget(), __func__,
-                  [self, chan, aResult]() {
-                    FinishCrossProcessRedirect(chan, aResult);
-                  },
-                  [self, chan](const nsresult& aRejectionRv) {
-                    MOZ_ASSERT(NS_FAILED(aRejectionRv), "This should be an error code");
-                    FinishCrossProcessRedirect(chan, aRejectionRv);
-                  });
-  } else {
-    FinishCrossProcessRedirect(chan, aResult);
-  }
-
-  return IPC_OK();
-}
-
 void
 HttpChannelParent::ResponseSynthesized()
 {
@@ -2044,15 +2003,6 @@ HttpChannelParent::CompleteRedirect(bool succeeded)
   LOG(("HttpChannelParent::CompleteRedirect [this=%p succeeded=%d]\n",
        this, succeeded));
 
-  // The channel was redirected to another process, and the channel parent
-  // is about to be deleted. We send a CancelRedirected message in order to
-  // inform the listener that this child is going away.
-  if (mDoingCrossProcessRedirect && !mIPCClosed) {
-      MOZ_ASSERT(!mRedirectChannel);
-      Unused << SendCancelRedirected();
-      return NS_OK;
-  }
-
   // If this was an internal redirect for a service worker interception then
   // we will not have a redirecting channel here.  Hide this redirect from
   // the child.
@@ -2471,7 +2421,7 @@ HttpChannelParent::IssueWarning(uint32_t aWarning, bool aAsError)
 NS_IMETHODIMP
 HttpChannelParent::ReadyToVerify(nsresult aResult)
 {
-  LOG(("HttpChannelParent::ReadyToVerify [this=%p result=%" PRIx32 "]\n",
+  LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%" PRIx32 "]\n",
        this, static_cast<uint32_t>(aResult)));
   MOZ_ASSERT(NS_IsMainThread());
 

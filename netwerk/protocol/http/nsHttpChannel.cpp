@@ -116,8 +116,6 @@
 #include "nsIMultiplexInputStream.h"
 #include "../../cache2/CacheFileUtils.h"
 #include "nsINetworkLinkService.h"
-#include "mozilla/dom/PromiseNativeHandler.h"
-#include "mozilla/dom/Promise.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -7105,77 +7103,6 @@ nsHttpChannel::GetRequestMethod(nsACString& aMethod)
 // nsHttpChannel::nsIRequestObserver
 //-----------------------------------------------------------------------------
 
-// This class is used to convert from a DOM promise to a MozPromise.
-// Once we have a native implementation of nsIRedirectProcessChooser we can
-// remove it and use MozPromises directly.
-class DomPromiseListener final
-    : dom::PromiseNativeHandler
-{
-    NS_DECL_ISUPPORTS
-
-    static RefPtr<nsHttpChannel::TabPromise>
-    Create(dom::Promise* aDOMPromise)
-    {
-        MOZ_ASSERT(aDOMPromise);
-        RefPtr<DomPromiseListener> handler = new DomPromiseListener();
-        RefPtr<nsHttpChannel::TabPromise> promise = handler->mPromiseHolder.Ensure(__func__);
-        aDOMPromise->AppendNativeHandler(handler);
-        return promise;
-    }
-
-    virtual void
-    ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
-    {
-        nsCOMPtr<nsITabParent> tabParent;
-        JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
-        nsresult rv = UnwrapArg<nsITabParent>(aCx, obj, getter_AddRefs(tabParent));
-        if (NS_FAILED(rv)) {
-            mPromiseHolder.Reject(rv, __func__);
-            return;
-        }
-        mPromiseHolder.Resolve(tabParent, __func__);
-    }
-
-    virtual void
-    RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
-    {
-        if (!aValue.isInt32()) {
-            mPromiseHolder.Reject(NS_ERROR_DOM_NOT_NUMBER_ERR, __func__);
-            return;
-        }
-        mPromiseHolder.Reject((nsresult) aValue.toInt32(), __func__);
-    }
-
-private:
-    DomPromiseListener() = default;
-    ~DomPromiseListener() = default;
-    MozPromiseHolder<nsHttpChannel::TabPromise> mPromiseHolder;
-};
-
-NS_IMPL_ISUPPORTS0(DomPromiseListener)
-
-nsresult
-nsHttpChannel::StartCrossProcessRedirect()
-{
-    nsresult rv = CheckRedirectLimit(nsIChannelEventSink::REDIRECT_INTERNAL);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    RefPtr<HttpChannelParentListener> listener = do_QueryObject(mCallbacks);
-    MOZ_ASSERT(listener);
-
-    nsCOMPtr<nsILoadInfo> redirectLoadInfo =
-      CloneLoadInfoForRedirect(mURI, nsIChannelEventSink::REDIRECT_INTERNAL);
-
-    listener->TriggerCrossProcessRedirect(this,
-                                          redirectLoadInfo,
-                                          mCrossProcessRedirectIdentifier);
-
-    // This will suspend the channel
-    rv = WaitForRedirectCallback();
-
-    return rv;
-}
-
 NS_IMETHODIMP
 nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
@@ -7279,32 +7206,6 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
         rv = StartRedirectChannelToURI(mURI, nsIChannelEventSink::REDIRECT_INTERNAL);
         if (NS_SUCCEEDED(rv))
             return NS_OK;
-    }
-
-    // Check if the channel should be redirected to another process.
-    // If so, trigger a redirect, and the HttpChannelParentListener will
-    // redirect to the correct process
-    nsCOMPtr<nsIRedirectProcessChooser> requestChooser =
-        do_GetClassObject("@mozilla.org/network/processChooser");
-    if (requestChooser) {
-        nsCOMPtr<nsITabParent> tp;
-        nsCOMPtr<nsIParentChannel> parentChannel;
-        NS_QueryNotificationCallbacks(this, parentChannel);
-
-        RefPtr<dom::Promise> tabPromise;
-        rv = requestChooser->GetChannelRedirectTarget(this, parentChannel, &mCrossProcessRedirectIdentifier, getter_AddRefs(tabPromise));
-
-        if (NS_SUCCEEDED(rv) && tabPromise) {
-            // The promise will be handled in AsyncOnChannelRedirect.
-            mRedirectTabPromise = DomPromiseListener::Create(tabPromise);
-
-            PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
-            rv = StartCrossProcessRedirect();
-            if (NS_SUCCEEDED(rv)) {
-                return NS_OK;
-            }
-            PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest3);
-        }
     }
 
     // avoid crashing if mListener happens to be null...
