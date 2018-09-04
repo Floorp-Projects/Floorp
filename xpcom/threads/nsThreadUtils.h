@@ -21,8 +21,10 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "xpcpublic.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"
@@ -319,6 +321,14 @@ bool
 SpinEventLoopUntil(Pred&& aPredicate, nsIThread* aThread = nullptr)
 {
   nsIThread* thread = aThread ? aThread : NS_GetCurrentThread();
+
+  // From a latency perspective, spinning the event loop is like leaving script
+  // and returning to the event loop. Tell the watchdog we stopped running
+  // script (until we return).
+  mozilla::Maybe<xpc::AutoScriptActivity> asa;
+  if (NS_IsMainThread()) {
+    asa.emplace(false);
+  }
 
   while (!aPredicate()) {
     bool didSomething = NS_ProcessNextEvent(thread, true);

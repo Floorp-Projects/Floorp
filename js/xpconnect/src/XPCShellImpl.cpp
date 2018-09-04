@@ -590,15 +590,21 @@ SetInterruptCallback(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-SimulateActivityCallback(JSContext* cx, unsigned argc, Value* vp)
+SimulateNoScriptActivity(JSContext* cx, unsigned argc, Value* vp)
 {
     // Sanity-check args.
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-    if (args.length() != 1 || !args[0].isBoolean()) {
-        JS_ReportErrorASCII(cx, "Wrong number of arguments");
+    if (args.length() != 1 || !args[0].isInt32() || args[0].toInt32() < 0) {
+        JS_ReportErrorASCII(cx, "Expected a positive integer argument");
         return false;
     }
-    xpc::SimulateActivityCallback(args[0].toBoolean());
+
+    // This mimics mozilla::SpinEventLoopUntil but instead of spinning the
+    // event loop we sleep, to make sure we don't run script.
+    xpc::AutoScriptActivity asa(false);
+    PR_Sleep(PR_SecondsToInterval(args[0].toInt32()));
+
+    args.rval().setUndefined();
     return true;
 }
 
@@ -665,7 +671,7 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FN("atob",            xpc::Atob,      1,0),
     JS_FN("btoa",            xpc::Btoa,      1,0),
     JS_FN("setInterruptCallback", SetInterruptCallback, 1,0),
-    JS_FN("simulateActivityCallback", SimulateActivityCallback, 1,0),
+    JS_FN("simulateNoScriptActivity", SimulateNoScriptActivity, 1,0),
     JS_FN("registerAppManifest", RegisterAppManifest, 1, 0),
 #ifdef ENABLE_TESTS
     JS_FN("registerXPCTestComponents", RegisterXPCTestComponents, 0, 0),
