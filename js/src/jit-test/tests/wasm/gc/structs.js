@@ -1,14 +1,11 @@
 if (!wasmGcEnabled()) {
-    assertErrorMessage(() => wasmEvalText(`(module
-                                            (gc_feature_opt_in 1)
-                                            (type $s (struct)))`),
+    assertErrorMessage(() => wasmEvalText(`(module (type $s (struct)))`),
                        WebAssembly.CompileError, /Structure types not enabled/);
     quit();
 }
 
 var bin = wasmTextToBinary(
     `(module
-      (gc_feature_opt_in 1)
 
       (table 2 anyfunc)
       (elem (i32.const 0) $doit $doitagain)
@@ -76,7 +73,6 @@ assertEq(ins.x2(8), Math.PI)
 
 wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
  (type $s (struct (field i32))))
 `)
 
@@ -84,7 +80,6 @@ wasmEvalText(`
 
 wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
  (type $s (struct)))
 `)
 
@@ -92,7 +87,6 @@ wasmEvalText(`
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
  (type $s (struct (field $x i32)))
  (type $s (struct (field $y i32))))
 `),
@@ -102,35 +96,30 @@ SyntaxError, /duplicate type name/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
  (type $s))
 `),
 SyntaxError, /parsing wasm text/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
  (type $s (field $x i32)))
 `),
 SyntaxError, /bad type definition/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
  (type $s (struct (field $x i31))))
 `),
 SyntaxError, /parsing wasm text/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
  (type $s (struct (fjeld $x i32))))
 `),
 SyntaxError, /parsing wasm text/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
  (type $s (struct abracadabra)))
 `),
 SyntaxError, /parsing wasm text/);
@@ -139,7 +128,6 @@ SyntaxError, /parsing wasm text/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
  (type $s (struct))
  (type $f (func (param i32) (result i32)))
  (func (type 0) (param i32) (result i32) (unreachable)))
@@ -150,10 +138,6 @@ WebAssembly.CompileError, /signature index references non-signature/);
 
 var bad = new Uint8Array([0x00, 0x61, 0x73, 0x6d,
                           0x01, 0x00, 0x00, 0x00,
-
-                          0x2a,                   // GcFeatureOptIn section
-                          0x01,                   // Section size
-                          0x01,                   // Version
 
                           0x01,                   // Type section
                           0x03,                   // Section size

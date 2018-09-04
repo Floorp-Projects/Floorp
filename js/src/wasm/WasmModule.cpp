@@ -254,11 +254,11 @@ Module::finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2Arg, Modul
                 return false;
         }
 
-        HasGcTypes gcTypesConfigured = code().metadata().temporaryGcTypesConfigured;
+        HasGcTypes gcTypesEnabled = code().metadata().temporaryHasGcTypes;
         const CodeTier& tier2 = code().codeTier(Tier::Ion);
 
         Maybe<size_t> stub2Index;
-        if (!stubs2->createTier2(gcTypesConfigured, funcExportIndices, tier2, &stub2Index))
+        if (!stubs2->createTier2(gcTypesEnabled, funcExportIndices, tier2, &stub2Index))
             return false;
 
         // Now that we can't fail or otherwise abort tier2, make it live.
