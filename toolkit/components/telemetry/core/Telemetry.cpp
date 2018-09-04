@@ -24,7 +24,7 @@
 #include "mozilla/Unused.h"
 
 #include "base/pickle.h"
-#include "CombinedStacks.h"
+#include "other/CombinedStacks.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsThreadManager.h"
@@ -52,11 +52,11 @@
 #include "Telemetry.h"
 #include "TelemetryCommon.h"
 #include "TelemetryHistogram.h"
-#include "TelemetryIOInterposeObserver.h"
+#include "other/TelemetryIOInterposeObserver.h"
 #include "ipc/TelemetryIPCAccumulator.h"
 #include "TelemetryScalar.h"
 #include "TelemetryEvent.h"
-#include "WebrtcTelemetry.h"
+#include "other/WebrtcTelemetry.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsBaseHashtable.h"
@@ -91,7 +91,7 @@
 
 #if defined(MOZ_GECKO_PROFILER)
 #include "shared-libraries.h"
-#include "KeyedStackCapturer.h"
+#include "other/KeyedStackCapturer.h"
 #endif // MOZ_GECKO_PROFILER
 
 #if defined(MOZ_TELEMETRY_GECKOVIEW)
