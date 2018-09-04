@@ -539,12 +539,12 @@ interface nsIDocShell : nsIDocShellTreeItem
   readonly attribute nsIChannel failedChannel;
 
   /**
-   * Keeps track of the previous SHTransaction index and the current
-   * SHTransaction index at the time that the doc shell begins to load.
+   * Keeps track of the previous nsISHEntry index and the current
+   * nsISHEntry index at the time that the doc shell begins to load.
    * Used for ContentViewer eviction.
    */
-  readonly attribute long previousTransIndex;
-  readonly attribute long loadedTransIndex;
+  readonly attribute long previousEntryIndex;
+  readonly attribute long loadedEntryIndex;
 
   /**
    * Notification that entries have been removed from the beginning of a

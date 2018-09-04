@@ -84,12 +84,12 @@ var SessionHistoryInternal = {
       let shistory = history.legacySHistory.QueryInterface(Ci.nsISHistory);
       let count = shistory.count;
       for ( ; entryCount < count; entryCount++) {
-        let txn = shistory.GetTransactionAtIndex(entryCount);
+        let shEntry = shistory.getEntryAtIndex(entryCount);
         if (entryCount <= aFromIdx) {
           skippedCount++;
           continue;
         }
-        let entry = this.serializeEntry(txn);
+        let entry = this.serializeEntry(shEntry);
         data.entries.push(entry);
       }
 
