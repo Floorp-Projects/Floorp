@@ -15,6 +15,7 @@
 {
   let c = Object.getOwnPropertyDescriptor(this, "Components");
   if ((!c || !c.value || c.writable) && typeof SpecialPowers === "object")
+    // eslint-disable-next-line no-global-assign
     Components = SpecialPowers.wrap(SpecialPowers.Components);
 }
 

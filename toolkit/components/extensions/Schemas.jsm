@@ -2396,7 +2396,7 @@ FunctionEntry = class FunctionEntry extends CallEntry {
 //
 // TODO Bug 1369722: we should be able to remove the eslint-disable-line that follows
 // once Bug 1369722 has been fixed.
-Event = class Event extends CallEntry { // eslint-disable-line no-native-reassign
+Event = class Event extends CallEntry { // eslint-disable-line no-global-assign
   static parseSchema(root, event, path) {
     let extraParameters = Array.from(event.extraParameters || [], param => ({
       type: root.parseSchema(param, path, ["name", "optional", "default"]),
