@@ -71,27 +71,27 @@ for (var src of srcs) {
     }));
     img.srcset = src + ' 3x';
   }, 'Test image ' + src + ' with width = 800, height = 800, and no specified sizes');
-
-  async_test(t => {
-    var img = document.createElement('IMG');
-    img.intrinsicSize = '400 x 500';
-    img.sizes = '100px';
-    img.width = '100';
-    var expected_intrinsic_width = 400;
-    var expected_intrinsic_height = 500;
-    var expected_width = 100;
-    var expected_height = 125;
-
-    document.body.appendChild(img);
-    img.addEventListener('load', t.step_func(() => {
-      assert_equals(img.width, expected_width, 'width');
-      assert_equals(img.height, expected_height, 'height');
-      assert_equals(img.naturalWidth, expected_intrinsic_width, 'naturalWidth');
-      assert_equals(img.naturalHeight, expected_intrinsic_height, 'naturalHeigh');
-      t.done();
-    }));
-    img.srcset = src + ' 100w';
-  }, 'Test image ' + src + ' with sizes = 100, width = 100, and srcset descriptor = 100w');
 }
+
+async_test(t => {
+  var img = document.createElement('IMG');
+  img.intrinsicSize = '400 x 500';
+  img.sizes = '100px';
+  var expected_intrinsic_width = 100;
+  var expected_intrinsic_height = 125;
+  var expected_width = 100;
+  var expected_height = 125;
+
+  document.body.appendChild(img);
+  img.addEventListener('load', t.step_func(() => {
+    assert_equals(img.width, expected_width, 'width');
+    assert_equals(img.height, expected_height, 'height');
+    assert_equals(img.naturalWidth, expected_intrinsic_width, 'naturalWidth');
+    assert_equals(img.naturalHeight, expected_intrinsic_height, 'naturalHeigh');
+    t.done();
+  }));
+  img.srcset = srcs[2] + ' 32w';
+}, 'Test image (32 x 32) with sizes = 100 and srcset descriptor = 32w');
+
 </script>
 </body>
