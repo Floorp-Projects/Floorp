@@ -219,7 +219,7 @@ private:
                             AudioTimelineEvent::Type aType,
                             double aTime, float aValue,
                             double aTimeConstant = 0.0,
-                            float aDuration = 0.0,
+                            double aDuration = 0.0,
                             const float* aCurve = nullptr,
                             uint32_t aCurveLength = 0)
   {
