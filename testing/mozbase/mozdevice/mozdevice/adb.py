@@ -529,6 +529,9 @@ class ADBDevice(ADBCommand):
     """
     __metaclass__ = ABCMeta
 
+    SOCKET_DIRECTON_REVERSE = "reverse"
+    SOCKET_DIRECTON_FORWARD = "forward"
+
     def __init__(self,
                  device=None,
                  adb='adb',
@@ -962,7 +965,7 @@ class ADBDevice(ADBCommand):
                                          device_serial=self._device_serial,
                                          timeout=timeout)
 
-    # Port forwarding methods
+    # Networking methods
 
     def _validate_port(self, port, is_local=True):
         """Validate a port forwarding specifier. Raises ValueError on failure.
@@ -977,22 +980,24 @@ class ADBDevice(ADBCommand):
 
         parts = port.split(":", 1)
         if len(parts) != 2 or parts[0] not in prefixes:
-            raise ValueError("Invalid forward specifier %s" % port)
+            raise ValueError("Invalid port specifier %s" % port)
 
-    def forward(self, local, remote, allow_rebind=True, timeout=None):
-        """Forward a local port to a specific port on the device.
+    def _validate_direction(self, direction):
+        """Validate direction of the socket connection. Raises ValueError on failure.
 
-        Ports are specified in the form:
-            tcp:<port>
-            localabstract:<unix domain socket name>
-            localreserved:<unix domain socket name>
-            localfilesystem:<unix domain socket name>
-            dev:<character device name>
-            jdwp:<process pid> (remote only)
+        :param str direction: The socket direction specifier to validate
+        :raises: * ValueError
+        """
+        if direction not in [self.SOCKET_DIRECTON_FORWARD, self.SOCKET_DIRECTON_REVERSE]:
+            raise ValueError('Invalid direction specifier {}'.format(direction))
 
-        :param str local: Local port to forward
-        :param str remote: Remote port to which to forward
-        :param bool allow_rebind: Don't error if the local port is already forwarded
+    def create_socket_connection(self, direction, local, remote, allow_rebind=True, timeout=None):
+        """Sets up a socket connection in the specified direction.
+
+        :param str direction: Direction of the socket connection
+        :param str local: Local port
+        :param str remote: Remote port
+        :param bool allow_rebind: Do not fail if port is already bound
         :param timeout: The maximum time in seconds
             for any spawned adb process to complete before throwing
             an ADBTimeoutError. If it is not specified, the value
@@ -1002,34 +1007,46 @@ class ADBDevice(ADBCommand):
                  * ADBTimeoutError
                  * ADBError
         """
-
+        # validate socket direction, and local and remote port formatting.
+        self._validate_direction(direction)
         for port, is_local in [(local, True), (remote, False)]:
             self._validate_port(port, is_local=is_local)
 
-        cmd = ["forward", local, remote]
+        cmd = [direction, local, remote]
+
         if not allow_rebind:
             cmd.insert(1, "--no-rebind")
+
+        # execute commands to establish socket connection.
         self.command_output(cmd, timeout=timeout)
 
-    def list_forwards(self, timeout=None):
-        """Return a list of tuples specifying active forwards
+    def list_socket_connections(self, direction, timeout=None):
+        """Return a list of tuples specifying active socket connectionss.
 
         Return values are of the form (device, local, remote).
 
+        :param str direction: 'forward' to list forward socket connections
+                              'reverse' to list reverse socket connections
         :param timeout: The maximum time in seconds
             for any spawned adb process to complete before throwing
             an ADBTimeoutError. If it is not specified, the value
             set in the ADBDevice constructor is used.
         :type timeout: integer or None
-        :raises: * ADBTimeoutError
+        :raises: * ValueError
+                 * ADBTimeoutError
                  * ADBError
         """
-        forwards = self.command_output(["forward", "--list"], timeout=timeout)
-        return [tuple(line.split(" ")) for line in forwards.splitlines() if line.strip()]
+        self._validate_direction(direction)
 
-    def remove_forwards(self, local=None, timeout=None):
-        """Remove existing port forwards.
+        cmd = [direction, "--list"]
+        output = self.command_output(cmd, timeout=timeout)
+        return [tuple(line.split(" ")) for line in output.splitlines() if line.strip()]
 
+    def remove_socket_connections(self, direction, local=None, timeout=None):
+        """Remove existing socket connections for a given direction.
+
+        :param str direction: 'forward' to remove forward socket connection
+                              'reverse' to remove reverse socket connection
         :param local: local port specifier as for ADBDevice.forward. If local
             is not specified removes all forwards.
         :type local: str or None
@@ -1042,7 +1059,10 @@ class ADBDevice(ADBCommand):
                  * ADBTimeoutError
                  * ADBError
         """
-        cmd = ["forward"]
+        self._validate_direction(direction)
+
+        cmd = [direction]
+
         if local is None:
             cmd.extend(["--remove-all"])
         else:
@@ -1050,6 +1070,55 @@ class ADBDevice(ADBCommand):
             cmd.extend(["--remove", local])
 
         self.command_output(cmd, timeout=timeout)
+
+    # Legacy port forward methods
+
+    def forward(self, local, remote, allow_rebind=True, timeout=None):
+        """Forward a local port to a specific port on the device.
+
+        See `ADBDevice.create_socket_connection`.
+        """
+        self.create_socket_connection(self.SOCKET_DIRECTON_FORWARD,
+                                      local, remote, allow_rebind, timeout)
+
+    def list_forwards(self, timeout=None):
+        """Return a list of tuples specifying active forwards.
+
+        See `ADBDevice.list_socket_connection`.
+        """
+        return self.list_socket_connections(self.SOCKET_DIRECTON_FORWARD, timeout)
+
+    def remove_forwards(self, local=None, timeout=None):
+        """Remove existing port forwards.
+
+        See `ADBDevice.remove_socket_connection`.
+        """
+        self.remove_socket_connections(self.SOCKET_DIRECTON_FORWARD, local, timeout)
+
+    # Legacy port reverse methods
+
+    def reverse(self, local, remote, allow_rebind=True, timeout=None):
+        """Sets up a reverse socket connection from device to host.
+
+        See `ADBDevice.create_socket_connection`.
+        """
+        self.create_socket_connection(self.SOCKET_DIRECTON_REVERSE,
+                                      local, remote, allow_rebind, timeout)
+
+    def list_reverses(self, timeout=None):
+        """Returns a list of tuples showing active reverse socket connections.
+
+        See `ADBDevice.list_socket_connection`.
+        """
+        return self.list_socket_connections(self.SOCKET_DIRECTON_REVERSE, timeout)
+
+    def remove_reverses(self, local=None, timeout=None):
+        """Remove existing reverse socket connections.
+
+        See `ADBDevice.remove_socket_connection`.
+        """
+        self.remove_socket_connections(self.SOCKET_DIRECTON_REVERSE,
+                                       local, timeout)
 
     # Device Shell methods
 

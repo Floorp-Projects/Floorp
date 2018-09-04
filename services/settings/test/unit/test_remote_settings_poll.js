@@ -261,6 +261,19 @@ add_task(async function test_server_bad_json() {
 add_task(clear_state);
 
 
+add_task(async function test_server_404_response() {
+  function simulateDummy404(request, response) {
+    response.setHeader("Content-Type", "application/json; charset=UTF-8");
+    response.write("<html></html>");
+    response.setStatusLine(null, 404, "OK");
+  }
+  server.registerPathHandler(CHANGES_PATH, simulateDummy404);
+
+  await RemoteSettings.pollChanges(); // Does not fail when running from tests.
+});
+add_task(clear_state);
+
+
 add_task(async function test_server_error() {
   const startHistogram = getUptakeTelemetrySnapshot(TELEMETRY_HISTOGRAM_KEY);
 

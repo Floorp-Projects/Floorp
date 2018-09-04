@@ -361,7 +361,7 @@ var gSync = {
     }
   },
 
-  populateSendTabToDevicesMenu(devicesPopup, url, title, createDeviceNodeFn) {
+  populateSendTabToDevicesMenu(devicesPopup, aTab, createDeviceNodeFn) {
     if (!createDeviceNodeFn) {
       createDeviceNodeFn = (clientId, name, clientType, lastModified) => {
         let eltName = name ? "menuitem" : "menuseparator";
@@ -386,7 +386,7 @@ var gSync = {
 
     const state = UIState.get();
     if (state.status == UIState.STATUS_SIGNED_IN && this.remoteClients.length > 0) {
-      this._appendSendTabDeviceList(fragment, createDeviceNodeFn, url, title);
+      this._appendSendTabDeviceList(fragment, createDeviceNodeFn, aTab);
     } else if (state.status == UIState.STATUS_SIGNED_IN) {
       this._appendSendTabSingleDevice(fragment, createDeviceNodeFn);
     } else if (state.status == UIState.STATUS_NOT_VERIFIED ||
@@ -402,14 +402,27 @@ var gSync = {
   // TODO: once our transition from the old-send tab world is complete,
   // this list should be built using the FxA device list instead of the client
   // collection.
-  _appendSendTabDeviceList(fragment, createDeviceNodeFn, url, title) {
+  _appendSendTabDeviceList(fragment, createDeviceNodeFn, tab) {
+    let tabsToSend = tab.multiselected ? gBrowser.selectedTabs : [tab];
+
+    function getTabUrl(t) {
+      return t.linkedBrowser.currentURI.spec;
+    }
+    function getTabTitle(t) {
+      return t.linkedBrowser.contentTitle;
+    }
+
     const onSendAllCommand = (event) => {
-      this.sendTabToDevice(url, this.remoteClients, title);
+      for (let t of tabsToSend) {
+        this.sendTabToDevice(getTabUrl(t), this.remoteClients, getTabTitle(t));
+      }
     };
     const onTargetDeviceCommand = (event) => {
       const clientId = event.target.getAttribute("clientId");
       const client = this.remoteClients.find(c => c.id == clientId);
-      this.sendTabToDevice(url, [client], title);
+      for (let t of tabsToSend) {
+        this.sendTabToDevice(getTabUrl(t), [client], getTabTitle(t));
+      }
     };
 
     function addTargetDevice(clientId, name, clientType, lastModified) {
@@ -516,14 +529,31 @@ var gSync = {
 
   // "Send Tab to Device" menu item
   updateTabContextMenu(aPopupMenu, aTargetTab) {
+    // We may get here before initialisation. This situation
+    // can lead to a empty label for 'Send To Device' Menu.
+    this.init();
+
     if (!this.SYNC_ENABLED) {
       // These items are hidden in onSyncDisabled(). No need to do anything.
       return;
     }
-    const enabled = !this.syncConfiguredAndLoading &&
-                    this.isSendableURI(aTargetTab.linkedBrowser.currentURI.spec);
+    let hasASendableURI = false;
+    for (let tab of aTargetTab.multiselected ? gBrowser.selectedTabs : [aTargetTab]) {
+      if (this.isSendableURI(tab.linkedBrowser.currentURI.spec)) {
+        hasASendableURI = true;
+        break;
+      }
+    }
+    const enabled = !this.syncConfiguredAndLoading && hasASendableURI;
 
-    document.getElementById("context_sendTabToDevice").disabled = !enabled;
+    let sendTabsToDevice = document.getElementById("context_sendTabToDevice");
+    sendTabsToDevice.disabled = !enabled;
+
+    let tabCount = aTargetTab.multiselected ? gBrowser.multiSelectedTabsCount : 1;
+    sendTabsToDevice.label = PluralForm.get(tabCount,
+                                           gNavigatorBundle.getString("sendTabsToDevice.label"))
+                                      .replace("#1", tabCount.toLocaleString());
+    sendTabsToDevice.accessKey = gNavigatorBundle.getString("sendTabsToDevice.accesskey");
   },
 
   // "Send Page to Device" and "Send Link to Device" menu items

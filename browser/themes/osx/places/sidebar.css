@@ -26,12 +26,12 @@
   margin: 0 10px;
 }
 
-.sidebar-placesTreechildren::-moz-tree-row(selected) {
+.sidebar-panel:not([lwt-sidebar]) .sidebar-placesTreechildren::-moz-tree-row(selected) {
   -moz-appearance: -moz-mac-source-list-selection;
   -moz-font-smoothing-background-color: -moz-mac-source-list-selection;
 }
 
-.sidebar-placesTreechildren::-moz-tree-row(selected,focus) {
+.sidebar-panel:not([lwt-sidebar-highlight]) .sidebar-placesTreechildren::-moz-tree-row(selected,focus) {
   -moz-appearance: -moz-mac-active-source-list-selection;
   -moz-font-smoothing-background-color: -moz-mac-active-source-list-selection;
 }

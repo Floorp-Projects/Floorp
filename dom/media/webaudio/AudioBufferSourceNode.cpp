@@ -699,9 +699,16 @@ void
 AudioBufferSourceNode::Start(double aWhen, double aOffset,
                              const Optional<double>& aDuration, ErrorResult& aRv)
 {
-  if (!WebAudioUtils::IsTimeValid(aWhen) || aOffset < 0 ||
-      (aDuration.WasPassed() && !WebAudioUtils::IsTimeValid(aDuration.Value()))) {
-    aRv.Throw(NS_ERROR_RANGE_ERR);
+  if (!WebAudioUtils::IsTimeValid(aWhen)) {
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(NS_LITERAL_STRING("start time"));
+    return;
+  }
+  if (aOffset < 0) {
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(NS_LITERAL_STRING("offset"));
+    return;
+  }
+  if (aDuration.WasPassed() && !WebAudioUtils::IsTimeValid(aDuration.Value())) {
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(NS_LITERAL_STRING("duration"));
     return;
   }
 
@@ -802,7 +809,7 @@ void
 AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv)
 {
   if (!WebAudioUtils::IsTimeValid(aWhen)) {
-    aRv.Throw(NS_ERROR_RANGE_ERR);
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(NS_LITERAL_STRING("stop time"));
     return;
   }
 

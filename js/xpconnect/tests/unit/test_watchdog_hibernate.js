@@ -23,13 +23,11 @@ async function testBody() {
   // scheduling, we should never have more than 3 seconds of inactivity without
   // hibernating. To add some padding for automation, we mandate that hibernation
   // must begin between 2 and 5 seconds from now.
-  await new Promise(resolve => {
-    var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.initWithCallback(resolve, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
-    simulateActivityCallback(false);
-  });
 
-  simulateActivityCallback(true);
+  // Sleep for 10 seconds. Note: we don't use nsITimer here because then we may run
+  // arbitrary (idle) events involving script before it fires.
+  simulateNoScriptActivity(10);
+
   busyWait(1000); // Give the watchdog time to wake up on the condvar.
   var stateChange = Cu.getWatchdogTimestamp("ContextStateChange");
   startHibernation = Cu.getWatchdogTimestamp("WatchdogHibernateStart");

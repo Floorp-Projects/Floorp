@@ -271,6 +271,12 @@ pref("browser.urlbar.doubleClickSelectsAll", true);
 pref("browser.urlbar.doubleClickSelectsAll", false);
 #endif
 
+// Whether using `ctrl` when hitting return/enter in the URL bar
+// (or clicking 'go') should prefix 'www.' and suffix
+// browser.fixup.alternate.suffix to the URL bar value prior to
+// navigating.
+pref("browser.urlbar.ctrlCanonizesURLs", true);
+
 // Control autoFill behavior
 pref("browser.urlbar.autoFill", true);
 pref("browser.urlbar.speculativeConnect.enabled", true);

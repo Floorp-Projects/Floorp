@@ -6,6 +6,7 @@
 
 .network-monitor .learn-more-link::before {
   background-image: url(chrome://devtools/skin/images/help.svg);
+  background-size: contain;
 }
 
 .network-monitor .tree-container .treeTable tr .learn-more-link {

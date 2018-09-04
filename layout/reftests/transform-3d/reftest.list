@@ -93,3 +93,4 @@ fuzzy-if(winWidget,0-150,0-120) fuzzy-if(webrender&&cocoaWidget,99-99,133-133) =
 == intermediate-1.html intermediate-1-ref.html
 == preserves3d-nested-filter-1.html preserves3d-nested-filter-1-ref.html
 != preserve3d-scale.html about:blank
+== perspective-overflow-1.html perspective-overflow-1-ref.html
