@@ -247,6 +247,10 @@ private:
       return;
     }
 
+    for (auto& pending : mPendingEvents) {
+      pending.mAnimation->CachedChildIndexRef() = -1;
+    }
+
     // FIXME: Replace with mPendingEvents.StableSort when bug 1147091 is
     // fixed.
     std::stable_sort(mPendingEvents.begin(), mPendingEvents.end(),
