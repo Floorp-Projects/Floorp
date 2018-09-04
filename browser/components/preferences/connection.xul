@@ -37,7 +37,8 @@
   <vbox id="ConnectionsDialogPane" class="prefpane largeDialogContainer">
     <script type="application/javascript" src="chrome://browser/content/preferences/connection.js"/>
 
-    <hbox id="proxyExtensionContent" align="top" hidden="true">
+    <hbox id="proxyExtensionContent"
+          align="top" hidden="true" class="extension-controlled">
       <description control="disableProxyExtension" flex="1" />
       <button id="disableProxyExtension"
               class="extension-controlled-button accessory-button"

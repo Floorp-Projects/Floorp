@@ -21,10 +21,12 @@ const TemporaryExtensionInstaller =
 const WorkerDetail = createFactory(require("./debugtarget/WorkerDetail"));
 
 const Services = require("Services");
+const { DEBUG_TARGET_PANE } = require("../constants");
 
 class RuntimePage extends PureComponent {
   static get propTypes() {
     return {
+      collapsibilities: PropTypes.object.isRequired,
       dispatch: PropTypes.func.isRequired,
       installedExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
       otherWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -37,6 +39,7 @@ class RuntimePage extends PureComponent {
 
   render() {
     const {
+      collapsibilities,
       dispatch,
       installedExtensions,
       otherWorkers,
@@ -58,43 +61,55 @@ class RuntimePage extends PureComponent {
       TemporaryExtensionInstaller({ dispatch }),
       DebugTargetPane({
         actionComponent: TemporaryExtensionAction,
+        collapsibilityKey: DEBUG_TARGET_PANE.TEMPORARY_EXTENSION,
         detailComponent: ExtensionDetail,
         dispatch,
+        isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.TEMPORARY_EXTENSION),
         name: "Temporary Extensions",
         targets: temporaryExtensions,
       }),
       DebugTargetPane({
         actionComponent: InspectAction,
+        collapsibilityKey: DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
         detailComponent: ExtensionDetail,
         dispatch,
+        isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.INSTALLED_EXTENSION),
         name: "Extensions",
         targets: installedExtensions,
       }),
       DebugTargetPane({
         actionComponent: InspectAction,
+        collapsibilityKey: DEBUG_TARGET_PANE.TAB,
         detailComponent: TabDetail,
         dispatch,
+        isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.TAB),
         name: "Tabs",
         targets: tabs
       }),
       DebugTargetPane({
         actionComponent: ServiceWorkerAction,
+        collapsibilityKey: DEBUG_TARGET_PANE.SERVICE_WORKER,
         detailComponent: WorkerDetail,
         dispatch,
+        isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.SERVICE_WORKER),
         name: "Service Workers",
         targets: serviceWorkers
       }),
       DebugTargetPane({
         actionComponent: InspectAction,
+        collapsibilityKey: DEBUG_TARGET_PANE.SHARED_WORKER,
         detailComponent: WorkerDetail,
         dispatch,
+        isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.SHARED_WORKER),
         name: "Shared Workers",
         targets: sharedWorkers
       }),
       DebugTargetPane({
         actionComponent: InspectAction,
+        collapsibilityKey: DEBUG_TARGET_PANE.OTHER_WORKER,
         detailComponent: WorkerDetail,
         dispatch,
+        isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.OTHER_WORKER),
         name: "Other Workers",
         targets: otherWorkers
       }),
@@ -104,6 +119,7 @@ class RuntimePage extends PureComponent {
 
 const mapStateToProps = state => {
   return {
+    collapsibilities: state.ui.debugTargetCollapsibilities,
     installedExtensions: state.runtime.installedExtensions,
     otherWorkers: state.runtime.otherWorkers,
     serviceWorkers: state.runtime.serviceWorkers,
