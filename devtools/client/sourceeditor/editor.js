@@ -1298,15 +1298,17 @@ Editor.prototype = {
     const cm = editors.get(this);
     const className = AUTOCOMPLETE_MARK_CLASSNAME;
 
-    cm.getAllMarks().forEach(mark => {
-      if (mark.className === className) {
-        mark.clear();
+    cm.operation(() => {
+      cm.getAllMarks().forEach(mark => {
+        if (mark.className === className) {
+          mark.clear();
+        }
+      });
+
+      if (text) {
+        cm.markText({...cursor, ch: cursor.ch - 1}, cursor, { className, title: text });
       }
     });
-
-    if (text) {
-      cm.markText({...cursor, ch: cursor.ch - 1}, cursor, { className, title: text });
-    }
   },
 
   /**
