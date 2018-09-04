@@ -180,6 +180,25 @@ button > hbox > label {
   font-weight: 600;
 }
 
+.extension-controlled {
+  margin-top: 18px !important;
+  margin-bottom: 18px !important;
+  background: var(--grey-20);
+  border-radius: 5px;
+  -moz-padding-end: 10px;
+}
+
+.extension-controlled > description {
+  line-height: 16px;
+  background: url(chrome://browser/skin/identity-icon.svg) 10px 14px no-repeat;
+  padding: 10px;
+  -moz-padding-start: 30px;
+}
+
+.extension-controlled > description:-moz-locale-dir(rtl) {
+  background-position-x: right 10px;
+}
+
 .extension-controlled-icon {
   height: 20px;
   margin: 2px 0 6px;

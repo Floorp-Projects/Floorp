@@ -9,14 +9,12 @@ TEST_DIRS += ['tests']
 XPIDL_SOURCES += [
     'nsIScriptableUConv.idl',
     'nsITextToSubURI.idl',
-    'nsIUTF8ConverterService.idl',
 ]
 
 XPIDL_MODULE = 'uconv'
 
 EXPORTS += [
     'nsConverterInputStream.h',
-    'nsUConvCID.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -25,7 +23,6 @@ UNIFIED_SOURCES += [
     'nsScriptableUConv.cpp',
     'nsTextToSubURI.cpp',
     'nsUConvModule.cpp',
-    'nsUTF8ConverterService.cpp'
 ]
 
 FINAL_LIBRARY = 'xul'

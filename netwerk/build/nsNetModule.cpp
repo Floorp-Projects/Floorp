@@ -28,7 +28,6 @@
 #include "nsSOCKSSocketProvider.h"
 #include "nsCacheService.h"
 #include "nsDiskCacheDeviceSQL.h"
-#include "nsApplicationCache.h"
 #include "nsApplicationCacheService.h"
 #include "nsMimeTypes.h"
 #include "nsDNSPrefetch.h"
@@ -230,8 +229,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNestedAboutURIMutator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsApplicationCacheService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsApplicationCacheNamespace)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsApplicationCache)
 
 // file
 #include "nsFileProtocolHandler.h"
@@ -743,8 +740,6 @@ NS_DEFINE_NAMED_CID(NS_SOCKS4SOCKETPROVIDER_CID);
 NS_DEFINE_NAMED_CID(NS_UDPSOCKETPROVIDER_CID);
 NS_DEFINE_NAMED_CID(NS_CACHESERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_APPLICATIONCACHESERVICE_CID);
-NS_DEFINE_NAMED_CID(NS_APPLICATIONCACHENAMESPACE_CID);
-NS_DEFINE_NAMED_CID(NS_APPLICATIONCACHE_CID);
 #ifdef NECKO_COOKIES
 NS_DEFINE_NAMED_CID(NS_COOKIEMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_COOKIESERVICE_CID);
@@ -865,8 +860,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_UDPSOCKETPROVIDER_CID, false, nullptr, nsUDPSocketProviderConstructor },
     { &kNS_CACHESERVICE_CID, false, nullptr, nsCacheService::Create },
     { &kNS_APPLICATIONCACHESERVICE_CID, false, nullptr, nsApplicationCacheServiceConstructor },
-    { &kNS_APPLICATIONCACHENAMESPACE_CID, false, nullptr, nsApplicationCacheNamespaceConstructor },
-    { &kNS_APPLICATIONCACHE_CID, false, nullptr, nsApplicationCacheConstructor },
 #ifdef NECKO_COOKIES
     { &kNS_COOKIEMANAGER_CID, false, nullptr, nsICookieServiceConstructor },
     { &kNS_COOKIESERVICE_CID, false, nullptr, nsICookieServiceConstructor },
@@ -990,8 +983,6 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_NETWORK_SOCKET_CONTRACTID_PREFIX "udp", &kNS_UDPSOCKETPROVIDER_CID },
     { NS_CACHESERVICE_CONTRACTID, &kNS_CACHESERVICE_CID },
     { NS_APPLICATIONCACHESERVICE_CONTRACTID, &kNS_APPLICATIONCACHESERVICE_CID },
-    { NS_APPLICATIONCACHENAMESPACE_CONTRACTID, &kNS_APPLICATIONCACHENAMESPACE_CID },
-    { NS_APPLICATIONCACHE_CONTRACTID, &kNS_APPLICATIONCACHE_CID },
 #ifdef NECKO_COOKIES
     { NS_COOKIEMANAGER_CONTRACTID, &kNS_COOKIEMANAGER_CID },
     { NS_COOKIESERVICE_CONTRACTID, &kNS_COOKIESERVICE_CID },
