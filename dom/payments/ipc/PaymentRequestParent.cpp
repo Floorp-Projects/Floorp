@@ -66,6 +66,11 @@ PaymentRequestParent::RecvRequestPayment(const IPCPaymentActionRequest& aRequest
       mRequestId = request.requestId();
       break;
     }
+    case IPCPaymentActionRequest::TIPCPaymentRetryActionRequest: {
+      const IPCPaymentRetryActionRequest& request = aRequest;
+      mRequestId = request.requestId();
+      break;
+    }
     default : {
       return IPC_FAIL(this, "Unknown PaymentRequest action type");
     }
