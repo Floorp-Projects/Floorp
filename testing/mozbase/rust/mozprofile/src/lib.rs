@@ -1,17 +1,16 @@
 extern crate tempdir;
 
-pub mod profile;
 pub mod preferences;
 pub mod prefreader;
-
+pub mod profile;
 
 #[cfg(test)]
 mod test {
-//    use std::fs::File;
-//    use profile::Profile;
-    use prefreader::{parse, tokenize, serialize};
-    use prefreader::{PrefToken, Position};
+    //    use std::fs::File;
+    //    use profile::Profile;
     use preferences::Pref;
+    use prefreader::{parse, serialize, tokenize};
+    use prefreader::{Position, PrefToken};
     use std::collections::BTreeMap;
     use std::error::Error;
     use std::io::Cursor;
@@ -19,55 +18,62 @@ mod test {
 
     #[test]
     fn tokenize_simple() {
-        let prefs = "  user_pref ( 'example.pref.string', 'value' )   ;\n pref(\"example.pref.int\", -123); sticky_pref('example.pref.bool',false);";
+        let prefs = "  user_pref ( 'example.pref.string', 'value' )   ;\n \
+                     pref(\"example.pref.int\", -123); sticky_pref('example.pref.bool',false);";
 
         let p = Position::new();
 
-        let expected = vec![PrefToken::UserPrefFunction(p),
-                            PrefToken::Paren('(', p),
-                            PrefToken::String("example.pref.string".into(), p),
-                            PrefToken::Comma(p),
-                            PrefToken::String("value".into(), p),
-                            PrefToken::Paren(')', p),
-                            PrefToken::Semicolon(p),
-                            PrefToken::PrefFunction(p),
-                            PrefToken::Paren('(', p),
-                            PrefToken::String("example.pref.int".into(), p),
-                            PrefToken::Comma(p),
-                            PrefToken::Int(-123, p),
-                            PrefToken::Paren(')', p),
-                            PrefToken::Semicolon(p),
-                            PrefToken::StickyPrefFunction(p),
-                            PrefToken::Paren('(', p),
-                            PrefToken::String("example.pref.bool".into(), p),
-                            PrefToken::Comma(p),
-                            PrefToken::Bool(false, p),
-                            PrefToken::Paren(')', p),
-                            PrefToken::Semicolon(p)];
+        let expected = vec![
+            PrefToken::UserPrefFunction(p),
+            PrefToken::Paren('(', p),
+            PrefToken::String("example.pref.string".into(), p),
+            PrefToken::Comma(p),
+            PrefToken::String("value".into(), p),
+            PrefToken::Paren(')', p),
+            PrefToken::Semicolon(p),
+            PrefToken::PrefFunction(p),
+            PrefToken::Paren('(', p),
+            PrefToken::String("example.pref.int".into(), p),
+            PrefToken::Comma(p),
+            PrefToken::Int(-123, p),
+            PrefToken::Paren(')', p),
+            PrefToken::Semicolon(p),
+            PrefToken::StickyPrefFunction(p),
+            PrefToken::Paren('(', p),
+            PrefToken::String("example.pref.bool".into(), p),
+            PrefToken::Comma(p),
+            PrefToken::Bool(false, p),
+            PrefToken::Paren(')', p),
+            PrefToken::Semicolon(p),
+        ];
 
         tokenize_test(prefs, &expected);
     }
 
     #[test]
     fn tokenize_comments() {
-        let prefs = "# bash style comment\n /*block comment*/ user_pref/*block comment*/(/*block comment*/ 'example.pref.string'  /*block comment*/,/*block comment*/ 'value'/*block comment*/ )// line comment";
+        let prefs = "# bash style comment\n /*block comment*/ user_pref/*block comment*/(/*block \
+                     comment*/ 'example.pref.string'  /*block comment*/,/*block comment*/ \
+                     'value'/*block comment*/ )// line comment";
 
         let p = Position::new();
 
-        let expected = vec![PrefToken::CommentBashLine(" bash style comment".into(), p),
-                            PrefToken::CommentBlock("block comment".into(), p),
-                            PrefToken::UserPrefFunction(p),
-                            PrefToken::CommentBlock("block comment".into(), p),
-                            PrefToken::Paren('(', p),
-                            PrefToken::CommentBlock("block comment".into(), p),
-                            PrefToken::String("example.pref.string".into(), p),
-                            PrefToken::CommentBlock("block comment".into(), p),
-                            PrefToken::Comma(p),
-                            PrefToken::CommentBlock("block comment".into(), p),
-                            PrefToken::String("value".into(), p),
-                            PrefToken::CommentBlock("block comment".into(), p),
-                            PrefToken::Paren(')', p),
-                            PrefToken::CommentLine(" line comment".into(), p)];
+        let expected = vec![
+            PrefToken::CommentBashLine(" bash style comment".into(), p),
+            PrefToken::CommentBlock("block comment".into(), p),
+            PrefToken::UserPrefFunction(p),
+            PrefToken::CommentBlock("block comment".into(), p),
+            PrefToken::Paren('(', p),
+            PrefToken::CommentBlock("block comment".into(), p),
+            PrefToken::String("example.pref.string".into(), p),
+            PrefToken::CommentBlock("block comment".into(), p),
+            PrefToken::Comma(p),
+            PrefToken::CommentBlock("block comment".into(), p),
+            PrefToken::String("value".into(), p),
+            PrefToken::CommentBlock("block comment".into(), p),
+            PrefToken::Paren(')', p),
+            PrefToken::CommentLine(" line comment".into(), p),
+        ];
 
         tokenize_test(prefs, &expected);
     }
@@ -78,12 +84,14 @@ mod test {
 
         let p = Position::new();
 
-        let expected = vec![PrefToken::UserPrefFunction(p),
-                            PrefToken::Paren('(', p),
-                            PrefToken::String("example pref".into(), p),
-                            PrefToken::Comma(p),
-                            PrefToken::String(" ☃𐂖\"'\n\r\\\\w".into(), p),
-                            PrefToken::Paren(')', p)];
+        let expected = vec![
+            PrefToken::UserPrefFunction(p),
+            PrefToken::Paren('(', p),
+            PrefToken::String("example pref".into(), p),
+            PrefToken::Comma(p),
+            PrefToken::String(" ☃𐂖\"'\n\r\\\\w".into(), p),
+            PrefToken::Paren(')', p),
+        ];
 
         tokenize_test(prefs, &expected);
     }
@@ -93,49 +101,31 @@ mod test {
 
         for (e, a) in expected.iter().zip(tokenize(prefs.as_bytes())) {
             let success = match (e, &a) {
-                (&PrefToken::PrefFunction(_),
-                 &PrefToken::PrefFunction(_)) => true,
-                (&PrefToken::UserPrefFunction(_),
-                 &PrefToken::UserPrefFunction(_)) => true,
-                (&PrefToken::StickyPrefFunction(_),
-                 &PrefToken::StickyPrefFunction(_)) => true,
-                (&PrefToken::CommentBlock(ref data_e, _),
-                 &PrefToken::CommentBlock(ref data_a, _)) => {
+                (&PrefToken::PrefFunction(_), &PrefToken::PrefFunction(_)) => true,
+                (&PrefToken::UserPrefFunction(_), &PrefToken::UserPrefFunction(_)) => true,
+                (&PrefToken::StickyPrefFunction(_), &PrefToken::StickyPrefFunction(_)) => true,
+                (
+                    &PrefToken::CommentBlock(ref data_e, _),
+                    &PrefToken::CommentBlock(ref data_a, _),
+                ) => data_e == data_a,
+                (
+                    &PrefToken::CommentLine(ref data_e, _),
+                    &PrefToken::CommentLine(ref data_a, _),
+                ) => data_e == data_a,
+                (
+                    &PrefToken::CommentBashLine(ref data_e, _),
+                    &PrefToken::CommentBashLine(ref data_a, _),
+                ) => data_e == data_a,
+                (&PrefToken::Paren(data_e, _), &PrefToken::Paren(data_a, _)) => data_e == data_a,
+                (&PrefToken::Semicolon(_), &PrefToken::Semicolon(_)) => true,
+                (&PrefToken::Comma(_), &PrefToken::Comma(_)) => true,
+                (&PrefToken::String(ref data_e, _), &PrefToken::String(ref data_a, _)) => {
                     data_e == data_a
-                },
-                (&PrefToken::CommentLine(ref data_e, _),
-                 &PrefToken::CommentLine(ref data_a, _)) => {
-                    data_e == data_a
-                },
-                (&PrefToken::CommentBashLine(ref data_e, _),
-                 &PrefToken::CommentBashLine(ref data_a, _))  => {
-                    data_e == data_a
-                },
-                (&PrefToken::Paren(data_e, _),
-                 &PrefToken::Paren(data_a, _)) => {
-                    data_e == data_a
-                },
-                (&PrefToken::Semicolon(_),
-                 &PrefToken::Semicolon(_)) => true,
-                (&PrefToken::Comma(_),
-                 &PrefToken::Comma(_)) => true,
-                (&PrefToken::String(ref data_e, _),
-                 &PrefToken::String(ref data_a, _)) => {
-                    data_e == data_a
-                },
-                (&PrefToken::Int(data_e, _),
-                 &PrefToken::Int(data_a, _)) => {
-                    data_e == data_a
-                },
-                (&PrefToken::Bool(data_e, _),
-                 &PrefToken::Bool(data_a, _)) => {
-                    data_e == data_a
-                },
-                (&PrefToken::Error(data_e, _),
-                 &PrefToken::Error(data_a, _)) => {
-                    data_e == data_a
-                },
-                (_, _) => false
+                }
+                (&PrefToken::Int(data_e, _), &PrefToken::Int(data_a, _)) => data_e == data_a,
+                (&PrefToken::Bool(data_e, _), &PrefToken::Bool(data_a, _)) => data_e == data_a,
+                (&PrefToken::Error(data_e, _), &PrefToken::Error(data_a, _)) => data_e == data_a,
+                (_, _) => false,
             };
             if !success {
                 println!("Expected {:?}, got {:?}", e, a);
@@ -146,7 +136,8 @@ mod test {
 
     #[test]
     fn parse_simple() {
-        let input = "  user_pref /* block comment */ ( 'example.pref.string', 'value' )   ;\n pref(\"example.pref.int\", -123); sticky_pref('example.pref.bool',false)";
+        let input = "  user_pref /* block comment */ ( 'example.pref.string', 'value' )   ;\n \
+                     pref(\"example.pref.int\", -123); sticky_pref('example.pref.bool',false)";
 
         let mut expected: BTreeMap<String, Pref> = BTreeMap::new();
         expected.insert("example.pref.string".into(), Pref::new("value"));
@@ -177,11 +168,12 @@ mod test {
                 assert!(false)
             }
         }
-   }
+    }
 
     #[test]
     fn serialize_simple() {
-        let input = "  user_pref /* block comment */ ( 'example.pref.string', 'value' )   ;\n pref(\"example.pref.int\", -123); sticky_pref('example.pref.bool',false)";
+        let input = "  user_pref /* block comment */ ( 'example.pref.string', 'value' )   ;\n \
+                     pref(\"example.pref.int\", -123); sticky_pref('example.pref.bool',false)";
         let expected = "sticky_pref(\"example.pref.bool\", false);
 user_pref(\"example.pref.int\", -123);
 user_pref(\"example.pref.string\", \"value\");\n";

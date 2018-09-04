@@ -9,7 +9,9 @@ const {
   TAKE_SCREENSHOT_START,
 } = require("../actions/index");
 
-const INITIAL_SCREENSHOT = { isCapturing: false };
+const INITIAL_SCREENSHOT = {
+  isCapturing: false,
+};
 
 const reducers = {
 

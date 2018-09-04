@@ -4,13 +4,14 @@
 
 "use strict";
 
+const Services = require("Services");
+
 const {
   CHANGE_RELOAD_CONDITION,
   LOAD_RELOAD_CONDITIONS_END,
 } = require("./index");
 
 const Types = require("../types");
-const Services = require("Services");
 
 const PREF_PREFIX = "devtools.responsive.reloadConditions.";
 

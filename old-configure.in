@@ -2617,6 +2617,9 @@ i*86)
 x86_64)
   MOZ_D3D_CPU_SUFFIX=x64
   ;;
+aarch64)
+  MOZ_D3D_CPU_SUFFIX=arm
+  ;;
 esac
 
 dnl ========================================================
@@ -2648,6 +2651,9 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
       if test -f "$MOZ_D3DCOMPILER_VISTA_DLL_PATH"; then
         AC_MSG_RESULT([Found MOZ_D3DCOMPILER_VISTA_DLL_PATH: $MOZ_D3DCOMPILER_VISTA_DLL_PATH])
         MOZ_HAS_WINSDK_WITH_D3D=1
+      elif test "$target_cpu" = "aarch64" -a "$MOZ_D3DCOMPILER_VISTA_DLL" = "d3dcompiler_47.dll"; then
+        AC_MSG_RESULT([AArch64 Windows includes d3dcompiler DLLs])
+        MOZ_D3DCOMPILER_VISTA_DLL_PATH=
       else
         AC_MSG_RESULT([MOZ_D3DCOMPILER_VISTA_DLL_PATH doesn't exist: $MOZ_D3DCOMPILER_VISTA_DLL_PATH])
         AC_MSG_ERROR([Windows SDK at "$WINDOWSSDKDIR" appears broken. Try updating to MozillaBuild 1.9 final or higher.])

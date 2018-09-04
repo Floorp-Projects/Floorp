@@ -291,7 +291,6 @@ GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind)
                   kind != AllocKind::ATOM &&
                   kind != AllocKind::FAT_INLINE_ATOM);
     MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
-    MOZ_ASSERT(cx->isAllocAllowed());
 #endif
 
     // Crash if we perform a GC action when it is not safe.

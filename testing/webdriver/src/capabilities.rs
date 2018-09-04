@@ -121,7 +121,7 @@ impl SpecNewSessionParameters {
             capabilities.remove(&key);
         }
 
-        for (key, value) in capabilities.iter() {
+        for (key, value) in &capabilities {
             match &**key {
                 x @ "acceptInsecureCerts" | x @ "setWindowRect" => if !value.is_boolean() {
                     return Err(WebDriverError::new(
@@ -163,7 +163,7 @@ impl SpecNewSessionParameters {
 
     fn validate_page_load_strategy(value: &Value) -> WebDriverResult<()> {
         match value {
-            &Value::String(ref x) => match &**x {
+            Value::String(x) => match &**x {
                 "normal" | "eager" | "none" => {}
                 x => {
                     return Err(WebDriverError::new(
@@ -189,7 +189,7 @@ impl SpecNewSessionParameters {
             "proxy is not an object"
         );
 
-        for (key, value) in obj.iter() {
+        for (key, value) in obj {
             match &**key {
                 "proxyType" => match value.as_str() {
                     Some("pac") | Some("direct") | Some("autodetect") | Some("system")
@@ -326,7 +326,7 @@ impl SpecNewSessionParameters {
             "timeouts capability is not an object"
         );
 
-        for (key, value) in obj.iter() {
+        for (key, value) in obj {
             match &**key {
                 x @ "script" | x @ "pageLoad" | x @ "implicit" => {
                     let timeout = try_opt!(
@@ -393,10 +393,10 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
         browser_capabilities: &mut T,
     ) -> WebDriverResult<Option<Capabilities>> {
         let default = vec![Map::new()];
-        let capabilities_list = if self.firstMatch.len() > 0 {
-            &self.firstMatch
-        } else {
+        let capabilities_list = if self.firstMatch.is_empty() {
             &default
+        } else {
+            &self.firstMatch
         };
 
         let merged_capabilities = capabilities_list
@@ -412,7 +412,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                     ));
                 }
                 let mut merged = self.alwaysMatch.clone();
-                for (key, value) in first_match_entry.clone().into_iter() {
+                for (key, value) in first_match_entry.clone() {
                     merged.insert(key, value);
                 }
                 Ok(merged)
@@ -425,7 +425,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
             .filter_map(|merged| {
                 browser_capabilities.init(merged);
 
-                for (key, value) in merged.iter() {
+                for (key, value) in merged {
                     match &**key {
                         "browserName" => {
                             let browserValue = browser_capabilities

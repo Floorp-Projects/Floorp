@@ -632,7 +632,7 @@ OpIter<Policy>::Unify(StackType observed, StackType expected, StackType* result)
         return true;
     }
 
-    if (env_.gcTypesEnabled() == HasGcTypes::True && observed.isRefOrAnyRef() &&
+    if (env_.gcTypesEnabled == HasGcTypes::True && observed.isRefOrAnyRef() &&
         expected.isRefOrAnyRef() && IsSubtypeOf(observed, expected))
     {
         *result = expected;
@@ -661,7 +661,7 @@ OpIter<Policy>::Join(StackType one, StackType two, StackType* result)
         return true;
     }
 
-    if (env_.gcTypesEnabled() == HasGcTypes::True && one.isRefOrAnyRef() && two.isRefOrAnyRef()) {
+    if (env_.gcTypesEnabled == HasGcTypes::True && one.isRefOrAnyRef() && two.isRefOrAnyRef()) {
         if (IsSubtypeOf(two, one)) {
             *result = one;
             return true;
@@ -901,12 +901,12 @@ OpIter<Policy>::readBlockType(ExprType* type)
         known = true;
         break;
       case uint8_t(ExprType::Ref):
-        known = env_.gcTypesEnabled() == HasGcTypes::True &&
+        known = env_.gcTypesEnabled == HasGcTypes::True &&
                 uncheckedRefTypeIndex < MaxTypes &&
                 uncheckedRefTypeIndex < env_.types.length();
         break;
       case uint8_t(ExprType::AnyRef):
-        known = env_.gcTypesEnabled() == HasGcTypes::True;
+        known = env_.gcTypesEnabled == HasGcTypes::True;
         break;
       case uint8_t(ExprType::Limit):
         break;

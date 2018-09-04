@@ -1264,9 +1264,9 @@ ScriptedProxyHandler::className(JSContext* cx, HandleObject proxy) const
 JSString*
 ScriptedProxyHandler::fun_toString(JSContext* cx, HandleObject proxy, bool isToSource) const
 {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                              js_Function_str, js_toString_str, "object");
-    return nullptr;
+    // The BaseProxyHandler has the desired behavior: Throw for non-callable,
+    // otherwise return [native code].
+    return BaseProxyHandler::fun_toString(cx, proxy, isToSource);
 }
 
 RegExpShared*
