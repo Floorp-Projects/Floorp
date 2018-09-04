@@ -37,7 +37,6 @@ using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
-using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -153,17 +152,6 @@ child:
   prio(high) async NetworkChangeNotification(nsCString type);
 
   async PTransportProvider();
-
-  // This message is sent to PNecko and triggers the creation of a new
-  // HttpChannelChild that will be connected to the parent channel represented
-  // by registrarId.
-  async CrossProcessRedirect(uint32_t aRegistrarId,
-                             nsIURI aURI,
-                             uint32_t aNewLoadFlags,
-                             OptionalLoadInfoArgs aLoadInfo,
-                             uint64_t aChannelId,
-                             nsIURI aOriginalURI,
-                             uint64_t aIdentifier);
 
 both:
   // Actually we need PTCPSocket() for parent. But ipdl disallows us having different

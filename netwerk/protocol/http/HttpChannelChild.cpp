@@ -297,7 +297,6 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAssociatedContentSecurity, GetAssociatedContentSecurity())
   NS_INTERFACE_MAP_ENTRY(nsIDivertableChannel)
   NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
-  NS_INTERFACE_MAP_ENTRY_CONCRETE(HttpChannelChild)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 //-----------------------------------------------------------------------------
@@ -2158,13 +2157,6 @@ HttpChannelChild::Redirect3Complete(OverrideRunnable* aRunnable)
     return true;
   }
   return false;
-}
-
-mozilla::ipc::IPCResult
-HttpChannelChild::RecvCancelRedirected()
-{
-  CleanupRedirectingChannel(NS_BINDING_REDIRECTED);
-  return IPC_OK();
 }
 
 void
@@ -4132,16 +4124,6 @@ HttpChannelChild::MaybeCallSynthesizedCallback()
 
   mSynthesizedCallback->BodyComplete(mStatus);
   mSynthesizedCallback = nullptr;
-}
-
-nsresult
-HttpChannelChild::CrossProcessRedirectFinished(nsresult aStatus)
-{
-  if (!mIPCOpen) {
-    return NS_BINDING_FAILED;
-  }
-  Unused << SendCrossProcessRedirectDone(aStatus);
-  return NS_OK;
 }
 
 } // namespace net
