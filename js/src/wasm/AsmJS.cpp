@@ -1971,9 +1971,14 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
             index += funcImportMap_.count();
         }
 
-        Maybe<InitExpr> initExpr = Some(InitExpr(LitVal(uint32_t(0))));
-        return env_.elemSegments
-                   .emplaceBack(tableIndex, std::move(initExpr), std::move(elems));
+        MutableElemSegment seg = js_new<ElemSegment>();
+        if (!seg) {
+            return false;
+        }
+        seg->tableIndex = tableIndex;
+        seg->offsetIfActive = Some(InitExpr(LitVal(uint32_t(0))));
+        seg->elemFuncIndices = std::move(elems);
+        return env_.elemSegments.append(std::move(seg));
     }
     bool declareImport(PropertyName* name, FuncType&& sig, unsigned ffiIndex, uint32_t* importIndex) {
         FuncImportMap::AddPtr p = funcImportMap_.lookupForAdd(NamedSig::Lookup(name, sig));
