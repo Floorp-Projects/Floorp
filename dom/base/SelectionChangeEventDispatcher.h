@@ -4,34 +4,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_SelectionChangeListener_h_
-#define mozilla_SelectionChangeListener_h_
+#ifndef mozilla_SelectionChangeEventDispatcher_h
+#define mozilla_SelectionChangeEventDispatcher_h
 
 #include "mozilla/Attributes.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 
-class nsRange;
+class nsIDocument;
 class nsINode;
+class nsRange;
 
 namespace mozilla {
-namespace dom {
 
-// XXX This class name is too generic.  Perhaps, SelectionChangeEventDispatcher?
-//     And also it's odd that this is in |dom| namespace since this is not
-//     an implementation of any DOM object.
-class SelectionChangeListener final
+namespace dom {
+class Selection;
+}
+
+class SelectionChangeEventDispatcher final
 {
 public:
-  // SelectionChangeListener has to participate in cycle collection because
-  // it holds strong references to nsINodes in its mOldRanges array.
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SelectionChangeListener)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(SelectionChangeListener)
+  // SelectionChangeEventDispatcher has to participate in cycle collection
+  // because it holds strong references to nsINodes in its mOldRanges array.
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(
+    SelectionChangeEventDispatcher)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(SelectionChangeEventDispatcher)
 
   MOZ_CAN_RUN_SCRIPT
   void OnSelectionChange(nsIDocument* aDocument,
-                         Selection* aSelection,
+                         dom::Selection* aSelection,
                          int16_t aReason);
 
   // This field is used to keep track of the ranges which were present in the
@@ -60,10 +62,9 @@ public:
 private:
   nsTArray<RawRangeData> mOldRanges;
 
-  ~SelectionChangeListener() {}
+  ~SelectionChangeEventDispatcher() {}
 };
 
-} // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_SelectionChangeListener_h_
+#endif // mozilla_SelectionChangeEventDispatcher_h
