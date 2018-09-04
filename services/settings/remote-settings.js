@@ -163,12 +163,18 @@ async function fetchLatestChanges(url, lastEtag) {
     } catch (e) {
       payload = e.message;
     }
+
     if (!payload.hasOwnProperty("data")) {
       // If the server is failing, the JSON response might not contain the
-      // expected data (e.g. error response - Bug 1259145)
-      throw new Error(`Server error ${response.status} ${response.statusText}: ${JSON.stringify(payload)}`);
+      // expected data. For example, real server errors (Bug 1259145)
+      // or dummy local server for tests (Bug 1481348)
+      const is404FromCustomServer = response.status == 404 && Services.prefs.prefHasUserValue(PREF_SETTINGS_SERVER);
+      if (!is404FromCustomServer) {
+        throw new Error(`Server error ${response.status} ${response.statusText}: ${JSON.stringify(payload)}`);
+      }
+    } else {
+      changes = payload.data;
     }
-    changes = payload.data;
   }
   // The server should always return ETag. But we've had situations where the CDN
   // was interfering.
