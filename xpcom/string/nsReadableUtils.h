@@ -782,14 +782,6 @@ bool FindCharInReadable(char16_t aChar, nsAString::const_iterator& aSearchStart,
 bool FindCharInReadable(char aChar, nsACString::const_iterator& aSearchStart,
                         const nsACString::const_iterator& aSearchEnd);
 
-/**
-* Finds the number of occurences of |aChar| in the string |aStr|
-*/
-uint32_t CountCharInReadable(const nsAString& aStr,
-                             char16_t aChar);
-uint32_t CountCharInReadable(const nsACString& aStr,
-                             char aChar);
-
 bool StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring);
 bool StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring,
                       const nsStringComparator& aComparator);
