@@ -116,6 +116,7 @@ body {
   width: 16px;
   height: 16px;
   mask: url("chrome://devtools/skin/images/help.svg") no-repeat;
+  mask-size: contain;
 }
 
 .devtools-toolbar .help:focus {
