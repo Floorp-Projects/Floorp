@@ -34,6 +34,13 @@ class RadioSearchEngineListPreference : SearchEngineListPreference, RadioGroup.O
     }
 
     override fun onCheckedChanged(group: RadioGroup, checkedId: Int) {
+
+        /* onCheckedChanged is called intermittently before the search engine table is full, so we
+           must check these conditions to prevent crashes and inconsistent states. */
+        if (group.childCount != searchEngines.count() || !group.getChildAt(checkedId).isPressed) {
+            return
+        }
+
         val newDefaultEngine = searchEngines[checkedId]
         Settings.getInstance(group.context).setDefaultSearchEngineByName(newDefaultEngine.name)
         val source = if (CustomSearchEngineStore.isCustomSearchEngine(newDefaultEngine.identifier, context))
