@@ -870,7 +870,7 @@ public:
                                              const nsIFrame* aAncestor,
                                              bool* aPreservesAxisAlignedRectangles = nullptr,
                                              mozilla::Maybe<Matrix4x4Flagged>* aMatrixCache = nullptr,
-                                             bool aStopAtStackingContextAndDisplayPort = false,
+                                             bool aStopAtStackingContextAndDisplayPortAndOOFFrame = false,
                                              nsIFrame** aOutAncestor = nullptr);
 
 

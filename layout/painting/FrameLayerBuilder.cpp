@@ -3143,7 +3143,9 @@ PaintedLayerDataNode::FindPaintedLayerFor(const nsIntRect& aVisibleRect,
       // use this painted layer.
       if (data.mVisibleRegion.Intersects(aVisibleRect)) {
         break;
-      } else if (gfxPrefs::LayoutSmallerPaintedLayers()) {
+      }
+
+      if (gfxPrefs::LayoutSmallerPaintedLayers()) {
         lowestUsableLayer = nullptr;
       }
     }
@@ -6078,9 +6080,9 @@ ComputeDesiredDisplaySizeForAnimation(nsIFrame* aContainerFrame)
   if (widget) {
     return LayoutDevicePixel::ToAppUnits(widget->GetClientSize(),
                                          presContext->AppUnitsPerDevPixel());
-  } else {
-    return presContext->GetVisibleArea().Size();
   }
+
+  return presContext->GetVisibleArea().Size();
 }
 
 static bool

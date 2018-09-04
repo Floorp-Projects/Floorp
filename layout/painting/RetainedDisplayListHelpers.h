@@ -88,7 +88,7 @@ typedef Index<MergedListUnits> MergedListIndex;
 template <typename T>
 class DirectedAcyclicGraph {
 public:
-  DirectedAcyclicGraph() {}
+  DirectedAcyclicGraph() = default;
   DirectedAcyclicGraph(DirectedAcyclicGraph&& aOther)
     : mNodesInfo(std::move(aOther.mNodesInfo))
     , mDirectPredecessorList(std::move(aOther.mDirectPredecessorList))
