@@ -1836,8 +1836,8 @@ public:
   }
 
   // ChildNode methods
-  mozilla::dom::Element* GetPreviousElementSibling() const;
-  mozilla::dom::Element* GetNextElementSibling() const;
+  inline mozilla::dom::Element* GetPreviousElementSibling() const;
+  inline mozilla::dom::Element* GetNextElementSibling() const;
 
   MOZ_CAN_RUN_SCRIPT void Before(const Sequence<OwningNodeOrString>& aNodes,
                                  ErrorResult& aRv);

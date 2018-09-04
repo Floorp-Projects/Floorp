@@ -2044,21 +2044,52 @@ Element::AttrValueIs(int32_t aNameSpaceID,
 } // namespace dom
 } // namespace mozilla
 
-inline mozilla::dom::Element* nsINode::AsElement()
+inline mozilla::dom::Element*
+nsINode::AsElement()
 {
   MOZ_ASSERT(IsElement());
   return static_cast<mozilla::dom::Element*>(this);
 }
 
-inline const mozilla::dom::Element* nsINode::AsElement() const
+inline const mozilla::dom::Element*
+nsINode::AsElement() const
 {
   MOZ_ASSERT(IsElement());
   return static_cast<const mozilla::dom::Element*>(this);
 }
 
-inline mozilla::dom::Element* nsINode::GetParentElement() const
+inline mozilla::dom::Element*
+nsINode::GetParentElement() const
 {
   return mozilla::dom::Element::FromNodeOrNull(mParent);
+}
+
+inline mozilla::dom::Element*
+nsINode::GetPreviousElementSibling() const
+{
+  nsIContent* previousSibling = GetPreviousSibling();
+  while (previousSibling) {
+    if (previousSibling->IsElement()) {
+      return previousSibling->AsElement();
+    }
+    previousSibling = previousSibling->GetPreviousSibling();
+  }
+
+  return nullptr;
+}
+
+inline mozilla::dom::Element*
+nsINode::GetNextElementSibling() const
+{
+  nsIContent* nextSibling = GetNextSibling();
+  while (nextSibling) {
+    if (nextSibling->IsElement()) {
+      return nextSibling->AsElement();
+    }
+    nextSibling = nextSibling->GetNextSibling();
+  }
+
+  return nullptr;
 }
 
 /**
