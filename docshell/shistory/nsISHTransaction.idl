@@ -14,11 +14,5 @@ interface nsISHTransaction : nsISupports
    * The nsISHEntry for the current transaction. Never null.
    */
   [infallible] attribute nsISHEntry sHEntry;
-
-  /**
-   * Specifies if this transaction should persist. If not it will be replaced
-   * by new additions to the list.
-   */
-  [infallible] attribute boolean persist;
 };
 
