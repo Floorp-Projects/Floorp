@@ -483,6 +483,31 @@ PaymentDetails::GetShippingAddressErrors(JSContext* aCx, JS::MutableHandleValue 
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PaymentDetails::GetPayer(JSContext* aCx, JS::MutableHandleValue aErrors)
+{
+  PayerErrorFields errors;
+  errors.Init(mPayerErrors);
+  if (!ToJSValue(aCx, errors, aErrors)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PaymentDetails::GetPaymentMethod(JSContext* aCx, JS::MutableHandleValue aErrors)
+{
+  if (mPaymentMethodErrors.IsEmpty()) {
+    aErrors.set(JS::NullValue());
+    return NS_OK;
+  }
+  nsresult rv = DeserializeToJSValue(mPaymentMethodErrors, aCx ,aErrors);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
 nsresult
 PaymentDetails::Update(nsIPaymentDetails* aDetails, const bool aRequestShipping)
 {
@@ -545,6 +570,19 @@ nsString
 PaymentDetails::GetShippingAddressErrors() const
 {
   return mShippingAddressErrors;
+}
+
+nsresult
+PaymentDetails::UpdateErrors(const nsAString& aError,
+                             const nsAString& aPayerErrors,
+                             const nsAString& aPaymentMethodErrors,
+                             const nsAString& aShippingAddressErrors)
+{
+  mError = aError;
+  mPayerErrors = aPayerErrors;
+  mPaymentMethodErrors = aPaymentMethodErrors;
+  mShippingAddressErrors = aShippingAddressErrors;
+  return NS_OK;
 }
 
 /* PaymentOptions */
@@ -725,6 +763,20 @@ void
 PaymentRequest::SetCompleteStatus(const nsAString& aCompleteStatus)
 {
   mCompleteStatus = aCompleteStatus;
+}
+
+nsresult
+PaymentRequest::UpdateErrors(const nsAString& aError,
+                             const nsAString& aPayerErrors,
+                             const nsAString& aPaymentMethodErrors,
+                             const nsAString& aShippingAddressErrors)
+{
+  PaymentDetails* rowDetails = static_cast<PaymentDetails*>(mPaymentDetails.get());
+  MOZ_ASSERT(rowDetails);
+  return rowDetails->UpdateErrors(aError,
+                                  aPayerErrors,
+                                  aPaymentMethodErrors,
+                                  aShippingAddressErrors);
 }
 
 NS_IMETHODIMP

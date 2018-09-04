@@ -378,6 +378,26 @@ PaymentRequestService::RequestPayment(const nsAString& aRequestId,
       mRequestQueue.RemoveElement(payment);
       break;
     }
+    case IPCPaymentActionRequest::TIPCPaymentRetryActionRequest: {
+      const IPCPaymentRetryActionRequest& action = aAction;
+      nsCOMPtr<nsIPaymentRequest> payment;
+      rv = GetPaymentRequestById(aRequestId, getter_AddRefs(payment));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      MOZ_ASSERT(payment);
+      payments::PaymentRequest* rowPayment =
+        static_cast<payments::PaymentRequest*>(payment.get());
+      MOZ_ASSERT(rowPayment);
+      rowPayment->UpdateErrors(action.error(),
+                               action.payerErrors(),
+                               action.paymentMethodErrors(),
+                               action.shippingAddressErrors());
+      MOZ_ASSERT(mShowingRequest == payment);
+      rv = LaunchUIAction(aRequestId,
+                          IPCPaymentActionRequest::TIPCPaymentUpdateActionRequest);
+      break;
+    }
     default: {
       return NS_ERROR_FAILURE;
     }

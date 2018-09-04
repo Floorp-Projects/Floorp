@@ -540,6 +540,44 @@ PaymentRequestManager::ClosePayment(PaymentRequest* aRequest)
 }
 
 nsresult
+PaymentRequestManager::RetryPayment(JSContext* aCx,
+                                    PaymentRequest* aRequest,
+                                    const PaymentValidationErrors& aErrors)
+{
+  NS_ENSURE_ARG_POINTER(aCx);
+  NS_ENSURE_ARG_POINTER(aRequest);
+
+  nsAutoString requestId;
+  aRequest->GetInternalId(requestId);
+
+  nsAutoString error(EmptyString());
+  if (aErrors.mError.WasPassed()) {
+    error = aErrors.mError.Value();
+  }
+
+  nsAutoString shippingAddressErrors(EmptyString());
+  aErrors.mShippingAddress.ToJSON(shippingAddressErrors);
+
+  nsAutoString payerErrors(EmptyString());
+  aErrors.mPayer.ToJSON(payerErrors);
+
+  nsAutoString paymentMethodErrors(EmptyString());
+  if (aErrors.mPaymentMethod.WasPassed()) {
+    JS::RootedObject object(aCx, aErrors.mPaymentMethod.Value());
+    nsresult rv = SerializeFromJSObject(aCx, object, paymentMethodErrors);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+  IPCPaymentRetryActionRequest action(requestId,
+                                      error,
+                                      payerErrors,
+                                      paymentMethodErrors,
+                                      shippingAddressErrors);
+  return SendRequestPayment(aRequest, action);
+}
+
+nsresult
 PaymentRequestManager::RespondPayment(PaymentRequest* aRequest,
                                       const IPCPaymentActionResponse& aResponse)
 {
