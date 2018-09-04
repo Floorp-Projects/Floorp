@@ -226,7 +226,6 @@ struct JSContext : public JS::RootingContext,
     bool permanentAtomsPopulated() { return runtime_->permanentAtomsPopulated(); }
     const js::FrozenAtomSet& permanentAtoms() { return *runtime_->permanentAtoms(); }
     js::WellKnownSymbols& wellKnownSymbols() { return *runtime_->wellKnownSymbols; }
-    JS::BuildIdOp buildIdOp() { return runtime_->buildIdOp; }
     const JS::AsmJSCacheOps& asmJSCacheOps() { return runtime_->asmJSCacheOps; }
     js::PropertyName* emptyString() { return runtime_->emptyString; }
     js::FreeOp* defaultFreeOp() { return runtime_->defaultFreeOp(); }

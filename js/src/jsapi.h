@@ -4654,13 +4654,14 @@ SetAsmJSCacheOps(JSContext* cx, const AsmJSCacheOps* callbacks);
  * engine, it is critical that the buildId shall change for each new build of
  * the JS engine.
  */
+
 typedef js::Vector<char, 0, js::SystemAllocPolicy> BuildIdCharVector;
 
 typedef bool
 (* BuildIdOp)(BuildIdCharVector* buildId);
 
 extern JS_PUBLIC_API(void)
-SetBuildIdOp(JSContext* cx, BuildIdOp buildIdOp);
+SetProcessBuildIdOp(BuildIdOp buildIdOp);
 
 /**
  * The WasmModule interface allows the embedding to hold a reference to the

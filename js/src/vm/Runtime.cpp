@@ -66,6 +66,7 @@ using JS::DoubleNaNValue;
 /* static */ MOZ_THREAD_LOCAL(JSContext*) js::TlsContext;
 /* static */ Atomic<size_t> JSRuntime::liveRuntimesCount;
 Atomic<JS::LargeAllocationFailureCallback> js::OnLargeAllocationFailure;
+Atomic<JS::BuildIdOp> js::GetBuildId;
 
 namespace js {
     bool gCanUseExtraThreads = true;
@@ -119,7 +120,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     readPrincipals(nullptr),
     warningReporter(nullptr),
     geckoProfiler_(thisFromCtor()),
-    buildIdOp(nullptr),
     trustedPrincipals_(nullptr),
     wrapObjectCallbacks(&DefaultWrapObjectCallbacks),
     preserveWrapperCallback(nullptr),
