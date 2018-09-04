@@ -18,14 +18,13 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHTRANSACTION
 
-  nsSHTransaction(nsISHEntry* aSHEntry, bool aPersist);
+  explicit nsSHTransaction(nsISHEntry* aSHEntry);
 
 protected:
   virtual ~nsSHTransaction();
 
 protected:
   nsCOMPtr<nsISHEntry> mSHEntry;  // never null
-  bool mPersist;
 };
 
 #endif /* nsSHTransaction_h */

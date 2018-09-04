@@ -625,11 +625,14 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
     aSHEntry->SetDocshellID(&docshellID);
   }
 
-  if (currentTxn && !currentTxn->GetPersist()) {
-    NOTIFY_LISTENERS(OnHistoryReplaceEntry, (mIndex));
-    currentTxn->SetSHEntry(aSHEntry);
-    currentTxn->SetPersist(aPersist);
-    return NS_OK;
+  if (currentTxn) {
+    nsCOMPtr<nsISHEntry> entry = currentTxn->GetSHEntry();
+    if (!entry->GetPersist()) {
+      NOTIFY_LISTENERS(OnHistoryReplaceEntry, (mIndex));
+      currentTxn->SetSHEntry(aSHEntry);
+      aSHEntry->SetPersist(aPersist);
+      return NS_OK;
+    }
   }
 
   nsCOMPtr<nsIURI> uri;
@@ -639,7 +642,8 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
   // Remove all transactions after the current one, add the new one, and set
   // the new one as the current one.
   MOZ_ASSERT(mIndex >= -1);
-  nsCOMPtr<nsISHTransaction> txn = new nsSHTransaction(aSHEntry, aPersist);
+  nsCOMPtr<nsISHTransaction> txn = new nsSHTransaction(aSHEntry);
+  aSHEntry->SetPersist(aPersist);
   mTransactions.TruncateLength(mIndex + 1);
   mTransactions.AppendElement(txn);
   mIndex++;
@@ -894,7 +898,7 @@ nsSHistory::ReplaceEntry(int32_t aIndex, nsISHEntry* aReplaceEntry)
 
   // Set the replacement entry in the transaction
   currentTxn->SetSHEntry(aReplaceEntry);
-  currentTxn->SetPersist(true);
+  aReplaceEntry->SetPersist(true);
 
   return NS_OK;
 }

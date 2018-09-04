@@ -81,8 +81,6 @@ var SessionHistoryInternal = {
     let skippedCount = 0, entryCount = 0;
 
     if (history && history.count > 0) {
-      // Loop over the transactions so we can get the persist property for each
-      // one.
       let shistory = history.legacySHistory.QueryInterface(Ci.nsISHistory);
       let count = shistory.count;
       for ( ; entryCount < count; entryCount++) {
@@ -92,7 +90,6 @@ var SessionHistoryInternal = {
           continue;
         }
         let entry = this.serializeEntry(txn.sHEntry);
-        entry.persist = txn.persist;
         data.entries.push(entry);
       }
 
@@ -251,6 +248,8 @@ var SessionHistoryInternal = {
         entry.children = children;
       }
     }
+
+    entry.persist = shEntry.persist;
 
     return entry;
   },
