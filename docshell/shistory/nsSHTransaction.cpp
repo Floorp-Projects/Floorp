@@ -7,9 +7,8 @@
 #include "nsSHTransaction.h"
 #include "nsISHEntry.h"
 
-nsSHTransaction::nsSHTransaction(nsISHEntry* aSHEntry, bool aPersist)
+nsSHTransaction::nsSHTransaction(nsISHEntry* aSHEntry)
   : mSHEntry(aSHEntry)
-  , mPersist(aPersist)
 {
   MOZ_ASSERT(aSHEntry);
 }
@@ -43,18 +42,3 @@ nsSHTransaction::SetSHEntry(nsISHEntry* aSHEntry)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHTransaction::SetPersist(bool aPersist)
-{
-  mPersist = aPersist;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHTransaction::GetPersist(bool* aPersist)
-{
-  NS_ENSURE_ARG_POINTER(aPersist);
-
-  *aPersist = mPersist;
-  return NS_OK;
-}
