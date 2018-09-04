@@ -172,6 +172,9 @@
         <label id="siteDataLearnMoreLink"
           class="learnMore text-link" data-l10n-id="sitedata-learn-more"/>
       </description>
+      <description class="description-with-side-element warning-description"
+                   flex="1" hidden="true" id="blockCookiesWarning"
+                   data-l10n-id="sitedata-warning-your-settings-prevent-changes"/>
       <radiogroup id="blockCookies"
                   preference="network.cookie.cookieBehavior"
                   onsyncfrompreference="return gPrivacyPane.readBlockCookies();"
@@ -393,9 +396,9 @@
                                  data-l10n-id="content-blocking-reject-trackers-description"
                                  class="content-blocking-category-description"/>
                     <description data-l10n-id="content-blocking-reject-trackers-warning-your-settings-prevent-changes"
-                                 class="content-blocking-category-description description-with-side-element reject-trackers-warning-icon"/>
+                                 class="content-blocking-category-description description-with-side-element warning-description"/>
                     <description data-l10n-id="content-blocking-reject-trackers-warning-your-settings-prevent-changes"
-                                 class="content-blocking-category-description description-with-side-element reject-trackers-warning-icon"/>
+                                 class="content-blocking-category-description description-with-side-element warning-description"/>
                   </deck>
                 </vbox>
                 <hbox align="center" pack="end">
