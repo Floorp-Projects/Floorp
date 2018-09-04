@@ -3766,6 +3766,7 @@ img.skipPausing {
 
 .command-bar img.shortcuts {
   mask: url("chrome://devtools/skin/images/help.svg") no-repeat;
+  mask-size: contain;
 }
 
 .command-bar .replay-inactive {
