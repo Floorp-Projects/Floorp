@@ -324,6 +324,8 @@ add_task(async function testNormalBrowsing() {
   is(TrackingProtection.enabled, Services.prefs.getBoolPref(TP_PREF),
      "TP.enabled is based on the original pref value");
 
+  Services.prefs.setBoolPref(FB_PREF, false);
+
   await testContentBlockingEnabled(tab);
 
   if (Services.prefs.getBoolPref(CB_UI_PREF)) {
@@ -354,6 +356,8 @@ add_task(async function testNormalBrowsing() {
   await testContentBlockingDisabled(tab);
 
   gBrowser.removeCurrentTab();
+
+  Services.prefs.clearUserPref(FB_PREF);
 });
 
 add_task(async function testPrivateBrowsing() {
@@ -363,6 +367,8 @@ add_task(async function testPrivateBrowsing() {
 
   // Set the normal mode pref to false to check the pbmode pref.
   Services.prefs.setBoolPref(TP_PREF, false);
+
+  Services.prefs.setBoolPref(FB_PREF, false);
 
   ContentBlocking = tabbrowser.ownerGlobal.ContentBlocking;
   ok(ContentBlocking, "CB is attached to the private window");
@@ -401,6 +407,8 @@ add_task(async function testPrivateBrowsing() {
   await testContentBlockingDisabled(tab);
 
   privateWin.close();
+
+  Services.prefs.clearUserPref(FB_PREF);
 });
 
 add_task(async function testFastBlock() {
@@ -413,6 +421,8 @@ add_task(async function testFastBlock() {
 
   tabbrowser = gBrowser;
   let tab = tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser);
+
+  Services.prefs.setBoolPref(FB_PREF, false);
 
   ContentBlocking = gBrowser.ownerGlobal.ContentBlocking;
   ok(ContentBlocking, "CB is attached to the browser window");
@@ -445,7 +455,7 @@ add_task(async function testFastBlock() {
 
   await testContentBlockingDisabled(tab);
 
-  Services.prefs.setBoolPref(FB_PREF, false);
+  Services.prefs.clearUserPref(FB_PREF);
   Services.prefs.clearUserPref(FB_TIMEOUT_PREF);
   gBrowser.removeCurrentTab();
 });
@@ -458,6 +468,8 @@ add_task(async function testThirdPartyCookies() {
 
   await UrlClassifierTestUtils.addTestTrackers();
   gTrackingPageURL = COOKIE_PAGE;
+
+  Services.prefs.setBoolPref(FB_PREF, false);
 
   tabbrowser = gBrowser;
   let tab = tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser);
@@ -493,6 +505,7 @@ add_task(async function testThirdPartyCookies() {
 
   await testContentBlockingDisabled(tab);
 
+  Services.prefs.clearUserPref(FB_PREF);
   Services.prefs.clearUserPref(TPC_PREF);
   gBrowser.removeCurrentTab();
 });
