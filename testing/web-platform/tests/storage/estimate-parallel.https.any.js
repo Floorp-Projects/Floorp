@@ -1,10 +1,5 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
-<title>StorageManager: multiple estimate() calls in parallel</title>
-<meta name="help" href="https://storage.spec.whatwg.org/#dom-storagemanager-estimate">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: title=StorageManager: multiple estimate() calls in parallel
+
 promise_test(async t => {
   let r1, r2;
   await Promise.all([
@@ -16,4 +11,3 @@ promise_test(async t => {
   assert_true(('usage' in r2) && ('quota' in r2),
               'second response should have expected fields');
 }, 'Multiple estimate() calls in parallel should complete');
-</script>
