@@ -188,10 +188,6 @@ already_AddRefed<nsIContentViewer>
 GetContentViewerForTransaction(nsISHTransaction* aTrans)
 {
   nsCOMPtr<nsISHEntry> entry = aTrans->GetSHEntry();
-  if (!entry) {
-    return nullptr;
-  }
-
   nsCOMPtr<nsISHEntry> ownerEntry;
   nsCOMPtr<nsIContentViewer> viewer;
   entry->GetAnyContentViewer(getter_AddRefs(ownerEntry),
@@ -642,13 +638,10 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
   aSHEntry->GetURI(getter_AddRefs(uri));
   NOTIFY_LISTENERS(OnHistoryNewEntry, (uri, mIndex));
 
-  nsCOMPtr<nsISHTransaction> txn = new nsSHTransaction();
-  txn->SetPersist(aPersist);
-  txn->SetSHEntry(aSHEntry);
-
   // Remove all transactions after the current one, add the new one, and set
   // the new one as the current one.
   MOZ_ASSERT(mIndex >= -1);
+  nsCOMPtr<nsISHTransaction> txn = new nsSHTransaction(aSHEntry, aPersist);
   mTransactions.TruncateLength(mIndex + 1);
   mTransactions.AppendElement(txn);
   mIndex++;
@@ -704,12 +697,11 @@ nsSHistory::GetEntryAtIndex(int32_t aIndex, bool aModifyIndex,
   if (NS_SUCCEEDED(rv) && txn) {
     // Get the Entry from the transaction
     txn->GetSHEntry(aResult);
-    if (*aResult) {
-      // Set mIndex to the requested index, if asked to do so..
-      if (aModifyIndex) {
-        mIndex = aIndex;
-        NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
-      }
+
+    // Set mIndex to the requested index, if asked to do so..
+    if (aModifyIndex) {
+      mIndex = aIndex;
+      NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
     }
   }
   return rv;
@@ -740,10 +732,6 @@ nsSHistory::GetIndexOfEntry(nsISHEntry* aSHEntry, int32_t* aResult)
 
   for (int32_t i = 0; i < Length(); i++) {
     nsCOMPtr<nsISHEntry> entry = mTransactions[i]->GetSHEntry();
-    if (!entry) {
-      return NS_ERROR_FAILURE;
-    }
-
     if (aSHEntry == entry) {
       *aResult = i;
       return NS_OK;
@@ -760,10 +748,6 @@ nsSHistory::PrintHistory()
   for (int32_t i = 0; i < Length(); i++) {
     nsCOMPtr<nsISHTransaction> txn = mTransactions[i];
     nsCOMPtr<nsISHEntry> entry = txn->GetSHEntry();
-    if (!entry) {
-      return NS_ERROR_FAILURE;
-    }
-
     nsCOMPtr<nsILayoutHistoryState> layoutHistoryState;
     nsCOMPtr<nsIURI> uri;
     nsString title;
