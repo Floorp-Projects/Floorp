@@ -338,12 +338,7 @@ class UrlInputFragment :
     override fun onStart() {
         super.onStart()
 
-        context?.let {
-            if (!Settings.getInstance(it).shouldShowFirstrun()) {
-                // Only show keyboard if we are not displaying the first run tour on top.
-                showKeyboard()
-            }
-        }
+        showKeyboard()
     }
 
     override fun onStop() {
