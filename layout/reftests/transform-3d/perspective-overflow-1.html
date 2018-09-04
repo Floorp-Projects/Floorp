@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!-- Use reftest-snapshot-all as a workaround for bug 1485705 -->
+<html class="reftest-wait reftest-snapshot-all">
+<head>
+<meta charset="UTF-8">
+<title>Testcase for bug 1483659</title>
+<style>
+#container {
+  position: absolute;
+  top: 400px;
+  left: 200px;
+  perspective: 100px;
+}
+
+#content {
+  width: 300px;
+  height: 300px;
+  background-color: green;
+}
+</style>
+</head>
+<body>
+<div id="container">
+  <div id="content"></div>
+</div>
+<script>
+function doTest() {
+  var e = document.getElementById("content");
+  e.style.transform = "rotateY(60deg)";
+
+  document.documentElement.classList.remove("reftest-wait");
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>
