@@ -64,7 +64,7 @@ var Authentication = {
 
   async _openVerificationPage(uri) {
     let mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
-    let newtab = mainWindow.getBrowser().addTab(uri);
+    let newtab = mainWindow.getBrowser().addWebTab(uri);
     let win = mainWindow.getBrowser().getBrowserForTab(newtab);
     await new Promise(resolve => {
       win.addEventListener("loadend", resolve, { once: true });
