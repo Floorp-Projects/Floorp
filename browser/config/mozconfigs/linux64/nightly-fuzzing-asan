@@ -18,6 +18,10 @@ ac_add_options --disable-elf-hack
 ac_add_options --enable-fuzzing
 unset MOZ_STDCXX_COMPAT
 
+# Piggybacking UBSan for now since only a small subset of checks are enabled.
+# A new build can be created when appropriate.
+ac_add_options --enable-undefined-sanitizer
+
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 
