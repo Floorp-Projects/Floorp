@@ -391,7 +391,7 @@ public:
   typedef layers::EventRegions EventRegions;
 
   FrameLayerBuilder();
-  ~FrameLayerBuilder();
+  ~FrameLayerBuilder() override;
 
   static void Shutdown();
 

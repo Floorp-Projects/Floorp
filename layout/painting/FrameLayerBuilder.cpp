@@ -495,7 +495,7 @@ public:
   {
     MOZ_COUNT_CTOR(LayerManagerData);
   }
-  ~LayerManagerData() {
+  ~LayerManagerData() override {
     MOZ_COUNT_DTOR(LayerManagerData);
   }
 
@@ -1848,7 +1848,7 @@ public:
   bool mDisabledAlpha;
 
 protected:
-  ~PaintedDisplayItemLayerUserData() = default;
+  ~PaintedDisplayItemLayerUserData() override = default;
 };
 
 FrameLayerBuilder::FrameLayerBuilder()
