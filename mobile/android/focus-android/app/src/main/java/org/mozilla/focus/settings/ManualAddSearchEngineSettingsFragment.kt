@@ -85,7 +85,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         val openLearnMore = {
             SessionManager.getInstance().createSession(Source.MENU, SupportUtils
-                .getSumoURLForTopic(activity, SupportUtils.SumoTopic.ADD_SEARCH_ENGINE))
+                .getSumoURLForTopic(activity!!, SupportUtils.SumoTopic.ADD_SEARCH_ENGINE))
             activity!!.finish()
             TelemetryWrapper.addSearchEngineLearnMoreEvent()
         }

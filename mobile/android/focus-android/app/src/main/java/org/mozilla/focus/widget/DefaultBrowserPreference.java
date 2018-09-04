@@ -60,9 +60,9 @@ public class DefaultBrowserPreference extends Preference {
         final Context context = getContext();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            SupportUtils.openDefaultAppsSettings(context);
+            SupportUtils.INSTANCE.openDefaultAppsSettings(context);
         } else {
-            SupportUtils.openDefaultBrowserSumoPage(context);
+            SupportUtils.INSTANCE.openDefaultBrowserSumoPage(context);
         }
     }
 }

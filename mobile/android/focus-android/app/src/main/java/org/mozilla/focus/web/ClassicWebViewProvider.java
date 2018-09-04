@@ -39,7 +39,7 @@ public class ClassicWebViewProvider implements IWebViewProvider {
     }
 
     public void performCleanup(@NonNull final Context context) {
-        SystemWebView.deleteContentFromKnownLocations(context);
+        SystemWebView.Companion.deleteContentFromKnownLocations(context);
     }
 
     /**

@@ -147,7 +147,7 @@ class SearchSuggestionsFragment : Fragment() {
 
         val learnMoreSpan = object : ClickableSpan() {
             override fun onClick(textView: View) {
-                val url = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.SEARCH_SUGGESTIONS)
+                val url = SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.SEARCH_SUGGESTIONS)
                 SessionManager.getInstance().createSession(Source.MENU, url)
             }
 

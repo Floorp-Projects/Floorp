@@ -48,7 +48,7 @@ public class LocalizedContent {
 
         final Map<String, String> substitutionMap = new ArrayMap<>();
         final String appName = context.getResources().getString(R.string.app_name);
-        final String learnMoreURL = SupportUtils.getManifestoURL();
+        final String learnMoreURL = SupportUtils.INSTANCE.getManifestoURL();
 
         String aboutVersion = "";
         try {

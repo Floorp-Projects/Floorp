@@ -1069,7 +1069,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
             R.id.help_trackers -> SessionManager.getInstance().createSession(
                 Source.MENU,
-                SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.TRACKERS)
+                SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.TRACKERS)
             )
 
             R.id.add_to_homescreen -> {
