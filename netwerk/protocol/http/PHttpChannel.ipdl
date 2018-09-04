@@ -51,6 +51,10 @@ parent:
                         OptionalCorsPreflightArgs corsPreflightArgs,
                         bool chooseAppcache);
 
+  // Sent to the parent in order signal that the child side listeners have been
+  // set up and the parent side of the channel can be opened.
+  async CrossProcessRedirectDone(nsresult result);
+
   // For document loads we keep this protocol open after child's
   // OnStopRequest, and send this msg (instead of __delete__) to allow
   // partial cleanup on parent.
@@ -145,6 +149,11 @@ child:
   // Report a security message to the console associated with this
   // channel.
   async ReportSecurityMessage(nsString messageTag, nsString messageCategory);
+
+  // This message is sent to a child that has been redirected to another process.
+  // As a consequence, it should cleanup the channel listeners and remove the
+  // request from the loadGroup.
+  async CancelRedirected();
 
   // Tell child to delete channel (all IPDL deletes must be done from child to
   // avoid races: see bug 591708).

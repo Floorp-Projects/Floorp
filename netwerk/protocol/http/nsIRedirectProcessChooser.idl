@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIRequest;
+interface nsITabParent;
+interface nsIChannel;
+interface nsIParentChannel;
+interface nsIChildChannel;
+
+[scriptable, uuid(cd7166de-e221-485f-8172-f1d05f97c6a8)]
+interface nsIRedirectProcessChooser : nsISupports
+{
+  /**
+   * @param aChannel - channel which may need to be redirected to other process.
+   * @param aParentChannel - parent channel associated with aChannel;
+   *                         may be null when aChannel is main process only.
+   * @param aIdentifier - returned by the process chooser when a decision is
+   *                      made to redirect the channel. The identifier is used
+   *                      to track the new channel in the other process.
+   * @return - promise that resolves with a nsITabParent or rejects with nsresult.
+   * @throws NS_ERROR_NOT_AVAILABLE when redirection is not necessary.
+   */
+  Promise getChannelRedirectTarget(in nsIChannel aChannel,
+                                   in nsIParentChannel aParentChannel,
+                                   inout unsigned long long aIdentifier);
+};
+
+[scriptable, uuid(50af805f-e4db-40d9-9dd8-1ae9ab12bdc2)]
+interface nsIChildProcessChannelListener : nsISupports
+{
+  /**
+   * @param aChildChannel - new child channel
+   * @param aIdentifier - returned by call to getChannelRedirectTarget. Used to
+                          identify the new channel.
+   *
+   * This method has to call aChildChannel->completeRedirectSetup(listener, context)
+   * in order to be ready for content; listener is a class that implements
+   * nsIStreamListener.
+   */
+  void onChannelReady(in nsIChildChannel aChildChannel, in unsigned long long aIdentifier);
+};
+
