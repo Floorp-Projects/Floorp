@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.components.ui.tabcounter
+package mozilla.components.ui.tabcounter
 
-import org.mozilla.components.ui.tabcounter.TabCounter.Companion.DEFAULT_TABS_COUNTER_TEXT
-import org.mozilla.components.ui.tabcounter.TabCounter.Companion.ONE_DIGIT_SIZE_RATIO
-import org.mozilla.components.ui.tabcounter.TabCounter.Companion.SO_MANY_TABS_OPEN
-import org.mozilla.components.ui.tabcounter.TabCounter.Companion.TWO_DIGITS_SIZE_RATIO
+import mozilla.components.ui.tabcounter.TabCounter.Companion.DEFAULT_TABS_COUNTER_TEXT
+import mozilla.components.ui.tabcounter.TabCounter.Companion.ONE_DIGIT_SIZE_RATIO
+import mozilla.components.ui.tabcounter.TabCounter.Companion.SO_MANY_TABS_OPEN
+import mozilla.components.ui.tabcounter.TabCounter.Companion.TWO_DIGITS_SIZE_RATIO
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
