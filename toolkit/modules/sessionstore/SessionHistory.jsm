@@ -314,7 +314,7 @@ var SessionHistoryInternal = {
     // Select the right history entry.
     let index = tabData.index - 1;
     if (index < history.count && history.index != index) {
-      history.getEntryAtIndex(index, true);
+      history.index = index;
     }
     return history;
   },

@@ -48,10 +48,9 @@ interface nsISHistory: nsISupports
   readonly attribute long count;
 
   /**
-   * A readonly property of the interface that returns
-   * the index of the current document in session history.
+   * The index of the current document in session history.
    */
-  readonly attribute long index;
+  attribute long index;
 
   /**
    * A readonly property of the interface that returns
@@ -69,21 +68,16 @@ interface nsISHistory: nsISupports
   attribute long maxLength;
 
   /**
-   * Called to obtain handle to the history entry at a
-   * given index.
+   * Get the history entry at a given index.
    *
    * @param index             The index value whose entry is requested.
    *                          The oldest entry is located at index == 0.
-   * @param modifyIndex       A boolean flag that indicates if the current
-   *                          index of session history should be modified
-   *                          to the parameter index.
-   *
    * @return                  <code>NS_OK</code> history entry for
    *                          the index is obtained successfully.
    *                          <code>NS_ERROR_FAILURE</code> Error in obtaining
    *                          history entry for the given index.
    */
-  nsISHEntry getEntryAtIndex(in long aIndex, in boolean aModifyIndex);
+  nsISHEntry getEntryAtIndex(in long aIndex);
 
   /**
    * Called to purge older documents from history.
