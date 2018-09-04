@@ -5,8 +5,8 @@
 
 // Test changing the display pixel ratio.
 
-const { changeDisplayPixelRatio } =
-  require("devtools/client/responsive.html/actions/display-pixel-ratio");
+const { changeDisplayPixelRatio } = require("devtools/client/responsive.html/actions/ui");
+
 const NEW_PIXEL_RATIO = 5.5;
 
 add_task(async function() {

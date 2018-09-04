@@ -5,14 +5,35 @@
 "use strict";
 
 const {
+  CHANGE_DISPLAY_PIXEL_RATIO,
   TOGGLE_LEFT_ALIGNMENT,
+  TOGGLE_TOUCH_SIMULATION,
 } = require("./index");
 
 module.exports = {
 
+  /**
+   * The pixel ratio of the display has changed. This may be triggered by the user
+   * when changing the monitor resolution, or when the window is dragged to a different
+   * display with a different pixel ratio.
+   */
+  changeDisplayPixelRatio(displayPixelRatio) {
+    return {
+      type: CHANGE_DISPLAY_PIXEL_RATIO,
+      displayPixelRatio,
+    };
+  },
+
   toggleLeftAlignment(enabled) {
     return {
       type: TOGGLE_LEFT_ALIGNMENT,
+      enabled,
+    };
+  },
+
+  toggleTouchSimulation(enabled) {
+    return {
+      type: TOGGLE_TOUCH_SIMULATION,
       enabled,
     };
   },
