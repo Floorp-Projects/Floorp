@@ -9967,12 +9967,12 @@ BaseCompiler::emitBody()
 
 #ifdef ENABLE_WASM_GC
           case uint16_t(Op::RefNull):
-            if (env_.gcTypesEnabled() == HasGcTypes::False)
+            if (env_.gcTypesEnabled == HasGcTypes::False)
                 return iter_.unrecognizedOpcode(&op);
             CHECK_NEXT(emitRefNull());
             break;
           case uint16_t(Op::RefIsNull):
-            if (env_.gcTypesEnabled() == HasGcTypes::False)
+            if (env_.gcTypesEnabled == HasGcTypes::False)
                 return iter_.unrecognizedOpcode(&op);
             CHECK_NEXT(emitConversion(emitRefIsNull, ValType::AnyRef, ValType::I32));
             break;
@@ -10375,7 +10375,7 @@ js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo
         ValTypeVector locals;
         if (!locals.appendAll(env.funcTypes[func.index]->args()))
             return false;
-        if (!DecodeLocalEntries(d, env.kind, env.types, env.gcTypesEnabled(), &locals))
+        if (!DecodeLocalEntries(d, env.kind, env.types, env.gcTypesEnabled, &locals))
             return false;
 
         // One-pass baseline compilation.
