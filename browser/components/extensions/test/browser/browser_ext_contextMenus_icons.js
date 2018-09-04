@@ -245,3 +245,154 @@ add_task(async function test_manifest_without_icons() {
   await extension.unload();
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_child_icon_update() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+
+  let blackIconData = "iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAIAAADZrBkAAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4QYGEhkO2P07+gAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAARSURBVCjPY2AYBaNgFAxPAAAD3gABo0ohTgAAAABJRU5ErkJggg==";
+  const IMAGE_ARRAYBUFFER_BLACK = imageBufferFromDataURI(blackIconData);
+
+  let redIconData = "iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAIAAADZrBkAAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4QYGEgw1XkM0ygAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAYSURBVCjPY/zPQA5gYhjVNqptVNsg1wYAItkBI/GNR3YAAAAASUVORK5CYII=";
+  const IMAGE_ARRAYBUFFER_RED = imageBufferFromDataURI(redIconData);
+
+  let blueIconData = "iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAIAAADZrBkAAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4QYGEg0QDFzRzAAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAbSURBVCjPY2SQ+89AOmBiIAuMahvVNqqNftoAlKMBQZXKX9kAAAAASUVORK5CYII=";
+  const IMAGE_ARRAYBUFFER_BLUE = imageBufferFromDataURI(blueIconData);
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["contextMenus"],
+      "icons": {
+        "18": "black_icon.png",
+      },
+    },
+
+    files: {
+      "black_icon.png": IMAGE_ARRAYBUFFER_BLACK,
+      "red_icon.png": IMAGE_ARRAYBUFFER_RED,
+      "blue_icon.png": IMAGE_ARRAYBUFFER_BLUE,
+    },
+
+    background: function() {
+      browser.test.onMessage.addListener(msg => {
+        if (msg === "update-contextmenu-item") {
+          browser.contextMenus.update("contextmenu-child2", {
+            icons: {
+              18: "blue_icon.png",
+            },
+          }, () => {
+            browser.test.sendMessage("contextmenu-item-updated");
+          });
+        } else if (msg === "update-contextmenu-item-without-icons") {
+          browser.contextMenus.update("contextmenu-child2", {}, () => {
+            browser.test.sendMessage("contextmenu-item-updated-without-icons");
+          });
+        } else if (msg === "update-contextmenu-item-with-icons-as-null") {
+          browser.contextMenus.update("contextmenu-child2", {
+            icons: null,
+          }, () => {
+            browser.test.sendMessage("contextmenu-item-updated-with-icons-as-null");
+          });
+        } else if (msg === "update-contextmenu-item-when-its-the-only-child") {
+          browser.contextMenus.update("contextmenu-child1", {
+            icons: {
+              18: "blue_icon.png",
+            },
+          }, () => {
+            browser.test.sendMessage("contextmenu-item-updated-when-its-only-child");
+          });
+        }
+      });
+
+      browser.contextMenus.create({
+        title: "child1",
+        id: "contextmenu-child1",
+        icons: {
+          18: "blue_icon.png",
+        },
+      });
+
+      let menuitemId = browser.contextMenus.create({
+        title: "child2",
+        id: "contextmenu-child2",
+        icons: {
+          18: "red_icon.png",
+        },
+        onclick: async () => {
+          await browser.contextMenus.remove(menuitemId);
+          browser.test.sendMessage("child-deleted");
+        },
+      }, () => {
+        browser.test.sendMessage("contextmenu-items-added");
+      });
+    },
+  });
+
+  let confirmContextMenuIcon = (element, imageName) => {
+    let imageURL = element.getAttribute("image");
+    ok(imageURL.endsWith(imageName), "The context menu should display the extension icon next to the child element");
+  };
+
+  await extension.startup();
+
+  await extension.awaitMessage("contextmenu-items-added");
+  let contextMenu = await openExtensionContextMenu();
+
+  let contextMenuChild1 = contextMenu.getElementsByAttribute("label", "child1")[0];
+  confirmContextMenuIcon(contextMenuChild1, "blue_icon.png");
+
+  let contextMenuChild2 = contextMenu.getElementsByAttribute("label", "child2")[0];
+  confirmContextMenuIcon(contextMenuChild2, "red_icon.png");
+
+  await closeContextMenu();
+
+  extension.sendMessage("update-contextmenu-item");
+  await extension.awaitMessage("contextmenu-item-updated");
+
+  contextMenu = await openExtensionContextMenu();
+
+  contextMenuChild2 = contextMenu.getElementsByAttribute("label", "child2")[0];
+  confirmContextMenuIcon(contextMenuChild2, "blue_icon.png");
+
+  await closeContextMenu();
+
+  extension.sendMessage("update-contextmenu-item-without-icons");
+  await extension.awaitMessage("contextmenu-item-updated-without-icons");
+
+  contextMenu = await openExtensionContextMenu();
+
+  contextMenuChild2 = contextMenu.getElementsByAttribute("label", "child2")[0];
+  confirmContextMenuIcon(contextMenuChild2, "blue_icon.png");
+
+  await closeContextMenu();
+
+  extension.sendMessage("update-contextmenu-item-with-icons-as-null");
+  await extension.awaitMessage("contextmenu-item-updated-with-icons-as-null");
+
+  contextMenu = await openExtensionContextMenu();
+
+  contextMenuChild2 = contextMenu.getElementsByAttribute("label", "child2")[0];
+  is(contextMenuChild2.getAttribute("image"), "", "Second child should not have an icon");
+
+  await closeExtensionContextMenu(contextMenuChild2);
+  await extension.awaitMessage("child-deleted");
+
+  contextMenu = await openContextMenu();
+
+  contextMenuChild1 = contextMenu.getElementsByAttribute("label", "child1")[0];
+  confirmContextMenuIcon(contextMenuChild1, "black_icon.png");
+
+  await closeContextMenu();
+
+  extension.sendMessage("update-contextmenu-item-when-its-the-only-child");
+  await extension.awaitMessage("contextmenu-item-updated-when-its-only-child");
+
+  contextMenu = await openContextMenu();
+
+  contextMenuChild1 = contextMenu.getElementsByAttribute("label", "child1")[0];
+  confirmContextMenuIcon(contextMenuChild1, "black_icon.png");
+
+  await closeContextMenu();
+
+  await extension.unload();
+  BrowserTestUtils.removeTab(tab);
+});
