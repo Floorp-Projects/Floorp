@@ -1176,10 +1176,8 @@ WasmTokenStream::next()
         break;
 
       case 'g':
-#ifdef ENABLE_WASM_GC
         if (consume(u"gc_feature_opt_in"))
             return WasmToken(WasmToken::GcFeatureOptIn, begin, cur_);
-#endif
         if (consume(u"get_global"))
             return WasmToken(WasmToken::GetGlobal, begin, cur_);
         if (consume(u"get_local"))
