@@ -1,10 +1,4 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>StorageManager: persist()</title>
-<meta name="help" href="https://storage.spec.whatwg.org/#dom-storagemanager-persist">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: title=StorageManager: persisted()
 
 promise_test(function() {
     var promise = navigator.storage.persisted();
@@ -14,5 +8,3 @@ promise_test(function() {
         assert_equals(typeof result, 'boolean', result + ' should be boolean');
     });
 }, 'navigator.storage.persisted() returns a promise that resolves.');
-
-</script>

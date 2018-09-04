@@ -1,10 +1,4 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>StorageManager: estimate()</title>
-<meta name="help" href="https://storage.spec.whatwg.org/#dom-storagemanager-estimate">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: title=StorageManager: estimate()
 
 test(function(t) {
     assert_true(navigator.storage.estimate() instanceof Promise);
@@ -64,5 +58,3 @@ promise_test(function(t) {
                                 'estimated usage should increase');
         });
 }, 'estimate() shows usage increase after 1MB IndexedDB record is stored');
-
-</script>

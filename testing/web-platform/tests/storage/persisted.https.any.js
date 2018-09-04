@@ -1,6 +1,4 @@
-if (this.document === undefined) {
-  importScripts("/resources/testharness.js");
-}
+// META: title=StorageManager: persisted()
 
 test(function(t) {
   assert_true('persisted' in navigator.storage);
@@ -14,5 +12,3 @@ promise_test(function(t) {
     assert_equals(result, false);
   });
 }, 'persisted() returns a promise and resolves as boolean with false');
-
-done();

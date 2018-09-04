@@ -1,4 +1,5 @@
-importScripts('/resources/testharness.js');
+// META: title=StorageManager: persist() (worker)
+importScripts("/resources/testharness.js");
 
 test(function() {
   assert_false('persist' in navigator.storage);

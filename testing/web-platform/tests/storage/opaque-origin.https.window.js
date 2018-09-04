@@ -1,9 +1,4 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<title>StorageManager API and opaque origins</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: title=StorageManager API and opaque origins
 
 function load_iframe(src, sandbox) {
   return new Promise(resolve => {
@@ -76,4 +71,3 @@ function make_script(snippet) {
       });
   }, `${snippet} in sandboxed iframe should reject with TypeError`);
 });
-</script>
