@@ -27,9 +27,9 @@ add_task(async function test_opening_blocked_popups() {
 
   await ContentTask.spawn(tab.linkedBrowser, baseURL, async function(uri) {
     let iframe = content.document.createElement("iframe");
-    iframe.src = uri;
     let pageHideHappened = ContentTaskUtils.waitForEvent(this, "pagehide", true);
     content.document.body.appendChild(iframe);
+    iframe.src = uri;
     await pageHideHappened;
   });
 

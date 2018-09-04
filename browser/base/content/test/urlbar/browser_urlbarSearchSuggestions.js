@@ -70,10 +70,7 @@ add_task(async function plainEnterOnSuggestion() {
 });
 
 add_task(async function ctrlEnterOnSuggestion() {
-  await testPressEnterOnSuggestion("http://www.foofoo.com/",
-                                   AppConstants.platform === "macosx" ?
-                                     { metaKey: true } :
-                                     { ctrlKey: true });
+  await testPressEnterOnSuggestion("http://www.foofoo.com/", { ctrlKey: true });
 });
 
 add_task(async function copySuggestionText() {

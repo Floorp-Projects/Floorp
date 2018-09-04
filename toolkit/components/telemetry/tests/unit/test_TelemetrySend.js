@@ -20,7 +20,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 
 ChromeUtils.defineModuleGetter(this, "TelemetryHealthPing",
-  "resource://gre/modules/TelemetryHealthPing.jsm");
+  "resource://gre/modules/HealthPing.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(Services, "cookies", "@mozilla.org/cookieService;1", "nsICookieService");
 

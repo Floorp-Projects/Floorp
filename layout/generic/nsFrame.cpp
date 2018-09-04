@@ -9443,6 +9443,44 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 #endif
   }
 
+  nsSize oldSize = mRect.Size();
+  bool sizeChanged = ((aOldSize ? *aOldSize : oldSize) != aNewSize);
+
+  // Our frame size may not have been computed and set yet, but code under
+  // functions such as ComputeEffectsRect (which we're about to call) use the
+  // values that are stored in our frame rect to compute their results.  We
+  // need the results from those functions to be based on the frame size that
+  // we *will* have, so we temporarily set our frame size here before calling
+  // those functions.
+  //
+  // XXX Someone should document here why we revert the frame size before we
+  // return rather than just leaving it set.
+  //
+  // We pass false here to avoid invalidating display items for this temporary
+  // change. We sometimes reflow frames multiple times, with the final size being
+  // the same as the initial. The single call to SetSize after reflow is done
+  // will take care of invalidating display items if the size has actually
+  // changed.
+  SetSize(aNewSize, false);
+
+  const bool applyOverflowClipping =
+    nsFrame::ShouldApplyOverflowClipping(this, disp);
+
+  if (ChildrenHavePerspective(disp) && sizeChanged) {
+    RecomputePerspectiveChildrenOverflow(this);
+
+    if (!applyOverflowClipping) {
+      aOverflowAreas.SetAllTo(bounds);
+      DebugOnly<bool> ok = ComputeCustomOverflow(aOverflowAreas);
+
+      // ComputeCustomOverflow() should not return false, when
+      // FrameMaintainsOverflow() returns true.
+      MOZ_ASSERT(ok, "FrameMaintainsOverflow() != ComputeCustomOverflow()");
+
+      UnionChildOverflow(aOverflowAreas);
+    }
+  }
+
   // This is now called FinishAndStoreOverflow() instead of
   // StoreOverflow() because frame-generic ways of adding overflow
   // can happen here, e.g. CSS2 outline and native theme.
@@ -9467,7 +9505,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   NS_ASSERTION((disp->mOverflowY == NS_STYLE_OVERFLOW_CLIP) ==
                (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
                "If one overflow is clip, the other should be too");
-  if (nsFrame::ShouldApplyOverflowClipping(this, disp)) {
+  if (applyOverflowClipping) {
     // The contents are actually clipped to the padding area
     aOverflowAreas.SetAllTo(bounds);
   }
@@ -9501,26 +9539,6 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 
   ComputeAndIncludeOutlineArea(this, aOverflowAreas, aNewSize);
 
-  nsSize oldSize = mRect.Size();
-  bool sizeChanged = ((aOldSize ? *aOldSize : oldSize) != aNewSize);
-
-  // Our frame size may not have been computed and set yet, but code under
-  // functions such as ComputeEffectsRect (which we're about to call) use the
-  // values that are stored in our frame rect to compute their results.  We
-  // need the results from those functions to be based on the frame size that
-  // we *will* have, so we temporarily set our frame size here before calling
-  // those functions.
-  //
-  // XXX Someone should document here why we revert the frame size before we
-  // return rather than just leaving it set.
-  //
-  // We pass false here to avoid invalidating display items for this temporary
-  // change. We sometimes reflow frames multiple times, with the final size being
-  // the same as the initial. The single call to SetSize after reflow is done
-  // will take care of invalidating display items if the size has actually
-  // changed.
-  SetSize(aNewSize, false);
-
   // Nothing in here should affect scrollable overflow.
   aOverflowAreas.VisualOverflow() =
     ComputeEffectsRect(this, aOverflowAreas.VisualOverflow(), aNewSize);
@@ -9537,11 +9555,6 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   }
 
   /* If we're transformed, transform the overflow rect by the current transformation. */
-  if (ChildrenHavePerspective(disp) && sizeChanged) {
-    nsRect newBounds(nsPoint(0, 0), aNewSize);
-    RecomputePerspectiveChildrenOverflow(this);
-  }
-
   if (hasTransform) {
     SetProperty(nsIFrame::PreTransformOverflowAreasProperty(),
                 new nsOverflowAreas(aOverflowAreas));

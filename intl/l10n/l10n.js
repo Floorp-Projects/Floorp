@@ -1,6 +1,7 @@
 {
   const { DOMLocalization } =
     ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm", {});
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
   /**
    * Polyfill for document.ready polyfill.
@@ -46,8 +47,9 @@
 
   document.l10n = new DOMLocalization(resourceIds);
 
-  // Trigger the first two contexts to be loaded eagerly.
-  document.l10n.ctxs.touchNext(2);
+  const appLocales = Services.locale.getAppLocalesAsBCP47();
+  const prefetchCount = appLocales.length > 1 ? 2 : 1;
+  document.l10n.ctxs.touchNext(prefetchCount);
 
   document.l10n.ready = documentReady().then(() => {
     document.l10n.registerObservers();

@@ -469,9 +469,14 @@ nsLayoutUtils::AreRetainedDisplayListsEnabled()
 {
   if (XRE_IsContentProcess()) {
     return gfxPrefs::LayoutRetainDisplayList();
-  } else {
+  }
+
+  if (XRE_IsE10sParentProcess()) {
     return gfxPrefs::LayoutRetainDisplayListChrome();
   }
+
+  // Retained display lists require e10s.
+  return false;
 }
 
 bool

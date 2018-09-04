@@ -1,10 +1,21 @@
 "use strict";
 
+/**
+ * The configuration is based on eslint:recommended config. The details for all
+ * the ESLint rules, and which ones are in the recommended configuration can
+ * be found here:
+ *
+ * https://eslint.org/docs/rules/
+ */
 module.exports = {
   "env": {
     "browser": true,
     "es6": true
   },
+
+  "extends": [
+    "eslint:recommended"
+  ],
 
   "globals": {
     "AddonManagerPermissions": false,
@@ -135,6 +146,10 @@ module.exports = {
     // Functions must always return something or nothing
     "consistent-return": "error",
 
+    // XXX This rule line should be removed to enable it. See bug 1487642.
+    // Require super() calls in constructors
+    "constructor-super": "off",
+
     // Require braces around blocks that start a new line
     // Note that this rule is likely to be overridden on a per-directory basis
     // very frequently.
@@ -151,6 +166,10 @@ module.exports = {
 
     // Require function* name()
     "generator-star-spacing": ["error", {"after": true, "before": false}],
+
+    // XXX This rule line should be removed to enable it. See bug 1487642.
+    // Enforce return statements in getters
+    "getter-return": "off",
 
     // Two space indent
     // "indent": ["error", 2, { "SwitchCase": 1 }],
@@ -201,35 +220,20 @@ module.exports = {
     // Disallow use of arguments.caller or arguments.callee.
     "no-caller": "error",
 
-    // Disallow modifying variables of class declarations.
-    "no-class-assign": "error",
+    // XXX Bug 1487642 - decide if we want to enable this or not.
+    // Disallow lexical declarations in case clauses
+    "no-case-declarations": "off",
 
-    // Disallow assignment operators in conditional statements
-    "no-cond-assign": "error",
+    // XXX Bug 1487642 - decide if we want to enable this or not.
+    // Disallow the use of console
+    "no-console": "off",
 
-    // Disallow modifying variables that are declared using const.
-    "no-const-assign": "error",
-
-    // Disallow control characters in regular expressions.
-    "no-control-regex": "error",
-
-    // Disallow the use of debugger
-    "no-debugger": "error",
-
-    // Disallow deleting variables
-    "no-delete-var": "error",
-
-    // No duplicate arguments in function declarations
-    "no-dupe-args": "error",
-
-    // Disallow duplicate class members.
-    "no-dupe-class-members": "error",
+    // XXX Bug 1487642 - decide if we want to enable this or not.
+    // Disallow constant expressions in conditions
+    "no-constant-condition": "off",
 
     // No duplicate keys in object declarations
     "no-dupe-keys": "error",
-
-    // No duplicate cases in switch statements
-    "no-duplicate-case": "error",
 
     // If an if block ends with a return no need for an else block
     "no-else-return": "error",
@@ -237,38 +241,25 @@ module.exports = {
     // No empty statements
     "no-empty": ["error", {"allowEmptyCatch": true}],
 
-    // No empty character classes in regex
-    "no-empty-character-class": "error",
-
-    // Disallow empty destructuring
-    "no-empty-pattern": "error",
-
     // Disallow eval and setInteral/setTimeout with strings
     "no-eval": "error",
-
-    // No assigning to exception variable
-    "no-ex-assign": "error",
 
     // Disallow unnecessary calls to .bind()
     "no-extra-bind": "error",
 
-    // No using !! where casting to boolean is already happening
-    "no-extra-boolean-cast": "error",
+    // XXX Bug 1487642 - decide if we want to enable this or not.
+    // Disallow fallthrough of case statements
+    "no-fallthrough": "off",
 
-    // No double semicolon
-    "no-extra-semi": "error",
-
-    // No overwriting defined functions
-    "no-func-assign": "error",
+    // Disallow assignments to native objects or read-only global variables
+    "no-global-assign": "error",
 
     // Disallow eval and setInteral/setTimeout with strings
     "no-implied-eval": "error",
 
-    // No invalid regular expressions
-    "no-invalid-regexp": "error",
-
-    // No odd whitespace characters
-    "no-irregular-whitespace": "error",
+    // This has been superseded since we're using ES6.
+    // Disallow variable or function declarations in nested blocks
+    "no-inner-declarations": "off",
 
     // Disallow the use of the __iterator__ property
     "no-iterator": "error",
@@ -282,9 +273,6 @@ module.exports = {
     // No single if block inside an else block
     "no-lonely-if": "error",
 
-    // no-tabs disallows tabs completely.
-    // "no-mixed-spaces-and-tabs": "error",
-
     // No unnecessary spacing
     "no-multi-spaces": ["error", { exceptions: {
       "ArrayExpression": true,
@@ -292,9 +280,6 @@ module.exports = {
       "ObjectExpression": true,
       "VariableDeclarator": true
     } }],
-
-    // No reassigning native JS objects
-    "no-native-reassign": "error",
 
     // Nested ternary statements are confusing
     "no-nested-ternary": "error",
@@ -305,23 +290,8 @@ module.exports = {
     // Dissallow use of new wrappers
     "no-new-wrappers": "error",
 
-    // No Math() or JSON()
-    "no-obj-calls": "error",
-
-    // No octal literals
-    "no-octal": "error",
-
-    // No redeclaring variables
-    "no-redeclare": "error",
-
-    // Disallow multiple spaces in regular expressions
-    "no-regex-spaces": "error",
-
     // Disallows unnecessary `return await ...`.
     "no-return-await": "error",
-
-    // Disallow assignments where both sides are exactly the same
-    "no-self-assign": "error",
 
     // No unnecessary comparisons
     "no-self-compare": "error",
@@ -335,32 +305,14 @@ module.exports = {
     // No declaring variables that hide things like arguments
     "no-shadow-restricted-names": "error",
 
-    // Disallow sparse arrays
-    "no-sparse-arrays": "error",
-
     // Disallow tabs.
     "no-tabs": "error",
 
     // No trailing whitespace
     "no-trailing-spaces": "error",
 
-    // No using undeclared variables
-    "no-undef": "error",
-
-    // Error on newline where a semicolon is needed
-    "no-unexpected-multiline": "error",
-
     // Disallow the use of Boolean literals in conditional expressions.
     "no-unneeded-ternary": "error",
-
-    // No unreachable statements
-    "no-unreachable": "error",
-
-    // Disallow control flow statements in finally blocks
-    "no-unsafe-finally": "error",
-
-    // No (!foo in bar) or (!object instanceof Class)
-    "no-unsafe-negation": "error",
 
     // No unsanitized use of innerHTML=, document.write() etc.
     // cf. https://github.com/mozilla/eslint-plugin-no-unsanitized#rule-details
@@ -383,6 +335,10 @@ module.exports = {
     // lines)
     "no-useless-concat": "error",
 
+    // XXX Bug 1487642 - decide if we want to enable this or not.
+    // Disallow unnecessary escape characters
+    "no-useless-escape": "off",
+
     // Disallow redundant return statements
     "no-useless-return": "error",
 
@@ -401,6 +357,10 @@ module.exports = {
       "allowTemplateLiterals": true,
       "avoidEscape": true
     }],
+
+    // XXX Bug 1487642 - decide if we want to enable this or not.
+    // Require generator functions to contain yield
+    "require-yield": "off",
 
     // No spacing inside rest or spread expressions
     "rest-spread-spacing": "error",
@@ -435,11 +395,5 @@ module.exports = {
 
     // Requires or disallows a whitespace (space or tab) beginning a comment
     "spaced-comment": "error",
-
-    // No comparisons to NaN
-    "use-isnan": "error",
-
-    // Only check typeof against valid results
-    "valid-typeof": "error"
   }
 };

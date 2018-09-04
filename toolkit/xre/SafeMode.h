@@ -25,7 +25,8 @@ namespace mozilla {
 enum class SafeModeFlag : uint32_t
 {
   None = 0,
-  Unset = (1 << 0)
+  Unset = (1 << 0),
+  NoKeyPressCheck = (1 << 1),
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SafeModeFlag)
@@ -56,7 +57,8 @@ IsSafeModeRequested(int& aArgc, CharT* aArgv[],
   // order bit will be 1 if the key is pressed. By masking the returned short
   // with 0x8000 the result will be 0 if the key is not pressed and non-zero
   // otherwise.
-  if ((GetKeyState(VK_SHIFT) & 0x8000) &&
+  if (!(aFlags & SafeModeFlag::NoKeyPressCheck) &&
+      (GetKeyState(VK_SHIFT) & 0x8000) &&
       !(GetKeyState(VK_CONTROL) & 0x8000) &&
       !(GetKeyState(VK_MENU) & 0x8000) &&
       !EnvHasValue("MOZ_DISABLE_SAFE_MODE_KEY")) {
@@ -69,7 +71,8 @@ IsSafeModeRequested(int& aArgc, CharT* aArgv[],
 #endif // defined(XP_WIN)
 
 #if defined(XP_MACOSX)
-  if ((GetCurrentEventKeyModifiers() & optionKey) &&
+  if (!(aFlags & SafeModeFlag::NoKeyPressCheck) &&
+      (GetCurrentEventKeyModifiers() & optionKey) &&
       !EnvHasValue("MOZ_DISABLE_SAFE_MODE_KEY")) {
     result = true;
   }

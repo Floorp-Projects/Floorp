@@ -351,7 +351,7 @@ if (this.addMessageListener) {
   var SpecialPowers = { Cc, Ci, Cr, Cu };
   var ok, is;
   // Ignore ok/is in commonInit since they aren't defined in a chrome script.
-  ok = is = () => {}; // eslint-disable-line no-native-reassign
+  ok = is = () => {};
 
   ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
   ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");

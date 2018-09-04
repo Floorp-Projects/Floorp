@@ -36,7 +36,7 @@ function loadPrivilegedScriptTest() {
       handlers[type].forEach(handler => handler.apply(null, args));
     };
     var handlers = {};
-    /* eslint-disable-next-line no-native-reassign */
+    /* eslint-disable-next-line no-global-assign */
     addMessageListener = function(message, handler) {
       if (handlers.hasOwnProperty(message)) {
         handlers[message].push(handler);
@@ -44,7 +44,7 @@ function loadPrivilegedScriptTest() {
         handlers[message] = [handler];
       }
     };
-    /* eslint-disable-next-line no-native-reassign */
+    /* eslint-disable-next-line no-global-assign */
     removeMessageListener = function(message, handler) {
       if (!handler || !handlers.hasOwnProperty(message)) {
         return;
