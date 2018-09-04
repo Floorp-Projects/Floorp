@@ -112,7 +112,10 @@ mod test {
     #[test]
     fn test_string() {
         assert_eq!(PrefValue::from("foo"), PrefValue::String("foo".to_string()));
-        assert_eq!(PrefValue::from("foo".to_string()), PrefValue::String("foo".to_string()));
+        assert_eq!(
+            PrefValue::from("foo".to_string()),
+            PrefValue::String("foo".to_string())
+        );
     }
 
     #[test]

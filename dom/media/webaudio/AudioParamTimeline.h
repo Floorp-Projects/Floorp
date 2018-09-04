@@ -53,7 +53,7 @@ public:
   void InsertEvent(const AudioTimelineEvent& aEvent)
   {
     if (aEvent.mType == AudioTimelineEvent::Cancel) {
-      CancelScheduledValues(aEvent.template Time<TimeType>());
+      CancelScheduledValues(aEvent.Time<TimeType>());
       return;
     }
     if (aEvent.mType == AudioTimelineEvent::Stream) {

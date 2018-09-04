@@ -8,6 +8,10 @@ XPIDL_SOURCES += [
     'nsICompressConvStats.idl'
 ]
 
+EXPORTS += [
+    'nsUnknownDecoder.h',
+]
+
 XPIDL_MODULE = 'necko_http'
 
 UNIFIED_SOURCES += [

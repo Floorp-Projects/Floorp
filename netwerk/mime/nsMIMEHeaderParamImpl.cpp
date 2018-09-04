@@ -26,22 +26,22 @@ using mozilla::Encoding;
 
 static char *DecodeQ(const char *, uint32_t);
 static bool Is7bitNonAsciiString(const char *, uint32_t);
-static void CopyRawHeader(const char *, uint32_t, const char *, nsACString &);
-static nsresult DecodeRFC2047Str(const char *, const char *, bool, nsACString&);
-static nsresult internalDecodeParameter(const nsACString&, const char*,
-                                        const char*, bool, bool, nsACString&);
+static void CopyRawHeader(const char *, uint32_t, const nsACString&, nsACString &);
+static nsresult DecodeRFC2047Str(const char *, const nsACString&, bool, nsACString&);
+static nsresult internalDecodeParameter(const nsACString&, const nsACString&,
+                                        const nsACString&, bool, bool, nsACString&);
 
 static nsresult
 ToUTF8(const nsACString& aString,
-       const char* aCharset,
+       const nsACString& aCharset,
        bool aAllowSubstitution,
        nsACString& aResult)
 {
-  if (!aCharset || !*aCharset)
+  if (aCharset.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
+  }
 
-  auto encoding = Encoding::ForLabelNoReplacement(
-                    mozilla::MakeStringSpan(aCharset));
+  auto encoding = Encoding::ForLabelNoReplacement(aCharset);
   if (!encoding) {
     return NS_ERROR_UCONV_NOCONV;
   }
@@ -58,7 +58,7 @@ ToUTF8(const nsACString& aString,
 
 static nsresult
 ConvertStringToUTF8(const nsACString& aString,
-                    const char* aCharset,
+                    const nsACString& aCharset,
                     bool aSkipCheck,
                     bool aAllowSubstitution,
                     nsACString& aUTF8String)
@@ -161,7 +161,7 @@ nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
     // if necessary.
 
     nsAutoCString str1;
-    rv = internalDecodeParameter(med, charset.get(), nullptr, false,
+    rv = internalDecodeParameter(med, charset, EmptyCString(), false,
                                  // was aDecoding == MIME_FIELD_ENCODING
                                  // see bug 875615
                                  true,
@@ -172,8 +172,7 @@ nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
     {
         const Encoding* encoding = Encoding::ForLabel(aFallbackCharset);
         nsAutoCString str2;
-        if (NS_SUCCEEDED(ConvertStringToUTF8(str1,
-                PromiseFlatCString(aFallbackCharset).get(), false,
+        if (NS_SUCCEEDED(ConvertStringToUTF8(str1, aFallbackCharset, false,
                                    encoding != UTF_8_ENCODING,
                                    str2))) {
           CopyUTF8toUTF16(str2, aResult);
@@ -372,14 +371,13 @@ int32_t parseSegmentNumber(const char *aValue, int32_t aLen)
 
 // validate a given octet sequence for compliance with the specified
 // encoding
-bool IsValidOctetSequenceForCharset(nsACString& aCharset, const char *aOctets)
+bool IsValidOctetSequenceForCharset(const nsACString& aCharset, const char *aOctets)
 {
   nsAutoCString tmpRaw;
   tmpRaw.Assign(aOctets);
   nsAutoCString tmpDecoded;
 
-  nsresult rv = ConvertStringToUTF8(tmpRaw,
-                                    PromiseFlatCString(aCharset).get(),
+  nsresult rv = ConvertStringToUTF8(tmpRaw, aCharset,
                                     false, false, tmpDecoded);
 
   if (rv != NS_OK) {
@@ -780,7 +778,7 @@ increment_str:
 }
 
 nsresult
-internalDecodeRFC2047Header(const char* aHeaderVal, const char* aDefaultCharset,
+internalDecodeRFC2047Header(const char* aHeaderVal, const nsACString& aDefaultCharset,
                             bool aOverrideCharset, bool aEatContinuations,
                             nsACString& aResult)
 {
@@ -795,7 +793,7 @@ internalDecodeRFC2047Header(const char* aHeaderVal, const char* aDefaultCharset,
   // aDefaultCharset is specified, decodes RFC 2047 encoding and converts
   // to UTF-8. Otherwise, just strips away CRLF.
   if (PL_strstr(aHeaderVal, "=?") ||
-      (aDefaultCharset && (!IsUTF8(nsDependentCString(aHeaderVal)) ||
+      (!aDefaultCharset.IsEmpty() && (!IsUTF8(nsDependentCString(aHeaderVal)) ||
       Is7bitNonAsciiString(aHeaderVal, strlen(aHeaderVal))))) {
     DecodeRFC2047Str(aHeaderVal, aDefaultCharset, aOverrideCharset, aResult);
   } else if (aEatContinuations &&
@@ -824,7 +822,8 @@ nsMIMEHeaderParamImpl::DecodeRFC2047Header(const char* aHeaderVal,
                                            bool aEatContinuations,
                                            nsACString& aResult)
 {
-  return internalDecodeRFC2047Header(aHeaderVal, aDefaultCharset,
+  return internalDecodeRFC2047Header(aHeaderVal,
+                                     nsCString(aDefaultCharset),
                                      aOverrideCharset, aEatContinuations,
                                      aResult);
 }
@@ -933,7 +932,7 @@ nsMIMEHeaderParamImpl::DecodeRFC5987Param(const nsACString& aParamVal,
 
   // finally convert octet sequence to UTF-8 and be done
   nsAutoCString utf8;
-  nsresult rv = ConvertStringToUTF8(value, charset.get(), true, false, utf8);
+  nsresult rv = ConvertStringToUTF8(value, charset, true, false, utf8);
   NS_ENSURE_SUCCESS(rv, rv);
 
   CopyUTF8toUTF16(utf8, aResult);
@@ -941,14 +940,14 @@ nsMIMEHeaderParamImpl::DecodeRFC5987Param(const nsACString& aParamVal,
 }
 
 nsresult
-internalDecodeParameter(const nsACString& aParamValue, const char* aCharset,
-                        const char* aDefaultCharset, bool aOverrideCharset,
+internalDecodeParameter(const nsACString& aParamValue, const nsACString& aCharset,
+                        const nsACString& aDefaultCharset, bool aOverrideCharset,
                         bool aDecode2047, nsACString& aResult)
 {
   aResult.Truncate();
   // If aCharset is given, aParamValue was obtained from RFC2231/5987
   // encoding and we're pretty sure that it's in aCharset.
-  if (aCharset && *aCharset)
+  if (!aCharset.IsEmpty())
   {
     return ConvertStringToUTF8(aParamValue, aCharset, true, true, aResult);
   }
@@ -997,7 +996,8 @@ nsMIMEHeaderParamImpl::DecodeParameter(const nsACString& aParamValue,
                                        bool aOverrideCharset,
                                        nsACString& aResult)
 {
-  return internalDecodeParameter(aParamValue, aCharset, aDefaultCharset,
+  return internalDecodeParameter(aParamValue, nsCString(aCharset),
+                                 nsCString(aDefaultCharset),
                                  aOverrideCharset, true, aResult);
 }
 
@@ -1111,12 +1111,12 @@ bool Is7bitNonAsciiString(const char *input, uint32_t len)
 // chars. *aOutput is advanced by the number of output octets.
 // static
 void CopyRawHeader(const char *aInput, uint32_t aLen,
-                   const char *aDefaultCharset, nsACString &aOutput)
+                   const nsACString& aDefaultCharset, nsACString &aOutput)
 {
   int32_t c;
 
   // If aDefaultCharset is not specified, make a blind copy.
-  if (!aDefaultCharset || !*aDefaultCharset) {
+  if (aDefaultCharset.IsEmpty()) {
     aOutput.Append(aInput, aLen);
     return;
   }
@@ -1135,14 +1135,14 @@ void CopyRawHeader(const char *aInput, uint32_t aLen,
   // skip ASCIIness/UTF8ness test if aInput is supected to be a 7bit non-ascii
   // string and aDefaultCharset is a 7bit non-ascii charset.
   bool skipCheck = (c == 0x1B || c == '~') &&
-                     IS_7BIT_NON_ASCII_CHARSET(aDefaultCharset);
+                     IS_7BIT_NON_ASCII_CHARSET(PromiseFlatCString(aDefaultCharset).get());
 
   // If not UTF-8, treat as default charset
   nsAutoCString utf8Text;
   if (NS_SUCCEEDED(
       ConvertStringToUTF8(Substring(aInput, aInput + aLen),
-                          aDefaultCharset, skipCheck, true,
-                          utf8Text))) {
+                          PromiseFlatCString(aDefaultCharset),
+                          skipCheck, true, utf8Text))) {
     aOutput.Append(utf8Text);
   } else { // replace each octet with Unicode replacement char in UTF-8.
     for (uint32_t i = 0; i < aLen; i++) {
@@ -1156,7 +1156,7 @@ void CopyRawHeader(const char *aInput, uint32_t aLen,
 }
 
 nsresult DecodeQOrBase64Str(const char *aEncoded, size_t aLen, char aQOrBase64,
-                            const char *aCharset, nsACString &aResult)
+                            const nsACString& aCharset, nsACString &aResult)
 {
   char *decodedText;
   NS_ASSERTION(aQOrBase64 == 'Q' || aQOrBase64 == 'B', "Should be 'Q' or 'B'");
@@ -1176,7 +1176,7 @@ nsresult DecodeQOrBase64Str(const char *aEncoded, size_t aLen, char aQOrBase64,
   // skip ASCIIness/UTF8ness test if aCharset is 7bit non-ascii charset.
   nsresult rv = ConvertStringToUTF8(nsDependentCString(decodedText),
                                     aCharset,
-                                    IS_7BIT_NON_ASCII_CHARSET(aCharset),
+                                    IS_7BIT_NON_ASCII_CHARSET(PromiseFlatCString(aCharset).get()),
                                     true, utf8Text);
   free(decodedText);
   if (NS_FAILED(rv)) {
@@ -1195,7 +1195,7 @@ static const char especials[] = R"(()<>@,;:\"/[]?.=)";
 // ignored and aDefaultCharset is assumed, instead. aDefaultCharset
 // is also used to convert raw octets (without RFC 2047 encoding) to UTF-8.
 //static
-nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
+nsresult DecodeRFC2047Str(const char *aHeader, const nsACString& aDefaultCharset,
                           bool aOverrideCharset, nsACString &aResult)
 {
   const char *p, *q = nullptr, *r;
@@ -1228,7 +1228,7 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
     if (!isLastEncodedWord || q < p) {
       if (!encodedText.IsEmpty()) {
         rv = DecodeQOrBase64Str(encodedText.get(), encodedText.Length(),
-                                prevEncoding, prevCharset.get(), aResult);
+                                prevEncoding, prevCharset, aResult);
         if (NS_FAILED(rv)) {
           aResult.Append(encodedText);
         }
@@ -1286,7 +1286,7 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
     // Override charset if requested.  Never override labeled UTF-8.
     // Use default charset instead of UNKNOWN-8BIT
     if ((aOverrideCharset && 0 != nsCRT::strcasecmp(curCharset.get(), "UTF-8"))
-    || (aDefaultCharset && 0 == nsCRT::strcasecmp(curCharset.get(), "UNKNOWN-8BIT"))
+    || (!aDefaultCharset.IsEmpty() && 0 == nsCRT::strcasecmp(curCharset.get(), "UNKNOWN-8BIT"))
     ) {
       curCharset = aDefaultCharset;
     }
@@ -1321,7 +1321,7 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
         bDecoded = true;
       }
       rv = DecodeQOrBase64Str(encodedText.get(), encodedText.Length(),
-                              prevEncoding, prevCharset.get(), aResult);
+                              prevEncoding, prevCharset, aResult);
       if (NS_FAILED(rv)) {
         aResult.Append(encodedText);
       }
@@ -1331,7 +1331,7 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
     }
     if (!bDecoded) {
       rv = DecodeQOrBase64Str(q + 2, R - (q + 2), curEncoding,
-                              curCharset.get(), aResult);
+                              curCharset, aResult);
       if (NS_FAILED(rv)) {
         aResult.Append(encodedText);
       }
@@ -1344,7 +1344,7 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
   badsyntax:
     if (!encodedText.IsEmpty()) {
       rv = DecodeQOrBase64Str(encodedText.get(), encodedText.Length(),
-                              prevEncoding, prevCharset.get(), aResult);
+                              prevEncoding, prevCharset, aResult);
       if (NS_FAILED(rv)) {
         aResult.Append(encodedText);
       }
@@ -1359,7 +1359,7 @@ nsresult DecodeRFC2047Str(const char *aHeader, const char *aDefaultCharset,
 
   if (!encodedText.IsEmpty()) {
     rv = DecodeQOrBase64Str(encodedText.get(), encodedText.Length(),
-                            prevEncoding, prevCharset.get(), aResult);
+                            prevEncoding, prevCharset, aResult);
     if (NS_FAILED(rv)) {
       aResult.Append(encodedText);
     }
