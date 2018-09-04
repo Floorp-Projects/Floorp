@@ -157,6 +157,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/HoldDropJSObjects.h"
 /* This must occur *after* base/process_util.h to avoid typedefs conflicts. */
@@ -164,6 +165,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/SegmentedVector.h"
+#include "mozilla/Variant.h"
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectionNoteRootCallback.h"
@@ -2092,6 +2094,43 @@ private:
   nsAutoPtr<NodePool::Enumerator> mCurrNode;
   uint32_t mNoteChildCount;
 
+  class GraphCache
+  {
+  public:
+    // This either returns a pointer if present, or an index, if it isn't.
+    Variant<PtrInfo*, uint32_t> GetEntryOrIndex(void* aPtr)
+    {
+      uint32_t hash = mozilla::HashGeneric(aPtr);
+      uint32_t index = hash % kCacheSize;
+      PtrInfo* result = mCache[index];
+      if (result && result->mPointer == aPtr) {
+        return AsVariant(result);
+      }
+
+      return AsVariant(index);
+    }
+
+    void Add(uint32_t aIndex, PtrInfo* aPtrInfo)
+    {
+      mCache[aIndex] = aPtrInfo;
+    }
+
+    void Remove(void* aPtr)
+    {
+      uint32_t hash = mozilla::HashGeneric(aPtr);
+      uint32_t index = hash % kCacheSize;
+      PtrInfo* pinfo = mCache[index];
+      if (pinfo && pinfo->mPointer == aPtr) {
+        mCache[index] = nullptr;
+      }
+    }
+  private:
+    const static uint32_t kCacheSize = 491;
+    PtrInfo* mCache[kCacheSize] = {0};
+  };
+
+  GraphCache mGraphCache;
+
 public:
   CCGraphBuilder(CCGraph& aGraph,
                  CycleCollectorResults& aResults,
@@ -2113,6 +2152,10 @@ public:
   // Do some work traversing nodes in the graph. Returns true if this graph building is finished.
   bool BuildGraph(SliceBudget& aBudget);
 
+  void RemoveCachedEntry(void* aPtr)
+  {
+    mGraphCache.Remove(aPtr);
+  }
 private:
   PtrInfo* AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant);
   PtrInfo* AddWeakMapNode(JS::GCCellPtr aThing);
@@ -2210,6 +2253,10 @@ CCGraphBuilder::CCGraphBuilder(CCGraph& aGraph,
   , mMergeZones(aMergeZones)
   , mNoteChildCount(0)
 {
+  // 4096 is an allocation bucket size.
+  static_assert(sizeof(CCGraphBuilder) <= 4096,
+                "Don't create too large CCGraphBuilder objects");
+
   if (aCCRuntime) {
     mJSParticipant = aCCRuntime->GCThingParticipant();
     mJSZoneParticipant = aCCRuntime->ZoneParticipant();
@@ -2240,6 +2287,15 @@ CCGraphBuilder::AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant)
     return nullptr;
   }
 
+  Variant<PtrInfo*, uint32_t> cacheVariant = mGraphCache.GetEntryOrIndex(aPtr);
+  if (cacheVariant.is<PtrInfo*>()) {
+    MOZ_ASSERT(cacheVariant.as<PtrInfo*>()->mParticipant == aParticipant,
+               "nsCycleCollectionParticipant shouldn't change!");
+    return cacheVariant.as<PtrInfo*>();
+  }
+
+  MOZ_ASSERT(cacheVariant.is<uint32_t>());
+
   PtrInfo* result;
   auto p = mGraph.mPtrInfoMap.lookupForAdd(aPtr);
   if (!p) {
@@ -2262,6 +2318,8 @@ CCGraphBuilder::AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant)
     MOZ_ASSERT(result->mParticipant == aParticipant,
                "nsCycleCollectionParticipant shouldn't change!");
   }
+
+  mGraphCache.Add(cacheVariant.as<uint32_t>(), result);
 
   return result;
 }
@@ -4044,6 +4102,9 @@ nsCycleCollector::RemoveObjectFromGraph(void* aObj)
   }
 
   mGraph.RemoveObjectFromMap(aObj);
+  if (mBuilder) {
+    mBuilder->RemoveCachedEntry(aObj);
+  }
 }
 
 void
