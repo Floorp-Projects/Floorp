@@ -153,7 +153,6 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         override fun onPause() {
-            geckoSession.setActive(false)
         }
 
         override fun goBack() {
@@ -172,7 +171,6 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         override fun onResume() {
-            geckoSession.setActive(true)
             if (TelemetryWrapper.dayPassedSinceLastUpload(context)) {
                 sendTelemetrySnapshots()
             }
@@ -512,7 +510,6 @@ class GeckoWebViewProvider : IWebViewProvider {
                         geckoSession.open(geckoRuntime!!)
                     }
                     setSession(geckoSession)
-                    geckoSession.setActive(true)
                 } else {
                     // App was backgrounded and restored;
                     // GV restored the GeckoSession itself, but we need to restore our variables
