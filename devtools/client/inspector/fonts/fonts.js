@@ -85,7 +85,7 @@ class FontInspector {
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewTextChange = debounce(this.onPreviewTextChange, 100, this);
     this.onPropertyChange = this.onPropertyChange.bind(this);
-    this.onRulePropertyUpdated = debounce(this.onRulePropertyUpdated, 100, this);
+    this.onRulePropertyUpdated = debounce(this.onRulePropertyUpdated, 300, this);
     this.onToggleFontHighlight = this.onToggleFontHighlight.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
     this.update = this.update.bind(this);
@@ -598,22 +598,23 @@ class FontInspector {
    * @param  {String} value
    *         CSS property value
    */
-  syncChanges(name, value) {
+  async syncChanges(name, value) {
     const textProperty = this.getTextProperty(name, value);
     if (textProperty) {
-      // This method may be called after the connection to the page style actor is closed.
-      // For example, during teardown of automated tests. Here, we catch any failure that
-      // may occur because of that. We're not interested in handling the error.
-      textProperty.setValue(value).catch(error => {
+      try {
+        await textProperty.setValue(value, "", true);
+        this.ruleView.on("property-value-updated", this.onRulePropertyUpdated);
+      } catch (error) {
+        // Because setValue() does an asynchronous call to the server, there is a chance
+        // the font editor was destroyed while we were waiting. If that happened, just
+        // bail out silently.
         if (!this.document) {
           return;
         }
 
         throw error;
-      });
+      }
     }
-
-    this.ruleView.on("property-value-updated", this.onRulePropertyUpdated);
   }
 
   /**
