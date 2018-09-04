@@ -3,14 +3,12 @@
   "type": "object",
   "properties": {
     "AppUpdateURL": {
-      "description": "Sets custom app update server URL.",
       "machine_only": true,
+
       "type": "URL"
     },
 
     "Authentication": {
-      "description": "Sites that support integrated authentication. See https://developer.mozilla.org/en-US/docs/Mozilla/Integrated_authentication",
-
       "type": "object",
       "properties": {
         "SPNEGO" : {
@@ -47,32 +45,22 @@
     },
 
     "BlockAboutAddons": {
-      "description": "Block access to the Add-ons Mananger (about:addons).",
-
       "type": "boolean"
     },
 
     "BlockAboutConfig": {
-      "description": "Blocks access to the about:config page.",
-
       "type": "boolean"
     },
 
     "BlockAboutProfiles": {
-      "description": "Blocks access to the about:profiles page.",
-
       "type": "boolean"
     },
 
     "BlockAboutSupport": {
-      "description": "Blocks access to the about:support page.",
-
       "type": "boolean"
     },
 
     "Bookmarks": {
-      "description": "Allows the creation of bookmarks in the Bookmarks bar, Bookmarks menu, or a specified folder inside them.",
-
       "type": "array",
       "items": {
         "type": "object",
@@ -103,8 +91,6 @@
     },
 
     "Certificates": {
-      "description": "Whether or not to use built in certs. This policy is Windows only at this time.",
-
       "type": "object",
       "properties": {
         "ImportEnterpriseRoots": {
@@ -114,8 +100,6 @@
     },
 
     "Cookies": {
-      "description": "Allow or deny websites to set cookies.",
-
       "type": "object",
       "properties": {
         "Allow": {
@@ -158,99 +142,68 @@
     },
 
     "DisableAppUpdate": {
-      "description": "Prevent the browser from updating.",
       "machine_only": true,
 
       "type": "boolean"
     },
 
     "DisableBuiltinPDFViewer": {
-      "description": "Disables PDF.js, which displays PDFs within Firefox.",
-
       "type": "boolean"
     },
 
     "DisableDeveloperTools": {
-      "description": "Prevents access to developer tools.",
-
       "type": "boolean"
     },
 
     "DisableFeedbackCommands": {
-      "description": "Prevents ability to send feedback from the help menu (\"Submit Feedback\" and \"Report Deceptive Site\").",
-
       "type": "boolean"
     },
 
     "DisableFirefoxAccounts": {
-      "description": "Disables Firefox Account based services, including Sync.",
-
       "type": "boolean"
     },
 
     "DisableFirefoxScreenshots": {
-      "description": "Prevents usage of the Firefox Screenshots feature.",
-
       "type": "boolean"
     },
 
     "DisableFirefoxStudies": {
-      "description": "Prevents Firefox from running studies.",
-
       "type": "boolean"
     },
 
     "DisableForgetButton": {
-      "description": "Prevents access to the \"Forget\" button.",
-
       "type": "boolean"
     },
 
     "DisableFormHistory": {
-      "description": "Don't remember search and form history.",
-
       "type": "boolean"
     },
 
     "DisableMasterPasswordCreation": {
-      "description": "If true, removes access to create a master password.",
-
       "type": "boolean"
     },
 
     "DisablePocket": {
-      "description": "Prevents ability to save webpages to Pocket.",
-
       "type": "boolean"
     },
 
     "DisablePrivateBrowsing": {
-      "description": "Disables private browsing.",
-
       "type": "boolean"
     },
 
     "DisableProfileImport": {
-      "description": "Disables the Firefox \"Import data from another browser\" button.",
-
       "type": "boolean"
     },
 
     "DisableProfileRefresh": {
-      "description": "Disables the \"Refresh Firefox\" button in about:support.",
-
       "type": "boolean"
     },
 
     "DisableSafeMode": {
-      "description": "Prevents ability to restart in safe mode. You can only prevent the Shift key by using GPO on Windows.",
-
       "type": "boolean"
     },
 
     "DisableSecurityBypass": {
-      "description": "Prevents the user from bypassing certain security warnings.",
-
       "type": "object",
       "properties": {
         "InvalidCertificate": {
@@ -264,46 +217,34 @@
     },
 
     "DisableSetDesktopBackground": {
-      "description": "Prevents usage of the \"Set Image as Desktop Background\" feature.",
-
       "type": "boolean"
     },
 
     "DisableSystemAddonUpdate": {
-      "description": "Prevent the browser from installing and updating system addons.",
       "machine_only": true,
 
       "type": "boolean"
     },
 
     "DisableTelemetry": {
-      "description": "Turns off Telemetry.",
       "machine_only": true,
 
       "type": "boolean"
     },
 
     "DisplayBookmarksToolbar": {
-      "description": "Causes the bookmarks toolbar to be displayed by default.",
-
       "type": "boolean"
     },
 
     "DisplayMenuBar": {
-      "description": "Causes the menu bar to be displayed by default.",
-
       "type": "boolean"
     },
 
     "DontCheckDefaultBrowser": {
-      "description": "Don't check for the default browser on startup.",
-
       "type": "boolean"
     },
 
     "EnableTrackingProtection": {
-      "description": "Enables or disables tracking protection and optionally locks it.",
-
       "type": "object",
       "properties": {
         "Value": {
@@ -317,7 +258,6 @@
     },
 
     "Extensions": {
-      "description": "Install, uninstall or lock extensions. The Install option takes URLs or paths as parameters. The Uninstall and Locked options take extension IDs.",
       "machine_only": true,
 
       "type": "object",
@@ -344,8 +284,6 @@
     },
 
     "FlashPlugin": {
-      "description": "Allow or deny flash plugin usage.",
-
       "type": "object",
       "properties": {
         "Allow": {
@@ -375,13 +313,10 @@
     },
 
     "HardwareAcceleration": {
-      "description": "If false, prevents ability to turn on hardware acceleration.",
-
       "type": "boolean"
     },
 
     "Homepage": {
-      "description": "Set and optionally lock the homepage.",
       "machine_only": true,
 
       "type": "object",
@@ -404,8 +339,6 @@
     },
 
     "InstallAddonsPermission": {
-      "description": "Allow websites to install add-ons.",
-
       "type": "object",
       "properties": {
         "Allow": {
@@ -422,34 +355,26 @@
     },
 
     "NoDefaultBookmarks": {
-      "description": "Don't create the default bookmarks bundled with Firefox, nor the Smart Bookmarks (Most Visited, Recent Tags). Note: this policy is only effective if used before the first run of the profile.",
-
       "type": "boolean"
     },
 
     "OfferToSaveLogins": {
-      "description": "Enforces the setting to allow Firefox to offer to remember saved logins and passwords. Both true and false values are accepted.",
-
       "type": "boolean"
     },
 
     "OverrideFirstRunPage": {
-      "description": "Override the first run page. Set this policy to blank if you want to disable the first run page.",
       "machine_only": true,
 
       "type": "URLorEmpty"
     },
 
     "OverridePostUpdatePage": {
-      "description": "Override the post-update \"What's New\" page. Set this policy to blank if you want to disable the post-update page.",
       "machine_only": true,
 
       "type": "URLorEmpty"
     },
 
     "Permissions": {
-      "description": "Configure permissions for camera, microphone, location and notifications.",
-
       "type": "object",
       "properties": {
         "Camera": {
@@ -571,8 +496,6 @@
     },
 
     "PopupBlocking": {
-      "description": "Allow or deny popup usage.",
-
       "type": "object",
       "properties": {
         "Allow": {
@@ -594,8 +517,6 @@
     },
 
     "Proxy": {
-      "description": "Configure Proxy settings.",
-
       "type": "object",
       "properties": {
         "Mode": {
@@ -651,20 +572,15 @@
     },
 
     "SanitizeOnShutdown": {
-      "description": "Clears ALL browser data on shutdown.",
-
       "type": "boolean"
     },
 
     "SearchBar": {
-      "description": "Sets the default location of the search bar. Only applies on first run, but can be changed.",
-
       "type": "string",
       "enum": ["unified", "separate"]
     },
 
     "SearchEngines": {
-      "description": "Modifies the list of search engines built into Firefox.",
       "enterprise_only": true,
 
       "type": "object",
@@ -717,7 +633,6 @@
     },
 
     "WebsiteFilter": {
-      "description": "Blocks websites from being visited. The parameters take an array of Match Patterns, as documented in https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Match_patterns. Only http/https accesses are supported at the moment. The arrays are limited to 1000 entries each.",
       "machine_only": "true",
 
       "type": "object",
