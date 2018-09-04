@@ -381,7 +381,9 @@ TISInputSourceWrapper::TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
   if (len == 0) {
     return true;
   }
-  NS_ENSURE_TRUE(EnsureStringLength(aStr, len), false);
+  if (!aStr.SetLength(len, fallible)) {
+    return false;
+  }
   NS_ASSERTION(sizeof(char16_t) == sizeof(UniChar),
                "size of char16_t and size of UniChar are different");
   memcpy(aStr.BeginWriting(), chars, len * sizeof(char16_t));
