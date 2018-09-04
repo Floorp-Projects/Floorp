@@ -341,7 +341,9 @@ PaymentDetails::PaymentDetails(const nsAString& aId,
                                nsIArray* aShippingOptions,
                                nsIArray* aModifiers,
                                const nsAString& aError,
-                               const nsAString& aShippingAddressErrors)
+                               const nsAString& aShippingAddressErrors,
+                               const nsAString& aPayerErrors,
+                               const nsAString& aPaymentMethodErrors)
   : mId(aId)
   , mTotalItem(aTotalItem)
   , mDisplayItems(aDisplayItems)
@@ -349,6 +351,8 @@ PaymentDetails::PaymentDetails(const nsAString& aId,
   , mModifiers(aModifiers)
   , mError(aError)
   , mShippingAddressErrors(aShippingAddressErrors)
+  , mPayerErrors(aPayerErrors)
+  , mPaymentMethodErrors(aPaymentMethodErrors)
 {
 }
 
@@ -415,7 +419,9 @@ PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
   nsCOMPtr<nsIPaymentDetails> details =
     new PaymentDetails(aIPCDetails.id(), total, displayItems, shippingOptions,
                        modifiers, aIPCDetails.error(),
-                       aIPCDetails.shippingAddressErrors());
+                       aIPCDetails.shippingAddressErrors(),
+                       aIPCDetails.payerErrors(),
+                       aIPCDetails.paymentMethodErrors());
 
   details.forget(aDetails);
   return NS_OK;
@@ -561,15 +567,29 @@ PaymentDetails::Update(nsIPaymentDetails* aDetails, const bool aRequestShipping)
   PaymentDetails* rowDetails = static_cast<PaymentDetails*>(aDetails);
   MOZ_ASSERT(rowDetails);
   mShippingAddressErrors = rowDetails->GetShippingAddressErrors();
+  mPayerErrors = rowDetails->GetPayer();
+  mPaymentMethodErrors = rowDetails->GetPaymentMethod();
 
   return NS_OK;
 
 }
 
-nsString
+const nsString&
 PaymentDetails::GetShippingAddressErrors() const
 {
   return mShippingAddressErrors;
+}
+
+const nsString&
+PaymentDetails::GetPayer() const
+{
+  return mPayerErrors;
+}
+
+const nsString&
+PaymentDetails::GetPaymentMethod() const
+{
+  return mPaymentMethodErrors;
 }
 
 nsresult
