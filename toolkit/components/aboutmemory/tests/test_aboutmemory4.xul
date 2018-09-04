@@ -37,42 +37,45 @@
     frame.height = 300;
     frame.src = "about:memory?file=" + makePathname(aFilename);
     document.documentElement.appendChild(frame);
-    frame.focus();
+    frame.addEventListener("load", function onFrameLoad(e) {
+      frame.removeEventListener("load", onFrameLoad);
+      frame.focus();
 
-    // Initialize the clipboard contents.
-    SpecialPowers.clipboardCopyString("initial clipboard value");
+      // Initialize the clipboard contents.
+      SpecialPowers.clipboardCopyString("initial clipboard value");
 
-    let numFailures = 0, maxFailures = 30;
+      let numFailures = 0, maxFailures = 30;
 
-    // Because the file load is async, we don't know when it will finish and
-    // the output will show up.  So we poll.
-    function copyPasteAndCheck() {
-      // Copy and paste frame contents, and filter out non-deterministic
-      // differences.
-      synthesizeKey("A", {accelKey: true});
-      synthesizeKey("C", {accelKey: true});
-      let actual = SpecialPowers.getClipboardData("text/unicode");
-      actual = actual.replace(/\(pid \d+\)/, "(pid NNN)");
+      // Because the file load is async, we don't know when it will finish and
+      // the output will show up.  So we poll.
+      function copyPasteAndCheck() {
+        // Copy and paste frame contents, and filter out non-deterministic
+        // differences.
+        synthesizeKey("A", {accelKey: true});
+        synthesizeKey("C", {accelKey: true});
+        let actual = SpecialPowers.getClipboardData("text/unicode");
+        actual = actual.replace(/\(pid \d+\)/, "(pid NNN)");
 
-      if (actual.trim() === aExpected.trim()) {
-        SimpleTest.ok(true, "Clipboard has the expected contents");
-        aNext();
-      } else {
-        numFailures++;
-        if (numFailures === maxFailures) {
-          ok(false, "pasted text doesn't match");
-          dump("******EXPECTED******\n");
-          dump(aExpected);
-          dump("*******ACTUAL*******\n");
-          dump(actual);
-          dump("********************\n");
-          SimpleTest.finish();
+        if (actual.trim() === aExpected.trim()) {
+          SimpleTest.ok(true, "Clipboard has the expected contents");
+          aNext();
         } else {
-          setTimeout(copyPasteAndCheck, 100);
+          numFailures++;
+          if (numFailures === maxFailures) {
+            ok(false, "pasted text doesn't match");
+            dump("******EXPECTED******\n");
+            dump(aExpected);
+            dump("*******ACTUAL*******\n");
+            dump(actual);
+            dump("********************\n");
+            SimpleTest.finish();
+          } else {
+            setTimeout(copyPasteAndCheck, 100);
+          }
         }
       }
-    }
-    copyPasteAndCheck();
+      copyPasteAndCheck();
+    });
   }
 
   // Returns a function that chains together multiple test() calls.
