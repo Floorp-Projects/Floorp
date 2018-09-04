@@ -13,6 +13,14 @@ import kotlinx.coroutines.experimental.launch
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.request.RequestInterceptor
 
+internal val additionalHeaders = mapOf(
+    // For every request WebView sends a "X-requested-with" header with the package name of the
+    // application. We can't really prevent that but we can at least send an empty value.
+    // Unfortunately the additional headers will not be propagated to subsequent requests
+    // (e.g. redirects). See issue #696.
+    "X-Requested-With" to ""
+)
+
 /**
  * WebView-based EngineSession implementation.
  */
@@ -34,7 +42,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
             scheduledLoad = ScheduledLoad(url)
         } else {
             view?.get()?.currentUrl = url
-            internalView.loadUrl(url)
+            internalView.loadUrl(url, additionalHeaders)
         }
     }
 

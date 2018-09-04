@@ -52,8 +52,16 @@ class SystemEngineSessionTest {
 
     @Test
     fun testLoadUrl() {
+        var loadedUrl: String? = null
+        var loadHeaders: Map<String, String>? = null
+
         val engineSession = spy(SystemEngineSession())
-        val webView = mock(WebView::class.java)
+        val webView = spy(object : WebView(RuntimeEnvironment.application) {
+            override fun loadUrl(url: String?, additionalHttpHeaders: MutableMap<String, String>?) {
+                loadedUrl = url
+                loadHeaders = additionalHttpHeaders
+            }
+        })
 
         engineSession.loadUrl("")
         verify(webView, never()).loadUrl(anyString())
@@ -61,7 +69,14 @@ class SystemEngineSessionTest {
         `when`(engineSession.currentView()).thenReturn(webView)
 
         engineSession.loadUrl("http://mozilla.org")
-        verify(webView).loadUrl("http://mozilla.org")
+        verify(webView).loadUrl(eq("http://mozilla.org"), any())
+
+        assertEquals("http://mozilla.org", loadedUrl)
+
+        assertNotNull(loadHeaders)
+        assertEquals(1, loadHeaders!!.size)
+        assertTrue(loadHeaders!!.containsKey("X-Requested-With"))
+        assertEquals("", loadHeaders!!["X-Requested-With"])
     }
 
     @Test

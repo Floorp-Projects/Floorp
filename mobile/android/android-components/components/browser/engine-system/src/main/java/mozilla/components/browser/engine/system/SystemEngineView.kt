@@ -69,7 +69,7 @@ class SystemEngineView @JvmOverloads constructor(
         }
 
         internalSession.scheduledLoad.url?.let {
-            currentWebView.loadUrl(it)
+            currentWebView.loadUrl(it, additionalHeaders)
             internalSession.scheduledLoad = ScheduledLoad()
         }
     }
