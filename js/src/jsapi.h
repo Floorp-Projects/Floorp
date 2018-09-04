@@ -4667,9 +4667,8 @@ SetBuildIdOp(JSContext* cx, BuildIdOp buildIdOp);
  * underying C++ implementation of a JS WebAssembly.Module object for purposes
  * of efficient postMessage() and (de)serialization from a random thread.
  *
- * For postMessage() sharing:
- *
- * - GetWasmModule() is called when making a structured clone of payload
+ * In particular, this allows postMessage() of a WebAssembly.Module:
+ * GetWasmModule() is called when making a structured clone of a payload
  * containing a WebAssembly.Module object. The structured clone buffer holds a
  * refcount of the JS::WasmModule until createObject() is called in the target
  * agent's JSContext. The new WebAssembly.Module object continues to hold the
@@ -4677,22 +4676,6 @@ SetBuildIdOp(JSContext* cx, BuildIdOp buildIdOp);
  * dropped from any thread and so the virtual destructor (and all internal
  * methods of the C++ module) must be thread-safe.
  */
-
-class WasmModuleListener
-{
-  protected:
-    virtual ~WasmModuleListener() {}
-
-  public:
-    // These method signatures are chosen to exactly match nsISupports so that a
-    // plain nsISupports-implementing class can trivially implement this
-    // interface too. We can't simply #include "nsISupports.h" so we use MFBT
-    // equivalents for all the platform-dependent types.
-    virtual MozExternalRefCountType MOZ_XPCOM_ABI AddRef() = 0;
-    virtual MozExternalRefCountType MOZ_XPCOM_ABI Release() = 0;
-
-    virtual void onCompilationComplete() = 0;
-};
 
 struct WasmModule : js::AtomicRefCounted<WasmModule>
 {
@@ -4705,6 +4688,11 @@ IsWasmModuleObject(HandleObject obj);
 
 extern JS_PUBLIC_API(RefPtr<WasmModule>)
 GetWasmModule(HandleObject obj);
+
+/**
+ * This function will be removed when bug 1487479 expunges the last remaining
+ * bits of wasm IDB support.
+ */
 
 extern JS_PUBLIC_API(RefPtr<WasmModule>)
 DeserializeWasmModule(PRFileDesc* bytecode, BuildIdCharVector&& buildId,
