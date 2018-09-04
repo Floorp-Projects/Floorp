@@ -139,13 +139,13 @@ struct ModuleEnvironment
     size_t numFuncDefs() const {
         return funcTypes.length() - funcImportGlobalDataOffsets.length();
     }
-    HasGcTypes gcTypesEnabled() const {
 #ifdef ENABLE_WASM_GC
+    HasGcTypes gcTypesEnabled() const {
         if (gcTypesConfigured == HasGcTypes::True)
             return gcFeatureOptIn;
-#endif
         return HasGcTypes::False;
     }
+#endif
     bool usesMemory() const {
         return memoryUsage != MemoryUsage::None;
     }
