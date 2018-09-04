@@ -47,6 +47,10 @@ if CONFIG['WRAP_STL_INCLUDES']:
         stl_compiler = 'msvc'
 
     if stl_compiler:
+        # Note that the 'stl_wrappers' folder is known to the build system as
+        # containing generated files; if this is changed here then the code in
+        # GeneratedFile.__init__ in python/mozbuild/mozbuild/frontend/data.py
+        # might need to be updated accordingly as well.
         template_file = SRCDIR + '/%s-stl-wrapper.template.h' % stl_compiler
         output_dir = '../dist/stl_wrappers'
         # We have to use a sentinel file as the first file because the
