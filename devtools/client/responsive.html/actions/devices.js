@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 const {
   ADD_DEVICE,
   ADD_DEVICE_TYPE,
@@ -20,6 +18,7 @@ const { removeDeviceAssociation } = require("./viewports");
 
 const { addDevice, getDevices, removeDevice } = require("devtools/client/shared/devices");
 
+const Services = require("Services");
 const DISPLAYED_DEVICES_PREF = "devtools.responsive.html.displayedDeviceList";
 
 /**

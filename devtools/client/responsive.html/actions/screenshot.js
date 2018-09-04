@@ -6,8 +6,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 const {
   TAKE_SCREENSHOT_START,
   TAKE_SCREENSHOT_END,
@@ -16,6 +14,7 @@ const {
 const { getFormatStr } = require("../utils/l10n");
 const { getTopLevelWindow } = require("../utils/window");
 const e10s = require("../utils/e10s");
+const Services = require("Services");
 
 const CAMERA_AUDIO_URL = "resource://devtools/client/themes/audio/shutter.wav";
 

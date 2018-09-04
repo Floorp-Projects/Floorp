@@ -23,9 +23,10 @@ const message = require("./utils/message");
 const App = createFactory(require("./components/App"));
 const Store = require("./store");
 const { loadDevices } = require("./actions/devices");
+const { changeDisplayPixelRatio } = require("./actions/display-pixel-ratio");
+const { changeLocation } = require("./actions/location");
 const { loadReloadConditions } = require("./actions/reload-conditions");
 const { addViewport, resizeViewport } = require("./actions/viewports");
-const { changeDisplayPixelRatio } = require("./actions/ui");
 
 // Exposed for use by tests
 window.require = require;
@@ -116,6 +117,7 @@ function onDevicePixelRatioChange() {
 window.addInitialViewport = ({ uri, userContextId }) => {
   try {
     onDevicePixelRatioChange();
+    bootstrap.dispatch(changeLocation(uri));
     bootstrap.dispatch(changeDisplayPixelRatio(window.devicePixelRatio));
     bootstrap.dispatch(addViewport(userContextId));
   } catch (e) {

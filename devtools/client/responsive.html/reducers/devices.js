@@ -18,10 +18,10 @@ const {
 const Types = require("../types");
 
 const INITIAL_DEVICES = {
-  isModalOpen: false,
-  listState: Types.loadableState.INITIALIZED,
-  modalOpenedFromViewport: null,
   types: [],
+  isModalOpen: false,
+  modalOpenedFromViewport: null,
+  listState: Types.loadableState.INITIALIZED,
 };
 
 const reducers = {

@@ -4,16 +4,16 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const ResizableViewport = createFactory(require("./ResizableViewport"));
 
 const Types = require("../types");
 
-class Viewports extends PureComponent {
+class Viewports extends Component {
   static get propTypes() {
     return {
       leftAlignmentEnabled: PropTypes.bool.isRequired,
