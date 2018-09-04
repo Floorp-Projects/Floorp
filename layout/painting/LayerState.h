@@ -9,8 +9,7 @@
 
 namespace mozilla {
 
-enum LayerState
-{
+enum LayerState {
   LAYER_NONE,
   LAYER_INACTIVE,
   LAYER_ACTIVE,

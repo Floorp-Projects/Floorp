@@ -111,11 +111,11 @@ public:
     Bezier outerSectionBezier;
     Bezier innerSectionBezier;
 
-    Result(const Bezier& aOuterSectionBezier, const Bezier& aInnerSectionBezier)
-      : outerSectionBezier(aOuterSectionBezier)
-      , innerSectionBezier(aInnerSectionBezier)
-    {
-    }
+    Result(const Bezier& aOuterSectionBezier,
+           const Bezier& aInnerSectionBezier)
+     : outerSectionBezier(aOuterSectionBezier),
+       innerSectionBezier(aInnerSectionBezier)
+    {}
   };
 
   //                       aCornerDim.width
@@ -140,10 +140,8 @@ public:
   //                     |         |
   //                     |<------->|
   //                     aBorderWidthV
-  DashedCornerFinder(const Bezier& aOuterBezier,
-                     const Bezier& aInnerBezier,
-                     Float aBorderWidthH,
-                     Float aBorderWidthV,
+  DashedCornerFinder(const Bezier& aOuterBezier, const Bezier& aInnerBezier,
+                     Float aBorderWidthH, Float aBorderWidthV,
                      const Size& aCornerDim);
 
   bool HasMore(void) const;
@@ -189,8 +187,7 @@ private:
   // The maximum number of segments.
   size_t mMaxCount;
 
-  enum
-  {
+  enum {
     //                      radius.width
     //                 |<----------------->|
     //                 |                   |
@@ -267,16 +264,13 @@ private:
   Float FindNext(Float dashLength);
 
   // Find mBestDashLength for parameters.
-  void FindBestDashLength(Float aMinBorderWidth,
-                          Float aMaxBorderWidth,
-                          Float aMinBorderRadius,
-                          Float aMaxBorderRadius);
+  void FindBestDashLength(Float aMinBorderWidth, Float aMaxBorderWidth,
+                          Float aMinBorderRadius, Float aMaxBorderRadius);
 
   // Fill corner with dashes with given dash length, and return the number of
   // segments and last segment's dash length.
   bool GetCountAndLastDashLength(Float aDashLength,
-                                 size_t* aCount,
-                                 Float* aActualDashLength);
+                                 size_t* aCount, Float* aActualDashLength);
 };
 
 } // namespace mozilla

@@ -30,24 +30,20 @@ struct ActiveScrolledRoot;
  * DisplayListClipState.
  * The clip chain order is determined by the active scrolled root order.
  * For every DisplayItemClipChain object |clipChain|, the following holds:
- * !clipChain->mParent ||
- * ActiveScrolledRoot::IsAncestor(clipChain->mParent->mASR, clipChain->mASR).
+ * !clipChain->mParent || ActiveScrolledRoot::IsAncestor(clipChain->mParent->mASR, clipChain->mASR).
  * The clip chain can skip over active scrolled roots. That just means that
  * there is no clip that moves with the skipped ASR in this chain.
  */
-struct DisplayItemClipChain
-{
+struct DisplayItemClipChain {
 
   /**
    * Get the display item clip in this chain that moves with aASR, or nullptr
    * if no such clip exists. aClipChain can be null.
    */
-  static const DisplayItemClip* ClipForASR(
-    const DisplayItemClipChain* aClipChain,
-    const ActiveScrolledRoot* aASR);
+  static const DisplayItemClip* ClipForASR(const DisplayItemClipChain* aClipChain,
+                                           const ActiveScrolledRoot* aASR);
 
-  static bool Equal(const DisplayItemClipChain* aClip1,
-                    const DisplayItemClipChain* aClip2);
+  static bool Equal(const DisplayItemClipChain* aClip1, const DisplayItemClipChain* aClip2);
   /**
    * Hash function that returns the same value for any two clips A and B
    * where Equal(A, B) is true.
@@ -58,32 +54,29 @@ struct DisplayItemClipChain
 
   bool HasRoundedCorners() const;
 
-  void AddRef() { mRefCount++; }
-  void Release()
-  {
+  void AddRef() {
+    mRefCount++;
+  }
+  void Release() {
     MOZ_ASSERT(mRefCount > 0);
     mRefCount--;
   }
 
-  DisplayItemClipChain(const DisplayItemClip& aClip,
-                       const ActiveScrolledRoot* aASR,
-                       const DisplayItemClipChain* aParent)
+  DisplayItemClipChain(const DisplayItemClip& aClip, const ActiveScrolledRoot* aASR, const DisplayItemClipChain* aParent)
     : mClip(aClip)
     , mASR(aASR)
     , mParent(aParent)
 #ifdef DEBUG
     , mOnStack(true)
 #endif
-  {
-  }
+  {}
 
   DisplayItemClipChain()
     : mASR(nullptr)
 #ifdef DEBUG
     , mOnStack(true)
 #endif
-  {
-  }
+  {}
 
   DisplayItemClip mClip;
   const ActiveScrolledRoot* mASR;
