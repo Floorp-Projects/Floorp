@@ -39,7 +39,7 @@ GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& imports,
 extern bool
 GenerateEntryStubs(jit::MacroAssembler& masm, size_t funcExportIndex,
                    const FuncExport& funcExport, const Maybe<jit::ImmPtr>& callee,
-                   bool isAsmJS, HasGcTypes gcTypesConfigured, CodeRangeVector* codeRanges);
+                   bool isAsmJS, HasGcTypes gcTypesEnabled, CodeRangeVector* codeRanges);
 
 // An argument that will end up on the stack according to the system ABI, to be
 // passed to GenerateDirectCallFromJit. Since the direct JIT call creates its
