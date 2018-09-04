@@ -111,3 +111,4 @@ MSG_DEF(MSG_INVALID_AUDIOPARAM_METHOD_START_TIME_ERROR, 0, JSEXN_RANGEERR, "The 
 MSG_DEF(MSG_INVALID_AUDIOPARAM_METHOD_END_TIME_ERROR, 0, JSEXN_RANGEERR, "The end time for an AudioParam method must be positive.")
 MSG_DEF(MSG_INVALID_AUDIOPARAM_EXPONENTIAL_VALUE_ERROR, 0, JSEXN_RANGEERR, "The value passed to exponentialCurveToValueAtTime must be positive.")
 MSG_DEF(MSG_INVALID_AUDIOPARAM_EXPONENTIAL_CONSTANT_ERROR, 0, JSEXN_RANGEERR, "The exponential constant passed to setTargetAtTime must be positive.")
+MSG_DEF(MSG_VALUE_OUT_OF_RANGE, 1, JSEXN_RANGEERR, "The value for the {0} is outside the valid range.")

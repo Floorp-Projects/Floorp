@@ -4,7 +4,7 @@
 
 #include "TelemetryGeckoViewTesting.h"
 #include "TelemetryGeckoViewPersistence.h"
-#include "TelemetryScalar.h"
+#include "core/TelemetryScalar.h"
 
 namespace TelemetryGeckoViewTesting {
   // This is defined in TelemetryGeckoViewPersistence.cpp

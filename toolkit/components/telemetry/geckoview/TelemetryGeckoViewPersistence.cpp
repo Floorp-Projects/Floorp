@@ -29,8 +29,8 @@
 #include "nsXULAppAPI.h"
 #include "prenv.h"
 #include "prio.h"
-#include "TelemetryScalar.h"
-#include "TelemetryHistogram.h"
+#include "core/TelemetryScalar.h"
+#include "core/TelemetryHistogram.h"
 #include "xpcpublic.h"
 
 using mozilla::GetErrorName;

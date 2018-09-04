@@ -229,6 +229,12 @@ function generateDocumentation() {
   let new_cont = document.getElementById("documentationContent");
   new_cont.setAttribute("id", "documentationContent");
 
+  // map specific policies to a different string ID, to allow updates to
+  // existing descriptions
+  let string_mapping = {
+    "DisableSetDesktopBackground": "DisableSetAsDesktopBackground",
+  };
+
   for (let policyName in schema.properties) {
     let main_tbody = document.createElement("tbody");
     main_tbody.classList.add("collapsible");
@@ -244,7 +250,8 @@ function generateDocumentation() {
       row.appendChild(col(policyName));
     }
     let descriptionColumn = col("");
-    descriptionColumn.setAttribute("data-l10n-id", `policy-${policyName}`);
+    let stringID = string_mapping[policyName] || policyName;
+    descriptionColumn.setAttribute("data-l10n-id", `policy-${stringID}`);
     row.appendChild(descriptionColumn);
     main_tbody.appendChild(row);
     let sec_tbody = document.createElement("tbody");

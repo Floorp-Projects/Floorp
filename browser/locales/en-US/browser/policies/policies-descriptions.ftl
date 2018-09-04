@@ -60,26 +60,32 @@ policy-DisableSafeMode = Disable the feature to restart in Safe Mode. Note: the 
 
 policy-DisableSecurityBypass = Prevent the user from bypassing certain security warnings.
 
-policy-DisableSetDesktopBackground = Disable the menu command Set Image as Desktop Background.
+policy-DisableSetAsDesktopBackground = Disable the menu command Set as Desktop Background for images.
 
 policy-DisableSystemAddonUpdate = Prevent the browser from installing and updating system add-ons.
 
 policy-DisableTelemetry = Turn off Telemetry.
 
-policy-DisplayBookmarksToolbar = Display the Bookmark Toolbar by default.
+policy-DisplayBookmarksToolbar = Display the Bookmarks Toolbar by default.
 
 policy-DisplayMenuBar = Display the Menu Bar by default.
 
 policy-DontCheckDefaultBrowser = Disable check for default browser on startup.
 
+# “lock” means that the user won’t be able to change this setting
 policy-EnableTrackingProtection = Enable or disable Content Blocking and optionally lock it.
 
+# A “locked” extension can’t be disabled or removed by the user. This policy
+# takes 3 keys (“Install”, ”Uninstall”, ”Locked”), you can either keep them in
+# English or translate them as verbs. See also:
+# https://github.com/mozilla/policy-templates/blob/master/README.md#extensions-machine-only
 policy-Extensions = Install, uninstall or lock extensions. The Install option takes URLs or paths as parameters. The Uninstall and Locked options take extension IDs.
 
 policy-FlashPlugin = Allow or deny usage of the Flash plugin.
 
 policy-HardwareAcceleration = If false, turn off hardware acceleration.
 
+# “lock” means that the user won’t be able to change this setting
 policy-Homepage = Set and optionally lock the homepage.
 
 policy-InstallAddonsPermission = Allow certain websites to install add-ons.
@@ -90,7 +96,7 @@ policy-OfferToSaveLogins = Enforce the setting to allow { -brand-short-name } to
 
 policy-OverrideFirstRunPage = Override the first run page. Set this policy to blank if you want to disable the first run page.
 
-policy-OverridePostUpdatePage = Override the post-update "What’s New" page. Set this policy to blank if you want to disable the post-update page.
+policy-OverridePostUpdatePage = Override the post-update “What’s New” page. Set this policy to blank if you want to disable the post-update page.
 
 policy-Permissions = Configure permissions for camera, microphone, location and notifications.
 
@@ -104,4 +110,6 @@ policy-SearchBar = Set the default location of the search bar. The user is still
 
 policy-SearchEngines = Configure search engine settings. This policy is only available on the Extended Support Release (ESR) version.
 
+# “format” refers to the format used for the value of this policy. See also:
+# https://github.com/mozilla/policy-templates/blob/master/README.md#websitefilter-machine-only
 policy-WebsiteFilter = Block websites from being visited. See documentation for more details on the format.
