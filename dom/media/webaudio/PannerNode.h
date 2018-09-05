@@ -107,11 +107,18 @@ public:
   {
     return mRefDistance;
   }
-  void SetRefDistance(double aRefDistance)
+  void SetRefDistance(double aRefDistance, ErrorResult& aRv)
   {
     if (WebAudioUtils::FuzzyEqual(mRefDistance, aRefDistance)) {
       return;
     }
+
+    if (aRefDistance < 0) {
+       aRv.template ThrowRangeError<
+        MSG_INVALID_PANNERNODE_REFDISTANCE_ERROR>();
+      return;
+    }
+
     mRefDistance = aRefDistance;
     SendDoubleParameterToStream(REF_DISTANCE, mRefDistance);
   }
@@ -120,11 +127,18 @@ public:
   {
     return mMaxDistance;
   }
-  void SetMaxDistance(double aMaxDistance)
+  void SetMaxDistance(double aMaxDistance, ErrorResult& aRv)
   {
     if (WebAudioUtils::FuzzyEqual(mMaxDistance, aMaxDistance)) {
       return;
     }
+
+    if (aMaxDistance <= 0) {
+       aRv.template ThrowRangeError<
+        MSG_INVALID_PANNERNODE_MAXDISTANCE_ERROR>();
+      return;
+    }
+
     mMaxDistance = aMaxDistance;
     SendDoubleParameterToStream(MAX_DISTANCE, mMaxDistance);
   }
@@ -133,11 +147,18 @@ public:
   {
     return mRolloffFactor;
   }
-  void SetRolloffFactor(double aRolloffFactor)
+  void SetRolloffFactor(double aRolloffFactor, ErrorResult& aRv)
   {
     if (WebAudioUtils::FuzzyEqual(mRolloffFactor, aRolloffFactor)) {
       return;
     }
+
+
+    if (aRolloffFactor < 0) {
+       aRv.template ThrowRangeError<
+        MSG_INVALID_PANNERNODE_ROLLOFF_ERROR>();
+    }
+
     mRolloffFactor = aRolloffFactor;
     SendDoubleParameterToStream(ROLLOFF_FACTOR, mRolloffFactor);
   }
@@ -172,11 +193,17 @@ public:
   {
     return mConeOuterGain;
   }
-  void SetConeOuterGain(double aConeOuterGain)
+  void SetConeOuterGain(double aConeOuterGain, ErrorResult& aRv)
   {
     if (WebAudioUtils::FuzzyEqual(mConeOuterGain, aConeOuterGain)) {
       return;
     }
+
+    if (aConeOuterGain < 0 || aConeOuterGain > 1) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return;
+    }
+
     mConeOuterGain = aConeOuterGain;
     SendDoubleParameterToStream(CONE_OUTER_GAIN, mConeOuterGain);
   }

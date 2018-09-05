@@ -61,13 +61,17 @@ interface PannerNode : AudioNode {
 
     // Distance model and attributes
     attribute DistanceModelType distanceModel;
+    [SetterThrows]
     attribute double refDistance;
+    [SetterThrows]
     attribute double maxDistance;
+    [SetterThrows]
     attribute double rolloffFactor;
 
     // Directional sound cone
     attribute double coneInnerAngle;
     attribute double coneOuterAngle;
+    [SetterThrows]
     attribute double coneOuterGain;
 
 };

@@ -112,3 +112,6 @@ MSG_DEF(MSG_INVALID_AUDIOPARAM_METHOD_END_TIME_ERROR, 0, JSEXN_RANGEERR, "The en
 MSG_DEF(MSG_INVALID_AUDIOPARAM_EXPONENTIAL_VALUE_ERROR, 0, JSEXN_RANGEERR, "The value passed to exponentialRampToValueAtTime must be positive.")
 MSG_DEF(MSG_INVALID_AUDIOPARAM_EXPONENTIAL_CONSTANT_ERROR, 0, JSEXN_RANGEERR, "The exponential constant passed to setTargetAtTime must be non-negative.")
 MSG_DEF(MSG_VALUE_OUT_OF_RANGE, 1, JSEXN_RANGEERR, "The value for the {0} is outside the valid range.")
+MSG_DEF(MSG_INVALID_PANNERNODE_REFDISTANCE_ERROR, 0, JSEXN_RANGEERR, "The refDistance value passed to PannerNode must not be negative.")
+MSG_DEF(MSG_INVALID_PANNERNODE_MAXDISTANCE_ERROR, 0, JSEXN_RANGEERR, "The maxDistance value passed to PannerNode must be positive.")
+MSG_DEF(MSG_INVALID_PANNERNODE_ROLLOFF_ERROR, 0, JSEXN_RANGEERR, "The rolloffFactor value passed to PannerNode must not be negative.")
