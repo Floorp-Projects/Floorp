@@ -119,10 +119,7 @@ js::AtomStateEntry::asPtr(JSContext* cx) const
 UniqueChars
 js::AtomToPrintableString(JSContext* cx, JSAtom* atom)
 {
-    JSString* str = QuoteString(cx, atom, 0);
-    if (!str)
-        return nullptr;
-    return EncodeLatin1(cx, str);
+    return QuoteString(cx, atom);
 }
 
 #define DEFINE_PROTO_STRING(name,init,clasp) const char js_##name##_str[] = #name;

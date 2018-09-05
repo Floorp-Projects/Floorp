@@ -2073,10 +2073,7 @@ js::ValueToPrintableLatin1(JSContext* cx, const Value& vArg, bool asSource)
         str = ToString<CanGC>(cx, v);
     if (!str)
         return nullptr;
-    str = QuoteString(cx, str, 0);
-    if (!str)
-        return nullptr;
-    return EncodeLatin1(cx, str);
+    return QuoteString(cx, str);
 }
 
 UniqueChars
@@ -2171,8 +2168,8 @@ SymbolToSource(JSContext* cx, Symbol* symbol)
     if (code == SymbolCode::InSymbolRegistry ? !buf.append("Symbol.for(") : !buf.append("Symbol("))
         return nullptr;
     if (desc) {
-        desc = StringToSource(cx, desc);
-        if (!desc || !buf.append(desc))
+        UniqueChars quoted = QuoteString(cx, desc, '"');
+        if (!quoted || !buf.append(quoted.get(), strlen(quoted.get())))
             return nullptr;
     }
     if (!buf.append(')'))
@@ -2221,5 +2218,8 @@ js::ValueToSource(JSContext* cx, HandleValue v)
 JSString*
 js::StringToSource(JSContext* cx, JSString* str)
 {
-    return QuoteString(cx, str, '"');
+    UniqueChars chars = QuoteString(cx, str, '"');
+    if (!chars)
+        return nullptr;
+    return NewStringCopyZ<CanGC>(cx, chars.get());
 }

@@ -573,7 +573,7 @@ Statistics::renderJsonSlice(size_t sliceNum) const
     JSONPrinter json(printer);
 
     formatJsonSlice(sliceNum, json);
-    return UniqueChars(printer.release());
+    return printer.release();
 }
 
 UniqueChars
@@ -584,7 +584,7 @@ Statistics::renderNurseryJson(JSRuntime* rt) const
         return UniqueChars(nullptr);
     JSONPrinter json(printer);
     rt->gc.nursery().renderProfileJSON(json);
-    return UniqueChars(printer.release());
+    return printer.release();
 }
 
 #ifdef DEBUG
@@ -641,7 +641,7 @@ Statistics::renderJsonMessage(uint64_t timestamp, bool includeSlices) const
 
     json.endObject();
 
-    return UniqueChars(printer.release());
+    return printer.release();
 }
 
 void
