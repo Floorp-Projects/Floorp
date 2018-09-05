@@ -142,7 +142,7 @@ function spawnTaskInNewDialog(requestId, contentTaskFn, args = null) {
 async function addAddressRecord(address) {
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
-  let guid = formAutofillStorage.addresses.add(address);
+  let guid = await formAutofillStorage.addresses.add(address);
   await onChanged;
   return guid;
 }
@@ -150,7 +150,7 @@ async function addAddressRecord(address) {
 async function addCardRecord(card) {
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
-  let guid = formAutofillStorage.creditCards.add(card);
+  let guid = await formAutofillStorage.creditCards.add(card);
   await onChanged;
   return guid;
 }

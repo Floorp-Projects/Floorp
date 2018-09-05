@@ -246,11 +246,11 @@ add_task(async function test_migrateAddressRecords() {
   let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
 
-  ADDRESS_TESTCASES.forEach(testcase => {
+  await Promise.all(ADDRESS_TESTCASES.map(async testcase => {
     info(testcase.description);
-    profileStorage.addresses._migrateRecord(testcase.record);
+    await profileStorage.addresses._migrateRecord(testcase.record);
     do_check_record_matches(testcase.expectedResult, testcase.record);
-  });
+  }));
 });
 
 add_task(async function test_migrateCreditCardRecords() {
@@ -259,9 +259,9 @@ add_task(async function test_migrateCreditCardRecords() {
   let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
 
-  CREDIT_CARD_TESTCASES.forEach(testcase => {
+  await Promise.all(CREDIT_CARD_TESTCASES.map(async testcase => {
     info(testcase.description);
-    profileStorage.creditCards._migrateRecord(testcase.record);
+    await profileStorage.creditCards._migrateRecord(testcase.record);
     do_check_record_matches(testcase.expectedResult, testcase.record);
-  });
+  }));
 });
