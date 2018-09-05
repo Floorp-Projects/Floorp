@@ -24,7 +24,7 @@ object LoadTimeObserver {
                     if ((urlLoading != null && urlLoading != session.url.value) || urlLoading == null) {
                         urlLoading = session.url.value
                         startLoadTime = SystemClock.elapsedRealtime()
-                        Log.i(LOG_TAG, "zerdatime $startLoadTime - page load $urlLoading start")
+                        Log.i(LOG_TAG, "zerdatime $startLoadTime - page load start")
                     }
                 } else {
                     // Progress of 99 means the page completed loading and wasn't interrupted.
