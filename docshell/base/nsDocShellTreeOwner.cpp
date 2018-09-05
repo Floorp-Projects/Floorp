@@ -972,7 +972,7 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent)
           nsAutoString url;
           if (NS_SUCCEEDED(links[0]->GetUrl(url))) {
             if (!url.IsEmpty()) {
-              webnav->LoadURI(url.get(), 0, nullptr, nullptr, nullptr,
+              webnav->LoadURI(url, 0, nullptr, nullptr, nullptr,
                               triggeringPrincipal);
             }
           }
