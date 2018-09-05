@@ -2062,9 +2062,8 @@ js::EncodeLatin1(JSContext* cx, JSString* str)
     return UniqueChars(reinterpret_cast<char*>(buf));
 }
 
-const char*
-js::ValueToPrintableLatin1(JSContext* cx, const Value& vArg, UniqueChars* bytes,
-                           bool asSource)
+UniqueChars
+js::ValueToPrintableLatin1(JSContext* cx, const Value& vArg, bool asSource)
 {
     RootedValue v(cx, vArg);
     JSString* str;
@@ -2077,23 +2076,21 @@ js::ValueToPrintableLatin1(JSContext* cx, const Value& vArg, UniqueChars* bytes,
     str = QuoteString(cx, str, 0);
     if (!str)
         return nullptr;
-    *bytes = JS_EncodeString(cx, str);
-    return bytes->get();
+    return JS_EncodeString(cx, str);
 }
 
-const char*
-js::ValueToPrintableUTF8(JSContext* cx, const Value& vArg, UniqueChars* bytes, bool asSource)
+UniqueChars
+js::ValueToPrintableUTF8(JSContext* cx, const Value& vArg, bool asSource)
 {
     RootedValue v(cx, vArg);
-    JSString* str;
+    RootedString str(cx);
     if (asSource)
-        str = ValueToSource(cx, v);
+        str.set(ValueToSource(cx, v));
     else
-        str = ToString<CanGC>(cx, v);
+        str.set(ToString<CanGC>(cx, v));
     if (!str)
         return nullptr;
-    *bytes = JS_EncodeStringToUTF8(cx, RootedString(cx, str));
-    return bytes->get();
+    return JS_EncodeStringToUTF8(cx, str);
 }
 
 template <AllowGC allowGC>
