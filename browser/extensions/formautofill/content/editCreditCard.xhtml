@@ -73,37 +73,35 @@
   <script type="application/javascript"><![CDATA[
     "use strict";
 
-    (async () => {
-      let {
-        getAddressLabel,
-        isCCNumber,
-        getCreditCardNetworks,
-      } = FormAutofillUtils;
-      let record = window.arguments && window.arguments[0];
-      let addresses = {};
-      for (let address of await formAutofillStorage.addresses.getAll()) {
-        addresses[address.guid] = address;
-      }
+    let {
+      getAddressLabel,
+      isCCNumber,
+      getCreditCardNetworks,
+    } = FormAutofillUtils;
+    let record = window.arguments && window.arguments[0];
+    let addresses = {};
+    for (let address of formAutofillStorage.addresses.getAll()) {
+      addresses[address.guid] = address;
+    }
 
-      /* import-globals-from autofillEditForms.js */
-      let fieldContainer = new EditCreditCard({
-        form: document.getElementById("form"),
-      }, record, addresses,
-        {
-          getAddressLabel: getAddressLabel.bind(FormAutofillUtils),
-          isCCNumber: isCCNumber.bind(FormAutofillUtils),
-          getSupportedNetworks: getCreditCardNetworks.bind(FormAutofillUtils),
-        });
+    /* import-globals-from autofillEditForms.js */
+    let fieldContainer = new EditCreditCard({
+      form: document.getElementById("form"),
+    }, record, addresses,
+      {
+        getAddressLabel: getAddressLabel.bind(FormAutofillUtils),
+        isCCNumber: isCCNumber.bind(FormAutofillUtils),
+        getSupportedNetworks: getCreditCardNetworks.bind(FormAutofillUtils),
+      });
 
-      /* import-globals-from editDialog.js */
-      new EditCreditCardDialog({
-        title: document.querySelector("title"),
-        fieldContainer,
-        controlsContainer: document.getElementById("controls-container"),
-        cancel: document.getElementById("cancel"),
-        save: document.getElementById("save"),
-      }, record);
-    })();
+    /* import-globals-from editDialog.js */
+    new EditCreditCardDialog({
+      title: document.querySelector("title"),
+      fieldContainer,
+      controlsContainer: document.getElementById("controls-container"),
+      cancel: document.getElementById("cancel"),
+      save: document.getElementById("save"),
+    }, record);
   ]]></script>
 </body>
 </html>

@@ -63,22 +63,22 @@ function add_storage_task(test_function) {
 add_storage_task(async function test_remove_everything(storage, records) {
   info("check simple tombstone semantics");
 
-  let guid = await storage.add(records[0]);
-  Assert.equal((await storage.getAll()).length, 1);
+  let guid = storage.add(records[0]);
+  Assert.equal(storage.getAll().length, 1);
 
   storage.pullSyncChanges(); // force sync metadata, which triggers tombstone behaviour.
 
   storage.remove(guid);
 
-  await storage.add(records[1]);
+  storage.add(records[1]);
   // getAll() is still 1 as we deleted the first.
-  Assert.equal((await storage.getAll()).length, 1);
+  Assert.equal(storage.getAll().length, 1);
 
   // check we have the tombstone.
-  Assert.equal((await storage.getAll({includeDeleted: true})).length, 2);
+  Assert.equal(storage.getAll({includeDeleted: true}).length, 2);
 
   storage.removeAll();
 
   // should have deleted both the existing and deleted records.
-  Assert.equal((await storage.getAll({includeDeleted: true})).length, 0);
+  Assert.equal(storage.getAll({includeDeleted: true}).length, 0);
 });

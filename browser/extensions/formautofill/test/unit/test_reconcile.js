@@ -920,25 +920,27 @@ add_task(async function test_reconcile_unknown_version() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME);
 
   // Cross-version reconciliation isn't supported yet. See bug 1377204.
-  await Assert.rejects(profileStorage.addresses.reconcile({
-    "guid": "31d83d2725ec",
-    "version": 2,
-    "given-name": "Mark",
-    "family-name": "Hammond",
-  }), /Got unknown record version/);
+  throws(() => {
+    profileStorage.addresses.reconcile({
+      "guid": "31d83d2725ec",
+      "version": 2,
+      "given-name": "Mark",
+      "family-name": "Hammond",
+    });
+  }, /Got unknown record version/);
 });
 
 add_task(async function test_reconcile_idempotent() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME);
 
   let guid = "de1ba7b094fe";
-  await profileStorage.addresses.add({
+  profileStorage.addresses.add({
     guid,
     version: 1,
     "given-name": "Mark",
     "family-name": "Hammond",
   }, {sourceSync: true});
-  await profileStorage.addresses.update(guid, {
+  profileStorage.addresses.update(guid, {
     "given-name": "Skip",
     "family-name": "Hammond",
     "organization": "Mozilla",
@@ -953,8 +955,8 @@ add_task(async function test_reconcile_idempotent() {
   };
 
   {
-    let {forkedGUID} = await profileStorage.addresses.reconcile(remote);
-    let updatedRecord = await profileStorage.addresses.get(guid, {
+    let {forkedGUID} = profileStorage.addresses.reconcile(remote);
+    let updatedRecord = profileStorage.addresses.get(guid, {
       rawData: true,
     });
 
@@ -969,8 +971,8 @@ add_task(async function test_reconcile_idempotent() {
   }
 
   {
-    let {forkedGUID} = await profileStorage.addresses.reconcile(remote);
-    let updatedRecord = await profileStorage.addresses.get(guid, {
+    let {forkedGUID} = profileStorage.addresses.reconcile(remote);
+    let updatedRecord = profileStorage.addresses.get(guid, {
       rawData: true,
     });
 
@@ -999,13 +1001,13 @@ add_task(async function test_reconcile_three_way_merge() {
     for (let test of TESTCASES[collectionName]) {
       info(test.description);
 
-      await profileStorage[collectionName].add(test.parent, {sourceSync: true});
+      profileStorage[collectionName].add(test.parent, {sourceSync: true});
 
       for (let updatedRecord of test.local) {
-        await profileStorage[collectionName].update(test.parent.guid, updatedRecord);
+        profileStorage[collectionName].update(test.parent.guid, updatedRecord);
       }
 
-      let localRecord = await profileStorage[collectionName].get(test.parent.guid, {
+      let localRecord = profileStorage[collectionName].get(test.parent.guid, {
         rawData: true,
       });
 
@@ -1015,13 +1017,13 @@ add_task(async function test_reconcile_three_way_merge() {
           data == "reconcile" &&
           subject.wrappedJSObject.collectionName == collectionName
       );
-      let {forkedGUID} = await profileStorage[collectionName].reconcile(test.remote);
+      let {forkedGUID} = profileStorage[collectionName].reconcile(test.remote);
       await onReconciled;
-      let reconciledRecord = await profileStorage[collectionName].get(test.parent.guid, {
+      let reconciledRecord = profileStorage[collectionName].get(test.parent.guid, {
         rawData: true,
       });
       if (forkedGUID) {
-        let forkedRecord = await profileStorage[collectionName].get(forkedGUID, {
+        let forkedRecord = profileStorage[collectionName].get(forkedGUID, {
           rawData: true,
         });
 

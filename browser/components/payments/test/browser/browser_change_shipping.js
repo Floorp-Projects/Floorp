@@ -5,7 +5,7 @@ async function setup() {
   let prefilledGuids = await addSampleAddressesAndBasicCard();
 
   info("associating the card with the billing address");
-  await formAutofillStorage.creditCards.update(prefilledGuids.card1GUID, {
+  formAutofillStorage.creditCards.update(prefilledGuids.card1GUID, {
     billingAddressGUID: prefilledGuids.address1GUID,
   }, true);
 }
@@ -321,7 +321,7 @@ add_task(async function test_address_edit() {
     info("initial addressOptions: " + JSON.stringify(addressOptions));
     selectedIndex = addressOptions.selectedOptionIndex;
     let selectedAddressGuid = addressOptions.options[selectedIndex].guid;
-    let selectedAddress = await formAutofillStorage.addresses.get(selectedAddressGuid);
+    let selectedAddress = formAutofillStorage.addresses.get(selectedAddressGuid);
 
     is(selectedIndex, 0, "First address should be selected");
     ok(selectedAddress, "Selected address does exist in the address collection");
@@ -339,7 +339,7 @@ add_task(async function test_address_edit() {
     let newSelectedAddressGuid = addressOptions.options[selectedIndex].guid;
 
     is(newSelectedAddressGuid, selectedAddressGuid, "Selected guid hasnt changed");
-    selectedAddress = await formAutofillStorage.addresses.get(selectedAddressGuid);
+    selectedAddress = formAutofillStorage.addresses.get(selectedAddressGuid);
 
     is(selectedIndex, 0, "First address should be selected");
     is(selectedAddress.country, "CA", "Expected changed country value");

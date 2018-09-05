@@ -63,16 +63,16 @@ class TempCollection {
     return this._data[guid];
   }
 
-  async update(guid, record, preserveOldProperties) {
+  update(guid, record, preserveOldProperties) {
     let recordToSave = Object.assign(preserveOldProperties ? this._data[guid] : {}, record);
-    await this._formAutofillCollection.computeFields(recordToSave);
+    this._formAutofillCollection.computeFields(recordToSave);
     return (this._data[guid] = recordToSave);
   }
 
-  async add(record) {
+  add(record) {
     let guid = "temp-" + Math.abs(Math.random() * 0xffffffff|0);
     let recordToSave = Object.assign({guid}, record);
-    await this._formAutofillCollection.computeFields(recordToSave);
+    this._formAutofillCollection.computeFields(recordToSave);
     this._data[guid] = recordToSave;
     return guid;
   }
@@ -95,12 +95,14 @@ var paymentDialogWrapper = {
   ]),
 
   /**
+   * Note: This method is async because formAutofillStorage plans to become async.
+   *
    * @param {string} guid
    * @returns {object} containing only the requested payer values.
    */
   async _convertProfileAddressToPayerData(guid) {
     let addressData = this.temporaryStore.addresses.get(guid) ||
-                      await formAutofillStorage.addresses.get(guid);
+                      formAutofillStorage.addresses.get(guid);
     if (!addressData) {
       throw new Error(`Payer address not found: ${guid}`);
     }
@@ -121,12 +123,14 @@ var paymentDialogWrapper = {
   },
 
   /**
+   * Note: This method is async because formAutofillStorage plans to become async.
+   *
    * @param {string} guid
    * @returns {nsIPaymentAddress}
    */
   async _convertProfileAddressToPaymentAddress(guid) {
     let addressData = this.temporaryStore.addresses.get(guid) ||
-                      await formAutofillStorage.addresses.get(guid);
+                      formAutofillStorage.addresses.get(guid);
     if (!addressData) {
       throw new Error(`Shipping address not found: ${guid}`);
     }
@@ -154,7 +158,7 @@ var paymentDialogWrapper = {
    */
   async _convertProfileBasicCardToPaymentMethodData(guid, cardSecurityCode) {
     let cardData = this.temporaryStore.creditCards.get(guid) ||
-                   await formAutofillStorage.creditCards.get(guid);
+                   formAutofillStorage.creditCards.get(guid);
     if (!cardData) {
       throw new Error(`Basic card not found in storage: ${guid}`);
     }
@@ -317,17 +321,17 @@ var paymentDialogWrapper = {
     return component.createInstance(componentInterface);
   },
 
-  async fetchSavedAddresses() {
+  fetchSavedAddresses() {
     let savedAddresses = {};
-    for (let address of await formAutofillStorage.addresses.getAll()) {
+    for (let address of formAutofillStorage.addresses.getAll()) {
       savedAddresses[address.guid] = address;
     }
     return savedAddresses;
   },
 
-  async fetchSavedPaymentCards() {
+  fetchSavedPaymentCards() {
     let savedBasicCards = {};
-    for (let card of await formAutofillStorage.creditCards.getAll()) {
+    for (let card of formAutofillStorage.creditCards.getAll()) {
       savedBasicCards[card.guid] = card;
       // Filter out the encrypted card number since the dialog content is
       // considered untrusted and runs in a content process.
@@ -341,13 +345,10 @@ var paymentDialogWrapper = {
     return savedBasicCards;
   },
 
-  async onAutofillStorageChange() {
-    let [savedAddresses, savedBasicCards] =
-      await Promise.all([this.fetchSavedAddresses(), this.fetchSavedPaymentCards()]);
-
+  onAutofillStorageChange() {
     this.sendMessageToContent("updateState", {
-      savedAddresses,
-      savedBasicCards,
+      savedAddresses: this.fetchSavedAddresses(),
+      savedBasicCards: this.fetchSavedPaymentCards(),
     });
   },
 
@@ -445,24 +446,21 @@ var paymentDialogWrapper = {
     return obj;
   },
 
-  async initializeFrame() {
-    Services.obs.addObserver(this, "formautofill-storage-changed", true);
-
+  initializeFrame() {
     let requestSerialized = this._serializeRequest(this.request);
     let chromeWindow = Services.wm.getMostRecentWindow("navigator:browser");
     let isPrivate = PrivateBrowsingUtils.isWindowPrivate(chromeWindow);
 
-    let [savedAddresses, savedBasicCards] =
-      await Promise.all([this.fetchSavedAddresses(), this.fetchSavedPaymentCards()]);
-
     this.sendMessageToContent("showPaymentRequest", {
       request: requestSerialized,
-      savedAddresses,
+      savedAddresses: this.fetchSavedAddresses(),
       tempAddresses: this.temporaryStore.addresses.getAll(),
-      savedBasicCards,
+      savedBasicCards: this.fetchSavedPaymentCards(),
       tempBasicCards: this.temporaryStore.creditCards.getAll(),
       isPrivate,
     });
+
+    Services.obs.addObserver(this, "formautofill-storage-changed", true);
   },
 
   debugFrame() {
@@ -567,6 +565,16 @@ var paymentDialogWrapper = {
       stateChange: {},
     };
     try {
+      if (collectionName == "creditCards" && !guid && !record.isTemporary) {
+        // We need to be logged in so we can encrypt the credit card number and
+        // that's only supported when we're adding a new record.
+        // TODO: "MasterPassword.ensureLoggedIn" can be removed after the storage
+        // APIs are refactored to be async functions (bug 1399367).
+        if (!await MasterPassword.ensureLoggedIn()) {
+          throw new Error("User canceled master password entry");
+        }
+      }
+
       let isTemporary = record.isTemporary;
       let collection = isTemporary ? this.temporaryStore[collectionName] :
                                      formAutofillStorage[collectionName];

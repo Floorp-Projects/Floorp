@@ -10,7 +10,7 @@ async function setup() {
     [PTU.Addresses.TimBL], [PTU.BasicCards.JohnDoe]);
 
   info("associating the card with the billing address");
-  await formAutofillStorage.creditCards.update(prefilledGuids.card1GUID, {
+  formAutofillStorage.creditCards.update(prefilledGuids.card1GUID, {
     billingAddressGUID: prefilledGuids.address1GUID,
   }, true);
 

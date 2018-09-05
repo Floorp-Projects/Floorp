@@ -8,12 +8,12 @@ const details = PTU.Details.total60USD;
 add_task(async function test_initial_state() {
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
-  let address1GUID = await formAutofillStorage.addresses.add(PTU.Addresses.TimBL);
+  let address1GUID = formAutofillStorage.addresses.add(PTU.Addresses.TimBL);
   await onChanged;
 
   onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                       (subject, data) => data == "add");
-  let card1GUID = await formAutofillStorage.creditCards.add(PTU.BasicCards.JohnDoe);
+  let card1GUID = formAutofillStorage.creditCards.add(PTU.BasicCards.JohnDoe);
   await onChanged;
 
   await BrowserTestUtils.withNewTab({
@@ -56,7 +56,7 @@ add_task(async function test_initial_state() {
     let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                             (subject, data) => data == "add");
     info("adding an address");
-    let address2GUID = await formAutofillStorage.addresses.add(PTU.Addresses.TimBL2);
+    let address2GUID = formAutofillStorage.addresses.add(PTU.Addresses.TimBL2);
     await onChanged;
 
     await spawnPaymentDialogTask(frame, async function checkAdd({
@@ -65,17 +65,11 @@ add_task(async function test_initial_state() {
       card1GUID,
     }) {
       info("checkAdd");
-
-      let {
-        PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      let contentWin = Cu.waiveXrays(content);
       let {
         savedAddresses,
         savedBasicCards,
-      } = await PTU.DialogContentUtils.waitForState(
-        content,
-        state => !!state.savedAddresses[address2GUID]
-      );
+      } = contentWin.document.querySelector("payment-dialog").requestStore.getState();
 
       let addressGUIDs = Object.keys(savedAddresses);
       is(addressGUIDs.length, 2, "Now two savedAddresses");
@@ -97,7 +91,7 @@ add_task(async function test_initial_state() {
     onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                         (subject, data) => data == "update");
     info("updating the credit expiration");
-    await formAutofillStorage.creditCards.update(card1GUID, {
+    formAutofillStorage.creditCards.update(card1GUID, {
       "cc-exp-month": 6,
       "cc-exp-year": 2029,
     }, true);
@@ -109,17 +103,11 @@ add_task(async function test_initial_state() {
       card1GUID,
     }) {
       info("checkUpdate");
-
-      let {
-        PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      let contentWin = Cu.waiveXrays(content);
       let {
         savedAddresses,
         savedBasicCards,
-      } = await PTU.DialogContentUtils.waitForState(
-        content,
-        state => !!state.savedAddresses[address2GUID]
-      );
+      } = contentWin.document.querySelector("payment-dialog").requestStore.getState();
 
       let addressGUIDs = Object.keys(savedAddresses);
       is(addressGUIDs.length, 2, "Still two savedAddresses");
@@ -151,17 +139,11 @@ add_task(async function test_initial_state() {
       card1GUID,
     }) {
       info("checkRemove");
-
-      let {
-        PaymentTestUtils: PTU,
-      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      let contentWin = Cu.waiveXrays(content);
       let {
         savedAddresses,
         savedBasicCards,
-      } = await PTU.DialogContentUtils.waitForState(
-        content,
-        state => !!state.savedAddresses[address2GUID]
-      );
+      } = contentWin.document.querySelector("payment-dialog").requestStore.getState();
 
       is(Object.keys(savedAddresses).length, 1, "Now one savedAddresses");
       is(savedAddresses[address2GUID].name, "Timothy Johann Berners-Lee", "Check full name");

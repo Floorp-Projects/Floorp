@@ -46,7 +46,7 @@ add_task(async function test_show_completePayment() {
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "update");
   info("associating the card with the billing address");
-  await formAutofillStorage.creditCards.update(card1GUID, {
+  formAutofillStorage.creditCards.update(card1GUID, {
     billingAddressGUID: address1GUID,
   }, true);
   await onChanged;

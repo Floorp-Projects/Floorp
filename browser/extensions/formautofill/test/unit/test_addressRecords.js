@@ -287,7 +287,7 @@ add_task(async function test_getAll() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
                                                 [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
-  let addresses = await profileStorage.addresses.getAll();
+  let addresses = profileStorage.addresses.getAll();
 
   Assert.equal(addresses.length, 2);
   do_check_record_matches(addresses[0], TEST_ADDRESS_1);
@@ -299,44 +299,44 @@ add_task(async function test_getAll() {
   Assert.equal(addresses[0]["address-line2"], "MIT Room 32-G524");
 
   // Test with rawData set.
-  addresses = await profileStorage.addresses.getAll({rawData: true});
+  addresses = profileStorage.addresses.getAll({rawData: true});
   Assert.equal(addresses[0].name, undefined);
   Assert.equal(addresses[0]["address-line1"], undefined);
   Assert.equal(addresses[0]["address-line2"], undefined);
 
   // Modifying output shouldn't affect the storage.
   addresses[0].organization = "test";
-  do_check_record_matches((await profileStorage.addresses.getAll())[0], TEST_ADDRESS_1);
+  do_check_record_matches(profileStorage.addresses.getAll()[0], TEST_ADDRESS_1);
 });
 
 add_task(async function test_get() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
                                                 [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
-  let addresses = await profileStorage.addresses.getAll();
+  let addresses = profileStorage.addresses.getAll();
   let guid = addresses[0].guid;
 
-  let address = await profileStorage.addresses.get(guid);
+  let address = profileStorage.addresses.get(guid);
   do_check_record_matches(address, TEST_ADDRESS_1);
 
   // Test with rawData set.
-  address = await profileStorage.addresses.get(guid, {rawData: true});
+  address = profileStorage.addresses.get(guid, {rawData: true});
   Assert.equal(address.name, undefined);
   Assert.equal(address["address-line1"], undefined);
   Assert.equal(address["address-line2"], undefined);
 
   // Modifying output shouldn't affect the storage.
   address.organization = "test";
-  do_check_record_matches(await profileStorage.addresses.get(guid), TEST_ADDRESS_1);
+  do_check_record_matches(profileStorage.addresses.get(guid), TEST_ADDRESS_1);
 
-  Assert.equal(await profileStorage.addresses.get("INVALID_GUID"), null);
+  Assert.equal(profileStorage.addresses.get("INVALID_GUID"), null);
 });
 
 add_task(async function test_add() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
                                                 [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
-  let addresses = await profileStorage.addresses.getAll();
+  let addresses = profileStorage.addresses.getAll();
 
   Assert.equal(addresses.length, 2);
 
@@ -351,23 +351,23 @@ add_task(async function test_add() {
   Assert.equal(addresses[0].timesUsed, 0);
 
   // Empty string should be deleted before saving.
-  await profileStorage.addresses.add(TEST_ADDRESS_WITH_EMPTY_FIELD);
+  profileStorage.addresses.add(TEST_ADDRESS_WITH_EMPTY_FIELD);
   let address = profileStorage.addresses._data[2];
   Assert.equal(address.name, TEST_ADDRESS_WITH_EMPTY_FIELD.name);
   Assert.equal(address["street-address"], undefined);
 
   // Empty computed fields shouldn't cause any problem.
-  await profileStorage.addresses.add(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD);
+  profileStorage.addresses.add(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD);
   address = profileStorage.addresses._data[3];
   Assert.equal(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
 
-  await Assert.rejects(profileStorage.addresses.add(TEST_ADDRESS_WITH_INVALID_FIELD),
+  Assert.throws(() => profileStorage.addresses.add(TEST_ADDRESS_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./);
 
-  await Assert.rejects(profileStorage.addresses.add({}),
+  Assert.throws(() => profileStorage.addresses.add({}),
     /Record contains no valid field\./);
 
-  await Assert.rejects(profileStorage.addresses.add(TEST_ADDRESS_EMPTY_AFTER_NORMALIZE),
+  Assert.throws(() => profileStorage.addresses.add(TEST_ADDRESS_EMPTY_AFTER_NORMALIZE),
     /Record contains no valid field\./);
 });
 
@@ -385,7 +385,7 @@ add_task(async function test_update() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
                                                 [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
-  let addresses = await profileStorage.addresses.getAll();
+  let addresses = profileStorage.addresses.getAll();
   let guid = addresses[1].guid;
   let timeLastModified = addresses[1].timeLastModified;
 
@@ -399,13 +399,13 @@ add_task(async function test_update() {
 
   Assert.notEqual(addresses[1].country, undefined);
 
-  await profileStorage.addresses.update(guid, TEST_ADDRESS_3);
+  profileStorage.addresses.update(guid, TEST_ADDRESS_3);
   await onChanged;
   await profileStorage._saveImmediately();
 
   profileStorage.addresses.pullSyncChanges(); // force sync metadata, which we check below.
 
-  let address = await profileStorage.addresses.get(guid, {rawData: true});
+  let address = profileStorage.addresses.get(guid, {rawData: true});
 
   Assert.equal(address.country, undefined);
   Assert.notEqual(address.timeLastModified, timeLastModified);
@@ -413,13 +413,13 @@ add_task(async function test_update() {
   Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 
   // Test preserveOldProperties parameter and field with empty string.
-  await profileStorage.addresses.update(guid, TEST_ADDRESS_WITH_EMPTY_FIELD, true);
+  profileStorage.addresses.update(guid, TEST_ADDRESS_WITH_EMPTY_FIELD, true);
   await onChanged;
   await profileStorage._saveImmediately();
 
   profileStorage.addresses.pullSyncChanges(); // force sync metadata, which we check below.
 
-  address = await profileStorage.addresses.get(guid, {rawData: true});
+  address = profileStorage.addresses.get(guid, {rawData: true});
 
   Assert.equal(address["given-name"], "Tim");
   Assert.equal(address["family-name"], "Berners");
@@ -429,37 +429,42 @@ add_task(async function test_update() {
   Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 2);
 
   // Empty string should be deleted while updating.
-  await profileStorage.addresses.update(profileStorage.addresses._data[0].guid, TEST_ADDRESS_WITH_EMPTY_FIELD);
+  profileStorage.addresses.update(profileStorage.addresses._data[0].guid, TEST_ADDRESS_WITH_EMPTY_FIELD);
   address = profileStorage.addresses._data[0];
   Assert.equal(address.name, TEST_ADDRESS_WITH_EMPTY_FIELD.name);
   Assert.equal(address["street-address"], undefined);
 
   // Empty computed fields shouldn't cause any problem.
-  await profileStorage.addresses.update(profileStorage.addresses._data[0].guid, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, false);
+  profileStorage.addresses.update(profileStorage.addresses._data[0].guid, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, false);
   address = profileStorage.addresses._data[0];
   Assert.equal(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
-  await profileStorage.addresses.update(profileStorage.addresses._data[1].guid, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, true);
+  profileStorage.addresses.update(profileStorage.addresses._data[1].guid, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, true);
   address = profileStorage.addresses._data[1];
   Assert.equal(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
 
-  await Assert.rejects(profileStorage.addresses.update("INVALID_GUID", TEST_ADDRESS_3),
+  Assert.throws(
+    () => profileStorage.addresses.update("INVALID_GUID", TEST_ADDRESS_3),
     /No matching record\./
   );
 
-  await Assert.rejects(profileStorage.addresses.update(guid, TEST_ADDRESS_WITH_INVALID_FIELD),
+  Assert.throws(
+    () => profileStorage.addresses.update(guid, TEST_ADDRESS_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./
   );
 
-  await Assert.rejects(profileStorage.addresses.update(guid, {}),
+  Assert.throws(
+    () => profileStorage.addresses.update(guid, {}),
     /Record contains no valid field\./
   );
 
-  await Assert.rejects(profileStorage.addresses.update(guid, TEST_ADDRESS_EMPTY_AFTER_NORMALIZE),
+  Assert.throws(
+    () => profileStorage.addresses.update(guid, TEST_ADDRESS_EMPTY_AFTER_NORMALIZE),
     /Record contains no valid field\./
   );
 
   profileStorage.addresses.update(guid, TEST_ADDRESS_2);
-  await Assert.rejects(profileStorage.addresses.update(guid, TEST_ADDRESS_EMPTY_AFTER_UPDATE_ADDRESS_2),
+  Assert.throws(
+    () => profileStorage.addresses.update(guid, TEST_ADDRESS_EMPTY_AFTER_UPDATE_ADDRESS_2),
     /Record contains no valid field\./
   );
 });
@@ -468,7 +473,7 @@ add_task(async function test_notifyUsed() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
                                                 [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
-  let addresses = await profileStorage.addresses.getAll();
+  let addresses = profileStorage.addresses.getAll();
   let guid = addresses[1].guid;
   let timeLastUsed = addresses[1].timeLastUsed;
   let timesUsed = addresses[1].timesUsed;
@@ -486,7 +491,7 @@ add_task(async function test_notifyUsed() {
   profileStorage.addresses.notifyUsed(guid);
   await onChanged;
 
-  let address = await profileStorage.addresses.get(guid);
+  let address = profileStorage.addresses.get(guid);
 
   Assert.equal(address.timesUsed, timesUsed + 1);
   Assert.notEqual(address.timeLastUsed, timeLastUsed);
@@ -503,7 +508,7 @@ add_task(async function test_remove() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
                                                 [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
-  let addresses = await profileStorage.addresses.getAll();
+  let addresses = profileStorage.addresses.getAll();
   let guid = addresses[1].guid;
 
   let onChanged = TestUtils.topicObserved(
@@ -519,11 +524,11 @@ add_task(async function test_remove() {
   profileStorage.addresses.remove(guid);
   await onChanged;
 
-  addresses = await profileStorage.addresses.getAll();
+  addresses = profileStorage.addresses.getAll();
 
   Assert.equal(addresses.length, 1);
 
-  Assert.equal(await profileStorage.addresses.get(guid), null);
+  Assert.equal(profileStorage.addresses.get(guid), null);
 });
 
 MERGE_TESTCASES.forEach((testcase) => {
@@ -531,7 +536,7 @@ MERGE_TESTCASES.forEach((testcase) => {
     info("Starting testcase: " + testcase.description);
     let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
                                                   [testcase.addressInStorage]);
-    let addresses = await profileStorage.addresses.getAll();
+    let addresses = profileStorage.addresses.getAll();
     let guid = addresses[0].guid;
     let timeLastModified = addresses[0].timeLastModified;
 
@@ -555,7 +560,7 @@ MERGE_TESTCASES.forEach((testcase) => {
       await onMerged;
     }
 
-    addresses = await profileStorage.addresses.getAll();
+    addresses = profileStorage.addresses.getAll();
     Assert.equal(addresses.length, 1);
     do_check_record_matches(addresses[0], testcase.expectedAddress);
     if (testcase.noNeedToUpdate) {
@@ -574,7 +579,7 @@ MERGE_TESTCASES.forEach((testcase) => {
 
 add_task(async function test_merge_same_address() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [TEST_ADDRESS_1]);
-  let addresses = await profileStorage.addresses.getAll();
+  let addresses = profileStorage.addresses.getAll();
   let guid = addresses[0].guid;
   let timeLastModified = addresses[0].timeLastModified;
 
@@ -594,7 +599,7 @@ add_task(async function test_merge_unable_merge() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
                                                 [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
-  let addresses = await profileStorage.addresses.getAll();
+  let addresses = profileStorage.addresses.getAll();
   let guid = addresses[1].guid;
 
   // Force to create sync metadata.
@@ -602,15 +607,15 @@ add_task(async function test_merge_unable_merge() {
   Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 
   // Unable to merge because of conflict
-  Assert.equal(await profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_3), false);
+  Assert.equal(profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_3), false);
 
   // Unable to merge because no overlap
-  Assert.equal(await profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_4), false);
+  Assert.equal(profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_4), false);
 
   // Unable to strict merge because subset with empty string
   let subset = Object.assign({}, TEST_ADDRESS_1);
   subset.organization = "";
-  Assert.equal(await profileStorage.addresses.mergeIfPossible(guid, subset, true), false);
+  Assert.equal(profileStorage.addresses.mergeIfPossible(guid, subset, true), false);
 
   // Shouldn't bump the change counter
   Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
@@ -621,15 +626,14 @@ add_task(async function test_mergeToStorage() {
                                                 [TEST_ADDRESS_1, TEST_ADDRESS_2]);
   // Merge an address to storage
   let anotherAddress = profileStorage.addresses._clone(TEST_ADDRESS_2);
-  await profileStorage.addresses.add(anotherAddress);
+  profileStorage.addresses.add(anotherAddress);
   anotherAddress.email = "timbl@w3.org";
-  Assert.equal((await profileStorage.addresses.mergeToStorage(anotherAddress)).length, 2);
-
-  Assert.equal((await profileStorage.addresses.getAll())[1].email, anotherAddress.email);
-  Assert.equal((await profileStorage.addresses.getAll())[2].email, anotherAddress.email);
+  Assert.equal(profileStorage.addresses.mergeToStorage(anotherAddress).length, 2);
+  Assert.equal(profileStorage.addresses.getAll()[1].email, anotherAddress.email);
+  Assert.equal(profileStorage.addresses.getAll()[2].email, anotherAddress.email);
 
   // Empty computed fields shouldn't cause any problem.
-  Assert.equal((await profileStorage.addresses.mergeToStorage(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD)).length, 3);
+  Assert.equal(profileStorage.addresses.mergeToStorage(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD).length, 3);
 });
 
 add_task(async function test_mergeToStorage_strict() {
@@ -638,9 +642,9 @@ add_task(async function test_mergeToStorage_strict() {
   // Try to merge a subset with empty string
   let anotherAddress = profileStorage.addresses._clone(TEST_ADDRESS_1);
   anotherAddress.email = "";
-  Assert.equal((await profileStorage.addresses.mergeToStorage(anotherAddress, true)).length, 0);
-  Assert.equal((await profileStorage.addresses.getAll())[0].email, TEST_ADDRESS_1.email);
+  Assert.equal(profileStorage.addresses.mergeToStorage(anotherAddress, true).length, 0);
+  Assert.equal(profileStorage.addresses.getAll()[0].email, TEST_ADDRESS_1.email);
 
   // Empty computed fields shouldn't cause any problem.
-  Assert.equal((await profileStorage.addresses.mergeToStorage(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, true)).length, 1);
+  Assert.equal(profileStorage.addresses.mergeToStorage(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, true).length, 1);
 });
