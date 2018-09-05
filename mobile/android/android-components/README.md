@@ -102,7 +102,7 @@ High-level components for building browser(-like) apps.
 
 * 🔴 [**Engine-Gecko-Nightly**](components/browser/engine-gecko/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Nightly channel).
 
-* 🔴 [**Engine-System**](components/browser/engine-system/README.md) - *Engine* implementation based on the system's WebView.
+* ⚪ [**Engine-System**](components/browser/engine-system/README.md) - *Engine* implementation based on the system's WebView.
 
 * ⚪ [**Errorpages**](components/browser/errorpages/README.md) - Responsive browser error pages for Android apps.
 
