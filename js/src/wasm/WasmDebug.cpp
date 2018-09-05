@@ -455,14 +455,16 @@ DebugState::debugDisplayURL(JSContext* cx) const
         return nullptr;
 
     if (const char* filename = metadata().filename.get()) {
-        js::StringBuffer filenamePrefix(cx);
         // EncodeURI returns false due to invalid chars or OOM -- fail only
         // during OOM.
-        if (!EncodeURI(cx, filenamePrefix, filename, strlen(filename))) {
-            if (!cx->isExceptionPending())
+        JSString* filenamePrefix = EncodeURI(cx, filename, strlen(filename));
+        if (!filenamePrefix) {
+            if (cx->isThrowingOutOfMemory())
                 return nullptr;
+
+            MOZ_ASSERT(!cx->isThrowingOverRecursed());
             cx->clearPendingException(); // ignore invalid URI
-        } else if (!result.append(filenamePrefix.finishString())) {
+        } else if (!result.append(filenamePrefix)) {
             return nullptr;
         }
     }

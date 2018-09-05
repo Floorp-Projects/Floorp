@@ -154,8 +154,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     ModuleEnvironment* const        env_;
 
     // Data that is moved into the result of finish()
-    Assumptions                     assumptions_;
-    UniqueLinkDataTier              linkDataTier_;
+    UniqueLinkData                  linkData_;
     UniqueMetadataTier              metadataTier_;
     MutableMetadata                 metadata_;
 
@@ -225,7 +224,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // a new Module. Otherwise, if env->mode is Tier2, finishTier2() must be
     // called to augment the given Module with tier 2 code.
 
-    SharedModule finishModule(const ShareableBytes& bytecode);
+    SharedModule finishModule(const ShareableBytes& bytecode, UniqueLinkData* linkData = nullptr);
     MOZ_MUST_USE bool finishTier2(Module& module);
 };
 

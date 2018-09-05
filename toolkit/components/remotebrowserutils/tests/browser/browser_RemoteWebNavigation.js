@@ -59,9 +59,9 @@ add_task(async function test_history() {
                           .getInterface(Ci.nsISHistory);
     is(history.count, 2, "Should be two history items");
     is(history.index, 1, "Should be at the right place in history");
-    let entry = history.getEntryAtIndex(0, false);
+    let entry = history.getEntryAtIndex(0);
     is(entry.URI.spec, dummy1, "Should have the right history entry");
-    entry = history.getEntryAtIndex(1, false);
+    entry = history.getEntryAtIndex(1);
     is(entry.URI.spec, dummy2, "Should have the right history entry");
   });
 
@@ -92,7 +92,7 @@ add_task(async function test_flags() {
                               .getInterface(Ci.nsISHistory);
         is(history.count, count, "Should be one history item");
         is(history.index, index, "Should be at the right place in history");
-        let entry = history.getEntryAtIndex(index, false);
+        let entry = history.getEntryAtIndex(index);
         is(entry.URI.spec, dummy2, "Should have the right history entry");
       });
   }

@@ -109,7 +109,7 @@ function dumpSHistory(theWindow)
   dump(" requestedIndex: " + sh.legacySHistory.requestedIndex + "\n");
 
   for (let i = 0; i < sh.count; i++) {
-    let shentry = sh.legacySHistory.getEntryAtIndex(i, false);
+    let shentry = sh.legacySHistory.getEntryAtIndex(i);
     dump(" " + i + ": " + shentry.URI.spec + '\n');
     for (let j = 0; j < shentry.childCount; j++) {
       let child = shentry.GetChildAt(j);

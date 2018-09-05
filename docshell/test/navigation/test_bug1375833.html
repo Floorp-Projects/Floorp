@@ -49,7 +49,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375833
       ok(newFrameDocShellId, "sanity check for docshell ID");
       is(newFrameDocShellId, frameDocShellId, "check docshell ID remains after reload");
 
-      let entry = shistory.legacySHistory.getEntryAtIndex(shistory.index, false);
+      let entry = shistory.legacySHistory.getEntryAtIndex(shistory.index);
       let frameEntry = entry.GetChildAt(0);
       is(String(frameEntry.docshellID), frameDocShellId, "check newly added shentry uses the same docshell ID");
 

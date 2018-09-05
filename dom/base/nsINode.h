@@ -1769,7 +1769,11 @@ public:
   {
     return HasChildren();
   }
-  uint16_t CompareDocumentPosition(nsINode& aOther) const;
+
+  // See nsContentUtils::PositionIsBefore for aThisIndex and aOtherIndex usage.
+  uint16_t CompareDocumentPosition(nsINode& aOther,
+                                   int32_t* aThisIndex = nullptr,
+                                   int32_t* aOtherIndex = nullptr) const;
   void GetNodeValue(nsAString& aNodeValue)
   {
     GetNodeValueInternal(aNodeValue);

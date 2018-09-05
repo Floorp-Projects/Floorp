@@ -259,8 +259,7 @@ MarkDocShell(nsIDocShellTreeItem* aNode, bool aCleanupJS)
     int32_t historyCount = history->Count();
     for (int32_t i = 0; i < historyCount; ++i) {
       nsCOMPtr<nsISHEntry> shEntry;
-      history->LegacySHistory()->GetEntryAtIndex(
-        i, false, getter_AddRefs(shEntry));
+      history->LegacySHistory()->GetEntryAtIndex(i, getter_AddRefs(shEntry));
 
       MarkSHEntry(shEntry, aCleanupJS);
     }

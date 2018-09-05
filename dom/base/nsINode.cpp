@@ -752,7 +752,9 @@ nsINode::LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix)
 }
 
 uint16_t
-nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
+nsINode::CompareDocumentPosition(nsINode& aOtherNode,
+                                 int32_t* aThisIndex,
+                                 int32_t* aOtherIndex) const
 {
   if (this == &aOtherNode) {
     return 0;
@@ -852,9 +854,38 @@ nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
       // child1 or child2 can be an attribute here. This will work fine since
       // ComputeIndexOf will return -1 for the attribute making the
       // attribute be considered before any child.
-      return parent->ComputeIndexOf(child1) < parent->ComputeIndexOf(child2) ?
+      int32_t child1Index;
+      bool cachedChild1Index = false;
+      if (&aOtherNode == child1 && aOtherIndex) {
+        cachedChild1Index = true;
+        child1Index = *aOtherIndex != -1 ?
+          *aOtherIndex : parent->ComputeIndexOf(child1);
+      } else {
+        child1Index = parent->ComputeIndexOf(child1);
+      }
+
+      int32_t child2Index;
+      bool cachedChild2Index = false;
+      if (this == child2 && aThisIndex) {
+        cachedChild2Index = true;
+        child2Index = *aThisIndex != -1 ?
+          *aThisIndex : parent->ComputeIndexOf(child2);
+      } else {
+        child2Index = parent->ComputeIndexOf(child2);
+      }
+
+      uint16_t retVal = child1Index < child2Index ?
         Node_Binding::DOCUMENT_POSITION_PRECEDING :
         Node_Binding::DOCUMENT_POSITION_FOLLOWING;
+
+      if (cachedChild1Index) {
+        *aOtherIndex = child1Index;
+      }
+      if (cachedChild2Index) {
+        *aThisIndex = child2Index;
+      }
+
+      return retVal;
     }
     parent = child1;
   }
@@ -1460,11 +1491,67 @@ nsINode::GetPreviousSibling() const
   return mPreviousOrLastSibling;
 }
 
+// CACHE_POINTER_SHIFT indicates how many steps to downshift the |this| pointer.
+// It should be small enough to not cause collisions between adjecent objects,
+// and large enough to make sure that all indexes are used.
+#define CACHE_POINTER_SHIFT 6
+#define CACHE_NUM_SLOTS 128
+#define CACHE_CHILD_LIMIT 10
+
+#define CACHE_GET_INDEX(_parent) \
+  ((NS_PTR_TO_INT32(_parent) >> CACHE_POINTER_SHIFT) & \
+   (CACHE_NUM_SLOTS - 1))
+
+struct IndexCacheSlot
+{
+  const nsINode* mParent;
+  const nsINode* mChild;
+  int32_t mChildIndex;
+};
+
+static IndexCacheSlot sIndexCache[CACHE_NUM_SLOTS];
+
+static inline void
+AddChildAndIndexToCache(const nsINode* aParent, const nsINode* aChild,
+                        int32_t aChildIndex)
+{
+  uint32_t index = CACHE_GET_INDEX(aParent);
+  sIndexCache[index].mParent = aParent;
+  sIndexCache[index].mChild = aChild;
+  sIndexCache[index].mChildIndex = aChildIndex;
+}
+
+static inline void
+GetChildAndIndexFromCache(const nsINode* aParent,
+                          const nsINode** aChild,
+                          int32_t* aChildIndex)
+{
+  uint32_t index = CACHE_GET_INDEX(aParent);
+  if (sIndexCache[index].mParent == aParent) {
+    *aChild = sIndexCache[index].mChild;
+    *aChildIndex = sIndexCache[index].mChildIndex;
+  } else {
+    *aChild = nullptr;
+    *aChildIndex = -1;
+  }
+}
+
+static inline void
+RemoveFromCache(const nsINode* aParent)
+{
+  uint32_t index = CACHE_GET_INDEX(aParent);
+  if (sIndexCache[index].mParent == aParent) {
+    sIndexCache[index] = { nullptr, nullptr, -1 };
+  }
+}
+
 void
 nsINode::AppendChildToChildList(nsIContent* aKid)
 {
   MOZ_ASSERT(aKid);
   MOZ_ASSERT(!aKid->mNextSibling);
+
+  RemoveFromCache(this);
 
   if (mFirstChild) {
     nsIContent* lastChild = GetLastChild();
@@ -1484,6 +1571,8 @@ nsINode::InsertChildToChildList(nsIContent* aKid, nsIContent* aNextSibling)
 {
   MOZ_ASSERT(aKid);
   MOZ_ASSERT(aNextSibling);
+
+  RemoveFromCache(this);
 
   nsIContent* previousSibling = aNextSibling->mPreviousOrLastSibling;
   aNextSibling->mPreviousOrLastSibling = aKid;
@@ -1505,6 +1594,8 @@ nsINode::DisconnectChild(nsIContent* aKid)
 {
   MOZ_ASSERT(aKid);
   MOZ_ASSERT(GetChildCount() > 0);
+
+  RemoveFromCache(this);
 
   nsIContent* previousSibling = aKid->GetPreviousSibling();
   nsCOMPtr<nsIContent> ref = aKid;
@@ -1557,11 +1648,48 @@ nsINode::ComputeIndexOf(const nsINode* aChild) const
     return GetChildCount() - 1;
   }
 
+  if (mChildCount >= CACHE_CHILD_LIMIT) {
+    const nsINode* child;
+    int32_t childIndex;
+    GetChildAndIndexFromCache(this, &child, &childIndex);
+    if (child) {
+      if (child == aChild) {
+        return childIndex;
+      }
+
+      int32_t nextIndex = childIndex;
+      int32_t prevIndex = childIndex;
+      nsINode* prev = child->GetPreviousSibling();
+      nsINode* next = child->GetNextSibling();
+      do {
+        if (next) {
+          ++nextIndex;
+          if (next == aChild) {
+            AddChildAndIndexToCache(this, aChild, nextIndex);
+            return nextIndex;
+          }
+          next = next->GetNextSibling();
+        }
+        if (prev) {
+          --prevIndex;
+          if (prev == aChild) {
+            AddChildAndIndexToCache(this, aChild, prevIndex);
+            return prevIndex;
+          }
+          prev = prev->GetPreviousSibling();
+        }
+      } while (prev || next);
+    }
+  }
+
   int32_t index = 0;
   nsINode* current = mFirstChild;
   while (current) {
     MOZ_ASSERT(current->GetParentNode() == this);
     if (current == aChild) {
+      if (mChildCount >= CACHE_CHILD_LIMIT) {
+        AddChildAndIndexToCache(this, current, index);
+      }
       return index;
     }
     current = current->GetNextSibling();

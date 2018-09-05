@@ -24,13 +24,13 @@ function test() {
 
   promiseTabState(tab, tabState).then(() => {
     let sessionHistory = browser.sessionHistory;
-    let entry = sessionHistory.legacySHistory.getEntryAtIndex(0, false);
+    let entry = sessionHistory.legacySHistory.getEntryAtIndex(0);
 
     whenChildCount(entry, 1, function() {
       whenChildCount(entry, 2, function() {
         promiseBrowserLoaded(browser).then(() => {
           let newSessionHistory = browser.sessionHistory;
-          let newEntry = newSessionHistory.legacySHistory.getEntryAtIndex(0, false);
+          let newEntry = newSessionHistory.legacySHistory.getEntryAtIndex(0);
 
           whenChildCount(newEntry, 0, function() {
             // Make sure that we reset the state.

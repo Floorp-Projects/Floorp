@@ -12,7 +12,7 @@
           isOK = true;
         }
         document.body.textContent = isOK ? "PASSED" : "FAILED";
-        opener.ok(isOK, "Duplicate session history transactions should have been removed!");
+        opener.ok(isOK, "Duplicate session history entries should have been removed!");
         opener.nextTest();
         window.close();
       }
