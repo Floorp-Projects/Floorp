@@ -1176,8 +1176,7 @@ EvalAndPrint(JSContext* cx, const char* bytes, size_t length,
 
     if (!result.isUndefined() && gOutFile->isOpen()) {
         // Print.
-        RootedString str(cx);
-        str = JS_ValueToSource(cx, result);
+        RootedString str(cx, JS_ValueToSource(cx, result));
         if (!str)
             return false;
 
@@ -2327,7 +2326,7 @@ ReadLineBuf(JSContext* cx, unsigned argc, Value* vp)
             len++;
         }
 
-        JSString* str = JS_NewStringCopyN(cx, currentBuf, len);
+        JSString* str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(currentBuf, len));
         if (!str)
             return false;
 
@@ -2341,8 +2340,8 @@ ReadLineBuf(JSContext* cx, unsigned argc, Value* vp)
     }
 
     if (args.length() == 1) {
-        if (sc->readLineBuf)
-            sc->readLineBuf.reset();
+        sc->readLineBuf = nullptr;
+        sc->readLineBufPos = 0;
 
         RootedString str(cx, JS::ToString(cx, args[0]));
         if (!str)
@@ -2351,7 +2350,7 @@ ReadLineBuf(JSContext* cx, unsigned argc, Value* vp)
         if (!sc->readLineBuf)
             return false;
 
-        sc->readLineBufPos = 0;
+        args.rval().setUndefined();
         return true;
     }
 
@@ -2512,12 +2511,11 @@ StopTimingMutator(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const char*
-ToSource(JSContext* cx, MutableHandleValue vp, UniqueChars* bytes)
+ToSource(JSContext* cx, HandleValue vp, UniqueChars* bytes)
 {
-    JSString* str = JS_ValueToSource(cx, vp);
+    RootedString str(cx, JS_ValueToSource(cx, vp));
     if (str) {
-        vp.setString(str);
-        *bytes = JS_EncodeString(cx, str);
+        *bytes = JS_EncodeStringToUTF8(cx, str);
         if (*bytes)
             return bytes->get();
     }
@@ -2548,15 +2546,15 @@ AssertEq(JSContext* cx, unsigned argc, Value* vp)
         const char* actual = ToSource(cx, args[0], &bytes0);
         const char* expected = ToSource(cx, args[1], &bytes1);
         if (args.length() == 2) {
-            JS_ReportErrorNumberLatin1(cx, my_GetErrorMessage, nullptr, JSSMSG_ASSERT_EQ_FAILED,
-                                       actual, expected);
+            JS_ReportErrorNumberUTF8(cx, my_GetErrorMessage, nullptr, JSSMSG_ASSERT_EQ_FAILED,
+                                     actual, expected);
         } else {
-            UniqueChars bytes2 = JS_EncodeString(cx, args[2].toString());
+            RootedString message(cx, args[2].toString());
+            UniqueChars bytes2 = JS_EncodeStringToUTF8(cx, message);
             if (!bytes2)
                 return false;
-            JS_ReportErrorNumberLatin1(cx, my_GetErrorMessage, nullptr,
-                                       JSSMSG_ASSERT_EQ_FAILED_MSG,
-                                       actual, expected, bytes2.get());
+            JS_ReportErrorNumberUTF8(cx, my_GetErrorMessage, nullptr, JSSMSG_ASSERT_EQ_FAILED_MSG,
+                                     actual, expected, bytes2.get());
         }
         return false;
     }
@@ -3174,11 +3172,10 @@ DisassFile(JSContext* cx, unsigned argc, Value* vp)
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return false;
-    bool ok = DisassembleScript(cx, script, nullptr, p.lines, p.recursive, p.sourceNotes, &sprinter);
-    if (ok)
-        fprintf(gOutFile->fp, "%s\n", sprinter.string());
-    if (!ok)
+    if (!DisassembleScript(cx, script, nullptr, p.lines, p.recursive, p.sourceNotes, &sprinter))
         return false;
+
+    fprintf(gOutFile->fp, "%s\n", sprinter.string());
 
     args.rval().setUndefined();
     return true;

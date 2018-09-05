@@ -1861,7 +1861,7 @@ js::ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
             if (!str)
                 return nullptr;
         }
-        return EncodeLatin1(cx, str);
+        return StringToNewUTF8CharsZ(cx, *str);
     };
 
     if (lref.isString() && rref.isString()) {
@@ -1871,8 +1871,8 @@ js::ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
         UniqueChars rbytes = uniqueCharsFromString(cx, rref);
         if (!rbytes)
             return;
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_IN_STRING,
-                                   lbytes.get(), rbytes.get());
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_IN_STRING,
+                                 lbytes.get(), rbytes.get());
         return;
     }
 

@@ -218,12 +218,12 @@ extern const char       js_EscapeMap[];
 // character is appended at the beginning and end of the result string.
 // The returned string is guaranteed to contain only ASCII characters.
 extern JS::UniqueChars
-QuoteString(JSContext* cx, JSString* str, char quote = 0);
+QuoteString(JSContext* cx, JSString* str, char quote = '\0');
 
 // Appends the quoted string to the given Sprinter. Follows the same semantics
 // as QuoteString from above.
 extern bool
-QuoteString(Sprinter* sp, JSString* str, char quote = 0);
+QuoteString(Sprinter* sp, JSString* str, char quote = '\0');
 
 } // namespace js
 
