@@ -11,19 +11,20 @@
 
 #include "gc/Allocator.h"
 #include "gc/GCTrace.h"
+#include "js/CharacterEncoding.h"
 #include "vm/EnvironmentObject.h"
 
 #include "vm/JSObject-inl.h"
 
-class JSAutoByteString;
-
 namespace js {
 
 inline const char*
-GetFunctionNameBytes(JSContext* cx, JSFunction* fun, JSAutoByteString* bytes)
+GetFunctionNameBytes(JSContext* cx, JSFunction* fun, UniqueChars* bytes)
 {
-    if (JSAtom* name = fun->explicitName())
-        return bytes->encodeLatin1(cx, name);
+    if (JSAtom* name = fun->explicitName()) {
+        *bytes = JS_EncodeString(cx, name);
+        return bytes->get();
+    }
     return js_anonymous_str;
 }
 

@@ -31,7 +31,7 @@
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
 #include "jit/Jit.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "util/StringBuffer.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
@@ -1861,7 +1861,7 @@ js::ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
             if (!str)
                 return nullptr;
         }
-        return UniqueChars(JS_EncodeString(cx, str));
+        return JS_EncodeString(cx, str);
     };
 
     if (lref.isString() && rref.isString()) {
@@ -5339,9 +5339,9 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber, HandleId id)
 {
     MOZ_ASSERT(errorNumber == JSMSG_UNINITIALIZED_LEXICAL ||
                errorNumber == JSMSG_BAD_CONST_ASSIGN);
-    JSAutoByteString printable;
+    UniqueChars printable;
     if (ValueToPrintableLatin1(cx, IdToValue(id), &printable))
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, printable.ptr());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, printable.get());
 }
 
 void
@@ -5382,10 +5382,10 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
 void
 js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name, const char* redeclKind)
 {
-    JSAutoByteString printable;
+    UniqueChars printable;
     if (AtomToPrintableString(cx, name, &printable)) {
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR,
-                                   redeclKind, printable.ptr());
+                                   redeclKind, printable.get());
     }
 }
 
@@ -5461,11 +5461,11 @@ js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame)
 
     if (fun->isDerivedClassConstructor()) {
         const char* name = "anonymous";
-        JSAutoByteString str;
+        UniqueChars str;
         if (fun->explicitName()) {
             if (!AtomToPrintableString(cx, fun->explicitName(), &str))
                 return false;
-            name = str.ptr();
+            name = str.get();
         }
 
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS, name);

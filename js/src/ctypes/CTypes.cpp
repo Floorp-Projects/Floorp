@@ -39,9 +39,10 @@
 #include "gc/FreeOp.h"
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/StableStringChars.h"
 #include "js/UniquePtr.h"
+#include "js/Utility.h"
 #include "js/Vector.h"
 #include "util/Windows.h"
 #include "vm/JSContext.h"
@@ -982,20 +983,22 @@ GetErrorMessage(void* userRef, const unsigned errorNumber)
 }
 
 static const char*
-EncodeLatin1(JSContext* cx, AutoString& str, JSAutoByteString& bytes)
+EncodeLatin1(JSContext* cx, AutoString& str, JS::UniqueChars& bytes)
 {
-  return bytes.encodeLatin1(cx, NewUCString(cx, str.finish()));
+  bytes = JS_EncodeString(cx, NewUCString(cx, str.finish()));
+  return bytes.get();
 }
 
 static const char*
-CTypesToSourceForError(JSContext* cx, HandleValue val, JSAutoByteString& bytes)
+CTypesToSourceForError(JSContext* cx, HandleValue val, JS::UniqueChars& bytes)
 {
   if (val.isObject()) {
       RootedObject obj(cx, &val.toObject());
       if (CType::IsCType(obj) || CData::IsCDataMaybeUnwrap(&obj)) {
           RootedValue v(cx, ObjectValue(*obj));
           RootedString str(cx, JS_ValueToSource(cx, v));
-          return bytes.encodeLatin1(cx, str);
+          bytes = JS_EncodeString(cx, str);
+          return bytes.get();
       }
   }
   return ValueToSourceForError(cx, val, bytes);
@@ -1179,7 +1182,7 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
           HandleObject funObj = nullptr, unsigned argIndex = 0,
           HandleObject arrObj = nullptr, unsigned arrIndex = 0)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
   if (!valStr)
     return false;
@@ -1195,7 +1198,7 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
       SprintfLiteral(indexStr, "%u", arrIndex);
 
       AutoString arrSource;
-      JSAutoByteString arrBytes;
+      JS::UniqueChars arrBytes;
       BuildTypeSource(cx, arrObj, true, arrSource);
       if (!arrSource)
           return false;
@@ -1211,13 +1214,13 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     case TYPE_struct: {
       JSFlatString* name = GetFieldName(arrObj, arrIndex);
       MOZ_ASSERT(name);
-      JSAutoByteString nameBytes;
-      const char* nameStr = nameBytes.encodeLatin1(cx, name);
+      JS::UniqueChars nameBytes = JS_EncodeString(cx, name);
+      const char* nameStr = nameBytes.get();
       if (!nameStr)
         return false;
 
       AutoString structSource;
-      JSAutoByteString structBytes;
+      JS::UniqueChars structBytes;
       BuildTypeSource(cx, arrObj, true, structSource);
       if (!structSource)
           return false;
@@ -1225,7 +1228,7 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
       if (!structStr)
         return false;
 
-      JSAutoByteString posBytes;
+      JS::UniqueChars posBytes;
       const char* posStr;
       if (funObj) {
         AutoString posSource;
@@ -1258,7 +1261,7 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     SprintfLiteral(indexStr, "%u", argIndex + 1);
 
     AutoString funSource;
-    JSAutoByteString funBytes;
+    JS::UniqueChars funBytes;
     BuildFunctionTypeSource(cx, funObj, funSource);
     if (!funSource)
         return false;
@@ -1275,7 +1278,7 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     MOZ_ASSERT(funObj);
 
     AutoString funSource;
-    JSAutoByteString funBytes;
+    JS::UniqueChars funBytes;
     BuildFunctionTypeSource(cx, funObj, funSource);
     if (!funSource)
         return false;
@@ -1291,7 +1294,7 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     MOZ_ASSERT(funObj);
 
     AutoString funSource;
-    JSAutoByteString funBytes;
+    JS::UniqueChars funBytes;
     BuildFunctionTypeSource(cx, funObj, funSource);
     if (!funSource)
         return false;
@@ -1324,7 +1327,7 @@ ConvError(JSContext* cx, HandleObject expectedType, HandleValue actual,
   MOZ_ASSERT(CType::IsCType(expectedType));
 
   AutoString expectedSource;
-  JSAutoByteString expectedBytes;
+  JS::UniqueChars expectedBytes;
   BuildTypeSource(cx, expectedType, true, expectedSource);
   if (!expectedSource)
       return false;
@@ -1340,7 +1343,7 @@ static bool
 ArgumentConvError(JSContext* cx, HandleValue actual, const char* funStr,
                   unsigned argIndex)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
   if (!valStr)
     return false;
@@ -1369,7 +1372,7 @@ ArrayLengthMismatch(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
 {
   MOZ_ASSERT(arrObj && CType::IsCType(arrObj));
 
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
   if (!valStr)
     return false;
@@ -1380,7 +1383,7 @@ ArrayLengthMismatch(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
   SprintfLiteral(actualLengthStr, "%u", actualLength);
 
   AutoString arrSource;
-  JSAutoByteString arrBytes;
+  JS::UniqueChars arrBytes;
   BuildTypeSource(cx, arrObj, true, arrSource);
   if (!arrSource)
       return false;
@@ -1401,7 +1404,7 @@ ArrayLengthOverflow(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
 {
   MOZ_ASSERT(arrObj && CType::IsCType(arrObj));
 
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
   if (!valStr)
     return false;
@@ -1412,7 +1415,7 @@ ArrayLengthOverflow(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
   SprintfLiteral(actualLengthStr, "%u", actualLength);
 
   AutoString arrSource;
-  JSAutoByteString arrBytes;
+  JS::UniqueChars arrBytes;
   BuildTypeSource(cx, arrObj, true, arrSource);
   if (!arrSource)
       return false;
@@ -1454,8 +1457,8 @@ CannotConstructError(JSContext* cx, const char* type)
 static bool
 DuplicateFieldError(JSContext* cx, Handle<JSFlatString*> name)
 {
-  JSAutoByteString nameBytes;
-  const char* nameStr = nameBytes.encodeLatin1(cx, name);
+  JS::UniqueChars nameBytes = JS_EncodeString(cx, name);
+  const char* nameStr = nameBytes.get();
   if (!nameStr)
     return false;
 
@@ -1476,7 +1479,7 @@ static bool
 EmptyFinalizerError(JSContext* cx, ConversionType convType,
                     HandleObject funObj = nullptr, unsigned argIndex = 0)
 {
-  JSAutoByteString posBytes;
+  JS::UniqueChars posBytes;
   const char* posStr;
   if (funObj) {
     AutoString posSource;
@@ -1504,13 +1507,13 @@ FieldCountMismatch(JSContext* cx,
 {
   MOZ_ASSERT(structObj && CType::IsCType(structObj));
 
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
   if (!valStr)
     return false;
 
   AutoString structSource;
-  JSAutoByteString structBytes;
+  JS::UniqueChars structBytes;
   BuildTypeSource(cx, structObj, true, structSource);
   if (!structSource)
       return false;
@@ -1523,7 +1526,7 @@ FieldCountMismatch(JSContext* cx,
   char actualCountStr[16];
   SprintfLiteral(actualCountStr, "%u", actualCount);
 
-  JSAutoByteString posBytes;
+  JS::UniqueChars posBytes;
   const char* posStr;
   if (funObj) {
     AutoString posSource;
@@ -1547,7 +1550,7 @@ FieldCountMismatch(JSContext* cx,
 static bool
 FieldDescriptorCountError(JSContext* cx, HandleValue typeVal, size_t length)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, typeVal, valBytes);
   if (!valStr)
     return false;
@@ -1563,7 +1566,7 @@ FieldDescriptorCountError(JSContext* cx, HandleValue typeVal, size_t length)
 static bool
 FieldDescriptorNameError(JSContext* cx, HandleId id)
 {
-  JSAutoByteString idBytes;
+  JS::UniqueChars idBytes;
   RootedValue idVal(cx, IdToValue(id));
   const char* propStr = CTypesToSourceForError(cx, idVal, idBytes);
   if (!propStr)
@@ -1578,14 +1581,14 @@ static bool
 FieldDescriptorSizeError(JSContext* cx, HandleObject typeObj, HandleId id)
 {
   RootedValue typeVal(cx, ObjectValue(*typeObj));
-  JSAutoByteString typeBytes;
+  JS::UniqueChars typeBytes;
   const char* typeStr = CTypesToSourceForError(cx, typeVal, typeBytes);
   if (!typeStr)
     return false;
 
   RootedString idStr(cx, IdToString(cx, id));
-  JSAutoByteString idBytes;
-  const char* propStr = idBytes.encodeLatin1(cx, idStr);
+  JS::UniqueChars idBytes = JS_EncodeString(cx, idStr);
+  const char* propStr = idBytes.get();
   if (!propStr)
     return false;
 
@@ -1597,7 +1600,7 @@ FieldDescriptorSizeError(JSContext* cx, HandleObject typeObj, HandleId id)
 static bool
 FieldDescriptorNameTypeError(JSContext* cx, HandleValue typeVal)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, typeVal, valBytes);
   if (!valStr)
     return false;
@@ -1610,14 +1613,14 @@ FieldDescriptorNameTypeError(JSContext* cx, HandleValue typeVal)
 static bool
 FieldDescriptorTypeError(JSContext* cx, HandleValue poroVal, HandleId id)
 {
-  JSAutoByteString typeBytes;
+  JS::UniqueChars typeBytes;
   const char* typeStr = CTypesToSourceForError(cx, poroVal, typeBytes);
   if (!typeStr)
     return false;
 
   RootedString idStr(cx, IdToString(cx, id));
-  JSAutoByteString idBytes;
-  const char* propStr = idBytes.encodeLatin1(cx, idStr);
+  JS::UniqueChars idBytes = JS_EncodeString(cx, idStr);
+  const char* propStr = idBytes.get();
   if (!propStr)
     return false;
 
@@ -1629,15 +1632,15 @@ FieldDescriptorTypeError(JSContext* cx, HandleValue poroVal, HandleId id)
 static bool
 FieldMissingError(JSContext* cx, JSObject* typeObj, JSFlatString* name_)
 {
-  JSAutoByteString typeBytes;
+  JS::UniqueChars typeBytes;
   RootedString name(cx, name_);
   RootedValue typeVal(cx, ObjectValue(*typeObj));
   const char* typeStr = CTypesToSourceForError(cx, typeVal, typeBytes);
   if (!typeStr)
     return false;
 
-  JSAutoByteString nameBytes;
-  const char* nameStr = nameBytes.encodeLatin1(cx, name);
+  JS::UniqueChars nameBytes = JS_EncodeString(cx, name);
+  const char* nameStr = nameBytes.get();
   if (!nameStr)
     return false;
 
@@ -1651,13 +1654,13 @@ FinalizerSizeError(JSContext* cx, HandleObject funObj, HandleValue actual)
 {
   MOZ_ASSERT(CType::IsCType(funObj));
 
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
   if (!valStr)
     return false;
 
   AutoString funSource;
-  JSAutoByteString funBytes;
+  JS::UniqueChars funBytes;
   BuildFunctionTypeSource(cx, funObj, funSource);
   if (!funSource)
       return false;
@@ -1677,7 +1680,7 @@ FunctionArgumentLengthMismatch(JSContext* cx,
                                bool isVariadic)
 {
   AutoString funSource;
-  JSAutoByteString funBytes;
+  JS::UniqueChars funBytes;
   Value slot = JS_GetReservedSlot(funObj, SLOT_REFERENT);
   if (!slot.isUndefined() && Library::IsLibrary(&slot.toObject())) {
     BuildFunctionTypeSource(cx, funObj, funSource);
@@ -1708,7 +1711,7 @@ static bool
 FunctionArgumentTypeError(JSContext* cx,
                           uint32_t index, HandleValue typeVal, const char* reason)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, typeVal, valBytes);
   if (!valStr)
     return false;
@@ -1725,7 +1728,7 @@ FunctionArgumentTypeError(JSContext* cx,
 static bool
 FunctionReturnTypeError(JSContext* cx, HandleValue type, const char* reason)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, type, valBytes);
   if (!valStr)
     return false;
@@ -1738,7 +1741,7 @@ FunctionReturnTypeError(JSContext* cx, HandleValue type, const char* reason)
 static bool
 IncompatibleCallee(JSContext* cx, const char* funName, HandleObject actualObj)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   RootedValue val(cx, ObjectValue(*actualObj));
   const char* valStr = CTypesToSourceForError(cx, val, valBytes);
   if (!valStr)
@@ -1762,7 +1765,7 @@ IncompatibleThisProto(JSContext* cx, const char* funName,
 static bool
 IncompatibleThisProto(JSContext* cx, const char* funName, HandleValue actualVal)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actualVal, valBytes);
   if (!valStr)
     return false;
@@ -1786,7 +1789,7 @@ static bool
 IncompatibleThisType(JSContext* cx, const char* funName, const char* actualType,
                      HandleValue actualVal)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actualVal, valBytes);
   if (!valStr)
     return false;
@@ -1800,7 +1803,7 @@ IncompatibleThisType(JSContext* cx, const char* funName, const char* actualType,
 static bool
 InvalidIndexError(JSContext* cx, HandleValue val)
 {
-  JSAutoByteString idBytes;
+  JS::UniqueChars idBytes;
   const char* indexStr = CTypesToSourceForError(cx, val, idBytes);
   if (!indexStr)
     return false;
@@ -1837,7 +1840,7 @@ NonPrimitiveError(JSContext* cx, HandleObject typeObj)
   MOZ_ASSERT(CType::IsCType(typeObj));
 
   AutoString typeSource;
-  JSAutoByteString typeBytes;
+  JS::UniqueChars typeBytes;
   BuildTypeSource(cx, typeObj, true, typeSource);
   if (!typeSource)
       return false;
@@ -1853,7 +1856,7 @@ NonPrimitiveError(JSContext* cx, HandleObject typeObj)
 static bool
 NonStringBaseError(JSContext* cx, HandleValue thisVal)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, thisVal, valBytes);
   if (!valStr)
     return false;
@@ -1866,7 +1869,7 @@ NonStringBaseError(JSContext* cx, HandleValue thisVal)
 static bool
 NullPointerError(JSContext* cx, const char* action, HandleObject obj)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   RootedValue val(cx, ObjectValue(*obj));
   const char* valStr = CTypesToSourceForError(cx, val, valBytes);
   if (!valStr)
@@ -1882,18 +1885,18 @@ PropNameNonStringError(JSContext* cx, HandleId id, HandleValue actual,
                        ConversionType convType,
                        HandleObject funObj = nullptr, unsigned argIndex = 0)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
   if (!valStr)
     return false;
 
-  JSAutoByteString idBytes;
+  JS::UniqueChars idBytes;
   RootedValue idVal(cx, IdToValue(id));
   const char* propStr = CTypesToSourceForError(cx, idVal, idBytes);
   if (!propStr)
     return false;
 
-  JSAutoByteString posBytes;
+  JS::UniqueChars posBytes;
   const char* posStr;
   if (funObj) {
     AutoString posSource;
@@ -1923,7 +1926,7 @@ SizeOverflow(JSContext* cx, const char* name, const char* limit)
 static bool
 TypeError(JSContext* cx, const char* expected, HandleValue actual)
 {
-  JSAutoByteString bytes;
+  JS::UniqueChars bytes;
   const char* src = CTypesToSourceForError(cx, actual, bytes);
   if (!src)
     return false;
@@ -1936,7 +1939,7 @@ TypeError(JSContext* cx, const char* expected, HandleValue actual)
 static bool
 TypeOverflow(JSContext* cx, const char* expected, HandleValue actual)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
   if (!valStr)
     return false;
@@ -1950,7 +1953,7 @@ static bool
 UndefinedSizeCastError(JSContext* cx, HandleObject targetTypeObj)
 {
   AutoString targetTypeSource;
-  JSAutoByteString targetTypeBytes;
+  JS::UniqueChars targetTypeBytes;
   BuildTypeSource(cx, targetTypeObj, true, targetTypeSource);
   if (!targetTypeSource)
       return false;
@@ -1969,7 +1972,7 @@ SizeMismatchCastError(JSContext* cx,
                       size_t sourceSize, size_t targetSize)
 {
   AutoString sourceTypeSource;
-  JSAutoByteString sourceTypeBytes;
+  JS::UniqueChars sourceTypeBytes;
   BuildTypeSource(cx, sourceTypeObj, true, sourceTypeSource);
   if (!sourceTypeSource)
       return false;
@@ -1978,7 +1981,7 @@ SizeMismatchCastError(JSContext* cx,
     return false;
 
   AutoString targetTypeSource;
-  JSAutoByteString targetTypeBytes;
+  JS::UniqueChars targetTypeBytes;
   BuildTypeSource(cx, targetTypeObj, true, targetTypeSource);
   if (!targetTypeSource)
       return false;
@@ -2001,7 +2004,7 @@ SizeMismatchCastError(JSContext* cx,
 static bool
 UndefinedSizePointerError(JSContext* cx, const char* action, HandleObject obj)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   RootedValue val(cx, ObjectValue(*obj));
   const char* valStr = CTypesToSourceForError(cx, val, valBytes);
   if (!valStr)
@@ -2015,7 +2018,7 @@ UndefinedSizePointerError(JSContext* cx, const char* action, HandleObject obj)
 static bool
 VariadicArgumentTypeError(JSContext* cx, uint32_t index, HandleValue actual)
 {
-  JSAutoByteString valBytes;
+  JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
   if (!valStr)
     return false;

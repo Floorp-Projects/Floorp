@@ -10,7 +10,7 @@
 
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Proxy.h"
 #include "js/SourceBufferHolder.h"
@@ -140,8 +140,8 @@ SandboxDump(JSContext* cx, unsigned argc, Value* vp)
     if (!str)
         return false;
 
-    JSAutoByteString utf8str;
-    char* cstr = utf8str.encodeUtf8(cx, str);
+    JS::UniqueChars utf8str = JS_EncodeStringToUTF8(cx, str);
+    char* cstr = utf8str.get();
     if (!cstr)
         return false;
 
@@ -855,69 +855,69 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             return false;
         }
         RootedString nameStr(cx, nameValue.toString());
-        JSAutoByteString name;
-        if (!name.encodeUtf8(cx, nameStr))
+        JS::UniqueChars name = JS_EncodeStringToUTF8(cx, nameStr);
+        if (!name)
             return false;
-        if (!strcmp(name.ptr(), "Blob")) {
+        if (!strcmp(name.get(), "Blob")) {
             Blob = true;
-        } else if (!strcmp(name.ptr(), "ChromeUtils")) {
+        } else if (!strcmp(name.get(), "ChromeUtils")) {
             ChromeUtils = true;
-        } else if (!strcmp(name.ptr(), "CSS")) {
+        } else if (!strcmp(name.get(), "CSS")) {
             CSS = true;
-        } else if (!strcmp(name.ptr(), "CSSRule")) {
+        } else if (!strcmp(name.get(), "CSSRule")) {
             CSSRule = true;
-        } else if (!strcmp(name.ptr(), "Directory")) {
+        } else if (!strcmp(name.get(), "Directory")) {
             Directory = true;
-        } else if (!strcmp(name.ptr(), "DOMParser")) {
+        } else if (!strcmp(name.get(), "DOMParser")) {
             DOMParser = true;
-        } else if (!strcmp(name.ptr(), "Element")) {
+        } else if (!strcmp(name.get(), "Element")) {
             Element = true;
-        } else if (!strcmp(name.ptr(), "Event")) {
+        } else if (!strcmp(name.get(), "Event")) {
             Event = true;
-        } else if (!strcmp(name.ptr(), "File")) {
+        } else if (!strcmp(name.get(), "File")) {
             File = true;
-        } else if (!strcmp(name.ptr(), "FileReader")) {
+        } else if (!strcmp(name.get(), "FileReader")) {
             FileReader = true;
-        } else if (!strcmp(name.ptr(), "FormData")) {
+        } else if (!strcmp(name.get(), "FormData")) {
             FormData = true;
-        } else if (!strcmp(name.ptr(), "InspectorUtils")) {
+        } else if (!strcmp(name.get(), "InspectorUtils")) {
             InspectorUtils = true;
-        } else if (!strcmp(name.ptr(), "MessageChannel")) {
+        } else if (!strcmp(name.get(), "MessageChannel")) {
             MessageChannel = true;
-        } else if (!strcmp(name.ptr(), "Node")) {
+        } else if (!strcmp(name.get(), "Node")) {
             Node = true;
-        } else if (!strcmp(name.ptr(), "NodeFilter")) {
+        } else if (!strcmp(name.get(), "NodeFilter")) {
             NodeFilter = true;
-        } else if (!strcmp(name.ptr(), "TextDecoder")) {
+        } else if (!strcmp(name.get(), "TextDecoder")) {
             TextDecoder = true;
-        } else if (!strcmp(name.ptr(), "TextEncoder")) {
+        } else if (!strcmp(name.get(), "TextEncoder")) {
             TextEncoder = true;
-        } else if (!strcmp(name.ptr(), "URL")) {
+        } else if (!strcmp(name.get(), "URL")) {
             URL = true;
-        } else if (!strcmp(name.ptr(), "URLSearchParams")) {
+        } else if (!strcmp(name.get(), "URLSearchParams")) {
             URLSearchParams = true;
-        } else if (!strcmp(name.ptr(), "XMLHttpRequest")) {
+        } else if (!strcmp(name.get(), "XMLHttpRequest")) {
             XMLHttpRequest = true;
-        } else if (!strcmp(name.ptr(), "XMLSerializer")) {
+        } else if (!strcmp(name.get(), "XMLSerializer")) {
             XMLSerializer = true;
-        } else if (!strcmp(name.ptr(), "atob")) {
+        } else if (!strcmp(name.get(), "atob")) {
             atob = true;
-        } else if (!strcmp(name.ptr(), "btoa")) {
+        } else if (!strcmp(name.get(), "btoa")) {
             btoa = true;
-        } else if (!strcmp(name.ptr(), "caches")) {
+        } else if (!strcmp(name.get(), "caches")) {
             caches = true;
-        } else if (!strcmp(name.ptr(), "crypto")) {
+        } else if (!strcmp(name.get(), "crypto")) {
             crypto = true;
-        } else if (!strcmp(name.ptr(), "fetch")) {
+        } else if (!strcmp(name.get(), "fetch")) {
             fetch = true;
-        } else if (!strcmp(name.ptr(), "indexedDB")) {
+        } else if (!strcmp(name.get(), "indexedDB")) {
             indexedDB = true;
 #ifdef MOZ_WEBRTC
-        } else if (!strcmp(name.ptr(), "rtcIdentityProvider")) {
+        } else if (!strcmp(name.get(), "rtcIdentityProvider")) {
             rtcIdentityProvider = true;
 #endif
         } else {
-            JS_ReportErrorUTF8(cx, "Unknown property name: %s", name.ptr());
+            JS_ReportErrorUTF8(cx, "Unknown property name: %s", name.get());
             return false;
         }
     }
@@ -1540,10 +1540,9 @@ OptionsBase::ParseString(const char* name, nsCString& prop)
         return false;
     }
 
-    char* tmp = JS_EncodeString(mCx, value.toString());
+    JS::UniqueChars tmp = JS_EncodeString(mCx, value.toString());
     NS_ENSURE_TRUE(tmp, false);
-    prop.Assign(tmp, strlen(tmp));
-    js_free(tmp);
+    prop.Assign(tmp.get(), strlen(tmp.get()));
     return true;
 }
 
