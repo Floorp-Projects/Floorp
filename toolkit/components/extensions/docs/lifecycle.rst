@@ -32,6 +32,9 @@ the ``onManifestEntry()`` method for the API is no longer called,
 but an API can examine the new manifest after an update to detect that
 the key has been removed.
 
+Handling lifecycle events
+-------------------------
+
 To be notified of update and uninstall events, an extension lists these
 events in the API manifest:
 
@@ -46,5 +49,12 @@ events in the API manifest:
 If these properties are present, the ``onUpdate()`` and ``onUninstall()``
 methods will be called for the relevant ``ExtensionAPI`` instances when
 an extension that uses the API is updated or uninstalled.
+
+Note that these events can be triggered on extensions that are inactive.
+For that reason, these events can only be handled by extension APIs that
+are built into the browser.  Or, in other words, these events cannot be
+handled by APIs that are implemented in WebExtension experiments.  If the
+implementation of an API relies on these events for corectness, the API
+must be built into the browser and not delievered via an experiment.
 
 .. Should we even document onStartup()?  I think no...

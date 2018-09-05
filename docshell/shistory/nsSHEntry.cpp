@@ -38,6 +38,7 @@ nsSHEntry::nsSHEntry()
   , mIsSrcdocEntry(false)
   , mScrollRestorationIsManual(false)
   , mLoadedInThisProcess(false)
+  , mPersist(true)
 {
 }
 
@@ -1001,3 +1002,20 @@ nsSHEntry::SetAsHistoryLoad()
   mLoadType = LOAD_HISTORY;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsSHEntry::GetPersist(bool* aPersist)
+{
+  NS_ENSURE_ARG_POINTER(aPersist);
+
+  *aPersist = mPersist;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SetPersist(bool aPersist)
+{
+  mPersist = aPersist;
+  return NS_OK;
+}
+

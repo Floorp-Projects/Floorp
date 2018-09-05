@@ -363,8 +363,8 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     if (!DescribeScriptedCaller(cx, &scriptedCaller, "wasm_eval"))
         return false;
 
-    MutableCompileArgs compileArgs = cx->new_<CompileArgs>();
-    if (!compileArgs || !compileArgs->initFromContext(cx, std::move(scriptedCaller)))
+    MutableCompileArgs compileArgs = cx->new_<CompileArgs>(cx, std::move(scriptedCaller));
+    if (!compileArgs)
         return false;
 
     UniqueChars error;
@@ -894,14 +894,7 @@ InitCompileArgs(JSContext* cx, const char* introducer)
     if (!DescribeScriptedCaller(cx, &scriptedCaller, introducer))
         return nullptr;
 
-    MutableCompileArgs compileArgs = cx->new_<CompileArgs>();
-    if (!compileArgs)
-        return nullptr;
-
-    if (!compileArgs->initFromContext(cx, std::move(scriptedCaller)))
-        return nullptr;
-
-    return compileArgs;
+    return cx->new_<CompileArgs>(cx, std::move(scriptedCaller));
 }
 
 static bool
