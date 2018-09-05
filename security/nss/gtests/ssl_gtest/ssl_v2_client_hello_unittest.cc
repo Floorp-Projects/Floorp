@@ -350,6 +350,30 @@ TEST_P(SSLv2ClientHelloTest, RequireSafeRenegotiationWithSCSV) {
   Connect();
 }
 
+TEST_P(SSLv2ClientHelloTest, CheckServerRandom) {
+  ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
+  SetAvailableCipherSuite(TLS_DHE_RSA_WITH_AES_128_CBC_SHA);
+
+  static const size_t random_len = 32;
+  uint8_t srandom1[random_len];
+  uint8_t z[random_len] = {0};
+
+  auto sh = MakeTlsFilter<TlsHandshakeRecorder>(server_, ssl_hs_server_hello);
+  Connect();
+  ASSERT_TRUE(sh->buffer().len() > (random_len + 2));
+  memcpy(srandom1, sh->buffer().data() + 2, random_len);
+  EXPECT_NE(0, memcmp(srandom1, z, random_len));
+
+  Reset();
+  sh = MakeTlsFilter<TlsHandshakeRecorder>(server_, ssl_hs_server_hello);
+  Connect();
+  ASSERT_TRUE(sh->buffer().len() > (random_len + 2));
+  const uint8_t* srandom2 = sh->buffer().data() + 2;
+
+  EXPECT_NE(0, memcmp(srandom2, z, random_len));
+  EXPECT_NE(0, memcmp(srandom1, srandom2, random_len));
+}
+
 // Connect to the server with TLS 1.1, signalling that this is a fallback from
 // a higher version. As the server doesn't support anything higher than TLS 1.1
 // it must accept the connection.

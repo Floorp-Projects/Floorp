@@ -178,7 +178,7 @@ PrintParameterUsage()
     fputs(
         "-V [min]:[max] restricts the set of enabled SSL/TLS protocol versions.\n"
         "   All versions are enabled by default.\n"
-        "   Possible values for min/max: ssl3 tls1.0 tls1.1 tls1.2\n"
+        "   Possible values for min/max: ssl3 tls1.0 tls1.1 tls1.2 tls1.3\n"
         "   Example: \"-V ssl3:\" enables SSL 3 and newer.\n"
         "-D means disable Nagle delays in TCP\n"
         "-R means disable detection of rollback from TLS to SSL3\n"
