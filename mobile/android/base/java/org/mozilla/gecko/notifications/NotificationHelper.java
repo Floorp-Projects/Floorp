@@ -28,6 +28,7 @@ import org.mozilla.gecko.GeckoActivityMonitor;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.mozglue.SafeIntent;
+import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.BitmapUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -118,7 +119,10 @@ public final class NotificationHelper implements BundleEventListener {
 
     // Holds the mapping between the Channel enum used by the rest of our codebase and the
     // channel ID used for communication with the system NotificationManager.
-    private final Map<Channel, String> mDefinedNotificationChannels = new HashMap<Channel, String>(7) {{
+    // How to determine the initialCapacity: Count all channels (including the Updater, which is
+    // only added further down in initNotificationChannels), multiply by 4/3 for a maximum load
+    // factor of 75 % and round up to the next multiple of two.
+    private final Map<Channel, String> mDefinedNotificationChannels = new HashMap<Channel, String>(16) {{
         final String DEFAULT_CHANNEL_TAG = "default2-notification-channel";
         put(Channel.DEFAULT, DEFAULT_CHANNEL_TAG);
 
@@ -134,11 +138,6 @@ public final class NotificationHelper implements BundleEventListener {
         if (AppConstants.MOZ_ANDROID_MMA) {
             final String LP_DEFAULT_CHANNEL_TAG = "lp-default-notification-channel";
             put(Channel.LP_DEFAULT, LP_DEFAULT_CHANNEL_TAG);
-        }
-
-        if (AppConstants.MOZ_UPDATER) {
-            final String UPDATER_CHANNEL_TAG = "updater-notification-channel";
-            put(Channel.UPDATER, UPDATER_CHANNEL_TAG);
         }
 
         final String SYNCED_TABS_CHANNEL_TAG = "synced-tabs-notification-channel";
@@ -192,6 +191,13 @@ public final class NotificationHelper implements BundleEventListener {
     }
 
     private void initNotificationChannels() {
+        final String UPDATER_CHANNEL_TAG = "updater-notification-channel";
+        if (UpdateServiceHelper.isUpdaterEnabled(mContext)) {
+            mDefinedNotificationChannels.put(Channel.UPDATER, UPDATER_CHANNEL_TAG);
+        } else {
+            mDeprecatedNotificationChannels.add(UPDATER_CHANNEL_TAG);
+        }
+
         final NotificationManager notificationManager =
                 (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 
