@@ -71,7 +71,7 @@ ModuleGenerator::ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env
     error_(error),
     cancelled_(cancelled),
     env_(env),
-    linkDataTier_(nullptr),
+    linkData_(nullptr),
     metadataTier_(nullptr),
     taskState_(mutexid::WasmCompileTaskState),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
@@ -183,15 +183,12 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
             return false;
     }
 
-    linkDataTier_ = js::MakeUnique<LinkDataTier>(tier());
-    if (!linkDataTier_)
+    linkData_ = js::MakeUnique<LinkData>(tier());
+    if (!linkData_)
         return false;
 
     metadataTier_ = js::MakeUnique<MetadataTier>(tier());
     if (!metadataTier_)
-        return false;
-
-    if (!assumptions_.clone(compileArgs_->assumptions))
         return false;
 
     // The funcToCodeRange_ maps function indices to code-range indices and all
@@ -514,8 +511,8 @@ ModuleGenerator::noteCodeRange(uint32_t codeRangeIndex, const CodeRange& codeRan
         debugTrapCodeOffset_ = codeRange.begin();
         break;
       case CodeRange::TrapExit:
-        MOZ_ASSERT(!linkDataTier_->trapOffset);
-        linkDataTier_->trapOffset = codeRange.begin();
+        MOZ_ASSERT(!linkData_->trapOffset);
+        linkData_->trapOffset = codeRange.begin();
         break;
       case CodeRange::Throw:
         // Jumped to by other stubs, so nothing to do.
@@ -586,18 +583,18 @@ ModuleGenerator::linkCompiledCode(const CompiledCode& code)
 
     for (const SymbolicAccess& access : code.symbolicAccesses) {
         uint32_t patchAt = offsetInModule + access.patchAt.offset();
-        if (!linkDataTier_->symbolicLinks[access.target].append(patchAt))
+        if (!linkData_->symbolicLinks[access.target].append(patchAt))
             return false;
     }
 
     for (const CodeLabel& codeLabel : code.codeLabels) {
-        LinkDataTier::InternalLink link;
+        LinkData::InternalLink link;
         link.patchAtOffset = offsetInModule + codeLabel.patchAt().offset();
         link.targetOffset = offsetInModule + codeLabel.target().offset();
 #ifdef JS_CODELABEL_LINKMODE
         link.mode = codeLabel.linkMode();
 #endif
-        if (!linkDataTier_->internalLinks.append(link))
+        if (!linkData_->internalLinks.append(link))
             return false;
     }
 
@@ -937,11 +934,11 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     if (!finishMetadata(bytecode))
         return nullptr;
 
-    return ModuleSegment::create(tier(), masm_, *linkDataTier_);
+    return ModuleSegment::create(tier(), masm_, *linkData_);
 }
 
 SharedModule
-ModuleGenerator::finishModule(const ShareableBytes& bytecode)
+ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* linkData)
 {
     MOZ_ASSERT(mode() == CompileMode::Once || mode() == CompileMode::Tier1);
 
@@ -953,24 +950,12 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
     if (!jumpTables.init(mode(), *moduleSegment, metadataTier_->codeRanges))
         return nullptr;
 
-    UniqueConstBytes maybeDebuggingBytes;
-    if (env_->debugEnabled()) {
-        MOZ_ASSERT(mode() == CompileMode::Once);
-        Bytes bytes;
-        if (!bytes.resize(masm_.bytesNeeded()))
-            return nullptr;
-        masm_.executableCopy(bytes.begin(), /* flushICache = */ false);
-        maybeDebuggingBytes = js::MakeUnique<Bytes>(std::move(bytes));
-        if (!maybeDebuggingBytes)
-            return nullptr;
-    }
-
     auto codeTier = js::MakeUnique<CodeTier>(std::move(metadataTier_), std::move(moduleSegment));
     if (!codeTier)
         return nullptr;
 
     MutableCode code = js_new<Code>(std::move(codeTier), *metadata_, std::move(jumpTables));
-    if (!code || !code->initialize(bytecode, *linkDataTier_))
+    if (!code || !code->initialize(bytecode, *linkData_))
         return nullptr;
 
     StructTypeVector structTypes;
@@ -979,21 +964,41 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
             return nullptr;
     }
 
-    SharedModule module(js_new<Module>(std::move(assumptions_),
-                                       *code,
-                                       std::move(maybeDebuggingBytes),
-                                       LinkData(std::move(linkDataTier_)),
+    UniqueBytes debugUnlinkedCode;
+    UniqueLinkData debugLinkData;
+    if (env_->debugEnabled()) {
+        MOZ_ASSERT(mode() == CompileMode::Once);
+        MOZ_ASSERT(tier() == Tier::Debug);
+
+        debugUnlinkedCode = js::MakeUnique<Bytes>();
+        if (!debugUnlinkedCode || !debugUnlinkedCode->resize(masm_.bytesNeeded()))
+            return nullptr;
+
+        masm_.executableCopy(debugUnlinkedCode->begin(), /* flushICache = */ false);
+
+        debugLinkData = std::move(linkData_);
+    }
+
+    SharedModule module(js_new<Module>(*code,
                                        std::move(env_->imports),
                                        std::move(env_->exports),
                                        std::move(env_->dataSegments),
                                        std::move(env_->elemSegments),
                                        std::move(structTypes),
-                                       bytecode));
+                                       bytecode,
+                                       std::move(debugUnlinkedCode),
+                                       std::move(debugLinkData)));
     if (!module)
         return nullptr;
 
     if (mode() == CompileMode::Tier1)
         module->startTier2(*compileArgs_);
+
+    if (linkData) {
+        MOZ_ASSERT(isAsmJS());
+        MOZ_ASSERT(!env_->debugEnabled());
+        *linkData = std::move(linkData_);
+    }
 
     return module;
 }
@@ -1022,7 +1027,7 @@ ModuleGenerator::finishTier2(Module& module)
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
-    return module.finishTier2(std::move(linkDataTier_), std::move(tier2), env_);
+    return module.finishTier2(*linkData_, std::move(tier2), std::move(*env_));
 }
 
 size_t

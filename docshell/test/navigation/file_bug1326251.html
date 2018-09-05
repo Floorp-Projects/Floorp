@@ -49,8 +49,8 @@
         let shistory = docShell.QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
                                .sessionHistory;
         // Now staticFrame has frame0 -> frame1 -> frame2.
-        opener.is(docShell.previousTransIndex, 3, 'docShell.previousTransIndex');
-        opener.is(docShell.loadedTransIndex, 2, 'docShell.loadedTransIndex');
+        opener.is(docShell.previousEntryIndex, 3, 'docShell.previousEntryIndex');
+        opener.is(docShell.loadedEntryIndex, 2, 'docShell.loadedEntryIndex');
         opener.is(shistory.index, 2, 'shistory.index');
         opener.is(history.length, 4, 'history.length');
         opener.is(document.getElementById('staticFrame').contentWindow.location.href, BASE_URL + 'frame2.html', 'staticFrame location');
@@ -109,8 +109,8 @@
                                .sessionHistory;
         // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static
         // innerStaticFrame:                                frame0        -> frame1
-        opener.is(docShell.previousTransIndex, 5, 'docShell.previousTransIndex');
-        opener.is(docShell.loadedTransIndex, 4, 'docShell.loadedTransIndex');
+        opener.is(docShell.previousEntryIndex, 5, 'docShell.previousEntryIndex');
+        opener.is(docShell.loadedEntryIndex, 4, 'docShell.loadedEntryIndex');
         opener.is(shistory.index, 4, 'shistory.index');
         opener.is(history.length, 6, 'history.length');
         let staticFrame = document.getElementById('staticFrame');
