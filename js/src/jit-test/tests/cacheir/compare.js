@@ -191,3 +191,36 @@ warmup(UndefNull_SNEQ1, [[undefined, null, true], [undefined, undefined, false],
 var typeDifference = function(a,b) { return a === b; }
 warmup(typeDifference, [[1,1, true], [3,3, true], [3, typeDifference, false],[typeDifference, {}, false],
                         [3.2, 1, false], [0, -0, true]]);
+
+// String + Number
+var String_Number_GT1 = (a, b) => { return a > b; }
+warmup(String_Number_GT1, [["1.4",2, false], [1,"1", false], ["3",4, false],
+                           [-1024, "-1023", false], [1.3, "1.2", true]]);
+
+var String_Number_GTE1 = (a, b) => { return a >= b; }
+warmup(String_Number_GTE1, [["1.4",2, false], [1,"1", true], [3,"4", false],
+                            [-1024, "-1023", false], [1.2, "1.2", true]]);
+
+var String_Number_LT1 = (a, b) => { return a < b; }
+warmup(String_Number_LT1, [["1.4",2, true], ["1",1, false], [3,"4", true],
+                           [-1024, "-1023", true], [1.2, "1.2", false]]);
+
+var String_Number_LTE1 = (a, b) => { return a <= b; }
+warmup(String_Number_LTE1, [["1.4",2, true], ["1",1, true], [3,"4", true],
+                            [-1024, "-1023", true], [1.2, "1.2", true]]);
+
+var String_Number_EQ1 = (a, b) => { return a == b; }
+warmup(String_Number_EQ1, [["1.4",2, false], ["1",1, true], [3,"4", false],
+                          [-1024, "-1023", false], [1.2, "1.2", true]]);
+
+var String_Number_NEQ1 = (a, b) => { return a != b; }
+warmup(String_Number_NEQ1, [["1.4",2, true], ["1",1, false], [3,"4", true],
+                            [-1024, "-1023", true], [1.2, "1.2", false]]);
+
+var String_Number_SEQ1 = (a, b) => { return a === b; }
+warmup(String_Number_SEQ1, [["1.4",2, false],  ["1",1, false], [3,"4", false],
+                            [-1024, "-1023", false], [1.2, "1.2", false]]);
+
+var String_Number_SNEQ1 = (a, b) => { return a !== b; }
+warmup(String_Number_SNEQ1, [["1.4",2, true], ["1",1, true], [3,"4", true],
+                             [-1024, "-1023", true], [1.2, "1.2", true]]);
