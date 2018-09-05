@@ -21,7 +21,9 @@ var gFeatures = undefined;
 let {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
 this.AntiTracking = {
-  runTest(name, callbackTracking, callbackNonTracking, cleanupFunction, extraPrefs, windowOpenTest = true, userInteractionTest = true, expectedBlockingNotifications = true) {
+  runTest(name, callbackTracking, callbackNonTracking, cleanupFunction, extraPrefs,
+          windowOpenTest = true, userInteractionTest = true, expectedBlockingNotifications = true,
+          runInPrivateWindow = false) {
     // Here we want to test that a 3rd party context is simply blocked.
     this._createTask({
       name,
@@ -31,6 +33,7 @@ this.AntiTracking = {
       callback: callbackTracking,
       extraPrefs,
       expectedBlockingNotifications,
+      runInPrivateWindow,
     });
     this._createCleanupTask(cleanupFunction);
 
@@ -75,6 +78,7 @@ this.AntiTracking = {
           callback: callbackNonTracking,
           extraPrefs: [],
           expectedBlockingNotifications: false,
+          runInPrivateWindow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -86,6 +90,7 @@ this.AntiTracking = {
           callback: callbackNonTracking,
           extraPrefs: [],
           expectedBlockingNotifications: false,
+          runInPrivateWindow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -97,6 +102,7 @@ this.AntiTracking = {
           callback: callbackNonTracking,
           extraPrefs: [],
           expectedBlockingNotifications: false,
+          runInPrivateWindow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -108,6 +114,7 @@ this.AntiTracking = {
           callback: callbackNonTracking,
           extraPrefs: [],
           expectedBlockingNotifications: false,
+          runInPrivateWindow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -119,6 +126,7 @@ this.AntiTracking = {
           callback: callbackNonTracking,
           extraPrefs: [],
           expectedBlockingNotifications: false,
+          runInPrivateWindow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -130,6 +138,7 @@ this.AntiTracking = {
           callback: callbackNonTracking,
           extraPrefs: [],
           expectedBlockingNotifications: false,
+          runInPrivateWindow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -142,6 +151,7 @@ this.AntiTracking = {
           callback: callbackNonTracking,
           extraPrefs: [],
           expectedBlockingNotifications: false,
+          runInPrivateWindow,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -153,6 +163,7 @@ this.AntiTracking = {
           callback: callbackNonTracking,
           extraPrefs: [],
           expectedBlockingNotifications: false,
+          runInPrivateWindow,
         });
         this._createCleanupTask(cleanupFunction);
       } else {
@@ -164,6 +175,7 @@ this.AntiTracking = {
           callback: callbackNonTracking,
           extraPrefs: [],
           expectedBlockingNotifications: false,
+          runInPrivateWindow,
         });
         this._createCleanupTask(cleanupFunction);
       }
@@ -171,20 +183,20 @@ this.AntiTracking = {
       // Phase 2: Here we want to test that a third-party context doesn't
       // get blocked with when the same origin is opened through window.open().
       if (windowOpenTest) {
-        this._createWindowOpenTask(name, callbackTracking, callbackNonTracking, extraPrefs);
+        this._createWindowOpenTask(name, callbackTracking, callbackNonTracking, runInPrivateWindow, extraPrefs);
         this._createCleanupTask(cleanupFunction);
       }
 
       // Phase 3: Here we want to test that a third-party context doesn't
       // get blocked with user interaction present
       if (userInteractionTest) {
-        this._createUserInteractionTask(name, callbackTracking, callbackNonTracking, extraPrefs);
+        this._createUserInteractionTask(name, callbackTracking, callbackNonTracking, runInPrivateWindow, extraPrefs);
         this._createCleanupTask(cleanupFunction);
       }
     }
   },
 
-  async _setupTest(cookieBehavior, blockingByContentBlocking, extraPrefs) {
+  async _setupTest(win, cookieBehavior, blockingByContentBlocking, extraPrefs) {
     await SpecialPowers.flushPrefEnv();
     await SpecialPowers.pushPrefEnv({"set": [
       ["browser.contentblocking.enabled", blockingByContentBlocking],
@@ -192,7 +204,7 @@ this.AntiTracking = {
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.pbmode.enabled", false],
       ["privacy.trackingprotection.annotate_channels", cookieBehavior != BEHAVIOR_ACCEPT],
-      [ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS],
+      [win.ContentBlocking.prefIntroCount, win.ContentBlocking.MAX_INTROS],
     ]});
 
     if (extraPrefs && Array.isArray(extraPrefs) && extraPrefs.length) {
@@ -206,11 +218,18 @@ this.AntiTracking = {
     add_task(async function() {
       info("Starting " + (options.cookieBehavior != BEHAVIOR_ACCEPT ? "blocking" : "non-blocking") + " cookieBehavior (" + options.cookieBehavior + ") and " +
                          (options.blockingByContentBlocking ? "blocking" : "non-blocking") + " contentBlocking with" +
-                         (options.allowList ? "" : "out") + " allow list test " + options.name);
+                         (options.allowList ? "" : "out") + " allow list test " + options.name +
+                         " running in a " + (options.runInPrivateWindow ? "private" : "normal") + " window");
 
-     requestLongerTimeout(2);
+      requestLongerTimeout(2);
 
-      await AntiTracking._setupTest(options.cookieBehavior,
+      let win = window;
+      if (options.runInPrivateWindow) {
+        win = OpenBrowserWindow({private: true});
+        await TestUtils.topicObserved("browser-delayed-startup-finished");
+      }
+
+      await AntiTracking._setupTest(win, options.cookieBehavior,
                                     options.blockingByContentBlocking,
                                     options.extraPrefs);
 
@@ -222,18 +241,18 @@ this.AntiTracking = {
           }
         },
       };
-      gBrowser.addProgressListener(listener);
+      win.gBrowser.addProgressListener(listener);
 
       info("Creating a new tab");
-      let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
-      gBrowser.selectedTab = tab;
+      let tab = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);
+      win.gBrowser.selectedTab = tab;
 
-      let browser = gBrowser.getBrowserForTab(tab);
+      let browser = win.gBrowser.getBrowserForTab(tab);
       await BrowserTestUtils.browserLoaded(browser);
 
       if (options.allowList) {
         info("Disabling content blocking for this page");
-        ContentBlocking.disableForCurrentPage();
+        win.ContentBlocking.disableForCurrentPage();
 
         // The previous function reloads the browser, so wait for it to load again!
         await BrowserTestUtils.browserLoaded(browser);
@@ -278,18 +297,22 @@ this.AntiTracking = {
 
       if (options.allowList) {
         info("Enabling content blocking for this page");
-        ContentBlocking.enableForCurrentPage();
+        win.ContentBlocking.enableForCurrentPage();
 
         // The previous function reloads the browser, so wait for it to load again!
         await BrowserTestUtils.browserLoaded(browser);
       }
 
-      gBrowser.removeProgressListener(listener);
+      win.gBrowser.removeProgressListener(listener);
 
       is(!!cookieBlocked, options.expectedBlockingNotifications, "Checking cookie blocking notifications");
 
       info("Removing the tab");
       BrowserTestUtils.removeTab(tab);
+
+      if (options.runInPrivateWindow) {
+        win.close();
+      }
     });
   },
 
@@ -302,19 +325,25 @@ this.AntiTracking = {
     });
   },
 
-  _createWindowOpenTask(name, blockingCallback, nonBlockingCallback, extraPrefs) {
+  _createWindowOpenTask(name, blockingCallback, nonBlockingCallback, runInPrivateWindow, extraPrefs) {
     add_task(async function() {
       info("Starting window-open test " + name);
 
       requestLongerTimeout(2);
 
-      await AntiTracking._setupTest(BEHAVIOR_REJECT_TRACKER, true, extraPrefs);
+      let win = window;
+      if (runInPrivateWindow) {
+        win = OpenBrowserWindow({private: true});
+        await TestUtils.topicObserved("browser-delayed-startup-finished");
+      }
+
+      await AntiTracking._setupTest(win, BEHAVIOR_REJECT_TRACKER, true, extraPrefs);
 
       info("Creating a new tab");
-      let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
-      gBrowser.selectedTab = tab;
+      let tab = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);
+      win.gBrowser.selectedTab = tab;
 
-      let browser = gBrowser.getBrowserForTab(tab);
+      let browser = win.gBrowser.getBrowserForTab(tab);
       await BrowserTestUtils.browserLoaded(browser);
 
       let pageURL = TEST_3RD_PARTY_PAGE_WO;
@@ -363,22 +392,32 @@ this.AntiTracking = {
 
       info("Removing the tab");
       BrowserTestUtils.removeTab(tab);
+
+      if (runInPrivateWindow) {
+        win.close();
+      }
     });
   },
 
-  _createUserInteractionTask(name, blockingCallback, nonBlockingCallback, extraPrefs) {
+  _createUserInteractionTask(name, blockingCallback, nonBlockingCallback, runInPrivateWindow, extraPrefs) {
     add_task(async function() {
       info("Starting user-interaction test " + name);
 
       requestLongerTimeout(2);
 
-      await AntiTracking._setupTest(BEHAVIOR_REJECT_TRACKER, true, extraPrefs);
+      let win = window;
+      if (runInPrivateWindow) {
+        win = OpenBrowserWindow({private: true});
+        await TestUtils.topicObserved("browser-delayed-startup-finished");
+      }
+
+      await AntiTracking._setupTest(win, BEHAVIOR_REJECT_TRACKER, true, extraPrefs);
 
       info("Creating a new tab");
-      let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
-      gBrowser.selectedTab = tab;
+      let tab = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);
+      win.gBrowser.selectedTab = tab;
 
-      let browser = gBrowser.getBrowserForTab(tab);
+      let browser = win.gBrowser.getBrowserForTab(tab);
       await BrowserTestUtils.browserLoaded(browser);
 
       info("Creating a 3rd party content");
@@ -461,6 +500,10 @@ this.AntiTracking = {
 
       info("Removing the tab");
       BrowserTestUtils.removeTab(tab);
+
+      if (runInPrivateWindow) {
+        win.close();
+      }
     });
   },
 };
