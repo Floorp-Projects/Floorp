@@ -1363,7 +1363,7 @@ CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
     JSString* filenameStr = ResolvePath(cx, rawFilenameStr, ScriptRelative);
     if (!filenameStr)
         return false;
-    UniqueChars filename = JS_EncodeString(cx, filenameStr);
+    UniqueChars filename = JS_EncodeStringToLatin1(cx, filenameStr);
     if (!filename)
         return false;
 
@@ -1553,7 +1553,7 @@ LoadScript(JSContext* cx, unsigned argc, Value* vp, bool scriptRelative)
             JS_ReportErrorASCII(cx, "unable to resolve path");
             return false;
         }
-        UniqueChars filename = JS_EncodeString(cx, str);
+        UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
         if (!filename)
             return false;
         errno = 0;
@@ -1615,7 +1615,7 @@ ParseCompileOptions(JSContext* cx, CompileOptions& options, HandleObject opts,
         s = ToString(cx, v);
         if (!s)
             return false;
-        fileNameBytes = JS_EncodeString(cx, s);
+        fileNameBytes = JS_EncodeStringToLatin1(cx, s);
         if (!fileNameBytes)
             return false;
         options.setFile(fileNameBytes.get());
@@ -2098,7 +2098,7 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
 JSString*
 js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr)
 {
-    UniqueChars pathname = JS_EncodeString(cx, pathnameStr);
+    UniqueChars pathname = JS_EncodeStringToLatin1(cx, pathnameStr);
     if (!pathname)
         return nullptr;
 
@@ -2194,7 +2194,7 @@ Run(JSContext* cx, unsigned argc, Value* vp)
     int64_t startClock = PRMJ_Now();
     {
         /* FIXME: This should use UTF-8 (bug 987069). */
-        UniqueChars filename = JS_EncodeString(cx, str);
+        UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
         if (!filename)
             return false;
 
@@ -3152,7 +3152,7 @@ DisassFile(JSContext* cx, unsigned argc, Value* vp)
     JSString* str = JS::ToString(cx, HandleValue::fromMarkedLocation(&p.argv[0]));
     if (!str)
         return false;
-    UniqueChars filename = JS_EncodeString(cx, str);
+    UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
     if (!filename)
         return false;
     RootedScript script(cx);
@@ -4376,7 +4376,7 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
         }
 
         RootedString str(cx, args[1].toString());
-        filename = JS_EncodeString(cx, str);
+        filename = JS_EncodeStringToLatin1(cx, str);
         if (!filename)
             return false;
 
@@ -5429,7 +5429,7 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
                 return false;
             }
         } else {
-            arg = JS_EncodeString(cx, str);
+            arg = JS_EncodeStringToLatin1(cx, str);
             if (!arg)
                 return false;
         }
@@ -7160,7 +7160,7 @@ SetARMHwCapFlags(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
 #if defined(JS_CODEGEN_ARM)
-    UniqueChars flagsList = JS_EncodeString(cx, flagsListString);
+    UniqueChars flagsList = JS_EncodeStringToLatin1(cx, flagsListString);
     if (!flagsList)
         return false;
 
@@ -9057,7 +9057,7 @@ ProcessArgs(JSContext* cx, OptionParser* op)
         if (!absolutePath)
             return false;
 
-        sc->moduleLoadPath = JS_EncodeString(cx, absolutePath);
+        sc->moduleLoadPath = JS_EncodeStringToLatin1(cx, absolutePath);
     } else {
         sc->moduleLoadPath = js::shell::GetCWD();
     }

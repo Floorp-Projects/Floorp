@@ -985,7 +985,7 @@ GetErrorMessage(void* userRef, const unsigned errorNumber)
 static JS::UniqueChars
 EncodeLatin1(JSContext* cx, AutoString& str)
 {
-  return JS_EncodeString(cx, NewUCString(cx, str.finish()));
+  return JS_EncodeStringToLatin1(cx, NewUCString(cx, str.finish()));
 }
 
 static const char*
@@ -996,7 +996,7 @@ CTypesToSourceForError(JSContext* cx, HandleValue val, JS::UniqueChars& bytes)
       if (CType::IsCType(obj) || CData::IsCDataMaybeUnwrap(&obj)) {
           RootedValue v(cx, ObjectValue(*obj));
           RootedString str(cx, JS_ValueToSource(cx, v));
-          bytes = JS_EncodeString(cx, str);
+          bytes = JS_EncodeStringToLatin1(cx, str);
           return bytes.get();
       }
   }
@@ -1212,7 +1212,7 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     case TYPE_struct: {
       JSFlatString* name = GetFieldName(arrObj, arrIndex);
       MOZ_ASSERT(name);
-      JS::UniqueChars nameStr = JS_EncodeString(cx, name);
+      JS::UniqueChars nameStr = JS_EncodeStringToLatin1(cx, name);
       if (!nameStr)
         return false;
 
@@ -1445,7 +1445,7 @@ CannotConstructError(JSContext* cx, const char* type)
 static bool
 DuplicateFieldError(JSContext* cx, Handle<JSFlatString*> name)
 {
-  JS::UniqueChars nameStr = JS_EncodeString(cx, name);
+  JS::UniqueChars nameStr = JS_EncodeStringToLatin1(cx, name);
   if (!nameStr)
     return false;
 
@@ -1567,7 +1567,7 @@ FieldDescriptorSizeError(JSContext* cx, HandleObject typeObj, HandleId id)
     return false;
 
   RootedString idStr(cx, IdToString(cx, id));
-  JS::UniqueChars propStr = JS_EncodeString(cx, idStr);
+  JS::UniqueChars propStr = JS_EncodeStringToLatin1(cx, idStr);
   if (!propStr)
     return false;
 
@@ -1598,7 +1598,7 @@ FieldDescriptorTypeError(JSContext* cx, HandleValue poroVal, HandleId id)
     return false;
 
   RootedString idStr(cx, IdToString(cx, id));
-  JS::UniqueChars propStr = JS_EncodeString(cx, idStr);
+  JS::UniqueChars propStr = JS_EncodeStringToLatin1(cx, idStr);
   if (!propStr)
     return false;
 
@@ -1617,7 +1617,7 @@ FieldMissingError(JSContext* cx, JSObject* typeObj, JSFlatString* name_)
   if (!typeStr)
     return false;
 
-  JS::UniqueChars nameStr = JS_EncodeString(cx, name);
+  JS::UniqueChars nameStr = JS_EncodeStringToLatin1(cx, name);
   if (!nameStr)
     return false;
 
