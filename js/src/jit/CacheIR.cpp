@@ -5009,6 +5009,38 @@ CompareIRGenerator::tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsI
 }
 
 bool
+CompareIRGenerator::tryAttachStringNumber(ValOperandId lhsId, ValOperandId rhsId)
+{
+    // Ensure String x Number
+    if (!(lhsVal_.isString() && rhsVal_.isNumber()) &&
+        !(rhsVal_.isString() && lhsVal_.isNumber()))
+    {
+        return false;
+    }
+
+    // Case should have been handled by tryAttachStrictlDifferentTypes
+    MOZ_ASSERT(op_ != JSOP_STRICTEQ && op_ != JSOP_STRICTNE);
+
+    auto createGuards = [&](HandleValue v, ValOperandId vId) {
+        if (v.isString()) {
+            StringOperandId strId = writer.guardIsString(vId);
+            return writer.guardAndGetNumberFromString(strId);
+        }
+        MOZ_ASSERT(v.isNumber());
+        writer.guardIsNumber(vId);
+        return vId;
+    };
+
+    ValOperandId lhsGuardedId = createGuards(lhsVal_, lhsId);
+    ValOperandId rhsGuardedId = createGuards(rhsVal_, rhsId);
+    writer.compareDoubleResult(op_, lhsGuardedId, rhsGuardedId);
+    writer.returnFromIC();
+
+    trackAttached("StringNumber");
+    return true;
+}
+
+bool
 CompareIRGenerator::tryAttachStub()
 {
     MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
@@ -5029,8 +5061,7 @@ CompareIRGenerator::tryAttachStub()
 
     // For sloppy equality ops, there are cases this IC does not handle:
     // - {Symbol} x {Null, Undefined, String, Bool, Number}.
-    // - {String} x {Null, Undefined, Symbol, Bool, Number}. Bug 1467907 will add support
-    //   for {String} x {Int32}.
+    // - {String} x {Null, Undefined, Symbol, Bool, Number}.
     // - {Bool} x {Double}.
     // - {Object} x {String, Symbol, Bool, Number}.
     if (IsEqualityOp(op_)) {
@@ -5071,6 +5102,9 @@ CompareIRGenerator::tryAttachStub()
     if (tryAttachInt32(lhsId, rhsId))
         return true;
     if (tryAttachNumber(lhsId, rhsId))
+        return true;
+
+    if (tryAttachStringNumber(lhsId, rhsId))
         return true;
 
     trackAttached(IRGenerator::NotAttached);
