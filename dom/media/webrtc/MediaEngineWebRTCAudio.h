@@ -140,49 +140,6 @@ protected:
 
 private:
   /**
-   * Representation of data tied to an AllocationHandle rather than to the source.
-   */
-  struct Allocation {
-    Allocation() = delete;
-    explicit Allocation(const RefPtr<AllocationHandle>& aHandle);
-    ~Allocation();
-
-#ifdef DEBUG
-    // The MSGImpl::IterationEnd() of the last time we appended data from an
-    // audio callback.
-    // Guarded by MediaEngineWebRTCMicrophoneSource::mMutex.
-    GraphTime mLastCallbackAppendTime = 0;
-#endif
-    // Set to false by Start(). Becomes true after the first time we append real
-    // audio frames from the audio callback.
-    // Guarded by MediaEngineWebRTCMicrophoneSource::mMutex.
-    bool mLiveFramesAppended = false;
-
-    // Set to false by Start(). Becomes true after the first time we append
-    // silence *after* the first audio callback has appended real frames.
-    // Guarded by MediaEngineWebRTCMicrophoneSource::mMutex.
-    bool mLiveSilenceAppended = false;
-
-    const RefPtr<AllocationHandle> mHandle;
-    RefPtr<SourceMediaStream> mStream;
-    TrackID mTrackID = TRACK_NONE;
-    PrincipalHandle mPrincipal = PRINCIPAL_HANDLE_NONE;
-    bool mEnabled = false;
-  };
-
-  /**
-   * Used with nsTArray<Allocation>::IndexOf to locate an Allocation by a handle.
-   */
-  class AllocationHandleComparator {
-  public:
-    bool Equals(const Allocation& aAllocation,
-                const RefPtr<const AllocationHandle>& aHandle) const
-    {
-      return aHandle == aAllocation.mHandle;
-    }
-  };
-
-  /**
    * Reevaluates the aggregated constraints of all allocations and restarts the
    * underlying device if necessary.
    *
@@ -240,7 +197,15 @@ private:
   // Graph thread only.
   bool PassThrough(MediaStreamGraphImpl* aGraphImpl) const;
 
-  // Set on construction and then immutable, can be used anywhere.
+  // Those are written on the MediaManager thread, read on either the
+  // MediaManager thread or the MSG thread. Guarded by mMutex.
+  RefPtr<AllocationHandle> mHandle;
+  RefPtr<SourceMediaStream> mStream;
+  TrackID mTrackID = TRACK_NONE;
+  PrincipalHandle mPrincipal = PRINCIPAL_HANDLE_NONE;
+  bool mEnabled = false;
+
+  // Set on construction and then immutable. Used on the MediaManager thread.
   const RefPtr<AudioDeviceInfo> mDeviceInfo;
   // Those four members are set on construction, on the MediaManager thread.
   const bool mDelayAgnostic;
@@ -260,11 +225,9 @@ private:
   // Current state of the shared resource for this source. Written on the
   // owning thread, read on either the owning thread or the MSG thread.
   Atomic<MediaEngineSourceState> mState;
+  // This mutex must be held to access mAllocation (and its members) and
+  // modifying mListener.
   Mutex mMutex;
-  // We set an allocation in Allocate() and remove it in Deallocate().
-  // Must be set on the MediaManager thread and is then accessed while holding
-  // mMutex on the MSG thread or the MediaManager thread.
-  UniquePtr<Allocation> mAllocation;
   // mListener is created on the MediaManager thread, and then sent to the MSG
   // thread. On shutdown, we send this pointer to the MSG thread again, telling
   // it to clean up.
@@ -297,6 +260,21 @@ private:
   AlignedFloatBuffer mDeinterleavedBuffer;
   // Stores the mixed down input audio
   AlignedFloatBuffer mInputDownmixBuffer;
+#ifdef DEBUG
+  // The MSGImpl::IterationEnd() of the last time we appended data from an
+  // audio callback.
+  // Guarded by MediaEngineWebRTCMicrophoneSource::mMutex.
+  GraphTime mLastCallbackAppendTime = 0;
+#endif
+  // Set to false by Start(). Becomes true after the first time we append real
+  // audio frames from the audio callback.
+  // Guarded by MediaEngineWebRTCMicrophoneSource::mMutex.
+  bool mLiveFramesAppended = false;
+
+  // Set to false by Start(). Becomes true after the first time we append
+  // silence *after* the first audio callback has appended real frames.
+  // Guarded by MediaEngineWebRTCMicrophoneSource::mMutex.
+  bool mLiveSilenceAppended = false;
 };
 
 
