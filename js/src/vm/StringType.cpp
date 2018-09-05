@@ -17,6 +17,9 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
+#include "jsfriendapi.h"
+
+#include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "gc/Nursery.h"
@@ -2063,28 +2066,19 @@ js::EncodeLatin1(JSContext* cx, JSString* str)
 }
 
 UniqueChars
-js::ValueToPrintableLatin1(JSContext* cx, const Value& vArg, bool asSource)
+js::IdToPrintableUTF8(JSContext* cx, HandleId id, IdToPrintableBehavior behavior)
 {
-    RootedValue v(cx, vArg);
+    // ToString(<symbol>) throws a TypeError, therefore require that callers
+    // request source representation when |id| is a property key.
+    MOZ_ASSERT_IF(behavior == IdToPrintableBehavior::IdIsIdentifier,
+                  JSID_IS_ATOM(id) && frontend::IsIdentifier(JSID_TO_ATOM(id)));
+
+    RootedValue v(cx, IdToValue(id));
     JSString* str;
-    if (asSource)
+    if (behavior == IdToPrintableBehavior::IdIsPropertyKey)
         str = ValueToSource(cx, v);
     else
         str = ToString<CanGC>(cx, v);
-    if (!str)
-        return nullptr;
-    return QuoteString(cx, str);
-}
-
-UniqueChars
-js::ValueToPrintableUTF8(JSContext* cx, const Value& vArg, bool asSource)
-{
-    RootedValue v(cx, vArg);
-    RootedString str(cx);
-    if (asSource)
-        str.set(ValueToSource(cx, v));
-    else
-        str.set(ToString<CanGC>(cx, v));
     if (!str)
         return nullptr;
     return StringToNewUTF8CharsZ(cx, *str);
