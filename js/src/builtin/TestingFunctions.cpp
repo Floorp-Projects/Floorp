@@ -2194,7 +2194,7 @@ DumpHeap(JSContext* cx, unsigned argc, Value* vp)
         if (v.isString()) {
             if (!fuzzingSafe) {
                 RootedString str(cx, v.toString());
-                UniqueChars fileNameBytes = JS_EncodeString(cx, str);
+                UniqueChars fileNameBytes = JS_EncodeStringToLatin1(cx, str);
                 if (!fileNameBytes)
                     return false;
                 dumpFile = fopen(fileNameBytes.get(), "w");
@@ -2760,7 +2760,7 @@ class CloneBufferObject : public NativeObject {
             JSString* str = JS::ToString(cx, args.get(0));
             if (!str)
                 return false;
-            dataOwner = JS_EncodeString(cx, str);
+            dataOwner = JS_EncodeStringToLatin1(cx, str);
             if (!dataOwner)
                 return false;
             data = dataOwner.get();
@@ -4735,7 +4735,7 @@ SetTimeZone(JSContext* cx, unsigned argc, Value* vp)
     };
 
     if (args[0].isString() && !args[0].toString()->empty()) {
-        UniqueChars timeZone = JS_EncodeString(cx, args[0].toString());
+        UniqueChars timeZone = JS_EncodeStringToLatin1(cx, args[0].toString());
         if (!timeZone)
             return false;
 
@@ -4825,7 +4825,7 @@ SetDefaultLocale(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
 
-        UniqueChars locale = JS_EncodeString(cx, str);
+        UniqueChars locale = JS_EncodeStringToLatin1(cx, str);
         if (!locale)
             return false;
 

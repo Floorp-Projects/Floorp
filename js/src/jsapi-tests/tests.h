@@ -103,9 +103,8 @@ class JSAPITest
     bool evaluate(const char* bytes, const char* filename, int lineno, JS::MutableHandleValue vp);
 
     JSAPITestString jsvalToSource(JS::HandleValue v) {
-        JSString* str = JS_ValueToSource(cx, v);
-        if (str) {
-            if (JS::UniqueChars bytes = JS_EncodeString(cx, str))
+        if (JSString* str = JS_ValueToSource(cx, v)) {
+            if (JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str))
                 return JSAPITestString(bytes.get());
         }
         JS_ClearPendingException(cx);
@@ -232,7 +231,7 @@ class JSAPITest
             JS_ClearPendingException(cx);
             JSString* s = JS::ToString(cx, v);
             if (s) {
-                if (JS::UniqueChars bytes = JS_EncodeString(cx, s))
+                if (JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, s))
                     message += bytes.get();
             }
         }
@@ -271,7 +270,7 @@ class JSAPITest
             JSString* str = JS::ToString(cx, args[i]);
             if (!str)
                 return false;
-            JS::UniqueChars bytes = JS_EncodeString(cx, str);
+            JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str);
             if (!bytes)
                 return false;
             printf("%s%s", i ? " " : "", bytes.get());

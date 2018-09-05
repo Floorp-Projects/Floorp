@@ -486,7 +486,7 @@ ParseEvalOptions(JSContext* cx, HandleValue value, EvalOptions& options)
         RootedString url_str(cx, ToString<CanGC>(cx, v));
         if (!url_str)
             return false;
-        UniqueChars url_bytes = JS_EncodeString(cx, url_str);
+        UniqueChars url_bytes = JS_EncodeStringToLatin1(cx, url_str);
         if (!url_bytes)
             return false;
         if (!options.setFilename(cx, url_bytes.get()))
@@ -4567,7 +4567,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         // Compute urlCString and displayURLChars, if a url or displayURL was
         // given respectively.
         if (url.isString()) {
-            urlCString = JS_EncodeString(cx, url.toString());
+            urlCString = JS_EncodeStringToLatin1(cx, url.toString());
             if (!urlCString)
                 return false;
         }
@@ -4950,7 +4950,7 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
      */
     bool prepareQuery() {
         if (className.isString()) {
-            classNameCString = JS_EncodeString(cx, className.toString());
+            classNameCString = JS_EncodeStringToLatin1(cx, className.toString());
             if (!classNameCString)
                 return false;
         }

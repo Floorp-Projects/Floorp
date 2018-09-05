@@ -169,12 +169,10 @@ Library::Create(JSContext* cx, HandleValue path, const JSCTypesCallbacks* callba
 #undef MAX_ERROR_LEN
 
     if (JS::StringIsASCII(error)) {
-      JS::UniqueChars pathCharsUTF8 = JS_EncodeStringToUTF8(cx, pathStr);
-      if (pathCharsUTF8)
+      if (JS::UniqueChars pathCharsUTF8 = JS_EncodeStringToUTF8(cx, pathStr))
         JS_ReportErrorUTF8(cx, "couldn't open library %s: %s", pathCharsUTF8.get(), error);
     } else {
-      JS::UniqueChars pathCharsLatin1 = JS_EncodeString(cx, pathStr);
-      if (pathCharsLatin1)
+      if (JS::UniqueChars pathCharsLatin1 = JS_EncodeStringToLatin1(cx, pathStr))
         JS_ReportErrorLatin1(cx, "couldn't open library %s: %s", pathCharsLatin1.get(), error);
     }
     return nullptr;
