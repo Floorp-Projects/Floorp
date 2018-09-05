@@ -327,12 +327,24 @@ PannerNode::Create(AudioContext& aAudioContext,
                          aOptions.mPositionZ);
   audioNode->SetOrientation(aOptions.mOrientationX, aOptions.mOrientationY,
                             aOptions.mOrientationZ);
-  audioNode->SetRefDistance(aOptions.mRefDistance);
-  audioNode->SetMaxDistance(aOptions.mMaxDistance);
-  audioNode->SetRolloffFactor(aOptions.mRolloffFactor);
+  audioNode->SetRefDistance(aOptions.mRefDistance, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  audioNode->SetMaxDistance(aOptions.mMaxDistance, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  audioNode->SetRolloffFactor(aOptions.mRolloffFactor, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
   audioNode->SetConeInnerAngle(aOptions.mConeInnerAngle);
   audioNode->SetConeOuterAngle(aOptions.mConeOuterAngle);
-  audioNode->SetConeOuterGain(aOptions.mConeOuterGain);
+  audioNode->SetConeOuterGain(aOptions.mConeOuterGain, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
 
   return audioNode.forget();
 }

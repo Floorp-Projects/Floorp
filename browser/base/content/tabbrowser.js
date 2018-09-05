@@ -283,9 +283,12 @@ window._gBrowser = {
   },
 
   _setupInitialBrowserAndTab() {
+    // See browser.js for the meaning of window.arguments.
+    let userContextId = window.arguments && window.arguments[6];
+
     // Bug 1362774 will adjust this to only set `uriIsAboutBlank` when
     // necessary. For now, we always pass it.
-    let browser = this._createBrowser({uriIsAboutBlank: true});
+    let browser = this._createBrowser({uriIsAboutBlank: true, userContextId});
     browser.setAttribute("primary", "true");
     browser.setAttribute("blank", "true");
     browser.droppedLinkHandler = handleDroppedLink;
@@ -304,6 +307,12 @@ window._gBrowser = {
     tab._tPos = 0;
     tab._fullyOpen = true;
     tab.linkedBrowser = browser;
+
+    if (userContextId) {
+      tab.setAttribute("usercontextid", userContextId);
+      ContextualIdentityService.setTabStyle(tab);
+    }
+
     this._tabForBrowser.set(browser, tab);
 
     this._appendStatusPanel();
