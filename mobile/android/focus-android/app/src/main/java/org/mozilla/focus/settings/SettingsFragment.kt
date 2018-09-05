@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+@file:Suppress("ForbiddenComment")
 
 package org.mozilla.focus.settings
 
@@ -14,7 +15,7 @@ import org.mozilla.focus.locale.LocaleManager
 import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.widget.DefaultBrowserPreference
-import java.util.*
+import java.util.Locale
 
 class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
 
