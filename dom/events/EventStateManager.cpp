@@ -5070,7 +5070,7 @@ EventStateManager::GetEventTarget()
     }
   }
 
-  nsIFrame* frame = shell->GetEventTargetFrame();
+  nsIFrame* frame = shell->GetCurrentEventFrame();
   return (mCurrentTarget = frame);
 }
 

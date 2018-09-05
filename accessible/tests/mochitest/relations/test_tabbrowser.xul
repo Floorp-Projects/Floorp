@@ -48,8 +48,8 @@
         ////////////////////////////////////////////////////////////////////////
         // 'labelled by'/'label for' relations for xul:tab and xul:tabpanel
 
-        var tabs = tabBrowser().tabContainer.childNodes;
-        var panels = tabBrowser().tabbox.tabpanels.childNodes;
+        var tabs = tabBrowser().tabContainer.children;
+        var panels = tabBrowser().tabbox.tabpanels.children;
 
         testRelation(panels[0], RELATION_LABELLED_BY, tabs[0]);
         testRelation(tabs[0], RELATION_LABEL_FOR, panels[0]);
