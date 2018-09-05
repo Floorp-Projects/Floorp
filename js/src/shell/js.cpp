@@ -1472,15 +1472,14 @@ Options(JSContext* cx, unsigned argc, Value* vp)
         RootedString str(cx, JS::ToString(cx, args[i]));
         if (!str)
             return false;
-        args[i].setString(str);
 
-        UniqueChars opt = JS_EncodeStringToUTF8(cx, str);
+        RootedLinearString opt(cx, str->ensureLinear(cx));
         if (!opt)
             return false;
 
-        if (strcmp(opt.get(), "strict") == 0) {
+        if (StringEqualsAscii(opt, "strict")) {
             JS::ContextOptionsRef(cx).toggleExtraWarnings();
-        } else if (strcmp(opt.get(), "werror") == 0) {
+        } else if (StringEqualsAscii(opt, "werror")) {
             // Disallow toggling werror when there are off-thread jobs, to avoid
             // confusing CompileError::throwError.
             ShellContext* sc = GetShellContext(cx);
@@ -1489,16 +1488,20 @@ Options(JSContext* cx, unsigned argc, Value* vp)
                 return false;
             }
             JS::ContextOptionsRef(cx).toggleWerror();
-        } else if (strcmp(opt.get(), "throw_on_asmjs_validation_failure") == 0) {
+        } else if (StringEqualsAscii(opt, "throw_on_asmjs_validation_failure")) {
             JS::ContextOptionsRef(cx).toggleThrowOnAsmJSValidationFailure();
-        } else if (strcmp(opt.get(), "strict_mode") == 0) {
+        } else if (StringEqualsAscii(opt, "strict_mode")) {
             JS::ContextOptionsRef(cx).toggleStrictMode();
         } else {
+            UniqueChars optChars = JS_EncodeStringToUTF8(cx, opt);
+            if (!optChars)
+                return false;
+
             JS_ReportErrorUTF8(cx,
                                "unknown option name '%s'."
                                " The valid names are strict,"
                                " werror, and strict_mode.",
-                               opt.get());
+                               optChars.get());
             return false;
         }
     }
@@ -5332,13 +5335,6 @@ class AutoCStringVector
         js_free(argv_[i]);
         argv_[i] = arg.release();
     }
-    const char* back() const {
-        return argv_.back();
-    }
-    void replaceBack(UniqueChars arg) {
-        js_free(argv_.back());
-        argv_.back() = arg.release();
-    }
 };
 
 #if defined(XP_WIN)
@@ -5417,26 +5413,32 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // The arguments to nestedShell are stringified and append to argv.
-    RootedString str(cx);
     for (unsigned i = 0; i < args.length(); i++) {
-        str = ToString(cx, args[i]);
+        JSString* str = ToString(cx, args[i]);
         if (!str)
             return false;
 
-        UniqueChars arg = JS_EncodeString(cx, str);
-        if (!arg || !argv.append(std::move(arg)))
+        JSLinearString* linear = str->ensureLinear(cx);
+        if (!linear)
             return false;
 
-        // As a special case, if the caller passes "--js-cache", replace that
-        // with "--js-cache=$(jsCacheDir)"
-        if (!strcmp(argv.back(), "--js-cache") && jsCacheDir) {
-            UniqueChars newArg = JS_smprintf("--js-cache=%s", jsCacheDir);
-            if (!newArg) {
+        UniqueChars arg;
+        if (StringEqualsAscii(linear, "--js-cache") && jsCacheDir) {
+            // As a special case, if the caller passes "--js-cache", use
+            // "--js-cache=$(jsCacheDir)" instead.
+            arg = JS_smprintf("--js-cache=%s", jsCacheDir);
+            if (!arg) {
                 JS_ReportOutOfMemory(cx);
                 return false;
             }
-            argv.replaceBack(std::move(newArg));
+        } else {
+            arg = JS_EncodeString(cx, str);
+            if (!arg)
+                return false;
         }
+
+        if (!argv.append(std::move(arg)))
+            return false;
     }
 
     // execv assumes argv is null-terminated
