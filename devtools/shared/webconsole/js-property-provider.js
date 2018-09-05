@@ -19,9 +19,10 @@ const MAX_AUTOCOMPLETE_ATTEMPTS = exports.MAX_AUTOCOMPLETE_ATTEMPTS = 100000;
 // Prevent iterating over too many properties during autocomplete suggestions.
 const MAX_AUTOCOMPLETIONS = exports.MAX_AUTOCOMPLETIONS = 1500;
 
-const STATE_NORMAL = 0;
-const STATE_QUOTE = 2;
-const STATE_DQUOTE = 3;
+const STATE_NORMAL = Symbol("STATE_NORMAL");
+const STATE_QUOTE = Symbol("STATE_QUOTE");
+const STATE_DQUOTE = Symbol("STATE_DQUOTE");
+const STATE_TEMPLATE_LITERAL = Symbol("STATE_TEMPLATE_LITERAL");
 
 const OPEN_BODY = "{[(".split("");
 const CLOSE_BODY = "}])".split("");
@@ -73,6 +74,8 @@ function findCompletionBeginning(str) {
           state = STATE_DQUOTE;
         } else if (c == "'") {
           state = STATE_QUOTE;
+        } else if (c == "`") {
+          state = STATE_TEMPLATE_LITERAL;
         } else if (c == ";") {
           start = i + 1;
         } else if (c == " ") {
@@ -133,6 +136,15 @@ function findCompletionBeginning(str) {
             err: "unterminated string literal"
           };
         } else if (c == '"') {
+          state = STATE_NORMAL;
+        }
+        break;
+
+      // Template literal state > ` <
+      case STATE_TEMPLATE_LITERAL:
+        if (c == "\\") {
+          i++;
+        } else if (c == "`") {
           state = STATE_NORMAL;
         }
         break;

@@ -8101,19 +8101,6 @@ if (false) {
     other_values: [ "green", "#fc3" ],
     invalid_values: [ "000000", "ff00ff" ]
   };
-
-  // |clip-path: path()| is chrome-only.
-  gCSSProperties["clip-path"].other_values.push(
-    "path(nonzero, 'M 10 10 h 100 v 100 h-100 v-100 z')",
-    "path(evenodd, 'M 10 10 h 100 v 100 h-100 v-100 z')",
-    "path('M10,30A20,20 0,0,1 50,30A20,20 0,0,1 90,30Q90,60 50,90Q10,60 10,30z')",
-  );
-
-  gCSSProperties["clip-path"].invalid_values.push(
-    "path(nonzero)",
-    "path(evenodd, '')",
-    "path(abs, 'M 10 10 L 10 10 z')",
-  );
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
@@ -8178,6 +8165,20 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
     invalid_values: [ "path('')", "path()", "path(a)", "path('M 10 Z')" ,
                       "path('M 10-10 20')", "path('M 10 10 C 20 20 40 20')" ]
   };
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {
+  gCSSProperties["clip-path"].other_values.push(
+    "path(nonzero, 'M 10 10 h 100 v 100 h-100 v-100 z')",
+    "path(evenodd, 'M 10 10 h 100 v 100 h-100 v-100 z')",
+    "path('M10,30A20,20 0,0,1 50,30A20,20 0,0,1 90,30Q90,60 50,90Q10,60 10,30z')",
+  );
+
+  gCSSProperties["clip-path"].invalid_values.push(
+    "path(nonzero)",
+    "path(evenodd, '')",
+    "path(abs, 'M 10 10 L 10 10 z')",
+  );
 }
 
 const OVERFLOW_MOZKWS = [

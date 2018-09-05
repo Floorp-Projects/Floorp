@@ -1856,6 +1856,67 @@ CacheIRCompiler::emitGuardNoDenseElements()
 }
 
 bool
+CacheIRCompiler::emitGuardAndGetNumberFromString()
+{
+    Register str = allocator.useRegister(masm, reader.stringOperandId());
+    ValueOperand output = allocator.defineValueRegister(masm, reader.valOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label vmCall, done, failureRestoreStack;
+    // Use indexed value as fast path if possible.
+    masm.loadStringIndexValue(str, scratch, &vmCall);
+    masm.tagValue(JSVAL_TYPE_INT32, scratch, output);
+    masm.jump(&done);
+    {
+        masm.bind(&vmCall);
+        // Reserve stack for holding the result value of the call.
+        masm.reserveStack(sizeof(double));
+        masm.moveStackPtrTo(output.payloadOrValueReg());
+
+        // We cannot use callVM, as callVM exepcts to be able to clobber all operands,
+        // however, since this op is not the last in the generated IC, we want to be able
+        // to reference other live values.
+        LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+        masm.PushRegsInMask(volatileRegs);
+
+        masm.setupUnalignedABICall(scratch);
+        masm.loadJSContext(scratch);
+        masm.passABIArg(scratch);
+        masm.passABIArg(str);
+        masm.passABIArg(output.payloadOrValueReg());
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, StringToNumberDontReportOOM));
+        masm.mov(ReturnReg, scratch);
+
+        LiveRegisterSet ignore;
+        ignore.add(scratch);
+        masm.PopRegsInMaskIgnore(volatileRegs, ignore);
+
+        Label ok;
+        masm.branchIfTrueBool(scratch, &ok);
+        {
+            // OOM path, recovered by StringToNumberDontReportOOM.
+            //
+            // Use addToStackPtr instead of freeStack as freeStack tracks stack height
+            // flow-insensitively, and using it twice would confuse the stack height
+            // tracking. 
+            masm.addToStackPtr(Imm32(sizeof(double)));
+            masm.jump(failure->label());
+        }
+        masm.bind(&ok);
+        
+        masm.loadDouble(Address(output.payloadOrValueReg(), 0), FloatReg0);
+        masm.boxDouble(FloatReg0, output, FloatReg0);
+        masm.freeStack(sizeof(double));
+    }
+    masm.bind(&done);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitGuardAndGetIndexFromString()
 {
     Register str = allocator.useRegister(masm, reader.stringOperandId());

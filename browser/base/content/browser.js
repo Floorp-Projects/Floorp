@@ -16,6 +16,7 @@ const {WebExtensionPolicy} = Cu.getGlobalForObject(Services);
 // lazy module getters
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -1633,6 +1634,8 @@ var gBrowserInit = {
   _handleURIToLoad() {
     this._callWithURIToLoad(uriToLoad => {
       if (!uriToLoad || uriToLoad == "about:blank") {
+        // We don't check whether window.arguments[6] (userContextId) is set
+        // because tabbrowser.js takes care of that for the initial tab.
         return;
       }
 
@@ -6276,44 +6279,66 @@ function UpdateCurrentCharset(target) {
   }
 }
 
-function UpdateDownloadsAutoHide(popup) {
-  let checkbox = popup.querySelector(".customize-context-autoHide");
-  let isDownloads = popup.triggerNode && ["downloads-button", "wrapper-downloads-button"].includes(popup.triggerNode.id);
-  checkbox.hidden = !isDownloads;
-  if (this.window.DownloadsButton.autoHideDownloadsButton) {
-    checkbox.setAttribute("checked", "true");
-  } else {
-    checkbox.removeAttribute("checked");
-  }
-}
+var ToolbarContextMenu = {
+  updateDownloadsAutoHide(popup) {
+    let checkbox = popup.querySelector(".customize-context-autoHide");
+    let isDownloads = popup.triggerNode && ["downloads-button", "wrapper-downloads-button"].includes(popup.triggerNode.id);
+    checkbox.hidden = !isDownloads;
+    if (DownloadsButton.autoHideDownloadsButton) {
+      checkbox.setAttribute("checked", "true");
+    } else {
+      checkbox.removeAttribute("checked");
+    }
+  },
 
-function onDownloadsAutoHideChange(event) {
-  let autoHide = event.target.getAttribute("checked") == "true";
-  Services.prefs.setBoolPref("browser.download.autohideButton", autoHide);
-}
+  onDownloadsAutoHideChange(event) {
+    let autoHide = event.target.getAttribute("checked") == "true";
+    Services.prefs.setBoolPref("browser.download.autohideButton", autoHide);
+  },
 
-function getUnwrappedTriggerNode(popup) {
-  // Toolbar buttons are wrapped in customize mode. Unwrap if necessary.
-  let {triggerNode} = popup;
-  if (triggerNode && gCustomizeMode.isWrappedToolbarItem(triggerNode)) {
-    return triggerNode.firstElementChild;
-  }
-  return triggerNode;
-}
+  _getUnwrappedTriggerNode(popup) {
+    // Toolbar buttons are wrapped in customize mode. Unwrap if necessary.
+    let {triggerNode} = popup;
+    if (triggerNode && gCustomizeMode.isWrappedToolbarItem(triggerNode)) {
+      return triggerNode.firstElementChild;
+    }
+    return triggerNode;
+  },
 
-function UpdateManageExtension(popup) {
-  let checkbox = popup.querySelector(".customize-context-manageExtension");
-  let separator = checkbox.nextElementSibling;
-  let node = getUnwrappedTriggerNode(popup);
-  let isWebExt = node && node.hasAttribute("data-extensionid");
-  checkbox.hidden = separator.hidden = !isWebExt;
-}
+  updateExtension(popup) {
+    let removeExtension = popup.querySelector(".customize-context-removeExtension");
+    let manageExtension = removeExtension.nextElementSibling;
+    let separator = manageExtension.nextElementSibling;
+    let node = this._getUnwrappedTriggerNode(popup);
+    let isWebExt = node && node.hasAttribute("data-extensionid");
+    removeExtension.hidden = manageExtension.hidden = separator.hidden = !isWebExt;
+  },
 
-function openAboutAddonsForContextAction(popup) {
-  let id = getUnwrappedTriggerNode(popup).getAttribute("data-extensionid");
-  let viewID = "addons://detail/" + encodeURIComponent(id);
-  BrowserOpenAddonsMgr(viewID);
-}
+  async removeExtensionForContextAction(popup) {
+    let id = this._getUnwrappedTriggerNode(popup).getAttribute("data-extensionid");
+    let addon = await AddonManager.getAddonByID(id);
+    let {name} = addon;
+    let brand = document.getElementById("bundle_brand").getString("brandShorterName");
+    let {getFormattedString, getString} = gNavigatorBundle;
+    let title = getFormattedString("webext.remove.confirmation.title", [name]);
+    let message = getFormattedString("webext.remove.confirmation.message", [name, brand]);
+    let btnTitle = getString("webext.remove.confirmation.button");
+    let {BUTTON_TITLE_IS_STRING: titleString, BUTTON_TITLE_CANCEL: titleCancel,
+         BUTTON_POS_0, BUTTON_POS_1, confirmEx} = Services.prompt;
+    let btnFlags = BUTTON_POS_0 * titleString + BUTTON_POS_1 * titleCancel;
+    let response = confirmEx(null, title, message, btnFlags, btnTitle, null, null, null,
+                             {value: 0});
+    if (response == 0) {
+      addon.uninstall();
+    }
+  },
+
+  openAboutAddonsForContextAction(popup) {
+    let id = this._getUnwrappedTriggerNode(popup).getAttribute("data-extensionid");
+    let viewID = "addons://detail/" + encodeURIComponent(id);
+    BrowserOpenAddonsMgr(viewID);
+  },
+};
 
 var gPageStyleMenu = {
   // This maps from a <browser> element (or, more specifically, a
