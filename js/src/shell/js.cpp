@@ -4750,10 +4750,9 @@ BinParse(JSContext* cx, unsigned argc, Value* vp)
             // By default, `useMultipart` is `true`.
             useMultipart = true;
         } else if (optionFormat.isString()) {
-            RootedString stringFormat(cx);
-            stringFormat = optionFormat.toString();
-            JS::Rooted<JSLinearString*> linearFormat(cx);
-            linearFormat = stringFormat->ensureLinear(cx);
+            RootedLinearString linearFormat(cx, optionFormat.toString()->ensureLinear(cx));
+            if (!linearFormat)
+                return false;
             if (StringEqualsAscii(linearFormat, "multipart")) {
                 useMultipart = true;
             } else if (StringEqualsAscii(linearFormat, "simple")) {
