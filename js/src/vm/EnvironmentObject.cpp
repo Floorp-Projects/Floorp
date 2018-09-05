@@ -3358,9 +3358,8 @@ static void
 ReportCannotDeclareGlobalBinding(JSContext* cx, HandlePropertyName name, const char* reason)
 {
     if (UniqueChars printable = AtomToPrintableString(cx, name)) {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                                   JSMSG_CANT_DECLARE_GLOBAL_BINDING,
-                                   printable.get(), reason);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_DECLARE_GLOBAL_BINDING,
+                                  printable.get(), reason);
     }
 }
 
