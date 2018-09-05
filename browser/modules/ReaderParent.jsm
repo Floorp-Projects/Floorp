@@ -57,29 +57,41 @@ var ReaderParent = {
     }
 
     let button = win.document.getElementById("reader-mode-button");
-    let command = win.document.getElementById("View:ReaderView");
+    let menuitem = win.document.getElementById("menu_readerModeItem");
     let key = win.document.getElementById("key_toggleReaderMode");
     // aria-reader is not a real ARIA attribute. However, this will cause
     // Gecko accessibility to expose the "reader" object attribute. We do this
     // so that the reader state is easy for accessibility clients to access
     // programmatically.
     if (browser.currentURI.spec.startsWith("about:reader")) {
+      let closeText = gStringBundle.GetStringFromName("readerView.close");
+
       button.setAttribute("readeractive", true);
       button.hidden = false;
-      let closeText = gStringBundle.GetStringFromName("readerView.close");
-      command.setAttribute("label", closeText);
-      command.setAttribute("hidden", false);
-      command.setAttribute("accesskey", gStringBundle.GetStringFromName("readerView.close.accesskey"));
+      button.setAttribute("aria-label", closeText);
+
+      menuitem.setAttribute("label", closeText);
+      menuitem.setAttribute("hidden", false);
+      menuitem.setAttribute("accesskey",
+        gStringBundle.GetStringFromName("readerView.close.accesskey"));
+
       key.setAttribute("disabled", false);
+
       browser.setAttribute("aria-reader", "active");
     } else {
+      let enterText = gStringBundle.GetStringFromName("readerView.enter");
+
       button.removeAttribute("readeractive");
       button.hidden = !browser.isArticle;
-      let enterText = gStringBundle.GetStringFromName("readerView.enter");
-      command.setAttribute("label", enterText);
-      command.setAttribute("hidden", !browser.isArticle);
-      command.setAttribute("accesskey", gStringBundle.GetStringFromName("readerView.enter.accesskey"));
+      button.setAttribute("aria-label", enterText);
+
+      menuitem.setAttribute("label", enterText);
+      menuitem.setAttribute("hidden", !browser.isArticle);
+      menuitem.setAttribute("accesskey",
+        gStringBundle.GetStringFromName("readerView.enter.accesskey"));
+
       key.setAttribute("disabled", !browser.isArticle);
+
       if (browser.isArticle) {
         browser.setAttribute("aria-reader", "available");
       } else {
