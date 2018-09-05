@@ -20,7 +20,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/mscom/Utils.h"
 
-#ifdef __GNUC__
+#if defined(__GNUC__) || defined(__clang__)
 // Inheriting from both XPCOM and MSCOM interfaces causes a lot of warnings
 // about virtual functions being hidden by each other. This is done by
 // design, so silence the warning.
