@@ -173,7 +173,6 @@ public:
                                  nsIContent** aTargetContent = nullptr,
                                  nsIContent* aOverrideClickTarget = nullptr)
                                  override;
-  nsIFrame* GetEventTargetFrame() override;
   already_AddRefed<nsIContent>
     GetEventTargetContent(WidgetEvent* aEvent) override;
 
@@ -657,7 +656,7 @@ private:
   bool InZombieDocument(nsIContent *aContent);
   already_AddRefed<nsIPresShell> GetParentPresShellForEventHandling();
   nsIContent* GetCurrentEventContent();
-  nsIFrame* GetCurrentEventFrame();
+  nsIFrame* GetCurrentEventFrame() override;
   MOZ_CAN_RUN_SCRIPT nsresult
   RetargetEventToParent(WidgetGUIEvent* aEvent, nsEventStatus* aEventStatus);
   void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
