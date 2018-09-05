@@ -31,7 +31,7 @@ using namespace js::gc;
 using JS::AutoStableStringChars;
 
 void
-js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext* cx, jsid id)
+js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext* cx, HandleId id)
 {
     if (JS_IsExceptionPending(cx))
         return;

@@ -79,15 +79,14 @@ using namespace js;
 using namespace js::gc;
 
 void
-js::ReportNotObject(JSContext* cx, const Value& v)
+js::ReportNotObject(JSContext* cx, HandleValue v)
 {
     MOZ_ASSERT(!v.isObject());
 
-    RootedValue value(cx, v);
-    UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, nullptr);
-    if (bytes)
+    if (UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr)) {
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
                                    bytes.get());
+    }
 }
 
 void
@@ -253,7 +252,7 @@ GetPropertyIfPresent(JSContext* cx, HandleObject obj, HandleId id, MutableHandle
 }
 
 bool
-js::Throw(JSContext* cx, jsid id, unsigned errorNumber, const char* details)
+js::Throw(JSContext* cx, HandleId id, unsigned errorNumber, const char* details)
 {
     MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount == (details ? 2 : 1));
     MOZ_ASSERT_IF(details, JS::StringIsASCII(details));
