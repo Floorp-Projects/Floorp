@@ -336,7 +336,7 @@ var SessionHistoryInternal = {
                   createInstance(Ci.nsISHEntry);
 
     shEntry.setURI(Utils.makeURI(entry.url));
-    shEntry.setTitle(entry.title || entry.url);
+    shEntry.title = entry.title || entry.url;
     if (entry.subframe)
       shEntry.setIsSubFrame(entry.subframe || false);
     shEntry.setAsHistoryLoad();

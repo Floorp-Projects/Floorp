@@ -735,7 +735,7 @@ nsSHistory::PrintHistory()
 
     entry->GetLayoutHistoryState(getter_AddRefs(layoutHistoryState));
     entry->GetURI(getter_AddRefs(uri));
-    entry->GetTitle(getter_Copies(title));
+    entry->GetTitle(title);
 
 #if 0
     nsAutoCString url;
