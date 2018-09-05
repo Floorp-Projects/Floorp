@@ -1990,7 +1990,7 @@ bool
 TypedObject::obj_deleteProperty(JSContext* cx, HandleObject obj, HandleId id, ObjectOpResult& result)
 {
     if (IsOwnId(cx, obj, id)) {
-        UniqueChars propName = ValueToPrintableUTF8(cx, IdToValue(id), true);
+        UniqueChars propName = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
         if (!propName)
             return false;
 

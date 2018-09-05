@@ -2304,9 +2304,12 @@ GetNonexistentProperty(JSContext* cx, HandleId id, IsNameLookup nameLookup, Muta
     script->setWarnedAboutUndefinedProp();
 
     // Ok, bad undefined property reference: whine about it.
-    RootedValue val(cx, IdToValue(id));
-    return ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP, JSDVG_IGNORE_STACK, val,
-                                    nullptr, nullptr, nullptr);
+    UniqueChars bytes = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
+    if (!bytes)
+        return false;
+
+    return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr,
+                                            JSMSG_UNDEFINED_PROP, bytes.get());
 }
 
 /* The NoGC version of GetNonexistentProperty, present only to make types line up. */
@@ -2475,8 +2478,7 @@ MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleId id)
             return true;
     }
 
-    JSString* propname = JSID_TO_STRING(id);
-    UniqueChars bytes = StringToNewUTF8CharsZ(cx, *propname);
+    UniqueChars bytes = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsIdentifier);
     if (!bytes)
         return false;
     return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr,
