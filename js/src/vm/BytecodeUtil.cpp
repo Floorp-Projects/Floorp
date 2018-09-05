@@ -1189,8 +1189,8 @@ ToDisassemblySource(JSContext* cx, HandleScope scope, UniqueChars* bytes)
     }
 
     for (Rooted<BindingIter> bi(cx, BindingIter(scope)); bi; bi++) {
-        UniqueChars nameBytes;
-        if (!AtomToPrintableString(cx, bi.name(), &nameBytes))
+        UniqueChars nameBytes = AtomToPrintableString(cx, bi.name());
+        if (!nameBytes)
             return false;
 
         source = JS_sprintf_append(std::move(source), "%s: ", nameBytes.get());
