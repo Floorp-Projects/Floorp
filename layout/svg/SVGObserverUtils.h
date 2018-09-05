@@ -583,12 +583,6 @@ public:
 
   struct EffectProperties {
     SVGMaskObserverList* mMaskObservers;
-    nsSVGPaintingProperty* mClipPath;
-
-    /**
-     * @return the clip-path frame, or null if there is no clip-path frame
-     */
-    nsSVGClipPathFrame* GetClipPathFrame();
 
     /**
      * @return an array which contains all SVG mask frames.
@@ -606,19 +600,6 @@ public:
      */
     bool HasInvalidEffects() {
       return !HasNoOrValidEffects();
-    }
-
-    /*
-     * @return true if we either do not have clip-path or have a valid
-     * clip-path.
-     */
-    bool HasNoOrValidClipPath();
-
-    /*
-     * @return true if we have an invalid clip-path.
-     */
-    bool HasInvalidClipPath() {
-      return !HasNoOrValidClipPath();
     }
 
     /*
@@ -794,6 +775,27 @@ public:
   DetachFromCanvasContext(nsISupports* aAutoObserver);
 
   /**
+   * Get the frame of the SVG clipPath applied to aClippedFrame, if any, and
+   * set up aClippedFrame as a rendering observer of the clipPath's frame, to
+   * be invalidated if it changes.
+   *
+   * Currently we only have support for 'clip-path' with a single item, but the
+   * spec. now says 'clip-path' can be set to an arbitrary number of items.
+   * Once we support that, aClipPathFrame will need to be an nsTArray as it
+   * is for 'filter' and 'mask'.  Currently a return value of eHasNoRefs means
+   * that there is no clipping at all, but once we support more than one item
+   * then - as for filter and mask - we could still have basic shape clipping
+   * to apply even if there are no references to SVG clipPath elements.
+   *
+   * Note that, unlike for filters, a reference to an ID that doesn't exist
+   * is not invalid for clip-path or mask.  We will return eHasNoRefs in that
+   * case.
+   */
+  static ReferenceState
+  GetAndObserveClipPath(nsIFrame* aClippedFrame,
+                        nsSVGClipPathFrame** aClipPathFrame);
+
+  /**
    * Get the SVGGeometryElement that is referenced by aTextPathFrame, and make
    * aTextPathFrame start observing rendering changes to that element.
    */
@@ -848,12 +850,6 @@ public:
   static already_AddRefed<URLAndReferrerInfo>
   GetMarkerURI(nsIFrame* aFrame,
                RefPtr<mozilla::css::URLValue> nsStyleSVG::* aMarker);
-
-  /**
-   * A helper function to resolve clip-path URL.
-   */
-  static already_AddRefed<URLAndReferrerInfo>
-  GetClipPathURI(nsIFrame* aFrame);
 
   /**
    * A helper function to resolve filter URL.
