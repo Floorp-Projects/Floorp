@@ -74,6 +74,9 @@ class GeckoWebViewProvider : IWebViewProvider {
         if (geckoRuntime == null) {
             val runtimeSettingsBuilder = GeckoRuntimeSettings.Builder()
             runtimeSettingsBuilder.useContentProcessHint(true)
+            // Safe browsing is not ready #3309
+            runtimeSettingsBuilder.blockMalware(false)
+            runtimeSettingsBuilder.blockPhishing(false)
             if (TelemetryWrapper.isTelemetryEnabled(context)) {
                 runtimeSettingsBuilder.nativeCrashReportingEnabled(true)
             }
