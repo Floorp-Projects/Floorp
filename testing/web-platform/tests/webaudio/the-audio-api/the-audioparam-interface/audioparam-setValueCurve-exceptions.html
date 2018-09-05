@@ -46,28 +46,28 @@
               g.gain.setValueAtTime(1, automationTime);
             },
             'setValueAtTime(1, ' + automationTime + ')')
-            .throw('NotSupportedError');
+            .throw(DOMException, 'NotSupportedError');
 
         should(
             function() {
               g.gain.linearRampToValueAtTime(1, automationTime);
             },
             'linearRampToValueAtTime(1, ' + automationTime + ')')
-            .throw('NotSupportedError');
+            .throw(DOMException, 'NotSupportedError');
 
         should(
             function() {
               g.gain.exponentialRampToValueAtTime(1, automationTime);
             },
             'exponentialRampToValueAtTime(1, ' + automationTime + ')')
-            .throw('NotSupportedError');
+            .throw(DOMException, 'NotSupportedError');
 
         should(
             function() {
               g.gain.setTargetAtTime(1, automationTime, 1);
             },
             'setTargetAtTime(1, ' + automationTime + ', 1)')
-            .throw('NotSupportedError');
+            .throw(DOMException, 'NotSupportedError');
 
         should(
             function() {
@@ -120,7 +120,7 @@
                 g.gain.setValueCurveAtTime(curve, time, 0.01);
               },
               'setValueCurveAtTime(curve, ' + time + ', 0.01)')
-              .throw('NotSupportedError');
+              .throw(DOMException, 'NotSupportedError');
         }
 
         // Elements of setValueCurve should be finite.
@@ -167,7 +167,7 @@
               g.gain.setValueCurveAtTime(curve, time, 0.01);
             },
             'setValueCurveAtTime(curve, ' + time + ', 0.01)')
-            .throw('NotSupportedError');
+            .throw(DOMException, 'NotSupportedError');
 
         task.done();
       });
@@ -369,14 +369,14 @@
               g.gain.setValueCurveAtTime(Float32Array.from([]), time, 0.01);
             },
             'setValueCurveAtTime([], ' + time + ', 0.01)')
-            .throw('InvalidStateError');
+            .throw(DOMException, 'InvalidStateError');
 
         should(
             () => {
               g.gain.setValueCurveAtTime(Float32Array.from([1]), time, 0.01);
             },
             'setValueCurveAtTime([1], ' + time + ', 0.01)')
-            .throw('InvalidStateError');
+            .throw(DOMException, 'InvalidStateError');
 
         should(() => {
           g.gain.setValueCurveAtTime(Float32Array.from([1, 2]), time, 0.01);

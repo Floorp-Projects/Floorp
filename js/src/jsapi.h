@@ -54,26 +54,6 @@ namespace JS {
 class SourceBufferHolder;
 class TwoByteChars;
 
-#ifdef JS_DEBUG
-
-class JS_PUBLIC_API(AutoCheckRequestDepth)
-{
-    JSContext* cx;
-  public:
-    explicit AutoCheckRequestDepth(JSContext* cx);
-    ~AutoCheckRequestDepth();
-};
-
-# define CHECK_REQUEST(cx) \
-    JS::AutoCheckRequestDepth _autoCheckRequestDepth(cx)
-
-#else
-
-# define CHECK_REQUEST(cx) \
-    ((void) 0)
-
-#endif /* JS_DEBUG */
-
 /** AutoValueArray roots an internal fixed-size array of Values. */
 template <size_t N>
 class MOZ_RAII AutoValueArray : public AutoGCRooter
@@ -488,12 +468,6 @@ extern JS_PUBLIC_API(JSRuntime*)
 JS_GetRuntime(JSContext* cx);
 
 extern JS_PUBLIC_API(void)
-JS_BeginRequest(JSContext* cx);
-
-extern JS_PUBLIC_API(void)
-JS_EndRequest(JSContext* cx);
-
-extern JS_PUBLIC_API(void)
 JS_SetFutexCanWait(JSContext* cx);
 
 namespace js {
@@ -502,31 +476,6 @@ void
 AssertHeapIsIdle();
 
 } /* namespace js */
-
-class MOZ_RAII JSAutoRequest
-{
-  public:
-    explicit JSAutoRequest(JSContext* cx
-                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mContext(cx)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        JS_BeginRequest(mContext);
-    }
-    ~JSAutoRequest() {
-        JS_EndRequest(mContext);
-    }
-
-  protected:
-    JSContext* mContext;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-#if 0
-  private:
-    static void* operator new(size_t) CPP_THROW_NEW { return 0; }
-    static void operator delete(void*, size_t) { }
-#endif
-};
 
 namespace JS {
 

@@ -47,9 +47,9 @@ assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(codeId))), CompileError,
 assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(dataId))), CompileError, sectionError("data"));
 
 // unknown sections are unconditionally rejected
-assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(42))), CompileError, unknownSection);
-assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(42, 0))), CompileError, unknownSection);
-assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(42, 1, 0))), CompileError, unknownSection);
+assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(37))), CompileError, unknownSection);
+assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(37, 0))), CompileError, unknownSection);
+assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(37, 1, 0))), CompileError, unknownSection);
 
 // user sections have special rules
 assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0))), CompileError, sectionError("custom"));  // no length

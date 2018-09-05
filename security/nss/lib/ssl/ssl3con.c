@@ -10669,6 +10669,9 @@ ssl3_AuthCertificate(sslSocket *ss)
                                            PR_TRUE, isServer);
     if (rv != SECSuccess) {
         errCode = PORT_GetError();
+        if (errCode == 0) {
+            errCode = SSL_ERROR_BAD_CERTIFICATE;
+        }
         if (rv != SECWouldBlock) {
             if (ss->handleBadCert) {
                 rv = (*ss->handleBadCert)(ss->badCertArg, ss->fd);

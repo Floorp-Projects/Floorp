@@ -27,7 +27,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIScriptError.h"
-#include "nsICookiePermission.h"
+#include "nsCookiePermission.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
@@ -684,11 +684,7 @@ nsCookieService::Init()
   os->AddObserver(this, "profile-do-change", true);
   os->AddObserver(this, "last-pb-context-exited", true);
 
-  mPermissionService = do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
-  if (!mPermissionService) {
-    NS_WARNING("nsICookiePermission implementation not available - some features won't work!");
-    COOKIE_LOGSTRING(LogLevel::Warning, ("Init(): nsICookiePermission implementation not available"));
-  }
+  mPermissionService = nsCookiePermission::GetOrCreate();
 
   return NS_OK;
 }

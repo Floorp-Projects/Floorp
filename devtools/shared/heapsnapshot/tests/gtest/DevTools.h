@@ -46,8 +46,6 @@ struct DevTools : public ::testing::Test {
     if (!cx)
       return;
 
-    JS_BeginRequest(cx);
-
     global.init(cx, createGlobal());
     if (!global)
       return;
@@ -111,8 +109,6 @@ struct DevTools : public ::testing::Test {
       JS::LeaveRealm(cx, nullptr);
       global = nullptr;
     }
-    if (cx)
-      JS_EndRequest(cx);
   }
 };
 
