@@ -49,7 +49,7 @@ macosx64/opt:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        max-run-time: 7200
+        max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
