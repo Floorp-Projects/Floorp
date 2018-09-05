@@ -477,6 +477,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Is path() supported in clip-path?
+VARCACHE_PREF(
+  "layout.css.clip-path-path.enabled",
+   layout_css_clip_path_path_enabled,
+  bool, false
+)
+
 // Is support for CSS column-span enabled?
 VARCACHE_PREF(
   "layout.css.column-span.enabled",
