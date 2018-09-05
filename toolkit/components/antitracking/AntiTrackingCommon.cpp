@@ -15,7 +15,7 @@
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
-#include "nsICookiePermission.h"
+#include "nsCookiePermission.h"
 #include "nsICookieService.h"
 #include "nsIDocShell.h"
 #include "nsIHttpChannelInternal.h"
@@ -112,11 +112,7 @@ CheckCookiePermissionForPrincipal(nsIPrincipal* aPrincipal)
     return access;
   }
 
-  nsCOMPtr<nsICookiePermission> cps =
-    do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
-  if (NS_WARN_IF(!cps)) {
-    return access;
-  }
+  nsCOMPtr<nsICookiePermission> cps = nsCookiePermission::GetOrCreate();
 
   nsresult rv = cps->CanAccess(aPrincipal, &access);
   if (NS_WARN_IF(NS_FAILED(rv))) {

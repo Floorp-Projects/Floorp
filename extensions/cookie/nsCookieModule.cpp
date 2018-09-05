@@ -14,28 +14,33 @@
 // Define the constructor function for the objects
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIPermissionManager,
   nsPermissionManager::GetXPCOMSingleton)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCookiePermission)
 
 NS_DEFINE_NAMED_CID(NS_PERMISSIONMANAGER_CID);
-NS_DEFINE_NAMED_CID(NS_COOKIEPERMISSION_CID);
 
 
 static const mozilla::Module::CIDEntry kCookieCIDs[] = {
     { &kNS_PERMISSIONMANAGER_CID, false, nullptr, nsIPermissionManagerConstructor },
-    { &kNS_COOKIEPERMISSION_CID, false, nullptr, nsCookiePermissionConstructor },
     { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kCookieContracts[] = {
     { NS_PERMISSIONMANAGER_CONTRACTID, &kNS_PERMISSIONMANAGER_CID },
-    { NS_COOKIEPERMISSION_CONTRACTID, &kNS_COOKIEPERMISSION_CID },
     { nullptr }
 };
+
+static void CookieModuleDtor()
+{
+  nsCookiePermission::Shutdown();
+}
 
 static const mozilla::Module kCookieModule = {
     mozilla::Module::kVersion,
     kCookieCIDs,
-    kCookieContracts
+    kCookieContracts,
+    nullptr,
+    nullptr,
+    nullptr,
+    CookieModuleDtor
 };
 
 NSMODULE_DEFN(nsCookieModule) = &kCookieModule;
