@@ -6333,7 +6333,7 @@ nsGlobalWindowOuter::FindOuter(const nsAString& aString, bool aCaseSensitive,
   }
 
   // Set the options of the search
-  aError = finder->SetSearchString(PromiseFlatString(aString).get());
+  aError = finder->SetSearchString(aString);
   if (aError.Failed()) {
     return false;
   }
