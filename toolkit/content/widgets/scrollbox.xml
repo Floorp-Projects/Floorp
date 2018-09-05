@@ -106,6 +106,12 @@
         ]]></setter>
       </property>
 
+      <property name="scrollBoxObject" readonly="true">
+        <getter><![CDATA[
+          return this._scrollbox.boxObject;
+        ]]></getter>
+      </property>
+
       <property name="scrollClientRect" readonly="true">
         <getter><![CDATA[
           return this._scrollbox.getBoundingClientRect();
