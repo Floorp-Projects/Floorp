@@ -10,11 +10,6 @@
 #include "HttpChannelParent.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsXULAppAPI.h"
-#include "mozilla/StaticPtr.h"
-
-namespace {
-mozilla::StaticRefPtr<mozilla::net::BackgroundChannelRegistrar> gSingleton;
-}
 
 namespace mozilla {
 namespace net {
@@ -33,24 +28,6 @@ BackgroundChannelRegistrar::BackgroundChannelRegistrar()
 BackgroundChannelRegistrar::~BackgroundChannelRegistrar()
 {
   MOZ_ASSERT(NS_IsMainThread());
-}
-
-// static
-already_AddRefed<nsIBackgroundChannelRegistrar>
-BackgroundChannelRegistrar::GetOrCreate()
-{
-  if (!gSingleton) {
-    gSingleton = new BackgroundChannelRegistrar();
-  }
-  return do_AddRef(gSingleton);
-}
-
-// static
-void
-BackgroundChannelRegistrar::Shutdown()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  gSingleton = nullptr;
 }
 
 void

@@ -26,7 +26,7 @@
 #include "nsNetUtil.h"
 #include "nsISupportsPriority.h"
 #include "nsIAuthPromptProvider.h"
-#include "mozilla/net/BackgroundChannelRegistrar.h"
+#include "nsIBackgroundChannelRegistrar.h"
 #include "nsSerializationHelper.h"
 #include "nsISerializable.h"
 #include "nsIAssociatedContentSecurity.h"
@@ -263,7 +263,7 @@ HttpChannelParent::CleanupBackgroundChannel()
     // This HttpChannelParent might still have a reference from
     // BackgroundChannelRegistrar.
     nsCOMPtr<nsIBackgroundChannelRegistrar> registrar =
-      BackgroundChannelRegistrar::GetOrCreate();
+      do_GetService(NS_BACKGROUNDCHANNELREGISTRAR_CONTRACTID);
     MOZ_ASSERT(registrar);
 
     registrar->DeleteChannel(mChannel->ChannelId());
@@ -730,7 +730,7 @@ HttpChannelParent::WaitForBgParent()
 
 
   nsCOMPtr<nsIBackgroundChannelRegistrar> registrar =
-    BackgroundChannelRegistrar::GetOrCreate();
+    do_GetService(NS_BACKGROUNDCHANNELREGISTRAR_CONTRACTID);
   MOZ_ASSERT(registrar);
   registrar->LinkHttpChannel(mChannel->ChannelId(), this);
 
