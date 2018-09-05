@@ -180,7 +180,7 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, 
         if (!str)
             return false;
 
-        UniqueChars propName = JS_EncodeStringToUTF8(cx, str);
+        UniqueChars propName = StringToNewUTF8CharsZ(cx, *str);
         if (!propName)
             return false;
 

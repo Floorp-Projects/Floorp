@@ -22,7 +22,7 @@ inline const char*
 GetFunctionNameBytes(JSContext* cx, JSFunction* fun, UniqueChars* bytes)
 {
     if (JSAtom* name = fun->explicitName()) {
-        *bytes = JS_EncodeString(cx, name);
+        *bytes = EncodeLatin1(cx, name);
         return bytes->get();
     }
     return js_anonymous_str;

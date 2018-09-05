@@ -299,9 +299,9 @@ ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
             JSString* str = ToString<CanGC>(cx, val);
             if (!str)
                 return;
-            errorArgs[i - 1] = JS_EncodeString(cx, str);
+            errorArgs[i - 1] = EncodeLatin1(cx, str);
         } else if (val.isString()) {
-            errorArgs[i - 1] = JS_EncodeString(cx, val.toString());
+            errorArgs[i - 1] = EncodeLatin1(cx, val.toString());
         } else {
             errorArgs[i - 1] = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, nullptr);
         }
