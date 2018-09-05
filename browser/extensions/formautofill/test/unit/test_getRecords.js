@@ -79,7 +79,7 @@ add_task(async function test_getRecords() {
 
     if (collection) {
       sinon.stub(collection, "getAll");
-      collection.getAll.returns(Promise.resolve(expectedResult));
+      collection.getAll.returns(expectedResult);
     }
     await formAutofillParent._getRecords({collectionName}, target);
     mock.verify();
@@ -98,7 +98,7 @@ add_task(async function test_getRecords_addresses() {
   let mockAddresses = [TEST_ADDRESS_1, TEST_ADDRESS_2];
   let collection = formAutofillParent.formAutofillStorage.addresses;
   sinon.stub(collection, "getAll");
-  collection.getAll.returns(Promise.resolve(mockAddresses));
+  collection.getAll.returns(mockAddresses);
 
   let testCases = [
     {
@@ -173,14 +173,13 @@ add_task(async function test_getRecords_creditCards() {
   await formAutofillParent.init();
   await formAutofillParent.formAutofillStorage.initialize();
   let collection = formAutofillParent.formAutofillStorage.creditCards;
-  let encryptedCCRecords = await Promise.all([TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2].map(async record => {
+  let encryptedCCRecords = [TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2].map(record => {
     let clonedRecord = Object.assign({}, record);
     clonedRecord["cc-number"] = CreditCard.getLongMaskedNumber(record["cc-number"]);
-    clonedRecord["cc-number-encrypted"] = await MasterPassword.encrypt(record["cc-number"]);
+    clonedRecord["cc-number-encrypted"] = MasterPassword.encryptSync(record["cc-number"]);
     return clonedRecord;
-  }));
-  sinon.stub(collection, "getAll", () =>
-    Promise.resolve([Object.assign({}, encryptedCCRecords[0]), Object.assign({}, encryptedCCRecords[1])]));
+  });
+  sinon.stub(collection, "getAll", () => [Object.assign({}, encryptedCCRecords[0]), Object.assign({}, encryptedCCRecords[1])]);
   let CreditCardsWithDecryptedNumber = [
     Object.assign({}, encryptedCCRecords[0], {"cc-number-decrypted": TEST_CREDIT_CARD_1["cc-number"]}),
     Object.assign({}, encryptedCCRecords[1], {"cc-number-decrypted": TEST_CREDIT_CARD_2["cc-number"]}),

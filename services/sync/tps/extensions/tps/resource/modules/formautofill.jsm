@@ -39,7 +39,7 @@ class FormAutofillBase {
 
   async Create() {
     const storage = await this.getStorage();
-    await storage.add(this.props);
+    storage.add(this.props);
   }
 
   async Find() {
@@ -52,7 +52,7 @@ class FormAutofillBase {
   async Update() {
     const storage = await this.getStorage();
     const {guid} = await this.Find();
-    await storage.update(guid, this.updateProps, true);
+    storage.update(guid, this.updateProps, true);
   }
 
   async Remove() {
@@ -110,9 +110,8 @@ class CreditCard extends FormAutofillBase {
 
   async Find() {
     const storage = await this.getStorage();
-    await Promise.all(storage._data.map(
-      async entry => entry["cc-number"] = await MasterPassword.decrypt(entry["cc-number-encrypted"])));
     return storage._data.find(entry => {
+      entry["cc-number"] = MasterPassword.decryptSync(entry["cc-number-encrypted"]);
       return this._fields.every(field => entry[field] === this.props[field]);
     });
   }
