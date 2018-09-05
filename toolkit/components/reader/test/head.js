@@ -1,7 +1,7 @@
 ChromeUtils.defineModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
 
-/* exported promiseTabLoadEvent, promiseWaitForCondition, is_element_visible, is_element_hidden */
+/* exported promiseTabLoadEvent, is_element_visible, is_element_hidden */
 
 /**
  * Waits for a load (or custom) event to finish in a given tab. If provided
@@ -49,38 +49,6 @@ function promiseTabLoadEvent(tab, url) {
   // if our loaded promise resolves before the timeout, then we resolve the
   // timeout promise as well, causing the all promise to resolve.
   return Promise.all([deferred.promise, loaded]);
-}
-
-function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
-  retryTimes = typeof retryTimes !== "undefined" ? retryTimes : 30;
-  var tries = 0;
-  var interval = setInterval(function() {
-    if (tries >= retryTimes) {
-      ok(false, errorMsg);
-      moveOn();
-    }
-    var conditionPassed;
-    try {
-      conditionPassed = condition();
-    } catch (e) {
-      ok(false, e + "\n" + e.stack);
-      conditionPassed = false;
-    }
-    if (conditionPassed) {
-      moveOn();
-    }
-    tries++;
-  }, 100);
-  var moveOn = function() {
-    clearInterval(interval);
-    nextTest();
-  };
-}
-
-function promiseWaitForCondition(aConditionFn) {
-  return new Promise(resolve => {
-    waitForCondition(aConditionFn, resolve, "Condition didn't pass.");
-  });
 }
 
 function is_element_visible(element, msg) {
