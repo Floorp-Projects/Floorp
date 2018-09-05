@@ -10,11 +10,10 @@
 
 const NUMBER_OF_BACKUPS = 10;
 
-add_task(async function() {
+async function createBackups(nBackups, dateObj, bookmarksBackupDir) {
   // Generate random dates.
-  let dateObj = new Date();
   let dates = [];
-  while (dates.length < NUMBER_OF_BACKUPS) {
+  while (dates.length < nBackups) {
     // Use last year to ensure today's backup is the newest.
     let randomDate = new Date(dateObj.getFullYear() - 1,
                               Math.floor(12 * Math.random()),
@@ -24,10 +23,6 @@ add_task(async function() {
   }
   // Sort dates from oldest to newest.
   dates.sort();
-
-  // Get and cleanup the backups folder.
-  let backupFolderPath = await PlacesBackups.getBackupFolder();
-  let bookmarksBackupDir = new FileUtils.File(backupFolderPath);
 
   // Fake backups are created backwards to ensure we won't consider file
   // creation time.
@@ -42,10 +37,10 @@ add_task(async function() {
       do_throw("Unable to create fake backup " + backupFile.leafName);
   }
 
-  await PlacesBackups.create(NUMBER_OF_BACKUPS);
-  // Add today's backup.
-  dates.push(dateObj.getTime());
+  return dates;
+}
 
+async function checkBackups(dates, bookmarksBackupDir) {
   // Check backups.  We have 11 dates but we the max number is 10 so the
   // oldest backup should have been removed.
   for (let i = 0; i < dates.length; i++) {
@@ -72,7 +67,9 @@ add_task(async function() {
     if (backupFile.exists() != shouldExist)
       do_throw("Backup should " + (shouldExist ? "" : "not") + " exist: " + backupFilename);
   }
+}
 
+async function cleanupFiles(bookmarksBackupDir) {
   // Cleanup backups folder.
   // XXX: Can't use bookmarksBackupDir.remove(true) because file lock happens
   // on WIN XP.
@@ -81,5 +78,53 @@ add_task(async function() {
     let entry = files.nextFile;
     entry.remove(false);
   }
+  // Clear cache to match the manual removing of files
+  delete PlacesBackups._backupFiles;
   Assert.ok(!bookmarksBackupDir.directoryEntries.hasMoreElements());
+}
+
+add_task(async function test_create_backups() {
+  let backupFolderPath = await PlacesBackups.getBackupFolder();
+  let bookmarksBackupDir = new FileUtils.File(backupFolderPath);
+
+  let dateObj = new Date();
+  let dates = await createBackups(NUMBER_OF_BACKUPS, dateObj, bookmarksBackupDir);
+  // Add today's backup.
+  await PlacesBackups.create(NUMBER_OF_BACKUPS);
+  dates.push(dateObj.getTime());
+  await checkBackups(dates, bookmarksBackupDir);
+  await cleanupFiles(bookmarksBackupDir);
+});
+
+add_task(async function test_saveBookmarks_with_no_backups() {
+  let backupFolderPath = await PlacesBackups.getBackupFolder();
+  let bookmarksBackupDir = new FileUtils.File(backupFolderPath);
+
+  Services.prefs.setIntPref("browser.bookmarks.max_backups", 0);
+
+  let filePath = do_get_tempdir().path + "/backup.json";
+  await PlacesBackups.saveBookmarksToJSONFile(filePath);
+  let files = bookmarksBackupDir.directoryEntries;
+  Assert.ok(!files.hasMoreElements(), "Should have no backup files.");
+  await OS.File.remove(filePath);
+  // We don't need to call cleanupFiles as we are not creating any
+  // backups but need to reset the cache.
+  delete PlacesBackups._backupFiles;
+});
+
+add_task(async function test_saveBookmarks_with_backups() {
+  let backupFolderPath = await PlacesBackups.getBackupFolder();
+  let bookmarksBackupDir = new FileUtils.File(backupFolderPath);
+
+  Services.prefs.setIntPref("browser.bookmarks.max_backups", NUMBER_OF_BACKUPS);
+
+  let filePath = do_get_tempdir().path + "/backup.json";
+  let dateObj = new Date();
+  let dates = await createBackups(NUMBER_OF_BACKUPS, dateObj, bookmarksBackupDir);
+
+  await PlacesBackups.saveBookmarksToJSONFile(filePath);
+  dates.push(dateObj.getTime());
+  await checkBackups(dates, bookmarksBackupDir);
+  await OS.File.remove(filePath);
+  await cleanupFiles(bookmarksBackupDir);
 });

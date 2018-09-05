@@ -19,6 +19,17 @@ XPCOMUtils.defineLazyGetter(this, "filenamesRegex",
   () => /^bookmarks-([0-9-]+)(?:_([0-9]+)){0,1}(?:_([a-z0-9=+-]{24})){0,1}\.(json(lz4)?)$/i
 );
 
+async function limitBackups(aMaxBackups, backupFiles) {
+  if (typeof aMaxBackups == "number" && aMaxBackups > -1 &&
+      backupFiles.length >= aMaxBackups) {
+    let numberOfBackupsToDelete = backupFiles.length - aMaxBackups;
+    while (numberOfBackupsToDelete--) {
+      let oldestBackup = backupFiles.pop();
+      await OS.File.remove(oldestBackup);
+    }
+  }
+}
+
 /**
  * Appends meta-data information to a given filename.
  */
@@ -240,6 +251,13 @@ var PlacesBackups = {
       }
       this._backupFiles.unshift(aFilePath);
     } else {
+      let aMaxBackup = Services.prefs.getIntPref("browser.bookmarks.max_backups");
+      if (aMaxBackup === 0) {
+        if (!this._backupFiles)
+          await this.getBackupFiles();
+        limitBackups(aMaxBackup, this._backupFiles);
+        return nodeCount;
+      }
       // If we are saving to a folder different than our backups folder, then
       // we also want to create a new compressed version in it.
       // This way we ensure the latest valid backup is the same saved by the
@@ -269,9 +287,9 @@ var PlacesBackups = {
         }
         let jsonString = await OS.File.read(aFilePath);
         await OS.File.writeAtomic(newFilePath, jsonString, { compression: "lz4" });
+        await limitBackups(aMaxBackup, this._backupFiles);
       }
     }
-
     return nodeCount;
   },
 
@@ -289,22 +307,12 @@ var PlacesBackups = {
    * @return {Promise}
    */
   create: function PB_create(aMaxBackups, aForceBackup) {
-    let limitBackups = async () => {
-      let backupFiles = await this.getBackupFiles();
-      if (typeof aMaxBackups == "number" && aMaxBackups > -1 &&
-          backupFiles.length >= aMaxBackups) {
-        let numberOfBackupsToDelete = backupFiles.length - aMaxBackups;
-        while (numberOfBackupsToDelete--) {
-          let oldestBackup = this._backupFiles.pop();
-          await OS.File.remove(oldestBackup);
-        }
-      }
-    };
-
     return (async () => {
       if (aMaxBackups === 0) {
         // Backups are disabled, delete any existing one and bail out.
-        await limitBackups(0);
+        if (!this._backupFiles)
+          await this.getBackupFiles();
+        await limitBackups(0, this._backupFiles);
         return;
       }
 
@@ -366,7 +374,7 @@ var PlacesBackups = {
       this._backupFiles.unshift(newBackupFileWithMetadata);
 
       // Limit the number of backups.
-      await limitBackups(aMaxBackups);
+      await limitBackups(aMaxBackups, this._backupFiles);
     })();
   },
 

@@ -7,7 +7,7 @@ add_task(async function duplicateTab() {
   await ContentTask.spawn(tab.linkedBrowser, null, function() {
     let docshell = content.window.docShell
                                  .QueryInterface(Ci.nsIWebNavigation);
-    let shEntry = docshell.sessionHistory.legacySHistory.getEntryAtIndex(0, false);
+    let shEntry = docshell.sessionHistory.legacySHistory.getEntryAtIndex(0);
     is(shEntry.docshellID.toString(), docshell.historyID.toString());
   });
 
@@ -17,7 +17,7 @@ add_task(async function duplicateTab() {
   await ContentTask.spawn(tab2.linkedBrowser, null, function() {
     let docshell = content.window.docShell
                                  .QueryInterface(Ci.nsIWebNavigation);
-    let shEntry = docshell.sessionHistory.legacySHistory.getEntryAtIndex(0, false);
+    let shEntry = docshell.sessionHistory.legacySHistory.getEntryAtIndex(0);
     is(shEntry.docshellID.toString(), docshell.historyID.toString());
   });
 
@@ -36,7 +36,7 @@ add_task(async function contentToChromeNavigate() {
                                  .QueryInterface(Ci.nsIWebNavigation);
     let sh = docshell.sessionHistory;
     is(sh.count, 1);
-    is(sh.legacySHistory.getEntryAtIndex(0, false).docshellID.toString(), docshell.historyID.toString());
+    is(sh.legacySHistory.getEntryAtIndex(0).docshellID.toString(), docshell.historyID.toString());
   });
 
   // Force the browser to navigate to the chrome process.
@@ -54,8 +54,8 @@ add_task(async function contentToChromeNavigate() {
   let sh = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
 
   is(sh.count, 2);
-  is(sh.legacySHistory.getEntryAtIndex(0, false).docshellID.toString(), docShell.historyID.toString());
-  is(sh.legacySHistory.getEntryAtIndex(1, false).docshellID.toString(), docShell.historyID.toString());
+  is(sh.legacySHistory.getEntryAtIndex(0).docshellID.toString(), docShell.historyID.toString());
+  is(sh.legacySHistory.getEntryAtIndex(1).docshellID.toString(), docShell.historyID.toString());
 
   BrowserTestUtils.removeTab(tab);
 });

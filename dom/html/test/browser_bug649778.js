@@ -43,7 +43,7 @@ function getPopupURL() {
                 .QueryInterface(Ci.nsIWebNavigation)
                 .sessionHistory;
 
-  return sh.legacySHistory.getEntryAtIndex(sh.index, false).URI.spec;
+  return sh.legacySHistory.getEntryAtIndex(sh.index).URI.spec;
 }
 
 var wyciwygURL;

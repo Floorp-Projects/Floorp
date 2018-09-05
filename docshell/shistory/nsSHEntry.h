@@ -61,6 +61,7 @@ private:
   bool mIsSrcdocEntry;
   bool mScrollRestorationIsManual;
   bool mLoadedInThisProcess;
+  bool mPersist;
 };
 
 #endif /* nsSHEntry_h */

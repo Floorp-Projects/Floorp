@@ -61,6 +61,7 @@ public:
     : DOMEventTargetHelper(aGlobal)
     , mPlaybackRate(1.0)
     , mAnimationIndex(sNextAnimationIndex++)
+    , mCachedChildIndex(-1)
     , mPendingState(PendingState::NotPending)
     , mFinishedAtLastComposeStyle(false)
     , mIsRelevant(false)
@@ -405,6 +406,8 @@ public:
    */
   virtual void MaybeQueueCancelEvent(const StickyTimeDuration& aActiveTime) {};
 
+  int32_t& CachedChildIndexRef() { return mCachedChildIndex; }
+
 protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
   void CancelNoUpdate();
@@ -578,6 +581,10 @@ protected:
   // this member to implement their own brand of sorting. As a result, it is
   // possible for two different objects to have the same index.
   uint64_t mAnimationIndex;
+
+  // While ordering Animation objects for event dispatch, the index of the
+  // target node in its parent may be cached in mCachedChildIndex.
+  int32_t mCachedChildIndex;
 
   // Indicates if the animation is in the pending state (and what state it is
   // waiting to enter when it finished pending). We use this rather than

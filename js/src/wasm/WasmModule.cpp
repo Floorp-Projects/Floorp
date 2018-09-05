@@ -37,139 +37,6 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
-size_t
-LinkDataTier::SymbolicLinkArray::serializedSize() const
-{
-    size_t size = 0;
-    for (const Uint32Vector& offsets : *this)
-        size += SerializedPodVectorSize(offsets);
-    return size;
-}
-
-uint8_t*
-LinkDataTier::SymbolicLinkArray::serialize(uint8_t* cursor) const
-{
-    for (const Uint32Vector& offsets : *this)
-        cursor = SerializePodVector(cursor, offsets);
-    return cursor;
-}
-
-const uint8_t*
-LinkDataTier::SymbolicLinkArray::deserialize(const uint8_t* cursor)
-{
-    for (Uint32Vector& offsets : *this) {
-        cursor = DeserializePodVector(cursor, &offsets);
-        if (!cursor)
-            return nullptr;
-    }
-    return cursor;
-}
-
-size_t
-LinkDataTier::SymbolicLinkArray::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
-{
-    size_t size = 0;
-    for (const Uint32Vector& offsets : *this)
-        size += offsets.sizeOfExcludingThis(mallocSizeOf);
-    return size;
-}
-
-size_t
-LinkDataTier::serializedSize() const
-{
-    return sizeof(pod()) +
-           SerializedPodVectorSize(internalLinks) +
-           symbolicLinks.serializedSize();
-}
-
-uint8_t*
-LinkDataTier::serialize(uint8_t* cursor) const
-{
-    MOZ_ASSERT(tier == Tier::Serialized);
-
-    cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
-    cursor = SerializePodVector(cursor, internalLinks);
-    cursor = symbolicLinks.serialize(cursor);
-    return cursor;
-}
-
-const uint8_t*
-LinkDataTier::deserialize(const uint8_t* cursor)
-{
-    (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
-    (cursor = DeserializePodVector(cursor, &internalLinks)) &&
-    (cursor = symbolicLinks.deserialize(cursor));
-    return cursor;
-}
-
-size_t
-LinkDataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
-{
-    return internalLinks.sizeOfExcludingThis(mallocSizeOf) +
-           symbolicLinks.sizeOfExcludingThis(mallocSizeOf);
-}
-
-void
-LinkData::setTier2(UniqueLinkDataTier tier) const
-{
-    MOZ_RELEASE_ASSERT(tier->tier == Tier::Ion && tier1_->tier == Tier::Baseline);
-    MOZ_RELEASE_ASSERT(!tier2_.get());
-    tier2_ = std::move(tier);
-}
-
-const LinkDataTier&
-LinkData::tier(Tier tier) const
-{
-    switch (tier) {
-      case Tier::Baseline:
-        if (tier1_->tier == Tier::Baseline)
-            return *tier1_;
-        MOZ_CRASH("No linkData at this tier");
-      case Tier::Ion:
-        if (tier1_->tier == Tier::Ion)
-            return *tier1_;
-        if (tier2_)
-            return *tier2_;
-        MOZ_CRASH("No linkData at this tier");
-      default:
-        MOZ_CRASH();
-    }
-}
-
-size_t
-LinkData::serializedSize() const
-{
-    return tier(Tier::Serialized).serializedSize();
-}
-
-uint8_t*
-LinkData::serialize(uint8_t* cursor) const
-{
-    cursor = tier(Tier::Serialized).serialize(cursor);
-    return cursor;
-}
-
-const uint8_t*
-LinkData::deserialize(const uint8_t* cursor)
-{
-    MOZ_ASSERT(!tier1_);
-    tier1_ = js::MakeUnique<LinkDataTier>(Tier::Serialized);
-    if (!tier1_)
-        return nullptr;
-    cursor = tier1_->deserialize(cursor);
-    return cursor;
-}
-
-size_t
-LinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
-{
-    size_t sum = 0;
-    sum += tier1_->sizeOfExcludingThis(mallocSizeOf);
-    if (tier2_)
-        sum += tier2_->sizeOfExcludingThis(mallocSizeOf);
-    return sum;
-}
-
 class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask
 {
     SharedModule            module_;
@@ -213,18 +80,17 @@ Module::startTier2(const CompileArgs& args)
 }
 
 bool
-Module::finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2Arg, ModuleEnvironment* env2)
+Module::finishTier2(const LinkData& linkData, UniqueCodeTier tier2Arg, ModuleEnvironment&& env2)
 {
     MOZ_ASSERT(code().bestTier() == Tier::Baseline && tier2Arg->tier() == Tier::Ion);
 
     // Install the data in the data structures. They will not be visible
     // until commitTier2().
 
-    if (!code().setTier2(std::move(tier2Arg), *bytecode_, *linkData2))
+    if (!code().setTier2(std::move(tier2Arg), *bytecode_, linkData))
         return false;
-    linkData().setTier2(std::move(linkData2));
     for (uint32_t i = 0; i < elemSegments_.length(); i++)
-        elemSegments_[i].setTier2(std::move(env2->elemSegments[i].elemCodeRangeIndices(Tier::Ion)));
+        elemSegments_[i].setTier2(std::move(env2.elemSegments[i].elemCodeRangeIndices(Tier::Ion)));
 
     // Before we can make tier-2 live, we need to compile tier2 versions of any
     // extant tier1 lazy stubs (otherwise, tiering would break the assumption
@@ -247,7 +113,7 @@ Module::finishTier2(UniqueLinkDataTier linkData2, UniqueCodeTier tier2Arg, Modul
             const FuncExport& fe = metadataTier1.funcExports[i];
             if (fe.hasEagerStubs())
                 continue;
-            MOZ_ASSERT(!env2->isAsmJS(), "only wasm functions are lazily exported");
+            MOZ_ASSERT(!env2.isAsmJS(), "only wasm functions are lazily exported");
             if (!stubs1->hasStub(fe.funcIndex()))
                 continue;
             if (!funcExportIndices.emplaceBack(i))
@@ -294,21 +160,9 @@ Module::testingBlockOnTier2Complete() const
 }
 
 /* virtual */ size_t
-Module::compiledSerializedSize() const
+Module::serializedSize(const LinkData& linkData) const
 {
-    MOZ_ASSERT(!testingTier2Active_);
-
-    // The compiled debug code must not be saved, set compiled size to 0,
-    // so Module::assumptionsMatch will return false during assumptions
-    // deserialization.
-    if (metadata().debugEnabled)
-        return 0;
-
-    if (!code_->hasTier(Tier::Serialized))
-        return 0;
-
-    return assumptions_.serializedSize() +
-           linkData_.serializedSize() +
+    return linkData.serializedSize() +
            SerializedVectorSize(imports_) +
            SerializedVectorSize(exports_) +
            SerializedPodVectorSize(dataSegments_) +
@@ -318,59 +172,26 @@ Module::compiledSerializedSize() const
 }
 
 /* virtual */ void
-Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
+Module::serialize(const LinkData& linkData, uint8_t* begin, size_t size) const
 {
-    MOZ_ASSERT(!testingTier2Active_);
+    MOZ_RELEASE_ASSERT(!testingTier2Active_);
+    MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
+    MOZ_RELEASE_ASSERT(code_->hasTier(Tier::Serialized));
 
-    if (metadata().debugEnabled) {
-        MOZ_RELEASE_ASSERT(compiledSize == 0);
-        return;
-    }
-
-    if (!code_->hasTier(Tier::Serialized)) {
-        MOZ_RELEASE_ASSERT(compiledSize == 0);
-        return;
-    }
-
-    uint8_t* cursor = compiledBegin;
-    cursor = assumptions_.serialize(cursor);
-    cursor = linkData_.serialize(cursor);
+    uint8_t* cursor = begin;
+    cursor = linkData.serialize(cursor);
     cursor = SerializeVector(cursor, imports_);
     cursor = SerializeVector(cursor, exports_);
     cursor = SerializePodVector(cursor, dataSegments_);
     cursor = SerializeVector(cursor, elemSegments_);
     cursor = SerializeVector(cursor, structTypes_);
-    cursor = code_->serialize(cursor, linkData_);
-    MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
-}
-
-/* static */ bool
-Module::assumptionsMatch(const Assumptions& current, const uint8_t* compiledBegin, size_t remain)
-{
-    Assumptions cached;
-    if (!cached.deserialize(compiledBegin, remain))
-        return false;
-
-    return current == cached;
+    cursor = code_->serialize(cursor, linkData);
+    MOZ_RELEASE_ASSERT(cursor == begin + size);
 }
 
 /* static */ SharedModule
-Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
-                    const uint8_t* compiledBegin, size_t compiledSize,
-                    Metadata* maybeMetadata)
+Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
 {
-    MutableBytes bytecode = js_new<ShareableBytes>();
-    if (!bytecode || !bytecode->bytes.initLengthUninitialized(bytecodeSize))
-        return nullptr;
-
-    if (bytecodeSize)
-        memcpy(bytecode->bytes.begin(), bytecodeBegin, bytecodeSize);
-
-    Assumptions assumptions;
-    const uint8_t* cursor = assumptions.deserialize(compiledBegin, compiledSize);
-    if (!cursor)
-        return nullptr;
-
     MutableMetadata metadata(maybeMetadata);
     if (!metadata) {
         metadata = js_new<Metadata>();
@@ -378,7 +199,15 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
             return nullptr;
     }
 
-    LinkData linkData;
+    const uint8_t* cursor = begin;
+
+    // Temporary. (asm.js doesn't save bytecode)
+    MOZ_RELEASE_ASSERT(maybeMetadata->isAsmJS());
+    MutableBytes bytecode = js_new<ShareableBytes>();
+    if (!bytecode)
+        return nullptr;
+
+    LinkData linkData(Tier::Serialized);
     cursor = linkData.deserialize(cursor);
     if (!cursor)
         return nullptr;
@@ -413,13 +242,10 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
     if (!cursor)
         return nullptr;
 
-    MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
+    MOZ_RELEASE_ASSERT(cursor == begin + size);
     MOZ_RELEASE_ASSERT(!!maybeMetadata == code->metadata().isAsmJS());
 
-    return js_new<Module>(std::move(assumptions),
-                          *code,
-                          nullptr,            // Serialized code is never debuggable
-                          std::move(linkData),
+    return js_new<Module>(*code,
                           std::move(imports),
                           std::move(exports),
                           std::move(dataSegments),
@@ -467,17 +293,12 @@ MapFile(PRFileDesc* file, PRFileInfo* info)
 }
 
 SharedModule
-wasm::DeserializeModule(PRFileDesc* bytecodeFile, JS::BuildIdCharVector&& buildId,
-                        UniqueChars filename, unsigned line)
+wasm::DeserializeModule(PRFileDesc* bytecodeFile, UniqueChars filename, unsigned line)
 {
     PRFileInfo bytecodeInfo;
     UniqueMapping bytecodeMapping = MapFile(bytecodeFile, &bytecodeInfo);
     if (!bytecodeMapping)
         return nullptr;
-
-    // Since the compiled file's assumptions don't match, we must recompile from
-    // bytecode. The bytecode file format is simply that of a .wasm (see
-    // Module::bytecodeSerialize).
 
     MutableBytes bytecode = js_new<ShareableBytes>();
     if (!bytecode || !bytecode->bytes.initLengthUninitialized(bytecodeInfo.size))
@@ -489,7 +310,7 @@ wasm::DeserializeModule(PRFileDesc* bytecodeFile, JS::BuildIdCharVector&& buildI
     scriptedCaller.filename = std::move(filename);
     scriptedCaller.line = line;
 
-    MutableCompileArgs args = js_new<CompileArgs>(Assumptions(std::move(buildId)), std::move(scriptedCaller));
+    MutableCompileArgs args = js_new<CompileArgs>(std::move(scriptedCaller));
     if (!args)
         return nullptr;
 
@@ -521,16 +342,14 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
 {
     code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenCode, code, data);
     *data += mallocSizeOf(this) +
-             assumptions_.sizeOfExcludingThis(mallocSizeOf) +
-             linkData_.sizeOfExcludingThis(mallocSizeOf) +
              SizeOfVectorExcludingThis(imports_, mallocSizeOf) +
              SizeOfVectorExcludingThis(exports_, mallocSizeOf) +
              dataSegments_.sizeOfExcludingThis(mallocSizeOf) +
              SizeOfVectorExcludingThis(elemSegments_, mallocSizeOf) +
              SizeOfVectorExcludingThis(structTypes_, mallocSizeOf) +
              bytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
-    if (unlinkedCodeForDebugging_)
-        *data += unlinkedCodeForDebugging_->sizeOfExcludingThis(mallocSizeOf);
+    if (debugUnlinkedCode_)
+        *data += debugUnlinkedCode_->sizeOfExcludingThis(mallocSizeOf);
 }
 
 
@@ -1115,13 +934,16 @@ Module::instantiate(JSContext* cx,
     SharedCode code(code_);
 
     if (metadata().debugEnabled) {
+        MOZ_ASSERT(debugUnlinkedCode_);
+        MOZ_ASSERT(debugLinkData_);
+
         // The first time through, use the pre-linked code in the module but
         // mark it as busy. Subsequently, instantiate the copy of the code
         // bytes that we keep around for debugging instead, because the debugger
         // may patch the pre-linked code at any time.
-        if (!codeIsBusy_.compareExchange(false, true)) {
+        if (!debugCodeClaimed_.compareExchange(false, true)) {
             Tier tier = Tier::Baseline;
-            auto segment = ModuleSegment::create(tier, *unlinkedCodeForDebugging_, linkData(tier));
+            auto segment = ModuleSegment::create(tier, *debugUnlinkedCode_, *debugLinkData_);
             if (!segment) {
                 ReportOutOfMemory(cx);
                 return false;
@@ -1140,7 +962,7 @@ Module::instantiate(JSContext* cx,
                 return false;
 
             MutableCode debugCode = js_new<Code>(std::move(codeTier), metadata(), std::move(jumpTables));
-            if (!debugCode || !debugCode->initialize(*bytecode_, linkData(tier))) {
+            if (!debugCode || !debugCode->initialize(*bytecode_, *debugLinkData_)) {
                 ReportOutOfMemory(cx);
                 return false;
             }

@@ -27,6 +27,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIRunnable.h"
+#include "nsIPlatformInfo.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
 #include "nsWindowSizes.h"
@@ -1042,6 +1043,29 @@ OnLargeAllocationFailureCallback()
     }
 
     r->BlockUntilDone();
+}
+
+bool
+mozilla::GetBuildId(JS::BuildIdCharVector* aBuildID)
+{
+    nsCOMPtr<nsIPlatformInfo> info = do_GetService("@mozilla.org/xre/app-info;1");
+    if (!info) {
+        return false;
+    }
+
+    nsCString buildID;
+    nsresult rv = info->GetPlatformBuildID(buildID);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    if (!aBuildID->resize(buildID.Length())) {
+        return false;
+    }
+
+    for (size_t i = 0; i < buildID.Length(); i++) {
+        (*aBuildID)[i] = buildID[i];
+    }
+
+    return true;
 }
 
 size_t
@@ -2951,6 +2975,7 @@ XPCJSRuntime::Initialize(JSContext* cx)
     js::SetWindowProxyClass(cx, &OuterWindowProxyClass);
     js::SetXrayJitInfo(&gXrayJitInfo);
     JS::SetProcessLargeAllocationFailureCallback(OnLargeAllocationFailureCallback);
+    JS::SetProcessBuildIdOp(GetBuildId);
 
     // The JS engine needs to keep the source code around in order to implement
     // Function.prototype.toSource(). It'd be nice to not have to do this for
