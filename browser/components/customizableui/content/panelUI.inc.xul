@@ -29,8 +29,13 @@
        when hover styles overlap. See https://bugzilla.mozilla.org/show_bug.cgi?id=1378427 .
        -->
   <menupopup id="customizationPanelItemContextMenu"
-             onpopupshowing="gCustomizeMode.onPanelContextMenuShowing(event); UpdateManageExtension(this)">
-    <menuitem oncommand="openAboutAddonsForContextAction(this.parentElement)"
+             onpopupshowing="gCustomizeMode.onPanelContextMenuShowing(event); ToolbarContextMenu.updateExtension(this)">
+    <menuitem oncommand="ToolbarContextMenu.removeExtensionForContextAction(this.parentElement)"
+              accesskey="&customizeMenu.removeExtension.accesskey;"
+              label="&customizeMenu.removeExtension.label;"
+              contexttype="toolbaritem"
+              class="customize-context-removeExtension"/>
+    <menuitem oncommand="ToolbarContextMenu.openAboutAddonsForContextAction(this.parentElement)"
               accesskey="&customizeMenu.manageExtension.accesskey;"
               label="&customizeMenu.manageExtension.label;"
               contexttype="toolbaritem"
