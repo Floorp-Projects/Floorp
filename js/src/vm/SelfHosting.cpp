@@ -2857,8 +2857,12 @@ VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg)
     }
 
     if (nameMissing) {
-        RootedValue value(cx, IdToValue(id));
-        ReportValueError(cx, JSMSG_NO_SUCH_SELF_HOSTED_PROP, JSDVG_IGNORE_STACK, value, nullptr);
+        UniqueChars bytes = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
+        if (!bytes)
+            return false;
+
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NO_SUCH_SELF_HOSTED_PROP,
+                                 bytes.get());
         return false;
     }
 #endif // DEBUG

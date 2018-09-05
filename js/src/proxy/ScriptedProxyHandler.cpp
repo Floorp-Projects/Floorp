@@ -891,8 +891,11 @@ ScriptedProxyHandler::delete_(JSContext* cx, HandleObject proxy, HandleId id,
 
     // Step 12.
     if (desc.object() && !desc.configurable()) {
-        RootedValue v(cx, IdToValue(id));
-        ReportValueError(cx, JSMSG_CANT_DELETE, JSDVG_IGNORE_STACK, v, nullptr);
+        UniqueChars bytes = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
+        if (!bytes)
+            return false;
+
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_CANT_DELETE, bytes.get());
         return false;
     }
 

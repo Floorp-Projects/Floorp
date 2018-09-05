@@ -1677,22 +1677,23 @@ SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt, int32_t lengt
 UniqueChars
 EncodeLatin1(JSContext* cx, JSString* str);
 
-/*
- * Convert a value to a printable C string.
- *
- * As the function name implies, any characters in a converted printable string will be Latin1
- * characters. If there are any non-Latin1 characters in the original value, then those characters
- * will be changed to Unicode escape sequences(I.e. \udddd, dddd are 4 hex digits) in the printable
- * string.
- */
-extern UniqueChars
-ValueToPrintableLatin1(JSContext* cx, const Value&, bool asSource = false);
+enum class IdToPrintableBehavior : bool {
+    /*
+     * Request the printable representation of an identifier.
+     */
+    IdIsIdentifier,
+
+    /*
+     * Request the printable representation of a property key.
+     */
+    IdIsPropertyKey
+};
 
 /*
- * Convert a value to a printable C string encoded in UTF-8.
+ * Convert a jsid to a printable C string encoded in UTF-8.
  */
 extern UniqueChars
-ValueToPrintableUTF8(JSContext* cx, const Value&, bool asSource = false);
+IdToPrintableUTF8(JSContext* cx, HandleId id, IdToPrintableBehavior behavior);
 
 /*
  * Convert a non-string value to a string, returning null after reporting an

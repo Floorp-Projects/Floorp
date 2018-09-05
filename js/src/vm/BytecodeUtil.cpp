@@ -1158,7 +1158,10 @@ ToDisassemblySource(JSContext* cx, HandleValue v)
         }
     }
 
-    return ValueToPrintableLatin1(cx, v, true);
+    JSString* str = ValueToSource(cx, v);
+    if (!str)
+        return nullptr;
+    return QuoteString(cx, str);
 }
 
 static bool

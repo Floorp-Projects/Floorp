@@ -4758,7 +4758,10 @@ BinParse(JSContext* cx, unsigned argc, Value* vp)
             } else if (StringEqualsAscii(linearFormat, "simple")) {
                 useMultipart = false;
             } else {
-                UniqueChars printable = ValueToPrintableUTF8(cx, optionFormat);
+                UniqueChars printable = JS_EncodeStringToUTF8(cx, linearFormat);
+                if (!printable)
+                    return false;
+
                 JS_ReportErrorUTF8(cx,
                                    "Unknown value for option `format`, expected 'multipart' or "
                                    "'simple', got %s", printable.get());

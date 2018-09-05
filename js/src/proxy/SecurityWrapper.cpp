@@ -113,16 +113,12 @@ SecurityWrapper<Base>::defineProperty(JSContext* cx, HandleObject wrapper, Handl
                                       ObjectOpResult& result) const
 {
     if (desc.getter() || desc.setter()) {
-        RootedValue idVal(cx, IdToValue(id));
-        JSString* str = ValueToSource(cx, idVal);
-        if (!str)
+        UniqueChars prop = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
+        if (!prop)
             return false;
-        AutoStableStringChars chars(cx);
-        const char16_t* prop = nullptr;
-        if (str->ensureFlat(cx) && chars.initTwoByte(cx, str))
-            prop = chars.twoByteChars();
-        JS_ReportErrorNumberUC(cx, GetErrorMessage, nullptr,
-                               JSMSG_ACCESSOR_DEF_DENIED, prop);
+
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_ACCESSOR_DEF_DENIED,
+                                 prop.get());
         return false;
     }
 

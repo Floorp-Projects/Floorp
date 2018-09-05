@@ -892,7 +892,7 @@ js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback call
 void
 js::ReportIsNotDefined(JSContext* cx, HandleId id)
 {
-    if (UniqueChars printable = ValueToPrintableUTF8(cx, IdToValue(id)))
+    if (UniqueChars printable = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsIdentifier))
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NOT_DEFINED, printable.get());
 }
 
