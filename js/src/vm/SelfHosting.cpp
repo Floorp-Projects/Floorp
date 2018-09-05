@@ -299,7 +299,7 @@ ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
             JSString* str = ToString<CanGC>(cx, val);
             if (!str)
                 return;
-            errorArgs[i - 1] = EncodeLatin1(cx, str);
+            errorArgs[i - 1] = StringToNewUTF8CharsZ(cx, *str);
         } else {
             errorArgs[i - 1] = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, nullptr);
         }
@@ -307,8 +307,8 @@ ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
             return;
     }
 
-    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber,
-                               errorArgs[0].get(), errorArgs[1].get(), errorArgs[2].get());
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber,
+                             errorArgs[0].get(), errorArgs[1].get(), errorArgs[2].get());
 }
 
 static bool
