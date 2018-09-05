@@ -92,6 +92,7 @@
     <color name="browser_menu_blocking_switch_bg">#1Af9f9fa</color>
     <color name="browser_menu_trackers_blocked_label">@android:color/white</color>
     <color name="browser_menu_request_desktop_separator">#1Af9f9fa</color>
+    <color name="browser_menu_trackers_blocked_subtitle">@color/photonGrey10</color>
 
     <color name="images_removal_warning_background_color">#353852</color>
 

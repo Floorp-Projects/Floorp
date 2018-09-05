@@ -18,7 +18,7 @@
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/list"
-            android:layout_width="250dp"
+            android:layout_width="@dimen/browser_menu_height"
             android:layout_height="wrap_content"
             android:paddingBottom="8dp"
             android:paddingTop="8dp" />

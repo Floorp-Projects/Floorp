@@ -59,4 +59,11 @@
     <dimen name="doorhanger_icon_size">60dp</dimen>
     <dimen name="doorhanger_rounded_corner_radius">4dp</dimen>
     <dimen name="doorhanger_small_icon">16dp</dimen>
+
+    <dimen name="browser_menu_height">280dp</dimen>
+
+    <dimen name="menu_blocking_switch_container_height">88dp</dimen>
+    <dimen name="menu_blocking_switch_height">20dp</dimen>
+    <dimen name="menu_blocking_switch_width">46dp</dimen>
+    <dimen name="menu_blocking_switch_margin">12dp</dimen>
 </resources>
