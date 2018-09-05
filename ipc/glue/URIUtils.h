@@ -39,7 +39,7 @@ struct IPDLParamTraits<nsIURI>
     WriteIPDLParam(aMsg, aActor, params);
   }
 
-  static bool Read(IPC::Message* aMsg, PickleIterator* aIter,
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
                    IProtocol* aActor, RefPtr<nsIURI>* aResult)
   {
     OptionalURIParams params;

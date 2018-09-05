@@ -37,12 +37,9 @@ struct FourFloats
     n[3] = d;
   }
 
-  bool
-  operator==(const FourFloats& aOther) const
+  bool operator==(const FourFloats& aOther) const
   {
-    return n[0] == aOther.n[0] &&
-           n[1] == aOther.n[1] &&
-           n[2] == aOther.n[2] &&
+    return n[0] == aOther.n[0] && n[1] == aOther.n[1] && n[2] == aOther.n[2] &&
            n[3] == aOther.n[3];
   }
 };
@@ -53,9 +50,15 @@ public:
   typedef const FourFloats& KeyType;
   typedef const FourFloats* KeyTypePointer;
 
-  explicit FourFloatsHashKey(KeyTypePointer aKey) : mValue(*aKey) {}
-  FourFloatsHashKey(const FourFloatsHashKey& aToCopy) : mValue(aToCopy.mValue) {}
-  ~FourFloatsHashKey() {}
+  explicit FourFloatsHashKey(KeyTypePointer aKey)
+    : mValue(*aKey)
+  {
+  }
+  FourFloatsHashKey(const FourFloatsHashKey& aToCopy)
+    : mValue(aToCopy.mValue)
+  {
+  }
+  ~FourFloatsHashKey() = default;
 
   KeyType GetKey() const { return mValue; }
   bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
@@ -65,7 +68,10 @@ public:
   {
     return HashBytes(aKey->n, sizeof(mozilla::gfx::Float) * 4);
   }
-  enum { ALLOW_MEMMOVE = true };
+  enum
+  {
+    ALLOW_MEMMOVE = true
+  };
 
 private:
   const FourFloats mValue;

@@ -50,13 +50,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       };
     }
 
-    function changeARIAActiveDescendantInvalid(aID) {
+    /**
+     * Change aria-activedescendant to an invalid (non-existent) id.
+     * Ensure that focus is fired on the element itself.
+     */
+    function changeARIAActiveDescendantInvalid(aID, aInvalidID) {
+      if (!aInvalidID) {
+        aInvalidID = "invalid";
+      }
+
       this.eventSeq = [
         new focusChecker(aID)
       ];
 
       this.invoke = function changeARIAActiveDescendant_invoke() {
-        getNode(aID).setAttribute("aria-activedescendant", "invalid");
+        getNode(aID).setAttribute("aria-activedescendant", aInvalidID);
       };
 
       this.getID = function changeARIAActiveDescendant_getID() {
@@ -87,6 +95,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       };
     }
 
+    /**
+     * Change the id of an element to another id which is the target of
+     * aria-activedescendant.
+     * If another element already has the desired id, remove it from that
+     * element first.
+     * Ensure that focus is fired on the target element which was given the
+     * desired id.
+     * @param aFromID The existing id of the target element.
+     * @param aToID The desired id to be given to the target element.
+    */
+    function moveARIAActiveDescendantID(aFromID, aToID) {
+      this.eventSeq = [
+        new focusChecker(aToID)
+      ];
+
+      this.invoke = function moveARIAActiveDescendantID_invoke() {
+        let orig = document.getElementById(aToID);
+        if (orig) {
+          orig.id = "";
+        }
+        document.getElementById(aFromID).id = aToID;
+      };
+
+      this.getID = function moveARIAActiveDescendantID_getID() {
+        return "move aria-activedescendant id " + aToID;
+      };
+    }
+
     var gQueue = null;
     function doTest() {
       gQueue = new eventQueue();
@@ -103,8 +139,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
 
       gQueue.push(new clearARIAActiveDescendant("listbox"));
       gQueue.push(new changeARIAActiveDescendant("listbox", "item1"));
-      gQueue.push(new changeARIAActiveDescendantInvalid("listbox"));
-      gQueue.push(new changeARIAActiveDescendant("listbox", "item1"));
+      gQueue.push(new changeARIAActiveDescendantInvalid("listbox", "invalid"));
+
+      gQueue.push(new changeARIAActiveDescendant("listbox", "roaming"));
+      gQueue.push(new moveARIAActiveDescendantID("roaming2", "roaming"));
+      gQueue.push(new changeARIAActiveDescendantInvalid("listbox", "roaming3"));
+      gQueue.push(new moveARIAActiveDescendantID("roaming", "roaming3"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -134,6 +174,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
        aria-owns="item3">
     <div role="listitem" id="item1">item1</div>
     <div role="listitem" id="item2">item2</div>
+    <div role="listitem" id="roaming">roaming</div>
+    <div role="listitem" id="roaming2">roaming2</div>
   </div>
   <div role="listitem" id="item3">item3</div>
 

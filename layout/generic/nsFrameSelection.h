@@ -181,9 +181,9 @@ struct nsPrevNextBidiLevels
 };
 
 namespace mozilla {
+class SelectionChangeEventDispatcher;
 namespace dom {
 class Selection;
-class SelectionChangeListener;
 } // namespace dom
 
 /**
@@ -691,7 +691,7 @@ private:
   }
 
   friend class mozilla::dom::Selection;
-  friend class mozilla::dom::SelectionChangeListener;
+  friend class mozilla::SelectionChangeEventDispatcher;
   friend struct mozilla::AutoPrepareFocusRange;
 #ifdef DEBUG
   void printSelection();       // for debugging

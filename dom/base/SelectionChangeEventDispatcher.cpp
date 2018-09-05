@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Implementation of mozilla::dom::SelectionChangeListener
+ * Implementation of mozilla::SelectionChangeEventDispatcher
  */
 
-#include "SelectionChangeListener.h"
+#include "SelectionChangeEventDispatcher.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "nsCOMPtr.h"
@@ -18,10 +18,12 @@
 #include "nsRange.h"
 #include "mozilla/dom/Selection.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
-SelectionChangeListener::RawRangeData::RawRangeData(const nsRange* aRange)
+using namespace dom;
+
+SelectionChangeEventDispatcher::RawRangeData::RawRangeData(
+                                                const nsRange* aRange)
 {
   mozilla::ErrorResult rv;
   mStartContainer = aRange->GetStartContainer(rv);
@@ -35,7 +37,7 @@ SelectionChangeListener::RawRangeData::RawRangeData(const nsRange* aRange)
 }
 
 bool
-SelectionChangeListener::RawRangeData::Equals(const nsRange* aRange)
+SelectionChangeEventDispatcher::RawRangeData::Equals(const nsRange* aRange)
 {
   mozilla::ErrorResult rv;
   bool eq = mStartContainer == aRange->GetStartContainer(rv);
@@ -50,10 +52,11 @@ SelectionChangeListener::RawRangeData::Equals(const nsRange* aRange)
 }
 
 inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            SelectionChangeListener::RawRangeData& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
+ImplCycleCollectionTraverse(
+  nsCycleCollectionTraversalCallback& aCallback,
+  SelectionChangeEventDispatcher::RawRangeData& aField,
+  const char* aName,
+  uint32_t aFlags = 0)
 {
   ImplCycleCollectionTraverse(aCallback, aField.mStartContainer,
                               "mStartContainer", aFlags);
@@ -61,23 +64,23 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                               "mEndContainer", aFlags);
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(SelectionChangeListener)
+NS_IMPL_CYCLE_COLLECTION_CLASS(SelectionChangeEventDispatcher)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SelectionChangeListener)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SelectionChangeEventDispatcher)
   tmp->mOldRanges.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(SelectionChangeListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(SelectionChangeEventDispatcher)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOldRanges);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SelectionChangeListener, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SelectionChangeListener, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SelectionChangeEventDispatcher, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SelectionChangeEventDispatcher, Release)
 
 void
-SelectionChangeListener::OnSelectionChange(nsIDocument* aDoc,
-                                           Selection* aSel,
-                                           int16_t aReason)
+SelectionChangeEventDispatcher::OnSelectionChange(nsIDocument* aDoc,
+                                                  Selection* aSel,
+                                                  int16_t aReason)
 {
   nsIDocument* doc = aSel->GetParentObject();
   if (!(doc && nsContentUtils::IsSystemPrincipal(doc->NodePrincipal())) &&
@@ -171,3 +174,5 @@ SelectionChangeListener::OnSelectionChange(nsIDocument* aDoc,
     }
   }
 }
+
+} // namespace mozilla
