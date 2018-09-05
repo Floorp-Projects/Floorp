@@ -175,12 +175,7 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, 
     }
 
     if (ErrorTakesArguments(code_)) {
-        RootedValue idv(cx, IdToValue(id));
-        RootedString str(cx, ValueToSource(cx, idv));
-        if (!str)
-            return false;
-
-        UniqueChars propName = StringToNewUTF8CharsZ(cx, *str);
+        UniqueChars propName = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
         if (!propName)
             return false;
 

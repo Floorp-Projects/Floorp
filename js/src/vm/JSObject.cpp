@@ -257,20 +257,14 @@ js::Throw(JSContext* cx, HandleId id, unsigned errorNumber, const char* details)
     MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount == (details ? 2 : 1));
     MOZ_ASSERT_IF(details, JS::StringIsASCII(details));
 
-    RootedValue idVal(cx, IdToValue(id));
-    JSString* idstr = ValueToSource(cx, idVal);
-    if (!idstr)
-       return false;
-    UniqueChars bytes = EncodeLatin1(cx, idstr);
+    UniqueChars bytes = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
     if (!bytes)
         return false;
 
-    if (details) {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.get(),
-                                   details);
-    } else {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.get());
-    }
+    if (details)
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber, bytes.get(), details);
+    else
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber, bytes.get());
 
     return false;
 }
