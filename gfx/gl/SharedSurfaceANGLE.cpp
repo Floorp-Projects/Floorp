@@ -86,8 +86,10 @@ SharedSurface_ANGLEShareHandle::Create(GLContext* gl, EGLConfig config,
     }
 #endif
 
-    return MakeUnique<SharedSurface_ANGLEShareHandle>(
-               gl, egl, size, hasAlpha, pbuffer, shareHandle, keyedMutex);
+    typedef SharedSurface_ANGLEShareHandle ptrT;
+    UniquePtr<ptrT> ret( new ptrT(gl, egl, size, hasAlpha, pbuffer, shareHandle,
+                                  keyedMutex) );
+    return std::move(ret);
 }
 
 EGLDisplay
@@ -345,8 +347,9 @@ SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl, const SurfaceCaps& caps,
 
     EGLConfig config = GLContextEGL::Cast(gl)->mConfig;
 
-    return MakeUnique<SurfaceFactory_ANGLEShareHandle>(
-               gl, caps, allocator, flags, egl, config);
+    typedef SurfaceFactory_ANGLEShareHandle ptrT;
+    UniquePtr<ptrT> ret( new ptrT(gl, caps, allocator, flags, egl, config) );
+    return std::move(ret);
 }
 
 SurfaceFactory_ANGLEShareHandle::SurfaceFactory_ANGLEShareHandle(GLContext* gl,
