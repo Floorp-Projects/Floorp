@@ -1715,7 +1715,7 @@ struct IterativeFailureSimulator
 {
     virtual void setup(JSContext* cx) {}
     virtual void teardown(JSContext* cx) {}
-    virtual void startSimulating(unsigned iteration, unsigned thread) = 0;
+    virtual void startSimulating(JSContext* cx, unsigned iteration, unsigned thread) = 0;
     virtual bool stopSimulating() = 0;
     virtual void cleanup(JSContext* cx) {}
 };
@@ -1735,7 +1735,6 @@ RunIterativeFailureTest(JSContext* cx, const IterativeFailureTestParams& params,
     cx->runningOOMTest = true;
 
     MOZ_ASSERT(!cx->isExceptionPending());
-    cx->runtime()->hadOutOfMemory = false;
 
 #ifdef JS_GC_ZEAL
     JS_SetGCZeal(cx, 0, JS_DEFAULT_ZEAL_FREQ);
@@ -1756,9 +1755,8 @@ RunIterativeFailureTest(JSContext* cx, const IterativeFailureTestParams& params,
                 fprintf(stderr, "  iteration %d\n", iteration);
 
             MOZ_ASSERT(!cx->isExceptionPending());
-            MOZ_ASSERT(!cx->runtime()->hadOutOfMemory);
 
-            simulator.startSimulating(iteration, thread);
+            simulator.startSimulating(cx, iteration, thread);
 
             RootedValue result(cx);
             bool ok = JS_CallFunction(cx, cx->global(), params.testFunction,
@@ -1870,7 +1868,12 @@ ParseIterativeFailureTestParams(JSContext* cx, const CallArgs& args,
 
 struct OOMSimulator : public IterativeFailureSimulator
 {
-    void startSimulating(unsigned i, unsigned thread) override {
+    void setup(JSContext* cx) override {
+        cx->runtime()->hadOutOfMemory = false;
+    }
+
+    void startSimulating(JSContext* cx, unsigned i, unsigned thread) override {
+        MOZ_ASSERT(!cx->runtime()->hadOutOfMemory);
         js::oom::SimulateOOMAfter(i, thread, false);
     }
 
@@ -1904,7 +1907,7 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
 
 struct StackOOMSimulator : public IterativeFailureSimulator
 {
-    void startSimulating(unsigned i, unsigned thread) override {
+    void startSimulating(JSContext* cx, unsigned i, unsigned thread) override {
         js::oom::SimulateStackOOMAfter(i, thread, false);
     }
 
@@ -1950,7 +1953,7 @@ struct FailingIterruptSimulator : public IterativeFailureSimulator
         cx->interruptCallbacks().erase(prevEnd, cx->interruptCallbacks().end());
     }
 
-    void startSimulating(unsigned i, unsigned thread) override {
+    void startSimulating(JSContext* cx, unsigned i, unsigned thread) override {
         js::oom::SimulateInterruptAfter(i, thread, false);
     }
 
