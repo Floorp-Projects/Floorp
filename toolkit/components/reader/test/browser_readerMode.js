@@ -163,45 +163,45 @@ add_task(async function test_reader_view_element_attribute_transform() {
     });
   }
 
-  let command = document.getElementById("View:ReaderView");
+  let menuitem = document.getElementById("menu_readerModeItem");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-  is(command.hidden, true, "Command element should have the hidden attribute");
+  is(menuitem.hidden, true, "menuitem element should have the hidden attribute");
 
   info("Navigate a reader-able page");
   let waitForPageshow = BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "pageshow");
-  await observeAttribute(command, "hidden",
+  await observeAttribute(menuitem, "hidden",
     () => {
       let url = TEST_PATH + "readerModeArticle.html";
       tab.linkedBrowser.loadURI(url);
     },
     () => {
-      is(command.hidden, false, "Command's hidden attribute should be false on a reader-able page");
+      is(menuitem.hidden, false, "menuitem's hidden attribute should be false on a reader-able page");
     }
   );
   await waitForPageshow;
 
   info("Navigate a non-reader-able page");
   waitForPageshow = BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "pageshow");
-  await observeAttribute(command, "hidden",
+  await observeAttribute(menuitem, "hidden",
     () => {
       let url = TEST_PATH + "readerModeArticleHiddenNodes.html";
       tab.linkedBrowser.loadURI(url);
     },
     () => {
-      is(command.hidden, true, "Command's hidden attribute should be true on a non-reader-able page");
+      is(menuitem.hidden, true, "menuitem's hidden attribute should be true on a non-reader-able page");
     }
   );
   await waitForPageshow;
 
   info("Navigate a reader-able page");
   waitForPageshow = BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "pageshow");
-  await observeAttribute(command, "hidden",
+  await observeAttribute(menuitem, "hidden",
     () => {
       let url = TEST_PATH + "readerModeArticle.html";
       tab.linkedBrowser.loadURI(url);
     },
     () => {
-      is(command.hidden, false, "Command's hidden attribute should be false on a reader-able page");
+      is(menuitem.hidden, false, "menuitem's hidden attribute should be false on a reader-able page");
     }
   );
   await waitForPageshow;
@@ -232,13 +232,13 @@ add_task(async function test_reader_view_element_attribute_transform() {
 
   info("Navigate a non-reader-able page");
   waitForPageshow = BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "pageshow");
-  await observeAttribute(command, "hidden",
+  await observeAttribute(menuitem, "hidden",
     () => {
       let url = TEST_PATH + "readerModeArticleHiddenNodes.html";
       tab.linkedBrowser.loadURI(url);
     },
     () => {
-      is(command.hidden, true, "Command's hidden attribute should be true on a non-reader-able page");
+      is(menuitem.hidden, true, "menuitem's hidden attribute should be true on a non-reader-able page");
     }
   );
   await waitForPageshow;
