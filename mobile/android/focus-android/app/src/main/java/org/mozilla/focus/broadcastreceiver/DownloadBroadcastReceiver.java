@@ -67,7 +67,7 @@ public class DownloadBroadcastReceiver extends BroadcastReceiver {
 
                     final File file = new File(Uri.decode(localUri));
                     final Uri uriForFile = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + FILE_PROVIDER_EXTENSION, file);
-                    final Intent openFileIntent = IntentUtils.createOpenFileIntent(uriForFile, mimeType);
+                    final Intent openFileIntent = IntentUtils.INSTANCE.createOpenFileIntent(uriForFile, mimeType);
                     showSnackbarForFilename(openFileIntent, context, fileName);
                 }
             }
@@ -78,7 +78,7 @@ public class DownloadBroadcastReceiver extends BroadcastReceiver {
     private void showSnackbarForFilename(final Intent openFileIntent, final Context context, String fileName) {
         final Snackbar snackbar = Snackbar
                 .make(browserContainer, String.format(context.getString(R.string.download_snackbar_finished), fileName), Snackbar.LENGTH_LONG);
-        if (IntentUtils.activitiesFoundForIntent(context, openFileIntent)) {
+        if (IntentUtils.INSTANCE.activitiesFoundForIntent(context, openFileIntent)) {
             snackbar.setAction(context.getString(R.string.download_snackbar_open), new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {

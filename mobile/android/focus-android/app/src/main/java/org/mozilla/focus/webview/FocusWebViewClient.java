@@ -265,7 +265,7 @@ import static android.view.View.IMPORTANT_FOR_ACCESSIBILITY_YES;
         final Uri uri = Uri.parse(url);
         if (!UrlUtils.isSupportedProtocol(uri.getScheme()) &&
                 callback != null &&
-                IntentUtils.handleExternalUri(view.getContext(), (IWebView) view, url)) {
+                IntentUtils.INSTANCE.handleExternalUri(view.getContext(), (IWebView) view, url)) {
             return true;
         }
 
