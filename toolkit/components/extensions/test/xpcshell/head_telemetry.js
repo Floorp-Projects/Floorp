@@ -16,11 +16,18 @@ function arraySum(arr) {
 function clearHistograms() {
   Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
                                         true /* clear */);
+  Services.telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                             true /* clear */);
 }
 
 function getSnapshots(process) {
   return Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
                                                false /* clear */)[process];
+}
+
+function getKeyedSnapshots(process) {
+  return Services.telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                    false /* clear */)[process];
 }
 
 // TODO Bug 1357509: There is no good way to make sure that the parent received
@@ -33,4 +40,42 @@ function promiseTelemetryRecorded(id, process, expectedCount) {
     return snapshot && arraySum(snapshot.counts) >= expectedCount;
   };
   return ContentTaskUtils.waitForCondition(condition);
+}
+
+function promiseKeyedTelemetryRecorded(id, process, expectedKey, expectedCount) {
+  let condition = () => {
+    let snapshot = Services.telemetry.snapshotKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                              false /* clear */)[process][id];
+    return snapshot && snapshot[expectedKey] && arraySum(snapshot[expectedKey].counts) >= expectedCount;
+  };
+  return ContentTaskUtils.waitForCondition(condition);
+}
+
+function assertHistogramSnapshot(histogramId, {keyed, processSnapshot, expectedValue}, msg) {
+  let histogram;
+
+  if (keyed) {
+    histogram = Services.telemetry.getKeyedHistogramById(histogramId);
+  } else {
+    histogram = Services.telemetry.getHistogramById(histogramId);
+  }
+
+  let res = processSnapshot(histogram.snapshot());
+  Assert.deepEqual(res, expectedValue, msg);
+  return res;
+}
+
+function assertHistogramEmpty(histogramId) {
+  assertHistogramSnapshot(histogramId, {
+    processSnapshot: (snapshot) => snapshot.sum,
+    expectedValue: 0,
+  }, `No data recorded for histogram: ${histogramId}.`);
+}
+
+function assertKeyedHistogramEmpty(histogramId) {
+  assertHistogramSnapshot(histogramId, {
+    keyed: true,
+    processSnapshot: (snapshot) => Object.keys(snapshot).length,
+    expectedValue: 0,
+  }, `No data recorded for histogram: ${histogramId}.`);
 }

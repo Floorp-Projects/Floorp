@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LanguageDetector: "resource:///modules/translation/LanguageDetector.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
-  TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
 });
 
@@ -42,6 +41,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["crypto", "TextEncoder"]);
 const {
   DefaultMap,
   DefaultWeakMap,
+  ExtensionTelemetry,
   getInnerWindowID,
   getWinUtils,
   promiseDocumentIdle,
@@ -69,7 +69,6 @@ XPCOMUtils.defineLazyGetter(this, "console", ExtensionCommon.getConsole);
 var DocumentManager;
 
 const CATEGORY_EXTENSION_SCRIPTS_CONTENT = "webextension-scripts-content";
-const CONTENT_SCRIPT_INJECTION_HISTOGRAM = "WEBEXT_CONTENT_SCRIPT_INJECTION_MS";
 
 var apiManager = new class extends SchemaAPIManager {
   constructor() {
@@ -493,9 +492,11 @@ class Script {
 
     let result;
 
+    const {extension} = context;
+
     // The evaluations below may throw, in which case the promise will be
     // automatically rejected.
-    TelemetryStopwatch.start(CONTENT_SCRIPT_INJECTION_HISTOGRAM, context);
+    ExtensionTelemetry.contentScriptInjection.stopwatchStart(extension, context);
     try {
       for (let script of scripts) {
         result = script.executeInGlobal(context.cloneScope);
@@ -505,7 +506,7 @@ class Script {
         result = Cu.evalInSandbox(this.matcher.jsCode, context.cloneScope, "latest");
       }
     } finally {
-      TelemetryStopwatch.finish(CONTENT_SCRIPT_INJECTION_HISTOGRAM, context);
+      ExtensionTelemetry.contentScriptInjection.stopwatchFinish(extension, context);
     }
 
     await cssPromise;

@@ -1,13 +1,15 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
-                               "resource://gre/modules/TelemetryStopwatch.jsm");
-
 ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 var {
   HiddenExtensionPage,
   promiseExtensionViewLoaded,
 } = ExtensionParent;
+
+ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+var {
+  ExtensionTelemetry,
+} = ExtensionUtils;
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "DELAYED_STARTUP",
                                       "extensions.webextensions.background-delayed-startup");
@@ -28,16 +30,20 @@ class BackgroundPage extends HiddenExtensionPage {
   }
 
   async build() {
-    TelemetryStopwatch.start("WEBEXT_BACKGROUND_PAGE_LOAD_MS", this);
+    const {extension} = this;
+
+    ExtensionTelemetry.backgroundPageLoad.stopwatchStart(extension, this);
+
     await this.createBrowserElement();
-    this.extension._backgroundPageFrameLoader = this.browser.frameLoader;
+    extension._backgroundPageFrameLoader = this.browser.frameLoader;
 
     extensions.emit("extension-browser-inserted", this.browser);
 
-    this.browser.loadURI(this.url, {triggeringPrincipal: this.extension.principal});
+    this.browser.loadURI(this.url, {triggeringPrincipal: extension.principal});
 
     let context = await promiseExtensionViewLoaded(this.browser);
-    TelemetryStopwatch.finish("WEBEXT_BACKGROUND_PAGE_LOAD_MS", this);
+
+    ExtensionTelemetry.backgroundPageLoad.stopwatchFinish(extension, this);
 
     if (context) {
       // Wait until all event listeners registered by the script so far
@@ -46,7 +52,7 @@ class BackgroundPage extends HiddenExtensionPage {
       context.listenerPromises = null;
     }
 
-    this.extension.emit("startup");
+    extension.emit("startup");
   }
 
   shutdown() {
