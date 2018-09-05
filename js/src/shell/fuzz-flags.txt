@@ -43,8 +43,9 @@
 --spectre-mitigations=on
 
 # GC-related
---gc-zeal=2
---gc-zeal=10
+# These 2 flags can cause the shell to slow down
+# --gc-zeal=2
+# --gc-zeal=10
 --no-cgc
 --no-ggc
 --no-incremental-gc
