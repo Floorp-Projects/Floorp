@@ -4953,17 +4953,6 @@ IsConstructor(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-IsLegacyIterator(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 1)
-        args.rval().setBoolean(false);
-    else
-        args.rval().setBoolean(IsPropertyIterator(args[0]));
-    return true;
-}
-
-static bool
 SetTimeResolution(JSContext* cx, unsigned argc, Value* vp)
 {
    CallArgs args = CallArgsFromVp(argc, vp);
@@ -5824,10 +5813,6 @@ gc::ZealModeHelpText),
     JS_FN_HELP("isConstructor", IsConstructor, 1, 0,
 "isConstructor(value)",
 "  Returns whether the value is considered IsConstructor.\n"),
-
-    JS_FN_HELP("isLegacyIterator", IsLegacyIterator, 1, 0,
-"isLegacyIterator(value)",
-"  Returns whether the value is considered is a legacy iterator.\n"),
 
     JS_FN_HELP("getTimeZone", GetTimeZone, 0, 0,
 "getTimeZone()",
