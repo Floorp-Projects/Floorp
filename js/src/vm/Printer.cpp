@@ -99,7 +99,7 @@ Sprinter::realloc_(size_t newSize)
     }
     base = newBuf;
     size = newSize;
-    base[size - 1] = 0;
+    base[size - 1] = '\0';
     return true;
 }
 
@@ -133,9 +133,9 @@ Sprinter::init()
 #ifdef DEBUG
     initialized = true;
 #endif
-    *base = 0;
+    *base = '\0';
     size = DefaultSize;
-    base[size - 1] = 0;
+    base[size - 1] = '\0';
     return true;
 }
 
@@ -144,7 +144,7 @@ Sprinter::checkInvariants() const
 {
     MOZ_ASSERT(initialized);
     MOZ_ASSERT((size_t) offset < size);
-    MOZ_ASSERT(base[size - 1] == 0);
+    MOZ_ASSERT(base[size - 1] == '\0');
 }
 
 UniqueChars
@@ -214,7 +214,7 @@ Sprinter::put(const char* s, size_t len)
         js_memcpy(bp, s, len);
     }
 
-    bp[len] = 0;
+    bp[len] = '\0';
     return true;
 }
 
@@ -242,7 +242,7 @@ Sprinter::putString(JSString* s)
             buffer[i] = char(src[i]);
     }
 
-    buffer[length] = 0;
+    buffer[length] = '\0';
     return true;
 }
 
@@ -320,7 +320,7 @@ QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars, char quote)
 
             for (ptrdiff_t i = 0; i < len; ++i)
                 (*sp)[base + i] = char(s[i]);
-            (*sp)[base + len] = 0;
+            (*sp)[base + len] = '\0';
         }
 
         if (t == end)
@@ -352,7 +352,7 @@ QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars, char quote)
 }
 
 bool
-QuoteString(Sprinter* sp, JSString* str, char quote/* = 0*/)
+QuoteString(Sprinter* sp, JSString* str, char quote /*= '\0' */)
 {
     JSLinearString* linear = str->ensureLinear(sp->context);
     if (!linear)
@@ -365,7 +365,7 @@ QuoteString(Sprinter* sp, JSString* str, char quote/* = 0*/)
 }
 
 UniqueChars
-QuoteString(JSContext* cx, JSString* str, char quote/* = 0*/)
+QuoteString(JSContext* cx, JSString* str, char quote /* = '\0' */)
 {
     Sprinter sprinter(cx);
     if (!sprinter.init())

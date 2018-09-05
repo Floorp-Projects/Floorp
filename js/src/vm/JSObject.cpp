@@ -256,6 +256,7 @@ bool
 js::Throw(JSContext* cx, jsid id, unsigned errorNumber, const char* details)
 {
     MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount == (details ? 2 : 1));
+    MOZ_ASSERT_IF(details, JS::StringIsASCII(details));
 
     RootedValue idVal(cx, IdToValue(id));
     JSString* idstr = ValueToSource(cx, idVal);

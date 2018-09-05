@@ -1701,12 +1701,7 @@ ReportPropertyError(JSContext* cx,
                     const unsigned errorNumber,
                     HandleId id)
 {
-    RootedValue idVal(cx, IdToValue(id));
-    RootedString str(cx, ValueToSource(cx, idVal));
-    if (!str)
-        return false;
-
-    UniqueChars propName = StringToNewUTF8CharsZ(cx, *str);
+    UniqueChars propName = ValueToPrintableUTF8(cx, IdToValue(id), true);
     if (!propName)
         return false;
 
