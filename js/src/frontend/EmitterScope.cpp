@@ -399,8 +399,8 @@ EmitterScope::dump(BytecodeEmitter* bce)
     for (NameLocationMap::Range r = nameCache_->all(); !r.empty(); r.popFront()) {
         const NameLocation& l = r.front().value();
 
-        UniqueChars bytes;
-        if (!AtomToPrintableString(bce->cx, r.front().key(), &bytes))
+        UniqueChars bytes = AtomToPrintableString(bce->cx, r.front().key());
+        if (!bytes)
             return;
         if (l.kind() != NameLocation::Kind::Dynamic)
             fprintf(stdout, "  %s %s ", BindingKindString(l.bindingKind()), bytes.get());
