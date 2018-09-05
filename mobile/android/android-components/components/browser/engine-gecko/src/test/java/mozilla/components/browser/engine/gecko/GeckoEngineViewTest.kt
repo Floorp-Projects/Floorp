@@ -35,19 +35,4 @@ class GeckoEngineViewTest {
         engineView.render(engineSession)
         verify(geckoView, times(1)).setSession(geckoSession)
     }
-
-    @Test
-    fun testLifecycleMethods() {
-        val geckoView = mock(GeckoView::class.java)
-        val geckoSession = mock(GeckoSession::class.java)
-        val engineView = GeckoEngineView(RuntimeEnvironment.application)
-        `when`(geckoView.session).thenReturn(geckoSession)
-        engineView.currentGeckoView = geckoView
-
-        engineView.onStart()
-        verify(geckoSession).setActive(true)
-
-        engineView.onStop()
-        verify(geckoSession).setActive(false)
-    }
 }
