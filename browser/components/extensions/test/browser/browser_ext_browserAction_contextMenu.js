@@ -105,6 +105,20 @@ add_task(async function browseraction_popup_image_contextmenu() {
   await extension.unload();
 });
 
+function openContextMenu(menuId, targetId) {
+  return openChromeContextMenu(menuId, "#" + CSS.escape(targetId));
+}
+
+function waitForElementShown(element) {
+  let win = element.ownerGlobal;
+  let dwu = win.windowUtils;
+  return BrowserTestUtils.waitForCondition(() => {
+    info("Waiting for overflow button to have non-0 size");
+    let bounds = dwu.getBoundsWithoutFlushing(element);
+    return bounds.width > 0 && bounds.height > 0;
+  });
+}
+
 add_task(async function browseraction_contextmenu_manage_extension() {
   let id = "addon_id@example.com";
   let buttonId = `${makeWidgetId(id)}-browser-action`;
@@ -125,17 +139,16 @@ add_task(async function browseraction_contextmenu_manage_extension() {
     },
   });
 
-  function openContextMenu(menuId, targetId) {
-    return openChromeContextMenu(menuId, "#" + CSS.escape(targetId));
-  }
-
   function checkVisibility(menu, visible) {
+    let removeExtension = menu.querySelector(".customize-context-removeExtension");
     let manageExtension = menu.querySelector(".customize-context-manageExtension");
     let separator = manageExtension.nextElementSibling;
 
     info(`Check visibility`);
-    is(manageExtension.hidden, !visible, `Manage Extension should be ${visible ? "visible" : "hidden"}`);
-    is(separator.hidden, !visible, `Separator after Manage Extension should be ${visible ? "visible" : "hidden"}`);
+    let expected = visible ? "visible" : "hidden";
+    is(removeExtension.hidden, !visible, `Remove Extension should be ${expected}`);
+    is(manageExtension.hidden, !visible, `Manage Extension should be ${expected}`);
+    is(separator.hidden, !visible, `Separator after Manage Extension should be ${expected}`);
   }
 
   async function testContextMenu(menuId, customizing) {
@@ -161,16 +174,6 @@ add_task(async function browseraction_contextmenu_manage_extension() {
     }
 
     return menu;
-  }
-
-  function waitForElementShown(element) {
-    let win = element.ownerGlobal;
-    let dwu = win.windowUtils;
-    return BrowserTestUtils.waitForCondition(() => {
-      info("Waiting for overflow button to have non-0 size");
-      let bounds = dwu.getBoundsWithoutFlushing(element);
-      return bounds.width > 0 && bounds.height > 0;
-    });
   }
 
   async function main(customizing) {
@@ -245,5 +248,119 @@ add_task(async function browseraction_contextmenu_manage_extension() {
 
   info("Close the dummy tab and finish");
   gBrowser.removeTab(dummyTab);
+  await extension.unload();
+});
+
+add_task(async function browseraction_contextmenu_remove_extension() {
+  let id = "addon_id@example.com";
+  let name = "Awesome Add-on";
+  let buttonId = `${makeWidgetId(id)}-browser-action`;
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name,
+      "applications": {
+        "gecko": {id},
+      },
+      "browser_action": {},
+    },
+    useAddonManager: "temporary",
+  });
+  let brand = Services.strings.createBundle("chrome://branding/locale/brand.properties")
+    .GetStringFromName("brandShorterName");
+  let {prompt} = Services;
+  let promptService = {
+    _response: 1,
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
+    confirmEx: function(...args) {
+      promptService._confirmExArgs = args;
+      return promptService._response;
+    },
+  };
+  Services.prompt = promptService;
+  registerCleanupFunction(() => {
+    Services.prompt = prompt;
+  });
+
+  async function testContextMenu(menuId, customizing) {
+    info(`Open browserAction context menu in ${menuId}`);
+    let menu = await openContextMenu(menuId, buttonId);
+
+    info(`Choosing 'Remove Extension' in ${menuId} should show confirm dialog`);
+    let removeExtension = menu.querySelector(".customize-context-removeExtension");
+    await closeChromeContextMenu(menuId, removeExtension);
+    is(promptService._confirmExArgs[1], `Remove ${name}`);
+    is(promptService._confirmExArgs[2], `Remove ${name} from ${brand}?`);
+    is(promptService._confirmExArgs[4], "Remove");
+    return menu;
+  }
+
+  async function main(customizing) {
+    if (customizing) {
+      info("Enter customize mode");
+      let customizationReady = BrowserTestUtils.waitForEvent(gNavToolbox, "customizationready");
+      gCustomizeMode.enter();
+      await customizationReady;
+    }
+
+    info("Test toolbar context menu in browserAction");
+    await testContextMenu("toolbar-context-menu", customizing);
+
+    info("Pin the browserAction and another button to the overflow menu");
+    CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+
+    info("Wait until the overflow menu is ready");
+    let overflowButton = document.getElementById("nav-bar-overflow-button");
+    let icon = document.getAnonymousElementByAttribute(overflowButton, "class", "toolbarbutton-icon");
+    await waitForElementShown(icon);
+
+    if (!customizing) {
+      info("Open overflow menu");
+      let menu = document.getElementById("widget-overflow");
+      let shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+      overflowButton.click();
+      await shown;
+    }
+
+    info("Test overflow menu context menu in browserAction");
+    await testContextMenu("customizationPanelItemContextMenu", customizing);
+
+    info("Restore initial state");
+    CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_NAVBAR);
+
+    if (customizing) {
+      info("Exit customize mode");
+      let afterCustomization = BrowserTestUtils.waitForEvent(gNavToolbox, "aftercustomization");
+      gCustomizeMode.exit();
+      await afterCustomization;
+    }
+  }
+
+  await extension.startup();
+
+  info("Run tests in normal mode");
+  await main(false);
+
+  info("Run tests in customize mode");
+  await main(true);
+
+  let addon = await AddonManager.getAddonByID(id);
+  ok(addon, "Addon is still installed");
+
+  promptService._response = 0;
+  let uninstalled = new Promise((resolve) => {
+    AddonManager.addAddonListener({
+      onUninstalled(addon) {
+        is(addon.id, id, "The expected add-on has been uninstalled");
+        AddonManager.removeAddonListener(this);
+        resolve();
+      },
+    });
+  });
+  await testContextMenu("toolbar-context-menu", false);
+  await uninstalled;
+
+  addon = await AddonManager.getAddonByID(id);
+  ok(!addon, "Addon has been uninstalled");
+
   await extension.unload();
 });

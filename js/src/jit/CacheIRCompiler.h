@@ -43,6 +43,7 @@ namespace jit {
     _(GuardAndLoadUnboxedExpando)         \
     _(GuardNoDetachedTypedObjects)        \
     _(GuardNoDenseElements)               \
+    _(GuardAndGetNumberFromString)        \
     _(GuardAndGetIndexFromString)         \
     _(GuardIndexIsNonNegative)            \
     _(GuardTagNotEqual)                   \

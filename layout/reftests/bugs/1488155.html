@@ -1,0 +1,14 @@
+<!doctype html>
+<html class="reftest-wait">
+<style>
+  :link {
+    color: green;
+  }
+</style>
+<a id="target">Should be green</a>
+<script>
+window.addEventListener("MozReftestInvalidate", function() {
+  target.setAttribute("href", "");
+  document.documentElement.className = "";
+});
+</script>

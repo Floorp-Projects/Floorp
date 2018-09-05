@@ -1084,6 +1084,10 @@ public class BrowserApp extends GeckoApp
                 // that the user had before entering in Picture-in-picture mode.
                 if (userReturnedToFullApp) {
                     ActivityUtils.setFullScreen(this, true);
+                } else {
+                    // User closed the PIP mode.
+                    // Make sure that after restarting, the activity will match device's orientation.
+                    setRequestedOrientationForCurrentActivity(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
                 }
             }
         }

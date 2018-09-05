@@ -1592,6 +1592,19 @@ js::StringToNumber(JSContext* cx, JSString* str, double* result)
            : CharsToNumber(cx, linearStr->twoByteChars(nogc), str->length(), result);
 }
 
+bool
+js::StringToNumberDontReportOOM(JSContext* cx, JSString* str, double* result)
+{
+    // IC Code calls this directly.
+    AutoUnsafeCallWithABI unsafe;
+
+    if (!StringToNumber(cx, str, result)) {
+        cx->recoverFromOutOfMemory();
+        return false;
+    }
+    return true;
+}
+
 JS_PUBLIC_API(bool)
 js::ToNumberSlow(JSContext* cx, HandleValue v_, double* out)
 {
