@@ -18,6 +18,7 @@ namespace js {
 
 /*
  * Return a printable, lossless char[] representation of a string-type atom.
+ * The returned string is guaranteed to contain only ASCII characters.
  */
 extern UniqueChars
 AtomToPrintableString(JSContext* cx, JSAtom* atom);

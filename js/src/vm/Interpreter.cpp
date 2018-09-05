@@ -1876,8 +1876,8 @@ js::ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
         return;
     }
 
-    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_IN_NOT_OBJECT,
-                               InformalValueTypeName(rref));
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_IN_NOT_OBJECT,
+                              InformalValueTypeName(rref));
 }
 
 static MOZ_NEVER_INLINE bool
@@ -5382,8 +5382,8 @@ void
 js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name, const char* redeclKind)
 {
     if (UniqueChars printable = AtomToPrintableString(cx, name)) {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR,
-                                   redeclKind, printable.get());
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR, redeclKind,
+                                  printable.get());
     }
 }
 
@@ -5467,12 +5467,12 @@ js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame)
             name = str.get();
         }
 
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS, name);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS, name);
         return false;
     }
 
     MOZ_ASSERT(fun->isArrow());
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS_ARROW);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS_ARROW);
     return false;
 }
 
