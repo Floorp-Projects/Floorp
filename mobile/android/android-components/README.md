@@ -104,7 +104,7 @@ High-level components for building browser(-like) apps.
 
 * 🔴 [**Engine-System**](components/browser/engine-system/README.md) - *Engine* implementation based on the system's WebView.
 
-* ⚪ [**Erropages**](components/browser/errorpages/README.md) - Responsive browser error pages for Android apps.
+* ⚪ [**Errorpages**](components/browser/errorpages/README.md) - Responsive browser error pages for Android apps.
 
 * 🔴 [**Menu**](components/browser/menu/README.md) - A generic menu with customizable items primarily for browser toolbars.
 
@@ -134,7 +134,7 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Session**](components/feature/session/README.md) - A component that connects an (concept) engine implementation with the browser session module.
 
-* 🔴 [**Tabs**](components/feature/tabs/README.md) - A component that connects a trabs tray implementation with the session and toolbar modules.
+* 🔴 [**Tabs**](components/feature/tabs/README.md) - A component that connects a tabs tray implementation with the session and toolbar modules.
 
 * 🔴 [**Toolbar**](components/feature/toolbar/README.md) - A component that connects a (concept) toolbar implementation with the browser session module.
 
@@ -160,7 +160,7 @@ _Components and libraries to interact with backend services._
 
 * 🔵 [**Firefox Accounts (FxA)**](components/service/firefox-accounts/README.md) - A library for integrating with Firefox Accounts.
 
-* ⚪ [**Fretboard**](components/service/fretboard/README.md) - An Android framework for segmenting users in order to run A/B tests and rollout features gradually.
+* ⚪ [**Fretboard**](components/service/fretboard/README.md) - An Android framework for segmenting users in order to run A/B tests and roll out features gradually.
 
 * 🔵 [**Telemetry**](components/service/telemetry/README.md) - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
 
