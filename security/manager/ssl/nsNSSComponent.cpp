@@ -573,8 +573,8 @@ nsNSSComponent::MaybeEnableFamilySafetyCompatibility()
   if (!(IsWin8Point1OrLater() && !IsWin10OrLater())) {
     return;
   }
-  // Disabled by default.
-  uint32_t familySafetyMode = Preferences::GetUint(kFamilySafetyModePref, 0);
+  // Detect but don't import by default.
+  uint32_t familySafetyMode = Preferences::GetUint(kFamilySafetyModePref, 1);
   if (familySafetyMode > 2) {
     familySafetyMode = 0;
   }
