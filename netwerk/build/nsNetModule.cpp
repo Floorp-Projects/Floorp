@@ -37,7 +37,6 @@
 #include "nsIContentSniffer.h"
 #include "Predictor.h"
 #include "nsIThreadPool.h"
-#include "mozilla/net/BackgroundChannelRegistrar.h"
 #include "mozilla/net/NeckoChild.h"
 #include "RedirectChannelRegistrar.h"
 
@@ -251,6 +250,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init)
 #include "nsHttpNTLMAuth.h"
 #include "nsHttpActivityDistributor.h"
 #include "ThrottleQueue.h"
+#include "BackgroundChannelRegistrar.h"
 #undef LOG
 #undef LOG_ENABLED
 namespace mozilla {
@@ -264,6 +264,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpActivityDistributor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpBasicAuth)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpDigestAuth)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ThrottleQueue)
+NS_GENERIC_FACTORY_CONSTRUCTOR(BackgroundChannelRegistrar)
 } // namespace net
 } // namespace mozilla
 
@@ -647,8 +648,6 @@ static void nsNetShutdown()
 
     mozilla::net::RedirectChannelRegistrar::Shutdown();
 
-    mozilla::net::BackgroundChannelRegistrar::Shutdown();
-
     delete gNetSniffers;
     gNetSniffers = nullptr;
     delete gDataSniffers;
@@ -723,6 +722,7 @@ NS_DEFINE_NAMED_CID(NS_HTTPAUTHMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_HTTPCHANNELAUTHPROVIDER_CID);
 NS_DEFINE_NAMED_CID(NS_HTTPACTIVITYDISTRIBUTOR_CID);
 NS_DEFINE_NAMED_CID(NS_THROTTLEQUEUE_CID);
+NS_DEFINE_NAMED_CID(NS_BACKGROUNDCHANNELREGISTRAR_CID);
 NS_DEFINE_NAMED_CID(NS_FTPPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_RESPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_EXTENSIONPROTOCOLHANDLER_CID);
@@ -842,6 +842,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_HTTPCHANNELAUTHPROVIDER_CID, false, nullptr, mozilla::net::nsHttpChannelAuthProviderConstructor },
     { &kNS_HTTPACTIVITYDISTRIBUTOR_CID, false, nullptr, mozilla::net::nsHttpActivityDistributorConstructor },
     { &kNS_THROTTLEQUEUE_CID, false, nullptr, mozilla::net::ThrottleQueueConstructor },
+    { &kNS_BACKGROUNDCHANNELREGISTRAR_CID, false, nullptr, mozilla::net::BackgroundChannelRegistrarConstructor },
     { &kNS_FTPPROTOCOLHANDLER_CID, false, nullptr, nsFtpProtocolHandlerConstructor },
     { &kNS_RESPROTOCOLHANDLER_CID, false, nullptr, nsResProtocolHandlerConstructor },
     { &kNS_EXTENSIONPROTOCOLHANDLER_CID, false, nullptr, mozilla::ExtensionProtocolHandlerConstructor },
@@ -967,6 +968,7 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_HTTPCHANNELAUTHPROVIDER_CONTRACTID, &kNS_HTTPCHANNELAUTHPROVIDER_CID },
     { NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID, &kNS_HTTPACTIVITYDISTRIBUTOR_CID },
     { NS_THROTTLEQUEUE_CONTRACTID, &kNS_THROTTLEQUEUE_CID },
+    { NS_BACKGROUNDCHANNELREGISTRAR_CONTRACTID, &kNS_BACKGROUNDCHANNELREGISTRAR_CID },
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp", &kNS_FTPPROTOCOLHANDLER_CID },
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "resource", &kNS_RESPROTOCOLHANDLER_CID },
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "moz-extension", &kNS_EXTENSIONPROTOCOLHANDLER_CID },
