@@ -311,6 +311,10 @@ bouncer-check
 -------------
 Checks Bouncer (download.mozilla.org) uptake.
 
+bouncer-locations
+-----------------
+Updates nightly bouncer locations for version bump
+
 release-bouncer-check
 ---------------------
 Checks Bouncer (download.mozilla.org) uptake as part of the release tasks.

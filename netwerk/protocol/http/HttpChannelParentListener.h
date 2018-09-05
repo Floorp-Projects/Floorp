@@ -54,6 +54,10 @@ public:
   void SetupInterceptionAfterRedirect(bool aShouldIntercept);
   void ClearInterceptedChannel(nsIStreamListener* aListener);
 
+  nsresult TriggerCrossProcessRedirect(nsIChannel *oldChannel,
+                                       nsILoadInfo *aLoadInfo,
+                                       uint64_t aIdentifier);
+
 private:
   virtual ~HttpChannelParentListener() = default;
 

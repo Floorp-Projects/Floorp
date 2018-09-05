@@ -44,6 +44,11 @@ public:
     { return aAccessible == mActiveItem; }
 
   /**
+   * Return DOM node having DOM focus.
+   */
+  nsINode* FocusedDOMNode() const;
+
+  /**
    * Return true if given DOM node has DOM focus.
    */
   inline bool HasDOMFocus(const nsINode* aNode) const
@@ -112,11 +117,6 @@ protected:
 private:
   FocusManager(const FocusManager&);
   FocusManager& operator =(const FocusManager&);
-
-  /**
-   * Return DOM node having DOM focus.
-   */
-  nsINode* FocusedDOMNode() const;
 
   /**
    * Return DOM document having DOM focus.
