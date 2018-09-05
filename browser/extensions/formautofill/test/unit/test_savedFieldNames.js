@@ -46,15 +46,18 @@ add_task(async function test_profileSavedFieldNames_update() {
     Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
   });
 
-  sinon.stub(formAutofillParent.formAutofillStorage.addresses, "getAll");
-  formAutofillParent.formAutofillStorage.addresses.getAll.returns([]);
+  Object.defineProperty(
+    formAutofillParent.formAutofillStorage.addresses,
+    "_data", {writable: true});
+
+  formAutofillParent.formAutofillStorage.addresses._data = [];
 
   // The set is empty if there's no profile in the store.
   formAutofillParent._updateSavedFieldNames();
   Assert.equal(Services.ppmm.initialProcessData.autofillSavedFieldNames.size, 0);
 
   // 2 profiles with 4 valid fields.
-  let fakeStorage = [{
+  formAutofillParent.formAutofillStorage.addresses._data = [{
     guid: "test-guid-1",
     organization: "Sesame Street",
     "street-address": "123 Sesame Street.",
@@ -75,7 +78,7 @@ add_task(async function test_profileSavedFieldNames_update() {
     timeLastModified: 0,
     timesUsed: 0,
   }];
-  formAutofillParent.formAutofillStorage.addresses.getAll.returns(fakeStorage);
+
   formAutofillParent._updateSavedFieldNames();
 
   let autofillSavedFieldNames = Services.ppmm.initialProcessData.autofillSavedFieldNames;
