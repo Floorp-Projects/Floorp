@@ -372,9 +372,19 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(n
   }
 
   // Remember that this pref is stored in seconds!
+  uint32_t expirationType = nsIPermissionManager::EXPIRE_TIME;
   uint32_t expirationTime =
     StaticPrefs::privacy_restrict3rdpartystorage_expiration() * 1000;
   int64_t when = (PR_Now() / PR_USEC_PER_MSEC) + expirationTime;
+
+  uint32_t privateBrowsingId = 0;
+  nsresult rv = aParentPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
+  if (!NS_WARN_IF(NS_FAILED(rv)) && privateBrowsingId > 0) {
+    // If we are coming from a private window, make sure to store a session-only
+    // permission which won't get persisted to disk.
+    expirationType = nsIPermissionManager::EXPIRE_SESSION;
+    when = 0;
+  }
 
   nsAutoCString type;
   CreatePermissionKey(aTrackingOrigin, aGrantedOrigin, type);
@@ -382,9 +392,9 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(n
   LOG(("Computed permission key: %s, expiry: %d, proceeding to save in the permission manager",
        type.get(), expirationTime));
 
-  nsresult rv = pm->AddFromPrincipal(aParentPrincipal, type.get(),
-                                     nsIPermissionManager::ALLOW_ACTION,
-                                     nsIPermissionManager::EXPIRE_TIME, when);
+  rv = pm->AddFromPrincipal(aParentPrincipal, type.get(),
+                            nsIPermissionManager::ALLOW_ACTION,
+                            expirationType, when);
   Unused << NS_WARN_IF(NS_FAILED(rv));
   aResolver(NS_SUCCEEDED(rv));
 
