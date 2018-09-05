@@ -3309,7 +3309,13 @@ GetBacktrace(JSContext* cx, unsigned argc, Value* vp)
     if (!buf)
         return false;
 
-    return ReturnStringCopy(cx, args, buf.get());
+    JS::ConstUTF8CharsZ utf8chars(buf.get(), strlen(buf.get()));
+    JSString* str = NewStringCopyUTF8Z<CanGC>(cx, utf8chars);
+    if (!str)
+        return false;
+
+    args.rval().setString(str);
+    return true;
 }
 
 static bool
