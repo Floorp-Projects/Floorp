@@ -20,6 +20,7 @@ class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPrefe
 
     private var localeUpdated: Boolean = false
 
+    @Suppress("ForbiddenComment")
     override fun onCreatePreferences(bundle: Bundle?, s: String?) {
         addPreferencesFromResource(R.xml.settings)
         // TODO: #2869 Enable Debugging and Expose Advanced Setting
