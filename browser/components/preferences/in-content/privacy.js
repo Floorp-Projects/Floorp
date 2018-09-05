@@ -405,15 +405,10 @@ var gPrivacyPane = {
       }
     }
 
-    Services.obs.addObserver(this, "sitedatamanager:sites-updated");
-    Services.obs.addObserver(this, "sitedatamanager:updating-sites");
-    let unload = () => {
-      window.removeEventListener("unload", unload);
-      Services.obs.removeObserver(this, "sitedatamanager:sites-updated");
-      Services.obs.removeObserver(this, "sitedatamanager:updating-sites");
-    };
-    window.addEventListener("unload", unload);
-    SiteDataManager.updateSites();
+    if (!contentBlockingUiEnabled) {
+      // If content blocking UI is enabled, this has been handled by initContentBlocking.
+      this.initSiteDataControls();
+    }
     setEventListener("clearSiteDataButton", "command",
       gPrivacyPane.clearSiteData);
     setEventListener("siteDataSettings", "command",
@@ -469,6 +464,18 @@ var gPrivacyPane = {
 
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "privacy-pane-loaded");
+  },
+
+  initSiteDataControls() {
+    Services.obs.addObserver(this, "sitedatamanager:sites-updated");
+    Services.obs.addObserver(this, "sitedatamanager:updating-sites");
+    let unload = () => {
+      window.removeEventListener("unload", unload);
+      Services.obs.removeObserver(this, "sitedatamanager:sites-updated");
+      Services.obs.removeObserver(this, "sitedatamanager:updating-sites");
+    };
+    window.addEventListener("unload", unload);
+    SiteDataManager.updateSites();
   },
 
   // CONTENT BLOCKING
@@ -543,6 +550,12 @@ var gPrivacyPane = {
                                                      browserPrivacyCategory.nextSibling);
       browserPrivacyCategory.parentNode.insertBefore(trackingGroup,
                                                      browserPrivacyCategory.nextSibling);
+
+      // We do this after having moved the elements in the DOM above, in order to avoid
+      // a race condition with this timeout handler reapplying the XBL bindings to the
+      // elements in this subtree and the observe() method attempting to set the disabled
+      // attribute on the site data controls.
+      this.initSiteDataControls();
     }, 0);
   },
 
