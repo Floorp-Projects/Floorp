@@ -6,13 +6,8 @@
 #ifndef nsSecureBrowserUIImpl_h
 #define nsSecureBrowserUIImpl_h
 
-#include "PLDHashTable.h"
-#include "mozilla/ReentrancyGuard.h"
 #include "nsCOMPtr.h"
-#include "nsINetUtil.h"
 #include "nsISecureBrowserUI.h"
-#include "nsISecurityEventSink.h"
-#include "nsIURI.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 
@@ -22,13 +17,10 @@ class nsIChannel;
 #define NS_SECURE_BROWSER_UI_CID \
 { 0xcc75499a, 0x1dd1, 0x11b2, {0x8a, 0x82, 0xca, 0x41, 0x0a, 0xc9, 0x07, 0xb8}}
 
-
-class nsSecureBrowserUIImpl : public nsISecureBrowserUI,
-                              public nsIWebProgressListener,
-                              public nsSupportsWeakReference
+class nsSecureBrowserUIImpl : public nsISecureBrowserUI
+                            , public nsIWebProgressListener
+                            , public nsSupportsWeakReference
 {
-  friend class mozilla::ReentrancyGuard;
-
 public:
   nsSecureBrowserUIImpl();
 
@@ -39,55 +31,15 @@ public:
 protected:
   virtual ~nsSecureBrowserUIImpl() {};
 
-  nsWeakPtr mWindow;
+  // Do mixed content and tracking protection checks. May update mState.
+  void CheckForBlockedContent();
+  // Given some information about a request from an OnLocationChange event,
+  // update mState and mTopLevelSecurityInfo.
+  nsresult UpdateStateAndSecurityInfo(nsIChannel* channel, nsIURI* uri);
+
+  uint32_t mState;
   nsWeakPtr mDocShell;
-  nsCOMPtr<nsINetUtil> mIOService;
-  nsCOMPtr<nsIURI> mCurrentURI;
-  nsCOMPtr<nsISecurityEventSink> mToplevelEventSink;
-
-  enum lockIconState {
-    lis_no_security,
-    lis_broken_security,
-    lis_mixed_security,
-    lis_high_security
-  };
-
-  lockIconState mNotifiedSecurityState;
-  bool mNotifiedToplevelIsEV;
-
-  void ResetStateTracking();
-  uint32_t mNewToplevelSecurityState;
-  bool mNewToplevelIsEV;
-  bool mNewToplevelSecurityStateKnown;
-  bool mIsViewSource;
-
-  int32_t mDocumentRequestsInProgress;
-  int32_t mSubRequestsBrokenSecurity;
-  int32_t mSubRequestsNoSecurity;
-  bool mCertUserOverridden;
-  bool mRestoreSubrequests;
-  bool mOnLocationChangeSeen;
-#ifdef DEBUG
-  bool mEntered; // For ReentrancyGuard.
-#endif
-
-  static already_AddRefed<nsISupports> ExtractSecurityInfo(nsIRequest* aRequest);
-  nsresult MapInternalToExternalState(uint32_t* aState, lockIconState lock, bool ev);
-  void UpdateSecurityState(nsIRequest* aRequest, bool withNewLocation,
-                           bool withUpdateStatus);
-  void TellTheWorld(nsIRequest* aRequest);
-
-  void EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsISupports *info,
-                                      bool withNewLocation, bool withNewSink);
-  void UpdateSubrequestMembers(nsISupports* securityInfo, nsIRequest* request);
-
-  void ObtainEventSink(nsIChannel *channel,
-                       nsCOMPtr<nsISecurityEventSink> &sink);
-
-  nsCOMPtr<nsITransportSecurityInfo> mSecInfo;
-  nsCOMPtr<nsISupports> mCurrentToplevelSecurityInfo;
-
-  PLDHashTable mTransferringRequests;
+  nsCOMPtr<nsITransportSecurityInfo> mTopLevelSecurityInfo;
 };
 
 #endif // nsSecureBrowserUIImpl_h
