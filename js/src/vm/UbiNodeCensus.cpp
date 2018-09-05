@@ -10,6 +10,7 @@
 #include "js/StableStringChars.h"
 #include "util/Text.h"
 #include "vm/JSContext.h"
+#include "vm/Printer.h"
 #include "vm/Realm.h"
 
 #include "vm/JSObject-inl.h"
@@ -1261,11 +1262,7 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue)
     }
 
     // We didn't recognize the breakdown type; complain.
-    RootedString bySource(cx, ValueToSource(cx, byValue));
-    if (!bySource)
-        return nullptr;
-
-    UniqueChars byBytes = JS_EncodeString(cx, bySource);
+    UniqueChars byBytes = QuoteString(cx, by, '"');
     if (!byBytes)
         return nullptr;
 
