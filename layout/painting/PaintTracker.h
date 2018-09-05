@@ -15,17 +15,14 @@ namespace mozilla {
 class MOZ_STACK_CLASS PaintTracker
 {
 public:
-  PaintTracker() {
-    ++gPaintTracker;
-  }
-  ~PaintTracker() {
+  PaintTracker() { ++gPaintTracker; }
+  ~PaintTracker()
+  {
     NS_ASSERTION(gPaintTracker > 0, "Mismatched constructor/destructor");
     --gPaintTracker;
   }
 
-  static bool IsPainting() {
-    return !!gPaintTracker;
-  }
+  static bool IsPainting() { return !!gPaintTracker; }
 
 private:
   static int gPaintTracker;

@@ -25,16 +25,26 @@ class DisplayListBuilder;
 
 // A resolved color stop, with a specific position along the gradient line and
 // a color.
-struct ColorStop {
-  ColorStop(): mPosition(0), mIsMidpoint(false) {}
-  ColorStop(double aPosition, bool aIsMidPoint, const gfx::Color& aColor) :
-    mPosition(aPosition), mIsMidpoint(aIsMidPoint), mColor(aColor) {}
+struct ColorStop
+{
+  ColorStop()
+    : mPosition(0)
+    , mIsMidpoint(false)
+  {
+  }
+  ColorStop(double aPosition, bool aIsMidPoint, const gfx::Color& aColor)
+    : mPosition(aPosition)
+    , mIsMidpoint(aIsMidPoint)
+    , mColor(aColor)
+  {
+  }
   double mPosition; // along the gradient line; 0=start, 1=end
   bool mIsMidpoint;
   gfx::Color mColor;
 };
 
-class nsCSSGradientRenderer final {
+class nsCSSGradientRenderer final
+{
 public:
   /**
    * Prepare a nsCSSGradientRenderer for a gradient for an element.
@@ -96,7 +106,8 @@ private:
     , mGradient(nullptr)
     , mRadiusX(0.0)
     , mRadiusY(0.0)
-  {}
+  {
+  }
 
   /**
    * Attempts to paint the tiles for a gradient by painting it once to an

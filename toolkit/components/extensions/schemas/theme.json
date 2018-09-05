@@ -241,6 +241,10 @@
                 "$ref": "ThemeColor",
                 "optional": true
               },
+              "sidebar_border": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
               "sidebar_text": {
                 "$ref": "ThemeColor",
                 "optional": true

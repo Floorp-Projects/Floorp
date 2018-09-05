@@ -17,30 +17,22 @@ namespace mozilla {
  * transform matrix.
  */
 template<typename T>
-class MatrixStack {
+class MatrixStack
+{
 public:
   MatrixStack() = default;
 
-  ~MatrixStack()
-  {
-    MOZ_ASSERT(mMatrices.IsEmpty());
-  }
+  ~MatrixStack() { MOZ_ASSERT(mMatrices.IsEmpty()); }
 
   /**
    * Returns the current accumulated transform matrix.
    */
-  const T& CurrentMatrix() const
-  {
-    return mCurrentMatrix;
-  }
+  const T& CurrentMatrix() const { return mCurrentMatrix; }
 
   /**
    * Returns true if any matrices are currently pushed to the stack.
    */
-  bool HasTransform() const
-  {
-    return mMatrices.Length() > 0;
-  }
+  bool HasTransform() const { return mMatrices.Length() > 0; }
 
   /**
    * Pushes the given |aMatrix| to the stack.

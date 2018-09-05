@@ -97,6 +97,10 @@ const ThemeVariableMap = [
     lwtProperty: "sidebar_text",
     optionalElementID: "sidebar-box",
   }],
+  ["--sidebar-border-color", {
+    lwtProperty: "sidebar_border",
+    optionalElementID: "browser",
+  }],
 ];
 
 const ThemeContentPropertyList = [
