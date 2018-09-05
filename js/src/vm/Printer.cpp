@@ -8,6 +8,7 @@
 
 #include "mozilla/PodOperations.h"
 #include "mozilla/Printf.h"
+#include "mozilla/RangedPtr.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -16,6 +17,7 @@
 #include "jsutil.h"
 
 #include "ds/LifoAlloc.h"
+#include "js/CharacterEncoding.h"
 #include "util/Text.h"
 #include "util/Windows.h"
 #include "vm/JSContext.h"
@@ -223,24 +225,17 @@ Sprinter::putString(JSString* s)
 {
     InvariantChecker ic(this);
 
-    size_t length = s->length();
+    JSFlatString* flat = s->ensureFlat(context);
+    if (!flat)
+        return false;
+
+    size_t length = JS::GetDeflatedUTF8StringLength(flat);
 
     char* buffer = reserve(length);
     if (!buffer)
         return false;
 
-    JSLinearString* linear = s->ensureLinear(context);
-    if (!linear)
-        return false;
-
-    JS::AutoCheckCannotGC nogc;
-    if (linear->hasLatin1Chars()) {
-        PodCopy(reinterpret_cast<Latin1Char*>(buffer), linear->latin1Chars(nogc), length);
-    } else {
-        const char16_t* src = linear->twoByteChars(nogc);
-        for (size_t i = 0; i < length; i++)
-            buffer[i] = char(src[i]);
-    }
+    JS::DeflateStringToUTF8Buffer(flat, mozilla::RangedPtr<char>(buffer, length));
 
     buffer[length] = '\0';
     return true;

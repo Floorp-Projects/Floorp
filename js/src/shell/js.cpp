@@ -3100,7 +3100,8 @@ DisassembleToString(JSContext* cx, unsigned argc, Value* vp)
     if (!DisassembleToSprinter(cx, args.length(), vp, &sprinter))
         return false;
 
-    JSString* str = JS_NewStringCopyZ(cx, sprinter.string());
+    JS::ConstUTF8CharsZ utf8chars(sprinter.string(), strlen(sprinter.string()));
+    JSString* str = JS_NewStringCopyUTF8Z(cx, utf8chars);
     if (!str)
         return false;
     args.rval().setString(str);
