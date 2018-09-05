@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for nsIHTMLObjectResizer.hideResizers()</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div id="editor" contenteditable></div>
+<img src="green.png"><!-- for ensuring to load the image at first test of <img> case -->
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async function() {
+  async function waitForSelectionChange() {
+    return new Promise(resolve => {
+      document.addEventListener("selectionchange", () => {
+        resolve();
+      }, {once: true});
+    });
+  }
+
+  document.execCommand("enableObjectResizing", false, true);
+  let editor = document.getElementById("editor");
+  editor.innerHTML = "<img id=\"target\" src=\"green.png\" width=\"100\" height=\"100\">";
+  let img = document.getElementById("target");
+  let promiseSelectionChangeEvent = waitForSelectionChange();
+  synthesizeMouseAtCenter(img, {});
+  await promiseSelectionChangeEvent;
+  ok(img.hasAttribute("_moz_resizing"), "resizers of the <img> should be visible");
+  getHTMLObjectResizer().hideResizers();
+  ok(!img.hasAttribute("_moz_resizing"), "resizers of the <img> should be hidden after a call of hideResizers()");
+
+  SimpleTest.finish();
+});
+
+function getHTMLObjectResizer() {
+  var Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsIHTMLObjectResizer);
+}
+</script>
+</pre>
+</body>
+</html>
