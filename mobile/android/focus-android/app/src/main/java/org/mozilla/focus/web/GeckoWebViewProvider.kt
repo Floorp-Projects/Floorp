@@ -77,9 +77,8 @@ class GeckoWebViewProvider : IWebViewProvider {
             // Safe browsing is not ready #3309
             runtimeSettingsBuilder.blockMalware(false)
             runtimeSettingsBuilder.blockPhishing(false)
-            if (TelemetryWrapper.isTelemetryEnabled(context)) {
-                runtimeSettingsBuilder.nativeCrashReportingEnabled(true)
-            }
+            runtimeSettingsBuilder.nativeCrashReportingEnabled(false)
+            runtimeSettingsBuilder.javaCrashReportingEnabled(false)
             geckoRuntime =
                     GeckoRuntime.create(context.applicationContext, runtimeSettingsBuilder.build())
         }
