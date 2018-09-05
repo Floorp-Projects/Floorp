@@ -343,22 +343,14 @@ SelectorAutocompleter.prototype = {
 
       case KeyCodes.DOM_VK_UP:
         if (popup.isOpen && popup.itemCount > 0) {
-          if (popup.selectedIndex === 0) {
-            popup.selectedIndex = popup.itemCount - 1;
-          } else {
-            popup.selectedIndex--;
-          }
+          popup.selectPreviousItem();
           this.searchBox.value = popup.selectedItem.label;
         }
         break;
 
       case KeyCodes.DOM_VK_DOWN:
         if (popup.isOpen && popup.itemCount > 0) {
-          if (popup.selectedIndex === popup.itemCount - 1) {
-            popup.selectedIndex = 0;
-          } else {
-            popup.selectedIndex++;
-          }
+          popup.selectNextItem();
           this.searchBox.value = popup.selectedItem.label;
         }
         break;
