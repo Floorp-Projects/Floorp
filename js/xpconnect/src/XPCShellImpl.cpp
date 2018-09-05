@@ -250,7 +250,7 @@ ReadLine(JSContext* cx, unsigned argc, Value* vp)
     }
 
     /* Get a line from the infile */
-    JS::UniqueChars strBytes = JS_EncodeString(cx, str);
+    JS::UniqueChars strBytes = JS_EncodeStringToLatin1(cx, str);
     if (!strBytes || !GetLine(cx, buf, gInFile, strBytes.get()))
         return false;
 
@@ -353,7 +353,7 @@ Load(JSContext* cx, unsigned argc, Value* vp)
         str = ToString(cx, args[i]);
         if (!str)
             return false;
-        JS::UniqueChars filename = JS_EncodeString(cx, str);
+        JS::UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
         if (!filename)
             return false;
         FILE* file = fopen(filename.get(), "r");
@@ -726,7 +726,7 @@ ProcessLine(AutoJSAPI& jsapi, const char* buffer, int startline)
     RootedString str(cx);
     if (!(str = ToString(cx, result)))
         return false;
-    JS::UniqueChars bytes = JS_EncodeString(cx, str);
+    JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str);
     if (!bytes)
         return false;
 

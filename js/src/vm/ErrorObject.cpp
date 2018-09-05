@@ -145,7 +145,7 @@ js::ErrorObject::getOrCreateErrorReport(JSContext* cx)
     report.exnType = type_;
 
     // Filename.
-    UniqueChars filenameStr = JS_EncodeString(cx, fileName(cx));
+    UniqueChars filenameStr = JS_EncodeStringToLatin1(cx, fileName(cx));
     if (!filenameStr)
         return nullptr;
     report.filename = filenameStr.get();

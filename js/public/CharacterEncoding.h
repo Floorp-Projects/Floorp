@@ -346,12 +346,12 @@ inline void JS_free(JS::UTF8CharsZ& ptr) { js_free((void*)ptr.get()); }
  * eventually be removed.
  */
 extern JS_PUBLIC_API(JS::UniqueChars)
-JS_EncodeString(JSContext* cx, JSString* str);
+JS_EncodeStringToLatin1(JSContext* cx, JSString* str);
 
 /**
  * DEPRECATED
  *
- * Same behavior as JS_EncodeString(), but encode into a UTF-8 string.
+ * Same behavior as JS_EncodeStringToLatin1(), but encode into a UTF-8 string.
  *
  * This function *loses information* when it copies the characters of |str| if
  * |str| contains invalid UTF-16: U+FFFD REPLACEMENT CHARACTER will be copied

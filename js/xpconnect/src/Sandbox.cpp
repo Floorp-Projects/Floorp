@@ -1544,7 +1544,7 @@ OptionsBase::ParseString(const char* name, nsCString& prop)
         return false;
     }
 
-    JS::UniqueChars tmp = JS_EncodeString(mCx, value.toString());
+    JS::UniqueChars tmp = JS_EncodeStringToLatin1(mCx, value.toString());
     NS_ENSURE_TRUE(tmp, false);
     prop.Assign(tmp.get(), strlen(tmp.get()));
     return true;

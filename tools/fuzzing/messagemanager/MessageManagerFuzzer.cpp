@@ -196,7 +196,7 @@ MessageManagerFuzzer::MutateValue(JSContext* aCx,
     }
     JSString* str = JS_NewStringCopyZ(aCx, x.get());
     aOutMutationValue.set(JS::StringValue(str));
-    JS::UniqueChars valueChars = JS_EncodeString(aCx, aValue.toString());
+    JS::UniqueChars valueChars = JS_EncodeStringToUTF8(aCx, aValue.toString());
     MSGMGR_FUZZER_LOG("%*s! Mutated value of type |string|: '%s' to '%s'",
                       aRecursionCounter * 4, "",
                       valueChars.get(), x.get());
