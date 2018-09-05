@@ -8,14 +8,13 @@ ChromeUtils.defineModuleGetter(this, "clearTimeout",
                                "resource://gre/modules/Timer.jsm");
 ChromeUtils.defineModuleGetter(this, "setTimeout",
                                "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
-                               "resource://gre/modules/TelemetryStopwatch.jsm");
 ChromeUtils.defineModuleGetter(this, "ViewPopup",
                                "resource:///modules/ExtensionPopups.jsm");
 
 var {
   DefaultWeakMap,
   ExtensionError,
+  ExtensionTelemetry,
 } = ExtensionUtils;
 
 ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
@@ -28,8 +27,6 @@ var {
 XPCOMUtils.defineLazyGlobalGetters(this, ["InspectorUtils"]);
 
 const POPUP_PRELOAD_TIMEOUT_MS = 200;
-const POPUP_OPEN_MS_HISTOGRAM = "WEBEXT_BROWSERACTION_POPUP_OPEN_MS";
-const POPUP_RESULT_HISTOGRAM = "WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT";
 
 // WeakMap[Extension -> BrowserAction]
 const browserActionMap = new WeakMap();
@@ -179,7 +176,9 @@ this.browserAction = class extends ExtensionAPI {
       },
 
       onViewShowing: async event => {
-        TelemetryStopwatch.start(POPUP_OPEN_MS_HISTOGRAM, this);
+        const {extension} = this;
+
+        ExtensionTelemetry.browserActionPopupOpen.stopwatchStart(extension, this);
         let document = event.target.ownerDocument;
         let tabbrowser = document.defaultView.gBrowser;
 
@@ -196,19 +195,21 @@ this.browserAction = class extends ExtensionAPI {
             let attachPromise = popup.attach(event.target);
             event.detail.addBlocker(attachPromise);
             await attachPromise;
-            TelemetryStopwatch.finish(POPUP_OPEN_MS_HISTOGRAM, this);
+            ExtensionTelemetry.browserActionPopupOpen.stopwatchFinish(extension, this);
             if (this.eventQueue.length) {
-              let histogram = Services.telemetry.getHistogramById(POPUP_RESULT_HISTOGRAM);
-              histogram.add("popupShown");
+              ExtensionTelemetry.browserActionPreloadResult.histogramAdd({
+                category: "popupShown",
+                extension: this.extension,
+              });
               this.eventQueue = [];
             }
           } catch (e) {
-            TelemetryStopwatch.cancel(POPUP_OPEN_MS_HISTOGRAM, this);
+            ExtensionTelemetry.browserActionPopupOpen.stopwatchCancel(extension, this);
             Cu.reportError(e);
             event.preventDefault();
           }
         } else {
-          TelemetryStopwatch.cancel(POPUP_OPEN_MS_HISTOGRAM, this);
+          ExtensionTelemetry.browserActionPopupOpen.stopwatchCancel(extension, this);
           // This isn't not a hack, but it seems to provide the correct behavior
           // with the fewest complications.
           event.preventDefault();
@@ -328,8 +329,10 @@ this.browserAction = class extends ExtensionAPI {
       case "mouseout":
         if (this.pendingPopup) {
           if (this.eventQueue.length) {
-            let histogram = Services.telemetry.getHistogramById(POPUP_RESULT_HISTOGRAM);
-            histogram.add(`clearAfter${this.eventQueue.pop()}`);
+            ExtensionTelemetry.browserActionPreloadResult.histogramAdd({
+              category: `clearAfter${this.eventQueue.pop()}`,
+              extension: this.extension,
+            });
             this.eventQueue = [];
           }
           this.clearPopup();
