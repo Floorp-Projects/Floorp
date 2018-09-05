@@ -51,7 +51,7 @@ raptor-speedometer-firefox:
     description: "Raptor Speedometer on Firefox"
     try-name: raptor-speedometer-firefox
     treeherder-symbol: Rap(sp)
-    run-on-projects: ['try', 'mozilla-central']
+    run-on-projects: ['try', 'mozilla-central', 'mozilla-inbound', 'autoland']
     max-run-time: 1500
     mozharness:
         extra-options:
