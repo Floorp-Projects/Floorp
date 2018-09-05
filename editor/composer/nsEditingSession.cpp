@@ -977,8 +977,8 @@ nsEditingSession::TimerCallback(nsITimer* aTimer, void* aClosure)
   if (docShell) {
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
     if (webNav) {
-      webNav->LoadURI(u"about:blank", 0, nullptr, nullptr, nullptr,
-                      nsContentUtils::GetSystemPrincipal());
+      webNav->LoadURI(NS_LITERAL_STRING("about:blank"), 0, nullptr, nullptr,
+                      nullptr, nsContentUtils::GetSystemPrincipal());
     }
   }
 }
