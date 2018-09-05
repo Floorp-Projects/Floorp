@@ -5381,8 +5381,7 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
 void
 js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name, const char* redeclKind)
 {
-    UniqueChars printable;
-    if (AtomToPrintableString(cx, name, &printable)) {
+    if (UniqueChars printable = AtomToPrintableString(cx, name)) {
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR,
                                    redeclKind, printable.get());
     }
@@ -5462,7 +5461,8 @@ js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame)
         const char* name = "anonymous";
         UniqueChars str;
         if (fun->explicitName()) {
-            if (!AtomToPrintableString(cx, fun->explicitName(), &str))
+            str = AtomToPrintableString(cx, fun->explicitName());
+            if (!str)
                 return false;
             name = str.get();
         }

@@ -18,10 +18,9 @@ namespace js {
 
 /*
  * Return a printable, lossless char[] representation of a string-type atom.
- * The lifetime of the result matches the lifetime of bytes.
  */
-extern const char*
-AtomToPrintableString(JSContext* cx, JSAtom* atom, UniqueChars* bytes);
+extern UniqueChars
+AtomToPrintableString(JSContext* cx, JSAtom* atom);
 
 class PropertyName;
 
