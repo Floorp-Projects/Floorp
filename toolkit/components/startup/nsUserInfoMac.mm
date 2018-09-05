@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "nsUserInfoMac.h"
 #include "nsObjCExceptions.h"
 #include "nsString.h"
+#include "mozilla/Span.h"
 
 #import <Cocoa/Cocoa.h>
 #import <AddressBook/AddressBook.h>
@@ -16,31 +16,30 @@ NS_IMPL_ISUPPORTS(nsUserInfo, nsIUserInfo)
 nsUserInfo::nsUserInfo() {}
 
 NS_IMETHODIMP
-nsUserInfo::GetFullname(char16_t **aFullname)
+nsUserInfo::GetFullname(nsAString& aFullname)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
   
-  NS_ConvertUTF8toUTF16 fullName([NSFullUserName() UTF8String]);
-  *aFullname = ToNewUnicode(fullName);
+  CopyUTF8toUTF16(mozilla::MakeStringSpan([NSFullUserName() UTF8String]),
+                  aFullname);
   return NS_OK;
   
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
 }
 
 NS_IMETHODIMP 
-nsUserInfo::GetUsername(char **aUsername)
+nsUserInfo::GetUsername(nsACString& aUsername)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
   
-  nsAutoCString username([NSUserName() UTF8String]);
-  *aUsername = ToNewCString(username);
+  aUsername.Assign([NSUserName() UTF8String]);
   return NS_OK;
   
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
 }
 
 nsresult 
-nsUserInfo::GetPrimaryEmailAddress(nsCString &aEmailAddress)
+nsUserInfo::GetPrimaryEmailAddress(nsACString &aEmailAddress)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
   
@@ -61,23 +60,20 @@ nsUserInfo::GetPrimaryEmailAddress(nsCString &aEmailAddress)
 }
 
 NS_IMETHODIMP 
-nsUserInfo::GetEmailAddress(char **aEmailAddress)
+nsUserInfo::GetEmailAddress(nsACString& aEmailAddress)
 {
-  nsAutoCString email;
-  if (NS_SUCCEEDED(GetPrimaryEmailAddress(email))) 
-    *aEmailAddress = ToNewCString(email);
-  return NS_OK;
+  return GetPrimaryEmailAddress(aEmailAddress);
 }
 
 NS_IMETHODIMP 
-nsUserInfo::GetDomain(char **aDomain)
+nsUserInfo::GetDomain(nsACString& aDomain)
 {
   nsAutoCString email;
   if (NS_SUCCEEDED(GetPrimaryEmailAddress(email))) {
     int32_t index = email.FindChar('@');
     if (index != -1) {
       // chop off everything before, and including the '@'
-      *aDomain = ToNewCString(Substring(email, index + 1));
+      aDomain.Assign(Substring(email, index + 1));
     }
   }
   return NS_OK;
