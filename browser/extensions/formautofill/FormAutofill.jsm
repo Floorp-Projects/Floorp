@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "logLevel", "extensions.formautofill
 // This helper avoids both of those problems by never touching the
 // console object unless debug logging is enabled.
 function debug() {
-  if (logLevel.toLowerCase() == "debug") {
+  if (logLevel == "debug") {
     this.log.debug(...arguments);
   }
 }
