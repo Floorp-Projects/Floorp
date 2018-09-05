@@ -246,9 +246,9 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr, int32_t aLineLen)
         if (NS_SUCCEEDED(rv = gTextToSubURI->UnEscapeAndConvert(
                            mEncoding, filename, result))) {
           if (!result.IsEmpty()) {
-            aIdx->SetLocation(filename.get());
+            aIdx->SetLocation(filename);
             if (!mHasDescription)
-              aIdx->SetDescription(result.get());
+              aIdx->SetDescription(result);
             success = true;
           }
         } else {
@@ -261,16 +261,16 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr, int32_t aLineLen)
         // just fallback to unescape'ing in-place
         // XXX - this shouldn't be using UTF8, should it?
         // when can we fail to get the service, anyway? - bbaetz
-        aIdx->SetLocation(filename.get());
+        aIdx->SetLocation(filename);
         if (!mHasDescription) {
-          aIdx->SetDescription(NS_ConvertUTF8toUTF16(value).get());
+          aIdx->SetDescription(NS_ConvertUTF8toUTF16(value));
         }
       }
     }
       break;
     case FIELD_DESCRIPTION:
       nsUnescape(value);
-      aIdx->SetDescription(NS_ConvertUTF8toUTF16(value).get());
+      aIdx->SetDescription(NS_ConvertUTF8toUTF16(value));
       break;
     case FIELD_CONTENTLENGTH:
       {
@@ -292,7 +292,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr, int32_t aLineLen)
       }
       break;
     case FIELD_CONTENTTYPE:
-      aIdx->SetContentType(value);
+      aIdx->SetContentType(nsDependentCString(value));
       break;
     case FIELD_FILETYPE:
       // unescape in-place
