@@ -1133,29 +1133,11 @@ js::DumpScript(JSContext* cx, JSScript* scriptArg, FILE* fp)
 static UniqueChars
 ToDisassemblySource(JSContext* cx, HandleValue v)
 {
-    if (v.isString()) {
-        Sprinter sprinter(cx);
-        if (!sprinter.init())
-            return nullptr;
-        char* nbytes = QuoteString(&sprinter, v.toString(), '"');
-        if (!nbytes)
-            return nullptr;
-        UniqueChars copy = JS_smprintf("%s", nbytes);
-        if (!copy) {
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
-        return copy;
-    }
+    if (v.isString())
+        return QuoteString(cx, v.toString(), '"');
 
-    if (JS::RuntimeHeapIsBusy()) {
-        UniqueChars source = JS_smprintf("<value>");
-        if (!source) {
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
-        return source;
-    }
+    if (JS::RuntimeHeapIsBusy())
+        return DuplicateString(cx, "<value>");
 
     if (v.isObject()) {
         JSObject& obj = v.toObject();
@@ -1643,7 +1625,7 @@ struct ExpressionDecompiler
     bool decompilePC(const OffsetAndDefIndex& offsetAndDefIndex);
     JSAtom* getArg(unsigned slot);
     JSAtom* loadAtom(jsbytecode* pc);
-    bool quote(JSString* s, uint32_t quote);
+    bool quote(JSString* s, char quote);
     bool write(const char* s);
     bool write(JSString* str);
     UniqueChars getOutput();
@@ -2112,9 +2094,9 @@ ExpressionDecompiler::write(JSString* str)
 }
 
 bool
-ExpressionDecompiler::quote(JSString* s, uint32_t quote)
+ExpressionDecompiler::quote(JSString* s, char quote)
 {
-    return QuoteString(&sprinter, s, quote) != nullptr;
+    return QuoteString(&sprinter, s, quote);
 }
 
 JSAtom*

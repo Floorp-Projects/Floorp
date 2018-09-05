@@ -271,7 +271,10 @@ js::ObjectToSource(JSContext* cx, HandleObject obj)
                 ? !IsIdentifier(JSID_TO_ATOM(id))
                 : JSID_TO_INT(id) < 0)
             {
-                idstr = QuoteString(cx, idstr, char16_t('\''));
+                UniqueChars quotedId = QuoteString(cx, idstr, '\'');
+                if (!quotedId)
+                    return false;
+                idstr = NewStringCopyZ<CanGC>(cx, quotedId.get());
                 if (!idstr)
                     return false;
             }
