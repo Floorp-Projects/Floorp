@@ -131,6 +131,10 @@ web-platform-tests-wdspec:
     description: "Web platform webdriver-spec run"
     suite: web-platform-tests-wdspec
     treeherder-symbol: W(Wd)
+    chunks:
+        by-test-platform:
+            linux64-ccov/.*: 2
+            default: 2
     mozharness:
         extra-options:
             - --test-type=wdspec
@@ -143,10 +147,6 @@ web-platform-tests-wdspec:
             linux64-asan/opt: 2
             linux64-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
-    chunks:
-        by-test-platform:
-            linux64-ccov/.*: 2
-            default: 1
 
 web-platform-tests-wdspec-headless:
     description: "Web platform webdriver-spec headless run"

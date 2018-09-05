@@ -45,7 +45,6 @@ bool AutoScriptEvaluate::StartEvaluating(HandleObject scope)
 
     mEvaluated = true;
 
-    JS_BeginRequest(mJSContext);
     mAutoRealm.emplace(mJSContext, scope);
 
     // Saving the exception state keeps us from interfering with another script
@@ -64,8 +63,6 @@ AutoScriptEvaluate::~AutoScriptEvaluate()
     if (!mJSContext || !mEvaluated)
         return;
     mState->restore();
-
-    JS_EndRequest(mJSContext);
 }
 
 // It turns out that some errors may be not worth reporting. So, this

@@ -2756,12 +2756,9 @@ WorkerThreadPrimaryRunnable::Run()
       PROFILER_SET_JS_CONTEXT(cx);
 
       {
-        JSAutoRequest ar(cx);
-
         mWorkerPrivate->DoRunLoop(cx);
         // The AutoJSAPI in DoRunLoop should have reported any exceptions left
-        // on cx.  Note that we still need the JSAutoRequest above because
-        // AutoJSAPI on workers does NOT enter a request!
+        // on cx.
         MOZ_ASSERT(!JS_IsExceptionPending(cx));
       }
 

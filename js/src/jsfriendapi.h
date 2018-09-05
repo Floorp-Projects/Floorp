@@ -1161,17 +1161,6 @@ GetPCCountScriptContents(JSContext* cx, size_t script);
 JS_FRIEND_API(char*)
 GetCodeCoverageSummary(JSContext* cx, size_t* length);
 
-typedef void
-(* ActivityCallback)(void* arg, bool active);
-
-/**
- * Sets a callback that is run whenever the runtime goes idle - the
- * last active request ceases - and begins activity - when it was
- * idle and a request begins.
- */
-JS_FRIEND_API(void)
-SetActivityCallback(JSContext* cx, ActivityCallback cb, void* arg);
-
 typedef bool
 (* DOMInstanceClassHasProtoAtDepth)(const Class* instanceClass,
                                     uint32_t protoID, uint32_t depth);

@@ -662,8 +662,6 @@ private:
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    JSAutoRequest areq(mContext);
-
     JS::RealmOptions options;
     options.creationOptions().setNewCompartmentInSystemZone();
     mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr,
@@ -750,7 +748,6 @@ ProxyAutoConfig::SetupJS()
     return NS_ERROR_FAILURE;
 
   JSContext* cx = mJSContext->Context();
-  JSAutoRequest areq(cx);
   JSAutoRealm ar(cx, mJSContext->Global());
   AutoPACErrorReporter aper(cx);
 
@@ -810,7 +807,6 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
     return NS_ERROR_NOT_AVAILABLE;
 
   JSContext *cx = mJSContext->Context();
-  JSAutoRequest areq(cx);
   JSAutoRealm ar(cx, mJSContext->Global());
   AutoPACErrorReporter aper(cx);
 

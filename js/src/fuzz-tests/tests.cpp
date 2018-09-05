@@ -76,7 +76,6 @@ jsfuzz_init(JSContext** cx, JS::PersistentRootedObject* global)
     js::UseInternalJobQueues(*cx);
     if (!JS::InitSelfHostedCode(*cx))
         return false;
-    JS_BeginRequest(*cx);
     global->init(*cx);
     *global = jsfuzz_createGlobal(*cx, nullptr);
     if (!*global)
@@ -89,7 +88,6 @@ static void
 jsfuzz_uninit(JSContext* cx)
 {
     if (cx) {
-        JS_EndRequest(cx);
         JS_DestroyContext(cx);
         cx = nullptr;
     }

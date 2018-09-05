@@ -199,9 +199,6 @@ PORT_Strdup(const char *str)
 void
 PORT_SetError(int value)
 {
-#ifdef DEBUG_jp96085
-    PORT_Assert(value != SEC_ERROR_REUSED_ISSUER_AND_SERIAL);
-#endif
     PR_SetError(value, 0);
     return;
 }

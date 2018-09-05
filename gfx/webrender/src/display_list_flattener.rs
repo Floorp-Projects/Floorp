@@ -963,8 +963,8 @@ impl<'a> DisplayListFlattener<'a> {
 
             // If not already isolated for some other reason,
             // make this picture as isolated.
-            if parent_pic.composite_mode.is_none() {
-                parent_pic.composite_mode = Some(PictureCompositeMode::Blit);
+            if parent_pic.requested_composite_mode.is_none() {
+                parent_pic.requested_composite_mode = Some(PictureCompositeMode::Blit);
             }
         }
 

@@ -508,7 +508,7 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
                                  js::NukeReferencesToWindow nukeReferencesToWindow,
                                  js::NukeReferencesFromTarget nukeReferencesFromTarget)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     JSRuntime* rt = cx->runtime();
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {

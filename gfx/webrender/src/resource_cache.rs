@@ -7,7 +7,7 @@ use api::{BlobImageDescriptor, BlobImageHandler, BlobImageRequest};
 use api::{ClearCache, ColorF, DevicePoint, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
 use api::{FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
 use api::{ExternalImageData, ExternalImageType, BlobImageResult, BlobImageParams};
-use api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
+use api::{FontInstanceData, FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
 use api::{GlyphDimensions, IdNamespace};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering};
 use api::{TileOffset, TileSize, TileRange, NormalizedRect, BlobImageData};
@@ -349,6 +349,23 @@ struct Resources {
 impl BlobImageResources for Resources {
     fn get_font_data(&self, key: FontKey) -> &FontTemplate {
         self.font_templates.get(&key).unwrap()
+    }
+    fn get_font_instance_data(&self, key: FontInstanceKey) -> Option<FontInstanceData> {
+        match self.font_instances.read().unwrap().get(&key) {
+            Some(instance) => Some(FontInstanceData {
+                font_key: instance.font_key,
+                size: instance.size,
+                options: Some(FontInstanceOptions {
+                  render_mode: instance.render_mode,
+                  flags: instance.flags,
+                  bg_color: instance.bg_color,
+                  synthetic_italics: instance.synthetic_italics,
+                }),
+                platform_options: instance.platform_options,
+                variations: instance.variations.clone(),
+            }),
+            None => None,
+        }
     }
     fn get_image(&self, key: ImageKey) -> Option<(&ImageData, &ImageDescriptor)> {
         self.image_templates

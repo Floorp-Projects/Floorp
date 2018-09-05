@@ -97,6 +97,9 @@ class WasmToken
         Field,
         Float,
         Func,
+#ifdef ENABLE_WASM_GC
+        GcFeatureOptIn,
+#endif
         GetGlobal,
         GetLocal,
         Global,
@@ -372,6 +375,9 @@ class WasmToken
           case Field:
           case Float:
           case Func:
+#ifdef ENABLE_WASM_GC
+          case GcFeatureOptIn:
+#endif
           case Global:
           case Mutable:
           case Import:
@@ -1170,6 +1176,10 @@ WasmTokenStream::next()
         break;
 
       case 'g':
+#ifdef ENABLE_WASM_GC
+        if (consume(u"gc_feature_opt_in"))
+            return WasmToken(WasmToken::GcFeatureOptIn, begin, cur_);
+#endif
         if (consume(u"get_global"))
             return WasmToken(WasmToken::GetGlobal, begin, cur_);
         if (consume(u"get_local"))
@@ -3623,6 +3633,28 @@ ParseMemory(WasmParseContext& c, AstModule* module)
     return module->addMemory(name, memory);
 }
 
+#ifdef ENABLE_WASM_GC
+// Custom section for experimental work.  The size of this section should always
+// be 1 byte, and that byte is a nonzero varint7 carrying the version number
+// being opted into.
+static bool
+ParseGcFeatureOptIn(WasmParseContext& c, AstModule* module)
+{
+    WasmToken token;
+    if (!c.ts.getIf(WasmToken::Index, &token)) {
+        c.ts.generateError(token, "GC feature version number required", c.error);
+        return false;
+    }
+
+    if (token.index() == 0 || token.index() > 127) {
+        c.ts.generateError(token, "invalid GC feature version number", c.error);
+        return false;
+    }
+
+    return module->addGcFeatureOptIn(token.index());
+}
+#endif
+
 static bool
 ParseStartFunc(WasmParseContext& c, WasmToken token, AstModule* module)
 {
@@ -4060,6 +4092,13 @@ ParseModule(const char16_t* text, uintptr_t stackLimit, LifoAlloc& lifo, UniqueC
                 return nullptr;
             break;
           }
+#ifdef ENABLE_WASM_GC
+          case WasmToken::GcFeatureOptIn: {
+            if (!ParseGcFeatureOptIn(c, module))
+                return nullptr;
+            break;
+          }
+#endif
           case WasmToken::Global: {
             if (!ParseGlobal(c, module))
                 return nullptr;
@@ -5368,6 +5407,26 @@ EncodeExpr(Encoder& e, AstExpr& expr)
 /*****************************************************************************/
 // wasm AST binary serialization
 
+#ifdef ENABLE_WASM_GC
+static bool
+EncodeGcFeatureOptInSection(Encoder& e, AstModule& module)
+{
+    uint32_t optInVersion = module.gcFeatureOptIn();
+    if (!optInVersion)
+        return true;
+
+    size_t offset;
+    if (!e.startSection(SectionId::GcFeatureOptIn, &offset))
+        return false;
+
+    if (!e.writeVarU32(optInVersion))
+        return false;
+
+    e.finishSection(offset);
+    return true;
+}
+#endif
+
 static bool
 EncodeTypeSection(Encoder& e, AstModule& module)
 {
@@ -5857,6 +5916,11 @@ EncodeModule(AstModule& module, Uint32Vector* offsets, Bytes* bytes)
 
     if (!e.writeFixedU32(EncodingVersion))
         return false;
+
+#ifdef ENABLE_WASM_GC
+    if (!EncodeGcFeatureOptInSection(e, module))
+        return false;
+#endif
 
     if (!EncodeTypeSection(e, module))
         return false;
