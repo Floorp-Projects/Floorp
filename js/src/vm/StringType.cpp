@@ -20,7 +20,7 @@
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "gc/Nursery.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/StableStringChars.h"
 #include "js/UbiNode.h"
 #include "util/StringBuffer.h"
@@ -2063,7 +2063,7 @@ js::EncodeLatin1(JSContext* cx, JSString* str)
 }
 
 const char*
-js::ValueToPrintableLatin1(JSContext* cx, const Value& vArg, JSAutoByteString* bytes,
+js::ValueToPrintableLatin1(JSContext* cx, const Value& vArg, UniqueChars* bytes,
                            bool asSource)
 {
     RootedValue v(cx, vArg);
@@ -2077,11 +2077,12 @@ js::ValueToPrintableLatin1(JSContext* cx, const Value& vArg, JSAutoByteString* b
     str = QuoteString(cx, str, 0);
     if (!str)
         return nullptr;
-    return bytes->encodeLatin1(cx, str);
+    *bytes = JS_EncodeString(cx, str);
+    return bytes->get();
 }
 
 const char*
-js::ValueToPrintableUTF8(JSContext* cx, const Value& vArg, JSAutoByteString* bytes, bool asSource)
+js::ValueToPrintableUTF8(JSContext* cx, const Value& vArg, UniqueChars* bytes, bool asSource)
 {
     RootedValue v(cx, vArg);
     JSString* str;
@@ -2091,7 +2092,8 @@ js::ValueToPrintableUTF8(JSContext* cx, const Value& vArg, JSAutoByteString* byt
         str = ToString<CanGC>(cx, v);
     if (!str)
         return nullptr;
-    return bytes->encodeUtf8(cx, RootedString(cx, str));
+    *bytes = JS_EncodeStringToUTF8(cx, RootedString(cx, str));
+    return bytes->get();
 }
 
 template <AllowGC allowGC>

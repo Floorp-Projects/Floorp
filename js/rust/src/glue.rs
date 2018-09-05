@@ -340,6 +340,10 @@ extern "C" {
                                              dest: *mut JSStructuredCloneData)
                                              -> bool;
 
+    pub fn JSEncodeStringToUTF8(cx: *mut JSContext,
+                                string: JS::HandleString)
+                                -> *mut ::libc::c_char;
+
     pub fn IsDebugBuild() -> bool;
 }
 

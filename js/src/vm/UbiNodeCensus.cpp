@@ -6,7 +6,7 @@
 
 #include "js/UbiNodeCensus.h"
 
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/StableStringChars.h"
 #include "util/Text.h"
 #include "vm/JSContext.h"
@@ -1265,12 +1265,12 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue)
     if (!bySource)
         return nullptr;
 
-    JSAutoByteString byBytes(cx, bySource);
+    UniqueChars byBytes = JS_EncodeString(cx, bySource);
     if (!byBytes)
         return nullptr;
 
     JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_CENSUS_BREAKDOWN,
-                               byBytes.ptr());
+                               byBytes.get());
     return nullptr;
 }
 
