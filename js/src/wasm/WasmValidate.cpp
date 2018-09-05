@@ -2072,12 +2072,7 @@ wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env)
 #ifdef ENABLE_WASM_GC
     if (!DecodeGCFeatureOptInSection(d, env))
         return false;
-    HasGcTypes gcFeatureOptIn = env->gcFeatureOptIn;
-#else
-    HasGcTypes gcFeatureOptIn = HasGcTypes::False;
 #endif
-
-    env->compilerEnv->computeParameters(d, gcFeatureOptIn);
 
     if (!DecodeTypeSection(d, env))
         return false;
@@ -2347,15 +2342,12 @@ wasm::Validate(JSContext* cx, const ShareableBytes& bytecode, UniqueChars* error
     Decoder d(bytecode.bytes, 0, error);
 
 #ifdef ENABLE_WASM_GC
-    HasGcTypes gcTypesConfigured = cx->options().wasmGc() ? HasGcTypes::True : HasGcTypes::False;
+    HasGcTypes gcSupport = cx->options().wasmGc() ? HasGcTypes::True : HasGcTypes::False;
 #else
-    HasGcTypes gcTypesConfigured = HasGcTypes::False;
+    HasGcTypes gcSupport = HasGcTypes::False;
 #endif
 
-    CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Ion, DebugEnabled::False,
-                                    gcTypesConfigured);
-    ModuleEnvironment env(gcTypesConfigured,
-                          &compilerEnv,
+    ModuleEnvironment env(CompileMode::Once, Tier::Ion, DebugEnabled::False, gcSupport,
                           cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()
                           ? Shareable::True
                           : Shareable::False);

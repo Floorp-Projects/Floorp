@@ -1470,7 +1470,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     ArrayViewVector       arrayViews_;
 
     // State used to build the AsmJSModule in finish():
-    CompilerEnvironment   compilerEnv_;
     ModuleEnvironment     env_;
     MutableAsmJSMetadata  asmJSMetadata_;
 
@@ -1531,13 +1530,12 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         sigSet_(cx),
         funcImportMap_(cx),
         arrayViews_(cx),
-        compilerEnv_(CompileMode::Once, Tier::Ion, DebugEnabled::False, HasGcTypes::False),
-        env_(HasGcTypes::False, &compilerEnv_, Shareable::False, ModuleKind::AsmJS),
+        env_(CompileMode::Once, Tier::Ion, DebugEnabled::False, HasGcTypes::False,
+             Shareable::False, ModuleKind::AsmJS),
         errorString_(nullptr),
         errorOffset_(UINT32_MAX),
         errorOverRecursed_(false)
     {
-        compilerEnv_.computeParameters(HasGcTypes::False);
         env_.minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
     }
 
