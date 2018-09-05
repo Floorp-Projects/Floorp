@@ -1130,33 +1130,31 @@ js::DumpScript(JSContext* cx, JSScript* scriptArg, FILE* fp)
     return ok;
 }
 
-static bool
-ToDisassemblySource(JSContext* cx, HandleValue v, UniqueChars* bytes)
+static UniqueChars
+ToDisassemblySource(JSContext* cx, HandleValue v)
 {
     if (v.isString()) {
         Sprinter sprinter(cx);
         if (!sprinter.init())
-            return false;
+            return nullptr;
         char* nbytes = QuoteString(&sprinter, v.toString(), '"');
         if (!nbytes)
-            return false;
+            return nullptr;
         UniqueChars copy = JS_smprintf("%s", nbytes);
         if (!copy) {
             ReportOutOfMemory(cx);
-            return false;
+            return nullptr;
         }
-        *bytes = std::move(copy);
-        return true;
+        return copy;
     }
 
     if (JS::RuntimeHeapIsBusy()) {
         UniqueChars source = JS_smprintf("<value>");
         if (!source) {
             ReportOutOfMemory(cx);
-            return false;
+            return nullptr;
         }
-        *bytes = std::move(source);
-        return true;
+        return source;
     }
 
     if (v.isObject()) {
@@ -1166,21 +1164,19 @@ ToDisassemblySource(JSContext* cx, HandleValue v, UniqueChars* bytes)
             RootedFunction fun(cx, &obj.as<JSFunction>());
             JSString* str = JS_DecompileFunction(cx, fun);
             if (!str)
-                return false;
-            *bytes = JS_EncodeString(cx, str);
-            return !!*bytes;
+                return nullptr;
+            return JS_EncodeString(cx, str);
         }
 
         if (obj.is<RegExpObject>()) {
             JSString* source = obj.as<RegExpObject>().toString(cx);
             if (!source)
-                return false;
-            *bytes = JS_EncodeString(cx, source);
-            return !!*bytes;
+                return nullptr;
+            return JS_EncodeString(cx, source);
         }
     }
 
-    return !!ValueToPrintableLatin1(cx, v, bytes, true);
+    return ValueToPrintableLatin1(cx, v, true);
 }
 
 static bool
@@ -1433,8 +1429,8 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       case JOF_ENVCOORD: {
         RootedValue v(cx,
             StringValue(EnvironmentCoordinateName(cx->caches().envCoordinateNameCache, script, pc)));
-        UniqueChars bytes;
-        if (!ToDisassemblySource(cx, v, &bytes))
+        UniqueChars bytes = ToDisassemblySource(cx, v);
+        if (!bytes)
             return 0;
         EnvironmentCoordinate ec(pc);
         if (!sp->jsprintf(" %s (hops = %u, slot = %u)", bytes.get(), ec.hops(), ec.slot()))
@@ -1444,8 +1440,8 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
       case JOF_ATOM: {
         RootedValue v(cx, StringValue(script->getAtom(GET_UINT32_INDEX(pc))));
-        UniqueChars bytes;
-        if (!ToDisassemblySource(cx, v, &bytes))
+        UniqueChars bytes = ToDisassemblySource(cx, v);
+        if (!bytes)
             return 0;
         if (!sp->jsprintf(" %s", bytes.get()))
             return 0;
@@ -1454,8 +1450,8 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
       case JOF_DOUBLE: {
         RootedValue v(cx, script->getConst(GET_UINT32_INDEX(pc)));
-        UniqueChars bytes;
-        if (!ToDisassemblySource(cx, v, &bytes))
+        UniqueChars bytes = ToDisassemblySource(cx, v);
+        if (!bytes)
             return 0;
         if (!sp->jsprintf(" %s", bytes.get()))
             return 0;
@@ -1472,9 +1468,9 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
         JSObject* obj = script->getObject(GET_UINT32_INDEX(pc));
         {
-            UniqueChars bytes;
             RootedValue v(cx, ObjectValue(*obj));
-            if (!ToDisassemblySource(cx, v, &bytes))
+            UniqueChars bytes = ToDisassemblySource(cx, v);
+            if (!bytes)
                 return 0;
             if (!sp->jsprintf(" %s", bytes.get()))
                 return 0;
@@ -1484,9 +1480,9 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
       case JOF_REGEXP: {
         js::RegExpObject* obj = script->getRegExp(pc);
-        UniqueChars bytes;
         RootedValue v(cx, ObjectValue(*obj));
-        if (!ToDisassemblySource(cx, v, &bytes))
+        UniqueChars bytes = ToDisassemblySource(cx, v);
+        if (!bytes)
             return 0;
         if (!sp->jsprintf(" %s", bytes.get()))
             return 0;

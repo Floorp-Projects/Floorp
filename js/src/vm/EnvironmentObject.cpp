@@ -1414,8 +1414,7 @@ namespace {
 static void
 ReportOptimizedOut(JSContext* cx, HandleId id)
 {
-    UniqueChars printable;
-    if (ValueToPrintableLatin1(cx, IdToValue(id), &printable)) {
+    if (UniqueChars printable = ValueToPrintableLatin1(cx, IdToValue(id))) {
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_OPTIMIZED_OUT,
                                    printable.get());
     }
