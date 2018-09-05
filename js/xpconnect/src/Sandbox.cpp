@@ -854,69 +854,73 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             JS_ReportErrorASCII(cx, "Property names must be strings");
             return false;
         }
-        RootedString nameStr(cx, nameValue.toString());
-        JS::UniqueChars name = JS_EncodeStringToUTF8(cx, nameStr);
-        if (!name)
+        JSFlatString* nameStr = JS_FlattenString(cx, nameValue.toString());
+        if (!nameStr)
             return false;
-        if (!strcmp(name.get(), "Blob")) {
+        if (JS_FlatStringEqualsAscii(nameStr, "Blob")) {
             Blob = true;
-        } else if (!strcmp(name.get(), "ChromeUtils")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "ChromeUtils")) {
             ChromeUtils = true;
-        } else if (!strcmp(name.get(), "CSS")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "CSS")) {
             CSS = true;
-        } else if (!strcmp(name.get(), "CSSRule")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "CSSRule")) {
             CSSRule = true;
-        } else if (!strcmp(name.get(), "Directory")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "Directory")) {
             Directory = true;
-        } else if (!strcmp(name.get(), "DOMParser")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "DOMParser")) {
             DOMParser = true;
-        } else if (!strcmp(name.get(), "Element")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "Element")) {
             Element = true;
-        } else if (!strcmp(name.get(), "Event")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "Event")) {
             Event = true;
-        } else if (!strcmp(name.get(), "File")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "File")) {
             File = true;
-        } else if (!strcmp(name.get(), "FileReader")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "FileReader")) {
             FileReader = true;
-        } else if (!strcmp(name.get(), "FormData")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "FormData")) {
             FormData = true;
-        } else if (!strcmp(name.get(), "InspectorUtils")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "InspectorUtils")) {
             InspectorUtils = true;
-        } else if (!strcmp(name.get(), "MessageChannel")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "MessageChannel")) {
             MessageChannel = true;
-        } else if (!strcmp(name.get(), "Node")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "Node")) {
             Node = true;
-        } else if (!strcmp(name.get(), "NodeFilter")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "NodeFilter")) {
             NodeFilter = true;
-        } else if (!strcmp(name.get(), "TextDecoder")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "TextDecoder")) {
             TextDecoder = true;
-        } else if (!strcmp(name.get(), "TextEncoder")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "TextEncoder")) {
             TextEncoder = true;
-        } else if (!strcmp(name.get(), "URL")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "URL")) {
             URL = true;
-        } else if (!strcmp(name.get(), "URLSearchParams")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "URLSearchParams")) {
             URLSearchParams = true;
-        } else if (!strcmp(name.get(), "XMLHttpRequest")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "XMLHttpRequest")) {
             XMLHttpRequest = true;
-        } else if (!strcmp(name.get(), "XMLSerializer")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "XMLSerializer")) {
             XMLSerializer = true;
-        } else if (!strcmp(name.get(), "atob")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "atob")) {
             atob = true;
-        } else if (!strcmp(name.get(), "btoa")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "btoa")) {
             btoa = true;
-        } else if (!strcmp(name.get(), "caches")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "caches")) {
             caches = true;
-        } else if (!strcmp(name.get(), "crypto")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "crypto")) {
             crypto = true;
-        } else if (!strcmp(name.get(), "fetch")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "fetch")) {
             fetch = true;
-        } else if (!strcmp(name.get(), "indexedDB")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "indexedDB")) {
             indexedDB = true;
 #ifdef MOZ_WEBRTC
-        } else if (!strcmp(name.get(), "rtcIdentityProvider")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "rtcIdentityProvider")) {
             rtcIdentityProvider = true;
 #endif
         } else {
+            RootedString nameStr(cx, nameValue.toString());
+            JS::UniqueChars name = JS_EncodeStringToUTF8(cx, nameStr);
+            if (!name)
+                return false;
+
             JS_ReportErrorUTF8(cx, "Unknown property name: %s", name.get());
             return false;
         }

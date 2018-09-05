@@ -2915,17 +2915,17 @@ ParseCloneScope(JSContext* cx, HandleString str)
 {
     mozilla::Maybe<JS::StructuredCloneScope> scope;
 
-    UniqueChars scopeStr = JS_EncodeString(cx, str);
+    JSLinearString* scopeStr = str->ensureLinear(cx);
     if (!scopeStr)
         return scope;
 
-    if (strcmp(scopeStr.get(), "SameProcessSameThread") == 0)
+    if (StringEqualsAscii(scopeStr, "SameProcessSameThread"))
         scope.emplace(JS::StructuredCloneScope::SameProcessSameThread);
-    else if (strcmp(scopeStr.get(), "SameProcessDifferentThread") == 0)
+    else if (StringEqualsAscii(scopeStr, "SameProcessDifferentThread"))
         scope.emplace(JS::StructuredCloneScope::SameProcessDifferentThread);
-    else if (strcmp(scopeStr.get(), "DifferentProcess") == 0)
+    else if (StringEqualsAscii(scopeStr, "DifferentProcess"))
         scope.emplace(JS::StructuredCloneScope::DifferentProcess);
-    else if (strcmp(scopeStr.get(), "DifferentProcessForIndexedDB") == 0)
+    else if (StringEqualsAscii(scopeStr, "DifferentProcessForIndexedDB"))
         scope.emplace(JS::StructuredCloneScope::DifferentProcessForIndexedDB);
 
     return scope;
@@ -2952,13 +2952,13 @@ Serialize(JSContext* cx, unsigned argc, Value* vp)
             JSString* str = JS::ToString(cx, v);
             if (!str)
                 return false;
-            UniqueChars poli = JS_EncodeString(cx, str);
+            JSLinearString* poli = str->ensureLinear(cx);
             if (!poli)
                 return false;
 
-            if (strcmp(poli.get(), "allow") == 0) {
+            if (StringEqualsAscii(poli, "allow")) {
                 // default
-            } else if (strcmp(poli.get(), "deny") == 0) {
+            } else if (StringEqualsAscii(poli, "deny")) {
                 policy.denySharedArrayBuffer();
             } else {
                 JS_ReportErrorASCII(cx, "Invalid policy value for 'SharedArrayBuffer'");
@@ -4122,12 +4122,12 @@ SetGCCallback(JSContext* cx, unsigned argc, Value* vp)
     JSString* str = JS::ToString(cx, v);
     if (!str)
         return false;
-    UniqueChars action = JS_EncodeString(cx, str);
+    RootedLinearString action(cx, str->ensureLinear(cx));
     if (!action)
         return false;
 
     int32_t phases = 0;
-    if ((strcmp(action.get(), "minorGC") == 0) || (strcmp(action.get(), "majorGC") == 0)) {
+    if (StringEqualsAscii(action, "minorGC") || StringEqualsAscii(action, "majorGC")) {
         if (!JS_GetProperty(cx, opts, "phases", &v))
             return false;
         if (v.isUndefined()) {
@@ -4136,17 +4136,17 @@ SetGCCallback(JSContext* cx, unsigned argc, Value* vp)
             JSString* str = JS::ToString(cx, v);
             if (!str)
                 return false;
-            UniqueChars phasesStr = JS_EncodeString(cx, str);
+            JSLinearString* phasesStr = str->ensureLinear(cx);
             if (!phasesStr)
                 return false;
 
-            if (strcmp(phasesStr.get(), "begin") == 0)
+            if (StringEqualsAscii(phasesStr, "begin")) {
                 phases = (1 << JSGC_BEGIN);
-            else if (strcmp(phasesStr.get(), "end") == 0)
+            } else if (StringEqualsAscii(phasesStr, "end")) {
                 phases = (1 << JSGC_END);
-            else if (strcmp(phasesStr.get(), "both") == 0)
+            } else if (StringEqualsAscii(phasesStr, "both")) {
                 phases = (1 << JSGC_BEGIN) | (1 << JSGC_END);
-            else {
+            } else {
                 JS_ReportErrorASCII(cx, "Invalid callback phase");
                 return false;
             }
@@ -4165,7 +4165,7 @@ SetGCCallback(JSContext* cx, unsigned argc, Value* vp)
         gcCallback::prevMinorGC = nullptr;
     }
 
-    if (strcmp(action.get(), "minorGC") == 0) {
+    if (StringEqualsAscii(action, "minorGC")) {
         auto info = js_new<gcCallback::MinorGC>();
         if (!info) {
             ReportOutOfMemory(cx);
@@ -4175,7 +4175,7 @@ SetGCCallback(JSContext* cx, unsigned argc, Value* vp)
         info->phases = phases;
         info->active = true;
         JS_SetGCCallback(cx, gcCallback::minorGC, info);
-    } else if (strcmp(action.get(), "majorGC") == 0) {
+    } else if (StringEqualsAscii(action, "majorGC")) {
         if (!JS_GetProperty(cx, opts, "depth", &v))
             return false;
         int32_t depth = 1;
