@@ -12,6 +12,7 @@
 #include "jsutil.h"
 
 #include "gc/Marking.h"
+#include "js/CharacterEncoding.h"
 #include "js/Vector.h"
 #include "util/StringBuffer.h"
 #include "vm/GlobalObject.h"
@@ -1598,7 +1599,7 @@ ReportTypedObjTypeError(JSContext* cx,
 {
     // Serialize type string of obj
     RootedAtom typeReprAtom(cx, &obj->typeDescr().stringRepr());
-    UniqueChars typeReprStr(JS_EncodeStringToUTF8(cx, typeReprAtom));
+    UniqueChars typeReprStr = JS_EncodeStringToUTF8(cx, typeReprAtom);
     if (!typeReprStr)
         return false;
 
@@ -1705,7 +1706,7 @@ ReportPropertyError(JSContext* cx,
     if (!str)
         return false;
 
-    UniqueChars propName(JS_EncodeStringToUTF8(cx, str));
+    UniqueChars propName = JS_EncodeStringToUTF8(cx, str);
     if (!propName)
         return false;
 

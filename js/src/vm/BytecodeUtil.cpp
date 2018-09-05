@@ -32,7 +32,6 @@
 #include "frontend/SourceNotes.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
-#include "js/AutoByteString.h"
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
 #include "util/StringBuffer.h"
@@ -1132,7 +1131,7 @@ js::DumpScript(JSContext* cx, JSScript* scriptArg, FILE* fp)
 }
 
 static bool
-ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
+ToDisassemblySource(JSContext* cx, HandleValue v, UniqueChars* bytes)
 {
     if (v.isString()) {
         Sprinter sprinter(cx);
@@ -1146,7 +1145,7 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
             ReportOutOfMemory(cx);
             return false;
         }
-        bytes->initBytes(std::move(copy));
+        *bytes = std::move(copy);
         return true;
     }
 
@@ -1156,7 +1155,7 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
             ReportOutOfMemory(cx);
             return false;
         }
-        bytes->initBytes(std::move(source));
+        *bytes = std::move(source);
         return true;
     }
 
@@ -1168,14 +1167,16 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
             JSString* str = JS_DecompileFunction(cx, fun);
             if (!str)
                 return false;
-            return bytes->encodeLatin1(cx, str);
+            *bytes = JS_EncodeString(cx, str);
+            return !!*bytes;
         }
 
         if (obj.is<RegExpObject>()) {
             JSString* source = obj.as<RegExpObject>().toString(cx);
             if (!source)
                 return false;
-            return bytes->encodeLatin1(cx, source);
+            *bytes = JS_EncodeString(cx, source);
+            return !!*bytes;
         }
     }
 
@@ -1183,7 +1184,7 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
 }
 
 static bool
-ToDisassemblySource(JSContext* cx, HandleScope scope, JSAutoByteString* bytes)
+ToDisassemblySource(JSContext* cx, HandleScope scope, UniqueChars* bytes)
 {
     UniqueChars source = JS_smprintf("%s {", ScopeKindString(scope->kind()));
     if (!source) {
@@ -1192,11 +1193,11 @@ ToDisassemblySource(JSContext* cx, HandleScope scope, JSAutoByteString* bytes)
     }
 
     for (Rooted<BindingIter> bi(cx, BindingIter(scope)); bi; bi++) {
-        JSAutoByteString nameBytes;
+        UniqueChars nameBytes;
         if (!AtomToPrintableString(cx, bi.name(), &nameBytes))
             return false;
 
-        source = JS_sprintf_append(std::move(source), "%s: ", nameBytes.ptr());
+        source = JS_sprintf_append(std::move(source), "%s: ", nameBytes.get());
         if (!source) {
             ReportOutOfMemory(cx);
             return false;
@@ -1249,7 +1250,7 @@ ToDisassemblySource(JSContext* cx, HandleScope scope, JSAutoByteString* bytes)
         return false;
     }
 
-    bytes->initBytes(std::move(source));
+    *bytes = std::move(source);
     return true;
 }
 
@@ -1421,10 +1422,10 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
       case JOF_SCOPE: {
         RootedScope scope(cx, script->getScope(GET_UINT32_INDEX(pc)));
-        JSAutoByteString bytes;
+        UniqueChars bytes;
         if (!ToDisassemblySource(cx, scope, &bytes))
             return 0;
-        if (!sp->jsprintf(" %s", bytes.ptr()))
+        if (!sp->jsprintf(" %s", bytes.get()))
             return 0;
         break;
       }
@@ -1432,31 +1433,31 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       case JOF_ENVCOORD: {
         RootedValue v(cx,
             StringValue(EnvironmentCoordinateName(cx->caches().envCoordinateNameCache, script, pc)));
-        JSAutoByteString bytes;
+        UniqueChars bytes;
         if (!ToDisassemblySource(cx, v, &bytes))
             return 0;
         EnvironmentCoordinate ec(pc);
-        if (!sp->jsprintf(" %s (hops = %u, slot = %u)", bytes.ptr(), ec.hops(), ec.slot()))
+        if (!sp->jsprintf(" %s (hops = %u, slot = %u)", bytes.get(), ec.hops(), ec.slot()))
             return 0;
         break;
       }
 
       case JOF_ATOM: {
         RootedValue v(cx, StringValue(script->getAtom(GET_UINT32_INDEX(pc))));
-        JSAutoByteString bytes;
+        UniqueChars bytes;
         if (!ToDisassemblySource(cx, v, &bytes))
             return 0;
-        if (!sp->jsprintf(" %s", bytes.ptr()))
+        if (!sp->jsprintf(" %s", bytes.get()))
             return 0;
         break;
       }
 
       case JOF_DOUBLE: {
         RootedValue v(cx, script->getConst(GET_UINT32_INDEX(pc)));
-        JSAutoByteString bytes;
+        UniqueChars bytes;
         if (!ToDisassemblySource(cx, v, &bytes))
             return 0;
-        if (!sp->jsprintf(" %s", bytes.ptr()))
+        if (!sp->jsprintf(" %s", bytes.get()))
             return 0;
         break;
       }
@@ -1471,11 +1472,11 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
         JSObject* obj = script->getObject(GET_UINT32_INDEX(pc));
         {
-            JSAutoByteString bytes;
+            UniqueChars bytes;
             RootedValue v(cx, ObjectValue(*obj));
             if (!ToDisassemblySource(cx, v, &bytes))
                 return 0;
-            if (!sp->jsprintf(" %s", bytes.ptr()))
+            if (!sp->jsprintf(" %s", bytes.get()))
                 return 0;
         }
         break;
@@ -1483,11 +1484,11 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
       case JOF_REGEXP: {
         js::RegExpObject* obj = script->getRegExp(pc);
-        JSAutoByteString bytes;
+        UniqueChars bytes;
         RootedValue v(cx, ObjectValue(*obj));
         if (!ToDisassemblySource(cx, v, &bytes))
             return 0;
-        if (!sp->jsprintf(" %s", bytes.ptr()))
+        if (!sp->jsprintf(" %s", bytes.get()))
             return 0;
         break;
       }
@@ -2317,7 +2318,7 @@ js::DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,
             return nullptr;
     }
 
-    return UniqueChars(JS_EncodeString(cx, fallback));
+    return JS_EncodeString(cx, fallback);
 }
 
 static bool
@@ -2407,7 +2408,7 @@ js::DecompileArgument(JSContext* cx, int formalIndex, HandleValue v)
     if (!fallback)
         return nullptr;
 
-    return UniqueChars(JS_EncodeString(cx, fallback));
+    return JS_EncodeString(cx, fallback);
 }
 
 extern bool

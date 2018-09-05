@@ -35,7 +35,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Policy.h"
 #include "jit/BaselineJIT.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/MemoryMetrics.h"
 #include "js/Proxy.h"
 #include "js/UbiNode.h"
@@ -95,7 +95,7 @@ js::ReportNotObjectArg(JSContext* cx, const char* nth, const char* fun, HandleVa
 {
     MOZ_ASSERT(!v.isObject());
 
-    JSAutoByteString bytes;
+    UniqueChars bytes;
     if (const char* chars = ValueToSourceForError(cx, v, bytes)) {
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT_ARG,
                                    nth, fun, chars);
@@ -107,7 +107,7 @@ js::ReportNotObjectWithName(JSContext* cx, const char* name, HandleValue v)
 {
     MOZ_ASSERT(!v.isObject());
 
-    JSAutoByteString bytes;
+    UniqueChars bytes;
     if (const char* chars = ValueToSourceForError(cx, v, bytes)) {
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT_NAME,
                                    name, chars);
@@ -261,15 +261,15 @@ js::Throw(JSContext* cx, jsid id, unsigned errorNumber, const char* details)
     JSString* idstr = ValueToSource(cx, idVal);
     if (!idstr)
        return false;
-    JSAutoByteString bytes(cx, idstr);
+    UniqueChars bytes = JS_EncodeString(cx, idstr);
     if (!bytes)
         return false;
 
     if (details) {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.ptr(),
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.get(),
                                    details);
     } else {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.ptr());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.get());
     }
 
     return false;

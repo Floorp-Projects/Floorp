@@ -23,7 +23,6 @@
 
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
-#include "js/AutoByteString.h"
 #include "js/CharacterEncoding.h"
 #include "js/UniquePtr.h"
 #include "js/Wrapper.h"
@@ -884,7 +883,7 @@ ErrorReport::init(JSContext* cx, HandleValue exn,
         if (JS_GetProperty(cx, exnObject, filename_str, &val)) {
             RootedString tmp(cx, ToString<CanGC>(cx, val));
             if (tmp)
-                filename.encodeUtf8(cx, tmp);
+                filename = JS_EncodeStringToUTF8(cx, tmp);
             else
                 cx->clearPendingException();
         } else {
@@ -909,7 +908,7 @@ ErrorReport::init(JSContext* cx, HandleValue exn,
 
         reportp = &ownedReport;
         new (reportp) JSErrorReport();
-        ownedReport.filename = filename.ptr();
+        ownedReport.filename = filename.get();
         ownedReport.lineno = lineno;
         ownedReport.exnType = JSEXN_INTERNALERR;
         ownedReport.column = column;
@@ -935,8 +934,10 @@ ErrorReport::init(JSContext* cx, HandleValue exn,
     }
 
     const char* utf8Message = nullptr;
-    if (str)
-        utf8Message = toStringResultBytesStorage.encodeUtf8(cx, str);
+    if (str) {
+        toStringResultBytesStorage = JS_EncodeStringToUTF8(cx, str);
+        utf8Message = toStringResultBytesStorage.get();
+    }
     if (!utf8Message)
         utf8Message = "unknown (can't convert to string)";
 
@@ -1054,7 +1055,7 @@ JS::CreateError(JSContext* cx, JSExnType type, HandleObject stack, HandleString 
 }
 
 const char*
-js::ValueToSourceForError(JSContext* cx, HandleValue val, JSAutoByteString& bytes)
+js::ValueToSourceForError(JSContext* cx, HandleValue val, UniqueChars& bytes)
 {
     if (val.isUndefined())
         return "undefined";
@@ -1093,14 +1094,16 @@ js::ValueToSourceForError(JSContext* cx, HandleValue val, JSAutoByteString& byte
             return "<<error converting value to string>>";
     } else {
         MOZ_ASSERT(val.isBoolean() || val.isSymbol());
-        return bytes.encodeLatin1(cx, str);
+        bytes = JS_EncodeString(cx, str);
+        return bytes.get();
     }
     if (!sb.append(str))
         return "<<error converting value to string>>";
     str = sb.finishString();
     if (!str)
         return "<<error converting value to string>>";
-    return bytes.encodeLatin1(cx, str);
+    bytes = JS_EncodeString(cx, str);
+    return bytes.get();
 }
 
 bool
