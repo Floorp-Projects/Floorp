@@ -921,6 +921,7 @@ DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
 
   if (aAttribute == nsGkAtoms::id) {
     RelocateARIAOwnedIfNeeded(elm);
+    ARIAActiveDescendantIDMaybeMoved(elm);
   }
 
   // ARIA or XUL selection
@@ -2477,4 +2478,47 @@ DocAccessible::DispatchScrollingEvent(uint32_t aEventType)
                                                  scrollRange.height);
 
   nsEventShell::FireEvent(event);
+}
+
+void
+DocAccessible::ARIAActiveDescendantIDMaybeMoved(dom::Element* aElm)
+{
+  nsINode* focusNode = FocusMgr()->FocusedDOMNode();
+  // The focused element must be within this document.
+  if (!focusNode || focusNode->OwnerDoc() != mDocumentNode) {
+    return;
+  }
+
+  dom::Element* focusElm = nullptr;
+  if (focusNode == mDocumentNode) {
+    // The document is focused, so look for aria-activedescendant on the
+    // body/root.
+    focusElm = Elm();
+    if (!focusElm) {
+      return;
+    }
+  } else {
+    MOZ_ASSERT(focusNode->IsElement());
+    focusElm = focusNode->AsElement();
+  }
+
+  // Check if the focus has aria-activedescendant and whether
+  // it refers to the id just set on aElm.
+  nsAutoString id;
+  aElm->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
+  if (!focusElm->AttrValueIs(kNameSpaceID_None,
+      nsGkAtoms::aria_activedescendant, id, eCaseMatters)) {
+    return;
+  }
+
+  // The aria-activedescendant target has probably changed.
+  Accessible* acc = GetAccessibleEvenIfNotInMapOrContainer(focusNode);
+  if (!acc) {
+    return;
+  }
+  
+  // The active descendant might have just been inserted and may not be in the
+  // tree yet. Therefore, schedule this async to ensure the tree is up to date.
+  mNotificationController->ScheduleNotification<DocAccessible, Accessible>
+    (this, &DocAccessible::ARIAActiveDescendantChanged, acc);
 }

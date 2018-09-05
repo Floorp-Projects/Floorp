@@ -35,7 +35,7 @@ DisplayItemClip::SetTo(const nsRect& aRect, const nscoord* aRadii)
   if (aRadii) {
     mRoundedClipRects.SetLength(1);
     mRoundedClipRects[0].mRect = aRect;
-    memcpy(mRoundedClipRects[0].mRadii, aRadii, sizeof(nscoord)*8);
+    memcpy(mRoundedClipRects[0].mRadii, aRadii, sizeof(nscoord) * 8);
   } else {
     mRoundedClipRects.Clear();
   }
@@ -50,7 +50,7 @@ DisplayItemClip::SetTo(const nsRect& aRect,
   mClipRect = aRect;
   mRoundedClipRects.SetLength(1);
   mRoundedClipRects[0].mRect = aRoundedRect;
-  memcpy(mRoundedClipRects[0].mRadii, aRadii, sizeof(nscoord)*8);
+  memcpy(mRoundedClipRects[0].mRadii, aRadii, sizeof(nscoord) * 8);
 }
 
 bool
@@ -90,8 +90,7 @@ DisplayItemClip::IntersectWith(const DisplayItemClip& aOther)
 }
 
 void
-DisplayItemClip::ApplyTo(gfxContext* aContext,
-                         int32_t A2D) const
+DisplayItemClip::ApplyTo(gfxContext* aContext, int32_t A2D) const
 {
   ApplyRectTo(aContext, A2D);
   ApplyRoundedRectClipsTo(aContext, A2D, 0, mRoundedClipRects.Length());
@@ -109,7 +108,8 @@ DisplayItemClip::ApplyRectTo(gfxContext* aContext, int32_t A2D) const
 void
 DisplayItemClip::ApplyRoundedRectClipsTo(gfxContext* aContext,
                                          int32_t A2D,
-                                         uint32_t aBegin, uint32_t aEnd) const
+                                         uint32_t aBegin,
+                                         uint32_t aEnd) const
 {
   DrawTarget& aDrawTarget = *aContext->GetDrawTarget();
 
@@ -123,9 +123,10 @@ DisplayItemClip::ApplyRoundedRectClipsTo(gfxContext* aContext,
 }
 
 void
-DisplayItemClip::FillIntersectionOfRoundedRectClips(gfxContext* aContext,
-                                                    const Color& aColor,
-                                                    int32_t aAppUnitsPerDevPixel) const
+DisplayItemClip::FillIntersectionOfRoundedRectClips(
+  gfxContext* aContext,
+  const Color& aColor,
+  int32_t aAppUnitsPerDevPixel) const
 {
   DrawTarget& aDrawTarget = *aContext->GetDrawTarget();
 
@@ -138,9 +139,8 @@ DisplayItemClip::FillIntersectionOfRoundedRectClips(gfxContext* aContext,
   ApplyRoundedRectClipsTo(aContext, aAppUnitsPerDevPixel, 0, end - 1);
 
   // Now fill the rect at |aEnd - 1|:
-  RefPtr<Path> roundedRect = MakeRoundedRectPath(aDrawTarget,
-                                                 aAppUnitsPerDevPixel,
-                                                 mRoundedClipRects[end - 1]);
+  RefPtr<Path> roundedRect = MakeRoundedRectPath(
+    aDrawTarget, aAppUnitsPerDevPixel, mRoundedClipRects[end - 1]);
   ColorPattern color(ToDeviceColor(aColor));
   aDrawTarget.Fill(roundedRect, color);
 
@@ -153,7 +153,7 @@ DisplayItemClip::FillIntersectionOfRoundedRectClips(gfxContext* aContext,
 already_AddRefed<Path>
 DisplayItemClip::MakeRoundedRectPath(DrawTarget& aDrawTarget,
                                      int32_t A2D,
-                                     const RoundedRect &aRoundRect) const
+                                     const RoundedRect& aRoundRect) const
 {
   RectCornerRadii pixelRadii;
   nsCSSRendering::ComputePixelRadii(aRoundRect.mRadii, A2D, &pixelRadii);
@@ -170,10 +170,10 @@ DisplayItemClip::ApproximateIntersectInward(const nsRect& aRect) const
   if (mHaveClipRect) {
     r.IntersectRect(r, mClipRect);
   }
-  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length();
-       i < iEnd; ++i) {
-    const RoundedRect &rr = mRoundedClipRects[i];
-    nsRegion rgn = nsLayoutUtils::RoundedRectIntersectRect(rr.mRect, rr.mRadii, r);
+  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length(); i < iEnd; ++i) {
+    const RoundedRect& rr = mRoundedClipRects[i];
+    nsRegion rgn =
+      nsLayoutUtils::RoundedRectIntersectRect(rr.mRect, rr.mRadii, r);
     r = rgn.GetLargestRectangle();
   }
   return r;
@@ -182,8 +182,12 @@ DisplayItemClip::ApproximateIntersectInward(const nsRect& aRect) const
 // Test if (aXPoint, aYPoint) is in the ellipse with center (aXCenter, aYCenter)
 // and radii aXRadius, aYRadius.
 static bool
-IsInsideEllipse(nscoord aXRadius, nscoord aXCenter, nscoord aXPoint,
-                nscoord aYRadius, nscoord aYCenter, nscoord aYPoint)
+IsInsideEllipse(nscoord aXRadius,
+                nscoord aXCenter,
+                nscoord aXPoint,
+                nscoord aYRadius,
+                nscoord aYCenter,
+                nscoord aYPoint)
 {
   float scaledX = float(aXPoint - aXCenter) / float(aXRadius);
   float scaledY = float(aYPoint - aYCenter) / float(aYRadius);
@@ -198,9 +202,8 @@ DisplayItemClip::IsRectClippedByRoundedCorner(const nsRect& aRect) const
 
   nsRect rect;
   rect.IntersectRect(aRect, NonRoundedIntersection());
-  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length();
-       i < iEnd; ++i) {
-    const RoundedRect &rr = mRoundedClipRects[i];
+  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length(); i < iEnd; ++i) {
+    const RoundedRect& rr = mRoundedClipRects[i];
     // top left
     if (rect.x < rr.mRect.x + rr.mRadii[eCornerTopLeftX] &&
         rect.y < rr.mRect.y + rr.mRadii[eCornerTopLeftY]) {
@@ -258,8 +261,7 @@ DisplayItemClip::NonRoundedIntersection() const
 {
   NS_ASSERTION(mHaveClipRect, "Must have a clip rect!");
   nsRect result = mClipRect;
-  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length();
-       i < iEnd; ++i) {
+  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length(); i < iEnd; ++i) {
     result.IntersectRect(result, mRoundedClipRects[i].mRect);
   }
   return result;
@@ -271,10 +273,10 @@ DisplayItemClip::IsRectAffectedByClip(const nsRect& aRect) const
   if (mHaveClipRect && !mClipRect.Contains(aRect)) {
     return true;
   }
-  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length();
-       i < iEnd; ++i) {
-    const RoundedRect &rr = mRoundedClipRects[i];
-    nsRegion rgn = nsLayoutUtils::RoundedRectIntersectRect(rr.mRect, rr.mRadii, aRect);
+  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length(); i < iEnd; ++i) {
+    const RoundedRect& rr = mRoundedClipRects[i];
+    nsRegion rgn =
+      nsLayoutUtils::RoundedRectIntersectRect(rr.mRect, rr.mRadii, aRect);
     if (!rgn.Contains(aRect)) {
       return true;
     }
@@ -289,7 +291,8 @@ DisplayItemClip::IsRectAffectedByClip(const nsIntRect& aRect,
                                       int32_t A2D) const
 {
   if (mHaveClipRect) {
-    nsIntRect pixelClipRect = mClipRect.ScaleToNearestPixels(aXScale, aYScale, A2D);
+    nsIntRect pixelClipRect =
+      mClipRect.ScaleToNearestPixels(aXScale, aYScale, A2D);
     if (!pixelClipRect.Contains(aRect)) {
       return true;
     }
@@ -297,18 +300,18 @@ DisplayItemClip::IsRectAffectedByClip(const nsIntRect& aRect,
 
   // Rounded rect clipping only snaps to user-space pixels, not device space.
   nsIntRect unscaled = aRect;
-  unscaled.Scale(1/aXScale, 1/aYScale);
+  unscaled.Scale(1 / aXScale, 1 / aYScale);
 
-  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length();
-       i < iEnd; ++i) {
-    const RoundedRect &rr = mRoundedClipRects[i];
+  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length(); i < iEnd; ++i) {
+    const RoundedRect& rr = mRoundedClipRects[i];
 
     nsIntRect pixelRect = rr.mRect.ToNearestPixels(A2D);
 
     RectCornerRadii pixelRadii;
     nsCSSRendering::ComputePixelRadii(rr.mRadii, A2D, &pixelRadii);
 
-    nsIntRegion rgn = nsLayoutUtils::RoundedRectIntersectIntRect(pixelRect, pixelRadii, unscaled);
+    nsIntRegion rgn = nsLayoutUtils::RoundedRectIntersectIntRect(
+      pixelRect, pixelRadii, unscaled);
     if (!rgn.Contains(unscaled)) {
       return true;
     }
@@ -324,8 +327,7 @@ DisplayItemClip::ApplyNonRoundedIntersection(const nsRect& aRect) const
   }
 
   nsRect result = aRect.Intersect(mClipRect);
-  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length();
-       i < iEnd; ++i) {
+  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length(); i < iEnd; ++i) {
     result = result.Intersect(mRoundedClipRects[i].mRect);
   }
   return result;
@@ -343,7 +345,10 @@ DisplayItemClip::RemoveRoundedCorners()
 
 // Computes the difference between aR1 and aR2, limited to aBounds.
 static void
-AccumulateRectDifference(const nsRect& aR1, const nsRect& aR2, const nsRect& aBounds, nsRegion* aOut)
+AccumulateRectDifference(const nsRect& aR1,
+                         const nsRect& aR2,
+                         const nsRect& aBounds,
+                         nsRegion* aOut)
 {
   if (aR1.IsEqualInterior(aR2))
     return;
@@ -363,9 +368,10 @@ AccumulateRoundedRectDifference(const DisplayItemClip::RoundedRect& aR1,
   const nsRect& rect1 = aR1.mRect;
   const nsRect& rect2 = aR2.mRect;
 
-  // If the two rectangles are totally disjoint, just add them both - otherwise we'd
-  // end up adding one big enclosing rect
-  if (!rect1.Intersects(rect2) || memcmp(aR1.mRadii, aR2.mRadii, sizeof(aR1.mRadii))) {
+  // If the two rectangles are totally disjoint, just add them both - otherwise
+  // we'd end up adding one big enclosing rect
+  if (!rect1.Intersects(rect2) ||
+      memcmp(aR1.mRadii, aR2.mRadii, sizeof(aR1.mRadii))) {
     aOut->Or(*aOut, rect1.Intersect(aBounds));
     aOut->Or(*aOut, rect2.Intersect(aOtherBounds));
     return;
@@ -398,49 +404,62 @@ AccumulateRoundedRectDifference(const DisplayItemClip::RoundedRect& aR1,
   // The logic below just implements this idea, but generalized to both the
   // X and Y dimensions. The "(...)Adjusted(...)" values represent the lopped
   // off sides.
-  nscoord highestAdjustedBottom =
-    std::min(rect1.YMost() - aR1.mRadii[eCornerBottomLeftY],
-             std::min(rect1.YMost() - aR1.mRadii[eCornerBottomRightY],
-                      std::min(rect2.YMost() - aR2.mRadii[eCornerBottomLeftY],
-                               rect2.YMost() - aR2.mRadii[eCornerBottomRightY])));
+  nscoord highestAdjustedBottom = std::min(
+    rect1.YMost() - aR1.mRadii[eCornerBottomLeftY],
+    std::min(rect1.YMost() - aR1.mRadii[eCornerBottomRightY],
+             std::min(rect2.YMost() - aR2.mRadii[eCornerBottomLeftY],
+                      rect2.YMost() - aR2.mRadii[eCornerBottomRightY])));
   nscoord lowestAdjustedTop =
     std::max(rect1.Y() + aR1.mRadii[eCornerTopLeftY],
              std::max(rect1.Y() + aR1.mRadii[eCornerTopRightY],
                       std::max(rect2.Y() + aR2.mRadii[eCornerTopLeftY],
                                rect2.Y() + aR2.mRadii[eCornerTopRightY])));
 
-  nscoord minAdjustedRight =
-    std::min(rect1.XMost() - aR1.mRadii[eCornerTopRightX],
-             std::min(rect1.XMost() - aR1.mRadii[eCornerBottomRightX],
-                      std::min(rect2.XMost() - aR2.mRadii[eCornerTopRightX],
-                               rect2.XMost() - aR2.mRadii[eCornerBottomRightX])));
+  nscoord minAdjustedRight = std::min(
+    rect1.XMost() - aR1.mRadii[eCornerTopRightX],
+    std::min(rect1.XMost() - aR1.mRadii[eCornerBottomRightX],
+             std::min(rect2.XMost() - aR2.mRadii[eCornerTopRightX],
+                      rect2.XMost() - aR2.mRadii[eCornerBottomRightX])));
   nscoord maxAdjustedLeft =
     std::max(rect1.X() + aR1.mRadii[eCornerTopLeftX],
              std::max(rect1.X() + aR1.mRadii[eCornerBottomLeftX],
                       std::max(rect2.X() + aR2.mRadii[eCornerTopLeftX],
                                rect2.X() + aR2.mRadii[eCornerBottomLeftX])));
 
-  // We only want to add an invalidation rect if the bounds have changed. If we always
-  // added all of the 4 rects below, we would always be invalidating a border around the
-  // rects, even in cases where we just translated along the X or Y axis.
+  // We only want to add an invalidation rect if the bounds have changed. If we
+  // always added all of the 4 rects below, we would always be invalidating a
+  // border around the rects, even in cases where we just translated along the X
+  // or Y axis.
   nsRegion r;
   // First, or with the Y delta rects, wide along the X axis
   if (rect1.Y() != rect2.Y()) {
-    r.Or(r, nsRect(minLeft, highestTop,
-                   maxRight - minLeft, lowestAdjustedTop - highestTop));
+    r.Or(r,
+         nsRect(minLeft,
+                highestTop,
+                maxRight - minLeft,
+                lowestAdjustedTop - highestTop));
   }
   if (rect1.YMost() != rect2.YMost()) {
-    r.Or(r, nsRect(minLeft, highestAdjustedBottom,
-                   maxRight - minLeft, lowestBottom - highestAdjustedBottom));
+    r.Or(r,
+         nsRect(minLeft,
+                highestAdjustedBottom,
+                maxRight - minLeft,
+                lowestBottom - highestAdjustedBottom));
   }
   // Then, or with the X delta rects, narrow along the Y axis
   if (rect1.X() != rect2.X()) {
-    r.Or(r, nsRect(minLeft, lowestAdjustedTop,
-                   maxAdjustedLeft - minLeft, highestAdjustedBottom - lowestAdjustedTop));
+    r.Or(r,
+         nsRect(minLeft,
+                lowestAdjustedTop,
+                maxAdjustedLeft - minLeft,
+                highestAdjustedBottom - lowestAdjustedTop));
   }
   if (rect1.XMost() != rect2.XMost()) {
-    r.Or(r, nsRect(minAdjustedRight, lowestAdjustedTop,
-                   maxRight - minAdjustedRight, highestAdjustedBottom - lowestAdjustedTop));
+    r.Or(r,
+         nsRect(minAdjustedRight,
+                lowestAdjustedTop,
+                maxRight - minAdjustedRight,
+                highestAdjustedBottom - lowestAdjustedTop));
   }
 
   r.And(r, aBounds.Union(aOtherBounds));
@@ -461,7 +480,8 @@ DisplayItemClip::AddOffsetAndComputeDifference(const nsPoint& aOffset,
     return;
   }
   if (mHaveClipRect) {
-    AccumulateRectDifference(mClipRect + aOffset, aOther.mClipRect,
+    AccumulateRectDifference(mClipRect + aOffset,
+                             aOther.mClipRect,
                              aBounds.Union(aOtherBounds),
                              aDifference);
   }
@@ -479,7 +499,8 @@ DisplayItemClip::AddOffsetAndComputeDifference(const nsPoint& aOffset,
 void
 DisplayItemClip::AppendRoundedRects(nsTArray<RoundedRect>* aArray) const
 {
-  aArray->AppendElements(mRoundedClipRects.Elements(), mRoundedClipRects.Length());
+  aArray->AppendElements(mRoundedClipRects.Elements(),
+                         mRoundedClipRects.Length());
 }
 
 bool
@@ -535,34 +556,55 @@ DisplayItemClip::ToString() const
 {
   nsAutoCString str;
   if (mHaveClipRect) {
-    str.AppendPrintf("%d,%d,%d,%d", mClipRect.x, mClipRect.y,
-                     mClipRect.width, mClipRect.height);
+    str.AppendPrintf("%d,%d,%d,%d",
+                     mClipRect.x,
+                     mClipRect.y,
+                     mClipRect.width,
+                     mClipRect.height);
     for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {
       const RoundedRect& r = mRoundedClipRects[i];
       str.AppendPrintf(" [%d,%d,%d,%d corners %d,%d,%d,%d,%d,%d,%d,%d]",
-                       r.mRect.x, r.mRect.y, r.mRect.width, r.mRect.height,
-                       r.mRadii[0], r.mRadii[1], r.mRadii[2], r.mRadii[3],
-                       r.mRadii[4], r.mRadii[5], r.mRadii[6], r.mRadii[7]);
+                       r.mRect.x,
+                       r.mRect.y,
+                       r.mRect.width,
+                       r.mRect.height,
+                       r.mRadii[0],
+                       r.mRadii[1],
+                       r.mRadii[2],
+                       r.mRadii[3],
+                       r.mRadii[4],
+                       r.mRadii[5],
+                       r.mRadii[6],
+                       r.mRadii[7]);
     }
   }
   return str;
 }
 
 void
-DisplayItemClip::ToComplexClipRegions(int32_t aAppUnitsPerDevPixel,
-                                      const layers::StackingContextHelper& aSc,
-                                      nsTArray<wr::ComplexClipRegion>& aOutArray) const
+DisplayItemClip::ToComplexClipRegions(
+  int32_t aAppUnitsPerDevPixel,
+  const layers::StackingContextHelper& aSc,
+  nsTArray<wr::ComplexClipRegion>& aOutArray) const
 {
   for (uint32_t i = 0; i < mRoundedClipRects.Length(); i++) {
     wr::ComplexClipRegion* region = aOutArray.AppendElement();
     region->rect = wr::ToRoundedLayoutRect(LayoutDeviceRect::FromAppUnits(
-        mRoundedClipRects[i].mRect, aAppUnitsPerDevPixel));
+      mRoundedClipRects[i].mRect, aAppUnitsPerDevPixel));
     const nscoord* radii = mRoundedClipRects[i].mRadii;
     region->radii = wr::ToBorderRadius(
-        LayoutDeviceSize::FromAppUnits(nsSize(radii[eCornerTopLeftX], radii[eCornerTopLeftY]), aAppUnitsPerDevPixel),
-        LayoutDeviceSize::FromAppUnits(nsSize(radii[eCornerTopRightX], radii[eCornerTopRightY]), aAppUnitsPerDevPixel),
-        LayoutDeviceSize::FromAppUnits(nsSize(radii[eCornerBottomLeftX], radii[eCornerBottomLeftY]), aAppUnitsPerDevPixel),
-        LayoutDeviceSize::FromAppUnits(nsSize(radii[eCornerBottomRightX], radii[eCornerBottomRightY]), aAppUnitsPerDevPixel));
+      LayoutDeviceSize::FromAppUnits(
+        nsSize(radii[eCornerTopLeftX], radii[eCornerTopLeftY]),
+        aAppUnitsPerDevPixel),
+      LayoutDeviceSize::FromAppUnits(
+        nsSize(radii[eCornerTopRightX], radii[eCornerTopRightY]),
+        aAppUnitsPerDevPixel),
+      LayoutDeviceSize::FromAppUnits(
+        nsSize(radii[eCornerBottomLeftX], radii[eCornerBottomLeftY]),
+        aAppUnitsPerDevPixel),
+      LayoutDeviceSize::FromAppUnits(
+        nsSize(radii[eCornerBottomRightX], radii[eCornerBottomRightY]),
+        aAppUnitsPerDevPixel));
     region->mode = wr::ClipMode::Clip;
   }
 }

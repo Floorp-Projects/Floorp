@@ -147,3 +147,41 @@ add_task(async function test_support_sidebar_colors() {
     }, false);
   }
 });
+
+add_task(async function test_support_sidebar_border_color() {
+  const LIGHT_SALMON = "#ffa07a";
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      theme: {
+        colors: {
+          sidebar_border: LIGHT_SALMON,
+        },
+      },
+    },
+  });
+
+  await extension.startup();
+
+  const sidebarHeader = document.getElementById("sidebar-header");
+  const sidebarHeaderCS = window.getComputedStyle(sidebarHeader);
+
+  is(sidebarHeaderCS.borderBottomColor, hexToCSS(LIGHT_SALMON),
+     "Sidebar header border should be colored properly");
+
+  if (AppConstants.platform !== "linux") {
+    const sidebarSplitter = document.getElementById("sidebar-splitter");
+    const sidebarSplitterCS = window.getComputedStyle(sidebarSplitter);
+
+    is(sidebarSplitterCS.borderInlineEndColor, hexToCSS(LIGHT_SALMON),
+       "Sidebar splitter should be colored properly");
+
+    SidebarUI.reversePosition();
+
+    is(sidebarSplitterCS.borderInlineStartColor, hexToCSS(LIGHT_SALMON),
+       "Sidebar splitter should be colored properly after switching sides");
+
+    SidebarUI.reversePosition();
+  }
+
+  await extension.unload();
+});
