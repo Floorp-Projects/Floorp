@@ -523,6 +523,14 @@
   background-color: hsla(0,0%,0%,.15);
 }
 
+:root[lwt-toolbar-field-brighttext] #urlbar-zoom-button:hover {
+  background-color: rgba(255,255,255,.2);
+}
+
+:root[lwt-toolbar-field-brighttext] #urlbar-zoom-button:hover:active {
+  background-color: rgba(255,255,255,.3);
+}
+
 #urlbar-zoom-button > .toolbarbutton-text {
   display: -moz-box;
 }
