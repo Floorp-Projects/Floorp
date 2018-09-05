@@ -9,7 +9,6 @@
 
 #include "nsIBackgroundChannelRegistrar.h"
 #include "nsRefPtrHashtable.h"
-#include "mozilla/AlreadyAddRefed.h"
 
 namespace mozilla {
 namespace net {
@@ -28,11 +27,6 @@ public:
   NS_DECL_NSIBACKGROUNDCHANNELREGISTRAR
 
   explicit BackgroundChannelRegistrar();
-
-  // Singleton accessor
-  static already_AddRefed<nsIBackgroundChannelRegistrar> GetOrCreate();
-
-  static void Shutdown();
 
 private:
   virtual ~BackgroundChannelRegistrar();
