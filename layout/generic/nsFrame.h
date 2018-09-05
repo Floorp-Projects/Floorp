@@ -854,6 +854,8 @@ public:
   dr_cookie.Change();
 #define DISPLAY_LAYOUT(dr_frame) \
   DR_layout_cookie dr_cookie(dr_frame);
+// FIXME DISPLAY_*_WIDTH should go through a renaming refactoring to reflect the
+// fact that it's displaying a minimum inline size, not a minimum width.
 #define DISPLAY_MIN_WIDTH(dr_frame, dr_result) \
   DR_intrinsic_width_cookie dr_cookie(dr_frame, "Min", dr_result)
 #define DISPLAY_PREF_WIDTH(dr_frame, dr_result) \
