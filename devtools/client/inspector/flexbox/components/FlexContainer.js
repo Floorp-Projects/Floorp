@@ -4,10 +4,9 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createRef, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const { translateNodeFrontToGrip } = require("devtools/client/inspector/shared/utils");
 
 // Reps
@@ -33,6 +32,9 @@ class FlexContainer extends PureComponent {
   constructor(props) {
     super(props);
 
+    this.colorValueEl = createRef();
+    this.swatchEl = createRef();
+
     this.onFlexboxCheckboxClick = this.onFlexboxCheckboxClick.bind(this);
     this.onFlexboxInspectIconClick = this.onFlexboxInspectIconClick.bind(this);
     this.setFlexboxColor = this.setFlexboxColor.bind(this);
@@ -45,11 +47,10 @@ class FlexContainer extends PureComponent {
       onSetFlexboxOverlayColor,
     } = this.props;
 
-    const swatchEl = findDOMNode(this).querySelector(".flexbox-color-swatch");
     const tooltip = getSwatchColorPickerTooltip();
 
     let previousColor;
-    tooltip.addSwatch(swatchEl, {
+    tooltip.addSwatch(this.swatchEl.current, {
       onCommit: this.setFlexboxColor,
       onPreview: this.setFlexboxColor,
       onRevert: () => {
@@ -62,13 +63,12 @@ class FlexContainer extends PureComponent {
   }
 
   componentWillUnMount() {
-    const swatchEl = findDOMNode(this).querySelector(".flexbox-color-swatch");
     const tooltip = this.props.getSwatchColorPickerTooltip();
-    tooltip.removeSwatch(swatchEl);
+    tooltip.removeSwatch(this.swatchEl.current);
   }
 
   setFlexboxColor() {
-    const color = findDOMNode(this).querySelector(".flexbox-color-value").textContent;
+    const color = this.colorValueEl.current.textContent;
     this.props.onSetFlexboxOverlayColor(color);
   }
 
@@ -132,7 +132,8 @@ class FlexContainer extends PureComponent {
         ),
         dom.div(
           {
-            className: "flexbox-color-swatch",
+            className: "layout-color-swatch",
+            ref: this.swatchEl,
             style: {
               backgroundColor: color,
             },
@@ -143,7 +144,13 @@ class FlexContainer extends PureComponent {
         // the selected color. This is why we use a span in display: none for now.
         // Ideally we should modify the SwatchColorPickerTooltip to bypass this
         // requirement. See https://bugzilla.mozilla.org/show_bug.cgi?id=1341578
-        dom.span({ className: "flexbox-color-value" }, color)
+        dom.span(
+          {
+            className: "layout-color-value",
+            ref: this.colorValueEl,
+          },
+          color
+        )
       )
     );
   }
