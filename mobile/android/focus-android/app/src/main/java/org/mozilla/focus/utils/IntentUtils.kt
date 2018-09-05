@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.utils
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -46,7 +47,8 @@ object IntentUtils {
             0 -> handleUnsupportedLink(context, webView, intent)
             1 -> {
                 val info = matchingActivities[0]
-                val externalAppTitle = info.loadLabel(packageManager)
+                val externalAppTitle = info?.loadLabel(packageManager) ?: "(null)"
+
                 showConfirmationDialog(
                         context,
                         intent,
@@ -79,7 +81,8 @@ object IntentUtils {
 
             val packageManager = context.packageManager
             val info = packageManager.resolveActivity(marketIntent, 0)
-            val marketTitle = info.loadLabel(packageManager)
+            val marketTitle = info?.loadLabel(packageManager) ?: "(null)"
+
             showConfirmationDialog(context, marketIntent,
                     context.getString(R.string.external_app_prompt_no_app_title),
                     R.string.external_app_prompt_no_app, marketTitle)
@@ -109,7 +112,13 @@ object IntentUtils {
         builder.apply {
             setTitle(title)
             setMessage(context.resources.getString(messageResource, ourAppName, param))
-            setPositiveButton(R.string.action_ok) { _, _ -> context.startActivity(targetIntent) }
+            setPositiveButton(R.string.action_ok) { _, _ ->
+                try {
+                    context.startActivity(targetIntent)
+                } catch (_: ActivityNotFoundException) {
+                    return@setPositiveButton
+                }
+            }
             setNegativeButton(R.string.action_cancel) { dialog, _ -> dialog.dismiss() }
             show()
         }
