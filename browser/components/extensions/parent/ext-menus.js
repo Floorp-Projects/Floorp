@@ -274,9 +274,7 @@ var gMenuBuilder = {
       element.setAttribute("disabled", "true");
     }
 
-    let button;
-
-    element.addEventListener("command", event => {
+    element.addEventListener("command", event => { // eslint-disable-line mozilla/balanced-listeners
       if (event.target !== event.currentTarget) {
         return;
       }
@@ -306,8 +304,6 @@ var gMenuBuilder = {
         info.modifiers.push("MacCtrl");
       }
 
-      info.button = button;
-
       // Allow menus to open various actions supported in webext prior
       // to notifying onclicked.
       let actionFor = {
@@ -321,20 +317,6 @@ var gMenuBuilder = {
       }
 
       item.extension.emit("webext-menu-menuitem-click", info, contextData.tab);
-    }, {once: true});
-
-    element.addEventListener("click", event => { // eslint-disable-line mozilla/balanced-listeners
-      if (event.target !== event.currentTarget) {
-        return;
-      }
-
-      button = event.button;
-      if (event.button) {
-        element.doCommand();
-        if (event.button !== 0 && event.button !== 2) {
-          contextData.menu.hidePopup();
-        }
-      }
     });
 
     // Don't publish the ID of the root because the root element is
