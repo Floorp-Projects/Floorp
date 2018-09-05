@@ -50,7 +50,7 @@ js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
 
-    UniqueChars locale = JS_EncodeString(cx, args[0].toString());
+    UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
     if (!locale)
         return false;
 
@@ -370,8 +370,7 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 3);
 
     // 1. Assert: locale is a string.
-    RootedString str(cx, args[0].toString());
-    UniqueChars locale = JS_EncodeStringToUTF8(cx, str);
+    UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
     if (!locale)
         return false;
 
@@ -461,7 +460,7 @@ js::intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
 
-    UniqueChars locale = JS_EncodeString(cx, args[0].toString());
+    UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
     if (!locale)
         return false;
 
