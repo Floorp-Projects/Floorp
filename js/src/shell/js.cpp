@@ -1614,10 +1614,9 @@ ParseCompileOptions(JSContext* cx, CompileOptions& options, HandleObject opts,
         if (!s)
             return false;
         fileNameBytes = JS_EncodeString(cx, s);
-        char* fileName = fileNameBytes.get();
-        if (!fileName)
+        if (!fileNameBytes)
             return false;
-        options.setFile(fileName);
+        options.setFile(fileNameBytes.get());
     }
 
     if (!JS_GetProperty(cx, opts, "element", &v))
@@ -4760,11 +4759,10 @@ BinParse(JSContext* cx, unsigned argc, Value* vp)
             } else if (StringEqualsAscii(linearFormat, "simple")) {
                 useMultipart = false;
             } else {
-                UniqueChars printable;
+                UniqueChars printable = ValueToPrintableUTF8(cx, optionFormat);
                 JS_ReportErrorUTF8(cx,
                                    "Unknown value for option `format`, expected 'multipart' or "
-                                   "'simple', got %s",
-                                   ValueToPrintableUTF8(cx, optionFormat, &printable));
+                                   "'simple', got %s", printable.get());
                 return false;
             }
         } else {

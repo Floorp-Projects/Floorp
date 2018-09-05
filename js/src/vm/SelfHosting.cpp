@@ -303,10 +303,7 @@ ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
         } else if (val.isString()) {
             errorArgs[i - 1] = JS_EncodeString(cx, val.toString());
         } else {
-            UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, nullptr);
-            if (!bytes)
-                return;
-            errorArgs[i - 1] = std::move(bytes);
+            errorArgs[i - 1] = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, nullptr);
         }
         if (!errorArgs[i - 1])
             return;

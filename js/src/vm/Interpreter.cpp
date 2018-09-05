@@ -5339,8 +5339,7 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber, HandleId id)
 {
     MOZ_ASSERT(errorNumber == JSMSG_UNINITIALIZED_LEXICAL ||
                errorNumber == JSMSG_BAD_CONST_ASSIGN);
-    UniqueChars printable;
-    if (ValueToPrintableLatin1(cx, IdToValue(id), &printable))
+    if (UniqueChars printable = ValueToPrintableLatin1(cx, IdToValue(id)))
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, printable.get());
 }
 
