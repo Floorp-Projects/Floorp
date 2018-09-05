@@ -525,34 +525,10 @@ this.tabs = class extends ExtensionAPI {
             let url;
             let principal = context.principal;
 
-
-            if (createProperties.cookieStoreId && !extension.hasPermission("cookies")) {
-              return Promise.reject({message: `No permission for cookieStoreId: ${createProperties.cookieStoreId}`});
-            }
-
             let options = {};
             if (createProperties.cookieStoreId) {
-              if (!global.isValidCookieStoreId(createProperties.cookieStoreId)) {
-                return Promise.reject({message: `Illegal cookieStoreId: ${createProperties.cookieStoreId}`});
-              }
-
-              let privateWindow = PrivateBrowsingUtils.isBrowserPrivate(window.gBrowser);
-              if (privateWindow && !global.isPrivateCookieStoreId(createProperties.cookieStoreId)) {
-                return Promise.reject({message: `Illegal to set non-private cookieStoreId in a private window`});
-              }
-
-              if (!privateWindow && global.isPrivateCookieStoreId(createProperties.cookieStoreId)) {
-                return Promise.reject({message: `Illegal to set private cookieStoreId in a non-private window`});
-              }
-
-              if (global.isContainerCookieStoreId(createProperties.cookieStoreId)) {
-                let containerId = global.getContainerForCookieStoreId(createProperties.cookieStoreId);
-                if (!containerId) {
-                  return Promise.reject({message: `No cookie store exists with ID ${createProperties.cookieStoreId}`});
-                }
-
-                options.userContextId = containerId;
-              }
+              // May throw if validation fails.
+              options.userContextId = getUserContextIdForCookieStoreId(extension, createProperties.cookieStoreId, PrivateBrowsingUtils.isBrowserPrivate(window.gBrowser));
             }
 
             if (createProperties.url !== null) {
