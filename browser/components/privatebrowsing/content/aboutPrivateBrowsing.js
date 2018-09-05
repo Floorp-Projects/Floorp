@@ -24,11 +24,11 @@ function updateTPInfo() {
   let tpDescription = document.getElementById("tpDescription");
   let cbDescription = document.getElementById("cbDescription");
 
-  tpTitle.classList.toggle("hide", contentBlockingUIEnabled);
-  tpDescription.classList.toggle("hide", contentBlockingUIEnabled);
+  tpTitle.toggleAttribute("hidden", contentBlockingUIEnabled);
+  tpDescription.toggleAttribute("hidden", contentBlockingUIEnabled);
 
-  cbTitle.classList.toggle("hide", !contentBlockingUIEnabled);
-  cbDescription.classList.toggle("hide", !contentBlockingUIEnabled);
+  cbTitle.toggleAttribute("hidden", !contentBlockingUIEnabled);
+  cbDescription.toggleAttribute("hidden", !contentBlockingUIEnabled);
 
   let globalTrackingEnabled = RPMGetBoolPref(TP_ENABLED_PREF);
   let trackingEnabled = globalTrackingEnabled || RPMGetBoolPref(TP_PB_ENABLED_PREF);
@@ -37,13 +37,13 @@ function updateTPInfo() {
     let contentBlockingEnabled = RPMGetBoolPref(CB_ENABLED_PREF);
     trackingEnabled = trackingEnabled && contentBlockingEnabled;
   } else {
-    title.classList.toggle("hide", trackingEnabled);
-    titleTracking.classList.toggle("hide", !trackingEnabled);
+    title.toggleAttribute("hidden", trackingEnabled);
+    titleTracking.toggleAttribute("hidden", !trackingEnabled);
   }
 
   // if tracking protection is enabled globally we don't even give the user
   // a choice here by hiding the toggle completely.
-  tpButton.classList.toggle("hide", globalTrackingEnabled);
+  tpButton.toggleAttribute("hidden", globalTrackingEnabled);
   tpToggle.checked = trackingEnabled;
 
   tpSubHeader.classList.toggle("tp-off", !trackingEnabled);
