@@ -3357,8 +3357,7 @@ js::CheckVarNameConflict(JSContext* cx, Handle<LexicalEnvironmentObject*> lexica
 static void
 ReportCannotDeclareGlobalBinding(JSContext* cx, HandlePropertyName name, const char* reason)
 {
-    UniqueChars printable;
-    if (AtomToPrintableString(cx, name, &printable)) {
+    if (UniqueChars printable = AtomToPrintableString(cx, name)) {
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
                                    JSMSG_CANT_DECLARE_GLOBAL_BINDING,
                                    printable.get(), reason);
