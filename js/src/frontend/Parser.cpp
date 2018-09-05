@@ -170,8 +170,8 @@ ParseContext::Scope::dump(ParseContext* pc)
 
     fprintf(stdout, "\n  decls:\n");
     for (DeclaredNameMap::Range r = declared_->all(); !r.empty(); r.popFront()) {
-        UniqueChars bytes;
-        if (!AtomToPrintableString(cx, r.front().key(), &bytes))
+        UniqueChars bytes = AtomToPrintableString(cx, r.front().key());
+        if (!bytes)
             return;
         DeclaredNameInfo& info = r.front().value().wrapped;
         fprintf(stdout, "    %s %s%s\n",
@@ -1226,8 +1226,8 @@ GeneralParser<ParseHandler, CharT>::reportRedeclaration(HandlePropertyName name,
                                                         DeclarationKind prevKind,
                                                         TokenPos pos, uint32_t prevPos)
 {
-    UniqueChars bytes;
-    if (!AtomToPrintableString(context, name, &bytes))
+    UniqueChars bytes = AtomToPrintableString(context, name);
+    if (!bytes)
         return;
 
     if (prevPos == DeclaredNameInfo::npos) {
@@ -1290,8 +1290,8 @@ GeneralParser<ParseHandler, CharT>::notePositionalFormalParameter(Node fn, Handl
         // In such cases, report will queue up the potential error and return
         // 'true'.
         if (pc->sc()->needStrictChecks()) {
-            UniqueChars bytes;
-            if (!AtomToPrintableString(context, name, &bytes))
+            UniqueChars bytes = AtomToPrintableString(context, name);
+            if (!bytes)
                 return false;
             if (!strictModeError(JSMSG_DUPLICATE_FORMAL, bytes.get()))
                 return false;
@@ -2425,8 +2425,8 @@ Parser<FullParseHandler, CharT>::moduleBody(ModuleSharedContext* modulesc)
 
         DeclaredNamePtr p = modulepc.varScope().lookupDeclaredName(name);
         if (!p) {
-            UniqueChars str;
-            if (!AtomToPrintableString(context, name, &str))
+            UniqueChars str = AtomToPrintableString(context, name);
+            if (!str)
                 return null();
 
             errorAt(TokenStream::NoOffset, JSMSG_MISSING_EXPORT, str.get());
@@ -5463,8 +5463,8 @@ Parser<FullParseHandler, CharT>::checkExportedName(JSAtom* exportName)
     if (!pc->sc()->asModuleContext()->builder.hasExportedName(exportName))
         return true;
 
-    UniqueChars str;
-    if (!AtomToPrintableString(context, exportName, &str))
+    UniqueChars str = AtomToPrintableString(context, exportName);
+    if (!str)
         return false;
 
     error(JSMSG_DUPLICATE_EXPORT_NAME, str.get());

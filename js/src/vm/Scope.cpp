@@ -1519,8 +1519,8 @@ js::DumpBindings(JSContext* cx, Scope* scopeArg)
 {
     RootedScope scope(cx, scopeArg);
     for (Rooted<BindingIter> bi(cx, BindingIter(scope)); bi; bi++) {
-        UniqueChars bytes;
-        if (!AtomToPrintableString(cx, bi.name(), &bytes))
+        UniqueChars bytes = AtomToPrintableString(cx, bi.name());
+        if (!bytes)
             return;
         fprintf(stderr, "%s %s ", BindingKindString(bi.kind()), bytes.get());
         switch (bi.location().kind()) {
