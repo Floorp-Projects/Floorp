@@ -81,14 +81,19 @@
 
 using namespace js;
 
-void js::ReportNotObject(JSContext* cx, HandleValue v) {
+void js::ReportNotObject(JSContext* cx, JSErrNum err, int spindex,
+                         HandleValue v) {
   MOZ_ASSERT(!v.isObject());
+  ReportValueError(cx, err, spindex, v, nullptr);
+}
 
-  if (UniqueChars bytes =
-          DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr)) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_NOT_NONNULL_OBJECT, bytes.get());
-  }
+void js::ReportNotObject(JSContext* cx, JSErrNum err, HandleValue v) {
+  ReportNotObject(cx, err, JSDVG_SEARCH_STACK, v);
+}
+
+void js::ReportNotObject(JSContext* cx, const Value& v) {
+  RootedValue value(cx, v);
+  ReportNotObject(cx, JSMSG_NOT_NONNULL_OBJECT, value);
 }
 
 void js::ReportNotObjectArg(JSContext* cx, const char* nth, const char* fun,
@@ -97,19 +102,8 @@ void js::ReportNotObjectArg(JSContext* cx, const char* nth, const char* fun,
 
   UniqueChars bytes;
   if (const char* chars = ValueToSourceForError(cx, v, bytes)) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_NOT_NONNULL_OBJECT_ARG, nth, fun, chars);
-  }
-}
-
-void js::ReportNotObjectWithName(JSContext* cx, const char* name,
-                                 HandleValue v) {
-  MOZ_ASSERT(!v.isObject());
-
-  UniqueChars bytes;
-  if (const char* chars = ValueToSourceForError(cx, v, bytes)) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_NOT_NONNULL_OBJECT_NAME, name, chars);
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                               JSMSG_NOT_NONNULL_OBJECT_ARG, nth, fun, chars);
   }
 }
 
@@ -307,8 +301,8 @@ bool js::ToPropertyDescriptor(JSContext* cx, HandleValue descval,
                               bool checkAccessors,
                               MutableHandle<PropertyDescriptor> desc) {
   // step 2
-  RootedObject obj(cx,
-                   NonNullObjectWithName(cx, "property descriptor", descval));
+  RootedObject obj(
+      cx, NonNullObject(cx, JSMSG_NOT_NONNULL_OBJECT_PROP_DESC, descval));
   if (!obj) {
     return false;
   }
