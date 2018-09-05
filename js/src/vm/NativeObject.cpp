@@ -2456,7 +2456,7 @@ js::GetNameBoundInEnvironment(JSContext* cx, HandleObject envArg, HandleId id, M
 /*** [[Set]] *************************************************************************************/
 
 static bool
-MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleString propname)
+MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleId id)
 {
     unsigned flags;
     {
@@ -2475,6 +2475,7 @@ MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleString propname)
             return true;
     }
 
+    JSString* propname = JSID_TO_STRING(id);
     UniqueChars bytes = StringToNewUTF8CharsZ(cx, *propname);
     if (!bytes)
         return false;
@@ -2595,8 +2596,7 @@ SetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id, Handl
                        HandleValue receiver, ObjectOpResult& result)
 {
     if (!IsQualified && receiver.isObject() && receiver.toObject().isUnqualifiedVarObj()) {
-        RootedString idStr(cx, JSID_TO_STRING(id));
-        if (!MaybeReportUndeclaredVarAssignment(cx, idStr))
+        if (!MaybeReportUndeclaredVarAssignment(cx, id))
             return false;
     }
 
