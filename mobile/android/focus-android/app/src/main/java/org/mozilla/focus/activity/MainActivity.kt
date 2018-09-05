@@ -27,6 +27,7 @@ import org.mozilla.focus.session.ui.SessionsSheetFragment
 import org.mozilla.focus.settings.ExperimentsSettingsFragment
 import org.mozilla.focus.telemetry.SentryWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.ViewUtils
 import org.mozilla.focus.viewmodel.MainViewModel
@@ -222,7 +223,11 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         val shouldAnimate = isShowingBrowser && browserFragment!!.isResumed
 
         if (shouldAnimate) {
-            transaction.setCustomAnimations(0, R.anim.erase_animation)
+            if (AppConstants.isGeckoBuild) {
+                transaction.setCustomAnimations(0, R.anim.erase_animation_gv)
+            } else {
+                transaction.setCustomAnimations(0, R.anim.erase_animation)
+            }
         }
 
         transaction
