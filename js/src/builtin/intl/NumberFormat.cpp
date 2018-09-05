@@ -20,7 +20,6 @@
 #include "builtin/intl/ScopedICUObject.h"
 #include "ds/Sort.h"
 #include "gc/FreeOp.h"
-#include "js/CharacterEncoding.h"
 #include "js/RootingAPI.h"
 #include "js/StableStringChars.h"
 #include "js/TypeDecls.h"
@@ -214,12 +213,12 @@ js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 1);
     MOZ_ASSERT(args[0].isString());
 
-    UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
+    JSAutoByteString locale(cx, args[0].toString());
     if (!locale)
         return false;
 
     UErrorCode status = U_ZERO_ERROR;
-    UNumberingSystem* numbers = unumsys_open(IcuLocale(locale.get()), &status);
+    UNumberingSystem* numbers = unumsys_open(IcuLocale(locale.ptr()), &status);
     if (U_FAILURE(status)) {
         intl::ReportInternalError(cx);
         return false;
@@ -256,7 +255,7 @@ NewUNumberFormat(JSContext* cx, Handle<NumberFormatObject*> numberFormat)
 
     if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
         return nullptr;
-    UniqueChars locale = intl::EncodeLocale(cx, value.toString());
+    JSAutoByteString locale(cx, value.toString());
     if (!locale)
         return nullptr;
 
@@ -348,7 +347,7 @@ NewUNumberFormat(JSContext* cx, Handle<NumberFormatObject*> numberFormat)
     uUseGrouping = value.toBoolean();
 
     UErrorCode status = U_ZERO_ERROR;
-    UNumberFormat* nf = unum_open(uStyle, nullptr, 0, IcuLocale(locale.get()), nullptr, &status);
+    UNumberFormat* nf = unum_open(uStyle, nullptr, 0, IcuLocale(locale.ptr()), nullptr, &status);
     if (U_FAILURE(status)) {
         intl::ReportInternalError(cx);
         return nullptr;

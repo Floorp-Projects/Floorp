@@ -37,6 +37,7 @@
 #include "frontend/FoldConstants.h"
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
+#include "js/AutoByteString.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -170,13 +171,13 @@ ParseContext::Scope::dump(ParseContext* pc)
 
     fprintf(stdout, "\n  decls:\n");
     for (DeclaredNameMap::Range r = declared_->all(); !r.empty(); r.popFront()) {
-        UniqueChars bytes = AtomToPrintableString(cx, r.front().key());
-        if (!bytes)
+        JSAutoByteString bytes;
+        if (!AtomToPrintableString(cx, r.front().key(), &bytes))
             return;
         DeclaredNameInfo& info = r.front().value().wrapped;
         fprintf(stdout, "    %s %s%s\n",
                 DeclarationKindString(info.kind()),
-                bytes.get(),
+                bytes.ptr(),
                 info.closedOver() ? " (closed over)" : "");
     }
 
@@ -1226,12 +1227,12 @@ GeneralParser<ParseHandler, CharT>::reportRedeclaration(HandlePropertyName name,
                                                         DeclarationKind prevKind,
                                                         TokenPos pos, uint32_t prevPos)
 {
-    UniqueChars bytes = AtomToPrintableString(context, name);
-    if (!bytes)
+    JSAutoByteString bytes;
+    if (!AtomToPrintableString(context, name, &bytes))
         return;
 
     if (prevPos == DeclaredNameInfo::npos) {
-        errorAt(pos.begin, JSMSG_REDECLARED_VAR, DeclarationKindString(prevKind), bytes.get());
+        errorAt(pos.begin, JSMSG_REDECLARED_VAR, DeclarationKindString(prevKind), bytes.ptr());
         return;
     }
 
@@ -1260,7 +1261,7 @@ GeneralParser<ParseHandler, CharT>::reportRedeclaration(HandlePropertyName name,
     }
 
     errorWithNotesAt(std::move(notes), pos.begin, JSMSG_REDECLARED_VAR,
-                     DeclarationKindString(prevKind), bytes.get());
+                     DeclarationKindString(prevKind), bytes.ptr());
 }
 
 // notePositionalFormalParameter is called for both the arguments of a regular
@@ -1290,10 +1291,10 @@ GeneralParser<ParseHandler, CharT>::notePositionalFormalParameter(Node fn, Handl
         // In such cases, report will queue up the potential error and return
         // 'true'.
         if (pc->sc()->needStrictChecks()) {
-            UniqueChars bytes = AtomToPrintableString(context, name);
-            if (!bytes)
+            JSAutoByteString bytes;
+            if (!AtomToPrintableString(context, name, &bytes))
                 return false;
-            if (!strictModeError(JSMSG_DUPLICATE_FORMAL, bytes.get()))
+            if (!strictModeError(JSMSG_DUPLICATE_FORMAL, bytes.ptr()))
                 return false;
         }
 
@@ -2425,11 +2426,11 @@ Parser<FullParseHandler, CharT>::moduleBody(ModuleSharedContext* modulesc)
 
         DeclaredNamePtr p = modulepc.varScope().lookupDeclaredName(name);
         if (!p) {
-            UniqueChars str = AtomToPrintableString(context, name);
-            if (!str)
+            JSAutoByteString str;
+            if (!AtomToPrintableString(context, name, &str))
                 return null();
 
-            errorAt(TokenStream::NoOffset, JSMSG_MISSING_EXPORT, str.get());
+            errorAt(TokenStream::NoOffset, JSMSG_MISSING_EXPORT, str.ptr());
             return null();
         }
 
@@ -5463,11 +5464,11 @@ Parser<FullParseHandler, CharT>::checkExportedName(JSAtom* exportName)
     if (!pc->sc()->asModuleContext()->builder.hasExportedName(exportName))
         return true;
 
-    UniqueChars str = AtomToPrintableString(context, exportName);
-    if (!str)
+    JSAutoByteString str;
+    if (!AtomToPrintableString(context, exportName, &str))
         return false;
 
-    error(JSMSG_DUPLICATE_EXPORT_NAME, str.get());
+    error(JSMSG_DUPLICATE_EXPORT_NAME, str.ptr());
     return false;
 }
 

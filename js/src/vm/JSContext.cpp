@@ -37,6 +37,7 @@
 #include "gc/Marking.h"
 #include "jit/Ion.h"
 #include "jit/PcScriptCache.h"
+#include "js/AutoByteString.h"
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
 #ifdef JS_SIMULATOR_ARM64
@@ -441,10 +442,10 @@ js::ReportUsageErrorASCII(JSContext* cx, HandleObject callee, const char* msg)
         JS_ReportErrorASCII(cx, "%s", msg);
     } else {
         RootedString usageStr(cx, usage.toString());
-        UniqueChars str = JS_EncodeStringToUTF8(cx, usageStr);
-        if (!str)
+        JSAutoByteString str;
+        if (!str.encodeUtf8(cx, usageStr))
             return;
-        JS_ReportErrorUTF8(cx, "%s. Usage: %s", msg, str.get());
+        JS_ReportErrorUTF8(cx, "%s. Usage: %s", msg, str.ptr());
     }
 }
 
@@ -892,8 +893,10 @@ js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback call
 void
 js::ReportIsNotDefined(JSContext* cx, HandleId id)
 {
-    if (UniqueChars printable = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsIdentifier))
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NOT_DEFINED, printable.get());
+    JSAutoByteString printable;
+    if (!ValueToPrintableUTF8(cx, IdToValue(id), &printable))
+        return;
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NOT_DEFINED, printable.ptr());
 }
 
 void
@@ -919,15 +922,27 @@ js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v, bool 
         return;
 
     if (strcmp(bytes.get(), js_undefined_str) == 0 || strcmp(bytes.get(), js_null_str) == 0) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NO_PROPERTIES, bytes.get());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NO_PROPERTIES,
+                                   bytes.get());
     } else if (v.isUndefined()) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE, bytes.get(),
-                                 js_undefined_str);
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                   bytes.get(), js_undefined_str);
     } else {
         MOZ_ASSERT(v.isNull());
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE, bytes.get(),
-                                 js_null_str);
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                   bytes.get(), js_null_str);
     }
+}
+
+char*
+EncodeIdAsLatin1(JSContext* cx, HandleId id, JSAutoByteString& bytes)
+{
+    RootedValue idVal(cx, IdToValue(id));
+    RootedString idStr(cx, ValueToSource(cx, idVal));
+    if (!idStr)
+        return nullptr;
+
+    return bytes.encodeLatin1(cx, idStr);
 }
 
 void
@@ -936,14 +951,14 @@ js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v, Handl
 {
     MOZ_ASSERT(v.isNullOrUndefined());
 
-    UniqueChars keyBytes = IdToPrintableUTF8(cx, key, IdToPrintableBehavior::IdIsPropertyKey);
-    if (!keyBytes)
+    JSAutoByteString keyBytes;
+    if (!EncodeIdAsLatin1(cx, key, keyBytes))
         return;
 
     if (!reportScanStack) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL,
-                                 keyBytes.get(),
-                                 v.isUndefined() ? js_undefined_str : js_null_str);
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL,
+                                   keyBytes.ptr(),
+                                   v.isUndefined() ? js_undefined_str : js_null_str);
         return;
     }
 
@@ -952,15 +967,15 @@ js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v, Handl
         return;
 
     if (strcmp(bytes.get(), js_undefined_str) == 0 || strcmp(bytes.get(), js_null_str) == 0) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL,
-                                 keyBytes.get(), bytes.get());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL,
+                                   keyBytes.ptr(), bytes.get());
     } else if (v.isUndefined()) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL_EXPR,
-                                 bytes.get(), js_undefined_str, keyBytes.get());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL_EXPR,
+                                   bytes.get(), js_undefined_str, keyBytes.ptr());
     } else {
         MOZ_ASSERT(v.isNull());
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL_EXPR,
-                                 bytes.get(), js_null_str, keyBytes.get());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL_EXPR,
+                                   bytes.get(), js_null_str, keyBytes.ptr());
     }
 }
 
@@ -977,8 +992,9 @@ js::ReportMissingArg(JSContext* cx, HandleValue v, unsigned arg)
         if (!bytes)
             return;
     }
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_MISSING_FUN_ARG,
-                             argbuf, bytes ? bytes.get() : "");
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                               JSMSG_MISSING_FUN_ARG,
+                               argbuf, bytes ? bytes.get() : "");
 }
 
 bool
@@ -992,8 +1008,8 @@ js::ReportValueErrorFlags(JSContext* cx, unsigned flags, const unsigned errorNum
     if (!bytes)
         return false;
 
-    return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr, errorNumber,
-                                            bytes.get(), arg1, arg2);
+    return JS_ReportErrorFlagsAndNumberLatin1(cx, flags, GetErrorMessage, nullptr, errorNumber,
+                                              bytes.get(), arg1, arg2);
 }
 
 JSObject*

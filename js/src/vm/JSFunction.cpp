@@ -31,6 +31,7 @@
 #include "gc/Policy.h"
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
+#include "js/AutoByteString.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/CompileOptions.h"
 #include "js/Proxy.h"
@@ -2498,7 +2499,7 @@ js::ReportIncompatibleMethod(JSContext* cx, const CallArgs& args, const Class* c
 #endif
 
     if (JSFunction* fun = ReportIfNotFunction(cx, args.calleev())) {
-        UniqueChars funNameBytes;
+        JSAutoByteString funNameBytes;
         if (const char* funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
             JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                                        clasp->name, funName, InformalValueTypeName(thisv));
@@ -2510,7 +2511,7 @@ void
 js::ReportIncompatible(JSContext* cx, const CallArgs& args)
 {
     if (JSFunction* fun = ReportIfNotFunction(cx, args.calleev())) {
-        UniqueChars funNameBytes;
+        JSAutoByteString funNameBytes;
         if (const char* funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
             JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_METHOD,
                                        funName, "method", InformalValueTypeName(args.thisv()));

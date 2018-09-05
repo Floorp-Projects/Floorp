@@ -19,7 +19,7 @@
 #include "builtin/intl/SharedIntlData.h"
 #include "builtin/intl/TimeZoneDataGenerated.h"
 #include "gc/FreeOp.h"
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "js/StableStringChars.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
@@ -236,10 +236,10 @@ js::intl_DateTimeFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp
 }
 
 static bool
-DefaultCalendar(JSContext* cx, const UniqueChars& locale, MutableHandleValue rval)
+DefaultCalendar(JSContext* cx, const JSAutoByteString& locale, MutableHandleValue rval)
 {
     UErrorCode status = U_ZERO_ERROR;
-    UCalendar* cal = ucal_open(nullptr, 0, locale.get(), UCAL_DEFAULT, &status);
+    UCalendar* cal = ucal_open(nullptr, 0, locale.ptr(), UCAL_DEFAULT, &status);
 
     // This correctly handles nullptr |cal| when opening failed.
     ScopedICUObject<UCalendar, ucal_close> closeCalendar(cal);
@@ -283,7 +283,7 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 1);
     MOZ_ASSERT(args[0].isString());
 
-    UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
+    JSAutoByteString locale(cx, args[0].toString());
     if (!locale)
         return false;
 
@@ -302,7 +302,7 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
 
     // Now get the calendars that "would make a difference", i.e., not the default.
     UErrorCode status = U_ZERO_ERROR;
-    UEnumeration* values = ucal_getKeywordValuesForLocale("ca", locale.get(), false, &status);
+    UEnumeration* values = ucal_getKeywordValuesForLocale("ca", locale.ptr(), false, &status);
     if (U_FAILURE(status)) {
         intl::ReportInternalError(cx);
         return false;
@@ -360,7 +360,7 @@ js::intl_defaultCalendar(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 1);
     MOZ_ASSERT(args[0].isString());
 
-    UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
+    JSAutoByteString locale(cx, args[0].toString());
     if (!locale)
         return false;
 
@@ -527,7 +527,7 @@ js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args[0].isString());
     MOZ_ASSERT(args[1].isString());
 
-    UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
+    JSAutoByteString locale(cx, args[0].toString());
     if (!locale)
         return false;
 
@@ -538,7 +538,7 @@ js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp)
     mozilla::Range<const char16_t> skelChars = skeleton.twoByteRange();
 
     UErrorCode status = U_ZERO_ERROR;
-    UDateTimePatternGenerator* gen = udatpg_open(IcuLocale(locale.get()), &status);
+    UDateTimePatternGenerator* gen = udatpg_open(IcuLocale(locale.ptr()), &status);
     if (U_FAILURE(status)) {
         intl::ReportInternalError(cx);
         return false;
@@ -564,7 +564,7 @@ js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 4);
     MOZ_ASSERT(args[0].isString());
 
-    UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
+    JSAutoByteString locale(cx, args[0].toString());
     if (!locale)
         return false;
 
@@ -612,7 +612,7 @@ js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp)
     mozilla::Range<const char16_t> timeZoneChars = timeZone.twoByteRange();
 
     UErrorCode status = U_ZERO_ERROR;
-    UDateFormat* df = udat_open(timeStyle, dateStyle, IcuLocale(locale.get()),
+    UDateFormat* df = udat_open(timeStyle, dateStyle, IcuLocale(locale.ptr()),
                                 timeZoneChars.begin().get(), timeZoneChars.length(),
                                 nullptr, -1, &status);
     if (U_FAILURE(status)) {
@@ -645,7 +645,7 @@ NewUDateFormat(JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat)
 
     if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
         return nullptr;
-    UniqueChars locale = intl::EncodeLocale(cx, value.toString());
+    JSAutoByteString locale(cx, value.toString());
     if (!locale)
         return nullptr;
 
@@ -673,7 +673,7 @@ NewUDateFormat(JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat)
 
     UErrorCode status = U_ZERO_ERROR;
     UDateFormat* df =
-        udat_open(UDAT_PATTERN, UDAT_PATTERN, IcuLocale(locale.get()),
+        udat_open(UDAT_PATTERN, UDAT_PATTERN, IcuLocale(locale.ptr()),
                   timeZoneChars.begin().get(), timeZoneChars.length(),
                   patternChars.begin().get(), patternChars.length(), &status);
     if (U_FAILURE(status)) {

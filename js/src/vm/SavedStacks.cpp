@@ -1820,14 +1820,15 @@ const SavedStacks::MetadataBuilder SavedStacks::metadataBuilder;
 /* static */ ReconstructedSavedFramePrincipals ReconstructedSavedFramePrincipals::IsSystem;
 /* static */ ReconstructedSavedFramePrincipals ReconstructedSavedFramePrincipals::IsNotSystem;
 
-UniqueChars
+UTF8CharsZ
 BuildUTF8StackString(JSContext* cx, JSPrincipals* principals, HandleObject stack)
 {
     RootedString stackStr(cx);
     if (!JS::BuildStackString(cx, principals, stack, &stackStr))
-        return nullptr;
+        return UTF8CharsZ();
 
-    return JS_EncodeStringToUTF8(cx, stackStr);
+    char* chars = JS_EncodeStringToUTF8(cx, stackStr);
+    return UTF8CharsZ(chars, strlen(chars));
 }
 
 uint32_t

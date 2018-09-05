@@ -15,7 +15,7 @@
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "gc/FreeOp.h"
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 
@@ -224,7 +224,7 @@ NewURelativeDateTimeFormatter(JSContext* cx, Handle<RelativeTimeFormatObject*> r
 
     if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
         return nullptr;
-    UniqueChars locale = intl::EncodeLocale(cx, value.toString());
+    JSAutoByteString locale(cx, value.toString());
     if (!locale)
         return nullptr;
 
@@ -249,7 +249,7 @@ NewURelativeDateTimeFormatter(JSContext* cx, Handle<RelativeTimeFormatObject*> r
 
     UErrorCode status = U_ZERO_ERROR;
     URelativeDateTimeFormatter* rtf =
-        ureldatefmt_open(IcuLocale(locale.get()), nullptr, relDateTimeStyle,
+        ureldatefmt_open(IcuLocale(locale.ptr()), nullptr, relDateTimeStyle,
                          UDISPCTX_CAPITALIZATION_FOR_STANDALONE, &status);
     if (U_FAILURE(status)) {
         intl::ReportInternalError(cx);

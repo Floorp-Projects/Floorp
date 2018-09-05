@@ -277,8 +277,8 @@ ReportArgTypeError(JSContext* cx, const char* funName, const char* expectedType,
     if (!bytes)
         return;
 
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE, funName,
-                             expectedType, bytes.get());
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE, funName,
+                               expectedType, bytes.get());
 }
 
 static MOZ_MUST_USE bool

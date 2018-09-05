@@ -15,7 +15,7 @@
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "gc/FreeOp.h"
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/StringType.h"
@@ -196,7 +196,7 @@ NewUNumberFormatForPluralRules(JSContext* cx, Handle<PluralRulesObject*> pluralR
 
     if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
         return nullptr;
-    UniqueChars locale = intl::EncodeLocale(cx, value.toString());
+    JSAutoByteString locale(cx, value.toString());
     if (!locale)
         return nullptr;
 
@@ -234,7 +234,7 @@ NewUNumberFormatForPluralRules(JSContext* cx, Handle<PluralRulesObject*> pluralR
 
     UErrorCode status = U_ZERO_ERROR;
     UNumberFormat* nf =
-        unum_open(UNUM_DECIMAL, nullptr, 0, IcuLocale(locale.get()), nullptr, &status);
+        unum_open(UNUM_DECIMAL, nullptr, 0, IcuLocale(locale.ptr()), nullptr, &status);
     if (U_FAILURE(status)) {
         intl::ReportInternalError(cx);
         return nullptr;
@@ -269,7 +269,7 @@ NewUPluralRules(JSContext* cx, Handle<PluralRulesObject*> pluralRules)
 
     if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
         return nullptr;
-    UniqueChars locale = intl::EncodeLocale(cx, value.toString());
+    JSAutoByteString locale(cx, value.toString());
     if (!locale)
         return nullptr;
 
@@ -291,7 +291,7 @@ NewUPluralRules(JSContext* cx, Handle<PluralRulesObject*> pluralRules)
     }
 
     UErrorCode status = U_ZERO_ERROR;
-    UPluralRules* pr = uplrules_openForType(IcuLocale(locale.get()), category, &status);
+    UPluralRules* pr = uplrules_openForType(IcuLocale(locale.ptr()), category, &status);
     if (U_FAILURE(status)) {
         intl::ReportInternalError(cx);
         return nullptr;

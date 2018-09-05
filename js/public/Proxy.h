@@ -625,7 +625,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
         , enteredAction(BaseProxyHandler::NONE)
 #endif
         {}
-    void reportErrorIfExceptionIsNotPending(JSContext* cx, HandleId id);
+    void reportErrorIfExceptionIsNotPending(JSContext* cx, jsid id);
     bool allow;
     bool rv;
 

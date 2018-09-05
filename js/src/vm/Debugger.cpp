@@ -25,7 +25,7 @@
 #include "gc/PublicIterators.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineJIT.h"
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "js/Date.h"
 #include "js/SourceBufferHolder.h"
 #include "js/StableStringChars.h"
@@ -486,10 +486,10 @@ ParseEvalOptions(JSContext* cx, HandleValue value, EvalOptions& options)
         RootedString url_str(cx, ToString<CanGC>(cx, v));
         if (!url_str)
             return false;
-        UniqueChars url_bytes = JS_EncodeStringToLatin1(cx, url_str);
+        JSAutoByteString url_bytes(cx, url_str);
         if (!url_bytes)
             return false;
-        if (!options.setFilename(cx, url_bytes.get()))
+        if (!options.setFilename(cx, url_bytes.ptr()))
             return false;
     }
 
@@ -4481,7 +4481,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
     RootedValue url;
 
     /* url as a C string. */
-    UniqueChars urlCString;
+    JSAutoByteString urlCString;
 
     /* If this is a string, matching scripts' sources have displayURLs equal to
      * it. */
@@ -4567,8 +4567,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         // Compute urlCString and displayURLChars, if a url or displayURL was
         // given respectively.
         if (url.isString()) {
-            urlCString = JS_EncodeStringToLatin1(cx, url.toString());
-            if (!urlCString)
+            if (!urlCString.encodeLatin1(cx, url.toString()))
                 return false;
         }
 
@@ -4609,14 +4608,14 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
 
     template <typename T>
     MOZ_MUST_USE bool commonFilter(T script, const JS::AutoRequireNoGC& nogc) {
-        if (urlCString) {
+        if (urlCString.ptr()) {
             bool gotFilename = false;
-            if (script->filename() && strcmp(script->filename(), urlCString.get()) == 0)
+            if (script->filename() && strcmp(script->filename(), urlCString.ptr()) == 0)
                 gotFilename = true;
 
             bool gotSourceURL = false;
             if (!gotFilename && script->scriptSource()->introducerFilename() &&
-                strcmp(script->scriptSource()->introducerFilename(), urlCString.get()) == 0)
+                strcmp(script->scriptSource()->introducerFilename(), urlCString.ptr()) == 0)
             {
                 gotSourceURL = true;
             }
@@ -4921,7 +4920,7 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
 
         if (!className.isUndefined()) {
             const char* objClassName = obj->getClass()->name;
-            if (strcmp(objClassName, classNameCString.get()) != 0)
+            if (strcmp(objClassName, classNameCString.ptr()) != 0)
                 return true;
         }
 
@@ -4942,7 +4941,7 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
     RootedValue className;
 
     /* The className member, as a C string. */
-    UniqueChars classNameCString;
+    JSAutoByteString classNameCString;
 
     /*
      * Given that either omittedQuery or parseQuery has been called, prepare the
@@ -4950,8 +4949,7 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
      */
     bool prepareQuery() {
         if (className.isString()) {
-            classNameCString = JS_EncodeStringToLatin1(cx, className.toString());
-            if (!classNameCString)
+            if (!classNameCString.encodeLatin1(cx, className.toString()))
                 return false;
         }
 
@@ -5432,7 +5430,7 @@ Debugger::wrapWasmScript(JSContext* cx, Handle<WasmInstanceObject*> wasmInstance
 }
 
 static JSObject*
-DebuggerScript_check(JSContext* cx, HandleValue v, const char* fnname)
+DebuggerScript_check(JSContext* cx, const Value& v, const char* fnname)
 {
     JSObject* thisobj = NonNullObject(cx, v);
     if (!thisobj)

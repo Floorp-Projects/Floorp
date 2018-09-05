@@ -6,7 +6,6 @@
 
 #include "JSControl.h"
 
-#include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #include "js/JSON.h"
 #include "ChildInternal.h"
@@ -803,11 +802,12 @@ RecordReplay_Dump(JSContext* aCx, unsigned aArgc, Value* aVp)
     if (!str) {
       return false;
     }
-    JS::UniqueChars cstr = JS_EncodeStringToLatin1(aCx, str);
+    char* cstr = JS_EncodeString(aCx, str);
     if (!cstr) {
       return false;
     }
-    Print("%s", cstr.get());
+    Print("%s", cstr);
+    JS_free(aCx, cstr);
   }
 
   args.rval().setUndefined();

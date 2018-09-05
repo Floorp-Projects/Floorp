@@ -55,6 +55,7 @@
 #include "gc/WeakMap.h"
 #include "jit/JitCommon.h"
 #include "jit/JitSpewer.h"
+#include "js/AutoByteString.h"
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
@@ -175,8 +176,13 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, 
     }
 
     if (ErrorTakesArguments(code_)) {
-        UniqueChars propName = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
-        if (!propName)
+        RootedValue idv(cx, IdToValue(id));
+        RootedString str(cx, ValueToSource(cx, idv));
+        if (!str)
+            return false;
+
+        JSAutoByteString propName;
+        if (!propName.encodeUtf8(cx, str))
             return false;
 
         if (code_ == JSMSG_SET_NON_OBJECT_RECEIVER) {
@@ -187,16 +193,16 @@ JS::ObjectOpResult::reportStrictErrorOrWarning(JSContext* cx, HandleObject obj, 
                     return false;
             }
             return ReportValueErrorFlags(cx, flags, code_, JSDVG_IGNORE_STACK, val,
-                                         nullptr, propName.get(), nullptr);
+                                         nullptr, propName.ptr(), nullptr);
         }
 
         if (ErrorTakesObjectArgument(code_)) {
             return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr, code_,
-                                                    obj->getClass()->name, propName.get());
+                                                    obj->getClass()->name, propName.ptr());
         }
 
         return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr, code_,
-                                                propName.get());
+                                                propName.ptr());
     }
     return JS_ReportErrorFlagsAndNumberASCII(cx, flags, GetErrorMessage, nullptr, code_);
 }
@@ -1643,7 +1649,7 @@ JS::GetFirstArgumentAsTypeHint(JSContext* cx, CallArgs args, JSType *result)
         return true;
     }
 
-    UniqueChars bytes;
+    JSAutoByteString bytes;
     const char* source = ValueToSourceForError(cx, args.get(0), bytes);
     if (!source) {
         ReportOutOfMemory(cx);
@@ -5060,8 +5066,9 @@ JS::DumpPromiseAllocationSite(JSContext* cx, JS::HandleObject promise)
 {
     RootedObject stack(cx, promise->as<PromiseObject>().allocationSite());
     JSPrincipals* principals = cx->realm()->principals();
-    UniqueChars stackStr = BuildUTF8StackString(cx, principals, stack);
-    if (stackStr)
+    UniqueChars stackStr(
+        reinterpret_cast<char*>(BuildUTF8StackString(cx, principals, stack).get()));
+    if (stackStr.get())
         fputs(stackStr.get(), stderr);
 }
 
@@ -5070,8 +5077,9 @@ JS::DumpPromiseResolutionSite(JSContext* cx, JS::HandleObject promise)
 {
     RootedObject stack(cx, promise->as<PromiseObject>().resolutionSite());
     JSPrincipals* principals = cx->realm()->principals();
-    UniqueChars stackStr = BuildUTF8StackString(cx, principals, stack);
-    if (stackStr)
+    UniqueChars stackStr(
+        reinterpret_cast<char*>(BuildUTF8StackString(cx, principals, stack).get()));
+    if (stackStr.get())
         fputs(stackStr.get(), stderr);
 }
 #endif
@@ -6047,22 +6055,22 @@ JS_DecodeBytes(JSContext* cx, const char* src, size_t srclen, char16_t* dst, siz
     return true;
 }
 
-JS_PUBLIC_API(JS::UniqueChars)
-JS_EncodeStringToLatin1(JSContext* cx, JSString* str)
+JS_PUBLIC_API(char*)
+JS_EncodeString(JSContext* cx, JSString* str)
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
 
-    return js::EncodeLatin1(cx, str);
+    return js::EncodeLatin1(cx, str).release();
 }
 
-JS_PUBLIC_API(JS::UniqueChars)
+JS_PUBLIC_API(char*)
 JS_EncodeStringToUTF8(JSContext* cx, HandleString str)
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
 
-    return StringToNewUTF8CharsZ(cx, *str);
+    return StringToNewUTF8CharsZ(cx, *str).release();
 }
 
 JS_PUBLIC_API(size_t)

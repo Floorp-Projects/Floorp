@@ -7,11 +7,11 @@ extern crate js;
 extern crate libc;
 
 use js::ar::AutoRealm;
-use js::glue::JSEncodeStringToUTF8;
 use js::jsapi::root::JS::CallArgs;
 use js::jsapi::root::JS::RealmOptions;
 use js::jsapi::root::JSContext;
 use js::jsapi::root::JS_DefineFunction;
+use js::jsapi::root::JS_EncodeStringToUTF8;
 use js::jsapi::root::JS_NewGlobalObject;
 use js::jsapi::root::JS_ReportErrorASCII;
 use js::jsapi::root::JS::OnNewGlobalHookOption;
@@ -55,7 +55,7 @@ unsafe extern "C" fn puts(context: *mut JSContext, argc: u32, vp: *mut Value) ->
     let arg = args.get(0);
     let js = js::rust::ToString(context, arg);
     rooted!(in(context) let message_root = js);
-    let message = JSEncodeStringToUTF8(context, message_root.handle());
+    let message = JS_EncodeStringToUTF8(context, message_root.handle());
     let message = CStr::from_ptr(message);
     println!("{}", str::from_utf8(message.to_bytes()).unwrap());
 

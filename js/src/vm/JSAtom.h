@@ -11,17 +11,18 @@
 
 #include "gc/Rooting.h"
 #include "js/TypeDecls.h"
-#include "js/Utility.h"
 #include "vm/CommonPropertyNames.h"
+
+class JSAutoByteString;
 
 namespace js {
 
 /*
  * Return a printable, lossless char[] representation of a string-type atom.
- * The returned string is guaranteed to contain only ASCII characters.
+ * The lifetime of the result matches the lifetime of bytes.
  */
-extern UniqueChars
-AtomToPrintableString(JSContext* cx, JSAtom* atom);
+extern const char*
+AtomToPrintableString(JSContext* cx, JSAtom* atom, JSAutoByteString* bytes);
 
 class PropertyName;
 

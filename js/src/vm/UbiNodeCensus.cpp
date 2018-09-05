@@ -6,11 +6,10 @@
 
 #include "js/UbiNodeCensus.h"
 
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "js/StableStringChars.h"
 #include "util/Text.h"
 #include "vm/JSContext.h"
-#include "vm/Printer.h"
 #include "vm/Realm.h"
 
 #include "vm/JSObject-inl.h"
@@ -1262,12 +1261,16 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue)
     }
 
     // We didn't recognize the breakdown type; complain.
-    UniqueChars byBytes = QuoteString(cx, by, '"');
+    RootedString bySource(cx, ValueToSource(cx, byValue));
+    if (!bySource)
+        return nullptr;
+
+    JSAutoByteString byBytes(cx, bySource);
     if (!byBytes)
         return nullptr;
 
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_CENSUS_BREAKDOWN,
-                              byBytes.get());
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_CENSUS_BREAKDOWN,
+                               byBytes.ptr());
     return nullptr;
 }
 

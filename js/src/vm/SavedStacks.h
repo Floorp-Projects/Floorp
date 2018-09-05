@@ -320,7 +320,7 @@ struct MutableWrappedPtrOperations<SavedStacks::LocationValue, Wrapper>
     }
 };
 
-JS::UniqueChars
+UTF8CharsZ
 BuildUTF8StackString(JSContext* cx, JSPrincipals* principals, HandleObject stack);
 
 uint32_t

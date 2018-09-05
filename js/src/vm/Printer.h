@@ -15,7 +15,6 @@
 #include <string.h>
 
 #include "js/TypeDecls.h"
-#include "js/Utility.h"
 
 namespace js {
 
@@ -101,7 +100,7 @@ class Sprinter final : public GenericPrinter
 
     const char* string() const { return base; }
     const char* stringEnd() const { return base + offset; }
-    JS::UniqueChars release();
+    char* release();
 
     // Returns the string at offset |off|.
     char* stringAt(ptrdiff_t off) const;
@@ -212,18 +211,15 @@ class LSprinter final : public GenericPrinter
 // Map escaped code to the letter/symbol escaped with a backslash.
 extern const char       js_EscapeMap[];
 
-// Return a C-string containing the chars in str, with any non-printing chars
-// escaped. If the optional quote parameter is present and is not '\0', quotes
-// (as specified by the quote argument) are also escaped, and the quote
-// character is appended at the beginning and end of the result string.
-// The returned string is guaranteed to contain only ASCII characters.
-extern JS::UniqueChars
-QuoteString(JSContext* cx, JSString* str, char quote = '\0');
+// Return a GC'ed string containing the chars in str, with any non-printing
+// chars or quotes (' or " as specified by the quote argument) escaped, and
+// with the quote character at the beginning and end of the result string.
+extern JSString*
+QuoteString(JSContext* cx, JSString* str, char16_t quote);
 
-// Appends the quoted string to the given Sprinter. Follows the same semantics
-// as QuoteString from above.
-extern bool
-QuoteString(Sprinter* sp, JSString* str, char quote = '\0');
+extern char*
+QuoteString(Sprinter* sp, JSString* str, char16_t quote);
+
 
 } // namespace js
 

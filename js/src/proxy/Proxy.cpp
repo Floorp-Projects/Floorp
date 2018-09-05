@@ -28,8 +28,10 @@
 using namespace js;
 using namespace js::gc;
 
+using JS::AutoStableStringChars;
+
 void
-js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext* cx, HandleId id)
+js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext* cx, jsid id)
 {
     if (JS_IsExceptionPending(cx))
         return;
@@ -37,12 +39,18 @@ js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext* cx, HandleId 
     if (JSID_IS_VOID(id)) {
         ReportAccessDenied(cx);
     } else {
-        UniqueChars prop = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
-        if (!prop)
+        RootedValue idVal(cx, IdToValue(id));
+        JSString* str = ValueToSource(cx, idVal);
+        if (!str) {
             return;
+        }
+        AutoStableStringChars chars(cx);
+        const char16_t* prop = nullptr;
+        if (str->ensureFlat(cx) && chars.initTwoByte(cx, str))
+            prop = chars.twoByteChars();
 
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_ACCESS_DENIED,
-                                 prop.get());
+        JS_ReportErrorNumberUC(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_ACCESS_DENIED,
+                               prop);
     }
 }
 

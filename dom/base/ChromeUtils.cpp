@@ -6,7 +6,7 @@
 
 #include "ChromeUtils.h"
 
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "js/SavedFrameAPI.h"
 #include "jsfriendapi.h"
 #include "WrapperFactory.h"
@@ -467,11 +467,11 @@ namespace module_getter {
 
     JS::Rooted<JSString*> moduleURI(
       aCx, js::GetFunctionNativeReserved(callee, SLOT_URI).toString());
-    JS::UniqueChars bytes = JS_EncodeStringToUTF8(aCx, moduleURI);
-    if (!bytes) {
+    JSAutoByteString bytes;
+    if (!bytes.encodeUtf8(aCx, moduleURI)) {
       return false;
     }
-    nsDependentCString uri(bytes.get());
+    nsDependentCString uri(bytes.ptr());
 
     RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
     MOZ_ASSERT(moduleloader);
