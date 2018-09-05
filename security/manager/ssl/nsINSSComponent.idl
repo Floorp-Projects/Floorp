@@ -55,16 +55,6 @@ interface nsINSSComponent : nsISupports {
   [noscript] nsIX509CertList getEnterpriseRoots();
 
   /**
-   * During initialization, nsINSSComponent collects any 3rd party root
-   * certificates from the OS that may be relevant (e.g. enterprise roots, the
-   * Family Safety root on Windows 8). However, to prevent opening a PKCS#11
-   * login prompt and potentially re-entering initialization, the component
-   * delays trusting these roots until a later event tick. This is the function
-   * that enables that.
-   */
-  [noscript] void trustLoaded3rdPartyRoots();
-
-  /**
    * For performance reasons, the builtin roots module is loaded on a background
    * thread. When any code that depends on the builtin roots module runs, it
    * must first wait for the module to be loaded.

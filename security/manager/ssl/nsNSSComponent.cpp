@@ -666,7 +666,12 @@ nsNSSComponent::MaybeImportEnterpriseRoots()
   if (!importEnterpriseRoots) {
     return;
   }
+  ImportEnterpriseRoots();
+}
 
+void
+nsNSSComponent::ImportEnterpriseRoots()
+{
   UniqueCERTCertList roots;
   nsresult rv = GatherEnterpriseRoots(roots);
   if (NS_FAILED(rv)) {
@@ -676,12 +681,11 @@ nsNSSComponent::MaybeImportEnterpriseRoots()
 
   {
     MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(!mEnterpriseRoots);
     mEnterpriseRoots = std::move(roots);
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsNSSComponent::TrustLoaded3rdPartyRoots()
 {
   // We can't call ChangeCertTrustWithPossibleAuthentication while holding
@@ -774,9 +778,11 @@ nsNSSComponent::GetEnterpriseRoots(nsIX509CertList** enterpriseRoots)
 class LoadLoadableRootsTask final : public Runnable
 {
 public:
-  explicit LoadLoadableRootsTask(nsNSSComponent* nssComponent)
+  explicit LoadLoadableRootsTask(nsNSSComponent* nssComponent,
+                                 bool importEnterpriseRoots)
     : Runnable("LoadLoadableRootsTask")
     , mNSSComponent(nssComponent)
+    , mImportEnterpriseRoots(importEnterpriseRoots)
   {
     MOZ_ASSERT(nssComponent);
   }
@@ -789,6 +795,7 @@ private:
   NS_IMETHOD Run() override;
   nsresult LoadLoadableRoots();
   RefPtr<nsNSSComponent> mNSSComponent;
+  bool mImportEnterpriseRoots;
   nsCOMPtr<nsIThread> mThread;
 };
 
@@ -807,9 +814,6 @@ LoadLoadableRootsTask::Dispatch()
   return mThread->Dispatch(this, NS_DISPATCH_NORMAL);
 }
 
-// NB: If anything in this function can cause an acquisition of
-// nsNSSComponent::mMutex, this can potentially deadlock with
-// nsNSSComponent::Shutdown.
 NS_IMETHODIMP
 LoadLoadableRootsTask::Run()
 {
@@ -830,31 +834,44 @@ LoadLoadableRootsTask::Run()
     return NS_OK;
   }
 
-  nsresult rv = LoadLoadableRoots();
-  if (NS_FAILED(rv)) {
+  nsresult loadLoadableRootsResult = LoadLoadableRoots();
+  if (NS_WARN_IF(NS_FAILED(loadLoadableRootsResult))) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("LoadLoadableRoots failed"));
-    // We don't return rv here because then BlockUntilLoadableRootsLoaded will
-    // just wait forever. Instead we'll save its value (below) so we can inform
-    // code that relies on the roots module being present that loading it
-    // failed.
+    // We don't return loadLoadableRootsResult here because then
+    // BlockUntilLoadableRootsLoaded will just wait forever. Instead we'll save
+    // its value (below) so we can inform code that relies on the roots module
+    // being present that loading it failed.
   }
 
-  if (NS_SUCCEEDED(rv)) {
+  // Loading EV information will only succeed if we've successfully loaded the
+  // loadable roots module.
+  if (NS_SUCCEEDED(loadLoadableRootsResult)) {
     if (NS_FAILED(LoadExtendedValidationInfo())) {
       // This isn't a show-stopper in the same way that failing to load the
       // roots module is.
       MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("failed to load EV info"));
     }
   }
+
+  if (mImportEnterpriseRoots) {
+    mNSSComponent->ImportEnterpriseRoots();
+  }
+  nsresult rv = mNSSComponent->TrustLoaded3rdPartyRoots();
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Error,
+            ("failed to trust loaded 3rd party roots"));
+  }
+
   {
     MonitorAutoLock rootsLoadedLock(mNSSComponent->mLoadableRootsLoadedMonitor);
     mNSSComponent->mLoadableRootsLoaded = true;
     // Cache the result of LoadLoadableRoots so BlockUntilLoadableRootsLoaded
     // can return it to all callers later.
-    mNSSComponent->mLoadableRootsLoadedResult = rv;
+    mNSSComponent->mLoadableRootsLoadedResult = loadLoadableRootsResult;
     rv = mNSSComponent->mLoadableRootsLoadedMonitor.NotifyAll();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      MOZ_LOG(gPIPNSSLog, LogLevel::Error,
+              ("failed to notify loadable roots loaded monitor"));
     }
   }
 
@@ -1850,14 +1867,13 @@ nsNSSComponent::InitializeNSS()
 
   DisableMD5();
 
-  // Note that these functions do not change the trust of any loaded 3rd party
+  // Note that this function does not change the trust of any loaded 3rd party
   // roots. Because we're initializing the nsNSSComponent, and because if the
   // user has a master password set on the softoken it could cause the
   // authentication dialog to come up, we could conceivably re-enter
-  // nsNSSComponent initialization, which would be bad. Instead, we schedule an
-  // event to set the trust after the component has been initialized (below).
+  // nsNSSComponent initialization, which would be bad. Instead, we set the
+  // trust when the load loadable roots task finishes (below).
   MaybeEnableFamilySafetyCompatibility();
-  MaybeImportEnterpriseRoots();
 
   ConfigureTLSSessionIdentifiers();
 
@@ -1939,18 +1955,14 @@ nsNSSComponent::InitializeNSS()
     mMitmDetecionEnabled =
       Preferences::GetBool("security.pki.mitm_canary_issuer.enabled", true);
 
-    nsCOMPtr<nsINSSComponent> handle(this);
-    NS_DispatchToCurrentThread(NS_NewRunnableFunction("nsNSSComponent::TrustLoaded3rdPartyRoots",
-    [handle]() {
-      MOZ_ALWAYS_SUCCEEDS(handle->TrustLoaded3rdPartyRoots());
-    }));
-
     // Set dynamic options from prefs. This has to run after
     // SSL_ConfigServerSessionIDCache.
     setValidationOptions(true, lock);
 
+    bool importEnterpriseRoots = Preferences::GetBool(kEnterpriseRootModePref,
+                                                      false);
     RefPtr<LoadLoadableRootsTask> loadLoadableRootsTask(
-      new LoadLoadableRootsTask(this));
+      new LoadLoadableRootsTask(this, importEnterpriseRoots));
     rv = loadLoadableRootsTask->Dispatch();
     if (NS_FAILED(rv)) {
       return rv;
@@ -1967,21 +1979,24 @@ nsNSSComponent::ShutdownNSS()
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::ShutdownNSS\n"));
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  MutexAutoLock lock(mMutex);
-
+  bool loadLoadableRootsTaskDispatched;
+  {
+    MutexAutoLock lock(mMutex);
+    loadLoadableRootsTaskDispatched = mLoadLoadableRootsTaskDispatched;
+  }
   // We have to block until the load loadable roots task has completed, because
   // otherwise we might try to unload the loadable roots while the loadable
   // roots loading thread is setting up EV information, which can cause
   // it to fail to find the roots it is expecting. However, if initialization
   // failed, we won't have dispatched the load loadable roots background task.
   // In that case, we don't want to block on an event that will never happen.
-  if (mLoadLoadableRootsTaskDispatched) {
+  if (loadLoadableRootsTaskDispatched) {
     Unused << BlockUntilLoadableRootsLoaded();
-    mLoadLoadableRootsTaskDispatched = false;
   }
 
   ::mozilla::psm::UnloadLoadableRoots();
 
+  MutexAutoLock lock(mMutex);
 #ifdef XP_WIN
   mFamilySafetyRoot = nullptr;
   mEnterpriseRoots = nullptr;
