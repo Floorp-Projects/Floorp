@@ -7240,9 +7240,10 @@ nsDisplaySubDocument::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 
 nsDisplayResolution::nsDisplayResolution(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame,
+                                         nsSubDocumentFrame* aSubDocFrame,
                                          nsDisplayList* aList,
                                          nsDisplayOwnLayerFlags aFlags)
-  : nsDisplaySubDocument(aBuilder, aFrame, nullptr, aList, aFlags)
+  : nsDisplaySubDocument(aBuilder, aFrame, aSubDocFrame, aList, aFlags)
 {
   MOZ_COUNT_CTOR(nsDisplayResolution);
 }
@@ -7857,11 +7858,12 @@ nsDisplayScrollInfoLayer::WriteDebugInfo(std::stringstream& aStream)
 
 nsDisplayZoom::nsDisplayZoom(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame,
+                             nsSubDocumentFrame* aSubDocFrame,
                              nsDisplayList* aList,
                              int32_t aAPD,
                              int32_t aParentAPD,
                              nsDisplayOwnLayerFlags aFlags)
-  : nsDisplaySubDocument(aBuilder, aFrame, nullptr, aList, aFlags)
+  : nsDisplaySubDocument(aBuilder, aFrame, aSubDocFrame, aList, aFlags)
   , mAPD(aAPD)
   , mParentAPD(aParentAPD)
 {
