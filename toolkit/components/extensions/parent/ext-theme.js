@@ -187,6 +187,7 @@ class Theme {
         case "ntp_background":
         case "ntp_text":
         case "sidebar":
+        case "sidebar_border":
         case "sidebar_text":
         case "sidebar_highlight":
         case "sidebar_highlight_text":

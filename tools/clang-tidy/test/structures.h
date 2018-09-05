@@ -81,6 +81,10 @@ bind_rt<Fp, Arguments...> bind(Fp &&, Arguments &&...);
 typedef unsigned int uid_t;
 typedef unsigned int pid_t;
 
+int bcmp(void *, void *, size_t);
+void bcopy(void *, void *, size_t);
+void bzero(void *, size_t);
+
 int getpw(uid_t uid, char *buf);
 int setuid(uid_t uid);
 

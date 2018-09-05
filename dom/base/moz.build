@@ -132,7 +132,7 @@ EXPORTS.mozilla += [
     'FeedWriterEnabled.h',
     'FlushType.h',
     'RangeBoundary.h',
-    'SelectionChangeListener.h',
+    'SelectionChangeEventDispatcher.h',
     'TextInputProcessor.h',
     'UseCounter.h',
 ]
@@ -369,7 +369,7 @@ UNIFIED_SOURCES += [
     'ScreenLuminance.cpp',
     'ScreenOrientation.cpp',
     'Selection.cpp',
-    'SelectionChangeListener.cpp',
+    'SelectionChangeEventDispatcher.cpp',
     'ShadowRoot.cpp',
     'StructuredCloneBlob.cpp',
     'StructuredCloneHolder.cpp',

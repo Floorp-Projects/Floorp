@@ -737,7 +737,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
   // in JS!).
   tmp->mNotifyAutoCopy = false;
   tmp->StopNotifyingAccessibleCaretEventHub();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionChangeListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionChangeEventDispatcher)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionListeners)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedRange)
   tmp->RemoveAllRanges(IgnoreErrors());
@@ -754,7 +754,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Selection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchorFocusRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameSelection)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectionChangeListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectionChangeEventDispatcher)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectionListeners)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(Selection)
@@ -3505,9 +3505,10 @@ Selection::NotifySelectionListeners()
     hub->OnSelectionChange(doc, this, reason);
   }
 
-  if (mSelectionChangeListener) {
-    RefPtr<SelectionChangeListener> listener(mSelectionChangeListener);
-    listener->OnSelectionChange(doc, this, reason);
+  if (mSelectionChangeEventDispatcher) {
+    RefPtr<SelectionChangeEventDispatcher> dispatcher(
+                                             mSelectionChangeEventDispatcher);
+    dispatcher->OnSelectionChange(doc, this, reason);
   }
   for (auto& listener : selectionListeners) {
     listener->NotifySelectionChanged(doc, this, reason);

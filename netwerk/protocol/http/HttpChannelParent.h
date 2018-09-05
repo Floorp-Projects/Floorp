@@ -123,6 +123,8 @@ public:
 
   base::ProcessId OtherPid() const override;
 
+  void SetCrossProcessRedirect() { mDoingCrossProcessRedirect = true; }
+
 protected:
   // used to connect redirected-to channel in parent with just created
   // ChildChannel.  Used during redirects.
@@ -207,6 +209,7 @@ protected:
                                          const uint32_t& count) override;
   virtual mozilla::ipc::IPCResult RecvDivertOnStopRequest(const nsresult& statusCode) override;
   virtual mozilla::ipc::IPCResult RecvDivertComplete() override;
+  virtual mozilla::ipc::IPCResult RecvCrossProcessRedirectDone(const nsresult& aResult) override;
   virtual mozilla::ipc::IPCResult RecvRemoveCorsPreflightCacheEntry(const URIParams& uri,
                                                                     const mozilla::ipc::PrincipalInfo& requestingPrincipal) override;
   virtual mozilla::ipc::IPCResult RecvBytesRead(const int32_t& aCount) override;
@@ -340,6 +343,7 @@ private:
   uint8_t mCacheNeedFlowControlInitialized : 1;
   uint8_t mNeedFlowControl : 1;
   uint8_t mSuspendedForFlowControl : 1;
+  uint8_t mDoingCrossProcessRedirect : 1;
 
   // Number of events to wait before actually invoking AsyncOpen on the main
   // channel. For each asynchronous step required before InvokeAsyncOpen, should
