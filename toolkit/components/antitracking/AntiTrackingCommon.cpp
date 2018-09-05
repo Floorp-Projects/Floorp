@@ -796,7 +796,6 @@ AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner*
                                                              nsIURI* aURI)
 {
   MOZ_ASSERT(aFirstPartyWindow);
-  MOZ_ASSERT(!nsContentUtils::IsTrackingResourceWindow(aFirstPartyWindow));
   MOZ_ASSERT(aURI);
 
   LOG_SPEC(("Computing a best guess as to whether window %p has access to URI %s",
