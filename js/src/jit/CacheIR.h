@@ -217,6 +217,7 @@ extern const char* const CacheKindNames[];
     _(GuardNoUnboxedExpando)              \
     _(GuardAndLoadUnboxedExpando)         \
     _(GuardAndGetIndexFromString)         \
+    _(GuardAndGetNumberFromString)        \
     _(GuardAndGetIterator)                \
     _(GuardHasGetterSetter)               \
     _(GuardGroupHasUnanalyzedNewScript)   \
@@ -767,6 +768,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     Int32OperandId guardAndGetIndexFromString(StringOperandId str) {
         Int32OperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::GuardAndGetIndexFromString, str);
+        writeOperandId(res);
+        return res;
+    }
+    ValOperandId guardAndGetNumberFromString(StringOperandId str) {
+        ValOperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::GuardAndGetNumberFromString, str);
         writeOperandId(res);
         return res;
     }
@@ -1884,6 +1891,7 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator
     bool tryAttachPrimitiveUndefined(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachObjectUndefined(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId);
+    bool tryAttachStringNumber(ValOperandId lhsId, ValOperandId rhsId);
 
     void trackAttached(const char* name);
 
