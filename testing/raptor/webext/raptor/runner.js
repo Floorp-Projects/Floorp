@@ -79,8 +79,8 @@ function getTestSettings() {
         results.name = testName;
         results.unit = settings.unit;
         results.subtest_unit = settings.subtest_unit;
-        results.lower_is_better = settings.lower_is_better == "true";
-        results.subtest_lower_is_better = settings.subtest_lower_is_better == "true";
+        results.lower_is_better = settings.lower_is_better === true;
+        results.subtest_lower_is_better = settings.subtest_lower_is_better === true;
         results.alert_threshold = settings.alert_threshold;
 
         if (settings.page_timeout !== undefined) {
