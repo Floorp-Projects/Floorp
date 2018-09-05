@@ -27,6 +27,7 @@
 
 #include "builtin/String.h"
 #include "double-conversion/double-conversion.h"
+#include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #if !EXPOSE_INTL_API
 #include "js/LocaleSensitive.h"
@@ -796,10 +797,10 @@ num_toLocaleString_impl(JSContext* cx, const CallArgs& args)
      * Create the string, move back to bytes to make string twiddling
      * a bit easier and so we can insert platform charset seperators.
      */
-    JSAutoByteString numBytes(cx, str);
+    UniqueChars numBytes = JS_EncodeString(cx, str);
     if (!numBytes)
         return false;
-    const char* num = numBytes.ptr();
+    const char* num = numBytes.get();
     if (!num)
         return false;
 
