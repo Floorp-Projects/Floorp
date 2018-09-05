@@ -607,7 +607,7 @@ ExecuteCompileTask(CompileTask* task, UniqueChars* error)
     MOZ_ASSERT(task->lifo.isEmpty());
     MOZ_ASSERT(task->output.empty());
 
-    switch (task->env.tier()) {
+    switch (task->env.tier) {
       case Tier::Ion:
         if (!IonCompileFunctions(task->env, task->lifo, task->inputs, &task->output, error))
             return false;

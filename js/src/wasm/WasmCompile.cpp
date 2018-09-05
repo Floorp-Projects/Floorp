@@ -81,11 +81,11 @@ CompileArgs::CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller)
     bool gcEnabled = false;
 #endif
 
-    baselineEnabled = cx->options().wasmBaseline();
-    ionEnabled = cx->options().wasmIon();
+    baselineEnabled = cx->options().wasmBaseline() || gcEnabled;
+    ionEnabled = cx->options().wasmIon() && !gcEnabled;
     sharedMemoryEnabled = cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
     gcTypesConfigured = gcEnabled ? HasGcTypes::True : HasGcTypes::False;
-    testTiering = cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
+    testTiering = (cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2) && !gcEnabled;
 
     // Debug information such as source view or debug traps will require
     // additional memory and permanently stay in baseline code, so we try to
@@ -373,51 +373,10 @@ TieringBeneficial(uint32_t codeSize)
     return true;
 }
 
-CompilerEnvironment::CompilerEnvironment(const CompileArgs& args)
-  : state_(InitialWithArgs),
-    args_(&args)
+static void
+InitialCompileFlags(const CompileArgs& args, Decoder& d, CompileMode* mode, Tier* tier,
+                    DebugEnabled* debug)
 {
-}
-
-CompilerEnvironment::CompilerEnvironment(CompileMode mode,
-                                         Tier tier,
-                                         DebugEnabled debugEnabled,
-                                         HasGcTypes gcTypesConfigured)
-  : state_(InitialWithModeTierDebug),
-    mode_(mode),
-    tier_(tier),
-    debug_(debugEnabled),
-    gcTypes_(gcTypesConfigured)
-{
-}
-
-void
-CompilerEnvironment::computeParameters(HasGcTypes gcFeatureOptIn)
-{
-    MOZ_ASSERT(state_ == InitialWithModeTierDebug);
-
-    if (gcTypes_ == HasGcTypes::True)
-        gcTypes_ = gcFeatureOptIn;
-    state_ = Computed;
-}
-
-void
-CompilerEnvironment::computeParameters(Decoder& d, HasGcTypes gcFeatureOptIn)
-{
-    MOZ_ASSERT(!isComputed());
-
-    if (state_ == InitialWithModeTierDebug) {
-        computeParameters(gcFeatureOptIn);
-        return;
-    }
-
-    bool gcEnabled = args_->gcTypesConfigured == HasGcTypes::True &&
-                     gcFeatureOptIn == HasGcTypes::True;
-    bool argBaselineEnabled = args_->baselineEnabled || gcEnabled;
-    bool argIonEnabled = args_->ionEnabled && !gcEnabled;
-    bool argTestTiering = args_->testTiering && !gcEnabled;
-    bool argDebugEnabled = args_->debugEnabled;
-
     uint32_t codeSectionSize = 0;
 
     SectionRange range;
@@ -425,25 +384,24 @@ CompilerEnvironment::computeParameters(Decoder& d, HasGcTypes gcFeatureOptIn)
         codeSectionSize = range.size;
 
     // Attempt to default to ion if baseline is disabled.
-    bool baselineEnabled = BaselineCanCompile() && (argBaselineEnabled || argTestTiering);
-    bool debugEnabled = BaselineCanCompile() && argDebugEnabled;
-    bool ionEnabled = IonCanCompile() && (argIonEnabled || !baselineEnabled || argTestTiering);
+    bool baselineEnabled = BaselineCanCompile() && (args.baselineEnabled || args.testTiering);
+    bool debugEnabled = BaselineCanCompile() && args.debugEnabled;
+    bool ionEnabled = IonCanCompile() && (args.ionEnabled || !baselineEnabled || args.testTiering);
 
     // HasCompilerSupport() should prevent failure here
     MOZ_RELEASE_ASSERT(baselineEnabled || ionEnabled);
 
     if (baselineEnabled && ionEnabled && !debugEnabled && CanUseExtraThreads() &&
-        (TieringBeneficial(codeSectionSize) || argTestTiering))
+        (TieringBeneficial(codeSectionSize) || args.testTiering))
     {
-        mode_ = CompileMode::Tier1;
-        tier_ = Tier::Baseline;
+        *mode = CompileMode::Tier1;
+        *tier = Tier::Baseline;
     } else {
-        mode_ = CompileMode::Once;
-        tier_ = debugEnabled || !ionEnabled ? Tier::Baseline : Tier::Ion;
+        *mode = CompileMode::Once;
+        *tier = debugEnabled || !ionEnabled ? Tier::Baseline : Tier::Ion;
     }
-    debug_ = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
-    gcTypes_ = gcEnabled ? HasGcTypes::True : HasGcTypes::False;
-    state_ = Computed;
+
+    *debug = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
 }
 
 template <class DecoderT>
@@ -504,9 +462,12 @@ wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, Uni
 
     Decoder d(bytecode.bytes, 0, error, warnings);
 
-    CompilerEnvironment compilerEnv(args);
-    ModuleEnvironment env(args.gcTypesConfigured,
-                          &compilerEnv,
+    CompileMode mode;
+    Tier tier;
+    DebugEnabled debug;
+    InitialCompileFlags(args, d, &mode, &tier, &debug);
+
+    ModuleEnvironment env(mode, tier, debug, args.gcTypesConfigured,
                           args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
     if (!DecodeModuleEnvironment(d, &env))
         return nullptr;
@@ -532,16 +493,12 @@ wasm::CompileTier2(const CompileArgs& args, Module& module, Atomic<bool>* cancel
     UniqueChars error;
     Decoder d(module.bytecode().bytes, 0, &error);
 
-    HasGcTypes gcTypesConfigured = HasGcTypes::False; // No Ion support yet
-    CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Ion, DebugEnabled::False,
-                                    gcTypesConfigured);
-    ModuleEnvironment env(gcTypesConfigured,
-                          &compilerEnv,
+    MOZ_ASSERT(args.gcTypesConfigured == HasGcTypes::False, "can't ion-compile with gc types yet");
+
+    ModuleEnvironment env(CompileMode::Tier2, Tier::Ion, DebugEnabled::False, HasGcTypes::False,
                           args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
     if (!DecodeModuleEnvironment(d, &env))
         return;
-
-    MOZ_ASSERT(env.gcTypesEnabled() == HasGcTypes::False, "can't ion-compile with gc types yet");
 
     ModuleGenerator mg(args, &env, cancelled, &error);
     if (!mg.init())
@@ -660,9 +617,12 @@ wasm::CompileStreaming(const CompileArgs& args,
     {
         Decoder d(envBytes, 0, error, warnings);
 
-        CompilerEnvironment compilerEnv(args);
-        env.emplace(args.gcTypesConfigured,
-                    &compilerEnv,
+        CompileMode mode;
+        Tier tier;
+        DebugEnabled debug;
+        InitialCompileFlags(args, d, &mode, &tier, &debug);
+
+        env.emplace(mode, tier, debug, args.gcTypesConfigured,
                     args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
         if (!DecodeModuleEnvironment(d, env.ptr()))
             return nullptr;
