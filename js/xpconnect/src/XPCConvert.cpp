@@ -1351,7 +1351,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
             if (!str)
                 return NS_ERROR_FAILURE;
 
-            JS::UniqueChars strBytes = JS_EncodeString(cx, str);
+            JS::UniqueChars strBytes = JS_EncodeStringToLatin1(cx, str);
             if (!strBytes)
                 return NS_ERROR_FAILURE;
 
@@ -1419,8 +1419,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
 
     JSString* str = ToString(cx, s);
     if (str) {
-        JS::UniqueChars strBytes = JS_EncodeString(cx, str);
-        if (!!strBytes) {
+        if (JS::UniqueChars strBytes = JS_EncodeStringToLatin1(cx, str)) {
             return ConstructException(NS_ERROR_XPC_JS_THREW_STRING,
                                       strBytes.get(), ifaceName, methodName,
                                       nullptr, exceptn, cx, s.address());

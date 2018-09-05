@@ -300,7 +300,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                 if (!JSID_IS_STRING(id))
                     break;
 
-                name = JS_EncodeString(ccx, JSID_TO_STRING(id));
+                name = JS_EncodeStringToLatin1(ccx, JSID_TO_STRING(id));
                 if (!name)
                     break;
 

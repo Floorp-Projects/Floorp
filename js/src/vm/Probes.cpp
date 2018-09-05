@@ -40,7 +40,7 @@ FunctionName(JSContext* cx, JSFunction* fun, UniqueChars* bytes)
         return probes::nullName;
     if (!fun->displayAtom())
         return probes::anonymousName;
-    *bytes = JS_EncodeString(cx, fun->displayAtom());
+    *bytes = JS_EncodeStringToLatin1(cx, fun->displayAtom());
     return *bytes ? bytes->get() : probes::nullName;
 }
 

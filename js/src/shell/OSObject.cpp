@@ -106,7 +106,7 @@ ResolvePath(JSContext* cx, HandleString filenameStr, PathResolutionMode resolveM
 #endif
     }
 
-    UniqueChars filename = JS_EncodeString(cx, filenameStr);
+    UniqueChars filename = JS_EncodeStringToLatin1(cx, filenameStr);
     if (!filename)
         return nullptr;
 
@@ -158,7 +158,7 @@ ResolvePath(JSContext* cx, HandleString filenameStr, PathResolutionMode resolveM
 JSObject*
 FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr)
 {
-    UniqueChars pathname = JS_EncodeString(cx, pathnameStr);
+    UniqueChars pathname = JS_EncodeStringToLatin1(cx, pathnameStr);
     if (!pathname)
         return nullptr;
 
@@ -319,7 +319,7 @@ osfile_writeTypedArrayToFile(JSContext* cx, unsigned argc, Value* vp)
     if (!str)
         return false;
 
-    UniqueChars filename = JS_EncodeString(cx, str);
+    UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
     if (!filename)
         return false;
 
@@ -472,7 +472,7 @@ redirect(JSContext* cx, HandleString relFilename, RCFile** globalFile)
     RootedString filename(cx, ResolvePath(cx, relFilename, RootRelative));
     if (!filename)
         return nullptr;
-    UniqueChars filenameABS = JS_EncodeString(cx, filename);
+    UniqueChars filenameABS = JS_EncodeStringToLatin1(cx, filename);
     if (!filenameABS)
         return nullptr;
     RCFile* file = RCFile::create(cx, filenameABS.get(), "wb");
@@ -636,7 +636,7 @@ ospath_isAbsolute(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    UniqueChars path = JS_EncodeString(cx, args[0].toString());
+    UniqueChars path = JS_EncodeStringToLatin1(cx, args[0].toString());
     if (!path)
         return false;
 
@@ -665,7 +665,7 @@ ospath_join(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
 
-        UniqueChars path = JS_EncodeString(cx, args[i].toString());
+        UniqueChars path = JS_EncodeStringToLatin1(cx, args[i].toString());
         if (!path)
             return false;
 
@@ -795,7 +795,7 @@ os_system(JSContext* cx, unsigned argc, Value* vp)
     if (!str)
         return false;
 
-    UniqueChars command = JS_EncodeString(cx, str);
+    UniqueChars command = JS_EncodeStringToLatin1(cx, str);
     if (!command)
         return false;
 
@@ -824,7 +824,7 @@ os_spawn(JSContext* cx, unsigned argc, Value* vp)
     if (!str)
         return false;
 
-    UniqueChars command = JS_EncodeString(cx, str);
+    UniqueChars command = JS_EncodeStringToLatin1(cx, str);
     if (!command)
         return false;
 
