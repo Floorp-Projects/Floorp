@@ -279,6 +279,7 @@ macosx64-tests:
     - test-verify-wpt
     - web-platform-tests
     - web-platform-tests-reftests
+    - web-platform-tests-wdspec
     - xpcshell
 
 macosx64-talos:

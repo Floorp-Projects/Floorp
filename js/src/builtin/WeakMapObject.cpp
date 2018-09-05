@@ -203,7 +203,7 @@ JS_PUBLIC_API(bool)
 JS::GetWeakMapEntry(JSContext* cx, HandleObject mapObj, HandleObject key,
                     MutableHandleValue rval)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(key);
     rval.setUndefined();
     ObjectValueMap* map = mapObj->as<WeakMapObject>().getMap();
@@ -222,7 +222,7 @@ JS_PUBLIC_API(bool)
 JS::SetWeakMapEntry(JSContext* cx, HandleObject mapObj, HandleObject key,
                     HandleValue val)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(key, val);
     Handle<WeakMapObject*> rootedMap = mapObj.as<WeakMapObject>();
     return WeakCollectionPutEntryInternal(cx, rootedMap, key, val);

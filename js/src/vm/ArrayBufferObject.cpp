@@ -1812,7 +1812,7 @@ JS_FRIEND_API(bool)
 JS_DetachArrayBuffer(JSContext* cx, HandleObject obj)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(obj);
 
     if (!obj->is<ArrayBufferObject>()) {
@@ -1850,7 +1850,7 @@ JS_FRIEND_API(JSObject*)
 JS_NewArrayBuffer(JSContext* cx, uint32_t nbytes)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     MOZ_ASSERT(nbytes <= INT32_MAX);
     return ArrayBufferObject::create(cx, nbytes);
 }
@@ -1859,7 +1859,7 @@ JS_PUBLIC_API(JSObject*)
 JS_NewArrayBufferWithContents(JSContext* cx, size_t nbytes, void* data)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     MOZ_ASSERT_IF(!data, nbytes == 0);
 
     ArrayBufferObject::BufferContents contents =
@@ -1873,7 +1873,7 @@ JS_NewExternalArrayBuffer(JSContext* cx, size_t nbytes, void* data,
                           JS::BufferContentsFreeFunc freeFunc, void* freeUserData)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
 
     MOZ_ASSERT(data);
     MOZ_ASSERT(nbytes > 0);
@@ -1888,7 +1888,7 @@ JS_PUBLIC_API(JSObject*)
 JS_NewArrayBufferWithExternalContents(JSContext* cx, size_t nbytes, void* data)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     MOZ_ASSERT_IF(!data, nbytes == 0);
     ArrayBufferObject::BufferContents contents =
         ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(data);
@@ -1929,7 +1929,7 @@ JS_PUBLIC_API(void*)
 JS_ExternalizeArrayBufferContents(JSContext* cx, HandleObject obj)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(obj);
 
     if (!obj->is<ArrayBufferObject>()) {
@@ -1961,7 +1961,7 @@ JS_PUBLIC_API(void*)
 JS_StealArrayBufferContents(JSContext* cx, HandleObject objArg)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(objArg);
 
     JSObject* obj = CheckedUnwrap(objArg);
@@ -1998,7 +1998,7 @@ JS_PUBLIC_API(JSObject*)
 JS_NewMappedArrayBufferWithContents(JSContext* cx, size_t nbytes, void* data)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
 
     MOZ_ASSERT(data);
     ArrayBufferObject::BufferContents contents =
@@ -2049,7 +2049,7 @@ JS_FRIEND_API(JSObject*)
 JS_GetArrayBufferViewBuffer(JSContext* cx, HandleObject objArg, bool* isSharedMemory)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(objArg);
 
     JSObject* obj = CheckedUnwrap(objArg);

@@ -3649,8 +3649,6 @@ WorkerMain(WorkerInput* input)
     EnvironmentPreparer environmentPreparer(cx);
 
     do {
-        JSAutoRequest areq(cx);
-
         JS::RealmOptions compartmentOptions;
         SetStandardRealmOptions(compartmentOptions);
 
@@ -9473,8 +9471,6 @@ Shell(JSContext* cx, OptionParser* op, char** envp)
     Maybe<AutoDisableCompactingGC> nocgc;
     if (op->getBoolOption("no-cgc"))
         nocgc.emplace(cx);
-
-    JSAutoRequest areq(cx);
 
     if (op->getBoolOption("fuzzing-safe"))
         fuzzingSafe = true;

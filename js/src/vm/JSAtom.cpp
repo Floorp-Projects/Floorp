@@ -857,7 +857,7 @@ JSAtom*
 js::Atomize(JSContext* cx, const char* bytes, size_t length, PinningBehavior pin,
             const Maybe<uint32_t>& indexValue)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
 
     const Latin1Char* chars = reinterpret_cast<const Latin1Char*>(bytes);
     return AtomizeAndCopyChars(cx, chars, length, pin, indexValue);
@@ -867,7 +867,7 @@ template <typename CharT>
 JSAtom*
 js::AtomizeChars(JSContext* cx, const CharT* chars, size_t length, PinningBehavior pin)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     return AtomizeAndCopyChars(cx, chars, length, pin, Nothing());
 }
 

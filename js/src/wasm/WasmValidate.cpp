@@ -397,12 +397,12 @@ DecodeValType(Decoder& d, ModuleKind kind, uint32_t numTypes, HasGcTypes gcTypes
         return true;
       case uint8_t(ValType::AnyRef):
         if (gcTypesEnabled == HasGcTypes::False)
-            break;
+            return d.fail("reference types not enabled");
         *type = ValType(ValType::Code(uncheckedCode));
         return true;
       case uint8_t(ValType::Ref): {
         if (gcTypesEnabled == HasGcTypes::False)
-            break;
+            return d.fail("reference types not enabled");
         if (uncheckedRefTypeIndex >= numTypes)
             return d.fail("ref index out of range");
         // We further validate ref types in the caller.
@@ -863,14 +863,14 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
           }
 #ifdef ENABLE_WASM_GC
           case uint16_t(Op::RefNull): {
-            if (env.gcTypesEnabled == HasGcTypes::False)
+            if (env.gcTypesEnabled() == HasGcTypes::False)
                 return iter.unrecognizedOpcode(&op);
             ValType unusedType;
             CHECK(iter.readRefNull(&unusedType));
             break;
           }
           case uint16_t(Op::RefIsNull): {
-            if (env.gcTypesEnabled == HasGcTypes::False)
+            if (env.gcTypesEnabled() == HasGcTypes::False)
                 return iter.unrecognizedOpcode(&op);
             CHECK(iter.readConversion(ValType::AnyRef, ValType::I32, &nothing));
             break;
@@ -1070,7 +1070,7 @@ wasm::ValidateFunctionBody(const ModuleEnvironment& env, uint32_t funcIndex, uin
 
     const uint8_t* bodyBegin = d.currentPosition();
 
-    if (!DecodeLocalEntries(d, ModuleKind::Wasm, env.types, env.gcTypesEnabled, &locals))
+    if (!DecodeLocalEntries(d, ModuleKind::Wasm, env.types, env.gcTypesEnabled(), &locals))
         return false;
 
     if (!DecodeFunctionBodyExprs(env, funcType, locals, bodyBegin + bodySize, &d))
@@ -1154,7 +1154,7 @@ DecodeFuncType(Decoder& d, ModuleEnvironment* env, TypeStateVector* typeState, u
         return false;
 
     for (uint32_t i = 0; i < numArgs; i++) {
-        if (!DecodeValType(d, ModuleKind::Wasm, env->types.length(), env->gcTypesEnabled, &args[i]))
+        if (!DecodeValType(d, ModuleKind::Wasm, env->types.length(), env->gcTypesEnabled(), &args[i]))
             return false;
         if (!ValidateRefType(d, typeState, args[i]))
             return false;
@@ -1171,7 +1171,7 @@ DecodeFuncType(Decoder& d, ModuleEnvironment* env, TypeStateVector* typeState, u
 
     if (numRets == 1) {
         ValType type;
-        if (!DecodeValType(d, ModuleKind::Wasm, env->types.length(), env->gcTypesEnabled, &type))
+        if (!DecodeValType(d, ModuleKind::Wasm, env->types.length(), env->gcTypesEnabled(), &type))
             return false;
         if (!ValidateRefType(d, typeState, type))
             return false;
@@ -1191,7 +1191,7 @@ DecodeFuncType(Decoder& d, ModuleEnvironment* env, TypeStateVector* typeState, u
 static bool
 DecodeStructType(Decoder& d, ModuleEnvironment* env, TypeStateVector* typeState, uint32_t typeIndex)
 {
-    if (env->gcTypesEnabled == HasGcTypes::False)
+    if (env->gcTypesEnabled() == HasGcTypes::False)
         return d.fail("Structure types not enabled");
 
     uint32_t numFields;
@@ -1214,7 +1214,7 @@ DecodeStructType(Decoder& d, ModuleEnvironment* env, TypeStateVector* typeState,
         if ((flags & ~uint8_t(FieldFlags::AllowedMask)) != 0)
             return d.fail("garbage flag bits");
         fields[i].isMutable = flags & uint8_t(FieldFlags::Mutable);
-        if (!DecodeValType(d, ModuleKind::Wasm, env->types.length(), env->gcTypesEnabled, &fields[i].type))
+        if (!DecodeValType(d, ModuleKind::Wasm, env->types.length(), env->gcTypesEnabled(), &fields[i].type))
             return false;
         if (!ValidateRefType(d, typeState, fields[i].type))
             return false;
@@ -1228,6 +1228,34 @@ DecodeStructType(Decoder& d, ModuleEnvironment* env, TypeStateVector* typeState,
 
     return true;
 }
+
+#ifdef ENABLE_WASM_GC
+static bool
+DecodeGCFeatureOptInSection(Decoder& d, ModuleEnvironment* env)
+{
+    MaybeSectionRange range;
+    if (!d.startSection(SectionId::GcFeatureOptIn, env, &range, "type"))
+        return false;
+    if (!range)
+        return true;
+
+    uint32_t version;
+    if (!d.readVarU32(&version))
+        return d.fail("expected gc feature version");
+
+    // For documentation of what's in the various versions, see
+    // https://github.com/lars-t-hansen/moz-gc-experiments
+    //
+    // When we evolve the engine to handle v2, we will continue to recognize v1
+    // here if v2 is fully backwards compatible with v1.
+
+    if (version != 1)
+        return d.fail("unsupported version of the gc feature");
+
+    env->gcFeatureOptIn = HasGcTypes::True;
+    return d.finishSection(*range, "gcfeatureoptin");
+}
+#endif
 
 static bool
 DecodeTypeSection(Decoder& d, ModuleEnvironment* env)
@@ -1536,7 +1564,7 @@ DecodeImport(Decoder& d, ModuleEnvironment* env)
       case DefinitionKind::Global: {
         ValType type;
         bool isMutable;
-        if (!DecodeGlobalType(d, env->types, env->gcTypesEnabled, &type, &isMutable))
+        if (!DecodeGlobalType(d, env->types, env->gcTypesEnabled(), &type, &isMutable))
             return false;
         if (!GlobalIsJSCompatible(d, type, isMutable))
             return false;
@@ -1768,11 +1796,11 @@ DecodeGlobalSection(Decoder& d, ModuleEnvironment* env)
     for (uint32_t i = 0; i < numDefs; i++) {
         ValType type;
         bool isMutable;
-        if (!DecodeGlobalType(d, env->types, env->gcTypesEnabled, &type, &isMutable))
+        if (!DecodeGlobalType(d, env->types, env->gcTypesEnabled(), &type, &isMutable))
             return false;
 
         InitExpr initializer;
-        if (!DecodeInitializerExpression(d, env->gcTypesEnabled, env->globals, type,
+        if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, type,
                                          env->types.length(), &initializer))
         {
             return false;
@@ -1961,7 +1989,7 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
             return d.fail("table index out of range");
 
         InitExpr offset;
-        if (!DecodeInitializerExpression(d, env->gcTypesEnabled, env->globals, ValType::I32,
+        if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
                                          env->types.length(), &offset))
         {
             return false;
@@ -2040,6 +2068,16 @@ wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env)
 {
     if (!DecodePreamble(d))
         return false;
+
+#ifdef ENABLE_WASM_GC
+    if (!DecodeGCFeatureOptInSection(d, env))
+        return false;
+    HasGcTypes gcFeatureOptIn = env->gcFeatureOptIn;
+#else
+    HasGcTypes gcFeatureOptIn = HasGcTypes::False;
+#endif
+
+    env->compilerEnv->computeParameters(d, gcFeatureOptIn);
 
     if (!DecodeTypeSection(d, env))
         return false;
@@ -2148,7 +2186,7 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
             return d.fail("data segment requires a memory section");
 
         DataSegment seg;
-        if (!DecodeInitializerExpression(d, env->gcTypesEnabled, env->globals, ValType::I32,
+        if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
                                          env->types.length(), &seg.offset))
         {
             return false;
@@ -2309,12 +2347,15 @@ wasm::Validate(JSContext* cx, const ShareableBytes& bytecode, UniqueChars* error
     Decoder d(bytecode.bytes, 0, error);
 
 #ifdef ENABLE_WASM_GC
-    HasGcTypes gcSupport = cx->options().wasmGc() ? HasGcTypes::True : HasGcTypes::False;
+    HasGcTypes gcTypesConfigured = cx->options().wasmGc() ? HasGcTypes::True : HasGcTypes::False;
 #else
-    HasGcTypes gcSupport = HasGcTypes::False;
+    HasGcTypes gcTypesConfigured = HasGcTypes::False;
 #endif
 
-    ModuleEnvironment env(CompileMode::Once, Tier::Ion, DebugEnabled::False, gcSupport,
+    CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Ion, DebugEnabled::False,
+                                    gcTypesConfigured);
+    ModuleEnvironment env(gcTypesConfigured,
+                          &compilerEnv,
                           cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()
                           ? Shareable::True
                           : Shareable::False);

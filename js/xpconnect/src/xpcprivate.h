@@ -772,7 +772,6 @@ inline void CHECK_STATE(int s) const {MOZ_ASSERT(mState >= s, "bad state");}
 #endif
 
 private:
-    JSAutoRequest                   mAr;
     State                           mState;
 
     RefPtr<nsXPConnect>           mXPC;

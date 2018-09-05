@@ -322,11 +322,6 @@ AutoJSAPI::~AutoJSAPI()
     JS::SetWarningReporter(cx(), mOldWarningReporter.value());
   }
 
-  // Leave the request before popping.
-  if (mIsMainThread) {
-    mAutoRequest.reset();
-  }
-
   ScriptSettingsStack::Pop(this);
 }
 
@@ -349,12 +344,6 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
   mCx = aCx;
   mIsMainThread = aIsMainThread;
   mGlobalObject = aGlobalObject;
-  if (aIsMainThread) {
-    // We _could_ just unconditionally emplace mAutoRequest here.  It's just not
-    // needed on worker threads, and we're hoping to kill it on the main thread
-    // too.
-    mAutoRequest.emplace(mCx);
-  }
   if (aGlobal) {
     JS::ExposeObjectToActiveJS(aGlobal);
   }

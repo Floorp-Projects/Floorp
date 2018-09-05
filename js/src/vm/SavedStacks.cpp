@@ -772,7 +772,7 @@ GetSavedFrameSource(JSContext* cx, JSPrincipals* principals, HandleObject savedF
                     SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */)
 {
     js::AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     MOZ_RELEASE_ASSERT(cx->realm());
 
     {
@@ -796,7 +796,7 @@ GetSavedFrameLine(JSContext* cx, JSPrincipals* principals, HandleObject savedFra
                   SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */)
 {
     js::AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     MOZ_RELEASE_ASSERT(cx->realm());
     MOZ_ASSERT(linep);
 
@@ -817,7 +817,7 @@ GetSavedFrameColumn(JSContext* cx, JSPrincipals* principals, HandleObject savedF
                     SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */)
 {
     js::AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     MOZ_RELEASE_ASSERT(cx->realm());
     MOZ_ASSERT(columnp);
 
@@ -838,7 +838,7 @@ GetSavedFrameFunctionDisplayName(JSContext* cx, JSPrincipals* principals, Handle
                                  SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */)
 {
     js::AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     MOZ_RELEASE_ASSERT(cx->realm());
 
     {
@@ -862,7 +862,7 @@ GetSavedFrameAsyncCause(JSContext* cx, JSPrincipals* principals, HandleObject sa
                         SavedFrameSelfHosted unused_ /* = SavedFrameSelfHosted::Include */)
 {
     js::AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     MOZ_RELEASE_ASSERT(cx->realm());
 
     {
@@ -894,7 +894,7 @@ GetSavedFrameAsyncParent(JSContext* cx, JSPrincipals* principals, HandleObject s
                          SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */)
 {
     js::AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     MOZ_RELEASE_ASSERT(cx->realm());
 
     bool skippedAsync;
@@ -928,7 +928,7 @@ GetSavedFrameParent(JSContext* cx, JSPrincipals* principals, HandleObject savedF
                     SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */)
 {
     js::AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     MOZ_RELEASE_ASSERT(cx->realm());
 
     bool skippedAsync;
@@ -1034,7 +1034,7 @@ BuildStackString(JSContext* cx, JSPrincipals* principals, HandleObject stack,
                  MutableHandleString stringp, size_t indent, js::StackFormat format)
 {
     js::AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     MOZ_RELEASE_ASSERT(cx->realm());
 
     js::StringBuffer sb(cx);
