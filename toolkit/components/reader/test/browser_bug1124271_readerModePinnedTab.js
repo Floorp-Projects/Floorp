@@ -29,7 +29,7 @@ add_task(async function() {
   // Point tab to a test page that is reader-able.
   let url = TEST_PATH + "readerModeArticle.html";
   await promiseTabLoadEvent(tab, url);
-  await promiseWaitForCondition(() => !readerButton.hidden);
+  await TestUtils.waitForCondition(() => !readerButton.hidden);
 
   readerButton.click();
   await promiseTabLoadEvent(tab);
