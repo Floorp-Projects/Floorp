@@ -15,7 +15,7 @@
     <p>Status codes test</p>
 
     <script type="text/javascript">
-      /* exported performRequests, performCachedRequests */
+      /* exported performRequests, performCachedRequests, performOneCachedRequest */
       "use strict";
 
       function get(address, callback) {
@@ -54,6 +54,13 @@
         });
       }
 
+      function performOneCachedRequest() {
+        get("sjs_status-codes-test-server.sjs?sts=ok&cached", function() {
+          get("sjs_status-codes-test-server.sjs?sts=ok&cached", function() {
+            // Done.
+          });
+        });
+      }
     </script>
   </body>
 

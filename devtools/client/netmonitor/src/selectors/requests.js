@@ -108,7 +108,8 @@ const getDisplayedRequestsSummary = createSelector(
         totals.contentSize += item.contentSize;
       }
 
-      if (typeof item.transferredSize == "number" && !item.fromCache) {
+      if (typeof item.transferredSize == "number" &&
+        !(item.fromCache || item.status === "304")) {
         totals.transferredSize += item.transferredSize;
       }
 
