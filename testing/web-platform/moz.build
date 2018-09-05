@@ -221,10 +221,10 @@ with Files("tests/css/css-cascade/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
 with Files("tests/css/css-font-loading/**"):
-    BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
+    BUG_COMPONENT = ("Core", "Layout: Text")
 
 with Files("tests/css/css-fonts/**"):
-    BUG_COMPONENT = ("Core", "Layout: Text and Fonts")
+    BUG_COMPONENT = ("Core", "Layout: Text")
 
 with Files("tests/css/css-paint-api/**"):
     BUG_COMPONENT = ("Core", "Layout: Web Painting")
