@@ -528,6 +528,12 @@ function networkRequest(url, opts) {
     cache: opts.loadFromCache ? "default" : "no-cache"
   }).then(res => {
     if (res.status >= 200 && res.status < 300) {
+      if (res.headers.get("Content-Type") === "application/wasm") {
+        return res.arrayBuffer().then(buffer => ({
+          content: buffer,
+          isDwarf: true
+        }));
+      }
       return res.text().then(text => ({ content: text }));
     }
     return Promise.reject(`request failed with status ${res.status}`);
@@ -4308,6 +4314,7 @@ const { networkRequest } = __webpack_require__(3651);
 const { getSourceMap, setSourceMap } = __webpack_require__(3704);
 const { WasmRemap } = __webpack_require__(3719);
 const { SourceMapConsumer } = __webpack_require__(3705);
+const { convertToJSON } = __webpack_require__(3785);
 
 function _resolveSourceMapURL(source) {
   const { url = "", sourceMapURL = "" } = source;
@@ -4334,7 +4341,11 @@ async function _resolveAndFetch(generatedSource) {
   // Fetch the sourcemap over the network and create it.
   const { sourceMapURL, baseURL } = _resolveSourceMapURL(generatedSource);
 
-  const fetched = await networkRequest(sourceMapURL, { loadFromCache: false });
+  let fetched = await networkRequest(sourceMapURL, { loadFromCache: false });
+
+  if (fetched.isDwarf) {
+    fetched = { content: await convertToJSON(fetched.content) };
+  }
 
   // Create the source map and fix it up.
   let map = new SourceMapConsumer(fetched.content, baseURL);
@@ -4514,6 +4525,59 @@ async function getOriginalStackFrames(generatedLocation) {
 
 module.exports = {
   getOriginalStackFrames
+};
+
+/***/ }),
+
+/***/ 3785:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/* eslint camelcase: 0*/
+
+let cachedWasmModule;
+let utf8Decoder;
+
+function convertDwarf(wasm, instance) {
+  const { memory, alloc_mem, free_mem, convert_dwarf } = instance.exports;
+  const wasmPtr = alloc_mem(wasm.byteLength);
+  new Uint8Array(memory.buffer, wasmPtr, wasm.byteLength).set(new Uint8Array(wasm));
+  const resultPtr = alloc_mem(12);
+  const enableXScopes = false;
+  convert_dwarf(wasmPtr, wasm.byteLength, resultPtr, resultPtr + 4, enableXScopes);
+  free_mem(wasmPtr);
+  const resultView = new DataView(memory.buffer, resultPtr, 12);
+  const outputPtr = resultView.getUint32(0, true),
+        outputLen = resultView.getUint32(4, true);
+  free_mem(resultPtr);
+  if (!utf8Decoder) {
+    utf8Decoder = new TextDecoder("utf-8");
+  }
+  const output = utf8Decoder.decode(new Uint8Array(memory.buffer, outputPtr, outputLen));
+  free_mem(outputPtr);
+  return output;
+}
+
+async function convertToJSON(buffer) {
+  if (!cachedWasmModule) {
+    const isFirefoxPanel = typeof location !== "undefined" && location.protocol === "resource:";
+    const wasmPath = `${isFirefoxPanel ? "." : "/wasm"}/dwarf_to_json.wasm`;
+    const wasm = await (await fetch(wasmPath)).arrayBuffer();
+    const imports = {};
+    const { instance } = await WebAssembly.instantiate(wasm, imports);
+    cachedWasmModule = instance;
+  }
+  return convertDwarf(buffer, cachedWasmModule);
+}
+
+module.exports = {
+  convertToJSON
 };
 
 /***/ })

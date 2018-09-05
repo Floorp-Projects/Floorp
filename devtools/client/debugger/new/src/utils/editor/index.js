@@ -63,6 +63,8 @@ Object.defineProperty(exports, "onMouseOver", {
 });
 exports.getEditor = getEditor;
 exports.removeEditor = removeEditor;
+exports.startOperation = startOperation;
+exports.endOperation = endOperation;
 exports.shouldShowPrettyPrint = shouldShowPrettyPrint;
 exports.shouldShowFooter = shouldShowFooter;
 exports.traverseResults = traverseResults;
@@ -101,6 +103,30 @@ function getEditor() {
 
 function removeEditor() {
   editor = null;
+}
+
+function getCodeMirror() {
+  return editor && editor.codeMirror;
+}
+
+function startOperation() {
+  const codeMirror = getCodeMirror();
+
+  if (!codeMirror) {
+    return;
+  }
+
+  codeMirror.startOperation();
+}
+
+function endOperation() {
+  const codeMirror = getCodeMirror();
+
+  if (!codeMirror) {
+    return;
+  }
+
+  codeMirror.endOperation();
 }
 
 function shouldShowPrettyPrint(selectedSource) {

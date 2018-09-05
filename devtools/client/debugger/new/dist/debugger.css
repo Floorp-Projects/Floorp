@@ -210,11 +210,6 @@ button:focus {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:root.theme-light,
-:root .theme-light {
-  --theme-search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
-}
-
 * {
   box-sizing: border-box;
 }
@@ -1077,8 +1072,8 @@ html .toggle-button.end.vertical svg {
   line-height: 30px;
   background-color: var(--theme-toolbar-background);
   color: var(--theme-body-color-active);
-  width: calc(100% - 38px);
-  flex: 1;
+  flex-grow: 1;
+  min-width: 40px;
 }
 
 .search-field.big input {
@@ -1086,6 +1081,10 @@ html .toggle-button.end.vertical svg {
   margin-left: 30px;
   font-size: 14px;
   line-height: 40px;
+}
+
+.search-field input:focus {
+  outline: none;
 }
 
 .theme-dark .search-field input {
@@ -1128,7 +1127,8 @@ html .toggle-button.end.vertical svg {
 .search-field .summary {
   line-height: 27px;
   text-align: center;
-  padding-inline-end: 10px;
+  padding-inline-start: 5px;
+  padding-inline-end: 5px;
   color: var(--theme-body-color-inactive);
   align-self: center;
   padding-top: 1px;
@@ -1145,9 +1145,10 @@ html .toggle-button.end.vertical svg {
   height: 100%;
   background: transparent;
   transition: all 0.25s ease-in-out;
-  border: 1px solid transparent;
   justify-content: center;
   padding-top: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 .search-field .search-nav-buttons .nav-btn:hover {
@@ -1411,6 +1412,10 @@ html .toggle-button.end.vertical svg {
   font-style: italic;
   font-size: 0.9em;
   color: var(--theme-comment);
+}
+
+.sources-list .tree .focused .label .suffix {
+  color: inherit;
 }
 
 .sources-list .tree img.arrow.expanded {
@@ -3221,6 +3226,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   font-size: 12px;
   padding: 0.5em 1.6em;
   color: var(--theme-body-color);
+  outline: 0;
 }
 
 @keyframes shake {
@@ -3750,18 +3756,6 @@ img.skipPausing {
 
 .command-bar .filler {
   flex-grow: 1;
-}
-
-.command-bar img.replay-previous {
-  mask: url("chrome://devtools/skin/images/debugger/back.svg") no-repeat;
-  mask-size: 75%;
-  margin-top: 5px;
-}
-
-.command-bar img.replay-next {
-  mask: url("chrome://devtools/skin/images/debugger/forward.svg") no-repeat;
-  mask-size: 75%;
-  margin-top: 5px;
 }
 
 .command-bar img.shortcuts {

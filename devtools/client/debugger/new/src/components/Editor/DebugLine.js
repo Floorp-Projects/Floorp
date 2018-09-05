@@ -33,16 +33,10 @@ class DebugLine extends _react.Component {
       selectedFrame,
       selectedSource
     } = this.props;
+    (0, _editor.startOperation)();
+    this.clearDebugLine(prevProps.selectedFrame, prevProps.selectedSource, prevProps.why);
     this.setDebugLine(why, selectedFrame, selectedSource);
-  }
-
-  componentWillUpdate() {
-    const {
-      why,
-      selectedFrame,
-      selectedSource
-    } = this.props;
-    this.clearDebugLine(selectedFrame, selectedSource, why);
+    (0, _editor.endOperation)();
   }
 
   componentDidMount() {

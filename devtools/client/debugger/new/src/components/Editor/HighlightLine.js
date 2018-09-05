@@ -77,8 +77,10 @@ class HighlightLine extends _react.Component {
       this.isStepping = true;
     }
 
+    (0, _editor.startOperation)();
     this.clearHighlightLine(prevProps.selectedLocation, prevProps.selectedSource);
     this.setHighlightLine(selectedLocation, selectedFrame, selectedSource);
+    (0, _editor.endOperation)();
   }
 
   setHighlightLine(selectedLocation, selectedFrame, selectedSource) {
