@@ -9,7 +9,8 @@ var testBuffers = [
     "f",
     "\n",
     "\nf",
-    ""
+    "",
+    "Ää\n\u{10ffff}",
 ];
 
 var expected = [
@@ -19,11 +20,12 @@ var expected = [
     [ "f" ],
     [ "" ],
     [ "", "f" ],
-    []
+    [],
+    ["Ää", "\u{10ffff}"],
 ];
 
-for (var idx in testBuffers) {
-    readlineBuf(testBuffers[idx]);
+for (var [idx, testValue] of testBuffers.entries()) {
+    readlineBuf(testValue);
     var result = [];
 
     while ((line = readlineBuf()) != null) {
