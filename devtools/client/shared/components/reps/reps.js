@@ -4470,10 +4470,7 @@ class Tree extends Component {
         // Only set default focus to the first tree node if the focus came
         // from outside the tree (e.g. by tabbing to the tree from other
         // external elements).
-        if (
-          explicitOriginalTarget !== this.treeRef &&
-          !this.treeRef.contains(explicitOriginalTarget)
-        ) {
+        if (explicitOriginalTarget !== this.treeRef && !this.treeRef.contains(explicitOriginalTarget)) {
           this._focus(traversal[0].item);
         }
       },

@@ -56,10 +56,6 @@ var _projectTextSearch = require("./project-text-search");
 
 var _projectTextSearch2 = _interopRequireDefault(_projectTextSearch);
 
-var _replay = require("./replay");
-
-var _replay2 = _interopRequireDefault(_replay);
-
 var _quickOpen = require("./quick-open");
 
 var _quickOpen2 = _interopRequireDefault(_quickOpen);
@@ -96,7 +92,6 @@ exports.default = {
   ast: _ast2.default,
   coverage: _coverage2.default,
   projectTextSearch: _projectTextSearch2.default,
-  replay: _replay2.default,
   quickOpen: _quickOpen2.default,
   sourceTree: _sourceTree2.default,
   debuggee: _debuggee2.default

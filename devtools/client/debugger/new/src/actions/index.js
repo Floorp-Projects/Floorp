@@ -44,10 +44,6 @@ var _projectTextSearch = require("./project-text-search");
 
 var projectTextSearch = _interopRequireWildcard(_projectTextSearch);
 
-var _replay = require("./replay");
-
-var replay = _interopRequireWildcard(_replay);
-
 var _quickOpen = require("./quick-open");
 
 var quickOpen = _interopRequireWildcard(_quickOpen);
@@ -93,7 +89,6 @@ exports.default = { ...navigation,
   ...ast,
   ...coverage,
   ...projectTextSearch,
-  ...replay,
   ...quickOpen,
   ...sourceTree,
   ...debuggee,

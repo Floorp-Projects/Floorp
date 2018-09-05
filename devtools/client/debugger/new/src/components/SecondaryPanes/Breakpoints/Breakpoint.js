@@ -51,6 +51,15 @@ class Breakpoint extends _react.PureComponent {
       (0, _BreakpointsContextMenu2.default)({ ...this.props,
         contextMenuEvent: e
       });
+    }, this.onDoubleClick = () => {
+      const {
+        breakpoint,
+        openConditionalPanel
+      } = this.props;
+
+      if (breakpoint.condition) {
+        openConditionalPanel(breakpoint.location.line);
+      }
     }, this.selectBreakpoint = () => {
       const {
         breakpoint,
@@ -166,6 +175,7 @@ class Breakpoint extends _react.PureComponent {
         "is-conditional": !!breakpoint.condition
       }),
       onClick: this.selectBreakpoint,
+      onDoubleClick: this.onDoubleClick,
       onContextMenu: this.onContextMenu
     }, _react2.default.createElement("input", {
       type: "checkbox",

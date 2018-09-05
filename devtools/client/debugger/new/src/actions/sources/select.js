@@ -15,13 +15,15 @@ var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
 var _sources = require("../../reducers/sources");
 
+var _tabs = require("../../reducers/tabs");
+
 var _ast = require("../ast");
 
 var _ui = require("../ui");
 
 var _prettyPrint = require("./prettyPrint");
 
-var _tabs = require("../tabs");
+var _tabs2 = require("../tabs");
 
 var _loadSourceText = require("./loadSourceText");
 
@@ -140,7 +142,7 @@ function selectLocation(location, {
 
     const activeSearch = (0, _selectors.getActiveSearch)(getState());
 
-    if (activeSearch !== "file") {
+    if (activeSearch && activeSearch !== "file") {
       dispatch((0, _ui.closeActiveSearch)());
     } // Preserve the current source map context (original / generated)
     // when navigting to a new location.
@@ -153,7 +155,12 @@ function selectLocation(location, {
       source = (0, _sources.getSourceFromId)(getState(), location.sourceId);
     }
 
-    dispatch((0, _tabs.addTab)(source.url));
+    const tabSources = (0, _tabs.getSourcesForTabs)(getState());
+
+    if (!tabSources.includes(source)) {
+      dispatch((0, _tabs2.addTab)(source.url));
+    }
+
     dispatch(setSelectedLocation(source, location));
     await dispatch((0, _loadSourceText.loadSourceText)(source));
     const loadedSource = (0, _selectors.getSource)(getState(), source.id);
@@ -165,7 +172,7 @@ function selectLocation(location, {
 
     if (keepContext && _prefs.prefs.autoPrettyPrint && !(0, _selectors.getPrettySource)(getState(), loadedSource.id) && (0, _source.shouldPrettyPrint)(loadedSource) && (0, _source.isMinified)(loadedSource)) {
       await dispatch((0, _prettyPrint.togglePrettyPrint)(loadedSource.id));
-      dispatch((0, _tabs.closeTab)(loadedSource.url));
+      dispatch((0, _tabs2.closeTab)(loadedSource.url));
     }
 
     dispatch((0, _ast.setSymbols)(loadedSource.id));

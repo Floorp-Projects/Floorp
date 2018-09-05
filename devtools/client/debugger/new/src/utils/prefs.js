@@ -63,7 +63,6 @@ if ((0, _devtoolsEnvironment.isDevelopment)()) {
   pref("devtools.debugger.features.code-folding", false);
   pref("devtools.debugger.features.outline", true);
   pref("devtools.debugger.features.column-breakpoints", true);
-  pref("devtools.debugger.features.replay", true);
   pref("devtools.debugger.features.pause-points", true);
   pref("devtools.debugger.features.skip-pausing", true);
   pref("devtools.debugger.features.component-pane", false);
@@ -113,7 +112,6 @@ const features = exports.features = new _devtoolsModules.PrefsHelper("devtools.d
   eventListeners: ["Bool", "event-listeners"],
   outline: ["Bool", "outline"],
   codeFolding: ["Bool", "code-folding"],
-  replay: ["Bool", "replay"],
   pausePoints: ["Bool", "pause-points"],
   skipPausing: ["Bool", "skip-pausing"],
   autocompleteExpression: ["Bool", "autocomplete-expressions"],
