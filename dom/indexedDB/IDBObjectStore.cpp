@@ -1150,8 +1150,6 @@ IDBObjectStore::DeserializeValue(JSContext* aCx,
 
   MOZ_ASSERT(!(aCloneReadInfo.mData.Size() % sizeof(uint64_t)));
 
-  JSAutoRequest ar(aCx);
-
   static const JSStructuredCloneCallbacks callbacks = {
     CommonStructuredCloneReadCallback,
     nullptr,

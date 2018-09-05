@@ -98,10 +98,3 @@ interface nsICookiePermission : nsISupports
                        inout int64_t aExpiry);
 };
 
-%{ C++
-/**
- * The nsICookiePermission implementation is an XPCOM service registered
- * under the ContractID:
- */
-#define NS_COOKIEPERMISSION_CONTRACTID "@mozilla.org/cookie/permission;1"
-%}

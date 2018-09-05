@@ -130,9 +130,5 @@ TEST(GCPostBarriers, nsTArray) {
   JSContext* cx = ccjscx->Context();
   ASSERT_TRUE(cx != nullptr);
 
-  JS_BeginRequest(cx);
-
   CreateGlobalAndRunTest(cx);
-
-  JS_EndRequest(cx);
 }

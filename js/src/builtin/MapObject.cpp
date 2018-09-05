@@ -1693,7 +1693,7 @@ SetObject::clear(JSContext* cx, unsigned argc, Value* vp)
 static bool
 forEach(const char* funcName, JSContext *cx, HandleObject obj, HandleValue callbackFn, HandleValue thisArg)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
 
     RootedId forEachId(cx, NameToId(cx->names().forEach));
     RootedFunction forEachFunc(cx, JS::GetSelfHostedFunction(cx, funcName, forEachId, 2));
@@ -1709,7 +1709,7 @@ template<typename RetT>
 RetT
 CallObjFunc(RetT(*ObjFunc)(JSContext*, HandleObject), JSContext* cx, HandleObject obj)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(obj);
 
     // Always unwrap, in case this is an xray or cross-compartment wrapper.
@@ -1727,7 +1727,7 @@ bool
 CallObjFunc(bool(*ObjFunc)(JSContext *cx, HandleObject obj, HandleValue key, bool *rval),
             JSContext *cx, HandleObject obj, HandleValue key, bool *rval)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(obj, key);
 
     // Always unwrap, in case this is an xray or cross-compartment wrapper.
@@ -1752,7 +1752,7 @@ CallObjFunc(bool(*ObjFunc)(JSContext* cx, Iter kind,
                            HandleObject obj, MutableHandleValue iter),
             JSContext *cx, Iter iterType, HandleObject obj, MutableHandleValue rval)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(obj);
 
     // Always unwrap, in case this is an xray or cross-compartment wrapper.
@@ -1792,7 +1792,7 @@ JS::MapSize(JSContext* cx, HandleObject obj)
 JS_PUBLIC_API(bool)
 JS::MapGet(JSContext* cx, HandleObject obj, HandleValue key, MutableHandleValue rval)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(obj, key, rval);
 
     // Unwrap the object, and enter its realm. If object isn't wrapped,
@@ -1823,7 +1823,7 @@ JS::MapGet(JSContext* cx, HandleObject obj, HandleValue key, MutableHandleValue 
 JS_PUBLIC_API(bool)
 JS::MapSet(JSContext *cx, HandleObject obj, HandleValue key, HandleValue val)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(obj, key, val);
 
     // Unwrap the object, and enter its compartment. If object isn't wrapped,
@@ -1904,7 +1904,7 @@ JS::SetSize(JSContext *cx, HandleObject obj)
 JS_PUBLIC_API(bool)
 JS::SetAdd(JSContext *cx, HandleObject obj, HandleValue key)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(obj, key);
 
     // Unwrap the object, and enter its compartment. If object isn't wrapped,

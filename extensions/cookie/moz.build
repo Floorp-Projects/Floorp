@@ -6,6 +6,10 @@
 
 TEST_DIRS += ['test']
 
+EXPORTS += [
+    'nsCookiePermission.h',
+]
+
 UNIFIED_SOURCES += [
     'nsCookieModule.cpp',
     'nsCookiePermission.cpp',

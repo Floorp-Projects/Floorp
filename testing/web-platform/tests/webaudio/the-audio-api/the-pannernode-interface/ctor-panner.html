@@ -107,7 +107,7 @@
               node = new PannerNode(context, options);
             },
             'new PannerNode(c, ' + JSON.stringify(options) + ')')
-            .throw('NotSupportedError');
+            .throw(DOMException, 'NotSupportedError');
 
         options = {channelCount: 3};
         should(
@@ -115,7 +115,7 @@
               node = new PannerNode(context, options);
             },
             'new PannerNode(c, ' + JSON.stringify(options) + ')')
-            .throw('NotSupportedError');
+            .throw(DOMException, 'NotSupportedError');
 
         options = {channelCount: 99};
         should(
@@ -123,7 +123,7 @@
               node = new PannerNode(context, options);
             },
             'new PannerNode(c, ' + JSON.stringify(options) + ')')
-            .throw('NotSupportedError');
+            .throw(DOMException, 'NotSupportedError');
 
         // Test channelCountMode.  A mode of "max" is illegal, but others are
         // ok.
@@ -153,7 +153,7 @@
               node = new PannerNode(context, options);
             },
             'new PannerNode(c, ' + JSON.stringify(options) + ')')
-            .throw('NotSupportedError');
+            .throw(DOMException, 'NotSupportedError');
 
         options = {channelCountMode: 'foobar'};
         should(

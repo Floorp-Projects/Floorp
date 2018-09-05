@@ -12,7 +12,7 @@ use gpu_cache::GpuCache;
 use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind};
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap};
-use picture::PictureSurface;
+use picture::{PictureCompositeMode, PictureSurface, RasterConfig};
 use prim_store::{PrimitiveIndex, PrimitiveRun, PrimitiveStore, Transform, SpaceMapper};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_backend::FrameId;
@@ -24,7 +24,7 @@ use std::f32;
 use std::sync::Arc;
 use tiling::{Frame, RenderPass, RenderPassKind, RenderTargetContext};
 use tiling::{ScrollbarPrimitive, SpecialRenderPasses};
-use util;
+use util::{self, MaxRect};
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -108,13 +108,23 @@ impl PictureState {
     pub fn new(
         ref_spatial_node_index: SpatialNodeIndex,
         clip_scroll_tree: &ClipScrollTree,
+        world_rect: WorldRect,
     ) -> Self {
-        let map_local_to_pic = SpaceMapper::new(ref_spatial_node_index);
-
-        let mut map_pic_to_world = SpaceMapper::new(SpatialNodeIndex(0));
+        let mut map_pic_to_world = SpaceMapper::new(
+            SpatialNodeIndex(0),
+            world_rect,
+        );
         map_pic_to_world.set_target_spatial_node(
             ref_spatial_node_index,
             clip_scroll_tree,
+        );
+        let pic_bounds = map_pic_to_world.unmap(
+            &world_rect,
+        ).unwrap_or(PictureRect::max_rect());
+
+        let map_local_to_pic = SpaceMapper::new(
+            ref_spatial_node_index,
+            pic_bounds,
         );
 
         PictureState {
@@ -246,6 +256,7 @@ impl FrameBuilder {
         let mut pic_state = PictureState::new(
             root_spatial_node_index,
             &frame_context.clip_scroll_tree,
+            frame_context.world_rect,
         );
 
         let pic_context = self
@@ -290,7 +301,10 @@ impl FrameBuilder {
         );
 
         let render_task_id = frame_state.render_tasks.add(root_render_task);
-        pic.surface = Some(PictureSurface::RenderTask(render_task_id));
+        pic.raster_config = Some(RasterConfig {
+            composite_mode: PictureCompositeMode::Blit,
+            surface: Some(PictureSurface::RenderTask(render_task_id)),
+        });
         Some(render_task_id)
     }
 

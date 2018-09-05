@@ -275,7 +275,9 @@ CompositorBridgeChild::InitForWidget(uint64_t aProcessToken,
 /*static*/ CompositorBridgeChild*
 CompositorBridgeChild::Get()
 {
-  // This is only expected to be used in child processes.
+  // This is only expected to be used in child processes. While the parent
+  // process does have CompositorBridgeChild instances, it has _multiple_ (one
+  // per window), and therefore there is no global singleton available.
   MOZ_ASSERT(!XRE_IsParentProcess());
   return sCompositorBridge;
 }

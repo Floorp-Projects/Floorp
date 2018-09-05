@@ -186,7 +186,6 @@ private:
  *   previously entered compartment for that JSContext is not used by mistake.
  * * Reporting any exceptions left on the JSRuntime, unless the caller steals
  *   or silences them.
- * * On main thread, entering a JSAutoRequest.
  *
  * Additionally, the following duties are planned, but not yet implemented:
  *
@@ -295,7 +294,6 @@ protected:
   // AutoJSAPI, so Init must NOT be called on subclasses that use this.
   AutoJSAPI(nsIGlobalObject* aGlobalObject, bool aIsMainThread, Type aType);
 
-  mozilla::Maybe<JSAutoRequest> mAutoRequest;
   mozilla::Maybe<JSAutoNullableRealm> mAutoNullableRealm;
   JSContext *mCx;
 

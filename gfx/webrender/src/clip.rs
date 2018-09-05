@@ -425,6 +425,7 @@ impl ClipStore {
         gpu_cache: &mut GpuCache,
         resource_cache: &mut ResourceCache,
         device_pixel_scale: DevicePixelScale,
+        world_rect: &WorldRect,
     ) -> Option<ClipChainInstance> {
         let mut local_clip_rect = local_prim_clip_rect;
         let spatial_nodes = &clip_scroll_tree.spatial_nodes;
@@ -472,17 +473,11 @@ impl ClipStore {
                     if let Some(clip_rect) = clip_node.item.get_local_clip_rect() {
                         match conversion {
                             ClipSpaceConversion::Local => {
-                                local_clip_rect = match local_clip_rect.intersection(&clip_rect) {
-                                    Some(local_clip_rect) => local_clip_rect,
-                                    None => return None,
-                                };
+                                local_clip_rect = local_clip_rect.intersection(&clip_rect)?;
                             }
                             ClipSpaceConversion::Offset(ref offset) => {
                                 let clip_rect = clip_rect.translate(offset);
-                                local_clip_rect = match local_clip_rect.intersection(&clip_rect) {
-                                    Some(local_clip_rect) => local_clip_rect,
-                                    None => return None,
-                                };
+                                local_clip_rect = local_clip_rect.intersection(&clip_rect)?;
                             }
                             ClipSpaceConversion::Transform(..) => {
                                 // TODO(gw): In the future, we can reduce the size
@@ -508,20 +503,11 @@ impl ClipStore {
             current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
         }
 
-        let local_bounding_rect = match local_prim_rect.intersection(&local_clip_rect) {
-            Some(rect) => rect,
-            None => return None,
-        };
+        let local_bounding_rect = local_prim_rect.intersection(&local_clip_rect)?;
 
-        let pic_clip_rect = match prim_to_pic_mapper.map(&local_bounding_rect) {
-            Some(pic_bounding_rect) => pic_bounding_rect,
-            None => return None,
-        };
+        let pic_clip_rect = prim_to_pic_mapper.map(&local_bounding_rect)?;
 
-        let world_clip_rect = match pic_to_world_mapper.map(&pic_clip_rect) {
-            Some(world_clip_rect) => world_clip_rect,
-            None => return None,
-        };
+        let world_clip_rect = pic_to_world_mapper.map(&pic_clip_rect)?;
 
         // Now, we've collected all the clip nodes that *potentially* affect this
         // primitive region, and reduced the size of the prim region as much as possible.
@@ -550,6 +536,7 @@ impl ClipStore {
                     node.item.get_clip_result_complex(
                         transform,
                         &world_clip_rect,
+                        world_rect,
                     )
                 }
             };
@@ -869,6 +856,7 @@ impl ClipItem {
         &self,
         transform: &LayoutToWorldTransform,
         prim_world_rect: &WorldRect,
+        world_rect: &WorldRect,
     ) -> ClipResult {
         let (clip_rect, inner_rect) = match *self {
             ClipItem::Rectangle(clip_rect, ClipMode::Clip) => {
@@ -897,7 +885,11 @@ impl ClipItem {
             }
         }
 
-        let outer_clip_rect = match project_rect(transform, &clip_rect) {
+        let outer_clip_rect = match project_rect(
+            transform,
+            &clip_rect,
+            world_rect,
+        ) {
             Some(outer_clip_rect) => outer_clip_rect,
             None => return ClipResult::Partial,
         };

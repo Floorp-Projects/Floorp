@@ -11,9 +11,13 @@
   border: none
 }
 #test-inline, #ref-inline { display: inline-flex }
+legend {
+  float: left; /* Makes it not the "rendered legend" */
+  padding: 0;
+}
 </style>
 <fieldset id=test>
- <div>1</div>
+ <legend>1</legend>
  <div>2</div>
  <div>3</div>
  <div>4</div>
@@ -25,7 +29,7 @@
 </fieldset>
 <hr>
 <div id=ref>
- <div>1</div>
+ <legend>1</legend>
  <div>2</div>
  <div>3</div>
  <div>4</div>
@@ -37,7 +41,7 @@
 </div>
 <hr>
 <fieldset id=test-inline>
- <div>1</div>
+ <legend>1</legend>
  <div>2</div>
  <div>3</div>
  <div>4</div>
@@ -60,12 +64,21 @@
 </div>
 <script>
   test(() => {
-    assert_equals(getComputedStyle(document.getElementById('test')).height,
-                  getComputedStyle(document.getElementById('ref')).height);
+    const testElm = document.getElementById('test');
+    const refElm = document.getElementById('ref');
+    assert_equals(getComputedStyle(testElm).height,
+                  getComputedStyle(refElm).height, 'height');
+    assert_equals(testElm.querySelector('legend').offsetTop,
+                  testElm.querySelector('div').offsetTop, 'offsetTop')
   }, "Flex");
 
   test(() => {
-    assert_equals(getComputedStyle(document.getElementById('test-inline')).height,
-                  getComputedStyle(document.getElementById('ref-inline')).height);
+    const testElm = document.getElementById('test-inline');
+    const refElm = document.getElementById('ref-inline');
+    assert_equals(getComputedStyle(testElm).height,
+                  getComputedStyle(refElm).height, 'height');
+    assert_equals(testElm.querySelector('legend').offsetTop,
+                  testElm.querySelector('div').offsetTop, 'offsetTop')
+
   }, "Inline flex");
 </script>
