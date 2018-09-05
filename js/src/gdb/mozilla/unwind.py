@@ -188,7 +188,7 @@ class JitFrameDecorator(FrameDecorator):
                     function = str(atom)
             except gdb.MemoryError:
                 function = "(could not read function name)"
-            script = fptr['u']['i']['s']['script_']
+            script = fptr['u']['scripted']['s']['script_']
         elif tag == self.cache.CalleeToken_Script:
             script = gdb.Value(calleetoken).cast(self.cache.JSScript)
         return {"function": function, "script": script}
@@ -226,7 +226,7 @@ class JitFrameDecorator(FrameDecorator):
                         return FrameDecorator.filename(self)
                     scriptsourceobj = (
                         nativeobj + 1).cast(self.cache.HeapSlot)[self.cache.SOURCE_SLOT]
-                    scriptsource = scriptsourceobj['value']['data']['asBits'] << 1
+                    scriptsource = scriptsourceobj['value']['asBits_'] << 1
                     scriptsource = scriptsource.cast(self.cache.ScriptSource)
                     return scriptsource['filename_']['mTuple']['mFirstA'].string()
         return FrameDecorator.filename(self)
