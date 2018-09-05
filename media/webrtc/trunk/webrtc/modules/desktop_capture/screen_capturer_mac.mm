@@ -424,6 +424,7 @@ bool ScreenCapturerMac::Init() {
   ScreenConfigurationChanged();
 */
   desktop_config_monitor_->Lock();
+  desktop_config_ = desktop_config_monitor_->desktop_configuration();
   update_screen_configuration_ = true;
   desktop_config_monitor_->Unlock();
   return true;
