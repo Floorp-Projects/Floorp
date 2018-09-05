@@ -365,8 +365,13 @@ xmlns="http://www.w3.org/1999/xhtml"
     </panel>
 
     <menupopup id="toolbar-context-menu"
-               onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator')); UpdateDownloadsAutoHide(this); UpdateManageExtension(this)">
-      <menuitem oncommand="openAboutAddonsForContextAction(this.parentElement)"
+               onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator')); ToolbarContextMenu.updateDownloadsAutoHide(this); ToolbarContextMenu.updateExtension(this)">
+      <menuitem oncommand="ToolbarContextMenu.removeExtensionForContextAction(this.parentElement)"
+                accesskey="&customizeMenu.removeExtension.accesskey;"
+                label="&customizeMenu.removeExtension.label;"
+                contexttype="toolbaritem"
+                class="customize-context-removeExtension"/>
+      <menuitem oncommand="ToolbarContextMenu.openAboutAddonsForContextAction(this.parentElement)"
                 accesskey="&customizeMenu.manageExtension.accesskey;"
                 label="&customizeMenu.manageExtension.label;"
                 contexttype="toolbaritem"
@@ -377,7 +382,7 @@ xmlns="http://www.w3.org/1999/xhtml"
                 label="&customizeMenu.pinToOverflowMenu.label;"
                 contexttype="toolbaritem"
                 class="customize-context-moveToPanel"/>
-      <menuitem oncommand="onDownloadsAutoHideChange(event)"
+      <menuitem oncommand="ToolbarContextMenu.onDownloadsAutoHideChange(event)"
                 type="checkbox"
                 accesskey="&customizeMenu.autoHideDownloadsButton.accesskey;"
                 label="&customizeMenu.autoHideDownloadsButton.label;"
