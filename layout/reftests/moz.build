@@ -56,13 +56,13 @@ TEST_HARNESS_FILES.testing.mochitest.tests.fonts += [
 REFTEST_MANIFESTS += ['reftest.list']
 
 with Files('abs-pos/**'):
-    BUG_COMPONENT = ('Core', 'Layout: R & A Pos')
+    BUG_COMPONENT = ('Core', 'Layout: Positioned')
 with Files('async-scrolling/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('backgrounds/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('bidi/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Text')
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 with Files('border-image/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('border-radius/**'):
@@ -80,7 +80,7 @@ with Files('box-sizing/**'):
 with Files('bugs/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('canvas/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Images')
+    BUG_COMPONENT = ('Core', 'Layout: Images, Video, and HTML Frames')
 with Files('columns/**'):
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 with Files('counter-style/**'):
@@ -162,15 +162,15 @@ with Files('floats/**'):
 with Files('font-face/**'):
     BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 with Files('font-features/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Text')
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 with Files('font-inflation/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Text')
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 with Files('font-loading-api/**'):
     BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 with Files('font-matching/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Text')
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 with Files('fonts/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Text')
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 with Files('forms/**'):
     BUG_COMPONENT = ('Core', 'Layout: Form Controls')
 with Files('generated-content/**'):
@@ -178,15 +178,15 @@ with Files('generated-content/**'):
 with Files('ib-split/**'):
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 with Files('image/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Images')
+    BUG_COMPONENT = ('Core', 'Layout: Images, Video, and HTML Frames')
 with Files('image-element/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Images')
+    BUG_COMPONENT = ('Core', 'Layout: Images, Video, and HTML Frames')
 with Files('image-rect/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('image-region/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Images')
+    BUG_COMPONENT = ('Core', 'Layout: Images, Video, and HTML Frames')
 with Files('indic-shaping/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Text')
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 with Files('inline/**'):
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 with Files('inline-borderpadding/**'):
@@ -220,11 +220,11 @@ with Files('percent-overflow-sizing/**'):
 with Files('pixel-rounding/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('position-dynamic-changes/**'):
-    BUG_COMPONENT = ('Core', 'Layout: R & A Pos')
+    BUG_COMPONENT = ('Core', 'Layout: Positioned')
 with Files('position-relative/**'):
-    BUG_COMPONENT = ('Core', 'Layout: R & A Pos')
+    BUG_COMPONENT = ('Core', 'Layout: Positioned')
 with Files('position-sticky/**'):
-    BUG_COMPONENT = ('Core', 'Layout: R & A Pos')
+    BUG_COMPONENT = ('Core', 'Layout: Positioned')
 with Files('printing/**'):
     BUG_COMPONENT = ('Core', 'Printing: Output')
 with Files('reftest-sanity/**'):
@@ -236,7 +236,7 @@ with Files('selection/**'):
 with Files('svg/**'):
     BUG_COMPONENT = ('Core', 'SVG')
 with Files('tab-size/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Text')
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 with Files('table-anonymous-boxes/**'):
     BUG_COMPONENT = ('Core', 'Layout: Tables')
 with Files('table-background/**'):
@@ -250,19 +250,19 @@ with Files('table-overflow/**'):
 with Files('table-width/**'):
     BUG_COMPONENT = ('Core', 'Layout: Tables')
 with Files('text/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Text')
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 with Files('text-decoration/**'):
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 with Files('text-indent/**'):
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 with Files('text-overflow/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Text')
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 with Files('text-shadow/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Text')
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 with Files('text-svgglyphs/**'):
     BUG_COMPONENT = ('Core', 'SVG')
 with Files('text-transform/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Text')
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 with Files('transform/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('transform-3d/**'):
@@ -286,7 +286,7 @@ with Files('w3c-css/submitted/css21/**'):
 with Files('w3c-css/submitted/flexbox/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('w3c-css/submitted/fonts3/**'):
-    BUG_COMPONENT = ('Core', 'Layout: Text')
+    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 with Files('w3c-css/submitted/ib-split/**'):
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 with Files('w3c-css/submitted/images3/**'):
