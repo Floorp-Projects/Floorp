@@ -584,6 +584,16 @@ protected:
 
   void DispatchScrollingEvent(uint32_t aEventType);
 
+  /**
+   * Check if an id attribute change affects aria-activedescendant and handle
+   * the aria-activedescendant change if appropriate.
+   * If the currently focused element has aria-activedescendant and an
+   * element's id changes to match this, the id was probably moved from the
+   * previous active descendant, thus making this element the new active
+   * descendant. In that case, accessible focus must be changed accordingly.
+   */
+  void ARIAActiveDescendantIDMaybeMoved(dom::Element* aElm);
+
 protected:
 
   /**
