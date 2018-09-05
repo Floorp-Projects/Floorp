@@ -1057,8 +1057,8 @@ js::obj_create(JSContext* cx, unsigned argc, Value* vp)
         if (!bytes)
             return false;
 
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                                   bytes.get(), "not an object or null");
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                 bytes.get(), "not an object or null");
         return false;
     }
 

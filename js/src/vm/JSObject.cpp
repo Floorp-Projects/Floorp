@@ -84,8 +84,8 @@ js::ReportNotObject(JSContext* cx, HandleValue v)
     MOZ_ASSERT(!v.isObject());
 
     if (UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr)) {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
-                                   bytes.get());
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
+                                 bytes.get());
     }
 }
 
@@ -228,8 +228,8 @@ js::GetFirstArgumentAsObject(JSContext* cx, const CallArgs& args, const char* me
         UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr);
         if (!bytes)
             return false;
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                                   bytes.get(), "not an object");
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                 bytes.get(), "not an object");
         return false;
     }
 
