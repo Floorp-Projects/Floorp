@@ -200,7 +200,7 @@ js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 1);
     MOZ_ASSERT(args[0].isString());
 
-    UniqueChars locale = JS_EncodeString(cx, args[0].toString());
+    UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
     if (!locale)
         return false;
     UErrorCode status = U_ZERO_ERROR;
@@ -277,7 +277,7 @@ NewUCollator(JSContext* cx, Handle<CollatorObject*> collator)
 
     if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
         return nullptr;
-    UniqueChars locale = JS_EncodeString(cx, value.toString());
+    UniqueChars locale = intl::EncodeLocale(cx, value.toString());
     if (!locale)
         return nullptr;
 

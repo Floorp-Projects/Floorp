@@ -1165,14 +1165,14 @@ ToDisassemblySource(JSContext* cx, HandleValue v)
             JSString* str = JS_DecompileFunction(cx, fun);
             if (!str)
                 return nullptr;
-            return JS_EncodeString(cx, str);
+            return EncodeLatin1(cx, str);
         }
 
         if (obj.is<RegExpObject>()) {
             JSString* source = obj.as<RegExpObject>().toString(cx);
             if (!source)
                 return nullptr;
-            return JS_EncodeString(cx, source);
+            return EncodeLatin1(cx, source);
         }
     }
 
@@ -2314,7 +2314,7 @@ js::DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,
             return nullptr;
     }
 
-    return JS_EncodeString(cx, fallback);
+    return EncodeLatin1(cx, fallback);
 }
 
 static bool
@@ -2404,7 +2404,7 @@ js::DecompileArgument(JSContext* cx, int formalIndex, HandleValue v)
     if (!fallback)
         return nullptr;
 
-    return JS_EncodeString(cx, fallback);
+    return EncodeLatin1(cx, fallback);
 }
 
 extern bool

@@ -261,7 +261,7 @@ js::Throw(JSContext* cx, jsid id, unsigned errorNumber, const char* details)
     JSString* idstr = ValueToSource(cx, idVal);
     if (!idstr)
        return false;
-    UniqueChars bytes = JS_EncodeString(cx, idstr);
+    UniqueChars bytes = EncodeLatin1(cx, idstr);
     if (!bytes)
         return false;
 

@@ -2475,7 +2475,7 @@ MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleString propname)
             return true;
     }
 
-    UniqueChars bytes = JS_EncodeStringToUTF8(cx, propname);
+    UniqueChars bytes = StringToNewUTF8CharsZ(cx, *propname);
     if (!bytes)
         return false;
     return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr,
