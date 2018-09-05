@@ -26,6 +26,7 @@
   <string name="shortcut_erase_short_label">Sampôh</string>
   <string name="shortcut_erase_long_label">Sampôh riwayat browsing</string>
   <string name="text_selection_search_action">Mita deungön Rahsia</string>
+  <string name="preference_mozilla_summary">Bhaih %1$s, beunantu</string>
   <string name="preference_category_tracking_protection">Peulindông seutöt</string>
   <string name="preference_category_web_content">Asoe Web</string>
   <string name="preference_category_switching_apps">Tuka App</string>

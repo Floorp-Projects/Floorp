@@ -217,11 +217,17 @@
   <string name="biometric_auth_not_recognized_error">Detadas pas reconegudas. Tornatz ensajar.</string>
   <string name="biometric_auth_moved_too_quickly">Lo det a bolegat tròp rapidament. Tornatz ensajar.</string>
   <string name="enable_search_suggestion_title">Volètz activar las suggestions de recèrca ?</string>
+  <string name="enable_search_suggestion_subtitle">Per obténer de suggestions de recèrca, %1$s a d’enviar al motor de recèrca çò que picatz dins la barra d’adreça. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Ne saber mai</string>
   <string name="enable_search_suggestions_no">Non</string>
   <string name="enable_search_suggestions_yes">Òc</string>
   <string name="no_suggestions_message">Unes motor de recèrca pòdon pas mostrar de suggestions.</string>
   <string name="dismiss_no_suggestions_prompt_button">Tampar</string>
+  <string name="tip_disable_tracking_protection">Aqueste site a un compòrtament inesperat ?\n Ensajatz de desactivar la proteccion contra lo seguiment</string>
+  <string name="tip_add_to_homescreen">Accedissètz rapidament als sites que mai visitatz %1$s Menú &gt; Apondre a l’ecran d’acuèlh</string>
+  <string name="tip_set_default_browser">Dobrir totes los ligams amb %1$s\n Definir %1$s coma navegador per defaut</string>
+  <string name="tip_autocomplete_url">Emplenament automaticament de las URL dels sites mai visitats\n Mantenètz quichat quin que siá URL dins la barra d’adreça</string>
+  <string name="tip_open_in_new_tab">Dobrir un ligam dins un onglet novèl\n Mantenètz quichat quin que siá ligam de la pagina</string>
   <string name="tip_request_desktop">Vos aimatz mai lo site en version ordenador ? Menú %1$s &gt; Veire version ordenador</string>
   <string name="tip_disable_tips">Quitar de mostrar las astúcias quand %1$s se lança</string>
 </resources>

@@ -139,6 +139,7 @@
   <string name="accessibility_next_result">Shikajsi tay yawi kisa uksenpa</string>
   <string name="accessibility_previous_result">Shikajsi tay kiski yakin</string>
   <string name="accessibility_dismiss_find_in_page">Maka shikwi tay muajsik tik ne iswat</string>
+  <string name="http_auth_dialog_title">Muneki timutukaytalia</string>
   <string name="http_auth_dialog_username">Mutukay usuarioj</string>
   <string name="http_auth_dialog_password">Constraseñaj</string>
   <string name="custom_tab_copy_url_action">URL kupintuk</string>

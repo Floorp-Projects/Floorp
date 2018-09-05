@@ -38,6 +38,7 @@
   <string name="preference_category_data_collection_use">Veri toplanması ve kullanımı</string>
   <string name="preference_category_search">Arama</string>
   <string name="preference_show_search_suggestions">Arama önerilerini göster</string>
+  <string name="preference_show_search_suggestions_summary">%1$s, adres çubuğuna yazdıklarını arama motorunuza gönderecektir</string>
   <string name="preference_search_engine_default">Varsayılan</string>
   <string name="preference_state_on">Açık</string>
   <string name="preference_state_off">Kapalı</string>
