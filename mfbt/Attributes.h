@@ -730,12 +730,11 @@
 #  endif
 #  define MOZ_IMPLICIT __attribute__((annotate("moz_implicit")))
 #  define MOZ_IS_SMARTPTR_TO_REFCOUNTED __attribute__((annotate("moz_is_smartptr_to_refcounted")))
-#  define MOZ_IS_REFPTR __attribute__((annotate("moz_is_refptr"))) \
-                        MOZ_IS_SMARTPTR_TO_REFCOUNTED
+#  define MOZ_IS_REFPTR MOZ_IS_SMARTPTR_TO_REFCOUNTED
 #  define MOZ_NO_ARITHMETIC_EXPR_IN_ARGUMENT __attribute__((annotate("moz_no_arith_expr_in_arg")))
-#  define MOZ_OWNING_REF __attribute__((annotate("moz_strong_ref")))
-#  define MOZ_NON_OWNING_REF __attribute__((annotate("moz_weak_ref")))
-#  define MOZ_UNSAFE_REF(reason) __attribute__((annotate("moz_weak_ref")))
+#  define MOZ_OWNING_REF
+#  define MOZ_NON_OWNING_REF
+#  define MOZ_UNSAFE_REF(reason)
 #  define MOZ_NO_ADDREF_RELEASE_ON_RETURN __attribute__((annotate("moz_no_addref_release_on_return")))
 #  define MOZ_MUST_USE_TYPE __attribute__((annotate("moz_must_use_type")))
 #  define MOZ_NEEDS_NO_VTABLE_TYPE __attribute__((annotate("moz_needs_no_vtable_type")))
@@ -746,10 +745,8 @@
 #  define MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS \
     __attribute__((annotate("moz_inherit_type_annotations_from_template_args")))
 #  define MOZ_NON_AUTOABLE __attribute__((annotate("moz_non_autoable")))
-#  define MOZ_INIT_OUTSIDE_CTOR \
-    __attribute__((annotate("moz_ignore_ctor_initialization")))
-#  define MOZ_IS_CLASS_INIT \
-    __attribute__((annotate("moz_is_class_init")))
+#  define MOZ_INIT_OUTSIDE_CTOR
+#  define MOZ_IS_CLASS_INIT
 #  define MOZ_NON_PARAM \
     __attribute__((annotate("moz_non_param")))
 #  define MOZ_REQUIRED_BASE_METHOD \
