@@ -118,7 +118,7 @@ bool WeakMapObject::delete_(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(WeakMapObject::is(args.thisv()));
 
   if (!args.get(0).isObject()) {
-    ReportNotObjectWithName(cx, "WeakMap key", args.get(0));
+    ReportNotObject(cx, JSMSG_NOT_NONNULL_OBJECT_WEAKMAP_KEY, args.get(0));
     return false;
   }
 
