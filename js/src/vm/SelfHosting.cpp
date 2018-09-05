@@ -294,14 +294,12 @@ ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
 
     UniqueChars errorArgs[3];
     for (unsigned i = 1; i < 4 && i < args.length(); i++) {
-        RootedValue val(cx, args[i]);
-        if (val.isInt32()) {
+        HandleValue val = args[i];
+        if (val.isInt32() || val.isString()) {
             JSString* str = ToString<CanGC>(cx, val);
             if (!str)
                 return;
             errorArgs[i - 1] = EncodeLatin1(cx, str);
-        } else if (val.isString()) {
-            errorArgs[i - 1] = EncodeLatin1(cx, val.toString());
         } else {
             errorArgs[i - 1] = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, nullptr);
         }
