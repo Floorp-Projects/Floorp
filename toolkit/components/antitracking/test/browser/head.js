@@ -20,6 +20,8 @@ var gFeatures = undefined;
 
 let {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
+requestLongerTimeout(2);
+
 this.AntiTracking = {
   runTest(name, callbackTracking, callbackNonTracking, cleanupFunction, extraPrefs,
           windowOpenTest = true, userInteractionTest = true, expectedBlockingNotifications = true,
@@ -221,8 +223,6 @@ this.AntiTracking = {
                          (options.allowList ? "" : "out") + " allow list test " + options.name +
                          " running in a " + (options.runInPrivateWindow ? "private" : "normal") + " window");
 
-      requestLongerTimeout(2);
-
       let win = window;
       if (options.runInPrivateWindow) {
         win = OpenBrowserWindow({private: true});
@@ -329,8 +329,6 @@ this.AntiTracking = {
     add_task(async function() {
       info("Starting window-open test " + name);
 
-      requestLongerTimeout(2);
-
       let win = window;
       if (runInPrivateWindow) {
         win = OpenBrowserWindow({private: true});
@@ -402,8 +400,6 @@ this.AntiTracking = {
   _createUserInteractionTask(name, blockingCallback, nonBlockingCallback, runInPrivateWindow, extraPrefs) {
     add_task(async function() {
       info("Starting user-interaction test " + name);
-
-      requestLongerTimeout(2);
 
       let win = window;
       if (runInPrivateWindow) {
