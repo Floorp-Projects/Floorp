@@ -31,7 +31,7 @@
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
 #include "jit/Jit.h"
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "util/StringBuffer.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
@@ -1861,7 +1861,7 @@ js::ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
             if (!str)
                 return nullptr;
         }
-        return StringToNewUTF8CharsZ(cx, *str);
+        return UniqueChars(JS_EncodeString(cx, str));
     };
 
     if (lref.isString() && rref.isString()) {
@@ -1871,13 +1871,13 @@ js::ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
         UniqueChars rbytes = uniqueCharsFromString(cx, rref);
         if (!rbytes)
             return;
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_IN_STRING,
-                                 lbytes.get(), rbytes.get());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_IN_STRING,
+                                   lbytes.get(), rbytes.get());
         return;
     }
 
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_IN_NOT_OBJECT,
-                              InformalValueTypeName(rref));
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_IN_NOT_OBJECT,
+                               InformalValueTypeName(rref));
 }
 
 static MOZ_NEVER_INLINE bool
@@ -5339,8 +5339,9 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber, HandleId id)
 {
     MOZ_ASSERT(errorNumber == JSMSG_UNINITIALIZED_LEXICAL ||
                errorNumber == JSMSG_BAD_CONST_ASSIGN);
-    if (UniqueChars printable = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsIdentifier))
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber, printable.get());
+    JSAutoByteString printable;
+    if (ValueToPrintableLatin1(cx, IdToValue(id), &printable))
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, printable.ptr());
 }
 
 void
@@ -5381,9 +5382,10 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
 void
 js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name, const char* redeclKind)
 {
-    if (UniqueChars printable = AtomToPrintableString(cx, name)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR, redeclKind,
-                                  printable.get());
+    JSAutoByteString printable;
+    if (AtomToPrintableString(cx, name, &printable)) {
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR,
+                                   redeclKind, printable.ptr());
     }
 }
 
@@ -5459,20 +5461,19 @@ js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame)
 
     if (fun->isDerivedClassConstructor()) {
         const char* name = "anonymous";
-        UniqueChars str;
+        JSAutoByteString str;
         if (fun->explicitName()) {
-            str = AtomToPrintableString(cx, fun->explicitName());
-            if (!str)
+            if (!AtomToPrintableString(cx, fun->explicitName(), &str))
                 return false;
-            name = str.get();
+            name = str.ptr();
         }
 
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS, name);
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS, name);
         return false;
     }
 
     MOZ_ASSERT(fun->isArrow());
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS_ARROW);
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS_ARROW);
     return false;
 }
 

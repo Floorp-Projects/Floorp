@@ -15,7 +15,7 @@
 #include "nsContentUtils.h"
 #include "nsCycleCollector.h"
 #include "jsfriendapi.h"
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "js/SavedFrameAPI.h"
 #include "js/StructuredClone.h"
 #include "mozilla/Attributes.h"
@@ -246,12 +246,12 @@ nsXPCComponents_Interfaces::Resolve(nsIXPConnectWrappedNative* wrapper,
     if (!JSID_IS_STRING(id))
         return NS_OK;
 
+    JSAutoByteString name;
     RootedString str(cx, JSID_TO_STRING(id));
-    JS::UniqueChars name = JS_EncodeStringToLatin1(cx, str);
 
     // we only allow interfaces by name here
-    if (name && name[0] != '{') {
-        const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByName(name.get());
+    if (name.encodeLatin1(cx, str) && name.ptr()[0] != '{') {
+        const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByName(name.ptr());
         if (!info)
             return NS_OK;
 
@@ -431,10 +431,10 @@ nsXPCComponents_InterfacesByID::Resolve(nsIXPConnectWrappedNative* wrapper,
     if (38 != JS_GetStringLength(str))
         return NS_OK;
 
-    JS::UniqueChars utf8str = JS_EncodeStringToUTF8(cx, str);
-    if (utf8str) {
+    JSAutoByteString utf8str;
+    if (utf8str.encodeUtf8(cx, str)) {
         nsID iid;
-        if (!iid.Parse(utf8str.get()))
+        if (!iid.Parse(utf8str.ptr()))
             return NS_OK;
 
         const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(iid);
@@ -623,13 +623,11 @@ nsXPCComponents_Classes::Resolve(nsIXPConnectWrappedNative* wrapper,
     RootedId id(cx, idArg);
     RootedObject obj(cx, objArg);
 
-    if (!JSID_IS_STRING(id))
-        return NS_OK;
-
-    JS::UniqueChars name = JS_EncodeStringToLatin1(cx, JSID_TO_STRING(id));
-    if (name &&
-        name[0] != '{') { // we only allow contractids here
-        nsCOMPtr<nsIJSCID> nsid = nsJSCID::NewID(name.get());
+    JSAutoByteString name;
+    if (JSID_IS_STRING(id) &&
+        name.encodeLatin1(cx, JSID_TO_STRING(id)) &&
+        name.ptr()[0] != '{') { // we only allow contractids here
+        nsCOMPtr<nsIJSCID> nsid = nsJSCID::NewID(name.ptr());
         if (nsid) {
             nsXPConnect* xpc = nsXPConnect::XPConnect();
             RootedObject idobj(cx);
@@ -834,12 +832,12 @@ nsXPCComponents_ClassesByID::Resolve(nsIXPConnectWrappedNative* wrapper,
     if (!JSID_IS_STRING(id))
         return NS_OK;
 
+    JSAutoByteString name;
     RootedString str(cx, JSID_TO_STRING(id));
-    JS::UniqueChars name = JS_EncodeStringToLatin1(cx, str);
-    if (name && name[0] == '{' &&
-        IsRegisteredCLSID(name.get())) // we only allow canonical CLSIDs here
+    if (name.encodeLatin1(cx, str) && name.ptr()[0] == '{' &&
+        IsRegisteredCLSID(name.ptr())) // we only allow canonical CLSIDs here
     {
-        nsCOMPtr<nsIJSCID> nsid = nsJSCID::NewID(name.get());
+        nsCOMPtr<nsIJSCID> nsid = nsJSCID::NewID(name.ptr());
         if (nsid) {
             nsXPConnect* xpc = nsXPConnect::XPConnect();
             RootedObject idobj(cx);
@@ -1000,16 +998,14 @@ nsXPCComponents_Results::Resolve(nsIXPConnectWrappedNative* wrapper,
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
-    if (!JSID_IS_STRING(id))
-        return NS_OK;
+    JSAutoByteString name;
 
-    JS::UniqueChars name = JS_EncodeStringToLatin1(cx, JSID_TO_STRING(id));
-    if (name) {
+    if (JSID_IS_STRING(id) && name.encodeLatin1(cx, JSID_TO_STRING(id))) {
         const char* rv_name;
         const void* iter = nullptr;
         nsresult rv;
         while (nsXPCException::IterateNSResults(&rv, &rv_name, nullptr, &iter)) {
-            if (!strcmp(name.get(), rv_name)) {
+            if (!strcmp(name.ptr(), rv_name)) {
                 *resolvedp = true;
                 if (!JS_DefinePropertyById(cx, obj, id, (uint32_t)rv,
                                            JSPROP_ENUMERATE |
@@ -1165,17 +1161,15 @@ nsXPCComponents_ID::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
 
     // convert the first argument into a string and see if it looks like an id
 
-    JSString* jsstr = ToString(cx, args[0]);
-    if (!jsstr)
-        return ThrowAndFail(NS_ERROR_XPC_BAD_ID_STRING, cx, _retval);
-
-    JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, jsstr);
-    if (!bytes)
-        return ThrowAndFail(NS_ERROR_XPC_BAD_ID_STRING, cx, _retval);
-
+    JSString* jsstr;
+    JSAutoByteString bytes;
     nsID id;
-    if (!id.Parse(bytes.get()))
+
+    if (!(jsstr = ToString(cx, args[0])) ||
+        !bytes.encodeLatin1(cx, jsstr) ||
+        !id.Parse(bytes.ptr())) {
         return ThrowAndFail(NS_ERROR_XPC_BAD_ID_STRING, cx, _retval);
+    }
 
     // make the new object and return it.
 
@@ -1388,8 +1382,7 @@ struct MOZ_STACK_CLASS ExceptionArgParser
         JSString* str = ToString(cx, v);
         if (!str)
            return false;
-        messageBytes = JS_EncodeStringToLatin1(cx, str);
-        eMsg = messageBytes.get();
+        eMsg = messageBytes.encodeLatin1(cx, str);
         return !!eMsg;
     }
 
@@ -1460,7 +1453,7 @@ struct MOZ_STACK_CLASS ExceptionArgParser
      */
 
     // If there's a non-default exception string, hold onto the allocated bytes.
-    JS::UniqueChars messageBytes;
+    JSAutoByteString messageBytes;
 
     // Various bits and pieces that are helpful to have around.
     JSContext* cx;
@@ -1878,17 +1871,12 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
     nsCOMPtr<nsIJSCID> cClassID;
     nsCOMPtr<nsIJSIID> cInterfaceID;
     const char*        cInitializer = nullptr;
-    JS::UniqueChars cInitializerBytes;
+    JSAutoByteString  cInitializerBytes;
 
     if (args.length() >= 3) {
         // args[2] is an initializer function or property name
         RootedString str(cx, ToString(cx, args[2]));
-        if (!str)
-            return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
-
-        cInitializerBytes = JS_EncodeStringToLatin1(cx, str);
-        cInitializer = cInitializerBytes.get();
-        if (!cInitializer)
+        if (!str || !(cInitializer = cInitializerBytes.encodeLatin1(cx, str)))
             return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
     }
 

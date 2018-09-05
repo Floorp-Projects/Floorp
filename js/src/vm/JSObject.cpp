@@ -35,7 +35,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Policy.h"
 #include "jit/BaselineJIT.h"
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "js/MemoryMetrics.h"
 #include "js/Proxy.h"
 #include "js/UbiNode.h"
@@ -79,14 +79,15 @@ using namespace js;
 using namespace js::gc;
 
 void
-js::ReportNotObject(JSContext* cx, HandleValue v)
+js::ReportNotObject(JSContext* cx, const Value& v)
 {
     MOZ_ASSERT(!v.isObject());
 
-    if (UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr)) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
-                                 bytes.get());
-    }
+    RootedValue value(cx, v);
+    UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, nullptr);
+    if (bytes)
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
+                                   bytes.get());
 }
 
 void
@@ -94,7 +95,7 @@ js::ReportNotObjectArg(JSContext* cx, const char* nth, const char* fun, HandleVa
 {
     MOZ_ASSERT(!v.isObject());
 
-    UniqueChars bytes;
+    JSAutoByteString bytes;
     if (const char* chars = ValueToSourceForError(cx, v, bytes)) {
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT_ARG,
                                    nth, fun, chars);
@@ -106,7 +107,7 @@ js::ReportNotObjectWithName(JSContext* cx, const char* name, HandleValue v)
 {
     MOZ_ASSERT(!v.isObject());
 
-    UniqueChars bytes;
+    JSAutoByteString bytes;
     if (const char* chars = ValueToSourceForError(cx, v, bytes)) {
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT_NAME,
                                    name, chars);
@@ -228,8 +229,8 @@ js::GetFirstArgumentAsObject(JSContext* cx, const CallArgs& args, const char* me
         UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr);
         if (!bytes)
             return false;
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                                 bytes.get(), "not an object");
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                   bytes.get(), "not an object");
         return false;
     }
 
@@ -252,19 +253,24 @@ GetPropertyIfPresent(JSContext* cx, HandleObject obj, HandleId id, MutableHandle
 }
 
 bool
-js::Throw(JSContext* cx, HandleId id, unsigned errorNumber, const char* details)
+js::Throw(JSContext* cx, jsid id, unsigned errorNumber, const char* details)
 {
     MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount == (details ? 2 : 1));
-    MOZ_ASSERT_IF(details, JS::StringIsASCII(details));
 
-    UniqueChars bytes = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
+    RootedValue idVal(cx, IdToValue(id));
+    JSString* idstr = ValueToSource(cx, idVal);
+    if (!idstr)
+       return false;
+    JSAutoByteString bytes(cx, idstr);
     if (!bytes)
         return false;
 
-    if (details)
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber, bytes.get(), details);
-    else
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber, bytes.get());
+    if (details) {
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.ptr(),
+                                   details);
+    } else {
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.ptr());
+    }
 
     return false;
 }

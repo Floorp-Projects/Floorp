@@ -8,7 +8,7 @@
 
 #include "jsapi.h"
 
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "vm/Interpreter.h" // For InstanceOfOperator
 
 #include "vm/JSObject-inl.h"
@@ -179,11 +179,11 @@ GetProxyTrap(JSContext* cx, HandleObject handler, HandlePropertyName name, Mutab
 
     // Step 4.
     if (!IsCallable(func)) {
-        UniqueChars bytes = EncodeLatin1(cx, name);
+        JSAutoByteString bytes(cx, name);
         if (!bytes)
             return false;
 
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_BAD_TRAP, bytes.get());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_BAD_TRAP, bytes.ptr());
         return false;
     }
 
@@ -831,10 +831,8 @@ ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy, AutoIdV
     }
 
     // Step 22.
-    if (!uncheckedResultKeys.empty()) {
-        RootedId id(cx, uncheckedResultKeys.all().front());
-        return js::Throw(cx, id, JSMSG_CANT_REPORT_NEW);
-    }
+    if (!uncheckedResultKeys.empty())
+        return js::Throw(cx, uncheckedResultKeys.all().front(), JSMSG_CANT_REPORT_NEW);
 
     // Step 23.
     return props.appendAll(trapResult);
@@ -891,11 +889,8 @@ ScriptedProxyHandler::delete_(JSContext* cx, HandleObject proxy, HandleId id,
 
     // Step 12.
     if (desc.object() && !desc.configurable()) {
-        UniqueChars bytes = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
-        if (!bytes)
-            return false;
-
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_CANT_DELETE, bytes.get());
+        RootedValue v(cx, IdToValue(id));
+        ReportValueError(cx, JSMSG_CANT_DELETE, JSDVG_IGNORE_STACK, v, nullptr);
         return false;
     }
 

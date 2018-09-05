@@ -16,7 +16,7 @@
 #include "base/basictypes.h"
 
 #include "jsapi.h"
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/SourceBufferHolder.h"
 
@@ -83,10 +83,10 @@ Print(JSContext *cx, unsigned argc, JS::Value *vp)
         JSString *str = JS::ToString(cx, args[i]);
         if (!str)
             return false;
-        JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str);
+        JSAutoByteString bytes(cx, str);
         if (!bytes)
             return false;
-        fprintf(stdout, "%s%s", i ? " " : "", bytes.get());
+        fprintf(stdout, "%s%s", i ? " " : "", bytes.ptr());
         fflush(stdout);
     }
     fputc('\n', stdout);
@@ -119,11 +119,11 @@ Dump(JSContext *cx, unsigned argc, JS::Value *vp)
     JSString *str = JS::ToString(cx, args[0]);
     if (!str)
         return false;
-    JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str);
+    JSAutoByteString bytes(cx, str);
     if (!bytes)
       return false;
 
-    fputs(bytes.get(), stdout);
+    fputs(bytes.ptr(), stdout);
     fflush(stdout);
     return true;
 }
@@ -147,20 +147,20 @@ Load(JSContext *cx,
         JS::Rooted<JSString*> str(cx, JS::ToString(cx, args[i]));
         if (!str)
             return false;
-        JS::UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
+        JSAutoByteString filename(cx, str);
         if (!filename)
             return false;
-        FILE *file = fopen(filename.get(), "r");
+        FILE *file = fopen(filename.ptr(), "r");
         if (!file) {
-            filename = JS_EncodeStringToUTF8(cx, str);
-            if (!filename)
+            filename.clear();
+            if (!filename.encodeUtf8(cx, str))
                 return false;
-            JS_ReportErrorUTF8(cx, "cannot open file '%s' for reading", filename.get());
+            JS_ReportErrorUTF8(cx, "cannot open file '%s' for reading", filename.ptr());
             return false;
         }
         JS::CompileOptions options(cx);
         options.setUTF8(true)
-               .setFileAndLine(filename.get(), 1);
+               .setFileAndLine(filename.ptr(), 1);
         JS::Rooted<JSScript*> script(cx);
         bool ok = JS::Compile(cx, options, file, &script);
         fclose(file);
@@ -346,13 +346,13 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
                 /* Suppress warnings from JS::ToString(). */
                 older = JS::SetWarningReporter(cx, nullptr);
                 str = JS::ToString(cx, result);
-                JS::UniqueChars bytes;
+                JSAutoByteString bytes;
                 if (str)
-                    bytes = JS_EncodeStringToLatin1(cx, str);
+                    bytes.encodeLatin1(cx, str);
                 JS::SetWarningReporter(cx, older);
 
                 if (!!bytes)
-                    fprintf(stdout, "%s\n", bytes.get());
+                    fprintf(stdout, "%s\n", bytes.ptr());
                 else
                     ok = false;
             }

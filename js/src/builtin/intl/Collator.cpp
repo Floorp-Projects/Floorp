@@ -17,7 +17,7 @@
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/SharedIntlData.h"
 #include "gc/FreeOp.h"
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "js/StableStringChars.h"
 #include "js/TypeDecls.h"
 #include "vm/GlobalObject.h"
@@ -200,11 +200,11 @@ js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 1);
     MOZ_ASSERT(args[0].isString());
 
-    UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
+    JSAutoByteString locale(cx, args[0].toString());
     if (!locale)
         return false;
     UErrorCode status = U_ZERO_ERROR;
-    UEnumeration* values = ucol_getKeywordValuesForLocale("co", locale.get(), false, &status);
+    UEnumeration* values = ucol_getKeywordValuesForLocale("co", locale.ptr(), false, &status);
     if (U_FAILURE(status)) {
         ReportInternalError(cx);
         return false;
@@ -277,7 +277,7 @@ NewUCollator(JSContext* cx, Handle<CollatorObject*> collator)
 
     if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
         return nullptr;
-    UniqueChars locale = intl::EncodeLocale(cx, value.toString());
+    JSAutoByteString locale(cx, value.toString());
     if (!locale)
         return nullptr;
 
@@ -300,7 +300,7 @@ NewUCollator(JSContext* cx, Handle<CollatorObject*> collator)
         if (StringEqualsAscii(usage, "search")) {
             // ICU expects search as a Unicode locale extension on locale.
             // Unicode locale extensions must occur before private use extensions.
-            const char* oldLocale = locale.get();
+            const char* oldLocale = locale.ptr();
             const char* p;
             size_t index;
             size_t localeLen = strlen(oldLocale);
@@ -323,7 +323,8 @@ NewUCollator(JSContext* cx, Handle<CollatorObject*> collator)
             memcpy(newLocale, oldLocale, index);
             memcpy(newLocale + index, insert, insertLen);
             memcpy(newLocale + index + insertLen, oldLocale + index, localeLen - index + 1); // '\0'
-            locale = JS::UniqueChars(newLocale);
+            locale.clear();
+            locale.initBytes(JS::UniqueChars(newLocale));
         } else {
             MOZ_ASSERT(StringEqualsAscii(usage, "sort"));
         }
@@ -385,7 +386,7 @@ NewUCollator(JSContext* cx, Handle<CollatorObject*> collator)
     }
 
     UErrorCode status = U_ZERO_ERROR;
-    UCollator* coll = ucol_open(IcuLocale(locale.get()), &status);
+    UCollator* coll = ucol_open(IcuLocale(locale.ptr()), &status);
     if (U_FAILURE(status)) {
         ReportInternalError(cx);
         return nullptr;

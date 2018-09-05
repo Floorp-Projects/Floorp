@@ -8,6 +8,7 @@
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/TDZCheckCache.h"
+#include "js/AutoByteString.h"
 
 #include "vm/GlobalObject.h"
 
@@ -399,13 +400,13 @@ EmitterScope::dump(BytecodeEmitter* bce)
     for (NameLocationMap::Range r = nameCache_->all(); !r.empty(); r.popFront()) {
         const NameLocation& l = r.front().value();
 
-        UniqueChars bytes = AtomToPrintableString(bce->cx, r.front().key());
-        if (!bytes)
+        JSAutoByteString bytes;
+        if (!AtomToPrintableString(bce->cx, r.front().key(), &bytes))
             return;
         if (l.kind() != NameLocation::Kind::Dynamic)
-            fprintf(stdout, "  %s %s ", BindingKindString(l.bindingKind()), bytes.get());
+            fprintf(stdout, "  %s %s ", BindingKindString(l.bindingKind()), bytes.ptr());
         else
-            fprintf(stdout, "  %s ", bytes.get());
+            fprintf(stdout, "  %s ", bytes.ptr());
 
         switch (l.kind()) {
           case NameLocation::Kind::Dynamic:

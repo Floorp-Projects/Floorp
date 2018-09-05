@@ -21,7 +21,7 @@
 
 #include "builtin/String.h"
 #include "gc/Marking.h"
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "util/Text.h"
 #include "vm/JSContext.h"
 #include "vm/SymbolType.h"
@@ -116,10 +116,14 @@ js::AtomStateEntry::asPtr(JSContext* cx) const
     return atom;
 }
 
-UniqueChars
-js::AtomToPrintableString(JSContext* cx, JSAtom* atom)
+const char*
+js::AtomToPrintableString(JSContext* cx, JSAtom* atom, JSAutoByteString* bytes)
 {
-    return QuoteString(cx, atom);
+    JSString* str = QuoteString(cx, atom, 0);
+    if (!str)
+        return nullptr;
+    bytes->initBytes(EncodeLatin1(cx, str));
+    return bytes->ptr();
 }
 
 #define DEFINE_PROTO_STRING(name,init,clasp) const char js_##name##_str[] = #name;

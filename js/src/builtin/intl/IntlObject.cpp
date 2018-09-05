@@ -21,7 +21,7 @@
 #include "builtin/intl/NumberFormat.h"
 #include "builtin/intl/PluralRules.h"
 #include "builtin/intl/ScopedICUObject.h"
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "js/Class.h"
 #include "js/StableStringChars.h"
 #include "vm/GlobalObject.h"
@@ -50,14 +50,14 @@ js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
 
-    UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
+    JSAutoByteString locale(cx, args[0].toString());
     if (!locale)
         return false;
 
     UErrorCode status = U_ZERO_ERROR;
     const UChar* uTimeZone = nullptr;
     int32_t uTimeZoneLength = 0;
-    UCalendar* cal = ucal_open(uTimeZone, uTimeZoneLength, locale.get(), UCAL_DEFAULT, &status);
+    UCalendar* cal = ucal_open(uTimeZone, uTimeZoneLength, locale.ptr(), UCAL_DEFAULT, &status);
     if (U_FAILURE(status)) {
         intl::ReportInternalError(cx);
         return false;
@@ -370,8 +370,9 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 3);
 
     // 1. Assert: locale is a string.
-    UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
-    if (!locale)
+    RootedString str(cx, args[0].toString());
+    JSAutoByteString locale;
+    if (!locale.encodeUtf8(cx, str))
         return false;
 
     // 2. Assert: style is a string.
@@ -404,7 +405,7 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
     UErrorCode status = U_ZERO_ERROR;
 
     UDateFormat* fmt =
-        udat_open(UDAT_DEFAULT, UDAT_DEFAULT, IcuLocale(locale.get()),
+        udat_open(UDAT_DEFAULT, UDAT_DEFAULT, IcuLocale(locale.ptr()),
         nullptr, 0, nullptr, 0, &status);
     if (U_FAILURE(status)) {
         intl::ReportInternalError(cx);
@@ -414,7 +415,7 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
 
     // UDateTimePatternGenerator will be needed for translations of date and
     // time fields like "month", "week", "day" etc.
-    UDateTimePatternGenerator* dtpg = udatpg_open(IcuLocale(locale.get()), &status);
+    UDateTimePatternGenerator* dtpg = udatpg_open(IcuLocale(locale.ptr()), &status);
     if (U_FAILURE(status)) {
         intl::ReportInternalError(cx);
         return false;
@@ -460,7 +461,7 @@ js::intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
 
-    UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
+    JSAutoByteString locale(cx, args[0].toString());
     if (!locale)
         return false;
 
@@ -471,7 +472,7 @@ js::intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp)
     if (!DefineDataProperty(cx, info, cx->names().locale, args[0]))
         return false;
 
-    bool rtl = uloc_isRightToLeft(IcuLocale(locale.get()));
+    bool rtl = uloc_isRightToLeft(IcuLocale(locale.ptr()));
 
     RootedValue dir(cx, StringValue(rtl ? cx->names().rtl : cx->names().ltr));
 
