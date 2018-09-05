@@ -834,15 +834,12 @@ SCInput::readChars(char16_t* p, size_t nchars)
 void
 SCInput::getPtr(uint64_t data, void** ptr)
 {
-    // No endianness conversion is used for pointers, since they are not sent
-    // across address spaces anyway.
-    *ptr = reinterpret_cast<void*>(data);
+    *ptr = reinterpret_cast<void*>(NativeEndian::swapFromLittleEndian(data));
 }
 
 bool
 SCInput::readPtr(void** p)
 {
-    // See endianness comment in getPtr, above.
     uint64_t u;
     if (!readNativeEndian(&u))
         return false;
@@ -1914,7 +1911,7 @@ JSStructuredCloneWriter::transferOwnership()
 
         point.write(NativeEndian::swapToLittleEndian(PairToUInt64(tag, ownership)));
         point.next();
-        point.write(reinterpret_cast<uint64_t>(content));
+        point.write(NativeEndian::swapToLittleEndian(reinterpret_cast<uint64_t>(content)));
         point.next();
         point.write(NativeEndian::swapToLittleEndian(extraData));
         point.next();
