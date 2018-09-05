@@ -948,7 +948,7 @@ public:
   /**
     * Gets the current target event frame from the PresShell
     */
-  virtual nsIFrame* GetEventTargetFrame() = 0;
+  virtual nsIFrame* GetCurrentEventFrame() = 0;
 
   /**
     * Gets the current target event frame from the PresShell
