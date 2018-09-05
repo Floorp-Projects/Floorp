@@ -12,7 +12,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "gc/Marking.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/Value.h"
 #include "vm/Debugger.h"
 #include "vm/TypedArrayObject.h"
@@ -2475,11 +2475,11 @@ MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleString propname)
             return true;
     }
 
-    JSAutoByteString bytes;
-    if (!bytes.encodeUtf8(cx, propname))
+    UniqueChars bytes = JS_EncodeStringToUTF8(cx, propname);
+    if (!bytes)
         return false;
     return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr,
-                                            JSMSG_UNDECLARED_VAR, bytes.ptr());
+                                            JSMSG_UNDECLARED_VAR, bytes.get());
 }
 
 /*

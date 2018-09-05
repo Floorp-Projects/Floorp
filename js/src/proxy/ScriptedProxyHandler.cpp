@@ -8,7 +8,7 @@
 
 #include "jsapi.h"
 
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "vm/Interpreter.h" // For InstanceOfOperator
 
 #include "vm/JSObject-inl.h"
@@ -179,11 +179,11 @@ GetProxyTrap(JSContext* cx, HandleObject handler, HandlePropertyName name, Mutab
 
     // Step 4.
     if (!IsCallable(func)) {
-        JSAutoByteString bytes(cx, name);
+        UniqueChars bytes = JS_EncodeString(cx, name);
         if (!bytes)
             return false;
 
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_BAD_TRAP, bytes.ptr());
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_BAD_TRAP, bytes.get());
         return false;
     }
 
