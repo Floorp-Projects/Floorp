@@ -23,7 +23,7 @@ private object Versions {
 
     const val jna = "4.5.2"
 
-    const val fxa = "0.2.3"
+    const val fxa = "0.2.4"
 }
 
 // Synchronized dependencies used by (some) modules
