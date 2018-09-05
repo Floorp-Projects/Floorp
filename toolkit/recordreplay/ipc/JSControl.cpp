@@ -803,7 +803,7 @@ RecordReplay_Dump(JSContext* aCx, unsigned aArgc, Value* aVp)
     if (!str) {
       return false;
     }
-    JS::UniqueChars cstr = JS_EncodeString(aCx, str);
+    JS::UniqueChars cstr = JS_EncodeStringToLatin1(aCx, str);
     if (!cstr) {
       return false;
     }

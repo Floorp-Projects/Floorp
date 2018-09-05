@@ -247,7 +247,7 @@ nsXPCComponents_Interfaces::Resolve(nsIXPConnectWrappedNative* wrapper,
         return NS_OK;
 
     RootedString str(cx, JSID_TO_STRING(id));
-    JS::UniqueChars name = JS_EncodeString(cx, str);
+    JS::UniqueChars name = JS_EncodeStringToLatin1(cx, str);
 
     // we only allow interfaces by name here
     if (name && name[0] != '{') {
@@ -626,7 +626,7 @@ nsXPCComponents_Classes::Resolve(nsIXPConnectWrappedNative* wrapper,
     if (!JSID_IS_STRING(id))
         return NS_OK;
 
-    JS::UniqueChars name = JS_EncodeString(cx, JSID_TO_STRING(id));
+    JS::UniqueChars name = JS_EncodeStringToLatin1(cx, JSID_TO_STRING(id));
     if (name &&
         name[0] != '{') { // we only allow contractids here
         nsCOMPtr<nsIJSCID> nsid = nsJSCID::NewID(name.get());
@@ -835,7 +835,7 @@ nsXPCComponents_ClassesByID::Resolve(nsIXPConnectWrappedNative* wrapper,
         return NS_OK;
 
     RootedString str(cx, JSID_TO_STRING(id));
-    JS::UniqueChars name = JS_EncodeString(cx, str);
+    JS::UniqueChars name = JS_EncodeStringToLatin1(cx, str);
     if (name && name[0] == '{' &&
         IsRegisteredCLSID(name.get())) // we only allow canonical CLSIDs here
     {
@@ -1003,7 +1003,7 @@ nsXPCComponents_Results::Resolve(nsIXPConnectWrappedNative* wrapper,
     if (!JSID_IS_STRING(id))
         return NS_OK;
 
-    JS::UniqueChars name = JS_EncodeString(cx, JSID_TO_STRING(id));
+    JS::UniqueChars name = JS_EncodeStringToLatin1(cx, JSID_TO_STRING(id));
     if (name) {
         const char* rv_name;
         const void* iter = nullptr;
@@ -1169,7 +1169,7 @@ nsXPCComponents_ID::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
     if (!jsstr)
         return ThrowAndFail(NS_ERROR_XPC_BAD_ID_STRING, cx, _retval);
 
-    JS::UniqueChars bytes = JS_EncodeString(cx, jsstr);
+    JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, jsstr);
     if (!bytes)
         return ThrowAndFail(NS_ERROR_XPC_BAD_ID_STRING, cx, _retval);
 
@@ -1388,7 +1388,7 @@ struct MOZ_STACK_CLASS ExceptionArgParser
         JSString* str = ToString(cx, v);
         if (!str)
            return false;
-        messageBytes = JS_EncodeString(cx, str);
+        messageBytes = JS_EncodeStringToLatin1(cx, str);
         eMsg = messageBytes.get();
         return !!eMsg;
     }
@@ -1886,7 +1886,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
         if (!str)
             return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
 
-        cInitializerBytes = JS_EncodeString(cx, str);
+        cInitializerBytes = JS_EncodeStringToLatin1(cx, str);
         cInitializer = cInitializerBytes.get();
         if (!cInitializer)
             return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);

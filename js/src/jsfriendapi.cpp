@@ -832,7 +832,7 @@ FormatValue(JSContext* cx, const Value& vArg, UniqueChars& bytes)
 
     if (!str)
         return nullptr;
-    bytes = JS_EncodeString(cx, str);
+    bytes = JS_EncodeStringToLatin1(cx, str);
     if (!bytes)
         return nullptr;
     const char* buf = bytes.get();
@@ -893,7 +893,7 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
     // print the frame number and function name
     JS::UniqueChars buf(std::move(inBuf));
     if (funname) {
-        UniqueChars funbytes = JS_EncodeString(cx, funname);
+        UniqueChars funbytes = JS_EncodeStringToLatin1(cx, funname);
         if (!funbytes)
             return nullptr;
         buf = sprintf_append(cx, std::move(buf), "%d %s(", num, funbytes.get());
@@ -939,7 +939,7 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
             if (i < iter.numFormalArgs()) {
                 MOZ_ASSERT(fi.argumentSlot() == i);
                 if (!fi.isDestructured()) {
-                    nameBytes = JS_EncodeString(cx, fi.name());
+                    nameBytes = JS_EncodeStringToLatin1(cx, fi.name());
                     name = nameBytes.get();
                     if (!name)
                         return nullptr;
@@ -994,7 +994,7 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
                 cx->clearPendingException();
             }
             if (thisValStr) {
-                thisValBytes = JS_EncodeString(cx, thisValStr);
+                thisValBytes = JS_EncodeStringToLatin1(cx, thisValStr);
                 if (!thisValBytes)
                     return nullptr;
                 buf = sprintf_append(cx, std::move(buf), "    this = %s\n", thisValBytes.get());

@@ -1265,7 +1265,7 @@ mozJSComponentLoader::ExtractExports(JSContext* aCx, ComponentLoaderInfo& aInfo,
         if (i == 0) {
             logBuffer.AssignLiteral("Installing symbols [ ");
         }
-        JS::UniqueChars bytes = JS_EncodeString(cx, JSID_TO_STRING(symbolId));
+        JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, JSID_TO_STRING(symbolId));
         if (!!bytes)
             logBuffer.Append(bytes.get());
         logBuffer.Append(' ');
