@@ -12,7 +12,6 @@
 #include "jsutil.h"
 
 #include "gc/Marking.h"
-#include "js/CharacterEncoding.h"
 #include "js/Vector.h"
 #include "util/StringBuffer.h"
 #include "vm/GlobalObject.h"
@@ -1592,6 +1591,21 @@ TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr, gc::InitialHeap 
     return obj;
 }
 
+static bool
+ReportTypedObjTypeError(JSContext* cx,
+                        const unsigned errorNumber,
+                        HandleTypedObject obj)
+{
+    // Serialize type string of obj
+    RootedAtom typeReprAtom(cx, &obj->typeDescr().stringRepr());
+    UniqueChars typeReprStr(JS_EncodeStringToUTF8(cx, typeReprAtom));
+    if (!typeReprStr)
+        return false;
+
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber, typeReprStr.get());
+    return false;
+}
+
 /* static */ void
 OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
 {
@@ -1681,20 +1695,31 @@ TypedObject::obj_lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
     return LookupProperty(cx, proto, id, objp, propp);
 }
 
+static bool
+ReportPropertyError(JSContext* cx,
+                    const unsigned errorNumber,
+                    HandleId id)
+{
+    RootedValue idVal(cx, IdToValue(id));
+    RootedString str(cx, ValueToSource(cx, idVal));
+    if (!str)
+        return false;
+
+    UniqueChars propName(JS_EncodeStringToUTF8(cx, str));
+    if (!propName)
+        return false;
+
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber, propName.get());
+    return false;
+}
+
 bool
 TypedObject::obj_defineProperty(JSContext* cx, HandleObject obj, HandleId id,
                                 Handle<PropertyDescriptor> desc,
                                 ObjectOpResult& result)
 {
-    // Serialize the type string of |obj|.
-    RootedAtom typeReprAtom(cx, &obj->as<TypedObject>().typeDescr().stringRepr());
-    UniqueChars typeReprStr = StringToNewUTF8CharsZ(cx, *typeReprAtom);
-    if (!typeReprStr)
-        return false;
-
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_NOT_EXTENSIBLE,
-                             typeReprStr.get());
-    return false;
+    Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
+    return ReportTypedObjTypeError(cx, JSMSG_OBJECT_NOT_EXTENSIBLE, typedObj);
 }
 
 bool
@@ -1989,14 +2014,8 @@ IsOwnId(JSContext* cx, HandleObject obj, HandleId id)
 bool
 TypedObject::obj_deleteProperty(JSContext* cx, HandleObject obj, HandleId id, ObjectOpResult& result)
 {
-    if (IsOwnId(cx, obj, id)) {
-        UniqueChars propName = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
-        if (!propName)
-            return false;
-
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_CANT_DELETE, propName.get());
-        return false;
-    }
+    if (IsOwnId(cx, obj, id))
+        return ReportPropertyError(cx, JSMSG_CANT_DELETE, id);
 
     RootedObject proto(cx, obj->staticPrototype());
     if (!proto)

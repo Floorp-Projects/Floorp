@@ -117,7 +117,7 @@ class UTF8CharsZ : public mozilla::RangedPtr<unsigned char>
  * A wrapper for a "const char*" that is encoded using UTF-8.
  * This class does not manage ownership of the data; that is left
  * to others.  This differs from UTF8CharsZ in that the chars are
- * const and it disallows assignment.
+ * const and it allows assignment.
  */
 class JS_PUBLIC_API(ConstUTF8CharsZ)
 {
@@ -330,42 +330,5 @@ StringIsASCII(const char* s);
 
 inline void JS_free(JS::Latin1CharsZ& ptr) { js_free((void*)ptr.get()); }
 inline void JS_free(JS::UTF8CharsZ& ptr) { js_free((void*)ptr.get()); }
-
-/**
- * DEPRECATED
- *
- * Allocate memory sufficient to contain the characters of |str| truncated to
- * Latin-1 and a trailing null terminator, fill the memory with the characters
- * interpreted in that manner plus the null terminator, and return a pointer to
- * the memory.
- *
- * This function *loses information* when it copies the characters of |str| if
- * |str| contains code units greater than 0xFF.  Additionally, users that
- * depend on null-termination will misinterpret the copied characters if |str|
- * contains any nulls.  Avoid using this function if possible, because it will
- * eventually be removed.
- */
-extern JS_PUBLIC_API(JS::UniqueChars)
-JS_EncodeStringToLatin1(JSContext* cx, JSString* str);
-
-/**
- * DEPRECATED
- *
- * Same behavior as JS_EncodeStringToLatin1(), but encode into a UTF-8 string.
- *
- * This function *loses information* when it copies the characters of |str| if
- * |str| contains invalid UTF-16: U+FFFD REPLACEMENT CHARACTER will be copied
- * instead.
- *
- * The returned string is also subject to misinterpretation if |str| contains
- * any nulls (which are faithfully transcribed into the returned string, but
- * which will implicitly truncate the string if it's passed to functions that
- * expect null-terminated strings).
- *
- * Avoid using this function if possible, because we'll remove it once we can
- * devise a better API for the task.
- */
-extern JS_PUBLIC_API(JS::UniqueChars)
-JS_EncodeStringToUTF8(JSContext* cx, JS::Handle<JSString*> str);
 
 #endif /* js_CharacterEncoding_h */

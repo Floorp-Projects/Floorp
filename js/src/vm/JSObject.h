@@ -1241,10 +1241,10 @@ XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj);
  * Using NotNullObject is usually less code.
  */
 extern void
-ReportNotObject(JSContext* cx, HandleValue v);
+ReportNotObject(JSContext* cx, const Value& v);
 
 inline JSObject*
-NonNullObject(JSContext* cx, HandleValue v)
+NonNullObject(JSContext* cx, const Value& v)
 {
     if (v.isObject())
         return &v.toObject();
@@ -1292,7 +1292,7 @@ GetFirstArgumentAsObject(JSContext* cx, const CallArgs& args, const char* method
 
 /* Helper for throwing, always returns false. */
 extern bool
-Throw(JSContext* cx, HandleId id, unsigned errorNumber, const char* details = nullptr);
+Throw(JSContext* cx, jsid id, unsigned errorNumber, const char* details = nullptr);
 
 /*
  * ES6 rev 29 (6 Dec 2014) 7.3.13. Mark obj as non-extensible, and adjust each

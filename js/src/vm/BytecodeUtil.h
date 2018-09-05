@@ -532,7 +532,7 @@ DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,
  * Decompile the formal argument at formalIndex in the nearest non-builtin
  * stack frame, falling back with converting v to source.
  */
-JSString*
+UniqueChars
 DecompileArgument(JSContext* cx, int formalIndex, HandleValue v);
 
 static inline unsigned

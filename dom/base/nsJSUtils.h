@@ -19,6 +19,7 @@
 #include "GeckoProfiler.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/AutoByteString.h"
 #include "js/Conversions.h"
 #include "js/StableStringChars.h"
 #include "nsString.h"

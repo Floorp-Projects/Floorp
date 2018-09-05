@@ -10,7 +10,7 @@
 
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
-#include "js/CharacterEncoding.h"
+#include "js/AutoByteString.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Proxy.h"
 #include "js/SourceBufferHolder.h"
@@ -140,8 +140,8 @@ SandboxDump(JSContext* cx, unsigned argc, Value* vp)
     if (!str)
         return false;
 
-    JS::UniqueChars utf8str = JS_EncodeStringToUTF8(cx, str);
-    char* cstr = utf8str.get();
+    JSAutoByteString utf8str;
+    char* cstr = utf8str.encodeUtf8(cx, str);
     if (!cstr)
         return false;
 
@@ -854,74 +854,70 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             JS_ReportErrorASCII(cx, "Property names must be strings");
             return false;
         }
-        JSFlatString* nameStr = JS_FlattenString(cx, nameValue.toString());
-        if (!nameStr)
+        RootedString nameStr(cx, nameValue.toString());
+        JSAutoByteString name;
+        if (!name.encodeUtf8(cx, nameStr))
             return false;
-        if (JS_FlatStringEqualsAscii(nameStr, "Blob")) {
+        if (!strcmp(name.ptr(), "Blob")) {
             Blob = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "ChromeUtils")) {
+        } else if (!strcmp(name.ptr(), "ChromeUtils")) {
             ChromeUtils = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "CSS")) {
+        } else if (!strcmp(name.ptr(), "CSS")) {
             CSS = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "CSSRule")) {
+        } else if (!strcmp(name.ptr(), "CSSRule")) {
             CSSRule = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "Directory")) {
+        } else if (!strcmp(name.ptr(), "Directory")) {
             Directory = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "DOMParser")) {
+        } else if (!strcmp(name.ptr(), "DOMParser")) {
             DOMParser = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "Element")) {
+        } else if (!strcmp(name.ptr(), "Element")) {
             Element = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "Event")) {
+        } else if (!strcmp(name.ptr(), "Event")) {
             Event = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "File")) {
+        } else if (!strcmp(name.ptr(), "File")) {
             File = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "FileReader")) {
+        } else if (!strcmp(name.ptr(), "FileReader")) {
             FileReader = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "FormData")) {
+        } else if (!strcmp(name.ptr(), "FormData")) {
             FormData = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "InspectorUtils")) {
+        } else if (!strcmp(name.ptr(), "InspectorUtils")) {
             InspectorUtils = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "MessageChannel")) {
+        } else if (!strcmp(name.ptr(), "MessageChannel")) {
             MessageChannel = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "Node")) {
+        } else if (!strcmp(name.ptr(), "Node")) {
             Node = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "NodeFilter")) {
+        } else if (!strcmp(name.ptr(), "NodeFilter")) {
             NodeFilter = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "TextDecoder")) {
+        } else if (!strcmp(name.ptr(), "TextDecoder")) {
             TextDecoder = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "TextEncoder")) {
+        } else if (!strcmp(name.ptr(), "TextEncoder")) {
             TextEncoder = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "URL")) {
+        } else if (!strcmp(name.ptr(), "URL")) {
             URL = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "URLSearchParams")) {
+        } else if (!strcmp(name.ptr(), "URLSearchParams")) {
             URLSearchParams = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "XMLHttpRequest")) {
+        } else if (!strcmp(name.ptr(), "XMLHttpRequest")) {
             XMLHttpRequest = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "XMLSerializer")) {
+        } else if (!strcmp(name.ptr(), "XMLSerializer")) {
             XMLSerializer = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "atob")) {
+        } else if (!strcmp(name.ptr(), "atob")) {
             atob = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "btoa")) {
+        } else if (!strcmp(name.ptr(), "btoa")) {
             btoa = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "caches")) {
+        } else if (!strcmp(name.ptr(), "caches")) {
             caches = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "crypto")) {
+        } else if (!strcmp(name.ptr(), "crypto")) {
             crypto = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "fetch")) {
+        } else if (!strcmp(name.ptr(), "fetch")) {
             fetch = true;
-        } else if (JS_FlatStringEqualsAscii(nameStr, "indexedDB")) {
+        } else if (!strcmp(name.ptr(), "indexedDB")) {
             indexedDB = true;
 #ifdef MOZ_WEBRTC
-        } else if (JS_FlatStringEqualsAscii(nameStr, "rtcIdentityProvider")) {
+        } else if (!strcmp(name.ptr(), "rtcIdentityProvider")) {
             rtcIdentityProvider = true;
 #endif
         } else {
-            RootedString nameStr(cx, nameValue.toString());
-            JS::UniqueChars name = JS_EncodeStringToUTF8(cx, nameStr);
-            if (!name)
-                return false;
-
-            JS_ReportErrorUTF8(cx, "Unknown property name: %s", name.get());
+            JS_ReportErrorUTF8(cx, "Unknown property name: %s", name.ptr());
             return false;
         }
     }
@@ -1544,9 +1540,10 @@ OptionsBase::ParseString(const char* name, nsCString& prop)
         return false;
     }
 
-    JS::UniqueChars tmp = JS_EncodeStringToLatin1(mCx, value.toString());
+    char* tmp = JS_EncodeString(mCx, value.toString());
     NS_ENSURE_TRUE(tmp, false);
-    prop.Assign(tmp.get(), strlen(tmp.get()));
+    prop.Assign(tmp, strlen(tmp));
+    js_free(tmp);
     return true;
 }
 

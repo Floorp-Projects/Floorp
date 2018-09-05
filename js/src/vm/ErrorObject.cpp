@@ -13,6 +13,7 @@
 
 #include "jsexn.h"
 
+#include "js/AutoByteString.h"
 #include "js/CallArgs.h"
 #include "js/CharacterEncoding.h"
 #include "vm/GlobalObject.h"
@@ -145,10 +146,10 @@ js::ErrorObject::getOrCreateErrorReport(JSContext* cx)
     report.exnType = type_;
 
     // Filename.
-    UniqueChars filenameStr = JS_EncodeStringToLatin1(cx, fileName(cx));
-    if (!filenameStr)
+    JSAutoByteString filenameStr;
+    if (!filenameStr.encodeLatin1(cx, fileName(cx)))
         return nullptr;
-    report.filename = filenameStr.get();
+    report.filename = filenameStr.ptr();
 
     // Coordinates.
     report.lineno = lineNumber();

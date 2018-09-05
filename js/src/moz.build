@@ -124,6 +124,7 @@ EXPORTS += [
 
 EXPORTS.js += [
     '../public/AllocPolicy.h',
+    '../public/AutoByteString.h',
     '../public/CallArgs.h',
     '../public/CallNonGenericMethod.h',
     '../public/CharacterEncoding.h',
