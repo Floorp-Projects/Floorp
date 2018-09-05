@@ -569,6 +569,9 @@ class DesktopInstance(GeckoInstance):
         # tests that don't expect it to be there.
         "browser.urlbar.userMadeSearchSuggestionsChoice": True,
 
+        # Don't warn when exiting the browser
+        "browser.warnOnQuit": False,
+
         # Disable first-run welcome page
         "startup.homepage_welcome_url": "about:blank",
         "startup.homepage_welcome_url.additional": "",
