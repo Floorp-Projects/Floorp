@@ -15,16 +15,6 @@ import mozilla.components.support.ktx.android.content.systemService
 import java.lang.ref.WeakReference
 
 /**
- * The resolved layout direction for this view.
- *
- * @return {@link #LAYOUT_DIRECTION_RTL} if the layout direction is RTL or returns
- * {@link #LAYOUT_DIRECTION_LTR} if the layout direction is not RTL.
- */
-val View.layoutDirection: Int
-    get() =
-        ViewCompat.getLayoutDirection(this)
-
-/**
  * Is the horizontal layout direction of this view from Right to Left?
  */
 val View.isRTL: Boolean
