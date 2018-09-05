@@ -3873,7 +3873,7 @@ NotifyDumpResult(bool aResult,
     MOZ_ASSERT(!!aCallbackThread);
     Unused << aCallbackThread->Dispatch(NS_NewRunnableFunction("CrashReporter::InvokeCallback",
                                                                std::move(runnable)),
-                                        NS_DISPATCH_NORMAL);
+                                        NS_DISPATCH_SYNC);
   } else {
     runnable();
   }

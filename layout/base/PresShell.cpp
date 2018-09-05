@@ -6442,12 +6442,6 @@ PresShell::GetCurrentEventFrame()
   return mCurrentEventFrame;
 }
 
-nsIFrame*
-PresShell::GetEventTargetFrame()
-{
-  return GetCurrentEventFrame();
-}
-
 already_AddRefed<nsIContent>
 PresShell::GetEventTargetContent(WidgetEvent* aEvent)
 {

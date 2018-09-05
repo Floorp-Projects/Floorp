@@ -80,6 +80,8 @@ clang_checkers:
   - name: performance-type-promotion-in-math-fn
   - name: performance-unnecessary-copy-initialization
   - name: performance-unnecessary-value-param
+  - name: readability-braces-around-statements
+  # Note: this can be loosened up by using the ShortStatementLines option
   - name: readability-container-size-empty
   - name: readability-else-after-return
   - name: readability-misleading-indentation
