@@ -1034,26 +1034,28 @@ nsImageFrame::GetContinuationOffset() const
 /* virtual */ nscoord
 nsImageFrame::GetMinISize(gfxContext *aRenderingContext)
 {
-  // XXX The caller doesn't account for constraints of the height,
-  // min-height, and max-height properties.
+  // XXX The caller doesn't account for constraints of the block-size,
+  // min-block-size, and max-block-size properties.
   DebugOnly<nscoord> result;
   DISPLAY_MIN_WIDTH(this, result);
   EnsureIntrinsicSizeAndRatio();
-  return mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord ?
-    mIntrinsicSize.width.GetCoordValue() : 0;
+  const nsStyleCoord& iSize = GetWritingMode().IsVertical() ?
+                                mIntrinsicSize.height : mIntrinsicSize.width;
+  return iSize.GetUnit() == eStyleUnit_Coord ? iSize.GetCoordValue() : 0;
 }
 
 /* virtual */ nscoord
 nsImageFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
-  // XXX The caller doesn't account for constraints of the height,
-  // min-height, and max-height properties.
+  // XXX The caller doesn't account for constraints of the block-size,
+  // min-block-size, and max-block-size properties.
   DebugOnly<nscoord> result;
   DISPLAY_PREF_WIDTH(this, result);
   EnsureIntrinsicSizeAndRatio();
+  const nsStyleCoord& iSize = GetWritingMode().IsVertical() ?
+                                mIntrinsicSize.height : mIntrinsicSize.width;
   // convert from normal twips to scaled twips (printing...)
-  return mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord ?
-    mIntrinsicSize.width.GetCoordValue() : 0;
+  return iSize.GetUnit() == eStyleUnit_Coord ? iSize.GetCoordValue() : 0;
 }
 
 /* virtual */ IntrinsicSize
