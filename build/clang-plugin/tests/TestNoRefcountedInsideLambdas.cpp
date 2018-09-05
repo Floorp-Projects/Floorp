@@ -1,5 +1,5 @@
 #include <functional>
-#define MOZ_STRONG_REF __attribute__((annotate("moz_strong_ref")))
+#define MOZ_STRONG_REF
 #define MOZ_IMPLICIT __attribute__((annotate("moz_implicit")))
 
 struct RefCountedBase {
