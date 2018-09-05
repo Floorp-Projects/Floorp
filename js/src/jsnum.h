@@ -60,12 +60,18 @@ template <AllowGC allowGC>
 extern JSString*
 NumberToString(JSContext* cx, double d);
 
+extern JSString*
+NumberToStringHelper(JSContext* cx, double d);
+
 extern JSAtom*
 NumberToAtom(JSContext* cx, double d);
 
 template <AllowGC allowGC>
 extern JSFlatString*
 Int32ToString(JSContext* cx, int32_t i);
+
+extern JSFlatString*
+Int32ToStringHelper(JSContext* cx, int32_t i);
 
 extern JSAtom*
 Int32ToAtom(JSContext* cx, int32_t si);
