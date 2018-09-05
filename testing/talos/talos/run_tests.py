@@ -14,7 +14,6 @@ import traceback
 import urllib
 
 import mozhttpd
-import mozinfo
 import mozversion
 import utils
 from mozlog import get_proxy_logger
@@ -123,10 +122,7 @@ def run_tests(config, browser_config):
         if not test.get('profile', False):
             test['profile'] = config.get('profile')
 
-    if mozinfo.os == 'win':
-        browser_config['extra_args'] = ['--no-deelevate', '--wait-for-browser']
-    else:
-        browser_config['extra_args'] = []
+    browser_config['extra_args'] = []
 
     # pass --no-remote to firefox launch, if --develop is specified
     # we do that to allow locally the user to have another running firefox
