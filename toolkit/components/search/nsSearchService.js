@@ -3085,8 +3085,8 @@ SearchService.prototype = {
   ],
 
   _addEngineToStore: function SRCH_SVC_addEngineToStore(aEngine) {
-    let url = aEngine._getURLOfType("text/html").getSubmission("dummy", aEngine).uri.spec;
-    if (this._blackList.some(code => url.includes(code))) {
+    let url = aEngine._getURLOfType("text/html").getSubmission("dummy", aEngine).uri.spec.toLowerCase();
+    if (this._blackList.some(code => url.includes(code.toLowerCase()))) {
       LOG("_addEngineToStore: Ignoring blacklisted engine");
       return;
     }
