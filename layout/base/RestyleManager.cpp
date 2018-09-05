@@ -3184,7 +3184,9 @@ RestyleManager::ContentStateChanged(nsIContent* aContent,
 
   const EventStates kVisitedAndUnvisited =
     NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED;
-  if (aChangedBits.HasAtLeastOneOfStates(kVisitedAndUnvisited) &&
+  // NOTE: We want to return ASAP for visitedness changes, but we don't want to
+  // mess up the situation where the element became a link or stopped being one.
+  if (aChangedBits.HasAllStates(kVisitedAndUnvisited) &&
       !Gecko_VisitedStylesEnabled(element.OwnerDoc())) {
     aChangedBits &= ~kVisitedAndUnvisited;
     if (aChangedBits.IsEmpty()) {
