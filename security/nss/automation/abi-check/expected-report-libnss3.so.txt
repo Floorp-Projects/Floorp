@@ -1,5 +1,0 @@
-
-1 Added function:
-
-  'function KeyType CERT_GetCertKeyType(const CERTSubjectPublicKeyInfo*)'    {CERT_GetCertKeyType@@NSS_3.39}
-
