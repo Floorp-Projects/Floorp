@@ -1318,7 +1318,7 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
   ApplyPrimitiveConfig(config, aGeometry);
 
   ShaderProgramOGL *program = GetShaderProgramFor(config);
-  MOZ_DIAGNOSTIC_ASSERT(program);
+  MOZ_RELEASE_ASSERT(program);
   if (!program) {
     return;
   }
