@@ -309,7 +309,7 @@ window._gBrowser = {
     tab.linkedBrowser = browser;
 
     if (userContextId) {
-      tab.setUserContextId(userContextId);
+      tab.setAttribute("usercontextid", userContextId);
       ContextualIdentityService.setTabStyle(tab);
     }
 
