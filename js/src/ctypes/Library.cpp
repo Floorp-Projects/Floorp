@@ -10,7 +10,7 @@
 #include "prlink.h"
 
 #include "ctypes/CTypes.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/StableStringChars.h"
 
 using JS::AutoStableStringChars;
@@ -169,13 +169,13 @@ Library::Create(JSContext* cx, HandleValue path, const JSCTypesCallbacks* callba
 #undef MAX_ERROR_LEN
 
     if (JS::StringIsASCII(error)) {
-      JSAutoByteString pathCharsUTF8;
-      if (pathCharsUTF8.encodeUtf8(cx, pathStr))
-        JS_ReportErrorUTF8(cx, "couldn't open library %s: %s", pathCharsUTF8.ptr(), error);
+      JS::UniqueChars pathCharsUTF8 = JS_EncodeStringToUTF8(cx, pathStr);
+      if (pathCharsUTF8)
+        JS_ReportErrorUTF8(cx, "couldn't open library %s: %s", pathCharsUTF8.get(), error);
     } else {
-      JSAutoByteString pathCharsLatin1;
-      if (pathCharsLatin1.encodeLatin1(cx, pathStr))
-        JS_ReportErrorLatin1(cx, "couldn't open library %s: %s", pathCharsLatin1.ptr(), error);
+      JS::UniqueChars pathCharsLatin1 = JS_EncodeString(cx, pathStr);
+      if (pathCharsLatin1)
+        JS_ReportErrorLatin1(cx, "couldn't open library %s: %s", pathCharsLatin1.get(), error);
     }
     return nullptr;
   }

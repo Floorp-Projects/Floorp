@@ -14,7 +14,6 @@
 #include "builtin/ModuleObject.h"
 #include "gc/Allocator.h"
 #include "gc/FreeOp.h"
-#include "js/AutoByteString.h"
 #include "util/StringBuffer.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSScript.h"
@@ -1520,10 +1519,10 @@ js::DumpBindings(JSContext* cx, Scope* scopeArg)
 {
     RootedScope scope(cx, scopeArg);
     for (Rooted<BindingIter> bi(cx, BindingIter(scope)); bi; bi++) {
-        JSAutoByteString bytes;
+        UniqueChars bytes;
         if (!AtomToPrintableString(cx, bi.name(), &bytes))
             return;
-        fprintf(stderr, "%s %s ", BindingKindString(bi.kind()), bytes.ptr());
+        fprintf(stderr, "%s %s ", BindingKindString(bi.kind()), bytes.get());
         switch (bi.location().kind()) {
           case BindingLocation::Kind::Global:
             if (bi.isTopLevelFunction())

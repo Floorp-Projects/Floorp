@@ -38,7 +38,6 @@
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
-#include "js/AutoByteString.h"
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Date.h"
@@ -293,28 +292,28 @@ ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
     MOZ_ASSERT(efs->exnType == type, "error-throwing intrinsic and error number are inconsistent");
 #endif
 
-    JSAutoByteString errorArgs[3];
+    UniqueChars errorArgs[3];
     for (unsigned i = 1; i < 4 && i < args.length(); i++) {
         RootedValue val(cx, args[i]);
         if (val.isInt32()) {
             JSString* str = ToString<CanGC>(cx, val);
             if (!str)
                 return;
-            errorArgs[i - 1].encodeLatin1(cx, str);
+            errorArgs[i - 1] = JS_EncodeString(cx, str);
         } else if (val.isString()) {
-            errorArgs[i - 1].encodeLatin1(cx, val.toString());
+            errorArgs[i - 1] = JS_EncodeString(cx, val.toString());
         } else {
             UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, nullptr);
             if (!bytes)
                 return;
-            errorArgs[i - 1].initBytes(std::move(bytes));
+            errorArgs[i - 1] = std::move(bytes);
         }
         if (!errorArgs[i - 1])
             return;
     }
 
     JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber,
-                               errorArgs[0].ptr(), errorArgs[1].ptr(), errorArgs[2].ptr());
+                               errorArgs[0].get(), errorArgs[1].get(), errorArgs[2].get());
 }
 
 static bool
@@ -1869,7 +1868,7 @@ js::ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args)
     while (!iter.done()) {
         MOZ_ASSERT(iter.callee(cx)->isSelfHostedOrIntrinsic() &&
                    !iter.callee(cx)->isBoundFunction());
-        JSAutoByteString funNameBytes;
+        UniqueChars funNameBytes;
         const char* funName = GetFunctionNameBytes(cx, iter.callee(cx), &funNameBytes);
         if (!funName)
             return false;

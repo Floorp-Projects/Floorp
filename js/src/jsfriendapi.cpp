@@ -20,7 +20,7 @@
 #include "gc/GCInternals.h"
 #include "gc/PublicIterators.h"
 #include "gc/WeakMap.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/Printf.h"
 #include "js/Proxy.h"
 #include "js/Wrapper.h"
@@ -808,7 +808,7 @@ js::DumpScript(JSContext* cx, JSScript* scriptArg)
 #endif
 
 static const char*
-FormatValue(JSContext* cx, const Value& vArg, JSAutoByteString& bytes)
+FormatValue(JSContext* cx, const Value& vArg, UniqueChars& bytes)
 {
     RootedValue v(cx, vArg);
 
@@ -832,7 +832,8 @@ FormatValue(JSContext* cx, const Value& vArg, JSAutoByteString& bytes)
 
     if (!str)
         return nullptr;
-    const char* buf = bytes.encodeLatin1(cx, str);
+    bytes = JS_EncodeString(cx, str);
+    const char* buf = bytes.get();
     if (!buf)
         return nullptr;
     const char* found = strstr(buf, "function ");
@@ -892,8 +893,8 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
     // print the frame number and function name
     JS::UniqueChars buf(std::move(inBuf));
     if (funname) {
-        JSAutoByteString funbytes;
-        char* str = funbytes.encodeLatin1(cx, funname);
+        UniqueChars funbytes = JS_EncodeString(cx, funname);
+        char* str = funbytes.get();
         if (!str)
             return nullptr;
         buf = sprintf_append(cx, std::move(buf), "%d %s(", num, str);
@@ -925,7 +926,7 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
                 arg = MagicValue(JS_OPTIMIZED_OUT);
             }
 
-            JSAutoByteString valueBytes;
+            UniqueChars valueBytes;
             const char* value = FormatValue(cx, arg, valueBytes);
             if (!value) {
                 if (cx->isThrowingOutOfMemory())
@@ -933,13 +934,14 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
                 cx->clearPendingException();
             }
 
-            JSAutoByteString nameBytes;
+            UniqueChars nameBytes;
             const char* name = nullptr;
 
             if (i < iter.numFormalArgs()) {
                 MOZ_ASSERT(fi.argumentSlot() == i);
                 if (!fi.isDestructured()) {
-                    name = nameBytes.encodeLatin1(cx, fi.name());
+                    nameBytes = JS_EncodeString(cx, fi.name());
+                    name = nameBytes.get();
                     if (!name)
                         return nullptr;
                 } else {
@@ -985,7 +987,7 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
     // print the value of 'this'
     if (showLocals) {
         if (!thisVal.isUndefined()) {
-            JSAutoByteString thisValBytes;
+            UniqueChars thisValBytes;
             RootedString thisValStr(cx, ToString<CanGC>(cx, thisVal));
             if (!thisValStr) {
                 if (cx->isThrowingOutOfMemory())
@@ -993,7 +995,8 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
                 cx->clearPendingException();
             }
             if (thisValStr) {
-                const char* str = thisValBytes.encodeLatin1(cx, thisValStr);
+                thisValBytes = JS_EncodeString(cx, thisValStr);
+                const char* str = thisValBytes.get();
                 if (!str)
                     return nullptr;
                 buf = sprintf_append(cx, std::move(buf), "    this = %s\n", str);
@@ -1032,7 +1035,7 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
                 continue;
             }
 
-            JSAutoByteString nameBytes;
+            UniqueChars nameBytes;
             const char* name = FormatValue(cx, key, nameBytes);
             if (!name) {
                 if (cx->isThrowingOutOfMemory())
@@ -1040,7 +1043,7 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
                 cx->clearPendingException();
             }
 
-            JSAutoByteString valueBytes;
+            UniqueChars valueBytes;
             const char* value = FormatValue(cx, v, valueBytes);
             if (!value) {
                 if (cx->isThrowingOutOfMemory())

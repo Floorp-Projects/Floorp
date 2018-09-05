@@ -11,9 +11,8 @@
 
 #include "gc/Rooting.h"
 #include "js/TypeDecls.h"
+#include "js/Utility.h"
 #include "vm/CommonPropertyNames.h"
-
-class JSAutoByteString;
 
 namespace js {
 
@@ -22,7 +21,7 @@ namespace js {
  * The lifetime of the result matches the lifetime of bytes.
  */
 extern const char*
-AtomToPrintableString(JSContext* cx, JSAtom* atom, JSAutoByteString* bytes);
+AtomToPrintableString(JSContext* cx, JSAtom* atom, UniqueChars* bytes);
 
 class PropertyName;
 
