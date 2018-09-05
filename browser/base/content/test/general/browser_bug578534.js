@@ -6,11 +6,9 @@ add_task(async function test() {
   let uriString = "http://example.com/";
   let cookieBehavior = "network.cookie.cookieBehavior";
   let uriObj = Services.io.newURI(uriString);
-  let cp = Cc["@mozilla.org/cookie/permission;1"]
-             .getService(Ci.nsICookiePermission);
 
   await SpecialPowers.pushPrefEnv({ set: [[ cookieBehavior, 2 ]] });
-  cp.setAccess(uriObj, cp.ACCESS_ALLOW);
+  Services.perms.add(uriObj, "cookie", Services.perms.ALLOW_ACTION);
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: uriString }, async function(browser) {
     await ContentTask.spawn(browser, null, function() {
@@ -19,5 +17,5 @@ add_task(async function test() {
     });
   });
 
-  cp.setAccess(uriObj, cp.ACCESS_DEFAULT);
+  Services.perms.add(uriObj, "cookie", Services.perms.UNKNOWN_ACTION);
 });

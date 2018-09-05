@@ -59,15 +59,7 @@ const TEST_DATA = [
                     "memory", "netmonitor", "storage"],
     dropTarget: "#toolbox-buttons-end",
     expectedOrder: ["inspector", "jsdebugger", "styleeditor", "performance",
-                    "memory", "netmonitor", "storage", "webconsole", "accessibility"],
-  },
-  {
-    description: "Mouse was out from the document while dragging",
-    dragTarget: "webconsole",
-    passedTargets: ["inspector"],
-    dropTarget: null,
-    expectedOrder: ["webconsole", "inspector", "jsdebugger", "styleeditor",
-                    "performance", "memory", "netmonitor", "storage", "accessibility"],
+                    "memory", "netmonitor", "storage", "accessibility", "webconsole"],
   },
 ];
 

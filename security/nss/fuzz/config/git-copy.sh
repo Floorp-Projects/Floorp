@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 if [ $# -lt 3 ]; then
   echo "Usage: $0 <repo> <branch> <directory>" 1>&2
@@ -28,7 +28,7 @@ fi
 
 rm -rf "$DIR"
 git init -q "$DIR"
-git -C "$DIR" fetch -q --depth=1 "$REPO" "$COMMIT":git-copy-tmp
-git -C "$DIR" reset --hard git-copy-tmp
+git -C "$DIR" fetch -q --depth=1 "$REPO" "$COMMIT"
+git -C "$DIR" reset -q --hard FETCH_HEAD
 git -C "$DIR" rev-parse --verify HEAD > "$DIR"/.git-copy
 rm -rf "$DIR"/.git

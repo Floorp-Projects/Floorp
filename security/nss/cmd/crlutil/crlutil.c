@@ -232,10 +232,6 @@ ImportCRL(CERTCertDBHandle *certHandle, char *url, int type,
     SECItem crlDER;
     PK11SlotInfo *slot = NULL;
     int rv;
-#if defined(DEBUG_jp96085)
-    PRIntervalTime starttime, endtime, elapsed;
-    PRUint32 mins, secs, msecs;
-#endif
 
     crlDER.data = NULL;
 
@@ -256,19 +252,9 @@ ImportCRL(CERTCertDBHandle *certHandle, char *url, int type,
             goto loser;
     }
 
-#if defined(DEBUG_jp96085)
-    starttime = PR_IntervalNow();
-#endif
     crl = PK11_ImportCRL(slot, &crlDER, url, type,
                          NULL, importOptions, NULL, decodeOptions);
-#if defined(DEBUG_jp96085)
-    endtime = PR_IntervalNow();
-    elapsed = endtime - starttime;
-    mins = PR_IntervalToSeconds(elapsed) / 60;
-    secs = PR_IntervalToSeconds(elapsed) % 60;
-    msecs = PR_IntervalToMilliseconds(elapsed) % 1000;
-    printf("Elapsed : %2d:%2d.%3d\n", mins, secs, msecs);
-#endif
+
     if (!crl) {
         const char *errString;
 

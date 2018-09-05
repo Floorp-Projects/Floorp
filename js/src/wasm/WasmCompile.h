@@ -52,7 +52,7 @@ struct CompileArgs : ShareableBase<CompileArgs>
     bool debugEnabled;
     bool ionEnabled;
     bool sharedMemoryEnabled;
-    HasGcTypes gcTypesEnabled;
+    HasGcTypes gcTypesConfigured;
     bool testTiering;
 
     explicit CompileArgs(ScriptedCaller&& scriptedCaller)
@@ -61,7 +61,7 @@ struct CompileArgs : ShareableBase<CompileArgs>
         debugEnabled(false),
         ionEnabled(false),
         sharedMemoryEnabled(false),
-        gcTypesEnabled(HasGcTypes::False),
+        gcTypesConfigured(HasGcTypes::False),
         testTiering(false)
     {}
 

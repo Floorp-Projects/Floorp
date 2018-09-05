@@ -382,7 +382,6 @@ ExecutionRunnable::RunOnWorkletThread()
   MOZ_ASSERT(workletThread);
 
   JSContext* cx = workletThread->GetJSContext();
-  JSAutoRequest areq(cx);
 
   AutoJSAPI jsapi;
   jsapi.Init();

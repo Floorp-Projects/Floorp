@@ -404,7 +404,6 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 static bool
 HandleInterrupt(JSContext* cx, bool invokeCallback)
 {
-    MOZ_ASSERT(cx->requestDepth >= 1);
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
     // Interrupts can occur at different points between recording and replay,
@@ -570,24 +569,6 @@ void
 JSRuntime::traceSharedIntlData(JSTracer* trc)
 {
     sharedIntlData.ref().trace(trc);
-}
-
-void
-JSContext::triggerActivityCallback(bool active)
-{
-    if (!activityCallback)
-        return;
-
-    /*
-     * The activity callback must not trigger a GC: it would create a cirular
-     * dependency between entering a request and Rooted's requirement of being
-     * in a request. In practice this callback already cannot trigger GC. The
-     * suppression serves to inform the exact rooting hazard analysis of this
-     * property and ensures that it remains true in the future.
-     */
-    AutoSuppressGC suppress(this);
-
-    activityCallback(activityCallbackArg, active);
 }
 
 FreeOp::FreeOp(JSRuntime* maybeRuntime)
