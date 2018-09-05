@@ -301,8 +301,7 @@ namespace JS {
 
 /** Exposed for DumpJSStack */
 extern JS_FRIEND_API(JS::UniqueChars)
-FormatStackDump(JSContext* cx, JS::UniqueChars&& buf, bool showArgs, bool showLocals,
-                bool showThisProps);
+FormatStackDump(JSContext* cx, bool showArgs, bool showLocals, bool showThisProps);
 
 /**
  * Set all of the uninitialized lexicals on an object to undefined. Return

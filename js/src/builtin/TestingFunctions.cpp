@@ -3305,7 +3305,7 @@ GetBacktrace(JSContext* cx, unsigned argc, Value* vp)
         showThisProps = ToBoolean(v);
     }
 
-    JS::UniqueChars buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
+    JS::UniqueChars buf = JS::FormatStackDump(cx, showArgs, showLocals, showThisProps);
     if (!buf)
         return false;
 
