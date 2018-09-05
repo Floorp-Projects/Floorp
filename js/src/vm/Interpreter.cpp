@@ -1861,7 +1861,7 @@ js::ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
             if (!str)
                 return nullptr;
         }
-        return JS_EncodeString(cx, str);
+        return EncodeLatin1(cx, str);
     };
 
     if (lref.isString() && rref.isString()) {

@@ -2076,7 +2076,7 @@ js::ValueToPrintableLatin1(JSContext* cx, const Value& vArg, bool asSource)
     str = QuoteString(cx, str, 0);
     if (!str)
         return nullptr;
-    return JS_EncodeString(cx, str);
+    return EncodeLatin1(cx, str);
 }
 
 UniqueChars
@@ -2090,7 +2090,7 @@ js::ValueToPrintableUTF8(JSContext* cx, const Value& vArg, bool asSource)
         str.set(ToString<CanGC>(cx, v));
     if (!str)
         return nullptr;
-    return JS_EncodeStringToUTF8(cx, str);
+    return StringToNewUTF8CharsZ(cx, *str);
 }
 
 template <AllowGC allowGC>
