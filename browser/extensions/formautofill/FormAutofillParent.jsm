@@ -191,6 +191,7 @@ FormAutofillParent.prototype = {
    * Update the status and trigger _onStatusChanged, if necessary.
    */
   _updateStatus() {
+    log.debug("_updateStatus");
     let wasActive = this._active;
     this._active = this._computeStatus();
     if (this._active !== wasActive) {
@@ -208,29 +209,27 @@ FormAutofillParent.prototype = {
   async receiveMessage({name, data, target}) {
     switch (name) {
       case "FormAutofill:InitStorage": {
-        this.formAutofillStorage.initialize();
+        await this.formAutofillStorage.initialize();
         break;
       }
       case "FormAutofill:GetRecords": {
-        this._getRecords(data, target);
+        await this._getRecords(data, target);
         break;
       }
       case "FormAutofill:SaveAddress": {
         if (data.guid) {
-          this.formAutofillStorage.addresses.update(data.guid, data.address);
+          await this.formAutofillStorage.addresses.update(data.guid, data.address);
         } else {
-          this.formAutofillStorage.addresses.add(data.address);
+          await this.formAutofillStorage.addresses.add(data.address);
         }
         break;
       }
       case "FormAutofill:SaveCreditCard": {
-        // TODO: "MasterPassword.ensureLoggedIn" can be removed after the storage
-        // APIs are refactored to be async functions (bug 1399367).
         if (!await MasterPassword.ensureLoggedIn()) {
           log.warn("User canceled master password entry");
           return;
         }
-        this.formAutofillStorage.creditCards.add(data.creditcard);
+        await this.formAutofillStorage.creditCards.add(data.creditcard);
         break;
       }
       case "FormAutofill:RemoveAddresses": {
@@ -242,7 +241,7 @@ FormAutofillParent.prototype = {
         break;
       }
       case "FormAutofill:OnFormSubmit": {
-        this._onFormSubmit(data, target);
+        await this._onFormSubmit(data, target);
         break;
       }
       case "FormAutofill:OpenPreferences": {
@@ -312,7 +311,7 @@ FormAutofillParent.prototype = {
       return;
     }
 
-    let recordsInCollection = collection.getAll();
+    let recordsInCollection = await collection.getAll();
     if (!info || !info.fieldName || !recordsInCollection.length) {
       target.sendAsyncMessage("FormAutofill:Records", recordsInCollection);
       return;
@@ -356,60 +355,43 @@ FormAutofillParent.prototype = {
 
   _updateSavedFieldNames() {
     log.debug("_updateSavedFieldNames");
-    if (!Services.ppmm.initialProcessData.autofillSavedFieldNames) {
-      Services.ppmm.initialProcessData.autofillSavedFieldNames = new Set();
-    } else {
-      Services.ppmm.initialProcessData.autofillSavedFieldNames.clear();
-    }
 
-    ["addresses", "creditCards"].forEach(c => {
-      this.formAutofillStorage[c].getAll().forEach((record) => {
-        Object.keys(record).forEach((fieldName) => {
-          if (!record[fieldName]) {
-            return;
-          }
-          Services.ppmm.initialProcessData.autofillSavedFieldNames.add(fieldName);
-        });
-      });
-    });
-
-    // Remove the internal guid and metadata fields.
-    this.formAutofillStorage.INTERNAL_FIELDS.forEach((fieldName) => {
-      Services.ppmm.initialProcessData.autofillSavedFieldNames.delete(fieldName);
-    });
+    Services.ppmm.initialProcessData.autofillSavedFieldNames =
+      new Set([...this.formAutofillStorage.addresses.getSavedFieldNames(),
+        ...this.formAutofillStorage.creditCards.getSavedFieldNames()]);
 
     Services.ppmm.broadcastAsyncMessage("FormAutofill:savedFieldNames",
                                         Services.ppmm.initialProcessData.autofillSavedFieldNames);
     this._updateStatus();
   },
 
-  _onAddressSubmit(address, target, timeStartedFillingMS) {
+  async _onAddressSubmit(address, target, timeStartedFillingMS) {
     let showDoorhanger = null;
     if (address.guid) {
       // Avoid updating the fields that users don't modify.
-      let originalAddress = this.formAutofillStorage.addresses.get(address.guid);
+      let originalAddress = await this.formAutofillStorage.addresses.get(address.guid);
       for (let field in address.record) {
         if (address.untouchedFields.includes(field) && originalAddress[field]) {
           address.record[field] = originalAddress[field];
         }
       }
 
-      if (!this.formAutofillStorage.addresses.mergeIfPossible(address.guid, address.record, true)) {
+      if (!await this.formAutofillStorage.addresses.mergeIfPossible(address.guid, address.record, true)) {
         this._recordFormFillingTime("address", "autofill-update", timeStartedFillingMS);
 
         showDoorhanger = async () => {
           const description = FormAutofillUtils.getAddressLabel(address.record);
           const state = await FormAutofillDoorhanger.show(target, "updateAddress", description);
-          let changedGUIDs = this.formAutofillStorage.addresses.mergeToStorage(address.record, true);
+          let changedGUIDs = await this.formAutofillStorage.addresses.mergeToStorage(address.record, true);
           switch (state) {
             case "create":
               if (!changedGUIDs.length) {
-                changedGUIDs.push(this.formAutofillStorage.addresses.add(address.record));
+                changedGUIDs.push(await this.formAutofillStorage.addresses.add(address.record));
               }
               break;
             case "update":
               if (!changedGUIDs.length) {
-                this.formAutofillStorage.addresses.update(address.guid, address.record, true);
+                await this.formAutofillStorage.addresses.update(address.guid, address.record, true);
                 changedGUIDs.push(address.guid);
               } else {
                 this.formAutofillStorage.addresses.remove(address.guid);
@@ -427,9 +409,9 @@ FormAutofillParent.prototype = {
         Services.telemetry.scalarAdd("formautofill.addresses.fill_type_autofill", 1);
       }
     } else {
-      let changedGUIDs = this.formAutofillStorage.addresses.mergeToStorage(address.record);
+      let changedGUIDs = await this.formAutofillStorage.addresses.mergeToStorage(address.record);
       if (!changedGUIDs.length) {
-        changedGUIDs.push(this.formAutofillStorage.addresses.add(address.record));
+        changedGUIDs.push(await this.formAutofillStorage.addresses.add(address.record));
       }
       changedGUIDs.forEach(guid => this.formAutofillStorage.addresses.notifyUsed(guid));
       this._recordFormFillingTime("address", "manual", timeStartedFillingMS);
@@ -455,7 +437,7 @@ FormAutofillParent.prototype = {
     return showDoorhanger;
   },
 
-  _onCreditCardSubmit(creditCard, target, timeStartedFillingMS) {
+  async _onCreditCardSubmit(creditCard, target, timeStartedFillingMS) {
     // Updates the used status for shield/heartbeat to recognize users who have
     // used Credit Card Autofill.
     let setUsedStatus = status => {
@@ -476,7 +458,7 @@ FormAutofillParent.prototype = {
       // Indicate that the user has used Credit Card Autofill to fill in a form.
       setUsedStatus(3);
 
-      let originalCCData = this.formAutofillStorage.creditCards.get(creditCard.guid);
+      let originalCCData = await this.formAutofillStorage.creditCards.get(creditCard.guid);
       let recordUnchanged = true;
       for (let field in creditCard.record) {
         if (creditCard.record[field] === "" && !originalCCData[field]) {
@@ -514,7 +496,7 @@ FormAutofillParent.prototype = {
     }
 
     // Early return if it's a duplicate data
-    let dupGuid = this.formAutofillStorage.creditCards.getDuplicateGuid(creditCard.record);
+    let dupGuid = await this.formAutofillStorage.creditCards.getDuplicateGuid(creditCard.record);
     if (dupGuid) {
       this.formAutofillStorage.creditCards.notifyUsed(dupGuid);
       return false;
@@ -548,8 +530,6 @@ FormAutofillParent.prototype = {
         return;
       }
 
-      // TODO: "MasterPassword.ensureLoggedIn" can be removed after the storage
-      // APIs are refactored to be async functions (bug 1399367).
       if (!await MasterPassword.ensureLoggedIn()) {
         log.warn("User canceled master password entry");
         return;
@@ -558,15 +538,15 @@ FormAutofillParent.prototype = {
       let changedGUIDs = [];
       if (creditCard.guid) {
         if (state == "update") {
-          this.formAutofillStorage.creditCards.update(creditCard.guid, creditCard.record, true);
+          await this.formAutofillStorage.creditCards.update(creditCard.guid, creditCard.record, true);
           changedGUIDs.push(creditCard.guid);
         } else if ("create") {
-          changedGUIDs.push(this.formAutofillStorage.creditCards.add(creditCard.record));
+          changedGUIDs.push(await this.formAutofillStorage.creditCards.add(creditCard.record));
         }
       } else {
-        changedGUIDs.push(...this.formAutofillStorage.creditCards.mergeToStorage(creditCard.record));
+        changedGUIDs.push(...await this.formAutofillStorage.creditCards.mergeToStorage(creditCard.record));
         if (!changedGUIDs.length) {
-          changedGUIDs.push(this.formAutofillStorage.creditCards.add(creditCard.record));
+          changedGUIDs.push(await this.formAutofillStorage.creditCards.add(creditCard.record));
         }
       }
       changedGUIDs.forEach(guid => this.formAutofillStorage.creditCards.notifyUsed(guid));
@@ -588,8 +568,8 @@ FormAutofillParent.prototype = {
     // Transmit the telemetry immediately in the meantime form submitted, and handle these pending
     // doorhangers at a later.
     await Promise.all([
-      address.map(addrRecord => this._onAddressSubmit(addrRecord, target, timeStartedFillingMS)),
-      creditCard.map(ccRecord => this._onCreditCardSubmit(ccRecord, target, timeStartedFillingMS)),
+      await Promise.all(address.map(addrRecord => this._onAddressSubmit(addrRecord, target, timeStartedFillingMS))),
+      await Promise.all(creditCard.map(ccRecord => this._onCreditCardSubmit(ccRecord, target, timeStartedFillingMS))),
     ].map(pendingDoorhangers => {
       return pendingDoorhangers.filter(pendingDoorhanger => !!pendingDoorhanger &&
                                                             typeof pendingDoorhanger == "function");
