@@ -87,21 +87,17 @@ nsScriptErrorBase::InitializeOnMainThread()
 
 // nsIConsoleMessage methods
 NS_IMETHODIMP
-nsScriptErrorBase::GetMessageMoz(char16_t** result) {
-    nsresult rv;
-
+nsScriptErrorBase::GetMessageMoz(nsAString& aMessage)
+{
     nsAutoCString message;
-    rv = ToString(message);
-    if (NS_FAILED(rv))
+    nsresult rv = ToString(message);
+    if (NS_FAILED(rv)) {
         return rv;
+    }
 
-    *result = UTF8ToNewUnicode(message);
-    if (!*result)
-        return NS_ERROR_OUT_OF_MEMORY;
-
+    CopyUTF8toUTF16(message, aMessage);
     return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsScriptErrorBase::GetLogLevel(uint32_t* aLogLevel)
