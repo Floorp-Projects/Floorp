@@ -2197,8 +2197,7 @@ DumpHeap(JSContext* cx, unsigned argc, Value* vp)
                 UniqueChars fileNameBytes = JS_EncodeString(cx, str);
                 if (!fileNameBytes)
                     return false;
-                const char* fileName = fileNameBytes.get();
-                dumpFile = fopen(fileName, "w");
+                dumpFile = fopen(fileNameBytes.get(), "w");
                 if (!dumpFile) {
                     fileNameBytes = JS_EncodeStringToUTF8(cx, str);
                     if (!fileNameBytes)
