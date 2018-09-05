@@ -102,22 +102,41 @@ vec2 get_outer_corner_scale(int segment) {
     return p;
 }
 
-vec4 mod_color(vec4 color, float f) {
-    return vec4(clamp(color.rgb * f, vec3(0.0), vec3(color.a)), color.a);
+// NOTE(emilio): If you change this algorithm, do the same change
+// in border.rs
+vec4 mod_color(vec4 color, bool is_black, bool lighter) {
+    const float light_black = 0.7;
+    const float dark_black = 0.3;
+
+    const float dark_scale = 0.66666666;
+    const float light_scale = 1.0;
+
+    if (is_black) {
+        if (lighter) {
+            return vec4(vec3(light_black), color.a);
+        }
+        return vec4(vec3(dark_black), color.a);
+    }
+
+    if (lighter) {
+        return vec4(color.rgb * light_scale, color.a);
+    }
+    return vec4(color.rgb * dark_scale, color.a);
 }
 
 vec4[2] get_colors_for_side(vec4 color, int style) {
     vec4 result[2];
-    const vec2 f = vec2(1.3, 0.7);
+
+    bool is_black = color.rgb == vec3(0.0, 0.0, 0.0);
 
     switch (style) {
         case BORDER_STYLE_GROOVE:
-            result[0] = mod_color(color, f.x);
-            result[1] = mod_color(color, f.y);
+            result[0] = mod_color(color, is_black, true);
+            result[1] = mod_color(color, is_black, false);
             break;
         case BORDER_STYLE_RIDGE:
-            result[0] = mod_color(color, f.y);
-            result[1] = mod_color(color, f.x);
+            result[0] = mod_color(color, is_black, false);
+            result[1] = mod_color(color, is_black, true);
             break;
         default:
             result[0] = color;
