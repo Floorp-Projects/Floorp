@@ -2247,8 +2247,8 @@ nsDocumentViewer::Show(void)
       if (history) {
         int32_t prevIndex,loadedIndex;
         nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(treeItem);
-        docShell->GetPreviousTransIndex(&prevIndex);
-        docShell->GetLoadedTransIndex(&loadedIndex);
+        docShell->GetPreviousEntryIndex(&prevIndex);
+        docShell->GetLoadedEntryIndex(&loadedIndex);
 #ifdef DEBUG_PAGE_CACHE
         printf("About to evict content viewers: prev=%d, loaded=%d\n",
                prevIndex, loadedIndex);

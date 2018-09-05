@@ -3751,11 +3751,13 @@ static const bool js_isUriUnescaped[] = {
 #undef ____
 
 static inline bool
-TransferBufferToString(StringBuffer& sb, MutableHandleValue rval)
+TransferBufferToString(StringBuffer& sb, JSString* str, MutableHandleValue rval)
 {
-    JSString* str = sb.finishString();
-    if (!str)
-        return false;
+    if (!sb.empty()) {
+        str = sb.finishString();
+        if (!str)
+            return false;
+    }
     rval.setString(str);
     return true;
 }
@@ -3776,9 +3778,8 @@ template <typename CharT>
 static MOZ_NEVER_INLINE EncodeResult
 Encode(StringBuffer& sb, const CharT* chars, size_t length, const bool* unescapedSet)
 {
-    Latin1Char hexBuf[4];
+    Latin1Char hexBuf[3];
     hexBuf[0] = '%';
-    hexBuf[3] = 0;
 
     auto appendEncoded = [&sb, &hexBuf](Latin1Char c) {
         static const char HexDigits[] = "0123456789ABCDEF"; /* NB: uppercase */
@@ -3788,12 +3789,28 @@ Encode(StringBuffer& sb, const CharT* chars, size_t length, const bool* unescape
         return sb.append(hexBuf, 3);
     };
 
+    auto appendRange = [&sb, chars, length](size_t start, size_t end) {
+        MOZ_ASSERT(start <= end);
+
+        if (start < end) {
+            if (start == 0) {
+                if (!sb.reserve(length))
+                    return false;
+            }
+            return sb.append(chars + start, chars + end);
+        }
+        return true;
+    };
+
+    size_t startAppend = 0;
     for (size_t k = 0; k < length; k++) {
         CharT c = chars[k];
         if (c < 128 && (js_isUriUnescaped[c] || (unescapedSet && unescapedSet[c]))) {
-            if (!sb.append(Latin1Char(c)))
-                return Encode_Failure;
+            continue;
         } else {
+            if (!appendRange(startAppend, k))
+                return Encode_Failure;
+
             if (mozilla::IsSame<CharT, Latin1Char>::value) {
                 if (c < 0x80) {
                     if (!appendEncoded(c))
@@ -3828,7 +3845,14 @@ Encode(StringBuffer& sb, const CharT* chars, size_t length, const bool* unescape
                         return Encode_Failure;
                 }
             }
+
+            startAppend = k + 1;
         }
+    }
+
+    if (startAppend > 0) {
+        if (!appendRange(startAppend, length))
+            return Encode_Failure;
     }
 
     return Encode_Success;
@@ -3844,8 +3868,6 @@ Encode(JSContext* cx, HandleLinearString str, const bool* unescapedSet, MutableH
     }
 
     StringBuffer sb(cx);
-    if (!sb.reserve(length))
-        return false;
 
     EncodeResult res;
     if (str->hasLatin1Chars()) {
@@ -3865,7 +3887,7 @@ Encode(JSContext* cx, HandleLinearString str, const bool* unescapedSet, MutableH
     }
 
     MOZ_ASSERT(res == Encode_Success);
-    return TransferBufferToString(sb, rval);
+    return TransferBufferToString(sb, str, rval);
 }
 
 enum DecodeResult { Decode_Failure, Decode_BadUri, Decode_Success };
@@ -3874,6 +3896,15 @@ template <typename CharT>
 static DecodeResult
 Decode(StringBuffer& sb, const CharT* chars, size_t length, const bool* reservedSet)
 {
+    auto appendRange = [&sb, chars](size_t start, size_t end) {
+        MOZ_ASSERT(start <= end);
+
+        if (start < end)
+            return sb.append(chars + start, chars + end);
+        return true;
+    };
+
+    size_t startAppend = 0;
     for (size_t k = 0; k < length; k++) {
         CharT c = chars[k];
         if (c == '%') {
@@ -3887,14 +3918,14 @@ Decode(StringBuffer& sb, const CharT* chars, size_t length, const bool* reserved
             uint32_t B = JS7_UNHEX(chars[k+1]) * 16 + JS7_UNHEX(chars[k+2]);
             k += 2;
             if (B < 128) {
-                c = CharT(B);
-                if (reservedSet && reservedSet[c]) {
-                    if (!sb.append(chars + start, k - start + 1))
-                        return Decode_Failure;
-                } else {
-                    if (!sb.append(c))
-                        return Decode_Failure;
-                }
+                Latin1Char ch = Latin1Char(B);
+                if (reservedSet && reservedSet[ch])
+                    continue;
+
+                if (!appendRange(startAppend, start))
+                    return Decode_Failure;
+                if (!sb.append(ch))
+                    return Decode_Failure;
             } else {
                 int n = 1;
                 while (B & (0x80 >> n))
@@ -3924,6 +3955,9 @@ Decode(StringBuffer& sb, const CharT* chars, size_t length, const bool* reserved
                     octets[j] = char(B);
                 }
 
+                if (!appendRange(startAppend, start))
+                    return Decode_Failure;
+
                 uint32_t v = JS::Utf8ToOneUcs4Char(octets, n);
                 MOZ_ASSERT(v >= 128);
                 if (v >= unicode::NonBMPMin) {
@@ -3939,10 +3973,14 @@ Decode(StringBuffer& sb, const CharT* chars, size_t length, const bool* reserved
                         return Decode_Failure;
                 }
             }
-        } else {
-            if (!sb.append(c))
-                return Decode_Failure;
+
+            startAppend = k + 1;
         }
+    }
+
+    if (startAppend > 0) {
+        if (!appendRange(startAppend, length))
+            return Decode_Failure;
     }
 
     return Decode_Success;
@@ -3977,7 +4015,7 @@ Decode(JSContext* cx, HandleLinearString str, const bool* reservedSet, MutableHa
     }
 
     MOZ_ASSERT(res == Decode_Success);
-    return TransferBufferToString(sb, rval);
+    return TransferBufferToString(sb, str, rval);
 }
 
 static bool
@@ -4024,18 +4062,21 @@ str_encodeURI_Component(JSContext* cx, unsigned argc, Value* vp)
     return Encode(cx, str, nullptr, args.rval());
 }
 
-bool
-js::EncodeURI(JSContext* cx, StringBuffer& sb, const char* chars, size_t length)
+JSString*
+js::EncodeURI(JSContext* cx, const char* chars, size_t length)
 {
+    StringBuffer sb(cx);
     EncodeResult result = Encode(sb, reinterpret_cast<const Latin1Char*>(chars), length,
                                  js_isUriReservedPlusPound);
     if (result == EncodeResult::Encode_Failure)
-        return false;
+        return nullptr;
     if (result == EncodeResult::Encode_BadUri) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_URI);
-        return false;
+        return nullptr;
     }
-    return true;
+    if (sb.empty())
+        return NewStringCopyN<CanGC>(cx, chars, length);
+    return sb.finishString();
 }
 
 static bool

@@ -217,6 +217,8 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
             "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
             "-DLIBCXX_LIBCPPABI_VERSION=\"\"",
         ]
+        if is_linux():
+            cmake_args += ["-DLLVM_BINUTILS_INCDIR=%s/include" % gcc_dir]
         if is_windows():
             cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
             cmake_args.insert(-1, "-DLLVM_USE_CRT_RELEASE=MT")

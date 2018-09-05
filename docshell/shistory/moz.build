@@ -9,7 +9,6 @@ XPIDL_SOURCES += [
     'nsISHEntry.idl',
     'nsISHistory.idl',
     'nsISHistoryListener.idl',
-    'nsISHTransaction.idl',
 ]
 
 XPIDL_MODULE = 'shistory'
@@ -28,7 +27,6 @@ UNIFIED_SOURCES += [
     'nsSHEntry.cpp',
     'nsSHEntryShared.cpp',
     'nsSHistory.cpp',
-    'nsSHTransaction.cpp',
     'ParentSHistory.cpp',
 ]
 

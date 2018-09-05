@@ -2079,7 +2079,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
             env_.memoryUsage = MemoryUsage::None;
         return true;
     }
-    SharedModule finish() {
+    SharedModule finish(UniqueLinkData* linkData) {
         MOZ_ASSERT(env_.funcTypes.empty());
         if (!env_.funcTypes.resize(funcImportMap_.count() + funcDefs_.length()))
             return nullptr;
@@ -2122,8 +2122,8 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
                 return nullptr;
         }
 
-        MutableCompileArgs args = cx_->new_<CompileArgs>();
-        if (!args || !args->initFromContext(cx_, std::move(scriptedCaller)))
+        MutableCompileArgs args = cx_->new_<CompileArgs>(cx_, std::move(scriptedCaller));
+        if (!args)
             return nullptr;
 
         uint32_t codeSectionSize = 0;
@@ -2155,7 +2155,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
         if (!mg.finishFuncDefs())
             return nullptr;
 
-        return mg.finishModule(*bytes);
+        return mg.finishModule(*bytes, linkData);
     }
 };
 
@@ -5685,7 +5685,8 @@ CheckModuleEnd(ModuleValidator &m)
 }
 
 static SharedModule
-CheckModule(JSContext* cx, AsmJSParser& parser, ParseNode* stmtList, unsigned* time)
+CheckModule(JSContext* cx, AsmJSParser& parser, ParseNode* stmtList, UniqueLinkData* linkData,
+            unsigned* time)
 {
     int64_t before = PRMJ_Now();
 
@@ -5726,7 +5727,7 @@ CheckModule(JSContext* cx, AsmJSParser& parser, ParseNode* stmtList, unsigned* t
     if (!CheckModuleEnd(m))
         return nullptr;
 
-    SharedModule module = m.finish();
+    SharedModule module = m.finish(linkData);
     if (!module)
         return nullptr;
 
@@ -6326,6 +6327,72 @@ AsmJSMetadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 
 namespace {
 
+// Assumptions captures ambient state that must be the same when compiling and
+// deserializing a module for the compiled code to be valid. If it's not, then
+// the module must be recompiled from scratch.
+
+struct Assumptions
+{
+    uint32_t              cpuId;
+    JS::BuildIdCharVector buildId;
+
+    Assumptions();
+    bool init();
+
+    bool operator==(const Assumptions& rhs) const;
+    bool operator!=(const Assumptions& rhs) const { return !(*this == rhs); }
+
+    size_t serializedSize() const;
+    uint8_t* serialize(uint8_t* cursor) const;
+    const uint8_t* deserialize(const uint8_t* cursor, size_t remain);
+};
+
+Assumptions::Assumptions()
+  : cpuId(ObservedCPUFeatures()),
+    buildId()
+{}
+
+bool
+Assumptions::init()
+{
+    return GetBuildId && GetBuildId(&buildId);
+}
+
+bool
+Assumptions::operator==(const Assumptions& rhs) const
+{
+    return cpuId == rhs.cpuId &&
+           buildId.length() == rhs.buildId.length() &&
+           ArrayEqual(buildId.begin(), rhs.buildId.begin(), buildId.length());
+}
+
+size_t
+Assumptions::serializedSize() const
+{
+    return sizeof(uint32_t) +
+           SerializedPodVectorSize(buildId);
+}
+
+uint8_t*
+Assumptions::serialize(uint8_t* cursor) const
+{
+    // The format of serialized Assumptions must never change in a way that
+    // would cause old cache files written with by an old build-id to match the
+    // assumptions of a different build-id.
+
+    cursor = WriteScalar<uint32_t>(cursor, cpuId);
+    cursor = SerializePodVector(cursor, buildId);
+    return cursor;
+}
+
+const uint8_t*
+Assumptions::deserialize(const uint8_t* cursor, size_t remain)
+{
+    (cursor = ReadScalarChecked<uint32_t>(cursor, &remain, &cpuId)) &&
+    (cursor = DeserializePodVectorChecked(cursor, &remain, &buildId));
+    return cursor;
+}
+
 class ModuleChars
 {
   protected:
@@ -6517,7 +6584,7 @@ struct ScopedCacheEntryOpenedForRead
 } // unnamed namespace
 
 static JS::AsmJSCacheResult
-StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, JSContext* cx)
+StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, const LinkData& linkData, JSContext* cx)
 {
     ModuleCharsForStore moduleChars;
     if (!moduleChars.init(parser))
@@ -6525,11 +6592,16 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, JSContext* cx)
 
     MOZ_RELEASE_ASSERT(module.bytecode().length() == 0);
 
-    size_t compiledSize = module.compiledSerializedSize();
-    MOZ_RELEASE_ASSERT(compiledSize <= UINT32_MAX);
+    size_t moduleSize = module.serializedSize(linkData);
+    MOZ_RELEASE_ASSERT(moduleSize <= UINT32_MAX);
 
-    size_t serializedSize = sizeof(uint32_t) +
-                            compiledSize +
+    Assumptions assumptions;
+    if (!assumptions.init())
+        return JS::AsmJSCache_InternalError;
+
+    size_t serializedSize = assumptions.serializedSize() +
+                            sizeof(uint32_t) +
+                            moduleSize +
                             moduleChars.serializedSize();
 
     JS::OpenAsmJSCacheEntryForWriteOp open = cx->asmJSCacheOps().openEntryForWrite;
@@ -6547,14 +6619,12 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, JSContext* cx)
 
     uint8_t* cursor = entry.memory;
 
-    // Everything serialized before the Module must not change incompatibly
-    // between any two builds (regardless of platform, architecture, ...).
-    // (The Module::assumptionsMatch() guard everything in the Module and
-    // afterwards.)
-    cursor = WriteScalar<uint32_t>(cursor, compiledSize);
+    cursor = assumptions.serialize(cursor);
 
-    module.compiledSerialize(cursor, compiledSize);
-    cursor += compiledSize;
+    cursor = WriteScalar<uint32_t>(cursor, moduleSize);
+
+    module.serialize(linkData, cursor, moduleSize);
+    cursor += moduleSize;
 
     cursor = moduleChars.serialize(cursor);
 
@@ -6582,32 +6652,32 @@ LookupAsmJSModuleInCache(JSContext* cx, AsmJSParser& parser, bool* loadedFromCac
     if (!open(cx->global(), begin, limit, &entry.serializedSize, &entry.memory, &entry.handle))
         return true;
 
-    size_t remain = entry.serializedSize;
     const uint8_t* cursor = entry.memory;
 
-    uint32_t compiledSize;
-    cursor = ReadScalarChecked<uint32_t>(cursor, &remain, &compiledSize);
+    Assumptions deserializedAssumptions;
+    cursor = deserializedAssumptions.deserialize(cursor, entry.serializedSize);
     if (!cursor)
         return true;
 
-    Assumptions assumptions;
-    if (!assumptions.initBuildIdFromContext(cx))
-        return false;
+    Assumptions currentAssumptions;
+    if (!currentAssumptions.init() || currentAssumptions != deserializedAssumptions)
+        return true;
 
-    if (!Module::assumptionsMatch(assumptions, cursor, remain))
+    uint32_t moduleSize;
+    cursor = ReadScalar<uint32_t>(cursor, &moduleSize);
+    if (!cursor)
         return true;
 
     MutableAsmJSMetadata asmJSMetadata = cx->new_<AsmJSMetadata>();
     if (!asmJSMetadata)
         return false;
 
-    *module = Module::deserialize(/* bytecodeBegin = */ nullptr, /* bytecodeSize = */ 0,
-                                  cursor, compiledSize, asmJSMetadata.get());
+    *module = Module::deserialize(cursor, moduleSize, asmJSMetadata.get());
     if (!*module) {
         ReportOutOfMemory(cx);
         return false;
     }
-    cursor += compiledSize;
+    cursor += moduleSize;
 
     // Due to the hash comparison made by openEntryForRead, this should succeed
     // with high probability.
@@ -6775,8 +6845,9 @@ js::CompileAsmJS(JSContext* cx, AsmJSParser& parser, ParseNode* stmtList, bool* 
     if (!loadedFromCache) {
         // "Checking" parses, validates and compiles, producing a fully compiled
         // WasmModuleObject as result.
+        UniqueLinkData linkData;
         unsigned time;
-        module = CheckModule(cx, parser, stmtList, &time);
+        module = CheckModule(cx, parser, stmtList, &linkData, &time);
         if (!module)
             return NoExceptionPending(cx);
 
@@ -6784,7 +6855,7 @@ js::CompileAsmJS(JSContext* cx, AsmJSParser& parser, ParseNode* stmtList, bool* 
         // AsmJSModule must be stored before static linking since static linking
         // specializes the AsmJSModule to the current process's address space
         // and therefore must be executed after a cache hit.
-        JS::AsmJSCacheResult cacheResult = StoreAsmJSModuleInCache(parser, *module, cx);
+        JS::AsmJSCacheResult cacheResult = StoreAsmJSModuleInCache(parser, *module, *linkData, cx);
 
         // Build the string message to display in the developer console.
         message = BuildConsoleMessage(time, cacheResult);

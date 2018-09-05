@@ -38,7 +38,6 @@
 #include "nsWrapperCache.h"
 #include "nsStringBuffer.h"
 
-#include "nsIPlatformInfo.h"
 #include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "xpcpublic.h"

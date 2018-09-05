@@ -31,7 +31,7 @@ class nsSHEntryShared;
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 [ptr] native nsSHEntryShared(nsSHEntryShared);
 
-[scriptable, uuid(0dad26b8-a259-42c7-93f1-2fa7fc076e45)]
+[builtinclass, scriptable, uuid(0dad26b8-a259-42c7-93f1-2fa7fc076e45)]
 interface nsISHEntry : nsISupports
 {
     /**
@@ -400,6 +400,13 @@ interface nsISHEntry : nsISupports
      * @throw if nothing was replaced.
      */
     void ReplaceChild(in nsISHEntry aNewChild);
+
+    /**
+     * When an entry is serving is within nsISHistory's array of entries, this
+     * property specifies if it should persist. If not it will be replaced by
+     * new additions to the list.
+     */
+    [infallible] attribute boolean persist;
 };
 
 %{ C++
