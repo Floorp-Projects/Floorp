@@ -167,7 +167,7 @@ XPCThrower::Verbosify(XPCCallContext& ccx,
         const char* name;
         JS::UniqueChars bytes;
         if (!JSID_IS_VOID(id)) {
-            bytes = JS_EncodeString(ccx, JSID_TO_STRING(id));
+            bytes = JS_EncodeStringToLatin1(ccx, JSID_TO_STRING(id));
             name = bytes ? bytes.get() : "";
         } else {
             name = "Unknown";

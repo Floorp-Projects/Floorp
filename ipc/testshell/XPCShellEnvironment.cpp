@@ -83,7 +83,7 @@ Print(JSContext *cx, unsigned argc, JS::Value *vp)
         JSString *str = JS::ToString(cx, args[i]);
         if (!str)
             return false;
-        JS::UniqueChars bytes = JS_EncodeString(cx, str);
+        JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str);
         if (!bytes)
             return false;
         fprintf(stdout, "%s%s", i ? " " : "", bytes.get());
@@ -119,7 +119,7 @@ Dump(JSContext *cx, unsigned argc, JS::Value *vp)
     JSString *str = JS::ToString(cx, args[0]);
     if (!str)
         return false;
-    JS::UniqueChars bytes = JS_EncodeString(cx, str);
+    JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str);
     if (!bytes)
       return false;
 
@@ -147,7 +147,7 @@ Load(JSContext *cx,
         JS::Rooted<JSString*> str(cx, JS::ToString(cx, args[i]));
         if (!str)
             return false;
-        JS::UniqueChars filename = JS_EncodeString(cx, str);
+        JS::UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
         if (!filename)
             return false;
         FILE *file = fopen(filename.get(), "r");
@@ -348,7 +348,7 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
                 str = JS::ToString(cx, result);
                 JS::UniqueChars bytes;
                 if (str)
-                    bytes = JS_EncodeString(cx, str);
+                    bytes = JS_EncodeStringToLatin1(cx, str);
                 JS::SetWarningReporter(cx, older);
 
                 if (!!bytes)

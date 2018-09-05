@@ -204,7 +204,7 @@ RequiredStringArg(JSContext* cx, const CallArgs& args, size_t argi, const char* 
         return nullptr;
     }
 
-    return JS_EncodeString(cx, args[argi].toString());
+    return JS_EncodeStringToLatin1(cx, args[argi].toString());
 }
 
 static bool
