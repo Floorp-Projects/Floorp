@@ -59,6 +59,3 @@ fuzzy(0-64,0-340) fuzzy-if(webrender,104-104,311-311) == clip-path-inset-003.htm
 == clip-path-stroke-001.html clip-path-stroke-001-ref.html
 
 == clip-path-transform-001.html clip-path-transform-001-ref.html
-
-pref(layout.css.clip-path-path.enabled,true) == clip-path-path-001.html clip-path-path-001-ref.html
-pref(layout.css.clip-path-path.enabled,true) == clip-path-path-002.html clip-path-path-002-ref.html
