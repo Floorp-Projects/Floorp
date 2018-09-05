@@ -11,8 +11,11 @@ with Files('**'):
 XPI_NAME = 'reftest'
 USE_EXTENSION_MANIFEST = True
 JAR_MANIFESTS += ['jar.mn']
-FINAL_TARGET_PP_FILES += ['install.rdf']
-FINAL_TARGET_FILES += ['bootstrap.js']
+FINAL_TARGET_FILES += [
+    'api.js',
+    'manifest.json',
+    'schema.json',
+]
 
 TEST_HARNESS_FILES.reftest += [
     '/build/mobile/remoteautomation.py',

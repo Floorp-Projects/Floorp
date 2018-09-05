@@ -1,5 +1,4 @@
 reftest.jar:
-% content reftest %content/ contentaccessible=yes
   content/moz-bool-pref.css (../../../layout/reftests/css-parsing/moz-bool-pref.css)
   content/reftest.xul (reftest.xul)
 
