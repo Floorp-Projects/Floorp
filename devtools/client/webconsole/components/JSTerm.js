@@ -325,7 +325,7 @@ class JSTerm extends Component {
 
             "Home": () => {
               if (this.autocompletePopup.isOpen) {
-                this.autocompletePopup.selectItemAtIndex(0);
+                this.autocompletePopup.selectedIndex = 0;
                 return null;
               }
 
@@ -339,8 +339,8 @@ class JSTerm extends Component {
 
             "End": () => {
               if (this.autocompletePopup.isOpen) {
-                this.autocompletePopup.selectItemAtIndex(
-                  this.autocompletePopup.itemCount - 1);
+                this.autocompletePopup.selectedIndex =
+                  this.autocompletePopup.itemCount - 1;
                 return null;
               }
 
@@ -907,7 +907,7 @@ class JSTerm extends Component {
 
       case KeyCodes.DOM_VK_HOME:
         if (this.autocompletePopup.isOpen) {
-          this.autocompletePopup.selectItemAtIndex(0);
+          this.autocompletePopup.selectedIndex = 0;
           event.preventDefault();
         } else if (inputValue.length <= 0) {
           this.hud.outputScroller.scrollTop = 0;
@@ -917,7 +917,7 @@ class JSTerm extends Component {
 
       case KeyCodes.DOM_VK_END:
         if (this.autocompletePopup.isOpen) {
-          this.autocompletePopup.selectItemAtIndex(this.autocompletePopup.itemCount - 1);
+          this.autocompletePopup.selectedIndex = this.autocompletePopup.itemCount - 1;
           event.preventDefault();
         } else if (inputValue.length <= 0) {
           this.hud.outputScroller.scrollTop = this.hud.outputScroller.scrollHeight;
@@ -1175,11 +1175,7 @@ class JSTerm extends Component {
     }
 
     const popup = this.autocompletePopup;
-    // We don't want to trigger the onSelect callback since we already set the completion
-    // text a few lines above.
-    popup.setItems(items, 0, {
-      preventSelectCallback: true,
-    });
+    popup.setItems(items);
 
     const minimumAutoCompleteLength = 2;
 
@@ -1218,9 +1214,7 @@ class JSTerm extends Component {
       }
 
       if (popupAlignElement) {
-        popup.openPopup(popupAlignElement, xOffset, yOffset, 0, {
-          preventSelectCallback: true,
-        });
+        popup.openPopup(popupAlignElement, xOffset, yOffset);
       }
     } else if (items.length < minimumAutoCompleteLength && popup.isOpen) {
       popup.hidePopup();
