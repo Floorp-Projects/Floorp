@@ -136,6 +136,11 @@
             },
             "description": "An array of keyboard modifiers that were held while the menu item was clicked."
           },
+          "button": {
+            "type": "integer",
+            "optional": true,
+            "description": "An integer value of button by which menu item was clicked."
+          },
           "targetElementId": {
             "type": "integer",
             "optional": true,
