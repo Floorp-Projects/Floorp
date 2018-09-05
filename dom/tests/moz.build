@@ -86,7 +86,7 @@ with Files("mochitest/orientation/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 with Files("mochitest/orientation/*507902*"):
-    BUG_COMPONENT = ("Core", "Layout: Images, Video, and HTML Frames")
+    BUG_COMPONENT = ("Core", "Layout: Images")
 
 with Files("mochitest/pointerlock/**"):
     BUG_COMPONENT = ("Core", "DOM")

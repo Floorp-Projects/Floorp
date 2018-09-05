@@ -14,7 +14,7 @@ with Files('nsChangeHint.h'):
     BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 
 with Files('nsBidi*'):
-    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
+    BUG_COMPONENT = ('Core', 'Layout: Text')
 
 with Files('AccessibleCaret*'):
     BUG_COMPONENT = ('Core', 'Selection')

@@ -26,7 +26,7 @@ with Files("en-US/chrome/layout/layout_errors.properties"):
     BUG_COMPONENT = ("Core", "DOM: Animation")
 
 with Files("en-US/chrome/layout/MediaDocument.properties"):
-    BUG_COMPONENT = ("Core", "Layout: Images, Video, and HTML Frames")
+    BUG_COMPONENT = ("Core", "Layout: Images")
 
 with Files("en-US/chrome/layout/printing.properties"):
     BUG_COMPONENT = ("Core", "Printing: Output")
