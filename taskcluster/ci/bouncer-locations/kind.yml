@@ -1,0 +1,51 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.bouncer_locations:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+   description: nightly bouncer locations job
+   attributes:
+      build_platform: linux64-nightly
+      nightly: true
+   worker-type:
+      by-project:
+         mozilla-central: scriptworker-prov-v1/bouncer-v1
+         default: scriptworker-prov-v1/bouncer-dev
+   worker:
+      implementation: bouncer-locations
+   scopes:
+      by-project:
+         mozilla-central:
+            - project:releng:bouncer:action:locations
+            - project:releng:bouncer:server:production
+         default:
+            - project:releng:bouncer:action:locations
+            - project:releng:bouncer:server:staging
+   run-on-projects: ['maple', 'mozilla-central']
+   treeherder:
+      symbol: BncLoc
+      kind: other
+      tier: 2
+
+jobs:
+   firefox:
+      bouncer-products:
+         by-project:
+            mozilla-central:
+                - firefox-nightly-latest
+                - firefox-nightly-latest-ssl
+                - firefox-nightly-latest-l10n
+                - firefox-nightly-latest-l10n-ssl
+            default:
+                - firefox-nightly-latest
+                - firefox-nightly-latest-ssl
+                - firefox-nightly-latest-l10n
+                - firefox-nightly-latest-l10n-ssl
+      treeherder:
+         platform: firefox-release/opt
