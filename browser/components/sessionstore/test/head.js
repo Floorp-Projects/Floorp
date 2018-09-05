@@ -530,6 +530,7 @@ function modifySessionStorage(browser, storageData, storageOptions = {}) {
     }
 
     let keys = new Set(Object.keys(data));
+    let isClearing = !keys.size;
     let storage = frame.sessionStorage;
 
     return new Promise(resolve => {
@@ -544,8 +545,12 @@ function modifySessionStorage(browser, storageData, storageOptions = {}) {
         }
       }, true);
 
-      for (let key of keys) {
-        frame.sessionStorage[key] = data[key];
+      if (isClearing) {
+        storage.clear();
+      } else {
+        for (let key of keys) {
+          frame.sessionStorage[key] = data[key];
+        }
       }
     });
   });
