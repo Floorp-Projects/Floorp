@@ -826,28 +826,35 @@
         <parameter name="event"/>
         <body><![CDATA[
           var dt = event.dataTransfer;
-          if (dt.mozItemCount == 1) {
-            var types = dt.mozTypesAt(0);
+
+          let isMovingTabs = dt.mozItemCount > 0;
+          for (let i = 0; i < dt.mozItemCount; i++) {
             // tabs are always added as the first type
-            if (types[0] == TAB_DROP_TYPE) {
-              let sourceNode = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
-              if (sourceNode instanceof XULElement &&
-                  sourceNode.localName == "tab" &&
-                  sourceNode.ownerGlobal.isChromeWindow &&
-                  sourceNode.ownerDocument.documentElement.getAttribute("windowtype") == "navigator:browser" &&
-                  sourceNode.ownerGlobal.gBrowser.tabContainer == sourceNode.parentNode) {
-                // Do not allow transfering a private tab to a non-private window
-                // and vice versa.
-                if (PrivateBrowsingUtils.isWindowPrivate(window) !=
-                    PrivateBrowsingUtils.isWindowPrivate(sourceNode.ownerGlobal))
-                  return "none";
+            let types = dt.mozTypesAt(0);
+            if (types[0] != TAB_DROP_TYPE) {
+              isMovingTabs = false;
+              break;
+            }
+          }
 
-                if (window.gMultiProcessBrowser !=
-                    sourceNode.ownerGlobal.gMultiProcessBrowser)
-                  return "none";
+          if (isMovingTabs) {
+            let sourceNode = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
+            if (sourceNode instanceof XULElement &&
+                sourceNode.localName == "tab" &&
+                sourceNode.ownerGlobal.isChromeWindow &&
+                sourceNode.ownerDocument.documentElement.getAttribute("windowtype") == "navigator:browser" &&
+                sourceNode.ownerGlobal.gBrowser.tabContainer == sourceNode.parentNode) {
+              // Do not allow transfering a private tab to a non-private window
+              // and vice versa.
+              if (PrivateBrowsingUtils.isWindowPrivate(window) !=
+                  PrivateBrowsingUtils.isWindowPrivate(sourceNode.ownerGlobal))
+                return "none";
 
-                return dt.dropEffect == "copy" ? "copy" : "move";
-              }
+              if (window.gMultiProcessBrowser !=
+                  sourceNode.ownerGlobal.gMultiProcessBrowser)
+                return "none";
+
+              return dt.dropEffect == "copy" ? "copy" : "move";
             }
           }
 
@@ -1199,14 +1206,22 @@
         if (!tab || this._isCustomizing)
           return;
 
-        let dt = event.dataTransfer;
-        dt.mozSetDataAt(TAB_DROP_TYPE, tab, 0);
-        let browser = tab.linkedBrowser;
+        let selectedTabs = gBrowser.selectedTabs;
+        let otherSelectedTabs = selectedTabs.filter(selectedTab => selectedTab != tab);
+        let dataTransferOrderedTabs = [tab].concat(otherSelectedTabs);
 
-        // We must not set text/x-moz-url or text/plain data here,
-        // otherwise trying to deatch the tab by dropping it on the desktop
-        // may result in an "internet shortcut"
-        dt.mozSetDataAt("text/x-moz-text-internal", browser.currentURI.spec, 0);
+        let dt = event.dataTransfer;
+        for (let i = 0; i < dataTransferOrderedTabs.length; i++) {
+          let dtTab = dataTransferOrderedTabs[i];
+
+          dt.mozSetDataAt(TAB_DROP_TYPE, dtTab, i);
+          let dtBrowser = dtTab.linkedBrowser;
+
+          // We must not set text/x-moz-url or text/plain data here,
+          // otherwise trying to detach the tab by dropping it on the desktop
+          // may result in an "internet shortcut"
+          dt.mozSetDataAt("text/x-moz-text-internal", dtBrowser.currentURI.spec, i);
+        }
 
         // Set the cursor to an arrow during tab drags.
         dt.mozCursor = "default";
@@ -1215,10 +1230,9 @@
         // node to deliver the `dragend` event.  See bug 1345473.
         dt.addElement(tab);
 
-        // Regroup all selected tabs around the dragged tab
-        // for multiple tabs dragging
         if (tab.multiselected) {
-          let selectedTabs = gBrowser.selectedTabs;
+          // Regroup all selected tabs around the dragged tab
+          // for multiple tabs dragging
           let draggedTabPos = tab._tPos;
 
           // Move left selected tabs
@@ -1257,6 +1271,7 @@
         canvas.height = 90 * scale;
         let toDrag = canvas;
         let dragImageOffset = -16;
+        let browser = tab.linkedBrowser;
         if (gMultiProcessBrowser) {
           var context = canvas.getContext("2d");
           context.fillStyle = "white";
