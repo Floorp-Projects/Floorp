@@ -1053,8 +1053,7 @@ js::obj_create(JSContext* cx, unsigned argc, Value* vp)
     }
 
     if (!args[0].isObjectOrNull()) {
-        RootedValue v(cx, args[0]);
-        UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr);
+        UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, args[0], nullptr);
         if (!bytes)
             return false;
 

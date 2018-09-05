@@ -5432,7 +5432,7 @@ Debugger::wrapWasmScript(JSContext* cx, Handle<WasmInstanceObject*> wasmInstance
 }
 
 static JSObject*
-DebuggerScript_check(JSContext* cx, const Value& v, const char* fnname)
+DebuggerScript_check(JSContext* cx, HandleValue v, const char* fnname)
 {
     JSObject* thisobj = NonNullObject(cx, v);
     if (!thisobj)
