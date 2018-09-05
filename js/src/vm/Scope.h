@@ -209,7 +209,8 @@ class TrailingNamesArray
 
     BindingName* start() { return reinterpret_cast<BindingName*>(ptr()); }
 
-    BindingName& operator[](size_t i) { return start()[i]; }
+    BindingName& get(size_t i) { return start()[i]; }
+    BindingName& operator[](size_t i) { return get(i); }
 };
 
 class BindingLocation
@@ -465,6 +466,7 @@ class LexicalScope : public Scope
 {
     friend class Scope;
     friend class BindingIter;
+    friend class GCMarker;
 
   public:
     // Data is public because it is created by the frontend. See
@@ -779,6 +781,7 @@ class GlobalScope : public Scope
 {
     friend class Scope;
     friend class BindingIter;
+    friend class GCMarker;
 
   public:
     // Data is public because it is created by the frontend. See
@@ -883,6 +886,7 @@ class EvalScope : public Scope
 {
     friend class Scope;
     friend class BindingIter;
+    friend class GCMarker;
 
   public:
     // Data is public because it is created by the frontend. See
@@ -1055,6 +1059,7 @@ class WasmInstanceScope : public Scope
 {
     friend class BindingIter;
     friend class Scope;
+    friend class GCMarker;
     static const ScopeKind classScopeKind_ = ScopeKind::WasmInstance;
 
   public:
@@ -1114,6 +1119,7 @@ class WasmFunctionScope : public Scope
 {
     friend class BindingIter;
     friend class Scope;
+    friend class GCMarker;
     static const ScopeKind classScopeKind_ = ScopeKind::WasmFunction;
 
   public:
