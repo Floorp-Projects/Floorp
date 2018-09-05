@@ -16,8 +16,8 @@ class SyncKeys internal constructor(raw: Raw) {
 
     @Suppress("VariableNaming")
     class Raw(p: Pointer) : Structure(p) {
-        @JvmField var sync_key: String? = null
-        @JvmField var xcs: String? = null
+        @JvmField var sync_key: Pointer? = null
+        @JvmField var xcs: Pointer? = null
 
         init {
             read()
@@ -29,8 +29,8 @@ class SyncKeys internal constructor(raw: Raw) {
     }
 
     init {
-        this.syncKey = raw.sync_key
-        this.xcs = raw.xcs
+        this.syncKey = raw.sync_key?.getString(0, RustObject.RUST_STRING_ENCODING)
+        this.xcs = raw.xcs?.getString(0, RustObject.RUST_STRING_ENCODING)
         FxaClient.INSTANCE.fxa_sync_keys_free(raw.pointer)
     }
 }

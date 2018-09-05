@@ -41,12 +41,14 @@ abstract class RustObject<T> : Closeable {
     }
 
     companion object {
+        const val RUST_STRING_ENCODING = "utf8"
+
         fun getAndConsumeString(stringPtr: Pointer?): String? {
             if (stringPtr == null) {
                 return null
             }
             try {
-                return stringPtr.getString(0, "utf8")
+                return stringPtr.getString(0, RUST_STRING_ENCODING)
             } finally {
                 FxaClient.INSTANCE.fxa_str_free(stringPtr)
             }

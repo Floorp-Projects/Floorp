@@ -49,7 +49,7 @@ open class Error : Structure() {
      * Get the error message or null if there is none.
      */
     fun getMessage(): String? {
-        return this.message?.getString(0, "utf8")
+        return this.message?.getString(0, RustObject.RUST_STRING_ENCODING)
     }
 
     override fun getFieldOrder(): List<String> {

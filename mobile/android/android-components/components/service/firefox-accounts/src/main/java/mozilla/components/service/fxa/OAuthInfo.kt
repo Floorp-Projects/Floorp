@@ -17,9 +17,9 @@ class OAuthInfo internal constructor(raw: Raw) {
 
     @Suppress("VariableNaming")
     class Raw(p: Pointer) : Structure(p) {
-        @JvmField var access_token: String? = null
-        @JvmField var keys: String? = null
-        @JvmField var scope: String? = null
+        @JvmField var access_token: Pointer? = null
+        @JvmField var keys: Pointer? = null
+        @JvmField var scope: Pointer? = null
 
         init {
             read()
@@ -31,9 +31,9 @@ class OAuthInfo internal constructor(raw: Raw) {
     }
 
     init {
-        this.accessToken = raw.access_token
-        this.keys = raw.keys
-        this.scope = raw.scope
+        this.accessToken = raw.access_token?.getString(0, RustObject.RUST_STRING_ENCODING)
+        this.keys = raw.keys?.getString(0, RustObject.RUST_STRING_ENCODING)
+        this.scope = raw.scope?.getString(0, RustObject.RUST_STRING_ENCODING)
         FxaClient.INSTANCE.fxa_oauth_info_free(raw.pointer)
     }
 }
