@@ -45,7 +45,8 @@ MaskLayerImageCache::FindImageFor(const MaskLayerImageKey** aKey)
 }
 
 void
-MaskLayerImageCache::PutImage(const MaskLayerImageKey* aKey, ImageContainer* aContainer)
+MaskLayerImageCache::PutImage(const MaskLayerImageKey* aKey,
+                              ImageContainer* aContainer)
 {
   MaskLayerImageEntry* entry = mMaskImageContainers.PutEntry(*aKey);
   entry->mContainer = aContainer;
@@ -58,7 +59,8 @@ MaskLayerImageCache::MaskLayerImageKey::MaskLayerImageKey()
   MOZ_COUNT_CTOR(MaskLayerImageKey);
 }
 
-MaskLayerImageCache::MaskLayerImageKey::MaskLayerImageKey(const MaskLayerImageKey& aKey)
+MaskLayerImageCache::MaskLayerImageKey::MaskLayerImageKey(
+  const MaskLayerImageKey& aKey)
   : mRoundedClipRects(aKey.mRoundedClipRects)
   , mLayerCount(aKey.mLayerCount)
 {
