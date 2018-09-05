@@ -490,6 +490,9 @@ impl AlphaBatchBuilder {
                             );
 
             let source_task_id = pic
+                .raster_config
+                .as_ref()
+                .expect("BUG: no raster config")
                 .surface
                 .as_ref()
                 .expect("BUG: unexpected surface in splitting")
@@ -636,7 +639,7 @@ impl AlphaBatchBuilder {
                         // for it and add it to the current plane splitter.
                         if picture.is_in_3d_context {
                             // Push into parent plane splitter.
-                            debug_assert!(picture.surface.is_some());
+                            debug_assert!(picture.raster_config.is_some());
                             let transform = &ctx.transforms
                                 .get_transform_by_id(transform_id);
 
@@ -666,13 +669,16 @@ impl AlphaBatchBuilder {
                             return;
                         }
 
-                        let add_to_parent_pic = match picture.composite_mode {
-                            Some(PictureCompositeMode::Filter(filter)) => {
-                                assert!(filter.is_visible());
-                                match filter {
-                                    FilterOp::Blur(..) => {
-                                        match picture.surface {
-                                            Some(ref surface) => {
+                        match picture.raster_config {
+                            Some(ref raster_config) => {
+                                let surface = raster_config.surface
+                                                           .as_ref()
+                                                           .expect("bug: surface must be allocated by now");
+                                match raster_config.composite_mode {
+                                    PictureCompositeMode::Filter(filter) => {
+                                        assert!(filter.is_visible());
+                                        match filter {
+                                            FilterOp::Blur(..) => {
                                                 let kind = BatchKind::Brush(
                                                     BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
                                                 );
@@ -703,108 +709,96 @@ impl AlphaBatchBuilder {
                                                     clip_task_address,
                                                 };
                                                 batch.push(PrimitiveInstance::from(instance));
-                                                false
                                             }
-                                            None => {
-                                                true
+                                            FilterOp::DropShadow(offset, ..) => {
+                                                // Draw an instance of the shadow first, following by the content.
+
+                                                // Both the shadow and the content get drawn as a brush image.
+                                                let kind = BatchKind::Brush(
+                                                    BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
+                                                );
+
+                                                // Gets the saved render task ID of the content, which is
+                                                // deeper in the render task tree than the direct child.
+                                                let secondary_id = picture.secondary_render_task_id.expect("no secondary!?");
+                                                let saved_index = render_tasks[secondary_id].saved_index.expect("no saved index!?");
+                                                debug_assert_ne!(saved_index, SavedTargetIndex::PENDING);
+
+                                                // Build BatchTextures for shadow/content
+                                                let shadow_textures = BatchTextures::render_target_cache();
+                                                let content_textures = BatchTextures {
+                                                    colors: [
+                                                        SourceTexture::RenderTaskCache(saved_index),
+                                                        SourceTexture::Invalid,
+                                                        SourceTexture::Invalid,
+                                                    ],
+                                                };
+
+                                                // Build batch keys for shadow/content
+                                                let shadow_key = BatchKey::new(kind, non_segmented_blend_mode, shadow_textures);
+                                                let content_key = BatchKey::new(kind, non_segmented_blend_mode, content_textures);
+
+                                                // Retrieve the UV rect addresses for shadow/content.
+                                                let cache_task_id = surface.resolve_render_task_id();
+                                                let shadow_uv_rect_address = render_tasks[cache_task_id]
+                                                    .get_texture_address(gpu_cache)
+                                                    .as_int();
+                                                let content_uv_rect_address = render_tasks[secondary_id]
+                                                    .get_texture_address(gpu_cache)
+                                                    .as_int();
+
+                                                // Get the GPU cache address of the extra data handle.
+                                                let shadow_prim_address = gpu_cache.get_address(&picture.extra_gpu_data_handle);
+
+                                                let content_prim_header_index = prim_headers.push(&prim_header, [
+                                                    content_uv_rect_address,
+                                                    (ShaderColorMode::Image as i32) << 16 |
+                                                    RasterizationSpace::Screen as i32,
+                                                    0,
+                                                ]);
+
+                                                let shadow_rect = prim_metadata.local_rect.translate(&offset);
+                                                let shadow_clip_rect = prim_metadata.local_clip_rect.translate(&offset);
+
+                                                let shadow_prim_header = PrimitiveHeader {
+                                                    local_rect: shadow_rect,
+                                                    local_clip_rect: shadow_clip_rect,
+                                                    specific_prim_address: shadow_prim_address,
+                                                    ..prim_header
+                                                };
+
+                                                let shadow_prim_header_index = prim_headers.push(&shadow_prim_header, [
+                                                    shadow_uv_rect_address,
+                                                    (ShaderColorMode::Alpha as i32) << 16 |
+                                                    RasterizationSpace::Screen as i32,
+                                                    0,
+                                                ]);
+
+                                                let shadow_instance = BrushInstance {
+                                                    prim_header_index: shadow_prim_header_index,
+                                                    clip_task_address,
+                                                    segment_index: 0,
+                                                    edge_flags: EdgeAaSegmentMask::empty(),
+                                                    brush_flags: BrushFlags::empty(),
+                                                };
+
+                                                let content_instance = BrushInstance {
+                                                    prim_header_index: content_prim_header_index,
+                                                    clip_task_address,
+                                                    segment_index: 0,
+                                                    edge_flags: EdgeAaSegmentMask::empty(),
+                                                    brush_flags: BrushFlags::empty(),
+                                                };
+
+                                                self.batch_list
+                                                    .get_suitable_batch(shadow_key, bounding_rect)
+                                                    .push(PrimitiveInstance::from(shadow_instance));
+
+                                                self.batch_list
+                                                    .get_suitable_batch(content_key, bounding_rect)
+                                                    .push(PrimitiveInstance::from(content_instance));
                                             }
-                                        }
-                                    }
-                                    FilterOp::DropShadow(offset, ..) => {
-                                        // Draw an instance of the shadow first, following by the content.
-
-                                        // Both the shadow and the content get drawn as a brush image.
-                                        if let Some(ref surface) = picture.surface {
-                                            let kind = BatchKind::Brush(
-                                                BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
-                                            );
-
-                                            // Gets the saved render task ID of the content, which is
-                                            // deeper in the render task tree than the direct child.
-                                            let secondary_id = picture.secondary_render_task_id.expect("no secondary!?");
-                                            let saved_index = render_tasks[secondary_id].saved_index.expect("no saved index!?");
-                                            debug_assert_ne!(saved_index, SavedTargetIndex::PENDING);
-
-                                            // Build BatchTextures for shadow/content
-                                            let shadow_textures = BatchTextures::render_target_cache();
-                                            let content_textures = BatchTextures {
-                                                colors: [
-                                                    SourceTexture::RenderTaskCache(saved_index),
-                                                    SourceTexture::Invalid,
-                                                    SourceTexture::Invalid,
-                                                ],
-                                            };
-
-                                            // Build batch keys for shadow/content
-                                            let shadow_key = BatchKey::new(kind, non_segmented_blend_mode, shadow_textures);
-                                            let content_key = BatchKey::new(kind, non_segmented_blend_mode, content_textures);
-
-                                            // Retrieve the UV rect addresses for shadow/content.
-                                            let cache_task_id = surface.resolve_render_task_id();
-                                            let shadow_uv_rect_address = render_tasks[cache_task_id]
-                                                .get_texture_address(gpu_cache)
-                                                .as_int();
-                                            let content_uv_rect_address = render_tasks[secondary_id]
-                                                .get_texture_address(gpu_cache)
-                                                .as_int();
-
-                                            // Get the GPU cache address of the extra data handle.
-                                            let shadow_prim_address = gpu_cache.get_address(&picture.extra_gpu_data_handle);
-
-                                            let content_prim_header_index = prim_headers.push(&prim_header, [
-                                                content_uv_rect_address,
-                                                (ShaderColorMode::Image as i32) << 16 |
-                                                RasterizationSpace::Screen as i32,
-                                                0,
-                                            ]);
-
-                                            let shadow_rect = prim_metadata.local_rect.translate(&offset);
-                                            let shadow_clip_rect = prim_metadata.local_clip_rect.translate(&offset);
-
-                                            let shadow_prim_header = PrimitiveHeader {
-                                                local_rect: shadow_rect,
-                                                local_clip_rect: shadow_clip_rect,
-                                                specific_prim_address: shadow_prim_address,
-                                                ..prim_header
-                                            };
-
-                                            let shadow_prim_header_index = prim_headers.push(&shadow_prim_header, [
-                                                shadow_uv_rect_address,
-                                                (ShaderColorMode::Alpha as i32) << 16 |
-                                                RasterizationSpace::Screen as i32,
-                                                0,
-                                            ]);
-
-                                            let shadow_instance = BrushInstance {
-                                                prim_header_index: shadow_prim_header_index,
-                                                clip_task_address,
-                                                segment_index: 0,
-                                                edge_flags: EdgeAaSegmentMask::empty(),
-                                                brush_flags: BrushFlags::empty(),
-                                            };
-
-                                            let content_instance = BrushInstance {
-                                                prim_header_index: content_prim_header_index,
-                                                clip_task_address,
-                                                segment_index: 0,
-                                                edge_flags: EdgeAaSegmentMask::empty(),
-                                                brush_flags: BrushFlags::empty(),
-                                            };
-
-                                            self.batch_list
-                                                .get_suitable_batch(shadow_key, bounding_rect)
-                                                .push(PrimitiveInstance::from(shadow_instance));
-
-                                            self.batch_list
-                                                .get_suitable_batch(content_key, bounding_rect)
-                                                .push(PrimitiveInstance::from(content_instance));
-                                        }
-
-                                        false
-                                    }
-                                    _ => {
-                                        match picture.surface {
-                                            Some(ref surface) => {
+                                            _ => {
                                                 let key = BatchKey::new(
                                                     BatchKind::Brush(BrushBatchKind::Blend),
                                                     BlendMode::PremultipliedAlpha,
@@ -868,110 +862,92 @@ impl AlphaBatchBuilder {
 
                                                 let batch = self.batch_list.get_suitable_batch(key, bounding_rect);
                                                 batch.push(PrimitiveInstance::from(instance));
-                                                false
-                                            }
-                                            None => {
-                                                true
                                             }
                                         }
                                     }
+                                    PictureCompositeMode::MixBlend(mode) => {
+                                        let cache_task_id = surface.resolve_render_task_id();
+                                        let backdrop_id = picture.secondary_render_task_id.expect("no backdrop!?");
+
+                                        let key = BatchKey::new(
+                                            BatchKind::Brush(
+                                                BrushBatchKind::MixBlend {
+                                                    task_id,
+                                                    source_id: cache_task_id,
+                                                    backdrop_id,
+                                                },
+                                            ),
+                                            BlendMode::PremultipliedAlpha,
+                                            BatchTextures::no_texture(),
+                                        );
+                                        let batch = self.batch_list.get_suitable_batch(key, bounding_rect);
+                                        let backdrop_task_address = render_tasks.get_task_address(backdrop_id);
+                                        let source_task_address = render_tasks.get_task_address(cache_task_id);
+                                        let prim_header_index = prim_headers.push(&prim_header, [
+                                            mode as u32 as i32,
+                                            backdrop_task_address.0 as i32,
+                                            source_task_address.0 as i32,
+                                        ]);
+
+                                        let instance = BrushInstance {
+                                            prim_header_index,
+                                            clip_task_address,
+                                            segment_index: 0,
+                                            edge_flags: EdgeAaSegmentMask::empty(),
+                                            brush_flags: BrushFlags::empty(),
+                                        };
+
+                                        batch.push(PrimitiveInstance::from(instance));
+                                    }
+                                    PictureCompositeMode::Blit => {
+                                        let cache_task_id = surface.resolve_render_task_id();
+                                        let kind = BatchKind::Brush(
+                                            BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
+                                        );
+                                        let key = BatchKey::new(
+                                            kind,
+                                            non_segmented_blend_mode,
+                                            BatchTextures::render_target_cache(),
+                                        );
+                                        let batch = self.batch_list.get_suitable_batch(
+                                            key,
+                                            bounding_rect,
+                                        );
+
+                                        let uv_rect_address = render_tasks[cache_task_id]
+                                            .get_texture_address(gpu_cache)
+                                            .as_int();
+                                        let prim_header_index = prim_headers.push(&prim_header, [
+                                            uv_rect_address,
+                                            (ShaderColorMode::Image as i32) << 16 |
+                                            RasterizationSpace::Screen as i32,
+                                            0,
+                                        ]);
+
+                                        let instance = BrushInstance {
+                                            prim_header_index,
+                                            clip_task_address,
+                                            segment_index: 0,
+                                            edge_flags: EdgeAaSegmentMask::empty(),
+                                            brush_flags: BrushFlags::empty(),
+                                        };
+                                        batch.push(PrimitiveInstance::from(instance));
+                                    }
                                 }
                             }
-                            Some(PictureCompositeMode::MixBlend(mode)) => {
-                                let cache_task_id = picture
-                                    .surface
-                                    .as_ref()
-                                    .expect("bug: no surface allocated")
-                                    .resolve_render_task_id();
-                                let backdrop_id = picture.secondary_render_task_id.expect("no backdrop!?");
-
-                                let key = BatchKey::new(
-                                    BatchKind::Brush(
-                                        BrushBatchKind::MixBlend {
-                                            task_id,
-                                            source_id: cache_task_id,
-                                            backdrop_id,
-                                        },
-                                    ),
-                                    BlendMode::PremultipliedAlpha,
-                                    BatchTextures::no_texture(),
-                                );
-                                let batch = self.batch_list.get_suitable_batch(key, bounding_rect);
-                                let backdrop_task_address = render_tasks.get_task_address(backdrop_id);
-                                let source_task_address = render_tasks.get_task_address(cache_task_id);
-                                let prim_header_index = prim_headers.push(&prim_header, [
-                                    mode as u32 as i32,
-                                    backdrop_task_address.0 as i32,
-                                    source_task_address.0 as i32,
-                                ]);
-
-                                let instance = BrushInstance {
-                                    prim_header_index,
-                                    clip_task_address,
-                                    segment_index: 0,
-                                    edge_flags: EdgeAaSegmentMask::empty(),
-                                    brush_flags: BrushFlags::empty(),
-                                };
-
-                                batch.push(PrimitiveInstance::from(instance));
-                                false
-                            }
-                            Some(PictureCompositeMode::Blit) => {
-                                let cache_task_id = picture
-                                    .surface
-                                    .as_ref()
-                                    .expect("bug: no surface allocated")
-                                    .resolve_render_task_id();
-                                let kind = BatchKind::Brush(
-                                    BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
-                                );
-                                let key = BatchKey::new(
-                                    kind,
-                                    non_segmented_blend_mode,
-                                    BatchTextures::render_target_cache(),
-                                );
-                                let batch = self.batch_list.get_suitable_batch(
-                                    key,
-                                    bounding_rect,
-                                );
-
-                                let uv_rect_address = render_tasks[cache_task_id]
-                                    .get_texture_address(gpu_cache)
-                                    .as_int();
-                                let prim_header_index = prim_headers.push(&prim_header, [
-                                    uv_rect_address,
-                                    (ShaderColorMode::Image as i32) << 16 |
-                                    RasterizationSpace::Screen as i32,
-                                    0,
-                                ]);
-
-                                let instance = BrushInstance {
-                                    prim_header_index,
-                                    clip_task_address,
-                                    segment_index: 0,
-                                    edge_flags: EdgeAaSegmentMask::empty(),
-                                    brush_flags: BrushFlags::empty(),
-                                };
-                                batch.push(PrimitiveInstance::from(instance));
-                                false
-                            }
                             None => {
-                                true
+                                // If this picture is being drawn into an existing target (i.e. with
+                                // no composition operation), recurse and add to the current batch list.
+                                self.add_pic_to_batch(
+                                    picture,
+                                    task_id,
+                                    ctx,
+                                    gpu_cache,
+                                    render_tasks,
+                                    deferred_resolves,
+                                    prim_headers,
+                                );
                             }
-                        };
-
-                        // If this picture is being drawn into an existing target (i.e. with
-                        // no composition operation), recurse and add to the current batch list.
-                        if add_to_parent_pic {
-                            self.add_pic_to_batch(
-                                picture,
-                                task_id,
-                                ctx,
-                                gpu_cache,
-                                render_tasks,
-                                deferred_resolves,
-                                prim_headers,
-                            );
                         }
                     }
                     BrushKind::Image { request, ref visible_tiles, .. } if !visible_tiles.is_empty() => {
