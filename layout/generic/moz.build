@@ -32,19 +32,16 @@ with Files('MathML*'):
     BUG_COMPONENT = ('Core', 'MathML')
 
 with Files('Text*'):
-    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
+    BUG_COMPONENT = ('Core', 'Layout: Text')
 
 with Files('nsText*'):
-    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
+    BUG_COMPONENT = ('Core', 'Layout: Text')
 
 with Files('nsFrameSetFrame*'):
-    BUG_COMPONENT = ('Core', 'Layout: Images, Video, and HTML Frames')
+    BUG_COMPONENT = ('Core', 'Layout: HTML Frames')
 
 with Files('nsSubDocumentFrame*'):
-    BUG_COMPONENT = ('Core', 'Layout: Images, Video, and HTML Frames')
-
-with Files('nsFlex.*'):
-    BUG_COMPONENT = ('Core', 'Layout: Flexbox')
+    BUG_COMPONENT = ('Core', 'Layout: HTML Frames')
 
 with Files('nsFloatManager.*'):
     BUG_COMPONENT = ('Core', 'Layout: Floats')
@@ -52,32 +49,17 @@ with Files('nsFloatManager.*'):
 with Files('nsIntervalSet.*'):
     BUG_COMPONENT = ('Core', 'Layout: Floats')
 
-with Files('nsGrid.*'):
-    BUG_COMPONENT = ('Core', 'Layout: Grid')
-
 with Files('nsHTMLCanvasFrame.*'):
-    BUG_COMPONENT = ('Core', 'Layout: Images, Video, and HTML Frames')
+    BUG_COMPONENT = ('Core', 'Layout: Images')
 
 with Files('nsImage*'):
-    BUG_COMPONENT = ('Core', 'Layout: Images, Video, and HTML Frames')
+    BUG_COMPONENT = ('Core', 'Layout: Images')
 
 with Files('nsAbsoluteContainingBlock.*'):
-    BUG_COMPONENT = ('Core', 'Layout: Positioned')
+    BUG_COMPONENT = ('Core', 'Layout: R & A Pos')
 
 with Files('Sticky*'):
-    BUG_COMPONENT = ('Core', 'Layout: Positioned')
-
-with Files('nsRuby*'):
-    BUG_COMPONENT = ('Core', 'Layout: Ruby')
-
-with Files('Ruby*'):
-    BUG_COMPONENT = ('Core', 'Layout: Ruby')
-
-with Files('*Scroll*'):
-    BUG_COMPONENT = ('Core', 'Layout: Scrolling and Overflow')
-
-with Files('nsFont.*'):
-    BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
+    BUG_COMPONENT = ('Core', 'Layout: R & A Pos')
 
 with Files('nsPluginFrame.*'):
     BUG_COMPONENT = ('Core', 'Plug-ins')
