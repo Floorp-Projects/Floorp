@@ -1757,7 +1757,7 @@ nsPresContext::RefreshSystemMetrics()
   // properly reflected in computed style data), system fonts (whose
   // changes are not), and -moz-appearance (whose changes likewise are
   // not), so we need to recascade for the first, and reflow for the rest.
-  MediaFeatureValuesChanged({
+  MediaFeatureValuesChangedAllDocuments({
     eRestyle_ForceDescendants,
     NS_STYLE_HINT_REFLOW,
     MediaFeatureChangeReason::SystemMetricsChange,
