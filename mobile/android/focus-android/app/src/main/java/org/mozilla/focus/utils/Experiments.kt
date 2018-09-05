@@ -15,7 +15,7 @@ const val EXPERIMENTS_BUCKET_NAME = "main"
 const val EXPERIMENTS_COLLECTION_NAME = "focus-experiments"
 
 val geckoEngineExperimentDescriptor = ExperimentDescriptor(Config.EXPERIMENT_DESCRIPTOR_GECKOVIEW_ENGINE)
-val homeScreenTipsExperimentDescriptor = ExperimentDescriptor(Config.EXPERIMENT_DESCIPTOR_HOME_SCREEN_TIPS)
+val homeScreenTipsExperimentDescriptor = ExperimentDescriptor(Config.EXPERIMENT_DESCRIPTOR_HOME_SCREEN_TIPS)
 
 val Context.app: FocusApplication
     get() = applicationContext as FocusApplication

@@ -7,5 +7,5 @@ package org.mozilla.focus.web
 object Config {
     const val DEFAULT_NEW_RENDERER = true
     const val EXPERIMENT_DESCRIPTOR_GECKOVIEW_ENGINE = "use-gecko-nightly"
-    const val EXPERIMENT_DESCIPTOR_HOME_SCREEN_TIPS = "use-homescreen-tips-nightly"
+    const val EXPERIMENT_DESCRIPTOR_HOME_SCREEN_TIPS = "use-homescreen-tips-nightly"
 }

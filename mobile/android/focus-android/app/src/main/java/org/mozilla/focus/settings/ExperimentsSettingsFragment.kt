@@ -10,9 +10,10 @@ import android.support.v7.preference.PreferenceFragmentCompat
 import android.support.v7.preference.SwitchPreferenceCompat
 import com.jakewharton.processphoenix.ProcessPhoenix
 import org.mozilla.focus.R
+import org.mozilla.focus.session.SessionManager
+import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.app
 import org.mozilla.focus.utils.geckoEngineExperimentDescriptor
-import org.mozilla.focus.utils.isInExperiment
 import org.mozilla.focus.web.Config
 import org.mozilla.focus.web.ENGINE_PREF_STRING_KEY
 
@@ -22,13 +23,12 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(),
         const val FRAGMENT_TAG = "ExperimentSettings"
     }
 
-    private var rendererPreferenceChanged = false
+    private var enginePref: SwitchPreferenceCompat? = null
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.experiments_settings)
-        val enginePref: SwitchPreferenceCompat? = preferenceManager
-                .findPreference(ENGINE_PREF_STRING_KEY) as SwitchPreferenceCompat?
-        enginePref?.isChecked = activity!!.isInExperiment(geckoEngineExperimentDescriptor)
+        enginePref = preferenceManager!!.findPreference(ENGINE_PREF_STRING_KEY) as SwitchPreferenceCompat?
+        enginePref?.isChecked = AppConstants.isGeckoBuild
     }
 
     override fun onResume() {
@@ -39,19 +39,21 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(),
     override fun onPause() {
         super.onPause()
         preferenceScreen?.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
-        if (rendererPreferenceChanged) {
+        if (AppConstants.isGeckoBuild != enginePref?.isChecked) {
             val launcherIntent = activity?.packageManager?.getLaunchIntentForPackage(activity!!.packageName)
             ProcessPhoenix.triggerRebirth(context, launcherIntent)
+        } else {
+            SessionManager.getInstance().removeAllSessions()
         }
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             ENGINE_PREF_STRING_KEY -> {
-                rendererPreferenceChanged = true
+                val newValue = sharedPreferences!!.getBoolean(key, Config.DEFAULT_NEW_RENDERER)
                 activity!!.app.fretboard.setOverride(
-                    activity!!.app, geckoEngineExperimentDescriptor,
-                        sharedPreferences!!.getBoolean(key, Config.DEFAULT_NEW_RENDERER))
+                    activity!!.app, geckoEngineExperimentDescriptor, newValue
+                )
             }
         }
     }
