@@ -833,9 +833,9 @@ FormatValue(JSContext* cx, const Value& vArg, UniqueChars& bytes)
     if (!str)
         return nullptr;
     bytes = JS_EncodeString(cx, str);
-    const char* buf = bytes.get();
-    if (!buf)
+    if (!bytes)
         return nullptr;
+    const char* buf = bytes.get();
     const char* found = strstr(buf, "function ");
     if (found && (found - buf <= 2))
         return "[function]";
@@ -894,10 +894,9 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
     JS::UniqueChars buf(std::move(inBuf));
     if (funname) {
         UniqueChars funbytes = JS_EncodeString(cx, funname);
-        char* str = funbytes.get();
-        if (!str)
+        if (!funbytes)
             return nullptr;
-        buf = sprintf_append(cx, std::move(buf), "%d %s(", num, str);
+        buf = sprintf_append(cx, std::move(buf), "%d %s(", num, funbytes.get());
     } else if (fun) {
         buf = sprintf_append(cx, std::move(buf), "%d anonymous(", num);
     } else {
@@ -996,10 +995,9 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
             }
             if (thisValStr) {
                 thisValBytes = JS_EncodeString(cx, thisValStr);
-                const char* str = thisValBytes.get();
-                if (!str)
+                if (!thisValBytes)
                     return nullptr;
-                buf = sprintf_append(cx, std::move(buf), "    this = %s\n", str);
+                buf = sprintf_append(cx, std::move(buf), "    this = %s\n", thisValBytes.get());
             } else {
                 buf = sprintf_append(cx, std::move(buf), "    <failed to get 'this' value>\n");
             }

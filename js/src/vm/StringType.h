@@ -1685,15 +1685,14 @@ EncodeLatin1(JSContext* cx, JSString* str);
  * will be changed to Unicode escape sequences(I.e. \udddd, dddd are 4 hex digits) in the printable
  * string.
  */
-extern const char*
-ValueToPrintableLatin1(JSContext* cx, const Value&, UniqueChars* bytes,
-                       bool asSource = false);
+extern UniqueChars
+ValueToPrintableLatin1(JSContext* cx, const Value&, bool asSource = false);
 
 /*
  * Convert a value to a printable C string encoded in UTF-8.
  */
-extern const char*
-ValueToPrintableUTF8(JSContext* cx, const Value&, UniqueChars* bytes, bool asSource = false);
+extern UniqueChars
+ValueToPrintableUTF8(JSContext* cx, const Value&, bool asSource = false);
 
 /*
  * Convert a non-string value to a string, returning null after reporting an
