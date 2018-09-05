@@ -1,14 +1,10 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.utils
 
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.support.annotation.StringRes
 import android.support.v7.app.AlertDialog
@@ -19,9 +15,8 @@ import org.mozilla.focus.web.IWebView
 import java.net.URISyntaxException
 
 object IntentUtils {
-
-    private val MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id="
-    private val EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url"
+    private const val MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id="
+    private const val EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url"
 
     /**
      * Find and open the appropriate app for a given Uri. If appropriate, let the user select between
@@ -36,55 +31,37 @@ object IntentUtils {
      */
     fun handleExternalUri(context: Context, webView: IWebView, uri: String): Boolean {
         // This code is largely based on Fennec's ExternalIntentDuringPrivateBrowsingPromptFragment.java
-        val intent: Intent
-        try {
-            intent = Intent.parseUri(uri, 0)
-        } catch (e: URISyntaxException) {
-            // Let the browser handle the url (i.e. let the browser show it's unsupported protocol /
-            // invalid URL page).
-            return false
-        }
+        val intent = try { Intent.parseUri(uri, 0) } catch (e: URISyntaxException) { return false }
 
         // Since we're a browser:
         intent.addCategory(Intent.CATEGORY_BROWSABLE)
 
-        val packageManager = context.packageManager
-
         // This is where we "leak" the uri to the OS. If we're using the system webview, then the OS
         // already knows that we're opening this uri. Even if we're using GeckoView, the OS can still
         // see what domains we're visiting, so there's no loss of privacy here:
+        val packageManager = context.packageManager
         val matchingActivities = packageManager.queryIntentActivities(intent, 0)
 
-        if (matchingActivities.size == 0) {
-            return handleUnsupportedLink(context, webView, intent)
-        } else if (matchingActivities.size == 1) {
-            val info: ResolveInfo
-
-            if (matchingActivities.size == 1) {
-                info = matchingActivities[0]
-            } else {
-                // Ordering isn't guaranteed if there is more than one available activity - hence
-                // we fetch the default (this code isn't currently run because we handle the > 1
-                // case separately, but would be needed if we ever decide to prefer the default
-                // app for the > 1 case.
-                info = packageManager.resolveActivity(intent, 0)
+        when (matchingActivities.size) {
+            0 -> handleUnsupportedLink(context, webView, intent)
+            1 -> {
+                val info = matchingActivities[0]
+                val externalAppTitle = info.loadLabel(packageManager)
+                showConfirmationDialog(
+                        context,
+                        intent,
+                        context.getString(R.string.external_app_prompt_title),
+                        R.string.external_app_prompt,
+                        externalAppTitle)
             }
-            val externalAppTitle = info.loadLabel(packageManager)
-
-            showConfirmationDialog(context, intent, context.getString(R.string.external_app_prompt_title), R.string.external_app_prompt, externalAppTitle)
-            return true
-        } else { // matchingActivities.size() > 1
-            // By explicitly showing the chooser, we can avoid having a (default) app from opening
-            // the link immediately. This isn't perfect - we'd prefer to highlight the default app,
-            // but it's not clear if there's any way of doing that. An alternative
-            // would be to reuse the same dialog as for the single-activity case, and offer
-            // a "open in other app this time" button if we have more than one matchingActivity.
-            val chooserTitle = context.getString(R.string.external_multiple_apps_matched_exit)
-            val chooserIntent = Intent.createChooser(intent, chooserTitle)
-            context.startActivity(chooserIntent)
-
-            return true
+            else -> {
+                val chooserTitle = context.getString(R.string.external_multiple_apps_matched_exit)
+                val chooserIntent = Intent.createChooser(intent, chooserTitle)
+                context.startActivity(chooserIntent)
+            }
         }
+
+        return true
     }
 
     private fun handleUnsupportedLink(context: Context, webView: IWebView, intent: Intent): Boolean {
@@ -119,42 +96,31 @@ object IntentUtils {
     // We only need one param for both scenarios, hence we use just one "param" argument. If we ever
     // end up needing more or a variable number we can change this, but java varargs are a bit messy
     // so let's try to avoid that seeing as it's not needed right now.
-    private fun showConfirmationDialog(context: Context, targetIntent: Intent, title: String, @StringRes messageResource: Int, param: CharSequence) {
+    private fun showConfirmationDialog(
+        context: Context,
+        targetIntent: Intent,
+        title: String,
+        @StringRes messageResource: Int,
+        param: CharSequence
+    ) {
         val builder = AlertDialog.Builder(context, R.style.DialogStyle)
-
         val ourAppName = context.getString(R.string.app_name)
 
-        builder.setTitle(title)
-
-        builder.setMessage(context.resources.getString(messageResource, ourAppName, param))
-
-        builder.setPositiveButton(R.string.action_ok) { _, _ -> context.startActivity(targetIntent) }
-
-        builder.setNegativeButton(R.string.action_cancel) { dialog, _-> dialog.dismiss() }
-
-        // TODO: remove this, or enable it - depending on how we decide to handle the multiple-app/>1
-        // case in future.
-        //            if (matchingActivities.size() > 1) {
-        //                builder.setNeutralButton(R.string.external_app_prompt_other, new DialogInterface.OnClickListener() {
-        //                    @Override
-        //                    public void onClick(DialogInterface dialog, int which) {
-        //                        final String chooserTitle = activity.getResources().getString(R.string.external_multiple_apps_matched_exit);
-        //                        final Intent chooserIntent = Intent.createChooser(intent, chooserTitle);
-        //                        activity.startActivity(chooserIntent);
-        //                    }
-        //                });
-        //            }
-
-        builder.show()
+        builder.apply {
+            setTitle(title)
+            setMessage(context.resources.getString(messageResource, ourAppName, param))
+            setPositiveButton(R.string.action_ok) { _, _ -> context.startActivity(targetIntent) }
+            setNegativeButton(R.string.action_cancel) { dialog, _ -> dialog.dismiss() }
+            show()
+        }
     }
 
     fun activitiesFoundForIntent(context: Context, intent: Intent?): Boolean {
-        if (intent == null) {
-            return false
-        }
-        val packageManager = context.packageManager
-        val resolveInfoList = packageManager.queryIntentActivities(intent, 0)
-        return resolveInfoList.size > 0
+        return intent?.let {
+            val packageManager = context.packageManager
+            val resolveInfoList = packageManager.queryIntentActivities(intent, 0)
+            resolveInfoList.size > 0
+        } ?: false
     }
 
     fun createOpenFileIntent(uriFile: Uri?, mimeType: String?): Intent? {
