@@ -279,7 +279,7 @@ raptor-assorted-dom-firefox:
     try-name: raptor-assorted-dom-firefox
     treeherder-symbol: Rap(dom)
     run-on-projects: ['try', 'mozilla-central']
-    tier: 3
+    tier: 2
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -293,7 +293,7 @@ raptor-assorted-dom-chrome:
     try-name: raptor-assorted-dom-chrome
     treeherder-symbol: Rap-C(dom)
     run-on-projects: ['try', 'mozilla-central']
-    tier: 3
+    tier: 2
     max-run-time: 1500
     mozharness:
         extra-options:
