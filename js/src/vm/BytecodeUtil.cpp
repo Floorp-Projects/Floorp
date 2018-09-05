@@ -1147,14 +1147,14 @@ ToDisassemblySource(JSContext* cx, HandleValue v)
             JSString* str = JS_DecompileFunction(cx, fun);
             if (!str)
                 return nullptr;
-            return EncodeLatin1(cx, str);
+            return StringToNewUTF8CharsZ(cx, *str);
         }
 
         if (obj.is<RegExpObject>()) {
             JSString* source = obj.as<RegExpObject>().toString(cx);
             if (!source)
                 return nullptr;
-            return EncodeLatin1(cx, source);
+            return StringToNewUTF8CharsZ(cx, *source);
         }
     }
 
@@ -2299,7 +2299,7 @@ js::DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,
             return nullptr;
     }
 
-    return EncodeLatin1(cx, fallback);
+    return StringToNewUTF8CharsZ(cx, *fallback);
 }
 
 static bool
@@ -2379,8 +2379,10 @@ js::DecompileArgument(JSContext* cx, int formalIndex, HandleValue v)
         UniqueChars result;
         if (!DecompileArgumentFromStack(cx, formalIndex, &result))
             return nullptr;
-        if (result && strcmp(result.get(), "(intermediate value)"))
-            return NewStringCopyZ<CanGC>(cx, result.get());
+        if (result && strcmp(result.get(), "(intermediate value)")) {
+            JS::ConstUTF8CharsZ utf8chars(result.get(), strlen(result.get()));
+            return NewStringCopyUTF8Z<CanGC>(cx, utf8chars);
+        }
     }
     if (v.isUndefined())
         return cx->names().undefined; // Prevent users from seeing "(void 0)"
@@ -2692,7 +2694,8 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, StringBuffer& buf)
             UniqueChars text = ed.getOutput();
             if (!text)
                 return false;
-            JSString* str = NewLatin1StringZ(cx, std::move(text));
+            JS::ConstUTF8CharsZ utf8chars(text.get(), strlen(text.get()));
+            JSString* str = NewStringCopyUTF8Z<CanGC>(cx, utf8chars);
             if (!AppendJSONProperty(buf, "text"))
                 return false;
             if (!str || !(str = StringToSource(cx, str)))

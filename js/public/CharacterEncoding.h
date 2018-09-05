@@ -117,7 +117,7 @@ class UTF8CharsZ : public mozilla::RangedPtr<unsigned char>
  * A wrapper for a "const char*" that is encoded using UTF-8.
  * This class does not manage ownership of the data; that is left
  * to others.  This differs from UTF8CharsZ in that the chars are
- * const and it allows assignment.
+ * const and it disallows assignment.
  */
 class JS_PUBLIC_API(ConstUTF8CharsZ)
 {
