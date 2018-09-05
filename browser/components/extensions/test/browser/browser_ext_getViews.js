@@ -64,6 +64,29 @@ function genericChecker() {
   browser.test.sendMessage(kind + "-ready");
 }
 
+async function promiseBrowserContentUnloaded(browser) {
+  // Wait until the content has unloaded before resuming the test, to avoid
+  // calling extension.getViews too early (and having intermittent failures).
+  const MSG_WINDOW_DESTROYED = "Test:BrowserContentDestroyed";
+  let unloadPromise = new Promise(resolve => {
+    Services.ppmm.addMessageListener(MSG_WINDOW_DESTROYED, function listener() {
+      Services.ppmm.removeMessageListener(MSG_WINDOW_DESTROYED, listener);
+      resolve();
+    });
+  });
+
+  await ContentTask.spawn(browser, MSG_WINDOW_DESTROYED, (MSG_WINDOW_DESTROYED) => {
+    this.content.addEventListener("unload", () => {
+      // Use process message manager to ensure that the message is delivered
+      // even after the <browser>'s message manager is disconnected.
+      Services.cpmm.sendAsyncMessage(MSG_WINDOW_DESTROYED);
+    }, {once: true});
+  });
+
+  // Return an object so that callers can use "await".
+  return {unloadPromise};
+}
+
 add_task(async function() {
   let win1 = await BrowserTestUtils.openNewBrowserWindow();
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
@@ -151,13 +174,15 @@ add_task(async function() {
     // Window needs focus to open popups.
     await focusWindow(win);
     await clickBrowserAction(extension, win);
-    await awaitExtensionPanel(extension, win);
+    let browser = await awaitExtensionPanel(extension, win);
 
     await extension.awaitMessage("popup-ready");
 
     await callback();
 
+    let {unloadPromise} = await promiseBrowserContentUnloaded(browser);
     closeBrowserAction(extension, win);
+    await unloadPromise;
   }
 
   await triggerPopup(win1, async function() {
@@ -182,8 +207,10 @@ add_task(async function() {
 
   info("closing one tab");
 
+  let {unloadPromise} = await promiseBrowserContentUnloaded(win1.gBrowser.selectedBrowser);
   extension.sendMessage("background-close-tab", winId1);
   await extension.awaitMessage("closed");
+  await unloadPromise;
 
   info("one tab closed, one remains");
 
