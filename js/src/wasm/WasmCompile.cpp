@@ -34,58 +34,46 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
-template <class DecoderT>
-static bool
-DecodeFunctionBody(DecoderT& d, ModuleGenerator& mg, uint32_t funcIndex)
+uint32_t
+wasm::ObservedCPUFeatures()
 {
-    uint32_t bodySize;
-    if (!d.readVarU32(&bodySize))
-        return d.fail("expected number of function body bytes");
+    enum Arch {
+        X86 = 0x1,
+        X64 = 0x2,
+        ARM = 0x3,
+        MIPS = 0x4,
+        MIPS64 = 0x5,
+        ARM64 = 0x6,
+        ARCH_BITS = 3
+    };
 
-    if (bodySize > MaxFunctionBytes)
-        return d.fail("function body too big");
-
-    const size_t offsetInModule = d.currentOffset();
-
-    // Skip over the function body; it will be validated by the compilation thread.
-    const uint8_t* bodyBegin;
-    if (!d.readBytes(bodySize, &bodyBegin))
-        return d.fail("function body length too big");
-
-    return mg.compileFuncDef(funcIndex, offsetInModule, bodyBegin, bodyBegin + bodySize);
+#if defined(JS_CODEGEN_X86)
+    MOZ_ASSERT(uint32_t(jit::CPUInfo::GetSSEVersion()) <= (UINT32_MAX >> ARCH_BITS));
+    return X86 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
+#elif defined(JS_CODEGEN_X64)
+    MOZ_ASSERT(uint32_t(jit::CPUInfo::GetSSEVersion()) <= (UINT32_MAX >> ARCH_BITS));
+    return X64 | (uint32_t(jit::CPUInfo::GetSSEVersion()) << ARCH_BITS);
+#elif defined(JS_CODEGEN_ARM)
+    MOZ_ASSERT(jit::GetARMFlags() <= (UINT32_MAX >> ARCH_BITS));
+    return ARM | (jit::GetARMFlags() << ARCH_BITS);
+#elif defined(JS_CODEGEN_ARM64)
+    MOZ_ASSERT(jit::GetARM64Flags() <= (UINT32_MAX >> ARCH_BITS));
+    return ARM64 | (jit::GetARM64Flags() << ARCH_BITS);
+#elif defined(JS_CODEGEN_MIPS32)
+    MOZ_ASSERT(jit::GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
+    return MIPS | (jit::GetMIPSFlags() << ARCH_BITS);
+#elif defined(JS_CODEGEN_MIPS64)
+    MOZ_ASSERT(jit::GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
+    return MIPS64 | (jit::GetMIPSFlags() << ARCH_BITS);
+#elif defined(JS_CODEGEN_NONE)
+    return 0;
+#else
+# error "unknown architecture"
+#endif
 }
 
-template <class DecoderT>
-static bool
-DecodeCodeSection(const ModuleEnvironment& env, DecoderT& d, ModuleGenerator& mg)
-{
-    if (!env.codeSection) {
-        if (env.numFuncDefs() != 0)
-            return d.fail("expected code section");
-
-        return mg.finishFuncDefs();
-    }
-
-    uint32_t numFuncDefs;
-    if (!d.readVarU32(&numFuncDefs))
-        return d.fail("expected function body count");
-
-    if (numFuncDefs != env.numFuncDefs())
-        return d.fail("function body count does not match function signature count");
-
-    for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
-        if (!DecodeFunctionBody(d, mg, env.numFuncImports() + funcDefIndex))
-            return false;
-    }
-
-    if (!d.finishSection(*env.codeSection, "code"))
-        return false;
-
-    return mg.finishFuncDefs();
-}
-
-bool
-CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
+CompileArgs::CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller)
+  : scriptedCaller(std::move(scriptedCaller))
 {
 #ifdef ENABLE_WASM_GC
     bool gcEnabled = cx->options().wasmGc();
@@ -104,9 +92,6 @@ CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
     // only enable it when a developer actually cares: when the debugger tab
     // is open.
     debugEnabled = cx->realm()->debuggerObservesAsmJS();
-
-    this->scriptedCaller = std::move(scriptedCaller);
-    return assumptions.initBuildIdFromContext(cx);
 }
 
 // Classify the current system as one of a set of recognizable classes.  This
@@ -417,6 +402,56 @@ InitialCompileFlags(const CompileArgs& args, Decoder& d, CompileMode* mode, Tier
     }
 
     *debug = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
+}
+
+template <class DecoderT>
+static bool
+DecodeFunctionBody(DecoderT& d, ModuleGenerator& mg, uint32_t funcIndex)
+{
+    uint32_t bodySize;
+    if (!d.readVarU32(&bodySize))
+        return d.fail("expected number of function body bytes");
+
+    if (bodySize > MaxFunctionBytes)
+        return d.fail("function body too big");
+
+    const size_t offsetInModule = d.currentOffset();
+
+    // Skip over the function body; it will be validated by the compilation thread.
+    const uint8_t* bodyBegin;
+    if (!d.readBytes(bodySize, &bodyBegin))
+        return d.fail("function body length too big");
+
+    return mg.compileFuncDef(funcIndex, offsetInModule, bodyBegin, bodyBegin + bodySize);
+}
+
+template <class DecoderT>
+static bool
+DecodeCodeSection(const ModuleEnvironment& env, DecoderT& d, ModuleGenerator& mg)
+{
+    if (!env.codeSection) {
+        if (env.numFuncDefs() != 0)
+            return d.fail("expected code section");
+
+        return mg.finishFuncDefs();
+    }
+
+    uint32_t numFuncDefs;
+    if (!d.readVarU32(&numFuncDefs))
+        return d.fail("expected function body count");
+
+    if (numFuncDefs != env.numFuncDefs())
+        return d.fail("function body count does not match function signature count");
+
+    for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
+        if (!DecodeFunctionBody(d, mg, env.numFuncImports() + funcDefIndex))
+            return false;
+    }
+
+    if (!d.finishSection(*env.codeSection, "code"))
+        return false;
+
+    return mg.finishFuncDefs();
 }
 
 SharedModule

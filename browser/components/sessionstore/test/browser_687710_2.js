@@ -30,8 +30,8 @@ add_task(async function test() {
   await promiseTabState(tab, state);
   await ContentTask.spawn(tab.linkedBrowser, null, function() {
     function compareEntries(i, j, history) {
-      let e1 = history.getEntryAtIndex(i, false);
-      let e2 = history.getEntryAtIndex(j, false);
+      let e1 = history.getEntryAtIndex(i);
+      let e2 = history.getEntryAtIndex(j);
 
       ok(e1.sharesDocumentWith(e2),
          `${i} should share doc with ${j}`);

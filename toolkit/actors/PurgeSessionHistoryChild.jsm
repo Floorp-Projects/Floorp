@@ -21,7 +21,7 @@ class PurgeSessionHistoryChild extends ActorChild {
     // place the entry at current index at the end of the history list, so it won't get removed
     if (sessionHistory.index < sessionHistory.count - 1) {
       let legacy = sessionHistory.legacySHistory;
-      let indexEntry = legacy.getEntryAtIndex(sessionHistory.index, false);
+      let indexEntry = legacy.getEntryAtIndex(sessionHistory.index);
       indexEntry.QueryInterface(Ci.nsISHEntry);
       legacy.addEntry(indexEntry, true);
     }

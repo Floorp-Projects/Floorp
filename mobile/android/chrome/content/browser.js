@@ -2270,7 +2270,7 @@ var BrowserApp = {
     let browser = this.selectedBrowser;
     let hist = browser.sessionHistory.legacySHistory;
     for (let i = toIndex; i >= fromIndex; i--) {
-      let entry = hist.getEntryAtIndex(i, false);
+      let entry = hist.getEntryAtIndex(i);
       let item = {
         title: entry.title || entry.URI.displaySpec,
         url: entry.URI.displaySpec,

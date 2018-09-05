@@ -24,7 +24,7 @@ GetBuildId(JS::BuildIdCharVector* buildId)
 static JSScript*
 FreezeThaw(JSContext* cx, JS::HandleScript script)
 {
-    JS::SetBuildIdOp(cx, GetBuildId);
+    JS::SetProcessBuildIdOp(::GetBuildId);
 
     // freeze
     JS::TranscodeBuffer buffer;

@@ -7626,9 +7626,9 @@ JS::FinishIncrementalEncoding(JSContext* cx, JS::HandleScript script, TranscodeB
 }
 
 JS_PUBLIC_API(void)
-JS::SetBuildIdOp(JSContext* cx, JS::BuildIdOp buildIdOp)
+JS::SetProcessBuildIdOp(JS::BuildIdOp buildIdOp)
 {
-    cx->runtime()->buildIdOp = buildIdOp;
+    GetBuildId = buildIdOp;
 }
 
 JS_PUBLIC_API(void)
@@ -7654,10 +7654,9 @@ JS::GetWasmModule(HandleObject obj)
 }
 
 JS_PUBLIC_API(RefPtr<JS::WasmModule>)
-JS::DeserializeWasmModule(PRFileDesc* bytecode, JS::BuildIdCharVector&& buildId,
-                          UniqueChars filename, unsigned line)
+JS::DeserializeWasmModule(PRFileDesc* bytecode, UniqueChars filename, unsigned line)
 {
-    return wasm::DeserializeModule(bytecode, std::move(buildId), std::move(filename), line);
+    return wasm::DeserializeModule(bytecode, std::move(filename), line);
 }
 
 JS_PUBLIC_API(void)

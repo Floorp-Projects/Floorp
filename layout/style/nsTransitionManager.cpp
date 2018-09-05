@@ -362,7 +362,10 @@ CSSTransition::HasLowerCompositeOrderThan(const CSSTransition& aOther) const
 
   // 1. Sort by document order
   if (!mOwningElement.Equals(aOther.mOwningElement)) {
-    return mOwningElement.LessThan(aOther.mOwningElement);
+    return mOwningElement.LessThan(
+      const_cast<CSSTransition*>(this)->CachedChildIndexRef(),
+      aOther.mOwningElement,
+      const_cast<CSSTransition*>(&aOther)->CachedChildIndexRef());
   }
 
   // 2. (Same element and pseudo): Sort by transition generation

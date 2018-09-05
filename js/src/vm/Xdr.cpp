@@ -86,8 +86,8 @@ static XDRResult
 VersionCheck(XDRState<mode>* xdr)
 {
     JS::BuildIdCharVector buildId;
-    MOZ_ASSERT(xdr->cx()->buildIdOp());
-    if (!xdr->cx()->buildIdOp()(&buildId)) {
+    MOZ_ASSERT(GetBuildId);
+    if (!GetBuildId(&buildId)) {
         ReportOutOfMemory(xdr->cx());
         return xdr->fail(JS::TranscodeResult_Throw);
     }

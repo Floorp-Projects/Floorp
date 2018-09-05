@@ -24,6 +24,13 @@
 namespace js {
 namespace wasm {
 
+// Return a uint32_t which captures the observed properties of the CPU that
+// affect compilation. If code compiled now is to be serialized and executed
+// later, the ObservedCPUFeatures() must be ensured to be the same.
+
+uint32_t
+ObservedCPUFeatures();
+
 // Describes the JS scripted caller of a request to compile a wasm module.
 
 struct ScriptedCaller
@@ -39,7 +46,6 @@ struct ScriptedCaller
 
 struct CompileArgs : ShareableBase<CompileArgs>
 {
-    Assumptions assumptions;
     ScriptedCaller scriptedCaller;
     UniqueChars sourceMapURL;
     bool baselineEnabled;
@@ -49,9 +55,8 @@ struct CompileArgs : ShareableBase<CompileArgs>
     HasGcTypes gcTypesEnabled;
     bool testTiering;
 
-    CompileArgs(Assumptions&& assumptions, ScriptedCaller&& scriptedCaller)
-      : assumptions(std::move(assumptions)),
-        scriptedCaller(std::move(scriptedCaller)),
+    explicit CompileArgs(ScriptedCaller&& scriptedCaller)
+      : scriptedCaller(std::move(scriptedCaller)),
         baselineEnabled(false),
         debugEnabled(false),
         ionEnabled(false),
@@ -60,10 +65,7 @@ struct CompileArgs : ShareableBase<CompileArgs>
         testTiering(false)
     {}
 
-    // If CompileArgs is constructed without arguments, initFromContext() must
-    // be called to complete initialization.
-    CompileArgs() = default;
-    bool initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller);
+    CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller);
 };
 
 typedef RefPtr<CompileArgs> MutableCompileArgs;

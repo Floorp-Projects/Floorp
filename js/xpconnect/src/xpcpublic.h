@@ -757,6 +757,13 @@ bool IsChromeOrXBLOrUAWidget(JSContext* cx, JSObject* /* unused */);
 bool ThreadSafeIsChromeOrXBLOrUAWidget(JSContext* cx, JSObject* obj);
 
 } // namespace dom
+
+/**
+ * Fill the given vector with the buildid.
+ */
+bool
+GetBuildId(JS::BuildIdCharVector* aBuildID);
+
 } // namespace mozilla
 
 #endif

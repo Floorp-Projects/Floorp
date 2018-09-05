@@ -277,7 +277,7 @@ var E10SUtils = {
     let sessionHistory = webNav.sessionHistory;
     let requestedIndex = sessionHistory.legacySHistory.requestedIndex;
     if (requestedIndex >= 0) {
-      if (sessionHistory.legacySHistory.getEntryAtIndex(requestedIndex, false).loadedInThisProcess) {
+      if (sessionHistory.legacySHistory.getEntryAtIndex(requestedIndex).loadedInThisProcess) {
         return true;
       }
 
