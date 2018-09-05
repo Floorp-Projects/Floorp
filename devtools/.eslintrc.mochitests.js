@@ -11,6 +11,7 @@ module.exports = {
     "synthesizeKeyFromKeyTag": true,
     "TargetFactory": true,
     "waitForTick": true,
+    "waitUntilState": true,
   },
 
   "parserOptions": {

@@ -607,7 +607,7 @@ ExecuteCompileTask(CompileTask* task, UniqueChars* error)
     MOZ_ASSERT(task->lifo.isEmpty());
     MOZ_ASSERT(task->output.empty());
 
-    switch (task->env.tier) {
+    switch (task->env.tier()) {
       case Tier::Ion:
         if (!IonCompileFunctions(task->env, task->lifo, task->inputs, &task->output, error))
             return false;
@@ -829,7 +829,7 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
     // Copy over data from the ModuleEnvironment.
 
     metadata_->memoryUsage = env_->memoryUsage;
-    metadata_->temporaryHasGcTypes = env_->gcTypesEnabled;
+    metadata_->temporaryGcTypesConfigured = env_->gcTypesConfigured;
     metadata_->minMemoryLength = env_->minMemoryLength;
     metadata_->maxMemoryLength = env_->maxMemoryLength;
     metadata_->startFuncIndex = env_->startFuncIndex;

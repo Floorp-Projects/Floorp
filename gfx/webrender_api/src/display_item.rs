@@ -273,6 +273,33 @@ impl NormalBorder {
         b.bottom.color = color;
         b
     }
+
+    /// Normalizes a border so that we don't render disallowed stuff, like inset
+    /// borders that are less than two pixels wide.
+    #[inline]
+    pub fn normalize(&mut self, widths: &BorderWidths) {
+        #[inline]
+        fn renders_small_border_solid(style: BorderStyle) -> bool {
+            match style {
+                BorderStyle::Groove |
+                BorderStyle::Ridge |
+                BorderStyle::Inset |
+                BorderStyle::Outset => true,
+                _ => false,
+            }
+        }
+
+        let normalize_side = |side: &mut BorderSide, width: f32| {
+            if renders_small_border_solid(side.style) && width < 2. {
+                side.style = BorderStyle::Solid;
+            }
+        };
+
+        normalize_side(&mut self.left, widths.left);
+        normalize_side(&mut self.right, widths.right);
+        normalize_side(&mut self.top, widths.top);
+        normalize_side(&mut self.bottom, widths.bottom);
+    }
 }
 
 #[repr(u32)]

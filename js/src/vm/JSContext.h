@@ -470,15 +470,7 @@ struct JSContext : public JS::RootingContext,
      */
     js::ThreadData<js::EnterDebuggeeNoExecute*> noExecuteDebuggerTop;
 
-    js::ThreadData<js::ActivityCallback> activityCallback;
-    js::ThreadData<void*>                activityCallbackArg;
-    void triggerActivityCallback(bool active);
-
-    /* The request depth for this thread. */
-    js::ThreadData<unsigned> requestDepth;
-
 #ifdef DEBUG
-    js::ThreadData<unsigned> checkRequestDepth;
     js::ThreadData<uint32_t> inUnsafeCallWithABI;
     js::ThreadData<bool> hasAutoUnsafeCallWithABI;
 #endif
@@ -711,9 +703,6 @@ struct JSContext : public JS::RootingContext,
     bool runtimeMatches(JSRuntime* rt) const {
         return runtime_ == rt;
     }
-
-    // Number of JS_BeginRequest calls without the corresponding JS_EndRequest.
-    js::ThreadData<unsigned> outstandingRequests;
 
     js::ThreadData<bool> jitIsBroken;
 
@@ -1340,5 +1329,8 @@ struct MOZ_RAII AutoSetThreadIsSweeping
 } // namespace gc
 
 } /* namespace js */
+
+#define CHECK_THREAD(cx) \
+    MOZ_ASSERT_IF(cx && !cx->helperThread(), CurrentThreadCanAccessRuntime(cx->runtime()))
 
 #endif /* vm_JSContext_h */

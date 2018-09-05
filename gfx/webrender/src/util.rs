@@ -22,7 +22,7 @@ pub trait MatrixHelpers<Src, Dst> {
     fn has_2d_inverse(&self) -> bool;
     fn exceeds_2d_scale(&self, limit: f64) -> bool;
     fn inverse_project(&self, target: &TypedPoint2D<f32, Dst>) -> Option<TypedPoint2D<f32, Src>>;
-    fn inverse_rect_footprint(&self, rect: &TypedRect<f32, Dst>) -> TypedRect<f32, Src>;
+    fn inverse_rect_footprint(&self, rect: &TypedRect<f32, Dst>) -> Option<TypedRect<f32, Src>>;
     fn transform_kind(&self) -> TransformedRectKind;
     fn is_simple_translation(&self) -> bool;
     fn is_simple_2d_translation(&self) -> bool;
@@ -90,13 +90,13 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
         m.inverse().map(|inv| TypedPoint2D::new(inv.m31, inv.m32))
     }
 
-    fn inverse_rect_footprint(&self, rect: &TypedRect<f32, Dst>) -> TypedRect<f32, Src> {
-        TypedRect::from_points(&[
-            self.inverse_project(&rect.origin).unwrap_or(TypedPoint2D::zero()),
-            self.inverse_project(&rect.top_right()).unwrap_or(TypedPoint2D::zero()),
-            self.inverse_project(&rect.bottom_left()).unwrap_or(TypedPoint2D::zero()),
-            self.inverse_project(&rect.bottom_right()).unwrap_or(TypedPoint2D::zero()),
-        ])
+    fn inverse_rect_footprint(&self, rect: &TypedRect<f32, Dst>) -> Option<TypedRect<f32, Src>> {
+        Some(TypedRect::from_points(&[
+            self.inverse_project(&rect.origin)?,
+            self.inverse_project(&rect.top_right())?,
+            self.inverse_project(&rect.bottom_left())?,
+            self.inverse_project(&rect.bottom_right())?,
+        ]))
     }
 
     fn transform_kind(&self) -> TransformedRectKind {
@@ -393,7 +393,7 @@ impl<Src, Dst> FastTransform<Src, Dst> {
             FastTransform::Transform { inverse: Some(ref inverse), is_2d: true, .. }  =>
                 inverse.transform_rect(rect),
             FastTransform::Transform { ref transform, is_2d: false, .. } =>
-                Some(transform.inverse_rect_footprint(rect)),
+                transform.inverse_rect_footprint(rect),
             FastTransform::Transform { inverse: None, .. }  => None,
         }
     }
@@ -446,6 +446,7 @@ pub type LayoutToWorldFastTransform = FastTransform<LayoutPixel, WorldPixel>;
 pub fn project_rect<F, T>(
     transform: &TypedTransform3D<f32, F, T>,
     rect: &TypedRect<f32, F>,
+    bounds: &TypedRect<f32, T>,
 ) -> Option<TypedRect<f32, T>>
  where F: fmt::Debug
 {
@@ -462,7 +463,7 @@ pub fn project_rect<F, T>(
         let mut clipper = Clipper::new();
         clipper.add_frustum(
             transform,
-            None,
+            Some(*bounds),
         );
 
         let polygon = Polygon::from_rect(*rect, 1);

@@ -116,14 +116,19 @@ pub struct SpaceMapper<F, T> {
     kind: CoordinateSpaceMapping<F, T>,
     pub ref_spatial_node_index: SpatialNodeIndex,
     current_target_spatial_node_index: SpatialNodeIndex,
+    bounds: TypedRect<f32, T>,
 }
 
 impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
-    pub fn new(ref_spatial_node_index: SpatialNodeIndex) -> Self {
+    pub fn new(
+        ref_spatial_node_index: SpatialNodeIndex,
+        bounds: TypedRect<f32, T>,
+    ) -> Self {
         SpaceMapper {
             kind: CoordinateSpaceMapping::Local,
             ref_spatial_node_index,
             current_target_spatial_node_index: ref_spatial_node_index,
+            bounds,
         }
     }
 
@@ -161,6 +166,21 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         }
     }
 
+    pub fn unmap(&self, rect: &TypedRect<f32, T>) -> Option<TypedRect<f32, F>> {
+        match self.kind {
+            CoordinateSpaceMapping::Local => {
+                Some(TypedRect::from_untyped(&rect.to_untyped()))
+            }
+            CoordinateSpaceMapping::Offset(ref offset) => {
+                let offset = TypedVector2D::new(-offset.x, -offset.y);
+                Some(TypedRect::from_untyped(&rect.translate(&offset).to_untyped()))
+            }
+            CoordinateSpaceMapping::Transform(ref transform) => {
+                transform.inverse_rect_footprint(rect)
+            }
+        }
+    }
+
     pub fn map(&self, rect: &TypedRect<f32, F>) -> Option<TypedRect<f32, T>> {
         match self.kind {
             CoordinateSpaceMapping::Local => {
@@ -170,7 +190,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
                 Some(TypedRect::from_untyped(&rect.translate(offset).to_untyped()))
             }
             CoordinateSpaceMapping::Transform(ref transform) => {
-                match project_rect(transform, rect) {
+                match project_rect(transform, rect, &self.bounds) {
                     Some(bounds) => {
                         Some(bounds)
                     }
@@ -408,7 +428,10 @@ impl BrushKind {
 
     // Construct a brush that is a border with `border` style and `widths`
     // dimensions.
-    pub fn new_border(border: NormalBorder, widths: BorderWidths) -> BrushKind {
+    pub fn new_border(mut border: NormalBorder, widths: BorderWidths) -> BrushKind {
+        // FIXME(emilio): Is this the best place to do this?
+        border.normalize(&widths);
+
         let cache_key = BorderCacheKey::new(&border, &widths);
         BrushKind::Border {
             source: BorderSource::Border {
@@ -527,7 +550,7 @@ impl BrushPrimitive {
     pub fn may_need_clip_mask(&self) -> bool {
         match self.kind {
             BrushKind::Picture(ref pic) => {
-                pic.composite_mode.is_some()
+                pic.raster_config.is_some()
             }
             _ => {
                 true
@@ -1465,7 +1488,7 @@ impl PrimitiveStore {
                         // If we encounter a picture that is a pass-through
                         // (i.e. no composite mode), then we can recurse into
                         // that to try and find a primitive to collapse to.
-                        if pic.composite_mode.is_none() {
+                        if pic.requested_composite_mode.is_none() {
                             return self.get_opacity_collapse_prim(run.base_prim_index);
                         }
                     }
@@ -1496,7 +1519,7 @@ impl PrimitiveStore {
         pic_prim_index: PrimitiveIndex,
     ) {
         // Only handle opacity filters for now.
-        let binding = match self.get_pic(pic_prim_index).composite_mode {
+        let binding = match self.get_pic(pic_prim_index).requested_composite_mode {
             Some(PictureCompositeMode::Filter(FilterOp::Opacity(binding, _))) => {
                 binding
             }
@@ -1544,7 +1567,7 @@ impl PrimitiveStore {
         // intermediate surface or incur an extra blend / blit. Instead,
         // the collapsed primitive will be drawn directly into the
         // parent picture.
-        self.get_pic_mut(pic_prim_index).composite_mode = None;
+        self.get_pic_mut(pic_prim_index).requested_composite_mode = None;
     }
 
     pub fn prim_count(&self) -> usize {
@@ -1601,6 +1624,7 @@ impl PrimitiveStore {
                 let mut pic_state_for_children = PictureState::new(
                     root_spatial_node_index,
                     frame_context.clip_scroll_tree,
+                    frame_context.world_rect,
                 );
 
                 // Mark whether this picture has a complex coordinate system.
@@ -1693,6 +1717,7 @@ impl PrimitiveStore {
                     frame_state.gpu_cache,
                     frame_state.resource_cache,
                     frame_context.device_pixel_scale,
+                    &frame_context.world_rect,
                 );
 
             let clip_chain = match clip_chain {
@@ -2210,6 +2235,7 @@ impl Primitive {
                     frame_state.gpu_cache,
                     frame_state.resource_cache,
                     frame_context.device_pixel_scale,
+                    &frame_context.world_rect,
                 );
 
             match segment_clip_chain {

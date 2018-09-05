@@ -4,7 +4,7 @@
 
 extern crate serde_bytes;
 
-use font::{FontInstanceKey, FontKey, FontTemplate};
+use font::{FontInstanceKey, FontInstanceData, FontKey, FontTemplate};
 use std::sync::Arc;
 use {DevicePoint, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
 use {IdNamespace, TileOffset, TileSize};
@@ -177,6 +177,7 @@ impl ImageData {
 /// The resources exposed by the resource cache available for use by the blob rasterizer.
 pub trait BlobImageResources {
     fn get_font_data(&self, key: FontKey) -> &FontTemplate;
+    fn get_font_instance_data(&self, key: FontInstanceKey) -> Option<FontInstanceData>;
     fn get_image(&self, key: ImageKey) -> Option<(&ImageData, &ImageDescriptor)>;
 }
 

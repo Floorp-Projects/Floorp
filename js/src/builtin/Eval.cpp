@@ -442,7 +442,7 @@ js::IsAnyBuiltinEval(JSFunction* fun)
 static bool
 ExecuteInExtensibleLexicalEnvironment(JSContext* cx, HandleScript scriptArg, HandleObject env)
 {
-    CHECK_REQUEST(cx);
+    CHECK_THREAD(cx);
     cx->check(env);
     MOZ_ASSERT(IsExtensibleLexicalEnvironment(env));
     MOZ_RELEASE_ASSERT(scriptArg->hasNonSyntacticScope());

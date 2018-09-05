@@ -194,9 +194,6 @@ js::DestroyContext(JSContext* cx)
 {
     JS_AbortIfWrongThread(cx);
 
-    if (cx->outstandingRequests != 0)
-        MOZ_CRASH("Attempted to destroy a context while it is in a request.");
-
     cx->checkNoGCRooters();
 
     // Cancel all off thread Ion compiles. Completed Ion compiles may try to
@@ -1269,11 +1266,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     nativeStackBase(GetNativeStackBase()),
     entryMonitor(nullptr),
     noExecuteDebuggerTop(nullptr),
-    activityCallback(nullptr),
-    activityCallbackArg(nullptr),
-    requestDepth(0),
 #ifdef DEBUG
-    checkRequestDepth(0),
     inUnsafeCallWithABI(false),
     hasAutoUnsafeCallWithABI(false),
 #endif
@@ -1319,7 +1312,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     generatingError(false),
     cycleDetectorVector_(this),
     data(nullptr),
-    outstandingRequests(0),
     jitIsBroken(false),
     asyncCauseForNewActivations(nullptr),
     asyncCallIsExplicit(false),
@@ -1585,28 +1577,6 @@ JSContext::updateMallocCounter(size_t nbytes)
 
     zone()->updateMallocCounter(nbytes);
 }
-
-#ifdef DEBUG
-
-JS::AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext* cxArg)
-  : cx(cxArg->helperThread() ? nullptr : cxArg)
-{
-    if (cx) {
-        MOZ_ASSERT(cx->requestDepth || JS::RuntimeHeapIsBusy());
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-        cx->checkRequestDepth++;
-    }
-}
-
-JS::AutoCheckRequestDepth::~AutoCheckRequestDepth()
-{
-    if (cx) {
-        MOZ_ASSERT(cx->checkRequestDepth != 0);
-        cx->checkRequestDepth--;
-    }
-}
-
-#endif
 
 #ifdef JS_CRASH_DIAGNOSTICS
 void
