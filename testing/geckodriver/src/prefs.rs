@@ -62,7 +62,6 @@ lazy_static! {
         ("browser.uitour.enabled", Pref::new(false)),
 
         // Do not warn on quitting Firefox
-        // TODO: Remove once minimum supported Firefox release is 61.
         ("browser.warnOnQuit", Pref::new(false)),
 
         // Do not show datareporting policy notifications which can
