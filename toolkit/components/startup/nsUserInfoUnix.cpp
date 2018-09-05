@@ -33,7 +33,7 @@ nsUserInfo::~nsUserInfo()
 NS_IMPL_ISUPPORTS(nsUserInfo,nsIUserInfo)
 
 NS_IMETHODIMP
-nsUserInfo::GetFullname(char16_t **aFullname)
+nsUserInfo::GetFullname(nsAString& aFullname)
 {
     struct passwd *pw = nullptr;
 
@@ -66,19 +66,13 @@ nsUserInfo::GetFullname(char16_t **aFullname)
         fullname.ReplaceSubstring("&", username.get());
     }
 
-    nsAutoString unicodeFullname;
-    NS_CopyNativeToUnicode(fullname, unicodeFullname);
+    NS_CopyNativeToUnicode(fullname, aFullname);
 
-    *aFullname = ToNewUnicode(unicodeFullname);
-
-    if (*aFullname)
-        return NS_OK;
-
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUserInfo::GetUsername(char * *aUsername)
+nsUserInfo::GetUsername(nsACString& aUsername)
 {
     struct passwd *pw = nullptr;
 
@@ -91,13 +85,13 @@ nsUserInfo::GetUsername(char * *aUsername)
     printf("username = %s\n", pw->pw_name);
 #endif
 
-    *aUsername = strdup(pw->pw_name);
+    aUsername.Assign(pw->pw_name);
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsUserInfo::GetDomain(char * *aDomain)
+nsUserInfo::GetDomain(nsACString& aDomain)
 {
     nsresult rv = NS_ERROR_FAILURE;
 
@@ -113,7 +107,7 @@ nsUserInfo::GetDomain(char * *aDomain)
 #endif
 
     if (domainname && domainname[0]) {
-        *aDomain = strdup(domainname);
+        aDomain.Assign(domainname);
         rv = NS_OK;
     }
     else {
@@ -124,7 +118,7 @@ nsUserInfo::GetDomain(char * *aDomain)
             // if the nodename is foo.bar.org, use bar.org as the domain
             char *pos = strchr(buf.nodename,'.');
             if (pos) {
-                *aDomain = strdup(pos+1);
+                aDomain.Assign(pos + 1);
                 rv = NS_OK;
             }
         }
@@ -134,33 +128,25 @@ nsUserInfo::GetDomain(char * *aDomain)
 }
 
 NS_IMETHODIMP
-nsUserInfo::GetEmailAddress(char * *aEmailAddress)
+nsUserInfo::GetEmailAddress(nsACString& aEmailAddress)
 {
     // use username + "@" + domain for the email address
-
     nsresult rv;
 
-    nsAutoCString emailAddress;
     nsCString username;
     nsCString domain;
 
-    rv = GetUsername(getter_Copies(username));
+    rv = GetUsername(username);
     if (NS_FAILED(rv)) return rv;
 
-    rv = GetDomain(getter_Copies(domain));
+    rv = GetDomain(domain);
     if (NS_FAILED(rv)) return rv;
 
-    if (!username.IsEmpty() && !domain.IsEmpty()) {
-        emailAddress = username.get();
-        emailAddress += "@";
-        emailAddress += domain.get();
-    }
-    else {
+    if (username.IsEmpty() || domain.IsEmpty()) {
         return NS_ERROR_FAILURE;
     }
 
-    *aEmailAddress = ToNewCString(emailAddress);
-
+    aEmailAddress = username + NS_LITERAL_CSTRING("@") + domain;
     return NS_OK;
 }
 
