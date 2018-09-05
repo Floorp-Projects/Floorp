@@ -1094,7 +1094,7 @@ js::ValueToSourceForError(JSContext* cx, HandleValue val, UniqueChars& bytes)
             return "<<error converting value to string>>";
     } else {
         MOZ_ASSERT(val.isBoolean() || val.isSymbol());
-        bytes = JS_EncodeString(cx, str);
+        bytes = EncodeLatin1(cx, str);
         return bytes.get();
     }
     if (!sb.append(str))
@@ -1102,7 +1102,7 @@ js::ValueToSourceForError(JSContext* cx, HandleValue val, UniqueChars& bytes)
     str = sb.finishString();
     if (!str)
         return "<<error converting value to string>>";
-    bytes = JS_EncodeString(cx, str);
+    bytes = EncodeLatin1(cx, str);
     return bytes.get();
 }
 

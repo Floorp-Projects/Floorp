@@ -179,7 +179,7 @@ GetProxyTrap(JSContext* cx, HandleObject handler, HandlePropertyName name, Mutab
 
     // Step 4.
     if (!IsCallable(func)) {
-        UniqueChars bytes = JS_EncodeString(cx, name);
+        UniqueChars bytes = EncodeLatin1(cx, name);
         if (!bytes)
             return false;
 

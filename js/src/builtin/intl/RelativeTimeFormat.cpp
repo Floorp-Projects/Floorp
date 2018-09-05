@@ -224,7 +224,7 @@ NewURelativeDateTimeFormatter(JSContext* cx, Handle<RelativeTimeFormatObject*> r
 
     if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
         return nullptr;
-    UniqueChars locale = JS_EncodeString(cx, value.toString());
+    UniqueChars locale = intl::EncodeLocale(cx, value.toString());
     if (!locale)
         return nullptr;
 
