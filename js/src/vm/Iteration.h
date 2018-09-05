@@ -425,9 +425,6 @@ IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval);
 extern JSObject*
 CreateIterResultObject(JSContext* cx, HandleValue value, bool done);
 
-bool
-IsPropertyIterator(HandleValue v);
-
 enum class IteratorKind { Sync, Async };
 
 } /* namespace js */
