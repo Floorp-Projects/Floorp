@@ -162,8 +162,6 @@
     "browser/base/content/test/plugins/browser_CTP_data_urls.js": 3333,
     "browser/base/content/test/plugins/browser_CTP_drag_drop.js": 5737,
     "browser/base/content/test/plugins/browser_CTP_favorfallback.js": 4197,
-    "browser/base/content/test/plugins/browser_CTP_notificationBar.js": 4022,
-    "browser/base/content/test/plugins/browser_CTP_remove_navigate.js": 2812,
     "browser/base/content/test/plugins/browser_blocking.js": 8271,
     "browser/base/content/test/plugins/browser_blocklist_content.js": 3470,
     "browser/base/content/test/plugins/browser_clearplugindata.js": 2972,
