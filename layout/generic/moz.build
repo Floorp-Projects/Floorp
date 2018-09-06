@@ -12,6 +12,12 @@ with Files('Block*'):
     # Parts of these files are really Layout: Floats
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
+with Files('nsColumn*'):
+    BUG_COMPONENT = ('Core', 'Layout: Columns')
+
+with Files('Column*'):
+    BUG_COMPONENT = ('Core', 'Layout: Columns')
+
 with Files('nsLine*'):
     # Parts of these files are really Layout: Floats
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
@@ -144,6 +150,7 @@ EXPORTS.mozilla.layout += [
 UNIFIED_SOURCES += [
     'BlockReflowInput.cpp',
     'BRFrame.cpp',
+    'ColumnSetWrapperFrame.cpp',
     'CSSAlignUtils.cpp',
     'CSSOrderAwareFrameIterator.cpp',
     'DetailsFrame.cpp',
