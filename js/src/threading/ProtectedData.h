@@ -103,16 +103,18 @@ class ProtectedData
 
     T& ref() {
 #ifdef JS_HAS_PROTECTED_DATA_CHECKS
-        if (!AutoNoteSingleThreadedRegion::count)
+        if (!AutoNoteSingleThreadedRegion::count) {
             check.check();
+        }
 #endif
         return value;
     }
 
     const T& ref() const {
 #ifdef JS_HAS_PROTECTED_DATA_CHECKS
-        if (!AutoNoteSingleThreadedRegion::count)
+        if (!AutoNoteSingleThreadedRegion::count) {
             check.check();
+        }
 #endif
         return value;
     }
@@ -318,8 +320,9 @@ class ProtectedDataWriteOnce
 
     template <typename U>
     ThisType& operator=(const U& p) {
-        if (ref() != p)
+        if (ref() != p) {
             this->writeRef() = p;
+        }
         return *this;
     }
 
@@ -327,8 +330,9 @@ class ProtectedDataWriteOnce
 
     T& writeRef() {
 #ifdef JS_HAS_PROTECTED_DATA_CHECKS
-        if (!AutoNoteSingleThreadedRegion::count)
+        if (!AutoNoteSingleThreadedRegion::count) {
             check.check();
+        }
         // Despite the WriteOnce name, actually allow two writes to accommodate
         // data that is cleared during teardown.
         MOZ_ASSERT(++nwrites <= 2);
