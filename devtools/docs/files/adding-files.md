@@ -151,8 +151,8 @@ Example:
 
 Example:
 
-* File: `/devtools/shared/locales/en-US/screenshot.properties`
-* Usage: `chrome://devtools-shared/locale/screenshot.properties`
+* File: `/devtools/shared/locales/en-US/gcli.properties`
+* Usage: `chrome://devtools-shared/locale/gcli.properties`
 
 ### Guidelines
 

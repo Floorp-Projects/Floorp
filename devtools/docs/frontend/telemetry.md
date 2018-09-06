@@ -121,7 +121,7 @@ devtools.main:
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
-      entrypoint: How was the toolbox opened? CommandLine, ContextMenu, HamburgerMenu, KeyShortcut, SessionRestore or SystemMenu
+      entrypoint: How was the toolbox opened? CommandLine, ContextMenu, DeveloperToolbar, HamburgerMenu, KeyShortcut, SessionRestore or SystemMenu
       first_panel: The name of the first panel opened.
       host: "Toolbox host (positioning): bottom, side, window or other."
       splitconsole: Indicates whether the split console was open.

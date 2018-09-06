@@ -409,13 +409,14 @@ function parseCodeFile(fileUri) {
 
         if (isDevtools) {
           let rules = [
+            ["gcli", "resource://devtools/shared/gcli/source/lib/gcli"],
             ["devtools/client/locales", "chrome://devtools/locale"],
             ["devtools/shared/locales", "chrome://devtools-shared/locale"],
             ["devtools/shared/platform", "resource://devtools/shared/platform/chrome"],
             ["devtools", "resource://devtools"],
           ];
 
-          match = line.match(/["']((?:devtools)\/[^\\#"']+)["']/);
+          match = line.match(/["']((?:devtools|gcli)\/[^\\#"']+)["']/);
           if (match && match[1]) {
             let path = match[1];
             for (let rule of rules) {

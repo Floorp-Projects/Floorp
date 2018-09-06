@@ -547,7 +547,8 @@ exports.ToolboxButtons = [
     onClick(event, toolbox) {
       const tab = toolbox.target.tab;
       const browserWindow = tab.ownerDocument.defaultView;
-      ResponsiveUIManager.toggle(browserWindow, tab, { trigger: "toolbox" });
+      ResponsiveUIManager.handleGcliCommand(browserWindow, tab,
+        "resize toggle", null);
     },
     isChecked(toolbox) {
       if (!toolbox.target.tab) {

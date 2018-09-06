@@ -19,6 +19,7 @@ DevToolsModules(
     'device.js',
     'emulation.js',
     'framerate.js',
+    'gcli.js',
     'highlighters.js',
     'inspector.js',
     'layout.js',

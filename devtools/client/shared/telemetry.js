@@ -672,6 +672,7 @@ function getChartsFromToolId(id) {
     case "ABOUTDEBUGGING":
     case "BROWSERCONSOLE":
     case "CANVASDEBUGGER":
+    case "DEVELOPERTOOLBAR":
     case "DOM":
     case "INSPECTOR":
     case "JSBROWSERDEBUGGER":
