@@ -77,8 +77,9 @@ static const int WindowBits = -15;
 bool
 Compressor::init()
 {
-    if (inplen >= UINT32_MAX)
+    if (inplen >= UINT32_MAX) {
         return false;
+    }
     // zlib is slow and we'd rather be done compression sooner
     // even if it means decompression is slower which penalizes
     // Function.toString()
@@ -104,10 +105,11 @@ Compressor::compressMore()
 {
     MOZ_ASSERT(zs.next_out);
     uInt left = inplen - (zs.next_in - inp);
-    if (left <= MAX_INPUT_SIZE)
+    if (left <= MAX_INPUT_SIZE) {
         zs.avail_in = left;
-    else if (zs.avail_in == 0)
+    } else if (zs.avail_in == 0) {
         zs.avail_in = MAX_INPUT_SIZE;
+    }
 
     // Finish the current chunk if needed.
     bool flush = false;
@@ -144,8 +146,9 @@ Compressor::compressMore()
     if (done || currentChunkSize == CHUNK_SIZE) {
         MOZ_ASSERT_IF(!done, flush);
         MOZ_ASSERT(chunkSize(inplen, chunkOffsets.length()) == currentChunkSize);
-        if (!chunkOffsets.append(outbytes))
+        if (!chunkOffsets.append(outbytes)) {
             return OOM;
+        }
         currentChunkSize = 0;
         MOZ_ASSERT_IF(done, chunkOffsets.length() == (inplen - 1) / CHUNK_SIZE + 1);
     }
@@ -262,8 +265,9 @@ js::DecompressStringChunk(const unsigned char* inp, size_t chunk,
         MOZ_RELEASE_ASSERT(ret == Z_STREAM_END);
     } else {
         ret = inflate(&zs, Z_NO_FLUSH);
-        if (ret == Z_MEM_ERROR)
+        if (ret == Z_MEM_ERROR) {
             return false;
+        }
         MOZ_RELEASE_ASSERT(ret == Z_OK);
     }
     MOZ_ASSERT(zs.avail_in == 0);
