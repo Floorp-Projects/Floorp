@@ -170,6 +170,9 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 
             if (mAttachedContext == 0) {
                 release();
+                synchronized (sUnusedTextures) {
+                    sSurfaceTextures.remove(mHandle);
+                }
                 return;
             }
 

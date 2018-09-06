@@ -529,7 +529,7 @@ CreateNotebookWidget()
 }
 
 static GtkWidget*
-CreateHeaderBar(WidgetNodeType aWidgetType)
+CreateHeaderBarWidget(WidgetNodeType aWidgetType)
 {
   MOZ_ASSERT(gtk_check_version(3, 10, 0) == nullptr,
              "GtkHeaderBar is only available on GTK 3.10+.");
@@ -538,22 +538,29 @@ CreateHeaderBar(WidgetNodeType aWidgetType)
     dlsym(RTLD_DEFAULT, "gtk_header_bar_new");
 
   GtkWidget* headerbar = sGtkHeaderBarNewPtr();
+  GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
+  GtkStyleContext* style = gtk_widget_get_style_context(window);
+
   if (aWidgetType == MOZ_GTK_HEADER_BAR_MAXIMIZED) {
-    GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
-    gtk_widget_set_name(window, "MozillaMaximizedGtkWidget");
-    GtkStyleContext* style = gtk_widget_get_style_context(window);
     gtk_style_context_add_class(style, "maximized");
-    GtkWidget *fixed = gtk_fixed_new();
-    gtk_container_add(GTK_CONTAINER(window), fixed);
-    gtk_container_add(GTK_CONTAINER(fixed), headerbar);
-    // Save the window container so we don't leak it.
-    sWidgetStorage[MOZ_GTK_WINDOW_MAXIMIZED] = window;
+    sWidgetStorage[MOZ_GTK_HEADERBAR_WINDOW_MAXIMIZED] = window;
   } else {
-    AddToWindowContainer(headerbar);
+    sWidgetStorage[MOZ_GTK_HEADERBAR_WINDOW] = window;
   }
 
+  // Headerbar has to be placed to window with csd or solid-csd style
+  // to properly draw the decorated.
+  GtkStyleContext* windowStyle = GetStyleContext(MOZ_GTK_WINDOW);
+  bool solidDecorations =
+      gtk_style_context_has_class(windowStyle, "solid-csd");
+  gtk_style_context_add_class(style, solidDecorations ? "solid-csd" : "csd");
+
+  GtkWidget *fixed = gtk_fixed_new();
+  gtk_container_add(GTK_CONTAINER(window), fixed);
+  gtk_container_add(GTK_CONTAINER(fixed), headerbar);
+
   // Emulate what create_titlebar() at gtkwindow.c does.
-  GtkStyleContext* style = gtk_widget_get_style_context(headerbar);
+  style = gtk_widget_get_style_context(headerbar);
   gtk_style_context_add_class(style, "titlebar");
 
   // TODO: Define default-decoration titlebar style as workaround
@@ -719,7 +726,9 @@ CreateHeaderBarButtons()
   MOZ_ASSERT(gtk_check_version(3, 10, 0) == nullptr,
              "GtkHeaderBar is only available on GTK 3.10+.");
 
-  GtkWidget* headerBar = GetWidget(MOZ_GTK_HEADER_BAR);
+  GtkWidget* headerBar = sWidgetStorage[MOZ_GTK_HEADER_BAR];
+  MOZ_ASSERT(headerBar != nullptr,
+             "We're missing header bar widget!");
 
   gint buttonSpacing = 6;
   g_object_get(headerBar, "spacing", &buttonSpacing, nullptr);
@@ -747,6 +756,21 @@ CreateHeaderBarButtons()
                              MOZ_GTK_HEADER_BAR_BUTTON_CLOSE)) {
     CreateHeaderBarButton(buttonBox, MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
   }
+}
+
+static void
+CreateHeaderBar()
+{
+  MOZ_ASSERT(sWidgetStorage[MOZ_GTK_HEADER_BAR] == nullptr &&
+             sWidgetStorage[MOZ_GTK_HEADER_BAR_MAXIMIZED] == nullptr,
+             "Header bar widget is already created!");
+
+  sWidgetStorage[MOZ_GTK_HEADER_BAR] =
+    CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR);
+  sWidgetStorage[MOZ_GTK_HEADER_BAR_MAXIMIZED] =
+    CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR_MAXIMIZED);
+
+  CreateHeaderBarButtons();
 }
 
 static GtkWidget*
@@ -833,12 +857,13 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateComboBoxEntryArrowWidget();
     case MOZ_GTK_HEADER_BAR:
     case MOZ_GTK_HEADER_BAR_MAXIMIZED:
-      return CreateHeaderBar(aWidgetType);
     case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE_RESTORE:
-      CreateHeaderBarButtons();
+      /* Create header bar widgets once and fill with child elements as we need
+         the header bar fully configured to get a correct style */
+      CreateHeaderBar();
       return sWidgetStorage[aWidgetType];
     default:
       /* Not implemented */
@@ -1464,10 +1489,15 @@ ResetWidgetCache(void)
   mozilla::PodArrayZero(sStyleStorage);
 
   /* This will destroy all of our widgets */
-  if (sWidgetStorage[MOZ_GTK_WINDOW])
+  if (sWidgetStorage[MOZ_GTK_WINDOW]) {
     gtk_widget_destroy(sWidgetStorage[MOZ_GTK_WINDOW]);
-  if (sWidgetStorage[MOZ_GTK_WINDOW_MAXIMIZED])
-    gtk_widget_destroy(sWidgetStorage[MOZ_GTK_WINDOW_MAXIMIZED]);
+  }
+  if (sWidgetStorage[MOZ_GTK_HEADERBAR_WINDOW]) {
+    gtk_widget_destroy(sWidgetStorage[MOZ_GTK_HEADERBAR_WINDOW]);
+  }
+  if (sWidgetStorage[MOZ_GTK_HEADERBAR_WINDOW_MAXIMIZED]) {
+    gtk_widget_destroy(sWidgetStorage[MOZ_GTK_HEADERBAR_WINDOW_MAXIMIZED]);
+  }
 
   /* Clear already freed arrays */
   mozilla::PodArrayZero(sWidgetStorage);

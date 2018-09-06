@@ -98,6 +98,7 @@ payment-dialog > header > .page-error {
 
 .page > footer {
   align-items: center;
+  justify-content: end;
   background-color: #eaeaee;
   display: flex;
   /* from visual spec: */

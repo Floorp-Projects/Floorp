@@ -296,8 +296,10 @@ typedef enum {
   MOZ_GTK_SPLITTER_SEPARATOR_VERTICAL,
   /* Paints the background of a window, dialog or page. */
   MOZ_GTK_WINDOW,
+  /* Used only as a container for MOZ_GTK_HEADER_BAR. */
+  MOZ_GTK_HEADERBAR_WINDOW,
   /* Used only as a container for MOZ_GTK_HEADER_BAR_MAXIMIZED. */
-  MOZ_GTK_WINDOW_MAXIMIZED,
+  MOZ_GTK_HEADERBAR_WINDOW_MAXIMIZED,
   /* Window container for all widgets */
   MOZ_GTK_WINDOW_CONTAINER,
   /* Paints a GtkInfoBar, for notifications. */
