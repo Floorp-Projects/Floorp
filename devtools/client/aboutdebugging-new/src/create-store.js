@@ -8,7 +8,7 @@ const { applyMiddleware, createStore } = require("devtools/client/shared/vendor/
 const { thunk } = require("devtools/client/shared/redux/middleware/thunk.js");
 
 const rootReducer = require("./reducers/index");
-const { RuntimeState } = require("./reducers/runtime-state");
+const { DebugTargetsState } = require("./reducers/debug-targets-state");
 const { RuntimesState } = require("./reducers/runtimes-state");
 const { UiState } = require("./reducers/ui-state");
 const debugTargetListenerMiddleware = require("./middleware/debug-target-listener");
@@ -20,7 +20,7 @@ const { getNetworkLocations } = require("./modules/network-locations");
 
 function configureStore() {
   const initialState = {
-    runtime: new RuntimeState(),
+    debugTargets: new DebugTargetsState(),
     runtimes: new RuntimesState(),
     ui: getUiState(),
   };
