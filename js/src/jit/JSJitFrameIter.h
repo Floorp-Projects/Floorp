@@ -123,8 +123,9 @@ class JSJitFrameIter
 
     // Used only by DebugModeOSRVolatileJitFrameIter.
     void exchangeReturnAddressIfMatch(uint8_t* oldAddr, uint8_t* newAddr) {
-        if (returnAddressToFp_ == oldAddr)
+        if (returnAddressToFp_ == oldAddr) {
             returnAddressToFp_ = newAddr;
+        }
     }
 
     // Current frame information.
@@ -272,8 +273,9 @@ class JSJitFrameIter
         }
 
         Value* argv = actualArgs();
-        for (unsigned i = start; i < end; i++)
+        for (unsigned i = start; i < end; i++) {
             op(argv[i]);
+        }
     }
 
     void dump() const;
@@ -395,14 +397,16 @@ struct MaybeReadFallback
     bool canRecoverResults() { return maybeCx; }
 
     Value unreadablePlaceholder() const {
-        if (unreadablePlaceholder_ == NoGC_MagicOptimizedOut)
+        if (unreadablePlaceholder_ == NoGC_MagicOptimizedOut) {
             return MagicValue(JS_OPTIMIZED_OUT);
+        }
         return UndefinedValue();
     }
 
     NoGCValue noGCPlaceholder(const Value& v) const {
-        if (v.isMagic(JS_OPTIMIZED_OUT))
+        if (v.isMagic(JS_OPTIMIZED_OUT)) {
             return NoGC_MagicOptimizedOut;
+        }
         return NoGC_UndefinedValue;
     }
 };
@@ -505,8 +509,9 @@ class SnapshotIterator
         // Inline frames are inlined on calls, which are considered as being
         // resumed on the Call as baseline will push the pc once we return from
         // the call.
-        if (moreFrames())
+        if (moreFrames()) {
             return false;
+        }
         return recover_.resumeAfter();
     }
     inline BailoutKind bailoutKind() const {
@@ -570,8 +575,9 @@ class SnapshotIterator
     Value readWithDefault(RValueAllocation* alloc) {
         *alloc = RValueAllocation();
         RValueAllocation a = readAllocation();
-        if (allocationReadable(a))
+        if (allocationReadable(a)) {
             return allocationValue(a);
+        }
 
         *alloc = a;
         return allocationValue(a, RM_AlwaysDefault);
@@ -594,24 +600,28 @@ class SnapshotIterator
         if (script->argumentsHasVarBinding()) {
             if (argsObj) {
                 Value v = read();
-                if (v.isObject())
+                if (v.isObject()) {
                     *argsObj = &v.toObject().as<ArgumentsObject>();
+                }
             } else {
                 skip();
             }
         }
 
-        if (thisv)
+        if (thisv) {
             *thisv = maybeRead(fallback);
-        else
+        } else {
             skip();
+        }
 
         unsigned i = 0;
-        if (end < start)
+        if (end < start) {
             i = start;
+        }
 
-        for (; i < start; i++)
+        for (; i < start; i++) {
             skip();
+        }
         for (; i < end; i++) {
             // We are not always able to read values from the snapshots, some values
             // such as non-gc things may still be live in registers and cause an
@@ -704,8 +714,9 @@ class InlineFrameIterator
         // property still hold since the for inlined frames. This property does not
         // hold for the parent frame because it can have optimize a call to
         // js_fun_call or js_fun_apply.
-        if (more())
+        if (more()) {
             return numActualArgs_;
+        }
 
         return frame_->numActualArgs();
     }
@@ -729,10 +740,11 @@ class InlineFrameIterator
         }
 
         // Read return value.
-        if (rval)
+        if (rval) {
             *rval = s.maybeRead(fallback);
-        else
+        } else {
             s.skip();
+        }
 
         if (newTarget) {
             // For now, only support reading new.target when we are reading
@@ -749,8 +761,9 @@ class InlineFrameIterator
             // Get the non overflown arguments, which are taken from the inlined
             // frame, because it will have the updated value when JSOP_SETARG is
             // done.
-            if (behavior != ReadFrame_Overflown)
+            if (behavior != ReadFrame_Overflown) {
                 s.readFunctionFrameArgs(argOp, argsObj, thisv, 0, nformal, script(), fallback);
+            }
 
             if (behavior != ReadFrame_Formals) {
                 if (more()) {
@@ -773,8 +786,9 @@ class InlineFrameIterator
                     // [envchain], and maybe +1 for [argsObj]
                     MOZ_ASSERT(parent_s.numAllocations() >= nactual + 3 + argsObjAdj + hasNewTarget);
                     unsigned skip = parent_s.numAllocations() - nactual - 3 - argsObjAdj - hasNewTarget;
-                    for (unsigned j = 0; j < skip; j++)
+                    for (unsigned j = 0; j < skip; j++) {
                         parent_s.skip();
+                    }
 
                     // Get the overflown arguments
                     MaybeReadFallback unusedFallback;
@@ -783,24 +797,28 @@ class InlineFrameIterator
                     parent_s.readFunctionFrameArgs(argOp, nullptr, nullptr,
                                                    nformal, nactual, it.script(),
                                                    fallback);
-                    if (newTarget && isConstructing())
+                    if (newTarget && isConstructing()) {
                         *newTarget = parent_s.maybeRead(fallback);
+                    }
                 } else {
                     // There is no parent frame to this inlined frame, we can read
                     // from the frame's Value vector directly.
                     Value* argv = frame_->actualArgs();
-                    for (unsigned i = nformal; i < nactual; i++)
+                    for (unsigned i = nformal; i < nactual; i++) {
                         argOp(argv[i]);
-                    if (newTarget && isConstructing())
+                    }
+                    if (newTarget && isConstructing()) {
                         *newTarget = argv[nactual];
+                    }
                 }
             }
         }
 
         // At this point we've read all the formals in s, and can read the
         // locals.
-        for (unsigned i = 0; i < script()->nfixed(); i++)
+        for (unsigned i = 0; i < script()->nfixed(); i++) {
             localOp(s.maybeRead(fallback));
+        }
     }
 
     template <class Op>
@@ -844,8 +862,9 @@ class InlineFrameIterator
         s.skip();
 
         // Arguments object.
-        if (script()->argumentsHasVarBinding())
+        if (script()->argumentsHasVarBinding()) {
             s.skip();
+        }
 
         return s.maybeRead(fallback);
     }
