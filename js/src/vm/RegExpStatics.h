@@ -130,8 +130,9 @@ RegExpStatics::createDependent(JSContext* cx, size_t start, size_t end, MutableH
     MOZ_ASSERT(start <= end);
     MOZ_ASSERT(end <= matchesInput->length());
     JSString* str = NewDependentString(cx, matchesInput, start, end - start);
-    if (!str)
+    if (!str) {
         return false;
+    }
     out.setString(str);
     return true;
 }
@@ -162,16 +163,18 @@ RegExpStatics::makeMatch(JSContext* cx, size_t pairNum, MutableHandleValue out)
 inline bool
 RegExpStatics::createLastMatch(JSContext* cx, MutableHandleValue out)
 {
-    if (!executeLazy(cx))
+    if (!executeLazy(cx)) {
         return false;
+    }
     return makeMatch(cx, 0, out);
 }
 
 inline bool
 RegExpStatics::createLastParen(JSContext* cx, MutableHandleValue out)
 {
-    if (!executeLazy(cx))
+    if (!executeLazy(cx)) {
         return false;
+    }
 
     if (matches.empty() || matches.pairCount() == 1) {
         out.setString(cx->runtime()->emptyString);
@@ -191,8 +194,9 @@ inline bool
 RegExpStatics::createParen(JSContext* cx, size_t pairNum, MutableHandleValue out)
 {
     MOZ_ASSERT(pairNum >= 1);
-    if (!executeLazy(cx))
+    if (!executeLazy(cx)) {
         return false;
+    }
 
     if (matches.empty() || pairNum >= matches.pairCount()) {
         out.setString(cx->runtime()->emptyString);
@@ -204,8 +208,9 @@ RegExpStatics::createParen(JSContext* cx, size_t pairNum, MutableHandleValue out
 inline bool
 RegExpStatics::createLeftContext(JSContext* cx, MutableHandleValue out)
 {
-    if (!executeLazy(cx))
+    if (!executeLazy(cx)) {
         return false;
+    }
 
     if (matches.empty()) {
         out.setString(cx->runtime()->emptyString);
@@ -221,8 +226,9 @@ RegExpStatics::createLeftContext(JSContext* cx, MutableHandleValue out)
 inline bool
 RegExpStatics::createRightContext(JSContext* cx, MutableHandleValue out)
 {
-    if (!executeLazy(cx))
+    if (!executeLazy(cx)) {
         return false;
+    }
 
     if (matches.empty()) {
         out.setString(cx->runtime()->emptyString);
@@ -318,8 +324,9 @@ RegExpStatics::checkInvariants()
 
     /* Present pairs must be valid. */
     for (size_t i = 0; i < matches.pairCount(); i++) {
-        if (matches[i].isUndefined())
+        if (matches[i].isUndefined()) {
             continue;
+        }
         const MatchPair& pair = matches[i];
         MOZ_ASSERT(mpiLen >= size_t(pair.limit) && pair.limit >= pair.start && pair.start >= 0);
     }
