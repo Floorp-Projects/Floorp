@@ -14,7 +14,6 @@ if CONFIG['FFVPX_ASFLAGS']:
 
 SharedLibrary('mozavutil')
 SOURCES += [
-    'atomic.c',
     'avstring.c',
     'bprint.c',
     'buffer.c',
@@ -29,6 +28,7 @@ SOURCES += [
     'fixed_dsp.c',
     'float_dsp.c',
     'frame.c',
+    'hwcontext.c',
     'imgutils.c',
     'log.c',
     'log2_tab.c',

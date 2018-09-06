@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "avutil.h"
+#include "hwcontext.h"
 
 // cpu_internal.c
 int ff_get_cpu_flags_aarch64(void) { return 0; }
@@ -21,7 +22,6 @@ void ff_float_dsp_init_mips(AVFloatDSPContext *fdsp) {}
 #if !defined(__arm__)
 void ff_float_dsp_init_arm(AVFloatDSPContext *fdsp) {}
 #endif
-int av_hwframe_get_buffer(struct AVBufferRef* hwframe_ref, struct AVFrame* frame, int flags) { return 0; }
 
 // cpu.c
 size_t ff_get_cpu_max_align_aarch64() { return 0; }
