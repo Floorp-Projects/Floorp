@@ -5,10 +5,10 @@
 "use strict";
 
 const {
-  CONNECT_RUNTIME_SUCCESS,
-  DISCONNECT_RUNTIME_SUCCESS,
   NETWORK_LOCATIONS_UPDATED,
   RUNTIMES,
+  WATCH_RUNTIME_SUCCESS,
+  UNWATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 
 function RuntimesState(networkRuntimes = []) {
@@ -23,7 +23,7 @@ function RuntimesState(networkRuntimes = []) {
 
 function runtimesReducer(state = RuntimesState(), action) {
   switch (action.type) {
-    case CONNECT_RUNTIME_SUCCESS: {
+    case WATCH_RUNTIME_SUCCESS: {
       const { client } = action;
       const thisFirefoxRuntimes = [{
         id: RUNTIMES.THIS_FIREFOX,
@@ -33,7 +33,7 @@ function runtimesReducer(state = RuntimesState(), action) {
       return Object.assign({}, state, { thisFirefoxRuntimes });
     }
 
-    case DISCONNECT_RUNTIME_SUCCESS: {
+    case UNWATCH_RUNTIME_SUCCESS: {
       const thisFirefoxRuntimes = [{
         id: RUNTIMES.THIS_FIREFOX,
         type: RUNTIMES.THIS_FIREFOX
