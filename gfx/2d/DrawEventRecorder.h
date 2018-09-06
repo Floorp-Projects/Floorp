@@ -46,10 +46,9 @@ public:
   }
 
   void ClearResources() {
-    mUnscaledFonts.clear();
     mStoredObjects.clear();
     mStoredFontData.clear();
-    mUnscaledFontMap.clear();
+    mScaledFonts.clear();
   }
 
   template<class S>
@@ -71,7 +70,10 @@ public:
   }
 
   void AddScaledFont(ScaledFont* aFont) {
-    mStoredFonts.insert(aFont);
+    if (mStoredFonts.insert(aFont).second &&
+        WantsExternalFonts()) {
+      mScaledFonts.push_back(aFont);
+    }
   }
 
   void RemoveScaledFont(ScaledFont* aFont) {
@@ -98,20 +100,6 @@ public:
     return mStoredFontData.find(aFontDataKey) != mStoredFontData.end();
   }
 
-  // Returns the index of the UnscaledFont
-  size_t GetUnscaledFontIndex(UnscaledFont *aFont) {
-    auto i = mUnscaledFontMap.find(aFont);
-    size_t index;
-    if (i == mUnscaledFontMap.end()) {
-      mUnscaledFonts.push_back(aFont);
-      index = mUnscaledFonts.size() - 1;
-      mUnscaledFontMap.insert({{aFont, index}});
-    } else {
-      index = i->second;
-    }
-    return index;
-  }
-
   bool WantsExternalFonts() const { return mExternalFonts; }
 
   void TakeExternalSurfaces(std::vector<RefPtr<SourceSurface>>& aSurfaces)
@@ -131,9 +119,8 @@ protected:
   std::unordered_set<const void*> mStoredObjects;
   std::unordered_set<uint64_t> mStoredFontData;
   std::unordered_set<ScaledFont*> mStoredFonts;
+  std::vector<RefPtr<ScaledFont>> mScaledFonts;
   std::unordered_set<SourceSurface*> mStoredSurfaces;
-  std::vector<RefPtr<UnscaledFont>> mUnscaledFonts;
-  std::unordered_map<UnscaledFont*, size_t> mUnscaledFontMap;
   std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
   bool mExternalFonts;
 };
@@ -173,7 +160,7 @@ private:
   mozilla::OFStream mOutputStream;
 };
 
-typedef std::function<void(MemStream &aStream, std::vector<RefPtr<UnscaledFont>> &aUnscaledFonts)> SerializeResourcesFn;
+typedef std::function<void(MemStream &aStream, std::vector<RefPtr<ScaledFont>> &aScaledFonts)> SerializeResourcesFn;
 
 // WARNING: This should not be used in its existing state because
 // it is likely to OOM because of large continguous allocations.

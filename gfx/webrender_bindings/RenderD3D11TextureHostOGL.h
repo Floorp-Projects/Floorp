@@ -24,7 +24,9 @@ public:
                                     gfx::SurfaceFormat aFormat,
                                     gfx::IntSize aSize);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
+  wr::WrExternalImage Lock(uint8_t aChannelIndex,
+                           gl::GLContext* aGL,
+                           wr::ImageRendering aRendering) override;
   void Unlock() override;
   void ClearCachedResources() override;
 
@@ -34,7 +36,7 @@ public:
 private:
   virtual ~RenderDXGITextureHostOGL();
 
-  bool EnsureLockable();
+  bool EnsureLockable(wr::ImageRendering aRendering);
 
   void DeleteTextureHandle();
 
@@ -64,7 +66,9 @@ public:
                                          gfx::IntSize aSize,
                                          gfx::IntSize aSizeCbCr);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
+  wr::WrExternalImage Lock(uint8_t aChannelIndex,
+                           gl::GLContext* aGL,
+                           wr::ImageRendering aRendering) override;
   virtual void Unlock() override;
   void ClearCachedResources() override;
 
@@ -74,7 +78,7 @@ public:
 private:
   virtual ~RenderDXGIYCbCrTextureHostOGL();
 
-  bool EnsureLockable();
+  bool EnsureLockable(wr::ImageRendering aRendering);
 
   void DeleteTextureHandle();
 

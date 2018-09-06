@@ -4,7 +4,7 @@
 
 
 #ifdef WR_VERTEX_SHADER
-#define VECS_PER_RENDER_TASK        2
+#define VECS_PER_RENDER_TASK        2U
 
 uniform HIGHP_SAMPLER_FLOAT sampler2D sRenderTasks;
 

@@ -28,3 +28,6 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         '-Wno-sign-compare',
         '-Wno-unused-function'
     ]
+
+if CONFIG['TARGET_ENDIANNESS'] == 'big':
+    DEFINES['IS_BIG_ENDIAN'] = 1
