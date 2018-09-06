@@ -796,14 +796,7 @@ nsSHistory::PurgeHistory(int32_t aNumEntries)
 
   aNumEntries = std::min(aNumEntries, Length());
 
-  bool purgeHistory = true;
-  NOTIFY_LISTENERS_CANCELABLE(OnHistoryPurge, purgeHistory,
-                              (aNumEntries, &purgeHistory));
-
-  if (!purgeHistory) {
-    // Listener asked us not to purge
-    return NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA;
-  }
+  NOTIFY_LISTENERS(OnHistoryPurge, (aNumEntries));
 
   // Remove the first `aNumEntries` entries.
   mEntries.RemoveElementsAt(0, aNumEntries);
@@ -952,14 +945,9 @@ NS_IMETHODIMP
 nsSHistory::ReloadCurrentEntry()
 {
   // Notify listeners
-  bool canNavigate = true;
   nsCOMPtr<nsIURI> currentURI;
   GetCurrentURI(getter_AddRefs(currentURI));
-  NOTIFY_LISTENERS_CANCELABLE(OnHistoryGotoIndex, canNavigate,
-                              (mIndex, currentURI, &canNavigate));
-  if (!canNavigate) {
-    return NS_OK;
-  }
+  NOTIFY_LISTENERS(OnHistoryGotoIndex, (mIndex, currentURI));
 
   return LoadEntry(mIndex, LOAD_HISTORY, HIST_CMD_RELOAD);
 }
@@ -1529,18 +1517,9 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
   MOZ_ASSERT((prevEntry && nextEntry && nextURI), "prevEntry, nextEntry and nextURI can't be null");
 
   // Send appropriate listener notifications.
-  bool canNavigate = true;
   if (aHistCmd == HIST_CMD_GOTOINDEX) {
     // We are going somewhere else. This is not reload either
-    NOTIFY_LISTENERS_CANCELABLE(OnHistoryGotoIndex, canNavigate,
-                                (aIndex, nextURI, &canNavigate));
-  }
-
-  if (!canNavigate) {
-    // If the listener asked us not to proceed with
-    // the operation, simply return.
-    mRequestedIndex = -1;
-    return NS_OK;  // XXX Maybe I can return some other error code?
+    NOTIFY_LISTENERS(OnHistoryGotoIndex, (aIndex, nextURI));
   }
 
   if (mRequestedIndex == mIndex) {

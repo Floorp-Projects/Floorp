@@ -301,12 +301,10 @@ class SessionHistoryListener extends Handler {
   OnHistoryGotoIndex(index, gotoURI) {
     // We ought to collect the previously current entry as well, see bug 1350567.
     this.collectFrom(kLastIndex);
-    return true;
   }
 
   OnHistoryPurge(numEntries) {
     this.collect();
-    return true;
   }
 
   OnHistoryReload(reloadURI, reloadFlags) {

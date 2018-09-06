@@ -19,12 +19,10 @@ var historyListener = {
 
   OnHistoryGotoIndex() {
     sendAsyncMessage("ss-test:OnHistoryGotoIndex");
-    return true;
   },
 
   OnHistoryPurge() {
     sendAsyncMessage("ss-test:OnHistoryPurge");
-    return true;
   },
 
   OnHistoryReload() {
