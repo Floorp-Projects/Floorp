@@ -4,7 +4,9 @@
 
 package mozilla.components.service.fretboard
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Looper
 import android.text.TextUtils
 import java.util.zip.CRC32
 
@@ -14,6 +16,7 @@ import java.util.zip.CRC32
  *
  * @property valuesProvider provider for the device's values
  */
+@Suppress("TooManyFunctions")
 internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = ValuesProvider()) {
     /**
      * Determines if a specific experiment should be enabled or not for the device
@@ -95,7 +98,7 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
     }
 
     /**
-     * Overrides a specified experiment
+     * Overrides a specified experiment asynchronously
      *
      * @param context context
      * @param descriptor descriptor of the experiment
@@ -109,7 +112,23 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
     }
 
     /**
-     * Clears an override for a specified experiment
+     * Overrides a specified experiment as a blocking operation
+     *
+     * @param context context
+     * @param descriptor descriptor of the experiment
+     * @param active overridden value for the experiment, true to activate it, false to deactivate
+     */
+    @SuppressLint("ApplySharedPref")
+    fun setOverrideNow(context: Context, descriptor: ExperimentDescriptor, active: Boolean) {
+        require(Looper.myLooper() != Looper.getMainLooper()) { "This cannot be used on the main thread" }
+        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(descriptor.name, active)
+                .commit()
+    }
+
+    /**
+     * Clears an override for a specified experiment asynchronously
      *
      * @param context context
      * @param descriptor descriptor of the experiment
@@ -122,7 +141,22 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
     }
 
     /**
-     * Clears all experiment overrides
+     * Clears an override for a specified experiment as a blocking operation
+     *
+     * @param context context
+     * @param descriptor descriptor of the experiment
+     */
+    @SuppressLint("ApplySharedPref")
+    fun clearOverrideNow(context: Context, descriptor: ExperimentDescriptor) {
+        require(Looper.myLooper() != Looper.getMainLooper()) { "This cannot be used on the main thread" }
+        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .remove(descriptor.name)
+                .commit()
+    }
+
+    /**
+     * Clears all experiment overrides asynchronously
      *
      * @param context context
      */
@@ -131,6 +165,20 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
             .edit()
             .clear()
             .apply()
+    }
+
+    /**
+     * Clears all experiment overrides as a blocking operation
+     *
+     * @param context context
+     */
+    @SuppressLint("ApplySharedPref")
+    fun clearAllOverridesNow(context: Context) {
+        require(Looper.myLooper() != Looper.getMainLooper()) { "This cannot be used on the main thread" }
+        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .clear()
+                .commit()
     }
 
     companion object {

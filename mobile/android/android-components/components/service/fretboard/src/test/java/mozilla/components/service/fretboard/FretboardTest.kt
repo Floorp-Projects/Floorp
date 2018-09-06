@@ -8,6 +8,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -318,6 +320,14 @@ class FretboardTest {
         verify(prefsEditor).putBoolean("first-name", false)
         fretboard.setOverride(context, ExperimentDescriptor("first-name"), true)
         verify(prefsEditor).putBoolean("first-name", true)
+
+        runBlocking(CommonPool) {
+            assertTrue(fretboard.isInExperiment(context, ExperimentDescriptor("first-name")))
+            fretboard.setOverrideNow(context, ExperimentDescriptor("first-name"), false)
+            verify(prefsEditor, times(2)).putBoolean("first-name", false)
+            fretboard.setOverrideNow(context, ExperimentDescriptor("first-name"), true)
+            verify(prefsEditor, times(2)).putBoolean("first-name", true)
+        }
     }
 
     @Test
@@ -357,6 +367,12 @@ class FretboardTest {
         fretboard.setOverride(context, ExperimentDescriptor("first-name"), false)
         fretboard.clearOverride(context, ExperimentDescriptor("first-name"))
         verify(prefsEditor).remove("first-name")
+
+        runBlocking(CommonPool) {
+            fretboard.setOverrideNow(context, ExperimentDescriptor("first-name"), false)
+            fretboard.clearOverrideNow(context, ExperimentDescriptor("first-name"))
+            verify(prefsEditor, times(2)).remove("first-name")
+        }
     }
 
     @Test
@@ -396,6 +412,12 @@ class FretboardTest {
         fretboard.setOverride(context, ExperimentDescriptor("first-name"), false)
         fretboard.clearAllOverrides(context)
         verify(prefsEditor).clear()
+
+        runBlocking(CommonPool) {
+            fretboard.setOverrideNow(context, ExperimentDescriptor("first-name"), false)
+            fretboard.clearAllOverridesNow(context)
+            verify(prefsEditor, times(2)).clear()
+        }
     }
 
     @Test
