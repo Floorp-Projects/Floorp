@@ -565,13 +565,14 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow *aWindow)
   , mWaylandBuffer(nullptr)
   , mBackupBuffer(nullptr)
   , mFrameCallback(nullptr)
-  , mFrameCallbackSurface(nullptr)
+  , mLastCommittedSurface(nullptr)
   , mDisplayThreadMessageLoop(MessageLoop::current())
   , mDelayedCommitHandle(nullptr)
   , mDrawToWaylandBufferDirectly(true)
   , mPendingCommit(false)
   , mWaylandBufferFullScreenDamage(false)
   , mIsMainThread(NS_IsMainThread())
+  , mNeedScaleFactorUpdate(true)
 {
 }
 
@@ -608,23 +609,6 @@ WindowSurfaceWayland::~WindowSurfaceWayland()
   }
 }
 
-void
-WindowSurfaceWayland::UpdateScaleFactor()
-{
-  wl_surface* waylandSurface = mWindow->GetWaylandSurface();
-  MOZ_ASSERT(waylandSurface,
-    "Missing Wayland wl_surface during wl_buffer switch!");
-  if (!waylandSurface) {
-    // TODO: Set the scale factor properly later if we're missing wl_surface
-    // on wl_buffer request (Bug 1487763).
-    return;
-  }
-
-  wl_proxy_set_queue((struct wl_proxy *)waylandSurface,
-                     mWaylandDisplay->GetEventQueue());
-  wl_surface_set_buffer_scale(waylandSurface, mWindow->GdkScaleFactor());
-}
-
 WindowBackBuffer*
 WindowSurfaceWayland::GetWaylandBufferToDraw(int aWidth, int aHeight)
 {
@@ -639,7 +623,7 @@ WindowSurfaceWayland::GetWaylandBufferToDraw(int aWidth, int aHeight)
       mWaylandBuffer->Resize(aWidth, aHeight);
       // There's a chance that scale factor has been changed
       // when buffer size changed
-      UpdateScaleFactor();
+      mNeedScaleFactorUpdate = true;
     }
     return mWaylandBuffer;
   }
@@ -812,7 +796,7 @@ WindowSurfaceWayland::CommitWaylandBuffer()
     // Target window is not created yet - delay the commit. This can happen only
     // when the window is newly created and there's no active
     // frame callback pending.
-    MOZ_ASSERT(!mFrameCallback || waylandSurface != mFrameCallbackSurface,
+    MOZ_ASSERT(!mFrameCallback || waylandSurface != mLastCommittedSurface,
       "Missing wayland surface at frame callback!");
 
     // Do nothing if there's already mDelayedCommitHandle pending.
@@ -834,7 +818,7 @@ WindowSurfaceWayland::CommitWaylandBuffer()
 
   // We have an active frame callback request so handle it.
   if (mFrameCallback) {
-    if (waylandSurface == mFrameCallbackSurface) {
+    if (waylandSurface == mLastCommittedSurface) {
       // We have an active frame callback pending from our recent surface.
       // It means we should defer the commit to FrameCallbackHandler().
       return;
@@ -843,7 +827,7 @@ WindowSurfaceWayland::CommitWaylandBuffer()
     // callback is no longer active and we should release it.
     wl_callback_destroy(mFrameCallback);
     mFrameCallback = nullptr;
-    mFrameCallbackSurface = nullptr;
+    mLastCommittedSurface = nullptr;
   }
 
   if (mWaylandBufferFullScreenDamage) {
@@ -867,9 +851,14 @@ WindowSurfaceWayland::CommitWaylandBuffer()
 
   mFrameCallback = wl_surface_frame(waylandSurface);
   wl_callback_add_listener(mFrameCallback, &frame_listener, this);
-  mFrameCallbackSurface = waylandSurface;
+
+  if (mNeedScaleFactorUpdate || mLastCommittedSurface != waylandSurface) {
+    wl_surface_set_buffer_scale(waylandSurface, mWindow->GdkScaleFactor());
+    mNeedScaleFactorUpdate = false;
+  }
 
   mWaylandBuffer->Attach(waylandSurface);
+  mLastCommittedSurface = waylandSurface;
 
   // There's no pending commit, all changes are sent to compositor.
   mPendingCommit = false;
@@ -901,12 +890,11 @@ WindowSurfaceWayland::FrameCallbackHandler()
   MOZ_ASSERT(mIsMainThread == NS_IsMainThread());
   MOZ_ASSERT(mFrameCallback != nullptr,
              "FrameCallbackHandler() called without valid frame callback!");
-  MOZ_ASSERT(mFrameCallbackSurface != nullptr,
+  MOZ_ASSERT(mLastCommittedSurface != nullptr,
              "FrameCallbackHandler() called without valid wl_surface!");
 
   wl_callback_destroy(mFrameCallback);
   mFrameCallback = nullptr;
-  mFrameCallbackSurface = nullptr;
 
   if (mPendingCommit) {
     CommitWaylandBuffer();
