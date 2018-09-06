@@ -36,8 +36,6 @@ static bool sandboxEnabled;
 
 nsresult CentralizedAdminPrefManagerInit(bool aSandboxEnabled)
 {
-    nsresult rv;
-
     // If the sandbox is already created, no need to create it again.
     if (autoconfigSb.initialized())
         return NS_OK;
@@ -45,10 +43,7 @@ nsresult CentralizedAdminPrefManagerInit(bool aSandboxEnabled)
     sandboxEnabled = aSandboxEnabled;
 
     // Grab XPConnect.
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
+    nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
 
     // Grab the system principal.
     nsCOMPtr<nsIPrincipal> principal;
@@ -58,7 +53,7 @@ nsresult CentralizedAdminPrefManagerInit(bool aSandboxEnabled)
     // Create a sandbox.
     AutoSafeJSContext cx;
     JS::Rooted<JSObject*> sandbox(cx);
-    rv = xpc->CreateSandbox(cx, principal, sandbox.address());
+    nsresult rv = xpc->CreateSandbox(cx, principal, sandbox.address());
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Unwrap, store and root the sandbox.
@@ -117,8 +112,6 @@ nsresult EvaluateAdminConfigScript(JS::HandleObject sandbox,
                                    const char *filename, bool globalContext,
                                    bool callbacks, bool skipFirstLine)
 {
-    nsresult rv = NS_OK;
-
     if (skipFirstLine) {
         /* In order to protect the privacy of the JavaScript preferences file
          * from loading by the browser, we make the first line unparseable
@@ -142,10 +135,7 @@ nsresult EvaluateAdminConfigScript(JS::HandleObject sandbox,
     }
 
     // Grab XPConnect.
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
+    nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
 
     AutoJSAPI jsapi;
     if (!jsapi.Init(sandbox)) {
@@ -176,8 +166,8 @@ nsresult EvaluateAdminConfigScript(JS::HandleObject sandbox,
             return NS_ERROR_UNEXPECTED;
         }
     }
-    rv = xpc->EvalInSandboxObject(convertedScript, filename, cx,
-                                  sandbox, &v);
+    nsresult rv = xpc->EvalInSandboxObject(convertedScript, filename, cx,
+                                           sandbox, &v);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
