@@ -160,7 +160,7 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.settings]
      */
-    override fun setDesktopMode(enable: Boolean, reload: Boolean) {
+    override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
         // no-op (requires v63+)
     }
 

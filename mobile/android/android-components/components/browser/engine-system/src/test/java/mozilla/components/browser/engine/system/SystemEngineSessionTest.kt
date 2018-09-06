@@ -374,7 +374,7 @@ class SystemEngineSessionTest {
         val webView = mock(WebView::class.java)
         val webViewSettings = mock(WebSettings::class.java)
 
-        engineSession.setDesktopMode(true)
+        engineSession.toggleDesktopMode(true)
         verify(engineSession).currentView()
         verify(webView, never()).settings
 
@@ -382,14 +382,14 @@ class SystemEngineSessionTest {
         `when`(webView.settings).thenReturn(webViewSettings)
         `when`(webViewSettings.userAgentString).thenReturn(userAgentMobile)
 
-        engineSession.setDesktopMode(true)
+        engineSession.toggleDesktopMode(true)
         verify(webViewSettings).useWideViewPort = true
         verify(engineSession).toggleDesktopUA(userAgentMobile, true)
 
-        engineSession.setDesktopMode(true)
+        engineSession.toggleDesktopMode(true)
         verify(webView, never()).reload()
 
-        engineSession.setDesktopMode(true, true)
+        engineSession.toggleDesktopMode(true, true)
         verify(webView).reload()
     }
 

@@ -31,7 +31,11 @@ class EngineObserverTest {
             override fun restoreState(state: Map<String, Any>) {}
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun disableTrackingProtection() {}
-            override fun setDesktopMode(enable: Boolean, reload: Boolean) {}
+            override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
+                notifyObservers {
+                    onDesktopModeChange(enable)
+                }
+            }
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
@@ -55,12 +59,14 @@ class EngineObserverTest {
         engineSession.register(EngineObserver(session))
 
         engineSession.loadUrl("http://mozilla.org")
+        engineSession.toggleDesktopMode(true)
         Assert.assertEquals("http://mozilla.org", session.url)
         Assert.assertEquals("", session.searchTerms)
         Assert.assertEquals(100, session.progress)
         Assert.assertEquals(true, session.loading)
         Assert.assertEquals(true, session.canGoForward)
         Assert.assertEquals(true, session.canGoBack)
+        Assert.assertEquals(true, session.desktopMode)
     }
 
     @Test
@@ -77,7 +83,7 @@ class EngineObserverTest {
             override fun restoreState(state: Map<String, Any>) {}
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun disableTrackingProtection() {}
-            override fun setDesktopMode(enable: Boolean, reload: Boolean) {}
+            override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
@@ -122,7 +128,7 @@ class EngineObserverTest {
                 notifyObservers { onTrackerBlockingEnabledChange(false) }
             }
 
-            override fun setDesktopMode(enable: Boolean, reload: Boolean) {}
+            override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
             override fun saveState(): Map<String, Any> {
                 return emptyMap()
             }

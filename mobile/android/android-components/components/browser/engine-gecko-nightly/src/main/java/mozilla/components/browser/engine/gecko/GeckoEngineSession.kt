@@ -160,7 +160,7 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.settings]
      */
-    override fun setDesktopMode(enable: Boolean, reload: Boolean) {
+    override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
         val currentMode = geckoSession.settings.getInt(GeckoSessionSettings.USER_AGENT_MODE)
         val newMode = if (enable) {
             GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
@@ -170,7 +170,7 @@ class GeckoEngineSession(
 
         if (newMode != currentMode) {
             geckoSession.settings.setInt(GeckoSessionSettings.USER_AGENT_MODE, newMode)
-            notifyObservers { onDesktopModeEnabled(enable) }
+            notifyObservers { onDesktopModeChange(enable) }
         }
 
         if (reload) {

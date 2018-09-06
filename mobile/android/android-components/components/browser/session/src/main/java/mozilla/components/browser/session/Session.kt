@@ -47,6 +47,7 @@ class Session(
         fun onTrackerBlocked(session: Session, blocked: String, all: List<String>) = Unit
         fun onLongPress(session: Session, hitResult: HitResult): Boolean = false
         fun onFindResult(session: Session, result: FindResult) = Unit
+        fun onDesktopModeChanged(session: Session, enabled: Boolean) = Unit
     }
 
     /**
@@ -225,6 +226,15 @@ class Session(
     var hitResult: Consumable<HitResult> by Delegates.vetoable(Consumable.empty()) { _, _, result ->
         val consumers = wrapConsumers<HitResult> { onLongPress(this@Session, it) }
         !result.consumeBy(consumers)
+    }
+
+    /**
+     * Desktop Mode state, true if the desktop mode is requested, otherwise false.
+     */
+    var desktopMode: Boolean by Delegates.observable(false) { _, old, new ->
+        notifyObservers(old, new) {
+            onDesktopModeChanged(this@Session, new)
+        }
     }
 
     /**

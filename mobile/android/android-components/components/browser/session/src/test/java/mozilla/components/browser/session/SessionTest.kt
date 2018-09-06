@@ -492,4 +492,18 @@ class SessionTest {
         session.findResults = emptyList()
         verifyNoMoreInteractions(observer)
     }
+
+    @Test
+    fun `observer is notified when desktop mode is set`() {
+        val observer = mock(Session.Observer::class.java)
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+
+        session.desktopMode = true
+
+        verify(observer).onDesktopModeChanged(
+                eq(session),
+                eq(true))
+        assertTrue(session.desktopMode)
+    }
 }

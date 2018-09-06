@@ -30,7 +30,7 @@ abstract class EngineSession(
         fun onTrackerBlockingEnabledChange(enabled: Boolean) = Unit
         fun onTrackerBlocked(url: String) = Unit
         fun onLongPress(hitResult: HitResult) = Unit
-        fun onDesktopModeEnabled(enabled: Boolean) = Unit
+        fun onDesktopModeChange(enabled: Boolean) = Unit
         fun onFind(text: String) = Unit
         fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) = Unit
 
@@ -157,7 +157,7 @@ abstract class EngineSession(
     /**
      * Enables/disables Desktop Mode with an optional ability to reload the session right after.
      */
-    abstract fun setDesktopMode(enable: Boolean, reload: Boolean = false)
+    abstract fun toggleDesktopMode(enable: Boolean, reload: Boolean = false)
 
     /**
      * Finds and highlights all occurrences of the provided String and highlights them asynchronously.

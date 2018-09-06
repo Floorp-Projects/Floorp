@@ -95,14 +95,14 @@ class SessionUseCases(
         }
     }
 
-    class RequestDesktopSite internal constructor(
+    class RequestDesktopSiteUseCase internal constructor(
         private val sessionManager: SessionManager
     ) {
         /**
          * Request the desktop version of the current session and reloads the page.
          */
         fun invoke(enable: Boolean, session: Session = sessionManager.selectedSessionOrThrow) {
-            sessionManager.getOrCreateEngineSession(session).setDesktopMode(enable, true)
+            sessionManager.getOrCreateEngineSession(session).toggleDesktopMode(enable, true)
         }
     }
 
@@ -112,5 +112,5 @@ class SessionUseCases(
     val stopLoading: StopLoadingUseCase by lazy { StopLoadingUseCase(sessionManager) }
     val goBack: GoBackUseCase by lazy { GoBackUseCase(sessionManager) }
     val goForward: GoForwardUseCase by lazy { GoForwardUseCase(sessionManager) }
-    val requestDesktopSite: RequestDesktopSite by lazy { RequestDesktopSite(sessionManager) }
+    val requestDesktopSite: RequestDesktopSiteUseCase by lazy { RequestDesktopSiteUseCase(sessionManager) }
 }

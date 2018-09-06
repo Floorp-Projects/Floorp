@@ -571,22 +571,22 @@ class GeckoEngineSessionTest {
 
         var desktopModeEnabled = false
         engineSession.register(object : EngineSession.Observer {
-            override fun onDesktopModeEnabled(enabled: Boolean) {
+            override fun onDesktopModeChange(enabled: Boolean) {
                 desktopModeEnabled = true
             }
         })
-        engineSession.setDesktopMode(true)
+        engineSession.toggleDesktopMode(true)
         assertTrue(desktopModeEnabled)
 
         desktopModeEnabled = false
-        engineSession.setDesktopMode(true)
+        engineSession.toggleDesktopMode(true)
         assertFalse(desktopModeEnabled)
 
         engineSession.geckoSession.settings.setInt(GeckoSessionSettings.USER_AGENT_MODE, GeckoSessionSettings.USER_AGENT_MODE_DESKTOP)
-        engineSession.setDesktopMode(true)
+        engineSession.toggleDesktopMode(true)
         assertFalse(desktopModeEnabled)
 
-        engineSession.setDesktopMode(false)
+        engineSession.toggleDesktopMode(false)
         assertTrue(desktopModeEnabled)
     }
 

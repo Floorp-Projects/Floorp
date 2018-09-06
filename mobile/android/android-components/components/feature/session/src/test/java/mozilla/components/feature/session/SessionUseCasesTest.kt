@@ -96,10 +96,10 @@ class SessionUseCasesTest {
         `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
 
         useCases.requestDesktopSite.invoke(true, session)
-        verify(engineSession).setDesktopMode(true, true)
+        verify(engineSession).toggleDesktopMode(true, true)
 
         `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.requestDesktopSite.invoke(true)
-        verify(selectedEngineSession).setDesktopMode(true, true)
+        verify(selectedEngineSession).toggleDesktopMode(true, true)
     }
 }

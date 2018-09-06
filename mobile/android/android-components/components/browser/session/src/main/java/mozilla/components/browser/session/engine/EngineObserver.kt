@@ -77,4 +77,8 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
         val download = Download(url, fileName, contentType, contentLength, userAgent, Environment.DIRECTORY_DOWNLOADS)
         session.download = Consumable.from(download)
     }
+
+    override fun onDesktopModeChange(enabled: Boolean) {
+        session.desktopMode = enabled
+    }
 }

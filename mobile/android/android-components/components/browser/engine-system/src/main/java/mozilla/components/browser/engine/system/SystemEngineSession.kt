@@ -203,9 +203,9 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
     }
 
     /**
-     * See [EngineSession.setDesktopMode]
+     * See [EngineSession.toggleDesktopMode]
      */
-    override fun setDesktopMode(enable: Boolean, reload: Boolean) {
+    override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
         currentView()?.let { view ->
             val webSettings = view.settings
             webSettings.userAgentString = toggleDesktopUA(webSettings.userAgentString, enable)
