@@ -59,7 +59,7 @@ function createScreenshotDataURL(document, args) {
   let filename = getFilename(args.filename);
 
   if (args.fullpage) {
-    // Bug 961832: GCLI screenshot shows fixed position element in wrong
+    // Bug 961832: Screenshot shows fixed position element in wrong
     // position if we don't scroll to top
     window.scrollTo(0, 0);
     width = window.innerWidth + window.scrollMaxX - window.scrollMinX;
