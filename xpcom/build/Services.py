@@ -20,8 +20,6 @@ service('ObserverService', 'nsIObserverService',
         "@mozilla.org/observer-service;1")
 service('StringBundleService', 'nsIStringBundleService',
         "@mozilla.org/intl/stringbundle;1")
-service('XPConnect', 'nsIXPConnect',
-        "@mozilla.org/js/xpc/XPConnect;1")
 service('PermissionManager', 'nsIPermissionManager',
         "@mozilla.org/permissionmanager;1")
 service('ServiceWorkerManager', 'nsIServiceWorkerManager',

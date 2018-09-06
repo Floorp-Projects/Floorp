@@ -758,7 +758,7 @@ xpc_NewIDObject(JSContext* cx, HandleObject scope, const nsID& aID)
 
     nsCOMPtr<nsIJSID> iid = nsJSID::NewID(aID);
     if (iid) {
-        nsXPConnect* xpc = nsXPConnect::XPConnect();
+        nsIXPConnect* xpc = nsIXPConnect::XPConnect();
         if (xpc) {
             xpc->WrapNative(cx, scope, static_cast<nsISupports*>(iid),
                             NS_GET_IID(nsIJSID), obj.address());

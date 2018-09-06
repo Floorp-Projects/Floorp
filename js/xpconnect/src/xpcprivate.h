@@ -229,18 +229,6 @@ public:
 
     // non-interface implementation
 public:
-    // These get non-addref'd pointers
-    static nsXPConnect* XPConnect()
-    {
-        // Do a release-mode assert that we're not doing anything significant in
-        // XPConnect off the main thread. If you're an extension developer hitting
-        // this, you need to change your code. See bug 716167.
-        if (!MOZ_LIKELY(NS_IsMainThread()))
-            MOZ_CRASH();
-
-        return gSelf;
-    }
-
     static XPCJSRuntime* GetRuntimeInstance();
 
     static bool IsISupportsDescendant(const nsXPTInterfaceInfo* info);
@@ -259,14 +247,10 @@ public:
         return gSystemPrincipal;
     }
 
-    static already_AddRefed<nsXPConnect> GetSingleton();
-
     // Called by module code in dll startup
     static void InitStatics();
     // Called by module code on dll shutdown.
     static void ReleaseXPConnectSingleton();
-
-    bool IsShuttingDown() const {return mShuttingDown;}
 
     void RecordTraversal(void* p, nsISupports* s);
 
@@ -283,10 +267,13 @@ private:
     XPCJSRuntime*                   mRuntime;
     bool                            mShuttingDown;
 
+    friend class nsIXPConnect;
+
 public:
     static nsIScriptSecurityManager* gScriptSecurityManager;
     static nsIPrincipal* gSystemPrincipal;
 };
+
 
 /***************************************************************************/
 
@@ -774,7 +761,7 @@ inline void CHECK_STATE(int s) const {MOZ_ASSERT(mState >= s, "bad state");}
 private:
     State                           mState;
 
-    RefPtr<nsXPConnect>           mXPC;
+    nsCOMPtr<nsIXPConnect>          mXPC;
 
     XPCJSContext*                   mXPCJSContext;
     JSContext*                      mJSContext;
