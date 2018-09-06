@@ -208,29 +208,8 @@ if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$DEVELOPER_OPTIONS"; then
     fi
 fi
 
-# On OSX, the linker defaults to building PIE programs when targeting OSX 10.7.
-# On other Unix systems, some file managers (Nautilus) can't start PIE programs
-if test "$OS_TARGET" = Android; then
-    # bionic in Android >= 4.1 supports PIE, and we target those versions.
-    MOZ_PIE=1
-else
-    MOZ_PIE=
-fi
-
-MOZ_ARG_ENABLE_BOOL(pie,
-[  --enable-pie           Enable Position Independent Executables],
-    MOZ_PIE=1,
-    MOZ_PIE= )
-
-if test "$GNU_CC$CLANG_CC" -a -n "$MOZ_PIE"; then
-    AC_MSG_CHECKING([for PIE support])
-    _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS $DSO_PIC_CFLAGS -pie"
-    AC_TRY_LINK(,,AC_MSG_RESULT([yes])
-                  [MOZ_PROGRAM_LDFLAGS="$MOZ_PROGRAM_LDFLAGS -pie"],
-                  AC_MSG_RESULT([no])
-                  AC_MSG_ERROR([--enable-pie requires PIE support from the linker.]))
-    LDFLAGS=$_SAVE_LDFLAGS
+if test "$GNU_CC$CLANG_CC"; then
+    MOZ_PROGRAM_LDFLAGS="$MOZ_PROGRAM_LDFLAGS -pie"
 fi
 
 AC_SUBST(MOZ_PROGRAM_LDFLAGS)

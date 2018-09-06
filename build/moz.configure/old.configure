@@ -202,7 +202,6 @@ def old_configure_options(*options):
     '--enable-nspr-build',
     '--enable-official-branding',
     '--enable-parental-controls',
-    '--enable-pie',
     '--enable-posix-nspr-emulation',
     '--enable-pref-extensions',
     '--enable-raw',
