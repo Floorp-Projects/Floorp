@@ -747,7 +747,7 @@ nsMathMLmencloseFrame::SetAdditionalComputedStyle(int32_t          aIndex,
     mMathMLChar[aIndex].SetComputedStyle(aComputedStyle);
 }
 
-class nsDisplayNotation : public nsDisplayItem
+class nsDisplayNotation final : public nsDisplayItem
 {
 public:
   nsDisplayNotation(nsDisplayListBuilder* aBuilder,

@@ -148,7 +148,7 @@ class AutoPrintEventDispatcher;
 
 // a small delegate class used to avoid circular references
 
-class nsDocViewerSelectionListener : public nsISelectionListener
+class nsDocViewerSelectionListener final : public nsISelectionListener
 {
 public:
 
@@ -180,7 +180,7 @@ protected:
 
 /** editor Implementation of the FocusListener interface
  */
-class nsDocViewerFocusListener : public nsIDOMEventListener
+class nsDocViewerFocusListener final : public nsIDOMEventListener
 {
 public:
   /** default constructor

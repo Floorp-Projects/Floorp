@@ -63,7 +63,8 @@ IntrinsicRatioFromCanvasSize(const nsIntSize& aCanvasSizeInPx)
                 nsPresContext::CSSPixelsToAppUnits(aCanvasSizeInPx.height));
 }
 
-class nsDisplayCanvas : public nsDisplayItem {
+class nsDisplayCanvas final : public nsDisplayItem
+{
 public:
   nsDisplayCanvas(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame)

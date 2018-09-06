@@ -17,8 +17,8 @@
 
 class gfxContext;
 
-class nsSVGForeignObjectFrame : public nsContainerFrame
-                              , public nsSVGDisplayableFrame
+class nsSVGForeignObjectFrame final : public nsContainerFrame
+                                    , public nsSVGDisplayableFrame
 {
   friend nsContainerFrame*
   NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);

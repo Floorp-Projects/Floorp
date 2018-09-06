@@ -14,7 +14,8 @@
 // <semantics> -- associate annotations with a MathML expression
 //
 
-class nsMathMLsemanticsFrame : public nsMathMLSelectedFrame {
+class nsMathMLsemanticsFrame final : public nsMathMLSelectedFrame
+{
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLsemanticsFrame)
 

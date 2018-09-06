@@ -932,7 +932,8 @@ nsSliderMediator::HandleEvent(dom::Event* aEvent)
   return NS_OK;
 }
 
-class AsyncScrollbarDragStarter : public nsAPostRefreshObserver {
+class AsyncScrollbarDragStarter final : public nsAPostRefreshObserver
+{
 public:
   AsyncScrollbarDragStarter(nsIPresShell* aPresShell,
                             nsIWidget* aWidget,

@@ -119,7 +119,7 @@ private:
 // Linear Gradients
 // -------------------------------------------------------------------------
 
-class nsSVGLinearGradientFrame : public nsSVGGradientFrame
+class nsSVGLinearGradientFrame final : public nsSVGGradientFrame
 {
   friend nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
                                                 ComputedStyle* aStyle);
@@ -161,7 +161,7 @@ protected:
 // Radial Gradients
 // -------------------------------------------------------------------------
 
-class nsSVGRadialGradientFrame : public nsSVGGradientFrame
+class nsSVGRadialGradientFrame final : public nsSVGGradientFrame
 {
   friend nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell,
                                                 ComputedStyle* aStyle);
