@@ -216,8 +216,8 @@ interface nsIDocShell : nsIDocShellTreeItem
    * depending on the value of aReplace.
    */
   [implicit_jscontext]
-  void addState(in jsval aData, in DOMString aTitle,
-                in DOMString aURL, in boolean aReplace);
+  void addState(in jsval aData, in AString aTitle,
+                in AString aURL, in boolean aReplace);
 
   /**
    * Reset state to a new content model within the current document and the document
@@ -274,7 +274,7 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * This allows chrome to set a custom User agent on a specific docshell
    */
-  attribute DOMString customUserAgent;
+  attribute AString customUserAgent;
 
   /**
    * Whether CSS error reporting is enabled.

@@ -8,11 +8,11 @@
 [scriptable, uuid(feb979a8-f8cc-4522-9dff-6c055ca50762)]
 interface nsIAudioDeviceInfo : nsISupports
 {
-  readonly attribute DOMString name;
+  readonly attribute AString name;
 
-  readonly attribute DOMString groupId;
+  readonly attribute AString groupId;
 
-  readonly attribute DOMString vendor;
+  readonly attribute AString vendor;
 
   // type: Unknown/Input/Output
   const unsigned short TYPE_UNKNOWN = 0;

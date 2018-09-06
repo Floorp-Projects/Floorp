@@ -49,11 +49,11 @@ interface nsIDateTimeInputArea : nsISupports
    * Set the attribute of the inner text boxes. Only "tabindex", "readonly",
    * and "disabled" are allowed.
    */
-  void setEditAttribute(in DOMString name, in DOMString value);
+  void setEditAttribute(in AString name, in AString value);
 
   /**
    * Remove the attribute of the inner text boxes. Only "tabindex", "readonly",
    * and "disabled" are allowed.
    */
-  void removeEditAttribute(in DOMString name);
+  void removeEditAttribute(in AString name);
 };

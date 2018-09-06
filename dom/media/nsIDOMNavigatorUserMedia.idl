@@ -8,11 +8,11 @@
 [scriptable, builtinclass, uuid(ba3b2e08-1c07-4cd3-8822-f4d7e35ff2ae)]
 interface nsIMediaDevice : nsISupports
 {
-  readonly attribute DOMString type;
-  readonly attribute DOMString name;
-  readonly attribute DOMString id;
-  readonly attribute DOMString mediaSource;
-  readonly attribute DOMString rawId;
+  readonly attribute AString type;
+  readonly attribute AString name;
+  readonly attribute AString id;
+  readonly attribute AString mediaSource;
+  readonly attribute AString rawId;
   readonly attribute boolean scary;
 };
 
