@@ -9,6 +9,7 @@ import android.animation.AnimatorListenerAdapter
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.SharedPreferences
+import android.content.res.Configuration
 import android.graphics.Typeface
 import android.graphics.drawable.TransitionDrawable
 import android.os.Bundle
@@ -352,6 +353,27 @@ class UrlInputFragment :
         ViewUtils.showKeyboard(urlView)
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+        super.onConfigurationChanged(newConfig)
+
+        if (newConfig?.orientation != Configuration.ORIENTATION_UNDEFINED) {
+            //This is a hack to make the HomeMenu actually stick on top of the menuView (#3287)
+
+            displayedPopupMenu?.let {
+                it.dismiss()
+
+                menuView.viewTreeObserver.addOnPreDrawListener (object : ViewTreeObserver.OnPreDrawListener {
+                    override fun onPreDraw(): Boolean {
+                        menuView.viewTreeObserver.removeOnPreDrawListener(this)
+                        showHomeMenu(menuView)
+
+                        return false
+                    }
+                })
+            }
+        }
+    }
+
     // This method triggers the complexity warning. However it's actually not that hard to understand.
     @Suppress("ComplexMethod")
     override fun onClick(view: View) {
@@ -364,12 +386,7 @@ class UrlInputFragment :
                 clear()
             }
 
-            R.id.menuView -> context?.let {
-                val menu = HomeMenu(it, this)
-                menu.show(view)
-
-                displayedPopupMenu = menu
-            }
+            R.id.menuView -> showHomeMenu(view)
 
             R.id.whats_new -> context?.let {
                 TelemetryWrapper.openWhatsNewEvent(WhatsNew.shouldHighlightWhatsNew(it))
@@ -393,6 +410,16 @@ class UrlInputFragment :
     private fun clear() {
         urlView?.setText("")
         urlView?.requestFocus()
+    }
+
+    private fun showHomeMenu(anchor: View) = context?.let {
+        displayedPopupMenu = HomeMenu(it, this)
+
+        displayedPopupMenu?.show(anchor)
+
+        displayedPopupMenu?.dismissListener = {
+            displayedPopupMenu = null
+        }
     }
 
     override fun onDetach() {

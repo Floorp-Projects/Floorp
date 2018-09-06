@@ -23,6 +23,8 @@ class HomeMenu(
     val context: Context,
     val listener: View.OnClickListener
 ) : PopupWindow(), View.OnClickListener {
+    var dismissListener: (() -> Unit)? = null
+
     init {
         contentView = LayoutInflater.from(context).inflate(R.layout.menu, null)
 
@@ -51,5 +53,11 @@ class HomeMenu(
         dismiss()
 
         listener.onClick(view)
+    }
+
+    override fun dismiss() {
+        super.dismiss()
+
+        dismissListener?.invoke()
     }
 }
