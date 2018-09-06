@@ -100,8 +100,8 @@ jobs:
     run:
       using: debian-package
       tarball:
-        url: https://www.mercurial-scm.org/release/mercurial-4.7.tar.gz
-        sha256: 098cb1437f77fb7f75dc2f008742933c729ec0b63cfa3e4e2f0a8fbc3d0d349f
+        url: https://www.mercurial-scm.org/release/mercurial-4.7.1.tar.gz
+        sha256: 8503383c1c31842576516b803d07564216470887ca6388719e4c4089663b410c
       pre-build-command: >-
         cp -r contrib/packaging/debian debian &&
         sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb7moz1/" \
@@ -116,8 +116,8 @@ jobs:
       using: debian-package
       dist: stretch
       tarball:
-        url: https://www.mercurial-scm.org/release/mercurial-4.7.tar.gz
-        sha256: 098cb1437f77fb7f75dc2f008742933c729ec0b63cfa3e4e2f0a8fbc3d0d349f
+        url: https://www.mercurial-scm.org/release/mercurial-4.7.1.tar.gz
+        sha256: 8503383c1c31842576516b803d07564216470887ca6388719e4c4089663b410c
       pre-build-command: >-
         cp -r contrib/packaging/debian debian &&
         sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb9moz1/" \
