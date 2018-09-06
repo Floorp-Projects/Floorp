@@ -39,8 +39,9 @@ class CompactBufferReader
             byte = readByte();
             val |= (uint32_t(byte) >> 1) << shift;
             shift += 7;
-            if (!(byte & 1))
+            if (!(byte & 1)) {
                 return val;
+            }
         }
     }
 
@@ -79,10 +80,12 @@ class CompactBufferReader
         bool isNegative = !!(b & (1 << 0));
         bool more = !!(b & (1 << 1));
         int32_t result = b >> 2;
-        if (more)
+        if (more) {
             result |= readUnsigned() << 6;
-        if (isNegative)
+        }
+        if (isNegative) {
             return -result;
+        }
         return result;
     }
 
@@ -132,8 +135,9 @@ class CompactBufferWriter
     }
     void writeByteAt(uint32_t pos, uint32_t byte) {
         MOZ_ASSERT(byte <= 0xFF);
-        if (!oom())
+        if (!oom()) {
             buffer_[pos] = byte;
+        }
     }
     void writeUnsigned(uint32_t value) {
         do {
@@ -159,8 +163,9 @@ class CompactBufferWriter
 
         // Write out the rest of the bytes, if needed.
         value >>= 6;
-        if (value == 0)
+        if (value == 0) {
             return;
+        }
         writeUnsigned(value);
     }
     void writeFixedUint32_t(uint32_t value) {
@@ -177,8 +182,9 @@ class CompactBufferWriter
         // Must be at 4-byte boundary
         MOZ_ASSERT_IF(!oom(), length() % sizeof(uint32_t) == 0);
         writeFixedUint32_t(0);
-        if (oom())
+        if (oom()) {
             return;
+        }
         uint8_t* endPtr = buffer() + length();
         reinterpret_cast<uint32_t*>(endPtr)[-1] = value;
     }

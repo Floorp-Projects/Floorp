@@ -64,8 +64,9 @@ class CacheIRSpewer
 
         ~Guard() {
           if (sp_.enabled()) {
-            if (name_ != nullptr)
+            if (name_ != nullptr) {
               sp_.attached(name_);
+            }
             sp_.endCache();
             sp_.lock().unlock();
           }
