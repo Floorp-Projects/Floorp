@@ -1804,6 +1804,12 @@ protected: // Shouldn't be used by friend classes
    */
   nsresult ShowResizersInternal(Element& aResizedElement);
 
+  /**
+   * Hide resizers if they are visible.  If this is called while there is no
+   * visible resizers, this does not return error, but does nothing.
+   */
+  nsresult HideResizersInternal();
+
   ManualNACPtr CreateResizer(int16_t aLocation, nsIContent& aParentContent);
   void SetAnonymousElementPosition(int32_t aX, int32_t aY,
                                    Element* aResizer);
