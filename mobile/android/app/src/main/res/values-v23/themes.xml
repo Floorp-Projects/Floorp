@@ -10,11 +10,13 @@
     -->
     <style name="GeckoAppBase" parent="Gecko">
         <!-- Following are defaults from res/values/themes.xml#GeckoAppBase -->
-        <item name="android:buttonStyle">@style/Widget.Button</item>
-        <item name="android:dropDownItemStyle">@style/Widget.DropDownItem</item>
-        <item name="android:editTextStyle">@style/Widget.EditText</item>
-        <item name="android:textViewStyle">@style/Widget.TextView</item>
+        <item name="android:actionButtonStyle">@style/GeckoActionBar.Button</item>
+        <item name="android:listViewStyle">@style/Widget.ListView</item>
+        <item name="android:spinnerDropDownItemStyle">@style/Widget.DropDownItem.Spinner</item>
+        <item name="android:spinnerItemStyle">@style/Widget.TextView.SpinnerItem</item>
+        <item name="menuItemSwitcherLayoutStyle">@style/Widget.MenuItemSwitcherLayout</item>
         <item name="menuItemDefaultStyle">@style/Widget.MenuItemDefault</item>
+        <item name="menuItemSecondaryActionBarStyle">@style/Widget.MenuItemSecondaryActionBar</item>
 
         <!-- Following are used to apply a Photon theme to date/time pickers only on API >=23 -->
         <item name="android:timePickerStyle" >@style/PhotonTimePicker</item>
