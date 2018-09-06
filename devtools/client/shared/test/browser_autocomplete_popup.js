@@ -44,7 +44,7 @@ add_task(async function() {
   is(popup.selectedItem, items[0], "First item from top is selected");
   checkActiveDescendant(popup, input);
 
-  popup.selectedIndex = 1;
+  popup.selectItemAtIndex(1);
 
   is(popup.selectedIndex, 1, "index 1 is selected");
   is(popup.selectedItem, items[1], "item1 is selected");
@@ -73,22 +73,6 @@ add_task(async function() {
   is(popup.selectedIndex, 0, "index 0 is selected");
   is(popup.selectedItem, items[0], "item0 is selected");
   checkActiveDescendant(popup, input);
-
-  items.push({label: "label3", value: "value3"});
-  popup.appendItem(items[3]);
-
-  is(popup.itemCount, items.length, "item3 appended");
-
-  popup.selectedIndex = 3;
-  is(popup.selectedItem, items[3], "item3 is selected");
-  checkActiveDescendant(popup, input);
-
-  popup.removeItem(items[2]);
-
-  is(popup.selectedIndex, 2, "index2 is selected");
-  is(popup.selectedItem, items[3], "item3 is still selected");
-  checkActiveDescendant(popup, input);
-  is(popup.itemCount, items.length - 1, "item2 removed");
 
   popup.clearItems();
   is(popup.itemCount, 0, "items cleared");
