@@ -3,7 +3,7 @@ set -x -e -v
 
 OWNER=luser
 PROJECT=rust-size
-PROJECT_REVISION=4a5d9148f50dc037dc230f10b8fc4e5ca00016aa
+PROJECT_REVISION=ab659d93b1faba95307df952aefe3fbed3583669
 
 # This script is for building rust-size
 case "$(uname -s)" in
