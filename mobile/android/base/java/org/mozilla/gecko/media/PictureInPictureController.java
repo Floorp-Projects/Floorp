@@ -43,9 +43,9 @@ public class PictureInPictureController implements BundleEventListener {
      * @throws IllegalStateException if entering Picture In Picture mode was not possible.
      */
     public void tryEnteringPictureInPictureMode() throws IllegalStateException {
-        if (shouldTryPipMode()) {
+        if (shouldTryPipMode() &&
+                pipActivity.enterPictureInPictureMode(getPipParams(isMediaPlaying()))) {
             EventDispatcher.getInstance().registerUiThreadListener(this, "MediaControlService:MediaPlayingStatus");
-            pipActivity.enterPictureInPictureMode(getPipParams(isMediaPlaying()));
             isInPipMode = true;
         }
     }
