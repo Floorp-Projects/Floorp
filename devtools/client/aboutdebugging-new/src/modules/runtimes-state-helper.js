@@ -4,10 +4,14 @@
 
 "use strict";
 
-function getCurrentClient(runtimesState) {
+function getCurrentRuntime(runtimesState) {
   const selectedRuntimeId = runtimesState.selectedRuntimeId;
-  const selectedRuntime = findRuntimeById(selectedRuntimeId, runtimesState);
-  return selectedRuntime.client;
+  return findRuntimeById(selectedRuntimeId, runtimesState);
+}
+exports.getCurrentRuntime = getCurrentRuntime;
+
+function getCurrentClient(runtimesState) {
+  return getCurrentRuntime(runtimesState).client;
 }
 exports.getCurrentClient = getCurrentClient;
 
