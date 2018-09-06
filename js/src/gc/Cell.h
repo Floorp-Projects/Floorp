@@ -289,10 +289,12 @@ Cell::storeBuffer() const
 inline JS::TraceKind
 Cell::getTraceKind() const
 {
-    if (isTenured())
+    if (isTenured()) {
         return asTenured().getTraceKind();
-    if (nurseryCellIsString())
+    }
+    if (nurseryCellIsString()) {
         return JS::TraceKind::String;
+    }
     return JS::TraceKind::Object;
 }
 
@@ -429,8 +431,9 @@ TenuredCell::readBarrier(TenuredCell* thing)
     if (thing->isMarkedGray()) {
         // There shouldn't be anything marked grey unless we're on the main thread.
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread()));
-        if (!JS::RuntimeHeapIsCollecting())
+        if (!JS::RuntimeHeapIsCollecting()) {
             JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr(thing, thing->getTraceKind()));
+        }
     }
 }
 
@@ -441,8 +444,9 @@ AssertSafeToSkipBarrier(TenuredCell* thing);
 TenuredCell::writeBarrierPre(TenuredCell* thing)
 {
     MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-    if (!thing)
+    if (!thing) {
         return;
+    }
 
 #ifdef JS_GC_ZEAL
     // When verifying pre barriers we need to switch on all barriers, even
@@ -494,8 +498,9 @@ Cell::thingIsNotGray(Cell* cell)
 bool
 Cell::isAligned() const
 {
-    if (!isTenured())
+    if (!isTenured()) {
         return true;
+    }
     return asTenured().isAligned();
 }
 
