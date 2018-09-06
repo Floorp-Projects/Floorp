@@ -42,8 +42,9 @@ async function editUsernamePromises(site, oldUsername, newUsername) {
   let login = Services.logins.findLogins({}, site, "", "")[0];
   is(login.username, oldUsername, "Correct username saved");
   is(getUsername(0), oldUsername, "Correct username shown");
+  let focusPromise = BrowserTestUtils.waitForEvent(signonsTree, "focus", true);
   synthesizeDblClickOnCell(signonsTree, 1, 0);
-  await BrowserTestUtils.waitForEvent(signonsTree, "focus", true);
+  await focusPromise;
 
   EventUtils.sendString(newUsername, pwmgrdlg);
   let signonsIntro = doc.querySelector("#signonsIntro");
@@ -63,8 +64,9 @@ async function editPasswordPromises(site, oldPassword, newPassword) {
   is(login.password, oldPassword, "Correct password saved");
   is(getPassword(0), oldPassword, "Correct password shown");
 
+  let focusPromise = BrowserTestUtils.waitForEvent(signonsTree, "focus", true);
   synthesizeDblClickOnCell(signonsTree, 2, 0);
-  await BrowserTestUtils.waitForEvent(signonsTree, "focus", true);
+  await focusPromise;
 
   EventUtils.sendString(newPassword, pwmgrdlg);
   let signonsIntro = doc.querySelector("#signonsIntro");
