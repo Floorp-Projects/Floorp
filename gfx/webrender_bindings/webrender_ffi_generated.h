@@ -237,12 +237,7 @@ struct Renderer;
 // Offset in number of tiles.
 struct Tiles;
 
-// A Transaction is a group of commands to apply atomically to a document.
-//
-// This mechanism ensures that:
-// - no other message can be interleaved between two commands that need to be applied together.
-// - no redundant work is performed if two commands in the same transaction cause the scene or
-// the frame to be rebuilt.
+// Represents the work associated to a transaction before scene building.
 struct Transaction;
 
 // The default unit.
