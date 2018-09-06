@@ -82,8 +82,9 @@ class BaselineInspector
         MOZ_ASSERT(isValidPC(pc));
         ICEntry* ent =
             baselineScript()->maybeICEntryFromPCOffset(script->pcToOffset(pc), prevLookedUpEntry);
-        if (!ent)
+        if (!ent) {
             return nullptr;
+        }
         MOZ_ASSERT(ent->isForOp());
         prevLookedUpEntry = ent;
         return ent;
