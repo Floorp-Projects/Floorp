@@ -132,12 +132,13 @@ class CodeCoverageMixin(SingleTestMixin):
 
         # Download and extract class files from the build task.
         self.classfiles_dir = tempfile.mkdtemp()
-        url_to_classfiles = self.query_build_dir_url('target.geckoview_classfiles.zip')
-        classfiles_zip_path = os.path.join(self.classfiles_dir, 'target.geckoview_classfiles.zip')
-        self.download_file(url_to_classfiles, classfiles_zip_path)
-        with zipfile.ZipFile(classfiles_zip_path, 'r') as z:
-            z.extractall(self.classfiles_dir)
-        os.remove(classfiles_zip_path)
+        for archive in ['target.geckoview_classfiles.zip', 'target.app_classfiles.zip']:
+            url_to_classfiles = self.query_build_dir_url(archive)
+            classfiles_zip_path = os.path.join(self.classfiles_dir, archive)
+            self.download_file(url_to_classfiles, classfiles_zip_path)
+            with zipfile.ZipFile(classfiles_zip_path, 'r') as z:
+                z.extractall(self.classfiles_dir)
+            os.remove(classfiles_zip_path)
 
         # Create the directory where the emulator coverage file will be placed.
         self.java_coverage_output_dir = tempfile.mkdtemp()
