@@ -161,13 +161,6 @@ Variant_base::GetAsID(nsID *)
 
 inline
 NS_IMETHODIMP
-Variant_base::GetAsDOMString(nsAString &)
-{
-  return NS_ERROR_CANNOT_CONVERT_DATA;
-}
-
-inline
-NS_IMETHODIMP
 Variant_base::GetAsString(char **)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
