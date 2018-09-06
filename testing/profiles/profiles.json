@@ -1,6 +1,6 @@
 {
     "mochitest": ["common", "unittest"],
-    "profileserver": ["common", "unittest"],
+    "profileserver": ["common", "unittest", "profileserver"],
     "raptor": ["common", "perf", "raptor"],
     "reftest": ["common", "reftest"],
     "talos": ["common", "perf"],
