@@ -379,8 +379,9 @@ class SimdConstant {
 
     bool operator==(const SimdConstant& rhs) const {
         MOZ_ASSERT(defined() && rhs.defined());
-        if (type() != rhs.type())
+        if (type() != rhs.type()) {
             return false;
+        }
         // Takes negative zero into accuont, as it's a bit comparison.
         return memcmp(&u, &rhs.u, sizeof(u)) == 0;
     }
@@ -723,8 +724,9 @@ static inline const char*
 PropertyNameToExtraName(PropertyName* name)
 {
     JS::AutoCheckCannotGC nogc;
-    if (!name->hasLatin1Chars())
+    if (!name->hasLatin1Chars()) {
         return nullptr;
+    }
     return reinterpret_cast<const char *>(name->latin1Chars(nogc));
 }
 
