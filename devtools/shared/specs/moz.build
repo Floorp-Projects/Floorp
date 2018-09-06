@@ -24,7 +24,6 @@ DevToolsModules(
     'environment.js',
     'frame.js',
     'framerate.js',
-    'gcli.js',
     'heap-snapshot-file.js',
     'highlighters.js',
     'index.js',
