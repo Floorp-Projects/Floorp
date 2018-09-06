@@ -10,6 +10,7 @@ profile_files = [
     'profiles.json',
     'reftest/*',
     'unittest/*',
+    'web-platform/*'
 ]
 
 TEST_HARNESS_FILES.reftest.profile_data += profile_files
