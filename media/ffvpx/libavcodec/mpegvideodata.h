@@ -16,23 +16,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef AVUTIL_ARM_CPU_H
-#define AVUTIL_ARM_CPU_H
+#ifndef AVCODEC_MPEGVIDEODATA_H
+#define AVCODEC_MPEGVIDEODATA_H
 
-#include "libavutil/cpu.h"
-#include "libavutil/cpu_internal.h"
+#include <stdint.h>
 
-#define have_armv5te(flags) CPUEXT(flags, ARMV5TE)
-#define have_armv6(flags)   CPUEXT(flags, ARMV6)
-#define have_armv6t2(flags) CPUEXT(flags, ARMV6T2)
-#define have_vfp(flags)     CPUEXT(flags, VFP)
-#define have_vfpv3(flags)   CPUEXT(flags, VFPV3)
-#define have_neon(flags)    CPUEXT(flags, NEON)
-#define have_setend(flags)  CPUEXT(flags, SETEND)
+/* encoding scans */
+extern const uint8_t ff_alternate_horizontal_scan[64];
+extern const uint8_t ff_alternate_vertical_scan[64];
 
-/* some functions use the VFPv2 vector mode which is deprecated in ARMv7-A
- * and might trap on such CPU depending on the OS configuration */
-#define have_vfp_vm(flags)                                              \
-    (HAVE_VFP && ((flags) & AV_CPU_FLAG_VFP_VM))
+extern const uint8_t ff_mpeg1_dc_scale_table[128];
+extern const uint8_t * const ff_mpeg2_dc_scale_table[4];
 
-#endif /* AVUTIL_ARM_CPU_H */
+extern const uint8_t ff_mpeg2_non_linear_qscale[32];
+
+extern const uint8_t ff_default_chroma_qscale_table[32];
+
+#endif /* AVCODEC_MPEGVIDEODATA_H */
