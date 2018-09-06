@@ -8,6 +8,3 @@ export NM="$topsrcdir/clang/bin/llvm-nm"
 export RANLIB="$topsrcdir/clang/bin/llvm-ranlib"
 
 ac_add_options --enable-lto
-# Until it's either made the default or we figure a way to remove the
-# copy locations that LTO induces in non-PIE executables.
-ac_add_options --enable-pie

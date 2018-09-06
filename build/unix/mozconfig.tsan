@@ -15,7 +15,6 @@ ac_add_options --disable-sandbox
 ac_add_options --disable-jemalloc
 ac_add_options --disable-crashreporter
 ac_add_options --disable-elf-hack
-ac_add_options --enable-pie
 
 # Keep symbols to symbolize TSan traces
 ac_add_options --disable-install-strip
