@@ -2,7 +2,7 @@
  * @licstart The following is the entire license notice for the
  * Javascript code in this page
  *
- * Copyright 2017 Mozilla Foundation
+ * Copyright 2018 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.775';
-var pdfjsBuild = '20cd1b35';
+var pdfjsVersion = '2.0.815';
+var pdfjsBuild = 'd6927376';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(7);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(19);
@@ -177,7 +177,7 @@ exports.apiCompatibilityParams = pdfjsDisplayAPICompatibility.apiCompatibilityPa
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.URL = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isSpace = exports.isString = exports.isNum = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.getInheritableProperty = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.toRomanNumerals = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
+exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.URL = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isSpace = exports.isString = exports.isNum = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.getInheritableProperty = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.toRomanNumerals = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
 
 __w_pdfjs_require__(2);
 
@@ -190,6 +190,16 @@ const NativeImageDecoding = {
   NONE: 'none',
   DECODE: 'decode',
   DISPLAY: 'display'
+};
+const PermissionFlag = {
+  PRINT: 0x04,
+  MODIFY_CONTENTS: 0x08,
+  COPY: 0x10,
+  MODIFY_ANNOTATIONS: 0x20,
+  FILL_INTERACTIVE_FORMS: 0x100,
+  COPY_FOR_ACCESSIBILITY: 0x200,
+  ASSEMBLE: 0x400,
+  PRINT_HIGH_QUALITY: 0x800
 };
 var TextRenderingMode = {
   FILL: 0,
@@ -913,6 +923,7 @@ exports.MissingPDFException = MissingPDFException;
 exports.NativeImageDecoding = NativeImageDecoding;
 exports.PasswordException = PasswordException;
 exports.PasswordResponses = PasswordResponses;
+exports.PermissionFlag = PermissionFlag;
 exports.StreamType = StreamType;
 exports.TextRenderingMode = TextRenderingMode;
 exports.UnexpectedResponseException = UnexpectedResponseException;
@@ -4215,7 +4226,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.775',
+    apiVersion: '2.0.815',
     source: {
       data: source.data,
       url: source.url,
@@ -4323,70 +4334,70 @@ var PDFDataRangeTransport = function pdfDataRangeTransportClosure() {
   };
   return PDFDataRangeTransport;
 }();
-var PDFDocumentProxy = function PDFDocumentProxyClosure() {
-  function PDFDocumentProxy(pdfInfo, transport, loadingTask) {
-    this._pdfInfo = pdfInfo;
-    this.transport = transport;
+class PDFDocumentProxy {
+  constructor(pdfInfo, transport, loadingTask) {
     this.loadingTask = loadingTask;
+    this._pdfInfo = pdfInfo;
+    this._transport = transport;
   }
-  PDFDocumentProxy.prototype = {
-    get numPages() {
-      return this._pdfInfo.numPages;
-    },
-    get fingerprint() {
-      return this._pdfInfo.fingerprint;
-    },
-    getPage(pageNumber) {
-      return this.transport.getPage(pageNumber);
-    },
-    getPageIndex: function PDFDocumentProxy_getPageIndex(ref) {
-      return this.transport.getPageIndex(ref);
-    },
-    getDestinations: function PDFDocumentProxy_getDestinations() {
-      return this.transport.getDestinations();
-    },
-    getDestination: function PDFDocumentProxy_getDestination(id) {
-      return this.transport.getDestination(id);
-    },
-    getPageLabels: function PDFDocumentProxy_getPageLabels() {
-      return this.transport.getPageLabels();
-    },
-    getPageMode() {
-      return this.transport.getPageMode();
-    },
-    getAttachments: function PDFDocumentProxy_getAttachments() {
-      return this.transport.getAttachments();
-    },
-    getJavaScript() {
-      return this.transport.getJavaScript();
-    },
-    getOutline: function PDFDocumentProxy_getOutline() {
-      return this.transport.getOutline();
-    },
-    getMetadata: function PDFDocumentProxy_getMetadata() {
-      return this.transport.getMetadata();
-    },
-    getData: function PDFDocumentProxy_getData() {
-      return this.transport.getData();
-    },
-    getDownloadInfo: function PDFDocumentProxy_getDownloadInfo() {
-      return this.transport.downloadInfoCapability.promise;
-    },
-    getStats: function PDFDocumentProxy_getStats() {
-      return this.transport.getStats();
-    },
-    cleanup: function PDFDocumentProxy_cleanup() {
-      this.transport.startCleanup();
-    },
-    destroy: function PDFDocumentProxy_destroy() {
-      return this.loadingTask.destroy();
-    },
-    get loadingParams() {
-      return this.transport.loadingParams;
-    }
-  };
-  return PDFDocumentProxy;
-}();
+  get numPages() {
+    return this._pdfInfo.numPages;
+  }
+  get fingerprint() {
+    return this._pdfInfo.fingerprint;
+  }
+  getPage(pageNumber) {
+    return this._transport.getPage(pageNumber);
+  }
+  getPageIndex(ref) {
+    return this._transport.getPageIndex(ref);
+  }
+  getDestinations() {
+    return this._transport.getDestinations();
+  }
+  getDestination(id) {
+    return this._transport.getDestination(id);
+  }
+  getPageLabels() {
+    return this._transport.getPageLabels();
+  }
+  getPageMode() {
+    return this._transport.getPageMode();
+  }
+  getAttachments() {
+    return this._transport.getAttachments();
+  }
+  getJavaScript() {
+    return this._transport.getJavaScript();
+  }
+  getOutline() {
+    return this._transport.getOutline();
+  }
+  getPermissions() {
+    return this._transport.getPermissions();
+  }
+  getMetadata() {
+    return this._transport.getMetadata();
+  }
+  getData() {
+    return this._transport.getData();
+  }
+  getDownloadInfo() {
+    return this._transport.downloadInfoCapability.promise;
+  }
+  getStats() {
+    return this._transport.getStats();
+  }
+  cleanup() {
+    this._transport.startCleanup();
+  }
+  destroy() {
+    return this.loadingTask.destroy();
+  }
+  get loadingParams() {
+    return this._transport.loadingParams;
+  }
+}
 var PDFPageProxy = function PDFPageProxyClosure() {
   function PDFPageProxy(pageIndex, pageInfo, transport, pdfBug = false) {
     this.pageIndex = pageIndex;
@@ -4900,8 +4911,8 @@ var PDFWorker = function PDFWorkerClosure() {
   };
   return PDFWorker;
 }();
-var WorkerTransport = function WorkerTransportClosure() {
-  function WorkerTransport(messageHandler, loadingTask, networkStream, params) {
+class WorkerTransport {
+  constructor(messageHandler, loadingTask, networkStream, params) {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
     this.commonObjs = new PDFObjects();
@@ -4922,446 +4933,430 @@ var WorkerTransport = function WorkerTransportClosure() {
     this.downloadInfoCapability = (0, _util.createPromiseCapability)();
     this.setupMessageHandler();
   }
-  WorkerTransport.prototype = {
-    destroy: function WorkerTransport_destroy() {
-      if (this.destroyCapability) {
-        return this.destroyCapability.promise;
-      }
-      this.destroyed = true;
-      this.destroyCapability = (0, _util.createPromiseCapability)();
-      if (this._passwordCapability) {
-        this._passwordCapability.reject(new Error('Worker was destroyed during onPassword callback'));
-      }
-      var waitOn = [];
-      this.pageCache.forEach(function (page) {
-        if (page) {
-          waitOn.push(page._destroy());
-        }
-      });
-      this.pageCache = [];
-      this.pagePromises = [];
-      var terminated = this.messageHandler.sendWithPromise('Terminate', null);
-      waitOn.push(terminated);
-      Promise.all(waitOn).then(() => {
-        this.fontLoader.clear();
-        if (this._networkStream) {
-          this._networkStream.cancelAllRequests();
-        }
-        if (this.messageHandler) {
-          this.messageHandler.destroy();
-          this.messageHandler = null;
-        }
-        this.destroyCapability.resolve();
-      }, this.destroyCapability.reject);
+  destroy() {
+    if (this.destroyCapability) {
       return this.destroyCapability.promise;
-    },
-    setupMessageHandler: function WorkerTransport_setupMessageHandler() {
-      var messageHandler = this.messageHandler;
-      var loadingTask = this.loadingTask;
-      messageHandler.on('GetReader', function (data, sink) {
-        (0, _util.assert)(this._networkStream);
-        this._fullReader = this._networkStream.getFullReader();
-        this._fullReader.onProgress = evt => {
-          this._lastProgress = {
-            loaded: evt.loaded,
-            total: evt.total
-          };
+    }
+    this.destroyed = true;
+    this.destroyCapability = (0, _util.createPromiseCapability)();
+    if (this._passwordCapability) {
+      this._passwordCapability.reject(new Error('Worker was destroyed during onPassword callback'));
+    }
+    const waitOn = [];
+    this.pageCache.forEach(function (page) {
+      if (page) {
+        waitOn.push(page._destroy());
+      }
+    });
+    this.pageCache = [];
+    this.pagePromises = [];
+    const terminated = this.messageHandler.sendWithPromise('Terminate', null);
+    waitOn.push(terminated);
+    Promise.all(waitOn).then(() => {
+      this.fontLoader.clear();
+      if (this._networkStream) {
+        this._networkStream.cancelAllRequests();
+      }
+      if (this.messageHandler) {
+        this.messageHandler.destroy();
+        this.messageHandler = null;
+      }
+      this.destroyCapability.resolve();
+    }, this.destroyCapability.reject);
+    return this.destroyCapability.promise;
+  }
+  setupMessageHandler() {
+    const { messageHandler, loadingTask } = this;
+    messageHandler.on('GetReader', function (data, sink) {
+      (0, _util.assert)(this._networkStream);
+      this._fullReader = this._networkStream.getFullReader();
+      this._fullReader.onProgress = evt => {
+        this._lastProgress = {
+          loaded: evt.loaded,
+          total: evt.total
         };
-        sink.onPull = () => {
-          this._fullReader.read().then(function ({ value, done }) {
-            if (done) {
-              sink.close();
-              return;
-            }
-            (0, _util.assert)((0, _util.isArrayBuffer)(value));
-            sink.enqueue(new Uint8Array(value), 1, [value]);
-          }).catch(reason => {
-            sink.error(reason);
-          });
-        };
-        sink.onCancel = reason => {
-          this._fullReader.cancel(reason);
-        };
-      }, this);
-      messageHandler.on('ReaderHeadersReady', function (data) {
-        let headersCapability = (0, _util.createPromiseCapability)();
-        let fullReader = this._fullReader;
-        fullReader.headersReady.then(() => {
-          if (!fullReader.isStreamingSupported || !fullReader.isRangeSupported) {
-            if (this._lastProgress) {
-              let loadingTask = this.loadingTask;
-              if (loadingTask.onProgress) {
-                loadingTask.onProgress(this._lastProgress);
-              }
-            }
-            fullReader.onProgress = evt => {
-              let loadingTask = this.loadingTask;
-              if (loadingTask.onProgress) {
-                loadingTask.onProgress({
-                  loaded: evt.loaded,
-                  total: evt.total
-                });
-              }
-            };
+      };
+      sink.onPull = () => {
+        this._fullReader.read().then(function ({ value, done }) {
+          if (done) {
+            sink.close();
+            return;
           }
-          headersCapability.resolve({
-            isStreamingSupported: fullReader.isStreamingSupported,
-            isRangeSupported: fullReader.isRangeSupported,
-            contentLength: fullReader.contentLength
-          });
-        }, headersCapability.reject);
-        return headersCapability.promise;
-      }, this);
-      messageHandler.on('GetRangeReader', function (data, sink) {
-        (0, _util.assert)(this._networkStream);
-        let _rangeReader = this._networkStream.getRangeReader(data.begin, data.end);
-        sink.onPull = () => {
-          _rangeReader.read().then(function ({ value, done }) {
-            if (done) {
-              sink.close();
-              return;
-            }
-            (0, _util.assert)((0, _util.isArrayBuffer)(value));
-            sink.enqueue(new Uint8Array(value), 1, [value]);
-          }).catch(reason => {
-            sink.error(reason);
-          });
-        };
-        sink.onCancel = reason => {
-          _rangeReader.cancel(reason);
-        };
-      }, this);
-      messageHandler.on('GetDoc', function transportDoc({ pdfInfo }) {
-        this.numPages = pdfInfo.numPages;
-        var loadingTask = this.loadingTask;
-        var pdfDocument = new PDFDocumentProxy(pdfInfo, this, loadingTask);
-        this.pdfDocument = pdfDocument;
-        loadingTask._capability.resolve(pdfDocument);
-      }, this);
-      messageHandler.on('PasswordRequest', function transportPasswordRequest(exception) {
-        this._passwordCapability = (0, _util.createPromiseCapability)();
-        if (loadingTask.onPassword) {
-          var updatePassword = password => {
-            this._passwordCapability.resolve({ password });
-          };
-          try {
-            loadingTask.onPassword(updatePassword, exception.code);
-          } catch (ex) {
-            this._passwordCapability.reject(ex);
-          }
-        } else {
-          this._passwordCapability.reject(new _util.PasswordException(exception.message, exception.code));
-        }
-        return this._passwordCapability.promise;
-      }, this);
-      messageHandler.on('PasswordException', function transportPasswordException(exception) {
-        loadingTask._capability.reject(new _util.PasswordException(exception.message, exception.code));
-      }, this);
-      messageHandler.on('InvalidPDF', function transportInvalidPDF(exception) {
-        this.loadingTask._capability.reject(new _util.InvalidPDFException(exception.message));
-      }, this);
-      messageHandler.on('MissingPDF', function transportMissingPDF(exception) {
-        this.loadingTask._capability.reject(new _util.MissingPDFException(exception.message));
-      }, this);
-      messageHandler.on('UnexpectedResponse', function transportUnexpectedResponse(exception) {
-        this.loadingTask._capability.reject(new _util.UnexpectedResponseException(exception.message, exception.status));
-      }, this);
-      messageHandler.on('UnknownError', function transportUnknownError(exception) {
-        this.loadingTask._capability.reject(new _util.UnknownErrorException(exception.message, exception.details));
-      }, this);
-      messageHandler.on('DataLoaded', function transportPage(data) {
-        this.downloadInfoCapability.resolve(data);
-      }, this);
-      messageHandler.on('StartRenderPage', function transportRender(data) {
-        if (this.destroyed) {
-          return;
-        }
-        var page = this.pageCache[data.pageIndex];
-        page._stats.timeEnd('Page Request');
-        page._startRenderPage(data.transparency, data.intent);
-      }, this);
-      messageHandler.on('RenderPageChunk', function transportRender(data) {
-        if (this.destroyed) {
-          return;
-        }
-        var page = this.pageCache[data.pageIndex];
-        page._renderPageChunk(data.operatorList, data.intent);
-      }, this);
-      messageHandler.on('commonobj', function transportObj(data) {
-        if (this.destroyed) {
-          return;
-        }
-        var id = data[0];
-        var type = data[1];
-        if (this.commonObjs.hasData(id)) {
-          return;
-        }
-        switch (type) {
-          case 'Font':
-            var exportedData = data[2];
-            let params = this._params;
-            if ('error' in exportedData) {
-              var exportedError = exportedData.error;
-              (0, _util.warn)('Error during font loading: ' + exportedError);
-              this.commonObjs.resolve(id, exportedError);
-              break;
-            }
-            var fontRegistry = null;
-            if (params.pdfBug && _global_scope2.default.FontInspector && _global_scope2.default.FontInspector.enabled) {
-              fontRegistry = {
-                registerFont(font, url) {
-                  _global_scope2.default['FontInspector'].fontAdded(font, url);
-                }
-              };
-            }
-            var font = new _font_loader.FontFaceObject(exportedData, {
-              isEvalSupported: params.isEvalSupported,
-              disableFontFace: params.disableFontFace,
-              ignoreErrors: params.ignoreErrors,
-              onUnsupportedFeature: this._onUnsupportedFeature.bind(this),
-              fontRegistry
-            });
-            var fontReady = fontObjs => {
-              this.commonObjs.resolve(id, font);
-            };
-            this.fontLoader.bind([font], fontReady);
-            break;
-          case 'FontPath':
-            this.commonObjs.resolve(id, data[2]);
-            break;
-          default:
-            throw new Error(`Got unknown common object type ${type}`);
-        }
-      }, this);
-      messageHandler.on('obj', function transportObj(data) {
-        if (this.destroyed) {
-          return;
-        }
-        var id = data[0];
-        var pageIndex = data[1];
-        var type = data[2];
-        var pageProxy = this.pageCache[pageIndex];
-        var imageData;
-        if (pageProxy.objs.hasData(id)) {
-          return;
-        }
-        switch (type) {
-          case 'JpegStream':
-            imageData = data[3];
-            return new Promise((resolve, reject) => {
-              const img = new Image();
-              img.onload = function () {
-                resolve(img);
-              };
-              img.onerror = function () {
-                reject(new Error('Error during JPEG image loading'));
-              };
-              img.src = imageData;
-            }).then(img => {
-              pageProxy.objs.resolve(id, img);
-            });
-          case 'Image':
-            imageData = data[3];
-            pageProxy.objs.resolve(id, imageData);
-            var MAX_IMAGE_SIZE_TO_STORE = 8000000;
-            if (imageData && 'data' in imageData && imageData.data.length > MAX_IMAGE_SIZE_TO_STORE) {
-              pageProxy.cleanupAfterRender = true;
-            }
-            break;
-          default:
-            throw new Error(`Got unknown object type ${type}`);
-        }
-      }, this);
-      messageHandler.on('DocProgress', function transportDocProgress(data) {
-        if (this.destroyed) {
-          return;
-        }
-        var loadingTask = this.loadingTask;
-        if (loadingTask.onProgress) {
-          loadingTask.onProgress({
-            loaded: data.loaded,
-            total: data.total
-          });
-        }
-      }, this);
-      messageHandler.on('PageError', function transportError(data) {
-        if (this.destroyed) {
-          return;
-        }
-        var page = this.pageCache[data.pageNum - 1];
-        var intentState = page.intentStates[data.intent];
-        if (intentState.displayReadyCapability) {
-          intentState.displayReadyCapability.reject(data.error);
-        } else {
-          throw new Error(data.error);
-        }
-        if (intentState.operatorList) {
-          intentState.operatorList.lastChunk = true;
-          for (var i = 0; i < intentState.renderTasks.length; i++) {
-            intentState.renderTasks[i].operatorListChanged();
-          }
-        }
-      }, this);
-      messageHandler.on('UnsupportedFeature', this._onUnsupportedFeature, this);
-      messageHandler.on('JpegDecode', function (data) {
-        if (this.destroyed) {
-          return Promise.reject(new Error('Worker was destroyed'));
-        }
-        if (typeof document === 'undefined') {
-          return Promise.reject(new Error('"document" is not defined.'));
-        }
-        var imageUrl = data[0];
-        var components = data[1];
-        if (components !== 3 && components !== 1) {
-          return Promise.reject(new Error('Only 3 components or 1 component can be returned'));
-        }
-        return new Promise(function (resolve, reject) {
-          var img = new Image();
-          img.onload = function () {
-            var width = img.width;
-            var height = img.height;
-            var size = width * height;
-            var rgbaLength = size * 4;
-            var buf = new Uint8ClampedArray(size * components);
-            var tmpCanvas = document.createElement('canvas');
-            tmpCanvas.width = width;
-            tmpCanvas.height = height;
-            var tmpCtx = tmpCanvas.getContext('2d');
-            tmpCtx.drawImage(img, 0, 0);
-            var data = tmpCtx.getImageData(0, 0, width, height).data;
-            var i, j;
-            if (components === 3) {
-              for (i = 0, j = 0; i < rgbaLength; i += 4, j += 3) {
-                buf[j] = data[i];
-                buf[j + 1] = data[i + 1];
-                buf[j + 2] = data[i + 2];
-              }
-            } else if (components === 1) {
-              for (i = 0, j = 0; i < rgbaLength; i += 4, j++) {
-                buf[j] = data[i];
-              }
-            }
-            resolve({
-              data: buf,
-              width,
-              height
-            });
-          };
-          img.onerror = function () {
-            reject(new Error('JpegDecode failed to load image'));
-          };
-          img.src = imageUrl;
+          (0, _util.assert)((0, _util.isArrayBuffer)(value));
+          sink.enqueue(new Uint8Array(value), 1, [value]);
+        }).catch(reason => {
+          sink.error(reason);
         });
-      }, this);
-      messageHandler.on('FetchBuiltInCMap', function (data) {
-        if (this.destroyed) {
-          return Promise.reject(new Error('Worker was destroyed'));
+      };
+      sink.onCancel = reason => {
+        this._fullReader.cancel(reason);
+      };
+    }, this);
+    messageHandler.on('ReaderHeadersReady', function (data) {
+      const headersCapability = (0, _util.createPromiseCapability)();
+      const fullReader = this._fullReader;
+      fullReader.headersReady.then(() => {
+        if (!fullReader.isStreamingSupported || !fullReader.isRangeSupported) {
+          if (this._lastProgress) {
+            if (loadingTask.onProgress) {
+              loadingTask.onProgress(this._lastProgress);
+            }
+          }
+          fullReader.onProgress = evt => {
+            if (loadingTask.onProgress) {
+              loadingTask.onProgress({
+                loaded: evt.loaded,
+                total: evt.total
+              });
+            }
+          };
         }
-        return this.CMapReaderFactory.fetch({ name: data.name });
-      }, this);
-    },
-    _onUnsupportedFeature({ featureId }) {
+        headersCapability.resolve({
+          isStreamingSupported: fullReader.isStreamingSupported,
+          isRangeSupported: fullReader.isRangeSupported,
+          contentLength: fullReader.contentLength
+        });
+      }, headersCapability.reject);
+      return headersCapability.promise;
+    }, this);
+    messageHandler.on('GetRangeReader', function (data, sink) {
+      (0, _util.assert)(this._networkStream);
+      const rangeReader = this._networkStream.getRangeReader(data.begin, data.end);
+      sink.onPull = () => {
+        rangeReader.read().then(function ({ value, done }) {
+          if (done) {
+            sink.close();
+            return;
+          }
+          (0, _util.assert)((0, _util.isArrayBuffer)(value));
+          sink.enqueue(new Uint8Array(value), 1, [value]);
+        }).catch(reason => {
+          sink.error(reason);
+        });
+      };
+      sink.onCancel = reason => {
+        rangeReader.cancel(reason);
+      };
+    }, this);
+    messageHandler.on('GetDoc', function ({ pdfInfo }) {
+      this.numPages = pdfInfo.numPages;
+      this.pdfDocument = new PDFDocumentProxy(pdfInfo, this, loadingTask);
+      loadingTask._capability.resolve(this.pdfDocument);
+    }, this);
+    messageHandler.on('PasswordRequest', function (exception) {
+      this._passwordCapability = (0, _util.createPromiseCapability)();
+      if (loadingTask.onPassword) {
+        const updatePassword = password => {
+          this._passwordCapability.resolve({ password });
+        };
+        try {
+          loadingTask.onPassword(updatePassword, exception.code);
+        } catch (ex) {
+          this._passwordCapability.reject(ex);
+        }
+      } else {
+        this._passwordCapability.reject(new _util.PasswordException(exception.message, exception.code));
+      }
+      return this._passwordCapability.promise;
+    }, this);
+    messageHandler.on('PasswordException', function (exception) {
+      loadingTask._capability.reject(new _util.PasswordException(exception.message, exception.code));
+    }, this);
+    messageHandler.on('InvalidPDF', function (exception) {
+      loadingTask._capability.reject(new _util.InvalidPDFException(exception.message));
+    }, this);
+    messageHandler.on('MissingPDF', function (exception) {
+      loadingTask._capability.reject(new _util.MissingPDFException(exception.message));
+    }, this);
+    messageHandler.on('UnexpectedResponse', function (exception) {
+      loadingTask._capability.reject(new _util.UnexpectedResponseException(exception.message, exception.status));
+    }, this);
+    messageHandler.on('UnknownError', function (exception) {
+      loadingTask._capability.reject(new _util.UnknownErrorException(exception.message, exception.details));
+    }, this);
+    messageHandler.on('DataLoaded', function (data) {
+      this.downloadInfoCapability.resolve(data);
+    }, this);
+    messageHandler.on('StartRenderPage', function (data) {
       if (this.destroyed) {
         return;
       }
-      let loadingTask = this.loadingTask;
-      if (loadingTask.onUnsupportedFeature) {
-        loadingTask.onUnsupportedFeature(featureId);
+      const page = this.pageCache[data.pageIndex];
+      page._stats.timeEnd('Page Request');
+      page._startRenderPage(data.transparency, data.intent);
+    }, this);
+    messageHandler.on('RenderPageChunk', function (data) {
+      if (this.destroyed) {
+        return;
       }
-    },
-    getData: function WorkerTransport_getData() {
-      return this.messageHandler.sendWithPromise('GetData', null);
-    },
-    getPage(pageNumber) {
-      if (!Number.isInteger(pageNumber) || pageNumber <= 0 || pageNumber > this.numPages) {
-        return Promise.reject(new Error('Invalid page request'));
+      const page = this.pageCache[data.pageIndex];
+      page._renderPageChunk(data.operatorList, data.intent);
+    }, this);
+    messageHandler.on('commonobj', function (data) {
+      if (this.destroyed) {
+        return;
       }
-      var pageIndex = pageNumber - 1;
-      if (pageIndex in this.pagePromises) {
-        return this.pagePromises[pageIndex];
+      const [id, type, exportedData] = data;
+      if (this.commonObjs.hasData(id)) {
+        return;
       }
-      var promise = this.messageHandler.sendWithPromise('GetPage', { pageIndex }).then(pageInfo => {
-        if (this.destroyed) {
-          throw new Error('Transport destroyed');
-        }
-        let page = new PDFPageProxy(pageIndex, pageInfo, this, this._params.pdfBug);
-        this.pageCache[pageIndex] = page;
-        return page;
-      });
-      this.pagePromises[pageIndex] = promise;
-      return promise;
-    },
-    getPageIndex: function WorkerTransport_getPageIndexByRef(ref) {
-      return this.messageHandler.sendWithPromise('GetPageIndex', { ref }).catch(function (reason) {
-        return Promise.reject(new Error(reason));
-      });
-    },
-    getAnnotations: function WorkerTransport_getAnnotations(pageIndex, intent) {
-      return this.messageHandler.sendWithPromise('GetAnnotations', {
-        pageIndex,
-        intent
-      });
-    },
-    getDestinations: function WorkerTransport_getDestinations() {
-      return this.messageHandler.sendWithPromise('GetDestinations', null);
-    },
-    getDestination: function WorkerTransport_getDestination(id) {
-      if (typeof id !== 'string') {
-        return Promise.reject(new Error('Invalid destination request.'));
-      }
-      return this.messageHandler.sendWithPromise('GetDestination', { id });
-    },
-    getPageLabels: function WorkerTransport_getPageLabels() {
-      return this.messageHandler.sendWithPromise('GetPageLabels', null);
-    },
-    getPageMode() {
-      return this.messageHandler.sendWithPromise('GetPageMode', null);
-    },
-    getAttachments: function WorkerTransport_getAttachments() {
-      return this.messageHandler.sendWithPromise('GetAttachments', null);
-    },
-    getJavaScript: function WorkerTransport_getJavaScript() {
-      return this.messageHandler.sendWithPromise('GetJavaScript', null);
-    },
-    getOutline: function WorkerTransport_getOutline() {
-      return this.messageHandler.sendWithPromise('GetOutline', null);
-    },
-    getMetadata: function WorkerTransport_getMetadata() {
-      return this.messageHandler.sendWithPromise('GetMetadata', null).then(results => {
-        return {
-          info: results[0],
-          metadata: results[1] ? new _metadata.Metadata(results[1]) : null,
-          contentDispositionFilename: this._fullReader ? this._fullReader.filename : null
-        };
-      });
-    },
-    getStats: function WorkerTransport_getStats() {
-      return this.messageHandler.sendWithPromise('GetStats', null);
-    },
-    startCleanup: function WorkerTransport_startCleanup() {
-      this.messageHandler.sendWithPromise('Cleanup', null).then(() => {
-        for (var i = 0, ii = this.pageCache.length; i < ii; i++) {
-          var page = this.pageCache[i];
-          if (page) {
-            page.cleanup();
+      switch (type) {
+        case 'Font':
+          const params = this._params;
+          if ('error' in exportedData) {
+            const exportedError = exportedData.error;
+            (0, _util.warn)(`Error during font loading: ${exportedError}`);
+            this.commonObjs.resolve(id, exportedError);
+            break;
           }
+          let fontRegistry = null;
+          if (params.pdfBug && _global_scope2.default.FontInspector && _global_scope2.default.FontInspector.enabled) {
+            fontRegistry = {
+              registerFont(font, url) {
+                _global_scope2.default['FontInspector'].fontAdded(font, url);
+              }
+            };
+          }
+          const font = new _font_loader.FontFaceObject(exportedData, {
+            isEvalSupported: params.isEvalSupported,
+            disableFontFace: params.disableFontFace,
+            ignoreErrors: params.ignoreErrors,
+            onUnsupportedFeature: this._onUnsupportedFeature.bind(this),
+            fontRegistry
+          });
+          const fontReady = fontObjs => {
+            this.commonObjs.resolve(id, font);
+          };
+          this.fontLoader.bind([font], fontReady);
+          break;
+        case 'FontPath':
+          this.commonObjs.resolve(id, exportedData);
+          break;
+        default:
+          throw new Error(`Got unknown common object type ${type}`);
+      }
+    }, this);
+    messageHandler.on('obj', function (data) {
+      if (this.destroyed) {
+        return;
+      }
+      const [id, pageIndex, type, imageData] = data;
+      const pageProxy = this.pageCache[pageIndex];
+      if (pageProxy.objs.hasData(id)) {
+        return;
+      }
+      switch (type) {
+        case 'JpegStream':
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = function () {
+              resolve(img);
+            };
+            img.onerror = function () {
+              reject(new Error('Error during JPEG image loading'));
+            };
+            img.src = imageData;
+          }).then(img => {
+            pageProxy.objs.resolve(id, img);
+          });
+        case 'Image':
+          pageProxy.objs.resolve(id, imageData);
+          const MAX_IMAGE_SIZE_TO_STORE = 8000000;
+          if (imageData && 'data' in imageData && imageData.data.length > MAX_IMAGE_SIZE_TO_STORE) {
+            pageProxy.cleanupAfterRender = true;
+          }
+          break;
+        default:
+          throw new Error(`Got unknown object type ${type}`);
+      }
+    }, this);
+    messageHandler.on('DocProgress', function (data) {
+      if (this.destroyed) {
+        return;
+      }
+      if (loadingTask.onProgress) {
+        loadingTask.onProgress({
+          loaded: data.loaded,
+          total: data.total
+        });
+      }
+    }, this);
+    messageHandler.on('PageError', function (data) {
+      if (this.destroyed) {
+        return;
+      }
+      const page = this.pageCache[data.pageNum - 1];
+      const intentState = page.intentStates[data.intent];
+      if (intentState.displayReadyCapability) {
+        intentState.displayReadyCapability.reject(data.error);
+      } else {
+        throw new Error(data.error);
+      }
+      if (intentState.operatorList) {
+        intentState.operatorList.lastChunk = true;
+        for (let i = 0; i < intentState.renderTasks.length; i++) {
+          intentState.renderTasks[i].operatorListChanged();
         }
-        this.commonObjs.clear();
-        this.fontLoader.clear();
+      }
+    }, this);
+    messageHandler.on('UnsupportedFeature', this._onUnsupportedFeature, this);
+    messageHandler.on('JpegDecode', function (data) {
+      if (this.destroyed) {
+        return Promise.reject(new Error('Worker was destroyed'));
+      }
+      if (typeof document === 'undefined') {
+        return Promise.reject(new Error('"document" is not defined.'));
+      }
+      const [imageUrl, components] = data;
+      if (components !== 3 && components !== 1) {
+        return Promise.reject(new Error('Only 3 components or 1 component can be returned'));
+      }
+      return new Promise(function (resolve, reject) {
+        const img = new Image();
+        img.onload = function () {
+          const width = img.width;
+          const height = img.height;
+          const size = width * height;
+          const rgbaLength = size * 4;
+          const buf = new Uint8ClampedArray(size * components);
+          const tmpCanvas = document.createElement('canvas');
+          tmpCanvas.width = width;
+          tmpCanvas.height = height;
+          const tmpCtx = tmpCanvas.getContext('2d');
+          tmpCtx.drawImage(img, 0, 0);
+          const data = tmpCtx.getImageData(0, 0, width, height).data;
+          if (components === 3) {
+            for (let i = 0, j = 0; i < rgbaLength; i += 4, j += 3) {
+              buf[j] = data[i];
+              buf[j + 1] = data[i + 1];
+              buf[j + 2] = data[i + 2];
+            }
+          } else if (components === 1) {
+            for (let i = 0, j = 0; i < rgbaLength; i += 4, j++) {
+              buf[j] = data[i];
+            }
+          }
+          resolve({
+            data: buf,
+            width,
+            height
+          });
+        };
+        img.onerror = function () {
+          reject(new Error('JpegDecode failed to load image'));
+        };
+        img.src = imageUrl;
       });
-    },
-    get loadingParams() {
-      let params = this._params;
-      return (0, _util.shadow)(this, 'loadingParams', {
-        disableAutoFetch: params.disableAutoFetch,
-        disableCreateObjectURL: params.disableCreateObjectURL,
-        disableFontFace: params.disableFontFace,
-        nativeImageDecoderSupport: params.nativeImageDecoderSupport
-      });
+    }, this);
+    messageHandler.on('FetchBuiltInCMap', function (data) {
+      if (this.destroyed) {
+        return Promise.reject(new Error('Worker was destroyed'));
+      }
+      return this.CMapReaderFactory.fetch({ name: data.name });
+    }, this);
+  }
+  _onUnsupportedFeature({ featureId }) {
+    if (this.destroyed) {
+      return;
     }
-  };
-  return WorkerTransport;
-}();
+    if (this.loadingTask.onUnsupportedFeature) {
+      this.loadingTask.onUnsupportedFeature(featureId);
+    }
+  }
+  getData() {
+    return this.messageHandler.sendWithPromise('GetData', null);
+  }
+  getPage(pageNumber) {
+    if (!Number.isInteger(pageNumber) || pageNumber <= 0 || pageNumber > this.numPages) {
+      return Promise.reject(new Error('Invalid page request'));
+    }
+    const pageIndex = pageNumber - 1;
+    if (pageIndex in this.pagePromises) {
+      return this.pagePromises[pageIndex];
+    }
+    const promise = this.messageHandler.sendWithPromise('GetPage', { pageIndex }).then(pageInfo => {
+      if (this.destroyed) {
+        throw new Error('Transport destroyed');
+      }
+      const page = new PDFPageProxy(pageIndex, pageInfo, this, this._params.pdfBug);
+      this.pageCache[pageIndex] = page;
+      return page;
+    });
+    this.pagePromises[pageIndex] = promise;
+    return promise;
+  }
+  getPageIndex(ref) {
+    return this.messageHandler.sendWithPromise('GetPageIndex', { ref }).catch(function (reason) {
+      return Promise.reject(new Error(reason));
+    });
+  }
+  getAnnotations(pageIndex, intent) {
+    return this.messageHandler.sendWithPromise('GetAnnotations', {
+      pageIndex,
+      intent
+    });
+  }
+  getDestinations() {
+    return this.messageHandler.sendWithPromise('GetDestinations', null);
+  }
+  getDestination(id) {
+    if (typeof id !== 'string') {
+      return Promise.reject(new Error('Invalid destination request.'));
+    }
+    return this.messageHandler.sendWithPromise('GetDestination', { id });
+  }
+  getPageLabels() {
+    return this.messageHandler.sendWithPromise('GetPageLabels', null);
+  }
+  getPageMode() {
+    return this.messageHandler.sendWithPromise('GetPageMode', null);
+  }
+  getAttachments() {
+    return this.messageHandler.sendWithPromise('GetAttachments', null);
+  }
+  getJavaScript() {
+    return this.messageHandler.sendWithPromise('GetJavaScript', null);
+  }
+  getOutline() {
+    return this.messageHandler.sendWithPromise('GetOutline', null);
+  }
+  getPermissions() {
+    return this.messageHandler.sendWithPromise('GetPermissions', null);
+  }
+  getMetadata() {
+    return this.messageHandler.sendWithPromise('GetMetadata', null).then(results => {
+      return {
+        info: results[0],
+        metadata: results[1] ? new _metadata.Metadata(results[1]) : null,
+        contentDispositionFilename: this._fullReader ? this._fullReader.filename : null
+      };
+    });
+  }
+  getStats() {
+    return this.messageHandler.sendWithPromise('GetStats', null);
+  }
+  startCleanup() {
+    this.messageHandler.sendWithPromise('Cleanup', null).then(() => {
+      for (let i = 0, ii = this.pageCache.length; i < ii; i++) {
+        const page = this.pageCache[i];
+        if (page) {
+          page.cleanup();
+        }
+      }
+      this.commonObjs.clear();
+      this.fontLoader.clear();
+    });
+  }
+  get loadingParams() {
+    const params = this._params;
+    return (0, _util.shadow)(this, 'loadingParams', {
+      disableAutoFetch: params.disableAutoFetch,
+      disableCreateObjectURL: params.disableCreateObjectURL,
+      disableFontFace: params.disableFontFace,
+      nativeImageDecoderSupport: params.nativeImageDecoderSupport
+    });
+  }
+}
 var PDFObjects = function PDFObjectsClosure() {
   function PDFObjects() {
     this.objs = Object.create(null);
@@ -5558,8 +5553,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.775';
-  exports.build = build = '20cd1b35';
+  exports.version = version = '2.0.815';
+  exports.build = build = 'd6927376';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;

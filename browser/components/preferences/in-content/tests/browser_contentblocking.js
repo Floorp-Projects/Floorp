@@ -111,6 +111,13 @@ add_task(async function testContentBlockingMainCategory() {
 
   tpCheckbox.checked = true;
 
+  // Select "Always" under "All Detected Trackers".
+  let always = doc.querySelector("#trackingProtectionMenu > radio[value=always]");
+  let private = doc.querySelector("#trackingProtectionMenu > radio[value=private]");
+  always.radioGroup.selectedItem = always;
+  ok(!private.selected, "The Only in private windows item should not be selected");
+  ok(always.selected, "The Always item should be selected");
+
   // The first time, privacy-pane-tp-ui-updated won't be dispatched since the
   // assignment above is a no-op.
 
@@ -127,6 +134,21 @@ add_task(async function testContentBlockingMainCategory() {
   // Ensure the dependent controls are disabled
   checkControlStateWorker(doc, dependentControls, false);
   checkControlStateWorker(doc, alwaysEnabledControls, true);
+
+  // Make sure the selection in the tracking protection submenu persists after
+  // a few times of checking and unchecking All Detected Trackers.
+  // Doing this in a loop in order to avoid typing in the unrolled version manually.
+  // We need to go from the checked state of the checkbox to unchecked back to
+  // checked again...
+  for (let i = 0; i < 3; ++i) {
+    promise = TestUtils.topicObserved("privacy-pane-tp-ui-updated");
+    EventUtils.synthesizeMouseAtCenter(tpCheckbox, {}, doc.defaultView);
+
+    await promise;
+    is(tpCheckbox.checked, i % 2 == 0, "The checkbox should now be unchecked");
+    ok(!private.selected, "The Only in private windows item should still not be selected");
+    ok(always.selected, "The Always item should still be selected");
+  }
 
   gBrowser.removeCurrentTab();
 
