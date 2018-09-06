@@ -205,12 +205,11 @@ enum nsXPTTypeTag : uint8_t
   //  - Always passed indirectly,
   //  - Outparams must be initialized by caller,
   //  - Supported in xptcall due to indirection.
-  TD_DOMSTRING         = 24,
-  TD_UTF8STRING        = 25,
-  TD_CSTRING           = 26,
-  TD_ASTRING           = 27,
-  TD_JSVAL             = 28,
-  TD_ARRAY             = 29,
+  TD_UTF8STRING        = 24,
+  TD_CSTRING           = 25,
+  TD_ASTRING           = 26,
+  TD_JSVAL             = 27,
+  TD_ARRAY             = 28,
   _TD_LAST_COMPLEX     = TD_ARRAY
 };
 
@@ -360,7 +359,6 @@ public:
   TD_ALIAS_(T_WCHAR             , TD_WCHAR            );
   TD_ALIAS_(T_VOID              , TD_VOID             );
   TD_ALIAS_(T_IID               , TD_PNSIID           );
-  TD_ALIAS_(T_DOMSTRING         , TD_DOMSTRING        );
   TD_ALIAS_(T_CHAR_STR          , TD_PSTRING          );
   TD_ALIAS_(T_WCHAR_STR         , TD_PWSTRING         );
   TD_ALIAS_(T_INTERFACE         , TD_INTERFACE_TYPE   );
@@ -708,7 +706,6 @@ GetString(uint32_t aIndex)
   macro(TD_PROMISE,           mozilla::dom::Promise*)
 
 #define XPT_FOR_EACH_COMPLEX_TYPE(macro) \
-  macro(TD_DOMSTRING,  nsString) \
   macro(TD_UTF8STRING, nsCString) \
   macro(TD_CSTRING,    nsCString) \
   macro(TD_ASTRING,    nsString) \
