@@ -106,8 +106,9 @@ class GlobalObject;
 template <typename T>
 static T ConvertScalar(double d)
 {
-    if (TypeIsFloatingPoint<T>())
+    if (TypeIsFloatingPoint<T>()) {
         return T(d);
+    }
     if (TypeIsUnsigned<T>()) {
         uint32_t n = JS::ToUint32(d);
         return T(n);
