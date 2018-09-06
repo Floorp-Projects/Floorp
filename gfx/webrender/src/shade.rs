@@ -584,8 +584,8 @@ impl Shaders {
 
         let ps_text_run_dual_source = TextShader::new("ps_text_run",
             device,
-            &["DUAL_SOURCE_BLENDING"],
-            options.precache_shaders,
+            &[DUAL_SOURCE_FEATURE],
+            options.precache_shaders && !options.disable_dual_source_blending,
         )?;
 
         // All image configuration.
@@ -606,7 +606,7 @@ impl Shaders {
                     device,
                     &image_features,
                     options.precache_shaders,
-                    true,
+                    !options.disable_dual_source_blending,
                 )?);
             }
             image_features.clear();
