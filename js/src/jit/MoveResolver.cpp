@@ -37,10 +37,11 @@ MoveOperand::MoveOperand(MacroAssembler& masm, const ABIArg& arg)
         break;
       case ABIArg::Stack:
         kind_ = MEMORY;
-        if (IsHiddenSP(masm.getStackPointer()))
+        if (IsHiddenSP(masm.getStackPointer())) {
             MOZ_CRASH("Hidden SP cannot be represented as register code on this platform");
-        else
+        } else {
             code_ = AsRegister(masm.getStackPointer()).code();
+        }
         disp_ = arg.offsetFromArgBase();
         break;
       case ABIArg::Uninitialized:
@@ -66,8 +67,9 @@ MoveResolver::addMove(const MoveOperand& from, const MoveOperand& to, MoveOp::Ty
     // Assert that we're not doing no-op moves.
     MOZ_ASSERT(!(from == to));
     PendingMove* pm = movePool_.allocate(from, to, type);
-    if (!pm)
+    if (!pm) {
         return false;
+    }
     pending_.pushBack(pm);
     return true;
 }
@@ -116,8 +118,9 @@ MoveResolver::findCycledMove(PendingMoveIterator* iter, PendingMoveIterator end,
 static inline bool
 MoveIsDouble(const MoveOperand& move)
 {
-    if (!move.isFloatReg())
+    if (!move.isFloatReg()) {
         return false;
+    }
     return move.floatReg().isDouble();
 }
 #endif
@@ -126,8 +129,9 @@ MoveIsDouble(const MoveOperand& move)
 static inline bool
 MoveIsSingle(const MoveOperand& move)
 {
-    if (!move.isFloatReg())
+    if (!move.isFloatReg()) {
         return false;
+    }
     return move.floatReg().isSingle();
 }
 #endif
@@ -136,15 +140,18 @@ MoveIsSingle(const MoveOperand& move)
 bool
 MoveResolver::isDoubleAliasedAsSingle(const MoveOperand& move)
 {
-    if (!MoveIsDouble(move))
+    if (!MoveIsDouble(move)) {
         return false;
+    }
 
     for (auto iter = pending_.begin(); iter != pending_.end(); ++iter) {
         PendingMove* other = *iter;
-        if (other->from().aliases(move) && MoveIsSingle(other->from()))
+        if (other->from().aliases(move) && MoveIsSingle(other->from())) {
             return true;
-        if (other->to().aliases(move) && MoveIsSingle(other->to()))
+        }
+        if (other->to().aliases(move) && MoveIsSingle(other->to())) {
             return true;
+        }
     }
     return false;
 }
@@ -209,8 +216,9 @@ MoveResolver::resolve()
             MoveOperand toLower = SplitIntoLowerHalf(pm->to());
 
             PendingMove* lower = movePool_.allocate(fromLower, toLower, MoveOp::FLOAT32);
-            if (!lower)
+            if (!lower) {
                 return false;
+            }
 
             // Insert the new node before the current position to not affect iteration.
             pending_.insertBefore(pm, lower);
@@ -294,16 +302,18 @@ MoveResolver::resolve()
                 // complete and not participating in a cycle. The resulting
                 // move can safely be added to the ordered move list.
                 PendingMove* done = stack.popBack();
-                if (!addOrderedMove(*done))
+                if (!addOrderedMove(*done)) {
                     return false;
+                }
                 movePool_.free(done);
             }
         }
         // If the current queue is empty, it is certain that there are
         // all previous cycles cannot conflict with future cycles,
         // so re-set the counter of pending cycles, while keeping a high-water mark.
-        if (numCycles_ < curCycles_)
+        if (numCycles_ < curCycles_) {
             numCycles_ = curCycles_;
+        }
         curCycles_ = 0;
     }
 
@@ -318,8 +328,9 @@ MoveResolver::addOrderedMove(const MoveOp& move)
     // is in memory and the target of one of the moves is in a register.
     MOZ_ASSERT(!move.from().aliases(move.to()));
 
-    if (!move.from().isMemory() || move.isCycleBegin() || move.isCycleEnd())
+    if (!move.from().isMemory() || move.isCycleBegin() || move.isCycleEnd()) {
         return orderedMoves_.append(move);
+    }
 
     // Look for an earlier move with the same source, where no intervening move
     // touches either the source or destination of the new move.
@@ -343,8 +354,9 @@ MoveResolver::addOrderedMove(const MoveOp& move)
             }
         }
 
-        if (existing.aliases(move))
+        if (existing.aliases(move)) {
             break;
+        }
     }
 
     return orderedMoves_.append(move);
@@ -357,11 +369,13 @@ MoveResolver::reorderMove(size_t from, size_t to)
 
     MoveOp op = orderedMoves_[from];
     if (from < to) {
-        for (size_t i = from; i < to; i++)
+        for (size_t i = from; i < to; i++) {
             orderedMoves_[i] = orderedMoves_[i + 1];
+        }
     } else {
-        for (size_t i = from; i > to; i--)
+        for (size_t i = from; i > to; i--) {
             orderedMoves_[i] = orderedMoves_[i - 1];
+        }
     }
     orderedMoves_[to] = op;
 }
@@ -375,17 +389,20 @@ MoveResolver::sortMemoryToMemoryMoves()
     // memory->memory move, if necessary.
     for (size_t i = 0; i < orderedMoves_.length(); i++) {
         const MoveOp& base = orderedMoves_[i];
-        if (!base.from().isMemory() || !base.to().isMemory())
+        if (!base.from().isMemory() || !base.to().isMemory()) {
             continue;
-        if (base.type() != MoveOp::GENERAL && base.type() != MoveOp::INT32)
+        }
+        if (base.type() != MoveOp::GENERAL && base.type() != MoveOp::INT32) {
             continue;
+        }
 
         // Look for an earlier move clobbering a register.
         bool found = false;
         for (int j = i - 1; j >= 0; j--) {
             const MoveOp& previous = orderedMoves_[j];
-            if (previous.aliases(base) || previous.isCycleBegin() || previous.isCycleEnd())
+            if (previous.aliases(base) || previous.isCycleBegin() || previous.isCycleEnd()) {
                 break;
+            }
 
             if (previous.to().isGeneralReg()) {
                 reorderMove(i, j);
@@ -393,16 +410,18 @@ MoveResolver::sortMemoryToMemoryMoves()
                 break;
             }
         }
-        if (found)
+        if (found) {
             continue;
+        }
 
         // Look for a later move clobbering a register.
         if (i + 1 < orderedMoves_.length()) {
             bool found = false, skippedRegisterUse = false;
             for (size_t j = i + 1; j < orderedMoves_.length(); j++) {
                 const MoveOp& later = orderedMoves_[j];
-                if (later.aliases(base) || later.isCycleBegin() || later.isCycleEnd())
+                if (later.aliases(base) || later.isCycleBegin() || later.isCycleEnd()) {
                     break;
+                }
 
                 if (later.to().isGeneralReg()) {
                     if (skippedRegisterUse) {
@@ -418,8 +437,9 @@ MoveResolver::sortMemoryToMemoryMoves()
                     break;
                 }
 
-                if (later.from().isGeneralReg())
+                if (later.from().isGeneralReg()) {
                     skippedRegisterUse = true;
+                }
             }
 
             if (found) {
