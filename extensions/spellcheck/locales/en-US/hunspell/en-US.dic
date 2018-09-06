@@ -1,4 +1,4 @@
-52869
+52891
 0/nm
 0th/pt
 1/n1
@@ -904,6 +904,7 @@ Assamese/M
 Assembly
 Assisi/M
 Assyria/M
+Assyriaca/M
 Assyrian/SM
 Astaire/M
 Astana/M
@@ -4099,6 +4100,7 @@ Eurasian/MS
 Euripides/M
 Eurodollar/SM
 Europa/M
+Europaea/M
 Europe/M
 European/MS
 Eurydice/M
@@ -5614,6 +5616,7 @@ Hirohito/M
 Hiroshima/M
 Hirsch/M
 Hispanic/SM
+Hispanica/M
 Hispaniola/M
 Hiss/M
 Hitachi/M
@@ -5652,6 +5655,7 @@ Holiday/M
 Holiness
 Holland/ZSMR
 Hollander/M
+Hollandica/M
 Hollerith/M
 Holley/M
 Hollie/M
@@ -6033,6 +6037,7 @@ Isis/M
 Islam/MS
 Islamabad/M
 Islamic/M
+Islamica/M
 Islamism/M
 Islamist/M
 Islamophobia
@@ -6706,6 +6711,7 @@ Kharkov/M
 Khartoum/M
 Khayyam/M
 Khazar/M
+Khazarica/M
 Khmer/M
 Khoikhoi/M
 Khoisan/M
@@ -8528,6 +8534,7 @@ Mongol/SM
 Mongolia/M
 Mongolian/SM
 Mongolic/M
+Mongolica/M
 Mongoloid
 Monica/M
 Monika/M
@@ -8984,6 +8991,7 @@ Nicaraguan/SM
 Niccolo/M
 Nice/M
 Nicene/M
+Nicephori/M
 Nichiren/M
 Nichol/SM
 Nicholas/M
@@ -9019,6 +9027,7 @@ Nigel/M
 Niger/M
 Nigeria/M
 Nigerian/MS
+Nigeriana/M
 Nigerien/M
 Nightingale/M
 Nijinsky/M
@@ -9173,6 +9182,7 @@ OHSA/M
 OJ
 OK/SMDG
 OMB/M
+OMG
 ON
 OPEC/M
 OR
@@ -9389,6 +9399,7 @@ Ottawa/SM
 Ottilie/M
 Otto/M
 Ottoman/M
+Ottomana/M
 Ouagadougou/M
 Ouija/MS
 Ovid/M
@@ -9946,6 +9957,7 @@ Pr/M
 Prada/M
 Prado/M
 Praetorian/M
+Praetoriana/M
 Prague/M
 Praia/M
 Prakrit/M
@@ -10567,6 +10579,7 @@ Rom
 Roma/M
 Romain/M
 Roman/MS
+Romana/M
 Romanesque/MS
 Romania/M
 Romanian/MS
@@ -11368,6 +11381,7 @@ Singer/M
 Singh/M
 Singleton/M
 Sinhalese/M
+Sinica/M
 Sinkiang/M
 Siobhan/M
 Sioux/M
@@ -11495,6 +11509,7 @@ Southey/M
 Souths
 Southwest/MS
 Soviet/M
+Sovietica/M
 Soweto/M
 Soyinka/M
 Soyuz/M
@@ -11699,6 +11714,7 @@ Sumatra/M
 Sumatran/SM
 Sumeria/M
 Sumerian/SM
+Sumerica/M
 Summer/MS
 Summers/M
 Sumner/M
@@ -11797,6 +11813,7 @@ Syracuse/M
 Syria/M
 Syriac/M
 Syrian/MS
+Syriana/M
 Szilard/M
 Szymborska/M
 Sèvres/M
@@ -21590,6 +21607,7 @@ crime/SM
 crimeware/M
 criminal/MYS
 criminality/M
+criminalization
 criminalize/CGDS
 criminologist/MS
 criminology/M
@@ -38805,6 +38823,7 @@ pawnbroker/MS
 pawnbroking/M
 pawnshop/MS
 pawpaw/MS
+pax
 pay's
 pay/ASGBL
 payback/SM
@@ -49991,6 +50010,7 @@ tunefulness/M
 tuneless/Y
 tuner/M
 tuneup/SM
+tung
 tungsten/M
 tunic/SM
 tunnel/JSMDRZG
@@ -52242,6 +52262,8 @@ winnower/M
 wino/MS
 winsome/YTRP
 winsomeness/M
+winsorization
+winsorize/SGD
 winter/GSMD
 wintergreen/M
 winterize/GDS
