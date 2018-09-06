@@ -16,7 +16,8 @@
 // <maction> -- bind actions to a subexpression
 //
 
-class nsMathMLmactionFrame : public nsMathMLSelectedFrame {
+class nsMathMLmactionFrame final : public nsMathMLSelectedFrame
+{
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmactionFrame)
 

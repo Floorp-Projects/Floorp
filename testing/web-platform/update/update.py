@@ -5,7 +5,7 @@
 import os
 
 from wptrunner.update.base import Step, StepRunner
-from wptrunner.update.update import LoadConfig, SyncFromUpstream, UpdateMetadata
+from wptrunner.update.update import LoadConfig, SyncFromUpstream, UpdateMetadata, RemoveObsolete
 from wptrunner.update.tree import NoVCSTree
 
 from .tree import GitTree, HgTree, GeckoCommit
@@ -39,4 +39,5 @@ class UpdateRunner(StepRunner):
              LoadTrees,
              SyncToUpstream,
              SyncFromUpstream,
+             RemoveObsolete,
              UpdateMetadata]

@@ -20,8 +20,8 @@ assert_eq(implemented_type_names('c'), ['C'])
 assert_eq(implemented_type_names('c_'), ['C_', 'C'])
 assert_eq(implemented_type_names('e'), ['E', 'C', 'D'])
 assert_eq(implemented_type_names('e_'), ['E_', 'E', 'C', 'D'])
-assert_eq(implemented_type_names('f'), ['F', 'C', 'D'])
-assert_eq(implemented_type_names('h'), ['H', 'F', 'G', 'C', 'D'])
+assert_eq(implemented_type_names('f'), ['F', 'C_', 'D_', 'C', 'D'])
+assert_eq(implemented_type_names('h'), ['H', 'F', 'G', 'C_', 'D_', 'C', 'D'])
 
 # Check that our pretty-printers aren't interfering with printing other types.
 assert_pretty('10', '10')

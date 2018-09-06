@@ -58,8 +58,10 @@ async function test_basic_eviction(base_host) {
                    'session_foo_path_6',
                    'session_foo_path_7'], BASE_URI);
 
-    await setCookie("non_session_expired_foo_path_1", null, "/foo", 1, FOO_PATH);
-    await setCookie("non_session_expired_foo_path_2", null, "/foo", 1, FOO_PATH);
+    const EXPIRED_TIME = 3;
+
+    await setCookie("non_session_expired_foo_path_1", null, "/foo", EXPIRED_TIME, FOO_PATH);
+    await setCookie("non_session_expired_foo_path_2", null, "/foo", EXPIRED_TIME, FOO_PATH);
     verifyCookies(['session_foo_path_5',
                    'session_foo_path_6',
                    'session_foo_path_7',
@@ -67,7 +69,7 @@ async function test_basic_eviction(base_host) {
                    'non_session_expired_foo_path_2'], BASE_URI);
 
     // Check if expired cookies are evicted first.
-    await new Promise(resolve => do_timeout(1000, resolve));
+    await new Promise(resolve => do_timeout(EXPIRED_TIME * 1000, resolve));
     await setCookie("session_foo_path_8", null, "/foo", null, FOO_PATH);
     verifyCookies(['session_foo_path_6',
                    'session_foo_path_7',

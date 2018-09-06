@@ -39,8 +39,15 @@ class JSStringPtr(Common):
 
     def chars(self):
         d = self.value['d']
-        length = d['u1']['length']
-        flags = d['u1']['flags']
+        flags = d['flags_']
+        if 'length_' in d.type:
+            length = d['length_']
+        else:
+            # If we couldn't fetch the length directly, it must be stored
+            # within `flags`.
+            length = flags >> 32
+            flags = flags % 2**32
+
         corrupt = {
             0x2f2f2f2f: 'JS_FRESH_NURSERY_PATTERN',
             0x2b2b2b2b: 'JS_SWEPT_NURSERY_PATTERN',

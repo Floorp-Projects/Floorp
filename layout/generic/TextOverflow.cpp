@@ -162,7 +162,7 @@ IsFrameDescendantOfAny(nsIFrame* aChild,
   return false;
 }
 
-class nsDisplayTextOverflowMarker : public nsDisplayItem
+class nsDisplayTextOverflowMarker final : public nsDisplayItem
 {
 public:
   nsDisplayTextOverflowMarker(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,

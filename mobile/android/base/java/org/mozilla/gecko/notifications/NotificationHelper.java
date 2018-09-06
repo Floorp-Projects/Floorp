@@ -27,6 +27,7 @@ import org.mozilla.gecko.GeckoActivityMonitor;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.mozglue.SafeIntent;
+import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.BitmapUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -38,6 +39,7 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLConnection;
 import java.net.URLDecoder;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,8 +119,11 @@ public final class NotificationHelper implements BundleEventListener {
 
     // Holds the mapping between the Channel enum used by the rest of our codebase and the
     // channel ID used for communication with the system NotificationManager.
-    private final Map<Channel, String> mDefinedNotificationChannels = new HashMap<Channel, String>(7) {{
-        final String DEFAULT_CHANNEL_TAG = "default-notification-channel";
+    // How to determine the initialCapacity: Count all channels (including the Updater, which is
+    // only added further down in initNotificationChannels), multiply by 4/3 for a maximum load
+    // factor of 75 % and round up to the next multiple of two.
+    private final Map<Channel, String> mDefinedNotificationChannels = new HashMap<Channel, String>(16) {{
+        final String DEFAULT_CHANNEL_TAG = "default2-notification-channel";
         put(Channel.DEFAULT, DEFAULT_CHANNEL_TAG);
 
         final String MLS_CHANNEL_TAG = "mls-notification-channel";
@@ -135,14 +140,15 @@ public final class NotificationHelper implements BundleEventListener {
             put(Channel.LP_DEFAULT, LP_DEFAULT_CHANNEL_TAG);
         }
 
-        if (AppConstants.MOZ_UPDATER) {
-            final String UPDATER_CHANNEL_TAG = "updater-notification-channel";
-            put(Channel.UPDATER, UPDATER_CHANNEL_TAG);
-        }
-
         final String SYNCED_TABS_CHANNEL_TAG = "synced-tabs-notification-channel";
         put(Channel.SYNCED_TABS, SYNCED_TABS_CHANNEL_TAG);
     }};
+
+    // These are channels we no longer require and want to retire from Android's settings UI.
+    private final List<String> mDeprecatedNotificationChannels = Arrays.asList(
+            "default-notification-channel",
+            null
+    );
 
     // Holds a list of notifications that should be cleared if the Fennec Activity is shut down.
     // Will not include ongoing or persistent notifications that are tied to Gecko's lifecycle.
@@ -185,16 +191,30 @@ public final class NotificationHelper implements BundleEventListener {
     }
 
     private void initNotificationChannels() {
+        final String UPDATER_CHANNEL_TAG = "updater-notification-channel";
+        if (UpdateServiceHelper.isUpdaterEnabled(mContext)) {
+            mDefinedNotificationChannels.put(Channel.UPDATER, UPDATER_CHANNEL_TAG);
+        } else {
+            mDeprecatedNotificationChannels.add(UPDATER_CHANNEL_TAG);
+        }
+
+        final NotificationManager notificationManager =
+                (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        for (String channelId : mDeprecatedNotificationChannels) {
+            removeChannel(notificationManager, channelId);
+        }
+
         for (Channel mozChannel : mDefinedNotificationChannels.keySet()) {
-            createChannel(mozChannel);
+            createChannel(notificationManager, mozChannel);
         }
     }
 
     @SuppressWarnings("fallthrough")
     @TargetApi(26)
-    private void createChannel(Channel definedChannel) {
-        final NotificationManager notificationManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationChannel channel = notificationManager.getNotificationChannel(mDefinedNotificationChannels.get(definedChannel));
+    private void createChannel(final NotificationManager manager, Channel definedChannel) {
+        NotificationChannel channel =
+                manager.getNotificationChannel(mDefinedNotificationChannels.get(definedChannel));
 
         if (channel == null) {
             switch (definedChannel) {
@@ -244,12 +264,19 @@ public final class NotificationHelper implements BundleEventListener {
                 default: {
                     channel = new NotificationChannel(mDefinedNotificationChannels.get(definedChannel),
                             mContext.getString(R.string.default_notification_channel),
-                            NotificationManager.IMPORTANCE_HIGH);
+                            NotificationManager.IMPORTANCE_LOW);
                 }
                 break;
             }
 
-            notificationManager.createNotificationChannel(channel);
+            manager.createNotificationChannel(channel);
+        }
+    }
+
+    @TargetApi(26)
+    private void removeChannel(final NotificationManager manager, final String channelId) {
+        if (manager.getNotificationChannel(channelId) != null) {
+            manager.deleteNotificationChannel(channelId);
         }
     }
 

@@ -90,7 +90,7 @@ FormAutofillStore.prototype = {
 
   async getAllIDs() {
     let result = {};
-    for (let {guid} of this.storage.getAll({includeDeleted: true})) {
+    for (let {guid} of await this.storage.getAll({includeDeleted: true})) {
       result[guid] = true;
     }
     return result;
@@ -103,7 +103,7 @@ FormAutofillStore.prototype = {
   // Note: this function intentionally returns false in cases where we only have
   // a (local) tombstone - and formAutofillStorage.get() filters them for us.
   async itemExists(id) {
-    return Boolean(this.storage.get(id));
+    return Boolean(await this.storage.get(id));
   },
 
   async applyIncoming(remoteRecord) {
@@ -120,7 +120,7 @@ FormAutofillStore.prototype = {
     }
 
     // No matching local record. Try to dedupe a NEW local record.
-    let localDupeID = this.storage.findDuplicateGUID(remoteRecord.toEntry());
+    let localDupeID = await this.storage.findDuplicateGUID(remoteRecord.toEntry());
     if (localDupeID) {
       this._log.trace(`Deduping local record ${localDupeID} to remote`, remoteRecord);
       // Change the local GUID to match the incoming record, then apply the
@@ -135,13 +135,13 @@ FormAutofillStore.prototype = {
     // handles for us.)
     this._log.trace("Add record", remoteRecord);
     let entry = remoteRecord.toEntry();
-    this.storage.add(entry, {sourceSync: true});
+    await this.storage.add(entry, {sourceSync: true});
   },
 
   async createRecord(id, collection) {
     this._log.trace("Create record", id);
     let record = new AutofillRecord(collection, id);
-    let entry = this.storage.get(id, {
+    let entry = await this.storage.get(id, {
       rawData: true,
     });
     if (entry) {
@@ -158,10 +158,10 @@ FormAutofillStore.prototype = {
     this._log.trace("Updating record", record);
 
     let entry = record.toEntry();
-    let {forkedGUID} = this.storage.reconcile(entry);
+    let {forkedGUID} = await this.storage.reconcile(entry);
     if (this._log.level <= Log.Level.Debug) {
-      let forkedRecord = forkedGUID ? this.storage.get(forkedGUID) : null;
-      let reconciledRecord = this.storage.get(record.id);
+      let forkedRecord = forkedGUID ? await this.storage.get(forkedGUID) : null;
+      let reconciledRecord = await this.storage.get(record.id);
       this._log.debug("Updated local record", {
         forked: sanitizeStorageObject(forkedRecord),
         updated: sanitizeStorageObject(reconciledRecord),

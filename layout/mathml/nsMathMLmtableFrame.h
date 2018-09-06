@@ -242,7 +242,7 @@ protected:
 
 // --------------
 
-class nsMathMLmtdFrame : public nsTableCellFrame
+class nsMathMLmtdFrame final : public nsTableCellFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmtdFrame)

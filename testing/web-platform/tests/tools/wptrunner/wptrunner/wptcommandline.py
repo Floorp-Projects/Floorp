@@ -554,6 +554,8 @@ def create_parser_update(product_choices=None):
     parser.add_argument("--stability", nargs="?", action="store", const="unstable", default=None,
         help=("Reason for disabling tests. When updating test results, disable tests that have "
               "inconsistent results across many runs with the given reason."))
+    parser.add_argument("--no-remove-obsolete", action="store_false", dest="remove_obsolete", default=True,
+                        help=("Don't remove metadata files that no longer correspond to a test file"))
     parser.add_argument("--no-store-state", action="store_false", dest="store_state",
                         help="Store state so that steps can be resumed after failure")
     parser.add_argument("--continue", action="store_true",

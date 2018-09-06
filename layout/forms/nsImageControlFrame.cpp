@@ -16,8 +16,8 @@
 
 using namespace mozilla;
 
-class nsImageControlFrame : public nsImageFrame,
-                            public nsIFormControlFrame
+class nsImageControlFrame final : public nsImageFrame,
+                                  public nsIFormControlFrame
 {
 public:
   explicit nsImageControlFrame(ComputedStyle* aStyle);
