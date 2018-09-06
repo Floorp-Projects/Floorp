@@ -397,6 +397,27 @@ UnscaledFontDWrite::GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton
   return true;
 }
 
+ScaledFontDWrite::InstanceData::InstanceData(const wr::FontInstanceOptions* aOptions,
+                                             const wr::FontInstancePlatformOptions* aPlatformOptions)
+  : mUseEmbeddedBitmap(false)
+  , mForceGDIMode(false)
+  , mGamma(2.2f)
+  , mContrast(1.0f)
+{
+  if (aOptions) {
+    if (aOptions->flags & wr::FontInstanceFlags::EMBEDDED_BITMAPS) {
+      mUseEmbeddedBitmap = true;
+    }
+    if (aOptions->flags & wr::FontInstanceFlags::FORCE_GDI) {
+      mForceGDIMode = true;
+    }
+  }
+  if (aPlatformOptions) {
+    mGamma = aPlatformOptions->gamma / 100.0f;
+    mContrast = aPlatformOptions->contrast / 100.0f;
+  }
+}
+
 // Helper for ScaledFontDWrite::GetFontInstanceData: if the font has variation
 // axes, get their current values into the aOutput vector.
 static void
@@ -541,6 +562,8 @@ UnscaledFontDWrite::CreateScaledFont(Float aGlyphSize,
     gfxWarning() << "DWrite scaled font instance data is truncated.";
     return nullptr;
   }
+  const ScaledFontDWrite::InstanceData& instanceData =
+    *reinterpret_cast<const ScaledFontDWrite::InstanceData*>(aInstanceData);
 
   IDWriteFontFace* face = mFontFace;
 
@@ -556,15 +579,13 @@ UnscaledFontDWrite::CreateScaledFont(Float aGlyphSize,
     }
   }
 
-  const ScaledFontDWrite::InstanceData *instanceData =
-    reinterpret_cast<const ScaledFontDWrite::InstanceData*>(aInstanceData);
   RefPtr<ScaledFontBase> scaledFont =
     new ScaledFontDWrite(face, this, aGlyphSize,
-                         instanceData->mUseEmbeddedBitmap,
-                         instanceData->mForceGDIMode,
+                         instanceData.mUseEmbeddedBitmap,
+                         instanceData.mForceGDIMode,
                          nullptr,
-                         instanceData->mGamma,
-                         instanceData->mContrast);
+                         instanceData.mGamma,
+                         instanceData.mContrast);
 
   if (mNeedsCairo && !scaledFont->PopulateCairoScaledFont()) {
     gfxWarning() << "Unable to create cairo scaled font DWrite font.";
@@ -572,6 +593,20 @@ UnscaledFontDWrite::CreateScaledFont(Float aGlyphSize,
   }
 
   return scaledFont.forget();
+}
+
+already_AddRefed<ScaledFont>
+UnscaledFontDWrite::CreateScaledFontFromWRFont(Float aGlyphSize,
+                                               const wr::FontInstanceOptions* aOptions,
+                                               const wr::FontInstancePlatformOptions* aPlatformOptions,
+                                               const FontVariation* aVariations,
+                                               uint32_t aNumVariations)
+{
+  ScaledFontDWrite::InstanceData instanceData(aOptions, aPlatformOptions);
+  return CreateScaledFont(aGlyphSize,
+                          reinterpret_cast<uint8_t*>(&instanceData),
+                          sizeof(instanceData),
+                          aVariations, aNumVariations);
 }
 
 AntialiasMode

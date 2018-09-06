@@ -56,6 +56,8 @@ pub struct Transaction {
     use_scene_builder_thread: bool,
 
     generate_frame: bool,
+
+    low_priority: bool,
 }
 
 impl Transaction {
@@ -67,6 +69,7 @@ impl Transaction {
             payloads: Vec::new(),
             use_scene_builder_thread: true,
             generate_frame: false,
+            low_priority: false,
         }
     }
 
@@ -256,6 +259,7 @@ impl Transaction {
                 resource_updates: self.resource_updates,
                 use_scene_builder_thread: self.use_scene_builder_thread,
                 generate_frame: self.generate_frame,
+                low_priority: self.low_priority,
             },
             self.payloads,
         )
@@ -337,6 +341,18 @@ impl Transaction {
         self.resource_updates.push(ResourceUpdate::DeleteFontInstance(key));
     }
 
+    // A hint that this transaction can be processed at a lower priority. High-
+    // priority transactions can jump ahead of regular-priority transactions,
+    // but both high- and regular-priority transactions are processed in order
+    // relative to other transactions of the same priority.
+    pub fn set_low_priority(&mut self, low_priority: bool) {
+        self.low_priority = low_priority;
+    }
+
+    pub fn is_low_priority(&self) -> bool {
+        self.low_priority
+    }
+
     pub fn merge(&mut self, mut other: Vec<ResourceUpdate>) {
         self.resource_updates.append(&mut other);
     }
@@ -354,6 +370,7 @@ pub struct TransactionMsg {
     pub resource_updates: Vec<ResourceUpdate>,
     pub generate_frame: bool,
     pub use_scene_builder_thread: bool,
+    pub low_priority: bool,
 }
 
 impl TransactionMsg {
@@ -372,6 +389,7 @@ impl TransactionMsg {
             resource_updates: Vec::new(),
             generate_frame: false,
             use_scene_builder_thread: false,
+            low_priority: false,
         }
     }
 
@@ -382,6 +400,7 @@ impl TransactionMsg {
             resource_updates: Vec::new(),
             generate_frame: false,
             use_scene_builder_thread: false,
+            low_priority: false,
         }
     }
 }

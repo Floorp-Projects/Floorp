@@ -12,6 +12,12 @@
 namespace mozilla {
 namespace layers {
 
+struct BlobFont
+{
+  wr::FontInstanceKey mFontInstanceKey;
+  gfx::ReferencePtr mScaledFontPtr;
+};
+
 class WebRenderDrawEventRecorder final : public gfx::DrawEventRecorderMemory
 {
 public:

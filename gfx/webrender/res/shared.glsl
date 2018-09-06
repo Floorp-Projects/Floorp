@@ -40,7 +40,7 @@
     // https://github.com/servo/webrender/pull/623
     // https://github.com/servo/servo/issues/13953
     // Do the division with unsigned ints because that's more efficient with D3D
-    #define get_fetch_uv(i, vpi)  ivec2(int(uint(vpi) * (uint(i) % uint(WR_MAX_VERTEX_TEXTURE_WIDTH/vpi))), int(uint(i) / uint(WR_MAX_VERTEX_TEXTURE_WIDTH/vpi)))
+    #define get_fetch_uv(i, vpi)  ivec2(int(vpi * (uint(i) % (WR_MAX_VERTEX_TEXTURE_WIDTH/vpi))), int(uint(i) / (WR_MAX_VERTEX_TEXTURE_WIDTH/vpi)))
 #endif
 
 //======================================================================================

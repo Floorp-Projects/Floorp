@@ -82,7 +82,7 @@ impl<'a> BufReader<'a> {
         ret
     }
 
-    fn read_font_key(&mut self) -> FontKey {
+    fn read_blob_font(&mut self) -> BlobFont {
         self.read()
     }
 
@@ -333,6 +333,11 @@ fn merge_blob_images(old_buf: &[u8], new_buf: &[u8], dirty_rect: Box2d) -> Vec<u
     result
 }
 
+#[repr(C)]
+struct BlobFont {
+    font_instance_key: FontInstanceKey,
+    scaled_font_ptr: u64,
+}
 
 struct Moz2dBlobRasterizer {
     workers: Arc<ThreadPool>,
@@ -437,7 +442,8 @@ impl BlobImageHandler for Moz2dBlobImageHandler {
         unsafe { DeleteFontData(font); }
     }
 
-    fn delete_font_instance(&mut self, _key: FontInstanceKey) {
+    fn delete_font_instance(&mut self, key: FontInstanceKey) {
+        unsafe { DeleteBlobFont(key); }
     }
 
     fn clear_namespace(&mut self, namespace: IdNamespace) {
@@ -457,13 +463,23 @@ impl BlobImageHandler for Moz2dBlobImageHandler {
     }
 }
 
-use bindings::{WrFontKey, WrIdNamespace};
+use bindings::{WrFontKey, WrFontInstanceKey, WrIdNamespace};
 
 #[allow(improper_ctypes)] // this is needed so that rustc doesn't complain about passing the &Arc<Vec> to an extern function
 extern "C" {
     fn AddFontData(key: WrFontKey, data: *const u8, size: usize, index: u32, vec: &ArcVecU8);
     fn AddNativeFontHandle(key: WrFontKey, handle: *mut c_void, index: u32);
     fn DeleteFontData(key: WrFontKey);
+    fn AddBlobFont(
+        instance_key: WrFontInstanceKey,
+        font_key: WrFontKey,
+        size: f32,
+        options: *const FontInstanceOptions,
+        platform_options: *const FontInstancePlatformOptions,
+        variations: *const FontVariation,
+        num_variations: usize,
+    );
+    fn DeleteBlobFont(key: WrFontInstanceKey);
     fn ClearBlobImageResources(namespace: WrIdNamespace);
 }
 
@@ -495,27 +511,59 @@ impl Moz2dBlobImageHandler {
             unsafe { AddNativeFontHandle(key, cstr.as_ptr() as *mut c_void, handle.index) };
         }
 
-        fn process_fonts(mut extra_data: BufReader, resources: &BlobImageResources) {
+        fn process_fonts(
+            mut extra_data: BufReader,
+            resources: &BlobImageResources,
+            unscaled_fonts: &mut Vec<FontKey>,
+            scaled_fonts: &mut Vec<FontInstanceKey>,
+        ) {
             let font_count = extra_data.read_usize();
             for _ in 0..font_count {
-                let key = extra_data.read_font_key();
-                let template = resources.get_font_data(key);
-                match template {
-                    &FontTemplate::Raw(ref data, ref index) => {
-                        unsafe { AddFontData(key, data.as_ptr(), data.len(), *index, data); }
+                let font = extra_data.read_blob_font();
+                if scaled_fonts.contains(&font.font_instance_key) {
+                    continue;
+                }
+                scaled_fonts.push(font.font_instance_key);
+                if let Some(instance) = resources.get_font_instance_data(font.font_instance_key) {
+                    if !unscaled_fonts.contains(&instance.font_key) {
+                        unscaled_fonts.push(instance.font_key);
+                        let template = resources.get_font_data(instance.font_key);
+                        match template {
+                            &FontTemplate::Raw(ref data, ref index) => {
+                                unsafe { AddFontData(instance.font_key, data.as_ptr(), data.len(), *index, data); }
+                            }
+                            &FontTemplate::Native(ref handle) => {
+                                process_native_font_handle(instance.font_key, handle);
+                            }
+                        }
                     }
-                    &FontTemplate::Native(ref handle) => {
-                        process_native_font_handle(key, handle);
+                    unsafe {
+                        AddBlobFont(
+                            font.font_instance_key,
+                            instance.font_key,
+                            instance.size.to_f32_px(),
+                            option_to_nullable(&instance.options),
+                            option_to_nullable(&instance.platform_options),
+                            instance.variations.as_ptr(),
+                            instance.variations.len(),
+                        );
                     }
                 }
-                resources.get_font_data(key);
             }
         }
+
         {
             let mut index = BlobReader::new(blob);
+            let mut unscaled_fonts = Vec::new();
+            let mut scaled_fonts = Vec::new();
             while index.reader.pos < index.reader.buf.len() {
                 let e  = index.read_entry();
-                process_fonts(BufReader::new(&blob[e.end..e.extra_end]), resources);
+                process_fonts(
+                    BufReader::new(&blob[e.end..e.extra_end]),
+                    resources,
+                    &mut unscaled_fonts,
+                    &mut scaled_fonts,
+                );
             }
         }
     }
