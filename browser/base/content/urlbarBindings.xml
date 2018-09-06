@@ -35,7 +35,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                       required="required"
                       xbl:inherits="textoverflow,focused"/>
           <html:input anonid="input"
-                      class="autocomplete-textbox urlbar-input textbox-input"
+                      class="urlbar-input textbox-input"
                       allowevents="true"
                       inputmode="mozAwesomebar"
                       xbl:inherits="value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,focused,textoverflow"/>
