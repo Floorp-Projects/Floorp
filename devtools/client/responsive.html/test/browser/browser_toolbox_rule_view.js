@@ -5,18 +5,7 @@
 
 // Check that when the viewport is resized, the rule-view refreshes.
 
-const TEST_URI = "data:text/html;charset=utf-8,<html><style>" +
-                 "div {" +
-                 "  width: 500px;" +
-                 "  height: 10px;" +
-                 "  background: purple;" +
-                 "} " +
-                 "@media screen and (max-width: 200px) {" +
-                 "  div { " +
-                 "    width: 100px;" +
-                 "  }" +
-                 "};" +
-                 "</style><div></div></html>";
+const TEST_URI = `${URL_ROOT}doc_toolbox_rule_view.html`;
 
 addRDMTask(TEST_URI, async function({ ui, manager }) {
   info("Open the responsive design mode and set its size to 500x500 to start");
