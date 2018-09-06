@@ -11,7 +11,7 @@ const {
   REQUEST_WORKERS_SUCCESS,
 } = require("../constants");
 
-function RuntimeState() {
+function DebugTargetsState() {
   return {
     installedExtensions: [],
     otherWorkers: [],
@@ -22,10 +22,10 @@ function RuntimeState() {
   };
 }
 
-function runtimeReducer(state = RuntimeState(), action) {
+function debugTargetsReducer(state = DebugTargetsState(), action) {
   switch (action.type) {
     case DISCONNECT_RUNTIME_SUCCESS: {
-      return RuntimeState();
+      return DebugTargetsState();
     }
     case REQUEST_EXTENSIONS_SUCCESS: {
       const { installedExtensions, temporaryExtensions } = action;
@@ -46,6 +46,6 @@ function runtimeReducer(state = RuntimeState(), action) {
 }
 
 module.exports = {
-  RuntimeState,
-  runtimeReducer,
+  DebugTargetsState,
+  debugTargetsReducer,
 };
