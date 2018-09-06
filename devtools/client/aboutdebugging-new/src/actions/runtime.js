@@ -34,6 +34,11 @@ const {
   REQUEST_WORKERS_SUCCESS,
 } = require("../constants");
 
+function getCurrentClient(state) {
+  const thisFirefoxRuntime = state.runtimes.thisFirefoxRuntimes[0];
+  return thisFirefoxRuntime.client;
+}
+
 function connectRuntime() {
   return async (dispatch, getState) => {
     dispatch({ type: CONNECT_RUNTIME_START });
@@ -57,9 +62,9 @@ function connectRuntime() {
 
 function disconnectRuntime() {
   return async (dispatch, getState) => {
-    dispatch({ type: DISCONNECT_RUNTIME_START });
+    const client = getCurrentClient(getState());
 
-    const client = getState().runtime.client;
+    dispatch({ type: DISCONNECT_RUNTIME_START, client });
 
     try {
       await client.close();
@@ -86,7 +91,8 @@ function inspectDebugTarget(type, id) {
       }
       case DEBUG_TARGETS.WORKER: {
         // Open worker toolbox in new window.
-        gDevToolsBrowser.openWorkerToolbox(getState().runtime.client, id);
+        const client = getCurrentClient(getState());
+        gDevToolsBrowser.openWorkerToolbox(client, id);
         break;
       }
 
@@ -112,7 +118,7 @@ function installTemporaryExtension() {
 
 function pushServiceWorker(actor) {
   return async (_, getState) => {
-    const client = getState().runtime.client;
+    const client = getCurrentClient(getState());
 
     try {
       await client.request({ to: actor, type: "push" });
@@ -124,7 +130,7 @@ function pushServiceWorker(actor) {
 
 function reloadTemporaryExtension(actor) {
   return async (_, getState) => {
-    const client = getState().runtime.client;
+    const client = getCurrentClient(getState());
 
     try {
       await client.request({ to: actor, type: "reload" });
@@ -148,7 +154,7 @@ function requestTabs() {
   return async (dispatch, getState) => {
     dispatch({ type: REQUEST_TABS_START });
 
-    const client = getState().runtime.client;
+    const client = getCurrentClient(getState());
 
     try {
       const { tabs } = await client.listTabs({ favicons: true });
@@ -164,7 +170,7 @@ function requestExtensions() {
   return async (dispatch, getState) => {
     dispatch({ type: REQUEST_EXTENSIONS_START });
 
-    const client = getState().runtime.client;
+    const client = getCurrentClient(getState());
 
     try {
       const { addons } = await client.listAddons();
@@ -187,7 +193,7 @@ function requestWorkers() {
   return async (dispatch, getState) => {
     dispatch({ type: REQUEST_WORKERS_START });
 
-    const client = getState().runtime.client;
+    const client = getCurrentClient(getState());
 
     try {
       const {
@@ -210,7 +216,7 @@ function requestWorkers() {
 
 function startServiceWorker(actor) {
   return async (_, getState) => {
-    const client = getState().runtime.client;
+    const client = getCurrentClient(getState());
 
     try {
       await client.request({ to: actor, type: "start" });
