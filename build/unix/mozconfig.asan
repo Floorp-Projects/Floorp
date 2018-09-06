@@ -1,6 +1,6 @@
 MOZ_AUTOMATION_L10N_CHECK=0
 
-. "$topsrcdir/build/unix/mozconfig.linux"
+. "$topsrcdir/build/unix/mozconfig.unix"
 
 export LLVM_SYMBOLIZER="$topsrcdir/clang/bin/llvm-symbolizer"
 #
