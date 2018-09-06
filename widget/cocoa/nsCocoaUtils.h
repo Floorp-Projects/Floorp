@@ -18,6 +18,7 @@
 #include "nsObjCExceptions.h"
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/StaticPtr.h"
 
 // Declare the backingScaleFactor method that we want to call
 // on NSView/Window/Screen objects, if they recognize it.
@@ -38,7 +39,13 @@ class TimeStamp;
 namespace gfx {
 class SourceSurface;
 } // namespace gfx
+namespace dom {
+class Promise;
+} // namespace dom
 } // namespace mozilla
+
+using mozilla::StaticAutoPtr;
+using mozilla::StaticMutex;
 
 // Used to retain a Cocoa object for the remainder of a method's execution.
 class nsAutoRetainCocoaObject {
@@ -102,11 +109,18 @@ struct KeyBindingsCommand
 
 @end // NativeKeyBindingsRecorder
 
+#if !defined(MAC_OS_X_VERSION_10_14) || \
+  MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
+typedef NSString* AVMediaType;
+#endif
+
 class nsCocoaUtils
 {
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
   typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
+  typedef mozilla::dom::Promise Promise;
+  typedef StaticAutoPtr<nsTArray<RefPtr<Promise>>> PromiseArray;
 
 public:
 
@@ -396,6 +410,84 @@ public:
    * If aEventTime is 0, this returns current timestamp.
    */
   static mozilla::TimeStamp GetEventTimeStamp(NSTimeInterval aEventTime);
+
+  /**
+   * Get the current video capture permission status.
+   * Returns NS_ERROR_NOT_IMPLEMENTED on 10.13 and earlier macOS versions.
+   */
+  static nsresult GetVideoCapturePermissionState(uint16_t& aPermissionState);
+
+  /**
+   * Get the current audio capture permission status.
+   * Returns NS_ERROR_NOT_IMPLEMENTED on 10.13 and earlier macOS versions.
+   */
+  static nsresult GetAudioCapturePermissionState(uint16_t& aPermissionState);
+
+  /**
+   * Request video capture permission from the OS. Caller must be running
+   * on the main thread and the promise will be resolved on the main thread.
+   * Returns NS_ERROR_NOT_IMPLEMENTED on 10.13 and earlier macOS versions.
+   */
+  static nsresult RequestVideoCapturePermission(RefPtr<Promise>& aPromise);
+
+  /**
+   * Request audio capture permission from the OS. Caller must be running
+   * on the main thread and the promise will be resolved on the main thread.
+   * Returns NS_ERROR_NOT_IMPLEMENTED on 10.13 and earlier macOS versions.
+   */
+  static nsresult RequestAudioCapturePermission(RefPtr<Promise>& aPromise);
+
+private:
+  /**
+   * Completion handlers used as an argument to the macOS API to
+   * request media capture permission. These are called asynchronously
+   * on an arbitrary dispatch queue.
+   */
+  static void (^AudioCompletionHandler)(BOOL);
+  static void (^VideoCompletionHandler)(BOOL);
+
+  /**
+   * Called from the audio and video completion handlers in order to
+   * dispatch the handling back to the main thread.
+   */
+  static void ResolveAudioCapturePromises(bool aGranted);
+  static void ResolveVideoCapturePromises(bool aGranted);
+
+  /**
+   * Main implementation for Request{Audio,Video}CapturePermission.
+   * @param aType the AVMediaType to request capture permission for
+   * @param aPromise the Promise to resolve when capture permission
+   *                 is either allowed or denied
+   * @param aPromiseList the array of promises to save |aPromise| in
+   * @param aHandler the block function (either ResolveAudioCapturePromises
+   *                 or ResolveVideoCapturePromises) to be used as
+   *                 the requestAccessForMediaType callback.
+   */
+  static nsresult RequestCapturePermission(NSString* aType,
+                                           RefPtr<Promise>& aPromise,
+                                           PromiseArray& aPromiseList,
+                                           void (^aHandler)(BOOL granted));
+  /**
+   * Resolves the pending promises that are waiting for a response
+   * to a request video or audio capture permission.
+   */
+  static void ResolveMediaCapturePromises(bool aGranted,
+                                          PromiseArray& aPromiseList);
+
+  /**
+   * Array of promises waiting to be resolved due to a video capture request.
+   */
+  static PromiseArray sVideoCapturePromises;
+
+  /**
+   * Array of promises waiting to be resolved due to an audio capture request.
+   */
+  static PromiseArray sAudioCapturePromises;
+
+  /**
+   * Lock protecting |sVideoCapturePromises| and |sAudioCapturePromises|.
+   */
+  static StaticMutex sMediaCaptureMutex;
 };
 
 #endif // nsCocoaUtils_h_

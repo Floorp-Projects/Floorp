@@ -1432,6 +1432,13 @@ var PlacesUtils = {
   promiseDBConnection: () => gAsyncDBConnPromised,
 
   /**
+   * This is pretty much the same as promiseDBConnection, but with a larger
+   * page cache, useful for consumers doing large table scans, like the urlbar.
+   * @see promiseDBConnection
+   */
+  promiseLargeCacheDBConnection: () => gAsyncDBLargeCacheConnPromised,
+
+  /**
    * Performs a read/write operation on the Places database through a Sqlite.jsm
    * wrapped connection to the Places database.
    *
@@ -1936,6 +1943,22 @@ XPCOMUtils.defineLazyGetter(this, "gAsyncDBWrapperPromised",
   }).then(conn => {
     setupDbForShutdown(conn, "PlacesUtils wrapped connection");
     return conn;
+  }).catch(Cu.reportError)
+);
+
+XPCOMUtils.defineLazyGetter(this, "gAsyncDBLargeCacheConnPromised",
+  () => Sqlite.cloneStorageConnection({
+    connection: PlacesUtils.history.DBConnection,
+    readOnly:   true,
+  }).then(async conn => {
+      setupDbForShutdown(conn, "PlacesUtils large cache read-only connection");
+      // Components like the urlbar often fallback to a table scan due to lack
+      // of full text indices.  A larger cache helps reducing IO and improves
+      // performance. This value is expected to be larger than the default
+      // mozStorage value defined as MAX_CACHE_SIZE_BYTES in
+      // storage/mozStorageConnection.cpp.
+      await conn.execute("PRAGMA cache_size = -6144"); // 6MiB
+      return conn;
   }).catch(Cu.reportError)
 );
 
