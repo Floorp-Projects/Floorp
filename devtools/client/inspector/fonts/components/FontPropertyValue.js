@@ -162,9 +162,12 @@ class FontPropertyValue extends PureComponent {
    *        Change event.
    */
   onChange(e) {
-    // Regular expresion to check for positive floating point or integer numbers.
+    // Regular expresion to check for floating point or integer numbers. Accept negative
+    // numbers only if the min value is negative. Otherwise, expect positive numbers.
     // Whitespace and non-digit characters are invalid (aside from a single dot).
-    const regex = /^[0-9]+(.[0-9]+)?$/;
+    const regex = (this.props.min && this.props.min < 0)
+      ? /^-?[0-9]+(.[0-9]+)?$/
+      : /^[0-9]+(.[0-9]+)?$/;
     let string = e.target.value.trim();
 
     if (e.target.validity.badInput) {
@@ -190,7 +193,6 @@ class FontPropertyValue extends PureComponent {
       return;
     }
 
-    // Catch any negative or irrational numbers.
     if (!regex.test(string)) {
       return;
     }
