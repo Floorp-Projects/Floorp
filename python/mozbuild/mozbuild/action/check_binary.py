@@ -172,7 +172,7 @@ def check_nsmodules(target, binary):
         raise Skip()
     symbols = []
     if buildconfig.substs.get('_MSC_VER'):
-        for line in get_output('dumpbin', '-exports', binary):
+        for line in get_output('dumpbin.exe', '-exports', binary):
             data = line.split(None, 3)
             if data and len(data) == 4 and data[0].isdigit() and \
                     ishex(data[1]) and ishex(data[2]):
