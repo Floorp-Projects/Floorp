@@ -62,6 +62,7 @@ registerCleanupFunction(async function() {
   });
 });
 
+// Import the GCLI test helper
 var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 testDir = testDir.replace(/\/\//g, "/");
 testDir = testDir.replace("chrome:/mochitest", "chrome://mochitest");

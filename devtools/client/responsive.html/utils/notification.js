@@ -17,19 +17,19 @@ loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools"
  *        The browser tab.
  * @param options
  *        Other options associated with opening.  Currently includes:
- *        - `toolbox`: Whether initiated via toolbox button
+ *        - `command`: Whether initiated via GCLI command bar or toolbox button
  *        - `msg`: String to show in the notification
  *        - `priority`: Priority level for the notification, which affects the icon and
  *                      overall appearance.
  */
-function showNotification(window, tab, { toolboxButton, msg, priority } = {}) {
+function showNotification(window, tab, { command, msg, priority } = {}) {
   // Default to using the browser's per-tab notification box
   let nbox = window.gBrowser.getNotificationBox(tab.linkedBrowser);
 
-  // If opening was initiated by a toolbox button, check for an open
+  // If opening was initiated by GCLI command bar or toolbox button, check for an open
   // toolbox for the tab.  If one exists, use the toolbox's notification box so that the
   // message is placed closer to the action taken by the user.
-  if (toolboxButton) {
+  if (command) {
     const target = TargetFactory.forTab(tab);
     const toolbox = gDevTools.getToolbox(target);
     if (toolbox) {

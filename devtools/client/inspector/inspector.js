@@ -2322,7 +2322,7 @@ Inspector.prototype = {
   },
 
   /**
-   * Initiate screenshot command on selected node.
+   * Initiate gcli screenshot command on selected node.
    */
   async screenshotNode() {
     // Bug 1332936 - it's possible to call `screenshotNode` while the BoxModel highlighter
