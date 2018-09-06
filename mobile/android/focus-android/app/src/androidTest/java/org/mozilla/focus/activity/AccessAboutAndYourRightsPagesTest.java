@@ -104,21 +104,18 @@ public class AccessAboutAndYourRightsPagesTest {
         onView(withText(aboutLabel))
                 .check(matches(isDisplayed()))
                 .perform(click());
-
-        assertWebsiteUrlContains("focus:about");
-
-        pressBack();  // This takes to main view
-        openMenu();
-        clickMenuItem(R.id.settings);
-        onView(withText(mozillaMenuLabel))
+        onView(withId(R.id.infofragment))
                 .check(matches(isDisplayed()))
                 .perform(click());
+        pressBack();  // This takes to Mozilla Submenu of settings
 
         // "Your rights" page
         onView(withText(context.getString(R.string.your_rights)))
                 .check(matches(isDisplayed()))
                 .perform(click());
-        assertWebsiteUrlContains("focus:rights");
+        onView(withId(R.id.infofragment))
+                .check(matches(isDisplayed()))
+                .perform(click());
     }
 
     private void clickMenuItem(@IdRes int id) {
