@@ -5,8 +5,9 @@
 
 package org.mozilla.gecko;
 
-import android.os.StrictMode;
 import android.util.Log;
+
+import org.mozilla.gecko.util.StrictModeContext;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -47,17 +48,15 @@ public final class SysInfo {
      * @return the number of CPU cores, or 1 if the number could not be
      *         determined.
      */
+    @SuppressWarnings("try")
     public static int getCPUCount() {
         if (cpuCount > 0) {
             return cpuCount;
         }
 
         // Avoid a strict mode warning.
-        StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
-        try {
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
             return readCPUCount();
-        } finally {
-            StrictMode.setThreadPolicy(savedPolicy);
         }
     }
 
@@ -133,6 +132,7 @@ public final class SysInfo {
      *
      * @return 0 if a problem occurred, or memory size in MB.
      */
+    @SuppressWarnings("try")
     public static int getMemSize() {
         if (totalRAM >= 0) {
             return totalRAM;
@@ -142,8 +142,7 @@ public final class SysInfo {
         final byte[] MEMTOTAL = {'M', 'e', 'm', 'T', 'o', 't', 'a', 'l'};
 
         // `/proc/meminfo` is not a real file and thus safe to read on the main thread.
-        final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
-        try {
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
             final byte[] buffer = new byte[MEMINFO_BUFFER_SIZE_BYTES];
             final FileInputStream is = new FileInputStream("/proc/meminfo");
             try {
@@ -167,8 +166,6 @@ public final class SysInfo {
             return totalRAM = 0;
         } catch (IOException e) {
             return totalRAM = 0;
-        } finally {
-            StrictMode.setThreadPolicy(savedPolicy);
         }
     }
 

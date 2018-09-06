@@ -12,7 +12,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "gc/Marking.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/Value.h"
 #include "vm/Debugger.h"
 #include "vm/TypedArrayObject.h"
@@ -2304,9 +2304,12 @@ GetNonexistentProperty(JSContext* cx, HandleId id, IsNameLookup nameLookup, Muta
     script->setWarnedAboutUndefinedProp();
 
     // Ok, bad undefined property reference: whine about it.
-    RootedValue val(cx, IdToValue(id));
-    return ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP, JSDVG_IGNORE_STACK, val,
-                                    nullptr, nullptr, nullptr);
+    UniqueChars bytes = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
+    if (!bytes)
+        return false;
+
+    return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr,
+                                            JSMSG_UNDEFINED_PROP, bytes.get());
 }
 
 /* The NoGC version of GetNonexistentProperty, present only to make types line up. */
@@ -2456,7 +2459,7 @@ js::GetNameBoundInEnvironment(JSContext* cx, HandleObject envArg, HandleId id, M
 /*** [[Set]] *************************************************************************************/
 
 static bool
-MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleString propname)
+MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleId id)
 {
     unsigned flags;
     {
@@ -2475,11 +2478,11 @@ MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleString propname)
             return true;
     }
 
-    JSAutoByteString bytes;
-    if (!bytes.encodeUtf8(cx, propname))
+    UniqueChars bytes = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsIdentifier);
+    if (!bytes)
         return false;
     return JS_ReportErrorFlagsAndNumberUTF8(cx, flags, GetErrorMessage, nullptr,
-                                            JSMSG_UNDECLARED_VAR, bytes.ptr());
+                                            JSMSG_UNDECLARED_VAR, bytes.get());
 }
 
 /*
@@ -2595,8 +2598,7 @@ SetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id, Handl
                        HandleValue receiver, ObjectOpResult& result)
 {
     if (!IsQualified && receiver.isObject() && receiver.toObject().isUnqualifiedVarObj()) {
-        RootedString idStr(cx, JSID_TO_STRING(id));
-        if (!MaybeReportUndeclaredVarAssignment(cx, idStr))
+        if (!MaybeReportUndeclaredVarAssignment(cx, id))
             return false;
     }
 

@@ -656,9 +656,21 @@ var gPrivacyPane = {
       "#changeBlockListLink",
       "#contentBlockingChangeCookieSettings",
       "#blockCookiesCB, #blockCookiesCB > radio",
+      "#blockCookies, #blockCookies > radio",
     ];
 
     this._toggleControls(dependentControls, contentBlockingEnabled);
+
+    // The list of dependent controls here would normally include #blockCookiesLabel,
+    // #blockCookiesMenu, #keepUntil and #keepCookiesUntil, but in order to avoid
+    // having two parts of the code responsible for figuring out whether these
+    // controls must be enabled or disabled, we offload that responsibility to
+    // networkCookieBehaviorReadPrefs() which already knows how to deal with it.
+    this.networkCookieBehaviorReadPrefs();
+
+    // If Content Blocking gets disabled, show the warning in the Cookies and Site Data section.
+    let blockCookiesWarning = document.getElementById("blockCookiesWarning");
+    blockCookiesWarning.hidden = contentBlockingEnabled;
 
     // Need to make sure we account for pref locking/extension overrides when enabling the TP menu.
     this._updateTrackingProtectionUI();
@@ -731,15 +743,17 @@ var gPrivacyPane = {
     let keepUntilLabel = document.getElementById("keepUntil");
     let keepUntilMenu = document.getElementById("keepCookiesUntil");
 
+    let disabledByCB = contentBlockingUiEnabled ? !contentBlockingEnabled : false;
     let blockCookies = (behavior != 0);
     let cookieBehaviorLocked = Services.prefs.prefIsLocked("network.cookie.cookieBehavior");
-    let blockCookiesControlsDisabled = !blockCookies || cookieBehaviorLocked;
+    let blockCookiesControlsDisabled = !blockCookies || cookieBehaviorLocked || disabledByCB;
     blockCookiesLabel.disabled = blockCookiesMenu.disabled = blockCookiesControlsDisabled;
 
     let completelyBlockCookies = (behavior == 2);
     let privateBrowsing = Preferences.get("browser.privatebrowsing.autostart").value;
     let cookieExpirationLocked = Services.prefs.prefIsLocked("network.cookie.lifetimePolicy");
-    let keepUntilControlsDisabled = privateBrowsing || completelyBlockCookies || cookieExpirationLocked;
+    let keepUntilControlsDisabled = privateBrowsing || completelyBlockCookies ||
+                                    cookieExpirationLocked || disabledByCB;
     keepUntilLabel.disabled = keepUntilMenu.disabled = keepUntilControlsDisabled;
 
     switch (behavior) {

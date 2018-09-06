@@ -7,6 +7,7 @@
 #include "jsfriendapi.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
 
@@ -20,7 +21,7 @@
 #include "gc/GCInternals.h"
 #include "gc/PublicIterators.h"
 #include "gc/WeakMap.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/Printf.h"
 #include "js/Proxy.h"
 #include "js/Wrapper.h"
@@ -808,61 +809,34 @@ js::DumpScript(JSContext* cx, JSScript* scriptArg)
 #endif
 
 static const char*
-FormatValue(JSContext* cx, const Value& vArg, JSAutoByteString& bytes)
+FormatValue(JSContext* cx, HandleValue v, UniqueChars& bytes)
 {
-    RootedValue v(cx, vArg);
-
     if (v.isMagic(JS_OPTIMIZED_OUT))
         return "[unavailable]";
 
-    /*
-     * We could use Maybe<AutoRealm> here, but G++ can't quite follow
-     * that, and warns about uninitialized members being used in the
-     * destructor.
-     */
-    RootedString str(cx);
-    if (v.isObject()) {
-        if (IsCrossCompartmentWrapper(&v.toObject()))
-            return "[cross-compartment wrapper]";
-        AutoRealm ar(cx, &v.toObject());
-        str = ToString<CanGC>(cx, v);
-    } else {
-        str = ToString<CanGC>(cx, v);
-    }
-
-    if (!str)
-        return nullptr;
-    const char* buf = bytes.encodeLatin1(cx, str);
-    if (!buf)
-        return nullptr;
-    const char* found = strstr(buf, "function ");
-    if (found && (found - buf <= 2))
+    if (IsCallable(v))
         return "[function]";
-    return buf;
-}
 
-// Wrapper for JS_sprintf_append() that reports allocation failure to the
-// context.
-static JS::UniqueChars
-MOZ_FORMAT_PRINTF(3, 4)
-sprintf_append(JSContext* cx, JS::UniqueChars&& buf, const char* fmt, ...)
-{
-    va_list ap;
+    if (v.isObject() && IsCrossCompartmentWrapper(&v.toObject()))
+        return "[cross-compartment wrapper]";
 
-    va_start(ap, fmt);
-    JS::UniqueChars result = JS_vsprintf_append(std::move(buf), fmt, ap);
-    va_end(ap);
+    JSString* str;
+    {
+        mozilla::Maybe<AutoRealm> ar;
+        if (v.isObject())
+            ar.emplace(cx, &v.toObject());
 
-    if (!result) {
-        ReportOutOfMemory(cx);
-        return nullptr;
+        str = ToString<CanGC>(cx, v);
+        if (!str)
+            return nullptr;
     }
 
-    return result;
+    bytes = StringToNewUTF8CharsZ(cx, *str);
+    return bytes.get();
 }
 
-static JS::UniqueChars
-FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int num,
+static bool
+FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp, int num,
             bool showArgs, bool showLocals, bool showThisProps)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
@@ -886,24 +860,23 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
         !(fun->isBoundFunction() && iter.isConstructing()))
     {
         if (!GetFunctionThis(cx, iter.abstractFramePtr(), &thisVal))
-            return nullptr;
+            return false;
     }
 
     // print the frame number and function name
-    JS::UniqueChars buf(std::move(inBuf));
     if (funname) {
-        JSAutoByteString funbytes;
-        char* str = funbytes.encodeLatin1(cx, funname);
-        if (!str)
-            return nullptr;
-        buf = sprintf_append(cx, std::move(buf), "%d %s(", num, str);
+        UniqueChars funbytes = StringToNewUTF8CharsZ(cx, *funname);
+        if (!funbytes)
+            return false;
+        if (!sp.printf("%d %s(", num, funbytes.get()))
+            return false;
     } else if (fun) {
-        buf = sprintf_append(cx, std::move(buf), "%d anonymous(", num);
+        if (!sp.printf("%d anonymous(", num))
+            return false;
     } else {
-        buf = sprintf_append(cx, std::move(buf), "%d <TOP LEVEL>", num);
+        if (!sp.printf("%d <TOP LEVEL>", num))
+            return false;
     }
-    if (!buf)
-        return nullptr;
 
     if (showArgs && iter.hasArgs()) {
         PositionalFormalParameterIter fi(script);
@@ -925,23 +898,24 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
                 arg = MagicValue(JS_OPTIMIZED_OUT);
             }
 
-            JSAutoByteString valueBytes;
+            UniqueChars valueBytes;
             const char* value = FormatValue(cx, arg, valueBytes);
             if (!value) {
                 if (cx->isThrowingOutOfMemory())
-                    return nullptr;
+                    return false;
                 cx->clearPendingException();
             }
 
-            JSAutoByteString nameBytes;
+            UniqueChars nameBytes;
             const char* name = nullptr;
 
             if (i < iter.numFormalArgs()) {
                 MOZ_ASSERT(fi.argumentSlot() == i);
                 if (!fi.isDestructured()) {
-                    name = nameBytes.encodeLatin1(cx, fi.name());
+                    nameBytes = StringToNewUTF8CharsZ(cx, *fi.name());
+                    name = nameBytes.get();
                     if (!name)
-                        return nullptr;
+                        return false;
                 } else {
                     name = "(destructured parameter)";
                 }
@@ -949,35 +923,34 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
             }
 
             if (value) {
-                buf = sprintf_append(cx, std::move(buf), "%s%s%s%s%s%s",
-                                     !first ? ", " : "",
-                                     name ? name :"",
-                                     name ? " = " : "",
-                                     arg.isString() ? "\"" : "",
-                                     value,
-                                     arg.isString() ? "\"" : "");
-                if (!buf)
-                    return nullptr;
+                if (!sp.printf("%s%s%s%s%s%s",
+                               !first ? ", " : "",
+                               name ? name :"",
+                               name ? " = " : "",
+                               arg.isString() ? "\"" : "",
+                               value,
+                               arg.isString() ? "\"" : ""))
+                {
+                    return false;
+                }
 
                 first = false;
             } else {
-                buf = sprintf_append(cx, std::move(buf),
-                                     "    <Failed to get argument while inspecting stack frame>\n");
-                if (!buf)
-                    return nullptr;
+                if (!sp.put("    <Failed to get argument while inspecting stack frame>\n"))
+                    return false;
 
             }
         }
     }
 
     // print filename and line number
-    buf = sprintf_append(cx, std::move(buf), "%s [\"%s\":%d]\n",
-                         fun ? ")" : "",
-                         filename ? filename : "<unknown>",
-                         lineno);
-    if (!buf)
-        return nullptr;
-
+    if (!sp.printf("%s [\"%s\":%d]\n",
+                   fun ? ")" : "",
+                   filename ? filename : "<unknown>",
+                   lineno))
+    {
+        return false;
+    }
 
     // Note: Right now we don't dump the local variables anymore, because
     // that is hard to support across all the JITs etc.
@@ -985,23 +958,22 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
     // print the value of 'this'
     if (showLocals) {
         if (!thisVal.isUndefined()) {
-            JSAutoByteString thisValBytes;
             RootedString thisValStr(cx, ToString<CanGC>(cx, thisVal));
             if (!thisValStr) {
                 if (cx->isThrowingOutOfMemory())
-                    return nullptr;
+                    return false;
                 cx->clearPendingException();
             }
             if (thisValStr) {
-                const char* str = thisValBytes.encodeLatin1(cx, thisValStr);
-                if (!str)
-                    return nullptr;
-                buf = sprintf_append(cx, std::move(buf), "    this = %s\n", str);
+                UniqueChars thisValBytes = StringToNewUTF8CharsZ(cx, *thisValStr);
+                if (!thisValBytes)
+                    return false;
+                if (!sp.printf("    this = %s\n", thisValBytes.get()))
+                    return false;
             } else {
-                buf = sprintf_append(cx, std::move(buf), "    <failed to get 'this' value>\n");
+                if (!sp.put("    <failed to get 'this' value>\n"))
+                    return false;
             }
-            if (!buf)
-                return nullptr;
         }
     }
 
@@ -1011,11 +983,10 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
         AutoIdVector keys(cx);
         if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &keys)) {
             if (cx->isThrowingOutOfMemory())
-                return nullptr;
+                return false;
             cx->clearPendingException();
         }
 
-        RootedId id(cx);
         for (size_t i = 0; i < keys.length(); i++) {
             RootedId id(cx, keys[i]);
             RootedValue key(cx, IdToValue(id));
@@ -1023,98 +994,98 @@ FormatFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int n
 
             if (!GetProperty(cx, obj, obj, id, &v)) {
                 if (cx->isThrowingOutOfMemory())
-                    return nullptr;
+                    return false;
                 cx->clearPendingException();
-                buf = sprintf_append(cx, std::move(buf),
-                                     "    <Failed to fetch property while inspecting stack frame>\n");
-                if (!buf)
-                    return nullptr;
+                if (!sp.put("    <Failed to fetch property while inspecting stack frame>\n"))
+                    return false;
                 continue;
             }
 
-            JSAutoByteString nameBytes;
+            UniqueChars nameBytes;
             const char* name = FormatValue(cx, key, nameBytes);
             if (!name) {
                 if (cx->isThrowingOutOfMemory())
-                    return nullptr;
+                    return false;
                 cx->clearPendingException();
             }
 
-            JSAutoByteString valueBytes;
+            UniqueChars valueBytes;
             const char* value = FormatValue(cx, v, valueBytes);
             if (!value) {
                 if (cx->isThrowingOutOfMemory())
-                    return nullptr;
+                    return false;
                 cx->clearPendingException();
             }
 
             if (name && value) {
-                buf = sprintf_append(cx, std::move(buf), "    this.%s = %s%s%s\n",
-                                     name,
-                                     v.isString() ? "\"" : "",
-                                     value,
-                                     v.isString() ? "\"" : "");
+                if (!sp.printf("    this.%s = %s%s%s\n",
+                               name,
+                               v.isString() ? "\"" : "",
+                               value,
+                               v.isString() ? "\"" : ""))
+                {
+                    return false;
+                }
             } else {
-                buf = sprintf_append(cx, std::move(buf),
-                                     "    <Failed to format values while inspecting stack frame>\n");
+                if (!sp.put("    <Failed to format values while inspecting stack frame>\n"))
+                    return false;
             }
-            if (!buf)
-                return nullptr;
         }
     }
 
     MOZ_ASSERT(!cx->isExceptionPending());
-    return buf;
+    return true;
 }
 
-static JS::UniqueChars
-FormatWasmFrame(JSContext* cx, const FrameIter& iter, JS::UniqueChars&& inBuf, int num)
+static bool
+FormatWasmFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp, int num)
 {
     UniqueChars nameStr;
     if (JSAtom* functionDisplayAtom = iter.maybeFunctionDisplayAtom()) {
         nameStr = StringToNewUTF8CharsZ(cx, *functionDisplayAtom);
         if (!nameStr)
-            return nullptr;
+            return false;
     }
 
-    JS::UniqueChars buf = sprintf_append(cx, std::move(inBuf), "%d %s()",
-                                         num,
-                                         nameStr ? nameStr.get() : "<wasm-function>");
-    if (!buf)
-        return nullptr;
+    if (!sp.printf("%d %s()", num, nameStr ? nameStr.get() : "<wasm-function>"))
+        return false;
 
-    buf = sprintf_append(cx, std::move(buf), " [\"%s\":wasm-function[%d]:0x%x]\n",
-                         iter.filename() ? iter.filename() : "<unknown>",
-                         iter.wasmFuncIndex(),
-                         iter.wasmBytecodeOffset());
-    if (!buf)
-        return nullptr;
+    if (!sp.printf(" [\"%s\":wasm-function[%d]:0x%x]\n",
+                   iter.filename() ? iter.filename() : "<unknown>",
+                   iter.wasmFuncIndex(),
+                   iter.wasmBytecodeOffset()))
+    {
+        return false;
+    }
 
     MOZ_ASSERT(!cx->isExceptionPending());
-    return buf;
+    return true;
 }
 
 JS_FRIEND_API(JS::UniqueChars)
-JS::FormatStackDump(JSContext* cx, JS::UniqueChars&& inBuf, bool showArgs, bool showLocals,
-                    bool showThisProps)
+JS::FormatStackDump(JSContext* cx, bool showArgs, bool showLocals, bool showThisProps)
 {
     int num = 0;
 
-    JS::UniqueChars buf(std::move(inBuf));
+    Sprinter sp(cx);
+    if (!sp.init())
+        return nullptr;
+
     for (AllFramesIter i(cx); !i.done(); ++i) {
-        if (i.hasScript())
-            buf = FormatFrame(cx, i, std::move(buf), num, showArgs, showLocals, showThisProps);
-        else
-            buf = FormatWasmFrame(cx, i, std::move(buf), num);
-        if (!buf)
+        bool ok = i.hasScript()
+                  ? FormatFrame(cx, i, sp, num, showArgs, showLocals, showThisProps)
+                  : FormatWasmFrame(cx, i, sp, num);
+        if (!ok)
             return nullptr;
         num++;
     }
 
-    if (!num)
-        buf = JS_sprintf_append(std::move(buf), "JavaScript stack is empty\n");
+    if (num == 0) {
+        if (!sp.put("JavaScript stack is empty\n"))
+            return nullptr;
+    }
 
-    return buf;
+    return sp.release();
 }
 
 extern JS_FRIEND_API(bool)

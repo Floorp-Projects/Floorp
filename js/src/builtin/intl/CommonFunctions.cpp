@@ -9,6 +9,9 @@
 #include "builtin/intl/CommonFunctions.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/TextUtils.h"
+
+#include <algorithm>
 
 #include "jsfriendapi.h" // for GetErrorMessage, JSMSG_INTERNAL_INTL_ERROR
 
@@ -80,6 +83,32 @@ void
 js::intl::ReportInternalError(JSContext* cx)
 {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+}
+
+js::UniqueChars
+js::intl::EncodeLocale(JSContext* cx, JSString* locale)
+{
+#ifdef DEBUG
+    auto containsOnlyValidBCP47Chars = [](auto* chars, size_t length) {
+        return length > 0 &&
+               mozilla::IsAsciiAlpha(chars[0]) &&
+               std::all_of(chars, chars + length, [](auto c) {
+                   return mozilla::IsAsciiAlphanumeric(c) || c == '-';
+               });
+    };
+
+    if (JSLinearString* linear = locale->ensureLinear(cx)) {
+        JS::AutoCheckCannotGC nogc;
+        MOZ_ASSERT(linear->hasLatin1Chars()
+                   ? containsOnlyValidBCP47Chars(linear->latin1Chars(nogc), linear->length())
+                   : containsOnlyValidBCP47Chars(linear->twoByteChars(nogc), linear->length()));
+    } else {
+        // Ignore OOM when only performing a debug assertion.
+        cx->recoverFromOutOfMemory();
+    }
+#endif
+
+    return EncodeLatin1(cx, locale);
 }
 
 bool

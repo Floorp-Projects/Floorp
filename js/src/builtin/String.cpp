@@ -614,22 +614,26 @@ str_toSource_impl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(IsString(args.thisv()));
 
-    Rooted<JSString*> str(cx, ToString<CanGC>(cx, args.thisv()));
+    JSString* str = ToString<CanGC>(cx, args.thisv());
     if (!str)
         return false;
 
-    str = QuoteString(cx, str, '"');
-    if (!str)
+    UniqueChars quoted = QuoteString(cx, str, '"');
+    if (!quoted)
         return false;
 
     StringBuffer sb(cx);
-    if (!sb.append("(new String(") || !sb.append(str) || !sb.append("))"))
+    if (!sb.append("(new String(") ||
+        !sb.append(quoted.get(), strlen(quoted.get())) ||
+        !sb.append("))"))
+    {
         return false;
+    }
 
-    str = sb.finishString();
-    if (!str)
+    JSString* result = sb.finishString();
+    if (!result)
         return false;
-    args.rval().setString(str);
+    args.rval().setString(result);
     return true;
 }
 

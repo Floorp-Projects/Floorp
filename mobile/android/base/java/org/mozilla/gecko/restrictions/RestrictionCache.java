@@ -9,9 +9,9 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.os.UserManager;
 
+import org.mozilla.gecko.util.StrictModeContext;
 import org.mozilla.gecko.util.ThreadUtils;
 
 /**
@@ -58,21 +58,18 @@ public class RestrictionCache {
         }
     }
 
+    @SuppressWarnings("try")
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     private static void readRestrictions(Context context) {
         final UserManager mgr = (UserManager) context.getSystemService(Context.USER_SERVICE);
 
         // If we do not have anything in the cache yet then this read might happen on the UI thread (Bug 1189347).
-        final StrictMode.ThreadPolicy policy = StrictMode.allowThreadDiskReads();
-
-        try {
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
             Bundle appRestrictions = mgr.getApplicationRestrictions(context.getPackageName());
             migrateRestrictionsIfNeeded(appRestrictions);
 
             cachedAppRestrictions = appRestrictions;
             cachedUserRestrictions = mgr.getUserRestrictions(); // Always implies disk read
-        } finally {
-            StrictMode.setThreadPolicy(policy);
         }
     }
 

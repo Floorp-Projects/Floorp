@@ -330,9 +330,14 @@ add_task(async function testContentBlockingDependentControls() {
     "#content-blocking-categories-label",
     "#changeBlockListLink",
     "#contentBlockingChangeCookieSettings",
+    "#blockCookies, #blockCookies > radio",
+    "#keepUntil",
+    "#keepCookiesUntil",
   ];
   let alwaysDisabledControls = [
     "#blockCookiesCB, #blockCookiesCB > radio",
+    "#blockCookiesLabel",
+    "#blockCookiesMenu",
   ];
 
   await doDependentControlChecks(dependentControls, alwaysDisabledControls);
@@ -353,6 +358,11 @@ add_task(async function testContentBlockingDependentControls() {
     "#changeBlockListLink",
     "#contentBlockingChangeCookieSettings",
     "#blockCookiesCB, #blockCookiesCB > radio",
+    "#blockCookies, #blockCookies > radio",
+    "#blockCookiesLabel",
+    "#blockCookiesMenu",
+    "#keepUntil",
+    "#keepCookiesUntil",
   ];
 
   await doDependentControlChecks(dependentControls);
@@ -376,6 +386,11 @@ add_task(async function testContentBlockingDependentTPControls() {
     "#changeBlockListLink",
     "#contentBlockingChangeCookieSettings",
     "#blockCookiesCB, #blockCookiesCB > radio",
+    "#blockCookies, #blockCookies > radio",
+    "#blockCookiesLabel",
+    "#blockCookiesMenu",
+    "#keepUntil",
+    "#keepCookiesUntil",
   ];
   let alwaysDisabledControls = [
     "#trackingProtectionMenu",
@@ -391,6 +406,49 @@ add_task(async function testContentBlockingDependentTPControls() {
 add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
   let prefValuesToTest = [
     Ci.nsICookieService.BEHAVIOR_REJECT,        // Block All Cookies
+  ];
+  for (let value of prefValuesToTest) {
+    await SpecialPowers.pushPrefEnv({set: [
+      [CB_UI_PREF, true],
+      [CB_FB_UI_PREF, true],
+      [CB_TP_UI_PREF, true],
+      [CB_RT_UI_PREF, true],
+      [TP_PREF, false],
+      [TP_PBM_PREF, true],
+      [NCB_PREF, value],
+    ]});
+
+    // When Block All Cookies is selected, the Third-Party Cookies section under Content Blocking
+    // as well as the Keep Until controls under Cookies and Site Data should get disabled
+    // unconditionally.
+    let dependentControls = [
+      "#content-blocking-categories-label",
+      "#contentBlockingFastBlockCheckbox",
+      "#contentBlockingTrackingProtectionCheckbox",
+      ".fastblock-icon",
+      ".tracking-protection-icon",
+      "#trackingProtectionMenu",
+      "[control=trackingProtectionMenu]",
+      "#changeBlockListLink",
+      "#contentBlockingChangeCookieSettings",
+      "#blockCookies, #blockCookies > radio",
+      "#blockCookiesLabel",
+      "#blockCookiesMenu",
+    ];
+    let alwaysDisabledControls = [
+      "[control=blockCookiesCB]",
+      "#blockCookiesCBDeck",
+      "#blockCookiesCB, #blockCookiesCB > radio",
+      "#keepUntil",
+      "#keepCookiesUntil",
+    ];
+
+    await doDependentControlChecks(dependentControls, alwaysDisabledControls);
+  }
+
+  // When Block Cookies from unvisited websites is selected, the Third-Party Cookies section under
+  // Content Blocking should get disabled unconditionally.
+  prefValuesToTest = [
     Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN, // Block Cookies from unvisited websites
   ];
   for (let value of prefValuesToTest) {
@@ -414,6 +472,11 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
       "[control=trackingProtectionMenu]",
       "#changeBlockListLink",
       "#contentBlockingChangeCookieSettings",
+      "#blockCookies, #blockCookies > radio",
+      "#blockCookiesLabel",
+      "#blockCookiesMenu",
+      "#keepUntil",
+      "#keepCookiesUntil",
     ];
     let alwaysDisabledControls = [
       "[control=blockCookiesCB]",
@@ -424,6 +487,9 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
     await doDependentControlChecks(dependentControls, alwaysDisabledControls);
   }
 
+  // When Accept All Cookies is selected, the radio buttons under Third-Party Cookies
+  // in Content Blocking as well as the Type blocked controls in Cookies and Site Data
+  // must remain disabled unconditionally.
   prefValuesToTest = [
     Ci.nsICookieService.BEHAVIOR_ACCEPT,         // Accept All Cookies
   ];
@@ -445,15 +511,21 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
       "[control=trackingProtectionMenu]",
       "#changeBlockListLink",
       "#contentBlockingChangeCookieSettings",
+      "#blockCookies, #blockCookies > radio",
+      "#keepUntil",
+      "#keepCookiesUntil",
     ];
     let alwaysDisabledControls = [
       "#blockCookiesCB, #blockCookiesCB > radio",
+      "#blockCookiesLabel",
+      "#blockCookiesMenu",
     ];
 
     await doDependentControlChecks(dependentControls, alwaysDisabledControls);
   }
 
-  // The rest of the values
+  // For other choices of cookie policies, no parts of the UI should get disabled
+  // unconditionally.
   prefValuesToTest = [
     Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN, // Block All Third-Party Cookies
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER, // Block Cookies from third-party trackers
@@ -477,6 +549,11 @@ add_task(async function testContentBlockingDependentControlsOnSiteDataUI() {
       "#changeBlockListLink",
       "#contentBlockingChangeCookieSettings",
       "#blockCookiesCB, #blockCookiesCB > radio",
+      "#blockCookies, #blockCookies > radio",
+      "#blockCookiesLabel",
+      "#blockCookiesMenu",
+      "#keepUntil",
+      "#keepCookiesUntil",
     ];
 
     await doDependentControlChecks(dependentControls);

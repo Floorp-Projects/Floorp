@@ -8,7 +8,7 @@
 
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/Printf.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
@@ -164,10 +164,13 @@ XPCThrower::Verbosify(XPCCallContext& ccx,
     if (ccx.HasInterfaceAndMember()) {
         XPCNativeInterface* iface = ccx.GetInterface();
         jsid id = ccx.GetMember()->GetName();
-        JSAutoByteString bytes;
-        const char* name = JSID_IS_VOID(id) ? "Unknown" : bytes.encodeLatin1(ccx, JSID_TO_STRING(id));
-        if (!name) {
-            name = "";
+        const char* name;
+        JS::UniqueChars bytes;
+        if (!JSID_IS_VOID(id)) {
+            bytes = JS_EncodeStringToLatin1(ccx, JSID_TO_STRING(id));
+            name = bytes ? bytes.get() : "";
+        } else {
+            name = "Unknown";
         }
         sz = JS_smprintf("%s [%s.%s]", *psz, iface->GetNameString(), name).release();
     }

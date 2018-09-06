@@ -7,7 +7,7 @@
 #include "nsXULAppAPI.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Printf.h"
 #include "mozilla/ChaosMode.h"
@@ -250,8 +250,8 @@ ReadLine(JSContext* cx, unsigned argc, Value* vp)
     }
 
     /* Get a line from the infile */
-    JSAutoByteString strBytes(cx, str);
-    if (!strBytes || !GetLine(cx, buf, gInFile, strBytes.ptr()))
+    JS::UniqueChars strBytes = JS_EncodeStringToLatin1(cx, str);
+    if (!strBytes || !GetLine(cx, buf, gInFile, strBytes.get()))
         return false;
 
     /* Strip newline character added by GetLine() */
@@ -288,13 +288,13 @@ Print(JSContext* cx, unsigned argc, Value* vp)
         if (!str)
             return false;
 
-        JSAutoByteString utf8str;
-        if (!utf8str.encodeUtf8(cx, str))
+        JS::UniqueChars utf8str = JS_EncodeStringToUTF8(cx, str);
+        if (!utf8str)
             return false;
 
         if (i)
             utf8output.Append(' ');
-        utf8output.Append(utf8str.ptr(), utf8str.length());
+        utf8output.Append(utf8str.get(), strlen(utf8str.get()));
     }
     utf8output.Append('\n');
     fputs(utf8output.get(), gOutFile);
@@ -315,12 +315,12 @@ Dump(JSContext* cx, unsigned argc, Value* vp)
     if (!str)
         return false;
 
-    JSAutoByteString utf8str;
-    if (!utf8str.encodeUtf8(cx, str))
+    JS::UniqueChars utf8str = JS_EncodeStringToUTF8(cx, str);
+    if (!utf8str)
         return false;
 
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.ptr());
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.get());
 #endif
 #ifdef XP_WIN
     if (IsDebuggerPresent()) {
@@ -330,7 +330,7 @@ Dump(JSContext* cx, unsigned argc, Value* vp)
         OutputDebugStringW(wstr.get());
     }
 #endif
-    fputs(utf8str.ptr(), gOutFile);
+    fputs(utf8str.get(), gOutFile);
     fflush(gOutFile);
     return true;
 }
@@ -353,21 +353,21 @@ Load(JSContext* cx, unsigned argc, Value* vp)
         str = ToString(cx, args[i]);
         if (!str)
             return false;
-        JSAutoByteString filename(cx, str);
+        JS::UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
         if (!filename)
             return false;
-        FILE* file = fopen(filename.ptr(), "r");
+        FILE* file = fopen(filename.get(), "r");
         if (!file) {
-            filename.clear();
-            if (!filename.encodeUtf8(cx, str))
+            filename = JS_EncodeStringToUTF8(cx, str);
+            if (!filename)
                 return false;
             JS_ReportErrorUTF8(cx, "cannot open file '%s' for reading",
-                               filename.ptr());
+                               filename.get());
             return false;
         }
         JS::CompileOptions options(cx);
         options.setUTF8(true)
-               .setFileAndLine(filename.ptr(), 1)
+               .setFileAndLine(filename.get(), 1)
                .setIsRunOnce(true);
         JS::Rooted<JSScript*> script(cx);
         JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
@@ -479,25 +479,25 @@ Options(JSContext* cx, unsigned argc, Value* vp)
     ContextOptions oldContextOptions = ContextOptionsRef(cx);
 
     RootedString str(cx);
-    JSAutoByteString opt;
+    JS::UniqueChars opt;
     for (unsigned i = 0; i < args.length(); ++i) {
         str = ToString(cx, args[i]);
         if (!str)
             return false;
 
-        opt.clear();
-        if (!opt.encodeUtf8(cx, str))
+        opt = JS_EncodeStringToUTF8(cx, str);
+        if (!opt)
             return false;
 
-        if (strcmp(opt.ptr(), "strict") == 0)
+        if (strcmp(opt.get(), "strict") == 0)
             ContextOptionsRef(cx).toggleExtraWarnings();
-        else if (strcmp(opt.ptr(), "werror") == 0)
+        else if (strcmp(opt.get(), "werror") == 0)
             ContextOptionsRef(cx).toggleWerror();
-        else if (strcmp(opt.ptr(), "strict_mode") == 0)
+        else if (strcmp(opt.get(), "strict_mode") == 0)
             ContextOptionsRef(cx).toggleStrictMode();
         else {
             JS_ReportErrorUTF8(cx, "unknown option name '%s'. The valid names are "
-                               "strict, werror, and strict_mode.", opt.ptr());
+                               "strict, werror, and strict_mode.", opt.get());
             return false;
         }
     }
@@ -726,11 +726,11 @@ ProcessLine(AutoJSAPI& jsapi, const char* buffer, int startline)
     RootedString str(cx);
     if (!(str = ToString(cx, result)))
         return false;
-    JSAutoByteString bytes;
-    if (!bytes.encodeLatin1(cx, str))
+    JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str);
+    if (!bytes)
         return false;
 
-    fprintf(gOutFile, "%s\n", bytes.ptr());
+    fprintf(gOutFile, "%s\n", bytes.get());
     return true;
 }
 

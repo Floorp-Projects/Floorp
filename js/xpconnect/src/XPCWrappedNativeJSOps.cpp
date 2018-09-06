@@ -10,7 +10,7 @@
 #include "xpc_make_class.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Preferences.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/Printf.h"
 
@@ -289,20 +289,37 @@ DefinePropertyIfFound(XPCCallContext& ccx,
         // interface and add a tearoff as necessary.
 
         if (wrapperToReflectInterfaceNames) {
-            JSAutoByteString name;
+            JS::UniqueChars name;
             RefPtr<XPCNativeInterface> iface2;
             XPCWrappedNativeTearOff* to;
             RootedObject jso(ccx);
             nsresult rv = NS_OK;
 
-            if (JSID_IS_STRING(id) &&
-                name.encodeLatin1(ccx, JSID_TO_STRING(id)) &&
-                (iface2 = XPCNativeInterface::GetNewOrUsed(name.ptr())) &&
-                nullptr != (to = wrapperToReflectInterfaceNames->
-                           FindTearOff(iface2, true, &rv)) &&
-                nullptr != (jso = to->GetJSObject()))
+            bool defineProperty = false;
+            do {
+                if (!JSID_IS_STRING(id))
+                    break;
 
-            {
+                name = JS_EncodeStringToLatin1(ccx, JSID_TO_STRING(id));
+                if (!name)
+                    break;
+
+                iface2 = XPCNativeInterface::GetNewOrUsed(name.get());
+                if (!iface2)
+                    break;
+
+                to = wrapperToReflectInterfaceNames->FindTearOff(iface2, true, &rv);
+                if (!to)
+                    break;
+
+                jso = to->GetJSObject();
+                if (!jso)
+                    break;
+
+                defineProperty = true;
+            } while (false);
+
+            if (defineProperty) {
                 AutoResolveName arn(ccx, id);
                 if (resolved)
                     *resolved = true;

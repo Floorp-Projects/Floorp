@@ -435,6 +435,11 @@ button > hbox > label {
   margin-top: 1.5em;
 }
 
+#blockCookiesWarning {
+  margin-top: 1.5em !important;
+  margin-bottom: -1em !important;
+}
+
 /* Collapse the non-active vboxes in decks to use only the height the
    active vbox needs */
 #historyPane:not([selectedIndex="1"]) > #historyDontRememberPane,

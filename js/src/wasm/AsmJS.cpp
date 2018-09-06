@@ -32,7 +32,6 @@
 #include "builtin/String.h"
 #include "frontend/Parser.h"
 #include "gc/Policy.h"
-#include "js/AutoByteString.h"
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
 #include "js/SourceBufferHolder.h"
@@ -2017,9 +2016,8 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     bool failNameOffset(uint32_t offset, const char* fmt, PropertyName* name) {
         // This function is invoked without the caller properly rooting its locals.
         gc::AutoSuppressGC suppress(cx_);
-        JSAutoByteString bytes;
-        if (AtomToPrintableString(cx_, name, &bytes))
-            failfOffset(offset, fmt, bytes.ptr());
+        if (UniqueChars bytes = AtomToPrintableString(cx_, name))
+            failfOffset(offset, fmt, bytes.get());
         return false;
     }
 

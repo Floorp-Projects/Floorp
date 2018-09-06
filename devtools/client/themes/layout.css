@@ -14,47 +14,36 @@
 }
 
 /**
- * Common styles for shared components
+ * Common styles for the layout container
  */
-
-.grid-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1 auto;
-  min-width: 140px;
-  margin-inline-start: 16px;
-}
-
-.grid-container:first-child {
-  margin-bottom: 10px;
-}
-
-.grid-container > span {
-  font-weight: 600;
-  margin-bottom: 5px;
-  pointer-events: none;
-}
-
-.grid-container > ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
 
 #layout-container li {
   padding: 3px 0;
   -moz-user-select: none;
 }
 
-.flex-container input,
-.grid-container input {
+#layout-container input {
   margin-inline-end: 7px;
   vertical-align: middle;
 }
 
-.flex-container label,
-.grid-container label {
+#layout-container label {
   margin-inline-start: -3px;
+}
+
+.layout-color-swatch {
+  width: 12px;
+  height: 12px;
+  margin-inline-start: -1px;
+  border: 1px solid var(--theme-highlight-gray);
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.layout-color-value {
+  display: none;
 }
 
 /* Layout Properties: Common styles used for the Box Model and Flexbox Properties */
@@ -91,14 +80,14 @@
   display: block;
 }
 
+/**
+ * Flex Container
+ */
+
 #layout-flexbox-container {
   display: flex;
   flex-direction: column;
 }
-
-/**
- * Flex Container
- */
 
 .flex-container {
   border-bottom: 1px solid var(--theme-splitter-color);
@@ -152,6 +141,30 @@
   display: flex;
   flex-direction: column;
   padding: 5px;
+}
+
+.grid-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 auto;
+  min-width: 140px;
+  margin-inline-start: 16px;
+}
+
+.grid-container:first-child {
+  margin-bottom: 10px;
+}
+
+.grid-container > span {
+  font-weight: 600;
+  margin-bottom: 5px;
+  pointer-events: none;
+}
+
+.grid-container > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 /**
@@ -213,27 +226,6 @@
   margin-inline-end: 5px;
   width: 16px;
   height: 16px;
-}
-
-/**
- * Flexbox and Grid Item
- */
-
-.flexbox-color-swatch,
-.grid-color-swatch {
-  width: 12px;
-  height: 12px;
-  margin-inline-start: -1px;
-  border: 1px solid var(--theme-highlight-gray);
-  border-radius: 50%;
-  cursor: pointer;
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.flexbox-color-value,
-.grid-color-value {
-  display: none;
 }
 
 /**
