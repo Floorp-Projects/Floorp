@@ -71,8 +71,9 @@ class BaselineCompilerShared
     BaselineCompilerShared(JSContext* cx, TempAllocator& alloc, JSScript* script);
 
     ICEntry* allocateICEntry(ICStub* stub, ICEntry::Kind kind) {
-        if (!stub)
+        if (!stub) {
             return nullptr;
+        }
 
         // Create the entry and add it to the vector.
         if (!icEntries_.append(ICEntry(script->pcToOffset(pc), kind))) {
@@ -149,8 +150,9 @@ class BaselineCompilerShared
     bool callVM(const VMFunction& fun, CallVMPhase phase=POST_INITIALIZE);
 
     bool callVMNonOp(const VMFunction& fun, CallVMPhase phase=POST_INITIALIZE) {
-        if (!callVM(fun, phase))
+        if (!callVM(fun, phase)) {
             return false;
+        }
         icEntries_.back().setFakeKind(ICEntry::Kind_NonOpCallVM);
         return true;
     }
