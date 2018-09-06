@@ -260,10 +260,12 @@ class Encoder
         do {
             uint8_t byte = i & 0x7f;
             i >>= 7;
-            if (i != 0)
+            if (i != 0) {
                 byte |= 0x80;
-            if (!bytes_.append(byte))
+            }
+            if (!bytes_.append(byte)) {
                 return false;
+            }
         } while (i != 0);
         return true;
     }
@@ -275,10 +277,12 @@ class Encoder
             uint8_t byte = i & 0x7f;
             i >>= 7;
             done = ((i == 0) && !(byte & 0x40)) || ((i == -1) && (byte & 0x40));
-            if (!done)
+            if (!done) {
                 byte |= 0x80;
-            if (!bytes_.append(byte))
+            }
+            if (!bytes_.append(byte)) {
                 return false;
+            }
         } while (!done);
         return true;
     }
@@ -311,8 +315,9 @@ class Encoder
 
     uint32_t varU32ByteLength(size_t offset) const {
         size_t start = offset;
-        while (bytes_[offset] & 0x80)
+        while (bytes_[offset] & 0x80) {
             offset++;
+        }
         return offset - start + 1;
     }
 
@@ -501,8 +506,9 @@ class Decoder
 
     template <class T>
     MOZ_MUST_USE bool read(T* out) {
-        if (bytesRemain() < sizeof(T))
+        if (bytesRemain() < sizeof(T)) {
             return false;
+        }
         memcpy((void*)out, cur_, sizeof(T));
         cur_ += sizeof(T);
         return true;
@@ -534,8 +540,9 @@ class Decoder
         uint8_t byte;
         UInt shift = 0;
         do {
-            if (!readFixedU8(&byte))
+            if (!readFixedU8(&byte)) {
                 return false;
+            }
             if (!(byte & 0x80)) {
                 *out = u | UInt(byte) << shift;
                 return true;
@@ -543,8 +550,9 @@ class Decoder
             u |= UInt(byte & 0x7F) << shift;
             shift += 7;
         } while (shift != numBitsInSevens);
-        if (!readFixedU8(&byte) || (byte & (unsigned(-1) << remainderBits)))
+        if (!readFixedU8(&byte) || (byte & (unsigned(-1) << remainderBits))) {
             return false;
+        }
         *out = u | (UInt(byte) << numBitsInSevens);
         MOZ_ASSERT_IF(sizeof(UInt) == 4, unsigned(cur_ - before) <= MaxVarU32DecodedBytes);
         return true;
@@ -560,22 +568,26 @@ class Decoder
         uint8_t byte;
         unsigned shift = 0;
         do {
-            if (!readFixedU8(&byte))
+            if (!readFixedU8(&byte)) {
                 return false;
+            }
             s |= SInt(byte & 0x7f) << shift;
             shift += 7;
             if (!(byte & 0x80)) {
-                if (byte & 0x40)
+                if (byte & 0x40) {
                     s |= UInt(-1) << shift;
+                }
                 *out = s;
                 return true;
             }
         } while (shift < numBitsInSevens);
-        if (!remainderBits || !readFixedU8(&byte) || (byte & 0x80))
+        if (!remainderBits || !readFixedU8(&byte) || (byte & 0x80)) {
             return false;
+        }
         uint8_t mask = 0x7f & (uint8_t(-1) << remainderBits);
-        if ((byte & mask) != ((byte & (1 << (remainderBits - 1))) ? mask : 0))
+        if ((byte & mask) != ((byte & (1 << (remainderBits - 1))) ? mask : 0)) {
             return false;
+        }
         *out = s | UInt(byte) << shift;
         return true;
     }
@@ -615,8 +627,9 @@ class Decoder
     UniqueChars* error() { return error_; }
 
     void clearError() {
-        if (error_)
+        if (error_) {
             error_->reset();
+        }
     }
 
     bool done() const {
@@ -680,11 +693,13 @@ class Decoder
     }
     MOZ_MUST_USE bool readValType(uint8_t* code, uint32_t* refTypeIndex) {
         static_assert(uint8_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-        if (!readFixedU8(code))
+        if (!readFixedU8(code)) {
             return false;
+        }
         if (*code == uint8_t(TypeCode::Ref)) {
-            if (!readVarU32(refTypeIndex))
+            if (!readVarU32(refTypeIndex)) {
                 return false;
+            }
         } else {
             *refTypeIndex = NoRefTypeIndex;
         }
@@ -692,11 +707,13 @@ class Decoder
     }
     MOZ_MUST_USE bool readBlockType(uint8_t* code, uint32_t* refTypeIndex) {
         static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-        if (!readFixedU8(code))
+        if (!readFixedU8(code)) {
             return false;
+        }
         if (*code == uint8_t(TypeCode::Ref)) {
-            if (!readVarU32(refTypeIndex))
+            if (!readVarU32(refTypeIndex)) {
                 return false;
+            }
         } else {
             *refTypeIndex = NoRefTypeIndex;
         }
@@ -705,11 +722,13 @@ class Decoder
     MOZ_MUST_USE bool readOp(OpBytes* op) {
         static_assert(size_t(Op::Limit) == 256, "fits");
         uint8_t u8;
-        if (!readFixedU8(&u8))
+        if (!readFixedU8(&u8)) {
             return false;
+        }
         op->b0 = u8;
-        if (MOZ_LIKELY(!IsPrefixByte(u8)))
+        if (MOZ_LIKELY(!IsPrefixByte(u8))) {
             return true;
+        }
         if (!readFixedU8(&u8)) {
             op->b1 = 0;         // Make it sane
             return false;
@@ -721,10 +740,12 @@ class Decoder
     // See writeBytes comment.
 
     MOZ_MUST_USE bool readBytes(uint32_t numBytes, const uint8_t** bytes = nullptr) {
-        if (bytes)
+        if (bytes) {
             *bytes = cur_;
-        if (bytesRemain() < numBytes)
+        }
+        if (bytesRemain() < numBytes) {
             return false;
+        }
         cur_ += numBytes;
         return true;
     }
@@ -793,8 +814,9 @@ class Decoder
         uint32_t shift = 0;
         do {
             uint8_t byte = *cur_++;
-            if (!(byte & 0x80))
+            if (!(byte & 0x80)) {
                 return decoded | (UInt(byte) << shift);
+            }
             decoded |= UInt(byte & 0x7f) << shift;
             shift += 7;
         } while (shift != numBitsInSevens);

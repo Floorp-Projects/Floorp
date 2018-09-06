@@ -670,20 +670,22 @@ MOZ_COLD static void
 SetRegisterToCoercedUndefined(CONTEXT* context, size_t size,
                               const Disassembler::OtherOperand& value)
 {
-    if (value.kind() == Disassembler::OtherOperand::FPR)
+    if (value.kind() == Disassembler::OtherOperand::FPR) {
         SetFPRegToNaN(size, AddressOfFPRegisterSlot(context, value.fpr()));
-    else
+    } else {
         SetGPRegToZero(AddressOfGPRegisterSlot(context, value.gpr()));
+    }
 }
 
 MOZ_COLD static void
 SetRegisterToLoadedValue(CONTEXT* context, SharedMem<void*> addr, size_t size,
                          const Disassembler::OtherOperand& value)
 {
-    if (value.kind() == Disassembler::OtherOperand::FPR)
+    if (value.kind() == Disassembler::OtherOperand::FPR) {
         SetFPRegToLoadedValue(addr, size, AddressOfFPRegisterSlot(context, value.fpr()));
-    else
+    } else {
         SetGPRegToLoadedValue(addr, size, AddressOfGPRegisterSlot(context, value.gpr()));
+    }
 }
 
 MOZ_COLD static void
@@ -697,12 +699,13 @@ MOZ_COLD static void
 StoreValueFromRegister(CONTEXT* context, SharedMem<void*> addr, size_t size,
                        const Disassembler::OtherOperand& value)
 {
-    if (value.kind() == Disassembler::OtherOperand::FPR)
+    if (value.kind() == Disassembler::OtherOperand::FPR) {
         StoreValueFromFPReg(addr, size, AddressOfFPRegisterSlot(context, value.fpr()));
-    else if (value.kind() == Disassembler::OtherOperand::GPR)
+    } else if (value.kind() == Disassembler::OtherOperand::GPR) {
         StoreValueFromGPReg(addr, size, AddressOfGPRegisterSlot(context, value.gpr()));
-    else
+    } else {
         StoreValueFromGPImm(addr, size, value.imm());
+    }
 }
 
 MOZ_COLD static uint8_t*
@@ -742,8 +745,9 @@ HandleOutOfBounds(CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
     BytecodeOffset bytecode;
     MOZ_ALWAYS_TRUE(segment->code().lookupTrap(pc, &trap, &bytecode));
 
-    if (trap != Trap::OutOfBounds)
+    if (trap != Trap::OutOfBounds) {
         return false;
+    }
 
     if (bytecode.isValid()) {
         activation->startWasmTrap(Trap::OutOfBounds, bytecode.offset(), ToRegisterState(context));
@@ -910,8 +914,9 @@ HandleFault(PEXCEPTION_POINTERS exception)
     uint8_t* pc = *ppc;
 
     const CodeSegment* codeSegment = LookupCodeSegment(pc);
-    if (!codeSegment || !codeSegment->isModule())
+    if (!codeSegment || !codeSegment->isModule()) {
         return false;
+    }
 
     const ModuleSegment* moduleSegment = codeSegment->asModule();
 
@@ -919,14 +924,16 @@ HandleFault(PEXCEPTION_POINTERS exception)
     MOZ_ASSERT(activation);
 
     const Instance* instance = LookupFaultingInstance(*moduleSegment, pc, ContextToFP(context));
-    if (!instance)
+    if (!instance) {
         return false;
+    }
 
     if (record->ExceptionCode == EXCEPTION_ILLEGAL_INSTRUCTION) {
         Trap trap;
         BytecodeOffset bytecode;
-        if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode))
+        if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode)) {
             return false;
+        }
 
         activation->startWasmTrap(trap, bytecode.offset(), ToRegisterState(context));
         *ppc = moduleSegment->trapCode();
@@ -935,15 +942,17 @@ HandleFault(PEXCEPTION_POINTERS exception)
 
     MOZ_RELEASE_ASSERT(&instance->code() == &moduleSegment->code());
 
-    if (record->NumberParameters < 2)
+    if (record->NumberParameters < 2) {
         return false;
+    }
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(record->ExceptionInformation[1]);
 
     // This check isn't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    if (!IsHeapAccessAddress(*instance, faultingAddress))
+    if (!IsHeapAccessAddress(*instance, faultingAddress)) {
         return false;
+    }
 
     MOZ_ASSERT(activation->compartment() == instance->realm()->compartment());
 
@@ -954,12 +963,14 @@ static LONG WINAPI
 WasmFaultHandler(LPEXCEPTION_POINTERS exception)
 {
     // Before anything else, prevent handler recursion.
-    if (sAlreadyInSignalHandler.get())
+    if (sAlreadyInSignalHandler.get()) {
         return EXCEPTION_CONTINUE_SEARCH;
+    }
     AutoSignalHandler ash;
 
-    if (HandleFault(exception))
+    if (HandleFault(exception)) {
         return EXCEPTION_CONTINUE_EXECUTION;
+    }
 
     // No need to worry about calling other handlers, the OS does this for us.
     return EXCEPTION_CONTINUE_SEARCH;
@@ -1021,12 +1032,14 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
     kern_return_t kret;
     kret = thread_get_state(cxThread, thread_state,
                             (thread_state_t)&context.thread, &thread_state_count);
-    if (kret != KERN_SUCCESS)
+    if (kret != KERN_SUCCESS) {
         return false;
+    }
     kret = thread_get_state(cxThread, float_state,
                             (thread_state_t)&context.float_, &float_state_count);
-    if (kret != KERN_SUCCESS)
+    if (kret != KERN_SUCCESS) {
         return false;
+    }
 
     uint8_t** ppc = ContextToPC(&context);
     uint8_t* pc = *ppc;
@@ -1042,14 +1055,16 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
     AutoNoteSingleThreadedRegion anstr;
 
     const CodeSegment* codeSegment = LookupCodeSegment(pc);
-    if (!codeSegment || !codeSegment->isModule())
+    if (!codeSegment || !codeSegment->isModule()) {
         return false;
+    }
 
     const ModuleSegment* moduleSegment = codeSegment->asModule();
 
     const Instance* instance = LookupFaultingInstance(*moduleSegment, pc, ContextToFP(&context));
-    if (!instance)
+    if (!instance) {
         return false;
+    }
 
     JitActivation* activation = cx->activation()->asJit();
     MOZ_ASSERT(activation->compartment() == instance->realm()->compartment());
@@ -1057,8 +1072,9 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
     if (request.body.exception == EXC_BAD_INSTRUCTION) {
         Trap trap;
         BytecodeOffset bytecode;
-        if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode))
+        if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode)) {
             return false;
+        }
 
         activation->startWasmTrap(trap, bytecode.offset(), ToRegisterState(&context));
         *ppc = moduleSegment->trapCode();
@@ -1066,27 +1082,32 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
         MOZ_RELEASE_ASSERT(&instance->code() == &moduleSegment->code());
 
         MOZ_ASSERT(request.body.exception == EXC_BAD_ACCESS);
-        if (request.body.codeCnt != 2)
+        if (request.body.codeCnt != 2) {
             return false;
+        }
 
         uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(request.body.code[1]);
 
         // This check isn't necessary, but, since we can, check anyway to make
         // sure we aren't covering up a real bug.
-        if (!IsHeapAccessAddress(*instance, faultingAddress))
+        if (!IsHeapAccessAddress(*instance, faultingAddress)) {
             return false;
+        }
 
-        if (!HandleOutOfBounds(&context, pc, faultingAddress, moduleSegment, *instance, activation, ppc))
+        if (!HandleOutOfBounds(&context, pc, faultingAddress, moduleSegment, *instance, activation, ppc)) {
             return false;
+        }
     }
 
     // Update the thread state with the new pc and register values.
     kret = thread_set_state(cxThread, float_state, (thread_state_t)&context.float_, float_state_count);
-    if (kret != KERN_SUCCESS)
+    if (kret != KERN_SUCCESS) {
         return false;
+    }
     kret = thread_set_state(cxThread, thread_state, (thread_state_t)&context.thread, thread_state_count);
-    if (kret != KERN_SUCCESS)
+    if (kret != KERN_SUCCESS) {
         return false;
+    }
 
     return true;
 }
@@ -1118,8 +1139,9 @@ MachExceptionHandlerThread(JSContext* cx)
         // There are only two messages we should be receiving: an exception
         // message that occurs when the runtime's thread faults and the quit
         // message sent when the runtime is shutting down.
-        if (request.body.Head.msgh_id == sQuitId)
+        if (request.body.Head.msgh_id == sQuitId) {
             break;
+        }
         if (request.body.Head.msgh_id != sExceptionId) {
             fprintf(stderr, "Unexpected msg header id %d\n", (int)request.body.Head.msgh_bits);
             MOZ_CRASH();
@@ -1166,8 +1188,9 @@ MachExceptionHandler::uninstall()
                                                         EXCEPTION_DEFAULT | MACH_EXCEPTION_CODES,
                                                         THREAD_STATE_NONE);
         mach_port_deallocate(mach_task_self(), thread);
-        if (kret != KERN_SUCCESS)
+        if (kret != KERN_SUCCESS) {
             MOZ_CRASH();
+        }
         installed_ = false;
     }
     if (thread_.joinable()) {
@@ -1209,15 +1232,18 @@ MachExceptionHandler::install(JSContext* cx)
 
     // Get a port which can send and receive data.
     kret = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &port_);
-    if (kret != KERN_SUCCESS)
+    if (kret != KERN_SUCCESS) {
         return false;
+    }
     kret = mach_port_insert_right(mach_task_self(), port_, port_, MACH_MSG_TYPE_MAKE_SEND);
-    if (kret != KERN_SUCCESS)
+    if (kret != KERN_SUCCESS) {
         return false;
+    }
 
     // Create a thread to block on reading port_.
-    if (!thread_.init(MachExceptionHandlerThread, cx))
+    if (!thread_.init(MachExceptionHandlerThread, cx)) {
         return false;
+    }
 
     // Direct exceptions on this thread to port_ (and thus our handler thread).
     // Note: we are totally clobbering any existing *thread* exception ports and
@@ -1231,8 +1257,9 @@ MachExceptionHandler::install(JSContext* cx)
                                       EXCEPTION_DEFAULT | MACH_EXCEPTION_CODES,
                                       THREAD_STATE_NONE);
     mach_port_deallocate(mach_task_self(), thread);
-    if (kret != KERN_SUCCESS)
+    if (kret != KERN_SUCCESS) {
         return false;
+    }
 
     installed_ = true;
     onFailure.release();
@@ -1253,8 +1280,9 @@ static bool
 HandleFault(int signum, siginfo_t* info, void* ctx)
 {
     // Before anything else, prevent handler recursion.
-    if (sAlreadyInSignalHandler.get())
+    if (sAlreadyInSignalHandler.get()) {
         return false;
+    }
     AutoSignalHandler ash;
 
     MOZ_RELEASE_ASSERT(signum == SIGSEGV || signum == SIGBUS || signum == kWasmTrapSignal);
@@ -1264,14 +1292,16 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
     uint8_t* pc = *ppc;
 
     const CodeSegment* segment = LookupCodeSegment(pc);
-    if (!segment || !segment->isModule())
+    if (!segment || !segment->isModule()) {
         return false;
+    }
 
     const ModuleSegment* moduleSegment = segment->asModule();
 
     const Instance* instance = LookupFaultingInstance(*moduleSegment, pc, ContextToFP(context));
-    if (!instance)
+    if (!instance) {
         return false;
+    }
 
     JitActivation* activation = TlsContext.get()->activation()->asJit();
     MOZ_ASSERT(activation->compartment() == instance->realm()->compartment());
@@ -1279,13 +1309,15 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
     if (signum == kWasmTrapSignal) {
         // Wasm traps for MIPS raise only integer overflow fp exception.
 #ifdef __mips__
-        if (info->si_code != FPE_INTOVF)
+        if (info->si_code != FPE_INTOVF) {
             return false;
+        }
 #endif
         Trap trap;
         BytecodeOffset bytecode;
-        if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode))
+        if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode)) {
             return false;
+        }
 
         activation->startWasmTrap(trap, bytecode.offset(), ToRegisterState(context));
         *ppc = moduleSegment->trapCode();
@@ -1305,14 +1337,16 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         // This is observed on some automation machines for some out-of-bounds
         // atomic accesses on x86/64.
 #ifdef SI_KERNEL
-        if (info->si_code != SI_KERNEL)
+        if (info->si_code != SI_KERNEL) {
             return false;
+        }
 #else
         return false;
 #endif
     } else {
-        if (!IsHeapAccessAddress(*instance, faultingAddress))
+        if (!IsHeapAccessAddress(*instance, faultingAddress)) {
             return false;
+        }
     }
 
     return HandleOutOfBounds(context, pc, faultingAddress, moduleSegment, *instance, activation, ppc);
@@ -1325,8 +1359,9 @@ static struct sigaction sPrevWasmTrapHandler;
 static void
 WasmFaultHandler(int signum, siginfo_t* info, void* context)
 {
-    if (HandleFault(signum, info, context))
+    if (HandleFault(signum, info, context)) {
         return;
+    }
 
     struct sigaction* previousSignal = nullptr;
     switch (signum) {
@@ -1348,12 +1383,13 @@ WasmFaultHandler(int signum, siginfo_t* info, void* context)
     // signal to it's original disposition and returning.
     //
     // Note: the order of these tests matter.
-    if (previousSignal->sa_flags & SA_SIGINFO)
+    if (previousSignal->sa_flags & SA_SIGINFO) {
         previousSignal->sa_sigaction(signum, info, context);
-    else if (previousSignal->sa_handler == SIG_DFL || previousSignal->sa_handler == SIG_IGN)
+    } else if (previousSignal->sa_handler == SIG_DFL || previousSignal->sa_handler == SIG_IGN) {
         sigaction(signum, previousSignal, nullptr);
-    else
+    } else {
         previousSignal->sa_handler(signum);
+    }
 }
 # endif // XP_WIN || XP_DARWIN || assume unix
 
@@ -1368,8 +1404,9 @@ static bool
 ProcessHasSignalHandlers()
 {
     // We assume that there are no races creating the first JSRuntime of the process.
-    if (sTriedInstallSignalHandlers)
+    if (sTriedInstallSignalHandlers) {
         return sHaveSignalHandlers;
+    }
     sTriedInstallSignalHandlers = true;
 
 #if defined (JS_CODEGEN_NONE)
@@ -1378,13 +1415,15 @@ ProcessHasSignalHandlers()
 #endif
 
     // Signal handlers are currently disabled when recording or replaying.
-    if (mozilla::recordreplay::IsRecordingOrReplaying())
+    if (mozilla::recordreplay::IsRecordingOrReplaying()) {
         return false;
+    }
 
 #if defined(ANDROID) && defined(MOZ_LINKER)
     // Signal handling is broken on some android systems.
-    if (IsSignalHandlingBroken())
+    if (IsSignalHandlingBroken()) {
         return false;
+    }
 #endif
 
     // Initalize ThreadLocal flag used by WasmFaultHandler
@@ -1404,8 +1443,9 @@ ProcessHasSignalHandlers()
     // such as MemoryProtectionExceptionHandler that assume we are crashing.
     const bool firstHandler = true;
 # endif
-    if (!AddVectoredExceptionHandler(firstHandler, WasmFaultHandler))
+    if (!AddVectoredExceptionHandler(firstHandler, WasmFaultHandler)) {
         return false;
+    }
 #elif defined(XP_DARWIN)
     // OSX handles seg faults via the Mach exception handler above, so don't
     // install WasmFaultHandler.
@@ -1419,8 +1459,9 @@ ProcessHasSignalHandlers()
     faultHandler.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
     faultHandler.sa_sigaction = WasmFaultHandler;
     sigemptyset(&faultHandler.sa_mask);
-    if (sigaction(SIGSEGV, &faultHandler, &sPrevSEGVHandler))
+    if (sigaction(SIGSEGV, &faultHandler, &sPrevSEGVHandler)) {
         MOZ_CRASH("unable to install segv handler");
+    }
 
 # if defined(JS_CODEGEN_ARM)
     // On Arm Handle Unaligned Accesses
@@ -1428,8 +1469,9 @@ ProcessHasSignalHandlers()
     busHandler.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
     busHandler.sa_sigaction = WasmFaultHandler;
     sigemptyset(&busHandler.sa_mask);
-    if (sigaction(SIGBUS, &busHandler, &sPrevSIGBUSHandler))
+    if (sigaction(SIGBUS, &busHandler, &sPrevSIGBUSHandler)) {
         MOZ_CRASH("unable to install sigbus handler");
+    }
 # endif
 
     // Install a handler to handle the instructions that are emitted to implement
@@ -1438,8 +1480,9 @@ ProcessHasSignalHandlers()
     wasmTrapHandler.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
     wasmTrapHandler.sa_sigaction = WasmFaultHandler;
     sigemptyset(&wasmTrapHandler.sa_mask);
-    if (sigaction(kWasmTrapSignal, &wasmTrapHandler, &sPrevWasmTrapHandler))
+    if (sigaction(kWasmTrapSignal, &wasmTrapHandler, &sPrevWasmTrapHandler)) {
         MOZ_CRASH("unable to install wasm trap handler");
+    }
 #endif
 
     sHaveSignalHandlers = true;
@@ -1450,13 +1493,15 @@ bool
 wasm::EnsureSignalHandlers(JSContext* cx)
 {
     // Nothing to do if the platform doesn't support it.
-    if (!ProcessHasSignalHandlers())
+    if (!ProcessHasSignalHandlers()) {
         return true;
+    }
 
 #if defined(XP_DARWIN)
     // On OSX, each JSContext which runs wasm gets its own handler thread.
-    if (!cx->wasmMachExceptionHandler.installed() && !cx->wasmMachExceptionHandler.install(cx))
+    if (!cx->wasmMachExceptionHandler.installed() && !cx->wasmMachExceptionHandler.install(cx)) {
         return false;
+    }
 #endif
 
     return true;

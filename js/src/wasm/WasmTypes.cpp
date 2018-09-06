@@ -97,8 +97,9 @@ Val::writePayload(uint8_t* dst) const
         // an instance is effectively a field of the WasmInstanceObject.
         // - WasmGlobalObjects are always tenured, and they have a Cell field,
         // so a post-barrier may be needed for the same reason as above.
-        if (u.ptr_)
+        if (u.ptr_) {
             JSObject::writeBarrierPost((JSObject**)dst, nullptr, u.ptr_);
+        }
         return;
     }
     MOZ_CRASH("unexpected Val type");
@@ -107,8 +108,9 @@ Val::writePayload(uint8_t* dst) const
 void
 Val::trace(JSTracer* trc)
 {
-    if (type_.isValid() && type_.isRefOrAnyRef() && u.ptr_)
+    if (type_.isValid() && type_.isRefOrAnyRef() && u.ptr_) {
         TraceManuallyBarrieredEdge(trc, &u.ptr_, "wasm ref/anyref global");
+    }
 }
 
 bool
@@ -230,15 +232,18 @@ FuncTypeIdDesc::isGlobal(const FuncType& funcType)
 {
     unsigned numTypes = (funcType.ret() == ExprType::Void ? 0 : 1) +
                         (funcType.args().length());
-    if (numTypes > sMaxTypes)
+    if (numTypes > sMaxTypes) {
         return true;
+    }
 
-    if (funcType.ret() != ExprType::Void && !IsImmediateType(NonVoidToValType(funcType.ret())))
+    if (funcType.ret() != ExprType::Void && !IsImmediateType(NonVoidToValType(funcType.ret()))) {
         return true;
+    }
 
     for (ValType v : funcType.args()) {
-        if (!IsImmediateType(v))
+        if (!IsImmediateType(v)) {
             return true;
+        }
     }
 
     return false;
@@ -321,8 +326,9 @@ FuncTypeWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 bool
 StructType::hasPrefix(const StructType& other) const
 {
-    if (fields_.length() < other.fields_.length())
+    if (fields_.length() < other.fields_.length()) {
         return false;
+    }
     uint32_t limit = other.fields_.length();
     for (uint32_t i = 0; i < limit; i++) {
         if (fields_[i].type != other.fields_[i].type ||
@@ -507,10 +513,11 @@ wasm::RoundUpToNextValidARMImmediate(uint32_t i)
 {
     MOZ_ASSERT(i <= 0xff000000);
 
-    if (i <= 16 * 1024 * 1024)
+    if (i <= 16 * 1024 * 1024) {
         i = i ? mozilla::RoundUpPow2(i) : 0;
-    else
+    } else {
         i = (i + 0x00ffffff) & ~0x00ffffff;
+    }
 
     MOZ_ASSERT(IsValidARMImmediate(i));
 
@@ -597,12 +604,14 @@ DebugFrame::getLocal(uint32_t localIndex, MutableHandleValue vp)
 {
     ValTypeVector locals;
     size_t argsLength;
-    if (!instance()->debug().debugGetLocalTypes(funcIndex(), &locals, &argsLength))
+    if (!instance()->debug().debugGetLocalTypes(funcIndex(), &locals, &argsLength)) {
         return false;
+    }
 
     BaseLocalIter iter(locals, argsLength, /* debugEnabled = */ true);
-    while (!iter.done() && iter.index() < localIndex)
+    while (!iter.done() && iter.index() < localIndex) {
         iter++;
+    }
     MOZ_ALWAYS_TRUE(!iter.done());
 
     uint8_t* frame = static_cast<uint8_t*>((void*)this) + offsetOfFrame();
@@ -697,8 +706,9 @@ bool
 TrapSiteVectorArray::empty() const
 {
     for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
-        if (!(*this)[trap].empty())
+        if (!(*this)[trap].empty()) {
             return false;
+        }
     }
 
     return true;
@@ -707,38 +717,43 @@ TrapSiteVectorArray::empty() const
 void
 TrapSiteVectorArray::clear()
 {
-    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
         (*this)[trap].clear();
+    }
 }
 
 void
 TrapSiteVectorArray::swap(TrapSiteVectorArray& rhs)
 {
-    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
         (*this)[trap].swap(rhs[trap]);
+    }
 }
 
 void
 TrapSiteVectorArray::podResizeToFit()
 {
-    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
         (*this)[trap].podResizeToFit();
+    }
 }
 
 size_t
 TrapSiteVectorArray::serializedSize() const
 {
     size_t ret = 0;
-    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
         ret += SerializedPodVectorSize((*this)[trap]);
+    }
     return ret;
 }
 
 uint8_t*
 TrapSiteVectorArray::serialize(uint8_t* cursor) const
 {
-    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
         cursor = SerializePodVector(cursor, (*this)[trap]);
+    }
     return cursor;
 }
 
@@ -747,8 +762,9 @@ TrapSiteVectorArray::deserialize(const uint8_t* cursor)
 {
     for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
         cursor = DeserializePodVector(cursor, &(*this)[trap]);
-        if (!cursor)
+        if (!cursor) {
             return nullptr;
+        }
     }
     return cursor;
 }
@@ -757,8 +773,9 @@ size_t
 TrapSiteVectorArray::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     size_t ret = 0;
-    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
         ret += (*this)[trap].sizeOfExcludingThis(mallocSizeOf);
+    }
     return ret;
 }
 
@@ -870,8 +887,9 @@ wasm::LookupInSorted(const CodeRangeVector& codeRanges, CodeRange::OffsetInCode 
     size_t upperBound = codeRanges.length();
 
     size_t match;
-    if (!BinarySearch(codeRanges, lowerBound, upperBound, target, &match))
+    if (!BinarySearch(codeRanges, lowerBound, upperBound, target, &match)) {
         return nullptr;
+    }
 
     return &codeRanges[match];
 }
@@ -882,8 +900,9 @@ wasm::CreateTlsData(uint32_t globalDataLength)
     MOZ_ASSERT(globalDataLength % gc::SystemPageSize() == 0);
 
     void* allocatedBase = js_calloc(TlsDataAlign + offsetof(TlsData, globalArea) + globalDataLength);
-    if (!allocatedBase)
+    if (!allocatedBase) {
         return nullptr;
+    }
 
     auto* tlsData = reinterpret_cast<TlsData*>(AlignBytes(uintptr_t(allocatedBase), TlsDataAlign));
     tlsData->allocatedBase = allocatedBase;
