@@ -39,13 +39,15 @@ Symbol::new_(JSContext* cx, JS::SymbolCode code, JSString* description)
     JSAtom* atom = nullptr;
     if (description) {
         atom = AtomizeString(cx, description);
-        if (!atom)
+        if (!atom) {
             return nullptr;
+        }
     }
 
     Symbol* sym = newInternal(cx, code, cx->runtime()->randomHashCode(), atom);
-    if (sym)
+    if (sym) {
         cx->markAtom(sym);
+    }
     return sym;
 }
 
@@ -53,8 +55,9 @@ Symbol*
 Symbol::for_(JSContext* cx, HandleString description)
 {
     JSAtom* atom = AtomizeString(cx, description);
-    if (!atom)
+    if (!atom) {
         return nullptr;
+    }
 
     SymbolRegistry& registry = cx->symbolRegistry();
     SymbolRegistry::AddPtr p = registry.lookupForAdd(atom);
@@ -67,8 +70,9 @@ Symbol::for_(JSContext* cx, HandleString description)
     // that is different than the hash of the corresponding atom.
     HashNumber hash = mozilla::HashGeneric(atom->hash());
     Symbol* sym = newInternal(cx, SymbolCode::InSymbolRegistry, hash, atom);
-    if (!sym)
+    if (!sym) {
         return nullptr;
+    }
 
     // p is still valid here because we only access the symbol registry from the
     // main thread, and newInternal can't GC.
@@ -99,15 +103,17 @@ Symbol::dump(js::GenericPrinter& out)
     } else if (code_ == SymbolCode::InSymbolRegistry || code_ == SymbolCode::UniqueSymbol) {
         out.printf(code_ == SymbolCode::InSymbolRegistry ? "Symbol.for(" : "Symbol(");
 
-        if (description_)
+        if (description_) {
             description_->dumpCharsNoNewline(out);
-        else
+        } else {
             out.printf("undefined");
+        }
 
         out.putChar(')');
 
-        if (code_ == SymbolCode::UniqueSymbol)
+        if (code_ == SymbolCode::UniqueSymbol) {
             out.printf("@%p", (void*) this);
+        }
     } else {
         out.printf("<Invalid Symbol code=%u>", unsigned(code_));
     }
@@ -119,20 +125,24 @@ js::SymbolDescriptiveString(JSContext* cx, Symbol* sym, MutableHandleValue resul
 {
     // steps 2-5
     StringBuffer sb(cx);
-    if (!sb.append("Symbol("))
+    if (!sb.append("Symbol(")) {
         return false;
+    }
     RootedString str(cx, sym->description());
     if (str) {
-        if (!sb.append(str))
+        if (!sb.append(str)) {
             return false;
+        }
     }
-    if (!sb.append(')'))
+    if (!sb.append(')')) {
         return false;
+    }
 
     // step 6
     str = sb.finishString();
-    if (!str)
+    if (!str) {
         return false;
+    }
     result.setString(str);
     return true;
 }

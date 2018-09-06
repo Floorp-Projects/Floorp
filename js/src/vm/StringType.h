@@ -632,8 +632,9 @@ class JSString : public js::gc::Cell
     JS::Zone* zone() const {
         if (isTenured()) {
             // Allow permanent atoms to be accessed across zones and runtimes.
-            if (isPermanentAtom())
+            if (isPermanentAtom()) {
                 return zoneFromAnyThread();
+            }
             return asTenured().zone();
         }
         return js::Nursery::getStringZone(this);
@@ -642,8 +643,9 @@ class JSString : public js::gc::Cell
     // Implement TenuredZone members needed for template instantiations.
 
     JS::Zone* zoneFromAnyThread() const {
-        if (isTenured())
+        if (isTenured()) {
             return asTenured().zoneFromAnyThread();
+        }
         return js::Nursery::getStringZone(this);
     }
 
@@ -652,17 +654,19 @@ class JSString : public js::gc::Cell
     js::gc::AllocKind getAllocKind() const {
         using js::gc::AllocKind;
         AllocKind kind;
-        if (isAtom())
-            if (isFatInline())
+        if (isAtom()) {
+            if (isFatInline()) {
                 kind = AllocKind::FAT_INLINE_ATOM;
-            else
+            } else {
                 kind = AllocKind::ATOM;
-        else if (isFatInline())
+            }
+        } else if (isFatInline()) {
             kind = AllocKind::FAT_INLINE_STRING;
-        else if (isExternal())
+        } else if (isExternal()) {
             kind = AllocKind::EXTERNAL_STRING;
-        else
+        } else {
             kind = AllocKind::STRING;
+        }
 
 #if DEBUG
         if (isTenured()) {
@@ -694,14 +698,16 @@ class JSString : public js::gc::Cell
     void traceChildren(JSTracer* trc);
 
     static MOZ_ALWAYS_INLINE void readBarrier(JSString* thing) {
-        if (thing->isPermanentAtom() || js::gc::IsInsideNursery(thing))
+        if (thing->isPermanentAtom() || js::gc::IsInsideNursery(thing)) {
             return;
+        }
         js::gc::TenuredCell::readBarrier(&thing->asTenured());
     }
 
     static MOZ_ALWAYS_INLINE void writeBarrierPre(JSString* thing) {
-        if (!thing || thing->isPermanentAtom() || js::gc::IsInsideNursery(thing))
+        if (!thing || thing->isPermanentAtom() || js::gc::IsInsideNursery(thing)) {
             return;
+        }
 
         js::gc::TenuredCell::writeBarrierPre(&thing->asTenured());
     }
@@ -722,14 +728,16 @@ class JSString : public js::gc::Cell
 
         js::gc::StoreBuffer* buffer;
         if (next && (buffer = next->storeBuffer())) {
-            if (prev && prev->storeBuffer())
+            if (prev && prev->storeBuffer()) {
                 return;
+            }
             buffer->putCell(static_cast<js::gc::Cell**>(cellp));
             return;
         }
 
-        if (prev && (buffer = prev->storeBuffer()))
+        if (prev && (buffer = prev->storeBuffer())) {
             buffer->unputCell(static_cast<js::gc::Cell**>(cellp));
+        }
     }
 
   private:
@@ -915,13 +923,15 @@ class JSDependentString : public JSLinearString
     MOZ_ALWAYS_INLINE mozilla::Maybe<size_t> baseOffset() const {
         MOZ_ASSERT(JSString::isDependent());
         JS::AutoCheckCannotGC nogc;
-        if (MOZ_UNLIKELY(base()->isUndepended()))
+        if (MOZ_UNLIKELY(base()->isUndepended())) {
             return mozilla::Nothing();
+        }
         size_t offset;
-        if (hasTwoByteChars())
+        if (hasTwoByteChars()) {
             offset = twoByteChars(nogc) - base()->twoByteChars(nogc);
-        else
+        } else {
             offset = latin1Chars(nogc) - base()->latin1Chars(nogc);
+        }
         MOZ_ASSERT(offset < base()->length());
         return mozilla::Some(offset);
     }
@@ -998,8 +1008,9 @@ class JSFlatString : public JSLinearString
         MOZ_ASSERT_IF(hasIndexValue(), getIndexValue() == index);
         MOZ_ASSERT_IF(!allowAtom, !isAtom());
 
-        if (hasIndexValue() || index > UINT16_MAX)
+        if (hasIndexValue() || index > UINT16_MAX) {
             return;
+        }
 
         mozilla::DebugOnly<uint32_t> containedIndex;
         MOZ_ASSERT(isIndexSlow(&containedIndex));
@@ -1314,16 +1325,18 @@ static_assert(sizeof(FatInlineAtom) == sizeof(JSFatInlineString) + sizeof(uint64
 inline js::HashNumber
 JSAtom::hash() const
 {
-    if (isFatInline())
+    if (isFatInline()) {
         return static_cast<const js::FatInlineAtom*>(this)->hash();
+    }
     return static_cast<const js::NormalAtom*>(this)->hash();
 }
 
 inline void
 JSAtom::initHash(js::HashNumber hash)
 {
-    if (isFatInline())
+    if (isFatInline()) {
         return static_cast<js::FatInlineAtom*>(this)->initHash(hash);
+    }
     return static_cast<js::NormalAtom*>(this)->initHash(hash);
 }
 
@@ -1408,13 +1421,15 @@ class StaticStrings
         switch (length) {
           case 1: {
             char16_t c = chars[0];
-            if (c < UNIT_STATIC_LIMIT)
+            if (c < UNIT_STATIC_LIMIT) {
                 return getUnit(c);
+            }
             return nullptr;
           }
           case 2:
-            if (fitsInSmallChar(chars[0]) && fitsInSmallChar(chars[1]))
+            if (fitsInSmallChar(chars[0]) && fitsInSmallChar(chars[1])) {
                 return getLength2(chars[0], chars[1]);
+            }
             return nullptr;
           case 3:
             /*
@@ -1433,8 +1448,9 @@ class StaticStrings
                           (chars[1] - '0') * 10 +
                           (chars[2] - '0');
 
-                if (unsigned(i) < INT_STATIC_LIMIT)
+                if (unsigned(i) < INT_STATIC_LIMIT) {
                     return getInt(i);
+                }
             }
             return nullptr;
         }
@@ -1507,8 +1523,9 @@ StringToNewUTF8CharsZ(JSContext* maybecx, JSString& str)
     JS::AutoCheckCannotGC nogc;
 
     JSLinearString* linear = str.ensureLinear(maybecx);
-    if (!linear)
+    if (!linear) {
         return nullptr;
+    }
 
     return UniqueChars(linear->hasLatin1Chars()
                        ? JS::CharsToNewUTF8CharsZ(maybecx, linear->latin1Range(nogc)).c_str()
@@ -1712,8 +1729,9 @@ template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSString*
 ToString(JSContext* cx, JS::HandleValue v)
 {
-    if (v.isString())
+    if (v.isString()) {
         return v.toString();
+    }
     return ToStringSlow<allowGC>(cx, v);
 }
 
@@ -1769,8 +1787,9 @@ JSString::getChar(JSContext* cx, size_t index, char16_t* code)
         str = this;
     }
 
-    if (!str->ensureLinear(cx))
+    if (!str->ensureLinear(cx)) {
         return false;
+    }
 
     *code = str->asLinear().latin1OrTwoByteChar(index);
     return true;

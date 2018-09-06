@@ -80,14 +80,16 @@ class Symbol : public js::gc::TenuredCell
 
     static const JS::TraceKind TraceKind = JS::TraceKind::Symbol;
     inline void traceChildren(JSTracer* trc) {
-        if (description_)
+        if (description_) {
             js::TraceManuallyBarrieredEdge(trc, &description_, "description");
+        }
     }
     inline void finalize(js::FreeOp*) {}
 
     static MOZ_ALWAYS_INLINE void writeBarrierPre(Symbol* thing) {
-        if (thing && !thing->isWellKnownSymbol())
+        if (thing && !thing->isWellKnownSymbol()) {
             thing->asTenured().writeBarrierPre(thing);
+        }
     }
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
