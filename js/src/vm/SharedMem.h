@@ -76,8 +76,9 @@ class SharedMem
         MOZ_ASSERT(asValue() % sizeof(mozilla::Conditional<mozilla::IsVoid<typename mozilla::RemovePointer<U>::Type>::value,
                                                            char,
                                                            typename mozilla::RemovePointer<U>::Type>) == 0);
-        if (sharedness_ == IsUnshared)
+        if (sharedness_ == IsUnshared) {
             return SharedMem<U>::unshared(unwrap());
+        }
 #endif
         return SharedMem<U>::shared(unwrap());
     }

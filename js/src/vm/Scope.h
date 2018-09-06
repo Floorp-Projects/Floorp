@@ -203,8 +203,9 @@ class TrailingNamesArray
     TrailingNamesArray() = delete;
 
     explicit TrailingNamesArray(size_t nameCount) {
-        if (nameCount)
+        if (nameCount) {
             JS_POISON(&data_, 0xCC, sizeof(BindingName) * nameCount, MemCheckKind::MakeUndefined);
+        }
     }
 
     BindingName* start() { return reinterpret_cast<BindingName*>(ptr()); }
@@ -392,16 +393,18 @@ class Scope : public js::gc::TenuredCell
     template <typename T>
     bool hasOnChain() const {
         for (const Scope* it = this; it; it = it->enclosing()) {
-            if (it->is<T>())
+            if (it->is<T>()) {
                 return true;
+            }
         }
         return false;
     }
 
     bool hasOnChain(ScopeKind kind) const {
         for (const Scope* it = this; it; it = it->enclosing()) {
-            if (it->kind() == kind)
+            if (it->kind() == kind) {
                 return true;
+            }
         }
         return false;
     }
@@ -954,8 +957,9 @@ class EvalScope : public Scope
     }
 
     bool isNonGlobal() const {
-        if (strict())
+        if (strict()) {
             return true;
+        }
         return !nearestVarScopeForDirectEval(enclosing())->is<GlobalScope>();
     }
 
@@ -1293,8 +1297,9 @@ class BindingIter
                 // Usually positional formal parameters don't have frame
                 // slots, except when there are parameter expressions, in
                 // which case they act like lets.
-                if (index_ >= nonPositionalFormalStart_ || (hasFormalParameterExprs() && name()))
+                if (index_ >= nonPositionalFormalStart_ || (hasFormalParameterExprs() && name())) {
                     frameSlot_++;
+                }
             }
         }
         index_++;
@@ -1302,8 +1307,9 @@ class BindingIter
 
     void settle() {
         if (ignoreDestructuredFormalParameters()) {
-            while (!done() && !name())
+            while (!done() && !name()) {
                 increment();
+            }
         }
     }
 
@@ -1385,39 +1391,48 @@ class BindingIter
 
     BindingLocation location() const {
         MOZ_ASSERT(!done());
-        if (!(flags_ & CanHaveSlotsMask))
+        if (!(flags_ & CanHaveSlotsMask)) {
             return BindingLocation::Global();
-        if (index_ < positionalFormalStart_)
+        }
+        if (index_ < positionalFormalStart_) {
             return BindingLocation::Import();
+        }
         if (closedOver()) {
             MOZ_ASSERT(canHaveEnvironmentSlots());
             return BindingLocation::Environment(environmentSlot_);
         }
-        if (index_ < nonPositionalFormalStart_ && canHaveArgumentSlots())
+        if (index_ < nonPositionalFormalStart_ && canHaveArgumentSlots()) {
             return BindingLocation::Argument(argumentSlot_);
-        if (canHaveFrameSlots())
+        }
+        if (canHaveFrameSlots()) {
             return BindingLocation::Frame(frameSlot_);
+        }
         MOZ_ASSERT(isNamedLambda());
         return BindingLocation::NamedLambdaCallee();
     }
 
     BindingKind kind() const {
         MOZ_ASSERT(!done());
-        if (index_ < positionalFormalStart_)
+        if (index_ < positionalFormalStart_) {
             return BindingKind::Import;
+        }
         if (index_ < varStart_) {
             // When the parameter list has expressions, the parameters act
             // like lexical bindings and have TDZ.
-            if (hasFormalParameterExprs())
+            if (hasFormalParameterExprs()) {
                 return BindingKind::Let;
+            }
             return BindingKind::FormalParameter;
         }
-        if (index_ < letStart_)
+        if (index_ < letStart_) {
             return BindingKind::Var;
-        if (index_ < constStart_)
+        }
+        if (index_ < constStart_) {
             return BindingKind::Let;
-        if (isNamedLambda())
+        }
+        if (isNamedLambda()) {
             return BindingKind::NamedLambdaCallee;
+        }
         return BindingKind::Const;
     }
 
@@ -1430,8 +1445,9 @@ class BindingIter
 
     bool hasArgumentSlot() const {
         MOZ_ASSERT(!done());
-        if (hasFormalParameterExprs())
+        if (hasFormalParameterExprs()) {
             return false;
+        }
         return index_ >= positionalFormalStart_ && index_ < nonPositionalFormalStart_;
     }
 
@@ -1463,8 +1479,9 @@ JSAtom* FrameSlotName(JSScript* script, jsbytecode* pc);
 class PositionalFormalParameterIter : public BindingIter
 {
     void settle() {
-        if (index_ >= nonPositionalFormalStart_)
+        if (index_ >= nonPositionalFormalStart_) {
             index_ = length_;
+        }
     }
 
   public:
@@ -1541,8 +1558,9 @@ class MOZ_STACK_CLASS ScopeIter
     bool hasSyntacticEnvironment() const;
 
     void trace(JSTracer* trc) {
-        if (scope_)
+        if (scope_) {
             TraceRoot(trc, &scope_, "scope iter scope");
+        }
     }
 };
 
