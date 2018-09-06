@@ -36,6 +36,8 @@ testBinASTReaderInit(int *argc, char ***argv) {
 
 static int
 testBinASTReaderFuzz(const uint8_t* buf, size_t size) {
+    using namespace js::frontend;
+
     auto gcGuard = mozilla::MakeScopeExit([&] {
         JS::PrepareForFullGC(gCx);
         JS::NonIncrementalGC(gCx, GC_NORMAL, JS::gcreason::API);
@@ -53,12 +55,16 @@ testBinASTReaderFuzz(const uint8_t* buf, size_t size) {
         return 0;
     }
 
-    js::frontend::UsedNameTracker binUsedNames(gCx);
+    UsedNameTracker binUsedNames(gCx);
 
-    js::frontend::BinASTParser<js::frontend::BinTokenReaderTester> reader(gCx, gCx->tempLifoAlloc(), binUsedNames, options);
+    Directives directives(false);
+    GlobalSharedContext globalsc(gCx, ScopeKind::Global, directives, false);
+
+    BinASTParser<js::frontend::BinTokenReaderTester> reader(gCx, gCx->tempLifoAlloc(),
+                                                            binUsedNames, options);
 
     // Will be deallocated once `reader` goes out of scope.
-    auto binParsed = reader.parse(binSource);
+    auto binParsed = reader.parse(&globalsc, binSource);
     RootedValue binExn(gCx);
     if (binParsed.isErr()) {
         js::GetAndClearException(gCx, &binExn);
