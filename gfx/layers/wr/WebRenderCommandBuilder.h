@@ -189,6 +189,7 @@ private:
 
   wr::usize mBuilderDumpIndex;
   wr::usize mDumpIndent;
+public:
   // Whether consecutive inactive display items should be grouped into one
   // blob image.
   bool mDoGrouping;
