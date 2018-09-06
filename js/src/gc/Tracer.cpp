@@ -71,8 +71,9 @@ DoCallback<Value>(JS::CallbackTracer* trc, Value* vp, const char* name)
     // template objects when using DumpHeapTracer or UbiNode tracers while Ion
     // compiling off-thread.
     Value v = DispatchTyped(DoCallbackFunctor<Value>(), *vp, trc, name);
-    if (*vp != v)
+    if (*vp != v) {
         *vp = v;
+    }
     return v;
 }
 
@@ -81,8 +82,9 @@ jsid
 DoCallback<jsid>(JS::CallbackTracer* trc, jsid* idp, const char* name)
 {
     jsid id = DispatchTyped(DoCallbackFunctor<jsid>(), *idp, trc, name);
-    if (*idp != id)
+    if (*idp != id) {
         *idp = id;
+    }
     return id;
 }
 
@@ -91,8 +93,9 @@ TaggedProto
 DoCallback<TaggedProto>(JS::CallbackTracer* trc, TaggedProto* protop, const char* name)
 {
     TaggedProto proto = DispatchTyped(DoCallbackFunctor<TaggedProto>(), *protop, trc, name);
-    if (*protop != proto)
+    if (*protop != proto) {
         *protop = proto;
+    }
     return proto;
 }
 
@@ -149,8 +152,9 @@ struct TraceIncomingFunctor {
     {}
     template <typename T>
     void operator()(T tp) {
-        if (!compartments_.has((*tp)->compartment()))
+        if (!compartments_.has((*tp)->compartment())) {
             return;
+        }
         TraceManuallyBarrieredEdge(trc_, tp, "cross-compartment wrapper");
     }
     // StringWrappers are just used to avoid copying strings
@@ -164,8 +168,9 @@ JS_PUBLIC_API(void)
 JS::TraceIncomingCCWs(JSTracer* trc, const JS::CompartmentSet& compartments)
 {
     for (js::CompartmentsIter comp(trc->runtime()); !comp.done(); comp.next()) {
-        if (compartments.has(comp))
+        if (compartments.has(comp)) {
             continue;
+        }
 
         for (Compartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
             mozilla::DebugOnly<const CrossCompartmentKey> prior = e.front().key();
@@ -256,8 +261,9 @@ ObjectGroupCycleCollectorTracer::onChild(const JS::GCCellPtr& thing)
         AutoSweepObjectGroup sweep(&group);
         if (group.maybeUnboxedLayout(sweep)) {
             for (size_t i = 0; i < seen.length(); i++) {
-                if (seen[i] == &group)
+                if (seen[i] == &group) {
                     return;
+                }
             }
             if (seen.append(&group) && worklist.append(&group)) {
                 return;
@@ -278,8 +284,9 @@ gc::TraceCycleCollectorChildren(JS::CallbackTracer* trc, ObjectGroup* group)
 
     // Early return if this group is not required to be in an ObjectGroup chain.
     AutoSweepObjectGroup sweep(group);
-    if (!group->maybeUnboxedLayout(sweep))
+    if (!group->maybeUnboxedLayout(sweep)) {
         return group->traceChildren(trc);
+    }
 
     ObjectGroupCycleCollectorTracer groupTracer(trc->asCallbackTracer());
     group->traceChildren(&groupTracer);
@@ -311,28 +318,34 @@ StringKindHeader(JSString* str)
     MOZ_ASSERT(str->isLinear());
 
     if (str->isAtom()) {
-        if (str->isPermanentAtom())
+        if (str->isPermanentAtom()) {
             return "permanent atom: ";
+        }
         return "atom: ";
     }
 
     if (str->isFlat()) {
-        if (str->isExtensible())
+        if (str->isExtensible()) {
             return "extensible: ";
-        if (str->isUndepended())
+        }
+        if (str->isUndepended()) {
             return "undepended: ";
+        }
         if (str->isInline()) {
-            if (str->isFatInline())
+            if (str->isFatInline()) {
                 return "fat inline: ";
+            }
             return "inline: ";
         }
         return "flat: ";
     }
 
-    if (str->isDependent())
+    if (str->isDependent()) {
         return "dependent: ";
-    if (str->isExternal())
+    }
+    if (str->isExternal()) {
         return "external: ";
+    }
     return "linear: ";
 }
 
@@ -343,8 +356,9 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
     const char* name = nullptr; /* silence uninitialized warning */
     size_t n;
 
-    if (bufsize == 0)
+    if (bufsize == 0) {
         return;
+    }
 
     switch (kind) {
       case JS::TraceKind::BaseShape:
@@ -411,8 +425,9 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
     }
 
     n = strlen(name);
-    if (n > bufsize - 1)
+    if (n > bufsize - 1) {
         n = bufsize - 1;
+    }
     js_memcpy(buf, name, n + 1);
     buf += n;
     bufsize -= n;

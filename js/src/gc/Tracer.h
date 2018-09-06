@@ -123,16 +123,18 @@ template <typename T>
 inline void
 TraceNullableEdge(JSTracer* trc, WriteBarrieredBase<T>* thingp, const char* name)
 {
-    if (InternalBarrierMethods<T>::isMarkable(thingp->get()))
+    if (InternalBarrierMethods<T>::isMarkable(thingp->get())) {
         TraceEdge(trc, thingp, name);
+    }
 }
 
 template <typename T>
 inline void
 TraceNullableEdge(JSTracer* trc, ReadBarriered<T>* thingp, const char* name)
 {
-    if (InternalBarrierMethods<T>::isMarkable(thingp->unbarrieredGet()))
+    if (InternalBarrierMethods<T>::isMarkable(thingp->unbarrieredGet())) {
         TraceEdge(trc, thingp, name);
+    }
 }
 
 // Trace through a "root" edge. These edges are the initial edges in the object
@@ -162,8 +164,9 @@ inline void
 TraceNullableRoot(JSTracer* trc, T* thingp, const char* name)
 {
     gc::AssertRootMarkingPhase(trc);
-    if (InternalBarrierMethods<T>::isMarkable(*thingp))
+    if (InternalBarrierMethods<T>::isMarkable(*thingp)) {
         gc::TraceEdgeInternal(trc, gc::ConvertToBase(thingp), name);
+    }
 }
 
 template <typename T>

@@ -73,8 +73,9 @@ StoreBuffer::WholeCellBuffer::put(const Cell* cell)
     ArenaCellSet* cells = arena->bufferedCells();
     if (cells->isEmpty()) {
         cells = allocateCellSet(arena);
-        if (!cells)
+        if (!cells) {
             return;
+        }
     }
 
     cells->putCell(&cell->asTenured());
