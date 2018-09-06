@@ -740,8 +740,9 @@ class MOZ_RAII EnvironmentIter
     }
 
     void operator++(int) {
-        if (hasAnyEnvironmentObject())
+        if (hasAnyEnvironmentObject()) {
             env_ = &env_->as<EnvironmentObject>().enclosingEnvironment();
+        }
         incrementScopeIter();
         settle();
     }
@@ -775,8 +776,9 @@ class MOZ_RAII EnvironmentIter
     }
 
     Scope* maybeScope() const {
-        if (si_)
+        if (si_) {
             return si_.scope();
+        }
         return nullptr;
     }
 
@@ -1077,17 +1079,21 @@ namespace js {
 inline bool
 IsSyntacticEnvironment(JSObject* env)
 {
-    if (!env->is<EnvironmentObject>())
+    if (!env->is<EnvironmentObject>()) {
         return false;
+    }
 
-    if (env->is<WithEnvironmentObject>())
+    if (env->is<WithEnvironmentObject>()) {
         return env->as<WithEnvironmentObject>().isSyntactic();
+    }
 
-    if (env->is<LexicalEnvironmentObject>())
+    if (env->is<LexicalEnvironmentObject>()) {
         return env->as<LexicalEnvironmentObject>().isSyntactic();
+    }
 
-    if (env->is<NonSyntacticVariablesObject>())
+    if (env->is<NonSyntacticVariablesObject>()) {
         return false;
+    }
 
     return true;
 }
@@ -1117,8 +1123,9 @@ IsNSVOLexicalEnvironment(JSObject* env)
 inline JSObject*
 MaybeUnwrapWithEnvironment(JSObject* env)
 {
-    if (env->is<WithEnvironmentObject>())
+    if (env->is<WithEnvironmentObject>()) {
         return &env->as<WithEnvironmentObject>().object();
+    }
     return env;
 }
 
@@ -1138,8 +1145,9 @@ IsFrameInitialEnvironment(AbstractFramePtr frame, SpecificEnvironment& env)
 
     // A function frame's CallObject, if present, is always the initial
     // environment.
-    if (mozilla::IsSame<SpecificEnvironment, CallObject>::value)
+    if (mozilla::IsSame<SpecificEnvironment, CallObject>::value) {
         return true;
+    }
 
     // For an eval frame, the VarEnvironmentObject, if present, is always the
     // initial environment.
