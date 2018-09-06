@@ -14,7 +14,7 @@ namespace mozilla {
 
 // This class implements a cubic MSD timing function and automatically
 // adapts the animation duration based on the scrolling rate.
-class ScrollAnimationMSDPhysics : public ScrollAnimationPhysics
+class ScrollAnimationMSDPhysics final : public ScrollAnimationPhysics
 {
 public:
   typedef mozilla::layers::AxisPhysicsMSDModel AxisPhysicsMSDModel;

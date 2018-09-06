@@ -18,7 +18,7 @@ using namespace mozilla;
  * This frame is used by filter primitive elements that
  * have special child elements that provide parameters.
  */
-class SVGFEContainerFrame : public nsContainerFrame
+class SVGFEContainerFrame final : public nsContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);

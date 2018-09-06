@@ -283,6 +283,13 @@
                 "$ref": "ItemType",
                 "optional": true
               },
+              "icons": {
+                "type": "object",
+                "optional": "omit-key-if-missing",
+                "patternProperties" : {
+                  "^[1-9]\\d*$": { "type" : "string" }
+                }
+              },
               "title": {
                 "type": "string",
                 "optional": true

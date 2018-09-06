@@ -14,7 +14,8 @@
 // <mspace> -- space
 //
 
-class nsMathMLmspaceFrame : public nsMathMLContainerFrame {
+class nsMathMLmspaceFrame final : public nsMathMLContainerFrame
+{
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmspaceFrame)
 

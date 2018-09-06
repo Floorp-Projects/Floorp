@@ -13521,6 +13521,18 @@
     "n_buckets": 100,
     "description": "The amount of time it takes to load a WebExtensions background page, from when the build function is called to when the page has finished processing the onload event."
   },
+  "WEBEXT_BACKGROUND_PAGE_LOAD_MS_BY_ADDONID": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1483002],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes to load a WebExtensions background page, from when the build function is called to when the page has finished processing the onload event, keyed by addon id.",
+    "keyed": true
+  },
   "WEBEXT_BROWSERACTION_POPUP_OPEN_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["addons-dev-internal@mozilla.com"],
@@ -13532,6 +13544,18 @@
     "n_buckets": 100,
     "description": "The amount of time it takes for a BrowserAction popup to open."
   },
+  "WEBEXT_BROWSERACTION_POPUP_OPEN_MS_BY_ADDONID": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1483002],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes for a BrowserAction popup to open, keyed by addon id.",
+    "keyed": true
+  },
   "WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT": {
     "record_in_processes": ["main"],
     "alert_emails": ["addons-dev-internal@mozilla.com"],
@@ -13541,6 +13565,17 @@
     "labels": ["popupShown", "clearAfterHover", "clearAfterMousedown"],
     "releaseChannelCollection": "opt-out",
     "description": "The number of times a browserAction popup is preloaded and results in one of the categories."
+  },
+  "WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT_BY_ADDONID": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1483002],
+    "expires_in_version": "67",
+    "kind": "categorical",
+    "labels": ["popupShown", "clearAfterHover", "clearAfterMousedown"],
+    "releaseChannelCollection": "opt-out",
+    "description": "The number of times a browserAction popup is preloaded and results in one of the categories, keyed by addon id.",
+    "keyed": true
   },
   "WEBEXT_CONTENT_SCRIPT_INJECTION_MS": {
     "record_in_processes": ["main", "content"],
@@ -13553,6 +13588,18 @@
     "n_buckets": 100,
     "description": "The amount of time it takes for content scripts from a WebExtension to be injected into a window."
   },
+  "WEBEXT_CONTENT_SCRIPT_INJECTION_MS_BY_ADDONID": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1483002],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes for content scripts from a WebExtension to be injected into a window, keyed by addon id.",
+    "keyed": true
+  },
   "WEBEXT_EXTENSION_STARTUP_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["addons-dev-internal@mozilla.com"],
@@ -13563,6 +13610,18 @@
     "high": 50000,
     "n_buckets": 100,
     "description": "The amount of time it takes for a WebExtension to start up, from when the startup function is called to when the startup promise resolves."
+  },
+   "WEBEXT_EXTENSION_STARTUP_MS_BY_ADDONID": {
+    "record_in_processes": ["main"],
+     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1483002],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes for a WebExtension to start up, from when the startup function is called to when the startup promise resolves, keyed by addon id.",
+    "keyed": true
   },
   "WEBEXT_PAGEACTION_POPUP_OPEN_MS": {
     "record_in_processes": ["main"],
@@ -13575,6 +13634,18 @@
     "n_buckets": 100,
     "description": "The amount of time it takes for a PageAction popup to open."
   },
+  "WEBEXT_PAGEACTION_POPUP_OPEN_MS_BY_ADDONID": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1483002],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes for a PageAction popup to open, keyed by addon id.",
+    "keyed": true
+  },
   "WEBEXT_STORAGE_LOCAL_GET_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["addons-dev-internal@mozilla.com"],
@@ -13585,6 +13656,18 @@
     "high": 50000,
     "n_buckets": 100,
     "description": "The amount of time it takes to perform a get via storage.local using the JSONFile backend."
+  },
+  "WEBEXT_STORAGE_LOCAL_GET_MS_BY_ADDONID": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1483002],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes to perform a get via storage.local using the JSONFile backend, keyed by addon id.",
+    "keyed": true
   },
   "WEBEXT_STORAGE_LOCAL_SET_MS": {
     "record_in_processes": ["main", "content"],
@@ -13597,6 +13680,18 @@
     "n_buckets": 100,
     "description": "The amount of time it takes to perform a set via storage.local using the JSONFile backend."
   },
+  "WEBEXT_STORAGE_LOCAL_SET_MS_BY_ADDONID": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1483002],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes to perform a set via storage.local using the JSONFile backend, keyed by addon id.",
+    "keyed": true
+  },
   "WEBEXT_STORAGE_LOCAL_IDB_GET_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["addons-dev-internal@mozilla.com"],
@@ -13608,6 +13703,18 @@
     "n_buckets": 100,
     "description": "The amount of time it takes to perform a get via storage.local using the IndexedDB backend."
   },
+  "WEBEXT_STORAGE_LOCAL_IDB_GET_MS_BY_ADDONID": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1483002],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes to perform a get via storage.local using the IndexedDB backend, keyed by addon id.",
+    "keyed": true
+  },
   "WEBEXT_STORAGE_LOCAL_IDB_SET_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["addons-dev-internal@mozilla.com"],
@@ -13618,6 +13725,18 @@
     "high": 50000,
     "n_buckets": 100,
     "description": "The amount of time it takes to perform a set via storage.local using the IndexedDB backend."
+  },
+  "WEBEXT_STORAGE_LOCAL_IDB_SET_MS_BY_ADDONID": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1483002],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes to perform a set via storage.local using the IndexedDB backend, keyed by addon id.",
+    "keyed": true
   },
   "WEBEXT_STORAGE_LOCAL_IDB_MIGRATE_RESULT_COUNT": {
     "record_in_processes": ["main"],

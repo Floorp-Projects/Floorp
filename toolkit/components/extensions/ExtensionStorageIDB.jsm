@@ -8,6 +8,7 @@ this.EXPORTED_SYMBOLS = ["ExtensionStorageIDB"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/IndexedDB.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
@@ -22,6 +23,10 @@ XPCOMUtils.defineLazyGetter(this, "WEBEXT_STORAGE_USER_CONTEXT_ID", () => {
   return ContextualIdentityService.getDefaultPrivateIdentity(
     "userContextIdInternal.webextStorageLocal").userContextId;
 });
+
+var {
+  getTrimmedString,
+} = ExtensionUtils;
 
 const IDB_NAME = "webExtensions-storage-local";
 const IDB_DATA_STORENAME = "storage-local-data";
@@ -48,29 +53,6 @@ var DataMigrationTelemetry = {
   },
 
   /**
-   * Get a trimmed version of the given string if it is longer than 80 chars.
-   *
-   * @param {string} str
-   *        The original string content.
-   *
-   * @returns {string}
-   *          The trimmed version of the string when longer than 80 chars, or the given string
-   *          unmodified otherwise.
-   */
-  getTrimmedString(str) {
-    if (str.length <= 80) {
-      return str;
-    }
-
-    const length = str.length;
-
-    // Trim the string to prevent a flood of warnings messages logged internally by recordEvent,
-    // the trimmed version is going to be composed by the first 40 chars and the last 37 and 3 dots
-    // that joins the two parts, to visually indicate that the string has been trimmed.
-    return `${str.slice(0, 40)}...${str.slice(length - 37, length)}`;
-  },
-
-  /**
    * Get the DOMException error name for a given error object.
    *
    * @param {Error | undefined} error
@@ -88,7 +70,7 @@ var DataMigrationTelemetry = {
 
     if (error instanceof DOMException) {
       if (error.name.length > 80) {
-        return this.getTrimmedString(error.name);
+        return getTrimmedString(error.name);
       }
 
       return error.name;
@@ -150,7 +132,7 @@ var DataMigrationTelemetry = {
       }
 
       Services.telemetry.recordEvent("extensions.data", "migrateResult", "storageLocal",
-                                     this.getTrimmedString(extensionId), extra);
+                                     getTrimmedString(extensionId), extra);
     } catch (err) {
       // Report any telemetry error on the browser console, but
       // we treat it as a non-fatal error and we don't re-throw

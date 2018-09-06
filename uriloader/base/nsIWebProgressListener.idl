@@ -178,7 +178,7 @@ interface nsIWebProgressListener : nsISupports
    * Mixed active content flags
    *
    * NOTE: IF YOU ARE ADDING MORE OF THESE FLAGS, MAKE SURE TO EDIT
-   * nsSecureBrowserUIImpl::MapInternalToExternalState().
+   * nsSecureBrowserUIImpl::CheckForBlockedContent().
    *
    * May be set in addition to the State Security Flags, to indicate that
    * mixed active content has been encountered.
@@ -196,7 +196,7 @@ interface nsIWebProgressListener : nsISupports
    * Mixed display content flags
    *
    * NOTE: IF YOU ARE ADDING MORE OF THESE FLAGS, MAKE SURE TO EDIT
-   * nsSecureBrowserUIImpl::MapInternalToExternalState().
+   * nsSecureBrowserUIImpl::CheckForBlockedContent().
    *
    * May be set in addition to the State Security Flags, to indicate that
    * mixed display content has been encountered.
@@ -214,7 +214,7 @@ interface nsIWebProgressListener : nsISupports
    *  Safe Browsing blocking content flags
    *
    * NOTE: IF YOU ARE ADDING MORE OF THESE FLAGS, MAKE SURE TO EDIT
-   * nsSecureBrowserUIImpl::MapInternalToExternalState().
+   * nsSecureBrowserUIImpl::CheckForBlockedContent().
    *
    * May be set in addition to the State security Flags, to indicate that
    * tracking or unsafe content has been encountered.
@@ -236,7 +236,7 @@ interface nsIWebProgressListener : nsISupports
    * Diagnostic flags
    *
    * NOTE: IF YOU ARE ADDING MORE OF THESE FLAGS, MAKE SURE TO EDIT
-   * nsSecureBrowserUIImpl::MapInternalToExternalState().
+   * nsSecureBrowserUIImpl::CheckForBlockedContent().
    *
    * May be set in addition to other security state flags to indicate that
    * some state is countered that deserves a warning or error, but does not
@@ -307,7 +307,7 @@ interface nsIWebProgressListener : nsISupports
    * Cookie Jar blocking
    *
    * NOTE: IF YOU ARE ADDING MORE OF THESE FLAGS, MAKE SURE TO EDIT
-   * nsSecureBrowserUIImpl::MapInternalToExternalState().
+   * nsSecureBrowserUIImpl::CheckForBlockedContent().
    *
    * These flags describe the reason of cookie jar rejection.
    *

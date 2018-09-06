@@ -109,25 +109,6 @@ var MasterPassword = {
   },
 
   /**
-   * Decrypts cipherText synchronously. "ensureLoggedIn()" needs to be called
-   * outside in case another dialog is showing.
-   *
-   * NOTE: This method will be removed soon once the FormAutofillStorage APIs are
-   *       refactored to be async functions (bug 1399367). Please use async
-   *       version instead.
-   *
-   * @deprecated
-   * @param   {string} cipherText Encrypted string including the algorithm details.
-   * @returns {string} The decrypted string.
-   */
-  decryptSync(cipherText) {
-    if (this.isUIBusy) {
-      throw Components.Exception("\"ensureLoggedIn()\" should be called first", Cr.NS_ERROR_UNEXPECTED);
-    }
-    return cryptoSDR.decrypt(cipherText);
-  },
-
-  /**
    * Encrypts a string and returns cipher text containing algorithm information used for decryption.
    *
    * @param   {string} plainText Original string without encryption.
@@ -138,25 +119,6 @@ var MasterPassword = {
       throw Components.Exception("User canceled master password entry", Cr.NS_ERROR_ABORT);
     }
 
-    return cryptoSDR.encrypt(plainText);
-  },
-
-  /**
-   * Encrypts plainText synchronously. "ensureLoggedIn()" needs to be called
-   * outside in case another dialog is showing.
-   *
-   * NOTE: This method will be removed soon once the FormAutofillStorage APIs are
-   *       refactored to be async functions (bug 1399367). Please use async
-   *       version instead.
-   *
-   * @deprecated
-   * @param   {string} plainText A plain string to be encrypted.
-   * @returns {string} The encrypted cipher string.
-   */
-  encryptSync(plainText) {
-    if (this.isUIBusy) {
-      throw Components.Exception("\"ensureLoggedIn()\" should be called first", Cr.NS_ERROR_UNEXPECTED);
-    }
     return cryptoSDR.encrypt(plainText);
   },
 

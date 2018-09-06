@@ -19,7 +19,7 @@ using namespace mozilla::dom;
  * identifier. The SVGViewFrame class passes on any attribute changes
  * the view receives to the overridden <svg> element (if there is one).
  **/
-class SVGViewFrame : public nsFrame
+class SVGViewFrame final : public nsFrame
 {
   friend nsIFrame*
   NS_NewSVGViewFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);

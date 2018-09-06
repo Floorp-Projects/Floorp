@@ -6,26 +6,21 @@ ChromeUtils.defineModuleGetter(this, "ExtensionStorageIDB",
                                "resource://gre/modules/ExtensionStorageIDB.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
-                               "resource://gre/modules/TelemetryStopwatch.jsm");
 
-// Telemetry histogram keys for the JSONFile backend.
-const storageGetHistogram = "WEBEXT_STORAGE_LOCAL_GET_MS";
-const storageSetHistogram = "WEBEXT_STORAGE_LOCAL_SET_MS";
-// Telemetry  histogram keys for the IndexedDB backend.
-const storageGetIDBHistogram = "WEBEXT_STORAGE_LOCAL_IDB_GET_MS";
-const storageSetIDBHistogram = "WEBEXT_STORAGE_LOCAL_IDB_SET_MS";
+var {
+  ExtensionTelemetry,
+} = ExtensionUtils;
 
 // Wrap a storage operation in a TelemetryStopWatch.
-async function measureOp(histogram, fn) {
+async function measureOp(telemetryMetric, extension, fn) {
   const stopwatchKey = {};
-  TelemetryStopwatch.start(histogram, stopwatchKey);
+  telemetryMetric.stopwatchStart(extension, stopwatchKey);
   try {
     let result = await fn();
-    TelemetryStopwatch.finish(histogram, stopwatchKey);
+    telemetryMetric.stopwatchFinish(extension, stopwatchKey);
     return result;
   } catch (err) {
-    TelemetryStopwatch.cancel(histogram, stopwatchKey);
+    telemetryMetric.stopwatchCancel(extension, stopwatchKey);
     throw err;
   }
 }
@@ -34,14 +29,14 @@ this.storage = class extends ExtensionAPI {
   getLocalFileBackend(context, {deserialize, serialize}) {
     return {
       get(keys) {
-        return measureOp(storageGetHistogram, () => {
+        return measureOp(ExtensionTelemetry.storageLocalGetJSON, context.extension, () => {
           return context.childManager.callParentAsyncFunction(
             "storage.local.JSONFileBackend.get",
             [serialize(keys)]).then(deserialize);
         });
       },
       set(items) {
-        return measureOp(storageSetHistogram, () => {
+        return measureOp(ExtensionTelemetry.storageLocalSetJSON, context.extension, () => {
           return context.childManager.callParentAsyncFunction(
             "storage.local.JSONFileBackend.set", [serialize(items)]);
         });
@@ -76,13 +71,13 @@ this.storage = class extends ExtensionAPI {
 
     return {
       get(keys) {
-        return measureOp(storageGetIDBHistogram, async () => {
+        return measureOp(ExtensionTelemetry.storageLocalGetIDB, context.extension, async () => {
           const db = await getDB();
           return db.get(keys);
         });
       },
       set(items) {
-        return measureOp(storageSetIDBHistogram, async () => {
+        return measureOp(ExtensionTelemetry.storageLocalSetIDB, context.extension, async () => {
           const db = await getDB();
           const changes = await db.set(items, {
             serialize: ExtensionStorage.serialize,

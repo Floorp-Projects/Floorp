@@ -146,7 +146,7 @@ add_task(async function test_hiddenPageActionContextMenu() {
   is(menuItems.length, 3, "Correct number of children");
   const [dontShowItem, separator, manageItem] = menuItems;
 
-  is(dontShowItem.label, "Don\u2019t Show in Address Bar", "Correct first child");
+  is(dontShowItem.label, "Remove from Address Bar", "Correct first child");
   is(separator.tagName, "menuseparator", "Correct second child");
   is(manageItem.label, "Manage Extension\u2026", "Correct third child");
 

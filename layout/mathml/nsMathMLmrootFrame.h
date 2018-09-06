@@ -15,7 +15,8 @@
 // <msqrt> and <mroot> -- form a radical
 //
 
-class nsMathMLmrootFrame : public nsMathMLContainerFrame {
+class nsMathMLmrootFrame final : public nsMathMLContainerFrame
+{
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmrootFrame)
 

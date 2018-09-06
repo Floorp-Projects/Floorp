@@ -1830,7 +1830,7 @@ nsMathMLChar::GetMaxWidth(nsIFrame* aForFrame,
   return std::max(bm.width, bm.rightBearing) - std::min(0, bm.leftBearing);
 }
 
-class nsDisplayMathMLSelectionRect : public nsDisplayItem {
+class nsDisplayMathMLSelectionRect final : public nsDisplayItem {
 public:
   nsDisplayMathMLSelectionRect(nsDisplayListBuilder* aBuilder,
                                nsIFrame* aFrame, const nsRect& aRect)
@@ -1864,7 +1864,7 @@ void nsDisplayMathMLSelectionRect::Paint(nsDisplayListBuilder* aBuilder,
   drawTarget->FillRect(rect, ColorPattern(ToDeviceColor(bgColor)));
 }
 
-class nsDisplayMathMLCharForeground : public nsDisplayItem {
+class nsDisplayMathMLCharForeground final : public nsDisplayItem {
 public:
   nsDisplayMathMLCharForeground(nsDisplayListBuilder* aBuilder,
                                 nsIFrame* aFrame, nsMathMLChar* aChar,
@@ -1920,7 +1920,7 @@ private:
 };
 
 #ifdef DEBUG
-class nsDisplayMathMLCharDebug : public nsDisplayItem {
+class nsDisplayMathMLCharDebug final : public nsDisplayItem {
 public:
   nsDisplayMathMLCharDebug(nsDisplayListBuilder* aBuilder,
                            nsIFrame* aFrame, const nsRect& aRect)
