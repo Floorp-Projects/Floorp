@@ -152,6 +152,17 @@ public class ViewUtils {
         }, delayMillis);
     }
 
+    public static Snackbar getBrandedSnackbar(View view, @StringRes int resId) {
+        final Context context = view.getContext();
+        final Snackbar snackbar = Snackbar.make(view, resId, Snackbar.LENGTH_LONG);
+        final View snackbarView = snackbar.getView();
+        snackbarView.setBackgroundColor(ContextCompat.getColor(context, R.color.snackbarBackground));
+        final TextView snackbarTextView = snackbarView.findViewById(android.support.design.R.id.snackbar_text);
+        snackbarTextView.setTextColor(ContextCompat.getColor(context, R.color.snackbarTextColor));
+        snackbar.setActionTextColor(ContextCompat.getColor(context, R.color.snackbarActionText));
+        return snackbar;
+    }
+
     public static boolean isRTL(View view) {
         return ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_RTL;
     }

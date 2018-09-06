@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.menu.context
 
+import android.app.Activity
 import android.app.Dialog
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -26,7 +27,9 @@ import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper.BrowserContextMenuValue
+import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.UrlUtils
+import org.mozilla.focus.utils.ViewUtils
 import org.mozilla.focus.web.Download
 import org.mozilla.focus.web.IWebView
 
@@ -131,7 +134,19 @@ object WebContextMenu {
 
             when (item.itemId) {
                 R.id.menu_new_tab -> {
-                    SessionManager.getInstance().createSession(Source.MENU, hitTarget.linkURL)
+                    SessionManager.getInstance()
+                            .createNewTabSession(Source.MENU, hitTarget.linkURL, context).also { session ->
+                                if (!Settings.getInstance(context).shouldOpenNewTabs()) {
+                                    // Show Snackbar to allow users to switch to tab they just opened
+                                    val snackbar = ViewUtils.getBrandedSnackbar(
+                                            (context as Activity).findViewById(android.R.id.content),
+                                            R.string.new_tab_opened_snackbar)
+                                    snackbar.setAction(R.string.open_new_tab_snackbar) {
+                                        SessionManager.getInstance().selectSession(session)
+                                    }
+                                    snackbar.show()
+                                }
+                            }
                     TelemetryWrapper.openLinkInNewTabEvent()
                     PreferenceManager.getDefaultSharedPreferences(context).edit()
                         .putBoolean(

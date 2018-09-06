@@ -91,6 +91,9 @@ class Settings private constructor(context: Context) {
     fun shouldUseBiometrics(): Boolean =
             preferences.getBoolean(getPreferenceKey(R.string.pref_key_biometric), false)
 
+    fun shouldOpenNewTabs(): Boolean =
+        preferences.getBoolean(getPreferenceKey(R.string.pref_key_open_new_tab), false)
+
     fun shouldUseSecureMode(): Boolean =
             preferences.getBoolean(getPreferenceKey(R.string.pref_key_secure), false)
 

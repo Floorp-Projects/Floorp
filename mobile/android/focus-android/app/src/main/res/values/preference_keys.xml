@@ -50,4 +50,7 @@
         <xliff:g id="preference_key">use_homescreen_tips</xliff:g>
     </string>
 
+    <string name="pref_key_open_new_tab" translatable="false">
+        <xliff:g id="preference_key">pref_open_new_tab</xliff:g>
+    </string>
 </resources>

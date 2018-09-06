@@ -12,6 +12,11 @@
         android:layout="@layout/focus_preference_no_icon"
         android:title="@string/preference_homescreen_tips" />
 
+    <SwitchPreference
+        android:key="@string/pref_key_open_new_tab"
+        android:layout="@layout/focus_preference_no_icon"
+        android:title="@string/preference_open_new_tab" />
+
     <org.mozilla.focus.widget.AboutPreference
         android:key="@string/pref_key_about"
         android:layout="@layout/focus_preference_new_tab"

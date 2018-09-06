@@ -721,4 +721,11 @@ be temporary, and you can try again later.</li>
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
         Argument 1 is the app name (Firefox Focus/Firefox Klar/etc). -->
     <string name="tip_disable_tips">Turn off tips on the %1$s start screen</string>
+
+    <!-- Displayed in a snackbar when a user opens a new tab, gives action to switch to the newly opened tab -->
+    <string name="new_tab_opened_snackbar">New tab opened</string>
+    <string name="open_new_tab_snackbar">Switch</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">When you open link in a new tab, switch to it immediately</string>
 </resources>
