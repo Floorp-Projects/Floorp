@@ -9,6 +9,8 @@ const {
   DISCONNECT_RUNTIME_SUCCESS,
   NETWORK_LOCATIONS_UPDATED,
   RUNTIMES,
+  UNWATCH_RUNTIME_SUCCESS,
+  WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 
 const {
@@ -24,6 +26,7 @@ const TYPE_TO_RUNTIMES_KEY = {
 function RuntimesState(networkRuntimes = []) {
   return {
     networkRuntimes,
+    selectedRuntimeId: null,
     thisFirefoxRuntimes: [{
       id: RUNTIMES.THIS_FIREFOX,
       type: RUNTIMES.THIS_FIREFOX,
@@ -78,6 +81,15 @@ function runtimesReducer(state = RuntimesState(), action) {
         };
       });
       return Object.assign({}, state, { networkRuntimes });
+    }
+
+    case UNWATCH_RUNTIME_SUCCESS: {
+      return Object.assign({}, state, { selectedRuntimeId: null });
+    }
+
+    case WATCH_RUNTIME_SUCCESS: {
+      const { id } = action.runtime;
+      return Object.assign({}, state, { selectedRuntimeId: id });
     }
 
     default:

@@ -54,7 +54,7 @@ function debugTargetListenerMiddleware(store) {
   return next => action => {
     switch (action.type) {
       case WATCH_RUNTIME_SUCCESS: {
-        const { client } = action;
+        const { client } = action.runtime;
         client.addListener("tabListChanged", onTabsUpdated);
         AddonManager.addAddonListener(extensionsListener);
         client.addListener("workerListChanged", onWorkersUpdated);
@@ -65,7 +65,7 @@ function debugTargetListenerMiddleware(store) {
         break;
       }
       case UNWATCH_RUNTIME_START: {
-        const { client } = action;
+        const { client } = action.runtime;
         client.removeListener("tabListChanged", onTabsUpdated);
         AddonManager.removeAddonListener(extensionsListener);
         client.removeListener("workerListChanged", onWorkersUpdated);

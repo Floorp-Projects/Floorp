@@ -22,13 +22,15 @@ class SidebarItem extends PureComponent {
       id: PropTypes.string.isRequired,
       isSelected: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
+      runtimeId: PropTypes.string,
       selectable: PropTypes.bool.isRequired,
       type: PropTypes.string.isRequired,
     };
   }
 
   onItemClick() {
-    this.props.dispatch(Actions.selectPage(this.props.id));
+    const { id, dispatch, runtimeId } = this.props;
+    dispatch(Actions.selectPage(id, runtimeId));
   }
 
   render() {
