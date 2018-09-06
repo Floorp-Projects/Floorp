@@ -24,9 +24,9 @@ function selectPage(page) {
     }
 
     if (page === PAGES.THIS_FIREFOX) {
-      await dispatch(Actions.connectRuntime());
+      await dispatch(Actions.watchRuntime());
     } else {
-      await dispatch(Actions.disconnectRuntime());
+      await dispatch(Actions.unwatchRuntime());
     }
 
     dispatch({ type: PAGE_SELECTED, page });
