@@ -108,6 +108,8 @@ NS_NewWBRFrame(nsIPresShell* aPresShell, mozilla::ComputedStyle* aStyle) {
   return NS_NewEmptyFrame(aPresShell, aStyle);
 }
 
+nsBlockFrame*
+NS_NewColumnSetWrapperFrame(nsIPresShell* aPresShell, mozilla::ComputedStyle* aStyle, nsFrameState aStateFlags);
 nsContainerFrame*
 NS_NewColumnSetFrame(nsIPresShell* aPresShell, mozilla::ComputedStyle* aStyle, nsFrameState aStateFlags);
 
