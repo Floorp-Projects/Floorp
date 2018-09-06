@@ -53,8 +53,9 @@ ParseNodeAllocator::allocNode()
 {
     LifoAlloc::AutoFallibleScope fallibleAllocator(&alloc);
     void* p = alloc.alloc(sizeof (ParseNode));
-    if (!p)
+    if (!p) {
         ReportOutOfMemory(cx);
+    }
     return p;
 }
 
@@ -93,8 +94,9 @@ ParseNode::appendOrCreateList(ParseNodeKind kind, ParseNode* left, ParseNode* ri
     }
 
     ParseNode* list = handler->new_<ListNode>(kind, JSOP_NOP, left);
-    if (!list)
+    if (!list) {
         return nullptr;
+    }
 
     list->append(right);
     return list;
@@ -111,18 +113,20 @@ static const char * const parseNodeNames[] = {
 void
 frontend::DumpParseTree(ParseNode* pn, GenericPrinter& out, int indent)
 {
-    if (pn == nullptr)
+    if (pn == nullptr) {
         out.put("#NULL");
-    else
+    } else {
         pn->dump(out, indent);
+    }
 }
 
 static void
 IndentNewLine(GenericPrinter& out, int indent)
 {
     out.putChar('\n');
-    for (int i = 0; i < indent; ++i)
+    for (int i = 0; i < indent; ++i) {
         out.putChar(' ');
+    }
 }
 
 void
@@ -186,12 +190,14 @@ NullaryNode::dump(GenericPrinter& out)
       case ParseNodeKind::Number: {
         ToCStringBuf cbuf;
         const char* cstr = NumberToCString(nullptr, &cbuf, pn_dval);
-        if (!IsFinite(pn_dval))
+        if (!IsFinite(pn_dval)) {
             out.put("#");
-        if (cstr)
+        }
+        if (cstr) {
             out.printf("%s", cstr);
-        else
+        } else {
             out.printf("%g", pn_dval);
+        }
         break;
       }
 
@@ -224,10 +230,11 @@ BinaryNode::dump(GenericPrinter& out, int indent)
         DumpParseTree(pn_right, out, indent + 2);
 
         out.putChar(' ');
-        if (as<PropertyAccess>().isSuper())
+        if (as<PropertyAccess>().isSuper()) {
             out.put("super");
-        else
+        } else {
             DumpParseTree(pn_left, out, indent + 2);
+        }
 
         out.printf(")");
         return;
@@ -288,17 +295,19 @@ template <typename CharT>
 static void
 DumpName(GenericPrinter& out, const CharT* s, size_t len)
 {
-    if (len == 0)
+    if (len == 0) {
         out.put("#<zero-length name>");
+    }
 
     for (size_t i = 0; i < len; i++) {
         char16_t c = s[i];
-        if (c > 32 && c < 127)
+        if (c > 32 && c < 127) {
             out.putChar(c);
-        else if (c <= 255)
+        } else if (c <= 255) {
             out.printf("\\x%02x", unsigned(c));
-        else
+        } else {
             out.printf("\\u%04x", unsigned(c));
+        }
     }
 }
 
@@ -315,10 +324,11 @@ NameNode::dump(GenericPrinter& out, int indent)
             out.printf(")");
         } else {
             JS::AutoCheckCannotGC nogc;
-            if (pn_atom->hasLatin1Chars())
+            if (pn_atom->hasLatin1Chars()) {
                 DumpName(out, pn_atom->latin1Chars(nogc), pn_atom->length());
-            else
+            } else {
                 DumpName(out, pn_atom->twoByteChars(nogc), pn_atom->length());
+            }
         }
         return;
     }
@@ -341,12 +351,14 @@ LexicalScopeNode::dump(GenericPrinter& out, int indent)
         for (uint32_t i = 0; i < bindings->length; i++) {
             JSAtom* name = bindings->trailingNames[i].name();
             JS::AutoCheckCannotGC nogc;
-            if (name->hasLatin1Chars())
+            if (name->hasLatin1Chars()) {
                 DumpName(out, name->latin1Chars(nogc), name->length());
-            else
+            } else {
                 DumpName(out, name->twoByteChars(nogc), name->length());
-            if (i < bindings->length - 1)
+            }
+            if (i < bindings->length - 1) {
                 IndentNewLine(out, nameIndent);
+            }
         }
     }
     out.putChar(']');
@@ -386,8 +398,9 @@ ObjectBox::asFunctionBox()
 /* static */ void
 ObjectBox::TraceList(JSTracer* trc, ObjectBox* listHead)
 {
-    for (ObjectBox* box = listHead; box; box = box->traceLink)
+    for (ObjectBox* box = listHead; box; box = box->traceLink) {
         box->trace(trc);
+    }
 }
 
 void
@@ -400,8 +413,9 @@ void
 FunctionBox::trace(JSTracer* trc)
 {
     ObjectBox::trace(trc);
-    if (enclosingScope_)
+    if (enclosingScope_) {
         TraceRoot(trc, &enclosingScope_, "funbox-enclosingScope");
+    }
 }
 
 bool
@@ -412,12 +426,14 @@ js::frontend::IsAnonymousFunctionDefinition(ParseNode* pn)
     // 14.1.12 (FunctionExpression).
     // 14.4.8 (GeneratorExpression).
     // 14.6.8 (AsyncFunctionExpression)
-    if (pn->isKind(ParseNodeKind::Function) && !pn->pn_funbox->function()->explicitName())
+    if (pn->isKind(ParseNodeKind::Function) && !pn->pn_funbox->function()->explicitName()) {
         return true;
+    }
 
     // 14.5.8 (ClassExpression)
-    if (pn->is<ClassNode>() && !pn->as<ClassNode>().names())
+    if (pn->is<ClassNode>() && !pn->as<ClassNode>().names()) {
         return true;
+    }
 
     return false;
 }

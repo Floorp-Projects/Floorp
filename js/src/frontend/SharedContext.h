@@ -456,8 +456,9 @@ class FunctionBox : public ObjectBox, public SharedContext
         // If this FunctionBox is a lazy child of the function we're actually
         // compiling, then it is not the outermost SharedContext, so this
         // method should return nullptr."
-        if (isLazyFunctionWithoutEnclosingScope())
+        if (isLazyFunctionWithoutEnclosingScope()) {
             return nullptr;
+        }
 
         return enclosingScope_;
     }

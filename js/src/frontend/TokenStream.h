@@ -532,19 +532,22 @@ class TokenStreamShared
     {
 #ifdef DEBUG
         // Easy case: modifiers match.
-        if (modifier == lookaheadToken.modifier)
+        if (modifier == lookaheadToken.modifier) {
             return;
+        }
 
         if (lookaheadToken.modifierException == OperandIsNone) {
             // getToken(Operand) permissibly following getToken().
-            if (modifier == Operand && lookaheadToken.modifier == None)
+            if (modifier == Operand && lookaheadToken.modifier == None) {
                 return;
+            }
         }
 
         if (lookaheadToken.modifierException == NoneIsOperand) {
             // getToken() permissibly following getToken(Operand).
-            if (modifier == None && lookaheadToken.modifier == Operand)
+            if (modifier == None && lookaheadToken.modifier == Operand) {
                 return;
+            }
         }
 
         MOZ_ASSERT_UNREACHABLE("this token was previously looked up with a "
@@ -624,8 +627,9 @@ class TokenStreamAnyChars
 
   public:
     PropertyName* currentName() const {
-        if (isCurrentTokenType(TokenKind::Name))
+        if (isCurrentTokenType(TokenKind::Name)) {
             return currentToken().name();
+        }
 
         MOZ_ASSERT(TokenKindIsPossibleIdentifierName(currentToken().type));
         return reservedWordToPropertyName(currentToken().type);
@@ -665,8 +669,9 @@ class TokenStreamAnyChars
 
     void setInvalidTemplateEscape(uint32_t offset, InvalidEscapeType type) {
         MOZ_ASSERT(type != InvalidEscapeType::None);
-        if (invalidTemplateEscapeType != InvalidEscapeType::None)
+        if (invalidTemplateEscapeType != InvalidEscapeType::None) {
             return;
+        }
         invalidTemplateEscapeOffset = offset;
         invalidTemplateEscapeType = type;
     }
@@ -684,8 +689,9 @@ class TokenStreamAnyChars
         // arrow function parsing: we want to add modifier exceptions in the
         // fast paths, then potentially (but not necessarily) duplicate them
         // after parsing all of an arrow function.
-        if (next.modifierException == modifierException)
+        if (next.modifierException == modifierException) {
             return;
+        }
 
         if (next.modifierException == NoneIsOperand) {
             // Token after yield expression without operand already has
@@ -794,8 +800,9 @@ class TokenStreamAnyChars
             uint32_t lineStartOffset = lineStartOffsets_[lineIndex];
             MOZ_RELEASE_ASSERT(offset >= lineStartOffset);
             uint32_t column = offset - lineStartOffset;
-            if (lineIndex == 0)
+            if (lineIndex == 0) {
                 return column + initialColumn_;
+            }
             return column;
         }
 
@@ -807,8 +814,9 @@ class TokenStreamAnyChars
 
         bool isOnThisLine(uint32_t offset, uint32_t lineNum, bool* onThisLine) const {
             uint32_t lineIndex = lineNumToIndex(lineNum);
-            if (lineIndex + 1 >= lineStartOffsets_.length()) // +1 due to sentinel
+            if (lineIndex + 1 >= lineStartOffsets_.length()) { // +1 due to sentinel
                 return false;
+            }
             *onThisLine = lineStartOffsets_[lineIndex] <= offset &&
                           offset < lineStartOffsets_[lineIndex + 1];
             return true;
@@ -1075,8 +1083,9 @@ class PeekedCodePoint final
 inline PeekedCodePoint<char16_t>
 PeekCodePoint(const char16_t* const ptr, const char16_t* const end)
 {
-    if (MOZ_UNLIKELY(ptr >= end))
+    if (MOZ_UNLIKELY(ptr >= end)) {
         return PeekedCodePoint<char16_t>::none();
+    }
 
     char16_t lead = ptr[0];
 
@@ -1099,17 +1108,20 @@ PeekCodePoint(const char16_t* const ptr, const char16_t* const end)
 inline PeekedCodePoint<mozilla::Utf8Unit>
 PeekCodePoint(const mozilla::Utf8Unit* const ptr, const mozilla::Utf8Unit* const end)
 {
-    if (MOZ_UNLIKELY(ptr >= end))
+    if (MOZ_UNLIKELY(ptr >= end)) {
         return PeekedCodePoint<mozilla::Utf8Unit>::none();
+    }
 
     const mozilla::Utf8Unit lead = ptr[0];
-    if (mozilla::IsAscii(lead))
+    if (mozilla::IsAscii(lead)) {
         return PeekedCodePoint<mozilla::Utf8Unit>(lead.toUint8(), 1);
+    }
 
     const mozilla::Utf8Unit* afterLead = ptr + 1;
     mozilla::Maybe<char32_t> codePoint = mozilla::DecodeOneUtf8CodePoint(lead, &afterLead, end);
-    if (codePoint.isNothing())
+    if (codePoint.isNothing()) {
         return PeekedCodePoint<mozilla::Utf8Unit>::none();
+    }
 
     auto len = mozilla::AssertedCast<uint8_t>(mozilla::PointerRangeSize(ptr, afterLead));
     MOZ_ASSERT(len <= 4);
@@ -1246,14 +1258,16 @@ class SourceUnits
     bool matchHexDigits(uint8_t n, char16_t* out) {
         MOZ_ASSERT(ptr, "shouldn't peek into poisoned SourceUnits");
         MOZ_ASSERT(n <= 4, "hexdigit value can't overflow char16_t");
-        if (n > remaining())
+        if (n > remaining()) {
             return false;
+        }
 
         char16_t v = 0;
         for (uint8_t i = 0; i < n; i++) {
             auto unit = CodeUnitValue(ptr[i]);
-            if (!JS7_ISHEX(unit))
+            if (!JS7_ISHEX(unit)) {
                 return false;
+            }
 
             v = (v << 4) | JS7_UNHEX(unit);
         }
@@ -1265,8 +1279,9 @@ class SourceUnits
 
     bool matchCodeUnits(const char* chars, uint8_t length) {
         MOZ_ASSERT(ptr, "shouldn't match into poisoned SourceUnits");
-        if (length > remaining())
+        if (length > remaining()) {
             return false;
+        }
 
         const CharT* start = ptr;
         const CharT* end = ptr + length;
@@ -1324,8 +1339,9 @@ class SourceUnits
                    "function should only be called when a '\\n' was just "
                    "ungotten, and any '\\r' preceding it must also be "
                    "ungotten");
-        if (*(ptr - 1) == CharT('\r'))
+        if (*(ptr - 1) == CharT('\r')) {
             ptr--;
+        }
     }
 
     /** Unget U+2028 LINE SEPARATOR or U+2029 PARAGRAPH SEPARATOR. */
@@ -1524,8 +1540,9 @@ class TokenStreamCharsBase
     inline CharT toCharT(int32_t codeUnitValue);
 
     void ungetCodeUnit(int32_t c) {
-        if (c == EOF)
+        if (c == EOF) {
             return;
+        }
 
         sourceUnits.ungetCodeUnit();
     }
@@ -1929,8 +1946,9 @@ class GeneralTokenStreamChars
      * it's ungotten.
      */
     int32_t getCodeUnit() {
-        if (MOZ_LIKELY(!this->sourceUnits.atEnd()))
+        if (MOZ_LIKELY(!this->sourceUnits.atEnd())) {
             return CodeUnitValue(this->sourceUnits.getCodeUnit());
+        }
 
         anyCharsAccess().flags.isEOF = true;
         return EOF;
@@ -1996,8 +2014,9 @@ class GeneralTokenStreamChars
         // is on a different line, we can't easily provide context.  (This means
         // any error in a multi-line token, e.g. an unterminated multiline string
         // literal, won't have context.)
-        if (err->lineNumber != anyCharsAccess().lineno)
+        if (err->lineNumber != anyCharsAccess().lineno) {
             return true;
+        }
 
         return addLineOfContext(err, offset);
     }
@@ -2021,8 +2040,9 @@ class GeneralTokenStreamChars
         // Template literals normalize only '\r' and "\r\n" to '\n'; Unicode
         // separators don't need special handling.
         // https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv
-        if (!fillCharBufferFromSourceNormalizingAsciiLineBreaks(cur, end))
+        if (!fillCharBufferFromSourceNormalizingAsciiLineBreaks(cur, end)) {
             return nullptr;
+        }
 
         return drainCharBufferIntoAtom(anyChars.cx);
     }
@@ -2341,8 +2361,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     // If there is an invalid escape in a template, report it and return false,
     // otherwise return true.
     bool checkForInvalidTemplateEscapeError() {
-        if (anyCharsAccess().invalidTemplateEscapeType == InvalidEscapeType::None)
+        if (anyCharsAccess().invalidTemplateEscapeType == InvalidEscapeType::None) {
             return true;
+        }
 
         reportInvalidEscapeError(anyCharsAccess().invalidTemplateEscapeOffset,
                                  anyCharsAccess().invalidTemplateEscapeType);
@@ -2510,8 +2531,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
             *ttp = anyChars.nextToken().type;
             return true;
         }
-        if (!getTokenInternal(ttp, modifier))
+        if (!getTokenInternal(ttp, modifier)) {
             return false;
+        }
         anyChars.ungetToken();
         return true;
     }
@@ -2520,8 +2542,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         TokenStreamAnyChars& anyChars = anyCharsAccess();
         if (anyChars.lookahead == 0) {
             TokenKind tt;
-            if (!getTokenInternal(&tt, modifier))
+            if (!getTokenInternal(&tt, modifier)) {
                 return false;
+            }
             anyChars.ungetToken();
             MOZ_ASSERT(anyChars.hasLookahead());
         } else {
@@ -2534,8 +2557,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     MOZ_MUST_USE bool peekOffset(uint32_t* offset, Modifier modifier = None) {
         TokenPos pos;
-        if (!peekTokenPos(&pos, modifier))
+        if (!peekTokenPos(&pos, modifier)) {
             return false;
+        }
         *offset = pos.begin;
         return true;
     }
@@ -2579,8 +2603,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         // The following test is somewhat expensive but gets these cases (and
         // all others) right.
         TokenKind tmp;
-        if (!getToken(&tmp, modifier))
+        if (!getToken(&tmp, modifier)) {
             return false;
+        }
         const Token& next = anyChars.currentToken();
         anyChars.ungetToken();
 
@@ -2594,8 +2619,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     // Get the next token from the stream if its kind is |tt|.
     MOZ_MUST_USE bool matchToken(bool* matchedp, TokenKind tt, Modifier modifier = None) {
         TokenKind token;
-        if (!getToken(&token, modifier))
+        if (!getToken(&token, modifier)) {
             return false;
+        }
         if (token == tt) {
             *matchedp = true;
         } else {
@@ -2614,8 +2640,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     MOZ_MUST_USE bool nextTokenEndsExpr(bool* endsExpr) {
         TokenKind tt;
-        if (!peekToken(&tt))
+        if (!peekToken(&tt)) {
             return false;
+        }
 
         *endsExpr = anyCharsAccess().isExprEnding[size_t(tt)];
         if (*endsExpr) {
@@ -2679,8 +2706,9 @@ TokenStreamPosition<CharT>::TokenStreamPosition(AutoKeepAtoms& keepAtoms,
     prevLinebase = anyChars.prevLinebase;
     lookahead = anyChars.lookahead;
     currentToken = anyChars.currentToken();
-    for (unsigned i = 0; i < anyChars.lookahead; i++)
+    for (unsigned i = 0; i < anyChars.lookahead; i++) {
         lookaheadTokens[i] = anyChars.tokens[anyChars.aheadCursor(1 + i)];
+    }
 }
 
 class TokenStreamAnyCharsAccess

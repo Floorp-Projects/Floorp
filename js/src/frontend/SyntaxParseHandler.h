@@ -170,12 +170,15 @@ class SyntaxParseHandler
 
     Node newName(PropertyName* name, const TokenPos& pos, JSContext* cx) {
         lastAtom = name;
-        if (name == cx->names().arguments)
+        if (name == cx->names().arguments) {
             return NodeArgumentsName;
-        if (pos.begin + strlen("async") == pos.end && name == cx->names().async)
+        }
+        if (pos.begin + strlen("async") == pos.end && name == cx->names().async) {
             return NodePotentialAsyncKeyword;
-        if (name == cx->names().eval)
+        }
+        if (name == cx->names().eval) {
             return NodeEvalName;
+        }
         return NodeName;
     }
 
@@ -411,8 +414,9 @@ class SyntaxParseHandler
     }
 
     Node newDeclarationList(ParseNodeKind kind, const TokenPos& pos) {
-        if (kind == ParseNodeKind::Var)
+        if (kind == ParseNodeKind::Var) {
             return NodeVarDeclaration;
+        }
         MOZ_ASSERT(kind == ParseNodeKind::Let || kind == ParseNodeKind::Const);
         return NodeLexicalDeclaration;
     }
@@ -475,10 +479,12 @@ class SyntaxParseHandler
         // A number of nodes have different behavior upon parenthesization, but
         // only in some circumstances.  Convert these nodes to special
         // parenthesized forms.
-        if (node == NodeUnparenthesizedArray)
+        if (node == NodeUnparenthesizedArray) {
             return NodeParenthesizedArray;
-        if (node == NodeUnparenthesizedObject)
+        }
+        if (node == NodeUnparenthesizedObject) {
             return NodeParenthesizedObject;
+        }
 
         // Other nodes need not be recognizable after parenthesization; convert
         // them to a generic node.
@@ -490,8 +496,9 @@ class SyntaxParseHandler
         }
 
         // Convert parenthesized |async| to a normal name node.
-        if (node == NodePotentialAsyncKeyword)
+        if (node == NodePotentialAsyncKeyword) {
             return NodeName;
+        }
 
         // In all other cases, the parenthesized form of |node| is equivalent
         // to the unparenthesized form: return |node| unchanged.
@@ -527,8 +534,9 @@ class SyntaxParseHandler
         // |this|.  It's not really eligible for the funapply/funcall
         // optimizations as they're currently implemented (assuming a single
         // value is used for both retrieval and |this|).
-        if (node != NodeDottedProperty)
+        if (node != NodeDottedProperty) {
             return nullptr;
+        }
         return lastAtom->asPropertyName();
     }
 
