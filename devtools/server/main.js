@@ -358,11 +358,6 @@ var DebuggerServer = {
       constructor: "StorageActor",
       type: { target: true }
     });
-    this.registerModule("devtools/server/actors/gcli", {
-      prefix: "gcli",
-      constructor: "GcliActor",
-      type: { target: true }
-    });
     this.registerModule("devtools/server/actors/memory", {
       prefix: "memory",
       constructor: "MemoryActor",
@@ -939,6 +934,7 @@ var DebuggerServer = {
         }
       };
 
+      const parentActors = [];
       const onSpawnActorInParent = function(msg) {
         // We may have multiple connectToFrame instance running for the same tab
         // and need to filter the messages.
@@ -977,6 +973,8 @@ var DebuggerServer = {
             prefix: connPrefix,
             actorID: instance.actorID
           });
+
+          parentActors.push(instance);
         } catch (e) {
           const errorMessage =
             "Exception during actor module setup running in the parent process: ";
@@ -1027,6 +1025,13 @@ var DebuggerServer = {
         parentModules.forEach(mod => {
           if (mod.onBrowserSwap) {
             mod.onBrowserSwap(mm);
+          }
+        });
+
+        // Also notify actors spawned in the parent process about the new message manager.
+        parentActors.forEach(parentActor => {
+          if (parentActor.onBrowserSwap) {
+            parentActor.onBrowserSwap(mm);
           }
         });
 

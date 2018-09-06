@@ -123,6 +123,10 @@ var whitelist = [
   {file: "resource://app/modules/translation/GoogleTranslator.jsm"},
   {file: "resource://app/modules/translation/YandexTranslator.jsm"},
 
+  // The Quantum Bar files are not in use yet, but we plan to start using them
+  // soon in parallel to the old implementation.
+  {file: "resource://app/modules/UrlbarTokenizer.jsm"},
+
   // Starting from here, files in the whitelist are bugs that need fixing.
   // Bug 1339424 (wontfix?)
   {file: "chrome://browser/locale/taskbar.properties",
@@ -409,14 +413,13 @@ function parseCodeFile(fileUri) {
 
         if (isDevtools) {
           let rules = [
-            ["gcli", "resource://devtools/shared/gcli/source/lib/gcli"],
             ["devtools/client/locales", "chrome://devtools/locale"],
             ["devtools/shared/locales", "chrome://devtools-shared/locale"],
             ["devtools/shared/platform", "resource://devtools/shared/platform/chrome"],
             ["devtools", "resource://devtools"],
           ];
 
-          match = line.match(/["']((?:devtools|gcli)\/[^\\#"']+)["']/);
+          match = line.match(/["']((?:devtools)\/[^\\#"']+)["']/);
           if (match && match[1]) {
             let path = match[1];
             for (let rule of rules) {

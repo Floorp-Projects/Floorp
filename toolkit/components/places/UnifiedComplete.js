@@ -2593,35 +2593,22 @@ UnifiedComplete.prototype = {
   getDatabaseHandle() {
     if (Prefs.get("autocomplete.enabled") && !this._promiseDatabase) {
       this._promiseDatabase = (async () => {
-        let conn = await Sqlite.cloneStorageConnection({
-          connection: PlacesUtils.history.DBConnection,
-          readOnly: true,
-        });
+        let conn = await PlacesUtils.promiseLargeCacheDBConnection();
 
         try {
-           Sqlite.shutdown.addBlocker("Places UnifiedComplete.js clone closing",
-                                      async () => {
+           Sqlite.shutdown.addBlocker("Places UnifiedComplete.js closing",
+                                      () => {
                                         // Break a possible cycle through the
                                         // previous result, the controller and
                                         // ourselves.
                                         this._currentSearch = null;
                                         SwitchToTabStorage.shutdown();
-                                        await conn.close();
                                       });
         } catch (ex) {
-          // It's too late to block shutdown, just close the connection.
-          await conn.close();
+          // It's too late to block shutdown.
           throw ex;
         }
-
-        // Autocomplete often fallbacks to a table scan due to lack of text
-        // indices.  A larger cache helps reducing IO and improving performance.
-        // The value used here is larger than the default Storage value defined
-        // as MAX_CACHE_SIZE_BYTES in storage/mozStorageConnection.cpp.
-        await conn.execute("PRAGMA cache_size = -6144"); // 6MiB
-
         await SwitchToTabStorage.initDatabase(conn);
-
         return conn;
       })().catch(ex => {
         dump("Couldn't get database handle: " + ex + "\n");
