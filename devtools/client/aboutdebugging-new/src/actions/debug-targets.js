@@ -44,7 +44,7 @@ function inspectDebugTarget(type, id) {
       }
       case DEBUG_TARGETS.WORKER: {
         // Open worker toolbox in new window.
-        const client = getCurrentClient(getState());
+        const client = getCurrentClient(getState().runtimes);
         gDevToolsBrowser.openWorkerToolbox(client, id);
         break;
       }
@@ -71,7 +71,7 @@ function installTemporaryExtension() {
 
 function pushServiceWorker(actor) {
   return async (_, getState) => {
-    const client = getCurrentClient(getState());
+    const client = getCurrentClient(getState().runtimes);
 
     try {
       await client.request({ to: actor, type: "push" });
@@ -83,7 +83,7 @@ function pushServiceWorker(actor) {
 
 function reloadTemporaryExtension(actor) {
   return async (_, getState) => {
-    const client = getCurrentClient(getState());
+    const client = getCurrentClient(getState().runtimes);
 
     try {
       await client.request({ to: actor, type: "reload" });
@@ -107,7 +107,7 @@ function requestTabs() {
   return async (dispatch, getState) => {
     dispatch({ type: REQUEST_TABS_START });
 
-    const client = getCurrentClient(getState());
+    const client = getCurrentClient(getState().runtimes);
 
     try {
       const { tabs } = await client.listTabs({ favicons: true });
@@ -123,7 +123,7 @@ function requestExtensions() {
   return async (dispatch, getState) => {
     dispatch({ type: REQUEST_EXTENSIONS_START });
 
-    const client = getCurrentClient(getState());
+    const client = getCurrentClient(getState().runtimes);
 
     try {
       const { addons } = await client.listAddons();
@@ -146,7 +146,7 @@ function requestWorkers() {
   return async (dispatch, getState) => {
     dispatch({ type: REQUEST_WORKERS_START });
 
-    const client = getCurrentClient(getState());
+    const client = getCurrentClient(getState().runtimes);
 
     try {
       const {
@@ -169,7 +169,7 @@ function requestWorkers() {
 
 function startServiceWorker(actor) {
   return async (_, getState) => {
-    const client = getCurrentClient(getState());
+    const client = getCurrentClient(getState().runtimes);
 
     try {
       await client.request({ to: actor, type: "start" });

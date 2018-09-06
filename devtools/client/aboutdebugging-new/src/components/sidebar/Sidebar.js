@@ -45,7 +45,9 @@ class Sidebar extends PureComponent {
 
     return runtimes.networkRuntimes.map(runtime => {
       const connectComponent = DeviceSidebarItemAction({
-        connected: false,
+        connected: !!runtime.client,
+        dispatch,
+        runtimeId: runtime.id,
       });
 
       return SidebarItem({
