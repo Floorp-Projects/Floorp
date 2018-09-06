@@ -5,8 +5,6 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-const { DebuggerClient } = require("devtools/shared/client/debugger-client");
-const { DebuggerServer } = require("devtools/server/main");
 const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
 
 const {
@@ -16,13 +14,11 @@ const {
 } = require("devtools/client/aboutdebugging-new/src/modules/extensions-helper");
 
 const {
-  CONNECT_RUNTIME_FAILURE,
-  CONNECT_RUNTIME_START,
-  CONNECT_RUNTIME_SUCCESS,
+  getCurrentClient
+} = require("devtools/client/aboutdebugging-new/src/modules/runtimes-state-helper");
+
+const {
   DEBUG_TARGETS,
-  DISCONNECT_RUNTIME_FAILURE,
-  DISCONNECT_RUNTIME_START,
-  DISCONNECT_RUNTIME_SUCCESS,
   REQUEST_EXTENSIONS_FAILURE,
   REQUEST_EXTENSIONS_START,
   REQUEST_EXTENSIONS_SUCCESS,
@@ -33,49 +29,6 @@ const {
   REQUEST_WORKERS_START,
   REQUEST_WORKERS_SUCCESS,
 } = require("../constants");
-
-function getCurrentClient(state) {
-  const thisFirefoxRuntime = state.runtimes.thisFirefoxRuntimes[0];
-  return thisFirefoxRuntime.client;
-}
-
-function connectRuntime() {
-  return async (dispatch, getState) => {
-    dispatch({ type: CONNECT_RUNTIME_START });
-
-    DebuggerServer.init();
-    DebuggerServer.registerAllActors();
-    const client = new DebuggerClient(DebuggerServer.connectPipe());
-
-    try {
-      await client.connect();
-
-      dispatch({ type: CONNECT_RUNTIME_SUCCESS, client });
-      dispatch(requestExtensions());
-      dispatch(requestTabs());
-      dispatch(requestWorkers());
-    } catch (e) {
-      dispatch({ type: CONNECT_RUNTIME_FAILURE, error: e.message });
-    }
-  };
-}
-
-function disconnectRuntime() {
-  return async (dispatch, getState) => {
-    const client = getCurrentClient(getState());
-
-    dispatch({ type: DISCONNECT_RUNTIME_START, client });
-
-    try {
-      await client.close();
-      DebuggerServer.destroy();
-
-      dispatch({ type: DISCONNECT_RUNTIME_SUCCESS });
-    } catch (e) {
-      dispatch({ type: DISCONNECT_RUNTIME_FAILURE, error: e.message });
-    }
-  };
-}
 
 function inspectDebugTarget(type, id) {
   return async (_, getState) => {
@@ -227,8 +180,6 @@ function startServiceWorker(actor) {
 }
 
 module.exports = {
-  connectRuntime,
-  disconnectRuntime,
   inspectDebugTarget,
   installTemporaryExtension,
   pushServiceWorker,
