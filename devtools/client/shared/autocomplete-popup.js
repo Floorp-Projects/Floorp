@@ -99,7 +99,7 @@ AutocompletePopup.prototype = {
   onClick: function(e) {
     const item = e.target.closest(".autocomplete-item");
     if (item && typeof item.dataset.index !== "undefined") {
-      this.selectedIndex = parseInt(item.dataset.index, 10);
+      this.selectItemAtIndex(parseInt(item.dataset.index, 10));
     }
 
     this.emit("popup-click");
@@ -121,11 +121,9 @@ AutocompletePopup.prototype = {
    *        of the popup.
    * @param {Number} index
    *        The position of item to select.
+   * @param {Object} options: Check `selectItemAtIndex` for more information.
    */
-  openPopup: function(anchor, xOffset = 0, yOffset = 0, index) {
-    this.__maxLabelLength = -1;
-    this._updateSize();
-
+  openPopup: function(anchor, xOffset = 0, yOffset = 0, index, options) {
     // Retrieve the anchor's document active element to add accessibility metadata.
     this._activeElement = anchor.ownerDocument.activeElement;
 
@@ -141,7 +139,7 @@ AutocompletePopup.prototype = {
 
     this._tooltip.once("shown", () => {
       if (this.autoSelect) {
-        this.selectItemAtIndex(index);
+        this.selectItemAtIndex(index, options);
       }
 
       this.emit("popup-opened");
@@ -153,13 +151,43 @@ AutocompletePopup.prototype = {
    *
    * @param {Number} index
    *        The position of the item to select.
+   * @param {Object} options: An object that can contain:
+   *        -  {Boolean} preventSelectCallback: true to not call this.onSelectCallback as
+   *                     during the initial autoSelect.
    */
-  selectItemAtIndex: function(index) {
+  selectItemAtIndex: function(index, options = {}) {
+    const {
+      preventSelectCallback,
+    } = options;
+
     if (!Number.isInteger(index)) {
       // If no index was provided, select the first item.
       index = 0;
     }
+    const item = this.items[index];
+    const element = this.elements.get(item);
+
+    const previousSelected = this._list.querySelector(".autocomplete-selected");
+    if (previousSelected && previousSelected !== element) {
+      previousSelected.classList.remove("autocomplete-selected");
+    }
+
+    if (element && !element.classList.contains("autocomplete-selected")) {
+      element.classList.add("autocomplete-selected");
+    }
+
+    if (this.isOpen && item) {
+      this._scrollElementIntoViewIfNeeded(element);
+      this._setActiveDescendant(element.id);
+    } else {
+      this._clearActiveDescendant();
+    }
     this.selectedIndex = index;
+
+    if (this.isOpen && item && this.onSelectCallback && !preventSelectCallback) {
+      // Call the user-defined select callback if defined.
+      this.onSelectCallback(item);
+    }
   },
 
   /**
@@ -231,28 +259,37 @@ AutocompletePopup.prototype = {
    *
    * @param {Array} items
    *        The list of items you want displayed in the popup list.
-   * @param {Number} index
+   * @param {Number} selectedIndex
    *        The position of the item to select.
+   * @param {Object} options: An object that can contain:
+   *        -  {Boolean} preventSelectCallback: true to not call this.onSelectCallback as
+   *                     during the initial autoSelect.
    */
-  setItems: function(items, index) {
+  setItems: function(items, selectedIndex, options) {
     this.clearItems();
-    items.forEach(this.appendItem, this);
 
-    if (this.isOpen && this.autoSelect) {
-      this.selectItemAtIndex(index);
-    }
-  },
-
-  __maxLabelLength: -1,
-
-  get _maxLabelLength() {
-    if (this.__maxLabelLength !== -1) {
-      return this.__maxLabelLength;
+    // If there is no new items, no need to do unecessary work.
+    if (items.length === 0) {
+      return;
     }
 
-    let max = 0;
+    if (!Number.isInteger(selectedIndex) && this.autoSelect) {
+      selectedIndex = 0;
+    }
 
-    for (let {label, postLabel, count} of this.items) {
+    // Let's compute the max label length in the item list. This length will then be used
+    // to set the width of the popup.
+    let maxLabelLength = 0;
+
+    const fragment = this._document.createDocumentFragment();
+    items.forEach((item, i) => {
+      const selected = selectedIndex === i;
+      const listItem = this.createListItem(item, i, selected);
+      this.items.push(item);
+      this.elements.set(item, listItem);
+      fragment.appendChild(listItem);
+
+      let {label, postLabel, count} = item;
       if (count) {
         label += count + "";
       }
@@ -260,29 +297,13 @@ AutocompletePopup.prototype = {
       if (postLabel) {
         label += postLabel;
       }
+      maxLabelLength = Math.max(label.length, maxLabelLength);
+    });
 
-      const length = label.length + (postLabel ? 3 : 0);
-      max = Math.max(length, max);
-    }
+    this._list.style.width = (maxLabelLength + 3) + "ch";
+    this._list.appendChild(fragment);
 
-    this.__maxLabelLength = max;
-    return this.__maxLabelLength;
-  },
-
-  /**
-   * Update the panel size to fit the content.
-   */
-  _updateSize: function() {
-    if (!this._tooltip) {
-      return;
-    }
-
-    this._list.style.width = (this._maxLabelLength + 3) + "ch";
-
-    const selectedItem = this.selectedItem;
-    if (selectedItem) {
-      this._scrollElementIntoViewIfNeeded(this.elements.get(selectedItem));
-    }
+    this.selectItemAtIndex(selectedIndex, options);
   },
 
   _scrollElementIntoViewIfNeeded: function(element) {
@@ -297,7 +318,7 @@ AutocompletePopup.prototype = {
       // Element is above container.
       element.scrollIntoView(true);
     } else if ((top + height) > containerHeight) {
-      // Element is beloew container.
+      // Element is below container.
       element.scrollIntoView(false);
     }
   },
@@ -306,51 +327,10 @@ AutocompletePopup.prototype = {
    * Clear all the items from the autocomplete list.
    */
   clearItems: function() {
-    // Reset the selectedIndex to -1 before clearing the list
-    this.selectedIndex = -1;
     this._list.innerHTML = "";
-    this.__maxLabelLength = -1;
     this.items = [];
     this.elements = new WeakMap();
-  },
-
-  /**
-   * Getter for the index of the selected item.
-   *
-   * @type {Number}
-   */
-  get selectedIndex() {
-    return this._selectedIndex;
-  },
-
-  /**
-   * Setter for the selected index.
-   *
-   * @param {Number} index
-   *        The number (index) of the item you want to select in the list.
-   */
-  set selectedIndex(index) {
-    const previousSelected = this._list.querySelector(".autocomplete-selected");
-    if (previousSelected) {
-      previousSelected.classList.remove("autocomplete-selected");
-    }
-
-    const item = this.items[index];
-    if (this.isOpen && item) {
-      const element = this.elements.get(item);
-
-      element.classList.add("autocomplete-selected");
-      this._scrollElementIntoViewIfNeeded(element);
-      this._setActiveDescendant(element.id);
-    } else {
-      this._clearActiveDescendant();
-    }
-    this._selectedIndex = index;
-
-    if (this.isOpen && item && this.onSelectCallback) {
-      // Call the user-defined select callback if defined.
-      this.onSelectCallback();
-    }
+    this.selectItemAtIndex(-1);
   },
 
   /**
@@ -358,7 +338,7 @@ AutocompletePopup.prototype = {
    * @type Object
    */
   get selectedItem() {
-    return this.items[this._selectedIndex];
+    return this.items[this.selectedIndex];
   },
 
   /**
@@ -370,7 +350,7 @@ AutocompletePopup.prototype = {
   set selectedItem(item) {
     const index = this.items.indexOf(item);
     if (index !== -1 && this.isOpen) {
-      this.selectedIndex = index;
+      this.selectItemAtIndex(index);
     }
   },
 
@@ -414,31 +394,15 @@ AutocompletePopup.prototype = {
     this._activeElement.removeAttribute("aria-activedescendant");
   },
 
-  /**
-   * Append an item into the autocomplete list.
-   *
-   * @param {Object} item
-   *        The item you want appended to the list.
-   *        The item object can have the following properties:
-   *        - label {String} Property which is used as the displayed value.
-   *        - preLabel {String} [Optional] The String that will be displayed
-   *                   before the label indicating that this is the already
-   *                   present text in the input box, and label is the text
-   *                   that will be auto completed. When this property is
-   *                   present, |preLabel.length| starting characters will be
-   *                   removed from label.
-   *        - postLabel {String} [Optional] The string that will be displayed
-   *                  after the label. Currently used to display the value of
-   *                  a desired variable.
-   *        - count {Number} [Optional] The number to represent the count of
-   *                autocompleted label.
-   */
-  appendItem: function(item) {
+  createListItem: function(item, index, selected) {
     const listItem = this._document.createElementNS(HTML_NS, "li");
     // Items must have an id for accessibility.
     listItem.setAttribute("id", "autocomplete-item-" + itemIdCounter++);
-    listItem.className = "autocomplete-item";
-    listItem.setAttribute("data-index", this.items.length);
+    listItem.classList.add("autocomplete-item");
+    if (selected) {
+      listItem.classList.add("autocomplete-selected");
+    }
+    listItem.setAttribute("data-index", index);
 
     if (this.direction) {
       listItem.setAttribute("dir", this.direction);
@@ -480,38 +444,7 @@ AutocompletePopup.prototype = {
       listItem.appendChild(countDesc);
     }
 
-    this._list.appendChild(listItem);
-    this.items.push(item);
-    this.elements.set(item, listItem);
-  },
-
-  /**
-   * Remove an item from the popup list.
-   *
-   * @param {Object} item
-   *        The item you want removed.
-   */
-  removeItem: function(item) {
-    if (!this.items.includes(item)) {
-      return;
-    }
-
-    const itemIndex = this.items.indexOf(item);
-    const selectedIndex = this.selectedIndex;
-
-    // Remove autocomplete item.
-    this.items.splice(itemIndex, 1);
-
-    // Remove corresponding DOM element from the elements WeakMap and from the DOM.
-    const elementToRemove = this.elements.get(item);
-    this.elements.delete(elementToRemove);
-    elementToRemove.remove();
-
-    if (itemIndex <= selectedIndex) {
-      // If the removed item index was before or equal to the selected index, shift the
-      // selected index by 1.
-      this.selectedIndex = Math.max(0, selectedIndex - 1);
-    }
+    return listItem;
   },
 
   /**
@@ -545,9 +478,9 @@ AutocompletePopup.prototype = {
    */
   selectNextItem: function() {
     if (this.selectedIndex < (this.items.length - 1)) {
-      this.selectedIndex++;
+      this.selectItemAtIndex(this.selectedIndex + 1);
     } else {
-      this.selectedIndex = 0;
+      this.selectItemAtIndex(0);
     }
     return this.selectedItem;
   },
@@ -560,9 +493,9 @@ AutocompletePopup.prototype = {
    */
   selectPreviousItem: function() {
     if (this.selectedIndex > 0) {
-      this.selectedIndex--;
+      this.selectItemAtIndex(this.selectedIndex - 1);
     } else {
-      this.selectedIndex = this.items.length - 1;
+      this.selectItemAtIndex(this.items.length - 1);
     }
 
     return this.selectedItem;
@@ -577,7 +510,7 @@ AutocompletePopup.prototype = {
    */
   selectNextPageItem: function() {
     const nextPageIndex = this.selectedIndex + this._itemsPerPane + 1;
-    this.selectedIndex = Math.min(nextPageIndex, this.itemCount - 1);
+    this.selectItemAtIndex(Math.min(nextPageIndex, this.itemCount - 1));
     return this.selectedItem;
   },
 
@@ -590,7 +523,7 @@ AutocompletePopup.prototype = {
    */
   selectPreviousPageItem: function() {
     const prevPageIndex = this.selectedIndex - this._itemsPerPane - 1;
-    this.selectedIndex = Math.max(prevPageIndex, 0);
+    this.selectItemAtIndex(Math.max(prevPageIndex, 0));
     return this.selectedItem;
   },
 
