@@ -24,7 +24,7 @@ import org.mozilla.focus.search.CustomSearchEngineStore
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Settings
-import org.mozilla.focus.utils.activeExperimentIds
+import org.mozilla.focus.utils.activeExperimentNames
 import org.mozilla.telemetry.Telemetry
 import org.mozilla.telemetry.TelemetryHolder
 import org.mozilla.telemetry.config.TelemetryConfiguration
@@ -817,7 +817,7 @@ object TelemetryWrapper {
 
     @JvmStatic
     fun recordActiveExperiments(context: Context) {
-        TelemetryHolder.get().recordActiveExperiments(context.activeExperimentIds)
+        TelemetryHolder.get().recordActiveExperiments(context.activeExperimentNames)
     }
 
     @JvmStatic

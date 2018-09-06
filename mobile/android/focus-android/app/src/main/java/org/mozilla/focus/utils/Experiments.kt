@@ -23,5 +23,5 @@ val Context.app: FocusApplication
 fun Context.isInExperiment(descriptor: ExperimentDescriptor): Boolean =
         app.fretboard.isInExperiment(this, descriptor)
 
-val Context.activeExperimentIds: List<String>
-    get() = app.fretboard.getActiveExperiments(this).map { it.id }
+val Context.activeExperimentNames: List<String>
+    get() = app.fretboard.getActiveExperiments(this).map { it.name }
