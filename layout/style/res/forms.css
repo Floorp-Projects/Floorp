@@ -163,7 +163,6 @@ textarea > .preview-div {
   display: inline-block;
   ime-mode: inherit;
   resize: inherit;
-  scrollbar-width: inherit;
   -moz-control-character-visibility: visible;
   overflow-clip-box: inherit;
 }
