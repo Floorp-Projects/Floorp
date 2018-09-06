@@ -5,10 +5,10 @@
 "use strict";
 
 const {
-  DISCONNECT_RUNTIME_SUCCESS,
   REQUEST_EXTENSIONS_SUCCESS,
   REQUEST_TABS_SUCCESS,
   REQUEST_WORKERS_SUCCESS,
+  UNWATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 
 function DebugTargetsState() {
@@ -24,7 +24,7 @@ function DebugTargetsState() {
 
 function debugTargetsReducer(state = DebugTargetsState(), action) {
   switch (action.type) {
-    case DISCONNECT_RUNTIME_SUCCESS: {
+    case UNWATCH_RUNTIME_SUCCESS: {
       return DebugTargetsState();
     }
     case REQUEST_EXTENSIONS_SUCCESS: {

@@ -94,10 +94,10 @@ const AboutDebugging = {
 
   async destroy() {
     L10nRegistry.removeSource("aboutdebugging");
-    // Call removeNetworkLocationsObserver before disconnectRuntime,
+    // Call removeNetworkLocationsObserver before unwatchRuntime,
     // follow up in Bug 1490950.
     removeNetworkLocationsObserver(this.onNetworkLocationsUpdated);
-    await this.actions.disconnectRuntime();
+    await this.actions.unwatchRuntime();
     setDebugTargetCollapsibilities(this.store.getState().ui.debugTargetCollapsibilities);
     unmountComponentAtNode(this.mount);
   },
