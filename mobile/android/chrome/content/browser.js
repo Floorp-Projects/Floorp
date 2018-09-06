@@ -4677,12 +4677,10 @@ Tab.prototype = {
 
   OnHistoryGotoIndex: function(index, gotoURI) {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
-    return true;
   },
 
   OnHistoryPurge: function(numEntries) {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
-    return true;
   },
 
   OnHistoryReplaceEntry: function(index) {

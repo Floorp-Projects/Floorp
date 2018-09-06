@@ -13,12 +13,10 @@ SHistoryListener.prototype = {
 
   OnHistoryGotoIndex: function (aIndex, aGotoURI) {
     this.last = "gotoindex";
-    return this.retval;
   },
 
   OnHistoryPurge: function (aNumEntries) {
     this.last = "purge";
-    return this.retval;
   },
 
   OnHistoryReload: function (aReloadURI, aReloadFlags) {
