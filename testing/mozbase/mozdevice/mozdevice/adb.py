@@ -1687,10 +1687,33 @@ class ADBDevice(ADBCommand):
             if chmodsh:
                 self.rm(chmodsh, timeout=timeout, root=root)
 
+    def _test_path(self, argument, path, timeout=None, root=False):
+        """Performs path and file type checking.
+
+        :param str argument: Command line argument to the test command.
+        :param str path: The path or filename on the device.
+        :param timeout: The maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+        :type timeout: integer or None
+        :param bool root: Flag specifying if the command should be
+            executed as root.
+        :returns: boolean - True if path or filename fulfills the
+            condition of the test.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+        """
+        return self.shell_bool('test -{arg} {path}'.format(arg=argument,
+                                                           path=path),
+                               timeout=timeout, root=root)
+
     def exists(self, path, timeout=None, root=False):
         """Returns True if the path exists on the device.
 
-        :param str path: The directory name on the device.
+        :param str path: The path name on the device.
         :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
@@ -1705,12 +1728,12 @@ class ADBDevice(ADBCommand):
                  * ADBRootError
         """
         path = posixpath.normpath(path)
-        return self.shell_bool('ls -a %s' % path, timeout=timeout, root=root)
+        return self._test_path('e', path, timeout, root)
 
     def is_dir(self, path, timeout=None, root=False):
         """Returns True if path is an existing directory on the device.
 
-        :param str path: The path on the device.
+        :param str path: The directory on the device.
         :param timeout: The maximum time in
             seconds for any spawned adb process to complete before
             throwing an ADBTimeoutError.
@@ -1726,7 +1749,7 @@ class ADBDevice(ADBCommand):
                  * ADBRootError
         """
         path = posixpath.normpath(path)
-        return self.shell_bool('ls -a %s/' % path, timeout=timeout, root=root)
+        return self._test_path('d', path, timeout, root)
 
     def is_file(self, path, timeout=None, root=False):
         """Returns True if path is an existing file on the device.
@@ -1747,9 +1770,7 @@ class ADBDevice(ADBCommand):
                  * ADBRootError
         """
         path = posixpath.normpath(path)
-        return (
-            self.exists(path, timeout=timeout, root=root) and
-            not self.is_dir(path, timeout=timeout, root=root))
+        return self._test_path('f', path, timeout, root)
 
     def list_files(self, path, timeout=None, root=False):
         """Return a list of files/directories contained in a directory
