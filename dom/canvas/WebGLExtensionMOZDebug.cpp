@@ -59,17 +59,13 @@ WebGLExtensionMOZDebug::GetParameter(JSContext* cx, GLenum pname,
             return;
         }
 
-    case dom::MOZ_debugBinding::WSI_INFO:
+    case 0x10000: // "WSI_INFO"
         {
             nsCString info;
             gl->GetWSIInfo(&info);
             retval.set(StringValue(cx, NS_ConvertUTF8toUTF16(info), er));
             return;
         }
-
-    case dom::MOZ_debugBinding::DOES_INDEX_VALIDATION:
-        retval.set(JS::BooleanValue(mContext->mNeedsIndexValidation));
-        return;
 
     default:
         mContext->ErrorInvalidEnumArg("MOZ_debug.getParameter", "pname", pname);
