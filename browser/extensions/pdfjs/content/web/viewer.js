@@ -2,7 +2,7 @@
  * @licstart The following is the entire license notice for the
  * Javascript code in this page
  *
- * Copyright 2017 Mozilla Foundation
+ * Copyright 2018 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -396,7 +396,7 @@ let PDFViewerApplication = {
       this.bindWindowEvents();
       let appContainer = appConfig.appContainer || document.documentElement;
       this.l10n.translate(appContainer).then(() => {
-        this.eventBus.dispatch('localized');
+        this.eventBus.dispatch('localized', { source: this });
       });
       this.initialized = true;
     });
@@ -480,7 +480,8 @@ let PDFViewerApplication = {
     let { appConfig } = this;
     return new Promise((resolve, reject) => {
       this.overlayManager = new _overlay_manager.OverlayManager();
-      let eventBus = appConfig.eventBus || (0, _dom_events.getGlobalEventBus)();
+      const dispatchToDOM = _app_options.AppOptions.get('eventBusDispatchToDOM');
+      let eventBus = appConfig.eventBus || (0, _dom_events.getGlobalEventBus)(dispatchToDOM);
       this.eventBus = eventBus;
       let pdfRenderingQueue = new _pdf_rendering_queue.PDFRenderingQueue();
       pdfRenderingQueue.onIdle = this.cleanup.bind(this);
@@ -885,6 +886,7 @@ let PDFViewerApplication = {
       this.downloadComplete = true;
       this.loadingBar.hide();
       firstPagePromise.then(() => {
+        this.eventBus.dispatch('documentloaded', { source: this });
         this.eventBus.dispatch('documentload', { source: this });
       });
     });
@@ -960,6 +962,7 @@ let PDFViewerApplication = {
           scrollMode,
           spreadMode
         });
+        this.eventBus.dispatch('documentinit', { source: this });
         if (!this.isViewerEmbedded) {
           pdfViewer.focus();
         }
@@ -1219,13 +1222,16 @@ let PDFViewerApplication = {
       eventBus.dispatch('resize', { source: window });
     };
     _boundEvents.windowHashChange = () => {
-      eventBus.dispatch('hashchange', { hash: document.location.hash.substring(1) });
+      eventBus.dispatch('hashchange', {
+        source: window,
+        hash: document.location.hash.substring(1)
+      });
     };
     _boundEvents.windowBeforePrint = () => {
-      eventBus.dispatch('beforeprint');
+      eventBus.dispatch('beforeprint', { source: window });
     };
     _boundEvents.windowAfterPrint = () => {
-      eventBus.dispatch('afterprint');
+      eventBus.dispatch('afterprint', { source: window });
     };
     window.addEventListener('wheel', webViewerWheel);
     window.addEventListener('click', webViewerClick);
@@ -2284,8 +2290,11 @@ let animationStarted = new Promise(function (resolve) {
   window.requestAnimationFrame(resolve);
 });
 class EventBus {
-  constructor() {
+  constructor({
+    dispatchToDOM = false
+  } = {}) {
     this._listeners = Object.create(null);
+    this._dispatchToDOM = dispatchToDOM === true;
   }
   on(eventName, listener) {
     let eventListeners = this._listeners[eventName];
@@ -2306,12 +2315,40 @@ class EventBus {
   dispatch(eventName) {
     let eventListeners = this._listeners[eventName];
     if (!eventListeners || eventListeners.length === 0) {
+      if (this._dispatchToDOM) {
+        this._dispatchDOMEvent(eventName);
+      }
       return;
     }
     let args = Array.prototype.slice.call(arguments, 1);
     eventListeners.slice(0).forEach(function (listener) {
       listener.apply(null, args);
     });
+    if (this._dispatchToDOM) {
+      this._dispatchDOMEvent(eventName, args);
+    }
+  }
+  _dispatchDOMEvent(eventName, args = null) {
+    if (!this._dispatchToDOM) {
+      return;
+    }
+    const details = Object.create(null);
+    if (args && args.length > 0) {
+      const obj = args[0];
+      for (let key in obj) {
+        const value = obj[key];
+        if (key === 'source') {
+          if (value === window || value === document) {
+            return;
+          }
+          continue;
+        }
+        details[key] = value;
+      }
+    }
+    const event = document.createEvent('CustomEvent');
+    event.initCustomEvent(eventName, true, true, details);
+    document.dispatchEvent(event);
   }
 }
 function clamp(v, min, max) {
@@ -3141,6 +3178,10 @@ const defaultOptions = {
     value: false,
     kind: OptionKind.VIEWER
   },
+  eventBusDispatchToDOM: {
+    value: false,
+    kind: OptionKind.VIEWER
+  },
   externalLinkRel: {
     value: 'noopener noreferrer nofollow',
     kind: OptionKind.VIEWER
@@ -3408,12 +3449,13 @@ function attachDOMEventsToEventBus(eventBus) {
   });
 }
 let globalEventBus = null;
-function getGlobalEventBus() {
-  if (globalEventBus) {
-    return globalEventBus;
+function getGlobalEventBus(dispatchToDOM = false) {
+  if (!globalEventBus) {
+    globalEventBus = new _ui_utils.EventBus({ dispatchToDOM });
+    if (!dispatchToDOM) {
+      attachDOMEventsToEventBus(globalEventBus);
+    }
   }
-  globalEventBus = new _ui_utils.EventBus();
-  attachDOMEventsToEventBus(globalEventBus);
   return globalEventBus;
 }
 exports.attachDOMEventsToEventBus = attachDOMEventsToEventBus;
@@ -5392,19 +5434,19 @@ class PDFPresentationMode {
     if (contextMenuItems) {
       contextMenuItems.contextFirstPage.addEventListener('click', () => {
         this.contextMenuOpen = false;
-        this.eventBus.dispatch('firstpage');
+        this.eventBus.dispatch('firstpage', { source: this });
       });
       contextMenuItems.contextLastPage.addEventListener('click', () => {
         this.contextMenuOpen = false;
-        this.eventBus.dispatch('lastpage');
+        this.eventBus.dispatch('lastpage', { source: this });
       });
       contextMenuItems.contextPageRotateCw.addEventListener('click', () => {
         this.contextMenuOpen = false;
-        this.eventBus.dispatch('rotatecw');
+        this.eventBus.dispatch('rotatecw', { source: this });
       });
       contextMenuItems.contextPageRotateCcw.addEventListener('click', () => {
         this.contextMenuOpen = false;
-        this.eventBus.dispatch('rotateccw');
+        this.eventBus.dispatch('rotateccw', { source: this });
       });
     }
   }
@@ -8457,16 +8499,16 @@ class Toolbar {
     let { eventBus, items } = this;
     let self = this;
     items.previous.addEventListener('click', function () {
-      eventBus.dispatch('previouspage');
+      eventBus.dispatch('previouspage', { source: self });
     });
     items.next.addEventListener('click', function () {
-      eventBus.dispatch('nextpage');
+      eventBus.dispatch('nextpage', { source: self });
     });
     items.zoomIn.addEventListener('click', function () {
-      eventBus.dispatch('zoomin');
+      eventBus.dispatch('zoomin', { source: self });
     });
     items.zoomOut.addEventListener('click', function () {
-      eventBus.dispatch('zoomout');
+      eventBus.dispatch('zoomout', { source: self });
     });
     items.pageNumber.addEventListener('click', function () {
       this.select();
@@ -8487,16 +8529,16 @@ class Toolbar {
       });
     });
     items.presentationModeButton.addEventListener('click', function () {
-      eventBus.dispatch('presentationmode');
+      eventBus.dispatch('presentationmode', { source: self });
     });
     items.openFile.addEventListener('click', function () {
-      eventBus.dispatch('openfile');
+      eventBus.dispatch('openfile', { source: self });
     });
     items.print.addEventListener('click', function () {
-      eventBus.dispatch('print');
+      eventBus.dispatch('print', { source: self });
     });
     items.download.addEventListener('click', function () {
-      eventBus.dispatch('download');
+      eventBus.dispatch('download', { source: self });
     });
     items.scaleSelect.oncontextmenu = _ui_utils.noContextMenuHandler;
     eventBus.on('localized', () => {
@@ -9034,6 +9076,7 @@ function getDefaultPreferences() {
       "sidebarViewOnLoad": 0,
       "cursorToolOnLoad": 0,
       "enableWebGL": false,
+      "eventBusDispatchToDOM": false,
       "pdfBugEnabled": false,
       "disableRange": false,
       "disableStream": false,
