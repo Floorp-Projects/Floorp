@@ -109,7 +109,7 @@ public class SwitchLocaleTest {
             .className("android.widget.CheckedTextView")
             .instance(0)
             .enabled(true));
-    private UiObject languageHeading = TestHelper.settingsList.getChild(new UiSelector()
+    private UiObject languageHeading = TestHelper.settingsMenu.getChild(new UiSelector()
             .className("android.widget.LinearLayout")
             .instance(0));
     private UiObject englishHeading = TestHelper.mDevice.findObject(new UiSelector()

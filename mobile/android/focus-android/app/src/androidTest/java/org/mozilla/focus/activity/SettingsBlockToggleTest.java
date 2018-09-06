@@ -101,19 +101,19 @@ public class SettingsBlockToggleTest {
         UiObject privacyHeading = TestHelper.mDevice.findObject(new UiSelector()
                 .text("Privacy & Security")
                 .resourceId("android:id/title"));
-        UiObject blockAdTrackerEntry = TestHelper.settingsList.getChild(new UiSelector()
+        UiObject blockAdTrackerEntry = TestHelper.settingsMenu.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
                 .instance(1));
         UiObject blockAdTrackerValue = blockAdTrackerEntry.getChild(new UiSelector()
                 .className("android.widget.Switch"));
 
-        UiObject blockAnalyticTrackerEntry = TestHelper.settingsList.getChild(new UiSelector()
+        UiObject blockAnalyticTrackerEntry = TestHelper.settingsMenu.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
                 .instance(2));
         UiObject blockAnalyticTrackerValue = blockAnalyticTrackerEntry.getChild(new UiSelector()
                 .className("android.widget.Switch"));
 
-        UiObject blockSocialTrackerEntry = TestHelper.settingsList.getChild(new UiSelector()
+        UiObject blockSocialTrackerEntry = TestHelper.settingsMenu.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
                 .instance(4));
         UiObject blockSocialTrackerValue = blockSocialTrackerEntry.getChild(new UiSelector()

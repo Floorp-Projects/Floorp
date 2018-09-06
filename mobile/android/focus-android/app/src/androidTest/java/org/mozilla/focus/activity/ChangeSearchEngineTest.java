@@ -13,6 +13,8 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import static android.support.test.espresso.Espresso.onView;
+
 import android.widget.RadioButton;
 
 import org.junit.After;
@@ -20,14 +22,23 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mozilla.focus.R;
 import org.mozilla.focus.helpers.TestHelper;
 import org.mozilla.focus.utils.AppConstants;
 
 import java.util.Arrays;
 
-import static junit.framework.Assert.assertEquals;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.ViewMatchers.isDescendantOfA;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static android.view.KeyEvent.KEYCODE_SPACE;
 import static junit.framework.Assert.assertTrue;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
+import static org.mozilla.focus.helpers.EspressoHelper.childAtPosition;
 import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 import static org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime;
@@ -72,11 +83,11 @@ public class ChangeSearchEngineTest {
 
     @Test
     public void SearchTest() throws UiObjectNotFoundException {
-        UiObject settingsMenu = TestHelper.settingsList.getChild(new UiSelector()
+        UiObject searchMenu = TestHelper.settingsMenu.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
-                .instance(1));
+                .instance(2));
 
-        UiObject searchEngineSelectorLabel = settingsMenu.getChild(new UiSelector()
+        UiObject searchEngineSelectorLabel = searchMenu.getChild(new UiSelector()
                 .resourceId("android:id/title")
                 .text("Search")
                 .enabled(true));
@@ -90,6 +101,7 @@ public class ChangeSearchEngineTest {
         assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
         openSettings();
         TestHelper.settingsHeading.waitForExists(waitingTime);
+        searchEngineSelectorLabel.waitForExists(waitingTime);
         searchEngineSelectorLabel.click();
 
         // Open [settings menu] > [search engine menu] and click "Default" label
@@ -127,43 +139,43 @@ public class ChangeSearchEngineTest {
 
         // Do search on text string
         TestHelper.inlineAutocompleteEditText.clearTextField();
-        TestHelper.inlineAutocompleteEditText.setText("mozilla focus");
-        TestHelper.hint.waitForExists(waitingTime);
-        assertTrue(TestHelper.inlineAutocompleteEditText.exists());
+        TestHelper.inlineAutocompleteEditText.setText("mozilla ");
+        // Would you like to turn on search suggestions? Yes No
+        // fresh install only)
+        if (TestHelper.searchSuggestionsTitle.exists()) {
+            TestHelper.searchSuggestionsButtonYes.waitForExists(waitingTime);
+            TestHelper.searchSuggestionsButtonYes.click();
+        }
 
-        // Check that search hint bar correctly displayed
-        assertTrue(TestHelper.hint.getText().equals("Search for mozilla focus"));
-        TestHelper.hint.click();
-        googleWebView.waitForExists(waitingTime);
-        TestHelper.progressBar.waitForExists(webPageLoadwaitingTime);
-        //Assert.assertTrue(TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime));
-        TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime);
-        // Search for words: <Google|DuckDuckGo|etc.>, mozilla, focus
-        assertTrue(TestHelper.browserURLbar.getText().contains(mSearchEngine.toLowerCase()));
-        assertTrue(TestHelper.browserURLbar.getText().contains("mozilla"));
-        assertTrue(TestHelper.browserURLbar.getText().contains("focus"));
+        // verify search hints... "mozilla firefox", "mozilla careers", etc.TestHelper.suggestionList.waitForExists(waitingTime);
+        TestHelper.mDevice.pressKeyCode(KEYCODE_SPACE);
+        TestHelper.suggestionList.waitForExists(waitingTime);
+        assertTrue(TestHelper.suggestionList.getChildCount() >= 1);
 
-        // Tap URL bar, check it displays search term (instead of URL)
-        TestHelper.browserURLbar.click();
-        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
-        assertEquals(TestHelper.inlineAutocompleteEditText.getText(), "mozilla focus");
-        TestHelper.pressEnterKey();
-        googleWebView.waitForExists(waitingTime);
-        TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime);
-        // Search for words: <Google|DuckDuckGo|etc.>, mozilla, focus
-        assertTrue(TestHelper.browserURLbar.getText().contains(mSearchEngine.toLowerCase()));
-        assertTrue(TestHelper.browserURLbar.getText().contains("mozilla"));
-        assertTrue(TestHelper.browserURLbar.getText().contains("focus"));
+        // we expect min=1, max=5
+        int count = 0;
+        int maxCount = 5;
+        //while (count <= maxCount) {
+        while (count < maxCount) {
+            onView(allOf(withText(containsString("mozilla")),
+                    withId(R.id.suggestion),
+                    isDescendantOfA(childAtPosition(withId(R.id.suggestionList), count))))
+                    .check(matches(isDisplayed()));
+            count++;
+        };
 
-        // Do another search on text string
-        TestHelper.browserURLbar.click();
-        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
-        TestHelper.inlineAutocompleteEditText.clearTextField();
-        TestHelper.inlineAutocompleteEditText.setText("mozilla focus");
-        TestHelper.hint.waitForExists(waitingTime);
+       // Tap URL bar, check it displays search term (instead of URL)
+       TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+       TestHelper.inlineAutocompleteEditText.click();
+       TestHelper.inlineAutocompleteEditText.clearTextField();
+       TestHelper.inlineAutocompleteEditText.setText("mozilla focus");
+       TestHelper.pressEnterKey();
+       googleWebView.waitForExists(waitingTime);
+       TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime);
 
-        // Check search hint bar correctly displayed
-        assertTrue(TestHelper.hint.getText().equals("Search for mozilla focus"));
-        TestHelper.hint.click();
+       // Search for words: <Google|DuckDuckGo|etc.>, mozilla, focus
+       assertTrue(TestHelper.browserURLbar.getText().contains(mSearchEngine.toLowerCase()));
+       assertTrue(TestHelper.browserURLbar.getText().contains("mozilla"));
+       assertTrue(TestHelper.browserURLbar.getText().contains("focus"));
     }
 }

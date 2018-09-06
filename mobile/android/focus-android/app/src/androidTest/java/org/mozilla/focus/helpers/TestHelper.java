@@ -9,6 +9,7 @@ import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.ViewInteraction;
+import static android.support.test.espresso.Espresso.onView;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
@@ -31,7 +32,6 @@ import okhttp3.mockwebserver.MockResponse;
 import okio.Buffer;
 import okio.Okio;
 
-import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
@@ -98,12 +98,22 @@ public final class TestHelper {
             .resourceId(getAppName() + ":id/urlView")
             .focused(true)
             .enabled(true));
+    public static UiObject searchSuggestionsTitle = mDevice.findObject(new UiSelector()
+            .resourceId(getAppName() + ":id/enable_search_suggestions_title")
+            .enabled(true));
+    public static UiObject searchSuggestionsButtonYes = mDevice.findObject(new UiSelector()
+            .resourceId(getAppName() + ":id/enable_search_suggestions_button")
+            .enabled(true));
     public static UiObject cleartextField = mDevice.findObject(new UiSelector()
             .resourceId(getAppName() + ":id/clearView")
             .enabled(true));
     public static UiObject hint = mDevice.findObject(new UiSelector()
             .resourceId(getAppName() + ":id/searchView")
             .clickable(true));
+    public static UiObject suggestionList = mDevice.findObject(new UiSelector()
+            .resourceId(getAppName() + ":id/suggestionList"));
+    public static UiObject suggestion = mDevice.findObject(new UiSelector()
+            .resourceId(getAppName() + ":id/suggestion"));
     public static UiObject webView = mDevice.findObject(new UiSelector()
             .className("android.webkit.WebView")
             .enabled(true));
@@ -205,8 +215,8 @@ public final class TestHelper {
             .enabled(true));
 
     /********* Settings Menu Item Locators ***********/
-    public static UiObject settingsList = mDevice.findObject(new UiSelector()
-            .resourceId(getAppName() + ":id/list"));
+    public static UiObject settingsMenu = mDevice.findObject(new UiSelector()
+            .resourceId(getAppName() + ":id/recycler_view"));
     public static UiObject settingsHeading = mDevice.findObject(new UiSelector()
             .resourceId(getAppName() + ":id/toolbar")
             .enabled(true));
