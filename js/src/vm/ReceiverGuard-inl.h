@@ -23,8 +23,9 @@ ReceiverGuard::ReceiverGuard(JSObject* obj)
     if (!obj->isNative()) {
         if (obj->is<UnboxedPlainObject>()) {
             group = obj->group();
-            if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando())
+            if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando()) {
                 shape = expando->lastProperty();
+            }
             return;
         }
         if (obj->is<TypedObject>()) {
