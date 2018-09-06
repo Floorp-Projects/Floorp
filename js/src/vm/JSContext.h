@@ -183,16 +183,18 @@ struct JSContext : public JS::RootingContext,
     template <typename T>
     T* pod_callocCanGC(size_t numElems, arena_id_t arena = js::MallocArena) {
         T* p = maybe_pod_calloc<T>(numElems, arena);
-        if (MOZ_LIKELY(!!p))
+        if (MOZ_LIKELY(!!p)) {
             return p;
+        }
         size_t bytes;
         if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(numElems, &bytes))) {
             reportAllocationOverflow();
             return nullptr;
         }
         p = static_cast<T*>(runtime()->onOutOfMemoryCanGC(js::AllocFunction::Calloc, bytes));
-        if (!p)
+        if (!p) {
             return nullptr;
+        }
         updateMallocCounter(bytes);
         return p;
     }
@@ -647,8 +649,9 @@ struct JSContext : public JS::RootingContext,
     js::ThreadData<JS::PersistentRooted<JS::Value>> unwrappedException_; /* most-recently-thrown exception */
 
     JS::Value& unwrappedException() {
-        if (!unwrappedException_.ref().initialized())
+        if (!unwrappedException_.ref().initialized()) {
             unwrappedException_.ref().init(this);
+        }
         return unwrappedException_.ref().get();
     }
 
@@ -722,8 +725,9 @@ struct JSContext : public JS::RootingContext,
   public:
 
     js::SavedFrame*& asyncStackForNewActivations() {
-        if (!asyncStackForNewActivations_.ref().initialized())
+        if (!asyncStackForNewActivations_.ref().initialized()) {
             asyncStackForNewActivations_.ref().init(this);
+        }
         return asyncStackForNewActivations_.ref().get();
     }
 
