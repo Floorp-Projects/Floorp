@@ -362,8 +362,9 @@ class Arena
         firstFreeSpan.checkSpan(this);
         size_t numFree = 0;
         const FreeSpan* span = &firstFreeSpan;
-        for (; !span->isEmpty(); span = span->nextSpan(this))
+        for (; !span->isEmpty(); span = span->nextSpan(this)) {
             numFree += (span->last - span->first) / thingSize + 1;
+        }
         return numFree;
     }
 
@@ -375,12 +376,14 @@ class Arena
         const FreeSpan* span = &firstFreeSpan;
         for (; !span->isEmpty(); span = span->nextSpan(this)) {
             /* If the thing comes before the current span, it's not free. */
-            if (thing < base + span->first)
+            if (thing < base + span->first) {
                 return false;
+            }
 
             /* If we find it before the end of the span, it's free. */
-            if (thing <= base + span->last)
+            if (thing <= base + span->last) {
                 return true;
+            }
         }
         return false;
     }
@@ -400,8 +403,9 @@ class Arena
         MOZ_ASSERT(!(uintptr_t(arena) & ArenaMask));
         MOZ_ASSERT(!auxNextLink && !hasDelayedMarking);
         hasDelayedMarking = 1;
-        if (arena)
+        if (arena) {
             auxNextLink = arena->address() >> ArenaShift;
+        }
     }
 
     void unsetDelayedMarking() {
@@ -629,8 +633,9 @@ struct ChunkBitmap
     MOZ_ALWAYS_INLINE bool markIfUnmarked(const TenuredCell* cell, MarkColor color) {
         uintptr_t* word, mask;
         getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
-        if (*word & mask)
+        if (*word & mask) {
             return false;
+        }
         if (color == MarkColor::Black) {
             *word |= mask;
         } else {
@@ -639,8 +644,9 @@ struct ChunkBitmap
              * doing just mask << color may overflow the mask.
              */
             getMarkWordAndMask(cell, ColorBit::GrayOrBlackBit, &word, &mask);
-            if (*word & mask)
+            if (*word & mask) {
                 return false;
+            }
             *word |= mask;
         }
         return true;
@@ -661,8 +667,9 @@ struct ChunkBitmap
         getMarkWordAndMask(dst, colorBit, &dstWord, &dstMask);
 
         *dstWord &= ~dstMask;
-        if (*srcWord & srcMask)
+        if (*srcWord & srcMask) {
             *dstWord |= dstMask;
+        }
     }
 
     MOZ_ALWAYS_INLINE void unmark(const TenuredCell* cell) {
@@ -834,14 +841,16 @@ class HeapUsage
 
     void addGCArena() {
         gcBytes_ += ArenaSize;
-        if (parent_)
+        if (parent_) {
             parent_->addGCArena();
+        }
     }
     void removeGCArena() {
         MOZ_ASSERT(gcBytes_ >= ArenaSize);
         gcBytes_ -= ArenaSize;
-        if (parent_)
+        if (parent_) {
             parent_->removeGCArena();
+        }
     }
 
     /* Pair to adoptArenas. Adopts the attendant usage statistics. */
