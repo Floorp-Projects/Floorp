@@ -228,7 +228,7 @@ already_AddRefed<nsIURI>
 GetJSValueAsURI(JSContext* aCtx,
                 const JS::Value& aValue) {
   if (!aValue.isPrimitive()) {
-    nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
+    nsCOMPtr<nsIXPConnect> xpc = mozilla::services::GetXPConnect();
 
     nsCOMPtr<nsIXPConnectWrappedNative> wrappedObj;
     nsresult rv = xpc->GetWrappedNativeOfJSObject(aCtx, aValue.toObjectOrNull(),
@@ -2521,7 +2521,7 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
       // a mistake.
       if (data.visitTime < (PR_Now() / 1000)) {
 #ifdef DEBUG
-        nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
+        nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
         Unused << xpc->DebugDumpJSStack(false, false, false);
         MOZ_CRASH("invalid time format passed to updatePlaces");
 #endif

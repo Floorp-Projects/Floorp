@@ -191,12 +191,19 @@ interface nsIXPCWrappedJSObjectGetter : nsISupports
 /***************************************************************************/
 
 
-[noscript, builtinclass, uuid(768507b5-b981-40c7-8276-f6a1da502a24)]
+%{ C++
+// For use with the service manager
+// {CB6593E0-F9B2-11d2-BDD6-000064657374}
+#define NS_XPCONNECT_CID \
+{ 0xcb6593e0, 0xf9b2, 0x11d2, \
+    { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
+%}
+
+[noscript, uuid(768507b5-b981-40c7-8276-f6a1da502a24)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
-    // These get non-addref'd pointers
-    static nsIXPConnect* XPConnect();
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCONNECT_CID)
 %}
 
     /**
@@ -369,6 +376,4 @@ interface nsIXPConnect : nsISupports
 
     [noscript] JSObjectPtr readFunction(in nsIObjectInputStream aStream,
                                         in JSContextPtr aJSContext);
-
-    [infallible] readonly attribute boolean isShuttingDown;
 };
