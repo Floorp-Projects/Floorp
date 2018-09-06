@@ -262,7 +262,7 @@ ComputeBorderOverflow(nsMathMLmtdFrame* aFrame,
  * around a nsMathMLmtdFrame based on the rowline and columnline properties
  * set on the cell frame.
  */
-class nsDisplaymtdBorder : public nsDisplayBorder
+class nsDisplaymtdBorder final : public nsDisplayBorder
 {
 public:
   nsDisplaymtdBorder(nsDisplayListBuilder* aBuilder, nsMathMLmtdFrame* aFrame)

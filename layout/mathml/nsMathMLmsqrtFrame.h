@@ -33,7 +33,8 @@ These attributes are inherited by every element from its rendering environment,
 but can be set explicitly only on <mstyle>. (See Section 3.3.4.)
 */
 
-class nsMathMLmsqrtFrame : public nsMathMLmencloseFrame {
+class nsMathMLmsqrtFrame final : public nsMathMLmencloseFrame
+{
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmsqrtFrame)
 

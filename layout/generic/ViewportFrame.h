@@ -26,7 +26,8 @@ class ServoRestyleState;
   * containing the doc root frame. ViewportFrame stores this child in its primary child
   * list.
   */
-class ViewportFrame : public nsContainerFrame {
+class ViewportFrame : public nsContainerFrame
+{
 public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(ViewportFrame)

@@ -26,8 +26,8 @@ class LayerManager;
 class nsPresContext;
 class nsDisplayItem;
 
-class nsVideoFrame : public nsContainerFrame
-                   , public nsIAnonymousContentCreator
+class nsVideoFrame final : public nsContainerFrame
+                         , public nsIAnonymousContentCreator
 {
 public:
   template <typename T> using Maybe = mozilla::Maybe<T>;

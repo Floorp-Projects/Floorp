@@ -211,7 +211,8 @@ nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
   return true;
 }
 
-class nsDisplayButtonBorder : public nsDisplayItem {
+class nsDisplayButtonBorder final : public nsDisplayItem
+{
 public:
   nsDisplayButtonBorder(nsDisplayListBuilder* aBuilder,
                                   nsButtonFrameRenderer* aRenderer)
@@ -334,7 +335,8 @@ nsDisplayButtonBorder::GetBounds(nsDisplayListBuilder* aBuilder,
           : mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
 
-class nsDisplayButtonForeground : public nsDisplayItem {
+class nsDisplayButtonForeground final : public nsDisplayItem
+{
 public:
   nsDisplayButtonForeground(nsDisplayListBuilder* aBuilder,
                             nsButtonFrameRenderer* aRenderer)

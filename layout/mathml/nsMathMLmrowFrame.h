@@ -16,7 +16,8 @@
 // <mstyle> -- make style changes that affect the rendering of its contents
 //
 
-class nsMathMLmrowFrame : public nsMathMLContainerFrame {
+class nsMathMLmrowFrame final : public nsMathMLContainerFrame
+{
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmrowFrame)
 

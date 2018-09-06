@@ -10,11 +10,11 @@ AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42"
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionStorage.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
 
 const {
   ExtensionStorageIDB,
-  DataMigrationTelemetry,
 } = ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -252,7 +252,7 @@ add_task(async function test_extensionId_trimmed_in_telemetry_event() {
 
   await extension.awaitMessage("storage-local-data-migrated");
 
-  const expectedTrimmedExtensionId = DataMigrationTelemetry.getTrimmedString(EXTENSION_ID);
+  const expectedTrimmedExtensionId = ExtensionUtils.getTrimmedString(EXTENSION_ID);
 
   equal(expectedTrimmedExtensionId.length, 80, "The trimmed version of the extensionId should be 80 chars long");
 

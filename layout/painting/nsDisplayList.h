@@ -6262,6 +6262,7 @@ class nsDisplayResolution : public nsDisplaySubDocument
 public:
   nsDisplayResolution(nsDisplayListBuilder* aBuilder,
                       nsIFrame* aFrame,
+                      nsSubDocumentFrame* aSubDocFrame,
                       nsDisplayList* aList,
                       nsDisplayOwnLayerFlags aFlags);
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -6584,6 +6585,7 @@ public:
    */
   nsDisplayZoom(nsDisplayListBuilder* aBuilder,
                 nsIFrame* aFrame,
+                nsSubDocumentFrame* aSubDocFrame,
                 nsDisplayList* aList,
                 int32_t aAPD,
                 int32_t aParentAPD,

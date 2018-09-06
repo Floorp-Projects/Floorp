@@ -22,8 +22,8 @@
 
 class nsIPrincipal;
 
-class nsFontFaceLoader : public nsIStreamLoaderObserver
-                       , public nsIRequestObserver
+class nsFontFaceLoader final : public nsIStreamLoaderObserver
+                             , public nsIRequestObserver
 {
 public:
   nsFontFaceLoader(gfxUserFontEntry* aFontToLoad, nsIURI* aFontURI,

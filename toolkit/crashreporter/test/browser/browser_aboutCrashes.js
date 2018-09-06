@@ -1,22 +1,28 @@
 add_task(async function test() {
-  let appD = make_fake_appdir();
-  let crD = appD.clone();
+  const appD = make_fake_appdir();
+  const crD = appD.clone();
   crD.append("Crash Reports");
-  let crashes = add_fake_crashes(crD, 5);
+  const crashes = add_fake_crashes(crD, 5);
   // sanity check
-  let appDtest = Services.dirsvc.get("UAppData", Ci.nsIFile);
+  const appDtest = Services.dirsvc.get("UAppData", Ci.nsIFile);
   ok(appD.equals(appDtest), "directory service provider registered ok");
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:crashes" }, function(browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:crashes" }, browser => {
     info("about:crashes loaded");
-    return ContentTask.spawn(browser, crashes, function(crashes) {
-      let doc = content.document;
-      let crashlinks = doc.getElementById("submitted").querySelectorAll(".crashReport");
-      Assert.equal(crashlinks.length, crashes.length,
-        "about:crashes lists correct number of crash reports");
+    return ContentTask.spawn(browser, crashes, crashes => {
+      const doc = content.document;
+      const crashIds = doc.getElementsByClassName("crash-id");
+      Assert.equal(
+        crashIds.length,
+        crashes.length,
+        "about:crashes lists correct number of crash reports",
+      );
       for (let i = 0; i < crashes.length; i++) {
-        Assert.equal(crashlinks[i].firstChild.textContent, crashes[i].id,
-          i + ": crash ID is correct");
+        Assert.equal(
+          crashIds[i].textContent,
+          crashes[i].id,
+          i + ": crash ID is correct",
+        );
       }
     });
   });

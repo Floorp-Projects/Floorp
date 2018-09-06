@@ -44,8 +44,8 @@ const TEST_PROFILE_2 = {
   country: "US",
 };
 
-function expectLocalProfiles(profileStorage, expected) {
-  let profiles = profileStorage.addresses.getAll({
+async function expectLocalProfiles(profileStorage, expected) {
+  let profiles = await profileStorage.addresses.getAll({
     rawData: true,
     includeDeleted: true,
   });
@@ -72,7 +72,7 @@ function expectLocalProfiles(profileStorage, expected) {
 async function setup() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME);
   // should always start with no profiles.
-  Assert.equal(profileStorage.addresses.getAll({includeDeleted: true}).length, 0);
+  Assert.equal((await profileStorage.addresses.getAll({includeDeleted: true})).length, 0);
 
   Services.prefs.setCharPref("services.sync.log.logger.engine.addresses", "Trace");
   let engine = new AddressesEngine(Service);
@@ -131,12 +131,12 @@ add_task(async function test_outgoing() {
   let {profileStorage, server, collection, engine} = await setup();
   try {
     equal(engine._tracker.score, 0);
-    let existingGUID = profileStorage.addresses.add(TEST_PROFILE_1);
+    let existingGUID = await profileStorage.addresses.add(TEST_PROFILE_1);
     // And a deleted item.
     let deletedGUID = profileStorage.addresses._generateGUID();
-    profileStorage.addresses.add({guid: deletedGUID, deleted: true});
+    await profileStorage.addresses.add({guid: deletedGUID, deleted: true});
 
-    expectLocalProfiles(profileStorage, [
+    await expectLocalProfiles(profileStorage, [
       {
         guid: existingGUID,
       },
@@ -157,7 +157,7 @@ add_task(async function test_outgoing() {
     Assert.ok(collection.wbo(existingGUID));
     Assert.ok(collection.wbo(deletedGUID));
 
-    expectLocalProfiles(profileStorage, [
+    await expectLocalProfiles(profileStorage, [
       {
         guid: existingGUID,
       },
@@ -197,7 +197,7 @@ add_task(async function test_incoming_new() {
     await engine.setLastSync(0);
     await engine.sync();
 
-    expectLocalProfiles(profileStorage, [
+    await expectLocalProfiles(profileStorage, [
       {
         guid: profileID,
       }, {
@@ -220,8 +220,8 @@ add_task(async function test_incoming_new() {
 add_task(async function test_incoming_existing() {
   let {profileStorage, server, engine} = await setup();
   try {
-    let guid1 = profileStorage.addresses.add(TEST_PROFILE_1);
-    let guid2 = profileStorage.addresses.add(TEST_PROFILE_2);
+    let guid1 = await profileStorage.addresses.add(TEST_PROFILE_1);
+    let guid2 = await profileStorage.addresses.add(TEST_PROFILE_2);
 
     // an initial sync so we don't think they are locally modified.
     await engine.setLastSync(0);
@@ -245,7 +245,7 @@ add_task(async function test_incoming_existing() {
 
     await engine.sync();
 
-    expectLocalProfiles(profileStorage, [
+    await expectLocalProfiles(profileStorage, [
       Object.assign({}, modifiedEntry1, {guid: guid1}),
       {guid: guid2, deleted: true},
     ]);
@@ -257,7 +257,7 @@ add_task(async function test_incoming_existing() {
 add_task(async function test_tombstones() {
   let {profileStorage, server, collection, engine} = await setup();
   try {
-    let existingGUID = profileStorage.addresses.add(TEST_PROFILE_1);
+    let existingGUID = await profileStorage.addresses.add(TEST_PROFILE_1);
 
     await engine.setLastSync(0);
     await engine.sync();
@@ -283,7 +283,7 @@ add_task(async function test_tombstones() {
 add_task(async function test_applyIncoming_both_deleted() {
   let {profileStorage, server, engine} = await setup();
   try {
-    let guid = profileStorage.addresses.add(TEST_PROFILE_1);
+    let guid = await profileStorage.addresses.add(TEST_PROFILE_1);
 
     await engine.setLastSync(0);
     await engine.sync();
@@ -301,10 +301,10 @@ add_task(async function test_applyIncoming_both_deleted() {
 
     await engine.sync();
 
-    ok(!profileStorage.addresses.get(guid),
+    ok(!await await profileStorage.addresses.get(guid),
       "Should not return record for locally deleted item");
 
-    let localRecords = profileStorage.addresses.getAll({
+    let localRecords = await profileStorage.addresses.getAll({
       includeDeleted: true,
     });
     equal(localRecords.length, 1, "Only tombstone should exist locally");
@@ -329,11 +329,11 @@ add_task(async function test_applyIncoming_nonexistent_tombstone() {
     await engine.setLastSync(0);
     await engine.sync();
 
-    ok(!profileStorage.addresses.get(guid),
+    ok(!await profileStorage.addresses.get(guid),
       "Should not return record for uknown deleted item");
-    let localTombstone = profileStorage.addresses.getAll({
+    let localTombstone = (await profileStorage.addresses.getAll({
       includeDeleted: true,
-    }).find(record => record.guid == guid);
+    })).find(record => record.guid == guid);
     ok(localTombstone, "Should store tombstone for unknown item");
   } finally {
     await cleanup(server);
@@ -343,7 +343,7 @@ add_task(async function test_applyIncoming_nonexistent_tombstone() {
 add_task(async function test_applyIncoming_incoming_deleted() {
   let {profileStorage, server, engine} = await setup();
   try {
-    let guid = profileStorage.addresses.add(TEST_PROFILE_1);
+    let guid = await profileStorage.addresses.add(TEST_PROFILE_1);
 
     await engine.setLastSync(0);
     await engine.sync();
@@ -358,11 +358,11 @@ add_task(async function test_applyIncoming_incoming_deleted() {
 
     await engine.sync();
 
-    ok(!profileStorage.addresses.get(guid), "Should delete unmodified item locally");
+    ok(!await profileStorage.addresses.get(guid), "Should delete unmodified item locally");
 
-    let localTombstone = profileStorage.addresses.getAll({
+    let localTombstone = (await profileStorage.addresses.getAll({
       includeDeleted: true,
-    }).find(record => record.guid == guid);
+    })).find(record => record.guid == guid);
     ok(localTombstone, "Should keep local tombstone for remotely deleted item");
     strictEqual(getSyncChangeCounter(profileStorage.addresses, guid), 0,
       "Local tombstone should be marked as syncing");
@@ -374,7 +374,7 @@ add_task(async function test_applyIncoming_incoming_deleted() {
 add_task(async function test_applyIncoming_incoming_restored() {
   let {profileStorage, server, engine} = await setup();
   try {
-    let guid = profileStorage.addresses.add(TEST_PROFILE_1);
+    let guid = await profileStorage.addresses.add(TEST_PROFILE_1);
 
     // Upload the record to the server.
     await engine.setLastSync(0);
@@ -394,7 +394,7 @@ add_task(async function test_applyIncoming_incoming_restored() {
     await engine.sync();
 
     // We should replace our tombstone with the server's version.
-    let localRecord = profileStorage.addresses.get(guid);
+    let localRecord = await profileStorage.addresses.get(guid);
     ok(objectMatches(localRecord, {
       "given-name": "Timothy",
       "family-name": "Berners-Lee",
@@ -411,7 +411,7 @@ add_task(async function test_applyIncoming_incoming_restored() {
 add_task(async function test_applyIncoming_outgoing_restored() {
   let {profileStorage, server, engine} = await setup();
   try {
-    let guid = profileStorage.addresses.add(TEST_PROFILE_1);
+    let guid = await profileStorage.addresses.add(TEST_PROFILE_1);
 
     // Upload the record to the server.
     await engine.setLastSync(0);
@@ -420,7 +420,7 @@ add_task(async function test_applyIncoming_outgoing_restored() {
     // Modify the local record.
     let localCopy = Object.assign({}, TEST_PROFILE_1);
     localCopy["street-address"] = "I moved!";
-    profileStorage.addresses.update(guid, localCopy);
+    await profileStorage.addresses.update(guid, localCopy);
 
     // Replace the record with a tombstone on the server.
     let lastSync = await engine.getLastSync();
@@ -442,7 +442,7 @@ add_task(async function test_applyIncoming_outgoing_restored() {
       "street-address": "I moved!",
     }));
 
-    let localRecord = profileStorage.addresses.get(guid);
+    let localRecord = await profileStorage.addresses.get(guid);
     ok(localRecord, "Modified record should not be deleted locally");
   } finally {
     await cleanup(server);
@@ -455,7 +455,7 @@ add_task(async function test_reconcile_both_modified_identical() {
   let {profileStorage, server, engine} = await setup();
   try {
     // create a record locally.
-    let guid = profileStorage.addresses.add(TEST_PROFILE_1);
+    let guid = await profileStorage.addresses.add(TEST_PROFILE_1);
 
     // and an identical record on the server.
     server.insertWBO("foo", "addresses", new ServerWBO(guid, encryptPayload({
@@ -466,7 +466,7 @@ add_task(async function test_reconcile_both_modified_identical() {
     await engine.setLastSync(0);
     await engine.sync();
 
-    expectLocalProfiles(profileStorage, [{guid}]);
+    await expectLocalProfiles(profileStorage, [{guid}]);
   } finally {
     await cleanup(server);
   }
@@ -477,13 +477,13 @@ add_task(async function test_incoming_dupes() {
   try {
     // Create a profile locally, then sync to upload the new profile to the
     // server.
-    let guid1 = profileStorage.addresses.add(TEST_PROFILE_1);
+    let guid1 = await profileStorage.addresses.add(TEST_PROFILE_1);
 
     await engine.setLastSync(0);
     await engine.sync();
 
     // Create another profile locally, but don't sync it yet.
-    profileStorage.addresses.add(TEST_PROFILE_2);
+    await profileStorage.addresses.add(TEST_PROFILE_2);
 
     // Now create two records on the server with the same contents as our local
     // profiles, but different GUIDs.
@@ -507,7 +507,7 @@ add_task(async function test_incoming_dupes() {
     // reconcile changes.
     await engine.sync();
 
-    expectLocalProfiles(profileStorage, [
+    await expectLocalProfiles(profileStorage, [
       // We uploaded `guid1` during the first sync. Even though its contents
       // are the same as `guid1_dupe`, we keep both.
       Object.assign({}, TEST_PROFILE_1, {guid: guid1}),
@@ -525,7 +525,7 @@ add_task(async function test_dedupe_identical_unsynced() {
   let {profileStorage, server, engine} = await setup();
   try {
     // create a record locally.
-    let localGuid = profileStorage.addresses.add(TEST_PROFILE_1);
+    let localGuid = await profileStorage.addresses.add(TEST_PROFILE_1);
 
     // and an identical record on the server but different GUID.
     let remoteGuid = Utils.makeGUID();
@@ -542,7 +542,7 @@ add_task(async function test_dedupe_identical_unsynced() {
 
     // Should have 1 item locally with GUID changed to the remote one.
     // There's no tombstone as the original was unsynced.
-    expectLocalProfiles(profileStorage, [
+    await expectLocalProfiles(profileStorage, [
       {
         guid: remoteGuid,
       },
@@ -556,7 +556,7 @@ add_task(async function test_dedupe_identical_synced() {
   let {profileStorage, server, engine} = await setup();
   try {
     // create a record locally.
-    let localGuid = profileStorage.addresses.add(TEST_PROFILE_1);
+    let localGuid = await profileStorage.addresses.add(TEST_PROFILE_1);
 
     // sync it - it will no longer be a candidate for de-duping.
     await engine.setLastSync(0);
@@ -575,7 +575,7 @@ add_task(async function test_dedupe_identical_synced() {
     await engine.sync();
 
     // Should have 2 items locally, since the first was synced.
-    expectLocalProfiles(profileStorage, [
+    await expectLocalProfiles(profileStorage, [
       {guid: localGuid},
       {guid: remoteGuid},
     ]);
@@ -606,8 +606,8 @@ add_task(async function test_dedupe_multiple_candidates() {
     }, localRecord);
 
     // We don't pass `sourceSync` so that the records are marked as NEW.
-    let aGuid = profileStorage.addresses.add(localRecord);
-    let bGuid = profileStorage.addresses.add(localRecord);
+    let aGuid = await profileStorage.addresses.add(localRecord);
+    let bGuid = await profileStorage.addresses.add(localRecord);
 
     // Insert B before A.
     server.insertWBO("foo", "addresses", new ServerWBO(bGuid, encryptPayload({
@@ -622,7 +622,7 @@ add_task(async function test_dedupe_multiple_candidates() {
     await engine.setLastSync(0);
     await engine.sync();
 
-    expectLocalProfiles(profileStorage, [
+    await expectLocalProfiles(profileStorage, [
       {
         "guid": aGuid,
         "given-name": "Mark",
@@ -656,7 +656,7 @@ add_task(async function test_reconcile_both_modified_conflict() {
   let {profileStorage, server, engine} = await setup();
   try {
     // create a record locally.
-    let guid = profileStorage.addresses.add(TEST_PROFILE_1);
+    let guid = await profileStorage.addresses.add(TEST_PROFILE_1);
 
     // Upload the record to the server.
     await engine.setLastSync(0);
@@ -668,7 +668,7 @@ add_task(async function test_reconcile_both_modified_conflict() {
     // Change the same field locally and on the server.
     let localCopy = Object.assign({}, TEST_PROFILE_1);
     localCopy["street-address"] = "I moved!";
-    profileStorage.addresses.update(guid, localCopy);
+    await profileStorage.addresses.update(guid, localCopy);
 
     let lastSync = await engine.getLastSync();
     let collection = server.user("foo").collection("addresses");
@@ -687,7 +687,7 @@ add_task(async function test_reconcile_both_modified_conflict() {
     let forkedPayload = serverPayloads.find(payload => payload.id != guid);
     ok(forkedPayload, "Forked record should exist on server");
 
-    expectLocalProfiles(profileStorage, [
+    await expectLocalProfiles(profileStorage, [
       {
         guid,
         "given-name": "Timothy",
@@ -714,9 +714,9 @@ add_task(async function test_reconcile_both_modified_conflict() {
 add_task(async function test_wipe() {
   let {profileStorage, server, engine} = await setup();
   try {
-    let guid = profileStorage.addresses.add(TEST_PROFILE_1);
+    let guid = await profileStorage.addresses.add(TEST_PROFILE_1);
 
-    expectLocalProfiles(profileStorage, [{guid}]);
+    await expectLocalProfiles(profileStorage, [{guid}]);
 
     let promiseObserved = promiseOneObserver("formautofill-storage-changed");
 
@@ -727,7 +727,7 @@ add_task(async function test_wipe() {
     Assert.equal(subject.wrappedJSObject.collectionName, "addresses", "got the correct collection");
     Assert.equal(data, "removeAll", "a removeAll should be noted");
 
-    expectLocalProfiles(profileStorage, []);
+    await expectLocalProfiles(profileStorage, []);
   } finally {
     await cleanup(server);
   }

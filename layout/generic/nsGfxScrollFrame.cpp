@@ -4525,6 +4525,14 @@ ScrollFrameHelper::FireScrollPortEvent()
   nsSize scrollportSize = mScrollPort.Size();
   nsSize childSize = GetScrolledRect().Size();
 
+  // Keep this in sync with PostOverflowEvent.
+  //
+  // TODO(emilio): why do we need the whole WillPaintObserver infrastructure and
+  // can't use AddScriptRunner & co? I guess it made sense when we used
+  // WillPaintObserver for scroll events too, or when this used to flush.
+  //
+  // Should we remove this?
+
   bool newVerticalOverflow = childSize.height > scrollportSize.height;
   bool vertChanged = mVerticalOverflow != newVerticalOverflow;
 
@@ -5077,10 +5085,6 @@ ScrollFrameHelper::PostScrollEvent()
 NS_IMETHODIMP
 ScrollFrameHelper::AsyncScrollPortEvent::Run()
 {
-  if (mHelper) {
-    mHelper->mOuter->PresContext()->Document()->
-      FlushPendingNotifications(FlushType::InterruptibleLayout);
-  }
   return mHelper ? mHelper->FireScrollPortEvent() : NS_OK;
 }
 

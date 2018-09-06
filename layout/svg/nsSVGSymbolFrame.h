@@ -9,8 +9,7 @@
 
 #include "nsSVGViewportFrame.h"
 
-class nsSVGSymbolFrame
- : public nsSVGViewportFrame
+class nsSVGSymbolFrame final : public nsSVGViewportFrame
 {
   friend nsIFrame*
   NS_NewSVGSymbolFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);

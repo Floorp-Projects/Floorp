@@ -249,7 +249,9 @@ GetElevationState(mozilla::LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken
     return Some(ElevationState::eNormalUser);
   }
 
-  aOutMediumIlToken = GetMediumIntegrityToken(token);
+  if (!(aFlags & mozilla::LauncherFlags::eNoDeelevate)) {
+    aOutMediumIlToken = GetMediumIntegrityToken(token);
+  }
 
   return Some(ElevationState::eHighIntegrityNoUAC);
 }

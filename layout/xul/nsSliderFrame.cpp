@@ -932,7 +932,8 @@ nsSliderMediator::HandleEvent(dom::Event* aEvent)
   return NS_OK;
 }
 
-class AsyncScrollbarDragStarter : public nsAPostRefreshObserver {
+class AsyncScrollbarDragStarter final : public nsAPostRefreshObserver
+{
 public:
   AsyncScrollbarDragStarter(nsIPresShell* aPresShell,
                             nsIWidget* aWidget,
@@ -1196,7 +1197,7 @@ nsSliderFrame::DragThumb(bool aGrabMouseEvents)
 }
 
 bool
-nsSliderFrame::isDraggingThumb()
+nsSliderFrame::isDraggingThumb() const
 {
   return (nsIPresShell::GetCapturingContent() == GetContent());
 }
@@ -1567,7 +1568,8 @@ nsSliderFrame::OnlySystemGroupDispatch(EventMessage aMessage) const
   // If we are in a native anonymous subtree, do not dispatch mouse-move events
   // targeted at this slider frame to web content. This matches the behaviour
   // of other browsers.
-  return aMessage == eMouseMove && GetContent()->IsInNativeAnonymousSubtree();
+  return aMessage == eMouseMove && isDraggingThumb() &&
+         GetContent()->IsInNativeAnonymousSubtree();
 }
 
 NS_IMPL_ISUPPORTS(nsSliderMediator,

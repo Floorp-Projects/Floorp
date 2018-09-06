@@ -32,7 +32,7 @@ struct ScrollableLayerGuid;
 
 namespace layout {
 
-class RenderFrameParent : public PRenderFrameParent
+class RenderFrameParent final : public PRenderFrameParent
 {
   typedef mozilla::layers::AsyncDragMetrics AsyncDragMetrics;
   typedef mozilla::layers::FrameMetrics FrameMetrics;
@@ -144,7 +144,7 @@ private:
  * layer tree (for a given RenderFrameParent) into its parent
  * process's layer tree.
  */
-class nsDisplayRemote : public nsDisplayItem
+class nsDisplayRemote final : public nsDisplayItem
 {
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
 

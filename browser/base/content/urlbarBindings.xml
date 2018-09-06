@@ -516,48 +516,76 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <field name="_formattingEnabled">true</field>
 
       <!--
-        If the input value is a URL, the input is not focused, and formatting is
-        enabled, this method highlights the domain, and if mixed content is
-        present, it crosses out the https scheme.  It also ensures that the host
-        is visible (not scrolled out of sight).  Otherwise it removes formatting.
+        This is used only as an optimization to avoid removing formatting in
+        the _remove* format methods when no formatting is actually applied.
+      -->
+      <field name="_formattingApplied">false</field>
+
+      <!--
+        This method tries to apply styling to the text in the input, depending
+        on the text.  See the _format* methods.
+      -->
+      <method name="formatValue">
+        <body><![CDATA[
+          if (!this.editor || !this.editor.rootElement.firstChild.textContent) {
+            return;
+          }
+
+          // Remove the current formatting.
+          this._removeURLFormat();
+          this._removeSearchAliasFormat();
+          this._formattingApplied = false;
+
+          // Apply new formatting.  Formatter methods should return true if they
+          // successfully formatted the value and false if not.  We apply only
+          // one formatter at a time, so we stop at the first successful one.
+          let formatterMethods = [
+            "_formatURL",
+            "_formatSearchAlias",
+          ];
+          this._formattingApplied = formatterMethods.some(m => this[m]());
+        ]]></body>
+      </method>
+
+      <method name="_removeURLFormat">
+        <body><![CDATA[
+          this.scheme.value = "";
+          if (!this._formattingApplied) {
+            return;
+          }
+          let controller = this.editor.selectionController;
+          let strikeOut =
+            controller.getSelection(controller.SELECTION_URLSTRIKEOUT);
+          strikeOut.removeAllRanges();
+          let selection =
+            controller.getSelection(controller.SELECTION_URLSECONDARY);
+          selection.removeAllRanges();
+          this._formatScheme(controller.SELECTION_URLSTRIKEOUT, true);
+          this._formatScheme(controller.SELECTION_URLSECONDARY, true);
+          this.inputField.style.setProperty("--urlbar-scheme-size", "0px");
+        ]]></body>
+      </method>
+
+      <!--
+        If the input value is a URL and the input is not focused, this
+        formatter method highlights the domain, and if mixed content is present,
+        it crosses out the https scheme.  It also ensures that the host is
+        visible (not scrolled out of sight).
 
         @param  onlyEnsureFormattedHostVisible
                 Pass true to skip formatting and instead only ensure that the
                 host is visible.
+        @return True if formatting was applied and false if not.
       -->
-      <method name="formatValue">
+      <method name="_formatURL">
         <parameter name="onlyEnsureFormattedHostVisible"/>
         <body><![CDATA[
-          // Used to avoid re-entrance in async callbacks.
-          let instance = this._formattingInstance = {};
-
-          if (!this.editor)
-            return;
-
-          let controller, strikeOut, selection;
-
-          if (!onlyEnsureFormattedHostVisible) {
-            // Cleanup previously set styles.
-            this.scheme.value = "";
-            if (this._formattingEnabled) {
-              controller = this.editor.selectionController;
-              strikeOut = controller.getSelection(controller.SELECTION_URLSTRIKEOUT);
-              strikeOut.removeAllRanges();
-              selection = controller.getSelection(controller.SELECTION_URLSECONDARY);
-              selection.removeAllRanges();
-              this.formatScheme(controller.SELECTION_URLSTRIKEOUT, true);
-              this.formatScheme(controller.SELECTION_URLSECONDARY, true);
-              this.inputField.style.setProperty("--urlbar-scheme-size", "0px");
-            }
+          if (this.focused) {
+            return false;
           }
 
           let textNode = this.editor.rootElement.firstChild;
           let value = textNode.textContent;
-          if (!value)
-            return;
-
-          if (this.focused)
-            return;
 
           // Get the URL from the fixup service:
           let flags = Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
@@ -572,7 +600,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               !uriInfo.fixedURI ||
               uriInfo.keywordProviderName ||
               !["http", "https", "ftp"].includes(uriInfo.fixedURI.scheme)) {
-            return;
+            return false;
           }
 
           // If we trimmed off the http scheme, ensure we stick it back on before
@@ -587,8 +615,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
 
           let matchedURL = value.match(/^(([a-z]+:\/\/)(?:[^\/#?]+@)?)(\S+?)(?::\d+)?\s*(?:[\/#?]|$)/);
-          if (!matchedURL)
-            return;
+          if (!matchedURL) {
+            return false;
+          }
 
           let [, preDomain, schemeWSlashes, domain] = matchedURL;
           // We strip http, so we should not show the scheme box for it.
@@ -598,6 +627,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                                               schemeWSlashes.length + "ch");
           }
 
+          // Used to avoid re-entrance in the requestAnimationFrame callback.
+          let instance = this._formatURLInstance = {};
+
           // Make sure the host is always visible. Since it is aligned on
           // the first strong directional character, we set scrollLeft
           // appropriately to ensure the domain stays visible in case of an
@@ -605,8 +637,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           window.requestAnimationFrame(() => {
             // Check for re-entrance. On focus change this formatting code is
             // invoked regardless, thus this should be enough.
-            if (this._formattingInstance != instance)
+            if (this._formatURLInstance != instance) {
               return;
+            }
             let directionality = window.windowUtils.getDirectionFromText(domain);
             // In the future, for example in bug 525831, we may add a forceRTL
             // char just after the domain, and in such a case we should not
@@ -617,10 +650,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
           });
 
-          if (onlyEnsureFormattedHostVisible || !this._formattingEnabled)
-            return;
+          if (onlyEnsureFormattedHostVisible || !this._formattingEnabled) {
+            return false;
+          }
 
-          this.formatScheme(controller.SELECTION_URLSECONDARY);
+          let controller = this.editor.selectionController;
+
+          this._formatScheme(controller.SELECTION_URLSECONDARY);
 
           // Strike out the "https" part if mixed active content is loaded.
           if (this.getAttribute("pageproxystate") == "valid" &&
@@ -630,8 +666,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             let range = document.createRange();
             range.setStart(textNode, 0);
             range.setEnd(textNode, 5);
+            let strikeOut =
+              controller.getSelection(controller.SELECTION_URLSTRIKEOUT);
             strikeOut.addRange(range);
-            this.formatScheme(controller.SELECTION_URLSTRIKEOUT);
+            this._formatScheme(controller.SELECTION_URLSTRIKEOUT);
           }
 
           let baseDomain = domain;
@@ -649,6 +687,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             subDomain = domain.slice(0, -baseDomain.length);
           }
 
+          let selection =
+            controller.getSelection(controller.SELECTION_URLSECONDARY);
+
           let rangeLength = preDomain.length + subDomain.length - trimmedLength;
           if (rangeLength) {
             let range = document.createRange();
@@ -664,10 +705,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             range.setEnd(textNode, value.length - trimmedLength);
             selection.addRange(range);
           }
+
+          return true;
         ]]></body>
       </method>
 
-      <method name="formatScheme">
+      <method name="_formatScheme">
         <parameter name="selectionType"/>
         <parameter name="clear"/>
         <body><![CDATA[
@@ -683,6 +726,84 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             r.setEnd(textNode, textNode.textContent.length);
             selection.addRange(r);
           }
+        ]]></body>
+      </method>
+
+      <method name="_removeSearchAliasFormat">
+        <body><![CDATA[
+          if (!this._formattingApplied) {
+            return;
+          }
+          let selection = this.editor.selectionController.getSelection(
+            Ci.nsISelectionController.SELECTION_FIND
+          );
+          selection.removeAllRanges();
+        ]]></body>
+      </method>
+
+      <!--
+        If the input value starts with a search alias, this formatter method
+        highlights it.
+
+        @return True if formatting was applied and false if not.
+      -->
+      <method name="_formatSearchAlias">
+        <body><![CDATA[
+          if (!this._formattingEnabled) {
+            return false;
+          }
+
+          let textNode = this.editor.rootElement.firstChild;
+          let value = textNode.textContent;
+          let trimmedValue = value.trimStart();
+
+          // If there's no alias in the results or the first word in the input
+          // value is not that alias, then there's no formatting to do.
+          if (!this.popup.searchAlias ||
+              (trimmedValue.length != this.popup.searchAlias.length &&
+               trimmedValue[this.popup.searchAlias.length] != " ") ||
+              !trimmedValue.startsWith(this.popup.searchAlias)) {
+            return false;
+          }
+
+          let index = value.indexOf(this.popup.searchAlias);
+
+          // We abuse the SELECTION_FIND selection type to do our highlighting.
+          // It's the only type that works with Selection.setColors().
+          let selection = this.editor.selectionController.getSelection(
+            Ci.nsISelectionController.SELECTION_FIND
+          );
+
+          let range = document.createRange();
+          range.setStart(textNode, index);
+          range.setEnd(textNode, index + this.popup.searchAlias.length);
+          selection.addRange(range);
+
+          let fg = "#2362d7";
+          let bg = "#d2e6fd";
+
+          // Selection.setColors() will swap the given foreground and background
+          // colors if it detects that the contrast between the background
+          // color and the frame color is too low.  Normally we don't want that
+          // to happen; we want it to use our colors as given (even if setColors
+          // thinks the contrast is too low).  But it's a nice feature for non-
+          // default themes, where the contrast between our background color and
+          // the input's frame color might actually be too low.  We can
+          // (hackily) force setColors to use our colors as given by passing
+          // them as the alternate colors.  Otherwise, allow setColors to swap
+          // them, which we can do by passing "currentColor".  See
+          // nsTextPaintStyle::GetHighlightColors for details.
+          if (this.querySelector(":-moz-lwtheme") ||
+              (AppConstants.platform == "win" &&
+               window.matchMedia("(-moz-windows-default-theme: 0)").matches)) {
+            // non-default theme(s)
+            selection.setColors(fg, bg, "currentColor", "currentColor");
+          } else {
+            // default themes
+            selection.setColors(fg, bg, fg, bg);
+          }
+
+          return true;
         ]]></body>
       </method>
 
@@ -1458,7 +1579,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 this.closePopup();
 
                 // Make sure the host remains visible in the input field (via
-                // formatValue) when the window is resized.  We don't want to
+                // _formatURL) when the window is resized.  We don't want to
                 // hurt resize performance though, so do this only after resize
                 // events have stopped and a small timeout has elapsed.
                 if (this._resizeThrottleTimeout) {
@@ -1466,7 +1587,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 }
                 this._resizeThrottleTimeout = setTimeout(() => {
                   this._resizeThrottleTimeout = null;
-                  this.formatValue(true);
+                  this._formatURL(true);
                 }, 100);
               }
               break;
@@ -1794,82 +1915,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           this.gotResultForCurrentQuery = false;
           this.controller.startSearch(value);
-        ]]></body>
-      </method>
-
-      <!--
-        Highlights the search alias in the input, or clears the highlight if
-        there is no alias.  To determine in an efficient manner whether the
-        input contains an alias, this method looks at the first (heuristic)
-        result.  If it's a searchengine result with an alias, then it looks for
-        that alias in the input.  Otherwise it clears the highlight.  That means
-        that if the input contains an alias but the alias result is not first,
-        the alias will not be highlighted.
-      -->
-      <method name="highlightSearchAlias">
-        <body><![CDATA[
-          if (!this.editor) {
-            return;
-          }
-
-          // We abuse the SELECTION_FIND selection type to do our highlighting.
-          // It's the only type that works with Selection.setColors().
-          let selection = this.editor.selectionController.getSelection(
-            Ci.nsISelectionController.SELECTION_FIND
-          );
-          selection.removeAllRanges();
-
-          let textNode = this.editor.rootElement.firstChild;
-          let value = textNode.textContent;
-          if (!value) {
-            return;
-          }
-
-          // Alias results have the searchengine style.  Check that first to
-          // avoid the more expensive regexp in _parseActionUrl when possible
-          // since this method is called by the popup every time you start a
-          // search.
-          let alias =
-            this.mController.matchCount &&
-            this.mController.getStyleAt(0).includes("searchengine") &&
-            this._parseActionUrl(this.mController.getFinalCompleteValueAt(0)).params.alias;
-          if (!alias) {
-            return;
-          }
-
-          let index = value.indexOf(alias);
-          if (index < 0) {
-            return;
-          }
-
-          let range = document.createRange();
-          range.setStart(textNode, index);
-          range.setEnd(textNode, index + alias.length);
-          selection.addRange(range);
-
-          let fg = "#2362d7";
-          let bg = "#d2e6fd";
-
-          // Selection.setColors() will swap the given foreground and background
-          // colors if it detects that the contrast between the background
-          // color and the frame color is too low.  Normally we don't want that
-          // to happen; we want it to use our colors as given (even if setColors
-          // thinks the contrast is too low).  But it's a nice feature for non-
-          // default themes, where the contrast between our background color and
-          // the input's frame color might actually be too low.  We can
-          // (hackily) force setColors to use our colors as given by passing
-          // them as the alternate colors.  Otherwise, allow setColors to swap
-          // them, which we can do by passing "currentColor".  See
-          // nsTextPaintStyle::GetHighlightColors for details.
-          if (this.querySelector(":-moz-lwtheme") ||
-              (AppConstants.platform == "win" &&
-               window.matchMedia("(-moz-windows-default-theme: 0)").matches)) {
-            // non-default theme(s)
-            selection.setColors(fg, bg, "currentColor", "currentColor");
-          } else {
-            // default themes
-            selection.setColors(fg, bg, fg, bg);
-          }
         ]]></body>
       </method>
     </implementation>
@@ -2621,15 +2666,31 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
+      <!--
+        The search alias of the first (heuristic) result in the popup, if any.
+      -->
+      <field name="searchAlias">null</field>
+
       <method name="onResultsAdded">
         <body>
           <![CDATA[
-            // Highlight the search alias in the input if one is present, or
-            // clear the highlight otherwise.  highlightSearchAlias examines
-            // only the first result, so as an optimzation, call it only when
-            // this is the first result.
             if (!this.input.gotResultForCurrentQuery) {
-              this.input.highlightSearchAlias();
+              // This is the first result of a new search.  Cache its search
+              // alias, if any.  Do this now, when we get the first result, so
+              // that the cached alias remains available between the time the
+              // previous search ended and now.
+              //
+              // Calling _parseActionUrl and getting params.alias would be
+              // sufficient here, but as an optimization, first check whether
+              // the result is a searchengine result, which is a simple
+              // substring check, to avoid the more expensive _parseActionUrl.
+              let alias =
+                this.input.mController.getStyleAt(0).includes("searchengine") &&
+                this.input._parseActionUrl(this.input.mController.getFinalCompleteValueAt(0)).params.alias;
+              this.searchAlias = alias || null;
+
+              // Format the alias or remove the formatting of the previous alias.
+              this.input.formatValue();
             }
 
             // If nothing is selected yet, select the first result if it is a

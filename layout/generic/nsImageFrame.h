@@ -42,7 +42,7 @@ namespace layers {
 } // namespace layers
 } // namespace mozilla
 
-class nsImageListener : public imgINotificationObserver
+class nsImageListener final : public imgINotificationObserver
 {
 protected:
   virtual ~nsImageListener();
@@ -446,7 +446,8 @@ public:
  * image itself, and hence receive events just as if the image itself
  * received events.
  */
-class nsDisplayImage : public nsDisplayImageContainer {
+class nsDisplayImage final : public nsDisplayImageContainer
+{
 public:
   typedef mozilla::layers::LayerManager LayerManager;
 

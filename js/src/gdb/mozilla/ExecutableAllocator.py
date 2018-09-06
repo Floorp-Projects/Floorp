@@ -48,10 +48,11 @@ class jsjitExecutableAllocator(object):
             self.allocator = allocator
             self.entryType = allocator.cache.ExecutablePool.pointer()
             # Emulate the HashSet::Range
-            self.table = allocator.value['m_pools']['impl']['table']
+            self.table = allocator.value['m_pools']['mImpl']['mTable']
             self.index = 0
             HASHNUMBER_BIT_SIZE = 32
-            self.max = 1 << (HASHNUMBER_BIT_SIZE - allocator.value['m_pools']['impl']['hashShift'])
+            hashShift = allocator.value['m_pools']['mImpl']['mHashShift']
+            self.max = 1 << (HASHNUMBER_BIT_SIZE - hashShift)
             if self.table == 0:
                 self.max = 0
 
@@ -63,8 +64,8 @@ class jsjitExecutableAllocator(object):
             if cur >= self.max:
                 raise StopIteration()
             self.index = self.index + 1
-            if self.table[cur]['keyHash'] > 1:  # table[i]->isLive()
-                return self.table[cur]['mem']['u']['mDummy'].cast(self.entryType)
+            if self.table[cur]['mKeyHash'] > 1:  # table[i]->isLive()
+                return self.table[cur]['mValueData'].cast(self.entryType)
             return self.__next__()
 
 

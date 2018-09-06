@@ -363,7 +363,8 @@ public:
   }
 };
 
-class nsDisplayPlugin : public nsDisplayItem {
+class nsDisplayPlugin final : public nsDisplayItem
+{
 public:
   nsDisplayPlugin(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame)

@@ -25,7 +25,7 @@ struct ScrollAnimationBezierPhysicsSettings
 
 // This class implements a cubic bezier timing function and automatically
 // adapts the animation duration based on the scrolling rate.
-class ScrollAnimationBezierPhysics : public ScrollAnimationPhysics
+class ScrollAnimationBezierPhysics final : public ScrollAnimationPhysics
 {
 public:
   explicit ScrollAnimationBezierPhysics(const nsPoint& aStartPos,

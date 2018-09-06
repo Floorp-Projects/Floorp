@@ -62,7 +62,7 @@ struct nsFramesetDrag {
 /*******************************************************************************
  * nsHTMLFramesetFrame
  ******************************************************************************/
-class nsHTMLFramesetFrame : public nsContainerFrame
+class nsHTMLFramesetFrame final : public nsContainerFrame
 {
 public:
   NS_DECL_QUERYFRAME

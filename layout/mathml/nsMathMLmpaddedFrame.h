@@ -14,7 +14,8 @@
 // <mpadded> -- adjust space around content
 //
 
-class nsMathMLmpaddedFrame : public nsMathMLContainerFrame {
+class nsMathMLmpaddedFrame final : public nsMathMLContainerFrame
+{
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmpaddedFrame)
 
