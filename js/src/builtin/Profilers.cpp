@@ -28,6 +28,7 @@
 # define getpid _getpid
 #endif
 
+#include "js/CharacterEncoding.h"
 #include "js/Utility.h"
 #include "util/Text.h"
 #include "vm/Probes.h"
@@ -203,7 +204,7 @@ RequiredStringArg(JSContext* cx, const CallArgs& args, size_t argi, const char* 
         return nullptr;
     }
 
-    return UniqueChars(JS_EncodeString(cx, args[argi].toString()));
+    return JS_EncodeStringToLatin1(cx, args[argi].toString());
 }
 
 static bool

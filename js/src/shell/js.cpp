@@ -77,7 +77,7 @@
 #include "jit/JitcodeMap.h"
 #include "jit/JitRealm.h"
 #include "jit/shared/CodeGenerator-shared.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/Debug.h"
@@ -1053,7 +1053,6 @@ BoundToAsyncStack(JSContext* cx, unsigned argc, Value* vp)
     RootedObject options(cx, &GetFunctionNativeReserved(&args.callee(), 1).toObject());
 
     RootedSavedFrame stack(cx, nullptr);
-    JSAutoByteString cause;
     bool isExplicit;
 
     RootedValue v(cx);
@@ -1069,7 +1068,13 @@ BoundToAsyncStack(JSContext* cx, unsigned argc, Value* vp)
     if (!JS_GetProperty(cx, options, "cause", &v))
         return false;
     RootedString causeString(cx, ToString(cx, v));
-    if (!causeString || !cause.encodeUtf8(cx, causeString)) {
+    if (!causeString) {
+        MOZ_ASSERT(cx->isExceptionPending());
+        return false;
+    }
+
+    UniqueChars cause = JS_EncodeStringToUTF8(cx, causeString);
+    if (!cause) {
         MOZ_ASSERT(cx->isExceptionPending());
         return false;
     }
@@ -1082,7 +1087,7 @@ BoundToAsyncStack(JSContext* cx, unsigned argc, Value* vp)
                  ? JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::EXPLICIT
                  : JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::IMPLICIT);
 
-    JS::AutoSetAsyncStackForNewCalls asasfnckthxbye(cx, stack, cause.ptr(), kind);
+    JS::AutoSetAsyncStackForNewCalls asasfnckthxbye(cx, stack, cause.get(), kind);
     return Call(cx, UndefinedHandleValue, function,
                 JS::HandleValueArray::empty(), args.rval());
 }
@@ -1171,16 +1176,14 @@ EvalAndPrint(JSContext* cx, const char* bytes, size_t length,
 
     if (!result.isUndefined() && gOutFile->isOpen()) {
         // Print.
-        RootedString str(cx);
-        str = JS_ValueToSource(cx, result);
+        RootedString str(cx, JS_ValueToSource(cx, result));
         if (!str)
             return false;
 
-        char* utf8chars = JS_EncodeStringToUTF8(cx, str);
+        UniqueChars utf8chars = JS_EncodeStringToUTF8(cx, str);
         if (!utf8chars)
             return false;
-        fprintf(gOutFile->fp, "%s\n", utf8chars);
-        JS_free(cx, utf8chars);
+        fprintf(gOutFile->fp, "%s\n", utf8chars.get());
     }
     return true;
 }
@@ -1360,7 +1363,7 @@ CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
     JSString* filenameStr = ResolvePath(cx, rawFilenameStr, ScriptRelative);
     if (!filenameStr)
         return false;
-    JSAutoByteString filename(cx, filenameStr);
+    UniqueChars filename = JS_EncodeStringToLatin1(cx, filenameStr);
     if (!filename)
         return false;
 
@@ -1382,9 +1385,9 @@ CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    FILE* file = fopen(filename.ptr(), "rb");
+    FILE* file = fopen(filename.get(), "rb");
     if (!file) {
-        ReportCantOpenErrorUnknownEncoding(cx, filename.ptr());
+        ReportCantOpenErrorUnknownEncoding(cx, filename.get());
         return false;
     }
     AutoCloseFile autoClose(file);
@@ -1468,15 +1471,14 @@ Options(JSContext* cx, unsigned argc, Value* vp)
         RootedString str(cx, JS::ToString(cx, args[i]));
         if (!str)
             return false;
-        args[i].setString(str);
 
-        JSAutoByteString opt;
-        if (!opt.encodeUtf8(cx, str))
+        RootedLinearString opt(cx, str->ensureLinear(cx));
+        if (!opt)
             return false;
 
-        if (strcmp(opt.ptr(), "strict") == 0) {
+        if (StringEqualsAscii(opt, "strict")) {
             JS::ContextOptionsRef(cx).toggleExtraWarnings();
-        } else if (strcmp(opt.ptr(), "werror") == 0) {
+        } else if (StringEqualsAscii(opt, "werror")) {
             // Disallow toggling werror when there are off-thread jobs, to avoid
             // confusing CompileError::throwError.
             ShellContext* sc = GetShellContext(cx);
@@ -1485,16 +1487,20 @@ Options(JSContext* cx, unsigned argc, Value* vp)
                 return false;
             }
             JS::ContextOptionsRef(cx).toggleWerror();
-        } else if (strcmp(opt.ptr(), "throw_on_asmjs_validation_failure") == 0) {
+        } else if (StringEqualsAscii(opt, "throw_on_asmjs_validation_failure")) {
             JS::ContextOptionsRef(cx).toggleThrowOnAsmJSValidationFailure();
-        } else if (strcmp(opt.ptr(), "strict_mode") == 0) {
+        } else if (StringEqualsAscii(opt, "strict_mode")) {
             JS::ContextOptionsRef(cx).toggleStrictMode();
         } else {
+            UniqueChars optChars = JS_EncodeStringToUTF8(cx, opt);
+            if (!optChars)
+                return false;
+
             JS_ReportErrorUTF8(cx,
                                "unknown option name '%s'."
                                " The valid names are strict,"
                                " werror, and strict_mode.",
-                               opt.ptr());
+                               optChars.get());
             return false;
         }
     }
@@ -1547,7 +1553,7 @@ LoadScript(JSContext* cx, unsigned argc, Value* vp, bool scriptRelative)
             JS_ReportErrorASCII(cx, "unable to resolve path");
             return false;
         }
-        JSAutoByteString filename(cx, str);
+        UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
         if (!filename)
             return false;
         errno = 0;
@@ -1558,8 +1564,8 @@ LoadScript(JSContext* cx, unsigned argc, Value* vp, bool scriptRelative)
             .setNoScriptRval(true);
         RootedScript script(cx);
         RootedValue unused(cx);
-        if ((compileOnly && !Compile(cx, opts, filename.ptr(), &script)) ||
-            !Evaluate(cx, opts, filename.ptr(), &unused))
+        if ((compileOnly && !Compile(cx, opts, filename.get(), &script)) ||
+            !Evaluate(cx, opts, filename.get(), &unused))
         {
             return false;
         }
@@ -1586,7 +1592,7 @@ LoadScriptRelativeToScript(JSContext* cx, unsigned argc, Value* vp)
 // bytes.
 static bool
 ParseCompileOptions(JSContext* cx, CompileOptions& options, HandleObject opts,
-                    JSAutoByteString& fileNameBytes)
+                    UniqueChars& fileNameBytes)
 {
     RootedValue v(cx);
     RootedString s(cx);
@@ -1609,10 +1615,10 @@ ParseCompileOptions(JSContext* cx, CompileOptions& options, HandleObject opts,
         s = ToString(cx, v);
         if (!s)
             return false;
-        char* fileName = fileNameBytes.encodeLatin1(cx, s);
-        if (!fileName)
+        fileNameBytes = JS_EncodeStringToLatin1(cx, s);
+        if (!fileNameBytes)
             return false;
-        options.setFile(fileName);
+        options.setFile(fileNameBytes.get());
     }
 
     if (!JS_GetProperty(cx, opts, "element", &v))
@@ -1818,7 +1824,7 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
     }
 
     CompileOptions options(cx);
-    JSAutoByteString fileNameBytes;
+    UniqueChars fileNameBytes;
     RootedString displayURL(cx);
     RootedString sourceMapURL(cx);
     RootedObject global(cx, nullptr);
@@ -2092,34 +2098,34 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
 JSString*
 js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr)
 {
-    JSAutoByteString pathname(cx, pathnameStr);
+    UniqueChars pathname = JS_EncodeStringToLatin1(cx, pathnameStr);
     if (!pathname)
         return nullptr;
 
     FILE* file;
 
-    file = fopen(pathname.ptr(), "rb");
+    file = fopen(pathname.get(), "rb");
     if (!file) {
-        ReportCantOpenErrorUnknownEncoding(cx, pathname.ptr());
+        ReportCantOpenErrorUnknownEncoding(cx, pathname.get());
         return nullptr;
     }
 
     AutoCloseFile autoClose(file);
 
     if (fseek(file, 0, SEEK_END) != 0) {
-        pathname.clear();
-        if (!pathname.encodeUtf8(cx, pathnameStr))
+        pathname = JS_EncodeStringToUTF8(cx, pathnameStr);
+        if (!pathname)
             return nullptr;
-        JS_ReportErrorUTF8(cx, "can't seek end of %s", pathname.ptr());
+        JS_ReportErrorUTF8(cx, "can't seek end of %s", pathname.get());
         return nullptr;
     }
 
     size_t len = ftell(file);
     if (fseek(file, 0, SEEK_SET) != 0) {
-        pathname.clear();
-        if (!pathname.encodeUtf8(cx, pathnameStr))
+        pathname = JS_EncodeStringToUTF8(cx, pathnameStr);
+        if (!pathname)
             return nullptr;
-        JS_ReportErrorUTF8(cx, "can't seek start of %s", pathname.ptr());
+        JS_ReportErrorUTF8(cx, "can't seek start of %s", pathname.get());
         return nullptr;
     }
 
@@ -2130,12 +2136,12 @@ js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr)
     size_t cc = fread(buf.get(), 1, len, file);
     if (cc != len) {
         if (ptrdiff_t(cc) < 0) {
-            ReportCantOpenErrorUnknownEncoding(cx, pathname.ptr());
+            ReportCantOpenErrorUnknownEncoding(cx, pathname.get());
         } else {
-            pathname.clear();
-            if (!pathname.encodeUtf8(cx, pathnameStr))
+            pathname = JS_EncodeStringToUTF8(cx, pathnameStr);
+            if (!pathname)
                 return nullptr;
-            JS_ReportErrorUTF8(cx, "can't read %s: short read", pathname.ptr());
+            JS_ReportErrorUTF8(cx, "can't read %s: short read", pathname.get());
         }
         return nullptr;
     }
@@ -2144,10 +2150,10 @@ js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr)
         JS::LossyUTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(buf.get(), len), &len).get()
     );
     if (!ucbuf) {
-        pathname.clear();
-        if (!pathname.encodeUtf8(cx, pathnameStr))
+        pathname = JS_EncodeStringToUTF8(cx, pathnameStr);
+        if (!pathname)
             return nullptr;
-        JS_ReportErrorUTF8(cx, "Invalid UTF-8 in file '%s'", pathname.ptr());
+        JS_ReportErrorUTF8(cx, "Invalid UTF-8 in file '%s'", pathname.get());
         return nullptr;
     }
 
@@ -2188,13 +2194,13 @@ Run(JSContext* cx, unsigned argc, Value* vp)
     int64_t startClock = PRMJ_Now();
     {
         /* FIXME: This should use UTF-8 (bug 987069). */
-        JSAutoByteString filename(cx, str);
+        UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
         if (!filename)
             return false;
 
         JS::CompileOptions options(cx);
         options.setIntroductionType("js shell run")
-               .setFileAndLine(filename.ptr(), 1)
+               .setFileAndLine(filename.get(), 1)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
         if (!JS_CompileUCScript(cx, srcBuf, options, &script))
@@ -2320,7 +2326,7 @@ ReadLineBuf(JSContext* cx, unsigned argc, Value* vp)
             len++;
         }
 
-        JSString* str = JS_NewStringCopyN(cx, currentBuf, len);
+        JSString* str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(currentBuf, len));
         if (!str)
             return false;
 
@@ -2334,17 +2340,17 @@ ReadLineBuf(JSContext* cx, unsigned argc, Value* vp)
     }
 
     if (args.length() == 1) {
-        if (sc->readLineBuf)
-            sc->readLineBuf.reset();
+        sc->readLineBuf = nullptr;
+        sc->readLineBufPos = 0;
 
         RootedString str(cx, JS::ToString(cx, args[0]));
         if (!str)
             return false;
-        sc->readLineBuf = UniqueChars(JS_EncodeStringToUTF8(cx, str));
+        sc->readLineBuf = JS_EncodeStringToUTF8(cx, str);
         if (!sc->readLineBuf)
             return false;
 
-        sc->readLineBufPos = 0;
+        args.rval().setUndefined();
         return true;
     }
 
@@ -2366,11 +2372,10 @@ PutStr(JSContext* cx, unsigned argc, Value* vp)
         RootedString str(cx, JS::ToString(cx, args[0]));
         if (!str)
             return false;
-        char* bytes = JS_EncodeStringToUTF8(cx, str);
+        UniqueChars bytes = JS_EncodeStringToUTF8(cx, str);
         if (!bytes)
             return false;
-        fputs(bytes, gOutFile->fp);
-        JS_free(cx, bytes);
+        fputs(bytes.get(), gOutFile->fp);
         fflush(gOutFile->fp);
     }
 
@@ -2399,11 +2404,10 @@ PrintInternal(JSContext* cx, const CallArgs& args, RCFile* file)
         RootedString str(cx, JS::ToString(cx, args[i]));
         if (!str)
             return false;
-        char* bytes = JS_EncodeStringToUTF8(cx, str);
+        UniqueChars bytes = JS_EncodeStringToUTF8(cx, str);
         if (!bytes)
             return false;
-        fprintf(file->fp, "%s%s", i ? " " : "", bytes);
-        JS_free(cx, bytes);
+        fprintf(file->fp, "%s%s", i ? " " : "", bytes.get());
     }
 
     fputc('\n', file->fp);
@@ -2507,13 +2511,13 @@ StopTimingMutator(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const char*
-ToSource(JSContext* cx, MutableHandleValue vp, JSAutoByteString* bytes)
+ToSource(JSContext* cx, HandleValue vp, UniqueChars* bytes)
 {
-    JSString* str = JS_ValueToSource(cx, vp);
+    RootedString str(cx, JS_ValueToSource(cx, vp));
     if (str) {
-        vp.setString(str);
-        if (bytes->encodeLatin1(cx, str))
-            return bytes->ptr();
+        *bytes = JS_EncodeStringToUTF8(cx, str);
+        if (*bytes)
+            return bytes->get();
     }
     JS_ClearPendingException(cx);
     return "<<error converting value to string>>";
@@ -2538,19 +2542,19 @@ AssertEq(JSContext* cx, unsigned argc, Value* vp)
     if (!JS_SameValue(cx, args[0], args[1], &same))
         return false;
     if (!same) {
-        JSAutoByteString bytes0, bytes1;
+        UniqueChars bytes0, bytes1;
         const char* actual = ToSource(cx, args[0], &bytes0);
         const char* expected = ToSource(cx, args[1], &bytes1);
         if (args.length() == 2) {
-            JS_ReportErrorNumberLatin1(cx, my_GetErrorMessage, nullptr, JSSMSG_ASSERT_EQ_FAILED,
-                                       actual, expected);
+            JS_ReportErrorNumberUTF8(cx, my_GetErrorMessage, nullptr, JSSMSG_ASSERT_EQ_FAILED,
+                                     actual, expected);
         } else {
-            JSAutoByteString bytes2(cx, args[2].toString());
+            RootedString message(cx, args[2].toString());
+            UniqueChars bytes2 = JS_EncodeStringToUTF8(cx, message);
             if (!bytes2)
                 return false;
-            JS_ReportErrorNumberLatin1(cx, my_GetErrorMessage, nullptr,
-                                       JSSMSG_ASSERT_EQ_FAILED_MSG,
-                                       actual, expected, bytes2.ptr());
+            JS_ReportErrorNumberUTF8(cx, my_GetErrorMessage, nullptr, JSSMSG_ASSERT_EQ_FAILED_MSG,
+                                     actual, expected, bytes2.get());
         }
         return false;
     }
@@ -3096,7 +3100,8 @@ DisassembleToString(JSContext* cx, unsigned argc, Value* vp)
     if (!DisassembleToSprinter(cx, args.length(), vp, &sprinter))
         return false;
 
-    JSString* str = JS_NewStringCopyZ(cx, sprinter.string());
+    JS::ConstUTF8CharsZ utf8chars(sprinter.string(), strlen(sprinter.string()));
+    JSString* str = JS_NewStringCopyUTF8Z(cx, utf8chars);
     if (!str)
         return false;
     args.rval().setString(str);
@@ -3148,7 +3153,7 @@ DisassFile(JSContext* cx, unsigned argc, Value* vp)
     JSString* str = JS::ToString(cx, HandleValue::fromMarkedLocation(&p.argv[0]));
     if (!str)
         return false;
-    JSAutoByteString filename(cx, str);
+    UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
     if (!filename)
         return false;
     RootedScript script(cx);
@@ -3157,22 +3162,21 @@ DisassFile(JSContext* cx, unsigned argc, Value* vp)
         CompileOptions options(cx);
         options.setIntroductionType("js shell disFile")
                .setUTF8(true)
-               .setFileAndLine(filename.ptr(), 1)
+               .setFileAndLine(filename.get(), 1)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
 
-        if (!JS::Compile(cx, options, filename.ptr(), &script))
+        if (!JS::Compile(cx, options, filename.get(), &script))
             return false;
     }
 
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return false;
-    bool ok = DisassembleScript(cx, script, nullptr, p.lines, p.recursive, p.sourceNotes, &sprinter);
-    if (ok)
-        fprintf(gOutFile->fp, "%s\n", sprinter.string());
-    if (!ok)
+    if (!DisassembleScript(cx, script, nullptr, p.lines, p.recursive, p.sourceNotes, &sprinter))
         return false;
+
+    fprintf(gOutFile->fp, "%s\n", sprinter.string());
 
     args.rval().setUndefined();
     return true;
@@ -3368,7 +3372,7 @@ Crash(JSContext* cx, unsigned argc, Value* vp)
     RootedString message(cx, JS::ToString(cx, args[0]));
     if (!message)
         return false;
-    char* utf8chars = JS_EncodeStringToUTF8(cx, message);
+    UniqueChars utf8chars = JS_EncodeStringToUTF8(cx, message);
     if (!utf8chars)
         return false;
     if (args.get(1).isObject()) {
@@ -3380,9 +3384,9 @@ Crash(JSContext* cx, unsigned argc, Value* vp)
             js::NoteIntentionalCrash();
     }
 #ifndef DEBUG
-    MOZ_ReportCrash(utf8chars, __FILE__, __LINE__);
+    MOZ_ReportCrash(utf8chars.get(), __FILE__, __LINE__);
 #endif
-    MOZ_CRASH_UNSAFE_OOL(utf8chars);
+    MOZ_CRASH_UNSAFE_OOL(utf8chars.get());
 }
 
 static bool
@@ -4184,7 +4188,7 @@ StackDump(JSContext* cx, unsigned argc, Value* vp)
     bool showLocals = ToBoolean(args.get(1));
     bool showThisProps = ToBoolean(args.get(2));
 
-    JS::UniqueChars buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
+    JS::UniqueChars buf = JS::FormatStackDump(cx, showArgs, showLocals, showThisProps);
     if (!buf) {
         fputs("Failed to format JavaScript stack for dump\n", gOutFile->fp);
         JS_ClearPendingException(cx);
@@ -4373,7 +4377,7 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
         }
 
         RootedString str(cx, args[1].toString());
-        filename.reset(JS_EncodeString(cx, str));
+        filename = JS_EncodeStringToLatin1(cx, str);
         if (!filename)
             return false;
 
@@ -4747,20 +4751,21 @@ BinParse(JSContext* cx, unsigned argc, Value* vp)
             // By default, `useMultipart` is `true`.
             useMultipart = true;
         } else if (optionFormat.isString()) {
-            RootedString stringFormat(cx);
-            stringFormat = optionFormat.toString();
-            JS::Rooted<JSLinearString*> linearFormat(cx);
-            linearFormat = stringFormat->ensureLinear(cx);
+            RootedLinearString linearFormat(cx, optionFormat.toString()->ensureLinear(cx));
+            if (!linearFormat)
+                return false;
             if (StringEqualsAscii(linearFormat, "multipart")) {
                 useMultipart = true;
             } else if (StringEqualsAscii(linearFormat, "simple")) {
                 useMultipart = false;
             } else {
-                JSAutoByteString printable;
+                UniqueChars printable = JS_EncodeStringToUTF8(cx, linearFormat);
+                if (!printable)
+                    return false;
+
                 JS_ReportErrorUTF8(cx,
                                    "Unknown value for option `format`, expected 'multipart' or "
-                                   "'simple', got %s",
-                                   ValueToPrintableUTF8(cx, optionFormat, &printable));
+                                   "'simple', got %s", printable.get());
                 return false;
             }
         } else {
@@ -4983,7 +4988,7 @@ OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    JSAutoByteString fileNameBytes;
+    UniqueChars fileNameBytes;
     CompileOptions options(cx);
     options.setIntroductionType("js shell offThreadCompileScript")
            .setFileAndLine("<string>", 1);
@@ -5088,7 +5093,7 @@ OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    JSAutoByteString fileNameBytes;
+    UniqueChars fileNameBytes;
     CompileOptions options(cx);
     options.setIntroductionType("js shell offThreadCompileModule")
            .setFileAndLine("<string>", 1);
@@ -5192,7 +5197,7 @@ OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp)
     }
     RootedObject cacheEntry(cx, &args[0].toObject());
 
-    JSAutoByteString fileNameBytes;
+    UniqueChars fileNameBytes;
     CompileOptions options(cx);
     options.setIntroductionType("js shell offThreadDecodeScript")
            .setFileAndLine("<string>", 1);
@@ -5330,13 +5335,6 @@ class AutoCStringVector
         js_free(argv_[i]);
         argv_[i] = arg.release();
     }
-    const char* back() const {
-        return argv_.back();
-    }
-    void replaceBack(UniqueChars arg) {
-        js_free(argv_.back());
-        argv_.back() = arg.release();
-    }
 };
 
 #if defined(XP_WIN)
@@ -5415,26 +5413,32 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // The arguments to nestedShell are stringified and append to argv.
-    RootedString str(cx);
     for (unsigned i = 0; i < args.length(); i++) {
-        str = ToString(cx, args[i]);
+        JSString* str = ToString(cx, args[i]);
         if (!str)
             return false;
 
-        UniqueChars arg(JS_EncodeString(cx, str));
-        if (!arg || !argv.append(std::move(arg)))
+        JSLinearString* linear = str->ensureLinear(cx);
+        if (!linear)
             return false;
 
-        // As a special case, if the caller passes "--js-cache", replace that
-        // with "--js-cache=$(jsCacheDir)"
-        if (!strcmp(argv.back(), "--js-cache") && jsCacheDir) {
-            UniqueChars newArg = JS_smprintf("--js-cache=%s", jsCacheDir);
-            if (!newArg) {
+        UniqueChars arg;
+        if (StringEqualsAscii(linear, "--js-cache") && jsCacheDir) {
+            // As a special case, if the caller passes "--js-cache", use
+            // "--js-cache=$(jsCacheDir)" instead.
+            arg = JS_smprintf("--js-cache=%s", jsCacheDir);
+            if (!arg) {
                 JS_ReportOutOfMemory(cx);
                 return false;
             }
-            argv.replaceBack(std::move(newArg));
+        } else {
+            arg = JS_EncodeStringToLatin1(cx, str);
+            if (!arg)
+                return false;
         }
+
+        if (!argv.append(std::move(arg)))
+            return false;
     }
 
     // execv assumes argv is null-terminated
@@ -6961,7 +6965,7 @@ class ShellAutoEntryMonitor : JS::dbg::AutoEntryMonitor {
 
         RootedString displayId(cx, JS_GetFunctionDisplayId(function));
         if (displayId) {
-            UniqueChars displayIdStr(JS_EncodeStringToUTF8(cx, displayId));
+            UniqueChars displayIdStr = JS_EncodeStringToUTF8(cx, displayId);
             if (!displayIdStr) {
                 // We report OOM in buildResult.
                 cx->recoverFromOutOfMemory();
@@ -7159,11 +7163,11 @@ SetARMHwCapFlags(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
 #if defined(JS_CODEGEN_ARM)
-    JSAutoByteString flagsList(cx, flagsListString);
+    UniqueChars flagsList = JS_EncodeStringToLatin1(cx, flagsListString);
     if (!flagsList)
         return false;
 
-    jit::ParseARMHwCapFlags(flagsList.ptr());
+    jit::ParseARMHwCapFlags(flagsList.get());
 #endif
 
     args.rval().setUndefined();
@@ -8197,7 +8201,7 @@ PrintStackTrace(JSContext* cx, HandleValue exn)
     if (!BuildStackString(cx, principals, stackObj, &stackStr, 2))
         return false;
 
-    UniqueChars stack(JS_EncodeStringToUTF8(cx, stackStr));
+    UniqueChars stack = JS_EncodeStringToUTF8(cx, stackStr);
     if (!stack)
         return false;
 
@@ -9056,7 +9060,7 @@ ProcessArgs(JSContext* cx, OptionParser* op)
         if (!absolutePath)
             return false;
 
-        sc->moduleLoadPath = UniqueChars(JS_EncodeString(cx, absolutePath));
+        sc->moduleLoadPath = JS_EncodeStringToLatin1(cx, absolutePath);
     } else {
         sc->moduleLoadPath = js::shell::GetCWD();
     }

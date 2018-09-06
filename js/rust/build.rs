@@ -319,7 +319,6 @@ const WHITELIST_FUNCTIONS: &'static [&'static str] = &[
     "JS_DestroyContext",
     "JS::DisableIncrementalGC",
     "js::Dump.*",
-    "JS_EncodeStringToUTF8",
     "JS::EnterRealm",
     "JS_EnumerateStandardClasses",
     "JS_ErrorFromException",
