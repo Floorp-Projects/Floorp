@@ -358,6 +358,11 @@ var DebuggerServer = {
       constructor: "StorageActor",
       type: { target: true }
     });
+    this.registerModule("devtools/server/actors/gcli", {
+      prefix: "gcli",
+      constructor: "GcliActor",
+      type: { target: true }
+    });
     this.registerModule("devtools/server/actors/memory", {
       prefix: "memory",
       constructor: "MemoryActor",

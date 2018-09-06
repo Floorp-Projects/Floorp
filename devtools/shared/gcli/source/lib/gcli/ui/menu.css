@@ -1,0 +1,69 @@
+
+.gcli-menu {
+  overflow: hidden;
+  font-size: 90%;
+}
+
+.gcli-menu:not(:first-of-type) {
+  padding-top: 5px;
+}
+
+.gcli-menu-vert {
+  white-space: nowrap;
+  max-width: 22em;
+  display: inline-flex;
+  padding-inline-end: 20px;
+  -webkit-padding-end: 20px;
+}
+
+.gcli-menu-names {
+  white-space: nowrap;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.gcli-menu-descs {
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.gcli-menu-name,
+.gcli-menu-desc {
+  white-space: nowrap;
+}
+
+.gcli-menu-name {
+  padding-inline-start: 2px;
+  -webkit-padding-start: 2px;
+  padding-inline-end: 8px;
+  -webkit-padding-end: 8px;
+}
+
+.gcli-menu-desc {
+  padding-inline-end: 2px;
+  -webkit-padding-end: 2px;
+  color: #777;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.gcli-menu-name:hover,
+.gcli-menu-desc:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.gcli-menu-highlight,
+.gcli-menu-highlight.gcli-menu-option:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.gcli-menu-typed {
+  color: #FF6600;
+}
+
+.gcli-menu-more {
+  font-size: 80%;
+  width: 8em;
+  display: inline-flex;
+  vertical-align: bottom;
+}

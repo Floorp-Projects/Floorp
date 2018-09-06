@@ -4,6 +4,10 @@
 
 "use strict";
 
+// This was copied (and slightly modified) from
+// devtools/shared/gcli/source/lib/gcli/util/util.js, which in turn
+// says:
+
 /**
  * Keyboard handling is a mess. http://unixpapa.com/js/key.html
  * It would be good to use DOM L3 Keyboard events,
@@ -13,7 +17,7 @@
  * and when the code that uses this KeyEvent was written, nothing was clear,
  * so instead, we're using this unmodern shim:
  * http://stackoverflow.com/questions/5681146/chrome-10-keyevent-or-something-similar-to-firefoxs-keyevent
- * See BUG 664991: keyboard handling should be updated to use DOM-L3
+ * See BUG 664991: GCLI's keyboard handling should be updated to use DOM-L3
  * https://bugzilla.mozilla.org/show_bug.cgi?id=664991
  */
 
@@ -132,6 +136,9 @@ exports.KeyCodes = {
   DOM_VK_CLOSE_BRACKET: 221,
   DOM_VK_QUOTE: 222,
   DOM_VK_META: 224,
+
+  // A few that did not appear in gcli, but that are apparently used
+  // in devtools.
   DOM_VK_COLON: 58,
   DOM_VK_VOLUME_MUTE: 181,
   DOM_VK_VOLUME_DOWN: 182,

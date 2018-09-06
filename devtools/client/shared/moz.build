@@ -25,6 +25,7 @@ DevToolsModules(
     'css-angle.js',
     'curl.js',
     'demangle.js',
+    'developer-toolbar.js',
     'devices.js',
     'DOMHelpers.jsm',
     'enum.js',

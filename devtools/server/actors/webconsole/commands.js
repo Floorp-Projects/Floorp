@@ -116,7 +116,7 @@ function parseCommand(tokens) {
         const { value, offset } = collectString(nextToken, tokens, nextTokenIndex);
         // in order for JSON.stringify to correctly output values, they must be correctly
         // typed
-        // As per the old GCLI documentation, we can only have one value associated with a
+        // As per the GCLI documentation, we can only have one value associated with a
         // flag but multiple flags with the same name can exist and should be combined
         // into and array.  Here we are associating only the value on the right hand
         // side if it is of type `arg` as a single value; the second case initializes
