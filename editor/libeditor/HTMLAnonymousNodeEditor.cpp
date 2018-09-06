@@ -458,7 +458,7 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
         return rv;
       }
     } else {
-      nsresult rv = ShowResizers(*focusElement);
+      nsresult rv = ShowResizersInternal(*focusElement);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
