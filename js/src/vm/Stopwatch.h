@@ -129,8 +129,9 @@ struct PerformanceMonitoring {
      * May return `false` if the underlying hashtable cannot be allocated.
      */
     bool setIsMonitoringJank(bool value) {
-        if (isMonitoringJank_ != value)
+        if (isMonitoringJank_ != value) {
             reset();
+        }
 
         isMonitoringJank_ = value;
         return true;
@@ -157,8 +158,9 @@ struct PerformanceMonitoring {
      * May return `false` if the underlying hashtable cannot be allocated.
      */
     bool setIsMonitoringCPOW(bool value) {
-        if (isMonitoringCPOW_ != value)
+        if (isMonitoringCPOW_ != value) {
             reset();
+        }
 
         isMonitoringCPOW_ = value;
         return true;
