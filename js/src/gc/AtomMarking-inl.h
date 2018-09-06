@@ -47,12 +47,14 @@ AtomMarkingRuntime::inlinedMarkAtom(JSContext* cx, T* thing)
     MOZ_ASSERT(cell->zoneFromAnyThread()->isAtomsZone());
 
     // The context's zone will be null during initialization of the runtime.
-    if (!cx->zone())
+    if (!cx->zone()) {
         return;
+    }
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
-    if (ThingIsPermanent(thing))
+    if (ThingIsPermanent(thing)) {
         return;
+    }
 
     size_t bit = GetAtomBit(cell);
     MOZ_ASSERT(bit / JS_BITS_PER_WORD < allocatedWords);
