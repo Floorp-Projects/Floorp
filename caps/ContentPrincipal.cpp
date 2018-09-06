@@ -351,6 +351,8 @@ ContentPrincipal::GetDomain(nsIURI** aDomain)
 NS_IMETHODIMP
 ContentPrincipal::SetDomain(nsIURI* aDomain)
 {
+  MOZ_ASSERT(aDomain);
+
   mDomain = aDomain;
   SetHasExplicitDomain();
 
@@ -532,7 +534,12 @@ ContentPrincipal::Read(nsIObjectInputStream* aStream)
     mCSP->SetRequestContext(nullptr, this);
   }
 
-  SetDomain(domain);
+  // Note: we don't call SetDomain here because we don't need the wrapper
+  // recomputation code there (we just created this principal).
+  mDomain = domain;
+  if (mDomain) {
+    SetHasExplicitDomain();
+  }
 
   return NS_OK;
 }

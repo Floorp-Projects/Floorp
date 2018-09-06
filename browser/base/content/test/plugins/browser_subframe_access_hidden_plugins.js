@@ -10,7 +10,7 @@ const DOMAIN_2 = "http://mochi.test:8888";
  * then the plugin should be hidden in the navigator.plugins list by
  * default. However, if a plugin has been allowed on a top-level
  * document, we should let subframes of that document access
- * navigator.plugins without showing the notification bar.
+ * navigator.plugins.
  */
 add_task(async function setup() {
   // We'll make the Test Plugin click-to-play.
@@ -57,9 +57,7 @@ add_task(async function test_plugin_accessible_in_subframe() {
       content.document.body.appendChild(subframe);
       await loadedPromise;
 
-      // Instead of waiting for a notification bar that should never come,
-      // we'll make sure that the HiddenPlugin event never fires in content
-      // (which is the event that triggers the notification bar).
+      // Make sure that the HiddenPlugin event never fires in content.
       let sawEvent = false;
       addEventListener("HiddenPlugin", function onHiddenPlugin(e) {
         sawEvent = true;

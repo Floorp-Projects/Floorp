@@ -19,9 +19,9 @@
   <!ENTITY shippingOptionsLabel       "Shipping Options">
   <!ENTITY deliveryOptionsLabel       "Delivery Options">
   <!ENTITY pickupOptionsLabel         "Pickup Options">
-  <!ENTITY shippingGenericError       "Can't ship to this address. Select a different address.">
-  <!ENTITY deliveryGenericError       "Can't deliver to this address. Select a different address.">
-  <!ENTITY pickupGenericError         "Can't pick up from this address. Select a different address.">
+  <!ENTITY shippingGenericError       "Can’t ship to this address. Select a different address.">
+  <!ENTITY deliveryGenericError       "Can’t deliver to this address. Select a different address.">
+  <!ENTITY pickupGenericError         "Can’t pick up from this address. Select a different address.">
   <!ENTITY paymentMethodsLabel        "Payment Method">
   <!ENTITY address.addLink.label      "Add">
   <!ENTITY address.editLink.label     "Edit">
@@ -63,16 +63,14 @@
   <!ENTITY addressPage.addButton.label        "Add">
   <!ENTITY addressPage.updateButton.label     "Update">
   <!ENTITY addressPage.persistCheckbox.label  "Save address to &brandShortName;">
-  <!ENTITY failErrorPage.title  "Sorry! Something went wrong with the payment process.">
-  <!ENTITY failErrorPage.suggestion1  "Check your credit card has not expired.">
-  <!ENTITY failErrorPage.suggestion2  "Make sure your credit card information is accurate.">
-  <!ENTITY failErrorPage.suggestion3  "If no other solutions work, check with **host-name**.">
-  <!ENTITY failErrorPage.doneButton.label     "OK">
-  <!ENTITY timeoutErrorPage.title  "Whoops! **host-name** took too long to respond.">
-  <!ENTITY timeoutErrorPage.suggestion1  "Try again later.">
-  <!ENTITY timeoutErrorPage.suggestion2  "Check your network connection." >
-  <!ENTITY timeoutErrorPage.suggestion3  "If no other solutions work, check with **host-name**.">
-  <!ENTITY timeoutErrorPage.doneButton.label     "OK">
+  <!ENTITY failErrorPage.title                "We couldn’t complete your payment to **host-name**">
+  <!ENTITY failErrorPage.suggestionHeading    "The most likely cause is a hiccup with your credit card.">
+  <!ENTITY failErrorPage.suggestion1          "Make sure the card you’re using hasn’t expired">
+  <!ENTITY failErrorPage.suggestion2          "Double check the card number and expiration date">
+  <!ENTITY failErrorPage.doneButton.label     "Close">
+  <!ENTITY timeoutErrorPage.title             "**host-name** is taking too long to respond.">
+  <!ENTITY timeoutErrorPage.suggestionHeading "The most likely cause is a temporary connection hiccup. Open a new tab to check your network connection or click “Close” to try again.">
+  <!ENTITY timeoutErrorPage.doneButton.label     "Close">
   <!ENTITY webPaymentsBranding.label             "&brandShortName; Checkout">
   <!ENTITY invalidOption.label                   "Missing or invalid information">
 ]>
@@ -199,16 +197,14 @@
 
       <completion-error-page id="completion-timeout-error" class="illustrated"
                   data-page-title="&timeoutErrorPage.title;"
-                  data-suggestion-1="&timeoutErrorPage.suggestion1;"
-                  data-suggestion-2="&timeoutErrorPage.suggestion2;"
-                  data-suggestion-3="&timeoutErrorPage.suggestion3;"
+                  data-suggestion-heading="&timeoutErrorPage.suggestionHeading;"
                   data-done-button-label="&timeoutErrorPage.doneButton.label;"
                   hidden="hidden"></completion-error-page>
       <completion-error-page id="completion-fail-error" class="illustrated"
                   data-page-title="&failErrorPage.title;"
+                  data-suggestion-heading="&failErrorPage.suggestionHeading;"
                   data-suggestion-1="&failErrorPage.suggestion1;"
                   data-suggestion-2="&failErrorPage.suggestion2;"
-                  data-suggestion-3="&failErrorPage.suggestion3;"
                   data-done-button-label="&failErrorPage.doneButton.label;"
                   hidden="hidden"></completion-error-page>
     </div>

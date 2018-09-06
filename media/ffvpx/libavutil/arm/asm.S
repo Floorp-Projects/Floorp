@@ -46,6 +46,7 @@
 #   define FPU @
 #endif
 
+#if HAVE_AS_ARCH_DIRECTIVE
 #if   HAVE_NEON
         .arch           armv7-a
 #elif HAVE_ARMV6T2
@@ -54,6 +55,7 @@
         .arch           armv6
 #elif HAVE_ARMV5TE
         .arch           armv5te
+#endif
 #endif
 #if   HAVE_AS_OBJECT_ARCH
 ELF     .object_arch    armv4
@@ -109,11 +111,17 @@ FUNC    .func   \name
 ELF     .size   \name, . - \name
         .purgem endconst
     .endm
-.if HAVE_SECTION_DATA_REL_RO && \relocate
+#if HAVE_SECTION_DATA_REL_RO
+.if \relocate
         .section        .data.rel.ro
 .else
         .section        .rodata
 .endif
+#elif !defined(__MACH__)
+        .section        .rodata
+#else
+        .const_data
+#endif
         .align          \align
 \name:
 .endm

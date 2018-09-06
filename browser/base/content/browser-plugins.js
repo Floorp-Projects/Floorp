@@ -9,14 +9,10 @@ ChromeUtils.defineModuleGetter(this, "Blocklist",
 var gPluginHandler = {
   PREF_SESSION_PERSIST_MINUTES: "plugin.sessionPermissionNow.intervalInMinutes",
   PREF_PERSISTENT_DAYS: "plugin.persistentPermissionAlways.intervalInDays",
-  PREF_SHOW_INFOBAR: "plugins.show_infobar",
-  PREF_INFOBAR_DISMISSAL_PERMANENT: "plugins.remember_infobar_dismissal",
 
   MESSAGES: [
     "PluginContent:ShowClickToPlayNotification",
     "PluginContent:RemoveNotification",
-    "PluginContent:UpdateHiddenPluginUI",
-    "PluginContent:HideNotificationBar",
     "PluginContent:InstallSinglePlugin",
     "PluginContent:ShowPluginCrashedNotification",
     "PluginContent:SubmitReport",
@@ -53,14 +49,6 @@ var gPluginHandler = {
         break;
       case "PluginContent:RemoveNotification":
         this.removeNotification(msg.target, msg.data.name);
-        break;
-      case "PluginContent:UpdateHiddenPluginUI":
-        this.updateHiddenPluginUI(msg.target, msg.data.haveInsecure, msg.data.actions,
-                                  msg.principal, msg.data.location)
-          .catch(Cu.reportError);
-        break;
-      case "PluginContent:HideNotificationBar":
-        this.hideNotificationBar(msg.target, msg.data.name);
         break;
       case "PluginContent:InstallSinglePlugin":
         this.installSinglePlugin(msg.data.pluginInfo);
@@ -282,7 +270,6 @@ var gPluginHandler = {
       if (showNow) {
         notification.options.primaryPlugin = primaryPluginPermission;
         notification.reshow();
-        browser.messageManager.sendAsyncMessage("BrowserPlugins:NotificationShown");
       }
       return;
     }
@@ -368,7 +355,19 @@ var gPluginHandler = {
       PopupNotifications.show(browser, "click-to-play-plugins",
                                              description, "plugins-notification-icon",
                                              mainAction, secondaryActions, options);
-      browser.messageManager.sendAsyncMessage("BrowserPlugins:NotificationShown");
+
+      // Check if the plugin is insecure and update the notification icon accordingly.
+      let haveInsecure = false;
+      switch (pluginInfo.fallbackType) {
+        // haveInsecure will trigger the red flashing icon and the infobar
+        // styling below
+        case Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE:
+        case Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE:
+          haveInsecure = true;
+      }
+
+      document.getElementById("plugins-notification-icon").classList.
+        toggle("plugin-blocked", haveInsecure);
     } else {
       this.removeNotification(browser, "click-to-play-plugins");
     }
@@ -378,182 +377,6 @@ var gPluginHandler = {
     let notification = PopupNotifications.getNotification(name, browser);
     if (notification)
       PopupNotifications.remove(notification);
-  },
-
-  hideNotificationBar(browser, name) {
-    let notificationBox = gBrowser.getNotificationBox(browser);
-    let notification = notificationBox.getNotificationWithValue(name);
-    if (notification)
-      notificationBox.removeNotification(notification, true);
-  },
-
-  infobarBlockedForURI(uri) {
-    return new Promise((resolve, reject) => {
-      let tableName = Services.prefs.getStringPref("urlclassifier.flashInfobarTable", "");
-      if (!tableName) {
-        resolve(false);
-      }
-      let classifier = Cc["@mozilla.org/url-classifier/dbservice;1"]
-        .getService(Ci.nsIURIClassifier);
-      classifier.asyncClassifyLocalWithTables(uri, tableName, [], [], (c, list) => {
-        resolve(list.length > 0);
-      });
-    });
-  },
-
-  async updateHiddenPluginUI(browser, haveInsecure, actions,
-                                 principal, location) {
-    let origin = principal.originNoSuffix;
-
-    let shouldShowNotification = !(await this.infobarBlockedForURI(browser.documentURI));
-
-    // It is possible that we've received a message from the frame script to show
-    // the hidden plugin notification for a principal that no longer matches the one
-    // that the browser's content now has assigned (ie, the browser has browsed away
-    // after the message was sent, but before the message was received). In that case,
-    // we should just ignore the message.
-    if (!principal.equals(browser.contentPrincipal)) {
-      return;
-    }
-
-    // Data URIs, when linked to from some page, inherit the principal of that
-    // page. That means that we also need to compare the actual locations to
-    // ensure we aren't getting a message from a Data URI that we're no longer
-    // looking at.
-    let receivedURI = Services.io.newURI(location);
-    if (!browser.documentURI.equalsExceptRef(receivedURI)) {
-      return;
-    }
-
-    // Set up the icon
-    document.getElementById("plugins-notification-icon").classList.
-      toggle("plugin-blocked", haveInsecure);
-
-    // Now configure the notification bar
-    let notificationBox = gBrowser.getNotificationBox(browser);
-
-    function hideNotification() {
-      let n = notificationBox.getNotificationWithValue("plugin-hidden");
-      if (n) {
-        notificationBox.removeNotification(n, true);
-      }
-    }
-
-    // There are three different cases when showing an infobar:
-    // 1.  A single type of plugin is hidden on the page. Show the UI for that
-    //     plugin.
-    // 2a. Multiple types of plugins are hidden on the page. Show the multi-UI
-    //     with the vulnerable styling.
-    // 2b. Multiple types of plugins are hidden on the page, but none are
-    //     vulnerable. Show the nonvulnerable multi-UI.
-    function showNotification() {
-      if (!Services.prefs.getBoolPref(gPluginHandler.PREF_SHOW_INFOBAR, true)) {
-        return;
-      }
-
-      let n = notificationBox.getNotificationWithValue("plugin-hidden");
-      if (n) {
-        // If something is already shown, just keep it
-        return;
-      }
-
-      Services.telemetry.getHistogramById("PLUGINS_INFOBAR_SHOWN").
-        add(true);
-
-      let message;
-      // Icons set directly cannot be manipulated using moz-image-region, so
-      // we use CSS classes instead.
-      let brand = document.getElementById("bundle_brand").getString("brandShortName");
-
-      if (actions.length == 1) {
-        let pluginInfo = actions[0];
-        let pluginName = pluginInfo.pluginName;
-
-        switch (pluginInfo.fallbackType) {
-          case Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY:
-          case Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY_QUIET:
-            message = gNavigatorBundle.getFormattedString(
-              "pluginActivationWarning.message",
-              [brand]);
-            break;
-          case Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE:
-            message = gNavigatorBundle.getFormattedString(
-              "pluginActivateOutdated.message",
-              [pluginName, origin, brand]);
-            break;
-          case Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE:
-            message = gNavigatorBundle.getFormattedString(
-              "pluginActivateVulnerable.message",
-              [pluginName, origin, brand]);
-        }
-      } else {
-        // Multi-plugin
-        message = gNavigatorBundle.getFormattedString(
-          "pluginActivateMultiple.message", [origin]);
-      }
-
-      let buttons = [
-        {
-          label: gNavigatorBundle.getString("pluginContinueBlocking.label"),
-          accessKey: gNavigatorBundle.getString("pluginContinueBlocking.accesskey"),
-          callback() {
-            Services.telemetry.getHistogramById("PLUGINS_INFOBAR_BLOCK").
-              add(true);
-
-            Services.perms.addFromPrincipal(principal,
-                                            "plugin-hidden-notification",
-                                            Services.perms.DENY_ACTION);
-          },
-        },
-        {
-          label: gNavigatorBundle.getString("pluginActivateTrigger.label"),
-          accessKey: gNavigatorBundle.getString("pluginActivateTrigger.accesskey"),
-          callback() {
-            Services.telemetry.getHistogramById("PLUGINS_INFOBAR_ALLOW").
-              add(true);
-
-            let curNotification =
-              PopupNotifications.getNotification("click-to-play-plugins",
-                                                 browser);
-            if (curNotification) {
-              curNotification.reshow();
-            }
-          },
-        },
-      ];
-      function notificationCallback(type) {
-        if (type == "dismissed") {
-          Services.telemetry.getHistogramById("PLUGINS_INFOBAR_DISMISSED").
-            add(true);
-          if (Services.prefs.getBoolPref(gPluginHandler.PREF_INFOBAR_DISMISSAL_PERMANENT, false)) {
-            Services.perms.addFromPrincipal(principal,
-                                            "plugin-hidden-notification",
-                                            Services.perms.DENY_ACTION);
-          }
-        }
-      }
-      n = notificationBox.
-        appendNotification(message, "plugin-hidden", null,
-                           notificationBox.PRIORITY_INFO_HIGH, buttons,
-                           notificationCallback);
-      if (haveInsecure) {
-        n.classList.add("pluginVulnerable");
-      }
-    }
-
-    if (actions.length == 0) {
-      shouldShowNotification = false;
-    }
-    if (shouldShowNotification &&
-        Services.perms.testPermissionFromPrincipal(principal, "plugin-hidden-notification") ==
-        Ci.nsIPermissionManager.DENY_ACTION) {
-      shouldShowNotification = false;
-    }
-    if (shouldShowNotification) {
-      showNotification();
-    } else {
-      hideNotification();
-    }
   },
 
   contextMenuCommand(browser, plugin, command) {

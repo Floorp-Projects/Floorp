@@ -8200,42 +8200,6 @@
     "bug_numbers": [902075, 1345894, 1398972],
     "alert_emails": ["flashvideo-2015@mozilla.com"]
   },
-  "PLUGINS_INFOBAR_SHOWN": {
-    "record_in_processes": ["main"],
-    "releaseChannelCollection": "opt-out",
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Count of when the hidden-plugin infobar was displayed.",
-    "bug_numbers": [902075, 1345894],
-    "alert_emails": ["flashvideo-2015@mozilla.com"]
-  },
-  "PLUGINS_INFOBAR_BLOCK": {
-    "record_in_processes": ["main"],
-    "releaseChannelCollection": "opt-out",
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Count the number of times the user clicked 'block' on the hidden-plugin infobar.",
-    "bug_numbers": [902075, 1345894],
-    "alert_emails": ["flashvideo-2015@mozilla.com"]
-  },
-  "PLUGINS_INFOBAR_ALLOW": {
-    "record_in_processes": ["main"],
-    "releaseChannelCollection": "opt-out",
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Count the number of times the user clicked 'allow' on the hidden-plugin infobar.",
-    "bug_numbers": [902075, 1345894],
-    "alert_emails": ["flashvideo-2015@mozilla.com"]
-  },
-  "PLUGINS_INFOBAR_DISMISSED": {
-    "record_in_processes": ["main"],
-    "releaseChannelCollection": "opt-out",
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Count the number of times the user explicitly dismisses the hidden-plugin infobar without choosing allow or continue-blocking.",
-    "bug_numbers": [1368060],
-    "alert_emails": ["flashvideo-2015@mozilla.com"]
-  },
   "POPUP_NOTIFICATION_STATS": {
     "record_in_processes": ["main"],
     "releaseChannelCollection": "opt-out",
@@ -9356,7 +9320,7 @@
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "apoirot@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "labels": ["KeyShortcut", "SystemMenu", "HamburgerMenu", "ContextMenu", "CommandLine", "DeveloperToolbar", "SessionRestore"],
+    "labels": ["KeyShortcut", "SystemMenu", "HamburgerMenu", "ContextMenu", "CommandLine", "SessionRestore"],
     "releaseChannelCollection": "opt-out",
     "description": "Records how the user is triggering Developer Tools startup."
   },
@@ -9610,15 +9574,6 @@
     "kind": "count",
     "bug_numbers": [1247985],
     "description": "Number of times the DevTools Eyedropper has been opened via the color picker.",
-    "releaseChannelCollection": "opt-out"
-  },
-  "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "bug_numbers": [1247985],
-    "description": "Number of times the DevTools Developer Toolbar / GCLI has been opened.",
     "releaseChannelCollection": "opt-out"
   },
   "DEVTOOLS_ABOUTDEBUGGING_OPENED_COUNT": {
@@ -9974,17 +9929,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "How long has the responsive view been active (seconds)"
   },
-  "DEVTOOLS_DEVELOPERTOOLBAR_TIME_ACTIVE_SECONDS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000000,
-    "n_buckets": 100,
-    "bug_numbers": [1446496],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
-    "releaseChannelCollection": "opt-out",
-    "description": "How long has the developer toolbar been active (seconds)"
-  },
   "DEVTOOLS_ABOUTDEBUGGING_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -10269,15 +10213,6 @@
     "n_values": 9,
     "releaseChannelCollection": "opt-out",
     "description": "Records DevTools toolbox host each time the toolbox is opened and when the host is changed (0:Bottom, 1:Side, 2:Window, 3:Custom, 9:Unknown)."
-  },
-  "DEVTOOLS_GCLI_COMMANDS_KEYED": {
-    "record_in_processes": ["main", "content"],
-    "bug_numbers": [1347517],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "never",
-    "keyed": true,
-    "kind": "count",
-    "description": "Reports the command name used in GCLI e.g. 'screenshot'"
   },
   "DEVTOOLS_NUMBER_OF_CSS_GRIDS_IN_A_PAGE": {
     "record_in_processes": ["main", "content"],

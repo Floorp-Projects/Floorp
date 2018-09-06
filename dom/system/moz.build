@@ -20,6 +20,9 @@ with Files("windows/*LocationProvider*"):
 with Files("mac/*LocationProvider*"):
     BUG_COMPONENT = ("Core", "Geolocation")
 
+with Files("mac/*OSPermissionRequest*"):
+    BUG_COMPONENT = ("Firefox", "Device Permissions")
+
 with Files("linux/*LocationProvider*"):
     BUG_COMPONENT = ("Core", "Geolocation")
 
@@ -49,14 +52,21 @@ elif toolkit == 'android':
 elif toolkit == 'gtk3':
     DIRS += ['linux']
 
+if toolkit != 'cocoa':
+    EXPORTS += [
+        'nsOSPermissionRequest.h',
+    ]
+
 XPIDL_SOURCES += [
     'nsIOSFileConstantsService.idl',
+    'nsIOSPermissionRequest.idl',
 ]
 
 XPIDL_MODULE = 'dom_system'
 
 EXPORTS += [
     'nsDeviceSensors.h',
+    'nsOSPermissionRequestBase.h',
 ]
 
 EXPORTS.mozilla += [
@@ -65,6 +75,7 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'nsDeviceSensors.cpp',
+    'nsOSPermissionRequestBase.cpp',
     'OSFileConstants.cpp',
 ]
 

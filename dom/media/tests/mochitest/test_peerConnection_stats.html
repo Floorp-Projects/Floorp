@@ -56,8 +56,23 @@ var statsExpectedByType = {
       "consentRequestsSent",],
     deprecated: [],
   },
-  "local-candidate": { skip: true },
-  "remote-candidate": { skip: true },
+  "local-candidate": {
+    expected: ["id", "timestamp", "type", "componentId", "ipAddress",
+               "transport", "mozLocalTransport", "portNumber",
+               "candidateType"],
+    optional: [],
+    unimplemented: ["address", "port", "networkType", "protocol",
+                    "relayProtocol", "priority", "url"],
+    deprecated: ["candidateId"],
+  },
+  "remote-candidate": {
+    expected: ["id", "timestamp", "type", "componentId", "ipAddress",
+               "transport", "portNumber", "candidateType"],
+    optional: [],
+    unimplemented: ["address", "port", "networkType", "protocol",
+                    "relayProtocol", "priority", "url"],
+    deprecated: ["candidateId"],
+  },
   "certificate": { skip: true },
 };
 ["in", "out"].forEach(pre => {
@@ -182,7 +197,7 @@ var pedanticChecks = report => {
           + stat.firCount);
 
         // pliCount
-        ok(stat.pliCount >= 0 && stat.pliCount < 100,
+        ok(stat.pliCount >= 0 && stat.pliCount < 200,
           stat.type + ".pliCount is a sane number for a short test. value="
           + stat.pliCount);
       }
@@ -482,6 +497,30 @@ var pedanticChecks = report => {
         stat.type + ".selected is undefined, true when state is succeeded, "
         + "or false. value="
         + stat.selected);
+
+    } else if (stat.type == "local-candidate" || stat.type == "remote-candidate") {
+      info(`candidate is ${JSON.stringify(stat)}`);
+
+      // componentId
+      ok(stat.componentId, `${stat.type} has componentId. value=${stat.componentId}`);
+
+      // ipAddress
+      ok(stat.ipAddress, `${stat.type} has ipAddress. value=${stat.ipAddress}`);
+
+      // transport
+      ok(stat.transport, `${stat.type} has transport. value=${stat.transport}`);
+
+      if (stat.type == "local-candidate") {
+        // mozLocalTransport
+        ok(stat.mozLocalTransport, `${stat.type} has mozLocalTransport. value=${stat.mozLocalTransport}`);
+      }
+
+      // portNumber
+      ok(stat.portNumber >= 0, `${stat.type} has portNumber >= 0. value=${stat.portNumber}`);
+      ok(stat.portNumber <= 65535, `${stat.type} has portNumber <= 65535. value=${stat.portNumber}`);
+
+      // candidateType
+      ok(stat.candidateType, `${stat.type} has candidateType. value=${stat.candidateType}`);
 
     }
 

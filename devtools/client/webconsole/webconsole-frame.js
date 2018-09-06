@@ -228,7 +228,7 @@ WebConsoleFrame.prototype = {
     this.document = this.window.document;
     this.rootElement = this.document.documentElement;
 
-    this.outputNode = this.document.getElementById("output-container");
+    this.outputNode = this.document.getElementById("app-wrapper");
 
     const toolbox = gDevTools.getToolbox(this.owner.target);
 
