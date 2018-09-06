@@ -978,43 +978,11 @@ public:
   }
 
   /**
-   * Get slow tracking content blocked flag for this document.
-   */
-  bool GetHasSlowTrackingContentBlocked()
-  {
-    return mHasSlowTrackingContentBlocked;
-  }
-
-  /**
-   * Get all cookies blocked flag for this document.
-   */
-  bool GetHasAllCookiesBlocked()
-  {
-    return mHasAllCookiesBlocked;
-  }
-
-  /**
    * Get tracking cookies blocked flag for this document.
    */
   bool GetHasTrackingCookiesBlocked()
   {
     return mHasTrackingCookiesBlocked;
-  }
-
-  /**
-   * Get third-party cookies blocked flag for this document.
-   */
-  bool GetHasForeignCookiesBlocked()
-  {
-    return mHasForeignCookiesBlocked;
-  }
-
-  /**
-   * Get cookies blocked by site permission flag for this document.
-   */
-  bool GetHasCookiesBlockedByPermission()
-  {
-    return mHasCookiesBlockedByPermission;
   }
 
   /**
@@ -1026,43 +994,11 @@ public:
   }
 
   /**
-   * Set the slow tracking content blocked flag for this document.
-   */
-  void SetHasSlowTrackingContentBlocked(bool aHasSlowTrackingContentBlocked)
-  {
-    mHasSlowTrackingContentBlocked = aHasSlowTrackingContentBlocked;
-  }
-
-  /**
-   * Set the all cookies blocked flag for this document.
-   */
-  void SetHasAllCookiesBlocked(bool aHasAllCookiesBlocked)
-  {
-    mHasAllCookiesBlocked = aHasAllCookiesBlocked;
-  }
-
-  /**
    * Set the tracking cookies blocked flag for this document.
    */
   void SetHasTrackingCookiesBlocked(bool aHasTrackingCookiesBlocked)
   {
     mHasTrackingCookiesBlocked = aHasTrackingCookiesBlocked;
-  }
-
-  /**
-   * Set the third-party cookies blocked flag for this document.
-   */
-  void SetHasForeignCookiesBlocked(bool aHasForeignCookiesBlocked)
-  {
-    mHasForeignCookiesBlocked = aHasForeignCookiesBlocked;
-  }
-
-  /**
-   * Set the cookies blocked by site permission flag for this document.
-   */
-  void SetHasCookiesBlockedByPermission(bool aHasCookiesBlockedByPermission)
-  {
-    mHasCookiesBlockedByPermission = aHasCookiesBlockedByPermission;
   }
 
   /**
@@ -4067,20 +4003,8 @@ protected:
   // True if a document has blocked Tracking Content
   bool mHasTrackingContentBlocked : 1;
 
-  // True if a document has blocked Slow Tracking Content
-  bool mHasSlowTrackingContentBlocked : 1;
-
-  // True if a document has blocked All Cookies
-  bool mHasAllCookiesBlocked : 1;
-
   // True if a document has blocked Tracking Cookies
   bool mHasTrackingCookiesBlocked : 1;
-
-  // True if a document has blocked Foreign Cookies
-  bool mHasForeignCookiesBlocked : 1;
-
-  // True if a document has blocked Cookies By Site Permission
-  bool mHasCookiesBlockedByPermission : 1;
 
   // True if a document has loaded Tracking Content
   bool mHasTrackingContentLoaded : 1;

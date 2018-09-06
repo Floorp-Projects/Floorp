@@ -5291,16 +5291,8 @@ nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
   securityUI->GetState(&state);
   if (aState == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
     doc->SetHasTrackingContentBlocked(true);
-  } else if (aState == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT) {
-    doc->SetHasSlowTrackingContentBlocked(true);
-  } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION) {
-    doc->SetHasCookiesBlockedByPermission(true);
   } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
     doc->SetHasTrackingCookiesBlocked(true);
-  } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL) {
-    doc->SetHasAllCookiesBlocked(true);
-  } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN) {
-    doc->SetHasForeignCookiesBlocked(true);
   } else {
     // Ignore nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
   }
