@@ -91,8 +91,9 @@ class DataViewObject : public NativeObject
 
     SharedMem<void*> dataPointerEither() const {
         void *p = getPrivate();
-        if (isSharedMemory())
+        if (isSharedMemory()) {
             return SharedMem<void*>::shared(p);
+        }
         return SharedMem<void*>::unshared(p);
     }
 
