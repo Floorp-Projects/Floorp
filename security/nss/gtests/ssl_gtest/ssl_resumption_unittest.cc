@@ -171,21 +171,143 @@ TEST_P(TlsConnectGenericResumption, ConnectResumeClientNoneServerBoth) {
   SendReceive();
 }
 
-TEST_P(TlsConnectGenericPre13, ConnectResumeWithHigherVersion) {
+TEST_P(TlsConnectGenericPre13, ResumeWithHigherVersionTls13) {
+  uint16_t lower_version = version_;
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  Connect();
+  SendReceive();
+  CheckKeys();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  EnsureTlsSetup();
+  auto psk_ext = std::make_shared<TlsExtensionCapture>(
+      client_, ssl_tls13_pre_shared_key_xtn);
+  auto ticket_ext =
+      std::make_shared<TlsExtensionCapture>(client_, ssl_session_ticket_xtn);
+  client_->SetFilter(std::make_shared<ChainedPacketFilter>(
+      ChainedPacketFilterInit({psk_ext, ticket_ext})));
+  SetExpectedVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  client_->SetVersionRange(lower_version, SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(lower_version, SSL_LIBRARY_VERSION_TLS_1_3);
+  ExpectResumption(RESUME_NONE);
+  Connect();
+
+  // The client shouldn't have sent a PSK, though it will send a ticket.
+  EXPECT_FALSE(psk_ext->captured());
+  EXPECT_TRUE(ticket_ext->captured());
+}
+
+class CaptureSessionId : public TlsHandshakeFilter {
+ public:
+  CaptureSessionId(const std::shared_ptr<TlsAgent>& a)
+      : TlsHandshakeFilter(
+            a, {kTlsHandshakeClientHello, kTlsHandshakeServerHello}),
+        sid_() {}
+
+  const DataBuffer& sid() const { return sid_; }
+
+ protected:
+  PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                       const DataBuffer& input,
+                                       DataBuffer* output) override {
+    // The session_id is in the same place in both Hello messages:
+    size_t offset = 2 + 32;  // Version(2) + Random(32)
+    uint32_t len = 0;
+    EXPECT_TRUE(input.Read(offset, 1, &len));
+    offset++;
+    if (input.len() < offset + len) {
+      ADD_FAILURE() << "session_id overflows the Hello message";
+      return KEEP;
+    }
+    sid_.Assign(input.data() + offset, len);
+    return KEEP;
+  }
+
+ private:
+  DataBuffer sid_;
+};
+
+// Attempting to resume from TLS 1.2 when 1.3 is possible should not result in
+// resumption, though it will appear to be TLS 1.3 compatibility mode if the
+// server uses a session ID.
+TEST_P(TlsConnectGenericPre13, ResumeWithHigherVersionTls13SessionId) {
+  uint16_t lower_version = version_;
   ConfigureSessionCache(RESUME_SESSIONID, RESUME_SESSIONID);
-  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_1);
-  SetExpectedVersion(SSL_LIBRARY_VERSION_TLS_1_1);
+  auto original_sid = MakeTlsFilter<CaptureSessionId>(server_);
+  Connect();
+  CheckKeys();
+  EXPECT_EQ(32U, original_sid->sid().len());
+
+  // The client should now attempt to resume with the session ID from the last
+  // connection.  This looks like compatibility mode, we just want to ensure
+  // that we get TLS 1.3 rather than 1.2 (and no resumption).
+  Reset();
+  auto client_sid = MakeTlsFilter<CaptureSessionId>(client_);
+  auto server_sid = MakeTlsFilter<CaptureSessionId>(server_);
+  ConfigureSessionCache(RESUME_SESSIONID, RESUME_SESSIONID);
+  SetExpectedVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  client_->SetVersionRange(lower_version, SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(lower_version, SSL_LIBRARY_VERSION_TLS_1_3);
+  ExpectResumption(RESUME_NONE);
+
+  Connect();
+  SendReceive();
+
+  EXPECT_EQ(client_sid->sid(), original_sid->sid());
+  if (variant_ == ssl_variant_stream) {
+    EXPECT_EQ(client_sid->sid(), server_sid->sid());
+  } else {
+    // DTLS servers don't echo the session ID.
+    EXPECT_EQ(0U, server_sid->sid().len());
+  }
+}
+
+TEST_P(TlsConnectPre12, ResumeWithHigherVersionTls12) {
+  uint16_t lower_version = version_;
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
   Connect();
 
   Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
   EnsureTlsSetup();
-  SetExpectedVersion(SSL_LIBRARY_VERSION_TLS_1_2);
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_2);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_2);
+  SetExpectedVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  client_->SetVersionRange(lower_version, SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(lower_version, SSL_LIBRARY_VERSION_TLS_1_3);
   ExpectResumption(RESUME_NONE);
   Connect();
+}
+
+TEST_P(TlsConnectGenericPre13, ResumeWithLowerVersionFromTls13) {
+  uint16_t original_version = version_;
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  Connect();
+  SendReceive();
+  CheckKeys();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ConfigureVersion(original_version);
+  ExpectResumption(RESUME_NONE);
+  Connect();
+  SendReceive();
+}
+
+TEST_P(TlsConnectPre12, ResumeWithLowerVersionFromTls12) {
+  uint16_t original_version = version_;
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_2);
+  Connect();
+  SendReceive();
+  CheckKeys();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ConfigureVersion(original_version);
+  ExpectResumption(RESUME_NONE);
+  Connect();
+  SendReceive();
 }
 
 TEST_P(TlsConnectGeneric, ConnectResumeClientBothTicketServerTicketForget) {

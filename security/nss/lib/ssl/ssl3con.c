@@ -6386,15 +6386,18 @@ ssl_CheckServerSessionIdCorrectness(sslSocket *ss, SECItem *sidBytes)
 
     /* TLS 1.2: Session ID shouldn't match if we sent a fake. */
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
-        return !sentFakeSid || !sidMatch;
+        if (sentFakeSid) {
+            return !sidMatch;
+        }
+        return PR_TRUE;
     }
 
     /* TLS 1.3: We sent a session ID.  The server's should match. */
-    if (sentRealSid || sentFakeSid) {
+    if (!IS_DTLS(ss) && (sentRealSid || sentFakeSid)) {
         return sidMatch;
     }
 
-    /* TLS 1.3: The server shouldn't send a session ID. */
+    /* TLS 1.3 (no SID)/DTLS 1.3: The server shouldn't send a session ID. */
     return sidBytes->len == 0;
 }
 
