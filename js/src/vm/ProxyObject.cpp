@@ -36,8 +36,9 @@ GetProxyGCObjectKind(const Class* clasp, const BaseProxyHandler* handler, const 
     MOZ_ASSERT(nslots <= NativeObject::MAX_FIXED_SLOTS);
 
     gc::AllocKind kind = gc::GetGCObjectKind(nslots);
-    if (handler->finalizeInBackground(priv))
+    if (handler->finalizeInBackground(priv)) {
         kind = GetBackgroundAllocKind(kind);
+    }
 
     return kind;
 }
@@ -66,8 +67,9 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
     if (proto.isObject() && !options.singleton() && !clasp->isDOMClass()) {
         ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
         RootedObject protoObj(cx, proto.toObject());
-        if (!JSObject::setNewGroupUnknown(cx, realm, clasp, protoObj))
+        if (!JSObject::setNewGroupUnknown(cx, realm, clasp, protoObj)) {
             return nullptr;
+        }
     }
 
     // Ensure that the wrapper has the same lifetime assumptions as the
@@ -96,14 +98,16 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
     values->init(proxy->numReservedSlots());
 
     proxy->data.handler = handler;
-    if (IsCrossCompartmentWrapper(proxy))
+    if (IsCrossCompartmentWrapper(proxy)) {
         proxy->setCrossCompartmentPrivate(priv);
-    else
+    } else {
         proxy->setSameCompartmentPrivate(priv);
+    }
 
     /* Don't track types of properties of non-DOM and non-singleton proxies. */
-    if (newKind != SingletonObject && !clasp->isDOMClass())
+    if (newKind != SingletonObject && !clasp->isDOMClass()) {
         MarkObjectGroupUnknownProperties(cx, proxy->group());
+    }
 
     return proxy;
 }
@@ -168,12 +172,14 @@ ProxyObject::create(JSContext* cx, const Class* clasp, Handle<TaggedProto> proto
     // Try to look up the group and shape in the NewProxyCache.
     if (!realm->newProxyCache.lookup(clasp, proto, group.address(), shape.address())) {
         group = ObjectGroup::defaultNewGroup(cx, clasp, proto, nullptr);
-        if (!group)
+        if (!group) {
             return cx->alreadyReportedOOM();
+        }
 
         shape = EmptyShape::getInitialShape(cx, clasp, proto, /* nfixed = */ 0);
-        if (!shape)
+        if (!shape) {
             return cx->alreadyReportedOOM();
+        }
 
         MOZ_ASSERT(group->realm() == realm);
         realm->newProxyCache.add(group, shape);
@@ -183,8 +189,9 @@ ProxyObject::create(JSContext* cx, const Class* clasp, Handle<TaggedProto> proto
     debugCheckNewObject(group, shape, allocKind, heap);
 
     JSObject* obj = js::Allocate<JSObject>(cx, allocKind, /* nDynamicSlots = */ 0, heap, clasp);
-    if (!obj)
+    if (!obj) {
         return cx->alreadyReportedOOM();
+    }
 
     ProxyObject* pobj = static_cast<ProxyObject*>(obj);
     pobj->initGroup(group);
@@ -197,8 +204,9 @@ ProxyObject::create(JSContext* cx, const Class* clasp, Handle<TaggedProto> proto
 
     if (newKind == SingletonObject) {
         Rooted<ProxyObject*> pobjRoot(cx, pobj);
-        if (!JSObject::setSingleton(cx, pobjRoot))
+        if (!JSObject::setSingleton(cx, pobjRoot)) {
             return cx->alreadyReportedOOM();
+        }
         pobj = pobjRoot;
     }
 
