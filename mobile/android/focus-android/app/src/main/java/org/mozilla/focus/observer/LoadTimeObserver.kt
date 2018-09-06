@@ -38,7 +38,7 @@ object LoadTimeObserver {
                         // Even internal pages take longer than 40 ms to load, let's not send any loads faster than this
                         if (elapsedLoad > MIN_LOAD_TIME && !UrlUtils.isLocalizedContent(urlLoading)) {
                             Log.i(LOG_TAG, "Sent load to histogram")
-                            TelemetryWrapper.addLoadToHistogram(elapsedLoad)
+                            TelemetryWrapper.addLoadToHistogram(session.url.value, elapsedLoad)
                         }
                     }
                 }

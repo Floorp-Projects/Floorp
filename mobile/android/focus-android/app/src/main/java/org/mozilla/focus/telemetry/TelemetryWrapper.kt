@@ -24,6 +24,7 @@ import org.mozilla.focus.search.CustomSearchEngineStore
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.activeExperimentNames
 import org.mozilla.telemetry.Telemetry
 import org.mozilla.telemetry.TelemetryHolder
@@ -38,6 +39,7 @@ import org.mozilla.telemetry.ping.TelemetryMobileMetricsPingBuilder
 import org.mozilla.telemetry.schedule.jobscheduler.JobSchedulerTelemetryScheduler
 import org.mozilla.telemetry.serialize.JSONPingSerializer
 import org.mozilla.telemetry.storage.FileTelemetryStorage
+import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -60,6 +62,8 @@ object TelemetryWrapper {
     private const val HISTOGRAM_SIZE = 200
     private const val BUCKET_SIZE_MS = 100
     private const val HISTOGRAM_MIN_INDEX = 0
+
+    private const val MAX_URIS = 100
 
     private val isEnabledByDefault: Boolean
         get() = !AppConstants.isKlarBuild
@@ -181,6 +185,8 @@ object TelemetryWrapper {
         val SUCCESS = "success"
         val ERROR_CODE = "error_code"
         val SEARCH_SUGGESTION = "search_suggestion"
+        val TOTAL_URI_COUNT = "total_uri_count"
+        val UNIQUE_DOMAINS_COUNT = "unique_domains_count"
     }
 
     enum class BrowserContextMenuValue {
@@ -295,9 +301,13 @@ object TelemetryWrapper {
     }
 
     private var histogram = IntArray(HISTOGRAM_SIZE)
+    private var domainMap = HashSet<String>()
+    private var numUri = 0
 
     @JvmStatic
-    fun addLoadToHistogram(newLoadTime: Long) {
+    fun addLoadToHistogram(url: String, newLoadTime: Long) {
+        domainMap.add(UrlUtils.stripCommonSubdomains(URI(url).host))
+        numUri++
         var histogramLoadIndex = (newLoadTime / BUCKET_SIZE_MS).toInt()
 
         if (histogramLoadIndex > (HISTOGRAM_SIZE - 2)) {
@@ -334,6 +344,18 @@ object TelemetryWrapper {
 
         // Clear histogram array after queueing it
         histogram = IntArray(HISTOGRAM_SIZE)
+
+        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.BROWSER).extra(
+            Extra.UNIQUE_DOMAINS_COUNT,
+            if (domainMap.size <= MAX_URIS) domainMap.size.toString() else MAX_URIS.toString()
+        ).queue()
+        domainMap.clear()
+
+        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.BROWSER).extra(
+            Extra.TOTAL_URI_COUNT,
+            if (numUri <= MAX_URIS) numUri.toString() else MAX_URIS.toString()
+        ).queue()
+        numUri = 0
 
         TelemetryEvent.create(Category.ACTION, Method.BACKGROUND, Object.APP).queue()
     }
