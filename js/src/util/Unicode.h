@@ -152,8 +152,9 @@ IsIdentifierStart(char16_t ch)
      * We use a lookup table for small and thus common characters for speed.
      */
 
-    if (ch < 128)
+    if (ch < 128) {
         return js_isidstart[ch];
+    }
 
     return CharInfo(ch).isUnicodeIDStart();
 }
@@ -164,8 +165,9 @@ IsIdentifierStartNonBMP(uint32_t codePoint);
 inline bool
 IsIdentifierStart(uint32_t codePoint)
 {
-    if (MOZ_UNLIKELY(codePoint > UTF16Max))
+    if (MOZ_UNLIKELY(codePoint > UTF16Max)) {
         return IsIdentifierStartNonBMP(codePoint);
+    }
     return IsIdentifierStart(char16_t(codePoint));
 }
 
@@ -183,8 +185,9 @@ IsIdentifierPart(char16_t ch)
      * We use a lookup table for small and thus common characters for speed.
      */
 
-    if (ch < 128)
+    if (ch < 128) {
         return js_isident[ch];
+    }
 
     return CharInfo(ch).isUnicodeIDContinue();
 }
@@ -195,8 +198,9 @@ IsIdentifierPartNonBMP(uint32_t codePoint);
 inline bool
 IsIdentifierPart(uint32_t codePoint)
 {
-    if (MOZ_UNLIKELY(codePoint > UTF16Max))
+    if (MOZ_UNLIKELY(codePoint > UTF16Max)) {
         return IsIdentifierPartNonBMP(codePoint);
+    }
     return IsIdentifierPart(char16_t(codePoint));
 }
 
@@ -212,8 +216,9 @@ IsUnicodeIDStartNonBMP(uint32_t codePoint);
 inline bool
 IsUnicodeIDStart(uint32_t codePoint)
 {
-    if (MOZ_UNLIKELY(codePoint > UTF16Max))
+    if (MOZ_UNLIKELY(codePoint > UTF16Max)) {
         return IsIdentifierStartNonBMP(codePoint);
+    }
     return IsUnicodeIDStart(char16_t(codePoint));
 }
 
@@ -232,11 +237,13 @@ IsSpace(char16_t ch)
      * this range, so we inline this case, too.
      */
 
-    if (ch < 128)
+    if (ch < 128) {
         return js_isspace[ch];
+    }
 
-    if (ch == NO_BREAK_SPACE)
+    if (ch == NO_BREAK_SPACE) {
         return true;
+    }
 
     return CharInfo(ch).isSpace();
 }
@@ -244,12 +251,14 @@ IsSpace(char16_t ch)
 inline bool
 IsSpaceOrBOM2(char16_t ch)
 {
-    if (ch < 128)
+    if (ch < 128) {
         return js_isspace[ch];
+    }
 
     /* We accept BOM2 (0xFFFE) for compatibility reasons in the parser. */
-    if (ch == NO_BREAK_SPACE || ch == BYTE_ORDER_MARK2)
+    if (ch == NO_BREAK_SPACE || ch == BYTE_ORDER_MARK2) {
         return true;
+    }
 
     return CharInfo(ch).isSpace();
 }
@@ -263,8 +272,9 @@ inline char16_t
 ToUpperCase(char16_t ch)
 {
     if (ch < 128) {
-        if (ch >= 'a' && ch <= 'z')
+        if (ch >= 'a' && ch <= 'z') {
             return ch - ('a' - 'A');
+        }
         return ch;
     }
 
@@ -282,8 +292,9 @@ inline char16_t
 ToLowerCase(char16_t ch)
 {
     if (ch < 128) {
-        if (ch >= 'A' && ch <= 'Z')
+        if (ch >= 'A' && ch <= 'Z') {
             return ch + ('a' - 'A');
+        }
         return ch;
     }
 
@@ -303,8 +314,9 @@ ToLowerCase(char16_t ch)
 inline bool
 ChangesWhenUpperCased(char16_t ch)
 {
-    if (ch < 128)
+    if (ch < 128) {
         return ch >= 'a' && ch <= 'z';
+    }
     return CharInfo(ch).upperCase != 0;
 }
 
@@ -319,8 +331,9 @@ ChangesWhenUpperCased(char16_t ch)
 inline bool
 ChangesWhenUpperCased(JS::Latin1Char ch)
 {
-    if (MOZ_LIKELY(ch < 128))
+    if (MOZ_LIKELY(ch < 128)) {
         return ch >= 'a' && ch <= 'z';
+    }
 
     // U+00B5 and U+00E0 to U+00FF, except U+00F7, have an uppercase form.
     bool hasUpper = ch == MICRO_SIGN ||
@@ -333,8 +346,9 @@ ChangesWhenUpperCased(JS::Latin1Char ch)
 inline bool
 ChangesWhenLowerCased(char16_t ch)
 {
-    if (ch < 128)
+    if (ch < 128) {
         return ch >= 'A' && ch <= 'Z';
+    }
     return CharInfo(ch).lowerCase != 0;
 }
 
@@ -342,8 +356,9 @@ ChangesWhenLowerCased(char16_t ch)
 inline bool
 ChangesWhenLowerCased(JS::Latin1Char ch)
 {
-    if (MOZ_LIKELY(ch < 128))
+    if (MOZ_LIKELY(ch < 128)) {
         return ch >= 'A' && ch <= 'Z';
+    }
 
     // U+00C0 to U+00DE, except U+00D7, have a lowercase form.
     bool hasLower = ((ch & ~0x1F) == LATIN_CAPITAL_LETTER_A_WITH_GRAVE) &&
