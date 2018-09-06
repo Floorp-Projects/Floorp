@@ -19,14 +19,16 @@ JS_PUBLIC_API(BackEdge::Ptr)
 BackEdge::clone() const
 {
     auto clone = js::MakeUnique<BackEdge>();
-    if (!clone)
+    if (!clone) {
         return nullptr;
+    }
 
     clone->predecessor_ = predecessor();
     if (name()) {
         clone->name_ = js::DuplicateString(name().get());
-        if (!clone->name_)
+        if (!clone->name_) {
             return nullptr;
+        }
     }
     return clone;
 }
@@ -39,8 +41,9 @@ dumpNode(const JS::ubi::Node& node)
     fprintf(stderr, "    %p ", (void*) node.identifier());
     js_fputs(node.typeName(), stderr);
     if (node.coarseType() == JS::ubi::CoarseType::Object) {
-        if (const char* clsName = node.jsObjectClassName())
+        if (const char* clsName = node.jsObjectClassName()) {
             fprintf(stderr, " [object %s]", clsName);
+        }
     }
     fputc('\n', stderr);
 }
@@ -70,8 +73,9 @@ dumpPaths(JSContext* cx, Node node, uint32_t maxNumPaths /* = 10 */)
             fprintf(stderr, "        '");
 
             const char16_t* name = backEdge->name().get();
-            if (!name)
+            if (!name) {
                 name = u"<no edge name>";
+            }
             js_fputs(name, stderr);
             fprintf(stderr, "'\n");
 
@@ -85,8 +89,9 @@ dumpPaths(JSContext* cx, Node node, uint32_t maxNumPaths /* = 10 */)
     });
     MOZ_ASSERT(ok);
 
-    if (i == 0)
+    if (i == 0) {
         fprintf(stderr, "No retaining paths found.\n");
+    }
 }
 #endif
 
