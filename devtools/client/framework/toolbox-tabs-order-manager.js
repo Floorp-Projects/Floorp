@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
+const { gDevTools } = require("devtools/client/framework/devtools");
 const Services = require("Services");
 const Telemetry = require("devtools/client/shared/telemetry");
 const TABS_REORDERED_SCALAR = "devtools.toolbox.tabs_reordered";
@@ -26,16 +28,20 @@ class ToolboxTabsOrderManager {
     this.telemetry = new Telemetry();
   }
 
-  destroy() {
+  async destroy() {
     Services.prefs.removeObserver(PREFERENCE_NAME, this.onOrderUpdated);
 
-    // Save the reordering preference, because some tools might be removed.
-    const ids =
-      this.currentPanelDefinitions.map(definition => definition.extensionId || definition.id);
-    const pref = ids.join(",");
-    Services.prefs.setCharPref(PREFERENCE_NAME, pref);
-
+    // Call mouseUp() to clear the state to prepare for in case a dragging was in progress
+    // when the destroy() was called.
     this.onMouseUp();
+
+    // Remove panel id which is not in panel definitions and addons list.
+    let prefIds = Services.prefs.getCharPref(PREFERENCE_NAME, "").split(",");
+    const extensions = await AddonManager.getAllAddons();
+    const definitions = gDevTools.getToolDefinitionArray();
+    prefIds = prefIds.filter(id => definitions.find(d => id === (d.extensionId || d.id)) ||
+                                   extensions.find(e => id === e.id));
+    Services.prefs.setCharPref(PREFERENCE_NAME, prefIds.join(","));
   }
 
   insertBefore(target) {
