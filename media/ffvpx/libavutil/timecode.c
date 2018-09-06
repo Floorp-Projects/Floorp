@@ -155,7 +155,7 @@ static int check_fps(int fps)
 static int check_timecode(void *log_ctx, AVTimecode *tc)
 {
     if ((int)tc->fps <= 0) {
-        av_log(log_ctx, AV_LOG_ERROR, "Timecode frame rate must be specified\n");
+        av_log(log_ctx, AV_LOG_ERROR, "Valid timecode frame rate must be specified. Minimum value is 1\n");
         return AVERROR(EINVAL);
     }
     if ((tc->flags & AV_TIMECODE_FLAG_DROPFRAME) && tc->fps != 30 && tc->fps != 60) {
@@ -214,7 +214,7 @@ int av_timecode_init_from_string(AVTimecode *tc, AVRational rate, const char *st
     tc->start = (hh*3600 + mm*60 + ss) * tc->fps + ff;
     if (tc->flags & AV_TIMECODE_FLAG_DROPFRAME) { /* adjust frame number */
         int tmins = 60*hh + mm;
-        tc->start -= 2 * (tmins - tmins/10);
+        tc->start -= (tc->fps == 30 ? 2 : 4) * (tmins - tmins/10);
     }
     return 0;
 }
