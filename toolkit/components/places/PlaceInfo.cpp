@@ -107,7 +107,7 @@ PlaceInfo::GetVisits(JSContext* aContext,
   JS::Rooted<JSObject*> global(aContext, JS::CurrentGlobalOrNull(aContext));
   NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIXPConnect> xpc = mozilla::services::GetXPConnect();
+  nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
 
   for (VisitsArray::size_type idx = 0; idx < mVisits.Length(); idx++) {
     JS::RootedObject jsobj(aContext);
