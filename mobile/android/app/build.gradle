@@ -532,11 +532,6 @@ if (project.hasProperty('enable_code_coverage')) {
 
 // Set up code coverage for tests on emulators.
 if (mozconfig.substs.MOZ_JAVA_CODE_COVERAGE) {
-    apply plugin: "jacoco"
-    jacoco {
-        toolVersion = "${project.jacoco_version}"
-    }
-
     android {
         jacoco {
             version = "$jacoco_version"
