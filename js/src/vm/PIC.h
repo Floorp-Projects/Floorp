@@ -79,15 +79,17 @@ class PICChain
         }
 
         CatStub* cur = stubs_;
-        while (cur->next())
+        while (cur->next()) {
             cur = cur->next();
+        }
         cur->append(stub);
     }
 
     unsigned numStubs() const {
         unsigned count = 0;
-        for (CatStub* stub = stubs_; stub; stub = stub->next())
+        for (CatStub* stub = stubs_; stub; stub = stub->next()) {
             count++;
+        }
         return count;
     }
 
@@ -247,8 +249,9 @@ struct ForOfPIC
     }
     static inline Chain* getOrCreate(JSContext* cx) {
         NativeObject* obj = cx->global()->getForOfPICObject();
-        if (obj)
+        if (obj) {
             return fromJSObject(obj);
+        }
         return create(cx);
     }
     static Chain* create(JSContext* cx);
