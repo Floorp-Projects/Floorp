@@ -28,8 +28,9 @@ js::CallWarningReporter(JSContext* cx, JSErrorReport* reportp)
     MOZ_ASSERT(reportp);
     MOZ_ASSERT(JSREPORT_IS_WARNING(reportp->flags));
 
-    if (JS::WarningReporter warningReporter = cx->runtime()->warningReporter)
+    if (JS::WarningReporter warningReporter = cx->runtime()->warningReporter) {
         warningReporter(cx, reportp);
+    }
 }
 
 void
@@ -70,8 +71,9 @@ js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSEr
     // it later.
     CompileError tempErr;
     CompileError* err = &tempErr;
-    if (cx->helperThread() && !cx->addPendingCompileError(&err))
+    if (cx->helperThread() && !cx->addPendingCompileError(&err)) {
         return false;
+    }
 
     err->notes = std::move(notes);
     err->flags = flags;
@@ -82,8 +84,9 @@ js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSEr
     err->column = metadata.columnNumber;
     err->isMuted = metadata.isMuted;
 
-    if (UniqueTwoByteChars lineOfContext = std::move(metadata.lineOfContext))
+    if (UniqueTwoByteChars lineOfContext = std::move(metadata.lineOfContext)) {
         err->initOwnedLinebuf(lineOfContext.release(), metadata.lineLength, metadata.tokenOffset);
+    }
 
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber,
                                 nullptr, ArgumentsAreLatin1, err, args))
@@ -91,8 +94,9 @@ js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSEr
         return false;
     }
 
-    if (!cx->helperThread())
+    if (!cx->helperThread()) {
         err->throwError(cx);
+    }
 
     return true;
 }
@@ -106,8 +110,9 @@ js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErro
     // it later.
     CompileError tempErr;
     CompileError* err = &tempErr;
-    if (cx->helperThread() && !cx->addPendingCompileError(&err))
+    if (cx->helperThread() && !cx->addPendingCompileError(&err)) {
         return;
+    }
 
     err->notes = std::move(notes);
     err->flags = flags;
@@ -118,8 +123,9 @@ js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErro
     err->column = metadata.columnNumber;
     err->isMuted = metadata.isMuted;
 
-    if (UniqueTwoByteChars lineOfContext = std::move(metadata.lineOfContext))
+    if (UniqueTwoByteChars lineOfContext = std::move(metadata.lineOfContext)) {
         err->initOwnedLinebuf(lineOfContext.release(), metadata.lineLength, metadata.tokenOffset);
+    }
 
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber,
                                 nullptr, ArgumentsAreLatin1, err, args))
@@ -127,8 +133,9 @@ js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErro
         return;
     }
 
-    if (!cx->helperThread())
+    if (!cx->helperThread()) {
         err->throwError(cx);
+    }
 }
 
 void
