@@ -396,6 +396,7 @@ tls13_ClientSendPreSharedKeyXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     xtnData->lastXtnOffset = buf->len - 4;
 
     PORT_Assert(ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3);
+    PORT_Assert(ss->sec.ci.sid->version >= SSL_LIBRARY_VERSION_TLS_1_3);
 
     /* Send a single ticket identity. */
     session_ticket = &ss->sec.ci.sid->u.ssl3.locked.sessionTicket;

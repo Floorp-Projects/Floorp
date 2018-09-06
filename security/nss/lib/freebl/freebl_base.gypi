@@ -114,8 +114,7 @@
             'intel-gcm-x64-masm.asm',
           ],
         }],
-	      [ 'cc_use_gnu_ld!=1 and target_arch!="x64"', {
-          # not x64
+        [ 'cc_use_gnu_ld!=1 and target_arch=="ia32"', {
           'sources': [
             'mpi/mpi_x86_asm.c',
             'intel-aes-x86-masm.asm',
