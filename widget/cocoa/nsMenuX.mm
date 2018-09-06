@@ -419,19 +419,15 @@ void nsMenuX::MenuConstruct()
 
   // bug 365405: Manually wrap the menupopup node to make sure it's bounded
   if (!mXBLAttached) {
-    nsresult rv;
-    nsCOMPtr<nsIXPConnect> xpconnect =
-      do_GetService(nsIXPConnect::GetCID(), &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsIDocument* ownerDoc = menuPopup->OwnerDoc();
-      dom::AutoJSAPI jsapi;
-      if (ownerDoc && jsapi.Init(ownerDoc->GetInnerWindow())) {
-        JSContext* cx = jsapi.cx();
-        JS::RootedObject ignoredObj(cx);
-        xpconnect->WrapNative(cx, JS::CurrentGlobalOrNull(cx), menuPopup,
-                              NS_GET_IID(nsISupports), ignoredObj.address());
-        mXBLAttached = true;
-      }
+    nsCOMPtr<nsIXPConnect> xpconnect = nsIXPConnect::XPConnect();
+    nsIDocument* ownerDoc = menuPopup->OwnerDoc();
+    dom::AutoJSAPI jsapi;
+    if (ownerDoc && jsapi.Init(ownerDoc->GetInnerWindow())) {
+      JSContext* cx = jsapi.cx();
+      JS::RootedObject ignoredObj(cx);
+      xpconnect->WrapNative(cx, JS::CurrentGlobalOrNull(cx), menuPopup,
+                            NS_GET_IID(nsISupports), ignoredObj.address());
+      mXBLAttached = true;
     }
   }
 

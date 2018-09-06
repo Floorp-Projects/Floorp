@@ -69,7 +69,7 @@ JSValIsInterfaceOfType(JSContext* cx, HandleValue v, REFNSIID iid)
     if (v.isPrimitive())
         return false;
 
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
+    nsIXPConnect* xpc = nsIXPConnect::XPConnect();
     RootedObject obj(cx, &v.toObject());
     return NS_SUCCEEDED(xpc->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wn))) && wn &&
         NS_SUCCEEDED(wn->Native()->QueryInterface(iid, getter_AddRefs(iface))) && iface;
@@ -258,7 +258,7 @@ nsXPCComponents_Interfaces::Resolve(nsIXPConnectWrappedNative* wrapper,
         nsCOMPtr<nsIJSIID> nsid = nsJSIID::NewID(info);
 
         if (nsid) {
-            nsXPConnect* xpc = nsXPConnect::XPConnect();
+            nsIXPConnect* xpc = nsIXPConnect::XPConnect();
             RootedObject idobj(cx);
             if (NS_SUCCEEDED(xpc->WrapNative(cx, obj,
                                              static_cast<nsIJSIID*>(nsid),
@@ -446,7 +446,7 @@ nsXPCComponents_InterfacesByID::Resolve(nsIXPConnectWrappedNative* wrapper,
         if (!nsid)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        nsXPConnect* xpc = nsXPConnect::XPConnect();
+        nsIXPConnect* xpc = nsIXPConnect::XPConnect();
         RootedObject idobj(cx);
         if (NS_SUCCEEDED(xpc->WrapNative(cx, obj,
                                          static_cast<nsIJSIID*>(nsid),
@@ -631,7 +631,7 @@ nsXPCComponents_Classes::Resolve(nsIXPConnectWrappedNative* wrapper,
         name[0] != '{') { // we only allow contractids here
         nsCOMPtr<nsIJSCID> nsid = nsJSCID::NewID(name.get());
         if (nsid) {
-            nsXPConnect* xpc = nsXPConnect::XPConnect();
+            nsIXPConnect* xpc = nsIXPConnect::XPConnect();
             RootedObject idobj(cx);
             if (NS_SUCCEEDED(xpc->WrapNative(cx, obj,
                                              static_cast<nsIJSCID*>(nsid),
@@ -841,7 +841,7 @@ nsXPCComponents_ClassesByID::Resolve(nsIXPConnectWrappedNative* wrapper,
     {
         nsCOMPtr<nsIJSCID> nsid = nsJSCID::NewID(name.get());
         if (nsid) {
-            nsXPConnect* xpc = nsXPConnect::XPConnect();
+            nsIXPConnect* xpc = nsIXPConnect::XPConnect();
             RootedObject idobj(cx);
             if (NS_SUCCEEDED(xpc->WrapNative(cx, obj,
                                              static_cast<nsIJSCID*>(nsid),
@@ -1320,7 +1320,7 @@ nsXPCComponents_Exception::Construct(nsIXPConnectWrappedNative* wrapper, JSConte
 struct MOZ_STACK_CLASS ExceptionArgParser
 {
     ExceptionArgParser(JSContext* context,
-                       nsXPConnect* xpconnect)
+                       nsIXPConnect* xpconnect)
         : eMsg("exception")
         , eResult(NS_ERROR_FAILURE)
         , cx(context)
@@ -1464,7 +1464,7 @@ struct MOZ_STACK_CLASS ExceptionArgParser
 
     // Various bits and pieces that are helpful to have around.
     JSContext* cx;
-    nsXPConnect* xpc;
+    nsIXPConnect* xpc;
 };
 
 // static
@@ -1473,7 +1473,7 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
                                            JSContext* cx, HandleObject obj,
                                            const CallArgs& args, bool* _retval)
 {
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
+    nsIXPConnect* xpc = nsIXPConnect::XPConnect();
 
     MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsCallerChrome());
 
@@ -1682,7 +1682,7 @@ nsresult
 nsXPCConstructor::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,JSContext* cx,
                                   HandleObject obj, const CallArgs& args, bool* _retval)
 {
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
+    nsIXPConnect* xpc = nsIXPConnect::XPConnect();
 
     // security check not required because we are going to call through the
     // code which is reflected into JS which will do that for us later.
@@ -1859,7 +1859,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
 
     // get the various other object pointers we need
 
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
+    nsIXPConnect* xpc = nsIXPConnect::XPConnect();
     XPCWrappedNativeScope* scope = ObjectScope(obj);
     nsCOMPtr<nsIXPCComponents> comp;
 

@@ -1341,7 +1341,7 @@ Connection::Close()
   if (isAsyncExecutionThreadAvailable()) {
 #ifdef DEBUG
     if (NS_IsMainThread()) {
-      nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
+      nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
       Unused << xpc->DebugDumpJSStack(false, false, false);
     }
 #endif

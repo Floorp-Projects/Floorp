@@ -11,7 +11,6 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Unused.h"
 
-#include "xpcprivate.h"
 #include "XPCWrapper.h"
 #include "jsfriendapi.h"
 #include "js/ProfilingStack.h"
@@ -59,7 +58,6 @@ nsIPrincipal* nsXPConnect::gSystemPrincipal = nullptr;
 const char XPC_EXCEPTION_CONTRACTID[]     = "@mozilla.org/js/xpc/Exception;1";
 const char XPC_CONSOLE_CONTRACTID[]       = "@mozilla.org/consoleservice;1";
 const char XPC_SCRIPT_ERROR_CONTRACTID[]  = "@mozilla.org/scripterror;1";
-const char XPC_XPCONNECT_CONTRACTID[]     = "@mozilla.org/js/xpc/XPConnect;1";
 
 /***************************************************************************/
 
@@ -152,12 +150,6 @@ nsXPConnect::InitStatics()
 
     // Initialize our singleton scopes.
     gSelf->mRuntime->InitSingletonScopes();
-}
-
-already_AddRefed<nsXPConnect>
-nsXPConnect::GetSingleton()
-{
-    return do_AddRef(nsXPConnect::XPConnect());
 }
 
 // static
@@ -1096,6 +1088,32 @@ NS_IMETHODIMP
 nsXPConnect::ReadFunction(nsIObjectInputStream* stream, JSContext* cx, JSObject** functionObjp)
 {
     return ReadScriptOrFunction(stream, cx, nullptr, functionObjp);
+}
+
+NS_IMETHODIMP
+nsXPConnect::GetIsShuttingDown(bool* aIsShuttingDown)
+{
+    if (!aIsShuttingDown) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    *aIsShuttingDown = mShuttingDown;
+
+    return NS_OK;
+}
+
+// static
+nsIXPConnect*
+nsIXPConnect::XPConnect()
+{
+    // Do a release-mode assert that we're not doing anything significant in
+    // XPConnect off the main thread. If you're an extension developer hitting
+    // this, you need to change your code. See bug 716167.
+    if (!MOZ_LIKELY(NS_IsMainThread())) {
+        MOZ_CRASH();
+    }
+
+    return nsXPConnect::gSelf;
 }
 
 /* These are here to be callable from a debugger */
