@@ -78,8 +78,9 @@ class TypedArrayObject : public NativeObject
 
     static bool sameBuffer(Handle<TypedArrayObject*> a, Handle<TypedArrayObject*> b) {
         // Inline buffers.
-        if (!a->hasBuffer() || !b->hasBuffer())
+        if (!a->hasBuffer() || !b->hasBuffer()) {
             return a.get() == b.get();
+        }
 
         // Shared buffers.
         if (a->isSharedMemory() && b->isSharedMemory()) {
@@ -193,23 +194,27 @@ class TypedArrayObject : public NativeObject
     ArrayBufferObject* bufferUnshared() const {
         MOZ_ASSERT(!isSharedMemory());
         JSObject* obj = bufferObject();
-        if (!obj)
+        if (!obj) {
             return nullptr;
+        }
         return &obj->as<ArrayBufferObject>();
     }
     SharedArrayBufferObject* bufferShared() const {
         MOZ_ASSERT(isSharedMemory());
         JSObject* obj = bufferObject();
-        if (!obj)
+        if (!obj) {
             return nullptr;
+        }
         return &obj->as<SharedArrayBufferObject>();
     }
     ArrayBufferObjectMaybeShared* bufferEither() const {
         JSObject* obj = bufferObject();
-        if (!obj)
+        if (!obj) {
             return nullptr;
-        if (isSharedMemory())
+        }
+        if (isSharedMemory()) {
             return &obj->as<SharedArrayBufferObject>();
+        }
         return &obj->as<ArrayBufferObject>();
     }
 
@@ -217,8 +222,9 @@ class TypedArrayObject : public NativeObject
         return SharedMem<void*>::shared(viewDataEither_());
     }
     SharedMem<void*> viewDataEither() const {
-        if (isSharedMemory())
+        if (isSharedMemory()) {
             return SharedMem<void*>::shared(viewDataEither_());
+        }
         return SharedMem<void*>::unshared(viewDataEither_());
     }
     void initViewData(SharedMem<uint8_t*> viewData) {
@@ -238,14 +244,16 @@ class TypedArrayObject : public NativeObject
 
     bool hasDetachedBuffer() const {
         // Shared buffers can't be detached.
-        if (isSharedMemory())
+        if (isSharedMemory()) {
             return false;
+        }
 
         // A typed array with a null buffer has never had its buffer exposed to
         // become detached.
         ArrayBufferObject* buffer = bufferUnshared();
-        if (!buffer)
+        if (!buffer) {
             return false;
+        }
 
         return buffer->isDetached();
     }
@@ -355,8 +363,9 @@ IsTypedArrayIndex(jsid id, uint64_t* indexp)
         return true;
     }
 
-    if (MOZ_UNLIKELY(!JSID_IS_STRING(id)))
+    if (MOZ_UNLIKELY(!JSID_IS_STRING(id))) {
         return false;
+    }
 
     JS::AutoCheckCannotGC nogc;
     JSAtom* atom = JSID_TO_ATOM(id);
@@ -364,14 +373,16 @@ IsTypedArrayIndex(jsid id, uint64_t* indexp)
 
     if (atom->hasLatin1Chars()) {
         const Latin1Char* s = atom->latin1Chars(nogc);
-        if (!mozilla::IsAsciiDigit(*s) && *s != '-')
+        if (!mozilla::IsAsciiDigit(*s) && *s != '-') {
             return false;
+        }
         return StringIsTypedArrayIndex(s, length, indexp);
     }
 
     const char16_t* s = atom->twoByteChars(nogc);
-    if (!mozilla::IsAsciiDigit(*s) && *s != '-')
+    if (!mozilla::IsAsciiDigit(*s) && *s != '-') {
         return false;
+    }
     return StringIsTypedArrayIndex(s, length, indexp);
 }
 

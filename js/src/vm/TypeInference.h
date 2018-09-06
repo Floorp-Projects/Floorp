@@ -606,22 +606,25 @@ class TypeConstraint
 
     void checkMagic() const {
 #ifdef JS_CRASH_DIAGNOSTICS
-        if (MOZ_UNLIKELY(magic_ != TypeConstraintMagic))
+        if (MOZ_UNLIKELY(magic_ != TypeConstraintMagic)) {
             ReportMagicWordFailure(magic_, TypeConstraintMagic);
+        }
 #endif
     }
 
     TypeConstraint* next() const {
         checkMagic();
-        if (next_)
+        if (next_) {
             next_->checkMagic();
+        }
         return next_;
     }
     void setNext(TypeConstraint* next) {
         MOZ_ASSERT(!next_);
         checkMagic();
-        if (next)
+        if (next) {
             next->checkMagic();
+        }
         next_ = next;
     }
 
@@ -756,8 +759,9 @@ class ConstraintTypeSet : public TypeSet
 
     void checkMagic() const {
 #ifdef JS_CRASH_DIAGNOSTICS
-        if (MOZ_UNLIKELY(magic_ != ConstraintTypeSetMagic))
+        if (MOZ_UNLIKELY(magic_ != ConstraintTypeSetMagic)) {
             ReportMagicWordFailure(magic_, ConstraintTypeSetMagic, uintptr_t(flags), uintptr_t(objectSet));
+        }
 #endif
     }
 
@@ -765,15 +769,17 @@ class ConstraintTypeSet : public TypeSet
     // ObjectGroup or TypeScript.
     TypeConstraint* constraintList(const AutoSweepBase& sweep) const {
         checkMagic();
-        if (constraintList_)
+        if (constraintList_) {
             constraintList_->checkMagic();
+        }
         return constraintList_;
     }
     void setConstraintList(TypeConstraint* constraint) {
         MOZ_ASSERT(!constraintList_);
         checkMagic();
-        if (constraint)
+        if (constraint) {
             constraint->checkMagic();
+        }
         constraintList_ = constraint;
     }
 
@@ -866,8 +872,9 @@ class TemporaryTypeSet : public TypeSet
      */
     bool objectOrSentinel() {
         TypeFlags flags = TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL | TYPE_FLAG_ANYOBJECT;
-        if (baseFlags() & (~flags & TYPE_FLAG_BASE_MASK))
+        if (baseFlags() & (~flags & TYPE_FLAG_BASE_MASK)) {
             return false;
+        }
 
         return hasAnyFlag(TYPE_FLAG_ANYOBJECT) || baseObjectCount() > 0;
     }
@@ -1250,8 +1257,9 @@ class TypeScript
         return inlinedCompilations_;
     }
     MOZ_MUST_USE bool addInlinedCompilation(RecompileInfo info) {
-        if (!inlinedCompilations_.empty() && inlinedCompilations_.back() == info)
+        if (!inlinedCompilations_.empty() && inlinedCompilations_.back() == info) {
             return true;
+        }
         return inlinedCompilations_.append(info);
     }
 
@@ -1390,8 +1398,9 @@ class HeapTypeSetKey
     jsid id() const { return id_; }
 
     HeapTypeSet* maybeTypes() const {
-        if (maybeTypes_)
+        if (maybeTypes_) {
             maybeTypes_->checkMagic();
+        }
         return maybeTypes_;
     }
 
