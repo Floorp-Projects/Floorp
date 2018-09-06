@@ -14,7 +14,6 @@ DIRS += [
     'css',
     'discovery',
     'fronts',
-    'gcli',
     'heapsnapshot',
     'inspector',
     'jsbeautify',
