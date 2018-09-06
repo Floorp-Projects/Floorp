@@ -58,6 +58,7 @@
 #include "StickyScrollContainer.h"
 #include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
@@ -10333,6 +10334,77 @@ nsDisplaySVGWrapper::CreateWebRenderCommands(
   }
 
   return false;
+}
+
+
+nsDisplayForeignObject::nsDisplayForeignObject(nsDisplayListBuilder* aBuilder,
+                                               nsIFrame* aFrame, nsDisplayList* aList)
+    : nsDisplayWrapList(aBuilder, aFrame, aList)
+{
+  MOZ_COUNT_CTOR(nsDisplayForeignObject);
+}
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayForeignObject::~nsDisplayForeignObject() {
+  MOZ_COUNT_DTOR(nsDisplayForeignObject);
+}
+#endif
+
+LayerState
+nsDisplayForeignObject::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                      LayerManager* aManager,
+                                      const ContainerLayerParameters& aParameters)
+{
+  RefPtr<LayerManager> layerManager = aBuilder->GetWidgetLayerManager();
+  if (layerManager && layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+    return LAYER_ACTIVE_FORCE;
+  }
+  return LAYER_NONE;
+}
+
+bool
+nsDisplayForeignObject::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
+{
+  RefPtr<LayerManager> layerManager = aBuilder->GetWidgetLayerManager();
+  if (layerManager && layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
+    return false;
+  }
+  return true;
+}
+
+already_AddRefed<Layer>
+nsDisplayForeignObject::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aContainerParameters)
+{
+  ContainerLayerParameters newContainerParameters = aContainerParameters;
+  newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
+
+  RefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
+                           newContainerParameters, nullptr);
+
+  return container.forget();
+}
+
+bool
+nsDisplayForeignObject::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                             mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                             const StackingContextHelper& aSc,
+                                             mozilla::layers::WebRenderLayerManager* aManager,
+                                             nsDisplayListBuilder* aDisplayListBuilder)
+{
+  if (gfxPrefs::WebRenderBlobInvalidation()) {
+    AutoRestore<bool> restoreDoGrouping(aManager->CommandBuilder().mDoGrouping);
+    aManager->CommandBuilder().mDoGrouping = false;
+    return nsDisplayWrapList::CreateWebRenderCommands(aBuilder,
+                                             aResources,
+                                             aSc,
+                                             aManager,
+                                             aDisplayListBuilder);
+  } else {
+    return false;
+  }
 }
 
 namespace mozilla {
