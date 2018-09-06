@@ -6,8 +6,12 @@
 "use strict";
 
 add_task(async function init() {
+  // Run this in a new tab, to ensure all the locationchange notifications have
+  // fired.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   let which = gURLBar._whichSearchSuggestionsNotification || undefined;
   registerCleanupFunction(async function() {
+    BrowserTestUtils.removeTab(tab);
     // Reset the search suggestions notification.
     if (which === undefined) {
       delete gURLBar._whichSearchSuggestionsNotification;
