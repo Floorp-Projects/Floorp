@@ -4,8 +4,8 @@
 
 "use strict";
 
-const debugTargets = require("./debug-targets");
-const runtimes = require("./runtimes");
-const ui = require("./ui");
-
-Object.assign(exports, ui, runtimes, debugTargets);
+function getCurrentClient(state) {
+  const thisFirefoxRuntime = state.runtimes.thisFirefoxRuntimes[0];
+  return thisFirefoxRuntime.client;
+}
+exports.getCurrentClient = getCurrentClient;
