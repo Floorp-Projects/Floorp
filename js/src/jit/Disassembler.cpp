@@ -30,8 +30,9 @@ Disassembler::ComplexAddress::operator!=(const ComplexAddress& other) const
 bool
 Disassembler::OtherOperand::operator==(const OtherOperand& other) const
 {
-    if (kind_ != other.kind_)
+    if (kind_ != other.kind_) {
         return false;
+    }
     switch (kind_) {
       case Imm: return u_.imm == other.u_.imm;
       case GPR: return u_.gpr == other.u_.gpr;
