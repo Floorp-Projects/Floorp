@@ -1479,7 +1479,6 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
 
 add_old_configure_assignment('MOZ_HARDENING_CFLAGS', security_hardening_cflags.flags)
 add_old_configure_assignment('MOZ_HARDENING_CFLAGS_JS', security_hardening_cflags.js_flags)
-imply_option('--enable-pie', depends_if('--enable-hardening')(lambda v: v))
 
 # Code Coverage
 # ==============================================================

@@ -41,8 +41,10 @@ include $(topsrcdir)/config/rules.mk
 ifneq (,$(filter-out WINNT,$(OS_ARCH)))
 
 ifdef COMPILE_ENVIRONMENT
+ifndef MOZ_NO_PIE_COMPAT
 libs::
 	cp -p $(DIST)/bin/$(MOZ_APP_NAME)$(BIN_SUFFIX) $(DIST)/bin/$(MOZ_APP_NAME)-bin$(BIN_SUFFIX)
+endif
 endif
 
 GARBAGE += $(addprefix $(FINAL_TARGET)/defaults/pref/, firefox.js)
