@@ -265,8 +265,9 @@ GenericNaN()
 static inline double
 CanonicalizeNaN(double d)
 {
-    if (MOZ_UNLIKELY(mozilla::IsNaN(d)))
+    if (MOZ_UNLIKELY(mozilla::IsNaN(d))) {
         return GenericNaN();
+    }
     return d;
 }
 
@@ -542,10 +543,11 @@ union MOZ_NON_PARAM alignas(8) Value
     }
 
     void setObjectOrNull(JSObject* arg) {
-        if (arg)
+        if (arg) {
             setObject(*arg);
-        else
+        } else {
             setNull();
+        }
     }
 
     void swap(Value& rhs) {
@@ -706,11 +708,13 @@ union MOZ_NON_PARAM alignas(8) Value
                       "Value type tags must correspond with JS::TraceKinds.");
         static_assert((JSVAL_TAG_OBJECT & 0x03) == size_t(JS::TraceKind::Object),
                       "Value type tags must correspond with JS::TraceKinds.");
-        if (MOZ_UNLIKELY(isPrivateGCThing()))
+        if (MOZ_UNLIKELY(isPrivateGCThing())) {
             return JS::GCThingTraceKind(toGCThing());
+        }
 #ifdef ENABLE_BIGINT
-        if (MOZ_UNLIKELY(isBigInt()))
+        if (MOZ_UNLIKELY(isBigInt())) {
             return JS::TraceKind::BigInt;
+        }
 #endif
         return JS::TraceKind(toTag() & 0x03);
     }
@@ -948,8 +952,9 @@ ExposeValueToActiveJS(const Value& v)
     Value tmp = v;
     MOZ_ASSERT(!js::gc::EdgeNeedsSweepUnbarrieredSlow(&tmp));
 #endif
-    if (v.isGCThing())
+    if (v.isGCThing()) {
         js::gc::ExposeGCThingToActiveJS(GCCellPtr(v));
+    }
 }
 
 /************************************************************************/
@@ -993,8 +998,9 @@ CanonicalizedDoubleValue(double d)
 static inline bool
 IsCanonicalized(double d)
 {
-  if (mozilla::IsInfinite(d) || mozilla::IsFinite(d))
+  if (mozilla::IsInfinite(d) || mozilla::IsFinite(d)) {
       return true;
+  }
 
   uint64_t bits;
   mozilla::BitwiseCast<uint64_t>(d, &bits);
@@ -1155,10 +1161,11 @@ class MakeNumberValue
     static inline Value create(const T t)
     {
         Value v;
-        if (JSVAL_INT_MIN <= t && t <= JSVAL_INT_MAX)
+        if (JSVAL_INT_MIN <= t && t <= JSVAL_INT_MAX) {
             v.setInt32(int32_t(t));
-        else
+        } else {
             v.setDouble(double(t));
+        }
         return v;
     }
 };
@@ -1171,10 +1178,11 @@ class MakeNumberValue<false>
     static inline Value create(const T t)
     {
         Value v;
-        if (t <= JSVAL_INT_MAX)
+        if (t <= JSVAL_INT_MAX) {
             v.setInt32(int32_t(t));
-        else
+        } else {
             v.setDouble(double(t));
+        }
         return v;
     }
 };
@@ -1414,10 +1422,11 @@ class HeapBase<JS::Value, Wrapper> : public WrappedPtrOperations<JS::Value, Wrap
     }
 
     void setObjectOrNull(JSObject* arg) {
-        if (arg)
+        if (arg) {
             setObject(*arg);
-        else
+        } else {
             setNull();
+        }
     }
 };
 
@@ -1480,8 +1489,9 @@ namespace JS {
 MOZ_ALWAYS_INLINE bool
 ValueIsNotGray(const Value& value)
 {
-    if (!value.isGCThing())
+    if (!value.isGCThing()) {
         return true;
+    }
 
     return CellIsNotGray(value.toGCThing());
 }

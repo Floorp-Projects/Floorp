@@ -96,8 +96,9 @@ MOZ_ALWAYS_INLINE bool
 CallNonGenericMethod(JSContext* cx, const CallArgs& args)
 {
     HandleValue thisv = args.thisv();
-    if (Test(thisv))
+    if (Test(thisv)) {
         return Impl(cx, args);
+    }
 
     return detail::CallMethodIfWrapped(cx, Test, Impl, args);
 }
@@ -106,8 +107,9 @@ MOZ_ALWAYS_INLINE bool
 CallNonGenericMethod(JSContext* cx, IsAcceptableThis Test, NativeImpl Impl, const CallArgs& args)
 {
     HandleValue thisv = args.thisv();
-    if (Test(thisv))
+    if (Test(thisv)) {
         return Impl(cx, args);
+    }
 
     return detail::CallMethodIfWrapped(cx, Test, Impl, args);
 }
