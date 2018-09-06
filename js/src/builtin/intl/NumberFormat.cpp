@@ -100,19 +100,22 @@ NumberFormat(JSContext* cx, const CallArgs& args, bool construct)
 
     // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
     RootedObject proto(cx);
-    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
         return false;
+    }
 
     if (!proto) {
         proto = GlobalObject::getOrCreateNumberFormatPrototype(cx, cx->global());
-        if (!proto)
+        if (!proto) {
             return false;
+        }
     }
 
     Rooted<NumberFormatObject*> numberFormat(cx);
     numberFormat = NewObjectWithGivenProto<NumberFormatObject>(cx, proto);
-    if (!numberFormat)
+    if (!numberFormat) {
         return false;
+    }
 
     numberFormat->setReservedSlot(NumberFormatObject::INTERNALS_SLOT, NullValue());
     numberFormat->setReservedSlot(NumberFormatObject::UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
@@ -153,8 +156,9 @@ js::NumberFormatObject::finalize(FreeOp* fop, JSObject* obj)
 
     const Value& slot =
         obj->as<NumberFormatObject>().getReservedSlot(NumberFormatObject::UNUMBER_FORMAT_SLOT);
-    if (UNumberFormat* nf = static_cast<UNumberFormat*>(slot.toPrivate()))
+    if (UNumberFormat* nf = static_cast<UNumberFormat*>(slot.toPrivate())) {
         unum_close(nf);
+    }
 }
 
 JSObject*
@@ -163,32 +167,39 @@ js::CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalO
 {
     RootedFunction ctor(cx);
     ctor = GlobalObject::createConstructor(cx, &NumberFormat, cx->names().NumberFormat, 0);
-    if (!ctor)
+    if (!ctor) {
         return nullptr;
+    }
 
     RootedObject proto(cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-    if (!proto)
+    if (!proto) {
         return nullptr;
+    }
 
-    if (!LinkConstructorAndPrototype(cx, ctor, proto))
+    if (!LinkConstructorAndPrototype(cx, ctor, proto)) {
         return nullptr;
+    }
 
     // 11.3.2
-    if (!JS_DefineFunctions(cx, ctor, numberFormat_static_methods))
+    if (!JS_DefineFunctions(cx, ctor, numberFormat_static_methods)) {
         return nullptr;
+    }
 
     // 11.4.4
-    if (!JS_DefineFunctions(cx, proto, numberFormat_methods))
+    if (!JS_DefineFunctions(cx, proto, numberFormat_methods)) {
         return nullptr;
+    }
 
     // 11.4.2 and 11.4.3
-    if (!JS_DefineProperties(cx, proto, numberFormat_properties))
+    if (!JS_DefineProperties(cx, proto, numberFormat_properties)) {
         return nullptr;
+    }
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!DefineDataProperty(cx, Intl, cx->names().NumberFormat, ctorValue, 0))
+    if (!DefineDataProperty(cx, Intl, cx->names().NumberFormat, ctorValue, 0)) {
         return nullptr;
+    }
 
     constructor.set(ctor);
     return proto;
@@ -201,8 +212,9 @@ js::intl_NumberFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 0);
 
     RootedValue result(cx);
-    if (!GetAvailableLocales(cx, unum_countAvailable, unum_getAvailable, &result))
+    if (!GetAvailableLocales(cx, unum_countAvailable, unum_getAvailable, &result)) {
         return false;
+    }
     args.rval().set(result);
     return true;
 }
@@ -215,8 +227,9 @@ js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args[0].isString());
 
     UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
-    if (!locale)
+    if (!locale) {
         return false;
+    }
 
     UErrorCode status = U_ZERO_ERROR;
     UNumberingSystem* numbers = unumsys_open(IcuLocale(locale.get()), &status);
@@ -234,8 +247,9 @@ js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp)
     }
 
     JSString* jsname = NewStringCopyZ<CanGC>(cx, name);
-    if (!jsname)
+    if (!jsname) {
         return false;
+    }
 
     args.rval().setString(jsname);
     return true;
@@ -251,14 +265,17 @@ NewUNumberFormat(JSContext* cx, Handle<NumberFormatObject*> numberFormat)
     RootedValue value(cx);
 
     RootedObject internals(cx, intl::GetInternalsObject(cx, numberFormat));
-    if (!internals)
+    if (!internals) {
        return nullptr;
+    }
 
-    if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().locale, &value)) {
         return nullptr;
+    }
     UniqueChars locale = intl::EncodeLocale(cx, value.toString());
-    if (!locale)
+    if (!locale) {
         return nullptr;
+    }
 
     // UNumberFormat options with default values
     UNumberFormatStyle uStyle = UNUM_DECIMAL;
@@ -277,30 +294,36 @@ NewUNumberFormat(JSContext* cx, Handle<NumberFormatObject*> numberFormat)
     // We don't need to look at numberingSystem - it can only be set via
     // the Unicode locale extension and is therefore already set on locale.
 
-    if (!GetProperty(cx, internals, internals, cx->names().style, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().style, &value)) {
         return nullptr;
+    }
 
     {
         JSLinearString* style = value.toString()->ensureLinear(cx);
-        if (!style)
+        if (!style) {
             return nullptr;
+        }
 
         if (StringEqualsAscii(style, "currency")) {
-            if (!GetProperty(cx, internals, internals, cx->names().currency, &value))
+            if (!GetProperty(cx, internals, internals, cx->names().currency, &value)) {
                 return nullptr;
+            }
             currency = value.toString();
             MOZ_ASSERT(currency->length() == 3,
                        "IsWellFormedCurrencyCode permits only length-3 strings");
-            if (!stableChars.initTwoByte(cx, currency))
+            if (!stableChars.initTwoByte(cx, currency)) {
                 return nullptr;
+            }
             // uCurrency remains owned by stableChars.
             uCurrency = stableChars.twoByteRange().begin().get();
 
-            if (!GetProperty(cx, internals, internals, cx->names().currencyDisplay, &value))
+            if (!GetProperty(cx, internals, internals, cx->names().currencyDisplay, &value)) {
                 return nullptr;
+            }
             JSLinearString* currencyDisplay = value.toString()->ensureLinear(cx);
-            if (!currencyDisplay)
+            if (!currencyDisplay) {
                 return nullptr;
+            }
             if (StringEqualsAscii(currencyDisplay, "code")) {
                 uStyle = UNUM_CURRENCY_ISO;
             } else if (StringEqualsAscii(currencyDisplay, "symbol")) {
@@ -318,33 +341,40 @@ NewUNumberFormat(JSContext* cx, Handle<NumberFormatObject*> numberFormat)
     }
 
     bool hasP;
-    if (!HasProperty(cx, internals, cx->names().minimumSignificantDigits, &hasP))
+    if (!HasProperty(cx, internals, cx->names().minimumSignificantDigits, &hasP)) {
         return nullptr;
+    }
 
     if (hasP) {
-        if (!GetProperty(cx, internals, internals, cx->names().minimumSignificantDigits, &value))
+        if (!GetProperty(cx, internals, internals, cx->names().minimumSignificantDigits, &value)) {
             return nullptr;
+        }
         uMinimumSignificantDigits = value.toInt32();
 
-        if (!GetProperty(cx, internals, internals, cx->names().maximumSignificantDigits, &value))
+        if (!GetProperty(cx, internals, internals, cx->names().maximumSignificantDigits, &value)) {
             return nullptr;
+        }
         uMaximumSignificantDigits = value.toInt32();
     } else {
-        if (!GetProperty(cx, internals, internals, cx->names().minimumIntegerDigits, &value))
+        if (!GetProperty(cx, internals, internals, cx->names().minimumIntegerDigits, &value)) {
             return nullptr;
+        }
         uMinimumIntegerDigits = AssertedCast<uint32_t>(value.toInt32());
 
-        if (!GetProperty(cx, internals, internals, cx->names().minimumFractionDigits, &value))
+        if (!GetProperty(cx, internals, internals, cx->names().minimumFractionDigits, &value)) {
             return nullptr;
+        }
         uMinimumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
 
-        if (!GetProperty(cx, internals, internals, cx->names().maximumFractionDigits, &value))
+        if (!GetProperty(cx, internals, internals, cx->names().maximumFractionDigits, &value)) {
             return nullptr;
+        }
         uMaximumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
     }
 
-    if (!GetProperty(cx, internals, internals, cx->names().useGrouping, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().useGrouping, &value)) {
         return nullptr;
+    }
     uUseGrouping = value.toBoolean();
 
     UErrorCode status = U_ZERO_ERROR;
@@ -384,8 +414,9 @@ PartitionNumberPattern(JSContext* cx, UNumberFormat* nf, double* x,
     // ICU incorrectly formats NaN values with the sign bit set, as if they
     // were negative.  Replace all NaNs with a single pattern with sign bit
     // unset ("positive", that is) until ICU is fixed.
-    if (MOZ_UNLIKELY(IsNaN(*x)))
+    if (MOZ_UNLIKELY(IsNaN(*x))) {
         *x = SpecificNaN<double>(0, 1);
+    }
 
     return CallICU(cx, [nf, d = *x, fpositer](UChar* chars, int32_t size, UErrorCode* status) {
         return unum_formatDoubleForFields(nf, d, chars, size, fpositer, status);
@@ -398,8 +429,9 @@ intl_FormatNumber(JSContext* cx, UNumberFormat* nf, double x, MutableHandleValue
     // Passing null for |fpositer| will just not compute partition information,
     // letting us common up all ICU number-formatting code.
     JSString* str = PartitionNumberPattern(cx, nf, &x, nullptr);
-    if (!str)
+    if (!str) {
         return false;
+    }
 
     result.setString(str);
     return true;
@@ -417,10 +449,12 @@ GetFieldTypeForNumberField(UNumberFormatFields fieldName, double d)
     // version-testing #ifdefs, should cross-version divergence occur.
     switch (fieldName) {
       case UNUM_INTEGER_FIELD:
-        if (IsNaN(d))
+        if (IsNaN(d)) {
             return &JSAtomState::nan;
-        if (!IsFinite(d))
+        }
+        if (!IsFinite(d)) {
             return &JSAtomState::infinity;
+        }
         return &JSAtomState::integer;
 
       case UNUM_GROUPING_SEPARATOR_FIELD:
@@ -492,12 +526,14 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
     ScopedICUObject<UFieldPositionIterator, ufieldpositer_close> toClose(fpositer);
 
     RootedString overallResult(cx, PartitionNumberPattern(cx, nf, &x, fpositer));
-    if (!overallResult)
+    if (!overallResult) {
         return false;
+    }
 
     RootedArrayObject partsArray(cx, NewDenseEmptyArray(cx));
-    if (!partsArray)
+    if (!partsArray) {
         return false;
+    }
 
     // First, vacuum up fields in the overall formatted string.
 
@@ -526,15 +562,17 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
                    "erm, aren't fields always non-empty?");
 
         FieldType type = GetFieldTypeForNumberField(UNumberFormatFields(fieldInt), x);
-        if (!fields.emplaceBack(uint32_t(beginIndexInt), uint32_t(endIndexInt), type))
+        if (!fields.emplaceBack(uint32_t(beginIndexInt), uint32_t(endIndexInt), type)) {
             return false;
+        }
     }
 
     // Second, merge sort the fields vector.  Expand the vector to have scratch
     // space for performing the sort.
     size_t fieldsLen = fields.length();
-    if (!fields.resizeUninitialized(fieldsLen * 2))
+    if (!fields.resizeUninitialized(fieldsLen * 2)) {
         return false;
+    }
 
     MOZ_ALWAYS_TRUE(MergeSort(fields.begin(), fieldsLen, fields.begin() + fieldsLen,
                               [](const Field& left, const Field& right,
@@ -549,8 +587,9 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
                               }));
 
     // Deallocate the scratch space.
-    if (!fields.resize(fieldsLen))
+    if (!fields.resize(fieldsLen)) {
         return false;
+    }
 
     // Third, iterate over the sorted field list to generate a sequence of
     // parts (what ECMA-402 actually exposes).  A part is a maximal character
@@ -629,8 +668,9 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
             MOZ_ASSERT_IF(enclosingFields.length() > 0,
                           fields[enclosingFields.back()].end >= end);
 
-            while (enclosingFields.length() > 0 && fields[enclosingFields.back()].end == end)
+            while (enclosingFields.length() > 0 && fields[enclosingFields.back()].end == end) {
                 enclosingFields.popBack();
+            }
         }
 
         bool nextPartInternal(Part* part) {
@@ -703,8 +743,9 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
                 // enclosing field.  (If there are no nested fields, don't
                 // bother pushing a field that'd be immediately popped.)
                 if (current->end > next->begin) {
-                    if (!enclosingFields.append(index - 1))
+                    if (!enclosingFields.append(index - 1)) {
                         return false;
+                    }
                 }
 
                 // Do so until the next field begins after this one.
@@ -739,8 +780,9 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
                 return true;
             }
 
-            if (!nextPartInternal(part))
+            if (!nextPartInternal(part)) {
                 return false;
+            }
 
             *hasPart = true;
             lastEnd = part->end;
@@ -758,11 +800,13 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
     do {
         bool hasPart;
         Part part;
-        if (!gen.nextPart(&hasPart, &part))
+        if (!gen.nextPart(&hasPart, &part)) {
             return false;
+        }
 
-        if (!hasPart)
+        if (!hasPart) {
             break;
+        }
 
         FieldType type = part.type;
         size_t endIndex = part.end;
@@ -770,25 +814,30 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
         MOZ_ASSERT(lastEndIndex < endIndex);
 
         singlePart = NewBuiltinClassInstance<PlainObject>(cx);
-        if (!singlePart)
+        if (!singlePart) {
             return false;
+        }
 
         propVal.setString(cx->names().*type);
-        if (!DefineDataProperty(cx, singlePart, cx->names().type, propVal))
+        if (!DefineDataProperty(cx, singlePart, cx->names().type, propVal)) {
             return false;
+        }
 
         JSLinearString* partSubstr =
             NewDependentString(cx, overallResult, lastEndIndex, endIndex - lastEndIndex);
-        if (!partSubstr)
+        if (!partSubstr) {
             return false;
+        }
 
         propVal.setString(partSubstr);
-        if (!DefineDataProperty(cx, singlePart, cx->names().value, propVal))
+        if (!DefineDataProperty(cx, singlePart, cx->names().value, propVal)) {
             return false;
+        }
 
         propVal.setObject(*singlePart);
-        if (!DefineDataElement(cx, partsArray, partIndex, propVal))
+        if (!DefineDataElement(cx, partsArray, partIndex, propVal)) {
             return false;
+        }
 
         lastEndIndex = endIndex;
         partIndex++;
@@ -818,14 +867,16 @@ js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp)
     UNumberFormat* nf = static_cast<UNumberFormat*>(priv);
     if (!nf) {
         nf = NewUNumberFormat(cx, numberFormat);
-        if (!nf)
+        if (!nf) {
             return false;
+        }
         numberFormat->setReservedSlot(NumberFormatObject::UNUMBER_FORMAT_SLOT, PrivateValue(nf));
     }
 
     // Use the UNumberFormat to actually format the number.
-    if (args[2].toBoolean())
+    if (args[2].toBoolean()) {
         return intl_FormatNumberToParts(cx, nf, args[1].toNumber(), args.rval());
+    }
 
     return intl_FormatNumber(cx, nf, args[1].toNumber(), args.rval());
 }
