@@ -115,7 +115,6 @@ public:
 
 private:
   WindowBackBuffer*         GetWaylandBufferToDraw(int aWidth, int aHeight);
-  void                      UpdateScaleFactor();
 
   already_AddRefed<gfx::DrawTarget> LockWaylandBuffer(int aWidth, int aHeight);
   already_AddRefed<gfx::DrawTarget> LockImageSurface(const gfx::IntSize& aLockSize);
@@ -130,13 +129,14 @@ private:
   WindowBackBuffer*         mBackupBuffer;
   RefPtr<gfxImageSurface>   mImageSurface;
   wl_callback*              mFrameCallback;
-  wl_surface*               mFrameCallbackSurface;
+  wl_surface*               mLastCommittedSurface;
   MessageLoop*              mDisplayThreadMessageLoop;
   WindowSurfaceWayland**    mDelayedCommitHandle;
   bool                      mDrawToWaylandBufferDirectly;
   bool                      mPendingCommit;
   bool                      mWaylandBufferFullScreenDamage;
   bool                      mIsMainThread;
+  bool                      mNeedScaleFactorUpdate;
 };
 
 }  // namespace widget
