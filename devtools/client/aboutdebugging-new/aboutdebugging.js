@@ -35,7 +35,7 @@ const {
 
 const App = createFactory(require("./src/components/App"));
 
-const { PAGES } = require("./src/constants");
+const { PAGES, RUNTIMES } = require("./src/constants");
 
 const AboutDebugging = {
   async init() {
@@ -57,7 +57,7 @@ const AboutDebugging = {
       this.mount
     );
 
-    this.actions.selectPage(PAGES.THIS_FIREFOX);
+    this.actions.selectPage(PAGES.THIS_FIREFOX, RUNTIMES.THIS_FIREFOX);
     this.actions.updateNetworkLocations(getNetworkLocations());
 
     addNetworkLocationsObserver(this.onNetworkLocationsUpdated);
@@ -93,12 +93,19 @@ const AboutDebugging = {
   },
 
   async destroy() {
+    const state = this.store.getState();
+
     L10nRegistry.removeSource("aboutdebugging");
     // Call removeNetworkLocationsObserver before unwatchRuntime,
     // follow up in Bug 1490950.
     removeNetworkLocationsObserver(this.onNetworkLocationsUpdated);
-    await this.actions.unwatchRuntime();
-    setDebugTargetCollapsibilities(this.store.getState().ui.debugTargetCollapsibilities);
+
+    const currentRuntimeId = state.runtimes.selectedRuntimeId;
+    if (currentRuntimeId) {
+      await this.actions.unwatchRuntime(currentRuntimeId);
+    }
+
+    setDebugTargetCollapsibilities(state.ui.debugTargetCollapsibilities);
     unmountComponentAtNode(this.mount);
   },
 

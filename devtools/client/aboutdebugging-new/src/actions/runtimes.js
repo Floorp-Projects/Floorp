@@ -10,7 +10,6 @@ const { DebuggerServer } = require("devtools/server/main");
 const Actions = require("./index");
 
 const {
-  getCurrentClient,
   findRuntimeById,
 } = require("devtools/client/aboutdebugging-new/src/modules/runtimes-state-helper");
 
@@ -100,18 +99,20 @@ function disconnectRuntime(id) {
   };
 }
 
-function watchRuntime() {
+function watchRuntime(id) {
   return async (dispatch, getState) => {
     dispatch({ type: WATCH_RUNTIME_START });
 
     try {
-      // THIS_FIREFOX connects and disconnects on the fly when opening the page.
-      // XXX: watchRuntime is only called when opening THIS_FIREFOX page for now.
-      await dispatch(connectRuntime(RUNTIMES.THIS_FIREFOX));
+      if (id === RUNTIMES.THIS_FIREFOX) {
+        // THIS_FIREFOX connects and disconnects on the fly when opening the page.
+        await dispatch(connectRuntime(RUNTIMES.THIS_FIREFOX));
+      }
 
-      const runtime = findRuntimeById(RUNTIMES.THIS_FIREFOX, getState().runtimes);
+      // The selected runtime should already have a connected client assigned.
+      const runtime = findRuntimeById(id, getState().runtimes);
+      await dispatch({ type: WATCH_RUNTIME_SUCCESS, runtime });
 
-      dispatch({ type: WATCH_RUNTIME_SUCCESS, client: runtime.client });
       dispatch(Actions.requestExtensions());
       dispatch(Actions.requestTabs());
       dispatch(Actions.requestWorkers());
@@ -121,18 +122,17 @@ function watchRuntime() {
   };
 }
 
-function unwatchRuntime() {
+function unwatchRuntime(id) {
   return async (dispatch, getState) => {
-    // XXX: unwatchRuntime is only called when opening THIS_FIREFOX page for now.
-    const runtime = findRuntimeById(RUNTIMES.THIS_FIREFOX, getState().runtimes);
-    const client = runtime.client;
+    const runtime = findRuntimeById(id, getState().runtimes);
 
-    dispatch({ type: UNWATCH_RUNTIME_START, client });
+    dispatch({ type: UNWATCH_RUNTIME_START, runtime });
 
     try {
-      // THIS_FIREFOX connects and disconnects on the fly when opening the page.
-      // XXX: unwatchRuntime is only called when closing THIS_FIREFOX page for now.
-      await dispatch(disconnectRuntime(RUNTIMES.THIS_FIREFOX));
+      if (id === RUNTIMES.THIS_FIREFOX) {
+        // THIS_FIREFOX connects and disconnects on the fly when opening the page.
+        await dispatch(disconnectRuntime(RUNTIMES.THIS_FIREFOX));
+      }
 
       dispatch({ type: UNWATCH_RUNTIME_SUCCESS });
     } catch (e) {
