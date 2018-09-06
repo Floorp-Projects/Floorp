@@ -177,8 +177,9 @@ class ArgumentsObject : public NativeObject
     MOZ_MUST_USE bool createRareData(JSContext* cx);
 
     RareArgumentsData* getOrCreateRareData(JSContext* cx) {
-        if (!data()->rareData && !createRareData(cx))
+        if (!data()->rareData && !createRareData(cx)) {
             return nullptr;
+        }
         return data()->rareData;
     }
 
@@ -285,8 +286,9 @@ class ArgumentsObject : public NativeObject
      */
     bool isElementDeleted(uint32_t i) const {
         MOZ_ASSERT(i < data()->numArgs);
-        if (i >= initialLength())
+        if (i >= initialLength()) {
             return false;
+        }
         return maybeRareData() && maybeRareData()->isElementDeleted(initialLength(), i);
     }
 
@@ -339,8 +341,9 @@ class ArgumentsObject : public NativeObject
      * NB: Returning false does not indicate error!
      */
     bool maybeGetElement(uint32_t i, MutableHandleValue vp) {
-        if (i >= initialLength() || isElementDeleted(i))
+        if (i >= initialLength() || isElementDeleted(i)) {
             return false;
+        }
         vp.set(element(i));
         return true;
     }
@@ -352,8 +355,9 @@ class ArgumentsObject : public NativeObject
      * |miscSize| argument in JSObject::sizeOfExcludingThis().
      */
     size_t sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf) const {
-        if (!data()) // Template arguments objects have no data.
+        if (!data()) { // Template arguments objects have no data.
             return 0;
+        }
         return mallocSizeOf(data()) + mallocSizeOf(maybeRareData());
     }
     size_t sizeOfData() const {

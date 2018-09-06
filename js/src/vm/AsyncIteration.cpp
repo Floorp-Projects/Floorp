@@ -36,17 +36,20 @@ WrappedAsyncGenerator(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1.
     InvokeArgs args2(cx);
-    if (!FillArgumentsFromArraylike(cx, args2, args))
+    if (!FillArgumentsFromArraylike(cx, args2, args)) {
         return false;
+    }
 
     RootedValue generatorVal(cx);
-    if (!Call(cx, unwrappedVal, args.thisv(), args2, &generatorVal))
+    if (!Call(cx, unwrappedVal, args.thisv(), args2, &generatorVal)) {
         return false;
+    }
 
     // Step 2.
     AsyncGeneratorObject* asyncGenObj = AsyncGeneratorObject::create(cx, wrapped, generatorVal);
-    if (!asyncGenObj)
+    if (!asyncGenObj) {
         return false;
+    }
 
     // Step 3 (skipped).
     // Done in AsyncGeneratorObject::create and generator.
@@ -68,17 +71,20 @@ js::WrapAsyncGeneratorWithProto(JSContext* cx, HandleFunction unwrapped, HandleO
 
     RootedAtom funName(cx, unwrapped->explicitName());
     uint16_t length;
-    if (!JSFunction::getLength(cx, unwrapped, &length))
+    if (!JSFunction::getLength(cx, unwrapped, &length)) {
         return nullptr;
+    }
 
     JSFunction* wrapped = NewFunctionWithProto(cx, WrappedAsyncGenerator, length,
                                                JSFunction::NATIVE_FUN, nullptr, funName, proto,
                                                gc::AllocKind::FUNCTION_EXTENDED);
-    if (!wrapped)
+    if (!wrapped) {
         return nullptr;
+    }
 
-    if (unwrapped->hasInferredName())
+    if (unwrapped->hasInferredName()) {
         wrapped->setInferredName(unwrapped->inferredName());
+    }
 
     // Link them to each other to make GetWrappedAsyncGenerator and
     // GetUnwrappedAsyncGenerator work.
@@ -92,8 +98,9 @@ JSObject*
 js::WrapAsyncGenerator(JSContext* cx, HandleFunction unwrapped)
 {
     RootedObject proto(cx, GlobalObject::getOrCreateAsyncGenerator(cx, cx->global()));
-    if (!proto)
+    if (!proto) {
         return nullptr;
+    }
 
     return WrapAsyncGeneratorWithProto(cx, unwrapped, proto);
 }
@@ -178,13 +185,15 @@ AsyncFromSyncIteratorObject::create(JSContext* cx, HandleObject iter, HandleValu
     // Step 2.
     RootedObject proto(cx, GlobalObject::getOrCreateAsyncFromSyncIteratorPrototype(cx,
                                                                                    cx->global()));
-    if (!proto)
+    if (!proto) {
         return nullptr;
+    }
 
     AsyncFromSyncIteratorObject* asyncIter =
         NewObjectWithGivenProto<AsyncFromSyncIteratorObject>(cx, proto);
-    if (!asyncIter)
+    if (!asyncIter) {
         return nullptr;
+    }
 
     // Step 3.
     asyncIter->init(iter, nextMethod);
@@ -264,14 +273,16 @@ OrdinaryCreateFromConstructorAsynGen(JSContext* cx, HandleFunction fun)
 
     // Step 2.
     RootedValue protoVal(cx);
-    if (!GetProperty(cx, fun, fun, cx->names().prototype, &protoVal))
+    if (!GetProperty(cx, fun, fun, cx->names().prototype, &protoVal)) {
         return nullptr;
+    }
 
     RootedObject proto(cx, protoVal.isObject() ? &protoVal.toObject() : nullptr);
     if (!proto) {
         proto = GlobalObject::getOrCreateAsyncGeneratorPrototype(cx, cx->global());
-        if (!proto)
+        if (!proto) {
             return nullptr;
+        }
     }
 
     // Step 3.
@@ -285,8 +296,9 @@ AsyncGeneratorObject::create(JSContext* cx, HandleFunction asyncGen, HandleValue
     MOZ_ASSERT(generatorVal.toObject().is<GeneratorObject>());
 
     AsyncGeneratorObject* asyncGenObj = OrdinaryCreateFromConstructorAsynGen(cx, asyncGen);
-    if (!asyncGenObj)
+    if (!asyncGenObj) {
         return nullptr;
+    }
 
     // Async Iteration proposal 6.4.3.2 AsyncGeneratorStart.
     // Step 6.
@@ -308,8 +320,9 @@ AsyncGeneratorObject::createRequest(JSContext* cx, Handle<AsyncGeneratorObject*>
                                     CompletionKind completionKind, HandleValue completionValue,
                                     Handle<PromiseObject*> promise)
 {
-    if (!asyncGenObj->hasCachedRequest())
+    if (!asyncGenObj->hasCachedRequest()) {
         return AsyncGeneratorRequest::create(cx, completionKind, completionValue, promise);
+    }
 
     AsyncGeneratorRequest* request = asyncGenObj->takeCachedRequest();
     request->init(completionKind, completionValue, promise);
@@ -327,15 +340,18 @@ AsyncGeneratorObject::enqueueRequest(JSContext* cx, Handle<AsyncGeneratorObject*
         }
 
         RootedNativeObject queue(cx, NewList(cx));
-        if (!queue)
+        if (!queue) {
             return false;
+        }
 
         RootedValue requestVal(cx, ObjectValue(*asyncGenObj->singleQueueRequest()));
-        if (!AppendToList(cx, queue, requestVal))
+        if (!AppendToList(cx, queue, requestVal)) {
             return false;
+        }
         requestVal = ObjectValue(*request);
-        if (!AppendToList(cx, queue, requestVal))
+        if (!AppendToList(cx, queue, requestVal)) {
             return false;
+        }
 
         asyncGenObj->setQueue(queue);
         return true;
@@ -362,8 +378,9 @@ AsyncGeneratorObject::dequeueRequest(JSContext* cx, Handle<AsyncGeneratorObject*
 /* static */ AsyncGeneratorRequest*
 AsyncGeneratorObject::peekRequest(Handle<AsyncGeneratorObject*> asyncGenObj)
 {
-    if (asyncGenObj->isSingleQueue())
+    if (asyncGenObj->isSingleQueue()) {
         return asyncGenObj->singleQueueRequest();
+    }
 
     return PeekList<AsyncGeneratorRequest>(asyncGenObj->queue());
 }
@@ -379,8 +396,9 @@ AsyncGeneratorRequest::create(JSContext* cx, CompletionKind completionKind,
                               HandleValue completionValue, Handle<PromiseObject*> promise)
 {
     AsyncGeneratorRequest* request = NewObjectWithGivenProto<AsyncGeneratorRequest>(cx, nullptr);
-    if (!request)
+    if (!request) {
         return nullptr;
+    }
 
     request->init(completionKind, completionValue, promise);
     return request;
@@ -409,13 +427,15 @@ AsyncGeneratorThrown(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj)
     asyncGenObj->setCompleted();
 
     // Not much we can do about uncatchable exceptions, so just bail.
-    if (!cx->isExceptionPending())
+    if (!cx->isExceptionPending()) {
         return false;
+    }
 
     // Step 5.f.i.
     RootedValue value(cx);
-    if (!GetAndClearException(cx, &value))
+    if (!GetAndClearException(cx, &value)) {
         return false;
+    }
 
     // Step 5.f.ii.
     return AsyncGeneratorReject(cx, asyncGenObj, value);
@@ -462,8 +482,9 @@ js::AsyncGeneratorResume(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenOb
     }
 
     // 4.1 steps 2-9.
-    if (asyncGenObj->generatorObj()->isAfterAwait())
+    if (asyncGenObj->generatorObj()->isAfterAwait()) {
         return AsyncGeneratorAwait(cx, asyncGenObj, result);
+    }
 
     // The following code corresponds to the following 3 cases:
     //   * yield
@@ -479,11 +500,13 @@ js::AsyncGeneratorResume(JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenOb
     // 8.2.1 yield* steps 6.a.vii, 6.b.ii.7, 6.c.ix.
     RootedObject resultObj(cx, &result.toObject());
     RootedValue value(cx);
-    if (!GetProperty(cx, resultObj, resultObj, cx->names().value, &value))
+    if (!GetProperty(cx, resultObj, resultObj, cx->names().value, &value)) {
         return false;
+    }
 
-    if (asyncGenObj->generatorObj()->isAfterYield())
+    if (asyncGenObj->generatorObj()->isAfterYield()) {
         return AsyncGeneratorYield(cx, asyncGenObj, value);
+    }
 
     // 11.4.3.2 step 5.d-g.
     return AsyncGeneratorReturned(cx, asyncGenObj, value);
@@ -511,22 +534,26 @@ static const JSFunctionSpec async_generator_methods[] = {
 /* static */ MOZ_MUST_USE bool
 GlobalObject::initAsyncGenerators(JSContext* cx, Handle<GlobalObject*> global)
 {
-    if (global->getReservedSlot(ASYNC_ITERATOR_PROTO).isObject())
+    if (global->getReservedSlot(ASYNC_ITERATOR_PROTO).isObject()) {
         return true;
+    }
 
     // Async Iteration proposal 11.1.2 %AsyncIteratorPrototype%.
     RootedObject asyncIterProto(cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-    if (!asyncIterProto)
+    if (!asyncIterProto) {
         return false;
-    if (!DefinePropertiesAndFunctions(cx, asyncIterProto, nullptr, async_iterator_proto_methods))
+    }
+    if (!DefinePropertiesAndFunctions(cx, asyncIterProto, nullptr, async_iterator_proto_methods)) {
         return false;
+    }
 
     // Async Iteration proposal 11.1.3.2 %AsyncFromSyncIteratorPrototype%.
     RootedObject asyncFromSyncIterProto(
         cx, GlobalObject::createBlankPrototypeInheriting(cx, &PlainObject::class_,
                                                          asyncIterProto));
-    if (!asyncFromSyncIterProto)
+    if (!asyncFromSyncIterProto) {
         return false;
+    }
     if (!DefinePropertiesAndFunctions(cx, asyncFromSyncIterProto, nullptr,
                                       async_from_sync_iter_methods) ||
         !DefineToStringTag(cx, asyncFromSyncIterProto, cx->names().AsyncFromSyncIterator))
@@ -538,8 +565,9 @@ GlobalObject::initAsyncGenerators(JSContext* cx, Handle<GlobalObject*> global)
     RootedObject asyncGenProto(
         cx, GlobalObject::createBlankPrototypeInheriting(cx, &PlainObject::class_,
                                                          asyncIterProto));
-    if (!asyncGenProto)
+    if (!asyncGenProto) {
         return false;
+    }
     if (!DefinePropertiesAndFunctions(cx, asyncGenProto, nullptr, async_generator_methods) ||
         !DefineToStringTag(cx, asyncGenProto, cx->names().AsyncGenerator))
     {
@@ -548,10 +576,12 @@ GlobalObject::initAsyncGenerators(JSContext* cx, Handle<GlobalObject*> global)
 
     // Async Iteration proposal 11.3.3 %AsyncGenerator%.
     RootedObject asyncGenerator(cx, NewSingletonObjectWithFunctionPrototype(cx, global));
-    if (!asyncGenerator)
+    if (!asyncGenerator) {
         return false;
-    if (!JSObject::setDelegate(cx, asyncGenerator))
+    }
+    if (!JSObject::setDelegate(cx, asyncGenerator)) {
         return false;
+    }
     if (!LinkConstructorAndPrototype(cx, asyncGenerator, asyncGenProto, JSPROP_READONLY,
                                      JSPROP_READONLY) ||
         !DefineToStringTag(cx, asyncGenerator, cx->names().AsyncGeneratorFunction))
@@ -560,8 +590,9 @@ GlobalObject::initAsyncGenerators(JSContext* cx, Handle<GlobalObject*> global)
     }
 
     RootedValue function(cx, global->getConstructor(JSProto_Function));
-    if (!function.toObjectOrNull())
+    if (!function.toObjectOrNull()) {
         return false;
+    }
     RootedObject proto(cx, &function.toObject());
     RootedAtom name(cx, cx->names().AsyncGeneratorFunction);
 
@@ -569,8 +600,9 @@ GlobalObject::initAsyncGenerators(JSContext* cx, Handle<GlobalObject*> global)
     RootedObject asyncGenFunction(
         cx, NewFunctionWithProto(cx, AsyncGeneratorConstructor, 1, JSFunction::NATIVE_CTOR,
                                  nullptr, name, proto, gc::AllocKind::FUNCTION, SingletonObject));
-    if (!asyncGenFunction)
+    if (!asyncGenFunction) {
         return false;
+    }
     if (!LinkConstructorAndPrototype(cx, asyncGenFunction, asyncGenerator,
                                      JSPROP_PERMANENT | JSPROP_READONLY, JSPROP_READONLY))
     {
