@@ -213,6 +213,9 @@ HandlerService.prototype = {
           get: function(target, name) {
             return target[name] || target._handlerInfo[name];
           },
+          set: function(target, name, value) {
+            target._handlerInfo[name] = value;
+          },
         },
       );
       handlers.appendElement(handler);
