@@ -35,7 +35,7 @@ add_task(async function() {
   const bgcItem = editor.popup.getItemAtIndex(itemIndex);
   is(bgcItem.label, "background-color",
     "Check the expected completion element is background-color.");
-  editor.popup.selectedIndex = itemIndex;
+  editor.popup.selectItemAtIndex(itemIndex);
 
   info("Select the background-color suggestion with a mouse click.");
   const onSuggest = editor.once("after-suggest");
@@ -63,10 +63,11 @@ add_task(async function() {
     "Editing the value span now.");
 
   info("Entering a value and blurring the field to expect a rule change");
-  editor.input.value = "#F00";
-
   onModifications = view.once("ruleview-changed");
-  editor.input.blur();
+
+  EventUtils.sendString("#F00");
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
+
   await onModifications;
 
   is(textProp.value, "#F00", "Text prop should have been changed.");
