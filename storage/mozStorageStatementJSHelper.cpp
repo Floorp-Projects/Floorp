@@ -35,7 +35,7 @@ stepFunc(JSContext *aCtx, uint32_t argc, JS::Value *_vp)
 {
   JS::CallArgs args = CallArgsFromVp(argc, _vp);
 
-  nsCOMPtr<nsIXPConnect> xpc(mozilla::services::GetXPConnect());
+  nsCOMPtr<nsIXPConnect> xpc(nsIXPConnect::XPConnect());
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
 
   if (!args.thisv().isObject()) {

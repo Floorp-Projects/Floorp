@@ -21,26 +21,21 @@
 #define MOZJSSUBSCRIPTLOADER_CONTRACTID "@mozilla.org/moz/jssubscript-loader;1"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSID)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIXPConnect,
-                                         nsXPConnect::GetSingleton)
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(mozJSComponentLoader,
                                          mozJSComponentLoader::GetOrCreate);
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader)
 
 NS_DEFINE_NAMED_CID(NS_JS_ID_CID);
-NS_DEFINE_NAMED_CID(NS_XPCONNECT_CID);
 NS_DEFINE_NAMED_CID(MOZJSCOMPONENTLOADER_CID);
 NS_DEFINE_NAMED_CID(MOZ_JSSUBSCRIPTLOADER_CID);
 
 #define XPCONNECT_CIDENTRIES                                                  \
   { &kNS_JS_ID_CID, false, nullptr,  nsJSIDConstructor },                     \
-  { &kNS_XPCONNECT_CID, false, nullptr,  nsIXPConnectConstructor },           \
   { &kMOZJSCOMPONENTLOADER_CID, false, nullptr, mozJSComponentLoaderConstructor },\
   { &kMOZ_JSSUBSCRIPTLOADER_CID, false, nullptr, mozJSSubScriptLoaderConstructor },
 
 #define XPCONNECT_CONTRACTS                                                   \
-  { XPC_XPCONNECT_CONTRACTID, &kNS_XPCONNECT_CID },                           \
   { MOZJSCOMPONENTLOADER_CONTRACTID, &kMOZJSCOMPONENTLOADER_CID },            \
   { MOZJSSUBSCRIPTLOADER_CONTRACTID, &kMOZ_JSSUBSCRIPTLOADER_CID },
 
