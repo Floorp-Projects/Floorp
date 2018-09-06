@@ -22,8 +22,12 @@ object AppConstants {
         get() = BUILD_TYPE_RELEASE == BuildConfig.BUILD_TYPE
 
     val isGeckoBuild: Boolean
-        get() = (WebViewProvider.engine == null && Config.DEFAULT_NEW_RENDERER) ||
-                (WebViewProvider.engine?.javaClass?.simpleName == GeckoWebViewProvider::class.java.simpleName)
+        get() =
+            if (WebViewProvider.engine == null) {
+                Config.DEFAULT_NEW_RENDERER
+            } else {
+                WebViewProvider.engine?.javaClass?.simpleName == GeckoWebViewProvider::class.java.simpleName
+            }
 
     val isDevBuild: Boolean
         get() = BUILD_TYPE_DEBUG == BuildConfig.BUILD_TYPE
