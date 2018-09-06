@@ -465,7 +465,12 @@ private:
   RefPtr<nsRefreshDriver> mRootRefresh;
 
   // The most recently allocated transaction id.
-  TransactionId mPendingTransaction;
+  TransactionId mNextTransactionId;
+  // This number is mCompletedTransaction + (pending transaction count).
+  // When we revoke a transaction id, we revert this number (since it's
+  // no longer outstanding), but not mNextTransactionId (since we don't
+  // want to reuse the number).
+  TransactionId mOutstandingTransactionId;
   // The most recently completed transaction id.
   TransactionId mCompletedTransaction;
 

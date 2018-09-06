@@ -392,6 +392,7 @@ nsDOMWindowUtils::UpdateLayerTree()
     RefPtr<nsViewManager> vm = presShell->GetViewManager();
     nsView* view = vm->GetRootView();
     if (view) {
+      nsAutoScriptBlocker scriptBlocker;
       presShell->Paint(view, view->GetBounds(),
           nsIPresShell::PAINT_LAYERS | nsIPresShell::PAINT_SYNC_DECODE_IMAGES);
       presShell->GetLayerManager()->WaitOnTransactionProcessed();
