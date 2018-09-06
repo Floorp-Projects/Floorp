@@ -541,8 +541,9 @@ class ScriptSource
     void incref() { refs++; }
     void decref() {
         MOZ_ASSERT(refs != 0);
-        if (--refs == 0)
+        if (--refs == 0) {
             js_delete(this);
+        }
     }
     MOZ_MUST_USE bool initFromOptions(JSContext* cx,
                                       const JS::ReadOnlyCompileOptions& options,
@@ -702,15 +703,18 @@ class ScriptSourceHolder
     }
     ~ScriptSourceHolder()
     {
-        if (ss)
+        if (ss) {
             ss->decref();
+        }
     }
     void reset(ScriptSource* newss) {
         // incref before decref just in case ss == newss.
-        if (newss)
+        if (newss) {
             newss->incref();
-        if (ss)
+        }
+        if (ss) {
             ss->decref();
+        }
         ss = newss;
     }
     ScriptSource* get() const {
@@ -749,8 +753,9 @@ class ScriptSourceObject : public NativeObject
     }
     JSScript* introductionScript() const {
         Value value = getReservedSlot(INTRODUCTION_SCRIPT_SLOT);
-        if (value.isUndefined())
+        if (value.isUndefined()) {
             return nullptr;
+        }
         return value.toGCThing()->as<JSScript>();
     }
 
@@ -818,8 +823,9 @@ class SharedScriptData
     void decRefCount() {
         MOZ_ASSERT(refCount_ != 0);
         uint32_t remain = --refCount_;
-        if (remain == 0)
+        if (remain == 0) {
             js_free(this);
+        }
     }
 
     size_t dataLength() const {
@@ -836,8 +842,9 @@ class SharedScriptData
         return natoms_;
     }
     GCPtrAtom* atoms() {
-        if (!natoms_)
+        if (!natoms_) {
             return nullptr;
+        }
         return reinterpret_cast<GCPtrAtom*>(data());
     }
 
@@ -881,12 +888,15 @@ struct ScriptBytecodeHasher
     }
     static bool match(SharedScriptData* entry, const Lookup& lookup) {
         const SharedScriptData* data = lookup.scriptData;
-        if (entry->natoms() != data->natoms())
+        if (entry->natoms() != data->natoms()) {
             return false;
-        if (entry->codeLength() != data->codeLength())
+        }
+        if (entry->codeLength() != data->codeLength()) {
             return false;
-        if (entry->numNotes() != data->numNotes())
+        }
+        if (entry->numNotes() != data->numNotes()) {
             return false;
+        }
         return mozilla::ArrayEqual<uint8_t>(entry->data(), data->data(), data->dataLength());
     }
 };
@@ -1255,8 +1265,9 @@ class JSScript : public js::gc::TenuredCell
 
     // Script bytecode is immutable after creation.
     jsbytecode* code() const {
-        if (!scriptData_)
+        if (!scriptData_) {
             return nullptr;
+        }
         return scriptData_->code();
     }
     bool isUncompleted() const {
@@ -1315,10 +1326,12 @@ class JSScript : public js::gc::TenuredCell
     // Number of fixed slots reserved for slots that are always live. Only
     // nonzero for function or module code.
     size_t numAlwaysLiveFixedSlots() const {
-        if (bodyScope()->is<js::FunctionScope>())
+        if (bodyScope()->is<js::FunctionScope>()) {
             return bodyScope()->as<js::FunctionScope>().nextFrameSlot();
-        if (bodyScope()->is<js::ModuleScope>())
+        }
+        if (bodyScope()->is<js::ModuleScope>()) {
             return bodyScope()->as<js::ModuleScope>().nextFrameSlot();
+        }
         return 0;
     }
 
@@ -1330,8 +1343,9 @@ class JSScript : public js::gc::TenuredCell
     }
 
     unsigned numArgs() const {
-        if (bodyScope()->is<js::FunctionScope>())
+        if (bodyScope()->is<js::FunctionScope>()) {
             return bodyScope()->as<js::FunctionScope>().numPositionalFormalParameters();
+        }
         return 0;
     }
 
@@ -1340,8 +1354,9 @@ class JSScript : public js::gc::TenuredCell
     bool functionHasParameterExprs() const {
         // Only functions have parameters.
         js::Scope* scope = bodyScope();
-        if (!scope->is<js::FunctionScope>())
+        if (!scope->is<js::FunctionScope>()) {
             return false;
+        }
         return scope->as<js::FunctionScope>().hasParameterExprs();
     }
 
@@ -1685,8 +1700,9 @@ class JSScript : public js::gc::TenuredCell
      */
     inline JSFunction* functionDelazifying() const;
     JSFunction* functionNonDelazifying() const {
-        if (bodyScope()->is<js::FunctionScope>())
+        if (bodyScope()->is<js::FunctionScope>()) {
             return bodyScope()->as<js::FunctionScope>().canonicalFunction();
+        }
         return nullptr;
     }
     /*
@@ -1696,8 +1712,9 @@ class JSScript : public js::gc::TenuredCell
     inline void ensureNonLazyCanonicalFunction();
 
     js::ModuleObject* module() const {
-        if (bodyScope()->is<js::ModuleScope>())
+        if (bodyScope()->is<js::ModuleScope>()) {
             return bodyScope()->as<js::ModuleScope>().module();
+        }
         return nullptr;
     }
 
@@ -1747,8 +1764,9 @@ class JSScript : public js::gc::TenuredCell
 
     /* Return whether this is a 'direct eval' script in a function scope. */
     bool isDirectEvalInFunction() const {
-        if (!isForEval())
+        if (!isForEval()) {
             return false;
+        }
         return bodyScope()->hasOnChain(js::ScopeKind::Function);
     }
 
@@ -1806,8 +1824,9 @@ class JSScript : public js::gc::TenuredCell
         MOZ_ASSERT(functionHasExtraBodyVarScope());
         for (uint32_t i = 0; i < scopes()->length; i++) {
             js::Scope* scope = getScope(i);
-            if (scope->kind() == js::ScopeKind::FunctionBodyVar)
+            if (scope->kind() == js::ScopeKind::FunctionBodyVar) {
                 return &scope->as<js::VarScope>();
+            }
         }
         MOZ_CRASH("Function extra body var scope not found");
     }
@@ -1815,8 +1834,9 @@ class JSScript : public js::gc::TenuredCell
     bool needsBodyEnvironment() const {
         for (uint32_t i = 0; i < scopes()->length; i++) {
             js::Scope* scope = getScope(i);
-            if (ScopeKindIsInBody(scope->kind()) && scope->hasEnvironment())
+            if (ScopeKindIsInBody(scope->kind()) && scope->hasEnvironment()) {
                 return true;
+            }
         }
         return false;
     }
@@ -2007,8 +2027,9 @@ class JSScript : public js::gc::TenuredCell
 
     inline JSFunction* getFunction(size_t index);
     JSFunction* function() const {
-        if (functionNonDelazifying())
+        if (functionNonDelazifying()) {
             return functionNonDelazifying();
+        }
         return nullptr;
     }
 
@@ -2035,12 +2056,14 @@ class JSScript : public js::gc::TenuredCell
      * JSVAL_VOID, or any other effects.
      */
     bool isEmpty() const {
-        if (length() > 3)
+        if (length() > 3) {
             return false;
+        }
 
         jsbytecode* pc = code();
-        if (noScriptRval() && JSOp(*pc) == JSOP_FALSE)
+        if (noScriptRval() && JSOp(*pc) == JSOP_FALSE) {
             ++pc;
+        }
         return JSOp(*pc) == JSOP_RETRVAL;
     }
 

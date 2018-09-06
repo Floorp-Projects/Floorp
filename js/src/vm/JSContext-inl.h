@@ -58,18 +58,21 @@ class ContextChecks
     }
 
     void check(JS::Realm* r, int argIndex) {
-        if (r && r != realm())
+        if (r && r != realm()) {
             fail(realm(), r, argIndex);
+        }
     }
 
     void check(JS::Compartment* c, int argIndex) {
-        if (c && c != compartment())
+        if (c && c != compartment()) {
             fail(compartment(), c, argIndex);
+        }
     }
 
     void check(JS::Zone* z, int argIndex) {
-        if (zone() && z != zone())
+        if (zone() && z != zone()) {
             fail(zone(), z, argIndex);
+        }
     }
 
     void check(JSObject* obj, int argIndex) {
@@ -100,10 +103,11 @@ class ContextChecks
 
     void check(JSString* str, int argIndex) {
         MOZ_ASSERT(JS::CellIsNotGray(str));
-        if (str->isAtom())
+        if (str->isAtom()) {
             checkAtom(&str->asAtom(), argIndex);
-        else
+        } else {
             check(str->zone(), argIndex);
+        }
     }
 
     void check(JS::Symbol* symbol, int argIndex) {
@@ -111,12 +115,13 @@ class ContextChecks
     }
 
     void check(const js::Value& v, int argIndex) {
-        if (v.isObject())
+        if (v.isObject()) {
             check(&v.toObject(), argIndex);
-        else if (v.isString())
+        } else if (v.isString()) {
             check(v.toString(), argIndex);
-        else if (v.isSymbol())
+        } else if (v.isSymbol()) {
             check(v.toSymbol(), argIndex);
+        }
     }
 
     // Check the contents of any container class that supports the C++
@@ -129,43 +134,50 @@ class ContextChecks
         >::value
     >::Type
     check(const Container& container, int argIndex) {
-        for (auto i : container)
+        for (auto i : container) {
             check(i, argIndex);
+        }
     }
 
     void check(const JS::HandleValueArray& arr, int argIndex) {
-        for (size_t i = 0; i < arr.length(); i++)
+        for (size_t i = 0; i < arr.length(); i++) {
             check(arr[i], argIndex);
+        }
     }
 
     void check(const CallArgs& args, int argIndex) {
-        for (Value* p = args.base(); p != args.end(); ++p)
+        for (Value* p = args.base(); p != args.end(); ++p) {
             check(*p, argIndex);
+        }
     }
 
     void check(jsid id, int argIndex) {
-        if (JSID_IS_ATOM(id))
+        if (JSID_IS_ATOM(id)) {
             checkAtom(JSID_TO_ATOM(id), argIndex);
-        else if (JSID_IS_SYMBOL(id))
+        } else if (JSID_IS_SYMBOL(id)) {
             checkAtom(JSID_TO_SYMBOL(id), argIndex);
-        else
+        } else {
             MOZ_ASSERT(!JSID_IS_GCTHING(id));
+        }
     }
 
     void check(JSScript* script, int argIndex) {
         MOZ_ASSERT(JS::CellIsNotGray(script));
-        if (script)
+        if (script) {
             check(script->realm(), argIndex);
+        }
     }
 
     void check(AbstractFramePtr frame, int argIndex);
 
     void check(Handle<PropertyDescriptor> desc, int argIndex) {
         check(desc.object(), argIndex);
-        if (desc.hasGetterObject())
+        if (desc.hasGetterObject()) {
             check(desc.getterObject(), argIndex);
-        if (desc.hasSetterObject())
+        }
+        if (desc.hasSetterObject()) {
             check(desc.setterObject(), argIndex);
+        }
         check(desc.value(), argIndex);
     }
 
@@ -187,24 +199,27 @@ template <class... Args> inline void
 JSContext::check(const Args&... args)
 {
 #ifdef JS_CRASH_DIAGNOSTICS
-    if (contextChecksEnabled())
+    if (contextChecksEnabled()) {
         checkImpl(0, args...);
+    }
 #endif
 }
 
 template <class... Args> inline void
 JSContext::releaseCheck(const Args&... args)
 {
-    if (contextChecksEnabled())
+    if (contextChecksEnabled()) {
         checkImpl(0, args...);
+    }
 }
 
 template <class... Args> MOZ_ALWAYS_INLINE void
 JSContext::debugOnlyCheck(const Args&... args)
 {
 #if defined(DEBUG) && defined(JS_CRASH_DIAGNOSTICS)
-    if (contextChecksEnabled())
+    if (contextChecksEnabled()) {
         checkImpl(0, args...);
+    }
 #endif
 }
 
@@ -230,13 +245,15 @@ MOZ_ALWAYS_INLINE bool
 CallJSGetterOp(JSContext* cx, GetterOp op, HandleObject obj, HandleId id,
                MutableHandleValue vp)
 {
-    if (!CheckRecursionLimit(cx))
+    if (!CheckRecursionLimit(cx)) {
         return false;
+    }
 
     cx->check(obj, id, vp);
     bool ok = op(cx, obj, id, vp);
-    if (ok)
+    if (ok) {
         cx->check(vp);
+    }
     return ok;
 }
 
@@ -244,8 +261,9 @@ MOZ_ALWAYS_INLINE bool
 CallJSSetterOp(JSContext* cx, SetterOp op, HandleObject obj, HandleId id, HandleValue v,
                ObjectOpResult& result)
 {
-    if (!CheckRecursionLimit(cx))
+    if (!CheckRecursionLimit(cx)) {
         return false;
+    }
 
     cx->check(obj, id, v);
     return op(cx, obj, id, v, result);
@@ -255,8 +273,9 @@ inline bool
 CallJSAddPropertyOp(JSContext* cx, JSAddPropertyOp op, HandleObject obj, HandleId id,
                     HandleValue v)
 {
-    if (!CheckRecursionLimit(cx))
+    if (!CheckRecursionLimit(cx)) {
         return false;
+    }
 
     cx->check(obj, id, v);
     return op(cx, obj, id, v);
@@ -266,12 +285,14 @@ inline bool
 CallJSDeletePropertyOp(JSContext* cx, JSDeletePropertyOp op, HandleObject receiver, HandleId id,
                        ObjectOpResult& result)
 {
-    if (!CheckRecursionLimit(cx))
+    if (!CheckRecursionLimit(cx)) {
         return false;
+    }
 
     cx->check(receiver, id);
-    if (op)
+    if (op) {
         return op(cx, receiver, id, result);
+    }
     return result.succeed();
 }
 
@@ -281,8 +302,9 @@ CheckForInterrupt(JSContext* cx)
     MOZ_ASSERT(!cx->isExceptionPending());
     // Add an inline fast-path since we have to check for interrupts in some hot
     // C++ loops of library builtins.
-    if (MOZ_UNLIKELY(cx->hasAnyPendingInterrupt()))
+    if (MOZ_UNLIKELY(cx->hasAnyPendingInterrupt())) {
         return cx->handleInterrupt();
+    }
 
     JS_INTERRUPT_POSSIBLY_FAIL();
 
@@ -317,12 +339,14 @@ JSContext::setPendingException(JS::HandleValue v)
         // Do not intercept exceptions if we are already
         // in the exception interceptor. That would lead
         // to infinite recursion.
-        if (this->runtime()->errorInterception.isExecuting)
+        if (this->runtime()->errorInterception.isExecuting) {
             break;
+        }
 
         // Check whether we have an interceptor at all.
-        if (!this->runtime()->errorInterception.interceptor)
+        if (!this->runtime()->errorInterception.interceptor) {
             break;
+        }
 
         // Make sure that we do not call the interceptor from within
         // the interceptor.
@@ -370,8 +394,9 @@ JSContext::enterAtomsZone()
 inline void
 JSContext::setZone(js::Zone *zone, JSContext::IsAtomsZone isAtomsZone)
 {
-    if (zone_)
+    if (zone_) {
         zone_->addTenuredAllocsSinceMinorGC(allocsThisZoneSinceMinorGC_);
+    }
 
     allocsThisZoneSinceMinorGC_ = 0;
 
@@ -430,8 +455,9 @@ JSContext::leaveRealm(JS::Realm* oldRealm)
 
     setRealm(oldRealm);
 
-    if (startingRealm)
+    if (startingRealm) {
         startingRealm->leave();
+    }
 }
 
 inline void
@@ -466,24 +492,28 @@ JSContext::setRealmForJitExceptionHandler(JS::Realm* realm)
 inline JSScript*
 JSContext::currentScript(jsbytecode** ppc, AllowCrossRealm allowCrossRealm) const
 {
-    if (ppc)
+    if (ppc) {
         *ppc = nullptr;
+    }
 
     js::Activation* act = activation();
-    if (!act)
+    if (!act) {
         return nullptr;
+    }
 
     MOZ_ASSERT(act->cx() == this);
 
     // Cross-compartment implies cross-realm.
-    if (allowCrossRealm == AllowCrossRealm::DontAllow && act->compartment() != compartment())
+    if (allowCrossRealm == AllowCrossRealm::DontAllow && act->compartment() != compartment()) {
         return nullptr;
+    }
 
     JSScript* script = nullptr;
     jsbytecode* pc = nullptr;
     if (act->isJit()) {
-        if (act->hasWasmExitFP())
+        if (act->hasWasmExitFP()) {
             return nullptr;
+        }
         js::jit::GetPcScript(const_cast<JSContext*>(this), &script, &pc);
     } else {
         js::InterpreterFrame* fp = act->asInterpreter()->current();
@@ -494,11 +524,13 @@ JSContext::currentScript(jsbytecode** ppc, AllowCrossRealm allowCrossRealm) cons
 
     MOZ_ASSERT(script->containsPC(pc));
 
-    if (allowCrossRealm == AllowCrossRealm::DontAllow && script->realm() != realm())
+    if (allowCrossRealm == AllowCrossRealm::DontAllow && script->realm() != realm()) {
         return nullptr;
+    }
 
-    if (ppc)
+    if (ppc) {
         *ppc = pc;
+    }
     return script;
 }
 
