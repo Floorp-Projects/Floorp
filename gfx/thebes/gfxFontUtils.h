@@ -31,7 +31,7 @@ class gfxSparseBitSet {
 private:
     enum { BLOCK_SIZE = 32 };   // ==> 256 codepoints per block
     enum { BLOCK_SIZE_BITS = BLOCK_SIZE * 8 };
-    enum { BLOCK_INDEX_SHIFT = 8 };
+    enum { NO_BLOCK = 0xffff }; // index value indicating missing (empty) block
 
     struct Block {
         Block(const Block& aBlock) { memcpy(mBits, aBlock.mBits, sizeof(mBits)); }
@@ -42,31 +42,26 @@ private:
 public:
     gfxSparseBitSet() { }
     gfxSparseBitSet(const gfxSparseBitSet& aBitset) {
-        uint32_t len = aBitset.mBlocks.Length();
-        mBlocks.AppendElements(len);
-        for (uint32_t i = 0; i < len; ++i) {
-            Block *block = aBitset.mBlocks[i].get();
-            if (block) {
-                mBlocks[i] = mozilla::MakeUnique<Block>(*block);
-            }
-        }
+        mBlockIndex.AppendElements(aBitset.mBlockIndex);
+        mBlocks.AppendElements(aBitset.mBlocks);
     }
 
-    bool Equals(const gfxSparseBitSet *aOther) const {
-        if (mBlocks.Length() != aOther->mBlocks.Length()) {
+    bool Equals(const gfxSparseBitSet* aOther) const {
+        if (mBlockIndex.Length() != aOther->mBlockIndex.Length()) {
             return false;
         }
-        size_t n = mBlocks.Length();
+        size_t n = mBlockIndex.Length();
         for (size_t i = 0; i < n; ++i) {
-            const Block *b1 = mBlocks[i].get();
-            const Block *b2 = aOther->mBlocks[i].get();
-            if (!b1 != !b2) {
+            uint32_t b1 = mBlockIndex[i];
+            uint32_t b2 = aOther->mBlockIndex[i];
+            if ((b1 == NO_BLOCK) != (b2 == NO_BLOCK)) {
                 return false;
             }
-            if (!b1) {
+            if (b1 == NO_BLOCK) {
                 continue;
             }
-            if (memcmp(&b1->mBits, &b2->mBits, BLOCK_SIZE) != 0) {
+            if (memcmp(&mBlocks[b1].mBits, &aOther->mBlocks[b2].mBits,
+                       BLOCK_SIZE) != 0) {
                 return false;
             }
         }
@@ -74,52 +69,45 @@ public:
     }
 
     bool test(uint32_t aIndex) const {
-        NS_ASSERTION(mBlocks.DebugGetHeader(), "mHdr is null, this is bad");
-        uint32_t blockIndex = aIndex/BLOCK_SIZE_BITS;
-        if (blockIndex >= mBlocks.Length()) {
+        uint32_t i = aIndex / BLOCK_SIZE_BITS;
+        if (i >= mBlockIndex.Length() || mBlockIndex[i] == NO_BLOCK) {
             return false;
         }
-        const Block *block = mBlocks[blockIndex].get();
-        if (!block) {
-            return false;
-        }
-        return ((block->mBits[(aIndex>>3) & (BLOCK_SIZE - 1)]) & (1 << (aIndex & 0x7))) != 0;
+        const Block& block = mBlocks[mBlockIndex[i]];
+        return ((block.mBits[(aIndex>>3) & (BLOCK_SIZE - 1)]) & (1 << (aIndex & 0x7))) != 0;
     }
 
     // dump out contents of bitmap
     void Dump(const char* aPrefix, eGfxLog aWhichLog) const;
 
     bool TestRange(uint32_t aStart, uint32_t aEnd) {
-        uint32_t startBlock, endBlock, blockLen;
-        
         // start point is beyond the end of the block array? return false immediately
-        startBlock = aStart >> BLOCK_INDEX_SHIFT;
-        blockLen = mBlocks.Length();
-        if (startBlock >= blockLen) return false;
-        
-        // check for blocks in range, if none, return false
-        uint32_t blockIndex;
-        bool hasBlocksInRange = false;
+        uint32_t startBlock = aStart / BLOCK_SIZE_BITS;
+        uint32_t blockLen = mBlockIndex.Length();
+        if (startBlock >= blockLen) {
+            return false;
+        }
 
-        endBlock = aEnd >> BLOCK_INDEX_SHIFT;
-        for (blockIndex = startBlock; blockIndex <= endBlock; blockIndex++) {
-            if (blockIndex < blockLen && mBlocks[blockIndex]) {
+        // check for blocks in range, if none, return false
+        bool hasBlocksInRange = false;
+        uint32_t endBlock = aEnd / BLOCK_SIZE_BITS;
+        for (uint32_t bi = startBlock; bi <= endBlock; bi++) {
+            if (bi < blockLen && mBlockIndex[bi] != NO_BLOCK) {
                 hasBlocksInRange = true;
+                break;
             }
         }
         if (!hasBlocksInRange) {
             return false;
         }
 
-        Block *block;
-        uint32_t i, start, end;
-        
         // first block, check bits
-        if ((block = mBlocks[startBlock].get())) {
-            start = aStart;
-            end = std::min(aEnd, ((startBlock+1) << BLOCK_INDEX_SHIFT) - 1);
-            for (i = start; i <= end; i++) {
-                if ((block->mBits[(i>>3) & (BLOCK_SIZE - 1)]) & (1 << (i & 0x7))) {
+        if (mBlockIndex[startBlock] != NO_BLOCK) {
+            const Block& block = mBlocks[mBlockIndex[startBlock]];
+            uint32_t start = aStart;
+            uint32_t end = std::min(aEnd, ((startBlock + 1) * BLOCK_SIZE_BITS) - 1);
+            for (uint32_t i = start; i <= end; i++) {
+                if ((block.mBits[(i >> 3) & (BLOCK_SIZE - 1)]) & (1 << (i & 0x7))) {
                     return true;
                 }
             }
@@ -129,137 +117,129 @@ public:
         }
 
         // [2..n-1] blocks check bytes
-        for (blockIndex = startBlock + 1; blockIndex < endBlock; blockIndex++) {
-            uint32_t index;
-            
-            if (blockIndex >= blockLen ||
-                !(block = mBlocks[blockIndex].get())) {
+        for (uint32_t i = startBlock + 1; i < endBlock; i++) {
+            if (i >= blockLen || mBlockIndex[i] == NO_BLOCK) {
                 continue;
             }
-            for (index = 0; index < BLOCK_SIZE; index++) {
-                if (block->mBits[index]) {
+            const Block& block = mBlocks[mBlockIndex[i]];
+            for (uint32_t index = 0; index < BLOCK_SIZE; index++) {
+                if (block.mBits[index]) {
                     return true;
                 }
             }
         }
-        
+
         // last block, check bits
-        if (endBlock < blockLen && (block = mBlocks[endBlock].get())) {
-            start = endBlock << BLOCK_INDEX_SHIFT;
-            end = aEnd;
-            for (i = start; i <= end; i++) {
-                if ((block->mBits[(i>>3) & (BLOCK_SIZE - 1)]) & (1 << (i & 0x7))) {
+        if (endBlock < blockLen && mBlockIndex[endBlock] != NO_BLOCK) {
+            const Block& block = mBlocks[mBlockIndex[endBlock]];
+            uint32_t start = endBlock * BLOCK_SIZE_BITS;
+            uint32_t end = aEnd;
+            for (uint32_t i = start; i <= end; i++) {
+                if ((block.mBits[(i >> 3) & (BLOCK_SIZE - 1)]) & (1 << (i & 0x7))) {
                     return true;
                 }
             }
         }
-        
+
         return false;
     }
     
     void set(uint32_t aIndex) {
-        uint32_t blockIndex = aIndex/BLOCK_SIZE_BITS;
-        if (blockIndex >= mBlocks.Length()) {
-            mBlocks.AppendElements(blockIndex + 1 - mBlocks.Length());
+        uint32_t i = aIndex / BLOCK_SIZE_BITS;
+        while (i >= mBlockIndex.Length()) {
+            mBlockIndex.AppendElement(NO_BLOCK);
         }
-        Block *block = mBlocks[blockIndex].get();
-        if (!block) {
-            block = new Block;
-            mBlocks[blockIndex].reset(block);
+        if (mBlockIndex[i] == NO_BLOCK) {
+            mBlocks.AppendElement();
+            MOZ_ASSERT(mBlocks.Length() < 0xffff, "block index overflow!");
+            mBlockIndex[i] = mBlocks.Length() - 1;
         }
-        block->mBits[(aIndex>>3) & (BLOCK_SIZE - 1)] |= 1 << (aIndex & 0x7);
+        Block& block = mBlocks[mBlockIndex[i]];
+        block.mBits[(aIndex >> 3) & (BLOCK_SIZE - 1)] |= 1 << (aIndex & 0x7);
     }
 
     void set(uint32_t aIndex, bool aValue) {
-        if (aValue)
+        if (aValue) {
             set(aIndex);
-        else
+        } else {
             clear(aIndex);
+        }
     }
 
     void SetRange(uint32_t aStart, uint32_t aEnd) {
-        const uint32_t startIndex = aStart/BLOCK_SIZE_BITS;
-        const uint32_t endIndex = aEnd/BLOCK_SIZE_BITS;
+        const uint32_t startIndex = aStart / BLOCK_SIZE_BITS;
+        const uint32_t endIndex = aEnd / BLOCK_SIZE_BITS;
 
-        if (endIndex >= mBlocks.Length()) {
-            uint32_t numNewBlocks = endIndex + 1 - mBlocks.Length();
-            mBlocks.AppendElements(numNewBlocks);
+        while (endIndex >= mBlockIndex.Length()) {
+            mBlockIndex.AppendElement(NO_BLOCK);
         }
 
         for (uint32_t i = startIndex; i <= endIndex; ++i) {
             const uint32_t blockFirstBit = i * BLOCK_SIZE_BITS;
             const uint32_t blockLastBit = blockFirstBit + BLOCK_SIZE_BITS - 1;
 
-            Block *block = mBlocks[i].get();
-            if (!block) {
+            if (mBlockIndex[i] == NO_BLOCK) {
                 bool fullBlock =
                     (aStart <= blockFirstBit && aEnd >= blockLastBit);
-
-                block = new Block(fullBlock ? 0xFF : 0);
-                mBlocks[i].reset(block);
-
+                mBlocks.AppendElement(Block(fullBlock ? 0xFF : 0));
+                MOZ_ASSERT(mBlocks.Length() < 0xffff, "block index overflow!");
+                mBlockIndex[i] = mBlocks.Length() - 1;
                 if (fullBlock) {
                     continue;
                 }
             }
 
+            Block& block = mBlocks[mBlockIndex[i]];
             const uint32_t start = aStart > blockFirstBit ? aStart - blockFirstBit : 0;
             const uint32_t end = std::min<uint32_t>(aEnd - blockFirstBit, BLOCK_SIZE_BITS - 1);
 
             for (uint32_t bit = start; bit <= end; ++bit) {
-                block->mBits[bit>>3] |= 1 << (bit & 0x7);
+                block.mBits[bit >> 3] |= 1 << (bit & 0x7);
             }
         }
     }
 
     void clear(uint32_t aIndex) {
-        uint32_t blockIndex = aIndex/BLOCK_SIZE_BITS;
-        if (blockIndex >= mBlocks.Length()) {
-            mBlocks.AppendElements(blockIndex + 1 - mBlocks.Length());
-        }
-        Block *block = mBlocks[blockIndex].get();
-        if (!block) {
+        uint32_t i = aIndex / BLOCK_SIZE_BITS;
+        if (i >= mBlockIndex.Length()) {
             return;
         }
-        block->mBits[(aIndex>>3) & (BLOCK_SIZE - 1)] &= ~(1 << (aIndex & 0x7));
+        if (mBlockIndex[i] == NO_BLOCK) {
+            mBlocks.AppendElement();
+            MOZ_ASSERT(mBlocks.Length() < 0xffff, "block index overflow!");
+            mBlockIndex[i] = mBlocks.Length() - 1;
+        }
+        Block& block = mBlocks[mBlockIndex[i]];
+        block.mBits[(aIndex >> 3) & (BLOCK_SIZE - 1)] &= ~(1 << (aIndex & 0x7));
     }
 
     void ClearRange(uint32_t aStart, uint32_t aEnd) {
-        const uint32_t startIndex = aStart/BLOCK_SIZE_BITS;
-        const uint32_t endIndex = aEnd/BLOCK_SIZE_BITS;
-
-        if (endIndex >= mBlocks.Length()) {
-            uint32_t numNewBlocks = endIndex + 1 - mBlocks.Length();
-            mBlocks.AppendElements(numNewBlocks);
-        }
+        const uint32_t startIndex = aStart / BLOCK_SIZE_BITS;
+        const uint32_t endIndex = aEnd / BLOCK_SIZE_BITS;
 
         for (uint32_t i = startIndex; i <= endIndex; ++i) {
-            const uint32_t blockFirstBit = i * BLOCK_SIZE_BITS;
-
-            Block *block = mBlocks[i].get();
-            if (!block) {
-                // any nonexistent block is implicitly all clear,
-                // so there's no need to even create it
+            if (i >= mBlockIndex.Length()) {
+                return;
+            }
+            if (mBlockIndex[i] == NO_BLOCK) {
                 continue;
             }
+
+            const uint32_t blockFirstBit = i * BLOCK_SIZE_BITS;
+            Block& block = mBlocks[mBlockIndex[i]];
 
             const uint32_t start = aStart > blockFirstBit ? aStart - blockFirstBit : 0;
             const uint32_t end = std::min<uint32_t>(aEnd - blockFirstBit, BLOCK_SIZE_BITS - 1);
 
             for (uint32_t bit = start; bit <= end; ++bit) {
-                block->mBits[bit>>3] &= ~(1 << (bit & 0x7));
+                block.mBits[bit >> 3] &= ~(1 << (bit & 0x7));
             }
         }
     }
 
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-        size_t total = mBlocks.ShallowSizeOfExcludingThis(aMallocSizeOf);
-        for (uint32_t i = 0; i < mBlocks.Length(); i++) {
-            if (mBlocks[i]) {
-                total += aMallocSizeOf(mBlocks[i].get());
-            }
-        }
-        return total;
+        return mBlocks.ShallowSizeOfExcludingThis(aMallocSizeOf) +
+               mBlockIndex.ShallowSizeOfExcludingThis(aMallocSizeOf);
     }
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
@@ -268,35 +248,35 @@ public:
 
     // clear out all blocks in the array
     void reset() {
-        uint32_t i;
-        for (i = 0; i < mBlocks.Length(); i++) {
-            mBlocks[i] = nullptr;
-        }
+        mBlocks.Clear();
+        mBlockIndex.Clear();
     }
 
     // set this bitset to the union of its current contents and another
     void Union(const gfxSparseBitSet& aBitset) {
         // ensure mBlocks is large enough
-        uint32_t blockCount = aBitset.mBlocks.Length();
-        if (blockCount > mBlocks.Length()) {
-            uint32_t needed = blockCount - mBlocks.Length();
-            mBlocks.AppendElements(needed);
+        uint32_t blockCount = aBitset.mBlockIndex.Length();
+        while (blockCount > mBlockIndex.Length()) {
+            mBlockIndex.AppendElement(NO_BLOCK);
         }
         // for each block that may be present in aBitset...
         for (uint32_t i = 0; i < blockCount; ++i) {
             // if it is missing (implicitly empty), just skip
-            if (!aBitset.mBlocks[i]) {
+            if (aBitset.mBlockIndex[i] == NO_BLOCK) {
                 continue;
             }
             // if the block is missing in this set, just copy the other
-            if (!mBlocks[i]) {
-                mBlocks[i] = mozilla::MakeUnique<Block>(*aBitset.mBlocks[i]);
+            if (mBlockIndex[i] == NO_BLOCK) {
+                mBlocks.AppendElement(aBitset.mBlocks[aBitset.mBlockIndex[i]]);
+                MOZ_ASSERT(mBlocks.Length() < 0xffff, "block index overflow!");
+                mBlockIndex[i] = mBlocks.Length() - 1;
                 continue;
             }
             // else set existing block to the union of both
-            uint32_t *dst = reinterpret_cast<uint32_t*>(mBlocks[i]->mBits);
-            const uint32_t *src =
-                reinterpret_cast<const uint32_t*>(aBitset.mBlocks[i]->mBits);
+            uint32_t* dst = reinterpret_cast<uint32_t*>(
+                &mBlocks[mBlockIndex[i]].mBits);
+            const uint32_t* src = reinterpret_cast<const uint32_t*>(
+                &aBitset.mBlocks[aBitset.mBlockIndex[i]].mBits);
             for (uint32_t j = 0; j < BLOCK_SIZE / 4; ++j) {
                 dst[j] |= src[j];
             }
@@ -304,23 +284,27 @@ public:
     }
 
     void Compact() {
+        // TODO: Discard any empty blocks, and adjust index accordingly.
+        // (May not be worth doing, though, because we so rarely clear bits
+        // that were previously set.)
         mBlocks.Compact();
+        mBlockIndex.Compact();
     }
 
     uint32_t GetChecksum() const {
-        uint32_t check = adler32(0, Z_NULL, 0);
-        for (uint32_t i = 0; i < mBlocks.Length(); i++) {
-            if (mBlocks[i]) {
-                const Block *block = mBlocks[i].get();
-                check = adler32(check, (uint8_t*) (&i), 4);
-                check = adler32(check, (uint8_t*) block, sizeof(Block));
-            }
-        }
+        uint32_t check =
+            adler32(0,
+                    reinterpret_cast<const uint8_t*>(mBlockIndex.Elements()),
+                    mBlockIndex.Length() * sizeof(uint16_t));
+        check = adler32(check,
+                        reinterpret_cast<const uint8_t*>(mBlocks.Elements()),
+                        mBlocks.Length() * sizeof(Block));
         return check;
     }
 
 private:
-    nsTArray<mozilla::UniquePtr<Block>> mBlocks;
+    nsTArray<uint16_t> mBlockIndex;
+    nsTArray<Block>    mBlocks;
 };
 
 #define TRUETYPE_TAG(a, b, c, d) ((a) << 24 | (b) << 16 | (c) << 8 | (d))
