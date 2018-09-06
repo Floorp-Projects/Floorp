@@ -1329,12 +1329,6 @@ VARCACHE_PREF(
 )
 
 VARCACHE_PREF(
-  "security.csp.enable_violation_events",
-   security_csp_enable_violation_events,
-  bool, true
-)
-
-VARCACHE_PREF(
   "security.csp.reporting.script-sample.max-length",
    security_csp_reporting_script_sample_max_length,
   int32_t, 40
