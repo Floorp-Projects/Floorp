@@ -16,13 +16,13 @@ interface nsIGfxInfo : nsISupports
   readonly attribute boolean D2DEnabled;
   readonly attribute boolean DWriteEnabled;
   readonly attribute boolean usingGPUProcess;
-  readonly attribute DOMString DWriteVersion;
-  readonly attribute DOMString cleartypeParameters;
+  readonly attribute AString DWriteVersion;
+  readonly attribute AString cleartypeParameters;
 
   /*
    * These are valid across all platforms.
    */
-  readonly attribute DOMString ContentBackend;
+  readonly attribute AString ContentBackend;
   readonly attribute boolean WebRenderEnabled;
   readonly attribute boolean isHeadless;
   readonly attribute boolean UsesTiling;
@@ -35,33 +35,33 @@ interface nsIGfxInfo : nsISupports
   /**
    * The name of the display adapter.
    */
-  readonly attribute DOMString adapterDescription;
-  readonly attribute DOMString adapterDescription2;
+  readonly attribute AString adapterDescription;
+  readonly attribute AString adapterDescription2;
 
-  readonly attribute DOMString adapterDriver;
-  readonly attribute DOMString adapterDriver2;
+  readonly attribute AString adapterDriver;
+  readonly attribute AString adapterDriver2;
 
   /* These types are inspired by DXGI_ADAPTER_DESC */
-  readonly attribute DOMString adapterVendorID;
-  readonly attribute DOMString adapterVendorID2;
+  readonly attribute AString adapterVendorID;
+  readonly attribute AString adapterVendorID2;
 
-  readonly attribute DOMString adapterDeviceID;
-  readonly attribute DOMString adapterDeviceID2;
+  readonly attribute AString adapterDeviceID;
+  readonly attribute AString adapterDeviceID2;
 
-  readonly attribute DOMString adapterSubsysID;
-  readonly attribute DOMString adapterSubsysID2;
+  readonly attribute AString adapterSubsysID;
+  readonly attribute AString adapterSubsysID2;
 
   /**
    * The amount of RAM in MB in the display adapter.
    */
-  readonly attribute DOMString adapterRAM;
-  readonly attribute DOMString adapterRAM2;
+  readonly attribute AString adapterRAM;
+  readonly attribute AString adapterRAM2;
 
-  readonly attribute DOMString adapterDriverVersion;
-  readonly attribute DOMString adapterDriverVersion2;
+  readonly attribute AString adapterDriverVersion;
+  readonly attribute AString adapterDriverVersion2;
 
-  readonly attribute DOMString adapterDriverDate;
-  readonly attribute DOMString adapterDriverDate2;
+  readonly attribute AString adapterDriverDate;
+  readonly attribute AString adapterDriverDate2;
 
   readonly attribute boolean isGPU2Active;
 
@@ -172,7 +172,7 @@ interface nsIGfxInfo : nsISupports
    * Ask about a feature, return the minimum driver version required for it if its status is
    * FEATURE_BLOCKED_DRIVER_VERSION, otherwise return an empty string.
    */
-  DOMString getFeatureSuggestedDriverVersion(in long aFeature);
+  AString getFeatureSuggestedDriverVersion(in long aFeature);
 
   // only useful on X11
   [noscript, notxpcom] void GetData();

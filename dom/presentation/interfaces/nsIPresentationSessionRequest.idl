@@ -25,10 +25,10 @@ interface nsIPresentationSessionRequest: nsISupports
   readonly attribute nsIPresentationDevice device;
 
   // The URL requested to open by remote device.
-  readonly attribute DOMString url;
+  readonly attribute AString url;
 
   // The Id for representing this session.
-  readonly attribute DOMString presentationId;
+  readonly attribute AString presentationId;
 
   // The control channel for this session.
   readonly attribute nsIPresentationControlChannel controlChannel;

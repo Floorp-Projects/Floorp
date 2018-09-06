@@ -8,10 +8,10 @@ interface nsIWorkerDebuggerListener : nsISupports
 {
   void onClose();
 
-  void onError(in DOMString filename, in unsigned long lineno,
-               in DOMString message);
+  void onError(in AString filename, in unsigned long lineno,
+               in AString message);
 
-  void onMessage(in DOMString message);
+  void onMessage(in AString message);
 };
 
 [scriptable, builtinclass, uuid(22f93aa3-8a05-46be-87e0-fa93bf8a8eff)]
@@ -31,7 +31,7 @@ interface nsIWorkerDebugger : nsISupports
 
   readonly attribute unsigned long type;
 
-  readonly attribute DOMString url;
+  readonly attribute AString url;
 
   readonly attribute mozIDOMWindow window;
 
@@ -39,10 +39,10 @@ interface nsIWorkerDebugger : nsISupports
 
   readonly attribute unsigned long serviceWorkerID;
 
-  void initialize(in DOMString url);
+  void initialize(in AString url);
 
   [binaryname(PostMessageMoz)]
-  void postMessage(in DOMString message);
+  void postMessage(in AString message);
 
   void addListener(in nsIWorkerDebuggerListener listener);
 

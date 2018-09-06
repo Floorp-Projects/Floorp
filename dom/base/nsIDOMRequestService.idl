@@ -15,7 +15,7 @@ interface nsIDOMRequestService : nsISupports
   DOMRequest createRequest(in mozIDOMWindow window);
 
   void fireSuccess(in DOMRequest request, in jsval result);
-  void fireError(in DOMRequest request, in DOMString error);
+  void fireError(in DOMRequest request, in AString error);
   void fireSuccessAsync(in DOMRequest request, in jsval result);
-  void fireErrorAsync(in DOMRequest request, in DOMString error);
+  void fireErrorAsync(in DOMRequest request, in AString error);
 };

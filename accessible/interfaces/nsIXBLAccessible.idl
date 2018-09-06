@@ -16,5 +16,5 @@ interface nsIXBLAccessible : nsISupports
   /**
    * Return accessible name.
    */
-  readonly attribute DOMString accessibleName;
+  readonly attribute AString accessibleName;
 };
