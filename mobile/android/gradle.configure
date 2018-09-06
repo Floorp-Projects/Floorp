@@ -238,15 +238,16 @@ set_config('GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS', gradle_android_archive_geck
 
 
 @depends(gradle_android_build_config)
-def gradle_android_archive_geckoview_coverage_artifacts_tasks(build_config):
-    '''Gradle tasks run by |mach android archive-geckoview-coverage-artifacts|.'''
+def gradle_android_archive_coverage_artifacts_tasks(build_config):
+    '''Gradle tasks run by |mach android archive-coverage-artifacts|.'''
     return [
         'geckoview:archiveClassfiles{geckoview.variant.name}'.format(geckoview=build_config.geckoview),
         'geckoview:copyCoverageDependencies',
+        'app:archiveClassfiles{app.variant.name}'.format(app=build_config.app),
     ]
 
-set_config('GRADLE_ANDROID_ARCHIVE_GECKOVIEW_COVERAGE_ARTIFACTS_TASKS',
-           gradle_android_archive_geckoview_coverage_artifacts_tasks)
+set_config('GRADLE_ANDROID_ARCHIVE_COVERAGE_ARTIFACTS_TASKS',
+           gradle_android_archive_coverage_artifacts_tasks)
 
 
 @depends(
@@ -259,7 +260,7 @@ set_config('GRADLE_ANDROID_ARCHIVE_GECKOVIEW_COVERAGE_ARTIFACTS_TASKS',
     gradle_android_generate_sdk_bindings_tasks,
     gradle_android_generate_generated_jni_wrappers_tasks,
     gradle_android_generate_fennec_jni_wrappers_tasks,
-    gradle_android_archive_geckoview_coverage_artifacts_tasks,
+    gradle_android_archive_coverage_artifacts_tasks,
 )
 @imports(_from='itertools', _import='imap')
 @imports(_from='itertools', _import='chain')

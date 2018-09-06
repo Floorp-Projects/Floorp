@@ -528,3 +528,30 @@ apply from: "${topsrcdir}/mobile/android/gradle/jacoco_dependencies.gradle"
 if (project.hasProperty('enable_code_coverage')) {
     apply from: "${topsrcdir}/mobile/android/gradle/jacoco_for_junit.gradle"
 }
+
+
+// Set up code coverage for tests on emulators.
+if (mozconfig.substs.MOZ_JAVA_CODE_COVERAGE) {
+    // Generate tasks to archive compiled classfiles for later use with JaCoCo report generation.
+    // One of these tasks is used by `mach android archive-coverage-artifacts`.
+    android.applicationVariants.all { variant ->
+        def name = variant.name
+        def compileTask = tasks.getByName("compile${name.capitalize()}JavaWithJavac")
+        task "archiveClassfiles${name.capitalize()}"(type: Zip, dependsOn: compileTask) {
+            description = "Archive compiled classfiles for $name in order to export them as code coverage artifacts."
+            def fileFilter = ['**/androidTest/**',
+                              '**/test/**',
+                              '**/R.class',
+                              '**/R$*.class',
+                              '**/BuildConfig.*',
+                              '**/Manifest*.*',
+                              '**/*Test*.*',
+                              'android/**/*.*']
+            from fileTree(dir: compileTask.destinationDir, excludes: fileFilter)
+            destinationDir = file("${buildDir}/coverage")
+            // Note: This task assumes only one variant of archiveClassfiles* will be used.
+            // Running multiple variants of this task will overwrite the output archive.
+            archiveName = 'target.app_classfiles.zip'
+        }
+    }
+}
