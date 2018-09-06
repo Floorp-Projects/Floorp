@@ -357,6 +357,13 @@ class Channel
     return rtp_receiver_->GetSources();
   }
 
+  int GetPlayoutFrequency() const {
+    if (audio_coding_) {
+      return audio_coding_->PlayoutFrequency();
+    }
+    return 0;
+  }
+
  private:
   class ProcessAndEncodeAudioTask;
 
