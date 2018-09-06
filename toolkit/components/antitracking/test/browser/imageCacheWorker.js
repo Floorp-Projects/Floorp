@@ -43,7 +43,8 @@ AntiTracking.runTest("Image cache - should load the image twice.",
   null, // cleanup function
   null, // no extra prefs
   false, // no window open test
-  false // no user-interaction test
+  false, // no user-interaction test
+  expectedBlockingNotifications
 );
 
 // We still want to see just 2 requests.
