@@ -27,7 +27,7 @@ class SVGFilterElement;
 } // namespace dom
 } // namespace mozilla
 
-class nsSVGFilterFrame : public nsSVGContainerFrame
+class nsSVGFilterFrame final : public nsSVGContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGFilterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);

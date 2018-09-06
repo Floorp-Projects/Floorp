@@ -276,7 +276,7 @@ nsMathMLFrame::ParseNumericValue(const nsString&   aString,
 }
 
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
-class nsDisplayMathMLBoundingMetrics : public nsDisplayItem {
+class nsDisplayMathMLBoundingMetrics final : public nsDisplayItem {
 public:
   nsDisplayMathMLBoundingMetrics(nsDisplayListBuilder* aBuilder,
                                  nsIFrame* aFrame, const nsRect& aRect)
@@ -324,7 +324,8 @@ nsMathMLFrame::DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
 }
 #endif
 
-class nsDisplayMathMLBar : public nsDisplayItem {
+class nsDisplayMathMLBar final : public nsDisplayItem
+{
 public:
   nsDisplayMathMLBar(nsDisplayListBuilder* aBuilder,
                      nsIFrame* aFrame, const nsRect& aRect, uint32_t aIndex)

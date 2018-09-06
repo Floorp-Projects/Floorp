@@ -196,7 +196,8 @@ NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(FontSizeInflationProperty, float)
  *
  * This is stored in {Simple, Complex}TextRunUserData.
  */
-class GlyphObserver : public gfxFont::GlyphChangeObserver {
+class GlyphObserver final : public gfxFont::GlyphChangeObserver
+{
 public:
   GlyphObserver(gfxFont* aFont, gfxTextRun* aTextRun)
     : gfxFont::GlyphChangeObserver(aFont), mTextRun(aTextRun) {
@@ -4884,7 +4885,8 @@ nsTextFrame::CharacterDataChanged(const CharacterDataChangeInfo& aInfo)
   return NS_OK;
 }
 
-class nsDisplayText final : public nsCharClipDisplayItem {
+class nsDisplayText final : public nsCharClipDisplayItem
+{
 public:
   nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame,
                 const Maybe<bool>& aIsSelected);

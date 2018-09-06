@@ -474,7 +474,8 @@ static gfx::Matrix4x4 ComputePageTransform(nsIFrame* aFrame, float aAppUnitsPerP
   return gfx::Matrix4x4::Scaling(scale, scale, 1);
 }
 
-class nsDisplayHeaderFooter : public nsDisplayItem {
+class nsDisplayHeaderFooter final : public nsDisplayItem
+{
 public:
   nsDisplayHeaderFooter(nsDisplayListBuilder* aBuilder, nsPageFrame *aFrame)
     : nsDisplayItem(aBuilder, aFrame)

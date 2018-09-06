@@ -268,7 +268,8 @@ void Area::HasFocus(bool aHasFocus)
 
 //----------------------------------------------------------------------
 
-class DefaultArea : public Area {
+class DefaultArea final : public Area
+{
 public:
   explicit DefaultArea(HTMLAreaElement* aArea);
 
@@ -312,7 +313,8 @@ void DefaultArea::GetRect(nsIFrame* aFrame, nsRect& aRect)
 
 //----------------------------------------------------------------------
 
-class RectArea : public Area {
+class RectArea final : public Area
+{
 public:
   explicit RectArea(HTMLAreaElement* aArea);
 
@@ -418,7 +420,8 @@ void RectArea::GetRect(nsIFrame* aFrame, nsRect& aRect)
 
 //----------------------------------------------------------------------
 
-class PolyArea : public Area {
+class PolyArea final : public Area
+{
 public:
   explicit PolyArea(HTMLAreaElement* aArea);
 
@@ -575,7 +578,8 @@ void PolyArea::GetRect(nsIFrame* aFrame, nsRect& aRect)
 
 //----------------------------------------------------------------------
 
-class CircleArea : public Area {
+class CircleArea final : public Area
+{
 public:
   explicit CircleArea(HTMLAreaElement* aArea);
 

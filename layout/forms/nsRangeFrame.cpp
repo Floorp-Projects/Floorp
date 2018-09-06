@@ -163,7 +163,7 @@ nsRangeFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
   }
 }
 
-class nsDisplayRangeFocusRing : public nsDisplayItem
+class nsDisplayRangeFocusRing final : public nsDisplayItem
 {
 public:
   nsDisplayRangeFocusRing(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)

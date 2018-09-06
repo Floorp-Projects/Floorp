@@ -539,7 +539,8 @@ nsSVGOuterSVGFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas)
 /**
  * Used to paint/hit-test SVG when SVG display lists are disabled.
  */
-class nsDisplayOuterSVG : public nsDisplayItem {
+class nsDisplayOuterSVG final : public nsDisplayItem
+{
 public:
   nsDisplayOuterSVG(nsDisplayListBuilder* aBuilder,
                     nsSVGOuterSVGFrame* aFrame) :

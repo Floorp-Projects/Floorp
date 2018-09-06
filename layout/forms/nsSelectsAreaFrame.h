@@ -9,7 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "nsBlockFrame.h"
 
-class nsSelectsAreaFrame : public nsBlockFrame
+class nsSelectsAreaFrame final : public nsBlockFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsSelectsAreaFrame)
