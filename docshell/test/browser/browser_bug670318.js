@@ -34,19 +34,16 @@ add_task(async function test() {
             delete content._testListener;
             content.setTimeout(() => { content.location.reload(); }, 0);
           }
-
-          return true;
         },
 
         OnHistoryReload: () => true,
-        OnHistoryGotoIndex: () => true,
-        OnHistoryPurge: () => true,
+        OnHistoryGotoIndex: () => {},
+        OnHistoryPurge: () => {},
         OnHistoryReplaceEntry: () => {
           // The initial load of about:blank causes a transient entry to be
           // created, so our first navigation to a real page is a replace
           // instead of a new entry.
           ++count;
-          return true;
         },
 
         QueryInterface: ChromeUtils.generateQI([Ci.nsISHistoryListener,
