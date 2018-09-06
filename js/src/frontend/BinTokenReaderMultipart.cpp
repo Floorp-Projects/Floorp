@@ -66,8 +66,9 @@ BinTokenReaderMultipart::readHeader()
     // For the moment, MAGIC_FORMAT_VERSION is 0. Once we have a story
     // on backwards compatibility of the binary container, we will
     // probably want to change this to `if (version > MAGIC_FORMAT_VERSION)`.
-    if (version != MAGIC_FORMAT_VERSION)
+    if (version != MAGIC_FORMAT_VERSION) {
         return raiseError("Format version not implemented");
+    }
 
     // Start reading grammar.
     MOZ_TRY(readConst(SECTION_HEADER_GRAMMAR));
@@ -75,35 +76,42 @@ BinTokenReaderMultipart::readHeader()
     BINJS_MOZ_TRY_DECL(grammarByteLen, readInternalUint32());
     const auto posBeforeGrammar = current_;
 
-    if (posBeforeGrammar + grammarByteLen > stop_ || posBeforeGrammar + grammarByteLen < current_) // Sanity check.
+    if (posBeforeGrammar + grammarByteLen > stop_ || posBeforeGrammar + grammarByteLen < current_) { // Sanity check.
         return raiseError("Invalid byte length in grammar table");
+    }
 
     BINJS_MOZ_TRY_DECL(grammarNumberOfEntries, readInternalUint32());
-    if (grammarNumberOfEntries > BINKIND_LIMIT) // Sanity check.
+    if (grammarNumberOfEntries > BINKIND_LIMIT) { // Sanity check.
         return raiseError("Invalid number of entries in grammar table");
+    }
 
     // This table maps BinKind index -> BinKind.
     // Initialize and populate.
-    if (!grammarTable_.reserve(grammarNumberOfEntries))
+    if (!grammarTable_.reserve(grammarNumberOfEntries)) {
         return raiseOOM();
+    }
 
     for (uint32_t i = 0; i < grammarNumberOfEntries; ++i) {
         BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
-        if (current_ + byteLen > stop_)
+        if (current_ + byteLen > stop_) {
             return raiseError("Invalid byte length in grammar table");
-        if (current_ + byteLen < current_) // Overflow.
+        }
+        if (current_ + byteLen < current_) { // Overflow.
             return raiseError("Invalid byte length in grammar table");
+        }
         CharSlice name((const char*)current_, byteLen);
         current_ += byteLen;
 
         BINJS_MOZ_TRY_DECL(kind, cx_->runtime()->binast().binKind(cx_, name));
-        if (!kind)
+        if (!kind) {
             return raiseError("Invalid entry in grammar table");
+        }
 
         grammarTable_.infallibleAppend(*kind); // We called `reserve` before the loop.
     }
-    if (current_ != grammarByteLen + posBeforeGrammar)
+    if (current_ != grammarByteLen + posBeforeGrammar) {
         return raiseError("The length of the grammar table didn't match its contents.");
+    }
 
     // Start reading strings
     MOZ_TRY(readConst(SECTION_HEADER_STRINGS));
@@ -111,25 +119,30 @@ BinTokenReaderMultipart::readHeader()
     BINJS_MOZ_TRY_DECL(stringsByteLen, readInternalUint32());
     const auto posBeforeStrings = current_;
 
-    if (posBeforeStrings + stringsByteLen > stop_ || posBeforeStrings + stringsByteLen < current_) // Sanity check.
+    if (posBeforeStrings + stringsByteLen > stop_ || posBeforeStrings + stringsByteLen < current_) { // Sanity check.
         return raiseError("Invalid byte length in strings table");
+    }
 
     BINJS_MOZ_TRY_DECL(stringsNumberOfEntries, readInternalUint32());
-    if (stringsNumberOfEntries > MAX_NUMBER_OF_STRINGS) // Sanity check.
+    if (stringsNumberOfEntries > MAX_NUMBER_OF_STRINGS) { // Sanity check.
         return raiseError("Too many entries in strings table");
+    }
 
     // This table maps String index -> String.
     // Initialize and populate.
-    if (!atomsTable_.reserve(stringsNumberOfEntries))
+    if (!atomsTable_.reserve(stringsNumberOfEntries)) {
         return raiseOOM();
-    if (!slicesTable_.reserve(stringsNumberOfEntries))
+    }
+    if (!slicesTable_.reserve(stringsNumberOfEntries)) {
         return raiseOOM();
+    }
 
     RootedAtom atom(cx_);
     for (uint32_t i = 0; i < stringsNumberOfEntries; ++i) {
         BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
-        if (current_ + byteLen > stop_ || current_ + byteLen < current_)
+        if (current_ + byteLen > stop_ || current_ + byteLen < current_) {
             return raiseError("Invalid byte length in individual string");
+        }
 
         // Check null string.
         if (byteLen == 2 && *current_ == 255 && *(current_ + 1) == 0) {
@@ -148,8 +161,9 @@ BinTokenReaderMultipart::readHeader()
         current_ += byteLen;
     }
 
-    if (posBeforeStrings + stringsByteLen != current_)
+    if (posBeforeStrings + stringsByteLen != current_) {
         return raiseError("The length of the strings table didn't match its contents.");
+    }
 
     // Start reading AST.
     MOZ_TRY(readConst(SECTION_HEADER_TREE));
@@ -158,8 +172,9 @@ BinTokenReaderMultipart::readHeader()
 
     BINJS_MOZ_TRY_DECL(treeByteLen, readInternalUint32());
 
-    if (posBeforeTree_ + treeByteLen > stop_ || posBeforeTree_ + treeByteLen < posBeforeTree_) // Sanity check.
+    if (posBeforeTree_ + treeByteLen > stop_ || posBeforeTree_ + treeByteLen < posBeforeTree_) { // Sanity check.
         return raiseError("Invalid byte length in tree table");
+    }
 
     // At this stage, we're ready to start reading the tree.
     return Ok();
@@ -199,8 +214,9 @@ BinTokenReaderMultipart::readDouble()
     // Decode little-endian.
     const uint64_t asInt = mozilla::LittleEndian::readUint64(bytes);
 
-    if (asInt == NULL_FLOAT_REPRESENTATION)
+    if (asInt == NULL_FLOAT_REPRESENTATION) {
         return raiseError("Not implemented: null double value");
+    }
 
     // Canonicalize NaN, just to make sure another form of signalling NaN
     // doesn't slip past us.
@@ -215,8 +231,9 @@ BinTokenReaderMultipart::readMaybeAtom()
     updateLatestKnownGood();
     BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
-    if (index >= atomsTable_.length())
+    if (index >= atomsTable_.length()) {
         return raiseError("Invalid index to strings table");
+    }
     return atomsTable_[index].get();
 }
 
@@ -225,8 +242,9 @@ BinTokenReaderMultipart::readAtom()
 {
     BINJS_MOZ_TRY_DECL(maybe, readMaybeAtom());
 
-    if (!maybe)
+    if (!maybe) {
         return raiseError("Empty string");
+    }
 
     return maybe;
 }
@@ -237,8 +255,9 @@ BinTokenReaderMultipart::readChars(Chars& out)
     updateLatestKnownGood();
     BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
-    if (index >= slicesTable_.length())
+    if (index >= slicesTable_.length()) {
         return raiseError("Invalid index to strings table for string enum");
+    }
 
     out = slicesTable_[index];
     return Ok();
@@ -250,12 +269,14 @@ BinTokenReaderMultipart::readVariant()
     updateLatestKnownGood();
     BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
-    if (index >= slicesTable_.length())
+    if (index >= slicesTable_.length()) {
         return raiseError("Invalid index to strings table for string enum");
+    }
 
     auto variantsPtr = variantsTable_.lookupForAdd(index);
-    if (variantsPtr)
+    if (variantsPtr) {
         return variantsPtr->value();
+    }
 
     // Either we haven't cached the result yet or this is not a variant.
     // Check in the slices table and, in case of success, cache the result.
@@ -266,11 +287,13 @@ BinTokenReaderMultipart::readVariant()
     Chars slice = slicesTable_[index]; // We have checked `index` above.
     BINJS_MOZ_TRY_DECL(variant, cx_->runtime()->binast().binVariant(cx_, slice));
 
-    if (!variant)
+    if (!variant) {
         return raiseError("Invalid string enum variant");
+    }
 
-    if (!variantsTable_.add(variantsPtr, index, *variant))
+    if (!variantsTable_.add(variantsPtr, index, *variant)) {
         return raiseOOM();
+    }
 
     return *variant;
 }
@@ -281,8 +304,9 @@ BinTokenReaderMultipart::readSkippableSubTree()
     updateLatestKnownGood();
     BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
 
-    if (current_ + byteLen > stop_ || current_ + byteLen < current_)
+    if (current_ + byteLen > stop_ || current_ + byteLen < current_) {
         return raiseError("Invalid byte length in readSkippableSubTree");
+    }
 
     const auto start = current_;
 
@@ -308,8 +332,9 @@ JS::Result<Ok>
 BinTokenReaderMultipart::enterTaggedTuple(BinKind& tag, BinTokenReaderMultipart::BinFields&, AutoTaggedTuple& guard)
 {
     BINJS_MOZ_TRY_DECL(index, readInternalUint32());
-    if (index >= grammarTable_.length())
+    if (index >= grammarTable_.length()) {
         return raiseError("Invalid index to grammar table");
+    }
 
     tag = grammarTable_[index];
 
@@ -356,8 +381,9 @@ BinTokenReaderMultipart::AutoBase::~AutoBase()
 JS::Result<Ok>
 BinTokenReaderMultipart::AutoBase::checkPosition(const uint8_t* expectedEnd)
 {
-    if (reader_.current_ != expectedEnd)
+    if (reader_.current_ != expectedEnd) {
         return reader_.raiseError("Caller did not consume the expected set of bytes");
+    }
 
     return Ok();
 }
@@ -403,8 +429,9 @@ BinTokenReaderMultipart::readInternalUint32()
         MOZ_TRY_VAR(byte, readByte());
 
         const uint32_t newResult = result | (byte >> 1) << shift;
-        if (newResult < result)
+        if (newResult < result) {
             return raiseError("Overflow during readInternalUint32");
+        }
 
         result = newResult;
         shift += 7;
