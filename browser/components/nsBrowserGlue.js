@@ -239,7 +239,6 @@ let ACTORS = {
 
       messages: [
         "BrowserPlugins:ActivatePlugins",
-        "BrowserPlugins:NotificationShown",
         "BrowserPlugins:ContextMenuCommand",
         "BrowserPlugins:NPAPIPluginProcessCrashed",
         "BrowserPlugins:CrashReportSubmitted",

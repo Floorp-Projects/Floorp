@@ -5,7 +5,6 @@
 @namespace html url(http://www.w3.org/1999/xhtml);
 
 /* These styles affect only the bound element, not other page content. */
-/* Keep any changes to these styles in sync with plugin-doorhanger.inc.css */
 .mainBox {
  --grey-10: #f9f9fa;
  --grey-60: #4a4a4f;

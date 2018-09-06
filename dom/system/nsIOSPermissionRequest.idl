@@ -1,0 +1,55 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(95790842-75a0-430d-98bf-f5ce3788ea6d)]
+interface nsIOSPermissionRequest: nsISupports
+{
+  /*
+   * The permission state is not known. As an example, on macOS
+   * this is used to indicate the user has not been prompted to
+   * authorize or deny access and there is no policy in place to
+   * deny access.
+   */
+  const uint16_t PERMISSION_STATE_NOTDETERMINED = 0;
+
+  /* A policy prevents the application from accessing the resource */
+  const uint16_t PERMISSION_STATE_RESTRICTED = 1;
+
+  /* Access to the resource is denied */
+  const uint16_t PERMISSION_STATE_DENIED = 2;
+
+  /* Access to the resource is allowed */
+  const uint16_t PERMISSION_STATE_AUTHORIZED = 3;
+
+  /* Get the permission state for both audio and video capture */
+  void getMediaCapturePermissionState(out uint16_t aVideo,
+                                      out uint16_t aAudio);
+
+  /* Get the permission state for audio capture */
+  void getAudioCapturePermissionState(out uint16_t aAudio);
+
+  /* Get the permission state for video capture */
+  void getVideoCapturePermissionState(out uint16_t aVideo);
+
+  /*
+   * Request permission to access video capture devices. Returns a
+   * promise that resolves with |true| after the browser has been
+   * granted permission to capture video. If capture access is denied,
+   * the promise is resolved with |false|. The promise is rejected if
+   * an error occurs.
+   */
+  [implicit_jscontext, must_use]
+  Promise requestVideoCapturePermission();
+
+  /*
+   * Request permission to access audio capture devices. Returns a
+   * promise with the same semantics as |requestVideoCapturePermission|.
+   */
+  [implicit_jscontext, must_use]
+  Promise requestAudioCapturePermission();
+};

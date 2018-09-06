@@ -249,7 +249,7 @@ add_task(async function test_timeout_fail_completeStatus() {
     ok(payButton != primaryButton,
        `Primary button is the not pay button in the ${completeStatus} state`);
     ok(isHidden(payButton), "Pay button is not visible");
-    is(primaryButton.textContent, "OK", "Check button label");
+    is(primaryButton.textContent, "Close", "Check button label");
 
     let rect = primaryButton.getBoundingClientRect();
     let visibleElement =

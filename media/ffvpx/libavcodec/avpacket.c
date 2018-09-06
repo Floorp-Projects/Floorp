@@ -479,34 +479,6 @@ int av_packet_split_side_data(AVPacket *pkt){
 }
 #endif
 
-#if FF_API_MERGE_SD
-int ff_packet_split_and_drop_side_data(AVPacket *pkt){
-    if (!pkt->side_data_elems && pkt->size >12 && AV_RB64(pkt->data + pkt->size - 8) == FF_MERGE_MARKER){
-        int i;
-        unsigned int size;
-        uint8_t *p;
-
-        p = pkt->data + pkt->size - 8 - 5;
-        for (i=1; ; i++){
-            size = AV_RB32(p);
-            if (size>INT_MAX - 5 || p - pkt->data < size)
-                return 0;
-            if (p[4]&128)
-                break;
-            if (p - pkt->data < size + 5)
-                return 0;
-            p-= size+5;
-            if (i > AV_PKT_DATA_NB)
-                return 0;
-        }
-        pkt->size = p - pkt->data - size;
-        av_assert0(pkt->size >= 0);
-        return 1;
-    }
-    return 0;
-}
-#endif
-
 uint8_t *av_packet_pack_dictionary(AVDictionary *dict, int *size)
 {
     AVDictionaryEntry *t = NULL;
@@ -599,6 +571,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
     dst->flags                = src->flags;
     dst->stream_index         = src->stream_index;
 
+    dst->side_data            = NULL;
+    dst->side_data_elems      = 0;
     for (i = 0; i < src->side_data_elems; i++) {
          enum AVPacketSideDataType type = src->side_data[i].type;
          int size          = src->side_data[i].size;
@@ -676,6 +650,45 @@ void av_packet_move_ref(AVPacket *dst, AVPacket *src)
     av_init_packet(src);
     src->data = NULL;
     src->size = 0;
+}
+
+int av_packet_make_refcounted(AVPacket *pkt)
+{
+    int ret;
+
+    if (pkt->buf)
+        return 0;
+
+    ret = packet_alloc(&pkt->buf, pkt->size);
+    if (ret < 0)
+        return ret;
+    if (pkt->size)
+        memcpy(pkt->buf->data, pkt->data, pkt->size);
+
+    pkt->data = pkt->buf->data;
+
+    return 0;
+}
+
+int av_packet_make_writable(AVPacket *pkt)
+{
+    AVBufferRef *buf = NULL;
+    int ret;
+
+    if (pkt->buf && av_buffer_is_writable(pkt->buf))
+        return 0;
+
+    ret = packet_alloc(&buf, pkt->size);
+    if (ret < 0)
+        return ret;
+    if (pkt->size)
+        memcpy(buf->data, pkt->data, pkt->size);
+
+    av_buffer_unref(&pkt->buf);
+    pkt->buf  = buf;
+    pkt->data = buf->data;
+
+    return 0;
 }
 
 void av_packet_rescale_ts(AVPacket *pkt, AVRational src_tb, AVRational dst_tb)
