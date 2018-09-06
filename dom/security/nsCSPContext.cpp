@@ -1137,10 +1137,6 @@ nsCSPContext::FireViolationEvent(
   Element* aTriggeringElement,
   const mozilla::dom::SecurityPolicyViolationEventInit& aViolationEventInit)
 {
-  if (!StaticPrefs::security_csp_enable_violation_events()) {
-    return NS_OK;
-  }
-
   if (mEventListener) {
     nsAutoString json;
     if (aViolationEventInit.ToJSON(json)) {

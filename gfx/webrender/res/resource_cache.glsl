@@ -14,8 +14,8 @@ uniform HIGHP_SAMPLER_FLOAT sampler2D sResourceCache;
 //           instead of an int, and encode the UV directly
 //           in the vertices.
 ivec2 get_resource_cache_uv(int address) {
-    return ivec2(address % WR_MAX_VERTEX_TEXTURE_WIDTH,
-                 address / WR_MAX_VERTEX_TEXTURE_WIDTH);
+    return ivec2(uint(address) % WR_MAX_VERTEX_TEXTURE_WIDTH,
+                 uint(address) / WR_MAX_VERTEX_TEXTURE_WIDTH);
 }
 
 vec4[2] fetch_from_resource_cache_2_direct(ivec2 address) {

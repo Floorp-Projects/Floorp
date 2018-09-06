@@ -461,12 +461,20 @@ pub fn project_rect<F, T>(
     // Otherwise, it will be clamped to the screen bounds anyway.
     if homogens.iter().any(|h| h.w <= 0.0) {
         let mut clipper = Clipper::new();
-        clipper.add_frustum(
+        let polygon = Polygon::from_rect(*rect, 1);
+
+        let planes = match Clipper::frustum_planes(
             transform,
             Some(*bounds),
-        );
+        ) {
+            Ok(planes) => planes,
+            Err(..) => return None,
+        };
 
-        let polygon = Polygon::from_rect(*rect, 1);
+        for plane in planes {
+            clipper.add(plane);
+        }
+
         let results = clipper.clip(polygon);
         if results.is_empty() {
             return None

@@ -119,18 +119,8 @@ impl<T, U> Polygon<T, U> where
     U: fmt::Debug,
 {
     /// Construct a polygon from points that are already transformed.
-    #[deprecated(since = "0.12.1", note = "Use try_from_points instead")]
-    pub fn from_points(
-        points: [TypedPoint3D<T, U>; 4],
-        anchor: usize,
-    ) -> Self {
-        Self::try_from_points(points, anchor).unwrap()
-    }
-
-    /// Construct a polygon from points that are already transformed.
     /// Return None if the polygon doesn't contain any space.
-    /// This method will be removed in `from_points` in the next breaking release.
-    pub fn try_from_points(
+    pub fn from_points(
         points: [TypedPoint3D<T, U>; 4],
         anchor: usize,
     ) -> Option<Self> {
@@ -179,7 +169,7 @@ impl<T, U> Polygon<T, U> where
                 rect.bottom_left().to_3d(),
             ],
             anchor,
-        )
+        ).unwrap()
     }
 
     /// Construct a polygon from a rectangle with 3D transform.
@@ -201,7 +191,7 @@ impl<T, U> Polygon<T, U> where
         //Note: this code path could be more efficient if we had inverse-transpose
         //let n4 = transform.transform_point4d(&TypedPoint4D::new(T::zero(), T::zero(), T::one(), T::zero()));
         //let normal = TypedPoint3D::new(n4.x, n4.y, n4.z);
-        Self::try_from_points(points, anchor)
+        Self::from_points(points, anchor)
     }
 
     /// Bring a point into the local coordinate space, returning
@@ -243,7 +233,7 @@ impl<T, U> Polygon<T, U> where
         //Note: this code path could be more efficient if we had inverse-transpose
         //let n4 = transform.transform_point4d(&TypedPoint4D::new(T::zero(), T::zero(), T::one(), T::zero()));
         //let normal = TypedPoint3D::new(n4.x, n4.y, n4.z);
-        Polygon::try_from_points(points, self.anchor)
+        Polygon::from_points(points, self.anchor)
     }
 
     /// Check if all the points are indeed placed on the plane defined by

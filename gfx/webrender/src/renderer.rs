@@ -12,6 +12,7 @@
 use api::{BlobImageHandler, ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, Epoch, ExternalImageId};
 use api::{ExternalImageType, FontRenderMode, FrameMsg, ImageFormat, PipelineId};
+use api::{ImageRendering};
 use api::{RenderApiSender, RenderNotifier, TexelRect, TextureTarget};
 use api::{channel};
 use api::DebugCommand;
@@ -43,7 +44,7 @@ use device::query::GpuProfiler;
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use record::ApiRecordingReceiver;
 use render_backend::RenderBackend;
-use scene_builder::SceneBuilder;
+use scene_builder::{SceneBuilder, LowPrioritySceneBuilder};
 use shade::Shaders;
 use render_task::{RenderTask, RenderTaskKind, RenderTaskTree};
 use resource_cache::ResourceCache;
@@ -1713,9 +1714,11 @@ impl Renderer {
         let blob_image_handler = options.blob_image_handler.take();
         let thread_listener_for_render_backend = thread_listener.clone();
         let thread_listener_for_scene_builder = thread_listener.clone();
+        let thread_listener_for_lp_scene_builder = thread_listener.clone();
         let scene_builder_hooks = options.scene_builder_hooks;
         let rb_thread_name = format!("WRRenderBackend#{}", options.renderer_id.unwrap_or(0));
         let scene_thread_name = format!("WRSceneBuilder#{}", options.renderer_id.unwrap_or(0));
+        let lp_scene_thread_name = format!("WRSceneBuilderLP#{}", options.renderer_id.unwrap_or(0));
         let glyph_rasterizer = GlyphRasterizer::new(workers)?;
 
         let (scene_builder, scene_tx, scene_rx) = SceneBuilder::new(
@@ -1736,6 +1739,32 @@ impl Renderer {
             }
         })?;
 
+        let low_priority_scene_tx = if options.support_low_priority_transactions {
+            let (low_priority_scene_tx, low_priority_scene_rx) = channel();
+            let lp_builder = LowPrioritySceneBuilder {
+                rx: low_priority_scene_rx,
+                tx: scene_tx.clone(),
+            };
+
+            thread::Builder::new().name(lp_scene_thread_name.clone()).spawn(move || {
+                register_thread_with_profiler(lp_scene_thread_name.clone());
+                if let Some(ref thread_listener) = *thread_listener_for_lp_scene_builder {
+                    thread_listener.thread_started(&lp_scene_thread_name);
+                }
+
+                let mut scene_builder = lp_builder;
+                scene_builder.run();
+
+                if let Some(ref thread_listener) = *thread_listener_for_lp_scene_builder {
+                    thread_listener.thread_stopped(&lp_scene_thread_name);
+                }
+            })?;
+
+            low_priority_scene_tx
+        } else {
+            scene_tx.clone()
+        };
+
         thread::Builder::new().name(rb_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(rb_thread_name.clone());
             if let Some(ref thread_listener) = *thread_listener_for_render_backend {
@@ -1754,6 +1783,7 @@ impl Renderer {
                 payload_rx_for_backend,
                 result_tx,
                 scene_tx,
+                low_priority_scene_tx,
                 scene_rx,
                 device_pixel_ratio,
                 resource_cache,
@@ -2601,7 +2631,8 @@ impl Renderer {
                                 let handler = self.external_image_handler
                                     .as_mut()
                                     .expect("Found external image, but no handler set!");
-                                let size = match handler.lock(id, channel_index).source {
+                                // The filter is only relevant for NativeTexture external images.
+                                let size = match handler.lock(id, channel_index, ImageRendering::Auto).source {
                                     ExternalImageSource::RawData(data) => {
                                         uploader.upload(
                                             rect, layer_index, stride,
@@ -3366,9 +3397,32 @@ impl Renderer {
         self.handle_blits(&target.blits, render_tasks);
 
         // Draw any borders for this target.
-        if !target.border_segments.is_empty() {
+        if !target.border_segments_solid.is_empty() ||
+           !target.border_segments_complex.is_empty() {
             let _timer = self.gpu_profile.start_timer(GPU_TAG_CACHE_BORDER);
+        }
 
+        if !target.border_segments_solid.is_empty() {
+            self.set_blend(true, FramebufferKind::Other);
+            self.set_blend_mode_premultiplied_alpha(FramebufferKind::Other);
+
+            self.shaders.cs_border_solid.bind(
+                &mut self.device,
+                &projection,
+                &mut self.renderer_errors,
+            );
+
+            self.draw_instanced_batch(
+                &target.border_segments_solid,
+                VertexArrayKind::Border,
+                &BatchTextures::no_texture(),
+                stats,
+            );
+
+            self.set_blend(false, FramebufferKind::Other);
+        }
+
+        if !target.border_segments_complex.is_empty() {
             self.set_blend(true, FramebufferKind::Other);
             self.set_blend_mode_premultiplied_alpha(FramebufferKind::Other);
 
@@ -3379,7 +3433,7 @@ impl Renderer {
             );
 
             self.draw_instanced_batch(
-                &target.border_segments,
+                &target.border_segments_complex,
                 VertexArrayKind::Border,
                 &BatchTextures::no_texture(),
                 stats,
@@ -3453,7 +3507,8 @@ impl Renderer {
             let ext_image = props
                 .external_image
                 .expect("BUG: Deferred resolves must be external images!");
-            let image = handler.lock(ext_image.id, ext_image.channel_index);
+            // Provide rendering information for NativeTexture external images.
+            let image = handler.lock(ext_image.id, ext_image.channel_index, deferred_resolve.rendering);
             let texture_target = match ext_image.image_type {
                 ExternalImageType::TextureHandle(target) => target,
                 ExternalImageType::Buffer => {
@@ -4105,8 +4160,8 @@ pub struct ExternalImage<'a> {
 pub trait ExternalImageHandler {
     /// Lock the external image. Then, WR could start to read the image content.
     /// The WR client should not change the image content until the unlock()
-    /// call.
-    fn lock(&mut self, key: ExternalImageId, channel_index: u8) -> ExternalImage;
+    /// call. Provide ImageRendering for NativeTexture external images.
+    fn lock(&mut self, key: ExternalImageId, channel_index: u8, rendering: ImageRendering) -> ExternalImage;
     /// Unlock the external image. The WR should not read the image content
     /// after this call.
     fn unlock(&mut self, key: ExternalImageId, channel_index: u8);
@@ -4196,6 +4251,7 @@ pub struct RendererOptions {
     pub scene_builder_hooks: Option<Box<SceneBuilderHooks + Send>>,
     pub sampler: Option<Box<AsyncPropertySampler + Send>>,
     pub chase_primitive: ChasePrimitive,
+    pub support_low_priority_transactions: bool,
 }
 
 impl Default for RendererOptions {
@@ -4230,6 +4286,7 @@ impl Default for RendererOptions {
             scene_builder_hooks: None,
             sampler: None,
             chase_primitive: ChasePrimitive::Nothing,
+            support_low_priority_transactions: false,
         }
     }
 }
@@ -4303,7 +4360,7 @@ struct DummyExternalImageHandler {
 
 #[cfg(feature = "replay")]
 impl ExternalImageHandler for DummyExternalImageHandler {
-    fn lock(&mut self, key: ExternalImageId, channel_index: u8) -> ExternalImage {
+    fn lock(&mut self, key: ExternalImageId, channel_index: u8, _rendering: ImageRendering) -> ExternalImage {
         let (ref captured_data, ref uv) = self.data[&(key, channel_index)];
         ExternalImage {
             uv: *uv,
@@ -4435,7 +4492,8 @@ impl Renderer {
             for def in &deferred_images {
                 info!("\t{}", def.short_path);
                 let ExternalImageData { id, channel_index, image_type } = def.external;
-                let ext_image = handler.lock(id, channel_index);
+                // The image rendering parameter is irrelevant because no filtering happens during capturing.
+                let ext_image = handler.lock(id, channel_index, ImageRendering::Auto);
                 let (data, short_path) = match ext_image.source {
                     ExternalImageSource::RawData(data) => {
                         let arc_id = arc_map.len() + 1;

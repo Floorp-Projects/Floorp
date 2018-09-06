@@ -51,7 +51,7 @@ struct FontInstanceFlags {
     return *this;
   }
 
-  FontInstanceFlags operator|(uint32_t aBits) {
+  FontInstanceFlags operator|(uint32_t aBits) const {
     FontInstanceFlags flags = { bits | aBits };
     return flags;
   }
@@ -61,10 +61,12 @@ struct FontInstanceFlags {
     return *this;
   }
 
-  FontInstanceFlags operator&(uint32_t aBits) {
+  FontInstanceFlags operator&(uint32_t aBits) const {
     FontInstanceFlags flags = { bits & aBits };
     return flags;
   }
+
+  MOZ_IMPLICIT operator bool() const { return bits != 0; }
 
   enum : uint32_t {
     SYNTHETIC_BOLD    = 1 << 1,

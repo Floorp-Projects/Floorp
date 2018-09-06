@@ -18,7 +18,11 @@
 namespace mozilla {
 namespace wr {
 
-wr::WrExternalImage LockExternalImage(void* aObj, wr::WrExternalImageId aId, uint8_t aChannelIndex)
+wr::WrExternalImage
+LockExternalImage(void* aObj,
+                  wr::WrExternalImageId aId,
+                  uint8_t aChannelIndex,
+                  wr::ImageRendering aRendering)
 {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
@@ -27,7 +31,7 @@ wr::WrExternalImage LockExternalImage(void* aObj, wr::WrExternalImageId aId, uin
     gfxCriticalNote << "Failed to lock ExternalImage for extId:" << AsUint64(aId);
     return InvalidToWrExternalImage();
   }
-  return texture->Lock(aChannelIndex, renderer->gl());
+  return texture->Lock(aChannelIndex, renderer->gl(), aRendering);
 }
 
 void UnlockExternalImage(void* aObj, wr::WrExternalImageId aId, uint8_t aChannelIndex)

@@ -16,6 +16,7 @@ varying vec4 vUvClip;
 #ifdef WR_VERTEX_SHADER
 
 #define VECS_PER_TEXT_RUN           3
+#define GLYPHS_PER_GPU_BLOCK        2U
 
 struct Glyph {
     vec2 offset;
@@ -26,12 +27,13 @@ Glyph fetch_glyph(int specific_prim_address,
     // Two glyphs are packed in each texel in the GPU cache.
     int glyph_address = specific_prim_address +
                         VECS_PER_TEXT_RUN +
-                        glyph_index / 2;
+                        int(uint(glyph_index) / GLYPHS_PER_GPU_BLOCK);
     vec4 data = fetch_from_resource_cache_1(glyph_address);
     // Select XY or ZW based on glyph index.
     // We use "!= 0" instead of "== 1" here in order to work around a driver
     // bug with equality comparisons on integers.
-    vec2 glyph = mix(data.xy, data.zw, bvec2(glyph_index % 2 != 0));
+    vec2 glyph = mix(data.xy, data.zw,
+                     bvec2(uint(glyph_index) % GLYPHS_PER_GPU_BLOCK != 0U));
 
     return Glyph(glyph);
 }

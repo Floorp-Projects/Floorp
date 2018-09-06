@@ -211,12 +211,15 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
 /// images that are visible, a DeferredResolve is created
 /// that is stored in the frame. This allows the render
 /// thread to iterate this list and update any changed
-/// texture data and update the UV rect.
+/// texture data and update the UV rect. Any filtering
+/// is handled externally for NativeTexture external
+/// images.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct DeferredResolve {
     pub address: GpuCacheAddress,
     pub image_properties: ImageProperties,
+    pub rendering: ImageRendering,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]

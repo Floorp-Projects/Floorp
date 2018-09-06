@@ -31,7 +31,6 @@ use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitive};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
-use scene_builder::{BuiltScene, SceneRequest};
 use spatial_node::{SpatialNodeType, StickyFrameInfo};
 use std::{f32, iter, mem};
 use tiling::{CompositeOps, ScrollbarPrimitive};
@@ -1997,31 +1996,6 @@ impl<'a> DisplayListFlattener<'a> {
 
     pub fn simple_scroll_and_clip_chain(&mut self, id: &ClipId) -> ScrollNodeAndClipChain {
         self.map_clip_and_scroll(&ClipAndScrollInfo::simple(*id))
-    }
-}
-
-pub fn build_scene(config: &FrameBuilderConfig, request: SceneRequest) -> BuiltScene {
-
-    let mut clip_scroll_tree = ClipScrollTree::new();
-    let mut new_scene = Scene::new();
-
-    let frame_builder = DisplayListFlattener::create_frame_builder(
-        FrameBuilder::empty(), // WIP, we're not really recycling anything here, clean this up.
-        &request.scene,
-        &mut clip_scroll_tree,
-        request.font_instances,
-        &request.view,
-        &request.output_pipelines,
-        config,
-        &mut new_scene,
-        request.scene_id,
-    );
-
-    BuiltScene {
-        scene: new_scene,
-        frame_builder,
-        clip_scroll_tree,
-        removed_pipelines: request.removed_pipelines,
     }
 }
 

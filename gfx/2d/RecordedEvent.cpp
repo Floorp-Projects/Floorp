@@ -89,8 +89,6 @@ RecordedEvent::GetEventName(EventType aType)
     return "Snapshot";
   case SCALEDFONTCREATION:
     return "ScaledFontCreation";
-  case SCALEDFONTCREATIONBYINDEX:
-    return "ScaledFontCreationByIndex";
   case SCALEDFONTDESTRUCTION:
     return "ScaledFontDestruction";
   case MASKSURFACE:

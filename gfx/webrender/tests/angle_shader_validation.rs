@@ -16,7 +16,7 @@ struct Shader {
     features: &'static [&'static str],
 }
 
-const SHADER_PREFIX: &str = "#define WR_MAX_VERTEX_TEXTURE_WIDTH 1024\n";
+const SHADER_PREFIX: &str = "#define WR_MAX_VERTEX_TEXTURE_WIDTH 1024U\n";
 
 const BRUSH_FEATURES: &[&str] = &["", "ALPHA_PASS"];
 const CLIP_FEATURES: &[&str] = &["TRANSFORM"];
@@ -49,6 +49,10 @@ const SHADERS: &[Shader] = &[
     },
     Shader {
         name: "cs_border_segment",
+        features: CACHE_FEATURES,
+    },
+    Shader {
+        name: "cs_border_solid",
         features: CACHE_FEATURES,
     },
     // Prim shaders
