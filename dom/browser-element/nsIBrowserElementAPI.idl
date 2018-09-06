@@ -36,13 +36,13 @@ interface nsIBrowserElementAPI : nsISupports
 
   void setFrameLoader(in FrameLoader frameLoader);
 
-  void sendMouseEvent(in DOMString type,
+  void sendMouseEvent(in AString type,
                       in uint32_t x,
                       in uint32_t y,
                       in uint32_t button,
                       in uint32_t clickCount,
                       in uint32_t mifiers);
-  void sendTouchEvent(in DOMString aType,
+  void sendTouchEvent(in AString aType,
                       [const, array, size_is(count)] in uint32_t aIdentifiers,
                       [const, array, size_is(count)] in int32_t aXs,
                       [const, array, size_is(count)] in int32_t aYs,
@@ -56,25 +56,25 @@ interface nsIBrowserElementAPI : nsISupports
   void goForward();
   void reload(in boolean hardReload);
   void stop();
-  DOMRequest download(in DOMString url,
+  DOMRequest download(in AString url,
                             [optional] in jsval options);
   DOMRequest purgeHistory();
   DOMRequest getScreenshot(in uint32_t width,
                                  in uint32_t height,
-                                 [optional] in DOMString mimeType);
+                                 [optional] in AString mimeType);
   void zoom(in float zoom);
   DOMRequest getCanGoBack();
   DOMRequest getCanGoForward();
   DOMRequest getContentDimensions();
 
-  void findAll(in DOMString searchString, in long caseSensitivity);
+  void findAll(in AString searchString, in long caseSensitivity);
   void findNext(in long direction);
   void clearMatch();
 
   void addNextPaintListener(in jsval listener); // BrowserElementNextPaintEventCallback
   void removeNextPaintListener(in jsval listener); // BrowserElementNextPaintEventCallback
 
-  DOMRequest executeScript(in DOMString script, in jsval options);
+  DOMRequest executeScript(in AString script, in jsval options);
 
   /**
    * Returns an object that represents a Web Manifest:

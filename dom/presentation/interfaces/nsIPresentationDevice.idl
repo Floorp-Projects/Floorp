@@ -37,7 +37,7 @@ interface nsIPresentationDevice : nsISupports
    * @params requestedUrl the designated URL for a presentation request.
    * @returns true if designated URL is supported.
    */
-  boolean isRequestedUrlSupported(in DOMString requestedUrl);
+  boolean isRequestedUrlSupported(in AString requestedUrl);
 };
 
 

@@ -18,11 +18,11 @@ interface nsIDOMXULCommandDispatcher : nsISupports
             attribute mozIDOMWindowProxy focusedWindow;
 
   void                      addCommandUpdater(in Element updater,
-                                              in DOMString events,
-                                              in DOMString targets);
+                                              in AString events,
+                                              in AString targets);
   void                      removeCommandUpdater(in Element updater);
 
-  void                      updateCommands(in DOMString eventName);
+  void                      updateCommands(in AString eventName);
 
   nsIController             getControllerForCommand(in string command);
   nsIControllers            getControllers();

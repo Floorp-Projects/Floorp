@@ -89,14 +89,14 @@ interface nsIEventListenerService : nsISupports
    * Returns true if a event target has any listener for the given type.
    */
   boolean hasListenersFor(in EventTarget aEventTarget,
-                          in DOMString aType);
+                          in AString aType);
 
   /**
    * Add a system-group eventlistener to a event target.
    */
   [implicit_jscontext]
   void addSystemEventListener(in EventTarget target,
-                              in DOMString type,
+                              in AString type,
                               in jsval listener,
                               in boolean useCapture);
 
@@ -105,7 +105,7 @@ interface nsIEventListenerService : nsISupports
    */
   [implicit_jscontext]
   void removeSystemEventListener(in EventTarget target,
-                                 in DOMString type,
+                                 in AString type,
                                  in jsval listener,
                                  in boolean useCapture);
 

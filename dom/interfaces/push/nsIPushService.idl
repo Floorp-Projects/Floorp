@@ -14,7 +14,7 @@ interface nsIPrincipal;
 [scriptable, uuid(1de32d5c-ea88-4c9e-9626-b032bd87f415)]
 interface nsIPushSubscription : nsISupports
 {
-  readonly attribute DOMString endpoint;
+  readonly attribute AString endpoint;
   readonly attribute long long pushCount;
   readonly attribute long long lastPush;
   readonly attribute long quota;
@@ -24,7 +24,7 @@ interface nsIPushSubscription : nsISupports
   bool quotaApplies();
   bool isExpired();
 
-  void getKey(in DOMString name,
+  void getKey(in AString name,
               [optional] out uint32_t keyLen,
               [array, size_is(keyLen), retval] out uint8_t key);
 };
@@ -76,9 +76,9 @@ interface nsIPushClearResultCallback : nsISupports
 interface nsIPushService : nsISupports
 {
   /** Observer topic names, exported for convenience. */
-  readonly attribute DOMString pushTopic;
-  readonly attribute DOMString subscriptionChangeTopic;
-  readonly attribute DOMString subscriptionModifiedTopic;
+  readonly attribute AString pushTopic;
+  readonly attribute AString subscriptionChangeTopic;
+  readonly attribute AString subscriptionModifiedTopic;
 
   /**
    * Creates a push subscription for the given |scope| URL and |principal|.
@@ -96,7 +96,7 @@ interface nsIPushService : nsISupports
    * |scope|. Servers may drop subscriptions at any time, so callers should
    * recreate subscriptions if desired.
    */
-  void subscribe(in DOMString scope, in nsIPrincipal principal,
+  void subscribe(in AString scope, in nsIPrincipal principal,
                  in nsIPushSubscriptionCallback callback);
 
   /**
@@ -104,7 +104,7 @@ interface nsIPushService : nsISupports
    * application server must use the corresponding private key to authenticate
    * message delivery requests, as described in draft-thomson-webpush-vapid.
    */
-  void subscribeWithKey(in DOMString scope, in nsIPrincipal principal,
+  void subscribeWithKey(in AString scope, in nsIPrincipal principal,
                         in uint32_t keyLength,
                         [const, array, size_is(keyLength)] in uint8_t key,
                         in nsIPushSubscriptionCallback callback);
@@ -112,7 +112,7 @@ interface nsIPushService : nsISupports
   /**
    * Removes a push subscription for the given |scope|.
    */
-  void unsubscribe(in DOMString scope, in nsIPrincipal principal,
+  void unsubscribe(in AString scope, in nsIPrincipal principal,
                    in nsIUnsubscribeResultCallback callback);
 
   /**
@@ -120,14 +120,14 @@ interface nsIPushService : nsISupports
    * |(scope, principal)| pair. If the subscription does not exist, the
    * callback will receive |null| as the second argument.
    */
-  void getSubscription(in DOMString scope, in nsIPrincipal principal,
+  void getSubscription(in AString scope, in nsIPrincipal principal,
                        in nsIPushSubscriptionCallback callback);
 
   /**
    * Drops every subscription for the given |domain|, or all domains if
    * |domain| is "*".
    */
-  void clearForDomain(in DOMString domain,
+  void clearForDomain(in AString domain,
                       in nsIPushClearResultCallback callback);
 };
 

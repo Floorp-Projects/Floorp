@@ -7,8 +7,8 @@
 
 [scriptable, uuid(6ed53cfb-9e59-424c-af8d-e74582381951)]
 interface nsIDOMXULButtonElement : nsIDOMXULControlElement {
-  attribute DOMString type;
-  attribute DOMString dlgType;
+  attribute AString type;
+  attribute AString dlgType;
 
   // For buttons of type="menu" only.
   attribute boolean open;
@@ -17,5 +17,5 @@ interface nsIDOMXULButtonElement : nsIDOMXULControlElement {
   attribute boolean checked;
 
   // For buttons of type="radio" only.
-  attribute DOMString group;
+  attribute AString group;
 };

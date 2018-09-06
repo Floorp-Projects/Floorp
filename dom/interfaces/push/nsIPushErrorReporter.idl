@@ -40,6 +40,6 @@ interface nsIPushErrorReporter : nsISupports
    * an opaque string passed to `nsIPushNotifier.notifyPush{WithData}`.
    * |reason| is a delivery error reason.
    */
-  void reportDeliveryError(in DOMString messageId,
+  void reportDeliveryError(in AString messageId,
                            [optional] in uint16_t reason);
 };

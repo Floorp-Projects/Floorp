@@ -94,7 +94,7 @@ interface nsIPlaintextEditor : nsISupports
    *
    * @param aString   the string to be inserted
    */
-   void insertText(in DOMString aStringToInsert);
+   void insertText(in AString aStringToInsert);
 
   /**
    * Insert a line break into the content model.

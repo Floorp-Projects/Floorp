@@ -21,7 +21,7 @@ webidl EventTarget;
 interface nsIPresentationDeviceRequest : nsISupports
 {
   // The origin which initiate the request.
-  readonly attribute DOMString origin;
+  readonly attribute AString origin;
 
   // The array of candidate URLs.
   readonly attribute nsIArray requestURLs;

@@ -98,7 +98,7 @@ interface nsIXULRuntime : nsISupports
    * The type of remote content process we're running in.
    * null if we're in the parent/chrome process.
    */
-  readonly attribute DOMString remoteType;
+  readonly attribute AString remoteType;
 
   /**
    * If true, browser tabs may be opened by default in a different process
@@ -134,7 +134,7 @@ interface nsIXULRuntime : nsISupports
   /**
    * Executable of Windows service that activated accessibility.
    */
-  readonly attribute DOMString accessibilityInstantiator;
+  readonly attribute AString accessibilityInstantiator;
 
   /**
    * Temporary, do not use. Indicates if an incompat version of JAWS
