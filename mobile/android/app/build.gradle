@@ -532,6 +532,28 @@ if (project.hasProperty('enable_code_coverage')) {
 
 // Set up code coverage for tests on emulators.
 if (mozconfig.substs.MOZ_JAVA_CODE_COVERAGE) {
+    apply plugin: "jacoco"
+    jacoco {
+        toolVersion = "${project.jacoco_version}"
+    }
+
+    android {
+        jacoco {
+            version = "$jacoco_version"
+        }
+        buildTypes {
+            debug {
+                testCoverageEnabled true
+            }
+        }
+    }
+
+    dependencies {
+        // This is required both in the instrumented application classes and the test classes,
+        // so `api` has to be used instead of `androidTestImplementation`.
+        api "org.jacoco:org.jacoco.agent:$jacoco_version:runtime"
+    }
+
     // Generate tasks to archive compiled classfiles for later use with JaCoCo report generation.
     // One of these tasks is used by `mach android archive-coverage-artifacts`.
     android.applicationVariants.all { variant ->
