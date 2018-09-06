@@ -43,7 +43,6 @@
 #include "cpu.h"
 #include "dict.h"
 #include "macros.h"
-#include "mem.h"
 #include "pixfmt.h"
 #include "version.h"
 
@@ -63,10 +62,10 @@
 #endif
 #endif
 
-#if defined(_WIN32) && CONFIG_SHARED && !defined(BUILDING_avutil)
-#    define av_export_avutil __declspec(dllimport)
+#if defined(_MSC_VER) && CONFIG_SHARED
+#    define av_export __declspec(dllimport)
 #else
-#    define av_export_avutil
+#    define av_export
 #endif
 
 #if HAVE_PRAGMA_DEPRECATED
@@ -77,8 +76,8 @@
 #        define FF_DISABLE_DEPRECATION_WARNINGS __pragma(warning(push)) __pragma(warning(disable:4996))
 #        define FF_ENABLE_DEPRECATION_WARNINGS  __pragma(warning(pop))
 #    else
-#        define FF_DISABLE_DEPRECATION_WARNINGS _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
-#        define FF_ENABLE_DEPRECATION_WARNINGS  _Pragma("GCC diagnostic pop")
+#        define FF_DISABLE_DEPRECATION_WARNINGS _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+#        define FF_ENABLE_DEPRECATION_WARNINGS  _Pragma("GCC diagnostic warning \"-Wdeprecated-declarations\"")
 #    endif
 #else
 #    define FF_DISABLE_DEPRECATION_WARNINGS
@@ -111,30 +110,24 @@
     DECLARE_ALIGNED(a, t, la_##v) s o;                  \
     t (*v) o = la_##v
 
-#define LOCAL_ALIGNED(a, t, v, ...) LOCAL_ALIGNED_##a(t, v, __VA_ARGS__)
+#define LOCAL_ALIGNED(a, t, v, ...) E1(LOCAL_ALIGNED_A(a, t, v, __VA_ARGS__,,))
 
-#if HAVE_LOCAL_ALIGNED
-#   define LOCAL_ALIGNED_4(t, v, ...) E1(LOCAL_ALIGNED_D(4, t, v, __VA_ARGS__,,))
-#else
-#   define LOCAL_ALIGNED_4(t, v, ...) E1(LOCAL_ALIGNED_A(4, t, v, __VA_ARGS__,,))
-#endif
-
-#if HAVE_LOCAL_ALIGNED
+#if HAVE_LOCAL_ALIGNED_8
 #   define LOCAL_ALIGNED_8(t, v, ...) E1(LOCAL_ALIGNED_D(8, t, v, __VA_ARGS__,,))
 #else
-#   define LOCAL_ALIGNED_8(t, v, ...) E1(LOCAL_ALIGNED_A(8, t, v, __VA_ARGS__,,))
+#   define LOCAL_ALIGNED_8(t, v, ...) LOCAL_ALIGNED(8, t, v, __VA_ARGS__)
 #endif
 
-#if HAVE_LOCAL_ALIGNED
+#if HAVE_LOCAL_ALIGNED_16
 #   define LOCAL_ALIGNED_16(t, v, ...) E1(LOCAL_ALIGNED_D(16, t, v, __VA_ARGS__,,))
 #else
-#   define LOCAL_ALIGNED_16(t, v, ...) E1(LOCAL_ALIGNED_A(16, t, v, __VA_ARGS__,,))
+#   define LOCAL_ALIGNED_16(t, v, ...) LOCAL_ALIGNED(16, t, v, __VA_ARGS__)
 #endif
 
-#if HAVE_LOCAL_ALIGNED
+#if HAVE_LOCAL_ALIGNED_32
 #   define LOCAL_ALIGNED_32(t, v, ...) E1(LOCAL_ALIGNED_D(32, t, v, __VA_ARGS__,,))
 #else
-#   define LOCAL_ALIGNED_32(t, v, ...) E1(LOCAL_ALIGNED_A(32, t, v, __VA_ARGS__,,))
+#   define LOCAL_ALIGNED_32(t, v, ...) LOCAL_ALIGNED(32, t, v, __VA_ARGS__)
 #endif
 
 #define FF_ALLOC_OR_GOTO(ctx, p, size, label)\
@@ -359,14 +352,5 @@ void ff_check_pixfmt_descriptors(void);
  * @return <0 on error
  */
 int avpriv_dict_set_timestamp(AVDictionary **dict, const char *key, int64_t timestamp);
-
-// Helper macro for AV_PIX_FMT_FLAG_PSEUDOPAL deprecation. Code inside FFmpeg
-// should always use FF_PSEUDOPAL. Once the public API flag gets removed, all
-// code using it is dead code.
-#if FF_API_PSEUDOPAL
-#define FF_PSEUDOPAL AV_PIX_FMT_FLAG_PSEUDOPAL
-#else
-#define FF_PSEUDOPAL 0
-#endif
 
 #endif /* AVUTIL_INTERNAL_H */

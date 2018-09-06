@@ -20,7 +20,7 @@ SOURCES += [
 ]
 LOCAL_INCLUDES += [
     '..',
-    '../ffmpeg58/include',
+    '../ffmpeg57/include',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

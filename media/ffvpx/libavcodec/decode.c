@@ -40,7 +40,6 @@
 #include "avcodec.h"
 #include "bytestream.h"
 #include "decode.h"
-#include "hwaccel.h"
 #include "internal.h"
 #include "thread.h"
 
@@ -130,7 +129,7 @@ static int extract_packet_props(AVCodecInternal *avci, const AVPacket *pkt)
     if (pkt) {
         ret = av_packet_copy_props(avci->last_pkt_props, pkt);
         if (!ret)
-            avci->last_pkt_props->size = pkt->size; // HACK: Needed for ff_decode_frame_props().
+            avci->last_pkt_props->size = pkt->size; // HACK: Needed for ff_init_buffer_info().
     }
     return ret;
 }
@@ -370,7 +369,8 @@ static int decode_simple_internal(AVCodecContext *avctx, AVFrame *frame)
     DecodeSimpleContext *ds = &avci->ds;
     AVPacket           *pkt = ds->in_pkt;
     // copy to ensure we do not change pkt
-    int got_frame, actual_got_frame;
+    AVPacket tmp;
+    int got_frame, actual_got_frame, did_split;
     int ret;
 
     if (!pkt->data && !avci->draining) {
@@ -390,12 +390,31 @@ static int decode_simple_internal(AVCodecContext *avctx, AVFrame *frame)
           avctx->active_thread_type & FF_THREAD_FRAME))
         return AVERROR_EOF;
 
+    tmp = *pkt;
+#if FF_API_MERGE_SD
+FF_DISABLE_DEPRECATION_WARNINGS
+    did_split = avci->compat_decode_partial_size ?
+                ff_packet_split_and_drop_side_data(&tmp) :
+                av_packet_split_side_data(&tmp);
+
+    if (did_split) {
+        ret = extract_packet_props(avctx->internal, &tmp);
+        if (ret < 0)
+            return ret;
+
+        ret = apply_param_change(avctx, &tmp);
+        if (ret < 0)
+            return ret;
+    }
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
+
     got_frame = 0;
 
     if (HAVE_THREADS && avctx->active_thread_type & FF_THREAD_FRAME) {
-        ret = ff_thread_decode_frame(avctx, frame, &got_frame, pkt);
+        ret = ff_thread_decode_frame(avctx, frame, &got_frame, &tmp);
     } else {
-        ret = avctx->codec->decode(avctx, frame, &got_frame, pkt);
+        ret = avctx->codec->decode(avctx, frame, &got_frame, &tmp);
 
         if (!(avctx->codec->caps_internal & FF_CODEC_CAP_SETS_PKT_DTS))
             frame->pkt_dts = pkt->dts;
@@ -525,6 +544,13 @@ FF_ENABLE_DEPRECATION_WARNINGS
             }
         }
     }
+#if FF_API_MERGE_SD
+    if (did_split) {
+        av_packet_free_side_data(&tmp);
+        if(ret == tmp.size)
+            ret = pkt->size;
+    }
+#endif
 
     if (avctx->codec->type == AVMEDIA_TYPE_AUDIO &&
         !avci->showed_multi_packet_warning &&
@@ -613,28 +639,6 @@ static int decode_receive_frame_internal(AVCodecContext *avctx, AVFrame *frame)
 
     if (ret == AVERROR_EOF)
         avci->draining_done = 1;
-
-    if (!ret) {
-        /* the only case where decode data is not set should be decoders
-         * that do not call ff_get_buffer() */
-        av_assert0((frame->private_ref && frame->private_ref->size == sizeof(FrameDecodeData)) ||
-                   !(avctx->codec->capabilities & AV_CODEC_CAP_DR1));
-
-        if (frame->private_ref) {
-            FrameDecodeData *fdd = (FrameDecodeData*)frame->private_ref->data;
-
-            if (fdd->post_process) {
-                ret = fdd->post_process(avctx, frame);
-                if (ret < 0) {
-                    av_frame_unref(frame);
-                    return ret;
-                }
-            }
-        }
-    }
-
-    /* free the per-frame decode data */
-    av_buffer_unref(&frame->private_ref);
 
     return ret;
 }
@@ -748,11 +752,6 @@ static int compat_decode(AVCodecContext *avctx, AVFrame *frame,
     int ret = 0;
 
     av_assert0(avci->compat_decode_consumed == 0);
-
-    if (avci->draining_done && pkt && pkt->size != 0) {
-        av_log(avctx, AV_LOG_WARNING, "Got unexpected packet after EOF\n");
-        avcodec_flush_buffers(avctx);
-    }
 
     *got_frame = 0;
     avci->compat_decode = 1;
@@ -1000,6 +999,7 @@ int avcodec_decode_subtitle2(AVCodecContext *avctx, AVSubtitle *sub,
                              AVPacket *avpkt)
 {
     int i, ret = 0;
+    AVCodecInternal *avci = avctx->internal;
 
     if (!avpkt->data && avpkt->size) {
         av_log(avctx, AV_LOG_ERROR, "invalid packet: NULL data, size != 0\n");
@@ -1016,9 +1016,29 @@ int avcodec_decode_subtitle2(AVCodecContext *avctx, AVSubtitle *sub,
     get_subtitle_defaults(sub);
 
     if ((avctx->codec->capabilities & AV_CODEC_CAP_DELAY) || avpkt->size) {
-        AVPacket pkt_recoded = *avpkt;
+        AVPacket pkt_recoded;
+        AVPacket tmp = *avpkt;
+#if FF_API_MERGE_SD
+FF_DISABLE_DEPRECATION_WARNINGS
+        int did_split = avci->compat_decode_partial_size ?
+                        ff_packet_split_and_drop_side_data(&tmp) :
+                        av_packet_split_side_data(&tmp);
+        //apply_param_change(avctx, &tmp);
 
-        ret = recode_subtitle(avctx, &pkt_recoded, avpkt);
+        if (did_split) {
+            /* FFMIN() prevents overflow in case the packet wasn't allocated with
+             * proper padding.
+             * If the side data is smaller than the buffer padding size, the
+             * remaining bytes should have already been filled with zeros by the
+             * original packet allocation anyway. */
+            memset(tmp.data + tmp.size, 0,
+                   FFMIN(avpkt->size - tmp.size, AV_INPUT_BUFFER_PADDING_SIZE));
+        }
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
+
+        pkt_recoded = tmp;
+        ret = recode_subtitle(avctx, &pkt_recoded, &tmp);
         if (ret < 0) {
             *got_sub_ptr = 0;
         } else {
@@ -1057,8 +1077,7 @@ int avcodec_decode_subtitle2(AVCodecContext *avctx, AVSubtitle *sub,
                 sub->format = 1;
 
             for (i = 0; i < sub->num_rects; i++) {
-                if (avctx->sub_charenc_mode != FF_SUB_CHARENC_MODE_IGNORE &&
-                    sub->rects[i]->ass && !utf8_check(sub->rects[i]->ass)) {
+                if (sub->rects[i]->ass && !utf8_check(sub->rects[i]->ass)) {
                     av_log(avctx, AV_LOG_ERROR,
                            "Invalid UTF-8 in decoded subtitles text; "
                            "maybe missing -sub_charenc option\n");
@@ -1068,7 +1087,7 @@ int avcodec_decode_subtitle2(AVCodecContext *avctx, AVSubtitle *sub,
                 }
             }
 
-            if (avpkt->data != pkt_recoded.data) { // did we recode?
+            if (tmp.data != pkt_recoded.data) { // did we recode?
                 /* prevent from destroying side data from original packet */
                 pkt_recoded.side_data = NULL;
                 pkt_recoded.side_data_elems = 0;
@@ -1077,6 +1096,14 @@ int avcodec_decode_subtitle2(AVCodecContext *avctx, AVSubtitle *sub,
             }
         }
 
+#if FF_API_MERGE_SD
+        if (did_split) {
+            av_packet_free_side_data(&tmp);
+            if(ret == tmp.size)
+                ret = avpkt->size;
+        }
+#endif
+
         if (*got_sub_ptr)
             avctx->frame_number++;
     }
@@ -1084,238 +1111,84 @@ int avcodec_decode_subtitle2(AVCodecContext *avctx, AVSubtitle *sub,
     return ret;
 }
 
-enum AVPixelFormat avcodec_default_get_format(struct AVCodecContext *avctx,
-                                              const enum AVPixelFormat *fmt)
+static int is_hwaccel_pix_fmt(enum AVPixelFormat pix_fmt)
 {
-    const AVPixFmtDescriptor *desc;
-    const AVCodecHWConfig *config;
-    int i, n;
-
-    // If a device was supplied when the codec was opened, assume that the
-    // user wants to use it.
-    if (avctx->hw_device_ctx && avctx->codec->hw_configs) {
-        AVHWDeviceContext *device_ctx =
-            (AVHWDeviceContext*)avctx->hw_device_ctx->data;
-        for (i = 0;; i++) {
-            config = &avctx->codec->hw_configs[i]->public;
-            if (!config)
-                break;
-            if (!(config->methods &
-                  AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX))
-                continue;
-            if (device_ctx->type != config->device_type)
-                continue;
-            for (n = 0; fmt[n] != AV_PIX_FMT_NONE; n++) {
-                if (config->pix_fmt == fmt[n])
-                    return fmt[n];
-            }
-        }
-    }
-    // No device or other setup, so we have to choose from things which
-    // don't any other external information.
-
-    // If the last element of the list is a software format, choose it
-    // (this should be best software format if any exist).
-    for (n = 0; fmt[n] != AV_PIX_FMT_NONE; n++);
-    desc = av_pix_fmt_desc_get(fmt[n - 1]);
-    if (!(desc->flags & AV_PIX_FMT_FLAG_HWACCEL))
-        return fmt[n - 1];
-
-    // Finally, traverse the list in order and choose the first entry
-    // with no external dependencies (if there is no hardware configuration
-    // information available then this just picks the first entry).
-    for (n = 0; fmt[n] != AV_PIX_FMT_NONE; n++) {
-        for (i = 0;; i++) {
-            config = avcodec_get_hw_config(avctx->codec, i);
-            if (!config)
-                break;
-            if (config->pix_fmt == fmt[n])
-                break;
-        }
-        if (!config) {
-            // No specific config available, so the decoder must be able
-            // to handle this format without any additional setup.
-            return fmt[n];
-        }
-        if (config->methods & AV_CODEC_HW_CONFIG_METHOD_INTERNAL) {
-            // Usable with only internal setup.
-            return fmt[n];
-        }
-    }
-
-    // Nothing is usable, give up.
-    return AV_PIX_FMT_NONE;
+    const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(pix_fmt);
+    return desc->flags & AV_PIX_FMT_FLAG_HWACCEL;
 }
 
-int ff_decode_get_hw_frames_ctx(AVCodecContext *avctx,
-                                enum AVHWDeviceType dev_type)
+enum AVPixelFormat avcodec_default_get_format(struct AVCodecContext *s, const enum AVPixelFormat *fmt)
 {
-    AVHWDeviceContext *device_ctx;
-    AVHWFramesContext *frames_ctx;
-    int ret;
-
-    if (!avctx->hwaccel)
-        return AVERROR(ENOSYS);
-
-    if (avctx->hw_frames_ctx)
-        return 0;
-    if (!avctx->hw_device_ctx) {
-        av_log(avctx, AV_LOG_ERROR, "A hardware frames or device context is "
-                "required for hardware accelerated decoding.\n");
-        return AVERROR(EINVAL);
-    }
-
-    device_ctx = (AVHWDeviceContext *)avctx->hw_device_ctx->data;
-    if (device_ctx->type != dev_type) {
-        av_log(avctx, AV_LOG_ERROR, "Device type %s expected for hardware "
-               "decoding, but got %s.\n", av_hwdevice_get_type_name(dev_type),
-               av_hwdevice_get_type_name(device_ctx->type));
-        return AVERROR(EINVAL);
-    }
-
-    ret = avcodec_get_hw_frames_parameters(avctx,
-                                           avctx->hw_device_ctx,
-                                           avctx->hwaccel->pix_fmt,
-                                           &avctx->hw_frames_ctx);
-    if (ret < 0)
-        return ret;
-
-    frames_ctx = (AVHWFramesContext*)avctx->hw_frames_ctx->data;
-
-
-    if (frames_ctx->initial_pool_size) {
-        // We guarantee 4 base work surfaces. The function above guarantees 1
-        // (the absolute minimum), so add the missing count.
-        frames_ctx->initial_pool_size += 3;
-    }
-
-    ret = av_hwframe_ctx_init(avctx->hw_frames_ctx);
-    if (ret < 0) {
-        av_buffer_unref(&avctx->hw_frames_ctx);
-        return ret;
-    }
-
-    return 0;
+    while (*fmt != AV_PIX_FMT_NONE && is_hwaccel_pix_fmt(*fmt))
+        ++fmt;
+    return fmt[0];
 }
 
-int avcodec_get_hw_frames_parameters(AVCodecContext *avctx,
-                                     AVBufferRef *device_ref,
-                                     enum AVPixelFormat hw_pix_fmt,
-                                     AVBufferRef **out_frames_ref)
+static AVHWAccel *find_hwaccel(enum AVCodecID codec_id,
+                               enum AVPixelFormat pix_fmt)
 {
-    AVBufferRef *frames_ref = NULL;
-    const AVCodecHWConfigInternal *hw_config;
-    const AVHWAccel *hwa;
-    int i, ret;
+    AVHWAccel *hwaccel = NULL;
 
-    for (i = 0;; i++) {
-        hw_config = avctx->codec->hw_configs[i];
-        if (!hw_config)
-            return AVERROR(ENOENT);
-        if (hw_config->public.pix_fmt == hw_pix_fmt)
-            break;
-    }
+    while ((hwaccel = av_hwaccel_next(hwaccel)))
+        if (hwaccel->id == codec_id
+            && hwaccel->pix_fmt == pix_fmt)
+            return hwaccel;
+    return NULL;
+}
 
-    hwa = hw_config->hwaccel;
-    if (!hwa || !hwa->frame_params)
+static int setup_hwaccel(AVCodecContext *avctx,
+                         const enum AVPixelFormat fmt,
+                         const char *name)
+{
+    AVHWAccel *hwa = find_hwaccel(avctx->codec_id, fmt);
+    int ret        = 0;
+
+    if (!hwa) {
+        av_log(avctx, AV_LOG_ERROR,
+               "Could not find an AVHWAccel for the pixel format: %s",
+               name);
         return AVERROR(ENOENT);
-
-    frames_ref = av_hwframe_ctx_alloc(device_ref);
-    if (!frames_ref)
-        return AVERROR(ENOMEM);
-
-    ret = hwa->frame_params(avctx, frames_ref);
-    if (ret >= 0) {
-        AVHWFramesContext *frames_ctx = (AVHWFramesContext*)frames_ref->data;
-
-        if (frames_ctx->initial_pool_size) {
-            // If the user has requested that extra output surfaces be
-            // available then add them here.
-            if (avctx->extra_hw_frames > 0)
-                frames_ctx->initial_pool_size += avctx->extra_hw_frames;
-
-            // If frame threading is enabled then an extra surface per thread
-            // is also required.
-            if (avctx->active_thread_type & FF_THREAD_FRAME)
-                frames_ctx->initial_pool_size += avctx->thread_count;
-        }
-
-        *out_frames_ref = frames_ref;
-    } else {
-        av_buffer_unref(&frames_ref);
     }
-    return ret;
-}
 
-static int hwaccel_init(AVCodecContext *avctx,
-                        const AVCodecHWConfigInternal *hw_config)
-{
-    const AVHWAccel *hwaccel;
-    int err;
-
-    hwaccel = hw_config->hwaccel;
-    if (hwaccel->capabilities & AV_HWACCEL_CODEC_CAP_EXPERIMENTAL &&
+    if (hwa->capabilities & AV_HWACCEL_CODEC_CAP_EXPERIMENTAL &&
         avctx->strict_std_compliance > FF_COMPLIANCE_EXPERIMENTAL) {
         av_log(avctx, AV_LOG_WARNING, "Ignoring experimental hwaccel: %s\n",
-               hwaccel->name);
+               hwa->name);
         return AVERROR_PATCHWELCOME;
     }
 
-    if (hwaccel->priv_data_size) {
-        avctx->internal->hwaccel_priv_data =
-            av_mallocz(hwaccel->priv_data_size);
+    if (hwa->priv_data_size) {
+        avctx->internal->hwaccel_priv_data = av_mallocz(hwa->priv_data_size);
         if (!avctx->internal->hwaccel_priv_data)
             return AVERROR(ENOMEM);
     }
 
-    avctx->hwaccel = hwaccel;
-    if (hwaccel->init) {
-        err = hwaccel->init(avctx);
-        if (err < 0) {
-            av_log(avctx, AV_LOG_ERROR, "Failed setup for format %s: "
-                   "hwaccel initialisation returned error.\n",
-                   av_get_pix_fmt_name(hw_config->public.pix_fmt));
+    avctx->hwaccel = hwa;
+    if (hwa->init) {
+        ret = hwa->init(avctx);
+        if (ret < 0) {
             av_freep(&avctx->internal->hwaccel_priv_data);
             avctx->hwaccel = NULL;
-            return err;
+            return ret;
         }
     }
 
     return 0;
-}
-
-static void hwaccel_uninit(AVCodecContext *avctx)
-{
-    if (avctx->hwaccel && avctx->hwaccel->uninit)
-        avctx->hwaccel->uninit(avctx);
-
-    av_freep(&avctx->internal->hwaccel_priv_data);
-
-    avctx->hwaccel = NULL;
-
-    av_buffer_unref(&avctx->hw_frames_ctx);
 }
 
 int ff_get_format(AVCodecContext *avctx, const enum AVPixelFormat *fmt)
 {
     const AVPixFmtDescriptor *desc;
     enum AVPixelFormat *choices;
-    enum AVPixelFormat ret, user_choice;
-    const AVCodecHWConfigInternal *hw_config;
-    const AVCodecHWConfig *config;
-    int i, n, err;
+    enum AVPixelFormat ret;
+    unsigned n = 0;
 
-    // Find end of list.
-    for (n = 0; fmt[n] != AV_PIX_FMT_NONE; n++);
-    // Must contain at least one entry.
+    while (fmt[n] != AV_PIX_FMT_NONE)
+        ++n;
+
     av_assert0(n >= 1);
-    // If a software format is available, it must be the last entry.
-    desc = av_pix_fmt_desc_get(fmt[n - 1]);
-    if (desc->flags & AV_PIX_FMT_FLAG_HWACCEL) {
-        // No software format is available.
-    } else {
-        avctx->sw_pix_fmt = fmt[n - 1];
-    }
+    avctx->sw_pix_fmt = fmt[n - 1];
+    av_assert2(!is_hwaccel_pix_fmt(avctx->sw_pix_fmt));
 
     choices = av_malloc_array(n + 1, sizeof(*choices));
     if (!choices)
@@ -1324,108 +1197,48 @@ int ff_get_format(AVCodecContext *avctx, const enum AVPixelFormat *fmt)
     memcpy(choices, fmt, (n + 1) * sizeof(*choices));
 
     for (;;) {
-        // Remove the previous hwaccel, if there was one.
-        hwaccel_uninit(avctx);
+        if (avctx->hwaccel && avctx->hwaccel->uninit)
+            avctx->hwaccel->uninit(avctx);
+        av_freep(&avctx->internal->hwaccel_priv_data);
+        avctx->hwaccel = NULL;
 
-        user_choice = avctx->get_format(avctx, choices);
-        if (user_choice == AV_PIX_FMT_NONE) {
-            // Explicitly chose nothing, give up.
-            ret = AV_PIX_FMT_NONE;
-            break;
-        }
+        av_buffer_unref(&avctx->hw_frames_ctx);
 
-        desc = av_pix_fmt_desc_get(user_choice);
+        ret = avctx->get_format(avctx, choices);
+
+        desc = av_pix_fmt_desc_get(ret);
         if (!desc) {
-            av_log(avctx, AV_LOG_ERROR, "Invalid format returned by "
-                   "get_format() callback.\n");
             ret = AV_PIX_FMT_NONE;
             break;
         }
-        av_log(avctx, AV_LOG_DEBUG, "Format %s chosen by get_format().\n",
-               desc->name);
 
-        for (i = 0; i < n; i++) {
-            if (choices[i] == user_choice)
-                break;
-        }
-        if (i == n) {
-            av_log(avctx, AV_LOG_ERROR, "Invalid return from get_format(): "
-                   "%s not in possible list.\n", desc->name);
+        if (!(desc->flags & AV_PIX_FMT_FLAG_HWACCEL))
             break;
-        }
-
-        if (avctx->codec->hw_configs) {
-            for (i = 0;; i++) {
-                hw_config = avctx->codec->hw_configs[i];
-                if (!hw_config)
-                    break;
-                if (hw_config->public.pix_fmt == user_choice)
-                    break;
-            }
-        } else {
-            hw_config = NULL;
-        }
-
-        if (!hw_config) {
-            // No config available, so no extra setup required.
-            ret = user_choice;
+#if FF_API_CAP_VDPAU
+        if (avctx->codec->capabilities&AV_CODEC_CAP_HWACCEL_VDPAU)
             break;
-        }
-        config = &hw_config->public;
+#endif
 
-        if (config->methods &
-            AV_CODEC_HW_CONFIG_METHOD_HW_FRAMES_CTX &&
-            avctx->hw_frames_ctx) {
-            const AVHWFramesContext *frames_ctx =
-                (AVHWFramesContext*)avctx->hw_frames_ctx->data;
-            if (frames_ctx->format != user_choice) {
-                av_log(avctx, AV_LOG_ERROR, "Invalid setup for format %s: "
-                       "does not match the format of the provided frames "
-                       "context.\n", desc->name);
-                goto try_again;
-            }
-        } else if (config->methods &
-                   AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
-                   avctx->hw_device_ctx) {
-            const AVHWDeviceContext *device_ctx =
-                (AVHWDeviceContext*)avctx->hw_device_ctx->data;
-            if (device_ctx->type != config->device_type) {
-                av_log(avctx, AV_LOG_ERROR, "Invalid setup for format %s: "
-                       "does not match the type of the provided device "
-                       "context.\n", desc->name);
-                goto try_again;
-            }
-        } else if (config->methods &
-                   AV_CODEC_HW_CONFIG_METHOD_INTERNAL) {
-            // Internal-only setup, no additional configuration.
-        } else if (config->methods &
-                   AV_CODEC_HW_CONFIG_METHOD_AD_HOC) {
-            // Some ad-hoc configuration we can't see and can't check.
-        } else {
-            av_log(avctx, AV_LOG_ERROR, "Invalid setup for format %s: "
-                   "missing configuration.\n", desc->name);
-            goto try_again;
-        }
-        if (hw_config->hwaccel) {
-            av_log(avctx, AV_LOG_DEBUG, "Format %s requires hwaccel "
-                   "initialisation.\n", desc->name);
-            err = hwaccel_init(avctx, hw_config);
-            if (err < 0)
-                goto try_again;
-        }
-        ret = user_choice;
-        break;
-
-    try_again:
-        av_log(avctx, AV_LOG_DEBUG, "Format %s not usable, retrying "
-               "get_format() without it.\n", desc->name);
-        for (i = 0; i < n; i++) {
-            if (choices[i] == user_choice)
+        if (avctx->hw_frames_ctx) {
+            AVHWFramesContext *hw_frames_ctx = (AVHWFramesContext*)avctx->hw_frames_ctx->data;
+            if (hw_frames_ctx->format != ret) {
+                av_log(avctx, AV_LOG_ERROR, "Format returned from get_buffer() "
+                       "does not match the format of provided AVHWFramesContext\n");
+                ret = AV_PIX_FMT_NONE;
                 break;
+            }
         }
-        for (; i + 1 < n; i++)
-            choices[i] = choices[i + 1];
-        --n;
+
+        if (!setup_hwaccel(avctx, ret, desc->name))
+            break;
+
+        /* Remove failed hwaccel from choices */
+        for (n = 0; choices[n] != ret; n++)
+            av_assert0(choices[n] != AV_PIX_FMT_NONE);
+
+        do
+            choices[n] = choices[n + 1];
+        while (choices[n++] != AV_PIX_FMT_NONE);
     }
 
     av_freep(&choices);
@@ -1614,7 +1427,7 @@ static int video_get_buffer(AVCodecContext *s, AVFrame *pic)
         pic->linesize[i] = 0;
     }
     if (desc->flags & AV_PIX_FMT_FLAG_PAL ||
-        ((desc->flags & FF_PSEUDOPAL) && pic->data[1]))
+        desc->flags & AV_PIX_FMT_FLAG_PSEUDOPAL)
         avpriv_set_systematic_pal2((uint32_t *)pic->data[1], pic->format);
 
     if (s->debug & FF_DEBUG_BUFFERS)
@@ -1662,7 +1475,7 @@ static int add_metadata_from_side_data(const AVPacket *avpkt, AVFrame *frame)
     return av_packet_unpack_dictionary(side_metadata, size, frame_md);
 }
 
-int ff_decode_frame_props(AVCodecContext *avctx, AVFrame *frame)
+int ff_init_buffer_info(AVCodecContext *avctx, AVFrame *frame)
 {
     const AVPacket *pkt = avctx->internal->last_pkt_props;
     int i;
@@ -1770,6 +1583,11 @@ FF_ENABLE_DEPRECATION_WARNINGS
     return 0;
 }
 
+int ff_decode_frame_props(AVCodecContext *avctx, AVFrame *frame)
+{
+    return ff_init_buffer_info(avctx, frame);
+}
+
 static void validate_avframe_allocation(AVCodecContext *avctx, AVFrame *frame)
 {
     if (avctx->codec_type == AVMEDIA_TYPE_VIDEO) {
@@ -1779,11 +1597,12 @@ static void validate_avframe_allocation(AVCodecContext *avctx, AVFrame *frame)
         int flags = desc ? desc->flags : 0;
         if (num_planes == 1 && (flags & AV_PIX_FMT_FLAG_PAL))
             num_planes = 2;
-        if ((flags & FF_PSEUDOPAL) && frame->data[1])
-            num_planes = 2;
         for (i = 0; i < num_planes; i++) {
             av_assert0(frame->data[i]);
         }
+        // For now do not enforce anything for palette of pseudopal formats
+        if (num_planes == 1 && (flags & AV_PIX_FMT_FLAG_PSEUDOPAL))
+            num_planes = 2;
         // For formats without data like hwaccel allow unused pointers to be non-NULL.
         for (i = num_planes; num_planes > 0 && i < FF_ARRAY_ELEMS(frame->data); i++) {
             if (frame->data[i])
@@ -1791,43 +1610,6 @@ static void validate_avframe_allocation(AVCodecContext *avctx, AVFrame *frame)
             frame->data[i] = NULL;
         }
     }
-}
-
-static void decode_data_free(void *opaque, uint8_t *data)
-{
-    FrameDecodeData *fdd = (FrameDecodeData*)data;
-
-    if (fdd->post_process_opaque_free)
-        fdd->post_process_opaque_free(fdd->post_process_opaque);
-
-    if (fdd->hwaccel_priv_free)
-        fdd->hwaccel_priv_free(fdd->hwaccel_priv);
-
-    av_freep(&fdd);
-}
-
-int ff_attach_decode_data(AVFrame *frame)
-{
-    AVBufferRef *fdd_buf;
-    FrameDecodeData *fdd;
-
-    av_assert1(!frame->private_ref);
-    av_buffer_unref(&frame->private_ref);
-
-    fdd = av_mallocz(sizeof(*fdd));
-    if (!fdd)
-        return AVERROR(ENOMEM);
-
-    fdd_buf = av_buffer_create((uint8_t*)fdd, sizeof(*fdd), decode_data_free,
-                               NULL, AV_BUFFER_FLAG_READONLY);
-    if (!fdd_buf) {
-        av_freep(&fdd);
-        return AVERROR(ENOMEM);
-    }
-
-    frame->private_ref = fdd_buf;
-
-    return 0;
 }
 
 static int get_buffer_internal(AVCodecContext *avctx, AVFrame *frame, int flags)
@@ -1866,14 +1648,8 @@ static int get_buffer_internal(AVCodecContext *avctx, AVFrame *frame, int flags)
         avctx->sw_pix_fmt = avctx->pix_fmt;
 
     ret = avctx->get_buffer2(avctx, frame, flags);
-    if (ret < 0)
-        goto end;
-
-    validate_avframe_allocation(avctx, frame);
-
-    ret = ff_attach_decode_data(frame);
-    if (ret < 0)
-        goto end;
+    if (ret >= 0)
+        validate_avframe_allocation(avctx, frame);
 
 end:
     if (avctx->codec_type == AVMEDIA_TYPE_VIDEO && !override_dimensions &&
@@ -1881,9 +1657,6 @@ end:
         frame->width  = avctx->width;
         frame->height = avctx->height;
     }
-
-    if (ret < 0)
-        av_frame_unref(frame);
 
     return ret;
 }
@@ -1910,6 +1683,8 @@ static int reget_buffer_internal(AVCodecContext *avctx, AVFrame *frame)
                frame->width, frame->height, av_get_pix_fmt_name(frame->format), avctx->width, avctx->height, av_get_pix_fmt_name(avctx->pix_fmt));
         av_frame_unref(frame);
     }
+
+    ff_init_buffer_info(avctx, frame);
 
     if (!frame->data[0])
         return ff_get_buffer(avctx, frame, AV_GET_BUFFER_FLAG_REF);

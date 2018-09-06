@@ -42,7 +42,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#if HAVE_MACH_ABSOLUTE_TIME
+#if HAVE_MACH_MACH_TIME_H
 #include <mach/mach_time.h>
 #endif
 

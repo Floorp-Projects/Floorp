@@ -23,7 +23,6 @@
 
 #include "avcodec.h"
 #include "get_bits.h"
-#include "hwaccel.h"
 #include "internal.h"
 #include "profiles.h"
 #include "thread.h"
@@ -170,10 +169,7 @@ fail:
 
 static int update_size(AVCodecContext *avctx, int w, int h)
 {
-#define HWACCEL_MAX (CONFIG_VP9_DXVA2_HWACCEL + \
-                     CONFIG_VP9_D3D11VA_HWACCEL * 2 + \
-                     CONFIG_VP9_NVDEC_HWACCEL + \
-                     CONFIG_VP9_VAAPI_HWACCEL)
+#define HWACCEL_MAX (CONFIG_VP9_DXVA2_HWACCEL + CONFIG_VP9_D3D11VA_HWACCEL * 2 + CONFIG_VP9_VAAPI_HWACCEL)
     enum AVPixelFormat pix_fmts[HWACCEL_MAX + 2], *fmtp = pix_fmts;
     VP9Context *s = avctx->priv_data;
     uint8_t *p;
@@ -188,7 +184,6 @@ static int update_size(AVCodecContext *avctx, int w, int h)
 
         switch (s->pix_fmt) {
         case AV_PIX_FMT_YUV420P:
-        case AV_PIX_FMT_YUV420P10:
 #if CONFIG_VP9_DXVA2_HWACCEL
             *fmtp++ = AV_PIX_FMT_DXVA2_VLD;
 #endif
@@ -196,17 +191,12 @@ static int update_size(AVCodecContext *avctx, int w, int h)
             *fmtp++ = AV_PIX_FMT_D3D11VA_VLD;
             *fmtp++ = AV_PIX_FMT_D3D11;
 #endif
-#if CONFIG_VP9_NVDEC_HWACCEL
-            *fmtp++ = AV_PIX_FMT_CUDA;
-#endif
 #if CONFIG_VP9_VAAPI_HWACCEL
             *fmtp++ = AV_PIX_FMT_VAAPI;
 #endif
             break;
+        case AV_PIX_FMT_YUV420P10:
         case AV_PIX_FMT_YUV420P12:
-#if CONFIG_VP9_NVDEC_HWACCEL
-            *fmtp++ = AV_PIX_FMT_CUDA;
-#endif
 #if CONFIG_VP9_VAAPI_HWACCEL
             *fmtp++ = AV_PIX_FMT_VAAPI;
 #endif
@@ -1644,10 +1634,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
 #endif
         {
             ret = decode_tiles(avctx, data, size);
-            if (ret < 0) {
-                ff_thread_report_progress(&s->s.frames[CUR_FRAME].tf, INT_MAX, 0);
+            if (ret < 0)
                 return ret;
-            }
         }
 
         // Sum all counts fields into td[0].counts for tile threading
@@ -1797,23 +1785,4 @@ AVCodec ff_vp9_decoder = {
     .init_thread_copy      = ONLY_IF_THREADS_ENABLED(vp9_decode_init_thread_copy),
     .update_thread_context = ONLY_IF_THREADS_ENABLED(vp9_decode_update_thread_context),
     .profiles              = NULL_IF_CONFIG_SMALL(ff_vp9_profiles),
-    .bsfs                  = "vp9_superframe_split",
-    .hw_configs            = (const AVCodecHWConfigInternal*[]) {
-#if CONFIG_VP9_DXVA2_HWACCEL
-                               HWACCEL_DXVA2(vp9),
-#endif
-#if CONFIG_VP9_D3D11VA_HWACCEL
-                               HWACCEL_D3D11VA(vp9),
-#endif
-#if CONFIG_VP9_D3D11VA2_HWACCEL
-                               HWACCEL_D3D11VA2(vp9),
-#endif
-#if CONFIG_VP9_NVDEC_HWACCEL
-                               HWACCEL_NVDEC(vp9),
-#endif
-#if CONFIG_VP9_VAAPI_HWACCEL
-                               HWACCEL_VAAPI(vp9),
-#endif
-                               NULL
-                           },
 };
