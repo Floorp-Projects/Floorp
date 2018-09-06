@@ -188,6 +188,14 @@ impl Scene {
     pub fn update_epoch(&mut self, pipeline_id: PipelineId, epoch: Epoch) {
         self.pipeline_epochs.insert(pipeline_id, epoch);
     }
+
+    pub fn has_root_pipeline(&self) -> bool {
+        if let Some(ref root_id) = self.root_pipeline_id {
+            return self.pipelines.contains_key(root_id);
+        }
+
+        false
+    }
 }
 
 /// An arbitrary number which we assume opacity is invisible below.

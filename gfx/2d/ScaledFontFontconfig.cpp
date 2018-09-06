@@ -107,6 +107,69 @@ ScaledFontFontconfig::InstanceData::InstanceData(cairo_scaled_font_t* aScaledFon
   cairo_font_options_destroy(fontOptions);
 }
 
+ScaledFontFontconfig::InstanceData::InstanceData(const wr::FontInstanceOptions* aOptions,
+                                                 const wr::FontInstancePlatformOptions* aPlatformOptions)
+  : mFlags(HINT_METRICS)
+  , mHintStyle(FC_HINT_FULL)
+  , mSubpixelOrder(FC_RGBA_UNKNOWN)
+  , mLcdFilter(FC_LCD_LEGACY)
+{
+  if (aOptions) {
+    if (aOptions->flags & wr::FontInstanceFlags::FORCE_AUTOHINT) {
+      mFlags |= AUTOHINT;
+    }
+    if (aOptions->flags & wr::FontInstanceFlags::EMBEDDED_BITMAPS) {
+      mFlags |= EMBEDDED_BITMAP;
+    }
+    if (aOptions->flags & wr::FontInstanceFlags::SYNTHETIC_BOLD) {
+      mFlags |= EMBOLDEN;
+    }
+    if (aOptions->flags & wr::FontInstanceFlags::VERTICAL_LAYOUT) {
+      mFlags |= VERTICAL_LAYOUT;
+    }
+    if (aOptions->render_mode != wr::FontRenderMode::Mono) {
+      mFlags |= ANTIALIAS;
+      if (aOptions->render_mode == wr::FontRenderMode::Subpixel) {
+        if (aOptions->flags & wr::FontInstanceFlags::SUBPIXEL_BGR) {
+          mSubpixelOrder =
+            aOptions->flags & wr::FontInstanceFlags::LCD_VERTICAL ? FC_RGBA_VBGR : FC_RGBA_BGR;
+        } else {
+          mSubpixelOrder =
+            aOptions->flags & wr::FontInstanceFlags::LCD_VERTICAL ? FC_RGBA_VRGB : FC_RGBA_RGB;
+        }
+      }
+    }
+  }
+  if (aPlatformOptions) {
+    switch (aPlatformOptions->hinting) {
+    case wr::FontHinting::None:
+      mHintStyle = FC_HINT_NONE;
+      break;
+    case wr::FontHinting::Light:
+      mHintStyle = FC_HINT_SLIGHT;
+      break;
+    case wr::FontHinting::Normal:
+      mHintStyle = FC_HINT_MEDIUM;
+      break;
+    default:
+      break;
+    }
+    switch (aPlatformOptions->lcd_filter) {
+    case wr::FontLCDFilter::None:
+      mLcdFilter = FC_LCD_NONE;
+      break;
+    case wr::FontLCDFilter::Default:
+      mLcdFilter = FC_LCD_DEFAULT;
+      break;
+    case wr::FontLCDFilter::Light:
+      mLcdFilter = FC_LCD_LIGHT;
+      break;
+    default:
+      break;
+    }
+  }
+}
+
 void
 ScaledFontFontconfig::InstanceData::SetupPattern(FcPattern* aPattern) const
 {
@@ -353,27 +416,6 @@ ScaledFontFontconfig::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* a
   return true;
 }
 
-already_AddRefed<ScaledFont>
-UnscaledFontFontconfig::CreateScaledFont(Float aGlyphSize,
-                                         const uint8_t* aInstanceData,
-                                         uint32_t aInstanceDataLength,
-                                         const FontVariation* aVariations,
-                                         uint32_t aNumVariations)
-{
-  if (aInstanceDataLength < sizeof(ScaledFontFontconfig::InstanceData)) {
-    gfxWarning() << "Fontconfig scaled font instance data is truncated.";
-    return nullptr;
-  }
-  const ScaledFontFontconfig::InstanceData *instanceData =
-    reinterpret_cast<const ScaledFontFontconfig::InstanceData*>(aInstanceData);
-  RefPtr<ScaledFont> scaledFont =
-    ScaledFontFontconfig::CreateFromInstanceData(*instanceData, this, aGlyphSize,
-                                                 aVariations, aNumVariations,
-                                                 static_cast<NativeFontResourceFontconfig*>(
-                                                   mNativeFontResource.get()));
-  return scaledFont.forget();
-}
-
 static cairo_user_data_key_t sNativeFontResourceKey;
 
 static void
@@ -391,34 +433,41 @@ ReleaseFace(void* aData)
 }
 
 already_AddRefed<ScaledFont>
-ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
-                                             UnscaledFontFontconfig* aUnscaledFont,
-                                             Float aSize,
-                                             const FontVariation* aVariations,
-                                             uint32_t aNumVariations,
-                                             NativeFontResourceFontconfig* aNativeFontResource)
+UnscaledFontFontconfig::CreateScaledFont(Float aSize,
+                                         const uint8_t* aInstanceData,
+                                         uint32_t aInstanceDataLength,
+                                         const FontVariation* aVariations,
+                                         uint32_t aNumVariations)
 {
+  if (aInstanceDataLength < sizeof(ScaledFontFontconfig::InstanceData)) {
+    gfxWarning() << "Fontconfig scaled font instance data is truncated.";
+    return nullptr;
+  }
+  const ScaledFontFontconfig::InstanceData& instanceData =
+    *reinterpret_cast<const ScaledFontFontconfig::InstanceData*>(aInstanceData);
+
   FcPattern* pattern = FcPatternCreate();
   if (!pattern) {
     gfxWarning() << "Failed initializing Fontconfig pattern for scaled font";
     return nullptr;
   }
-  FT_Face face = aUnscaledFont->GetFace();
+  FT_Face face = GetFace();
+  NativeFontResourceFreeType* nfr = static_cast<NativeFontResourceFreeType*>(mNativeFontResource.get());
   FT_Face varFace = nullptr;
   if (face) {
-    if (aNativeFontResource && aNumVariations > 0) {
-      varFace = aNativeFontResource->CloneFace();
+    if (nfr && aNumVariations > 0) {
+      varFace = nfr->CloneFace();
       if (!varFace) {
         gfxWarning() << "Failed cloning face for variations";
       }
     }
     FcPatternAddFTFace(pattern, FC_FT_FACE, varFace ? varFace : face);
   } else {
-    FcPatternAddString(pattern, FC_FILE, reinterpret_cast<const FcChar8*>(aUnscaledFont->GetFile()));
-    FcPatternAddInteger(pattern, FC_INDEX, aUnscaledFont->GetIndex());
+    FcPatternAddString(pattern, FC_FILE, reinterpret_cast<const FcChar8*>(GetFile()));
+    FcPatternAddInteger(pattern, FC_INDEX, GetIndex());
   }
   FcPatternAddDouble(pattern, FC_PIXEL_SIZE, aSize);
-  aInstanceData.SetupPattern(pattern);
+  instanceData.SetupPattern(pattern);
 
   StackArray<FT_Fixed, 32> coords(aNumVariations);
   for (uint32_t i = 0; i < aNumVariations; i++) {
@@ -435,11 +484,11 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
     return nullptr;
   }
 
-  if (aNativeFontResource) {
+  if (nfr) {
     // Bug 1362117 - Cairo may keep the font face alive after the owning NativeFontResource
     // was freed. To prevent this, we must bind the NativeFontResource to the font face so that
     // it stays alive at least as long as the font face.
-    aNativeFontResource->AddRef();
+    nfr->AddRef();
     cairo_status_t err = CAIRO_STATUS_SUCCESS;
     bool cleanupFace = false;
     if (varFace) {
@@ -453,7 +502,7 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
     } else {
       err = cairo_font_face_set_user_data(font,
                                           &sNativeFontResourceKey,
-                                          aNativeFontResource,
+                                          nfr,
                                           ReleaseNativeFontResource);
     }
     if (err != CAIRO_STATUS_SUCCESS) {
@@ -461,7 +510,7 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
       if (varFace && cleanupFace) {
         Factory::ReleaseFTFace(varFace);
       }
-      aNativeFontResource->Release();
+      nfr->Release();
       cairo_font_face_destroy(font);
       FcPatternDestroy(pattern);
       return nullptr;
@@ -475,7 +524,7 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
   cairo_matrix_init_identity(&identityMatrix);
 
   cairo_font_options_t *fontOptions = cairo_font_options_create();
-  aInstanceData.SetupFontOptions(fontOptions);
+  instanceData.SetupFontOptions(fontOptions);
 
   cairo_scaled_font_t* cairoScaledFont =
     cairo_scaled_font_create(font, &sizeMatrix, &identityMatrix, fontOptions);
@@ -490,7 +539,7 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
   }
 
   RefPtr<ScaledFontFontconfig> scaledFont =
-    new ScaledFontFontconfig(cairoScaledFont, pattern, aUnscaledFont, aSize);
+    new ScaledFontFontconfig(cairoScaledFont, pattern, this, aSize);
 
   cairo_scaled_font_destroy(cairoScaledFont);
   FcPatternDestroy(pattern);
@@ -498,10 +547,24 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
   // Only apply variations if we have an explicitly cloned face. Otherwise,
   // if the pattern holds the pathname, Cairo will handle setting of variations.
   if (varFace) {
-    UnscaledFontFreeType::ApplyVariationsToFace(aVariations, aNumVariations, varFace);
+    ApplyVariationsToFace(aVariations, aNumVariations, varFace);
   }
 
   return scaledFont.forget();
+}
+
+already_AddRefed<ScaledFont>
+UnscaledFontFontconfig::CreateScaledFontFromWRFont(Float aGlyphSize,
+                                                   const wr::FontInstanceOptions* aOptions,
+                                                   const wr::FontInstancePlatformOptions* aPlatformOptions,
+                                                   const FontVariation* aVariations,
+                                                   uint32_t aNumVariations)
+{
+  ScaledFontFontconfig::InstanceData instanceData(aOptions, aPlatformOptions);
+  return CreateScaledFont(aGlyphSize,
+                          reinterpret_cast<uint8_t*>(&instanceData),
+                          sizeof(instanceData),
+                          aVariations, aNumVariations);
 }
 
 bool

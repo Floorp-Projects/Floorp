@@ -6,16 +6,14 @@
 
 // For edges, the colors are the same. For corners, these
 // are the colors of each edge making up the corner.
-flat varying vec4 vColor00;
-flat varying vec4 vColor01;
-flat varying vec4 vColor10;
-flat varying vec4 vColor11;
+flat varying vec4 vColor0;
+flat varying vec4 vColor1;
 
 // A point + tangent defining the line where the edge
 // transition occurs. Used for corners only.
 flat varying vec4 vColorLine;
 
-// x = segment, y = styles, z = edge axes, w = clip mode
+// x = segment, z = edge axes, w = clip mode
 flat varying ivec4 vConfig;
 
 // xy = Local space position of the clip center.
@@ -48,18 +46,6 @@ varying vec2 vPos;
 #define SEGMENT_TOP             5
 #define SEGMENT_RIGHT           6
 #define SEGMENT_BOTTOM          7
-
-// Border styles as defined in webrender_api/types.rs
-#define BORDER_STYLE_NONE         0
-#define BORDER_STYLE_SOLID        1
-#define BORDER_STYLE_DOUBLE       2
-#define BORDER_STYLE_DOTTED       3
-#define BORDER_STYLE_DASHED       4
-#define BORDER_STYLE_HIDDEN       5
-#define BORDER_STYLE_GROOVE       6
-#define BORDER_STYLE_RIDGE        7
-#define BORDER_STYLE_INSET        8
-#define BORDER_STYLE_OUTSET       9
 
 #define CLIP_NONE   0
 #define CLIP_DASH   1
@@ -102,55 +88,8 @@ vec2 get_outer_corner_scale(int segment) {
     return p;
 }
 
-// NOTE(emilio): If you change this algorithm, do the same change
-// in border.rs
-vec4 mod_color(vec4 color, bool is_black, bool lighter) {
-    const float light_black = 0.7;
-    const float dark_black = 0.3;
-
-    const float dark_scale = 0.66666666;
-    const float light_scale = 1.0;
-
-    if (is_black) {
-        if (lighter) {
-            return vec4(vec3(light_black), color.a);
-        }
-        return vec4(vec3(dark_black), color.a);
-    }
-
-    if (lighter) {
-        return vec4(color.rgb * light_scale, color.a);
-    }
-    return vec4(color.rgb * dark_scale, color.a);
-}
-
-vec4[2] get_colors_for_side(vec4 color, int style) {
-    vec4 result[2];
-
-    bool is_black = color.rgb == vec3(0.0, 0.0, 0.0);
-
-    switch (style) {
-        case BORDER_STYLE_GROOVE:
-            result[0] = mod_color(color, is_black, true);
-            result[1] = mod_color(color, is_black, false);
-            break;
-        case BORDER_STYLE_RIDGE:
-            result[0] = mod_color(color, is_black, false);
-            result[1] = mod_color(color, is_black, true);
-            break;
-        default:
-            result[0] = color;
-            result[1] = color;
-            break;
-    }
-
-    return result;
-}
-
 void main(void) {
     int segment = aFlags & 0xff;
-    int style0 = (aFlags >> 8) & 0xff;
-    int style1 = (aFlags >> 16) & 0xff;
     int clip_mode = (aFlags >> 24) & 0xff;
 
     vec2 outer_scale = get_outer_corner_scale(segment);
@@ -195,19 +134,15 @@ void main(void) {
 
     vConfig = ivec4(
         segment,
-        style0 | (style1 << 16),
+        0,
         edge_axis.x | (edge_axis.y << 16),
         clip_mode
     );
     vPartialWidths = vec4(aWidths / 3.0, aWidths / 2.0);
     vPos = aRect.zw * aPosition.xy;
 
-    vec4[2] color0 = get_colors_for_side(aColor0, style0);
-    vColor00 = color0[0];
-    vColor01 = color0[1];
-    vec4[2] color1 = get_colors_for_side(aColor1, style1);
-    vColor10 = color1[0];
-    vColor11 = color1[1];
+    vColor0 = aColor0;
+    vColor1 = aColor1;
     vClipCenter_Sign = vec4(outer + clip_sign * aRadii, clip_sign);
     vClipRadii = vec4(aRadii, max(aRadii - aWidths, 0.0));
     vColorLine = vec4(outer, aWidths.y * -clip_sign.y, aWidths.x * clip_sign.x);
@@ -232,107 +167,11 @@ void main(void) {
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-vec4 evaluate_color_for_style_in_corner(
-    vec2 clip_relative_pos,
-    int style,
-    vec4 color0,
-    vec4 color1,
-    vec4 clip_radii,
-    float mix_factor,
-    int segment,
-    float aa_range
-) {
-    switch (style) {
-        case BORDER_STYLE_DOUBLE: {
-            // Get the distances from 0.33 of the radii, and
-            // also 0.67 of the radii. Use these to form a
-            // SDF subtraction which will clip out the inside
-            // third of the rounded edge.
-            float d_radii_a = distance_to_ellipse(
-                clip_relative_pos,
-                clip_radii.xy - vPartialWidths.xy,
-                aa_range
-            );
-            float d_radii_b = distance_to_ellipse(
-                clip_relative_pos,
-                clip_radii.xy - 2.0 * vPartialWidths.xy,
-                aa_range
-            );
-            float d = min(-d_radii_a, d_radii_b);
-            float alpha = distance_aa(aa_range, d);
-            return alpha * color0;
-        }
-        case BORDER_STYLE_GROOVE:
-        case BORDER_STYLE_RIDGE: {
-            float d = distance_to_ellipse(
-                clip_relative_pos,
-                clip_radii.xy - vPartialWidths.zw,
-                aa_range
-            );
-            float alpha = distance_aa(aa_range, d);
-            float swizzled_factor;
-            switch (segment) {
-                case SEGMENT_TOP_LEFT: swizzled_factor = 0.0; break;
-                case SEGMENT_TOP_RIGHT: swizzled_factor = mix_factor; break;
-                case SEGMENT_BOTTOM_RIGHT: swizzled_factor = 1.0; break;
-                case SEGMENT_BOTTOM_LEFT: swizzled_factor = 1.0 - mix_factor; break;
-                default: swizzled_factor = 0.0; break;
-            };
-            vec4 c0 = mix(color1, color0, swizzled_factor);
-            vec4 c1 = mix(color0, color1, swizzled_factor);
-            return mix(c0, c1, alpha);
-        }
-        default:
-            break;
-    }
-
-    return color0;
-}
-
-vec4 evaluate_color_for_style_in_edge(
-    vec2 pos,
-    int style,
-    vec4 color0,
-    vec4 color1,
-    float aa_range,
-    int edge_axis
-) {
-    switch (style) {
-        case BORDER_STYLE_DOUBLE: {
-            float d0 = -1.0;
-            float d1 = -1.0;
-            if (vPartialWidths[edge_axis] > 1.0) {
-                vec2 ref = vec2(
-                    vEdgeReference[edge_axis] + vPartialWidths[edge_axis],
-                    vEdgeReference[edge_axis+2] - vPartialWidths[edge_axis]
-                );
-                d0 = pos[edge_axis] - ref.x;
-                d1 = ref.y - pos[edge_axis];
-            }
-            float d = min(d0, d1);
-            float alpha = distance_aa(aa_range, d);
-            return alpha * color0;
-        }
-        case BORDER_STYLE_GROOVE:
-        case BORDER_STYLE_RIDGE: {
-            float ref = vEdgeReference[edge_axis] + vPartialWidths[edge_axis+2];
-            float d = pos[edge_axis] - ref;
-            float alpha = distance_aa(aa_range, d);
-            return mix(color0, color1, alpha);
-        }
-        default:
-            break;
-    }
-
-    return color0;
-}
-
 void main(void) {
     float aa_range = compute_aa_range(vPos);
     vec4 color0, color1;
 
     int segment = vConfig.x;
-    ivec2 style = ivec2(vConfig.y & 0xffff, vConfig.y >> 16);
     ivec2 edge_axis = ivec2(vConfig.z & 0xffff, vConfig.z >> 16);
     int clip_mode = vConfig.w;
 
@@ -375,48 +214,10 @@ void main(void) {
         float d_radii_b = distance_to_ellipse(clip_relative_pos, vClipRadii.zw, aa_range);
         float d_radii = max(d_radii_a, -d_radii_b);
         d = max(d, d_radii);
-
-        color0 = evaluate_color_for_style_in_corner(
-            clip_relative_pos,
-            style.x,
-            vColor00,
-            vColor01,
-            vClipRadii,
-            mix_factor,
-            segment,
-            aa_range
-        );
-        color1 = evaluate_color_for_style_in_corner(
-            clip_relative_pos,
-            style.y,
-            vColor10,
-            vColor11,
-            vClipRadii,
-            mix_factor,
-            segment,
-            aa_range
-        );
-    } else {
-        color0 = evaluate_color_for_style_in_edge(
-            vPos,
-            style.x,
-            vColor00,
-            vColor01,
-            aa_range,
-            edge_axis.x
-        );
-        color1 = evaluate_color_for_style_in_edge(
-            vPos,
-            style.y,
-            vColor10,
-            vColor11,
-            aa_range,
-            edge_axis.y
-        );
     }
 
     float alpha = distance_aa(aa_range, d);
-    vec4 color = mix(color0, color1, mix_factor);
+    vec4 color = mix(vColor0, vColor1, mix_factor);
     oFragColor = color * alpha;
 }
 #endif

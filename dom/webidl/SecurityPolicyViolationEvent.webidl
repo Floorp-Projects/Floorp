@@ -7,8 +7,7 @@ enum SecurityPolicyViolationEventDisposition
   "enforce", "report"
 };
 
-[Constructor(DOMString type, optional SecurityPolicyViolationEventInit eventInitDict),
- Pref="security.csp.enable_violation_events"]
+[Constructor(DOMString type, optional SecurityPolicyViolationEventInit eventInitDict)]
 interface SecurityPolicyViolationEvent : Event
 {
     readonly attribute DOMString      documentURI;

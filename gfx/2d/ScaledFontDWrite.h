@@ -102,6 +102,9 @@ private:
       , mContrast(aScaledFont->mContrast)
     {}
 
+    InstanceData(const wr::FontInstanceOptions* aOptions,
+                 const wr::FontInstancePlatformOptions* aPlatformOptions);
+
     bool mUseEmbeddedBitmap;
     bool mForceGDIMode;
     Float mGamma;

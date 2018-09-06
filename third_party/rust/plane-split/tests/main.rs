@@ -3,7 +3,7 @@ extern crate plane_split;
 
 use euclid::{Angle, TypedRect, TypedSize2D, TypedTransform3D, point2, point3, vec3};
 use euclid::approxeq::ApproxEq;
-use plane_split::{Intersection, Line, LineProjection, Plane, Polygon};
+use plane_split::{Intersection, Line, LineProjection, NegativeHemisphereError, Plane, Polygon};
 
 
 #[test]
@@ -60,7 +60,7 @@ fn valid() {
 
 #[test]
 fn empty() {
-    let poly = Polygon::<f32, ()>::try_from_points(
+    let poly = Polygon::<f32, ()>::from_points(
         [
             point3(0.0, 0.0, 1.0),
             point3(0.0, 0.0, 1.0),
@@ -262,11 +262,17 @@ fn split() {
 
 #[test]
 fn plane_unnormalized() {
-    let mut plane: Option<Plane<f32, ()>> = Plane::from_unnormalized(vec3(0.0, 0.0, 0.0), 1.0);
-    assert_eq!(plane, None);
+    let zero_vec = vec3(0.0000001, 0.0, 0.0);
+    let mut plane: Result<Option<Plane<f32, ()>>, _> = Plane::from_unnormalized(zero_vec, 1.0);
+    assert_eq!(plane, Ok(None));
+    plane = Plane::from_unnormalized(zero_vec, 0.0);
+    assert_eq!(plane, Err(NegativeHemisphereError));
+    plane = Plane::from_unnormalized(zero_vec, -0.5);
+    assert_eq!(plane, Err(NegativeHemisphereError));
+
     plane = Plane::from_unnormalized(vec3(-3.0, 4.0, 0.0), 2.0);
-    assert_eq!(plane, Some(Plane {
+    assert_eq!(plane, Ok(Some(Plane {
         normal: vec3(-3.0/5.0, 4.0/5.0, 0.0),
         offset: 2.0/5.0,
-    }));
+    })));
 }
