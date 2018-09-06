@@ -19,6 +19,7 @@
 #ifndef AVUTIL_ARM_CPU_H
 #define AVUTIL_ARM_CPU_H
 
+#include "config.h"
 #include "libavutil/cpu.h"
 #include "libavutil/cpu_internal.h"
 

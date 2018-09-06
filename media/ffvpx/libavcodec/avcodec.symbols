@@ -30,6 +30,8 @@ av_grow_packet
 av_hwaccel_next
 av_init_packet
 av_lockmgr_register
+av_log_ask_for_sample
+av_log_missing_feature
 av_new_packet
 av_packet_copy_props
 av_packet_free_side_data
@@ -90,6 +92,7 @@ avcodec_flush_buffers
 avcodec_free_context
 avcodec_get_class
 avcodec_get_context_defaults3
+avcodec_get_edge_width
 avcodec_get_frame_class
 avcodec_get_name
 avcodec_get_subtitle_rect_class
@@ -99,6 +102,7 @@ avcodec_license
 avcodec_open2
 avcodec_register
 avcodec_register_all
+avcodec_set_dimensions
 avcodec_string
 avcodec_version
 avsubtitle_free
