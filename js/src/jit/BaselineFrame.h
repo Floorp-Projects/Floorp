@@ -213,11 +213,13 @@ class BaselineFrame
 
   public:
     Value newTarget() const {
-        if (isEvalFrame())
+        if (isEvalFrame()) {
             return *evalNewTargetAddress();
+        }
         MOZ_ASSERT(isFunctionFrame());
-        if (callee()->isArrow())
+        if (callee()->isArrow()) {
             return callee()->getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
+        }
         if (isConstructing()) {
             return *(Value*)(reinterpret_cast<const uint8_t*>(this) +
                              BaselineFrame::Size() +
@@ -230,8 +232,9 @@ class BaselineFrame
         return flags_ & HAS_RVAL;
     }
     MutableHandleValue returnValue() {
-        if (!hasReturnValue())
+        if (!hasReturnValue()) {
             addressOfReturnValue()->setUndefined();
+        }
         return MutableHandleValue::fromMarkedLocation(addressOfReturnValue());
     }
     void setReturnValue(const Value& v) {
@@ -321,8 +324,9 @@ class BaselineFrame
     }
 
     BaselineDebugModeOSRInfo* getDebugModeOSRInfo() {
-        if (flags_ & HAS_DEBUG_MODE_OSR_INFO)
+        if (flags_ & HAS_DEBUG_MODE_OSR_INFO) {
             return debugModeOSRInfo();
+        }
         return nullptr;
     }
 
@@ -344,8 +348,9 @@ class BaselineFrame
     }
 
     jsbytecode* maybeOverridePc() const {
-        if (hasOverridePc())
+        if (hasOverridePc()) {
             return overridePc();
+        }
         return nullptr;
     }
 
