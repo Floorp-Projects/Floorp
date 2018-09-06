@@ -2499,6 +2499,7 @@ tls13_HandleServerHelloPart2(sslSocket *ss)
     }
 
     if (ss->statelessResume) {
+        PORT_Assert(sid->version >= SSL_LIBRARY_VERSION_TLS_1_3);
         if (tls13_GetHash(ss) !=
             tls13_GetHashForCipherSuite(sid->u.ssl3.cipherSuite)) {
             FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_SERVER_HELLO,
