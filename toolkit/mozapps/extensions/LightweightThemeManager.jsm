@@ -170,6 +170,10 @@ var LightweightThemeManager = {
   },
 
   set currentTheme(aData) {
+    _setCurrentTheme(aData, false);
+  },
+
+  setCurrentTheme(aData) {
     return _setCurrentTheme(aData, false);
   },
 
@@ -646,22 +650,21 @@ AddonWrapper.prototype = {
   },
 
   set userDisabled(val) {
+    this.setUserDisabled(val);
+  },
+
+  async setUserDisabled(val) {
     if (val == this.userDisabled)
-      return val;
+      return;
 
-    if (val)
-      LightweightThemeManager.currentTheme = null;
-    else
-      LightweightThemeManager.currentTheme = themeFor(this);
-
-    return val;
+    await LightweightThemeManager.setCurrentTheme(val ? null : themeFor(this));
   },
 
-  async enable() {
-    this.userDisabled = false;
+  enable() {
+    return this.setUserDisabled(false);
   },
-  async disable() {
-    this.userDisabled = true;
+  disable() {
+    return this.setUserDisabled(true);
   },
 
   // Lightweight themes are never disabled by the application
@@ -769,7 +772,7 @@ function _getExternalID(id) {
   return id + ID_SUFFIX;
 }
 
-function _setCurrentTheme(aData, aLocal) {
+async function _setCurrentTheme(aData, aLocal) {
   aData = _sanitizeTheme(aData, null, aLocal);
 
   let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
@@ -816,8 +819,8 @@ function _setCurrentTheme(aData, aLocal) {
     return null;
 
   if (notify) {
-    AddonManagerPrivate.notifyAddonChanged(aData ? _getExternalID(aData.id) : null,
-                                           ADDON_TYPE, false);
+    await AddonManagerPrivate.notifyAddonChanged(aData ? _getExternalID(aData.id) : null,
+                                                 ADDON_TYPE, false);
   }
 
   return LightweightThemeManager.currentTheme;
