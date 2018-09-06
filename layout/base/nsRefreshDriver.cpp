@@ -167,7 +167,7 @@ public:
     }
   }
 
-  virtual void RemoveRefreshDriver(nsRefreshDriver* aDriver)
+  void RemoveRefreshDriver(nsRefreshDriver* aDriver)
   {
     LOG("[%p] RemoveRefreshDriver %p", this, aDriver);
 
@@ -1110,7 +1110,8 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
   : mActiveTimer(nullptr),
     mPresContext(aPresContext),
     mRootRefresh(nullptr),
-    mPendingTransaction{0},
+    mNextTransactionId{0},
+    mOutstandingTransactionId{0},
     mCompletedTransaction{0},
     mFreezeCount(0),
     mThrottledFrameRequestInterval(TimeDuration::FromMilliseconds(
@@ -1187,7 +1188,7 @@ nsRefreshDriver::RestoreNormalRefresh()
 {
   mTestControllingRefreshes = false;
   EnsureTimerStarted(eAllowTimeToGoBackwards);
-  mCompletedTransaction = mPendingTransaction;
+  mCompletedTransaction = mOutstandingTransactionId = mNextTransactionId;
 }
 
 TimeStamp
@@ -2155,10 +2156,11 @@ nsRefreshDriver::FinishedWaitingForTransaction()
 mozilla::layers::TransactionId
 nsRefreshDriver::GetTransactionId(bool aThrottle)
 {
-  mPendingTransaction = mPendingTransaction.Next();
+  mOutstandingTransactionId = mOutstandingTransactionId.Next();
+  mNextTransactionId = mNextTransactionId.Next();
 
   if (aThrottle &&
-      mPendingTransaction - mCompletedTransaction >= 2 &&
+      mOutstandingTransactionId - mCompletedTransaction >= 2 &&
       !mWaitingForTransaction &&
       !mTestControllingRefreshes) {
     mWaitingForTransaction = true;
@@ -2166,38 +2168,48 @@ nsRefreshDriver::GetTransactionId(bool aThrottle)
     mWarningThreshold = 1;
   }
 
-  return mPendingTransaction;
+  return mNextTransactionId;
 }
 
 mozilla::layers::TransactionId
 nsRefreshDriver::LastTransactionId() const
 {
-  return mPendingTransaction;
+  return mNextTransactionId;
 }
 
 void
 nsRefreshDriver::RevokeTransactionId(mozilla::layers::TransactionId aTransactionId)
 {
-  MOZ_ASSERT(aTransactionId == mPendingTransaction);
-  if (mPendingTransaction - mCompletedTransaction == 2 &&
+  MOZ_ASSERT(aTransactionId == mNextTransactionId);
+  if (mOutstandingTransactionId - mCompletedTransaction == 2 &&
       mWaitingForTransaction) {
     MOZ_ASSERT(!mSkippedPaints, "How did we skip a paint when we're in the middle of one?");
     FinishedWaitingForTransaction();
   }
-  mPendingTransaction = mPendingTransaction.Prev();
+
+  // Notify the pres context so that it can deliver MozAfterPaint for this
+  // id if any caller was expecting it.
+  nsPresContext* pc = GetPresContext();
+  if (pc) {
+    pc->NotifyRevokingDidPaint(aTransactionId);
+  }
+  // Revert the outstanding transaction since we're no longer waiting on it to be
+  // completed, but don't revert mNextTransactionId since we can't use the id
+  // again.
+  mOutstandingTransactionId = mOutstandingTransactionId.Prev();
 }
 
 void
 nsRefreshDriver::ClearPendingTransactions()
 {
-  mCompletedTransaction = mPendingTransaction;
+  mCompletedTransaction = mOutstandingTransactionId = mNextTransactionId;
   mWaitingForTransaction = false;
 }
 
 void
 nsRefreshDriver::ResetInitialTransactionId(mozilla::layers::TransactionId aTransactionId)
 {
-  mCompletedTransaction = mPendingTransaction = aTransactionId;
+  mCompletedTransaction = mOutstandingTransactionId = mNextTransactionId = aTransactionId;
 }
 
 mozilla::TimeStamp
@@ -2210,13 +2222,18 @@ void
 nsRefreshDriver::NotifyTransactionCompleted(mozilla::layers::TransactionId aTransactionId)
 {
   if (aTransactionId > mCompletedTransaction) {
-    if (mPendingTransaction - mCompletedTransaction > 1 &&
+    if (mOutstandingTransactionId - mCompletedTransaction > 1 &&
         mWaitingForTransaction) {
       mCompletedTransaction = aTransactionId;
       FinishedWaitingForTransaction();
     } else {
       mCompletedTransaction = aTransactionId;
     }
+  }
+
+  // If completed transaction id get ahead of outstanding id, reset to distance id.
+  if (mCompletedTransaction > mOutstandingTransactionId) {
+    mOutstandingTransactionId = mCompletedTransaction;
   }
 }
 
