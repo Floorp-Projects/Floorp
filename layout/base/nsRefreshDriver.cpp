@@ -167,7 +167,7 @@ public:
     }
   }
 
-  virtual void RemoveRefreshDriver(nsRefreshDriver* aDriver)
+  void RemoveRefreshDriver(nsRefreshDriver* aDriver)
   {
     LOG("[%p] RemoveRefreshDriver %p", this, aDriver);
 
