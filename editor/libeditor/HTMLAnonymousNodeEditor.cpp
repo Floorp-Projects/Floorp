@@ -294,9 +294,9 @@ HTMLEditor::HideAnonymousEditingUIs()
     NS_ASSERTION(!mInlineEditedCell, "HideInlineTableEditingUI failed");
   }
   if (mResizedObject) {
-    DebugOnly<nsresult> rv = HideResizers();
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HideResizers() failed");
-    NS_ASSERTION(!mResizedObject, "HideResizers failed");
+    DebugOnly<nsresult> rv = HideResizersInternal();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HideResizersInternal() failed");
+    NS_ASSERTION(!mResizedObject, "HideResizersInternal() failed");
   }
 }
 
@@ -321,9 +321,9 @@ HTMLEditor::HideAnonymousEditingUIsIfUnnecessary()
   if (!IsObjectResizerEnabled() && mResizedObject) {
     // XXX If we're resizing something, we need to cancel or commit the
     //     operation now.
-    DebugOnly<nsresult> rv = HideResizers();
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HideResizers() failed");
-    NS_ASSERTION(!mResizedObject, "HideResizers failed");
+    DebugOnly<nsresult> rv = HideResizersInternal();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HideResizersInternal() failed");
+    NS_ASSERTION(!mResizedObject, "HideResizersInternal() failed");
   }
 }
 
@@ -426,14 +426,14 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
 
   if (IsObjectResizerEnabled() && mResizedObject &&
       mResizedObject != focusElement) {
-    // Perhaps, even if HideResizers() failed, we should try to hide inline
-    // table editing UI.  However, it returns error only when we cannot do
-    // anything.  So, it's okay for now.
-    nsresult rv = HideResizers();
+    // Perhaps, even if HideResizersInternal() failed, we should try to hide
+    // inline table editing UI.  However, it returns error only when we cannot
+    // do anything.  So, it's okay for now.
+    nsresult rv = HideResizersInternal();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    NS_ASSERTION(!mResizedObject, "HideResizers failed");
+    NS_ASSERTION(!mResizedObject, "HideResizersInternal() failed");
   }
 
   if (IsInlineTableEditorEnabled() && mInlineEditedCell &&
@@ -458,7 +458,7 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
         return rv;
       }
     } else {
-      nsresult rv = ShowResizers(*focusElement);
+      nsresult rv = ShowResizersInternal(*focusElement);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }

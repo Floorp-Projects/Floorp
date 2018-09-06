@@ -225,7 +225,7 @@ private:
   void ReleaseTextureOfImage(const wr::ImageKey& aKey);
 
   LayersId GetLayersId() const;
-  void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
+  bool ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
                                       wr::TransactionBuilder& aTxn);
 
   void ClearResources();

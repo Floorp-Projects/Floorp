@@ -1779,8 +1779,6 @@ protected: // Shouldn't be used by friend classes
    */
   nsresult RefereshEditingUI(Selection& aSelection);
 
-  nsresult ShowResizersInner(Element& aResizedElement);
-
   /**
    * Returns the offset of an element's frame to its absolute containing block.
    */
@@ -1804,7 +1802,13 @@ protected: // Shouldn't be used by friend classes
    * Shows active resizers around an element's frame
    * @param aResizedElement [IN] a DOM Element
    */
-  nsresult ShowResizers(Element& aResizedElement);
+  nsresult ShowResizersInternal(Element& aResizedElement);
+
+  /**
+   * Hide resizers if they are visible.  If this is called while there is no
+   * visible resizers, this does not return error, but does nothing.
+   */
+  nsresult HideResizersInternal();
 
   ManualNACPtr CreateResizer(int16_t aLocation, nsIContent& aParentContent);
   void SetAnonymousElementPosition(int32_t aX, int32_t aY,

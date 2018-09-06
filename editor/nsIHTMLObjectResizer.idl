@@ -34,13 +34,8 @@ interface nsIHTMLObjectResizer : nsISupports
   attribute boolean objectResizingEnabled;
 
   /**
-   * Shows active resizers around an element's frame
-   * @param aResizedElement [IN] a DOM Element
-   */
-  void showResizers(in Element aResizedElement);
-
-  /**
-   * Hide resizers if they are visible
+   * Hide resizers if they are visible.  If this is called while there is no
+   * visible resizers, this does not throw exception, just does nothing.
    */
   void hideResizers();
 
