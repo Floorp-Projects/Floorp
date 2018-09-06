@@ -1629,20 +1629,15 @@ js_option('--enable-linker', nargs=1,
 
 
 @depends('--enable-linker', c_compiler, developer_options, '--enable-gold',
-         extra_toolchain_flags, target, lto.enabled,
-         when=is_linker_option_enabled)
+         extra_toolchain_flags, target, when=is_linker_option_enabled)
 @checking('for linker', lambda x: x.KIND)
 @imports('os')
 @imports('shutil')
 def select_linker(linker, c_compiler, developer_options, enable_gold,
-                  toolchain_flags, target, lto):
+                  toolchain_flags, target):
 
     if linker:
         linker = linker[0]
-    elif lto and c_compiler.type == 'clang' and target.kernel != 'Darwin':
-        # If no linker was explicitly given, and building with clang for non-macOS,
-        # prefer lld. For macOS, we prefer ld64, or whatever the default linker is.
-        linker = 'lld'
     else:
         linker = None
 

@@ -183,7 +183,7 @@ AboutRedirector::NewChannel(nsIURI* aURI,
       }
 
       if (sNewCertErrorPageEnabled && path.EqualsLiteral("certerror")) {
-        url.AssignASCII("chrome://browser/content/aboutNetError-new.xhtml");
+        url.Assign(NS_LITERAL_CSTRING("chrome://browser/content/aboutNetError-new.xhtml"));
       }
 
       // fall back to the specified url in the map

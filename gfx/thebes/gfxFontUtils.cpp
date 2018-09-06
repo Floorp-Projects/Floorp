@@ -68,18 +68,18 @@ typedef struct {
 void
 gfxSparseBitSet::Dump(const char* aPrefix, eGfxLog aWhichLog) const
 {
-    NS_ASSERTION(mBlocks.DebugGetHeader(), "mHdr is null, this is bad");
-    uint32_t b, numBlocks = mBlocks.Length();
+    uint32_t numBlocks = mBlockIndex.Length();
 
-    for (b = 0; b < numBlocks; b++) {
-        Block *block = mBlocks[b].get();
-        if (!block) {
+    for (uint32_t b = 0; b < numBlocks; b++) {
+        if (mBlockIndex[b] == NO_BLOCK) {
             continue;
         }
+        const Block* block = &mBlocks[mBlockIndex[b]];
         const int BUFSIZE = 256;
         char outStr[BUFSIZE];
         int index = 0;
-        index += snprintf(&outStr[index], BUFSIZE - index, "%s u+%6.6x [", aPrefix, (b << BLOCK_INDEX_SHIFT));
+        index += snprintf(&outStr[index], BUFSIZE - index, "%s u+%6.6x [",
+                          aPrefix, (b * BLOCK_SIZE_BITS));
         for (int i = 0; i < 32; i += 4) {
             for (int j = i; j < i + 4; j++) {
                 uint8_t bits = block->mBits[j];

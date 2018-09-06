@@ -17,7 +17,7 @@
 #endif
 
 #include "jsapi.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Printf.h"
 #include "nsCOMPtr.h"
@@ -106,12 +106,12 @@ Dump(JSContext* cx, unsigned argc, Value* vp)
     if (!str)
         return false;
 
-    JSAutoByteString utf8str;
-    if (!utf8str.encodeUtf8(cx, str))
+    JS::UniqueChars utf8str = JS_EncodeStringToUTF8(cx, str);
+    if (!utf8str)
         return false;
 
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.ptr());
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.get());
 #endif
 #ifdef XP_WIN
     if (IsDebuggerPresent()) {
@@ -121,7 +121,7 @@ Dump(JSContext* cx, unsigned argc, Value* vp)
         OutputDebugStringW(wstr.get());
     }
 #endif
-    fputs(utf8str.ptr(), stdout);
+    fputs(utf8str.get(), stdout);
     fflush(stdout);
     return true;
 }
@@ -1241,12 +1241,12 @@ mozJSComponentLoader::ExtractExports(JSContext* aCx, ComponentLoaderInfo& aInfo,
         symbolHolder = ResolveModuleObjectPropertyById(cx, aMod->obj, symbolId);
         if (!symbolHolder ||
             !JS_GetPropertyById(cx, symbolHolder, symbolId, &value)) {
-            JSAutoByteString bytes;
             RootedString symbolStr(cx, JSID_TO_STRING(symbolId));
-            if (!bytes.encodeUtf8(cx, symbolStr))
+            JS::UniqueChars bytes = JS_EncodeStringToUTF8(cx, symbolStr);
+            if (!bytes)
                 return NS_ERROR_FAILURE;
             return ReportOnCallerUTF8(cxhelper, ERROR_GETTING_SYMBOL,
-                                      aInfo, bytes.ptr());
+                                      aInfo, bytes.get());
         }
 
         if (value.isUndefined()) {
@@ -1254,20 +1254,20 @@ mozJSComponentLoader::ExtractExports(JSContext* aCx, ComponentLoaderInfo& aInfo,
         }
 
         if (!JS_SetPropertyById(cx, aExports, symbolId, value)) {
-            JSAutoByteString bytes;
             RootedString symbolStr(cx, JSID_TO_STRING(symbolId));
-            if (!bytes.encodeUtf8(cx, symbolStr))
+            JS::UniqueChars bytes = JS_EncodeStringToUTF8(cx, symbolStr);
+            if (!bytes)
                 return NS_ERROR_FAILURE;
             return ReportOnCallerUTF8(cxhelper, ERROR_GETTING_SYMBOL,
-                                      aInfo, bytes.ptr());
+                                      aInfo, bytes.get());
         }
 #ifdef DEBUG
         if (i == 0) {
             logBuffer.AssignLiteral("Installing symbols [ ");
         }
-        JSAutoByteString bytes(cx, JSID_TO_STRING(symbolId));
+        JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, JSID_TO_STRING(symbolId));
         if (!!bytes)
-            logBuffer.Append(bytes.ptr());
+            logBuffer.Append(bytes.get());
         logBuffer.Append(' ');
         if (i == symbolCount - 1) {
             nsCString location;

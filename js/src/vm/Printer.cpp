@@ -8,6 +8,7 @@
 
 #include "mozilla/PodOperations.h"
 #include "mozilla/Printf.h"
+#include "mozilla/RangedPtr.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -16,6 +17,7 @@
 #include "jsutil.h"
 
 #include "ds/LifoAlloc.h"
+#include "js/CharacterEncoding.h"
 #include "util/Text.h"
 #include "util/Windows.h"
 #include "vm/JSContext.h"
@@ -99,7 +101,7 @@ Sprinter::realloc_(size_t newSize)
     }
     base = newBuf;
     size = newSize;
-    base[size - 1] = 0;
+    base[size - 1] = '\0';
     return true;
 }
 
@@ -133,9 +135,9 @@ Sprinter::init()
 #ifdef DEBUG
     initialized = true;
 #endif
-    *base = 0;
+    *base = '\0';
     size = DefaultSize;
-    base[size - 1] = 0;
+    base[size - 1] = '\0';
     return true;
 }
 
@@ -144,10 +146,10 @@ Sprinter::checkInvariants() const
 {
     MOZ_ASSERT(initialized);
     MOZ_ASSERT((size_t) offset < size);
-    MOZ_ASSERT(base[size - 1] == 0);
+    MOZ_ASSERT(base[size - 1] == '\0');
 }
 
-char*
+UniqueChars
 Sprinter::release()
 {
     checkInvariants();
@@ -160,7 +162,7 @@ Sprinter::release()
 #ifdef DEBUG
     initialized = false;
 #endif
-    return str;
+    return UniqueChars(str);
 }
 
 char*
@@ -214,7 +216,7 @@ Sprinter::put(const char* s, size_t len)
         js_memcpy(bp, s, len);
     }
 
-    bp[len] = 0;
+    bp[len] = '\0';
     return true;
 }
 
@@ -223,26 +225,19 @@ Sprinter::putString(JSString* s)
 {
     InvariantChecker ic(this);
 
-    size_t length = s->length();
+    JSFlatString* flat = s->ensureFlat(context);
+    if (!flat)
+        return false;
+
+    size_t length = JS::GetDeflatedUTF8StringLength(flat);
 
     char* buffer = reserve(length);
     if (!buffer)
         return false;
 
-    JSLinearString* linear = s->ensureLinear(context);
-    if (!linear)
-        return false;
+    JS::DeflateStringToUTF8Buffer(flat, mozilla::RangedPtr<char>(buffer, length));
 
-    JS::AutoCheckCannotGC nogc;
-    if (linear->hasLatin1Chars()) {
-        PodCopy(reinterpret_cast<Latin1Char*>(buffer), linear->latin1Chars(nogc), length);
-    } else {
-        const char16_t* src = linear->twoByteChars(nogc);
-        for (size_t i = 0; i < length; i++)
-            buffer[i] = char(src[i]);
-    }
-
-    buffer[length] = 0;
+    buffer[length] = '\0';
     return true;
 }
 
@@ -288,17 +283,14 @@ const char js_EscapeMap[] = {
 };
 
 template <typename CharT>
-static char*
-QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars, char16_t quote)
+static bool
+QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars, char quote)
 {
     using CharPtr = mozilla::RangedPtr<const CharT>;
 
-    /* Sample off first for later return value pointer computation. */
-    ptrdiff_t offset = sp->getOffset();
-
     if (quote) {
-        if (!sp->jsprintf("%c", char(quote)))
-            return nullptr;
+        if (!sp->putChar(quote))
+            return false;
     }
 
     const CharPtr end = chars.end();
@@ -319,11 +311,11 @@ QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars, char16_t quot
             ptrdiff_t len = t - s;
             ptrdiff_t base = sp->getOffset();
             if (!sp->reserve(len))
-                return nullptr;
+                return false;
 
             for (ptrdiff_t i = 0; i < len; ++i)
                 (*sp)[base + i] = char(s[i]);
-            (*sp)[base + len] = 0;
+            (*sp)[base + len] = '\0';
         }
 
         if (t == end)
@@ -333,7 +325,7 @@ QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars, char16_t quot
         const char* escape;
         if (!(c >> 8) && c != 0 && (escape = strchr(js_EscapeMap, int(c))) != nullptr) {
             if (!sp->jsprintf("\\%c", escape[1]))
-                return nullptr;
+                return false;
         } else {
             /*
              * Use \x only if the high byte is 0 and we're in a quoted string,
@@ -341,34 +333,25 @@ QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars, char16_t quot
              * (see bug 621814).
              */
             if (!sp->jsprintf((quote && !(c >> 8)) ? "\\x%02X" : "\\u%04X", c))
-                return nullptr;
+                return false;
         }
     }
 
     /* Sprint the closing quote and return the quoted string. */
     if (quote) {
-        if (!sp->jsprintf("%c", char(quote)))
-            return nullptr;
+        if (!sp->putChar(quote))
+            return false;
     }
 
-    /*
-     * If we haven't Sprint'd anything yet, Sprint an empty string so that
-     * the return below gives a valid result.
-     */
-    if (offset == sp->getOffset()) {
-        if (!sp->put(""))
-            return nullptr;
-    }
-
-    return sp->stringAt(offset);
+    return true;
 }
 
-char*
-QuoteString(Sprinter* sp, JSString* str, char16_t quote)
+bool
+QuoteString(Sprinter* sp, JSString* str, char quote /*= '\0' */)
 {
     JSLinearString* linear = str->ensureLinear(sp->context);
     if (!linear)
-        return nullptr;
+        return false;
 
     JS::AutoCheckCannotGC nogc;
     return linear->hasLatin1Chars()
@@ -376,16 +359,15 @@ QuoteString(Sprinter* sp, JSString* str, char16_t quote)
            : QuoteString(sp, linear->twoByteRange(nogc), quote);
 }
 
-JSString*
-QuoteString(JSContext* cx, JSString* str, char16_t quote)
+UniqueChars
+QuoteString(JSContext* cx, JSString* str, char quote /* = '\0' */)
 {
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return nullptr;
-    char* bytes = QuoteString(&sprinter, str, quote);
-    if (!bytes)
+    if (!QuoteString(&sprinter, str, quote))
         return nullptr;
-    return NewStringCopyZ<CanGC>(cx, bytes);
+    return sprinter.release();
 }
 
 Fprinter::Fprinter(FILE* fp)

@@ -271,7 +271,10 @@ js::ObjectToSource(JSContext* cx, HandleObject obj)
                 ? !IsIdentifier(JSID_TO_ATOM(id))
                 : JSID_TO_INT(id) < 0)
             {
-                idstr = QuoteString(cx, idstr, char16_t('\''));
+                UniqueChars quotedId = QuoteString(cx, idstr, '\'');
+                if (!quotedId)
+                    return false;
+                idstr = NewStringCopyZ<CanGC>(cx, quotedId.get());
                 if (!idstr)
                     return false;
             }
@@ -1050,13 +1053,12 @@ js::obj_create(JSContext* cx, unsigned argc, Value* vp)
     }
 
     if (!args[0].isObjectOrNull()) {
-        RootedValue v(cx, args[0]);
-        UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr);
+        UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, args[0], nullptr);
         if (!bytes)
             return false;
 
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                                   bytes.get(), "not an object or null");
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                 bytes.get(), "not an object or null");
         return false;
     }
 
