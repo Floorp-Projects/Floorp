@@ -61,10 +61,12 @@ class AstName
     bool empty() const { return begin_ == nullptr; }
 
     bool operator==(AstName rhs) const {
-        if (length() != rhs.length())
+        if (length() != rhs.length()) {
             return false;
-        if (begin() == rhs.begin())
+        }
+        if (begin() == rhs.begin()) {
             return true;
+        }
         return EqualChars(begin(), rhs.begin(), length());
     }
     bool operator!=(AstName rhs) const {
@@ -158,8 +160,9 @@ class AstValType
     }
 
     ValType::Code code() const {
-        if (which_ == IsValType)
+        if (which_ == IsValType) {
             return type_.code();
+        }
         return ValType::Ref;
     }
 
@@ -169,10 +172,12 @@ class AstValType
     }
 
     bool operator==(const AstValType& that) const {
-        if (which_ != that.which_)
+        if (which_ != that.which_) {
             return false;
-        if (which_ == IsValType)
+        }
+        if (which_ == IsValType) {
             return type_ == that.type_;
+        }
         return ref_ == that.ref_;
     }
 
@@ -240,22 +245,26 @@ class AstExprType
     }
 
     ExprType::Code code() const {
-        if (which_ == IsExprType)
+        if (which_ == IsExprType) {
             return type_.code();
+        }
         return ExprType::Ref;
     }
 
     ExprType type() const {
-        if (which_ == IsExprType)
+        if (which_ == IsExprType) {
             return type_;
+        }
         return ExprType(vt_.type());
     }
 
     bool operator==(const AstExprType& that) const {
-        if (which_ != that.which_)
+        if (which_ != that.which_) {
             return false;
-        if (which_ == IsExprType)
+        }
+        if (which_ == IsExprType) {
             return type_ == that.type_;
+        }
         return vt_ == that.vt_;
     }
 
@@ -357,14 +366,17 @@ class AstFuncType : public AstTypeDef
         return name_;
     }
     bool operator==(const AstFuncType& rhs) const {
-        if (ret() != rhs.ret())
+        if (ret() != rhs.ret()) {
             return false;
+        }
         size_t len = args().length();
-        if (rhs.args().length() != len)
+        if (rhs.args().length() != len) {
             return false;
+        }
         for (size_t i=0; i < len; i++) {
-            if (args()[i] != rhs.args()[i])
+            if (args()[i] != rhs.args()[i]) {
                 return false;
+            }
         }
         return true;
     }
@@ -372,8 +384,9 @@ class AstFuncType : public AstTypeDef
     typedef const AstFuncType& Lookup;
     static HashNumber hash(Lookup ft) {
         HashNumber hn = HashNumber(ft.ret().code());
-        for (const AstValType& vt : ft.args())
+        for (const AstValType& vt : ft.args()) {
             hn = mozilla::AddToHash(hn, uint32_t(vt.code()));
+        }
         return hn;
     }
     static bool match(const AstFuncType* lhs, Lookup rhs) {
@@ -1357,8 +1370,9 @@ class AstModule : public AstNode
         return !!startFunc_;
     }
     bool setStartFunc(AstStartFunc startFunc) {
-        if (startFunc_)
+        if (startFunc_) {
             return false;
+        }
         startFunc_.emplace(startFunc);
         return true;
     }
@@ -1379,8 +1393,9 @@ class AstModule : public AstNode
     }
     bool append(AstFuncType* funcType) {
         uint32_t funcTypeIndex = types_.length();
-        if (!types_.append(funcType))
+        if (!types_.append(funcType)) {
             return false;
+        }
         FuncTypeMap::AddPtr p = funcTypeMap_.lookupForAdd(*funcType);
         return p || funcTypeMap_.add(p, funcType, funcTypeIndex);
     }
@@ -1397,25 +1412,30 @@ class AstModule : public AstNode
         return types_.append(str);
     }
     bool append(AstTypeDef* td) {
-        if (td->isFuncType())
+        if (td->isFuncType()) {
             return append(&td->asFuncType());
-        if (td->isStructType())
+        }
+        if (td->isStructType()) {
             return append(&td->asStructType());
+        }
         MOZ_CRASH("Bad type");
     }
     bool append(AstImport* imp) {
         switch (imp->kind()) {
           case DefinitionKind::Function:
-            if (!funcImportNames_.append(imp->name()))
+            if (!funcImportNames_.append(imp->name())) {
                 return false;
+            }
             break;
           case DefinitionKind::Table:
-            if (!tables_.append(AstResizable(imp->limits(), true)))
+            if (!tables_.append(AstResizable(imp->limits(), true))) {
                 return false;
+            }
             break;
           case DefinitionKind::Memory:
-            if (!memories_.append(AstResizable(imp->limits(), true)))
+            if (!memories_.append(AstResizable(imp->limits(), true))) {
                 return false;
+            }
             break;
           case DefinitionKind::Global:
             numGlobalImports_++;
