@@ -1,0 +1,10 @@
+div {
+  width: 500px;
+  height: 10px;
+  background: purple;
+}
+@media screen and (max-width: 200px) {
+  div {
+    width: 100px;
+  }
+};

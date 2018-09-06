@@ -150,3 +150,11 @@ LOCAL_INCLUDES += [
     '/media/libaom/config', # aom_version.h
     '/third_party/aom',
 ]
+
+if CONFIG['OS_TARGET'] == 'Linux':
+    # For fuzzing, We only support building on Linux currently.
+    include('/tools/fuzzing/libfuzzer-config.mozbuild')
+    if CONFIG['FUZZING_INTERFACES']:
+        TEST_DIRS += [
+            'test/fuzztest'
+    ]

@@ -19,6 +19,7 @@
 #include "nsURILoader.h"
 #include "nsDocLoader.h"
 #include "nsOSHelperAppService.h"
+#include "nsOSPermissionRequest.h"
 #include "nsExternalProtocolHandler.h"
 #include "nsPrefetchService.h"
 #include "nsOfflineCacheUpdate.h"
@@ -91,6 +92,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalURLHandlerService)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ContentHandlerService, Init)
 
+// OS access permissions
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsOSPermissionRequest)
+
 // session history
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHEntry)
 
@@ -106,6 +110,7 @@ NS_DEFINE_NAMED_CID(NS_PREFETCHSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_OFFLINECACHEUPDATESERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_OFFLINECACHEUPDATE_CID);
 NS_DEFINE_NAMED_CID(NS_LOCALHANDLERAPP_CID);
+NS_DEFINE_NAMED_CID(NS_OSPERMISSIONREQUEST_CID);
 #ifdef MOZ_ENABLE_DBUS
 NS_DEFINE_NAMED_CID(NS_DBUSHANDLERAPP_CID);
 #endif
@@ -125,6 +130,7 @@ const mozilla::Module::CIDEntry kDocShellCIDs[] = {
   { &kNS_URI_LOADER_CID, false, nullptr, nsURILoaderConstructor },
   { &kNS_DOCUMENTLOADER_SERVICE_CID, false, nullptr, nsDocLoaderConstructor },
   { &kNS_EXTERNALHELPERAPPSERVICE_CID, false, nullptr, nsOSHelperAppServiceConstructor },
+  { &kNS_OSPERMISSIONREQUEST_CID, false, nullptr, nsOSPermissionRequestConstructor },
   { &kNS_CONTENTHANDLERSERVICE_CID, false, nullptr, ContentHandlerServiceConstructor,
     mozilla::Module::CONTENT_PROCESS_ONLY },
   { &kNS_EXTERNALPROTOCOLHANDLER_CID, false, nullptr, nsExternalProtocolHandlerConstructor },
@@ -197,6 +203,7 @@ const mozilla::Module::ContractIDEntry kDocShellContracts[] = {
   { NS_SHENTRY_CONTRACTID, &kNS_SHENTRY_CID },
   { NS_LOADCONTEXT_CONTRACTID, &kNS_LOADCONTEXT_CID },
   { NS_PRIVATELOADCONTEXT_CONTRACTID, &kNS_PRIVATELOADCONTEXT_CID },
+  { NS_OSPERMISSIONREQUEST_CONTRACTID, &kNS_OSPERMISSIONREQUEST_CID, mozilla::Module::MAIN_PROCESS_ONLY },
   { nullptr }
 };
 

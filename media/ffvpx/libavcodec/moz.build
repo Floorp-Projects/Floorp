@@ -39,7 +39,6 @@ SOURCES += [
 
 if not CONFIG['MOZ_FFVPX_FLACONLY']:
     SOURCES += [
-        'audioconvert.c',
         'avpicture.c',
         'bitstream.c',
         'bitstream_filter.c',
@@ -50,8 +49,6 @@ if not CONFIG['MOZ_FFVPX_FLACONLY']:
         'profiles.c',
         'qsv_api.c',
         'raw.c',
-        'resample.c',
-        'resample2.c',
         'reverse.c',
         'videodsp.c',
         'vp56rac.c',
@@ -60,6 +57,7 @@ if not CONFIG['MOZ_FFVPX_FLACONLY']:
         'vp8dsp.c',
         'vp9.c',
         'vp9_parser.c',
+        'vp9_superframe_split_bsf.c',
         'vp9block.c',
         'vp9data.c',
         'vp9dsp.c',

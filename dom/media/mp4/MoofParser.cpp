@@ -148,16 +148,18 @@ MoofParser::BlockingReadNextMoof()
 {
   int64_t length = std::numeric_limits<int64_t>::max();
   mSource->Length(&length);
-  MediaByteRangeSet byteRanges;
-  byteRanges += MediaByteRange(0, length);
   RefPtr<BlockingStream> stream = new BlockingStream(mSource);
+  MediaByteRangeSet byteRanges(MediaByteRange(0, length));
 
   BoxContext context(stream, byteRanges);
   for (Box box(&context, mOffset); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("moof")) {
-      byteRanges.Clear();
-      byteRanges += MediaByteRange(mOffset, box.Range().mEnd);
-      return RebuildFragmentedIndex(context);
+      MediaByteRangeSet parseByteRanges(
+        MediaByteRange(mOffset, box.Range().mEnd));
+      BoxContext parseContext(stream, parseByteRanges);
+      if (RebuildFragmentedIndex(parseContext)) {
+        return true;
+      }
     }
   }
   return false;

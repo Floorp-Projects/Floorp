@@ -331,8 +331,8 @@ var TelemetryStopwatch = {
   /**
    * Set the testing mode. Used by tests.
    */
-  setTestModeEnabled(testing) {
-    TelemetryStopwatchImpl.suppressErrors(true);
+  setTestModeEnabled(testing = true) {
+    TelemetryStopwatchImpl.suppressErrors(testing);
   },
 };
 

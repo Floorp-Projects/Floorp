@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#import <AVFoundation/AVFoundation.h>
+
 #include <cmath>
 
 #include "gfx2DGlue.h"
@@ -16,6 +18,8 @@
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIAppShellService.h"
+#include "nsIOSPermissionRequest.h"
+#include "nsIRunnable.h"
 #include "nsIXULWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsIServiceManager.h"
@@ -23,14 +27,19 @@
 #include "nsToolkit.h"
 #include "nsCRT.h"
 #include "SVGImageContext.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/StaticMutex.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
 
+using mozilla::dom::Promise;
 using mozilla::gfx::BackendType;
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::DrawTarget;
@@ -43,6 +52,21 @@ using mozilla::gfx::SurfaceFormat;
 using mozilla::gfx::SourceSurface;
 using mozilla::image::ImageRegion;
 using std::ceil;
+
+LazyLogModule gCocoaUtilsLog("nsCocoaUtils");
+#undef LOG
+#define LOG(...) MOZ_LOG(gCocoaUtilsLog, LogLevel::Debug, (__VA_ARGS__))
+
+/*
+ * For each audio and video capture request, we hold an owning reference
+ * to a promise to be resolved when the request's async callback is invoked.
+ * sVideoCapturePromises and sAudioCapturePromises are arrays of video and
+ * audio promises waiting for to be resolved. Each array is protected by a
+ * mutex.
+ */
+nsCocoaUtils::PromiseArray nsCocoaUtils::sVideoCapturePromises;
+nsCocoaUtils::PromiseArray nsCocoaUtils::sAudioCapturePromises;
+StaticMutex nsCocoaUtils::sMediaCaptureMutex;
 
 static float
 MenuBarScreenHeight()
@@ -1122,4 +1146,260 @@ nsCocoaUtils::GetEventTimeStamp(NSTimeInterval aEventTime)
   int64_t tick =
     BaseTimeDurationPlatformUtils::TicksFromMilliseconds(aEventTime * 1000.0);
   return TimeStamp::FromSystemTime(tick);
+}
+
+// AVAuthorizationStatus is not needed unless we are running on 10.14.
+// However, on pre-10.14 SDK's, AVAuthorizationStatus and its enum values
+// are both defined and prohibited from use by compile-time checks. We
+// define a copy of AVAuthorizationStatus to allow compilation on pre-10.14
+// SDK's. The enum values must match what is defined in the 10.14 SDK.
+// We use ASSERTS for 10.14 SDK builds to check the enum values match.
+enum GeckoAVAuthorizationStatus {
+  GeckoAVAuthorizationStatusNotDetermined = 0,
+  GeckoAVAuthorizationStatusRestricted = 1,
+  GeckoAVAuthorizationStatusDenied = 2,
+  GeckoAVAuthorizationStatusAuthorized = 3
+};
+
+#if !defined(MAC_OS_X_VERSION_10_14) || \
+  MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
+// Define authorizationStatusForMediaType: as returning
+// GeckoAVAuthorizationStatus instead of AVAuthorizationStatus to allow
+// compilation on pre-10.14 SDK's.
+@interface AVCaptureDevice(GeckoAVAuthorizationStatus)
++ (GeckoAVAuthorizationStatus)authorizationStatusForMediaType:(AVMediaType)mediaType;
+@end
+
+@interface AVCaptureDevice(WithCompletionHandler)
++ (void)requestAccessForMediaType:(AVMediaType)mediaType completionHandler:(void (^)(BOOL granted))handler;
+@end
+#endif
+
+static const char*
+AVMediaTypeToString(AVMediaType aType)
+{
+  if (aType == AVMediaTypeVideo) {
+    return "video";
+  }
+
+  if (aType == AVMediaTypeAudio) {
+    return "audio";
+  }
+
+  return "unexpected type";
+}
+
+static void
+LogAuthorizationStatus(AVMediaType aType, int aState)
+{
+  const char* stateString;
+
+  switch (aState) {
+    case GeckoAVAuthorizationStatusAuthorized:
+      stateString = "AVAuthorizationStatusAuthorized";
+      break;
+    case GeckoAVAuthorizationStatusDenied:
+      stateString = "AVAuthorizationStatusDenied";
+      break;
+    case GeckoAVAuthorizationStatusNotDetermined:
+      stateString = "AVAuthorizationStatusNotDetermined";
+      break;
+    case GeckoAVAuthorizationStatusRestricted:
+      stateString = "AVAuthorizationStatusRestricted";
+      break;
+    default:
+      stateString = "Invalid state";
+  }
+
+  LOG("%s authorization status: %s\n", AVMediaTypeToString(aType), stateString);
+}
+
+static nsresult
+GetPermissionState(AVMediaType aMediaType, uint16_t& aState)
+{
+  MOZ_ASSERT(aMediaType == AVMediaTypeVideo || aMediaType == AVMediaTypeAudio);
+
+  // Only attempt to check authorization status on 10.14+.
+  if (!nsCocoaFeatures::OnMojaveOrLater()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  GeckoAVAuthorizationStatus authStatus =
+   [AVCaptureDevice authorizationStatusForMediaType:aMediaType];
+  LogAuthorizationStatus(aMediaType, authStatus);
+
+  // Convert GeckoAVAuthorizationStatus to nsIOSPermissionRequest const
+  switch (authStatus) {
+    case GeckoAVAuthorizationStatusAuthorized:
+      aState = nsIOSPermissionRequest::PERMISSION_STATE_AUTHORIZED;
+      return NS_OK;
+    case GeckoAVAuthorizationStatusDenied:
+      aState = nsIOSPermissionRequest::PERMISSION_STATE_DENIED;
+      return NS_OK;
+    case GeckoAVAuthorizationStatusNotDetermined:
+      aState = nsIOSPermissionRequest::PERMISSION_STATE_NOTDETERMINED;
+      return NS_OK;
+    case GeckoAVAuthorizationStatusRestricted:
+      aState = nsIOSPermissionRequest::PERMISSION_STATE_RESTRICTED;
+      return NS_OK;
+    default:
+      MOZ_ASSERT(false, "Invalid authorization status");
+      return NS_ERROR_UNEXPECTED;
+  }
+}
+
+nsresult
+nsCocoaUtils::GetVideoCapturePermissionState(uint16_t& aPermissionState)
+{
+  return GetPermissionState(AVMediaTypeVideo, aPermissionState);
+}
+
+nsresult
+nsCocoaUtils::GetAudioCapturePermissionState(uint16_t& aPermissionState)
+{
+  return GetPermissionState(AVMediaTypeAudio, aPermissionState);
+}
+
+nsresult
+nsCocoaUtils::RequestVideoCapturePermission(RefPtr<Promise>& aPromise)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return nsCocoaUtils::RequestCapturePermission(AVMediaTypeVideo,
+                                                aPromise,
+                                                sVideoCapturePromises,
+                                                VideoCompletionHandler);
+}
+
+nsresult
+nsCocoaUtils::RequestAudioCapturePermission(RefPtr<Promise>& aPromise)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return nsCocoaUtils::RequestCapturePermission(AVMediaTypeAudio,
+                                                aPromise,
+                                                sAudioCapturePromises,
+                                                AudioCompletionHandler);
+}
+
+//
+// Stores |aPromise| on |aPromiseList| and starts an asynchronous media
+// capture request for the given media type |aType|. If we are already
+// waiting for a capture request for this media type, don't start a new
+// request. |aHandler| is invoked on an arbitrary dispatch queue when the
+// request completes and must resolve any waiting Promises on the main
+// thread.
+//
+nsresult
+nsCocoaUtils::RequestCapturePermission(AVMediaType aType,
+                                       RefPtr<Promise>& aPromise,
+                                       PromiseArray& aPromiseList,
+                                       void (^aHandler)(BOOL granted))
+{
+  MOZ_ASSERT(aType == AVMediaTypeVideo || aType == AVMediaTypeAudio);
+#if defined(MAC_OS_X_VERSION_10_14)
+  // Ensure our enum constants match. We can only do this when
+  // compiling on 10.14+ because AVAuthorizationStatus is
+  // prohibited by preprocessor checks on earlier OS versions.
+  MOZ_ASSERT((int)GeckoAVAuthorizationStatusNotDetermined ==
+             (int)AVAuthorizationStatusNotDetermined);
+  MOZ_ASSERT((int)GeckoAVAuthorizationStatusRestricted ==
+             (int)AVAuthorizationStatusRestricted);
+  MOZ_ASSERT((int)GeckoAVAuthorizationStatusDenied ==
+             (int)AVAuthorizationStatusDenied);
+  MOZ_ASSERT((int)GeckoAVAuthorizationStatusAuthorized ==
+             (int)AVAuthorizationStatusAuthorized);
+#endif
+  LOG("RequestCapturePermission(%s)", AVMediaTypeToString(aType));
+
+  // Only attempt to request authorization on 10.14+.
+  if (!nsCocoaFeatures::OnMojaveOrLater()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  sMediaCaptureMutex.Lock();
+
+  // Initialize our list of promises on first invocation
+  if (aPromiseList == nullptr) {
+    aPromiseList = new nsTArray<RefPtr<Promise>>;
+    ClearOnShutdown(&aPromiseList);
+  }
+
+  aPromiseList->AppendElement(aPromise);
+  size_t nPromises = aPromiseList->Length();
+
+  sMediaCaptureMutex.Unlock();
+
+  LOG("RequestCapturePermission(%s): %ld promise(s) unresolved",
+    AVMediaTypeToString(aType), nPromises);
+
+  // If we had one or more more existing promises waiting to be resolved
+  // by the completion handler, we don't need to start another request.
+  if (nPromises > 1) {
+    return NS_OK;
+  }
+
+  // Start the request
+  [AVCaptureDevice requestAccessForMediaType:aType completionHandler:aHandler];
+  return NS_OK;
+}
+
+//
+// Audio capture request completion handler. Called from an arbitrary
+// dispatch queue.
+//
+void (^nsCocoaUtils::AudioCompletionHandler)(BOOL) = ^void (BOOL granted)
+{
+  nsCocoaUtils::ResolveAudioCapturePromises(granted);
+};
+
+//
+// Video capture request completion handler. Called from an arbitrary
+// dispatch queue.
+//
+void (^nsCocoaUtils::VideoCompletionHandler)(BOOL) = ^void (BOOL granted)
+{
+  nsCocoaUtils::ResolveVideoCapturePromises(granted);
+};
+
+void
+nsCocoaUtils::ResolveMediaCapturePromises(bool aGranted,
+                                          PromiseArray& aPromiseList)
+{
+  StaticMutexAutoLock lock(sMediaCaptureMutex);
+
+  // Remove each promise from the list and resolve it.
+  while (aPromiseList->Length() > 0) {
+    RefPtr<Promise> promise = aPromiseList->LastElement();
+    aPromiseList->RemoveLastElement();
+
+    // Resolve on main thread
+    nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
+      "ResolveMediaAccessPromise",
+      [aGranted, aPromise = std::move(promise)]() {
+        aPromise->MaybeResolve(aGranted);
+      }));
+    NS_DispatchToMainThread(runnable.forget());
+  }
+
+}
+
+void
+nsCocoaUtils::ResolveAudioCapturePromises(bool aGranted)
+{
+  // Resolve on main thread
+  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
+    "ResolveAudioCapturePromise", [aGranted]() {
+      ResolveMediaCapturePromises(aGranted, sAudioCapturePromises);
+    }));
+  NS_DispatchToMainThread(runnable.forget());
+}
+
+void
+nsCocoaUtils::ResolveVideoCapturePromises(bool aGranted)
+{
+  // Resolve on main thread
+  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
+    "ResolveVideoCapturePromise", [aGranted]() {
+      ResolveMediaCapturePromises(aGranted, sVideoCapturePromises);
+    }));
+  NS_DispatchToMainThread(runnable.forget());
 }
