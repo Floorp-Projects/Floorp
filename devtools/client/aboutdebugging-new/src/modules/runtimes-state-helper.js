@@ -5,8 +5,9 @@
 "use strict";
 
 function getCurrentClient(runtimesState) {
-  const thisFirefoxRuntime = runtimesState.thisFirefoxRuntimes[0];
-  return thisFirefoxRuntime.client;
+  const selectedRuntimeId = runtimesState.selectedRuntimeId;
+  const selectedRuntime = findRuntimeById(selectedRuntimeId, runtimesState);
+  return selectedRuntime.client;
 }
 exports.getCurrentClient = getCurrentClient;
 
