@@ -241,7 +241,7 @@ nsresult
 HTMLEditor::ShowResizersInternal(Element& aResizedElement)
 {
   // When we have visible resizers, we cannot show new resizers.
-  // So, the caller should call HideResizers() first.
+  // So, the caller should call HideResizersInternal() first.
   if (NS_WARN_IF(mResizedObject)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -369,7 +369,7 @@ HTMLEditor::ShowResizersInternal(Element& aResizedElement)
     return NS_OK;
   } while (true);
 
-  DebugOnly<nsresult> rv = HideResizers();
+  DebugOnly<nsresult> rv = HideResizersInternal();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Failed to clean up unnecessary resizers");
   return NS_ERROR_FAILURE;
@@ -377,6 +377,16 @@ HTMLEditor::ShowResizersInternal(Element& aResizedElement)
 
 NS_IMETHODIMP
 HTMLEditor::HideResizers()
+{
+  nsresult rv = HideResizersInternal();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::HideResizersInternal()
 {
   if (NS_WARN_IF(!mResizedObject)) {
     return NS_OK;
@@ -468,7 +478,7 @@ HTMLEditor::HideResizers()
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
   if (NS_WARN_IF(!doc)) {
-    return NS_ERROR_NULL_POINTER;
+    return NS_ERROR_FAILURE;
   }
 
   // nsIDocument::GetWindow() may return nullptr when HTMLEditor is destroyed
@@ -481,7 +491,7 @@ HTMLEditor::HideResizers()
 
   nsCOMPtr<EventTarget> targetOfWindow = do_QueryInterface(window);
   if (NS_WARN_IF(!targetOfWindow)) {
-    return NS_ERROR_NULL_POINTER;
+    return NS_ERROR_FAILURE;
   }
   targetOfWindow->RemoveEventListener(NS_LITERAL_STRING("resize"),
                                       resizeEventListener, false);
