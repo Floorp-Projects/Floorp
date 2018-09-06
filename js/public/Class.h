@@ -224,8 +224,9 @@ class ObjectOpResult
      * -   Otherwise, do nothing and return true.
      */
     bool checkStrictErrorOrWarning(JSContext* cx, HandleObject obj, HandleId id, bool strict) {
-        if (ok())
+        if (ok()) {
             return true;
+        }
         return reportStrictErrorOrWarning(cx, obj, id, strict);
     }
 
@@ -687,8 +688,9 @@ struct MOZ_STATIC_CLASS ClassSpec
         static_assert(JSProto_Null == 0, "zeroed key must be null");
 
         // Default: Inherit from Object.
-        if (!(flags & ProtoKeyMask))
+        if (!(flags & ProtoKeyMask)) {
             return JSProto_Object;
+        }
 
         return JSProtoKey(flags & ProtoKeyMask);
     }

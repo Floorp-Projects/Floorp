@@ -103,8 +103,9 @@ TimeClip(double time)
 {
     // Steps 1-2.
     const double MaxTimeMagnitude = 8.64e15;
-    if (!mozilla::IsFinite(time) || mozilla::Abs(time) > MaxTimeMagnitude)
+    if (!mozilla::IsFinite(time) || mozilla::Abs(time) > MaxTimeMagnitude) {
         return ClippedTime(mozilla::UnspecifiedNaN<double>());
+    }
 
     // Step 3.
     return ClippedTime(ToInteger(time) + (+0.0));

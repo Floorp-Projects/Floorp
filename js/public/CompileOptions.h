@@ -340,8 +340,9 @@ class JS_PUBLIC_API(OwningCompileOptions) final
                              const char* intro, unsigned line,
                              JSScript* script, uint32_t offset)
     {
-        if (!setIntroducerFilename(cx, introducerFn))
+        if (!setIntroducerFilename(cx, introducerFn)) {
             return false;
+        }
 
         introductionType = intro;
         introductionLineno = line;
