@@ -4,13 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCollationFactory.h"
-#include "nsCollationCID.h"
+#include "nsCollation.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/intl/LocaleService.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
-NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
 
 NS_IMPL_ISUPPORTS(nsCollationFactory, nsICollationFactory)
 
@@ -27,17 +25,11 @@ nsCollationFactory::CreateCollationForLocale(const nsACString& locale, nsICollat
 {
   // Create a collation interface instance.
   //
-  nsICollation *inst;
-  nsresult res;
-
-  res = CallCreateInstance(kCollationCID, &inst);
-  if (NS_FAILED(res)) {
-    return res;
-  }
+  nsCOMPtr<nsICollation> inst = new nsCollation();
 
   inst->Initialize(locale);
 
-  *instancePtr = inst;
+  inst.forget(instancePtr);
 
-  return res;
+  return NS_OK;
 }
