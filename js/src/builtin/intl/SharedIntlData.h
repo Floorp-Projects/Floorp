@@ -45,10 +45,11 @@ class SharedIntlData
         explicit LinearStringLookup(JSLinearString* string)
           : isLatin1(string->hasLatin1Chars()), length(string->length())
         {
-            if (isLatin1)
+            if (isLatin1) {
                 latin1Chars = string->latin1Chars(nogc);
-            else
+            } else {
                 twoByteChars = string->twoByteChars(nogc);
+            }
         }
     };
 

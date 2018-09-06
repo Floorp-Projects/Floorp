@@ -83,24 +83,28 @@ RelativeTimeFormat(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Step 1.
-    if (!ThrowIfNotConstructing(cx, args, "Intl.RelativeTimeFormat"))
+    if (!ThrowIfNotConstructing(cx, args, "Intl.RelativeTimeFormat")) {
         return false;
+    }
 
     // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
     RootedObject proto(cx);
-    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
         return false;
+    }
 
     if (!proto) {
         proto = GlobalObject::getOrCreateRelativeTimeFormatPrototype(cx, cx->global());
-        if (!proto)
+        if (!proto) {
             return false;
+        }
     }
 
     Rooted<RelativeTimeFormatObject*> relativeTimeFormat(cx);
     relativeTimeFormat = NewObjectWithGivenProto<RelativeTimeFormatObject>(cx, proto);
-    if (!relativeTimeFormat)
+    if (!relativeTimeFormat) {
         return false;
+    }
 
     relativeTimeFormat->setReservedSlot(RelativeTimeFormatObject::INTERNALS_SLOT, NullValue());
     relativeTimeFormat->setReservedSlot(RelativeTimeFormatObject::URELATIVE_TIME_FORMAT_SLOT,
@@ -127,8 +131,9 @@ js::RelativeTimeFormatObject::finalize(FreeOp* fop, JSObject* obj)
 
     constexpr auto RT_FORMAT_SLOT = RelativeTimeFormatObject::URELATIVE_TIME_FORMAT_SLOT;
     const Value& slot = obj->as<RelativeTimeFormatObject>().getReservedSlot(RT_FORMAT_SLOT);
-    if (URelativeDateTimeFormatter* rtf = static_cast<URelativeDateTimeFormatter*>(slot.toPrivate()))
+    if (URelativeDateTimeFormatter* rtf = static_cast<URelativeDateTimeFormatter*>(slot.toPrivate())) {
         ureldatefmt_close(rtf);
+    }
 }
 
 JSObject*
@@ -137,28 +142,35 @@ js::CreateRelativeTimeFormatPrototype(JSContext* cx, HandleObject Intl,
 {
     RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, &RelativeTimeFormat, cx->names().RelativeTimeFormat, 0);
-    if (!ctor)
+    if (!ctor) {
         return nullptr;
+    }
 
     RootedObject proto(cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-    if (!proto)
+    if (!proto) {
         return nullptr;
+    }
 
-    if (!LinkConstructorAndPrototype(cx, ctor, proto))
+    if (!LinkConstructorAndPrototype(cx, ctor, proto)) {
         return nullptr;
+    }
 
-    if (!JS_DefineFunctions(cx, ctor, relativeTimeFormat_static_methods))
+    if (!JS_DefineFunctions(cx, ctor, relativeTimeFormat_static_methods)) {
         return nullptr;
+    }
 
-    if (!JS_DefineFunctions(cx, proto, relativeTimeFormat_methods))
+    if (!JS_DefineFunctions(cx, proto, relativeTimeFormat_methods)) {
         return nullptr;
+    }
 
-    if (!JS_DefineProperties(cx, proto, relativeTimeFormat_properties))
+    if (!JS_DefineProperties(cx, proto, relativeTimeFormat_properties)) {
         return nullptr;
+    }
 
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!DefineDataProperty(cx, Intl, cx->names().RelativeTimeFormat, ctorValue, 0))
+    if (!DefineDataProperty(cx, Intl, cx->names().RelativeTimeFormat, ctorValue, 0)) {
         return nullptr;
+    }
 
     return proto;
 }
@@ -180,8 +192,9 @@ js::GlobalObject::addRelativeTimeFormatConstructor(JSContext* cx, HandleObject i
     }
 
     JSObject* relativeTimeFormatProto = CreateRelativeTimeFormatPrototype(cx, intl, global);
-    if (!relativeTimeFormatProto)
+    if (!relativeTimeFormatProto) {
         return false;
+    }
 
     global->setReservedSlot(RELATIVE_TIME_FORMAT_PROTO, ObjectValue(*relativeTimeFormatProto));
     return true;
@@ -203,8 +216,9 @@ js::intl_RelativeTimeFormat_availableLocales(JSContext* cx, unsigned argc, Value
     RootedValue result(cx);
     // We're going to use ULocale availableLocales as per ICU recommendation:
     // https://ssl.icu-project.org/trac/ticket/12756
-    if (!GetAvailableLocales(cx, uloc_countAvailable, uloc_getAvailable, &result))
+    if (!GetAvailableLocales(cx, uloc_countAvailable, uloc_getAvailable, &result)) {
         return false;
+    }
     args.rval().set(result);
     return true;
 }
@@ -217,25 +231,30 @@ static URelativeDateTimeFormatter*
 NewURelativeDateTimeFormatter(JSContext* cx, Handle<RelativeTimeFormatObject*> relativeTimeFormat)
 {
     RootedObject internals(cx, intl::GetInternalsObject(cx, relativeTimeFormat));
-    if (!internals)
+    if (!internals) {
         return nullptr;
+    }
 
     RootedValue value(cx);
 
-    if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().locale, &value)) {
         return nullptr;
+    }
     UniqueChars locale = intl::EncodeLocale(cx, value.toString());
-    if (!locale)
+    if (!locale) {
         return nullptr;
+    }
 
-    if (!GetProperty(cx, internals, internals, cx->names().style, &value))
+    if (!GetProperty(cx, internals, internals, cx->names().style, &value)) {
         return nullptr;
+    }
 
     UDateRelativeDateTimeFormatterStyle relDateTimeStyle;
     {
         JSLinearString* style = value.toString()->ensureLinear(cx);
-        if (!style)
+        if (!style) {
             return nullptr;
+        }
 
         if (StringEqualsAscii(style, "short")) {
             relDateTimeStyle = UDAT_STYLE_SHORT;
@@ -284,8 +303,9 @@ js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp)
 
     // ICU doesn't handle -0 well: work around this by converting it to +0.
     // See: http://bugs.icu-project.org/trac/ticket/12936
-    if (IsNegativeZero(t))
+    if (IsNegativeZero(t)) {
         t = +0.0;
+    }
 
     // Obtain a cached URelativeDateTimeFormatter object.
     constexpr auto RT_FORMAT_SLOT = RelativeTimeFormatObject::URELATIVE_TIME_FORMAT_SLOT;
@@ -293,16 +313,18 @@ js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp)
     URelativeDateTimeFormatter* rtf = static_cast<URelativeDateTimeFormatter*>(priv);
     if (!rtf) {
         rtf = NewURelativeDateTimeFormatter(cx, relativeTimeFormat);
-        if (!rtf)
+        if (!rtf) {
             return false;
+        }
         relativeTimeFormat->setReservedSlot(RT_FORMAT_SLOT, PrivateValue(rtf));
     }
 
     URelativeDateTimeUnit relDateTimeUnit;
     {
         JSLinearString* unit = args[2].toString()->ensureLinear(cx);
-        if (!unit)
+        if (!unit) {
             return false;
+        }
 
         if (StringEqualsAscii(unit, "second") || StringEqualsAscii(unit, "seconds")) {
             relDateTimeUnit = UDAT_REL_UNIT_SECOND;
@@ -327,8 +349,9 @@ js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp)
     RelativeTimeNumeric relDateTimeNumeric;
     {
         JSLinearString* numeric = args[3].toString()->ensureLinear(cx);
-        if (!numeric)
+        if (!numeric) {
             return false;
+        }
 
         if (StringEqualsAscii(numeric, "auto")) {
             relDateTimeNumeric = RelativeTimeNumeric::Auto;
@@ -347,8 +370,9 @@ js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp)
                        : ureldatefmt_formatNumeric;
             return fmt(rtf, t, relDateTimeUnit, chars, size, status);
         });
-    if (!str)
+    if (!str) {
         return false;
+    }
 
     args.rval().setString(str);
     return true;
