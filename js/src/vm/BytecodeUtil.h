@@ -446,8 +446,9 @@ StackUses(jsbytecode* pc)
 {
     JSOp op = JSOp(*pc);
     int nuses = CodeSpec[op].nuses;
-    if (nuses >= 0)
+    if (nuses >= 0) {
         return nuses;
+    }
 
     MOZ_ASSERT(nuses == -1);
     switch (op) {
@@ -530,8 +531,9 @@ GetBytecodeLength(jsbytecode* pc)
     JSOp op = (JSOp)*pc;
     MOZ_ASSERT(op < JSOP_LIMIT);
 
-    if (CodeSpec[op].length != -1)
+    if (CodeSpec[op].length != -1) {
         return CodeSpec[op].length;
+    }
     return GetVariableBytecodeLength(pc);
 }
 
@@ -547,27 +549,31 @@ BytecodeFlowsToBitop(jsbytecode* pc)
 {
     // Look for simple bytecode for integer conversions like (x | 0) or (x & -1).
     jsbytecode* next = pc + GetBytecodeLength(pc);
-    if (*next == JSOP_BITOR || *next == JSOP_BITAND)
+    if (*next == JSOP_BITOR || *next == JSOP_BITAND) {
         return true;
+    }
     if (*next == JSOP_INT8 && GET_INT8(next) == -1) {
         next += GetBytecodeLength(next);
-        if (*next == JSOP_BITAND)
+        if (*next == JSOP_BITAND) {
             return true;
+        }
         return false;
     }
     if (*next == JSOP_ONE) {
         next += GetBytecodeLength(next);
         if (*next == JSOP_NEG) {
             next += GetBytecodeLength(next);
-            if (*next == JSOP_BITAND)
+            if (*next == JSOP_BITAND) {
                 return true;
+            }
         }
         return false;
     }
     if (*next == JSOP_ZERO) {
         next += GetBytecodeLength(next);
-        if (*next == JSOP_BITOR)
+        if (*next == JSOP_BITOR) {
             return true;
+        }
         return false;
     }
     return false;

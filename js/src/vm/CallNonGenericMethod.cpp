@@ -23,12 +23,14 @@ JS::detail::CallMethodIfWrapped(JSContext* cx, IsAcceptableThis test, NativeImpl
 
     if (thisv.isObject()) {
         JSObject& thisObj = args.thisv().toObject();
-        if (thisObj.is<ProxyObject>())
+        if (thisObj.is<ProxyObject>()) {
             return Proxy::nativeCall(cx, test, impl, args);
+        }
     }
 
-    if (IsCallSelfHostedNonGenericMethod(impl))
+    if (IsCallSelfHostedNonGenericMethod(impl)) {
         return ReportIncompatibleSelfHostedMethod(cx, args);
+    }
 
     ReportIncompatible(cx, args);
     return false;
