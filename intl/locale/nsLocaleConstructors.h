@@ -30,7 +30,6 @@ ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
 }
 
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollation)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationFactory)
 
 namespace mozilla {
