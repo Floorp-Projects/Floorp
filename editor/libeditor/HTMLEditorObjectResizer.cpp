@@ -237,122 +237,142 @@ HTMLEditor::RefreshResizers()
                            mResizedObjectX, mResizedObjectY);
 }
 
-NS_IMETHODIMP
-HTMLEditor::ShowResizers(Element* aResizedElement)
-{
-  if (NS_WARN_IF(!aResizedElement)) {
-   return NS_ERROR_NULL_POINTER;
-  }
-  return ShowResizers(*aResizedElement);
-}
-
 nsresult
-HTMLEditor::ShowResizers(Element& aResizedElement)
+HTMLEditor::ShowResizersInternal(Element& aResizedElement)
 {
-  nsresult rv = ShowResizersInner(aResizedElement);
-  if (NS_FAILED(rv)) {
-    HideResizers();
-  }
-  return rv;
-}
-
-nsresult
-HTMLEditor::ShowResizersInner(Element& aResizedElement)
-{
-  if (mResizedObject) {
-    NS_ERROR("call HideResizers first");
+  // When we have visible resizers, we cannot show new resizers.
+  // So, the caller should call HideResizers() first.
+  if (NS_WARN_IF(mResizedObject)) {
     return NS_ERROR_UNEXPECTED;
   }
 
   nsCOMPtr<nsIContent> parentContent = aResizedElement.GetParent();
   if (NS_WARN_IF(!parentContent)) {
-   return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
 
   if (NS_WARN_IF(!IsDescendantOfEditorRoot(&aResizedElement))) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  mResizedObject = &aResizedElement;
+  // Let's create and setup resizers.  If we failed something, we should
+  // cancel everything which we do in this method.
+  do {
+    mResizedObject = &aResizedElement;
 
-  // The resizers and the shadow will be anonymous siblings of the element.
-  mTopLeftHandle =
-    CreateResizer(nsIHTMLObjectResizer::eTopLeft, *parentContent);
-  NS_ENSURE_TRUE(mTopLeftHandle, NS_ERROR_FAILURE);
-  mTopHandle = CreateResizer(nsIHTMLObjectResizer::eTop, *parentContent);
-  NS_ENSURE_TRUE(mTopHandle, NS_ERROR_FAILURE);
-  mTopRightHandle =
-    CreateResizer(nsIHTMLObjectResizer::eTopRight, *parentContent);
-  NS_ENSURE_TRUE(mTopRightHandle, NS_ERROR_FAILURE);
+    // The resizers and the shadow will be anonymous siblings of the element.
+    mTopLeftHandle =
+      CreateResizer(nsIHTMLObjectResizer::eTopLeft, *parentContent);
+    if (NS_WARN_IF(!mTopLeftHandle)) {
+      break;
+    }
+    mTopHandle = CreateResizer(nsIHTMLObjectResizer::eTop, *parentContent);
+    if (NS_WARN_IF(!mTopHandle)) {
+      break;
+    }
+    mTopRightHandle =
+      CreateResizer(nsIHTMLObjectResizer::eTopRight, *parentContent);
+    if (NS_WARN_IF(!mTopRightHandle)) {
+      break;
+    }
 
-  mLeftHandle = CreateResizer(nsIHTMLObjectResizer::eLeft, *parentContent);
-  NS_ENSURE_TRUE(mLeftHandle, NS_ERROR_FAILURE);
-  mRightHandle = CreateResizer(nsIHTMLObjectResizer::eRight, *parentContent);
-  NS_ENSURE_TRUE(mRightHandle, NS_ERROR_FAILURE);
+    mLeftHandle = CreateResizer(nsIHTMLObjectResizer::eLeft, *parentContent);
+    if (NS_WARN_IF(!mLeftHandle)) {
+      break;
+    }
+    mRightHandle = CreateResizer(nsIHTMLObjectResizer::eRight, *parentContent);
+    if (NS_WARN_IF(!mRightHandle)) {
+      break;
+    }
 
-  mBottomLeftHandle =
-    CreateResizer(nsIHTMLObjectResizer::eBottomLeft, *parentContent);
-  NS_ENSURE_TRUE(mBottomLeftHandle, NS_ERROR_FAILURE);
-  mBottomHandle = CreateResizer(nsIHTMLObjectResizer::eBottom, *parentContent);
-  NS_ENSURE_TRUE(mBottomHandle, NS_ERROR_FAILURE);
-  mBottomRightHandle =
-    CreateResizer(nsIHTMLObjectResizer::eBottomRight, *parentContent);
-  NS_ENSURE_TRUE(mBottomRightHandle, NS_ERROR_FAILURE);
+    mBottomLeftHandle =
+      CreateResizer(nsIHTMLObjectResizer::eBottomLeft, *parentContent);
+    if (NS_WARN_IF(!mBottomLeftHandle)) {
+      break;
+    }
+    mBottomHandle =
+      CreateResizer(nsIHTMLObjectResizer::eBottom, *parentContent);
+    if (NS_WARN_IF(!mBottomHandle)) {
+      break;
+    }
+    mBottomRightHandle =
+      CreateResizer(nsIHTMLObjectResizer::eBottomRight, *parentContent);
+    if (NS_WARN_IF(!mBottomRightHandle)) {
+      break;
+    }
 
-  nsresult rv =
-    GetPositionAndDimensions(aResizedElement,
-                             mResizedObjectX,
-                             mResizedObjectY,
-                             mResizedObjectWidth,
-                             mResizedObjectHeight,
-                             mResizedObjectBorderLeft,
-                             mResizedObjectBorderTop,
-                             mResizedObjectMarginLeft,
-                             mResizedObjectMarginTop);
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv =
+      GetPositionAndDimensions(aResizedElement,
+                               mResizedObjectX,
+                               mResizedObjectY,
+                               mResizedObjectWidth,
+                               mResizedObjectHeight,
+                               mResizedObjectBorderLeft,
+                               mResizedObjectBorderTop,
+                               mResizedObjectMarginLeft,
+                               mResizedObjectMarginTop);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      break;
+    }
 
-  // and let's set their absolute positions in the document
-  rv = SetAllResizersPosition();
-  NS_ENSURE_SUCCESS(rv, rv);
+    // and let's set their absolute positions in the document
+    rv = SetAllResizersPosition();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      break;
+    }
 
-  // now, let's create the resizing shadow
-  mResizingShadow = CreateShadow(*parentContent, aResizedElement);
-  NS_ENSURE_TRUE(mResizingShadow, NS_ERROR_FAILURE);
-  // and set its position
-  rv = SetShadowPosition(mResizingShadow, &aResizedElement,
-                         mResizedObjectX, mResizedObjectY);
-  NS_ENSURE_SUCCESS(rv, rv);
+    // now, let's create the resizing shadow
+    mResizingShadow = CreateShadow(*parentContent, aResizedElement);
+    if (NS_WARN_IF(!mResizingShadow)) {
+      break;
+    }
+    // and set its position
+    rv = SetShadowPosition(mResizingShadow, &aResizedElement,
+                           mResizedObjectX, mResizedObjectY);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      break;
+    }
 
-  // and then the resizing info tooltip
-  mResizingInfo = CreateResizingInfo(*parentContent);
-  NS_ENSURE_TRUE(mResizingInfo, NS_ERROR_FAILURE);
+    // and then the resizing info tooltip
+    mResizingInfo = CreateResizingInfo(*parentContent);
+    if (NS_WARN_IF(!mResizingInfo)) {
+      break;
+    }
 
-  // and listen to the "resize" event on the window first, get the
-  // window from the document...
-  nsCOMPtr<nsIDocument> doc = GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
+    // and listen to the "resize" event on the window first, get the
+    // window from the document...
+    nsIDocument* document = GetDocument();
+    if (NS_WARN_IF(!document)) {
+      break;
+    }
 
-  nsCOMPtr<EventTarget> target = do_QueryInterface(doc->GetWindow());
-  if (!target) {
-    return NS_ERROR_NULL_POINTER;
-  }
+    nsCOMPtr<EventTarget> target = do_QueryInterface(document->GetWindow());
+    if (!target) {
+      break;
+    }
 
-  mResizeEventListenerP = new DocumentResizeEventListener(*this);
-  rv = target->AddEventListener(NS_LITERAL_STRING("resize"),
-                                mResizeEventListenerP, false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    mResizeEventListenerP = new DocumentResizeEventListener(*this);
+    rv = target->AddEventListener(NS_LITERAL_STRING("resize"),
+                                  mResizeEventListenerP, false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      break;
+    }
 
-  MOZ_ASSERT(mResizedObject == &aResizedElement);
+    MOZ_ASSERT(mResizedObject == &aResizedElement);
 
-  mHasShownResizers = true;
+    mHasShownResizers = true;
 
-  // XXX Even when it failed to add event listener, should we need to set
-  //     _moz_resizing attribute?
-  aResizedElement.SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_resizing,
-                          NS_LITERAL_STRING("true"), true);
-  return NS_OK;
+    // XXX Even when it failed to add event listener, should we need to set
+    //     _moz_resizing attribute?
+    aResizedElement.SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_resizing,
+                            NS_LITERAL_STRING("true"), true);
+    return NS_OK;
+  } while (true);
+
+  DebugOnly<nsresult> rv = HideResizers();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Failed to clean up unnecessary resizers");
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
