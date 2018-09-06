@@ -415,7 +415,7 @@ WebGLContext::SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options,
         nsCString blocklistId;
         if (IsFeatureInBlacklist(gfxInfo, nsIGfxInfo::FEATURE_WEBGL_MSAA, &blocklistId)) {
             GenerateWarning("Disallowing antialiased backbuffers due to blacklisting.");
-            mOptions.antialias = false;
+            newOpts.antialias = false;
         }
     }
 
