@@ -355,6 +355,7 @@ struct DIGroup
   LayerIntRect mLayerBounds;
   Maybe<wr::ImageKey> mKey;
   std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
+  std::vector<RefPtr<ScaledFont>> mFonts;
 
   DIGroup()
     : mAppUnitsPerDevPixel(0)
@@ -383,6 +384,16 @@ struct DIGroup
       iter.Remove();
       delete data;
     }
+  }
+
+  void ClearImageKey(WebRenderLayerManager* aManager, bool aForce = false)
+  {
+    if (mKey) {
+      MOZ_RELEASE_ASSERT(aForce || mInvalidRect.IsEmpty());
+      aManager->AddImageKeyForDiscard(mKey.value());
+      mKey = Nothing();
+    }
+    mFonts.clear();
   }
 
   static IntRect
@@ -626,15 +637,20 @@ struct DIGroup
     }
 
     gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
+    std::vector<RefPtr<ScaledFont>> fonts;
     RefPtr<WebRenderDrawEventRecorder> recorder =
       MakeAndAddRef<WebRenderDrawEventRecorder>(
-        [&](MemStream& aStream, std::vector<RefPtr<UnscaledFont>>& aUnscaledFonts) {
-          size_t count = aUnscaledFonts.size();
+        [&](MemStream& aStream, std::vector<RefPtr<ScaledFont>>& aScaledFonts) {
+          size_t count = aScaledFonts.size();
           aStream.write((const char*)&count, sizeof(count));
-          for (auto unscaled : aUnscaledFonts) {
-            wr::FontKey key = aWrManager->WrBridge()->GetFontKeyForUnscaledFont(unscaled);
-            aStream.write((const char*)&key, sizeof(key));
+          for (auto& scaled : aScaledFonts) {
+            BlobFont font = {
+              aWrManager->WrBridge()->GetFontKeyForScaledFont(scaled, &aResources),
+              scaled
+            };
+            aStream.write((const char*)&font, sizeof(font));
           }
+          fonts = std::move(aScaledFonts);
         });
 
     RefPtr<gfx::DrawTarget> dummyDt =
@@ -650,10 +666,7 @@ struct DIGroup
 
     bool empty = aStartItem == aEndItem;
     if (empty) {
-      if (mKey) {
-        aWrManager->AddImageKeyForDiscard(mKey.value());
-        mKey = Nothing();
-      }
+      ClearImageKey(aWrManager, true);
       return;
     }
 
@@ -687,6 +700,7 @@ struct DIGroup
         return;
       }
     }
+    mFonts = std::move(fonts);
     mInvalidRect.SetEmpty();
     SetBlobImageVisibleArea(aResources, mKey.value(), mPaintRect, bounds);
     PushImage(aBuilder, bounds);
@@ -1022,11 +1036,7 @@ Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
         // The group changed size
         GP("Inner group size change\n");
         groupData->mFollowingGroup.ClearItems();
-        if (groupData->mFollowingGroup.mKey) {
-          MOZ_RELEASE_ASSERT(groupData->mFollowingGroup.mInvalidRect.IsEmpty());
-          aCommandBuilder->mManager->AddImageKeyForDiscard(groupData->mFollowingGroup.mKey.value());
-          groupData->mFollowingGroup.mKey = Nothing();
-        }
+        groupData->mFollowingGroup.ClearImageKey(aCommandBuilder->mManager);
       }
       groupData->mFollowingGroup.mGroupBounds = currentGroup->mGroupBounds;
       groupData->mFollowingGroup.mAppUnitsPerDevPixel = currentGroup->mAppUnitsPerDevPixel;
@@ -1163,11 +1173,7 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
     GP("Bounds change: %d %d %d %d vs %d %d %d %d\n", p.x, p.y, p.width, p.height, q.x, q.y, q.width, q.height);
 
     group.ClearItems();
-    if (group.mKey) {
-      MOZ_RELEASE_ASSERT(group.mInvalidRect.IsEmpty());
-      mManager->AddImageKeyForDiscard(group.mKey.value());
-      group.mKey = Nothing();
-    }
+    group.ClearImageKey(mManager);
   }
 
   FrameMetrics::ViewID scrollId = FrameMetrics::NULL_SCROLL_ID;
@@ -1796,15 +1802,20 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
     if (useBlobImage) {
       bool snapped;
       bool isOpaque = aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(paintBounds);
+      std::vector<RefPtr<ScaledFont>> fonts;
 
       RefPtr<WebRenderDrawEventRecorder> recorder =
-        MakeAndAddRef<WebRenderDrawEventRecorder>([&] (MemStream &aStream, std::vector<RefPtr<UnscaledFont>> &aUnscaledFonts) {
-          size_t count = aUnscaledFonts.size();
+        MakeAndAddRef<WebRenderDrawEventRecorder>([&] (MemStream &aStream, std::vector<RefPtr<ScaledFont>> &aScaledFonts) {
+          size_t count = aScaledFonts.size();
           aStream.write((const char*)&count, sizeof(count));
-          for (auto unscaled : aUnscaledFonts) {
-            wr::FontKey key = mManager->WrBridge()->GetFontKeyForUnscaledFont(unscaled);
-            aStream.write((const char*)&key, sizeof(key));
+          for (auto& scaled : aScaledFonts) {
+            BlobFont font = {
+              mManager->WrBridge()->GetFontKeyForScaledFont(scaled, &aResources),
+              scaled
+            };
+            aStream.write((const char*)&font, sizeof(font));
           }
+          fonts = std::move(aScaledFonts);
         });
       RefPtr<gfx::DrawTarget> dummyDt =
         gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
@@ -1826,6 +1837,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
           return nullptr;
         }
         fallbackData->SetKey(key);
+        fallbackData->SetFonts(fonts);
       } else {
         // If there is no invalidation region and we don't have a image key,
         // it means we don't need to push image for the item.
@@ -1992,6 +2004,8 @@ WebRenderGroupData::~WebRenderGroupData()
 {
   MOZ_COUNT_DTOR(WebRenderGroupData);
   GP("Group data destruct\n");
+  mSubGroup.ClearImageKey(mWRManager, true);
+  mFollowingGroup.ClearImageKey(mWRManager, true);
 }
 
 } // namespace layers

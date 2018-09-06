@@ -660,8 +660,10 @@ impl AlphaBatchBuilder {
                                         &matrix,
                                         Some(bounding_rect.to_f64()),
                                     );
-                                    for poly in results {
-                                        splitter.add(poly);
+                                    if let Ok(results) = results {
+                                        for poly in results {
+                                            splitter.add(poly);
+                                        }
                                     }
                                 }
                             }
@@ -1611,6 +1613,7 @@ pub fn resolve_image(
                     deferred_resolves.push(DeferredResolve {
                         image_properties,
                         address: gpu_cache.get_address(&cache_handle),
+                        rendering: request.rendering,
                     });
 
                     cache_item

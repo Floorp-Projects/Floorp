@@ -84,7 +84,6 @@ protected:
   uint32_t mIndex;
   RefPtr<NativeFontResource> mNativeFontResource;
 
-private:
   friend class ScaledFontFreeType;
   friend class ScaledFontFontconfig;
 
@@ -131,6 +130,13 @@ public:
                      uint32_t aInstanceDataLength,
                      const FontVariation* aVariations,
                      uint32_t aNumVariations) override;
+
+  already_AddRefed<ScaledFont>
+    CreateScaledFontFromWRFont(Float aGlyphSize,
+                               const wr::FontInstanceOptions* aOptions,
+                               const wr::FontInstancePlatformOptions* aPlatformOptions,
+                               const FontVariation* aVariations,
+                               uint32_t aNumVariations) override;
 };
 #endif
 
