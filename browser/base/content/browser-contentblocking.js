@@ -15,10 +15,6 @@ var FastBlock = {
     XPCOMUtils.defineLazyPreferenceGetter(this, "enabled", this.PREF_ENABLED, false);
     XPCOMUtils.defineLazyPreferenceGetter(this, "visible", this.PREF_UI_ENABLED, false);
   },
-
-  isBlockerActivated(state) {
-    return state & Ci.nsIWebProgressListener.STATE_BLOCKED_SLOW_TRACKING_CONTENT;
-  },
 };
 
 var TrackingProtection = {
@@ -132,10 +128,6 @@ var TrackingProtection = {
       }
     }
   },
-
-  isBlockerActivated(state) {
-    return state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT;
-  },
 };
 
 var ThirdPartyCookies = {
@@ -161,11 +153,6 @@ var ThirdPartyCookies = {
   },
   get enabled() {
     return this.PREF_ENABLED_VALUES.includes(this.behaviorPref);
-  },
-
-  isBlockerActivated(state) {
-    return (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER) != 0 ||
-           (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN) != 0;
   },
 };
 
@@ -447,21 +434,23 @@ var ContentBlocking = {
       this.iconBox.removeAttribute("animate");
     }
 
-    let anyBlockerActivated = false;
+    let isBlocking = state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT;
+    let isAllowing = state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT;
+    let detected = isBlocking || isAllowing;
+
+    let anyBlockerEnabled = false;
 
     for (let blocker of this.blockers) {
       blocker.categoryItem.classList.toggle("blocked", this.enabled && blocker.enabled);
       blocker.categoryItem.hidden = !blocker.visible;
-      anyBlockerActivated = anyBlockerActivated || blocker.isBlockerActivated(state);
+      anyBlockerEnabled = anyBlockerEnabled || blocker.enabled;
     }
 
-    // We consider the shield state "active" when some kind of blocking activity
-    // occurs on the page.  Note that merely allowing the loading of content that
-    // we could have blocked does not trigger the appearance of the shield.
+    // We consider the shield state "active" when any kind of blocking-related
+    // activity occurs on the page (blocking or allowing) and at least one blocker
+    // is enabled.
     // This state will be overriden later if there's an exception set for this site.
-    let active = this.enabled && anyBlockerActivated;
-    let isAllowing = state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT;
-    let detected = anyBlockerActivated || isAllowing;
+    let active = this.enabled && detected && anyBlockerEnabled;
 
     let isBrowserPrivate = PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser);
 

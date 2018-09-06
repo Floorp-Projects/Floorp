@@ -1551,50 +1551,10 @@ nsDocShell::GetHasTrackingContentBlocked(bool* aHasTrackingContentBlocked)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetHasSlowTrackingContentBlocked(bool* aHasSlowTrackingContentBlocked)
-{
-  nsCOMPtr<nsIDocument> doc(GetDocument());
-  *aHasSlowTrackingContentBlocked = doc && doc->GetHasSlowTrackingContentBlocked();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocShell::GetHasTrackingContentLoaded(bool* aHasTrackingContentLoaded)
 {
   nsCOMPtr<nsIDocument> doc(GetDocument());
   *aHasTrackingContentLoaded = doc && doc->GetHasTrackingContentLoaded();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetHasCookiesBlockedByPermission(bool* aHasCookiesBlockedByPermission)
-{
-  nsCOMPtr<nsIDocument> doc(GetDocument());
-  *aHasCookiesBlockedByPermission = doc && doc->GetHasCookiesBlockedByPermission();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetHasCookiesBlockedDueToTrackers(bool* aHasCookiesBlockedDueToTrackers)
-{
-  nsCOMPtr<nsIDocument> doc(GetDocument());
-  *aHasCookiesBlockedDueToTrackers = doc && doc->GetHasTrackingCookiesBlocked();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetHasAllCookiesBeenBlocked(bool* aHasAllCookiesBeenBlocked)
-{
-  nsCOMPtr<nsIDocument> doc(GetDocument());
-  *aHasAllCookiesBeenBlocked = doc && doc->GetHasAllCookiesBlocked();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetHasForeignCookiesBeenBlocked(bool* aHasForeignCookiesBeenBlocked)
-{
-  nsCOMPtr<nsIDocument> doc(GetDocument());
-  *aHasForeignCookiesBeenBlocked = doc && doc->GetHasForeignCookiesBlocked();
   return NS_OK;
 }
 
