@@ -18,6 +18,7 @@ import org.mozilla.focus.fragment.InfoFragment
 import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.web.ClassicWebViewProvider
 import org.mozilla.focus.web.IWebView
+import org.mozilla.focus.web.WebViewProvider
 
 /**
  * A generic activity that supports showing additional information in a WebView. This is useful
@@ -25,10 +26,12 @@ import org.mozilla.focus.web.IWebView
  */
 class InfoActivity : AppCompatActivity() {
 
+    private lateinit var url: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_info)
-        val url = intent.getStringExtra(EXTRA_URL)
+        url = intent.getStringExtra(EXTRA_URL)
         val title = intent.getStringExtra(EXTRA_TITLE)
         supportFragmentManager.beginTransaction()
             .replace(R.id.infofragment, InfoFragment.create(url))
@@ -42,9 +45,14 @@ class InfoActivity : AppCompatActivity() {
     }
 
     override fun onCreateView(name: String, context: Context, attrs: AttributeSet): View? {
-        // We want this to use a WebView
         if (name == IWebView::class.java.name) {
-            val view = ClassicWebViewProvider().create(context, attrs)
+            // We use a WebView for focus:rights as a workaround to link to other internal pages
+            val view = if (url == LocalizedContent.URL_RIGHTS) {
+                ClassicWebViewProvider().create(context, attrs)
+            } else {
+                WebViewProvider.create(context, attrs)
+            }
+
             val webView = view as IWebView
             webView.setBlockingEnabled(false)
             return view
