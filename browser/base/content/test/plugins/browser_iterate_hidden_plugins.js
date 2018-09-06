@@ -6,9 +6,7 @@ const HIDDEN_CTP_PLUGIN_PREF = "plugins.navigator.hidden_ctp_plugin";
 /**
  * If a plugin is click-to-play and named in HIDDEN_CTP_PLUGIN_PREF,
  * then the plugin should be hidden in the navigator.plugins list by default
- * when iterating. If, however, JS attempts to access the plugin via
- * navigator.plugins[NAME] directly, we should show the "Hidden Plugin"
- * notification bar.
+ * when iterating.
  */
 
 add_task(async function setup() {
@@ -63,64 +61,6 @@ add_task(async function test_plugin_is_hidden_on_iteration() {
       let plugins = Array.from(content.navigator.plugins);
       Assert.ok(plugins.some(p => p.name == pluginName),
                 "Should have found the Test Plugin");
-    });
-  });
-
-  await SpecialPowers.popPrefEnv();
-});
-
-/**
- * Tests that if a click-to-play plugin is hidden, that we show the
- * Hidden Plugin notification bar when accessed directly by name
- * via navigator.plugins.
- */
-add_task(async function test_plugin_shows_hidden_notification_on_access() {
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://example.com",
-  }, async function(browser) {
-    let notificationPromise = waitForNotificationBar("plugin-hidden", gBrowser.selectedBrowser);
-
-    await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(pluginName) {
-      let plugins = content.navigator.plugins;
-      // Just accessing the plugin should be enough to trigger the notification.
-      // We'll also do a sanity check and make sure that the HiddenPlugin event
-      // is firing (which is the event that triggers the notification bar).
-      let sawEvent = false;
-      addEventListener("HiddenPlugin", function onHiddenPlugin(e) {
-        sawEvent = true;
-        removeEventListener("HiddenPlugin", onHiddenPlugin, true);
-      }, true);
-      plugins[pluginName];
-      Assert.ok(sawEvent, "Should have seen the HiddenPlugin event.");
-    });
-
-    let notification = await notificationPromise;
-    notification.close();
-  });
-
-  // Make sure that if the plugin wasn't hidden that touching it
-  // does _NOT_ show the notification bar.
-  await SpecialPowers.pushPrefEnv({
-    set: [[HIDDEN_CTP_PLUGIN_PREF, ""]],
-  });
-
-  await BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: "http://example.com",
-  }, async function(browser) {
-    await ContentTask.spawn(browser, TEST_PLUGIN_NAME, async function(pluginName) {
-      let plugins = content.navigator.plugins;
-      // Instead of waiting for a notification bar that should never come,
-      // we'll make sure that the HiddenPlugin event never fires in content
-      // (which is the event that triggers the notification bar).
-      let sawEvent = false;
-      addEventListener("HiddenPlugin", function onHiddenPlugin(e) {
-        sawEvent = true;
-        removeEventListener("HiddenPlugin", onHiddenPlugin, true);
-      }, true);
-      plugins[pluginName];
-      Assert.ok(!sawEvent, "Should not have seen the HiddenPlugin event.");
     });
   });
 
