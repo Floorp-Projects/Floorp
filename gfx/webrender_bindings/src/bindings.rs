@@ -73,7 +73,7 @@ type WrImageKey = ImageKey;
 /// cbindgen:field-names=[mNamespace, mHandle]
 pub type WrFontKey = FontKey;
 /// cbindgen:field-names=[mNamespace, mHandle]
-type WrFontInstanceKey = FontInstanceKey;
+pub type WrFontInstanceKey = FontInstanceKey;
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrYuvColorSpace = YuvColorSpace;
 

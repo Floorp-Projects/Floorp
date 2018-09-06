@@ -824,6 +824,16 @@ public:
     return nullptr;
   }
 
+  virtual already_AddRefed<ScaledFont>
+    CreateScaledFontFromWRFont(Float aGlyphSize,
+                               const wr::FontInstanceOptions* aOptions,
+                               const wr::FontInstancePlatformOptions* aPlatformOptions,
+                               const FontVariation* aVariations,
+                               uint32_t aNumVariations)
+  {
+    return CreateScaledFont(aGlyphSize, nullptr, 0, aVariations, aNumVariations);
+  }
+
 protected:
   UnscaledFont() {}
 
