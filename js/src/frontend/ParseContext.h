@@ -78,8 +78,9 @@ class UsedNameTracker
         { }
 
         bool noteUsedInScope(uint32_t scriptId, uint32_t scopeId) {
-            if (uses_.empty() || uses_.back().scopeId < scopeId)
+            if (uses_.empty() || uses_.back().scopeId < scopeId) {
                 return uses_.append(Use { scriptId, scopeId });
+            }
             return true;
         }
 
@@ -87,10 +88,12 @@ class UsedNameTracker
             *closedOver = false;
             while (!uses_.empty()) {
                 Use& innermost = uses_.back();
-                if (innermost.scopeId < scopeId)
+                if (innermost.scopeId < scopeId) {
                     break;
-                if (innermost.scriptId > scriptId)
+                }
+                if (innermost.scriptId > scriptId) {
                     *closedOver = true;
+                }
                 uses_.popBack();
             }
         }
@@ -260,8 +263,9 @@ class ParseContext : public Nestable<ParseContext>
         uint32_t id_;
 
         bool maybeReportOOM(ParseContext* pc, bool result) {
-            if (!result)
+            if (!result) {
                 ReportOutOfMemory(pc->sc()->context);
+            }
             return result;
         }
 
@@ -346,14 +350,16 @@ class ParseContext : public Nestable<ParseContext>
             void settle() {
                 // Both var and lexically declared names are binding in a var
                 // scope.
-                if (isVarScope_)
+                if (isVarScope_) {
                     return;
+                }
 
                 // Otherwise, pop only lexically declared names are
                 // binding. Pop the range until we find such a name.
                 while (!declaredRange_.empty()) {
-                    if (BindingKindIsLexical(kind()))
+                    if (BindingKindIsLexical(kind())) {
                         break;
+                    }
                     declaredRange_.popFront();
                 }
             }
