@@ -7,12 +7,12 @@ package mozilla.components.browser.engine.gecko
 import kotlinx.coroutines.experimental.CompletableDeferred
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.support.ktx.kotlin.isPhone
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
-import mozilla.components.support.ktx.kotlin.isPhone
 import org.mozilla.gecko.util.ThreadUtils
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
@@ -161,7 +161,21 @@ class GeckoEngineSession(
      * See [EngineSession.settings]
      */
     override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
-        // no-op (requires v63+)
+        val currentMode = geckoSession.settings.getInt(GeckoSessionSettings.USER_AGENT_MODE)
+        val newMode = if (enable) {
+            GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
+        } else {
+            GeckoSessionSettings.USER_AGENT_MODE_MOBILE
+        }
+
+        if (newMode != currentMode) {
+            geckoSession.settings.setInt(GeckoSessionSettings.USER_AGENT_MODE, newMode)
+            notifyObservers { onDesktopModeChange(enable) }
+        }
+
+        if (reload) {
+            geckoSession.reload()
+        }
     }
 
     /**
@@ -201,6 +215,10 @@ class GeckoEngineSession(
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
+        override fun onLoadError(session: GeckoSession?, uri: String?, category: Int, error: Int): GeckoResult<String> {
+            return GeckoResult.fromValue(null)
+        }
+
         override fun onLocationChange(session: GeckoSession?, url: String) {
             // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
             if (initialLoad && url == ABOUT_BLANK) {
@@ -238,14 +256,12 @@ class GeckoEngineSession(
         override fun onNewSession(
             session: GeckoSession,
             uri: String
-        ): GeckoResult<GeckoSession> {
-            return GeckoResult.fromValue(null)
-        }
+        ): GeckoResult<GeckoSession> = GeckoResult.fromValue(null)
     }
 
     /**
-    * ProgressDelegate implementation for forwarding callbacks to observers of the session.
-    */
+     * ProgressDelegate implementation for forwarding callbacks to observers of the session.
+     */
     private fun createProgressDelegate() = object : GeckoSession.ProgressDelegate {
         override fun onProgressChange(session: GeckoSession?, progress: Int) {
             notifyObservers { onProgress(progress) }

@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko
 
 import mozilla.components.concept.engine.DefaultSettings
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -45,6 +46,7 @@ class GeckoEngineTest {
         val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
         `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
+        `when`(runtimeSettings.trackingProtectionCategories).thenReturn(TrackingProtectionPolicy.none().categories)
         `when`(runtime.settings).thenReturn(runtimeSettings)
         val engine = GeckoEngine(runtime)
 
@@ -55,6 +57,10 @@ class GeckoEngineTest {
         assertTrue(engine.settings.webFontsEnabled)
         engine.settings.webFontsEnabled = false
         verify(runtimeSettings).webFontsEnabled = false
+
+        assertEquals(TrackingProtectionPolicy.none(), engine.settings.trackingProtectionPolicy)
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.all()
+        verify(runtimeSettings).trackingProtectionCategories = TrackingProtectionPolicy.all().categories
 
         try {
             engine.settings.domStorageEnabled
@@ -75,8 +81,13 @@ class GeckoEngineTest {
         `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
         `when`(runtime.settings).thenReturn(runtimeSettings)
 
-        GeckoEngine(runtime, DefaultSettings(javascriptEnabled = false, webFontsEnabled = false))
+        GeckoEngine(runtime, DefaultSettings(
+                trackingProtectionPolicy = TrackingProtectionPolicy.all(),
+                javascriptEnabled = false,
+                webFontsEnabled = false))
+
         verify(runtimeSettings).javaScriptEnabled = false
         verify(runtimeSettings).webFontsEnabled = false
+        verify(runtimeSettings).trackingProtectionCategories = TrackingProtectionPolicy.all().categories
     }
 }

@@ -3,15 +3,15 @@
 buildscript {
     // Synchronized versions numbers of GeckoView (Beta) artifacts.
     ext.geckoBeta = [
-        // mozilla-beta: FENNEC_62_0b21_RELEASE
-        revision: '9f4fd933ca7e9e72a477a956c2c35b669a3d58b8',
-        version: '62.0.20180827144136'
+        // mozilla-beta: FENNEC_63_0b3
+        revision: '0269319281578bff4e01d77a21350bf91ba08620',
+        version: '63.0.20180904170936'
     ]
 
     ext.geckoRelease = [
-        // mozilla-release: FENNEC_61_0_RELEASE
-        revision: '785d242a5b01d5f1094882aa2144d8e5e2791e06',
-        version: '61.0.20180621125625'
+        // mozilla-release: FENNEC_62_0_RELEASE
+        revision: '9cbae12a3fff404ed2c12070ad475424d0ae869f',
+        version: '62.0.20180830143136'
     ]
 
     repositories {

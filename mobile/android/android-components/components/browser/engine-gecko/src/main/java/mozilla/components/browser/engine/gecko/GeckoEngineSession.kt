@@ -5,15 +5,16 @@
 package mozilla.components.browser.engine.gecko
 
 import kotlinx.coroutines.experimental.CompletableDeferred
-import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
-import org.mozilla.geckoview.GeckoResponse
+import org.mozilla.gecko.util.ThreadUtils
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_AUDIO
@@ -28,13 +29,25 @@ import org.mozilla.geckoview.GeckoSessionSettings
 @Suppress("TooManyFunctions")
 class GeckoEngineSession(
     runtime: GeckoRuntime,
-    privateMode: Boolean = false
+    privateMode: Boolean = false,
+    defaultSettings: Settings? = null
 ) : EngineSession() {
 
     internal var geckoSession = GeckoSession()
+
+    /**
+     * See [EngineSession.settings]
+     */
+    override val settings: Settings = object : Settings {
+        override var requestInterceptor: RequestInterceptor? = null
+    }
+
     private var initialLoad = true
 
     init {
+        defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
+        defaultSettings?.requestInterceptor?.let { settings.requestInterceptor = it }
+
         geckoSession.settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, privateMode)
         geckoSession.open(runtime)
 
@@ -102,18 +115,19 @@ class GeckoEngineSession(
      * is used so we're not blocking anything else. In case of calling this
      * method from onPause or similar, we also want a synchronous response.
      */
-    @Throws(GeckoEngineException::class)
     override fun saveState(): Map<String, Any> = runBlocking {
         val stateMap = CompletableDeferred<Map<String, Any>>()
-        launch {
-            geckoSession.saveState { state ->
-                if (state != null) {
-                    stateMap.complete(mapOf(GECKO_STATE_KEY to state.toString()))
-                } else {
-                    stateMap.completeExceptionally(GeckoEngineException("Failed to save state"))
-                }
-            }
+
+        ThreadUtils.sGeckoHandler.post {
+            geckoSession.saveState().then({ state ->
+                stateMap.complete(mapOf(GECKO_STATE_KEY to state.toString()))
+                GeckoResult<Void>()
+            }, { throwable ->
+                stateMap.completeExceptionally(throwable)
+                GeckoResult<Void>()
+            })
         }
+
         stateMap.await()
     }
 
@@ -146,13 +160,6 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.settings]
      */
-    override val settings: Settings
-        get() = throw UnsupportedOperationException("""Not supported by this implementation:
-            Use Engine.settings instead""".trimIndent())
-
-    /**
-     * See [EngineSession.settings]
-     */
     override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
         // no-op (requires v63+)
     }
@@ -161,21 +168,33 @@ class GeckoEngineSession(
      * See [EngineSession.findAll]
      */
     override fun findAll(text: String) {
-        // no-op (requires v62+)
+        notifyObservers { onFind(text) }
+        geckoSession.finder.find(text, 0).then { result: GeckoSession.FinderResult? ->
+            result?.let {
+                notifyObservers { onFindResult(it.current, it.total, true) }
+            }
+            GeckoResult<Void>()
+        }
     }
 
     /**
      * See [EngineSession.findNext]
      */
     override fun findNext(forward: Boolean) {
-        // no-op (requires v62+)
+        val findFlags = if (forward) 0 else GeckoSession.FINDER_FIND_BACKWARDS
+        geckoSession.finder.find(null, findFlags).then { result: GeckoSession.FinderResult? ->
+            result?.let {
+                notifyObservers { onFindResult(it.current, it.total, true) }
+            }
+            GeckoResult<Void>()
+        }
     }
 
     /**
      * See [EngineSession.clearFindMatches]
      */
     override fun clearFindMatches() {
-        // no-op (requires v62+)
+        geckoSession.finder.clear()
     }
 
     /**
@@ -193,13 +212,19 @@ class GeckoEngineSession(
         }
 
         override fun onLoadRequest(
-            session: GeckoSession?,
-            uri: String?,
+            session: GeckoSession,
+            uri: String,
             target: Int,
-            flags: Int,
-            response: GeckoResponse<Boolean>
-        ) {
-            response.respond(false)
+            flags: Int
+        ): GeckoResult<Boolean>? {
+            val response = settings.requestInterceptor?.onLoadRequest(
+                this@GeckoEngineSession,
+                uri
+            )?.apply {
+                loadData(data, mimeType, encoding)
+            }
+
+            return GeckoResult.fromValue(response != null)
         }
 
         override fun onCanGoForward(session: GeckoSession?, canGoForward: Boolean) {
@@ -211,16 +236,21 @@ class GeckoEngineSession(
         }
 
         override fun onNewSession(
-            session: GeckoSession?,
-            uri: String?,
-            response: GeckoResponse<GeckoSession>
-        ) {}
+            session: GeckoSession,
+            uri: String
+        ): GeckoResult<GeckoSession> {
+            return GeckoResult.fromValue(null)
+        }
     }
 
     /**
     * ProgressDelegate implementation for forwarding callbacks to observers of the session.
     */
     private fun createProgressDelegate() = object : GeckoSession.ProgressDelegate {
+        override fun onProgressChange(session: GeckoSession?, progress: Int) {
+            notifyObservers { onProgress(progress) }
+        }
+
         override fun onSecurityChange(
             session: GeckoSession?,
             securityInfo: GeckoSession.ProgressDelegate.SecurityInformation?
@@ -270,6 +300,8 @@ class GeckoEngineSession(
                 notifyObservers { onLongPress(it) }
             }
         }
+
+        override fun onCrash(session: GeckoSession?) = Unit
 
         override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) = Unit
 

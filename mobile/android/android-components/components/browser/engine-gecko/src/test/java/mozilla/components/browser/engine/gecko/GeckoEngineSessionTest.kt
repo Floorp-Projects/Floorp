@@ -4,27 +4,35 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.os.Handler
+import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.UnsupportedSettingException
+import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.support.test.expectException
+import mozilla.components.support.test.mock
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
+import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mozilla.gecko.util.BundleEventListener
 import org.mozilla.gecko.util.GeckoBundle
-import org.mozilla.geckoview.GeckoResponse
+import org.mozilla.gecko.util.ThreadUtils
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
@@ -34,6 +42,7 @@ import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_NONE
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_VIDEO
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
 import org.mozilla.geckoview.GeckoSessionSettings
+import org.mozilla.geckoview.SessionFinder
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -226,30 +235,16 @@ class GeckoEngineSessionTest {
 
     @Test
     fun testSaveState() {
+        ThreadUtils.sGeckoHandler = Handler()
+
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         engineSession.geckoSession = mock(GeckoSession::class.java)
         val currentState = GeckoSession.SessionState("")
         val stateMap = mapOf(GeckoEngineSession.GECKO_STATE_KEY to currentState.toString())
 
-        `when`(engineSession.geckoSession.saveState(any())).thenAnswer { inv ->
-            (inv.arguments[0] as GeckoResponse<GeckoSession.SessionState>).respond(currentState)
-        }
+        `when`(engineSession.geckoSession.saveState()).thenReturn(GeckoResult.fromValue(currentState))
 
         assertEquals(stateMap, engineSession.saveState())
-    }
-
-    @Test
-    fun testSaveStateThrowsExceptionOnNullResult() {
-        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
-        engineSession.geckoSession = mock(GeckoSession::class.java)
-        `when`(engineSession.geckoSession.saveState(any())).thenAnswer { inv ->
-            (inv.arguments[0] as GeckoResponse<GeckoSession.SessionState>).respond(null)
-        }
-
-        try {
-            engineSession.saveState()
-            fail("Expected GeckoEngineException")
-        } catch (e: GeckoEngineException) { }
     }
 
     @Test
@@ -386,9 +381,80 @@ class GeckoEngineSessionTest {
         assertTrue(privateEngineSession.geckoSession.settings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE))
     }
 
-    @Test(expected = UnsupportedOperationException::class)
-    fun testSettings() {
-        GeckoEngineSession(mock(GeckoRuntime::class.java)).settings
+    @Test
+    fun testUnsupportedSettings() {
+        val settings = GeckoEngineSession(mock(GeckoRuntime::class.java)).settings
+
+        expectException(UnsupportedSettingException::class) {
+            settings.javascriptEnabled = true
+        }
+
+        expectException(UnsupportedSettingException::class) {
+            settings.domStorageEnabled = false
+        }
+
+        expectException(UnsupportedSettingException::class) {
+            settings.trackingProtectionPolicy = TrackingProtectionPolicy.all()
+        }
+    }
+
+    @Test
+    fun testSettingRequestInterceptor() {
+        var interceptorCalledWithUri: String? = null
+
+        val interceptor = object : RequestInterceptor {
+            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+                interceptorCalledWithUri = uri
+                return RequestInterceptor.InterceptionResponse("<h1>Hello World</h1>")
+            }
+        }
+
+        val defaultSettings = DefaultSettings(requestInterceptor = interceptor)
+
+        val engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
+        engineSession.geckoSession = Mockito.spy(engineSession.geckoSession)
+
+        engineSession.geckoSession.navigationDelegate.onLoadRequest(
+            engineSession.geckoSession, "sample:about", 0, 0)
+
+        assertEquals("sample:about", interceptorCalledWithUri!!)
+        verify(engineSession.geckoSession).loadString("<h1>Hello World</h1>", "text/html")
+    }
+
+    @Test
+    fun testOnLoadRequestWithoutInterceptor() {
+        val defaultSettings = DefaultSettings()
+
+        val engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
+        engineSession.geckoSession = Mockito.spy(engineSession.geckoSession)
+
+        engineSession.geckoSession.navigationDelegate.onLoadRequest(
+            engineSession.geckoSession, "sample:about", 0, 0)
+
+        verify(engineSession.geckoSession, Mockito.never()).loadString(anyString(), anyString())
+    }
+
+    @Test
+    fun testOnLoadRequestWithInterceptorThatDoesNotIntercept() {
+        var interceptorCalledWithUri: String? = null
+
+        val interceptor = object : RequestInterceptor {
+            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+                interceptorCalledWithUri = uri
+                return null
+            }
+        }
+
+        val defaultSettings = DefaultSettings(requestInterceptor = interceptor)
+
+        val engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
+        engineSession.geckoSession = Mockito.spy(engineSession.geckoSession)
+
+        engineSession.geckoSession.navigationDelegate.onLoadRequest(
+            engineSession.geckoSession, "sample:about", 0, 0)
+
+        assertEquals("sample:about", interceptorCalledWithUri!!)
+        verify(engineSession.geckoSession, Mockito.never()).loadString(anyString(), anyString())
     }
 
     @Test
@@ -462,5 +528,82 @@ class GeckoEngineSessionTest {
 
         result = engineSession.handleLongClick(null, ELEMENT_TYPE_NONE, null)
         assertNull(result)
+    }
+
+    @Test
+    fun testFindAll() {
+        val finderResult = mock(GeckoSession.FinderResult::class.java)
+        val sessionFinder = mock(SessionFinder::class.java)
+        `when`(sessionFinder.find("mozilla", 0)).thenReturn(GeckoResult.fromValue(finderResult))
+
+        val geckoSession = mock(GeckoSession::class.java)
+        `when`(geckoSession.finder).thenReturn(sessionFinder)
+
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        engineSession.geckoSession = geckoSession
+
+        var findObserved: String? = null
+        var findResultObserved = false
+        engineSession.register(object : EngineSession.Observer {
+            override fun onFind(text: String) {
+                findObserved = text
+            }
+
+            override fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) {
+                assertEquals(0, activeMatchOrdinal)
+                assertEquals(0, numberOfMatches)
+                assertTrue(isDoneCounting)
+                findResultObserved = true
+            }
+        })
+
+        engineSession.findAll("mozilla")
+        assertEquals("mozilla", findObserved)
+        assertTrue(findResultObserved)
+        verify(sessionFinder).find("mozilla", 0)
+    }
+
+    @Test
+    fun testFindNext() {
+        val finderResult = mock(GeckoSession.FinderResult::class.java)
+        val sessionFinder = mock(SessionFinder::class.java)
+        `when`(sessionFinder.find(eq(null), anyInt())).thenReturn(GeckoResult.fromValue(finderResult))
+
+        val geckoSession = mock(GeckoSession::class.java)
+        `when`(geckoSession.finder).thenReturn(sessionFinder)
+
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        engineSession.geckoSession = geckoSession
+
+        var findResultObserved = false
+        engineSession.register(object : EngineSession.Observer {
+            override fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) {
+                assertEquals(0, activeMatchOrdinal)
+                assertEquals(0, numberOfMatches)
+                assertTrue(isDoneCounting)
+                findResultObserved = true
+            }
+        })
+
+        engineSession.findNext(true)
+        assertTrue(findResultObserved)
+        verify(sessionFinder).find(null, 0)
+
+        engineSession.findNext(false)
+        assertTrue(findResultObserved)
+        verify(sessionFinder).find(null, GeckoSession.FINDER_FIND_BACKWARDS)
+    }
+
+    @Test
+    fun testClearFindMatches() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        var clearMatchesReceived = false
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
+                BundleEventListener { _, _, _ -> clearMatchesReceived = true },
+                "GeckoView:ClearMatches"
+        )
+
+        engineSession.clearFindMatches()
+        assertTrue(clearMatchesReceived)
     }
 }

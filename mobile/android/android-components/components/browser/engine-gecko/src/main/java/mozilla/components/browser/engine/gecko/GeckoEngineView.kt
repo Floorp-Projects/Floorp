@@ -20,7 +20,15 @@ class GeckoEngineView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView {
 
-    internal var currentGeckoView = GeckoView(context)
+    internal var currentGeckoView = object : GeckoView(context) {
+        override fun onDetachedFromWindow() {
+            // We are releasing the session before GeckoView gets detached from the window. Otherwise
+            // GeckoView will close the session automatically and we do not want that.
+            releaseSession()
+
+            super.onDetachedFromWindow()
+        }
+    }
 
     init {
         // Currently this is just a FrameLayout with a single GeckoView instance. Eventually this
@@ -35,6 +43,12 @@ class GeckoEngineView @JvmOverloads constructor(
         val internalSession = session as GeckoEngineSession
 
         if (currentGeckoView.session != internalSession.geckoSession) {
+            currentGeckoView.session?.let {
+                // Release a previously assigned session. Otherwise GeckoView will close it
+                // automatically.
+                currentGeckoView.releaseSession()
+            }
+
             currentGeckoView.session = internalSession.geckoSession
         }
     }
