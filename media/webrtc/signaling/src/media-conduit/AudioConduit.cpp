@@ -226,12 +226,9 @@ bool WebrtcAudioConduit::GetAVStats(int32_t* jitterBufferDelayMs,
 bool WebrtcAudioConduit::GetRTPStats(unsigned int* jitterMs,
                                      unsigned int* cumulativeLost) {
   ASSERT_ON_THREAD(mStsThread);
-  unsigned int maxJitterMs = 0;
-  unsigned int discardedPackets;
   *jitterMs = 0;
   *cumulativeLost = 0;
-  return !mSendChannelProxy->GetRTPStatistics(*jitterMs, maxJitterMs,
-                                              discardedPackets, *cumulativeLost);
+  return !mSendChannelProxy->GetRTPStatistics(*jitterMs, *cumulativeLost);
 }
 
 DOMHighResTimeStamp
