@@ -115,7 +115,7 @@ nsStructuredCloneContainer::DeserializeToVariant(JSContext* aCx,
 
   // Now wrap the JS::Value as an nsIVariant.
   nsCOMPtr<nsIVariant> varStateObj;
-  nsCOMPtr<nsIXPConnect> xpconnect = do_GetService(nsIXPConnect::GetCID());
+  nsCOMPtr<nsIXPConnect> xpconnect = nsIXPConnect::XPConnect();
   NS_ENSURE_STATE(xpconnect);
   xpconnect->JSValToVariant(aCx, jsStateObj, getter_AddRefs(varStateObj));
   NS_ENSURE_STATE(varStateObj);

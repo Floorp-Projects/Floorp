@@ -37,8 +37,7 @@ JSDebugger::~JSDebugger()
 NS_IMETHODIMP
 JSDebugger::AddClass(JS::Handle<JS::Value> global, JSContext* cx)
 {
-  nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
+  nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
 
   if (!global.isObject()) {
     return NS_ERROR_INVALID_ARG;
