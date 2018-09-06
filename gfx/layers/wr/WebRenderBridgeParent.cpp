@@ -783,7 +783,9 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     sender.emplace(mApi, &txn);
   }
 
-  ProcessWebRenderParentCommands(aCommands, txn);
+  if (!ProcessWebRenderParentCommands(aCommands, txn)) {
+    return IPC_FAIL(this, "Invalid parent command found");
+  }
 
   if (!UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, txn)) {
     return IPC_FAIL(this, "Failed to deserialize resource updates");
@@ -883,7 +885,9 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     wr::TransactionBuilder txn;
     wr::Epoch wrEpoch = GetNextWrEpoch();
     txn.UpdateEpoch(mPipelineId, wrEpoch);
-    ProcessWebRenderParentCommands(aCommands, txn);
+    if (!ProcessWebRenderParentCommands(aCommands, txn)) {
+      return IPC_FAIL(this, "Invalid parent command found");
+    }
     mApi->SendTransaction(txn);
     scheduleComposite = true;
   }
@@ -942,12 +946,14 @@ WebRenderBridgeParent::RecvParentCommands(nsTArray<WebRenderParentCommand>&& aCo
     return IPC_OK();
   }
   wr::TransactionBuilder txn;
-  ProcessWebRenderParentCommands(aCommands, txn);
+  if (!ProcessWebRenderParentCommands(aCommands, txn)) {
+    return IPC_FAIL(this, "Invalid parent command found");
+  }
   mApi->SendTransaction(txn);
   return IPC_OK();
 }
 
-void
+bool
 WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
                                                       wr::TransactionBuilder& aTxn)
 {
@@ -1002,6 +1008,11 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
       case WebRenderParentCommand::TOpAddCompositorAnimations: {
         const OpAddCompositorAnimations& op = cmd.get_OpAddCompositorAnimations();
         CompositorAnimations data(std::move(op.data()));
+        // AnimationHelper::GetNextCompositorAnimationsId() encodes the child process PID
+        // in the upper 32 bits of the id, verify that this is as expected.
+        if ((data.id() >> 32) != (uint64_t)OtherPid()) {
+          return false;
+        }
         if (data.animations().Length()) {
           mAnimStorage->SetAnimations(data.id(), data.animations());
           mActiveAnimations.insert(data.id());
@@ -1014,6 +1025,7 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
       }
     }
   }
+  return true;
 }
 
 void

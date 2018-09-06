@@ -428,7 +428,7 @@ pref("browser.link.open_newwindow.disabled_in_fullscreen", false);
 #endif
 
 // Tabbed browser
-#if defined(NIGHTLY_BUILD)
+#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.tabs.multiselect", true);
 #else
 pref("browser.tabs.multiselect", false);
