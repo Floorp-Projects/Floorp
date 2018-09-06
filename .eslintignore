@@ -135,7 +135,6 @@ devtools/shared/css/generated/properties-db.js
 # Ignore devtools third-party libs
 devtools/shared/jsbeautify/*
 devtools/shared/acorn/*
-devtools/shared/gcli/source/*
 devtools/shared/node-properties/*
 devtools/shared/pretty-fast/*
 devtools/shared/sourcemap/*

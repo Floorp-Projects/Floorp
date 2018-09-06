@@ -137,7 +137,7 @@ window.getViewportSize = () => {
 };
 
 /**
- * Called by manager.js to set viewport size from tests, GCLI, etc.
+ * Called by manager.js to set viewport size from tests, etc.
  */
 window.setViewportSize = ({ width, height }) => {
   try {
