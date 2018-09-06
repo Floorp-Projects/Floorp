@@ -28,7 +28,7 @@ var WindowListener = {
         break;
       }
 
-      ChromeUtils.import("chrome://reftest/content/reftest.jsm");
+      ChromeUtils.import("resource://reftest/reftest.jsm");
       win.addEventListener("pageshow", function() {
         // Add setTimeout here because windows.innerWidth/Height are not set yet.
         win.setTimeout(function() {OnRefTestLoad(win);}, 0);
@@ -43,6 +43,11 @@ function startup(data, reason) {
     Services.wm.addListener(WindowListener);
     return;
   }
+
+  let resProto = Cc["@mozilla.org/network/protocol;1?name=resource"]
+                             .getService(Ci.nsISubstitutingProtocolHandler);
+  let uri = Services.io.newURI("chrome/reftest/res/", null, data.resourceURI);
+  resProto.setSubstitutionWithFlags("reftest", uri, resProto.ALLOW_CONTENT_ACCESS);
 
   let orig = Services.wm.getMostRecentWindow("navigator:browser");
 
@@ -59,7 +64,7 @@ function startup(data, reason) {
     // Close pre-existing window
     orig.close();
 
-    ChromeUtils.import("chrome://reftest/content/PerTestCoverageUtils.jsm");
+    ChromeUtils.import("resource://reftest/PerTestCoverageUtils.jsm");
     if (PerTestCoverageUtils.enabled) {
       // In PerTestCoverage mode, wait for the process belonging to the window we just closed
       // to be terminated, to avoid its shutdown interfering when we reset the counters.
@@ -77,7 +82,7 @@ function shutdown(data, reason) {
     Services.wm.removeListener(WindowListener);
     Cm.removedBootstrappedManifestLocation(data.installPath);
     OnRefTestUnload();
-    Cu.unload("chrome://reftest/content/reftest.jsm");
+    Cu.unload("resource://reftest/reftest.jsm");
   }
 }
 
