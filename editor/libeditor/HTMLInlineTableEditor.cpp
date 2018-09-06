@@ -181,7 +181,8 @@ HTMLEditor::DoInlineTableEditingAction(const Element& aElement)
   if (hideUI) {
     HideInlineTableEditingUI();
     if (hideResizersWithInlineTableUI) {
-      HideResizers();
+      DebugOnly<nsresult> rv = HideResizersInternal();
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to hide resizers");
     }
   }
 
