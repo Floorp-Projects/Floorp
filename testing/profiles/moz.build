@@ -8,6 +8,7 @@ profile_files = [
     'common/*',
     'perf/*',
     'profiles.json',
+    'profileserver/*',
     'reftest/*',
     'unittest/*',
     'web-platform/*'
