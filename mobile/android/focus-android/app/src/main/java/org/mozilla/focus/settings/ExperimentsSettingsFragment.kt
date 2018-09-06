@@ -9,8 +9,9 @@ import android.os.Bundle
 import android.support.v7.preference.PreferenceFragmentCompat
 import android.support.v7.preference.SwitchPreferenceCompat
 import com.jakewharton.processphoenix.ProcessPhoenix
+import kotlinx.coroutines.experimental.launch
+import org.mozilla.focus.IO
 import org.mozilla.focus.R
-import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.app
 import org.mozilla.focus.utils.geckoEngineExperimentDescriptor
@@ -39,21 +40,22 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(),
     override fun onPause() {
         super.onPause()
         preferenceScreen?.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
-        if (AppConstants.isGeckoBuild != enginePref?.isChecked) {
-            val launcherIntent = activity?.packageManager?.getLaunchIntentForPackage(activity!!.packageName)
-            ProcessPhoenix.triggerRebirth(context, launcherIntent)
-        } else {
-            SessionManager.getInstance().removeAllSessions()
-        }
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             ENGINE_PREF_STRING_KEY -> {
                 val newValue = sharedPreferences!!.getBoolean(key, Config.DEFAULT_NEW_RENDERER)
-                activity!!.app.fretboard.setOverride(
-                    activity!!.app, geckoEngineExperimentDescriptor, newValue
-                )
+                if (AppConstants.isGeckoBuild != newValue) {
+                    val app = activity!!.app
+                    launch(IO) {
+                        activity!!.app.fretboard.setOverrideNow(
+                            activity!!.app, geckoEngineExperimentDescriptor, newValue
+                        )
+                        val launcherIntent = app.packageManager?.getLaunchIntentForPackage(app.packageName)
+                        ProcessPhoenix.triggerRebirth(app, launcherIntent)
+                    }
+                }
             }
         }
     }
