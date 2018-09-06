@@ -44,8 +44,9 @@ struct BinaryASTSupport {
         }
 #ifdef DEBUG
         void dump() const {
-            for (auto c: *this)
+            for (auto c: *this) {
                 fprintf(stderr, "%c", c);
+            }
 
             fprintf(stderr, " (%d)", byteLen_);
         }
@@ -56,8 +57,9 @@ struct BinaryASTSupport {
             return mozilla::HashString(l.start_, l.byteLen_);
         }
         static bool match(const Lookup key, Lookup lookup) {
-            if (key.byteLen_ != lookup.byteLen_)
+            if (key.byteLen_ != lookup.byteLen_) {
                 return false;
+            }
             return strncmp(key.start_, lookup.start_, key.byteLen_) == 0;
         }
     };
