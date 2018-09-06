@@ -112,6 +112,7 @@ struct BlobItemData
   Matrix mMatrix; // updated to track the current transform to device space
   Matrix4x4Flagged mTransform; // only used with nsDisplayTransform items to detect transform changes
   float mOpacity; // only used with nsDisplayOpacity items to detect change to opacity
+  RefPtr<BasicLayerManager> mLayerManager;
 
   IntRect mImageRect;
   LayerIntPoint mGroupOffset;
@@ -449,7 +450,7 @@ struct DIGroup
       GP("mRect %d %d %d %d\n", aData->mRect.x, aData->mRect.y, aData->mRect.width, aData->mRect.height);
       InvalidateRect(aData->mRect);
       aData->mInvalid = true;
-    } else if (/*aData->mIsInvalid || XXX: handle image load invalidation */ (aItem->IsInvalid(invalid) && invalid.IsEmpty())) {
+    } else if (aData->mInvalid || /* XXX: handle image load invalidation */ (aItem->IsInvalid(invalid) && invalid.IsEmpty())) {
       MOZ_RELEASE_ASSERT(imageRect.IsEqualEdges(aData->mImageRect));
       MOZ_RELEASE_ASSERT(mLayerBounds.TopLeft() == aData->mGroupOffset);
       UniquePtr<nsDisplayItemGeometry> geometry(aItem->AllocateGeometry(aBuilder));
@@ -806,6 +807,32 @@ struct DIGroup
   }
 };
 
+// If we have an item we need to make sure it matches the current group
+// otherwise it means the item switched groups and we need to invalidate
+// it and recreate the data.
+static BlobItemData*
+GetBlobItemDataForGroup(nsDisplayItem* aItem, DIGroup* aGroup)
+{
+  BlobItemData* data = GetBlobItemData(aItem);
+  if (data) {
+    MOZ_RELEASE_ASSERT(data->mGroup->mDisplayItems.Contains(data));
+    if (data->mGroup != aGroup) {
+      GP("group don't match %p %p\n", data->mGroup, aGroup);
+      data->ClearFrame();
+      // the item is for another group
+      // it should be cleared out as being unused at the end of this paint
+      data = nullptr;
+    }
+  }
+  if (!data) {
+    GP("Allocating blob data\n");
+    data = new BlobItemData(aGroup, aItem);
+    aGroup->mDisplayItems.PutEntry(data);
+  }
+  data->mUsed = true;
+  return data;
+}
+
 void
 Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect& aItemBounds,
                             nsDisplayList* aChildren, gfxContext* aContext,
@@ -872,26 +899,32 @@ Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect
       GP("Paint Mask\n");
       // We don't currently support doing invalidation inside nsDisplayMask
       // for now just paint it as a single item
-      gfx::Size scale(1, 1);
-      RefPtr<BasicLayerManager> blm = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
-      PaintByLayer(aItem, mDisplayListBuilder, blm, aContext, scale, [&]() {
-                   static_cast<nsDisplayMask*>(aItem)->PaintAsLayer(mDisplayListBuilder,
-                                                                    aContext, blm);
-                   });
-      aContext->GetDrawTarget()->FlushItem(aItemBounds);
+      BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
+      if (data->mLayerManager->GetRoot()) {
+        data->mLayerManager->BeginTransaction();
+        static_cast<nsDisplayMask*>(aItem)->PaintAsLayer(mDisplayListBuilder,
+                                                       aContext, data->mLayerManager);
+        if (data->mLayerManager->InTransaction()) {
+          data->mLayerManager->AbortTransaction();
+        }
+        aContext->GetDrawTarget()->FlushItem(aItemBounds);
+      }
       break;
     }
     case DisplayItemType::TYPE_FILTER: {
       GP("Paint Filter\n");
       // We don't currently support doing invalidation inside nsDisplayFilter
       // for now just paint it as a single item
-      RefPtr<BasicLayerManager> blm = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
-      gfx::Size scale(1, 1);
-      PaintByLayer(aItem, mDisplayListBuilder, blm, aContext, scale, [&]() {
-                   static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(mDisplayListBuilder,
-                                                                      aContext, blm);
-                   });
-      aContext->GetDrawTarget()->FlushItem(aItemBounds);
+      BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
+      if (data->mLayerManager->GetRoot()) {
+        data->mLayerManager->BeginTransaction();
+        static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(mDisplayListBuilder,
+                                                           aContext, data->mLayerManager);
+        if (data->mLayerManager->InTransaction()) {
+          data->mLayerManager->AbortTransaction();
+        }
+        aContext->GetDrawTarget()->FlushItem(aItemBounds);
+      }
       break;
     }
 
@@ -963,32 +996,6 @@ IsItemProbablyActive(nsDisplayItem* aItem, nsDisplayListBuilder* aDisplayListBui
     // TODO: handle other items?
     return false;
   }
-}
-
-// If we have an item we need to make sure it matches the current group
-// otherwise it means the item switched groups and we need to invalidate
-// it and recreate the data.
-static BlobItemData*
-GetBlobItemDataForGroup(nsDisplayItem* aItem, DIGroup* aGroup)
-{
-  BlobItemData* data = GetBlobItemData(aItem);
-  if (data) {
-    MOZ_RELEASE_ASSERT(data->mGroup->mDisplayItems.Contains(data));
-    if (data->mGroup != aGroup) {
-      GP("group don't match %p %p\n", data->mGroup, aGroup);
-      data->ClearFrame();
-      // the item is for another group
-      // it should be cleared out as being unused at the end of this paint
-      data = nullptr;
-    }
-  }
-  if (!data) {
-    GP("Allocating blob data\n");
-    data = new BlobItemData(aGroup, aItem);
-    aGroup->mDisplayItems.PutEntry(data);
-  }
-  data->mUsed = true;
-  return data;
 }
 
 // This does a pass over the display lists and will join the display items
@@ -1076,6 +1083,10 @@ Grouper::ConstructGroupInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
   }
 }
 
+bool BuildLayer(nsDisplayItem* aItem, BlobItemData* aData,
+                nsDisplayListBuilder* aDisplayListBuilder,
+                const gfx::Size& aScale);
+
 void
 Grouper::ConstructItemInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
                                      wr::DisplayListBuilder& aBuilder,
@@ -1084,8 +1095,15 @@ Grouper::ConstructItemInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
                                      const StackingContextHelper& aSc)
 {
   nsDisplayList* children = aItem->GetChildren();
+  BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
 
-  if (aItem->GetType() == DisplayItemType::TYPE_TRANSFORM) {
+  if (aItem->GetType() == DisplayItemType::TYPE_FILTER ||
+      aItem->GetType() == DisplayItemType::TYPE_MASK) {
+    gfx::Size scale(1, 1);
+    // If ComputeDifferences finds any change, we invalidate the entire container item.
+    // This is needed because blob merging requires the entire item to be within the invalid region.
+    data->mInvalid = BuildLayer(aItem, data, mDisplayListBuilder, scale);
+  } else if (aItem->GetType() == DisplayItemType::TYPE_TRANSFORM) {
     nsDisplayTransform* transformItem = static_cast<nsDisplayTransform*>(aItem);
     const Matrix4x4Flagged& t = transformItem->GetTransform();
     Matrix t2d;
@@ -1101,12 +1119,13 @@ Grouper::ConstructItemInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
 
     mTransform = m;
   } else if (children) {
+    sIndent++;
     ConstructGroupInsideInactive(aCommandBuilder, aBuilder, aResources, aGroup, children, aSc);
+    sIndent--;
   }
 
   GP("Including %s of %d\n", aItem->Name(), aGroup->mDisplayItems.Count());
 
-  BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
   aGroup->ComputeGeometryChange(aItem, data, mTransform, mDisplayListBuilder); // we compute the geometry change here because we have the transform around still
 }
 
@@ -1554,6 +1573,50 @@ WebRenderCommandBuilder::PushImage(nsDisplayItem* aItem,
   aBuilder.PushImage(r, r, !aItem->BackfaceIsHidden(), wr::ToImageRendering(sampleFilter), key.value());
 
   return true;
+}
+
+bool
+BuildLayer(nsDisplayItem* aItem,
+           BlobItemData* aData,
+           nsDisplayListBuilder* aDisplayListBuilder,
+           const gfx::Size& aScale)
+{
+  if (!aData->mLayerManager) {
+    aData->mLayerManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
+  }
+  RefPtr<BasicLayerManager> blm = aData->mLayerManager;
+  UniquePtr<LayerProperties> props;
+  if (blm->GetRoot()) {
+    props = LayerProperties::CloneFrom(blm->GetRoot());
+  }
+  FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
+  layerBuilder->Init(aDisplayListBuilder, blm, nullptr, true);
+  layerBuilder->DidBeginRetainedLayerTransaction(blm);
+
+  blm->BeginTransaction();
+  bool isInvalidated = false;
+
+  ContainerLayerParameters param(aScale.width, aScale.height);
+  RefPtr<Layer> root = aItem->BuildLayer(aDisplayListBuilder, blm, param);
+
+  if (root) {
+    blm->SetRoot(root);
+    layerBuilder->WillEndTransaction();
+
+    // Check if there is any invalidation region.
+    nsIntRegion invalid;
+    if (props) {
+      props->ComputeDifferences(root, invalid, nullptr);
+      if (!invalid.IsEmpty()) {
+        isInvalidated = true;
+      }
+    } else {
+      isInvalidated = true;
+    }
+  }
+  blm->AbortTransaction();
+
+  return isInvalidated;
 }
 
 static bool
