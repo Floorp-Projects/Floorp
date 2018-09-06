@@ -96,32 +96,41 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         (if (isCustomTabMode)
             sessionManager.customTabSessions
         else
-            sessionManager.sessions).observe(this, object : NonNullObserver<List<Session>>() {
-            private var wasSessionsEmpty = false
+            sessionManager.sessions).observe(this, createSessionObserver())
+    }
 
-            public override fun onValueChanged(t: List<Session>) {
-                if (t.isEmpty()) {
-                    // There's no active session. Show the URL input screen so that the user can
-                    // start a new session.
-                    showUrlInputScreen()
-                    wasSessionsEmpty = true
+    private fun createSessionObserver() = object : NonNullObserver<List<Session>>() {
+        private var wasSessionsEmpty = false
+
+        public override fun onValueChanged(t: List<Session>) {
+            // If needed show the first run tour on top of the browser or url input fragment.
+            val showFirstrun = Settings.getInstance(this@MainActivity).shouldShowFirstrun()
+
+            if (t.isEmpty()) {
+                // There's no active session. Show the URL input screen so that the user can
+                // start a new session.
+                if (showFirstrun) {
+                    showFirstrun()
                 } else {
-                    // This happens when we move from 0 to 1 sessions: either on startup or after an erase.
-                    if (wasSessionsEmpty) {
-                        WebViewProvider.performNewBrowserSessionCleanup()
-                        wasSessionsEmpty = false
-                    }
+                    showUrlInputScreen()
+                }
 
+                wasSessionsEmpty = true
+            } else {
+                // This happens when we move from 0 to 1 sessions: either on startup or after an erase.
+                if (wasSessionsEmpty) {
+                    WebViewProvider.performNewBrowserSessionCleanup()
+                    wasSessionsEmpty = false
+                }
+
+                if (showFirstrun) {
+                    showFirstrun(currentSessionForActivity)
+                } else {
                     // We have at least one session. Show a fragment for the current session.
                     showBrowserScreenForCurrentSession()
                 }
-
-                // If needed show the first run tour on top of the browser or url input fragment.
-                if (Settings.getInstance(this@MainActivity).shouldShowFirstrun()) {
-                    showFirstrun()
-                }
             }
-        })
+        }
     }
 
     override fun applyLocale() {
@@ -235,10 +244,10 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
                 .commit()
     }
 
-    private fun showFirstrun() {
+    private fun showFirstrun(currentSession: Session? = null) {
         supportFragmentManager
                 .beginTransaction()
-                .add(R.id.container, FirstrunFragment.create(), FirstrunFragment.FRAGMENT_TAG)
+                .add(R.id.container, FirstrunFragment.create(currentSession), FirstrunFragment.FRAGMENT_TAG)
                 .commit()
     }
 

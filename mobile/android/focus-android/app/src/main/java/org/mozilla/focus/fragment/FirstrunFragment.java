@@ -21,6 +21,9 @@ import android.view.ViewGroup;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.firstrun.FirstrunPagerAdapter;
+import org.mozilla.focus.session.NullSession;
+import org.mozilla.focus.session.Session;
+import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.StatusBarUtils;
 
@@ -29,8 +32,18 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
 
     public static final String FIRSTRUN_PREF = "firstrun_shown";
 
-    public static FirstrunFragment create() {
-        return new FirstrunFragment();
+    private static final String ARGUMENT_SESSION_UUID = "sessionUUID";
+
+    public static FirstrunFragment create(@Nullable Session currentSession) {
+        String uuid = currentSession != null ? currentSession.getUUID() : null;
+
+        Bundle arguments = new Bundle();
+        arguments.putString(ARGUMENT_SESSION_UUID, uuid);
+
+        FirstrunFragment fragment = new FirstrunFragment();
+        fragment.setArguments(arguments);
+
+        return fragment;
     }
 
     private ViewPager viewPager;
@@ -100,12 +113,6 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
         final TabLayout tabLayout = view.findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager, true);
 
-        final FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-        final UrlInputFragment urlInputFragment = (UrlInputFragment) fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG);
-        if (urlInputFragment != null) {
-            fragmentManager.beginTransaction().detach(urlInputFragment).commit();
-        }
-
         return view;
     }
 
@@ -139,15 +146,28 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
                 .putBoolean(FIRSTRUN_PREF, true)
                 .apply();
 
+        @Nullable String sessionUUID = getArguments().getString(ARGUMENT_SESSION_UUID);
+        SessionManager sessionManager = SessionManager.getInstance();
+
+        Fragment fragment;
+        if (sessionUUID == null) {
+            fragment = UrlInputFragment.createWithoutSession();
+        } else {
+            Session session;
+
+            if (sessionManager.hasSessionWithUUID(sessionUUID)) {
+                session = sessionManager.getSessionByUUID(sessionUUID);
+            } else {
+                session = new NullSession();
+            }
+
+            fragment =  BrowserFragment.createForSession(session);
+        }
+
         fragmentManager
                 .beginTransaction()
-                .remove(this)
+                .replace(R.id.container, fragment, UrlInputFragment.FRAGMENT_TAG)
                 .commit();
-
-        final UrlInputFragment inputFragment = (UrlInputFragment) fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG);
-        if (inputFragment != null) {
-            fragmentManager.beginTransaction().attach(inputFragment).commit();
-        }
     }
 
     @Override

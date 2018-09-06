@@ -1348,6 +1348,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         private const val REQUEST_CODE_ADD_TO_HOMESCREEN_DIALOG = 301
         private const val REQUEST_CODE_BIOMETRIC_PROMPT = 302
 
+        @JvmStatic
         fun createForSession(session: Session): BrowserFragment {
             val arguments = Bundle()
             arguments.putString(ARGUMENT_SESSION_UUID, session.uuid)
