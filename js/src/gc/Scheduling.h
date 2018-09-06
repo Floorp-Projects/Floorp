@@ -536,11 +536,13 @@ class MemoryCounter
     void adopt(MemoryCounter& other);
 
     TriggerKind shouldTriggerGC(const GCSchedulingTunables& tunables) const {
-        if (MOZ_LIKELY(bytes_ < maxBytes_ * tunables.allocThresholdFactor()))
+        if (MOZ_LIKELY(bytes_ < maxBytes_ * tunables.allocThresholdFactor())) {
             return NoTrigger;
+        }
 
-        if (bytes_ < maxBytes_)
+        if (bytes_ < maxBytes_) {
             return IncrementalTrigger;
+        }
 
         return NonIncrementalTrigger;
     }
