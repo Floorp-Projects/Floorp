@@ -147,6 +147,7 @@ class GeckoWebViewProvider : IWebViewProvider {
             val settings = GeckoSessionSettings()
             settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, true)
             settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true)
+            settings.setBoolean(GeckoSessionSettings.SUSPEND_MEDIA_WHEN_INACTIVE, true)
 
             return GeckoSession(settings)
         }
