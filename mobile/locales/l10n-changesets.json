@@ -81,7 +81,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "795b8c806461"
+        "revision": "c8f1e441203e"
     },
     "cy": {
         "platforms": [
@@ -105,7 +105,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "c5b475e86f12"
+        "revision": "c5fcdb6cd7fa"
     },
     "el": {
         "platforms": [
@@ -273,7 +273,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "b82684390b9a"
+        "revision": "57fa7e85f9fc"
     },
     "is": {
         "platforms": [
@@ -285,7 +285,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "453a5b0559ef"
+        "revision": "de0d8e770ae5"
     },
     "ja": {
         "platforms": [
@@ -303,7 +303,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "39c34aaa1fb2"
+        "revision": "b640dc73d606"
     },
     "kk": {
         "platforms": [
@@ -351,7 +351,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "25ba63467b52"
+        "revision": "4f0a3e80468e"
     },
     "ml": {
         "platforms": [
@@ -567,7 +567,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "f8bca8d15410"
+        "revision": "adf3b82c7a9f"
     },
     "zh-TW": {
         "platforms": [
