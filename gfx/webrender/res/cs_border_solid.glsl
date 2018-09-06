@@ -13,7 +13,7 @@ flat varying vec4 vColor1;
 // transition occurs. Used for corners only.
 flat varying vec4 vColorLine;
 
-// x = segment, z = edge axes, w = clip mode
+// x = segment, z = edge axes
 flat varying ivec4 vConfig;
 
 // xy = Local space position of the clip center.
@@ -46,10 +46,6 @@ varying vec2 vPos;
 #define SEGMENT_TOP             5
 #define SEGMENT_RIGHT           6
 #define SEGMENT_BOTTOM          7
-
-#define CLIP_NONE   0
-#define CLIP_DASH   1
-#define CLIP_DOT    2
 
 #ifdef WR_VERTEX_SHADER
 
@@ -90,7 +86,6 @@ vec2 get_outer_corner_scale(int segment) {
 
 void main(void) {
     int segment = aFlags & 0xff;
-    int clip_mode = (aFlags >> 24) & 0xff;
 
     vec2 outer_scale = get_outer_corner_scale(segment);
     vec2 outer = outer_scale * aRect.zw;
@@ -136,7 +131,7 @@ void main(void) {
         segment,
         0,
         edge_axis.x | (edge_axis.y << 16),
-        clip_mode
+        0
     );
     vPartialWidths = vec4(aWidths / 3.0, aWidths / 2.0);
     vPos = aRect.zw * aPosition.xy;
@@ -150,18 +145,6 @@ void main(void) {
     vClipParams1 = aClipParams1;
     vClipParams2 = aClipParams2;
 
-    // For the case of dot clips, optimize the number of pixels that
-    // are hit to just include the dot itself.
-    // TODO(gw): We should do something similar in the future for
-    //           dash clips!
-    if (clip_mode == CLIP_DOT) {
-        // Expand by a small amount to allow room for AA around
-        // the dot.
-        float expanded_radius = aClipParams1.z + 2.0;
-        vPos = vClipParams1.xy + expanded_radius * (2.0 * aPosition.xy - 1.0);
-        vPos = clamp(vPos, vec2(0.0), aRect.zw);
-    }
-
     gl_Position = uTransform * vec4(aTaskOrigin + aRect.xy + vPos, 0.0, 1.0);
 }
 #endif
@@ -173,7 +156,6 @@ void main(void) {
 
     int segment = vConfig.x;
     ivec2 edge_axis = ivec2(vConfig.z & 0xffff, vConfig.z >> 16);
-    int clip_mode = vConfig.w;
 
     float mix_factor = 0.0;
     if (edge_axis.x != edge_axis.y) {
@@ -184,36 +166,12 @@ void main(void) {
     // Check if inside corner clip-region
     vec2 clip_relative_pos = vPos - vClipCenter_Sign.xy;
     bool in_clip_region = all(lessThan(vClipCenter_Sign.zw * clip_relative_pos, vec2(0.0)));
+
     float d = -1.0;
-
-    switch (clip_mode) {
-        case CLIP_DOT: {
-            // Set clip distance based or dot position and radius.
-            d = distance(vClipParams1.xy, vPos) - vClipParams1.z;
-            break;
-        }
-        case CLIP_DASH: {
-            // Get SDF for the two line/tangent clip lines,
-            // do SDF subtract to get clip distance.
-            float d0 = distance_to_line(vClipParams1.xy,
-                                        vClipParams1.zw,
-                                        vPos);
-            float d1 = distance_to_line(vClipParams2.xy,
-                                        vClipParams2.zw,
-                                        vPos);
-            d = max(d0, -d1);
-            break;
-        }
-        case CLIP_NONE:
-        default:
-            break;
-    }
-
     if (in_clip_region) {
         float d_radii_a = distance_to_ellipse(clip_relative_pos, vClipRadii.xy, aa_range);
         float d_radii_b = distance_to_ellipse(clip_relative_pos, vClipRadii.zw, aa_range);
-        float d_radii = max(d_radii_a, -d_radii_b);
-        d = max(d, d_radii);
+        d = max(d_radii_a, -d_radii_b);
     }
 
     float alpha = distance_aa(aa_range, d);
