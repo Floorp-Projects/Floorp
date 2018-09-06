@@ -16,7 +16,7 @@
 
 using namespace mozilla;
 
-class nsSVGAFrame : public nsSVGDisplayContainerFrame
+class nsSVGAFrame final : public nsSVGDisplayContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGAFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);

@@ -22,9 +22,9 @@ class DataTransfer;
 } // namespace dom
 } // namespace mozilla
 
-class nsFileControlFrame : public nsBlockFrame,
-                           public nsIFormControlFrame,
-                           public nsIAnonymousContentCreator
+class nsFileControlFrame final : public nsBlockFrame,
+                                 public nsIFormControlFrame,
+                                 public nsIAnonymousContentCreator
 {
 public:
   explicit nsFileControlFrame(ComputedStyle* aStyle);

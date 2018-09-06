@@ -13,8 +13,8 @@
 #include "nsCOMPtr.h"
 #include "nsCSSPseudoElements.h"
 
-class nsMeterFrame : public nsContainerFrame,
-                     public nsIAnonymousContentCreator
+class nsMeterFrame final : public nsContainerFrame,
+                           public nsIAnonymousContentCreator
 
 {
   typedef mozilla::dom::Element Element;

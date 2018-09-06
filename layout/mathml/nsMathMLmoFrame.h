@@ -15,7 +15,8 @@
 // <mo> -- operator, fence, or separator
 //
 
-class nsMathMLmoFrame : public nsMathMLTokenFrame {
+class nsMathMLmoFrame final : public nsMathMLTokenFrame
+{
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmoFrame)
 

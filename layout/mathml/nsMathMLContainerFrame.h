@@ -401,7 +401,8 @@ private:
 // 2) proper inter-frame spacing
 // 3) firing of Stretch() (in which case FinalizeReflow() would have to be cleaned)
 // Issues: If/when mathml becomes a pluggable component, the separation will be needed.
-class nsMathMLmathBlockFrame : public nsBlockFrame {
+class nsMathMLmathBlockFrame final : public nsBlockFrame
+{
 public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmathBlockFrame)
@@ -483,8 +484,9 @@ protected:
 
 // --------------
 
-class nsMathMLmathInlineFrame : public nsInlineFrame,
-                                public nsMathMLFrame {
+class nsMathMLmathInlineFrame final : public nsInlineFrame,
+                                      public nsMathMLFrame
+{
 public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmathInlineFrame)

@@ -1382,7 +1382,8 @@ struct nsRecessedBorder : public nsStyleBorder {
   }
 };
 
-class nsDisplayAltFeedback : public nsDisplayItem {
+class nsDisplayAltFeedback final : public nsDisplayItem
+{
 public:
   nsDisplayAltFeedback(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame) {}

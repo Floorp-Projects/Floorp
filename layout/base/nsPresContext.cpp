@@ -2174,7 +2174,7 @@ nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont)
   }
 }
 
-class CounterStyleCleaner : public nsAPostRefreshObserver
+class CounterStyleCleaner final : public nsAPostRefreshObserver
 {
 public:
   CounterStyleCleaner(nsRefreshDriver* aRefreshDriver,

@@ -22,7 +22,7 @@ nsresult NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
-class nsFrameTraversal : public nsIFrameTraversal
+class nsFrameTraversal final : public nsIFrameTraversal
 {
 public:
   nsFrameTraversal();
