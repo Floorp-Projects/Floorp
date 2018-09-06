@@ -1509,7 +1509,7 @@ InplaceEditor.prototype = {
         const selectedIndex = autoInsert ? index : -1;
 
         // Open the suggestions popup.
-        this.popup.setItems(finalList);
+        this.popup.setItems(finalList, selectedIndex);
         this._openAutocompletePopup(offset, selectedIndex);
       } else {
         this._hideAutocompletePopup();
