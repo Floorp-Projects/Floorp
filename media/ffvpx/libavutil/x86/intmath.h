@@ -47,8 +47,7 @@ static av_always_inline av_const int ff_log2_x86(unsigned int v)
 #   endif
 #   define ff_log2_16bit av_log2
 
-#if defined(__INTEL_COMPILER) || (defined(_MSC_VER) && (_MSC_VER >= 1700) && \
-                                  (defined(__BMI__) || !defined(__clang__)))
+#if defined(__INTEL_COMPILER) || (defined(_MSC_VER) && (_MSC_VER >= 1700))
 #   define ff_ctz(v) _tzcnt_u32(v)
 
 #   if ARCH_X86_64
