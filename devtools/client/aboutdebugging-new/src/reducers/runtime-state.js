@@ -5,7 +5,6 @@
 "use strict";
 
 const {
-  CONNECT_RUNTIME_SUCCESS,
   DISCONNECT_RUNTIME_SUCCESS,
   REQUEST_EXTENSIONS_SUCCESS,
   REQUEST_TABS_SUCCESS,
@@ -14,7 +13,6 @@ const {
 
 function RuntimeState() {
   return {
-    client: null,
     installedExtensions: [],
     otherWorkers: [],
     serviceWorkers: [],
@@ -26,10 +24,6 @@ function RuntimeState() {
 
 function runtimeReducer(state = RuntimeState(), action) {
   switch (action.type) {
-    case CONNECT_RUNTIME_SUCCESS: {
-      const { client } = action;
-      return Object.assign({}, state, { client });
-    }
     case DISCONNECT_RUNTIME_SUCCESS: {
       return RuntimeState();
     }

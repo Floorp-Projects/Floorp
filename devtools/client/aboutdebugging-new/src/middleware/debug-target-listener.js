@@ -65,7 +65,7 @@ function debugTargetListenerMiddleware(store) {
         break;
       }
       case DISCONNECT_RUNTIME_START: {
-        const { client } = store.getState().runtime;
+        const { client } = action;
         client.removeListener("tabListChanged", onTabsUpdated);
         AddonManager.removeAddonListener(extensionsListener);
         client.removeListener("workerListChanged", onWorkersUpdated);
