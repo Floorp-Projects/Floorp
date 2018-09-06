@@ -101,7 +101,7 @@ To generate the coverage report, we need three things:
   classfiles and the coverage counters as input and generates XML reports as
   output.
 
-The ``mach android archive-geckoview-coverage-artifacts`` command archives the
+The ``mach android archive-coverage-artifacts`` command archives the
 class files and exports the ``jacoco-cli`` jar file after the build is done.
 These files are later saved as public artifacts of the build.
 
