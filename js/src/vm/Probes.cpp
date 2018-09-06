@@ -6,7 +6,7 @@
 
 #include "vm/Probes-inl.h"
 
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "vm/JSContext.h"
 
 #ifdef INCLUDE_MOZILLA_DTRACE
@@ -34,13 +34,14 @@ ScriptFilename(const JSScript* script)
 }
 
 static const char*
-FunctionName(JSContext* cx, JSFunction* fun, JSAutoByteString* bytes)
+FunctionName(JSContext* cx, JSFunction* fun, UniqueChars* bytes)
 {
     if (!fun)
         return probes::nullName;
     if (!fun->displayAtom())
         return probes::anonymousName;
-    return bytes->encodeLatin1(cx, fun->displayAtom()) ? bytes->ptr() : probes::nullName;
+    *bytes = JS_EncodeStringToLatin1(cx, fun->displayAtom());
+    return *bytes ? bytes->get() : probes::nullName;
 }
 
 /*
@@ -53,7 +54,7 @@ FunctionName(JSContext* cx, JSFunction* fun, JSAutoByteString* bytes)
 void
 probes::DTraceEnterJSFun(JSContext* cx, JSFunction* fun, JSScript* script)
 {
-    JSAutoByteString funNameBytes;
+    UniqueChars funNameBytes;
     JAVASCRIPT_FUNCTION_ENTRY(ScriptFilename(script), probes::nullName,
                               FunctionName(cx, fun, &funNameBytes));
 }
@@ -61,7 +62,7 @@ probes::DTraceEnterJSFun(JSContext* cx, JSFunction* fun, JSScript* script)
 void
 probes::DTraceExitJSFun(JSContext* cx, JSFunction* fun, JSScript* script)
 {
-    JSAutoByteString funNameBytes;
+    UniqueChars funNameBytes;
     JAVASCRIPT_FUNCTION_RETURN(ScriptFilename(script), probes::nullName,
                                FunctionName(cx, fun, &funNameBytes));
 }

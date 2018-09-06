@@ -3394,7 +3394,7 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
                 if (!str)
                     return false;
 
-                filename.reset(JS_EncodeString(cx, str));
+                filename = EncodeLatin1(cx, str);
                 if (!filename)
                     return false;
             }

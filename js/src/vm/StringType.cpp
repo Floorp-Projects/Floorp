@@ -17,10 +17,13 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
+#include "jsfriendapi.h"
+
+#include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "gc/Nursery.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/StableStringChars.h"
 #include "js/UbiNode.h"
 #include "util/StringBuffer.h"
@@ -2062,36 +2065,23 @@ js::EncodeLatin1(JSContext* cx, JSString* str)
     return UniqueChars(reinterpret_cast<char*>(buf));
 }
 
-const char*
-js::ValueToPrintableLatin1(JSContext* cx, const Value& vArg, JSAutoByteString* bytes,
-                           bool asSource)
+UniqueChars
+js::IdToPrintableUTF8(JSContext* cx, HandleId id, IdToPrintableBehavior behavior)
 {
-    RootedValue v(cx, vArg);
-    JSString* str;
-    if (asSource)
-        str = ValueToSource(cx, v);
-    else
-        str = ToString<CanGC>(cx, v);
-    if (!str)
-        return nullptr;
-    str = QuoteString(cx, str, 0);
-    if (!str)
-        return nullptr;
-    return bytes->encodeLatin1(cx, str);
-}
+    // ToString(<symbol>) throws a TypeError, therefore require that callers
+    // request source representation when |id| is a property key.
+    MOZ_ASSERT_IF(behavior == IdToPrintableBehavior::IdIsIdentifier,
+                  JSID_IS_ATOM(id) && frontend::IsIdentifier(JSID_TO_ATOM(id)));
 
-const char*
-js::ValueToPrintableUTF8(JSContext* cx, const Value& vArg, JSAutoByteString* bytes, bool asSource)
-{
-    RootedValue v(cx, vArg);
+    RootedValue v(cx, IdToValue(id));
     JSString* str;
-    if (asSource)
+    if (behavior == IdToPrintableBehavior::IdIsPropertyKey)
         str = ValueToSource(cx, v);
     else
         str = ToString<CanGC>(cx, v);
     if (!str)
         return nullptr;
-    return bytes->encodeUtf8(cx, RootedString(cx, str));
+    return StringToNewUTF8CharsZ(cx, *str);
 }
 
 template <AllowGC allowGC>
@@ -2172,8 +2162,8 @@ SymbolToSource(JSContext* cx, Symbol* symbol)
     if (code == SymbolCode::InSymbolRegistry ? !buf.append("Symbol.for(") : !buf.append("Symbol("))
         return nullptr;
     if (desc) {
-        desc = StringToSource(cx, desc);
-        if (!desc || !buf.append(desc))
+        UniqueChars quoted = QuoteString(cx, desc, '"');
+        if (!quoted || !buf.append(quoted.get(), strlen(quoted.get())))
             return nullptr;
     }
     if (!buf.append(')'))
@@ -2222,5 +2212,8 @@ js::ValueToSource(JSContext* cx, HandleValue v)
 JSString*
 js::StringToSource(JSContext* cx, JSString* str)
 {
-    return QuoteString(cx, str, '"');
+    UniqueChars chars = QuoteString(cx, str, '"');
+    if (!chars)
+        return nullptr;
+    return NewStringCopyZ<CanGC>(cx, chars.get());
 }

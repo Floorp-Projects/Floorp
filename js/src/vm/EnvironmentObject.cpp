@@ -8,7 +8,6 @@
 
 #include "builtin/ModuleObject.h"
 #include "gc/Policy.h"
-#include "js/AutoByteString.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/AsyncFunction.h"
 #include "vm/GlobalObject.h"
@@ -1415,10 +1414,9 @@ namespace {
 static void
 ReportOptimizedOut(JSContext* cx, HandleId id)
 {
-    JSAutoByteString printable;
-    if (ValueToPrintableLatin1(cx, IdToValue(id), &printable)) {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_OPTIMIZED_OUT,
-                                   printable.ptr());
+    if (UniqueChars printable = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsIdentifier)) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_OPTIMIZED_OUT,
+                                 printable.get());
     }
 }
 
@@ -3359,11 +3357,9 @@ js::CheckVarNameConflict(JSContext* cx, Handle<LexicalEnvironmentObject*> lexica
 static void
 ReportCannotDeclareGlobalBinding(JSContext* cx, HandlePropertyName name, const char* reason)
 {
-    JSAutoByteString printable;
-    if (AtomToPrintableString(cx, name, &printable)) {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                                   JSMSG_CANT_DECLARE_GLOBAL_BINDING,
-                                   printable.ptr(), reason);
+    if (UniqueChars printable = AtomToPrintableString(cx, name)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_DECLARE_GLOBAL_BINDING,
+                                  printable.get(), reason);
     }
 }
 
