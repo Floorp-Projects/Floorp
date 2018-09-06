@@ -30,8 +30,9 @@ JS_STATIC_ASSERT(LastObjectAllocKind == unsigned(AllocKind::OBJECT_LAST));
 static inline void
 WriteWord(FILE *file, uint64_t data)
 {
-    if (file)
+    if (file) {
         fwrite(&data, sizeof(data), 1, file);
+    }
 }
 
 static inline void
@@ -84,8 +85,9 @@ GCTrace::initTrace(GCRuntime& gc)
     MOZ_ALWAYS_TRUE(!gcTraceFile);
 
     char* filename = getenv("JS_GC_TRACE");
-    if (!filename)
+    if (!filename) {
         return true;
+    }
 
     if (!tracedClasses.init() || !tracedGroups.init()) {
         finishTrace();
@@ -101,8 +103,9 @@ GCTrace::initTrace(GCRuntime& gc)
     TraceEvent(gcTraceFile, TraceEventInit, 0, TraceFormatVersion);
 
     /* Trace information about thing sizes. */
-    for (auto kind : AllAllocKinds())
+    for (auto kind : AllAllocKinds()) {
         TraceEvent(gcTraceFile, TraceEventThingSize, Arena::thingSize(kind));
+    }
 
     return true;
 }
@@ -157,8 +160,9 @@ GCTrace::traceTenuredAlloc(Cell* thing, AllocKind kind)
 void
 js::gc::GCTrace::maybeTraceClass(const Class* clasp)
 {
-    if (tracedClasses.has(clasp))
+    if (tracedClasses.has(clasp)) {
         return;
+    }
 
     TraceEvent(gcTraceFile, TraceEventClassInfo, uint64_t(clasp));
     TraceString(gcTraceFile, clasp->name);
@@ -171,8 +175,9 @@ js::gc::GCTrace::maybeTraceClass(const Class* clasp)
 void
 js::gc::GCTrace::maybeTraceGroup(ObjectGroup* group)
 {
-    if (tracedGroups.has(group))
+    if (tracedGroups.has(group)) {
         return;
+    }
 
     maybeTraceClass(group->clasp());
     TraceEvent(gcTraceFile, TraceEventGroupInfo, uint64_t(group));
@@ -189,8 +194,9 @@ GCTrace::traceTypeNewScript(ObjectGroup* group)
     static char buffer[bufLength];
 
     JSAtom* funName = group->newScriptDontCheckGeneration()->function()->displayAtom();
-    if (!funName)
+    if (!funName) {
         return;
+    }
 
     size_t length = funName->length();
     MOZ_ALWAYS_TRUE(length < bufLength);
@@ -204,8 +210,9 @@ GCTrace::traceTypeNewScript(ObjectGroup* group)
 void
 GCTrace::traceCreateObject(JSObject* object)
 {
-    if (!gcTraceFile)
+    if (!gcTraceFile) {
         return;
+    }
 
     ObjectGroup* group = object->group();
     maybeTraceGroup(group);
@@ -241,10 +248,12 @@ GCTrace::traceMajorGCStart()
 void
 GCTrace::traceTenuredFinalize(Cell* thing)
 {
-    if (!gcTraceFile)
+    if (!gcTraceFile) {
         return;
-    if (thing->asTenured().getAllocKind() == AllocKind::OBJECT_GROUP)
+    }
+    if (thing->asTenured().getAllocKind() == AllocKind::OBJECT_GROUP) {
         tracedGroups.remove(static_cast<const ObjectGroup*>(thing));
+    }
     TraceEvent(gcTraceFile, TraceEventTenuredFinalize, uint64_t(thing));
 }
 

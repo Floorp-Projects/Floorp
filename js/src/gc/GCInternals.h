@@ -140,15 +140,18 @@ class MOZ_RAII AutoStopVerifyingBarriers
         // gc::Statistics phase tree. So we pause the "real" GC, if in fact one
         // is in progress.
         gcstats::PhaseKind outer = gc->stats().currentPhaseKind();
-        if (outer != gcstats::PhaseKind::NONE)
+        if (outer != gcstats::PhaseKind::NONE) {
             gc->stats().endPhase(outer);
+        }
         MOZ_ASSERT(gc->stats().currentPhaseKind() == gcstats::PhaseKind::NONE);
 
-        if (restartPreVerifier)
+        if (restartPreVerifier) {
             gc->startVerifyPreBarriers();
+        }
 
-        if (outer != gcstats::PhaseKind::NONE)
+        if (outer != gcstats::PhaseKind::NONE) {
             gc->stats().beginPhase(outer);
+        }
     }
 };
 #else
