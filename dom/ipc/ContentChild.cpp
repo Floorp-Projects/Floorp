@@ -1785,6 +1785,12 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
   sandboxEnabled = StartMacOSContentSandbox();
 #elif defined(__OpenBSD__)
   sandboxEnabled = StartOpenBSDSandbox(GeckoProcessType_Content);
+  /* dont overwrite an existing session dbus address, but ensure it is set */
+  if (!PR_GetEnv("DBUS_SESSION_BUS_ADDRESS")) {
+      static LazyLogModule sPledgeLog("SandboxPledge");
+      MOZ_LOG(sPledgeLog, LogLevel::Debug, ("no session dbus found, faking one\n"));
+      PR_SetEnv("DBUS_SESSION_BUS_ADDRESS=");
+  }
 #endif
 
   CrashReporter::AnnotateCrashReport(
