@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale, DeviceUintPoint};
-use api::{DeviceUintRect, DeviceUintSize, DocumentLayer, FilterOp, ImageFormat, LayoutRect};
-use api::{MixBlendMode, PipelineId};
+use api::{ColorF, BorderStyle, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
+use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FilterOp, ImageFormat};
+use api::{LayoutRect, MixBlendMode, PipelineId};
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::{ClipStore};
 use clip_scroll_tree::SpatialNodeIndex;
@@ -27,6 +27,8 @@ use texture_allocator::GuillotineAllocator;
 use webrender_api::{DevicePixel, FontRenderMode};
 
 const MIN_TARGET_SIZE: u32 = 2048;
+const STYLE_SOLID: i32 = ((BorderStyle::Solid as i32) << 8) | ((BorderStyle::Solid as i32) << 16);
+const STYLE_MASK: i32 = 0x00FF_FF00;
 
 #[derive(Debug)]
 pub struct ScrollbarPrimitive {
@@ -618,7 +620,8 @@ pub struct TextureCacheRenderTarget {
     pub horizontal_blurs: Vec<BlurInstance>,
     pub blits: Vec<BlitJob>,
     pub glyphs: Vec<GlyphJob>,
-    pub border_segments: Vec<BorderInstance>,
+    pub border_segments_complex: Vec<BorderInstance>,
+    pub border_segments_solid: Vec<BorderInstance>,
     pub clears: Vec<DeviceIntRect>,
 }
 
@@ -629,7 +632,8 @@ impl TextureCacheRenderTarget {
             horizontal_blurs: vec![],
             blits: vec![],
             glyphs: vec![],
-            border_segments: vec![],
+            border_segments_complex: vec![],
+            border_segments_solid: vec![],
             clears: vec![],
         }
     }
@@ -684,8 +688,13 @@ impl TextureCacheRenderTarget {
                 }
 
                 let instances = mem::replace(&mut task_info.instances, Vec::new());
-
-                self.border_segments.extend(instances);
+                for instance in instances {
+                    if instance.flags & STYLE_MASK == STYLE_SOLID {
+                        self.border_segments_solid.push(instance);
+                    } else {
+                        self.border_segments_complex.push(instance);
+                    }
+                }
             }
             RenderTaskKind::Glyph(ref mut task_info) => {
                 self.add_glyph_task(task_info, target_rect.0)
