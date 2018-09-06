@@ -107,29 +107,29 @@ BinASTParserBase::~BinASTParserBase()
 // ------------- Toplevel constructions
 
 template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parse(const Vector<uint8_t>& data)
+BinASTParser<Tok>::parse(GlobalSharedContext* globalsc, const Vector<uint8_t>& data)
 {
-    return parse(data.begin(), data.length());
+    return parse(globalsc, data.begin(), data.length());
 }
 
 template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parse(const uint8_t* start, const size_t length)
+BinASTParser<Tok>::parse(GlobalSharedContext* globalsc, const uint8_t* start, const size_t length)
 {
-    auto result = parseAux(start, length);
+    auto result = parseAux(globalsc, start, length);
     poison(); // Make sure that the parser is never used again accidentally.
     return result;
 }
 
 
 template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parseAux(const uint8_t* start, const size_t length)
+BinASTParser<Tok>::parseAux(GlobalSharedContext* globalsc,
+                            const uint8_t* start, const size_t length)
 {
+    MOZ_ASSERT(globalsc);
+
     tokenizer_.emplace(cx_, start, length);
 
-    Directives directives(options().strictOption);
-    GlobalSharedContext globalsc(cx_, ScopeKind::Global,
-                                 directives, options().extraWarningsOption);
-    BinParseContext globalpc(cx_, this, &globalsc, /* newDirectives = */ nullptr);
+    BinParseContext globalpc(cx_, this, globalsc, /* newDirectives = */ nullptr);
     if (!globalpc.init())
         return cx_->alreadyReportedError();
 
@@ -146,7 +146,7 @@ BinASTParser<Tok>::parseAux(const uint8_t* start, const size_t length)
                                                                      parseContext_);
     if (!bindings)
         return cx_->alreadyReportedError();
-    globalsc.bindings = *bindings;
+    globalsc->bindings = *bindings;
 
     return result; // Magic conversion to Ok.
 }

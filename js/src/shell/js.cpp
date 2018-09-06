@@ -4697,11 +4697,39 @@ GetModuleObject(JSContext* cx, unsigned argc, Value* vp)
 
 #if defined(JS_BUILD_BINAST)
 
+using js::frontend::BinASTParser;
+using js::frontend::Directives;
+using js::frontend::GlobalSharedContext;
+using js::frontend::ParseNode;
+using js::frontend::UsedNameTracker;
+
+template <typename Tok>
+static bool
+ParseBinASTData(JSContext* cx, uint8_t* buf_data, uint32_t buf_length,
+                GlobalSharedContext* globalsc, UsedNameTracker& usedNames,
+                const JS::ReadOnlyCompileOptions& options)
+{
+    MOZ_ASSERT(globalsc);
+
+    // Note: We need to keep `reader` alive as long as we can use `parsed`.
+    BinASTParser<Tok> reader(cx, cx->tempLifoAlloc(), usedNames, options);
+
+    JS::Result<ParseNode*> parsed = reader.parse(globalsc, buf_data, buf_length);
+
+    if (parsed.isErr())
+        return false;
+
+#ifdef DEBUG
+    Fprinter out(stderr);
+    DumpParseTree(parsed.unwrap(), out);
+#endif
+
+    return true;
+}
+
 static bool
 BinParse(JSContext* cx, unsigned argc, Value* vp)
 {
-    using namespace js::frontend;
-
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() < 1) {
@@ -4782,35 +4810,13 @@ BinParse(JSContext* cx, unsigned argc, Value* vp)
 
     UsedNameTracker usedNames(cx);
 
-    JS::Result<ParseNode*> parsed(nullptr);
-    if (useMultipart) {
-        // Note: We need to keep `reader` alive as long as we can use `parsed`.
-        BinASTParser<BinTokenReaderMultipart> reader(cx, cx->tempLifoAlloc(), usedNames, options);
+    Directives directives(false);
+    GlobalSharedContext globalsc(cx, ScopeKind::Global, directives, false);
 
-        parsed = reader.parse(buf_data, buf_length);
-
-        if (parsed.isErr())
-            return false;
-
-#ifdef DEBUG
-        Fprinter out(stderr);
-        DumpParseTree(parsed.unwrap(), out);
-#endif
-
-    } else {
-        // Note: We need to keep `reader` alive as long as we can use `parsed`.
-        BinASTParser<BinTokenReaderTester> reader(cx, cx->tempLifoAlloc(), usedNames, options);
-
-        parsed = reader.parse(buf_data, buf_length);
-
-        if (parsed.isErr())
-            return false;
-
-#ifdef DEBUG
-        Fprinter out(stderr);
-        DumpParseTree(parsed.unwrap(), out);
-#endif
-    }
+    auto parseFunc = useMultipart ? ParseBinASTData<frontend::BinTokenReaderMultipart>
+                                  : ParseBinASTData<frontend::BinTokenReaderTester>;
+    if (!parseFunc(cx, buf_data, buf_length, &globalsc, usedNames, options))
+        return false;
 
     args.rval().setUndefined();
     return true;

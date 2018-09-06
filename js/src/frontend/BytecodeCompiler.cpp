@@ -641,16 +641,17 @@ frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadO
     if (!script)
         return nullptr;
 
+    Directives directives(options.strictOption);
+    GlobalSharedContext globalsc(cx, ScopeKind::Global, directives, options.extraWarningsOption);
+
     frontend::BinASTParser<BinTokenReaderMultipart> parser(cx, alloc, usedNames, options);
 
-    auto parsed = parser.parse(src, len);
+    auto parsed = parser.parse(&globalsc, src, len);
 
     if (parsed.isErr())
         return nullptr;
 
-    Directives dir(false);
-    GlobalSharedContext sc(cx, ScopeKind::Global, dir, false);
-    BytecodeEmitter bce(nullptr, &parser, &sc, script, nullptr, 0);
+    BytecodeEmitter bce(nullptr, &parser, &globalsc, script, nullptr, 0);
 
     if (!bce.init())
         return nullptr;
