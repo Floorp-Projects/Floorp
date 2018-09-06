@@ -4,8 +4,17 @@
 
 "use strict";
 
-function getCurrentClient(state) {
-  const thisFirefoxRuntime = state.runtimes.thisFirefoxRuntimes[0];
+function getCurrentClient(runtimesState) {
+  const thisFirefoxRuntime = runtimesState.thisFirefoxRuntimes[0];
   return thisFirefoxRuntime.client;
 }
 exports.getCurrentClient = getCurrentClient;
+
+function findRuntimeById(id, runtimesState) {
+  const allRuntimes = [
+    ...runtimesState.networkRuntimes,
+    ...runtimesState.thisFirefoxRuntimes,
+  ];
+  return allRuntimes.find(r => r.id === id);
+}
+exports.findRuntimeById = findRuntimeById;
