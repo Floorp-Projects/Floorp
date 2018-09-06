@@ -638,6 +638,17 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 
 /* We draw to titlebar when Gkt+ CSD is available */
 @media (-moz-gtk-csd-available) {
+  /* Some Gtk+ themes use non-rectangular toplevel windows. To fully support
+   * such themes we need to make toplevel window transparent with ARGB visual.
+   * It may cause performanance issue so let's put it under a preference
+   * and allow distros to enable it per default theme. */
+  @supports -moz-bool-pref("mozilla.widget.use-argb-visuals") {
+    :root[tabsintitlebar]:not(:-moz-lwtheme) {
+      background-color: transparent;
+      -moz-appearance: none;
+    }
+  }
+
   :root[tabsintitlebar] > #titlebar:-moz-lwtheme {
     visibility: hidden;
   }
