@@ -200,7 +200,7 @@ DumpXPC(JSContext *cx,
             return false;
     }
 
-    nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
     if (xpc)
         xpc->DebugDump(int16_t(depth));
     args.rval().setUndefined();

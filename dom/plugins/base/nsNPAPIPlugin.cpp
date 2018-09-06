@@ -734,7 +734,7 @@ _getpluginelement(NPP npp)
   }
   JSContext* cx = jsapi.cx();
 
-  nsCOMPtr<nsIXPConnect> xpc(nsIXPConnect::XPConnect());
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
   NS_ENSURE_TRUE(xpc, nullptr);
 
   JS::RootedValue val(cx);

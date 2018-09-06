@@ -355,7 +355,7 @@ bool XPCVariant::InitializeData(JSContext* cx)
 
     // XXX This could be smarter and pick some more interesting iface.
 
-    nsIXPConnect* xpc = nsIXPConnect::XPConnect();
+    nsXPConnect*  xpc = nsXPConnect::XPConnect();
     nsCOMPtr<nsISupports> wrapper;
     const nsIID& iid = NS_GET_IID(nsISupports);
 
