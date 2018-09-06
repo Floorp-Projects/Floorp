@@ -159,8 +159,9 @@ struct Statistics
 
     void reset(gc::AbortReason reason) {
         MOZ_ASSERT(reason != gc::AbortReason::None);
-        if (!aborted)
+        if (!aborted) {
             slices_.back().resetReason = reason;
+        }
     }
 
     void nonincremental(gc::AbortReason reason) {
@@ -462,13 +463,15 @@ struct MOZ_RAII AutoPhase
     AutoPhase(Statistics& stats, bool condition, PhaseKind phaseKind)
       : stats(stats), phaseKind(phaseKind), enabled(condition)
     {
-        if (enabled)
+        if (enabled) {
             stats.beginPhase(phaseKind);
+        }
     }
 
     ~AutoPhase() {
-        if (enabled)
+        if (enabled) {
             stats.endPhase(phaseKind);
+        }
     }
 
     Statistics& stats;
