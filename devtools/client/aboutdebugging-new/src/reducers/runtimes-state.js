@@ -11,7 +11,11 @@ const {
 
 function RuntimesState(networkRuntimes = []) {
   return {
-    networkRuntimes
+    networkRuntimes,
+    thisFirefoxRuntimes: [{
+      id: RUNTIMES.THIS_FIREFOX,
+      type: RUNTIMES.THIS_FIREFOX,
+    }]
   };
 }
 
