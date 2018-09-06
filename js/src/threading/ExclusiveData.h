@@ -175,8 +175,9 @@ class ExclusiveData
         }
 
         ~Guard() {
-            if (parent_)
+            if (parent_) {
                 parent_->release();
+            }
         }
     };
 
