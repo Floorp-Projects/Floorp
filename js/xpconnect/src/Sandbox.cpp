@@ -10,7 +10,7 @@
 
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Proxy.h"
 #include "js/SourceBufferHolder.h"
@@ -140,8 +140,8 @@ SandboxDump(JSContext* cx, unsigned argc, Value* vp)
     if (!str)
         return false;
 
-    JSAutoByteString utf8str;
-    char* cstr = utf8str.encodeUtf8(cx, str);
+    JS::UniqueChars utf8str = JS_EncodeStringToUTF8(cx, str);
+    char* cstr = utf8str.get();
     if (!cstr)
         return false;
 
@@ -854,70 +854,74 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             JS_ReportErrorASCII(cx, "Property names must be strings");
             return false;
         }
-        RootedString nameStr(cx, nameValue.toString());
-        JSAutoByteString name;
-        if (!name.encodeUtf8(cx, nameStr))
+        JSFlatString* nameStr = JS_FlattenString(cx, nameValue.toString());
+        if (!nameStr)
             return false;
-        if (!strcmp(name.ptr(), "Blob")) {
+        if (JS_FlatStringEqualsAscii(nameStr, "Blob")) {
             Blob = true;
-        } else if (!strcmp(name.ptr(), "ChromeUtils")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "ChromeUtils")) {
             ChromeUtils = true;
-        } else if (!strcmp(name.ptr(), "CSS")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "CSS")) {
             CSS = true;
-        } else if (!strcmp(name.ptr(), "CSSRule")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "CSSRule")) {
             CSSRule = true;
-        } else if (!strcmp(name.ptr(), "Directory")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "Directory")) {
             Directory = true;
-        } else if (!strcmp(name.ptr(), "DOMParser")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "DOMParser")) {
             DOMParser = true;
-        } else if (!strcmp(name.ptr(), "Element")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "Element")) {
             Element = true;
-        } else if (!strcmp(name.ptr(), "Event")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "Event")) {
             Event = true;
-        } else if (!strcmp(name.ptr(), "File")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "File")) {
             File = true;
-        } else if (!strcmp(name.ptr(), "FileReader")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "FileReader")) {
             FileReader = true;
-        } else if (!strcmp(name.ptr(), "FormData")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "FormData")) {
             FormData = true;
-        } else if (!strcmp(name.ptr(), "InspectorUtils")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "InspectorUtils")) {
             InspectorUtils = true;
-        } else if (!strcmp(name.ptr(), "MessageChannel")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "MessageChannel")) {
             MessageChannel = true;
-        } else if (!strcmp(name.ptr(), "Node")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "Node")) {
             Node = true;
-        } else if (!strcmp(name.ptr(), "NodeFilter")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "NodeFilter")) {
             NodeFilter = true;
-        } else if (!strcmp(name.ptr(), "TextDecoder")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "TextDecoder")) {
             TextDecoder = true;
-        } else if (!strcmp(name.ptr(), "TextEncoder")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "TextEncoder")) {
             TextEncoder = true;
-        } else if (!strcmp(name.ptr(), "URL")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "URL")) {
             URL = true;
-        } else if (!strcmp(name.ptr(), "URLSearchParams")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "URLSearchParams")) {
             URLSearchParams = true;
-        } else if (!strcmp(name.ptr(), "XMLHttpRequest")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "XMLHttpRequest")) {
             XMLHttpRequest = true;
-        } else if (!strcmp(name.ptr(), "XMLSerializer")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "XMLSerializer")) {
             XMLSerializer = true;
-        } else if (!strcmp(name.ptr(), "atob")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "atob")) {
             atob = true;
-        } else if (!strcmp(name.ptr(), "btoa")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "btoa")) {
             btoa = true;
-        } else if (!strcmp(name.ptr(), "caches")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "caches")) {
             caches = true;
-        } else if (!strcmp(name.ptr(), "crypto")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "crypto")) {
             crypto = true;
-        } else if (!strcmp(name.ptr(), "fetch")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "fetch")) {
             fetch = true;
-        } else if (!strcmp(name.ptr(), "indexedDB")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "indexedDB")) {
             indexedDB = true;
 #ifdef MOZ_WEBRTC
-        } else if (!strcmp(name.ptr(), "rtcIdentityProvider")) {
+        } else if (JS_FlatStringEqualsAscii(nameStr, "rtcIdentityProvider")) {
             rtcIdentityProvider = true;
 #endif
         } else {
-            JS_ReportErrorUTF8(cx, "Unknown property name: %s", name.ptr());
+            RootedString nameStr(cx, nameValue.toString());
+            JS::UniqueChars name = JS_EncodeStringToUTF8(cx, nameStr);
+            if (!name)
+                return false;
+
+            JS_ReportErrorUTF8(cx, "Unknown property name: %s", name.get());
             return false;
         }
     }
@@ -1540,10 +1544,9 @@ OptionsBase::ParseString(const char* name, nsCString& prop)
         return false;
     }
 
-    char* tmp = JS_EncodeString(mCx, value.toString());
+    JS::UniqueChars tmp = JS_EncodeStringToLatin1(mCx, value.toString());
     NS_ENSURE_TRUE(tmp, false);
-    prop.Assign(tmp, strlen(tmp));
-    js_free(tmp);
+    prop.Assign(tmp.get(), strlen(tmp.get()));
     return true;
 }
 

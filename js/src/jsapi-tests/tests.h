@@ -17,7 +17,7 @@
 
 #include "gc/GC.h"
 #include "js/AllocPolicy.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/Vector.h"
 #include "vm/JSContext.h"
 
@@ -103,11 +103,9 @@ class JSAPITest
     bool evaluate(const char* bytes, const char* filename, int lineno, JS::MutableHandleValue vp);
 
     JSAPITestString jsvalToSource(JS::HandleValue v) {
-        JSString* str = JS_ValueToSource(cx, v);
-        if (str) {
-            JSAutoByteString bytes(cx, str);
-            if (!!bytes)
-                return JSAPITestString(bytes.ptr());
+        if (JSString* str = JS_ValueToSource(cx, v)) {
+            if (JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str))
+                return JSAPITestString(bytes.get());
         }
         JS_ClearPendingException(cx);
         return JSAPITestString("<<error converting value to string>>");
@@ -233,9 +231,8 @@ class JSAPITest
             JS_ClearPendingException(cx);
             JSString* s = JS::ToString(cx, v);
             if (s) {
-                JSAutoByteString bytes(cx, s);
-                if (!!bytes)
-                    message += bytes.ptr();
+                if (JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, s))
+                    message += bytes.get();
             }
         }
 
@@ -273,11 +270,10 @@ class JSAPITest
             JSString* str = JS::ToString(cx, args[i]);
             if (!str)
                 return false;
-            char* bytes = JS_EncodeString(cx, str);
+            JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str);
             if (!bytes)
                 return false;
-            printf("%s%s", i ? " " : "", bytes);
-            JS_free(cx, bytes);
+            printf("%s%s", i ? " " : "", bytes.get());
         }
 
         putchar('\n');

@@ -41,7 +41,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitRealm.h"
-#include "js/AutoByteString.h"
+#include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/Debug.h"
@@ -1414,13 +1414,13 @@ CallFunctionWithAsyncStack(JSContext* cx, unsigned argc, Value* vp)
     RootedObject function(cx, &args[0].toObject());
     RootedObject stack(cx, &args[1].toObject());
     RootedString asyncCause(cx, args[2].toString());
-    JSAutoByteString utf8Cause;
-    if (!utf8Cause.encodeUtf8(cx, asyncCause)) {
+    UniqueChars utf8Cause = JS_EncodeStringToUTF8(cx, asyncCause);
+    if (!utf8Cause) {
         MOZ_ASSERT(cx->isExceptionPending());
         return false;
     }
 
-    JS::AutoSetAsyncStackForNewCalls sas(cx, stack, utf8Cause.ptr(),
+    JS::AutoSetAsyncStackForNewCalls sas(cx, stack, utf8Cause.get(),
                                          JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::EXPLICIT);
     return Call(cx, UndefinedHandleValue, function,
                 JS::HandleValueArray::empty(), args.rval());
@@ -2194,16 +2194,15 @@ DumpHeap(JSContext* cx, unsigned argc, Value* vp)
         if (v.isString()) {
             if (!fuzzingSafe) {
                 RootedString str(cx, v.toString());
-                JSAutoByteString fileNameBytes;
-                if (!fileNameBytes.encodeLatin1(cx, str))
+                UniqueChars fileNameBytes = JS_EncodeStringToLatin1(cx, str);
+                if (!fileNameBytes)
                     return false;
-                const char* fileName = fileNameBytes.ptr();
-                dumpFile = fopen(fileName, "w");
+                dumpFile = fopen(fileNameBytes.get(), "w");
                 if (!dumpFile) {
-                    fileNameBytes.clear();
-                    if (!fileNameBytes.encodeUtf8(cx, str))
+                    fileNameBytes = JS_EncodeStringToUTF8(cx, str);
+                    if (!fileNameBytes)
                         return false;
-                    JS_ReportErrorUTF8(cx, "can't open %s", fileNameBytes.ptr());
+                    JS_ReportErrorUTF8(cx, "can't open %s", fileNameBytes.get());
                     return false;
                 }
             }
@@ -2746,23 +2745,25 @@ class CloneBufferObject : public NativeObject {
     setCloneBuffer_impl(JSContext* cx, const CallArgs& args) {
         Rooted<CloneBufferObject*> obj(cx, &args.thisv().toObject().as<CloneBufferObject>());
 
-        uint8_t* data = nullptr;
-        UniquePtr<uint8_t[], JS::FreePolicy> dataOwner;
+        const char* data = nullptr;
+        UniqueChars dataOwner;
         uint32_t nbytes;
 
         if (args.get(0).isObject() && args[0].toObject().is<ArrayBufferObject>()) {
             ArrayBufferObject* buffer = &args[0].toObject().as<ArrayBufferObject>();
             bool isSharedMemory;
-            js::GetArrayBufferLengthAndData(buffer, &nbytes, &isSharedMemory, &data);
+            uint8_t* dataBytes = nullptr;
+            js::GetArrayBufferLengthAndData(buffer, &nbytes, &isSharedMemory, &dataBytes);
             MOZ_ASSERT(!isSharedMemory);
+            data = reinterpret_cast<char*>(dataBytes);
         } else {
             JSString* str = JS::ToString(cx, args.get(0));
             if (!str)
                 return false;
-            data = reinterpret_cast<uint8_t*>(JS_EncodeString(cx, str));
-            if (!data)
+            dataOwner = JS_EncodeStringToLatin1(cx, str);
+            if (!dataOwner)
                 return false;
-            dataOwner.reset(data);
+            data = dataOwner.get();
             nbytes = JS_GetStringLength(str);
         }
 
@@ -2777,7 +2778,7 @@ class CloneBufferObject : public NativeObject {
             return false;
         }
 
-        MOZ_ALWAYS_TRUE(buf->AppendBytes((const char*)data, nbytes));
+        MOZ_ALWAYS_TRUE(buf->AppendBytes(data, nbytes));
         obj->discard();
         obj->setData(buf.release(), true);
 
@@ -2914,17 +2915,17 @@ ParseCloneScope(JSContext* cx, HandleString str)
 {
     mozilla::Maybe<JS::StructuredCloneScope> scope;
 
-    JSAutoByteString scopeStr(cx, str);
+    JSLinearString* scopeStr = str->ensureLinear(cx);
     if (!scopeStr)
         return scope;
 
-    if (strcmp(scopeStr.ptr(), "SameProcessSameThread") == 0)
+    if (StringEqualsAscii(scopeStr, "SameProcessSameThread"))
         scope.emplace(JS::StructuredCloneScope::SameProcessSameThread);
-    else if (strcmp(scopeStr.ptr(), "SameProcessDifferentThread") == 0)
+    else if (StringEqualsAscii(scopeStr, "SameProcessDifferentThread"))
         scope.emplace(JS::StructuredCloneScope::SameProcessDifferentThread);
-    else if (strcmp(scopeStr.ptr(), "DifferentProcess") == 0)
+    else if (StringEqualsAscii(scopeStr, "DifferentProcess"))
         scope.emplace(JS::StructuredCloneScope::DifferentProcess);
-    else if (strcmp(scopeStr.ptr(), "DifferentProcessForIndexedDB") == 0)
+    else if (StringEqualsAscii(scopeStr, "DifferentProcessForIndexedDB"))
         scope.emplace(JS::StructuredCloneScope::DifferentProcessForIndexedDB);
 
     return scope;
@@ -2951,13 +2952,13 @@ Serialize(JSContext* cx, unsigned argc, Value* vp)
             JSString* str = JS::ToString(cx, v);
             if (!str)
                 return false;
-            JSAutoByteString poli(cx, str);
+            JSLinearString* poli = str->ensureLinear(cx);
             if (!poli)
                 return false;
 
-            if (strcmp(poli.ptr(), "allow") == 0) {
+            if (StringEqualsAscii(poli, "allow")) {
                 // default
-            } else if (strcmp(poli.ptr(), "deny") == 0) {
+            } else if (StringEqualsAscii(poli, "deny")) {
                 policy.denySharedArrayBuffer();
             } else {
                 JS_ReportErrorASCII(cx, "Invalid policy value for 'SharedArrayBuffer'");
@@ -3304,11 +3305,17 @@ GetBacktrace(JSContext* cx, unsigned argc, Value* vp)
         showThisProps = ToBoolean(v);
     }
 
-    JS::UniqueChars buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
+    JS::UniqueChars buf = JS::FormatStackDump(cx, showArgs, showLocals, showThisProps);
     if (!buf)
         return false;
 
-    return ReturnStringCopy(cx, args, buf.get());
+    JS::ConstUTF8CharsZ utf8chars(buf.get(), strlen(buf.get()));
+    JSString* str = NewStringCopyUTF8Z<CanGC>(cx, utf8chars);
+    if (!str)
+        return false;
+
+    args.rval().setString(str);
+    return true;
 }
 
 static bool
@@ -4121,12 +4128,12 @@ SetGCCallback(JSContext* cx, unsigned argc, Value* vp)
     JSString* str = JS::ToString(cx, v);
     if (!str)
         return false;
-    JSAutoByteString action(cx, str);
+    RootedLinearString action(cx, str->ensureLinear(cx));
     if (!action)
         return false;
 
     int32_t phases = 0;
-    if ((strcmp(action.ptr(), "minorGC") == 0) || (strcmp(action.ptr(), "majorGC") == 0)) {
+    if (StringEqualsAscii(action, "minorGC") || StringEqualsAscii(action, "majorGC")) {
         if (!JS_GetProperty(cx, opts, "phases", &v))
             return false;
         if (v.isUndefined()) {
@@ -4135,17 +4142,17 @@ SetGCCallback(JSContext* cx, unsigned argc, Value* vp)
             JSString* str = JS::ToString(cx, v);
             if (!str)
                 return false;
-            JSAutoByteString phasesStr(cx, str);
+            JSLinearString* phasesStr = str->ensureLinear(cx);
             if (!phasesStr)
                 return false;
 
-            if (strcmp(phasesStr.ptr(), "begin") == 0)
+            if (StringEqualsAscii(phasesStr, "begin")) {
                 phases = (1 << JSGC_BEGIN);
-            else if (strcmp(phasesStr.ptr(), "end") == 0)
+            } else if (StringEqualsAscii(phasesStr, "end")) {
                 phases = (1 << JSGC_END);
-            else if (strcmp(phasesStr.ptr(), "both") == 0)
+            } else if (StringEqualsAscii(phasesStr, "both")) {
                 phases = (1 << JSGC_BEGIN) | (1 << JSGC_END);
-            else {
+            } else {
                 JS_ReportErrorASCII(cx, "Invalid callback phase");
                 return false;
             }
@@ -4164,7 +4171,7 @@ SetGCCallback(JSContext* cx, unsigned argc, Value* vp)
         gcCallback::prevMinorGC = nullptr;
     }
 
-    if (strcmp(action.ptr(), "minorGC") == 0) {
+    if (StringEqualsAscii(action, "minorGC")) {
         auto info = js_new<gcCallback::MinorGC>();
         if (!info) {
             ReportOutOfMemory(cx);
@@ -4174,7 +4181,7 @@ SetGCCallback(JSContext* cx, unsigned argc, Value* vp)
         info->phases = phases;
         info->active = true;
         JS_SetGCCallback(cx, gcCallback::minorGC, info);
-    } else if (strcmp(action.ptr(), "majorGC") == 0) {
+    } else if (StringEqualsAscii(action, "majorGC")) {
         if (!JS_GetProperty(cx, opts, "depth", &v))
             return false;
         int32_t depth = 1;
@@ -4734,11 +4741,11 @@ SetTimeZone(JSContext* cx, unsigned argc, Value* vp)
     };
 
     if (args[0].isString() && !args[0].toString()->empty()) {
-        JSAutoByteString timeZone;
-        if (!timeZone.encodeLatin1(cx, args[0].toString()))
+        UniqueChars timeZone = JS_EncodeStringToLatin1(cx, args[0].toString());
+        if (!timeZone)
             return false;
 
-        if (!setTimeZone(timeZone.ptr())) {
+        if (!setTimeZone(timeZone.get())) {
             JS_ReportErrorASCII(cx, "Failed to set 'TZ' environment variable");
             return false;
         }
@@ -4824,11 +4831,11 @@ SetDefaultLocale(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
 
-        JSAutoByteString locale;
-        if (!locale.encodeLatin1(cx, str))
+        UniqueChars locale = JS_EncodeStringToLatin1(cx, str);
+        if (!locale)
             return false;
 
-        if (!JS_SetDefaultLocale(cx->runtime(), locale.ptr())) {
+        if (!JS_SetDefaultLocale(cx->runtime(), locale.get())) {
             ReportOutOfMemory(cx);
             return false;
         }
