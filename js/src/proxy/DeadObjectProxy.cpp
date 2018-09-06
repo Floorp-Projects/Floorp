@@ -164,12 +164,15 @@ js::DeadProxyTargetValue(ProxyObject* obj)
     // When nuking scripted proxies, isCallable and isConstructor values for
     // the proxy needs to be preserved.  So does background-finalization status.
     int32_t flags = 0;
-    if (obj->handler()->isCallable(obj))
+    if (obj->handler()->isCallable(obj)) {
         flags |= DeadObjectProxyIsCallable;
-    if (obj->handler()->isConstructor(obj))
+    }
+    if (obj->handler()->isConstructor(obj)) {
          flags |= DeadObjectProxyIsConstructor;
-    if (obj->handler()->finalizeInBackground(obj->private_()))
+    }
+    if (obj->handler()->finalizeInBackground(obj->private_())) {
          flags |= DeadObjectProxyIsBackgroundFinalized;
+    }
     return Int32Value(flags);
 }
 
@@ -179,10 +182,11 @@ js::NewDeadProxyObject(JSContext* cx, JSObject* origObj)
     MOZ_ASSERT_IF(origObj, origObj->is<ProxyObject>());
 
     RootedValue target(cx);
-    if (origObj && origObj->is<ProxyObject>())
+    if (origObj && origObj->is<ProxyObject>()) {
         target = DeadProxyTargetValue(&origObj->as<ProxyObject>());
-    else
+    } else {
         target = Int32Value(DeadObjectProxyIsBackgroundFinalized);
+    }
 
     return NewProxyObject(cx, &DeadObjectProxy::singleton, target, nullptr, ProxyOptions());
 }
