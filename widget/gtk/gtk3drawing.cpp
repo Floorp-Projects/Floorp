@@ -2331,6 +2331,23 @@ moz_gtk_header_bar_paint(WidgetNodeType widgetType,
     // titlebar bottom. It does not fit well with Firefox tabs so
     // draw with some extent to make the titlebar bottom part invisible.
     #define TITLEBAR_EXTENT 4
+
+    if (widgetType == MOZ_GTK_HEADER_BAR) {
+        GtkStyleContext* windowStyle = GetStyleContext(MOZ_GTK_WINDOW);
+        bool solidDecorations =
+            gtk_style_context_has_class(windowStyle, "solid-csd");
+        GtkStyleContext *decorationStyle =
+            GetStyleContext(solidDecorations ? MOZ_GTK_WINDOW_DECORATION_SOLID:
+                                               MOZ_GTK_WINDOW_DECORATION,
+                            GTK_TEXT_DIR_LTR,
+                            state_flags);
+
+        gtk_render_background(decorationStyle, cr, rect->x, rect->y,
+                              rect->width, rect->height + TITLEBAR_EXTENT);
+        gtk_render_frame(decorationStyle, cr, rect->x, rect->y,
+                         rect->width, rect->height + TITLEBAR_EXTENT);
+    }
+
     gtk_render_background(style, cr, rect->x, rect->y,
                           rect->width, rect->height + TITLEBAR_EXTENT);
     gtk_render_frame(style, cr, rect->x, rect->y,
