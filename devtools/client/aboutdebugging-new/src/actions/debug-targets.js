@@ -9,12 +9,15 @@ const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser
 
 const {
   debugLocalAddon,
+  debugRemoteAddon,
+  getAddonForm,
   openTemporaryExtension,
   uninstallAddon,
 } = require("devtools/client/aboutdebugging-new/src/modules/extensions-helper");
 
 const {
-  getCurrentClient
+  getCurrentClient,
+  getCurrentRuntime
 } = require("devtools/client/aboutdebugging-new/src/modules/runtimes-state-helper");
 
 const {
@@ -28,23 +31,38 @@ const {
   REQUEST_WORKERS_FAILURE,
   REQUEST_WORKERS_START,
   REQUEST_WORKERS_SUCCESS,
+  RUNTIMES,
 } = require("../constants");
 
 function inspectDebugTarget(type, id) {
   return async (_, getState) => {
+    const runtime = getCurrentRuntime(getState().runtimes);
+    const runtimeType = runtime.type;
+    const client = runtime.client;
+
     switch (type) {
       case DEBUG_TARGETS.TAB: {
         // Open tab debugger in new window.
-        window.open(`about:devtools-toolbox?type=tab&id=${ id }`);
+        if (runtime.type === RUNTIMES.NETWORK) {
+          const [host, port] = runtime.id.split(":");
+          window.open(`about:devtools-toolbox?type=tab&id=${id}` +
+                      `&host=${host}&port=${port}`);
+        } else if (runtimeType === RUNTIMES.THIS_FIREFOX) {
+          window.open(`about:devtools-toolbox?type=tab&id=${id}`);
+        }
         break;
       }
       case DEBUG_TARGETS.EXTENSION: {
-        debugLocalAddon(id);
+        if (runtimeType === RUNTIMES.NETWORK) {
+          const addonForm = await getAddonForm(id, client);
+          debugRemoteAddon(addonForm, client);
+        } else if (runtimeType === RUNTIMES.THIS_FIREFOX) {
+          debugLocalAddon(id);
+        }
         break;
       }
       case DEBUG_TARGETS.WORKER: {
         // Open worker toolbox in new window.
-        const client = getCurrentClient(getState().runtimes);
         gDevToolsBrowser.openWorkerToolbox(client, id);
         break;
       }
