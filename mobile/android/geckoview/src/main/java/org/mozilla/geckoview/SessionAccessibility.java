@@ -721,7 +721,7 @@ public class SessionAccessibility {
     }
 
     private void fireWindowChangedEvent(final int id) {
-        if (mView instanceof ViewParent) {
+        if (Settings.isEnabled() && mView instanceof ViewParent) {
             final AccessibilityEvent event = obtainEvent(
                     AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED, id);
             if (Build.VERSION.SDK_INT >= 19) {
