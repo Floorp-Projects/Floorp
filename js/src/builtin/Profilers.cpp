@@ -72,10 +72,11 @@ StartOSXProfiling(const char* profileName, pid_t pid)
     profiler = "Instruments";
 #endif
     if (!ok) {
-        if (profileName)
+        if (profileName) {
             UnsafeError("Failed to start %s for %s", profiler, profileName);
-        else
+        } else {
             UnsafeError("Failed to start %s", profiler);
+        }
         return false;
     }
     return true;
@@ -90,8 +91,9 @@ JS_StartProfiling(const char* profileName, pid_t pid)
     ok = StartOSXProfiling(profileName, pid);
 #endif
 #ifdef __linux__
-    if (!js_StartPerf())
+    if (!js_StartPerf()) {
         ok = false;
+    }
 #endif
     return ok;
 }
@@ -106,8 +108,9 @@ JS_StopProfiling(const char* profileName)
 #endif
 #endif
 #ifdef __linux__
-    if (!js_StopPerf())
+    if (!js_StopPerf()) {
         ok = false;
+    }
 #endif
     return ok;
 }
@@ -217,8 +220,9 @@ StartProfiling(JSContext* cx, unsigned argc, Value* vp)
     }
 
     UniqueChars profileName = RequiredStringArg(cx, args, 0, "startProfiling");
-    if (!profileName)
+    if (!profileName) {
         return false;
+    }
 
     if (args.length() == 1) {
         args.rval().setBoolean(JS_StartProfiling(profileName.get(), getpid()));
@@ -244,8 +248,9 @@ StopProfiling(JSContext* cx, unsigned argc, Value* vp)
     }
 
     UniqueChars profileName = RequiredStringArg(cx, args, 0, "stopProfiling");
-    if (!profileName)
+    if (!profileName) {
         return false;
+    }
     args.rval().setBoolean(JS_StopProfiling(profileName.get()));
     return true;
 }
@@ -260,8 +265,9 @@ PauseProfilers(JSContext* cx, unsigned argc, Value* vp)
     }
 
     UniqueChars profileName = RequiredStringArg(cx, args, 0, "pauseProfiling");
-    if (!profileName)
+    if (!profileName) {
         return false;
+    }
     args.rval().setBoolean(JS_PauseProfilers(profileName.get()));
     return true;
 }
@@ -276,8 +282,9 @@ ResumeProfilers(JSContext* cx, unsigned argc, Value* vp)
     }
 
     UniqueChars profileName = RequiredStringArg(cx, args, 0, "resumeProfiling");
-    if (!profileName)
+    if (!profileName) {
         return false;
+    }
     args.rval().setBoolean(JS_ResumeProfilers(profileName.get()));
     return true;
 }
@@ -292,15 +299,17 @@ DumpProfile(JSContext* cx, unsigned argc, Value* vp)
         ret = JS_DumpProfile(nullptr, nullptr);
     } else {
         UniqueChars filename = RequiredStringArg(cx, args, 0, "dumpProfile");
-        if (!filename)
+        if (!filename) {
             return false;
+        }
 
         if (args.length() == 1) {
             ret = JS_DumpProfile(filename.get(), nullptr);
         } else {
             UniqueChars profileName = RequiredStringArg(cx, args, 1, "dumpProfile");
-            if (!profileName)
+            if (!profileName) {
                 return false;
+            }
 
             ret = JS_DumpProfile(filename.get(), profileName.get());
         }
@@ -365,8 +374,9 @@ DumpCallgrind(JSContext* cx, unsigned argc, Value* vp)
     }
 
     UniqueChars outFile = RequiredStringArg(cx, args, 0, "dumpCallgrind");
-    if (!outFile)
+    if (!outFile) {
         return false;
+    }
 
     args.rval().setBoolean(js_DumpCallgrind(outFile.get()));
     return true;
@@ -536,8 +546,9 @@ bool js_StartPerf()
         const char* defaultArgs[] = {"perf", "record", "--pid", mainPidStr, "--output", outfile};
 
         Vector<const char*, 0, SystemAllocPolicy> args;
-        if (!args.append(defaultArgs, ArrayLength(defaultArgs)))
+        if (!args.append(defaultArgs, ArrayLength(defaultArgs))) {
             return false;
+        }
 
         const char* flags = getenv("MOZ_PROFILE_PERF_FLAGS");
         if (!flags) {
@@ -545,20 +556,23 @@ bool js_StartPerf()
         }
 
         UniqueChars flags2 = DuplicateString(flags);
-        if (!flags2)
+        if (!flags2) {
             return false;
+        }
 
         // Split |flags2| on spaces.
         char* toksave;
         char* tok = strtok_r(flags2.get(), " ", &toksave);
         while (tok) {
-            if (!args.append(tok))
+            if (!args.append(tok)) {
                 return false;
+            }
             tok = strtok_r(nullptr, " ", &toksave);
         }
 
-        if (!args.append((char*) nullptr))
+        if (!args.append((char*) nullptr)) {
             return false;
+        }
 
         execvp("perf", const_cast<char**>(args.begin()));
 
