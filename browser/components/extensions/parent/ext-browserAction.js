@@ -6,6 +6,8 @@ ChromeUtils.defineModuleGetter(this, "CustomizableUI",
                                "resource:///modules/CustomizableUI.jsm");
 ChromeUtils.defineModuleGetter(this, "clearTimeout",
                                "resource://gre/modules/Timer.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionTelemetry",
+                               "resource://gre/modules/ExtensionTelemetry.jsm");
 ChromeUtils.defineModuleGetter(this, "setTimeout",
                                "resource://gre/modules/Timer.jsm");
 ChromeUtils.defineModuleGetter(this, "ViewPopup",
@@ -14,7 +16,6 @@ ChromeUtils.defineModuleGetter(this, "ViewPopup",
 var {
   DefaultWeakMap,
   ExtensionError,
-  ExtensionTelemetry,
 } = ExtensionUtils;
 
 ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");

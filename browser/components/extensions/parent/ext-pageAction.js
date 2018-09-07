@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+ChromeUtils.defineModuleGetter(this, "ExtensionTelemetry",
+                               "resource://gre/modules/ExtensionTelemetry.jsm");
 ChromeUtils.defineModuleGetter(this, "PageActions",
                                "resource:///modules/PageActions.jsm");
 ChromeUtils.defineModuleGetter(this, "PanelPopup",
@@ -16,7 +18,6 @@ var {
 
 var {
   DefaultWeakMap,
-  ExtensionTelemetry,
 } = ExtensionUtils;
 
 // WeakMap[Extension -> PageAction]
