@@ -63,7 +63,8 @@ class TestGetChangedFiles(unittest.TestCase):
 class TestCheck(unittest.TestCase):
 
     def setUp(self):
-        files_changed.get_changed_files[PARAMS['head_repository'], PARAMS['head_rev']] = FILES_CHANGED
+        files_changed.get_changed_files[
+            PARAMS['head_repository'], PARAMS['head_rev']] = FILES_CHANGED
 
     def tearDown(self):
         files_changed.get_changed_files.clear()
