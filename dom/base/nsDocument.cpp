@@ -8911,6 +8911,10 @@ nsIDocument::SetReadyStateInternal(ReadyState rs)
     mLoadingTimeStamp = mozilla::TimeStamp::Now();
   }
 
+  if (READYSTATE_INTERACTIVE == rs) {
+    TriggerInitialDocumentTranslation();
+  }
+
   RecordNavigationTiming(rs);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
