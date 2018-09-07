@@ -9,6 +9,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIDirIndexListener.h"
+#include "mozilla/RefPtr.h"
 
 class nsIDirIndex;
 class nsITextToSubURI;
@@ -20,14 +21,24 @@ class nsDirIndexParser : public nsIDirIndexParser {
 private:
     virtual ~nsDirIndexParser();
 
+    nsDirIndexParser();
+    nsresult Init();
+
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSIDIRINDEXPARSER
 
-    nsDirIndexParser();
-    nsresult Init();
+    static already_AddRefed<nsIDirIndexParser>
+    CreateInstance()
+    {
+      RefPtr<nsDirIndexParser> parser = new nsDirIndexParser();
+      if (NS_FAILED(parser->Init())) {
+        return nullptr;
+      }
+      return parser.forget();
+    }
 
     enum fieldType {
         FIELD_UNKNOWN = 0, // MUST be 0
