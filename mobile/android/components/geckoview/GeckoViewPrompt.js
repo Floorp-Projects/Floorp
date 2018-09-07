@@ -32,6 +32,9 @@ PromptFactory.prototype = {
       case "contextmenu":
         this._handleContextMenu(aEvent);
         break;
+      case "DOMPopupBlocked":
+        this._handlePopupBlocked(aEvent);
+        break;
     }
   },
 
@@ -271,6 +274,21 @@ PromptFactory.prototype = {
     });
 
     aEvent.preventDefault();
+  },
+
+  _handlePopupBlocked: function(aEvent) {
+    const dwi = aEvent.requestingWindow;
+    const popupWindowURISpec = aEvent.popupWindowURI ? aEvent.popupWindowURI.spec : "about:blank";
+
+    let prompt = new PromptDelegate(aEvent.requestingWindow);
+    prompt.asyncShowPrompt({
+      type: "popup",
+      targetUri: popupWindowURISpec
+    }, allowed => {
+      if (allowed && dwi) {
+        dwi.open(popupWindowURISpec, aEvent.popupWindowName, aEvent.popupWindowFeatures);
+      }
+    });
   },
 
   /* ----------  nsIPromptFactory  ---------- */

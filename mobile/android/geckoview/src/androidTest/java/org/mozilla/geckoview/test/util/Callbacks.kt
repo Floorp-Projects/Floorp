@@ -128,6 +128,10 @@ class Callbacks private constructor() {
         override fun onFilePrompt(session: GeckoSession, title: String, type: Int, mimeTypes: Array<out String>, callback: GeckoSession.PromptDelegate.FileCallback) {
             callback.dismiss()
         }
+
+        override fun onPopupRequest(session: GeckoSession, targetUri: String): GeckoResult<Boolean>? {
+            return null
+        }
     }
 
     interface ScrollDelegate : GeckoSession.ScrollDelegate {

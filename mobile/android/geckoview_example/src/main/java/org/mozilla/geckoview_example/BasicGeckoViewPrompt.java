@@ -48,6 +48,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource;
 
@@ -912,5 +913,10 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
                                final MediaSource[] video, final MediaSource[] audio,
                                final GeckoSession.PermissionDelegate.MediaCallback callback) {
         onMediaPrompt(session, title, video, audio, null, null, callback);
+    }
+
+    @Override
+    public GeckoResult<Boolean> onPopupRequest(final GeckoSession session, final String targetUri) {
+        return GeckoResult.fromValue(true);
     }
 }
