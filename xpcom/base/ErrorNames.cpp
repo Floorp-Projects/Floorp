@@ -34,14 +34,14 @@ GetErrorName(nsresult rv, nsACString& name)
                                       : "NS_ERROR_GENERATE_FAILURE(");
 
   if (isSecurityError) {
-    name.AppendASCII("NS_ERROR_MODULE_SECURITY");
+    name.AppendLiteral("NS_ERROR_MODULE_SECURITY");
   } else {
     // This should never happen given the assertion above, so we don't bother
     // trying to print a symbolic name for the module here.
     name.AppendInt(NS_ERROR_GET_MODULE(rv));
   }
 
-  name.AppendASCII(", ");
+  name.AppendLiteral(", ");
 
   const char * nsprName = nullptr;
   if (isSecurityError) {
@@ -60,7 +60,7 @@ GetErrorName(nsresult rv, nsACString& name)
     name.AppendInt(NS_ERROR_GET_CODE(rv));
   }
 
-  name.AppendASCII(")");
+  name.AppendLiteral(")");
 }
 
 } // namespace mozilla

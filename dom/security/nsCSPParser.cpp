@@ -929,7 +929,7 @@ nsCSPParser::sandboxFlagList(nsCSPDirective* aDir)
 
     flags.Append(mCurToken);
     if (i != mCurDir.Length() - 1) {
-      flags.AppendASCII(" ");
+      flags.AppendLiteral(" ");
     }
   }
 

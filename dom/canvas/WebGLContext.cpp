@@ -892,7 +892,7 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
                 Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_FAILURE_ID, cur.key);
             }
 
-            text.AppendASCII("\n* ");
+            text.AppendLiteral("\n* ");
             text.Append(cur.info);
         }
         failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_REASON");
