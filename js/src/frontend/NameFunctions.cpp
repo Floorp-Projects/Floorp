@@ -786,6 +786,12 @@ class NameResolver
             break;
           }
 
+          case ParseNodeKind::CallImport:
+            MOZ_ASSERT(cur->isArity(PN_BINARY));
+            if (!resolve(cur->pn_right, prefix))
+                return false;
+            break;
+
           case ParseNodeKind::Dot:
             MOZ_ASSERT(cur->isArity(PN_BINARY));
 
