@@ -11,8 +11,7 @@ const certdb  = Cc["@mozilla.org/security/x509certdb;1"]
 
 function expectCT(value) {
   return (securityInfo) => {
-    let sslStatus = securityInfo.SSLStatus;
-    Assert.equal(sslStatus.certificateTransparencyStatus, value,
+    Assert.equal(securityInfo.certificateTransparencyStatus, value,
                  "actual and expected CT status should match");
   };
 }
@@ -30,10 +29,10 @@ function run_test() {
   // where N is 2 in this case. So, a policy-compliant certificate would have at
   // least 3 SCTs.
   add_connection_test("ct-valid.example.com", PRErrorCodeSuccess, null,
-    expectCT(Ci.nsISSLStatus.CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT));
+    expectCT(Ci.nsITransportSecurityInfo.CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT));
   // This certificate has only 2 embedded SCTs, and so is not policy-compliant.
   add_connection_test("ct-insufficient-scts.example.com", PRErrorCodeSuccess,
     null,
-    expectCT(Ci.nsISSLStatus.CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS));
+    expectCT(Ci.nsITransportSecurityInfo.CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS));
   run_next_test();
 }
