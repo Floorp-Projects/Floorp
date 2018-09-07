@@ -119,7 +119,7 @@ tasks:
                 TASKCLUSTER_CACHES: /builds/worker/checkouts
               - $if: 'tasks_for == "action"'
                 then:
-                  ACTION_TASK_GROUP_ID: '${taskGroupId}'     # taskGroupId of the target task
+                  ACTION_TASK_GROUP_ID: '${action.taskGroupId}'     # taskGroupId of the target task
                   ACTION_TASK_ID: {$json: {$eval: 'taskId'}} # taskId of the target task (JSON-encoded)
                   ACTION_INPUT: {$json: {$eval: 'input'}}
                   ACTION_CALLBACK: '${action.cb_name}'
