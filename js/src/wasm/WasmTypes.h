@@ -598,8 +598,16 @@ enum class Tier
 {
     Baseline,
     Debug = Baseline,
+    Optimized,
+    Serialized = Optimized
+};
+
+// Which backend to use in the case of the optimized tier.
+
+enum class OptimizedBackend
+{
     Ion,
-    Serialized = Ion
+    Cranelift,
 };
 
 // The CompileMode controls how compilation of a module is performed (notably,

@@ -98,7 +98,7 @@ Module::startTier2(const CompileArgs& args,
 bool
 Module::finishTier2(const LinkData& linkData2, UniqueCodeTier code2) const
 {
-    MOZ_ASSERT(code().bestTier() == Tier::Baseline && code2->tier() == Tier::Ion);
+    MOZ_ASSERT(code().bestTier() == Tier::Baseline && code2->tier() == Tier::Optimized);
 
     // Install the data in the data structures. They will not be visible
     // until commitTier2().
@@ -119,7 +119,7 @@ Module::finishTier2(const LinkData& linkData2, UniqueCodeTier code2) const
         const MetadataTier& metadataTier1 = metadata(Tier::Baseline);
 
         auto stubs1 = code().codeTier(Tier::Baseline).lazyStubs().lock();
-        auto stubs2 = code().codeTier(Tier::Ion).lazyStubs().lock();
+        auto stubs2 = code().codeTier(Tier::Optimized).lazyStubs().lock();
 
         MOZ_ASSERT(stubs2->empty());
 
@@ -138,7 +138,7 @@ Module::finishTier2(const LinkData& linkData2, UniqueCodeTier code2) const
         }
 
         HasGcTypes gcTypesConfigured = code().metadata().temporaryGcTypesConfigured;
-        const CodeTier& tier2 = code().codeTier(Tier::Ion);
+        const CodeTier& tier2 = code().codeTier(Tier::Optimized);
 
         Maybe<size_t> stub2Index;
         if (!stubs2->createTier2(gcTypesConfigured, funcExportIndices, tier2, &stub2Index)) {
@@ -155,8 +155,8 @@ Module::finishTier2(const LinkData& linkData2, UniqueCodeTier code2) const
 
     // And we update the jump vector.
 
-    uint8_t* base = code().segment(Tier::Ion).base();
-    for (const CodeRange& cr : metadata(Tier::Ion).codeRanges) {
+    uint8_t* base = code().segment(Tier::Optimized).base();
+    for (const CodeRange& cr : metadata(Tier::Optimized).codeRanges) {
         // These are racy writes that we just want to be visible, atomically,
         // eventually.  All hardware we care about will do this right.  But
         // we depend on the compiler not splitting the stores hidden inside the
