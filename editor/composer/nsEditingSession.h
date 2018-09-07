@@ -62,6 +62,13 @@ public:
 protected:
   virtual         ~nsEditingSession();
 
+  typedef already_AddRefed<nsIController> (*ControllerCreatorFn)();
+
+  nsresult        SetupEditorCommandController(ControllerCreatorFn aControllerCreatorFn,
+                                               mozIDOMWindowProxy* aWindow,
+                                               nsISupports* aContext,
+                                               uint32_t* aControllerId);
+
   nsresult        SetupEditorCommandController(const char *aControllerClassName,
                                                mozIDOMWindowProxy* aWindow,
                                                nsISupports *aContext,
