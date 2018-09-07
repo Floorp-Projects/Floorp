@@ -313,6 +313,7 @@ var gPlayTests = [
   // It is necessary to parse the file to find an audio frame instead.
   { name:"flac-noheader-s16.flac", type:"audio/flac", duration:4.0 },
   { name:"flac-s24.flac", type:"audio/flac", duration:4.04 },
+  { name:"flac-sample.mp4", type:"audio/mp4; codecs=flac", duration:4.95 },
   // Ogg with theora video and flac audio.
   { name:"A4.ogv", type:"video/ogg", width:320, height:240, duration:3.13 },
 
