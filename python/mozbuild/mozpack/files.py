@@ -12,6 +12,7 @@ import stat
 import subprocess
 import uuid
 import mozbuild.makeutil as makeutil
+from itertools import chain
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import FileAvoidWrite
 from mozpack.executables import (
@@ -21,7 +22,10 @@ from mozpack.executables import (
     may_elfhack,
     elfhack,
 )
-from mozpack.chrome.manifest import ManifestEntry
+from mozpack.chrome.manifest import (
+    ManifestEntry,
+    ManifestInterfaces,
+)
 from io import BytesIO
 from mozpack.errors import (
     ErrorMessage,
@@ -624,78 +628,6 @@ class ExtractedTarFile(GeneratedFile):
     def read(self):
         return self.content
 
-class XPTFile(GeneratedFile):
-    '''
-    File class for a linked XPT file. It takes several XPT files as input
-    (using the add() and remove() member functions), and links them at copy()
-    time.
-    '''
-    def __init__(self):
-        self._files = set()
-
-    def add(self, xpt):
-        '''
-        Add the given XPT file (as a BaseFile instance) to the list of XPTs
-        to link.
-        '''
-        assert isinstance(xpt, BaseFile)
-        self._files.add(xpt)
-
-    def remove(self, xpt):
-        '''
-        Remove the given XPT file (as a BaseFile instance) from the list of
-        XPTs to link.
-        '''
-        assert isinstance(xpt, BaseFile)
-        self._files.remove(xpt)
-
-    def copy(self, dest, skip_if_older=True):
-        '''
-        Link the registered XPTs and place the resulting linked XPT at the
-        destination given as a string or a Dest instance. Avoids an expensive
-        XPT linking if the interfaces in an existing destination match those of
-        the individual XPTs to link.
-        skip_if_older is ignored.
-        '''
-        if isinstance(dest, basestring):
-            dest = Dest(dest)
-        assert isinstance(dest, Dest)
-
-        from xpt import xpt_link, Typelib, Interface
-        all_typelibs = [Typelib.read(f.open()) for f in self._files]
-        if dest.exists():
-            # Typelib.read() needs to seek(), so use a BytesIO for dest
-            # content.
-            dest_interfaces = \
-                dict((i.name, i)
-                     for i in Typelib.read(BytesIO(dest.read())).interfaces
-                     if i.iid != Interface.UNRESOLVED_IID)
-            identical = True
-            for f in self._files:
-                typelib = Typelib.read(f.open())
-                for i in typelib.interfaces:
-                    if i.iid != Interface.UNRESOLVED_IID and \
-                            not (i.name in dest_interfaces and
-                                 i == dest_interfaces[i.name]):
-                        identical = False
-                        break
-            if identical:
-                return False
-        s = BytesIO()
-        xpt_link(all_typelibs).write(s)
-        dest.write(s.getvalue())
-        return True
-
-    def open(self):
-        raise RuntimeError("Unsupported")
-
-    def isempty(self):
-        '''
-        Return whether there are XPT files to link.
-        '''
-        return len(self._files) == 0
-
-
 class ManifestFile(BaseFile):
     '''
     File class for a manifest file. It takes individual manifest entries (using
@@ -712,8 +644,11 @@ class ManifestFile(BaseFile):
         currently but could in the future.
     '''
     def __init__(self, base, entries=None):
-        self._entries = entries if entries else []
         self._base = base
+        self._entries = []
+        self._interfaces = []
+        for e in entries or []:
+            self.add(e)
 
     def add(self, entry):
         '''
@@ -721,14 +656,20 @@ class ManifestFile(BaseFile):
         instead of add() time so that they can be more easily remove()d.
         '''
         assert isinstance(entry, ManifestEntry)
-        self._entries.append(entry)
+        if isinstance(entry, ManifestInterfaces):
+            self._interfaces.append(entry)
+        else:
+            self._entries.append(entry)
 
     def remove(self, entry):
         '''
         Remove the given entry from the manifest.
         '''
         assert isinstance(entry, ManifestEntry)
-        self._entries.remove(entry)
+        if isinstance(entry, ManifestInterfaces):
+            self._interfaces.remove(entry)
+        else:
+            self._entries.remove(entry)
 
     def open(self):
         '''
@@ -736,19 +677,20 @@ class ManifestFile(BaseFile):
         the manifest.
         '''
         return BytesIO(''.join('%s\n' % e.rebase(self._base)
-                               for e in self._entries))
+                               for e in chain(self._entries,
+                                              self._interfaces)))
 
     def __iter__(self):
         '''
         Iterate over entries in the manifest file.
         '''
-        return iter(self._entries)
+        return chain(self._entries, self._interfaces)
 
     def isempty(self):
         '''
         Return whether there are manifest entries to write
         '''
-        return len(self._entries) == 0
+        return len(self._entries) + len(self._interfaces) == 0
 
 
 class MinifiedProperties(BaseFile):

@@ -27,11 +27,9 @@ from mozpack.errors import (
     ErrorMessage,
 )
 from mozpack.test.test_files import (
-    MockDest,
     foo_xpt,
     foo2_xpt,
     bar_xpt,
-    read_interfaces,
 )
 import mozpack.path as mozpath
 from test_errors import TestErrors
@@ -94,13 +92,12 @@ RESULT_FLAT = {
     'chrome/f/oo/qux': FILES['chrome/f/oo/qux'],
     'components/components.manifest': [
         'binary-component foo.so',
-        'interfaces interfaces.xpt',
+        'interfaces bar.xpt',
+        'interfaces foo.xpt',
     ],
     'components/foo.so': FILES['components/foo.so'],
-    'components/interfaces.xpt': {
-        'foo': read_interfaces(foo_xpt.open())['foo'],
-        'bar': read_interfaces(bar_xpt.open())['bar'],
-    },
+    'components/foo.xpt': foo_xpt,
+    'components/bar.xpt': bar_xpt,
     'foo': FILES['foo'],
     'app/chrome.manifest': [
         'manifest chrome/chrome.manifest',
@@ -129,12 +126,11 @@ for addon in ('addon0', 'addon1'):
             ],
             'chrome/foo/bar/baz': FILES[mozpath.join(addon, 'chrome/foo/bar/baz')],
             'components/components.manifest': [
-                'interfaces interfaces.xpt',
+                'interfaces bar.xpt',
+                'interfaces foo.xpt',
             ],
-            'components/interfaces.xpt': {
-                'foo': read_interfaces(foo2_xpt.open())['foo'],
-                'bar': read_interfaces(bar_xpt.open())['bar'],
-            },
+            'components/bar.xpt': bar_xpt,
+            'components/foo.xpt': foo2_xpt,
         }.iteritems()
     })
 
@@ -145,14 +141,16 @@ RESULT_JAR = {
         'chrome/chrome.manifest',
         'components/components.manifest',
         'components/foo.so',
-        'components/interfaces.xpt',
+        'components/foo.xpt',
+        'components/bar.xpt',
         'foo',
         'app/chrome.manifest',
         'app/components/components.manifest',
         'app/components/foo.js',
         'addon0/chrome.manifest',
         'addon0/components/components.manifest',
-        'addon0/components/interfaces.xpt',
+        'addon0/components/foo.xpt',
+        'addon0/components/bar.xpt',
     )
 }
 
@@ -203,7 +201,8 @@ RESULT_OMNIJAR.update({
 RESULT_OMNIJAR.update({
     'omni.foo': {
         'components/components.manifest': [
-            'interfaces interfaces.xpt',
+            'interfaces bar.xpt',
+            'interfaces foo.xpt',
         ],
     },
     'chrome.manifest': [
@@ -234,7 +233,8 @@ RESULT_OMNIJAR['omni.foo'].update({
         'chrome/f/oo/bar/baz',
         'chrome/f/oo/baz',
         'chrome/f/oo/qux',
-        'components/interfaces.xpt',
+        'components/foo.xpt',
+        'components/bar.xpt',
     )
 })
 
@@ -272,11 +272,6 @@ RESULT_JAR_WITH_BASE = result_with_base(RESULT_JAR)
 RESULT_OMNIJAR_WITH_BASE = result_with_base(RESULT_OMNIJAR)
 
 
-class MockDest(MockDest):
-    def exists(self):
-        return False
-
-
 def fill_formatter(formatter, contents):
     for base, is_addon in contents['bases'].items():
         formatter.add_base(base, is_addon)
@@ -284,7 +279,7 @@ def fill_formatter(formatter, contents):
     for manifest in contents['manifests']:
         formatter.add_manifest(manifest)
 
-    for k, v in contents['files'].iteritems():
+    for k, v in sorted(contents['files'].iteritems()):
         if k.endswith('.xpt'):
             formatter.add_interfaces(k, v)
         else:
@@ -294,11 +289,7 @@ def fill_formatter(formatter, contents):
 def get_contents(registry, read_all=False):
     result = {}
     for k, v in registry:
-        if k.endswith('.xpt'):
-            tmpfile = MockDest()
-            registry[k].copy(tmpfile)
-            result[k] = read_interfaces(tmpfile)
-        elif isinstance(v, FileRegistry):
+        if isinstance(v, FileRegistry):
             result[k] = get_contents(v)
         elif isinstance(v, ManifestFile) or read_all:
             result[k] = v.open().read().splitlines()
