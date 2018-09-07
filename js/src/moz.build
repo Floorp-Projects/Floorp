@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include('js-config.mozbuild')
+include('js-cxxflags.mozbuild')
 
 # Directory metadata
 component_engine = ('Core', 'JavaScript Engine')
@@ -721,24 +722,6 @@ if CONFIG['JS_BUILD_BINAST']:
         SOURCES['frontend/BinToken.cpp'].flags += libfuzzer_flags
         SOURCES['frontend/BinTokenReaderTester.cpp'].flags += libfuzzer_flags
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-    # C4805 warns mixing bool with other integral types in computation.
-    # But given the conversion from bool is specified, and this is a
-    # pattern widely used in code in js/src, suppress this warning here.
-    CXXFLAGS += ['-wd4805']
-    # C4661 ("no suitable definition provided for explicit template
-    # instantiation request") is emitted for all Parser methods that
-    # have a Parser<FullParseHandler> definition but no
-    # Parser<SyntaxParseHandler> definition, see bug 1167030.
-    CXXFLAGS += ['-wd4661']
-    # FIXME: unary minus operator applied to unsigned type (bug 1229189)
-    CXXFLAGS += ['-wd4146']
-    # FIXME: 'operation' : conversion from 'type1' to 'type2' of
-    # greater size (bug 1259304)
-    CXXFLAGS += ['-wd4312']
-
-CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
-
 # Prepare self-hosted JS code for embedding
 GENERATED_FILES += [('selfhosted.out.h', 'selfhosted.js')]
 selfhosted = GENERATED_FILES[('selfhosted.out.h', 'selfhosted.js')]
@@ -786,12 +769,6 @@ selfhosted.inputs = [
 if CONFIG['JS_HAS_CTYPES']:
     if CONFIG['MOZ_SYSTEM_FFI']:
         CXXFLAGS += CONFIG['MOZ_FFI_CFLAGS']
-
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-shadow', '-Werror=format']
-    # Also disable strict-aliasing for GCC compiler, that is enabled by default
-    # starting with version 7.1, see Bug 1363009
-    CXXFLAGS += ['-fno-strict-aliasing']
 
 # Suppress warnings in third-party code.
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
