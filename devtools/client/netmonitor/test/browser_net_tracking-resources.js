@@ -6,7 +6,7 @@
 const { UrlClassifierTestUtils } =
   ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
-const TEST_URI = "http://tracking.example.org/browser/devtools/client/" +
+const TEST_URI = "http://example.com/browser/devtools/client/" +
                  "netmonitor/test/html_tracking-protection.html";
 
 registerCleanupFunction(function() {
@@ -19,7 +19,7 @@ registerCleanupFunction(function() {
 add_task(async function() {
   await UrlClassifierTestUtils.addTestTrackers();
 
-  const { tab, monitor } = await initNetMonitor(TEST_URI);
+  const { monitor, tab } = await initNetMonitor(TEST_URI);
   info("Starting  test...");
 
   const { document, store, windowRequire } = monitor.panelWin;
@@ -27,10 +27,8 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  // Reload the page
-  const wait = waitForAllRequestsFinished(monitor);
-  tab.linkedBrowser.reload();
-  await wait;
+  // Execute request with third party tracking protection flag.
+  await performRequests(monitor, tab, 1);
 
   const requests = document.querySelectorAll(".request-list-item .tracking-resource");
   is(requests.length, 1, "There should be one tracking request");

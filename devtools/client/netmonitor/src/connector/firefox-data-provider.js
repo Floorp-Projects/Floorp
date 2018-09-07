@@ -71,7 +71,7 @@ class FirefoxDataProvider {
       startedDateTime,
       fromCache,
       fromServiceWorker,
-      isTrackingResource,
+      isThirdPartyTrackingResource,
     } = data;
 
     if (this.actionsEnabled && this.actions.addRequest) {
@@ -90,7 +90,7 @@ class FirefoxDataProvider {
 
         fromCache,
         fromServiceWorker,
-        isTrackingResource,
+        isThirdPartyTrackingResource,
       }, true);
     }
 
@@ -325,7 +325,7 @@ class FirefoxDataProvider {
         url,
       },
       startedDateTime,
-      isTrackingResource,
+      isThirdPartyTrackingResource,
     } = networkInfo;
 
     await this.addRequest(actor, {
@@ -336,7 +336,7 @@ class FirefoxDataProvider {
       method,
       startedDateTime,
       url,
-      isTrackingResource,
+      isThirdPartyTrackingResource,
     });
 
     this.emit(EVENTS.NETWORK_EVENT, actor);
