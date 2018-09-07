@@ -1386,7 +1386,7 @@ function promiseNotification(id = "addon-webext-permissions") {
       let notification = PopupNotifications.getNotification(id);
       if (notification) {
         PopupNotifications.panel.removeEventListener("popupshown", popupshown);
-        PopupNotifications.panel.firstChild.button.click();
+        PopupNotifications.panel.firstElementChild.button.click();
         resolve();
       }
     }

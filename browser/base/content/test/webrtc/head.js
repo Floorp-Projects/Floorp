@@ -298,7 +298,7 @@ function promisePopupNotificationShown(aName, aAction) {
     PopupNotifications.panel.addEventListener("popupshown", function() {
       ok(!!PopupNotifications.getNotification(aName), aName + " notification shown");
       ok(PopupNotifications.isPanelOpen, "notification panel open");
-      ok(!!PopupNotifications.panel.firstChild, "notification panel populated");
+      ok(!!PopupNotifications.panel.firstElementChild, "notification panel populated");
 
       executeSoon(resolve);
     }, {once: true});
@@ -341,7 +341,7 @@ const kActionDeny = 2;
 const kActionNever = 3;
 
 function activateSecondaryAction(aAction) {
-  let notification = PopupNotifications.panel.firstChild;
+  let notification = PopupNotifications.panel.firstElementChild;
   switch (aAction) {
     case kActionNever:
       notification.checkbox.setAttribute("checked", true); // fallthrough

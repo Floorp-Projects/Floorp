@@ -159,7 +159,7 @@ async function testAutoplayUnknownPermission(args) {
       PopupNotifications.panel.firstElementChild.button.click();
     } else if (args.button == "block") {
       info("Clicking block button");
-      PopupNotifications.panel.firstChild.secondaryButton.click();
+      PopupNotifications.panel.firstElementChild.secondaryButton.click();
     } else {
       ok(false, "Invalid button field");
     }
