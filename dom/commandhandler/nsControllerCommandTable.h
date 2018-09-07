@@ -25,6 +25,7 @@ public:
 
   static already_AddRefed<nsIControllerCommandTable> CreateHTMLEditorCommandTable();
   static already_AddRefed<nsIControllerCommandTable> CreateHTMLEditorDocStateCommandTable();
+  static already_AddRefed<nsIControllerCommandTable> CreateWindowCommandTable();
 
 protected:
   virtual ~nsControllerCommandTable();
