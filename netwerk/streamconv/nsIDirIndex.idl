@@ -70,13 +70,3 @@ interface nsIDirIndex : nsISupports
     attribute PRTime lastModified;
 };
 
-%{C++
-
-#define NS_DIRINDEX_CID \
-/* { f6913e2e-1dd1-11b2-84be-f455dee342af } */ \
-{ 0xf6913e2e, \
-  0x1dd1, \
-  0x11b2, \
-  { 0x84, 0xbe, 0xf4, 0x55, 0xde, 0xe3, 0x42, 0xaf } \
-}
-%}
