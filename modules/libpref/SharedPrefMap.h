@@ -318,7 +318,8 @@ class SharedPrefMap
     uint8_t mIsSticky : 1;
     // True if the preference is locked, as defined by the preference service.
     uint8_t mIsLocked : 1;
-    // True if the preference's default value has changed since it was first set.
+    // True if the preference's default value has changed since it was first
+    // set.
     uint8_t mDefaultChanged : 1;
   };
 

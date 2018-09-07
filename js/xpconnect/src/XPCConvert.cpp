@@ -11,6 +11,7 @@
 
 #include "xpcprivate.h"
 #include "nsIScriptError.h"
+#include "nsISimpleEnumerator.h"
 #include "nsWrapperCache.h"
 #include "nsJSUtils.h"
 #include "nsQueryObject.h"

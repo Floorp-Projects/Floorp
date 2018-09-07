@@ -210,44 +210,22 @@ MockFilePickerInstance.prototype = {
 
     return null;
   },
-  get files() {
-    return {
-      index: 0,
-      QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
-      [Symbol.iterator]() {
-        return Array.from(MockFilePicker.returnData, d => d.nsIFile).values();
-      },
-      hasMoreElements() {
-        return this.index < MockFilePicker.returnData.length;
-      },
-      getNext() {
-        if (!MockFilePicker.returnData[this.index].nsIFile) {
-          throw Components.Exception("", Cr.NS_ERROR_FAILURE);
-        }
-        return MockFilePicker.returnData[this.index++].nsIFile;
+  * getFiles(asDOM) {
+    for (let d of MockFilePicker.returnData) {
+      if (asDOM) {
+        yield d.domFile || d.domDirectory;
+      } else if (d.nsIFile) {
+        yield d.nsIFile;
+      } else {
+        throw Components.Exception("", Cr.NS_ERROR_FAILURE);
       }
-    };
+    }
+  },
+  get files() {
+    return this.getFiles(false);
   },
   get domFileOrDirectoryEnumerator() {
-    return {
-      index: 0,
-      QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
-      hasMoreElements() {
-        return this.index < MockFilePicker.returnData.length;
-      },
-      getNext() {
-        // window.File does not implement nsIFile
-        if (MockFilePicker.returnData[this.index].domFile) {
-          return MockFilePicker.returnData[this.index++].domFile;
-        }
-
-        if (MockFilePicker.returnData[this.index].domDirectory) {
-          return MockFilePicker.returnData[this.index++].domDirectory;
-        }
-
-        return null;
-      }
-    };
+    return this.getFiles(true);
   },
   open(aFilePickerShownCallback) {
     MockFilePicker.showing = true;
