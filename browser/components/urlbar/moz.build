@@ -6,6 +6,7 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "Address Bar")
 
 EXTRA_JS_MODULES += [
+    'UrlbarController.jsm',
     'UrlbarTokenizer.jsm',
 ]
 
