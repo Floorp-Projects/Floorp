@@ -14,7 +14,6 @@
 namespace mozilla {
 namespace dom {
 class PaymentRequestUpdateEvent;
-struct PaymentMethodChangeEventInit;
 class PaymentMethodChangeEvent final : public PaymentRequestUpdateEvent
 {
 public:
