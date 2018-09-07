@@ -7,7 +7,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 1478910;
-var summary = 'JSMSG_AWAIT_IN_DEFAULT error for incomplete await expr in async function/generator parameter';
+var summary = 'JSMSG_AWAIT_IN_PARAMETER error for incomplete await expr in async function/generator parameter';
 
 
 //-----------------------------------------------------------------------------
@@ -20,7 +20,7 @@ function test()
   printStatus(summary);
 
   let testAwaitInDefaultExprOfAsyncFunc = (code) => {
-  	assertThrowsInstanceOf(() => eval(code), SyntaxError, "await can't be used in default expression");
+  	assertThrowsInstanceOf(() => eval(code), SyntaxError, "await expression can't be used in parameter");
   };
 
   let testNoException = (code) => {
