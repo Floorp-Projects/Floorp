@@ -19,6 +19,8 @@ TEST_HARNESS_FILES.xpcshell.dom.quota.test += [
     'test/head-shared.js',
 ]
 
+TEST_DIRS += ['test/gtest']
+
 XPIDL_SOURCES += [
     'nsIQuotaCallbacks.idl',
     'nsIQuotaManagerService.idl',
@@ -67,6 +69,7 @@ IPDL_SOURCES += [
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
 LOCAL_INCLUDES += [
     '/caps',
 ]

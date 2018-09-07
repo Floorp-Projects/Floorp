@@ -12,11 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsWeakPtr.h"
 
-#define NS_AUDIOCHANNELAGENT_CONTRACTID "@mozilla.org/audiochannelagent;1"
-// f27688e2-3dd7-11e2-904e-10bf48d64bd4
-#define NS_AUDIOCHANNELAGENT_CID {0xf27688e2, 0x3dd7, 0x11e2, \
-      {0x90, 0x4e, 0x10, 0xbf, 0x48, 0xd6, 0x4b, 0xd4}}
-
 class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;
 
