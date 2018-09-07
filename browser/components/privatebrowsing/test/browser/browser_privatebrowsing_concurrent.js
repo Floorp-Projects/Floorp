@@ -26,28 +26,32 @@ add_task(async function test() {
 
   // Step 1
   let non_private_browser = gBrowser.selectedBrowser;
-  non_private_browser.loadURI(prefix + "?action=set&name=test&value=value&initial=true");
-  await BrowserTestUtils.browserLoaded(non_private_browser);
+  let url = prefix + "?action=set&name=test&value=value&initial=true";
+  non_private_browser.loadURI(url);
+  await BrowserTestUtils.browserLoaded(non_private_browser, false, url);
 
 
   // Step 2
   let private_window = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   let private_browser = private_window.getBrowser().selectedBrowser;
-  private_browser.loadURI(prefix + "?action=set&name=test2&value=value2");
-  await BrowserTestUtils.browserLoaded(private_browser);
+  url = prefix + "?action=set&name=test2&value=value2";
+  private_browser.loadURI(url);
+  await BrowserTestUtils.browserLoaded(private_browser, false, url);
 
 
   // Step 3
-  non_private_browser.loadURI(prefix + "?action=get&name=test2");
-  await BrowserTestUtils.browserLoaded(non_private_browser);
+  url = prefix + "?action=get&name=test2";
+  non_private_browser.loadURI(url);
+  await BrowserTestUtils.browserLoaded(non_private_browser, false, url);
   let elts = await getElts(non_private_browser);
   isnot(elts[0], "value2", "public window shouldn't see private storage");
   is(elts[1], "1", "public window should only see public items");
 
 
   // Step 4
-  private_browser.loadURI(prefix + "?action=get&name=test");
-  await BrowserTestUtils.browserLoaded(private_browser);
+  url = prefix + "?action=get&name=test";
+  private_browser.loadURI(url);
+  await BrowserTestUtils.browserLoaded(private_browser, false, url);
   elts = await getElts(private_browser);
   isnot(elts[0], "value", "private window shouldn't see public storage");
   is(elts[1], "1", "private window should only see private items");
@@ -61,8 +65,9 @@ add_task(async function test() {
   await new Promise(resolve => Cu.schedulePreciseGC(resolve));
   private_browser = private_window.getBrowser().selectedBrowser;
 
-  private_browser.loadURI(prefix + "?action=get&name=test2");
-  await BrowserTestUtils.browserLoaded(private_browser, false, prefix + "?action=get&name=test2");
+  url = prefix + "?action=get&name=test2";
+  private_browser.loadURI(url);
+  await BrowserTestUtils.browserLoaded(private_browser, false, url);
   elts = await getElts(private_browser);
   isnot(elts[0], "value2", "public window shouldn't see cleared private storage");
   is(elts[1], "1", "public window should only see public items");
@@ -76,13 +81,15 @@ add_task(async function test() {
   await new Promise(resolve => Cu.schedulePreciseGC(resolve));
   private_browser = private_window.getBrowser().selectedBrowser;
 
-  private_browser.loadURI(prefix + "?action=set&name=test3&value=value3");
-  await BrowserTestUtils.browserLoaded(private_browser);
+  url = prefix + "?action=set&name=test3&value=value3";
+  private_browser.loadURI(url);
+  await BrowserTestUtils.browserLoaded(private_browser, false, url);
   elts = await getElts(private_browser);
   is(elts[1], "1", "private window should only see new private items");
 
   // Cleanup.
-  non_private_browser.loadURI(prefix + "?final=true");
-  await BrowserTestUtils.browserLoaded(non_private_browser);
+  url = prefix + "?final=true";
+  non_private_browser.loadURI(url);
+  await BrowserTestUtils.browserLoaded(non_private_browser, false, url);
   private_window.close();
 });
