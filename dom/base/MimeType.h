@@ -12,10 +12,15 @@
 #include "nsDataHashtable.h"
 #include "nsTArray.h"
 
-class MimeType final
+template<typename char_type> struct HashKeyType;
+template<> struct HashKeyType<char16_t> { typedef nsStringHashKey HashType; };
+template<> struct HashKeyType<char> { typedef nsCStringHashKey HashType; };
+
+template <typename char_type>
+class TMimeType final
 {
 private:
-  class ParameterValue : public nsString
+  class ParameterValue : public nsTString<char_type>
   {
   public:
     bool mRequiresQuoting;
@@ -25,18 +30,34 @@ private:
     {}
   };
 
-  nsString mType;
-  nsString mSubtype;
-  nsDataHashtable<nsStringHashKey, ParameterValue> mParameters;
-  nsTArray<nsString> mParameterNames;
+  nsTString<char_type> mType;
+  nsTString<char_type> mSubtype;
+  nsDataHashtable<typename HashKeyType<char_type>::HashType, ParameterValue> mParameters;
+  nsTArray<nsTString<char_type>> mParameterNames;
 
 public:
-  MimeType(const nsAString& aType, const nsAString& aSubtype)
+  TMimeType(const nsTSubstring<char_type>& aType, const nsTSubstring<char_type>& aSubtype)
     : mType(aType), mSubtype(aSubtype)
   {}
 
-  static mozilla::UniquePtr<MimeType> Parse(const nsAString& aStr);
-  void Serialize(nsAString& aStr) const;
+  static mozilla::UniquePtr<TMimeType<char_type>> Parse(const nsTSubstring<char_type>& aStr);
+
+  void Serialize(nsTSubstring<char_type>& aStr) const;
+
+  // Returns the `<mType>/<mSubtype>`
+  void GetFullType(nsTSubstring<char_type>& aStr) const;
+
+  // @param aName - the name of the parameter
+  // @param aOutput - will hold the value of the parameter (quoted if necessary)
+  // @param aAppend - if true, the method will append to the string;
+  //                  otherwise the string is truncated before appending.
+  // @return true if the parameter name is found, false otherwise.
+  bool GetParameterValue(const nsTSubstring<char_type>& aName,
+                         nsTSubstring<char_type>& aOutput,
+                         bool aAppend = false) const;
 };
+
+using MimeType = TMimeType<char16_t>;
+using CMimeType = TMimeType<char>;
 
 #endif // mozilla_dom_MimeType_h

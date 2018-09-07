@@ -334,8 +334,8 @@ def generate_partials_upstream_artifacts(job, artifacts, platform, locale=None):
     upstream_artifacts = [{
         'taskId': {'task-reference': '<partials-signing>'},
         'taskType': 'signing',
-        'paths': ["{}/{}".format(artifact_prefix, p)
-                  for p in artifacts],
+        'paths': ["{}/{}".format(artifact_prefix, path)
+                  for path, _ in artifacts],
         'locale': locale or 'en-US',
     }]
 

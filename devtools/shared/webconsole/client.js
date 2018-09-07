@@ -111,7 +111,7 @@ WebConsoleClient.prototype = {
         private: actor.private,
         fromCache: actor.fromCache,
         fromServiceWorker: actor.fromServiceWorker,
-        isTrackingResource: actor.isTrackingResource,
+        isThirdPartyTrackingResource: actor.isThirdPartyTrackingResource,
       };
       this._networkRequests.set(actor.actor, networkInfo);
 
