@@ -49,6 +49,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import kotlinx.android.synthetic.main.browser_display_toolbar.*
 
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.InstallFirefoxActivity
@@ -94,6 +95,7 @@ import java.util.Objects
 import mozilla.components.support.utils.ColorUtils
 import mozilla.components.support.utils.DownloadUtils
 import mozilla.components.support.utils.DrawableUtils
+import org.mozilla.focus.gecko.NestedGeckoView
 
 /**
  * Fragment for displaying the browser UI.
@@ -554,6 +556,8 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                     // Switch to immersive mode: Hide system bars other UI controls
                     switchToImmersiveMode()
                 } else {
+                    appbar?.setExpanded(false, true)
+                    (getWebView() as? NestedGeckoView)?.isNestedScrollingEnabled = false
                     // Hide status bar when entering fullscreen with GeckoView
                     statusBar!!.visibility = View.GONE
                     // Switch to immersive mode: Hide system bars other UI controls
@@ -562,6 +566,11 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             }
 
             override fun onExitFullScreen() {
+                if (AppConstants.isGeckoBuild) {
+                    appbar?.setExpanded(true, true)
+                    (getWebView() as? NestedGeckoView)?.isNestedScrollingEnabled = true
+                }
+
                 isFullscreen = false
 
                 // Remove custom video views and hide container
