@@ -35,6 +35,7 @@ UNIFIED_SOURCES += [
     'XPCVariant.cpp',
     'XPCWrappedJS.cpp',
     'XPCWrappedJSClass.cpp',
+    'XPCWrappedJSIterator.cpp',
     'XPCWrappedNative.cpp',
     'XPCWrappedNativeInfo.cpp',
     'XPCWrappedNativeJSOps.cpp',
