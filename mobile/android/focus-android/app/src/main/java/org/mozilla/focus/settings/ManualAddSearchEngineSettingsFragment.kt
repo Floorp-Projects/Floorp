@@ -206,12 +206,12 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
 
     private class ValidateSearchEngineAsyncTask
         constructor (
-            that: ManualAddSearchEngineSettingsFragment,
+            fragment: ManualAddSearchEngineSettingsFragment,
             private val engineName: String,
             private val query: String
         ) : AsyncTask<Void, Void, Boolean>() {
 
-        private val thatWeakReference: WeakReference<ManualAddSearchEngineSettingsFragment> = WeakReference(that)
+        private val fragmentWeakReference = WeakReference(fragment)
 
         override fun doInBackground(vararg p0: Void?): Boolean {
             val isValidSearchQuery = isValidSearchQueryURL(query)
@@ -227,25 +227,25 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
                 return
             }
 
-            val that = thatWeakReference.get()
-            if (that == null) {
+            val fragment = fragmentWeakReference.get()
+            if (fragment == null) {
                 Log.d(LOGTAG, "Fragment or menu item no longer exists when search query " +
                         "validation async task returned.")
                 return
             }
 
             if (isValidSearchQuery) {
-                CustomSearchEngineStore.addSearchEngine(that.activity!!, engineName, query)
-                Snackbar.make(that.view!!, R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
-                Settings.getInstance(that.activity!!).setDefaultSearchEngineByName(engineName)
-                that.fragmentManager!!.popBackStack()
+                CustomSearchEngineStore.addSearchEngine(fragment.activity!!, engineName, query)
+                Snackbar.make(fragment.view!!, R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
+                Settings.getInstance(fragment.activity!!).setDefaultSearchEngineByName(engineName)
+                fragment.fragmentManager!!.popBackStack()
             } else {
-                showServerError(that)
+                showServerError(fragment)
             }
 
-            that.setUiIsValidatingAsync(false, that.menuItemForActiveAsyncTask)
-            that.activeAsyncTask = null
-            that.menuItemForActiveAsyncTask = null
+            fragment.setUiIsValidatingAsync(false, fragment.menuItemForActiveAsyncTask)
+            fragment.activeAsyncTask = null
+            fragment.menuItemForActiveAsyncTask = null
         }
 
         private fun showServerError(that: ManualAddSearchEngineSettingsFragment) {
