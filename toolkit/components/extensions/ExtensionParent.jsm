@@ -481,6 +481,15 @@ ProxyMessenger = {
       return {messageManager: browser.messageManager, xulBrowser: browser};
     }
 
+    // port.postMessage / port.disconnect to non-tab contexts.
+    if (recipient.envType === "content_child") {
+      let childId = `${recipient.extensionId}.${recipient.contextId}`;
+      let context = ParentAPIManager.proxyContexts.get(childId);
+      if (context) {
+        return {messageManager: context.parentMessageManager, xulBrowser: context.xulBrowser};
+      }
+    }
+
     // runtime.sendMessage / runtime.connect
     let extension = GlobalManager.extensionMap.get(recipient.extensionId);
     if (extension) {
