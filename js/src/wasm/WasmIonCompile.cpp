@@ -3873,7 +3873,8 @@ wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
                           ExclusiveDeferredValidationState& dvs,
                           UniqueChars* error)
 {
-    MOZ_ASSERT(env.tier() == Tier::Ion);
+    MOZ_ASSERT(env.tier() == Tier::Optimized);
+    MOZ_ASSERT(env.optimizedBackend() == OptimizedBackend::Ion);
 
     TempAllocator alloc(&lifo);
     JitContext jitContext(&alloc);
