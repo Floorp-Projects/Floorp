@@ -1241,9 +1241,14 @@ var gViewController = {
           if (result != nsIFilePicker.returnOK)
             return;
 
+          let installTelemetryInfo = {
+            source: "about:addons",
+            method: "install-from-file",
+          };
+
           let browser = getBrowserElement();
           for (let file of fp.files) {
-            let install = await AddonManager.getInstallForFile(file);
+            let install = await AddonManager.getInstallForFile(file, null, installTelemetryInfo);
             AddonManager.installAddonFromAOM(browser, document.documentURIObject, install);
           }
         });
@@ -3433,7 +3438,11 @@ var gDragDrop = {
       }
 
       if (url) {
-        let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
+        let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall",
+                                                          null, null, null, null, null, {
+                                                            source: "about:addons",
+                                                            method: "drag-and-drop",
+                                                          });
         AddonManager.installAddonFromAOM(browser, document.documentURIObject, install);
       }
     }

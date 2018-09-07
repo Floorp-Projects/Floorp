@@ -33,6 +33,10 @@ function runTest() {
 }
 
 function install_blocked(installInfo) {
+  is(installInfo.installs.length, 1, "Got one AddonInstall instance as expected");
+  Assert.deepEqual(installInfo.installs[0].installTelemetryInfo,
+                   {source: "unknown", method: "link"},
+                   "Got the expected install.installTelemetryInfo");
 }
 
 function finish_test(count) {
