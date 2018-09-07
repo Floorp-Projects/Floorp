@@ -13,6 +13,7 @@ data class Experiment(
     /**
      * Unique identifier of the experiment
      */
+    @Deprecated("This is an internal ID used by Kinto. Public access will be removed soon.")
     val id: String,
     /**
      * Human-readable name of the experiment
