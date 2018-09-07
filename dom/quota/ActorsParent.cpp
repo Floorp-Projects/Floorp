@@ -7601,9 +7601,9 @@ ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
     SanitizeOriginString(originSanitized);
     originScope.SetOrigin(originSanitized);
   } else if (originScope.IsPrefix()) {
-    nsCString prefixSanitized(originScope.GetPrefix());
-    SanitizeOriginString(prefixSanitized);
-    originScope.SetPrefix(prefixSanitized);
+    nsCString originNoSuffixSanitized(originScope.GetOriginNoSuffix());
+    SanitizeOriginString(originNoSuffixSanitized);
+    originScope.SetOriginNoSuffix(originNoSuffixSanitized);
   }
 
   nsCOMPtr<nsIFile> file;
@@ -7629,8 +7629,8 @@ ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
     }
 
     // Skip the origin directory if it doesn't match the pattern.
-    if (!originScope.MatchesOrigin(OriginScope::FromOrigin(
-                                     NS_ConvertUTF16toUTF8(leafName)))) {
+    if (!originScope.Matches(OriginScope::FromOrigin(
+                               NS_ConvertUTF16toUTF8(leafName)))) {
       continue;
     }
 
