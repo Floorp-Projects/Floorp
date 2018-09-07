@@ -42,14 +42,27 @@ amContentHandler.prototype = {
 
     aRequest.cancel(Cr.NS_BINDING_ABORTED);
 
+    const {triggeringPrincipal} = aRequest.loadInfo;
+
+    let sourceHost;
+
+    try {
+      sourceHost = triggeringPrincipal.URI.host;
+    } catch (err) {
+      // Ignore errors when retrieving the host for the principal (e.g. null principals raise
+      // an NS_ERROR_FAILURE when principal.URI.host is accessed).
+    }
+
     let install = {
       uri: uri.spec,
       hash: null,
       name: null,
       icon: null,
       mimetype: XPI_CONTENT_TYPE,
-      triggeringPrincipal: aRequest.loadInfo.triggeringPrincipal,
+      triggeringPrincipal,
       callbackID: -1,
+      method: "link",
+      sourceHost,
     };
 
     if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
