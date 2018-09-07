@@ -5,17 +5,4 @@
 dropmarker {
   -moz-appearance: -moz-menulist-button;
   width: 16px;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  padding: 1px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-  -moz-image-region: auto;
-}
-
-dropmarker:hover:active:not([disabled="true"]) {
-  padding: 2px 0 0 2px;
-}
-
-dropmarker[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
 }
