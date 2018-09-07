@@ -137,7 +137,6 @@ static void Shutdown();
 #include "nsIMediaManager.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 
-#include "AudioChannelService.h"
 #include "mozilla/net/WebSocketEventService.h"
 
 #include "mozilla/dom/power/PowerManagerService.h"
@@ -419,13 +418,8 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(Geolocation, Geolocation::NonWindowSingleton)
 
-#define NS_AUDIOCHANNEL_SERVICE_CID \
-  { 0xf712e983, 0x048a, 0x443f, { 0x88, 0x02, 0xfc, 0xc3, 0xd9, 0x27, 0xce, 0xac }}
-
 #define NS_WEBSOCKETEVENT_SERVICE_CID \
   { 0x31689828, 0xda66, 0x49a6, { 0x87, 0x0c, 0xdf, 0x62, 0xb8, 0x3f, 0xe7, 0x89 }}
-
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AudioChannelService, AudioChannelService::GetOrCreate)
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(WebSocketEventService, WebSocketEventService::GetOrCreate)
 
@@ -535,7 +529,6 @@ NS_DEFINE_NAMED_CID(NS_EDITINGCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORCOMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_EDITINGCOMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_GEOLOCATION_CID);
-NS_DEFINE_NAMED_CID(NS_AUDIOCHANNEL_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_WEBSOCKETEVENT_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_FOCUSMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENTSECURITYMANAGER_CID);
@@ -764,7 +757,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_EDITORCOMMANDTABLE_CID, false, nullptr, nsEditorCommandTableConstructor },
   { &kNS_EDITINGCOMMANDTABLE_CID, false, nullptr, nsEditingCommandTableConstructor },
   { &kNS_GEOLOCATION_CID, false, nullptr, GeolocationConstructor },
-  { &kNS_AUDIOCHANNEL_SERVICE_CID, false, nullptr, AudioChannelServiceConstructor },
   { &kNS_WEBSOCKETEVENT_SERVICE_CID, false, nullptr, WebSocketEventServiceConstructor },
   { &kNS_FOCUSMANAGER_CID, false, nullptr, CreateFocusManager },
 #ifdef MOZ_WEBSPEECH_TEST_BACKEND
@@ -861,7 +853,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/editor/editorcontroller;1", &kNS_EDITORCONTROLLER_CID },
   { "@mozilla.org/editor/editingcontroller;1", &kNS_EDITINGCONTROLLER_CID },
   { "@mozilla.org/geolocation;1", &kNS_GEOLOCATION_CID },
-  { "@mozilla.org/audiochannel/service;1", &kNS_AUDIOCHANNEL_SERVICE_CID },
   { "@mozilla.org/websocketevent/service;1", &kNS_WEBSOCKETEVENT_SERVICE_CID },
   { "@mozilla.org/focus-manager;1", &kNS_FOCUSMANAGER_CID },
 #ifdef MOZ_WEBSPEECH_TEST_BACKEND
