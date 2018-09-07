@@ -45,7 +45,7 @@ types.addDictType("cookieobject", {
   value: "longstring",
   path: "nullable:string",
   host: "string",
-  isDomain: "boolean",
+  hostOnly: "boolean",
   isSecure: "boolean",
   isHttpOnly: "boolean",
   creationTime: "number",

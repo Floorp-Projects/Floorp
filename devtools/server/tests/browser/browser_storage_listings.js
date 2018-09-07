@@ -17,7 +17,7 @@ const storeMap = {
         expires: 2000000000000,
         path: "/browser",
         host: "test1.example.org",
-        isDomain: false,
+        hostOnly: true,
         isSecure: false,
       },
       {
@@ -26,7 +26,7 @@ const storeMap = {
         path: "/",
         host: ".example.org",
         expires: 0,
-        isDomain: true,
+        hostOnly: false,
         isSecure: false,
       },
       {
@@ -35,7 +35,7 @@ const storeMap = {
         expires: 2000000001000,
         path: "/",
         host: "test1.example.org",
-        isDomain: false,
+        hostOnly: true,
         isSecure: true,
       }
     ],
@@ -47,7 +47,7 @@ const storeMap = {
         path: "/",
         host: ".example.org",
         expires: 0,
-        isDomain: true,
+        hostOnly: false,
         isSecure: false,
       },
       {
@@ -56,7 +56,7 @@ const storeMap = {
         path: "/browser/devtools/server/tests/browser/",
         host: "sectest1.example.org",
         expires: 0,
-        isDomain: false,
+        hostOnly: true,
         isSecure: false,
       }
     ],
@@ -68,7 +68,7 @@ const storeMap = {
         host: ".example.org",
         path: "/",
         expires: 0,
-        isDomain: true,
+        hostOnly: false,
         isSecure: true,
       },
       {
@@ -77,7 +77,7 @@ const storeMap = {
         path: "/",
         host: ".example.org",
         expires: 0,
-        isDomain: true,
+        hostOnly: false,
         isSecure: false,
       },
       {
@@ -86,7 +86,7 @@ const storeMap = {
         path: "/browser/devtools/server/tests/browser/",
         host: "sectest1.example.org",
         expires: 0,
-        isDomain: false,
+        hostOnly: true,
         isSecure: false,
       }
     ]
@@ -372,7 +372,7 @@ var testCookiesObjects = async function(index, hosts, cookiesActor) {
           is(item.path, toMatch.path, "The path matches.");
           is(item.host, toMatch.host, "The host matches.");
           is(item.isSecure, toMatch.isSecure, "The isSecure value matches.");
-          is(item.isDomain, toMatch.isDomain, "The isDomain value matches.");
+          is(item.hostOnly, toMatch.hostOnly, "The hostOnly value matches.");
           break;
         }
       }

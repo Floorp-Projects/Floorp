@@ -561,7 +561,7 @@ StorageActors.createActor({
       // - do -
       lastAccessed: cookie.lastAccessed / 1000,
       value: new LongStringActor(this.conn, cookie.value || ""),
-      isDomain: cookie.isDomain,
+      hostOnly: !cookie.isDomain,
       isSecure: cookie.isSecure,
       isHttpOnly: cookie.isHttpOnly,
       sameSite: this.getSameSiteStringFromCookie(cookie)
@@ -686,7 +686,7 @@ StorageActors.createActor({
       { name: "lastAccessed", editable: false, hidden: false },
       { name: "creationTime", editable: false, hidden: true },
       { name: "value", editable: true, hidden: false },
-      { name: "isDomain", editable: false, hidden: true },
+      { name: "hostOnly", editable: false, hidden: true },
       { name: "isSecure", editable: true, hidden: true },
       { name: "isHttpOnly", editable: true, hidden: false },
       { name: "sameSite", editable: false, hidden: false }
