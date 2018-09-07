@@ -192,11 +192,11 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
     nsAutoCString name;
     name.AppendASCII(aName);
     if (aField.mTypeAtom) {
-      name.AppendASCII(" event=");
+      name.AppendLiteral(" event=");
       name.Append(nsAtomCString(aField.mTypeAtom));
-      name.AppendASCII(" listenerType=");
+      name.AppendLiteral(" listenerType=");
       name.AppendInt(aField.mListenerType);
-      name.AppendASCII(" ");
+      name.AppendLiteral(" ");
     }
     CycleCollectionNoteChild(aCallback, aField.mListener.GetISupports(), name.get(),
                              aFlags);

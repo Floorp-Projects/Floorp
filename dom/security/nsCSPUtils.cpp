@@ -537,7 +537,7 @@ void
 nsCSPSchemeSrc::toString(nsAString& outStr) const
 {
   outStr.Append(mScheme);
-  outStr.AppendASCII(":");
+  outStr.AppendLiteral(":");
 }
 
 /* ===== nsCSPHostSrc ======================== */
@@ -769,7 +769,7 @@ void
 nsCSPHostSrc::toString(nsAString& outStr) const
 {
   if (mGeneratedFromSelfKeyword) {
-    outStr.AppendASCII("'self'");
+    outStr.AppendLiteral("'self'");
     return;
   }
 
@@ -785,12 +785,12 @@ nsCSPHostSrc::toString(nsAString& outStr) const
   outStr.Append(mScheme);
 
   // append host
-  outStr.AppendASCII("://");
+  outStr.AppendLiteral("://");
   outStr.Append(mHost);
 
   // append port
   if (!mPort.IsEmpty()) {
-    outStr.AppendASCII(":");
+    outStr.AppendLiteral(":");
     outStr.Append(mPort);
   }
 
@@ -928,7 +928,7 @@ nsCSPNonceSrc::toString(nsAString& outStr) const
 {
   outStr.Append(CSP_EnumToUTF16Keyword(CSP_NONCE));
   outStr.Append(mNonce);
-  outStr.AppendASCII("'");
+  outStr.AppendLiteral("'");
 }
 
 /* ===== nsCSPHashSrc ===================== */
@@ -989,11 +989,11 @@ nsCSPHashSrc::visit(nsCSPSrcVisitor* aVisitor) const
 void
 nsCSPHashSrc::toString(nsAString& outStr) const
 {
-  outStr.AppendASCII("'");
+  outStr.AppendLiteral("'");
   outStr.Append(mAlgorithm);
-  outStr.AppendASCII("-");
+  outStr.AppendLiteral("-");
   outStr.Append(mHash);
-  outStr.AppendASCII("'");
+  outStr.AppendLiteral("'");
 }
 
 /* ===== nsCSPReportURI ===================== */
@@ -1100,14 +1100,14 @@ nsCSPDirective::toString(nsAString& outStr) const
 {
   // Append directive name
   outStr.AppendASCII(CSP_CSPDirectiveToString(mDirective));
-  outStr.AppendASCII(" ");
+  outStr.AppendLiteral(" ");
 
   // Append srcs
   uint32_t length = mSrcs.Length();
   for (uint32_t i = 0; i < length; i++) {
     mSrcs[i]->toString(outStr);
     if (i != (length - 1)) {
-      outStr.AppendASCII(" ");
+      outStr.AppendLiteral(" ");
     }
   }
 }
@@ -1421,10 +1421,10 @@ nsRequireSRIForDirective::toString(nsAString &outStr) const
     nsIContentSecurityPolicy::REQUIRE_SRI_FOR));
   for (uint32_t i = 0; i < mTypes.Length(); i++) {
     if (mTypes[i] == nsIContentPolicy::TYPE_SCRIPT) {
-      outStr.AppendASCII(" script");
+      outStr.AppendLiteral(" script");
     }
     else if (mTypes[i] == nsIContentPolicy::TYPE_STYLESHEET) {
-      outStr.AppendASCII(" style");
+      outStr.AppendLiteral(" style");
     }
   }
 }
@@ -1603,7 +1603,7 @@ nsCSPPolicy::toString(nsAString& outStr) const
   for (uint32_t i = 0; i < length; ++i) {
     mDirectives[i]->toString(outStr);
     if (i != (length - 1)) {
-      outStr.AppendASCII("; ");
+      outStr.AppendLiteral("; ");
     }
   }
 }
@@ -1662,7 +1662,7 @@ nsCSPPolicy::getDirectiveStringAndReportSampleForContentType(nsContentPolicyType
     return;
   }
   NS_ASSERTION(false, "Can not query directive string for contentType!");
-  outDirective.AppendASCII("couldNotQueryViolatedDirective");
+  outDirective.AppendLiteral("couldNotQueryViolatedDirective");
 }
 
 void
