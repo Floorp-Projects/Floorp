@@ -65,6 +65,7 @@ class Repackage(BaseScript):
         dirs = self.query_abs_dirs()
 
         subst = {
+            'package-name': config['package-name'],
             'sfx-stub': config['sfx-stub'],
             'installer-tag': config['installer-tag'],
             'stub-installer-tag': config['stub-installer-tag'],
