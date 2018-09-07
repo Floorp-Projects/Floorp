@@ -220,7 +220,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             return isValidSearchQuery
         }
 
-        override fun onPostExecute(isValidSearchQuery: Boolean?) {
+        override fun onPostExecute(isValidSearchQuery: Boolean) {
             super.onPostExecute(isValidSearchQuery)
             if (isCancelled) {
                 Log.d(LOGTAG, "ValidateSearchEngineAsyncTask has been cancelled")
@@ -234,7 +234,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
                 return
             }
 
-            if (isValidSearchQuery == true) {
+            if (isValidSearchQuery) {
                 CustomSearchEngineStore.addSearchEngine(that.activity!!, engineName, query)
                 Snackbar.make(that.view!!, R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
                 Settings.getInstance(that.activity!!).setDefaultSearchEngineByName(engineName)
