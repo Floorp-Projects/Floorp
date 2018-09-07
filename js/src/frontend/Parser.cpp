@@ -4882,11 +4882,11 @@ GeneralParser<ParseHandler, CharT>::destructuringDeclarationWithoutYieldOrAwait(
     Node res = destructuringDeclaration(kind, yieldHandling, tt);
     if (res) {
         if (pc->lastYieldOffset != startYieldOffset) {
-            errorAt(pc->lastYieldOffset, JSMSG_YIELD_IN_DEFAULT);
+            errorAt(pc->lastYieldOffset, JSMSG_YIELD_IN_PARAMETER);
             return null();
         }
         if (pc->lastAwaitOffset != startAwaitOffset) {
-            errorAt(pc->lastAwaitOffset, JSMSG_AWAIT_IN_DEFAULT);
+            errorAt(pc->lastAwaitOffset, JSMSG_AWAIT_IN_PARAMETER);
             return null();
         }
     }
@@ -8651,7 +8651,7 @@ GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
       case TokenKind::Await: {
         if (pc->isAsync()) {
             if (inParametersOfAsyncFunction()) {
-                error(JSMSG_AWAIT_IN_DEFAULT);
+                error(JSMSG_AWAIT_IN_PARAMETER);
                 return null();
             }
             Node kid = unaryExpr(yieldHandling, tripledotHandling, possibleError, invoked);
@@ -8699,11 +8699,11 @@ GeneralParser<ParseHandler, CharT>::assignExprWithoutYieldOrAwait(YieldHandling 
     Node res = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
     if (res) {
         if (pc->lastYieldOffset != startYieldOffset) {
-            errorAt(pc->lastYieldOffset, JSMSG_YIELD_IN_DEFAULT);
+            errorAt(pc->lastYieldOffset, JSMSG_YIELD_IN_PARAMETER);
             return null();
         }
         if (pc->lastAwaitOffset != startAwaitOffset) {
-            errorAt(pc->lastAwaitOffset, JSMSG_AWAIT_IN_DEFAULT);
+            errorAt(pc->lastAwaitOffset, JSMSG_AWAIT_IN_PARAMETER);
             return null();
         }
     }
