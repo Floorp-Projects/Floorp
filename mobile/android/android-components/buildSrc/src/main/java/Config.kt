@@ -4,7 +4,7 @@
 
 object Config {
     // Synchronized library configuration for all modules
-    const val componentsVersion = "0.21"
+    const val componentsVersion = "0.22"
 
     // Synchronized build configuration for all modules
     const val compileSdkVersion = 27
