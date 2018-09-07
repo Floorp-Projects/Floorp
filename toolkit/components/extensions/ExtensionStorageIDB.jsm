@@ -8,11 +8,11 @@ this.EXPORTED_SYMBOLS = ["ExtensionStorageIDB"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/IndexedDB.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
+  getTrimmedString: "resource://gre/modules/ExtensionTelemetry.jsm",
   Services: "resource://gre/modules/Services.jsm",
   OS: "resource://gre/modules/osfile.jsm",
 });
@@ -23,10 +23,6 @@ XPCOMUtils.defineLazyGetter(this, "WEBEXT_STORAGE_USER_CONTEXT_ID", () => {
   return ContextualIdentityService.getDefaultPrivateIdentity(
     "userContextIdInternal.webextStorageLocal").userContextId;
 });
-
-var {
-  getTrimmedString,
-} = ExtensionUtils;
 
 const IDB_NAME = "webExtensions-storage-local";
 const IDB_DATA_STORENAME = "storage-local-data";
