@@ -99,6 +99,15 @@ add_task(async function startup() {
       min: 7,
       max: 55,
     },
+
+    // Disabling screenshots in the default test profile triggers some
+    // work in the chrome registry that reads this pref.  This can be removed
+    // when bootstrapped extensions are gone, or even when screenshots
+    // moves away from bootstrap (bug 1422437)
+    "chrome.override_package.global": {
+      min: 0,
+      max: 50,
+    },
   };
 
   let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
