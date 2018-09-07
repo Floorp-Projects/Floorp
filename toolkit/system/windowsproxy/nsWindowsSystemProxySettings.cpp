@@ -67,7 +67,7 @@ static void SetProxyResult(const char* aType, const nsACString& aHostPort,
 static void SetProxyResultDirect(nsACString& aResult)
 {
     // For whatever reason, a proxy is not to be used.
-    aResult.AssignASCII("DIRECT");
+    aResult.AssignLiteral("DIRECT");
 }
 
 static nsresult ReadInternetOption(uint32_t aOption, uint32_t& aFlags,

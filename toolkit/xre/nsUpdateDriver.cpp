@@ -589,7 +589,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir, int appArgc,
 #if defined(XP_UNIX) & !defined(XP_MACOSX)
     // When execv is used for an update that requires a restart 0 is passed
     // which is ignored by the updater.
-    pid.AssignASCII("0");
+    pid.AssignLiteral("0");
 #else
     pid.AppendInt((int32_t) getpid());
 #endif
@@ -600,7 +600,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir, int appArgc,
     }
   } else {
     // Signal the updater application that it should stage the update.
-    pid.AssignASCII("-1");
+    pid.AssignLiteral("-1");
   }
 
   int argc = 5;

@@ -675,7 +675,7 @@ private:
   NS_IMETHOD
   GetName(nsACString& aName) override
   {
-    aName.AssignASCII("ScriptLoaderRunnable");
+    aName.AssignLiteral("ScriptLoaderRunnable");
     return NS_OK;
   }
 

@@ -100,9 +100,11 @@ SubscriptCachePath(JSContext* cx, nsIURI* uri, JS::HandleObject targetObj, nsACS
 {
     // StartupCache must distinguish between non-syntactic vs global when
     // computing the cache key.
-    bool hasNonSyntacticScope = !JS_IsGlobalObject(targetObj);
-    cachePath.Assign(hasNonSyntacticScope ? JSSUB_CACHE_PREFIX("non-syntactic")
-                                          : JSSUB_CACHE_PREFIX("global"));
+    if (!JS_IsGlobalObject(targetObj)) {
+        cachePath.AssignLiteral(JSSUB_CACHE_PREFIX("non-syntactic"));
+    } else {
+        cachePath.AssignLiteral(JSSUB_CACHE_PREFIX("global"));
+    }
     PathifyURI(uri, cachePath);
 }
 
