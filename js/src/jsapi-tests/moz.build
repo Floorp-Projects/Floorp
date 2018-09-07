@@ -6,6 +6,8 @@
 
 GeckoProgram('jsapi-tests', linkage=None)
 
+include('../js-cxxflags.mozbuild')
+
 UNIFIED_SOURCES += [
     'selfTest.cpp',
     'testAddPropertyPropcache.cpp',
@@ -156,8 +158,6 @@ if CONFIG['JS_BUILD_BINAST'] and CONFIG['JS_STANDALONE']:
     ]
 
 
-DEFINES['EXPORT_JS_API'] = True
-
 LOCAL_INCLUDES += [
     '!..',
     '..',
@@ -171,13 +171,6 @@ if CONFIG['MOZ_NEEDS_LIBATOMIC']:
     OS_LIBS += ['atomic']
 
 OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
-
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-shadow', '-Werror=format', '-fno-strict-aliasing']
-
-# This is intended as a temporary workaround to enable VS2015.
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-    CXXFLAGS += ['-wd4312']
 
 DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR
 OBJDIR_PP_FILES.js.src['jsapi-tests'] += ['jsapi-tests-gdb.py.in']
