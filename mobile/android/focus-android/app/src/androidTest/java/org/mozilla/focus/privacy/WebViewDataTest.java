@@ -16,6 +16,7 @@ import android.util.Log;
 import junit.framework.Assert;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,6 +51,7 @@ import static org.mozilla.focus.helpers.TestHelper.waitingTime;
  * The test uses a whitelist so it might fail as soon as you store new files on disk.
  */
 @RunWith(AndroidJUnit4.class)
+@Ignore("This test fails permanently, see https://github.com/mozilla-mobile/focus-android/issues/2940")
 public class WebViewDataTest {
     private static final String LOGTAG = "WebViewDataTest";
 
