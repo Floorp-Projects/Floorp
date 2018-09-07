@@ -104,7 +104,7 @@ struct TargetConfirmationFlags {
  * An RAII class to temporarily apply async test attributes to the provided
  * AsyncPanZoomController.
  */
-class AutoApplyAsyncTestAttributes {
+class MOZ_RAII AutoApplyAsyncTestAttributes {
 public:
   explicit AutoApplyAsyncTestAttributes(AsyncPanZoomController*);
   ~AutoApplyAsyncTestAttributes();
