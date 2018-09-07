@@ -61,7 +61,9 @@ inline void
 js::jit::AtomicOperations::fenceSeqCst()
 {
     _ReadWriteBarrier();
-    MemoryBarrier();
+    // MemoryBarrier is defined in winnt.h, which we don't want to include here.
+    // This expression is the expansion of MemoryBarrier.
+    __dmb(_ARM64_BARRIER_SY);
 }
 
 template<typename T>
