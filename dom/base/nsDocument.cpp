@@ -10777,6 +10777,16 @@ nsIDocument::ExitFullscreenInDocTree(nsIDocument* aMaybeNotARootDoc)
     new ExitFullscreenScriptRunnable(std::move(changed)));
 }
 
+static void
+DispatchFullscreenNewOriginEvent(nsIDocument* aDoc)
+{
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+    new AsyncEventDispatcher(
+        aDoc, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
+        CanBubble::eYes, ChromeOnlyDispatch::eYes);
+  asyncDispatcher->PostDOMEvent();
+}
+
 bool
 GetFullscreenLeaf(nsIDocument* aDoc, void* aData)
 {
@@ -10889,9 +10899,7 @@ nsIDocument::RestorePreviousFullScreenState()
     // a fullscreen element in a parent document. If this document is
     // cross origin, dispatch an event to chrome so it knows to show
     // the warning UI.
-    DispatchCustomEventWithFlush(
-      newFullscreenDoc, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
-      /* Bubbles */ true, /* ChromeOnly */ true);
+    DispatchFullscreenNewOriginEvent(newFullscreenDoc);
   }
 }
 
@@ -11527,9 +11535,7 @@ nsIDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
   // shouldn't rely on this event itself.
   if (aRequest.mShouldNotifyNewOrigin &&
       !nsContentUtils::HaveEqualPrincipals(previousFullscreenDoc, this)) {
-    DispatchCustomEventWithFlush(
-      this, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
-      /* Bubbles */ true, /* ChromeOnly */ true);
+    DispatchFullscreenNewOriginEvent(this);
   }
 
   // Dispatch "fullscreenchange" events. Note this loop is in reverse
