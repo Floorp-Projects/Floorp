@@ -156,10 +156,6 @@ using mozilla::dom::power::PowerManagerService;
 using mozilla::dom::quota::QuotaManagerService;
 using mozilla::gmp::GeckoMediaPluginService;
 
-#define NS_EDITINGCOMMANDTABLE_CID \
-{ 0xcb38a746, 0xbeb8, 0x43f3, \
-  { 0x94, 0x29, 0x77, 0x96, 0xe1, 0xa9, 0x3f, 0xb4 } }
-
 #define NS_HAPTICFEEDBACK_CID \
 { 0x1f15dbc8, 0xbfaa, 0x45de, \
   { 0x8a, 0x46, 0x08, 0xe2, 0xe2, 0x63, 0x26, 0xb0 } }
@@ -497,7 +493,6 @@ NS_DEFINE_NAMED_CID(PUSHNOTIFIER_CID);
 NS_DEFINE_NAMED_CID(WORKERDEBUGGERMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITINGCONTROLLER_CID);
-NS_DEFINE_NAMED_CID(NS_EDITINGCOMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_GEOLOCATION_CID);
 NS_DEFINE_NAMED_CID(NS_WEBSOCKETEVENT_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_FOCUSMANAGER_CID);
@@ -598,13 +593,13 @@ nsEditingControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
 {
   nsCOMPtr<nsIController> controller = new nsBaseCommandController();
 
-  nsresult rv;
-  nsCOMPtr<nsIControllerCommandTable> editingCommandTable = do_GetService(kNS_EDITINGCOMMANDTABLE_CID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIControllerCommandTable> editingCommandTable =
+    nsControllerCommandTable::CreateEditingCommandTable();
 
   // this guy is a singleton, so make it immutable
   editingCommandTable->MakeImmutable();
 
+  nsresult rv;
   nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -612,23 +607,6 @@ nsEditingControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
   if (NS_FAILED(rv)) return rv;
 
   return controller->QueryInterface(aIID, aResult);
-}
-
-// Constructor for a command-table pre-filled with editing commands
-static nsresult
-nsEditingCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
-                                              void **aResult)
-{
-  nsCOMPtr<nsIControllerCommandTable> commandTable =
-      new nsControllerCommandTable();
-
-  nsresult rv = EditorController::RegisterEditingCommands(commandTable);
-  if (NS_FAILED(rv)) return rv;
-
-  // we don't know here whether we're being created as an instance,
-  // or a service, so we can't become immutable
-
-  return commandTable->QueryInterface(aIID, aResult);
 }
 
 static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
@@ -682,7 +660,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kWORKERDEBUGGERMANAGER_CID, true, nullptr, WorkerDebuggerManagerConstructor },
   { &kNS_EDITORCONTROLLER_CID, false, nullptr, EditorControllerConstructor },
   { &kNS_EDITINGCONTROLLER_CID, false, nullptr, nsEditingControllerConstructor },
-  { &kNS_EDITINGCOMMANDTABLE_CID, false, nullptr, nsEditingCommandTableConstructor },
   { &kNS_GEOLOCATION_CID, false, nullptr, GeolocationConstructor },
   { &kNS_WEBSOCKETEVENT_SERVICE_CID, false, nullptr, WebSocketEventServiceConstructor },
   { &kNS_FOCUSMANAGER_CID, false, nullptr, CreateFocusManager },
