@@ -24,7 +24,9 @@ var urls = [
   // Bug 781693
   ["data:text/plain;base64;x=y,dGVzdA==",           "text/plain",               "test"],
   ["data:text/plain;x=y;base64,dGVzdA==",           "text/plain",               "test"],
-  ["data:text/plain;x=y;base64,",                   "text/plain",               ""]
+  ["data:text/plain;x=y;base64,",                   "text/plain",               ""],
+  ["data:  ;charset=x   ;  base64,WA",              "text/plain",               "X",                "x"],
+  ["data:base64,WA",                                "text/plain",               "WA",               "US-ASCII"],
 ];
 
 function run_test() {
@@ -35,6 +37,10 @@ function run_test() {
 
     if (request.nsIChannel.contentType != urls[idx][1])
       do_throw("Type mismatch! Is <" + chan.contentType + ">, should be <" + urls[idx][1] + ">");
+
+    if (urls[idx][3] && request.nsIChannel.contentCharset !== urls[idx][3]) {
+      do_throw(`Charset mismatch! Test <${urls[idx][0]}> - Is <${request.nsIChannel.contentCharset}>, should be <${urls[idx][3]}>`);
+    }
 
     /* read completed successfully.  now compare the data. */
     if (data != urls[idx][2])
