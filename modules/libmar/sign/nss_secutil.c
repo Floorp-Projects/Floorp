@@ -74,7 +74,7 @@ GetPasswordString(void *arg, char *prompt)
       return NULL;
     }
   }
-#endif 
+#endif
 
   if (isInputTerminal) {
     fprintf(stdout, "Please enter your password:\n");
@@ -97,7 +97,7 @@ GetPasswordString(void *arg, char *prompt)
 #endif
 
   /* Strip off the newlines if present */
-  if (phrase[PORT_Strlen(phrase)-1] == '\n' || 
+  if (phrase[PORT_Strlen(phrase)-1] == '\n' ||
       phrase[PORT_Strlen(phrase)-1] == '\r') {
     phrase[PORT_Strlen(phrase)-1] = 0;
   }
@@ -185,7 +185,7 @@ SECU_FilePasswd(PK11SlotInfo *slot, PRBool retry, void *arg)
 }
 
 char *
-SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg) 
+SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg)
 {
     char prompt[255];
     secuPWData *pwdata = (secuPWData *)arg;
@@ -219,7 +219,7 @@ SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg)
   /* it's already been dup'ed */
   return pw;
     case PW_EXTERNAL:
-  sprintf(prompt, 
+  sprintf(prompt,
           "Press Enter, then enter PIN for \"%s\" on external device.\n",
     PK11_GetTokenName(slot));
   pw = GetPasswordString(NULL, prompt);

@@ -30,8 +30,8 @@ enum nsDateFormatSelector : long
 enum nsTimeFormatSelector : long
 {
   kTimeFormatNone = 0,            // don't include the time in the format string
-  kTimeFormatSeconds,             // provides the time format with seconds in the  given locale 
-  kTimeFormatNoSeconds            // provides the time format without seconds in the given locale 
+  kTimeFormatSeconds,             // provides the time format with seconds in the  given locale
+  kTimeFormatNoSeconds            // provides the time format without seconds in the given locale
 };
 
 class DateTimeFormat {

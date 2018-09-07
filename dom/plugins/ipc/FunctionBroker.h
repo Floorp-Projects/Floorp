@@ -121,7 +121,7 @@
  *   MOZ_ASSERT(nWritten);
  *   HookedFuncDelegateReq::Marshal(aTuple, nsDependentCSubstring(aBuf, aBufLen));
  * }
- * 
+ *
  * template<>
  * bool HookedFuncFB::Request::Unmarshal(ServerCallData& aScd, const IpdlTuple& aTuple,
  *                                       void*& aBuf, int& aBufLen)
@@ -168,7 +168,7 @@ extern IdToPtrMap sIdToPtrMap;
 #else // defined(XP_WIN)
 
 // Any methods we hook use the default calling convention.
-#define HOOK_CALL 
+#define HOOK_CALL
 
 #endif // defined(XP_WIN)
 

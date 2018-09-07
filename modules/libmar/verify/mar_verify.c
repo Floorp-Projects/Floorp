@@ -75,7 +75,7 @@ int mar_verify_signatures_for_fp(FILE *fp,
  *
  * @param  fp     The file pointer to read from.
  * @param  buffer The buffer to store the read results.
- * @param  size   The number of bytes to read, buffer must be 
+ * @param  size   The number of bytes to read, buffer must be
  *                at least of this size.
  * @param  ctxs   Pointer to the first element in an array of verify context.
  * @param  count  The number of elements in ctxs
@@ -85,12 +85,12 @@ int mar_verify_signatures_for_fp(FILE *fp,
  *         -2 on verify update error
 */
 int
-ReadAndUpdateVerifyContext(FILE *fp, 
+ReadAndUpdateVerifyContext(FILE *fp,
                            void *buffer,
-                           uint32_t size, 
+                           uint32_t size,
                            CryptoX_SignatureHandle *ctxs,
                            uint32_t count,
-                           const char *err) 
+                           const char *err)
 {
   uint32_t k;
   if (!fp || !buffer || !ctxs || count == 0 || !err) {
@@ -98,7 +98,7 @@ ReadAndUpdateVerifyContext(FILE *fp,
     return CryptoX_Error;
   }
 
-  if (!size) { 
+  if (!size) {
     return CryptoX_Success;
   }
 
@@ -122,7 +122,7 @@ ReadAndUpdateVerifyContext(FILE *fp,
  * certificate given, the second signature will be verified using the second
  * certificate given, etc. The signature count must exactly match the number of
  * certificates given, and all signature verifications must succeed.
- * 
+ *
  * @param  mar            The file who's signature should be calculated
  * @param  certData       Pointer to the first element in an array of
  *                        certificate data
@@ -140,7 +140,7 @@ mar_verify_signatures(MarFile *mar,
   CryptoX_ProviderHandle provider = CryptoX_InvalidHandleValue;
   CryptoX_PublicKey keys[MAX_SIGNATURES];
   uint32_t k;
-  
+
   memset(keys, 0, sizeof(keys));
 
   if (!mar || !certData || !certDataSizes || certCount == 0) {
@@ -153,7 +153,7 @@ mar_verify_signatures(MarFile *mar,
     goto failure;
   }
 
-  if (CryptoX_Failed(CryptoX_InitCryptoProvider(&provider))) { 
+  if (CryptoX_Failed(CryptoX_InitCryptoProvider(&provider))) {
     fprintf(stderr, "ERROR: Could not init crytpo library.\n");
     goto failure;
   }
@@ -206,8 +206,8 @@ mar_extract_and_verify_signatures_fp(FILE *fp,
     fprintf(stderr, "ERROR: Invalid file pointer passed.\n");
     return CryptoX_Error;
   }
-  
-  /* To protect against invalid MAR files, we assumes that the MAR file 
+
+  /* To protect against invalid MAR files, we assumes that the MAR file
      size is less than or equal to MAX_SIZE_OF_MAR_FILE. */
   if (fseeko(fp, 0, SEEK_END)) {
     fprintf(stderr, "ERROR: Could not seek to the end of the MAR file.\n");
@@ -246,7 +246,7 @@ mar_extract_and_verify_signatures_fp(FILE *fp,
       return CryptoX_Error;
     }
     signatureAlgorithmIDs[i] = ntohl(signatureAlgorithmIDs[i]);
-  
+
     if (fread(&signatureLen, sizeof(uint32_t), 1, fp) != 1) {
       fprintf(stderr, "ERROR: Could not read signatures length.\n");
       return CryptoX_Error;
@@ -319,7 +319,7 @@ mar_extract_and_verify_signatures_fp(FILE *fp,
  * certificate given, the second signature will be verified using the second
  * certificate given, etc. The signature count must exactly match the number of
  * certificates given, and all signature verifications must succeed.
- * 
+ *
  * @param  fp                   An opened MAR file handle
  * @param  provider             A library provider
  * @param  keys                 A pointer to the first element in an
@@ -359,7 +359,7 @@ mar_verify_signatures_for_fp(FILE *fp,
 
   /* This function is only called when we have at least one signature,
      but to protected against future people who call this function we
-     make sure a non zero value is passed in. 
+     make sure a non zero value is passed in.
    */
   if (!signatureCount) {
     fprintf(stderr, "ERROR: There must be at least one signature.\n");
@@ -381,10 +381,10 @@ mar_verify_signatures_for_fp(FILE *fp,
   }
 
   /* Bytes 0-3: MAR1
-     Bytes 4-7: index offset 
+     Bytes 4-7: index offset
      Bytes 8-15: size of entire MAR
    */
-  if (CryptoX_Failed(ReadAndUpdateVerifyContext(fp, buf, 
+  if (CryptoX_Failed(ReadAndUpdateVerifyContext(fp, buf,
                                                 SIGNATURE_BLOCK_OFFSET +
                                                 sizeof(uint32_t),
                                                 signatureHandles,
@@ -397,7 +397,7 @@ mar_verify_signatures_for_fp(FILE *fp,
   for (i = 0; i < signatureCount; i++) {
     /* Get the signature algorithm ID */
     if (CryptoX_Failed(ReadAndUpdateVerifyContext(fp,
-                                                  &buf, 
+                                                  &buf,
                                                   sizeof(uint32_t),
                                                   signatureHandles,
                                                   signatureCount,
@@ -405,9 +405,9 @@ mar_verify_signatures_for_fp(FILE *fp,
       goto failure;
     }
 
-    if (CryptoX_Failed(ReadAndUpdateVerifyContext(fp, 
+    if (CryptoX_Failed(ReadAndUpdateVerifyContext(fp,
                                                   &signatureLengths[i],
-                                                  sizeof(uint32_t), 
+                                                  sizeof(uint32_t),
                                                   signatureHandles,
                                                   signatureCount,
                                                   "signature length"))) {
