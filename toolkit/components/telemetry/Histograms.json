@@ -5766,10 +5766,10 @@
     "description": "Firefox: Time taken to kick off image compression of the canvas that will be used during swiping through history (ms)."
   },
   "FX_TAB_CLOSE_TIME_ANIM_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["mconley@mozilla.com", "hkirschner@mozilla.com", "sphilp@mozilla.com"],
-    "bug_numbers": [1340842],
-    "expires_in_version": "65",
+    "record_in_processes": ["main"],
+    "alert_emails": ["mconley@mozilla.com", "dolske@mozilla.com"],
+    "bug_numbers": [1340842, 1488952],
+    "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 10000,
@@ -5777,20 +5777,20 @@
     "description": "Firefox: Time taken from the point of closing a tab (with animation), to the browser element being removed from the DOM. (ms)."
   },
   "FX_TAB_CLOSE_TIME_NO_ANIM_MS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["mconley@mozilla.com", "hkirschner@mozilla.com"],
     "bug_numbers": [1340842],
-    "expires_in_version": "65",
+    "expires_in_version": "68",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
     "description": "Firefox: Time taken from the point of closing a tab (without animation) to the browser element being removed from the DOM. (ms)."
   },
   "FX_TAB_CLOSE_PERMIT_UNLOAD_TIME_MS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["mconley@mozilla.com", "hkirschner@mozilla.com"],
     "bug_numbers": [1340842],
-    "expires_in_version": "65",
+    "expires_in_version": "68",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
