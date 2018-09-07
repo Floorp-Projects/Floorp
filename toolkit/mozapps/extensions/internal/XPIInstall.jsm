@@ -1315,6 +1315,9 @@ class AddonInstall {
    *        Optional icons for the add-on
    * @param {string} [options.version]
    *        An optional version for the add-on
+   * @param {Object?} [options.installTelemetryInfo]
+   *        An optional object which provides details about the installation source
+   *        included in the addon manager telemetry events.
    * @param {function(string) : Promise<void>} [options.promptHandler]
    *        A callback to prompt the user before installing.
    */
@@ -1357,6 +1360,15 @@ class AddonInstall {
     this.name = options.name || null;
     this.type = options.type || null;
     this.version = options.version || null;
+    this.installTelemetryInfo = null;
+
+    if (options.installTelemetryInfo) {
+      this.installTelemetryInfo = options.installTelemetryInfo;
+    } else if (this.existingAddon) {
+      // Inherits the installTelemetryInfo on updates (so that the source of the original
+      // installation telemetry data is being preserved across the extension updates).
+      this.installTelemetryInfo = this.existingAddon.installTelemetryInfo;
+    }
 
     this.file = null;
     this.ownsTempFile = null;
@@ -1513,13 +1525,18 @@ class AddonInstall {
   }
 
   /**
-   * Updates the sourceURI and releaseNotesURI values on the Addon being
-   * installed by this AddonInstall instance.
+   * Updates the addon metadata that has to be propagated across restarts.
    */
-  updateAddonURIs() {
+  updatePersistedMetadata() {
     this.addon.sourceURI = this.sourceURI.spec;
-    if (this.releaseNotesURI)
+
+    if (this.releaseNotesURI) {
       this.addon.releaseNotesURI = this.releaseNotesURI.spec;
+    }
+
+    if (this.installTelemetryInfo) {
+      this.addon.installTelemetryInfo = this.installTelemetryInfo;
+    }
   }
 
   /**
@@ -1582,7 +1599,7 @@ class AddonInstall {
       pkg.close();
     }
 
-    this.updateAddonURIs();
+    this.updatePersistedMetadata();
 
     this.addon._install = this;
     this.name = this.addon.selectedLocale.name;
@@ -2425,6 +2442,7 @@ function createUpdate(aCallback, aAddon, aUpdate) {
       icons: aAddon.icons,
       version: aUpdate.version,
     };
+
     let install;
     if (url instanceof Ci.nsIFileURL) {
       install = new LocalAddonInstall(aAddon.location, url, opts);
@@ -2486,6 +2504,10 @@ AddonInstallWrapper.prototype = {
 
   set promptHandler(handler) {
     installFor(this).promptHandler = handler;
+  },
+
+  get installTelemetryInfo() {
+    return installFor(this).installTelemetryInfo;
   },
 
   install() {
@@ -2723,17 +2745,22 @@ UpdateChecker.prototype = {
  *        The file to install
  * @param {XPIStateLocation} location
  *        The location to install to
+ * @param {Object?} [telemetryInfo]
+ *        An optional object which provides details about the installation source
+ *        included in the addon manager telemetry events.
  * @returns {Promise<AddonInstall>}
  *        A Promise that resolves with the new install object.
  */
-function createLocalInstall(file, location) {
+function createLocalInstall(file, location, telemetryInfo) {
   if (!location) {
     location = XPIStates.getLocation(KEY_APP_PROFILE);
   }
   let url = Services.io.newFileURI(file);
 
   try {
-    let install = new LocalAddonInstall(location, url);
+    let install = new LocalAddonInstall(location, url, {
+      installTelemetryInfo: telemetryInfo,
+    });
     return install.init().then(() => install);
   } catch (e) {
     logger.error("Error creating install", e);
@@ -3432,6 +3459,7 @@ var XPIInstall = {
    */
   async installDistributionAddon(id, file, location) {
     let addon = await loadManifestFromFile(file, location);
+    addon.installTelemetryInfo = {source: "distribution"};
 
     if (addon.id != id) {
       throw new Error(`File file ${file.path} contains an add-on with an incorrect ID`);
@@ -3747,9 +3775,12 @@ var XPIInstall = {
    *        A version for the install
    * @param {XULElement?} [aBrowser]
    *        The browser performing the install
+   * @param {Object?} [aInstallTelemetryInfo]
+   *        An optional object which provides details about the installation source
+   *        included in the addon manager telemetry events.
    * @returns {AddonInstall}
    */
-  async getInstallForURL(aUrl, aHash, aName, aIcons, aVersion, aBrowser) {
+  async getInstallForURL(aUrl, aHash, aName, aIcons, aVersion, aBrowser, aInstallTelemetryInfo) {
     let location = XPIStates.getLocation(KEY_APP_PROFILE);
     let url = Services.io.newURI(aUrl);
 
@@ -3759,6 +3790,7 @@ var XPIInstall = {
       name: aName,
       icons: aIcons,
       version: aVersion,
+      installTelemetryInfo: aInstallTelemetryInfo,
     };
 
     if (url instanceof Ci.nsIFileURL) {
@@ -3776,10 +3808,13 @@ var XPIInstall = {
    *
    * @param {nsIFile} aFile
    *        The file to be installed
+   * @param {Object?} [aInstallTelemetryInfo]
+   *        An optional object which provides details about the installation source
+   *        included in the addon manager telemetry events.
    * @returns {AddonInstall?}
    */
-  async getInstallForFile(aFile) {
-    let install = await createLocalInstall(aFile);
+  async getInstallForFile(aFile, aInstallTelemetryInfo) {
+    let install = await createLocalInstall(aFile, null, aInstallTelemetryInfo);
     return install ? install.wrapper : null;
   },
 

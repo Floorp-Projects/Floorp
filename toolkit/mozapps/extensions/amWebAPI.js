@@ -224,7 +224,15 @@ class WebAPI extends APIObject {
   }
 
   createInstall(options) {
-    return this._apiTask("createInstall", [options], installInfo => {
+    let installOptions = {
+      ...options,
+      // Provide the host from which the amWebAPI is being called
+      // (so that we can detect if the API is being used from the disco pane,
+      // AMO, testpilot or another unknown webpage).
+      sourceHost: this.window.document.nodePrincipal.URI &&
+        this.window.document.nodePrincipal.URI.host,
+    };
+    return this._apiTask("createInstall", [installOptions], installInfo => {
       if (!installInfo) {
         return null;
       }

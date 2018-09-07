@@ -46,6 +46,13 @@ async function checkInstallConfirmation(...names) {
     observe(aSubject, aTopic, aData) {
       var installInfo = aSubject.wrappedJSObject;
       isnot(installInfo.browser, null, "Notification should have non-null browser");
+
+      is(installInfo.installs.length, 1, "Got one AddonInstall instance as expected");
+
+      Assert.deepEqual(installInfo.installs[0].installTelemetryInfo,
+                       {source: "about:addons", method: "drag-and-drop"},
+                       "Got the expected installTelemetryInfo");
+
       notificationCount++;
     },
   };

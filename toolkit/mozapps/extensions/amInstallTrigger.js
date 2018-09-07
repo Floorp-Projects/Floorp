@@ -166,11 +166,22 @@ InstallTrigger.prototype = {
       }
     }
 
+    let sourceHost;
+
+    try {
+      sourceHost = this._principal.URI.host;
+    } catch (err) {
+      // Ignore errors when retrieving the host for the principal (e.g. null principals raise
+      // an NS_ERROR_FAILURE when principal.URI.host is accessed).
+    }
+
     let installData = {
       uri: url.spec,
       hash: item.Hash || null,
       name: item.name,
       icon: iconUrl ? iconUrl.spec : null,
+      method: "installTrigger",
+      sourceHost,
     };
 
     return this._mediator.install(installData, this._principal, callback, this._window);

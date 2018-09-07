@@ -94,7 +94,8 @@ const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 const PENDING_INSTALL_METADATA =
     ["syncGUID", "targetApplications", "userDisabled", "softDisabled",
      "existingAddonID", "sourceURI", "releaseNotesURI", "installDate",
-     "updateDate", "applyBackgroundUpdates", "compatibilityOverrides"];
+     "updateDate", "applyBackgroundUpdates", "compatibilityOverrides",
+     "installTelemetryInfo"];
 
 const COMPATIBLE_BY_DEFAULT_TYPES = {
   extension: true,
@@ -116,7 +117,7 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "version", "type",
                           "seen", "dependencies", "hasEmbeddedWebExtension",
                           "userPermissions", "icons", "iconURL", "icon64URL",
                           "blocklistState", "blocklistURL", "startupData",
-                          "previewImage", "hidden"];
+                          "previewImage", "hidden", "installTelemetryInfo"];
 
 const LEGACY_TYPES = new Set([
   "extension",
@@ -289,6 +290,7 @@ class AddonInternal {
     this.skinnable = false;
     this.startupData = null;
     this._hidden = false;
+    this.installTelemetryInfo = null;
 
     this.inDatabase = false;
 
@@ -712,6 +714,21 @@ AddonWrapper = class {
   markAsSeen() {
     addonFor(this).seen = true;
     XPIDatabase.saveChanges();
+  }
+
+  get installTelemetryInfo() {
+    const addon = addonFor(this);
+    if (!addon.installTelemetryInfo && addon.location) {
+      if (addon.location.isSystem) {
+        return {source: "system-addon"};
+      }
+
+      if (addon.location.isTemporary) {
+        return {source: "temporary-addon"};
+      }
+    }
+
+    return addon.installTelemetryInfo;
   }
 
   get type() {
@@ -2431,6 +2448,12 @@ this.XPIDatabaseReconcile = {
     aNewAddon.appDisabled = !XPIDatabase.isUsableAddon(aNewAddon);
 
     if (isDetectedInstall && aNewAddon.foreignInstall) {
+      // Add the installation source info for the sideloaded extension.
+      aNewAddon.installTelemetryInfo = {
+        source: aLocation.name,
+        method: "sideload",
+      };
+
       // If the add-on is a foreign install and is in a scope where add-ons
       // that were dropped in should default to disabled then disable it
       let disablingScopes = Services.prefs.getIntPref(PREF_EM_AUTO_DISABLED_SCOPES, 0);
