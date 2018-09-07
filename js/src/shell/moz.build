@@ -10,21 +10,15 @@ if CONFIG['JS_SHELL_NAME']:
         USE_LIBS += ['editline']
     USE_LIBS += ['static:js']
 
+include('../js-config.mozbuild')
+include('../js-cxxflags.mozbuild')
+
 UNIFIED_SOURCES += [
     'js.cpp',
     'jsoptparse.cpp',
     'jsshell.cpp',
     'OSObject.cpp'
 ]
-
-DEFINES['EXPORT_JS_API'] = True
-
-if CONFIG['NIGHTLY_BUILD']:
-    DEFINES['ENABLE_WASM_GC'] = True
-    DEFINES['WASM_PRIVATE_REFTYPES'] = True
-
-# Also set in ../moz.build
-DEFINES['ENABLE_SHARED_ARRAY_BUFFER'] = True
 
 if CONFIG['CC_TYPE'] == 'msvc':
     # PGO is unnecessary for the js shell, but clang/gcc cannot turn off PGO
@@ -48,13 +42,6 @@ shellmoduleloader.inputs = [
     '../js.msg',
     'ModuleLoader.js',
 ]
-
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-shadow', '-Werror=format']
-
-# This is intended as a temporary workaround to enable VS2015.
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-    CXXFLAGS += ['-wd4312']
 
 # Place a GDB Python auto-load file next to the shell executable, both in
 # the build directory and in the dist/bin directory.
