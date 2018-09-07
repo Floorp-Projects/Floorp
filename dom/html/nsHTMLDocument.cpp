@@ -1394,7 +1394,7 @@ nsHTMLDocument::Open(JSContext* cx,
   if (curDocShell) {
     curDocShell->GetSameTypeParent(getter_AddRefs(parent));
   }
-  
+
   // We are using the same technique as in nsDocShell to figure
   // out the content policy type. If there is no same type parent,
   // we know we are loading a new top level document.
@@ -1983,7 +1983,7 @@ nsHTMLDocument::ResolveName(JSContext* aCx, const nsAString& aName,
   } else {
     // No named items were found, see if there's one registerd by id for aName.
     Element *e = entry->GetIdElement();
-  
+
     if (!e || !nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(e)) {
       return false;
     }

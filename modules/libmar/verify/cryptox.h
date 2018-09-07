@@ -104,22 +104,22 @@ void CryptoMac_FreePublicKey(CryptoX_PublicKey* aPublicKey);
   CryptoMac_FreePublicKey(aPublicKey)
 #define CryptoX_FreeCertificate(aCertificate)
 
-#elif defined(XP_WIN) 
+#elif defined(XP_WIN)
 
 #include <windows.h>
 #include <wincrypt.h>
 
 CryptoX_Result CryptoAPI_InitCryptoContext(HCRYPTPROV *provider);
-CryptoX_Result CryptoAPI_LoadPublicKey(HCRYPTPROV hProv, 
+CryptoX_Result CryptoAPI_LoadPublicKey(HCRYPTPROV hProv,
                                        BYTE *certData,
                                        DWORD sizeOfCertData,
                                        HCRYPTKEY *publicKey);
 CryptoX_Result CryptoAPI_VerifyBegin(HCRYPTPROV provider, HCRYPTHASH* hash);
-CryptoX_Result CryptoAPI_VerifyUpdate(HCRYPTHASH* hash, 
+CryptoX_Result CryptoAPI_VerifyUpdate(HCRYPTHASH* hash,
                                       BYTE *buf, DWORD len);
 CryptoX_Result CryptoAPI_VerifySignature(HCRYPTHASH *hash,
                                          HCRYPTKEY *pubKey,
-                                         const BYTE *signature, 
+                                         const BYTE *signature,
                                          DWORD signatureLen);
 
 #define CryptoX_InvalidHandleValue ((ULONG_PTR)NULL)

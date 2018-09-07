@@ -722,7 +722,7 @@ nsHttpChannel::CheckFastBlocked()
         (mLoadInfo && mLoadInfo->GetDocumentHasUserInteracted())) {
 
         LOG(("FastBlock passed (invalid) [this=%p]\n", this));
-        
+
         return false;
     }
 

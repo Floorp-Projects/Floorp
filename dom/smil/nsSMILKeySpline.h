@@ -21,7 +21,7 @@ public:
     , mY1(0)
     , mX2(0)
     , mY2(0)
-  { 
+  {
     /* caller must call Init later */\
   }
 

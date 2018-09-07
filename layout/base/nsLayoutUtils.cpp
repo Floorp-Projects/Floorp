@@ -6158,7 +6158,7 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
     if (!shadowContext)
       continue;
 
-    
+
 
     aDestCtx->Save();
     aDestCtx->NewPath();

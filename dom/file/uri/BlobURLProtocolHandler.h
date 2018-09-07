@@ -72,7 +72,7 @@ public:
 
   // This method returns false if aURI is not a known BlobURL. Otherwise it
   // returns true.
-  // 
+  //
   // When true is returned, the aPrincipal out param is meaningful.  It gets
   // set to the principal that a channel loaded from the blob would get if
   // the blob is not already revoked and to a NullPrincipal if the blob is

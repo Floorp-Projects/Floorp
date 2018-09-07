@@ -6200,7 +6200,7 @@ EventStateManager::WheelPrefs::HonoursRootForAutoDir()
 }
 
 // static
-Maybe<layers::APZWheelAction> 
+Maybe<layers::APZWheelAction>
 EventStateManager::APZWheelActionFor(const WidgetWheelEvent* aEvent)
 {
   if (aEvent->mMessage != eWheel) {

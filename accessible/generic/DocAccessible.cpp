@@ -2516,7 +2516,7 @@ DocAccessible::ARIAActiveDescendantIDMaybeMoved(dom::Element* aElm)
   if (!acc) {
     return;
   }
-  
+
   // The active descendant might have just been inserted and may not be in the
   // tree yet. Therefore, schedule this async to ensure the tree is up to date.
   mNotificationController->ScheduleNotification<DocAccessible, Accessible>

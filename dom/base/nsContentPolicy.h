@@ -35,7 +35,7 @@ class nsContentPolicy : public nsIContentPolicy
     //Helper method that applies policyMethod across all policies in mPolicies
     // with the given parameters
     nsresult CheckPolicy(CPMethod policyMethod,
-                         nsIURI *aURI, 
+                         nsIURI *aURI,
                          nsILoadInfo *aLoadInfo,
                          const nsACString &mimeGuess,
                          int16_t *decision);

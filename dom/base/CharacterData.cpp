@@ -236,7 +236,7 @@ CharacterData::ReplaceData(uint32_t aOffset, uint32_t aCount,
                                 aData.Length(), true);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
-  }  
+  }
 }
 
 nsresult

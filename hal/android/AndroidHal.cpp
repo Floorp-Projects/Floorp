@@ -131,7 +131,7 @@ GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
   int32_t rectX, rectY, rectWidth, rectHeight;
 
   screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
-  
+
   screen->GetRect(&rectX, &rectY, &rectWidth, &rectHeight);
   screen->GetColorDepth(&colorDepth);
   screen->GetPixelDepth(&pixelDepth);
