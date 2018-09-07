@@ -1964,8 +1964,7 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator
 
     bool tryAttachInt32();
     bool tryAttachDouble();
-    bool tryAttachDoubleWithInt32();
-    bool tryAttachBooleanWithInt32();
+    bool tryAttachBitwise();
     bool tryAttachStringConcat();
     bool tryAttachStringObjectConcat();
 

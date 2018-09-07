@@ -395,11 +395,6 @@ if (project.hasProperty('enable_code_coverage')) {
 
 // Set up code coverage for tests on emulators.
 if (mozconfig.substs.MOZ_JAVA_CODE_COVERAGE) {
-    apply plugin: "jacoco"
-    jacoco {
-        toolVersion = "${project.jacoco_version}"
-    }
-
     android {
         jacoco {
             version = "$jacoco_version"
@@ -428,7 +423,7 @@ if (mozconfig.substs.MOZ_JAVA_CODE_COVERAGE) {
         }
     }
 
-    // This task is used by `mach android archive-geckoview-coverage-artifacts`.
+    // This task is used by `mach android archive-coverage-artifacts`.
     task copyCoverageDependencies(type: Copy) {
         from(configurations.coverageDependency) {
             include 'org.jacoco.cli-*-nodeps.jar'
@@ -438,7 +433,7 @@ if (mozconfig.substs.MOZ_JAVA_CODE_COVERAGE) {
     }
 
     // Generate tasks to archive compiled classfiles for later use with JaCoCo report generation.
-    // One of these tasks is used by `mach android archive-geckoview-coverage-artifacts`.
+    // One of these tasks is used by `mach android archive-coverage-artifacts`.
     android.libraryVariants.all { variant ->
         def name = variant.name
         def compileTask = tasks.getByName("compile${name.capitalize()}JavaWithJavac")

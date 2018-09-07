@@ -181,7 +181,8 @@ HttpBackgroundChannelChild::RecvOnStopRequest(
                                     const nsHttpHeaderArray& aResponseTrailers)
 {
   LOG(("HttpBackgroundChannelChild::RecvOnStopRequest [this=%p]\n", this));
-  MOZ_ASSERT(OnSocketThread());
+  MOZ_ASSERT(gSocketTransportService);
+  MOZ_ASSERT(gSocketTransportService->IsOnCurrentThreadInfallible());
 
   // It's enough to set this from (just before) OnStopRequest notification, since
   // we don't need this value sooner than a channel was done loading - everything

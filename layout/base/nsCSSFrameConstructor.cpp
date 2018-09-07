@@ -8362,6 +8362,9 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
     newFrame = NS_NewXULLabelFrame(shell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
 #endif
+  } else if (LayoutFrameType::ColumnSetWrapper == frameType) {
+    newFrame = NS_NewColumnSetWrapperFrame(shell, computedStyle, nsFrameState(0));
+    newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::ColumnSet == frameType) {
     MOZ_ASSERT(!aFrame->IsTableCaption(),
                "no support for fragmenting table captions yet");

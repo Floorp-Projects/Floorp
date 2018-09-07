@@ -493,7 +493,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
 
         if self.java_code_coverage_enabled:
             cmd.extend(['--enable-coverage',
-                        '--coverage-output-path', self.java_coverage_output_path])
+                        '--coverage-output-dir', self.java_coverage_output_dir])
 
         return cmd
 

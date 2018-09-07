@@ -132,16 +132,16 @@ class CodeCoverageMixin(SingleTestMixin):
 
         # Download and extract class files from the build task.
         self.classfiles_dir = tempfile.mkdtemp()
-        url_to_classfiles = self.query_build_dir_url('target.geckoview_classfiles.zip')
-        classfiles_zip_path = os.path.join(self.classfiles_dir, 'target.geckoview_classfiles.zip')
-        self.download_file(url_to_classfiles, classfiles_zip_path)
-        with zipfile.ZipFile(classfiles_zip_path, 'r') as z:
-            z.extractall(self.classfiles_dir)
-        os.remove(classfiles_zip_path)
+        for archive in ['target.geckoview_classfiles.zip', 'target.app_classfiles.zip']:
+            url_to_classfiles = self.query_build_dir_url(archive)
+            classfiles_zip_path = os.path.join(self.classfiles_dir, archive)
+            self.download_file(url_to_classfiles, classfiles_zip_path)
+            with zipfile.ZipFile(classfiles_zip_path, 'r') as z:
+                z.extractall(self.classfiles_dir)
+            os.remove(classfiles_zip_path)
 
         # Create the directory where the emulator coverage file will be placed.
-        self.java_coverage_output_path = os.path.join(tempfile.mkdtemp(),
-                                                      'junit-coverage.ec')
+        self.java_coverage_output_dir = tempfile.mkdtemp()
 
     @PostScriptAction('download-and-extract')
     def setup_coverage_tools(self, action, success=None):
@@ -503,18 +503,22 @@ class CodeCoverageMixin(SingleTestMixin):
             return
 
         # If the emulator became unresponsive, the task has failed and we don't
-        # have the coverage report file, so stop running this function and
+        # have any coverage report file, so stop running this function and
         # allow the task to be retried automatically.
-        if not success and not os.path.exists(self.java_coverage_output_path):
+        if not success and not os.listdir(self.java_coverage_output_dir):
             return
+
+        report_files = [os.path.join(self.java_coverage_output_dir, f)
+                        for f in os.listdir(self.java_coverage_output_dir)]
+        assert len(report_files) > 0, "JaCoCo coverage data files were not found."
 
         dirs = self.query_abs_dirs()
         xml_path = tempfile.mkdtemp()
-        jacoco_command = ['java', '-jar', self.jacoco_jar, 'report',
-                          self.java_coverage_output_path,
-                          '--classfiles', self.classfiles_dir,
-                          '--name', 'geckoview-junit',
-                          '--xml', os.path.join(xml_path, 'geckoview-junit.xml')]
+        jacoco_command = ['java', '-jar', self.jacoco_jar, 'report'] + \
+            report_files + \
+            ['--classfiles', self.classfiles_dir,
+             '--name', 'geckoview-junit',
+             '--xml', os.path.join(xml_path, 'geckoview-junit.xml')]
         self.run_command(jacoco_command, halt_on_failure=True)
 
         grcov_command = [

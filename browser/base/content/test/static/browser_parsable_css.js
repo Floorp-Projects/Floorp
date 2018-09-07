@@ -91,6 +91,14 @@ if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
   });
 }
 
+if (!Services.prefs.getBoolPref("layout.css.scrollbar-width.enabled")) {
+  whitelist.push({
+    sourceName: /(?:res|gre-resources)\/forms\.css$/i,
+    errorMessage: /Unknown property .*\bscrollbar-width\b/i,
+    isFromDevTools: false,
+  });
+}
+
 let propNameWhitelist = [
   // These are CSS custom properties that we found a definition of but
   // no reference to.
