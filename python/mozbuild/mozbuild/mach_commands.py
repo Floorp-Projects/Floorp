@@ -1711,7 +1711,7 @@ class StaticAnalysis(MachCommandBase):
 
         footer = StaticAnalysisFooter(self.log_manager.terminal, monitor)
         with StaticAnalysisOutputManager(self.log_manager, monitor, footer) as output:
-            rc = self.run_process(args=args, line_handler=output.on_line, cwd=cwd)
+            rc = self.run_process(args=args, ensure_exit_code=False, line_handler=output.on_line, cwd=cwd)
 
             self.log(logging.WARNING, 'warning_summary',
                      {'count': len(monitor.warnings_db)},
