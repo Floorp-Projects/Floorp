@@ -38,6 +38,7 @@ EXPORTS.mozilla += [
     'InternalMutationEvent.h',
     'JSEventHandler.h',
     'KeyNameList.h',
+    'PendingFullscreenEvent.h',
     'PhysicalKeyCodeNameList.h',
     'TextComposition.h',
     'VirtualKeyCodeList.h',
