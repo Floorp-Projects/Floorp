@@ -11,6 +11,7 @@ EXPORTS += [
     'nsBaseCommandController.h',
     'nsCommandManager.h',
     'nsCommandParams.h',
+    'nsControllerCommandTable.h',
 ]
 
 XPIDL_SOURCES += [

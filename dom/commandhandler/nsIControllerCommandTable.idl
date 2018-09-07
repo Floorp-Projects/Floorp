@@ -87,14 +87,3 @@ interface nsIControllerCommandTable : nsISupports
                             [array, size_is(count), retval] out string commands);
 };
 
-
-
-%{C++
-// {670ee5da-6ad5-11d7-9950-000393636592}
-#define NS_CONTROLLERCOMMANDTABLE_CID \
-  {0x670ee5da, 0x6ad5, 0x11d7, \
-    { 0x99, 0x50, 0x00, 0x03, 0x93, 0x63, 0x65, 0x92 }}
-
-#define NS_CONTROLLERCOMMANDTABLE_CONTRACTID \
- "@mozilla.org/embedcomp/controller-command-table;1"
-%}

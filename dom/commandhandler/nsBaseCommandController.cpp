@@ -7,6 +7,7 @@
 #include "nsString.h"
 #include "nsIComponentManager.h"
 #include "nsBaseCommandController.h"
+#include "nsControllerCommandTable.h"
 
 #include "nsString.h"
 #include "nsWeakPtr.h"
@@ -34,16 +35,13 @@ nsBaseCommandController::~nsBaseCommandController()
 NS_IMETHODIMP
 nsBaseCommandController::Init(nsIControllerCommandTable* aCommandTable)
 {
-  nsresult rv = NS_OK;
-
   if (aCommandTable) {
     mCommandTable = aCommandTable;
   } else {
-    mCommandTable =
-      do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
+    mCommandTable = new nsControllerCommandTable();
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
