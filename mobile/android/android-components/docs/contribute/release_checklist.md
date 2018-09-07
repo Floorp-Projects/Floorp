@@ -6,6 +6,7 @@ permalink: /contributing/release-checklist
 
 ## Before the release
 
+- Make sure version number is correct or update version in Config.kt 
 - Update [CHANGELOG](https://github.com/mozilla-mobile/android-components/blob/master/docs/changelog.md)
   - Use milestone and commit log for identifying interesting changes
 - Generate API docs for release
