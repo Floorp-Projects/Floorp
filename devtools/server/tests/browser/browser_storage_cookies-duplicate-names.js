@@ -19,7 +19,7 @@ const TESTDATA = {
       expires: 0,
       path: "/",
       host: "test1.example.org",
-      isDomain: false,
+      hostOnly: true,
       isSecure: false,
     },
     {
@@ -28,7 +28,7 @@ const TESTDATA = {
       expires: 0,
       path: "/path2/",
       host: "test1.example.org",
-      isDomain: false,
+      hostOnly: true,
       isSecure: false,
     },
     {
@@ -37,7 +37,7 @@ const TESTDATA = {
       expires: 0,
       path: "/path3/",
       host: "test1.example.org",
-      isDomain: false,
+      hostOnly: true,
       isSecure: false,
     }
   ]
@@ -89,7 +89,7 @@ var testCookiesObjects = async function(index, hosts, cookiesActor) {
           is(item.path, toMatch.path, "The path matches.");
           is(item.host, toMatch.host, "The host matches.");
           is(item.isSecure, toMatch.isSecure, "The isSecure value matches.");
-          is(item.isDomain, toMatch.isDomain, "The isDomain value matches.");
+          is(item.hostOnly, toMatch.hostOnly, "The hostOnly value matches.");
           break;
         }
       }
