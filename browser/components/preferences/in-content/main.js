@@ -2428,34 +2428,6 @@ function getLocalHandlerApp(aFile) {
   return localHandlerApp;
 }
 
-/**
- * An enumeration of items in a JS array.
- *
- * FIXME: use ArrayConverter once it lands (bug 380839).
- *
- * @constructor
- */
-function ArrayEnumerator(aItems) {
-  this._index = 0;
-  this._contents = aItems;
-}
-
-ArrayEnumerator.prototype = {
-  _index: 0,
-
-  [Symbol.iterator]() {
-    return this._contents.values();
-  },
-
-  hasMoreElements() {
-    return this._index < this._contents.length;
-  },
-
-  getNext() {
-    return this._contents[this._index++];
-  },
-};
-
 function isFeedType(t) {
   return t == TYPE_MAYBE_FEED || t == TYPE_MAYBE_VIDEO_FEED || t == TYPE_MAYBE_AUDIO_FEED;
 }
@@ -3006,7 +2978,7 @@ class FeedHandlerInfo extends HandlerInfoWrapper {
       },
 
       enumerate() {
-        return new ArrayEnumerator(this._inner);
+        return this._inner.values();
       },
 
       appendElement(aHandlerApp, aWeak) {

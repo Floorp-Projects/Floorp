@@ -87,7 +87,7 @@ if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
 
 if CONFIG['OS_ARCH'] == 'Linux' or CONFIG['OS_ARCH'] == 'SunOS':
     FINAL_TARGET_FILES += [
-        '/toolkit/themes/windows/global/throbber/Throbber-small.gif',
+        'Throbber-small.gif',
     ]
 
 DEFINES['BIN_SUFFIX'] = '"%s"' % CONFIG['BIN_SUFFIX']
