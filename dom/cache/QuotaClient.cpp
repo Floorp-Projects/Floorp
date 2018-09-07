@@ -90,6 +90,14 @@ LockedGetPaddingSizeFromDB(nsIFile* aDir, const nsACString& aGroup,
   }
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
+  // Make sure that the database has the latest schema before we try to read
+  // from it. We have to do this because LockedGetPaddingSizeFromDB is called
+  // by QuotaClient::GetUsageForOrigin which may run at any time (there's no
+  // guarantee that SetupAction::RunSyncWithDBOnTarget already checked the
+  // schema for the given origin).
+  rv = mozilla::dom::cache::db::CreateOrMigrateSchema(conn);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
   int64_t paddingSize = 0;
   rv = mozilla::dom::cache::
        LockedDirectoryPaddingRestore(aDir, conn, /* aMustRestore */ false,
