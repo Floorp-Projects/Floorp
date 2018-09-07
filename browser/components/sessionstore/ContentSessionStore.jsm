@@ -315,14 +315,6 @@ class SessionHistoryListener extends Handler {
   OnHistoryReplaceEntry(index) {
     this.collect();
   }
-
-  OnLengthChanged(aCount) {
-    // Ignore, the method is implemented so that XPConnect doesn't throw!
-  }
-
-  OnIndexChanged(aIndex) {
-    // Ignore, the method is implemented so that XPConnect doesn't throw!
-  }
 }
 SessionHistoryListener.prototype.QueryInterface =
   ChromeUtils.generateQI([Ci.nsISHistoryListener,

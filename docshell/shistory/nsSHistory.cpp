@@ -641,9 +641,6 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
   mEntries.AppendElement(aSHEntry);
   mIndex++;
 
-  NOTIFY_LISTENERS(OnLengthChanged, (Length()));
-  NOTIFY_LISTENERS(OnIndexChanged, (mIndex));
-
   // Purge History list if it is too long
   if (gHistoryMaxSize >= 0 && Length() > gHistoryMaxSize) {
     PurgeHistory(Length() - gHistoryMaxSize);
@@ -677,8 +674,6 @@ nsSHistory::SetIndex(int32_t aIndex)
   }
 
   mIndex = aIndex;
-  NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
-
   return NS_OK;
 }
 
@@ -806,9 +801,6 @@ nsSHistory::PurgeHistory(int32_t aNumEntries)
   mIndex = std::max(mIndex, -1);
   mRequestedIndex -= aNumEntries;
   mRequestedIndex = std::max(mRequestedIndex, -1);
-
-  NOTIFY_LISTENERS(OnLengthChanged, (Length()));
-  NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
 
   if (mRootDocShell) {
     mRootDocShell->HistoryPurged(aNumEntries);
@@ -1356,7 +1348,6 @@ nsSHistory::RemoveDuplicate(int32_t aIndex, bool aKeepNext)
     // Adjust our indices to reflect the removed entry.
     if (mIndex > aIndex) {
       mIndex = mIndex - 1;
-      NOTIFY_LISTENERS(OnIndexChanged, (mIndex));
     }
 
     // NB: If the entry we are removing is the entry currently
@@ -1374,7 +1365,6 @@ nsSHistory::RemoveDuplicate(int32_t aIndex, bool aKeepNext)
     if (mRequestedIndex > aIndex || (mRequestedIndex == aIndex && !aKeepNext)) {
       mRequestedIndex = mRequestedIndex - 1;
     }
-    NOTIFY_LISTENERS(OnLengthChanged, (Length()));
     return true;
   }
   return false;
@@ -1439,7 +1429,6 @@ nsSHistory::UpdateIndex()
   // Update the actual index with the right value.
   if (mIndex != mRequestedIndex && mRequestedIndex != -1) {
     mIndex = mRequestedIndex;
-    NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
   }
 
   mRequestedIndex = -1;
