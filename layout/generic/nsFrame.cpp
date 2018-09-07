@@ -1203,6 +1203,18 @@ nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
     }
   }
 
+  // SVGObserverUtils::GetEffectProperties() asserts that we only invoke it with
+  // the first continuation so we need to check that in advance. Continuing text
+  // frame doesn't initialize its continuation pointer before reaching here for
+  // the first time, so we have to exclude text frames. This doesn't affect
+  // correctness because text nodes themselves shouldn't have effects applied.
+  if (!IsTextFrame() && !GetPrevContinuation()) {
+    // Kick off loading of external SVG resources referenced from properties if
+    // any. This currently includes filter, clip-path, and mask. We don't care
+    // about the return value. We only want its side effect.
+    Unused << SVGObserverUtils::GetEffectProperties(this);
+  }
+
   // If the page contains markup that overrides text direction, and
   // does not contain any characters that would activate the Unicode
   // bidi algorithm, we need to call |SetBidiEnabled| on the pres
