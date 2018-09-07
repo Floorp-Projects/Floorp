@@ -1042,3 +1042,74 @@ win32-mingw32/debug:
         - linux64-mingw32-nsis
         - linux64-mingw32-fxc2
         - linux64-node
+
+win64-mingwclang/opt:
+    description: "Win64 MinGW-Clang Opt"
+    index:
+        product: firefox
+        job-name: win64-mingwclang-opt
+    treeherder:
+        platform: windows-mingw32/all
+        symbol: WMC64(Bo)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: mingw32-build}
+        max-run-time: 7200
+        env:
+            PERFHERDER_EXTRA_OPTIONS: "opt 64 clang"
+    run:
+        using: mozharness
+        actions: [build]
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_windows_64_mingw_builds.py
+            - builds/releng_sub_windows_configs/64_mingwclang.py
+        need-xvfb: false
+    toolchains:
+        - mingw32-rust
+        - linux64-upx
+        - linux64-wine
+        - linux64-sccache
+        - linux64-cbindgen
+        - linux64-node
+        - linux64-clang-7-mingw
+        - linux64-mingw32-nsis
+        - linux64-mingw32-fxc2
+
+win64-mingwclang/debug:
+    description: "Win64 MinGW-Clang Debug"
+    index:
+        product: firefox
+        job-name: win64-mingwclang-debug
+    treeherder:
+        platform: windows-mingw32/all
+        symbol: WMC64(Bd)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: mingw32-build}
+        max-run-time: 72000
+        env:
+            PERFHERDER_EXTRA_OPTIONS: "debug 64 clang"
+    run:
+        using: mozharness
+        actions: [build]
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_windows_64_mingw_builds.py
+            - builds/releng_sub_windows_configs/64_mingwclang.py
+            - builds/releng_sub_windows_configs/64_mingwclang_debug.py
+        need-xvfb: false
+    toolchains:
+        - mingw32-rust
+        - linux64-upx
+        - linux64-wine
+        - linux64-sccache
+        - linux64-cbindgen
+        - linux64-node
+        - linux64-clang-7-mingw
+        - linux64-mingw32-nsis
+        - linux64-mingw32-fxc2
