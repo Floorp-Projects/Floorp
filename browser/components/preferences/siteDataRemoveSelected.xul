@@ -18,8 +18,9 @@
         ondialogcancel="gSiteDataRemoveSelected.ondialogcancel(); return true;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
-  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
+  <linkset>
+    <link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
+  </linkset>
 
   <script src="chrome://browser/content/preferences/siteDataRemoveSelected.js"/>
 

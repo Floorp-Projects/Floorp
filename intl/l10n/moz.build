@@ -39,8 +39,6 @@ XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
-JAR_MANIFESTS += ['jar.mn']
-
 SPHINX_TREES['l10n'] = 'docs'
 
 FINAL_LIBRARY = 'xul'
