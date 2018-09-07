@@ -478,9 +478,9 @@ async function test_allUnverified() {
   is(message, "Caution: This site would like to install an unverified add-on in " + gApp + ". Proceed at your own risk.");
 
   let container = document.getElementById("addon-install-confirmation-content");
-  is(container.childNodes.length, 1, "Should be one item listed");
-  is(container.childNodes[0].firstChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
-  is(container.childNodes[0].childNodes.length, 1, "Shouldn't have the unverified marker");
+  is(container.children.length, 1, "Should be one item listed");
+  is(container.children[0].firstElementChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
+  is(container.children[0].children.length, 1, "Shouldn't have the unverified marker");
 
   let notificationPromise = waitForNotification("addon-installed");
   acceptInstallDialog(installDialog);

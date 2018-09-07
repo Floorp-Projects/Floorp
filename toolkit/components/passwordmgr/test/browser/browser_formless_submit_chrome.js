@@ -66,7 +66,7 @@ add_task(async function test_backButton_forwardButton() {
     let forwardButton = document.getElementById("forward-button");
 
     let forwardTransitionPromise;
-    if (forwardButton.nextSibling == gURLBar) {
+    if (forwardButton.nextElementSibling == gURLBar) {
       // We need to wait for the forward button transition to complete before we
       // can click it, so we hook up a listener to wait for it to be ready.
       forwardTransitionPromise = BrowserTestUtils.waitForEvent(forwardButton, "transitionend");
