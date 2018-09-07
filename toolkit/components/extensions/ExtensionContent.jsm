@@ -13,6 +13,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.jsm",
   LanguageDetector: "resource:///modules/translation/LanguageDetector.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
@@ -41,7 +42,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["crypto", "TextEncoder"]);
 const {
   DefaultMap,
   DefaultWeakMap,
-  ExtensionTelemetry,
   getInnerWindowID,
   getWinUtils,
   promiseDocumentIdle,

@@ -6,10 +6,9 @@ var {
   promiseExtensionViewLoaded,
 } = ExtensionParent;
 
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
-var {
-  ExtensionTelemetry,
-} = ExtensionUtils;
+
+ChromeUtils.defineModuleGetter(this, "ExtensionTelemetry",
+                               "resource://gre/modules/ExtensionTelemetry.jsm");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "DELAYED_STARTUP",
                                       "extensions.webextensions.background-delayed-startup");

@@ -531,13 +531,13 @@ typedef int64_t (*Prototype_General7)(int64_t arg0, int64_t arg1, int64_t arg2, 
                                       int64_t arg4, int64_t arg5, int64_t arg6);
 typedef int64_t (*Prototype_General8)(int64_t arg0, int64_t arg1, int64_t arg2, int64_t arg3,
                                       int64_t arg4, int64_t arg5, int64_t arg6, int64_t arg7);
-typedef int64_t (*Prototype_GeneralGeneralGeneralInt64)(int64_t arg0, int32_t arg1, int32_t arg2,
+typedef int64_t (*Prototype_GeneralGeneralGeneralInt64)(int64_t arg0, int64_t arg1, int64_t arg2,
                                                         int64_t arg3);
-typedef int64_t (*Prototype_GeneralGeneralInt64Int64)(int64_t arg0, int32_t arg1, int64_t arg2,
+typedef int64_t (*Prototype_GeneralGeneralInt64Int64)(int64_t arg0, int64_t arg1, int64_t arg2,
                                                       int64_t arg3);
 
 typedef int64_t (*Prototype_Int_Double)(double arg0);
-typedef int64_t (*Prototype_Int_IntDouble)(int32_t arg0, double arg1);
+typedef int64_t (*Prototype_Int_IntDouble)(int64_t arg0, double arg1);
 typedef int64_t (*Prototype_Int_DoubleIntInt)(double arg0, uint64_t arg1, uint64_t arg2);
 typedef int64_t (*Prototype_Int_IntDoubleIntInt)(uint64_t arg0, double arg1,
                                                  uint64_t arg2, uint64_t arg3);
@@ -547,7 +547,7 @@ typedef float (*Prototype_Float32_Float32Float32)(float arg0, float arg1);
 
 typedef double (*Prototype_Double_None)();
 typedef double (*Prototype_Double_Double)(double arg0);
-typedef double (*Prototype_Double_Int)(int32_t arg0);
+typedef double (*Prototype_Double_Int)(int64_t arg0);
 typedef double (*Prototype_Double_DoubleInt)(double arg0, int64_t arg1);
 typedef double (*Prototype_Double_IntDouble)(int64_t arg0, double arg1);
 typedef double (*Prototype_Double_DoubleDouble)(double arg0, double arg1);

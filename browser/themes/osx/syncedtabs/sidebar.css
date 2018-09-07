@@ -18,12 +18,12 @@ body:not([lwt-sidebar]) .content-container {
   font-size: 12px;
 }
 
-.item.selected > .item-title-container {
+body:not([lwt-sidebar]) .item.selected > .item-title-container {
   -moz-appearance: -moz-mac-source-list-selection;
   -moz-font-smoothing-background-color: -moz-mac-source-list-selection;
 }
 
-.item.selected:focus > .item-title-container {
+body:not([lwt-sidebar-highlight]) .item.selected:focus > .item-title-container {
   -moz-appearance: -moz-mac-active-source-list-selection;
   -moz-font-smoothing-background-color: -moz-mac-active-source-list-selection;
 }

@@ -283,7 +283,7 @@ AreaPositionManager.prototype = {
   _getVisibleSiblingForDirection(aNode, aDirection) {
     let rv = aNode;
     do {
-      rv = rv[aDirection + "Sibling"];
+      rv = rv[aDirection + "ElementSibling"];
     } while (rv && rv.getAttribute("hidden") == "true");
     return rv;
   },

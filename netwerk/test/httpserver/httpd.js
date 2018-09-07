@@ -2797,7 +2797,12 @@ ServerHandler.prototype =
           // getting the line number where we evaluate the SJS file.  Don't
           // separate these two lines!
           var line = new Error().lineNumber;
-          Cu.evalInSandbox(sis.read(file.fileSize), s, "latest");
+          let uri = Cc["@mozilla.org/network/io-service;1"]
+                      .getService(Ci.nsIIOService)
+                      .newFileURI(file);
+          let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+                               .getService(Ci.mozIJSSubScriptLoader);
+          scriptLoader.loadSubScript(uri.spec, s);
         }
         catch (e)
         {

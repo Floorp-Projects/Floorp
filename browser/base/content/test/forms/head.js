@@ -11,7 +11,7 @@ function hideSelectPopup(selectPopup, mode = "enter", win = window) {
   } else if (mode == "enter") {
     EventUtils.synthesizeKey("KEY_Enter", {}, win);
   } else if (mode == "click") {
-    EventUtils.synthesizeMouseAtCenter(selectPopup.lastChild, { }, win);
+    EventUtils.synthesizeMouseAtCenter(selectPopup.lastElementChild, { }, win);
   }
 
   return selectClosedPromise;

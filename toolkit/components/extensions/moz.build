@@ -22,6 +22,7 @@ EXTRA_JS_MODULES += [
     'ExtensionStorage.jsm',
     'ExtensionStorageIDB.jsm',
     'ExtensionStorageSync.jsm',
+    'ExtensionTelemetry.jsm',
     'ExtensionUtils.jsm',
     'FindContent.jsm',
     'LegacyExtensionsUtils.jsm',

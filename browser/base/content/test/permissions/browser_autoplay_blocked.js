@@ -27,7 +27,7 @@ add_task(async function testMainViewVisible() {
 
   await BrowserTestUtils.withNewTab(AUTOPLAY_PAGE, async function() {
     let permissionsList = document.getElementById("identity-popup-permission-list");
-    let emptyLabel = permissionsList.nextSibling.nextSibling;
+    let emptyLabel = permissionsList.nextElementSibling.nextElementSibling;
 
     ok(BrowserTestUtils.is_hidden(autoplayBlockedIcon()), "Blocked icon not shown");
 
@@ -40,7 +40,7 @@ add_task(async function testMainViewVisible() {
 
   await BrowserTestUtils.withNewTab(AUTOPLAY_PAGE, async function() {
     let permissionsList = document.getElementById("identity-popup-permission-list");
-    let emptyLabel = permissionsList.nextSibling.nextSibling;
+    let emptyLabel = permissionsList.nextElementSibling.nextElementSibling;
 
     ok(!BrowserTestUtils.is_hidden(autoplayBlockedIcon()), "Blocked icon is shown");
 
