@@ -1,0 +1,79 @@
+# Sets:
+#    MOZ_AUTOMATION flags
+#    SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE - shouldn't be used?
+#    TOOLTOOL_DIR
+#    MAKECAB - shouldn't be used?
+. "$topsrcdir/build/mozconfig.win-common"
+
+# MinGW does not have (or need) makecab
+unset MAKECAB
+
+# Sets:
+#  build/mozconfig.common
+#    AUTOCLOBBER=1
+#    --enable-crashreporter
+#    --enable-release
+#    LLVM_CONFIG
+#    MOZ_ADDON_SIGNING
+#    MOZ_REQUIRE_SIGNING
+#    --enable-js-shell
+#  build/mozconfig.automation
+#    MOZ_AUTOMATION_ flags
+#  build/mozconfig.rust
+#    TOOLTOOL_DIR
+#    RUSTC
+#    CARGO
+. "$topsrcdir/browser/config/mozconfigs/common"
+
+# MinGW Stuff
+ac_add_options --target=x86_64-w64-mingw32
+ac_add_options --with-toolchain-prefix=x86_64-w64-mingw32-
+
+ac_add_options --disable-warnings-as-errors
+
+# Temporary config settings until we get these working on mingw
+ac_add_options --disable-accessibility # https://sourceforge.net/p/mingw-w64/bugs/648/
+
+# For now, we'll disable the sandbox, until we get get Bug 1461421 figured out
+ac_add_options --disable-sandbox
+
+# These aren't supported on mingw at this time
+ac_add_options --disable-maintenance-service
+ac_add_options --disable-webrtc # Bug 1393901
+ac_add_options --disable-geckodriver # Bug 1489320
+
+# Find our toolchain
+HOST_CC="$TOOLTOOL_DIR/clang/bin/clang"
+HOST_CXX="$TOOLTOOL_DIR/clang/bin/clang++"
+CC="$TOOLTOOL_DIR/clang/bin/x86_64-w64-mingw32-clang"
+CXX="$TOOLTOOL_DIR/clang/bin/x86_64-w64-mingw32-clang++"
+CXXFLAGS="-fms-extensions"
+CPP="$TOOLTOOL_DIR/clang/bin/x86_64-w64-mingw32-clang -E"
+AR=llvm-ar
+RANLIB=llvm-ranlib
+
+# For Stylo
+BINDGEN_CFLAGS="-I$TOOLTOOL_DIR/clang/x86_64-w64-mingw32/include/c++/v1 -I$TOOLTOOL_DIR/clang/lib/clang/7.0.0/include -I$TOOLTOOL_DIR/clang/x86_64-w64-mingw32/include"
+
+# Since we use windres from binutils without the rest of tools (like cpp), we need to
+# explicitly specify clang as a preprocessor.
+WINDRES="x86_64-w64-mingw32-windres --preprocessor=\"$CPP -xc\" -DRC_INVOKED"
+
+# Bug 1471698 - Work around binutils corrupting mingw clang binaries.
+LDFLAGS="-Wl,-S"
+STRIP=/bin/true
+OBJCOPY=/bin/true
+
+# We want to make sure we use binutils and other binaries in the tooltool
+# package.
+mk_add_options "export PATH=$TOOLTOOL_DIR/clang/bin:$TOOLTOOL_DIR/mingw32/bin:$TOOLTOOL_DIR/wine/bin:$TOOLTOOL_DIR/upx/bin:$TOOLTOOL_DIR/fxc2/bin:$PATH"
+
+LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/mingw32/lib64:$TOOLTOOL_DIR/clang/lib
+mk_add_options "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+
+# Do not include the visual studio related mozconfigs of course
+
+ac_add_options --with-branding=browser/branding/nightly
+
+. "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"
