@@ -196,7 +196,6 @@ body {
 .sync-state > p {
   padding-inline-end: 10px;
   padding-inline-start: 10px;
-  color: #888;
 }
 
 .text-link {
@@ -253,6 +252,11 @@ body {
   padding: 0 11px;
   max-width: 15em;
   margin: 0 auto;
+}
+
+body[lwt-sidebar] .deck .instructions {
+  color: inherit;
+  opacity: .6;
 }
 
 .deck .button {
