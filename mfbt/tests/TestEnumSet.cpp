@@ -33,6 +33,18 @@ enum SeaBird
   AUK
 };
 
+enum class SmallEnum : uint8_t
+{
+  Foo,
+  Bar,
+};
+
+enum class BigEnum : uint64_t
+{
+  Foo,
+  Bar = 35,
+};
+
 class EnumSetSuite
 {
 public:
@@ -62,9 +74,21 @@ public:
     testDuplicates();
     testIteration();
     testInitializerListConstuctor();
+    testBigEnum();
   }
 
 private:
+
+  void testEnumSetLayout()
+  {
+#ifndef DEBUG
+    static_assert(sizeof(EnumSet<SmallEnum>) == sizeof(SmallEnum),
+                  "EnumSet should be no bigger than the enum by default");
+    static_assert(sizeof(EnumSet<SmallEnum, uint32_t>) == sizeof(uint32_t),
+                  "EnumSet should be able to have its size overriden.");
+#endif
+  }
+
   void testSize()
   {
     MOZ_RELEASE_ASSERT(mAlcidae.size() == 0);
@@ -271,6 +295,13 @@ private:
     MOZ_RELEASE_ASSERT(someBirds.contains(SKIMMER));
     MOZ_RELEASE_ASSERT(someBirds.contains(GULL));
     MOZ_RELEASE_ASSERT(someBirds.contains(BOOBY));
+  }
+
+  void testBigEnum()
+  {
+    EnumSet<BigEnum> set;
+    set += BigEnum::Bar;
+    MOZ_RELEASE_ASSERT(set.serialize() == (uint64_t(1) << uint64_t(BigEnum::Bar)));
   }
 
   EnumSet<SeaBird> mAlcidae;

@@ -53,7 +53,7 @@ enum class VMFlag : uint8_t
   Mergeable,     // mg  - mergeable advise flag
 };
 
-using VMFlagSet = EnumSet<VMFlag>;
+using VMFlagSet = EnumSet<VMFlag, uint32_t>;
 
 class MemoryMapping final
 {

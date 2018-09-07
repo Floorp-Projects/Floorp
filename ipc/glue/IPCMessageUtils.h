@@ -952,11 +952,11 @@ struct ParamTraits<mozilla::Maybe<T>>
   }
 };
 
-template<typename T>
-struct ParamTraits<mozilla::EnumSet<T>>
+template<typename T, typename U>
+struct ParamTraits<mozilla::EnumSet<T, U>>
 {
-  typedef mozilla::EnumSet<T> paramType;
-  typedef typename mozilla::EnumSet<T>::serializedType serializedType;
+  typedef mozilla::EnumSet<T, U> paramType;
+  typedef U serializedType;
 
   static void Write(Message* msg, const paramType& param)
   {
