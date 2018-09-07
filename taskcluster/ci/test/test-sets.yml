@@ -408,6 +408,7 @@ android-x86-kvm-tests:
 
 android-ccov-tests:
     - geckoview-junit
+    - robocop
 
 devtools-tests:
     - mochitest-devtools-chrome

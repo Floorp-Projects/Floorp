@@ -904,6 +904,18 @@ class AndroidArguments(ArgumentContainer):
                    (eg. /mnt/sdcard/tests or /data/local/tests)",
           "suppress": True,
           }],
+        [["--enable-coverage"],
+         {"action": "store_true",
+          "default": False,
+          "help": "Enable collecting code coverage information when running"
+                  "robocop tests.",
+          }],
+        [["--coverage-output-dir"],
+         {"action": "store",
+          "default": None,
+          "help": "When using --enable-java-coverage, save the code coverage report"
+                  "files to this directory.",
+          }],
     ]
 
     defaults = {
@@ -969,6 +981,21 @@ class AndroidArguments(ArgumentContainer):
                     "Unable to find robocop APK '%s'" %
                     options.robocopApk)
             options.robocopApk = os.path.abspath(options.robocopApk)
+
+        if options.coverage_output_dir and not options.enable_coverage:
+            parser.error("--coverage-output-dir must be used with --enable-coverage")
+        if options.enable_coverage:
+            if not options.autorun:
+                parser.error(
+                    "--enable-coverage cannot be used with --no-autorun")
+            if not options.coverage_output_dir:
+                parser.error(
+                    "--coverage-output-dir must be specified when using --enable-coverage")
+            parent_dir = os.path.dirname(options.coverage_output_dir)
+            if not os.path.isdir(options.coverage_output_dir):
+                parser.error(
+                    "The directory for the coverage output does not exist: %s" %
+                    parent_dir)
 
         # Disable e10s by default on Android because we don't run Android
         # e10s jobs anywhere yet.
