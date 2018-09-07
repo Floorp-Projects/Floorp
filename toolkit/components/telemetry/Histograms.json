@@ -11030,7 +11030,7 @@
   },
   "WEAVE_LOGIN_FAILED_FOR": {
     "record_in_processes": ["main"],
-    "expires_in_version": "65",
+    "expires_in_version": "68",
     "alert_emails": ["sync-dev@mozilla.org"],
     "kind": "exponential",
     "high": 20000,
