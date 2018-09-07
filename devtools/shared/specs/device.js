@@ -10,7 +10,6 @@ const deviceSpec = generateActorSpec({
 
   methods: {
     getDescription: {request: {}, response: { value: RetVal("json")}},
-    getWallpaper: {request: {}, response: { value: RetVal("longstring")}},
     screenshotToDataURL: {request: {}, response: { value: RetVal("longstring")}},
   },
 });
