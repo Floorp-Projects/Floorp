@@ -19,12 +19,13 @@
         helpTopic="prefs-connection-settings"
         ondialoghelp="openPrefsHelp()">
 
-  <link rel="localization" href="browser/preferences/connection.ftl"/>
 
   <!-- Used for extension-controlled lockdown message -->
-  <link rel="localization" href="browser/preferences/preferences.ftl"/>
-  <link rel="localization" href="branding/brand.ftl"/>
-  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
+  <linkset>
+    <link rel="localization" href="browser/preferences/connection.ftl"/>
+    <link rel="localization" href="browser/preferences/preferences.ftl"/>
+    <link rel="localization" href="branding/brand.ftl"/>
+  </linkset>
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
