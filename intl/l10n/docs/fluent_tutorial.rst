@@ -507,27 +507,15 @@ register the browser's `/localization/` directory and make all files inside it
 available to be referenced.
 
 To make the document localized using Fluent, all the developer has to do is add
-a single polyfill for the Fluent API to the source and list the resources
-that will be used:
+localizable resources for Fluent API to use:
 
 .. code-block:: html
 
   <link rel="localization" href="branding/brand.ftl"/>
   <link rel="localization" href="browser/preferences/preferences.ftl"/>
-  <script src="chrome://global/content/l10n.js"></script>
-
-For performance reasons the :html:`<link/>` elements have to be specified above the
-:html:`<script/>`, and the :html:`<script/>` itself has to be synchronous in order to ensure
-that the localization happens before first paint.
-
-This allows Fluent to trigger asynchronous resource loading early enough to
-perform the initial DOM translation before the initial layout.
 
 The URI provided to the :html:`<link/>` element are relative paths within the localization
 system.
-
-Notice that only the registration of the script is synchronous. All the I/O and
-translation happen asynchronously.
 
 
 Custom Contexts
@@ -671,7 +659,6 @@ since the class and file names may show up during debugging or profiling,
 below is a list of major components, each with a corresponding file in `/intl/l10n`
 modules in Gecko.
 
-
 MessageContext
 --------------
 
@@ -701,14 +688,17 @@ DOMLocalization
 DOMLocalization extends :js:`Localization` with functionality to operate on HTML, XUL
 and the DOM directly including DOM Overlays and Mutation Observers.
 
+mozDOMLocalization
+------------------
 
-l10n.js
--------
+mozDOMLocalization is a wrapper on DOMLocalization which exposes it via XPIDL
+to allow DocumentL10n and nsIDocument to communicate with it.
 
-l10n.js is a small runtime code which fetches the :html:`<link>` elements specified
-in the document and initializes the main :js:`DOMLocalization` context
-on :js:`document.l10n`.
+DocumentL10n
+------------
 
+DocumentL10n implements the DocumentL10n WebIDL API and allows nsIDocument
+to communicate with mozDOMLocalization.
 
 L10nRegistry
 ------------
