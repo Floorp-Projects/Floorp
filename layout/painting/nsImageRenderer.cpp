@@ -649,9 +649,18 @@ nsImageRenderer::BuildWebRenderDisplayItems(
         return ImgDrawResult::NOT_READY;
       }
 
+      mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
+        nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame()));
       gfx::IntSize size;
-      Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageKey(
-        aItem, container, aBuilder, aResources, aSc, size, Nothing());
+      Maybe<wr::ImageKey> key =
+        aManager->CommandBuilder().CreateImageKey(aItem,
+                                                  container,
+                                                  aBuilder,
+                                                  aResources,
+                                                  rendering,
+                                                  aSc,
+                                                  size,
+                                                  Nothing());
 
       if (key.isNothing()) {
         return ImgDrawResult::NOT_READY;
@@ -672,14 +681,12 @@ nsImageRenderer::BuildWebRenderDisplayItems(
       LayoutDeviceSize gapSize = LayoutDeviceSize::FromAppUnits(
         aRepeatSize - aDest.Size(), appUnitsPerDevPixel);
 
-      SamplingFilter samplingFilter =
-        nsLayoutUtils::GetSamplingFilterForFrame(mForFrame);
       aBuilder.PushImage(fill,
                          clip,
                          !aItem->BackfaceIsHidden(),
                          wr::ToLayoutSize(destRect.Size()),
                          wr::ToLayoutSize(gapSize),
-                         wr::ToImageRendering(samplingFilter),
+                         rendering,
                          key.value());
       break;
     }
