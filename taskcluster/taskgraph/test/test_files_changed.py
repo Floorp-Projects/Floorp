@@ -40,7 +40,7 @@ class FakeResponse:
 class TestGetChangedFiles(unittest.TestCase):
 
     def setUp(self):
-        files_changed._cache.clear()
+        files_changed.get_changed_files.clear()
         self.old_get = files_changed.requests.get
 
         def fake_get(url, **kwargs):
@@ -49,6 +49,7 @@ class TestGetChangedFiles(unittest.TestCase):
 
     def tearDown(self):
         files_changed.requests.get = self.old_get
+        files_changed.get_changed_files.clear()
 
     def test_get_changed_files(self):
         """Get_changed_files correctly gets the list of changed files in a push.
@@ -62,7 +63,10 @@ class TestGetChangedFiles(unittest.TestCase):
 class TestCheck(unittest.TestCase):
 
     def setUp(self):
-        files_changed._cache[PARAMS['head_repository'], PARAMS['head_rev']] = FILES_CHANGED
+        files_changed.get_changed_files[PARAMS['head_repository'], PARAMS['head_rev']] = FILES_CHANGED
+
+    def tearDown(self):
+        files_changed.get_changed_files.clear()
 
     def test_check_no_params(self):
         self.assertTrue(files_changed.check({}, ["ignored"]))
