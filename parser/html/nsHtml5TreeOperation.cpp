@@ -178,6 +178,8 @@ nsHtml5TreeOperation::Append(nsIContent* aNode,
   MOZ_ASSERT(aBuilder->IsInDocUpdate());
   nsresult rv = NS_OK;
   nsHtml5OtherDocUpdate update(aParent->OwnerDoc(), aBuilder->GetDocument());
+  dom::AutoCEReaction autoCEReaction(
+    aParent->OwnerDoc()->GetDocGroup()->CustomElementReactionsStack(), nullptr);
   rv = aParent->AppendChildTo(aNode, false);
   if (NS_SUCCEEDED(rv)) {
     aNode->SetParserHasNotified();
