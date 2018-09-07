@@ -1058,6 +1058,7 @@ public class BrowserApp extends GeckoApp
             mPipController.tryEnteringPictureInPictureMode();
         } catch (IllegalStateException exception) {
             Log.e(LOGTAG, "Cannot enter in Picture In Picture mode:\n" + exception.getMessage());
+            setRequestedOrientationForCurrentActivity(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
         }
     }
 
