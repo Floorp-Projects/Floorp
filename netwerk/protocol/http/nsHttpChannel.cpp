@@ -699,13 +699,11 @@ nsHttpChannel::CheckFastBlocked()
     MOZ_ASSERT(mIsThirdPartyTrackingResource);
 
     static bool sFastBlockInited = false;
-    static bool sIsFastBlockEnabled = false;
     static uint32_t sFastBlockTimeout = 0;
     static uint32_t sFastBlockLimit = 0;
 
     if (!sFastBlockInited) {
         sFastBlockInited = true;
-        Preferences::AddBoolVarCache(&sIsFastBlockEnabled, "browser.fastblock.enabled");
         Preferences::AddUintVarCache(&sFastBlockTimeout, "browser.fastblock.timeout");
         Preferences::AddUintVarCache(&sFastBlockLimit, "browser.fastblock.limit");
     }
@@ -718,7 +716,7 @@ nsHttpChannel::CheckFastBlocked()
     }
 
     if (!StaticPrefs::browser_contentblocking_enabled() ||
-        !sIsFastBlockEnabled ||
+        !StaticPrefs::browser_fastblock_enabled() ||
         IsContentPolicyTypeWhitelistedForFastBlock(mLoadInfo) ||
         // If the user has interacted with the document, we disable fastblock.
         (mLoadInfo && mLoadInfo->GetDocumentHasUserInteracted())) {
