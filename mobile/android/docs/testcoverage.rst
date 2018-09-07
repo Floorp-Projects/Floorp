@@ -101,7 +101,7 @@ To generate the coverage report, we need three things:
   classfiles and the coverage counters as input and generates XML reports as
   output.
 
-The ``mach android archive-geckoview-coverage-artifacts`` command archives the
+The ``mach android archive-coverage-artifacts`` command archives the
 class files and exports the ``jacoco-cli`` jar file after the build is done.
 These files are later saved as public artifacts of the build.
 
@@ -115,3 +115,19 @@ true`` to ``am instrument``.
 
 .. _GeckoView: https://wiki.mozilla.org/Mobile/GeckoView
 .. _geckoview-junit: https://developer.mozilla.org/en-US/docs/Mozilla/Geckoview-Junit_Tests
+
+
+Code coverage for Robocop UI tests
+==================================
+
+Robocop_ provides UI-level testing for Fennec. The tests use the same
+automation scripts as geckoview-junit, only differing by the fact that they are
+run by ``runrobocop.py`` instead of ``runjunit.py``.
+
+The only notable difference from the geckoview-junit tests is that robocop
+tests are run with one ``am instrument`` call per test class. This means that
+one ``robocop-coverage-<test name>.ec`` file will be generated for each test
+class. After the tests finish, ``jacoco-cli`` will be called on all the
+resulting coverage data files.
+
+.. _Robocop: https://wiki.mozilla.org/Auto-tools/Projects/Robocop
