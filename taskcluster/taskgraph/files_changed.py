@@ -17,35 +17,32 @@ from subprocess import CalledProcessError
 from mozbuild.util import memoize
 
 logger = logging.getLogger(__name__)
-_cache = {}
 
 
+@memoize
 def get_changed_files(repository, revision):
     """
     Get the set of files changed in the push headed by the given revision.
     Responses are cached, so multiple calls with the same arguments are OK.
     """
-    key = repository, revision
-    if key not in _cache:
-        url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'), revision)
-        logger.debug("Querying version control for metadata: %s", url)
+    url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'), revision)
+    logger.debug("Querying version control for metadata: %s", url)
 
-        def get_automationrelevance():
-            response = requests.get(url, timeout=5)
-            return response.json()
-        contents = retry(get_automationrelevance, attempts=10, sleeptime=10)
+    def get_automationrelevance():
+        response = requests.get(url, timeout=5)
+        return response.json()
+    contents = retry(get_automationrelevance, attempts=10, sleeptime=10)
 
-        logger.debug('{} commits influencing task scheduling:'
-                     .format(len(contents['changesets'])))
-        changed_files = set()
-        for c in contents['changesets']:
-            logger.debug(" {cset} {desc}".format(
-                cset=c['node'][0:12],
-                desc=c['desc'].splitlines()[0].encode('ascii', 'ignore')))
-            changed_files |= set(c['files'])
+    logger.debug('{} commits influencing task scheduling:'
+                 .format(len(contents['changesets'])))
+    changed_files = set()
+    for c in contents['changesets']:
+        logger.debug(" {cset} {desc}".format(
+            cset=c['node'][0:12],
+            desc=c['desc'].splitlines()[0].encode('ascii', 'ignore')))
+        changed_files |= set(c['files'])
 
-        _cache[key] = changed_files
-    return _cache[key]
+    return changed_files
 
 
 def check(params, file_patterns):
