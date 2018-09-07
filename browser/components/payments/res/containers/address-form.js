@@ -265,6 +265,16 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
   }
 
   onInput(event) {
+    let container = event.target.closest(`#${event.target.id}-container`);
+    if (container) {
+      container.classList.remove("error");
+      event.target.setCustomValidity("");
+
+      let span = container.querySelector(".error-text");
+      if (span) {
+        span.textContent = "";
+      }
+    }
     this.updateSaveButtonState();
   }
 
