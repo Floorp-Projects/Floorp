@@ -469,6 +469,7 @@ WEBIDL_FILES = [
     'Directory.webidl',
     'Document.webidl',
     'DocumentFragment.webidl',
+    'DocumentL10n.webidl',
     'DocumentOrShadowRoot.webidl',
     'DocumentTimeline.webidl',
     'DocumentType.webidl',
