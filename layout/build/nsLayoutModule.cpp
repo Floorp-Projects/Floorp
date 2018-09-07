@@ -58,7 +58,6 @@
 #include "nsContentCreatorFunctions.h"
 
 #include "nsGlobalWindowCommands.h"
-#include "nsIControllerCommandTable.h"
 #include "nsJSProtocolHandler.h"
 #include "nsIControllerContext.h"
 #include "nsZipArchive.h"
@@ -150,6 +149,7 @@ static void Shutdown();
 
 #include "nsScriptError.h"
 #include "nsBaseCommandController.h"
+#include "nsControllerCommandTable.h"
 
 #include "mozilla/TextInputProcessor.h"
 
@@ -559,12 +559,11 @@ static nsresult
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
                                     REFNSIID aIID, void **aResult)
 {
-  nsresult rv;
   nsCOMPtr<nsIControllerCommandTable> commandTable =
-      do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+      new nsControllerCommandTable();
 
-  rv = nsWindowCommandRegistration::RegisterWindowCommands(commandTable);
+  nsresult rv =
+    nsWindowCommandRegistration::RegisterWindowCommands(commandTable);
   if (NS_FAILED(rv)) return rv;
 
   return commandTable->QueryInterface(aIID, aResult);
@@ -644,12 +643,10 @@ static nsresult
 nsEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
                                             void **aResult)
 {
-  nsresult rv;
   nsCOMPtr<nsIControllerCommandTable> commandTable =
-      do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+      new nsControllerCommandTable();
 
-  rv = EditorController::RegisterEditorCommands(commandTable);
+  nsresult rv = EditorController::RegisterEditorCommands(commandTable);
   if (NS_FAILED(rv)) return rv;
 
   // we don't know here whether we're being created as an instance,
@@ -663,12 +660,10 @@ static nsresult
 nsEditingCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
                                               void **aResult)
 {
-  nsresult rv;
   nsCOMPtr<nsIControllerCommandTable> commandTable =
-      do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+      new nsControllerCommandTable();
 
-  rv = EditorController::RegisterEditingCommands(commandTable);
+  nsresult rv = EditorController::RegisterEditingCommands(commandTable);
   if (NS_FAILED(rv)) return rv;
 
   // we don't know here whether we're being created as an instance,
