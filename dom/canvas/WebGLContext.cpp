@@ -2306,7 +2306,7 @@ WebGLContext::GetVRFrame()
 {
     if (!gl)
         return nullptr;
-    
+
     // Create a custom GLScreenBuffer for VR.
     if (!mVRScreen) {
         auto caps = gl->Screen()->mCaps;

@@ -90,7 +90,7 @@ public:
     return AddEventListener(aType, aListener, aUseCapture,
                             Nullable<bool>(aWantsUntrusted));
   }
-  
+
   /**
    * This method allows the removal of event listeners represented by
    * nsIDOMEventListener from the event target, with the same semantics as the
@@ -240,7 +240,7 @@ public:
    *
    * @note Only EventDispatcher should call this method.
    */
-  virtual void GetEventTargetParent(EventChainPreVisitor& aVisitor) = 0;  
+  virtual void GetEventTargetParent(EventChainPreVisitor& aVisitor) = 0;
 
   /**
    * Called before the capture phase of the event flow and after event target
@@ -269,7 +269,7 @@ public:
    * @note Only EventDispatcher should call this method.
    */
   virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) = 0;
-  
+
 protected:
   EventHandlerNonNull* GetEventHandler(nsAtom* aType);
   void SetEventHandler(nsAtom* aType, EventHandlerNonNull* aHandler);

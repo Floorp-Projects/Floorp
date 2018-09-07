@@ -1968,7 +1968,7 @@ private:
 
   /**
    * GetCustomInterface is somewhat like a GetInterface, but it is expected
-   * that the implementation is provided by a custom element or via the 
+   * that the implementation is provided by a custom element or via the
    * the XBL implements keyword. To use this, create a public method that
    * wraps a call to GetCustomInterface.
    */

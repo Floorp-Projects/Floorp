@@ -400,7 +400,7 @@ class ScopedFakeVertexAttrib0 final
     bool mDidFake = false;
 
 public:
-    ScopedFakeVertexAttrib0(WebGLContext* const webgl, 
+    ScopedFakeVertexAttrib0(WebGLContext* const webgl,
                             const uint64_t vertexCount, bool* const out_error)
         : mWebGL(webgl)
     {

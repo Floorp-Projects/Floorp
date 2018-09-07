@@ -33,7 +33,7 @@ static int mar_insert_item(MarFile *mar, const char *name, int namelen,
                            uint32_t offset, uint32_t length, uint32_t flags) {
   MarItem *item, *root;
   uint32_t hash;
-  
+
   item = (MarItem *) malloc(sizeof(MarItem) + namelen);
   if (!item)
     return -1;
@@ -223,7 +223,7 @@ void mar_close(MarFile *mar) {
  *                               of signatures in the MAR file.
  * @param hasAdditionalBlocks    Optional out parameter specifying if the MAR
  *                               file has additional blocks or not.
- * @param offsetAdditionalBlocks Optional out parameter for the offset to the 
+ * @param offsetAdditionalBlocks Optional out parameter for the offset to the
  *                               first additional block. Value is only valid if
  *                               hasAdditionalBlocks is not equal to 0.
  * @param numAdditionalBlocks    Optional out parameter for the number of
@@ -231,7 +231,7 @@ void mar_close(MarFile *mar) {
  *                               hasAdditionalBlocks is not equal to 0.
  * @return 0 on success and non-zero on failure.
  */
-int get_mar_file_info_fp(FILE *fp, 
+int get_mar_file_info_fp(FILE *fp,
                          int *hasSignatureBlock,
                          uint32_t *numSignatures,
                          int *hasAdditionalBlocks,
@@ -239,7 +239,7 @@ int get_mar_file_info_fp(FILE *fp,
                          uint32_t *numAdditionalBlocks)
 {
   uint32_t offsetToIndex, offsetToContent, signatureCount, signatureLen, i;
-  
+
   /* One of hasSignatureBlock or hasAdditionalBlocks must be non NULL */
   if (!hasSignatureBlock && !hasAdditionalBlocks) {
     return -1;
@@ -270,8 +270,8 @@ int get_mar_file_info_fp(FILE *fp,
     *numSignatures = ntohl(*numSignatures);
   }
 
-  /* Skip to the first index entry past the index size field 
-     We do it in 2 calls because offsetToIndex + sizeof(uint32_t) 
+  /* Skip to the first index entry past the index size field
+     We do it in 2 calls because offsetToIndex + sizeof(uint32_t)
      could oerflow in theory. */
   if (fseek(fp, offsetToIndex, SEEK_SET)) {
     return -1;
@@ -296,7 +296,7 @@ int get_mar_file_info_fp(FILE *fp,
     }
   }
 
-  /* If the caller doesn't care about the product info block 
+  /* If the caller doesn't care about the product info block
      value, then just return */
   if (!hasAdditionalBlocks) {
     return 0;
@@ -351,7 +351,7 @@ int get_mar_file_info_fp(FILE *fp,
         *offsetAdditionalBlocks = ftell(fp);
       }
     } else if (offsetAdditionalBlocks) {
-      /* numAdditionalBlocks is not specified but offsetAdditionalBlocks 
+      /* numAdditionalBlocks is not specified but offsetAdditionalBlocks
          is, so fill it! */
       *offsetAdditionalBlocks = ftell(fp) + sizeof(uint32_t);
     }
@@ -360,7 +360,7 @@ int get_mar_file_info_fp(FILE *fp,
   return 0;
 }
 
-/** 
+/**
  * Reads the product info block from the MAR file's additional block section.
  * The caller is responsible for freeing the fields in infoBlock
  * if the return is successful.
@@ -369,7 +369,7 @@ int get_mar_file_info_fp(FILE *fp,
  * @return 0 on success, -1 on failure
 */
 int
-read_product_info_block(char *path, 
+read_product_info_block(char *path,
                         struct ProductInformationBlock *infoBlock)
 {
   int rv;
@@ -385,7 +385,7 @@ read_product_info_block(char *path,
   return rv;
 }
 
-/** 
+/**
  * Reads the product info block from the MAR file's additional block section.
  * The caller is responsible for freeing the fields in infoBlock
  * if the return is successful.
@@ -394,14 +394,14 @@ read_product_info_block(char *path,
  * @return 0 on success, -1 on failure
 */
 int
-mar_read_product_info_block(MarFile *mar, 
+mar_read_product_info_block(MarFile *mar,
                             struct ProductInformationBlock *infoBlock)
 {
   uint32_t i, offsetAdditionalBlocks, numAdditionalBlocks,
     additionalBlockSize, additionalBlockID;
   int hasAdditionalBlocks;
 
-  /* The buffer size is 97 bytes because the MAR channel name < 64 bytes, and 
+  /* The buffer size is 97 bytes because the MAR channel name < 64 bytes, and
      product version < 32 bytes + 3 NULL terminator bytes. */
   char buf[97] = { '\0' };
   if (get_mar_file_info_fp(mar->fp, NULL, NULL,
@@ -412,18 +412,18 @@ mar_read_product_info_block(MarFile *mar,
   }
   for (i = 0; i < numAdditionalBlocks; ++i) {
     /* Read the additional block size */
-    if (fread(&additionalBlockSize, 
-              sizeof(additionalBlockSize), 
+    if (fread(&additionalBlockSize,
+              sizeof(additionalBlockSize),
               1, mar->fp) != 1) {
       return -1;
     }
-    additionalBlockSize = ntohl(additionalBlockSize) - 
-                          sizeof(additionalBlockSize) - 
+    additionalBlockSize = ntohl(additionalBlockSize) -
+                          sizeof(additionalBlockSize) -
                           sizeof(additionalBlockID);
 
     /* Read the additional block ID */
-    if (fread(&additionalBlockID, 
-              sizeof(additionalBlockID), 
+    if (fread(&additionalBlockID,
+              sizeof(additionalBlockID),
               1, mar->fp) != 1) {
       return -1;
     }
@@ -434,9 +434,9 @@ mar_read_product_info_block(MarFile *mar,
       int len;
 
       /* This block must be at most 104 bytes.
-         MAR channel name < 64 bytes, and product version < 32 bytes + 3 NULL 
-         terminator bytes. We only check for 96 though because we remove 8 
-         bytes above from the additionalBlockSize: We subtract 
+         MAR channel name < 64 bytes, and product version < 32 bytes + 3 NULL
+         terminator bytes. We only check for 96 though because we remove 8
+         bytes above from the additionalBlockSize: We subtract
          sizeof(additionalBlockSize) and sizeof(additionalBlockID) */
       if (additionalBlockSize > 96) {
         return -1;
@@ -466,9 +466,9 @@ mar_read_product_info_block(MarFile *mar,
         infoBlock->productVersion = NULL;
         return -1;
       }
-      infoBlock->MARChannelID = 
+      infoBlock->MARChannelID =
         strdup(infoBlock->MARChannelID);
-      infoBlock->productVersion = 
+      infoBlock->productVersion =
         strdup(infoBlock->productVersion);
       return 0;
     } else {
@@ -558,7 +558,7 @@ int mar_read(MarFile *mar, const MarItem *item, int offset, uint8_t *buf,
  *                               of signatures in the MAR file.
  * @param hasAdditionalBlocks    Optional out parameter specifying if the MAR
  *                               file has additional blocks or not.
- * @param offsetAdditionalBlocks Optional out parameter for the offset to the 
+ * @param offsetAdditionalBlocks Optional out parameter for the offset to the
  *                               first additional block. Value is only valid if
  *                               hasAdditionalBlocks is not equal to 0.
  * @param numAdditionalBlocks    Optional out parameter for the number of
@@ -566,7 +566,7 @@ int mar_read(MarFile *mar, const MarItem *item, int offset, uint8_t *buf,
  *                               has_additional_blocks is not equal to 0.
  * @return 0 on success and non-zero on failure.
  */
-int get_mar_file_info(const char *path, 
+int get_mar_file_info(const char *path,
                       int *hasSignatureBlock,
                       uint32_t *numSignatures,
                       int *hasAdditionalBlocks,
@@ -581,7 +581,7 @@ int get_mar_file_info(const char *path,
     return -1;
   }
 
-  rv = get_mar_file_info_fp(fp, hasSignatureBlock, 
+  rv = get_mar_file_info_fp(fp, hasSignatureBlock,
                             numSignatures, hasAdditionalBlocks,
                             offsetAdditionalBlocks, numAdditionalBlocks);
 

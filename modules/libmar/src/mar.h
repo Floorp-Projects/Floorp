@@ -122,9 +122,9 @@ int mar_read(MarFile *mar, const MarItem *item, int offset, uint8_t *buf,
  * @param infoBlock The information to store in the product information block.
  * @return          A non-zero value if an error occurs.
  */
-int mar_create(const char *dest, 
-               int numfiles, 
-               char **files, 
+int mar_create(const char *dest,
+               int numfiles,
+               char **files,
                struct ProductInformationBlock *infoBlock);
 
 /**
@@ -147,7 +147,7 @@ int mar_extract(const char *path);
  * @param data     On success, *data will point to a newly-allocated buffer
  *                 with the file's contents in it.
  * @param size     On success, *size will be the size of the created buffer.
- * 
+ *
  * @return 0 on success, -1 on error
  */
 int mar_read_entire_file(const char * filePath,
@@ -161,10 +161,10 @@ int mar_read_entire_file(const char * filePath,
  * certificate given, the second signature will be verified using the second
  * certificate given, etc. The signature count must exactly match the number of
  * certificates given, and all signature verifications must succeed.
- * We do not check that the certificate was issued by any trusted authority. 
- * We assume it to be self-signed.  We do not check whether the certificate 
+ * We do not check that the certificate was issued by any trusted authority.
+ * We assume it to be self-signed.  We do not check whether the certificate
  * is valid for this usage.
- * 
+ *
  * @param mar            The already opened MAR file.
  * @param certData       Pointer to the first element in an array of certificate
  *                       file data.
@@ -180,7 +180,7 @@ int mar_verify_signatures(MarFile *mar,
                           const uint32_t *certDataSizes,
                           uint32_t certCount);
 
-/** 
+/**
  * Reads the product info block from the MAR file's additional block section.
  * The caller is responsible for freeing the fields in infoBlock
  * if the return is successful.
@@ -189,7 +189,7 @@ int mar_verify_signatures(MarFile *mar,
  * @return 0 on success, -1 on failure
 */
 int
-mar_read_product_info_block(MarFile *mar, 
+mar_read_product_info_block(MarFile *mar,
                             struct ProductInformationBlock *infoBlock);
 
 #ifdef __cplusplus
