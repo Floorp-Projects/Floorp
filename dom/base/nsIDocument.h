@@ -45,6 +45,7 @@
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/SegmentedVector.h"
@@ -3631,6 +3632,13 @@ public:
     ++mNumTrackersBlocked;
   }
 
+  void NoteTrackerBlockedReason(
+    mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED aLabel)
+  {
+    MOZ_ASSERT(!GetSameTypeParentDocument());
+    mTrackerBlockedReasons += aLabel;
+  }
+
   uint32_t NumTrackersFound()
   {
     MOZ_ASSERT(!GetSameTypeParentDocument() || mNumTrackersFound == 0);
@@ -4618,6 +4626,9 @@ protected:
   // these two values here and those are shared by TP and FB.
   uint32_t mNumTrackersFound;
   uint32_t mNumTrackersBlocked;
+
+  mozilla::EnumSet<mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED>
+    mTrackerBlockedReasons;
 
   // document lightweight theme for use with :-moz-lwtheme, :-moz-lwtheme-brighttext
   // and :-moz-lwtheme-darktext
