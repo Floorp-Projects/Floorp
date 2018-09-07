@@ -212,6 +212,17 @@ TEST(MimeType, DuplicateParameter2)
     "Duplicate parameter #2";
 }
 
+TEST(MimeType, CString)
+{
+  const auto in = NS_LITERAL_CSTRING("text/html;charset=();charset=GBK");
+  UniquePtr<CMimeType> parsed = CMimeType::Parse(in);
+  ASSERT_TRUE(parsed) << "Parsing succeeded";
+  nsCString out;
+  parsed->Serialize(out);
+  ASSERT_TRUE(out.Equals(NS_LITERAL_CSTRING("text/html;charset=\"()\""))) <<
+    "Duplicate parameter #2";
+}
+
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4819)
