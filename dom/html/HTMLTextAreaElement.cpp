@@ -631,9 +631,10 @@ HTMLTextAreaElement::GetControllers(ErrorResult& aError)
       return nullptr;
     }
 
-    nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/editor/editorcontroller;1", &rv);
-    if (NS_FAILED(rv)) {
-      aError.Throw(rv);
+    nsCOMPtr<nsIController> controller =
+      nsBaseCommandController::CreateEditorController();
+    if (!controller) {
+      aError.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
 
