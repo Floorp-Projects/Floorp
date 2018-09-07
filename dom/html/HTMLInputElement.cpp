@@ -114,6 +114,7 @@
 #include "nsIController.h"
 #include "nsIMIMEInfo.h"
 #include "nsFrameSelection.h"
+#include "nsBaseCommandController.h"
 
 // input type=date
 #include "js/Date.h"
@@ -5814,10 +5815,9 @@ HTMLInputElement::GetControllers(ErrorResult& aRv)
 
       mControllers->AppendController(controller);
 
-      controller = do_CreateInstance("@mozilla.org/editor/editingcontroller;1",
-                                     &rv);
-      if (NS_FAILED(rv)) {
-        aRv.Throw(rv);
+      controller = nsBaseCommandController::CreateEditingController();
+      if (!controller) {
+        aRv.Throw(NS_ERROR_FAILURE);
         return nullptr;
       }
 
