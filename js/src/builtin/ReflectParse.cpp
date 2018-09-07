@@ -599,6 +599,9 @@ class NodeBuilder
     MOZ_MUST_USE bool metaProperty(HandleValue meta, HandleValue property, TokenPos* pos,
                                    MutableHandleValue dst);
 
+    MOZ_MUST_USE bool callImportExpression(HandleValue ident, HandleValue arg, TokenPos* pos,
+                                           MutableHandleValue dst);
+
     MOZ_MUST_USE bool super(TokenPos* pos, MutableHandleValue dst);
 
     /*
@@ -1596,6 +1599,20 @@ NodeBuilder::metaProperty(HandleValue meta, HandleValue property, TokenPos* pos,
     return newNode(AST_METAPROPERTY, pos,
                    "meta", meta,
                    "property", property,
+                   dst);
+}
+
+bool
+NodeBuilder::callImportExpression(HandleValue ident, HandleValue arg, TokenPos* pos,
+                                  MutableHandleValue dst)
+{
+    RootedValue cb(cx, callbacks[AST_CALL_IMPORT]);
+    if (!cb.isNull())
+        return callback(cb, arg, pos, dst);
+
+    return newNode(AST_CALL_IMPORT, pos,
+                   "ident", ident,
+                   "arg", arg,
                    dst);
 }
 
@@ -2948,6 +2965,21 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         return identifier(firstStr, &pn->pn_left->pn_pos, &firstIdent) &&
                identifier(secondStr, &pn->pn_right->pn_pos, &secondIdent) &&
                builder.metaProperty(firstIdent, secondIdent, &pn->pn_pos, dst);
+      }
+
+      case ParseNodeKind::CallImport:
+      {
+        MOZ_ASSERT(pn->pn_left->isKind(ParseNodeKind::PosHolder));
+        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
+        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
+
+        RootedValue ident(cx);
+        RootedValue arg(cx);
+
+        HandlePropertyName name = cx->names().import;
+        return identifier(name, &pn->pn_left->pn_pos, &ident) &&
+               expression(pn->pn_right, &arg) &&
+               builder.callImportExpression(ident, arg, &pn->pn_pos, dst);
       }
 
       case ParseNodeKind::SetThis:

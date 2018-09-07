@@ -302,6 +302,9 @@ class SyntaxParseHandler
     Node newImportMeta(Node importHolder, Node metaHolder) {
         return NodeGeneric;
     }
+    Node newCallImport(Node importHolder, Node singleArg) {
+        return NodeGeneric;
+    }
 
     Node newSetThis(Node thisName, Node value) { return value; }
 
