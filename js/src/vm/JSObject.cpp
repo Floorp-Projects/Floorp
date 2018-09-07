@@ -1557,7 +1557,7 @@ js::XDRObjectLiteral(XDRState<XDR_DECODE>* xdr, MutableHandleObject obj);
 
 /* static */ bool
 NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
-                              const AutoValueVector& values, void* priv)
+                              const Vector<Value>& values, void* priv)
 {
     // This object has just been swapped with some other object, and its shape
     // no longer reflects its allocated size. Correct this information and
@@ -1603,7 +1603,7 @@ JSObject::fixDictionaryShapeAfterSwap()
 }
 
 static MOZ_MUST_USE bool
-CopyProxyValuesBeforeSwap(JSContext* cx, ProxyObject* proxy, AutoValueVector& values)
+CopyProxyValuesBeforeSwap(JSContext* cx, ProxyObject* proxy, Vector<Value>& values)
 {
     MOZ_ASSERT(values.empty());
 
@@ -1628,7 +1628,7 @@ CopyProxyValuesBeforeSwap(JSContext* cx, ProxyObject* proxy, AutoValueVector& va
 }
 
 bool
-ProxyObject::initExternalValueArrayAfterSwap(JSContext* cx, const AutoValueVector& values)
+ProxyObject::initExternalValueArrayAfterSwap(JSContext* cx, const Vector<Value>& values)
 {
     MOZ_ASSERT(getClass()->isProxy());
 
@@ -1743,7 +1743,7 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
         NativeObject* nb = b->isNative() ? &b->as<NativeObject>() : nullptr;
 
         // Remember the original values from the objects.
-        AutoValueVector avals(cx);
+        Vector<Value> avals(cx);
         void* apriv = nullptr;
         if (na) {
             apriv = na->hasPrivate() ? na->getPrivate() : nullptr;
@@ -1752,7 +1752,7 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
                     oomUnsafe.crash("JSObject::swap");
             }
         }
-        AutoValueVector bvals(cx);
+        Vector<Value> bvals(cx);
         void* bpriv = nullptr;
         if (nb) {
             bpriv = nb->hasPrivate() ? nb->getPrivate() : nullptr;

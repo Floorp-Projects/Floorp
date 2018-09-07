@@ -57,8 +57,7 @@ class ProxyObject : public ShapedObject
     void setInlineValueArray() {
         data.reservedSlots = &reinterpret_cast<detail::ProxyValueArray*>(inlineDataStart())->reservedSlots;
     }
-    MOZ_MUST_USE bool initExternalValueArrayAfterSwap(JSContext* cx,
-                                                      const AutoValueVector& values);
+    MOZ_MUST_USE bool initExternalValueArrayAfterSwap(JSContext* cx, const Vector<Value>& values);
 
     const Value& private_() const {
         return GetProxyPrivate(this);
