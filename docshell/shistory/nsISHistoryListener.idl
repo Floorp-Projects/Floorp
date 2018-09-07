@@ -83,14 +83,4 @@ interface nsISHistoryListener : nsISupports
    *                      replaced.
    */
   void OnHistoryReplaceEntry(in long aIndex);
-
-   /**
-    * Called after nsISHistory::count has been updated.
-    */
-  void OnLengthChanged(in long aCount);
-
-  /**
-   * Called after nsISHistory::index has been updated.
-   */
-  void OnIndexChanged(in long aIndex);
 };
