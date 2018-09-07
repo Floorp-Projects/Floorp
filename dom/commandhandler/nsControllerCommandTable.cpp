@@ -215,6 +215,22 @@ nsControllerCommandTable::CreateEditorCommandTable()
 
 // static
 already_AddRefed<nsIControllerCommandTable>
+nsControllerCommandTable::CreateEditingCommandTable()
+{
+  nsCOMPtr<nsIControllerCommandTable> commandTable =
+      new nsControllerCommandTable();
+
+  nsresult rv = EditorController::RegisterEditingCommands(commandTable);
+  if (NS_FAILED(rv)) return nullptr;
+
+  // we don't know here whether we're being created as an instance,
+  // or a service, so we can't become immutable
+
+  return commandTable.forget();
+}
+
+// static
+already_AddRefed<nsIControllerCommandTable>
 nsControllerCommandTable::CreateHTMLEditorCommandTable()
 {
   nsCOMPtr<nsIControllerCommandTable> commandTable =

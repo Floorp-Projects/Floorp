@@ -24,6 +24,7 @@ public:
   NS_DECL_NSICONTROLLERCOMMANDTABLE
 
   static already_AddRefed<nsIControllerCommandTable> CreateEditorCommandTable();
+  static already_AddRefed<nsIControllerCommandTable> CreateEditingCommandTable();
   static already_AddRefed<nsIControllerCommandTable> CreateHTMLEditorCommandTable();
   static already_AddRefed<nsIControllerCommandTable> CreateHTMLEditorDocStateCommandTable();
   static already_AddRefed<nsIControllerCommandTable> CreateWindowCommandTable();
