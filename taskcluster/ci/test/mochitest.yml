@@ -245,6 +245,7 @@ mochitest-devtools-chrome:
             default: built-projects
     chunks:
         by-test-platform:
+            linux64-ccov/debug: 12
             windows10-64-ccov/debug: 10
             macosx64-ccov/debug: 15
             default: 8
