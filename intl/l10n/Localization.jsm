@@ -160,9 +160,14 @@ class Localization {
       this.generateMessages(this.resourceIds));
   }
 
-  addResourceIds(resourceIds) {
+  /**
+   * @param {Array<String>} resourceIds - List of resource IDs
+   * @param {bool}                eager - whether the I/O for new context should
+   *                                      begin eagerly
+   */
+  addResourceIds(resourceIds, eager = false) {
     this.resourceIds.push(...resourceIds);
-    this.onChange();
+    this.onChange(eager);
     return this.resourceIds.length;
   }
 
@@ -318,10 +323,23 @@ class Localization {
   /**
    * This method should be called when there's a reason to believe
    * that language negotiation or available resources changed.
+   *
+   * @param {bool} eager - whether the I/O for new context should begin eagerly
    */
-  onChange() {
+  onChange(eager = false) {
     this.ctxs = CachedAsyncIterable.from(
       this.generateMessages(this.resourceIds));
+    if (eager) {
+      // If the first app locale is the same as last fallback
+      // it means that we have all resources in this locale, and
+      // we want to eagerly fetch just that one.
+      // Otherwise, we're in a scenario where the first locale may
+      // be partial and we want to eagerly fetch a fallback as well.
+      const appLocale = Services.locale.getAppLocaleAsBCP47();
+      const lastFallback = Services.locale.lastFallbackLocale;
+      const prefetchCount = appLocale === lastFallback ? 1 : 2;
+      this.ctxs.touchNext(prefetchCount);
+    }
   }
 }
 

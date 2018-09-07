@@ -34,7 +34,7 @@ link =
   window.onload = async function() {
     SimpleTest.waitForExplicitFinish();
 
-    domLocalization.addResourceIds(["/browser/menu.ftl"], 1);
+    domLocalization.addResourceIds(["/browser/menu.ftl"], false);
 
     const p1 = document.querySelectorAll("p")[0];
     const link1 = document.querySelectorAll("a")[0];
