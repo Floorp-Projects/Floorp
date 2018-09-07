@@ -17,35 +17,25 @@ namespace mozilla {
 inline bool
 EnsureLongPath(nsAString& aDosPath)
 {
-  uint32_t aDosPathOriginalLen = aDosPath.Length();
-  auto inputPath = PromiseFlatString(aDosPath);
-  // Try to get the long path, or else get the required length of the long path
-  DWORD longPathLen = GetLongPathNameW(inputPath.get(),
-                                       reinterpret_cast<wchar_t*>(aDosPath.BeginWriting()),
-                                       aDosPathOriginalLen);
-  if (longPathLen == 0) {
-    return false;
+  nsAutoString inputPath(aDosPath);
+  while (true) {
+    DWORD requiredLength = GetLongPathNameW(inputPath.get(),
+                                            reinterpret_cast<wchar_t*>(aDosPath.BeginWriting()),
+                                            aDosPath.Length());
+    if (!requiredLength) {
+      return false;
+    }
+    if (requiredLength < aDosPath.Length()) {
+      // When GetLongPathNameW deems the last argument too small,
+      // it returns a value, but when you pass that value back, it's
+      // satisfied and returns a number that's one smaller. If the above
+      // check was == instead of <, the loop would go on forever with
+      // GetLongPathNameW returning oscillating values!
+      aDosPath.Truncate(requiredLength);
+      return true;
+    }
+    aDosPath.SetLength(requiredLength);
   }
-  aDosPath.SetLength(longPathLen);
-  if (longPathLen <= aDosPathOriginalLen) {
-    // Our string happened to be long enough for the first call to succeed.
-    return true;
-  }
-  // Now we have a large enough buffer, get the actual string
-  longPathLen = GetLongPathNameW(inputPath.get(),
-                                 reinterpret_cast<wchar_t*>(aDosPath.BeginWriting()), aDosPath.Length());
-  if (longPathLen == 0) {
-    return false;
-  }
-  // This success check should always be less-than because longPathLen excludes
-  // the null terminator on success, but includes it in the first call that
-  // returned the required size.
-  if (longPathLen < aDosPath.Length()) {
-    aDosPath.SetLength(longPathLen);
-    return true;
-  }
-  // We shouldn't reach this, but if we do then it's a failure!
-  return false;
 }
 
 inline bool
@@ -67,24 +57,32 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
     return true;
   }
   nsAutoString logicalDrives;
-  DWORD len = 0;
   while (true) {
-    len = GetLogicalDriveStringsW(
-      len, reinterpret_cast<wchar_t*>(logicalDrives.BeginWriting()));
-    if (!len) {
+    DWORD requiredLength = GetLogicalDriveStringsW(
+      logicalDrives.Length(), reinterpret_cast<wchar_t*>(logicalDrives.BeginWriting()));
+    if (!requiredLength) {
       return false;
-    } else if (len > logicalDrives.Length()) {
-      logicalDrives.SetLength(len);
-    } else {
+    }
+    if (requiredLength < logicalDrives.Length()) {
+      // When GetLogicalDriveStringsW deems the first argument too small,
+      // it returns a value, but when you pass that value back, it's
+      // satisfied and returns a number that's one smaller. If the above
+      // check was == instead of <, the loop would go on forever with
+      // GetLogicalDriveStringsW returning oscillating values!
+      logicalDrives.Truncate(requiredLength);
+      // logicalDrives now has the format "C:\\\0D:\\\0Z:\\\0". That is,
+      // the sequence drive letter, colon, backslash, U+0000 repeats.
       break;
     }
+    logicalDrives.SetLength(requiredLength);
   }
+
   const char16_t* cur = logicalDrives.BeginReading();
   const char16_t* end = logicalDrives.EndReading();
   nsString targetPath;
   targetPath.SetLength(MAX_PATH);
   wchar_t driveTemplate[] = L" :";
-  do {
+  while (cur < end) {
     // Unfortunately QueryDosDevice doesn't support the idiom for querying the
     // output buffer size, so it may require retries.
     driveTemplate[0] = *cur;
@@ -113,9 +111,16 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
         return EnsureLongPath(aDosPath);
       }
     }
-    // Advance to the next NUL character in logicalDrives
-    while (*cur++);
-  } while (cur != end);
+    // Find the next U+0000 within the logical string
+    while (*cur) {
+      // This loop skips the drive letter, the colon
+      // and the backslash.
+      cur++;
+    }
+    // Skip over the U+0000 that ends a drive entry
+    // within the logical string
+    cur++;
+  }
   // Try to handle UNC paths. NB: This must happen after we've checked drive
   // mappings in case a UNC path is mapped to a drive!
   NS_NAMED_LITERAL_STRING(uncPrefix, "\\\\");
