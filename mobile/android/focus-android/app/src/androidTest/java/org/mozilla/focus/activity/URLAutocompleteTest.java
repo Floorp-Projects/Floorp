@@ -68,7 +68,7 @@ public class URLAutocompleteTest {
                             0)))
             .atPosition(4);
 
-    private ViewInteraction AutoCompleteDialog = onView(allOf(withId(R.id.list),
+    private ViewInteraction AutoCompleteDialog = onView(allOf(withId(R.id.recycler_view),
             childAtPosition(withId(android.R.id.list_container), 0)));
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule
