@@ -1944,6 +1944,29 @@ public class GeckoSession extends LayerSession
                 delegate.onFilePrompt(session, title, intMode, mimeTypes, cb);
                 break;
             }
+            case "popup": {
+                GeckoResult<Boolean> res = delegate.onPopupRequest(session, message.getString("targetUri"));
+
+                if (res == null) {
+                    // Keep the popup blocked if the delegate returns null
+                    callback.sendSuccess(false);
+                }
+
+                res.then(new GeckoResult.OnValueListener<Boolean, Void>() {
+                    @Override
+                    public GeckoResult<Void> onValue(Boolean value) throws Throwable {
+                        callback.sendSuccess(value);
+                        return null;
+                    }
+                }, new GeckoResult.OnExceptionListener<Void>() {
+                    @Override
+                    public GeckoResult<Void> onException(Throwable exception) throws Throwable {
+                        callback.sendError("Failed to get popup-blocking decision");
+                        return null;
+                    }
+                });
+                break;
+            }
             default: {
                 callback.sendError("Invalid type");
                 break;
@@ -3003,6 +3026,18 @@ public class GeckoSession extends LayerSession
          */
         void onFilePrompt(GeckoSession session, String title, @FileType int type,
                           String[] mimeTypes, FileCallback callback);
+
+        /**
+         * Display a popup request prompt; this occurs when content attempts to open
+         * a new window in a way that doesn't appear to be the result of user input.
+         *
+         * @param session GeckoSession that triggered the prompt
+         * @param targetUri The target URI for the popup
+         *
+         * @return A {@link GeckoResult} resolving to a Boolean which indicates
+         *         whether or not the popup should be allowed to open.
+         */
+        GeckoResult<Boolean> onPopupRequest(GeckoSession session, String targetUri);
     }
 
     /**
