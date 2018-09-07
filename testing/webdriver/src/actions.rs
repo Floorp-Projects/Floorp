@@ -1,6 +1,7 @@
-use common::WebElement;
+use common::{WebElement, ELEMENT_KEY};
 use serde::de::{self, Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
+use serde_json::Value;
 use std::default::Default;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -164,12 +165,10 @@ pub struct PointerUpAction {
     pub button: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub enum PointerOrigin {
     #[serde(
-        rename = "element-6066-11e4-a52e-4f735466cecf",
-        serialize_with = "serialize_webelement_id",
-        deserialize_with = "deserialize_webelement_id"
+        rename = "element-6066-11e4-a52e-4f735466cecf", serialize_with = "serialize_webelement_id"
     )]
     Element(WebElement),
     #[serde(rename = "pointer")]
@@ -184,18 +183,37 @@ impl Default for PointerOrigin {
     }
 }
 
+// TODO: The custom deserializer can be removed once the support of the legacy
+// ELEMENT key has been removed from Selenium bindings
+// See: https://github.com/SeleniumHQ/selenium/issues/6393
+impl<'de> Deserialize<'de> for PointerOrigin {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = Value::deserialize(deserializer)?;
+        if let Some(web_element) = value.get(ELEMENT_KEY) {
+            String::deserialize(web_element)
+                .map(|id| PointerOrigin::Element(WebElement { id }))
+                .map_err(de::Error::custom)
+        } else if value == "pointer" {
+            Ok(PointerOrigin::Pointer)
+        } else if value == "viewport" {
+            Ok(PointerOrigin::Viewport)
+        } else {
+            Err(de::Error::custom(format!(
+                "unknown value `{}`, expected `pointer`, `viewport`, or `element-6066-11e4-a52e-4f735466cecf`",
+                value.to_string()
+            )))
+        }
+    }
+}
+
 fn serialize_webelement_id<S>(element: &WebElement, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
     element.id.serialize(serializer)
-}
-
-fn deserialize_webelement_id<'de, D>(deserializer: D) -> Result<WebElement, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    String::deserialize(deserializer).map(|id| WebElement { id })
 }
 
 fn deserialize_to_option_i64<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
@@ -876,6 +894,64 @@ mod test {
         });
 
         check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_origin_webelement() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":100,
+            "origin":{
+                "element-6066-11e4-a52e-4f735466cecf":"elem"
+            },
+            "x":5,
+            "y":10
+        }"#;
+        let data = PointerAction::Move(PointerMoveAction {
+            duration: Some(100),
+            origin: PointerOrigin::Element(WebElement { id: "elem".into() }),
+            x: Some(5),
+            y: Some(10),
+        });
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_origin_webelement_and_legacy_element() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":100,
+            "origin":{
+                "ELEMENT":"elem",
+                "element-6066-11e4-a52e-4f735466cecf":"elem"
+            },
+            "x":5,
+            "y":10
+        }"#;
+        let data = PointerAction::Move(PointerMoveAction {
+            duration: Some(100),
+            origin: PointerOrigin::Element(WebElement { id: "elem".into() }),
+            x: Some(5),
+            y: Some(10),
+        });
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_pointer_action_move_with_origin_only_legacy_element() {
+        let json = r#"{
+            "type":"pointerMove",
+            "duration":100,
+            "origin":{
+                "ELEMENT":"elem"
+            },
+            "x":5,
+            "y":10
+        }"#;
+
+        assert!(serde_json::from_str::<PointerOrigin>(&json).is_err());
     }
 
     #[test]
