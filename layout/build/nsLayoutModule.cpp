@@ -156,10 +156,6 @@ using mozilla::dom::power::PowerManagerService;
 using mozilla::dom::quota::QuotaManagerService;
 using mozilla::gmp::GeckoMediaPluginService;
 
-#define NS_EDITORCOMMANDTABLE_CID \
-{ 0x4f5e62b8, 0xd659, 0x4156, \
-  { 0x84, 0xfc, 0x2f, 0x60, 0x99, 0x40, 0x03, 0x69 } }
-
 #define NS_EDITINGCOMMANDTABLE_CID \
 { 0xcb38a746, 0xbeb8, 0x43f3, \
   { 0x94, 0x29, 0x77, 0x96, 0xe1, 0xa9, 0x3f, 0xb4 } }
@@ -501,7 +497,6 @@ NS_DEFINE_NAMED_CID(PUSHNOTIFIER_CID);
 NS_DEFINE_NAMED_CID(WORKERDEBUGGERMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITINGCONTROLLER_CID);
-NS_DEFINE_NAMED_CID(NS_EDITORCOMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_EDITINGCOMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_GEOLOCATION_CID);
 NS_DEFINE_NAMED_CID(NS_WEBSOCKETEVENT_SERVICE_CID);
@@ -579,13 +574,13 @@ EditorControllerConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   nsCOMPtr<nsIController> controller = new nsBaseCommandController();
 
-  nsresult rv;
-  nsCOMPtr<nsIControllerCommandTable> editorCommandTable = do_GetService(kNS_EDITORCOMMANDTABLE_CID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIControllerCommandTable> editorCommandTable =
+    nsControllerCommandTable::CreateEditorCommandTable();
 
   // this guy is a singleton, so make it immutable
   editorCommandTable->MakeImmutable();
 
+  nsresult rv;
   nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -617,23 +612,6 @@ nsEditingControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
   if (NS_FAILED(rv)) return rv;
 
   return controller->QueryInterface(aIID, aResult);
-}
-
-// Constructor for a command-table pre-filled with editor commands
-static nsresult
-nsEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
-                                            void **aResult)
-{
-  nsCOMPtr<nsIControllerCommandTable> commandTable =
-      new nsControllerCommandTable();
-
-  nsresult rv = EditorController::RegisterEditorCommands(commandTable);
-  if (NS_FAILED(rv)) return rv;
-
-  // we don't know here whether we're being created as an instance,
-  // or a service, so we can't become immutable
-
-  return commandTable->QueryInterface(aIID, aResult);
 }
 
 // Constructor for a command-table pre-filled with editing commands
@@ -704,7 +682,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kWORKERDEBUGGERMANAGER_CID, true, nullptr, WorkerDebuggerManagerConstructor },
   { &kNS_EDITORCONTROLLER_CID, false, nullptr, EditorControllerConstructor },
   { &kNS_EDITINGCONTROLLER_CID, false, nullptr, nsEditingControllerConstructor },
-  { &kNS_EDITORCOMMANDTABLE_CID, false, nullptr, nsEditorCommandTableConstructor },
   { &kNS_EDITINGCOMMANDTABLE_CID, false, nullptr, nsEditingCommandTableConstructor },
   { &kNS_GEOLOCATION_CID, false, nullptr, GeolocationConstructor },
   { &kNS_WEBSOCKETEVENT_SERVICE_CID, false, nullptr, WebSocketEventServiceConstructor },
