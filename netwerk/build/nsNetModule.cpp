@@ -175,13 +175,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEHeaderParamImpl)
 
 #include "nsRequestObserverProxy.h"
 #include "nsSimpleStreamListener.h"
-#include "nsDirIndexParser.h"
 
 typedef mozilla::net::nsRequestObserverProxy nsRequestObserverProxy;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRequestObserverProxy)
 typedef mozilla::net::nsSimpleStreamListener nsSimpleStreamListener;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleStreamListener)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDirIndexParser, Init)
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -702,7 +700,6 @@ NS_DEFINE_NAMED_CID(NS_NAMEDPIPESERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_DASHBOARD_CID);
 NS_DEFINE_NAMED_CID(NS_FTPDIRLISTINGCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_NSINDEXEDTOHTMLCONVERTER_CID);
-NS_DEFINE_NAMED_CID(NS_DIRINDEXPARSER_CID);
 NS_DEFINE_NAMED_CID(NS_MULTIMIXEDCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_UNKNOWNDECODER_CID);
 NS_DEFINE_NAMED_CID(NS_BINARYDETECTOR_CID);
@@ -821,7 +818,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_DASHBOARD_CID, false, nullptr, mozilla::net::DashboardConstructor },
     { &kNS_FTPDIRLISTINGCONVERTER_CID, false, nullptr, CreateNewFTPDirListingConv },
     { &kNS_NSINDEXEDTOHTMLCONVERTER_CID, false, nullptr, nsIndexedToHTML::Create },
-    { &kNS_DIRINDEXPARSER_CID, false, nullptr, nsDirIndexParserConstructor },
     { &kNS_MULTIMIXEDCONVERTER_CID, false, nullptr, CreateNewMultiMixedConvFactory },
     { &kNS_UNKNOWNDECODER_CID, false, nullptr, CreateNewUnknownDecoderFactory },
     { &kNS_BINARYDETECTOR_CID, false, nullptr, CreateNewBinaryDetectorFactory },
@@ -939,7 +935,6 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_DASHBOARD_CONTRACTID, &kNS_DASHBOARD_CID },
     { NS_ISTREAMCONVERTER_KEY FTP_TO_INDEX, &kNS_FTPDIRLISTINGCONVERTER_CID },
     { NS_ISTREAMCONVERTER_KEY INDEX_TO_HTML, &kNS_NSINDEXEDTOHTMLCONVERTER_CID },
-    { NS_DIRINDEXPARSER_CONTRACTID, &kNS_DIRINDEXPARSER_CID },
     { NS_ISTREAMCONVERTER_KEY MULTI_MIXED_X, &kNS_MULTIMIXEDCONVERTER_CID },
     { NS_ISTREAMCONVERTER_KEY MULTI_BYTERANGES, &kNS_MULTIMIXEDCONVERTER_CID },
     { NS_ISTREAMCONVERTER_KEY MULTI_MIXED, &kNS_MULTIMIXEDCONVERTER_CID },
