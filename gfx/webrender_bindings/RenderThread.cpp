@@ -7,12 +7,14 @@
 #include "base/task.h"
 #include "GeckoProfiler.h"
 #include "RenderThread.h"
+#include "nsIMemoryReporter.h"
 #include "nsThreadUtils.h"
 #include "mtransport/runnable_utils.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/StaticPtr.h"
@@ -27,6 +29,89 @@
 
 namespace mozilla {
 namespace wr {
+
+class MemoryReporter final : public nsIMemoryReporter {
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
+
+private:
+  ~MemoryReporter() = default;
+};
+
+// Memory reporter for WebRender.
+//
+// The reporting within WebRender is manual and incomplete. We could do a much
+// more thorough job by depending on the malloc_size_of crate, but integrating
+// that into WebRender is tricky [1].
+//
+// So the idea is to start with manual reporting for the large allocations
+// detected by DMD, and see how much that can cover in practice (which may
+// require a few rounds of iteration). If that approach turns out to be
+// fundamentally insufficient, we can either duplicate more of the malloc_size_of
+// functionality in WebRender, or deal with the complexity of a gecko-only
+// crate dependency.
+//
+// [1] See https://bugzilla.mozilla.org/show_bug.cgi?id=1480293#c1
+struct MemoryReporterHelper {
+  MemoryReporterHelper(nsIHandleReportCallback* aCallback, nsISupports* aData)
+    : mCallback(aCallback), mData(aData)
+  {}
+  nsCOMPtr<nsIHandleReportCallback> mCallback;
+  nsCOMPtr<nsISupports> mData;
+
+  void Report(size_t aBytes, const char* aName) const
+  {
+    nsPrintfCString path("explicit/gfx/webrender/%s", aName);
+    mCallback->Callback(EmptyCString(), path,
+                        nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
+                        aBytes, EmptyCString(), mData);
+  }
+};
+
+static void
+FinishAsyncMemoryReport()
+{
+  nsCOMPtr<nsIMemoryReporterManager> imgr =
+    do_GetService("@mozilla.org/memory-reporter-manager;1");
+  if (imgr) {
+    imgr->EndReport();
+  }
+}
+
+NS_IMPL_ISUPPORTS(MemoryReporter, nsIMemoryReporter)
+
+NS_IMETHODIMP
+MemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
+                               nsISupports* aData, bool aAnonymize)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+  layers::CompositorManagerChild* manager =
+    layers::CompositorManagerChild::GetInstance();
+  if (!manager) {
+    FinishAsyncMemoryReport();
+    return NS_OK;
+  }
+
+  MemoryReporterHelper helper(aHandleReport, aData);
+  manager->SendReportMemory(
+    [=](wr::MemoryReport aReport) {
+      helper.Report(aReport.primitive_stores, "primitive-stores");
+      helper.Report(aReport.clip_stores, "clip-stores");
+      helper.Report(aReport.gpu_cache_metadata, "gpu-cache/metadata");
+      helper.Report(aReport.gpu_cache_cpu_mirror, "gpu-cache/cpu-mirror");
+      helper.Report(aReport.render_tasks, "render-tasks");
+      helper.Report(aReport.hit_testers, "hit-testers");
+      FinishAsyncMemoryReport();
+    },
+    [](mozilla::ipc::ResponseRejectReason aReason) {
+      FinishAsyncMemoryReport();
+    }
+  );
+
+  return NS_OK;
+}
 
 static StaticRefPtr<RenderThread> sRenderThread;
 
@@ -85,6 +170,8 @@ RenderThread::Start()
       &RenderThread::ProgramCacheTask);
     sRenderThread->Loop()->PostTask(runnable.forget());
   }
+
+  RegisterStrongAsyncMemoryReporter(new MemoryReporter());
 }
 
 // static
@@ -140,6 +227,36 @@ bool
 RenderThread::IsInRenderThread()
 {
   return sRenderThread && sRenderThread->mThread->thread_id() == PlatformThread::CurrentId();
+}
+
+void
+RenderThread::DoAccumulateMemoryReport(MemoryReport aReport, const RefPtr<MemoryReportPromise::Private>& aPromise)
+{
+  MOZ_ASSERT(IsInRenderThread());
+  for (auto& r: mRenderers) {
+    wr_renderer_accumulate_memory_report(r.second->GetRenderer(), &aReport);
+  }
+
+  aPromise->Resolve(aReport, __func__);
+}
+
+// static
+RefPtr<MemoryReportPromise>
+RenderThread::AccumulateMemoryReport(MemoryReport aInitial)
+{
+  RefPtr<MemoryReportPromise::Private> p = new MemoryReportPromise::Private(__func__);
+  MOZ_ASSERT(!IsInRenderThread());
+  MOZ_ASSERT(Get());
+  Get()->Loop()->PostTask(
+    NewRunnableMethod<MemoryReport, RefPtr<MemoryReportPromise::Private>>(
+      "wr::RenderThread::DoAccumulateMemoryReport",
+      Get(),
+      &RenderThread::DoAccumulateMemoryReport,
+      aInitial, p
+    )
+  );
+
+  return p;
 }
 
 void
