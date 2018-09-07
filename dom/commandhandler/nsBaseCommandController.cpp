@@ -201,3 +201,24 @@ nsBaseCommandController::CreateWindowController()
 
   return controller.forget();
 }
+
+already_AddRefed<nsIController>
+nsBaseCommandController::CreateEditingController()
+{
+  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
+
+  nsCOMPtr<nsIControllerCommandTable> editingCommandTable =
+    nsControllerCommandTable::CreateEditingCommandTable();
+
+  // this guy is a singleton, so make it immutable
+  editingCommandTable->MakeImmutable();
+
+  nsresult rv;
+  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
+  if (NS_FAILED(rv)) return nullptr;
+
+  rv = controllerContext->Init(editingCommandTable);
+  if (NS_FAILED(rv)) return nullptr;
+
+  return controller.forget();
+}
