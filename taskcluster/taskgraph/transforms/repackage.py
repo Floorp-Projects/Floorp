@@ -82,7 +82,7 @@ packaging_description_schema = Schema({
 
 # The configuration passed to the mozharness repackage script. This defines the
 # arguments passed to `mach repackage`
-# - `args` is interpolated by mozharness (`{installer-tag}`,
+# - `args` is interpolated by mozharness (`{package-name}`, `{installer-tag}`,
 #   `{stub-installer-tag}`, `{sfx-stub}`) with values from the mozharness
 #   config.
 # - `inputs` are passed as long-options, with the filename prefixed by
@@ -117,7 +117,7 @@ PACKAGE_FORMATS = {
     'installer': {
         'args': [
             "installer",
-            "--package-name", "firefox",
+            "--package-name", "{package-name}",
             "--tag", "{installer-tag}",
             "--sfx-stub", "{sfx-stub}",
         ],
