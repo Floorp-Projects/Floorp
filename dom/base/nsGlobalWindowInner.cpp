@@ -535,7 +535,7 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 IdleRequestExecutor::GetName(nsACString& aName)
 {
-    aName.AssignASCII("IdleRequestExecutor");
+    aName.AssignLiteral("IdleRequestExecutor");
     return NS_OK;
 }
 

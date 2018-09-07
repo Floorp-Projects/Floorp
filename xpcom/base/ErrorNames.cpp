@@ -30,8 +30,8 @@ GetErrorName(nsresult rv, nsACString& name)
   // codes.)
   MOZ_ASSERT(isSecurityError);
 
-  name.AssignASCII(NS_SUCCEEDED(rv) ? "NS_ERROR_GENERATE_SUCCESS("
-                                    : "NS_ERROR_GENERATE_FAILURE(");
+  name.AssignLiteral(NS_SUCCEEDED(rv) ? "NS_ERROR_GENERATE_SUCCESS("
+                                      : "NS_ERROR_GENERATE_FAILURE(");
 
   if (isSecurityError) {
     name.AppendASCII("NS_ERROR_MODULE_SECURITY");
