@@ -38,10 +38,6 @@ interface nsIDirIndexListener : nsISupports {
 
 };
 
-%{C++
-#define NS_IDIRINDEXLISTENER_KEY         "@mozilla.org/dirIndexListener;1"
-%}
-
 /**
  * A parser for application/http-index-format
  */
