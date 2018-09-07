@@ -305,7 +305,7 @@ void
 nsTypeAheadFind::SaveFind()
 {
   if (mWebBrowserFind)
-    mWebBrowserFind->SetSearchString(mTypeAheadBuffer.get());
+    mWebBrowserFind->SetSearchString(mTypeAheadBuffer);
 
   // save the length of this find for "not found" sound
   mLastFindLength = mTypeAheadBuffer.Length();

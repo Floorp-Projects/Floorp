@@ -13,8 +13,8 @@ flat varying vec4 vColor1;
 // transition occurs. Used for corners only.
 flat varying vec4 vColorLine;
 
-// x = segment, z = edge axes
-flat varying ivec4 vConfig;
+// A boolean indicating that we should be mixing between edge colors.
+flat varying int vMixColors;
 
 // xy = Local space position of the clip center.
 // zw = Scale the rect origin by this to get the outer
@@ -25,16 +25,6 @@ flat varying vec4 vClipCenter_Sign;
 // corner clipping.
 flat varying vec4 vClipRadii;
 
-// Reference point for determine edge clip lines.
-flat varying vec4 vEdgeReference;
-
-// Stores widths/2 and widths/3 to save doing this in FS.
-flat varying vec4 vPartialWidths;
-
-// Clipping parameters for dot or dash.
-flat varying vec4 vClipParams1;
-flat varying vec4 vClipParams2;
-
 // Local space position
 varying vec2 vPos;
 
@@ -42,10 +32,6 @@ varying vec2 vPos;
 #define SEGMENT_TOP_RIGHT       1
 #define SEGMENT_BOTTOM_RIGHT    2
 #define SEGMENT_BOTTOM_LEFT     3
-#define SEGMENT_LEFT            4
-#define SEGMENT_TOP             5
-#define SEGMENT_RIGHT           6
-#define SEGMENT_BOTTOM          7
 
 #ifdef WR_VERTEX_SHADER
 
@@ -56,8 +42,6 @@ in vec4 aColor1;
 in int aFlags;
 in vec2 aWidths;
 in vec2 aRadii;
-in vec4 aClipParams1;
-in vec4 aClipParams2;
 
 vec2 get_outer_corner_scale(int segment) {
     vec2 p;
@@ -91,49 +75,20 @@ void main(void) {
     vec2 outer = outer_scale * aRect.zw;
     vec2 clip_sign = 1.0 - 2.0 * outer_scale;
 
-    // Set some flags used by the FS to determine the
-    // orientation of the two edges in this corner.
-    ivec2 edge_axis;
-    // Derive the positions for the edge clips, which must be handled
-    // differently between corners and edges.
-    vec2 edge_reference;
+    int mix_colors;
     switch (segment) {
         case SEGMENT_TOP_LEFT:
-            edge_axis = ivec2(0, 1);
-            edge_reference = outer;
-            break;
         case SEGMENT_TOP_RIGHT:
-            edge_axis = ivec2(1, 0);
-            edge_reference = vec2(outer.x - aWidths.x, outer.y);
-            break;
         case SEGMENT_BOTTOM_RIGHT:
-            edge_axis = ivec2(0, 1);
-            edge_reference = outer - aWidths;
-            break;
         case SEGMENT_BOTTOM_LEFT:
-            edge_axis = ivec2(1, 0);
-            edge_reference = vec2(outer.x, outer.y - aWidths.y);
+            mix_colors = 1;
             break;
-        case SEGMENT_TOP:
-        case SEGMENT_BOTTOM:
-            edge_axis = ivec2(1, 1);
-            edge_reference = vec2(0.0);
-            break;
-        case SEGMENT_LEFT:
-        case SEGMENT_RIGHT:
         default:
-            edge_axis = ivec2(0, 0);
-            edge_reference = vec2(0.0);
+            mix_colors = 0;
             break;
     }
 
-    vConfig = ivec4(
-        segment,
-        0,
-        edge_axis.x | (edge_axis.y << 16),
-        0
-    );
-    vPartialWidths = vec4(aWidths / 3.0, aWidths / 2.0);
+    vMixColors = mix_colors;
     vPos = aRect.zw * aPosition.xy;
 
     vColor0 = aColor0;
@@ -141,9 +96,6 @@ void main(void) {
     vClipCenter_Sign = vec4(outer + clip_sign * aRadii, clip_sign);
     vClipRadii = vec4(aRadii, max(aRadii - aWidths, 0.0));
     vColorLine = vec4(outer, aWidths.y * -clip_sign.y, aWidths.x * clip_sign.x);
-    vEdgeReference = vec4(edge_reference, edge_reference + aWidths);
-    vClipParams1 = aClipParams1;
-    vClipParams2 = aClipParams2;
 
     gl_Position = uTransform * vec4(aTaskOrigin + aRect.xy + vPos, 0.0, 1.0);
 }
@@ -152,13 +104,9 @@ void main(void) {
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
     float aa_range = compute_aa_range(vPos);
-    vec4 color0, color1;
-
-    int segment = vConfig.x;
-    ivec2 edge_axis = ivec2(vConfig.z & 0xffff, vConfig.z >> 16);
 
     float mix_factor = 0.0;
-    if (edge_axis.x != edge_axis.y) {
+    if (vMixColors != 0) {
         float d_line = distance_to_line(vColorLine.xy, vColorLine.zw, vPos);
         mix_factor = distance_aa(aa_range, -d_line);
     }

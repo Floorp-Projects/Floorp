@@ -656,7 +656,7 @@ nsWebBrowser::GoForward()
 }
 
 NS_IMETHODIMP
-nsWebBrowser::LoadURIWithOptions(const char16_t* aURI, uint32_t aLoadFlags,
+nsWebBrowser::LoadURIWithOptions(const nsAString& aURI, uint32_t aLoadFlags,
                                  nsIURI* aReferringURI,
                                  uint32_t aReferrerPolicy,
                                  nsIInputStream* aPostDataStream,
@@ -679,7 +679,7 @@ nsWebBrowser::SetOriginAttributesBeforeLoading(JS::Handle<JS::Value> aOriginAttr
 }
 
 NS_IMETHODIMP
-nsWebBrowser::LoadURI(const char16_t* aURI, uint32_t aLoadFlags,
+nsWebBrowser::LoadURI(const nsAString& aURI, uint32_t aLoadFlags,
                       nsIURI* aReferringURI,
                       nsIInputStream* aPostDataStream,
                       nsIInputStream* aExtraHeaderStream,

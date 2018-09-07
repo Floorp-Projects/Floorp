@@ -289,6 +289,47 @@ D3D11YCbCrImage::GetAsSourceSurface()
   return surface.forget();
 }
 
+class AutoCheckLockD3D11Texture
+{
+public:
+  explicit AutoCheckLockD3D11Texture(ID3D11Texture2D* aTexture)
+    : mIsLocked(false)
+  {
+    aTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mMutex));
+    if (!mMutex) {
+      // If D3D11Texture does not have keyed mutex, we think that the D3D11Texture could be locked.
+      mIsLocked = true;
+      return;
+    }
+
+    // Test to see if the keyed mutex has been released
+    HRESULT hr = mMutex->AcquireSync(0, 0);
+    if (SUCCEEDED(hr)) {
+      mIsLocked = true;
+    }
+  }
+
+  ~AutoCheckLockD3D11Texture()
+  {
+    if (!mMutex) {
+      return;
+    }
+    HRESULT hr = mMutex->ReleaseSync(0);
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to unlock the texture");
+    }
+  }
+
+  bool IsLocked() const
+  {
+    return mIsLocked;
+  }
+
+private:
+  bool mIsLocked;
+  RefPtr<IDXGIKeyedMutex> mMutex;
+};
+
 DXGIYCbCrTextureAllocationHelper::DXGIYCbCrTextureAllocationHelper(const PlanarYCbCrData& aData,
                                                                    TextureFlags aTextureFlags,
                                                                    ID3D11Device* aDevice)
@@ -316,10 +357,26 @@ DXGIYCbCrTextureAllocationHelper::IsCompatible(TextureClient* aTextureClient)
     return false;
   }
 
-  RefPtr<ID3D11Texture2D> texY = dxgiData->GetD3D11Texture(0);
+  ID3D11Texture2D* textureY = dxgiData->GetD3D11Texture(0);
+  ID3D11Texture2D* textureCb = dxgiData->GetD3D11Texture(1);
+  ID3D11Texture2D* textureCr = dxgiData->GetD3D11Texture(2);
+
   RefPtr<ID3D11Device> device;
-  texY->GetDevice(getter_AddRefs(device));
+  textureY->GetDevice(getter_AddRefs(device));
   if (!device || device != gfx::DeviceManagerDx::Get()->GetImageDevice()) {
+    return false;
+  }
+
+  // Test to see if the keyed mutex has been released.
+  // If D3D11Texture failed to lock, do not recycle the DXGIYCbCrTextureData.
+
+  AutoCheckLockD3D11Texture lockY(textureY);
+  AutoCheckLockD3D11Texture lockCr(textureCr);
+  AutoCheckLockD3D11Texture lockCb(textureCb);
+
+  if (!lockY.IsLocked() ||
+      !lockCr.IsLocked() ||
+      !lockCb.IsLocked()) {
     return false;
   }
 

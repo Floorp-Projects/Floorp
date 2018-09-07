@@ -26,10 +26,9 @@ nsConsoleMessage::nsConsoleMessage(const char16_t* aMessage)
 }
 
 NS_IMETHODIMP
-nsConsoleMessage::GetMessageMoz(char16_t** aResult)
+nsConsoleMessage::GetMessageMoz(nsAString& aMessage)
 {
-  *aResult = ToNewUnicode(mMessage);
-
+  aMessage = mMessage;
   return NS_OK;
 }
 

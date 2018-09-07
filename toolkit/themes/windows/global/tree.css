@@ -19,16 +19,6 @@ treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descend
 }
 
 @media (-moz-windows-classic) {
-  treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="ascending"] {
-    list-style-image: url("chrome://global/skin/tree/sort-asc-classic.png");
-  }
-
-  treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descending"] {
-    list-style-image: url("chrome://global/skin/tree/sort-dsc-classic.png");
-  }
-}
-
-@media (-moz-windows-classic) {
   treecol,
   treecolpicker {
     border: 1px solid;
@@ -45,5 +35,13 @@ treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descend
     border-inline-end-color: ThreeDHighlight;
     border-bottom-color: ThreeDHighlight;
     border-inline-start-color: ThreeDShadow;
+  }
+
+  treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="ascending"] {
+    list-style-image: url("chrome://global/skin/tree/sort-asc-classic.png");
+  }
+
+  treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descending"] {
+    list-style-image: url("chrome://global/skin/tree/sort-dsc-classic.png");
   }
 }

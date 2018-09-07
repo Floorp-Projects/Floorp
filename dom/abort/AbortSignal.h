@@ -35,11 +35,13 @@ public:
 protected:
   virtual ~AbortFollower();
 
-  // Subclasses of AbortFollower must Traverse/Unlink this member.
+  // Subclasses of AbortFollower must Traverse this member and call
+  // Unfollow() when Unlinking.
   RefPtr<AbortSignalImpl> mFollowingSignal;
 };
 
-// Any subclass of this class must Traverse/Unlink mFollowingSignal.
+// Any subclass of this class must Traverse mFollowingSignal and call
+// Unfollow() when Unlinking.
 class AbortSignalImpl : public AbortFollower
                       , public nsISupports
 {

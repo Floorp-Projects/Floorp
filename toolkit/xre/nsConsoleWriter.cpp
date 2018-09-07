@@ -82,7 +82,7 @@ WriteConsoleLog()
   nsAutoCString nativemsg;
 
   for (uint32_t i = 0; i < mcount; ++i) {
-    rv = messages[i]->GetMessageMoz(getter_Copies(msg));
+    rv = messages[i]->GetMessageMoz(msg);
     if (NS_SUCCEEDED(rv)) {
       NS_CopyUnicodeToNative(msg, nativemsg);
       PR_fprintf(file, "%s" NS_LINEBREAK, nativemsg.get());

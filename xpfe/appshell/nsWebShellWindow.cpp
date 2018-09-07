@@ -242,7 +242,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
     NS_ConvertUTF8toUTF16 urlString(tmpStr);
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
-    rv = webNav->LoadURI(urlString.get(),
+    rv = webNav->LoadURI(urlString,
                          nsIWebNavigation::LOAD_FLAGS_NONE,
                          nullptr,
                          nullptr,
