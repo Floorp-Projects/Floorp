@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var FakeSSLStatus = function() {
+var FakeTransportSecurityInfo = function() {
 };
 
-FakeSSLStatus.prototype = {
+FakeTransportSecurityInfo.prototype = {
   serverCert: null,
   cipherName: null,
   keyLength: 2048,
@@ -17,7 +17,7 @@ FakeSSLStatus.prototype = {
   getInterface(aIID) {
     return this.QueryInterface(aIID);
   },
-  QueryInterface: ChromeUtils.generateQI(["nsISSLStatus"]),
+  QueryInterface: ChromeUtils.generateQI(["nsITransportSecurityInfo"]),
 };
 
 function whenNewWindowLoaded(aOptions, aCallback) {
@@ -44,10 +44,10 @@ function test() {
 
   function doTest(aIsPrivateMode, aWindow, aCallback) {
     BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser).then(() => {
-      let sslStatus = new FakeSSLStatus();
+      let secInfo = new FakeTransportSecurityInfo();
       uri = aWindow.Services.io.newURI("https://localhost/img.png");
       gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                               "max-age=1000", sslStatus, privacyFlags(aIsPrivateMode),
+                               "max-age=1000", secInfo, privacyFlags(aIsPrivateMode),
                                Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
       ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
                                 privacyFlags(aIsPrivateMode)),

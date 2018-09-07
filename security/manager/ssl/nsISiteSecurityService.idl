@@ -7,7 +7,7 @@
 interface nsIURI;
 interface nsIObserver;
 interface nsIHttpChannel;
-interface nsISSLStatus;
+interface nsITransportSecurityInfo;
 interface nsISimpleEnumerator;
 
 %{C++
@@ -115,7 +115,7 @@ interface nsISiteSecurityService : nsISupports
      * @param aType the type of security header in question.
      * @param aSourceURI the URI of the resource with the HTTP header.
      * @param aHeader the HTTP response header specifying security data.
-     * @param aSSLStatus the SSLStatus of the current channel.
+     * @param aSecInfo the TransportSecurityInfo of the current channel.
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
      * @param aOriginAttributes the origin attributes that isolate this origin,
@@ -138,7 +138,7 @@ interface nsISiteSecurityService : nsISupports
     void processHeaderNative(in uint32_t aType,
                              in nsIURI aSourceURI,
                              in ACString aHeader,
-                             in nsISSLStatus aSSLStatus,
+                             in nsITransportSecurityInfo aSecInfo,
                              in uint32_t aFlags,
                              in uint32_t aSource,
                              in const_OriginAttributesRef aOriginAttributes,
@@ -151,7 +151,7 @@ interface nsISiteSecurityService : nsISupports
     void processHeader(in uint32_t aType,
                        in nsIURI aSourceURI,
                        in ACString aHeader,
-                       in nsISSLStatus aSSLStatus,
+                       in nsITransportSecurityInfo aSecInfo,
                        in uint32_t aFlags,
                        in uint32_t aSource,
                        [optional] in jsval aOriginAttributes,

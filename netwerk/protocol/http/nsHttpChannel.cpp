@@ -70,7 +70,6 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsISSLStatus.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIWebProgressListener.h"
 #include "LoadContextInfo.h"
@@ -1924,7 +1923,7 @@ GetPKPConsoleErrorTag(uint32_t failureResult, nsAString& consoleErrorTag)
  */
 nsresult
 nsHttpChannel::ProcessSingleSecurityHeader(uint32_t aType,
-                                           nsISSLStatus *aSSLStatus,
+                                           nsITransportSecurityInfo* aSecInfo,
                                            uint32_t aFlags)
 {
     nsHttpAtom atom;
@@ -1951,7 +1950,7 @@ nsHttpChannel::ProcessSingleSecurityHeader(uint32_t aType,
         NS_GetOriginAttributes(this, originAttributes);
         uint32_t failureResult;
         uint32_t headerSource = nsISiteSecurityService::SOURCE_ORGANIC_REQUEST;
-        rv = sss->ProcessHeader(aType, mURI, securityHeader, aSSLStatus,
+        rv = sss->ProcessHeader(aType, mURI, securityHeader, aSecInfo,
                                 aFlags, headerSource, originAttributes,
                                 nullptr, nullptr, &failureResult);
         if (NS_FAILED(rv)) {
@@ -2026,17 +2025,13 @@ nsHttpChannel::ProcessSecurityHeaders()
     // Get the TransportSecurityInfo
     nsCOMPtr<nsITransportSecurityInfo> transSecInfo = do_QueryInterface(mSecurityInfo);
     NS_ENSURE_TRUE(transSecInfo, NS_ERROR_FAILURE);
-    nsCOMPtr<nsISSLStatus> sslStatus;
-    rv = transSecInfo->GetSSLStatus(getter_AddRefs(sslStatus));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(sslStatus, NS_ERROR_FAILURE);
 
     rv = ProcessSingleSecurityHeader(nsISiteSecurityService::HEADER_HSTS,
-                                     sslStatus, flags);
+                                     transSecInfo, flags);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = ProcessSingleSecurityHeader(nsISiteSecurityService::HEADER_HPKP,
-                                     sslStatus, flags);
+                                     transSecInfo, flags);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -2162,10 +2157,6 @@ nsHttpChannel::ProcessSSLInformation()
         do_QueryInterface(mSecurityInfo);
     if (!securityInfo)
         return;
-    nsCOMPtr<nsISSLStatus> sslstat;
-    securityInfo->GetSSLStatus(getter_AddRefs(sslstat));
-    if (!sslstat)
-        return;
 
     uint32_t state;
     if (securityInfo &&
@@ -2181,7 +2172,7 @@ nsHttpChannel::ProcessSSLInformation()
 
     // Send (SHA-1) signature algorithm errors to the web console
     nsCOMPtr<nsIX509Cert> cert;
-    sslstat->GetServerCert(getter_AddRefs(cert));
+    securityInfo->GetServerCert(getter_AddRefs(cert));
     if (cert) {
         UniqueCERTCertificate nssCert(cert->GetCert());
         if (nssCert) {

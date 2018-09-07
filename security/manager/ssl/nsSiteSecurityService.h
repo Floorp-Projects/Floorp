@@ -18,7 +18,7 @@
 #include "prtime.h"
 
 class nsIURI;
-class nsISSLStatus;
+class nsITransportSecurityInfo;
 
 using mozilla::OriginAttributes;
 
@@ -178,7 +178,7 @@ private:
                         const OriginAttributes& aOriginAttributes);
   nsresult ProcessHeaderInternal(uint32_t aType, nsIURI* aSourceURI,
                                  const nsCString& aHeader,
-                                 nsISSLStatus* aSSLStatus,
+                                 nsITransportSecurityInfo* aSecInfo,
                                  uint32_t aFlags,
                                  SecurityPropertySource aSource,
                                  const OriginAttributes& aOriginAttributes,
@@ -191,7 +191,7 @@ private:
                             uint64_t* aMaxAge, bool* aIncludeSubdomains,
                             uint32_t* aFailureResult);
   nsresult ProcessPKPHeader(nsIURI* aSourceURI, const nsCString& aHeader,
-                            nsISSLStatus* aSSLStatus, uint32_t flags,
+                            nsITransportSecurityInfo* aSecInfo, uint32_t flags,
                             const OriginAttributes& aOriginAttributes,
                             uint64_t* aMaxAge, bool* aIncludeSubdomains,
                             uint32_t* aFailureResult);
