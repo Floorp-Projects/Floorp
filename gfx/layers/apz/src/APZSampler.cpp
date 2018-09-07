@@ -233,16 +233,6 @@ APZSampler::HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer)
       && !AsyncTransformComponentMatrix(apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing)).IsIdentity();
 }
 
-UniquePtr<AutoApplyAsyncTestAttributes>
-APZSampler::ApplyAsyncTestAttributes(const LayerMetricsWrapper& aLayer)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  AssertOnSamplerThread();
-
-  MOZ_ASSERT(aLayer.GetApzc());
-  return MakeUnique<AutoApplyAsyncTestAttributes>(aLayer.GetApzc());
-}
-
 void
 APZSampler::AssertOnSamplerThread() const
 {
