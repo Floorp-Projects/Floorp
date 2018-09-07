@@ -10311,8 +10311,9 @@ DebuggerObject::getErrorMessageName(JSContext* cx, HandleDebuggerObject object,
     }
 
     RootedString str(cx, JS_NewStringCopyZ(cx, efs->name));
-    if (!str)
+    if (!cx->compartment()->wrap(cx, &str))
         return false;
+
     result.set(str);
     return true;
 }
