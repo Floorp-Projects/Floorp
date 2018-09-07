@@ -18,6 +18,11 @@ function addNetworkLocationsObserver(listener) {
 }
 exports.addNetworkLocationsObserver = addNetworkLocationsObserver;
 
+function removeNetworkLocationsObserver(listener) {
+  Services.prefs.removeObserver(NETWORK_LOCATIONS_PREF, listener);
+}
+exports.removeNetworkLocationsObserver = removeNetworkLocationsObserver;
+
 /**
  * Read the current preference value for aboutdebugging network locations.
  * Will throw if the value cannot be parsed or is not an array.
