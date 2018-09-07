@@ -278,7 +278,7 @@ function promisePageActionViewShown() {
 }
 
 function promisePageActionViewChildrenVisible(panelViewNode) {
-  return promiseNodeVisible(panelViewNode.firstChild.firstChild);
+  return promiseNodeVisible(panelViewNode.firstElementChild.firstElementChild);
 }
 
 function promiseNodeVisible(node) {
