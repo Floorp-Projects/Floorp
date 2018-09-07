@@ -250,7 +250,7 @@ interface nsIWebNavigation : nsISupports
    *        aReferrer is also null docShell peforms a load using the
    *        SystemPrincipal as the triggeringPrincipal.
    */
-  void loadURI(in wstring                  aURI,
+  void loadURI(in AString                  aURI,
                in unsigned long            aLoadFlags,
                in nsIURI                   aReferrer,
                in nsIInputStream           aPostData,
@@ -303,7 +303,7 @@ interface nsIWebNavigation : nsISupports
    *        aReferrer is also null docShell peforms a load using the
    *        SystemPrincipal as the triggeringPrincipal.
    */
-  void loadURIWithOptions(in wstring                  aURI,
+  void loadURIWithOptions(in AString                  aURI,
                           in unsigned long            aLoadFlags,
                           in nsIURI                   aReferrer,
                           in unsigned long            aReferrerPolicy,

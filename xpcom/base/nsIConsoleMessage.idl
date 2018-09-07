@@ -32,7 +32,7 @@ interface nsIConsoleMessage : nsISupports
      */
     readonly attribute long long timeStamp;
 
-    [binaryname(MessageMoz)] readonly attribute wstring message;
+    [binaryname(MessageMoz)] readonly attribute AString message;
 
     AUTF8String toString();
 };

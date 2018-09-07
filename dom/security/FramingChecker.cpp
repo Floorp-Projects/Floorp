@@ -258,7 +258,7 @@ FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
           nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo
             ? loadInfo->TriggeringPrincipal()
             : nsContentUtils::GetSystemPrincipal();
-          webNav->LoadURI(u"about:blank",
+          webNav->LoadURI(NS_LITERAL_STRING("about:blank"),
                           0, nullptr, nullptr, nullptr,
                           triggeringPrincipal);
         }

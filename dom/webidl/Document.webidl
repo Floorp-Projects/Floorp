@@ -525,6 +525,10 @@ partial interface Document {
   [ChromeOnly] readonly attribute unsigned long numTrackersBlocked;
 };
 
+partial interface Document {
+  [Func="nsDocument::DocumentSupportsL10n"] readonly attribute DocumentL10n? l10n;
+};
+
 Document implements XPathEvaluator;
 Document implements GlobalEventHandlers;
 Document implements DocumentAndElementEventHandlers;

@@ -159,10 +159,10 @@ void main(void) {
 
     // Set some flags used by the FS to determine the
     // orientation of the two edges in this corner.
-    ivec2 edge_axis;
+    ivec2 edge_axis = ivec2(0, 0);
     // Derive the positions for the edge clips, which must be handled
     // differently between corners and edges.
-    vec2 edge_reference;
+    vec2 edge_reference = vec2(0.0);
     switch (segment) {
         case SEGMENT_TOP_LEFT:
             edge_axis = ivec2(0, 1);
@@ -183,13 +183,10 @@ void main(void) {
         case SEGMENT_TOP:
         case SEGMENT_BOTTOM:
             edge_axis = ivec2(1, 1);
-            edge_reference = vec2(0.0);
             break;
         case SEGMENT_LEFT:
         case SEGMENT_RIGHT:
         default:
-            edge_axis = ivec2(0, 0);
-            edge_reference = vec2(0.0);
             break;
     }
 
@@ -259,8 +256,8 @@ vec4 evaluate_color_for_style_in_corner(
                 aa_range
             );
             float d = min(-d_radii_a, d_radii_b);
-            float alpha = distance_aa(aa_range, d);
-            return alpha * color0;
+            color0 *= distance_aa(aa_range, d);
+            break;
         }
         case BORDER_STYLE_GROOVE:
         case BORDER_STYLE_RIDGE: {
@@ -280,7 +277,8 @@ vec4 evaluate_color_for_style_in_corner(
             };
             vec4 c0 = mix(color1, color0, swizzled_factor);
             vec4 c1 = mix(color0, color1, swizzled_factor);
-            return mix(c0, c1, alpha);
+            color0 = mix(c0, c1, alpha);
+            break;
         }
         default:
             break;
@@ -290,35 +288,36 @@ vec4 evaluate_color_for_style_in_corner(
 }
 
 vec4 evaluate_color_for_style_in_edge(
-    vec2 pos,
+    vec2 pos_vec,
     int style,
     vec4 color0,
     vec4 color1,
     float aa_range,
-    int edge_axis
+    int edge_axis_id
 ) {
+    vec2 edge_axis = edge_axis_id != 0 ? vec2(0.0, 1.0) : vec2(1.0, 0.0);
+    float pos = dot(pos_vec, edge_axis);
     switch (style) {
         case BORDER_STYLE_DOUBLE: {
-            float d0 = -1.0;
-            float d1 = -1.0;
-            if (vPartialWidths[edge_axis] > 1.0) {
+            float d = -1.0;
+            float partial_width = dot(vPartialWidths.xy, edge_axis);
+            if (partial_width > 1.0) {
                 vec2 ref = vec2(
-                    vEdgeReference[edge_axis] + vPartialWidths[edge_axis],
-                    vEdgeReference[edge_axis+2] - vPartialWidths[edge_axis]
+                    dot(vEdgeReference.xy, edge_axis) + partial_width,
+                    dot(vEdgeReference.zw, edge_axis) - partial_width
                 );
-                d0 = pos[edge_axis] - ref.x;
-                d1 = ref.y - pos[edge_axis];
+                d = min(pos - ref.x, ref.y - pos);
             }
-            float d = min(d0, d1);
-            float alpha = distance_aa(aa_range, d);
-            return alpha * color0;
+            color0 *= distance_aa(aa_range, d);
+            break;
         }
         case BORDER_STYLE_GROOVE:
         case BORDER_STYLE_RIDGE: {
-            float ref = vEdgeReference[edge_axis] + vPartialWidths[edge_axis+2];
-            float d = pos[edge_axis] - ref;
+            float ref = dot(vEdgeReference.xy + vPartialWidths.zw, edge_axis);
+            float d = pos - ref;
             float alpha = distance_aa(aa_range, d);
-            return mix(color0, color1, alpha);
+            color0 = mix(color0, color1, alpha);
+            break;
         }
         default:
             break;
