@@ -144,6 +144,10 @@ HTMLLinkElement::BindToTree(nsIDocument* aDocument,
   nsContentUtils::AddScriptRunner(
     NewRunnableMethod("dom::HTMLLinkElement::BindToTree", this, update));
 
+  if (aDocument && this->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization, eIgnoreCase)) {
+    aDocument->LocalizationLinkAdded(this);
+  }
+
   CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMLinkAdded"));
 
   return rv;
@@ -179,6 +183,10 @@ HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // from the parser.
   nsIDocument* oldDoc = GetUncomposedDoc();
   ShadowRoot* oldShadowRoot = GetContainingShadow();
+
+  if (oldDoc && this->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization, eIgnoreCase)) {
+    oldDoc->LocalizationLinkRemoved(this);
+  }
 
   CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMLinkRemoved"));
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
@@ -290,6 +298,36 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     mTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
         this, aValue ? aValue->GetStringValue() : EmptyString(),
         aSubjectPrincipal);
+  }
+
+  // If a link's `rel` attribute was changed from or to `localization`,
+  // update the list of localization links.
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::rel) {
+    nsIDocument* doc = GetComposedDoc();
+    if (doc) {
+      if ((aValue && aValue->Equals(nsGkAtoms::localization, eIgnoreCase)) &&
+          (!aOldValue || !aOldValue->Equals(nsGkAtoms::localization, eIgnoreCase))) {
+        doc->LocalizationLinkAdded(this);
+      } else if ((aOldValue && aOldValue->Equals(nsGkAtoms::localization, eIgnoreCase)) &&
+                 (!aValue || !aValue->Equals(nsGkAtoms::localization, eIgnoreCase))) {
+        doc->LocalizationLinkRemoved(this);
+      }
+    }
+  }
+
+  // If the link has `rel=localization` and its `href` attribute is changed,
+  // update the list of localization links.
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::href && 
+      AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization, eIgnoreCase)) {
+    nsIDocument* doc = GetComposedDoc();
+    if (doc) {
+      if (aOldValue) {
+        doc->LocalizationLinkRemoved(this);
+      }
+      if (aValue) {
+        doc->LocalizationLinkAdded(this);
+      }
+    }
   }
 
   if (aValue) {

@@ -73,7 +73,7 @@ add_task(async function test_format_messages() {
 });
 
 add_task(async function test_format_values() {
-  let msgs = await domLocalization.formatValues([{"id": "key"}], 1);
+  let msgs = await domLocalization.formatValues([{"id": "key"}]);
   equal(msgs.length, 1);
   equal(msgs[0], "[en] Value");
 });
