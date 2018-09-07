@@ -112,10 +112,6 @@ class nsIDocumentLoaderFactory;
 #define NS_PLUGINDOCLOADERFACTORY_CID \
 { 0x0ddf4df8, 0x4dbb, 0x4133, { 0x8b, 0x79, 0x9a, 0xfb, 0x96, 0x65, 0x14, 0xf5 } }
 
-#define NS_WINDOWCOMMANDTABLE_CID \
- { /* 0DE2FBFA-6B7F-11D7-BBBA-0003938A9D96 */        \
-  0x0DE2FBFA, 0x6B7F, 0x11D7, {0xBB, 0xBA, 0x00, 0x03, 0x93, 0x8A, 0x9D, 0x96} }
-
 #include "inDeepTreeWalker.h"
 
 #ifdef MOZ_XUL
@@ -486,7 +482,6 @@ NS_DEFINE_NAMED_CID(NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_JSPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_JSURI_CID);
 NS_DEFINE_NAMED_CID(NS_JSURIMUTATOR_CID);
-NS_DEFINE_NAMED_CID(NS_WINDOWCOMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_WINDOWCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_PLUGINDOCLOADERFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_PLUGINDOCUMENT_CID);
@@ -556,32 +551,18 @@ NS_DEFINE_NAMED_CID(TEXT_INPUT_PROCESSOR_CID);
 NS_DEFINE_NAMED_CID(NS_SCRIPTERROR_CID);
 
 static nsresult
-CreateWindowCommandTableConstructor(nsISupports *aOuter,
-                                    REFNSIID aIID, void **aResult)
-{
-  nsCOMPtr<nsIControllerCommandTable> commandTable =
-      new nsControllerCommandTable();
-
-  nsresult rv =
-    nsWindowCommandRegistration::RegisterWindowCommands(commandTable);
-  if (NS_FAILED(rv)) return rv;
-
-  return commandTable->QueryInterface(aIID, aResult);
-}
-
-static nsresult
 CreateWindowControllerWithSingletonCommandTable(nsISupports *aOuter,
                                       REFNSIID aIID, void **aResult)
 {
   nsCOMPtr<nsIController> controller = new nsBaseCommandController();
 
-  nsresult rv;
-  nsCOMPtr<nsIControllerCommandTable> windowCommandTable = do_GetService(kNS_WINDOWCOMMANDTABLE_CID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIControllerCommandTable> windowCommandTable =
+    nsControllerCommandTable::CreateWindowCommandTable();
 
   // this is a singleton; make it immutable
   windowCommandTable->MakeImmutable();
 
+  nsresult rv;
   nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -704,7 +685,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_JSPROTOCOLHANDLER_CID, false, nullptr, nsJSProtocolHandler::Create },
   { &kNS_JSURI_CID, false, nullptr, nsJSURIMutatorConstructor }, // do_CreateInstance returns mutator
   { &kNS_JSURIMUTATOR_CID, false, nullptr, nsJSURIMutatorConstructor },
-  { &kNS_WINDOWCOMMANDTABLE_CID, false, nullptr, CreateWindowCommandTableConstructor },
   { &kNS_WINDOWCONTROLLER_CID, false, nullptr, CreateWindowControllerWithSingletonCommandTable },
   { &kNS_PLUGINDOCLOADERFACTORY_CID, false, nullptr, CreateContentDLF },
   { &kNS_PLUGINDOCUMENT_CID, false, nullptr, CreatePluginDocument },
