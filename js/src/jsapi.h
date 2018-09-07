@@ -488,6 +488,9 @@ class JS_PUBLIC_API(ContextOptions) {
         wasm_(true),
         wasmBaseline_(true),
         wasmIon_(true),
+#ifdef ENABLE_WASM_CRANELIFT
+        wasmForceCranelift_(false),
+#endif
 #ifdef ENABLE_WASM_GC
         wasmGc_(false),
 #endif
@@ -576,6 +579,18 @@ class JS_PUBLIC_API(ContextOptions) {
         wasmIon_ = !wasmIon_;
         return *this;
     }
+
+#ifdef ENABLE_WASM_CRANELIFT
+    bool wasmForceCranelift() const { return wasmForceCranelift_; }
+    ContextOptions& setWasmForceCranelift(bool flag) {
+        wasmForceCranelift_ = flag;
+        return *this;
+    }
+    ContextOptions& toggleWasmForceCranelift() {
+        wasmForceCranelift_ = !wasmForceCranelift_;
+        return *this;
+    }
+#endif
 
     bool testWasmAwaitTier2() const { return testWasmAwaitTier2_; }
     ContextOptions& setTestWasmAwaitTier2(bool flag) {
@@ -687,6 +702,9 @@ class JS_PUBLIC_API(ContextOptions) {
     bool wasm_ : 1;
     bool wasmBaseline_ : 1;
     bool wasmIon_ : 1;
+#ifdef ENABLE_WASM_CRANELIFT
+    bool wasmForceCranelift_ : 1;
+#endif
 #ifdef ENABLE_WASM_GC
     bool wasmGc_ : 1;
 #endif
