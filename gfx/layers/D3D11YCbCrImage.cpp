@@ -292,7 +292,7 @@ D3D11YCbCrImage::GetAsSourceSurface()
 class AutoCheckLockD3D11Texture
 {
 public:
-  AutoCheckLockD3D11Texture(ID3D11Texture2D* aTexture)
+  explicit AutoCheckLockD3D11Texture(ID3D11Texture2D* aTexture)
     : mIsLocked(false)
   {
     aTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mMutex));
