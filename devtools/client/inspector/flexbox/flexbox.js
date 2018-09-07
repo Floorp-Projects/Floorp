@@ -305,7 +305,7 @@ class FlexboxInspector {
    * the layout view becomes visible or a new node is selected and needs to be update
    * with new flexbox data.
    *
-   * @param  {FlexboxFront|Null} flexboxFront
+   * @param  {FlexboxFront|null} flexboxFront
    *         The FlexboxFront of the flex container for the current node selection.
    */
   async update(flexboxFront) {

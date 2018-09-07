@@ -7,18 +7,19 @@
 
 webidl Document;
 webidl Element;
+webidl Node;
 
 [scriptable, uuid(7c468500-541f-4fe0-98c9-92a53b63ec8d)]
 interface mozIDOMLocalization : nsISupports
 {
-  unsigned long addResourceIds(in Array<AString> resourceIds);
+  unsigned long addResourceIds(in Array<AString> resourceIds, in bool aEager);
   unsigned long removeResourceIds(in Array<AString> resourceIds);
 
   Promise formatMessages(in Array<jsval> aKeys);
   Promise formatValues(in Array<jsval> aKeys);
   Promise formatValue(in DOMString aId, [optional] in jsval aArgs);
 
-  Promise translateFragment(in Element aElement);
+  Promise translateFragment(in Node aNode);
   Promise translateElements(in Array<Element> aElements);
 
   void connectRoot(in Element aElement);

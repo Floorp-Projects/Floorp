@@ -41,7 +41,7 @@ interface nsIDirIndex : nsISupports
      * The content type - may be null if it is unknown.
      * Unspecified for directories
      */
-    attribute string contentType;
+    attribute ACString contentType;
 
     /**
      * The fully qualified filename, expressed as a uri
@@ -49,13 +49,13 @@ interface nsIDirIndex : nsISupports
      * This is encoded with the encoding specified in
      * the nsIDirIndexParser, and is also escaped.
      */
-    attribute string location;
+    attribute ACString location;
 
     /**
      * A description for the filename, which should be
      * displayed by a viewer
      */
-    attribute wstring description;
+    attribute AString description;
 
     /**
      * File size, with -1 meaning "unknown"

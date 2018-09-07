@@ -211,6 +211,7 @@
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/DocumentL10n.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLBodyElement.h"
@@ -1885,6 +1886,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReadyForIdle)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentL10n)
 
   // Traverse all nsDocument nsCOMPtrs.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParser)
@@ -2031,6 +2033,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCommandDispatcher)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentL10n);
 
   tmp->mParentDocument = nullptr;
 
@@ -2227,6 +2230,23 @@ nsIDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   }
 
   mChannel = aChannel;
+}
+
+/**
+ * DocumentL10n is currently allowed for system
+ * principal.
+ *
+ * In the future we'll want to expose it to non-web-exposed
+ * about:* pages.
+ */
+bool
+PrincipalAllowsL10n(nsIPrincipal* principal)
+{
+  if (nsContentUtils::IsSystemPrincipal(principal)) {
+    return true;
+  }
+
+  return false;
 }
 
 void
@@ -3301,6 +3321,102 @@ nsIDocument::GetAllowPlugins()
   }
 
   return true;
+}
+
+void
+nsIDocument::InitializeLocalization(nsTArray<nsString>& aResourceIds)
+{
+  MOZ_ASSERT(!mDocumentL10n, "mDocumentL10n should not be initialized yet");
+
+  DocumentL10n* l10n = new DocumentL10n(this);
+  MOZ_ALWAYS_TRUE(l10n->Init(aResourceIds));
+  mDocumentL10n = l10n;
+}
+
+DocumentL10n*
+nsIDocument::GetL10n()
+{
+  return mDocumentL10n;
+}
+
+bool
+nsDocument::DocumentSupportsL10n(JSContext* aCx, JSObject* aObject)
+{
+  return PrincipalAllowsL10n(nsContentUtils::SubjectPrincipal(aCx));
+}
+
+void
+nsIDocument::LocalizationLinkAdded(Element* aLinkElement)
+{
+  if (!PrincipalAllowsL10n(NodePrincipal())) {
+    return;
+  }
+
+  nsAutoString href;
+  aLinkElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
+  // If the link is added after the DocumentL10n instance
+  // has been initialized, just pass the resource ID to it.
+  if (mDocumentL10n) {
+    AutoTArray<nsString, 1> resourceIds;
+    resourceIds.AppendElement(href);
+    mDocumentL10n->AddResourceIds(resourceIds);
+  } else {
+    // Otherwise, we're still parsing the document.
+    // In that case, add it to the pending list. This list
+    // will be resolved once the end of l10n resource
+    // container is reached.
+    mL10nResources.AppendElement(href);
+  }
+}
+
+void
+nsIDocument::LocalizationLinkRemoved(Element* aLinkElement)
+{
+  if (!PrincipalAllowsL10n(NodePrincipal())) {
+    return;
+  }
+
+  nsAutoString href;
+  aLinkElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
+  if (mDocumentL10n) {
+    AutoTArray<nsString, 1> resourceIds;
+    resourceIds.AppendElement(href);
+    uint32_t remaining = mDocumentL10n->RemoveResourceIds(resourceIds);
+    if (remaining == 0) {
+      mDocumentL10n = nullptr;
+    }
+  } else {
+    mL10nResources.RemoveElement(href);
+  }
+}
+
+/**
+ * This method should be called once the end of the l10n
+ * resource container has been parsed.
+ *
+ * In XUL this is the end of the first </linkset>,
+ * In XHTML/HTML this is the end of </head>.
+ *
+ * This milestone is used to allow for batch
+ * localization context I/O and building done
+ * once when all resources in the document have been
+ * collected.
+ */
+void
+nsIDocument::OnL10nResourceContainerParsed()
+{
+  if (!mL10nResources.IsEmpty()) {
+    InitializeLocalization(mL10nResources);
+    mL10nResources.Clear();
+  }
+}
+
+void
+nsIDocument::TriggerInitialDocumentTranslation()
+{
+  if (mDocumentL10n) {
+    mDocumentL10n->TriggerInitialDocumentTranslation();
+  }
 }
 
 bool
@@ -8793,6 +8909,10 @@ nsIDocument::SetReadyStateInternal(ReadyState rs)
   // At the time of loading start, we don't have timing object, record time.
   if (READYSTATE_LOADING == rs) {
     mLoadingTimeStamp = mozilla::TimeStamp::Now();
+  }
+
+  if (READYSTATE_INTERACTIVE == rs) {
+    TriggerInitialDocumentTranslation();
   }
 
   RecordNavigationTiming(rs);

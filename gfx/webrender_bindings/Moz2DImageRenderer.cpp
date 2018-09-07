@@ -71,7 +71,7 @@ struct FontInstanceData {
   float mSize;
   Maybe<FontInstanceOptions> mOptions;
   Maybe<FontInstancePlatformOptions> mPlatformOptions;
-  UniquePtr<FontVariation[]> mVariations;
+  UniquePtr<gfx::FontVariation[]> mVariations;
   size_t mNumVariations;
   RefPtr<ScaledFont> mScaledFont;
 
@@ -223,8 +223,8 @@ AddBlobFont(WrFontInstanceKey aInstanceKey,
       font.mPlatformOptions = Some(*aPlatformOptions);
     }
     if (aNumVariations) {
-      font.mVariations.reset(new FontVariation[aNumVariations]);
-      PodCopy(font.mVariations.get(), aVariations, aNumVariations);
+      font.mVariations.reset(new gfx::FontVariation[aNumVariations]);
+      PodCopy(font.mVariations.get(), reinterpret_cast<const gfx::FontVariation*>(aVariations), aNumVariations);
     }
   }
 }

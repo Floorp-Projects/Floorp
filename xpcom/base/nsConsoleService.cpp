@@ -303,7 +303,7 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
 #ifdef XP_WIN
     if (gLoggingToDebugger && IsDebuggerPresent()) {
       nsString msg;
-      aMessage->GetMessageMoz(getter_Copies(msg));
+      aMessage->GetMessageMoz(msg);
       msg.Append('\n');
       OutputDebugStringW(msg.get());
     }

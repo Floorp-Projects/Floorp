@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Testing DocumentL10n in XUL environment">
+
+  <linkset>
+    <link rel="localization" href="crashreporter/aboutcrashes.ftl"/>
+  </linkset>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript">
+  <![CDATA[
+  SimpleTest.waitForExplicitFinish();
+
+  document.addEventListener("DOMContentLoaded", async function() {
+    await document.l10n.ready;
+
+    let desc = document.getElementById("main-desc");
+    is(desc.textContent.length > 0, true);
+
+    // Test for manual value formatting
+    let msg = await document.l10n.formatValue("id-heading");
+    is(msg.length > 0, true);
+
+    let label = document.getElementById("label1");
+    document.l10n.setAttributes(
+      label,
+      "date-crashed-heading",
+      {
+        name: "John"
+      }
+    );
+
+    // Test for l10n.getAttributes
+    let l10nArgs = document.l10n.getAttributes(label);
+    is(l10nArgs.id, "date-crashed-heading");
+    is(l10nArgs.args.name, "John");
+
+    let verifyL10n = () => {
+      if (label.textContent.length > 0) {
+        window.removeEventListener("MozAfterPaint", verifyL10n);
+        SimpleTest.finish();
+      }
+    };
+    window.addEventListener("MozAfterPaint", verifyL10n);
+  }, { once: true});
+  ]]>
+  </script>
+
+  <description id="main-desc" data-l10n-id="crash-reports-title"/>
+
+  <label id="label1" />
+</window>

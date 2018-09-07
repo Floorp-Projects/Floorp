@@ -727,9 +727,13 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
  *         The Flex data object.
  * @param  {Window} win
  *         The Window object.
- * @return {Object} representation of the Flex data object.
+ * @return {Object|null} representation of the Flex data object.
  */
 function getFlexData(flex, win) {
+  if (!flex) {
+    return null;
+  }
+
   return {
     lines: flex.getLines().map(line => {
       return {

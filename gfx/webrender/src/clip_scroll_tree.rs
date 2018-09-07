@@ -148,7 +148,7 @@ impl ClipScrollTree {
                                  .pre_mul(&coord_system.transform);
         }
 
-        let transform = transform.post_translate(
+        let transform = transform.pre_translate(
             LayoutVector3D::new(
                 child.coordinate_system_relative_offset.x,
                 child.coordinate_system_relative_offset.y,
@@ -649,8 +649,8 @@ fn test_cst_scale_translation() {
     test_pt(100.0, 100.0, &cst, child2, child1, 200.0, 400.0);
     test_pt(200.0, 400.0, &cst, child1, child2, 100.0, 100.0);
 
-    test_pt(100.0, 100.0, &cst, child3, child1, 400.0, 300.0);
-    test_pt(400.0, 300.0, &cst, child1, child3, 100.0, 100.0);
+    test_pt(100.0, 100.0, &cst, child3, child1, 600.0, 0.0);
+    test_pt(400.0, 300.0, &cst, child1, child3, 0.0, 175.0);
 }
 
 #[test]

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8"></meta>
+  <title>Test DocumentL10n in HTML environment</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"></link>
+  <link rel="localization" href="crashreporter/aboutcrashes.ftl"/>
+  <script type="application/javascript">
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  document.addEventListener("DOMContentLoaded", async function() {
+    await document.l10n.ready;
+
+    let desc = document.getElementById("main-desc");
+    is(desc.textContent.length > 0, true);
+
+    // Test for manual value formatting
+    let msg = await document.l10n.formatValue("id-heading");
+    is(msg.length > 0, true);
+
+    let label = document.getElementById("label1");
+    document.l10n.setAttributes(
+      label,
+      "date-crashed-heading",
+      {
+        name: "John"
+      }
+    );
+
+    // Test for l10n.getAttributes
+    let l10nArgs = document.l10n.getAttributes(label);
+    is(l10nArgs.id, "date-crashed-heading");
+    is(l10nArgs.args.name, "John");
+
+    let verifyL10n = () => {
+      if (label.textContent.length > 0) {
+        window.removeEventListener("MozAfterPaint", verifyL10n);
+        SimpleTest.finish();
+      }
+    };
+    window.addEventListener("MozAfterPaint", verifyL10n);
+  }, { once: true});
+  </script>
+</head>
+<body>
+  <h1 id="main-desc" data-l10n-id="crash-reports-title"></h1>
+
+  <p id="label1" />
+</body>
+</html>
