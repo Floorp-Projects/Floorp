@@ -18,6 +18,7 @@ public class GeckoActivityMonitor implements Application.ActivityLifecycleCallba
     private static final GeckoActivityMonitor instance = new GeckoActivityMonitor();
 
     private WeakReference<Activity> currentActivity = new WeakReference<>(null);
+    private boolean currentActivityInBackground = true;
 
     public static GeckoActivityMonitor getInstance() {
         return instance;
@@ -26,20 +27,31 @@ public class GeckoActivityMonitor implements Application.ActivityLifecycleCallba
     private GeckoActivityMonitor() { }
 
     private void updateActivity(final Activity activity) {
-        if (currentActivity.get() == null) {
+        if (currentActivityInBackground) {
             ((GeckoApplication) activity.getApplication()).onApplicationForeground();
+            currentActivityInBackground = false;
         }
         currentActivity = new WeakReference<>(activity);
     }
 
-    private void checkAppGoingIntoBackground(final Activity activity) {
+    private void checkAppGoingIntoBackground(final Activity activity, boolean clearActivity) {
         // For the previous activity, this is called after onStart/onResume for the
         // new/resumed activity, so if we're switching activities within our app,
         // currentActivity should already refer to the next activity at this point.
-        // If it doesn't, it means we've been backgrounded.
-        if (currentActivity.get() == activity) {
+        if (currentActivity.get() != activity) {
+            // Some other activity of ours is in the process of starting,
+            // so we remain the active app.
+            return;
+        }
+        // No one wants to replace us - we're still the current activity within our app and are
+        // therefore going into the background.
+
+        if (clearActivity) {
             currentActivity.clear();
+        }
+        if (!currentActivityInBackground) {
             ((GeckoApplication) activity.getApplication()).onApplicationBackground();
+            currentActivityInBackground = true;
         }
     }
 
@@ -69,12 +81,16 @@ public class GeckoActivityMonitor implements Application.ActivityLifecycleCallba
 
     @Override
     public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
-        checkAppGoingIntoBackground(activity);
+        // We need to trigger our application-background handling here already, so that we have a
+        // chance to update the session store data for private tabs before it is saved as part of
+        // the saved instance state, but at the same time we don't yet want to clear the current
+        // activity until we're stopping for real.
+        checkAppGoingIntoBackground(activity, false);
     }
 
     @Override
     public void onActivityStopped(Activity activity) {
-        checkAppGoingIntoBackground(activity);
+        checkAppGoingIntoBackground(activity, true);
     }
 
     @Override
