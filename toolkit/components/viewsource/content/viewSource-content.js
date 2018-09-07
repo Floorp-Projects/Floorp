@@ -261,7 +261,7 @@ var ViewSourceContent = {
     let shEntry = Cc["@mozilla.org/browser/session-history-entry;1"]
                     .createInstance(Ci.nsISHEntry);
     shEntry.setURI(Services.io.newURI(viewSrcURL));
-    shEntry.setTitle(viewSrcURL);
+    shEntry.title = viewSrcURL;
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     shEntry.triggeringPrincipal = systemPrincipal;
     shEntry.setAsHistoryLoad();

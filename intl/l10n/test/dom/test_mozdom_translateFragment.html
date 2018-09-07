@@ -33,7 +33,7 @@ subtitle = Welcome to Fluent
   window.onload = async function() {
     SimpleTest.waitForExplicitFinish();
 
-    domLocalization.addResourceIds(["/browser/menu.ftl"], 1);
+    domLocalization.addResourceIds(["/browser/menu.ftl"], false);
 
     const frag = document.querySelectorAll("div")[0];
     const h1 = document.querySelectorAll("h1")[0];

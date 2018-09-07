@@ -79,7 +79,6 @@ add_task(async function() {
   is(settingsButton.disabled, true, "Should disable settings button while updating sites");
   Assert.deepEqual(doc.l10n.getAttributes(totalSiteDataSizeLabel), {
     id: "sitedata-total-size-calculating",
-    args: null,
   }, "Should show the loading message while updating");
 
   Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");

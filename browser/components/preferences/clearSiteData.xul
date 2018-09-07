@@ -15,9 +15,10 @@
         data-l10n-attrs="title, style"
         persist="screenX screenY width height">
 
-  <link rel="localization" href="branding/brand.ftl"/>
-  <link rel="localization" href="browser/preferences/clearSiteData.ftl"/>
-  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
+  <linkset>
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="browser/preferences/clearSiteData.ftl"/>
+  </linkset>
   <script src="chrome://browser/content/preferences/clearSiteData.js"/>
 
   <keyset>

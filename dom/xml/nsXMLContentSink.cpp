@@ -577,6 +577,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
         nodeInfo->NameAtom() == nsGkAtoms::textarea ||
         nodeInfo->NameAtom() == nsGkAtoms::video ||
         nodeInfo->NameAtom() == nsGkAtoms::audio ||
+        nodeInfo->NameAtom() == nsGkAtoms::head ||
         nodeInfo->NameAtom() == nsGkAtoms::object))
       || nodeInfo->NameAtom() == nsGkAtoms::title
       ) {

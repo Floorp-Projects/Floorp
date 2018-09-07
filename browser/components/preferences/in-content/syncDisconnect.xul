@@ -15,9 +15,10 @@
         data-l10n-id="sync-disconnect-dialog"
         data-l10n-attrs="title, style">
 
-  <link rel="localization" href="browser/branding/sync-brand.ftl"/>
-  <link rel="localization" href="browser/preferences/syncDisconnect.ftl"/>
-  <script src="chrome://global/content/l10n.js"/>
+  <linkset>
+    <link rel="localization" href="browser/branding/sync-brand.ftl"/>
+    <link rel="localization" href="browser/preferences/syncDisconnect.ftl"/>
+  </linkset>
   <script src="chrome://browser/content/preferences/in-content/syncDisconnect.js"/>
 
   <vbox id="deleteOptionsContent">
