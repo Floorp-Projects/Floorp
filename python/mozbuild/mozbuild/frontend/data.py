@@ -1172,7 +1172,7 @@ class GeneratedFile(ContextDerived):
             '.rs',
             'new', # 'new' is an output from make-stl-wrappers.py
         )
-        self.required_for_compile = any(f.endswith(suffixes) for f in self.outputs)
+        self.required_for_compile = [f for f in self.outputs if f.endswith(suffixes)]
 
 
 class ChromeManifestEntry(ContextDerived):
