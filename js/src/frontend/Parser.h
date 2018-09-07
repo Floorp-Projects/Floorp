@@ -1045,7 +1045,7 @@ class MOZ_STACK_CLASS GeneralParser
     Node lexicalDeclaration(YieldHandling yieldHandling, DeclarationKind kind);
 
     inline Node importDeclaration();
-    Node importDeclarationOrImportMeta(YieldHandling yieldHandling);
+    Node importDeclarationOrImportExpr(YieldHandling yieldHandling);
 
     Node exportFrom(uint32_t begin, Node specList);
     Node exportBatch(uint32_t begin);
@@ -1145,7 +1145,7 @@ class MOZ_STACK_CLASS GeneralParser
 
     bool tryNewTarget(Node& newTarget);
 
-    Node importMeta();
+    Node importExpr(YieldHandling yieldHandling);
 
     Node methodDefinition(uint32_t toStringStart, PropertyType propType, HandleAtom funName);
 
