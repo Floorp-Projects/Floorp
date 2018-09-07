@@ -589,10 +589,10 @@ class GeckoWebViewProvider : IWebViewProvider {
             encoding: String,
             historyURL: String
         ) {
-            geckoSession.loadData(data.toByteArray(Charsets.UTF_8), mimeType, baseURL)
-            currentUrl = baseURL
-            isLoadingInternalUrl = currentUrl == LocalizedContent.URL_RIGHTS || currentUrl ==
+            isLoadingInternalUrl = historyURL == LocalizedContent.URL_RIGHTS || historyURL ==
                     LocalizedContent.URL_ABOUT
+            geckoSession.loadData(data.toByteArray(Charsets.UTF_8), mimeType, baseURL)
+            currentUrl = historyURL
         }
 
         private fun sendTelemetrySnapshots() {
