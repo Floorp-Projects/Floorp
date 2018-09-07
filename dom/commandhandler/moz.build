@@ -33,4 +33,8 @@ UNIFIED_SOURCES += [
     'nsControllerCommandTable.cpp',
 ]
 
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
 FINAL_LIBRARY = 'xul'
