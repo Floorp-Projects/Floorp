@@ -14,6 +14,7 @@
 
 #include "mozilla/FlushType.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WeakPtr.h"
 #include "nsTObserverArray.h"
@@ -35,6 +36,7 @@ class nsIRunnable;
 
 namespace mozilla {
 class AnimationEventDispatcher;
+class PendingFullscreenEvent;
 class RefreshDriverTimer;
 class Runnable;
 
@@ -258,15 +260,17 @@ public:
   void RevokeFrameRequestCallbacks(nsIDocument* aDocument);
 
   /**
-   * Queue a new event to dispatch in next tick before the style flush
+   * Queue a new fullscreen event to be dispatched in next tick before
+   * the style flush
    */
-  void ScheduleEventDispatch(nsINode* aTarget, mozilla::dom::Event* aEvent);
+  void ScheduleFullscreenEvent(
+    mozilla::UniquePtr<mozilla::PendingFullscreenEvent> aEvent);
 
   /**
-   * Cancel all pending events scheduled by ScheduleEventDispatch which
-   * targets any node in aDocument.
+   * Cancel all pending fullscreen events scheduled by ScheduleFullscreenEvent
+   * which targets any node in aDocument.
    */
-  void CancelPendingEvents(nsIDocument* aDocument);
+  void CancelPendingFullscreenEvents(nsIDocument* aDocument);
 
   /**
    * Queue new animation events to dispatch in next tick.
@@ -422,7 +426,7 @@ private:
   };
   typedef nsClassHashtable<nsUint32HashKey, ImageStartData> ImageStartTable;
 
-  void DispatchPendingEvents();
+  void RunFullscreenSteps();
   void DispatchAnimationEvents();
   void RunFrameRequestCallbacks(mozilla::TimeStamp aNowTime);
   void UpdateIntersectionObservations();
@@ -535,11 +539,6 @@ private:
   AutoTArray<nsCOMPtr<nsIRunnable>, 16> mEarlyRunners;
   ScrollEventArray mScrollEvents;
 
-  struct PendingEvent {
-    nsCOMPtr<nsINode> mTarget;
-    RefPtr<mozilla::dom::Event> mEvent;
-  };
-
   AutoTArray<nsIPresShell*, 16> mResizeEventFlushObservers;
   AutoTArray<nsIPresShell*, 16> mStyleFlushObservers;
   AutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
@@ -547,7 +546,8 @@ private:
   nsTArray<nsIDocument*> mFrameRequestCallbackDocs;
   nsTArray<nsIDocument*> mThrottledFrameRequestCallbackDocs;
   nsTObserverArray<nsAPostRefreshObserver*> mPostRefreshObservers;
-  nsTArray<PendingEvent> mPendingEvents;
+  nsTArray<mozilla::UniquePtr<mozilla::PendingFullscreenEvent>>
+    mPendingFullscreenEvents;
   AutoTArray<mozilla::AnimationEventDispatcher*, 16>
     mAnimationEventFlushObservers;
 
