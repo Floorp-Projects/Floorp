@@ -834,7 +834,8 @@ ParticularProcessPriorityManager::CurrentPriority()
 ProcessPriority
 ParticularProcessPriorityManager::ComputePriority()
 {
-  if (!mActiveTabParents.IsEmpty()) {
+  if (!mActiveTabParents.IsEmpty() ||
+      mContentParent->GetRemoteType().EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
     return PROCESS_PRIORITY_FOREGROUND;
   }
 

@@ -47,6 +47,17 @@ if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
   );
 }
 
+// We'll assume the changes we are seeing are due to this focus change if
+// there are at least 5 areas that changed near the top of the screen, or if
+// the toolbar background is involved on OSX, but will only ignore this once.
+function isLikelyFocusChange(rects) {
+  if (rects.length > 5 && rects.every(r => r.y2 < 100))
+    return true;
+  if (Services.appinfo.OS == "Darwin" && rects.length == 2 && rects.every(r => r.y1 == 0 && r.h == 33))
+    return true;
+  return false;
+}
+
 /*
  * This test ensures that there are no unexpected
  * uninterruptible reflows or flickering areas when opening new windows.
@@ -71,11 +82,7 @@ add_task(async function() {
       filter(rects, frame, previousFrame) {
         // The first screenshot we get in OSX / Windows shows an unfocused browser
         // window for some reason. See bug 1445161.
-        //
-        // We'll assume the changes we are seeing are due to this focus change if
-        // there are at least 5 areas that changed near the top of the screen, but
-        // will only ignore this once (hence the alreadyFocused variable).
-        if (!alreadyFocused && rects.length > 5 && rects.every(r => r.y2 < 100)) {
+        if (!alreadyFocused && isLikelyFocusChange(rects)) {
           alreadyFocused = true;
           todo(false,
                "bug 1445161 - the window should be focused at first paint, " +

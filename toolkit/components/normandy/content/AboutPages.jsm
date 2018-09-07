@@ -6,15 +6,10 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(
-  this, "CleanupManager", "resource://normandy/lib/CleanupManager.jsm",
-);
-ChromeUtils.defineModuleGetter(
-  this, "AddonStudies", "resource://normandy/lib/AddonStudies.jsm",
-);
-ChromeUtils.defineModuleGetter(
-  this, "RecipeRunner", "resource://normandy/lib/RecipeRunner.jsm",
-);
+ChromeUtils.defineModuleGetter(this, "AddonStudyAction", "resource://normandy/actions/AddonStudyAction.jsm");
+ChromeUtils.defineModuleGetter(this, "CleanupManager", "resource://normandy/lib/CleanupManager.jsm");
+ChromeUtils.defineModuleGetter(this, "AddonStudies", "resource://normandy/lib/AddonStudies.jsm");
+ChromeUtils.defineModuleGetter(this, "RecipeRunner", "resource://normandy/lib/RecipeRunner.jsm");
 
 var EXPORTED_SYMBOLS = ["AboutPages"];
 
@@ -183,7 +178,8 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
      * @param {String} studyName
      */
     async removeStudy(recipeId, reason) {
-      await AddonStudies.stop(recipeId, reason);
+      const action = new AddonStudyAction();
+      await action.unenroll(recipeId, reason);
 
       // Update any open tabs with the new study list now that it has changed.
       Services.mm.broadcastAsyncMessage("Shield:ReceiveStudyList", {

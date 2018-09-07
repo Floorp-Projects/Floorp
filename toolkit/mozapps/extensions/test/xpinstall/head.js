@@ -265,12 +265,12 @@ var Harness = {
 
   handleEvent(event) {
     if (event.type === "popupshown") {
-      if (event.target.firstChild) {
+      if (event.target.firstElementChild) {
         let popupId = event.target.getAttribute("popupid");
         if (popupId === "addon-webext-permissions") {
-          this.popupReady(event.target.firstChild);
+          this.popupReady(event.target.firstElementChild);
         } else if (popupId === "addon-installed" || popupId === "addon-install-failed") {
-          event.target.firstChild.button.click();
+          event.target.firstElementChild.button.click();
         }
       }
     }
