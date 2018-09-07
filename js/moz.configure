@@ -491,5 +491,5 @@ def enable_cranelift(value):
     if value:
         return True
 
-set_config('MOZ_WASM_CRANELIFT', enable_cranelift)
-set_define('MOZ_WASM_CRANELIFT', enable_cranelift)
+set_config('ENABLE_WASM_CRANELIFT', enable_cranelift)
+set_define('ENABLE_WASM_CRANELIFT', enable_cranelift)
