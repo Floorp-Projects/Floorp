@@ -98,19 +98,6 @@ if CONFIG['HAVE_DTRACE']:
 
     EXPORTS += ['!javascript-trace.h']
 
-# Generate jit/MOpcodes.h from jit/MIR.h
-GENERATED_FILES += ['jit/MOpcodes.h']
-MOpcodesGenerated = GENERATED_FILES['jit/MOpcodes.h']
-MOpcodesGenerated.script = 'jit/GenerateOpcodeFiles.py:generate_mir_header'
-MOpcodesGenerated.inputs = ['jit/MIR.h']
-
-# Generate jit/LOpcodes.h from jit/LIR.h, jit/shared/LIR-shared.h, and
-# platform-specific LIR files.
-GENERATED_FILES += ['jit/LOpcodes.h']
-LOpcodesGenerated = GENERATED_FILES['jit/LOpcodes.h']
-LOpcodesGenerated.script = 'jit/GenerateOpcodeFiles.py:generate_lir_header'
-LOpcodesGenerated.inputs = ['jit/LIR.h', 'jit/shared/LIR-shared.h']
-
 # Changes to internal header files, used externally, massively slow down
 # browser builds.  Don't add new files here unless you know what you're
 # doing!
@@ -271,77 +258,6 @@ UNIFIED_SOURCES += [
     'irregexp/RegExpMacroAssembler.cpp',
     'irregexp/RegExpParser.cpp',
     'irregexp/RegExpStack.cpp',
-    'jit/AliasAnalysis.cpp',
-    'jit/AlignmentMaskAnalysis.cpp',
-    'jit/BacktrackingAllocator.cpp',
-    'jit/Bailouts.cpp',
-    'jit/BaselineBailouts.cpp',
-    'jit/BaselineCacheIRCompiler.cpp',
-    'jit/BaselineCompiler.cpp',
-    'jit/BaselineDebugModeOSR.cpp',
-    'jit/BaselineFrame.cpp',
-    'jit/BaselineFrameInfo.cpp',
-    'jit/BaselineIC.cpp',
-    'jit/BaselineInspector.cpp',
-    'jit/BaselineJIT.cpp',
-    'jit/BitSet.cpp',
-    'jit/BytecodeAnalysis.cpp',
-    'jit/C1Spewer.cpp',
-    'jit/CacheIR.cpp',
-    'jit/CacheIRCompiler.cpp',
-    'jit/CacheIRSpewer.cpp',
-    'jit/CodeGenerator.cpp',
-    'jit/CompileWrappers.cpp',
-    'jit/EdgeCaseAnalysis.cpp',
-    'jit/EffectiveAddressAnalysis.cpp',
-    'jit/ExecutableAllocator.cpp',
-    'jit/FoldLinearArithConstants.cpp',
-    'jit/InstructionReordering.cpp',
-    'jit/Ion.cpp',
-    'jit/IonAnalysis.cpp',
-    'jit/IonBuilder.cpp',
-    'jit/IonCacheIRCompiler.cpp',
-    'jit/IonControlFlow.cpp',
-    'jit/IonIC.cpp',
-    'jit/IonOptimizationLevels.cpp',
-    'jit/Jit.cpp',
-    'jit/JitcodeMap.cpp',
-    'jit/JitFrames.cpp',
-    'jit/JitOptions.cpp',
-    'jit/JitSpewer.cpp',
-    'jit/JSJitFrameIter.cpp',
-    'jit/JSONSpewer.cpp',
-    'jit/LICM.cpp',
-    'jit/Linker.cpp',
-    'jit/LIR.cpp',
-    'jit/LoopUnroller.cpp',
-    'jit/Lowering.cpp',
-    'jit/MacroAssembler.cpp',
-    'jit/MCallOptimize.cpp',
-    'jit/MIR.cpp',
-    'jit/MIRGraph.cpp',
-    'jit/MoveResolver.cpp',
-    'jit/OptimizationTracking.cpp',
-    'jit/PerfSpewer.cpp',
-    'jit/ProcessExecutableMemory.cpp',
-    'jit/RangeAnalysis.cpp',
-    'jit/Recover.cpp',
-    'jit/RegisterAllocator.cpp',
-    'jit/RematerializedFrame.cpp',
-    'jit/Safepoints.cpp',
-    'jit/ScalarReplacement.cpp',
-    'jit/shared/Assembler-shared.cpp',
-    'jit/shared/CodeGenerator-shared.cpp',
-    'jit/shared/Disassembler-shared.cpp',
-    'jit/shared/Lowering-shared.cpp',
-    'jit/Sink.cpp',
-    'jit/Snapshots.cpp',
-    'jit/StupidAllocator.cpp',
-    'jit/TypedObjectPrediction.cpp',
-    'jit/TypePolicy.cpp',
-    'jit/ValueNumbering.cpp',
-    'jit/VMFunctions.cpp',
-    'jit/WasmBCE.cpp',
     'jsapi.cpp',
     'jsdate.cpp',
     'jsexn.cpp',
@@ -507,139 +423,6 @@ if CONFIG['ENABLE_TRACE_LOGGING']:
         'vm/TraceLoggingTypes.cpp',
     ]
 
-if not CONFIG['ENABLE_ION']:
-    LOpcodesGenerated.inputs += ['jit/none/LIR-none.h']
-    UNIFIED_SOURCES += [
-        'jit/none/Trampoline-none.cpp'
-    ]
-elif CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
-    LOpcodesGenerated.inputs += ['jit/x86-shared/LIR-x86-shared.h']
-    UNIFIED_SOURCES += [
-        'jit/x86-shared/Architecture-x86-shared.cpp',
-        'jit/x86-shared/Assembler-x86-shared.cpp',
-        'jit/x86-shared/AssemblerBuffer-x86-shared.cpp',
-        'jit/x86-shared/CodeGenerator-x86-shared.cpp',
-        'jit/x86-shared/Lowering-x86-shared.cpp',
-        'jit/x86-shared/MacroAssembler-x86-shared-SIMD.cpp',
-        'jit/x86-shared/MacroAssembler-x86-shared.cpp',
-        'jit/x86-shared/MoveEmitter-x86-shared.cpp',
-    ]
-    if CONFIG['JS_CODEGEN_X64']:
-        LOpcodesGenerated.inputs += ['jit/x64/LIR-x64.h']
-        UNIFIED_SOURCES += [
-            'jit/x64/Assembler-x64.cpp',
-            'jit/x64/Bailouts-x64.cpp',
-            'jit/x64/CodeGenerator-x64.cpp',
-            'jit/x64/Lowering-x64.cpp',
-            'jit/x64/MacroAssembler-x64.cpp',
-            'jit/x64/Trampoline-x64.cpp',
-        ]
-    else:
-        LOpcodesGenerated.inputs += ['jit/x86/LIR-x86.h']
-        UNIFIED_SOURCES += [
-            'jit/x86/Assembler-x86.cpp',
-            'jit/x86/Bailouts-x86.cpp',
-            'jit/x86/CodeGenerator-x86.cpp',
-            'jit/x86/Lowering-x86.cpp',
-            'jit/x86/MacroAssembler-x86.cpp',
-            'jit/x86/Trampoline-x86.cpp',
-        ]
-elif CONFIG['JS_CODEGEN_ARM']:
-    LOpcodesGenerated.inputs += ['jit/arm/LIR-arm.h']
-    UNIFIED_SOURCES += [
-        'jit/arm/Architecture-arm.cpp',
-        'jit/arm/Assembler-arm.cpp',
-        'jit/arm/Bailouts-arm.cpp',
-        'jit/arm/CodeGenerator-arm.cpp',
-        'jit/arm/disasm/Constants-arm.cpp',
-        'jit/arm/disasm/Disasm-arm.cpp',
-        'jit/arm/Lowering-arm.cpp',
-        'jit/arm/MacroAssembler-arm.cpp',
-        'jit/arm/MoveEmitter-arm.cpp',
-        'jit/arm/Trampoline-arm.cpp',
-    ]
-    if CONFIG['JS_SIMULATOR_ARM']:
-        UNIFIED_SOURCES += [
-            'jit/arm/Simulator-arm.cpp'
-        ]
-    elif CONFIG['OS_ARCH'] == 'Darwin':
-        SOURCES += [
-            'jit/arm/llvm-compiler-rt/arm/aeabi_idivmod.S',
-            'jit/arm/llvm-compiler-rt/arm/aeabi_uidivmod.S',
-        ]
-elif CONFIG['JS_CODEGEN_ARM64']:
-    LOpcodesGenerated.inputs += ['jit/arm64/LIR-arm64.h']
-    UNIFIED_SOURCES += [
-        'jit/arm64/Architecture-arm64.cpp',
-        'jit/arm64/Assembler-arm64.cpp',
-        'jit/arm64/Bailouts-arm64.cpp',
-        'jit/arm64/CodeGenerator-arm64.cpp',
-        'jit/arm64/Lowering-arm64.cpp',
-        'jit/arm64/MacroAssembler-arm64.cpp',
-        'jit/arm64/MoveEmitter-arm64.cpp',
-        'jit/arm64/Trampoline-arm64.cpp',
-        'jit/arm64/vixl/Assembler-vixl.cpp',
-        'jit/arm64/vixl/Cpu-vixl.cpp',
-        'jit/arm64/vixl/Decoder-vixl.cpp',
-        'jit/arm64/vixl/Disasm-vixl.cpp',
-        'jit/arm64/vixl/Instructions-vixl.cpp',
-        'jit/arm64/vixl/Instrument-vixl.cpp',
-        'jit/arm64/vixl/MacroAssembler-vixl.cpp',
-        'jit/arm64/vixl/MozAssembler-vixl.cpp',
-        'jit/arm64/vixl/MozInstructions-vixl.cpp',
-        'jit/arm64/vixl/Utils-vixl.cpp'
-    ]
-    if CONFIG['JS_SIMULATOR_ARM64']:
-        UNIFIED_SOURCES += [
-            'jit/arm64/vixl/Debugger-vixl.cpp',
-            'jit/arm64/vixl/Logic-vixl.cpp',
-            'jit/arm64/vixl/MozSimulator-vixl.cpp',
-            'jit/arm64/vixl/Simulator-vixl.cpp'
-        ]
-elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
-    LOpcodesGenerated.inputs += ['jit/mips-shared/LIR-mips-shared.h']
-    UNIFIED_SOURCES += [
-        'jit/mips-shared/Architecture-mips-shared.cpp',
-        'jit/mips-shared/Assembler-mips-shared.cpp',
-        'jit/mips-shared/Bailouts-mips-shared.cpp',
-        'jit/mips-shared/CodeGenerator-mips-shared.cpp',
-        'jit/mips-shared/Lowering-mips-shared.cpp',
-        'jit/mips-shared/MacroAssembler-mips-shared.cpp',
-        'jit/mips-shared/MoveEmitter-mips-shared.cpp',
-    ]
-    if CONFIG['JS_CODEGEN_MIPS32']:
-        LOpcodesGenerated.inputs += ['jit/mips32/LIR-mips32.h']
-        UNIFIED_SOURCES += [
-            'jit/mips32/Architecture-mips32.cpp',
-            'jit/mips32/Assembler-mips32.cpp',
-            'jit/mips32/Bailouts-mips32.cpp',
-            'jit/mips32/CodeGenerator-mips32.cpp',
-            'jit/mips32/Lowering-mips32.cpp',
-            'jit/mips32/MacroAssembler-mips32.cpp',
-            'jit/mips32/MoveEmitter-mips32.cpp',
-            'jit/mips32/Trampoline-mips32.cpp',
-        ]
-        if CONFIG['JS_SIMULATOR_MIPS32']:
-            UNIFIED_SOURCES += [
-                'jit/mips32/Simulator-mips32.cpp'
-            ]
-    elif CONFIG['JS_CODEGEN_MIPS64']:
-        LOpcodesGenerated.inputs += ['jit/mips64/LIR-mips64.h']
-        UNIFIED_SOURCES += [
-            'jit/mips64/Architecture-mips64.cpp',
-            'jit/mips64/Assembler-mips64.cpp',
-            'jit/mips64/Bailouts-mips64.cpp',
-            'jit/mips64/CodeGenerator-mips64.cpp',
-            'jit/mips64/Lowering-mips64.cpp',
-            'jit/mips64/MacroAssembler-mips64.cpp',
-            'jit/mips64/MoveEmitter-mips64.cpp',
-            'jit/mips64/Trampoline-mips64.cpp',
-        ]
-        if CONFIG['JS_SIMULATOR_MIPS64']:
-            UNIFIED_SOURCES += [
-                'jit/mips64/Simulator-mips64.cpp'
-            ]
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
         'threading/windows/CpuCount.cpp',
@@ -691,6 +474,7 @@ ReservedWordsGenerated.inputs += [
 
 DIRS += [
     'build',
+    'jit',
 ]
 
 FINAL_LIBRARY = 'js'
