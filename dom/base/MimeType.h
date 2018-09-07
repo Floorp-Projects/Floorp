@@ -16,7 +16,6 @@ template<typename char_type> struct HashKeyType;
 template<> struct HashKeyType<char16_t> { typedef nsStringHashKey HashType; };
 template<> struct HashKeyType<char> { typedef nsCStringHashKey HashType; };
 
-
 template <typename char_type>
 class TMimeType final
 {
@@ -44,6 +43,18 @@ public:
   static mozilla::UniquePtr<TMimeType<char_type>> Parse(const nsTSubstring<char_type>& aStr);
 
   void Serialize(nsTSubstring<char_type>& aStr) const;
+
+  // Returns the `<mType>/<mSubtype>`
+  void GetFullType(nsTSubstring<char_type>& aStr) const;
+
+  // @param aName - the name of the parameter
+  // @param aOutput - will hold the value of the parameter (quoted if necessary)
+  // @param aAppend - if true, the method will append to the string;
+  //                  otherwise the string is truncated before appending.
+  // @return true if the parameter name is found, false otherwise.
+  bool GetParameterValue(const nsTSubstring<char_type>& aName,
+                         nsTSubstring<char_type>& aOutput,
+                         bool aAppend = false) const;
 };
 
 using MimeType = TMimeType<char16_t>;
