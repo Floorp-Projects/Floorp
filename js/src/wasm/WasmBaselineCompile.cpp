@@ -3794,7 +3794,7 @@ class BaseCompiler final : public BaseCompilerInterface
     void callIndirect(uint32_t funcTypeIndex, const Stk& indexVal, const FunctionCall& call)
     {
         const FuncTypeWithId& funcType = env_.types[funcTypeIndex].funcType();
-        MOZ_ASSERT(funcType.id.kind() != FuncTypeIdDesc::Kind::None);
+        MOZ_ASSERT(funcType.id.kind() != FuncTypeIdDescKind::None);
 
         MOZ_ASSERT(env_.tables.length() == 1);
         const TableDesc& table = env_.tables[0];

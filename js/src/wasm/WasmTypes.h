@@ -37,7 +37,7 @@
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "vm/MallocProvider.h"
-#include "wasm/WasmBinaryConstants.h"
+#include "wasm/WasmConstants.h"
 
 namespace js {
 
@@ -1136,27 +1136,32 @@ typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 class FuncTypeIdDesc
 {
   public:
-    enum class Kind { None, Immediate, Global };
     static const uintptr_t ImmediateBit = 0x1;
 
   private:
-    Kind kind_;
+    FuncTypeIdDescKind kind_;
     size_t bits_;
 
-    FuncTypeIdDesc(Kind kind, size_t bits) : kind_(kind), bits_(bits) {}
+    FuncTypeIdDesc(FuncTypeIdDescKind kind, size_t bits) : kind_(kind), bits_(bits) {}
 
   public:
-    Kind kind() const { return kind_; }
+    FuncTypeIdDescKind kind() const { return kind_; }
     static bool isGlobal(const FuncType& funcType);
 
-    FuncTypeIdDesc() : kind_(Kind::None), bits_(0) {}
+    FuncTypeIdDesc() : kind_(FuncTypeIdDescKind::None), bits_(0) {}
     static FuncTypeIdDesc global(const FuncType& funcType, uint32_t globalDataOffset);
     static FuncTypeIdDesc immediate(const FuncType& funcType);
 
-    bool isGlobal() const { return kind_ == Kind::Global; }
+    bool isGlobal() const { return kind_ == FuncTypeIdDescKind::Global; }
 
-    size_t immediate() const { MOZ_ASSERT(kind_ == Kind::Immediate); return bits_; }
-    uint32_t globalDataOffset() const { MOZ_ASSERT(kind_ == Kind::Global); return bits_; }
+    size_t immediate() const {
+        MOZ_ASSERT(kind_ == FuncTypeIdDescKind::Immediate);
+        return bits_;
+    }
+    uint32_t globalDataOffset() const {
+        MOZ_ASSERT(kind_ == FuncTypeIdDescKind::Global);
+        return bits_;
+    }
 };
 
 // FuncTypeWithId pairs a FuncType with FuncTypeIdDesc, describing either how to
@@ -1294,46 +1299,6 @@ class TypeDef
 };
 
 typedef Vector<TypeDef, 0, SystemAllocPolicy> TypeDefVector;
-
-// A wasm::Trap represents a wasm-defined trap that can occur during execution
-// which triggers a WebAssembly.RuntimeError. Generated code may jump to a Trap
-// symbolically, passing the bytecode offset to report as the trap offset. The
-// generated jump will be bound to a tiny stub which fills the offset and
-// then jumps to a per-Trap shared stub at the end of the module.
-
-enum class Trap
-{
-    // The Unreachable opcode has been executed.
-    Unreachable,
-    // An integer arithmetic operation led to an overflow.
-    IntegerOverflow,
-    // Trying to coerce NaN to an integer.
-    InvalidConversionToInteger,
-    // Integer division by zero.
-    IntegerDivideByZero,
-    // Out of bounds on wasm memory accesses.
-    OutOfBounds,
-    // Unaligned on wasm atomic accesses; also used for non-standard ARM
-    // unaligned access faults.
-    UnalignedAccess,
-    // call_indirect to null.
-    IndirectCallToNull,
-    // call_indirect signature mismatch.
-    IndirectCallBadSig,
-
-    // The internal stack space was exhausted. For compatibility, this throws
-    // the same over-recursed error as JS.
-    StackOverflow,
-
-    // The wasm execution has potentially run too long and the engine must call
-    // CheckForInterrupt(). This trap is resumable.
-    CheckInterrupt,
-
-    // Signal an error that was reported in C++ code.
-    ThrowReported,
-
-    Limit
-};
 
 // A wrapper around the bytecode offset of a wasm instruction within a whole
 // module, used for trap offsets or call offsets. These offsets should refer to
