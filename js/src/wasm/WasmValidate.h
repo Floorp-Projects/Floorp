@@ -73,10 +73,11 @@ struct CompilerEnvironment
 
         // Value in the other two states.
         struct {
-            CompileMode    mode_;
-            Tier           tier_;
-            DebugEnabled   debug_;
-            HasGcTypes     gcTypes_;
+            CompileMode      mode_;
+            Tier             tier_;
+            OptimizedBackend optimizedBackend_;
+            DebugEnabled     debug_;
+            HasGcTypes       gcTypes_;
         };
     };
 
@@ -90,6 +91,7 @@ struct CompilerEnvironment
     // value of gcTypes.
     CompilerEnvironment(CompileMode mode,
                         Tier tier,
+                        OptimizedBackend optimizedBackend,
                         DebugEnabled debugEnabled,
                         HasGcTypes gcTypesConfigured);
 
@@ -111,6 +113,10 @@ struct CompilerEnvironment
     Tier tier() const {
         MOZ_ASSERT(isComputed());
         return tier_;
+    }
+    OptimizedBackend optimizedBackend() const {
+        MOZ_ASSERT(isComputed());
+        return optimizedBackend_;
     }
     DebugEnabled debug() const {
         MOZ_ASSERT(isComputed());
@@ -203,6 +209,9 @@ struct ModuleEnvironment
 
     Tier tier() const {
         return compilerEnv->tier();
+    }
+    OptimizedBackend optimizedBackend() const {
+        return compilerEnv->optimizedBackend();
     }
     CompileMode mode() const {
         return compilerEnv->mode();
