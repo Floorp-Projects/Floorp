@@ -471,6 +471,25 @@ struct WrPipelineInfo {
   }
 };
 
+// Collection of heap sizes, in bytes.
+struct MemoryReport {
+  uintptr_t primitive_stores;
+  uintptr_t clip_stores;
+  uintptr_t gpu_cache_metadata;
+  uintptr_t gpu_cache_cpu_mirror;
+  uintptr_t render_tasks;
+  uintptr_t hit_testers;
+
+  bool operator==(const MemoryReport& aOther) const {
+    return primitive_stores == aOther.primitive_stores &&
+           clip_stores == aOther.clip_stores &&
+           gpu_cache_metadata == aOther.gpu_cache_metadata &&
+           gpu_cache_cpu_mirror == aOther.gpu_cache_cpu_mirror &&
+           render_tasks == aOther.render_tasks &&
+           hit_testers == aOther.hit_testers;
+  }
+};
+
 template<typename T, typename U>
 struct TypedSize2D {
   T width;
@@ -984,6 +1003,12 @@ struct WrOpacityProperty {
   }
 };
 
+// A C function that takes a pointer to a heap allocation and returns its size.
+//
+// This is borrowed from the malloc_size_of crate, upon which we want to avoid
+// a dependency from WebRender.
+using VoidPtrToSizeFn = uintptr_t(*)(const void*);
+
 extern "C" {
 
 extern void AddBlobFont(WrFontInstanceKey aInstanceKey,
@@ -1059,6 +1084,11 @@ WR_FUNC;
 
 WR_INLINE
 const VecU8 *wr_add_ref_arc(const ArcVecU8 *aArc)
+WR_FUNC;
+
+WR_INLINE
+void wr_api_accumulate_memory_report(DocumentHandle *aDh,
+                                     MemoryReport *aReport)
 WR_FUNC;
 
 WR_INLINE
@@ -1491,6 +1521,11 @@ WrProgramCache *wr_program_cache_new(const nsAString *aProfPath,
 WR_FUNC;
 
 WR_INLINE
+void wr_renderer_accumulate_memory_report(Renderer *aRenderer,
+                                          MemoryReport *aReport)
+WR_FUNC;
+
+WR_INLINE
 bool wr_renderer_current_epoch(Renderer *aRenderer,
                                WrPipelineId aPipelineId,
                                WrEpoch *aOutEpoch)
@@ -1779,6 +1814,7 @@ bool wr_window_new(WrWindowId aWindowId,
                    bool aSupportLowPriorityTransactions,
                    void *aGlContext,
                    WrThreadPool *aThreadPool,
+                   VoidPtrToSizeFn aSizeOfOp,
                    DocumentHandle **aOutHandle,
                    Renderer **aOutRenderer,
                    uint32_t *aOutMaxTextureSize)

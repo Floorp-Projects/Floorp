@@ -209,6 +209,7 @@ public:
   void FlushSceneBuilder();
 
   void NotifyMemoryPressure();
+  void AccumulateMemoryReport(wr::MemoryReport*);
 
   wr::WrIdNamespace GetNamespace();
   uint32_t GetMaxTextureSize() const { return mMaxTextureSize; }
