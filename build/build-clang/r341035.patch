@@ -1,0 +1,395 @@
+Index: lld/COFF/Driver.cpp
+===================================================================
+--- a/lld/COFF/Driver.cpp	(revision 341034)
++++ b/lld/COFF/Driver.cpp	(revision 341035)
+@@ -116,6 +116,19 @@
+   });
+ }
+ 
++// Symbol names are mangled by prepending "_" on x86.
++static StringRef mangle(StringRef Sym) {
++  assert(Config->Machine != IMAGE_FILE_MACHINE_UNKNOWN);
++  if (Config->Machine == I386)
++    return Saver.save("_" + Sym);
++  return Sym;
++}
++
++static bool findUnderscoreMangle(StringRef Sym) {
++  StringRef Entry = Symtab->findMangle(mangle(Sym));
++  return !Entry.empty() && !isa<Undefined>(Symtab->find(Entry));
++}
++
+ MemoryBufferRef LinkerDriver::takeBuffer(std::unique_ptr<MemoryBuffer> MB) {
+   MemoryBufferRef MBRef = *MB;
+   make<std::unique_ptr<MemoryBuffer>>(std::move(MB)); // take ownership
+@@ -407,14 +420,6 @@
+   return B;
+ }
+ 
+-// Symbol names are mangled by appending "_" prefix on x86.
+-StringRef LinkerDriver::mangle(StringRef Sym) {
+-  assert(Config->Machine != IMAGE_FILE_MACHINE_UNKNOWN);
+-  if (Config->Machine == I386)
+-    return Saver.save("_" + Sym);
+-  return Sym;
+-}
+-
+ // Windows specific -- find default entry point name.
+ //
+ // There are four different entry point functions for Windows executables,
+@@ -421,31 +426,23 @@
+ // each of which corresponds to a user-defined "main" function. This function
+ // infers an entry point from a user-defined "main" function.
+ StringRef LinkerDriver::findDefaultEntry() {
++  assert(Config->Subsystem != IMAGE_SUBSYSTEM_UNKNOWN &&
++         "must handle /subsystem before calling this");
++
+   // As a special case, if /nodefaultlib is given, we directly look for an
+   // entry point. This is because, if no default library is linked, users
+   // need to define an entry point instead of a "main".
+-  if (Config->NoDefaultLibAll) {
+-    for (StringRef S : {"mainCRTStartup", "wmainCRTStartup",
+-                        "WinMainCRTStartup", "wWinMainCRTStartup"}) {
+-      StringRef Entry = Symtab->findMangle(S);
+-      if (!Entry.empty() && !isa<Undefined>(Symtab->find(Entry)))
+-        return mangle(S);
+-    }
+-    return "";
++  bool FindMain = !Config->NoDefaultLibAll;
++  if (Config->Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI) {
++    if (findUnderscoreMangle(FindMain ? "WinMain" : "WinMainCRTStartup"))
++      return mangle("WinMainCRTStartup");
++    if (findUnderscoreMangle(FindMain ? "wWinMain" : "wWinMainCRTStartup"))
++      return mangle("wWinMainCRTStartup");
+   }
+-
+-  // User-defined main functions and their corresponding entry points.
+-  static const char *Entries[][2] = {
+-      {"main", "mainCRTStartup"},
+-      {"wmain", "wmainCRTStartup"},
+-      {"WinMain", "WinMainCRTStartup"},
+-      {"wWinMain", "wWinMainCRTStartup"},
+-  };
+-  for (auto E : Entries) {
+-    StringRef Entry = Symtab->findMangle(mangle(E[0]));
+-    if (!Entry.empty() && !isa<Undefined>(Symtab->find(Entry)))
+-      return mangle(E[1]);
+-  }
++  if (findUnderscoreMangle(FindMain ? "main" : "mainCRTStartup"))
++    return mangle("mainCRTStartup");
++  if (findUnderscoreMangle(FindMain ? "wmain" : "wmainCRTStartup"))
++    return mangle("wmainCRTStartup");
+   return "";
+ }
+ 
+@@ -452,9 +449,9 @@
+ WindowsSubsystem LinkerDriver::inferSubsystem() {
+   if (Config->DLL)
+     return IMAGE_SUBSYSTEM_WINDOWS_GUI;
+-  if (Symtab->findUnderscore("main") || Symtab->findUnderscore("wmain"))
++  if (findUnderscoreMangle("main") || findUnderscoreMangle("wmain"))
+     return IMAGE_SUBSYSTEM_WINDOWS_CUI;
+-  if (Symtab->findUnderscore("WinMain") || Symtab->findUnderscore("wWinMain"))
++  if (findUnderscoreMangle("WinMain") || findUnderscoreMangle("wWinMain"))
+     return IMAGE_SUBSYSTEM_WINDOWS_GUI;
+   return IMAGE_SUBSYSTEM_UNKNOWN;
+ }
+@@ -1335,25 +1332,6 @@
+     error("/dynamicbase:no is not compatible with " +
+           machineToStr(Config->Machine));
+ 
+-  // Handle /entry and /dll
+-  if (auto *Arg = Args.getLastArg(OPT_entry)) {
+-    Config->Entry = addUndefined(mangle(Arg->getValue()));
+-  } else if (!Config->Entry && !Config->NoEntry) {
+-    if (Args.hasArg(OPT_dll)) {
+-      StringRef S = (Config->Machine == I386) ? "__DllMainCRTStartup@12"
+-                                              : "_DllMainCRTStartup";
+-      Config->Entry = addUndefined(S);
+-    } else {
+-      // Windows specific -- If entry point name is not given, we need to
+-      // infer that from user-defined entry name.
+-      StringRef S = findDefaultEntry();
+-      if (S.empty())
+-        fatal("entry point must be defined");
+-      Config->Entry = addUndefined(S);
+-      log("Entry name inferred: " + S);
+-    }
+-  }
+-
+   // Handle /export
+   for (auto *Arg : Args.filtered(OPT_export)) {
+     Export E = parseExport(Arg->getValue());
+@@ -1379,6 +1357,34 @@
+     return;
+   }
+ 
++  // Windows specific -- if no /subsystem is given, we need to infer
++  // that from entry point name.  Must happen before /entry handling,
++  // and after the early return when just writing an import library.
++  if (Config->Subsystem == IMAGE_SUBSYSTEM_UNKNOWN) {
++    Config->Subsystem = inferSubsystem();
++    if (Config->Subsystem == IMAGE_SUBSYSTEM_UNKNOWN)
++      fatal("subsystem must be defined");
++  }
++
++  // Handle /entry and /dll
++  if (auto *Arg = Args.getLastArg(OPT_entry)) {
++    Config->Entry = addUndefined(mangle(Arg->getValue()));
++  } else if (!Config->Entry && !Config->NoEntry) {
++    if (Args.hasArg(OPT_dll)) {
++      StringRef S = (Config->Machine == I386) ? "__DllMainCRTStartup@12"
++                                              : "_DllMainCRTStartup";
++      Config->Entry = addUndefined(S);
++    } else {
++      // Windows specific -- If entry point name is not given, we need to
++      // infer that from user-defined entry name.
++      StringRef S = findDefaultEntry();
++      if (S.empty())
++        fatal("entry point must be defined");
++      Config->Entry = addUndefined(S);
++      log("Entry name inferred: " + S);
++    }
++  }
++
+   // Handle /delayload
+   for (auto *Arg : Args.filtered(OPT_delayload)) {
+     Config->DelayLoads.insert(StringRef(Arg->getValue()).lower());
+@@ -1491,14 +1497,6 @@
+   if (errorCount())
+     return;
+ 
+-  // Windows specific -- if no /subsystem is given, we need to infer
+-  // that from entry point name.
+-  if (Config->Subsystem == IMAGE_SUBSYSTEM_UNKNOWN) {
+-    Config->Subsystem = inferSubsystem();
+-    if (Config->Subsystem == IMAGE_SUBSYSTEM_UNKNOWN)
+-      fatal("subsystem must be defined");
+-  }
+-
+   // Handle /safeseh.
+   if (Args.hasFlag(OPT_safeseh, OPT_safeseh_no, false)) {
+     for (ObjFile *File : ObjFile::Instances)
+Index: lld/COFF/Driver.h
+===================================================================
+--- a/lld/COFF/Driver.h	(revision 341034)
++++ b/lld/COFF/Driver.h	(revision 341035)
+@@ -103,7 +103,6 @@
+   std::set<std::string> VisitedLibs;
+ 
+   Symbol *addUndefined(StringRef Sym);
+-  StringRef mangle(StringRef Sym);
+ 
+   // Windows specific -- "main" is not the only main function in Windows.
+   // You can choose one from these four -- {w,}{WinMain,main}.
+Index: lld/test/COFF/entry-inference332.test
+===================================================================
+--- a/lld/test/COFF/entry-inference332.test	(nonexistent)
++++ b/lld/test/COFF/entry-inference332.test	(revision 341035)
+@@ -0,0 +1,39 @@
++# RUN: sed -e s/ENTRYNAME/_mainCRTStartup/ %s | yaml2obj > %t.obj
++# RUN: lld-link /subsystem:console /out:%t.exe %t.obj /verbose /nodefaultlib > %t.log 2>&1
++# RUN: FileCheck %s < %t.log
++
++# RUN: sed -e s/ENTRYNAME/?mainCRTStartup@@YAHXZ/ %s | yaml2obj > %t.obj
++# RUN: lld-link /subsystem:console /out:%t.exe %t.obj /verbose /nodefaultlib > %t.log 2>&1
++# RUN: FileCheck %s < %t.log
++
++# CHECK: Entry name inferred: _mainCRTStartup
++
++--- !COFF
++header:
++  Machine:         IMAGE_FILE_MACHINE_I386
++  Characteristics: []
++sections:
++  - Name:            .text
++    Characteristics: [ IMAGE_SCN_CNT_CODE, IMAGE_SCN_MEM_EXECUTE, IMAGE_SCN_MEM_READ ]
++    Alignment:       4
++    SectionData:     B82A000000C3
++symbols:
++  - Name:            .text
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_STATIC
++    SectionDefinition:
++      Length:          6
++      NumberOfRelocations: 0
++      NumberOfLinenumbers: 0
++      CheckSum:        0
++      Number:          0
++  - Name:            "ENTRYNAME"
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++...
+Index: lld/test/COFF/entry-inference3.test
+===================================================================
+--- a/lld/test/COFF/entry-inference3.test	(revision 341034)
++++ b/lld/test/COFF/entry-inference3.test	(revision 341035)
+@@ -1,7 +1,11 @@
+-# RUN: yaml2obj < %s > %t.obj
+-# RUN: not lld-link /out:%t.exe %t.obj /verbose /nodefaultlib > %t.log 2>&1
++# RUN: sed -e s/ENTRYNAME/mainCRTStartup/ %s | yaml2obj > %t.obj
++# RUN: lld-link /subsystem:console /out:%t.exe %t.obj /verbose /nodefaultlib > %t.log 2>&1
+ # RUN: FileCheck %s < %t.log
+ 
++# RUN: sed -e s/ENTRYNAME/?mainCRTStartup@@YAHXZ/ %s | yaml2obj > %t.obj
++# RUN: lld-link /subsystem:console /out:%t.exe %t.obj /verbose /nodefaultlib > %t.log 2>&1
++# RUN: FileCheck %s < %t.log
++
+ # CHECK: Entry name inferred: mainCRTStartup
+ 
+ --- !COFF
+@@ -26,7 +30,7 @@
+       NumberOfLinenumbers: 0
+       CheckSum:        0
+       Number:          0
+-  - Name:            mainCRTStartup
++  - Name:            "ENTRYNAME"
+     Value:           0
+     SectionNumber:   1
+     SimpleType:      IMAGE_SYM_TYPE_NULL
+Index: lld/test/COFF/subsystem-inference32.test
+===================================================================
+--- a/lld/test/COFF/subsystem-inference32.test	(nonexistent)
++++ b/lld/test/COFF/subsystem-inference32.test	(revision 341035)
+@@ -0,0 +1,74 @@
++# RUN: sed -e s/ENTRYNAME/_main/ %s | yaml2obj > %t.obj
++# RUN: lld-link /out:%t.exe %t.obj
++# RUN: llvm-readobj -file-headers %t.exe | FileCheck -check-prefix=MAIN %s
++
++# RUN: sed s/ENTRYNAME/_wmain/ %s | yaml2obj > %t.obj
++# RUN: lld-link /out:%t.exe %t.obj
++# RUN: llvm-readobj -file-headers %t.exe | FileCheck -check-prefix=WMAIN %s
++
++# RUN: sed s/ENTRYNAME/_WinMain@16/ %s | yaml2obj > %t.obj
++# RUN: lld-link /out:%t.exe %t.obj
++# RUN: llvm-readobj -file-headers %t.exe | FileCheck -check-prefix=WINMAIN %s
++
++# RUN: sed s/ENTRYNAME/_wWinMain@16/ %s | yaml2obj > %t.obj
++# RUN: lld-link /out:%t.exe %t.obj
++# RUN: llvm-readobj -file-headers %t.exe | FileCheck -check-prefix=WWINMAIN %s
++
++# MAIN:     Subsystem: IMAGE_SUBSYSTEM_WINDOWS_CUI
++# WMAIN:    Subsystem: IMAGE_SUBSYSTEM_WINDOWS_CUI
++# WINMAIN:  Subsystem: IMAGE_SUBSYSTEM_WINDOWS_GUI
++# WWINMAIN: Subsystem: IMAGE_SUBSYSTEM_WINDOWS_GUI
++
++--- !COFF
++header:
++  Machine:         IMAGE_FILE_MACHINE_I386
++  Characteristics: []
++sections:
++  - Name:            .text
++    Characteristics: [ IMAGE_SCN_CNT_CODE, IMAGE_SCN_MEM_EXECUTE, IMAGE_SCN_MEM_READ ]
++    Alignment:       4
++    SectionData:     B82A000000C3
++symbols:
++  - Name:            .text
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_STATIC
++    SectionDefinition:
++      Length:          6
++      NumberOfRelocations: 0
++      NumberOfLinenumbers: 0
++      CheckSum:        0
++      Number:          0
++  - Name:            ENTRYNAME
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++  - Name:            _mainCRTStartup
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++  - Name:            _wmainCRTStartup
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++  - Name:            _WinMainCRTStartup
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++  - Name:            _wWinMainCRTStartup
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++...
+Index: lld/test/COFF/entry-inference4.test
+===================================================================
+--- a/lld/test/COFF/entry-inference4.test	(nonexistent)
++++ b/lld/test/COFF/entry-inference4.test	(revision 341035)
+@@ -0,0 +1,56 @@
++# RUN: sed 's/ENTRY1/WinMain/;s/ENTRY2/main/' %s | yaml2obj > %t.obj
++# RUN: not lld-link /subsystem:windows /out:%t.exe %t.obj > %t.log 2>&1
++# RUN: FileCheck -check-prefix=WINMAIN %s < %t.log
++
++# RUN: sed 's/ENTRY1/wWinMain/;s/ENTRY2/main/' %s | yaml2obj > %t.obj
++# RUN: not lld-link /subsystem:windows /out:%t.exe %t.obj > %t.log 2>&1
++# RUN: FileCheck -check-prefix=WWINMAIN %s < %t.log
++
++# RUN: sed 's/ENTRY1/WinMain/;s/ENTRY2/main/' %s | yaml2obj > %t.obj
++# RUN: not lld-link /subsystem:console /out:%t.exe %t.obj > %t.log 2>&1
++# RUN: FileCheck -check-prefix=MAIN %s < %t.log
++
++# RUN: sed 's/ENTRY1/WinMain/;s/ENTRY2/wmain/' %s | yaml2obj > %t.obj
++# RUN: not lld-link /subsystem:console /out:%t.exe %t.obj > %t.log 2>&1
++# RUN: FileCheck -check-prefix=WMAIN %s < %t.log
++
++# MAIN:     error: <root>: undefined symbol: mainCRTStartup
++# WMAIN:    error: <root>: undefined symbol: wmainCRTStartup
++# WINMAIN:  error: <root>: undefined symbol: WinMainCRTStartup
++# WWINMAIN: error: <root>: undefined symbol: wWinMainCRTStartup
++
++--- !COFF
++header:
++  Machine:         IMAGE_FILE_MACHINE_AMD64
++  Characteristics: []
++sections:
++  - Name:            .text
++    Characteristics: [ IMAGE_SCN_CNT_CODE, IMAGE_SCN_MEM_EXECUTE, IMAGE_SCN_MEM_READ ]
++    Alignment:       4
++    SectionData:     B82A000000C3
++symbols:
++  - Name:            .text
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_STATIC
++    SectionDefinition:
++      Length:          6
++      NumberOfRelocations: 0
++      NumberOfLinenumbers: 0
++      CheckSum:        0
++      Number:          0
++  - Name:            ENTRY1
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++  - Name:            ENTRY2
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++...
