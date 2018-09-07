@@ -271,7 +271,7 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
    *         The node to start iterating at.
    * @param {String} type
    *         Can be "grid" or "flex", the display type we are searching for.
-   * @return {GridActor|FlexboxActor|Null} The GridActor or FlexboxActor of the
+   * @return {GridActor|FlexboxActor|null} The GridActor or FlexboxActor of the
    * grid/flex container of the give node. Otherwise, returns null.
    */
   getCurrentDisplay(node, type) {
@@ -333,7 +333,7 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
    *
    * @param  {Node|NodeActor} node
    *         The node to start iterating at.
-   * @return {GridActor|Null} The GridActor of the grid container of the give node.
+   * @return {GridActor|null} The GridActor of the grid container of the give node.
    * Otherwise, returns null.
    */
   getCurrentGrid(node) {
@@ -348,7 +348,7 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
    *
    * @param  {Node|NodeActor} node
    *         The node to start iterating at.
-   * @return {FlexboxActor|Null} The FlexboxActor of the flex container of the give node.
+   * @return {FlexboxActor|null} The FlexboxActor of the flex container of the give node.
    * Otherwise, returns null.
    */
   getCurrentFlexbox(node) {

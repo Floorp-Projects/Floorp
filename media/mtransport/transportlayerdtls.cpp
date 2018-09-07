@@ -24,8 +24,8 @@
 #include "nsIEventTarget.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
-#include "ssl.h"
 #include "sslerr.h"
+#include "sslexp.h"
 #include "sslproto.h"
 #include "transportflow.h"
 
@@ -744,16 +744,16 @@ static const uint32_t DisabledCiphers[] = {
   TLS_RSA_WITH_NULL_MD5,
 };
 
-bool TransportLayerDtls::SetupCipherSuites(UniquePRFileDesc& ssl_fd) const {
+bool TransportLayerDtls::SetupCipherSuites(UniquePRFileDesc& ssl_fd) {
   SECStatus rv;
 
   // Set the SRTP ciphers
-  if (!srtp_ciphers_.empty()) {
-    // Note: std::vector is guaranteed to contiguous
-    rv = SSL_SetSRTPCiphers(ssl_fd.get(), &srtp_ciphers_[0],
-                            srtp_ciphers_.size());
+  if (!enabled_srtp_ciphers_.empty()) {
+    rv = SSL_InstallExtensionHooks(ssl_fd.get(), ssl_use_srtp_xtn,
+                                   TransportLayerDtls::WriteSrtpXtn, this,
+                                   TransportLayerDtls::HandleSrtpXtn, this);
     if (rv != SECSuccess) {
-      MOZ_MTLOG(ML_ERROR, "Couldn't set SRTP cipher suite");
+      MOZ_MTLOG(ML_ERROR, LAYER_INFO << "unable to set SRTP extension handler");
       return false;
     }
   }
@@ -879,6 +879,12 @@ void TransportLayerDtls::Handshake() {
       // Despite connecting, the connection doesn't have a valid ALPN label.
       // Forcibly close the connection so that the peer isn't left hanging
       // (assuming the close_notify isn't dropped).
+      ssl_fd_ = nullptr;
+      TL_SET_STATE(TS_ERROR);
+      return;
+    }
+    if (!enabled_srtp_ciphers_.empty() && srtp_cipher_ == 0) {
+      // We enabled SRTP, but got no cipher, this should have failed.
       ssl_fd_ = nullptr;
       TL_SET_STATE(TS_ERROR);
       return;
@@ -1141,25 +1147,207 @@ SECStatus TransportLayerDtls::GetClientAuthDataHook(void *arg, PRFileDesc *fd,
   return SECSuccess;
 }
 
-nsresult TransportLayerDtls::SetSrtpCiphers(std::vector<uint16_t> ciphers) {
-  // TODO: We should check these
-  srtp_ciphers_ = ciphers;
-
+nsresult TransportLayerDtls::SetSrtpCiphers(const std::vector<uint16_t>& ciphers) {
+  enabled_srtp_ciphers_ = std::move(ciphers);
   return NS_OK;
 }
 
 nsresult TransportLayerDtls::GetSrtpCipher(uint16_t *cipher) const {
   CheckThread();
-  if (state_ != TS_OPEN) {
+  if (srtp_cipher_ == 0) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  SECStatus rv = SSL_GetSRTPCipher(ssl_fd_.get(), cipher);
+  *cipher = srtp_cipher_;
+  return NS_OK;
+}
+
+static uint8_t* WriteUint16(uint8_t* cursor, uint16_t v) {
+  *cursor++ = v >> 8;
+  *cursor++ = v & 0xff;
+  return cursor;
+}
+
+static SSLHandshakeType SrtpXtnServerMessage(PRFileDesc* fd) {
+  SSLPreliminaryChannelInfo preinfo;
+  SECStatus rv = SSL_GetPreliminaryChannelInfo(fd, &preinfo, sizeof(preinfo));
   if (rv != SECSuccess) {
-    MOZ_MTLOG(ML_DEBUG, "No SRTP cipher negotiated");
-    return NS_ERROR_FAILURE;
+    MOZ_ASSERT(false, "Can't get version info");
+    return ssl_hs_client_hello;
+  }
+  return (preinfo.protocolVersion >= SSL_LIBRARY_VERSION_TLS_1_3)
+      ? ssl_hs_encrypted_extensions
+      : ssl_hs_server_hello;
+}
+
+/* static */ PRBool TransportLayerDtls::WriteSrtpXtn(
+    PRFileDesc* fd, SSLHandshakeType message, uint8_t* data,
+    unsigned int* len, unsigned int max_len, void* arg) {
+  auto self = reinterpret_cast<TransportLayerDtls*>(arg);
+
+  // ClientHello: send all supported versions.
+  if (message == ssl_hs_client_hello) {
+    MOZ_ASSERT(self->role_ == CLIENT);
+    MOZ_ASSERT(self->enabled_srtp_ciphers_.size(), "Haven't enabled SRTP");
+    // We will take 2 octets for each cipher, plus a 2 octet length and 1 octet
+    // for the length of the empty MKI.
+    if (max_len < self->enabled_srtp_ciphers_.size() * 2 + 3) {
+      MOZ_ASSERT(false, "Not enough space to send SRTP extension");
+      return false;
+    }
+    uint8_t* cursor = WriteUint16(data, self->enabled_srtp_ciphers_.size() * 2);
+    for (auto cs : self->enabled_srtp_ciphers_) {
+      cursor = WriteUint16(cursor, cs);
+    }
+    *cursor++ = 0; // MKI is empty
+    *len = cursor - data;
+    return true;
   }
 
-  return NS_OK;
+  if (message == SrtpXtnServerMessage(fd)) {
+    MOZ_ASSERT(self->role_ == SERVER);
+    if (!self->srtp_cipher_) {
+      // Not negotiated. Definitely bad, but the connection can fail later.
+      return false;
+    }
+    if (max_len < 5) {
+      MOZ_ASSERT(false, "Not enough space to send SRTP extension");
+      return false;
+    }
+
+    uint8_t* cursor = WriteUint16(data, 2); // Length = 2.
+    cursor = WriteUint16(cursor, self->srtp_cipher_);
+    *cursor++ = 0; // No MKI
+    *len = cursor - data;
+    return true;
+  }
+
+  return false;
+}
+
+class TlsParser {
+ public:
+  TlsParser(const uint8_t* data, size_t len)
+      : cursor_(data), remaining_(len) {}
+
+  bool error() const { return error_; }
+  size_t remaining() const { return remaining_; }
+
+  template<typename T,
+           class = typename std::enable_if<std::is_unsigned<T>::value>::type>
+  void Read(T* v, size_t sz = sizeof(T)) {
+    MOZ_ASSERT(sz <= sizeof(T), "Type is too small to hold the value requested");
+    if (remaining_ < sz) {
+      error_ = true;
+      return;
+    }
+
+    T result = 0;
+    for (size_t i = 0; i < sz; ++i) {
+      result = (result << 8) | *cursor_++;
+      remaining_--;
+    }
+    *v = result;
+  }
+
+  template<typename T,
+           class = typename std::enable_if<std::is_unsigned<T>::value>::type>
+  void ReadVector(std::vector<T>* v, size_t w) {
+    MOZ_ASSERT(v->empty(), "vector needs to be empty");
+
+    uint32_t len;
+    Read(&len, w);
+    if (error_ || len % sizeof(T) != 0 || len > remaining_) {
+      error_ = true;
+      return;
+    }
+
+    size_t count = len / sizeof(T);
+    v->reserve(count);
+    for (T i = 0; !error_ && i < count; ++i) {
+      T item;
+      Read(&item);
+      if (!error_) {
+        v->push_back(item);
+      }
+    }
+  }
+
+  void Skip(size_t n) {
+    if (remaining_ < n) {
+      error_ = true;
+    } else {
+      cursor_ += n;
+      remaining_ -= n;
+    }
+  }
+
+  size_t SkipVector(size_t w) {
+    uint32_t len = 0;
+    Read(&len, w);
+    Skip(len);
+    return len;
+  }
+
+ private:
+  const uint8_t* cursor_;
+  size_t remaining_;
+  bool error_ = false;
+};
+
+/* static */ SECStatus TransportLayerDtls::HandleSrtpXtn(
+    PRFileDesc* fd, SSLHandshakeType message, const uint8_t* data,
+    unsigned int len, SSLAlertDescription* alert, void* arg) {
+  static const uint8_t kTlsAlertHandshakeFailure = 40;
+  static const uint8_t kTlsAlertIllegalParameter = 47;
+  static const uint8_t kTlsAlertDecodeError = 50;
+  static const uint8_t kTlsAlertUnsupportedExtension = 110;
+
+  auto self = reinterpret_cast<TransportLayerDtls*>(arg);
+
+  // Parse the extension.
+  TlsParser parser(data, len);
+  std::vector<uint16_t> advertised;
+  parser.ReadVector(&advertised, 2);
+  size_t mki_len = parser.SkipVector(1);
+  if (parser.error() || parser.remaining() > 0) {
+    *alert = kTlsAlertDecodeError;
+    return SECFailure;
+  }
+
+  if (message == ssl_hs_client_hello) {
+    MOZ_ASSERT(self->role_ == SERVER);
+    if (self->enabled_srtp_ciphers_.empty()) {
+      // We don't have SRTP enabled, which is probably bad, but no sense in
+      // having the handshake fail at this point, let the client decide if this
+      // is a problem.
+      return SECSuccess;
+    }
+
+    for (auto supported : self->enabled_srtp_ciphers_) {
+      auto it = std::find(advertised.begin(), advertised.end(), supported);
+      if (it != advertised.end()) {
+        self->srtp_cipher_ = supported;
+        return SECSuccess;
+      }
+    }
+
+    // No common cipher.
+    *alert = kTlsAlertHandshakeFailure;
+    return SECFailure;
+  }
+
+  if (message == SrtpXtnServerMessage(fd)) {
+    MOZ_ASSERT(self->role_ == CLIENT);
+    if (advertised.size() != 1 || mki_len > 0) {
+      *alert = kTlsAlertIllegalParameter;
+      return SECFailure;
+    }
+    self->srtp_cipher_ = advertised[0];
+    return SECSuccess;
+  }
+
+  *alert = kTlsAlertUnsupportedExtension;
+  return SECFailure;
 }
 
 nsresult TransportLayerDtls::ExportKeyingMaterial(const std::string& label,

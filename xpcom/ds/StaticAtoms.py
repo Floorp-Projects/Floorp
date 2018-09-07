@@ -546,6 +546,7 @@ STATIC_ATOMS = [
     Atom("li", "li"),
     Atom("line", "line"),
     Atom("link", "link"),
+    Atom("linkset", "linkset"),
     # Atom("list", "list"),  # "list" is present below
     Atom("listbox", "listbox"),
     Atom("listener", "listener"),
@@ -556,6 +557,7 @@ STATIC_ATOMS = [
     Atom("triggeringprincipal", "triggeringprincipal"),
     Atom("localedir", "localedir"),
     Atom("localName", "local-name"),
+    Atom("localization", "localization"),
     Atom("longdesc", "longdesc"),
     Atom("loop", "loop"),
     Atom("low", "low"),

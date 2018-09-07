@@ -61,6 +61,11 @@ void
 HTMLSharedElement::DoneAddingChildren(bool aHaveNotified)
 {
   if (mNodeInfo->Equals(nsGkAtoms::head)) {
+    nsCOMPtr<nsIDocument> doc = GetUncomposedDoc();
+    if (doc) {
+      doc->OnL10nResourceContainerParsed();
+    }
+
     RefPtr<AsyncEventDispatcher> asyncDispatcher =
       new AsyncEventDispatcher(this,
                               NS_LITERAL_STRING("DOMHeadElementParsed"),

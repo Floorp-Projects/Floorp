@@ -433,8 +433,8 @@ class DOMLocalization extends Localization {
     };
   }
 
-  onChange() {
-    super.onChange();
+  onChange(eager = false) {
+    super.onChange(eager);
     this.translateRoots();
   }
 

@@ -31,59 +31,44 @@ nsDirIndex::SetType(uint32_t aType)
 }
 
 NS_IMETHODIMP
-nsDirIndex::GetContentType(char* *aContentType)
+nsDirIndex::GetContentType(nsACString& aContentType)
 {
-  NS_ENSURE_ARG_POINTER(aContentType);
-
-  *aContentType = ToNewCString(mContentType);
-  if (!*aContentType)
-    return NS_ERROR_OUT_OF_MEMORY;
-
+  aContentType = mContentType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::SetContentType(const char* aContentType)
+nsDirIndex::SetContentType(const nsACString& aContentType)
 {
   mContentType = aContentType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::GetLocation(char* *aLocation)
+nsDirIndex::GetLocation(nsACString& aLocation)
 {
-  NS_ENSURE_ARG_POINTER(aLocation);
-
-  *aLocation = ToNewCString(mLocation);
-  if (!*aLocation)
-    return NS_ERROR_OUT_OF_MEMORY;
-
+  aLocation = mLocation;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::SetLocation(const char* aLocation)
+nsDirIndex::SetLocation(const nsACString& aLocation)
 {
   mLocation = aLocation;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::GetDescription(char16_t* *aDescription)
+nsDirIndex::GetDescription(nsAString& aDescription)
 {
-  NS_ENSURE_ARG_POINTER(aDescription);
-
-  *aDescription = ToNewUnicode(mDescription);
-  if (!*aDescription)
-    return NS_ERROR_OUT_OF_MEMORY;
-
+  aDescription = mDescription;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDirIndex::SetDescription(const char16_t* aDescription)
+nsDirIndex::SetDescription(const nsAString& aDescription)
 {
-  mDescription.Assign(aDescription);
+  mDescription = aDescription;
   return NS_OK;
 }
 

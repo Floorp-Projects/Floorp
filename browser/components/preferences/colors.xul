@@ -18,8 +18,9 @@
         helpTopic="prefs-fonts-and-colors"
         ondialoghelp="openPrefsHelp()">
 
-  <link rel="localization" href="browser/preferences/colors.ftl"/>
-  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
+  <linkset>
+    <link rel="localization" href="browser/preferences/colors.ftl"/>
+  </linkset>
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>

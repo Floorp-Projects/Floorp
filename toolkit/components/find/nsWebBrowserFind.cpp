@@ -261,17 +261,16 @@ nsWebBrowserFind::FindNext(bool* aResult)
 }
 
 NS_IMETHODIMP
-nsWebBrowserFind::GetSearchString(char16_t** aSearchString)
+nsWebBrowserFind::GetSearchString(nsAString& aSearchString)
 {
-  NS_ENSURE_ARG_POINTER(aSearchString);
-  *aSearchString = ToNewUnicode(mSearchString);
+  aSearchString = mSearchString;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebBrowserFind::SetSearchString(const char16_t* aSearchString)
+nsWebBrowserFind::SetSearchString(const nsAString& aSearchString)
 {
-  mSearchString.Assign(aSearchString);
+  mSearchString = aSearchString;
   return NS_OK;
 }
 

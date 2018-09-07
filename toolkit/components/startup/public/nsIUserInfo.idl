@@ -10,14 +10,14 @@ interface nsIUserInfo : nsISupports
 {
     /* these are things the system may know about the current user */
 
-    readonly attribute wstring fullname;
+    readonly attribute AString fullname;
 
-    readonly attribute string emailAddress;
+    readonly attribute ACString emailAddress;
 
-    /* should this be a wstring? */
-    readonly attribute string username;
+    /* should this be an AString? */
+    readonly attribute ACString username;
 
-    readonly attribute string domain;
+    readonly attribute ACString domain;
 };
 
 %{C++

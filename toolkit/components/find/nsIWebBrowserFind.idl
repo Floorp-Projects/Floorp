@@ -45,8 +45,8 @@ interface nsIWebBrowserFind : nsISupports
      *
      * The string to search for. This must be non-empty to search.
      */
-    attribute wstring searchString;
-    
+    attribute AString searchString;
+
     /**
      * findBackwards
      *
