@@ -168,7 +168,7 @@ UITimerCallback::Notify(nsITimer* aTimer)
 NS_IMETHODIMP
 UITimerCallback::GetName(nsACString& aName)
 {
-  aName.AssignASCII("UITimerCallback_timer");
+  aName.AssignLiteral("UITimerCallback_timer");
   return NS_OK;
 }
 

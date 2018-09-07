@@ -816,7 +816,7 @@ DecoderDoctorDocumentWatcher::Notify(nsITimer* timer)
 NS_IMETHODIMP
 DecoderDoctorDocumentWatcher::GetName(nsACString& aName)
 {
-  aName.AssignASCII("DecoderDoctorDocumentWatcher_timer");
+  aName.AssignLiteral("DecoderDoctorDocumentWatcher_timer");
   return NS_OK;
 }
 
