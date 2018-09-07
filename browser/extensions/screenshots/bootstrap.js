@@ -27,25 +27,6 @@ let appStartupPromise = new Promise((resolve, reject) => {
 });
 
 const prefs = Services.prefs;
-const prefObserver = {
-  register() {
-    prefs.addObserver(PREF_BRANCH, this, false); // eslint-disable-line mozilla/no-useless-parameters
-  },
-
-  unregister() {
-    prefs.removeObserver(PREF_BRANCH, this, false); // eslint-disable-line mozilla/no-useless-parameters
-  },
-
-  observe(aSubject, aTopic, aData) {
-    // aSubject is the nsIPrefBranch we're observing (after appropriate QI)
-    // aData is the name of the pref that's been changed (relative to aSubject)
-    if (aData === USER_DISABLE_PREF) {
-      // eslint-disable-next-line promise/catch-or-return
-      appStartupPromise = appStartupPromise.then(handleStartup);
-    }
-  }
-};
-
 
 const appStartupObserver = {
   register() {
@@ -128,14 +109,12 @@ function startup(data, reason) { // eslint-disable-line no-unused-vars
   } else {
     appStartupDone();
   }
-  prefObserver.register();
   addonResourceURI = data.resourceURI;
   // eslint-disable-next-line promise/catch-or-return
   appStartupPromise = appStartupPromise.then(handleStartup);
 }
 
 function shutdown(data, reason) { // eslint-disable-line no-unused-vars
-  prefObserver.unregister();
   const webExtension = LegacyExtensionsUtils.getEmbeddedExtensionFor({
     id: ADDON_ID,
     resourceURI: addonResourceURI
