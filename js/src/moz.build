@@ -749,9 +749,6 @@ if CONFIG['MOZ_LINKER']:
     DEFINES['MOZ_LINKER'] = True
 
 if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-    # Prevent floating point errors caused by VC++ optimizations
-    # XXX We should add this to CXXFLAGS, too?
-    CFLAGS += ['-fp:precise']
     # C4805 warns mixing bool with other integral types in computation.
     # But given the conversion from bool is specified, and this is a
     # pattern widely used in code in js/src, suppress this warning here.
@@ -767,7 +764,6 @@ if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # greater size (bug 1259304)
     CXXFLAGS += ['-wd4312']
 
-CFLAGS += CONFIG['MOZ_ICU_CFLAGS']
 CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
 
 # Prepare self-hosted JS code for embedding
@@ -822,9 +818,10 @@ if CONFIG['JS_HAS_CTYPES']:
         DEFINES['FFI_BUILDING'] = True
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-shadow', '-Werror=format']
     # Also disable strict-aliasing for GCC compiler, that is enabled by default
     # starting with version 7.1, see Bug 1363009
-    CXXFLAGS += ['-Wno-shadow', '-Werror=format', '-fno-strict-aliasing']
+    CXXFLAGS += ['-fno-strict-aliasing']
 
 # Suppress warnings in third-party code.
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
