@@ -19,6 +19,7 @@ native LoadContextRef(already_AddRefed<nsISupports>);
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadTainting.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/TelemetryHistogramEnums.h"
 #include "nsStringFwd.h"
 
 namespace mozilla {
@@ -31,6 +32,7 @@ class ServiceWorkerDescriptor;
 } // namespace mozilla
 %}
 
+native AnalyticsProvider(mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED);
 [ref] native nsIRedirectHistoryEntryArray(const nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>>);
 native OriginAttributes(mozilla::OriginAttributes);
 [ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
@@ -1058,6 +1060,7 @@ interface nsILoadInfo : nsISupports
     */
   [infallible] attribute boolean isTracker;
   [infallible] attribute boolean isTrackerBlocked;
+  attribute AnalyticsProvider trackerBlockedReason;
 
   /**
     * The top-level document has been user-interacted.
