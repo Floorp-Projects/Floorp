@@ -583,7 +583,7 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, const FuncTypeIdDesc& funcT
     // the bytecode offset of the callsite by JitActivation::startWasmTrap.
     offsets->begin = masm.currentOffset();
     switch (funcTypeId.kind()) {
-      case FuncTypeIdDesc::Kind::Global: {
+      case FuncTypeIdDescKind::Global: {
         Register scratch = WasmTableCallScratchReg0;
         masm.loadWasmGlobalPtr(funcTypeId.globalDataOffset(), scratch);
         masm.branchPtr(Assembler::Condition::Equal, WasmTableCallSigReg, scratch,
@@ -591,13 +591,13 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, const FuncTypeIdDesc& funcT
         masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
         break;
       }
-      case FuncTypeIdDesc::Kind::Immediate: {
+      case FuncTypeIdDescKind::Immediate: {
         masm.branch32(Assembler::Condition::Equal, WasmTableCallSigReg,
                       Imm32(funcTypeId.immediate()), &normalEntry);
         masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
         break;
       }
-      case FuncTypeIdDesc::Kind::None:
+      case FuncTypeIdDescKind::None:
         break;
     }
 
