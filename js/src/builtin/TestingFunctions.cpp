@@ -600,6 +600,10 @@ WasmThreadsSupported(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef ENABLE_WASM_THREAD_OPS
     bool isSupported = wasm::HasSupport(cx);
+# ifdef ENABLE_WASM_CRANELIFT
+    if (cx->options().wasmForceCranelift())
+        isSupported = false;
+# endif
 #else
     bool isSupported = false;
 #endif
@@ -626,6 +630,10 @@ WasmBulkMemSupported(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef ENABLE_WASM_BULKMEM_OPS
     bool isSupported = true;
+# ifdef ENABLE_WASM_CRANELIFT
+    if (cx->options().wasmForceCranelift())
+        isSupported = false;
+# endif
 #else
     bool isSupported = false;
 #endif
@@ -639,6 +647,10 @@ WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef ENABLE_WASM_GC
     bool isSupported = cx->options().wasmBaseline() && cx->options().wasmGc();
+# ifdef ENABLE_WASM_CRANELIFT
+    if (cx->options().wasmForceCranelift())
+        isSupported = false;
+# endif
 #else
     bool isSupported = false;
 #endif
@@ -5847,7 +5859,7 @@ gc::ZealModeHelpText),
 
     JS_FN_HELP("assertCorrectRealm", AssertCorrectRealm, 0, 0,
 "assertCorrectRealm()",
-"  Asserts cx->realm matches callee->raelm.\n"),
+"  Asserts cx->realm matches callee->realm.\n"),
 
     JS_FN_HELP("baselineCompile", BaselineCompile, 2, 0,
 "baselineCompile([fun/code], forceDebugInstrumentation=false)",
