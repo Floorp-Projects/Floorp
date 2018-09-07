@@ -35,7 +35,10 @@ class SidebarItem extends PureComponent {
     return dom.li(
       {
         className: "sidebar-item" +
-                   (isSelected ? " sidebar-item--selected" : "") +
+                   (isSelected ?
+                      " sidebar-item--selected js-sidebar-item-selected" :
+                      ""
+                   ) +
                    (selectable ? " sidebar-item--selectable" : ""),
         onClick: selectable ? () => this.onItemClick() : null
       },
