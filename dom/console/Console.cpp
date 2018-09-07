@@ -2279,7 +2279,7 @@ Console::ComposeAndStoreGroupName(JSContext* aCx,
 {
   for (uint32_t i = 0; i < aData.Length(); ++i) {
     if (i != 0) {
-      aName.AppendASCII(" ");
+      aName.AppendLiteral(" ");
     }
 
     JS::Rooted<JS::Value> value(aCx, aData[i]);

@@ -2993,7 +2993,7 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
         nsAutoCString scheme;
         aURI->GetScheme(scheme);
         // append the additional 's' for security to the scheme :-)
-        scheme.AppendASCII("s");
+        scheme.AppendLiteral("s");
         NS_ConvertUTF8toUTF16 reportSpec(aURI->GetSpecOrDefault());
         NS_ConvertUTF8toUTF16 reportScheme(scheme);
 
