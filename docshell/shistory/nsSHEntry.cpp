@@ -258,7 +258,7 @@ nsSHEntry::GetSticky(bool* aSticky)
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetTitle(char16_t** aTitle)
+nsSHEntry::GetTitle(nsAString& aTitle)
 {
   // Check for empty title...
   if (mTitle.IsEmpty() && mURI) {
@@ -269,7 +269,7 @@ nsSHEntry::GetTitle(char16_t** aTitle)
     }
   }
 
-  *aTitle = ToNewUnicode(mTitle);
+  aTitle = mTitle;
   return NS_OK;
 }
 

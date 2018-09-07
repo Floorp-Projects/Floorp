@@ -33,7 +33,7 @@ title2 = Hello Another World
   window.onload = async function() {
     SimpleTest.waitForExplicitFinish();
 
-    domLocalization.addResourceIds(["/browser/menu.ftl"], 1);
+    domLocalization.addResourceIds(["/browser/menu.ftl"], false);
 
     const frag1 = document.querySelectorAll("div")[0];
     const frag2 = document.querySelectorAll("div")[1];

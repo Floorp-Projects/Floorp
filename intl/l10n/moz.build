@@ -22,11 +22,22 @@ EXTRA_COMPONENTS += [
     'mozDOMLocalization.manifest',
 ]
 
+EXPORTS.mozilla.dom += [
+    'DocumentL10n.h',
+]
+
+UNIFIED_SOURCES += [
+    'DocumentL10n.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
-
-JAR_MANIFESTS += ['jar.mn']
 
 SPHINX_TREES['l10n'] = 'docs'
 

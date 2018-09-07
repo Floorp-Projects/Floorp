@@ -1157,7 +1157,7 @@ TabChild::RecvLoadURL(const nsCString& aURI,
   }
 
   nsresult rv =
-    WebNavigation()->LoadURI(NS_ConvertUTF8toUTF16(aURI).get(),
+    WebNavigation()->LoadURI(NS_ConvertUTF8toUTF16(aURI),
                              nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
                              nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL,
                              nullptr, nullptr, nullptr, nsContentUtils::GetSystemPrincipal());
