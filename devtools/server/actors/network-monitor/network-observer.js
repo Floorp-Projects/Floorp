@@ -494,7 +494,7 @@ NetworkObserver.prototype = {
       .toISOString();
     event.fromCache = fromCache;
     event.fromServiceWorker = fromServiceWorker;
-    event.isTrackingResource = channel.isTrackingResource;
+    event.isThirdPartyTrackingResource = channel.isThirdPartyTrackingResource;
     httpActivity.fromServiceWorker = fromServiceWorker;
 
     if (extraStringData) {
