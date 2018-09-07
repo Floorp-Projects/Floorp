@@ -39,29 +39,30 @@ interface nsISHEntry : nsISupports
      * of the current entry. The object returned is
      * of type nsIURI
      */
-    readonly attribute nsIURI URI;
+    [infallible] readonly attribute nsIURI URI;
 
     /**
      * A readonly property that returns the original URI of the current entry.
      * If an entry is the result of a redirect this attribute holds original
      * URI. The object returned is of type nsIURI
      */
-    attribute nsIURI originalURI;
+    [infallible] attribute nsIURI originalURI;
 
     /**
      * URL as stored from nsILoadInfo.resultPrincipalURI.  See nsILoadInfo
      * for more details.
      */
-    attribute nsIURI resultPrincipalURI;
+    [infallible] attribute nsIURI resultPrincipalURI;
 
     /**
      *  This flag remembers whether channel has LOAD_REPLACE set.
      */
-    attribute boolean loadReplace;
+    [infallible] attribute boolean loadReplace;
 
     /**
      * The title of the current entry.
      */
+    // XXX: make it [infallible] when AString supports that (bug 1491187).
     attribute AString title;
 
     /**
@@ -73,35 +74,36 @@ interface nsISHEntry : nsISupports
      * history entries created as a result of a subframe
      * navigation.
      */
-    readonly attribute boolean isSubFrame;
+    [infallible] readonly attribute boolean isSubFrame;
 
     /** URI for the document */
     void setURI(in nsIURI aURI);
 
     /** Referrer URI */
-    attribute nsIURI referrerURI;
+    [infallible] attribute nsIURI referrerURI;
 
-    /** Referrer policy, holding one of the values (REFERRER_POLICY_*)
-     *  defined in nsIHttpChannel.
+    /**
+     * Referrer policy, holding one of the values (REFERRER_POLICY_*) defined
+     * in nsIHttpChannel.
      */
-    attribute unsigned long referrerPolicy;
+    [infallible] attribute unsigned long referrerPolicy;
 
     /** Content viewer, for fast restoration of presentation */
-    attribute nsIContentViewer contentViewer;
+    [infallible] attribute nsIContentViewer contentViewer;
 
     /** Whether the content viewer is marked "sticky" */
-    attribute boolean sticky;
+    [infallible] attribute boolean sticky;
 
     /** Saved state of the global window object */
-    attribute nsISupports windowState;
+    [infallible] attribute nsISupports windowState;
 
     /**
      * Saved position and dimensions of the content viewer; we must adjust the
      * root view's widget accordingly if this has changed when the presentation
      * is restored.
      */
-    [noscript] void getViewerBounds(in nsIntRect bounds);
-    [noscript] void setViewerBounds([const] in nsIntRect bounds);
+    [noscript, notxpcom] void getViewerBounds(in nsIntRect bounds);
+    [noscript, notxpcom] void setViewerBounds([const] in nsIntRect bounds);
 
     /**
      * Saved child docshells corresponding to contentViewer.  The child shells
@@ -123,7 +125,7 @@ interface nsISHEntry : nsISupports
     void clearChildShells();
 
     /** Saved refresh URI list for the content viewer */
-    attribute nsIMutableArray refreshURIList;
+    [infallible] attribute nsIMutableArray refreshURIList;
 
     /**
      * Ensure that the cached presentation members are self-consistent.
@@ -135,10 +137,10 @@ interface nsISHEntry : nsISupports
     void syncPresentationState();
 
     /** Post Data for the document */
-    attribute nsIInputStream postData;
+    [infallible] attribute nsIInputStream postData;
 
     /** LayoutHistoryState for scroll position and form values */
-    attribute nsILayoutHistoryState layoutHistoryState;
+    [infallible] attribute nsILayoutHistoryState layoutHistoryState;
 
     /**
      * Initialises the LayoutHistoryState if it doesn't already exist
@@ -147,33 +149,34 @@ interface nsISHEntry : nsISupports
     nsILayoutHistoryState initLayoutHistoryState();
 
     /** parent of this entry */
-    attribute nsISHEntry parent;
+    [infallible] attribute nsISHEntry parent;
 
     /**
      * The loadType for this entry. This is typically loadHistory except
      * when reload is pressed, it has the appropriate reload flag
      */
-    attribute unsigned long loadType;
+    [infallible] attribute unsigned long loadType;
 
     /**
      * An ID to help identify this entry from others during
      * subframe navigation
      */
-    attribute unsigned long ID;
+    [infallible] attribute unsigned long ID;
 
-    /** attribute to set and get the cache key for the entry */
-    attribute unsigned long cacheKey;
+    /** The cache key for the entry */
+    [infallible] attribute unsigned long cacheKey;
 
-    /** attribute to indicate whether layoutHistoryState should be saved */
-    attribute boolean saveLayoutStateFlag;
+    /** Should the layoutHistoryState be saved? */
+    [infallible] attribute boolean saveLayoutStateFlag;
 
-    /** attribute to indicate whether the page is already expired in cache */
-    attribute boolean expirationStatus;
+    /** Has the page already expired in cache? */
+    [infallible] attribute boolean expirationStatus;
 
     /**
      * attribute to indicate the content-type of the document that this
      * is a session history entry for
      */
+    // XXX: make it [infallible] when ACString supports that (bug 1491187).
     attribute ACString contentType;
 
     /**
@@ -185,9 +188,8 @@ interface nsISHEntry : nsISupports
      * Additionally, if this SHEntry was created by calling pushState from a
      * SHEntry whose URI was modified, this SHEntry's URIWasModified field is
      * true.
-     *
      */
-    attribute boolean URIWasModified;
+    [infallible] attribute boolean URIWasModified;
 
     /** Set/Get scrollers' positon in anchored pages */
     void setScrollPosition(in long x, in long y);
@@ -218,19 +220,19 @@ interface nsISHEntry : nsISupports
      * that the document that was loaded to create this history entry
      * came from.
      */
-    attribute nsIPrincipal triggeringPrincipal;
+    [infallible] attribute nsIPrincipal triggeringPrincipal;
 
     /**
      * Get the principal, if any, that is used when the inherit flag
      * is set.
      */
-    attribute nsIPrincipal principalToInherit;
+    [infallible] attribute nsIPrincipal principalToInherit;
 
     /**
      * Get/set data associated with this history state via a pushState() call,
      * serialized using structured clone.
      **/
-    attribute nsIStructuredCloneContainer stateData;
+    [infallible] attribute nsIStructuredCloneContainer stateData;
 
     /**
      * Gets the owning pointer to the editor data assosicated with
@@ -264,6 +266,7 @@ interface nsISHEntry : nsISupports
     /**
      * The history ID of the docshell.
      */
+    // Would be [infallible], but we don't support that property for nsIDPtr.
     attribute nsIDPtr docshellID;
 
     /**
@@ -271,7 +274,7 @@ interface nsISHEntry : nsISupports
      */
     [noscript, notxpcom] nsID DocshellID();
 
-    readonly attribute nsIBFCacheEntry BFCacheEntry;
+    [infallible] readonly attribute nsIBFCacheEntry BFCacheEntry;
 
     /**
      * Does this SHEntry point to the given BFCache entry?  If so, evicting
@@ -302,10 +305,10 @@ interface nsISHEntry : nsISupports
     boolean sharesDocumentWith(in nsISHEntry aEntry);
 
     /**
-     * True if this SHEntry corresponds to a document created by a srcdoc iframe.
-     * Set when a value is assigned to  srcdocData.
+     * True if this SHEntry corresponds to a document created by a srcdoc
+     * iframe. Set when a value is assigned to srcdocData.
      */
-    readonly attribute boolean isSrcdocEntry;
+    [infallible] readonly attribute boolean isSrcdocEntry;
 
     /**
      * Contents of the srcdoc attribute in a srcdoc iframe to be loaded instead
@@ -313,6 +316,7 @@ interface nsISHEntry : nsISupports
      * recreate the document at a later stage.
      * Setting this sets isSrcdocEntry to true
      */
+    // XXX: make it [infallible] when AString supports that (bug 1491187).
     attribute AString srcdocData;
 
     /**
@@ -320,26 +324,26 @@ interface nsISHEntry : nsISupports
      * document for use in situations where it cannot otherwise be determined,
      * for example with view-source.
      */
-    attribute nsIURI baseURI;
+    [infallible] attribute nsIURI baseURI;
 
     /**
      * Sets/gets the current scroll restoration state,
      * if true == "manual", false == "auto".
      */
-    attribute boolean scrollRestorationIsManual;
+    [infallible] attribute boolean scrollRestorationIsManual;
 
     /**
      * Flag to indicate that the history entry was originally loaded in the
      * current process. This flag does not survive a browser process switch.
      */
-    readonly attribute boolean loadedInThisProcess;
+    [infallible] readonly attribute boolean loadedInThisProcess;
 
     /**
      * The session history it belongs to. It's usually only set on root entries.
      * SHEntry is strictly bound to the SHistory it belongs to; it should not be
      * changed once set to a non-null value.
      */
-    [noscript] attribute nsISHistory SHistory;
+    [noscript, infallible] attribute nsISHistory SHistory;
 
     /**
      * Sets an SHEntry to reflect that it is a history type load. as
@@ -355,7 +359,7 @@ interface nsISHEntry : nsISupports
     /**
      * A number that is assigned by the sHistory when the entry is activated
      */
-    [noscript] attribute unsigned long lastTouched;
+    [noscript, infallible] attribute unsigned long lastTouched;
 
     /**
      * Some state, particularly that related to the back/forward cache, is
@@ -372,7 +376,7 @@ interface nsISHEntry : nsISupports
      * The current number of nsISHEntries which are immediate children of this
      * SHEntry.
      */
-    readonly attribute long childCount;
+    [infallible] readonly attribute long childCount;
 
     /**
      * Add a new child SHEntry. If offset is -1 adds to the end of the list.

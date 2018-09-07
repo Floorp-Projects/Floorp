@@ -219,7 +219,8 @@ nsSHEntry::GetAnyContentViewer(nsISHEntry** aOwnerEntry,
   // Find a content viewer in the root node or any of its children,
   // assuming that there is only one content viewer total in any one
   // nsSHEntry tree
-  GetContentViewer(aResult);
+  nsCOMPtr<nsIContentViewer> viewer = GetContentViewer();
+  viewer.forget(aResult);
   if (*aResult) {
 #ifdef DEBUG_PAGE_CACHE
     printf("Found content viewer\n");
@@ -322,11 +323,12 @@ nsSHEntry::InitLayoutHistoryState(nsILayoutHistoryState** aState)
   if (!mShared->mLayoutHistoryState) {
     nsCOMPtr<nsILayoutHistoryState> historyState;
     historyState = NS_NewLayoutHistoryState();
-    nsresult rv = SetLayoutHistoryState(historyState);
-    NS_ENSURE_SUCCESS(rv, rv);
+    SetLayoutHistoryState(historyState);
   }
 
-  return GetLayoutHistoryState(aState);
+  nsCOMPtr<nsILayoutHistoryState> state = GetLayoutHistoryState();
+  state.forget(aState);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -495,7 +497,6 @@ nsSHEntry::Clone(nsISHEntry** aResult)
 NS_IMETHODIMP
 nsSHEntry::GetParent(nsISHEntry** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
   *aResult = mParent;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
@@ -527,18 +528,16 @@ nsSHEntry::GetWindowState(nsISupports** aState)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsSHEntry::SetViewerBounds(const nsIntRect& aBounds)
 {
   mShared->mViewerBounds = aBounds;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsSHEntry::GetViewerBounds(nsIntRect& aBounds)
 {
   aBounds = mShared->mViewerBounds;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -551,11 +550,6 @@ nsSHEntry::GetTriggeringPrincipal(nsIPrincipal** aTriggeringPrincipal)
 NS_IMETHODIMP
 nsSHEntry::SetTriggeringPrincipal(nsIPrincipal* aTriggeringPrincipal)
 {
-  MOZ_ASSERT(aTriggeringPrincipal, "need a valid triggeringPrincipal");
-  if (!aTriggeringPrincipal) {
-    return NS_ERROR_FAILURE;
-  }
-
   mShared->mTriggeringPrincipal = aTriggeringPrincipal;
   return NS_OK;
 }
@@ -577,7 +571,6 @@ nsSHEntry::SetPrincipalToInherit(nsIPrincipal* aPrincipalToInherit)
 NS_IMETHODIMP
 nsSHEntry::GetBFCacheEntry(nsIBFCacheEntry** aEntry)
 {
-  NS_ENSURE_ARG_POINTER(aEntry);
   NS_IF_ADDREF(*aEntry = mShared);
   return NS_OK;
 }
@@ -909,7 +902,6 @@ nsSHEntry::HasDetachedEditor()
 NS_IMETHODIMP
 nsSHEntry::GetStateData(nsIStructuredCloneContainer** aContainer)
 {
-  NS_ENSURE_ARG_POINTER(aContainer);
   NS_IF_ADDREF(*aContainer = mStateData);
   return NS_OK;
 }
@@ -1007,8 +999,6 @@ nsSHEntry::SetAsHistoryLoad()
 NS_IMETHODIMP
 nsSHEntry::GetPersist(bool* aPersist)
 {
-  NS_ENSURE_ARG_POINTER(aPersist);
-
   *aPersist = mPersist;
   return NS_OK;
 }
