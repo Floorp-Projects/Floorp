@@ -7,6 +7,15 @@
     <meta charset="utf8">
   </head>
   <body>
-    <iframe src="http://tracking.example.com/"></iframe>
+    <script type="text/javascript">
+      /* exported performRequests */
+      "use strict";
+
+      function performRequests() {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "http://tracking.example.org/", true);
+        xhr.send(null);
+      }
+    </script>
   </body>
 </html>
