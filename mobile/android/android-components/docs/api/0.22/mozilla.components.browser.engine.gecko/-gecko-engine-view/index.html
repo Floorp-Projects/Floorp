@@ -1,0 +1,207 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>GeckoEngineView - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.engine.gecko</a>&nbsp;/&nbsp;<a href="./index.html">GeckoEngineView</a><br/>
+<br/>
+<h1>GeckoEngineView</h1>
+<code><span class="keyword">class </span><span class="identifier">GeckoEngineView</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/widget/FrameLayout.html"><span class="identifier">FrameLayout</span></a><span class="symbol">, </span><a href="../../mozilla.components.concept.engine/-engine-view/index.html"><span class="identifier">EngineView</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineView.kt#L17">(source)</a>
+<p>Gecko-based EngineView implementation.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">GeckoEngineView</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineView$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineView$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/attrs">attrs</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/util/AttributeSet.html"><span class="identifier">AttributeSet</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineView$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/defStyleAttr">defStyleAttr</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;0<span class="symbol">)</span></code>
+<p>Gecko-based EngineView implementation.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="render.html">render</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">render</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineView$render(mozilla.components.concept.engine.EngineSession)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine/-engine-session/index.html"><span class="identifier">EngineSession</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Render the content of the given session.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.engine/-engine-view/as-view.html">asView</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">asView</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a></code>
+<p>Convenience method to cast the implementation of this interface to an Android View object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.engine/-engine-view/on-create.html">onCreate</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onCreate</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>To be called in response to <a href="#">Lifecycle.Event.ON_CREATE</a>. See <a href="../../mozilla.components.concept.engine/-engine-view/index.html">EngineView</a>
+implementations for details.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.engine/-engine-view/on-destroy.html">onDestroy</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onDestroy</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>To be called in response to <a href="#">Lifecycle.Event.ON_DESTROY</a>. See <a href="../../mozilla.components.concept.engine/-engine-view/index.html">EngineView</a>
+implementations for details.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.engine/-engine-view/on-pause.html">onPause</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onPause</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>To be called in response to <a href="#">Lifecycle.Event.ON_PAUSE</a>. See <a href="../../mozilla.components.concept.engine/-engine-view/index.html">EngineView</a>
+implementations for details.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.engine/-engine-view/on-resume.html">onResume</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onResume</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>To be called in response to <a href="#">Lifecycle.Event.ON_RESUME</a>. See <a href="../../mozilla.components.concept.engine/-engine-view/index.html">EngineView</a>
+implementations for details.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.engine/-engine-view/on-start.html">onStart</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onStart</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>To be called in response to <a href="#">Lifecycle.Event.ON_START</a>. See <a href="../../mozilla.components.concept.engine/-engine-view/index.html">EngineView</a>
+implementations for details.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.engine/-engine-view/on-stop.html">onStop</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onStop</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>To be called in response to <a href="#">Lifecycle.Event.ON_STOP</a>. See <a href="../../mozilla.components.concept.engine/-engine-view/index.html">EngineView</a>
+implementations for details.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Extension Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-l-t-r.html">isLTR</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isLTR</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Is the horizontal layout direction of this view from Left to Right?</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-r-t-l.html">isRTL</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isRTL</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Is the horizontal layout direction of this view from Right to Left?</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Extension Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/dp.html">dp</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">dp</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$dp(android.view.View, kotlin.Int)/pixels">pixels</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Converts a value in density independent pixels (dp) to the actual pixel values for the display.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view-group/for-each.html">forEach</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/ViewGroup.html"><span class="identifier">ViewGroup</span></a><span class="symbol">.</span><span class="identifier">forEach</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$forEach(android.view.ViewGroup, kotlin.Function1((android.view.View, kotlin.Unit)))/action">action</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Performs the given action on each View in this ViewGroup.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/hide-keyboard.html">hideKeyboard</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">hideKeyboard</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Hides the soft input window.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-gone.html">isGone</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isGone</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.GONE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-invisible.html">isInvisible</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isInvisible</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.INVISIBLE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-visible.html">isVisible</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isVisible</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.VISIBLE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/show-keyboard.html">showKeyboard</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">showKeyboard</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$showKeyboard(android.view.View, kotlin.Int)/flags">flags</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;InputMethodManager.SHOW_IMPLICIT<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Tries to focus this view and show the soft input window for it.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

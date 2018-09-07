@@ -1,0 +1,24 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>GeckoEngineSession.saveState - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.engine.gecko</a>&nbsp;/&nbsp;<a href="index.html">GeckoEngineSession</a>&nbsp;/&nbsp;<a href="./save-state.html">saveState</a><br/>
+<br/>
+<h1>saveState</h1>
+<a name="mozilla.components.browser.engine.gecko.GeckoEngineSession$saveState()"></a>
+<code><span class="keyword">fun </span><span class="identifier">saveState</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L118">(source)</a>
+<p>Overrides <a href="../../mozilla.components.concept.engine/-engine-session/save-state.html">EngineSession.saveState</a></p>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/save-state.html">EngineSession.saveState</a></p>
+<p>GeckoView provides a String representing the entire session state. We
+store this String using a single Map entry with key GECKO_STATE_KEY.</p>
+<p>See https://bugzilla.mozilla.org/show_bug.cgi?id=1441810 for
+discussion on sync vs. async, where a decision was made that
+callers should provide synchronous wrappers, if needed. In case we're
+asking for the state when persisting, a separate (independent) thread
+is used so we're not blocking anything else. In case of calling this
+method from onPause or similar, we also want a synchronous response.</p>
+</BODY>
+</HTML>

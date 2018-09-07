@@ -1,0 +1,97 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.concept.engine - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="./index.html">mozilla.components.concept.engine</a><br/>
+<br/>
+<h2>Package mozilla.components.concept.engine</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-default-settings/index.html">DefaultSettings</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">DefaultSettings</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-settings/index.html"><span class="identifier">Settings</span></a></code>
+<p><a href="-settings/index.html">Settings</a> implementation used to set defaults for <a href="-engine/index.html">Engine</a> and <a href="-engine-session/index.html">EngineSession</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-engine/index.html">Engine</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">Engine</span></code>
+<p>Entry point for interacting with the engine implementation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-engine-session/index.html">EngineSession</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">EngineSession</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../mozilla.components.support.base.observer/-observable/index.html"><span class="identifier">Observable</span></a><span class="symbol">&lt;</span><a href="-engine-session/-observer/index.html"><span class="identifier">Observer</span></a><span class="symbol">&gt;</span></code>
+<p>Class representing a single engine session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-engine-view/index.html">EngineView</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">EngineView</span></code>
+<p>View component that renders web content.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-hit-result/index.html">HitResult</a></p>
+</td>
+<td>
+<code><span class="keyword">sealed</span> <span class="keyword">class </span><span class="identifier">HitResult</span></code>
+<p>Represents all the different supported types of data that can be found from long clicking
+an element.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-lifecycle-observer/index.html">LifecycleObserver</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">LifecycleObserver</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">LifecycleObserver</span></code>
+<p><a href="#">LifecycleObserver</a> which dispatches lifecycle events to an <a href="-engine-view/index.html">EngineView</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-settings/index.html">Settings</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">Settings</span></code>
+<p>Holds settings of an engine or session. Concrete engine
+implementations define how these settings are applied i.e.
+whether a setting is applied on an engine or session instance.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Exceptions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-unsupported-setting-exception/index.html">UnsupportedSettingException</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">UnsupportedSettingException</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-runtime-exception/index.html"><span class="identifier">RuntimeException</span></a></code>
+<p>Exception thrown by default if a setting is not supported by an engine or session.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,70 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SessionStorage - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.session.storage</a>&nbsp;/&nbsp;<a href="./index.html">SessionStorage</a><br/>
+<br/>
+<h1>SessionStorage</h1>
+<code><span class="keyword">interface </span><span class="identifier">SessionStorage</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/SessionStorage.kt#L12">(source)</a>
+<p>Storage component for browser and engine sessions.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="persist.html">persist</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">persist</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.storage.SessionStorage$persist(mozilla.components.browser.session.SessionManager)/sessionManager">sessionManager</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session-manager/index.html"><span class="identifier">SessionManager</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Persists the state of the provided sessions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="restore.html">restore</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">restore</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.storage.SessionStorage$restore(mozilla.components.browser.session.SessionManager)/sessionManager">sessionManager</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session-manager/index.html"><span class="identifier">SessionManager</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Restores the session storage state by reading from the latest persisted version.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="start.html">start</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">start</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.storage.SessionStorage$start(mozilla.components.browser.session.SessionManager)/sessionManager">sessionManager</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session-manager/index.html"><span class="identifier">SessionManager</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Starts saving the state frequently and automatically.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="stop.html">stop</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">stop</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Stops saving the state automatically.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-default-session-storage/index.html">DefaultSessionStorage</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">DefaultSessionStorage</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">SessionStorage</span></a></code>
+<p>Default implementation of <a href="./index.html">SessionStorage</a> which persists browser and engine
+session states to a JSON file.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

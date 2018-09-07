@@ -1,0 +1,112 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>BrowserToolbar.ToggleButton - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.browser.toolbar</a>&nbsp;/&nbsp;<a href="../index.html">BrowserToolbar</a>&nbsp;/&nbsp;<a href="./index.html">ToggleButton</a><br/>
+<br/>
+<h1>ToggleButton</h1>
+<code><span class="keyword">class </span><span class="identifier">ToggleButton</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../../mozilla.components.concept.toolbar/-toolbar/-action-toggle-button/index.html"><span class="identifier">ActionToggleButton</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L335">(source)</a>
+<p>An action button with two states, selected and unselected. When the button is pressed, the
+state changes automatically.</p>
+<h3>Parameters</h3>
+<p><a name="imageResource"></a>
+<code>imageResource</code> - The drawable to be shown if the button is in unselected state.</p>
+<p><a name="imageResourceSelected"></a>
+<code>imageResourceSelected</code> - The drawable to be shown if the button is in selected state.</p>
+<p><a name="contentDescription"></a>
+<code>contentDescription</code> - The content description to use if the button is in unselected state.</p>
+<p><a name="contentDescriptionSelected"></a>
+<code>contentDescriptionSelected</code> - The content description to use if the button is in selected state.</p>
+<p><a name="visible"></a>
+<code>visible</code> - Lambda that returns true or false to indicate whether this button should be shown.</p>
+<p><a name="selected"></a>
+<code>selected</code> - Sets whether this button should be selected initially.</p>
+<p><a name="background"></a>
+<code>background</code> - A custom (stateful) background drawable resource to be used.</p>
+<p><a name="listener"></a>
+<code>listener</code> - Callback that will be invoked whenever the checked state changes.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">ToggleButton</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar.ToggleButton$<init>(kotlin.Int, kotlin.Int, kotlin.String, kotlin.String, kotlin.Function0((kotlin.Boolean)), kotlin.Boolean, kotlin.Int, kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/imageResource">imageResource</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar.ToggleButton$<init>(kotlin.Int, kotlin.Int, kotlin.String, kotlin.String, kotlin.Function0((kotlin.Boolean)), kotlin.Boolean, kotlin.Int, kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/imageResourceSelected">imageResourceSelected</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar.ToggleButton$<init>(kotlin.Int, kotlin.Int, kotlin.String, kotlin.String, kotlin.Function0((kotlin.Boolean)), kotlin.Boolean, kotlin.Int, kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/contentDescription">contentDescription</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar.ToggleButton$<init>(kotlin.Int, kotlin.Int, kotlin.String, kotlin.String, kotlin.Function0((kotlin.Boolean)), kotlin.Boolean, kotlin.Int, kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/contentDescriptionSelected">contentDescriptionSelected</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar.ToggleButton$<init>(kotlin.Int, kotlin.Int, kotlin.String, kotlin.String, kotlin.Function0((kotlin.Boolean)), kotlin.Boolean, kotlin.Int, kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/visible">visible</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;{ true }<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar.ToggleButton$<init>(kotlin.Int, kotlin.Int, kotlin.String, kotlin.String, kotlin.Function0((kotlin.Boolean)), kotlin.Boolean, kotlin.Int, kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/selected">selected</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar.ToggleButton$<init>(kotlin.Int, kotlin.Int, kotlin.String, kotlin.String, kotlin.Function0((kotlin.Boolean)), kotlin.Boolean, kotlin.Int, kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/background">background</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar.ToggleButton$<init>(kotlin.Int, kotlin.Int, kotlin.String, kotlin.String, kotlin.Function0((kotlin.Boolean)), kotlin.Boolean, kotlin.Int, kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/listener">listener</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span></code>
+<p>An action button with two states, selected and unselected. When the button is pressed, the
+state changes automatically.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../../mozilla.components.concept.toolbar/-toolbar/-action-toggle-button/visible.html">visible</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">val </span><span class="identifier">visible</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Lambda that returns true or false to indicate whether this button should be shown.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="create-view.html">createView</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">createView</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.BrowserToolbar.ToggleButton$createView(android.view.ViewGroup)/parent">parent</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/ViewGroup.html"><span class="identifier">ViewGroup</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../../mozilla.components.concept.toolbar/-toolbar/-action-toggle-button/bind.html">bind</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">bind</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.toolbar.Toolbar.ActionToggleButton$bind(android.view.View)/view">view</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../mozilla.components.concept.toolbar/-toolbar/-action-toggle-button/is-selected.html">isSelected</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isSelected</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns the current selected state of the action.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../mozilla.components.concept.toolbar/-toolbar/-action-toggle-button/set-selected.html">setSelected</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setSelected</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.toolbar.Toolbar.ActionToggleButton$setSelected(kotlin.Boolean, kotlin.Boolean)/selected">selected</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.toolbar.Toolbar.ActionToggleButton$setSelected(kotlin.Boolean, kotlin.Boolean)/notifyListener">notifyListener</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Changes the selected state of the action.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../mozilla.components.concept.toolbar/-toolbar/-action-toggle-button/toggle.html">toggle</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">toggle</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.toolbar.Toolbar.ActionToggleButton$toggle(kotlin.Boolean)/notifyListener">notifyListener</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Changes the selected state of the action to the inverse of its current state.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

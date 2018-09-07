@@ -1,0 +1,21 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FxaResult.whenComplete - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fxa</a>&nbsp;/&nbsp;<a href="index.html">FxaResult</a>&nbsp;/&nbsp;<a href="./when-complete.html">whenComplete</a><br/>
+<br/>
+<h1>whenComplete</h1>
+<a name="mozilla.components.service.fxa.FxaResult$whenComplete(kotlin.Function1((mozilla.components.service.fxa.FxaResult.T, kotlin.Unit)))"></a>
+<code><span class="keyword">fun </span><span class="identifier">whenComplete</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FxaResult$whenComplete(kotlin.Function1((mozilla.components.service.fxa.FxaResult.T, kotlin.Unit)))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="identifier">value</span><span class="symbol">:</span>&nbsp;<a href="index.html#T"><span class="identifier">T</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaResult.kt#L134">(source)</a>
+<p>Adds a value listener to be called when the <a href="index.html">FxaResult</a> and the whole chain of <a href="then.html">then</a>
+calls is completed with a value. Listeners will be invoked on the same thread in
+which the <a href="index.html">FxaResult</a> was completed.</p>
+<h3>Parameters</h3>
+<p><a name="fn"></a>
+<code>fn</code> - A lambda expression with the same method signature as <a href="-on-value-listener/index.html">OnValueListener</a>,
+called when the <a href="index.html">FxaResult</a> is completed with a value.</p>
+</BODY>
+</HTML>

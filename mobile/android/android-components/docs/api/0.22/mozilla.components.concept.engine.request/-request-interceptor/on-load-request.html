@@ -1,0 +1,21 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>RequestInterceptor.onLoadRequest - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.engine.request</a>&nbsp;/&nbsp;<a href="index.html">RequestInterceptor</a>&nbsp;/&nbsp;<a href="./on-load-request.html">onLoadRequest</a><br/>
+<br/>
+<h1>onLoadRequest</h1>
+<a name="mozilla.components.concept.engine.request.RequestInterceptor$onLoadRequest(mozilla.components.concept.engine.EngineSession, kotlin.String)"></a>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onLoadRequest</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.request.RequestInterceptor$onLoadRequest(mozilla.components.concept.engine.EngineSession, kotlin.String)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine/-engine-session/index.html"><span class="identifier">EngineSession</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.request.RequestInterceptor$onLoadRequest(mozilla.components.concept.engine.EngineSession, kotlin.String)/uri">uri</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="-interception-response/index.html"><span class="identifier">InterceptionResponse</span></a><span class="symbol">?</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L29">(source)</a>
+<p>A request to open an URI. This is called before each page load to allow custom behavior implementation.</p>
+<h3>Parameters</h3>
+<p><a name="session"></a>
+<code>session</code> - The engine session that initiated the callback.</p>
+<p><strong>Return</strong><br/>
+An InterceptionResponse object containing alternative content if the request should be intercepted.
+    null otherwise.</p>
+</BODY>
+</HTML>

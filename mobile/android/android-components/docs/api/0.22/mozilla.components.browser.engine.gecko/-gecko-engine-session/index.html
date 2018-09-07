@@ -1,0 +1,195 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>GeckoEngineSession - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.engine.gecko</a>&nbsp;/&nbsp;<a href="./index.html">GeckoEngineSession</a><br/>
+<br/>
+<h1>GeckoEngineSession</h1>
+<code><span class="keyword">class </span><span class="identifier">GeckoEngineSession</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine/-engine-session/index.html"><span class="identifier">EngineSession</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/GeckoEngineSession.kt#L30">(source)</a>
+<p>Gecko-based EngineSession implementation.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">GeckoEngineSession</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$<init>(org.mozilla.geckoview.GeckoRuntime, kotlin.Boolean, mozilla.components.concept.engine.Settings)/runtime">runtime</span><span class="symbol">:</span>&nbsp;<span class="identifier">GeckoRuntime</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$<init>(org.mozilla.geckoview.GeckoRuntime, kotlin.Boolean, mozilla.components.concept.engine.Settings)/privateMode">privateMode</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$<init>(org.mozilla.geckoview.GeckoRuntime, kotlin.Boolean, mozilla.components.concept.engine.Settings)/defaultSettings">defaultSettings</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine/-settings/index.html"><span class="identifier">Settings</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span></code>
+<p>Gecko-based EngineSession implementation.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="settings.html">settings</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">settings</span><span class="symbol">: </span><a href="../../mozilla.components.concept.engine/-settings/index.html"><span class="identifier">Settings</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/settings.html">EngineSession.settings</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="clear-find-matches.html">clearFindMatches</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">clearFindMatches</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/clear-find-matches.html">EngineSession.clearFindMatches</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="disable-tracking-protection.html">disableTrackingProtection</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">disableTrackingProtection</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/disable-tracking-protection.html">EngineSession.disableTrackingProtection</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="enable-tracking-protection.html">enableTrackingProtection</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">enableTrackingProtection</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$enableTrackingProtection(mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy)/policy">policy</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine/-engine-session/-tracking-protection-policy/index.html"><span class="identifier">TrackingProtectionPolicy</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/enable-tracking-protection.html">EngineSession.enableTrackingProtection</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="find-all.html">findAll</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">findAll</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$findAll(kotlin.String)/text">text</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/find-all.html">EngineSession.findAll</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="find-next.html">findNext</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">findNext</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$findNext(kotlin.Boolean)/forward">forward</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/find-next.html">EngineSession.findNext</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="go-back.html">goBack</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">goBack</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/go-back.html">EngineSession.goBack</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="go-forward.html">goForward</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">goForward</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/go-forward.html">EngineSession.goForward</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="handle-long-click.html">handleLongClick</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">handleLongClick</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$handleLongClick(kotlin.String, kotlin.Int, kotlin.String)/elementSrc">elementSrc</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$handleLongClick(kotlin.String, kotlin.Int, kotlin.String)/elementType">elementType</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$handleLongClick(kotlin.String, kotlin.Int, kotlin.String)/uri">uri</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span><span class="symbol">: </span><a href="../../mozilla.components.concept.engine/-hit-result/index.html"><span class="identifier">HitResult</span></a><span class="symbol">?</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="load-data.html">loadData</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">loadData</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$loadData(kotlin.String, kotlin.String, kotlin.String)/data">data</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$loadData(kotlin.String, kotlin.String, kotlin.String)/mimeType">mimeType</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$loadData(kotlin.String, kotlin.String, kotlin.String)/encoding">encoding</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/load-data.html">EngineSession.loadData</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="load-url.html">loadUrl</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">loadUrl</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$loadUrl(kotlin.String)/url">url</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/load-url.html">EngineSession.loadUrl</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="reload.html">reload</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">reload</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/reload.html">EngineSession.reload</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="restore-state.html">restoreState</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">restoreState</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$restoreState(kotlin.collections.Map((kotlin.String, kotlin.Any)))/state">state</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/restore-state.html">EngineSession.restoreState</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="save-state.html">saveState</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">saveState</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/save-state.html">EngineSession.saveState</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="stop-loading.html">stopLoading</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">stopLoading</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/stop-loading.html">EngineSession.stopLoading</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="toggle-desktop-mode.html">toggleDesktopMode</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">toggleDesktopMode</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$toggleDesktopMode(kotlin.Boolean, kotlin.Boolean)/enable">enable</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.gecko.GeckoEngineSession$toggleDesktopMode(kotlin.Boolean, kotlin.Boolean)/reload">reload</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>See <a href="../../mozilla.components.concept.engine/-engine-session/settings.html">EngineSession.settings</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.concept.engine/-engine-session/close.html">close</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">close</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Close the session. This may free underlying objects. Call this when you are finished using
+this session.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

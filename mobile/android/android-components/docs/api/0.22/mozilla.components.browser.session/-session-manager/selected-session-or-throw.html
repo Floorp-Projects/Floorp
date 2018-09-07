@@ -1,0 +1,22 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SessionManager.selectedSessionOrThrow - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.session</a>&nbsp;/&nbsp;<a href="index.html">SessionManager</a>&nbsp;/&nbsp;<a href="./selected-session-or-throw.html">selectedSessionOrThrow</a><br/>
+<br/>
+<h1>selectedSessionOrThrow</h1>
+<a name="mozilla.components.browser.session.SessionManager$selectedSessionOrThrow"></a>
+<code><span class="keyword">val </span><span class="identifier">selectedSessionOrThrow</span><span class="symbol">: </span><a href="../-session/index.html"><span class="identifier">Session</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L55">(source)</a>
+<p>Gets the currently selected session or throws an IllegalStateException if no session is
+selected.</p>
+<p>It's application specific whether a session manager can have no selected session (= no sessions)
+or not. In applications that always have at least one session dealing with the nullable
+selectedSession property can be cumbersome. In those situations, where you always
+expect a session to exist, you can use selectedSessionOrThrow to avoid dealing
+with null values.</p>
+<p>Only one session can be selected at a given time.</p>
+</BODY>
+</HTML>

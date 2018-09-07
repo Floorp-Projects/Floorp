@@ -1,0 +1,42 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>RequestInterceptor - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.engine.request</a>&nbsp;/&nbsp;<a href="./index.html">RequestInterceptor</a><br/>
+<br/>
+<h1>RequestInterceptor</h1>
+<code><span class="keyword">interface </span><span class="identifier">RequestInterceptor</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L12">(source)</a>
+<p>Interface for classes that want to intercept load requests to allow custom behavior.</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-interception-response/index.html">InterceptionResponse</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">InterceptionResponse</span></code>
+<p>An alternative response for an intercepted request.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="on-load-request.html">onLoadRequest</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onLoadRequest</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.request.RequestInterceptor$onLoadRequest(mozilla.components.concept.engine.EngineSession, kotlin.String)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine/-engine-session/index.html"><span class="identifier">EngineSession</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.request.RequestInterceptor$onLoadRequest(mozilla.components.concept.engine.EngineSession, kotlin.String)/uri">uri</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="-interception-response/index.html"><span class="identifier">InterceptionResponse</span></a><span class="symbol">?</span></code>
+<p>A request to open an URI. This is called before each page load to allow custom behavior implementation.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

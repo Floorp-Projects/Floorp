@@ -1,0 +1,20 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>EngineSession.saveState - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.engine</a>&nbsp;/&nbsp;<a href="index.html">EngineSession</a>&nbsp;/&nbsp;<a href="./save-state.html">saveState</a><br/>
+<br/>
+<h1>saveState</h1>
+<a name="mozilla.components.concept.engine.EngineSession$saveState()"></a>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">saveState</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html"><span class="identifier">Map</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">,</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L136">(source)</a>
+<p>Saves and returns the engine state. Engine implementations are not required
+to persist the state anywhere else than in the returned map. Engines that
+already provide a serialized state can use a single entry in this map to
+provide this state. The only requirement is that the same map can be used
+to restore the original state. See <a href="restore-state.html">restoreState</a> and the specific
+engine implementation for details.</p>
+</BODY>
+</HTML>

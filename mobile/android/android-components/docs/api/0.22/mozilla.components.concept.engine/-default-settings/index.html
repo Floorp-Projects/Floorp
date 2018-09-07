@@ -1,0 +1,78 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>DefaultSettings - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.engine</a>&nbsp;/&nbsp;<a href="./index.html">DefaultSettings</a><br/>
+<br/>
+<h1>DefaultSettings</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">DefaultSettings</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-settings/index.html"><span class="identifier">Settings</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L55">(source)</a>
+<p><a href="../-settings/index.html">Settings</a> implementation used to set defaults for <a href="../-engine/index.html">Engine</a> and <a href="../-engine-session/index.html">EngineSession</a>.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">DefaultSettings</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor)/javascriptEnabled">javascriptEnabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor)/domStorageEnabled">domStorageEnabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor)/webFontsEnabled">webFontsEnabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor)/trackingProtectionPolicy">trackingProtectionPolicy</span><span class="symbol">:</span>&nbsp;<a href="../-engine-session/-tracking-protection-policy/index.html"><span class="identifier">TrackingProtectionPolicy</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.concept.engine.DefaultSettings$<init>(kotlin.Boolean, kotlin.Boolean, kotlin.Boolean, mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy, mozilla.components.concept.engine.request.RequestInterceptor)/requestInterceptor">requestInterceptor</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.concept.engine.request/-request-interceptor/index.html"><span class="identifier">RequestInterceptor</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span></code>
+<p><a href="../-settings/index.html">Settings</a> implementation used to set defaults for <a href="../-engine/index.html">Engine</a> and <a href="../-engine-session/index.html">EngineSession</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="dom-storage-enabled.html">domStorageEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">domStorageEnabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not DOM Storage is enabled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="javascript-enabled.html">javascriptEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">javascriptEnabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not JavaScript is enabled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="request-interceptor.html">requestInterceptor</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">requestInterceptor</span><span class="symbol">: </span><a href="../../mozilla.components.concept.engine.request/-request-interceptor/index.html"><span class="identifier">RequestInterceptor</span></a><span class="symbol">?</span></code>
+<p>Setting to intercept and override requests.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="tracking-protection-policy.html">trackingProtectionPolicy</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">trackingProtectionPolicy</span><span class="symbol">: </span><a href="../-engine-session/-tracking-protection-policy/index.html"><span class="identifier">TrackingProtectionPolicy</span></a><span class="symbol">?</span></code>
+<p>Setting to control tracking protection.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="web-fonts-enabled.html">webFontsEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">webFontsEnabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Setting to control whether or not Web fonts are enabled.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
