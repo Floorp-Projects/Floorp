@@ -1447,6 +1447,46 @@ var gEMETests = [
     duration:1.60,
   },
   {
+    // File generated with shaka packager:
+    // packager-osx --enable_raw_key_encryption --keys label=:key_id=7e571d047e571d047e571d047e571d21:key=7e5744447e5744447e5744447e574421 --segment_duration 1 --clear_lead 0 in=test-flac.mp4,stream=audio,output=flac-sample-cenc.mp4
+    name: "flac in mp4 clearkey",
+    tracks: [
+      {
+        name:"audio",
+        type:"audio/mp4; codecs=\"flac\"",
+        fragments:[ "flac-sample-cenc.mp4",
+                  ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "7e571d047e571d047e571d047e571d21" : "7e5744447e5744447e5744447e574421",
+    },
+    sessionType:"temporary",
+    sessionCount:1,
+    duration:2.05,
+  },
+  {
+    // File generated with shaka packager:
+    // packager-osx --enable_raw_key_encryption --keys label=:key_id=7e571d047e571d047e571d047e571d21:key=7e5744447e5744447e5744447e574421 --segment_duration 1 --clear_lead 0 in=test-opus.mp4,stream=audio,output=opus-sample-cenc.mp4
+    name: "opus in mp4 clearkey",
+    tracks: [
+      {
+        name:"audio",
+        type:"audio/mp4; codecs=\"opus\"",
+        fragments:[ "opus-sample-cenc.mp4",
+                  ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "7e571d047e571d047e571d047e571d21" : "7e5744447e5744447e5744447e574421",
+    },
+    sessionType:"temporary",
+    sessionCount:1,
+    duration:1.98,
+  },
+  {
     name: "WebM vorbis audio & vp8 video clearkey",
     tracks: [
       {
