@@ -248,7 +248,7 @@ FuncTypeIdDesc::isGlobal(const FuncType& funcType)
 FuncTypeIdDesc::global(const FuncType& funcType, uint32_t globalDataOffset)
 {
     MOZ_ASSERT(isGlobal(funcType));
-    return FuncTypeIdDesc(Kind::Global, globalDataOffset);
+    return FuncTypeIdDesc(FuncTypeIdDescKind::Global, globalDataOffset);
 }
 
 static ImmediateType
@@ -284,7 +284,7 @@ FuncTypeIdDesc::immediate(const FuncType& funcType)
     }
 
     MOZ_ASSERT(shift <= sTotalBits);
-    return FuncTypeIdDesc(Kind::Immediate, immediate);
+    return FuncTypeIdDesc(FuncTypeIdDescKind::Immediate, immediate);
 }
 
 size_t
