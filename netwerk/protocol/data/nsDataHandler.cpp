@@ -11,6 +11,7 @@
 #include "DataChannelChild.h"
 #include "plstr.h"
 #include "nsSimpleURI.h"
+#include "mozilla/dom/MimeType.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -143,13 +144,13 @@ nsDataHandler::AllowPort(int32_t port, const char *scheme, bool *_retval) {
     return NS_OK;
 }
 
-#define BASE64_EXTENSION ";base64"
-
 /**
  * Helper that performs a case insensitive match to find the offset of a given
  * pattern in a nsACString.
+ * The search is performed starting from the end of the string; if the string
+ * contains more than one match, the rightmost (last) match will be returned.
  */
-bool
+static bool
 FindOffsetOf(const nsACString& aPattern, const nsACString& aSrc,
              nsACString::size_type& aOffset)
 {
@@ -158,7 +159,7 @@ FindOffsetOf(const nsACString& aPattern, const nsACString& aSrc,
     nsACString::const_iterator begin, end;
     aSrc.BeginReading(begin);
     aSrc.EndReading(end);
-    if (!FindInReadable(aPattern, begin, end, kComparator)) {
+    if (!RFindInReadable(aPattern, begin, end, kComparator)) {
         return false;
     }
 
@@ -175,8 +176,8 @@ nsDataHandler::ParsePathWithoutRef(
     bool& aIsBase64,
     nsDependentCSubstring* aDataBuffer)
 {
-    static NS_NAMED_LITERAL_CSTRING(kBase64Ext, BASE64_EXTENSION);
-    static NS_NAMED_LITERAL_CSTRING(kCharset, "charset=");
+    static NS_NAMED_LITERAL_CSTRING(kBase64, "base64");
+    static NS_NAMED_LITERAL_CSTRING(kCharset, "charset");
 
     aIsBase64 = false;
 
@@ -197,8 +198,8 @@ nsDataHandler::ParsePathWithoutRef(
 
         // Determine if the data is base64 encoded.
         nsACString::size_type base64;
-        if (FindOffsetOf(kBase64Ext, mediaType, base64)) {
-            nsACString::size_type offset = base64 + kBase64Ext.Length();
+        if (FindOffsetOf(kBase64, mediaType, base64) && base64 > 0) {
+            nsACString::size_type offset = base64 + kBase64.Length();
             // Per the RFC 2397 grammar, "base64" MUST be at the end of the
             // non-data part.
             //
@@ -207,37 +208,51 @@ nsDataHandler::ParsePathWithoutRef(
             // 781693 for an example). Anything after "base64" in the non-data
             // part will be discarded in this case, however.
             if (offset == mediaType.Length() || mediaType[offset] == ';') {
-                aIsBase64 = true;
-                // Trim the base64 part off.
-                mediaType.Rebind(aPath, 0, base64);
-            }
-        }
-
-        // Everything else is content type.
-        int32_t semiColon = mediaType.FindChar(';');
-
-        if (semiColon == 0 || mediaType.IsEmpty()) {
-            // There is no content type, but there are other parameters.
-            aContentType.AssignLiteral("text/plain");
-        } else {
-            aContentType = Substring(mediaType, 0, semiColon);
-            ToLowerCase(aContentType);
-            if (!aContentType.StripWhitespace(mozilla::fallible)) {
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
-        }
-
-        if (semiColon != kNotFound && aContentCharset) {
-            auto afterSemi = Substring(mediaType, semiColon + 1);
-            nsACString::size_type charset;
-            if (FindOffsetOf(kCharset, afterSemi, charset)) {
-                *aContentCharset =
-                        Substring(afterSemi, charset + kCharset.Length());
-                if (!aContentCharset->StripWhitespace(mozilla::fallible)) {
-                    return NS_ERROR_OUT_OF_MEMORY;
+                MOZ_DIAGNOSTIC_ASSERT(base64 > 0, "Did someone remove the check?");
+                // Index is on the first character of matched "base64" so we
+                // move to the preceding character
+                base64--;
+                // Skip any preceding spaces, searching for a semicolon
+                while (base64 > 0 && mediaType[base64] == ' ') {
+                    base64--;
+                }
+                if (mediaType[base64] == ';') {
+                    aIsBase64 = true;
+                    // Trim the base64 part off.
+                    mediaType.Rebind(aPath, 0, base64);
                 }
             }
         }
+
+        // Skip any leading spaces
+        nsACString::size_type startIndex = 0;
+        while (startIndex < mediaType.Length() && mediaType[startIndex] == ' ') {
+            startIndex++;
+        }
+
+        nsAutoCString mediaTypeBuf;
+        // If the mimetype starts with ';' we assume text/plain
+        if (startIndex < mediaType.Length() && mediaType[startIndex] == ';') {
+            mediaTypeBuf.AssignLiteral("text/plain");
+            mediaTypeBuf.Append(mediaType);
+            mediaType.Rebind(mediaTypeBuf, 0, mediaTypeBuf.Length());
+        }
+
+        // Everything else is content type.
+        UniquePtr<CMimeType> parsed = CMimeType::Parse(mediaType);
+        if (parsed) {
+            parsed->GetFullType(aContentType);
+            if (aContentCharset) {
+                parsed->GetParameterValue(kCharset, *aContentCharset);
+            }
+        } else {
+            // Mime Type parsing failed
+            aContentType.AssignLiteral("text/plain");
+            if (aContentCharset) {
+                aContentCharset->AssignLiteral("US-ASCII");
+            }
+        }
+
     }
 
     if (aDataBuffer) {

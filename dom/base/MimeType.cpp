@@ -236,30 +236,65 @@ TMimeType<char_type>::Serialize(nsTSubstring<char_type>& aOutput) const
   aOutput.Append(mSubtype);
   for (uint32_t i = 0; i < mParameterNames.Length(); i++) {
     auto name = mParameterNames[i];
-    ParameterValue value;
-    mParameters.Get(name, &value);
     aOutput.AppendLiteral(";");
     aOutput.Append(name);
     aOutput.AppendLiteral("=");
-    if (value.mRequiresQuoting) {
-      aOutput.AppendLiteral("\"");
-      const char_type* vcur = value.BeginReading();
-      const char_type* vend = value.EndReading();
-      while (vcur < vend) {
-        if (*vcur == '"' || *vcur == '\\') {
-          aOutput.AppendLiteral("\\");
-        }
-        aOutput.Append(*vcur);
-        vcur++;
-      }
-      aOutput.AppendLiteral("\"");
-    } else {
-      aOutput.Append(value);
-    }
+    GetParameterValue(name, aOutput, true);
   }
+}
+
+template<typename char_type>
+void
+TMimeType<char_type>::GetFullType(nsTSubstring<char_type>& aOutput) const
+{
+  aOutput.Assign(mType);
+  aOutput.AppendLiteral("/");
+  aOutput.Append(mSubtype);
+}
+
+template<typename char_type>
+bool
+TMimeType<char_type>::GetParameterValue(const nsTSubstring<char_type>& aName,
+                                        nsTSubstring<char_type>& aOutput,
+                                        bool aAppend) const
+{
+  if (!aAppend) {
+    aOutput.Truncate();
+  }
+
+  ParameterValue value;
+  if (!mParameters.Get(aName, &value)) {
+    return false;
+  }
+
+  if (value.mRequiresQuoting) {
+    aOutput.AppendLiteral("\"");
+    const char_type* vcur = value.BeginReading();
+    const char_type* vend = value.EndReading();
+    while (vcur < vend) {
+      if (*vcur == '"' || *vcur == '\\') {
+        aOutput.AppendLiteral("\\");
+      }
+      aOutput.Append(*vcur);
+      vcur++;
+    }
+    aOutput.AppendLiteral("\"");
+  } else {
+    aOutput.Append(value);
+  }
+
+  return true;
 }
 
 template mozilla::UniquePtr<TMimeType<char16_t>> TMimeType<char16_t>::Parse(const nsTSubstring<char16_t>& aMimeType);
 template mozilla::UniquePtr<TMimeType<char>> TMimeType<char>::Parse(const nsTSubstring<char>& aMimeType);
 template void TMimeType<char16_t>::Serialize(nsTSubstring<char16_t>& aOutput) const;
 template void TMimeType<char>::Serialize(nsTSubstring<char>& aOutput) const;
+template void TMimeType<char16_t>::GetFullType(nsTSubstring<char16_t>& aOutput) const;
+template void TMimeType<char>::GetFullType(nsTSubstring<char>& aOutput) const;
+template bool TMimeType<char16_t>::GetParameterValue(const nsTSubstring<char16_t>& aName,
+                                                     nsTSubstring<char16_t>& aOutput,
+                                                     bool aAppend) const;
+template bool TMimeType<char>::GetParameterValue(const nsTSubstring<char>& aName,
+                                                 nsTSubstring<char>& aOutput,
+                                                 bool aAppend) const;
