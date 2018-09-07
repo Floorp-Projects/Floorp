@@ -1503,6 +1503,7 @@ WebRenderCommandBuilder::CreateImageKey(nsDisplayItem* aItem,
                                         ImageContainer* aContainer,
                                         mozilla::wr::DisplayListBuilder& aBuilder,
                                         mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                        mozilla::wr::ImageRendering aRendering,
                                         const StackingContextHelper& aSc,
                                         gfx::IntSize& aSize,
                                         const Maybe<LayoutDeviceRect>& aAsyncImageBounds)
@@ -1530,7 +1531,7 @@ WebRenderCommandBuilder::CreateImageKey(nsDisplayItem* aItem,
                                                  scBounds,
                                                  transform,
                                                  scaleToSize,
-                                                 wr::ImageRendering::Auto,
+                                                 aRendering,
                                                  wr::MixBlendMode::Normal,
                                                  !aItem->BackfaceIsHidden());
     return Nothing();
@@ -1554,10 +1555,11 @@ WebRenderCommandBuilder::PushImage(nsDisplayItem* aItem,
                                    const StackingContextHelper& aSc,
                                    const LayoutDeviceRect& aRect)
 {
+  mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
+    nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame()));
   gfx::IntSize size;
-  Maybe<wr::ImageKey> key = CreateImageKey(aItem, aContainer,
-                                           aBuilder, aResources,
-                                           aSc, size, Some(aRect));
+  Maybe<wr::ImageKey> key = CreateImageKey(
+    aItem, aContainer, aBuilder, aResources, rendering, aSc, size, Some(aRect));
   if (aContainer->IsAsync()) {
     // Async ImageContainer does not create ImageKey, instead it uses Pipeline.
     MOZ_ASSERT(key.isNothing());
@@ -1568,8 +1570,7 @@ WebRenderCommandBuilder::PushImage(nsDisplayItem* aItem,
   }
 
   auto r = wr::ToRoundedLayoutRect(aRect);
-  gfx::SamplingFilter sampleFilter = nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
-  aBuilder.PushImage(r, r, !aItem->BackfaceIsHidden(), wr::ToImageRendering(sampleFilter), key.value());
+  aBuilder.PushImage(r, r, !aItem->BackfaceIsHidden(), rendering, key.value());
 
   return true;
 }
