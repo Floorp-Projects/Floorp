@@ -24,7 +24,7 @@ permalink: /changelog/
 
 * We now provide aggregated API docs. The docs for this release are hosted at: https://mozilla-mobile.github.io/android-components/api/0.22
 * **browser-engine-***:
-  * EngineView now exposes lifecycle methods with default implementations. A `LifecycleObserver` implementation is provided which frowards events to EngineView instances.
+  * EngineView now exposes lifecycle methods with default implementations. A `LifecycleObserver` implementation is provided which forwards events to EngineView instances.
   ```Kotlin
   lifecycle.addObserver(EngineView.LifecycleObserver(view))
    ```
