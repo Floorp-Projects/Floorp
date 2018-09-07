@@ -4,6 +4,50 @@ title: Changelog
 permalink: /changelog/
 ---
 
+# 0.22 (2018-09-07)
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.21...v0.22),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/22?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.22/index)
+
+* Compiled against:
+  * Android
+    * SDK: 27
+    * Support Libraries: 27.1.1
+  * Kotlin
+    * Standard library: 1.2.61
+    * Coroutines: 0.23.4
+  * GeckoView
+    * Nightly: **64.0.20180905100117** 🔺
+    * Beta: **63.0b3** (0269319281578bff4e01d77a21350bf91ba08620) 🔺
+    * Release: **62.0** (9cbae12a3fff404ed2c12070ad475424d0ae869f) 🔺
+
+* We now provide aggregated API docs. The docs for this release are hosted at: https://mozilla-mobile.github.io/android-components/api/0.22
+* **browser-engine-***:
+  * EngineView now exposes lifecycle methods with default implementations. A `LifecycleObserver` implementation is provided which frowards events to EngineView instances.
+  ```Kotlin
+  lifecycle.addObserver(EngineView.LifecycleObserver(view))
+   ```
+  * Added engine setting for blocking web fonts:
+  ```Kotlin
+  GeckoEngine(runtime, DefaultSettings(webFontsEnabled = false))
+  ```
+  * `setDesktopMode()` was renamed to `toggleDesktopMode()`.
+* **browser-engine-system**: The `X-Requested-With` header is now cleared (set to an empty String).
+* **browser-session**: Desktop mode can be observed now:
+  ```Kotlin
+  session.register(object : Session.Observer {
+      fun onDesktopModeChange(enabled: Boolean) {
+          // ..
+      }
+  })
+  ```
+* **service-fretboard**:
+  * `Fretboard` now has synchronous methods for adding and clearing overrides: `setOverrideNow()`, `clearOverrideNow`, `clearAllOverridesNow`.
+  * Access to `Experiment.id` is now deprecated and is scheduled to be removed in a future release (target: 0.24). The `id` is an implementation detail of the underlying storage service and was not meant to be exposed to apps.
+* **ui-tabcounter**: Due to a packaging error previous releases of this component didn't contain any compiled code. This is the first usable release of the component.
+
+
 # 0.21 (2018-08-31)
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.20...v0.21),
