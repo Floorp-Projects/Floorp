@@ -21,13 +21,13 @@ function selectPage(page) {
       return;
     }
 
-    dispatch({ type: PAGE_SELECTED, page });
-
     if (page === PAGES.THIS_FIREFOX) {
-      dispatch(Actions.connectRuntime());
+      await dispatch(Actions.connectRuntime());
     } else {
-      dispatch(Actions.disconnectRuntime());
+      await dispatch(Actions.disconnectRuntime());
     }
+
+    dispatch({ type: PAGE_SELECTED, page });
   };
 }
 
