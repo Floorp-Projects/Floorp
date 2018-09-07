@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Test for GetAssertion on dead object</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <h1>Test for GetAssertion on dead object</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1483905">Mozilla Bug 1483905</a>
+
+  <script class="testbody" type="text/javascript">
+    "use strict";
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout(
+      "Due to the nature of this test, there's no way for the window we're opening to signal " +
+      "that it's done (the `document.writeln('')` is essential and basically clears any state " +
+      "we could use). So, we have to wait at least 15 seconds for the webauthn call to time out.");
+    let win = window.open("https://example.com/tests/dom/webauthn/tests/get_assertion_dead_object.html");
+    setTimeout(() => {
+      win.close();
+      SimpleTest.finish();
+    }, 20000);
+  </script>
+
+</body>
+</html>
