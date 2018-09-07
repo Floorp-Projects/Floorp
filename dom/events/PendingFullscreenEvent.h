@@ -13,6 +13,12 @@ class nsIDocument;
 
 namespace mozilla {
 
+enum class FullscreenEventType
+{
+  Change,
+  Error,
+};
+
 /*
  * Class for dispatching a fullscreen event. It should be queued and
  * invoked as part of "run the fullscreen steps" algorithm.
@@ -20,8 +26,9 @@ namespace mozilla {
 class PendingFullscreenEvent
 {
 public:
-  explicit PendingFullscreenEvent(nsIDocument* aDoc)
+  PendingFullscreenEvent(FullscreenEventType aType, nsIDocument* aDoc)
     : mDocument(aDoc)
+    , mType(aType)
   {
     MOZ_ASSERT(aDoc);
   }
@@ -34,13 +41,23 @@ public:
     MOZ_ASSERT(!mDispatched);
     mDispatched = true;
 #endif
+    nsString name;
+    switch (mType) {
+      case FullscreenEventType::Change:
+        name = NS_LITERAL_STRING("fullscreenchange");
+        break;
+      case FullscreenEventType::Error:
+        name = NS_LITERAL_STRING("fullscreenerror");
+        break;
+    }
     Unused << nsContentUtils::DispatchTrustedEvent(
-      mDocument, mDocument, NS_LITERAL_STRING("fullscreenchange"),
+      mDocument, mDocument, name,
       CanBubble::eYes, Cancelable::eNo, nullptr);
   }
 
 private:
   nsCOMPtr<nsIDocument> mDocument;
+  FullscreenEventType mType;
 #ifdef DEBUG
   bool mDispatched = false;
 #endif
