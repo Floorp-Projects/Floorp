@@ -49,6 +49,7 @@
 #include "nsStringFwd.h"                // for nsString
 #include "mozilla/dom/Selection.h"      // for AutoHideSelectionChanges, etc
 #include "nsFrameSelection.h"           // for nsFrameSelection
+#include "nsBaseCommandController.h"    // for nsBaseCommandController
 
 class nsISupports;
 class nsIURI;
@@ -156,7 +157,7 @@ nsEditingSession::MakeWindowEditable(mozIDOMWindowProxy* aWindow,
   // Setup commands common to plaintext and html editors,
   //  including the document creation observers
   // the first is an editing controller
-  rv = SetupEditorCommandController("@mozilla.org/editor/editingcontroller;1",
+  rv = SetupEditorCommandController(nsBaseCommandController::CreateEditingController,
                                     aWindow,
                                     static_cast<nsIEditingSession*>(this),
                                     &mBaseCommandControllerId);
@@ -1372,7 +1373,7 @@ nsEditingSession::ReattachToWindow(mozIDOMWindowProxy* aWindow)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Setup the command controllers again.
-  rv = SetupEditorCommandController("@mozilla.org/editor/editingcontroller;1",
+  rv = SetupEditorCommandController(nsBaseCommandController::CreateEditingController,
                                     aWindow,
                                     static_cast<nsIEditingSession*>(this),
                                     &mBaseCommandControllerId);

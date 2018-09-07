@@ -31,6 +31,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   static already_AddRefed<nsIController> CreateWindowController();
+  static already_AddRefed<nsIController> CreateEditingController();
 
 protected:
   virtual ~nsBaseCommandController();
