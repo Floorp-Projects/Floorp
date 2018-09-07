@@ -474,7 +474,6 @@ NS_DEFINE_NAMED_CID(NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_JSPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_JSURI_CID);
 NS_DEFINE_NAMED_CID(NS_JSURIMUTATOR_CID);
-NS_DEFINE_NAMED_CID(NS_WINDOWCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_PLUGINDOCLOADERFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_PLUGINDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_VIDEODOCUMENT_CID);
@@ -540,27 +539,6 @@ NS_DEFINE_NAMED_CID(TEXT_INPUT_PROCESSOR_CID);
 
 NS_DEFINE_NAMED_CID(NS_SCRIPTERROR_CID);
 
-static nsresult
-CreateWindowControllerWithSingletonCommandTable(nsISupports *aOuter,
-                                      REFNSIID aIID, void **aResult)
-{
-  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
-
-  nsCOMPtr<nsIControllerCommandTable> windowCommandTable =
-    nsControllerCommandTable::CreateWindowCommandTable();
-
-  // this is a singleton; make it immutable
-  windowCommandTable->MakeImmutable();
-
-  nsresult rv;
-  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  controllerContext->Init(windowCommandTable);
-  if (NS_FAILED(rv)) return rv;
-
-  return controller->QueryInterface(aIID, aResult);
-}
 
 // Constructor of a controller which is set up to use, internally, a
 // singleton command-table pre-filled with editor commands.
@@ -641,7 +619,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_JSPROTOCOLHANDLER_CID, false, nullptr, nsJSProtocolHandler::Create },
   { &kNS_JSURI_CID, false, nullptr, nsJSURIMutatorConstructor }, // do_CreateInstance returns mutator
   { &kNS_JSURIMUTATOR_CID, false, nullptr, nsJSURIMutatorConstructor },
-  { &kNS_WINDOWCONTROLLER_CID, false, nullptr, CreateWindowControllerWithSingletonCommandTable },
   { &kNS_PLUGINDOCLOADERFACTORY_CID, false, nullptr, CreateContentDLF },
   { &kNS_PLUGINDOCUMENT_CID, false, nullptr, CreatePluginDocument },
   { &kNS_VIDEODOCUMENT_CID, false, nullptr, CreateVideoDocument },
@@ -734,7 +711,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #endif
   { CONTENT_DLF_CONTRACTID, &kNS_CONTENT_DOCUMENT_LOADER_FACTORY_CID },
   { NS_JSPROTOCOLHANDLER_CONTRACTID, &kNS_JSPROTOCOLHANDLER_CID },
-  { NS_WINDOWCONTROLLER_CONTRACTID, &kNS_WINDOWCONTROLLER_CID },
   { PLUGIN_DLF_CONTRACTID, &kNS_PLUGINDOCLOADERFACTORY_CID },
   { NS_STYLESHEETSERVICE_CONTRACTID, &kNS_STYLESHEETSERVICE_CID },
   { NS_SDBCONNECTION_CONTRACTID, &kNS_SDBCONNECTION_CID },

@@ -180,3 +180,24 @@ nsBaseCommandController::GetSupportedCommands(uint32_t* aCount,
   NS_ENSURE_STATE(mCommandTable);
   return mCommandTable->GetSupportedCommands(aCount, aCommands);
 }
+
+already_AddRefed<nsIController>
+nsBaseCommandController::CreateWindowController()
+{
+  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
+
+  nsCOMPtr<nsIControllerCommandTable> windowCommandTable =
+    nsControllerCommandTable::CreateWindowCommandTable();
+
+  // this is a singleton; make it immutable
+  windowCommandTable->MakeImmutable();
+
+  nsresult rv;
+  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
+  if (NS_FAILED(rv)) return nullptr;
+
+  rv = controllerContext->Init(windowCommandTable);
+  if (NS_FAILED(rv)) return nullptr;
+
+  return controller.forget();
+}
