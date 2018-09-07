@@ -460,14 +460,14 @@ nsNSSSocketInfo::IsAcceptableForHost(const nsACString& hostname, bool* _retval)
 
   // Before checking the server certificate we need to make sure the
   // handshake has completed.
-  if (!mHandshakeCompleted || !SSLStatus() || !SSLStatus()->HasServerCert()) {
+  if (!mHandshakeCompleted || !HasServerCert()) {
     return NS_OK;
   }
 
   // If the cert has error bits (e.g. it is untrusted) then do not join.
   // The value of mHaveCertErrorBits is only reliable because we know that
   // the handshake completed.
-  if (SSLStatus()->mHaveCertErrorBits)
+  if (mHaveCertErrorBits)
     return NS_OK;
 
   // If the connection is using client certificates then do not join
@@ -482,7 +482,7 @@ nsNSSSocketInfo::IsAcceptableForHost(const nsACString& hostname, bool* _retval)
   UniqueCERTCertificate nssCert;
 
   nsCOMPtr<nsIX509Cert> cert;
-  if (NS_FAILED(SSLStatus()->GetServerCert(getter_AddRefs(cert)))) {
+  if (NS_FAILED(GetServerCert(getter_AddRefs(cert)))) {
     return NS_OK;
   }
   if (cert) {
