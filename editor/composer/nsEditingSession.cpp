@@ -1094,6 +1094,53 @@ nsEditingSession::PrepareForEditing(nsPIDOMWindowOuter* aWindow)
 ----------------------------------------------------------------------------*/
 nsresult
 nsEditingSession::SetupEditorCommandController(
+                                  nsEditingSession::ControllerCreatorFn aControllerCreatorFn,
+                                  mozIDOMWindowProxy* aWindow,
+                                  nsISupports* aContext,
+                                  uint32_t* aControllerId)
+{
+  NS_ENSURE_ARG_POINTER(aControllerCreatorFn);
+  NS_ENSURE_ARG_POINTER(aWindow);
+  NS_ENSURE_ARG_POINTER(aContext);
+  NS_ENSURE_ARG_POINTER(aControllerId);
+
+  auto* piWindow = nsPIDOMWindowOuter::From(aWindow);
+  MOZ_ASSERT(piWindow);
+
+  nsCOMPtr<nsIControllers> controllers;
+  nsresult rv = piWindow->GetControllers(getter_AddRefs(controllers));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We only have to create each singleton controller once
+  // We know this has happened once we have a controllerId value
+  if (!*aControllerId) {
+    nsCOMPtr<nsIController> controller = aControllerCreatorFn();
+    NS_ENSURE_TRUE(controller, NS_ERROR_FAILURE);
+
+    // We must insert at head of the list to be sure our
+    //   controller is found before other implementations
+    //   (e.g., not-implemented versions by browser)
+    rv = controllers->InsertControllerAt(0, controller);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Remember the ID for the controller
+    rv = controllers->GetControllerId(controller, aControllerId);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Set the context
+  return SetContextOnControllerById(controllers, aContext, *aControllerId);
+}
+
+/*---------------------------------------------------------------------------
+
+  SetupEditorCommandController
+
+  Create a command controller, append to controllers,
+  get and return the controller ID, and set the context
+----------------------------------------------------------------------------*/
+nsresult
+nsEditingSession::SetupEditorCommandController(
                                   const char *aControllerClassName,
                                   mozIDOMWindowProxy *aWindow,
                                   nsISupports *aContext,
