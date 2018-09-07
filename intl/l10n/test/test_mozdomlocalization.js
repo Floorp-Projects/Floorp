@@ -12,7 +12,12 @@ const fs = {
 const originalLoad = L10nRegistry.load;
 const originalRequested = Services.locale.getRequestedLocales();
 
+// Variable used to test for `L10nRegistry.load`
+// execution count.
+let loadCounter = 0;
+
 L10nRegistry.load = async function(url) {
+  loadCounter++;
   return fs.hasOwnProperty(url) ? fs[url] : false;
 };
 
@@ -37,14 +42,32 @@ add_task(function test_methods_presence() {
 });
 
 add_task(function test_add_remove_resources() {
-  equal(domLocalization.addResourceIds(["./path1.ftl", "./path2.ftl"], 2), 2);
-  equal(domLocalization.removeResourceIds(["./path1.ftl", "./path2.ftl"], 2), 0);
+  equal(domLocalization.addResourceIds(["./path1.ftl", "./path2.ftl"], false), 2);
+  equal(domLocalization.removeResourceIds(["./path1.ftl", "./path2.ftl"]), 0);
+});
+
+add_task(async function test_add_messages_eager() {
+  loadCounter = 0;
+
+  domLocalization.addResourceIds(["/browser/menu.ftl"], true);
+
+  equal(loadCounter, 1, "Load should be eagerly performed");
+
+  // Cleanup
+  domLocalization.removeResourceIds(["/browser/menu.ftl"]);
 });
 
 add_task(async function test_format_messages() {
-  domLocalization.addResourceIds(["/browser/menu.ftl"], 1);
+  // Make sure that the cache is empty to test for I/O.
+  L10nRegistry.sources.get("test").cache = {};
+  loadCounter = 0;
+
+  domLocalization.addResourceIds(["/browser/menu.ftl"], false);
+
+  equal(loadCounter, 0, "No loading should be performed eagerly");
 
   let msgs = await domLocalization.formatMessages([{"id": "key"}], 1);
+  equal(loadCounter, 1);
   equal(msgs.length, 1);
   equal(msgs[0].value, "[en] Value");
 });
