@@ -206,7 +206,7 @@ class ChainedIter
 
 typedef HashMap<Value*, const char*, DefaultHasher<Value*>, SystemAllocPolicy> RootedValueMap;
 
-using AllocKinds = mozilla::EnumSet<AllocKind>;
+using AllocKinds = mozilla::EnumSet<AllocKind, uint32_t>;
 
 // A singly linked list of zones.
 class ZoneList
