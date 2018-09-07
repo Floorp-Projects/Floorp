@@ -310,6 +310,14 @@ if (SpecialPowers.getBoolPref("layout.css.shape-outside.enabled")) {
     [ test_basic_shape_or_url_transition ];
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
+  supported_properties["offset-path"] = [ test_path_function ];
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {
+  supported_properties["clip-path"].push(test_path_function);
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
   supported_properties["font-variation-settings"] = [ test_font_variations_transition ];
 }
@@ -806,6 +814,112 @@ const basicShapesWithFragmentUrlTests = [
   // Fragment url to none
   { start: "none", end: "url('#a')", expected: ["url", ["\"#a\""]] },
   { start: "url('#a')", end: "none", expected: ["none"] },
+];
+
+// We have a lot of tests in web-platform-tests already, so here we only test
+// basic interpolation cases.
+const pathFunctionTests = [
+  { start: "none", end: "none",
+    expected: ["none"] },
+  // none to path
+  { start: "none",
+    end: "path('M 100 100')",
+    expected: ["path", '"M 100 100"']
+  },
+  // path to none
+  { start: "path('M 100 100')",
+    end: "none",
+    expected: ["none"]
+  },
+  // mismatch
+  {
+    start: "path('M 0 0 H 100 H 200')",
+    end: "path('M 0 0 H 500')",
+    expected: ["path", '"M 0 0 H 500"']
+  },
+  {
+    start: "path('M 0 0 V 100')",
+    end: "path('M 0 0 H 500')",
+    expected: ["path", '"M 0 0 H 500"']
+  },
+  {
+    start: "path('M 10 10 A 10 20 30 1 0 140 450')",
+    end: "path('M 10 10 A 50 60 70 0 1 380 290')",
+    expected: ["path", '"M 10 10 A 50 60 70 0 1 380 290"']
+  },
+  // match
+  {
+    start: "path('M 100 100')",
+    end: "path('M 100 500')",
+    expected: ["path", '"M 100 200"']
+  },
+  {
+    start: "path('M 10 10 L 100 100')",
+    end: "path('M 10 10 L 100 500')",
+    expected: ["path", '"M 10 10 L 100 200"']
+  },
+  {
+    start: "path('M 10 10 H 100')",
+    end: "path('M 10 10 H 500')",
+    expected: ["path", '"M 10 10 H 200"']
+  },
+  {
+    start: "path('M 10 10 V 100')",
+    end: "path('M 10 10 V 500')",
+    expected: ["path", '"M 10 10 V 200"']
+  },
+  {
+    start: "path('M 10 10 C 32 42 52 62 120 2200')",
+    end: "path('M 10 10 C 40 50 60 70 200 3000')",
+    expected: ["path", '"M 10 10 C 34 44 54 64 140 2400"']
+  },
+  {
+    start: "path('M 10 10 S 45 67 89 123')",
+    end: "path('M 10 10 S 61 51 113 99')",
+    expected: ["path", '"M 10 10 S 49 63 95 117"']
+  },
+  {
+    start: "path('M 10 10 Q 32 42 120 2200')",
+    end: "path('M 10 10 Q 40 50 200 3000')",
+    expected: ["path", '"M 10 10 Q 34 44 140 2400"']
+  },
+  {
+    start: "path('M 10 10 T 100 200')",
+    end: "path('M 10 10 T 500 280')",
+    expected: ["path", '"M 10 10 T 200 220"']
+  },
+  {
+    start: "path('M 10 10 A 10 20 30 0 1 140 450')",
+    end: "path('M 10 10 A 50 60 70 0 1 380 290')",
+    expected: ["path", '"M 10 10 A 20 30 40 0 1 200 410"']
+  },
+  // mix relative and absolute coordinates
+  {
+    start: "path('m 10 20 h 30 v 60 h 10 v -10 l 110 60')",
+    // =="path('M  10  20 H  40 V  80 H  50 V  70 L 160 130')"
+    end: "path('M 130 140 H 120 V 160 H 130 V 150 L 200 170')",
+    expected: ["path", '"M 40 50 H 60 V 100 H 70 V 90 L 170 140"']
+  },
+];
+
+const clipPathPathFunctionTests = [
+  // match fill-rule
+  {
+    start: "path(nonzero, 'M 100 100')",
+    end: "path(nonzero, 'M 100 500')",
+    expected: ["path", '"M 100 200"']
+  },
+  {
+    start: "path(evenodd, 'M 100 100')",
+    end: "path(evenodd, 'M 100 500')",
+    expected: ["path", 'evenodd, "M 100 200"']
+  },
+  // mismatch fill-rule
+  {
+    start: "path(nonzero, 'M 100 100')",
+    end: "path(evenodd, 'M 100 500')",
+    expected: ["path", 'evenodd, "M 100 500"']
+  },
 ];
 
 var filterTests = [
@@ -1562,6 +1676,36 @@ function test_shape_or_url_equals(computedValStr, expected)
   return true;
 }
 
+function test_path_function_equals(computedValStr, expectedList)
+{
+  // Check simple case "none"
+  if (expectedList.length === 1 && computedValStr === expectedList[0]) {
+    return true;
+  }
+
+  var regex = /([a-z]+)\((.*)\)/;
+  matches = computedValStr.match(regex)
+  if (!matches || matches[0] != computedValStr) {
+    ok(false, "Invalid function value");
+    return false;
+  }
+
+  // Bug 1480665: Support ray() for motion path. For now, only path(...) is
+  // acceptable.
+  if (matches[1] != "path") {
+    ok(false, "Only support path function");
+    return false;
+  }
+
+  // Check argument values.
+  if (matches[2] != expectedList[1]) {
+    ok(false, "Function parameters mismatch");
+    return false;
+  }
+
+  return true;
+}
+
 function filter_function_list_equals(computedValStr, expectedList)
 {
   // Check simple case "none"
@@ -1624,9 +1768,9 @@ function filter_function_list_equals(computedValStr, expectedList)
 
 function test_basic_shape_or_url_transition(prop) {
   let tests = basicShapesTests;
-  if (prop == "clip-path") {
+  if (prop === "clip-path") {
     // Clip-path won't resolve fragment URLs.
-    tests.concat(basicShapesWithFragmentUrlTests);
+    tests = tests.concat(basicShapesWithFragmentUrlTests);
   }
 
   for (let test of tests) {
@@ -1639,6 +1783,26 @@ function test_basic_shape_or_url_transition(prop) {
     ok(test_shape_or_url_equals(actual, test.expected),
        prop + " property is " + actual + " expected values of " +
        test.expected);
+  }
+}
+
+function test_path_function(prop) {
+  let tests = pathFunctionTests;
+  if (prop === "clip-path") {
+    // The syntax of path() in clip-path has fill-rule, so we have to test more.
+    tests = tests.concat(clipPathPathFunctionTests);
+  }
+
+  for (const test of tests) {
+    div.style.setProperty("transition-property", "none", "");
+    div.style.setProperty(prop, test.start, "");
+    cs.getPropertyValue(prop);
+    div.style.setProperty("transition-property", prop, "");
+    div.style.setProperty(prop, test.end, "");
+    const actual = cs.getPropertyValue(prop);
+    ok(test_path_function_equals(actual, test.expected),
+       prop + " property is " + actual + " expected values of " +
+       test.expected[0] + "(" + test.expected[1] + ")");
   }
 }
 
