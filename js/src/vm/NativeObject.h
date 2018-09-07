@@ -966,7 +966,7 @@ class NativeObject : public ShapedObject
                                 const AutoKeepShapeTables& keep);
 
     static MOZ_MUST_USE bool fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
-                                             const AutoValueVector& values, void* priv);
+                                             const Vector<Value>& values, void* priv);
 
   public:
     // Return true if this object has been converted from shared-immutable
