@@ -110,12 +110,14 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
                 .check(matches(hasFocus()))
                 .perform(click(), replaceText(webServer.url("/").toString()));
 
-        Screengrab.screenshot("Suggestion_accept_dialog");
 
         // click yes, then go into search dialog and change to twitter
-        onView(withId(R.id.enable_search_suggestions_button))
-                .check(matches(isDisplayed()))
-                .perform(click());
+        try {
+            onView(withId(R.id.enable_search_suggestions_button))
+                    .check(matches(isDisplayed()))
+                    .perform(click());
+            Screengrab.screenshot("Suggestion_accept_dialog");
+        } catch (AssertionError e) { }
 
         onView(withId(R.id.clearView))
                 .check(matches(isDisplayed()))
@@ -143,13 +145,12 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
                 .check(matches(hasFocus()))
                 .perform(click(), replaceText(webServer.url("/").toString()));
 
-        ViewInteraction dismissbutton = onView(withId(R.id.dismiss_no_suggestions_message));
-
-        dismissbutton.check(matches(isDisplayed()));
-
-        Screengrab.screenshot("Suggestion_unavailable_dialog");
-
-        dismissbutton.perform(click());
+        try {
+            ViewInteraction dismissbutton = onView(withId(R.id.dismiss_no_suggestions_message));
+            dismissbutton.check(matches(isDisplayed()));
+            Screengrab.screenshot("Suggestion_unavailable_dialog");
+            dismissbutton.perform(click());
+        } catch (AssertionError e) { }
 
         onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))
