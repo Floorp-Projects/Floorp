@@ -1413,8 +1413,9 @@ ScrollFrameHelper::WantAsyncScroll() const
                        (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN);
 
 #if defined(MOZ_WIDGET_ANDROID)
-  // Mobile platforms need focus to scroll.
-  bool canScrollWithoutScrollbars = IsFocused(mOuter->GetContent());
+  // Mobile platforms need focus to scroll text inputs.
+  bool canScrollWithoutScrollbars =
+    !IsForTextControlWithNoScrollbars() || IsFocused(mOuter->GetContent());
 #else
   bool canScrollWithoutScrollbars = true;
 #endif
@@ -4634,12 +4635,28 @@ ScrollFrameHelper::ReloadChildFrames()
   }
 }
 
+bool
+ScrollFrameHelper::IsForTextControlWithNoScrollbars() const
+{
+  nsIFrame* parent = mOuter->GetParent();
+  // The anonymous <div> used by <inputs> never gets scrollbars.
+  nsITextControlFrame* textFrame = do_QueryFrame(parent);
+  if (textFrame) {
+    // Make sure we are not a text area.
+    HTMLTextAreaElement* textAreaElement =
+      HTMLTextAreaElement::FromNode(parent->GetContent());
+    if (!textAreaElement) {
+      return true;
+    }
+  }
+  return false;
+}
+
 nsresult
 ScrollFrameHelper::CreateAnonymousContent(
   nsTArray<nsIAnonymousContentCreator::ContentInfo>& aElements)
 {
   nsPresContext* presContext = mOuter->PresContext();
-  nsIFrame* parent = mOuter->GetParent();
 
   // Don't create scrollbars if we're an SVG document being used as an image,
   // or if we're printing/print previewing.
@@ -4692,16 +4709,9 @@ ScrollFrameHelper::CreateAnonymousContent(
     canHaveVertical = true;
   }
 
-  // The anonymous <div> used by <inputs> never gets scrollbars.
-  nsITextControlFrame* textFrame = do_QueryFrame(parent);
-  if (textFrame) {
-    // Make sure we are not a text area.
-    HTMLTextAreaElement* textAreaElement =
-      HTMLTextAreaElement::FromNode(parent->GetContent());
-    if (!textAreaElement) {
-      mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = true;
-      return NS_OK;
-    }
+  if (IsForTextControlWithNoScrollbars()) {
+    mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = true;
+    return NS_OK;
   }
 
   nsNodeInfoManager* nodeInfoManager = presContext->Document()->NodeInfoManager();

@@ -5381,22 +5381,23 @@ bool
 BinaryArithIRGenerator::tryAttachStub()
 {
     AutoAssertNoPendingException aanpe(cx_);
-    // Attempt common case first
+    // Arithmetic operations with Int32 operands
     if (tryAttachInt32())
         return true;
-    if (tryAttachBooleanWithInt32())
+    // Bitwise operations with Int32 operands
+    if (tryAttachBitwise())
         return true;
-    if (tryAttachDoubleWithInt32())
-        return true;
-
-    // This attempt must come after tryAttachDoubleWithInt32
-    // and tryAttachInt32, as it will attach for those cases
+    // Arithmetic operations with Double operands. This needs to come after tryAttachInt32,
+    // as the guards overlap, and we'd prefer to attach the more specialized Int32 IC if
+    // it is possible.
     if (tryAttachDouble())
         return true;
 
-
+    // String x String
     if (tryAttachStringConcat())
         return true;
+
+    // String x Object
     if (tryAttachStringObjectConcat())
         return true;
 
@@ -5406,43 +5407,71 @@ BinaryArithIRGenerator::tryAttachStub()
 }
 
 bool
-BinaryArithIRGenerator::tryAttachDoubleWithInt32()
+BinaryArithIRGenerator::tryAttachBitwise()
 {
-    // ONLY bit-wise
-    if (op_ != JSOP_BITOR && op_ != JSOP_BITXOR && op_ != JSOP_BITAND)
+    // Only bit-wise and shifts.
+    if (op_ != JSOP_BITOR && op_ != JSOP_BITXOR && op_ != JSOP_BITAND &&
+        op_ != JSOP_LSH && op_ != JSOP_RSH && op_ != JSOP_URSH)
+    {
         return false;
+    }
 
     // Check guard conditions
-    if ((!(lhs_.isInt32()  && rhs_.isDouble()) &&
-         !(lhs_.isDouble() && rhs_.isInt32())))
+    if (!(lhs_.isNumber() || lhs_.isBoolean()) ||
+        !(rhs_.isNumber() || rhs_.isBoolean()))
+    {
         return false;
+    }
 
-    // output always int
-    MOZ_ASSERT(res_.isInt32());
+    // All ops, with the exception of URSH produce Int32 values.
+    MOZ_ASSERT_IF(op_ != JSOP_URSH, res_.isInt32());
 
     ValOperandId lhsId(writer.setInputOperandId(0));
     ValOperandId rhsId(writer.setInputOperandId(1));
 
+    // Convert type into int32 for the bitwise/shift operands.
+    auto guardToInt32 = [&](ValOperandId id, HandleValue val) {
+        if (val.isInt32()) {
+            return writer.guardIsInt32(id);
+        }
+        if (val.isBoolean()) {
+            return writer.guardIsBoolean(id);
+        }
+        MOZ_ASSERT(val.isDouble());
+        writer.guardType(id, JSVAL_TYPE_DOUBLE);
+        return writer.truncateDoubleToUInt32(id);
+    };
 
-    // Operations below commute, so we don't care about ordering.
-    Int32OperandId IntId = writer.guardIsInt32(lhs_.isInt32() ? lhsId : rhsId);
-    writer.guardType(lhs_.isDouble() ? lhsId : rhsId, JSVAL_TYPE_DOUBLE);
-    Int32OperandId truncatedId = writer.truncateDoubleToUInt32(lhs_.isDouble() ? lhsId : rhsId);
+    Int32OperandId lhsIntId = guardToInt32(lhsId, lhs_);
+    Int32OperandId rhsIntId = guardToInt32(rhsId, rhs_);
+
     switch (op_) {
       case JSOP_BITOR:
-        writer.int32BitOrResult(IntId, truncatedId);
-        trackAttached("BinaryArith.Int32Double.BitOr");
+        writer.int32BitOrResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Bitwise.BitOr");
         break;
       case JSOP_BITXOR:
-        writer.int32BitXOrResult(IntId, truncatedId);
-        trackAttached("BinaryArith.Int32Double.BitXOr");
+        writer.int32BitXOrResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Bitwise.BitXOr");
         break;
       case JSOP_BITAND:
-        writer.int32BitAndResult(IntId, truncatedId);
-        trackAttached("BinaryArith.Int32Double.BitAnd");
+        writer.int32BitAndResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Bitwise.BitAnd");
+        break;
+    case JSOP_LSH:
+        writer.int32LeftShiftResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Bitwise.LeftShift");
+        break;
+      case JSOP_RSH:
+        writer.int32RightShiftResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Bitwise.RightShift");
+        break;
+      case JSOP_URSH:
+        writer.int32URightShiftResult(lhsIntId, rhsIntId, res_.isDouble());
+        trackAttached("BinaryArith.Bitwise.UnsignedRightShift");
         break;
       default:
-        MOZ_CRASH("Unhandled op in tryAttachDoubleWithInt32");
+        MOZ_CRASH("Unhandled op in tryAttachBitwise");
     }
 
     writer.returnFromIC();
@@ -5503,23 +5532,37 @@ bool
 BinaryArithIRGenerator::tryAttachInt32()
 {
     // Check guard conditions
-    if (!lhs_.isInt32() || !rhs_.isInt32())
+    if (!(lhs_.isInt32() || lhs_.isBoolean()) ||
+        !(rhs_.isInt32() || rhs_.isBoolean()))
+    {
         return false;
+    }
 
     // These ICs will failure() if result can't be encoded in an Int32:
     // If sample result is not Int32, we should avoid IC.
-    if (!res_.isInt32())
+    if (!res_.isInt32()) {
         return false;
+    }
 
-    // Unsupported OP
-    if (op_ == JSOP_POW)
+    if (op_ != JSOP_ADD && op_ != JSOP_SUB && op_ != JSOP_MUL && op_ != JSOP_DIV &&
+        op_ != JSOP_MOD)
+    {
         return false;
+    }
 
     ValOperandId lhsId(writer.setInputOperandId(0));
     ValOperandId rhsId(writer.setInputOperandId(1));
 
-    Int32OperandId lhsIntId = writer.guardIsInt32(lhsId);
-    Int32OperandId rhsIntId = writer.guardIsInt32(rhsId);
+    auto guardToInt32 = [&](ValOperandId id, HandleValue v) {
+        if (v.isInt32()) {
+            return writer.guardIsInt32(id);
+        }
+        MOZ_ASSERT(v.isBoolean());
+        return writer.guardIsBoolean(id);
+    };
+
+    Int32OperandId lhsIntId = guardToInt32(lhsId, lhs_);
+    Int32OperandId rhsIntId = guardToInt32(rhsId, rhs_);
 
     switch (op_) {
       case JSOP_ADD:
@@ -5541,30 +5584,6 @@ BinaryArithIRGenerator::tryAttachInt32()
       case JSOP_MOD:
         writer.int32ModResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.Int32.Mod");
-        break;
-      case JSOP_BITOR:
-        writer.int32BitOrResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.Int32.BitOr");
-        break;
-      case JSOP_BITXOR:
-        writer.int32BitXOrResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.Int32.BitXOr");
-        break;
-      case JSOP_BITAND:
-        writer.int32BitAndResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.Int32.BitAnd");
-        break;
-      case JSOP_LSH:
-        writer.int32LeftShiftResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.Int32.LeftShift");
-        break;
-      case JSOP_RSH:
-        writer.int32RightShiftResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.Int32.RightShift");
-        break;
-      case JSOP_URSH:
-        writer.int32URightShiftResult(lhsIntId, rhsIntId, res_.isDouble());
-        trackAttached("BinaryArith.Int32.UnsignedRightShift");
         break;
       default:
         MOZ_CRASH("Unhandled op in tryAttachInt32");
@@ -5628,78 +5647,6 @@ BinaryArithIRGenerator::tryAttachStringObjectConcat()
 
     writer.returnFromIC();
     trackAttached("BinaryArith.StringObjectConcat");
-    return true;
-}
-
-bool
-BinaryArithIRGenerator::tryAttachBooleanWithInt32()
-{
-    // Check operation
-    if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
-        op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
-        op_ != JSOP_BITXOR && op_ != JSOP_MUL && op_ != JSOP_DIV)
-        return false;
-
-    // Check guards
-    if (!(lhs_.isBoolean() && (rhs_.isBoolean() || rhs_.isInt32())) &&
-        !(rhs_.isBoolean() && (lhs_.isBoolean() || lhs_.isInt32())))
-        return false;
-
-
-    ValOperandId lhsId(writer.setInputOperandId(0));
-    ValOperandId rhsId(writer.setInputOperandId(1));
-
-    Int32OperandId lhsIntId = (lhs_.isBoolean() ? writer.guardIsBoolean(lhsId)
-                                                : writer.guardIsInt32(lhsId));
-    Int32OperandId rhsIntId = (rhs_.isBoolean() ? writer.guardIsBoolean(rhsId)
-                                                : writer.guardIsInt32(rhsId));
-
-    switch (op_) {
-      case JSOP_ADD:
-        writer.int32AddResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.BooleanInt32.Add");
-        break;
-      case JSOP_SUB:
-        writer.int32SubResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.BooleanInt32.Sub");
-        break;
-      case JSOP_MUL:
-        writer.int32MulResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.BooleanInt32.Mul");
-        break;
-      case JSOP_DIV:
-        writer.int32DivResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.BooleanInt32.Div");
-        break;
-      case JSOP_BITOR:
-        writer.int32BitOrResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.BooleanInt32.BitOr");
-        break;
-      case JSOP_BITXOR:
-        writer.int32BitXOrResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.BooleanInt32.BitXOr");
-        break;
-      case JSOP_BITAND:
-        writer.int32BitAndResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.BooleanInt32.BitAnd");
-        break;
-      case JSOP_LSH:
-        writer.int32LeftShiftResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.BooleanInt32.LeftShift");
-        break;
-      case JSOP_RSH:
-        writer.int32RightShiftResult(lhsIntId, rhsIntId);
-        trackAttached("BinaryArith.BooleanInt32.RightShift");
-        break;
-      case JSOP_URSH:
-        writer.int32URightShiftResult(lhsIntId, rhsIntId, res_.isDouble());
-        trackAttached("BinaryArith.BooleanInt32.UnsignedRightShift");
-        break;
-      default:
-        MOZ_CRASH("Unhandled op in tryAttachInt32");
-    }
-
-    writer.returnFromIC();
     return true;
 }
 

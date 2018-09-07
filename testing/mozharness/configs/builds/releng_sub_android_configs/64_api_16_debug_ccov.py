@@ -9,7 +9,7 @@ config = {
          'archive-geckoview',
         ],
         ['android',
-         'archive-geckoview-coverage-artifacts',
+         'archive-coverage-artifacts',
         ],
     ],
 }

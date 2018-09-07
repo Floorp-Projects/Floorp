@@ -206,6 +206,7 @@
   "tps.jsm": ["ACTIONS", "Addons", "Addresses", "Bookmarks", "CreditCards", "Formdata", "History", "Passwords", "Prefs", "Tabs", "TPS", "Windows"],
   "Translation.jsm": ["Translation", "TranslationTelemetry"],
   "Traversal.jsm": ["TraversalRules", "TraversalHelper"],
+  "UrlbarController.jsm": ["QueryContext", "UrlbarController"],
   "UpdateTelemetry.jsm": ["AUSTLMY"],
   "UpdateTopLevelContentWindowIDHelper.jsm": ["trackBrowserWindow"],
   "UrlbarTokenizer.jsm": ["UrlbarTokenizer"],
