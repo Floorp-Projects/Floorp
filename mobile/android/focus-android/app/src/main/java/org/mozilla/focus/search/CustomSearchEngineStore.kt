@@ -8,6 +8,7 @@ import android.content.Context
 import android.util.Log
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineParser
+import org.mozilla.focus.Components
 import org.mozilla.focus.shortcut.IconGenerator
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
@@ -17,7 +18,9 @@ object CustomSearchEngineStore {
         val sharedPreferences = context.getSharedPreferences(PREF_FILE_SEARCH_ENGINES,
                 Context.MODE_PRIVATE)
 
-        return !sharedPreferences.contains(engineName)
+        val defaultEngines = Components.searchEngineManager.getSearchEngines(context)
+
+        return !sharedPreferences.contains(engineName) && !defaultEngines.any { it.name == engineName }
     }
 
     fun restoreDefaultSearchEngines(context: Context) {
