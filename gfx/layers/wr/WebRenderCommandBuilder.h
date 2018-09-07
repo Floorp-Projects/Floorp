@@ -65,6 +65,7 @@ public:
                                      ImageContainer* aContainer,
                                      mozilla::wr::DisplayListBuilder& aBuilder,
                                      mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                     mozilla::wr::ImageRendering aRendering,
                                      const StackingContextHelper& aSc,
                                      gfx::IntSize& aSize,
                                      const Maybe<LayoutDeviceRect>& aAsyncImageBounds);
