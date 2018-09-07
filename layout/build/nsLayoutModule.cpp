@@ -90,9 +90,6 @@ using mozilla::dom::PushNotifier;
 #define PUSHNOTIFIER_CID \
 { 0x2fc2d3e3, 0x020f, 0x404e, { 0xb0, 0x6a, 0x6e, 0xcf, 0x3e, 0xa2, 0x33, 0x4a } }
 
-#include "AudioChannelAgent.h"
-using mozilla::dom::AudioChannelAgent;
-
 // Editor stuff
 #include "mozilla/EditorController.h" //CID
 
@@ -210,8 +207,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(StorageActivityService,
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSynthVoiceRegistry,
                                          nsSynthVoiceRegistry::GetInstanceForService)
 #endif
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(AudioChannelAgent)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceSensors)
 
@@ -535,7 +530,6 @@ NS_DEFINE_NAMED_CID(STORAGEACTIVITYSERVICE_CID);
 NS_DEFINE_NAMED_CID(NOTIFICATIONTELEMETRYSERVICE_CID);
 NS_DEFINE_NAMED_CID(PUSHNOTIFIER_CID);
 NS_DEFINE_NAMED_CID(WORKERDEBUGGERMANAGER_CID);
-NS_DEFINE_NAMED_CID(NS_AUDIOCHANNELAGENT_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITINGCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORCOMMANDTABLE_CID);
@@ -765,7 +759,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNOTIFICATIONTELEMETRYSERVICE_CID, false, nullptr, NotificationTelemetryServiceConstructor },
   { &kPUSHNOTIFIER_CID, false, nullptr, PushNotifierConstructor },
   { &kWORKERDEBUGGERMANAGER_CID, true, nullptr, WorkerDebuggerManagerConstructor },
-  { &kNS_AUDIOCHANNELAGENT_CID, true, nullptr, AudioChannelAgentConstructor },
   { &kNS_EDITORCONTROLLER_CID, false, nullptr, EditorControllerConstructor },
   { &kNS_EDITINGCONTROLLER_CID, false, nullptr, nsEditingControllerConstructor },
   { &kNS_EDITORCOMMANDTABLE_CID, false, nullptr, nsEditorCommandTableConstructor },
@@ -865,7 +858,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NOTIFICATIONTELEMETRYSERVICE_CONTRACTID, &kNOTIFICATIONTELEMETRYSERVICE_CID },
   { PUSHNOTIFIER_CONTRACTID, &kPUSHNOTIFIER_CID },
   { WORKERDEBUGGERMANAGER_CONTRACTID, &kWORKERDEBUGGERMANAGER_CID },
-  { NS_AUDIOCHANNELAGENT_CONTRACTID, &kNS_AUDIOCHANNELAGENT_CID },
   { "@mozilla.org/editor/editorcontroller;1", &kNS_EDITORCONTROLLER_CID },
   { "@mozilla.org/editor/editingcontroller;1", &kNS_EDITINGCONTROLLER_CID },
   { "@mozilla.org/geolocation;1", &kNS_GEOLOCATION_CID },

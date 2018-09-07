@@ -34,6 +34,7 @@
 #include "nsILoadContext.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
+#include "AudioChannelAgent.h"
 #include "AudioChannelService.h"
 
 using namespace mozilla;
@@ -1241,18 +1242,15 @@ nsNPAPIPluginInstance::CreateAudioChannelAgentIfNeeded()
     return NS_OK;
   }
 
-  nsresult rv;
-  mAudioChannelAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1", &rv);
-  if (NS_WARN_IF(!mAudioChannelAgent)) {
-    return NS_ERROR_FAILURE;
-  }
+  mAudioChannelAgent = new AudioChannelAgent();
 
   nsCOMPtr<nsPIDOMWindowOuter> window = GetDOMWindow();
   if (NS_WARN_IF(!window)) {
     return NS_ERROR_FAILURE;
   }
 
-  rv = mAudioChannelAgent->Init(window->GetCurrentInnerWindow(), this);
+  nsresult rv =
+    mAudioChannelAgent->Init(window->GetCurrentInnerWindow(), this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
