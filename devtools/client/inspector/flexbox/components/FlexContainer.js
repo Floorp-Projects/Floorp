@@ -108,21 +108,15 @@ class FlexContainer extends PureComponent {
     } = this.props;
     const {
       flexItems,
-      highlighted,
+      flexItemShown,
     } = flexbox;
 
-    if (!highlighted || !flexItems.length) {
-      return null;
-    }
-
-    const selectedFlexItem = flexItems.find(item => item.shown);
-
-    if (!selectedFlexItem) {
+    if (!flexItemShown) {
       return null;
     }
 
     return FlexItemSelector({
-      flexItem: selectedFlexItem,
+      flexItem: flexItems.find(item => item.nodeFront.actorID === flexItemShown),
       flexItems,
       onToggleFlexItemShown,
     });

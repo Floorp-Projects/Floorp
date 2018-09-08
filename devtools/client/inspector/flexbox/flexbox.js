@@ -176,45 +176,39 @@ class FlexboxInspector {
    * Handler for the "reflow" event fired by the inspector's reflow tracker. On reflows,
    * updates the flexbox panel because the shape of the flexbox on the page may have
    * changed.
-   *
-   * TODO: In the future, we will want to compare the flex item fragment data returned
-   * for rendering the flexbox outline.
    */
   async onReflow() {
-    if (!this.isPanelVisible() || !this.store || !this.inspector.selection.nodeFront) {
+    if (!this.isPanelVisible() ||
+        !this.store ||
+        !this.inspector.selection.nodeFront ||
+        !this.hasGetCurrentFlexbox) {
       return;
     }
 
-    const { flexbox } = this.store.getState();
-
-    let flexboxFront;
     try {
-      if (!this.hasGetCurrentFlexbox) {
+      const flexboxFront = await this.layoutInspector.getCurrentFlexbox(
+        this.inspector.selection.nodeFront);
+
+      // Clear the flexbox panel if there is no flex container for the current node
+      // selection.
+      if (!flexboxFront) {
+        this.store.dispatch(clearFlexbox());
         return;
       }
 
-      flexboxFront = await this.layoutInspector.getCurrentFlexbox(
-        this.inspector.selection.nodeFront);
+      const { flexbox } = this.store.getState();
+
+      // Do nothing because the same flex container is still selected.
+      if (flexbox.actorID == flexboxFront.actorID) {
+        return;
+      }
+
+      // Update the flexbox panel with the new flexbox front contents.
+      this.update(flexboxFront);
     } catch (e) {
       // This call might fail if called asynchrously after the toolbox is finished
       // closing.
-      return;
     }
-
-    // Clear the flexbox panel if there is no flex container for the current node
-    // selection.
-    if (!flexboxFront) {
-      this.store.dispatch(clearFlexbox());
-      return;
-    }
-
-    // Do nothing because the same flex container is still selected.
-    if (flexbox.actorID == flexboxFront.actorID) {
-      return;
-    }
-
-    // Update the flexbox panel with the new flexbox front contents.
-    this.update(flexboxFront);
   }
 
   /**
@@ -354,7 +348,6 @@ class FlexboxInspector {
 
         flexItems.push({
           actorID: flexItemFront.actorID,
-          shown: false,
           flexItemSizing: flexItemFront.flexItemSizing,
           nodeFront: itemNodeFront,
           properties: flexItemFront.properties,
@@ -370,10 +363,21 @@ class FlexboxInspector {
       const customColors = await this.getCustomFlexboxColors();
       const color = customColors[hostname] ? customColors[hostname] : FLEXBOX_COLOR;
 
+      const { flexbox } = this.store.getState();
+      let { flexItemShown } = flexbox;
+
+      // Check if the flex item shown still exists in the list of flex items, otherwise
+      // set the flex item shown to null.
+      if (flexItemShown &&
+          !flexItemFronts.find(item => item.nodeFront.actorID === flexItemShown)) {
+        flexItemShown = null;
+      }
+
       this.store.dispatch(updateFlexbox({
         actorID: flexboxFront.actorID,
         color,
         flexItems,
+        flexItemShown,
         highlighted,
         nodeFront: containerNodeFront,
         properties: flexboxFront.properties,

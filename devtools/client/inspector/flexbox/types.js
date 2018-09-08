@@ -81,9 +81,6 @@ const flexItem = exports.flexItem = {
   // The computed style properties of the flex item.
   properties: PropTypes.shape(flexItemProperties),
 
-  // Whether or not the flex item sizing information is shown.
-  shown: PropTypes.bool,
-
 };
 
 /**
@@ -121,6 +118,9 @@ exports.flexbox = {
 
   // Array of flex container's flex items.
   flexItems: PropTypes.arrayOf(PropTypes.shape(flexItem)),
+
+  // The NodeFront actor ID of the flex item to display the flex item sizing properties.
+  flexItemShown: PropTypes.string,
 
   // Whether or not the flexbox highlighter is highlighting the flex container.
   highlighted: PropTypes.bool,
