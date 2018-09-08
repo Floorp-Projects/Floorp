@@ -197,83 +197,61 @@ nsControllerCommandTable::GetSupportedCommands(uint32_t* aCount,
   return NS_OK;
 }
 
-// static
-already_AddRefed<nsIControllerCommandTable>
-nsControllerCommandTable::CreateEditorCommandTable()
+typedef nsresult (*CommandTableRegistrar)(nsIControllerCommandTable*);
+
+static already_AddRefed<nsIControllerCommandTable>
+CreateCommandTableWithCommands(CommandTableRegistrar aRegistrar)
 {
   nsCOMPtr<nsIControllerCommandTable> commandTable =
       new nsControllerCommandTable();
 
-  nsresult rv = EditorController::RegisterEditorCommands(commandTable);
+  nsresult rv = aRegistrar(commandTable);
   if (NS_FAILED(rv)) return nullptr;
 
   // we don't know here whether we're being created as an instance,
   // or a service, so we can't become immutable
 
   return commandTable.forget();
+}
+
+// static
+already_AddRefed<nsIControllerCommandTable>
+nsControllerCommandTable::CreateEditorCommandTable()
+{
+  return CreateCommandTableWithCommands(
+      EditorController::RegisterEditorCommands);
 }
 
 // static
 already_AddRefed<nsIControllerCommandTable>
 nsControllerCommandTable::CreateEditingCommandTable()
 {
-  nsCOMPtr<nsIControllerCommandTable> commandTable =
-      new nsControllerCommandTable();
-
-  nsresult rv = EditorController::RegisterEditingCommands(commandTable);
-  if (NS_FAILED(rv)) return nullptr;
-
-  // we don't know here whether we're being created as an instance,
-  // or a service, so we can't become immutable
-
-  return commandTable.forget();
+  return CreateCommandTableWithCommands(
+      EditorController::RegisterEditingCommands);
 }
 
 // static
 already_AddRefed<nsIControllerCommandTable>
 nsControllerCommandTable::CreateHTMLEditorCommandTable()
 {
-  nsCOMPtr<nsIControllerCommandTable> commandTable =
-      new nsControllerCommandTable();
-
-  nsresult rv = mozilla::HTMLEditorController::RegisterHTMLEditorCommands(commandTable);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  // we don't know here whether we're being created as an instance,
-  // or a service, so we can't become immutable
-
-  return commandTable.forget();
+  return CreateCommandTableWithCommands(
+      HTMLEditorController::RegisterHTMLEditorCommands);
 }
 
 // static
 already_AddRefed<nsIControllerCommandTable>
 nsControllerCommandTable::CreateHTMLEditorDocStateCommandTable()
 {
-  nsCOMPtr<nsIControllerCommandTable> commandTable =
-      new nsControllerCommandTable();
-
-  nsresult rv = mozilla::HTMLEditorController::RegisterEditorDocStateCommands(
-                                        commandTable);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  // we don't know here whether we're being created as an instance,
-  // or a service, so we can't become immutable
-
-  return commandTable.forget();
+  return CreateCommandTableWithCommands(
+      HTMLEditorController::RegisterEditorDocStateCommands);
 }
 
 // static
 already_AddRefed<nsIControllerCommandTable>
 nsControllerCommandTable::CreateWindowCommandTable()
 {
-  nsCOMPtr<nsIControllerCommandTable> commandTable =
-      new nsControllerCommandTable();
-
-  nsresult rv =
-    nsWindowCommandRegistration::RegisterWindowCommands(commandTable);
-  if (NS_FAILED(rv)) return nullptr;
-
-  return commandTable.forget();
+  return CreateCommandTableWithCommands(
+      nsWindowCommandRegistration::RegisterWindowCommands);
 }
 
 nsresult
