@@ -34,6 +34,11 @@ extern const uint64_t kUnknownSize;
 
 class FileReaderDecreaseBusyCounter;
 
+// 26a79031-c94b-47e9-850a-f04fe17bc026
+#define FILEREADER_ID                                         \
+ { 0x26a79031, 0xc94b, 0x47e9, {0x85, 0x0a, 0xf0, 0x4f, 0xe1, \
+                                0x7b, 0xc0, 0x26} }
+
 class FileReader final : public DOMEventTargetHelper,
                          public nsIInterfaceRequestor,
                          public nsSupportsWeakReference,
@@ -53,6 +58,8 @@ public:
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSINAMED
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(FILEREADER_ID)
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(FileReader,
                                                          DOMEventTargetHelper)
@@ -110,6 +117,17 @@ public:
     ReadFileContent(aBlob, EmptyString(), FILE_AS_BINARY, aRv);
   }
 
+  enum eDataFormat
+  {
+    FILE_AS_ARRAYBUFFER,
+    FILE_AS_BINARY,
+    FILE_AS_TEXT,
+    FILE_AS_DATAURL
+  };
+
+  eDataFormat DataFormat() const { return mDataFormat; }
+  const nsString& Result() const { return mResult; }
+
 private:
   virtual ~FileReader();
 
@@ -118,13 +136,6 @@ private:
     EMPTY = 0,
     LOADING = 1,
     DONE = 2
-  };
-
-  enum eDataFormat {
-    FILE_AS_ARRAYBUFFER,
-    FILE_AS_BINARY,
-    FILE_AS_TEXT,
-    FILE_AS_DATAURL
   };
 
   void RootResultArrayBuffer();
@@ -202,6 +213,8 @@ private:
   // during the process.
   RefPtr<StrongWorkerRef> mStrongWorkerRef;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(FileReader, FILEREADER_ID)
 
 } // dom namespace
 } // mozilla namespace
