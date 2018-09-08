@@ -165,7 +165,7 @@ nsEditingSession::MakeWindowEditable(mozIDOMWindowProxy* aWindow,
 
   // The second is a controller to monitor doc state,
   // such as creation and "dirty flag"
-  rv = SetupEditorCommandController("@mozilla.org/editor/editordocstatecontroller;1",
+  rv = SetupEditorCommandController(nsBaseCommandController::CreateHTMLEditorDocStateController,
                                     aWindow,
                                     static_cast<nsIEditingSession*>(this),
                                     &mDocStateControllerId);
@@ -1379,7 +1379,7 @@ nsEditingSession::ReattachToWindow(mozIDOMWindowProxy* aWindow)
                                     &mBaseCommandControllerId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SetupEditorCommandController("@mozilla.org/editor/editordocstatecontroller;1",
+  rv = SetupEditorCommandController(nsBaseCommandController::CreateHTMLEditorDocStateController,
                                     aWindow,
                                     static_cast<nsIEditingSession*>(this),
                                     &mDocStateControllerId);
