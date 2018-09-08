@@ -175,15 +175,6 @@ static JS::GCSliceCallback sPrevGCSliceCallback;
 
 static bool sHasRunGC;
 
-// The number of currently pending document loads. This count isn't
-// guaranteed to always reflect reality and can't easily as we don't
-// have an easy place to know when a load ends or is interrupted in
-// all cases. This counter also gets reset if we end up GC'ing while
-// we're waiting for a slow page to load. IOW, this count may be 0
-// even when there are pending loads.
-static uint32_t sPendingLoadCount;
-static bool sLoadingInProgress;
-
 static uint32_t sCCollectedWaitingForGC;
 static uint32_t sCCollectedZonesWaitingForGC;
 static uint32_t sLikelyShortLivingObjectsNeedingGC;
@@ -1209,15 +1200,6 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
 
   KillGCTimer();
 
-  // Reset sPendingLoadCount in case the timer that fired was a
-  // timer we scheduled due to a normal GC timer firing while
-  // documents were loading. If this happens we're waiting for a
-  // document that is taking a long time to load, and we effectively
-  // ignore the fact that the currently loading documents are still
-  // loading and move on as if they weren't.
-  sPendingLoadCount = 0;
-  sLoadingInProgress = false;
-
   // We use danger::GetJSContext() since AutoJSAPI will assert if the current
   // thread's context is null (such as during shutdown).
   JSContext* cx = danger::GetJSContext();
@@ -2037,31 +2019,6 @@ nsJSContext::CleanupsSinceLastGC()
   return sCleanupsSinceLastGC;
 }
 
-// static
-void
-nsJSContext::LoadStart()
-{
-  sLoadingInProgress = true;
-  ++sPendingLoadCount;
-}
-
-// static
-void
-nsJSContext::LoadEnd()
-{
-  if (!sLoadingInProgress)
-    return;
-
-  // sPendingLoadCount is not a well managed load counter (and doesn't
-  // need to be), so make sure we don't make it wrap backwards here.
-  if (sPendingLoadCount > 0) {
-    --sPendingLoadCount;
-    return;
-  }
-
-  sLoadingInProgress = false;
-}
-
 // Check all of the various collector timers/runners and see if they are waiting to fire.
 // This does not check sFullGCTimer, as that's a more expensive collection we run
 // on a long timer.
@@ -2514,8 +2471,6 @@ mozilla::dom::StartupJSEnvironment()
   sLastCCEndTime = TimeStamp();
   sLastForgetSkippableCycleEndTime = TimeStamp();
   sHasRunGC = false;
-  sPendingLoadCount = 0;
-  sLoadingInProgress = false;
   sCCollectedWaitingForGC = 0;
   sCCollectedZonesWaitingForGC = 0;
   sLikelyShortLivingObjectsNeedingGC = 0;
