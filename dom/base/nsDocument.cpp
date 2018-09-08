@@ -8555,8 +8555,7 @@ static void
 DispatchFullScreenChange(nsIDocument* aTarget)
 {
   if (nsPresContext* presContext = aTarget->GetPresContext()) {
-    auto pendingEvent =
-      MakeUnique<PendingFullscreenEvent>(FullscreenEventType::Change, aTarget);
+    auto pendingEvent = MakeUnique<PendingFullscreenEvent>(aTarget);
     presContext->RefreshDriver()->
       ScheduleFullscreenEvent(std::move(pendingEvent));
   }
@@ -10928,12 +10927,12 @@ nsIDocument::AsyncRequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
 void
 nsIDocument::DispatchFullscreenError(const char* aMessage)
 {
-  if (nsPresContext* presContext = GetPresContext()) {
-    auto pendingEvent =
-      MakeUnique<PendingFullscreenEvent>(FullscreenEventType::Error, this);
-    presContext->RefreshDriver()->
-      ScheduleFullscreenEvent(std::move(pendingEvent));
-  }
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+    new AsyncEventDispatcher(this,
+                             NS_LITERAL_STRING("fullscreenerror"),
+                             CanBubble::eYes,
+                             ChromeOnlyDispatch::eNo);
+  asyncDispatcher->PostDOMEvent();
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("DOM"), this,
                                   nsContentUtils::eDOM_PROPERTIES,
