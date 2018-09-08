@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/EditorSpellCheck.h"   // for NS_EDITORSPELLCHECK_CID, etc
 #include "mozilla/HTMLEditorController.h" // for HTMLEditorController, etc
 #include "mozilla/Module.h"             // for Module, Module::CIDEntry, etc
 #include "mozilla/ModuleUtils.h"
@@ -22,8 +21,6 @@
 #include "nsServiceManagerUtils.h"      // for do_GetService
 #include "nscore.h"                     // for nsresult
 
-using mozilla::EditorSpellCheck;
-
 class nsISupports;
 
 ////////////////////////////////////////////////////////////////////////
@@ -32,17 +29,11 @@ class nsISupports;
 // NOTE: This creates an instance of objects by using the default constructor
 //
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(EditorSpellCheck)
-
-NS_DEFINE_NAMED_CID(NS_EDITORSPELLCHECK_CID);
-
 static const mozilla::Module::CIDEntry kComposerCIDs[] = {
-  { &kNS_EDITORSPELLCHECK_CID, false, nullptr, EditorSpellCheckConstructor },
   { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kComposerContracts[] = {
-  { "@mozilla.org/editor/editorspellchecker;1", &kNS_EDITORSPELLCHECK_CID },
   { nullptr }
 };
 
