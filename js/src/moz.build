@@ -210,22 +210,6 @@ UNIFIED_SOURCES += [
     'ds/Bitmap.cpp',
     'ds/LifoAlloc.cpp',
     'ds/MemoryProtectionExceptionHandler.cpp',
-    'gc/Allocator.cpp',
-    'gc/AtomMarking.cpp',
-    'gc/Barrier.cpp',
-    'gc/GC.cpp',
-    'gc/GCTrace.cpp',
-    'gc/Marking.cpp',
-    'gc/Memory.cpp',
-    'gc/Nursery.cpp',
-    'gc/PublicIterators.cpp',
-    'gc/RootMarking.cpp',
-    'gc/Statistics.cpp',
-    'gc/Tracer.cpp',
-    'gc/Verifier.cpp',
-    'gc/WeakMap.cpp',
-    'gc/WeakMapPtr.cpp',
-    'gc/Zone.cpp',
     'irregexp/NativeRegExpMacroAssembler.cpp',
     'irregexp/RegExpAST.cpp',
     'irregexp/RegExpCharacters.cpp',
@@ -353,9 +337,6 @@ UNIFIED_SOURCES += [
 #   RtlGenRandom declaration's calling convention in <ntsecapi.h> on Windows.
 # jsutil.cpp cannot be built in unified mode because it is needed for
 #   check-vanilla-allocations.
-# StoreBuffer.cpp cannot be built in unified because its template
-#   instantiations may or may not be needed depending on what it gets bundled
-#   with.
 # perf/ProfilingStack.cpp cannot be built in unified mode because we want to
 #   suppress warnings due to usage of the system allocator, and this allows it
 #   to have a deterministic object name.
@@ -365,7 +346,6 @@ UNIFIED_SOURCES += [
 #   files unlucky enough to be unified with it.
 SOURCES += [
     'builtin/RegExp.cpp',
-    'gc/StoreBuffer.cpp',
     'jsmath.cpp',
     'jsutil.cpp',
     'util/DoubleToString.cpp',
@@ -441,6 +421,7 @@ else:
 DIRS += [
     'build',
     'frontend',
+    'gc',
     'jit',
 ]
 
@@ -503,11 +484,3 @@ if CONFIG['JS_HAS_CTYPES']:
 # Suppress warnings in third-party code.
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     SOURCES['util/DoubleToString.cpp'].flags += ['-Wno-implicit-fallthrough']
-
-# Generate GC statistics phase data.
-GENERATED_FILES += ['gc/StatsPhasesGenerated.h']
-StatsPhasesGeneratedHeader = GENERATED_FILES['gc/StatsPhasesGenerated.h']
-StatsPhasesGeneratedHeader.script = 'gc/GenerateStatsPhases.py:generateHeader'
-GENERATED_FILES += ['gc/StatsPhasesGenerated.cpp']
-StatsPhasesGeneratedCpp = GENERATED_FILES['gc/StatsPhasesGenerated.cpp']
-StatsPhasesGeneratedCpp.script = 'gc/GenerateStatsPhases.py:generateCpp'
