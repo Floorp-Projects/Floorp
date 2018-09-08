@@ -10,14 +10,15 @@
 // Helper function for add_read_only_cert_override_test. Probably doesn't need
 // to be called directly.
 function add_read_only_cert_override(aHost, aExpectedBits, aSecurityInfo) {
+  let sslstatus = aSecurityInfo.SSLStatus;
   let bits =
-    (aSecurityInfo.isUntrusted ? Ci.nsICertOverrideService.ERROR_UNTRUSTED : 0) |
-    (aSecurityInfo.isDomainMismatch ? Ci.nsICertOverrideService.ERROR_MISMATCH : 0) |
-    (aSecurityInfo.isNotValidAtThisTime ? Ci.nsICertOverrideService.ERROR_TIME : 0);
+    (sslstatus.isUntrusted ? Ci.nsICertOverrideService.ERROR_UNTRUSTED : 0) |
+    (sslstatus.isDomainMismatch ? Ci.nsICertOverrideService.ERROR_MISMATCH : 0) |
+    (sslstatus.isNotValidAtThisTime ? Ci.nsICertOverrideService.ERROR_TIME : 0);
 
   Assert.equal(bits, aExpectedBits,
                "Actual and expected override bits should match");
-  let cert = aSecurityInfo.serverCert;
+  let cert = sslstatus.serverCert;
   let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
                               .getService(Ci.nsICertOverrideService);
   // Setting the last argument to false here ensures that we attempt to store a

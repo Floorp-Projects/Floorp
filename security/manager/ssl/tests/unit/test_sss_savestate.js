@@ -115,10 +115,10 @@ function run_test() {
     let maxAge = "max-age=" + (i * 1000);
      // alternate setting includeSubdomains
     let includeSubdomains = (i % 2 == 0 ? "; includeSubdomains" : "");
-    let secInfo = new FakeTransportSecurityInfo();
+    let sslStatus = new FakeSSLStatus();
     SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS,
                             uris[uriIndex], maxAge + includeSubdomains,
-                            secInfo, 0,
+                            sslStatus, 0,
                             Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   }
 

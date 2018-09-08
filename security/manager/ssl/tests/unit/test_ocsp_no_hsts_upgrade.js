@@ -42,9 +42,9 @@ function run_test() {
   let SSService = Cc["@mozilla.org/ssservice;1"]
                     .getService(Ci.nsISiteSecurityService);
   let uri = Services.io.newURI("http://localhost");
-  let secInfo = new FakeTransportSecurityInfo();
+  let sslStatus = new FakeSSLStatus();
   SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                          "max-age=10000", secInfo, 0,
+                          "max-age=10000", sslStatus, 0,
                           Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0),
      "Domain for the OCSP AIA URI should be considered a HSTS host, otherwise" +

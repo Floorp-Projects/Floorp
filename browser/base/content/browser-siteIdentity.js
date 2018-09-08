@@ -35,10 +35,10 @@ var gIdentityHandler = {
   _isSecureInternalUI: false,
 
   /**
-   * nsITransportSecurityInfo metadata provided by gBrowser.securityUI the last
-   * time the identity UI was updated, or null if the connection is not secure.
+   * nsISSLStatus metadata provided by gBrowser.securityUI the last time the
+   * identity UI was updated, or null if the connection is not secure.
    */
-  _secInfo: null,
+  _sslStatus: null,
 
   /**
    * Bitmask provided by nsIWebProgressListener.onSecurityChange.
@@ -297,12 +297,12 @@ var gIdentityHandler = {
   },
 
   /**
-   * Helper to parse out the important parts of _secInfo (of the SSL cert in
+   * Helper to parse out the important parts of _sslStatus (of the SSL cert in
    * particular) for use in constructing identity UI strings
   */
   getIdentityData() {
     var result = {};
-    var cert = this._secInfo.serverCert;
+    var cert = this._sslStatus.serverCert;
 
     // Human readable name of Subject
     result.subjectOrg = cert.organization;
@@ -347,7 +347,8 @@ var gIdentityHandler = {
     // Firstly, populate the state properties required to display the UI. See
     // the documentation of the individual properties for details.
     this.setURI(uri);
-    this._secInfo = gBrowser.securityUI.secInfo;
+    this._sslStatus = gBrowser.securityUI.secInfo &&
+                      gBrowser.securityUI.secInfo.SSLStatus;
 
     // Then, update the user interface with the available data.
     this.refreshIdentityBlock();

@@ -29,6 +29,7 @@
 #include "nsPKCS11Slot.h"
 #include "nsRandomGenerator.h"
 #include "nsSSLSocketProvider.h"
+#include "nsSSLStatus.h"
 #include "nsSecureBrowserUIImpl.h"
 #include "nsSiteSecurityService.h"
 #include "nsTLSSocketProvider.h"
@@ -153,6 +154,7 @@ NS_DEFINE_NAMED_CID(NS_KEYMODULEOBJECTFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENTSIGNATUREVERIFIER_CID);
 NS_DEFINE_NAMED_CID(NS_CERTOVERRIDE_CID);
 NS_DEFINE_NAMED_CID(NS_RANDOMGENERATOR_CID);
+NS_DEFINE_NAMED_CID(NS_SSLSTATUS_CID);
 NS_DEFINE_NAMED_CID(TRANSPORTSECURITYINFO_CID);
 NS_DEFINE_NAMED_CID(NS_NSSERRORSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_NSSVERSION_CID);
@@ -203,6 +205,8 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
                 ThreadRestriction::MainThreadOnly> },
   { &kNS_RANDOMGENERATOR_CID, false, nullptr,
     Constructor<nsRandomGenerator, nullptr, ProcessRestriction::AnyProcess> },
+  { &kNS_SSLSTATUS_CID, false, nullptr,
+    Constructor<nsSSLStatus, nullptr, ProcessRestriction::AnyProcess> },
   { &kTRANSPORTSECURITYINFO_CID, false, nullptr,
     Constructor<TransportSecurityInfo, nullptr,
                 ProcessRestriction::AnyProcess> },

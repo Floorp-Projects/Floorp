@@ -23,18 +23,18 @@ function loadCert(cert_name, trust_string) {
 }
 
 function checkFailParseInvalidPin(pinValue) {
-  let secInfo = new FakeTransportSecurityInfo(
+  let sslStatus = new FakeSSLStatus(
                         certFromFile("a.pinning2.example.com-pinningroot"));
   let uri = Services.io.newURI("https://a.pinning2.example.com");
   throws(() => {
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
-                             pinValue, secInfo, 0,
+                             pinValue, sslStatus, 0,
                              Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   }, /NS_ERROR_FAILURE/, `Invalid pin "${pinValue}" should be rejected`);
 }
 
 function checkPassValidPin(pinValue, settingPin, expectedMaxAge) {
-  let secInfo = new FakeTransportSecurityInfo(
+  let sslStatus = new FakeSSLStatus(
                         certFromFile("a.pinning2.example.com-pinningroot"));
   let uri = Services.io.newURI("https://a.pinning2.example.com");
   let maxAge = {};
@@ -47,12 +47,12 @@ function checkPassValidPin(pinValue, settingPin, expectedMaxAge) {
     // add a known valid pin!
     let validPinValue = "max-age=5000;" + VALID_PIN1 + BACKUP_PIN1;
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
-                             validPinValue, secInfo, 0,
+                             validPinValue, sslStatus, 0,
                              Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   }
   try {
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
-                             pinValue, secInfo, 0,
+                             pinValue, sslStatus, 0,
                              Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
                              {}, maxAge);
     ok(true, "Valid pin should be accepted");
