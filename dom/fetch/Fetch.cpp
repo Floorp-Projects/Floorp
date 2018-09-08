@@ -1253,6 +1253,21 @@ void
 FetchBody<Response>::SetMimeType();
 
 template <class Derived>
+const PathString&
+FetchBody<Derived>::BodyLocalPath() const
+{
+  return DerivedClass()->BodyLocalPath();
+}
+
+template
+const PathString&
+FetchBody<Request>::BodyLocalPath() const;
+
+template
+const PathString&
+FetchBody<Response>::BodyLocalPath() const;
+
+template <class Derived>
 void
 FetchBody<Derived>::SetReadableStreamBody(JSContext* aCx, JSObject* aBody)
 {
