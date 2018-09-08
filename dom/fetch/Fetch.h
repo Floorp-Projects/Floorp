@@ -187,9 +187,6 @@ public:
           JS::MutableHandle<JSObject*> aBodyOut,
           ErrorResult& aRv);
 
-  const PathString&
-  BodyLocalPath() const;
-
   // If the body contains a ReadableStream body object, this method produces a
   // tee() of it.
   void

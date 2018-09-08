@@ -220,21 +220,6 @@ public:
   }
 
   void
-  SetBodyLocalPath(PathString& aLocalPath)
-  {
-    mBodyLocalPath = aLocalPath;
-  }
-
-  const PathString&
-  BodyLocalPath() const
-  {
-    if (mWrappedResponse) {
-      return mWrappedResponse->BodyLocalPath();
-    }
-    return mBodyLocalPath;
-  }
-
-  void
   SetBody(nsIInputStream* aBody, int64_t aBodySize)
   {
     if (mWrappedResponse) {
@@ -388,7 +373,6 @@ private:
   const nsCString mStatusText;
   RefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBody;
-  PathString mBodyLocalPath;
   int64_t mBodySize;
   // It's used to passed to the CacheResponse to generate padding size. Once, we
   // generate the padding size for resposne, we don't need it anymore.
