@@ -50,9 +50,6 @@ public:
   BeginConsumeBodyMainThread(ThreadSafeWorkerRef* aWorkerRef);
 
   void
-  OnBlobResult(Blob* aBlob, ThreadSafeWorkerRef* aWorkerRef = nullptr);
-
-  void
   ContinueConsumeBody(nsresult aStatus, uint32_t aLength, uint8_t* aResult,
                       bool aShuttingDown = false);
 
@@ -82,9 +79,6 @@ private:
 
   ~FetchBodyConsumer();
 
-  nsresult
-  GetBodyLocalFile(nsIFile** aFile) const;
-
   void
   AssertIsOnTargetThread() const;
 
@@ -101,8 +95,6 @@ private:
 
   MutableBlobStorage::MutableBlobStorageType mBlobStorageType;
   nsCString mBodyMimeType;
-
-  PathString mBodyLocalPath;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 

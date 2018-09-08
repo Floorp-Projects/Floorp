@@ -476,18 +476,6 @@ public:
     }
   }
 
-  void
-  SetBodyLocalPath(PathString& aLocalPath)
-  {
-    mBodyLocalPath = aLocalPath;
-  }
-
-  const PathString&
-  BodyLocalPath() const
-  {
-    return mBodyLocalPath;
-  }
-
   // The global is used as the client for the new object.
   already_AddRefed<InternalRequest>
   GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult& aRv) const;
@@ -582,7 +570,6 @@ private:
   // mURLList: a list of one or more fetch URLs
   nsTArray<nsCString> mURLList;
   RefPtr<InternalHeaders> mHeaders;
-  PathString mBodyLocalPath;
   nsCOMPtr<nsIInputStream> mBodyStream;
   int64_t mBodyLength;
 
