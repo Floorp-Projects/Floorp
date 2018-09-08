@@ -49,6 +49,7 @@ enum class EditSubAction : int32_t;
 struct PropItem;
 template<class T> class OwningNonNull;
 namespace dom {
+class Blob;
 class DocumentFragment;
 class Event;
 class MouseEvent;
@@ -1933,6 +1934,18 @@ protected: // Shouldn't be used by friend classes
                                       nsIContent& aParentContent,
                                       const nsAString& aAnonClass,
                                       bool aIsCreatedHidden);
+
+  /**
+   * Reads a blob into memory and notifies the BlobReader object when the read
+   * operation is finished.
+   *
+   * @param aBlob       The input blob
+   * @param aWindow     The global object under which the read should happen.
+   * @param aBlobReader The blob reader object to be notified when finished.
+   */
+  static nsresult SlurpBlob(dom::Blob* aBlob,
+                            nsPIDOMWindowOuter* aWindow,
+                            BlobReader* aBlobReader);
 protected:
   RefPtr<TypeInState> mTypeInState;
   RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
