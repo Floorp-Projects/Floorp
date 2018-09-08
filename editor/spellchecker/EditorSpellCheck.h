@@ -16,7 +16,6 @@
 #include "nscore.h"                     // for nsresult
 
 class mozSpellChecker;
-class nsComposeTxtSrvFilter;
 class nsIEditor;
 class nsISpellChecker;
 
