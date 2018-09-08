@@ -56,7 +56,7 @@ const whitelist = {
     "resource://gre/modules/ActorChild.jsm",
     "resource://gre/modules/ActorManagerChild.jsm",
     "resource://gre/modules/E10SUtils.jsm",
-    "resource://gre/modules/ReaderMode.jsm",
+    "resource://gre/modules/Readerable.jsm",
     "resource://gre/modules/WebProgressChild.jsm",
 
     // Pocket

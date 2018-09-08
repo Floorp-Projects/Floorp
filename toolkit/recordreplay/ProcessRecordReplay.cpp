@@ -10,7 +10,6 @@
 #include "mozilla/Compression.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/StackWalk.h"
 #include "mozilla/StaticMutex.h"
 #include "DirtyMemoryHandler.h"
 #include "Lock.h"
@@ -44,8 +43,6 @@ const char* gSnapshotMemoryPrefix;
 const char* gSnapshotStackPrefix;
 
 char* gInitializationFailureMessage;
-
-static void DumpRecordingAssertions();
 
 bool gInitialized;
 ProcessKind gProcessKind;
@@ -141,10 +138,6 @@ RecordReplayInterface_Initialize(int aArgc, char* aArgv[])
   thread->BindToCurrent();
   thread->SetPassThrough(true);
 
-  if (IsReplaying() && TestEnv("DUMP_RECORDING")) {
-    DumpRecordingAssertions();
-  }
-
   InitializeTriggers();
   InitializeWeakPointers();
   InitializeMemorySnapshots();
@@ -166,17 +159,13 @@ RecordReplayInterface_Initialize(int aArgc, char* aArgv[])
 MOZ_EXPORT size_t
 RecordReplayInterface_InternalRecordReplayValue(size_t aValue)
 {
-  MOZ_ASSERT(IsRecordingOrReplaying());
-
-  if (AreThreadEventsPassedThrough()) {
+  Thread* thread = Thread::Current();
+  if (thread->PassThroughEvents()) {
     return aValue;
   }
   EnsureNotDivergedFromRecording();
 
-  MOZ_RELEASE_ASSERT(!AreThreadEventsDisallowed());
-  Thread* thread = Thread::Current();
-
-  RecordReplayAssert("Value");
+  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::Value);
   thread->Events().RecordOrReplayValue(&aValue);
   return aValue;
@@ -185,17 +174,13 @@ RecordReplayInterface_InternalRecordReplayValue(size_t aValue)
 MOZ_EXPORT void
 RecordReplayInterface_InternalRecordReplayBytes(void* aData, size_t aSize)
 {
-  MOZ_ASSERT(IsRecordingOrReplaying());
-
-  if (AreThreadEventsPassedThrough()) {
+  Thread* thread = Thread::Current();
+  if (thread->PassThroughEvents()) {
     return;
   }
   EnsureNotDivergedFromRecording();
 
-  MOZ_RELEASE_ASSERT(!AreThreadEventsDisallowed());
-  Thread* thread = Thread::Current();
-
-  RecordReplayAssert("Bytes %d", (int) aSize);
+  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::Bytes);
   thread->Events().CheckInput(aSize);
   thread->Events().RecordOrReplayBytes(aData, aSize);
@@ -327,291 +312,56 @@ InternalPrint(const char* aFormat, va_list aArgs)
   DirectPrint(buf2);
 }
 
+const char*
+ThreadEventName(ThreadEvent aEvent)
+{
+  switch (aEvent) {
+#define EnumToString(Kind) case ThreadEvent::Kind: return #Kind;
+    ForEachThreadEvent(EnumToString)
+#undef EnumToString
+  case ThreadEvent::CallStart: break;
+  }
+  size_t callId = (size_t) aEvent - (size_t) ThreadEvent::CallStart;
+  return gRedirections[callId].mName;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Record/Replay Assertions
 ///////////////////////////////////////////////////////////////////////////////
-
-struct StackWalkData
-{
-  char* mBuf;
-  size_t mSize;
-
-  StackWalkData(char* aBuf, size_t aSize)
-    : mBuf(aBuf), mSize(aSize)
-  {}
-
-  void append(const char* aText) {
-    size_t len = strlen(aText);
-    if (len <= mSize) {
-      strcpy(mBuf, aText);
-      mBuf += len;
-      mSize -= len;
-    }
-  }
-};
-
-static void
-StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
-{
-  StackWalkData* data = (StackWalkData*) aClosure;
-
-  MozCodeAddressDetails details;
-  MozDescribeCodeAddress(aPC, &details);
-
-  data->append(" ### ");
-  data->append(details.function[0] ? details.function : "???");
-}
-
-static void
-SetCurrentStackString(const char* aAssertion, char* aBuf, size_t aSize)
-{
-  size_t frameCount = 12;
-
-  // Locking operations usually have extra stack goop.
-  if (!strcmp(aAssertion, "Lock 1")) {
-    frameCount += 8;
-  } else if (!strncmp(aAssertion, "Lock ", 5)) {
-    frameCount += 4;
-  }
-
-  StackWalkData data(aBuf, aSize);
-  MozStackWalk(StackWalkCallback, /* aSkipFrames = */ 2, frameCount, &data);
-}
-
-// For debugging.
-char*
-PrintCurrentStackString()
-{
-  AutoEnsurePassThroughThreadEvents pt;
-  char* buf = new char[1000];
-  SetCurrentStackString("", buf, 1000);
-  return buf;
-}
-
-static inline bool
-AlwaysCaptureEventStack(const char* aText)
-{
-  return false;
-}
-
-// Bit included in assertion stream when the assertion is a text assert, rather
-// than a byte sequence.
-static const size_t AssertionBit = 1;
 
 extern "C" {
 
 MOZ_EXPORT void
 RecordReplayInterface_InternalRecordReplayAssert(const char* aFormat, va_list aArgs)
 {
-#ifdef INCLUDE_RECORD_REPLAY_ASSERTIONS
-  if (AreThreadEventsPassedThrough() || HasDivergedFromRecording()) {
+  Thread* thread = Thread::Current();
+  if (thread->PassThroughEvents() || thread->HasDivergedFromRecording()) {
     return;
   }
+  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
 
-  MOZ_RELEASE_ASSERT(!AreThreadEventsDisallowed());
-  Thread* thread = Thread::Current();
-
-  // Record an assertion string consisting of the name of the assertion and
-  // stack information about the current point of execution.
+  // Add the asserted string to the recording.
   char text[1024];
   VsprintfLiteral(text, aFormat, aArgs);
-  if (IsRecording() && (thread->ShouldCaptureEventStacks() || AlwaysCaptureEventStack(text))) {
-    AutoPassThroughThreadEvents pt;
-    SetCurrentStackString(text, text + strlen(text), sizeof(text) - strlen(text));
-  }
 
-  size_t textLen = strlen(text);
-
-  if (IsRecording()) {
-    thread->Asserts().WriteScalar(thread->Events().StreamPosition());
-    if (thread->IsMainThread()) {
-      thread->Asserts().WriteScalar(*ExecutionProgressCounter());
-    }
-    thread->Asserts().WriteScalar((textLen << 1) | AssertionBit);
-    thread->Asserts().WriteBytes(text, textLen);
-  } else {
-    // While replaying, both the assertion's name and the current position in
-    // the thread's events need to match up with what was recorded. The stack
-    // portion of the assertion text does not need to match, it is used to help
-    // track down the reason for the mismatch.
-    bool match = true;
-    size_t streamPos = thread->Asserts().ReadScalar();
-    if (streamPos != thread->Events().StreamPosition()) {
-      match = false;
-    }
-    size_t progress = 0;
-    if (thread->IsMainThread()) {
-      progress = thread->Asserts().ReadScalar();
-      if (progress != *ExecutionProgressCounter()) {
-        match = false;
-      }
-    }
-    size_t assertLen = thread->Asserts().ReadScalar() >> 1;
-
-    char* buffer = thread->TakeBuffer(assertLen + 1);
-
-    thread->Asserts().ReadBytes(buffer, assertLen);
-    buffer[assertLen] = 0;
-
-    if (assertLen < textLen || memcmp(buffer, text, textLen) != 0) {
-      match = false;
-    }
-
-    if (!match) {
-      for (int i = Thread::NumRecentAsserts - 1; i >= 0; i--) {
-        if (thread->RecentAssert(i).mText) {
-          Print("Thread %d Recent %d: %s [%d]\n",
-                (int) thread->Id(), (int) i,
-                thread->RecentAssert(i).mText, (int) thread->RecentAssert(i).mPosition);
-        }
-      }
-
-      {
-        AutoPassThroughThreadEvents pt;
-        SetCurrentStackString(text, text + strlen(text), sizeof(text) - strlen(text));
-      }
-
-      child::ReportFatalError(Nothing(),
-                              "Assertion Mismatch: Thread %d\n"
-                              "Recorded: %s [%d,%d]\n"
-                              "Replayed: %s [%d,%d]\n",
-                              (int) thread->Id(), buffer, (int) streamPos, (int) progress, text,
-                              (int) thread->Events().StreamPosition(),
-                              (int) (thread->IsMainThread() ? *ExecutionProgressCounter() : 0));
-      Unreachable();
-    }
-
-    thread->RestoreBuffer(buffer);
-
-    // Push this assert onto the recent assertions in the thread.
-    free(thread->RecentAssert(Thread::NumRecentAsserts - 1).mText);
-    for (size_t i = Thread::NumRecentAsserts - 1; i >= 1; i--) {
-      thread->RecentAssert(i) = thread->RecentAssert(i - 1);
-    }
-    thread->RecentAssert(0).mText = strdup(text);
-    thread->RecentAssert(0).mPosition = thread->Events().StreamPosition();
-  }
-#endif // INCLUDE_RECORD_REPLAY_ASSERTIONS
+  thread->Events().RecordOrReplayThreadEvent(ThreadEvent::Assert);
+  thread->Events().CheckInput(text);
 }
 
 MOZ_EXPORT void
 RecordReplayInterface_InternalRecordReplayAssertBytes(const void* aData, size_t aSize)
 {
-#ifdef INCLUDE_RECORD_REPLAY_ASSERTIONS
-  RecordReplayAssert("AssertBytes");
-
-  if (AreThreadEventsPassedThrough() || HasDivergedFromRecording()) {
+  Thread* thread = Thread::Current();
+  if (thread->PassThroughEvents() || thread->HasDivergedFromRecording()) {
     return;
   }
+  MOZ_RELEASE_ASSERT(thread->CanAccessRecording());
 
-  MOZ_ASSERT(!AreThreadEventsDisallowed());
-  Thread* thread = Thread::Current();
-
-  if (IsRecording()) {
-    thread->Asserts().WriteScalar(thread->Events().StreamPosition());
-    thread->Asserts().WriteScalar(aSize << 1);
-    thread->Asserts().WriteBytes(aData, aSize);
-  } else {
-    bool match = true;
-    size_t streamPos = thread->Asserts().ReadScalar();
-    if (streamPos != thread->Events().StreamPosition()) {
-      match = false;
-    }
-    size_t oldSize = thread->Asserts().ReadScalar() >> 1;
-    if (oldSize != aSize) {
-      match = false;
-    }
-
-    char* buffer = thread->TakeBuffer(oldSize);
-
-    thread->Asserts().ReadBytes(buffer, oldSize);
-    if (match && memcmp(buffer, aData, oldSize) != 0) {
-      match = false;
-    }
-
-    if (!match) {
-      // On a byte mismatch, print out some of the mismatched bytes, up to a
-      // cutoff in case there are many mismatched bytes.
-      if (oldSize == aSize) {
-        static const size_t MAX_MISMATCHES = 100;
-        size_t mismatches = 0;
-        for (size_t i = 0; i < aSize; i++) {
-          if (((char*)aData)[i] != buffer[i]) {
-            Print("Position %d: %d %d\n", (int) i, (int) buffer[i], (int) ((char*)aData)[i]);
-            if (++mismatches == MAX_MISMATCHES) {
-              break;
-            }
-          }
-        }
-        if (mismatches == MAX_MISMATCHES) {
-          Print("Position ...\n");
-        }
-      }
-
-      child::ReportFatalError(Nothing(),
-                              "Byte Comparison Check Failed: Position %d %d Length %d %d\n",
-                              (int) streamPos, (int) thread->Events().StreamPosition(),
-                              (int) oldSize, (int) aSize);
-      Unreachable();
-    }
-
-    thread->RestoreBuffer(buffer);
-  }
-#endif // INCLUDE_RECORD_REPLAY_ASSERTIONS
-}
-
-MOZ_EXPORT void
-RecordReplayRust_Assert(const uint8_t* aBuffer)
-{
-  RecordReplayAssert("%s", (const char*) aBuffer);
-}
-
-MOZ_EXPORT void
-RecordReplayRust_BeginPassThroughThreadEvents()
-{
-  BeginPassThroughThreadEvents();
-}
-
-MOZ_EXPORT void
-RecordReplayRust_EndPassThroughThreadEvents()
-{
-  EndPassThroughThreadEvents();
+  thread->Events().RecordOrReplayThreadEvent(ThreadEvent::AssertBytes);
+  thread->Events().CheckInput(aData, aSize);
 }
 
 } // extern "C"
-
-static void
-DumpRecordingAssertions()
-{
-  Thread* thread = Thread::Current();
-
-  for (size_t id = MainThreadId; id <= MaxRecordedThreadId; id++) {
-    Stream* asserts = gRecordingFile->OpenStream(StreamName::Assert, id);
-    if (asserts->AtEnd()) {
-      continue;
-    }
-
-    fprintf(stderr, "Thread Assertions %d:\n", (int) id);
-    while (!asserts->AtEnd()) {
-      (void) asserts->ReadScalar();
-      size_t shiftedLen = asserts->ReadScalar();
-      size_t assertLen = shiftedLen >> 1;
-
-      char* buffer = thread->TakeBuffer(assertLen + 1);
-      asserts->ReadBytes(buffer, assertLen);
-      buffer[assertLen] = 0;
-
-      if (shiftedLen & AssertionBit) {
-        fprintf(stderr, "%s\n", buffer);
-      }
-
-      thread->RestoreBuffer(buffer);
-    }
-  }
-
-  fprintf(stderr, "Done with assertions, exiting...\n");
-  _exit(0);
-}
 
 static ValueIndex* gGenericThings;
 static StaticMutexNotRecorded gGenericThingsMutex;

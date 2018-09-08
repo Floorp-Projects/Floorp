@@ -56,7 +56,6 @@ enum class StreamName
   Main,
   Lock,
   Event,
-  Assert,
   Count
 };
 
@@ -103,6 +102,13 @@ class Stream
   UniquePtr<char[]> mBallast;
   size_t mBallastSize;
 
+  // Any buffer available to check for input mismatches.
+  UniquePtr<char[]> mInputBallast;
+  size_t mInputBallastSize;
+
+  // The last event in this stream, in case of an input mismatch.
+  ThreadEvent mLastEvent;
+
   // The number of chunks that have been completely read or written. When
   // writing, this equals mChunks.length().
   size_t mChunkIndex;
@@ -122,6 +128,9 @@ class Stream
     , mStreamPos(0)
     , mBallast(nullptr)
     , mBallastSize(0)
+    , mInputBallast(nullptr)
+    , mInputBallastSize(0)
+    , mLastEvent((ThreadEvent) 0)
     , mChunkIndex(0)
     , mFlushedChunks(0)
   {}
@@ -158,17 +167,15 @@ public:
     RecordOrReplayBytes(aPtr, sizeof(T));
   }
 
-  // Make sure that a value is the same while replaying as it was while
-  // recording.
-  void CheckInput(size_t aValue);
+  // Note a new thread event for this stream, and make sure it is the same
+  // while replaying as it was while recording.
+  void RecordOrReplayThreadEvent(ThreadEvent aEvent);
 
-  // Add a thread event to this file. Each thread event in a file is followed
-  // by additional data specific to that event. Generally, CheckInput should be
-  // used while recording or replaying the data for a thread event so that any
-  // discrepancies with the recording are found immediately.
-  inline void RecordOrReplayThreadEvent(ThreadEvent aEvent) {
-    CheckInput((size_t)aEvent);
-  }
+  // Make sure that a value or buffer is the same while replaying as it was
+  // while recording.
+  void CheckInput(size_t aValue);
+  void CheckInput(const char* aValue);
+  void CheckInput(const void* aData, size_t aSize);
 
   inline size_t StreamPosition() {
     return mStreamPos;
@@ -182,6 +189,7 @@ private:
 
   void EnsureMemory(UniquePtr<char[]>* aBuf, size_t* aSize, size_t aNeededSize, size_t aMaxSize,
                     ShouldCopy aCopy);
+  void EnsureInputBallast(size_t aSize);
   void Flush(bool aTakeLock);
 
   static size_t BallastMaxSize();

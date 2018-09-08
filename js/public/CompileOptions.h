@@ -249,7 +249,7 @@ class JS_PUBLIC_API(OwningCompileOptions) final
     bool copy(JSContext* cx, const ReadOnlyCompileOptions& rhs);
 
     /* These setters make copies of their string arguments and are fallible. */
-    bool setFile(JSContext* cx, const char* f);
+    MOZ_MUST_USE bool setFile(JSContext* cx, const char* f);
     MOZ_MUST_USE bool setFileAndLine(JSContext* cx, const char* f, unsigned l);
     MOZ_MUST_USE bool setSourceMapURL(JSContext* cx, const char16_t* s);
     MOZ_MUST_USE bool setIntroducerFilename(JSContext* cx, const char* s);

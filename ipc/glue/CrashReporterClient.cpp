@@ -43,10 +43,14 @@ CrashReporterClient::AppendAppNotes(const nsCString& aData)
 /* static */ void
 CrashReporterClient::InitSingletonWithShmem(const Shmem& aShmem)
 {
-  StaticMutexAutoLock lock(sLock);
+  {
+    StaticMutexAutoLock lock(sLock);
 
-  MOZ_ASSERT(!sClientSingleton);
-  sClientSingleton = new CrashReporterClient(aShmem);
+    MOZ_ASSERT(!sClientSingleton);
+    sClientSingleton = new CrashReporterClient(aShmem);
+  }
+
+  CrashReporter::NotifyCrashReporterClientCreated();
 }
 
 /* static */ void

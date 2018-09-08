@@ -878,6 +878,8 @@ InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid,
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RecordReplay, true);
+
   gParentPid = aParentPid;
 
   // Construct the message that will be sent to each child when starting up.

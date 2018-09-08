@@ -491,7 +491,7 @@ class TestFunctional(HelperMixin, unittest.TestCase):
                                           'dist', 'host', 'bin',
                                           'dump_syms')
             self.target_bin = os.path.join(buildconfig.topobjdir,
-                                           'dist', 'bin', 'firefox')
+                                           'dist', 'bin', 'firefox-bin')
 
 
     def tearDown(self):

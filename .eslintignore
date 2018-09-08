@@ -370,6 +370,7 @@ toolkit/components/reader/Readability.js
 toolkit/components/reader/JSDOMParser.js
 
 # Uses preprocessing
+toolkit/components/reader/Readerable.jsm
 toolkit/content/widgets/wizard.xml
 toolkit/modules/AppConstants.jsm
 toolkit/mozapps/update/tests/data/xpcshellConstantsPP.js

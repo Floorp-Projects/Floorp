@@ -1,9 +1,7 @@
 MOZ_AUTOMATION_L10N_CHECK=0
 
-. "$topsrcdir/build/unix/mozconfig.linux"
+. "$topsrcdir/build/unix/mozconfig.unix"
 
-# Enabling the clang plugin triggers leaks. bug 1487622
-unset ENABLE_CLANG_PLUGIN
 export LLVM_SYMBOLIZER="$topsrcdir/clang/bin/llvm-symbolizer"
 #
 # Enable ASan specific code and build workarounds
