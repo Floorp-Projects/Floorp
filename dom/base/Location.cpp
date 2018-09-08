@@ -517,7 +517,7 @@ Location::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
     }
 
     return SetURI(newUri, aReplace || inScriptTag);
-  } 
+  }
   return result;
 }
 

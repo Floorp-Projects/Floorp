@@ -37,6 +37,8 @@ public final class MediaDrmProxy {
     private static final String VP9 = "video/x-vnd.on2.vp9";
     @WrapForJNI
     private static final String OPUS = "audio/opus";
+    @WrapForJNI
+    private static final String FLAC = "audio/flac";
 
     public static final ArrayList<MediaDrmProxy> sProxyList = new ArrayList<MediaDrmProxy>();
 

@@ -1581,10 +1581,13 @@ var AddonManagerInternal = {
    *         An optional placeholder version while the add-on is being downloaded
    * @param  aBrowser
    *         An optional <browser> element for download permissions prompts.
+   * @param  aTelemetryInfo
+   *         An optional object which provides details about the installation source
+   *         included in the addon manager telemetry events.
    * @throws if the aUrl, aCallback or aMimetype arguments are not specified
    */
   getInstallForURL(aUrl, aMimetype, aHash, aName,
-                   aIcons, aVersion, aBrowser) {
+                   aIcons, aVersion, aBrowser, aTelemetryInfo) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1627,7 +1630,7 @@ var AddonManagerInternal = {
       if (callProvider(provider, "supportsMimetype", false, aMimetype)) {
         return promiseCallProvider(
           provider, "getInstallForURL", aUrl, aHash, aName, aIcons,
-          aVersion, aBrowser);
+          aVersion, aBrowser, aTelemetryInfo);
       }
     }
 
@@ -1641,9 +1644,12 @@ var AddonManagerInternal = {
    *         The nsIFile where the add-on is located
    * @param  aMimetype
    *         An optional mimetype hint for the add-on
+   * @param  aTelemetryInfo
+   *         An optional object which provides details about the installation source
+   *         included in the addon manager telemetry events.
    * @throws if the aFile or aCallback arguments are not specified
    */
-  getInstallForFile(aFile, aMimetype) {
+  getInstallForFile(aFile, aMimetype, aTelemetryInfo) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1659,7 +1665,7 @@ var AddonManagerInternal = {
     return (async () => {
       for (let provider of this.providers) {
         let install = await promiseCallProvider(
-          provider, "getInstallForFile", aFile);
+          provider, "getInstallForFile", aFile, aTelemetryInfo);
 
         if (install)
           return install;
@@ -2704,7 +2710,13 @@ var AddonManagerInternal = {
         return Promise.reject({message: err.message});
       }
 
-      return AddonManagerInternal.getInstallForURL(options.url, "application/x-xpinstall", options.hash)
+      let installTelemetryInfo = {
+        source: AddonManager.getInstallSourceFromHost(options.sourceHost),
+        method: "amWebAPI",
+      };
+
+      return AddonManagerInternal.getInstallForURL(options.url, "application/x-xpinstall", options.hash,
+                                                   null, null, null, null, installTelemetryInfo)
                                  .then(install => {
         AddonManagerInternal.setupPromptHandler(target, null, install, false, "AMO");
 
@@ -3002,6 +3014,14 @@ var AddonManagerPrivate = {
  * @class
  */
 var AddonManager = {
+  // Map used to convert the known install source hostnames into the value to set into the
+  // telemetry events.
+  _installHostSource: new Map([
+    ["addons.mozilla.org", "amo"],
+    ["discovery.addons.mozilla.org", "disco"],
+    ["testpilot.firefox.com", "testpilot"],
+  ]),
+
   // Constants for the AddonInstall.state property
   // These will show up as AddonManager.STATE_* (eg, STATE_AVAILABLE)
   _states: new Map([
@@ -3261,14 +3281,26 @@ var AddonManager = {
     return err ? this._errorToString.get(err) : null;
   },
 
-  getInstallForURL(aUrl, aMimetype, aHash, aName, aIcons,
-                   aVersion, aBrowser) {
-    return AddonManagerInternal.getInstallForURL(aUrl, aMimetype, aHash,
-                                                 aName, aIcons, aVersion, aBrowser);
+  getInstallSourceFromHost(host) {
+    if (this._installHostSource.has(host)) {
+      return this._installHostSource.get(host);
+    }
+
+    if (WEBAPI_TEST_INSTALL_HOSTS.includes(host)) {
+      return "test-host";
+    }
+
+    return "unknown";
   },
 
-  getInstallForFile(aFile, aMimetype) {
-      return AddonManagerInternal.getInstallForFile(aFile, aMimetype);
+  getInstallForURL(aUrl, aMimetype, aHash, aName, aIcons,
+                   aVersion, aBrowser, aTelemetryInfo) {
+    return AddonManagerInternal.getInstallForURL(
+      aUrl, aMimetype, aHash, aName, aIcons, aVersion, aBrowser, aTelemetryInfo);
+  },
+
+  getInstallForFile(aFile, aMimetype, aTelemetryInfo) {
+    return AddonManagerInternal.getInstallForFile(aFile, aMimetype, aTelemetryInfo);
   },
 
   /**

@@ -28,7 +28,7 @@ int NSSInitCryptoContext(const char *NSSConfigDir);
 int mar_repackage_and_sign(const char *NSSConfigDir,
                            const char * const *certNames,
                            uint32_t certCount,
-                           const char *src, 
+                           const char *src,
                            const char * dest);
 
 static void print_version() {
@@ -92,8 +92,8 @@ static void print_usage() {
   printf("This program does not handle unicode file paths properly\n");
 }
 
-static int mar_test_callback(MarFile *mar, 
-                             const MarItem *item, 
+static int mar_test_callback(MarFile *mar,
+                             const MarItem *item,
                              void *unused) {
   printf("%u\t0%o\t%s\n", item->length, item->flags, item->name);
   return 0;
@@ -257,18 +257,18 @@ int main(int argc, char **argv) {
     struct ProductInformationBlock infoBlock;
     uint32_t numSignatures, numAdditionalBlocks;
     int hasSignatureBlock, hasAdditionalBlock;
-    if (!get_mar_file_info(argv[2], 
+    if (!get_mar_file_info(argv[2],
                            &hasSignatureBlock,
                            &numSignatures,
-                           &hasAdditionalBlock, 
+                           &hasAdditionalBlock,
                            NULL, &numAdditionalBlocks)) {
       if (hasSignatureBlock) {
-        printf("Signature block found with %d signature%s\n", 
-               numSignatures, 
+        printf("Signature block found with %d signature%s\n",
+               numSignatures,
                numSignatures != 1 ? "s" : "");
       }
       if (hasAdditionalBlock) {
-        printf("%d additional block%s found:\n", 
+        printf("%d additional block%s found:\n",
                numAdditionalBlocks,
                numAdditionalBlocks != 1 ? "s" : "");
       }
@@ -395,7 +395,7 @@ int main(int argc, char **argv) {
     if (rv) {
       /* Determine if the source MAR file has the new fields for signing */
       int hasSignatureBlock;
-      if (get_mar_file_info(argv[2], &hasSignatureBlock, 
+      if (get_mar_file_info(argv[2], &hasSignatureBlock,
                             NULL, NULL, NULL, NULL)) {
         fprintf(stderr, "ERROR: could not determine if MAR is old or new.\n");
       } else if (!hasSignatureBlock) {

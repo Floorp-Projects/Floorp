@@ -10,7 +10,7 @@
 
 #include "mozilla/dom/CSSCounterStyleRule.h"
 #include "mozilla/dom/CSSFontFaceRule.h"
-#include "mozilla/dom/CSSFontFeatureValuesRule.h" 
+#include "mozilla/dom/CSSFontFeatureValuesRule.h"
 #include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSKeyframesRule.h"
 #include "mozilla/dom/CSSMediaRule.h"

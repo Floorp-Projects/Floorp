@@ -216,7 +216,7 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
     const JSErrorFormatString* efs = js::GetErrorMessage(nullptr, aReport->errorNumber);
 
     if (efs == nullptr) {
-        mErrorMsgName.AssignASCII("");
+        mErrorMsgName.AssignLiteral("");
     } else {
         mErrorMsgName.AssignASCII(efs->name);
     }

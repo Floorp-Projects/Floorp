@@ -70,7 +70,7 @@ struct FakeString {
 
   nsString::char_type* BeginWriting()
   {
-    MOZ_ASSERT(!(mDataFlags & nsString::DataFlags::REFCOUNTED) || 
+    MOZ_ASSERT(!(mDataFlags & nsString::DataFlags::REFCOUNTED) ||
                !nsStringBuffer::FromData(mData)->IsReadonly());
     return mData;
   }

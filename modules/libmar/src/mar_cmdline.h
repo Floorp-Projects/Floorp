@@ -23,7 +23,7 @@ struct ProductInformationBlock;
  *                               of signatures in the MAR file.
  * @param hasAdditionalBlocks    Optional out parameter specifying if the MAR
  *                               file has additional blocks or not.
- * @param offsetAdditionalBlocks Optional out parameter for the offset to the 
+ * @param offsetAdditionalBlocks Optional out parameter for the offset to the
  *                               first additional block. Value is only valid if
  *                               hasAdditionalBlocks is not equal to 0.
  * @param numAdditionalBlocks    Optional out parameter for the number of
@@ -31,14 +31,14 @@ struct ProductInformationBlock;
  *                               has_additional_blocks is not equal to 0.
  * @return 0 on success and non-zero on failure.
  */
-int get_mar_file_info(const char *path, 
+int get_mar_file_info(const char *path,
                       int *hasSignatureBlock,
                       uint32_t *numSignatures,
                       int *hasAdditionalBlocks,
                       uint32_t *offsetAdditionalBlocks,
                       uint32_t *numAdditionalBlocks);
 
-/** 
+/**
  * Reads the product info block from the MAR file's additional block section.
  * The caller is responsible for freeing the fields in infoBlock
  * if the return is successful.
@@ -47,13 +47,13 @@ int get_mar_file_info(const char *path,
  * @return 0 on success, -1 on failure
 */
 int
-read_product_info_block(char *path, 
+read_product_info_block(char *path,
                         struct ProductInformationBlock *infoBlock);
 
-/** 
+/**
  * Refreshes the product information block with the new information.
  * The input MAR must not be signed or the function call will fail.
- * 
+ *
  * @param path             The path to the MAR file whose product info block
  *                         should be refreshed.
  * @param infoBlock        Out parameter for where to store the result to
@@ -67,7 +67,7 @@ refresh_product_info_block(const char *path,
  * Writes out a copy of the MAR at src but with the signature block stripped.
  *
  * @param  src  The path of the source MAR file
- * @param  dest The path of the MAR file to write out that 
+ * @param  dest The path of the MAR file to write out that
                 has no signature block
  * @return 0 on success
  *         -1 on error

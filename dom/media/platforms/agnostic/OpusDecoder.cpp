@@ -333,8 +333,11 @@ OpusDataDecoder::ProcessDecode(MediaRawData* aSample)
       __func__);
   };
 
-
   mFrames += frames;
+
+  if (!frames) {
+    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
+  }
 
   return DecodePromise::CreateAndResolve(
     DecodedData{ new AudioData(aSample->mOffset,

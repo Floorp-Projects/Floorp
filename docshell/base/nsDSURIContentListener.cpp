@@ -166,7 +166,7 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
           maybeCloseWindowHelper->MaybeCloseWindow();
         }
       }
-      return NS_OK; 
+      return NS_OK;
     }
   }
 

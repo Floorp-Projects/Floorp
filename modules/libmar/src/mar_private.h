@@ -17,7 +17,7 @@
 #define MAR_ID "MAR1"
 #define MAR_ID_SIZE 4
 
-/* The signature block comes directly after the header block 
+/* The signature block comes directly after the header block
    which is 16 bytes */
 #define SIGNATURE_BLOCK_OFFSET 16
 
@@ -30,7 +30,7 @@
 MOZ_STATIC_ASSERT(MAX_SIZE_OF_MAR_FILE < ((int64_t)LONG_MAX),
                   "max mar file size is too big");
 
-/* We store at most the size up to the signature block + 4 
+/* We store at most the size up to the signature block + 4
    bytes per BLOCKSIZE bytes */
 MOZ_STATIC_ASSERT(sizeof(BLOCKSIZE) < \
                   (SIGNATURE_BLOCK_OFFSET + sizeof(uint32_t)),
@@ -40,7 +40,7 @@ MOZ_STATIC_ASSERT(sizeof(BLOCKSIZE) < \
    implementations of the signmar program. */
 #define MAX_SIGNATURE_LENGTH 2048
 
-/* Each additional block has a unique ID.  
+/* Each additional block has a unique ID.
    The product information block has an ID of 1. */
 #define PRODUCT_INFO_BLOCK_ID 1
 
@@ -51,7 +51,7 @@ MOZ_STATIC_ASSERT(sizeof(BLOCKSIZE) < \
 #define PIB_MAX_PRODUCT_VERSION_SIZE 31
 
 /* The mar program is compiled as a host bin so we don't have access to NSPR at
-   runtime.  For that reason we use ntohl, htonl, and define HOST_TO_NETWORK64 
+   runtime.  For that reason we use ntohl, htonl, and define HOST_TO_NETWORK64
    instead of the NSPR equivalents. */
 #ifdef XP_WIN
 #include <winsock2.h>

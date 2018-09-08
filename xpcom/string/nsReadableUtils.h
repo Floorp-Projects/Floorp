@@ -328,7 +328,7 @@ AppendUTF16toUTF8(mozilla::Span<const char16_t> aSource, nsACString& aDest)
 // value as an unsigned byte. (This is not windows-1252!) If there are code
 // points above U+00FF, memory-safely produces garbage and will likely start
 // asserting in future debug builds. The nature of the garbage may differ
-// based on CPU architecture and must not be relied upon. The names say 
+// based on CPU architecture and must not be relied upon. The names say
 // "ASCII" instead of "Latin1" for legacy reasons.
 
 inline MOZ_MUST_USE bool
