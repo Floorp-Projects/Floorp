@@ -92,10 +92,11 @@ toolbarbutton[checked="true"]:not([disabled="true"]) {
 
 .toolbarbutton-menu-dropmarker {
   -moz-appearance: none !important;
-  padding: 0;
-  width: auto;
-  height: auto;
-  margin-top: 1px;
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 12px;
+  height: 12px;
 }
 
 /* ::::: toolbarbutton badged ::::: */
