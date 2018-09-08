@@ -2,6 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root {
+  --flex-item-selector-wrapper-border-color: var(--theme-content-color3);
+}
+
+:root.theme-dark {
+  --flex-item-selector-wrapper-border-color: var(--theme-content-color1);
+}
+
 #layout-container {
   height: 100%;
   width: 100%;
@@ -110,6 +118,46 @@
 
 .flex-item-list .devtools-button {
   background-color: transparent;
+}
+
+/**
+ * Flex Item Selector
+ */
+
+.flex-item-selector-wrapper {
+  margin-inline-start: 25px;
+  position: relative;
+}
+
+.flex-item-selector-wrapper::before {
+  position: absolute;
+  left: -12px;
+  top: 3px;
+  content: '';
+  display: block;
+  border-left: 0.5px solid var(--flex-item-selector-wrapper-border-color);
+  height: 0.8em;
+  border-bottom: 0.5px solid var(--flex-item-selector-wrapper-border-color);
+  width: 10px;
+}
+
+
+#flex-item-selector {
+  background-position: right 4px center;
+  padding-left: 0;
+  vertical-align: middle;
+  width: 140px;
+}
+
+#flex-item-selector .objectBox-node {
+  display: inline-block;
+  font-size: 12px;
+  overflow: hidden;
+  padding-top: 0.15em;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 85%;
 }
 
 /**
