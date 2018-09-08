@@ -658,6 +658,8 @@ CompositorBridgeParent::RecvStartFrameTimeRecording(const int32_t& aBufferSize, 
 {
   if (mLayerManager) {
     *aOutStartIndex = mLayerManager->StartFrameTimeRecording(aBufferSize);
+  } else if (mWrBridge) {
+    *aOutStartIndex = mWrBridge->StartFrameTimeRecording(aBufferSize);
   } else {
     *aOutStartIndex = 0;
   }
@@ -670,6 +672,8 @@ CompositorBridgeParent::RecvStopFrameTimeRecording(const uint32_t& aStartIndex,
 {
   if (mLayerManager) {
     mLayerManager->StopFrameTimeRecording(aStartIndex, *intervals);
+  } else if (mWrBridge) {
+    mWrBridge->StopFrameTimeRecording(aStartIndex, *intervals);
   }
   return IPC_OK();
 }
