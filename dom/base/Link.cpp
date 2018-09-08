@@ -272,7 +272,7 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
       }
     } else {
       oldPolicyType = nsIContentPolicy::TYPE_INVALID;
-    }    
+    }
   } else if (aName == nsGkAtoms::type) {
     nsAutoString oldType;
     nsAutoString notUsed;

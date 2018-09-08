@@ -882,7 +882,7 @@ bool nsHttpTransaction::ShouldThrottle()
         // DontThrottle requests are expected to be long-standing media
         // streams and would just unnecessarily block running downloads.
         // If we want to ballance bandwidth for media responses against
-        // running downloads, we need to find something smarter like 
+        // running downloads, we need to find something smarter like
         // changing the suspend/resume throttling intervals at-runtime.
         return false;
     }

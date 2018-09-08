@@ -142,7 +142,7 @@ public:
    * with a value of "true".
    */
   static bool IsDOMAttrTrue(const Accessible* aAccessible, nsAtom* aAttr);
-  
+
   /**
    * Return true if the DOM node of given accessible has aria-selected="true"
    * attribute.

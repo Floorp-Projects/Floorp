@@ -275,6 +275,7 @@
 #include "nsIURIClassifier.h"
 #include "nsIURIMutator.h"
 #include "mozilla/DocumentStyleRootIterator.h"
+#include "mozilla/PendingFullscreenEvent.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "nsHTMLTags.h"
@@ -4035,7 +4036,7 @@ nsIDocument::DeleteShell()
 {
   mExternalResourceMap.HideViewers();
   if (nsPresContext* presContext = mPresShell->GetPresContext()) {
-    presContext->RefreshDriver()->CancelPendingEvents(this);
+    presContext->RefreshDriver()->CancelPendingFullscreenEvents(this);
   }
 
   // When our shell goes away, request that all our images be immediately
@@ -8551,26 +8552,13 @@ NotifyPageHide(nsIDocument* aDocument, void* aData)
 }
 
 static void
-DispatchCustomEventWithFlush(nsINode* aTarget, const nsAString& aEventType,
-                             bool aBubbles, bool aOnlyChromeDispatch)
-{
-  RefPtr<Event> event = NS_NewDOMEvent(aTarget, nullptr, nullptr);
-  event->InitEvent(aEventType, aBubbles, false);
-  event->SetTrusted(true);
-  if (aOnlyChromeDispatch) {
-    event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
-  }
-  if (nsPresContext* presContext = aTarget->OwnerDoc()->GetPresContext()) {
-    presContext->RefreshDriver()->ScheduleEventDispatch(aTarget, event);
-  }
-}
-
-static void
 DispatchFullScreenChange(nsIDocument* aTarget)
 {
-  DispatchCustomEventWithFlush(
-    aTarget, NS_LITERAL_STRING("fullscreenchange"),
-    /* Bubbles */ true, /* OnlyChrome */ false);
+  if (nsPresContext* presContext = aTarget->GetPresContext()) {
+    auto pendingEvent = MakeUnique<PendingFullscreenEvent>(aTarget);
+    presContext->RefreshDriver()->
+      ScheduleFullscreenEvent(std::move(pendingEvent));
+  }
 }
 
 static void ClearPendingFullscreenRequests(nsIDocument* aDoc);
@@ -10777,6 +10765,16 @@ nsIDocument::ExitFullscreenInDocTree(nsIDocument* aMaybeNotARootDoc)
     new ExitFullscreenScriptRunnable(std::move(changed)));
 }
 
+static void
+DispatchFullscreenNewOriginEvent(nsIDocument* aDoc)
+{
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+    new AsyncEventDispatcher(
+        aDoc, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
+        CanBubble::eYes, ChromeOnlyDispatch::eYes);
+  asyncDispatcher->PostDOMEvent();
+}
+
 bool
 GetFullscreenLeaf(nsIDocument* aDoc, void* aData)
 {
@@ -10889,9 +10887,7 @@ nsIDocument::RestorePreviousFullScreenState()
     // a fullscreen element in a parent document. If this document is
     // cross origin, dispatch an event to chrome so it knows to show
     // the warning UI.
-    DispatchCustomEventWithFlush(
-      newFullscreenDoc, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
-      /* Bubbles */ true, /* ChromeOnly */ true);
+    DispatchFullscreenNewOriginEvent(newFullscreenDoc);
   }
 }
 
@@ -11527,9 +11523,7 @@ nsIDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
   // shouldn't rely on this event itself.
   if (aRequest.mShouldNotifyNewOrigin &&
       !nsContentUtils::HaveEqualPrincipals(previousFullscreenDoc, this)) {
-    DispatchCustomEventWithFlush(
-      this, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
-      /* Bubbles */ true, /* ChromeOnly */ true);
+    DispatchFullscreenNewOriginEvent(this);
   }
 
   // Dispatch "fullscreenchange" events. Note this loop is in reverse

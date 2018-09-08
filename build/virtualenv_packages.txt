@@ -71,7 +71,6 @@ mozilla.pth:testing/web-platform/tests/tools/six
 mozilla.pth:testing/xpcshell
 mozilla.pth:third_party/python/mock-1.0.0
 mozilla.pth:xpcom/ds/tools
-mozilla.pth:xpcom/typelib/xpt/tools
 mozilla.pth:tools/docs
 mozilla.pth:third_party/python/cbor2
 mozilla.pth:third_party/python/pyasn1

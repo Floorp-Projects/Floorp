@@ -357,8 +357,11 @@ protected:
     {
         void Init(const nsACString& aGeneric, const nsACString& aLangGroup)
         {
-            Assign(ForNameList ? NS_LITERAL_CSTRING("font.name-list.")
-                               : NS_LITERAL_CSTRING("font.name."));
+            if (ForNameList) {
+                AssignLiteral("font.name-list.");
+            } else {
+                AssignLiteral("font.name.");
+            }
             Append(aGeneric);
             if (!aLangGroup.IsEmpty()) {
                 Append('.');

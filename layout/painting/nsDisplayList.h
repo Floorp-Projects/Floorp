@@ -86,10 +86,6 @@ class Selection;
 } // namespace dom
 } // namespace mozilla
 
-// A set of blend modes, that never includes OP_OVER (since it's
-// considered the default, rather than a specific blend mode).
-typedef mozilla::EnumSet<mozilla::gfx::CompositionOp> BlendModeSet;
-
 /*
  * An nsIFrame can have many different visual parts. For example an image frame
  * can have a background, border, and outline, the image itself, and a

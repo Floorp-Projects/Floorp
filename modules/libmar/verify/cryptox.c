@@ -14,9 +14,9 @@
 
 #if defined(MAR_NSS)
 
-/** 
+/**
  * Loads the public key for the specified cert name from the NSS store.
- * 
+ *
  * @param certData  The DER-encoded X509 certificate to extract the key from.
  * @param certDataSize The size of certData.
  * @param publicKey Out parameter for the public key to use.
@@ -49,7 +49,7 @@ NSS_LoadPublicKey(const unsigned char *certData, unsigned int certDataSize,
 }
 
 CryptoX_Result
-NSS_VerifyBegin(VFYContext **ctx, 
+NSS_VerifyBegin(VFYContext **ctx,
                 SECKEYPublicKey * const *publicKey)
 {
   SECStatus status;
@@ -58,14 +58,14 @@ NSS_VerifyBegin(VFYContext **ctx,
   }
 
   /* Check that the key length is large enough for our requirements */
-  if ((SECKEY_PublicKeyStrength(*publicKey) * 8) < 
+  if ((SECKEY_PublicKeyStrength(*publicKey) * 8) <
       XP_MIN_SIGNATURE_LEN_IN_BYTES) {
-    fprintf(stderr, "ERROR: Key length must be >= %d bytes\n", 
+    fprintf(stderr, "ERROR: Key length must be >= %d bytes\n",
             XP_MIN_SIGNATURE_LEN_IN_BYTES);
     return CryptoX_Error;
   }
 
-  *ctx = VFY_CreateContext(*publicKey, NULL, 
+  *ctx = VFY_CreateContext(*publicKey, NULL,
                            SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION, NULL);
   if (*ctx == NULL) {
     return CryptoX_Error;
@@ -84,8 +84,8 @@ NSS_VerifyBegin(VFYContext **ctx,
  * @return CryptoX_Success on success, CryptoX_Error on error.
 */
 CryptoX_Result
-NSS_VerifySignature(VFYContext * const *ctx, 
-                    const unsigned char *signature, 
+NSS_VerifySignature(VFYContext * const *ctx,
+                    const unsigned char *signature,
                     unsigned int signatureLen)
 {
   SECItem signedItem;
@@ -113,13 +113,13 @@ NSS_VerifySignature(VFYContext * const *ctx,
 CryptoX_Result
 CryptoAPI_VerifySignature(HCRYPTHASH *hash,
                           HCRYPTKEY *pubKey,
-                          const BYTE *signature, 
+                          const BYTE *signature,
                           DWORD signatureLen)
 {
   DWORD i;
   BOOL result;
-/* Windows APIs expect the bytes in the signature to be in little-endian 
- * order, but we write the signature in big-endian order.  Other APIs like 
+/* Windows APIs expect the bytes in the signature to be in little-endian
+ * order, but we write the signature in big-endian order.  Other APIs like
  * NSS and OpenSSL expect big-endian order.
  */
   BYTE *signatureReversed;
@@ -133,7 +133,7 @@ CryptoAPI_VerifySignature(HCRYPTHASH *hash,
   }
 
   for (i = 0; i < signatureLen; i++) {
-    signatureReversed[i] = signature[signatureLen - 1 - i]; 
+    signatureReversed[i] = signature[signatureLen - 1 - i];
   }
   result = CryptVerifySignature(*hash, signatureReversed,
                                 signatureLen, *pubKey, NULL, 0);
@@ -141,9 +141,9 @@ CryptoAPI_VerifySignature(HCRYPTHASH *hash,
   return result ? CryptoX_Success : CryptoX_Error;
 }
 
-/** 
+/**
  * Obtains the public key for the passed in cert data
- * 
+ *
  * @param provider       The cyrto provider
  * @param certData       Data of the certificate to extract the public key from
  * @param sizeOfCertData The size of the certData buffer
@@ -151,7 +151,7 @@ CryptoAPI_VerifySignature(HCRYPTHASH *hash,
  * @param CryptoX_Success on success
 */
 CryptoX_Result
-CryptoAPI_LoadPublicKey(HCRYPTPROV provider, 
+CryptoAPI_LoadPublicKey(HCRYPTPROV provider,
                         BYTE *certData,
                         DWORD sizeOfCertData,
                         HCRYPTKEY *publicKey)
@@ -164,15 +164,15 @@ CryptoAPI_LoadPublicKey(HCRYPTPROV provider,
 
   blob.cbData = sizeOfCertData;
   blob.pbData = certData;
-  if (!CryptQueryObject(CERT_QUERY_OBJECT_BLOB, &blob, 
-                        CERT_QUERY_CONTENT_FLAG_CERT, 
-                        CERT_QUERY_FORMAT_FLAG_BINARY, 
-                        0, NULL, NULL, NULL, 
+  if (!CryptQueryObject(CERT_QUERY_OBJECT_BLOB, &blob,
+                        CERT_QUERY_CONTENT_FLAG_CERT,
+                        CERT_QUERY_FORMAT_FLAG_BINARY,
+                        0, NULL, NULL, NULL,
                         NULL, NULL, (const void **)&context)) {
     return CryptoX_Error;
   }
 
-  if (!CryptImportPublicKeyInfo(provider, 
+  if (!CryptImportPublicKeyInfo(provider,
                                 PKCS_7_ASN_ENCODING | X509_ASN_ENCODING,
                                 &context->pCertInfo->SubjectPublicKeyInfo,
                                 publicKey)) {
@@ -189,7 +189,7 @@ CryptoAPI_LoadPublicKey(HCRYPTPROV provider,
   * 2. Enhanced provider with creating a new key set
   * 3. Default provider without creating a new key set
   * 4. Default provider without creating a new key set
-  * #2 and #4 should not be needed because of the CRYPT_VERIFYCONTEXT, 
+  * #2 and #4 should not be needed because of the CRYPT_VERIFYCONTEXT,
   * but we add it just in case.
   *
   * @param provider Out parameter containing the provider handle.
@@ -198,25 +198,25 @@ CryptoAPI_LoadPublicKey(HCRYPTPROV provider,
 CryptoX_Result
 CryptoAPI_InitCryptoContext(HCRYPTPROV *provider)
 {
-  if (!CryptAcquireContext(provider, 
-                           NULL, 
-                           MS_ENH_RSA_AES_PROV, 
-                           PROV_RSA_AES, 
+  if (!CryptAcquireContext(provider,
+                           NULL,
+                           MS_ENH_RSA_AES_PROV,
+                           PROV_RSA_AES,
                            CRYPT_VERIFYCONTEXT)) {
-    if (!CryptAcquireContext(provider, 
-                             NULL, 
-                             MS_ENH_RSA_AES_PROV, 
-                             PROV_RSA_AES, 
+    if (!CryptAcquireContext(provider,
+                             NULL,
+                             MS_ENH_RSA_AES_PROV,
+                             PROV_RSA_AES,
                              CRYPT_NEWKEYSET | CRYPT_VERIFYCONTEXT)) {
-      if (!CryptAcquireContext(provider, 
-                               NULL, 
-                               NULL, 
-                               PROV_RSA_AES, 
+      if (!CryptAcquireContext(provider,
+                               NULL,
+                               NULL,
+                               PROV_RSA_AES,
                                CRYPT_VERIFYCONTEXT)) {
-        if (!CryptAcquireContext(provider, 
-                                 NULL, 
-                                 NULL, 
-                                 PROV_RSA_AES, 
+        if (!CryptAcquireContext(provider,
+                                 NULL,
+                                 NULL,
+                                 PROV_RSA_AES,
                                  CRYPT_NEWKEYSET | CRYPT_VERIFYCONTEXT)) {
           *provider = CryptoX_InvalidHandleValue;
           return CryptoX_Error;
@@ -227,7 +227,7 @@ CryptoAPI_InitCryptoContext(HCRYPTPROV *provider)
   return CryptoX_Success;
 }
 
-/** 
+/**
   * Begins a signature verification hash context
   *
   * @param provider The crypt provider to use
@@ -248,7 +248,7 @@ CryptoAPI_VerifyBegin(HCRYPTPROV provider, HCRYPTHASH* hash)
   return result ? CryptoX_Success : CryptoX_Error;
 }
 
-/** 
+/**
   * Updates a signature verification hash context
   *
   * @param hash The hash context to udpate

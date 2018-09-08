@@ -14,7 +14,6 @@ from mozpack.files import (
     DeflatedFile,
     Dest,
     ManifestFile,
-    XPTFile,
 )
 import mozpack.path as mozpath
 import errno
@@ -583,7 +582,7 @@ class Jarrer(FileRegistry, BaseFile):
                 # but need to be able to decompress those files, per
                 # UnpackFinder and formatters, we force deflate on them.
                 if compress == JAR_BROTLI and (
-                        isinstance(file, (ManifestFile, XPTFile)) or
+                        isinstance(file, ManifestFile) or
                         mozpath.basename(path) == 'install.rdf'):
                     compress = True
 

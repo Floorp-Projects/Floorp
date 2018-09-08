@@ -9056,7 +9056,7 @@ nsDocShell::CopyFavicon(nsIURI* aOldURI,
 #endif
 }
 
-struct InternalLoadData 
+struct InternalLoadData
 {
 public:
   InternalLoadData(nsDocShell* aDocShell,
@@ -9206,7 +9206,7 @@ public:
                 aSourceDocShell,
                 aBaseURI,
                 nullptr,
-                nullptr) 
+                nullptr)
   {}
 
   NS_IMETHOD
@@ -9305,7 +9305,7 @@ NS_IMPL_CYCLE_COLLECTION(LoadURIDelegateHandler, mLoadData.mDocShell,
                          mLoadData.mURI, mLoadData.mOriginalURI,
                          mLoadData.mResultPrincipalURI, mLoadData.mReferrer,
                          mLoadData.mTriggeringPrincipal,
-                         mLoadData.mPrincipalToInherit, 
+                         mLoadData.mPrincipalToInherit,
                          mLoadData.mPostData, mLoadData.mHeadersData,
                          mLoadData.mSHEntry, mLoadData.mSourceDocShell,
                          mLoadData.mBaseURI)
@@ -9586,7 +9586,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     if (NS_SUCCEEDED(rv) && promise) {
       const uint32_t flags = aFlags | INTERNAL_LOAD_FLAGS_DELEGATES_CHECKED;
 
-      RefPtr<LoadURIDelegateHandler> handler = 
+      RefPtr<LoadURIDelegateHandler> handler =
         new LoadURIDelegateHandler(this, aURI, aOriginalURI, aResultPrincipalURI,
                                    aKeepResultPrincipalURIIfSet,
                                    aLoadReplace, aReferrer, aReferrerPolicy,

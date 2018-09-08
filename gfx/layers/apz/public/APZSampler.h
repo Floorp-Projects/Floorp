@@ -93,13 +93,6 @@ public:
   bool HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer);
 
   /**
-   * Return a new AutoApplyAsyncTestAttributes instance. This should be called
-   * whenever we need to apply async attributes for test purposes (namely
-   * reftest-async-scroll-{x,y} and reftest-async-zoom).
-   */
-  UniquePtr<AutoApplyAsyncTestAttributes> ApplyAsyncTestAttributes(const LayerMetricsWrapper& aLayer);
-
-  /**
    * This can be used to assert that the current thread is the
    * sampler thread (which samples the async transform).
    * This does nothing if thread assertions are disabled.

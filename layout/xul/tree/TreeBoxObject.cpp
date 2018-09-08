@@ -340,7 +340,7 @@ TreeBoxObject::ScrollToRow(int32_t aRow)
   if (!body) {
     return;
   }
-    
+
   body->ScrollToRow(aRow);
 }
 

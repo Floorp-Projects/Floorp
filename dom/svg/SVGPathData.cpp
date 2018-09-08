@@ -614,14 +614,14 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
       case StylePathCommand::Tag::MoveTo: {
         MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
         const Point& p = toGfxPoint(cmd.move_to.point);
-        pathStart = segEnd = cmd.move_to.absolute ? p : segStart + p;
+        pathStart = segEnd = cmd.move_to.absolute == StyleIsAbsolute::Yes ? p : segStart + p;
         aBuilder->MoveTo(scale(segEnd));
         subpathHasLength = false;
         break;
       }
       case StylePathCommand::Tag::LineTo: {
         const Point& p = toGfxPoint(cmd.line_to.point);
-        segEnd = cmd.line_to.absolute ? p : segStart + p;
+        segEnd = cmd.line_to.absolute == StyleIsAbsolute::Yes ? p : segStart + p;
         if (segEnd != segStart) {
           subpathHasLength = true;
           aBuilder->LineTo(scale(segEnd));
@@ -633,7 +633,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
         cp2 = toGfxPoint(cmd.curve_to.control2);
         segEnd = toGfxPoint(cmd.curve_to.point);
 
-        if (!cmd.curve_to.absolute) {
+        if (cmd.curve_to.absolute == StyleIsAbsolute::No) {
           cp1 += segStart;
           cp2 += segStart;
           segEnd += segStart;
@@ -649,7 +649,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
         cp1 = toGfxPoint(cmd.quad_bezier_curve_to.control1);
         segEnd = toGfxPoint(cmd.quad_bezier_curve_to.point);
 
-        if (!cmd.quad_bezier_curve_to.absolute) {
+        if (cmd.quad_bezier_curve_to.absolute == StyleIsAbsolute::No) {
           cp1 += segStart;
           segEnd += segStart; // set before setting tcp2!
         }
@@ -668,7 +668,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
         const auto& arc = cmd.elliptical_arc;
         Point radii(arc.rx, arc.ry);
         segEnd = toGfxPoint(arc.point);
-        if (!arc.absolute) {
+        if (arc.absolute == StyleIsAbsolute::No) {
           segEnd += segStart;
         }
         if (segEnd != segStart) {
@@ -677,7 +677,8 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
             aBuilder->LineTo(scale(segEnd));
           } else {
             nsSVGArcConverter converter(segStart, segEnd, radii, arc.angle,
-                                        arc.large_arc_flag, arc.sweep_flag);
+                                        arc.large_arc_flag._0,
+                                        arc.sweep_flag._0);
             while (converter.GetNextSegment(&cp1, &cp2, &segEnd)) {
               aBuilder->BezierTo(scale(cp1), scale(cp2), scale(segEnd));
             }
@@ -686,7 +687,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
         break;
       }
       case StylePathCommand::Tag::HorizontalLineTo:
-        if (cmd.horizontal_line_to.absolute) {
+        if (cmd.horizontal_line_to.absolute == StyleIsAbsolute::Yes) {
           segEnd = Point(cmd.horizontal_line_to.x, segStart.y);
         } else {
           segEnd = segStart + Point(cmd.horizontal_line_to.x, 0.0f);
@@ -699,7 +700,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
         break;
 
       case StylePathCommand::Tag::VerticalLineTo:
-        if (cmd.vertical_line_to.absolute) {
+        if (cmd.vertical_line_to.absolute == StyleIsAbsolute::Yes) {
           segEnd = Point(segStart.x, cmd.vertical_line_to.y);
         } else {
           segEnd = segStart + Point(0.0f, cmd.vertical_line_to.y);
@@ -716,7 +717,7 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
         cp2 = toGfxPoint(cmd.smooth_curve_to.control2);
         segEnd = toGfxPoint(cmd.smooth_curve_to.point);
 
-        if (!cmd.smooth_curve_to.absolute) {
+        if (cmd.smooth_curve_to.absolute == StyleIsAbsolute::No) {
           cp2 += segStart;
           segEnd += segStart;
         }
@@ -734,7 +735,8 @@ SVGPathData::BuildPath(const nsTArray<StylePathCommand>& aPath,
 
         const Point& p = toGfxPoint(cmd.smooth_quad_bezier_curve_to.point);
         // set before setting tcp2!
-        segEnd = cmd.smooth_quad_bezier_curve_to.absolute ? p : segStart + p;
+        segEnd =
+          cmd.smooth_quad_bezier_curve_to.absolute == StyleIsAbsolute::Yes ? p : segStart + p;
         tcp2 = cp1 + (segEnd - cp1) / 3;
 
         if (segEnd != segStart || segEnd != cp1) {
