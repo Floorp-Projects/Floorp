@@ -95,6 +95,7 @@ class Flexbox extends PureComponent {
       onSetFlexboxOverlayColor,
       onShowBoxModelHighlighterForNode,
       onToggleFlexboxHighlighter,
+      onToggleFlexItemShown,
       setSelectedNode,
     } = this.props;
 
@@ -115,6 +116,7 @@ class Flexbox extends PureComponent {
           onSetFlexboxOverlayColor,
           onShowBoxModelHighlighterForNode,
           onToggleFlexboxHighlighter,
+          onToggleFlexItemShown,
           setSelectedNode,
         }),
         this.renderFlexItemList(),
