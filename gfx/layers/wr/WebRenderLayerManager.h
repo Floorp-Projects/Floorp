@@ -163,6 +163,10 @@ public:
 
   dom::TabGroup* GetTabGroup();
 
+  uint32_t StartFrameTimeRecording(int32_t aBufferSize) override;
+  void StopFrameTimeRecording(uint32_t         aStartIndex,
+                              nsTArray<float>& aFrameIntervals) override;
+
 private:
   /**
    * Take a snapshot of the parent context, and copy
