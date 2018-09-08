@@ -202,7 +202,7 @@ add_task(async function test_webext_background_remote_subframe_privileges() {
     window.addEventListener("message", evt => {
       browser.test.assertEq("http://mochi.test:8888", evt.origin, "postmessage origin ok");
       browser.test.assertFalse(evt.data.tabs, "remote frame cannot access webextension APIs");
-      browser.test.assertEq("cookie=monster", evt.data.cookie, "cookies yum yum");
+      browser.test.assertEq("cookie=monster", evt.data.cookie, "Expected cookie value");
       browser.test.notifyPass("webext-background-subframe-privileges");
     }, {once: true});
     browser.cookies.set({url: "http://mochi.test:8888", name: "cookie", "value": "monster"});
