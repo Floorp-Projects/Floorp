@@ -72,3 +72,12 @@ nsComposeTxtSrvFilter::Skip(nsINode* aNode) const
 
   return false;
 }
+
+// static
+already_AddRefed<nsComposeTxtSrvFilter>
+nsComposeTxtSrvFilter::CreateHelper(bool aIsForMail)
+{
+  RefPtr<nsComposeTxtSrvFilter> filter = new nsComposeTxtSrvFilter();
+  filter->Init(aIsForMail);
+  return filter.forget();
+}
