@@ -159,7 +159,8 @@ var IdentityHandler = {
       result.host = uri.host;
     }
 
-    let cert = aBrowser.securityUI.secInfo.serverCert;
+    let status = aBrowser.securityUI.secInfo.SSLStatus;
+    let cert = status.serverCert;
 
     result.organization = cert.organization;
     result.subjectName = cert.subjectName;

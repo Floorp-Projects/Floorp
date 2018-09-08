@@ -19,9 +19,9 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "nsArrayEnumerator.h"
 #include "nsCOMArray.h"
+#include "nsISSLStatus.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISocketProvider.h"
-#include "nsITransportSecurityInfo.h"
 #include "nsIURI.h"
 #include "nsIX509Cert.h"
 #include "nsNSSComponent.h"
@@ -774,7 +774,7 @@ nsSiteSecurityService::ProcessHeaderScriptable(
   uint32_t aType,
   nsIURI* aSourceURI,
   const nsACString& aHeader,
-  nsITransportSecurityInfo* aSecInfo,
+  nsISSLStatus* aSSLStatus,
   uint32_t aFlags,
   uint32_t aSource,
   JS::HandleValue aOriginAttributes,
@@ -791,7 +791,7 @@ nsSiteSecurityService::ProcessHeaderScriptable(
       return NS_ERROR_INVALID_ARG;
     }
   }
-  return ProcessHeader(aType, aSourceURI, aHeader, aSecInfo, aFlags,
+  return ProcessHeader(aType, aSourceURI, aHeader, aSSLStatus, aFlags,
                        aSource, originAttributes, aMaxAge, aIncludeSubdomains,
                        aFailureResult);
 }
@@ -800,7 +800,7 @@ NS_IMETHODIMP
 nsSiteSecurityService::ProcessHeader(uint32_t aType,
                                      nsIURI* aSourceURI,
                                      const nsACString& aHeader,
-                                     nsITransportSecurityInfo* aSecInfo,
+                                     nsISSLStatus* aSSLStatus,
                                      uint32_t aFlags,
                                      uint32_t aHeaderSource,
                                      const OriginAttributes& aOriginAttributes,
@@ -830,9 +830,9 @@ nsSiteSecurityService::ProcessHeader(uint32_t aType,
       return NS_ERROR_INVALID_ARG;
   }
 
-  NS_ENSURE_ARG(aSecInfo);
+  NS_ENSURE_ARG(aSSLStatus);
   return ProcessHeaderInternal(aType, aSourceURI, PromiseFlatCString(aHeader),
-                               aSecInfo, aFlags, source, aOriginAttributes,
+                               aSSLStatus, aFlags, source, aOriginAttributes,
                                aMaxAge, aIncludeSubdomains, aFailureResult);
 }
 
@@ -841,7 +841,7 @@ nsSiteSecurityService::ProcessHeaderInternal(
   uint32_t aType,
   nsIURI* aSourceURI,
   const nsCString& aHeader,
-  nsITransportSecurityInfo* aSecInfo,
+  nsISSLStatus* aSSLStatus,
   uint32_t aFlags,
   SecurityPropertySource aSource,
   const OriginAttributes& aOriginAttributes,
@@ -865,19 +865,19 @@ nsSiteSecurityService::ProcessHeaderInternal(
     *aIncludeSubdomains = false;
   }
 
-  if (aSecInfo) {
+  if (aSSLStatus) {
     bool tlsIsBroken = false;
     bool trustcheck;
     nsresult rv;
-    rv = aSecInfo->GetIsDomainMismatch(&trustcheck);
+    rv = aSSLStatus->GetIsDomainMismatch(&trustcheck);
     NS_ENSURE_SUCCESS(rv, rv);
     tlsIsBroken = tlsIsBroken || trustcheck;
 
-    rv = aSecInfo->GetIsNotValidAtThisTime(&trustcheck);
+    rv = aSSLStatus->GetIsNotValidAtThisTime(&trustcheck);
     NS_ENSURE_SUCCESS(rv, rv);
     tlsIsBroken = tlsIsBroken || trustcheck;
 
-    rv = aSecInfo->GetIsUntrusted(&trustcheck);
+    rv = aSSLStatus->GetIsUntrusted(&trustcheck);
     NS_ENSURE_SUCCESS(rv, rv);
     tlsIsBroken = tlsIsBroken || trustcheck;
     if (tlsIsBroken) {
@@ -904,7 +904,7 @@ nsSiteSecurityService::ProcessHeaderInternal(
                             aFailureResult);
       break;
     case nsISiteSecurityService::HEADER_HPKP:
-      rv = ProcessPKPHeader(aSourceURI, aHeader, aSecInfo, aFlags,
+      rv = ProcessPKPHeader(aSourceURI, aHeader, aSSLStatus, aFlags,
                             aOriginAttributes, aMaxAge, aIncludeSubdomains,
                             aFailureResult);
       break;
@@ -1056,7 +1056,7 @@ nsresult
 nsSiteSecurityService::ProcessPKPHeader(
   nsIURI* aSourceURI,
   const nsCString& aHeader,
-  nsITransportSecurityInfo* aSecInfo,
+  nsISSLStatus* aSSLStatus,
   uint32_t aFlags,
   const OriginAttributes& aOriginAttributes,
   uint64_t* aMaxAge,
@@ -1067,7 +1067,7 @@ nsSiteSecurityService::ProcessPKPHeader(
     *aFailureResult = nsISiteSecurityService::ERROR_UNKNOWN;
   }
   SSSLOG(("SSS: processing HPKP header '%s'", aHeader.get()));
-  NS_ENSURE_ARG(aSecInfo);
+  NS_ENSURE_ARG(aSSLStatus);
 
   const uint32_t aType = nsISiteSecurityService::HEADER_HPKP;
   bool foundMaxAge = false;
@@ -1103,7 +1103,7 @@ nsSiteSecurityService::ProcessPKPHeader(
   nsresult rv = GetHost(aSourceURI, host);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIX509Cert> cert;
-  rv = aSecInfo->GetServerCert(getter_AddRefs(cert));
+  rv = aSSLStatus->GetServerCert(getter_AddRefs(cert));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(cert, NS_ERROR_FAILURE);
   UniqueCERTCertificate nssCert(cert->GetCert());

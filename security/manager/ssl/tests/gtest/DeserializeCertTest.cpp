@@ -6,14 +6,9 @@
 
 #include "gtest/gtest.h"
 #include "nsCOMPtr.h"
-#include "nsITransportSecurityInfo.h"
-#include "nsIX509Cert.h"
-#include "nsIX509CertList.h"
-#include "nsSerializationHelper.h"
 #include "nsString.h"
+#include "nsSerializationHelper.h"
 
-// nsITransportSecurityInfo de-serializatin tests
-//
 // These tests verify that we can still deserialize old binary strings
 // generated for security info.  This is necessary because service workers
 // stores these strings on disk.
@@ -27,33 +22,6 @@
 //
 // We would like to move away from this binary compatibility requirement
 // in service workers.  See bug 1248628.
-void
-deserializeAndVerify(nsCString serializedSecInfo,
-                     bool hasFailedCertChain)
-{
-  nsCOMPtr<nsISupports> secInfo;
-  nsresult rv = NS_DeserializeObject(serializedSecInfo, getter_AddRefs(secInfo));
-  ASSERT_EQ(NS_OK, rv);
-  ASSERT_TRUE(secInfo);
-
-  nsCOMPtr<nsITransportSecurityInfo> securityInfo = do_QueryInterface(secInfo);
-  ASSERT_TRUE(securityInfo);
-
-  nsCOMPtr<nsIX509Cert> cert;
-  rv = securityInfo->GetServerCert(getter_AddRefs(cert));
-  ASSERT_EQ(NS_OK, rv);
-  ASSERT_TRUE(cert);
-
-  nsCOMPtr<nsIX509CertList> failedChain;
-  rv = securityInfo->GetFailedCertChain(getter_AddRefs(failedChain));
-  ASSERT_EQ(NS_OK, rv);
- 
-  if (hasFailedCertChain) { 
-    ASSERT_TRUE(failedChain);
-  } else {
-    ASSERT_FALSE(failedChain);
-  }
-}
 
 TEST(psm_DeserializeCert, gecko33)
 {
@@ -85,7 +53,10 @@ TEST(psm_DeserializeCert, gecko33)
   "HZmFBVHMcUN/87HsQo20PdOekeEvkjrrMIxW+gxw22Yb67yF/qKgwrWr+43bLN709iyw+LWiU7sQcHL2xk9SYiWQDj2tYz2soObV"
   "QYTJm0VUZMEVFhtALq46cx92Zu4vFwC8AAwAAAAABAQAA");
 
-  deserializeAndVerify(base64Serialization, false);
+  nsCOMPtr<nsISupports> cert;
+  nsresult rv = NS_DeserializeObject(base64Serialization, getter_AddRefs(cert));
+  ASSERT_EQ(NS_OK, rv);
+  ASSERT_TRUE(cert);
 }
 
 TEST(psm_DeserializeCert, gecko46)
@@ -118,119 +89,8 @@ TEST(psm_DeserializeCert, gecko46)
   "HC9DpZdrWTEH/W69Cr/KxRqGsWPwpgMv2Wqav8jaT35JxqTXjOlhQqzo6fNn3eYOeCf4PkCxZKwckWjy10qDaRbjhwAMHAGj2TPr"
   "idlvOj/7QyyX5m8up/1US8z1fRW4yoCSOt6V2bwuH6cAvAAMAAAAAAQEAAA==");
 
-  deserializeAndVerify(base64Serialization, false);
+  nsCOMPtr<nsISupports> cert;
+  nsresult rv = NS_DeserializeObject(base64Serialization, getter_AddRefs(cert));
+  ASSERT_EQ(NS_OK, rv);
+  ASSERT_TRUE(cert);
 }
-
-TEST(psm_DeserializeCert, preSSLStatusConsolidation)
-{
-  // Generated using serialized output of test "good.include-subdomains.pinning.example.com"
-  // in security/manager/ssl/tests/unit/test_cert_chains.js
-  nsCString base64Serialization(
-  "FnhllAKWRHGAlo+ESXykKAAAAAAAAAAAwAAAAAAAAEaphjojH6pBabDSgSnsfLHeAAgAAgAAAAAAAAAAAAAAAAAAAAAB4vFIJp5w"
-  "RkeyPxAQ9RJGKPqbqVvKO0mKuIl8ec8o/uhmCjImkVxP+7sgiYWmMt8FvcOXmlQiTNWFiWlrbpbqgwAAAAAAAAONMIIDiTCCAnGg"
-  "AwIBAgIUWbWLTwLBvfwcoiU7I8lDz9snfUgwDQYJKoZIhvcNAQELBQAwEjEQMA4GA1UEAwwHVGVzdCBDQTAiGA8yMDE2MTEyNzAw"
-  "MDAwMFoYDzIwMTkwMjA1MDAwMDAwWjAaMRgwFgYDVQQDDA9UZXN0IEVuZC1lbnRpdHkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw"
-  "ggEKAoIBAQC6iFGoRI4W1kH9braIBjYQPTwT2erkNUq07PVoV2wke8HHJajg2B+9sZwGm24ahvJr4q9adWtqZHEIeqVap0WH9xzV"
-  "JJwCfs1D/B5p0DggKZOrIMNJ5Nu5TMJrbA7tFYIP8X6taRqx0wI6iypB7qdw4A8Njf1mCyuwJJKkfbmIYXmQsVeQPdI7xeC4SB+o"
-  "N9OIQ+8nFthVt2Zaqn4CkC86exCABiTMHGyXrZZhW7filhLAdTGjDJHdtMr3/K0dJdMJ77kXDqdo4bN7LyJvaeO0ipVhHe4m1iWd"
-  "q5EITjbLHCQELL8Wiy/l8Y+ZFzG4s/5JI/pyUcQx1QOs2hgKNe2NAgMBAAGjgcowgccwgZAGA1UdEQSBiDCBhYIJbG9jYWxob3N0"
-  "gg0qLmV4YW1wbGUuY29tghUqLnBpbm5pbmcuZXhhbXBsZS5jb22CKCouaW5jbHVkZS1zdWJkb21haW5zLnBpbm5pbmcuZXhhbXBs"
-  "ZS5jb22CKCouZXhjbHVkZS1zdWJkb21haW5zLnBpbm5pbmcuZXhhbXBsZS5jb20wMgYIKwYBBQUHAQEEJjAkMCIGCCsGAQUFBzAB"
-  "hhZodHRwOi8vbG9jYWxob3N0Ojg4ODgvMA0GCSqGSIb3DQEBCwUAA4IBAQBE+6IPJK5OeonoQPC4CCWMd69SjhwS7X6TNgxDJzW7"
-  "qpVm4SFyYZ2xqzr2zib5LsYek6/jok5LPSpJVeFuSeiesvGMxk0O4ZEihPxSM4uR4xpCnPzz7LoFIzMELJv5i+cgLw4+6cINPkLj"
-  "oCUdb+AXSTur7THJaO75B44I2JjJfMfzgW1FwoWgXL/PQWRw+VY6OY1glqZOXzP+vfSja1SoggpiCzdPx7h1/SEEZov7zhCZXv1C"
-  "enx1njlpcj9wWEJMsyZczMNtiz5GkRrLaqCz9F8ah3NvkvPAZ0oOqtxuQgMXK/c0OXJVKi0SCJsWqZDoZhCrS/dE9guxlseZqhSI"
-  "wC8DAwAAAAABAQAAAAAAAAZ4MjU1MTkAAAAOUlNBLVBTUy1TSEEyNTYBlZ+xZWUXSH+rm9iRO+Uxl650zaXNL0c/lvXwt//2LGgA"
-  "AAACZgoyJpFcT/u7IImFpjLfBb3Dl5pUIkzVhYlpa26W6oMAAAAAAAADjTCCA4kwggJxoAMCAQICFFm1i08Cwb38HKIlOyPJQ8/b"
-  "J31IMA0GCSqGSIb3DQEBCwUAMBIxEDAOBgNVBAMMB1Rlc3QgQ0EwIhgPMjAxNjExMjcwMDAwMDBaGA8yMDE5MDIwNTAwMDAwMFow"
-  "GjEYMBYGA1UEAwwPVGVzdCBFbmQtZW50aXR5MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuohRqESOFtZB/W62iAY2"
-  "ED08E9nq5DVKtOz1aFdsJHvBxyWo4NgfvbGcBptuGobya+KvWnVramRxCHqlWqdFh/cc1SScAn7NQ/weadA4ICmTqyDDSeTbuUzC"
-  "a2wO7RWCD/F+rWkasdMCOosqQe6ncOAPDY39ZgsrsCSSpH25iGF5kLFXkD3SO8XguEgfqDfTiEPvJxbYVbdmWqp+ApAvOnsQgAYk"
-  "zBxsl62WYVu34pYSwHUxowyR3bTK9/ytHSXTCe+5Fw6naOGzey8ib2njtIqVYR3uJtYlnauRCE42yxwkBCy/Fosv5fGPmRcxuLP+"
-  "SSP6clHEMdUDrNoYCjXtjQIDAQABo4HKMIHHMIGQBgNVHREEgYgwgYWCCWxvY2FsaG9zdIINKi5leGFtcGxlLmNvbYIVKi5waW5u"
-  "aW5nLmV4YW1wbGUuY29tgigqLmluY2x1ZGUtc3ViZG9tYWlucy5waW5uaW5nLmV4YW1wbGUuY29tgigqLmV4Y2x1ZGUtc3ViZG9t"
-  "YWlucy5waW5uaW5nLmV4YW1wbGUuY29tMDIGCCsGAQUFBwEBBCYwJDAiBggrBgEFBQcwAYYWaHR0cDovL2xvY2FsaG9zdDo4ODg4"
-  "LzANBgkqhkiG9w0BAQsFAAOCAQEARPuiDySuTnqJ6EDwuAgljHevUo4cEu1+kzYMQyc1u6qVZuEhcmGdsas69s4m+S7GHpOv46JO"
-  "Sz0qSVXhbknonrLxjMZNDuGRIoT8UjOLkeMaQpz88+y6BSMzBCyb+YvnIC8OPunCDT5C46AlHW/gF0k7q+0xyWju+QeOCNiYyXzH"
-  "84FtRcKFoFy/z0FkcPlWOjmNYJamTl8z/r30o2tUqIIKYgs3T8e4df0hBGaL+84QmV79Qnp8dZ45aXI/cFhCTLMmXMzDbYs+RpEa"
-  "y2qgs/RfGodzb5LzwGdKDqrcbkIDFyv3NDlyVSotEgibFqmQ6GYQq0v3RPYLsZbHmaoUiGYKMiaRXE/7uyCJhaYy3wW9w5eaVCJM"
-  "1YWJaWtuluqDAAAAAAAAAtcwggLTMIIBu6ADAgECAhRdBTvvC7swO3cbVWIGn/56DrQ+cjANBgkqhkiG9w0BAQsFADASMRAwDgYD"
-  "VQQDDAdUZXN0IENBMCIYDzIwMTYxMTI3MDAwMDAwWhgPMjAxOTAyMDUwMDAwMDBaMBIxEDAOBgNVBAMMB1Rlc3QgQ0EwggEiMA0G"
-  "CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC6iFGoRI4W1kH9braIBjYQPTwT2erkNUq07PVoV2wke8HHJajg2B+9sZwGm24ahvJr"
-  "4q9adWtqZHEIeqVap0WH9xzVJJwCfs1D/B5p0DggKZOrIMNJ5Nu5TMJrbA7tFYIP8X6taRqx0wI6iypB7qdw4A8Njf1mCyuwJJKk"
-  "fbmIYXmQsVeQPdI7xeC4SB+oN9OIQ+8nFthVt2Zaqn4CkC86exCABiTMHGyXrZZhW7filhLAdTGjDJHdtMr3/K0dJdMJ77kXDqdo"
-  "4bN7LyJvaeO0ipVhHe4m1iWdq5EITjbLHCQELL8Wiy/l8Y+ZFzG4s/5JI/pyUcQx1QOs2hgKNe2NAgMBAAGjHTAbMAwGA1UdEwQF"
-  "MAMBAf8wCwYDVR0PBAQDAgEGMA0GCSqGSIb3DQEBCwUAA4IBAQCDjewR53YLc3HzZKugRDbQVxjJNILW6fSIyW9dSglYcWh6aiOK"
-  "9cZFVtzRWYEYkIlicAyTiPw34bXzxU1cK6sCSmBR+UTXbRPGb4OOy3MRaoF1m3jxwnPkQwxezDiqJTydCbYcBu0sKwURAZOd5QK9"
-  "22MsOsnrLjNlpRDmuH0VFhb5uN2I5mM3NvMnP2Or19O1Bk//iGD6AyJfiZFcii+FsDrJhbzw6lakEV7O/EnD0kk2l7I0VMtg1xZB"
-  "bEw7P6+V9zz5cAzaaq7EB0mCE+jJckSzSETBN+7lyVD8gwmHYxxZfPnUM/yvPbMU9L3xWD/z6HHwO6r+9m7BT+2pHjBCAAA=");
-
-  deserializeAndVerify(base64Serialization, false);
-}
-
-TEST(psm_DeserializeCert, preSSLStatusConsolidationFailedCertChain)
-{
-  // Generated using serialized output of test "expired.example.com"
-  // in security/manager/ssl/tests/unit/test_cert_chains.js
-  nsCString base64Serialization(
-  "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");
-
-  deserializeAndVerify(base64Serialization, true);
-}
-

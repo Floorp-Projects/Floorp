@@ -88,7 +88,7 @@ function testXHRLoad(aEvent) {
      "issuerName that is not the same as the certificate's");
 
   var cert = channel.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo).
-             serverCert;
+             SSLStatus.QueryInterface(Ci.nsISSLStatus).serverCert;
 
   certs = [ { issuerName: cert.issuerName,
               commonName: cert.commonName } ];
