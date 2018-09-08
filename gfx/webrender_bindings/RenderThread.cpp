@@ -13,6 +13,7 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
@@ -295,6 +296,10 @@ NotifyDidRender(layers::CompositorBridgeParent* aBridge,
                 TimeStamp aStart,
                 TimeStamp aEnd)
 {
+  if (aBridge->GetWrBridge()) {
+    aBridge->GetWrBridge()->RecordFrame();
+  }
+
   for (uintptr_t i = 0; i < aInfo.epochs.length; i++) {
     aBridge->NotifyPipelineRendered(
         aInfo.epochs.data[i].pipeline_id,

@@ -508,6 +508,8 @@ public:
   }
 #endif // defined(MOZ_WIDGET_ANDROID)
 
+  WebRenderBridgeParent* GetWrBridge() { return mWrBridge; }
+
 private:
 
   void Initialize();
