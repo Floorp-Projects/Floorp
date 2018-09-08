@@ -61,9 +61,6 @@ public:
   virtual void SetWindowProxy(JS::Handle<JSObject*> aWindowProxy) override;
   virtual JSObject* GetWindowProxy() override;
 
-  static void LoadStart();
-  static void LoadEnd();
-
   enum IsShrinking {
     ShrinkingGC,
     NonShrinkingGC
