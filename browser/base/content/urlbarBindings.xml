@@ -24,7 +24,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   <binding id="urlbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
 
     <content sizetopopup="pref">
-      <xul:hbox flex="1" class="urlbar-textbox-container">
+      <xul:hbox flex="1" class="urlbar-textbox-container" tooltip="aHTMLTooltip">
         <children includes="image|deck|stack|box"/>
         <xul:moz-input-box anonid="moz-input-box"
                   class="urlbar-input-box"
@@ -1192,17 +1192,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <body><![CDATA[
           if (this.focused || !this._inOverflow)
             return;
-          // We set the tooltip text on the parent node instead of the input
-          // field because XUL tooltips only work on XUL elements.
-          //
-          // FIXME(bug 1486716): title should work on chrome documents instead.
-          this.inputField.parentNode.setAttribute("tooltiptext", this.value);
+          this.inputField.setAttribute("title", this.value);
         ]]></body>
       </method>
 
       <method name="_hideURLTooltip">
         <body><![CDATA[
-          this.inputField.parentNode.removeAttribute("tooltiptext");
+          this.inputField.removeAttribute("title");
         ]]></body>
       </method>
 
