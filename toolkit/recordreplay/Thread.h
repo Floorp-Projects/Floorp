@@ -78,14 +78,6 @@ public:
   // Signature for the start function of a thread.
   typedef void (*Callback)(void*);
 
-  // Number of recent assertions remembered.
-  static const size_t NumRecentAsserts = 128;
-
-  struct RecentAssertInfo {
-    char* mText;
-    size_t mPosition;
-  };
-
 private:
   // Monitor used to protect various thread information (see Thread.h) and to
   // wait on or signal progress for a thread.
@@ -102,9 +94,9 @@ private:
   // used by the associated thread.
   size_t mDisallowEvents;
 
-  // Whether to capture stack information for events while recording. This is
-  // only used by the associated thread.
-  size_t mCaptureEventStacks;
+  // Whether execution has diverged from the recording and the thread's
+  // recorded events cannot be accessed.
+  bool mDivergedFromRecording;
 
   // Start routine and argument which the thread is currently executing. This
   // is cleared after the routine finishes and another start routine may be
@@ -118,17 +110,8 @@ private:
   // ID for this thread used by the system.
   NativeThreadId mNativeId;
 
-  // Streams with events and assertions for the thread. These are only used by
-  // the associated thread.
+  // Stream with events for the thread. This is only used on the thread itself.
   Stream* mEvents;
-  Stream* mAsserts;
-
-  // Recent assertions that have been encountered, for debugging.
-  RecentAssertInfo mRecentAsserts[NumRecentAsserts];
-
-  // Buffer for general use. This is only used by the associated thread.
-  char* mBuffer;
-  size_t mBufferCapacity;
 
   // Stack boundary of the thread, protected by the thread monitor.
   uint8_t* mStackBase;
@@ -158,20 +141,19 @@ public:
   size_t Id() { return mId; }
   NativeThreadId NativeId() { return mNativeId; }
   Stream& Events() { return *mEvents; }
-  Stream& Asserts() { return *mAsserts; }
   uint8_t* StackBase() { return mStackBase; }
   size_t StackSize() { return mStackSize; }
 
-  inline bool IsMainThread() { return mId == MainThreadId; }
-  inline bool IsRecordedThread() { return mId <= MaxRecordedThreadId; }
-  inline bool IsNonMainRecordedThread() { return IsRecordedThread() && !IsMainThread(); }
+  inline bool IsMainThread() const { return mId == MainThreadId; }
+  inline bool IsRecordedThread() const { return mId <= MaxRecordedThreadId; }
+  inline bool IsNonMainRecordedThread() const { return IsRecordedThread() && !IsMainThread(); }
 
   // Access the flag for whether this thread is passing events through.
   void SetPassThrough(bool aPassThrough) {
     MOZ_RELEASE_ASSERT(mPassThroughEvents == !aPassThrough);
     mPassThroughEvents = aPassThrough;
   }
-  bool PassThroughEvents() {
+  bool PassThroughEvents() const {
     return mPassThroughEvents;
   }
 
@@ -183,32 +165,24 @@ public:
     MOZ_RELEASE_ASSERT(mDisallowEvents);
     mDisallowEvents--;
   }
-  bool AreEventsDisallowed() {
+  bool AreEventsDisallowed() const {
     return mDisallowEvents != 0;
   }
 
-  // Access the counter for whether event stacks are captured while recording.
-  void BeginCaptureEventStacks() {
-    mCaptureEventStacks++;
+  // Access the flag for whether this thread's execution has diverged from the
+  // recording. Once set, this is only unset by rewinding to a point where the
+  // flag is clear.
+  void DivergeFromRecording() {
+    mDivergedFromRecording = true;
   }
-  void EndCaptureEventStacks() {
-    MOZ_RELEASE_ASSERT(mCaptureEventStacks);
-    mCaptureEventStacks--;
-  }
-  bool ShouldCaptureEventStacks() {
-    return mCaptureEventStacks != 0;
+  bool HasDivergedFromRecording() const {
+    return mDivergedFromRecording;
   }
 
-  // Access the array of recent assertions in the thread.
-  RecentAssertInfo& RecentAssert(size_t i) {
-    MOZ_ASSERT(i < NumRecentAsserts);
-    return mRecentAsserts[i];
+  // Return whether this thread may read or write to its recorded event stream.
+  bool CanAccessRecording() const {
+    return !PassThroughEvents() && !AreEventsDisallowed() && !HasDivergedFromRecording();
   }
-
-  // Access a thread local buffer of a guaranteed size. The buffer must be
-  // restored before it can be taken again.
-  char* TakeBuffer(size_t aSize);
-  void RestoreBuffer(char* aBuf);
 
   // The actual start routine at the root of all recorded threads, and of all
   // threads when replaying.

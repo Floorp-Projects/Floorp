@@ -38,10 +38,6 @@ interface nsIDirIndexListener : nsISupports {
 
 };
 
-%{C++
-#define NS_IDIRINDEXLISTENER_KEY         "@mozilla.org/dirIndexListener;1"
-%}
-
 /**
  * A parser for application/http-index-format
  */
@@ -65,15 +61,3 @@ interface nsIDirIndexParser : nsIStreamListener {
     attribute string encoding;
 };
 
-%{C++
-#define NS_DIRINDEXPARSER_CID \
-{ /* a0d6ad32-1dd1-11b2-aa55-a40187b54036 */ \
-    0xa0d6ad32, \
-    0x1dd1, \
-    0x11b2, \
-    { 0xaa, 0x55, 0xa4, 0x01, 0x87, 0xb5, 0x40, 0x36 } \
-}
-
-#define NS_DIRINDEXPARSER_CONTRACTID "@mozilla.org/dirIndexParser;1"
-
-%}

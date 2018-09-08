@@ -19,7 +19,11 @@ const MOZ_APP_VENDOR = "";
 
 // MOZ_APP_BASENAME is not optional for tests.
 const MOZ_APP_BASENAME = "@MOZ_APP_BASENAME@";
+#ifdef XP_LINUX
+const APP_BIN_SUFFIX = "-bin";
+#else
 const APP_BIN_SUFFIX = "@BIN_SUFFIX@";
+#endif
 
 const APP_INFO_NAME = "XPCShell";
 const APP_INFO_VENDOR = "Mozilla";

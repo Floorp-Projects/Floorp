@@ -578,6 +578,12 @@ ProxyStreamValid:
     Set to "false" when encountering an invalid IPC proxy stream.
   type: string
 
+RecordReplay:
+  description: >
+    Set to 1 if this crash happened in a Web Replay middleman, recording,
+    or replaying process.
+  type: boolean
+
 RecordReplayError:
   description: >
     Any fatal error that occurred while recording/replaying a tab.

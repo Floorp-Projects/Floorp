@@ -649,9 +649,18 @@ nsImageRenderer::BuildWebRenderDisplayItems(
         return ImgDrawResult::NOT_READY;
       }
 
+      mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
+        nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame()));
       gfx::IntSize size;
-      Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageKey(
-        aItem, container, aBuilder, aResources, aSc, size, Nothing());
+      Maybe<wr::ImageKey> key =
+        aManager->CommandBuilder().CreateImageKey(aItem,
+                                                  container,
+                                                  aBuilder,
+                                                  aResources,
+                                                  rendering,
+                                                  aSc,
+                                                  size,
+                                                  Nothing());
 
       if (key.isNothing()) {
         return ImgDrawResult::NOT_READY;
@@ -666,20 +675,45 @@ nsImageRenderer::BuildWebRenderDisplayItems(
                                               aFill.YMost() - firstTilePos.y),
                                        appUnitsPerDevPixel);
       wr::LayoutRect fill = wr::ToRoundedLayoutRect(fillRect);
+
+      wr::LayoutRect roundedDest = wr::ToRoundedLayoutRect(destRect);
+      auto stretchSize = wr::ToLayoutSize(destRect.Size());
+
+      // WebRender special cases situations where stretchSize == fillSize to
+      // infer that it shouldn't use repeat sampling. This makes sure
+      // we hit those special cases when not repeating.
+
+      switch (mExtendMode) {
+        case ExtendMode::CLAMP:
+          fill = roundedDest;
+          stretchSize = roundedDest.size;
+          break;
+        case ExtendMode::REPEAT_Y:
+          fill.origin.x = roundedDest.origin.x;
+          fill.size.width = roundedDest.size.width;
+          stretchSize.width = roundedDest.size.width;
+          break;
+        case ExtendMode::REPEAT_X:
+          fill.origin.y = roundedDest.origin.y;
+          fill.size.height = roundedDest.size.height;
+          stretchSize.height = roundedDest.size.height;
+          break;
+        default:
+          break;
+      }
+
       wr::LayoutRect clip = wr::ToRoundedLayoutRect(
         LayoutDeviceRect::FromAppUnits(aFill, appUnitsPerDevPixel));
 
       LayoutDeviceSize gapSize = LayoutDeviceSize::FromAppUnits(
         aRepeatSize - aDest.Size(), appUnitsPerDevPixel);
 
-      SamplingFilter samplingFilter =
-        nsLayoutUtils::GetSamplingFilterForFrame(mForFrame);
       aBuilder.PushImage(fill,
                          clip,
                          !aItem->BackfaceIsHidden(),
-                         wr::ToLayoutSize(destRect.Size()),
+                         stretchSize,
                          wr::ToLayoutSize(gapSize),
-                         wr::ToImageRendering(samplingFilter),
+                         rendering,
                          key.value());
       break;
     }

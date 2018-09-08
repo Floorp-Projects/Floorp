@@ -29,7 +29,12 @@ with Files("profile/channel-prefs.js"):
 with Files("profile/firefox.js"):
     BUG_COMPONENT = ("Firefox", "General")
 
-GeckoProgram(CONFIG['MOZ_APP_NAME'])
+if CONFIG['MOZ_NO_PIE_COMPAT']:
+    GeckoProgram(CONFIG['MOZ_APP_NAME'] + '-bin')
+
+    DIRS += ['no-pie']
+else:
+    GeckoProgram(CONFIG['MOZ_APP_NAME'])
 
 SOURCES += [
     'nsBrowserApp.cpp',
