@@ -29,12 +29,15 @@ class Benchmark(object):
     __metaclass__ = ABCMeta
     lower_is_better = True
     should_alert = False
-    units = 'score'
 
     def __init__(self, shell, args=None, shell_name=None):
         self.shell = shell
         self.args = args
         self.shell_name = shell_name
+
+    @abstractproperty
+    def units(self):
+        """Returns the unit of measurement of the benchmark."""
 
     @abstractproperty
     def name(self):
@@ -91,6 +94,18 @@ class Benchmark(object):
             ],
         }
         self.suite = self.perfherder_data['suites'][0]
+
+    def _provision_benchmark_script(self):
+        if os.path.isdir(self.path):
+            return
+
+        # Some benchmarks may have been downloaded from a fetch task, make
+        # sure they get copied over.
+        fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
+        if fetches_dir and os.path.isdir(fetches_dir):
+            fetchdir = os.path.join(fetches_dir, self.name)
+            if os.path.isdir(fetchdir):
+                shutil.copytree(fetchdir, self.path)
 
     def run(self):
         self.reset()
@@ -238,6 +253,8 @@ class WebToolingBenchmark(Benchmark):
     name = 'web-tooling-benchmark'
     path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'web-tooling-benchmark')
     main_js = 'cli.js'
+    units = 'score'
+    lower_is_better = False
 
     @property
     def command(self):
@@ -272,28 +289,63 @@ class WebToolingBenchmark(Benchmark):
                     bench_mean = mean
         self.suite['value'] = bench_mean
 
-    def _provision_benchmark_script(self):
-        if os.path.isdir(self.path):
-            return
-
-        # Some benchmarks may have been downloaded from a fetch task, make
-        # sure they get copied over.
-        fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
-        if fetches_dir and os.path.isdir(fetches_dir):
-            webtool_fetchdir = os.path.join(fetches_dir, 'web-tooling-benchmark')
-            if os.path.isdir(webtool_fetchdir):
-                shutil.copytree(webtool_fetchdir, self.path)
-
     def run(self):
         self._provision_benchmark_script()
         return super(WebToolingBenchmark, self).run()
+
+
+class Octane(RunOnceBenchmark):
+    name = 'octane'
+    path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'octane')
+    units = 'score'
+    lower_is_better = False
+
+    @property
+    def command(self):
+        cmd = super(Octane, self).command
+        return cmd + ['run.js']
+
+    def reset(self):
+        super(Octane, self).reset()
+
+        # Scores are of the form:
+        # {<bench_name>: {<score_name>: [<values>]}}
+        self.scores = defaultdict(lambda: defaultdict(list))
+
+    def process_line(self, output):
+        m = re.search("(.+): (\d+)", output)
+        if not m:
+            return
+        subtest = m.group(1)
+        score = m.group(2)
+        if subtest.startswith('Score'):
+            subtest = 'score'
+        if subtest not in self.scores[self.name]:
+            self.scores[self.name][subtest] = []
+        self.scores[self.name][subtest].append(int(score))
+
+    def collect_results(self):
+        # NOTE: for this benchmark we run the test once, so we have a single value array
+        for bench, scores in self.scores.items():
+            for score_name, values in scores.items():
+                test_name = "{}-{}".format(self.name, score_name)
+                mean = sum(values) / len(values)
+                self.suite['subtests'].append({'name': test_name, 'value': mean})
+                if score_name == 'score':
+                    bench_score = mean
+        self.suite['value'] = bench_score
+
+    def run(self):
+        self._provision_benchmark_script()
+        return super(Octane, self).run()
 
 
 all_benchmarks = {
     'ares6': Ares6,
     'six-speed': SixSpeed,
     'sunspider': SunSpider,
-    'web-tooling-benchmark': WebToolingBenchmark
+    'web-tooling-benchmark': WebToolingBenchmark,
+    'octane': Octane
 }
 
 
