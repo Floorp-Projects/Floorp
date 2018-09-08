@@ -181,107 +181,60 @@ nsBaseCommandController::GetSupportedCommands(uint32_t* aCount,
   return mCommandTable->GetSupportedCommands(aCount, aCommands);
 }
 
-already_AddRefed<nsIController>
-nsBaseCommandController::CreateWindowController()
+typedef already_AddRefed<nsIControllerCommandTable> (*CommandTableCreatorFn)();
+
+static already_AddRefed<nsIController>
+CreateControllerWithSingletonCommandTable(CommandTableCreatorFn aCreatorFn)
 {
   nsCOMPtr<nsIController> controller = new nsBaseCommandController();
 
-  nsCOMPtr<nsIControllerCommandTable> windowCommandTable =
-    nsControllerCommandTable::CreateWindowCommandTable();
+  nsCOMPtr<nsIControllerCommandTable> commandTable = aCreatorFn();
+  if (!commandTable) return nullptr;
 
   // this is a singleton; make it immutable
-  windowCommandTable->MakeImmutable();
+  commandTable->MakeImmutable();
 
   nsresult rv;
   nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
   if (NS_FAILED(rv)) return nullptr;
 
-  rv = controllerContext->Init(windowCommandTable);
+  rv = controllerContext->Init(commandTable);
   if (NS_FAILED(rv)) return nullptr;
 
   return controller.forget();
+}
+
+already_AddRefed<nsIController>
+nsBaseCommandController::CreateWindowController()
+{
+  return CreateControllerWithSingletonCommandTable(
+      nsControllerCommandTable::CreateWindowCommandTable);
 }
 
 already_AddRefed<nsIController>
 nsBaseCommandController::CreateEditorController()
 {
-  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
-
-  nsCOMPtr<nsIControllerCommandTable> editorCommandTable =
-    nsControllerCommandTable::CreateEditorCommandTable();
-
-  // this guy is a singleton, so make it immutable
-  editorCommandTable->MakeImmutable();
-
-  nsresult rv;
-  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
-  if (NS_FAILED(rv)) return nullptr;
-
-  rv = controllerContext->Init(editorCommandTable);
-  if (NS_FAILED(rv)) return nullptr;
-
-  return controller.forget();
+  return CreateControllerWithSingletonCommandTable(
+      nsControllerCommandTable::CreateEditorCommandTable);
 }
 
 already_AddRefed<nsIController>
 nsBaseCommandController::CreateEditingController()
 {
-  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
-
-  nsCOMPtr<nsIControllerCommandTable> editingCommandTable =
-    nsControllerCommandTable::CreateEditingCommandTable();
-
-  // this guy is a singleton, so make it immutable
-  editingCommandTable->MakeImmutable();
-
-  nsresult rv;
-  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
-  if (NS_FAILED(rv)) return nullptr;
-
-  rv = controllerContext->Init(editingCommandTable);
-  if (NS_FAILED(rv)) return nullptr;
-
-  return controller.forget();
+  return CreateControllerWithSingletonCommandTable(
+      nsControllerCommandTable::CreateEditingCommandTable);
 }
 
 already_AddRefed<nsIController>
 nsBaseCommandController::CreateHTMLEditorController()
 {
-  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
-
-  nsCOMPtr<nsIControllerCommandTable> composerCommandTable =
-    nsControllerCommandTable::CreateHTMLEditorCommandTable();
-
-  // this guy is a singleton, so make it immutable
-  composerCommandTable->MakeImmutable();
-
-  nsresult rv;
-  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  rv = controllerContext->Init(composerCommandTable);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return controller.forget();
+  return CreateControllerWithSingletonCommandTable(
+      nsControllerCommandTable::CreateHTMLEditorCommandTable);
 }
 
 already_AddRefed<nsIController>
 nsBaseCommandController::CreateHTMLEditorDocStateController()
 {
-  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
-
-  nsCOMPtr<nsIControllerCommandTable> composerCommandTable =
-    nsControllerCommandTable::CreateHTMLEditorDocStateCommandTable();
-
-  // this guy is a singleton, so make it immutable
-  composerCommandTable->MakeImmutable();
-
-  nsresult rv;
-  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  rv = controllerContext->Init(composerCommandTable);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return controller.forget();
+  return CreateControllerWithSingletonCommandTable(
+      nsControllerCommandTable::CreateHTMLEditorDocStateCommandTable);
 }
