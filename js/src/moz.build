@@ -308,27 +308,6 @@ UNIFIED_SOURCES += [
     'vm/UnboxedObject.cpp',
     'vm/Value.cpp',
     'vm/Xdr.cpp',
-    'wasm/AsmJS.cpp',
-    'wasm/WasmBaselineCompile.cpp',
-    'wasm/WasmBuiltins.cpp',
-    'wasm/WasmCode.cpp',
-    'wasm/WasmCompile.cpp',
-    'wasm/WasmDebug.cpp',
-    'wasm/WasmFrameIter.cpp',
-    'wasm/WasmGenerator.cpp',
-    'wasm/WasmInstance.cpp',
-    'wasm/WasmIonCompile.cpp',
-    'wasm/WasmJS.cpp',
-    'wasm/WasmModule.cpp',
-    'wasm/WasmOpIter.cpp',
-    'wasm/WasmProcess.cpp',
-    'wasm/WasmRealm.cpp',
-    'wasm/WasmSignalHandlers.cpp',
-    'wasm/WasmStubs.cpp',
-    'wasm/WasmTable.cpp',
-    'wasm/WasmTextToBinary.cpp',
-    'wasm/WasmTypes.cpp',
-    'wasm/WasmValidate.cpp'
 ]
 
 # builtin/RegExp.cpp cannot be built in unified mode because it causes huge
@@ -423,6 +402,7 @@ DIRS += [
     'frontend',
     'gc',
     'jit',
+    'wasm',
 ]
 
 FINAL_LIBRARY = 'js'
