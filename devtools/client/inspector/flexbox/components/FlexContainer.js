@@ -4,10 +4,14 @@
 
 "use strict";
 
-const { createRef, PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, createRef, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { translateNodeFrontToGrip } = require("devtools/client/inspector/shared/utils");
+
+loader.lazyGetter(this, "FlexItemSelector", function() {
+  return createFactory(require("./FlexItemSelector"));
+});
 
 // Reps
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
@@ -25,6 +29,7 @@ class FlexContainer extends PureComponent {
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
+      onToggleFlexItemShown: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
   }
@@ -96,6 +101,33 @@ class FlexContainer extends PureComponent {
     nodeFront.scrollIntoView().catch(e => console.error(e));
   }
 
+  renderFlexItemSelector() {
+    const {
+      flexbox,
+      onToggleFlexItemShown,
+    } = this.props;
+    const {
+      flexItems,
+      highlighted,
+    } = flexbox;
+
+    if (!highlighted || !flexItems.length) {
+      return null;
+    }
+
+    const selectedFlexItem = flexItems.find(item => item.shown);
+
+    if (!selectedFlexItem) {
+      return null;
+    }
+
+    return FlexItemSelector({
+      flexItem: selectedFlexItem,
+      flexItems,
+      onToggleFlexItemShown,
+    });
+  }
+
   render() {
     const {
       flexbox,
@@ -110,47 +142,50 @@ class FlexContainer extends PureComponent {
 
     return (
       dom.div({ className: "flex-container devtools-monospace" },
-        dom.label({},
-          dom.input(
+        dom.div({},
+          dom.label({},
+            dom.input(
+              {
+                className: "devtools-checkbox-toggle",
+                checked: highlighted,
+                onChange: this.onFlexboxCheckboxClick,
+                type: "checkbox",
+              }
+            ),
+            Rep(
+              {
+                defaultRep: ElementNode,
+                mode: MODE.TINY,
+                object: translateNodeFrontToGrip(nodeFront),
+                onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
+                onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
+                onInspectIconClick: () => this.onFlexboxInspectIconClick(nodeFront),
+              }
+            )
+          ),
+          dom.div(
             {
-              className: "devtools-checkbox-toggle",
-              checked: highlighted,
-              onChange: this.onFlexboxCheckboxClick,
-              type: "checkbox",
+              className: "layout-color-swatch",
+              ref: this.swatchEl,
+              style: {
+                backgroundColor: color,
+              },
+              title: color,
             }
           ),
-          Rep(
+          // The SwatchColorPicker relies on the nextSibling of the swatch element to
+          // apply the selected color. This is why we use a span in display: none for
+          // now. Ideally we should modify the SwatchColorPickerTooltip to bypass this
+          // requirement. See https://bugzilla.mozilla.org/show_bug.cgi?id=1341578
+          dom.span(
             {
-              defaultRep: ElementNode,
-              mode: MODE.TINY,
-              object: translateNodeFrontToGrip(nodeFront),
-              onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
-              onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
-              onInspectIconClick: () => this.onFlexboxInspectIconClick(nodeFront),
-            }
+              className: "layout-color-value",
+              ref: this.colorValueEl,
+            },
+            color
           )
         ),
-        dom.div(
-          {
-            className: "layout-color-swatch",
-            ref: this.swatchEl,
-            style: {
-              backgroundColor: color,
-            },
-            title: color,
-          }
-        ),
-        // The SwatchColorPicker relies on the nextSibling of the swatch element to apply
-        // the selected color. This is why we use a span in display: none for now.
-        // Ideally we should modify the SwatchColorPickerTooltip to bypass this
-        // requirement. See https://bugzilla.mozilla.org/show_bug.cgi?id=1341578
-        dom.span(
-          {
-            className: "layout-color-value",
-            ref: this.colorValueEl,
-          },
-          color
-        )
+        this.renderFlexItemSelector()
       )
     );
   }
