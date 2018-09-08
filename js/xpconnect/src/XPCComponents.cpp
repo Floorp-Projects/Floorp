@@ -41,6 +41,7 @@
 #include "nsGlobalWindow.h"
 #include "nsScriptError.h"
 #include "GeckoProfiler.h"
+#include "mozilla/EditorSpellCheck.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -3114,6 +3115,16 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::RecordReplayDirective(int aDirective)
 {
     recordreplay::RecordReplayDirective(aDirective);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::CreateSpellChecker(nsIEditorSpellCheck** aSpellChecker)
+{
+    NS_ENSURE_ARG_POINTER(aSpellChecker);
+    nsCOMPtr<nsIEditorSpellCheck> spellChecker =
+        new mozilla::EditorSpellCheck();
+    spellChecker.forget(aSpellChecker);
     return NS_OK;
 }
 
