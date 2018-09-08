@@ -459,20 +459,24 @@ nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
     return Nothing();
   }
 
+  mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
+    nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame()));
   gfx::IntSize size;
-  Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageKey(aItem, container,
-                                                                      aBuilder, aResources,
-                                                                      aSc, size, Nothing());
+  Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageKey(
+    aItem, container, aBuilder, aResources, rendering, aSc, size, Nothing());
   if (key.isNothing()) {
     return Some(ImgDrawResult::NOT_READY);
   }
   wr::LayoutRect fill = wr::ToRoundedLayoutRect(fillRect);
 
   LayoutDeviceSize gapSize(0, 0);
-  SamplingFilter sampleFilter = nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
-  aBuilder.PushImage(fill, fill, !BackfaceIsHidden(),
-                     wr::ToLayoutSize(fillRect.Size()), wr::ToLayoutSize(gapSize),
-                     wr::ToImageRendering(sampleFilter), key.value());
+  aBuilder.PushImage(fill,
+                     fill,
+                     !BackfaceIsHidden(),
+                     wr::ToLayoutSize(fillRect.Size()),
+                     wr::ToLayoutSize(gapSize),
+                     rendering,
+                     key.value());
 
   return Some(ImgDrawResult::SUCCESS);
 }

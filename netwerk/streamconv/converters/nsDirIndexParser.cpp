@@ -12,6 +12,7 @@
 #include "mozilla/Encoding.h"
 #include "prprf.h"
 #include "nsCRT.h"
+#include "nsDirIndex.h"
 #include "nsEscape.h"
 #include "nsIDirIndex.h"
 #include "nsIInputStream.h"
@@ -395,9 +396,7 @@ nsDirIndexParser::ProcessData(nsIRequest *aRequest, nsISupports *aCtxt) {
             }
           } else if (buf[2] == '1' && buf[3] == ':') {
             // 201. Field data
-            nsCOMPtr<nsIDirIndex> idx = do_CreateInstance("@mozilla.org/dirIndex;1",&rv);
-            if (NS_FAILED(rv))
-              return rv;
+            nsCOMPtr<nsIDirIndex> idx = new nsDirIndex();
 
             rv = ParseData(idx, ((char *)buf) + 4, lineLen - 4);
             if (NS_FAILED(rv)) {

@@ -12,6 +12,8 @@ ChromeUtils.defineModuleGetter(this, "AboutReader",
                                "resource://gre/modules/AboutReader.jsm");
 ChromeUtils.defineModuleGetter(this, "ReaderMode",
                                "resource://gre/modules/ReaderMode.jsm");
+ChromeUtils.defineModuleGetter(this, "Readerable",
+                               "resource://gre/modules/Readerable.jsm");
 
 class AboutReaderChild extends ActorChild {
   constructor(mm) {
@@ -102,7 +104,7 @@ class AboutReaderChild extends ActorChild {
    * painted is not going to work.
    */
   updateReaderButton(forceNonArticle) {
-    if (!ReaderMode.isEnabledForParseOnLoad || this.isAboutReader ||
+    if (!Readerable.isEnabledForParseOnLoad || this.isAboutReader ||
         !this.content || !(this.content.document instanceof this.content.HTMLDocument) ||
         this.content.document.mozSyntheticDocument) {
       return;
@@ -141,7 +143,7 @@ class AboutReaderChild extends ActorChild {
     this.cancelPotentialPendingReadabilityCheck();
     // Only send updates when there are articles; there's no point updating with
     // |false| all the time.
-    if (ReaderMode.isProbablyReaderable(this.content.document)) {
+    if (Readerable.isProbablyReaderable(this.content.document)) {
       this.mm.sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: true });
     } else if (forceNonArticle) {
       this.mm.sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: false });

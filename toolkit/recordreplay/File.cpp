@@ -51,7 +51,7 @@ Stream::ReadBytes(void* aData, size_t aSize)
     // If we try to read off the end of a stream then we must have hit the end
     // of the replay for this thread.
     while (mChunkIndex == mChunks.length()) {
-      MOZ_RELEASE_ASSERT(mName == StreamName::Event || mName == StreamName::Assert);
+      MOZ_RELEASE_ASSERT(mName == StreamName::Event);
       HitEndOfRecording();
     }
 
@@ -156,14 +156,73 @@ Stream::WriteScalar(size_t aValue)
 }
 
 void
+Stream::RecordOrReplayThreadEvent(ThreadEvent aEvent)
+{
+  if (IsRecording()) {
+    WriteScalar((size_t) aEvent);
+  } else {
+    ThreadEvent oldEvent = (ThreadEvent) ReadScalar();
+    if (oldEvent != aEvent) {
+      child::ReportFatalError(Nothing(), "Event Mismatch: Recorded %s Replayed %s",
+                              ThreadEventName(oldEvent), ThreadEventName(aEvent));
+    }
+    mLastEvent = aEvent;
+  }
+
+  // Check the execution progress counter for events executing on the main thread.
+  if (mNameIndex == MainThreadId) {
+    CheckInput(*ExecutionProgressCounter());
+  }
+}
+
+void
 Stream::CheckInput(size_t aValue)
 {
-  size_t oldValue = aValue;
-  RecordOrReplayScalar(&oldValue);
-  if (oldValue != aValue) {
-    child::ReportFatalError(Nothing(), "Input Mismatch: Recorded: %zu Replayed %zu\n",
-                            oldValue, aValue);
-    Unreachable();
+  if (IsRecording()) {
+    WriteScalar(aValue);
+  } else {
+    size_t oldValue = ReadScalar();
+    if (oldValue != aValue) {
+      child::ReportFatalError(Nothing(), "Input Mismatch: %s Recorded %llu Replayed %llu",
+                              ThreadEventName(mLastEvent), oldValue, aValue);
+    }
+  }
+}
+
+void
+Stream::CheckInput(const char* aValue)
+{
+  size_t len = strlen(aValue);
+  if (IsRecording()) {
+    WriteScalar(len);
+    WriteBytes(aValue, len);
+  } else {
+    size_t oldLen = ReadScalar();
+    EnsureInputBallast(oldLen + 1);
+    ReadBytes(mInputBallast.get(), oldLen);
+    mInputBallast[oldLen] = 0;
+
+    if (len != oldLen || memcmp(aValue, mInputBallast.get(), len) != 0) {
+      child::ReportFatalError(Nothing(), "Input Mismatch: %s Recorded %s Replayed %s",
+                              ThreadEventName(mLastEvent), mInputBallast.get(), aValue);
+    }
+  }
+}
+
+void
+Stream::CheckInput(const void* aData, size_t aSize)
+{
+  CheckInput(aSize);
+  if (IsRecording()) {
+    WriteBytes(aData, aSize);
+  } else {
+    EnsureInputBallast(aSize);
+    ReadBytes(mInputBallast.get(), aSize);
+
+    if (memcmp(aData, mInputBallast.get(), aSize) != 0) {
+      child::ReportFatalError(Nothing(), "Input Buffer Mismatch: %s",
+                              ThreadEventName(mLastEvent));
+    }
   }
 }
 
@@ -184,6 +243,12 @@ Stream::EnsureMemory(UniquePtr<char[]>* aBuf, size_t* aSize,
     aBuf->reset(newBuf);
     *aSize = newSize;
   }
+}
+
+void
+Stream::EnsureInputBallast(size_t aSize)
+{
+  EnsureMemory(&mInputBallast, &mInputBallastSize, aSize, (size_t) -1, DontCopyExistingData);
 }
 
 void

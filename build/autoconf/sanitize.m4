@@ -30,7 +30,7 @@ if test -n "$MOZ_ASAN"; then
     CFLAGS="-fsanitize=address $CFLAGS"
     CXXFLAGS="-fsanitize=address $CXXFLAGS"
     if test -z "$CLANG_CL"; then
-        LDFLAGS="-fsanitize=address $LDFLAGS"
+        LDFLAGS="-fsanitize=address -rdynamic $LDFLAGS"
     fi
     AC_DEFINE(MOZ_ASAN)
     MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
@@ -48,7 +48,7 @@ if test -n "$MOZ_MSAN"; then
     CFLAGS="-fsanitize=memory -fsanitize-memory-track-origins $CFLAGS"
     CXXFLAGS="-fsanitize=memory -fsanitize-memory-track-origins $CXXFLAGS"
     if test -z "$CLANG_CL"; then
-        LDFLAGS="-fsanitize=memory -fsanitize-memory-track-origins $LDFLAGS"
+        LDFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -rdynamic $LDFLAGS"
     fi
     AC_DEFINE(MOZ_MSAN)
     MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
@@ -66,7 +66,7 @@ if test -n "$MOZ_TSAN"; then
     CFLAGS="-fsanitize=thread $CFLAGS"
     CXXFLAGS="-fsanitize=thread $CXXFLAGS"
     if test -z "$CLANG_CL"; then
-        LDFLAGS="-fsanitize=thread $LDFLAGS"
+        LDFLAGS="-fsanitize=thread -rdynamic $LDFLAGS"
     fi
     AC_DEFINE(MOZ_TSAN)
     MOZ_PATH_PROG(LLVM_SYMBOLIZER, llvm-symbolizer)
@@ -94,7 +94,7 @@ if test -n "$MOZ_SIGNED_OVERFLOW_SANITIZE$MOZ_UNSIGNED_OVERFLOW_SANITIZE"; then
         CFLAGS="-fsanitize=signed-integer-overflow $CFLAGS"
         CXXFLAGS="-fsanitize=signed-integer-overflow $CXXFLAGS"
         if test -z "$CLANG_CL"; then
-            LDFLAGS="-fsanitize=signed-integer-overflow $LDFLAGS"
+            LDFLAGS="-fsanitize=signed-integer-overflow -rdynamic $LDFLAGS"
         fi
         AC_DEFINE(MOZ_SIGNED_OVERFLOW_SANITIZE)
     fi
@@ -103,7 +103,7 @@ if test -n "$MOZ_SIGNED_OVERFLOW_SANITIZE$MOZ_UNSIGNED_OVERFLOW_SANITIZE"; then
         CFLAGS="-fsanitize=unsigned-integer-overflow $CFLAGS"
         CXXFLAGS="-fsanitize=unsigned-integer-overflow $CXXFLAGS"
         if test -z "$CLANG_CL"; then
-            LDFLAGS="-fsanitize=unsigned-integer-overflow $LDFLAGS"
+            LDFLAGS="-fsanitize=unsigned-integer-overflow -rdynamic $LDFLAGS"
         fi
         AC_DEFINE(MOZ_UNSIGNED_OVERFLOW_SANITIZE)
     fi

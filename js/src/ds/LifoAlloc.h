@@ -17,6 +17,7 @@
 #include "mozilla/TypeTraits.h"
 
 #include <new>
+#include <stddef.h> // size_t
 
 // This data structure supports stacky LIFO allocation (mark/release and
 // LifoAllocScope). It does not maintain one contiguous segment; instead, it
@@ -196,7 +197,8 @@ static const size_t LIFO_ALLOC_ALIGN = 8;
 
 MOZ_ALWAYS_INLINE
 uint8_t*
-AlignPtr(uint8_t* orig) {
+AlignPtr(uint8_t* orig)
+{
     static_assert(mozilla::IsPowerOfTwo(LIFO_ALLOC_ALIGN),
                   "LIFO_ALLOC_ALIGN must be a power of two");
 
@@ -415,6 +417,11 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
         setBump(m.bump_);
     }
 
+    // Given an amount, compute the total size of a chunk for it: reserved
+    // space before |begin()|, space for |amount| bytes, and red-zone space
+    // after those bytes that will ultimately end at |capacity_|.
+    static inline MOZ_MUST_USE bool allocSizeWithRedZone(size_t amount, size_t* size);
+
     // Given a bump chunk pointer, find the next base/end pointers. This is
     // useful for having consistent allocations, and iterating over known size
     // allocations.
@@ -472,6 +479,23 @@ class BumpChunk : public SingleLinkedListElement<BumpChunk>
 // first allocation content. This can be used to ensure there is enough space
 // for the next allocation (see LifoAlloc::newChunkWithCapacity).
 static constexpr size_t BumpChunkReservedSpace = AlignBytes(sizeof(BumpChunk), LIFO_ALLOC_ALIGN);
+
+/* static */ inline MOZ_MUST_USE bool
+BumpChunk::allocSizeWithRedZone(size_t amount, size_t* size)
+{
+    constexpr size_t SpaceBefore = BumpChunkReservedSpace;
+    static_assert((SpaceBefore % LIFO_ALLOC_ALIGN) == 0,
+                   "reserved space presumed already aligned");
+
+    constexpr size_t SpaceAfter = RedZoneSize; // may be zero
+
+    constexpr size_t SpaceBeforeAndAfter = SpaceBefore + SpaceAfter;
+    static_assert(SpaceBeforeAndAfter >= SpaceBefore,
+                  "intermediate addition must not overflow");
+
+    *size = SpaceBeforeAndAfter + amount;
+    return MOZ_LIKELY(*size >= SpaceBeforeAndAfter);
+}
 
 inline const uint8_t*
 BumpChunk::begin() const

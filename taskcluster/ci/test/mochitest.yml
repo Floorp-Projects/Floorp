@@ -62,7 +62,7 @@ mochitest:
             default: virtual
     chunks:
         by-test-platform:
-            android-em-4.3-arm7-api-16/debug: 48
+            android-em-4.3-arm7-api-16/debug: 60
             android-em-7.0-x86/opt: 4
             android-em.*: 24
             linux.*/debug: 16

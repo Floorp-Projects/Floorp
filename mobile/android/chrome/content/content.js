@@ -8,6 +8,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AboutReader", "resource://gre/modules/AboutReader.jsm");
 ChromeUtils.defineModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
+ChromeUtils.defineModuleGetter(this, "Readerable", "resource://gre/modules/Readerable.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginManagerContent", "resource://gre/modules/LoginManagerContent.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gPipNSSBundle", function() {
@@ -486,7 +487,7 @@ var AboutReaderListener = {
     // Do not show Reader View icon on error pages (bug 1320900)
     if (this.isErrorPage) {
         sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: false });
-    } else if (!ReaderMode.isEnabledForParseOnLoad || this.isAboutReader ||
+    } else if (!Readerable.isEnabledForParseOnLoad || this.isAboutReader ||
         !(content.document instanceof content.HTMLDocument) ||
         content.document.mozSyntheticDocument) {
 
@@ -522,11 +523,12 @@ var AboutReaderListener = {
       return;
     }
 
+    Services.console.logStringMessage(`ON PAINT WHEN WAITED FOR\n`);
     this.cancelPotentialPendingReadabilityCheck();
 
     // Only send updates when there are articles; there's no point updating with
     // |false| all the time.
-    if (ReaderMode.isProbablyReaderable(content.document)) {
+    if (Readerable.isProbablyReaderable(content.document)) {
       sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: true });
     } else if (forceNonArticle) {
       sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: false });
