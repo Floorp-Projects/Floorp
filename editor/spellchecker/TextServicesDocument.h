@@ -14,7 +14,6 @@
 #include "nsTArray.h"
 #include "nscore.h"
 
-class nsComposeTxtSrvFilter;
 class nsIContent;
 class nsIContentIterator;
 class nsIEditor;
@@ -58,7 +57,7 @@ private:
   nsCOMPtr<nsIContent> mNextTextBlock;
   nsTArray<OffsetEntry*> mOffsetTable;
   RefPtr<nsRange> mExtent;
-  RefPtr<nsComposeTxtSrvFilter> mTxtSvcFilter;
+  uint32_t mTxtSvcFilterType;
 
   int32_t mSelStartIndex;
   int32_t mSelStartOffset;

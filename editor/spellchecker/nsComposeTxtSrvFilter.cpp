@@ -6,17 +6,10 @@
 #include "nsComposeTxtSrvFilter.h"
 #include "nsError.h"                    // for NS_OK
 #include "nsIContent.h"                 // for nsIContent
-#include "nsNameSpaceManager.h"        // for kNameSpaceID_None
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
-#include "nscore.h"                     // for NS_IMETHODIMP
 #include "mozilla/dom/Element.h"                 // for nsIContent
 
-nsComposeTxtSrvFilter::nsComposeTxtSrvFilter() :
-  mIsForMail(false)
-{
-}
-
-NS_IMPL_ISUPPORTS0(nsComposeTxtSrvFilter)
+using namespace mozilla;
 
 bool
 nsComposeTxtSrvFilter::Skip(nsINode* aNode) const
@@ -74,10 +67,10 @@ nsComposeTxtSrvFilter::Skip(nsINode* aNode) const
 }
 
 // static
-already_AddRefed<nsComposeTxtSrvFilter>
+UniquePtr<nsComposeTxtSrvFilter>
 nsComposeTxtSrvFilter::CreateHelper(bool aIsForMail)
 {
-  RefPtr<nsComposeTxtSrvFilter> filter = new nsComposeTxtSrvFilter();
+  auto filter = MakeUnique<nsComposeTxtSrvFilter>();
   filter->Init(aIsForMail);
-  return filter.forget();
+  return filter;
 }
