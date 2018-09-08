@@ -1,7 +1,7 @@
 "use strict";
 
 function check_ip(s, v, ip) {
-  let secInfo = new FakeTransportSecurityInfo();
+  let sslStatus = new FakeSSLStatus();
 
   let str = "https://";
   if (v == 6) {
@@ -19,7 +19,7 @@ function check_ip(s, v, ip) {
   let parsedMaxAge = {};
   let parsedIncludeSubdomains = {};
   s.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                  "max-age=1000;includeSubdomains", secInfo, 0,
+                  "max-age=1000;includeSubdomains", sslStatus, 0,
                   Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST, {},
                   parsedMaxAge, parsedIncludeSubdomains);
   ok(!s.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0),

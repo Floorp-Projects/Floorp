@@ -22,7 +22,7 @@ function SSLExceptions() {
 
 SSLExceptions.prototype = {
   _overrideService: null,
-  _secInfo: null,
+  _sslStatus: null,
 
   getInterface: function SSLE_getInterface(aIID) {
     return this.QueryInterface(aIID);
@@ -33,10 +33,8 @@ SSLExceptions.prototype = {
     To collect the SSL status we intercept the certificate error here
     and store the status for later use.
   */
-  notifyCertProblem: function SSLE_notifyCertProblem(socketInfo,
-                                                     secInfo,
-                                                     targetHost) {
-    this._secInfo = secInfo;
+  notifyCertProblem: function SSLE_notifyCertProblem(socketInfo, sslStatus, targetHost) {
+    this._sslStatus = sslStatus.QueryInterface(Ci.nsISSLStatus);
     return true; // suppress error UI
   },
 
@@ -45,7 +43,7 @@ SSLExceptions.prototype = {
     for the certificate and the errors.
    */
   _checkCert: function SSLE_checkCert(aURI) {
-    this._secInfo = null;
+    this._sslStatus = null;
 
     let req = new XMLHttpRequest();
     try {
@@ -63,15 +61,15 @@ SSLExceptions.prototype = {
                      "Logged for information purposes only: " + e);
     }
 
-    return this._secInfo;
+    return this._sslStatus;
   },
 
   /**
     Internal method to create an override.
   */
   _addOverride: function SSLE_addOverride(aURI, aWindow, aTemporary) {
-    let secInfo = this._checkCert(aURI);
-    let certificate = secInfo.serverCert;
+    let SSLStatus = this._checkCert(aURI);
+    let certificate = SSLStatus.serverCert;
 
     let flags = 0;
 
@@ -80,11 +78,11 @@ SSLExceptions.prototype = {
       aTemporary = true;
     }
 
-    if (secInfo.isUntrusted)
+    if (SSLStatus.isUntrusted)
       flags |= this._overrideService.ERROR_UNTRUSTED;
-    if (secInfo.isDomainMismatch)
+    if (SSLStatus.isDomainMismatch)
       flags |= this._overrideService.ERROR_MISMATCH;
-    if (secInfo.isNotValidAtThisTime)
+    if (SSLStatus.isNotValidAtThisTime)
       flags |= this._overrideService.ERROR_TIME;
 
     this._overrideService.rememberValidityOverride(

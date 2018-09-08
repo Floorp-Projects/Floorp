@@ -13,7 +13,7 @@ Observer.prototype = {
 };
 
 var gObserver = new Observer();
-var secInfo = new FakeTransportSecurityInfo();
+var sslStatus = new FakeSSLStatus();
 
 function cleanup() {
   Services.obs.removeObserver(gObserver, "last-pb-context-exited");
@@ -77,7 +77,7 @@ function test_part1() {
   let subDomainUri =
     Services.io.newURI("https://subdomain.includesubdomains.preloaded.test");
   gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                           "max-age=0", secInfo, 0,
+                           "max-age=0", sslStatus, 0,
                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
   ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
@@ -85,7 +85,7 @@ function test_part1() {
   // check that processing another header (with max-age non-zero) will
   // re-enable a site's sts status
   gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                           "max-age=1000", secInfo, 0,
+                           "max-age=1000", sslStatus, 0,
                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
   // but this time include subdomains was not set, so test for that
@@ -97,7 +97,7 @@ function test_part1() {
   // will not remove that (ancestor) site from the list
   uri = Services.io.newURI("https://subdomain.noincludesubdomains.preloaded.test");
   gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                           "max-age=0", secInfo, 0,
+                           "max-age=0", sslStatus, 0,
                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
                             Services.io.newURI("https://noincludesubdomains.preloaded.test"),
@@ -106,7 +106,7 @@ function test_part1() {
 
   uri = Services.io.newURI("https://subdomain.includesubdomains.preloaded.test");
   gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                           "max-age=0", secInfo, 0,
+                           "max-age=0", sslStatus, 0,
                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   // we received a header with "max-age=0", so we have "no information"
   // regarding the sts state of subdomain.includesubdomains.preloaded.test specifically,
@@ -132,7 +132,7 @@ function test_part1() {
        0));
 
   gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                           "max-age=1000", secInfo, 0,
+                           "max-age=1000", sslStatus, 0,
                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   // Here's what we have now:
   // |-- includesubdomains.preloaded.test (in preload list, includes subdomains) IS sts host
@@ -159,7 +159,7 @@ function test_part1() {
   uri = Services.io.newURI("https://includesubdomains2.preloaded.test");
   ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
   gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                           "max-age=1", secInfo, 0,
+                           "max-age=1", sslStatus, 0,
                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   do_timeout(1250, function() {
     ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
@@ -181,7 +181,7 @@ function test_private_browsing1() {
                             IS_PRIVATE));
 
   gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                           "max-age=0", secInfo, IS_PRIVATE,
+                           "max-age=0", sslStatus, IS_PRIVATE,
                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
                              IS_PRIVATE));
@@ -190,7 +190,7 @@ function test_private_browsing1() {
 
   // check adding it back in
   gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                           "max-age=1000", secInfo, IS_PRIVATE,
+                           "max-age=1000", sslStatus, IS_PRIVATE,
                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, IS_PRIVATE));
   // but no includeSubdomains this time
@@ -199,7 +199,7 @@ function test_private_browsing1() {
 
   // do the hokey-pokey...
   gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                           "max-age=0", secInfo, IS_PRIVATE,
+                           "max-age=0", sslStatus, IS_PRIVATE,
                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
                              IS_PRIVATE));
@@ -216,7 +216,7 @@ function test_private_browsing1() {
   ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
                             IS_PRIVATE));
   gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                           "max-age=1", secInfo, IS_PRIVATE,
+                           "max-age=1", sslStatus, IS_PRIVATE,
                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   do_timeout(1250, function() {
     ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri,

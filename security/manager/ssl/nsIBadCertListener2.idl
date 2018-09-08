@@ -6,8 +6,8 @@
 
 #include "nsISupports.idl"
 
+interface nsISSLStatus;
 interface nsIInterfaceRequestor;
-interface nsITransportSecurityInfo;
 
 /**
  * A mechanism to report a broken SSL status. The recipient should NOT block.
@@ -20,13 +20,13 @@ interface nsIBadCertListener2 : nsISupports {
   /**
    *  @param socketInfo A network communication context that can be used to obtain more information
    *                    about the active connection.
-   *  @param secInfo The TransportSecurityinfo object that describes the problem(s).
+   *  @param status The SSL status object that describes the problem(s).
    *  @param targetSite The Site name that was used to open the current connection.
    *
    *  @return The consumer shall return true if it wants to suppress the error message
    *          related to the bad cert (the connection will still get canceled).
    */
   boolean notifyCertProblem(in nsIInterfaceRequestor socketInfo, 
-                            in nsITransportSecurityInfo secInfo,
+                            in nsISSLStatus status,
                             in AUTF8String targetSite);
 };

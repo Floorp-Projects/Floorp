@@ -588,6 +588,7 @@ var NetworkHelper = {
     const wpl = Ci.nsIWebProgressListener;
     const NSSErrorsService = Cc["@mozilla.org/nss_errors_service;1"]
                                .getService(Ci.nsINSSErrorsService);
+    const SSLStatus = securityInfo.SSLStatus;
     if (!NSSErrorsService.isNSSErrorCode(securityInfo.errorCode)) {
       const state = securityInfo.securityState;
 
@@ -620,23 +621,23 @@ var NetworkHelper = {
       }
 
       // Cipher suite.
-      info.cipherSuite = securityInfo.cipherName;
+      info.cipherSuite = SSLStatus.cipherName;
 
       // Key exchange group name.
-      info.keaGroupName = securityInfo.keaGroupName;
+      info.keaGroupName = SSLStatus.keaGroupName;
 
       // Certificate signature scheme.
-      info.signatureSchemeName = securityInfo.signatureSchemeName;
+      info.signatureSchemeName = SSLStatus.signatureSchemeName;
 
       // Protocol version.
       info.protocolVersion =
-        this.formatSecurityProtocol(securityInfo.protocolVersion);
+        this.formatSecurityProtocol(SSLStatus.protocolVersion);
 
       // Certificate.
-      info.cert = this.parseCertificateInfo(securityInfo.serverCert);
+      info.cert = this.parseCertificateInfo(SSLStatus.serverCert);
 
       // Certificate transparency status.
-      info.certificateTransparency = securityInfo.certificateTransparencyStatus;
+      info.certificateTransparency = SSLStatus.certificateTransparencyStatus;
 
       // HSTS and HPKP if available.
       if (httpActivity.hostname) {
@@ -719,24 +720,24 @@ var NetworkHelper = {
   },
 
   /**
-   * Takes protocolVersion of TransportSecurityInfo object and returns
-   * human readable description.
+   * Takes protocolVersion of SSLStatus object and returns human readable
+   * description.
    *
    * @param Number version
-   *        One of nsITransportSecurityInfo version constants.
+   *        One of nsISSLStatus version constants.
    * @return string
    *         One of TLSv1, TLSv1.1, TLSv1.2, TLSv1.3 if @param version
    *         is valid, Unknown otherwise.
    */
   formatSecurityProtocol: function(version) {
     switch (version) {
-      case Ci.nsITransportSecurityInfo.TLS_VERSION_1:
+      case Ci.nsISSLStatus.TLS_VERSION_1:
         return "TLSv1";
-      case Ci.nsITransportSecurityInfo.TLS_VERSION_1_1:
+      case Ci.nsISSLStatus.TLS_VERSION_1_1:
         return "TLSv1.1";
-      case Ci.nsITransportSecurityInfo.TLS_VERSION_1_2:
+      case Ci.nsISSLStatus.TLS_VERSION_1_2:
         return "TLSv1.2";
-      case Ci.nsITransportSecurityInfo.TLS_VERSION_1_3:
+      case Ci.nsISSLStatus.TLS_VERSION_1_3:
         return "TLSv1.3";
       default:
         DevToolsUtils.reportException("NetworkHelper.formatSecurityProtocol",

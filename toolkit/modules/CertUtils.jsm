@@ -142,8 +142,9 @@ function checkCert(aChannel, aAllowNonBuiltInCerts, aCerts) {
     return;
   }
 
-  let secInfo = aChannel.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-  let cert = secInfo.serverCert;
+  let sslStatus = aChannel.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
+                          .SSLStatus;
+  let cert = sslStatus.serverCert;
 
   validateCert(cert, aCerts);
 
@@ -152,7 +153,7 @@ function checkCert(aChannel, aAllowNonBuiltInCerts, aCerts) {
   }
 
   let issuerCert = null;
-  for (issuerCert of secInfo.succeededCertChain.getEnumerator());
+  for (issuerCert of sslStatus.succeededCertChain.getEnumerator());
 
   const certNotBuiltInErr = "Certificate issuer is not built-in.";
   if (!issuerCert) {

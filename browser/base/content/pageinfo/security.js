@@ -27,6 +27,8 @@ var security = {
   },
 
   _getSecurityInfo() {
+    const nsISSLStatus = Ci.nsISSLStatus;
+
     // We don't have separate info for a frame, return null until further notice
     // (see bug 138479)
     if (!this.windowInfo.isTopWindow)
@@ -47,10 +49,10 @@ var security = {
       (ui.state & Ci.nsIWebProgressListener.STATE_IS_INSECURE);
     var isEV =
       (ui.state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
-    var secInfo = ui.secInfo;
+    var status = ui.secInfo && ui.secInfo.SSLStatus;
 
-    if (!isInsecure && secInfo) {
-      var cert = secInfo.serverCert;
+    if (!isInsecure && status) {
+      var cert = status.serverCert;
       var issuerName = cert.issuerOrganization || cert.issuerName;
 
       var retval = {
@@ -68,26 +70,26 @@ var security = {
 
       var version;
       try {
-        retval.encryptionAlgorithm = secInfo.cipherName;
-        retval.encryptionStrength = secInfo.secretKeyLength;
-        version = secInfo.protocolVersion;
+        retval.encryptionAlgorithm = status.cipherName;
+        retval.encryptionStrength = status.secretKeyLength;
+        version = status.protocolVersion;
       } catch (e) {
       }
 
       switch (version) {
-        case Ci.nsITransportSecurityInfo.SSL_VERSION_3:
+        case nsISSLStatus.SSL_VERSION_3:
           retval.version = "SSL 3";
           break;
-        case Ci.nsITransportSecurityInfo.TLS_VERSION_1:
+        case nsISSLStatus.TLS_VERSION_1:
           retval.version = "TLS 1.0";
           break;
-        case Ci.nsITransportSecurityInfo.TLS_VERSION_1_1:
+        case nsISSLStatus.TLS_VERSION_1_1:
           retval.version = "TLS 1.1";
           break;
-        case Ci.nsITransportSecurityInfo.TLS_VERSION_1_2:
+        case nsISSLStatus.TLS_VERSION_1_2:
           retval.version = "TLS 1.2";
           break;
-        case Ci.nsITransportSecurityInfo.TLS_VERSION_1_3:
+        case nsISSLStatus.TLS_VERSION_1_3:
           retval.version = "TLS 1.3";
           break;
       }
@@ -96,17 +98,13 @@ var security = {
       // Since we do not yet enforce the CT Policy on secure connections,
       // we must not complain on policy discompliance (it might be viewed
       // as a security issue by the user).
-      switch (secInfo.certificateTransparencyStatus) {
-        case Ci.nsITransportSecurityInfo.
-                CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE:
-        case Ci.nsITransportSecurityInfo.
-                CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS:
-        case Ci.nsITransportSecurityInfo.
-                CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS:
+      switch (status.certificateTransparencyStatus) {
+        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE:
+        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS:
+        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS:
           retval.certificateTransparency = null;
           break;
-        case Ci.nsITransportSecurityInfo.
-                CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT:
+        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT:
           retval.certificateTransparency = "Compliant";
           break;
       }

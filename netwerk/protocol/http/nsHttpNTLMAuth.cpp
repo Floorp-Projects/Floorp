@@ -23,6 +23,7 @@
 #ifdef XP_WIN
 #include "nsIChannel.h"
 #include "nsIX509Cert.h"
+#include "nsISSLStatus.h"
 #include "nsITransportSecurityInfo.h"
 #endif
 #include "mozilla/Attributes.h"
@@ -338,8 +339,13 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
             do_QueryInterface(security);
 
         if (mUseNative && secInfo) {
+            nsCOMPtr<nsISSLStatus> status;
+            rv = secInfo->GetSSLStatus(getter_AddRefs(status));
+            if (NS_FAILED(rv))
+                return rv;
+
             nsCOMPtr<nsIX509Cert> cert;
-            rv = secInfo->GetServerCert(getter_AddRefs(cert));
+            rv = status->GetServerCert(getter_AddRefs(cert));
             if (NS_FAILED(rv))
                 return rv;
 

@@ -1,0 +1,64 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIX509Cert;
+interface nsIX509CertList;
+
+[scriptable, uuid(fa9ba95b-ca3b-498a-b889-7c79cf28fee8)]
+interface nsISSLStatus : nsISupports {
+  readonly attribute nsIX509Cert serverCert;
+  readonly attribute nsIX509CertList failedCertChain;
+  readonly attribute nsIX509CertList succeededCertChain;
+
+  [must_use]
+  readonly attribute ACString cipherName;
+  [must_use]
+  readonly attribute unsigned long keyLength;
+  [must_use]
+  readonly attribute unsigned long secretKeyLength;
+  [must_use]
+  readonly attribute ACString keaGroupName;
+  [must_use]
+  readonly attribute ACString signatureSchemeName;
+
+  const short SSL_VERSION_3   = 0;
+  const short TLS_VERSION_1   = 1;
+  const short TLS_VERSION_1_1 = 2;
+  const short TLS_VERSION_1_2 = 3;
+  const short TLS_VERSION_1_3 = 4;
+  [must_use]
+  readonly attribute unsigned short protocolVersion;
+
+  const short CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE          = 0;
+  const short CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT        = 5;
+  const short CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS  = 6;
+  const short CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS = 7;
+  [must_use]
+  readonly attribute unsigned short certificateTransparencyStatus;
+
+  [must_use]
+  readonly attribute boolean isDomainMismatch;
+  [must_use]
+  readonly attribute boolean isNotValidAtThisTime;
+
+  /* Note: To distinguish between
+   *         "unstrusted because missing or untrusted issuer"
+   *       and
+   *         "untrusted because self signed"
+   *       query nsIX509Cert::isSelfSigned
+   */
+  [must_use]
+  readonly attribute boolean isUntrusted;
+
+  /**
+   * True only if (and after) serverCert was successfully validated as
+   * Extended Validation (EV).
+   */
+  [must_use]
+  readonly attribute boolean isExtendedValidation;
+};

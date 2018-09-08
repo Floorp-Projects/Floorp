@@ -12,6 +12,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsISSLStatus.h"
 #include "nsISecurityEventSink.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIWebProgress.h"
@@ -223,14 +224,28 @@ nsSecureBrowserUIImpl::UpdateStateAndSecurityInfo(nsIChannel* channel,
     if (NS_FAILED(rv)) {
       return rv;
     }
-    bool isEV;
-    rv = mTopLevelSecurityInfo->GetIsExtendedValidation(&isEV);
+    nsCOMPtr<nsISSLStatus> sslStatus;
+    rv = mTopLevelSecurityInfo->GetSSLStatus(getter_AddRefs(sslStatus));
     if (NS_FAILED(rv)) {
       return rv;
     }
-    if (isEV) {
-      MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug, ("  is EV"));
-      mState |= STATE_IDENTITY_EV_TOPLEVEL;
+    if (!sslStatus) {
+      MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+              ("  no sslStatus -> setting state to not secure"));
+      mState = STATE_IS_INSECURE;
+      mTopLevelSecurityInfo = nullptr;
+    } else {
+      MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+              ("  have sslStatus %p", sslStatus.get()));
+      bool isEV;
+      rv = sslStatus->GetIsExtendedValidation(&isEV);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      if (isEV) {
+        MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug, ("  is EV"));
+        mState |= STATE_IDENTITY_EV_TOPLEVEL;
+      }
     }
   } else {
     mState = STATE_IS_INSECURE;

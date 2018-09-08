@@ -619,8 +619,9 @@ CertOverrideListener.prototype = {
 
   QueryInterface: ChromeUtils.generateQI(["nsIBadCertListener2", "nsIInterfaceRequestor"]),
 
-  notifyCertProblem(socketInfo, secInfo, targetHost) {
-    var cert = secInfo.serverCert;
+  notifyCertProblem(socketInfo, sslStatus, targetHost) {
+    var cert = sslStatus.QueryInterface(Ci.nsISSLStatus)
+                        .serverCert;
     var cos = Cc["@mozilla.org/security/certoverride;1"].
               getService(Ci.nsICertOverrideService);
     cos.rememberValidityOverride(this.host, -1, cert, this.bits, false);

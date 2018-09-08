@@ -488,7 +488,7 @@ RESTRequest.prototype = {
 
   /** nsIBadCertListener2 **/
 
-  notifyCertProblem(socketInfo, secInfo, targetHost) {
+  notifyCertProblem(socketInfo, sslStatus, targetHost) {
     this._log.warn("Invalid HTTPS certificate encountered!");
     // Suppress invalid HTTPS certificate warnings in the UI.
     // (The request will still fail.)
