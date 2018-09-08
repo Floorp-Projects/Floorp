@@ -69,10 +69,6 @@ toolbarbutton:-moz-lwtheme:not(:hover):not([checked="true"]):not([open="true"]):
 
 .toolbarbutton-menu-dropmarker {
   -moz-appearance: toolbarbutton-dropdown !important;
-  list-style-image: none;
-  -moz-image-region: auto;
-  padding: 0;
-  margin: 0;
 }
 
 .toolbarbutton-menu-dropmarker[disabled="true"] {
