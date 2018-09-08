@@ -80,6 +80,11 @@ public:
 
   uint32_t GetLength() const { return mLength; }
 
+  operator mozilla::Span<const char16_t>() const
+  {
+    return mozilla::MakeSpan(static_cast<const char16_t*>(GetUTF16String()), GetLength());
+  }
+
   void ToString(nsAString& aString) const;
   void ToUTF8String(nsACString& aString) const;
 
