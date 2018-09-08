@@ -10,5 +10,6 @@ DevToolsModules(
     'FlexContainerProperties.js',
     'FlexItem.js',
     'FlexItemList.js',
+    'FlexItemSelector.js',
     'FlexItemSizingProperties.js',
 )

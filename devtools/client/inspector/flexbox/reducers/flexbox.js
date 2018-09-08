@@ -19,6 +19,8 @@ const INITIAL_FLEXBOX = {
   color: "",
   // An array of flex items belonging to the current flex container.
   flexItems: [],
+  // The NodeFront actor ID  of the flex item to display the flex item sizing properties.
+  flexItemShown: null,
   // Whether or not the flexbox highlighter is highlighting the flex container.
   highlighted: false,
   // The NodeFront of the flex container.
@@ -34,18 +36,11 @@ const reducers = {
   },
 
   [TOGGLE_FLEX_ITEM_SHOWN](flexbox, { nodeFront }) {
-    return Object.assign({}, flexbox, {
-      flexItems: flexbox.flexItems.map(flexItem => {
-        if (flexItem.nodeFront !== nodeFront) {
-          return Object.assign({}, flexItem, {
-            shown: false,
-          });
-        }
+    const { flexItems } = flexbox;
+    const flexItemShown = flexItems.find(item => item.nodeFront === nodeFront);
 
-        return Object.assign({}, flexItem, {
-          shown: !flexItem.shown,
-        });
-      })
+    return Object.assign({}, flexbox, {
+      flexItemShown: flexItemShown ? flexItemShown.nodeFront.actorID : null,
     });
   },
 
