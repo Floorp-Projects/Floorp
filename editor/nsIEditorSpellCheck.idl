@@ -6,7 +6,6 @@
 #include "nsISupports.idl"
 
 interface nsIEditor;
-interface nsITextServicesFilter;
 interface nsIEditorSpellCheckCallback;
 
 [scriptable, uuid(a171c25f-e4a8-4d08-adef-b797e6377bdc)]
@@ -130,14 +129,15 @@ interface nsIEditorSpellCheck : nsISupports
    */
   void          UninitSpellChecker();
 
+  const unsigned long FILTERTYPE_NORMAL = 1;
+  const unsigned long FILTERTYPE_MAIL = 2;
+
   /**
    * Used to filter the content (for example, to skip blockquotes in email from
    * spellchecking. Call this before calling InitSpellChecker; calling it
    * after initialization will have no effect.
-   *
-   * @see nsITextServicesDocument::setFilter
    */
-  void          setFilter(in nsITextServicesFilter filter);
+  void          setFilterType(in unsigned long filterType);
 
   /**
    * Like CheckCurrentWord, checks the word you give it, returning true if it's

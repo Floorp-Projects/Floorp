@@ -7,7 +7,6 @@
 #define nsComposeTxtSrvFilter_h__
 
 #include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS
-#include "nsITextServicesFilter.h"
 
 /**
  * This class implements a filter interface, that enables
@@ -16,16 +15,13 @@
  * This filter is used to skip over various form control nodes and
  * mail's cite nodes
  */
-class nsComposeTxtSrvFilter final : public nsITextServicesFilter
+class nsComposeTxtSrvFilter final : public nsISupports
 {
 public:
   nsComposeTxtSrvFilter();
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS
-
-  // nsITextServicesFilter
-  NS_DECL_NSITEXTSERVICESFILTER
 
   // Helper - Intializer
   void Init(bool aIsForMail) { mIsForMail = aIsForMail; }

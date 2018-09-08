@@ -16,7 +16,7 @@ nsComposeTxtSrvFilter::nsComposeTxtSrvFilter() :
 {
 }
 
-NS_IMPL_ISUPPORTS(nsComposeTxtSrvFilter, nsITextServicesFilter)
+NS_IMPL_ISUPPORTS0(nsComposeTxtSrvFilter)
 
 bool
 nsComposeTxtSrvFilter::Skip(nsINode* aNode) const
