@@ -69,11 +69,6 @@ protected:
                                                nsISupports* aContext,
                                                uint32_t* aControllerId);
 
-  nsresult        SetupEditorCommandController(const char *aControllerClassName,
-                                               mozIDOMWindowProxy* aWindow,
-                                               nsISupports *aContext,
-                                               uint32_t *aControllerId);
-
   nsresult        SetContextOnControllerById(nsIControllers* aControllers,
                                             nsISupports* aContext,
                                             uint32_t aID);
