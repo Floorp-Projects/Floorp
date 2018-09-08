@@ -58,8 +58,6 @@ LOCAL_INCLUDES += [
     '/netwerk/protocol/http',
 ]
 
-BROWSER_CHROME_MANIFESTS += [ 'tests/browser.ini' ]
-
 FINAL_LIBRARY = 'xul'
 
 include('/ipc/chromium/chromium-config.mozbuild')
