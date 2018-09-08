@@ -1989,7 +1989,7 @@ var gDiscoverView = {
     }
 
     gPendingInitializations++;
-    let aAddons = await AddonManager.getAllAddons();
+    let aAddons = await AddonManager.getAddonsByTypes(["extension", "theme"]);
     var list = {};
     for (let addon of aAddons) {
       var prefName = PREF_GETADDONS_CACHE_ID_ENABLED.replace("%ID%",
