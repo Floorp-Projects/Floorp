@@ -168,7 +168,7 @@ UITimerCallback::Notify(nsITimer* aTimer)
 NS_IMETHODIMP
 UITimerCallback::GetName(nsACString& aName)
 {
-  aName.AssignASCII("UITimerCallback_timer");
+  aName.AssignLiteral("UITimerCallback_timer");
   return NS_OK;
 }
 
@@ -6200,7 +6200,7 @@ EventStateManager::WheelPrefs::HonoursRootForAutoDir()
 }
 
 // static
-Maybe<layers::APZWheelAction> 
+Maybe<layers::APZWheelAction>
 EventStateManager::APZWheelActionFor(const WidgetWheelEvent* aEvent)
 {
   if (aEvent->mMessage != eWheel) {

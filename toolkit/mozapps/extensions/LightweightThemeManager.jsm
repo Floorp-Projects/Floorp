@@ -120,6 +120,10 @@ var LightweightThemeManager = {
   // will always show up at the top of the list.
   _builtInThemes: new Map(),
 
+  isBuiltIn(theme) {
+    return this._builtInThemes.has(theme.id);
+  },
+
   get usedThemes() {
     let themes = [];
     try {
@@ -680,6 +684,14 @@ AddonWrapper.prototype = {
 
   get foreignInstall() {
     return false;
+  },
+
+  get installTelemetryInfo() {
+    if (LightweightThemeManager.isBuiltIn(themeFor(this))) {
+      return {source: "builtin-theme"};
+    }
+
+    return {source: "lightweight-theme"};
   },
 
   uninstall() {

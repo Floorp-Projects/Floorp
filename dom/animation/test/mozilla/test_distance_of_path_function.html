@@ -1,0 +1,140 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src='/resources/testharness.js'></script>
+<script src='/resources/testharnessreport.js'></script>
+<script src='../testcommon.js'></script>
+<div id="log"></div>
+<script type='text/javascript'>
+'use strict';
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'offset-path', 'none', 'none');
+  assert_equals(dist, 0, 'none and none');
+}, 'none and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'offset-path', 'path("M 10 10")', 'none');
+  assert_equals(dist, 0, 'path("M 10 10") and none');
+}, 'Path and none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'offset-path',
+                         'path("M 10 10 H 10")',
+                         'path("M 10 10 H 10 H 10")');
+  assert_equals(dist, 0, 'path("M 10 10 H 10") and ' +
+                         'path("M 10 10 H 10 H 10")');
+}, 'Mismatched path functions');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'offset-path',
+                         'path("M 10 10")',
+                         'path("M 20 20")');
+  assert_equals(dist,
+                Math.sqrt(10 * 10 * 2),
+                'path("M 10 10") and path("M 30 30")');
+}, 'The moveto commands');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'offset-path',
+                         'path("M 0 0 L 10 10")',
+                         'path("M 0 0 L 20 20")');
+  assert_equals(dist,
+                Math.sqrt(10 * 10 * 2),
+                'path("M 0 0 L 10 10") and path("M 0 0 L 20 20")');
+}, 'The lineto commands');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'offset-path',
+                         'path("M 0 0 H 10")',
+                         'path("M 0 0 H 20")');
+  assert_equals(dist, 10, 'path("M 0 0 H 10") and path("M 0 0 H 20")');
+}, 'The horizontal lineto commands');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'offset-path',
+                         'path("M 0 0 V 10")',
+                         'path("M 0 0 V 20")');
+  assert_equals(dist, 10, 'path("M 0 0 V 10") and path("M 0 0 V 20")');
+}, 'The vertical lineto commands');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'offset-path',
+                         'path("M 0 0 C 10 10 20 20 30 30")',
+                         'path("M 0 0 C 20 20 40 40 0 0")');
+  assert_equals(dist,
+                Math.sqrt(10 * 10 * 2 + 20 * 20 * 2 + 30 * 30 * 2),
+                'path("M 0 0 C 10 10 20 20 30 30") and ' +
+                'path("M 0 0 C 20 20 40 40 0 0")');
+}, 'The cubic Bézier curve commands');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'offset-path',
+                         'path("M 0 0 S 20 20 30 30")',
+                         'path("M 0 0 S 40 40 0 0")');
+  assert_equals(dist,
+                Math.sqrt(20 * 20 * 2 + 30 * 30 * 2),
+                'path("M 0 0 S 20 20 30 30") and ' +
+                'path("M 0 0 S 40 40 0 0")');
+}, 'The smooth cubic Bézier curve commands');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'offset-path',
+                         'path("M 0 0 Q 10 10 30 30")',
+                         'path("M 0 0 Q 20 20 0 0")');
+  assert_equals(dist,
+                Math.sqrt(10 * 10 * 2 + 30 * 30 * 2),
+                'path("M 0 0 Q 10 10 30 30") and ' +
+                'path("M 0 0 Q 20 20 0 0")');
+}, 'The quadratic cubic Bézier curve commands');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'offset-path',
+                         'path("M 0 0 T 30 30")',
+                         'path("M 0 0 T 0 0")');
+  assert_equals(dist,
+                Math.sqrt(30 * 30 * 2),
+                'path("M 0 0 T 30 30") and ' +
+                'path("M 0 0 T 0 0")');
+}, 'The smooth quadratic cubic Bézier curve commands');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'offset-path',
+                         'path("M 0 0 A 5 5 10 0 1 30 30")',
+                         'path("M 0 0 A 4 4 5 0 0 20 20")');
+  assert_equals(dist,
+                Math.sqrt(1 * 1 * 2 + // radii
+                          5 * 5 +     // angle
+                          1 * 1 +     // flag
+                          10 * 10 * 2),
+                'path("M 0 0 A 5 5 10 0 1 30 30") and ' +
+                'path("M 0 0 A 4 4 5 0 0 20 20")');
+}, 'The elliptical arc curve commands');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'offset-path',
+                         'path("m 10 20 h 30 v 60 h 10 v -10 l 110 60")',
+                   // == 'path("M  10  20 H  40 V  80 H  50 V  70 L 160 130")'
+                         'path("M 130 140 H 120 V 160 H 130 V 150 L 200 170")');
+  assert_equals(dist,
+                Math.sqrt(120 * 120 * 2 +
+                          80 * 80 * 4 +
+                          40 * 40 * 2),
+                'path("m 10 20 h 30 v 60 h 10 v -10 l 110 60") and ' +
+                'path("M 130 140 H 120 V 160 H 130 V 150 L 200 170")');
+}, 'The distance of paths with absolute and relative coordinates');
+
+</script>
+</html>

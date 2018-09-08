@@ -169,6 +169,7 @@ typedef nsCString EMECodecString;
 static NS_NAMED_LITERAL_CSTRING(EME_CODEC_AAC, "aac");
 static NS_NAMED_LITERAL_CSTRING(EME_CODEC_OPUS, "opus");
 static NS_NAMED_LITERAL_CSTRING(EME_CODEC_VORBIS, "vorbis");
+static NS_NAMED_LITERAL_CSTRING(EME_CODEC_FLAC, "flac");
 static NS_NAMED_LITERAL_CSTRING(EME_CODEC_H264, "h264");
 static NS_NAMED_LITERAL_CSTRING(EME_CODEC_VP8, "vp8");
 static NS_NAMED_LITERAL_CSTRING(EME_CODEC_VP9, "vp9");
@@ -184,6 +185,9 @@ ToEMEAPICodecString(const nsString& aCodec)
   }
   if (aCodec.EqualsLiteral("vorbis")) {
     return EME_CODEC_VORBIS;
+  }
+  if (aCodec.EqualsLiteral("flac")) {
+    return EME_CODEC_FLAC;
   }
   if (IsH264CodecString(aCodec)) {
     return EME_CODEC_H264;
@@ -291,6 +295,8 @@ GetSupportedKeySystems()
       clearkey.mMP4.SetCanDecrypt(EME_CODEC_H264);
 #endif
       clearkey.mMP4.SetCanDecrypt(EME_CODEC_AAC);
+      clearkey.mMP4.SetCanDecrypt(EME_CODEC_FLAC);
+      clearkey.mMP4.SetCanDecrypt(EME_CODEC_OPUS);
       if (Preferences::GetBool("media.eme.vp9-in-mp4.enabled", false)) {
         clearkey.mMP4.SetCanDecrypt(EME_CODEC_VP9);
       }
@@ -328,6 +334,8 @@ GetSupportedKeySystems()
 #elif !defined(MOZ_WIDGET_ANDROID)
       widevine.mMP4.SetCanDecrypt(EME_CODEC_AAC);
 #endif
+      widevine.mMP4.SetCanDecrypt(EME_CODEC_FLAC);
+      widevine.mMP4.SetCanDecrypt(EME_CODEC_OPUS);
 
 #if defined(MOZ_WIDGET_ANDROID)
       using namespace mozilla::java;
@@ -346,6 +354,8 @@ GetSupportedKeySystems()
         { nsCString(VIDEO_MP4), EME_CODEC_H264, MediaDrmProxy::AVC, &widevine.mMP4 },
         { nsCString(VIDEO_MP4), EME_CODEC_VP9, MediaDrmProxy::AVC, &widevine.mMP4 },
         { nsCString(AUDIO_MP4), EME_CODEC_AAC, MediaDrmProxy::AAC, &widevine.mMP4 },
+        { nsCString(AUDIO_MP4), EME_CODEC_FLAC, MediaDrmProxy::FLAC, &widevine.mMP4 },
+        { nsCString(AUDIO_MP4), EME_CODEC_OPUS, MediaDrmProxy::OPUS, &widevine.mMP4 },
         { nsCString(VIDEO_WEBM), EME_CODEC_VP8, MediaDrmProxy::VP8, &widevine.mWebM },
         { nsCString(VIDEO_WEBM), EME_CODEC_VP9, MediaDrmProxy::VP9, &widevine.mWebM},
         { nsCString(AUDIO_WEBM), EME_CODEC_VORBIS, MediaDrmProxy::VORBIS, &widevine.mWebM},
@@ -493,7 +503,8 @@ GetCodecType(const EMECodecString& aCodec)
 {
   if (aCodec.Equals(EME_CODEC_AAC) ||
       aCodec.Equals(EME_CODEC_OPUS) ||
-      aCodec.Equals(EME_CODEC_VORBIS)) {
+      aCodec.Equals(EME_CODEC_VORBIS) ||
+      aCodec.Equals(EME_CODEC_FLAC)) {
     return Audio;
   }
   if (aCodec.Equals(EME_CODEC_H264) ||

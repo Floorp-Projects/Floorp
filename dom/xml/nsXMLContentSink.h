@@ -213,7 +213,7 @@ protected:
   // Holds the children in the prolog until the root element is added, after which they're
   // inserted in the document. However, if we're doing an XSLT transform this will
   // actually hold all the children of the source document, until the transform is
-  // finished. After the transform is finished we'll just discard the children. 
+  // finished. After the transform is finished we'll just discard the children.
   nsTArray<nsCOMPtr<nsIContent>> mDocumentChildren;
 
   static const int NS_ACCUMULATION_BUFFER_SIZE = 4096;

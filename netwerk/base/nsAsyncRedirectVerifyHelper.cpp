@@ -236,7 +236,7 @@ nsAsyncRedirectVerifyHelper::InitCallback()
 NS_IMETHODIMP
 nsAsyncRedirectVerifyHelper::GetName(nsACString& aName)
 {
-    aName.AssignASCII("nsAsyncRedirectVerifyHelper");
+    aName.AssignLiteral("nsAsyncRedirectVerifyHelper");
     return NS_OK;
 }
 

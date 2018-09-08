@@ -266,7 +266,7 @@ nsTreeColumn::GetX(mozilla::ErrorResult& aRv)
     aRv.Throw(NS_ERROR_FAILURE);
     return 0;
   }
-  
+
   return nsPresContext::AppUnitsToIntCSSPixels(frame->GetRect().x);
 }
 

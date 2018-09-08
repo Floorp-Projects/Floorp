@@ -30,7 +30,7 @@ nsHtml5ViewSourceUtils::NewBodyAttributes()
   int32_t tabSize = mozilla::Preferences::GetInt("view_source.tab_size", 4);
   if (tabSize > 0) {
     nsString style;
-    style.AssignASCII("-moz-tab-size: ");
+    style.AssignLiteral("-moz-tab-size: ");
     style.AppendInt(tabSize);
     bodyAttrs->addAttribute(
       nsHtml5AttributeName::ATTR_STYLE, nsHtml5String::FromString(style), -1);

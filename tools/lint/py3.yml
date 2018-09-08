@@ -44,7 +44,6 @@ py3:
         - tools/rb
         - tools/update-packaging
         - xpcom/idl-parser
-        - xpcom/typelib
     extensions: ['py']
     support-files:
         - 'tools/lint/python/*compat*'

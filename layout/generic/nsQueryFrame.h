@@ -121,7 +121,7 @@ private:
   {
     static Dst* QueryFrame(Src* aFrame) { return nullptr; }
   };
-  
+
   // Specialization for any nsIFrame type to any nsIFrame type -- if the source
   // instance's mClass matches kFrameIID of the destination type then
   // downcasting is safe.

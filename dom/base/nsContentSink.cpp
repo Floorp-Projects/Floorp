@@ -1669,6 +1669,6 @@ nsContentSink::NotifyDocElementCreated(nsIDocument* aDoc)
 NS_IMETHODIMP
 nsContentSink::GetName(nsACString& aName)
 {
-  aName.AssignASCII("nsContentSink_timer");
+  aName.AssignLiteral("nsContentSink_timer");
   return NS_OK;
 }

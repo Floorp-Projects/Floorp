@@ -376,7 +376,7 @@ nsDisplayXULTextBox::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aB
   gfx::Point deviceOffset = LayoutDevicePoint::FromAppUnits(
       bounds.TopLeft(), appUnitsPerDevPixel).ToUnknownPoint();
 
-  RefPtr<mozilla::layout::TextDrawTarget> textDrawer = 
+  RefPtr<mozilla::layout::TextDrawTarget> textDrawer =
       new mozilla::layout::TextDrawTarget(aBuilder, aResources, aSc, aManager, this, bounds);
   RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer, deviceOffset);
 

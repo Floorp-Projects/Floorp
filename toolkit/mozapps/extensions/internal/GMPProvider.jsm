@@ -239,6 +239,10 @@ GMPWrapper.prototype = {
     return false;
   },
 
+  get installTelemetryInfo() {
+    return {source: "gmp-plugin"};
+  },
+
   isCompatibleWith(aAppVersion, aPlatformVersion) {
     return true;
   },

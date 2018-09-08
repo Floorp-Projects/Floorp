@@ -28,6 +28,8 @@ function confirm_install(panel) {
 }
 
 function install_ended(install, addon) {
+  Assert.deepEqual(install.installTelemetryInfo, {source: "test-host", method: "installTrigger"},
+                   "Got the expected install.installTelemetryInfo");
   install.cancel();
 }
 

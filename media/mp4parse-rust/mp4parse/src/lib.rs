@@ -1992,15 +1992,15 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                 if (name != BoxType::MP4AudioSampleEntry &&
                     name != BoxType::ProtectedAudioSampleEntry) ||
                     codec_specific.is_some() {
-                        return Err(Error::InvalidData("malformed audio sample entry"));
+                    return Err(Error::InvalidData("malformed audio sample entry"));
                 }
-
                 let esds = read_esds(&mut b)?;
                 codec_type = esds.audio_codec;
                 codec_specific = Some(AudioCodecSpecific::ES_Descriptor(esds));
             }
             BoxType::FLACSpecificBox => {
-                if name != BoxType::FLACSampleEntry ||
+                if (name != BoxType::FLACSampleEntry &&
+                    name != BoxType::ProtectedAudioSampleEntry) ||
                     codec_specific.is_some() {
                     return Err(Error::InvalidData("malformed audio sample entry"));
                 }
@@ -2009,7 +2009,8 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                 codec_specific = Some(AudioCodecSpecific::FLACSpecificBox(dfla));
             }
             BoxType::OpusSpecificBox => {
-                if name != BoxType::OpusSampleEntry ||
+                if (name != BoxType::OpusSampleEntry &&
+                    name != BoxType::ProtectedAudioSampleEntry) ||
                     codec_specific.is_some() {
                     return Err(Error::InvalidData("malformed audio sample entry"));
                 }

@@ -591,7 +591,7 @@ PendingAlertsCollector::Notify(nsITimer*) {
 NS_IMETHODIMP
 PendingAlertsCollector::GetName(nsACString& aName)
 {
-  aName.AssignASCII("PendingAlertsCollector_timer");
+  aName.AssignLiteral("PendingAlertsCollector_timer");
   return NS_OK;
 }
 

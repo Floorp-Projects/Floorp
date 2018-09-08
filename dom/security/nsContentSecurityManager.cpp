@@ -67,7 +67,7 @@ nsContentSecurityManager::AllowTopLevelNavigationToDataURI(nsIChannel* aChannel)
   NS_ENSURE_SUCCESS(rv, true);
   nsAutoCString contentType;
   bool base64;
-  rv = nsDataHandler::ParseURI(spec, contentType, nullptr, 
+  rv = nsDataHandler::ParseURI(spec, contentType, nullptr,
                                base64, nullptr);
   NS_ENSURE_SUCCESS(rv, true);
 

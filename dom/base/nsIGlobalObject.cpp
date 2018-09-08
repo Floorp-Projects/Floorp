@@ -226,7 +226,7 @@ nsPIDOMWindowInner*
 nsIGlobalObject::AsInnerWindow()
 {
   if (MOZ_LIKELY(mIsInnerWindow)) {
-    return static_cast<nsPIDOMWindowInner*>(static_cast<nsGlobalWindowInner*>(this)); 
+    return static_cast<nsPIDOMWindowInner*>(static_cast<nsGlobalWindowInner*>(this));
   }
   return nullptr;
 }

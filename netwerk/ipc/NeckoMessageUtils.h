@@ -32,7 +32,7 @@ struct Permission
     , expireType(0)
     , expireTime(0)
   {}
-  
+
   Permission(const nsCString& aOrigin,
              const nsCString& aType,
              const uint32_t aCapability,

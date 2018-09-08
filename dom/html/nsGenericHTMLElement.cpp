@@ -550,7 +550,7 @@ nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(
          IsHTMLElement(nsGkAtoms::area);
 }
 
-void 
+void
 nsGenericHTMLElement::GetEventTargetParentForAnchors(EventChainPreVisitor& aVisitor)
 {
   nsGenericHTMLElementBase::GetEventTargetParent(aVisitor);
