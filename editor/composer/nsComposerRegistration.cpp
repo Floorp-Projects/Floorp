@@ -81,33 +81,16 @@ nsHTMLEditorDocStateControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
   return controller->QueryInterface(aIID, aResult);
 }
 
-// Tere we make an instance of the controller that holds composer commands.
-// We set it up with a singleton command table.
-static nsresult
-nsHTMLEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-  nsCOMPtr<nsIController> controller;
-  nsresult rv = CreateControllerWithSingletonCommandTable(
-                  nsControllerCommandTable::CreateHTMLEditorCommandTable(),
-                  getter_AddRefs(controller));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return controller->QueryInterface(aIID, aResult);
-}
-
-NS_DEFINE_NAMED_CID(NS_HTMLEDITORCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORDOCSTATECONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORSPELLCHECK_CID);
 
 static const mozilla::Module::CIDEntry kComposerCIDs[] = {
-  { &kNS_HTMLEDITORCONTROLLER_CID, false, nullptr, nsHTMLEditorControllerConstructor },
   { &kNS_EDITORDOCSTATECONTROLLER_CID, false, nullptr, nsHTMLEditorDocStateControllerConstructor },
   { &kNS_EDITORSPELLCHECK_CID, false, nullptr, EditorSpellCheckConstructor },
   { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kComposerContracts[] = {
-  { "@mozilla.org/editor/htmleditorcontroller;1", &kNS_HTMLEDITORCONTROLLER_CID },
   { "@mozilla.org/editor/editordocstatecontroller;1", &kNS_EDITORDOCSTATECONTROLLER_CID },
   { "@mozilla.org/editor/editorspellchecker;1", &kNS_EDITORSPELLCHECK_CID },
   { nullptr }

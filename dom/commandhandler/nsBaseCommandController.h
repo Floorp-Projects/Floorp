@@ -33,6 +33,7 @@ public:
   static already_AddRefed<nsIController> CreateWindowController();
   static already_AddRefed<nsIController> CreateEditorController();
   static already_AddRefed<nsIController> CreateEditingController();
+  static already_AddRefed<nsIController> CreateHTMLEditorController();
 
 protected:
   virtual ~nsBaseCommandController();
