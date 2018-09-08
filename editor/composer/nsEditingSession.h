@@ -31,11 +31,6 @@ class mozIDOMWindowProxy;
 class nsIDOMWindow;
 class nsISupports;
 class nsITimer;
-
-#define NS_EDITINGSESSION_CID                            \
-{ 0xbc26ff01, 0xf2bd, 0x11d4, { 0xa7, 0x3c, 0xe5, 0xa4, 0xb5, 0xa8, 0xbd, 0xfc } }
-
-
 class nsIChannel;
 class nsIControllers;
 class nsIDocShell;
