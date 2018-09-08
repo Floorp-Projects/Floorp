@@ -265,3 +265,23 @@ nsBaseCommandController::CreateHTMLEditorController()
   return controller.forget();
 }
 
+already_AddRefed<nsIController>
+nsBaseCommandController::CreateHTMLEditorDocStateController()
+{
+  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
+
+  nsCOMPtr<nsIControllerCommandTable> composerCommandTable =
+    nsControllerCommandTable::CreateHTMLEditorDocStateCommandTable();
+
+  // this guy is a singleton, so make it immutable
+  composerCommandTable->MakeImmutable();
+
+  nsresult rv;
+  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  rv = controllerContext->Init(composerCommandTable);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return controller.forget();
+}
