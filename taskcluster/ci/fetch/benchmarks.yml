@@ -6,6 +6,14 @@ d8:
     sha256: 0aa1c4e630de78373185fc1c0fa34bc87826f63fd4cbb664668891d6f6a6b24e
     size: 20578358
 
+octane:
+  description: Octane benchmark
+  fetch:
+    type: static-url
+    url: https://github.com/mozilla/perf-automation/releases/download/octane-v1/octane-0f5b8d48d4a9.zip
+    sha256: 38425ee1abfc5feca178b2f60fbd82b5873897c345112a85359be00024402f9f
+    size: 1816138
+
 unity-webgl:
   description: unity-webgl benchmark
   fetch:
