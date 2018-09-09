@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# cctools sometimes needs to be rebuilt when clang is modified.
+# Until bug 1471905 is addressed, increase the following number
+# when a forced rebuild of cctools is necessary: 1
+
 set -x -e -v
 
 # This script is for building cctools (Apple's binutils) for Linux using
@@ -35,7 +40,7 @@ cd $WORKSPACE/build/src
 cd $CROSSTOOLS_CCTOOLS_DIR
 export CC=$CLANG_DIR/bin/clang
 export CXX=$CLANG_DIR/bin/clang++
-export LDFLAGS=-lpthread
+export LDFLAGS="-lpthread -Wl,-rpath-link,$CLANG_DIR/lib"
 ./autogen.sh
 ./configure --prefix=$CROSSTOOLS_BUILD_DIR --target=x86_64-apple-darwin11 --with-llvm-config=$CLANG_DIR/bin/llvm-config
 
