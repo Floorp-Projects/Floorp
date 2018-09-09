@@ -49,7 +49,6 @@
 #include "vm/UnboxedObject-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using mozilla::Abs;
 using mozilla::ArrayLength;
@@ -3755,7 +3754,7 @@ static const ClassOps ArrayObjectClassOps = {
 };
 
 static const ClassSpec ArrayObjectClassSpec = {
-    GenericCreateConstructor<ArrayConstructor, 1, AllocKind::FUNCTION, &jit::JitInfo_Array>,
+    GenericCreateConstructor<ArrayConstructor, 1, gc::AllocKind::FUNCTION, &jit::JitInfo_Array>,
     CreateArrayPrototype,
     array_static_methods,
     array_static_props,

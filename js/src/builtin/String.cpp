@@ -60,7 +60,6 @@
 #include "vm/TypeInference-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using JS::Symbol;
 using JS::SymbolCode;
@@ -3642,7 +3641,7 @@ js::InitStringClass(JSContext* cx, Handle<GlobalObject*> global)
     /* Now create the String function. */
     RootedFunction ctor(cx);
     ctor = GlobalObject::createConstructor(cx, StringConstructor, cx->names().String, 1,
-                                           AllocKind::FUNCTION, &jit::JitInfo_String);
+                                           gc::AllocKind::FUNCTION, &jit::JitInfo_String);
     if (!ctor)
         return nullptr;
 

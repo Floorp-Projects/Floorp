@@ -46,7 +46,6 @@
 #include "vm/StringType-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using mozilla::ArrayEqual;
 using mozilla::DebugOnly;

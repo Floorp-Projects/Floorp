@@ -108,7 +108,6 @@
 #include "vm/StringType-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using mozilla::Maybe;
 using mozilla::PodCopy;
@@ -1323,7 +1322,7 @@ JS::IsIdleGCTaskNeeded(JSRuntime* rt) {
 
 JS_PUBLIC_API(void)
 JS::RunIdleTimeGCTask(JSRuntime* rt) {
-  GCRuntime& gc = rt->gc;
+  gc::GCRuntime& gc = rt->gc;
   if (gc.nursery().needIdleTimeCollection()) {
     gc.minorGC(JS::gcreason::IDLE_TIME_COLLECTION);
   }
@@ -1340,7 +1339,7 @@ JS_GC(JSContext* cx)
 JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext* cx)
 {
-    GCRuntime& gc = cx->runtime()->gc;
+    gc::GCRuntime& gc = cx->runtime()->gc;
     gc.maybeGC(cx->zone());
 }
 
@@ -6037,7 +6036,7 @@ JS_DecodeBytes(JSContext* cx, const char* src, size_t srclen, char16_t* dst, siz
     if (srclen > dstlen) {
         CopyAndInflateChars(dst, src, dstlen);
 
-        AutoSuppressGC suppress(cx);
+        gc::AutoSuppressGC suppress(cx);
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
         return false;
     }
