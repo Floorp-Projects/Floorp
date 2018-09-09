@@ -215,7 +215,7 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
 
     private void takeScreenshotOfTabsTrayAndErase() throws Exception {
         final UiObject mozillaImage = device.findObject(new UiSelector()
-                .resourceId("download")
+                .descriptionContains("download icon")
                 .enabled(true));
 
         UiObject imageMenuTitle = device.findObject(new UiSelector()
@@ -232,10 +232,10 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
                 .text(getString(R.string.tabs_tray_action_erase))
                 .enabled(true));
 
-        Assert.assertTrue(mozillaImage.waitForExists(waitingTime));
+        assertTrue(mozillaImage.waitForExists(waitingTime));
         mozillaImage.dragTo(mozillaImage, 7);
         assertTrue(imageMenuTitle.waitForExists(waitingTime));
-        Assert.assertTrue(imageMenuTitle.exists());
+        assertTrue(imageMenuTitle.exists());
         Screengrab.screenshot("Image_Context_Menu");
 
         //Open a new tab

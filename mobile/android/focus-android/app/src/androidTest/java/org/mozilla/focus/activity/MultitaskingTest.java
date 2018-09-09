@@ -18,6 +18,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
+import org.mozilla.focus.helpers.TestHelper;
 import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.web.IWebView;
@@ -97,6 +98,7 @@ public class MultitaskingTest {
     public void testVisitingMultipleSites() {
         {
             // Load website: Erase button visible, Tabs button not
+            TestHelper.inlineAutocompleteEditText.waitForExists(TestHelper.waitingTime);
 
             navigateToMockWebServer(webServer, "tab1.html");
 

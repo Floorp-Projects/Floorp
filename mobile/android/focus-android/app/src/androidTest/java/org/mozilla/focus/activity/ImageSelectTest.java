@@ -31,8 +31,10 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
 import static android.support.test.espresso.action.ViewActions.click;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
+import static org.mozilla.focus.helpers.TestHelper.mDevice;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 @RunWith(AndroidJUnit4.class)
@@ -126,7 +128,6 @@ public class ImageSelectTest {
         }
     };
 
-
     @After
     public void tearDown() {
        mActivityTestRule.getActivity().finishAndRemoveTask();
@@ -148,30 +149,30 @@ public class ImageSelectTest {
         TestHelper.waitForWebSiteTitleLoad();
 
         // Find image and long tap it
+        rabbitImage.waitForExists(waitingTime);
+        assertTrue(rabbitImage.exists());
         rabbitImage.dragTo(rabbitImage, 10);
         imageMenuTitle.waitForExists(waitingTime);
-        Assert.assertTrue(imageMenuTitle.exists());
-        Assert.assertEquals(imageMenuTitleText.getText(), imagePath);
-        Assert.assertTrue(shareMenu.exists());
-        Assert.assertTrue(copyMenu.exists());
-        Assert.assertTrue(saveMenu.exists());
-        Assert.assertTrue(warning.exists());
+        assertTrue(imageMenuTitle.exists());
+        assertEquals(imageMenuTitleText.getText(), imagePath);
+        assertTrue(shareMenu.exists());
+        assertTrue(copyMenu.exists());
+        assertTrue(saveMenu.exists());
+        assertTrue(warning.exists());
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             copyMenu.click();
-        } else {
-            TestHelper.mDevice.pressBack();
-        }
 
-        // Erase browsing session
-        TestHelper.floatingEraseButton.perform(click());
-        TestHelper.erasedMsg.waitForExists(waitingTime);
-        Assert.assertTrue(TestHelper.erasedMsg.exists());
+            // Erase browsing session
+            TestHelper.floatingEraseButton.perform(click());
+            TestHelper.erasedMsg.waitForExists(waitingTime);
+            assertTrue(TestHelper.erasedMsg.exists());
 
-        // KeyEvent.KEYCODE_PASTE) requires API 24 or above
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            // KeyEvent.KEYCODE_PASTE) requires API 24 or above
             TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
             TestHelper.mDevice.pressKeyCode(KeyEvent.KEYCODE_PASTE);
-            Assert.assertEquals(TestHelper.inlineAutocompleteEditText.getText(), imagePath);
+            assertEquals(TestHelper.inlineAutocompleteEditText.getText(), imagePath);
+            mDevice.pressBack();
         }
     }
 
@@ -191,18 +192,19 @@ public class ImageSelectTest {
         TestHelper.progressBar.waitUntilGone(waitingTime);
 
         // Find image and long tap it
-        Assert.assertTrue(rabbitImage.exists());
+        rabbitImage.waitForExists(waitingTime);
+        assertTrue(rabbitImage.exists());
         rabbitImage.dragTo(rabbitImage, 10);
         imageMenuTitle.waitForExists(waitingTime);
-        Assert.assertTrue(shareMenu.exists());
-        Assert.assertTrue(copyMenu.exists());
-        Assert.assertTrue(saveMenu.exists());
+        assertTrue(shareMenu.exists());
+        assertTrue(copyMenu.exists());
+        assertTrue(saveMenu.exists());
         shareMenu.click();
 
         // For simulators, where apps are not installed, it'll take to message app
         TestHelper.shareMenuHeader.waitForExists(waitingTime);
-        Assert.assertTrue(TestHelper.shareMenuHeader.exists());
-        Assert.assertTrue(TestHelper.shareAppList.exists());
+        assertTrue(TestHelper.shareMenuHeader.exists());
+        assertTrue(TestHelper.shareAppList.exists());
         TestHelper.pressBackKey();
         TestHelper.floatingEraseButton.perform(click());
         TestHelper.erasedMsg.waitForExists(waitingTime);
@@ -221,7 +223,7 @@ public class ImageSelectTest {
 
         // Find image and long tap it
         rabbitImage.waitForExists(waitingTime);
-        Assert.assertTrue(rabbitImage.exists());
+        assertTrue(rabbitImage.exists());
         rabbitImage.dragTo(rabbitImage, 10);
         imageMenuTitle.waitForExists(waitingTime);
         Assert.assertTrue(imageMenuTitle.exists());
