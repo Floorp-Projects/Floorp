@@ -25,9 +25,3 @@ interface nsIBoxObject : nsISupports
   void setProperty(in wstring propertyName, in wstring propertyValue);
   void removeProperty(in wstring propertyName);
 };
-
-%{C++
-nsresult
-NS_NewBoxObject(nsIBoxObject** aResult);
-
-%}
