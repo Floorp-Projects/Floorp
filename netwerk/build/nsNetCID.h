@@ -576,16 +576,6 @@
     {0x9f, 0xd4, 0xe0, 0x65, 0xe8, 0x55, 0x68, 0xf4} \
 }
 
-#define NS_HTTPCHANNELAUTHPROVIDER_CONTRACTID \
-    "@mozilla.org/network/http-channel-auth-provider;1"
-#define NS_HTTPCHANNELAUTHPROVIDER_CID \
-{ /* 02f5a8d8-4ef3-48b1-b527-8a643056abbd */         \
-    0x02f5a8d8,                                      \
-    0x4ef3,                                          \
-    0x48b1,                                          \
-    {0xb5, 0x27, 0x8a, 0x64, 0x30, 0x56, 0xab, 0xbd} \
-}
-
 // component implementing nsIHttpPushListener.
 #define NS_HTTPPUSHLISTENER_CONTRACTID \
     "@mozilla.org/network/push-listener;1"
