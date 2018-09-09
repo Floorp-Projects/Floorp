@@ -39,7 +39,6 @@
 #include "nsXMLContentSerializer.h"
 #include "nsXHTMLContentSerializer.h"
 #include "nsContentAreaDragDrop.h"
-#include "nsBox.h"
 #include "nsIFrameTraversal.h"
 #include "nsLayoutCID.h"
 #include "nsStyleSheetService.h"
@@ -118,7 +117,6 @@ class nsIDocumentLoaderFactory;
  { /* 0DE2FBFA-6B7F-11D7-BBBA-0003938A9D96 */        \
   0x0DE2FBFA, 0x6B7F, 0x11D7, {0xBB, 0xBA, 0x00, 0x03, 0x93, 0x8A, 0x9D, 0x96} }
 
-#include "nsIBoxObject.h"
 #include "inDeepTreeWalker.h"
 
 #ifdef MOZ_XUL
@@ -286,13 +284,6 @@ Shutdown()
 nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
 #endif
 
-nsresult NS_NewBoxObject(nsIBoxObject** aResult);
-
-#ifdef MOZ_XUL
-nsresult NS_NewMenuBoxObject(nsIBoxObject** aResult);
-nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
-#endif
-
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
 already_AddRefed<nsIContentViewer> NS_NewContentViewer();
@@ -346,12 +337,6 @@ MAKE_CTOR(CreateNewLayoutDebugger,        nsILayoutDebugger,           NS_NewLay
 #endif
 
 MAKE_CTOR(CreateNewFrameTraversal,      nsIFrameTraversal,      NS_CreateFrameTraversal)
-MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
-
-#ifdef MOZ_XUL
-MAKE_CTOR(CreateNewMenuBoxObject,       nsIBoxObject,           NS_NewMenuBoxObject)
-MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
-#endif // MOZ_XUL
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDeepTreeWalker)
 
@@ -475,11 +460,6 @@ Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID,
 NS_DEFINE_NAMED_CID(NS_LAYOUT_DEBUGGER_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_FRAMETRAVERSAL_CID);
-NS_DEFINE_NAMED_CID(NS_BOXOBJECT_CID);
-#ifdef MOZ_XUL
-NS_DEFINE_NAMED_CID(NS_MENUBOXOBJECT_CID);
-NS_DEFINE_NAMED_CID(NS_TREEBOXOBJECT_CID);
-#endif // MOZ_XUL
 NS_DEFINE_NAMED_CID(IN_DEEPTREEWALKER_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENT_VIEWER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLDOCUMENT_CID);
@@ -703,11 +683,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_LAYOUT_DEBUGGER_CID, false, nullptr, CreateNewLayoutDebugger },
 #endif
   { &kNS_FRAMETRAVERSAL_CID, false, nullptr, CreateNewFrameTraversal },
-  { &kNS_BOXOBJECT_CID, false, nullptr, CreateNewBoxObject },
-#ifdef MOZ_XUL
-  { &kNS_MENUBOXOBJECT_CID, false, nullptr, CreateNewMenuBoxObject },
-  { &kNS_TREEBOXOBJECT_CID, false, nullptr, CreateNewTreeBoxObject },
-#endif // MOZ_XUL
   { &kIN_DEEPTREEWALKER_CID, false, nullptr, inDeepTreeWalkerConstructor },
   { &kNS_CONTENT_VIEWER_CID, false, nullptr, CreateContentViewer },
   { &kNS_HTMLDOCUMENT_CID, false, nullptr, CreateHTMLDocument },
@@ -802,11 +777,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 
 static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   XPCONNECT_CONTRACTS
-  { "@mozilla.org/layout/xul-boxobject;1", &kNS_BOXOBJECT_CID },
-#ifdef MOZ_XUL
-  { "@mozilla.org/layout/xul-boxobject-menu;1", &kNS_MENUBOXOBJECT_CID },
-  { "@mozilla.org/layout/xul-boxobject-tree;1", &kNS_TREEBOXOBJECT_CID },
-#endif // MOZ_XUL
   { "@mozilla.org/inspector/deep-tree-walker;1", &kIN_DEEPTREEWALKER_CID },
   { "@mozilla.org/xml/xml-document;1", &kNS_XMLDOCUMENT_CID },
   { "@mozilla.org/svg/svg-document;1", &kNS_SVGDOCUMENT_CID },

@@ -574,14 +574,3 @@ BoxObject::RemoveProperty(const nsAString& propertyName)
 
 } // namespace dom
 } // namespace mozilla
-
-// Creation Routine ///////////////////////////////////////////////////////////////////////
-
-using namespace mozilla::dom;
-
-nsresult
-NS_NewBoxObject(nsIBoxObject** aResult)
-{
-  NS_ADDREF(*aResult = new BoxObject());
-  return NS_OK;
-}
