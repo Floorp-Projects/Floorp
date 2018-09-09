@@ -68,6 +68,12 @@ public:
   static bool
   IsFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipal);
 
+  enum StorageAccessGrantedReason
+  {
+    eStorageAccessAPI,
+    eHeuristic,
+  };
+
   // Grant the permission for aOrigin to have access to the first party storage.
   // This method can handle 2 different scenarios:
   // - aParentWindow is a 3rd party context, it opens an aOrigin window and the
@@ -86,7 +92,8 @@ public:
   typedef MozPromise<bool, bool, false> StorageAccessGrantPromise;
   static MOZ_MUST_USE RefPtr<StorageAccessGrantPromise>
   AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin,
-                                       nsPIDOMWindowInner* aParentWindow);
+                                       nsPIDOMWindowInner* aParentWindow,
+                                       StorageAccessGrantedReason aReason);
 
   // For IPC only.
   static void
