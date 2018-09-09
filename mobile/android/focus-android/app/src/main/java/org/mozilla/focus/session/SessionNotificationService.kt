@@ -129,7 +129,7 @@ class SessionNotificationService : Service() {
         channel.description = notificationChannelDescription
         channel.enableLights(false)
         channel.enableVibration(false)
-        channel.setShowBadge(true)
+        channel.setShowBadge(false)
 
         notificationManager.createNotificationChannel(channel)
     }
