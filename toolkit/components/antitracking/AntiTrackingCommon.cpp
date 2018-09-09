@@ -249,11 +249,76 @@ ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIHttpChannel* aChannel,
                                   message,
                                   params, ArrayLength(params));
 }
+
+void
+ReportUnblockingConsole(nsPIDOMWindowInner* aWindow,
+                        const nsAString& aTrackingOrigin,
+                        const nsAString& aGrantedOrigin,
+                        AntiTrackingCommon::StorageAccessGrantedReason aReason)
+{
+  nsCOMPtr<nsIPrincipal> principal =
+    nsGlobalWindowInner::Cast(aWindow)->GetPrincipal();
+  if (NS_WARN_IF(!principal)) {
+    return;
+  }
+
+  nsAutoString origin;
+  nsresult rv = nsContentUtils::GetUTFOrigin(principal, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
+  if (NS_WARN_IF(!docShell)) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> doc = docShell->GetDocument();
+  if (NS_WARN_IF(!doc)) {
+    return;
+  }
+
+  const char16_t* params[] = { origin.BeginReading(),
+                               aTrackingOrigin.BeginReading(),
+                               aGrantedOrigin.BeginReading() };
+  const char* messageWithDifferentOrigin = nullptr;
+  const char *messageWithSameOrigin = nullptr;
+
+  switch (aReason) {
+    case AntiTrackingCommon::eStorageAccessAPI:
+      messageWithDifferentOrigin = "CookieAllowedForOriginOnTrackerByStorageAccessAPI";
+      messageWithSameOrigin = "CookieAllowedForTrackerByStorageAccessAPI";
+      break;
+
+    case AntiTrackingCommon::eHeuristic:
+      messageWithDifferentOrigin = "CookieAllowedForOriginOnTrackerByHeuristic";
+      messageWithSameOrigin = "CookieAllowedForTrackerByHeuristic";
+      break;
+  }
+
+  if (aTrackingOrigin == aGrantedOrigin) {
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Content Blocking"),
+                                    doc,
+                                    nsContentUtils::eNECKO_PROPERTIES,
+                                    messageWithSameOrigin,
+                                    params, 2);
+  } else {
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Content Blocking"),
+                                    doc,
+                                    nsContentUtils::eNECKO_PROPERTIES,
+                                    messageWithDifferentOrigin,
+                                    params, 3);
+  }
+}
+
 } // anonymous
 
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
 AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin,
-                                                         nsPIDOMWindowInner* aParentWindow)
+                                                         nsPIDOMWindowInner* aParentWindow,
+                                                         StorageAccessGrantedReason aReason)
 {
   MOZ_ASSERT(aParentWindow);
 
@@ -308,6 +373,9 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
   }
 
   NS_ConvertUTF16toUTF8 grantedOrigin(aOrigin);
+
+  ReportUnblockingConsole(aParentWindow, NS_ConvertUTF8toUTF16(trackingOrigin),
+                          aOrigin, aReason);
 
   if (XRE_IsParentProcess()) {
     LOG(("Saving the permission: trackingOrigin=%s, grantedOrigin=%s",
