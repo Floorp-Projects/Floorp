@@ -67,7 +67,6 @@
 #include "vm/Stack-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using mozilla::DebugOnly;
 using mozilla::NumberEqualsInt32;

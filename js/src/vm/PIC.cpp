@@ -18,7 +18,6 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 bool
 js::ForOfPIC::Chain::initialize(JSContext* cx)
