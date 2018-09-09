@@ -21,7 +21,6 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 #define UNWRAPPED_ASYNC_WRAPPED_SLOT 1
 #define WRAPPED_ASYNC_UNWRAPPED_SLOT 0
@@ -74,7 +73,7 @@ js::WrapAsyncGeneratorWithProto(JSContext* cx, HandleFunction unwrapped, HandleO
 
     JSFunction* wrapped = NewFunctionWithProto(cx, WrappedAsyncGenerator, length,
                                                JSFunction::NATIVE_FUN, nullptr, funName, proto,
-                                               AllocKind::FUNCTION_EXTENDED);
+                                               gc::AllocKind::FUNCTION_EXTENDED);
     if (!wrapped)
         return nullptr;
 

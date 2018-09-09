@@ -26,7 +26,6 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 void
 js::AutoEnterPolicy::reportErrorIfExceptionIsNotPending(JSContext* cx, HandleId id)

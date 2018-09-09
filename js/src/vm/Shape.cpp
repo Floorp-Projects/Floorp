@@ -29,7 +29,6 @@
 #include "vm/Realm-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using mozilla::CeilingLog2Size;
 using mozilla::PodZero;
@@ -270,7 +269,7 @@ Shape::replaceLastProperty(JSContext* cx, StackBaseShape& base,
 
     if (!shape->parent) {
         /* Treat as resetting the initial property of the shape hierarchy. */
-        AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
+        gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
         return EmptyShape::getInitialShape(cx, base.clasp, proto, kind,
                                            base.flags & BaseShape::OBJECT_FLAG_MASK);
     }
@@ -1802,8 +1801,8 @@ Shape::fixupDictionaryShapeAfterMovingGC()
     // We use a fake cell pointer for this: it might not point to the beginning
     // of a cell, but will point into the right arena and will have the right
     // alignment.
-    Cell* cell = reinterpret_cast<Cell*>(uintptr_t(listp) & ~CellAlignMask);
-    AllocKind kind = TenuredCell::fromPointer(cell)->getAllocKind();
+    Cell* cell = reinterpret_cast<Cell*>(uintptr_t(listp) & ~gc::CellAlignMask);
+    gc::AllocKind kind = TenuredCell::fromPointer(cell)->getAllocKind();
     MOZ_ASSERT_IF(listpPointsIntoShape, IsShapeAllocKind(kind));
     MOZ_ASSERT_IF(!listpPointsIntoShape, IsObjectAllocKind(kind));
 #endif
@@ -2140,7 +2139,7 @@ EmptyShape::getInitialShape(JSContext* cx, const Class* clasp, TaggedProto proto
 
 /* static */ Shape*
 EmptyShape::getInitialShape(JSContext* cx, const Class* clasp, TaggedProto proto,
-                            AllocKind kind, uint32_t objectFlags)
+                            gc::AllocKind kind, uint32_t objectFlags)
 {
     return getInitialShape(cx, clasp, proto, GetGCKindSlots(kind, clasp), objectFlags);
 }
