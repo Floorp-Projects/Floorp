@@ -1,18 +1,17 @@
 package org.mozilla.focus.settings
 
-import android.app.Activity
 import android.content.Context
 import android.graphics.Paint
 import android.support.v4.content.ContextCompat
 import android.support.v7.preference.PreferenceViewHolder
 import android.support.v7.preference.SwitchPreferenceCompat
 import android.util.AttributeSet
-import android.view.ContextThemeWrapper
 import android.view.View
 import android.widget.TextView
 import org.mozilla.focus.R
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
+import org.mozilla.focus.utils.asActivity
 
 abstract class LearnMoreSwitchPreference(context: Context?, attrs: AttributeSet?) :
     SwitchPreferenceCompat(context, attrs) {
@@ -37,13 +36,7 @@ abstract class LearnMoreSwitchPreference(context: Context?, attrs: AttributeSet?
             // This is a hardcoded link: if we ever end up needing more of these links, we should
             // move the link into an xml parameter, but there's no advantage to making it configurable now.
             SessionManager.getInstance().createSession(Source.MENU, getLearnMoreUrl())
-            if (context is ContextThemeWrapper) {
-                if ((context as ContextThemeWrapper).baseContext is Activity) {
-                    ((context as ContextThemeWrapper).baseContext as Activity).finish()
-                }
-            } else {
-                (context as? Activity)?.finish()
-            }
+            context?.asActivity()?.finish()
         }
 
         val backgroundDrawableArray =
