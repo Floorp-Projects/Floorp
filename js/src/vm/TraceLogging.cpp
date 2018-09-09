@@ -29,7 +29,6 @@
 #include "jit/JitFrames-inl.h"
 
 using namespace js;
-using namespace js::jit;
 
 using mozilla::DebugOnly;
 
@@ -250,6 +249,8 @@ TraceLoggerThread::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 bool
 TraceLoggerThread::enable(JSContext* cx)
 {
+    using namespace js::jit;
+
     if (!enable())
         return fail(cx, "internal error");
 

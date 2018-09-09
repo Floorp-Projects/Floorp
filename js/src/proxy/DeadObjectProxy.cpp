@@ -12,7 +12,6 @@
 #include "vm/ProxyObject.h"
 
 using namespace js;
-using namespace js::gc;
 
 const DeadObjectProxy DeadObjectProxy::singleton;
 const char DeadObjectProxy::family = 0;

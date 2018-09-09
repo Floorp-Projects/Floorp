@@ -16,7 +16,6 @@
 #include "vm/Interpreter-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 MOZ_ALWAYS_INLINE bool
 IsWeakMap(HandleValue v)
@@ -147,7 +146,7 @@ WeakCollectionObject::nondeterministicGetKeys(JSContext* cx, Handle<WeakCollecti
         return false;
     if (ObjectValueMap* map = obj->getMap()) {
         // Prevent GC from mutating the weakmap while iterating.
-        AutoSuppressGC suppress(cx);
+        gc::AutoSuppressGC suppress(cx);
         for (ObjectValueMap::Base::Range r = map->all(); !r.empty(); r.popFront()) {
             JS::ExposeObjectToActiveJS(r.front().key());
             RootedObject key(cx, r.front().key());

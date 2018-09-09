@@ -60,8 +60,6 @@
 #include "vm/Stack-inl.h"
 
 using namespace js;
-using namespace js::gc;
-using namespace js::frontend;
 
 using mozilla::ArrayLength;
 using mozilla::CheckedInt;
@@ -822,7 +820,7 @@ CreateFunctionConstructor(JSContext* cx, JSProtoKey key)
     RootedObject functionCtor(cx,
       NewFunctionWithProto(cx, Function, 1, JSFunction::NATIVE_CTOR,
                            nullptr, HandlePropertyName(cx->names().Function),
-                           functionProto, AllocKind::FUNCTION, SingletonObject));
+                           functionProto, gc::AllocKind::FUNCTION, SingletonObject));
     if (!functionCtor)
         return nullptr;
 
@@ -842,7 +840,7 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
     RootedObject enclosingEnv(cx, &self->lexicalEnvironment());
     RootedFunction functionProto(cx, NewFunctionWithProto(cx, nullptr, 0, JSFunction::INTERPRETED,
                                                           enclosingEnv, nullptr, objectProto,
-                                                          AllocKind::FUNCTION, SingletonObject));
+                                                          gc::AllocKind::FUNCTION, SingletonObject));
     if (!functionProto)
     	return nullptr;
 
@@ -1762,6 +1760,8 @@ static bool
 CreateDynamicFunction(JSContext* cx, const CallArgs& args, GeneratorKind generatorKind,
                       FunctionAsyncKind asyncKind)
 {
+    using namespace frontend;
+
     // Steps 1-5.
     bool isGenerator = generatorKind == GeneratorKind::Generator;
     bool isAsync = asyncKind == FunctionAsyncKind::AsyncFunction;
@@ -1894,7 +1894,8 @@ CreateDynamicFunction(JSContext* cx, const CallArgs& args, GeneratorKind generat
     JSFunction::Flags flags = (isGenerator || isAsync)
                               ? JSFunction::INTERPRETED_LAMBDA_GENERATOR_OR_ASYNC
                               : JSFunction::INTERPRETED_LAMBDA;
-    AllocKind allocKind = isAsync ? AllocKind::FUNCTION_EXTENDED : AllocKind::FUNCTION;
+    gc::AllocKind allocKind = isAsync ? gc::AllocKind::FUNCTION_EXTENDED
+                                      : gc::AllocKind::FUNCTION;
     RootedFunction fun(cx, NewFunctionWithProto(cx, nullptr, 0,
                                                 flags, globalLexical,
                                                 anonymousAtom, defaultProto,
@@ -2080,7 +2081,8 @@ js::NewFunctionWithProto(JSContext* cx, Native native,
                          gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
                          NewObjectKind newKind /* = GenericObject */)
 {
-    MOZ_ASSERT(allocKind == AllocKind::FUNCTION || allocKind == AllocKind::FUNCTION_EXTENDED);
+    MOZ_ASSERT(allocKind == gc::AllocKind::FUNCTION ||
+               allocKind == gc::AllocKind::FUNCTION_EXTENDED);
     MOZ_ASSERT_IF(native, !enclosingEnv);
     MOZ_ASSERT(NewFunctionEnvironmentIsWellFormed(cx, enclosingEnv));
 
@@ -2088,7 +2090,7 @@ js::NewFunctionWithProto(JSContext* cx, Native native,
     if (!fun)
         return nullptr;
 
-    if (allocKind == AllocKind::FUNCTION_EXTENDED)
+    if (allocKind == gc::AllocKind::FUNCTION_EXTENDED)
         flags = JSFunction::Flags(flags | JSFunction::EXTENDED);
 
     /* Initialize all function members. */
@@ -2109,7 +2111,7 @@ js::NewFunctionWithProto(JSContext* cx, Native native,
         else
             fun->initNative(native, nullptr);
     }
-    if (allocKind == AllocKind::FUNCTION_EXTENDED)
+    if (allocKind == gc::AllocKind::FUNCTION_EXTENDED)
         fun->initializeExtended();
     fun->initAtom(atom);
 
@@ -2174,7 +2176,7 @@ NewFunctionClone(JSContext* cx, HandleFunction fun, NewObjectKind newKind,
                                            JSFunction::RESOLVED_NAME;
 
     uint16_t flags = fun->flags() & ~NonCloneableFlags;
-    if (allocKind == AllocKind::FUNCTION_EXTENDED)
+    if (allocKind == gc::AllocKind::FUNCTION_EXTENDED)
         flags |= JSFunction::EXTENDED;
 
     clone->setArgCount(fun->nargs());
@@ -2185,7 +2187,7 @@ NewFunctionClone(JSContext* cx, HandleFunction fun, NewObjectKind newKind,
         cx->markAtom(atom);
     clone->initAtom(atom);
 
-    if (allocKind == AllocKind::FUNCTION_EXTENDED) {
+    if (allocKind == gc::AllocKind::FUNCTION_EXTENDED) {
         if (fun->isExtended() && fun->compartment() == cx->compartment()) {
             for (unsigned i = 0; i < FunctionExtended::NUM_EXTENDED_SLOTS; i++)
                 clone->initExtendedSlot(i, fun->getExtendedSlot(i));
@@ -2288,7 +2290,7 @@ js::CloneAsmJSModuleFunction(JSContext* cx, HandleFunction fun)
     MOZ_ASSERT(fun->isExtended());
     MOZ_ASSERT(cx->compartment() == fun->compartment());
 
-    JSFunction* clone = NewFunctionClone(cx, fun, GenericObject, AllocKind::FUNCTION_EXTENDED,
+    JSFunction* clone = NewFunctionClone(cx, fun, GenericObject, gc::AllocKind::FUNCTION_EXTENDED,
                                          /* proto = */ nullptr);
     if (!clone)
         return nullptr;
@@ -2309,7 +2311,7 @@ js::CloneSelfHostingIntrinsic(JSContext* cx, HandleFunction fun)
     MOZ_ASSERT(!fun->isExtended());
     MOZ_ASSERT(cx->compartment() != fun->compartment());
 
-    JSFunction* clone = NewFunctionClone(cx, fun, SingletonObject, AllocKind::FUNCTION,
+    JSFunction* clone = NewFunctionClone(cx, fun, SingletonObject, gc::AllocKind::FUNCTION,
                                          /* proto = */ nullptr);
     if (!clone)
         return nullptr;
@@ -2446,7 +2448,7 @@ js::SetFunctionNameIfNoOwnName(JSContext* cx, HandleFunction fun, HandleValue na
 
 JSFunction*
 js::DefineFunction(JSContext* cx, HandleObject obj, HandleId id, Native native,
-                   unsigned nargs, unsigned flags, AllocKind allocKind /* = AllocKind::FUNCTION */)
+                   unsigned nargs, unsigned flags, gc::AllocKind allocKind /* = AllocKind::FUNCTION */)
 {
     RootedAtom atom(cx, IdToFunctionName(cx, id));
     if (!atom)

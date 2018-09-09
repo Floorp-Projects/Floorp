@@ -53,7 +53,6 @@
 #include "vm/JSContext-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using mozilla::Atomic;
 using mozilla::DebugOnly;
@@ -262,7 +261,7 @@ JSRuntime::destroyRuntime()
          */
         JSContext* cx = mainContextFromOwnThread();
         if (JS::IsIncrementalGCInProgress(cx))
-            FinishGC(cx);
+            gc::FinishGC(cx);
 
         /* Free source hook early, as its destructor may want to delete roots. */
         sourceHook = nullptr;

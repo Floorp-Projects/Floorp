@@ -76,7 +76,6 @@
 #include "vm/UnboxedObject-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 void
 js::ReportNotObject(JSContext* cx, HandleValue v)
@@ -723,7 +722,7 @@ NewObject(JSContext* cx, HandleObjectGroup group, gc::AllocKind kind,
 
     MOZ_ASSERT(clasp != &ArrayObject::class_);
     MOZ_ASSERT_IF(clasp == &JSFunction::class_,
-                  kind == AllocKind::FUNCTION || kind == AllocKind::FUNCTION_EXTENDED);
+                  kind == gc::AllocKind::FUNCTION || kind == gc::AllocKind::FUNCTION_EXTENDED);
 
     // For objects which can have fixed data following the object, only use
     // enough fixed slots to cover the number of reserved slots in the object,
@@ -1609,7 +1608,7 @@ CopyProxyValuesBeforeSwap(JSContext* cx, ProxyObject* proxy, Vector<Value>& valu
 
     // Remove the GCPtrValues we're about to swap from the store buffer, to
     // ensure we don't trace bogus values.
-    StoreBuffer& sb = cx->runtime()->gc.storeBuffer();
+    gc::StoreBuffer& sb = cx->runtime()->gc.storeBuffer();
 
     // Reserve space for the private slot and the reserved slots.
     if (!values.reserve(1 + proxy->numReservedSlots()))
@@ -1734,7 +1733,7 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
     } else {
         // Avoid GC in here to avoid confusing the tracing code with our
         // intermediate state.
-        AutoSuppressGC suppress(cx);
+        gc::AutoSuppressGC suppress(cx);
 
         // When the objects have different sizes, they will have different
         // numbers of fixed slots before and after the swap, so the slots for
@@ -3806,6 +3805,8 @@ js::DumpBacktrace(JSContext* cx)
 js::gc::AllocKind
 JSObject::allocKindForTenure(const js::Nursery& nursery) const
 {
+    using namespace js::gc;
+
     MOZ_ASSERT(IsInsideNursery(this));
 
     if (is<ArrayObject>()) {
@@ -3814,7 +3815,7 @@ JSObject::allocKindForTenure(const js::Nursery& nursery) const
 
         /* Use minimal size object if we are just going to copy the pointer. */
         if (!nursery.isInside(aobj.getElementsHeader()))
-            return AllocKind::OBJECT0_BACKGROUND;
+            return gc::AllocKind::OBJECT0_BACKGROUND;
 
         size_t nelements = aobj.getDenseCapacity();
         return GetBackgroundAllocKind(GetGCArrayKind(nelements));
@@ -3857,7 +3858,7 @@ JSObject::allocKindForTenure(const js::Nursery& nursery) const
 
     // Outline typed objects use the minimum allocation kind.
     if (is<OutlineTypedObject>())
-        return AllocKind::OBJECT0;
+        return gc::AllocKind::OBJECT0;
 
     // All nursery allocatable non-native objects are handled above.
     return as<NativeObject>().allocKindForTenure();
@@ -3928,7 +3929,7 @@ JSObject::sizeOfIncludingThisInNursery() const
     MOZ_ASSERT(!isTenured());
 
     const Nursery& nursery = runtimeFromMainThread()->gc.nursery();
-    size_t size = Arena::thingSize(allocKindForTenure(nursery));
+    size_t size = gc::Arena::thingSize(allocKindForTenure(nursery));
 
     if (is<NativeObject>()) {
         const NativeObject& native = as<NativeObject>();

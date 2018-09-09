@@ -51,7 +51,6 @@
 #include "vm/EnvironmentObject-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using mozilla::Maybe;
 using mozilla::Nothing;

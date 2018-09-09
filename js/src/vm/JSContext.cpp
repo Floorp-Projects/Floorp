@@ -65,7 +65,6 @@
 #include "vm/Stack-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using mozilla::DebugOnly;
 using mozilla::PodArrayZero;
@@ -123,7 +122,7 @@ JSContext::init(ContextKind kind)
         if (!wasm::EnsureSignalHandlers(this))
             return false;
     } else {
-        atomsZoneFreeLists_ = js_new<FreeLists>();
+        atomsZoneFreeLists_ = js_new<gc::FreeLists>();
         if (!atomsZoneFreeLists_)
             return false;
     }
@@ -309,7 +308,7 @@ js::ReportOutOfMemory(JSContext* cx)
         return cx->addPendingOutOfMemory();
 
     cx->runtime()->hadOutOfMemory = true;
-    AutoSuppressGC suppressGC(cx);
+    gc::AutoSuppressGC suppressGC(cx);
 
     /* Report the oom. */
     if (JS::OutOfMemoryCallback oomCallback = cx->runtime()->oomCallback)
@@ -366,7 +365,7 @@ js::ReportAllocationOverflow(JSContext* cx)
     if (cx->helperThread())
         return;
 
-    AutoSuppressGC suppressGC(cx);
+    gc::AutoSuppressGC suppressGC(cx);
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ALLOC_OVERFLOW);
 }
 
@@ -713,7 +712,7 @@ ExpandErrorArgumentsHelper(JSContext* cx, JSErrorCallback callback,
         callback = GetErrorMessage;
 
     {
-        AutoSuppressGC suppressGC(cx);
+        gc::AutoSuppressGC suppressGC(cx);
         efs = callback(userRef, errorNumber);
     }
 

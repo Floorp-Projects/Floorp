@@ -22,7 +22,6 @@
 #include "vm/JSScript-inl.h"
 
 using namespace js;
-using namespace js::frontend;
 
 static_assert(MODULE_STATUS_UNINSTANTIATED < MODULE_STATUS_INSTANTIATING &&
               MODULE_STATUS_INSTANTIATING < MODULE_STATUS_INSTANTIATED &&
@@ -1305,6 +1304,8 @@ ModuleBuilder::initModule()
 bool
 ModuleBuilder::processImport(frontend::ParseNode* pn)
 {
+    using namespace js::frontend;
+
     MOZ_ASSERT(pn->isKind(ParseNodeKind::Import));
     MOZ_ASSERT(pn->isArity(PN_BINARY));
     MOZ_ASSERT(pn->pn_left->isKind(ParseNodeKind::ImportSpecList));
@@ -1345,6 +1346,8 @@ ModuleBuilder::appendImportEntryObject(HandleImportEntryObject importEntry)
 bool
 ModuleBuilder::processExport(frontend::ParseNode* pn)
 {
+    using namespace js::frontend;
+
     MOZ_ASSERT(pn->isKind(ParseNodeKind::Export) || pn->isKind(ParseNodeKind::ExportDefault));
     MOZ_ASSERT(pn->getArity() == (pn->isKind(ParseNodeKind::Export) ? PN_UNARY : PN_BINARY));
 
@@ -1428,6 +1431,8 @@ ModuleBuilder::processExport(frontend::ParseNode* pn)
 bool
 ModuleBuilder::processExportBinding(frontend::ParseNode* binding)
 {
+    using namespace js::frontend;
+
     if (binding->isKind(ParseNodeKind::Name)) {
         RootedAtom name(cx_, binding->pn_atom);
         return appendExportEntry(name, name);
@@ -1443,6 +1448,8 @@ ModuleBuilder::processExportBinding(frontend::ParseNode* binding)
 bool
 ModuleBuilder::processExportArrayBinding(frontend::ParseNode* pn)
 {
+    using namespace js::frontend;
+
     MOZ_ASSERT(pn->isKind(ParseNodeKind::Array));
     MOZ_ASSERT(pn->isArity(PN_LIST));
 
@@ -1465,6 +1472,8 @@ ModuleBuilder::processExportArrayBinding(frontend::ParseNode* pn)
 bool
 ModuleBuilder::processExportObjectBinding(frontend::ParseNode* pn)
 {
+    using namespace js::frontend;
+
     MOZ_ASSERT(pn->isKind(ParseNodeKind::Object));
     MOZ_ASSERT(pn->isArity(PN_LIST));
 
@@ -1497,6 +1506,8 @@ ModuleBuilder::processExportObjectBinding(frontend::ParseNode* pn)
 bool
 ModuleBuilder::processExportFrom(frontend::ParseNode* pn)
 {
+    using namespace js::frontend;
+
     MOZ_ASSERT(pn->isKind(ParseNodeKind::ExportFrom));
     MOZ_ASSERT(pn->isArity(PN_BINARY));
     MOZ_ASSERT(pn->pn_left->isKind(ParseNodeKind::ExportSpecList));
@@ -1542,7 +1553,8 @@ ModuleBuilder::hasExportedName(JSAtom* name) const
 }
 
 bool
-ModuleBuilder::appendExportEntry(HandleAtom exportName, HandleAtom localName, ParseNode* node)
+ModuleBuilder::appendExportEntry(HandleAtom exportName, HandleAtom localName,
+                                 frontend::ParseNode* node)
 {
     uint32_t line = 0;
     uint32_t column = 0;
@@ -1557,7 +1569,7 @@ ModuleBuilder::appendExportEntry(HandleAtom exportName, HandleAtom localName, Pa
 
 bool
 ModuleBuilder::appendExportFromEntry(HandleAtom exportName, HandleAtom moduleRequest,
-                                     HandleAtom importName, ParseNode* node)
+                                     HandleAtom importName, frontend::ParseNode* node)
 {
     uint32_t line;
     uint32_t column;
@@ -1580,7 +1592,7 @@ ModuleBuilder::appendExportEntryObject(HandleExportEntryObject exportEntry)
 }
 
 bool
-ModuleBuilder::maybeAppendRequestedModule(HandleAtom specifier, ParseNode* node)
+ModuleBuilder::maybeAppendRequestedModule(HandleAtom specifier, frontend::ParseNode* node)
 {
     if (requestedModuleSpecifiers_.has(specifier))
         return true;

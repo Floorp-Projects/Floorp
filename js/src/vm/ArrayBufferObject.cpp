@@ -62,7 +62,6 @@ using mozilla::Nothing;
 using mozilla::Unused;
 
 using namespace js;
-using namespace js::gc;
 
 /*
  * Convert |v| to an array index for an array of length |length| per
@@ -974,7 +973,7 @@ ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buf
 ArrayBufferObject::BufferContents
 ArrayBufferObject::createMappedContents(int fd, size_t offset, size_t length)
 {
-    void* data = AllocateMappedContent(fd, offset, length, ARRAY_BUFFER_ALIGNMENT);
+    void* data = gc::AllocateMappedContent(fd, offset, length, ARRAY_BUFFER_ALIGNMENT);
     return BufferContents::create<MAPPED>(data);
 }
 
@@ -1013,7 +1012,7 @@ ArrayBufferObject::releaseData(FreeOp* fop)
         fop->free_(dataPointer());
         break;
       case MAPPED:
-        DeallocateMappedContent(dataPointer(), byteLength());
+        gc::DeallocateMappedContent(dataPointer(), byteLength());
         break;
       case WASM:
         WasmArrayRawBuffer::Release(dataPointer());
@@ -1244,7 +1243,7 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents content
     }
 
     MOZ_ASSERT(!(class_.flags & JSCLASS_HAS_PRIVATE));
-    gc::AllocKind allocKind = GetGCObjectKind(nslots);
+    gc::AllocKind allocKind = gc::GetGCObjectKind(nslots);
 
     AutoSetNewObjectMetadata metadata(cx);
     Rooted<ArrayBufferObject*> obj(cx,
@@ -2016,7 +2015,7 @@ JS_CreateMappedArrayBufferContents(int fd, size_t offset, size_t length)
 JS_PUBLIC_API(void)
 JS_ReleaseMappedArrayBufferContents(void* contents, size_t length)
 {
-    DeallocateMappedContent(contents, length);
+    gc::DeallocateMappedContent(contents, length);
 }
 
 JS_FRIEND_API(bool)

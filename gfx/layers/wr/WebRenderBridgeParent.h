@@ -46,6 +46,7 @@ class WebRenderImageHost;
 class WebRenderBridgeParent final : public PWebRenderBridgeParent
                                   , public CompositorVsyncSchedulerOwner
                                   , public CompositableParentManager
+                                  , public layers::FrameRecorder
 {
 public:
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,

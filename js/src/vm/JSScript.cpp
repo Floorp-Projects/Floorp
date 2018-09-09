@@ -70,8 +70,6 @@
 #include "vm/Stack-inl.h"
 
 using namespace js;
-using namespace js::gc;
-using namespace js::frontend;
 
 using mozilla::Maybe;
 using mozilla::PodCopy;
@@ -2872,7 +2870,7 @@ JSScript::initFunctionPrototype(JSContext* cx, Handle<JSScript*> script,
 static void
 InitAtomMap(frontend::AtomIndexMap& indices, GCPtrAtom* atoms)
 {
-    for (AtomIndexMap::Range r = indices.all(); !r.empty(); r.popFront()) {
+    for (frontend::AtomIndexMap::Range r = indices.all(); !r.empty(); r.popFront()) {
         JSAtom* atom = r.front().key();
         uint32_t index = r.front().value();
         MOZ_ASSERT(index < indices.count());
@@ -2937,7 +2935,7 @@ JSScript::initFromModuleContext(HandleScript script)
 }
 
 /* static */ bool
-JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, BytecodeEmitter* bce)
+JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, frontend::BytecodeEmitter* bce)
 {
     /* The counts of indexed things must be checked during code generation. */
     MOZ_ASSERT(bce->atomIndices->count() <= INDEX_LIMIT);
@@ -4528,7 +4526,7 @@ JSScript::maybeTopLevelPrivate() const
 JS::ubi::Base::Size
 JS::ubi::Concrete<JSScript>::size(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    Size size = Arena::thingSize(get().asTenured().getAllocKind());
+    Size size = gc::Arena::thingSize(get().asTenured().getAllocKind());
 
     size += get().sizeOfData(mallocSizeOf);
     size += get().sizeOfTypeScript(mallocSizeOf);
@@ -4554,7 +4552,7 @@ JS::ubi::Concrete<JSScript>::scriptFilename() const
 JS::ubi::Node::Size
 JS::ubi::Concrete<js::LazyScript>::size(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());
+    Size size = gc::Arena::thingSize(get().asTenured().getAllocKind());
     size += get().sizeOfExcludingThis(mallocSizeOf);
     return size;
 }

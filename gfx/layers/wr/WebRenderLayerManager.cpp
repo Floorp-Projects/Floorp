@@ -149,6 +149,28 @@ WebRenderLayerManager::GetCompositorBridgeChild()
   return WrBridge()->GetCompositorBridgeChild();
 }
 
+uint32_t
+WebRenderLayerManager::StartFrameTimeRecording(int32_t aBufferSize)
+{
+  CompositorBridgeChild* renderer = GetCompositorBridgeChild();
+  if (renderer) {
+    uint32_t startIndex;
+    renderer->SendStartFrameTimeRecording(aBufferSize, &startIndex);
+    return startIndex;
+  }
+  return -1;
+}
+
+void
+WebRenderLayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
+                                              nsTArray<float>& aFrameIntervals)
+{
+  CompositorBridgeChild* renderer = GetCompositorBridgeChild();
+  if (renderer) {
+    renderer->SendStopFrameTimeRecording(aStartIndex, &aFrameIntervals);
+  }
+}
+
 bool
 WebRenderLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {

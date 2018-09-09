@@ -30,7 +30,8 @@ select {
   padding-bottom: 5px;
 }
 
-form :-moz-any(label, div) {
+form label,
+form div {
   /* Positioned so that the .label-text and .error-text children will be
      positioned relative to this. */
   position: relative;

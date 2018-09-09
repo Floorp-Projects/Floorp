@@ -51,7 +51,6 @@
 #include "vm/JSObject-inl.h"
 
 using namespace js;
-using namespace js::gc;
 using namespace js::frontend;
 
 using mozilla::AssertedCast;

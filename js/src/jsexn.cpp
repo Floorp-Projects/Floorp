@@ -42,7 +42,6 @@
 #include "vm/SavedStacks-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 static void
 exn_finalize(FreeOp* fop, JSObject* obj);
