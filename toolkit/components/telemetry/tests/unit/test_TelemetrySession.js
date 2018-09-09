@@ -403,6 +403,11 @@ function checkPayload(payload, reason, successfulPings) {
 
   Assert.ok("processes" in payload, "The payload must have a processes section.");
   Assert.ok("parent" in payload.processes, "There must be at least a parent process.");
+
+  if (Services.prefs.getBoolPref("prio.enabled", false)) {
+    Assert.ok("prio" in payload, "The payload must have a prio section.");
+  }
+
   checkScalars(payload.processes);
 }
 
