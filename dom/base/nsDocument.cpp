@@ -12898,7 +12898,8 @@ nsIDocument::MaybeAllowStorageForOpener()
 
   // We don't care when the asynchronous work finishes here.
   Unused << AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(origin,
-                                                                     openerInner);
+                                                                     openerInner,
+                                                                     AntiTrackingCommon::eHeuristic);
 }
 
 bool

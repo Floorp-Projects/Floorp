@@ -30,10 +30,7 @@ toolbarbutton[disabled="true"][open="true"] {
 
 .toolbarbutton-menu-dropmarker {
   -moz-appearance: none !important;
-  border: none !important;
-  background-color: transparent !important;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
-  padding: 0;
   padding-inline-start: 2px;
   width: auto;
 }
