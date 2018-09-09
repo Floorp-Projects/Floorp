@@ -1483,7 +1483,7 @@ RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
  *   older than this, it means that some frames were not recorded, so data is invalid.
  */
 uint32_t
-LayerManager::StartFrameTimeRecording(int32_t aBufferSize)
+FrameRecorder::StartFrameTimeRecording(int32_t aBufferSize)
 {
   if (mRecording.mIsPaused) {
     mRecording.mIsPaused = false;
@@ -1506,7 +1506,7 @@ LayerManager::StartFrameTimeRecording(int32_t aBufferSize)
 }
 
 void
-LayerManager::RecordFrame()
+FrameRecorder::RecordFrame()
 {
   if (!mRecording.mIsPaused) {
     TimeStamp now = TimeStamp::Now();
@@ -1524,8 +1524,8 @@ LayerManager::RecordFrame()
 }
 
 void
-LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
-                                     nsTArray<float>& aFrameIntervals)
+FrameRecorder::StopFrameTimeRecording(uint32_t         aStartIndex,
+                                      nsTArray<float>& aFrameIntervals)
 {
   uint32_t bufferSize = mRecording.mIntervals.Length();
   uint32_t length = mRecording.mNextIndex - aStartIndex;

@@ -54,7 +54,6 @@
 #include "vm/Realm-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using js::frontend::IsIdentifier;
 

@@ -26,7 +26,6 @@
 #include "vm/TypeInference-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 typedef Rooted<ArgumentsObject*> RootedArgumentsObject;
 typedef MutableHandle<ArgumentsObject*> MutableHandleArgumentsObject;
@@ -429,7 +428,7 @@ ModuleEnvironmentObject::create(JSContext* cx, HandleModuleObject module)
     kind = gc::GetBackgroundAllocKind(kind);
 
     JSObject* obj;
-    JS_TRY_VAR_OR_RETURN_NULL(cx, obj, NativeObject::create(cx, kind, TenuredHeap, shape, group));
+    JS_TRY_VAR_OR_RETURN_NULL(cx, obj, NativeObject::create(cx, kind, gc::TenuredHeap, shape, group));
 
     RootedModuleEnvironmentObject env(cx, &obj->as<ModuleEnvironmentObject>());
 

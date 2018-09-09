@@ -51,7 +51,6 @@
 #include "vm/Shape-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using mozilla::AssertedCast;
 using mozilla::IsAsciiDigit;
@@ -225,7 +224,7 @@ JS_FOR_EACH_TYPED_ARRAY(OBJECT_MOVED_TYPED_ARRAY)
     size_t headerSize = dataOffset() + sizeof(HeapSlot);
 
     // See AllocKindForLazyBuffer.
-    AllocKind newAllocKind = obj->asTenured().getAllocKind();
+    gc::AllocKind newAllocKind = obj->asTenured().getAllocKind();
     MOZ_ASSERT_IF(nbytes == 0, headerSize + sizeof(uint8_t) <= GetGCKindBytes(newAllocKind));
 
     if (headerSize + nbytes <= GetGCKindBytes(newAllocKind)) {
@@ -402,7 +401,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static TypedArrayObject*
-    makeProtoInstance(JSContext* cx, HandleObject proto, AllocKind allocKind)
+    makeProtoInstance(JSContext* cx, HandleObject proto, gc::AllocKind allocKind)
     {
         MOZ_ASSERT(proto);
 
@@ -449,7 +448,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         MOZ_ASSERT(len < INT32_MAX / sizeof(NativeType));
 
         gc::AllocKind allocKind = buffer
-                                  ? GetGCObjectKind(instanceClass())
+                                  ? gc::GetGCObjectKind(instanceClass())
                                   : AllocKindForLazyBuffer(len * sizeof(NativeType));
 
         // Subclassing mandates that we hand in the proto every time. Most of
@@ -553,7 +552,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         bool fitsInline = nbytes <= INLINE_BUFFER_LIMIT;
         const Class* clasp = instanceClass();
         gc::AllocKind allocKind = !fitsInline
-                                  ? GetGCObjectKind(clasp)
+                                  ? gc::GetGCObjectKind(clasp)
                                   : AllocKindForLazyBuffer(nbytes);
         MOZ_ASSERT(CanBeFinalizedInBackground(allocKind, clasp));
         allocKind = GetBackgroundAllocKind(allocKind);
@@ -605,7 +604,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
     static void
     initTypedArrayData(JSContext* cx, TypedArrayObject* tarray, int32_t len,
-                       void* buf, AllocKind allocKind)
+                       void* buf, gc::AllocKind allocKind)
     {
         if (buf) {
 #ifdef DEBUG
@@ -645,7 +644,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         const Class* clasp = templateObj->group()->clasp();
         gc::AllocKind allocKind = !fitsInline
-                                  ? GetGCObjectKind(clasp)
+                                  ? gc::GetGCObjectKind(clasp)
                                   : AllocKindForLazyBuffer(nbytes);
         MOZ_ASSERT(CanBeFinalizedInBackground(allocKind, clasp));
         allocKind = GetBackgroundAllocKind(allocKind);
