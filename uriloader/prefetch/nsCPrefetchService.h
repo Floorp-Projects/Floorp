@@ -34,19 +34,4 @@
     {0x94, 0xe0, 0xa6, 0xe9, 0x1c, 0xa4, 0x4d, 0x8a} \
 }
 
-/**
- * nsOfflineCacheUpdate : nsIOfflineCacheUpdate
- */
-
-#define NS_OFFLINECACHEUPDATE_CONTRACTID \
-  "@mozilla.org/offlinecacheupdate;1"
-#define NS_OFFLINECACHEUPDATE_CID                    \
-{ /* e56f5e01-c7cc-4675-a9d7-b8f1e4127295 */         \
-    0xe56f5e01,                                      \
-    0xc7cc,                                          \
-    0x4675,                                          \
-    {0xa9, 0xd7, 0xb8, 0xf1, 0xe4, 0x12, 0x72, 0x95} \
-}
-
-
 #endif // !nsCPrefetchService_h__
