@@ -34,7 +34,6 @@
 #include "vm/StringType-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using mozilla::ArrayEnd;
 using mozilla::ArrayLength;

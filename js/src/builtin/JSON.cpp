@@ -33,7 +33,6 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using mozilla::IsFinite;
 using mozilla::Maybe;

@@ -21,7 +21,6 @@
 #include "vm/Stack-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using JS::AutoStableStringChars;
 

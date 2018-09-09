@@ -45,7 +45,6 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-using namespace js::gc;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
@@ -689,7 +688,7 @@ TypeSet::addType(Type type, LifoAlloc* alloc)
 // pointers then any number of TemporaryTypeSets might as well. Thus, if there
 // are any such ConstraintTypeSets in existence, all off thread Ion
 // compilations are canceled by the next minor GC.
-class TypeSetRef : public BufferableRef
+class TypeSetRef : public gc::BufferableRef
 {
     Zone* zone;
     ConstraintTypeSet* types;

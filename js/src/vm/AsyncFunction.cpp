@@ -16,7 +16,6 @@
 #include "vm/SelfHosting.h"
 
 using namespace js;
-using namespace js::gc;
 
 using mozilla::Maybe;
 
@@ -130,7 +129,7 @@ js::WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped, HandleOb
     // Steps 3 (partially).
     JSFunction* wrapped = NewFunctionWithProto(cx, WrappedAsyncFunction, length,
                                                JSFunction::NATIVE_FUN, nullptr, funName, proto,
-                                               AllocKind::FUNCTION_EXTENDED);
+                                               gc::AllocKind::FUNCTION_EXTENDED);
     if (!wrapped)
         return nullptr;
 
