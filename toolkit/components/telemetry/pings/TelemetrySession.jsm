@@ -87,6 +87,9 @@ const TOPIC_CYCLE_COLLECTOR_BEGIN = "cycle-collector-begin";
 // How long to wait in millis for all the child memory reports to come in
 const TOTAL_MEMORY_COLLECTOR_TIMEOUT = 200;
 
+// Control whether Telemetry data should be encrypted with Prio.
+const PRIO_ENABLED_PREF = "prio.enabled";
+
 var gLastMemoryPoll = null;
 
 var gWasDebuggerAttached = false;
@@ -1168,6 +1171,11 @@ var Impl = {
 
     payloadObj.info = info;
 
+    // Collect Prio-encoded measurements.
+    if (Services.prefs.getBoolPref(PRIO_ENABLED_PREF, false)) {
+      payloadObj.prio = protect(() => this._prioEncode());
+    }
+
     // Add extended set measurements for chrome process.
     if (Telemetry.canRecordExtended) {
       payloadObj.slowSQL = protect(() => Telemetry.slowSQL);
@@ -1946,5 +1954,45 @@ var Impl = {
     this._log.trace("markNewProfilePingSent");
     this._newProfilePingSent = true;
     return TelemetryStorage.saveSessionData(this._getSessionDataObject());
+  },
+
+  /**
+   * Encodes data for experimental Prio pilot project.
+   *
+   * @return {Object} An object containing Prio-encoded data.
+   */
+  _prioEncode() {
+    // First, map the Telemetry histogram names to the params PrioEncoder.encode() expects.
+    const prioEncodedHistograms = {
+      "BROWSER_IS_USER_DEFAULT": "browserIsUserDefault",
+      "NEWTAB_PAGE_ENABLED": "newTabPageEnabled",
+      "PDF_VIEWER_USED": "pdfViewerUsed",
+    };
+
+    // Build list of Prio parameters, using the first value recorded in each histogram.
+    let prioParams = {};
+    for (const [histogramName, prioName] of Object.entries(prioEncodedHistograms)) {
+      try {
+        const histogram = Telemetry.getHistogramById(histogramName);
+        const firstCount = Boolean(histogram.snapshot().sum);
+        prioParams[prioName] = firstCount;
+
+      } catch (ex) {
+        this._log.error(ex);
+      }
+    }
+
+    // Prio encode the data and add to payload.
+    const batchID = Policy.now();
+
+    let prioEncodedData;
+
+    try {
+      prioEncodedData = PrioEncoder.encode(batchID, prioParams);
+    } catch (ex) {
+      this._log.error(ex);
+    }
+
+    return prioEncodedData;
   },
 };

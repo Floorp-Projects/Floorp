@@ -45,6 +45,9 @@ for cdm in CONFIG['MOZ_EME_MODULES']:
 if CONFIG['MOZ_GPSD']:
     DEFINES['MOZ_GPSD'] = True
 
+if CONFIG['MOZ_LIBPRIO']:
+    DEFINES['MOZ_LIBPRIO'] = True
+
 # These files are specified in this moz.build to pick up DIST_SUBDIR as set in
 # this directory, which is un-set in browser/app.
 JS_PREFERENCE_PP_FILES += [
