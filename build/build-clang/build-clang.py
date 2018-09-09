@@ -222,6 +222,9 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
         if is_windows():
             cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
             cmake_args.insert(-1, "-DLLVM_USE_CRT_RELEASE=MT")
+        else:
+            # libllvm as a shared library is not supported on Windows
+            cmake_args += ["-DLLVM_LINK_LLVM_DYLIB=ON"]
         if ranlib is not None:
             cmake_args += ["-DCMAKE_RANLIB=%s" % slashify_path(ranlib)]
         if libtool is not None:
