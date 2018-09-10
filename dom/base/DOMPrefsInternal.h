@@ -19,7 +19,6 @@
 //   * This defines DOMPrefs::FooBar(JSContext* aCx, JSObject* aObj);
 //     This is allows the use of DOMPrefs in WebIDL files.
 
-DOM_PREF(IndexedDBStorageOptionsEnabled, "dom.indexedDB.storageOption.enabled")
 #ifdef JS_BUILD_BINAST
 DOM_PREF(BinASTEncodingEnabled, "dom.script_loader.binast_encoding.enabled")
 #endif

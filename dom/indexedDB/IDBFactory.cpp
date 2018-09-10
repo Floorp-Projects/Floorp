@@ -20,6 +20,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackground.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsAboutProtocolUtils.h"
@@ -717,7 +718,7 @@ IDBFactory::OpenInternal(JSContext* aCx,
   if (isInternal) {
     // Chrome privilege and internal origins always get persistent storage.
     persistenceType = PERSISTENCE_TYPE_PERSISTENT;
-  } else if (isAddon || DOMPrefs::IndexedDBStorageOptionsEnabled()) {
+  } else if (isAddon || StaticPrefs::dom_indexedDB_storageOption_enabled()) {
     persistenceType = PersistenceTypeFromStorage(aStorageType);
   } else {
     persistenceType = PERSISTENCE_TYPE_DEFAULT;
