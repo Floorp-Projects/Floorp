@@ -346,6 +346,14 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+#ifdef JS_BUILD_BINAST
+VARCACHE_PREF(
+  "dom.script_loader.binast_encoding.enabled",
+   dom_script_loader_binast_encoding_enabled,
+  RelaxedAtomicBool, false
+)
+#endif
+
 //---------------------------------------------------------------------------
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------
