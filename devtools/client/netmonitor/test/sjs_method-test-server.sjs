@@ -11,7 +11,7 @@ function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200, "Och Aye");
   response.setHeader("Content-Type", "text/plain; charset=utf-8", false);
 
-  var body = request.method + "\n" ;
+  var body = "";
   if (request.method == "POST") {
     var bodyStream = new BinaryInputStream(request.bodyInputStream);
     var bytes = [], avail = 0;
@@ -19,6 +19,8 @@ function handleRequest(request, response) {
       body += String.fromCharCode.apply(String, bodyStream.readByteArray(avail));
     }
   }
+  var contentType = request.hasHeader("content-type") ? request.getHeader("content-type") : ""
+  var bodyOutput = [request.method, contentType, body].join("\n");
 
-  response.bodyOutputStream.write(body, body.length);
+  response.bodyOutputStream.write(bodyOutput, bodyOutput.length);
 }

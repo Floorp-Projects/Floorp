@@ -18,13 +18,15 @@ http://creativecommons.org/publicdomain/zero/1.0/ -->
       /* exported performRequest */
       "use strict";
 
-      function performRequest(method) {
+      function performRequest(method, contentType, payload) {
         const xhr = new XMLHttpRequest();
         const url = "sjs_method-test-server.sjs";
-        const payload = method == "POST" ? "foo=bar&baz=42" : null;
         xhr.open(method, url, true);
         xhr.setRequestHeader("Accept-Language", window.navigator.language);
-        xhr.send(payload);
+        if (contentType) {
+          xhr.setRequestHeader("Content-Type", contentType);
+        }
+        xhr.send(payload || "");
       }
     </script>
   </body>
