@@ -16,6 +16,7 @@
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsServiceManagerUtils.h"
@@ -79,7 +80,7 @@ ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal)
 
   JS::Rooted<JSObject*> global(aCx, aGlobal);
 
-  if (!DOMPrefs::ServiceWorkersEnabled()) {
+  if (!StaticPrefs::dom_serviceWorkers_enabled()) {
     return false;
   }
 
