@@ -65,3 +65,13 @@ bench-web-tooling:
     fetches:
         fetch:
             - web-tooling-benchmark
+
+bench-octane:
+    description: Octane shell benchmark suite
+    shell: ['sm', 'v8']
+    test: octane
+    treeherder:
+        symbol: octane
+    fetches:
+        fetch:
+            - octane

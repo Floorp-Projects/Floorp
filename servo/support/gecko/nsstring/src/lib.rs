@@ -452,6 +452,20 @@ macro_rules! define_string_types {
                     let mut this = self.string.as_repr();
                     this.as_mut().length = length as u32;
                     *(this.as_mut().data.as_ptr().offset(length as isize)) = 0;
+                    if cfg!(debug_assertions) {
+                        // Overwrite the unused part in debug builds. Note
+                        // that capacity doesn't include space for the zero
+                        // terminator, so starting after the zero-terminator
+                        // we wrote ends up overwriting the terminator space
+                        // not reflected in the capacity number.
+                        // write_bytes() takes care of multiplying the length
+                        // by the size of T.
+                        ptr::write_bytes(this.as_mut().data.as_ptr().offset((length + 1) as isize),
+                                         0xE4u8,
+                                         self.capacity - length);
+                    }
+                    // We don't have a Rust interface for mozilla/MemoryChecking.h,
+                    // so let's just not communicate with MSan/Valgrind here.
                 }
                 mem::forget(self); // Don't run the failure path in drop()
                 BulkWriteOk{}
