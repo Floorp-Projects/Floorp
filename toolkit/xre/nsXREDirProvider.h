@@ -72,7 +72,8 @@ public:
   /**
    * Get a hash for the install directory.
    */
-  nsresult GetInstallHash(nsAString & aPathHash);
+  nsresult GetInstallHash(nsAString & aPathHash,
+                          bool aUseCompatibilityMode = false);
 
   /**
    * Get the directory under which update directory is created.

@@ -7,8 +7,12 @@
 
 from __future__ import print_function
 from collections import OrderedDict
-from parsers.shared_telemetry_utils import StringTable, static_assert, ParserError
-from parsers import parse_events
+from python_mozparsers.shared_telemetry_utils import (
+    StringTable,
+    static_assert,
+    ParserError
+)
+from python_mozparsers import parse_events
 
 import json
 import sys
