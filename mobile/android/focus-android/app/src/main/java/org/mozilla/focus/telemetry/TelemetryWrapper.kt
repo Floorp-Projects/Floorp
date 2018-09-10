@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.StrictMode
 import android.preference.PreferenceManager
 import android.support.annotation.CheckResult
+import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
 import org.json.JSONObject
@@ -300,9 +301,9 @@ object TelemetryWrapper {
         TelemetryEvent.create(Category.ACTION, Method.FOREGROUND, Object.APP).queue()
     }
 
-    private var histogram = IntArray(HISTOGRAM_SIZE)
-    private var domainMap = HashSet<String>()
-    private var numUri = 0
+    @VisibleForTesting var histogram = IntArray(HISTOGRAM_SIZE)
+    @VisibleForTesting var domainMap = HashSet<String>()
+    @VisibleForTesting var numUri = 0
 
     @JvmStatic
     fun addLoadToHistogram(url: String, newLoadTime: Long) {
