@@ -211,8 +211,8 @@ public:
   nscoord GetUnpaginatedBSize();
   void    SetUnpaginatedBSize(nsPresContext* aPresContext, nscoord aValue);
 
-  nscoord GetBStartBCBorderWidth() const { return mBStartBorderWidth; }
-  nscoord GetBEndBCBorderWidth() const { return mBEndBorderWidth; }
+  BCPixelSize GetBStartBCBorderWidth() const { return mBStartBorderWidth; }
+  BCPixelSize GetBEndBCBorderWidth() const { return mBEndBorderWidth; }
   void SetBStartBCBorderWidth(BCPixelSize aWidth) { mBStartBorderWidth = aWidth; }
   void SetBEndBCBorderWidth(BCPixelSize aWidth) { mBEndBorderWidth = aWidth; }
   mozilla::LogicalMargin GetBCBorderWidth(mozilla::WritingMode aWM);
