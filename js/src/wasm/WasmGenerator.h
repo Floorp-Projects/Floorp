@@ -121,15 +121,18 @@ typedef ExclusiveWaitableData<CompileTaskState> ExclusiveCompileTaskState;
 
 struct CompileTask
 {
-    const ModuleEnvironment&   env;
-    ExclusiveCompileTaskState& state;
-    LifoAlloc                  lifo;
-    FuncCompileInputVector     inputs;
-    CompiledCode               output;
+    const ModuleEnvironment&          env;
+    ExclusiveCompileTaskState&        state;
+    ExclusiveDeferredValidationState& dvs;
+    LifoAlloc                         lifo;
+    FuncCompileInputVector            inputs;
+    CompiledCode                      output;
 
-    CompileTask(const ModuleEnvironment& env, ExclusiveCompileTaskState& state, size_t defaultChunkSize)
+    CompileTask(const ModuleEnvironment& env, ExclusiveCompileTaskState& state,
+                ExclusiveDeferredValidationState& dvs, size_t defaultChunkSize)
       : env(env),
         state(state),
+        dvs(dvs),
         lifo(defaultChunkSize)
     {}
 
@@ -171,6 +174,9 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t                        lastPatchedCallSite_;
     uint32_t                        startOfUnpatchedCallsites_;
     CodeOffsetVector                debugTrapFarJumps_;
+
+    // Data accumulated for deferred validation.  Is shared and mutable.
+    ExclusiveDeferredValidationState deferredValidationState_;
 
     // Parallel compilation
     bool                            parallel_;
@@ -226,6 +232,10 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     SharedModule finishModule(const ShareableBytes& bytecode, UniqueLinkData* linkData = nullptr);
     MOZ_MUST_USE bool finishTier2(Module& module);
+
+    ExclusiveDeferredValidationState& deferredValidationState() {
+        return deferredValidationState_;
+    }
 };
 
 } // namespace wasm

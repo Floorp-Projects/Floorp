@@ -347,6 +347,7 @@ class MOZ_STACK_CLASS OpIter : private Policy
 
     Decoder& d_;
     const ModuleEnvironment& env_;
+    ExclusiveDeferredValidationState& dvs_;
 
     Vector<TypeAndValue<Value>, 8, SystemAllocPolicy> valueStack_;
     Vector<ControlStackEntry<ControlItem>, 8, SystemAllocPolicy> controlStack_;
@@ -436,12 +437,14 @@ class MOZ_STACK_CLASS OpIter : private Policy
     typedef Vector<Value, 8, SystemAllocPolicy> ValueVector;
 
 #ifdef DEBUG
-    explicit OpIter(const ModuleEnvironment& env, Decoder& decoder)
-      : d_(decoder), env_(env), op_(OpBytes(Op::Limit)), offsetOfLastReadOp_(0)
+    explicit OpIter(const ModuleEnvironment& env, Decoder& decoder,
+                    ExclusiveDeferredValidationState& dvs)
+      : d_(decoder), env_(env), dvs_(dvs), op_(OpBytes(Op::Limit)), offsetOfLastReadOp_(0)
     {}
 #else
-    explicit OpIter(const ModuleEnvironment& env, Decoder& decoder)
-      : d_(decoder), env_(env), offsetOfLastReadOp_(0)
+    explicit OpIter(const ModuleEnvironment& env, Decoder& decoder,
+                    ExclusiveDeferredValidationState& dvs)
+      : d_(decoder), env_(env), dvs_(dvs), offsetOfLastReadOp_(0)
     {}
 #endif
 
@@ -1906,8 +1909,11 @@ OpIter<Policy>::readMemOrTableDrop(bool isMem, uint32_t* segIndex)
         return false;
 
     if (isMem) {
-       // FIXME Notify deferred validation of this data seg index use
-    } else {
+        // We can't range-check *segIndex at this point since we don't yet
+        // know how many data segments the module has.  So note the index, but
+        // defer the actual check for now.
+        dvs_.lock()->notifyDataSegmentIndex(*segIndex, d_.currentOffset());
+     } else {
         if (*segIndex >= env_.elemSegments.length())
             return fail("table.drop index out of range");
     }
@@ -1964,7 +1970,8 @@ OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
         return false;
 
     if (isMem) {
-        // FIXME Notify deferred validation of this data seg index use
+        // Same comment as for readMemOrTableDrop.
+        dvs_.lock()->notifyDataSegmentIndex(*segIndex, d_.currentOffset());
     } else {
         if (*segIndex >= env_.elemSegments.length())
             return fail("table.init index out of range");
