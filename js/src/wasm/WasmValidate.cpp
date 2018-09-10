@@ -852,9 +852,31 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
 #endif
 #ifdef ENABLE_WASM_BULKMEM_OPS
               case uint16_t(MiscOp::MemCopy):
-                CHECK(iter.readMemCopy(&nothing, &nothing, &nothing));
+                  CHECK(iter.readMemOrTableCopy(/*isMem=*/true,
+                                                &nothing, &nothing, &nothing));
+              case uint16_t(MiscOp::MemDrop): {
+                uint32_t unusedSegIndex;
+                CHECK(iter.readMemOrTableDrop(/*isMem=*/true, &unusedSegIndex));
+              }
               case uint16_t(MiscOp::MemFill):
                 CHECK(iter.readMemFill(&nothing, &nothing, &nothing));
+              case uint16_t(MiscOp::MemInit): {
+                uint32_t unusedSegIndex;
+                CHECK(iter.readMemOrTableInit(/*isMem=*/true,
+                                              &unusedSegIndex, &nothing, &nothing, &nothing));
+              }
+              case uint16_t(MiscOp::TableCopy):
+                CHECK(iter.readMemOrTableCopy(/*isMem=*/false,
+                                              &nothing, &nothing, &nothing));
+              case uint16_t(MiscOp::TableDrop): {
+                uint32_t unusedSegIndex;
+                CHECK(iter.readMemOrTableDrop(/*isMem=*/false, &unusedSegIndex));
+              }
+              case uint16_t(MiscOp::TableInit): {
+                uint32_t unusedSegIndex;
+                CHECK(iter.readMemOrTableInit(/*isMem=*/false,
+                                              &unusedSegIndex, &nothing, &nothing, &nothing));
+              }
 #endif
               default:
                 return iter.unrecognizedOpcode(&op);

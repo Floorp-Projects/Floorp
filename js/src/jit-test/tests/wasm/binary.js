@@ -279,13 +279,12 @@ for (let i = 0x4f; i < 0x100; i++)
 //
 // Feb 2018 numeric draft:
 //
-//  0x00 .. 0x07 are saturating truncation ops.  0x40 and 0x41 are
-//  from the bulk memory proposal.  0x40/0x41 are unofficial values,
-//  until such time as there is an official assignment for memory.copy/fill
-//  subopcodes.
+//  0x00 .. 0x07 are saturating truncation ops.  0x08 .. 0x0e are from the
+//  bulk memory proposal.  0x08 .. 0x0e are unofficial values, until such
+//  time as there is an official assignment for memory.copy/fill subopcodes.
 
 for (let i = 0; i < 256; i++) {
-    if (i <= 0x07 || i == 0x40 || i == 0x41)
+    if (i <= 0x07 || (i >= 0x08 && i <= 0x0e))
         continue;
     checkIllegalPrefixed(MiscPrefix, i);
 }

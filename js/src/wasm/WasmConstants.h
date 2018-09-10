@@ -388,9 +388,15 @@ enum class MiscOp
     I64TruncSSatF64                      = 0x06,
     I64TruncUSatF64                      = 0x07,
 
-    // Bulk memory operations.  Note, these are unofficial.
-    MemCopy                              = 0x40,
-    MemFill                              = 0x41,
+    // Bulk memory operations.  Note, these are unofficial, but in accordance
+    // with the proposal as of June 2018.
+    MemInit                              = 0x08,
+    MemDrop                              = 0x09,
+    MemCopy                              = 0x0a,
+    MemFill                              = 0x0b,
+    TableInit                            = 0x0c,
+    TableDrop                            = 0x0d,
+    TableCopy                            = 0x0e,
 
     Limit
 };
