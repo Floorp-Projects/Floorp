@@ -911,7 +911,7 @@ Notification::PrefEnabled(JSContext* aCx, JSObject* aObj)
     }
 
     if (workerPrivate->IsServiceWorker()) {
-      return DOMPrefs::NotificationEnabledInServiceWorkers();
+      return StaticPrefs::dom_webnotifications_serviceworker_enabled();
     }
   }
 
