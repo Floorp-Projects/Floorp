@@ -5105,7 +5105,6 @@ pref("dom.streams.enabled", false);
 
 // Push
 
-pref("dom.push.enabled", false);
 pref("dom.push.alwaysConnect", false);
 
 pref("dom.push.loglevel", "Error");
