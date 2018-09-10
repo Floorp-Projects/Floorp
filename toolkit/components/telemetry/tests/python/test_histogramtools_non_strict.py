@@ -13,7 +13,7 @@ sys.path.append(TELEMETRY_ROOT_PATH)
 # The parsers live in a subdirectory of "build_scripts", account for that.
 # NOTE: if the parsers are moved, this logic will need to be updated.
 sys.path.append(path.join(TELEMETRY_ROOT_PATH, "build_scripts"))
-from parsers import parse_histograms   # noqa: E402
+from python_mozparsers import parse_histograms   # noqa: E402
 
 
 def load_histogram(histograms):

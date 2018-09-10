@@ -6,8 +6,12 @@
 # in a file provided as a command-line argument.
 
 from __future__ import print_function
-from parsers.shared_telemetry_utils import StringTable, static_assert, ParserError
-from parsers import parse_histograms
+from python_mozparsers.shared_telemetry_utils import (
+    StringTable,
+    static_assert,
+    ParserError
+)
+from python_mozparsers import parse_histograms
 
 import sys
 import buildconfig

@@ -42,6 +42,8 @@ loader.lazyRequireGetter(this, "WalkerSearch", "devtools/server/actors/utils/wal
 loader.lazyServiceGetter(this, "eventListenerService",
   "@mozilla.org/eventlistenerservice;1", "nsIEventListenerService");
 
+loader.lazyRequireGetter(this, "ChromeUtils");
+
 // Minimum delay between two "new-mutations" events.
 const MUTATIONS_THROTTLING_DELAY = 100;
 // List of mutation types that should -not- be throttled.
@@ -1844,7 +1846,15 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   onFrameLoad: function({ window, isTopLevel }) {
     const { readyState } = window.document;
     if (readyState != "interactive" && readyState != "complete") {
-      window.addEventListener("DOMContentLoaded",
+      // The document is not loaded, so we want to register to fire again when the
+      // DOM has been loaded. To do this, we need to know if this is a XUL document.
+      // We listen for "DOMContentLoaded" on HTML documents, but XUL documents don't
+      // fire this event, so we fallback to the "load" event for XUL. Unfortunately,
+      // since the document isn't loaded yet, we can't check its namespace declaration
+      // to determine if it is XUL. Instead, we use ChromeUtils to see if the document
+      // object class is XULDocument.
+      const isXULDocument = (ChromeUtils.getClassName(window.document) == "XULDocument");
+      window.addEventListener(isXULDocument ? "load" : "DOMContentLoaded",
         this.onFrameLoad.bind(this, { window, isTopLevel }),
         { once: true });
       return;

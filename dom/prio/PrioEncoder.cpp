@@ -5,9 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/Promise.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/TextUtils.h"
+
+#include "mozilla/dom/ToJSValue.h"
 
 #include "PrioEncoder.h"
 
@@ -35,15 +38,17 @@ PrioEncoder::~PrioEncoder()
   Prio_clear();
 }
 
-/* static */
-already_AddRefed<Promise>
-PrioEncoder::Encode(GlobalObject& aGlobal, const nsCString& aBatchID, const PrioParams& aPrioParams, ErrorResult& aRv)
+/* static */ void
+PrioEncoder::Encode(GlobalObject& aGlobal,
+                    const nsCString& aBatchID,
+                    const PrioParams& aPrioParams,
+                    RootedDictionary<PrioEncodedData>& aData,
+                    ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-
   if (!global) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
+    return;
   }
 
   SECStatus prio_rv = SECSuccess;
@@ -55,18 +60,20 @@ PrioEncoder::Encode(GlobalObject& aGlobal, const nsCString& aBatchID, const Prio
 
     Prio_init();
 
+    nsresult rv;
+
     nsAutoCStringN<CURVE25519_KEY_LEN_HEX + 1> prioKeyA;
-    nsresult rv = Preferences::GetCString("prio.publicKeyA", prioKeyA);
+    rv = Preferences::GetCString("prio.publicKeyA", prioKeyA);
     if (NS_FAILED(rv)) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
+      return;
     }
 
     nsAutoCStringN<CURVE25519_KEY_LEN_HEX + 1> prioKeyB;
     rv = Preferences::GetCString("prio.publicKeyB", prioKeyB);
     if (NS_FAILED(rv)) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
+      return;
     }
 
     // Check that both public keys are of the right length
@@ -74,35 +81,41 @@ PrioEncoder::Encode(GlobalObject& aGlobal, const nsCString& aBatchID, const Prio
     if (!PrioEncoder::IsValidHexPublicKey(prioKeyA)
         || !PrioEncoder::IsValidHexPublicKey(prioKeyB))  {
       aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
+      return;
     }
 
-    prio_rv = PublicKey_import_hex(&sPublicKeyA, reinterpret_cast<const unsigned char*>(prioKeyA.BeginReading()), CURVE25519_KEY_LEN_HEX);
+    prio_rv = PublicKey_import_hex(&sPublicKeyA,
+                                   reinterpret_cast<const unsigned char*>(prioKeyA.BeginReading()),
+                                   CURVE25519_KEY_LEN_HEX);
     if (prio_rv != SECSuccess) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
+      return;
     }
 
-    prio_rv = PublicKey_import_hex(&sPublicKeyB, reinterpret_cast<const unsigned char*>(prioKeyB.BeginReading()), CURVE25519_KEY_LEN_HEX);
+    prio_rv = PublicKey_import_hex(&sPublicKeyB,
+              reinterpret_cast<const unsigned char*>(prioKeyB.BeginReading()),
+              CURVE25519_KEY_LEN_HEX);
     if (prio_rv != SECSuccess) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
+      return;
     }
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
-
   bool dataItems[] = {
-    aPrioParams.mStartupCrashDetected,
-    aPrioParams.mSafeModeUsage,
-    aPrioParams.mBrowserIsUserDefault
+    aPrioParams.mBrowserIsUserDefault,
+    aPrioParams.mNewTabPageEnabled,
+    aPrioParams.mPdfViewerUsed,
   };
 
-  PrioConfig prioConfig = PrioConfig_new(mozilla::ArrayLength(dataItems), sPublicKeyA, sPublicKeyB, reinterpret_cast<const unsigned char*>(aBatchID.BeginReading()), aBatchID.Length());
+  PrioConfig prioConfig = PrioConfig_new(mozilla::ArrayLength(dataItems),
+                                         sPublicKeyA,
+                                         sPublicKeyB,
+                                         reinterpret_cast<const unsigned char*>(aBatchID.BeginReading()),
+                                         aBatchID.Length());
 
   if (!prioConfig) {
-    promise->MaybeReject(NS_ERROR_FAILURE);
-    return promise.forget();
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
 
   auto configGuard = MakeScopeExit([&] {
@@ -114,50 +127,54 @@ PrioEncoder::Encode(GlobalObject& aGlobal, const nsCString& aBatchID, const Prio
   unsigned char* forServerB = nullptr;
   unsigned int lenB = 0;
 
-  prio_rv = PrioClient_encode(prioConfig, dataItems, &forServerA, &lenA, &forServerB, &lenB);
-
-  // Package the data into the dictionary
-  PrioEncodedData data;
+  prio_rv = PrioClient_encode(prioConfig,
+                              dataItems,
+                              &forServerA,
+                              &lenA,
+                              &forServerB,
+                              &lenB);
 
   nsTArray<uint8_t> arrayForServerA;
   nsTArray<uint8_t> arrayForServerB;
 
-  if (!arrayForServerA.AppendElements(reinterpret_cast<uint8_t*>(forServerA), lenA, fallible)) {
-    promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-    return promise.forget();
+  if (!arrayForServerA.AppendElements(reinterpret_cast<uint8_t*>(forServerA),
+                                      lenA,
+                                      fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
   }
 
   free(forServerA);
 
-  if (!arrayForServerB.AppendElements(reinterpret_cast<uint8_t*>(forServerB), lenB, fallible)) {
-    promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-    return promise.forget();
+  if (!arrayForServerB.AppendElements(reinterpret_cast<uint8_t*>(forServerB),
+                                      lenB,
+                                      fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return ;
   }
 
   free(forServerB);
 
+  if (prio_rv != SECSuccess) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
   JS::Rooted<JS::Value> valueA(aGlobal.Context());
   if (!ToJSValue(aGlobal.Context(), TypedArrayCreator<Uint8Array>(arrayForServerA), &valueA)) {
-    promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-    return promise.forget();
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
   }
-  data.mA.Construct().Init(&valueA.toObject());
+
+  aData.mA.Construct().Init(&valueA.toObject());
 
   JS::Rooted<JS::Value> valueB(aGlobal.Context());
   if (!ToJSValue(aGlobal.Context(), TypedArrayCreator<Uint8Array>(arrayForServerB), &valueB)) {
-    promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-    return promise.forget();
-  }
-  data.mB.Construct().Init(&valueB.toObject());
-
-  if (prio_rv != SECSuccess) {
-    promise->MaybeReject(NS_ERROR_FAILURE);
-    return promise.forget();
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
   }
 
-  promise->MaybeResolve(data);
-
-  return promise.forget();
+  aData.mB.Construct().Init(&valueB.toObject());
 }
 
 bool
