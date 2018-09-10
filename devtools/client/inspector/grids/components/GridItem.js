@@ -96,6 +96,7 @@ class GridItem extends PureComponent {
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
     } = this.props;
+    const { nodeFront } = grid;
 
     return (
       dom.li({},
@@ -103,7 +104,6 @@ class GridItem extends PureComponent {
           dom.input(
             {
               checked: grid.highlighted,
-              disabled: grid.disabled,
               type: "checkbox",
               value: grid.id,
               onChange: this.onGridCheckboxClick,
@@ -112,10 +112,10 @@ class GridItem extends PureComponent {
           Rep({
             defaultRep: ElementNode,
             mode: MODE.TINY,
-            object: translateNodeFrontToGrip(grid.nodeFront),
+            object: translateNodeFrontToGrip(nodeFront),
             onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
-            onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(grid.nodeFront),
-            onInspectIconClick: () => this.onGridInspectIconClick(grid.nodeFront),
+            onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
+            onInspectIconClick: () => this.onGridInspectIconClick(nodeFront),
           })
         ),
         dom.div(

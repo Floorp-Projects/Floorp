@@ -23,6 +23,7 @@ registerCleanupFunction(() => {
 });
 
 const asyncStorage = require("devtools/shared/async-storage");
+const HIGHLIGHTER_TYPE = "CssGridHighlighter";
 
 /**
  * Simulate a color change in a given color picker tooltip.

@@ -28,6 +28,7 @@ add_task(async function() {
   info("Checking the initial state of the Grid Inspector.");
   ok(noGridList, "The message no grid containers is displayed.");
   ok(!gridList, "No grid containers are listed.");
-  ok(!highlighters.gridHighlighters.size,
+  ok(!highlighters.highlighters[HIGHLIGHTER_TYPE],
     "No CSS grid highlighter exists in the highlighters overlay.");
+  ok(!highlighters.gridHighlighterShown, "No CSS grid highlighter is shown.");
 });
