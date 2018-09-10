@@ -915,6 +915,7 @@ impl RenderBackend {
         profile_counters: &mut BackendProfileCounters,
         has_built_scene: bool,
     ) {
+        let requested_frame = render_frame;
         self.resource_cache.post_scene_building_update(
             resource_updates,
             &mut profile_counters.resources,
@@ -1023,7 +1024,10 @@ impl RenderBackend {
             self.result_tx.send(msg).unwrap();
         }
 
-        if render_frame {
+        // Always forward the transaction to the renderer if a frame was requested,
+        // otherwise gecko can get into a state where it waits (forever) for the
+        // transaction to complete before sending new work.
+        if requested_frame {
             self.notifier.new_frame_ready(document_id, scroll, render_frame, frame_build_time);
         }
     }
