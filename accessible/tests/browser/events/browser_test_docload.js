@@ -31,14 +31,15 @@ function urlChecker(url) {
 }
 
 async function runTests(browser, accDoc) {
-  let onLoadEvents = waitForEvents([
-    [EVENT_REORDER, getAccessible(browser)],
-    [EVENT_DOCUMENT_LOAD_COMPLETE, "body2"],
-    [EVENT_STATE_CHANGE, busyChecker(false)]
-  ], [ // unexpected
-    [EVENT_DOCUMENT_LOAD_COMPLETE, inIframeChecker("iframe1")],
-    [EVENT_STATE_CHANGE, inIframeChecker("iframe1")]
-  ]);
+  let onLoadEvents = waitForEvents({
+    expected: [
+      [EVENT_REORDER, getAccessible(browser)],
+      [EVENT_DOCUMENT_LOAD_COMPLETE, "body2"],
+      [EVENT_STATE_CHANGE, busyChecker(false)]],
+    unexpected: [
+      [EVENT_DOCUMENT_LOAD_COMPLETE, inIframeChecker("iframe1")],
+      [EVENT_STATE_CHANGE, inIframeChecker("iframe1")]]
+  });
 
   browser.loadURI(`data:text/html;charset=utf-8,
     <html><body id="body2">
