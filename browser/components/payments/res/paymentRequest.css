@@ -159,10 +159,6 @@ payment-dialog[changes-prevented][complete-status="success"] #pay {
   z-index: 1;
 }
 
-#cancel {
-  margin-inline-start: auto;
-}
-
 #disabled-overlay {
   background: white;
   grid-area: disabled-overlay;
@@ -176,15 +172,16 @@ payment-dialog[changes-prevented][complete-status="success"] #pay {
   left: 0;
 }
 
-#branding {
+.branding {
   background-image: url(chrome://branding/content/icon32.png);
   background-size: 16px;
   background-repeat: no-repeat;
   background-position: left center;
   padding-inline-start: 20px;
   line-height: 20px;
+  margin-inline-end: auto;
 }
 
-body[dir="rtl"] #branding {
+body[dir="rtl"] .branding {
   background-position: right center;
 }
