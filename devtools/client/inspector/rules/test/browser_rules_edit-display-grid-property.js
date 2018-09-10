@@ -45,5 +45,5 @@ add_task(async function() {
   info("Check the grid highlighter and grid toggle button are hidden.");
   gridToggle = container.querySelector(".ruleview-grid");
   ok(!gridToggle, "Grid highlighter toggle is not visible.");
-  ok(!highlighters.gridHighlighterShown, "No CSS grid highlighter is shown.");
+  ok(!highlighters.gridHighlighters.size, "No CSS grid highlighter is shown.");
 });
