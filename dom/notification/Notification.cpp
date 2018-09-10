@@ -13,6 +13,7 @@
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 
@@ -914,7 +915,7 @@ Notification::PrefEnabled(JSContext* aCx, JSObject* aObj)
     }
   }
 
-  return DOMPrefs::NotificationEnabled();
+  return StaticPrefs::dom_webnotifications_enabled();
 }
 
 // static
