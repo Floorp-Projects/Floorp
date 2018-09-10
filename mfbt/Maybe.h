@@ -22,8 +22,6 @@
 #include <ostream>
 #include <type_traits>
 
-class nsCycleCollectionTraversalCallback;
-
 namespace mozilla {
 
 struct Nothing { };
@@ -713,28 +711,6 @@ template<typename T> bool
 operator>=(const Maybe<T>& aLHS, const Maybe<T>& aRHS)
 {
   return !(aLHS < aRHS);
-}
-
-
-template<typename T>
-void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            Maybe<T>& aMaybe,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
-  if (aMaybe.isSome()) {
-    ImplCycleCollectionTraverse(aCallback, aMaybe.ref(), aName, aFlags);
-  }
-}
-
-template<typename T>
-void
-ImplCycleCollectionUnlink(Maybe<T>& aMaybe)
-{
-  if (aMaybe.isSome()) {
-    ImplCycleCollectionUnlink(aMaybe.ref());
-  }
 }
 
 } // namespace mozilla
