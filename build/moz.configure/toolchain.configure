@@ -370,7 +370,7 @@ def get_compiler_info(compiler, language):
     # in Xcode have a completely different versioning scheme despite exposing
     # the version with the same defines.
     # So instead, we make things such that the version is missing when the
-    # clang used is below the minimum supported version (currently clang 3.6).
+    # clang used is below the minimum supported version (currently clang 3.9).
     # We then only include the version information when the C++ compiler
     # matches the feature check, so that an unsupported version of clang would
     # have no version number.
@@ -385,7 +385,7 @@ def get_compiler_info(compiler, language):
         #endif
         #elif defined(__clang__)
         %COMPILER "clang"
-        #  if !__cplusplus || __has_feature(cxx_alignof)
+        #  if !__cplusplus || __has_builtin(__builtin_bitreverse8)
         %VERSION __clang_major__.__clang_minor__.__clang_patchlevel__
         #  endif
         #elif defined(__GNUC__)
@@ -923,10 +923,10 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                     % info.version)
 
         # If you want to bump the version check here search for
-        # cxx_alignof above, and see the associated comment.
+        # builtin_bitreverse8 above, and see the associated comment.
         if info.type == 'clang' and not info.version:
             raise FatalCheckError(
-                'Only clang/llvm 3.6 or newer is supported.')
+                'Only clang/llvm 3.9 or newer is supported.')
 
         if info.type == 'msvc':
             if info.version < '19.13.26128':
