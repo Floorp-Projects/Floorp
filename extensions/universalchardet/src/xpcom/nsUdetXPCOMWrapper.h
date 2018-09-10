@@ -10,8 +10,8 @@
 #include "nsIStringCharsetDetector.h"
 #include "nsICharsetDetectionObserver.h"
 #include "nsCOMPtr.h"
-
 #include "nsIFactory.h"
+#include "nsUniversalDetector.h"
 
 // {12BB8F1B-2389-11d3-B3BF-00805F8A6670}
 #define NS_JA_PSMDETECTOR_CID \
@@ -60,18 +60,11 @@ class nsXPCOMStringDetector :
 
 //=====================================================================
 
-class nsJAPSMDetector : public nsXPCOMDetector
+class nsJAPSMDetector final : public nsXPCOMDetector
 {
 public:
   nsJAPSMDetector()
     : nsXPCOMDetector() {}
-};
-
-class nsJAStringPSMDetector : public nsXPCOMStringDetector
-{
-public:
-  nsJAStringPSMDetector()
-    : nsXPCOMStringDetector() {}
 };
 
 #endif //_nsUdetXPCOMWrapper_h__
