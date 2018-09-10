@@ -14,6 +14,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsIPrincipal.h"
 
 #include "nsGfxCIID.h"
@@ -142,7 +143,8 @@ bool IsImageExtractionAllowed(nsIDocument *aDocument, JSContext *aCx, nsIPrincip
     // At this point, permission is unknown (nsIPermissionManager::UNKNOWN_ACTION).
 
     // Check if the request is in response to user input
-    if (DOMPrefs::EnableAutoDeclineCanvasPrompts() && !EventStateManager::IsHandlingUserInput()) {
+    if (StaticPrefs::privacy_resistFingerprinting_autoDeclineNoUserInputCanvasPrompts() &&
+        !EventStateManager::IsHandlingUserInput()) {
         nsAutoCString message;
         message.AppendPrintf("Blocked %s in page %s from extracting canvas data because no user input was detected.",
                              docURISpec.get(), topLevelDocURISpec.get());
