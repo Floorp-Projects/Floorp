@@ -15,6 +15,7 @@
 
 #include "nsHttp.h"
 #include "nsHttpChannel.h"
+#include "nsHttpChannelAuthProvider.h"
 #include "nsHttpHandler.h"
 #include "nsIApplicationCacheService.h"
 #include "nsIApplicationCacheContainer.h"
@@ -6492,11 +6493,8 @@ nsHttpChannel::BeginConnect()
         Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, false);
     }
 
-    mAuthProvider =
-        do_CreateInstance("@mozilla.org/network/http-channel-auth-provider;1",
-                          &rv);
-    if (NS_SUCCEEDED(rv))
-        rv = mAuthProvider->Init(this);
+    mAuthProvider = new nsHttpChannelAuthProvider();
+    rv = mAuthProvider->Init(this);
     if (NS_FAILED(rv)) {
         return rv;
     }
