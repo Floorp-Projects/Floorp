@@ -701,11 +701,26 @@ class TupBackend(CommonBackend):
             fh.write('IDL_PARSER_DIR = $(topsrcdir)/xpcom/idl-parser\n')
             fh.write('IDL_PARSER_CACHE_DIR = $(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl\n')
 
-        # Run 'tup init' if necessary.
-        if not os.path.exists(mozpath.join(self.environment.topsrcdir, ".tup")):
+        # Run 'tup init' if necessary, attempting to cover both the objdir
+        # and srcdir.
+        tup_base_dir = os.path.commonprefix([self.environment.topsrcdir,
+                                             self.environment.topobjdir])
+        if tup_base_dir != self.environment.topsrcdir:
+            if os.path.isdir(mozpath.join(self.environment.topsrcdir, '.tup')):
+                print("Found old tup root at '%s', removing..." %
+                      mozpath.join(self.environment.topsrcdir, '.tup'))
+                shutil.rmtree(mozpath.join(self.environment.topsrcdir, '.tup'))
+        if not os.path.isdir(mozpath.join(tup_base_dir, '.tup')):
+            if tup_base_dir != self.environment.topsrcdir:
+                # Ask the user to figure out where to run 'tup init' before
+                # continuing.
+                raise Exception("Please run `tup init --no-sync` in a common "
+                    "ancestor directory of your objdir and srcdir, possibly "
+                    "%s. To reduce file scanning overhead, this directory "
+                    "should contain the fewest files possible that are not "
+                    "necessary for this build." % tup_base_dir)
             tup = self.environment.substs.get('TUP', 'tup')
-            self._cmd.run_process(cwd=self.environment.topsrcdir, log_name='tup', args=[tup, 'init', '--no-sync'])
-
+            self._cmd.run_process(cwd=tup_base_dir, log_name='tup', args=[tup, 'init', '--no-sync'])
 
     def _get_cargo_flags(self, obj):
         cargo_flags = ['--build-plan', '-Z', 'unstable-options']
