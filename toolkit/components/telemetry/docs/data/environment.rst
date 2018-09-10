@@ -432,7 +432,7 @@ For each experiment we collect the ``id`` and the ``branch`` the client is enrol
 
 
 Version History
-===============
+---------------
 
 - Firefox 61:
 

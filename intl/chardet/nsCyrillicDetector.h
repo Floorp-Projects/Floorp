@@ -6,6 +6,7 @@
 #define nsCyrillicDetector_h__
 
 #include "nsCyrillicClass.h"
+#include "nsIStringCharsetDetector.h"
 
 
 
@@ -122,32 +123,18 @@ class nsCyrXPCOMStringDetector :
     const char* mResult;
 };
 
-class nsRUProbDetector : public nsCyrXPCOMDetector
+class nsRUProbDetector final : public nsCyrXPCOMDetector
 {
   public:
     nsRUProbDetector()
       : nsCyrXPCOMDetector(5, gCyrillicCls, gRussian) {}
 };
 
-class nsRUStringProbDetector : public nsCyrXPCOMStringDetector
-{
-  public:
-    nsRUStringProbDetector()
-      : nsCyrXPCOMStringDetector(5, gCyrillicCls, gRussian) {}
-};
-
-class nsUKProbDetector : public nsCyrXPCOMDetector
+class nsUKProbDetector final : public nsCyrXPCOMDetector
 {
   public:
     nsUKProbDetector()
       : nsCyrXPCOMDetector(5, gCyrillicCls, gUkrainian) {}
-};
-
-class nsUKStringProbDetector : public nsCyrXPCOMStringDetector
-{
-  public:
-    nsUKStringProbDetector()
-      : nsCyrXPCOMStringDetector(5, gCyrillicCls, gUkrainian) {}
 };
 
 #endif

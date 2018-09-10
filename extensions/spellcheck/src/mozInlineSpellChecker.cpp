@@ -55,7 +55,6 @@
 #include "nsIRunnable.h"
 #include "nsISelectionController.h"
 #include "nsIServiceManager.h"
-#include "nsITextServicesFilter.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
@@ -770,14 +769,8 @@ mozInlineSpellChecker::SetEnableRealTimeSpell(bool aEnabled)
     return NS_OK;
   }
 
-  nsCOMPtr<nsITextServicesFilter> filter =
-    do_CreateInstance("@mozilla.org/editor/txtsrvfiltermail;1");
-  if (NS_WARN_IF(!filter)) {
-    return NS_ERROR_FAILURE;
-  }
-
   mPendingSpellCheck = new EditorSpellCheck();
-  mPendingSpellCheck->SetFilter(filter);
+  mPendingSpellCheck->SetFilterType(nsIEditorSpellCheck::FILTERTYPE_MAIL);
 
   mPendingInitEditorSpellCheckCallback = new InitEditorSpellCheckCallback(this);
   nsresult rv = mPendingSpellCheck->InitSpellChecker(
