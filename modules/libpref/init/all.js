@@ -1362,8 +1362,6 @@ pref("privacy.firstparty.isolate",                        false);
 // (top level URLs) can access resources through window.opener.
 // This pref is effective only when "privacy.firstparty.isolate" is true.
 pref("privacy.firstparty.isolate.restrict_opener_access", true);
-// Anti-fingerprinting, disabled by default
-pref("privacy.resistFingerprinting", false);
 // We automatically decline canvas permission requests if they are not initiated
 // from user input. Just in case that breaks something, we allow the user to revert
 // this behaior with this obscure pref. We do not intend to support this long term.
