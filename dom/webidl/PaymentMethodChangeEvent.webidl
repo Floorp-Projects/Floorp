@@ -8,6 +8,6 @@ interface PaymentMethodChangeEvent : PaymentRequestUpdateEvent {
 };
 
 dictionary PaymentMethodChangeEventInit : PaymentRequestUpdateEventInit {
-    required DOMString methodName;
-             object?   methodDetails;
+    DOMString methodName = "";
+    object?   methodDetails = null;
 };
