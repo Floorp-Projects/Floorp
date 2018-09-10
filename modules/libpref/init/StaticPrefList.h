@@ -301,6 +301,18 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+#if !defined(MOZ_WIDGET_ANDROID)
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "dom.webkitBlink.dirPicker.enabled",
+   dom_webkitBlink_dirPicker_enabled,
+  RelaxedAtomicBool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 //---------------------------------------------------------------------------
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------

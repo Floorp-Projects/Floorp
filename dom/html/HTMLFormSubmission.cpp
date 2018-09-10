@@ -36,8 +36,8 @@
 #include "nsContentUtils.h"
 
 #include "mozilla/dom/Directory.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 namespace dom {
@@ -491,7 +491,7 @@ FSMultipartFormData::AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob)
     if (file) {
       nsAutoString relativePath;
       file->GetRelativePath(relativePath);
-      if (DOMPrefs::WebkitBlinkDirectoryPickerEnabled() &&
+      if (StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
           !relativePath.IsEmpty()) {
         filename16 = relativePath;
       }
@@ -550,7 +550,7 @@ nsresult
 FSMultipartFormData::AddNameDirectoryPair(const nsAString& aName,
                                           Directory* aDirectory)
 {
-  if (!DOMPrefs::WebkitBlinkDirectoryPickerEnabled()) {
+  if (!StaticPrefs::dom_webkitBlink_dirPicker_enabled()) {
     return NS_OK;
   }
 
