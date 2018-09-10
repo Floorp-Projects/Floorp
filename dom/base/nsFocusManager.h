@@ -77,6 +77,11 @@ public:
   bool IsFocused(nsIContent* aContent);
 
   /**
+   * Returns true if test mode is enabled.
+   */
+  bool IsTestMode();
+
+  /**
    * Return a focused window. Version of nsIFocusManager::GetFocusedWindow.
    */
   nsPIDOMWindowOuter* GetFocusedWindow() const { return mFocusedWindow; }
