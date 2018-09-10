@@ -2799,6 +2799,10 @@ public:
    * resolution, cumulative resolution, zoom, composition size, root
    * composition size, scroll offset and scrollable rect.
    *
+   * Note that for the RCD-RSF, the scroll offset returned is the layout
+   * viewport offset; if you need the visual viewport offset, that needs to
+   * be queried independently via nsIPresShell::GetVisualViewportOffset().
+   *
    * By contrast, ComputeFrameMetrics() computes all the fields, but requires
    * extra inputs and can only be called during frame layer building.
    */
