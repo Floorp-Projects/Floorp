@@ -49,5 +49,5 @@ async function checkGridHighlighter() {
   gridToggle.click();
   await onHighlighterShown;
 
-  ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
+  is(highlighters.gridHighlighters.size, 1, "CSS grid highlighter is shown.");
 }

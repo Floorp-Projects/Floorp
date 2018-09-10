@@ -34,8 +34,8 @@ add_task(async function() {
   gridToggle.click();
   await onHighlighterShown;
 
-  ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
+  is(highlighters.gridHighlighters.size, 1, "CSS grid highlighter is shown.");
 
   await navigateTo(inspector, TEST_URI_2);
-  ok(!highlighters.gridHighlighterShown, "CSS grid highlighter is hidden.");
+  ok(!highlighters.gridHighlighters.size, "CSS grid highlighter is hidden.");
 });

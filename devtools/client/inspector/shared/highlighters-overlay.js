@@ -6,6 +6,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {
   VIEW_NODE_VALUE_TYPE,
@@ -23,21 +24,32 @@ class HighlightersOverlay {
    *         Inspector toolbox panel.
    */
   constructor(inspector) {
-    /*
-    * Collection of instantiated highlighter actors like FlexboxHighlighter,
-    * CssGridHighlighter, ShapesHighlighter and GeometryEditorHighlighter.
-    */
-    this.highlighters = {};
-    /*
-    * Collection of instantiated in-context editors, like ShapesInContextEditor, which
-    * behave like highlighters but with added editing capabilities that need to map value
-    * changes to properties in the Rule view.
-    */
-    this.editors = {};
     this.inspector = inspector;
     this.highlighterUtils = this.inspector.toolbox.highlighterUtils;
     this.store = this.inspector.store;
     this.telemetry = inspector.telemetry;
+
+    // Collection of instantiated highlighter actors like FlexboxHighlighter,
+    // ShapesHighlighter and GeometryEditorHighlighter.
+    this.highlighters = {};
+    // Map of grid container NodeFront to their instantiated grid highlighter actors.
+    this.gridHighlighters = new Map();
+    // Array of reusable grid highlighters that have been instantiated and are not
+    // associated with any NodeFront.
+    this.extraGridHighlighterPool = [];
+
+    // Collection of instantiated in-context editors, like ShapesInContextEditor, which
+    // behave like highlighters but with added editing capabilities that need to map value
+    // changes to properties in the Rule view.
+    this.editors = {};
+
+    // Saved state to be restore on page navigation.
+    this.state = {
+      flexbox: {},
+      // Map of grid container NodeFront to the their stored grid options
+      grids: new Map(),
+      shapes: {},
+    };
 
     // NodeFront of the flexbox container that is highlighted.
     this.flexboxHighlighterShown = null;
@@ -45,20 +57,12 @@ class HighlightersOverlay {
     this.flexItemHighlighterShown = null;
     // NodeFront of element that is highlighted by the geometry editor.
     this.geometryEditorHighlighterShown = null;
-    // NodeFront of the grid container that is highlighted.
-    this.gridHighlighterShown = null;
     // Name of the highlighter shown on mouse hover.
     this.hoveredHighlighterShown = null;
     // Name of the selector highlighter shown.
     this.selectorHighlighterShown = null;
     // NodeFront of the shape that is highlighted
     this.shapesHighlighterShown = null;
-    // Saved state to be restore on page navigation.
-    this.state = {
-      flexbox: {},
-      grid: {},
-      shapes: {},
-    };
 
     this.onClick = this.onClick.bind(this);
     this.onMarkupMutation = this.onMarkupMutation.bind(this);
@@ -126,7 +130,7 @@ class HighlightersOverlay {
 
   /**
    * Toggle the shapes highlighter for the given node.
-
+   *
    * @param  {NodeFront} node
    *         The NodeFront of the element with a shape to highlight.
    * @param  {Object} options
@@ -389,7 +393,7 @@ class HighlightersOverlay {
    *         "rule" represents the rule view.
    */
   async toggleGridHighlighter(node, trigger) {
-    if (node == this.gridHighlighterShown) {
+    if (this.gridHighlighters.has(node)) {
       await this.hideGridHighlighter(node);
       return;
     }
@@ -410,7 +414,26 @@ class HighlightersOverlay {
    *         "rule" represents the rule view.
    */
   async showGridHighlighter(node, options, trigger) {
-    const highlighter = await this._getHighlighter("CssGridHighlighter");
+    const maxHighlighters =
+      Services.prefs.getIntPref("devtools.gridinspector.maxHighlighters");
+
+    // When the grid highlighter has the given node, it is probably called with new
+    // highlighting options, so skip any extra grid highlighter handling.
+    if (!this.gridHighlighters.has(node)) {
+      if (maxHighlighters === 1) {
+        // Only one grid highlighter can be shown at a time. Hides any instantiated
+        // grid highlighters.
+        for (const nodeFront of this.gridHighlighters.keys()) {
+          await this.hideGridHighlighter(nodeFront);
+        }
+      } else if (this.gridHighlighters.size === maxHighlighters) {
+        // The maximum number of grid highlighters shown have been reached. Don't show
+        // any additional grid highlighters.
+        return;
+      }
+    }
+
+    const highlighter = await this._getGridHighlighter(node);
     if (!highlighter) {
       return;
     }
@@ -434,10 +457,10 @@ class HighlightersOverlay {
       // Save grid highlighter state.
       const { url } = this.inspector.target;
       const selector = await node.getUniqueSelector();
-      this.state.grid = { selector, options, url };
-      this.gridHighlighterShown = node;
+      this.state.grids.set(node, { selector, options, url });
+
       // Emit the NodeFront of the grid container element that the grid highlighter was
-      // shown for.
+      // shown for, and its options for testing the highlighter setting options.
       this.emit("grid-highlighter-shown", node, options);
     } catch (e) {
       this._handleRejection(e);
@@ -451,22 +474,24 @@ class HighlightersOverlay {
    *         The NodeFront of the grid container element to unhighlight.
    */
   async hideGridHighlighter(node) {
-    if (!this.gridHighlighterShown || !this.highlighters.CssGridHighlighter) {
+    if (!this.gridHighlighters.has(node)) {
       return;
     }
 
     this._toggleRuleViewIcon(node, false, ".ruleview-grid");
 
-    await this.highlighters.CssGridHighlighter.hide();
+    // Hide the highlighter and put it in the pool of extra grid highlighters
+    // so that it can be reused.
+    const highlighter = this.gridHighlighters.get(node);
+    await highlighter.hide();
+    this.extraGridHighlighterPool.push(highlighter);
+
+    this.state.grids.delete(node);
+    this.gridHighlighters.delete(node);
 
     // Emit the NodeFront of the grid container element that the grid highlighter was
     // hidden for.
-    const nodeFront = this.gridHighlighterShown;
-    this.gridHighlighterShown = null;
-    this.emit("grid-highlighter-hidden", nodeFront, this.state.grid.options);
-
-    // Erase grid highlighter state.
-    this.state.grid = {};
+    this.emit("grid-highlighter-hidden", node);
   }
 
   /**
@@ -572,8 +597,16 @@ class HighlightersOverlay {
    * Restores the saved grid highlighter state.
    */
   async restoreGridState() {
+    // The NodeFronts that are used as the keys in the grid state Map are no longer in the
+    // tree after a reload. To clean up the grid state, we create a copy of the values of
+    // the grid state before restoring and clear it.
+    const values = [...this.state.grids.values()];
+    this.state.grids.clear();
+
     try {
-      await this.restoreState("grid", this.state.grid, this.showGridHighlighter);
+      for (const gridState of values) {
+        await this.restoreState("grid", gridState, this.showGridHighlighter);
+      }
     } catch (e) {
       this._handleRejection(e);
     }
@@ -613,24 +646,23 @@ class HighlightersOverlay {
 
       await showFunction(nodeFront, options);
       this.emit(`${name}-state-restored`, { restored: true });
+    } else {
+      this.emit(`${name}-state-restored`, { restored: false });
     }
-
-    this.emit(`${name}-state-restored`, { restored: false });
   }
 
   /**
-  * Get an instance of an in-context editor for the given type.
-  *
-  * In-context editors behave like highlighters but with added editing capabilities which
-  * need to write value changes back to something, like to properties in the Rule view.
-  * They typically exist in the context of the page, like the ShapesInContextEditor.
-  *
-  * @param  {String} type
-  *         Type of in-context editor. Currently supported: "shapesEditor"
-  *
-  * @return {Object|null}
-  *         Reference to instance for given type of in-context editor or null.
-  */
+   * Get an instance of an in-context editor for the given type.
+   *
+   * In-context editors behave like highlighters but with added editing capabilities which
+   * need to write value changes back to something, like to properties in the Rule view.
+   * They typically exist in the context of the page, like the ShapesInContextEditor.
+   *
+   * @param  {String} type
+   *         Type of in-context editor. Currently supported: "shapesEditor"
+   * @return {Object|null}
+   *         Reference to instance for given type of in-context editor or null.
+   */
   async getInContextEditor(type) {
     if (this.editors[type]) {
       return this.editors[type];
@@ -667,8 +699,6 @@ class HighlightersOverlay {
    * @return {Promise} that resolves to the highlighter
    */
   async _getHighlighter(type) {
-    const utils = this.highlighterUtils;
-
     if (this.highlighters[type]) {
       return this.highlighters[type];
     }
@@ -676,9 +706,9 @@ class HighlightersOverlay {
     let highlighter;
 
     try {
-      highlighter = await utils.getHighlighterByType(type);
+      highlighter = await this.highlighterUtils.getHighlighterByType(type);
     } catch (e) {
-      // Ignore any error
+      this._handleRejection(e);
     }
 
     if (!highlighter) {
@@ -686,6 +716,41 @@ class HighlightersOverlay {
     }
 
     this.highlighters[type] = highlighter;
+    return highlighter;
+  }
+
+  /**
+   * Get a grid highlighter front for a given node.
+   *
+   * @param  {NodeFront} node
+   *         The NodeFront of the grid container element to highlight.
+   * @return {Promise} that resolves to the grid highlighter front.
+   */
+  async _getGridHighlighter(node) {
+    if (this.gridHighlighters.has(node)) {
+      return this.gridHighlighters.get(node);
+    }
+
+    let highlighter;
+
+    // Attempt to use any grid highlighters already instantiated in the extra pool,
+    // otherwise, initialize a new grid highlighter.
+    if (this.extraGridHighlighterPool.length > 0) {
+      highlighter = this.extraGridHighlighterPool.pop();
+    } else {
+      try {
+        highlighter = await this.highlighterUtils.getHighlighterByType(
+          "CssGridHighlighter");
+      } catch (e) {
+        this._handleRejection(e);
+      }
+    }
+
+    if (!highlighter) {
+      return null;
+    }
+
+    this.gridHighlighters.set(node, highlighter);
     return highlighter;
   }
 
@@ -778,7 +843,7 @@ class HighlightersOverlay {
         hideHighlighter(node);
       }
     } catch (e) {
-      console.error(e);
+      this._handleRejection(e);
     }
   }
 
@@ -968,35 +1033,44 @@ class HighlightersOverlay {
       return;
     }
 
-    this._hideHighlighterIfDeadNode(this.flexboxHighlighterShown,
+    for (const node of this.gridHighlighters.keys()) {
+      await this._hideHighlighterIfDeadNode(node, this.hideGridHighlighter);
+    }
+
+    await this._hideHighlighterIfDeadNode(this.flexboxHighlighterShown,
       this.hideFlexboxHighlighter);
-    this._hideHighlighterIfDeadNode(this.flexItemHighlighterShown,
+    await this._hideHighlighterIfDeadNode(this.flexItemHighlighterShown,
       this.hideFlexItemHighlighter);
-    this._hideHighlighterIfDeadNode(this.gridHighlighterShown,
-      this.hideGridHighlighter);
-    this._hideHighlighterIfDeadNode(this.shapesHighlighterShown,
+    await this._hideHighlighterIfDeadNode(this.shapesHighlighterShown,
       this.hideShapesHighlighter);
   }
 
   /**
    * Clear saved highlighter shown properties on will-navigate.
    */
-  onWillNavigate() {
+  async onWillNavigate() {
     this.destroyEditors();
+
+    // Store all the grid highlighters into the pool of reusable grid highlighters, and
+    // clear the Map of grid highlighters.
+    for (const highlighter of this.gridHighlighters.values()) {
+      this.extraGridHighlighterPool.push(highlighter);
+    }
+
+    this.gridHighlighters.clear();
 
     this.boxModelHighlighterShown = null;
     this.flexboxHighlighterShown = null;
     this.flexItemHighlighterShown = null;
     this.geometryEditorHighlighterShown = null;
-    this.gridHighlighterShown = null;
     this.hoveredHighlighterShown = null;
     this.selectorHighlighterShown = null;
     this.shapesHighlighterShown = null;
   }
 
   /**
-  * Destroy and clean-up all instances of in-context editors.
-  */
+   * Destroy and clean-up all instances of in-context editors.
+   */
   destroyEditors() {
     for (const type in this.editors) {
       this.editors[type].off("show");
@@ -1007,6 +1081,27 @@ class HighlightersOverlay {
     this.editors = {};
   }
 
+  /**
+   * Destroy all instances of the grid highlighters.
+   */
+  destroyGridHighlighters() {
+    for (const highlighter of this.gridHighlighters.values()) {
+      highlighter.finalize();
+    }
+
+    for (const highlighter of this.extraGridHighlighterPool) {
+      highlighter.finalize();
+    }
+
+    this.gridHighlighters.clear();
+
+    this.gridHighlighters = null;
+    this.extraGridHighlighterPool = null;
+  }
+
+  /**
+   * Destroy and clean-up all instances of highlighters.
+   */
   destroyHighlighters() {
     for (const type in this.highlighters) {
       if (this.highlighters[type]) {
@@ -1014,6 +1109,7 @@ class HighlightersOverlay {
         this.highlighters[type] = null;
       }
     }
+
     this.highlighters = null;
   }
 
@@ -1022,12 +1118,12 @@ class HighlightersOverlay {
    * all initialized highlighters.
    */
   destroy() {
-    this.destroyHighlighters();
-    this.destroyEditors();
-
-    // Remove inspector events.
     this.inspector.off("markupmutation", this.onMarkupMutation);
     this.inspector.target.off("will-navigate", this.onWillNavigate);
+
+    this.destroyEditors();
+    this.destroyGridHighlighters();
+    this.destroyHighlighters();
 
     this._lastHovered = null;
 
@@ -1040,7 +1136,6 @@ class HighlightersOverlay {
     this.flexboxHighlighterShown = null;
     this.flexItemHighlighterShown = null;
     this.geometryEditorHighlighterShown = null;
-    this.gridHighlighterShown = null;
     this.hoveredHighlighterShown = null;
     this.selectorHighlighterShown = null;
     this.shapesHighlighterShown = null;
