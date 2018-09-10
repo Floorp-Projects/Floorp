@@ -19,7 +19,6 @@
 //   * This defines DOMPrefs::FooBar(JSContext* aCx, JSObject* aObj);
 //     This is allows the use of DOMPrefs in WebIDL files.
 
-DOM_PREF(FetchObserverEnabled, "dom.fetchObserver.enabled")
 DOM_PREF(ResistFingerprintingEnabled, "privacy.resistFingerprinting")
 DOM_PREF(EnableAutoDeclineCanvasPrompts, "privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts")
 DOM_PREF(DevToolsEnabled, "devtools.enabled")
@@ -41,7 +40,7 @@ DOM_WEBIDL_PREF2(dom_streams_enabled)
 DOM_WEBIDL_PREF2(gfx_offscreencanvas_enabled)
 DOM_WEBIDL_PREF2(dom_webkitBlink_dirPicker_enabled)
 DOM_WEBIDL_PREF2(dom_netinfo_enabled)
-DOM_WEBIDL_PREF(FetchObserverEnabled)
+DOM_WEBIDL_PREF2(dom_fetchObserver_enabled)
 DOM_WEBIDL_PREF(PerformanceObserverEnabled)
 DOM_WEBIDL_PREF(SchedulerTimingEnabled)
 
