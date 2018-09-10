@@ -5053,7 +5053,6 @@ pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  32768);
 
 // Web Notification
-pref("dom.webnotifications.enabled", true);
 pref("dom.webnotifications.serviceworker.enabled", true);
 pref("dom.webnotifications.requireinteraction.count", 3);
 #ifdef NIGHTLY_BUILD
