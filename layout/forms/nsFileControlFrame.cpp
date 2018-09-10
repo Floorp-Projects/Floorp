@@ -11,7 +11,6 @@
 #include "nsIDocument.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Directory.h"
@@ -22,6 +21,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
@@ -351,7 +351,7 @@ nsFileControlFrame::DnDListener::GetBlobImplForWebkitDirectory(FileList* aFileLi
   HTMLInputElement* inputElement =
     HTMLInputElement::FromNode(mFrame->GetContent());
   bool webkitDirPicker =
-    DOMPrefs::WebkitBlinkDirectoryPickerEnabled() &&
+    StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
     inputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory);
   if (!webkitDirPicker) {
     return NS_OK;
