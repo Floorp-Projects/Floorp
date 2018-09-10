@@ -4,7 +4,6 @@
 
 /* eslint-env mozilla/frame-script */
 
-const FAVICON_QUESTION = "chrome://global/skin/icons/question-32.png";
 const CB_ENABLED_PREF = "browser.contentblocking.enabled";
 const CB_UI_ENABLED_PREF = "browser.contentblocking.ui.enabled";
 const TP_ENABLED_PREF = "privacy.trackingprotection.enabled";
@@ -53,7 +52,6 @@ document.addEventListener("DOMContentLoaded", function() {
   if (!RPMIsWindowPrivate()) {
     document.documentElement.classList.remove("private");
     document.documentElement.classList.add("normal");
-    document.getElementById("favicon").setAttribute("href", FAVICON_QUESTION);
     document.getElementById("startPrivateBrowsing").addEventListener("click", function() {
       RPMSendAsyncMessage("OpenPrivateWindow");
     });
