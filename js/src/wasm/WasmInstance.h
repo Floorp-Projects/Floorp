@@ -55,6 +55,8 @@ class Instance
     const UniqueTlsData             tlsData_;
     GCPtrWasmMemoryObject           memory_;
     SharedTableVector               tables_;
+    DataSegmentInitVector           dataSegInitVec_;
+    ElemSegmentInitVector           elemSegInitVec_;
     bool                            enterFrameTrapsEnabled_;
 
     // Internal helpers:
@@ -97,6 +99,8 @@ class Instance
     const Metadata& metadata() const { return code_->metadata(); }
     bool isAsmJS() const { return metadata().isAsmJS(); }
     const SharedTableVector& tables() const { return tables_; }
+    DataSegmentInitVector& dataSegInitVec() { return dataSegInitVec_; }
+    ElemSegmentInitVector& elemSegInitVec() { return elemSegInitVec_; }
     SharedMem<uint8_t*> memoryBase() const;
     WasmMemoryObject* memory() const;
     size_t memoryMappedSize() const;
