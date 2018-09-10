@@ -16,12 +16,12 @@
 #include "ServiceWorkerRegistration.h"
 #include "ServiceWorkerUtils.h"
 
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/StaticPrefs.h"
 
 #ifdef XP_WIN
 #undef PostMessage
@@ -37,7 +37,7 @@ bool
 ServiceWorkerVisible(JSContext* aCx, JSObject* aObj)
 {
   if (NS_IsMainThread()) {
-    return DOMPrefs::ServiceWorkersEnabled();
+    return StaticPrefs::dom_serviceWorkers_enabled();
   }
 
   return IS_INSTANCE_OF(ServiceWorkerGlobalScope, aObj);
