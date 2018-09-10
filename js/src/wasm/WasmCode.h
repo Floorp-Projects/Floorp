@@ -77,24 +77,6 @@ struct LinkData : LinkDataCacheablePod
 
 typedef UniquePtr<LinkData> UniqueLinkData;
 
-// ShareableBytes is a reference-counted Vector of bytes.
-
-struct ShareableBytes : ShareableBase<ShareableBytes>
-{
-    // Vector is 'final', so instead make Vector a member and add boilerplate.
-    Bytes bytes;
-    ShareableBytes() = default;
-    explicit ShareableBytes(Bytes&& bytes) : bytes(std::move(bytes)) {}
-    size_t sizeOfExcludingThis(MallocSizeOf m) const { return bytes.sizeOfExcludingThis(m); }
-    const uint8_t* begin() const { return bytes.begin(); }
-    const uint8_t* end() const { return bytes.end(); }
-    size_t length() const { return bytes.length(); }
-    bool append(const uint8_t *p, uint32_t ct) { return bytes.append(p, ct); }
-};
-
-typedef RefPtr<ShareableBytes> MutableBytes;
-typedef RefPtr<const ShareableBytes> SharedBytes;
-
 // Executable code must be deallocated specially.
 
 struct FreeCode {
@@ -745,9 +727,13 @@ class Code : public ShareableBase<Code>
     SharedMetadata                      metadata_;
     ExclusiveData<CacheableCharsVector> profilingLabels_;
     JumpTables                          jumpTables_;
+    const DataSegmentVector             dataSegments_;
+    const ElemSegmentVector             elemSegments_;
 
   public:
-    Code(UniqueCodeTier tier1, const Metadata& metadata, JumpTables&& maybeJumpTables);
+    Code(UniqueCodeTier tier1, const Metadata& metadata,
+         JumpTables&& maybeJumpTables, DataSegmentVector&& dataSegments,
+         ElemSegmentVector&& elemSegments);
     bool initialized() const { return tier1_->initialized(); }
 
     bool initialize(const ShareableBytes& bytecode, const LinkData& linkData);
@@ -772,6 +758,8 @@ class Code : public ShareableBase<Code>
 
     const CodeTier& codeTier(Tier tier) const;
     const Metadata& metadata() const { return *metadata_; }
+    const DataSegmentVector& dataSegments() const { return dataSegments_; }
+    const ElemSegmentVector& elemSegments() const { return elemSegments_; }
 
     const ModuleSegment& segment(Tier iter) const {
         return codeTier(iter).segment();

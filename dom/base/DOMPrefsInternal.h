@@ -8,59 +8,24 @@
 // main-thread in DOM.
 // The format is as follows:
 //
-//   DOM_PREF(FooBar, "foo.bar")
+//   DOM_WEBIDL_PREF(foo_bar)
 //
-//   * First argument is the name of the getter function.  This defines a
-//     DOMPrefs::FooBar()
-//   * The second argument is the name of the pref.
-//
-//   DOM_WEBIDL_PREF(FooBar)
-//
-//   * This defines DOMPrefs::FooBar(JSContext* aCx, JSObject* aObj);
+//   * This defines DOMPrefs::foo_bar(JSContext* aCx, JSObject* aObj) which
+//     returns the value of StaticPrefs::foo_bar().
 //     This is allows the use of DOMPrefs in WebIDL files.
 
-DOM_PREF(ImageBitmapExtensionsEnabled, "canvas.imagebitmap_extensions.enabled")
-DOM_PREF(DOMCachesEnabled, "dom.caches.enabled")
-DOM_PREF(DOMCachesTestingEnabled, "dom.caches.testing.enabled")
-DOM_PREF(PerformanceLoggingEnabled, "dom.performance.enable_user_timing_logging")
-DOM_PREF(NotificationEnabled, "dom.webnotifications.enabled")
-DOM_PREF(NotificationEnabledInServiceWorkers, "dom.webnotifications.serviceworker.enabled")
-DOM_PREF(NotificationRIEnabled, "dom.webnotifications.requireinteraction.enabled")
-DOM_PREF(ServiceWorkersEnabled, "dom.serviceWorkers.enabled")
-DOM_PREF(ServiceWorkersTestingEnabled, "dom.serviceWorkers.testing.enabled")
-DOM_PREF(StorageManagerEnabled, "dom.storageManager.enabled")
-DOM_PREF(PromiseRejectionEventsEnabled, "dom.promise_rejection_events.enabled")
-DOM_PREF(PushEnabled, "dom.push.enabled")
-DOM_PREF(StreamsEnabled, "dom.streams.enabled")
-DOM_PREF(OffscreenCanvasEnabled, "gfx.offscreencanvas.enabled")
-DOM_PREF(WebkitBlinkDirectoryPickerEnabled, "dom.webkitBlink.dirPicker.enabled")
-DOM_PREF(NetworkInformationEnabled, "dom.netinfo.enabled")
-DOM_PREF(FetchObserverEnabled, "dom.fetchObserver.enabled")
-DOM_PREF(ResistFingerprintingEnabled, "privacy.resistFingerprinting")
-DOM_PREF(EnableAutoDeclineCanvasPrompts, "privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts")
-DOM_PREF(DevToolsEnabled, "devtools.enabled")
-DOM_PREF(PerformanceObserverEnabled, "dom.enable_performance_observer")
-DOM_PREF(IndexedDBStorageOptionsEnabled, "dom.indexedDB.storageOption.enabled")
-#ifdef JS_BUILD_BINAST
-DOM_PREF(BinASTEncodingEnabled, "dom.script_loader.binast_encoding.enabled")
-#endif
-
-DOM_WEBIDL_PREF(ImageBitmapExtensionsEnabled)
-DOM_WEBIDL_PREF(DOMCachesEnabled)
-DOM_WEBIDL_PREF(NotificationEnabledInServiceWorkers)
-DOM_WEBIDL_PREF(NotificationRIEnabled)
-DOM_WEBIDL_PREF(ServiceWorkersEnabled)
-DOM_WEBIDL_PREF(StorageManagerEnabled)
-DOM_WEBIDL_PREF(PromiseRejectionEventsEnabled)
-DOM_WEBIDL_PREF(PushEnabled)
-DOM_WEBIDL_PREF(StreamsEnabled)
-DOM_WEBIDL_PREF(OffscreenCanvasEnabled)
-DOM_WEBIDL_PREF(WebkitBlinkDirectoryPickerEnabled)
-DOM_WEBIDL_PREF(NetworkInformationEnabled)
-DOM_WEBIDL_PREF(FetchObserverEnabled)
-DOM_WEBIDL_PREF(PerformanceObserverEnabled)
-DOM_WEBIDL_PREF(SchedulerTimingEnabled)
-
-DOM_UINT32_PREF(WorkerCancelingTimeoutMillis,
-                "dom.worker.canceling.timeoutMilliseconds",
-                30000 /* 30 seconds */)
+DOM_WEBIDL_PREF(canvas_imagebitmap_extensions_enabled)
+DOM_WEBIDL_PREF(dom_caches_enabled)
+DOM_WEBIDL_PREF(dom_webnotifications_serviceworker_enabled)
+DOM_WEBIDL_PREF(dom_webnotifications_requireinteraction_enabled)
+DOM_WEBIDL_PREF(dom_serviceWorkers_enabled)
+DOM_WEBIDL_PREF(dom_storageManager_enabled)
+DOM_WEBIDL_PREF(dom_promise_rejection_events_enabled)
+DOM_WEBIDL_PREF(dom_push_enabled)
+DOM_WEBIDL_PREF(dom_streams_enabled)
+DOM_WEBIDL_PREF(gfx_offscreencanvas_enabled)
+DOM_WEBIDL_PREF(dom_webkitBlink_dirPicker_enabled)
+DOM_WEBIDL_PREF(dom_netinfo_enabled)
+DOM_WEBIDL_PREF(dom_fetchObserver_enabled)
+DOM_WEBIDL_PREF(dom_enable_performance_observer)
+DOM_WEBIDL_PREF(dom_performance_enable_scheduler_timing)

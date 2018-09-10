@@ -56,9 +56,6 @@ button[disabled="true"] {
 .button-menu-dropmarker {
   display: none;
   -moz-appearance: none !important;
-  border: none;
-  background-color: transparent !important;
-  margin: 1px;
 }
 
 /* ::::: plain buttons ::::: */

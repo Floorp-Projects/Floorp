@@ -114,7 +114,9 @@ class WasmToken
         Loop,
 #ifdef ENABLE_WASM_BULKMEM_OPS
         MemCopy,
+        MemDrop,
         MemFill,
+        MemInit,
 #endif
         Module,
         Mutable,
@@ -123,6 +125,9 @@ class WasmToken
         Offset,
         OpenParen,
         Param,
+#ifdef ENABLE_WASM_BULKMEM_OPS
+        Passive,
+#endif
         Ref,
         RefNull,
         Result,
@@ -135,6 +140,11 @@ class WasmToken
         Struct,
         Store,
         Table,
+#ifdef ENABLE_WASM_BULKMEM_OPS
+        TableCopy,
+        TableDrop,
+        TableInit,
+#endif
         TeeLocal,
         TernaryOpcode,
         Text,
@@ -346,7 +356,9 @@ class WasmToken
           case Loop:
 #ifdef ENABLE_WASM_BULKMEM_OPS
           case MemCopy:
+          case MemDrop:
           case MemFill:
+          case MemInit:
 #endif
           case Nop:
           case RefNull:
@@ -354,6 +366,11 @@ class WasmToken
           case SetGlobal:
           case SetLocal:
           case Store:
+#ifdef ENABLE_WASM_BULKMEM_OPS
+          case TableCopy:
+          case TableDrop:
+          case TableInit:
+#endif
           case TeeLocal:
           case TernaryOpcode:
           case UnaryOpcode:
@@ -390,6 +407,9 @@ class WasmToken
           case Offset:
           case OpenParen:
           case Param:
+#ifdef ENABLE_WASM_BULKMEM_OPS
+          case Passive:
+#endif
           case Ref:
           case Result:
           case Shared:
@@ -1672,8 +1692,12 @@ WasmTokenStream::next()
 #ifdef ENABLE_WASM_BULKMEM_OPS
             if (consume(u"copy"))
                 return WasmToken(WasmToken::MemCopy, begin, cur_);
+            if (consume(u"drop"))
+                return WasmToken(WasmToken::MemDrop, begin, cur_);
             if (consume(u"fill"))
                 return WasmToken(WasmToken::MemFill, begin, cur_);
+            if (consume(u"init"))
+                return WasmToken(WasmToken::MemInit, begin, cur_);
 #endif
             if (consume(u"grow"))
                 return WasmToken(WasmToken::GrowMemory, begin, cur_);
@@ -1704,6 +1728,10 @@ WasmTokenStream::next()
       case 'p':
         if (consume(u"param"))
             return WasmToken(WasmToken::Param, begin, cur_);
+#ifdef ENABLE_WASM_BULKMEM_OPS
+        if (consume(u"passive"))
+            return WasmToken(WasmToken::Passive, begin, cur_);
+#endif
         break;
 
       case 'r':
@@ -1738,6 +1766,17 @@ WasmTokenStream::next()
         break;
 
       case 't':
+#ifdef ENABLE_WASM_BULKMEM_OPS
+        if (consume(u"table.")) {
+            if (consume(u"copy"))
+                return WasmToken(WasmToken::TableCopy, begin, cur_);
+            if (consume(u"drop"))
+                return WasmToken(WasmToken::TableDrop, begin, cur_);
+            if (consume(u"init"))
+                return WasmToken(WasmToken::TableInit, begin, cur_);
+            break;
+        }
+#endif
         if (consume(u"table"))
             return WasmToken(WasmToken::Table, begin, cur_);
         if (consume(u"tee_local"))
@@ -3033,8 +3072,8 @@ ParseGrowMemory(WasmParseContext& c, bool inParens)
 }
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
-static AstMemCopy*
-ParseMemCopy(WasmParseContext& c, bool inParens)
+static AstMemOrTableCopy*
+ParseMemOrTableCopy(WasmParseContext& c, bool inParens, bool isMem)
 {
     AstExpr* dest = ParseExpr(c, inParens);
     if (!dest)
@@ -3048,7 +3087,17 @@ ParseMemCopy(WasmParseContext& c, bool inParens)
     if (!len)
         return nullptr;
 
-    return new(c.lifo) AstMemCopy(dest, src, len);
+    return new(c.lifo) AstMemOrTableCopy(isMem, dest, src, len);
+}
+
+static AstMemOrTableDrop*
+ParseMemOrTableDrop(WasmParseContext& c, bool isMem)
+{
+    WasmToken segIndexTok;
+    if (!c.ts.getIf(WasmToken::Index, &segIndexTok))
+        return nullptr;
+
+    return new(c.lifo) AstMemOrTableDrop(isMem, segIndexTok.index());
 }
 
 static AstMemFill*
@@ -3067,6 +3116,28 @@ ParseMemFill(WasmParseContext& c, bool inParens)
         return nullptr;
 
     return new(c.lifo) AstMemFill(start, val, len);
+}
+
+static AstMemOrTableInit*
+ParseMemOrTableInit(WasmParseContext& c, bool inParens, bool isMem)
+{
+    WasmToken segIndexTok;
+    if (!c.ts.getIf(WasmToken::Index, &segIndexTok))
+        return nullptr;
+
+    AstExpr* dst = ParseExpr(c, inParens);
+    if (!dst)
+        return nullptr;
+
+    AstExpr* src = ParseExpr(c, inParens);
+    if (!src)
+        return nullptr;
+
+    AstExpr* len = ParseExpr(c, inParens);
+    if (!len)
+        return nullptr;
+
+    return new(c.lifo) AstMemOrTableInit(isMem, segIndexTok.index(), dst, src, len);
 }
 #endif
 
@@ -3165,9 +3236,19 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
         return ParseGrowMemory(c, inParens);
 #ifdef ENABLE_WASM_BULKMEM_OPS
       case WasmToken::MemCopy:
-        return ParseMemCopy(c, inParens);
+        return ParseMemOrTableCopy(c, inParens, /*isMem=*/true);
+      case WasmToken::MemDrop:
+        return ParseMemOrTableDrop(c, /*isMem=*/true);
       case WasmToken::MemFill:
         return ParseMemFill(c, inParens);
+      case WasmToken::MemInit:
+        return ParseMemOrTableInit(c, inParens, /*isMem=*/true);
+      case WasmToken::TableCopy:
+        return ParseMemOrTableCopy(c, inParens, /*isMem=*/false);
+      case WasmToken::TableDrop:
+        return ParseMemOrTableDrop(c, /*isMem=*/false);
+      case WasmToken::TableInit:
+        return ParseMemOrTableInit(c, inParens, /*isMem=*/false);
 #endif
       case WasmToken::RefNull:
         return ParseRefNull(c);
@@ -3506,14 +3587,32 @@ ParseInitializerExpression(WasmParseContext& c)
     return initExpr;
 }
 
+static bool
+ParseInitializerExpressionOrPassive(WasmParseContext& c, AstExpr** maybeInitExpr)
+{
+#ifdef ENABLE_WASM_BULKMEM_OPS
+    if (c.ts.getIf(WasmToken::Passive)) {
+        *maybeInitExpr = nullptr;
+        return true;
+    }
+#endif
+
+    AstExpr* initExpr = ParseInitializerExpression(c);
+    if (!initExpr)
+        return false;
+
+    *maybeInitExpr = initExpr;
+    return true;
+}
+
 static AstDataSegment*
 ParseDataSegment(WasmParseContext& c)
 {
     if (!MaybeParseOwnerIndex(c))
         return nullptr;
 
-    AstExpr* offset = ParseInitializerExpression(c);
-    if (!offset)
+    AstExpr* offsetIfActive;
+    if (!ParseInitializerExpressionOrPassive(c, &offsetIfActive))
         return nullptr;
 
     AstNameVector fragments(c.lifo);
@@ -3524,7 +3623,7 @@ ParseDataSegment(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) AstDataSegment(offset, std::move(fragments));
+    return new(c.lifo) AstDataSegment(offsetIfActive, std::move(fragments));
 }
 
 static bool
@@ -3608,7 +3707,7 @@ ParseMemory(WasmParseContext& c, AstModule* module)
             if (!offset)
                 return false;
 
-            AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, std::move(fragments));
+            auto* segment = new(c.lifo) AstDataSegment(offset, std::move(fragments));
             if (!segment || !module->append(segment))
                 return false;
 
@@ -3960,8 +4059,8 @@ ParseElemSegment(WasmParseContext& c)
     if (!MaybeParseOwnerIndex(c))
         return nullptr;
 
-    AstExpr* offset = ParseInitializerExpression(c);
-    if (!offset)
+    AstExpr* offsetIfActive;
+    if (!ParseInitializerExpressionOrPassive(c, &offsetIfActive))
         return nullptr;
 
     AstRefVector elems(c.lifo);
@@ -3972,7 +4071,7 @@ ParseElemSegment(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) AstElemSegment(offset, std::move(elems));
+    return new(c.lifo) AstElemSegment(offsetIfActive, std::move(elems));
 }
 
 static bool
@@ -4599,7 +4698,7 @@ ResolveWake(Resolver& r, AstWake& s)
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
 static bool
-ResolveMemCopy(Resolver& r, AstMemCopy& s)
+ResolveMemOrTableCopy(Resolver& r, AstMemOrTableCopy& s)
 {
     return ResolveExpr(r, s.dest()) &&
            ResolveExpr(r, s.src()) &&
@@ -4611,6 +4710,14 @@ ResolveMemFill(Resolver& r, AstMemFill& s)
 {
     return ResolveExpr(r, s.start()) &&
            ResolveExpr(r, s.val()) &&
+           ResolveExpr(r, s.len());
+}
+
+static bool
+ResolveMemOrTableInit(Resolver& r, AstMemOrTableInit& s)
+{
+    return ResolveExpr(r, s.dst()) &&
+           ResolveExpr(r, s.src()) &&
            ResolveExpr(r, s.len());
 }
 #endif
@@ -4695,10 +4802,14 @@ ResolveExpr(Resolver& r, AstExpr& expr)
       case AstExprKind::Wake:
         return ResolveWake(r, expr.as<AstWake>());
 #ifdef ENABLE_WASM_BULKMEM_OPS
-    case AstExprKind::MemCopy:
-        return ResolveMemCopy(r, expr.as<AstMemCopy>());
-    case AstExprKind::MemFill:
+      case AstExprKind::MemOrTableCopy:
+        return ResolveMemOrTableCopy(r, expr.as<AstMemOrTableCopy>());
+      case AstExprKind::MemOrTableDrop:
+        return true;
+      case AstExprKind::MemFill:
         return ResolveMemFill(r, expr.as<AstMemFill>());
+      case AstExprKind::MemOrTableInit:
+        return ResolveMemOrTableInit(r, expr.as<AstMemOrTableInit>());
 #endif
     }
     MOZ_CRASH("Bad expr kind");
@@ -4873,12 +4984,12 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
     }
 
     for (AstDataSegment* segment : module->dataSegments()) {
-        if (!ResolveExpr(r, *segment->offset()))
+        if (segment->offsetIfActive() && !ResolveExpr(r, *segment->offsetIfActive()))
             return false;
     }
 
     for (AstElemSegment* segment : module->elemSegments()) {
-        if (!ResolveExpr(r, *segment->offset()))
+        if (segment->offsetIfActive() && !ResolveExpr(r, *segment->offsetIfActive()))
             return false;
         for (AstRef& ref : segment->elems()) {
             if (!r.resolveFunction(ref))
@@ -5293,12 +5404,19 @@ EncodeWake(Encoder& e, AstWake& s)
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
 static bool
-EncodeMemCopy(Encoder& e, AstMemCopy& s)
+EncodeMemOrTableCopy(Encoder& e, AstMemOrTableCopy& s)
 {
     return EncodeExpr(e, s.dest()) &&
            EncodeExpr(e, s.src()) &&
            EncodeExpr(e, s.len()) &&
-           e.writeOp(MiscOp::MemCopy);
+           e.writeOp(s.isMem() ? MiscOp::MemCopy : MiscOp::TableCopy);
+}
+
+static bool
+EncodeMemOrTableDrop(Encoder& e, AstMemOrTableDrop& s)
+{
+    return e.writeOp(s.isMem() ? MiscOp::MemDrop : MiscOp::TableDrop) &&
+           e.writeVarU32(s.segIndex());
 }
 
 static bool
@@ -5308,6 +5426,16 @@ EncodeMemFill(Encoder& e, AstMemFill& s)
            EncodeExpr(e, s.val()) &&
            EncodeExpr(e, s.len()) &&
            e.writeOp(MiscOp::MemFill);
+}
+
+static bool
+EncodeMemOrTableInit(Encoder& e, AstMemOrTableInit& s)
+{
+    return EncodeExpr(e, s.dst()) &&
+           EncodeExpr(e, s.src()) &&
+           EncodeExpr(e, s.len()) &&
+           e.writeOp(s.isMem() ? MiscOp::MemInit : MiscOp::TableInit) &&
+           e.writeVarU32(s.segIndex());
 }
 #endif
 
@@ -5395,10 +5523,14 @@ EncodeExpr(Encoder& e, AstExpr& expr)
       case AstExprKind::Wake:
         return EncodeWake(e, expr.as<AstWake>());
 #ifdef ENABLE_WASM_BULKMEM_OPS
-      case AstExprKind::MemCopy:
-        return EncodeMemCopy(e, expr.as<AstMemCopy>());
+      case AstExprKind::MemOrTableCopy:
+        return EncodeMemOrTableCopy(e, expr.as<AstMemOrTableCopy>());
+      case AstExprKind::MemOrTableDrop:
+        return EncodeMemOrTableDrop(e, expr.as<AstMemOrTableDrop>());
       case AstExprKind::MemFill:
         return EncodeMemFill(e, expr.as<AstMemFill>());
+      case AstExprKind::MemOrTableInit:
+        return EncodeMemOrTableInit(e, expr.as<AstMemOrTableInit>());
 #endif
     }
     MOZ_CRASH("Bad expr kind");
@@ -5809,14 +5941,30 @@ EncodeCodeSection(Encoder& e, Uint32Vector* offsets, AstModule& module)
 }
 
 static bool
+EncodeDestinationOffsetOrFlags(Encoder& e, AstExpr* offsetIfActive)
+{
+    if (offsetIfActive) {
+        // In the MVP, the following VarU32 is the table or linear memory
+        // index and it must be zero.  In the bulk-mem-ops proposal, it is
+        // repurposed as a flag field.
+        if (!e.writeVarU32(uint32_t(InitializerKind::Active)))
+            return false;
+        if (!EncodeExpr(e, *offsetIfActive))
+            return false;
+        if (!e.writeOp(Op::End))
+            return false;
+    } else {
+        if (!e.writeVarU32(uint32_t(InitializerKind::Passive)))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
 EncodeDataSegment(Encoder& e, const AstDataSegment& segment)
 {
-    if (!e.writeVarU32(0))  // linear memory index
-        return false;
-
-    if (!EncodeExpr(e, *segment.offset()))
-        return false;
-    if (!e.writeOp(Op::End))
+    if (!EncodeDestinationOffsetOrFlags(e, segment.offsetIfActive()))
         return false;
 
     size_t totalLength = 0;
@@ -5865,12 +6013,7 @@ EncodeDataSection(Encoder& e, AstModule& module)
 static bool
 EncodeElemSegment(Encoder& e, AstElemSegment& segment)
 {
-    if (!e.writeVarU32(0)) // table index
-        return false;
-
-    if (!EncodeExpr(e, *segment.offset()))
-        return false;
-    if (!e.writeOp(Op::End))
+    if (!EncodeDestinationOffsetOrFlags(e, segment.offsetIfActive()))
         return false;
 
     if (!e.writeVarU32(segment.elems().length()))

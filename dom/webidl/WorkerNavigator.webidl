@@ -16,7 +16,7 @@ WorkerNavigator implements NavigatorStorage;
 // http://wicg.github.io/netinfo/#extensions-to-the-navigator-interface
 [Exposed=Worker]
 partial interface WorkerNavigator {
-    [Func="mozilla::dom::DOMPrefs::NetworkInformationEnabled", Throws]
+    [Func="mozilla::dom::DOMPrefs::dom_netinfo_enabled", Throws]
     readonly attribute NetworkInformation connection;
 };
 

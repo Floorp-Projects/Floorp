@@ -9,7 +9,7 @@
 
 [Constructor(unsigned long width, unsigned long height),
  Exposed=(Window,Worker),
- Func="mozilla::dom::DOMPrefs::OffscreenCanvasEnabled"]
+ Func="mozilla::dom::DOMPrefs::gfx_offscreencanvas_enabled"]
 interface OffscreenCanvas : EventTarget {
   [Pure, SetterThrows]
   attribute unsigned long width;

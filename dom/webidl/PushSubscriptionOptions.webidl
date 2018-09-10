@@ -7,7 +7,7 @@
 * https://w3c.github.io/push-api/
 */
 
-[Exposed=(Window,Worker), Func="mozilla::dom::DOMPrefs::PushEnabled"]
+[Exposed=(Window,Worker), Func="mozilla::dom::DOMPrefs::dom_push_enabled"]
 interface PushSubscriptionOptions
 {
   [SameObject, Throws]

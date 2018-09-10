@@ -1071,6 +1071,7 @@ WasmInstanceObject::create(JSContext* cx,
                            const GlobalDescVector& globals,
                            HandleValVector globalImportValues,
                            const WasmGlobalObjectVector& globalObjs,
+                           const ShareableBytes* bytecode,
                            HandleObject proto)
 {
     UniquePtr<ExportMap> exports = js::MakeUnique<ExportMap>();
@@ -1141,7 +1142,7 @@ WasmInstanceObject::create(JSContext* cx,
     obj->initReservedSlot(INSTANCE_SLOT, PrivateValue(instance));
     MOZ_ASSERT(!obj->isNewborn());
 
-    if (!instance->init(cx))
+    if (!instance->init(cx, bytecode, funcImports))
         return nullptr;
 
     return obj;
@@ -2049,7 +2050,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
         const FuncExport& funcExport = metadata.lookupFuncExport(funcIndex);
         const CodeRange& codeRange = metadata.codeRanges[funcExport.funcCodeRangeIndex()];
         void* code = instance.codeBase(tier) + codeRange.funcTableEntry();
-        table.set(index, code, instance);
+        table.set(index, code, &instance);
     } else {
         table.setNull(index);
     }

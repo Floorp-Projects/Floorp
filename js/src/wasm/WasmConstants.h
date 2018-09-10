@@ -72,6 +72,53 @@ enum class TypeCode
     Limit                                = 0x80
 };
 
+enum class FuncTypeIdDescKind
+{
+    None,
+    Immediate,
+    Global
+};
+
+// A wasm::Trap represents a wasm-defined trap that can occur during execution
+// which triggers a WebAssembly.RuntimeError. Generated code may jump to a Trap
+// symbolically, passing the bytecode offset to report as the trap offset. The
+// generated jump will be bound to a tiny stub which fills the offset and
+// then jumps to a per-Trap shared stub at the end of the module.
+
+enum class Trap
+{
+    // The Unreachable opcode has been executed.
+    Unreachable,
+    // An integer arithmetic operation led to an overflow.
+    IntegerOverflow,
+    // Trying to coerce NaN to an integer.
+    InvalidConversionToInteger,
+    // Integer division by zero.
+    IntegerDivideByZero,
+    // Out of bounds on wasm memory accesses.
+    OutOfBounds,
+    // Unaligned on wasm atomic accesses; also used for non-standard ARM
+    // unaligned access faults.
+    UnalignedAccess,
+    // call_indirect to null.
+    IndirectCallToNull,
+    // call_indirect signature mismatch.
+    IndirectCallBadSig,
+
+    // The internal stack space was exhausted. For compatibility, this throws
+    // the same over-recursed error as JS.
+    StackOverflow,
+
+    // The wasm execution has potentially run too long and the engine must call
+    // CheckForInterrupt(). This trap is resumable.
+    CheckInterrupt,
+
+    // Signal an error that was reported in C++ code.
+    ThrowReported,
+
+    Limit
+};
+
 // The representation of a null reference value throughout the compiler.
 
 static const intptr_t NULLREF_VALUE = intptr_t((void*)nullptr);
@@ -101,6 +148,12 @@ enum class MemoryMasks
 {
     AllowUnshared                        = 0x1,
     AllowShared                          = 0x3
+};
+
+enum class InitializerKind
+{
+    Active                               = 0x00,
+    Passive                              = 0x01
 };
 
 enum class Op
@@ -335,9 +388,15 @@ enum class MiscOp
     I64TruncSSatF64                      = 0x06,
     I64TruncUSatF64                      = 0x07,
 
-    // Bulk memory operations.  Note, these are unofficial.
-    MemCopy                              = 0x40,
-    MemFill                              = 0x41,
+    // Bulk memory operations.  Note, these are unofficial, but in accordance
+    // with the proposal as of June 2018.
+    MemInit                              = 0x08,
+    MemDrop                              = 0x09,
+    MemCopy                              = 0x0a,
+    MemFill                              = 0x0b,
+    TableInit                            = 0x0c,
+    TableDrop                            = 0x0d,
+    TableCopy                            = 0x0e,
 
     Limit
 };

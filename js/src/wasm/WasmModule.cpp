@@ -89,8 +89,10 @@ Module::finishTier2(const LinkData& linkData, UniqueCodeTier tier2Arg, ModuleEnv
 
     if (!code().setTier2(std::move(tier2Arg), *bytecode_, linkData))
         return false;
-    for (uint32_t i = 0; i < elemSegments_.length(); i++)
-        elemSegments_[i].setTier2(std::move(env2.elemSegments[i].elemCodeRangeIndices(Tier::Ion)));
+    for (uint32_t i = 0; i < code().elemSegments().length(); i++) {
+        code().elemSegments()[i]
+              .setTier2(std::move(env2.elemSegments[i].elemCodeRangeIndices(Tier::Ion)));
+    }
 
     // Before we can make tier-2 live, we need to compile tier2 versions of any
     // extant tier1 lazy stubs (otherwise, tiering would break the assumption
@@ -165,8 +167,6 @@ Module::serializedSize(const LinkData& linkData) const
     return linkData.serializedSize() +
            SerializedVectorSize(imports_) +
            SerializedVectorSize(exports_) +
-           SerializedPodVectorSize(dataSegments_) +
-           SerializedVectorSize(elemSegments_) +
            SerializedVectorSize(structTypes_) +
            code_->serializedSize();
 }
@@ -182,8 +182,6 @@ Module::serialize(const LinkData& linkData, uint8_t* begin, size_t size) const
     cursor = linkData.serialize(cursor);
     cursor = SerializeVector(cursor, imports_);
     cursor = SerializeVector(cursor, exports_);
-    cursor = SerializePodVector(cursor, dataSegments_);
-    cursor = SerializeVector(cursor, elemSegments_);
     cursor = SerializeVector(cursor, structTypes_);
     cursor = code_->serialize(cursor, linkData);
     MOZ_RELEASE_ASSERT(cursor == begin + size);
@@ -222,16 +220,6 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
     if (!cursor)
         return nullptr;
 
-    DataSegmentVector dataSegments;
-    cursor = DeserializePodVector(cursor, &dataSegments);
-    if (!cursor)
-        return nullptr;
-
-    ElemSegmentVector elemSegments;
-    cursor = DeserializeVector(cursor, &elemSegments);
-    if (!cursor)
-        return nullptr;
-
     StructTypeVector structTypes;
     cursor = DeserializeVector(cursor, &structTypes);
     if (!cursor)
@@ -248,8 +236,6 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
     return js_new<Module>(*code,
                           std::move(imports),
                           std::move(exports),
-                          std::move(dataSegments),
-                          std::move(elemSegments),
                           std::move(structTypes),
                           *bytecode);
 }
@@ -344,8 +330,6 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
     *data += mallocSizeOf(this) +
              SizeOfVectorExcludingThis(imports_, mallocSizeOf) +
              SizeOfVectorExcludingThis(exports_, mallocSizeOf) +
-             dataSegments_.sizeOfExcludingThis(mallocSizeOf) +
-             SizeOfVectorExcludingThis(elemSegments_, mallocSizeOf) +
              SizeOfVectorExcludingThis(structTypes_, mallocSizeOf) +
              bytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
     if (debugUnlinkedCode_)
@@ -444,6 +428,37 @@ EvaluateInitExpr(HandleValVector globalImportValues, InitExpr initExpr)
     MOZ_CRASH("bad initializer expression");
 }
 
+void
+wasm::ComputeWasmCallee(const Code& code, const Instance* instance,
+                        Handle<FunctionVector> funcImports,
+                        uint32_t funcIndexIndex, const Table& table,
+                        const ElemSegment& seg, WasmCallee* out)
+{
+    const Tier tier = code.bestTier();
+    const CodeRangeVector& codeRanges = code.metadata(tier).codeRanges;
+    uint8_t* codeBase = code.segment(tier).base();
+
+    uint32_t funcIndex = seg.elemFuncIndices[funcIndexIndex];
+    if (funcIndex < funcImports.length() && IsExportedWasmFunction(funcImports[funcIndex])) {
+        MOZ_ASSERT(!code.metadata().isAsmJS());
+        MOZ_ASSERT(!table.isTypedFunction());
+
+        HandleFunction f = funcImports[funcIndex];
+        WasmInstanceObject* exportInstanceObj = ExportedFunctionToInstanceObject(f);
+        Instance& exportInstance = exportInstanceObj->instance();
+        Tier exportTier = exportInstance.code().bestTier();
+        const CodeRange& cr = exportInstanceObj->getExportedFunctionCodeRange(f, exportTier);
+        *out = WasmCallee(&exportInstance, exportInstance.codeBase(exportTier) +
+                                           cr.funcTableEntry());
+    } else {
+        const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices(tier)[funcIndexIndex]];
+        uint32_t entryOffset = table.isTypedFunction()
+                               ? cr.funcNormalEntry()
+                               : cr.funcTableEntry();
+        *out = WasmCallee(instance, codeBase + entryOffset);
+    }
+}
+
 bool
 Module::initSegments(JSContext* cx,
                      HandleWasmInstanceObject instanceObj,
@@ -459,11 +474,19 @@ Module::initSegments(JSContext* cx,
     // Perform all error checks up front so that this function does not perform
     // partial initialization if an error is reported.
 
-    for (const ElemSegment& seg : elemSegments_) {
+    for (const ElemSegment& seg : code_->elemSegments()) {
+        // If this is a passive segment, there's nothing we can check at
+        // this point.  We'll have to perform the relevant checks later, if
+        // and when the segment is used, that is, as an argument to the
+        // table.init or table.drop instructions.
+        if (!seg.offsetIfActive)
+            continue;
+
+        // Otherwise it's an active segment, so we check it now.
         uint32_t numElems = seg.elemCodeRangeIndices(tier).length();
 
         uint32_t tableLength = tables[seg.tableIndex]->length();
-        uint32_t offset = EvaluateInitExpr(globalImportValues, seg.offset);
+        uint32_t offset = EvaluateInitExpr(globalImportValues, *seg.offsetIfActive);
 
         if (offset > tableLength || tableLength - offset < numElems) {
             JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
@@ -474,8 +497,12 @@ Module::initSegments(JSContext* cx,
 
     if (memoryObj) {
         uint32_t memoryLength = memoryObj->volatileMemoryLength();
-        for (const DataSegment& seg : dataSegments_) {
-            uint32_t offset = EvaluateInitExpr(globalImportValues, seg.offset);
+        for (const DataSegment& seg : code_->dataSegments()) {
+            // As with element segments just above, skip passive ones for now.
+            if (!seg.offsetIfActive)
+                continue;
+
+            uint32_t offset = EvaluateInitExpr(globalImportValues, *seg.offsetIfActive);
 
             if (offset > memoryLength || memoryLength - offset < seg.length) {
                 JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
@@ -484,47 +511,45 @@ Module::initSegments(JSContext* cx,
             }
         }
     } else {
-        MOZ_ASSERT(dataSegments_.empty());
+        MOZ_ASSERT(code_->dataSegments().empty());
     }
 
     // Now that initialization can't fail partway through, write data/elem
     // segments into memories/tables.
 
-    for (const ElemSegment& seg : elemSegments_) {
+    for (const ElemSegment& seg : code_->elemSegments()) {
+        // Skip passive segments.  Those may get applied later, under
+        // program control, per comments above.
+        if (!seg.offsetIfActive)
+            continue;
+
+        // But apply active segments right now.
         Table& table = *tables[seg.tableIndex];
-        uint32_t offset = EvaluateInitExpr(globalImportValues, seg.offset);
-        const CodeRangeVector& codeRanges = metadata(tier).codeRanges;
-        uint8_t* codeBase = instance.codeBase(tier);
+        uint32_t offset = EvaluateInitExpr(globalImportValues, *seg.offsetIfActive);
+
+        MOZ_ASSERT(seg.elemCodeRangeIndices(tier).length() ==
+                   seg.elemFuncIndices.length());
 
         for (uint32_t i = 0; i < seg.elemCodeRangeIndices(tier).length(); i++) {
-            uint32_t funcIndex = seg.elemFuncIndices[i];
-            if (funcIndex < funcImports.length() && IsExportedWasmFunction(funcImports[funcIndex])) {
-                MOZ_ASSERT(!metadata().isAsmJS());
-                MOZ_ASSERT(!table.isTypedFunction());
-
-                HandleFunction f = funcImports[funcIndex];
-                WasmInstanceObject* exportInstanceObj = ExportedFunctionToInstanceObject(f);
-                Instance& exportInstance = exportInstanceObj->instance();
-                Tier exportTier = exportInstance.code().bestTier();
-                const CodeRange& cr = exportInstanceObj->getExportedFunctionCodeRange(f, exportTier);
-                table.set(offset + i, exportInstance.codeBase(exportTier) + cr.funcTableEntry(), exportInstance);
-            } else {
-                const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices(tier)[i]];
-                uint32_t entryOffset = table.isTypedFunction()
-                                       ? cr.funcNormalEntry()
-                                       : cr.funcTableEntry();
-                table.set(offset + i, codeBase + entryOffset, instance);
-            }
+            WasmCallee callee;
+            ComputeWasmCallee(code(), &instance, funcImports, i, table, seg, &callee);
+            table.set(offset + i, callee.entry, callee.instance);
         }
     }
 
     if (memoryObj) {
         uint8_t* memoryBase = memoryObj->buffer().dataPointerEither().unwrap(/* memcpy */);
 
-        for (const DataSegment& seg : dataSegments_) {
+        for (const DataSegment& seg : code_->dataSegments()) {
             MOZ_ASSERT(seg.bytecodeOffset <= bytecode_->length());
             MOZ_ASSERT(seg.length <= bytecode_->length() - seg.bytecodeOffset);
-            uint32_t offset = EvaluateInitExpr(globalImportValues, seg.offset);
+            // Skip passive segments.  Those may get applied later, under
+            // program control, per comments above.
+            if (!seg.offsetIfActive)
+                continue;
+
+            // But apply active segments right now.
+            uint32_t offset = EvaluateInitExpr(globalImportValues, *seg.offsetIfActive);
             memcpy(memoryBase + offset, bytecode_->begin() + seg.bytecodeOffset, seg.length);
         }
     }
@@ -633,7 +658,7 @@ Module::instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) c
 {
     if (!metadata().usesMemory()) {
         MOZ_ASSERT(!memory);
-        MOZ_ASSERT(dataSegments_.empty());
+        MOZ_ASSERT(code_->dataSegments().empty());
         return true;
     }
 
@@ -961,7 +986,41 @@ Module::instantiate(JSContext* cx,
             if (!jumpTables.init(CompileMode::Once, codeTier->segment(), metadata(tier).codeRanges))
                 return false;
 
-            MutableCode debugCode = js_new<Code>(std::move(codeTier), metadata(), std::move(jumpTables));
+            DataSegmentVector dataSegments;
+            if (!dataSegments.appendAll(code_->dataSegments()))
+                return false;
+
+            ElemSegmentVector elemSegments;
+            for (const ElemSegment& seg : code_->elemSegments()) {
+                // This (debugging) code path is called only for tier 1.
+                MOZ_ASSERT(seg.elemCodeRangeIndices2_.empty());
+
+                // ElemSegment doesn't have a (fallible) copy constructor,
+                // so we have to clone it "by hand".
+                ElemSegment clone;
+                clone.tableIndex = seg.tableIndex;
+                clone.offsetIfActive = seg.offsetIfActive;
+
+                MOZ_ASSERT(clone.elemFuncIndices.empty());
+                if (!clone.elemFuncIndices.appendAll(seg.elemFuncIndices))
+                    return false;
+
+                MOZ_ASSERT(clone.elemCodeRangeIndices1_.empty());
+                if (!clone.elemCodeRangeIndices1_.appendAll(seg.elemCodeRangeIndices1_))
+                    return false;
+
+                MOZ_ASSERT(clone.elemCodeRangeIndices2_.empty());
+                if (!clone.elemCodeRangeIndices2_.appendAll(seg.elemCodeRangeIndices2_))
+                    return false;
+
+                if (!elemSegments.append(std::move(clone)))
+                    return false;
+            }
+
+            MutableCode debugCode = js_new<Code>(std::move(codeTier), metadata(),
+                                                 std::move(jumpTables),
+                                                 std::move(dataSegments),
+                                                 std::move(elemSegments));
             if (!debugCode || !debugCode->initialize(*bytecode_, *debugLinkData_)) {
                 ReportOutOfMemory(cx);
                 return false;
@@ -1005,6 +1064,7 @@ Module::instantiate(JSContext* cx,
                                             metadata().globals,
                                             globalImportValues,
                                             globalObjs,
+                                            bytecode_.get(),
                                             instanceProto));
     if (!instance)
         return false;

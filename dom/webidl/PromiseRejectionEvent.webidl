@@ -6,7 +6,7 @@
 
 [Constructor(DOMString type, PromiseRejectionEventInit eventInitDict),
  Exposed=(Window,Worker),
- Func="mozilla::dom::DOMPrefs::PromiseRejectionEventsEnabled"]
+ Func="mozilla::dom::DOMPrefs::dom_promise_rejection_events_enabled"]
 interface PromiseRejectionEvent : Event
 {
   [BinaryName="rejectedPromise"]

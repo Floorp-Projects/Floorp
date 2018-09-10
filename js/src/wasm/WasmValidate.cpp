@@ -487,9 +487,11 @@ typedef OpIter<ValidatingPolicy> ValidatingOpIter;
 
 static bool
 DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
-                        const ValTypeVector& locals, const uint8_t* bodyEnd, Decoder* d)
+                        const ValTypeVector& locals,
+                        ExclusiveDeferredValidationState& dvs,
+                        const uint8_t* bodyEnd, Decoder* d)
 {
-    ValidatingOpIter iter(env, *d);
+    ValidatingOpIter iter(env, *d, dvs);
 
     if (!iter.readFunctionStart(funcType.ret()))
         return false;
@@ -852,9 +854,31 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
 #endif
 #ifdef ENABLE_WASM_BULKMEM_OPS
               case uint16_t(MiscOp::MemCopy):
-                CHECK(iter.readMemCopy(&nothing, &nothing, &nothing));
+                  CHECK(iter.readMemOrTableCopy(/*isMem=*/true,
+                                                &nothing, &nothing, &nothing));
+              case uint16_t(MiscOp::MemDrop): {
+                uint32_t unusedSegIndex;
+                CHECK(iter.readMemOrTableDrop(/*isMem=*/true, &unusedSegIndex));
+              }
               case uint16_t(MiscOp::MemFill):
                 CHECK(iter.readMemFill(&nothing, &nothing, &nothing));
+              case uint16_t(MiscOp::MemInit): {
+                uint32_t unusedSegIndex;
+                CHECK(iter.readMemOrTableInit(/*isMem=*/true,
+                                              &unusedSegIndex, &nothing, &nothing, &nothing));
+              }
+              case uint16_t(MiscOp::TableCopy):
+                CHECK(iter.readMemOrTableCopy(/*isMem=*/false,
+                                              &nothing, &nothing, &nothing));
+              case uint16_t(MiscOp::TableDrop): {
+                uint32_t unusedSegIndex;
+                CHECK(iter.readMemOrTableDrop(/*isMem=*/false, &unusedSegIndex));
+              }
+              case uint16_t(MiscOp::TableInit): {
+                uint32_t unusedSegIndex;
+                CHECK(iter.readMemOrTableInit(/*isMem=*/false,
+                                              &unusedSegIndex, &nothing, &nothing, &nothing));
+              }
 #endif
               default:
                 return iter.unrecognizedOpcode(&op);
@@ -1060,7 +1084,7 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
 
 bool
 wasm::ValidateFunctionBody(const ModuleEnvironment& env, uint32_t funcIndex, uint32_t bodySize,
-                           Decoder& d)
+                           Decoder& d, ExclusiveDeferredValidationState& dvs)
 {
     const FuncType& funcType = *env.funcTypes[funcIndex];
 
@@ -1073,7 +1097,7 @@ wasm::ValidateFunctionBody(const ModuleEnvironment& env, uint32_t funcIndex, uin
     if (!DecodeLocalEntries(d, ModuleKind::Wasm, env.types, env.gcTypesEnabled(), &locals))
         return false;
 
-    if (!DecodeFunctionBodyExprs(env, funcType, locals, bodyBegin + bodySize, &d))
+    if (!DecodeFunctionBodyExprs(env, funcType, locals, dvs, bodyBegin + bodySize, &d))
         return false;
 
     return true;
@@ -1980,19 +2004,29 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
         return d.fail("too many elem segments");
 
     for (uint32_t i = 0; i < numSegments; i++) {
-        uint32_t tableIndex;
-        if (!d.readVarU32(&tableIndex))
-            return d.fail("expected table index");
+        uint32_t initializerKind;
+        if (!d.readVarU32(&initializerKind))
+            return d.fail("expected elem initializer-kind field");
+
+        if (initializerKind != uint32_t(InitializerKind::Active) &&
+            initializerKind != uint32_t(InitializerKind::Passive))
+        {
+            return d.fail("invalid elem initializer-kind field");
+        }
 
         MOZ_ASSERT(env->tables.length() <= 1);
-        if (tableIndex >= env->tables.length())
-            return d.fail("table index out of range");
+        if (env->tables.length() == 0)
+            return d.fail("elem segment requires a table section");
 
-        InitExpr offset;
-        if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
-                                         env->types.length(), &offset))
-        {
-            return false;
+        Maybe<InitExpr> offsetIfActive;
+        if (initializerKind == uint32_t(InitializerKind::Active)) {
+            InitExpr offset;
+            if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
+                                             env->types.length(), &offset))
+            {
+                return false;
+            }
+            offsetIfActive.emplace(offset);
         }
 
         uint32_t numElems;
@@ -2018,10 +2052,10 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
             // contain functions from multiple instances and must be marked
             // external.
             if (env->funcIsImport(funcIndex))
-                env->tables[tableIndex].external = true;
+                env->tables[0].external = true;
 
 #ifdef WASM_PRIVATE_REFTYPES
-            if (env->tables[tableIndex].importedOrExported &&
+            if (env->tables[0].importedOrExported &&
                 !FuncTypeIsJSCompatible(d, *env->funcTypes[elemFuncIndices[i]]))
             {
                 return false;
@@ -2029,7 +2063,8 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
 #endif
         }
 
-        if (!env->elemSegments.emplaceBack(tableIndex, offset, std::move(elemFuncIndices)))
+        if (!env->elemSegments.emplaceBack(0, std::move(offsetIfActive),
+                                           std::move(elemFuncIndices)))
             return false;
     }
 
@@ -2116,7 +2151,8 @@ wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env)
 }
 
 static bool
-DecodeFunctionBody(Decoder& d, const ModuleEnvironment& env, uint32_t funcIndex)
+DecodeFunctionBody(Decoder& d, const ModuleEnvironment& env,
+                   ExclusiveDeferredValidationState& dvs, uint32_t funcIndex)
 {
     uint32_t bodySize;
     if (!d.readVarU32(&bodySize))
@@ -2128,14 +2164,15 @@ DecodeFunctionBody(Decoder& d, const ModuleEnvironment& env, uint32_t funcIndex)
     if (d.bytesRemain() < bodySize)
         return d.fail("function body length too big");
 
-    if (!ValidateFunctionBody(env, funcIndex, bodySize, d))
+    if (!ValidateFunctionBody(env, funcIndex, bodySize, d, dvs))
         return false;
 
     return true;
 }
 
 static bool
-DecodeCodeSection(Decoder& d, ModuleEnvironment* env)
+DecodeCodeSection(Decoder& d, ModuleEnvironment* env,
+                  ExclusiveDeferredValidationState& dvs)
 {
     if (!env->codeSection) {
         if (env->numFuncDefs() != 0)
@@ -2151,7 +2188,7 @@ DecodeCodeSection(Decoder& d, ModuleEnvironment* env)
         return d.fail("function body count does not match function signature count");
 
     for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
-        if (!DecodeFunctionBody(d, *env, env->numFuncImports() + funcDefIndex))
+        if (!DecodeFunctionBody(d, *env, dvs, env->numFuncImports() + funcDefIndex))
             return false;
     }
 
@@ -2175,21 +2212,28 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
         return d.fail("too many data segments");
 
     for (uint32_t i = 0; i < numSegments; i++) {
-        uint32_t linearMemoryIndex;
-        if (!d.readVarU32(&linearMemoryIndex))
-            return d.fail("expected linear memory index");
+        uint32_t initializerKind;
+        if (!d.readVarU32(&initializerKind))
+            return d.fail("expected data initializer-kind field");
 
-        if (linearMemoryIndex != 0)
-            return d.fail("linear memory index must currently be 0");
+        if (initializerKind != uint32_t(InitializerKind::Active) &&
+            initializerKind != uint32_t(InitializerKind::Passive))
+        {
+            return d.fail("invalid data initializer-kind field");
+        }
 
         if (!env->usesMemory())
             return d.fail("data segment requires a memory section");
 
         DataSegment seg;
-        if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
-                                         env->types.length(), &seg.offset))
-        {
-            return false;
+        if (initializerKind == uint32_t(InitializerKind::Active)) {
+            InitExpr segOffset;
+            if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
+                                             env->types.length(), &segOffset))
+            {
+                return false;
+            }
+            seg.offsetIfActive.emplace(segOffset);
         }
 
         if (!d.readVarU32(&seg.length))
@@ -2317,8 +2361,39 @@ DecodeNameSection(Decoder& d, ModuleEnvironment* env)
     return true;
 }
 
+void
+DeferredValidationState::notifyDataSegmentIndex(uint32_t segIndex, size_t offsetInModule)
+{
+    // If |segIndex| is larger than any previously observed use, or this is
+    // the first index use to be notified, make a note of it and the module
+    // offset it appeared at.  That way, if we have to report it later as an
+    // error, we can at least report a correct offset.
+    if (!haveHighestDataSegIndex || segIndex > highestDataSegIndex) {
+        highestDataSegIndex = segIndex;
+        highestDataSegIndexOffset = offsetInModule;
+    }
+
+    haveHighestDataSegIndex = true;
+}
+
 bool
-wasm::DecodeModuleTail(Decoder& d, ModuleEnvironment* env)
+DeferredValidationState::performDeferredValidation(const ModuleEnvironment& env,
+                                                   UniqueChars* error)
+{
+    if (haveHighestDataSegIndex &&
+        highestDataSegIndex >= env.dataSegments.length())
+    {
+        UniqueChars str(JS_smprintf("at offset %zu: memory.{drop,init} index out of range",
+                                    highestDataSegIndexOffset));
+        *error = std::move(str);
+        return false;
+    }
+
+    return true;
+}
+
+bool
+wasm::DecodeModuleTail(Decoder& d, ModuleEnvironment* env, ExclusiveDeferredValidationState& dvs)
 {
     if (!DecodeDataSection(d, env))
         return false;
@@ -2336,7 +2411,7 @@ wasm::DecodeModuleTail(Decoder& d, ModuleEnvironment* env)
         }
     }
 
-    return true;
+    return dvs.lock()->performDeferredValidation(*env, d.error());
 }
 
 // Validate algorithm.
@@ -2362,10 +2437,12 @@ wasm::Validate(JSContext* cx, const ShareableBytes& bytecode, UniqueChars* error
     if (!DecodeModuleEnvironment(d, &env))
         return false;
 
-    if (!DecodeCodeSection(d, &env))
+    ExclusiveDeferredValidationState dvs(mutexid::WasmDeferredValidation);
+
+    if (!DecodeCodeSection(d, &env, dvs))
         return false;
 
-    if (!DecodeModuleTail(d, &env))
+    if (!DecodeModuleTail(d, &env, dvs))
         return false;
 
     MOZ_ASSERT(!*error, "unreported error in decoding");
