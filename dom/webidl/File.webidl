@@ -31,7 +31,7 @@ dictionary ChromeFilePropertyBag : FilePropertyBag {
 
 // Mozilla extensions
 partial interface File {
-  [BinaryName="relativePath", Func="mozilla::dom::DOMPrefs::WebkitBlinkDirectoryPickerEnabled"]
+  [BinaryName="relativePath", Func="mozilla::dom::DOMPrefs::dom_webkitBlink_dirPicker_enabled"]
   readonly attribute USVString webkitRelativePath;
 
   [GetterThrows, ChromeOnly, NeedsCallerType]
