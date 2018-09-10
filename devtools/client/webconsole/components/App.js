@@ -50,7 +50,45 @@ class App extends Component {
   constructor(props) {
     super(props);
 
+    this.onClick = this.onClick.bind(this);
     this.onPaste = this.onPaste.bind(this);
+  }
+
+  onClick(event) {
+    const target = event.originalTarget || event.target;
+    const {
+      hud,
+    } = this.props;
+
+    // Do not focus on middle/right-click or 2+ clicks.
+    if (event.detail !== 1 || event.button !== 0) {
+      return;
+    }
+
+    // Do not focus if a link was clicked
+    if (target.closest("a")) {
+      return;
+    }
+
+    // Do not focus if an input field was clicked
+    if (target.closest("input")) {
+      return;
+    }
+    // Do not focus if something other than the output region was clicked
+    // (including e.g. the clear messages button in toolbar)
+    if (!target.closest(".webconsole-output-wrapper")) {
+      return;
+    }
+
+    // Do not focus if something is selected
+    const selection = hud.document.defaultView.getSelection();
+    if (selection && !selection.isCollapsed) {
+      return;
+    }
+
+    if (hud && hud.jsterm) {
+      hud.jsterm.focus();
+    }
   }
 
   onPaste(event) {
@@ -140,6 +178,7 @@ class App extends Component {
     return (
       div({
         className: classNames.join(" "),
+        onClick: this.onClick,
         ref: node => {
           this.node = node;
         }},
