@@ -12333,11 +12333,11 @@ static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
     else
       printf("cnt=%d \n", DR_state->mCount);
     if (DR_state->mDisplayPixelErrors) {
-      int32_t p2t = aPresContext->AppUnitsPerDevPixel();
-      CheckPixelError(aReflowInput.AvailableWidth(), p2t);
-      CheckPixelError(aReflowInput.AvailableHeight(), p2t);
-      CheckPixelError(aReflowInput.ComputedWidth(), p2t);
-      CheckPixelError(aReflowInput.ComputedHeight(), p2t);
+      int32_t d2a = aPresContext->AppUnitsPerDevPixel();
+      CheckPixelError(aReflowInput.AvailableWidth(), d2a);
+      CheckPixelError(aReflowInput.AvailableHeight(), d2a);
+      CheckPixelError(aReflowInput.ComputedWidth(), d2a);
+      CheckPixelError(aReflowInput.ComputedHeight(), d2a);
     }
   }
 }
@@ -12460,9 +12460,9 @@ void nsFrame::DisplayReflowExit(nsPresContext* aPresContext,
     }
     printf("\n");
     if (DR_state->mDisplayPixelErrors) {
-      int32_t p2t = aPresContext->AppUnitsPerDevPixel();
-      CheckPixelError(aMetrics.Width(), p2t);
-      CheckPixelError(aMetrics.Height(), p2t);
+      int32_t d2a = aPresContext->AppUnitsPerDevPixel();
+      CheckPixelError(aMetrics.Width(), d2a);
+      CheckPixelError(aMetrics.Height(), d2a);
     }
   }
   DR_state->DeleteTreeNode(*treeNode);
