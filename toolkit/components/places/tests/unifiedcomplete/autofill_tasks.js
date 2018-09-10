@@ -671,4 +671,62 @@ function addAutofillTasks(origins) {
 
     await cleanup();
   });
+
+  // Bookmark a page and then clear history.  The bookmarked origin/URL should
+  // be autofilled even though its frecency is <= 0 since the autofill threshold
+  // is 0.
+  add_task(async function zeroThreshold() {
+    await addBookmark({
+      uri: "http://" + url,
+    });
+
+    await PlacesUtils.history.clear();
+
+    // Make sure the place's frecency is <= 0.  (It will be reset to -1 on the
+    // history.clear() above, and then on idle it will be reset to 0.  xpcshell
+    // tests disable the idle service, so in practice it should always be -1,
+    // but in order to avoid possible intermittent failures in the future, don't
+    // assume that.)
+    let placeFrecency =
+      await PlacesTestUtils.fieldInDB("http://" + url, "frecency");
+    Assert.ok(placeFrecency <= 0);
+
+    // Make sure the origin's frecency is 0.
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.execute(`
+      SELECT frecency FROM moz_origins WHERE host = '${host}';
+    `);
+    Assert.equal(rows.length, 1);
+    let originFrecency = rows[0].getResultByIndex(0);
+    Assert.equal(originFrecency, 0);
+
+    // Make sure the autofill threshold is 0.
+    rows = await db.execute(`
+      SELECT
+        IFNULL((SELECT value FROM moz_meta WHERE key = "origin_frecency_count"), 0),
+        IFNULL((SELECT value FROM moz_meta WHERE key = "origin_frecency_sum"), 0),
+        IFNULL((SELECT value FROM moz_meta WHERE key = "origin_frecency_sum_of_squares"), 0)
+    `);
+    let count = rows[0].getResultByIndex(0);
+    let sum = rows[0].getResultByIndex(1);
+    let squares = rows[0].getResultByIndex(2);
+    Assert.equal(count, 0);
+    Assert.equal(sum, 0);
+    Assert.equal(squares, 0);
+
+    await check_autocomplete({
+      search,
+      autofilled: url,
+      completed: "http://" + url,
+      matches: [
+        {
+          value: url,
+          comment,
+          style: ["autofill", "heuristic"],
+        },
+      ],
+    });
+
+    await cleanup();
+  });
 }
