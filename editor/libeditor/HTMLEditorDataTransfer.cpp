@@ -15,8 +15,11 @@
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMStringList.h"
+#include "mozilla/dom/FileReader.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Base64.h"
 #include "mozilla/BasicEvents.h"
@@ -66,6 +69,7 @@
 #include "nsXPCOM.h"
 #include "nscore.h"
 #include "nsContentUtils.h"
+#include "nsQueryObject.h"
 
 class nsAtom;
 class nsILoadContext;
@@ -1010,6 +1014,101 @@ HTMLEditor::BlobReader::OnError(const nsAString& aError)
   return NS_OK;
 }
 
+class SlurpBlobEventListener final : public nsIDOMEventListener
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(SlurpBlobEventListener)
+
+  explicit SlurpBlobEventListener(nsIEditorBlobListener* aListener)
+    : mListener(aListener)
+  { }
+
+  NS_IMETHOD HandleEvent(Event* aEvent) override;
+
+private:
+  ~SlurpBlobEventListener() = default;
+
+  RefPtr<nsIEditorBlobListener> mListener;
+};
+
+NS_IMPL_CYCLE_COLLECTION(SlurpBlobEventListener, mListener)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SlurpBlobEventListener)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(SlurpBlobEventListener)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(SlurpBlobEventListener)
+
+NS_IMETHODIMP
+SlurpBlobEventListener::HandleEvent(Event* aEvent)
+{
+  EventTarget* target = aEvent->GetTarget();
+  if (!target || !mListener) {
+    return NS_OK;
+  }
+
+  RefPtr<FileReader> reader = do_QueryObject(target);
+  if (!reader) {
+    return NS_OK;
+  }
+
+  EventMessage message = aEvent->WidgetEventPtr()->mMessage;
+
+  if (message == eLoad) {
+    MOZ_ASSERT(reader->DataFormat() == FileReader::FILE_AS_BINARY);
+
+    // The original data has been converted from Latin1 to UTF-16, this just
+    // undoes that conversion.
+    mListener->OnResult(NS_LossyConvertUTF16toASCII(reader->Result()));
+  } else if (message == eLoadError) {
+    nsAutoString errorMessage;
+    reader->GetError()->GetErrorMessage(errorMessage);
+    mListener->OnError(errorMessage);
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
+HTMLEditor::SlurpBlob(Blob* aBlob, nsPIDOMWindowOuter* aWindow,
+                      BlobReader* aBlobReader)
+{
+  MOZ_ASSERT(aBlob);
+  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aBlobReader);
+
+  nsCOMPtr<nsPIDOMWindowInner> inner = aWindow->GetCurrentInnerWindow();
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(inner);
+  RefPtr<WeakWorkerRef> workerRef;
+  RefPtr<FileReader> reader = new FileReader(global, workerRef);
+
+  RefPtr<SlurpBlobEventListener> eventListener =
+    new SlurpBlobEventListener(aBlobReader);
+
+  nsresult rv = reader->AddEventListener(NS_LITERAL_STRING("load"),
+                                         eventListener, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = reader->AddEventListener(NS_LITERAL_STRING("error"),
+                                eventListener, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  ErrorResult result;
+  reader->ReadAsBinaryString(*aBlob, result);
+  if (result.Failed()) {
+    return result.StealNSResult();
+  }
+  return NS_OK;
+}
+
 nsresult
 HTMLEditor::InsertObject(const nsACString& aType,
                          nsISupports* aObject,
@@ -1025,17 +1124,13 @@ HTMLEditor::InsertObject(const nsACString& aType,
     RefPtr<BlobReader> br = new BlobReader(blob, this, aIsSafe, aSourceDoc,
                                            aDestinationNode, aDestOffset,
                                            aDoDeleteSelection);
-    nsCOMPtr<nsIEditorUtils> utils =
-      do_GetService("@mozilla.org/editor-utils;1");
-    NS_ENSURE_TRUE(utils, NS_ERROR_FAILURE);
-
     nsCOMPtr<nsINode> node = aDestinationNode;
     MOZ_ASSERT(node);
 
     RefPtr<Blob> domBlob = Blob::Create(node->GetOwnerGlobal(), blob);
     NS_ENSURE_TRUE(domBlob, NS_ERROR_FAILURE);
 
-    return utils->SlurpBlob(domBlob, node->OwnerDoc()->GetWindow(), br);
+    return SlurpBlob(domBlob, node->OwnerDoc()->GetWindow(), br);
   }
 
   nsAutoCString type(aType);

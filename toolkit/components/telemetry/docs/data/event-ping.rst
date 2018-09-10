@@ -87,6 +87,6 @@ events
 A map from process names to arrays of event records that have been :ref:`serialized <events.serializationformat>`.
 
 Version History
-===============
+---------------
 
 - Firefox 62: Started sending the "event" ping (`bug 1460595 <https://bugzilla.mozilla.org/show_bug.cgi?id=1460595>`_).

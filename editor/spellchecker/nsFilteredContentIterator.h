@@ -11,6 +11,7 @@
 #include "nsIContentIterator.h"
 #include "nsISupportsImpl.h"
 #include "nscore.h"
+#include "mozilla/UniquePtr.h"
 
 class nsAtom;
 class nsComposeTxtSrvFilter;
@@ -25,7 +26,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsFilteredContentIterator)
 
-  explicit nsFilteredContentIterator(nsComposeTxtSrvFilter* aFilter);
+  explicit nsFilteredContentIterator(
+    mozilla::UniquePtr<nsComposeTxtSrvFilter> aFilter);
 
   /* nsIContentIterator */
   virtual nsresult Init(nsINode* aRoot) override;
@@ -77,7 +79,7 @@ protected:
   RefPtr<nsAtom> mSelectAreaAtom;
   RefPtr<nsAtom> mMapAtom;
 
-  RefPtr<nsComposeTxtSrvFilter> mFilter;
+  mozilla::UniquePtr<nsComposeTxtSrvFilter> mFilter;
   RefPtr<nsRange>               mRange;
   bool                            mDidSkip;
   bool                            mIsOutOfRange;
