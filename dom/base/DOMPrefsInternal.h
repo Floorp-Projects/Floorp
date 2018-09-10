@@ -19,10 +19,6 @@
 //   * This defines DOMPrefs::FooBar(JSContext* aCx, JSObject* aObj);
 //     This is allows the use of DOMPrefs in WebIDL files.
 
-#ifdef JS_BUILD_BINAST
-DOM_PREF(BinASTEncodingEnabled, "dom.script_loader.binast_encoding.enabled")
-#endif
-
 DOM_WEBIDL_PREF2(canvas_imagebitmap_extensions_enabled)
 DOM_WEBIDL_PREF2(dom_caches_enabled)
 DOM_WEBIDL_PREF2(dom_webnotifications_serviceworker_enabled)
