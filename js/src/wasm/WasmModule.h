@@ -51,8 +51,6 @@ class Module : public JS::WasmModule
     const SharedCode        code_;
     const ImportVector      imports_;
     const ExportVector      exports_;
-    const DataSegmentVector dataSegments_;
-    const ElemSegmentVector elemSegments_;
     const StructTypeVector  structTypes_;
     const SharedBytes       bytecode_;
 
@@ -92,8 +90,6 @@ class Module : public JS::WasmModule
     Module(const Code& code,
            ImportVector&& imports,
            ExportVector&& exports,
-           DataSegmentVector&& dataSegments,
-           ElemSegmentVector&& elemSegments,
            StructTypeVector&& structTypes,
            const ShareableBytes& bytecode,
            UniqueConstBytes debugUnlinkedCode = nullptr,
@@ -101,8 +97,6 @@ class Module : public JS::WasmModule
       : code_(&code),
         imports_(std::move(imports)),
         exports_(std::move(exports)),
-        dataSegments_(std::move(dataSegments)),
-        elemSegments_(std::move(elemSegments)),
         structTypes_(std::move(structTypes)),
         bytecode_(&bytecode),
         debugCodeClaimed_(false),
@@ -171,6 +165,15 @@ class Module : public JS::WasmModule
 };
 
 typedef RefPtr<Module> SharedModule;
+
+// Compute the (entry point, instance pointer) pair for an entry in the
+// function-indices vector of an element segment.  |instance| must be the
+// Instance* that will eventually own the resulting WasmCallee.
+void
+ComputeWasmCallee(const Code& code, const Instance* instance,
+                  Handle<FunctionVector> funcImports,
+                  uint32_t funcIndexIndex, const Table& table,
+                  const ElemSegment& seg, WasmCallee* out);
 
 // JS API implementations:
 

@@ -510,6 +510,9 @@ static bool enableNativeRegExp = false;
 static bool enableSharedMemory = SHARED_MEMORY_DEFAULT;
 static bool enableWasmBaseline = false;
 static bool enableWasmIon = false;
+#ifdef ENABLE_WASM_CRANELIFT
+static bool wasmForceCranelift = false;
+#endif
 #ifdef ENABLE_WASM_GC
 static bool enableWasmGc = false;
 #endif
@@ -9139,8 +9142,14 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
     enableNativeRegExp = !op.getBoolOption("no-native-regexp");
     enableWasmBaseline = !op.getBoolOption("no-wasm-baseline");
     enableWasmIon = !op.getBoolOption("no-wasm-ion");
+#ifdef ENABLE_WASM_CRANELIFT
+    wasmForceCranelift = op.getBoolOption("wasm-force-cranelift");
+#endif
 #ifdef ENABLE_WASM_GC
     enableWasmGc = op.getBoolOption("wasm-gc");
+# ifdef ENABLE_WASM_CRANELIFT
+    enableWasmGc = false;
+# endif
 #endif
     enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
     enableAsyncStacks = !op.getBoolOption("no-async-stacks");
@@ -9152,6 +9161,9 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
                              .setWasm(enableWasm)
                              .setWasmBaseline(enableWasmBaseline)
                              .setWasmIon(enableWasmIon)
+#ifdef ENABLE_WASM_CRANELIFT
+                             .setWasmForceCranelift(wasmForceCranelift)
+#endif
 #ifdef ENABLE_WASM_GC
                              .setWasmGc(enableWasmGc)
 #endif
@@ -9445,6 +9457,9 @@ SetWorkerContextOptions(JSContext* cx)
                              .setWasm(enableWasm)
                              .setWasmBaseline(enableWasmBaseline)
                              .setWasmIon(enableWasmIon)
+#ifdef ENABLE_WASM_CRANELIFT
+                             .setWasmForceCranelift(wasmForceCranelift)
+#endif
 #ifdef ENABLE_WASM_GC
                              .setWasmGc(enableWasmGc)
 #endif
@@ -9695,6 +9710,9 @@ main(int argc, char** argv, char** envp)
         || !op.addBoolOption('\0', "no-wasm", "Disable WebAssembly compilation")
         || !op.addBoolOption('\0', "no-wasm-baseline", "Disable wasm baseline compiler")
         || !op.addBoolOption('\0', "no-wasm-ion", "Disable wasm ion compiler")
+#ifdef ENABLE_WASM_CRANELIFT
+        || !op.addBoolOption('\0', "wasm-force-cranelift", "Enable wasm Cranelift compiler")
+#endif
         || !op.addBoolOption('\0', "test-wasm-await-tier2", "Forcibly activate tiering and block "
                                    "instantiation on completion of tier2")
 #ifdef ENABLE_WASM_GC

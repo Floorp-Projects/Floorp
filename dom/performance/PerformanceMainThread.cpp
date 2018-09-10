@@ -6,7 +6,7 @@
 
 #include "PerformanceMainThread.h"
 #include "PerformanceNavigation.h"
-#include "mozilla/dom/DOMPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsICacheInfoChannel.h"
 
 namespace mozilla {
@@ -273,7 +273,7 @@ PerformanceMainThread::InsertUserEntry(PerformanceEntry* aEntry)
   nsAutoCString uri;
   uint64_t markCreationEpoch = 0;
 
-  if (DOMPrefs::PerformanceLoggingEnabled() ||
+  if (StaticPrefs::dom_performance_enable_user_timing_logging() ||
       nsContentUtils::SendPerformanceTimingNotifications()) {
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
@@ -287,7 +287,7 @@ PerformanceMainThread::InsertUserEntry(PerformanceEntry* aEntry)
     }
     markCreationEpoch = static_cast<uint64_t>(PR_Now() / PR_USEC_PER_MSEC);
 
-    if (DOMPrefs::PerformanceLoggingEnabled()) {
+    if (StaticPrefs::dom_performance_enable_user_timing_logging()) {
       Performance::LogEntry(aEntry, uri);
     }
   }

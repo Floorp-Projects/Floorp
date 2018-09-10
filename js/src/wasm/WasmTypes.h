@@ -37,7 +37,7 @@
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "vm/MallocProvider.h"
-#include "wasm/WasmBinaryConstants.h"
+#include "wasm/WasmConstants.h"
 
 namespace js {
 
@@ -157,6 +157,29 @@ struct ShareableBase : AtomicRefCounted<T>
         return mallocSizeOf(self) + self->sizeOfExcludingThis(mallocSizeOf);
     }
 };
+
+// ShareableBytes is a reference-counted Vector of bytes.
+
+struct ShareableBytes : ShareableBase<ShareableBytes>
+{
+    // Vector is 'final', so instead make Vector a member and add boilerplate.
+    Bytes bytes;
+
+    ShareableBytes() = default;
+    explicit ShareableBytes(Bytes&& bytes) : bytes(std::move(bytes)) {}
+    size_t sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+        return bytes.sizeOfExcludingThis(mallocSizeOf);
+    }
+    const uint8_t* begin() const { return bytes.begin(); }
+    const uint8_t* end() const { return bytes.end(); }
+    size_t length() const { return bytes.length(); }
+    bool append(const uint8_t* start, uint32_t len) {
+        return bytes.append(start, len);
+    }
+};
+
+typedef RefPtr<ShareableBytes> MutableBytes;
+typedef RefPtr<const ShareableBytes> SharedBytes;
 
 // A PackedTypeCode represents a TypeCode paired with a refTypeIndex (valid only
 // for TypeCode::Ref).  PackedTypeCode is guaranteed to be POD.
@@ -1062,18 +1085,25 @@ typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
 //
 // The codeRangeIndices are laid out in a nondeterminstic order as a result of
 // parallel compilation.
+//
+// NB: if you add members to this, or change the type of existing ones,
+// remember to update the ElemSegment copying code in Module::instantiate
+// accordingly.
 
 struct ElemSegment
 {
     uint32_t tableIndex;
-    InitExpr offset;
+    Maybe<InitExpr> offsetIfActive;
     Uint32Vector elemFuncIndices;
     Uint32Vector elemCodeRangeIndices1_;
     mutable Uint32Vector elemCodeRangeIndices2_;
 
     ElemSegment() = default;
-    ElemSegment(uint32_t tableIndex, InitExpr offset, Uint32Vector&& elemFuncIndices)
-      : tableIndex(tableIndex), offset(offset), elemFuncIndices(std::move(elemFuncIndices))
+    ElemSegment(uint32_t tableIndex, Maybe<InitExpr>&& offsetIfActive,
+                Uint32Vector&& elemFuncIndices)
+      : tableIndex(tableIndex),
+        offsetIfActive(std::move(offsetIfActive)),
+        elemFuncIndices(std::move(elemFuncIndices))
     {}
 
     Uint32Vector& elemCodeRangeIndices(Tier t) {
@@ -1115,12 +1145,57 @@ typedef Vector<ElemSegment, 0, SystemAllocPolicy> ElemSegmentVector;
 
 struct DataSegment
 {
-    InitExpr offset;
+    Maybe<InitExpr> offsetIfActive;
     uint32_t bytecodeOffset;
     uint32_t length;
 };
 
 typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
+
+// A pairing of entry point and instance pointer, used for lazy table
+// initialisation.
+
+struct WasmCallee
+{
+    WasmCallee() : instance(nullptr), entry(nullptr) {}
+    WasmCallee(const Instance* instance, void* entry)
+      : instance(instance),
+        entry(entry)
+    {}
+    // The instance associated with the code address.
+    const Instance* instance;
+    // The table entry code address.
+    void* entry;
+};
+
+// Support for passive data and element segments -- lazy initialisation.
+//
+// At instantiation time, we prepare the required initialising data for each
+// passive segment, copying it into new memory.  This is done separately for
+// data segments and elem segments.  We also create a vector of pointers to
+// this copied data, with nullptr for entries corresponding to active
+// segments.  This vector has the same length as the vector of data/elem
+// segments respectively in the originating module.
+//
+// The vector of pointers and the prepared data are owned by the instance
+// that is constructed.  We have to do this so that the initialising data is
+// available at run time in the instance, in particular to
+// Instance::{mem,table}{Init,Drop}.
+//
+// The final structures have type DataSegmentInitVector and
+// ElemSegmentInitVector respectively.
+
+typedef  Vector<uint8_t,    0, SystemAllocPolicy>  DataSegmentInit;
+typedef  Vector<WasmCallee, 0, SystemAllocPolicy>  ElemSegmentInit;
+
+// We store (unique) pointers rather than references to the initialising
+// vectors in order that they can be incrementally freed as we execute
+// {memory,table}.drop instructions.
+
+typedef  Vector<UniquePtr<DataSegmentInit>, 0, SystemAllocPolicy>
+         DataSegmentInitVector;
+typedef  Vector<UniquePtr<ElemSegmentInit>, 0, SystemAllocPolicy>
+         ElemSegmentInitVector;
 
 // FuncTypeIdDesc describes a function type that can be used by call_indirect
 // and table-entry prologues to structurally compare whether the caller and
@@ -1136,27 +1211,32 @@ typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 class FuncTypeIdDesc
 {
   public:
-    enum class Kind { None, Immediate, Global };
     static const uintptr_t ImmediateBit = 0x1;
 
   private:
-    Kind kind_;
+    FuncTypeIdDescKind kind_;
     size_t bits_;
 
-    FuncTypeIdDesc(Kind kind, size_t bits) : kind_(kind), bits_(bits) {}
+    FuncTypeIdDesc(FuncTypeIdDescKind kind, size_t bits) : kind_(kind), bits_(bits) {}
 
   public:
-    Kind kind() const { return kind_; }
+    FuncTypeIdDescKind kind() const { return kind_; }
     static bool isGlobal(const FuncType& funcType);
 
-    FuncTypeIdDesc() : kind_(Kind::None), bits_(0) {}
+    FuncTypeIdDesc() : kind_(FuncTypeIdDescKind::None), bits_(0) {}
     static FuncTypeIdDesc global(const FuncType& funcType, uint32_t globalDataOffset);
     static FuncTypeIdDesc immediate(const FuncType& funcType);
 
-    bool isGlobal() const { return kind_ == Kind::Global; }
+    bool isGlobal() const { return kind_ == FuncTypeIdDescKind::Global; }
 
-    size_t immediate() const { MOZ_ASSERT(kind_ == Kind::Immediate); return bits_; }
-    uint32_t globalDataOffset() const { MOZ_ASSERT(kind_ == Kind::Global); return bits_; }
+    size_t immediate() const {
+        MOZ_ASSERT(kind_ == FuncTypeIdDescKind::Immediate);
+        return bits_;
+    }
+    uint32_t globalDataOffset() const {
+        MOZ_ASSERT(kind_ == FuncTypeIdDescKind::Global);
+        return bits_;
+    }
 };
 
 // FuncTypeWithId pairs a FuncType with FuncTypeIdDesc, describing either how to
@@ -1294,46 +1374,6 @@ class TypeDef
 };
 
 typedef Vector<TypeDef, 0, SystemAllocPolicy> TypeDefVector;
-
-// A wasm::Trap represents a wasm-defined trap that can occur during execution
-// which triggers a WebAssembly.RuntimeError. Generated code may jump to a Trap
-// symbolically, passing the bytecode offset to report as the trap offset. The
-// generated jump will be bound to a tiny stub which fills the offset and
-// then jumps to a per-Trap shared stub at the end of the module.
-
-enum class Trap
-{
-    // The Unreachable opcode has been executed.
-    Unreachable,
-    // An integer arithmetic operation led to an overflow.
-    IntegerOverflow,
-    // Trying to coerce NaN to an integer.
-    InvalidConversionToInteger,
-    // Integer division by zero.
-    IntegerDivideByZero,
-    // Out of bounds on wasm memory accesses.
-    OutOfBounds,
-    // Unaligned on wasm atomic accesses; also used for non-standard ARM
-    // unaligned access faults.
-    UnalignedAccess,
-    // call_indirect to null.
-    IndirectCallToNull,
-    // call_indirect signature mismatch.
-    IndirectCallBadSig,
-
-    // The internal stack space was exhausted. For compatibility, this throws
-    // the same over-recursed error as JS.
-    StackOverflow,
-
-    // The wasm execution has potentially run too long and the engine must call
-    // CheckForInterrupt(). This trap is resumable.
-    CheckInterrupt,
-
-    // Signal an error that was reported in C++ code.
-    ThrowReported,
-
-    Limit
-};
 
 // A wrapper around the bytecode offset of a wasm instruction within a whole
 // module, used for trap offsets or call offsets. These offsets should refer to
@@ -1802,7 +1842,12 @@ enum class SymbolicAddress
     WaitI64,
     Wake,
     MemCopy,
+    MemDrop,
     MemFill,
+    MemInit,
+    TableCopy,
+    TableDrop,
+    TableInit,
 #ifdef ENABLE_WASM_GC
     PostBarrier,
 #endif

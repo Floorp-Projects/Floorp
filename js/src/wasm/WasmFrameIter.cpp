@@ -583,7 +583,7 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, const FuncTypeIdDesc& funcT
     // the bytecode offset of the callsite by JitActivation::startWasmTrap.
     offsets->begin = masm.currentOffset();
     switch (funcTypeId.kind()) {
-      case FuncTypeIdDesc::Kind::Global: {
+      case FuncTypeIdDescKind::Global: {
         Register scratch = WasmTableCallScratchReg0;
         masm.loadWasmGlobalPtr(funcTypeId.globalDataOffset(), scratch);
         masm.branchPtr(Assembler::Condition::Equal, WasmTableCallSigReg, scratch,
@@ -591,13 +591,13 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, const FuncTypeIdDesc& funcT
         masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
         break;
       }
-      case FuncTypeIdDesc::Kind::Immediate: {
+      case FuncTypeIdDescKind::Immediate: {
         masm.branch32(Assembler::Condition::Equal, WasmTableCallSigReg,
                       Imm32(funcTypeId.immediate()), &normalEntry);
         masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
         break;
       }
-      case FuncTypeIdDesc::Kind::None:
+      case FuncTypeIdDescKind::None:
         break;
     }
 
@@ -1382,8 +1382,18 @@ ThunkedNativeToDescription(SymbolicAddress func)
         return "jit call to int64 wasm function";
       case SymbolicAddress::MemCopy:
         return "call to native memory.copy function";
+      case SymbolicAddress::MemDrop:
+        return "call to native memory.drop function";
       case SymbolicAddress::MemFill:
         return "call to native memory.fill function";
+      case SymbolicAddress::MemInit:
+        return "call to native memory.init function";
+      case SymbolicAddress::TableCopy:
+        return "call to native table.copy function";
+      case SymbolicAddress::TableDrop:
+        return "call to native table.drop function";
+      case SymbolicAddress::TableInit:
+        return "call to native table.init function";
 #ifdef ENABLE_WASM_GC
       case SymbolicAddress::PostBarrier:
         return "call to native GC postbarrier (in wasm)";

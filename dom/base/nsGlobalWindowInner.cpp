@@ -101,6 +101,7 @@
 #include "PostMessageEvent.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
+#include "mozilla/StaticPrefs.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"
@@ -7725,7 +7726,7 @@ nsGlobalWindowInner::CreateImageBitmap(JSContext* aCx,
                                        const Sequence<ChannelPixelLayout>& aLayout,
                                        ErrorResult& aRv)
 {
-  if (!DOMPrefs::ImageBitmapExtensionsEnabled()) {
+  if (!StaticPrefs::canvas_imagebitmap_extensions_enabled()) {
     aRv.Throw(NS_ERROR_TYPE_ERR);
     return nullptr;
   }

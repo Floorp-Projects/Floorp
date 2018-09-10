@@ -13,13 +13,13 @@
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 
 #include "mozilla/dom/AppNotificationServiceOptionsBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/NotificationEvent.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/Promise.h"
@@ -910,11 +910,11 @@ Notification::PrefEnabled(JSContext* aCx, JSObject* aObj)
     }
 
     if (workerPrivate->IsServiceWorker()) {
-      return DOMPrefs::NotificationEnabledInServiceWorkers();
+      return StaticPrefs::dom_webnotifications_serviceworker_enabled();
     }
   }
 
-  return DOMPrefs::NotificationEnabled();
+  return StaticPrefs::dom_webnotifications_enabled();
 }
 
 // static
@@ -1718,7 +1718,7 @@ Notification::ShowInternal()
   bool inPrivateBrowsing = IsInPrivateBrowsing();
 
   bool requireInteraction = mRequireInteraction;
-  if (!DOMPrefs::NotificationRIEnabled()) {
+  if (!StaticPrefs::dom_webnotifications_requireinteraction_enabled()) {
     requireInteraction = false;
   }
 

@@ -1896,6 +1896,7 @@ class BaseCompiler final : public BaseCompilerInterface
     MIRTypeVector               SigPIII_;
     MIRTypeVector               SigPIIL_;
     MIRTypeVector               SigPILL_;
+    MIRTypeVector               SigPIIII_;
     NonAssertingLabel           returnLabel_;
 
     LatentOp                    latentOp_;       // Latent operation for branch (seen next)
@@ -1932,6 +1933,7 @@ class BaseCompiler final : public BaseCompilerInterface
                  const FuncCompileInput& input,
                  const ValTypeVector& locals,
                  Decoder& decoder,
+                 ExclusiveDeferredValidationState& dvs,
                  TempAllocator* alloc,
                  MacroAssembler* masm);
 
@@ -3794,7 +3796,7 @@ class BaseCompiler final : public BaseCompilerInterface
     void callIndirect(uint32_t funcTypeIndex, const Stk& indexVal, const FunctionCall& call)
     {
         const FuncTypeWithId& funcType = env_.types[funcTypeIndex].funcType();
-        MOZ_ASSERT(funcType.id.kind() != FuncTypeIdDesc::Kind::None);
+        MOZ_ASSERT(funcType.id.kind() != FuncTypeIdDescKind::None);
 
         MOZ_ASSERT(env_.tables.length() == 1);
         const TableDesc& table = env_.tables[0];
@@ -6015,8 +6017,10 @@ class BaseCompiler final : public BaseCompilerInterface
     MOZ_MUST_USE bool emitAtomicXchg(ValType type, Scalar::Type viewType);
     void emitAtomicXchg64(MemoryAccessDesc* access, ValType type, WantResult wantResult);
 #ifdef ENABLE_WASM_BULKMEM_OPS
-    MOZ_MUST_USE bool emitMemCopy();
+    MOZ_MUST_USE bool emitMemOrTableCopy(bool isMem);
+    MOZ_MUST_USE bool emitMemOrTableDrop(bool isMem);
     MOZ_MUST_USE bool emitMemFill();
+    MOZ_MUST_USE bool emitMemOrTableInit(bool isMem);
 #endif
 };
 
@@ -9364,18 +9368,46 @@ BaseCompiler::emitWake()
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
 bool
-BaseCompiler::emitMemCopy()
+BaseCompiler::emitMemOrTableCopy(bool isMem)
 {
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     Nothing nothing;
-    if (!iter_.readMemCopy(&nothing, &nothing, &nothing))
+    if (!iter_.readMemOrTableCopy(isMem, &nothing, &nothing, &nothing))
         return false;
 
     if (deadCode_)
         return true;
 
-    emitInstanceCall(lineOrBytecode, SigPIII_, ExprType::Void, SymbolicAddress::MemCopy);
+    SymbolicAddress callee = isMem ? SymbolicAddress::MemCopy
+                                   : SymbolicAddress::TableCopy;
+    emitInstanceCall(lineOrBytecode, SigPIII_, ExprType::Void, callee);
+
+    Label ok;
+    masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
+    trap(Trap::ThrowReported);
+    masm.bind(&ok);
+
+    return true;
+}
+
+bool
+BaseCompiler::emitMemOrTableDrop(bool isMem)
+{
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+    uint32_t segIndex = 0;
+    if (!iter_.readMemOrTableDrop(isMem, &segIndex))
+        return false;
+
+    if (deadCode_)
+        return true;
+
+    // Despite the cast to int32_t, the callee regards the value as unsigned.
+    pushI32(int32_t(segIndex));
+    SymbolicAddress callee = isMem ? SymbolicAddress::MemDrop
+                                   : SymbolicAddress::TableDrop;
+    emitInstanceCall(lineOrBytecode, SigPI_, ExprType::Void, callee);
 
     Label ok;
     masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
@@ -9398,6 +9430,32 @@ BaseCompiler::emitMemFill()
         return true;
 
     emitInstanceCall(lineOrBytecode, SigPIII_, ExprType::Void, SymbolicAddress::MemFill);
+
+    Label ok;
+    masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
+    trap(Trap::ThrowReported);
+    masm.bind(&ok);
+
+    return true;
+}
+
+bool
+BaseCompiler::emitMemOrTableInit(bool isMem)
+{
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+    uint32_t segIndex = 0;
+    Nothing nothing;
+    if (!iter_.readMemOrTableInit(isMem, &segIndex, &nothing, &nothing, &nothing))
+        return false;
+
+    if (deadCode_)
+        return true;
+
+    pushI32(int32_t(segIndex));
+    SymbolicAddress callee = isMem ? SymbolicAddress::MemInit
+                                   : SymbolicAddress::TableInit;
+    emitInstanceCall(lineOrBytecode, SigPIIII_, ExprType::Void, callee);
 
     Label ok;
     masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
@@ -10033,9 +10091,19 @@ BaseCompiler::emitBody()
 #endif // ENABLE_WASM_SATURATING_TRUNC_OPS
 #ifdef ENABLE_WASM_BULKMEM_OPS
               case uint16_t(MiscOp::MemCopy):
-                CHECK_NEXT(emitMemCopy());
+                CHECK_NEXT(emitMemOrTableCopy(/*isMem=*/true));
+              case uint16_t(MiscOp::MemDrop):
+                CHECK_NEXT(emitMemOrTableDrop(/*isMem=*/true));
               case uint16_t(MiscOp::MemFill):
                 CHECK_NEXT(emitMemFill());
+              case uint16_t(MiscOp::MemInit):
+                CHECK_NEXT(emitMemOrTableInit(/*isMem=*/true));
+              case uint16_t(MiscOp::TableCopy):
+                CHECK_NEXT(emitMemOrTableCopy(/*isMem=*/false));
+              case uint16_t(MiscOp::TableDrop):
+                CHECK_NEXT(emitMemOrTableDrop(/*isMem=*/false));
+              case uint16_t(MiscOp::TableInit):
+                CHECK_NEXT(emitMemOrTableInit(/*isMem=*/false));
 #endif // ENABLE_WASM_BULKMEM_OPS
               default:
                 break;
@@ -10241,10 +10309,11 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
                            const FuncCompileInput& func,
                            const ValTypeVector& locals,
                            Decoder& decoder,
+                           ExclusiveDeferredValidationState& dvs,
                            TempAllocator* alloc,
                            MacroAssembler* masm)
     : env_(env),
-      iter_(env, decoder),
+      iter_(env, decoder, dvs),
       func_(func),
       lastReadCallSite_(0),
       alloc_(*alloc),
@@ -10299,6 +10368,12 @@ BaseCompiler::init()
     {
         return false;
     }
+    if (!SigPIIII_.append(MIRType::Pointer) || !SigPIIII_.append(MIRType::Int32) ||
+        !SigPIIII_.append(MIRType::Int32) || !SigPIIII_.append(MIRType::Int32) ||
+        !SigPIIII_.append(MIRType::Int32))
+    {
+        return false;
+    }
 
     if (!fr.setupLocals(locals_, funcType().args(), env_.debugEnabled(), &localInfo_))
         return false;
@@ -10350,6 +10425,7 @@ js::wasm::BaselineCanCompile()
 bool
 js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
                                    const FuncCompileInputVector& inputs, CompiledCode* code,
+                                   ExclusiveDeferredValidationState& dvs,
                                    UniqueChars* error)
 {
     MOZ_ASSERT(env.tier() == Tier::Baseline);
@@ -10380,7 +10456,7 @@ js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo
 
         // One-pass baseline compilation.
 
-        BaseCompiler f(env, func, locals, d, &alloc, &masm);
+        BaseCompiler f(env, func, locals, d, dvs, &alloc, &masm);
         if (!f.init())
             return false;
         if (!f.emitFunction())

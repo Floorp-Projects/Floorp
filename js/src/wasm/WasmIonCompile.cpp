@@ -148,11 +148,12 @@ class FunctionCompiler
   public:
     FunctionCompiler(const ModuleEnvironment& env,
                      Decoder& decoder,
+                     ExclusiveDeferredValidationState& dvs,
                      const FuncCompileInput& func,
                      const ValTypeVector& locals,
                      MIRGenerator& mirGen)
       : env_(env),
-        iter_(env, decoder),
+        iter_(env, decoder, dvs),
         func_(func),
         locals_(locals),
         lastReadCallSite_(0),
@@ -1018,7 +1019,7 @@ class FunctionCompiler
 
         CalleeDesc callee;
         if (env_.isAsmJS()) {
-            MOZ_ASSERT(funcType.id.kind() == FuncTypeIdDesc::Kind::None);
+            MOZ_ASSERT(funcType.id.kind() == FuncTypeIdDescKind::None);
             const TableDesc& table = env_.tables[env_.asmJSSigToTableIndex[funcTypeIndex]];
             MOZ_ASSERT(IsPowerOfTwo(table.limits.initial));
             MOZ_ASSERT(!table.external);
@@ -1031,7 +1032,7 @@ class FunctionCompiler
             index = maskedIndex;
             callee = CalleeDesc::asmJSTable(table);
         } else {
-            MOZ_ASSERT(funcType.id.kind() != FuncTypeIdDesc::Kind::None);
+            MOZ_ASSERT(funcType.id.kind() != FuncTypeIdDescKind::None);
             MOZ_ASSERT(env_.tables.length() == 1);
             const TableDesc& table = env_.tables[0];
             callee = CalleeDesc::wasmTable(table, funcType.id);
@@ -2733,10 +2734,10 @@ EmitAtomicXchg(FunctionCompiler& f, ValType type, Scalar::Type viewType)
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
 static bool
-EmitMemCopy(FunctionCompiler& f)
+EmitMemOrTableCopy(FunctionCompiler& f, bool isMem)
 {
-    MDefinition *dest, *src, *len;
-    if (!f.iter().readMemCopy(&dest, &src, &len))
+    MDefinition* dst, *src, *len;
+    if (!f.iter().readMemOrTableCopy(isMem, &dst, &src, &len))
         return false;
 
     if (f.inDeadCode())
@@ -2751,7 +2752,7 @@ EmitMemCopy(FunctionCompiler& f)
     if (!f.passInstance(&args))
         return false;
 
-    if (!f.passArg(dest, ValType::I32, &args))
+    if (!f.passArg(dst, ValType::I32, &args))
         return false;
     if (!f.passArg(src, ValType::I32, &args))
         return false;
@@ -2761,8 +2762,48 @@ EmitMemCopy(FunctionCompiler& f)
     if (!f.finishCall(&args))
         return false;
 
+    SymbolicAddress callee = isMem ? SymbolicAddress::MemCopy
+                                   : SymbolicAddress::TableCopy;
     MDefinition* ret;
-    if (!f.builtinInstanceMethodCall(SymbolicAddress::MemCopy, args, ValType::I32, &ret))
+    if (!f.builtinInstanceMethodCall(callee, args, ValType::I32, &ret))
+        return false;
+
+    if (!f.checkI32NegativeMeansFailedResult(ret))
+        return false;
+
+    return true;
+}
+
+static bool
+EmitMemOrTableDrop(FunctionCompiler& f, bool isMem)
+{
+    uint32_t segIndexVal = 0;
+    if (!f.iter().readMemOrTableDrop(isMem, &segIndexVal))
+        return false;
+
+    if (f.inDeadCode())
+        return false;
+
+    uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+    CallCompileState args(f, lineOrBytecode);
+    if (!f.startCall(&args))
+        return false;
+
+    if (!f.passInstance(&args))
+        return false;
+
+    MDefinition* segIndex = f.constant(Int32Value(int32_t(segIndexVal)), MIRType::Int32);
+    if (!f.passArg(segIndex, ValType::I32, &args))
+        return false;
+
+    if (!f.finishCall(&args))
+        return false;
+
+    SymbolicAddress callee = isMem ? SymbolicAddress::MemDrop
+                                   : SymbolicAddress::TableDrop;
+    MDefinition* ret;
+    if (!f.builtinInstanceMethodCall(callee, args, ValType::I32, &ret))
         return false;
 
     if (!f.checkI32NegativeMeansFailedResult(ret))
@@ -2774,7 +2815,7 @@ EmitMemCopy(FunctionCompiler& f)
 static bool
 EmitMemFill(FunctionCompiler& f)
 {
-    MDefinition *start, *val, *len;
+    MDefinition* start, *val, *len;
     if (!f.iter().readMemFill(&start, &val, &len))
         return false;
 
@@ -2802,6 +2843,52 @@ EmitMemFill(FunctionCompiler& f)
 
     MDefinition* ret;
     if (!f.builtinInstanceMethodCall(SymbolicAddress::MemFill, args, ValType::I32, &ret))
+        return false;
+
+    if (!f.checkI32NegativeMeansFailedResult(ret))
+        return false;
+
+    return true;
+}
+
+static bool
+EmitMemOrTableInit(FunctionCompiler& f, bool isMem)
+{
+    uint32_t segIndexVal = 0;
+    MDefinition* dstOff, *srcOff, *len;
+    if (!f.iter().readMemOrTableInit(isMem, &segIndexVal, &dstOff, &srcOff, &len))
+        return false;
+
+    if (f.inDeadCode())
+        return false;
+
+    uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+    CallCompileState args(f, lineOrBytecode);
+    if (!f.startCall(&args))
+        return false;
+
+    if (!f.passInstance(&args))
+        return false;
+
+    if (!f.passArg(dstOff, ValType::I32, &args))
+        return false;
+    if (!f.passArg(srcOff, ValType::I32, &args))
+        return false;
+    if (!f.passArg(len, ValType::I32, &args))
+        return false;
+
+    MDefinition* segIndex = f.constant(Int32Value(int32_t(segIndexVal)), MIRType::Int32);
+    if (!f.passArg(segIndex, ValType::I32, &args))
+        return false;
+
+    if (!f.finishCall(&args))
+        return false;
+
+    SymbolicAddress callee = isMem ? SymbolicAddress::MemInit
+                                   : SymbolicAddress::TableInit;
+    MDefinition* ret;
+    if (!f.builtinInstanceMethodCall(callee, args, ValType::I32, &ret))
         return false;
 
     if (!f.checkI32NegativeMeansFailedResult(ret))
@@ -3231,9 +3318,19 @@ EmitBodyExprs(FunctionCompiler& f)
 #endif
 #ifdef ENABLE_WASM_BULKMEM_OPS
               case uint16_t(MiscOp::MemCopy):
-                CHECK(EmitMemCopy(f));
+                CHECK(EmitMemOrTableCopy(f, /*isMem=*/true));
+              case uint16_t(MiscOp::MemDrop):
+                CHECK(EmitMemOrTableDrop(f, /*isMem=*/true));
               case uint16_t(MiscOp::MemFill):
                 CHECK(EmitMemFill(f));
+              case uint16_t(MiscOp::MemInit):
+                CHECK(EmitMemOrTableInit(f, /*isMem=*/true));
+              case uint16_t(MiscOp::TableCopy):
+                CHECK(EmitMemOrTableCopy(f, /*isMem=*/false));
+              case uint16_t(MiscOp::TableDrop):
+                CHECK(EmitMemOrTableDrop(f, /*isMem=*/false));
+              case uint16_t(MiscOp::TableInit):
+                CHECK(EmitMemOrTableInit(f, /*isMem=*/false));
 #endif
               default:
                 return f.iter().unrecognizedOpcode(&op);
@@ -3481,6 +3578,7 @@ EmitBodyExprs(FunctionCompiler& f)
 bool
 wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
                           const FuncCompileInputVector& inputs, CompiledCode* code,
+                          ExclusiveDeferredValidationState& dvs,
                           UniqueChars* error)
 {
     MOZ_ASSERT(env.tier() == Tier::Ion);
@@ -3517,7 +3615,7 @@ wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
 
         // Build MIR graph
         {
-            FunctionCompiler f(env, d, func, locals, mir);
+            FunctionCompiler f(env, d, dvs, func, locals, mir);
             if (!f.init())
                 return false;
 

@@ -80,6 +80,7 @@ ModuleGenerator::ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env
     debugTrapCodeOffset_(),
     lastPatchedCallSite_(0),
     startOfUnpatchedCallsites_(0),
+    deferredValidationState_(mutexid::WasmDeferredValidation),
     parallel_(false),
     outstanding_(0),
     currentTask_(nullptr),
@@ -331,6 +332,10 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
                                                          funcIndex.isExplicit());
     }
 
+    // Ensure that mutable shared state for deferred validation is correctly
+    // set up.
+    deferredValidationState_.lock()->init();
+
     // Determine whether parallel or sequential compilation is to be used and
     // initialize the CompileTasks that will be used in either mode.
 
@@ -348,7 +353,8 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
     if (!tasks_.initCapacity(numTasks))
         return false;
     for (size_t i = 0; i < numTasks; i++)
-        tasks_.infallibleEmplaceBack(*env_, taskState_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+        tasks_.infallibleEmplaceBack(*env_, taskState_, deferredValidationState_,
+                                     COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
 
     if (!freeTasks_.reserve(numTasks))
         return false;
@@ -609,11 +615,13 @@ ExecuteCompileTask(CompileTask* task, UniqueChars* error)
 
     switch (task->env.tier()) {
       case Tier::Ion:
-        if (!IonCompileFunctions(task->env, task->lifo, task->inputs, &task->output, error))
+        if (!IonCompileFunctions(task->env, task->lifo, task->inputs,
+                                 &task->output, task->dvs, error))
             return false;
         break;
       case Tier::Baseline:
-        if (!BaselineCompileFunctions(task->env, task->lifo, task->inputs, &task->output, error))
+        if (!BaselineCompileFunctions(task->env, task->lifo, task->inputs,
+                                      &task->output, task->dvs, error))
             return false;
         break;
     }
@@ -926,7 +934,13 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     if (!linkCompiledCode(stubCode))
         return nullptr;
 
-    // All functions and stubs have been compiled, finish linking and metadata.
+    // All functions and stubs have been compiled.  Perform module-end
+    // validation.
+
+    if (!deferredValidationState_.lock()->performDeferredValidation(*env_, error_))
+        return nullptr;
+
+    // Finish linking and metadata.
 
     if (!finishCode())
         return nullptr;
@@ -954,7 +968,10 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
     if (!codeTier)
         return nullptr;
 
-    MutableCode code = js_new<Code>(std::move(codeTier), *metadata_, std::move(jumpTables));
+    MutableCode code = js_new<Code>(std::move(codeTier), *metadata_,
+                                    std::move(jumpTables),
+                                    std::move(env_->dataSegments),
+                                    std::move(env_->elemSegments));
     if (!code || !code->initialize(bytecode, *linkData_))
         return nullptr;
 
@@ -982,8 +999,6 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
     SharedModule module(js_new<Module>(*code,
                                        std::move(env_->imports),
                                        std::move(env_->exports),
-                                       std::move(env_->dataSegments),
-                                       std::move(env_->elemSegments),
                                        std::move(structTypes),
                                        bytecode,
                                        std::move(debugUnlinkedCode),

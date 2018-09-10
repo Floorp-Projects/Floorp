@@ -28,7 +28,6 @@
 #include "mozilla/JSObjectHolder.h"
 #include "mozilla/dom/Client.h"
 #include "mozilla/dom/ClientIPCTypes.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/InternalHeaders.h"
@@ -41,6 +40,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;
@@ -1933,7 +1933,7 @@ ServiceWorkerPrivate::TerminateWorker()
   mIdleWorkerTimer->Cancel();
   mIdleKeepAliveToken = nullptr;
   if (mWorkerPrivate) {
-    if (DOMPrefs::ServiceWorkersTestingEnabled()) {
+    if (StaticPrefs::dom_serviceWorkers_testing_enabled()) {
       nsCOMPtr<nsIObserverService> os = services::GetObserverService();
       if (os) {
         os->NotifyObservers(nullptr, "service-worker-shutdown", nullptr);

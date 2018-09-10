@@ -19,7 +19,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   // Execute requests.
-  await performRequests(monitor, tab, 7);
+  await performRequests(monitor, tab, 10);
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
@@ -64,6 +64,26 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[6]);
   testParamsTab3();
+
+  wait = waitForDOM(document, "#params-panel .tree-section", 2);
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[7]);
+  await wait;
+  testParamsTab1("a", "b", '{ "foo": "bar" }', "");
+
+  wait = waitForDOM(document, "#params-panel .tree-section", 2);
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[8]);
+  await wait;
+  testParamsTab1("a", "b", '{ "foo": "bar" }', "");
+
+  wait = waitForDOM(document, "#params-panel .tree-section", 1);
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[9]);
+  await wait;
+  testParamsTabGetWithArgs(new Map([
+    ["species", "in=(52,60)"],
+  ]));
 
   await teardown(monitor);
 
@@ -175,5 +195,44 @@ add_task(async function() {
       "The request params box should be hidden.");
     ok(!tabpanel.querySelector(".CodeMirror-code"),
       "The request post data editor should be hidden.");
+  }
+
+  /**
+   * @param {Map} expectedParams A map of expected parameter keys and values
+   * as Strings.
+   */
+  function testParamsTabGetWithArgs(expectedParams) {
+    const tabpanel = document.querySelector("#params-panel");
+
+    is(tabpanel.querySelectorAll(".tree-section").length, 1,
+      "Check the number of param tree sections displayed in this tabpanel.");
+    is(tabpanel.querySelectorAll("tr:not(.tree-section).treeRow").length, 1,
+      "Check the number of param rows displayed in this tabpanel.");
+    ok(!tabpanel.querySelector(".empty-notice"),
+      "The empty notice should not be displayed in this tabpanel.");
+
+    ok(tabpanel.querySelector(".treeTable"),
+      "The request params box should be shown.");
+    ok(!tabpanel.querySelector(".CodeMirror-code"),
+      "The request post data editor should be hidden.");
+
+    const treeSections = tabpanel.querySelectorAll(".tree-section");
+    const labels = tabpanel
+      .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
+    const values = tabpanel
+      .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
+
+    is(treeSections[0].querySelector(".treeLabel").textContent,
+      L10N.getStr("paramsQueryString"),
+      "Check the displayed params section title.");
+
+    const labelsIter = labels.values();
+    const valuesIter = values.values();
+    for (const [expKey, expValue] of expectedParams) {
+      const label = labelsIter.next().value;
+      const value = valuesIter.next().value;
+      is(label.textContent, expKey, "Check that parameter name matches.");
+      is(value.textContent, expValue, "Check that parameter value matches.");
+    }
   }
 });

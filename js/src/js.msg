@@ -389,6 +389,8 @@ MSG_DEF(JSMSG_WASM_INT_DIVIDE_BY_ZERO, 0, JSEXN_WASMRUNTIMEERROR, "integer divid
 MSG_DEF(JSMSG_WASM_OUT_OF_BOUNDS,      0, JSEXN_WASMRUNTIMEERROR, "index out of bounds")
 MSG_DEF(JSMSG_WASM_UNALIGNED_ACCESS,   0, JSEXN_WASMRUNTIMEERROR, "unaligned memory access")
 MSG_DEF(JSMSG_WASM_WAKE_OVERFLOW,      0, JSEXN_WASMRUNTIMEERROR, "too many woken agents")
+MSG_DEF(JSMSG_WASM_INVALID_PASSIVE_DATA_SEG, 0, JSEXN_WASMRUNTIMEERROR, "use of invalid passive data segment")
+MSG_DEF(JSMSG_WASM_INVALID_PASSIVE_ELEM_SEG, 0, JSEXN_WASMRUNTIMEERROR, "use of invalid passive element segment")
 MSG_DEF(JSMSG_WASM_BAD_UINT32,         2, JSEXN_RANGEERR,    "bad {0} {1}")
 MSG_DEF(JSMSG_WASM_BAD_GROW,           1, JSEXN_RANGEERR,    "failed to grow {0}")
 MSG_DEF(JSMSG_WASM_BAD_BUF_ARG,        0, JSEXN_TYPEERR,     "first argument must be an ArrayBuffer or typed array object")
