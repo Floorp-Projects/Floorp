@@ -78,7 +78,7 @@ usb_test(() => {
   return callWithTrustedClick(() => {
     return navigator.usb.requestDevice({ filters: expectedFilters })
       .then(device => {
-        assert_unreachable(
+        assert_unreached(
             'requestDevice should reject because no device selected');
       })
       .catch(error => {
@@ -86,6 +86,26 @@ usb_test(() => {
       });
   });
 }, 'filters are sent correctly');
+
+usb_test(async () => {
+  const badFilters = [
+    { productId: 1234 },     // productId requires vendorId
+    { subclassCode: 5678 },  // subclassCode requires classCode
+    { protocolCode: 9012 },  // protocolCode requires subclassCode
+  ];
+
+  for (const filter of badFilters) {
+    await callWithTrustedClick(async () => {
+      try {
+        await navigator.usb.requestDevice({ filters: [filter] });
+        assert_unreached(
+            'requestDevice should reject because of invalid filters');
+      } catch (error) {
+        assert_equals(error.name, 'TypeError');
+      }
+    });
+  }
+}, 'requestDevice rejects on invalid filters');
 
 usb_test(() => {
   return getFakeDevice().then(({ device, fakeDevice }) => {

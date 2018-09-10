@@ -89,11 +89,6 @@ LOCAL_INCLUDES += [
     '/layout/xul',
 ]
 
-EXTRA_COMPONENTS += [
-    'EditorUtils.js',
-    'EditorUtils.manifest',
-]
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

@@ -12,7 +12,6 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
-    'nsChardetModule.cpp',
     'nsCyrillicDetector.cpp',
 ]
 

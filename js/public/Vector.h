@@ -8,6 +8,7 @@
 #define js_Vector_h
 
 #include "mozilla/Vector.h"
+#include "js/TypeDecls.h"
 
 namespace js {
 
@@ -19,10 +20,9 @@ template <typename T>
 struct TypeIsGCThing : mozilla::FalseType
 {};
 
-// Uncomment this once we actually can assert it:
-//template <>
-//struct TypeIsGCThing<JS::Value> : mozilla::TrueType
-//{};
+template <>
+struct TypeIsGCThing<JS::Value> : mozilla::TrueType
+{};
 
 } // namespace detail
 
