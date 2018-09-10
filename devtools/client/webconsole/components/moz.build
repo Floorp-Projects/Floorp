@@ -22,7 +22,5 @@ DevToolsModules(
     'MessageIcon.js',
     'MessageIndent.js',
     'MessageRepeat.js',
-    'ReverseSearchInput.css',
-    'ReverseSearchInput.js',
     'SideBar.js'
 )

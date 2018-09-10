@@ -52,7 +52,43 @@ WebConsoleOutputWrapper.prototype = {
       const attachRefToHud = (id, node) => {
         this.hud[id] = node;
       };
+      // Focus the input line whenever the output area is clicked.
+      this.parentNode.addEventListener("click", (event) => {
+        // Do not focus on middle/right-click or 2+ clicks.
+        if (event.detail !== 1 || event.button !== 0) {
+          return;
+        }
+
+        // Do not focus if a link was clicked
+        const target = event.originalTarget || event.target;
+        if (target.closest("a")) {
+          return;
+        }
+
+        // Do not focus if an input field was clicked
+        if (target.closest("input")) {
+          return;
+        }
+
+        // Do not focus if something other than the output region was clicked
+        // (including e.g. the clear messages button in toolbar)
+        if (!target.closest(".webconsole-output-wrapper")) {
+          return;
+        }
+
+        // Do not focus if something is selected
+        const selection = this.document.defaultView.getSelection();
+        if (selection && !selection.isCollapsed) {
+          return;
+        }
+
+        if (this.hud && this.hud.jsterm) {
+          this.hud.jsterm.focus();
+        }
+      });
+
       const { hud } = this;
+
       const serviceContainer = {
         attachRefToHud,
         emitNewMessage: (node, messageId, timeStamp) => {
@@ -210,16 +246,14 @@ WebConsoleOutputWrapper.prototype = {
         });
       }
 
-      const {prefs} = store.getState();
       const app = App({
         attachRefToHud,
         serviceContainer,
         hud,
         onFirstMeaningfulPaint: resolve,
         closeSplitConsole: this.closeSplitConsole.bind(this),
-        jstermCodeMirror: prefs.jstermCodeMirror
+        jstermCodeMirror: store.getState().prefs.jstermCodeMirror
           && !Services.appinfo.accessibilityEnabled,
-        jstermReverseSearch: prefs.jstermReverseSearch,
       });
 
       // Render the root Application component.
