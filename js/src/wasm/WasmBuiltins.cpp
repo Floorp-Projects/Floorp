@@ -652,9 +652,24 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::MemCopy:
         *abiType = Args_General4;
         return FuncCast(Instance::memCopy, *abiType);
+      case SymbolicAddress::MemDrop:
+        *abiType = Args_General2;
+        return FuncCast(Instance::memDrop, *abiType);
       case SymbolicAddress::MemFill:
         *abiType = Args_General4;
         return FuncCast(Instance::memFill, *abiType);
+      case SymbolicAddress::MemInit:
+        *abiType = Args_General5;
+        return FuncCast(Instance::memInit, *abiType);
+      case SymbolicAddress::TableCopy:
+        *abiType = Args_General4;
+        return FuncCast(Instance::tableCopy, *abiType);
+      case SymbolicAddress::TableDrop:
+        *abiType = Args_General2;
+        return FuncCast(Instance::tableDrop, *abiType);
+      case SymbolicAddress::TableInit:
+        *abiType = Args_General5;
+        return FuncCast(Instance::tableInit, *abiType);
 #ifdef ENABLE_WASM_GC
       case SymbolicAddress::PostBarrier:
         *abiType = Args_General2;
@@ -735,7 +750,12 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::CoerceInPlace_JitEntry:
       case SymbolicAddress::ReportInt64JSCall:
       case SymbolicAddress::MemCopy:
+      case SymbolicAddress::MemDrop:
       case SymbolicAddress::MemFill:
+      case SymbolicAddress::MemInit:
+      case SymbolicAddress::TableCopy:
+      case SymbolicAddress::TableDrop:
+      case SymbolicAddress::TableInit:
 #ifdef ENABLE_WASM_GC
       case SymbolicAddress::PostBarrier:
 #endif

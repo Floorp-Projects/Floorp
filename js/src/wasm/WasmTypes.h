@@ -1842,7 +1842,12 @@ enum class SymbolicAddress
     WaitI64,
     Wake,
     MemCopy,
+    MemDrop,
     MemFill,
+    MemInit,
+    TableCopy,
+    TableDrop,
+    TableInit,
 #ifdef ENABLE_WASM_GC
     PostBarrier,
 #endif
