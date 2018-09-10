@@ -719,8 +719,7 @@ class RTCPeerConnection {
         return Services.io.newURI(uriStr);
       } catch (e) {
         if (e.result == Cr.NS_ERROR_MALFORMED_URI) {
-          throw new this._win.DOMException(msg + " - malformed URI: " + uriStr,
-                                           "SyntaxError");
+          throw new this._win.SyntaxError(`${msg} - malformed URI: ${uriStr}`);
         }
         throw e;
       }
@@ -730,27 +729,30 @@ class RTCPeerConnection {
 
     iceServers.forEach(({ urls, username, credential, credentialType }) => {
       if (!urls) {
-        throw new this._win.DOMException(msg + " - missing urls", "InvalidAccessError");
+        // TODO: Remove once url is deprecated (Bug 1369563)
+        throw new this._win.TypeError("Missing required 'urls' member of RTCIceServer");
+      }
+      if (urls.length == 0) {
+        throw new this._win.SyntaxError(`${msg} - urls is empty`);
       }
       urls.map(url => nicerNewURI(url)).forEach(({ scheme, spec }) => {
         if (scheme in { turn: 1, turns: 1 }) {
           if (username == undefined) {
-            throw new this._win.DOMException(msg + " - missing username: " + spec,
+            throw new this._win.DOMException(`${msg} - missing username: ${spec}`,
                                              "InvalidAccessError");
           }
           if (username.length > 512) {
-            throw new this._win.DOMException(msg +
-                                             " - username longer then 512 bytes: "
-                                             + username, "InvalidAccessError");
+            throw new this._win.DOMException(
+                `${msg} - username longer then 512 bytes: ${username}`,
+                "InvalidAccessError");
           }
           if (credential == undefined) {
-            throw new this._win.DOMException(msg + " - missing credential: " + spec,
+            throw new this._win.DOMException(`${msg} - missing credential: ${spec}`,
                                              "InvalidAccessError");
           }
           if (credentialType != "password") {
-            this.logWarning("RTCConfiguration TURN credentialType \"" +
-                            credentialType +
-                            "\" is not yet implemented. Treating as password." +
+            this.logWarning(`RTCConfiguration TURN credentialType \"${credentialType}\"` +
+                            " is not yet implemented. Treating as password." +
                             " https://bugzil.la/1247616");
           }
           this._hasTurnServer = true;
@@ -759,8 +761,7 @@ class RTCPeerConnection {
           this._hasStunServer = true;
           stunServers += 1;
         } else {
-          throw new this._win.DOMException(msg + " - improper scheme: " + scheme,
-                                           "SyntaxError");
+          throw new this._win.SyntaxError(`${msg} - improper scheme: ${scheme}`);
         }
         if (scheme in { stuns: 1 }) {
           this.logWarning(scheme.toUpperCase() + " is not yet supported.");
