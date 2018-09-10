@@ -960,7 +960,7 @@ class AstMemCopy : public AstExpr
   public:
     static const AstExprKind Kind = AstExprKind::MemCopy;
     explicit AstMemCopy(AstExpr* dest, AstExpr* src, AstExpr* len)
-      : AstExpr(Kind, ExprType::I32),
+      : AstExpr(Kind, ExprType::Void),
         dest_(dest),
         src_(src),
         len_(len)
@@ -980,7 +980,7 @@ class AstMemFill : public AstExpr
   public:
     static const AstExprKind Kind = AstExprKind::MemFill;
     explicit AstMemFill(AstExpr* start, AstExpr* val, AstExpr* len)
-      : AstExpr(Kind, ExprType::I32),
+      : AstExpr(Kind, ExprType::Void),
         start_(start),
         val_(val),
         len_(len)
