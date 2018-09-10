@@ -8,14 +8,13 @@
 const {
   FILTER_BAR_TOGGLE,
   INITIALIZE,
-  MESSAGES_CLEAR,
   PERSIST_TOGGLE,
-  REVERSE_SEARCH_INPUT_TOGGLE,
   SELECT_NETWORK_MESSAGE_TAB,
-  SHOW_OBJECT_IN_SIDEBAR,
   SIDEBAR_CLOSE,
-  SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
+  SHOW_OBJECT_IN_SIDEBAR,
   TIMESTAMPS_TOGGLE,
+  MESSAGES_CLEAR,
+  SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
 } = require("devtools/client/webconsole/constants");
 
 const {
@@ -31,7 +30,6 @@ const UiState = (overrides) => Object.freeze(Object.assign({
   timestampsVisible: true,
   gripInSidebar: null,
   closeButtonVisible: false,
-  reverseSearchInputVisible: false,
 }, overrides));
 
 function ui(state = UiState(), action) {
@@ -60,8 +58,6 @@ function ui(state = UiState(), action) {
       return Object.assign({}, state, {sidebarVisible: true, gripInSidebar: action.grip});
     case SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE:
       return Object.assign({}, state, {closeButtonVisible: action.shouldDisplayButton});
-    case REVERSE_SEARCH_INPUT_TOGGLE:
-      return {...state, reverseSearchInputVisible: !state.reverseSearchInputVisible};
   }
 
   return state;

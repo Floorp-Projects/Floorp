@@ -46,44 +46,8 @@ function getPreviousHistoryValue(state) {
   return null;
 }
 
-function getReverseSearchResult(state) {
-  const { history } = state;
-  const { currentReverseSearchResults, currentReverseSearchResultsPosition } = history;
-
-  if (!Array.isArray(currentReverseSearchResults)
-    || currentReverseSearchResults.length === 0
-    || !Number.isInteger(currentReverseSearchResultsPosition)
-  ) {
-    return null;
-  }
-  return currentReverseSearchResults[currentReverseSearchResultsPosition];
-}
-
-function getReverseSearchResultPosition(state) {
-  const { history } = state;
-  const { currentReverseSearchResultsPosition } = history;
-  if (!Number.isInteger(currentReverseSearchResultsPosition)) {
-    return currentReverseSearchResultsPosition;
-  }
-
-  return currentReverseSearchResultsPosition + 1;
-}
-
-function getReverseSearchTotalResults(state) {
-  const { history } = state;
-  const { currentReverseSearchResults } = history;
-  if (!currentReverseSearchResults) {
-    return null;
-  }
-
-  return currentReverseSearchResults.length;
-}
-
 module.exports = {
   getHistory,
   getHistoryEntries,
   getHistoryValue,
-  getReverseSearchResult,
-  getReverseSearchResultPosition,
-  getReverseSearchTotalResults,
 };

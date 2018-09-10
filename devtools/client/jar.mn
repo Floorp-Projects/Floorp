@@ -109,8 +109,6 @@ devtools.jar:
     skin/tooltips.css (themes/tooltips.css)
     skin/images/accessibility.svg (themes/images/accessibility.svg)
     skin/images/add.svg (themes/images/add.svg)
-    skin/images/arrowhead-down.svg (themes/images/arrowhead-down.svg)
-    skin/images/arrowhead-up.svg (themes/images/arrowhead-up.svg)
     skin/images/breadcrumbs-divider.svg (themes/images/breadcrumbs-divider.svg)
     skin/images/filters.svg (themes/images/filters.svg)
     skin/images/filter-swatch.svg (themes/images/filter-swatch.svg)
