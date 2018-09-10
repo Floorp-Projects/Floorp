@@ -37,6 +37,8 @@
 
     <string name="pref_key_privacy_security_screen" translatable="false"><xliff:g id="preference_key">pref_screen_privacy_security</xliff:g></string>
     <string name="pref_key_advanced_screen" translatable="false"><xliff:g id="preference_key">pref_advanced_screen</xliff:g></string>
+    <string name="pref_key_general_screen" translatable="false"><xliff:g id="preference_key">pref_general_screen</xliff:g></string>
+
     <string name="pref_key_mozilla_screen" translatable="false"><xliff:g id="preference_key">pref_screen_mozilla</xliff:g></string>
     <string name="pref_key_search_screen" translatable="false"><xliff:g id="preference_key">pref_screen_search</xliff:g></string>
     <string name="pref_key_remote_debugging" translatable="false"><xliff:g id="preference_key">pref_remote_debugging</xliff:g></string>

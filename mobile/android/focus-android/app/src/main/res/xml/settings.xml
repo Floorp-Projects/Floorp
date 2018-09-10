@@ -2,14 +2,13 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Empty default: we use an empty string to indicate "system default" language being selected -->
-    <!--suppress AndroidDomInspection -->
-    <org.mozilla.focus.widget.LocaleListPreference
-        android:icon="@drawable/ic_language"
-        android:defaultValue=""
-        android:key="@string/pref_key_locale"
+
+    <android.support.v7.preference.Preference
+        android:icon="@drawable/ic_settings"
+        android:key="@string/pref_key_general_screen"
         android:layout="@layout/focus_preference"
-        android:title="@string/preference_language" />
+        android:summary="@string/preference_general_summary"
+        android:title="@string/preference_category_general" />
 
     <android.support.v7.preference.Preference
         android:icon="@drawable/ic_lock"
@@ -30,11 +29,6 @@
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_advanced_summary"
         android:title="@string/preference_category_advanced" />
-
-    <org.mozilla.focus.widget.DefaultBrowserPreference
-        android:key="@string/pref_key_default_browser"
-        android:layout="@layout/focus_preference"
-        android:title="@string/preference_default_browser2" />
 
     <org.mozilla.focus.widget.MozillaPreference
         android:icon="@drawable/ic_mozilla"

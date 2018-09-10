@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <org.mozilla.focus.widget.DefaultBrowserPreference
+        android:key="@string/pref_key_default_browser"
+        android:layout="@layout/focus_preference_no_icon"
+        android:title="@string/preference_default_browser2" />
+
+    <SwitchPreference
+        android:key="@string/pref_key_open_new_tab"
+        android:layout="@layout/focus_preference_no_icon"
+        android:title="@string/preference_open_new_tab" />
+
+    <!-- Empty default: we use an empty string to indicate "system default" language being selected -->
+    <!--suppress AndroidDomInspection -->
+    <org.mozilla.focus.widget.LocaleListPreference
+        android:defaultValue=""
+        android:key="@string/pref_key_locale"
+        android:layout="@layout/focus_preference_no_icon"
+        android:title="@string/preference_language" />
+
+</android.support.v7.preference.PreferenceScreen>

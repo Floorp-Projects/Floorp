@@ -137,6 +137,9 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">General</string>
 
+    <!-- Preference summary for General Settings category; the three things users can find in this category -->
+    <string name="preference_general_summary">Default browser, tabs, language</string>
+
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Data Collection &amp; Use</string>
 
