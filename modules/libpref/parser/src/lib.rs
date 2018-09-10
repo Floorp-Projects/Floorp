@@ -54,16 +54,10 @@
 
 // This parser uses several important optimizations.
 //
-// - Because "'\0' means EOF" is part of the grammar (see above) we can match
-//   EOF as a normal char/token, which means we can avoid a typical "do we
-//   still have chars remaining?" test in get_char(), which gives a speedup
-//   because get_char() is a very hot function. (Actually, Rust would
-//   bounds-check this function anyway, so we have get_char_unchecked() which
-//   is used for the two hottest call sites.)
-//
-//   This also means EOF is representable by a u8. If EOF was represented by an
-//   out-of-band value such as -1 or 256, we'd have to return a larger type
-//   such as u16 or i16 from get_char().
+// - Because "'\0' means EOF" is part of the grammar (see above), EOF is
+//   representable by a u8. If EOF was represented by an out-of-band value such
+//   as -1 or 256, we'd have to return a larger type such as u16 or i16 from
+//   get_char().
 //
 // - When starting a new token, it uses a lookup table with the first char,
 //   which quickly identifies what kind of token it will be. Furthermore, if
@@ -192,7 +186,7 @@ enum Token {
 #[derive(Clone, Copy, PartialEq)]
 enum CharKind {
     // These are ordered by frequency. See the comment in GetToken().
-    SingleChar, // Unambiguous single-char tokens: [()+,-]
+    SingleChar, // Unambiguous single-char tokens: [()+,-] or EOF
     SpaceNL,    // [\t\v\f \n]
     Keyword,    // [A-Za-z_]
     Quote,      // ["']
@@ -535,13 +529,21 @@ impl<'t> Parser<'t> {
 
     #[inline(always)]
     fn get_char(&mut self) -> u8 {
-        let c = self.buf[self.i];
-        self.i += 1;
-        c
+        // We do the bounds check ourselves so we can return EOF on failure.
+        // (Although the buffer is guaranteed to end in an EOF char, we might
+        // go one char past that, whereupon we must return EOF again.)
+        if self.i < self.buf.len() {
+            let c = unsafe { *self.buf.get_unchecked(self.i) };
+            self.i += 1;
+            c
+        } else {
+            debug_assert!(self.i == self.buf.len());
+            EOF
+        }
     }
 
-    // This function skips the bounds check in non-optimized builds. Using it
-    // at the hottest two call sites gives a ~15% parsing speed boost.
+    // This function skips the bounds check in optimized builds. Using it at
+    // the hottest two call sites gives a ~15% parsing speed boost.
     #[inline(always)]
     unsafe fn get_char_unchecked(&mut self) -> u8 {
         debug_assert!(self.i < self.buf.len());
@@ -568,9 +570,11 @@ impl<'t> Parser<'t> {
     #[inline(always)]
     fn match_single_line_comment(&mut self) {
         loop {
-            // To reach here, the previous char must have been '/', and
-            // assertions elsewhere ensure that there must be at least one
-            // subsequent char (the '\0' for EOF).
+            // To reach here, the previous char must have been '/' (if this is
+            // the first loop iteration) or non-special (if this is the second
+            // or subsequent iteration), and assertions elsewhere ensure that
+            // there must be at least one subsequent char after those chars
+            // (the '\0' for EOF).
             let c = unsafe { self.get_char_unchecked() };
 
             // All the special chars have value <= b'\r'.
@@ -588,8 +592,6 @@ impl<'t> Parser<'t> {
                     break;
                 }
                 EOF => {
-                    // Unget EOF so subsequent calls to get_char() are safe.
-                    self.unget_char();
                     break;
                 }
                 _ => continue
@@ -615,8 +617,6 @@ impl<'t> Parser<'t> {
                     self.match_char(b'\n');
                 }
                 EOF => {
-                    // Unget EOF so subsequent calls to get_char() are safe.
-                    self.unget_char();
                     return false
                 }
                 _ => continue
@@ -630,11 +630,10 @@ impl<'t> Parser<'t> {
         for _ in 0..ndigits {
             value = value << 4;
             match self.get_char() {
-                c @ b'0'... b'9' => value += (c - b'0') as u16,
+                c @ b'0'...b'9' => value += (c - b'0') as u16,
                 c @ b'A'...b'F' => value += (c - b'A') as u16 + 10,
                 c @ b'a'...b'f' => value += (c - b'a') as u16 + 10,
                 _ => {
-                    // Unget in case the char was a closing quote or EOF.
                     self.unget_char();
                     return None;
                 }
@@ -716,7 +715,15 @@ impl<'t> Parser<'t> {
                                 return Token::Error("unterminated /* comment");
                             }
                         }
-                        _ => return Token::Error("expected '/' or '*' after '/'")
+                        c @ _ =>  {
+                            if c == b'\n' || c == b'\r' {
+                                // Unget the newline char; the outer loop will
+                                // reget it and adjust self.line_num
+                                // appropriately.
+                                self.unget_char();
+                            }
+                            return Token::Error("expected '/' or '*' after '/'");
+                        }
                     }
                     continue;
                 }
@@ -871,9 +878,12 @@ impl<'t> Parser<'t> {
                         }
                         continue; // We don't want to str_buf.push(c2) below.
                     }
-                    _ => {
-                        // Unget in case the char is an EOF.
-                        self.unget_char();
+                    c @ _ => {
+                        if c == b'\n' || c == b'\r' {
+                            // Unget the newline char; the outer loop will
+                            // reget it and adjust self.line_num appropriately.
+                            self.unget_char();
+                        }
                         self.string_error_token(
                             &mut token, "unexpected escape sequence character after '\\'");
                         continue;
@@ -894,8 +904,6 @@ impl<'t> Parser<'t> {
                 }
 
             } else if c == EOF {
-                // Unget EOF so subsequent calls to get_char() are safe.
-                self.unget_char();
                 self.string_error_token(&mut token, "unterminated string literal");
                 break;
 
