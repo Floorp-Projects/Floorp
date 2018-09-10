@@ -95,10 +95,10 @@ fuzzy-if(Android,0-4,0-2) == dynamicDirAuto-setRTL-LTR8.html dynamicDirAuto-refR
 == dynamicDirAuto-ChangeText-LTR10.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-ChangeText-RTL1.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-ChangeText-RTL2.html dynamicDirAuto-refRTL-RTL.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,0-30,0-1) == dynamicDirAuto-ChangeText-RTL3.html dynamicDirAuto-refRTL-RTL.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,0-30,0-1) == dynamicDirAuto-ChangeText-RTL4.html dynamicDirAuto-refRTL-RTL.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,0-30,0-1) == dynamicDirAuto-ChangeText-RTL5.html dynamicDirAuto-refRTL-RTL.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,0-30,0-1) == dynamicDirAuto-ChangeText-RTL6.html dynamicDirAuto-refRTL-RTL.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamicDirAuto-ChangeText-RTL3.html dynamicDirAuto-refRTL-RTL.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamicDirAuto-ChangeText-RTL4.html dynamicDirAuto-refRTL-RTL.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamicDirAuto-ChangeText-RTL5.html dynamicDirAuto-refRTL-RTL.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamicDirAuto-ChangeText-RTL6.html dynamicDirAuto-refRTL-RTL.html # Bug 1392106
 == dynamicDirAuto-ChangeText-RTL7.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-ChangeText-RTL8.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-ChangeText-RTL9.html dynamicDirAuto-refRTL-RTL.html
