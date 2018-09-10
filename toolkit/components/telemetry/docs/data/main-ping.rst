@@ -149,10 +149,6 @@ totalTime
 ~~~~~~~~~
 A non-monotonic integer representing the number of seconds the session has been alive.
 
-uptime
-~~~~~~
-A non-monotonic integer representing the number of minutes the session has been alive.
-
 addonManager
 ~~~~~~~~~~~~
 Only available in the extended set of measures, it contains a set of counters related to Addons. See `here <https://dxr.mozilla.org/mozilla-central/search?q=%22AddonManagerPrivate.recordSimpleMeasure%22&redirect=false&case=true>`__ for a list of recorded measures.
