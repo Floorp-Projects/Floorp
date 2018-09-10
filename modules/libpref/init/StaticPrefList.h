@@ -1449,6 +1449,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+VARCACHE_PREF(
+  "privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts",
+   privacy_resistFingerprinting_autoDeclineNoUserInputCanvasPrompts,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // Security prefs
 //---------------------------------------------------------------------------
