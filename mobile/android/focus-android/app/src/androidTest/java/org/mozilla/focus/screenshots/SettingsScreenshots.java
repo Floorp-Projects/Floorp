@@ -19,6 +19,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
+import org.mozilla.focus.helpers.TestHelper;
 
 import java.util.Collections;
 
@@ -76,6 +77,13 @@ public class SettingsScreenshots extends ScreenshotTest {
 
         Screengrab.screenshot("Settings_View_Top");
 
+        /* General Settings */
+        UiObject generalHeading = TestHelper.mDevice.findObject(new UiSelector()
+                .text("General")
+                .resourceId("android:id/title"));
+        generalHeading.waitForExists(waitingTime);
+        generalHeading.click();
+
         /* Language List (First page only */
         onView(withText(R.string.preference_language))
                 .perform(click());
@@ -91,6 +99,8 @@ public class SettingsScreenshots extends ScreenshotTest {
         CancelBtn.click();
         onView(withText(R.string.preference_language))
                 .check(matches(isDisplayed()));
+
+        Espresso.pressBack();
 
         /* Search Engine List */
         onView(withText(R.string.preference_category_search))

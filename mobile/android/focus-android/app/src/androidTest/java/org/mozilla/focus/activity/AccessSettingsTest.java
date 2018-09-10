@@ -21,7 +21,6 @@ import org.junit.runner.RunWith;
 import org.mozilla.focus.helpers.TestHelper;
 import org.mozilla.focus.utils.AppConstants;
 
-import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
@@ -68,8 +67,8 @@ public class AccessSettingsTest {
     @Test
     public void AccessSettingsTest() throws UiObjectNotFoundException {
 
-        UiObject languageHeading = TestHelper.mDevice.findObject(new UiSelector()
-                .text("Language")
+        UiObject generalHeading = TestHelper.mDevice.findObject(new UiSelector()
+                .text("General")
                 .resourceId("android:id/title"));
 
         UiObject privacyHeading = TestHelper.mDevice.findObject(new UiSelector()
@@ -80,13 +79,6 @@ public class AccessSettingsTest {
                 .text("Search")
                 .resourceId("android:id/title"));
 
-        UiObject defaultHeading = TestHelper.mDevice.findObject(new UiSelector()
-                .textContains("default browser")
-                .resourceId("android:id/title"));
-
-        UiObject defaultSwitch = TestHelper.mDevice.findObject(new UiSelector()
-                .resourceId(TestHelper.getAppName() + ":id/switch_widget"));
-
         UiObject mozHeading = TestHelper.mDevice.findObject(new UiSelector()
                 .text("Mozilla")
                 .resourceId("android:id/title"));
@@ -94,14 +86,12 @@ public class AccessSettingsTest {
         /* Go to Settings */
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         openSettings();
-        languageHeading.waitForExists(waitingTime);
+        generalHeading.waitForExists(waitingTime);
 
         /* Check the first element and other headings are present */
-        assertTrue(languageHeading.exists());
+        assertTrue(generalHeading.exists());
         assertTrue(searchHeading.exists());
         assertTrue(privacyHeading.exists());
-        assertTrue(defaultHeading.exists());
-        assertFalse(defaultSwitch.isChecked());
         assertTrue(mozHeading.exists());
     }
 }
