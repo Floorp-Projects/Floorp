@@ -5819,12 +5819,6 @@ pref("security.data_uri.block_toplevel_data_uri_navigations", true);
 // If true, all FTP subresource loads will be blocked.
 pref("security.block_ftp_subresources", true);
 
-// Enable Storage API for all platforms except Android.
-#if !defined(MOZ_WIDGET_ANDROID)
-pref("dom.storageManager.enabled", true);
-#else
-pref("dom.storageManager.enabled", false);
-#endif
 pref("dom.storageManager.prompt.testing", false);
 pref("dom.storageManager.prompt.testing.allow", false);
 
