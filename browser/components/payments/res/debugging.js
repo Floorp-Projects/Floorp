@@ -37,7 +37,7 @@ const paymentOptionsUpdater = {
 
 let REQUEST_1 = {
   tabId: 9,
-  topLevelPrincipal: {URI: {displayHost: "tschaeff.github.io"}},
+  topLevelPrincipal: {URI: {displayHost: "debugging.example.com"}},
   requestId: "3797081f-a96b-c34b-a58b-1083c6e66e25",
   completeStatus: "",
   paymentMethods: [],

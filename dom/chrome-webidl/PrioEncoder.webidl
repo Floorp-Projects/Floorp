@@ -7,13 +7,13 @@
 [ChromeOnly, Exposed=(Window,System)]
 namespace PrioEncoder {
   [Throws, NewObject]
-  Promise<PrioEncodedData> encode(ByteString batchID, PrioParams params);
+  PrioEncodedData encode(ByteString batchID, PrioParams params);
 };
 
 dictionary PrioParams {
-  required boolean startupCrashDetected;
-  required boolean safeModeUsage;
   required boolean browserIsUserDefault;
+  required boolean newTabPageEnabled;
+  required boolean pdfViewerUsed;
 };
 
 dictionary PrioEncodedData {

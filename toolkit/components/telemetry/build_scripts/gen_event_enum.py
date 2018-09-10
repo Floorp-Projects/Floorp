@@ -7,8 +7,8 @@
 # The events are defined in files provided as command-line arguments.
 
 from __future__ import print_function
-from parsers.shared_telemetry_utils import ParserError
-from parsers import parse_events
+from python_mozparsers.shared_telemetry_utils import ParserError
+from python_mozparsers import parse_events
 
 import sys
 
