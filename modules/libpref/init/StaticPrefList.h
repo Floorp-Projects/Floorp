@@ -294,6 +294,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Streams API
+VARCACHE_PREF(
+  "dom.streams.enabled",
+   dom_streams_enabled,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------
