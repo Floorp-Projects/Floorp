@@ -1143,11 +1143,15 @@ JumpTables::init(CompileMode mode, const ModuleSegment& ms, const CodeRangeVecto
     return true;
 }
 
-Code::Code(UniqueCodeTier tier1, const Metadata& metadata, JumpTables&& maybeJumpTables)
+Code::Code(UniqueCodeTier tier1, const Metadata& metadata,
+           JumpTables&& maybeJumpTables, DataSegmentVector&& dataSegments,
+           ElemSegmentVector&& elemSegments)
   : tier1_(std::move(tier1)),
     metadata_(&metadata),
     profilingLabels_(mutexid::WasmCodeProfilingLabels, CacheableCharsVector()),
-    jumpTables_(std::move(maybeJumpTables))
+    jumpTables_(std::move(maybeJumpTables)),
+    dataSegments_(std::move(dataSegments)),
+    elemSegments_(std::move(elemSegments))
 {}
 
 bool
@@ -1419,7 +1423,9 @@ Code::addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
     *data += mallocSizeOf(this) +
              metadata().sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenMetadata) +
              profilingLabels_.lock()->sizeOfExcludingThis(mallocSizeOf) +
-             jumpTables_.sizeOfMiscExcludingThis();
+             jumpTables_.sizeOfMiscExcludingThis() +
+             dataSegments_.sizeOfExcludingThis(mallocSizeOf) +
+             SizeOfVectorExcludingThis(elemSegments_, mallocSizeOf);
 
     for (auto t : tiers())
         codeTier(t).addSizeOfMisc(mallocSizeOf, code, data);
@@ -1448,6 +1454,8 @@ size_t
 Code::serializedSize() const
 {
     return metadata().serializedSize() +
+           SerializedPodVectorSize(dataSegments_) +
+           SerializedVectorSize(elemSegments_) +
            codeTier(Tier::Serialized).serializedSize();
 }
 
@@ -1457,6 +1465,8 @@ Code::serialize(uint8_t* cursor, const LinkData& linkData) const
     MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
 
     cursor = metadata().serialize(cursor);
+    cursor = SerializePodVector(cursor, dataSegments_);
+    cursor = SerializeVector(cursor, elemSegments_);
     cursor = codeTier(Tier::Serialized).serialize(cursor, linkData);
     return cursor;
 }
@@ -1472,6 +1482,16 @@ Code::deserialize(const uint8_t* cursor,
     if (!cursor)
         return nullptr;
 
+    DataSegmentVector dataSegments;
+    cursor = DeserializePodVector(cursor, &dataSegments);
+    if (!cursor)
+        return nullptr;
+
+    ElemSegmentVector elemSegments;
+    cursor = DeserializeVector(cursor, &elemSegments);
+    if (!cursor)
+        return nullptr;
+
     UniqueCodeTier codeTier;
     cursor = CodeTier::deserialize(cursor, linkData, &codeTier);
     if (!cursor)
@@ -1481,7 +1501,10 @@ Code::deserialize(const uint8_t* cursor,
     if (!jumpTables.init(CompileMode::Once, codeTier->segment(), codeTier->metadata().codeRanges))
         return nullptr;
 
-    MutableCode code = js_new<Code>(std::move(codeTier), metadata, std::move(jumpTables));
+    MutableCode code = js_new<Code>(std::move(codeTier), metadata,
+                                    std::move(jumpTables),
+                                    std::move(dataSegments),
+                                    std::move(elemSegments));
     if (!code || !code->initialize(bytecode, linkData))
         return nullptr;
 

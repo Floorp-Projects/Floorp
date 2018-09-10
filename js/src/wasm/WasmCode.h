@@ -745,9 +745,13 @@ class Code : public ShareableBase<Code>
     SharedMetadata                      metadata_;
     ExclusiveData<CacheableCharsVector> profilingLabels_;
     JumpTables                          jumpTables_;
+    const DataSegmentVector             dataSegments_;
+    const ElemSegmentVector             elemSegments_;
 
   public:
-    Code(UniqueCodeTier tier1, const Metadata& metadata, JumpTables&& maybeJumpTables);
+    Code(UniqueCodeTier tier1, const Metadata& metadata,
+         JumpTables&& maybeJumpTables, DataSegmentVector&& dataSegments,
+         ElemSegmentVector&& elemSegments);
     bool initialized() const { return tier1_->initialized(); }
 
     bool initialize(const ShareableBytes& bytecode, const LinkData& linkData);
@@ -772,6 +776,8 @@ class Code : public ShareableBase<Code>
 
     const CodeTier& codeTier(Tier tier) const;
     const Metadata& metadata() const { return *metadata_; }
+    const DataSegmentVector& dataSegments() const { return dataSegments_; }
+    const ElemSegmentVector& elemSegments() const { return elemSegments_; }
 
     const ModuleSegment& segment(Tier iter) const {
         return codeTier(iter).segment();
