@@ -518,7 +518,7 @@ wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, Uni
     if (!DecodeCodeSection(env, d, mg))
         return nullptr;
 
-    if (!DecodeModuleTail(d, &env))
+    if (!DecodeModuleTail(d, &env, mg.deferredValidationState()))
         return nullptr;
 
     return mg.finishModule(bytecode);
@@ -550,7 +550,7 @@ wasm::CompileTier2(const CompileArgs& args, Module& module, Atomic<bool>* cancel
     if (!DecodeCodeSection(env, d, mg))
         return;
 
-    if (!DecodeModuleTail(d, &env))
+    if (!DecodeModuleTail(d, &env, mg.deferredValidationState()))
         return;
 
     if (!mg.finishTier2(module))
@@ -698,7 +698,7 @@ wasm::CompileStreaming(const CompileArgs& args,
     {
         Decoder d(tailBytes, env->codeSection->end(), error, warnings);
 
-        if (!DecodeModuleTail(d, env.ptr()))
+        if (!DecodeModuleTail(d, env.ptr(), mg.deferredValidationState()))
             return nullptr;
 
         MOZ_ASSERT(d.done());

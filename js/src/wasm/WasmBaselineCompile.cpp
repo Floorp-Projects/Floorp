@@ -1932,6 +1932,7 @@ class BaseCompiler final : public BaseCompilerInterface
                  const FuncCompileInput& input,
                  const ValTypeVector& locals,
                  Decoder& decoder,
+                 ExclusiveDeferredValidationState& dvs,
                  TempAllocator* alloc,
                  MacroAssembler* masm);
 
@@ -10241,10 +10242,11 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
                            const FuncCompileInput& func,
                            const ValTypeVector& locals,
                            Decoder& decoder,
+                           ExclusiveDeferredValidationState& dvs,
                            TempAllocator* alloc,
                            MacroAssembler* masm)
     : env_(env),
-      iter_(env, decoder),
+      iter_(env, decoder, dvs),
       func_(func),
       lastReadCallSite_(0),
       alloc_(*alloc),
@@ -10350,6 +10352,7 @@ js::wasm::BaselineCanCompile()
 bool
 js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
                                    const FuncCompileInputVector& inputs, CompiledCode* code,
+                                   ExclusiveDeferredValidationState& dvs,
                                    UniqueChars* error)
 {
     MOZ_ASSERT(env.tier() == Tier::Baseline);
@@ -10380,7 +10383,7 @@ js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo
 
         // One-pass baseline compilation.
 
-        BaseCompiler f(env, func, locals, d, &alloc, &masm);
+        BaseCompiler f(env, func, locals, d, dvs, &alloc, &masm);
         if (!f.init())
             return false;
         if (!f.emitFunction())

@@ -148,11 +148,12 @@ class FunctionCompiler
   public:
     FunctionCompiler(const ModuleEnvironment& env,
                      Decoder& decoder,
+                     ExclusiveDeferredValidationState& dvs,
                      const FuncCompileInput& func,
                      const ValTypeVector& locals,
                      MIRGenerator& mirGen)
       : env_(env),
-        iter_(env, decoder),
+        iter_(env, decoder, dvs),
         func_(func),
         locals_(locals),
         lastReadCallSite_(0),
@@ -3481,6 +3482,7 @@ EmitBodyExprs(FunctionCompiler& f)
 bool
 wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
                           const FuncCompileInputVector& inputs, CompiledCode* code,
+                          ExclusiveDeferredValidationState& dvs,
                           UniqueChars* error)
 {
     MOZ_ASSERT(env.tier() == Tier::Ion);
@@ -3517,7 +3519,7 @@ wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
 
         // Build MIR graph
         {
-            FunctionCompiler f(env, d, func, locals, mir);
+            FunctionCompiler f(env, d, dvs, func, locals, mir);
             if (!f.init())
                 return false;
 
