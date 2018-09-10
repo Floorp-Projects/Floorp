@@ -16,7 +16,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == descriptor-negative.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == descriptor-prefix.html   descriptor-prefix-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == descriptor-suffix.html   descriptor-suffix-ref.html # Bug 1392106
 == descriptor-range.html    descriptor-range-ref.html
-fuzzy-if(webrender,0-22,0-3) == descriptor-pad.html      descriptor-pad-ref.html
+fuzzy-if(webrender,0-22,0-3) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == descriptor-pad.html descriptor-pad-ref.html # Bug 1392106
 == descriptor-fallback.html descriptor-fallback-ref.html
 == descriptor-symbols.html  descriptor-symbols-ref.html
 == descriptor-negative-invalid.html descriptor-negative-invalid-ref.html

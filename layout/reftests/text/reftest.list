@@ -321,7 +321,7 @@ pref(gfx.font_rendering.graphite.enabled,true) == glyph-decomposition-graphite.h
 == hyphenation-control-2.html hyphenation-control-2-ref.html
 == hyphenation-control-3.html hyphenation-control-3-ref.html
 == hyphenation-control-4.html hyphenation-control-4-ref.html
-fuzzy-if(winWidget,0-56,0-6) == hyphenation-control-5.html hyphenation-control-5-ref.html
+fuzzy-if(winWidget,0-56,0-6) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == hyphenation-control-5.html hyphenation-control-5-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == hyphenation-control-6.html hyphenation-control-6-ref.html # Bug 1392106
 == hyphenation-control-7.html hyphenation-control-7-ref.html
 
