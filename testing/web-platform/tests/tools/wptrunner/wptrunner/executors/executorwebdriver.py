@@ -21,23 +21,11 @@ from .protocol import (BaseProtocolPart,
                        TestDriverProtocolPart)
 from ..testrunner import Stop
 
+import webdriver as client
+
 here = os.path.join(os.path.split(__file__)[0])
 
-webdriver = None
-exceptions = None
-RemoteConnection = None
-
-
-def do_delayed_imports():
-    global webdriver
-    global exceptions
-    global RemoteConnection
-    from selenium import webdriver
-    from selenium.common import exceptions
-    from selenium.webdriver.remote.remote_connection import RemoteConnection
-
-
-class SeleniumBaseProtocolPart(BaseProtocolPart):
+class WebDriverBaseProtocolPart(BaseProtocolPart):
     def setup(self):
         self.webdriver = self.parent.webdriver
 
@@ -46,30 +34,35 @@ class SeleniumBaseProtocolPart(BaseProtocolPart):
         return method(script)
 
     def set_timeout(self, timeout):
-        self.webdriver.set_script_timeout(timeout * 1000)
+        try:
+            self.webdriver.timeouts.script = timeout
+        except client.WebDriverException:
+            # workaround https://bugs.chromium.org/p/chromedriver/issues/detail?id=2057
+            body = {"type": "script", "ms": timeout * 1000}
+            self.webdriver.send_session_command("POST", "timeouts", body)
 
     @property
     def current_window(self):
-        return self.webdriver.current_window_handle
+        return self.webdriver.window_handle
 
     def set_window(self, handle):
-        self.webdriver.switch_to_window(handle)
+        self.webdriver.window_handle = handle
 
     def wait(self):
         while True:
             try:
                 self.webdriver.execute_async_script("")
-            except exceptions.TimeoutException:
+            except client.TimeoutException:
                 pass
-            except (socket.timeout, exceptions.NoSuchWindowException,
-                    exceptions.ErrorInResponseException, IOError):
+            except (socket.timeout, client.NoSuchWindowException,
+                    client.UnknownErrorException, IOError):
                 break
             except Exception as e:
                 self.logger.error(traceback.format_exc(e))
                 break
 
 
-class SeleniumTestharnessProtocolPart(TestharnessProtocolPart):
+class WebDriverTestharnessProtocolPart(TestharnessProtocolPart):
     def setup(self):
         self.webdriver = self.parent.webdriver
 
@@ -77,20 +70,21 @@ class SeleniumTestharnessProtocolPart(TestharnessProtocolPart):
         url = urlparse.urljoin(self.parent.executor.server_url(url_protocol),
                                "/testharness_runner.html")
         self.logger.debug("Loading %s" % url)
-        self.webdriver.get(url)
+
+        self.webdriver.url = url
         self.webdriver.execute_script("document.title = '%s'" %
                                       threading.current_thread().name.replace("'", '"'))
 
     def close_old_windows(self):
-        exclude = self.webdriver.current_window_handle
-        handles = [item for item in self.webdriver.window_handles if item != exclude]
+        exclude = self.webdriver.window_handle
+        handles = [item for item in self.webdriver.handles if item != exclude]
         for handle in handles:
             try:
-                self.webdriver.switch_to_window(handle)
+                self.webdriver.window_handle = handle
                 self.webdriver.close()
-            except exceptions.NoSuchWindowException:
+            except client.NoSuchWindowException:
                 pass
-        self.webdriver.switch_to_window(exclude)
+        self.webdriver.window_handle = exclude
         return exclude
 
     def get_test_window(self, window_id, parent):
@@ -105,21 +99,7 @@ class SeleniumTestharnessProtocolPart(TestharnessProtocolPart):
             pass
 
         if test_window is None:
-            after = self.webdriver.window_handles
-
-    def get_test_window(self, window_id, parent):
-        test_window = None
-        try:
-            # Try using the JSON serialization of the WindowProxy object,
-            # it's in Level 1 but nothing supports it yet
-            win_s = self.webdriver.execute_script("return window['%s'];" % window_id)
-            win_obj = json.loads(win_s)
-            test_window = win_obj["window-fcc6-11e5-b4f8-330a88ab9d7f"]
-        except Exception:
-            pass
-
-        if test_window is None:
-            after = self.webdriver.window_handles
+            after = self.webdriver.handles
             if len(after) == 2:
                 test_window = next(iter(set(after) - set([parent])))
             elif after[0] == parent and len(after) > 2:
@@ -132,30 +112,38 @@ class SeleniumTestharnessProtocolPart(TestharnessProtocolPart):
         return test_window
 
 
-class SeleniumSelectorProtocolPart(SelectorProtocolPart):
+class WebDriverSelectorProtocolPart(SelectorProtocolPart):
     def setup(self):
         self.webdriver = self.parent.webdriver
 
     def elements_by_selector(self, selector):
-        return self.webdriver.find_elements_by_css_selector(selector)
+        return self.webdriver.find.css(selector)
 
 
-class SeleniumClickProtocolPart(ClickProtocolPart):
+class WebDriverClickProtocolPart(ClickProtocolPart):
     def setup(self):
         self.webdriver = self.parent.webdriver
 
     def element(self, element):
         return element.click()
 
-class SeleniumSendKeysProtocolPart(SendKeysProtocolPart):
+
+class WebDriverSendKeysProtocolPart(SendKeysProtocolPart):
     def setup(self):
         self.webdriver = self.parent.webdriver
 
     def send_keys(self, element, keys):
-        return element.send_keys(keys)
+        try:
+            return element.send_keys(keys)
+        except client.UnknownErrorException as e:
+            # workaround https://bugs.chromium.org/p/chromedriver/issues/detail?id=1999
+            if (e.http_status != 500 or
+                e.status_code != "unknown error"):
+                raise
+            return element.send_element_command("POST", "value", {"value": list(keys)})
 
 
-class SeleniumTestDriverProtocolPart(TestDriverProtocolPart):
+class WebDriverTestDriverProtocolPart(TestDriverProtocolPart):
     def setup(self):
         self.webdriver = self.parent.webdriver
 
@@ -169,35 +157,36 @@ class SeleniumTestDriverProtocolPart(TestDriverProtocolPart):
         self.webdriver.execute_script("window.postMessage(%s, '*')" % json.dumps(obj))
 
 
-class SeleniumProtocol(Protocol):
-    implements = [SeleniumBaseProtocolPart,
-                  SeleniumTestharnessProtocolPart,
-                  SeleniumSelectorProtocolPart,
-                  SeleniumClickProtocolPart,
-                  SeleniumSendKeysProtocolPart,
-                  SeleniumTestDriverProtocolPart]
+class WebDriverProtocol(Protocol):
+    implements = [WebDriverBaseProtocolPart,
+                  WebDriverTestharnessProtocolPart,
+                  WebDriverSelectorProtocolPart,
+                  WebDriverClickProtocolPart,
+                  WebDriverSendKeysProtocolPart,
+                  WebDriverTestDriverProtocolPart]
 
     def __init__(self, executor, browser, capabilities, **kwargs):
-        do_delayed_imports()
-
-        super(SeleniumProtocol, self).__init__(executor, browser)
+        super(WebDriverProtocol, self).__init__(executor, browser)
         self.capabilities = capabilities
         self.url = browser.webdriver_url
         self.webdriver = None
 
     def connect(self):
-        """Connect to browser via Selenium's WebDriver implementation."""
-        self.logger.debug("Connecting to Selenium on URL: %s" % self.url)
+        """Connect to browser via WebDriver."""
+        self.logger.debug("Connecting to WebDriver on URL: %s" % self.url)
 
-        self.webdriver = webdriver.Remote(command_executor=RemoteConnection(self.url.strip("/"),
-                                                                            resolve_ip=False),
-                                          desired_capabilities=self.capabilities)
+        host, port = self.url.split(":")[1].strip("/"), self.url.split(':')[-1].strip("/")
+
+        capabilities = {"alwaysMatch": self.capabilities}
+        self.webdriver = client.Session(host, port, capabilities=capabilities)
+        self.webdriver.start()
+
 
     def after_conect(self):
         pass
 
     def teardown(self):
-        self.logger.debug("Hanging up on Selenium session")
+        self.logger.debug("Hanging up on WebDriver session")
         try:
             self.webdriver.quit()
         except Exception:
@@ -207,9 +196,8 @@ class SeleniumProtocol(Protocol):
     def is_alive(self):
         try:
             # Get a simple property over the connection
-            self.webdriver.current_window_handle
-        # TODO what exception?
-        except (socket.timeout, exceptions.ErrorInResponseException):
+            self.webdriver.window_handle
+        except (socket.timeout, client.UnknownErrorException):
             return False
         return True
 
@@ -217,7 +205,7 @@ class SeleniumProtocol(Protocol):
         self.testharness.load_runner(self.executor.last_environment["protocol"])
 
 
-class SeleniumRun(object):
+class WebDriverRun(object):
     def __init__(self, func, protocol, url, timeout):
         self.func = func
         self.result = None
@@ -231,7 +219,7 @@ class SeleniumRun(object):
 
         try:
             self.protocol.base.set_timeout((timeout + extra_timeout))
-        except exceptions.ErrorInResponseException:
+        except client.UnknownErrorException:
             self.logger.error("Lost WebDriver connection")
             return Stop
 
@@ -248,31 +236,37 @@ class SeleniumRun(object):
     def _run(self):
         try:
             self.result = True, self.func(self.protocol, self.url, self.timeout)
-        except exceptions.TimeoutException:
+        except client.TimeoutException:
             self.result = False, ("EXTERNAL-TIMEOUT", None)
-        except (socket.timeout, exceptions.ErrorInResponseException):
+        except (socket.timeout, client.UnknownErrorException):
             self.result = False, ("CRASH", None)
         except Exception as e:
-            message = getattr(e, "message", "")
-            if message:
-                message += "\n"
-            message += traceback.format_exc(e)
-            self.result = False, ("INTERNAL-ERROR", e)
+            if (isinstance(e, client.WebDriverException) and
+                    e.http_status == 408 and
+                    e.status_code == "asynchronous script timeout"):
+                # workaround for https://bugs.chromium.org/p/chromedriver/issues/detail?id=2001
+                self.result = False, ("EXTERNAL-TIMEOUT", None)
+            else:
+                message = getattr(e, "message", "")
+                if message:
+                    message += "\n"
+                message += traceback.format_exc(e)
+                self.result = False, ("ERROR", message)
         finally:
             self.result_flag.set()
 
 
-class SeleniumTestharnessExecutor(TestharnessExecutor):
+class WebDriverTestharnessExecutor(TestharnessExecutor):
     supports_testdriver = True
 
     def __init__(self, browser, server_config, timeout_multiplier=1,
                  close_after_done=True, capabilities=None, debug_info=None,
                  **kwargs):
-        """Selenium-based executor for testharness.js tests"""
+        """WebDriver-based executor for testharness.js tests"""
         TestharnessExecutor.__init__(self, browser, server_config,
                                      timeout_multiplier=timeout_multiplier,
                                      debug_info=debug_info)
-        self.protocol = SeleniumProtocol(self, browser, capabilities)
+        self.protocol = WebDriverProtocol(self, browser, capabilities)
         with open(os.path.join(here, "testharness_webdriver.js")) as f:
             self.script = f.read()
         with open(os.path.join(here, "testharness_webdriver_resume.js")) as f:
@@ -290,7 +284,7 @@ class SeleniumTestharnessExecutor(TestharnessExecutor):
     def do_test(self, test):
         url = self.test_url(test)
 
-        success, data = SeleniumRun(self.do_testharness,
+        success, data = WebDriverRun(self.do_testharness,
                                     self.protocol,
                                     url,
                                     test.timeout * self.timeout_multiplier).run()
@@ -322,19 +316,19 @@ class SeleniumTestharnessExecutor(TestharnessExecutor):
         return rv
 
 
-class SeleniumRefTestExecutor(RefTestExecutor):
+class WebDriverRefTestExecutor(RefTestExecutor):
     def __init__(self, browser, server_config, timeout_multiplier=1,
                  screenshot_cache=None, close_after_done=True,
                  debug_info=None, capabilities=None, **kwargs):
-        """Selenium WebDriver-based executor for reftests"""
+        """WebDriver-based executor for reftests"""
         RefTestExecutor.__init__(self,
                                  browser,
                                  server_config,
                                  screenshot_cache=screenshot_cache,
                                  timeout_multiplier=timeout_multiplier,
                                  debug_info=debug_info)
-        self.protocol = SeleniumProtocol(self, browser,
-                                         capabilities=capabilities)
+        self.protocol = WebDriverProtocol(self, browser,
+                                          capabilities=capabilities)
         self.implementation = RefTestImplementation(self)
         self.close_after_done = close_after_done
         self.has_window = False
@@ -348,9 +342,7 @@ class SeleniumRefTestExecutor(RefTestExecutor):
         return self.protocol.is_alive()
 
     def do_test(self, test):
-        self.logger.info("Test requires OS-level window focus")
-
-        self.protocol.webdriver.set_window_size(600, 600)
+        self.protocol.webdriver.window.size = (600, 600)
 
         result = self.implementation.run_test(test)
 
@@ -361,18 +353,18 @@ class SeleniumRefTestExecutor(RefTestExecutor):
         assert viewport_size is None
         assert dpi is None
 
-        return SeleniumRun(self._screenshot,
+        return WebDriverRun(self._screenshot,
                            self.protocol,
                            self.test_url(test),
                            test.timeout).run()
 
     def _screenshot(self, protocol, url, timeout):
         webdriver = protocol.webdriver
-        webdriver.get(url)
+        webdriver.url = url
 
         webdriver.execute_async_script(self.wait_script)
 
-        screenshot = webdriver.get_screenshot_as_base64()
+        screenshot = webdriver.screenshot()
 
         # strip off the data:img/png, part of the url
         if screenshot.startswith("data:image/png;base64,"):
