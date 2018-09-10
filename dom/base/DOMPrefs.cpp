@@ -87,12 +87,6 @@ DOMPrefs::DumpEnabled()
 }
 #endif
 
-/* static */ bool
-DOMPrefs::SchedulerTimingEnabled()
-{
-  return mozilla::StaticPrefs::dom_performance_enable_scheduler_timing();
-}
-
 #include "DOMPrefsInternal.h"
 
 #undef DOM_PREF

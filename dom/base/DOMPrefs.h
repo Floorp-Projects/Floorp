@@ -19,9 +19,6 @@ public:
   // Returns true if the browser.dom.window.dump.enabled pref is set.
   static bool DumpEnabled();
 
-  // Returns true if the dom.performance.enable_scheduler_timing is set
-  static bool SchedulerTimingEnabled();
-
 #define DOM_PREF(name, pref) static bool name();
 #define DOM_WEBIDL_PREF(name) static bool name(JSContext* aCx, JSObject* aObj);
 #define DOM_WEBIDL_PREF2(name) static bool name(JSContext* aCx, JSObject* aObj);
