@@ -49,6 +49,7 @@ function configureStore(hud, options = {}) {
     || Math.max(getIntPref("devtools.hud.loglimit"), 1);
   const sidebarToggle = getBoolPref(PREFS.FEATURES.SIDEBAR_TOGGLE);
   const jstermCodeMirror = getBoolPref(PREFS.FEATURES.JSTERM_CODE_MIRROR);
+  const jstermReverseSearch = getBoolPref(PREFS.FEATURES.JSTERM_REVERSE_SEARCH);
   const historyCount = getIntPref(PREFS.UI.INPUT_HISTORY_COUNT);
 
   const initialState = {
@@ -56,6 +57,7 @@ function configureStore(hud, options = {}) {
       logLimit,
       sidebarToggle,
       jstermCodeMirror,
+      jstermReverseSearch,
       historyCount,
     }),
     filters: FilterState({
