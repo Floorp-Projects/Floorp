@@ -940,7 +940,7 @@ fuzzy-if(winWidget,0-123,0-1600) == 409659-1a.html 409659-1-ref.html  # Bug 1128
 != 409659-1c.html 409659-1-ref.html
 fuzzy-if(winWidget,0-123,0-1900) == 409659-1d.html 409659-1-ref.html  # Bug 1128229
 == 410621-1.html 410621-1-ref.html
-== 411059-1.html 411059-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 411059-1.html 411059-1-ref.html # Bug 1392106
 fuzzy-if(webrender&&!gtkWidget,127-129,652-770) == 411334-1.xml 411334-1-ref.xml
 == 411367-1.html 411367-1-ref.html
 == 411367-2.html 411367-2-ref.html
@@ -969,7 +969,7 @@ fails == 413027-3.html 413027-3-ref.html
 == 413286-4a.html 413286-4-ref.html
 == 413286-4b.html 413286-4-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 413286-5.html 413286-5-ref.html # Bug 1392106
-== 413286-6.html 413286-6-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 413286-6.html 413286-6-ref.html # Bug 1392106
 == 413292-1.html 413292-1-ref.html
 fuzzy-if(Android,0-11,0-17) fuzzy-if(webrender,0-1,0-10) == 413361-1.html 413361-1-ref.html # bug 1128229
 == 413840-background-unchanged.html 413840-background-unchanged-ref.html
@@ -1802,7 +1802,7 @@ fuzzy-if(skiaContent,0-1,0-3) == 931464-1.html 931464-1-ref.html
 == 931853.html 931853-ref.html
 == 931853-quirks.html 931853-quirks-ref.html
 == 933264-1.html 933264-1-ref.html
-== 936670-1.svg 936670-1-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 936670-1.svg 936670-1-ref.svg # Bug 1392106
 == 941940-1.html 941940-1-ref.html
 fails == 942017.html 942017-ref.html # bug 942017
 fuzzy-if(Android,0-1,0-1) fuzzy-if(skiaContent,0-1,0-160000) == 942672-1.html 942672-1-ref.html
@@ -1834,7 +1834,7 @@ pref(layout.css.overflow-clip-box.enabled,true) fuzzy-if(skiaContent,0-2,0-845) 
 == 1003425-1.html 1003425-1-ref.html
 == 1003425-2.html 1003425-2-ref.html
 == 1005405-1.html 1005405-1-ref.html
-== 1012640-1.html 1012640-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1012640-1.html 1012640-1-ref.html # Bug 1392106
 == 1013054-1.html 1013054-1-ref.html
 == 1018522-1.html 1018522-1-ref.html
 == 1021564-1.html 1021564-ref.html

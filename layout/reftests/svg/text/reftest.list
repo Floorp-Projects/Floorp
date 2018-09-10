@@ -13,7 +13,7 @@ fuzzy-if(webrender&&!gtkWidget,132-134,294-319) == simple-bidi.svg simple-bidi-r
 
 == simple-dx.svg simple.svg
 == simple-dx-2.svg simple-dx-2-ref.svg
-== simple-dx-anchor-end-bidi.svg simple-dx-anchor-end-bidi-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-dx-anchor-end-bidi.svg simple-dx-anchor-end-bidi-ref.svg # Bug 1392106
 == simple-dx-anchor-end-rtl.svg simple-dx-anchor-end-rtl-ref.svg
 == simple-dx-anchor-end.svg simple-dx-anchor-end-ref.svg
 == simple-dx-anchor-middle-bidi.svg simple-dx-anchor-middle-bidi-ref.svg
@@ -173,7 +173,7 @@ fuzzy-if(!d2d,0-14,0-2) fuzzy-if(skiaContent,0-1,0-200) == dynamic-non-scaling-s
 == dynamic-text-shadow.svg text-shadow-ref.svg
 
 # text and masks
-fuzzy-if(skiaContent&&winWidget,0-50,0-224)  == mask-applied.svg mask-applied-ref.svg
+fuzzy-if(skiaContent&&winWidget,0-50,0-224) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mask-applied.svg mask-applied-ref.svg # Bug 1392106
 fuzzy-if(skiaContent&&winWidget,0-105,0-112) == mask-content.svg mask-content-ref.svg
 fuzzy-if(skiaContent&&winWidget,0-53,0-112) == mask-content-2.svg mask-content-2-ref.svg
 
@@ -183,10 +183,10 @@ fuzzy-if(skiaContent&&winWidget,0-105,0-56) random-if(/^Windows\x20NT\x206\.1/.t
 fuzzy-if(skiaContent&&winWidget,0-53,0-112) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == clipPath-content-2.svg clipPath-content-2-ref.svg # Bug 1392106
 
 # text and patterns
-fuzzy-if(cocoaWidget,0-1,0-6) fuzzy-if(skiaContent,0-65,0-313) == pattern-content.svg pattern-content-ref.svg
+fuzzy-if(cocoaWidget,0-1,0-6) fuzzy-if(skiaContent,0-65,0-313) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == pattern-content.svg pattern-content-ref.svg # Bug 1392106
 
 # text and filters
-fuzzy-if(skiaContent&&winWidget,0-126,0-336) == filter-applied.svg filter-applied-ref.svg
+fuzzy-if(skiaContent&&winWidget,0-126,0-336) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == filter-applied.svg filter-applied-ref.svg # Bug 1392106
 
 # vertical text
 fuzzy-if(skiaContent,0-1,0-80) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-vertical-dx.svg textpath-vertical-dx-ref.svg # Bug 1392106
