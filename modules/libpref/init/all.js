@@ -5528,10 +5528,6 @@ pref("layout.accessiblecaret.enabled_on_touch", true);
 // Show the caret when long tapping on an empty content.
 pref("layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content", false);
 
-// Simulate long tap to select words on the platforms where APZ is not enabled
-// or long tap events does not fired by APZ.
-pref("layout.accessiblecaret.use_long_tap_injector", false);
-
 // By default, carets become tilt only when they are overlapping.
 pref("layout.accessiblecaret.always_tilt", false);
 
