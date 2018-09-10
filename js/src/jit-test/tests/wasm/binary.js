@@ -299,9 +299,10 @@ for (let i = 0; i < 256; i++)
     checkIllegalPrefixed(MozPrefix, i);
 
 for (let prefix of [ThreadPrefix, MiscPrefix, SimdPrefix, MozPrefix]) {
-    // Prefix without a subsequent opcode
-    let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[prefix]})])]);
-    assertErrorMessage(() => wasmEval(binary), CompileError, /unrecognized opcode/);
+    // Prefix without a subsequent opcode.  We must ask funcBody not to add an
+    // End code after the prefix, so the body really is just the prefix byte.
+    let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[prefix]}, /*withEndCode=*/false)])]);
+    assertErrorMessage(() => wasmEval(binary), CompileError, /unable to read opcode/);
     assertEq(WebAssembly.validate(binary), false);
 }
 
