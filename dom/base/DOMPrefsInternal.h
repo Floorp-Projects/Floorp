@@ -29,7 +29,3 @@ DOM_WEBIDL_PREF(dom_netinfo_enabled)
 DOM_WEBIDL_PREF(dom_fetchObserver_enabled)
 DOM_WEBIDL_PREF(dom_enable_performance_observer)
 DOM_WEBIDL_PREF(dom_performance_enable_scheduler_timing)
-
-DOM_UINT32_PREF(WorkerCancelingTimeoutMillis,
-                "dom.worker.canceling.timeoutMilliseconds",
-                30000 /* 30 seconds */)
