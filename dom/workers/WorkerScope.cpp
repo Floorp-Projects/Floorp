@@ -32,6 +32,7 @@
 #include "mozilla/dom/WorkerNavigator.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsServiceManagerUtils.h"
 
 #include "nsIDocument.h"
@@ -504,7 +505,7 @@ WorkerGlobalScope::CreateImageBitmap(JSContext* aCx,
                                      const Sequence<ChannelPixelLayout>& aLayout,
                                      ErrorResult& aRv)
 {
-  if (!DOMPrefs::ImageBitmapExtensionsEnabled()) {
+  if (!StaticPrefs::canvas_imagebitmap_extensions_enabled()) {
     aRv.Throw(NS_ERROR_TYPE_ERR);
     return nullptr;
   }

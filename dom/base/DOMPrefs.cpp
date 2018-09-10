@@ -24,12 +24,14 @@ DOMPrefs::Initialize()
 
 #define DOM_PREF(name, pref) DOMPrefs::name();
 #define DOM_WEBIDL_PREF(name)
+#define DOM_WEBIDL_PREF2(name)
 #define DOM_UINT32_PREF(name, pref, defaultValue) DOMPrefs::name();
 
 #include "DOMPrefsInternal.h"
 
 #undef DOM_PREF
 #undef DOM_WEBIDL_PREF
+#undef DOM_WEBIDL_PREF2
 #undef DOM_UINT32_PREF
 }
 
@@ -52,6 +54,15 @@ DOMPrefs::Initialize()
   {                                              \
     return DOMPrefs::name();                     \
   }
+
+// TODO: this is going to be renamed DOM_WEBIDL_PREF in the last patch.
+#define DOM_WEBIDL_PREF2(name)                   \
+  /* static */ bool                              \
+  DOMPrefs::name(JSContext* aCx, JSObject* aObj) \
+  {                                              \
+    return StaticPrefs::name();                  \
+  }
+
 
 #define DOM_UINT32_PREF(name, pref, defaultValue)                             \
   /* static */ uint32_t                                                       \
@@ -86,6 +97,7 @@ DOMPrefs::SchedulerTimingEnabled()
 
 #undef DOM_PREF
 #undef DOM_WEBIDL_PREF
+#undef DOM_WEBIDL_PREF2
 #undef DOM_UINT32_PREF
 
 } // dom namespace
