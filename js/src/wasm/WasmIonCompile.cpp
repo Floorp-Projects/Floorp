@@ -2736,7 +2736,7 @@ static bool
 EmitMemCopy(FunctionCompiler& f)
 {
     MDefinition *dest, *src, *len;
-    if (!f.iter().readMemCopy(&dest, &src, &len))
+    if (!f.iter().readMemOrTableCopy(/*isMem=*/true, &dest, &src, &len))
         return false;
 
     if (f.inDeadCode())

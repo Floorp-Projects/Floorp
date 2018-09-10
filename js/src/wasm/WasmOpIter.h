@@ -187,8 +187,10 @@ enum class OpKind {
     Swizzle,
     Shuffle,
     Splat,
-    MemCopy,
+    MemOrTableCopy,
+    MemOrTableDrop,
     MemFill,
+    MemOrTableInit,
     RefNull,
 };
 
@@ -553,8 +555,12 @@ class MOZ_STACK_CLASS OpIter : private Policy
                                         uint32_t byteSize,
                                         Value* oldValue,
                                         Value* newValue);
-    MOZ_MUST_USE bool readMemCopy(Value* dest, Value* src, Value* len);
+    MOZ_MUST_USE bool readMemOrTableCopy(bool isMem,
+                                         Value* dst, Value* src, Value* len);
+    MOZ_MUST_USE bool readMemOrTableDrop(bool isMem, uint32_t* segIndex);
     MOZ_MUST_USE bool readMemFill(Value* start, Value* val, Value* len);
+    MOZ_MUST_USE bool readMemOrTableInit(bool isMem, uint32_t* segIndex,
+                                         Value* dst, Value* src, Value* len);
 
     // At a location where readOp is allowed, peek at the next opcode
     // without consuming it or updating any internal state.
@@ -1858,12 +1864,17 @@ OpIter<Policy>::readAtomicCmpXchg(LinearMemoryAddress<Value>* addr, ValType resu
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::readMemCopy(Value* dest, Value* src, Value* len)
+OpIter<Policy>::readMemOrTableCopy(bool isMem, Value* dst, Value* src, Value* len)
 {
-    MOZ_ASSERT(Classify(op_) == OpKind::MemCopy);
+    MOZ_ASSERT(Classify(op_) == OpKind::MemOrTableCopy);
 
-    if (!env_.usesMemory())
-        return fail("can't touch memory without memory");
+    if (isMem) {
+        if (!env_.usesMemory())
+            return fail("can't touch memory without memory");
+    } else {
+        if (env_.tables.length() == 0)
+            return fail("can't table.copy without a table");
+    }
 
     if (!popWithType(ValType::I32, len))
         return false;
@@ -1871,8 +1882,35 @@ OpIter<Policy>::readMemCopy(Value* dest, Value* src, Value* len)
     if (!popWithType(ValType::I32, src))
         return false;
 
-    if (!popWithType(ValType::I32, dest))
+    if (!popWithType(ValType::I32, dst))
         return false;
+
+    return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readMemOrTableDrop(bool isMem, uint32_t* segIndex)
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::MemOrTableDrop);
+
+    if (isMem) {
+        if (!env_.usesMemory())
+            return fail("can't touch memory without memory");
+    } else {
+        if (env_.tables.length() == 0)
+            return fail("can't table.drop without a table");
+    }
+
+    if (!readVarU32(segIndex))
+        return false;
+
+    if (isMem) {
+       // FIXME Notify deferred validation of this data seg index use
+    } else {
+        if (*segIndex >= env_.elemSegments.length())
+            return fail("table.drop index out of range");
+    }
 
     return true;
 }
@@ -1894,6 +1932,43 @@ OpIter<Policy>::readMemFill(Value* start, Value* val, Value* len)
 
     if (!popWithType(ValType::I32, start))
         return false;
+
+    return true;
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
+                                   Value* dst, Value* src, Value* len)
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::MemOrTableInit);
+
+    if (isMem) {
+        if (!env_.usesMemory())
+            return fail("can't touch memory without memory");
+    } else {
+        if (env_.tables.length() == 0)
+            return fail("can't table.init without a table");
+    }
+
+    if (!popWithType(ValType::I32, len))
+        return false;
+
+    if (!popWithType(ValType::I32, src))
+        return false;
+
+    if (!popWithType(ValType::I32, dst))
+        return false;
+
+    if (!readVarU32(segIndex))
+        return false;
+
+    if (isMem) {
+        // FIXME Notify deferred validation of this data seg index use
+    } else {
+        if (*segIndex >= env_.elemSegments.length())
+            return fail("table.init index out of range");
+    }
 
     return true;
 }
