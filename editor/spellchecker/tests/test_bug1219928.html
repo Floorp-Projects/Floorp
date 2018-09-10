@@ -46,9 +46,7 @@ SimpleTest.waitForFocus(function() {
 
     spellchecker = SpecialPowers.Cc['@mozilla.org/editor/editorspellchecker;1']
                                 .createInstance(Ci.nsIEditorSpellCheck);
-    var filterContractId = "@mozilla.org/editor/txtsrvfilter;1";
-    spellchecker.setFilter(SpecialPowers.Cc[filterContractId]
-                                        .createInstance(Ci.nsITextServicesFilter));
+    spellchecker.setFilterType(spellchecker.FILTERTYPE_NORMAL);
     spellchecker.InitSpellChecker(editor, false, spellCheckStarted);
   });
 });

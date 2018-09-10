@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"                   // for nsCOMPtr, getter_AddRefs, etc
 #include "nsBaseCommandController.h"    // for nsBaseCommandController
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
-#include "nsComposeTxtSrvFilter.h"      // for nsComposeTxtSrvFilter, etc
 #include "nsDebug.h"                    // for NS_ENSURE_SUCCESS
 #include "nsError.h"                    // for NS_ERROR_NO_AGGREGATION, etc
 #include "nsIController.h"              // for nsIController
@@ -45,48 +44,6 @@ static NS_DEFINE_CID(kHTMLEditorDocStateCommandTableCID, NS_HTMLEDITOR_DOCSTATE_
 //
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(EditorSpellCheck)
-
-// There are no macros that enable us to have 2 constructors
-// for the same object
-//
-// Here we are creating the same object with two different contract IDs
-// and then initializing it different.
-// Basically, we need to tell the filter whether it is doing mail or not
-static nsresult
-nsComposeTxtSrvFilterConstructor(nsISupports *aOuter, REFNSIID aIID,
-                                 void **aResult, bool aIsForMail)
-{
-  *aResult = nullptr;
-  if (aOuter) {
-      return NS_ERROR_NO_AGGREGATION;
-  }
-  nsComposeTxtSrvFilter * inst = new nsComposeTxtSrvFilter();
-  if (!inst) {
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(inst);
-  inst->Init(aIsForMail);
-  nsresult rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-  return rv;
-}
-
-static nsresult
-nsComposeTxtSrvFilterConstructorForComposer(nsISupports *aOuter,
-                                            REFNSIID aIID,
-                                            void **aResult)
-{
-  return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, false);
-}
-
-static nsresult
-nsComposeTxtSrvFilterConstructorForMail(nsISupports *aOuter,
-                                        REFNSIID aIID,
-                                        void **aResult)
-{
-  return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, true);
-}
-
 
 // Constructor for a controller set up with a command table specified
 // by the CID passed in. This function uses do_GetService to get the
@@ -189,9 +146,6 @@ NS_DEFINE_NAMED_CID(NS_EDITORDOCSTATECONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_COMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_DOCSTATE_COMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORSPELLCHECK_CID);
-NS_DEFINE_NAMED_CID(NS_COMPOSERTXTSRVFILTER_CID);
-NS_DEFINE_NAMED_CID(NS_COMPOSERTXTSRVFILTERMAIL_CID);
-
 
 static const mozilla::Module::CIDEntry kComposerCIDs[] = {
   { &kNS_HTMLEDITORCONTROLLER_CID, false, nullptr, nsHTMLEditorControllerConstructor },
@@ -199,8 +153,6 @@ static const mozilla::Module::CIDEntry kComposerCIDs[] = {
   { &kNS_HTMLEDITOR_COMMANDTABLE_CID, false, nullptr, nsHTMLEditorCommandTableConstructor },
   { &kNS_HTMLEDITOR_DOCSTATE_COMMANDTABLE_CID, false, nullptr, nsHTMLEditorDocStateCommandTableConstructor },
   { &kNS_EDITORSPELLCHECK_CID, false, nullptr, EditorSpellCheckConstructor },
-  { &kNS_COMPOSERTXTSRVFILTER_CID, false, nullptr, nsComposeTxtSrvFilterConstructorForComposer },
-  { &kNS_COMPOSERTXTSRVFILTERMAIL_CID, false, nullptr, nsComposeTxtSrvFilterConstructorForMail },
   { nullptr }
 };
 
@@ -208,8 +160,6 @@ static const mozilla::Module::ContractIDEntry kComposerContracts[] = {
   { "@mozilla.org/editor/htmleditorcontroller;1", &kNS_HTMLEDITORCONTROLLER_CID },
   { "@mozilla.org/editor/editordocstatecontroller;1", &kNS_EDITORDOCSTATECONTROLLER_CID },
   { "@mozilla.org/editor/editorspellchecker;1", &kNS_EDITORSPELLCHECK_CID },
-  { COMPOSER_TXTSRVFILTER_CONTRACTID, &kNS_COMPOSERTXTSRVFILTER_CID },
-  { COMPOSER_TXTSRVFILTERMAIL_CONTRACTID, &kNS_COMPOSERTXTSRVFILTERMAIL_CID },
   { nullptr }
 };
 

@@ -211,6 +211,6 @@ versions and builds of the same module. See `breakpad <https://chromium.googleso
 description for further information. This field is populated only on Windows.
 
 Version History
-===============
+---------------
 
 - Firefox 58: Added ipc_channel_error (`bug 1410143 <https://bugzilla.mozilla.org/show_bug.cgi?id=1410143>`_).

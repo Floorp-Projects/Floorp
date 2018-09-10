@@ -855,17 +855,19 @@ nsUnknownDecoder::ConvertEncodedData(nsIRequest* request,
     if (listener) {
       listener->OnStartRequest(request, nullptr);
 
-      nsCOMPtr<nsIStringInputStream> rawStream =
-        do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID);
-      if (!rawStream)
-        return NS_ERROR_FAILURE;
+      if (length) {
+        nsCOMPtr<nsIStringInputStream> rawStream =
+          do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID);
+        if (!rawStream)
+          return NS_ERROR_FAILURE;
 
-      rv = rawStream->SetData((const char*)data, length);
-      NS_ENSURE_SUCCESS(rv, rv);
+        rv = rawStream->SetData((const char*)data, length);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = listener->OnDataAvailable(request, nullptr, rawStream, 0,
-                                     length);
-      NS_ENSURE_SUCCESS(rv, rv);
+        rv = listener->OnDataAvailable(request, nullptr, rawStream, 0,
+                                       length);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
 
       listener->OnStopRequest(request, nullptr, NS_OK);
     }

@@ -678,7 +678,7 @@ Structure:
     ],
 
 Version History
-===============
+---------------
 
 - Firefox 61:
 

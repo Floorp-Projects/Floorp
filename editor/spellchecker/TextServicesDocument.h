@@ -14,7 +14,6 @@
 #include "nsTArray.h"
 #include "nscore.h"
 
-class nsComposeTxtSrvFilter;
 class nsIContent;
 class nsIContentIterator;
 class nsIEditor;
@@ -58,7 +57,7 @@ private:
   nsCOMPtr<nsIContent> mNextTextBlock;
   nsTArray<OffsetEntry*> mOffsetTable;
   RefPtr<nsRange> mExtent;
-  RefPtr<nsComposeTxtSrvFilter> mTxtSvcFilter;
+  uint32_t mTxtSvcFilterType;
 
   int32_t mSelStartIndex;
   int32_t mSelStartOffset;
@@ -105,12 +104,14 @@ public:
   nsresult ExpandRangeToWordBoundaries(nsRange* aRange);
 
   /**
-   * Sets the filter to be used while iterating over content.
+   * Sets the filter type to be used while iterating over content.
+   * This will clear the current filter type if it's not either FILTERTYPE_NORMAL
+   * or FILTERTYPE_MAIL.
    *
-   * @param aFilter             The filter to be used while iterating over
+   * @param aFilterType         The filter type to be used while iterating over
    *                            content.
    */
-  nsresult SetFilter(nsComposeTxtSrvFilter* aFilter);
+  nsresult SetFilterType(uint32_t aFilterType);
 
   /**
    * Returns the text in the current text block.
