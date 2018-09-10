@@ -43,6 +43,12 @@ def computeVersionCode() {
     return code;
 }
 
+def computeVersionNumber() {
+  def appVersion = getAppVersionWithoutMilestone()
+  def parts = appVersion.split('\\.')
+  return parts[0] + "." + parts[1] + "." + getBuildId()
+}
+
 // Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
 def getBuildId() {
     return file("${topobjdir}/buildid.h").getText('utf-8').split()[2]
@@ -295,12 +301,7 @@ uploadArchives {
     repositories.mavenDeployer {
         pom.groupId = 'org.mozilla.geckoview'
         pom.artifactId = "geckoview-${mozconfig.substs.MOZ_UPDATE_CHANNEL}-${mozconfig.substs.ANDROID_CPU_ARCH}"
-
-        if (mozconfig.substs.RELEASE_OR_BETA == 'true') {
-            pom.version = mozconfig.substs.MOZ_APP_VERSION
-        } else {
-            pom.version = getAppVersionWithoutMilestone() + "." + getBuildId()
-        }
+        pom.version = computeVersionNumber()
 
         pom.project {
             licenses {

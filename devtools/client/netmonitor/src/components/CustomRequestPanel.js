@@ -74,7 +74,7 @@ class CustomRequestPanel extends Component {
    * @return {array} array of headers info {name, value}
    */
   parseRequestText(text, namereg, divider) {
-    const regex = new RegExp(`(${namereg})\\${divider}\\s*(.+)`);
+    const regex = new RegExp(`(${namereg})\\${divider}\\s*(\\S.*)`);
     const pairs = [];
 
     for (const line of text.split("\n")) {

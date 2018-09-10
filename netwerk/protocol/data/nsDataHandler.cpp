@@ -207,7 +207,7 @@ nsDataHandler::ParsePathWithoutRef(
             // is ok as well (this deals with *broken* data URIs, see bug
             // 781693 for an example). Anything after "base64" in the non-data
             // part will be discarded in this case, however.
-            if (offset == mediaType.Length() || mediaType[offset] == ';') {
+            if (offset == mediaType.Length() || mediaType[offset] == ';' || mediaType[offset] == ' ') {
                 MOZ_DIAGNOSTIC_ASSERT(base64 > 0, "Did someone remove the check?");
                 // Index is on the first character of matched "base64" so we
                 // move to the preceding character
