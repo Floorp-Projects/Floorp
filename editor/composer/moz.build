@@ -20,6 +20,10 @@ UNIFIED_SOURCES += [
     'nsEditingSession.cpp',
 ]
 
+EXPORTS += [
+    'nsEditingSession.h',
+]
+
 EXPORTS.mozilla += [
     'ComposerCommandsUpdater.h',
 ]

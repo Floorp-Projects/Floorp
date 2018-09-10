@@ -38,7 +38,7 @@ public:
   bool WaitingForLoad() const { return mMakeEditable; }
 
 protected:
-  nsresult EnsureEditingSession();
+  void EnsureEditingSession();
 
   // The doc shell that owns us. Weak ref, since it always outlives us.
   nsIDocShell* mDocShell;
