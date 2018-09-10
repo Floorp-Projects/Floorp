@@ -1,5 +1,7 @@
 . $topsrcdir/browser/config/mozconfigs/macosx64/nightly
 
+ac_add_options --disable-lto
+
 #add-on signing is checked but not enforced
 MOZ_REQUIRE_SIGNING=0
 # Enable MOZ_ALLOW_LEGACY_EXTENSIONS

@@ -1,5 +1,7 @@
 . "$topsrcdir/browser/config/mozconfigs/macosx64/nightly"
 
+ac_add_options --disable-lto
+
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 
 ac_add_options --disable-sandbox
