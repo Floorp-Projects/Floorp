@@ -106,10 +106,6 @@
   border-width: 0;
 }
 
-#debugger-toolbar .breadcrumbs-widget-item::before {
-  --background-color: var(--theme-toolbar-background);
-}
-
 .breadcrumbs-widget-item:first-child::before {
   /* The first crumb does not need any separator before itself */
   content: unset;
