@@ -428,6 +428,37 @@ EvaluateInitExpr(HandleValVector globalImportValues, InitExpr initExpr)
     MOZ_CRASH("bad initializer expression");
 }
 
+void
+wasm::ComputeWasmCallee(const Code& code, const Instance* instance,
+                        Handle<FunctionVector> funcImports,
+                        uint32_t funcIndexIndex, const Table& table,
+                        const ElemSegment& seg, WasmCallee* out)
+{
+    const Tier tier = code.bestTier();
+    const CodeRangeVector& codeRanges = code.metadata(tier).codeRanges;
+    uint8_t* codeBase = code.segment(tier).base();
+
+    uint32_t funcIndex = seg.elemFuncIndices[funcIndexIndex];
+    if (funcIndex < funcImports.length() && IsExportedWasmFunction(funcImports[funcIndex])) {
+        MOZ_ASSERT(!code.metadata().isAsmJS());
+        MOZ_ASSERT(!table.isTypedFunction());
+
+        HandleFunction f = funcImports[funcIndex];
+        WasmInstanceObject* exportInstanceObj = ExportedFunctionToInstanceObject(f);
+        Instance& exportInstance = exportInstanceObj->instance();
+        Tier exportTier = exportInstance.code().bestTier();
+        const CodeRange& cr = exportInstanceObj->getExportedFunctionCodeRange(f, exportTier);
+        *out = WasmCallee(&exportInstance, exportInstance.codeBase(exportTier) +
+                                           cr.funcTableEntry());
+    } else {
+        const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices(tier)[funcIndexIndex]];
+        uint32_t entryOffset = table.isTypedFunction()
+                               ? cr.funcNormalEntry()
+                               : cr.funcTableEntry();
+        *out = WasmCallee(instance, codeBase + entryOffset);
+    }
+}
+
 bool
 Module::initSegments(JSContext* cx,
                      HandleWasmInstanceObject instanceObj,
@@ -444,10 +475,18 @@ Module::initSegments(JSContext* cx,
     // partial initialization if an error is reported.
 
     for (const ElemSegment& seg : code_->elemSegments()) {
+        // If this is a passive segment, there's nothing we can check at
+        // this point.  We'll have to perform the relevant checks later, if
+        // and when the segment is used, that is, as an argument to the
+        // table.init or table.drop instructions.
+        if (!seg.offsetIfActive)
+            continue;
+
+        // Otherwise it's an active segment, so we check it now.
         uint32_t numElems = seg.elemCodeRangeIndices(tier).length();
 
         uint32_t tableLength = tables[seg.tableIndex]->length();
-        uint32_t offset = EvaluateInitExpr(globalImportValues, seg.offset);
+        uint32_t offset = EvaluateInitExpr(globalImportValues, *seg.offsetIfActive);
 
         if (offset > tableLength || tableLength - offset < numElems) {
             JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
@@ -459,7 +498,11 @@ Module::initSegments(JSContext* cx,
     if (memoryObj) {
         uint32_t memoryLength = memoryObj->volatileMemoryLength();
         for (const DataSegment& seg : code_->dataSegments()) {
-            uint32_t offset = EvaluateInitExpr(globalImportValues, seg.offset);
+            // As with element segments just above, skip passive ones for now.
+            if (!seg.offsetIfActive)
+                continue;
+
+            uint32_t offset = EvaluateInitExpr(globalImportValues, *seg.offsetIfActive);
 
             if (offset > memoryLength || memoryLength - offset < seg.length) {
                 JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
@@ -475,30 +518,22 @@ Module::initSegments(JSContext* cx,
     // segments into memories/tables.
 
     for (const ElemSegment& seg : code_->elemSegments()) {
+        // Skip passive segments.  Those may get applied later, under
+        // program control, per comments above.
+        if (!seg.offsetIfActive)
+            continue;
+
+        // But apply active segments right now.
         Table& table = *tables[seg.tableIndex];
-        uint32_t offset = EvaluateInitExpr(globalImportValues, seg.offset);
-        const CodeRangeVector& codeRanges = metadata(tier).codeRanges;
-        uint8_t* codeBase = instance.codeBase(tier);
+        uint32_t offset = EvaluateInitExpr(globalImportValues, *seg.offsetIfActive);
+
+        MOZ_ASSERT(seg.elemCodeRangeIndices(tier).length() ==
+                   seg.elemFuncIndices.length());
 
         for (uint32_t i = 0; i < seg.elemCodeRangeIndices(tier).length(); i++) {
-            uint32_t funcIndex = seg.elemFuncIndices[i];
-            if (funcIndex < funcImports.length() && IsExportedWasmFunction(funcImports[funcIndex])) {
-                MOZ_ASSERT(!metadata().isAsmJS());
-                MOZ_ASSERT(!table.isTypedFunction());
-
-                HandleFunction f = funcImports[funcIndex];
-                WasmInstanceObject* exportInstanceObj = ExportedFunctionToInstanceObject(f);
-                Instance& exportInstance = exportInstanceObj->instance();
-                Tier exportTier = exportInstance.code().bestTier();
-                const CodeRange& cr = exportInstanceObj->getExportedFunctionCodeRange(f, exportTier);
-                table.set(offset + i, exportInstance.codeBase(exportTier) + cr.funcTableEntry(), &exportInstance);
-            } else {
-                const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices(tier)[i]];
-                uint32_t entryOffset = table.isTypedFunction()
-                                       ? cr.funcNormalEntry()
-                                       : cr.funcTableEntry();
-                table.set(offset + i, codeBase + entryOffset, &instance);
-            }
+            WasmCallee callee;
+            ComputeWasmCallee(code(), &instance, funcImports, i, table, seg, &callee);
+            table.set(offset + i, callee.entry, callee.instance);
         }
     }
 
@@ -508,7 +543,13 @@ Module::initSegments(JSContext* cx,
         for (const DataSegment& seg : code_->dataSegments()) {
             MOZ_ASSERT(seg.bytecodeOffset <= bytecode_->length());
             MOZ_ASSERT(seg.length <= bytecode_->length() - seg.bytecodeOffset);
-            uint32_t offset = EvaluateInitExpr(globalImportValues, seg.offset);
+            // Skip passive segments.  Those may get applied later, under
+            // program control, per comments above.
+            if (!seg.offsetIfActive)
+                continue;
+
+            // But apply active segments right now.
+            uint32_t offset = EvaluateInitExpr(globalImportValues, *seg.offsetIfActive);
             memcpy(memoryBase + offset, bytecode_->begin() + seg.bytecodeOffset, seg.length);
         }
     }
@@ -958,7 +999,7 @@ Module::instantiate(JSContext* cx,
                 // so we have to clone it "by hand".
                 ElemSegment clone;
                 clone.tableIndex = seg.tableIndex;
-                clone.offset = seg.offset;
+                clone.offsetIfActive = seg.offsetIfActive;
 
                 MOZ_ASSERT(clone.elemFuncIndices.empty());
                 if (!clone.elemFuncIndices.appendAll(seg.elemFuncIndices))
@@ -1023,6 +1064,7 @@ Module::instantiate(JSContext* cx,
                                             metadata().globals,
                                             globalImportValues,
                                             globalObjs,
+                                            bytecode_.get(),
                                             instanceProto));
     if (!instance)
         return false;

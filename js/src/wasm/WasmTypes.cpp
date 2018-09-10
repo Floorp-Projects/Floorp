@@ -454,7 +454,7 @@ size_t
 ElemSegment::serializedSize() const
 {
     return sizeof(tableIndex) +
-           sizeof(offset) +
+           sizeof(offsetIfActive) +
            SerializedPodVectorSize(elemFuncIndices) +
            SerializedPodVectorSize(elemCodeRangeIndices(Tier::Serialized));
 }
@@ -463,7 +463,7 @@ uint8_t*
 ElemSegment::serialize(uint8_t* cursor) const
 {
     cursor = WriteBytes(cursor, &tableIndex, sizeof(tableIndex));
-    cursor = WriteBytes(cursor, &offset, sizeof(offset));
+    cursor = WriteBytes(cursor, &offsetIfActive, sizeof(offsetIfActive));
     cursor = SerializePodVector(cursor, elemFuncIndices);
     cursor = SerializePodVector(cursor, elemCodeRangeIndices(Tier::Serialized));
     return cursor;
@@ -473,7 +473,7 @@ const uint8_t*
 ElemSegment::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &tableIndex, sizeof(tableIndex))) &&
-    (cursor = ReadBytes(cursor, &offset, sizeof(offset))) &&
+    (cursor = ReadBytes(cursor, &offsetIfActive, sizeof(offsetIfActive))) &&
     (cursor = DeserializePodVector(cursor, &elemFuncIndices)) &&
     (cursor = DeserializePodVector(cursor, &elemCodeRangeIndices(Tier::Serialized)));
     return cursor;

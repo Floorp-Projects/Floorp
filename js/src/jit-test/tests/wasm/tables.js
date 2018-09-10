@@ -7,7 +7,7 @@ const RuntimeError = WebAssembly.RuntimeError;
 
 var callee = i => `(func $f${i} (result i32) (i32.const ${i}))`;
 
-wasmFailValidateText(`(module (elem (i32.const 0) $f0) ${callee(0)})`, /table index out of range/);
+wasmFailValidateText(`(module (elem (i32.const 0) $f0) ${callee(0)})`, /elem segment requires a table section/);
 wasmFailValidateText(`(module (table 10 anyfunc) (elem (i32.const 0) 0))`, /table element out of range/);
 wasmFailValidateText(`(module (table 10 anyfunc) (func) (elem (i32.const 0) 0 1))`, /table element out of range/);
 wasmFailValidateText(`(module (table 10 anyfunc) (func) (elem (f32.const 0) 0) ${callee(0)})`, /type mismatch/);

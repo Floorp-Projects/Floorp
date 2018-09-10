@@ -77,24 +77,6 @@ struct LinkData : LinkDataCacheablePod
 
 typedef UniquePtr<LinkData> UniqueLinkData;
 
-// ShareableBytes is a reference-counted Vector of bytes.
-
-struct ShareableBytes : ShareableBase<ShareableBytes>
-{
-    // Vector is 'final', so instead make Vector a member and add boilerplate.
-    Bytes bytes;
-    ShareableBytes() = default;
-    explicit ShareableBytes(Bytes&& bytes) : bytes(std::move(bytes)) {}
-    size_t sizeOfExcludingThis(MallocSizeOf m) const { return bytes.sizeOfExcludingThis(m); }
-    const uint8_t* begin() const { return bytes.begin(); }
-    const uint8_t* end() const { return bytes.end(); }
-    size_t length() const { return bytes.length(); }
-    bool append(const uint8_t *p, uint32_t ct) { return bytes.append(p, ct); }
-};
-
-typedef RefPtr<ShareableBytes> MutableBytes;
-typedef RefPtr<const ShareableBytes> SharedBytes;
-
 // Executable code must be deallocated specially.
 
 struct FreeCode {

@@ -166,6 +166,15 @@ class Module : public JS::WasmModule
 
 typedef RefPtr<Module> SharedModule;
 
+// Compute the (entry point, instance pointer) pair for an entry in the
+// function-indices vector of an element segment.  |instance| must be the
+// Instance* that will eventually own the resulting WasmCallee.
+void
+ComputeWasmCallee(const Code& code, const Instance* instance,
+                  Handle<FunctionVector> funcImports,
+                  uint32_t funcIndexIndex, const Table& table,
+                  const ElemSegment& seg, WasmCallee* out);
+
 // JS API implementations:
 
 SharedModule
