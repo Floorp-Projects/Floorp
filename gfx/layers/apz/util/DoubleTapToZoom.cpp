@@ -120,7 +120,8 @@ CalculateRectToZoomTo(const nsCOMPtr<nsIDocument>& aRootContentDocument,
   }
 
   FrameMetrics metrics = nsLayoutUtils::CalculateBasicFrameMetrics(rootScrollFrame);
-  CSSRect compositedArea(metrics.GetScrollOffset(), metrics.CalculateCompositedSizeInCssPixels());
+  CSSRect compositedArea(CSSPoint::FromAppUnits(shell->GetVisualViewportOffset()),
+                         metrics.CalculateCompositedSizeInCssPixels());
   const CSSCoord margin = 15;
   CSSRect rect = nsLayoutUtils::GetBoundingContentRect(element, rootScrollFrame);
 
