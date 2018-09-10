@@ -10,6 +10,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "MainThreadUtils.h"
@@ -214,17 +215,20 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
 
   // Lookup in the cache if this is a normal query. This is restricted to
   // main thread-only as the cache is not thread-safe.
-  TLDCacheEntry* entry = nullptr;
+  Maybe<TldCache::Entry> entry;
   if (aAdditionalParts == 1 && NS_IsMainThread()) {
-    if (LookupForAdd(aHostname, &entry)) {
+    auto p = mMruTable.Lookup(aHostname);
+    if (p) {
       // There was a match, just return the cached value.
-      aBaseDomain = entry->mBaseDomain;
+      aBaseDomain = p.Data().mBaseDomain;
       if (trailingDot) {
         aBaseDomain.Append('.');
       }
 
       return NS_OK;
     }
+
+    entry = Some(p);
   }
 
   // Walk up the domain tree, most specific to least specific,
@@ -310,8 +314,7 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
 
   // Update the MRU table if in use.
   if (entry) {
-    entry->mHost = aHostname;
-    entry->mBaseDomain = aBaseDomain;
+    entry->Set(TLDCacheEntry{aHostname, nsCString(aBaseDomain)});
   }
 
   // add on the trailing dot, if applicable
@@ -335,16 +338,6 @@ nsEffectiveTLDService::NormalizeHostname(nsCString &aHostname)
 
   ToLowerCase(aHostname);
   return NS_OK;
-}
-
-bool
-nsEffectiveTLDService::LookupForAdd(const nsACString& aHost, TLDCacheEntry** aEntry)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  const uint32_t hash = HashString(aHost.BeginReading(), aHost.Length());
-  *aEntry = &mMruTable[hash % kTableSize];
-  return (*aEntry)->mHost == aHost;
 }
 
 NS_IMETHODIMP
