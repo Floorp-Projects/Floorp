@@ -400,6 +400,14 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
       return IntRectAbsolute(x1, y1, x2, y2);
     }
 
+    layers::BlobFont ReadBlobFont() {
+      MOZ_RELEASE_ASSERT(pos + sizeof(layers::BlobFont) <= len);
+      layers::BlobFont ret;
+      memcpy(&ret, buf + pos, sizeof(ret));
+      pos += sizeof(ret);
+      return ret;
+    }
+
   };
 
   MOZ_RELEASE_ASSERT(aBlob.length() > sizeof(size_t));
@@ -421,10 +429,12 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
 
     layers::WebRenderTranslator translator(dt);
 
-    size_t count = *(size_t*)(aBlob.begin().get() + end);
+    MOZ_RELEASE_ASSERT(extra_end >= end);
+    MOZ_RELEASE_ASSERT(extra_end < aBlob.length());
+    Reader fontReader(aBlob.begin().get() + end, extra_end - end);
+    size_t count = fontReader.ReadSize();
     for (size_t i = 0; i < count; i++) {
-      layers::BlobFont blobFont =
-        *(layers::BlobFont*)(aBlob.begin() + end + sizeof(count) + sizeof(layers::BlobFont)*i).get();
+      layers::BlobFont blobFont = fontReader.ReadBlobFont();
       RefPtr<ScaledFont> scaledFont = GetScaledFont(&translator, blobFont.mFontInstanceKey);
       translator.AddScaledFont(blobFont.mScaledFontPtr, scaledFont);
     }
