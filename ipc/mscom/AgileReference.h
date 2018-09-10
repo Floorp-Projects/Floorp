@@ -33,17 +33,9 @@ namespace mscom {
  * HRESULT hr = myAgileRef->Resolve(IID_IFoo, getter_AddRefs(foo));
  * // Now foo may be called from the main thread
  */
-class AgileReference final
+class AgileReference
 {
 public:
-  AgileReference();
-
-  template <typename InterfaceT>
-  explicit AgileReference(RefPtr<InterfaceT>& aObject)
-    : AgileReference(__uuidof(InterfaceT), aObject)
-  {
-  }
-
   AgileReference(REFIID aIid, IUnknown* aObject);
   AgileReference(AgileReference&& aOther);
 
@@ -54,31 +46,14 @@ public:
     return mAgileRef || mGitCookie;
   }
 
-  template <typename T>
-  void Assign(const RefPtr<T>& aOther)
-  {
-    Assign(__uuidof(T), aOther);
-  }
-
-  template <typename T>
-  AgileReference& operator=(const RefPtr<T>& aOther)
-  {
-    Assign(aOther);
-    return *this;
-  }
-
-  HRESULT Resolve(REFIID aIid, void** aOutInterface) const;
+  HRESULT Resolve(REFIID aIid, void** aOutInterface);
 
   AgileReference(const AgileReference& aOther) = delete;
   AgileReference& operator=(const AgileReference& aOther) = delete;
-
-  AgileReference& operator=(AgileReference&& aOther);
+  AgileReference& operator=(AgileReference&& aOther) = delete;
 
 private:
-  void Assign(REFIID aIid, IUnknown* aObject);
-  void AssignInternal(IUnknown* aObject);
-  void Clear();
-  static IGlobalInterfaceTable* ObtainGit();
+  IGlobalInterfaceTable* ObtainGit();
 
 private:
   IID                     mIid;
@@ -88,27 +63,5 @@ private:
 
 } // namespace mscom
 } // namespace mozilla
-
-template <typename T>
-RefPtr<T>::RefPtr(const mozilla::mscom::AgileReference& aAgileRef)
-{
-  void* newRawPtr;
-  if (FAILED(aAgileRef.Resolve(__uuidof(T), &newRawPtr))) {
-    newRawPtr = nullptr;
-  }
-  assign_assuming_AddRef(static_cast<T*>(newRawPtr));
-}
-
-template <typename T>
-RefPtr<T>&
-RefPtr<T>::operator=(const mozilla::mscom::AgileReference& aAgileRef)
-{
-  void* newRawPtr;
-  if (FAILED(aAgileRef.Resolve(__uuidof(T), &newRawPtr))) {
-    newRawPtr = nullptr;
-  }
-  assign_assuming_AddRef(static_cast<T*>(newRawPtr));
-  return *this;
-}
 
 #endif // mozilla_mscom_AgileReference_h

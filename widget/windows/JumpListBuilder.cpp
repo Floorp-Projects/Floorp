@@ -20,10 +20,8 @@
 #include "nsThreadUtils.h"
 #include "mozilla/LazyIdleThread.h"
 #include "nsIObserverService.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/mscom/COMApartmentRegion.h"
 
 #include <shellapi.h>
 #include "WinUtils.h"
@@ -109,22 +107,10 @@ JumpListBuilder::JumpListBuilder() :
   mHasCommit(false),
   mMonitor("JumpListBuilderMonitor")
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  ::CoInitialize(nullptr);
 
-  RefPtr<ICustomDestinationList> jumpListMgr;
-  HRESULT hr = CoCreateInstance(CLSID_DestinationList, nullptr,
-                                CLSCTX_INPROC_SERVER, IID_ICustomDestinationList,
-                                getter_AddRefs(jumpListMgr));
-  if (FAILED(hr)) {
-    return;
-  }
-
-  // Since we are accessing mJumpListMgr across different threads
-  // (ie, different apartments), mJumpListMgr must be an agile reference.
-  mJumpListMgr = jumpListMgr;
-  if (!mJumpListMgr) {
-    return;
-  }
+  CoCreateInstance(CLSID_DestinationList, nullptr, CLSCTX_INPROC_SERVER,
+                   IID_ICustomDestinationList, getter_AddRefs(mJumpListMgr));
 
   // Make a lazy thread for any IO
   mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
@@ -143,6 +129,8 @@ JumpListBuilder::JumpListBuilder() :
 JumpListBuilder::~JumpListBuilder()
 {
   Preferences::RemoveObserver(this, kPrefTaskbarEnabled);
+  mJumpListMgr = nullptr;
+  ::CoUninitialize();
 }
 
 NS_IMETHODIMP JumpListBuilder::GetAvailable(int16_t *aAvailable)
@@ -176,19 +164,14 @@ NS_IMETHODIMP JumpListBuilder::GetMaxListItems(int16_t *aMaxItems)
     return NS_OK;
   }
 
-  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr;
-  if (!jumpListMgr) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   IObjectArray *objArray;
-  if (SUCCEEDED(jumpListMgr->BeginList(&mMaxItems, IID_PPV_ARGS(&objArray)))) {
+  if (SUCCEEDED(mJumpListMgr->BeginList(&mMaxItems, IID_PPV_ARGS(&objArray)))) {
     *aMaxItems = mMaxItems;
 
     if (objArray)
       objArray->Release();
 
-    jumpListMgr->AbortList();
+    mJumpListMgr->AbortList();
   }
 
   return NS_OK;
@@ -229,55 +212,36 @@ NS_IMETHODIMP JumpListBuilder::InitListBuild(JSContext* aCx,
 
 void JumpListBuilder::DoInitListBuild(RefPtr<Promise>&& aPromise)
 {
-  // Since we're invoking COM interfaces to talk to the shell on a background
-  // thread, we need to be running inside a single-threaded apartment.
-  mscom::STARegion sta;
-  MOZ_ASSERT(sta.IsValid());
-
   ReentrantMonitorAutoEnter lock(mMonitor);
   MOZ_ASSERT(mJumpListMgr);
 
-  if (sBuildingList) {
+  if(sBuildingList) {
     AbortListBuild();
-  }
-
-  HRESULT hr = E_UNEXPECTED;
-  auto errorHandler = MakeScopeExit([&aPromise, &hr]() {
-    if (SUCCEEDED(hr)) {
-      return;
-    }
-
-    NS_DispatchToMainThread(NS_NewRunnableFunction("InitListBuildReject",
-                                                   [promise = std::move(aPromise)]() {
-      promise->MaybeReject(NS_ERROR_FAILURE);
-    }));
-  });
-
-  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr;
-  if (!jumpListMgr) {
-    return;
   }
 
   nsTArray<nsString> urisToRemove;
   RefPtr<IObjectArray> objArray;
-  hr = jumpListMgr->BeginList(&mMaxItems,
-                              IID_PPV_ARGS(static_cast<IObjectArray**>
-                                           (getter_AddRefs(objArray))));
-  if (FAILED(hr)) {
-    return;
-  }
-
+  HRESULT hr = mJumpListMgr->BeginList(&mMaxItems,
+                                       IID_PPV_ARGS(static_cast<IObjectArray**>
+                                                    (getter_AddRefs(objArray))));
   // The returned objArray of removed items are for manually removed items.
   // This does not return items which are removed because they were previously
   // part of the jump list but are no longer part of the jump list.
-  sBuildingList = true;
-  RemoveIconCacheAndGetJumplistShortcutURIs(objArray, urisToRemove);
+  if (SUCCEEDED(hr)) {
+    sBuildingList = true;
+    RemoveIconCacheAndGetJumplistShortcutURIs(objArray, urisToRemove);
 
-  NS_DispatchToMainThread(NS_NewRunnableFunction("InitListBuildResolve",
-                                                 [urisToRemove = std::move(urisToRemove),
-                                                  promise = std::move(aPromise)]() {
-    promise->MaybeResolve(urisToRemove);
-  }));
+    NS_DispatchToMainThread(NS_NewRunnableFunction("InitListBuildResolve",
+                                                   [urisToRemove = std::move(urisToRemove),
+                                                    promise = std::move(aPromise)]() {
+      promise->MaybeResolve(urisToRemove);
+    }));
+  } else {
+    NS_DispatchToMainThread(NS_NewRunnableFunction("InitListBuildReject",
+                                                   [promise = std::move(aPromise)]() {
+      promise->MaybeReject(NS_ERROR_FAILURE);
+    }));
+  }
 }
 
 // Ensures that we have no old ICO files left in the jump list cache
@@ -330,11 +294,6 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
   if (!mJumpListMgr)
     return NS_ERROR_NOT_AVAILABLE;
 
-  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr;
-  if (!jumpListMgr) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   switch(aCatType) {
     case nsIJumpListBuilder::JUMPLIST_CATEGORY_TASKS:
     {
@@ -379,7 +338,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
         return NS_ERROR_UNEXPECTED;
 
       // Add the tasks
-      hr = jumpListMgr->AddUserTasks(pArray);
+      hr = mJumpListMgr->AddUserTasks(pArray);
       if (SUCCEEDED(hr))
         *_retval = true;
       return NS_OK;
@@ -387,14 +346,14 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
     break;
     case nsIJumpListBuilder::JUMPLIST_CATEGORY_RECENT:
     {
-      if (SUCCEEDED(jumpListMgr->AppendKnownCategory(KDC_RECENT)))
+      if (SUCCEEDED(mJumpListMgr->AppendKnownCategory(KDC_RECENT)))
         *_retval = true;
       return NS_OK;
     }
     break;
     case nsIJumpListBuilder::JUMPLIST_CATEGORY_FREQUENT:
     {
-      if (SUCCEEDED(jumpListMgr->AppendKnownCategory(KDC_FREQUENT)))
+      if (SUCCEEDED(mJumpListMgr->AppendKnownCategory(KDC_FREQUENT)))
         *_retval = true;
       return NS_OK;
     }
@@ -461,7 +420,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
         return NS_ERROR_UNEXPECTED;
 
       // Add the tasks
-      hr = jumpListMgr->AppendCategory(reinterpret_cast<const wchar_t*>(catName.BeginReading()), pArray);
+      hr = mJumpListMgr->AppendCategory(reinterpret_cast<const wchar_t*>(catName.BeginReading()), pArray);
       if (SUCCEEDED(hr))
         *_retval = true;
 
@@ -483,12 +442,7 @@ NS_IMETHODIMP JumpListBuilder::AbortListBuild()
   if (!mJumpListMgr)
     return NS_ERROR_NOT_AVAILABLE;
 
-  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr;
-  if (!jumpListMgr) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  jumpListMgr->AbortList();
+  mJumpListMgr->AbortList();
   sBuildingList = false;
 
   return NS_OK;
@@ -517,33 +471,20 @@ NS_IMETHODIMP JumpListBuilder::CommitListBuild(nsIJumpListCommittedCallback* aCa
 
 void JumpListBuilder::DoCommitListBuild(RefPtr<detail::DoneCommitListBuildCallback> aCallback)
 {
-  // Since we're invoking COM interfaces to talk to the shell on a background
-  // thread, we need to be running inside a single-threaded apartment.
-  mscom::STARegion sta;
-  MOZ_ASSERT(sta.IsValid());
-
   ReentrantMonitorAutoEnter lock(mMonitor);
   MOZ_ASSERT(mJumpListMgr);
   MOZ_ASSERT(aCallback);
 
-  HRESULT hr = E_UNEXPECTED;
-  auto onExit = MakeScopeExit([&hr, &aCallback]() {
-    // XXX We might want some specific error data here.
-    aCallback->SetResult(SUCCEEDED(hr));
-    Unused << NS_DispatchToMainThread(aCallback);
-  });
-
-  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr;
-  if (!jumpListMgr) {
-    return;
-  }
-
-  hr = jumpListMgr->CommitList();
+  HRESULT hr = mJumpListMgr->CommitList();
   sBuildingList = false;
 
   if (SUCCEEDED(hr)) {
     mHasCommit = true;
   }
+
+  // XXX We might want some specific error data here.
+  aCallback->SetResult(SUCCEEDED(hr));
+  Unused << NS_DispatchToMainThread(aCallback);
 }
 
 NS_IMETHODIMP JumpListBuilder::DeleteActiveList(bool *_retval)
@@ -554,22 +495,15 @@ NS_IMETHODIMP JumpListBuilder::DeleteActiveList(bool *_retval)
   if (!mJumpListMgr)
     return NS_ERROR_NOT_AVAILABLE;
 
-  if (sBuildingList) {
+  if(sBuildingList)
     AbortListBuild();
-  }
 
   nsAutoString uid;
   if (!WinTaskbar::GetAppUserModelID(uid))
     return NS_OK;
 
-  RefPtr<ICustomDestinationList> jumpListMgr = mJumpListMgr;
-  if (!jumpListMgr) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (SUCCEEDED(jumpListMgr->DeleteList(uid.get()))) {
+  if (SUCCEEDED(mJumpListMgr->DeleteList(uid.get())))
     *_retval = true;
-  }
 
   return NS_OK;
 }
@@ -620,7 +554,7 @@ void JumpListBuilder::RemoveIconCacheAndGetJumplistShortcutURIs(IObjectArray *aO
       int32_t numArgs;
 
       arglist = ::CommandLineToArgvW(buf, &numArgs);
-      if (arglist && numArgs > 0) {
+      if(arglist && numArgs > 0) {
         nsString spec(arglist[0]);
         aURISpecs.AppendElement(std::move(spec));
         ::LocalFree(arglist);
