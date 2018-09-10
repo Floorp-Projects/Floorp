@@ -682,7 +682,10 @@ class JSTerm extends Component {
    *        The new value to set.
    * @returns void
    */
-  setInputValue(newValue = "") {
+  setInputValue(newValue) {
+    newValue = newValue || "";
+    this.lastInputValue = newValue;
+
     if (this.props.codeMirrorEnabled) {
       if (this.editor) {
         // In order to get the autocomplete popup to work properly, we need to set the
@@ -710,9 +713,7 @@ class JSTerm extends Component {
       this.completeNode.value = "";
     }
 
-    this.lastInputValue = newValue;
     this.resizeInput();
-
     this.emit("set-input-value");
   }
 
