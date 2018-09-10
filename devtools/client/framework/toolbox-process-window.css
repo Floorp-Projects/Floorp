@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  height: 100vh;
+}
+
+/**
+ * The main content of the BrowserToolbox runs within an iframe.
+ */
+#toolbox-iframe {
+  border: 0;
+  width: 100%;
+  flex: 1;
+}
+
+/**
+ * Status message shows connection (to the backend) info messages.
+ */
+#status-message-container {
+  width: calc(100% - 10px);
+  font-family: var(--monospace-font-family);
+  padding: 5px;
+}
+
+/**
+ * Helper for hiding/showing the status message.
+ */
+#status-message-container[hidden="true"] {
+  display: none;
+}
+
+#status-message-title {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#status-message {
+  font-size: 12px;
+  width: 100%;
+  height: 200px;
+  overflow: auto;
+}
