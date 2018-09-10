@@ -326,6 +326,12 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+VARCACHE_PREF(
+  "dom.fetchObserver.enabled",
+   dom_fetchObserver_enabled,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------
