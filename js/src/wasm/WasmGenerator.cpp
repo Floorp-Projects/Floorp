@@ -954,7 +954,10 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
     if (!codeTier)
         return nullptr;
 
-    MutableCode code = js_new<Code>(std::move(codeTier), *metadata_, std::move(jumpTables));
+    MutableCode code = js_new<Code>(std::move(codeTier), *metadata_,
+                                    std::move(jumpTables),
+                                    std::move(env_->dataSegments),
+                                    std::move(env_->elemSegments));
     if (!code || !code->initialize(bytecode, *linkData_))
         return nullptr;
 
@@ -982,8 +985,6 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
     SharedModule module(js_new<Module>(*code,
                                        std::move(env_->imports),
                                        std::move(env_->exports),
-                                       std::move(env_->dataSegments),
-                                       std::move(env_->elemSegments),
                                        std::move(structTypes),
                                        bytecode,
                                        std::move(debugUnlinkedCode),
