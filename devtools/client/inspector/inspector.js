@@ -957,12 +957,6 @@ Inspector.prototype = {
           }
         },
         defaultTab == animationId);
-    } else {
-      this.sidebar.queueFrameTab(
-        "animationinspector",
-        animationTitle,
-        "chrome://devtools/content/inspector/animation-old/animation-inspector.xhtml",
-        defaultTab == "animationinspector");
     }
 
     // Inject a lazy loaded react tab by exposing a fake React object
