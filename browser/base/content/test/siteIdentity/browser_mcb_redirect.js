@@ -91,16 +91,16 @@ function test1() {
   Services.prefs.setBoolPref(PREF_INSECURE_ICON, false);
 
   var url = HTTPS_TEST_ROOT + "test_mcb_redirect.html";
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkUIForTest1);
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  BrowserTestUtils.browserLoaded(gTestBrowser).then(checkUIForTest1);
 }
 
 function testInsecure1() {
   Services.prefs.setBoolPref(PREF_INSECURE_ICON, true);
 
   var url = HTTPS_TEST_ROOT + "test_mcb_redirect.html";
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkUIForTest1);
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  BrowserTestUtils.browserLoaded(gTestBrowser).then(checkUIForTest1);
 }
 
 async function checkUIForTest1() {
@@ -118,8 +118,8 @@ async function checkUIForTest1() {
 
 function test2() {
   var url = HTTP_TEST_ROOT + "test_mcb_redirect.html";
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkUIForTest2);
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  BrowserTestUtils.browserLoaded(gTestBrowser).then(checkUIForTest2);
 }
 
 async function checkUIForTest2() {
@@ -138,8 +138,8 @@ async function checkUIForTest2() {
 function test3() {
   info("test3");
   var url = HTTPS_TEST_ROOT + "test_mcb_redirect_image.html";
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest3);
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  BrowserTestUtils.browserLoaded(gTestBrowser).then(checkLoadEventForTest3);
 }
 
 function checkLoadEventForTest3() {
@@ -156,8 +156,8 @@ function checkLoadEventForTest3() {
 function test4() {
   info("test4");
   var url = HTTP_TEST_ROOT + "test_mcb_redirect_image.html";
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest4);
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  BrowserTestUtils.browserLoaded(gTestBrowser).then(checkLoadEventForTest4);
 }
 
 function checkLoadEventForTest4() {
@@ -179,8 +179,8 @@ function test5() {
   info("test5");
   Services.io.offline = true;
   var url = HTTP_TEST_ROOT + "test_mcb_redirect_image.html";
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest5);
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  BrowserTestUtils.browserLoaded(gTestBrowser).then(checkLoadEventForTest5);
 }
 
 function checkLoadEventForTest5() {
@@ -206,8 +206,8 @@ function test6() {
   info("test6");
   Services.io.offline = true;
   var url = HTTPS_TEST_ROOT + "test_mcb_redirect_image.html";
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest6);
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  BrowserTestUtils.browserLoaded(gTestBrowser).then(checkLoadEventForTest6);
 }
 
 function checkLoadEventForTest6() {
@@ -227,8 +227,8 @@ function checkLoadEventForTest6() {
 // HTTP page loading insecure image that went through a double redirect
 function test7() {
   var url = HTTP_TEST_ROOT + "test_mcb_double_redirect_image.html";
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest7);
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  BrowserTestUtils.browserLoaded(gTestBrowser).then(checkLoadEventForTest7);
 }
 
 function checkLoadEventForTest7() {
@@ -249,8 +249,8 @@ function test8() {
   // Go into offline mode
   Services.io.offline = true;
   var url = HTTP_TEST_ROOT + "test_mcb_double_redirect_image.html";
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest8);
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  BrowserTestUtils.browserLoaded(gTestBrowser).then(checkLoadEventForTest8);
 }
 
 function checkLoadEventForTest8() {
@@ -275,8 +275,8 @@ function test9() {
   // Go into offline mode
   Services.io.offline = true;
   var url = HTTPS_TEST_ROOT + "test_mcb_double_redirect_image.html";
+  BrowserTestUtils.browserLoaded(gTestBrowser, false, url).then(checkLoadEventForTest9);
   BrowserTestUtils.loadURI(gTestBrowser, url);
-  BrowserTestUtils.browserLoaded(gTestBrowser).then(checkLoadEventForTest9);
 }
 
 function checkLoadEventForTest9() {
