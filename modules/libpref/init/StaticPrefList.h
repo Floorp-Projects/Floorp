@@ -366,6 +366,12 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+VARCACHE_PREF(
+  "dom.worker.canceling.timeoutMilliseconds",
+   dom_worker_canceling_timeoutMilliseconds,
+  RelaxedAtomicUint32, 30000 /* 30 seconds */
+)
+
 //---------------------------------------------------------------------------
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------
