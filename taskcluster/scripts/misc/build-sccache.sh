@@ -1,9 +1,8 @@
 #!/bin/bash
 set -x -e -v
 
-# 0.2.7 + a number of changes
-# Individual tasks may override this to build a different revision
-: ${SCCACHE_REVISION:=476d807a0b3c1c31314ea165feea83521d87a17f}
+# 0.2.7 + --coverage suppport
+SCCACHE_REVISION=1ab9a33e8d328941acc23c74c949b765f975f309
 
 # This script is for building sccache
 
@@ -12,7 +11,6 @@ Linux)
     WORKSPACE=$HOME/workspace
     UPLOAD_DIR=$HOME/artifacts
     COMPRESS_EXT=xz
-    PATH="$WORKSPACE/build/src/binutils/bin:$PATH"
     ;;
 MINGW*)
     WORKSPACE=$PWD
