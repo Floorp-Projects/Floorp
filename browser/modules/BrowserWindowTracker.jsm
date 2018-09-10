@@ -14,7 +14,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Lazy getters
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
@@ -145,44 +144,6 @@ var WindowHelper = {
       _trackedWindows.push(window);
     }
   },
-
-  getTopWindow(options) {
-    let checkPrivacy = typeof options == "object" &&
-                       "private" in options;
-
-    let allowPopups = typeof options == "object" && !!options.allowPopups;
-
-    function isSuitableBrowserWindow(win) {
-      return (!win.closed &&
-              (allowPopups || win.toolbar.visible) &&
-              (!checkPrivacy ||
-               PrivateBrowsingUtils.permanentPrivateBrowsing ||
-               PrivateBrowsingUtils.isWindowPrivate(win) == options.private));
-    }
-
-    let broken_wm_z_order =
-      AppConstants.platform != "macosx" && AppConstants.platform != "win";
-
-    if (broken_wm_z_order) {
-      let win = Services.wm.getMostRecentWindow("navigator:browser");
-
-      // if we're lucky, this isn't a popup, and we can just return this
-      if (win && !isSuitableBrowserWindow(win)) {
-        win = null;
-        // this is oldest to newest, so this gets a bit ugly
-        for (let nextWin of Services.wm.getEnumerator("navigator:browser")) {
-          if (isSuitableBrowserWindow(nextWin))
-            win = nextWin;
-        }
-      }
-      return win;
-    }
-    for (let win of Services.wm.getZOrderDOMWindowEnumerator("navigator:browser", true)) {
-      if (isSuitableBrowserWindow(win))
-        return win;
-    }
-    return null;
-  },
 };
 
 this.BrowserWindowTracker = {
@@ -195,23 +156,34 @@ this.BrowserWindowTracker = {
    *            Omit the property to search in both groups.
    *        * allowPopups: true if popup windows are permissable.
    */
-  getTopWindow(options) {
-    return WindowHelper.getTopWindow(options);
+  getTopWindow(options = {}) {
+    for (let win of _trackedWindows) {
+      if (!win.closed &&
+          (options.allowPopups || win.toolbar.visible) &&
+          (!("private" in options) ||
+           PrivateBrowsingUtils.permanentPrivateBrowsing ||
+           PrivateBrowsingUtils.isWindowPrivate(win) == options.private)) {
+        return win;
+      }
+    }
+    return null;
   },
 
   /**
-   * Iterator property that yields window objects by z-index, in reverse order.
-   * This means that the lastly focused window will the first item that is yielded.
-   * Note: we only know the order of windows we're actively tracking, which
-   * basically means _only_ browser windows.
+   * Number of currently open browser windows.
    */
-  orderedWindows: {
-    * [Symbol.iterator]() {
-      // Clone the windows array immediately as it may change during iteration,
-      // we'd rather have an outdated order than skip/revisit windows.
-      for (let window of [..._trackedWindows])
-        yield window;
-    },
+  get windowCount() {
+    return _trackedWindows.length;
+  },
+
+  /**
+   * Array of browser windows ordered by z-index, in reverse order.
+   * This means that the top-most browser window will be the first item.
+   */
+  get orderedWindows() {
+    // Clone the windows array immediately as it may change during iteration,
+    // we'd rather have an outdated order than skip/revisit windows.
+    return [..._trackedWindows];
   },
 
   track(window) {
