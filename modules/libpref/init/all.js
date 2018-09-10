@@ -184,9 +184,6 @@ pref("dom.performance.time_to_non_blank_paint.enabled", false);
 // Enable exposing timeToDOMContentFlushed
 pref("dom.performance.time_to_dom_content_flushed.enabled", false);
 
-// Enable Performance Observer API
-pref("dom.enable_performance_observer", true);
-
 // Enable requestIdleCallback API
 pref("dom.requestIdleCallback.enabled", true);
 
