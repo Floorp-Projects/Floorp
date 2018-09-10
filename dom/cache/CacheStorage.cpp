@@ -9,7 +9,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/CacheStorageBinding.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Response.h"
@@ -156,7 +155,7 @@ CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
 
   bool testingEnabled = aForceTrustedOrigin ||
     Preferences::GetBool("dom.caches.testing.enabled", false) ||
-    DOMPrefs::ServiceWorkersTestingEnabled();
+    StaticPrefs::dom_serviceWorkers_testing_enabled();
 
   if (!IsTrusted(principalInfo, testingEnabled)) {
     NS_WARNING("CacheStorage not supported on untrusted origins.");
@@ -209,7 +208,7 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
   //    that are better than ours.  In addition, we don't have information
   //    about the window any more, so we can't do our own checks.
   bool testingEnabled = StaticPrefs::dom_caches_testing_enabled() ||
-                        DOMPrefs::ServiceWorkersTestingEnabled() ||
+                        StaticPrefs::dom_serviceWorkers_testing_enabled() ||
                         aWorkerPrivate->ServiceWorkersTestingInWindow() ||
                         aWorkerPrivate->IsServiceWorker();
 

@@ -23,7 +23,6 @@
 
 #include "mozilla/LoadInfo.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorker.h"
@@ -93,7 +92,7 @@ ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal)
   }
 
   const bool isTestingEnabledInWindow = IsServiceWorkersTestingEnabledInWindow(aGlobal);
-  const bool isTestingEnabledByPref = DOMPrefs::ServiceWorkersTestingEnabled();
+  const bool isTestingEnabledByPref = StaticPrefs::dom_serviceWorkers_testing_enabled();
   const bool isTestingEnabled = isTestingEnabledByPref || isTestingEnabledInWindow;
 
   return isTestingEnabled;
