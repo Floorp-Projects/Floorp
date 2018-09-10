@@ -36,7 +36,7 @@ dictionary PushSubscriptionInit
   BufferSource? appServerKey;
 };
 
-[Exposed=(Window,Worker), Func="mozilla::dom::DOMPrefs::PushEnabled",
+[Exposed=(Window,Worker), Func="mozilla::dom::DOMPrefs::dom_push_enabled",
  ChromeConstructor(PushSubscriptionInit initDict)]
 interface PushSubscription
 {

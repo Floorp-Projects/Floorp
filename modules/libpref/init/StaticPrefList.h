@@ -287,6 +287,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Push
+VARCACHE_PREF(
+  "dom.push.enabled",
+   dom_push_enabled,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------
