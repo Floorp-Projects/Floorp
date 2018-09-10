@@ -217,10 +217,14 @@ void main(void) {
     // TODO(gw): We should do something similar in the future for
     //           dash clips!
     if (clip_mode == CLIP_DOT) {
+        float radius = aClipParams1.z;
+
         // Expand by a small amount to allow room for AA around
-        // the dot.
-        float expanded_radius = aClipParams1.z + 2.0;
-        vPos = vClipParams1.xy + expanded_radius * (2.0 * aPosition.xy - 1.0);
+        // the dot if it's big enough.
+        if (radius > 0.5)
+            radius += 2.0;
+
+        vPos = vClipParams1.xy + radius * (2.0 * aPosition.xy - 1.0);
         vPos = clamp(vPos, vec2(0.0), aRect.zw);
     }
 
