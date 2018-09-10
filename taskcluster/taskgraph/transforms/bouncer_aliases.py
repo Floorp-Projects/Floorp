@@ -48,10 +48,6 @@ def craft_bouncer_entries(config, job):
     release_config = get_release_config(config)
 
     product = job['shipping-product']
-    release_type = config.params['release_type']
-    # The release_type is defined but may point to None.
-    if not release_type:
-        release_type = ''
     current_version = release_config['version']
     bouncer_products_per_alias = job['bouncer-products-per-alias']
 
