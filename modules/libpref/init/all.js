@@ -5181,13 +5181,6 @@ pref("media.ondevicechange.fakeDeviceChangeEvent.enabled", false);
 // a no-op.
 pref("layout.css.touch_action.enabled", true);
 
-#if defined(MOZ_WIDGET_ANDROID)
-// Network Information API
-pref("dom.netinfo.enabled", true);
-#else
-pref("dom.netinfo.enabled", false);
-#endif
-
 // How long must we wait before declaring that a window is a "ghost" (i.e., a
 // likely leak)?  This should be longer than it usually takes for an eligible
 // window to be collected via the GC/CC.
