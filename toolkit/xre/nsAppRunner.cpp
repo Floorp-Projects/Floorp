@@ -3670,6 +3670,39 @@ XREMain::XRE_mainInit(bool* aExitFlag)
 }
 
 #ifdef XP_WIN
+static bool QueryOneWMIProperty(IWbemServices* aServices,
+                                const wchar_t* aWMIClass,
+                                const wchar_t* aProperty,
+                                VARIANT* aResult)
+{
+  RefPtr<IEnumWbemClassObject> enumerator;
+
+  _bstr_t query(L"SELECT * FROM ");
+  query += _bstr_t(aWMIClass);
+
+  HRESULT hr = aServices->ExecQuery(_bstr_t(L"WQL"), query,
+                                    WBEM_FLAG_FORWARD_ONLY |
+                                      WBEM_FLAG_RETURN_IMMEDIATELY,
+                                    nullptr, getter_AddRefs(enumerator));
+
+  if (FAILED(hr) || !enumerator) {
+    return false;
+  }
+
+  RefPtr<IWbemClassObject> classObject;
+  ULONG results;
+
+  hr = enumerator->Next(WBEM_INFINITE, 1, getter_AddRefs(classObject), &results);
+
+  if (FAILED(hr) || results == 0) {
+    return false;
+  }
+
+  hr = classObject->Get(aProperty, 0, aResult, 0, 0);
+
+  return SUCCEEDED(hr);
+}
+
 /**
  * Uses WMI to read some information that may be useful for diagnosing
  * crashes. This function is best-effort; failures shouldn't burden the
@@ -3703,33 +3736,13 @@ static void AnnotateWMIData()
     return;
   }
 
-  // Annotate information about the system manufacturer.
-
-  RefPtr<IEnumWbemClassObject> enumerator;
-
-  hr = services->ExecQuery(_bstr_t(L"WQL"), _bstr_t(L"SELECT * FROM Win32_BIOS"),
-                           WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
-                           nullptr, getter_AddRefs(enumerator));
-
-  if (FAILED(hr) || !enumerator) {
-    return;
-  }
-
-  RefPtr<IWbemClassObject> classObject;
-  ULONG results;
-
-  hr = enumerator->Next(WBEM_INFINITE, 1, getter_AddRefs(classObject), &results);
-
-  if (FAILED(hr) || results == 0) {
-    return;
-  }
 
   VARIANT value;
   VariantInit(&value);
 
-  hr = classObject->Get(L"Manufacturer", 0, &value, 0, 0);
-
-  if (SUCCEEDED(hr) && V_VT(&value) == VT_BSTR) {
+  // Annotate information about the system manufacturer.
+  if (QueryOneWMIProperty(services, L"Win32_BIOS", L"Manufacturer", &value) &&
+      V_VT(&value) == VT_BSTR) {
     CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::BIOS_Manufacturer,
       NS_ConvertUTF16toUTF8(V_BSTR(&value)));
