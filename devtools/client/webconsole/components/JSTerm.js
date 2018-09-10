@@ -1071,20 +1071,26 @@ class JSTerm extends Component {
     const {editor, inputNode} = this;
     const frameActor = this.getFrameActor(this.SELECTED_FRAME);
 
-    // Only complete if the selection is empty and the input value is not.
+    const cursor = this.getSelectionStart();
+
+    // Complete if:
+    // - The input is not empty
+    // - AND there is not text selected
+    // - AND the input or frameActor are different from previous completion
+    // - AND there is not an alphanumeric (+ "_" and "$") right after the cursor
     if (
       !inputValue ||
       (inputNode && inputNode.selectionStart != inputNode.selectionEnd) ||
       (editor && editor.getSelection()) ||
-      (this.lastInputValue === inputValue && frameActor === this._lastFrameActorId)
+      (this.lastInputValue === inputValue && frameActor === this._lastFrameActorId) ||
+      /^[a-zA-Z0-9_$]/.test(inputValue.substring(cursor))
     ) {
       this.clearCompletion();
       this.emit("autocomplete-updated");
       return;
     }
 
-    const cursor = this.getSelectionStart();
-    const input = inputValue.substring(0, cursor);
+    const input = this.getInputValueBeforeCursor();
 
     // If the current input starts with the previous input, then we already
     // have a list of suggestions and we just need to filter the cached
