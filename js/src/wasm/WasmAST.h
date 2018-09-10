@@ -480,8 +480,10 @@ enum class AstExprKind
     If,
     Load,
 #ifdef ENABLE_WASM_BULKMEM_OPS
-    MemCopy,
+    MemOrTableCopy,
+    MemOrTableDrop,
     MemFill,
+    MemOrTableInit,
 #endif
     Nop,
     Pop,
@@ -951,24 +953,44 @@ class AstWake : public AstExpr
 };
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
-class AstMemCopy : public AstExpr
+class AstMemOrTableCopy : public AstExpr
 {
+    bool     isMem_;
     AstExpr* dest_;
     AstExpr* src_;
     AstExpr* len_;
 
   public:
-    static const AstExprKind Kind = AstExprKind::MemCopy;
-    explicit AstMemCopy(AstExpr* dest, AstExpr* src, AstExpr* len)
+    static const AstExprKind Kind = AstExprKind::MemOrTableCopy;
+    explicit AstMemOrTableCopy(bool isMem, AstExpr* dest, AstExpr* src, AstExpr* len)
       : AstExpr(Kind, ExprType::Void),
+        isMem_(isMem),
         dest_(dest),
         src_(src),
         len_(len)
     {}
 
-    AstExpr& dest() const { return *dest_; }
-    AstExpr& src()  const { return *src_; }
-    AstExpr& len()  const { return *len_; }
+    bool     isMem() const { return isMem_; }
+    AstExpr& dest()  const { return *dest_; }
+    AstExpr& src()   const { return *src_; }
+    AstExpr& len()   const { return *len_; }
+};
+
+class AstMemOrTableDrop : public AstExpr
+{
+    bool     isMem_;
+    uint32_t segIndex_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::MemOrTableDrop;
+    explicit AstMemOrTableDrop(bool isMem, uint32_t segIndex)
+      : AstExpr(Kind, ExprType::Void),
+        isMem_(isMem),
+        segIndex_(segIndex)
+    {}
+
+    bool     isMem()    const { return isMem_; }
+    uint32_t segIndex() const { return segIndex_; }
 };
 
 class AstMemFill : public AstExpr
@@ -989,6 +1011,32 @@ class AstMemFill : public AstExpr
     AstExpr& start() const { return *start_; }
     AstExpr& val()   const { return *val_; }
     AstExpr& len()   const { return *len_; }
+};
+
+class AstMemOrTableInit : public AstExpr
+{
+    bool     isMem_;
+    uint32_t segIndex_;
+    AstExpr* dst_;
+    AstExpr* src_;
+    AstExpr* len_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::MemOrTableInit;
+    explicit AstMemOrTableInit(bool isMem, uint32_t segIndex, AstExpr* dst, AstExpr* src, AstExpr* len)
+      : AstExpr(Kind, ExprType::Void),
+        isMem_(isMem),
+        segIndex_(segIndex),
+        dst_(dst),
+        src_(src),
+        len_(len)
+    {}
+
+    bool     isMem()    const { return isMem_; }
+    uint32_t segIndex() const { return segIndex_; }
+    AstExpr& dst()      const { return *dst_; }
+    AstExpr& src()      const { return *src_; }
+    AstExpr& len()      const { return *len_; }
 };
 #endif
 

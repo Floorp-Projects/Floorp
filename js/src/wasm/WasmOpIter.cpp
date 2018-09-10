@@ -256,9 +256,16 @@ wasm::Classify(OpBytes op)
 #endif
 #ifdef ENABLE_WASM_BULKMEM_OPS
             case MiscOp::MemCopy:
-              return OpKind::MemCopy;
+            case MiscOp::TableCopy:
+              return OpKind::MemOrTableCopy;
+            case MiscOp::MemDrop:
+            case MiscOp::TableDrop:
+              return OpKind::MemOrTableDrop;
             case MiscOp::MemFill:
               return OpKind::MemFill;
+            case MiscOp::MemInit:
+            case MiscOp::TableInit:
+              return OpKind::MemOrTableInit;
 #endif
             default:
               break;

@@ -115,10 +115,9 @@ function checkMiscPrefixed(opcode, expect_failure) {
 //-----------------------------------------------------------
 // Verification cases for memory.copy/fill opcode encodings
 
-checkMiscPrefixed(0x3f, true);  // unassigned
-checkMiscPrefixed(0x40, false); // memory.copy
-checkMiscPrefixed(0x41, false); // memory.fill
-checkMiscPrefixed(0x42, true);  // unassigned
+checkMiscPrefixed(0x0a, false); // memory.copy
+checkMiscPrefixed(0x0b, false); // memory.fill
+checkMiscPrefixed(0x0f, true);  // table.copy+1, which is currently unassigned
 
 //-----------------------------------------------------------
 // Verification cases for memory.copy/fill arguments

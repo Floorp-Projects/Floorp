@@ -9369,7 +9369,7 @@ BaseCompiler::emitMemCopy()
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     Nothing nothing;
-    if (!iter_.readMemCopy(&nothing, &nothing, &nothing))
+    if (!iter_.readMemOrTableCopy(/*isMem=*/true, &nothing, &nothing, &nothing))
         return false;
 
     if (deadCode_)
