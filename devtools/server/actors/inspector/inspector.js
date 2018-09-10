@@ -106,10 +106,14 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     const deferred = defer();
     this._walkerPromise = deferred.promise;
 
+    const isXULDocument =
+      this.targetActor.window.document.documentElement.namespaceURI === XUL_NS;
+    const loadEvent = isXULDocument ? "load" : "DOMContentLoaded";
+
     const window = this.window;
     const domReady = () => {
       const targetActor = this.targetActor;
-      window.removeEventListener("DOMContentLoaded", domReady, true);
+      window.removeEventListener(loadEvent, domReady, true);
       this.walker = WalkerActor(this.conn, targetActor, options);
       this.manage(this.walker);
       this.walker.once("destroyed", () => {
@@ -120,7 +124,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     };
 
     if (window.document.readyState === "loading") {
-      window.addEventListener("DOMContentLoaded", domReady, true);
+      window.addEventListener(loadEvent, domReady, true);
     } else {
       domReady();
     }
