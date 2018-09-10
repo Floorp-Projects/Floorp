@@ -276,6 +276,14 @@ class ChromeAndroid(BrowserSetup):
             else:
                 raise WptrunError("Unable to locate or install chromedriver binary")
 
+class ChromeWebDriver(Chrome):
+    name = "chrome_webdriver"
+    browser_cls = browser.ChromeWebDriver
+
+class ChromeWebDriver(Chrome):
+    name = "chrome_webdriver"
+    browser_cls = browser.ChromeWebDriver
+
 
 class Opera(BrowserSetup):
     name = "opera"
@@ -321,6 +329,16 @@ https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
             kwargs["webdriver_binary"] = webdriver_binary
 
 
+class EdgeWebDriver(Edge):
+    name = "edge_webdriver"
+    browser_cls = browser.EdgeWebDriver
+
+
+class EdgeWebDriver(Edge):
+    name = "edge_webdriver"
+    browser_cls = browser.EdgeWebDriver
+
+
 class InternetExplorer(BrowserSetup):
     name = "ie"
     browser_cls = browser.InternetExplorer
@@ -357,6 +375,16 @@ class Safari(BrowserSetup):
                 raise WptrunError("Unable to locate safaridriver binary")
 
             kwargs["webdriver_binary"] = webdriver_binary
+
+
+class SafariWebDriver(Safari):
+    name = "safari_webdriver"
+    browser_cls = browser.SafariWebDriver
+
+
+class SafariWebDriver(Safari):
+    name = "safari_webdriver"
+    browser_cls = browser.SafariWebDriver
 
 
 class Sauce(BrowserSetup):
@@ -405,9 +433,12 @@ product_setup = {
     "firefox": Firefox,
     "chrome": Chrome,
     "chrome_android": ChromeAndroid,
+    "chrome_webdriver": ChromeWebDriver,
     "edge": Edge,
+    "edge_webdriver": EdgeWebDriver,
     "ie": InternetExplorer,
     "safari": Safari,
+    "safari_webdriver": SafariWebDriver,
     "servo": Servo,
     "sauce": Sauce,
     "opera": Opera,
