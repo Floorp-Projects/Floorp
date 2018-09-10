@@ -12,7 +12,7 @@ import mozilla.components.browser.session.SessionManager
 interface SessionStorage {
 
     /**
-     * Persists the state of the provided sessions.
+     * Persists the session state of the provided [SessionManager].
      *
      * @param sessionManager the session manager to persist from.
      * @return true if the state was persisted, otherwise false.
@@ -20,22 +20,22 @@ interface SessionStorage {
     fun persist(sessionManager: SessionManager): Boolean
 
     /**
-     * Restores the session storage state by reading from the latest persisted version.
+     * Restores the session state by reading from the latest persisted version.
      *
      * @param sessionManager the session manager to restore into.
-     * @return map of all restored sessions, and the currently selected session id.
+     * @return true if the state was restored, otherwise false.
      */
     fun restore(sessionManager: SessionManager): Boolean
 
     /**
-     * Starts saving the state frequently and automatically.
+     * Starts persisting the state frequently and automatically.
      *
      * @param sessionManager the session manager to persist from.
      */
     fun start(sessionManager: SessionManager)
 
     /**
-     * Stops saving the state automatically.
+     * Stops persisting the state automatically.
      */
     fun stop()
 }
