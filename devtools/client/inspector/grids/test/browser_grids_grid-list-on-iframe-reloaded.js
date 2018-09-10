@@ -23,7 +23,8 @@ add_task(async function() {
   is(gridList.childNodes.length, 1, "There's one grid in the list");
   const checkbox = gridList.querySelector("input");
   ok(checkbox.checked, "The checkbox is checked");
-  ok(highlighters.gridHighlighterShown, "There's a highlighter shown");
+  is(highlighters.gridHighlighters.size, 1, "There's a highlighter shown");
+  is(highlighters.state.grids.size, 1, "There's a saved grid state to be restored.");
 
   info("Reload the iframe in content and expect the grid list to update");
   const oldGrid = store.getState().grids[0];
@@ -37,12 +38,14 @@ add_task(async function() {
   await onHighlighterHidden;
 
   is(gridList.childNodes.length, 1, "There's still one grid in the list");
+  ok(!highlighters.state.grids.size, "No grids to be restored on page reload.");
 
   info("Highlight the first grid again to make sure this still works");
   await enableTheFirstGrid(doc, inspector);
 
   is(gridList.childNodes.length, 1, "There's again one grid in the list");
-  ok(highlighters.gridHighlighterShown, "There's a highlighter shown");
+  is(highlighters.gridHighlighters.size, 1, "There's a highlighter shown");
+  is(highlighters.state.grids.size, 1, "There's a saved grid state to be restored.");
 });
 
 async function enableTheFirstGrid(doc, { highlighters, store }) {
