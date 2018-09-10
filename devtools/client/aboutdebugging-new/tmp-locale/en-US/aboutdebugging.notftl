@@ -12,3 +12,6 @@ about-debugging-sidebar-this-firefox =
 # Sidebar heading for connecting to some remote source
 about-debugging-sidebar-connect =
   .name = Connect
+
+# Text displayed in the about:debugging sidebar when no device was found.
+about-debugging-sidebar-no-devices = No devices discovered
