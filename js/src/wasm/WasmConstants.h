@@ -150,6 +150,12 @@ enum class MemoryMasks
     AllowShared                          = 0x3
 };
 
+enum class InitializerKind
+{
+    Active                               = 0x00,
+    Passive                              = 0x01
+};
+
 enum class Op
 {
     // Control flow operators

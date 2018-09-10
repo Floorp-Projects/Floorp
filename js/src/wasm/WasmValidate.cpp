@@ -1980,19 +1980,29 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
         return d.fail("too many elem segments");
 
     for (uint32_t i = 0; i < numSegments; i++) {
-        uint32_t tableIndex;
-        if (!d.readVarU32(&tableIndex))
-            return d.fail("expected table index");
+        uint32_t initializerKind;
+        if (!d.readVarU32(&initializerKind))
+            return d.fail("expected elem initializer-kind field");
+
+        if (initializerKind != uint32_t(InitializerKind::Active) &&
+            initializerKind != uint32_t(InitializerKind::Passive))
+        {
+            return d.fail("invalid elem initializer-kind field");
+        }
 
         MOZ_ASSERT(env->tables.length() <= 1);
-        if (tableIndex >= env->tables.length())
-            return d.fail("table index out of range");
+        if (env->tables.length() == 0)
+            return d.fail("elem segment requires a table section");
 
-        InitExpr offset;
-        if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
-                                         env->types.length(), &offset))
-        {
-            return false;
+        Maybe<InitExpr> offsetIfActive;
+        if (initializerKind == uint32_t(InitializerKind::Active)) {
+            InitExpr offset;
+            if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
+                                             env->types.length(), &offset))
+            {
+                return false;
+            }
+            offsetIfActive.emplace(offset);
         }
 
         uint32_t numElems;
@@ -2018,10 +2028,10 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
             // contain functions from multiple instances and must be marked
             // external.
             if (env->funcIsImport(funcIndex))
-                env->tables[tableIndex].external = true;
+                env->tables[0].external = true;
 
 #ifdef WASM_PRIVATE_REFTYPES
-            if (env->tables[tableIndex].importedOrExported &&
+            if (env->tables[0].importedOrExported &&
                 !FuncTypeIsJSCompatible(d, *env->funcTypes[elemFuncIndices[i]]))
             {
                 return false;
@@ -2029,7 +2039,8 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
 #endif
         }
 
-        if (!env->elemSegments.emplaceBack(tableIndex, offset, std::move(elemFuncIndices)))
+        if (!env->elemSegments.emplaceBack(0, std::move(offsetIfActive),
+                                           std::move(elemFuncIndices)))
             return false;
     }
 
@@ -2175,21 +2186,28 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
         return d.fail("too many data segments");
 
     for (uint32_t i = 0; i < numSegments; i++) {
-        uint32_t linearMemoryIndex;
-        if (!d.readVarU32(&linearMemoryIndex))
-            return d.fail("expected linear memory index");
+        uint32_t initializerKind;
+        if (!d.readVarU32(&initializerKind))
+            return d.fail("expected data initializer-kind field");
 
-        if (linearMemoryIndex != 0)
-            return d.fail("linear memory index must currently be 0");
+        if (initializerKind != uint32_t(InitializerKind::Active) &&
+            initializerKind != uint32_t(InitializerKind::Passive))
+        {
+            return d.fail("invalid data initializer-kind field");
+        }
 
         if (!env->usesMemory())
             return d.fail("data segment requires a memory section");
 
         DataSegment seg;
-        if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
-                                         env->types.length(), &seg.offset))
-        {
-            return false;
+        if (initializerKind == uint32_t(InitializerKind::Active)) {
+            InitExpr segOffset;
+            if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
+                                             env->types.length(), &segOffset))
+            {
+                return false;
+            }
+            seg.offsetIfActive.emplace(segOffset);
         }
 
         if (!d.readVarU32(&seg.length))

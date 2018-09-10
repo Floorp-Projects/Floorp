@@ -83,7 +83,8 @@ class Instance
              HandleValVector globalImportValues,
              const WasmGlobalObjectVector& globalObjs);
     ~Instance();
-    bool init(JSContext* cx);
+    bool init(JSContext* cx, const ShareableBytes* bytecode,
+              Handle<FunctionVector> funcImports);
     void trace(JSTracer* trc);
 
     JS::Realm* realm() const { return realm_; }

@@ -1071,6 +1071,7 @@ WasmInstanceObject::create(JSContext* cx,
                            const GlobalDescVector& globals,
                            HandleValVector globalImportValues,
                            const WasmGlobalObjectVector& globalObjs,
+                           const ShareableBytes* bytecode,
                            HandleObject proto)
 {
     UniquePtr<ExportMap> exports = js::MakeUnique<ExportMap>();
@@ -1141,7 +1142,7 @@ WasmInstanceObject::create(JSContext* cx,
     obj->initReservedSlot(INSTANCE_SLOT, PrivateValue(instance));
     MOZ_ASSERT(!obj->isNewborn());
 
-    if (!instance->init(cx))
+    if (!instance->init(cx, bytecode, funcImports))
         return nullptr;
 
     return obj;
