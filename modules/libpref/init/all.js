@@ -1059,13 +1059,6 @@ pref("toolkit.asyncshutdown.crash_timeout", 180000); // 3 minutes
 // Extra logging for AsyncShutdown barriers and phases
 pref("toolkit.asyncshutdown.log", false);
 
-#ifdef MOZILLA_OFFICIAL
-// enable JS dump() function.
-pref("browser.dom.window.dump.enabled", false, sticky);
-#else
-pref("browser.dom.window.dump.enabled", true, sticky);
-#endif
-
 // Controls whether EventEmitter module throws dump message on each emit
 pref("toolkit.dump.emit", false);
 

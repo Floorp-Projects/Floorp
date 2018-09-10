@@ -22,29 +22,24 @@ DOMPrefs::Initialize()
   DOMPrefs::DumpEnabled();
 #endif
 
-#define DOM_PREF(name, pref) DOMPrefs::name();
 #define DOM_WEBIDL_PREF(name)
 #define DOM_UINT32_PREF(name, pref, defaultValue) DOMPrefs::name();
 
 #include "DOMPrefsInternal.h"
 
-#undef DOM_PREF
 #undef DOM_WEBIDL_PREF
 #undef DOM_UINT32_PREF
 }
 
-#define DOM_PREF(name, pref)                                         \
-  /* static */ bool                                                  \
-  DOMPrefs::name()                                                   \
-  {                                                                  \
-    static bool initialized = false;                                 \
-    static Atomic<bool> cachedValue;                                 \
-    if (!initialized) {                                              \
-      initialized = true;                                            \
-      Preferences::AddAtomicBoolVarCache(&cachedValue, pref, false); \
-    }                                                                \
-    return cachedValue;                                              \
-  }
+/* static */ bool
+DOMPrefs::DumpEnabled()
+{
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+  return StaticPrefs::browser_dom_window_dump_enabled();
+#else
+  return true;
+#endif
+}
 
 #define DOM_WEBIDL_PREF(name)                    \
   /* static */ bool                              \
@@ -52,7 +47,6 @@ DOMPrefs::Initialize()
   {                                              \
     return StaticPrefs::name();                  \
   }
-
 
 #define DOM_UINT32_PREF(name, pref, defaultValue)                             \
   /* static */ uint32_t                                                       \
@@ -67,19 +61,8 @@ DOMPrefs::Initialize()
     return cachedValue;                                                       \
   }
 
-#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-DOM_PREF(DumpEnabled, "browser.dom.window.dump.enabled")
-#else
-/* static */ bool
-DOMPrefs::DumpEnabled()
-{
-  return true;
-}
-#endif
-
 #include "DOMPrefsInternal.h"
 
-#undef DOM_PREF
 #undef DOM_WEBIDL_PREF
 #undef DOM_UINT32_PREF
 
