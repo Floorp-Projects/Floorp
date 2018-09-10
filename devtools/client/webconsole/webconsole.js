@@ -84,14 +84,6 @@ WebConsole.prototype = {
   },
 
   /**
-   * Getter for the xul:popupset that holds any popups we open.
-   * @type Element
-   */
-  get mainPopupSet() {
-    return this.chromeUtilsWindow.document.getElementById("mainPopupSet");
-  },
-
-  /**
    * Getter for the output element that holds messages we display.
    * @type Element
    */
@@ -285,15 +277,6 @@ WebConsole.prototype = {
 
     this._destroyer = (async () => {
       this.hudService.consoles.delete(this.hudId);
-
-      // The document may already be removed
-      if (this.chromeUtilsWindow && this.mainPopupSet) {
-        const popupset = this.mainPopupSet;
-        const panels = popupset.querySelectorAll("panel[hudId=" + this.hudId + "]");
-        for (const panel of panels) {
-          panel.hidePopup();
-        }
-      }
 
       if (this.ui) {
         await this.ui.destroy();
