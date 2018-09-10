@@ -14,15 +14,14 @@ const {
   INITIALIZE,
   PERSIST_TOGGLE,
   PREFS,
-  REVERSE_SEARCH_INPUT_TOGGLE,
   SELECT_NETWORK_MESSAGE_TAB,
-  SHOW_OBJECT_IN_SIDEBAR,
   SIDEBAR_CLOSE,
-  SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
+  SHOW_OBJECT_IN_SIDEBAR,
   TIMESTAMPS_TOGGLE,
+  SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
 } = require("devtools/client/webconsole/constants");
 
-function filterBarToggle() {
+function filterBarToggle(show) {
   return (dispatch, getState, {prefsService}) => {
     dispatch({
       type: FILTER_BAR_TOGGLE,
@@ -32,7 +31,7 @@ function filterBarToggle() {
   };
 }
 
-function persistToggle() {
+function persistToggle(show) {
   return (dispatch, getState, {prefsService}) => {
     dispatch({
       type: PERSIST_TOGGLE,
@@ -103,21 +102,14 @@ function showObjectInSidebar(grip) {
   };
 }
 
-function reverseSearchInputToggle() {
-  return {
-    type: REVERSE_SEARCH_INPUT_TOGGLE
-  };
-}
-
 module.exports = {
   filterBarToggle,
   initialize,
   persistToggle,
-  reverseSearchInputToggle,
   selectNetworkMessageTab,
+  sidebarClose,
   showMessageObjectInSidebar,
   showObjectInSidebar,
-  sidebarClose,
-  splitConsoleCloseButtonToggle,
   timestampsToggle,
+  splitConsoleCloseButtonToggle,
 };

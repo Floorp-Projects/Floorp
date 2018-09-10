@@ -882,7 +882,6 @@ body {
   min-height: 28px;
   overflow-y: auto;
   overflow-x: hidden;
-  flex-grow: 1;
 }
 
 .jsterm-cm .jsterm-input-container {
@@ -891,6 +890,11 @@ body {
 
 .webconsole-flex-wrapper > .webconsole-output:empty ~ .jsterm-input-container {
   border-top: none;
+}
+
+/* Last item in the flex wrapper should take the whole remaining height */
+.webconsole-flex-wrapper > :last-child {
+  flex-grow: 1;
 }
 
 /* Object Inspector */
