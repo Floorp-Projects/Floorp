@@ -205,12 +205,13 @@ function declSection(decls) {
     return { name: functionId, body };
 }
 
-function funcBody(func) {
+function funcBody(func, withEndCode=true) {
     var body = varU32(func.locals.length);
     for (let local of func.locals)
         body.push(...varU32(local));
     body = body.concat(...func.body);
-    body.push(EndCode);
+    if (withEndCode)
+        body.push(EndCode);
     body.splice(0, 0, ...varU32(body.length));
     return body;
 }
