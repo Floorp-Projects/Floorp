@@ -13,7 +13,6 @@
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
 #include "nsComposeTxtSrvFilter.h"      // for nsComposeTxtSrvFilter, etc
 #include "nsDebug.h"                    // for NS_ENSURE_SUCCESS
-#include "nsEditingSession.h"           // for NS_EDITINGSESSION_CID, etc
 #include "nsError.h"                    // for NS_ERROR_NO_AGGREGATION, etc
 #include "nsIController.h"              // for nsIController
 #include "nsIControllerCommandTable.h"  // for nsIControllerCommandTable, etc
@@ -45,7 +44,6 @@ static NS_DEFINE_CID(kHTMLEditorDocStateCommandTableCID, NS_HTMLEDITOR_DOCSTATE_
 // NOTE: This creates an instance of objects by using the default constructor
 //
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditingSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(EditorSpellCheck)
 
 // There are no macros that enable us to have 2 constructors
@@ -190,7 +188,6 @@ NS_DEFINE_NAMED_CID(NS_HTMLEDITORCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORDOCSTATECONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_COMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_DOCSTATE_COMMANDTABLE_CID);
-NS_DEFINE_NAMED_CID(NS_EDITINGSESSION_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORSPELLCHECK_CID);
 NS_DEFINE_NAMED_CID(NS_COMPOSERTXTSRVFILTER_CID);
 NS_DEFINE_NAMED_CID(NS_COMPOSERTXTSRVFILTERMAIL_CID);
@@ -201,7 +198,6 @@ static const mozilla::Module::CIDEntry kComposerCIDs[] = {
   { &kNS_EDITORDOCSTATECONTROLLER_CID, false, nullptr, nsHTMLEditorDocStateControllerConstructor },
   { &kNS_HTMLEDITOR_COMMANDTABLE_CID, false, nullptr, nsHTMLEditorCommandTableConstructor },
   { &kNS_HTMLEDITOR_DOCSTATE_COMMANDTABLE_CID, false, nullptr, nsHTMLEditorDocStateCommandTableConstructor },
-  { &kNS_EDITINGSESSION_CID, false, nullptr, nsEditingSessionConstructor },
   { &kNS_EDITORSPELLCHECK_CID, false, nullptr, EditorSpellCheckConstructor },
   { &kNS_COMPOSERTXTSRVFILTER_CID, false, nullptr, nsComposeTxtSrvFilterConstructorForComposer },
   { &kNS_COMPOSERTXTSRVFILTERMAIL_CID, false, nullptr, nsComposeTxtSrvFilterConstructorForMail },
@@ -211,7 +207,6 @@ static const mozilla::Module::CIDEntry kComposerCIDs[] = {
 static const mozilla::Module::ContractIDEntry kComposerContracts[] = {
   { "@mozilla.org/editor/htmleditorcontroller;1", &kNS_HTMLEDITORCONTROLLER_CID },
   { "@mozilla.org/editor/editordocstatecontroller;1", &kNS_EDITORDOCSTATECONTROLLER_CID },
-  { "@mozilla.org/editor/editingsession;1", &kNS_EDITINGSESSION_CID },
   { "@mozilla.org/editor/editorspellchecker;1", &kNS_EDITORSPELLCHECK_CID },
   { COMPOSER_TXTSRVFILTER_CONTRACTID, &kNS_COMPOSERTXTSRVFILTER_CID },
   { COMPOSER_TXTSRVFILTERMAIL_CONTRACTID, &kNS_COMPOSERTXTSRVFILTERMAIL_CID },
