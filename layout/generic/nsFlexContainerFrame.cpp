@@ -4252,10 +4252,8 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   // Tentatively store the child's desired content-box cross-size.
   // Note that childDesiredSize is the border-box size, so we have to
   // subtract border & padding to get the content-box size.
-  // (Note that at this point in the code, we know our cross axis is vertical,
-  // so we don't bother with making aAxisTracker pick the cross-axis component
-  // for us.)
-  nscoord crossAxisBorderPadding = aItem.GetBorderPadding().TopBottom();
+  nscoord crossAxisBorderPadding =
+    aItem.GetBorderPaddingSizeInAxis(aAxisTracker.GetCrossAxis());
   if (reflowResult.BSize() < crossAxisBorderPadding) {
     // Child's requested size isn't large enough for its border/padding!
     // This is OK for the trivial nsFrame::Reflow() impl, but other frame
