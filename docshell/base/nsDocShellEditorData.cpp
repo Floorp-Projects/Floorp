@@ -9,7 +9,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsIEditor.h"
-#include "nsIEditingSession.h"
+#include "nsEditingSession.h"
 #include "nsIDocShell.h"
 
 using namespace mozilla;
@@ -90,8 +90,7 @@ nsDocShellEditorData::CreateEditor()
 nsresult
 nsDocShellEditorData::GetEditingSession(nsIEditingSession** aResult)
 {
-  nsresult rv = EnsureEditingSession();
-  NS_ENSURE_SUCCESS(rv, rv);
+  EnsureEditingSession();
 
   NS_ADDREF(*aResult = mEditingSession);
 
@@ -124,20 +123,15 @@ nsDocShellEditorData::SetHTMLEditor(HTMLEditor* aHTMLEditor)
 }
 
 // This creates the editing session on the content docShell that owns 'this'.
-nsresult
+void
 nsDocShellEditorData::EnsureEditingSession()
 {
   NS_ASSERTION(mDocShell, "Should have docShell here");
   NS_ASSERTION(!mIsDetached, "This will stomp editing session!");
 
-  nsresult rv = NS_OK;
-
   if (!mEditingSession) {
-    mEditingSession =
-      do_CreateInstance("@mozilla.org/editor/editingsession;1", &rv);
+    mEditingSession = new nsEditingSession();
   }
-
-  return rv;
 }
 
 nsresult
