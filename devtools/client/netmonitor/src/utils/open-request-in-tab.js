@@ -18,8 +18,10 @@ loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link",
 
 /**
  * Opens given request in a new tab.
+ *
+ * For POST request supports application/x-www-form-urlencoded content-type only.
  */
-function openRequestInTab(url, requestPostData) {
+function openRequestInTab(url, requestHeaders, requestPostData) {
   if (!requestPostData) {
     openContentLink(url, {relatedToCurrent: true});
   } else {

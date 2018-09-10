@@ -24,14 +24,19 @@ add_task(async function() {
 
   // Open GET request in new tab
   await performRequest("GET");
-
   newTab = await openLastRequestInTab();
   await checkTabResponse(newTab, "GET");
 
   // Open POST request in new tab
-  await performRequest("POST");
+  await performRequest("POST", "application/x-www-form-urlencoded", "foo=bar&baz=42");
   newTab = await openLastRequestInTab();
-  await checkTabResponse(newTab, "POST");
+  await checkTabResponse(newTab, "POST", "application/x-www-form-urlencoded",
+    "foo=bar&amp;baz=42");
+
+  // Open POST application/json request in new tab
+  await performRequest("POST", "application/json", '{"foo":"bar"}');
+  newTab = await openLastRequestInTab();
+  await checkTabResponse(newTab, "POST", "application/json", '{"foo":"bar"}');
 
   await teardown(monitor);
 
@@ -49,7 +54,7 @@ add_task(async function() {
     monitor.panelWin.parent.document
       .querySelector("#request-list-context-newtab").click();
     await onTabOpen;
-    ok(true, "A new tab has been opened");
+    info("A new tab has been opened");
 
     const awaitedTab = gBrowser.selectedTab;
     await BrowserTestUtils.browserLoaded(awaitedTab.linkedBrowser);
@@ -58,20 +63,26 @@ add_task(async function() {
     return awaitedTab;
   }
 
-  async function performRequest(method) {
+  async function performRequest(method, contentType, payload) {
     const wait = waitForNetworkEvents(monitor, 1);
-    await ContentTask.spawn(tab.linkedBrowser, method, async function(meth) {
-      content.wrappedJSObject.performRequest(meth);
-    });
+    await ContentTask.spawn(tab.linkedBrowser, [method, contentType, payload],
+      async function([method_, contentType_, payload_]) {
+        content.wrappedJSObject.performRequest(method_, contentType_, payload_);
+      }
+    );
     await wait;
+    info("Performed request to test server");
   }
 
-  async function checkTabResponse(checkedTab, method) {
-    await ContentTask.spawn(checkedTab.linkedBrowser, method, async function(met) {
-      const { body } = content.wrappedJSObject.document;
-      const responseRE =
-        RegExp(met + (met == "POST" ? "\n*\s*foo\=bar\&amp;baz\=42" : ""));
-      ok(body.innerHTML.match(responseRE), "Tab method and data match original request");
-    });
+  async function checkTabResponse(checkedTab, method, contentType, payload) {
+    await ContentTask.spawn(checkedTab.linkedBrowser, [method, contentType, payload],
+      async function([method_, contentType_, payload_]) {
+        const { body } = content.wrappedJSObject.document;
+        const expected = [method_, contentType_, payload_].join("\n");
+        info("Response from the server:" + body.innerHTML.replace(/\n/g, "\\n"));
+        ok(body.innerHTML.includes(expected),
+          "Tab method and data match original request");
+      }
+    );
   }
 });
