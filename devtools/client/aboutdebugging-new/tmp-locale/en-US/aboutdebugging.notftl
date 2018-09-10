@@ -15,3 +15,18 @@ about-debugging-sidebar-connect =
 
 # Text displayed in the about:debugging sidebar when no device was found.
 about-debugging-sidebar-no-devices = No devices discovered
+
+# Below are the titles for the various categories of debug targets that can be found
+# on "runtime" pages of about:debugging.
+# Title of the temporary extensions category (only available for "This Firefox" runtime).
+about-debugging-runtime-temporary-extensions = Temporary Extensions
+# Title of the extensions category.
+about-debugging-runtime-extensions = Extensions
+# Title of the tabs category.
+about-debugging-runtime-tabs = Tabs
+# Title of the service workers category.
+about-debugging-runtime-service-workers = Service Workers
+# Title of the shared workers category.
+about-debugging-runtime-shared-workers = Shared Workers
+# Title of the other workers category.
+about-debugging-runtime-other-workers = Other Workers
