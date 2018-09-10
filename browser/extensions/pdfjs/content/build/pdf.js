@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.841';
-var pdfjsBuild = 'bc5111d1';
+var pdfjsVersion = '2.0.815';
+var pdfjsBuild = 'd6927376';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(7);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(19);
@@ -4226,7 +4226,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.841',
+    apiVersion: '2.0.815',
     source: {
       data: source.data,
       url: source.url,
@@ -5553,8 +5553,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.841';
-  exports.build = build = 'bc5111d1';
+  exports.version = version = '2.0.815';
+  exports.build = build = 'd6927376';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -6354,7 +6354,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
     if (canvasCtx) {
       addContextCurrentTransform(canvasCtx);
     }
-    this._cachedGetSinglePixelWidth = null;
+    this.cachedGetSinglePixelWidth = null;
   }
   function putBinaryImageData(ctx, imgData) {
     if (typeof ImageData !== 'undefined' && imgData instanceof ImageData) {
@@ -6829,12 +6829,12 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
         this.current = this.stateStack.pop();
         this.ctx.restore();
         this.pendingClip = null;
-        this._cachedGetSinglePixelWidth = null;
+        this.cachedGetSinglePixelWidth = null;
       }
     },
     transform: function CanvasGraphics_transform(a, b, c, d, e, f) {
       this.ctx.transform(a, b, c, d, e, f);
-      this._cachedGetSinglePixelWidth = null;
+      this.cachedGetSinglePixelWidth = null;
     },
     constructPath: function CanvasGraphics_constructPath(ops, args) {
       var ctx = this.ctx;
@@ -7177,7 +7177,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       if (scale === 0 || lineWidth === 0) {
         var fillStrokeMode = current.textRenderingMode & _util.TextRenderingMode.FILL_STROKE_MASK;
         if (fillStrokeMode === _util.TextRenderingMode.STROKE || fillStrokeMode === _util.TextRenderingMode.FILL_STROKE) {
-          this._cachedGetSinglePixelWidth = null;
+          this.cachedGetSinglePixelWidth = null;
           lineWidth = this.getSinglePixelWidth() * MIN_WIDTH_FACTOR;
         }
       } else {
@@ -7269,7 +7269,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       if (isTextInvisible || fontSize === 0) {
         return;
       }
-      this._cachedGetSinglePixelWidth = null;
+      this.cachedGetSinglePixelWidth = null;
       ctx.save();
       ctx.transform.apply(ctx, current.textMatrix);
       ctx.translate(current.x, current.y);
@@ -7737,12 +7737,14 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       }
       ctx.beginPath();
     },
-    getSinglePixelWidth(scale) {
-      if (this._cachedGetSinglePixelWidth === null) {
-        const inverse = this.ctx.mozCurrentTransformInverse;
-        this._cachedGetSinglePixelWidth = Math.sqrt(Math.max(inverse[0] * inverse[0] + inverse[1] * inverse[1], inverse[2] * inverse[2] + inverse[3] * inverse[3]));
+    getSinglePixelWidth: function CanvasGraphics_getSinglePixelWidth(scale) {
+      if (this.cachedGetSinglePixelWidth === null) {
+        this.ctx.save();
+        var inverse = this.ctx.mozCurrentTransformInverse;
+        this.ctx.restore();
+        this.cachedGetSinglePixelWidth = Math.sqrt(Math.max(inverse[0] * inverse[0] + inverse[1] * inverse[1], inverse[2] * inverse[2] + inverse[3] * inverse[3]));
       }
-      return this._cachedGetSinglePixelWidth;
+      return this.cachedGetSinglePixelWidth;
     },
     getCanvasPosition: function CanvasGraphics_getCanvasPosition(x, y) {
       var transform = this.ctx.mozCurrentTransform;
@@ -10013,8 +10015,8 @@ var renderTextLayer = function renderTextLayerClosure() {
       let fontFamily = textDiv.style.fontFamily;
       if (fontSize !== this._layoutTextLastFontSize || fontFamily !== this._layoutTextLastFontFamily) {
         this._layoutTextCtx.font = fontSize + ' ' + fontFamily;
-        this._layoutTextLastFontSize = fontSize;
-        this._layoutTextLastFontFamily = fontFamily;
+        this._lastFontSize = fontSize;
+        this._lastFontFamily = fontFamily;
       }
       let width = this._layoutTextCtx.measureText(textDiv.textContent).width;
       let transform = '';
