@@ -935,29 +935,25 @@ Inspector.prototype = {
       INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
       defaultTab == "computedview");
 
+    const animationId = "newanimationinspector";
     const animationTitle =
       INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle");
-
-    if (Services.prefs.getBoolPref("devtools.new-animationinspector.enabled")) {
-      const animationId = "newanimationinspector";
-
-      this.sidebar.queueTab(
-        animationId,
-        animationTitle,
-        {
-          props: {
-            id: animationId,
-            title: animationTitle
-          },
-          panel: () => {
-            const AnimationInspector =
-              this.browserRequire("devtools/client/inspector/animation/animation");
-            this.animationinspector = new AnimationInspector(this, this.panelWin);
-            return this.animationinspector.provider;
-          }
+    this.sidebar.queueTab(
+      animationId,
+      animationTitle,
+      {
+        props: {
+          id: animationId,
+          title: animationTitle
         },
-        defaultTab == animationId);
-    }
+        panel: () => {
+          const AnimationInspector =
+            this.browserRequire("devtools/client/inspector/animation/animation");
+          this.animationinspector = new AnimationInspector(this, this.panelWin);
+          return this.animationinspector.provider;
+        }
+      },
+      defaultTab == animationId);
 
     // Inject a lazy loaded react tab by exposing a fake React object
     // with a lazy defined Tab thanks to `panel` being a function
