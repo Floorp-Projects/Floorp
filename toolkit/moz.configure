@@ -1070,10 +1070,12 @@ set_define('MOZ_LAUNCHER_PROCESS', launcher)
 
 # Prio
 # ==============================================================
-@depends(c_compiler)
-def libprio(info):
+@depends(c_compiler, target)
+def libprio(info, target):
     if info:
-      if info.type in ('msvc',):
+      # TODO - re-enable Windows when bug 1489691 is fixed.
+      # Note that we will probably never support MSVC however.
+      if info.type in ('msvc',) or target.os in ('WINNT',):
         return None
     return True
 

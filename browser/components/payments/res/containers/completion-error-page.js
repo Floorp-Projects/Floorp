@@ -26,6 +26,10 @@ export default class CompletionErrorPage extends PaymentStateSubscriberMixin(Pay
     this.suggestions = [];
     this.body.append(this.suggestionsList);
 
+    this.brandingSpan = document.createElement("span");
+    this.brandingSpan.classList.add("branding");
+    this.footer.appendChild(this.brandingSpan);
+
     this.doneButton = document.createElement("button");
     this.doneButton.classList.add("done-button", "primary");
     this.doneButton.addEventListener("click", this);
@@ -51,6 +55,7 @@ export default class CompletionErrorPage extends PaymentStateSubscriberMixin(Pay
 
     this.pageTitleHeading.textContent = this.dataset.pageTitle;
     this.suggestionHeading.textContent = this.dataset.suggestionHeading;
+    this.brandingSpan.textContent = this.dataset.brandingLabel;
     this.doneButton.textContent = this.dataset.doneButtonLabel;
 
     this.suggestionsList.textContent = "";

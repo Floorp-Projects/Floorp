@@ -589,8 +589,8 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
     return NS_OK;
   }
 
-  // non-XUL documents should just use the default tooltip
-  if (!document->IsXULDocument()) {
+  // non-XUL elements should just use the default tooltip
+  if (!aTarget->IsXULElement()) {
     nsIPopupContainer* popupContainer =
       nsIPopupContainer::GetPopupContainer(document->GetShell());
     NS_ENSURE_STATE(popupContainer);

@@ -55,6 +55,7 @@ module.exports = {
     // Specific to Firefox (Chrome code only).
     "PlacesObservers": false,
     "PlacesWeakCallbackWrapper": false,
+    "PrioEncoder": false,
     // Specific to Firefox (Chrome code only).
     "SharedArrayBuffer": false,
     "SimpleGestureEvent": false,

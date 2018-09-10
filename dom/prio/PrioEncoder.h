@@ -21,8 +21,12 @@ class PrioEncoder
 public:
   NS_INLINE_DECL_REFCOUNTING(PrioEncoder)
 
-  static already_AddRefed<Promise>
-  Encode(GlobalObject& aGlobal, const nsCString& aBatchID, const PrioParams& aPrioParams, ErrorResult& aRv);
+  static
+  void Encode(GlobalObject& aGlobal,
+              const nsCString& aBatchID,
+              const PrioParams& aPrioParams,
+              RootedDictionary<PrioEncodedData>& aData,
+              ErrorResult& aRv);
 
 private:
   PrioEncoder();
