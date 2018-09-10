@@ -202,7 +202,29 @@ let URICountListener = {
       return;
     }
 
-    Services.search.recordSearchURLTelemetry(uriSpec);
+    let parseURLResult = Services.search.parseSubmissionURL(uriSpec);
+    if (parseURLResult.engine) {
+      this._recordSearchTelemetry(uriSpec, parseURLResult);
+    } else if (this._urlsQueuedForParsing) {
+      if (Services.search.isInitialized) {
+        this._urlsQueuedForParsing = null;
+      } else {
+        this._urlsQueuedForParsing.push(uriSpec);
+        if (this._urlsQueuedForParsing.length == 1) {
+          Services.search.init(rv => {
+            if (Components.isSuccessCode(rv)) {
+              for (let url of this._urlsQueuedForParsing) {
+                let innerParseURLResult = Services.search.parseSubmissionURL(url);
+                if (innerParseURLResult.engine) {
+                  this._recordSearchTelemetry(url, innerParseURLResult);
+                }
+              }
+            }
+            this._urlsQueuedForParsing = null;
+          });
+        }
+      }
+    }
 
     if (!shouldCountURI) {
       return;
@@ -238,6 +260,31 @@ let URICountListener = {
    */
   reset() {
     this._domainSet.clear();
+  },
+
+  _urlsQueuedForParsing: [],
+
+  _recordSearchTelemetry(url, parseURLResult) {
+    switch (parseURLResult.engine.identifier) {
+      case "google":
+      case "google-2018":
+        let type;
+        let queries = new URLSearchParams(url.split("#")[0].split("?")[1]);
+        let code = queries.get("client");
+        if (code) {
+          // Detecting follow-on searches for sap is a little tricky.
+          // There are a few parameters that only show up
+          // with follow-ons, so we look for those. (oq/ved/ei)
+          type = queries.has("oq") || queries.has("ved") || queries.has("ei") ? "sap-follow-on" : "sap";
+        } else {
+          type = "organic";
+        }
+        let payload = `google.in-content:${type}:${code || "none"}`;
+
+        let histogram = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
+        histogram.add(payload);
+        break;
+    }
   },
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
