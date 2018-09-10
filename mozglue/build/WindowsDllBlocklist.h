@@ -42,6 +42,7 @@ typedef void (*DllLoadHookType)(bool aDllLoaded, NTSTATUS aNtStatus,
 MFBT_API void DllBlocklist_SetDllLoadHook(DllLoadHookType aHook);
 typedef void (*CreateThreadHookType)(bool aWasAllowed, void *aStartAddress);
 MFBT_API void DllBlocklist_SetCreateThreadHook(CreateThreadHookType aHook);
+MFBT_API const char* DllBlocklist_TestBlocklistIntegrity();
 #endif // ENABLE_TESTS
 
 // Forward declaration
