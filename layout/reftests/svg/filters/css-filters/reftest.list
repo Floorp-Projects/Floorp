@@ -1,8 +1,6 @@
 # These tests verify that CSS filters behave properly.
 # e.g. filter: blur(3px)
 
-default-preferences pref(layout.css.filters.enabled,true)
-
 fuzzy-if(webrender,9-9,4780-4784) == blur.html blur-ref.html
 == blur.svg blur-ref.svg
 == blur-calc.html blur-calc-ref.html

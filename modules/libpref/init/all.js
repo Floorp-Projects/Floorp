@@ -2931,9 +2931,6 @@ pref("layout.css.mix-blend-mode.enabled", true);
 // Is support for isolation enabled?
 pref("layout.css.isolation.enabled", true);
 
-// Is support for CSS Filters enabled?
-pref("layout.css.filters.enabled", true);
-
 // Is support for CSS Scrollbar color properties enabled?
 pref("layout.css.scrollbar-colors.enabled", false);
 
