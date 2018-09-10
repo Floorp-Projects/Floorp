@@ -1540,7 +1540,7 @@ telemetry:
     description: >
       The number of times the pending operations list reached the
       high-water mark, leading to operations being applied immediately.
-    expires: "65"
+    expires: "70"
     kind: uint
     keyed: false
     notification_emails:
