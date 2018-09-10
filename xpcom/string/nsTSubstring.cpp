@@ -127,6 +127,16 @@ nsTSubstring<T>::StartBulkWriteImpl(size_type aCapacity,
       char_traits::move(this->mData + aNewSuffixStart,
                         this->mData + aOldSuffixStart,
                         aSuffixLength);
+      if (aSuffixLength) {
+        char_traits::uninitialize(this->mData + aPrefixToPreserve,
+                                  aNewSuffixStart - aPrefixToPreserve);
+        char_traits::uninitialize(this->mData + aNewSuffixStart + aSuffixLength,
+                                  curCapacity + 1 - aNewSuffixStart -
+                                    aSuffixLength);
+      } else {
+        char_traits::uninitialize(this->mData + aPrefixToPreserve,
+                                  curCapacity + 1 - aPrefixToPreserve);
+      }
       return curCapacity;
     }
   }
@@ -224,6 +234,16 @@ nsTSubstring<T>::StartBulkWriteImpl(size_type aCapacity,
   if (oldData == newData) {
     char_traits::move(
       newData + aNewSuffixStart, oldData + aOldSuffixStart, aSuffixLength);
+    if (aSuffixLength) {
+      char_traits::uninitialize(this->mData + aPrefixToPreserve,
+                                aNewSuffixStart - aPrefixToPreserve);
+      char_traits::uninitialize(this->mData + aNewSuffixStart + aSuffixLength,
+                                newCapacity + 1 - aNewSuffixStart -
+                                  aSuffixLength);
+    } else {
+      char_traits::uninitialize(this->mData + aPrefixToPreserve,
+                                newCapacity + 1 - aPrefixToPreserve);
+    }
   } else {
     char_traits::copy(newData, oldData, aPrefixToPreserve);
     char_traits::copy(
@@ -242,6 +262,18 @@ nsTSubstring<T>::FinishBulkWriteImpl(size_type aLength)
   if (aLength) {
     this->mData[aLength] = char_type(0);
     this->mLength = aLength;
+#ifdef DEBUG
+    // ifdefed in order to avoid the call to Capacity() in non-debug
+    // builds.
+    //
+    // Our string is mutable, so Capacity() doesn't return zero.
+    // Capacity() doesn't include the space for the zero terminator,
+    // but we want to unitialize that slot, too. Since we start
+    // counting after the zero terminator the we just wrote above,
+    // we end up overwriting the space for terminator not reflected
+    // in the capacity number.
+    char_traits::uninitialize(this->mData + aLength + 1, Capacity() - aLength);
+#endif
   } else {
     ::ReleaseData(this->mData, this->mDataFlags);
     SetToEmptyBuffer();
