@@ -1122,6 +1122,51 @@ struct DataSegment
 
 typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 
+// A pairing of entry point and instance pointer, used for lazy table
+// initialisation.
+
+struct WasmCallee
+{
+    WasmCallee() : instance(nullptr), entry(nullptr) {}
+    WasmCallee(const Instance* instance, void* entry)
+      : instance(instance),
+        entry(entry)
+    {}
+    // The instance associated with the code address.
+    const Instance* instance;
+    // The table entry code address.
+    void* entry;
+};
+
+// Support for passive data and element segments -- lazy initialisation.
+//
+// At instantiation time, we prepare the required initialising data for each
+// passive segment, copying it into new memory.  This is done separately for
+// data segments and elem segments.  We also create a vector of pointers to
+// this copied data, with nullptr for entries corresponding to active
+// segments.  This vector has the same length as the vector of data/elem
+// segments respectively in the originating module.
+//
+// The vector of pointers and the prepared data are owned by the instance
+// that is constructed.  We have to do this so that the initialising data is
+// available at run time in the instance, in particular to
+// Instance::{mem,table}{Init,Drop}.
+//
+// The final structures have type DataSegmentInitVector and
+// ElemSegmentInitVector respectively.
+
+typedef  Vector<uint8_t,    0, SystemAllocPolicy>  DataSegmentInit;
+typedef  Vector<WasmCallee, 0, SystemAllocPolicy>  ElemSegmentInit;
+
+// We store (unique) pointers rather than references to the initialising
+// vectors in order that they can be incrementally freed as we execute
+// {memory,table}.drop instructions.
+
+typedef  Vector<UniquePtr<DataSegmentInit>, 0, SystemAllocPolicy>
+         DataSegmentInitVector;
+typedef  Vector<UniquePtr<ElemSegmentInit>, 0, SystemAllocPolicy>
+         ElemSegmentInitVector;
+
 // FuncTypeIdDesc describes a function type that can be used by call_indirect
 // and table-entry prologues to structurally compare whether the caller and
 // callee's signatures *structurally* match. To handle the general case, a
