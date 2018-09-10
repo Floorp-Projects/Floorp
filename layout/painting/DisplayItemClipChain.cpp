@@ -85,7 +85,7 @@ DisplayItemClipChain::ToString(const DisplayItemClipChain* aClipChain)
       str.AppendLiteral(", ");
     }
   }
-  return str;
+  return std::move(str);
 }
 
 bool
