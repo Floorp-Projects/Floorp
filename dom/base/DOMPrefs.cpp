@@ -23,12 +23,10 @@ DOMPrefs::Initialize()
 #endif
 
 #define DOM_WEBIDL_PREF(name)
-#define DOM_UINT32_PREF(name, pref, defaultValue) DOMPrefs::name();
 
 #include "DOMPrefsInternal.h"
 
 #undef DOM_WEBIDL_PREF
-#undef DOM_UINT32_PREF
 }
 
 /* static */ bool
@@ -48,23 +46,9 @@ DOMPrefs::DumpEnabled()
     return StaticPrefs::name();                  \
   }
 
-#define DOM_UINT32_PREF(name, pref, defaultValue)                             \
-  /* static */ uint32_t                                                       \
-  DOMPrefs::name()                                                            \
-  {                                                                           \
-      static bool initialized = false;                                        \
-      static Atomic<uint32_t> cachedValue;                                    \
-      if (!initialized) {                                                     \
-        initialized = true;                                                   \
-        Preferences::AddAtomicUintVarCache(&cachedValue, pref, defaultValue); \
-    }                                                                         \
-    return cachedValue;                                                       \
-  }
-
 #include "DOMPrefsInternal.h"
 
 #undef DOM_WEBIDL_PREF
-#undef DOM_UINT32_PREF
 
 } // dom namespace
 } // mozilla namespace
