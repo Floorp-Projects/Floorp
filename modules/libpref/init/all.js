@@ -147,8 +147,6 @@ pref("dom.select_events.textcontrols.enabled", false);
 // We're going for effectively infinite, while preventing abuse.
 pref("dom.workers.maxPerDomain", 512);
 
-pref("dom.serviceWorkers.enabled", false);
-
 // The amount of time (milliseconds) service workers keep running after each event.
 pref("dom.serviceWorkers.idle_timeout", 30000);
 
