@@ -38,6 +38,8 @@
                     android:id="@+id/webview"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
                     android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
                     app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
