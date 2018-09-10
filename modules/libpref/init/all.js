@@ -5171,11 +5171,6 @@ pref("dom.w3c_pointer_events.dispatch_by_pointer_messages", false);
 // W3C pointer events draft
 pref("dom.w3c_pointer_events.implicit_capture", false);
 
-// WHATWG promise rejection events. See
-// https://html.spec.whatwg.org/multipage/webappapis.html#promiserejectionevent
-// TODO: Enable the event interface once actually firing it (bug 1362272).
-pref("dom.promise_rejection_events.enabled", false);
-
 // W3C draft ImageCapture API
 pref("dom.imagecapture.enabled", false);
 
