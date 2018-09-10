@@ -20,7 +20,7 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "computedview",
-      newpanel: "newanimationinspector"
+      newpanel: "animationinspector"
     }
   },
   {
@@ -30,7 +30,7 @@ const DATA = [
     object: "inspector",
     value: null,
     extra: {
-      oldpanel: "newanimationinspector",
+      oldpanel: "animationinspector",
       newpanel: "fontinspector"
     }
   },
@@ -64,7 +64,7 @@ const DATA = [
     value: null,
     extra: {
       oldpanel: "computedview",
-      newpanel: "newanimationinspector"
+      newpanel: "animationinspector"
     }
   },
   {
@@ -74,7 +74,7 @@ const DATA = [
     object: "inspector",
     value: null,
     extra: {
-      oldpanel: "newanimationinspector",
+      oldpanel: "animationinspector",
       newpanel: "fontinspector"
     }
   },
@@ -130,7 +130,7 @@ function testSidebar(toolbox) {
 
   const inspector = toolbox.getCurrentPanel();
   let sidebarTools = ["computedview", "layoutview", "fontinspector",
-                      "newanimationinspector"];
+                      "animationinspector"];
 
   // Concatenate the array with itself so that we can open each tool twice.
   sidebarTools = [...sidebarTools, ...sidebarTools];

@@ -10,7 +10,7 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js", this);
 
 const FRAME_SCRIPT_URL = CHROME_URL_ROOT + "doc_frame_script.js";
-const TAB_NAME = "newanimationinspector";
+const TAB_NAME = "animationinspector";
 
 const ANIMATION_L10N =
   new LocalizationHelper("devtools/client/locales/animationinspector.properties");
@@ -405,7 +405,7 @@ const mouseOutOnTargetNode = function(animationInspector, panel, index) {
 const selectAnimationInspector = async function(inspector) {
   await inspector.toolbox.selectTool("inspector");
   const onUpdated = inspector.once("inspector-updated");
-  inspector.sidebar.select("newanimationinspector");
+  inspector.sidebar.select("animationinspector");
   await onUpdated;
   await waitForRendering(inspector.animationinspector);
 };
