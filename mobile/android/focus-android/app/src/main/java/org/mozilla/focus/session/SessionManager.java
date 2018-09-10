@@ -4,18 +4,14 @@
 
 package org.mozilla.focus.session;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
-import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
-import android.view.View;
 
-import org.mozilla.focus.R;
 import org.mozilla.focus.architecture.NonNullLiveData;
 import org.mozilla.focus.architecture.NonNullMutableLiveData;
 import org.mozilla.focus.customtabs.CustomTabConfig;
@@ -23,7 +19,6 @@ import org.mozilla.focus.shortcut.HomeScreen;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.utils.UrlUtils;
-import org.mozilla.focus.utils.ViewUtils;
 import org.mozilla.focus.web.GeckoWebViewProvider;
 import org.mozilla.geckoview.GeckoSession;
 
