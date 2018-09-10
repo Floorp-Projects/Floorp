@@ -21,6 +21,7 @@ Test the completion-error-page component
             data-suggestion-heading="Sample suggestion heading"
             data-suggestion-1="Sample suggestion"
             data-suggestion-2="Sample suggestion"
+            data-branding-label="Sample Brand"
             data-done-button-label="OK"></completion-error-page>
   </p>
 <div id="content" style="display: none">
@@ -44,6 +45,7 @@ add_task(async function test_no_values() {
      "Suggestion 1 set on page");
   is(page.dataset["suggestion-2"], "Sample suggestion",
      "Suggestion 2 set on page");
+  is(page.dataset.brandingLabel, "Sample Brand", "Branding string set");
 
   page.dataset.pageTitle = "Oh noes! **host-name** is having an issue";
   page.dataset["suggestion-2"] = "You should probably blame **host-name**, not us";
@@ -72,6 +74,12 @@ add_task(async function test_no_values() {
   is(page.querySelector("li:nth-child(2)").textContent,
      `You should probably blame ${displayHost}, not us`,
      "Suggestion 2 includes host-name");
+  is(page.querySelector(".branding").textContent,
+     "Sample Brand",
+     "Branding set on page");
+  is(page.querySelector(".primary").textContent,
+     "OK",
+     "Primary button label set correctly");
 });
 </script>
 
