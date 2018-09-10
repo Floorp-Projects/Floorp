@@ -730,5 +730,5 @@ be temporary, and you can try again later.</li>
     <string name="open_new_tab_snackbar">Switch</string>
 
     <!-- Preference for switching to a new tab immediately after opening -->
-    <string name="preference_open_new_tab">When you open link in a new tab, switch to it immediately</string>
+    <string name="preference_open_new_tab">When you open a link in a new tab, switch to it immediately</string>
 </resources>
