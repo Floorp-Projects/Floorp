@@ -4,7 +4,7 @@
 
 # text-emphasis-style
 == text-emphasis-style-property-001.html text-emphasis-style-property-001-ref.html
-fuzzy-if(gtkWidget,0-3,0-4) fuzzy-if(skiaContent,0-104,0-80)  == text-emphasis-style-property-002.html text-emphasis-style-property-002-ref.html
+fuzzy-if(gtkWidget,0-3,0-4) fuzzy-if(skiaContent,0-104,0-80) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-emphasis-style-property-002.html text-emphasis-style-property-002-ref.html # Bug 1392106
 == text-emphasis-style-property-003.html text-emphasis-style-property-003-ref.html
 == text-emphasis-style-property-004.html text-emphasis-style-property-004-ref.html
 == text-emphasis-style-property-005.html text-emphasis-style-property-005-ref.html
@@ -54,7 +54,7 @@ fuzzy-if(gtkWidget,0-3,0-4) == text-emphasis-color-property-002.html text-emphas
 
 # text-emphasis
 == text-emphasis-property-001.html text-emphasis-style-property-001-ref.html
-fuzzy-if(gtkWidget,0-3,0-4) fuzzy-if(skiaContent,0-104,0-80) == text-emphasis-property-002.html text-emphasis-style-property-002-ref.html
+fuzzy-if(gtkWidget,0-3,0-4) fuzzy-if(skiaContent,0-104,0-80) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-emphasis-property-002.html text-emphasis-style-property-002-ref.html # Bug 1392106
 fuzzy-if(gtkWidget,0-3,0-4) == text-emphasis-property-003.html text-emphasis-style-property-012-ref.html
 fuzzy-if(gtkWidget,0-3,0-4) == text-emphasis-property-003a.html text-emphasis-style-property-012-ref.html
 fuzzy-if(gtkWidget,0-3,0-4) == text-emphasis-property-003b.html text-emphasis-style-property-012-ref.html
