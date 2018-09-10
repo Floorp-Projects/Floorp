@@ -588,7 +588,8 @@ Instance::Instance(JSContext* cx,
 }
 
 bool
-Instance::init(JSContext* cx)
+Instance::init(JSContext* cx, const ShareableBytes* bytecode,
+               Handle<FunctionVector> funcImports)
 {
     if (memory_ && memory_->movingGrowable() && !memory_->addMovingGrowObserver(cx, object_))
         return false;
@@ -618,6 +619,63 @@ Instance::init(JSContext* cx)
 #ifdef ENABLE_WASM_GC
     preBarrierCode_ = jitRuntime->preBarrier(MIRType::Object);
 #endif
+
+    // Create a vector the same length as the data segment vector, holding a
+    // copy of the initialising data for passive segments and |nullptr| for
+    // active ones.
+    MOZ_ASSERT(dataSegInitVec_.empty());
+    if (!dataSegInitVec_.reserve(code().dataSegments().length())) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+    for (const DataSegment& seg : code().dataSegments()) {
+        UniquePtr<DataSegmentInit> dsi = nullptr;
+        if (!seg.offsetIfActive) {
+            // Passive initialiser.
+            dsi.reset(js_new<DataSegmentInit>());
+            if (!dsi || !dsi->initLengthUninitialized(seg.length)) {
+                ReportOutOfMemory(cx);
+                return false;
+            }
+            MOZ_ASSERT(seg.bytecodeOffset <= bytecode->length());
+            MOZ_ASSERT(seg.length <= bytecode->length() - seg.bytecodeOffset);
+            memcpy((char*)dsi->begin(),
+                   (char*)bytecode->begin() + seg.bytecodeOffset,
+                   seg.length);
+        }
+        dataSegInitVec_.infallibleAppend(std::move(dsi));
+    }
+
+    // And similarly for the elem segment vector.
+    MOZ_ASSERT(elemSegInitVec_.empty());
+    if (!elemSegInitVec_.reserve(code().elemSegments().length())) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+    for (const ElemSegment& seg : code().elemSegments()) {
+        UniquePtr<ElemSegmentInit> esi = nullptr;
+        if (!seg.offsetIfActive) {
+            // Passive initialiser.
+            esi.reset(js_new<ElemSegmentInit>());
+            if (!esi || !esi->initLengthUninitialized(seg.elemFuncIndices.length())) {
+                ReportOutOfMemory(cx);
+                return false;
+            }
+
+            Tier tier = code().bestTier();
+            const Table& table = *tables()[seg.tableIndex];
+
+            MOZ_ASSERT(seg.elemCodeRangeIndices(tier).length() ==
+                       seg.elemFuncIndices.length());
+
+            for (uint32_t i = 0; i < seg.elemCodeRangeIndices(tier).length(); i++) {
+                ComputeWasmCallee(code(), this, funcImports, i, table, seg,
+                                  &(*esi)[i]);
+            }
+        }
+        elemSegInitVec_.infallibleAppend(std::move(esi));
+    }
+
     return true;
 }
 

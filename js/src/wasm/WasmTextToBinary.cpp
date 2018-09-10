@@ -123,6 +123,9 @@ class WasmToken
         Offset,
         OpenParen,
         Param,
+#ifdef ENABLE_WASM_BULKMEM_OPS
+        Passive,
+#endif
         Ref,
         RefNull,
         Result,
@@ -390,6 +393,9 @@ class WasmToken
           case Offset:
           case OpenParen:
           case Param:
+#ifdef ENABLE_WASM_BULKMEM_OPS
+          case Passive:
+#endif
           case Ref:
           case Result:
           case Shared:
@@ -1704,6 +1710,10 @@ WasmTokenStream::next()
       case 'p':
         if (consume(u"param"))
             return WasmToken(WasmToken::Param, begin, cur_);
+#ifdef ENABLE_WASM_BULKMEM_OPS
+        if (consume(u"passive"))
+            return WasmToken(WasmToken::Passive, begin, cur_);
+#endif
         break;
 
       case 'r':
@@ -3506,14 +3516,32 @@ ParseInitializerExpression(WasmParseContext& c)
     return initExpr;
 }
 
+static bool
+ParseInitializerExpressionOrPassive(WasmParseContext& c, AstExpr** maybeInitExpr)
+{
+#ifdef ENABLE_WASM_BULKMEM_OPS
+    if (c.ts.getIf(WasmToken::Passive)) {
+        *maybeInitExpr = nullptr;
+        return true;
+    }
+#endif
+
+    AstExpr* initExpr = ParseInitializerExpression(c);
+    if (!initExpr)
+        return false;
+
+    *maybeInitExpr = initExpr;
+    return true;
+}
+
 static AstDataSegment*
 ParseDataSegment(WasmParseContext& c)
 {
     if (!MaybeParseOwnerIndex(c))
         return nullptr;
 
-    AstExpr* offset = ParseInitializerExpression(c);
-    if (!offset)
+    AstExpr* offsetIfActive;
+    if (!ParseInitializerExpressionOrPassive(c, &offsetIfActive))
         return nullptr;
 
     AstNameVector fragments(c.lifo);
@@ -3524,7 +3552,7 @@ ParseDataSegment(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) AstDataSegment(offset, std::move(fragments));
+    return new(c.lifo) AstDataSegment(offsetIfActive, std::move(fragments));
 }
 
 static bool
@@ -3608,7 +3636,7 @@ ParseMemory(WasmParseContext& c, AstModule* module)
             if (!offset)
                 return false;
 
-            AstDataSegment* segment = new(c.lifo) AstDataSegment(offset, std::move(fragments));
+            auto* segment = new(c.lifo) AstDataSegment(offset, std::move(fragments));
             if (!segment || !module->append(segment))
                 return false;
 
@@ -3960,8 +3988,8 @@ ParseElemSegment(WasmParseContext& c)
     if (!MaybeParseOwnerIndex(c))
         return nullptr;
 
-    AstExpr* offset = ParseInitializerExpression(c);
-    if (!offset)
+    AstExpr* offsetIfActive;
+    if (!ParseInitializerExpressionOrPassive(c, &offsetIfActive))
         return nullptr;
 
     AstRefVector elems(c.lifo);
@@ -3972,7 +4000,7 @@ ParseElemSegment(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) AstElemSegment(offset, std::move(elems));
+    return new(c.lifo) AstElemSegment(offsetIfActive, std::move(elems));
 }
 
 static bool
@@ -4873,12 +4901,12 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
     }
 
     for (AstDataSegment* segment : module->dataSegments()) {
-        if (!ResolveExpr(r, *segment->offset()))
+        if (segment->offsetIfActive() && !ResolveExpr(r, *segment->offsetIfActive()))
             return false;
     }
 
     for (AstElemSegment* segment : module->elemSegments()) {
-        if (!ResolveExpr(r, *segment->offset()))
+        if (segment->offsetIfActive() && !ResolveExpr(r, *segment->offsetIfActive()))
             return false;
         for (AstRef& ref : segment->elems()) {
             if (!r.resolveFunction(ref))
@@ -5809,14 +5837,30 @@ EncodeCodeSection(Encoder& e, Uint32Vector* offsets, AstModule& module)
 }
 
 static bool
+EncodeDestinationOffsetOrFlags(Encoder& e, AstExpr* offsetIfActive)
+{
+    if (offsetIfActive) {
+        // In the MVP, the following VarU32 is the table or linear memory
+        // index and it must be zero.  In the bulk-mem-ops proposal, it is
+        // repurposed as a flag field.
+        if (!e.writeVarU32(uint32_t(InitializerKind::Active)))
+            return false;
+        if (!EncodeExpr(e, *offsetIfActive))
+            return false;
+        if (!e.writeOp(Op::End))
+            return false;
+    } else {
+        if (!e.writeVarU32(uint32_t(InitializerKind::Passive)))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
 EncodeDataSegment(Encoder& e, const AstDataSegment& segment)
 {
-    if (!e.writeVarU32(0))  // linear memory index
-        return false;
-
-    if (!EncodeExpr(e, *segment.offset()))
-        return false;
-    if (!e.writeOp(Op::End))
+    if (!EncodeDestinationOffsetOrFlags(e, segment.offsetIfActive()))
         return false;
 
     size_t totalLength = 0;
@@ -5865,12 +5909,7 @@ EncodeDataSection(Encoder& e, AstModule& module)
 static bool
 EncodeElemSegment(Encoder& e, AstElemSegment& segment)
 {
-    if (!e.writeVarU32(0)) // table index
-        return false;
-
-    if (!EncodeExpr(e, *segment.offset()))
-        return false;
-    if (!e.writeOp(Op::End))
+    if (!EncodeDestinationOffsetOrFlags(e, segment.offsetIfActive()))
         return false;
 
     if (!e.writeVarU32(segment.elems().length()))

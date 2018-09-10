@@ -1155,15 +1155,16 @@ class AstExport : public AstNode
 
 class AstDataSegment : public AstNode
 {
-    AstExpr* offset_;
+    AstExpr* offsetIfActive_;
     AstNameVector fragments_;
 
   public:
-    AstDataSegment(AstExpr* offset, AstNameVector&& fragments)
-      : offset_(offset), fragments_(std::move(fragments))
+    AstDataSegment(AstExpr* offsetIfActive, AstNameVector&& fragments)
+      : offsetIfActive_(offsetIfActive),
+        fragments_(std::move(fragments))
     {}
 
-    AstExpr* offset() const { return offset_; }
+    AstExpr* offsetIfActive() const { return offsetIfActive_; }
     const AstNameVector& fragments() const { return fragments_; }
 };
 
@@ -1171,15 +1172,16 @@ typedef AstVector<AstDataSegment*> AstDataSegmentVector;
 
 class AstElemSegment : public AstNode
 {
-    AstExpr* offset_;
+    AstExpr* offsetIfActive_;
     AstRefVector elems_;
 
   public:
-    AstElemSegment(AstExpr* offset, AstRefVector&& elems)
-      : offset_(offset), elems_(std::move(elems))
+    AstElemSegment(AstExpr* offsetIfActive, AstRefVector&& elems)
+      : offsetIfActive_(offsetIfActive),
+        elems_(std::move(elems))
     {}
 
-    AstExpr* offset() const { return offset_; }
+    AstExpr* offsetIfActive() const { return offsetIfActive_; }
     AstRefVector& elems() { return elems_; }
     const AstRefVector& elems() const { return elems_; }
 };
