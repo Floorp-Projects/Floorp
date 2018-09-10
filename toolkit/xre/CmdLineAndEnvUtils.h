@@ -332,7 +332,7 @@ MakeCommandLine(int argc, wchar_t **argv)
 
   auto s = MakeUnique<wchar_t[]>(len);
   if (!s) {
-    return nullptr;
+    return s;
   }
 
   wchar_t *c = s.get();
@@ -346,7 +346,7 @@ MakeCommandLine(int argc, wchar_t **argv)
 
   *c = '\0';
 
-  return std::move(s);
+  return s;
 }
 
 inline bool
