@@ -332,7 +332,7 @@ OffscreenCanvas::PrefEnabledOnWorkerThread(JSContext* aCx, JSObject* aObj)
     return true;
   }
 
-  return DOMPrefs::OffscreenCanvasEnabled(aCx, aObj);
+  return DOMPrefs::gfx_offscreencanvas_enabled(aCx, aObj);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(OffscreenCanvas, DOMEventTargetHelper, mCurrentContext)

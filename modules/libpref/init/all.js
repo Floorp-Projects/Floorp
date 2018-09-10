@@ -4791,8 +4791,6 @@ pref("webgl.dxgl.needs-finish", false);
 
 pref("dom.webgpu.enable", false);
 
-pref("gfx.offscreencanvas.enabled", false);
-
 // sendbuffer of 0 means use OS default, sendbuffer unset means use
 // gecko default which varies depending on windows version and is OS
 // default on non windows
