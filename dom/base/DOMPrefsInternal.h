@@ -19,7 +19,6 @@
 //   * This defines DOMPrefs::FooBar(JSContext* aCx, JSObject* aObj);
 //     This is allows the use of DOMPrefs in WebIDL files.
 
-DOM_PREF(StorageManagerEnabled, "dom.storageManager.enabled")
 DOM_PREF(PromiseRejectionEventsEnabled, "dom.promise_rejection_events.enabled")
 DOM_PREF(PushEnabled, "dom.push.enabled")
 DOM_PREF(StreamsEnabled, "dom.streams.enabled")
@@ -41,7 +40,7 @@ DOM_WEBIDL_PREF2(dom_caches_enabled)
 DOM_WEBIDL_PREF2(dom_webnotifications_serviceworker_enabled)
 DOM_WEBIDL_PREF2(dom_webnotifications_requireinteraction_enabled)
 DOM_WEBIDL_PREF2(dom_serviceWorkers_enabled)
-DOM_WEBIDL_PREF(StorageManagerEnabled)
+DOM_WEBIDL_PREF2(dom_storageManager_enabled)
 DOM_WEBIDL_PREF(PromiseRejectionEventsEnabled)
 DOM_WEBIDL_PREF(PushEnabled)
 DOM_WEBIDL_PREF(StreamsEnabled)
