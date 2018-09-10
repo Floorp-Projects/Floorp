@@ -6,6 +6,7 @@
 #define nsCyrillicDetector_h__
 
 #include "nsCyrillicClass.h"
+#include "nsIStringCharsetDetector.h"
 
 
 

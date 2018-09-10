@@ -6,7 +6,6 @@
 
 UNIFIED_SOURCES += [
     'nsUdetXPCOMWrapper.cpp',
-    'nsUniversalCharDetModule.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
