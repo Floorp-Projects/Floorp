@@ -5830,7 +5830,7 @@ BCMapCellInfo::SetIEndBorderWidths(BCPixelSize aWidth)
   if (mEndCol) {
     BCPixelSize half = BC_BORDER_START_HALF(aWidth);
     mEndCol->SetIEndBorderWidth(
-      std::max(nscoord(half), mEndCol->GetIEndBorderWidth()));
+      std::max(half, mEndCol->GetIEndBorderWidth()));
   }
 }
 
@@ -5845,9 +5845,10 @@ BCMapCellInfo::SetBEndBorderWidths(BCPixelSize aWidth)
   if (mEndRow) {
     BCPixelSize half = BC_BORDER_START_HALF(aWidth);
     mEndRow->SetBEndBCBorderWidth(
-      std::max(nscoord(half), mEndRow->GetBEndBCBorderWidth()));
+      std::max(half, mEndRow->GetBEndBCBorderWidth()));
   }
 }
+
 void
 BCMapCellInfo::SetBStartBorderWidths(BCPixelSize aWidth)
 {
@@ -5858,9 +5859,10 @@ BCMapCellInfo::SetBStartBorderWidths(BCPixelSize aWidth)
   if (mStartRow) {
     BCPixelSize half = BC_BORDER_END_HALF(aWidth);
     mStartRow->SetBStartBCBorderWidth(
-      std::max(nscoord(half), mStartRow->GetBStartBCBorderWidth()));
+      std::max(half, mStartRow->GetBStartBCBorderWidth()));
   }
 }
+
 void
 BCMapCellInfo::SetIStartBorderWidths(BCPixelSize aWidth)
 {
@@ -5871,7 +5873,7 @@ BCMapCellInfo::SetIStartBorderWidths(BCPixelSize aWidth)
   if (mStartCol) {
     BCPixelSize half = BC_BORDER_END_HALF(aWidth);
     mStartCol->SetIStartBorderWidth(
-      std::max(nscoord(half), mStartCol->GetIStartBorderWidth()));
+      std::max(half, mStartCol->GetIStartBorderWidth()));
   }
 }
 
