@@ -109,6 +109,13 @@ FinishMultiOffThreadScriptsDecoder(JSContext* cx, OffThreadToken* token,
 extern JS_PUBLIC_API(void)
 CancelMultiOffThreadScriptsDecoder(JSContext* cx, OffThreadToken* token);
 
+#if defined(JS_BUILD_BINAST)
+
+extern JS_PUBLIC_API(bool)
+CanDecodeBinASTOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
+
+#endif // defined(JS_BUILD_BINAST)
+
 } // namespace JS
 
 #endif /* js_OffThreadScriptCompilation_h */

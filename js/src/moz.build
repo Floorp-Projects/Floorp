@@ -395,6 +395,7 @@ UNIFIED_SOURCES += [
     'vm/MemoryMetrics.cpp',
     'vm/NativeObject.cpp',
     'vm/ObjectGroup.cpp',
+    'vm/OffThreadScriptCompilation.cpp',
     'vm/PIC.cpp',
     'vm/Printer.cpp',
     'vm/Probes.cpp',
