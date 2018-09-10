@@ -188,10 +188,10 @@ CLANGXX_3_3 = CLANGXX('3.3.0')
 CLANG_3_6 = CLANG('3.6.2') + DEFAULT_C11
 CLANGXX_3_6 = CLANGXX('3.6.2') + {
     '-std=gnu++11': {
-        '__has_feature(cxx_alignof)': '1',
+        '__has_builtin(__builtin_bitreverse8)': '1',
     },
     '-std=gnu++14': {
-        '__has_feature(cxx_alignof)': '1',
+        '__has_builtin(__builtin_bitreverse8)': '1',
     },
 }
 DEFAULT_CLANG = CLANG_3_6
@@ -487,7 +487,7 @@ class LinuxToolchainTest(BaseToolchainTest):
         compiler='/usr/bin/clang-3.3',
         language='C',
     )
-    CLANGXX_3_3_RESULT = 'Only clang/llvm 3.6 or newer is supported.'
+    CLANGXX_3_3_RESULT = 'Only clang/llvm 3.9 or newer is supported.'
     CLANG_3_6_RESULT = CompilerResult(
         flags=['-std=gnu99'],
         version='3.6.2',

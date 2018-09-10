@@ -12,11 +12,11 @@
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/WheelEventBinding.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsAttrValueInlines.h"
 #include "nsCRTGlue.h"
 #include "nsQueryObject.h"
@@ -562,7 +562,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
   RefPtr<DispatchChangeEventCallback> dispatchChangeEventCallback =
     new DispatchChangeEventCallback(mInput);
 
-  if (DOMPrefs::WebkitBlinkDirectoryPickerEnabled() &&
+  if (StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
       mInput->HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory)) {
     ErrorResult error;
     GetFilesHelper* helper = mInput->GetOrCreateGetFilesHelper(true, error);
@@ -2542,7 +2542,7 @@ HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
 
   if (mFileData->mFilesOrDirectories.IsEmpty()) {
     if ((IsDirPickerEnabled() && Allowdirs()) ||
-        (DOMPrefs::WebkitBlinkDirectoryPickerEnabled() &&
+        (StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
          HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory))) {
       nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                          "NoDirSelected", value);
@@ -2633,7 +2633,7 @@ HTMLInputElement::MozSetDndFilesAndDirectories(const nsTArray<OwningFileOrDirect
   RefPtr<DispatchChangeEventCallback> dispatchChangeEventCallback =
     new DispatchChangeEventCallback(this);
 
-  if (DOMPrefs::WebkitBlinkDirectoryPickerEnabled() &&
+  if (StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
       HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory)) {
     ErrorResult rv;
     GetFilesHelper* helper = GetOrCreateGetFilesHelper(true /* recursionFlag */,
@@ -2716,7 +2716,7 @@ HTMLInputElement::GetFiles()
   }
 
   if (IsDirPickerEnabled() && Allowdirs() &&
-      (!DOMPrefs::WebkitBlinkDirectoryPickerEnabled() ||
+      (!StaticPrefs::dom_webkitBlink_dirPicker_enabled() ||
        !HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory))) {
     return nullptr;
   }
@@ -3965,7 +3965,7 @@ HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor)
     if (target &&
         target->FindFirstNonChromeOnlyAccessContent() == this &&
         ((IsDirPickerEnabled() && Allowdirs()) ||
-         (DOMPrefs::WebkitBlinkDirectoryPickerEnabled() &&
+         (StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
           HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory)))) {
       type = FILE_PICKER_DIRECTORY;
     }

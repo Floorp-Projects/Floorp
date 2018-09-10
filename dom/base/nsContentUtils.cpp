@@ -2217,7 +2217,7 @@ nsContentUtils::IsCallerChrome()
 bool
 nsContentUtils::ShouldResistFingerprinting()
 {
-  return DOMPrefs::ResistFingerprintingEnabled();
+  return StaticPrefs::privacy_resistFingerprinting();
 }
 
 bool

@@ -222,6 +222,7 @@ class WasmInstanceObject : public NativeObject
                                       const wasm::GlobalDescVector& globals,
                                       wasm::HandleValVector globalImportValues,
                                       const WasmGlobalObjectVector& globalObjs,
+                                      const wasm::ShareableBytes* bytecode,
                                       HandleObject proto);
     void initExportsObj(JSObject& exportsObj);
 

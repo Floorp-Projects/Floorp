@@ -124,8 +124,6 @@ pref("dom.indexedDB.logging.enabled", true);
 pref("dom.indexedDB.logging.details", true);
 // Enable profiler marks for indexedDB events.
 pref("dom.indexedDB.logging.profiler-marks", false);
-// Enable passing the "storage" option to indexedDB.open.
-pref("dom.indexedDB.storageOption.enabled", false);
 
 // Whether or not File Handle is enabled.
 pref("dom.fileHandle.enabled", true);
@@ -146,8 +144,6 @@ pref("dom.select_events.textcontrols.enabled", false);
 // The number of workers per domain allowed to run concurrently.
 // We're going for effectively infinite, while preventing abuse.
 pref("dom.workers.maxPerDomain", 512);
-
-pref("dom.serviceWorkers.enabled", false);
 
 // The amount of time (milliseconds) service workers keep running after each event.
 pref("dom.serviceWorkers.idle_timeout", 30000);
@@ -171,9 +167,6 @@ pref("dom.enable_resource_timing", true);
 // Whether performance.GetEntries* will contain an entry for the active document
 pref("dom.enable_performance_navigation_timing", true);
 
-// Enable printing performance marks/measures to log
-pref("dom.performance.enable_user_timing_logging", false);
-
 // Enable notification of performance timing
 pref("dom.performance.enable_notify_performance_timing", false);
 
@@ -188,9 +181,6 @@ pref("dom.performance.time_to_non_blank_paint.enabled", false);
 
 // Enable exposing timeToDOMContentFlushed
 pref("dom.performance.time_to_dom_content_flushed.enabled", false);
-
-// Enable Performance Observer API
-pref("dom.enable_performance_observer", true);
 
 // Enable requestIdleCallback API
 pref("dom.requestIdleCallback.enabled", true);
@@ -968,9 +958,6 @@ pref("canvas.filters.enabled", true);
 pref("canvas.path.enabled", true);
 pref("canvas.capturestream.enabled", true);
 
-// Disable the ImageBitmap-extensions for now.
-pref("canvas.imagebitmap_extensions.enabled", false);
-
 // We want the ability to forcibly disable platform a11y, because
 // some non-a11y-related components attempt to bring it up.  See bug
 // 538530 for details about Windows; we have a pref here that allows it
@@ -1071,13 +1058,6 @@ pref("toolkit.asyncshutdown.crash_timeout", 180000); // 3 minutes
 #endif // MOZ_ASAN
 // Extra logging for AsyncShutdown barriers and phases
 pref("toolkit.asyncshutdown.log", false);
-
-#ifdef MOZILLA_OFFICIAL
-// enable JS dump() function.
-pref("browser.dom.window.dump.enabled", false, sticky);
-#else
-pref("browser.dom.window.dump.enabled", true, sticky);
-#endif
 
 // Controls whether EventEmitter module throws dump message on each emit
 pref("toolkit.dump.emit", false);
@@ -1370,8 +1350,6 @@ pref("privacy.firstparty.isolate",                        false);
 // (top level URLs) can access resources through window.opener.
 // This pref is effective only when "privacy.firstparty.isolate" is true.
 pref("privacy.firstparty.isolate.restrict_opener_access", true);
-// Anti-fingerprinting, disabled by default
-pref("privacy.resistFingerprinting", false);
 // We automatically decline canvas permission requests if they are not initiated
 // from user input. Just in case that breaks something, we allow the user to revert
 // this behaior with this obscure pref. We do not intend to support this long term.
@@ -4799,8 +4777,6 @@ pref("webgl.dxgl.needs-finish", false);
 
 pref("dom.webgpu.enable", false);
 
-pref("gfx.offscreencanvas.enabled", false);
-
 // sendbuffer of 0 means use OS default, sendbuffer unset means use
 // gecko default which varies depending on windows version and is OS
 // default on non windows
@@ -5059,14 +5035,7 @@ pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  32768);
 
 // Web Notification
-pref("dom.webnotifications.enabled", true);
-pref("dom.webnotifications.serviceworker.enabled", true);
 pref("dom.webnotifications.requireinteraction.count", 3);
-#ifdef NIGHTLY_BUILD
-pref("dom.webnotifications.requireinteraction.enabled", true);
-#else
-pref("dom.webnotifications.requireinteraction.enabled", false);
-#endif
 
 // Show favicons in web notifications.
 pref("alerts.showFavicons", false);
@@ -5115,12 +5084,8 @@ pref("dom.vibrator.max_vibrate_list_len", 128);
 // Battery API
 pref("dom.battery.enabled", true);
 
-// Streams API
-pref("dom.streams.enabled", false);
-
 // Push
 
-pref("dom.push.enabled", false);
 pref("dom.push.alwaysConnect", false);
 
 pref("dom.push.loglevel", "Error");
@@ -5186,11 +5151,6 @@ pref("dom.w3c_pointer_events.dispatch_by_pointer_messages", false);
 // W3C pointer events draft
 pref("dom.w3c_pointer_events.implicit_capture", false);
 
-// WHATWG promise rejection events. See
-// https://html.spec.whatwg.org/multipage/webappapis.html#promiserejectionevent
-// TODO: Enable the event interface once actually firing it (bug 1362272).
-pref("dom.promise_rejection_events.enabled", false);
-
 // W3C draft ImageCapture API
 pref("dom.imagecapture.enabled", false);
 
@@ -5206,13 +5166,6 @@ pref("media.ondevicechange.fakeDeviceChangeEvent.enabled", false);
 // those platforms we don't handle touch events anyway so it's conceptually
 // a no-op.
 pref("layout.css.touch_action.enabled", true);
-
-#if defined(MOZ_WIDGET_ANDROID)
-// Network Information API
-pref("dom.netinfo.enabled", true);
-#else
-pref("dom.netinfo.enabled", false);
-#endif
 
 // How long must we wait before declaring that a window is a "ghost" (i.e., a
 // likely leak)?  This should be longer than it usually takes for an eligible
@@ -5617,9 +5570,6 @@ pref("identity.fxaccounts.auth.uri", "https://api.accounts.firefox.com/v1");
 
 pref("beacon.enabled", true);
 
-// SW Cache API
-pref("dom.caches.enabled", true);
-
 // UDPSocket API
 pref("dom.udpsocket.enabled", false);
 
@@ -5816,7 +5766,6 @@ pref("osfile.reset_worker_delay", 30000);
 #endif
 
 #if !defined(MOZ_WIDGET_ANDROID)
-pref("dom.webkitBlink.dirPicker.enabled", true);
 pref("dom.webkitBlink.filesystem.enabled", true);
 #endif
 
@@ -5837,12 +5786,6 @@ pref("security.data_uri.block_toplevel_data_uri_navigations", true);
 // If true, all FTP subresource loads will be blocked.
 pref("security.block_ftp_subresources", true);
 
-// Enable Storage API for all platforms except Android.
-#if !defined(MOZ_WIDGET_ANDROID)
-pref("dom.storageManager.enabled", true);
-#else
-pref("dom.storageManager.enabled", false);
-#endif
 pref("dom.storageManager.prompt.testing", false);
 pref("dom.storageManager.prompt.testing.allow", false);
 

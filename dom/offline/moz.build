@@ -16,6 +16,7 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += [
     '/dom/base',
+    '/uriloader/prefetch',
 ]
 
 FINAL_LIBRARY = 'xul'

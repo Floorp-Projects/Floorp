@@ -2,9 +2,264 @@
 if (!wasmBulkMemSupported())
     quit(0);
 
+const Module = WebAssembly.Module;
+const Instance = WebAssembly.Instance;
+
+// Some non-boundary tests for {table,memory}.{init,drop,copy}.  The table
+// case is more complex and appears first.  The memory case is a simplified
+// version of it.
+
+// This module exports 5 functions ..
+let tab_expmod_t =
+    `(module
+        (func (export "ef0") (result i32) (i32.const 0))
+        (func (export "ef1") (result i32) (i32.const 1))
+        (func (export "ef2") (result i32) (i32.const 2))
+        (func (export "ef3") (result i32) (i32.const 3))
+        (func (export "ef4") (result i32) (i32.const 4))
+     )`;
+
+// .. and this one imports those 5 functions.  It adds 5 of its own, creates a
+// 30 element table using both active and passive initialisers, with a mixture
+// of the imported and local functions.  |testfn| is exported.  It uses the
+// supplied |insn| to modify the table somehow, and then will indirect-call
+// the table entry number specified as a parameter.  That will either return a
+// value 0 to 9 indicating the function called, or will throw an exception if
+// the table entry is empty.
+function gen_tab_impmod_t(insn)
+{
+  let t =
+  `(module
+     ;; -------- Types --------
+     (type (func (result i32)))  ;; type #0
+     ;; -------- Tables --------
+     (table 30 30 anyfunc)
+     ;; -------- Table initialisers --------
+     (elem (i32.const 2) 3 1 4 1)
+     (elem passive 2 7 1 8)
+     (elem (i32.const 12) 7 5 2 3 6)
+     (elem passive 5 9 2 7 6)
+     ;; -------- Imports --------
+     (import "a" "if0" (result i32))    ;; index 0
+     (import "a" "if1" (result i32))
+     (import "a" "if2" (result i32))
+     (import "a" "if3" (result i32))
+     (import "a" "if4" (result i32))    ;; index 4
+     ;; -------- Functions --------
+     (func (result i32) (i32.const 5))  ;; index 5
+     (func (result i32) (i32.const 6))
+     (func (result i32) (i32.const 7))
+     (func (result i32) (i32.const 8))
+     (func (result i32) (i32.const 9))  ;; index 9
+
+     (func (export "testfn") (param i32) (result i32)
+       ${insn}
+       ;; call the selected table entry, which will either return a value,
+       ;; or will cause an exception.
+       get_local 0      ;; callIx
+       call_indirect 0  ;; and its return value is our return value.
+     )
+   )`;
+   return t;
+};
+
+// This is the test driver.  It constructs the abovementioned module, using
+// the given |instruction| to modify the table, and then probes the table
+// by making indirect calls, one for each element of |expected_result_vector|.
+// The results are compared to those in the vector.
+
+function tab_test(instruction, expected_result_vector)
+{
+    let tab_expmod_b = wasmTextToBinary(tab_expmod_t);
+    let tab_expmod_i = new Instance(new Module(tab_expmod_b));
+
+    let tab_impmod_t = gen_tab_impmod_t(instruction);
+    let tab_impmod_b = wasmTextToBinary(tab_impmod_t);
+
+    for (let i = 0; i < expected_result_vector.length; i++) {
+        let inst = new Instance(new Module(tab_impmod_b),
+                                {a:{if0:tab_expmod_i.exports.ef0,
+                                    if1:tab_expmod_i.exports.ef1,
+                                    if2:tab_expmod_i.exports.ef2,
+                                    if3:tab_expmod_i.exports.ef3,
+                                    if4:tab_expmod_i.exports.ef4
+                                   }});
+        let expected = expected_result_vector[i];
+        let actual = undefined;
+        try {
+            actual = inst.exports.testfn(i);
+            assertEq(actual !== null, true);
+        } catch (e) {
+            if (!(e instanceof Error &&
+                  e.message.match(/indirect call to null/)))
+                throw e;
+            // actual remains undefined
+        }
+        assertEq(actual, expected,
+                 "tab_test fail: insn = '" + instruction + "', index = " +
+                 i + ", expected = " + expected + ", actual = " + actual);
+    }
+}
+
+// Using 'e' for empty (undefined) spaces in the table, to make it easier
+// to count through the vector entries when debugging.
+let e = undefined;
+
+// This just gives the initial state of the table, with its active
+// initialisers applied
+tab_test("nop",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,5,2, 3,6,e,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Copy non-null over non-null
+tab_test("(table.copy (i32.const 13) (i32.const 2) (i32.const 3))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,3,1, 4,6,e,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Copy non-null over null
+tab_test("(table.copy (i32.const 25) (i32.const 15) (i32.const 2))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,5,2, 3,6,e,e,e, e,e,e,e,e, 3,6,e,e,e]);
+
+// Copy null over non-null
+tab_test("(table.copy (i32.const 13) (i32.const 25) (i32.const 3))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,e,e, e,6,e,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Copy null over null
+tab_test("(table.copy (i32.const 20) (i32.const 22) (i32.const 4))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,5,2, 3,6,e,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Copy null and non-null entries, non overlapping
+tab_test("(table.copy (i32.const 25) (i32.const 1) (i32.const 3))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,5,2, 3,6,e,e,e, e,e,e,e,e, e,3,1,e,e]);
+
+// Copy null and non-null entries, overlapping, backwards
+tab_test("(table.copy (i32.const 10) (i32.const 12) (i32.const 7))",
+         [e,e,3,1,4, 1,e,e,e,e, 7,5,2,3,6, e,e,e,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Copy null and non-null entries, overlapping, forwards
+tab_test("(table.copy (i32.const 12) (i32.const 10) (i32.const 7))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,e,e,7, 5,2,3,6,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Passive init that overwrites all-null entries
+tab_test("(table.init 1 (i32.const 7) (i32.const 0) (i32.const 4))",
+         [e,e,3,1,4, 1,e,2,7,1, 8,e,7,5,2, 3,6,e,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Passive init that overwrites existing active-init-created entries
+tab_test("(table.init 3 (i32.const 15) (i32.const 1) (i32.const 3))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,5,2, 9,2,7,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Perform active and passive initialisation and then multiple copies
+tab_test("(table.init 1 (i32.const 7) (i32.const 0) (i32.const 4)) \n" +
+         "table.drop 1 \n" +
+         "(table.init 3 (i32.const 15) (i32.const 1) (i32.const 3)) \n" +
+         "table.drop 3 \n" +
+         "(table.copy (i32.const 20) (i32.const 15) (i32.const 5)) \n" +
+         "(table.copy (i32.const 21) (i32.const 29) (i32.const 1)) \n" +
+         "(table.copy (i32.const 24) (i32.const 10) (i32.const 1)) \n" +
+         "(table.copy (i32.const 13) (i32.const 11) (i32.const 4)) \n" +
+         "(table.copy (i32.const 19) (i32.const 20) (i32.const 5))",
+         [e,e,3,1,4, 1,e,2,7,1, 8,e,7,e,7, 5,2,7,e,9, e,7,e,8,8, e,e,e,e,e]);
+
+
+// And now a simplified version of the above, for memory.{init,drop,copy}.
+
+function gen_mem_mod_t(insn)
+{
+  let t =
+  `(module
+     ;; -------- Memories --------
+     (memory (export "memory0") 1 1)
+     ;; -------- Memory initialisers --------
+     (data (i32.const 2) "\\03\\01\\04\\01")
+     (data passive "\\02\\07\\01\\08")
+     (data (i32.const 12) "\\07\\05\\02\\03\\06")
+     (data passive "\\05\\09\\02\\07\\06")
+
+     (func (export "testfn")
+       ${insn}
+       ;; There's no return value.  The JS driver can just pull out the
+       ;; final memory and examine it.
+     )
+   )`;
+   return t;
+};
+
+function mem_test(instruction, expected_result_vector)
+{
+    let mem_mod_t = gen_mem_mod_t(instruction);
+    let mem_mod_b = wasmTextToBinary(mem_mod_t);
+
+    let inst = new Instance(new Module(mem_mod_b));
+    inst.exports.testfn();
+    let buf = new Uint8Array(inst.exports.memory0.buffer);
+
+    for (let i = 0; i < expected_result_vector.length; i++) {
+        let expected = expected_result_vector[i];
+        let actual = buf[i];
+        assertEq(actual, expected,
+                 "mem_test fail: insn = '" + instruction + "', index = " +
+                 i + ", expected = " + expected + ", actual = " + actual);
+    }
+}
+
+e = 0;
+
+// This just gives the initial state of the memory, with its active
+// initialisers applied.
+mem_test("nop",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,5,2, 3,6,e,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Copy non-zero over non-zero
+mem_test("(memory.copy (i32.const 13) (i32.const 2) (i32.const 3))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,3,1, 4,6,e,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Copy non-zero over zero
+mem_test("(memory.copy (i32.const 25) (i32.const 15) (i32.const 2))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,5,2, 3,6,e,e,e, e,e,e,e,e, 3,6,e,e,e]);
+
+// Copy zero over non-zero
+mem_test("(memory.copy (i32.const 13) (i32.const 25) (i32.const 3))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,e,e, e,6,e,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Copy zero over zero
+mem_test("(memory.copy (i32.const 20) (i32.const 22) (i32.const 4))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,5,2, 3,6,e,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Copy zero and non-zero entries, non overlapping
+mem_test("(memory.copy (i32.const 25) (i32.const 1) (i32.const 3))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,5,2, 3,6,e,e,e, e,e,e,e,e, e,3,1,e,e]);
+
+// Copy zero and non-zero entries, overlapping, backwards
+mem_test("(memory.copy (i32.const 10) (i32.const 12) (i32.const 7))",
+         [e,e,3,1,4, 1,e,e,e,e, 7,5,2,3,6, e,e,e,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Copy zero and non-zero entries, overlapping, forwards
+mem_test("(memory.copy (i32.const 12) (i32.const 10) (i32.const 7))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,e,e,7, 5,2,3,6,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Passive init that overwrites all-zero entries
+mem_test("(memory.init 1 (i32.const 7) (i32.const 0) (i32.const 4))",
+         [e,e,3,1,4, 1,e,2,7,1, 8,e,7,5,2, 3,6,e,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Passive init that overwrites existing active-init-created entries
+mem_test("(memory.init 3 (i32.const 15) (i32.const 1) (i32.const 3))",
+         [e,e,3,1,4, 1,e,e,e,e, e,e,7,5,2, 9,2,7,e,e, e,e,e,e,e, e,e,e,e,e]);
+
+// Perform active and passive initialisation and then multiple copies
+mem_test("(memory.init 1 (i32.const 7) (i32.const 0) (i32.const 4)) \n" +
+         "memory.drop 1 \n" +
+         "(memory.init 3 (i32.const 15) (i32.const 1) (i32.const 3)) \n" +
+         "memory.drop 3 \n" +
+         "(memory.copy (i32.const 20) (i32.const 15) (i32.const 5)) \n" +
+         "(memory.copy (i32.const 21) (i32.const 29) (i32.const 1)) \n" +
+         "(memory.copy (i32.const 24) (i32.const 10) (i32.const 1)) \n" +
+         "(memory.copy (i32.const 13) (i32.const 11) (i32.const 4)) \n" +
+         "(memory.copy (i32.const 19) (i32.const 20) (i32.const 5))",
+         [e,e,3,1,4, 1,e,2,7,1, 8,e,7,e,7, 5,2,7,e,9, e,7,e,8,8, e,e,e,e,e]);
+
+
 //---------------------------------------------------------------------//
 //---------------------------------------------------------------------//
-// Validation tests
+// Some further tests for memory.copy and memory.fill.  First, validation
+// tests.
 
 //-----------------------------------------------------------
 // Test helpers.  Copied and simplified from binary.js.
@@ -115,10 +370,9 @@ function checkMiscPrefixed(opcode, expect_failure) {
 //-----------------------------------------------------------
 // Verification cases for memory.copy/fill opcode encodings
 
-checkMiscPrefixed(0x3f, true);  // unassigned
-checkMiscPrefixed(0x40, false); // memory.copy
-checkMiscPrefixed(0x41, false); // memory.fill
-checkMiscPrefixed(0x42, true);  // unassigned
+checkMiscPrefixed(0x0a, false); // memory.copy
+checkMiscPrefixed(0x0b, false); // memory.fill
+checkMiscPrefixed(0x0f, true);  // table.copy+1, which is currently unassigned
 
 //-----------------------------------------------------------
 // Verification cases for memory.copy/fill arguments

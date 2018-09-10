@@ -24,6 +24,7 @@
 #include "mozilla/dom/WorkletGlobalScope.h"
 #include "mozilla/dom/WorkletThread.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDocument.h"
 #include "nsDOMNavigationTiming.h"
@@ -1356,7 +1357,7 @@ Console::IsEnabled(JSContext* aCx) const
   }
 
   // Make all Console API no-op if DevTools aren't enabled.
-  return DOMPrefs::DevToolsEnabled();
+  return StaticPrefs::devtools_enabled();
 }
 
 void

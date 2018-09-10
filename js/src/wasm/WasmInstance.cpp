@@ -35,6 +35,8 @@ using namespace js::jit;
 using namespace js::wasm;
 using mozilla::BitwiseCast;
 
+typedef CheckedInt<uint32_t> CheckedU32;
+
 class FuncTypeIdSet
 {
     typedef HashMap<const FuncType*, uint32_t, FuncTypeHashPolicy, SystemAllocPolicy> Map;
@@ -384,36 +386,30 @@ Instance::wake(Instance* instance, uint32_t byteOffset, int32_t count)
 }
 
 /* static */ int32_t
-Instance::memCopy(Instance* instance, uint32_t destByteOffset, uint32_t srcByteOffset, uint32_t len)
+Instance::memCopy(Instance* instance, uint32_t dstByteOffset, uint32_t srcByteOffset, uint32_t len)
 {
     WasmMemoryObject* mem = instance->memory();
     uint32_t memLen = mem->volatileMemoryLength();
 
-    // Knowing that len > 0 below simplifies the wraparound checks.
     if (len == 0) {
         // Even though the length is zero, we must check for a valid offset.
-        if (destByteOffset < memLen && srcByteOffset < memLen)
+        if (dstByteOffset < memLen && srcByteOffset < memLen)
             return 0;
-
-        // else fall through to failure case
     } else {
-        ArrayBufferObjectMaybeShared& arrBuf = mem->buffer();
-        uint8_t* rawBuf = arrBuf.dataPointerEither().unwrap();
-
         // Here, we know that |len - 1| cannot underflow.
-        typedef CheckedInt<uint32_t> CheckedU32;
-        CheckedU32 highest_destOffset = CheckedU32(destByteOffset) + CheckedU32(len - 1);
-        CheckedU32 highest_srcOffset = CheckedU32(srcByteOffset) + CheckedU32(len - 1);
-
-        if (highest_destOffset.isValid()   &&   // wraparound check
-            highest_srcOffset.isValid()    &&   // wraparound check
-            highest_destOffset.value() < memLen &&   // range check
-            highest_srcOffset.value() < memLen)      // range check
+        CheckedU32 lenMinus1 = CheckedU32(len - 1);
+        CheckedU32 highestDstOffset = CheckedU32(dstByteOffset) + lenMinus1;
+        CheckedU32 highestSrcOffset = CheckedU32(srcByteOffset) + lenMinus1;
+        if (highestDstOffset.isValid() &&
+            highestSrcOffset.isValid() &&
+            highestDstOffset.value() < memLen &&
+            highestSrcOffset.value() < memLen)
         {
-            memmove(rawBuf + destByteOffset, rawBuf + srcByteOffset, size_t(len));
+            ArrayBufferObjectMaybeShared& arrBuf = mem->buffer();
+            uint8_t* rawBuf = arrBuf.dataPointerEither().unwrap();
+            memmove(rawBuf + dstByteOffset, rawBuf + srcByteOffset, size_t(len));
             return 0;
         }
-        // else fall through to failure case
     }
 
     JSContext* cx = TlsContext.get();
@@ -422,33 +418,261 @@ Instance::memCopy(Instance* instance, uint32_t destByteOffset, uint32_t srcByteO
 }
 
 /* static */ int32_t
+Instance::memDrop(Instance* instance, uint32_t segIndex)
+{
+    DataSegmentInitVector& dataSegInitVec = instance->dataSegInitVec();
+    size_t initVecLen = dataSegInitVec.length();
+    MOZ_RELEASE_ASSERT(size_t(segIndex) < initVecLen, "ensured by validation");
+
+    const DataSegmentVector& dataSegs = instance->code().dataSegments();
+    MOZ_ASSERT(dataSegs.length() == initVecLen);
+
+    UniquePtr<DataSegmentInit>& segInit = dataSegInitVec[segIndex];
+
+    // Check that the segment is available for passive use.
+    if (!segInit) {
+       JSContext* cx = TlsContext.get();
+       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_INVALID_PASSIVE_DATA_SEG);
+       return -1;
+    }
+
+    // If this is an active initializer, something is badly wrong.
+    const DataSegment& seg = dataSegs[segIndex];
+    MOZ_RELEASE_ASSERT(!seg.offsetIfActive);
+
+    // Free the initializer, and update the initializer vector accordingly.
+    // This makes the initializer unavailable for future usage.
+    segInit = nullptr;
+    return 0;
+}
+
+/* static */ int32_t
 Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint32_t len)
 {
     WasmMemoryObject* mem = instance->memory();
     uint32_t memLen = mem->volatileMemoryLength();
 
-    // Knowing that len > 0 below simplifies the wraparound check.
     if (len == 0) {
         // Even though the length is zero, we must check for a valid offset.
         if (byteOffset < memLen)
             return 0;
-
-        // else fall through to failure case
     } else {
-        ArrayBufferObjectMaybeShared& arrBuf = mem->buffer();
-        uint8_t* rawBuf = arrBuf.dataPointerEither().unwrap();
-
         // Here, we know that |len - 1| cannot underflow.
-        typedef CheckedInt<uint32_t> CheckedU32;
-        CheckedU32 highest_offset = CheckedU32(byteOffset) + CheckedU32(len - 1);
-
-        if (highest_offset.isValid() &&     // wraparound check
-            highest_offset.value() < memLen)     // range check
+        CheckedU32 highestOffset = CheckedU32(byteOffset) + CheckedU32(len - 1);
+        if (highestOffset.isValid() &&
+            highestOffset.value() < memLen)
         {
+            ArrayBufferObjectMaybeShared& arrBuf = mem->buffer();
+            uint8_t* rawBuf = arrBuf.dataPointerEither().unwrap();
             memset(rawBuf + byteOffset, int(value), size_t(len));
             return 0;
         }
-        // else fall through to failure case
+    }
+
+    JSContext* cx = TlsContext.get();
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
+}
+
+/* static */ int32_t
+Instance::memInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
+                  uint32_t len, uint32_t segIndex)
+{
+    const DataSegmentInitVector& dataSegInitVec = instance->dataSegInitVec();
+    size_t initVecLen = dataSegInitVec.length();
+    MOZ_RELEASE_ASSERT(size_t(segIndex) < initVecLen, "ensured by validation");
+
+    const DataSegmentVector& dataSegs = instance->code().dataSegments();
+    MOZ_ASSERT(dataSegs.length() == initVecLen);
+
+    const UniquePtr<DataSegmentInit>& segInit = dataSegInitVec[segIndex];
+
+    // Check that the segment is available for passive use.
+    if (!segInit) {
+        JSContext* cx = TlsContext.get();
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_WASM_INVALID_PASSIVE_DATA_SEG);
+        return -1;
+    }
+
+    // If this is an active initializer, something is badly wrong.
+    const DataSegment& seg = dataSegs[segIndex];
+    MOZ_RELEASE_ASSERT(!seg.offsetIfActive);
+
+    const uint32_t segLen = seg.length;
+    MOZ_ASSERT(segLen == segInit->length());
+
+    WasmMemoryObject* mem = instance->memory();
+    const uint32_t memLen = mem->volatileMemoryLength();
+
+    // We are proposing to copy
+    //
+    //   segInit->begin()[ srcOffset .. srcOffset + len - 1 ]
+    // to
+    //   memoryBase[ dstOffset .. dstOffset + len - 1 ]
+
+    if (len == 0) {
+        // Even though the length is zero, we must check for valid offsets.
+        if (dstOffset < memLen && srcOffset < segLen)
+            return 0;
+    } else {
+        // Here, we know that |len - 1| cannot underflow.
+        CheckedU32 lenMinus1 = CheckedU32(len - 1);
+        CheckedU32 highestDstOffset = CheckedU32(dstOffset) + lenMinus1;
+        CheckedU32 highestSrcOffset = CheckedU32(srcOffset) + lenMinus1;
+        if (highestDstOffset.isValid() &&
+            highestSrcOffset.isValid() &&
+            highestDstOffset.value() < memLen &&
+            highestSrcOffset.value() < segLen)
+        {
+            ArrayBufferObjectMaybeShared& arrBuf = mem->buffer();
+            uint8_t* memoryBase = arrBuf.dataPointerEither().unwrap();
+            memcpy(memoryBase + dstOffset,
+                   (const char*)segInit->begin() + srcOffset, len);
+            return 0;
+        }
+    }
+
+    JSContext* cx = TlsContext.get();
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
+}
+
+/* static */ int32_t
+Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, uint32_t len)
+{
+    const SharedTable& table = instance->tables()[0];
+    uint32_t tableLen = table->length();
+
+    if (len == 0) {
+        // Even though the number of items to copy is zero, we must check
+        // for valid offsets.
+        if (dstOffset < tableLen && srcOffset < tableLen)
+            return 0;
+    } else {
+        // Here, we know that |len - 1| cannot underflow.
+        CheckedU32 lenMinus1 = CheckedU32(len - 1);
+        CheckedU32 highestDstOffset = CheckedU32(dstOffset) + lenMinus1;
+        CheckedU32 highestSrcOffset = CheckedU32(srcOffset) + lenMinus1;
+        if (highestDstOffset.isValid() &&
+            highestSrcOffset.isValid() &&
+            highestDstOffset.value() < tableLen &&
+            highestSrcOffset.value() < tableLen)
+        {
+            // Actually do the copy, taking care to handle overlapping cases
+            // correctly.
+            if (dstOffset > srcOffset) {
+                for (uint32_t i = len; i > 0; i--)
+                    table->copy(dstOffset + (i - 1), srcOffset + (i - 1));
+            } else if (dstOffset < srcOffset) {
+                for (uint32_t i = 0; i < len; i++)
+                    table->copy(dstOffset + i, srcOffset + i);
+            }
+
+            return 0;
+        }
+    }
+
+    JSContext* cx = TlsContext.get();
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
+}
+
+/* static */ int32_t
+Instance::tableDrop(Instance* instance, uint32_t segIndex)
+{
+    ElemSegmentInitVector& elemSegInitVec = instance->elemSegInitVec();
+    size_t initVecLen = elemSegInitVec.length();
+    MOZ_RELEASE_ASSERT(size_t(segIndex) < initVecLen, "ensured by validation");
+
+    const ElemSegmentVector& elemSegs = instance->code().elemSegments();
+    MOZ_ASSERT(elemSegs.length() == initVecLen);
+
+    UniquePtr<ElemSegmentInit>& segInit = elemSegInitVec[segIndex];
+
+    // Check that the segment is available for passive use.
+    if (!segInit) {
+       JSContext* cx = TlsContext.get();
+       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_INVALID_PASSIVE_ELEM_SEG);
+       return -1;
+    }
+
+    // If this is an active initializer, something is badly wrong.
+    const ElemSegment& seg = elemSegs[segIndex];
+    MOZ_RELEASE_ASSERT(!seg.offsetIfActive);
+
+    // Free the initializer, and update the initializer vector accordingly.
+    // This makes the initializer unavailable for future usage.
+    segInit = nullptr;
+    return 0;
+}
+
+/* static */ int32_t
+Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
+                    uint32_t len, uint32_t segIndex)
+{
+    const ElemSegmentInitVector& elemSegInitVec = instance->elemSegInitVec();
+    size_t initVecLen = elemSegInitVec.length();
+    MOZ_RELEASE_ASSERT(size_t(segIndex) < initVecLen, "ensured by validation");
+
+    const ElemSegmentVector& elemSegs = instance->code().elemSegments();
+    MOZ_ASSERT(elemSegs.length() == initVecLen);
+
+    const UniquePtr<ElemSegmentInit>& segInit = elemSegInitVec[segIndex];
+
+    // Check that the segment is available for passive use.
+    if (!segInit) {
+        JSContext* cx = TlsContext.get();
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_WASM_INVALID_PASSIVE_ELEM_SEG);
+        return -1;
+    }
+
+    // If this is an active initializer, something is badly wrong.
+    const ElemSegment& seg = elemSegs[segIndex];
+    MOZ_RELEASE_ASSERT(!seg.offsetIfActive);
+
+    const uint32_t segLen = seg.elemFuncIndices.length();
+    MOZ_ASSERT(segLen == segInit->length());
+
+    const SharedTable& table = instance->tables()[0];
+    const uint32_t tableLen = table->length();
+
+    // We are proposing to copy
+    //
+    //   (*segInit)[ srcOffset .. srcOffset + len - 1 ]
+    // to
+    //   tableBase[ dstOffset .. dstOffset + len - 1 ]
+
+    if (len == 0) {
+        // Even though the length is zero, we must check for valid offsets.
+        if (dstOffset < tableLen && srcOffset < segLen)
+            return 0;
+    } else {
+        // Here, we know that |len - 1| cannot underflow.
+        CheckedU32 lenMinus1 = CheckedU32(len - 1);
+        CheckedU32 highestDstOffset = CheckedU32(dstOffset) + lenMinus1;
+        CheckedU32 highestSrcOffset = CheckedU32(srcOffset) + lenMinus1;
+        if (highestDstOffset.isValid() &&
+            highestSrcOffset.isValid() &&
+            highestDstOffset.value() < tableLen &&
+            highestSrcOffset.value() < segLen)
+        {
+            for (uint32_t i = 0; i < len; i++) {
+                WasmCallee callee = (*segInit)[srcOffset + i];
+                MOZ_ASSERT(callee.entry);
+                MOZ_ASSERT(callee.instance);
+                // An "internal" table implicitly means that the instance
+                // pointer associated with each code entry point is the
+                // instance that owns the table.  So we need to ensure we're
+                // not about to break that invariant.
+                MOZ_ASSERT_IF(!table->external(), callee.instance == instance);
+                table->set(dstOffset + i, callee.entry, callee.instance);
+            }
+            return 0;
+        }
     }
 
     JSContext* cx = TlsContext.get();
@@ -597,7 +821,8 @@ Instance::Instance(JSContext* cx,
 }
 
 bool
-Instance::init(JSContext* cx)
+Instance::init(JSContext* cx, const ShareableBytes* bytecode,
+               Handle<FunctionVector> funcImports)
 {
     if (memory_ && memory_->movingGrowable() && !memory_->addMovingGrowObserver(cx, object_))
         return false;
@@ -627,6 +852,63 @@ Instance::init(JSContext* cx)
 #ifdef ENABLE_WASM_GC
     preBarrierCode_ = jitRuntime->preBarrier(MIRType::Object);
 #endif
+
+    // Create a vector the same length as the data segment vector, holding a
+    // copy of the initialising data for passive segments and |nullptr| for
+    // active ones.
+    MOZ_ASSERT(dataSegInitVec_.empty());
+    if (!dataSegInitVec_.reserve(code().dataSegments().length())) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+    for (const DataSegment& seg : code().dataSegments()) {
+        UniquePtr<DataSegmentInit> dsi = nullptr;
+        if (!seg.offsetIfActive) {
+            // Passive initialiser.
+            dsi.reset(js_new<DataSegmentInit>());
+            if (!dsi || !dsi->initLengthUninitialized(seg.length)) {
+                ReportOutOfMemory(cx);
+                return false;
+            }
+            MOZ_ASSERT(seg.bytecodeOffset <= bytecode->length());
+            MOZ_ASSERT(seg.length <= bytecode->length() - seg.bytecodeOffset);
+            memcpy((char*)dsi->begin(),
+                   (char*)bytecode->begin() + seg.bytecodeOffset,
+                   seg.length);
+        }
+        dataSegInitVec_.infallibleAppend(std::move(dsi));
+    }
+
+    // And similarly for the elem segment vector.
+    MOZ_ASSERT(elemSegInitVec_.empty());
+    if (!elemSegInitVec_.reserve(code().elemSegments().length())) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+    for (const ElemSegment& seg : code().elemSegments()) {
+        UniquePtr<ElemSegmentInit> esi = nullptr;
+        if (!seg.offsetIfActive) {
+            // Passive initialiser.
+            esi.reset(js_new<ElemSegmentInit>());
+            if (!esi || !esi->initLengthUninitialized(seg.elemFuncIndices.length())) {
+                ReportOutOfMemory(cx);
+                return false;
+            }
+
+            Tier tier = code().bestTier();
+            const Table& table = *tables()[seg.tableIndex];
+
+            MOZ_ASSERT(seg.elemCodeRangeIndices(tier).length() ==
+                       seg.elemFuncIndices.length());
+
+            for (uint32_t i = 0; i < seg.elemCodeRangeIndices(tier).length(); i++) {
+                ComputeWasmCallee(code(), this, funcImports, i, table, seg,
+                                  &(*esi)[i]);
+            }
+        }
+        elemSegInitVec_.infallibleAppend(std::move(esi));
+    }
+
     return true;
 }
 

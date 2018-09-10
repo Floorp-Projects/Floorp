@@ -66,8 +66,11 @@ class Table : public ShareableBase<Table>
 
     void** internalArray() const;
     ExternalTableElem* externalArray() const;
-    void set(uint32_t index, void* code, Instance& instance);
+    void set(uint32_t index, void* code, const Instance* instance);
     void setNull(uint32_t index);
+
+    // Copy entry at |srcIndex| to |dstIndex|.  Used by table.copy.
+    void copy(uint32_t dstIndex, uint32_t srcIndex);
 
     uint32_t grow(uint32_t delta, JSContext* cx);
     bool movingGrowable() const;

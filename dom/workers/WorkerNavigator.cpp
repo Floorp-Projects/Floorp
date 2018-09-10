@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/MediaCapabilities.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
@@ -13,6 +12,7 @@
 #include "mozilla/dom/WorkerNavigator.h"
 #include "mozilla/dom/WorkerNavigatorBinding.h"
 #include "mozilla/dom/network/Connection.h"
+#include "mozilla/StaticPrefs.h"
 
 #include "nsProxyRelease.h"
 #include "nsRFPService.h"
@@ -83,11 +83,11 @@ WorkerNavigator::GetAppName(nsString& aAppName, CallerType aCallerType) const
   MOZ_ASSERT(workerPrivate);
 
   if ((!mProperties.mAppNameOverridden.IsEmpty() ||
-       DOMPrefs::ResistFingerprintingEnabled()) &&
+       StaticPrefs::privacy_resistFingerprinting()) &&
       !workerPrivate->UsesSystemPrincipal()) {
     // We will spoof this value when 'privacy.resistFingerprinting' is true.
     // See nsRFPService.h for spoofed value.
-    aAppName = DOMPrefs::ResistFingerprintingEnabled() ?
+    aAppName = StaticPrefs::privacy_resistFingerprinting() ?
       NS_LITERAL_STRING(SPOOFED_APPNAME) : mProperties.mAppNameOverridden;
   } else {
     aAppName = mProperties.mAppName;
@@ -102,11 +102,11 @@ WorkerNavigator::GetAppVersion(nsString& aAppVersion, CallerType aCallerType,
   MOZ_ASSERT(workerPrivate);
 
   if ((!mProperties.mAppVersionOverridden.IsEmpty() ||
-       DOMPrefs::ResistFingerprintingEnabled()) &&
+       StaticPrefs::privacy_resistFingerprinting()) &&
       !workerPrivate->UsesSystemPrincipal()) {
     // We will spoof this value when 'privacy.resistFingerprinting' is true.
     // See nsRFPService.h for spoofed value.
-    aAppVersion = DOMPrefs::ResistFingerprintingEnabled() ?
+    aAppVersion = StaticPrefs::privacy_resistFingerprinting() ?
       NS_LITERAL_STRING(SPOOFED_APPVERSION) : mProperties.mAppVersionOverridden;
   } else {
     aAppVersion = mProperties.mAppVersion;
@@ -121,11 +121,11 @@ WorkerNavigator::GetPlatform(nsString& aPlatform, CallerType aCallerType,
   MOZ_ASSERT(workerPrivate);
 
   if ((!mProperties.mPlatformOverridden.IsEmpty() ||
-       DOMPrefs::ResistFingerprintingEnabled()) &&
+       StaticPrefs::privacy_resistFingerprinting()) &&
       !workerPrivate->UsesSystemPrincipal()) {
     // We will spoof this value when 'privacy.resistFingerprinting' is true.
     // See nsRFPService.h for spoofed value.
-    aPlatform = DOMPrefs::ResistFingerprintingEnabled() ?
+    aPlatform = StaticPrefs::privacy_resistFingerprinting() ?
       NS_LITERAL_STRING(SPOOFED_PLATFORM) : mProperties.mPlatformOverridden;
   } else {
     aPlatform = mProperties.mPlatform;

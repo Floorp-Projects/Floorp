@@ -81,9 +81,11 @@ button[disabled="true"] {
 
 .button-menu-dropmarker {
   -moz-appearance: none !important;
-  margin: 1px;
-  width: 11px;
-  height: 11px;
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 12px;
+  height: 12px;
 }
 
 /* ::::: plain buttons ::::: */

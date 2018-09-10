@@ -32,6 +32,7 @@ BaselineCanCompile();
 MOZ_MUST_USE bool
 BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
                          const FuncCompileInputVector& inputs, CompiledCode* code,
+                         ExclusiveDeferredValidationState& dvs,
                          UniqueChars* error);
 
 class BaseLocalIter

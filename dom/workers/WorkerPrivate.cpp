@@ -5006,7 +5006,8 @@ WorkerPrivate::StartCancelingTimer()
     }
   }
 
-  uint32_t cancelingTimeoutMillis = DOMPrefs::WorkerCancelingTimeoutMillis();
+  uint32_t cancelingTimeoutMillis =
+    StaticPrefs::dom_worker_canceling_timeoutMilliseconds();
 
   RefPtr<CancelingTimerCallback> callback = new CancelingTimerCallback(this);
   nsresult rv = mCancelingTimer->InitWithCallback(callback,
