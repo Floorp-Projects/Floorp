@@ -12,6 +12,10 @@ const {
   UPDATE_HISTORY_POSITION,
   HISTORY_BACK,
   HISTORY_FORWARD,
+  REVERSE_SEARCH_INPUT_TOGGLE,
+  REVERSE_SEARCH_INPUT_CHANGE,
+  REVERSE_SEARCH_BACK,
+  REVERSE_SEARCH_NEXT,
 } = require("devtools/client/webconsole/constants");
 
 /**
@@ -32,6 +36,10 @@ function getInitialState() {
     // pick up anything from the history and wants to return all
     // the way back to see the original input text.
     originalUserValue: null,
+
+    reverseSearchEnabled: false,
+    currentReverseSearchResults: null,
+    currentReverseSearchResultsPosition: null,
   };
 }
 
@@ -45,6 +53,14 @@ function history(state = getInitialState(), action, prefsState) {
       return historyLoaded(state, action.entries);
     case UPDATE_HISTORY_POSITION:
       return updateHistoryPosition(state, action.direction, action.expression);
+    case REVERSE_SEARCH_INPUT_TOGGLE:
+      return reverseSearchInputToggle(state);
+    case REVERSE_SEARCH_INPUT_CHANGE:
+      return reverseSearchInputChange(state, action.value);
+    case REVERSE_SEARCH_BACK:
+      return reverseSearchBack(state);
+    case REVERSE_SEARCH_NEXT:
+      return reverseSearchNext(state);
   }
   return state;
 }
@@ -125,6 +141,68 @@ function updateHistoryPosition(state, direction, expression) {
   }
 
   return state;
+}
+
+function reverseSearchInputToggle(state) {
+  return {
+    ...state,
+    reverseSearchEnabled: !state.reverseSearchEnabled,
+    position: state.reverseSearchEnabled === true ? state.entries.length : undefined,
+    currentReverseSearchResults: null,
+    currentReverseSearchResultsPosition: null,
+  };
+}
+
+function reverseSearchInputChange(state, searchString) {
+  if (searchString === "") {
+    return {
+      ...state,
+      position: undefined,
+      currentReverseSearchResults: null,
+      currentReverseSearchResultsPosition: null,
+    };
+  }
+
+  searchString = searchString.toLocaleLowerCase();
+  const matchingEntries = state.entries.filter(entry =>
+    entry.toLocaleLowerCase().includes(searchString));
+  // We only return unique entries, but we want to keep the latest entry in the array if
+  // it's duplicated (e.g. if we have [1,2,1], we want to get [2,1], not [1,2]).
+  // To do that, we need to reverse the matching entries array, provide it to a Set,
+  // transform it back to an array and reverse it again.
+  const uniqueEntries = new Set(matchingEntries.reverse());
+  const currentReverseSearchResults = Array.from(new Set(uniqueEntries)).reverse();
+
+  return {
+    ...state,
+    position: undefined,
+    currentReverseSearchResults,
+    currentReverseSearchResultsPosition: currentReverseSearchResults.length - 1,
+  };
+}
+
+function reverseSearchBack(state) {
+  let nextPosition = state.currentReverseSearchResultsPosition - 1;
+  if (nextPosition < 0) {
+    nextPosition = state.currentReverseSearchResults.length - 1;
+  }
+
+  return {
+    ...state,
+    currentReverseSearchResultsPosition: nextPosition
+  };
+}
+
+function reverseSearchNext(state) {
+  let previousPosition = state.currentReverseSearchResultsPosition + 1;
+  if (previousPosition >= state.currentReverseSearchResults.length) {
+    previousPosition = 0;
+  }
+
+  return {
+    ...state,
+    currentReverseSearchResultsPosition: previousPosition
+  };
 }
 
 exports.history = history;

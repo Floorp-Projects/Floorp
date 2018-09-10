@@ -1,0 +1,84 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.reverse-search {
+  display: flex;
+  font-size: inherit;
+  min-height: 26px;
+  color: var(--theme-body-color);
+  padding-block-start: 2px;
+  align-items: baseline;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.reverse-search:focus-within {
+  border-color: var(--blue-50);
+}
+
+.reverse-search {
+  flex-shrink: 0;
+}
+
+.reverse-search input {
+  border: none;
+  flex-grow: 1;
+  padding-inline-start: var(--console-inline-start-gutter);
+  background: transparent;
+  color: currentColor;
+  background-image: var(--magnifying-glass-image);
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+  background-position: 10px 2px;
+  -moz-context-properties: fill;
+}
+
+.reverse-search input:focus {
+  border: none;
+  outline: none;
+}
+
+.reverse-search:not(.no-result) input:focus {
+  fill: var(--console-input-icon-focused);
+}
+
+.reverse-search-info {
+  flex-shrink: 0;
+  padding: 0 8px;
+  color: var(--comment-node-color);
+}
+
+.search-result-button-prev,
+.search-result-button-next,
+.reverse-search-close-button {
+  padding: 4px 0;
+  margin: 0;
+  border-radius: 0;
+}
+
+.search-result-button-prev::before {
+  background-image: url("chrome://devtools/skin/images/arrowhead-up.svg");
+  background-size: 16px;
+  fill: var(--comment-node-color);
+}
+
+.search-result-button-next::before {
+  background-image: url("chrome://devtools/skin/images/arrowhead-down.svg");
+  background-size: 16px;
+  fill: var(--comment-node-color);
+}
+
+.reverse-search-close-button::before {
+  fill: var(--comment-node-color);
+  background-image: var(--close-button-image);
+}
+
+.reverse-search.no-result input {
+  fill: var(--error-color);
+}
+
+.reverse-search.no-result,
+.reverse-search.no-result input {
+  color: var(--error-color);
+}
