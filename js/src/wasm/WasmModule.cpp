@@ -507,13 +507,13 @@ Module::initSegments(JSContext* cx,
                 Instance& exportInstance = exportInstanceObj->instance();
                 Tier exportTier = exportInstance.code().bestTier();
                 const CodeRange& cr = exportInstanceObj->getExportedFunctionCodeRange(f, exportTier);
-                table.set(offset + i, exportInstance.codeBase(exportTier) + cr.funcTableEntry(), exportInstance);
+                table.set(offset + i, exportInstance.codeBase(exportTier) + cr.funcTableEntry(), &exportInstance);
             } else {
                 const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices(tier)[i]];
                 uint32_t entryOffset = table.isTypedFunction()
                                        ? cr.funcNormalEntry()
                                        : cr.funcTableEntry();
-                table.set(offset + i, codeBase + entryOffset, instance);
+                table.set(offset + i, codeBase + entryOffset, &instance);
             }
         }
     }

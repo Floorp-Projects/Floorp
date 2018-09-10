@@ -2049,7 +2049,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
         const FuncExport& funcExport = metadata.lookupFuncExport(funcIndex);
         const CodeRange& codeRange = metadata.codeRanges[funcExport.funcCodeRangeIndex()];
         void* code = instance.codeBase(tier) + codeRange.funcTableEntry();
-        table.set(index, code, instance);
+        table.set(index, code, &instance);
     } else {
         table.setNull(index);
     }

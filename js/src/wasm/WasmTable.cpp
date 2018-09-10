@@ -110,7 +110,7 @@ Table::externalArray() const
 }
 
 void
-Table::set(uint32_t index, void* code, Instance& instance)
+Table::set(uint32_t index, void* code, const Instance* instance)
 {
     if (external_) {
         ExternalTableElem& elem = externalArray()[index];
@@ -118,9 +118,10 @@ Table::set(uint32_t index, void* code, Instance& instance)
             JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
 
         elem.code = code;
-        elem.tls = instance.tlsData();
+        elem.tls = instance->tlsData();
 
-        MOZ_ASSERT(elem.tls->instance->objectUnbarriered()->isTenured(), "no writeBarrierPost");
+        MOZ_ASSERT(elem.tls->instance->objectUnbarriered()->isTenured(),
+                   "no writeBarrierPost (Table::set)");
     } else {
         internalArray()[index] = code;
     }
@@ -136,6 +137,30 @@ Table::setNull(uint32_t index)
 
     elem.code = nullptr;
     elem.tls = nullptr;
+}
+
+void
+Table::copy(uint32_t dstIndex, uint32_t srcIndex)
+{
+    if (external_) {
+        ExternalTableElem& dst = externalArray()[dstIndex];
+        if (dst.tls)
+            JSObject::writeBarrierPre(dst.tls->instance->objectUnbarriered());
+
+        ExternalTableElem& src = externalArray()[srcIndex];
+        dst.code = src.code;
+        dst.tls = src.tls;
+
+        if (dst.tls) {
+            MOZ_ASSERT(dst.code);
+            MOZ_ASSERT(dst.tls->instance->objectUnbarriered()->isTenured(),
+                       "no writeBarrierPost (Table::copy)");
+        } else {
+            MOZ_ASSERT(!dst.code);
+        }
+    } else {
+        internalArray()[dstIndex] = internalArray()[srcIndex];
+    }
 }
 
 uint32_t
