@@ -235,6 +235,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+VARCACHE_PREF(
+  "dom.webnotifications.serviceworker.enabled",
+   dom_webnotifications_serviceworker_enabled,
+  RelaxedAtomicBool, true
+)
+
 //---------------------------------------------------------------------------
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------

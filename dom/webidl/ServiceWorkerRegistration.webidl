@@ -44,8 +44,8 @@ partial interface ServiceWorkerRegistration {
 
 // https://notifications.spec.whatwg.org/
 partial interface ServiceWorkerRegistration {
-  [Throws, Func="mozilla::dom::DOMPrefs::NotificationEnabledInServiceWorkers"]
+  [Throws, Func="mozilla::dom::DOMPrefs::dom_webnotifications_serviceworker_enabled"]
   Promise<void> showNotification(DOMString title, optional NotificationOptions options);
-  [Throws, Func="mozilla::dom::DOMPrefs::NotificationEnabledInServiceWorkers"]
+  [Throws, Func="mozilla::dom::DOMPrefs::dom_webnotifications_serviceworker_enabled"]
   Promise<sequence<Notification>> getNotifications(optional GetNotificationOptions filter);
 };
