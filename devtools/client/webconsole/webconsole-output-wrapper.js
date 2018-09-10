@@ -88,7 +88,6 @@ WebConsoleOutputWrapper.prototype = {
       });
 
       const { hud } = this;
-
       const serviceContainer = {
         attachRefToHud,
         emitNewMessage: (node, messageId, timeStamp) => {
@@ -246,14 +245,16 @@ WebConsoleOutputWrapper.prototype = {
         });
       }
 
+      const {prefs} = store.getState();
       const app = App({
         attachRefToHud,
         serviceContainer,
         hud,
         onFirstMeaningfulPaint: resolve,
         closeSplitConsole: this.closeSplitConsole.bind(this),
-        jstermCodeMirror: store.getState().prefs.jstermCodeMirror
+        jstermCodeMirror: prefs.jstermCodeMirror
           && !Services.appinfo.accessibilityEnabled,
+        jstermReverseSearch: prefs.jstermReverseSearch,
       });
 
       // Render the root Application component.
