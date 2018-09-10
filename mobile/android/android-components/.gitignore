@@ -48,3 +48,5 @@ l10n-repo/
 # OS X
 .DS_Store
 
+# jacoco.exec
+jacoco.exec
