@@ -3671,11 +3671,11 @@ XREMain::XRE_mainInit(bool* aExitFlag)
 
 #ifdef XP_WIN
 /**
- * Uses WMI to read some manufacturer information that may be useful for
- * diagnosing hardware-specific crashes. This function is best-effort; failures
- * shouldn't burden the caller. COM must be initialized before calling.
+ * Uses WMI to read some information that may be useful for diagnosing
+ * crashes. This function is best-effort; failures shouldn't burden the
+ * caller. COM must be initialized before calling.
  */
-static void AnnotateSystemManufacturer()
+static void AnnotateWMIData()
 {
   RefPtr<IWbemLocator> locator;
 
@@ -3702,6 +3702,8 @@ static void AnnotateSystemManufacturer()
   if (FAILED(hr)) {
     return;
   }
+
+  // Annotate information about the system manufacturer.
 
   RefPtr<IEnumWbemClassObject> enumerator;
 
@@ -3736,7 +3738,7 @@ static void AnnotateSystemManufacturer()
   VariantClear(&value);
 }
 
-static void PR_CALLBACK AnnotateSystemManufacturer_ThreadStart(void*)
+static void PR_CALLBACK AnnotateWMIData_ThreadStart(void*)
 {
   HRESULT hr = CoInitialize(nullptr);
 
@@ -3744,7 +3746,7 @@ static void PR_CALLBACK AnnotateSystemManufacturer_ThreadStart(void*)
     return;
   }
 
-  AnnotateSystemManufacturer();
+  AnnotateWMIData();
 
   CoUninitialize();
 }
@@ -4465,7 +4467,7 @@ XREMain::XRE_mainRun()
   CrashReporter::SetIncludeContextHeap(includeContextHeap);
 
 #ifdef XP_WIN
-  PR_CreateThread(PR_USER_THREAD, AnnotateSystemManufacturer_ThreadStart, 0,
+  PR_CreateThread(PR_USER_THREAD, AnnotateWMIData_ThreadStart, 0,
                   PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
 #endif
 
