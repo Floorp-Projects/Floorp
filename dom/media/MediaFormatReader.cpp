@@ -2194,7 +2194,8 @@ MediaFormatReader::HandleDemuxedSamples(
       bool recyclable =
         StaticPrefs::MediaDecoderRecycleEnabled() &&
         decoder.mDecoder->SupportDecoderRecycling() &&
-        (*info)->mCrypto.mValid == decoder.GetCurrentInfo()->mCrypto.mValid;
+        (*info)->mCrypto.mValid == decoder.GetCurrentInfo()->mCrypto.mValid &&
+        (*info)->mMimeType == decoder.GetCurrentInfo()->mMimeType;
       if (!recyclable && decoder.mTimeThreshold.isNothing() &&
           (decoder.mNextStreamSourceID.isNothing() ||
            decoder.mNextStreamSourceID.ref() != info->GetID())) {
