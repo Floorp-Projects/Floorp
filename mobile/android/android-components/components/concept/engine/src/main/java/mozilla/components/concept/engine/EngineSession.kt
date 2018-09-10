@@ -161,6 +161,11 @@ abstract class EngineSession(
     abstract fun toggleDesktopMode(enable: Boolean, reload: Boolean = false)
 
     /**
+     * Clears all user data sources available.
+     */
+    abstract fun clearData()
+
+    /**
      * Finds and highlights all occurrences of the provided String and highlights them asynchronously.
      *
      * @param text the String to search for

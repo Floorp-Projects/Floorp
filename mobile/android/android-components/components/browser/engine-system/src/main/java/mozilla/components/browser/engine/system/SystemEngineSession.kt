@@ -4,11 +4,15 @@
 
 package mozilla.components.browser.engine.system
 
+import android.content.Context
 import android.os.Bundle
+import android.webkit.CookieManager
+import android.webkit.WebStorage
 import android.webkit.WebView
 import kotlinx.coroutines.experimental.launch
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.DefaultSettings
+import android.webkit.WebViewDatabase
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.ktx.kotlin.toBundle
@@ -140,6 +144,26 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
     }
 
     /**
+     * See [EngineSession.clearData]
+     */
+    override fun clearData() {
+        currentView()?.apply {
+            clearFormData()
+            clearHistory()
+            clearMatches()
+            clearSslPreferences()
+            clearCache(true)
+
+            // We don't care about the callback - we just want to make sure cookies are gone
+            CookieManager.getInstance().removeAllCookies(null)
+
+            webStorage().deleteAllData()
+
+            webViewDatabase(context).clearHttpAuthUsernamePassword()
+        }
+    }
+
+    /**
      * See [EngineSession.findAll]
      */
     override fun findAll(text: String) {
@@ -240,6 +264,10 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
     internal fun currentView(): WebView? {
         return view?.get()?.currentWebView
     }
+
+    internal fun webStorage(): WebStorage = WebStorage.getInstance()
+
+    internal fun webViewDatabase(context: Context) = WebViewDatabase.getInstance(context)
 
     /**
      * Helper method to notify observers from other classes in this package. This is needed as

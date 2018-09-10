@@ -10,9 +10,9 @@ import mozilla.components.concept.engine.EngineSession
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -101,5 +101,19 @@ class SessionUseCasesTest {
         `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.requestDesktopSite.invoke(true)
         verify(selectedEngineSession).toggleDesktopMode(true, true)
+    }
+
+    @Test
+    fun testClearData() {
+        val engineSession = mock(EngineSession::class.java)
+        val session = mock(Session::class.java)
+        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+
+        useCases.clearData.invoke(session)
+        verify(engineSession).clearData()
+
+        `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
+        useCases.clearData.invoke()
+        verify(selectedEngineSession).clearData()
     }
 }

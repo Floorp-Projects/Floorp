@@ -34,6 +34,7 @@ class EngineObserverTest {
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
                 notifyObservers { onDesktopModeChange(enable) }
             }
+            override fun clearData() {}
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
@@ -83,6 +84,7 @@ class EngineObserverTest {
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun disableTrackingProtection() {}
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
+            override fun clearData() {}
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
@@ -135,6 +137,7 @@ class EngineObserverTest {
 
             override fun loadUrl(url: String) {}
             override fun loadData(data: String, mimeType: String, encoding: String) {}
+            override fun clearData() {}
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}

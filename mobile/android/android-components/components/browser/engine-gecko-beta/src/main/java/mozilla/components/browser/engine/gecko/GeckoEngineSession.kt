@@ -8,12 +8,12 @@ import android.annotation.SuppressLint
 import kotlinx.coroutines.experimental.CompletableDeferred
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.request.RequestInterceptor
-import mozilla.components.support.ktx.kotlin.isPhone
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
+import mozilla.components.support.ktx.kotlin.isPhone
 import org.mozilla.gecko.util.ThreadUtils
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
@@ -177,6 +177,13 @@ class GeckoEngineSession(
         if (reload) {
             geckoSession.reload()
         }
+    }
+
+    /**
+     * See [EngineSession.clearData]
+     */
+    override fun clearData() {
+        // API not available yet.
     }
 
     /**

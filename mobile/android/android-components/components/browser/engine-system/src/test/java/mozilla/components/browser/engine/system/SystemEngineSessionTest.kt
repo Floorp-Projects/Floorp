@@ -1,10 +1,13 @@
 package mozilla.components.browser.engine.system
 
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
+import android.webkit.WebStorage
 import android.webkit.WebView
+import android.webkit.WebViewDatabase
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.concept.engine.DefaultSettings
@@ -477,5 +480,35 @@ class SystemEngineSessionTest {
         `when`(engineSession.currentView()).thenReturn(webView)
         engineSession.clearFindMatches()
         verify(webView).clearMatches()
+    }
+
+    @Test
+    fun testClearDataMakingExpectedCalls() {
+        val engineSession = spy(SystemEngineSession::class.java)
+        val webView = mock(WebView::class.java)
+        val webStorage: WebStorage = mock()
+        val webViewDatabase: WebViewDatabase = mock()
+        val context: Context = RuntimeEnvironment.application
+
+        engineSession.clearData()
+        verify(webView, never()).clearFormData()
+        verify(webView, never()).clearHistory()
+        verify(webView, never()).clearMatches()
+        verify(webView, never()).clearSslPreferences()
+        verify(webView, never()).clearCache(true)
+
+        doReturn(webStorage).`when`(engineSession).webStorage()
+        doReturn(webViewDatabase).`when`(engineSession).webViewDatabase(context)
+        `when`(webView.context).thenReturn(context)
+        `when`(engineSession.currentView()).thenReturn(webView)
+
+        engineSession.clearData()
+        verify(webView).clearFormData()
+        verify(webView).clearHistory()
+        verify(webView).clearMatches()
+        verify(webView).clearSslPreferences()
+        verify(webView).clearCache(true)
+        verify(webStorage).deleteAllData()
+        verify(webViewDatabase).clearHttpAuthUsernamePassword()
     }
 }

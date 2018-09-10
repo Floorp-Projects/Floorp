@@ -78,6 +78,9 @@ class Components(private val applicationContext: Context) {
             SimpleBrowserMenuItem("Settings") {
                 Toast.makeText(applicationContext, "Settings", Toast.LENGTH_SHORT).show()
             },
+            SimpleBrowserMenuItem("Clear Data") {
+                sessionUseCases.clearData.invoke()
+            },
             SimpleBrowserMenuCheckbox("Request desktop site") { checked ->
                 sessionUseCases.requestDesktopSite.invoke(checked)
             }

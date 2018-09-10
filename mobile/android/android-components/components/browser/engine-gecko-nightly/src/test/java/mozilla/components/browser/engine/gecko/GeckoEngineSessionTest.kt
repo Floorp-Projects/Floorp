@@ -29,6 +29,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyZeroInteractions
 import org.mozilla.gecko.util.BundleEventListener
 import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.gecko.util.ThreadUtils
@@ -698,5 +699,17 @@ class GeckoEngineSessionTest {
 
         engineSession.exitFullScreenMode()
         verify(geckoSession).exitFullScreen()
+    }
+
+    fun testClearData() {
+        val runtime = mock(GeckoRuntime::class.java)
+        val engineSession = GeckoEngineSession(runtime)
+        val observer: EngineSession.Observer = mock()
+
+        engineSession.register(observer)
+
+        engineSession.clearData()
+
+        verifyZeroInteractions(observer)
     }
 }

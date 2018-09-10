@@ -13,6 +13,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.verifyZeroInteractions
 
 class EngineSessionTest {
     private val unknownHitResult = HitResult.UNKNOWN("file://foobar")
@@ -393,6 +394,17 @@ class EngineSessionTest {
         defaultObserver.onProgress(123)
         defaultObserver.onLoadingStateChange(true)
     }
+
+    @Test
+    fun `engine doesn't notify observers of clear data`() {
+        val session = spy(DummyEngineSession())
+        val observer = mock(EngineSession.Observer::class.java)
+        session.register(observer)
+
+        session.clearData()
+
+        verifyZeroInteractions(observer)
+    }
 }
 
 open class DummyEngineSession : EngineSession() {
@@ -418,6 +430,8 @@ open class DummyEngineSession : EngineSession() {
     override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
 
     override fun disableTrackingProtection() {}
+
+    override fun clearData() {}
 
     override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
 

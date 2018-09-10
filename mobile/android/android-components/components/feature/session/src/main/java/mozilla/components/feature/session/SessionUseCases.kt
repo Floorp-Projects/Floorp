@@ -106,6 +106,17 @@ class SessionUseCases(
         }
     }
 
+    class ClearDataUseCase internal constructor(
+        private val sessionManager: SessionManager
+    ) {
+        /**
+         * Clears all user data sources available.
+         */
+        fun invoke(session: Session = sessionManager.selectedSessionOrThrow) {
+            sessionManager.getOrCreateEngineSession(session).clearData()
+        }
+    }
+
     val loadUrl: LoadUrlUseCase by lazy { LoadUrlUseCase(sessionManager) }
     val loadData: LoadDataUseCase by lazy { LoadDataUseCase(sessionManager) }
     val reload: ReloadUrlUseCase by lazy { ReloadUrlUseCase(sessionManager) }
@@ -113,4 +124,5 @@ class SessionUseCases(
     val goBack: GoBackUseCase by lazy { GoBackUseCase(sessionManager) }
     val goForward: GoForwardUseCase by lazy { GoForwardUseCase(sessionManager) }
     val requestDesktopSite: RequestDesktopSiteUseCase by lazy { RequestDesktopSiteUseCase(sessionManager) }
+    val clearData: ClearDataUseCase by lazy { ClearDataUseCase(sessionManager) }
 }
