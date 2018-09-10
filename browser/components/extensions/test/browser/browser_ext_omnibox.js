@@ -52,6 +52,7 @@ add_task(async function() {
             break;
           case "set-synchronous":
             synchronous = data.synchronous;
+            browser.test.sendMessage("set-synchronous-set");
             break;
           case "test-multiple-suggest-calls":
             suggestions.forEach(suggestion => suggestCallback([suggestion]));
@@ -104,7 +105,7 @@ add_task(async function() {
   }
 
   let inputSessionSerial = 0;
-  async function startInputSession(indexToWaitFor) {
+  async function startInputSession() {
     gURLBar.focus();
     gURLBar.value = keyword;
     EventUtils.sendString(" ");
@@ -115,17 +116,6 @@ add_task(async function() {
     EventUtils.sendString(char);
 
     await expectEvent("on-input-changed-fired", {text: char});
-    // Wait for the autocomplete search. Note that we cannot wait for the search
-    // to be complete, since the add-on doesn't communicate when it's done, so
-    // just check matches count.
-    try {
-      await waitForAutocompleteResultAt(indexToWaitFor);
-    } catch (e) {
-      // Print message for debugging. Discard data:-URIs.
-      info(gURLBar.popup.richlistbox.outerHTML.replace(/data:image[^"\s]+/g, "data:image..."));
-      throw e;
-    }
-
     return char;
   }
 
@@ -196,7 +186,8 @@ add_task(async function() {
       await extension.awaitMessage("default-suggestion-set");
     }
 
-    let text = await startInputSession(0);
+    let text = await startInputSession();
+    await waitForAutocompleteResultAt(0);
 
     let item = gURLBar.popup.richlistbox.children[0];
 
@@ -215,7 +206,8 @@ add_task(async function() {
   }
 
   async function testDisposition(suggestionIndex, expectedDisposition, expectedText) {
-    await startInputSession(suggestionIndex);
+    await startInputSession();
+    await waitForAutocompleteResultAt(suggestionIndex);
 
     // Select the suggestion.
     EventUtils.synthesizeKey("KEY_ArrowDown", {repeat: suggestionIndex});
@@ -238,6 +230,7 @@ add_task(async function() {
 
   async function testSuggestions(info) {
     extension.sendMessage("set-synchronous", {synchronous: false});
+    await extension.awaitMessage("set-synchronous-set");
 
     function expectSuggestion({content, description}, index) {
       let item = gURLBar.popup.richlistbox.children[index + 1]; // Skip the heuristic result.
@@ -250,11 +243,15 @@ add_task(async function() {
          `Expected suggestion to have displayurl: "${keyword} ${content}".`);
     }
 
-    let text = await startInputSession(info.suggestions.length - 1);
+    let text = await startInputSession();
+    // Even if the results are generated asynchronously,
+    // the heuristic result should always be present.
+    await waitForAutocompleteResultAt(0);
 
     extension.sendMessage(info.test);
     await extension.awaitMessage("test-ready");
 
+    await waitForAutocompleteResultAt(info.suggestions.length - 1);
     info.suggestions.forEach(expectSuggestion);
 
     let promiseEvent = expectEvent("on-input-entered-fired", {
