@@ -612,11 +612,11 @@ var State = {
       let image = "chrome://mozapps/skin/places/defaultFavicon.svg";
       let found = tabFinder.get(parseInt(id));
       if (found) {
-        name = found.tab.linkedBrowser.contentTitle;
         if (found.tabbrowser) {
+          name = found.tab.getAttribute("label");
           image = found.tab.getAttribute("image");
         } else {
-          name = "Preloaded: " + name;
+          name = "Preloaded: " + found.tab.linkedBrowser.contentTitle;
         }
       } else if (id == 1) {
         name = BRAND_NAME;
