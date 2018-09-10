@@ -19,7 +19,6 @@
 //   * This defines DOMPrefs::FooBar(JSContext* aCx, JSObject* aObj);
 //     This is allows the use of DOMPrefs in WebIDL files.
 
-DOM_PREF(PerformanceObserverEnabled, "dom.enable_performance_observer")
 DOM_PREF(IndexedDBStorageOptionsEnabled, "dom.indexedDB.storageOption.enabled")
 #ifdef JS_BUILD_BINAST
 DOM_PREF(BinASTEncodingEnabled, "dom.script_loader.binast_encoding.enabled")
@@ -38,7 +37,7 @@ DOM_WEBIDL_PREF2(gfx_offscreencanvas_enabled)
 DOM_WEBIDL_PREF2(dom_webkitBlink_dirPicker_enabled)
 DOM_WEBIDL_PREF2(dom_netinfo_enabled)
 DOM_WEBIDL_PREF2(dom_fetchObserver_enabled)
-DOM_WEBIDL_PREF(PerformanceObserverEnabled)
+DOM_WEBIDL_PREF2(dom_enable_performance_observer)
 DOM_WEBIDL_PREF(SchedulerTimingEnabled)
 
 DOM_UINT32_PREF(WorkerCancelingTimeoutMillis,
