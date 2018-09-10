@@ -293,11 +293,14 @@ pref("string.bad-keyword", TRUE);
     "test:3: prefs parse error: unterminated /* comment\n"
   );
 
-  // Malformed comment.
+  // Malformed comments (single slashes), followed by whitespace, newline, EOF.
   DEFAULT(R"(
-/ comment
-    )",
+/ comment;
+/
+; /)",
     "test:2: prefs parse error: expected '/' or '*' after '/'\n"
+    "test:3: prefs parse error: expected '/' or '*' after '/'\n"
+    "test:4: prefs parse error: expected '/' or '*' after '/'\n"
   );
 
   // C++-style comment ending in EOF (1).
