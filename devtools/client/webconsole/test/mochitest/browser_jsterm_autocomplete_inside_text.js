@@ -86,7 +86,7 @@ async function performTests() {
   info("Test autocomplete inside parens");
   jsterm.setInputValue("dump()");
   EventUtils.synthesizeKey("KEY_ArrowLeft");
-  const onAutocompleteUpdated = jsterm.once("autocomplete-updated");
+  let onAutocompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("window.testBugA");
   await onAutocompleteUpdated;
   ok(popup.isOpen, "popup is open");
@@ -104,6 +104,39 @@ async function performTests() {
   EventUtils.synthesizeKey("KEY_Tab");
   checkJsTermValueAndCursor(jsterm, "dump(window.testBugAA\t|)",
     "completion was successful after Enter");
+
+  info("Check that we don't show the popup when editing words");
+  await setInputValueForAutocompletion(jsterm, "estBug", 0);
+  onAutocompleteUpdated = jsterm.once("autocomplete-updated");
+  EventUtils.sendString("t");
+  await onAutocompleteUpdated;
+  is(jsterm.getInputValue(), "testBug", "jsterm has expected value");
+  is(popup.isOpen, false, "popup is not open");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
+
+  await setInputValueForAutocompletion(jsterm, "__foo", 1);
+  onAutocompleteUpdated = jsterm.once("autocomplete-updated");
+  EventUtils.sendString("t");
+  await onAutocompleteUpdated;
+  is(jsterm.getInputValue(), "_t_foo", "jsterm has expected value");
+  is(popup.isOpen, false, "popup is not open");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
+
+  await setInputValueForAutocompletion(jsterm, "$$bar", 1);
+  onAutocompleteUpdated = jsterm.once("autocomplete-updated");
+  EventUtils.sendString("t");
+  await onAutocompleteUpdated;
+  is(jsterm.getInputValue(), "$t$bar", "jsterm has expected value");
+  is(popup.isOpen, false, "popup is not open");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
+
+  await setInputValueForAutocompletion(jsterm, "99luftballons", 1);
+  onAutocompleteUpdated = jsterm.once("autocomplete-updated");
+  EventUtils.sendString("t");
+  await onAutocompleteUpdated;
+  is(jsterm.getInputValue(), "9t9luftballons", "jsterm has expected value");
+  is(popup.isOpen, false, "popup is not open");
+  ok(!getJsTermCompletionValue(jsterm), "there is no completion text");
 }
 
 async function setInitialState(jsterm) {
