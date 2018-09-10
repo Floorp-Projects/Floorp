@@ -20,7 +20,6 @@
 #include "mozilla/dom/AppNotificationServiceOptionsBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/NotificationEvent.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/Promise.h"
@@ -1719,7 +1718,7 @@ Notification::ShowInternal()
   bool inPrivateBrowsing = IsInPrivateBrowsing();
 
   bool requireInteraction = mRequireInteraction;
-  if (!DOMPrefs::NotificationRIEnabled()) {
+  if (!StaticPrefs::dom_webnotifications_requireinteraction_enabled()) {
     requireInteraction = false;
   }
 

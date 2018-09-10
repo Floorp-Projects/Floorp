@@ -5054,11 +5054,6 @@ pref("network.buffer.cache.size",  32768);
 
 // Web Notification
 pref("dom.webnotifications.requireinteraction.count", 3);
-#ifdef NIGHTLY_BUILD
-pref("dom.webnotifications.requireinteraction.enabled", true);
-#else
-pref("dom.webnotifications.requireinteraction.enabled", false);
-#endif
 
 // Show favicons in web notifications.
 pref("alerts.showFavicons", false);

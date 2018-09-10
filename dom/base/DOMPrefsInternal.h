@@ -19,7 +19,6 @@
 //   * This defines DOMPrefs::FooBar(JSContext* aCx, JSObject* aObj);
 //     This is allows the use of DOMPrefs in WebIDL files.
 
-DOM_PREF(NotificationRIEnabled, "dom.webnotifications.requireinteraction.enabled")
 DOM_PREF(ServiceWorkersEnabled, "dom.serviceWorkers.enabled")
 DOM_PREF(ServiceWorkersTestingEnabled, "dom.serviceWorkers.testing.enabled")
 DOM_PREF(StorageManagerEnabled, "dom.storageManager.enabled")
@@ -42,7 +41,7 @@ DOM_PREF(BinASTEncodingEnabled, "dom.script_loader.binast_encoding.enabled")
 DOM_WEBIDL_PREF2(canvas_imagebitmap_extensions_enabled)
 DOM_WEBIDL_PREF2(dom_caches_enabled)
 DOM_WEBIDL_PREF2(dom_webnotifications_serviceworker_enabled)
-DOM_WEBIDL_PREF(NotificationRIEnabled)
+DOM_WEBIDL_PREF2(dom_webnotifications_requireinteraction_enabled)
 DOM_WEBIDL_PREF(ServiceWorkersEnabled)
 DOM_WEBIDL_PREF(StorageManagerEnabled)
 DOM_WEBIDL_PREF(PromiseRejectionEventsEnabled)
