@@ -8,12 +8,6 @@
 // main-thread in DOM.
 // The format is as follows:
 //
-//   DOM_PREF(FooBar, "foo.bar")
-//
-//   * First argument is the name of the getter function.  This defines a
-//     DOMPrefs::FooBar()
-//   * The second argument is the name of the pref.
-//
 //   DOM_WEBIDL_PREF(foo_bar)
 //
 //   * This defines DOMPrefs::foo_bar(JSContext* aCx, JSObject* aObj) which
