@@ -193,7 +193,7 @@ class RequestListContextMenu {
       label: L10N.getStr("netmonitor.context.newTab"),
       accesskey: L10N.getStr("netmonitor.context.newTab.accesskey"),
       visible: !!selectedRequest,
-      click: () => this.openRequestInTab(id, url, requestPostData),
+      click: () => this.openRequestInTab(id, url, requestHeaders, requestPostData),
     });
 
     menu.push({
@@ -231,10 +231,14 @@ class RequestListContextMenu {
   /**
    * Opens selected item in a new tab.
    */
-  async openRequestInTab(id, url, requestPostData) {
+  async openRequestInTab(id, url, requestHeaders, requestPostData) {
+    requestHeaders = requestHeaders ||
+      await this.props.connector.requestData(id, "requestHeaders");
+
     requestPostData = requestPostData ||
       await this.props.connector.requestData(id, "requestPostData");
-    openRequestInTab(url, requestPostData);
+
+    openRequestInTab(url, requestHeaders, requestPostData);
   }
 
   /**
