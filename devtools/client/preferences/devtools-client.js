@@ -59,8 +59,6 @@ pref("devtools.inspector.showUserAgentStyles", false);
 pref("devtools.inspector.showAllAnonymousContent", false);
 // Enable the CSS shapes highlighter
 pref("devtools.inspector.shapesHighlighter.enabled", true);
-// Enable the new Animation Inspector
-pref("devtools.new-animationinspector.enabled", true);
 // Enable the Font Editor
 pref("devtools.inspector.fonteditor.enabled", true);
 // Enable the font highlight-on-hover feature
