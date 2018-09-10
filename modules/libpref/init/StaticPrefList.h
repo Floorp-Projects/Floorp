@@ -216,6 +216,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+VARCACHE_PREF(
+  "dom.caches.testing.enabled",
+   dom_caches_testing_enabled,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------
