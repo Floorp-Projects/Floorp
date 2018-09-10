@@ -51,9 +51,10 @@ add_task(async function() {
   await onHighlighterShown;
   await onCheckboxChange;
 
-  info("Check that the CSS grid highlighter is created and the saved grid state.");
-  is(highlighters.gridHighlighters.size, 1, "CSS grid highlighter is shown.");
-  is(highlighters.state.grids.size, 1, "There's a saved grid state to be restored.");
+  info("Checking the CSS grid highlighter is created.");
+  ok(highlighters.highlighters[HIGHLIGHTER_TYPE],
+    "CSS grid highlighter is created in the highlighters overlay.");
+  ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
 
   info("Reload the page, expect the highlighter to be displayed once again and " +
     "grid is checked");
@@ -67,9 +68,7 @@ add_task(async function() {
 
   info("Check that the grid highlighter can be displayed after reloading the page");
   ok(restored, "The highlighter state was restored");
-  is(highlighters.gridHighlighters.size, 1, "CSS grid highlighter is shown.");
-  is(highlighters.state.grids.size, 1,
-    "The saved grid state has the correct number of saved states.");
+  ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
 
   info("Navigate to another URL, and check that the highlighter is hidden and " +
     "grid is unchecked");
@@ -84,6 +83,5 @@ add_task(async function() {
 
   info("Check that the grid highlighter is hidden after navigating to a different page");
   ok(!restored, "The highlighter state was not restored");
-  ok(!highlighters.gridHighlighters.size, "CSS grid highlighter is hidden.");
-  ok(!highlighters.state.grids.size, "No grids to be restored on page reload.");
+  ok(!highlighters.gridHighlighterShown, "CSS grid highlighter is hidden.");
 });

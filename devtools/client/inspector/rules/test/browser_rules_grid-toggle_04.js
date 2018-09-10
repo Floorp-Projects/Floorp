@@ -19,6 +19,8 @@ const TEST_URI = `
   </div>
 `;
 
+const HIGHLIGHTER_TYPE = "CssGridHighlighter";
+
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const {inspector, view} = await openRuleView();
@@ -32,7 +34,9 @@ add_task(async function() {
   ok(gridToggle, "Grid highlighter toggle is visible.");
   ok(!gridToggle.classList.contains("active"),
     "Grid highlighter toggle button is not active.");
-  ok(!highlighters.gridHighlighters.size, "No CSS grid highlighter is shown.");
+  ok(!highlighters.highlighters[HIGHLIGHTER_TYPE],
+    "No CSS grid highlighter exists in the rule-view.");
+  ok(!highlighters.gridHighlighterShown, "No CSS grid highlighter is shown.");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
   const onHighlighterShown = highlighters.once("grid-highlighter-shown");
@@ -43,7 +47,9 @@ add_task(async function() {
     "the rule-view.");
   ok(gridToggle.classList.contains("active"),
     "Grid highlighter toggle is active.");
-  is(highlighters.gridHighlighters.size, 1, "CSS grid highlighter is shown.");
+  ok(highlighters.highlighters[HIGHLIGHTER_TYPE],
+    "CSS grid highlighter created in the rule-view.");
+  ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
 
   info("Toggling OFF the CSS grid highlighter from the rule-view.");
   const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
@@ -54,5 +60,5 @@ add_task(async function() {
     "in the rule-view.");
   ok(!gridToggle.classList.contains("active"),
     "Grid highlighter toggle button is not active.");
-  ok(!highlighters.gridHighlighters.size, "No CSS grid highlighter is shown.");
+  ok(!highlighters.gridHighlighterShown, "No CSS grid highlighter is shown.");
 });
