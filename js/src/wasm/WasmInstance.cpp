@@ -384,36 +384,32 @@ Instance::wake(Instance* instance, uint32_t byteOffset, int32_t count)
 }
 
 /* static */ int32_t
-Instance::memCopy(Instance* instance, uint32_t destByteOffset, uint32_t srcByteOffset, uint32_t len)
+Instance::memCopy(Instance* instance, uint32_t dstByteOffset, uint32_t srcByteOffset, uint32_t len)
 {
     WasmMemoryObject* mem = instance->memory();
     uint32_t memLen = mem->volatileMemoryLength();
 
-    // Knowing that len > 0 below simplifies the wraparound checks.
     if (len == 0) {
         // Even though the length is zero, we must check for a valid offset.
-        if (destByteOffset < memLen && srcByteOffset < memLen)
+        if (dstByteOffset < memLen && srcByteOffset < memLen)
             return 0;
-
-        // else fall through to failure case
     } else {
         ArrayBufferObjectMaybeShared& arrBuf = mem->buffer();
         uint8_t* rawBuf = arrBuf.dataPointerEither().unwrap();
 
         // Here, we know that |len - 1| cannot underflow.
         typedef CheckedInt<uint32_t> CheckedU32;
-        CheckedU32 highest_destOffset = CheckedU32(destByteOffset) + CheckedU32(len - 1);
-        CheckedU32 highest_srcOffset = CheckedU32(srcByteOffset) + CheckedU32(len - 1);
-
-        if (highest_destOffset.isValid()   &&   // wraparound check
-            highest_srcOffset.isValid()    &&   // wraparound check
-            highest_destOffset.value() < memLen &&   // range check
-            highest_srcOffset.value() < memLen)      // range check
+        CheckedU32 lenMinus1 = CheckedU32(len - 1);
+        CheckedU32 highestDstOffset = CheckedU32(dstByteOffset) + lenMinus1;
+        CheckedU32 highestSrcOffset = CheckedU32(srcByteOffset) + lenMinus1;
+        if (highestDstOffset.isValid() &&
+            highestSrcOffset.isValid() &&
+            highestDstOffset.value() < memLen &&
+            highestSrcOffset.value() < memLen)
         {
-            memmove(rawBuf + destByteOffset, rawBuf + srcByteOffset, size_t(len));
+            memmove(rawBuf + dstByteOffset, rawBuf + srcByteOffset, size_t(len));
             return 0;
         }
-        // else fall through to failure case
     }
 
     JSContext* cx = TlsContext.get();
@@ -427,28 +423,23 @@ Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint3
     WasmMemoryObject* mem = instance->memory();
     uint32_t memLen = mem->volatileMemoryLength();
 
-    // Knowing that len > 0 below simplifies the wraparound check.
     if (len == 0) {
         // Even though the length is zero, we must check for a valid offset.
         if (byteOffset < memLen)
             return 0;
-
-        // else fall through to failure case
     } else {
         ArrayBufferObjectMaybeShared& arrBuf = mem->buffer();
         uint8_t* rawBuf = arrBuf.dataPointerEither().unwrap();
 
         // Here, we know that |len - 1| cannot underflow.
         typedef CheckedInt<uint32_t> CheckedU32;
-        CheckedU32 highest_offset = CheckedU32(byteOffset) + CheckedU32(len - 1);
-
-        if (highest_offset.isValid() &&     // wraparound check
-            highest_offset.value() < memLen)     // range check
+        CheckedU32 highestOffset = CheckedU32(byteOffset) + CheckedU32(len - 1);
+        if (highestOffset.isValid() &&
+            highestOffset.value() < memLen)
         {
             memset(rawBuf + byteOffset, int(value), size_t(len));
             return 0;
         }
-        // else fall through to failure case
     }
 
     JSContext* cx = TlsContext.get();
