@@ -950,26 +950,26 @@ Module::instantiate(JSContext* cx,
                 return false;
 
             ElemSegmentVector elemSegments;
-            for (const ElemSegment& eseg : code_->elemSegments()) {
+            for (const ElemSegment& seg : code_->elemSegments()) {
                 // This (debugging) code path is called only for tier 1.
-                MOZ_ASSERT(eseg.elemCodeRangeIndices2_.empty());
+                MOZ_ASSERT(seg.elemCodeRangeIndices2_.empty());
 
                 // ElemSegment doesn't have a (fallible) copy constructor,
                 // so we have to clone it "by hand".
                 ElemSegment clone;
-                clone.tableIndex = eseg.tableIndex;
-                clone.offset = eseg.offset;
+                clone.tableIndex = seg.tableIndex;
+                clone.offset = seg.offset;
 
                 MOZ_ASSERT(clone.elemFuncIndices.empty());
-                if (!clone.elemFuncIndices.appendAll(eseg.elemFuncIndices))
+                if (!clone.elemFuncIndices.appendAll(seg.elemFuncIndices))
                     return false;
 
                 MOZ_ASSERT(clone.elemCodeRangeIndices1_.empty());
-                if (!clone.elemCodeRangeIndices1_.appendAll(eseg.elemCodeRangeIndices1_))
+                if (!clone.elemCodeRangeIndices1_.appendAll(seg.elemCodeRangeIndices1_))
                     return false;
 
                 MOZ_ASSERT(clone.elemCodeRangeIndices2_.empty());
-                if (!clone.elemCodeRangeIndices2_.appendAll(eseg.elemCodeRangeIndices2_))
+                if (!clone.elemCodeRangeIndices2_.appendAll(seg.elemCodeRangeIndices2_))
                     return false;
 
                 if (!elemSegments.append(std::move(clone)))
