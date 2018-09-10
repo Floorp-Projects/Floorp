@@ -19,6 +19,10 @@ exports.grid = {
   // The text direction of the grid container
   direction: PropTypes.string,
 
+  // Whether or not the grid checkbox is disabled as a result of hitting the
+  // maximum number of grid highlighters shown.
+  disabled: PropTypes.bool,
+
   // The grid fragment object of the grid container
   gridFragments: PropTypes.array,
 

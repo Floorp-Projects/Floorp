@@ -538,8 +538,8 @@ TextPropertyEditor.prototype = {
     const gridToggle = this.valueSpan.querySelector(".ruleview-grid");
     if (gridToggle) {
       gridToggle.setAttribute("title", l10n("rule.gridToggle.tooltip"));
-      if (this.ruleView.highlighters.gridHighlighterShown ===
-          this.ruleView.inspector.selection.nodeFront) {
+      if (this.ruleView.highlighters.gridHighlighters.has(
+            this.ruleView.inspector.selection.nodeFront)) {
         gridToggle.classList.add("active");
       }
     }
@@ -926,14 +926,15 @@ TextPropertyEditor.prototype = {
       "session_id": this.toolbox.sessionId
     });
 
-    // Since the value was changed, check if the original propertywas a flex or grid
+    // Since the value was changed, check if the original property was a flex or grid
     // display declaration and hide their respective highlighters.
     if (this.isDisplayFlex()) {
       this.ruleView.highlighters.hideFlexboxHighlighter();
     }
 
     if (this.isDisplayGrid()) {
-      this.ruleView.highlighters.hideGridHighlighter();
+      this.ruleView.highlighters.hideGridHighlighter(
+        this.ruleView.inspector.selection.nodeFront);
     }
 
     // First, set this property value (common case, only modified a property)
