@@ -466,6 +466,14 @@ VARCACHE_PREF(
   float, -18.5f
 )
 
+// Simulate long tap events to select words. Mainly used in manual testing
+// with mouse.
+VARCACHE_PREF(
+  "layout.accessiblecaret.use_long_tap_injector",
+   layout_accessiblecaret_use_long_tap_injector,
+  bool, false
+)
+
 // Is parallel CSS parsing enabled?
 VARCACHE_PREF(
   "layout.css.parsing.parallel",
