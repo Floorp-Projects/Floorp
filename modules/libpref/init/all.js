@@ -5514,31 +5514,6 @@ pref("plugins.flashBlock.enabled", false);
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
 
-// Show the caret when long tapping on an empty content.
-pref("layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content", false);
-
-// By default, carets become tilt only when they are overlapping.
-pref("layout.accessiblecaret.always_tilt", false);
-
-// 0 = by default, always hide carets for selection changes due to JS calls.
-// 1 = update any visible carets for selection changes due to JS calls,
-//     but don't show carets if carets are hidden.
-// 2 = always show carets for selection changes due to JS calls.
-pref("layout.accessiblecaret.script_change_update_mode", 0);
-
-// Allow one caret to be dragged across the other caret without any limitation.
-// This matches the built-in convention for all desktop platforms.
-pref("layout.accessiblecaret.allow_dragging_across_other_caret", true);
-
-// Optionally provide haptic feedback on longPress selection events.
-pref("layout.accessiblecaret.hapticfeedback", false);
-
-// Smart phone-number selection on long-press is not enabled by default.
-pref("layout.accessiblecaret.extend_selection_for_phone_number", false);
-
-// Keep the accessible carets hidden when the user is using mouse input.
-pref("layout.accessiblecaret.hide_carets_for_mouse_input", true);
-
 // Wakelock is disabled by default.
 pref("dom.wakelock.enabled", false);
 
