@@ -511,22 +511,6 @@ nsLayoutUtils::AnimatedImageLayersEnabled()
 }
 
 bool
-nsLayoutUtils::CSSFiltersEnabled()
-{
-  static bool sCSSFiltersEnabled;
-  static bool sCSSFiltersPrefCached = false;
-
-  if (!sCSSFiltersPrefCached) {
-    sCSSFiltersPrefCached = true;
-    Preferences::AddBoolVarCache(&sCSSFiltersEnabled,
-                                 "layout.css.filters.enabled",
-                                 false);
-  }
-
-  return sCSSFiltersEnabled;
-}
-
-bool
 nsLayoutUtils::IsInterCharacterRubyEnabled()
 {
   static bool sInterCharacterRubyEnabled;

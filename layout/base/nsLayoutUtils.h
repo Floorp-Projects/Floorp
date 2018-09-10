@@ -2402,11 +2402,6 @@ public:
   static bool AnimatedImageLayersEnabled();
 
   /**
-   * Checks if we should enable parsing for CSS Filters.
-   */
-  static bool CSSFiltersEnabled();
-
-  /**
    * Checks whether support for inter-character ruby is enabled.
    */
   static bool IsInterCharacterRubyEnabled();
