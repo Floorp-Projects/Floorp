@@ -337,6 +337,12 @@ VARCACHE_PREF(
   bool, true
 )
 
+VARCACHE_PREF(
+  "gfx.offscreencanvas.enabled",
+   gfx_offscreencanvas_enabled,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // HTML5 parser prefs
 //---------------------------------------------------------------------------
