@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.841';
-var pdfjsBuild = 'bc5111d1';
+var pdfjsVersion = '2.0.815';
+var pdfjsBuild = 'd6927376';
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -327,7 +327,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.841';
+    let workerVersion = '2.0.815';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -22285,7 +22285,7 @@ exports.CMapFactory = CMapFactory;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getFontType = exports.IdentityToUnicodeMap = exports.ToUnicodeMap = exports.FontFlags = exports.Font = exports.ErrorFont = exports.SEAC_ANALYSIS_ENABLED = undefined;
+exports.getFontType = exports.ProblematicCharRanges = exports.IdentityToUnicodeMap = exports.ToUnicodeMap = exports.FontFlags = exports.Font = exports.ErrorFont = exports.PRIVATE_USE_OFFSET_END = exports.PRIVATE_USE_OFFSET_START = exports.SEAC_ANALYSIS_ENABLED = undefined;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -22307,9 +22307,11 @@ var _stream = __w_pdfjs_require__(14);
 
 var _type1_parser = __w_pdfjs_require__(38);
 
-const PRIVATE_USE_AREAS = [[0xE000, 0xF8FF], [0x100000, 0x10FFFD]];
+var PRIVATE_USE_OFFSET_START = 0xE000;
+var PRIVATE_USE_OFFSET_END = 0xF8FF;
+var SKIP_PRIVATE_USE_RANGE_F000_TO_F01F = false;
 var PDF_GLYPH_SPACE_UNITS = 1000;
-var SEAC_ANALYSIS_ENABLED = true;
+var SEAC_ANALYSIS_ENABLED = false;
 var FontFlags = {
   FixedPitch: 1,
   Serif: 2,
@@ -22588,6 +22590,7 @@ var OpenTypeFileBuilder = function OpenTypeFileBuilderClosure() {
   };
   return OpenTypeFileBuilder;
 }();
+var ProblematicCharRanges = new Int32Array([0x0000, 0x0020, 0x007F, 0x00A1, 0x00AD, 0x00AE, 0x0600, 0x0780, 0x08A0, 0x10A0, 0x1780, 0x1800, 0x1C00, 0x1C50, 0x2000, 0x2010, 0x2011, 0x2012, 0x2028, 0x2030, 0x205F, 0x2070, 0x25CC, 0x25CD, 0x3000, 0x3001, 0x3164, 0x3165, 0xAA60, 0xAA80, 0xD800, 0xE000, 0xFFF0, 0x10000]);
 var Font = function FontClosure() {
   function Font(name, file, properties) {
     var charCode;
@@ -22791,33 +22794,58 @@ var Font = function FontClosure() {
     }
     return toFontChar;
   }
-  function adjustMapping(charCodeToGlyphId, hasGlyph, newGlyphZeroId) {
+  function isProblematicUnicodeLocation(code) {
+    var i = 0,
+        j = ProblematicCharRanges.length - 1;
+    while (i < j) {
+      var c = i + j + 1 >> 1;
+      if (code < ProblematicCharRanges[c]) {
+        j = c - 1;
+      } else {
+        i = c;
+      }
+    }
+    return !(i & 1);
+  }
+  function adjustMapping(charCodeToGlyphId, properties, missingGlyphs) {
+    var toUnicode = properties.toUnicode;
+    var isSymbolic = !!(properties.flags & FontFlags.Symbolic);
+    var isIdentityUnicode = properties.toUnicode instanceof IdentityToUnicodeMap;
     var newMap = Object.create(null);
     var toFontChar = [];
-    var privateUseAreaIndex = 0;
-    var nextAvailableFontCharCode = PRIVATE_USE_AREAS[privateUseAreaIndex][0];
-    var privateUseOffetEnd = PRIVATE_USE_AREAS[privateUseAreaIndex][1];
+    var usedFontCharCodes = [];
+    var nextAvailableFontCharCode = PRIVATE_USE_OFFSET_START;
     for (var originalCharCode in charCodeToGlyphId) {
       originalCharCode |= 0;
       var glyphId = charCodeToGlyphId[originalCharCode];
-      if (!hasGlyph(glyphId)) {
+      if (missingGlyphs[glyphId]) {
         continue;
       }
-      if (nextAvailableFontCharCode > privateUseOffetEnd) {
-        privateUseAreaIndex++;
-        if (privateUseAreaIndex >= PRIVATE_USE_AREAS.length) {
-          (0, _util.warn)('Ran out of space in font private use area.');
-          break;
+      var fontCharCode = originalCharCode;
+      var hasUnicodeValue = false;
+      if (!isIdentityUnicode && toUnicode.has(originalCharCode)) {
+        hasUnicodeValue = true;
+        var unicode = toUnicode.get(fontCharCode);
+        if (unicode.length === 1) {
+          fontCharCode = unicode.charCodeAt(0);
         }
-        nextAvailableFontCharCode = PRIVATE_USE_AREAS[privateUseAreaIndex][0];
-        privateUseOffetEnd = PRIVATE_USE_AREAS[privateUseAreaIndex][1];
       }
-      var fontCharCode = nextAvailableFontCharCode++;
-      if (glyphId === 0) {
-        glyphId = newGlyphZeroId;
+      if (usedFontCharCodes[fontCharCode] !== undefined || isProblematicUnicodeLocation(fontCharCode) || isSymbolic && !hasUnicodeValue) {
+        do {
+          if (nextAvailableFontCharCode > PRIVATE_USE_OFFSET_END) {
+            (0, _util.warn)('Ran out of space in font private use area.');
+            break;
+          }
+          fontCharCode = nextAvailableFontCharCode++;
+          if (SKIP_PRIVATE_USE_RANGE_F000_TO_F01F && fontCharCode === 0xF000) {
+            fontCharCode = 0xF020;
+            nextAvailableFontCharCode = fontCharCode + 1;
+          }
+        } while (usedFontCharCodes[fontCharCode] !== undefined);
       }
       newMap[fontCharCode] = glyphId;
       toFontChar[originalCharCode] = fontCharCode;
+      usedFontCharCodes[fontCharCode] = true;
     }
     return {
       toFontChar,
@@ -23003,9 +23031,6 @@ var Font = function FontClosure() {
         } else {
           throw new _util.FormatError('Unicode ranges Bits > 123 are reserved for internal usage');
         }
-      }
-      if (lastCharIndex > 0xFFFF) {
-        lastCharIndex = 0xFFFF;
       }
     } else {
       firstCharIndex = 0;
@@ -23560,12 +23585,13 @@ var Font = function FontClosure() {
             data[offset + 1] = value >> 1 & 0xFF;
           };
         }
-        var numGlyphsOut = dupFirstEntry ? numGlyphs + 1 : numGlyphs;
         var locaData = loca.data;
-        var locaDataSize = itemSize * (1 + numGlyphsOut);
-        locaData = new Uint8Array(locaDataSize);
-        locaData.set(loca.data.subarray(0, locaDataSize));
-        loca.data = locaData;
+        var locaDataSize = itemSize * (1 + numGlyphs);
+        if (locaData.length !== locaDataSize) {
+          locaData = new Uint8Array(locaDataSize);
+          locaData.set(loca.data.subarray(0, locaDataSize));
+          loca.data = locaData;
+        }
         var oldGlyfData = glyf.data;
         var oldGlyfDataLength = oldGlyfData.length;
         var newGlyfData = new Uint8Array(oldGlyfDataLength);
@@ -23574,7 +23600,8 @@ var Font = function FontClosure() {
         var missingGlyphs = Object.create(null);
         itemEncode(locaData, 0, writeOffset);
         var i, j;
-        for (i = 0, j = itemSize; i < numGlyphs; i++, j += itemSize) {
+        var locaCount = dupFirstEntry ? numGlyphs - 1 : numGlyphs;
+        for (i = 0, j = itemSize; i < locaCount; i++, j += itemSize) {
           var endOffset = itemDecode(locaData, j);
           if (endOffset === 0) {
             endOffset = startOffset;
@@ -23599,7 +23626,7 @@ var Font = function FontClosure() {
         }
         if (writeOffset === 0) {
           var simpleGlyph = new Uint8Array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 49, 0]);
-          for (i = 0, j = itemSize; i < numGlyphsOut; i++, j += itemSize) {
+          for (i = 0, j = itemSize; i < numGlyphs; i++, j += itemSize) {
             itemEncode(locaData, j, simpleGlyph.length);
           }
           glyf.data = simpleGlyph;
@@ -24018,14 +24045,7 @@ var Font = function FontClosure() {
       }
       font.pos = (font.start || 0) + tables['maxp'].offset;
       var version = font.getInt32();
-      const numGlyphs = font.getUint16();
-      let numGlyphsOut = numGlyphs + 1;
-      let dupFirstEntry = true;
-      if (numGlyphsOut > 0xFFFF) {
-        dupFirstEntry = false;
-        numGlyphsOut = numGlyphs;
-        (0, _util.warn)('Not enough space in glyfs to duplicate first glyph.');
-      }
+      var numGlyphs = font.getUint16();
       var maxFunctionDefs = 0;
       var maxSizeOfInstructions = 0;
       if (version >= 0x00010000 && tables['maxp'].length >= 22) {
@@ -24040,15 +24060,20 @@ var Font = function FontClosure() {
         font.pos += 4;
         maxSizeOfInstructions = font.getUint16();
       }
-      tables['maxp'].data[4] = numGlyphsOut >> 8;
-      tables['maxp'].data[5] = numGlyphsOut & 255;
+      var dupFirstEntry = false;
+      if (properties.type === 'CIDFontType2' && properties.toUnicode && properties.toUnicode.get(0) > '\u0000') {
+        dupFirstEntry = true;
+        numGlyphs++;
+        tables['maxp'].data[4] = numGlyphs >> 8;
+        tables['maxp'].data[5] = numGlyphs & 255;
+      }
       var hintsValid = sanitizeTTPrograms(tables['fpgm'], tables['prep'], tables['cvt '], maxFunctionDefs);
       if (!hintsValid) {
         delete tables['fpgm'];
         delete tables['prep'];
         delete tables['cvt '];
       }
-      sanitizeMetrics(font, tables['hhea'], tables['hmtx'], numGlyphsOut);
+      sanitizeMetrics(font, tables['hhea'], tables['hmtx'], numGlyphs);
       if (!tables['head']) {
         throw new _util.FormatError('Required "head" table is not found');
       }
@@ -24080,12 +24105,11 @@ var Font = function FontClosure() {
       this.ascent = metricsOverride.ascent / metricsOverride.unitsPerEm;
       this.descent = metricsOverride.descent / metricsOverride.unitsPerEm;
       if (tables['post']) {
-        readPostScriptTable(tables['post'], properties, numGlyphs);
+        var valid = readPostScriptTable(tables['post'], properties, numGlyphs);
+        if (!valid) {
+          tables['post'] = null;
+        }
       }
-      tables['post'] = {
-        tag: 'post',
-        data: createPostTable(properties)
-      };
       var charCodeToGlyphId = [],
           charCode;
       function hasGlyph(glyphId) {
@@ -24108,6 +24132,9 @@ var Font = function FontClosure() {
             charCodeToGlyphId[charCode] = glyphId;
           }
         });
+        if (dupFirstEntry && (isCidToGidMapEmpty || !charCodeToGlyphId[0])) {
+          charCodeToGlyphId[0] = numGlyphs - 1;
+        }
       } else {
         var cmapTable = readCmapTable(tables['cmap'], font, this.isSymbolicFont, properties.hasEncoding);
         var cmapPlatformId = cmapTable.platformId;
@@ -24175,15 +24202,11 @@ var Font = function FontClosure() {
       if (charCodeToGlyphId.length === 0) {
         charCodeToGlyphId[0] = 0;
       }
-      let glyphZeroId = numGlyphsOut - 1;
-      if (!dupFirstEntry) {
-        glyphZeroId = 0;
-      }
-      var newMapping = adjustMapping(charCodeToGlyphId, hasGlyph, glyphZeroId);
+      var newMapping = adjustMapping(charCodeToGlyphId, properties, missingGlyphs);
       this.toFontChar = newMapping.toFontChar;
       tables['cmap'] = {
         tag: 'cmap',
-        data: createCmapTable(newMapping.charCodeToGlyphId, numGlyphsOut)
+        data: createCmapTable(newMapping.charCodeToGlyphId, numGlyphs)
       };
       if (!tables['OS/2'] || !validateOS2Table(tables['OS/2'])) {
         tables['OS/2'] = {
@@ -24191,12 +24214,17 @@ var Font = function FontClosure() {
           data: createOS2Table(properties, newMapping.charCodeToGlyphId, metricsOverride)
         };
       }
+      if (!tables['post']) {
+        tables['post'] = {
+          tag: 'post',
+          data: createPostTable(properties)
+        };
+      }
       if (!isTrueType) {
         try {
           cffFile = new _stream.Stream(tables['CFF '].data);
           var parser = new _cff_parser.CFFParser(cffFile, properties, SEAC_ANALYSIS_ENABLED);
           cff = parser.parse();
-          cff.duplicateFirstGlyph();
           var compiler = new _cff_parser.CFFCompiler(cff);
           tables['CFF '].data = compiler.compile();
         } catch (e) {
@@ -24223,12 +24251,8 @@ var Font = function FontClosure() {
       if (properties.builtInEncoding) {
         adjustToUnicode(properties, properties.builtInEncoding);
       }
-      let glyphZeroId = 1;
-      if (font instanceof CFFFont) {
-        glyphZeroId = font.numGlyphs - 1;
-      }
       var mapping = font.getGlyphMapping(properties);
-      var newMapping = adjustMapping(mapping, font.hasGlyphId.bind(font), glyphZeroId);
+      var newMapping = adjustMapping(mapping, properties, Object.create(null));
       this.toFontChar = newMapping.toFontChar;
       var numGlyphs = font.numGlyphs;
       function getCharCodes(charCodeToGlyphId, glyphId) {
@@ -24379,11 +24403,11 @@ var Font = function FontClosure() {
         var seac = this.seacMap[charcode];
         fontCharCode = seac.baseFontCharCode;
         accent = {
-          fontChar: String.fromCodePoint(seac.accentFontCharCode),
+          fontChar: String.fromCharCode(seac.accentFontCharCode),
           offset: seac.accentOffset
         };
       }
-      var fontChar = typeof fontCharCode === 'number' ? String.fromCodePoint(fontCharCode) : '';
+      var fontChar = String.fromCharCode(fontCharCode);
       var glyph = this.glyphCache[charcode];
       if (!glyph || !glyph.matchesForCache(fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont)) {
         glyph = new Glyph(fontChar, unicode, accent, width, vmetric, operatorListId, isSpace, isInFont);
@@ -24645,16 +24669,6 @@ var Type1Font = function Type1FontClosure() {
       }
       return type1FontGlyphMapping(properties, builtInEncoding, glyphNames);
     },
-    hasGlyphId: function Type1Font_hasGlyphID(id) {
-      if (id < 0 || id >= this.numGlyphs) {
-        return false;
-      }
-      if (id === 0) {
-        return true;
-      }
-      var glyph = this.charstrings[id - 1];
-      return glyph.charstring.length > 0;
-    },
     getSeacs: function Type1Font_getSeacs(charstrings) {
       var i, ii;
       var seacMap = [];
@@ -24732,7 +24746,12 @@ var Type1Font = function Type1FontClosure() {
       var charStringsIndex = new _cff_parser.CFFIndex();
       charStringsIndex.add([0x8B, 0x0E]);
       for (i = 0; i < count; i++) {
-        charStringsIndex.add(glyphs[i]);
+        var glyph = glyphs[i];
+        if (glyph.length === 0) {
+          charStringsIndex.add([0x8B, 0x0E]);
+          continue;
+        }
+        charStringsIndex.add(glyph);
       }
       cff.charStrings = charStringsIndex;
       var privateDict = new _cff_parser.CFFPrivateDict();
@@ -24768,7 +24787,6 @@ var CFFFont = function CFFFontClosure() {
     this.properties = properties;
     var parser = new _cff_parser.CFFParser(file, properties, SEAC_ANALYSIS_ENABLED);
     this.cff = parser.parse();
-    this.cff.duplicateFirstGlyph();
     var compiler = new _cff_parser.CFFCompiler(this.cff);
     this.seacs = this.cff.seacs;
     try {
@@ -24809,19 +24827,29 @@ var CFFFont = function CFFFontClosure() {
       var encoding = cff.encoding ? cff.encoding.encoding : null;
       charCodeToGlyphId = type1FontGlyphMapping(properties, encoding, charsets);
       return charCodeToGlyphId;
-    },
-    hasGlyphId: function CFFFont_hasGlyphID(id) {
-      return this.cff.hasGlyphId(id);
     }
   };
   return CFFFont;
 }();
+(function checkSeacSupport() {
+  if (typeof navigator !== 'undefined' && /Windows/.test(navigator.userAgent)) {
+    exports.SEAC_ANALYSIS_ENABLED = SEAC_ANALYSIS_ENABLED = true;
+  }
+})();
+(function checkChromeWindows() {
+  if (typeof navigator !== 'undefined' && /Windows.*Chrome/.test(navigator.userAgent)) {
+    SKIP_PRIVATE_USE_RANGE_F000_TO_F01F = true;
+  }
+})();
 exports.SEAC_ANALYSIS_ENABLED = SEAC_ANALYSIS_ENABLED;
+exports.PRIVATE_USE_OFFSET_START = PRIVATE_USE_OFFSET_START;
+exports.PRIVATE_USE_OFFSET_END = PRIVATE_USE_OFFSET_END;
 exports.ErrorFont = ErrorFont;
 exports.Font = Font;
 exports.FontFlags = FontFlags;
 exports.ToUnicodeMap = ToUnicodeMap;
 exports.IdentityToUnicodeMap = IdentityToUnicodeMap;
+exports.ProblematicCharRanges = ProblematicCharRanges;
 exports.getFontType = getFontType;
 
 /***/ }),
@@ -24834,7 +24862,7 @@ exports.getFontType = getFontType;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.CFFFDSelect = exports.CFFCompiler = exports.CFFPrivateDict = exports.CFFTopDict = exports.CFFCharset = exports.CFFIndex = exports.CFFStrings = exports.CFFHeader = exports.CFF = exports.CFFParser = exports.CFFStandardStrings = undefined;
+exports.CFFCompiler = exports.CFFPrivateDict = exports.CFFTopDict = exports.CFFCharset = exports.CFFIndex = exports.CFFStrings = exports.CFFHeader = exports.CFF = exports.CFFParser = exports.CFFStandardStrings = undefined;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -25598,16 +25626,20 @@ var CFFParser = function CFFParserClosure() {
       return new CFFEncoding(predefined, format, encoding, raw);
     },
     parseFDSelect: function CFFParser_parseFDSelect(pos, length) {
+      var start = pos;
       var bytes = this.bytes;
       var format = bytes[pos++];
-      var fdSelect = [];
-      var i;
+      var fdSelect = [],
+          rawBytes;
+      var i,
+          invalidFirstGID = false;
       switch (format) {
         case 0:
           for (i = 0; i < length; ++i) {
             var id = bytes[pos++];
             fdSelect.push(id);
           }
+          rawBytes = bytes.subarray(start, pos);
           break;
         case 3:
           var rangesCount = bytes[pos++] << 8 | bytes[pos++];
@@ -25615,6 +25647,7 @@ var CFFParser = function CFFParserClosure() {
             var first = bytes[pos++] << 8 | bytes[pos++];
             if (i === 0 && first !== 0) {
               (0, _util.warn)('parseFDSelect: The first range must have a first GID of 0' + ' -- trying to recover.');
+              invalidFirstGID = true;
               first = 0;
             }
             var fdIndex = bytes[pos++];
@@ -25624,6 +25657,10 @@ var CFFParser = function CFFParserClosure() {
             }
           }
           pos += 2;
+          rawBytes = bytes.subarray(start, pos);
+          if (invalidFirstGID) {
+            rawBytes[3] = rawBytes[4] = 0;
+          }
           break;
         default:
           throw new _util.FormatError(`parseFDSelect: Unknown format "${format}".`);
@@ -25631,7 +25668,7 @@ var CFFParser = function CFFParserClosure() {
       if (fdSelect.length !== length) {
         throw new _util.FormatError('parseFDSelect: Invalid font data.');
       }
-      return new CFFFDSelect(format, fdSelect);
+      return new CFFFDSelect(fdSelect, rawBytes);
     }
   };
   return CFFParser;
@@ -25650,26 +25687,6 @@ var CFF = function CFFClosure() {
     this.fdSelect = null;
     this.isCIDFont = false;
   }
-  CFF.prototype = {
-    duplicateFirstGlyph: function CFF_duplicateFirstGlyph() {
-      if (this.charStrings.count >= 65535) {
-        (0, _util.warn)('Not enough space in charstrings to duplicate first glyph.');
-        return;
-      }
-      var glyphZero = this.charStrings.get(0);
-      this.charStrings.add(glyphZero);
-      if (this.isCIDFont) {
-        this.fdSelect.fdSelect.push(this.fdSelect.fdSelect[0]);
-      }
-    },
-    hasGlyphId: function CFF_hasGlyphID(id) {
-      if (id < 0 || id >= this.charStrings.count) {
-        return false;
-      }
-      var glyph = this.charStrings.get(id);
-      return glyph.length > 0;
-    }
-  };
   return CFF;
 }();
 var CFFHeader = function CFFHeaderClosure() {
@@ -25856,9 +25873,9 @@ var CFFEncoding = function CFFEncodingClosure() {
   return CFFEncoding;
 }();
 var CFFFDSelect = function CFFFDSelectClosure() {
-  function CFFFDSelect(format, fdSelect) {
-    this.format = format;
+  function CFFFDSelect(fdSelect, raw) {
     this.fdSelect = fdSelect;
+    this.raw = raw;
   }
   CFFFDSelect.prototype = {
     getFDIndex: function CFFFDSelect_get(glyphIndex) {
@@ -25949,7 +25966,6 @@ var CFFCompiler = function CFFCompilerClosure() {
           }
         }
       }
-      cff.topDict.setByName('charset', 0);
       var compiled = this.compileTopDicts([cff.topDict], output.length, cff.isCIDFont);
       output.add(compiled.output);
       var topDictTracker = compiled.trackers[0];
@@ -25966,15 +25982,21 @@ var CFFCompiler = function CFFCompilerClosure() {
           output.add(encoding);
         }
       }
-      var charset = this.compileCharset(cff.charset);
-      topDictTracker.setEntryLocation('charset', [output.length], output);
-      output.add(charset);
+      if (cff.charset && cff.topDict.hasName('charset')) {
+        if (cff.charset.predefined) {
+          topDictTracker.setEntryLocation('charset', [cff.charset.format], output);
+        } else {
+          var charset = this.compileCharset(cff.charset);
+          topDictTracker.setEntryLocation('charset', [output.length], output);
+          output.add(charset);
+        }
+      }
       var charStrings = this.compileCharStrings(cff.charStrings);
       topDictTracker.setEntryLocation('CharStrings', [output.length], output);
       output.add(charStrings);
       if (cff.isCIDFont) {
         topDictTracker.setEntryLocation('FDSelect', [output.length], output);
-        var fdSelect = this.compileFDSelect(cff.fdSelect);
+        var fdSelect = this.compileFDSelect(cff.fdSelect.raw);
         output.add(fdSelect);
         compiled = this.compileTopDicts(cff.fdArray, output.length, true);
         topDictTracker.setEntryLocation('FDArray', [output.length], output);
@@ -26169,55 +26191,16 @@ var CFFCompiler = function CFFCompilerClosure() {
       this.out.writeByteArray(this.compileIndex(globalSubrIndex));
     },
     compileCharStrings: function CFFCompiler_compileCharStrings(charStrings) {
-      var charStringsIndex = new CFFIndex();
-      for (var i = 0; i < charStrings.count; i++) {
-        var glyph = charStrings.get(i);
-        if (glyph.length === 0) {
-          charStringsIndex.add(new Uint8Array([0x8B, 0x0E]));
-          continue;
-        }
-        charStringsIndex.add(glyph);
-      }
-      return this.compileIndex(charStringsIndex);
+      return this.compileIndex(charStrings);
     },
     compileCharset: function CFFCompiler_compileCharset(charset) {
-      let length = 1 + (this.cff.charStrings.count - 1) * 2;
-      let out = new Uint8Array(length);
-      return this.compileTypedArray(out);
+      return this.compileTypedArray(charset.raw);
     },
     compileEncoding: function CFFCompiler_compileEncoding(encoding) {
       return this.compileTypedArray(encoding.raw);
     },
     compileFDSelect: function CFFCompiler_compileFDSelect(fdSelect) {
-      let format = fdSelect.format;
-      let out, i;
-      switch (format) {
-        case 0:
-          out = new Uint8Array(1 + fdSelect.fdSelect.length);
-          out[0] = format;
-          for (i = 0; i < fdSelect.fdSelect.length; i++) {
-            out[i + 1] = fdSelect.fdSelect[i];
-          }
-          break;
-        case 3:
-          let start = 0;
-          let lastFD = fdSelect.fdSelect[0];
-          let ranges = [format, 0, 0, start >> 8 & 0xFF, start & 0xFF, lastFD];
-          for (i = 1; i < fdSelect.fdSelect.length; i++) {
-            let currentFD = fdSelect.fdSelect[i];
-            if (currentFD !== lastFD) {
-              ranges.push(i >> 8 & 0xFF, i & 0xFF, currentFD);
-              lastFD = currentFD;
-            }
-          }
-          let numRanges = (ranges.length - 3) / 3;
-          ranges[1] = numRanges >> 8 & 0xFF;
-          ranges[2] = numRanges & 0xFF;
-          ranges.push(i >> 8 & 0xFF, i & 0xFF);
-          out = new Uint8Array(ranges);
-          break;
-      }
-      return this.compileTypedArray(out);
+      return this.compileTypedArray(fdSelect);
     },
     compileTypedArray: function CFFCompiler_compileTypedArray(data) {
       var out = [];
@@ -26288,7 +26271,6 @@ exports.CFFCharset = CFFCharset;
 exports.CFFTopDict = CFFTopDict;
 exports.CFFPrivateDict = CFFPrivateDict;
 exports.CFFCompiler = CFFCompiler;
-exports.CFFFDSelect = CFFFDSelect;
 
 /***/ }),
 /* 32 */
@@ -33721,7 +33703,7 @@ var FontRendererFactory = function FontRendererFactoryClosure() {
     return glyphs;
   }
   function lookupCmap(ranges, unicode) {
-    var code = unicode.codePointAt(0),
+    var code = unicode.charCodeAt(0),
         gid = 0;
     var l = 0,
         r = ranges.length - 1;
