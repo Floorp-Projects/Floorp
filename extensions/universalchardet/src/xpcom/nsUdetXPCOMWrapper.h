@@ -60,18 +60,11 @@ class nsXPCOMStringDetector :
 
 //=====================================================================
 
-class nsJAPSMDetector : public nsXPCOMDetector
+class nsJAPSMDetector final : public nsXPCOMDetector
 {
 public:
   nsJAPSMDetector()
     : nsXPCOMDetector() {}
-};
-
-class nsJAStringPSMDetector : public nsXPCOMStringDetector
-{
-public:
-  nsJAStringPSMDetector()
-    : nsXPCOMStringDetector() {}
 };
 
 #endif //_nsUdetXPCOMWrapper_h__
