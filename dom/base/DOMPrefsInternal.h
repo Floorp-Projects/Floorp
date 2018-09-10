@@ -19,7 +19,6 @@
 //   * This defines DOMPrefs::FooBar(JSContext* aCx, JSObject* aObj);
 //     This is allows the use of DOMPrefs in WebIDL files.
 
-DOM_PREF(PerformanceLoggingEnabled, "dom.performance.enable_user_timing_logging")
 DOM_PREF(NotificationEnabled, "dom.webnotifications.enabled")
 DOM_PREF(NotificationEnabledInServiceWorkers, "dom.webnotifications.serviceworker.enabled")
 DOM_PREF(NotificationRIEnabled, "dom.webnotifications.requireinteraction.enabled")
