@@ -3,13 +3,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['NIGHTLY_BUILD']:
-    UNIFIED_SOURCES += [
-        'TestDLLEject.cpp'
+    SOURCES += [
+        'TestDLLEject.cpp',
     ]
+
+SOURCES += [
+    'TestDLLBlocklist.cpp',
+]
 
 FINAL_LIBRARY = 'xul-gtest'
 
 TEST_DIRS += [
   'Injector',
   'InjectorDLL',
+  'TestDllBlocklist_AllowByVersion',
+  'TestDllBlocklist_MatchByName',
+  'TestDllBlocklist_MatchByVersion',
 ]
