@@ -19,7 +19,6 @@
 //   * This defines DOMPrefs::FooBar(JSContext* aCx, JSObject* aObj);
 //     This is allows the use of DOMPrefs in WebIDL files.
 
-DOM_PREF(OffscreenCanvasEnabled, "gfx.offscreencanvas.enabled")
 DOM_PREF(WebkitBlinkDirectoryPickerEnabled, "dom.webkitBlink.dirPicker.enabled")
 DOM_PREF(NetworkInformationEnabled, "dom.netinfo.enabled")
 DOM_PREF(FetchObserverEnabled, "dom.fetchObserver.enabled")
@@ -41,7 +40,7 @@ DOM_WEBIDL_PREF2(dom_storageManager_enabled)
 DOM_WEBIDL_PREF2(dom_promise_rejection_events_enabled)
 DOM_WEBIDL_PREF2(dom_push_enabled)
 DOM_WEBIDL_PREF2(dom_streams_enabled)
-DOM_WEBIDL_PREF(OffscreenCanvasEnabled)
+DOM_WEBIDL_PREF2(gfx_offscreencanvas_enabled)
 DOM_WEBIDL_PREF(WebkitBlinkDirectoryPickerEnabled)
 DOM_WEBIDL_PREF(NetworkInformationEnabled)
 DOM_WEBIDL_PREF(FetchObserverEnabled)
