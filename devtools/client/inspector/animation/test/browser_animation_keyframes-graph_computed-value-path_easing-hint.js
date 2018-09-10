@@ -189,6 +189,9 @@ const TEST_DATA = [
   },
 ];
 
+// Prevent test timeout's on windows code coverage: Bug 1470757
+requestLongerTimeout(2);
+
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_easings.html");
   await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
