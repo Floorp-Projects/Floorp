@@ -30,7 +30,7 @@ class CompilerPreprocessor(Preprocessor):
     # simple "FOO" case.
     VARSUBST = re.compile('(?<!")(?P<VAR>\w+)(?!")', re.U)
     NON_WHITESPACE = re.compile('\S')
-    HAS_FEATURE = re.compile('(__has_feature)\(([^\)]*)\)')
+    HAS_FEATURE_OR_BUILTIN = re.compile('(__has_(feature|builtin))\(([^\)]*)\)')
 
     def __init__(self, *args, **kwargs):
         Preprocessor.__init__(self, *args, **kwargs)
@@ -49,15 +49,15 @@ class CompilerPreprocessor(Preprocessor):
             return value
         # Our Preprocessor doesn't handle macros with parameters, so we hack
         # around that for __has_feature()-like things.
-        def normalize_has_feature(expr):
-            return self.HAS_FEATURE.sub(r'\1\2', expr)
+        def normalize_has_feature_or_builtin(expr):
+            return self.HAS_FEATURE_OR_BUILTIN.sub(r'\1\2', expr)
         self.context = self.Context(
-            (normalize_has_feature(k), normalize_numbers(v))
+            (normalize_has_feature_or_builtin(k), normalize_numbers(v))
             for k, v in context.iteritems()
         )
         try:
-            return Preprocessor.do_if(self, normalize_has_feature(expression),
-                                      **kwargs)
+            return Preprocessor.do_if(
+                self, normalize_has_feature_or_builtin(expression), **kwargs)
         finally:
             self.context = context
 
