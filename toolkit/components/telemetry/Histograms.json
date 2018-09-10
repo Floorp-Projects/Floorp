@@ -12899,9 +12899,9 @@
   },
   "NUMBER_OF_PROFILES": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "59",
-    "bug_numbers": [1296606],
+    "alert_emails": ["dtownsend@mozilla.com"],
+    "expires_in_version": "70",
+    "bug_numbers": [1296606, 1488881],
     "kind": "count",
     "description": "Number of named browser profiles for the current user, as reported by the profile service at startup."
   },
