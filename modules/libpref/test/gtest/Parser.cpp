@@ -51,9 +51,7 @@ user_pref("string", "value");
   );
 
   // Totally empty input.
-  DEFAULT("",
-    ""
-  );
+  DEFAULT("", "");
 
   // Whitespace-only input.
   DEFAULT(R"(
@@ -61,6 +59,11 @@ user_pref("string", "value");
     )" "\v \t \v \f",
     ""
   );
+
+  // Comment-only inputs.
+  DEFAULT(R"(// blah)", "");
+  DEFAULT(R"(# blah)", "");
+  DEFAULT(R"(/* blah */)", "");
 
   //-------------------------------------------------------------------------
   // All the lexing errors. (To be pedantic, some of the integer literal
