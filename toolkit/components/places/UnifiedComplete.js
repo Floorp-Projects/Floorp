@@ -263,8 +263,7 @@ const QUERYINDEX_ORIGIN_FRECENCY = 3;
 // `WITH` clause for the autofill queries.  autofill_frecency_threshold.value is
 // the mean of all moz_origins.frecency values + stddevMultiplier * one standard
 // deviation.  This is inlined directly in the SQL (as opposed to being a custom
-// Sqlite function for example) in order to be as efficient as possible.  The
-// MAX() is to make sure that places with <= 0 frecency are never autofilled.
+// Sqlite function for example) in order to be as efficient as possible.
 const SQL_AUTOFILL_WITH = `
   WITH
   frecency_stats(count, sum, squares) AS (
@@ -274,13 +273,13 @@ const SQL_AUTOFILL_WITH = `
       CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = "origin_frecency_sum_of_squares") AS REAL)
   ),
   autofill_frecency_threshold(value) AS (
-    SELECT MAX(1,
+    SELECT
       CASE count
       WHEN 0 THEN 0.0
       WHEN 1 THEN sum
       ELSE (sum / count) + (:stddevMultiplier * sqrt((squares - ((sum * sum) / count)) / count))
       END
-    ) FROM frecency_stats
+    FROM frecency_stats
   )
 `;
 
@@ -357,7 +356,8 @@ function urlQuery(conditions1, conditions2) {
                  id
           FROM moz_places
           WHERE rev_host = :revHost
-                AND frecency >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
+                AND MAX(frecency, 0) >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
+                AND hidden = 0
                 ${conditions1}
           UNION ALL
           SELECT :query_type,
@@ -368,7 +368,8 @@ function urlQuery(conditions1, conditions2) {
                  id
           FROM moz_places
           WHERE rev_host = :revHost || 'www.'
-                AND frecency >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
+                AND MAX(frecency, 0) >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
+                AND hidden = 0
                 ${conditions2}
           ORDER BY frecency DESC, id DESC
           LIMIT 1 `;
