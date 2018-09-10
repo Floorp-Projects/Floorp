@@ -935,7 +935,7 @@ Inspector.prototype = {
       INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
       defaultTab == "computedview");
 
-    const animationId = "newanimationinspector";
+    const animationId = "animationinspector";
     const animationTitle =
       INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle");
     this.sidebar.queueTab(

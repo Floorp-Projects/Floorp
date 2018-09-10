@@ -110,8 +110,8 @@ class AnimationInspector {
 
     const provider = createElement(Provider,
       {
-        id: "newanimationinspector",
-        key: "newanimationinspector",
+        id: "animationinspector",
+        key: "animationinspector",
         store: this.inspector.store
       },
       App(
@@ -275,7 +275,7 @@ class AnimationInspector {
   isPanelVisible() {
     return this.inspector && this.inspector.toolbox && this.inspector.sidebar &&
            this.inspector.toolbox.currentToolId === "inspector" &&
-           this.inspector.sidebar.getCurrentTabID() === "newanimationinspector";
+           this.inspector.sidebar.getCurrentTabID() === "animationinspector";
   }
 
   onAnimationStateChanged() {
@@ -625,7 +625,7 @@ class AnimationInspector {
   }
 
   async update() {
-    const done = this.inspector.updating("newanimationinspector");
+    const done = this.inspector.updating("animationinspector");
 
     const selection = this.inspector.selection;
     const animations =
