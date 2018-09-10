@@ -162,13 +162,6 @@
   overflow-x: auto;
 }
 
-/* If there is a source editor shows up in the last row of TreeView,
- * its height should not collapse into zero
- */
-.network-monitor .tree-container .treeTable tr:last-child.editor-row-container {
-  overflow: visible;
-}
-
 .network-monitor .source-editor-mount {
   width: 100%;
   height: 100%;
