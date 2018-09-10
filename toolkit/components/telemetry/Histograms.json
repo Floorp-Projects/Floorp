@@ -13029,9 +13029,9 @@
     "description": "XMLHttpRequest.responseType set to moz-chunked-arraybuffer"
   },
   "BUSY_TAB_ABANDONED": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["hkirschner@mozilla.com"],
-    "expires_in_version": "65",
+    "expires_in_version": "68",
     "kind": "categorical",
     "bug_numbers": [1307689],
     "description": "Records a value each time a tab that is showing the loading throbber is interrupted. Desktop only.",
