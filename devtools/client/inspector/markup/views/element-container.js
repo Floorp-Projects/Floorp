@@ -96,7 +96,7 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
       return;
     }
     this.editor._displayBadge.classList.toggle("active",
-      this.markup.highlighters.gridHighlighterShown === this.node);
+      this.markup.highlighters.gridHighlighters.has(this.node));
   },
 
   async _buildEventTooltipContent(target) {

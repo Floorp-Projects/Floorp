@@ -56,6 +56,9 @@ class GridInspector {
     this.store = inspector.store;
     this.telemetry = inspector.telemetry;
     this.walker = this.inspector.walker;
+    // Maximum number of grid highlighters that can be displayed.
+    this.maxHighlighters =
+      Services.prefs.getIntPref("devtools.gridinspector.maxHighlighters");
 
     this.onHighlighterShown = this.onHighlighterShown.bind(this);
     this.onHighlighterHidden = this.onHighlighterHidden.bind(this);
@@ -163,15 +166,15 @@ class GridInspector {
    *         The color to use.
    */
   getInitialGridColor(nodeFront, customColor, fallbackColor) {
-    const highlighted = nodeFront == this.highlighters.gridHighlighterShown;
+    const highlighted = this.highlighters.gridHighlighters.has(nodeFront);
 
     let color;
     if (customColor) {
       color = customColor;
-    } else if (highlighted && this.highlighters.state.grid.options) {
+    } else if (highlighted && this.highlighters.state.grids.has(nodeFront.actorID)) {
       // If the node front is currently highlighted, use the color from the highlighter
       // options.
-      color = this.highlighters.state.grid.options.color;
+      color = this.highlighters.state.grids.get(nodeFront.actorID).options.color;
     } else {
       // Otherwise use the color defined in the store for this node front.
       color = this.getGridColorForNodeFront(nodeFront);
@@ -200,29 +203,40 @@ class GridInspector {
   }
 
   /**
-   * Given a list of new grid fronts, and if we have a currently highlighted grid, check
-   * if its fragments have changed.
+   * Given a list of new grid fronts, and if there are highlighted grids, check
+   * if their fragments have changed.
    *
    * @param  {Array} newGridFronts
    *         A list of GridFront objects.
    * @return {Boolean}
    */
   haveCurrentFragmentsChanged(newGridFronts) {
-    const currentNode = this.highlighters.gridHighlighterShown;
-    if (!currentNode) {
+    const gridHighlighters = this.highlighters.gridHighlighters;
+
+    if (!gridHighlighters.size) {
       return false;
     }
 
-    const newGridFront = newGridFronts.find(g => g.containerNodeFront === currentNode);
-    if (!newGridFront) {
+    const gridFronts = newGridFronts.filter(g =>
+      gridHighlighters.has(g.containerNodeFront));
+    if (!gridFronts.length) {
       return false;
     }
 
     const { grids } = this.store.getState();
-    const oldFragments = grids.find(g => g.nodeFront === currentNode).gridFragments;
-    const newFragments = newGridFront.gridFragments;
 
-    return !compareFragmentsGeometry(oldFragments, newFragments);
+    for (const node of gridHighlighters.keys()) {
+      const oldFragments = grids
+        .find(g => g.nodeFront === node).gridFragments;
+      const newFragments = newGridFronts
+        .find(g => g.containerNodeFront === node).gridFragments;
+
+      if (!compareFragmentsGeometry(oldFragments, newFragments)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -300,12 +314,16 @@ class GridInspector {
       const colorForHost = customColors[hostname] ? customColors[hostname][i] : null;
       const fallbackColor = GRID_COLORS[i % GRID_COLORS.length];
       const color = this.getInitialGridColor(nodeFront, colorForHost, fallbackColor);
-      const highlighted = nodeFront == this.highlighters.gridHighlighterShown;
+      const highlighted = this.highlighters.gridHighlighters.has(nodeFront);
+      const disabled = !highlighted &&
+                       this.maxHighlighters > 1 &&
+                       this.highlighters.gridHighlighters.size === this.maxHighlighters;
 
       grids.push({
         id: i,
         actorID: grid.actorID,
         color,
+        disabled,
         direction: grid.direction,
         gridFragments: grid.gridFragments,
         highlighted,
@@ -325,11 +343,9 @@ class GridInspector {
    * @param  {NodeFront} nodeFront
    *         The NodeFront of the grid container element for which the grid
    *         highlighter is shown for.
-   * @param  {Object} options
-   *         The highlighter options used for the highlighter being shown/hidden.
    */
-  onHighlighterShown(nodeFront, options) {
-    this.onHighlighterChange(nodeFront, true, options);
+  onHighlighterShown(nodeFront) {
+    this.onHighlighterChange(nodeFront, true);
   }
 
   /**
@@ -340,11 +356,9 @@ class GridInspector {
    * @param  {NodeFront} nodeFront
    *         The NodeFront of the grid container element for which the grid highlighter
    *         is hidden for.
-   * @param  {Object} options
-   *         The highlighter options used for the highlighter being shown/hidden.
    */
-  onHighlighterHidden(nodeFront, options) {
-    this.onHighlighterChange(nodeFront, false, options);
+  onHighlighterHidden(nodeFront) {
+    this.onHighlighterChange(nodeFront, false);
   }
 
   /**
@@ -356,10 +370,8 @@ class GridInspector {
    *         is shown for.
    * @param  {Boolean} highlighted
    *         If the grid should be updated to highlight or hide.
-   * @param  {Object} options
-   *         The highlighter options used for the highlighter being shown/hidden.
    */
-  onHighlighterChange(nodeFront, highlighted, options = {}) {
+  onHighlighterChange(nodeFront, highlighted) {
     if (!this.isPanelVisible()) {
       return;
     }
@@ -415,10 +427,6 @@ class GridInspector {
       return;
     }
 
-    // Get the node front(s) from the current grid(s) so we can compare them to them to
-    // node(s) of the new grids.
-    const oldNodeFronts = grids.map(grid => grid.nodeFront.actorID);
-
     // In some cases, the nodes for current grids may have been removed from the DOM in
     // which case we need to update.
     if (grids.length && grids.some(grid => !grid.nodeFront.actorID)) {
@@ -426,18 +434,18 @@ class GridInspector {
       return;
     }
 
-    // Otherwise, continue comparing with the new grids.
-    const newNodeFronts = newGridFronts.filter(grid => grid.containerNodeFront)
+    // Get the node front(s) from the current grid(s) so we can compare them to them to
+    // the node(s) of the new grids.
+    const oldNodeFronts = grids.map(grid => grid.nodeFront.actorID);
+    const newNodeFronts = newGridFronts.filter(grid => grid.containerNode)
                                        .map(grid => grid.containerNodeFront.actorID);
+
     if (grids.length === newGridFronts.length &&
-        oldNodeFronts.sort().join(",") == newNodeFronts.sort().join(",")) {
-      // Same list of containers, but let's check if the geometry of the current grid has
-      // changed, if it hasn't we can safely abort.
-      if (!this.highlighters.gridHighlighterShown ||
-          (this.highlighters.gridHighlighterShown &&
-           !this.haveCurrentFragmentsChanged(newGridFronts))) {
-        return;
-      }
+        oldNodeFronts.sort().join(",") == newNodeFronts.sort().join(",") &&
+        !this.haveCurrentFragmentsChanged(newGridFronts)) {
+      // Same list of containers and the geometry of all the displayed grids remained the
+      // same, we can safely abort.
+      return;
     }
 
     // Either the list of containers or the current fragments have changed, do update.
