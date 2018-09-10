@@ -247,7 +247,6 @@ win64-sccache:
         max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
-            SCCACHE_REVISION: 1ab9a33e8d328941acc23c74c949b765f975f309
     run:
         using: toolchain-script
         script: build-sccache.sh
