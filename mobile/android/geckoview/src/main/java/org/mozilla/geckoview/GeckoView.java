@@ -111,8 +111,8 @@ public class GeckoView extends FrameLayout {
                 final SurfaceHolder holder = GeckoView.this.mSurfaceView.getHolder();
                 final Rect frame = holder.getSurfaceFrame();
                 mDisplay.surfaceChanged(holder.getSurface(), frame.right, frame.bottom);
+                GeckoView.this.setActive(true);
             }
-            GeckoView.this.setActive(true);
         }
 
         public GeckoDisplay release() {
@@ -135,8 +135,10 @@ public class GeckoView extends FrameLayout {
                                    final int width, final int height) {
             if (mDisplay != null) {
                 mDisplay.surfaceChanged(holder.getSurface(), width, height);
+                if (!mValid) {
+                    GeckoView.this.setActive(true);
+                }
             }
-            GeckoView.this.setActive(true);
             mValid = true;
         }
 
@@ -144,8 +146,8 @@ public class GeckoView extends FrameLayout {
         public void surfaceDestroyed(final SurfaceHolder holder) {
             if (mDisplay != null) {
                 mDisplay.surfaceDestroyed();
+                GeckoView.this.setActive(false);
             }
-            GeckoView.this.setActive(false);
             mValid = false;
         }
 
