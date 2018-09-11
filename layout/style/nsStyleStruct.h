@@ -89,7 +89,6 @@ struct Position {
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont
 {
-  nsStyleFont(const nsFont& aFont, const nsPresContext* aContext);
   nsStyleFont(const nsStyleFont& aStyleFont);
   explicit nsStyleFont(const nsPresContext* aContext);
   ~nsStyleFont() {
