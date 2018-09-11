@@ -42,6 +42,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["crypto", "TextEncoder"]);
 const {
   DefaultMap,
   DefaultWeakMap,
+  ExtensionError,
   getInnerWindowID,
   getWinUtils,
   promiseDocumentIdle,
@@ -498,7 +499,6 @@ class Script {
 
   async awaitCompiledScripts(context) {
     let scriptPromises = this.compileScripts();
-
     let scripts = scriptPromises.map(promise => promise.script);
 
     // If not all scripts are already available in the cache, block
@@ -532,6 +532,13 @@ class UserScript extends Script {
   constructor(extension, matcher) {
     super(extension, matcher);
 
+    // This is an opaque object that the extension provides, it is associated to
+    // the particular userScript and it is passed as a parameter to the custom
+    // userScripts APIs defined by the extension.
+    this.scriptMetadata = matcher.userScriptOptions.scriptMetadata;
+    this.apiScriptURL = extension.manifest.userScripts && extension.manifest.userScripts.apiScript;
+
+    this.promiseAPIScript = null;
     this.scriptPromises = null;
 
     // WeakMap<ContentScriptContextChild, Sandbox>
@@ -541,8 +548,16 @@ class UserScript extends Script {
   }
 
   compileScripts() {
+    if (this.apiScriptURL && !this.promiseAPIScript) {
+      this.promiseAPIScript = this.scriptCache.get(this.apiScriptURL);
+    }
+
     if (!this.scriptPromises) {
       this.scriptPromises = this.js.map(url => this.scriptCache.get(url));
+    }
+
+    if (this.promiseAPIScript) {
+      return [this.promiseAPIScript, ...this.scriptPromises];
     }
 
     return this.scriptPromises;
@@ -553,7 +568,20 @@ class UserScript extends Script {
 
     DocumentManager.lazyInit();
 
-    let sandboxScripts = await this.awaitCompiledScripts(context);
+    let scripts = await this.awaitCompiledScripts(context);
+
+    let apiScript, sandboxScripts;
+
+    if (this.promiseAPIScript) {
+      [apiScript, ...sandboxScripts] = scripts;
+    } else {
+      sandboxScripts = scripts;
+    }
+
+    // Load and execute the API script once per context.
+    if (apiScript) {
+      context.executeAPIScript(apiScript);
+    }
 
     // The evaluations below may throw, in which case the promise will be
     // automatically rejected.
@@ -569,6 +597,11 @@ class UserScript extends Script {
           Cu.nukeSandbox(userScriptSandbox);
         },
       });
+
+      // Inject the custom API registered by the extension API script.
+      if (apiScript) {
+        this.injectUserScriptAPIs(userScriptSandbox, context);
+      }
 
       for (let script of sandboxScripts) {
         script.executeInGlobal(userScriptSandbox);
@@ -604,6 +637,83 @@ class UserScript extends Script {
     });
 
     return sandbox;
+  }
+
+  injectUserScriptAPIs(userScriptScope, context) {
+    const {extension, scriptMetadata} = this;
+    const {userScriptAPIs, cloneScope: apiScope} = context;
+
+    if (!userScriptAPIs) {
+      return;
+    }
+
+    const clonedMetadata = scriptMetadata ?
+            Cu.cloneInto(scriptMetadata, apiScope) : undefined;
+
+    const UserScriptError = userScriptScope.Error;
+    const UserScriptPromise = userScriptScope.Promise;
+
+    const wrappedFnMap = new WeakMap();
+
+    function safeReturnCloned(res) {
+      try {
+        return Cu.cloneInto(res, userScriptScope);
+      } catch (err) {
+        Cu.reportError(
+          `userScripts API method wrapper for ${extension.policy.debugName}: ${err}`
+        );
+        throw new UserScriptError("Unable to clone object in the userScript sandbox");
+      }
+    }
+
+    function wrapUserScriptAPIMethod(fn, fnName) {
+      return Cu.exportFunction(function(...args) {
+        let fnArgs = Cu.cloneInto([], apiScope);
+
+        try {
+          for (let arg of args) {
+            if (typeof arg === "function") {
+              if (!wrappedFnMap.has(arg)) {
+                wrappedFnMap.set(arg, Cu.exportFunction(arg, apiScope));
+              }
+              fnArgs.push(wrappedFnMap.get(arg));
+            } else {
+              fnArgs.push(Cu.cloneInto(arg, apiScope));
+            }
+          }
+        } catch (err) {
+          Cu.reportError(`Error cloning userScriptAPIMethod parameters in ${fnName}: ${err}`);
+          throw new UserScriptError("Only serializable parameters are supported");
+        }
+
+        const res = runSafeSyncWithoutClone(fn, fnArgs, clonedMetadata, userScriptScope);
+
+        if (res instanceof context.Promise) {
+          return UserScriptPromise.resolve().then(async () => {
+            let value;
+            try {
+              value = await res;
+            } catch (err) {
+              if (err instanceof context.Error) {
+                throw new UserScriptError(err.message);
+              } else {
+                throw safeReturnCloned(err);
+              }
+            }
+            return safeReturnCloned(value);
+          });
+        }
+
+        return safeReturnCloned(res);
+      }, userScriptScope);
+    }
+
+    for (let key of Object.keys(userScriptAPIs)) {
+      Schemas.exportLazyGetter(userScriptScope, key, () => {
+        // Wrap the custom API methods exported to the userScript sandbox.
+        return wrapUserScriptAPIMethod(userScriptAPIs[key], key);
+      });
+    }
   }
 }
 
@@ -725,6 +835,14 @@ class ContentScriptContextChild extends BaseContext {
 
     Schemas.exportLazyGetter(this.sandbox, "browser", () => this.chromeObj);
     Schemas.exportLazyGetter(this.sandbox, "chrome", () => this.chromeObj);
+
+    // A set of exported API methods provided by the extension to the userScripts sandboxes.
+    this.userScriptAPIs = null;
+
+    // Keep track if the userScript API script has been already executed in this context
+    // (e.g. because there are more then one UserScripts that match the related webpage
+    // and so the UserScript apiScript has already been executed).
+    this.hasUserScriptAPIs = false;
   }
 
   injectAPI() {
@@ -741,6 +859,23 @@ class ContentScriptContextChild extends BaseContext {
 
   get cloneScope() {
     return this.sandbox;
+  }
+
+  setUserScriptAPIs(extCustomAPIs) {
+    if (this.userScriptAPIs) {
+      throw new ExtensionError("userScripts APIs may only be set once");
+    }
+
+    this.userScriptAPIs = extCustomAPIs;
+  }
+
+  async executeAPIScript(apiScript) {
+    // Execute the UserScript apiScript only once per context (e.g. more then one UserScripts
+    // match the same webpage and the apiScript has already been executed).
+    if (apiScript && !this.hasUserScriptAPIs) {
+      this.hasUserScriptAPIs = true;
+      apiScript.executeInGlobal(this.cloneScope);
+    }
   }
 
   addScript(script) {
