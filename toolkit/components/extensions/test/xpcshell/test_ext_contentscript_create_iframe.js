@@ -125,7 +125,7 @@ add_task(async function test_contentscript_create_iframe() {
     Assert.ok(!manifest, "manifest should be undefined");
 
     Assert.equal(String(manifestException),
-                 `TypeError: win.browser.runtime is undefined, can't access property "getManifest" of it`,
+                 `TypeError: win.browser.runtime is undefined, can't access its "getManifest" property`,
                  "expected exception received");
 
     let getManifestException = win.testGetManifestException();
