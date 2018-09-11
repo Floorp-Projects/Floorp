@@ -41,7 +41,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/StaticPrefs.h"
-#include "nsWindow.h"
 
 #ifdef MOZ_X11
 #  ifdef CAIRO_HAS_XLIB_SURFACE
@@ -444,15 +443,6 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType, nsIFrame* aF
           aWidgetFlags) {
         *aWidgetFlags = CheckBooleanAttr(aFrame, nsGkAtoms::parentfocused);
       }
-    }
-
-    if (aWidgetType == StyleAppearance::MozWindowTitlebar ||
-        aWidgetType == StyleAppearance::MozWindowTitlebarMaximized ||
-        aWidgetType == StyleAppearance::MozWindowButtonClose ||
-        aWidgetType == StyleAppearance::MozWindowButtonMinimize ||
-        aWidgetType == StyleAppearance::MozWindowButtonMaximize ||
-        aWidgetType == StyleAppearance::MozWindowButtonRestore) {
-      aState->backdrop = !nsWindow::GetTopLevelWindowActiveState(aFrame);
     }
   }
 
@@ -1797,16 +1787,6 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
     return NS_OK;
   }
 
-  if (aWidgetType == StyleAppearance::MozWindowTitlebar ||
-      aWidgetType == StyleAppearance::MozWindowTitlebarMaximized ||
-      aWidgetType == StyleAppearance::MozWindowButtonClose ||
-      aWidgetType == StyleAppearance::MozWindowButtonMinimize ||
-      aWidgetType == StyleAppearance::MozWindowButtonMaximize ||
-      aWidgetType == StyleAppearance::MozWindowButtonRestore) {
-    *aShouldRepaint = true;
-    return NS_OK;
-  }
-
   if ((aWidgetType == StyleAppearance::ScrollbarthumbVertical ||
        aWidgetType == StyleAppearance::ScrollbarthumbHorizontal) &&
        aAttribute == nsGkAtoms::active) {
@@ -2102,20 +2082,4 @@ nsNativeThemeGTK::GetWidgetTransparency(nsIFrame* aFrame,
     return eUnknownTransparency;
   }
 
-}
-
-bool
-nsNativeThemeGTK::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aWidgetType)
-{
-  switch (aWidgetType) {
-    case StyleAppearance::MozWindowTitlebar:
-    case StyleAppearance::MozWindowTitlebarMaximized:
-    case StyleAppearance::MozWindowButtonClose:
-    case StyleAppearance::MozWindowButtonMinimize:
-    case StyleAppearance::MozWindowButtonMaximize:
-    case StyleAppearance::MozWindowButtonRestore:
-      return true;
-    default:
-      return false;
-  }
 }
