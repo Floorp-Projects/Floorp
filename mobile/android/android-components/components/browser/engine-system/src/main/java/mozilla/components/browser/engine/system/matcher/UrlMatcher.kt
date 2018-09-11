@@ -58,7 +58,8 @@ class UrlMatcher : SharedPreferences.OnSharedPreferenceChangeListener {
         }
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        categoryPrefMap.forEach { k, v -> setCategoryEnabled(v, prefs.getBoolean(k, true)) }
+        categoryPrefMap.forEach { (k, v) -> setCategoryEnabled(v, prefs.getBoolean(k, true)) }
+
         prefs.registerOnSharedPreferenceChangeListener(this)
     }
 
