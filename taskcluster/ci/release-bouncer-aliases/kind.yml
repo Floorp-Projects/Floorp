@@ -15,25 +15,17 @@ kind-dependencies:
 job-defaults:
    description: Update bouncer aliases job
    worker-type:
-      by-project:
-         mozilla-beta: scriptworker-prov-v1/bouncer-v1
-         mozilla-release: scriptworker-prov-v1/bouncer-v1
-         mozilla-esr60: scriptworker-prov-v1/bouncer-v1
-         default: scriptworker-prov-v1/bouncer-dev
+      by-release-level:
+         production: scriptworker-prov-v1/bouncer-v1
+         staging: scriptworker-prov-v1/bouncer-dev
    worker:
       implementation: bouncer-aliases
    scopes:
-      by-project:
-         mozilla-beta:
+      by-release-level:
+         production:
             - project:releng:bouncer:action:aliases
             - project:releng:bouncer:server:production
-         mozilla-release:
-            - project:releng:bouncer:action:aliases
-            - project:releng:bouncer:server:production
-         mozilla-esr60:
-            - project:releng:bouncer:action:aliases
-            - project:releng:bouncer:server:production
-         default:
+         staging:
             - project:releng:bouncer:action:aliases
             - project:releng:bouncer:server:staging
    run-on-projects: []

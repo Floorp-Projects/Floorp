@@ -23,11 +23,9 @@ only-for-build-platforms:
 job-template:
    description: Signs {locales} XPIs for platform via addons.mozilla.org and pushes them
    worker-type:
-      by-project:
-         mozilla-beta: scriptworker-prov-v1/addon-v1
-         mozilla-release: scriptworker-prov-v1/addon-v1
-         mozilla-esr60: scriptworker-prov-v1/addon-v1
-         default: scriptworker-prov-v1/addon-dev
+      by-release-level:
+         production: scriptworker-prov-v1/addon-v1
+         staging: scriptworker-prov-v1/addon-dev
    worker:
       implementation: sign-and-push-addons
       channel:
@@ -41,13 +39,9 @@ job-template:
       upstream-artifacts:   # See transforms
    run-on-projects: []
    scopes:
-      by-project:
-         mozilla-beta:
+      by-release-level:
+         production:
             - project:releng:addons.mozilla.org:server:production
-         mozilla-release:
-            - project:releng:addons.mozilla.org:server:production
-         mozilla-esr60:
-            - project:releng:addons.mozilla.org:server:production
-         default:
+         staging:
             - project:releng:addons.mozilla.org:server:staging
    shipping-phase: promote

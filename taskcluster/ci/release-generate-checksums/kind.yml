@@ -58,11 +58,11 @@ jobs:
          build_type: opt
       run:
          extra-config:
-            by-project:
-               mozilla-(release|beta|esr.*):
+            by-release-level:
+               production:
                   stage_product: "firefox"
                   bucket_name: "net-mozaws-prod-delivery-firefox"
-               default:
+               staging:
                   stage_product: "firefox"
                   bucket_name: "net-mozaws-stage-delivery-firefox"
       treeherder:
@@ -75,11 +75,11 @@ jobs:
          build_type: opt
       run:
          extra-config:
-            by-project:
-               mozilla-(release|beta):
+            by-release-level:
+               production:
                   stage_product: "mobile"
                   bucket_name: "net-mozaws-prod-delivery-archive"
-               default:
+               staging:
                   stage_product: "mobile"
                   bucket_name: "net-mozaws-stage-delivery-archive"
       treeherder:
@@ -92,11 +92,11 @@ jobs:
          build_type: opt
       run:
          extra-config:
-            by-project:
-               mozilla-beta:
+            by-release-level:
+               production:
                   stage_product: "devedition"
                   bucket_name: "net-mozaws-prod-delivery-archive"
-               default:
+               staging:
                   stage_product: "devedition"
                   bucket_name: "net-mozaws-stage-delivery-archive"
       treeherder:

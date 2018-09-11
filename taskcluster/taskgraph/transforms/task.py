@@ -544,8 +544,8 @@ task_description_schema = Schema({
         Optional('require-mirrors'): bool,
         Optional('publish-rules'): optionally_keyed_by('project', [int]),
         Optional('rules-to-update'): optionally_keyed_by('project', [basestring]),
-        Optional('archive-domain'): optionally_keyed_by('project', basestring),
-        Optional('download-domain'): optionally_keyed_by('project', basestring),
+        Optional('archive-domain'): optionally_keyed_by('release-level', basestring),
+        Optional('download-domain'): optionally_keyed_by('release-level', basestring),
         Optional('blob-suffix'): basestring,
         Optional('complete-mar-filename-pattern'): basestring,
         Optional('complete-mar-bouncer-product-pattern'): basestring,
@@ -1152,7 +1152,10 @@ def build_balrog_payload(config, task, task_def):
             if prop in worker:
                 resolve_keyed_by(
                     worker, prop, task['description'],
-                    **config.params
+                    **{
+                        'project': config.params['project'],
+                        'release-level': config.params.release_level(),
+                    }
                 )
         task_def['payload'] = {
             'build_number': release_config['build_number'],
