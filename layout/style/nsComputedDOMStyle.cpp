@@ -4162,6 +4162,10 @@ nsComputedDOMStyle::GetAbsoluteOffset(mozilla::Side aSide)
     if (scrollFrame) {
       scrollbarSizes = scrollFrame->GetActualScrollbarSizes();
     }
+  } else if (container->IsGridContainerFrame() &&
+             (mOuterFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW))) {
+    containerRect = nsGridContainerFrame::GridItemCB(mOuterFrame);
+    rect.MoveBy(-containerRect.x, -containerRect.y);
   }
 
   nscoord offset = 0;

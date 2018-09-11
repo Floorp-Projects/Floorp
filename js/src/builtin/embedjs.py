@@ -40,6 +40,7 @@ from __future__ import with_statement
 import re
 import sys
 import os
+import mozpack.path as mozpath
 import subprocess
 import shlex
 import which
@@ -86,8 +87,11 @@ namespace %(namespace)s {
 
 
 def embed(cxx, preprocessorOption, cppflags, msgs, sources, c_out, js_out, namespace, env):
+    objdir = os.getcwd()
+    # Use relative pathnames to avoid path translation issues in WSL.
     combinedSources = '\n'.join([msgs] + ['#include "%(s)s"' %
-                                          {'s': source} for source in sources])
+                                          {'s': mozpath.relpath(source, objdir)}
+                                          for source in sources])
     args = cppflags + ['-D%(k)s=%(v)s' % {'k': k, 'v': env[k]} for k in env]
     preprocessed = preprocess(cxx, preprocessorOption, combinedSources, args)
     processed = '\n'.join([line for line in preprocessed.splitlines() if

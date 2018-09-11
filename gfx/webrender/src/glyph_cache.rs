@@ -130,15 +130,15 @@ impl GlyphCache {
     where
         for<'r> F: Fn(&'r &FontInstance) -> bool,
     {
-        let caches_to_destroy = self.glyph_key_caches
-            .keys()
-            .filter(&key_fun)
-            .cloned()
-            .collect::<Vec<_>>();
-        for key in caches_to_destroy {
-            let mut cache = self.glyph_key_caches.remove(&key).unwrap();
+        self.glyph_key_caches.retain(|k, cache| {
+            let should_clear = key_fun(&k);
+            if !should_clear {
+                return true;
+            }
+
             cache.clear();
-        }
+            false
+        })
     }
 
     // Clear out evicted entries from glyph key caches and, if possible,

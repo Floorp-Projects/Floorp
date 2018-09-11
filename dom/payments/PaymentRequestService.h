@@ -34,16 +34,12 @@ public:
 
   uint32_t NumPayments() const;
 
+  nsresult RequestPayment(const nsAString& aRequestId,
+                          const IPCPaymentActionRequest& aAction,
+                          PaymentRequestParent* aCallback);
 private:
   ~PaymentRequestService() = default;
 
-  nsresult
-  SetActionCallback(const nsAString& aRequestId,
-                    nsIPaymentActionCallback* aCallback);
-  nsresult
-  RemoveActionCallback(const nsAString& aRequestId);
-
-  // this method is only used for testing
   nsresult
   LaunchUIAction(const nsAString& aRequestId, uint32_t aActionType);
 
@@ -54,8 +50,6 @@ private:
   IsBasicCardPayment(const nsAString& aRequestId);
 
   FallibleTArray<nsCOMPtr<nsIPaymentRequest>> mRequestQueue;
-
-  nsInterfaceHashtable<nsStringHashKey, nsIPaymentActionCallback> mCallbackHashtable;
 
   nsCOMPtr<nsIPaymentUIService> mTestingUIService;
 

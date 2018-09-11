@@ -6,7 +6,6 @@
 #include "nsISupports.idl"
 #include "nsIVariant.idl"
 #include "nsIPaymentRequest.idl"
-#include "nsIPaymentActionRequest.idl"
 #include "nsIPaymentActionResponse.idl"
 #include "nsIPaymentAddress.idl"
 #include "nsISimpleEnumerator.idl"
@@ -70,22 +69,6 @@ interface nsIPaymentRequestService : nsISupports
    *  This API is for testing only.
    */
   void setTestingUIService(in nsIPaymentUIService aUIService);
-
-  /**
-   *  Request a specified action on the specified PaymentRequest.
-   *  @param aRequest - the requested action.
-   */
-  void requestPayment(in nsIPaymentActionRequest aRequest);
-
-  /**
-   *  This is a cleanup function to break the association between
-   *  nsIPaymentRequestService and nsIPaymentActionCallback.
-   *  nsIPaymentActionCallback is an interface that registered to
-   *  nsIPaymentRequestService when the merchant asks to perform actions, and it
-   *  will be called when user's response send back to nsIPaymentRequestService.
-   *  @param aCallback - the specified nsIPaymentActionCallback.
-   */
-  void removeActionCallback(in nsIPaymentActionCallback aCallback);
 };
 
 %{C++
