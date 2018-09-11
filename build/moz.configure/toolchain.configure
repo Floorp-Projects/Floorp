@@ -1423,26 +1423,6 @@ def asan(value):
 
 add_old_configure_assignment('MOZ_ASAN', asan)
 
-# UBSAN
-# ==============================================================
-
-js_option('--enable-undefined-sanitizer',
-          nargs='*',
-          help='Enable UndefinedBehavior Sanitizer')
-
-@depends_if('--enable-undefined-sanitizer')
-def ubsan(options):
-    default_checks = [
-        'bool',
-        'bounds',
-        'vla-bound',
-    ]
-
-    checks = options if len(options) else default_checks
-
-    return ','.join(checks)
-
-add_old_configure_assignment('MOZ_UBSAN_CHECKS', ubsan)
 
 # Security Hardening
 # ==============================================================
