@@ -14,7 +14,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from shutil import copytree
 
 import mozfile
-from six import string_types, python_2_unicode_compatible
+from six import string_types
 
 from .addons import AddonManager
 from .permissions import Permissions
@@ -150,7 +150,6 @@ class BaseProfile(object):
         return os.path.exists(self.profile)
 
 
-@python_2_unicode_compatible
 class Profile(BaseProfile):
     """Handles all operations regarding profile.
 
@@ -422,6 +421,9 @@ class Profile(BaseProfile):
         return retval
 
     def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
         return self.summary()
 
 
