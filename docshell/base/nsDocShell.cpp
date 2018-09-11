@@ -4146,7 +4146,7 @@ nsDocShell::GotoIndex(int32_t aIndex)
   }
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   NS_ENSURE_TRUE(rootSH, NS_ERROR_FAILURE);
-  return rootSH->LegacySHistoryImpl()->GotoIndex(aIndex);
+  return rootSH->LegacySHistory()->GotoIndex(aIndex);
 }
 
 NS_IMETHODIMP
@@ -11924,9 +11924,8 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
   } else {
     nsCOMPtr<nsISHEntry> rootSHEntry = nsSHistory::GetRootSHEntry(newSHEntry);
 
-    int32_t index = -1;
-    rv = rootSH->LegacySHistory()->GetIndexOfEntry(rootSHEntry, &index);
-    if (NS_SUCCEEDED(rv) && index > -1) {
+    int32_t index = rootSH->LegacySHistory()->GetIndexOfEntry(rootSHEntry);
+    if (index > -1) {
       rootSH->LegacySHistory()->ReplaceEntry(index, rootSHEntry);
     }
   }

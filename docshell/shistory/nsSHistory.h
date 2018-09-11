@@ -68,7 +68,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHISTORY
 
-  nsresult GotoIndex(int32_t aIndex);
   nsresult Reload(uint32_t aReloadFlags);
   nsresult GetCurrentURI(nsIURI** aResultURI);
 
@@ -131,6 +130,13 @@ private:
   virtual ~nsSHistory();
   friend class nsSHistoryObserver;
 
+  // The size of the window of SHEntries which can have alive viewers in the
+  // bfcache around the currently active SHEntry.
+  //
+  // We try to keep viewers for SHEntries between index - VIEWER_WINDOW and
+  // index + VIEWER_WINDOW alive.
+  static const int32_t VIEWER_WINDOW = 3;
+
   nsresult LoadDifferingEntries(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
                                 nsIDocShell* aRootDocShell, long aLoadType,
                                 bool& aDifferenceFound);
@@ -144,7 +150,7 @@ private:
 #endif
 
   // Find the history entry for a given bfcache entry. It only looks up between
-  // the range where alive viewers may exist (i.e nsISHistory::VIEWER_WINDOW).
+  // the range where alive viewers may exist (i.e nsSHistory::VIEWER_WINDOW).
   nsresult FindEntryForBFCache(nsIBFCacheEntry* aBFEntry,
                                nsISHEntry** aResult,
                                int32_t* aResultIndex);
