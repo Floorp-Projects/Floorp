@@ -541,6 +541,7 @@ class XPIState {
     this.dependencies = aDBAddon.dependencies;
     this.runInSafeMode = canRunInSafeMode(aDBAddon);
     this.signedState = aDBAddon.signedState;
+    this.file = aDBAddon._sourceBundle;
 
     if (aUpdated || mustGetMod) {
       this.getModTime(this.file);
