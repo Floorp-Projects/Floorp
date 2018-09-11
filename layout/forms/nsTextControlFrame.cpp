@@ -1273,7 +1273,7 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
     mRootNode->AppendChildTo(textNode, aNotify);
     textContent = textNode;
   } else {
-    textContent = childContent->AsText();
+    textContent = childContent->GetAsText();
   }
 
   NS_ENSURE_TRUE(textContent, NS_ERROR_UNEXPECTED);
