@@ -64,8 +64,6 @@ object TelemetryWrapper {
     private const val BUCKET_SIZE_MS = 100
     private const val HISTOGRAM_MIN_INDEX = 0
 
-    private const val MAX_URIS = 100
-
     private val isEnabledByDefault: Boolean
         get() = !AppConstants.isKlarBuild
 
@@ -347,14 +345,14 @@ object TelemetryWrapper {
         histogram = IntArray(HISTOGRAM_SIZE)
 
         TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.BROWSER).extra(
-            Extra.UNIQUE_DOMAINS_COUNT,
-            if (domainMap.size <= MAX_URIS) domainMap.size.toString() else MAX_URIS.toString()
+                Extra.UNIQUE_DOMAINS_COUNT,
+                domainMap.size.toString()
         ).queue()
         domainMap.clear()
 
         TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.BROWSER).extra(
-            Extra.TOTAL_URI_COUNT,
-            if (numUri <= MAX_URIS) numUri.toString() else MAX_URIS.toString()
+                Extra.TOTAL_URI_COUNT,
+                numUri.toString()
         ).queue()
         numUri = 0
 
