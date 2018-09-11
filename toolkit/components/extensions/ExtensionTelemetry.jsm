@@ -24,7 +24,6 @@ const histograms = {
   "storageLocalSetJSON": "WEBEXT_STORAGE_LOCAL_SET_MS",
   "storageLocalGetIDB": "WEBEXT_STORAGE_LOCAL_IDB_GET_MS",
   "storageLocalSetIDB": "WEBEXT_STORAGE_LOCAL_IDB_SET_MS",
-  "userScriptInjection": "WEBEXT_USER_SCRIPT_INJECTION_MS",
 };
 
 /**
