@@ -24,7 +24,7 @@ let testCasesForBothSuccessAndAbort = [
     await freePortal(aSuccess);
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);
-    await closeWindowAndWaitForXulWindowVisible(win);
+    await closeWindowAndWaitForWindowActivate(win);
   },
 
   /**
@@ -57,7 +57,7 @@ let testCasesForBothSuccessAndAbort = [
     ensureNoPortalTab(win2);
     ensureNoPortalNotification(win2);
 
-    await closeWindowAndWaitForXulWindowVisible(win2);
+    await closeWindowAndWaitForWindowActivate(win2);
     // No need to wait for xul-window-visible: after win2 is closed, focus
     // is restored to the default window and win1 remains in the background.
     await BrowserTestUtils.closeWindow(win1);
@@ -77,7 +77,7 @@ let testCasesForBothSuccessAndAbort = [
     await freePortal(aSuccess);
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);
-    await closeWindowAndWaitForXulWindowVisible(win);
+    await closeWindowAndWaitForWindowActivate(win);
   },
 
   /**
@@ -95,7 +95,7 @@ let testCasesForBothSuccessAndAbort = [
     });
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);
-    await closeWindowAndWaitForXulWindowVisible(win);
+    await closeWindowAndWaitForWindowActivate(win);
   },
 
   /**
@@ -113,8 +113,8 @@ let testCasesForBothSuccessAndAbort = [
     await freePortal(aSuccess);
     ensureNoPortalNotification(win1);
     ensureNoPortalNotification(win2);
-    await closeWindowAndWaitForXulWindowVisible(win2);
-    await closeWindowAndWaitForXulWindowVisible(win1);
+    await closeWindowAndWaitForWindowActivate(win2);
+    await closeWindowAndWaitForWindowActivate(win1);
   },
 ];
 

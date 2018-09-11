@@ -29,4 +29,8 @@ interface PaymentResponse {
 
   [NewObject]
   Promise<void> complete(optional PaymentComplete result = "unknown");
+
+  // If the dictionary argument has no required members, it must be optional.
+  [NewObject]
+  Promise<void> retry(optional PaymentValidationErrors errorFields);
 };

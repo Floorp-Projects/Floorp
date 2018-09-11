@@ -3254,6 +3254,40 @@ public:
     }
   }
 
+  nsDisplayList(nsDisplayList&& aOther)
+  {
+    mIsOpaque = aOther.mIsOpaque;
+    mForceTransparentSurface = aOther.mForceTransparentSurface;
+
+    if (aOther.mSentinel.mAbove) {
+      AppendToTop(&aOther);
+    } else {
+      mTop = &mSentinel;
+      mLength = 0;
+    }
+  }
+
+  nsDisplayList& operator=(nsDisplayList&& aOther)
+  {
+    if (this != &aOther) {
+      if (aOther.mSentinel.mAbove) {
+        nsDisplayList tmp;
+        tmp.AppendToTop(&aOther);
+        aOther.AppendToTop(this);
+        AppendToTop(&tmp);
+      } else {
+        mTop = &mSentinel;
+        mLength = 0;
+      }
+      mIsOpaque = aOther.mIsOpaque;
+      mForceTransparentSurface = aOther.mForceTransparentSurface;
+    }
+    return *this;
+  }
+
+  nsDisplayList(const nsDisplayList&) = delete;
+  nsDisplayList& operator=(const nsDisplayList& aOther) = delete;
+
   /**
    * Append an item to the top of the list. The item must not currently
    * be in a list and cannot be null.

@@ -159,8 +159,7 @@ public:
 
   /**
    * Return the containing block for aChild which MUST be an abs.pos. child
-   * of a grid container.  This is just a helper method for
-   * nsAbsoluteContainingBlock::Reflow - it's not meant to be used elsewhere.
+   * of a grid container and that container must have been reflowed.
    */
   static const nsRect& GridItemCB(nsIFrame* aChild);
 

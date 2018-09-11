@@ -188,6 +188,7 @@ EXPORTS.js += [
 ]
 
 UNIFIED_SOURCES += [
+    'builtin/Array.cpp',
     'builtin/AtomicsObject.cpp',
     'builtin/Boolean.cpp',
     'builtin/DataViewObject.cpp',
@@ -382,6 +383,7 @@ UNIFIED_SOURCES += [
     'vm/Id.cpp',
     'vm/Initialization.cpp',
     'vm/Iteration.cpp',
+    'vm/JSAtom.cpp',
     'vm/JSContext.cpp',
     'vm/JSFunction.cpp',
     'vm/JSObject.cpp',
@@ -443,8 +445,6 @@ UNIFIED_SOURCES += [
     'wasm/WasmValidate.cpp'
 ]
 
-# builtin/Array.cpp and vm/JSAtom.cpp cannot be built in unified mode because
-#   xpcshell is broken during packaging when compiled with gcc-4.8.2
 # builtin/RegExp.cpp cannot be built in unified mode because it causes huge
 #   win32 test slowdowns
 # frontend/Parser.cpp cannot be built in unified mode because of explicit
@@ -464,7 +464,6 @@ UNIFIED_SOURCES += [
 # vm/Interpreter.cpp is gigantic and destroys incremental build times for any
 #   files unlucky enough to be unified with it.
 SOURCES += [
-    'builtin/Array.cpp',
     'builtin/RegExp.cpp',
     'frontend/Parser.cpp',
     'gc/StoreBuffer.cpp',
@@ -472,7 +471,6 @@ SOURCES += [
     'jsutil.cpp',
     'util/DoubleToString.cpp',
     'vm/Interpreter.cpp',
-    'vm/JSAtom.cpp',
     'vm/ProfilingStack.cpp',
 ]
 

@@ -109,6 +109,8 @@ public:
   already_AddRefed<Promise> Abort(ErrorResult& aRv);
   void RespondAbortPayment(bool aResult);
 
+  nsresult RetryPayment(JSContext* aCx, const PaymentValidationErrors& aErrors);
+
   void GetId(nsAString& aRetVal) const;
   void GetInternalId(nsAString& aRetVal);
   void SetId(const nsAString& aId);

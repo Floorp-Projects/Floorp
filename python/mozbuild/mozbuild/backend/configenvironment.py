@@ -241,9 +241,10 @@ class PartialConfigDict(object):
         return existing_files
 
     def _write_file(self, key, value):
+        encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
         filename = mozpath.join(self._datadir, key)
         with FileAvoidWrite(filename) as fh:
-            json.dump(value, fh, indent=4)
+            json.dump(value, fh, indent=4, encoding=encoding)
         return filename
 
     def _fill_group(self, values):
