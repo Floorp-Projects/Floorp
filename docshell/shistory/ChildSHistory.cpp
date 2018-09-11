@@ -32,9 +32,7 @@ ChildSHistory::~ChildSHistory()
 int32_t
 ChildSHistory::Count()
 {
-  int32_t count;
-  mHistory->GetCount(&count);
-  return count;
+  return mHistory->GetCount();
 }
 
 int32_t
