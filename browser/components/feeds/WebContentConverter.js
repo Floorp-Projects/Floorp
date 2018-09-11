@@ -240,8 +240,8 @@ WebContentConverterRegistrar.prototype = {
                                       haveWindow ? aBrowserOrWindow : null);
 
     // Now Ask the user and provide the proper callback
-    let message = this._getFormattedString("addProtocolHandler",
-                                           [aTitle, uri.host, aProtocol]);
+    let message = this._getFormattedString("addProtocolHandlerMessage",
+                                           [uri.host, aProtocol]);
 
     let notificationIcon = uri.prePath + "/favicon.ico";
     let notificationValue = "Protocol Registration: " + aProtocol;
