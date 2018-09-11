@@ -414,7 +414,7 @@ public:
 private:
   MetadataNameOrIdMatcher(const int64_t& aId, const nsAString& aName)
     : mId(aId)
-    , mName(PromiseFlatString(aName))
+    , mName(aName)
     , mMetadata(nullptr)
     , mCheckName(true)
   {
