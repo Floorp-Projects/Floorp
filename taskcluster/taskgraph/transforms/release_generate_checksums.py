@@ -35,7 +35,7 @@ def handle_keyed_by(config, jobs):
                 item=job,
                 field=field,
                 item_name=job['name'],
-                project=config.params['project']
+                **{'release-level': config.params.release_level()}
             )
         yield job
 

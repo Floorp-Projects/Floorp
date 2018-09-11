@@ -30,7 +30,10 @@ def format(config, tasks):
 
         env = task.get('worker', {}).get('env', {})
         for k in env.keys():
-            resolve_keyed_by(env, k, 'snap envs', project=config.params['project'])
+            resolve_keyed_by(
+                env, k, 'snap envs',
+                **{'release-level': config.params.release_level()}
+            )
             task['worker']['env'][k] = env[k].format(**format_params)
 
         yield task

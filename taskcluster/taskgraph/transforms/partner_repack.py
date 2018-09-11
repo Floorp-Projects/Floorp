@@ -34,7 +34,10 @@ def populate_repack_manifests_url(config, tasks):
 
         for property in ("limit-locales", ):
             property = "extra.{}".format(property)
-            resolve_keyed_by(task, property, property, **config.params)
+            resolve_keyed_by(
+                task, property, property,
+                **{'release-level': config.params.release_level()}
+            )
 
         if task['worker']['env']['REPACK_MANIFESTS_URL'].startswith('git@'):
             task.setdefault('scopes', []).append(
