@@ -493,11 +493,6 @@ js::DateTimeInfo::instance;
 /* static */ js::ExclusiveData<js::IcuTimeZoneStatus>*
 js::IcuTimeZoneState;
 
-#if defined(XP_WIN)
-static bool
-IsOlsonCompatibleWindowsTimeZoneId(const char* tz);
-#endif
-
 bool
 js::InitDateTimeState()
 {
@@ -512,25 +507,12 @@ js::InitDateTimeState()
     MOZ_ASSERT(!IcuTimeZoneState,
                "we should be initializing only once");
 
-    IcuTimeZoneStatus initialStatus = IcuTimeZoneStatus::Valid;
-
-    // Directly set the ICU time zone status into the invalid state when we
-    // need to compute the actual default time zone from the TZ environment
-    // variable. We don't yet want to initialize ICU's time zone classes,
-    // because that may cause I/O operations slowing down the JS engine
-    // initialization, which we're currently in the middle of.
-    if (const char* tz = std::getenv("TZ")) {
-#if defined(XP_WIN)
-        if (IsOlsonCompatibleWindowsTimeZoneId(tz))
-            initialStatus = IcuTimeZoneStatus::NeedsUpdate;
-#else
-        if (std::strcmp(tz, ":/etc/localtime") == 0)
-            initialStatus = IcuTimeZoneStatus::NeedsUpdate;
-#endif /* defined(XP_WIN) */
-    }
-
+    // Set the ICU time zone status into the invalid state, so we compute the
+    // actual defaults on first access. We don't yet want to initialize ICU's
+    // time zone classes, because that may cause I/O operations slowing down
+    // the JS engine initialization, which we're currently in the middle of.
     IcuTimeZoneState = js_new<ExclusiveData<IcuTimeZoneStatus>>(mutexid::IcuTimeZoneStateMutex,
-                                                                initialStatus);
+                                                                IcuTimeZoneStatus::NeedsUpdate);
     if (!IcuTimeZoneState) {
         js_delete(DateTimeInfo::instance);
         DateTimeInfo::instance = nullptr;
@@ -622,46 +604,108 @@ IsOlsonCompatibleWindowsTimeZoneId(const char* tz)
     return false;
 }
 #elif ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
-/**
- * Examine /etc/localtime.
- *
- * If it is a symlink to a tzdata zoneinfo file -- a file containing
- * "/zoneinfo/" in its path, with subsequent path components that follow the
- * pattern of a time zone name, e.g. "America/New_York" (valid) or
- * "Fnord/Aliens" (not so much, presently) and so on -- return a string
- * containing those subsequent path components. (Which may not be a real
- * time zone name.)
- *
- * Otherwise (if the file doesn't exist, isn't a symlink, points to a file with
- * different path, etc.) return an empty string.
-*/
-static icu::UnicodeString
-ReadSystemTimeZoneId()
+static inline const char*
+TZContainsPath(const char* tzVar)
 {
-    // The system time zone file, see `man 3 tzset`.
-    static constexpr char SystemTimeZoneFile[] = "/etc/localtime";
+    // A TZ beginning with a colon is expected to be followed by a path --
+    // typically an absolute path (often /etc/localtime), but alternatively a
+    // path relative to /usr/share/zoneinfo/.
+    // NB: We currently only support absolute paths.
+    return tzVar[0] == ':' && tzVar[1] == '/' ? tzVar + 1 : nullptr;
+}
 
+/**
+ * Given a presumptive path |tz| to a zoneinfo time zone file
+ * (e.g. /etc/localtime), attempt to compute the time zone encoded by that
+ * path by repeatedly resolving symlinks until a path containing "/zoneinfo/"
+ * followed by time zone looking components is found. If a symlink is broken,
+ * symlink-following recurs too deeply, non time zone looking components are
+ * encountered, or some other error is encountered, return the empty string.
+ *
+ * If a non-empty string is returned, it's only guaranteed to have certain
+ * syntactic validity. It might not actually *be* a time zone name.
+ */
+static icu::UnicodeString
+ReadTimeZoneLink(const char* tz)
+{
     // The resolved link name can have different paths depending on the OS.
     // Follow ICU and only search for "/zoneinfo/"; see $ICU/common/putil.cpp.
     static constexpr char ZoneInfoPath[] = "/zoneinfo/";
     constexpr size_t ZoneInfoPathLength = mozilla::ArrayLength(ZoneInfoPath) - 1; // exclude NUL
 
-    char buf[PATH_MAX];
-    constexpr size_t buflen = mozilla::ArrayLength(buf) - 1; // -1 to null-terminate.
+    // Stop following symlinks after a fixed depth, because some common time
+    // zones are stored in files whose name doesn't match an Olson time zone
+    // name. For example on Ubuntu, "/usr/share/zoneinfo/America/New_York" is a
+    // symlink to "/usr/share/zoneinfo/posixrules" and "posixrules" is not an
+    // Olson time zone name.
+    // Four hops should be a reasonable limit for most use cases.
+    constexpr uint32_t FollowDepthLimit = 4;
 
-    // Return an empty string on error or if the result was truncated.
-    ssize_t slen = readlink(SystemTimeZoneFile, buf, buflen);
-    if (slen < 0 || size_t(slen) >= buflen)
+#ifdef PATH_MAX
+    constexpr size_t PathMax = PATH_MAX;
+#else
+    constexpr size_t PathMax = 4096;
+#endif
+    static_assert(PathMax > 0, "PathMax should be larger than zero");
+
+    char linkName[PathMax];
+    constexpr size_t linkNameLen = mozilla::ArrayLength(linkName) - 1; // -1 to null-terminate.
+
+    // Return if the TZ value is too large.
+    if (std::strlen(tz) > linkNameLen)
         return icu::UnicodeString();
 
-    // Ensure |buf| is null-terminated. (readlink may not necessarily null
-    // terminate the string.)
-    buf[size_t(slen)] = '\0';
+    std::strcpy(linkName, tz);
 
-    // Return an empty string if the path doesn't include "/zoneinfo/".
-    const char* timeZoneWithZoneInfo = std::strstr(buf, ZoneInfoPath);
-    if (!timeZoneWithZoneInfo)
-        return icu::UnicodeString();
+    char linkTarget[PathMax];
+    constexpr size_t linkTargetLen = mozilla::ArrayLength(linkTarget) - 1; // -1 to null-terminate.
+
+    uint32_t depth = 0;
+
+    // Search until we find "/zoneinfo/" in the link name.
+    const char* timeZoneWithZoneInfo;
+    while (!(timeZoneWithZoneInfo = std::strstr(linkName, ZoneInfoPath))) {
+        // Return if the symlink nesting is too deep.
+        if (++depth > FollowDepthLimit)
+            return icu::UnicodeString();
+
+        // Return on error or if the result was truncated.
+        ssize_t slen = readlink(linkName, linkTarget, linkTargetLen);
+        if (slen < 0 || size_t(slen) >= linkTargetLen)
+            return icu::UnicodeString();
+
+        // Ensure linkTarget is null-terminated. (readlink may not necessarily
+        // null-terminate the string.)
+        size_t len = size_t(slen);
+        linkTarget[len] = '\0';
+
+        // If the target is absolute, continue with that.
+        if (linkTarget[0] == '/') {
+            std::strcpy(linkName, linkTarget);
+            continue;
+        }
+
+        // If the target is relative, it must be resolved against either the
+        // directory the link was in, or against the current working directory.
+        char* separator = std::strrchr(linkName, '/');
+
+        // If the link name is just something like "foo", resolve linkTarget
+        // against the current working directory.
+        if (!separator) {
+            std::strcpy(linkName, linkTarget);
+            continue;
+        }
+
+        // Remove everything after the final path separator in linkName.
+        separator[1] = '\0';
+
+        // Return if the concatenated path name is too large.
+        if (std::strlen(linkName) + len > linkNameLen)
+            return icu::UnicodeString();
+
+        // Keep it simple and just concatenate the path names.
+        std::strcat(linkName, linkTarget);
+    }
 
     const char* timeZone = timeZoneWithZoneInfo + ZoneInfoPathLength;
     size_t timeZoneLen = std::strlen(timeZone);
@@ -712,13 +756,11 @@ js::ResyncICUDefaultTimeZone()
                 // TODO: Handle invalid time zone identifiers (bug 342068).
             }
 #else
-            // Handle ":/etc/localtime" manually because ICU currently doesn't
-            // support the TZ filespec format. We don't support the complete
-            // TZ filespec format for simplicity's sake and because
-            // ":/etc/localtime" should cover most cases.
+            // Handle links (starting with ':') manually because ICU currently
+            // doesn't support the TZ filespec format.
             // <https://unicode-org.atlassian.net/browse/ICU-13694>
-            if (std::strcmp(tz, ":/etc/localtime") == 0)
-                tzid.setTo(ReadSystemTimeZoneId());
+            if (const char* tzlink = TZContainsPath(tz))
+                tzid.setTo(ReadTimeZoneLink(tzlink));
 #endif /* defined(XP_WIN) */
 
             if (!tzid.isEmpty()) {
