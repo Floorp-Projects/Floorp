@@ -653,7 +653,7 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
 NS_IMETHODIMP
 nsSHistory::GetCount(int32_t* aResult)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
+  MOZ_ASSERT(aResult, "null out param?");
   *aResult = Length();
   return NS_OK;
 }

@@ -28,7 +28,7 @@ interface nsIURI;
  * This interface is accessible from javascript.
  */
 
-[scriptable, uuid(7b807041-e60a-4384-935f-af3061d8b815)]
+[builtinclass, scriptable, uuid(7b807041-e60a-4384-935f-af3061d8b815)]
 interface nsISHistory: nsISupports
 {
   /**
@@ -45,10 +45,11 @@ interface nsISHistory: nsISupports
    * the number of toplevel documents currently available
    * in session history.
    */
-  readonly attribute long count;
+  [infallible] readonly attribute long count;
 
   /**
-   * The index of the current document in session history.
+   * The index of the current document in session history. Not infallible
+   * because setting can fail if the assigned value is out of range.
    */
   attribute long index;
 
@@ -58,7 +59,7 @@ interface nsISHistory: nsISupports
    * didn't finished yet. When document finishes the loading
    * value -1 is returned.
    */
-  readonly attribute long requestedIndex;
+  [infallible] readonly attribute long requestedIndex;
 
   /**
    * Get the history entry at a given index. Returns non-null on success.
