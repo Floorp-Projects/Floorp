@@ -240,6 +240,24 @@ JS::IterateRealms(JSContext* cx, void* data, JS::IterateRealmCallback realmCallb
 }
 
 JS_PUBLIC_API(void)
+JS::IterateRealmsWithPrincipals(JSContext* cx, JSPrincipals* principals, void* data,
+                                JS::IterateRealmCallback realmCallback)
+{
+    MOZ_ASSERT(principals);
+
+    AutoTraceSession session(cx->runtime());
+
+    Rooted<Realm*> realm(cx);
+    for (RealmsIter r(cx->runtime()); !r.done(); r.next()) {
+        if (r->principals() != principals) {
+            continue;
+        }
+        realm = r;
+        (*realmCallback)(cx, data, realm);
+    }
+}
+
+JS_PUBLIC_API(void)
 JS::IterateRealmsInCompartment(JSContext* cx, JS::Compartment* compartment, void* data,
                                JS::IterateRealmCallback realmCallback)
 {
