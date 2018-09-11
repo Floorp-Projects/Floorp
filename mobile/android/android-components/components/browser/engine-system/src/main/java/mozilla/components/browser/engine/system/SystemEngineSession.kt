@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.webkit.WebView
 import kotlinx.coroutines.experimental.launch
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.ktx.kotlin.toBundle
@@ -31,6 +32,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
     internal var scheduledLoad = ScheduledLoad(null)
     @Volatile internal var trackingProtectionEnabled = false
     @Volatile internal var webFontsEnabled = true
+    @Volatile internal var internalSettings: Settings? = null
 
     /**
      * See [EngineSession.loadUrl]
@@ -163,13 +165,15 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
      * See [EngineSession.settings]
      */
     override val settings: Settings
-        get() = _settings ?: run { initSettings() }
-
-    private var _settings: Settings? = null
+        // Settings are initialized when the engine view is rendered
+        // as we need the WebView instance to do it. If this method is
+        // called before that we can return the provided default settings,
+        // or the global defaults.
+        get() = internalSettings ?: defaultSettings ?: DefaultSettings()
 
     internal fun initSettings(): Settings {
         currentView()?.settings?.let {
-            _settings = object : Settings {
+            internalSettings = object : Settings {
                 override var javascriptEnabled: Boolean
                     get() = it.javaScriptEnabled
                     set(value) { it.javaScriptEnabled = value }
@@ -199,7 +203,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
                     this.requestInterceptor = defaultSettings.requestInterceptor
                 }
             }
-            return _settings as Settings
+            return internalSettings as Settings
         } ?: throw IllegalStateException("System engine session not initialized")
     }
 

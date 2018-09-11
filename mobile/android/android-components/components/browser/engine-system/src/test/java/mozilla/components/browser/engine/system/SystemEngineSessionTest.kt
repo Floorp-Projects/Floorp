@@ -14,8 +14,11 @@ import mozilla.components.support.test.mock
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -31,6 +34,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.lang.reflect.Modifier
 
 @RunWith(RobolectricTestRunner::class)
 class SystemEngineSessionTest {
@@ -226,20 +230,38 @@ class SystemEngineSessionTest {
 
     @Test
     fun testSettings() {
+        assertEquals(DefaultSettings(), spy(SystemEngineSession()).settings)
+
+        val defaultSettings = DefaultSettings(trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all())
+        assertSame(defaultSettings, spy(SystemEngineSession(defaultSettings)).settings)
+
+        val engineSession = spy(SystemEngineSession(defaultSettings))
+        val webView = mock(WebView::class.java)
+        val webViewSettings = mock(WebSettings::class.java)
+        `when`(webView.context).thenReturn(RuntimeEnvironment.application)
+        `when`(engineSession.currentView()).thenReturn(webView)
+        `when`(webView.settings).thenReturn(webViewSettings)
+        engineSession.initSettings()
+        assertNotSame(defaultSettings, engineSession.settings)
+        assertNotEquals(DefaultSettings(), engineSession.settings)
+    }
+
+    @Test
+    fun testInitSettings() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
         `when`(webView.context).thenReturn(RuntimeEnvironment.application)
         val webViewSettings = mock(WebSettings::class.java)
         `when`(webViewSettings.javaScriptEnabled).thenReturn(false)
-        `when`(webViewSettings.domStorageEnabled).thenReturn(false)
         `when`(webView.settings).thenReturn(webViewSettings)
 
         try {
-            engineSession.settings.javascriptEnabled = true
+            engineSession.initSettings()
             fail("Expected IllegalStateException")
         } catch (e: IllegalStateException) { }
 
         `when`(engineSession.currentView()).thenReturn(webView)
+        engineSession.initSettings()
         assertFalse(engineSession.settings.javascriptEnabled)
         engineSession.settings.javascriptEnabled = true
         verify(webViewSettings).javaScriptEnabled = true
@@ -282,6 +304,17 @@ class SystemEngineSessionTest {
         verify(webViewSettings).javaScriptEnabled = false
         verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.all())
         assertFalse(engineSession.webFontsEnabled)
+    }
+
+    @Test
+    fun testSharedFieldsAreVolatile() {
+        val settingsField = SystemEngineSession::class.java.getDeclaredField("internalSettings")
+        val webFontsEnabledField = SystemEngineSession::class.java.getDeclaredField("webFontsEnabled")
+        val trackingProtectionField = SystemEngineSession::class.java.getDeclaredField("trackingProtectionEnabled")
+
+        assertTrue(Modifier.isVolatile(settingsField.modifiers))
+        assertTrue(Modifier.isVolatile(webFontsEnabledField.modifiers))
+        assertTrue(Modifier.isVolatile(trackingProtectionField.modifiers))
     }
 
     @Test
