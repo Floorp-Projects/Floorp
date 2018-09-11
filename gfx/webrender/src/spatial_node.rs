@@ -203,12 +203,14 @@ impl SpatialNode {
         transform_palette: &mut TransformPalette,
         node_index: SpatialNodeIndex,
     ) {
-        if !self.invertible {
-            transform_palette.invalidate(node_index);
-            return;
+        if self.invertible {
+            transform_palette.set_world_transform(
+                node_index,
+                self.world_content_transform
+                    .to_transform()
+                    .into_owned()
+            );
         }
-
-        transform_palette.set(node_index, &self.world_content_transform);
     }
 
     pub fn update(

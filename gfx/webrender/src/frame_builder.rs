@@ -2,18 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, DeviceIntPoint, DevicePixelScale, LayoutPixel, PicturePixel};
+use api::{ColorF, DeviceIntPoint, DevicePixelScale, LayoutPixel, PicturePixel, RasterPixel};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FontRenderMode, PictureRect};
 use api::{LayoutPoint, LayoutRect, LayoutSize, PipelineId, WorldPoint, WorldRect, WorldPixel};
-use clip::{ClipStore};
-use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
+use clip::ClipStore;
+use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use display_list_flattener::{DisplayListFlattener};
 use gpu_cache::GpuCache;
 use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind};
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap};
 use picture::{PictureCompositeMode, PictureSurface, RasterConfig};
-use prim_store::{PrimitiveIndex, PrimitiveRun, PrimitiveStore, Transform, SpaceMapper};
+use prim_store::{PrimitiveIndex, PrimitiveRun, PrimitiveStore, SpaceMapper};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_backend::FrameId;
 use render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree};
@@ -24,7 +24,7 @@ use std::f32;
 use std::sync::Arc;
 use tiling::{Frame, RenderPass, RenderPassKind, RenderTargetContext};
 use tiling::{ScrollbarPrimitive, SpecialRenderPasses};
-use util::{self, MaxRect};
+use util;
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -73,7 +73,6 @@ pub struct FrameBuildingContext<'a> {
     pub pipelines: &'a FastHashMap<PipelineId, Arc<ScenePipeline>>,
     pub world_rect: WorldRect,
     pub clip_scroll_tree: &'a ClipScrollTree,
-    pub transforms: &'a TransformPalette,
     pub max_local_clip: LayoutRect,
 }
 
@@ -84,6 +83,7 @@ pub struct FrameBuildingState<'a> {
     pub resource_cache: &'a mut ResourceCache,
     pub gpu_cache: &'a mut GpuCache,
     pub special_render_passes: &'a mut SpecialRenderPasses,
+    pub transforms: &'a mut TransformPalette,
 }
 
 pub struct PictureContext {
@@ -92,7 +92,8 @@ pub struct PictureContext {
     pub apply_local_clip_rect: bool,
     pub inflation_factor: f32,
     pub allow_subpixel_aa: bool,
-    pub has_surface: bool,
+    pub is_passthrough: bool,
+    pub establishes_raster_root: bool,
 }
 
 #[derive(Debug)]
@@ -102,57 +103,25 @@ pub struct PictureState {
     pub local_rect_changed: bool,
     pub map_local_to_pic: SpaceMapper<LayoutPixel, PicturePixel>,
     pub map_pic_to_world: SpaceMapper<PicturePixel, WorldPixel>,
-}
-
-impl PictureState {
-    pub fn new(
-        ref_spatial_node_index: SpatialNodeIndex,
-        clip_scroll_tree: &ClipScrollTree,
-        world_rect: WorldRect,
-    ) -> Self {
-        let mut map_pic_to_world = SpaceMapper::new(
-            SpatialNodeIndex(0),
-            world_rect,
-        );
-        map_pic_to_world.set_target_spatial_node(
-            ref_spatial_node_index,
-            clip_scroll_tree,
-        );
-        let pic_bounds = map_pic_to_world.unmap(
-            &world_rect,
-        ).unwrap_or(PictureRect::max_rect());
-
-        let map_local_to_pic = SpaceMapper::new(
-            ref_spatial_node_index,
-            pic_bounds,
-        );
-
-        PictureState {
-            tasks: Vec::new(),
-            has_non_root_coord_system: false,
-            local_rect_changed: false,
-            map_local_to_pic,
-            map_pic_to_world,
-        }
-    }
+    pub map_pic_to_raster: SpaceMapper<PicturePixel, RasterPixel>,
+    pub map_raster_to_world: SpaceMapper<RasterPixel, WorldPixel>,
+    pub surface_spatial_node_index: SpatialNodeIndex,
+    pub raster_spatial_node_index: SpatialNodeIndex,
 }
 
 pub struct PrimitiveContext<'a> {
     pub spatial_node: &'a SpatialNode,
     pub spatial_node_index: SpatialNodeIndex,
-    pub transform: Transform,
 }
 
 impl<'a> PrimitiveContext<'a> {
     pub fn new(
         spatial_node: &'a SpatialNode,
         spatial_node_index: SpatialNodeIndex,
-        transform: Transform,
     ) -> Self {
         PrimitiveContext {
             spatial_node,
             spatial_node_index,
-            transform,
         }
     }
 }
@@ -213,7 +182,7 @@ impl FrameBuilder {
         profile_counters: &mut FrameProfileCounters,
         device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
-        transform_palette: &TransformPalette,
+        transform_palette: &mut TransformPalette,
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
@@ -237,7 +206,6 @@ impl FrameBuilder {
             pipelines,
             world_rect,
             clip_scroll_tree,
-            transforms: transform_palette,
             max_local_clip: LayoutRect::new(
                 LayoutPoint::new(-MAX_CLIP_COORD, -MAX_CLIP_COORD),
                 LayoutSize::new(2.0 * MAX_CLIP_COORD, 2.0 * MAX_CLIP_COORD),
@@ -251,20 +219,24 @@ impl FrameBuilder {
             resource_cache,
             gpu_cache,
             special_render_passes,
+            transforms: transform_palette,
         };
 
-        let mut pic_state = PictureState::new(
+        let prim_context = PrimitiveContext::new(
+            &clip_scroll_tree.spatial_nodes[root_spatial_node_index.0],
             root_spatial_node_index,
-            &frame_context.clip_scroll_tree,
-            frame_context.world_rect,
         );
 
-        let pic_context = self
+        let (pic_context, mut pic_state) = self
             .prim_store
             .get_pic_mut(root_prim_index)
             .take_context(
+                &prim_context,
+                root_spatial_node_index,
+                root_spatial_node_index,
                 true,
-                scene_properties,
+                &mut frame_state,
+                &frame_context,
                 false,
             )
             .unwrap();
@@ -276,7 +248,6 @@ impl FrameBuilder {
             &mut pic_state,
             &frame_context,
             &mut frame_state,
-            root_spatial_node_index,
             &mut pic_rect,
         );
 
@@ -287,6 +258,7 @@ impl FrameBuilder {
             pic_context,
             pic_state,
             Some(pic_rect),
+            &mut frame_state,
         );
 
         let pic_state = pic.take_state();
@@ -298,12 +270,14 @@ impl FrameBuilder {
             DeviceIntPoint::zero(),
             pic_state.tasks,
             UvRectKind::Rect,
+            root_spatial_node_index,
         );
 
         let render_task_id = frame_state.render_tasks.add(root_render_task);
         pic.raster_config = Some(RasterConfig {
             composite_mode: PictureCompositeMode::Blit,
             surface: Some(PictureSurface::RenderTask(render_task_id)),
+            raster_spatial_node_index: ROOT_SPATIAL_NODE_INDEX,
         });
         Some(render_task_id)
     }
@@ -365,7 +339,7 @@ impl FrameBuilder {
         resource_cache.begin_frame(frame_id);
         gpu_cache.begin_frame();
 
-        let transform_palette = clip_scroll_tree.update_tree(
+        let mut transform_palette = clip_scroll_tree.update_tree(
             pan,
             scene_properties,
         );
@@ -387,7 +361,7 @@ impl FrameBuilder {
             &mut profile_counters,
             device_pixel_scale,
             scene_properties,
-            &transform_palette,
+            &mut transform_palette,
         );
 
         resource_cache.block_until_all_resources_added(gpu_cache,
@@ -430,7 +404,7 @@ impl FrameBuilder {
                 prim_store: &self.prim_store,
                 resource_cache,
                 use_dual_source_blending,
-                transforms: &transform_palette,
+                clip_scroll_tree,
             };
 
             pass.build(
@@ -439,6 +413,7 @@ impl FrameBuilder {
                 &mut render_tasks,
                 &mut deferred_resolves,
                 &self.clip_store,
+                &mut transform_palette,
                 &mut prim_headers,
             );
 

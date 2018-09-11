@@ -441,7 +441,12 @@ pub(crate) mod desc {
                 kind: VertexAttributeKind::I32,
             },
             VertexAttribute {
-                name: "aScrollNodeId",
+                name: "aClipTransformId",
+                count: 1,
+                kind: VertexAttributeKind::I32,
+            },
+            VertexAttribute {
+                name: "aPrimTransformId",
                 count: 1,
                 kind: VertexAttributeKind::I32,
             },
