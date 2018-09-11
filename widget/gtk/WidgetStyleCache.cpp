@@ -528,23 +528,31 @@ CreateNotebookWidget()
   return widget;
 }
 
-static GtkWidget*
+static void
 CreateHeaderBarWidget(WidgetNodeType aWidgetType)
 {
   MOZ_ASSERT(gtk_check_version(3, 10, 0) == nullptr,
              "GtkHeaderBar is only available on GTK 3.10+.");
+  MOZ_ASSERT(sWidgetStorage[aWidgetType] == nullptr,
+             "Header bar widget is already created!");
 
   static auto sGtkHeaderBarNewPtr = (GtkWidget* (*)())
     dlsym(RTLD_DEFAULT, "gtk_header_bar_new");
 
   GtkWidget* headerbar = sGtkHeaderBarNewPtr();
+  sWidgetStorage[aWidgetType] = headerbar;
+
   GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
   GtkStyleContext* style = gtk_widget_get_style_context(window);
 
   if (aWidgetType == MOZ_GTK_HEADER_BAR_MAXIMIZED) {
     gtk_style_context_add_class(style, "maximized");
+    MOZ_ASSERT(sWidgetStorage[MOZ_GTK_HEADERBAR_WINDOW_MAXIMIZED] == nullptr,
+               "Window widget is already created!");
     sWidgetStorage[MOZ_GTK_HEADERBAR_WINDOW_MAXIMIZED] = window;
   } else {
+    MOZ_ASSERT(sWidgetStorage[MOZ_GTK_HEADERBAR_WINDOW] == nullptr,
+               "Window widget is already created!");
     sWidgetStorage[MOZ_GTK_HEADERBAR_WINDOW] = window;
   }
 
@@ -571,8 +579,6 @@ CreateHeaderBarWidget(WidgetNodeType aWidgetType)
   // We need to fix titlebar size calculation to also include
   // titlebar button sizes. (Bug 1419442)
   gtk_style_context_add_class(style, "default-decoration");
-
-  return headerbar;
 }
 
 #define ICON_SCALE_VARIANTS 2
@@ -761,15 +767,8 @@ CreateHeaderBarButtons()
 static void
 CreateHeaderBar()
 {
-  MOZ_ASSERT(sWidgetStorage[MOZ_GTK_HEADER_BAR] == nullptr &&
-             sWidgetStorage[MOZ_GTK_HEADER_BAR_MAXIMIZED] == nullptr,
-             "Header bar widget is already created!");
-
-  sWidgetStorage[MOZ_GTK_HEADER_BAR] =
-    CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR);
-  sWidgetStorage[MOZ_GTK_HEADER_BAR_MAXIMIZED] =
-    CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR_MAXIMIZED);
-
+  CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR);
+  CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR_MAXIMIZED);
   CreateHeaderBarButtons();
 }
 

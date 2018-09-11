@@ -373,9 +373,12 @@ HTMLEditor::StartMoving()
   // now, let's create the resizing shadow
   mPositioningShadow =
     CreateShadow(*parentContent, *mAbsolutelyPositionedObject);
-  NS_ENSURE_TRUE(mPositioningShadow, NS_ERROR_FAILURE);
-  nsresult rv = SetShadowPosition(mPositioningShadow,
-                                  mAbsolutelyPositionedObject,
+  if (NS_WARN_IF(!mPositioningShadow) ||
+      NS_WARN_IF(!mAbsolutelyPositionedObject)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = SetShadowPosition(*mPositioningShadow,
+                                  *mAbsolutelyPositionedObject,
                                   mPositionedObjectX, mPositionedObjectY);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -493,7 +496,11 @@ HTMLEditor::SetFinalPosition(int32_t aX,
   mPositionedObjectX  = newX;
   mPositionedObjectY  = newY;
 
-  return RefreshResizers();
+  rv = RefreshResizers();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 void

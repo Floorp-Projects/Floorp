@@ -19,7 +19,11 @@ interface nsIHTMLInlineTableEditor : nsISupports
   attribute boolean inlineTableEditingEnabled;
 
   /**
-   * Refresh already visible inline table editing UI
+   * Refresh already visible inline table editing UI.
+   * If inline table editing UI is not visible, this does nothing.
+   * If the set of inline table editing UI is hidden or replaced with new
+   * one while this is called, this throws an exception.
+   * FYI: Current user in script is only BlueGriffon.
    */
   void refreshInlineTableEditingUI();
 };

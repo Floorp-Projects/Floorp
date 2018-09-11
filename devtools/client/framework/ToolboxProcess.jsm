@@ -6,7 +6,7 @@
 
 "use strict";
 
-const DBG_XUL = "chrome://devtools/content/framework/toolbox-process-window.xul";
+const DBG_XUL = "chrome://devtools/content/framework/toolbox-process-window.html";
 const CHROME_DEBUGGER_PROFILE_NAME = "chrome_debugger_profile";
 
 const { require, DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});

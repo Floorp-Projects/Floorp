@@ -745,7 +745,6 @@ var Impl = {
     let elapsedTime = Date.now() - si.process;
     var ret = {
       totalTime: Math.round(elapsedTime / 1000), // totalTime, in seconds
-      uptime: Math.round(elapsedTime / 60000), // uptime in minutes
     };
 
     // Look for app-specific timestamps
