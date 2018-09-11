@@ -1,11 +1,15 @@
 job-defaults:
     max-run-time: 1800
     suite: raptor
-    workdir: /home/cltbld
+    workdir:
+        by-test-platform:
+            android-hw-g5.*: /builds/worker
+            default: /home/cltbld
     tier:
         by-test-platform:
             windows10-64-ccov/.*: 3
             linux64-ccov/.*: 3
+            android-hw-g5.*: 3
             default: 2
     virtualization:
         by-test-platform:
@@ -23,6 +27,8 @@ job-defaults:
                     - raptor/windows_vm_config.py
                 linux64-ccov/opt:
                     - raptor/linux64_config_taskcluster.py
+                android-hw-g5.*:
+                    - raptor/android_hw_config.py
                 default:
                     - raptor/linux_config.py
 
@@ -56,6 +62,21 @@ raptor-speedometer-firefox:
     mozharness:
         extra-options:
             - --test=raptor-speedometer
+
+raptor-speedometer-geckoview:
+    description: "Raptor Speedometer on Geckoview"
+    try-name: raptor-speedometer-geckoview
+    treeherder-symbol: Rap(sp)
+    target: geckoview_example.apk
+    run-on-projects:
+        by-test-platform:
+            android-hw-g5.*: ['try', 'mozilla-central']
+    max-run-time: 1500
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
 
 raptor-speedometer-chrome:
     description: "Raptor Speedometer on Chrome"
