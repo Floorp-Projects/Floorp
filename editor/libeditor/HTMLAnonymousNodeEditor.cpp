@@ -286,7 +286,7 @@ void
 HTMLEditor::HideAnonymousEditingUIs()
 {
   if (mAbsolutelyPositionedObject) {
-    HideGrabber();
+    HideGrabberInternal();
     NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
   }
   if (mInlineEditedCell) {
@@ -309,7 +309,7 @@ HTMLEditor::HideAnonymousEditingUIsIfUnnecessary()
   if (!IsAbsolutePositionEditorEnabled() && mAbsolutelyPositionedObject) {
     // XXX If we're moving something, we need to cancel or commit the
     //     operation now.
-    HideGrabber();
+    HideGrabberInternal();
     NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
   }
   if (!IsInlineTableEditorEnabled() && mInlineEditedCell) {
@@ -420,7 +420,7 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
 
   if (IsAbsolutePositionEditorEnabled() && mAbsolutelyPositionedObject &&
       absPosElement != mAbsolutelyPositionedObject) {
-    HideGrabber();
+    HideGrabberInternal();
     NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
   }
 
@@ -468,12 +468,12 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
   if (IsAbsolutePositionEditorEnabled() && absPosElement &&
       IsModifiableNode(*absPosElement) && absPosElement != hostContent) {
     if (mAbsolutelyPositionedObject) {
-      nsresult rv = RefreshGrabber();
+      nsresult rv = RefreshGrabberInternal();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     } else {
-      nsresult rv = ShowGrabber(*absPosElement);
+      nsresult rv = ShowGrabberInternal(*absPosElement);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
