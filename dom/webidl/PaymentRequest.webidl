@@ -68,9 +68,24 @@ dictionary AddressErrors {
   DOMString sortingCode;
 };
 
+dictionary PaymentValidationErrors {
+  PayerErrorFields payer;
+  AddressErrors shippingAddress;
+  DOMString error;
+  object paymentMethod;
+};
+
+dictionary PayerErrorFields {
+  DOMString email;
+  DOMString name;
+  DOMString phone;
+};
+
 dictionary PaymentDetailsUpdate : PaymentDetailsBase {
   DOMString     error;
   AddressErrors shippingAddressErrors;
+  PayerErrorFields payerErrors;
+  object paymentMethodErrors;
   PaymentItem   total;
 };
 

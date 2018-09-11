@@ -428,12 +428,14 @@ ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
                      JS::OffThreadCompileCallback callback, void* callbackData)
   : kind(kind),
     options(cx),
-    alloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     parseGlobal(nullptr),
     callback(callback), callbackData(callbackData),
-    scripts(cx), sourceObjects(cx),
     overRecursed(false), outOfMemory(false)
 {
+    // Note that |cx| is the main thread context here but the parse task will
+    // run with a different, helper thread, context.
+    MOZ_ASSERT(!cx->helperThread());
+
     MOZ_ALWAYS_TRUE(scripts.reserve(scripts.capacity()));
     MOZ_ALWAYS_TRUE(sourceObjects.reserve(sourceObjects.capacity()));
 }
@@ -441,6 +443,8 @@ ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
 bool
 ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options, JSObject* global)
 {
+    MOZ_ASSERT(!cx->helperThread());
+
     if (!this->options.copy(cx, options))
         return false;
 
@@ -452,20 +456,6 @@ void
 ParseTask::activate(JSRuntime* rt)
 {
     rt->setUsedByHelperThread(parseGlobal->zone());
-}
-
-bool
-ParseTask::finish(JSContext* cx)
-{
-    for (auto& sourceObject : sourceObjects) {
-        RootedScriptSourceObject sso(cx, sourceObject);
-        if (!ScriptSourceObject::initFromOptions(cx, sso, options))
-            return false;
-        if (!sso->source()->tryCompressOffThread(cx))
-            return false;
-    }
-
-    return true;
 }
 
 ParseTask::~ParseTask() = default;
@@ -491,7 +481,6 @@ size_t
 ParseTask::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     return options.sizeOfExcludingThis(mallocSizeOf) +
-           alloc.sizeOfExcludingThis(mallocSizeOf) +
            errors.sizeOfExcludingThis(mallocSizeOf);
 }
 
@@ -504,11 +493,13 @@ ScriptParseTask::ScriptParseTask(JSContext* cx, JS::SourceBufferHolder& srcBuf,
 void
 ScriptParseTask::parse(JSContext* cx)
 {
+    MOZ_ASSERT(cx->helperThread());
+
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
     ScopeKind scopeKind = options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
-    JSScript* script = frontend::CompileGlobalScript(cx, alloc, scopeKind,
+    JSScript* script = frontend::CompileGlobalScript(cx, cx->tempLifoAlloc(), scopeKind,
                                                      options, data,
                                                      /* sourceObjectOut = */ &sourceObject.get());
     if (script)
@@ -526,9 +517,11 @@ ModuleParseTask::ModuleParseTask(JSContext* cx, JS::SourceBufferHolder& srcBuf,
 void
 ModuleParseTask::parse(JSContext* cx)
 {
+    MOZ_ASSERT(cx->helperThread());
+
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
-    JSScript* script = frontend::CompileModule(cx, options, data, alloc, &sourceObject.get());
+    JSScript* script = frontend::CompileModule(cx, options, data, cx->tempLifoAlloc(), &sourceObject.get());
     if (script) {
         scripts.infallibleAppend(script);
         if (sourceObject)
@@ -545,11 +538,13 @@ ScriptDecodeTask::ScriptDecodeTask(JSContext* cx, const JS::TranscodeRange& rang
 void
 ScriptDecodeTask::parse(JSContext* cx)
 {
+    MOZ_ASSERT(cx->helperThread());
+
     RootedScript resultScript(cx);
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
-    XDROffThreadDecoder decoder(cx, alloc, &options, /* sourceObjectOut = */ &sourceObject.get(),
-                                range);
+    XDROffThreadDecoder decoder(cx, cx->tempLifoAlloc(), &options,
+                                /* sourceObjectOut = */ &sourceObject.get(), range);
     XDRResult res = decoder.codeScript(&resultScript);
     MOZ_ASSERT(bool(resultScript) == res.isOk());
     if (res.isOk()) {
@@ -570,9 +565,11 @@ BinASTDecodeTask::BinASTDecodeTask(JSContext* cx, const uint8_t* buf, size_t len
 void
 BinASTDecodeTask::parse(JSContext* cx)
 {
+    MOZ_ASSERT(cx->helperThread());
+
     RootedScriptSourceObject sourceObject(cx);
 
-    JSScript* script = frontend::CompileGlobalBinASTScript(cx, alloc, options,
+    JSScript* script = frontend::CompileGlobalBinASTScript(cx, cx->tempLifoAlloc(), options,
                                                            data.begin().get(), data.length(),
                                                            &sourceObject.get());
     if (script) {
@@ -594,9 +591,12 @@ MultiScriptsDecodeTask::MultiScriptsDecodeTask(JSContext* cx, JS::TranscodeSourc
 void
 MultiScriptsDecodeTask::parse(JSContext* cx)
 {
+    MOZ_ASSERT(cx->helperThread());
+
     if (!scripts.reserve(sources->length()) ||
         !sourceObjects.reserve(sources->length()))
     {
+        ReportOutOfMemory(cx); // This sets |outOfMemory|.
         return;
     }
 
@@ -607,7 +607,8 @@ MultiScriptsDecodeTask::parse(JSContext* cx)
         RootedScript resultScript(cx);
         Rooted<ScriptSourceObject*> sourceObject(cx);
 
-        XDROffThreadDecoder decoder(cx, alloc, &opts, &sourceObject.get(), source.range);
+        XDROffThreadDecoder decoder(cx, cx->tempLifoAlloc(), &opts, &sourceObject.get(),
+                                    source.range);
         XDRResult res = decoder.codeScript(&resultScript);
         MOZ_ASSERT(bool(resultScript) == res.isOk());
 
@@ -1647,11 +1648,11 @@ GlobalHelperThreadState::removeFinishedParseTask(ParseTaskKind kind, JS::OffThre
     return task;
 }
 
-template <typename F, typename>
-bool
-GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
-                                         JS::OffThreadToken* token, F&& finishCallback)
+UniquePtr<ParseTask>
+GlobalHelperThreadState::finishParseTaskCommon(JSContext* cx, ParseTaskKind kind,
+                                               JS::OffThreadToken* token)
 {
+    MOZ_ASSERT(!cx->helperThread());
     MOZ_ASSERT(cx->realm());
 
     Rooted<UniquePtr<ParseTask>> parseTask(cx, removeFinishedParseTask(kind, token));
@@ -1660,23 +1661,26 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
     // remapping below, since we can't GC while that's happening.
     if (!EnsureParserCreatedClasses(cx, kind)) {
         LeaveParseTaskZone(cx->runtime(), parseTask.get().get());
-        return false;
+        return nullptr;
     }
 
     mergeParseTaskRealm(cx, parseTask.get().get(), cx->realm());
 
-    bool ok = finishCallback(parseTask.get().get());
-
     for (auto& script : parseTask->scripts)
         cx->releaseCheck(script);
 
-    if (!parseTask->finish(cx) || !ok)
-        return false;
+    for (auto& sourceObject : parseTask->sourceObjects) {
+        RootedScriptSourceObject sso(cx, sourceObject);
+        if (!ScriptSourceObject::initFromOptions(cx, sso, parseTask->options))
+            return nullptr;
+        if (!sso->source()->tryCompressOffThread(cx))
+            return nullptr;
+    }
 
     // Report out of memory errors eagerly, or errors could be malformed.
     if (parseTask->outOfMemory) {
         ReportOutOfMemory(cx);
-        return false;
+        return nullptr;
     }
 
     // Report any error or warnings generated during the parse.
@@ -1685,28 +1689,27 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
     if (parseTask->overRecursed)
         ReportOverRecursed(cx);
     if (cx->isExceptionPending())
-        return false;
+        return nullptr;
 
-    return true;
+    return std::move(parseTask.get());
 }
 
 JSScript*
-GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
-                                         JS::OffThreadToken* token)
+GlobalHelperThreadState::finishSingleParseTask(JSContext* cx, ParseTaskKind kind,
+                                               JS::OffThreadToken* token)
 {
     JS::RootedScript script(cx);
 
-    bool ok = finishParseTask(cx, kind, token, [&script] (ParseTask* parseTask) {
-        MOZ_RELEASE_ASSERT(parseTask->scripts.length() <= 1);
-
-        if (parseTask->scripts.length() > 0)
-            script = parseTask->scripts[0];
-
-        return true;
-    });
-
-    if (!ok)
+    Rooted<UniquePtr<ParseTask>> parseTask(cx, finishParseTaskCommon(cx, kind, token));
+    if (!parseTask) {
         return nullptr;
+    }
+
+    MOZ_RELEASE_ASSERT(parseTask->scripts.length() <= 1);
+
+    if (parseTask->scripts.length() > 0) {
+        script = parseTask->scripts[0];
+    }
 
     if (!script) {
         // No error was reported, but no script produced. Assume we hit out of
@@ -1723,28 +1726,25 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
 }
 
 bool
-GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
-                                         JS::OffThreadToken* token,
-                                         MutableHandle<ScriptVector> scripts)
+GlobalHelperThreadState::finishMultiParseTask(JSContext* cx, ParseTaskKind kind,
+                                              JS::OffThreadToken* token,
+                                              MutableHandle<ScriptVector> scripts)
 {
-    size_t expectedLength = 0;
-
-    bool ok = finishParseTask(cx, kind, token, [&scripts, &expectedLength] (ParseTask* parseTask) {
-        MOZ_ASSERT(parseTask->kind == ParseTaskKind::MultiScriptsDecode);
-        auto task = static_cast<MultiScriptsDecodeTask*>(parseTask);
-
-        expectedLength = task->sources->length();
-
-        if (!scripts.reserve(task->scripts.length()))
-            return false;
-
-        for (auto& script : task->scripts)
-            scripts.infallibleAppend(script);
-        return true;
-    });
-
-    if (!ok)
+    Rooted<UniquePtr<ParseTask>> parseTask(cx, finishParseTaskCommon(cx, kind, token));
+    if (!parseTask)
         return false;
+
+    MOZ_ASSERT(parseTask->kind == ParseTaskKind::MultiScriptsDecode);
+    auto task = static_cast<MultiScriptsDecodeTask*>(parseTask.get().get());
+    size_t expectedLength = task->sources->length();
+
+    if (!scripts.reserve(parseTask->scripts.length())) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    for (auto& script : parseTask->scripts)
+        scripts.infallibleAppend(script);
 
     if (scripts.length() != expectedLength) {
         // No error was reported, but fewer scripts produced than expected.
@@ -1769,7 +1769,7 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
 JSScript*
 GlobalHelperThreadState::finishScriptParseTask(JSContext* cx, JS::OffThreadToken* token)
 {
-    JSScript* script = finishParseTask(cx, ParseTaskKind::Script, token);
+    JSScript* script = finishSingleParseTask(cx, ParseTaskKind::Script, token);
     MOZ_ASSERT_IF(script, script->isGlobalCode());
     return script;
 }
@@ -1777,7 +1777,7 @@ GlobalHelperThreadState::finishScriptParseTask(JSContext* cx, JS::OffThreadToken
 JSScript*
 GlobalHelperThreadState::finishScriptDecodeTask(JSContext* cx, JS::OffThreadToken* token)
 {
-    JSScript* script = finishParseTask(cx, ParseTaskKind::ScriptDecode, token);
+    JSScript* script = finishSingleParseTask(cx, ParseTaskKind::ScriptDecode, token);
     MOZ_ASSERT_IF(script, script->isGlobalCode());
     return script;
 }
@@ -1787,7 +1787,7 @@ GlobalHelperThreadState::finishScriptDecodeTask(JSContext* cx, JS::OffThreadToke
 JSScript*
 GlobalHelperThreadState::finishBinASTDecodeTask(JSContext* cx, JS::OffThreadToken* token)
 {
-    JSScript* script = finishParseTask(cx, ParseTaskKind::BinAST, token);
+    JSScript* script = finishSingleParseTask(cx, ParseTaskKind::BinAST, token);
     MOZ_ASSERT_IF(script, script->isGlobalCode());
     return script;
 }
@@ -1798,13 +1798,13 @@ bool
 GlobalHelperThreadState::finishMultiScriptsDecodeTask(JSContext* cx, JS::OffThreadToken* token,
                                                       MutableHandle<ScriptVector> scripts)
 {
-    return finishParseTask(cx, ParseTaskKind::MultiScriptsDecode, token, scripts);
+    return finishMultiParseTask(cx, ParseTaskKind::MultiScriptsDecode, token, scripts);
 }
 
 JSScript*
 GlobalHelperThreadState::finishModuleParseTask(JSContext* cx, JS::OffThreadToken* token)
 {
-    RootedScript script(cx, finishParseTask(cx, ParseTaskKind::Module, token));
+    RootedScript script(cx, finishSingleParseTask(cx, ParseTaskKind::Module, token));
     if (!script)
         return nullptr;
 

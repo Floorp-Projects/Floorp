@@ -27,13 +27,13 @@ namespace css {
  *  1. allocate an object using WillProcessLines
  *  2. then call ProcessLine for each line you are building display lists for
  */
-class MOZ_HEAP_CLASS TextOverflow final {
+class TextOverflow final {
  public:
   /**
    * Allocate an object for text-overflow processing.
    * @return nullptr if no processing is necessary.  The caller owns the object.
    */
-  static UniquePtr<TextOverflow>
+  static Maybe<TextOverflow>
   WillProcessLines(nsDisplayListBuilder* aBuilder,
                    nsIFrame*             aBlockFrame);
 
@@ -44,6 +44,13 @@ class MOZ_HEAP_CLASS TextOverflow final {
    */
   TextOverflow(nsDisplayListBuilder* aBuilder,
                nsIFrame* aBlockFrame);
+
+  TextOverflow() = default;
+  ~TextOverflow() = default;
+  TextOverflow(TextOverflow&&) = default;
+  TextOverflow(const TextOverflow&) = delete;
+  TextOverflow& operator=(TextOverflow&&) = default;
+  TextOverflow& operator=(const TextOverflow&) = delete;
 
   /**
    * Analyze the display lists for text overflow and what kind of item is at

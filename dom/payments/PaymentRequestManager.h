@@ -58,6 +58,9 @@ public:
                          bool aRequestShipping,
                          bool aDeferredShow);
   nsresult ClosePayment(PaymentRequest* aRequest);
+  nsresult RetryPayment(JSContext* aCx,
+                        PaymentRequest* aRequest,
+                        const PaymentValidationErrors& aErrors);
 
   nsresult RespondPayment(PaymentRequest* aRequest,
                           const IPCPaymentActionResponse& aResponse);
