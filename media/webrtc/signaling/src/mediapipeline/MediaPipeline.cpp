@@ -2219,8 +2219,7 @@ public:
 
   // Accessors for external writes from the renderer
   void FrameSizeChange(unsigned int aWidth,
-                       unsigned int aHeight,
-                       unsigned int aNumberOfStreams)
+                       unsigned int aHeight)
   {
     MutexAutoLock enter(mMutex);
 
@@ -2294,10 +2293,9 @@ public:
 
   // Implement VideoRenderer
   void FrameSizeChange(unsigned int aWidth,
-                       unsigned int aHeight,
-                       unsigned int aNumberOfStreams) override
+                       unsigned int aHeight) override
   {
-    mPipeline->mListener->FrameSizeChange(aWidth, aHeight, aNumberOfStreams);
+    mPipeline->mListener->FrameSizeChange(aWidth, aHeight);
   }
 
   void RenderVideoFrame(const webrtc::VideoFrameBuffer& aBuffer,

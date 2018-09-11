@@ -93,30 +93,30 @@ public:
    * Note: Multiple invocations of this API shall remove an existing renderer
    * and attaches the new to the Conduit.
    */
-  virtual MediaConduitErrorCode AttachRenderer(RefPtr<mozilla::VideoRenderer> aVideoRenderer) override;
-  virtual void DetachRenderer() override;
+  MediaConduitErrorCode AttachRenderer(RefPtr<mozilla::VideoRenderer> aVideoRenderer) override;
+  void DetachRenderer() override;
 
   /**
    * APIs used by the registered external transport to this Conduit to
    * feed in received RTP Frames to the VideoEngine for decoding
    */
-  virtual MediaConduitErrorCode ReceivedRTPPacket(const void* data, int len, uint32_t ssrc) override;
+  MediaConduitErrorCode ReceivedRTPPacket(const void* data, int len, uint32_t ssrc) override;
 
   /**
    * APIs used by the registered external transport to this Conduit to
-   * feed in received RTP Frames to the VideoEngine for decoding
+   * feed in received RTCP Frames to the VideoEngine for decoding
    */
-  virtual MediaConduitErrorCode ReceivedRTCPPacket(const void* data, int len) override;
+  MediaConduitErrorCode ReceivedRTCPPacket(const void* data, int len) override;
 
-  virtual MediaConduitErrorCode StopTransmitting() override;
-  virtual MediaConduitErrorCode StartTransmitting() override;
-  virtual MediaConduitErrorCode StopReceiving() override;
-  virtual MediaConduitErrorCode StartReceiving() override;
+  MediaConduitErrorCode StopTransmitting() override;
+  MediaConduitErrorCode StartTransmitting() override;
+  MediaConduitErrorCode StopReceiving() override;
+  MediaConduitErrorCode StartReceiving() override;
 
   /**
    * Function to configure sending codec mode for different content
    */
-  virtual MediaConduitErrorCode ConfigureCodecMode(webrtc::VideoCodecMode) override;
+  MediaConduitErrorCode ConfigureCodecMode(webrtc::VideoCodecMode) override;
 
    /**
    * Function to configure send codec for the video session
@@ -126,7 +126,7 @@ public:
    * NOTE: This API can be invoked multiple time. Invoking this API may involve restarting
    *        transmission sub-system on the engine.
    */
-  virtual MediaConduitErrorCode ConfigureSendMediaCodec(const VideoCodecConfig* codecInfo) override;
+  MediaConduitErrorCode ConfigureSendMediaCodec(const VideoCodecConfig* codecInfo) override;
 
   /**
    * Function to configure list of receive codecs for the video session
@@ -137,28 +137,26 @@ public:
    * NOTE: This API can be invoked multiple time. Invoking this API may involve restarting
    *        transmission sub-system on the engine.
    */
-   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
+   MediaConduitErrorCode ConfigureRecvMediaCodecs(
        const std::vector<VideoCodecConfig* >& codecConfigList) override;
 
   /**
    * Register Transport for this Conduit. RTP and RTCP frames from the VideoEngine
    * shall be passed to the registered transport for transporting externally.
    */
-  virtual MediaConduitErrorCode SetTransmitterTransport(RefPtr<TransportInterface> aTransport) override;
+  MediaConduitErrorCode SetTransmitterTransport(RefPtr<TransportInterface> aTransport) override;
 
-  virtual MediaConduitErrorCode SetReceiverTransport(RefPtr<TransportInterface> aTransport) override;
+  MediaConduitErrorCode SetReceiverTransport(RefPtr<TransportInterface> aTransport) override;
 
   /**
    * Function to set the encoding bitrate limits based on incoming frame size and rate
    * @param width, height: dimensions of the frame
    * @param cap: user-enforced max bitrate, or 0
-   * @param aLastFramerateTenths: holds the current input framerate
    * @param aVideoStream stream to apply bitrates to
    */
   void SelectBitrates(unsigned short width,
                       unsigned short height,
                       int cap,
-                      int32_t aLastFramerateTenths,
                       webrtc::VideoStream& aVideoStream);
 
   /**
@@ -189,7 +187,7 @@ public:
    *       be invoked. This ensures the inserted video-frames can be
    *       transmitted by the conduit.
    */
-  virtual MediaConduitErrorCode SendVideoFrame(
+  MediaConduitErrorCode SendVideoFrame(
     const webrtc::VideoFrame& frame) override;
 
   /**
@@ -198,7 +196,7 @@ public:
    * Webrtc transport implementation to send and receive RTP packet.
    * VideoConduit registers itself as ExternalTransport to the VideoStream
    */
-  virtual bool SendRtp(const uint8_t* packet, size_t length,
+  bool SendRtp(const uint8_t* packet, size_t length,
                        const webrtc::PacketOptions& options) override;
 
   /**
@@ -207,14 +205,14 @@ public:
    * Webrtc transport implementation to send and receive RTCP packet.
    * VideoConduit registers itself as ExternalTransport to the VideoEngine
    */
-  virtual bool SendRtcp(const uint8_t* packet, size_t length) override;
+  bool SendRtcp(const uint8_t* packet, size_t length) override;
 
 
   /*
    * webrtc:VideoSinkInterface implementation
    * -------------------------------
    */
-  virtual void OnFrame(const webrtc::VideoFrame& frame) override;
+  void OnFrame(const webrtc::VideoFrame& frame) override;
 
   /*
    * webrtc:VideoSourceInterface implementation
@@ -226,27 +224,14 @@ public:
 
   void OnSinkWantsChanged(const rtc::VideoSinkWants& wants);
 
-  virtual uint64_t CodecPluginID() override;
+  uint64_t CodecPluginID() override;
 
-  virtual void SetPCHandle(const std::string& aPCHandle) override {
+  void SetPCHandle(const std::string& aPCHandle) override
+  {
     mPCHandle = aPCHandle;
   }
 
-  virtual void DeleteStreams() override;
-
-  unsigned int SendingMaxFs() override {
-    if(mCurSendCodecConfig) {
-      return mCurSendCodecConfig->mEncodingConstraints.maxFs;
-    }
-    return 0;
-  }
-
-  unsigned int SendingMaxFr() override {
-    if(mCurSendCodecConfig) {
-      return mCurSendCodecConfig->mEncodingConstraints.maxFps;
-    }
-    return 0;
-  }
+  void DeleteStreams() override;
 
   bool Denoising() const {
     return mDenoising;
@@ -272,7 +257,7 @@ public:
   virtual MediaConduitErrorCode Init();
 
   std::vector<unsigned int> GetLocalSSRCs() const override;
-  bool SetLocalSSRCs(const std::vector<unsigned int> & ssrcs) override;
+  bool SetLocalSSRCs(const std::vector<unsigned int>& ssrcs) override;
   bool GetRemoteSSRC(unsigned int* ssrc) override;
   bool SetRemoteSSRC(unsigned int ssrc) override;
   bool UnsetRemoteSSRC(uint32_t ssrc) override;
@@ -509,9 +494,6 @@ private:
   unsigned short mReceivingWidth;
   unsigned short mReceivingHeight;
   unsigned int   mSendingFramerate;
-  // scaled by *10 because Atomic<double/float> isn't supported
-  mozilla::Atomic<int32_t, mozilla::Relaxed> mLastFramerateTenths;
-  unsigned short mNumReceivingStreams;
   bool mVideoLatencyTestEnable;
   uint64_t mVideoLatencyAvg;
   // all in bps!
