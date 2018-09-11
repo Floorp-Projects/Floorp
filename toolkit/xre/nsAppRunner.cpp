@@ -3768,7 +3768,7 @@ static void AnnotateWMIData()
       V_VT(&value) == VT_I4) {
     long valueInt = V_I4(&value);
     nsCString valueString;
-    if (valueInt < 0 || valueInt >= ArrayLength(kMemoryErrorCorrectionValues)) {
+    if (valueInt < 0 || valueInt >= long(ArrayLength(kMemoryErrorCorrectionValues))) {
       valueString.AssignLiteral("Unexpected value");
     } else {
       valueString.AssignASCII(kMemoryErrorCorrectionValues[valueInt]);
