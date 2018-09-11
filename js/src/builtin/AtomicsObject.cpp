@@ -95,13 +95,16 @@ static bool
 GetSharedTypedArray(JSContext* cx, HandleValue v,
                     MutableHandle<TypedArrayObject*> viewp)
 {
-    if (!v.isObject())
+    if (!v.isObject()) {
         return ReportBadArrayType(cx);
-    if (!v.toObject().is<TypedArrayObject>())
+    }
+    if (!v.toObject().is<TypedArrayObject>()) {
         return ReportBadArrayType(cx);
+    }
     viewp.set(&v.toObject().as<TypedArrayObject>());
-    if (!viewp->isSharedMemory())
+    if (!viewp->isSharedMemory()) {
         return ReportBadArrayType(cx);
+    }
     return true;
 }
 
@@ -109,10 +112,12 @@ static bool
 GetTypedArrayIndex(JSContext* cx, HandleValue v, Handle<TypedArrayObject*> view, uint32_t* offset)
 {
     uint64_t index;
-    if (!ToIndex(cx, v, &index))
+    if (!ToIndex(cx, v, &index)) {
         return false;
-    if (index >= view->length())
+    }
+    if (index >= view->length()) {
         return ReportOutOfRange(cx);
+    }
     *offset = uint32_t(index);
     return true;
 }
@@ -165,8 +170,9 @@ CompareExchange(Scalar::Type viewType, int32_t oldCandidate, int32_t newCandidat
         return (int32_t)oldval;
       }
       default:
-        if (badArrayType)
+        if (badArrayType) {
             *badArrayType = true;
+        }
         return 0;
     }
 }
@@ -182,29 +188,35 @@ js::atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp)
     MutableHandleValue r = args.rval();
 
     Rooted<TypedArrayObject*> view(cx, nullptr);
-    if (!GetSharedTypedArray(cx, objv, &view))
+    if (!GetSharedTypedArray(cx, objv, &view)) {
         return false;
+    }
     uint32_t offset;
-    if (!GetTypedArrayIndex(cx, idxv, view, &offset))
+    if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
         return false;
+    }
     int32_t oldCandidate;
-    if (!ToInt32(cx, oldv, &oldCandidate))
+    if (!ToInt32(cx, oldv, &oldCandidate)) {
         return false;
+    }
     int32_t newCandidate;
-    if (!ToInt32(cx, newv, &newCandidate))
+    if (!ToInt32(cx, newv, &newCandidate)) {
         return false;
+    }
 
     bool badType = false;
     int32_t result = CompareExchange(view->type(), oldCandidate, newCandidate,
                                      view->viewDataShared(), offset, &badType);
 
-    if (badType)
+    if (badType) {
         return ReportBadArrayType(cx);
+    }
 
-    if (view->type() == Scalar::Uint32)
+    if (view->type() == Scalar::Uint32) {
         r.setNumber((double)(uint32_t)result);
-    else
+    } else {
         r.setInt32(result);
+    }
     return true;
 }
 
@@ -217,11 +229,13 @@ js::atomics_load(JSContext* cx, unsigned argc, Value* vp)
     MutableHandleValue r = args.rval();
 
     Rooted<TypedArrayObject*> view(cx, nullptr);
-    if (!GetSharedTypedArray(cx, objv, &view))
+    if (!GetSharedTypedArray(cx, objv, &view)) {
         return false;
+    }
     uint32_t offset;
-    if (!GetTypedArrayIndex(cx, idxv, view, &offset))
+    if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
         return false;
+    }
 
     SharedMem<void*> viewData = view->viewDataShared();
     switch (view->type()) {
@@ -310,8 +324,9 @@ ExchangeOrStore(Scalar::Type viewType, int32_t numberValue, SharedMem<void*> vie
         return (int32_t)value;
       }
       default:
-        if (badArrayType)
+        if (badArrayType) {
             *badArrayType = true;
+        }
         return 0;
     }
 #undef INT_OP
@@ -328,28 +343,33 @@ ExchangeOrStore(JSContext* cx, unsigned argc, Value* vp)
     MutableHandleValue r = args.rval();
 
     Rooted<TypedArrayObject*> view(cx, nullptr);
-    if (!GetSharedTypedArray(cx, objv, &view))
+    if (!GetSharedTypedArray(cx, objv, &view)) {
         return false;
+    }
     uint32_t offset;
-    if (!GetTypedArrayIndex(cx, idxv, view, &offset))
+    if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
         return false;
+    }
     double integerValue;
-    if (!ToInteger(cx, valv, &integerValue))
+    if (!ToInteger(cx, valv, &integerValue)) {
         return false;
+    }
 
     bool badType = false;
     int32_t result = ExchangeOrStore<op>(view->type(), JS::ToInt32(integerValue),
                                          view->viewDataShared(), offset, &badType);
 
-    if (badType)
+    if (badType) {
         return ReportBadArrayType(cx);
+    }
 
-    if (op == DoStore)
+    if (op == DoStore) {
         r.setNumber(integerValue);
-    else if (view->type() == Scalar::Uint32)
+    } else if (view->type() == Scalar::Uint32) {
         r.setNumber((double)(uint32_t)result);
-    else
+    } else {
         r.setInt32(result);
+    }
     return true;
 }
 
@@ -371,14 +391,17 @@ AtomicsBinop(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValue valv
              MutableHandleValue r)
 {
     Rooted<TypedArrayObject*> view(cx, nullptr);
-    if (!GetSharedTypedArray(cx, objv, &view))
+    if (!GetSharedTypedArray(cx, objv, &view)) {
         return false;
+    }
     uint32_t offset;
-    if (!GetTypedArrayIndex(cx, idxv, view, &offset))
+    if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
         return false;
+    }
     int32_t numberValue;
-    if (!ToInt32(cx, valv, &numberValue))
+    if (!ToInt32(cx, valv, &numberValue)) {
         return false;
+    }
 
     SharedMem<void*> viewData = view->viewDataShared();
     switch (view->type()) {
@@ -505,8 +528,9 @@ js::atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp)
         size = v.toInt32();
     } else {
         double dsize;
-        if (!ToInteger(cx, v, &dsize))
+        if (!ToInteger(cx, v, &dsize)) {
             return false;
+        }
         if (!mozilla::NumberIsInt32(dsize, &size)) {
             args.rval().setBoolean(false);
             return true;
@@ -588,8 +612,9 @@ AtomicsWait(JSContext* cx, SharedArrayRawBuffer* sarb, uint32_t byteOffset, T va
     // and it provides the necessary memory fence.
     AutoLockFutexAPI lock;
 
-    if (jit::AtomicOperations::loadSafeWhenRacy(addr) != value)
+    if (jit::AtomicOperations::loadSafeWhenRacy(addr) != value) {
         return FutexThread::WaitResult::NotEqual;
+    }
 
     FutexWaiter w(byteOffset, cx);
     if (FutexWaiter* waiters = sarb->waiters()) {
@@ -609,8 +634,9 @@ AtomicsWait(JSContext* cx, SharedArrayRawBuffer* sarb, uint32_t byteOffset, T va
     } else {
         w.lower_pri->back = w.back;
         w.back->lower_pri = w.lower_pri;
-        if (sarb->waiters() == &w)
+        if (sarb->waiters() == &w) {
             sarb->setWaiters(w.lower_pri);
+        }
     }
 
     return retval;
@@ -641,26 +667,32 @@ js::atomics_wait(JSContext* cx, unsigned argc, Value* vp)
     MutableHandleValue r = args.rval();
 
     Rooted<TypedArrayObject*> view(cx, nullptr);
-    if (!GetSharedTypedArray(cx, objv, &view))
+    if (!GetSharedTypedArray(cx, objv, &view)) {
         return false;
-    if (view->type() != Scalar::Int32)
+    }
+    if (view->type() != Scalar::Int32) {
         return ReportBadArrayType(cx);
+    }
     uint32_t offset;
-    if (!GetTypedArrayIndex(cx, idxv, view, &offset))
+    if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
         return false;
+    }
     int32_t value;
-    if (!ToInt32(cx, valv, &value))
+    if (!ToInt32(cx, valv, &value)) {
         return false;
+    }
     mozilla::Maybe<mozilla::TimeDuration> timeout;
     if (!timeoutv.isUndefined()) {
         double timeout_ms;
-        if (!ToNumber(cx, timeoutv, &timeout_ms))
+        if (!ToNumber(cx, timeoutv, &timeout_ms)) {
             return false;
+        }
         if (!mozilla::IsNaN(timeout_ms)) {
-            if (timeout_ms < 0)
+            if (timeout_ms < 0) {
                 timeout = mozilla::Some(mozilla::TimeDuration::FromSeconds(0.0));
-            else if (!mozilla::IsInfinite(timeout_ms))
+            } else if (!mozilla::IsInfinite(timeout_ms)) {
                 timeout = mozilla::Some(mozilla::TimeDuration::FromMilliseconds(timeout_ms));
+            }
         }
     }
 
@@ -704,8 +736,9 @@ js::atomics_notify_impl(SharedArrayRawBuffer* sarb, uint32_t byteOffset, int64_t
         do {
             FutexWaiter* c = iter;
             iter = iter->lower_pri;
-            if (c->offset != byteOffset || !c->cx->fx.isWaiting())
+            if (c->offset != byteOffset || !c->cx->fx.isWaiting()) {
                 continue;
+            }
             c->cx->fx.notify(FutexThread::NotifyExplicit);
             // Overflow will be a problem only in two cases:
             // (1) 128-bit systems with substantially more than 2^64 bytes of
@@ -714,8 +747,9 @@ js::atomics_notify_impl(SharedArrayRawBuffer* sarb, uint32_t byteOffset, int64_t
             // (2) Bugs.
             MOZ_RELEASE_ASSERT(woken < INT64_MAX);
             ++woken;
-            if (count > 0)
+            if (count > 0) {
                 --count;
+            }
         } while (count && iter != waiters);
     }
 
@@ -732,22 +766,27 @@ js::atomics_notify(JSContext* cx, unsigned argc, Value* vp)
     MutableHandleValue r = args.rval();
 
     Rooted<TypedArrayObject*> view(cx, nullptr);
-    if (!GetSharedTypedArray(cx, objv, &view))
+    if (!GetSharedTypedArray(cx, objv, &view)) {
         return false;
-    if (view->type() != Scalar::Int32)
+    }
+    if (view->type() != Scalar::Int32) {
         return ReportBadArrayType(cx);
+    }
     uint32_t offset;
-    if (!GetTypedArrayIndex(cx, idxv, view, &offset))
+    if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
         return false;
+    }
     int64_t count;
     if (countv.isUndefined()) {
         count = -1;
     } else {
         double dcount;
-        if (!ToInteger(cx, countv, &dcount))
+        if (!ToInteger(cx, countv, &dcount)) {
             return false;
-        if (dcount < 0.0)
+        }
+        if (dcount < 0.0) {
             dcount = 0.0;
+        }
         count = dcount > INT64_MAX ? -1 : int64_t(dcount);
     }
 
@@ -820,8 +859,9 @@ js::FutexThread::initInstance()
 void
 js::FutexThread::destroyInstance()
 {
-    if (cond_)
+    if (cond_) {
         js_delete(cond_);
+    }
 }
 
 bool
@@ -874,8 +914,9 @@ js::FutexThread::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
         // slice.
         auto sliceEnd = finalEnd.map([&](mozilla::TimeStamp& finalEnd) {
             auto sliceEnd = mozilla::TimeStamp::Now() + maxSlice;
-            if (finalEnd < sliceEnd)
+            if (finalEnd < sliceEnd) {
                 sliceEnd = finalEnd;
+            }
             return sliceEnd;
         });
 
@@ -892,8 +933,9 @@ js::FutexThread::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
             // Timeout or spurious wakeup.
             if (isTimed) {
                 auto now = mozilla::TimeStamp::Now();
-                if (now >= *finalEnd)
+                if (now >= *finalEnd) {
                     return WaitResult::TimedOut;
+                }
             }
             break;
 
@@ -933,11 +975,13 @@ js::FutexThread::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
             state_ = WaitingInterrupted;
             {
                 UnlockGuard<Mutex> unlock(locked);
-                if (!cx->handleInterrupt())
+                if (!cx->handleInterrupt()) {
                     return WaitResult::Error;
+                }
             }
-            if (state_ == Woken)
+            if (state_ == Woken) {
                 return WaitResult::OK;
+            }
             break;
 
           default:
@@ -960,8 +1004,9 @@ js::FutexThread::notify(NotifyReason reason)
         state_ = Woken;
         break;
       case NotifyForJSInterrupt:
-        if (state_ == WaitingNotifiedForInterrupt)
+        if (state_ == WaitingNotifiedForInterrupt) {
             return;
+        }
         state_ = WaitingNotifiedForInterrupt;
         break;
       default:
@@ -992,23 +1037,28 @@ AtomicsObject::initClass(JSContext* cx, Handle<GlobalObject*> global)
 {
     // Create Atomics Object.
     RootedObject objProto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
-    if (!objProto)
+    if (!objProto) {
         return nullptr;
+    }
     RootedObject Atomics(cx, NewObjectWithGivenProto(cx, &AtomicsObject::class_, objProto,
                                                      SingletonObject));
-    if (!Atomics)
+    if (!Atomics) {
         return nullptr;
+    }
 
-    if (!JS_DefineFunctions(cx, Atomics, AtomicsMethods))
+    if (!JS_DefineFunctions(cx, Atomics, AtomicsMethods)) {
         return nullptr;
-    if (!DefineToStringTag(cx, Atomics, cx->names().Atomics))
+    }
+    if (!DefineToStringTag(cx, Atomics, cx->names().Atomics)) {
         return nullptr;
+    }
 
     RootedValue AtomicsValue(cx, ObjectValue(*Atomics));
 
     // Everything is set up, install Atomics on the global object.
-    if (!DefineDataProperty(cx, global, cx->names().Atomics, AtomicsValue, JSPROP_RESOLVING))
+    if (!DefineDataProperty(cx, global, cx->names().Atomics, AtomicsValue, JSPROP_RESOLVING)) {
         return nullptr;
+    }
 
     global->setConstructor(JSProto_Atomics, AtomicsValue);
     return Atomics;

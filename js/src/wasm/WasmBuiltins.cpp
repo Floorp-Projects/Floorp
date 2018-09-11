@@ -89,8 +89,9 @@ WasmHandleDebugTrap()
     DebugFrame* debugFrame = DebugFrame::from(fp);
 
     if (site->kind() == CallSite::EnterFrame) {
-        if (!instance->enterFrameTrapsEnabled())
+        if (!instance->enterFrameTrapsEnabled()) {
             return true;
+        }
         debugFrame->setIsDebuggee();
         debugFrame->observe(cx);
         ResumeMode mode = Debugger::onEnterFrame(cx, debugFrame);
@@ -120,8 +121,9 @@ WasmHandleDebugTrap()
             JS_ReportErrorASCII(cx, "Unexpected resumption value from onSingleStep");
             return false;
         }
-        if (mode != ResumeMode::Continue)
+        if (mode != ResumeMode::Continue) {
             return false;
+        }
     }
     if (debug.hasBreakpointSite(site->lineOrBytecode())) {
         RootedValue result(cx, UndefinedValue());
@@ -131,8 +133,9 @@ WasmHandleDebugTrap()
             JS_ReportErrorASCII(cx, "Unexpected resumption value from breakpoint handler");
             return false;
         }
-        if (mode != ResumeMode::Continue)
+        if (mode != ResumeMode::Continue) {
             return false;
+        }
     }
     return true;
 }
@@ -172,8 +175,9 @@ wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter)
         // this frame's realm.
         cx->setRealmForJitExceptionHandler(iter.instance()->realm());
 
-        if (!iter.debugEnabled())
+        if (!iter.debugEnabled()) {
             continue;
+        }
 
         DebugFrame* frame = iter.debugFrame();
         frame->clearReturnJSValue();
@@ -228,8 +232,9 @@ CheckInterrupt(JSContext* cx, JitActivation* activation)
 {
     ResetInterruptState(cx);
 
-    if (!CheckForInterrupt(cx))
+    if (!CheckForInterrupt(cx)) {
         return nullptr;
+    }
 
     void* resumePC = activation->wasmTrapData().resumePC;
     activation->finishWasmTrap();
@@ -273,10 +278,12 @@ WasmHandleTrap()
         // stack overflow to trap, followed by a racy call to setInterrupt().
         // Thus, we must check for a real stack overflow first before we
         // CheckInterrupt() and possibly resume execution.
-        if (!CheckRecursionLimit(cx))
+        if (!CheckRecursionLimit(cx)) {
             return nullptr;
-        if (activation->wasmExitFP()->tls->isInterrupted())
+        }
+        if (activation->wasmExitFP()->tls->isInterrupted()) {
             return CheckInterrupt(cx, activation);
+        }
         return ReportError(cx, JSMSG_OVER_RECURSED);
       case Trap::ThrowReported:
         // Error was already reported under another name.
@@ -340,16 +347,18 @@ CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData, Value* argv)
         switch (fe.funcType().args()[i].code()) {
           case ValType::I32: {
             int32_t i32;
-            if (!ToInt32(cx, arg, &i32))
+            if (!ToInt32(cx, arg, &i32)) {
                 return false;
+            }
             argv[i] = Int32Value(i32);
             break;
           }
           case ValType::F32:
           case ValType::F64: {
             double dbl;
-            if (!ToNumber(cx, arg, &dbl))
+            if (!ToNumber(cx, arg, &dbl)) {
                 return false;
+            }
             // No need to convert double-to-float for f32, it's done inline
             // in the wasm stub later.
             argv[i] = DoubleValue(dbl);
@@ -407,8 +416,9 @@ TruncateDoubleToInt64(double input)
 {
     // Note: INT64_MAX is not representable in double. It is actually
     // INT64_MAX + 1.  Therefore also sending the failure value.
-    if (input >= double(INT64_MAX) || input < double(INT64_MIN) || IsNaN(input))
+    if (input >= double(INT64_MAX) || input < double(INT64_MIN) || IsNaN(input)) {
         return 0x8000000000000000;
+    }
     return int64_t(input);
 }
 
@@ -417,8 +427,9 @@ TruncateDoubleToUint64(double input)
 {
     // Note: UINT64_MAX is not representable in double. It is actually UINT64_MAX + 1.
     // Therefore also sending the failure value.
-    if (input >= double(UINT64_MAX) || input <= -1.0 || IsNaN(input))
+    if (input >= double(UINT64_MAX) || input <= -1.0 || IsNaN(input)) {
         return 0x8000000000000000;
+    }
     return uint64_t(input);
 }
 
@@ -426,14 +437,17 @@ static int64_t
 SaturatingTruncateDoubleToInt64(double input)
 {
     // Handle in-range values (except INT64_MIN).
-    if (fabs(input) < -double(INT64_MIN))
+    if (fabs(input) < -double(INT64_MIN)) {
         return int64_t(input);
+    }
     // Handle NaN.
-    if (IsNaN(input))
+    if (IsNaN(input)) {
         return 0;
+    }
     // Handle positive overflow.
-    if (input > 0)
+    if (input > 0) {
         return INT64_MAX;
+    }
     // Handle negative overflow.
     return INT64_MIN;
 }
@@ -442,11 +456,13 @@ static uint64_t
 SaturatingTruncateDoubleToUint64(double input)
 {
     // Handle positive overflow.
-    if (input >= -double(INT64_MIN) * 2.0)
+    if (input >= -double(INT64_MIN) * 2.0) {
         return UINT64_MAX;
+    }
     // Handle in-range values.
-    if (input >= -1.0)
+    if (input >= -1.0) {
         return uint64_t(input);
+    }
     // Handle NaN and negative overflow.
     return 0;
 }
@@ -914,8 +930,9 @@ struct BuiltinThunks
     {}
 
     ~BuiltinThunks() {
-        if (codeBase)
+        if (codeBase) {
             DeallocateExecutableMemory(codeBase, codeSize);
+        }
     }
 };
 
@@ -926,12 +943,14 @@ bool
 wasm::EnsureBuiltinThunksInitialized()
 {
     LockGuard<Mutex> guard(initBuiltinThunks);
-    if (builtinThunks)
+    if (builtinThunks) {
         return true;
+    }
 
     auto thunks = MakeUnique<BuiltinThunks>();
-    if (!thunks)
+    if (!thunks) {
         return false;
+    }
 
     LifoAlloc lifo(BUILTIN_THUNK_LIFO_SIZE);
     TempAllocator tempAlloc(&lifo);
@@ -952,22 +971,26 @@ wasm::EnsureBuiltinThunksInitialized()
         ExitReason exitReason(sym);
 
         CallableOffsets offsets;
-        if (!GenerateBuiltinThunk(masm, abiType, exitReason, funcPtr, &offsets))
+        if (!GenerateBuiltinThunk(masm, abiType, exitReason, funcPtr, &offsets)) {
             return false;
-        if (!thunks->codeRanges.emplaceBack(CodeRange::BuiltinThunk, offsets))
+        }
+        if (!thunks->codeRanges.emplaceBack(CodeRange::BuiltinThunk, offsets)) {
             return false;
+        }
     }
 
     TypedNativeToFuncPtrMap typedNatives;
-    if (!PopulateTypedNatives(&typedNatives))
+    if (!PopulateTypedNatives(&typedNatives)) {
         return false;
+    }
 
     for (TypedNativeToFuncPtrMap::Range r = typedNatives.all(); !r.empty(); r.popFront()) {
         TypedNative typedNative = r.front().key();
 
         uint32_t codeRangeIndex = thunks->codeRanges.length();
-        if (!thunks->typedNativeToCodeRange.putNew(typedNative, codeRangeIndex))
+        if (!thunks->typedNativeToCodeRange.putNew(typedNative, codeRangeIndex)) {
             return false;
+        }
 
         ABIFunctionType abiType = typedNative.abiType;
         void* funcPtr = r.front().value();
@@ -975,23 +998,27 @@ wasm::EnsureBuiltinThunksInitialized()
         ExitReason exitReason = ExitReason::Fixed::BuiltinNative;
 
         CallableOffsets offsets;
-        if (!GenerateBuiltinThunk(masm, abiType, exitReason, funcPtr, &offsets))
+        if (!GenerateBuiltinThunk(masm, abiType, exitReason, funcPtr, &offsets)) {
             return false;
-        if (!thunks->codeRanges.emplaceBack(CodeRange::BuiltinThunk, offsets))
+        }
+        if (!thunks->codeRanges.emplaceBack(CodeRange::BuiltinThunk, offsets)) {
             return false;
+        }
     }
 
     masm.finish();
-    if (masm.oom())
+    if (masm.oom()) {
         return false;
+    }
 
     size_t allocSize = AlignBytes(masm.bytesNeeded(), ExecutableCodePageSize);
 
     thunks->codeSize = allocSize;
     thunks->codeBase = (uint8_t*)AllocateExecutableMemory(allocSize, ProtectionSetting::Writable,
                                                           MemCheckKind::MakeUndefined);
-    if (!thunks->codeBase)
+    if (!thunks->codeBase) {
         return false;
+    }
 
     masm.executableCopy(thunks->codeBase, /* flushICache = */ false);
     memset(thunks->codeBase + masm.bytesNeeded(), 0, allocSize - masm.bytesNeeded());
@@ -1006,8 +1033,9 @@ wasm::EnsureBuiltinThunksInitialized()
     MOZ_ASSERT(masm.symbolicAccesses().empty());
 
     ExecutableAllocator::cacheFlush(thunks->codeBase, thunks->codeSize);
-    if (!ExecutableAllocator::makeExecutable(thunks->codeBase, thunks->codeSize))
+    if (!ExecutableAllocator::makeExecutable(thunks->codeBase, thunks->codeSize)) {
         return false;
+    }
 
     builtinThunks = thunks.release();
     return true;
@@ -1031,8 +1059,9 @@ wasm::SymbolicAddressTarget(SymbolicAddress sym)
     ABIFunctionType abiType;
     void* funcPtr = AddressOf(sym, &abiType);
 
-    if (!NeedsBuiltinThunk(sym))
+    if (!NeedsBuiltinThunk(sym)) {
         return funcPtr;
+    }
 
     const BuiltinThunks& thunks = *builtinThunks;
     uint32_t codeRangeIndex = thunks.symbolicAddressToCodeRange[sym];
@@ -1052,8 +1081,9 @@ ToBuiltinABIFunctionType(const FuncType& funcType)
       default: return Nothing();
     }
 
-    if ((args.length() + 1) > (sizeof(uint32_t) * 8 / ArgType_Shift))
+    if ((args.length() + 1) > (sizeof(uint32_t) * 8 / ArgType_Shift)) {
         return Nothing();
+    }
 
     for (size_t i = 0; i < args.length(); i++) {
         switch (args[i].code()) {
@@ -1071,19 +1101,22 @@ wasm::MaybeGetBuiltinThunk(HandleFunction f, const FuncType& funcType)
 {
     MOZ_ASSERT(builtinThunks);
 
-    if (!f->isNative() || !f->hasJitInfo() || f->jitInfo()->type() != JSJitInfo::InlinableNative)
+    if (!f->isNative() || !f->hasJitInfo() || f->jitInfo()->type() != JSJitInfo::InlinableNative) {
         return nullptr;
+    }
 
     Maybe<ABIFunctionType> abiType = ToBuiltinABIFunctionType(funcType);
-    if (!abiType)
+    if (!abiType) {
         return nullptr;
+    }
 
     TypedNative typedNative(f->jitInfo()->inlinableNative, *abiType);
 
     const BuiltinThunks& thunks = *builtinThunks;
     auto p = thunks.typedNativeToCodeRange.readonlyThreadsafeLookup(typedNative);
-    if (!p)
+    if (!p) {
         return nullptr;
+    }
 
     return thunks.codeBase + thunks.codeRanges[p->value()].begin();
 }
@@ -1091,12 +1124,14 @@ wasm::MaybeGetBuiltinThunk(HandleFunction f, const FuncType& funcType)
 bool
 wasm::LookupBuiltinThunk(void* pc, const CodeRange** codeRange, uint8_t** codeBase)
 {
-    if (!builtinThunks)
+    if (!builtinThunks) {
         return false;
+    }
 
     const BuiltinThunks& thunks = *builtinThunks;
-    if (pc < thunks.codeBase || pc >= thunks.codeBase + thunks.codeSize)
+    if (pc < thunks.codeBase || pc >= thunks.codeBase + thunks.codeSize) {
         return false;
+    }
 
     *codeBase = thunks.codeBase;
 

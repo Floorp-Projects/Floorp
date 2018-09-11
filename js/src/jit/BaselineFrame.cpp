@@ -41,18 +41,22 @@ BaselineFrame::trace(JSTracer* trc, const JSJitFrameIter& frameIterator)
     }
 
     // Trace environment chain, if it exists.
-    if (envChain_)
+    if (envChain_) {
         TraceRoot(trc, &envChain_, "baseline-envchain");
+    }
 
     // Trace return value.
-    if (hasReturnValue())
+    if (hasReturnValue()) {
         TraceRoot(trc, returnValue().address(), "baseline-rval");
+    }
 
-    if (isEvalFrame() && script()->isDirectEvalInFunction())
+    if (isEvalFrame() && script()->isDirectEvalInFunction()) {
         TraceRoot(trc, evalNewTargetAddress(), "baseline-evalNewTarget");
+    }
 
-    if (hasArgsObj())
+    if (hasArgsObj()) {
         TraceRoot(trc, &argsObj_, "baseline-args-obj");
+    }
 
     // Trace locals and stack values.
     JSScript* script = this->script();
@@ -63,8 +67,9 @@ BaselineFrame::trace(JSTracer* trc, const JSJitFrameIter& frameIterator)
 
     // NB: It is possible that numValueSlots() could be zero, even if nfixed is
     // nonzero.  This is the case if the function has an early stack check.
-    if (numValueSlots() == 0)
+    if (numValueSlots() == 0) {
         return;
+    }
 
     MOZ_ASSERT(nfixed <= numValueSlots());
 
@@ -76,15 +81,17 @@ BaselineFrame::trace(JSTracer* trc, const JSJitFrameIter& frameIterator)
         TraceLocals(this, trc, nfixed, numValueSlots());
 
         // Clear dead block-scoped locals.
-        while (nfixed > nlivefixed)
+        while (nfixed > nlivefixed) {
             unaliasedLocal(--nfixed).setUndefined();
+        }
 
         // Trace live locals.
         TraceLocals(this, trc, 0, nlivefixed);
     }
 
-    if (auto* debugEnvs = script->realm()->debugEnvs())
+    if (auto* debugEnvs = script->realm()->debugEnvs()) {
         debugEnvs->traceLiveFrame(trc, this);
+    }
 }
 
 bool
@@ -112,16 +119,18 @@ BaselineFrame::initForOsr(InterpreterFrame* fp, uint32_t numStackValues)
 
     envChain_ = fp->environmentChain();
 
-    if (fp->hasInitialEnvironmentUnchecked())
+    if (fp->hasInitialEnvironmentUnchecked()) {
         flags_ |= BaselineFrame::HAS_INITIAL_ENV;
+    }
 
     if (fp->script()->needsArgsObj() && fp->hasArgsObj()) {
         flags_ |= BaselineFrame::HAS_ARGS_OBJ;
         argsObj_ = &fp->argsObj();
     }
 
-    if (fp->hasReturnValue())
+    if (fp->hasReturnValue()) {
         setReturnValue(fp->returnValue());
+    }
 
     frameSize_ = BaselineFrame::FramePointerOffset +
         BaselineFrame::Size() +
@@ -129,8 +138,9 @@ BaselineFrame::initForOsr(InterpreterFrame* fp, uint32_t numStackValues)
 
     MOZ_ASSERT(numValueSlots() == numStackValues);
 
-    for (uint32_t i = 0; i < numStackValues; i++)
+    for (uint32_t i = 0; i < numStackValues; i++) {
         *valueSlot(i) = fp->slots()[i];
+    }
 
     if (fp->isDebuggee()) {
         JSContext* cx = TlsContext.get();
@@ -147,8 +157,9 @@ BaselineFrame::initForOsr(InterpreterFrame* fp, uint32_t numStackValues)
         BaselineScript* baseline = fp->script()->baselineScript();
         frame.current()->setReturnAddress(baseline->returnAddressForIC(baseline->icEntry(0)));
 
-        if (!Debugger::handleBaselineOsr(cx, fp, this))
+        if (!Debugger::handleBaselineOsr(cx, fp, this)) {
             return false;
+        }
 
         setIsDebuggee();
     }

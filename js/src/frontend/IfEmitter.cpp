@@ -32,27 +32,32 @@ bool
 BranchEmitterBase::emitThenInternal(SrcNoteType type)
 {
     // The end of TDZCheckCache for cond for else-if.
-    if (kind_ == Kind::MayContainLexicalAccessInBranch)
+    if (kind_ == Kind::MayContainLexicalAccessInBranch) {
         tdzCache_.reset();
+    }
 
     // Emit an annotated branch-if-false around the then part.
-    if (!bce_->newSrcNote(type))
+    if (!bce_->newSrcNote(type)) {
         return false;
-    if (!bce_->emitJump(JSOP_IFEQ, &jumpAroundThen_))
+    }
+    if (!bce_->emitJump(JSOP_IFEQ, &jumpAroundThen_)) {
         return false;
+    }
 
     // To restore stack depth in else part, save depth of the then part.
 #ifdef DEBUG
     // If DEBUG, this is also necessary to calculate |pushed_|.
     thenDepth_ = bce_->stackDepth;
 #else
-    if (type == SRC_COND || type == SRC_IF_ELSE)
+    if (type == SRC_COND || type == SRC_IF_ELSE) {
         thenDepth_ = bce_->stackDepth;
+    }
 #endif
 
     // Enclose then-branch with TDZCheckCache.
-    if (kind_ == Kind::MayContainLexicalAccessInBranch)
+    if (kind_ == Kind::MayContainLexicalAccessInBranch) {
         tdzCache_.emplace(bce_);
+    }
 
     return true;
 }
@@ -84,12 +89,14 @@ BranchEmitterBase::emitElseInternal()
     // Emit a jump from the end of our then part around the else part. The
     // patchJumpsToTarget call at the bottom of this function will fix up
     // the offset with jumpsAroundElse value.
-    if (!bce_->emitJump(JSOP_GOTO, &jumpsAroundElse_))
+    if (!bce_->emitJump(JSOP_GOTO, &jumpsAroundElse_)) {
         return false;
+    }
 
     // Ensure the branch-if-false comes here, then emit the else.
-    if (!bce_->emitJumpTargetAndPatch(jumpAroundThen_))
+    if (!bce_->emitJumpTargetAndPatch(jumpAroundThen_)) {
         return false;
+    }
 
     // Clear jumpAroundThen_ offset, to tell emitEnd there was an else part.
     jumpAroundThen_ = JumpList();
@@ -98,8 +105,9 @@ BranchEmitterBase::emitElseInternal()
     bce_->stackDepth = thenDepth_;
 
     // Enclose else-branch with TDZCheckCache.
-    if (kind_ == Kind::MayContainLexicalAccessInBranch)
+    if (kind_ == Kind::MayContainLexicalAccessInBranch) {
         tdzCache_.emplace(bce_);
+    }
 
     return true;
 }
@@ -118,13 +126,15 @@ BranchEmitterBase::emitEndInternal()
     if (jumpAroundThen_.offset != -1) {
         // No else part for the last branch, fixup the branch-if-false to
         // come here.
-        if (!bce_->emitJumpTargetAndPatch(jumpAroundThen_))
+        if (!bce_->emitJumpTargetAndPatch(jumpAroundThen_)) {
             return false;
+        }
     }
 
     // Patch all the jumps around else parts.
-    if (!bce_->emitJumpTargetAndPatch(jumpsAroundElse_))
+    if (!bce_->emitJumpTargetAndPatch(jumpsAroundElse_)) {
         return false;
+    }
 
     return true;
 }
@@ -137,8 +147,9 @@ IfEmitter::emitIf(const Maybe<uint32_t>& ifPos)
     if (ifPos) {
         // Make sure this code is attributed to the "if" so that it gets a
         // useful column number, instead of the default 0 value.
-        if (!bce_->updateSourceCoordNotes(*ifPos))
+        if (!bce_->updateSourceCoordNotes(*ifPos)) {
             return false;
+        }
     }
 
 #ifdef DEBUG
@@ -154,8 +165,9 @@ IfEmitter::emitThen()
     MOZ_ASSERT_IF(state_ == State::ElseIf, tdzCache_.isSome());
     MOZ_ASSERT_IF(state_ != State::ElseIf, tdzCache_.isNothing());
 
-    if (!emitThenInternal(SRC_IF))
+    if (!emitThenInternal(SRC_IF)) {
         return false;
+    }
 
 #ifdef DEBUG
     state_ = State::Then;
@@ -170,8 +182,9 @@ IfEmitter::emitThenElse()
     MOZ_ASSERT_IF(state_ == State::ElseIf, tdzCache_.isSome());
     MOZ_ASSERT_IF(state_ != State::ElseIf, tdzCache_.isNothing());
 
-    if (!emitThenInternal(SRC_IF_ELSE))
+    if (!emitThenInternal(SRC_IF_ELSE)) {
         return false;
+    }
 
 #ifdef DEBUG
     state_ = State::ThenElse;
@@ -184,14 +197,16 @@ IfEmitter::emitElseIf(const Maybe<uint32_t>& ifPos)
 {
     MOZ_ASSERT(state_ == State::ThenElse);
 
-    if (!emitElseInternal())
+    if (!emitElseInternal()) {
         return false;
+    }
 
     if (ifPos) {
         // Make sure this code is attributed to the "if" so that it gets a
         // useful column number, instead of the default 0 value.
-        if (!bce_->updateSourceCoordNotes(*ifPos))
+        if (!bce_->updateSourceCoordNotes(*ifPos)) {
             return false;
+        }
     }
 
 #ifdef DEBUG
@@ -205,8 +220,9 @@ IfEmitter::emitElse()
 {
     MOZ_ASSERT(state_ == State::ThenElse);
 
-    if (!emitElseInternal())
+    if (!emitElseInternal()) {
         return false;
+    }
 
 #ifdef DEBUG
     state_ = State::Else;
@@ -223,8 +239,9 @@ IfEmitter::emitEnd()
     MOZ_ASSERT_IF(state_ == State::Then, jumpAroundThen_.offset != -1);
     MOZ_ASSERT_IF(state_ == State::Else, jumpAroundThen_.offset == -1);
 
-    if (!emitEndInternal())
+    if (!emitEndInternal()) {
         return false;
+    }
 
 #ifdef DEBUG
     state_ = State::End;
@@ -259,8 +276,9 @@ bool
 CondEmitter::emitThenElse()
 {
     MOZ_ASSERT(state_ == State::Cond);
-    if (!emitThenInternal(SRC_COND))
+    if (!emitThenInternal(SRC_COND)) {
         return false;
+    }
 
 #ifdef DEBUG
     state_ = State::ThenElse;
@@ -273,8 +291,9 @@ CondEmitter::emitElse()
 {
     MOZ_ASSERT(state_ == State::ThenElse);
 
-    if (!emitElseInternal())
+    if (!emitElseInternal()) {
         return false;
+    }
 
 #ifdef DEBUG
     state_ = State::Else;
@@ -288,8 +307,9 @@ CondEmitter::emitEnd()
     MOZ_ASSERT(state_ == State::Else);
     MOZ_ASSERT(jumpAroundThen_.offset == -1);
 
-    if (!emitEndInternal())
+    if (!emitEndInternal()) {
         return false;
+    }
 
 #ifdef DEBUG
     state_ = State::End;

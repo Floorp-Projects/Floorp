@@ -11,11 +11,27 @@ ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
-  CrashSubmit: "resource://gre/modules/CrashSubmit.jsm",
+  EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Services: "resource://gre/modules/Services.jsm"
 });
 
+ChromeUtils.defineModuleGetter(this, "OS",
+                               "resource://gre/modules/osfile.jsm");
+
 GeckoViewUtils.initLogging("ContentCrashHandler", this);
+
+function getDir(name) {
+  let uAppDataPath = Services.dirsvc.get("UAppData", Ci.nsIFile).path;
+  return OS.Path.join(uAppDataPath, "Crash Reports", name);
+}
+
+function getPendingMinidump(id) {
+  let pendingDir = getDir("pending");
+
+  return [".dmp", ".extra"].map(suffix => {
+    return OS.Path.join(pendingDir, `${id}${suffix}`);
+  });
+}
 
 var ContentCrashHandler = {
   // The event listener for this is hooked up in GeckoViewStartup.js
@@ -38,9 +54,15 @@ var ContentCrashHandler = {
       return;
     }
 
-    debug `Submitting content process crash, dump ID ${dumpID}`;
-    CrashSubmit.submit(dumpID, {}).then(crashID => {
-      debug `Crash submission successful: ${crashID}`;
-    }, ChromeUtils.reportError);
+    debug `Notifying content process crash, dump ID ${dumpID}`;
+    const [minidumpPath, extrasPath] = getPendingMinidump(dumpID);
+
+    EventDispatcher.instance.sendRequest({
+      type: "GeckoView:ContentCrash",
+      minidumpPath,
+      extrasPath,
+      success: true,
+      fatal: false
+    });
   }
 };

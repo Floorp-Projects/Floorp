@@ -41,8 +41,9 @@ struct InstanceComparator
     explicit InstanceComparator(const Instance& target) : target(target) {}
 
     int operator()(const Instance* instance) const {
-        if (instance == &target)
+        if (instance == &target) {
             return 0;
+        }
 
         // Instances can share code, so the segments can be equal (though they
         // can't partially overlap).  If the codeBases are equal, we sort by
@@ -53,8 +54,9 @@ struct InstanceComparator
         Tier instanceTier = instance->code().stableTier();
         Tier targetTier = target.code().stableTier();
 
-        if (instance->codeBase(instanceTier) == target.codeBase(targetTier))
+        if (instance->codeBase(instanceTier) == target.codeBase(targetTier)) {
             return instance < &target ? -1 : 1;
+        }
 
         return target.codeBase(targetTier) < instance->codeBase(instanceTier) ? -1 : 1;
     }
@@ -70,16 +72,19 @@ wasm::Realm::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceOb
 
     instance.ensureProfilingLabels(cx->runtime()->geckoProfiler().enabled());
 
-    if (instance.debugEnabled() && instance.realm()->debuggerObservesAllExecution())
+    if (instance.debugEnabled() && instance.realm()->debuggerObservesAllExecution()) {
         instance.ensureEnterFrameTrapsState(cx, true);
+    }
 
     {
-        if (!instances_.reserve(instances_.length() + 1))
+        if (!instances_.reserve(instances_.length() + 1)) {
             return false;
+        }
 
         auto runtimeInstances = cx->runtime()->wasmInstances.lock();
-        if (!runtimeInstances->reserve(runtimeInstances->length() + 1))
+        if (!runtimeInstances->reserve(runtimeInstances->length() + 1)) {
             return false;
+        }
 
         // To avoid implementing rollback, do not fail after mutations start.
 
@@ -104,19 +109,22 @@ wasm::Realm::unregisterInstance(Instance& instance)
     InstanceComparator cmp(instance);
     size_t index;
 
-    if (BinarySearchIf(instances_, 0, instances_.length(), cmp, &index))
+    if (BinarySearchIf(instances_, 0, instances_.length(), cmp, &index)) {
         instances_.erase(instances_.begin() + index);
+    }
 
     auto runtimeInstances = runtime_->wasmInstances.lock();
-    if (BinarySearchIf(runtimeInstances.get(), 0, runtimeInstances->length(), cmp, &index))
+    if (BinarySearchIf(runtimeInstances.get(), 0, runtimeInstances->length(), cmp, &index)) {
         runtimeInstances->erase(runtimeInstances->begin() + index);
+    }
 }
 
 void
 wasm::Realm::ensureProfilingLabels(bool profilingEnabled)
 {
-    for (Instance* instance : instances_)
+    for (Instance* instance : instances_) {
         instance->ensureProfilingLabels(profilingEnabled);
+    }
 }
 
 void
@@ -129,14 +137,16 @@ void
 wasm::InterruptRunningCode(JSContext* cx)
 {
     auto runtimeInstances = cx->runtime()->wasmInstances.lock();
-    for (Instance* instance : runtimeInstances.get())
+    for (Instance* instance : runtimeInstances.get()) {
         instance->tlsData()->setInterrupt();
+    }
 }
 
 void
 wasm::ResetInterruptState(JSContext* cx)
 {
     auto runtimeInstances = cx->runtime()->wasmInstances.lock();
-    for (Instance* instance : runtimeInstances.get())
+    for (Instance* instance : runtimeInstances.get()) {
         instance->tlsData()->resetInterrupt(cx);
+    }
 }

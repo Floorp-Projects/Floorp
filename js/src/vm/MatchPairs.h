@@ -76,8 +76,9 @@ class MatchPairs
         for (size_t i = 0; i < pairCount_; i++) {
             const MatchPair& p = (*this)[i];
             MOZ_ASSERT(p.check());
-            if (p.isUndefined())
+            if (p.isUndefined()) {
                 continue;
+            }
             MOZ_ASSERT(size_t(p.limit) <= inputLength);
         }
 #endif

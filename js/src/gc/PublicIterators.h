@@ -43,24 +43,27 @@ class ZonesIter
         it(rt->gc.zones().begin()),
         end(rt->gc.zones().end())
     {
-        if (!atomsZone)
+        if (!atomsZone) {
             skipHelperThreadZones();
+        }
     }
 
     bool done() const { return !atomsZone && it == end; }
 
     void next() {
         MOZ_ASSERT(!done());
-        if (atomsZone)
+        if (atomsZone) {
             atomsZone = nullptr;
-        else
+        } else {
             it++;
+        }
         skipHelperThreadZones();
     }
 
     void skipHelperThreadZones() {
-        while (!done() && get()->usedByHelperThread())
+        while (!done() && get()->usedByHelperThread()) {
             it++;
+        }
     }
 
     JS::Zone* get() const {
@@ -195,8 +198,9 @@ class CompartmentsOrRealmsIterT
     explicit CompartmentsOrRealmsIterT(JSRuntime* rt)
       : iterMarker(&rt->gc), zone(rt, SkipAtoms)
     {
-        if (!zone.done())
+        if (!zone.done()) {
             inner.emplace(zone);
+        }
     }
 
     bool done() const { return zone.done(); }
@@ -208,8 +212,9 @@ class CompartmentsOrRealmsIterT
         if (inner->done()) {
             inner.reset();
             zone.next();
-            if (!zone.done())
+            if (!zone.done()) {
                 inner.emplace(zone);
+            }
         }
     }
 

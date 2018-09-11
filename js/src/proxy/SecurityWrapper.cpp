@@ -114,8 +114,9 @@ SecurityWrapper<Base>::defineProperty(JSContext* cx, HandleObject wrapper, Handl
 {
     if (desc.getter() || desc.setter()) {
         UniqueChars prop = IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsPropertyKey);
-        if (!prop)
+        if (!prop) {
             return false;
+        }
 
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_ACCESSOR_DEF_DENIED,
                                  prop.get());

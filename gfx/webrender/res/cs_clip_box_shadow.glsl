@@ -4,7 +4,7 @@
 
 #include shared,clip_shared
 
-varying vec3 vPos;
+varying vec3 vLocalPos;
 varying vec2 vUv;
 flat varying vec4 vUvBounds;
 flat varying float vLayer;
@@ -41,23 +41,26 @@ BoxShadowData fetch_data(ivec2 address) {
 void main(void) {
     ClipMaskInstance cmi = fetch_clip_item();
     ClipArea area = fetch_clip_area(cmi.render_task_address);
-    Transform transform = fetch_transform(cmi.transform_id);
+    Transform clip_transform = fetch_transform(cmi.clip_transform_id);
+    Transform prim_transform = fetch_transform(cmi.prim_transform_id);
     BoxShadowData bs_data = fetch_data(cmi.clip_data_address);
     ImageResource res = fetch_image_resource_direct(cmi.resource_address);
 
-    ClipVertexInfo vi = write_clip_tile_vertex(bs_data.dest_rect,
-                                               transform,
-                                               area);
-
+    ClipVertexInfo vi = write_clip_tile_vertex(
+        bs_data.dest_rect,
+        prim_transform,
+        clip_transform,
+        area
+    );
+    vLocalPos = vi.local_pos;
     vLayer = res.layer;
-    vPos = vi.local_pos;
     vClipMode = bs_data.clip_mode;
 
     vec2 uv0 = res.uv_rect.p0;
     vec2 uv1 = res.uv_rect.p1;
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));
-    vec2 local_pos = vPos.xy / vPos.z;
+    vec2 local_pos = vLocalPos.xy / vLocalPos.z;
 
     switch (bs_data.stretch_mode_x) {
         case MODE_STRETCH: {
@@ -96,7 +99,7 @@ void main(void) {
 
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
-    vec2 local_pos = vPos.xy / vPos.z;
+    vec2 local_pos = vLocalPos.xy / vLocalPos.z;
 
     vec2 uv = clamp(vUv.xy, vec2(0.0), vEdge.xy);
     uv += max(vec2(0.0), vUv.xy - vEdge.zw);

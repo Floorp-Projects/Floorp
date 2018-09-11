@@ -5,7 +5,7 @@
 
 package org.mozilla.geckoview.test.rule;
 
-import org.mozilla.gecko.gfx.GeckoDisplay;
+import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoResult.OnExceptionListener;
@@ -15,6 +15,8 @@ import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.SessionTextInput;
+import org.mozilla.geckoview.test.util.Environment;
+import org.mozilla.geckoview.test.TestCrashHandler;
 import org.mozilla.geckoview.test.util.UiThreadUtils;
 import org.mozilla.geckoview.test.rdp.Actor;
 import org.mozilla.geckoview.test.rdp.Promise;
@@ -539,56 +541,6 @@ public class GeckoSessionTestRule implements TestRule {
 
     protected interface CallRecordHandler {
         boolean handleCall(Method method, Object[] args);
-    }
-
-    public class Environment {
-        /* package */ Environment() {
-        }
-
-        private String getEnvVar(final String name) {
-            final int nameLen = name.length();
-            final Bundle args = InstrumentationRegistry.getArguments();
-            String env = args.getString("env0", null);
-            for (int i = 1; env != null; i++) {
-                if (env.length() >= nameLen + 1 &&
-                        env.startsWith(name) &&
-                        env.charAt(nameLen) == '=') {
-                    return env.substring(nameLen + 1);
-                }
-                env = args.getString("env" + i, null);
-            }
-            return "";
-        }
-
-        public boolean isAutomation() {
-            return !getEnvVar("MOZ_IN_AUTOMATION").isEmpty();
-        }
-
-        public boolean shouldShutdownOnCrash() {
-            return !getEnvVar("MOZ_CRASHREPORTER_SHUTDOWN").isEmpty();
-        }
-
-        public boolean isMultiprocess() {
-            return Boolean.valueOf(InstrumentationRegistry.getArguments()
-                                                          .getString("use_multiprocess",
-                                                                     "true"));
-        }
-
-        public boolean isDebugging() {
-            return Debug.isDebuggerConnected();
-        }
-
-        public boolean isEmulator() {
-            return "generic".equals(Build.DEVICE) || Build.DEVICE.startsWith("generic_");
-        }
-
-        public boolean isDebugBuild() {
-            return BuildConfig.DEBUG_BUILD;
-        }
-
-        public String getCPUArch() {
-            return BuildConfig.ANDROID_CPU_ARCH;
-        }
     }
 
     protected final class ExternalDelegate<T> {
@@ -1249,10 +1201,7 @@ public class GeckoSessionTestRule implements TestRule {
                     .consoleOutput(true);
 
             if (env.isAutomation()) {
-                runtimeSettingsBuilder
-                        .nativeCrashReportingEnabled(true)
-                        .javaCrashReportingEnabled(true)
-                        .crashReportingJobId(1024);
+                runtimeSettingsBuilder.crashHandler(TestCrashHandler.class);
             }
 
             sRuntime = GeckoRuntime.create(

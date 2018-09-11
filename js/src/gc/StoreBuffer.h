@@ -109,13 +109,15 @@ class StoreBuffer
         void sinkStore(StoreBuffer* owner) {
             if (last_) {
                 AutoEnterOOMUnsafeRegion oomUnsafe;
-                if (!stores_.put(last_))
+                if (!stores_.put(last_)) {
                     oomUnsafe.crash("Failed to allocate for MonoTypeBuffer::put.");
+                }
             }
             last_ = T();
 
-            if (MOZ_UNLIKELY(stores_.count() > MaxEntries))
+            if (MOZ_UNLIKELY(stores_.count() > MaxEntries)) {
                 owner->setAboutToOverflow(T::FullBufferReason);
+            }
         }
 
         bool has(StoreBuffer* owner, const T& v) {
@@ -149,8 +151,9 @@ class StoreBuffer
 
         MOZ_MUST_USE bool init() {
             MOZ_ASSERT(!head_);
-            if (!storage_)
+            if (!storage_) {
                 storage_ = js_new<LifoAlloc>(LifoAllocBlockSize);
+            }
             clear();
             return bool(storage_);
         }
@@ -190,15 +193,17 @@ class StoreBuffer
         ~GenericBuffer() { js_delete(storage_); }
 
         MOZ_MUST_USE bool init() {
-            if (!storage_)
+            if (!storage_) {
                 storage_ = js_new<LifoAlloc>(LifoAllocBlockSize);
+            }
             clear();
             return bool(storage_);
         }
 
         void clear() {
-            if (!storage_)
+            if (!storage_) {
                 return;
+            }
 
             storage_->used() ? storage_->releaseAll() : storage_->freeAll();
         }
@@ -221,16 +226,19 @@ class StoreBuffer
             AutoEnterOOMUnsafeRegion oomUnsafe;
             unsigned size = sizeof(T);
             unsigned* sizep = storage_->pod_malloc<unsigned>();
-            if (!sizep)
+            if (!sizep) {
                 oomUnsafe.crash("Failed to allocate for GenericBuffer::put.");
+            }
             *sizep = size;
 
             T* tp = storage_->new_<T>(t);
-            if (!tp)
+            if (!tp) {
                 oomUnsafe.crash("Failed to allocate for GenericBuffer::put.");
+            }
 
-            if (isAboutToOverflow())
+            if (isAboutToOverflow()) {
                 owner->setAboutToOverflow(JS::gcreason::FULL_GENERIC_BUFFER);
+            }
         }
 
         size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
@@ -346,8 +354,9 @@ class StoreBuffer
         // True if this SlotsEdge range overlaps with the other SlotsEdge range,
         // false if they do not overlap.
         bool overlaps(const SlotsEdge& other) const {
-            if (objectAndKind_ != other.objectAndKind_)
+            if (objectAndKind_ != other.objectAndKind_) {
                 return false;
+            }
 
             // Widen our range by one on each side so that we consider
             // adjacent-but-not-actually-overlapping ranges as overlapping. This
@@ -397,8 +406,9 @@ class StoreBuffer
     void unput(Buffer& buffer, const Edge& edge) {
         MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
-        if (!isEnabled())
+        if (!isEnabled()) {
             return;
+        }
         mozilla::ReentrancyGuard g(*this);
         buffer.unput(this, edge);
     }
@@ -407,11 +417,13 @@ class StoreBuffer
     void put(Buffer& buffer, const Edge& edge) {
         MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
-        if (!isEnabled())
+        if (!isEnabled()) {
             return;
+        }
         mozilla::ReentrancyGuard g(*this);
-        if (edge.maybeInRememberedSet(nursery_))
+        if (edge.maybeInRememberedSet(nursery_)) {
             buffer.put(this, edge);
+        }
     }
 
     MonoTypeBuffer<ValueEdge> bufferVal;
@@ -462,10 +474,11 @@ class StoreBuffer
     void unputCell(Cell** cellp) { unput(bufferCell, CellPtrEdge(cellp)); }
     void putSlot(NativeObject* obj, int kind, uint32_t start, uint32_t count) {
         SlotsEdge edge(obj, kind, start, count);
-        if (bufferSlot.last_.overlaps(edge))
+        if (bufferSlot.last_.overlaps(edge)) {
             bufferSlot.last_.merge(edge);
-        else
+        } else {
             put(bufferSlot, edge);
+        }
     }
 
     inline void putWholeCell(Cell* cell);

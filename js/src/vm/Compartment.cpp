@@ -106,12 +106,14 @@ CopyStringPure(JSContext* cx, JSString* str)
             JS::AutoCheckCannotGC nogc;
             copy = NewStringCopyNDontDeflate<NoGC>(cx, str->asLinear().twoByteChars(nogc), len);
         }
-        if (copy)
+        if (copy) {
             return copy;
+        }
 
         AutoStableStringChars chars(cx);
-        if (!chars.init(cx, str))
+        if (!chars.init(cx, str)) {
             return nullptr;
+        }
 
         return chars.isLatin1()
                ? NewStringCopyN<CanGC>(cx, chars.latin1Range().begin().get(), len)
@@ -120,15 +122,17 @@ CopyStringPure(JSContext* cx, JSString* str)
 
     if (str->hasLatin1Chars()) {
         UniquePtr<Latin1Char[], JS::FreePolicy> copiedChars = str->asRope().copyLatin1CharsZ(cx);
-        if (!copiedChars)
+        if (!copiedChars) {
             return nullptr;
+        }
 
         return NewString<CanGC>(cx, std::move(copiedChars), len);
     }
 
     UniqueTwoByteChars copiedChars = str->asRope().copyTwoByteCharsZ(cx);
-    if (!copiedChars)
+    if (!copiedChars) {
         return nullptr;
+    }
 
     return NewStringDontDeflate<CanGC>(cx, std::move(copiedChars), len);
 }
@@ -140,8 +144,9 @@ Compartment::wrap(JSContext* cx, MutableHandleString strp)
 
     /* If the string is already in this compartment, we are done. */
     JSString* str = strp;
-    if (str->zoneFromAnyThread() == zone())
+    if (str->zoneFromAnyThread() == zone()) {
         return true;
+    }
 
     /*
      * If the string is an atom, we don't have to copy, but we do need to mark
@@ -161,10 +166,12 @@ Compartment::wrap(JSContext* cx, MutableHandleString strp)
 
     /* No dice. Make a copy, and cache it. */
     JSString* copy = CopyStringPure(cx, str);
-    if (!copy)
+    if (!copy) {
         return false;
-    if (!putWrapper(cx, CrossCompartmentKey(key), StringValue(copy)))
+    }
+    if (!putWrapper(cx, CrossCompartmentKey(key), StringValue(copy))) {
         return false;
+    }
 
     strp.set(copy);
     return true;
@@ -176,12 +183,14 @@ Compartment::wrap(JSContext* cx, MutableHandleBigInt bi)
 {
     MOZ_ASSERT(cx->compartment() == this);
 
-    if (bi->zone() == cx->zone())
+    if (bi->zone() == cx->zone()) {
         return true;
+    }
 
     BigInt* copy = BigInt::copy(cx, bi);
-    if (!copy)
+    if (!copy) {
         return false;
+    }
     bi.set(copy);
     return true;
 }
@@ -227,12 +236,14 @@ Compartment::getNonWrapperObjectForCurrentCompartment(JSContext* cx, MutableHand
     // We're a bit worried about infinite recursion here, so we do a check -
     // see bug 809295.
     auto preWrap = cx->runtime()->wrapObjectCallbacks->preWrap;
-    if (!CheckSystemRecursionLimit(cx))
+    if (!CheckSystemRecursionLimit(cx)) {
         return false;
+    }
     if (preWrap) {
         preWrap(cx, cx->global(), obj, objectPassedToWrap, obj);
-        if (!obj)
+        if (!obj) {
             return false;
+        }
     }
     MOZ_ASSERT(!IsWindow(obj));
 
@@ -257,8 +268,9 @@ Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing, MutableHan
     // Create a new wrapper for the object.
     auto wrap = cx->runtime()->wrapObjectCallbacks->wrap;
     RootedObject wrapper(cx, wrap(cx, existing, obj));
-    if (!wrapper)
+    if (!wrapper) {
         return false;
+    }
 
     // We maintain the invariant that the key in the cross-compartment wrapper
     // map is always directly wrapped by the value.
@@ -270,8 +282,9 @@ Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing, MutableHan
         // Unfortunately it's possible for the wrapper to still be marked if we
         // took this path, for example if the object metadata callback stashes a
         // reference to it.
-        if (wrapper->is<CrossCompartmentWrapperObject>())
+        if (wrapper->is<CrossCompartmentWrapperObject>()) {
             NukeCrossCompartmentWrapper(cx, wrapper);
+        }
         return false;
     }
 
@@ -284,8 +297,9 @@ Compartment::wrap(JSContext* cx, MutableHandleObject obj)
 {
     MOZ_ASSERT(cx->compartment() == this);
 
-    if (!obj)
+    if (!obj) {
         return true;
+    }
 
     AutoDisableProxyCheck adpc;
 
@@ -295,14 +309,16 @@ Compartment::wrap(JSContext* cx, MutableHandleObject obj)
 
     // The passed object may already be wrapped, or may fit a number of special
     // cases that we need to check for and manually correct.
-    if (!getNonWrapperObjectForCurrentCompartment(cx, obj))
+    if (!getNonWrapperObjectForCurrentCompartment(cx, obj)) {
         return false;
+    }
 
     // If the reification above did not result in a same-compartment object,
     // get or create a new wrapper object in this compartment for it.
     if (obj->compartment() != this) {
-        if (!getOrCreateWrapper(cx, nullptr, obj))
+        if (!getOrCreateWrapper(cx, nullptr, obj)) {
             return false;
+        }
     }
 
     // Ensure that the wrapper is also exposed.
@@ -335,13 +351,15 @@ Compartment::rewrap(JSContext* cx, MutableHandleObject obj, HandleObject existin
 
     // The passed object may already be wrapped, or may fit a number of special
     // cases that we need to check for and manually correct.
-    if (!getNonWrapperObjectForCurrentCompartment(cx, obj))
+    if (!getNonWrapperObjectForCurrentCompartment(cx, obj)) {
         return false;
+    }
 
     // If the reification above resulted in a same-compartment object, we do
     // not need to create or return an existing wrapper.
-    if (obj->compartment() == this)
+    if (obj->compartment() == this) {
         return true;
+    }
 
     return getOrCreateWrapper(cx, existing, obj);
 }
@@ -349,16 +367,19 @@ Compartment::rewrap(JSContext* cx, MutableHandleObject obj, HandleObject existin
 bool
 Compartment::wrap(JSContext* cx, MutableHandle<JS::PropertyDescriptor> desc)
 {
-    if (!wrap(cx, desc.object()))
+    if (!wrap(cx, desc.object())) {
         return false;
+    }
 
     if (desc.hasGetterObject()) {
-        if (!wrap(cx, desc.getterObject()))
+        if (!wrap(cx, desc.getterObject())) {
             return false;
+        }
     }
     if (desc.hasSetterObject()) {
-        if (!wrap(cx, desc.setterObject()))
+        if (!wrap(cx, desc.setterObject())) {
             return false;
+        }
     }
 
     return wrap(cx, desc.value());
@@ -368,8 +389,9 @@ bool
 Compartment::wrap(JSContext* cx, MutableHandle<GCVector<Value>> vec)
 {
     for (size_t i = 0; i < vec.length(); ++i) {
-        if (!wrap(cx, vec[i]))
+        if (!wrap(cx, vec[i])) {
             return false;
+        }
     }
     return true;
 }
@@ -400,8 +422,9 @@ Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc)
     gcstats::AutoPhase ap(trc->runtime()->gc.stats(), gcstats::PhaseKind::MARK_CCWS);
     MOZ_ASSERT(JS::RuntimeHeapIsMajorCollecting());
     for (CompartmentsIter c(trc->runtime()); !c.done(); c.next()) {
-        if (!c->zone()->isCollecting())
+        if (!c->zone()->isCollecting()) {
             c->traceOutgoingCrossCompartmentWrappers(trc);
+        }
     }
     Debugger::traceIncomingCrossCompartmentEdges(trc);
 }
@@ -411,8 +434,9 @@ Compartment::sweepAfterMinorGC(JSTracer* trc)
 {
     crossCompartmentWrappers.sweepAfterMinorGC(trc);
 
-    for (RealmsInCompartmentIter r(this); !r.done(); r.next())
+    for (RealmsInCompartmentIter r(this); !r.done(); r.next()) {
         r->sweepAfterMinorGC();
+    }
 }
 
 /*
@@ -472,8 +496,9 @@ Compartment::fixupAfterMovingGC()
 {
     MOZ_ASSERT(zone()->isGCCompacting());
 
-    for (RealmsInCompartmentIter r(this); !r.done(); r.next())
+    for (RealmsInCompartmentIter r(this); !r.done(); r.next()) {
         r->fixupAfterMovingGC();
+    }
 
     // Sweep the wrapper map to update values (wrapper objects) in this
     // compartment that may have been moved.
@@ -489,6 +514,7 @@ Compartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     *compartmentObjects += mallocSizeOf(this);
     *crossCompartmentWrappersTables += crossCompartmentWrappers.sizeOfExcludingThis(mallocSizeOf);
 
-    if (auto callback = runtime_->sizeOfIncludingThisCompartmentCallback)
+    if (auto callback = runtime_->sizeOfIncludingThisCompartmentCallback) {
         *compartmentsPrivateData += callback(mallocSizeOf, this);
+    }
 }

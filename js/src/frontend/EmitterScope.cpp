@@ -33,8 +33,9 @@ static inline void
 MarkAllBindingsClosedOver(LexicalScope::Data& data)
 {
     TrailingNamesArray& names = data.trailingNames;
-    for (uint32_t i = 0; i < data.length; i++)
+    for (uint32_t i = 0; i < data.length; i++) {
         names[i] = BindingName(names[i].name(), true);
+    }
 }
 
 bool
@@ -60,10 +61,11 @@ bool
 EmitterScope::checkEnvironmentChainLength(BytecodeEmitter* bce)
 {
     uint32_t hops;
-    if (EmitterScope* emitterScope = enclosing(&bce))
+    if (EmitterScope* emitterScope = enclosing(&bce)) {
         hops = emitterScope->environmentChainLength_;
-    else
+    } else {
         hops = bce->sc->compilationEnclosingScope()->environmentChainLength();
+    }
 
     if (hops >= ENVCOORD_HOPS_LIMIT - 1) {
         bce->reportError(nullptr, JSMSG_TOO_DEEP, js_function_str);
@@ -78,8 +80,9 @@ void
 EmitterScope::updateFrameFixedSlots(BytecodeEmitter* bce, const BindingIter& bi)
 {
     nextFrameSlot_ = bi.nextFrameSlot();
-    if (nextFrameSlot_ > bce->maxFixedSlots)
+    if (nextFrameSlot_ > bce->maxFixedSlots) {
         bce->maxFixedSlots = nextFrameSlot_;
+    }
     MOZ_ASSERT_IF(bce->sc->isFunctionBox() &&
                   (bce->sc->asFunctionBox()->isGenerator() ||
                    bce->sc->asFunctionBox()->isAsync()),
@@ -102,10 +105,12 @@ EmitterScope::putNameInCache(BytecodeEmitter* bce, JSAtom* name, NameLocation lo
 Maybe<NameLocation>
 EmitterScope::lookupInCache(BytecodeEmitter* bce, JSAtom* name)
 {
-    if (NameLocationMap::Ptr p = nameCache_->lookup(name))
+    if (NameLocationMap::Ptr p = nameCache_->lookup(name)) {
         return Some(p->value().wrapped);
-    if (fallbackFreeNameLocation_ && nameCanBeFree(bce, name))
+    }
+    if (fallbackFreeNameLocation_ && nameCanBeFree(bce, name)) {
         return fallbackFreeNameLocation_;
+    }
     return Nothing();
 }
 
@@ -113,8 +118,9 @@ EmitterScope*
 EmitterScope::enclosing(BytecodeEmitter** bce) const
 {
     // There is an enclosing scope with access to the same frame.
-    if (EmitterScope* inFrame = enclosingInFrame())
+    if (EmitterScope* inFrame = enclosingInFrame()) {
         return inFrame;
+    }
 
     // We are currently compiling the enclosing script, look in the
     // enclosing BCE.
@@ -129,8 +135,9 @@ EmitterScope::enclosing(BytecodeEmitter** bce) const
 Scope*
 EmitterScope::enclosingScope(BytecodeEmitter* bce) const
 {
-    if (EmitterScope* es = enclosing(&bce))
+    if (EmitterScope* es = enclosing(&bce)) {
         return es->scope(bce);
+    }
 
     // The enclosing script is already compiled or the current script is the
     // global script.
@@ -160,8 +167,9 @@ NameIsOnEnvironment(Scope* scope, JSAtom* name)
                 if (!script->strict() && !script->functionHasParameterExprs()) {
                     // Check for duplicate positional formal parameters.
                     for (BindingIter bi2(bi); bi2 && bi2.hasArgumentSlot(); bi2++) {
-                        if (bi2.name() == name)
+                        if (bi2.name() == name) {
                             kind = bi2.location().kind();
+                        }
                     }
                 }
             }
@@ -189,12 +197,14 @@ EmitterScope::searchInEnclosingScope(JSAtom* name, Scope* scope, uint8_t hops)
           case ScopeKind::Function:
             if (hasEnv) {
                 JSScript* script = si.scope()->as<FunctionScope>().script();
-                if (script->funHasExtensibleScope())
+                if (script->funHasExtensibleScope()) {
                     return NameLocation::Dynamic();
+                }
 
                 for (BindingIter bi(si.scope()); bi; bi++) {
-                    if (bi.name() != name)
+                    if (bi.name() != name) {
                         continue;
+                    }
 
                     BindingLocation bindLoc = bi.location();
                     if (bi.hasArgumentSlot() &&
@@ -203,8 +213,9 @@ EmitterScope::searchInEnclosingScope(JSAtom* name, Scope* scope, uint8_t hops)
                     {
                         // Check for duplicate positional formal parameters.
                         for (BindingIter bi2(bi); bi2 && bi2.hasArgumentSlot(); bi2++) {
-                            if (bi2.name() == name)
+                            if (bi2.name() == name) {
                                 bindLoc = bi2.location();
+                            }
                         }
                     }
 
@@ -223,8 +234,9 @@ EmitterScope::searchInEnclosingScope(JSAtom* name, Scope* scope, uint8_t hops)
           case ScopeKind::Catch:
             if (hasEnv) {
                 for (BindingIter bi(si.scope()); bi; bi++) {
-                    if (bi.name() != name)
+                    if (bi.name() != name) {
                         continue;
+                    }
 
                     // The name must already have been marked as closed
                     // over. If this assertion is hit, there is a bug in the
@@ -239,8 +251,9 @@ EmitterScope::searchInEnclosingScope(JSAtom* name, Scope* scope, uint8_t hops)
           case ScopeKind::Module:
             if (hasEnv) {
                 for (BindingIter bi(si.scope()); bi; bi++) {
-                    if (bi.name() != name)
+                    if (bi.name() != name) {
                         continue;
+                    }
 
                     BindingLocation bindLoc = bi.location();
 
@@ -263,8 +276,9 @@ EmitterScope::searchInEnclosingScope(JSAtom* name, Scope* scope, uint8_t hops)
             // As an optimization, if the eval doesn't have its own var
             // environment and its immediate enclosing scope is a global
             // scope, all accesses are global.
-            if (!hasEnv && si.scope()->enclosing()->is<GlobalScope>())
+            if (!hasEnv && si.scope()->enclosing()->is<GlobalScope>()) {
                 return NameLocation::Global(BindingKind::Var);
+            }
             return NameLocation::Dynamic();
 
           case ScopeKind::Global:
@@ -299,17 +313,20 @@ EmitterScope::searchAndCache(BytecodeEmitter* bce, JSAtom* name)
     for (EmitterScope* es = enclosing(&bce); es; es = es->enclosing(&bce)) {
         loc = es->lookupInCache(bce, name);
         if (loc) {
-            if (loc->kind() == NameLocation::Kind::EnvironmentCoordinate)
+            if (loc->kind() == NameLocation::Kind::EnvironmentCoordinate) {
                 *loc = loc->addHops(hops);
+            }
             break;
         }
 
-        if (es->hasEnvironment())
+        if (es->hasEnvironment()) {
             hops++;
+        }
 
 #ifdef DEBUG
-        if (!es->enclosingInFrame())
+        if (!es->enclosingInFrame()) {
             inCurrentScript = false;
+        }
 #endif
     }
 
@@ -328,8 +345,9 @@ EmitterScope::searchAndCache(BytecodeEmitter* bce, JSAtom* name)
 
     // It is always correct to not cache the location. Ignore OOMs to make
     // lookups infallible.
-    if (!putNameInCache(bce, name, *loc))
+    if (!putNameInCache(bce, name, *loc)) {
         bce->cx->recoverFromOutOfMemory();
+    }
 
     return *loc;
 }
@@ -340,8 +358,9 @@ EmitterScope::internScope(BytecodeEmitter* bce, ScopeCreator createScope)
 {
     RootedScope enclosing(bce->cx, enclosingScope(bce));
     Scope* scope = createScope(bce->cx, enclosing);
-    if (!scope)
+    if (!scope) {
         return false;
+    }
     hasEnvironment_ = scope->hasEnvironment();
     scopeIndex_ = bce->scopeList.length();
     return bce->scopeList.append(scope);
@@ -378,14 +397,17 @@ EmitterScope::deadZoneFrameSlotRange(BytecodeEmitter* bce, uint32_t slotStart, u
     // throw reference errors. See 13.1.11, 9.2.13, 13.6.3.4, 13.6.4.6,
     // 13.6.4.8, 13.14.5, 15.1.8, and 15.2.0.15.
     if (slotStart != slotEnd) {
-        if (!bce->emit1(JSOP_UNINITIALIZED))
+        if (!bce->emit1(JSOP_UNINITIALIZED)) {
             return false;
-        for (uint32_t slot = slotStart; slot < slotEnd; slot++) {
-            if (!bce->emitLocalOp(JSOP_INITLEXICAL, slot))
-                return false;
         }
-        if (!bce->emit1(JSOP_POP))
+        for (uint32_t slot = slotStart; slot < slotEnd; slot++) {
+            if (!bce->emitLocalOp(JSOP_INITLEXICAL, slot)) {
+                return false;
+            }
+        }
+        if (!bce->emit1(JSOP_POP)) {
             return false;
+        }
     }
 
     return true;
@@ -400,12 +422,14 @@ EmitterScope::dump(BytecodeEmitter* bce)
         const NameLocation& l = r.front().value();
 
         UniqueChars bytes = AtomToPrintableString(bce->cx, r.front().key());
-        if (!bytes)
+        if (!bytes) {
             return;
-        if (l.kind() != NameLocation::Kind::Dynamic)
+        }
+        if (l.kind() != NameLocation::Kind::Dynamic) {
             fprintf(stdout, "  %s %s ", BindingKindString(l.bindingKind()), bytes.get());
-        else
+        } else {
             fprintf(stdout, "  %s ", bytes.get());
+        }
 
         switch (l.kind()) {
           case NameLocation::Kind::Dynamic:
@@ -449,8 +473,9 @@ EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
     MOZ_ASSERT(kind != ScopeKind::NamedLambda && kind != ScopeKind::StrictNamedLambda);
     MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
 
-    if (!ensureCache(bce))
+    if (!ensureCache(bce)) {
         return false;
+    }
 
     // Marks all names as closed over if the context requires it. This
     // cannot be done in the Parser as we may not know if the context requires
@@ -462,23 +487,27 @@ EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
     // This is not a problem with other scopes, as all other scopes with
     // bindings are body-level. At the time of their creation, whether or not
     // the context requires all bindings to be closed over is already known.
-    if (bce->sc->allBindingsClosedOver())
+    if (bce->sc->allBindingsClosedOver()) {
         MarkAllBindingsClosedOver(*bindings);
+    }
 
     // Resolve bindings.
     TDZCheckCache* tdzCache = bce->innermostTDZCheckCache;
     uint32_t firstFrameSlot = frameSlotStart();
     BindingIter bi(*bindings, firstFrameSlot, /* isNamedLambda = */ false);
     for (; bi; bi++) {
-        if (!checkSlotLimits(bce, bi))
+        if (!checkSlotLimits(bce, bi)) {
             return false;
+        }
 
         NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
-        if (!putNameInCache(bce, bi.name(), loc))
+        if (!putNameInCache(bce, bi.name(), loc)) {
             return false;
+        }
 
-        if (!tdzCache->noteTDZCheck(bce, bi.name(), CheckTDZ))
+        if (!tdzCache->noteTDZCheck(bce, bi.name(), CheckTDZ)) {
             return false;
+        }
     }
 
     updateFrameFixedSlots(bce, bi);
@@ -489,26 +518,30 @@ EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
     {
         return LexicalScope::create(cx, kind, bindings, firstFrameSlot, enclosing);
     };
-    if (!internScope(bce, createScope))
+    if (!internScope(bce, createScope)) {
         return false;
+    }
 
     if (ScopeKindIsInBody(kind) && hasEnvironment()) {
         // After interning the VM scope we can get the scope index.
-        if (!bce->emitInternedScopeOp(index(), JSOP_PUSHLEXICALENV))
+        if (!bce->emitInternedScopeOp(index(), JSOP_PUSHLEXICALENV)) {
             return false;
+        }
     }
 
     // Lexical scopes need notes to be mapped from a pc.
-    if (!appendScopeNote(bce))
+    if (!appendScopeNote(bce)) {
         return false;
+    }
 
     // Put frame slots in TDZ. Environment slots are poisoned during
     // environment creation.
     //
     // This must be done after appendScopeNote to be considered in the extent
     // of the scope.
-    if (!deadZoneFrameSlotRange(bce, firstFrameSlot, frameSlotEnd()))
+    if (!deadZoneFrameSlotRange(bce, firstFrameSlot, frameSlotEnd())) {
         return false;
+    }
 
     return checkEnvironmentChainLength(bce);
 }
@@ -519,12 +552,14 @@ EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox)
     MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
     MOZ_ASSERT(funbox->namedLambdaBindings());
 
-    if (!ensureCache(bce))
+    if (!ensureCache(bce)) {
         return false;
+    }
 
     // See comment in enterLexical about allBindingsClosedOver.
-    if (funbox->allBindingsClosedOver())
+    if (funbox->allBindingsClosedOver()) {
         MarkAllBindingsClosedOver(*funbox->namedLambdaBindings());
+    }
 
     BindingIter bi(*funbox->namedLambdaBindings(), LOCALNO_LIMIT, /* isNamedLambda = */ true);
     MOZ_ASSERT(bi.kind() == BindingKind::NamedLambdaCallee);
@@ -532,8 +567,9 @@ EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox)
     // The lambda name, if not closed over, is accessed via JSOP_CALLEE and
     // not a frame slot. Do not update frame slot information.
     NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
-    if (!putNameInCache(bce, bi.name(), loc))
+    if (!putNameInCache(bce, bi.name(), loc)) {
         return false;
+    }
 
     bi++;
     MOZ_ASSERT(!bi, "There should be exactly one binding in a NamedLambda scope");
@@ -544,8 +580,9 @@ EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox)
         return LexicalScope::create(cx, scopeKind, funbox->namedLambdaBindings(),
                                     LOCALNO_LIMIT, enclosing);
     };
-    if (!internScope(bce, createScope))
+    if (!internScope(bce, createScope)) {
         return false;
+    }
 
     return checkEnvironmentChainLength(bce);
 }
@@ -556,11 +593,13 @@ EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox)
     MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
 
     // If there are parameter expressions, there is an extra var scope.
-    if (!funbox->hasExtraBodyVarScope())
+    if (!funbox->hasExtraBodyVarScope()) {
         bce->setVarEmitterScope(this);
+    }
 
-    if (!ensureCache(bce))
+    if (!ensureCache(bce)) {
         return false;
+    }
 
     // Resolve body-level bindings, if there are any.
     auto bindings = funbox->functionScopeBindings();
@@ -570,8 +609,9 @@ EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox)
 
         BindingIter bi(*bindings, funbox->hasParameterExprs);
         for (; bi; bi++) {
-            if (!checkSlotLimits(bce, bi))
+            if (!checkSlotLimits(bce, bi)) {
                 return false;
+            }
 
             NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
             NameLocationMap::AddPtr p = cache.lookupForAdd(bi.name());
@@ -602,16 +642,18 @@ EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox)
     // eval and there is no extra var scope, any names beyond the function
     // scope must be accessed dynamically as we don't know if the name will
     // become a 'var' binding due to direct eval.
-    if (!funbox->hasParameterExprs && funbox->hasExtensibleScope())
+    if (!funbox->hasParameterExprs && funbox->hasExtensibleScope()) {
         fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
+    }
 
     // In case of parameter expressions, the parameters are lexical
     // bindings and have TDZ.
     if (funbox->hasParameterExprs && nextFrameSlot_) {
         uint32_t paramFrameSlotEnd = 0;
         for (BindingIter bi(*bindings, true); bi; bi++) {
-            if (!BindingKindIsLexical(bi.kind()))
+            if (!BindingKindIsLexical(bi.kind())) {
                 break;
+            }
 
             NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
             if (loc.kind() == NameLocation::Kind::FrameSlot) {
@@ -620,8 +662,9 @@ EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox)
             }
         }
 
-        if (!deadZoneFrameSlotRange(bce, 0, paramFrameSlotEnd))
+        if (!deadZoneFrameSlotRange(bce, 0, paramFrameSlotEnd)) {
             return false;
+        }
     }
 
     // Create and intern the VM scope.
@@ -632,8 +675,9 @@ EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox)
                                      funbox->needsCallObjectRegardlessOfBindings(),
                                      fun, enclosing);
     };
-    if (!internBodyScope(bce, createScope))
+    if (!internBodyScope(bce, createScope)) {
         return false;
+    }
 
     return checkEnvironmentChainLength(bce);
 }
@@ -650,20 +694,23 @@ EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce, FunctionBox* funbo
     // function scope as the var emitter scope.
     bce->setVarEmitterScope(this);
 
-    if (!ensureCache(bce))
+    if (!ensureCache(bce)) {
         return false;
+    }
 
     // Resolve body-level bindings, if there are any.
     uint32_t firstFrameSlot = frameSlotStart();
     if (auto bindings = funbox->extraVarScopeBindings()) {
         BindingIter bi(*bindings, firstFrameSlot);
         for (; bi; bi++) {
-            if (!checkSlotLimits(bce, bi))
+            if (!checkSlotLimits(bce, bi)) {
                 return false;
+            }
 
             NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
-            if (!putNameInCache(bce, bi.name(), loc))
+            if (!putNameInCache(bce, bi.name(), loc)) {
                 return false;
+            }
         }
 
         updateFrameFixedSlots(bce, bi);
@@ -675,8 +722,9 @@ EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce, FunctionBox* funbo
     // direct eval, any names beyond the var scope must be accessed
     // dynamically as we don't know if the name will become a 'var' binding
     // due to direct eval.
-    if (funbox->hasExtensibleScope())
+    if (funbox->hasExtensibleScope()) {
         fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
+    }
 
     // Create and intern the VM scope.
     auto createScope = [funbox, firstFrameSlot](JSContext* cx, HandleScope enclosing) {
@@ -685,17 +733,20 @@ EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce, FunctionBox* funbo
                                 funbox->needsExtraBodyVarEnvironmentRegardlessOfBindings(),
                                 enclosing);
     };
-    if (!internScope(bce, createScope))
+    if (!internScope(bce, createScope)) {
         return false;
+    }
 
     if (hasEnvironment()) {
-        if (!bce->emitInternedScopeOp(index(), JSOP_PUSHVARENV))
+        if (!bce->emitInternedScopeOp(index(), JSOP_PUSHVARENV)) {
             return false;
+        }
     }
 
     // The extra var scope needs a note to be mapped from a pc.
-    if (!appendScopeNote(bce))
+    if (!appendScopeNote(bce)) {
         return false;
+    }
 
     return checkEnvironmentChainLength(bce);
 }
@@ -705,8 +756,9 @@ EmitterScope::enterParameterExpressionVar(BytecodeEmitter* bce)
 {
     MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
 
-    if (!ensureCache(bce))
+    if (!ensureCache(bce)) {
         return false;
+    }
 
     // Parameter expressions var scopes have no pre-set bindings and are
     // always extensible, as they are needed for eval.
@@ -719,16 +771,19 @@ EmitterScope::enterParameterExpressionVar(BytecodeEmitter* bce)
                                 /* data = */ nullptr, firstFrameSlot,
                                 /* needsEnvironment = */ true, enclosing);
     };
-    if (!internScope(bce, createScope))
+    if (!internScope(bce, createScope)) {
         return false;
+    }
 
     MOZ_ASSERT(hasEnvironment());
-    if (!bce->emitInternedScopeOp(index(), JSOP_PUSHVARENV))
+    if (!bce->emitInternedScopeOp(index(), JSOP_PUSHVARENV)) {
         return false;
+    }
 
     // The extra var scope needs a note to be mapped from a pc.
-    if (!appendScopeNote(bce))
+    if (!appendScopeNote(bce)) {
         return false;
+    }
 
     return checkEnvironmentChainLength(bce);
 }
@@ -767,8 +822,9 @@ EmitterScope::enterGlobal(BytecodeEmitter* bce, GlobalSharedContext* globalsc)
 
     bce->setVarEmitterScope(this);
 
-    if (!ensureCache(bce))
+    if (!ensureCache(bce)) {
         return false;
+    }
 
     if (bce->emitterMode == BytecodeEmitter::SelfHosting) {
         // In self-hosting, it is incorrect to consult the global scope because
@@ -792,26 +848,30 @@ EmitterScope::enterGlobal(BytecodeEmitter* bce, GlobalSharedContext* globalsc)
         for (DynamicBindingIter bi(globalsc); bi; bi++) {
             NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
             JSAtom* name = bi.name();
-            if (!putNameInCache(bce, name, loc))
+            if (!putNameInCache(bce, name, loc)) {
                 return false;
+            }
 
             // Define the name in the prologue. Do not emit DEFVAR for
             // functions that we'll emit DEFFUN for.
-            if (bi.isTopLevelFunction())
+            if (bi.isTopLevelFunction()) {
                 continue;
+            }
 
-            if (!bce->emitAtomOp(name, bi.bindingOp()))
+            if (!bce->emitAtomOp(name, bi.bindingOp())) {
                 return false;
+            }
         }
     }
 
     // Note that to save space, we don't add free names to the cache for
     // global scopes. They are assumed to be global vars in the syntactic
     // global scope, dynamic accesses under non-syntactic global scope.
-    if (globalsc->scopeKind() == ScopeKind::Global)
+    if (globalsc->scopeKind() == ScopeKind::Global) {
         fallbackFreeNameLocation_ = Some(NameLocation::Global(BindingKind::Var));
-    else
+    } else {
         fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
+    }
 
     auto createScope = [globalsc](JSContext* cx, HandleScope enclosing) {
         MOZ_ASSERT(!enclosing);
@@ -827,8 +887,9 @@ EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc)
 
     bce->setVarEmitterScope(this);
 
-    if (!ensureCache(bce))
+    if (!ensureCache(bce)) {
         return false;
+    }
 
     // For simplicity, treat all free name lookups in eval scripts as dynamic.
     fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
@@ -839,12 +900,14 @@ EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc)
         ScopeKind scopeKind = evalsc->strict() ? ScopeKind::StrictEval : ScopeKind::Eval;
         return EvalScope::create(cx, scopeKind, evalsc->bindings, enclosing);
     };
-    if (!internBodyScope(bce, createScope))
+    if (!internBodyScope(bce, createScope)) {
         return false;
+    }
 
     if (hasEnvironment()) {
-        if (!bce->emitInternedScopeOp(index(), JSOP_PUSHVARENV))
+        if (!bce->emitInternedScopeOp(index(), JSOP_PUSHVARENV)) {
             return false;
+        }
     } else {
         // Resolve binding names and emit DEFVAR prologue ops if we don't have
         // an environment (i.e., a sloppy eval not in a parameter expression).
@@ -857,19 +920,22 @@ EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc)
             for (DynamicBindingIter bi(evalsc); bi; bi++) {
                 MOZ_ASSERT(bi.bindingOp() == JSOP_DEFVAR);
 
-                if (bi.isTopLevelFunction())
+                if (bi.isTopLevelFunction()) {
                     continue;
+                }
 
-                if (!bce->emitAtomOp(bi.name(), JSOP_DEFVAR))
+                if (!bce->emitAtomOp(bi.name(), JSOP_DEFVAR)) {
                     return false;
+                }
             }
         }
 
         // As an optimization, if the eval does not have its own var
         // environment and is directly enclosed in a global scope, then all
         // free name lookups are global.
-        if (scope(bce)->enclosing()->is<GlobalScope>())
+        if (scope(bce)->enclosing()->is<GlobalScope>()) {
             fallbackFreeNameLocation_ = Some(NameLocation::Global(BindingKind::Var));
+        }
     }
 
     return true;
@@ -882,8 +948,9 @@ EmitterScope::enterModule(BytecodeEmitter* bce, ModuleSharedContext* modulesc)
 
     bce->setVarEmitterScope(this);
 
-    if (!ensureCache(bce))
+    if (!ensureCache(bce)) {
         return false;
+    }
 
     // Resolve body-level bindings, if there are any.
     TDZCheckCache* tdzCache = bce->innermostTDZCheckCache;
@@ -891,19 +958,23 @@ EmitterScope::enterModule(BytecodeEmitter* bce, ModuleSharedContext* modulesc)
     if (ModuleScope::Data* bindings = modulesc->bindings) {
         BindingIter bi(*bindings);
         for (; bi; bi++) {
-            if (!checkSlotLimits(bce, bi))
+            if (!checkSlotLimits(bce, bi)) {
                 return false;
+            }
 
             NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
-            if (!putNameInCache(bce, bi.name(), loc))
+            if (!putNameInCache(bce, bi.name(), loc)) {
                 return false;
+            }
 
             if (BindingKindIsLexical(bi.kind())) {
-                if (loc.kind() == NameLocation::Kind::FrameSlot && !firstLexicalFrameSlot)
+                if (loc.kind() == NameLocation::Kind::FrameSlot && !firstLexicalFrameSlot) {
                     firstLexicalFrameSlot = Some(loc.frameSlot());
+                }
 
-                if (!tdzCache->noteTDZCheck(bce, bi.name(), CheckTDZ))
+                if (!tdzCache->noteTDZCheck(bce, bi.name(), CheckTDZ)) {
                     return false;
+                }
             }
         }
 
@@ -918,16 +989,18 @@ EmitterScope::enterModule(BytecodeEmitter* bce, ModuleSharedContext* modulesc)
     // Put lexical frame slots in TDZ. Environment slots are poisoned during
     // environment creation.
     if (firstLexicalFrameSlot) {
-        if (!deadZoneFrameSlotRange(bce, *firstLexicalFrameSlot, frameSlotEnd()))
+        if (!deadZoneFrameSlotRange(bce, *firstLexicalFrameSlot, frameSlotEnd())) {
             return false;
+        }
     }
 
     // Create and intern the VM scope.
     auto createScope = [modulesc](JSContext* cx, HandleScope enclosing) {
         return ModuleScope::create(cx, modulesc->bindings, modulesc->module(), enclosing);
     };
-    if (!internBodyScope(bce, createScope))
+    if (!internBodyScope(bce, createScope)) {
         return false;
+    }
 
     return checkEnvironmentChainLength(bce);
 }
@@ -937,8 +1010,9 @@ EmitterScope::enterWith(BytecodeEmitter* bce)
 {
     MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
 
-    if (!ensureCache(bce))
+    if (!ensureCache(bce)) {
         return false;
+    }
 
     // 'with' make all accesses dynamic and unanalyzable.
     fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
@@ -946,14 +1020,17 @@ EmitterScope::enterWith(BytecodeEmitter* bce)
     auto createScope = [](JSContext* cx, HandleScope enclosing) {
         return WithScope::create(cx, enclosing);
     };
-    if (!internScope(bce, createScope))
+    if (!internScope(bce, createScope)) {
         return false;
+    }
 
-    if (!bce->emitInternedScopeOp(index(), JSOP_ENTERWITH))
+    if (!bce->emitInternedScopeOp(index(), JSOP_ENTERWITH)) {
         return false;
+    }
 
-    if (!appendScopeNote(bce))
+    if (!appendScopeNote(bce)) {
         return false;
+    }
 
     return checkEnvironmentChainLength(bce);
 }
@@ -976,19 +1053,22 @@ EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal)
       case ScopeKind::Lexical:
       case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
-        if (!bce->emit1(hasEnvironment() ? JSOP_POPLEXICALENV : JSOP_DEBUGLEAVELEXICALENV))
+        if (!bce->emit1(hasEnvironment() ? JSOP_POPLEXICALENV : JSOP_DEBUGLEAVELEXICALENV)) {
             return false;
+        }
         break;
 
       case ScopeKind::With:
-        if (!bce->emit1(JSOP_LEAVEWITH))
+        if (!bce->emit1(JSOP_LEAVEWITH)) {
             return false;
+        }
         break;
 
       case ScopeKind::ParameterExpressionVar:
         MOZ_ASSERT(hasEnvironment());
-        if (!bce->emit1(JSOP_POPVARENV))
+        if (!bce->emit1(JSOP_POPVARENV)) {
             return false;
+        }
         break;
 
       case ScopeKind::Function:
@@ -1031,8 +1111,9 @@ EmitterScope::scope(const BytecodeEmitter* bce) const
 NameLocation
 EmitterScope::lookup(BytecodeEmitter* bce, JSAtom* name)
 {
-    if (Maybe<NameLocation> loc = lookupInCache(bce, name))
+    if (Maybe<NameLocation> loc = lookupInCache(bce, name)) {
         return *loc;
+    }
     return searchAndCache(bce, name);
 }
 
@@ -1043,8 +1124,9 @@ EmitterScope::locationBoundInScope(JSAtom* name, EmitterScope* target)
     // one. Count the number of extra hops to reach it.
     uint8_t extraHops = 0;
     for (EmitterScope* es = this; es != target; es = es->enclosingInFrame()) {
-        if (es->hasEnvironment())
+        if (es->hasEnvironment()) {
             extraHops++;
+        }
     }
 
     // Caches are prepopulated with bound names. So if the name is bound in a
@@ -1053,10 +1135,11 @@ EmitterScope::locationBoundInScope(JSAtom* name, EmitterScope* target)
     Maybe<NameLocation> loc;
     if (NameLocationMap::Ptr p = target->nameCache_->lookup(name)) {
         NameLocation l = p->value().wrapped;
-        if (l.kind() == NameLocation::Kind::EnvironmentCoordinate)
+        if (l.kind() == NameLocation::Kind::EnvironmentCoordinate) {
             loc = Some(l.addHops(extraHops));
-        else
+        } else {
             loc = Some(l);
+        }
     }
     return loc;
 }

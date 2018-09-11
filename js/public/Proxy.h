@@ -392,8 +392,9 @@ struct ProxyReservedSlots
     }
 
     void init(size_t nreserved) {
-        for (size_t i = 0; i < nreserved; i++)
+        for (size_t i = 0; i < nreserved; i++) {
             slots[i] = JS::UndefinedValue();
+        }
     }
 
     ProxyReservedSlots(const ProxyReservedSlots&) = delete;
@@ -477,10 +478,11 @@ SetProxyReservedSlotUnchecked(JSObject* obj, size_t n, const Value& extra)
     Value* vp = &GetProxyDataLayout(obj)->reservedSlots->slots[n];
 
     // Trigger a barrier before writing the slot.
-    if (vp->isGCThing() || extra.isGCThing())
+    if (vp->isGCThing() || extra.isGCThing()) {
         SetValueInProxy(vp, extra);
-    else
+    } else {
         *vp = extra;
+    }
 }
 
 } // namespace detail
@@ -531,10 +533,11 @@ SetProxyPrivate(JSObject* obj, const Value& value)
     Value* vp = &detail::GetProxyDataLayout(obj)->values()->privateSlot;
 
     // Trigger a barrier before writing the slot.
-    if (vp->isGCThing() || value.isGCThing())
+    if (vp->isGCThing() || value.isGCThing()) {
         detail::SetValueInProxy(vp, value);
-    else
+    } else {
         *vp = value;
+    }
 }
 
 inline bool
@@ -609,8 +612,9 @@ class JS_FRIEND_API(AutoEnterPolicy)
         // * The policy set rv to false, indicating that we should throw.
         // * The caller did not instruct us to ignore exceptions.
         // * The policy did not throw itself.
-        if (!allow && !rv && mayThrow)
+        if (!allow && !rv && mayThrow) {
             reportErrorIfExceptionIsNotPending(cx, id);
+        }
     }
 
     virtual ~AutoEnterPolicy() { recordLeave(); }

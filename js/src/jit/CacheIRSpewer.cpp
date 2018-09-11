@@ -36,8 +36,9 @@ CacheIRSpewer::CacheIRSpewer()
 
 CacheIRSpewer::~CacheIRSpewer()
 {
-    if (!enabled())
+    if (!enabled()) {
         return;
+    }
 
     json.ref().endList();
     output.flush();
@@ -57,19 +58,22 @@ CacheIRSpewer::~CacheIRSpewer()
 bool
 CacheIRSpewer::init(const char* filename)
 {
-    if (enabled())
+    if (enabled()) {
         return true;
+    }
 
     char name[256];
     uint32_t pid = getpid();
     // Default to JIT_SPEW_DIR/cacheir${pid}.json
-    if (filename[0] == '1')
+    if (filename[0] == '1') {
         SprintfLiteral(name, JIT_SPEW_DIR "/cacheir%" PRIu32 ".json", pid);
-    else
+    } else {
         SprintfLiteral(name, "%s%" PRIu32 ".json", filename, pid);
+    }
 
-    if (!output.init(name))
+    if (!output.init(name)) {
         return false;
+    }
     output.put("[");
 
     json.emplace(output);
@@ -118,10 +122,11 @@ static void
 QuoteString(GenericPrinter& out, JSLinearString* str)
 {
     JS::AutoCheckCannotGC nogc;
-    if (str->hasLatin1Chars())
+    if (str->hasLatin1Chars()) {
         QuoteString(out, str->latin1Chars(nogc), str->length());
-    else
+    } else {
         QuoteString(out, str->twoByteChars(nogc), str->length());
+    }
 }
 
 void
@@ -133,8 +138,9 @@ CacheIRSpewer::valueProperty(const char* name, const Value& v)
     j.beginObjectProperty(name);
 
     const char* type = InformalValueTypeName(v);
-    if (v.isInt32())
+    if (v.isInt32()) {
         type = "int32";
+    }
     j.property("type", type);
 
     if (v.isInt32()) {

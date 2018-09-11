@@ -520,8 +520,9 @@ class JitRealm
   public:
     JitCode* getStubCode(uint32_t key) {
         ICStubCodeMap::Ptr p = stubCodes_->lookup(key);
-        if (p)
+        if (p) {
             return p->value();
+        }
         return nullptr;
     }
     MOZ_MUST_USE bool putStubCode(JSContext* cx, uint32_t key, Handle<JitCode*> stubCode) {
@@ -548,8 +549,9 @@ class JitRealm
 
     // Initialize code stubs only used by Ion, not Baseline.
     MOZ_MUST_USE bool ensureIonStubsExist(JSContext* cx) {
-        if (stubs_[StringConcat])
+        if (stubs_[StringConcat]) {
             return true;
+        }
         stubs_[StringConcat] = generateStringConcatStub(cx);
         return stubs_[StringConcat];
     }
@@ -557,8 +559,9 @@ class JitRealm
     void sweep(JS::Realm* realm);
 
     void discardStubs() {
-        for (ReadBarrieredJitCode& stubRef : stubs_)
+        for (ReadBarrieredJitCode& stubRef : stubs_) {
             stubRef = nullptr;
+        }
     }
 
     JitCode* stringConcatStubNoBarrier(uint32_t* requiredBarriersOut) const {
@@ -570,8 +573,9 @@ class JitRealm
     }
 
     MOZ_MUST_USE bool ensureRegExpMatcherStubExists(JSContext* cx) {
-        if (stubs_[RegExpMatcher])
+        if (stubs_[RegExpMatcher]) {
             return true;
+        }
         stubs_[RegExpMatcher] = generateRegExpMatcherStub(cx);
         return stubs_[RegExpMatcher];
     }
@@ -581,8 +585,9 @@ class JitRealm
     }
 
     MOZ_MUST_USE bool ensureRegExpSearcherStubExists(JSContext* cx) {
-        if (stubs_[RegExpSearcher])
+        if (stubs_[RegExpSearcher]) {
             return true;
+        }
         stubs_[RegExpSearcher] = generateRegExpSearcherStub(cx);
         return stubs_[RegExpSearcher];
     }
@@ -592,8 +597,9 @@ class JitRealm
     }
 
     MOZ_MUST_USE bool ensureRegExpTesterStubExists(JSContext* cx) {
-        if (stubs_[RegExpTester])
+        if (stubs_[RegExpTester]) {
             return true;
+        }
         stubs_[RegExpTester] = generateRegExpTesterStub(cx);
         return stubs_[RegExpTester];
     }
@@ -635,8 +641,9 @@ class MOZ_STACK_CLASS AutoWritableJitCode
       : rt_(rt), addr_(addr), size_(size)
     {
         rt_->toggleAutoWritableJitCodeActive(true);
-        if (!ExecutableAllocator::makeWritable(addr_, size_))
+        if (!ExecutableAllocator::makeWritable(addr_, size_)) {
             MOZ_CRASH();
+        }
     }
     AutoWritableJitCode(void* addr, size_t size)
       : AutoWritableJitCode(TlsContext.get()->runtime(), addr, size)
@@ -645,8 +652,9 @@ class MOZ_STACK_CLASS AutoWritableJitCode
       : AutoWritableJitCode(code->runtimeFromMainThread(), code->raw(), code->bufferSize())
     {}
     ~AutoWritableJitCode() {
-        if (!ExecutableAllocator::makeExecutable(addr_, size_))
+        if (!ExecutableAllocator::makeExecutable(addr_, size_)) {
             MOZ_CRASH();
+        }
         rt_->toggleAutoWritableJitCodeActive(false);
     }
 };
@@ -657,12 +665,14 @@ class MOZ_STACK_CLASS MaybeAutoWritableJitCode
 
   public:
     MaybeAutoWritableJitCode(void* addr, size_t size, ReprotectCode reprotect) {
-        if (reprotect)
+        if (reprotect) {
             awjc_.emplace(addr, size);
+        }
     }
     MaybeAutoWritableJitCode(JitCode* code, ReprotectCode reprotect) {
-        if (reprotect)
+        if (reprotect) {
             awjc_.emplace(code);
+        }
     }
 };
 

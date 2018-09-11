@@ -100,8 +100,9 @@ WasmFrameIter::operator++()
     // just clear the trapping state.
 
     if (unwind_ == Unwind::True) {
-        if (activation_->isWasmTrapping())
+        if (activation_->isWasmTrapping()) {
             activation_->finishWasmTrap();
+        }
         activation_->setWasmExitFP(fp_);
     }
 
@@ -261,8 +262,9 @@ unsigned
 WasmFrameIter::computeLine(uint32_t* column) const
 {
     if (instance()->isAsmJS()) {
-        if (column)
+        if (column) {
             *column = 1;
+        }
         return lineOrBytecode_;
     }
 
@@ -279,8 +281,9 @@ WasmFrameIter::computeLine(uint32_t* column) const
     // breaking existing devtools code written when this used to be the case.
 
     MOZ_ASSERT(!(codeRange_->funcIndex() & ColumnBit));
-    if (column)
+    if (column) {
         *column = codeRange_->funcIndex() | ColumnBit;
+    }
     return lineOrBytecode_;
 }
 
@@ -497,11 +500,13 @@ static void
 GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                          uint32_t* ret)
 {
-    if (framePushed)
+    if (framePushed) {
         masm.freeStack(framePushed);
+    }
 
-    if (!reason.isNone())
+    if (!reason.isNone()) {
         ClearExitFP(masm, ABINonArgReturnVolatileReg);
+    }
 
     DebugOnly<uint32_t> poppedFP;
     DebugOnly<uint32_t> poppedTlsReg;
@@ -948,10 +953,11 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
     // pc-at-normal-entry case.
     uint32_t offsetFromEntry;
     if (codeRange->isFunction()) {
-        if (offsetInCode < codeRange->funcNormalEntry())
+        if (offsetInCode < codeRange->funcNormalEntry()) {
             offsetFromEntry = 0;
-        else
+        } else {
             offsetFromEntry = offsetInCode - codeRange->funcNormalEntry();
+        }
     } else {
         offsetFromEntry = offsetInCode - codeRange->begin();
     }
@@ -1112,8 +1118,9 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
 
         // On the error return path, FP might be set to FailFP. Ignore these
         // transient frames.
-        if (intptr_t(fixedFP) == (FailFP & ~ExitOrJitEntryFPTag))
+        if (intptr_t(fixedFP) == (FailFP & ~ExitOrJitEntryFPTag)) {
             return false;
+        }
         break;
       case CodeRange::Throw:
         // The throw stub executes a small number of instructions before popping
@@ -1422,8 +1429,9 @@ ProfilingFrameIterator::label() const
     static const char trapDescription[] = "trap handling (in wasm)";
     static const char debugTrapDescription[] = "debug trap handling (in wasm)";
 
-    if (!exitReason_.isFixed())
+    if (!exitReason_.isFixed()) {
         return ThunkedNativeToDescription(exitReason_.symbolic());
+    }
 
     switch (exitReason_.fixed()) {
       case ExitReason::Fixed::None:
@@ -1468,8 +1476,9 @@ wasm::LookupFaultingInstance(const ModuleSegment& codeSegment, void* pc, void* f
     // knowing whether there is a fault.
 
     const CodeRange* codeRange = codeSegment.code().lookupFuncRange(pc);
-    if (!codeRange)
+    if (!codeRange) {
         return nullptr;
+    }
 
     size_t offsetInModule = ((uint8_t*)pc) - codeSegment.base();
     if ((offsetInModule >= codeRange->funcNormalEntry() &&
@@ -1494,8 +1503,9 @@ wasm::LookupFaultingInstance(const ModuleSegment& codeSegment, void* pc, void* f
 bool
 wasm::InCompiledCode(void* pc)
 {
-    if (LookupCodeSegment(pc))
+    if (LookupCodeSegment(pc)) {
         return true;
+    }
 
     const CodeRange* codeRange;
     uint8_t* codeBase;

@@ -44,8 +44,9 @@ inline JSObject&
 InterpreterFrame::varObj() const
 {
     JSObject* obj = environmentChain();
-    while (!obj->isQualifiedVarObj())
+    while (!obj->isQualifiedVarObj()) {
         obj = obj->enclosingEnvironment();
+    }
     return *obj;
 }
 
@@ -64,8 +65,9 @@ InterpreterFrame::initCallFrame(InterpreterFrame* prev, jsbytecode* prevpc,
 
     /* Initialize stack frame members. */
     flags_ = 0;
-    if (constructing)
+    if (constructing) {
         flags_ |= CONSTRUCTING;
+    }
     argv_ = argv;
     script_ = script;
     nactual_ = nactual;
@@ -74,8 +76,9 @@ InterpreterFrame::initCallFrame(InterpreterFrame* prev, jsbytecode* prevpc,
     prevpc_ = prevpc;
     prevsp_ = prevsp;
 
-    if (script->isDebuggee())
+    if (script->isDebuggee()) {
         setIsDebuggee();
+    }
 
     initLocals();
 }
@@ -120,8 +123,9 @@ InterpreterFrame::unaliasedForEachActual(Op op)
     // slots.
 
     const Value* argsEnd = argv() + numActualArgs();
-    for (const Value* p = argv(); p < argsEnd; ++p)
+    for (const Value* p = argv(); p < argsEnd; ++p) {
         op(*p);
+    }
 }
 
 struct CopyTo
@@ -158,8 +162,9 @@ inline EnvironmentObject&
 InterpreterFrame::aliasedEnvironment(EnvironmentCoordinate ec) const
 {
     JSObject* env = &environmentChain()->as<EnvironmentObject>();
-    for (unsigned i = ec.hops(); i; i--)
+    for (unsigned i = ec.hops(); i; i--) {
         env = &env->as<EnvironmentObject>().enclosingEnvironment();
+    }
     return env->as<EnvironmentObject>();
 }
 
@@ -169,8 +174,9 @@ InterpreterFrame::pushOnEnvironmentChain(SpecificEnvironment& env)
 {
     MOZ_ASSERT(*environmentChain() == env.enclosingEnvironment());
     envChain_ = &env;
-    if (IsFrameInitialEnvironment(this, env))
+    if (IsFrameInitialEnvironment(this, env)) {
         flags_ |= HAS_INITIAL_ENV;
+    }
 }
 
 template <typename SpecificEnvironment>
@@ -202,8 +208,9 @@ InterpreterFrame::callObj() const
     MOZ_ASSERT(callee().needsCallObject());
 
     JSObject* pobj = environmentChain();
-    while (MOZ_UNLIKELY(!pobj->is<CallObject>()))
+    while (MOZ_UNLIKELY(!pobj->is<CallObject>())) {
         pobj = pobj->enclosingEnvironment();
+    }
     return pobj->as<CallObject>();
 }
 
@@ -226,10 +233,11 @@ uint8_t*
 InterpreterStack::allocateFrame(JSContext* cx, size_t size)
 {
     size_t maxFrames;
-    if (cx->realm()->principals() == cx->runtime()->trustedPrincipals())
+    if (cx->realm()->principals() == cx->runtime()->trustedPrincipals()) {
         maxFrames = MAX_FRAMES_TRUSTED;
-    else
+    } else {
         maxFrames = MAX_FRAMES;
+    }
 
     if (MOZ_UNLIKELY(frameCount_ >= maxFrames)) {
         ReportOverRecursed(cx);
@@ -269,8 +277,9 @@ InterpreterStack::getCallFrame(JSContext* cx, const CallArgs& args, HandleScript
 
     nvals += nformal + nfunctionState;
     uint8_t* buffer = allocateFrame(cx, sizeof(InterpreterFrame) + nvals * sizeof(Value));
-    if (!buffer)
+    if (!buffer) {
         return nullptr;
+    }
 
     Value* argv = reinterpret_cast<Value*>(buffer);
     unsigned nmissing = nformal - args.length();
@@ -278,8 +287,9 @@ InterpreterStack::getCallFrame(JSContext* cx, const CallArgs& args, HandleScript
     mozilla::PodCopy(argv, args.base(), 2 + args.length());
     SetValueRangeToUndefined(argv + 2 + args.length(), nmissing);
 
-    if (constructing)
+    if (constructing) {
         argv[2 + nformal] = args.newTarget();
+    }
 
     *pargv = argv + 2;
     return reinterpret_cast<InterpreterFrame*>(argv + nfunctionState + nformal);
@@ -304,8 +314,9 @@ InterpreterStack::pushInlineFrame(JSContext* cx, InterpreterRegs& regs, const Ca
 
     Value* argv;
     InterpreterFrame* fp = getCallFrame(cx, args, script, constructing, &argv);
-    if (!fp)
+    if (!fp) {
         return false;
+    }
 
     fp->mark_ = mark;
 
@@ -340,8 +351,9 @@ InterpreterStack::resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
     unsigned nvals = 2 + nformal + script->nslots();
 
     uint8_t* buffer = allocateFrame(cx, sizeof(InterpreterFrame) + nvals * sizeof(Value));
-    if (!buffer)
+    if (!buffer) {
         return false;
+    }
 
     Value* argv = reinterpret_cast<Value*>(buffer) + 2;
     argv[-2] = ObjectValue(*callee);
@@ -403,10 +415,12 @@ FrameIter::unaliasedForEachActual(JSContext* cx, Op op)
 inline HandleValue
 AbstractFramePtr::returnValue() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->returnValue();
-    if (isWasmDebugFrame())
+    }
+    if (isWasmDebugFrame()) {
         return asWasmDebugFrame()->returnValue();
+    }
     return asBaselineFrame()->returnValue();
 }
 
@@ -433,12 +447,15 @@ AbstractFramePtr::setReturnValue(const Value& rval) const
 inline JSObject*
 AbstractFramePtr::environmentChain() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->environmentChain();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->environmentChain();
-    if (isWasmDebugFrame())
+    }
+    if (isWasmDebugFrame()) {
         return &global()->lexicalEnvironment();
+    }
     return asRematerializedFrame()->environmentChain();
 }
 
@@ -475,10 +492,12 @@ AbstractFramePtr::popOffEnvironmentChain()
 inline CallObject&
 AbstractFramePtr::callObj() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->callObj();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->callObj();
+    }
     return asRematerializedFrame()->callObj();
 }
 
@@ -503,96 +522,117 @@ AbstractFramePtr::realm() const
 inline unsigned
 AbstractFramePtr::numActualArgs() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->numActualArgs();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->numActualArgs();
+    }
     return asRematerializedFrame()->numActualArgs();
 }
 
 inline unsigned
 AbstractFramePtr::numFormalArgs() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->numFormalArgs();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->numFormalArgs();
+    }
     return asRematerializedFrame()->numFormalArgs();
 }
 
 inline Value&
 AbstractFramePtr::unaliasedLocal(uint32_t i)
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->unaliasedLocal(i);
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->unaliasedLocal(i);
+    }
     return asRematerializedFrame()->unaliasedLocal(i);
 }
 
 inline Value&
 AbstractFramePtr::unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing)
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->unaliasedFormal(i, checkAliasing);
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->unaliasedFormal(i, checkAliasing);
+    }
     return asRematerializedFrame()->unaliasedFormal(i, checkAliasing);
 }
 
 inline Value&
 AbstractFramePtr::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing)
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->unaliasedActual(i, checkAliasing);
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->unaliasedActual(i, checkAliasing);
+    }
     return asRematerializedFrame()->unaliasedActual(i, checkAliasing);
 }
 
 inline bool
 AbstractFramePtr::hasInitialEnvironment() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->hasInitialEnvironment();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->hasInitialEnvironment();
+    }
     return asRematerializedFrame()->hasInitialEnvironment();
 }
 
 inline bool
 AbstractFramePtr::isGlobalFrame() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->isGlobalFrame();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->isGlobalFrame();
-    if (isWasmDebugFrame())
+    }
+    if (isWasmDebugFrame()) {
         return false;
+    }
     return asRematerializedFrame()->isGlobalFrame();
 }
 
 inline bool
 AbstractFramePtr::isModuleFrame() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->isModuleFrame();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->isModuleFrame();
-    if (isWasmDebugFrame())
+    }
+    if (isWasmDebugFrame()) {
         return false;
+    }
     return asRematerializedFrame()->isModuleFrame();
 }
 
 inline bool
 AbstractFramePtr::isEvalFrame() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->isEvalFrame();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->isEvalFrame();
-    if (isWasmDebugFrame())
+    }
+    if (isWasmDebugFrame()) {
         return false;
+    }
     MOZ_ASSERT(isRematerializedFrame());
     return false;
 }
@@ -600,10 +640,12 @@ AbstractFramePtr::isEvalFrame() const
 inline bool
 AbstractFramePtr::isDebuggerEvalFrame() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->isDebuggerEvalFrame();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->isDebuggerEvalFrame();
+    }
     MOZ_ASSERT(isRematerializedFrame());
     return false;
 }
@@ -611,50 +653,58 @@ AbstractFramePtr::isDebuggerEvalFrame() const
 inline bool
 AbstractFramePtr::isDebuggee() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->isDebuggee();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->isDebuggee();
-    if (isWasmDebugFrame())
+    }
+    if (isWasmDebugFrame()) {
         return asWasmDebugFrame()->isDebuggee();
+    }
     return asRematerializedFrame()->isDebuggee();
 }
 
 inline void
 AbstractFramePtr::setIsDebuggee()
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         asInterpreterFrame()->setIsDebuggee();
-    else if (isBaselineFrame())
+    } else if (isBaselineFrame()) {
         asBaselineFrame()->setIsDebuggee();
-    else if (isWasmDebugFrame())
+    } else if (isWasmDebugFrame()) {
         asWasmDebugFrame()->setIsDebuggee();
-    else
+    } else {
         asRematerializedFrame()->setIsDebuggee();
+    }
 }
 
 inline void
 AbstractFramePtr::unsetIsDebuggee()
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         asInterpreterFrame()->unsetIsDebuggee();
-    else if (isBaselineFrame())
+    } else if (isBaselineFrame()) {
         asBaselineFrame()->unsetIsDebuggee();
-    else if (isWasmDebugFrame())
+    } else if (isWasmDebugFrame()) {
         asWasmDebugFrame()->unsetIsDebuggee();
-    else
+    } else {
         asRematerializedFrame()->unsetIsDebuggee();
+    }
 }
 
 inline bool
 AbstractFramePtr::isConstructing() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->isConstructing();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->isConstructing();
-    if (isRematerializedFrame())
+    }
+    if (isRematerializedFrame()) {
         return asRematerializedFrame()->isConstructing();
+    }
     MOZ_CRASH("Unexpected frame");
 }
 
@@ -673,10 +723,12 @@ AbstractFramePtr::hasScript() const
 inline JSScript*
 AbstractFramePtr::script() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->script();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->script();
+    }
     return asRematerializedFrame()->script();
 }
 
@@ -689,50 +741,60 @@ AbstractFramePtr::wasmInstance() const
 inline GlobalObject*
 AbstractFramePtr::global() const
 {
-    if (isWasmDebugFrame())
+    if (isWasmDebugFrame()) {
         return &wasmInstance()->object()->global();
+    }
     return &script()->global();
 }
 
 inline JSFunction*
 AbstractFramePtr::callee() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return &asInterpreterFrame()->callee();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->callee();
+    }
     return asRematerializedFrame()->callee();
 }
 
 inline Value
 AbstractFramePtr::calleev() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->calleev();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->calleev();
+    }
     return asRematerializedFrame()->calleev();
 }
 
 inline bool
 AbstractFramePtr::isFunctionFrame() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->isFunctionFrame();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->isFunctionFrame();
-    if (isWasmDebugFrame())
+    }
+    if (isWasmDebugFrame()) {
         return false;
+    }
     return asRematerializedFrame()->isFunctionFrame();
 }
 
 inline bool
 AbstractFramePtr::isNonStrictDirectEvalFrame() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->isNonStrictDirectEvalFrame();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->isNonStrictDirectEvalFrame();
+    }
     MOZ_ASSERT(isRematerializedFrame());
     return false;
 }
@@ -740,10 +802,12 @@ AbstractFramePtr::isNonStrictDirectEvalFrame() const
 inline bool
 AbstractFramePtr::isStrictEvalFrame() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->isStrictEvalFrame();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->isStrictEvalFrame();
+    }
     MOZ_ASSERT(isRematerializedFrame());
     return false;
 }
@@ -751,30 +815,36 @@ AbstractFramePtr::isStrictEvalFrame() const
 inline Value*
 AbstractFramePtr::argv() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->argv();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->argv();
+    }
     return asRematerializedFrame()->argv();
 }
 
 inline bool
 AbstractFramePtr::hasArgsObj() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->hasArgsObj();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->hasArgsObj();
+    }
     return asRematerializedFrame()->hasArgsObj();
 }
 
 inline ArgumentsObject&
 AbstractFramePtr::argsObj() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->argsObj();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->argsObj();
+    }
     return asRematerializedFrame()->argsObj();
 }
 
@@ -791,12 +861,15 @@ AbstractFramePtr::initArgsObj(ArgumentsObject& argsobj) const
 inline bool
 AbstractFramePtr::prevUpToDate() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->prevUpToDate();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->prevUpToDate();
-    if (isWasmDebugFrame())
+    }
+    if (isWasmDebugFrame()) {
         return asWasmDebugFrame()->prevUpToDate();
+    }
     return asRematerializedFrame()->prevUpToDate();
 }
 
@@ -839,35 +912,41 @@ AbstractFramePtr::unsetPrevUpToDate() const
 inline Value&
 AbstractFramePtr::thisArgument() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->thisArgument();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->thisArgument();
+    }
     return asRematerializedFrame()->thisArgument();
 }
 
 inline Value
 AbstractFramePtr::newTarget() const
 {
-    if (isInterpreterFrame())
+    if (isInterpreterFrame()) {
         return asInterpreterFrame()->newTarget();
-    if (isBaselineFrame())
+    }
+    if (isBaselineFrame()) {
         return asBaselineFrame()->newTarget();
+    }
     return asRematerializedFrame()->newTarget();
 }
 
 inline bool
 AbstractFramePtr::debuggerNeedsCheckPrimitiveReturn() const
 {
-    if (isWasmDebugFrame())
+    if (isWasmDebugFrame()) {
         return false;
+    }
     return script()->isDerivedClassConstructor();
 }
 
 ActivationEntryMonitor::~ActivationEntryMonitor()
 {
-    if (entryMonitor_)
+    if (entryMonitor_) {
         entryMonitor_->Exit(cx_);
+    }
 
     cx_->entryMonitor = entryMonitor_;
 }
@@ -904,8 +983,9 @@ Activation::~Activation()
 bool
 Activation::isProfiling() const
 {
-    if (isInterpreter())
+    if (isInterpreter()) {
         return asInterpreter()->isProfiling();
+    }
 
     MOZ_ASSERT(isJit());
     return asJit()->isProfiling();
@@ -914,15 +994,17 @@ Activation::isProfiling() const
 Activation*
 Activation::mostRecentProfiling()
 {
-    if (isProfiling())
+    if (isProfiling()) {
         return this;
+    }
     return prevProfiling_;
 }
 
 inline LiveSavedFrameCache*
 Activation::getLiveSavedFrameCache(JSContext* cx) {
-    if (!frameCache_.get().initialized() && !frameCache_.get().init(cx))
+    if (!frameCache_.get().initialized() && !frameCache_.get().init(cx)) {
         return nullptr;
+    }
     return frameCache_.address();
 }
 
@@ -943,22 +1025,25 @@ InterpreterActivation::InterpreterActivation(RunState& state, JSContext* cx,
 InterpreterActivation::~InterpreterActivation()
 {
     // Pop all inline frames.
-    while (regs_.fp() != entryFrame_)
+    while (regs_.fp() != entryFrame_) {
         popInlineFrame(regs_.fp());
+    }
 
     MOZ_ASSERT(oldFrameCount_ == cx_->interpreterStack().frameCount_);
     MOZ_ASSERT_IF(oldFrameCount_ == 0, cx_->interpreterStack().allocator_.used() == 0);
 
-    if (entryFrame_)
+    if (entryFrame_) {
         cx_->interpreterStack().releaseFrame(entryFrame_);
+    }
 }
 
 inline bool
 InterpreterActivation::pushInlineFrame(const CallArgs& args, HandleScript script,
                                        MaybeConstruct constructing)
 {
-    if (!cx_->interpreterStack().pushInlineFrame(cx_, regs_, args, script, constructing))
+    if (!cx_->interpreterStack().pushInlineFrame(cx_, regs_, args, script, constructing)) {
         return false;
+    }
     MOZ_ASSERT(regs_.fp()->script()->compartment() == compartment());
     return true;
 }
@@ -977,8 +1062,9 @@ inline bool
 InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleObject envChain)
 {
     InterpreterStack& stack = cx_->interpreterStack();
-    if (!stack.resumeGeneratorCallFrame(cx_, regs_, callee, envChain))
+    if (!stack.resumeGeneratorCallFrame(cx_, regs_, callee, envChain)) {
         return false;
+    }
 
     MOZ_ASSERT(regs_.fp()->script()->compartment() == compartment_);
     return true;
@@ -987,23 +1073,29 @@ InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleObject 
 /* static */ inline mozilla::Maybe<LiveSavedFrameCache::FramePtr>
 LiveSavedFrameCache::FramePtr::create(const FrameIter& iter)
 {
-    if (iter.done())
+    if (iter.done()) {
         return mozilla::Nothing();
+    }
 
-    if (iter.isPhysicalJitFrame())
+    if (iter.isPhysicalJitFrame()) {
         return mozilla::Some(FramePtr(iter.physicalJitFrame()));
+    }
 
-    if (!iter.hasUsableAbstractFramePtr())
+    if (!iter.hasUsableAbstractFramePtr()) {
         return mozilla::Nothing();
+    }
 
     auto afp = iter.abstractFramePtr();
 
-    if (afp.isInterpreterFrame())
+    if (afp.isInterpreterFrame()) {
         return mozilla::Some(FramePtr(afp.asInterpreterFrame()));
-    if (afp.isWasmDebugFrame())
+    }
+    if (afp.isWasmDebugFrame()) {
         return mozilla::Some(FramePtr(afp.asWasmDebugFrame()));
-    if (afp.isRematerializedFrame())
+    }
+    if (afp.isRematerializedFrame()) {
         return mozilla::Some(FramePtr(afp.asRematerializedFrame()));
+    }
 
     MOZ_CRASH("unexpected frame type");
 }
@@ -1017,12 +1109,15 @@ LiveSavedFrameCache::FramePtr::create(AbstractFramePtr afp)
         js::jit::CommonFrameLayout *common = afp.asBaselineFrame()->framePrefix();
         return FramePtr(common);
     }
-    if (afp.isInterpreterFrame())
+    if (afp.isInterpreterFrame()) {
         return FramePtr(afp.asInterpreterFrame());
-    if (afp.isWasmDebugFrame())
+    }
+    if (afp.isWasmDebugFrame()) {
         return FramePtr(afp.asWasmDebugFrame());
-    if (afp.isRematerializedFrame())
+    }
+    if (afp.isRematerializedFrame()) {
         return FramePtr(afp.asRematerializedFrame());
+    }
 
     MOZ_CRASH("unexpected frame type");
 }

@@ -43,8 +43,9 @@ WeakSet_add_impl(JSContext* cx, const CallArgs& args)
     // Steps 5-7.
     RootedObject value(cx, &args[0].toObject());
     Rooted<WeakSetObject*> map(cx, &args.thisv().toObject().as<WeakSetObject>());
-    if (!WeakCollectionPutEntryInternal(cx, map, value, TrueHandleValue))
+    if (!WeakCollectionPutEntryInternal(cx, map, value, TrueHandleValue)) {
         return false;
+    }
 
     // Steps 6.a.i, 8.
     args.rval().set(args.thisv());
@@ -153,8 +154,9 @@ JSObject*
 WeakSetObject::initClass(JSContext* cx, Handle<GlobalObject*> global)
 {
     RootedPlainObject proto(cx, NewBuiltinClassInstance<PlainObject>(cx));
-    if (!proto)
+    if (!proto) {
         return nullptr;
+    }
 
     Rooted<JSFunction*> ctor(cx, GlobalObject::createConstructor(cx, construct,
                                                                  ClassName(JSProto_WeakSet, cx), 0));
@@ -187,22 +189,26 @@ WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
     // Based on our "Set" implementation instead of the more general ES6 steps.
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!ThrowIfNotConstructing(cx, args, "WeakSet"))
+    if (!ThrowIfNotConstructing(cx, args, "WeakSet")) {
         return false;
+    }
 
     RootedObject proto(cx);
-    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
         return false;
+    }
 
     Rooted<WeakSetObject*> obj(cx, WeakSetObject::create(cx, proto));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     if (!args.get(0).isNullOrUndefined()) {
         RootedValue iterable(cx, args[0]);
         bool optimized = false;
-        if (!IsOptimizableInitForSet<GlobalObject::getOrCreateWeakSetPrototype, isBuiltinAdd>(cx, obj, iterable, &optimized))
+        if (!IsOptimizableInitForSet<GlobalObject::getOrCreateWeakSetPrototype, isBuiltinAdd>(cx, obj, iterable, &optimized)) {
             return false;
+        }
 
         if (optimized) {
             RootedValue keyVal(cx);
@@ -218,16 +224,18 @@ WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
                 }
 
                 keyObject = &keyVal.toObject();
-                if (!WeakCollectionPutEntryInternal(cx, obj, keyObject, TrueHandleValue))
+                if (!WeakCollectionPutEntryInternal(cx, obj, keyObject, TrueHandleValue)) {
                     return false;
+                }
             }
         } else {
             FixedInvokeArgs<1> args2(cx);
             args2[0].set(args[0]);
 
             RootedValue thisv(cx, ObjectValue(*obj));
-            if (!CallSelfHostedFunction(cx, cx->names().WeakSetConstructorInit, thisv, args2, args2.rval()))
+            if (!CallSelfHostedFunction(cx, cx->names().WeakSetConstructorInit, thisv, args2, args2.rval())) {
                 return false;
+            }
         }
     }
 

@@ -47,12 +47,14 @@ Table::create(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeO
     // external table can contain functions from multiple instances and thus
     // must store an additional instance pointer in each element.
     UniqueByteArray array;
-    if (desc.external)
+    if (desc.external) {
         array.reset((uint8_t*)cx->pod_calloc<ExternalTableElem>(desc.limits.initial));
-    else
+    } else {
         array.reset((uint8_t*)cx->pod_calloc<void*>(desc.limits.initial));
-    if (!array)
+    }
+    if (!array) {
         return nullptr;
+    }
 
     return SharedTable(cx->new_<Table>(cx, desc, maybeObject, std::move(array)));
 }
@@ -73,10 +75,11 @@ Table::tracePrivate(JSTracer* trc)
     if (external_) {
         ExternalTableElem* array = externalArray();
         for (uint32_t i = 0; i < length_; i++) {
-            if (array[i].tls)
+            if (array[i].tls) {
                 array[i].tls->instance->trace(trc);
-            else
+            } else {
                 MOZ_ASSERT(!array[i].code);
+            }
         }
     }
 }
@@ -89,10 +92,11 @@ Table::trace(JSTracer* trc)
     // WasmTableObject, call Table::tracePrivate directly. Redirecting through
     // the WasmTableObject avoids marking the entire Table on each incoming
     // edge (once per dependent Instance).
-    if (maybeObject_)
+    if (maybeObject_) {
         TraceEdge(trc, &maybeObject_, "wasm table object");
-    else
+    } else {
         tracePrivate(trc);
+    }
 }
 
 void**
@@ -114,8 +118,9 @@ Table::set(uint32_t index, void* code, const Instance* instance)
 {
     if (external_) {
         ExternalTableElem& elem = externalArray()[index];
-        if (elem.tls)
+        if (elem.tls) {
             JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
+        }
 
         elem.code = code;
         elem.tls = instance->tlsData();
@@ -132,8 +137,9 @@ Table::setNull(uint32_t index)
 {
     // Only external tables can set elements to null after initialization.
     ExternalTableElem& elem = externalArray()[index];
-    if (elem.tls)
+    if (elem.tls) {
         JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
+    }
 
     elem.code = nullptr;
     elem.tls = nullptr;
@@ -168,18 +174,21 @@ Table::grow(uint32_t delta, JSContext* cx)
 {
     // This isn't just an optimization: movingGrowable() assumes that
     // onMovingGrowTable does not fire when length == maximum.
-    if (!delta)
+    if (!delta) {
         return length_;
+    }
 
     uint32_t oldLength = length_;
 
     CheckedInt<uint32_t> newLength = oldLength;
     newLength += delta;
-    if (!newLength.isValid())
+    if (!newLength.isValid()) {
         return -1;
+    }
 
-    if (maximum_ && newLength.value() > maximum_.value())
+    if (maximum_ && newLength.value() > maximum_.value()) {
         return -1;
+    }
 
     MOZ_ASSERT(movingGrowable());
 
@@ -188,8 +197,9 @@ Table::grow(uint32_t delta, JSContext* cx)
     // Note that realloc does not release array_'s pointee (which is returned by
     // externalArray()) on failure which is exactly what we need here.
     ExternalTableElem* newArray = rt->pod_realloc(externalArray(), length_, newLength.value());
-    if (!newArray)
+    if (!newArray) {
         return -1;
+    }
     Unused << array_.release();
     array_.reset((uint8_t*)newArray);
 
@@ -197,8 +207,9 @@ Table::grow(uint32_t delta, JSContext* cx)
     PodZero(newArray + length_, delta);
     length_ = newLength.value();
 
-    for (InstanceSet::Range r = observers_.all(); !r.empty(); r.popFront())
+    for (InstanceSet::Range r = observers_.all(); !r.empty(); r.popFront()) {
         r.front()->instance().onMovingGrowTable();
+    }
 
     return oldLength;
 }

@@ -616,12 +616,6 @@ protocol.  geckodriver translates WebDriver [commands], [responses],
 and [errors] to the [Marionette protocol], and acts as a proxy between
 [WebDriver] and [Marionette].
 
-geckodriver is built in the [Firefox CI] by default but _not_ if you
-build Firefox locally.  To enable building of geckodriver locally,
-ensure you put this in your [mozconfig]:
-
-	ac_add_options --enable-geckodriver
-
 You build geckodriver with the `./mach build testing/geckodriver`
 command, run tests with `./mach test testing/geckodriver`, and run
 the built executable with `./mach geckodriver -- --other --flags`.

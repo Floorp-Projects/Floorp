@@ -49,8 +49,9 @@ class TempAllocator
     {
         LifoAlloc::AutoFallibleScope fallibleAllocator(lifoAlloc());
         void* p = lifoScope_.alloc().alloc(bytes);
-        if (!ensureBallast())
+        if (!ensureBallast()) {
             return nullptr;
+        }
         return p;
     }
 
@@ -59,11 +60,13 @@ class TempAllocator
     {
         LifoAlloc::AutoFallibleScope fallibleAllocator(lifoAlloc());
         size_t bytes;
-        if (MOZ_UNLIKELY(!CalculateAllocSize<T>(n, &bytes)))
+        if (MOZ_UNLIKELY(!CalculateAllocSize<T>(n, &bytes))) {
             return nullptr;
+        }
         T* p = static_cast<T*>(lifoScope_.alloc().alloc(bytes));
-        if (MOZ_UNLIKELY(!ensureBallast()))
+        if (MOZ_UNLIKELY(!ensureBallast())) {
             return nullptr;
+        }
         return p;
     }
 
@@ -92,22 +95,25 @@ class JitAllocPolicy
     template <typename T>
     T* maybe_pod_malloc(size_t numElems) {
         size_t bytes;
-        if (MOZ_UNLIKELY(!CalculateAllocSize<T>(numElems, &bytes)))
+        if (MOZ_UNLIKELY(!CalculateAllocSize<T>(numElems, &bytes))) {
             return nullptr;
+        }
         return static_cast<T*>(alloc_.allocate(bytes));
     }
     template <typename T>
     T* maybe_pod_calloc(size_t numElems) {
         T* p = maybe_pod_malloc<T>(numElems);
-        if (MOZ_LIKELY(p))
+        if (MOZ_LIKELY(p)) {
             memset(p, 0, numElems * sizeof(T));
+        }
         return p;
     }
     template <typename T>
     T* maybe_pod_realloc(T* p, size_t oldSize, size_t newSize) {
         T* n = pod_malloc<T>(newSize);
-        if (MOZ_UNLIKELY(!n))
+        if (MOZ_UNLIKELY(!n)) {
             return n;
+        }
         MOZ_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
         memcpy(n, p, Min(oldSize * sizeof(T), newSize * sizeof(T)));
         return n;
@@ -195,8 +201,9 @@ class TempObjectPool
     template <typename... Args>
     T* allocate(Args&&... args) {
         MOZ_ASSERT(alloc_);
-        if (freed_.empty())
+        if (freed_.empty()) {
             return new (alloc_->fallible()) T(std::forward<Args>(args)...);
+        }
         T* res = freed_.popFront();
         return new (res) T(std::forward<Args>(args)...);
     }

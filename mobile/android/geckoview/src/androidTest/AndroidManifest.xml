@@ -23,6 +23,27 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity-alias>
+
+        <!-- This is used for crash handling in GeckoSessionTestRule -->
+        <service
+                android:name=".TestCrashHandler"
+                android:enabled="true"
+                android:exported="false"
+                android:process=":crash">
+        </service>
+
+        <!-- These are needed for CrashTest -->
+        <service
+                android:name=".crash.RemoteGeckoService"
+                android:enabled="true"
+                android:exported="false"
+                android:process=":gecko">
+        </service>
+        <service
+                android:name=".crash.CrashTestHandler"
+                android:enabled="true"
+                android:exported="false">
+        </service>
     </application>
 
 </manifest>

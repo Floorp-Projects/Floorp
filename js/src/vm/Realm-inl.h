@@ -97,12 +97,14 @@ js::ObjectRealm::objectMaybeInIteration(JSObject* obj)
 
     // If the list is empty we're not iterating any objects.
     js::NativeIterator* next = enumerators->next();
-    if (enumerators == next)
+    if (enumerators == next) {
         return false;
+    }
 
     // If the list contains a single object, check if it's |obj|.
-    if (next->next() == enumerators)
+    if (next->next() == enumerators) {
         return next->objectBeingIterated() == obj;
+    }
 
     return true;
 }

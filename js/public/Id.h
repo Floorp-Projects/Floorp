@@ -151,8 +151,9 @@ static MOZ_ALWAYS_INLINE JS::GCCellPtr
 JSID_TO_GCTHING(jsid id)
 {
     void* thing = (void*)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
-    if (JSID_IS_STRING(id))
+    if (JSID_IS_STRING(id)) {
         return JS::GCCellPtr(thing, JS::TraceKind::String);
+    }
     MOZ_ASSERT(JSID_IS_SYMBOL(id));
     return JS::GCCellPtr(thing, JS::TraceKind::Symbol);
 }
@@ -196,8 +197,9 @@ struct GCPolicy<jsid>
 MOZ_ALWAYS_INLINE bool
 IdIsNotGray(jsid id)
 {
-    if (!JSID_IS_GCTHING(id))
+    if (!JSID_IS_GCTHING(id)) {
         return true;
+    }
 
     return CellIsNotGray(JSID_TO_GCTHING(id).asCell());
 }
@@ -211,16 +213,19 @@ template <>
 struct BarrierMethods<jsid>
 {
     static gc::Cell* asGCThingOrNull(jsid id) {
-        if (JSID_IS_STRING(id))
+        if (JSID_IS_STRING(id)) {
             return reinterpret_cast<gc::Cell*>(JSID_TO_STRING(id));
-        if (JSID_IS_SYMBOL(id))
+        }
+        if (JSID_IS_SYMBOL(id)) {
             return reinterpret_cast<gc::Cell*>(JSID_TO_SYMBOL(id));
+        }
         return nullptr;
     }
     static void postBarrier(jsid* idp, jsid prev, jsid next) {}
     static void exposeToJS(jsid id) {
-        if (JSID_IS_GCTHING(id))
+        if (JSID_IS_GCTHING(id)) {
             js::gc::ExposeGCThingToActiveJS(JSID_TO_GCTHING(id));
+        }
     }
 };
 
@@ -231,10 +236,12 @@ auto
 DispatchTyped(F f, const jsid& id, Args&&... args)
   -> decltype(f(static_cast<JSString*>(nullptr), std::forward<Args>(args)...))
 {
-    if (JSID_IS_STRING(id))
+    if (JSID_IS_STRING(id)) {
         return f(JSID_TO_STRING(id), std::forward<Args>(args)...);
-    if (JSID_IS_SYMBOL(id))
+    }
+    if (JSID_IS_SYMBOL(id)) {
         return f(JSID_TO_SYMBOL(id), std::forward<Args>(args)...);
+    }
     MOZ_ASSERT(!JSID_IS_GCTHING(id));
     return F::defaultValue(id);
 }

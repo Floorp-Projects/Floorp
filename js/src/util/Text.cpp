@@ -23,8 +23,9 @@ const CharT*
 js_strchr_limit(const CharT* s, char16_t c, const CharT* limit)
 {
     while (s < limit) {
-        if (*s == c)
+        if (*s == c) {
             return s;
+        }
         s++;
     }
     return nullptr;
@@ -40,8 +41,9 @@ int32_t
 js_fputs(const char16_t* s, FILE* f)
 {
     while (*s != 0) {
-        if (fputwc(wchar_t(*s), f) == WEOF)
+        if (fputwc(wchar_t(*s), f) == WEOF) {
             return WEOF;
+        }
         s++;
     }
     return 1;
@@ -52,8 +54,9 @@ js::DuplicateString(JSContext* cx, const char* s)
 {
     size_t n = strlen(s) + 1;
     auto ret = cx->make_pod_array<char>(n);
-    if (!ret)
+    if (!ret) {
         return ret;
+    }
     PodCopy(ret.get(), s, n);
     return ret;
 }
@@ -63,8 +66,9 @@ js::DuplicateString(JSContext* cx, const char16_t* s)
 {
     size_t n = js_strlen(s) + 1;
     auto ret = cx->make_pod_array<char16_t>(n);
-    if (!ret)
+    if (!ret) {
         return ret;
+    }
     PodCopy(ret.get(), s, n);
     return ret;
 }
@@ -74,8 +78,9 @@ js::DuplicateString(const char* s)
 {
     size_t n = strlen(s) + 1;
     UniqueChars ret(js_pod_malloc<char>(n));
-    if (!ret)
+    if (!ret) {
         return ret;
+    }
     PodCopy(ret.get(), s, n);
     return ret;
 }
@@ -84,8 +89,9 @@ UniqueChars
 js::DuplicateString(const char* s, size_t n)
 {
     UniqueChars ret(js_pod_malloc<char>(n + 1));
-    if (!ret)
+    if (!ret) {
         return nullptr;
+    }
     PodCopy(ret.get(), s, n);
     ret[n] = 0;
     return ret;
@@ -101,8 +107,9 @@ UniqueTwoByteChars
 js::DuplicateString(const char16_t* s, size_t n)
 {
     UniqueTwoByteChars ret(js_pod_malloc<char16_t>(n + 1));
-    if (!ret)
+    if (!ret) {
         return nullptr;
+    }
     PodCopy(ret.get(), s, n);
     ret[n] = 0;
     return ret;
@@ -112,8 +119,9 @@ char16_t*
 js::InflateString(JSContext* cx, const char* bytes, size_t length)
 {
     char16_t* chars = cx->pod_malloc<char16_t>(length + 1);
-    if (!chars)
+    if (!chars) {
         return nullptr;
+    }
     CopyAndInflateChars(chars, bytes, length);
     chars[length] = 0;
     return chars;
@@ -176,10 +184,11 @@ js::PutEscapedStringImpl(char* buffer, size_t bufferSize, GenericPrinter* out, c
     MOZ_ASSERT_IF(!buffer, bufferSize == 0);
     MOZ_ASSERT_IF(out, !buffer);
 
-    if (bufferSize == 0)
+    if (bufferSize == 0) {
         buffer = nullptr;
-    else
+    } else {
         bufferSize--;
+    }
 
     const CharT* charsEnd = chars + length;
     size_t n = 0;
@@ -199,8 +208,9 @@ js::PutEscapedStringImpl(char* buffer, size_t bufferSize, GenericPrinter* out, c
           case LAST_QUOTE:
             state = STOP;
           do_quote:
-            if (quote == 0)
+            if (quote == 0) {
                 continue;
+            }
             c = (char)quote;
             break;
           case CHARS:
@@ -220,8 +230,9 @@ js::PutEscapedStringImpl(char* buffer, size_t bufferSize, GenericPrinter* out, c
                 goto do_hex_escape;
             }
             if (u < 127) {
-                if (u == quote || u == '\\')
+                if (u == quote || u == '\\') {
                     goto do_escape;
+                }
                 c = (char)u;
             } else if (u < 0x100) {
                 goto do_hex_escape;
@@ -264,14 +275,16 @@ js::PutEscapedStringImpl(char* buffer, size_t bufferSize, GenericPrinter* out, c
                 buffer = nullptr;
             }
         } else if (out) {
-            if (!out->put(&c, 1))
+            if (!out->put(&c, 1)) {
                 return size_t(-1);
+            }
         }
         n++;
     }
   stop:
-    if (buffer)
+    if (buffer) {
         buffer[n] = '\0';
+    }
     return n;
 }
 

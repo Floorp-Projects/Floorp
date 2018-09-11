@@ -5,7 +5,6 @@
 use api::{ExternalScrollId, LayoutPoint, LayoutRect, LayoutVector2D, LayoutVector3D};
 use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation};
 use api::{LayoutSize, LayoutTransform, PropertyBinding, ScrollSensitivity, WorldPoint};
-use clip::{ClipStore};
 use gpu_types::TransformPalette;
 use internal_types::{FastHashMap, FastHashSet};
 use print_tree::{PrintTree, PrintTreePrinter};
@@ -44,12 +43,12 @@ impl CoordinateSystem {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SpatialNodeIndex(pub usize);
 
-const ROOT_REFERENCE_FRAME_INDEX: SpatialNodeIndex = SpatialNodeIndex(0);
+pub const ROOT_SPATIAL_NODE_INDEX: SpatialNodeIndex = SpatialNodeIndex(0);
 const TOPMOST_SCROLL_NODE_INDEX: SpatialNodeIndex = SpatialNodeIndex(1);
 
 impl CoordinateSystemId {
@@ -168,7 +167,7 @@ impl ClipScrollTree {
     pub fn root_reference_frame_index(&self) -> SpatialNodeIndex {
         // TODO(mrobinson): We should eventually make this impossible to misuse.
         debug_assert!(!self.spatial_nodes.is_empty());
-        ROOT_REFERENCE_FRAME_INDEX
+        ROOT_SPATIAL_NODE_INDEX
     }
 
     /// The root scroll node which is the first child of the root reference frame.
@@ -415,7 +414,6 @@ impl ClipScrollTree {
         &self,
         index: SpatialNodeIndex,
         pt: &mut T,
-        clip_store: &ClipStore
     ) {
         let node = &self.spatial_nodes[index.0];
         match node.node_type {
@@ -442,23 +440,23 @@ impl ClipScrollTree {
         pt.add_item(format!("coordinate_system_id: {:?}", node.coordinate_system_id));
 
         for child_index in &node.children {
-            self.print_node(*child_index, pt, clip_store);
+            self.print_node(*child_index, pt);
         }
 
         pt.end_level();
     }
 
     #[allow(dead_code)]
-    pub fn print(&self, clip_store: &ClipStore) {
+    pub fn print(&self) {
         if !self.spatial_nodes.is_empty() {
             let mut pt = PrintTree::new("clip_scroll tree");
-            self.print_with(clip_store, &mut pt);
+            self.print_with(&mut pt);
         }
     }
 
-    pub fn print_with<T: PrintTreePrinter>(&self, clip_store: &ClipStore, pt: &mut T) {
+    pub fn print_with<T: PrintTreePrinter>(&self, pt: &mut T) {
         if !self.spatial_nodes.is_empty() {
-            self.print_node(self.root_reference_frame_index(), pt, clip_store);
+            self.print_node(self.root_reference_frame_index(), pt);
         }
     }
 }

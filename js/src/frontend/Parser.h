@@ -516,8 +516,9 @@ class MOZ_STACK_CLASS PerHandlerParser
         // If the we are delazifying, the LazyScript already has all the
         // closed-over info for bindings and there's no need to track used
         // names.
-        if (handler.canSkipLazyClosedOverBindings())
+        if (handler.canSkipLazyClosedOverBindings()) {
             return true;
+        }
 
         return ParserBase::noteUsedNameInternal(name);
     }
@@ -1618,8 +1619,9 @@ class MOZ_STACK_CLASS AutoAwaitIsKeyword
 
         // 'await' is always a keyword in module contexts, so we don't modify
         // the state when the original handling is AwaitIsModuleKeyword.
-        if (oldAwaitHandling_ != AwaitIsModuleKeyword)
+        if (oldAwaitHandling_ != AwaitIsModuleKeyword) {
             parser_->setAwaitHandling(awaitHandling);
+        }
     }
 
     ~AutoAwaitIsKeyword() {

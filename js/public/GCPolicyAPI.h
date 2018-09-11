@@ -112,12 +112,14 @@ struct GCPointerPolicy
                   "Non-pointer type not allowed for GCPointerPolicy");
 
     static void trace(JSTracer* trc, T* vp, const char* name) {
-        if (*vp)
+        if (*vp) {
             js::UnsafeTraceManuallyBarrieredEdge(trc, vp, name);
+        }
     }
     static bool needsSweep(T* vp) {
-        if (*vp)
+        if (*vp) {
             return js::gc::IsAboutToBeFinalizedUnbarriered(vp);
+        }
         return false;
     }
     static bool isValid(T v) {
@@ -134,12 +136,14 @@ template <typename T>
 struct NonGCPointerPolicy
 {
     static void trace(JSTracer* trc, T* vp, const char* name) {
-        if (*vp)
+        if (*vp) {
             (*vp)->trace(trc);
+        }
     }
     static bool needsSweep(T* vp) {
-        if (*vp)
+        if (*vp) {
             return (*vp)->needsSweep();
+        }
         return false;
     }
     static bool isValid(T v) {
@@ -163,17 +167,20 @@ template <typename T, typename D>
 struct GCPolicy<mozilla::UniquePtr<T, D>>
 {
     static void trace(JSTracer* trc, mozilla::UniquePtr<T,D>* tp, const char* name) {
-        if (tp->get())
+        if (tp->get()) {
             GCPolicy<T>::trace(trc, tp->get(), name);
+        }
     }
     static bool needsSweep(mozilla::UniquePtr<T,D>* tp) {
-        if (tp->get())
+        if (tp->get()) {
             return GCPolicy<T>::needsSweep(tp->get());
+        }
         return false;
     }
     static bool isValid(const mozilla::UniquePtr<T,D>& t) {
-        if (t.get())
+        if (t.get()) {
             return GCPolicy<T>::isValid(*t.get());
+        }
         return true;
     }
 };
@@ -184,17 +191,20 @@ template <typename T>
 struct GCPolicy<mozilla::Maybe<T>>
 {
     static void trace(JSTracer* trc, mozilla::Maybe<T>* tp, const char* name) {
-        if (tp->isSome())
+        if (tp->isSome()) {
             GCPolicy<T>::trace(trc, tp->ptr(), name);
+        }
     }
     static bool needsSweep(mozilla::Maybe<T>* tp) {
-        if (tp->isSome())
+        if (tp->isSome()) {
             return GCPolicy<T>::needsSweep(tp->ptr());
+        }
         return false;
     }
     static bool isValid(const mozilla::Maybe<T>& t) {
-        if (t.isSome())
+        if (t.isSome()) {
             return GCPolicy<T>::isValid(t.ref());
+        }
         return true;
     }
 };

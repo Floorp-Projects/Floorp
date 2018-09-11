@@ -40,8 +40,9 @@ using namespace js::jit;
 PCMappingSlotInfo::ToSlotLocation(const StackValue* stackVal)
 {
     if (stackVal->kind() == StackValue::Register) {
-        if (stackVal->reg() == R0)
+        if (stackVal->reg() == R0) {
             return SlotInR0;
+        }
         MOZ_ASSERT(stackVal->reg() == R1);
         return SlotInR1;
     }
@@ -52,10 +53,11 @@ PCMappingSlotInfo::ToSlotLocation(const StackValue* stackVal)
 void
 ICStubSpace::freeAllAfterMinorGC(Zone* zone)
 {
-    if (zone->isAtomsZone())
+    if (zone->isAtomsZone()) {
         MOZ_ASSERT(allocator_.isEmpty());
-    else
+    } else {
         zone->runtimeFromMainThread()->gc.freeAllLifoBlocksAfterMinorGC(&allocator_);
+    }
 }
 
 BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
@@ -123,8 +125,9 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
     uint8_t spDummy;
     uint32_t extra = BaselineFrame::Size() + (data.osrNumStackValues * sizeof(Value));
     uint8_t* checkSp = (&spDummy) - extra;
-    if (!CheckRecursionLimitWithStackPointer(cx, checkSp))
+    if (!CheckRecursionLimitWithStackPointer(cx, checkSp)) {
         return JitExec_Aborted;
+    }
 
 #ifdef DEBUG
     // Assert we don't GC before entering JIT code. A GC could discard JIT code
@@ -234,8 +237,9 @@ jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc)
     TraceLogStartEvent(logger, TraceLogger_Baseline);
 
     JitExecStatus status = EnterBaseline(cx, data);
-    if (status != JitExec_Ok)
+    if (status != JitExec_Ok) {
         return status;
+    }
 
     fp->setReturnValue(data.result);
     return JitExec_Ok;
@@ -260,16 +264,18 @@ jit::BaselineCompile(JSContext* cx, JSScript* script, bool forceDebugInstrumenta
         return Method_Error;
     }
 
-    if (forceDebugInstrumentation)
+    if (forceDebugInstrumentation) {
         compiler.setCompileDebugInstrumentation();
+    }
 
     MethodStatus status = compiler.compile();
 
     MOZ_ASSERT_IF(status == Method_Compiled, script->hasBaselineScript());
     MOZ_ASSERT_IF(status != Method_Compiled, !script->hasBaselineScript());
 
-    if (status == Method_CantCompile)
+    if (status == Method_CantCompile) {
         script->setBaselineScript(cx->runtime(), BASELINE_DISABLED_SCRIPT);
+    }
 
     return status;
 }
@@ -280,29 +286,36 @@ CanEnterBaselineJIT(JSContext* cx, HandleScript script, InterpreterFrame* osrFra
     MOZ_ASSERT(jit::IsBaselineEnabled(cx));
 
     // Skip if the script has been disabled.
-    if (!script->canBaselineCompile())
+    if (!script->canBaselineCompile()) {
         return Method_Skipped;
+    }
 
-    if (script->length() > BaselineScript::MAX_JSSCRIPT_LENGTH)
+    if (script->length() > BaselineScript::MAX_JSSCRIPT_LENGTH) {
         return Method_CantCompile;
+    }
 
-    if (script->nslots() > BaselineScript::MAX_JSSCRIPT_SLOTS)
+    if (script->nslots() > BaselineScript::MAX_JSSCRIPT_SLOTS) {
         return Method_CantCompile;
+    }
 
-    if (script->hasBaselineScript())
+    if (script->hasBaselineScript()) {
         return Method_Compiled;
+    }
 
     // Check this before calling ensureJitRealmExists, so we're less
     // likely to report OOM in JSRuntime::createJitRuntime.
-    if (!CanLikelyAllocateMoreExecutableMemory())
+    if (!CanLikelyAllocateMoreExecutableMemory()) {
         return Method_Skipped;
+    }
 
-    if (!cx->realm()->ensureJitRealmExists(cx))
+    if (!cx->realm()->ensureJitRealmExists(cx)) {
         return Method_Error;
+    }
 
     // Check script warm-up counter.
-    if (script->incWarmUpCounter() <= JitOptions.baselineWarmUpThreshold)
+    if (script->incWarmUpCounter() <= JitOptions.baselineWarmUpThreshold) {
         return Method_Skipped;
+    }
 
     // Frames can be marked as debuggee frames independently of its underlying
     // script being a debuggee script, e.g., when performing
@@ -313,8 +326,9 @@ CanEnterBaselineJIT(JSContext* cx, HandleScript script, InterpreterFrame* osrFra
 MethodStatus
 jit::CanEnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp)
 {
-   if (!CheckFrame(fp))
+   if (!CheckFrame(fp)) {
        return Method_CantCompile;
+   }
 
    // This check is needed in the following corner case. Consider a function h,
    //
@@ -336,8 +350,9 @@ jit::CanEnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp)
    // already compiled in baseline, execution jumps directly into baseline
    // code. This is incorrect as h's baseline script does not have debug
    // instrumentation.
-   if (fp->isDebuggee() && !Debugger::ensureExecutionObservabilityOfOsrFrame(cx, fp))
+   if (fp->isDebuggee() && !Debugger::ensureExecutionObservabilityOfOsrFrame(cx, fp)) {
        return Method_Error;
+   }
 
    RootedScript script(cx, fp->script());
    return CanEnterBaselineJIT(cx, script, fp);
@@ -398,8 +413,9 @@ BaselineScript::New(JSScript* jsscript,
                         paddedTLEntriesSize;
 
     BaselineScript* script = jsscript->zone()->pod_malloc_with_extra<BaselineScript, uint8_t>(allocBytes);
-    if (!script)
+    if (!script) {
         return nullptr;
+    }
     new (script) BaselineScript(prologueOffset, epilogueOffset,
                                 profilerEnterToggleOffset, profilerExitToggleOffset,
                                 postDebugPrologueOffset);
@@ -450,8 +466,9 @@ BaselineScript::trace(JSTracer* trc)
 void
 BaselineScript::writeBarrierPre(Zone* zone, BaselineScript* script)
 {
-    if (zone->needsIncrementalBarrier())
+    if (zone->needsIncrementalBarrier()) {
         script->trace(zone->barrierTracer());
+    }
 }
 
 void
@@ -493,8 +510,9 @@ BaselineScript::clearDependentWasmImports()
     // Remove any links from wasm::Instances that contain optimized import calls into
     // this BaselineScript.
     if (dependentWasmImports_) {
-        for (DependentWasmImport& dep : *dependentWasmImports_)
+        for (DependentWasmImport& dep : *dependentWasmImports_) {
             dep.instance->deoptimizeImportExit(dep.importIndex);
+        }
         dependentWasmImports_->clear();
     }
 }
@@ -516,8 +534,9 @@ BaselineScript::addDependentWasmImport(JSContext* cx, wasm::Instance& instance, 
 {
     if (!dependentWasmImports_) {
         dependentWasmImports_ = cx->new_<Vector<DependentWasmImport>>(cx);
-        if (!dependentWasmImports_)
+        if (!dependentWasmImports_) {
             return false;
+        }
     }
     return dependentWasmImports_->emplaceBack(instance, idx);
 }
@@ -525,8 +544,9 @@ BaselineScript::addDependentWasmImport(JSContext* cx, wasm::Instance& instance, 
 void
 BaselineScript::removeDependentWasmImport(wasm::Instance& instance, uint32_t idx)
 {
-    if (!dependentWasmImports_)
+    if (!dependentWasmImports_) {
         return;
+    }
 
     for (DependentWasmImport& dep : *dependentWasmImports_) {
         if (dep.instance == &instance && dep.importIndex == idx) {
@@ -585,10 +605,12 @@ BaselineScript::icEntryFromReturnOffset(CodeOffset returnOffset)
                        [&returnOffset](ICEntry& entry) {
                            size_t roffset = returnOffset.offset();
                            size_t entryRoffset = entry.returnOffset().offset();
-                           if (roffset < entryRoffset)
+                           if (roffset < entryRoffset) {
                                return -1;
-                           if (entryRoffset < roffset)
+                           }
+                           if (entryRoffset < roffset) {
                                return 1;
+                           }
                            return 0;
                        },
                        &loc);
@@ -605,10 +627,12 @@ ComputeBinarySearchMid(BaselineScript* baseline, uint32_t pcOffset, size_t* loc)
     return BinarySearchIf(ICEntries(baseline), 0, baseline->numICEntries(),
                           [pcOffset](ICEntry& entry) {
                               uint32_t entryOffset = entry.pcOffset();
-                              if (pcOffset < entryOffset)
+                              if (pcOffset < entryOffset) {
                                   return -1;
-                              if (entryOffset < pcOffset)
+                              }
+                              if (entryOffset < pcOffset) {
                                   return 1;
+                              }
                               return 0;
                           },
                           loc);
@@ -626,8 +650,9 @@ BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset)
     // Multiple IC entries can have the same PC offset, but this method only looks for
     // those which have isForOp() set.
     size_t mid;
-    if (!ComputeBinarySearchMid(this, pcOffset, &mid))
+    if (!ComputeBinarySearchMid(this, pcOffset, &mid)) {
         return nullptr;
+    }
 
     MOZ_ASSERT(mid < numICEntries());
 
@@ -635,14 +660,17 @@ BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset)
     // forward from this IC entry, looking for one with the same PC offset which
     // has isForOp() set.
     for (size_t i = mid; icEntry(i).pcOffset() == pcOffset; i--) {
-        if (icEntry(i).isForOp())
+        if (icEntry(i).isForOp()) {
             return &icEntry(i);
-        if (i == 0)
+        }
+        if (i == 0) {
             break;
+        }
     }
     for (size_t i = mid+1; i < numICEntries() && icEntry(i).pcOffset() == pcOffset; i++) {
-        if (icEntry(i).isForOp())
+        if (icEntry(i).isForOp()) {
             return &icEntry(i);
+        }
     }
     return nullptr;
 }
@@ -667,8 +695,9 @@ BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedU
         ICEntry* lastEntry = &icEntry(numICEntries() - 1);
         ICEntry* curEntry = prevLookedUpEntry;
         while (curEntry >= firstEntry && curEntry <= lastEntry) {
-            if (curEntry->pcOffset() == pcOffset && curEntry->isForOp())
+            if (curEntry->pcOffset() == pcOffset && curEntry->isForOp()) {
                 return curEntry;
+            }
             curEntry++;
         }
         return nullptr;
@@ -695,14 +724,17 @@ BaselineScript::callVMEntryFromPCOffset(uint32_t pcOffset)
     MOZ_ASSERT(mid < numICEntries());
 
     for (size_t i = mid; icEntry(i).pcOffset() == pcOffset; i--) {
-        if (icEntry(i).kind() == ICEntry::Kind_CallVM)
+        if (icEntry(i).kind() == ICEntry::Kind_CallVM) {
             return icEntry(i);
-        if (i == 0)
+        }
+        if (i == 0) {
             break;
+        }
     }
     for (size_t i = mid+1; i < numICEntries() && icEntry(i).pcOffset() == pcOffset; i++) {
-        if (icEntry(i).kind() == ICEntry::Kind_CallVM)
+        if (icEntry(i).kind() == ICEntry::Kind_CallVM) {
             return icEntry(i);
+        }
     }
     MOZ_CRASH("Invalid PC offset for callVM entry.");
 }
@@ -716,8 +748,9 @@ BaselineScript::stackCheckICEntry(bool earlyCheck)
     // handler via the stack check, which is part of the prologue.
     ICEntry::Kind kind = earlyCheck ? ICEntry::Kind_EarlyStackCheck : ICEntry::Kind_StackCheck;
     for (size_t i = 0; i < numICEntries() && icEntry(i).pcOffset() == 0; i++) {
-        if (icEntry(i).kind() == kind)
+        if (icEntry(i).kind() == kind) {
             return icEntry(i);
+        }
     }
     MOZ_CRASH("No stack check ICEntry found.");
 }
@@ -728,8 +761,9 @@ BaselineScript::warmupCountICEntry()
     // The stack check will be at a very low offset, so just do a linear search
     // from the beginning.
     for (size_t i = 0; i < numICEntries() && icEntry(i).pcOffset() == 0; i++) {
-        if (icEntry(i).kind() == ICEntry::Kind_WarmupCounter)
+        if (icEntry(i).kind() == ICEntry::Kind_WarmupCounter) {
             return icEntry(i);
+        }
     }
     MOZ_CRASH("No warmup count ICEntry found.");
 }
@@ -770,8 +804,9 @@ BaselineScript::copyICEntries(JSScript* script, const ICEntry* entries)
 
         // If the attached stub is a fallback stub, then fix it up with
         // a pointer to the (now available) realEntry.
-        if (realEntry.firstStub()->isFallback())
+        if (realEntry.firstStub()->isFallback()) {
             realEntry.firstStub()->toFallbackStub()->fixupICEntry(&realEntry);
+        }
 
         if (realEntry.firstStub()->isTypeMonitor_Fallback()) {
             ICTypeMonitor_Fallback* stub = realEntry.firstStub()->toTypeMonitor_Fallback();
@@ -803,8 +838,9 @@ BaselineScript::copyPCMappingEntries(const CompactBufferWriter& entries)
 void
 BaselineScript::copyPCMappingIndexEntries(const PCMappingIndexEntry* entries)
 {
-    for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++)
+    for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++) {
         pcMappingIndexEntry(i) = entries[i];
+    }
 }
 
 uint8_t*
@@ -818,8 +854,9 @@ BaselineScript::nativeCodeForPC(JSScript* script, jsbytecode* pc, PCMappingSlotI
     // interested in.
     uint32_t i = 1;
     for (; i < numPCMappingIndexEntries(); i++) {
-        if (pcMappingIndexEntry(i).pcOffset > pcOffset)
+        if (pcMappingIndexEntry(i).pcOffset > pcOffset) {
             break;
+        }
     }
 
     // The previous entry contains the current pc.
@@ -840,12 +877,14 @@ BaselineScript::nativeCodeForPC(JSScript* script, jsbytecode* pc, PCMappingSlotI
         // If the high bit is set, the native offset relative to the
         // previous pc != 0 and comes next.
         uint8_t b = reader.readByte();
-        if (b & 0x80)
+        if (b & 0x80) {
             nativeOffset += reader.readUnsigned();
+        }
 
         if (curPC == pc) {
-            if (slotInfo)
+            if (slotInfo) {
                 *slotInfo = PCMappingSlotInfo(b & ~0x80);
+            }
             return method_->raw() + nativeOffset;
         }
 
@@ -869,8 +908,9 @@ BaselineScript::approximatePcForNativeAddress(JSScript* script, uint8_t* nativeA
     // interested in.
     uint32_t i = 1;
     for (; i < numPCMappingIndexEntries(); i++) {
-        if (pcMappingIndexEntry(i).nativeOffset > nativeOffset)
+        if (pcMappingIndexEntry(i).nativeOffset > nativeOffset) {
             break;
+        }
     }
 
     // Go back an entry to search forward from.
@@ -887,28 +927,32 @@ BaselineScript::approximatePcForNativeAddress(JSScript* script, uint8_t* nativeA
 
     // The native code address can occur before the start of ops.
     // Associate those with bytecode offset 0.
-    if (curNativeOffset > nativeOffset)
+    if (curNativeOffset > nativeOffset) {
         return script->code();
+    }
 
     jsbytecode* lastPC = curPC;
     while (true) {
         // If the high bit is set, the native offset relative to the
         // previous pc != 0 and comes next.
         uint8_t b = reader.readByte();
-        if (b & 0x80)
+        if (b & 0x80) {
             curNativeOffset += reader.readUnsigned();
+        }
 
         // Return the last PC that matched nativeOffset. Some bytecode
         // generate no native code (e.g., constant-pushing bytecode like
         // JSOP_INT8), and so their entries share the same nativeOffset as the
         // next op that does generate code.
-        if (curNativeOffset > nativeOffset)
+        if (curNativeOffset > nativeOffset) {
             return lastPC;
+        }
 
         // The native address may lie in-between the last delta-entry in
         // a pcMappingIndexEntry, and the next pcMappingIndexEntry.
-        if (!reader.more())
+        if (!reader.more()) {
             return curPC;
+        }
 
         lastPC = curPC;
         curPC += GetBytecodeLength(curPC);
@@ -921,8 +965,9 @@ BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc)
     MOZ_ASSERT(script->baselineScript() == this);
 
     // Only scripts compiled for debug mode have toggled calls.
-    if (!hasDebugInstrumentation())
+    if (!hasDebugInstrumentation()) {
         return;
+    }
 
     AutoWritableJitCode awjc(method());
 
@@ -937,8 +982,9 @@ BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc)
 
         while (reader.more()) {
             uint8_t b = reader.readByte();
-            if (b & 0x80)
+            if (b & 0x80) {
                 nativeOffset += reader.readUnsigned();
+            }
 
             if (!pc || pc == curPC) {
                 bool enabled = script->stepModeEnabled() || script->hasBreakpointsAt(curPC);
@@ -963,8 +1009,9 @@ BaselineScript::initTraceLogger(JSScript* script, const Vector<CodeOffset>& offs
 #endif
 
     MOZ_ASSERT(offsets.length() == numTraceLoggerToggleOffsets_);
-    for (size_t i = 0; i < offsets.length(); i++)
+    for (size_t i = 0; i < offsets.length(); i++) {
         traceLoggerToggleOffsets()[i] = offsets[i].offset();
+    }
 
     if (TraceLogTextIdEnabled(TraceLogger_Engine) || TraceLogTextIdEnabled(TraceLogger_Scripts)) {
         traceLoggerScriptEvent_ = TraceLoggerEvent(TraceLogger_Scripts, script);
@@ -984,18 +1031,20 @@ BaselineScript::toggleTraceLoggerScripts(JSScript* script, bool enable)
 
     // Patch the logging script textId to be correct.
     // When logging log the specific textId else the global Scripts textId.
-    if (enable && !traceLoggerScriptEvent_.hasTextId())
+    if (enable && !traceLoggerScriptEvent_.hasTextId()) {
         traceLoggerScriptEvent_ = TraceLoggerEvent(TraceLogger_Scripts, script);
+    }
 
     AutoWritableJitCode awjc(method());
 
     // Enable/Disable the traceLogger.
     for (size_t i = 0; i < numTraceLoggerToggleOffsets_; i++) {
         CodeLocationLabel label(method_, CodeOffset(traceLoggerToggleOffsets()[i]));
-        if (enable)
+        if (enable) {
             Assembler::ToggleToCmp(label);
-        else
+        } else {
             Assembler::ToggleToJmp(label);
+        }
     }
 
 #if DEBUG
@@ -1015,10 +1064,11 @@ BaselineScript::toggleTraceLoggerEngine(bool enable)
     // Enable/Disable the traceLogger prologue and epilogue.
     for (size_t i = 0; i < numTraceLoggerToggleOffsets_; i++) {
         CodeLocationLabel label(method_, CodeOffset(traceLoggerToggleOffsets()[i]));
-        if (enable)
+        if (enable) {
             Assembler::ToggleToCmp(label);
-        else
+        } else {
             Assembler::ToggleToJmp(label);
+        }
     }
 
 #if DEBUG
@@ -1030,8 +1080,9 @@ BaselineScript::toggleTraceLoggerEngine(bool enable)
 void
 BaselineScript::toggleProfilerInstrumentation(bool enable)
 {
-    if (enable == isProfilerInstrumentationOn())
+    if (enable == isProfilerInstrumentationOn()) {
         return;
+    }
 
     JitSpew(JitSpew_BaselineIC, "  toggling profiling %s for BaselineScript %p",
             enable ? "on" : "off", this);
@@ -1057,12 +1108,14 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
 
     for (size_t i = 0; i < numICEntries(); i++) {
         ICEntry& entry = icEntry(i);
-        if (!entry.hasStub())
+        if (!entry.hasStub()) {
             continue;
+        }
 
         ICStub* lastStub = entry.firstStub();
-        while (lastStub->next())
+        while (lastStub->next()) {
             lastStub = lastStub->next();
+        }
 
         if (lastStub->isFallback()) {
             // Unlink all stubs allocated in the optimized space.
@@ -1085,8 +1138,9 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
                 // optimized stub space.
                 ICTypeMonitor_Fallback* lastMonStub =
                     lastStub->toMonitoredFallbackStub()->maybeFallbackMonitorStub();
-                if (lastMonStub)
+                if (lastMonStub) {
                     lastMonStub->resetMonitorStubChain(zone);
+                }
             }
         } else if (lastStub->isTypeMonitor_Fallback()) {
             lastStub->toTypeMonitor_Fallback()->resetMonitorStubChain(zone);
@@ -1099,8 +1153,9 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
     // All remaining stubs must be allocated in the fallback space.
     for (size_t i = 0; i < numICEntries(); i++) {
         ICEntry& entry = icEntry(i);
-        if (!entry.hasStub())
+        if (!entry.hasStub()) {
             continue;
+        }
 
         ICStub* stub = entry.firstStub();
         while (stub->next()) {
@@ -1114,8 +1169,9 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
 void
 jit::FinishDiscardBaselineScript(FreeOp* fop, JSScript* script)
 {
-    if (!script->hasBaselineScript())
+    if (!script->hasBaselineScript()) {
         return;
+    }
 
     if (script->baselineScript()->active()) {
         // Script is live on the stack. Keep the BaselineScript, but destroy
@@ -1141,21 +1197,24 @@ void
 jit::AddSizeOfBaselineData(JSScript* script, mozilla::MallocSizeOf mallocSizeOf, size_t* data,
                            size_t* fallbackStubs)
 {
-    if (script->hasBaselineScript())
+    if (script->hasBaselineScript()) {
         script->baselineScript()->addSizeOfIncludingThis(mallocSizeOf, data, fallbackStubs);
+    }
 }
 
 void
 jit::ToggleBaselineProfiling(JSRuntime* runtime, bool enable)
 {
     JitRuntime* jrt = runtime->jitRuntime();
-    if (!jrt)
+    if (!jrt) {
         return;
+    }
 
     for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
         for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next()) {
-            if (!script->hasBaselineScript())
+            if (!script->hasBaselineScript()) {
                 continue;
+            }
             AutoWritableJitCode awjc(script->baselineScript()->method());
             script->baselineScript()->toggleProfilerInstrumentation(enable);
         }
@@ -1168,8 +1227,9 @@ jit::ToggleBaselineTraceLoggerScripts(JSRuntime* runtime, bool enable)
 {
     for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
         for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next()) {
-            if (!script->hasBaselineScript())
+            if (!script->hasBaselineScript()) {
                 continue;
+            }
             script->baselineScript()->toggleTraceLoggerScripts(script, enable);
         }
     }
@@ -1180,8 +1240,9 @@ jit::ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable)
 {
     for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
         for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next()) {
-            if (!script->hasBaselineScript())
+            if (!script->hasBaselineScript()) {
                 continue;
+            }
             script->baselineScript()->toggleTraceLoggerEngine(enable);
         }
     }
@@ -1208,8 +1269,9 @@ MarkActiveBaselineScripts(JSContext* cx, const JitActivationIterator& activation
             // Keep the baseline script around, since bailouts from the ion
             // jitcode might need to re-enter into the baseline jitcode.
             frame.script()->baselineScript()->setActive();
-            for (InlineFrameIterator inlineIter(cx, &frame); inlineIter.more(); ++inlineIter)
+            for (InlineFrameIterator inlineIter(cx, &frame); inlineIter.more(); ++inlineIter) {
                 inlineIter.script()->baselineScript()->setActive();
+            }
             break;
           }
           default:;
@@ -1220,11 +1282,13 @@ MarkActiveBaselineScripts(JSContext* cx, const JitActivationIterator& activation
 void
 jit::MarkActiveBaselineScripts(Zone* zone)
 {
-    if (zone->isAtomsZone())
+    if (zone->isAtomsZone()) {
         return;
+    }
     JSContext* cx = TlsContext.get();
     for (JitActivationIterator iter(cx); !iter.done(); ++iter) {
-        if (iter->compartment()->zone() == zone)
+        if (iter->compartment()->zone() == zone) {
             MarkActiveBaselineScripts(cx, iter);
+        }
     }
 }

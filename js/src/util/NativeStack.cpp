@@ -180,15 +180,17 @@ js::GetNativeStackBaseImpl()
             }
             fclose(fs);
         }
-    } else
+    } else {
         // For non main-threads pthread allocates the stack itself so it tells
         // the truth.
         rc = pthread_attr_getstack(&sattr, &stackBase, &stackSize);
+    }
 # else
     rc = pthread_attr_getstack(&sattr, &stackBase, &stackSize);
 # endif
-    if (rc)
+    if (rc) {
         MOZ_CRASH();
+    }
     MOZ_ASSERT(stackBase);
     pthread_attr_destroy(&sattr);
 

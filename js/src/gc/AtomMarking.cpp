@@ -80,8 +80,9 @@ AtomMarkingRuntime::computeBitmapFromChunkMarkBits(JSRuntime* runtime, DenseBitm
     MOZ_ASSERT(CurrentThreadIsPerformingGC());
     MOZ_ASSERT(!runtime->hasHelperThreadZones());
 
-    if (!bitmap.ensureSpace(allocatedWords))
+    if (!bitmap.ensureSpace(allocatedWords)) {
         return false;
+    }
 
     Zone* atomsZone = runtime->unsafeAtomsZone();
     for (auto thingKind : AllAllocKinds()) {
@@ -100,8 +101,9 @@ AtomMarkingRuntime::refineZoneBitmapForCollectedZone(Zone* zone, const DenseBitm
 {
     MOZ_ASSERT(zone->isCollectingFromAnyThread());
 
-    if (zone->isAtomsZone())
+    if (zone->isAtomsZone()) {
         return;
+    }
 
     // Take the bitwise and between the two mark bitmaps to get the best new
     // overapproximation we can. |bitmap| might include bits that are not in
@@ -144,14 +146,16 @@ AtomMarkingRuntime::markAtomsUsedByUncollectedZones(JSRuntime* runtime)
             // We only need to update the chunk mark bits for zones which were
             // not collected in the current GC. Atoms which are referenced by
             // collected zones have already been marked.
-            if (!zone->isCollectingFromAnyThread())
+            if (!zone->isCollectingFromAnyThread()) {
                 zone->markedAtoms().bitwiseOrInto(markedUnion);
+            }
         }
         BitwiseOrIntoChunkMarkBits(runtime, markedUnion);
     } else {
         for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
-            if (!zone->isCollectingFromAnyThread())
+            if (!zone->isCollectingFromAnyThread()) {
                 BitwiseOrIntoChunkMarkBits(runtime, zone->markedAtoms());
+            }
         }
     }
 }
@@ -184,8 +188,9 @@ void
 AtomMarkingRuntime::markAtomValue(JSContext* cx, const Value& value)
 {
     if (value.isString()) {
-        if (value.toString()->isAtom())
+        if (value.toString()->isAtom()) {
             markAtom(cx, &value.toString()->asAtom());
+        }
         return;
     }
     if (value.isSymbol()) {
@@ -219,11 +224,13 @@ AtomMarkingRuntime::atomIsMarked(Zone* zone, T* thing)
     MOZ_ASSERT(!IsInsideNursery(thing));
     MOZ_ASSERT(thing->zoneFromAnyThread()->isAtomsZone());
 
-    if (!zone->runtimeFromAnyThread()->permanentAtomsPopulated())
+    if (!zone->runtimeFromAnyThread()->permanentAtomsPopulated()) {
         return true;
+    }
 
-    if (ThingIsPermanent(thing))
+    if (ThingIsPermanent(thing)) {
         return true;
+    }
 
     size_t bit = GetAtomBit(&thing->asTenured());
     return zone->markedAtoms().getBit(bit);
@@ -236,18 +243,21 @@ template<>
 bool
 AtomMarkingRuntime::atomIsMarked(Zone* zone, TenuredCell* thing)
 {
-    if (!thing)
+    if (!thing) {
         return true;
+    }
 
     if (thing->is<JSString>()) {
         JSString* str = thing->as<JSString>();
-        if (!str->isAtom())
+        if (!str->isAtom()) {
             return true;
+        }
         return atomIsMarked(zone, &str->asAtom());
     }
 
-    if (thing->is<JS::Symbol>())
+    if (thing->is<JS::Symbol>()) {
         return atomIsMarked(zone, thing->as<JS::Symbol>());
+    }
 
     return true;
 }
@@ -255,11 +265,13 @@ AtomMarkingRuntime::atomIsMarked(Zone* zone, TenuredCell* thing)
 bool
 AtomMarkingRuntime::idIsMarked(Zone* zone, jsid id)
 {
-    if (JSID_IS_ATOM(id))
+    if (JSID_IS_ATOM(id)) {
         return atomIsMarked(zone, JSID_TO_ATOM(id));
+    }
 
-    if (JSID_IS_SYMBOL(id))
+    if (JSID_IS_SYMBOL(id)) {
         return atomIsMarked(zone, JSID_TO_SYMBOL(id));
+    }
 
     MOZ_ASSERT(!JSID_IS_GCTHING(id));
     return true;
@@ -269,13 +281,15 @@ bool
 AtomMarkingRuntime::valueIsMarked(Zone* zone, const Value& value)
 {
     if (value.isString()) {
-        if (value.toString()->isAtom())
+        if (value.toString()->isAtom()) {
             return atomIsMarked(zone, &value.toString()->asAtom());
+        }
         return true;
     }
 
-    if (value.isSymbol())
+    if (value.isSymbol()) {
         return atomIsMarked(zone, value.toSymbol());
+    }
 
     MOZ_ASSERT_IF(value.isGCThing(),
                   value.isObject() ||

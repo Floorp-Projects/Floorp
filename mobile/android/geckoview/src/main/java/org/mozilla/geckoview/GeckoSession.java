@@ -46,12 +46,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.StringDef;
 import android.util.Base64;
 import android.util.Log;
+import android.view.Surface;
 import android.view.inputmethod.CursorAnchorInfo;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 
-public class GeckoSession extends LayerSession
-                          implements Parcelable {
+public final class GeckoSession extends LayerSession
+        implements Parcelable {
     private static final String LOGTAG = "GeckoSession";
     private static final boolean DEBUG = false;
 
@@ -1445,6 +1446,49 @@ public class GeckoSession extends LayerSession
         final GeckoBundle msg = new GeckoBundle(1);
         msg.putString("state", state.toString());
         mEventDispatcher.dispatch("GeckoView:RestoreState", msg);
+    }
+
+    // This is the GeckoDisplay acquired via acquireDisplay(), if any.
+    private GeckoDisplay mDisplay;
+    /* package */ GeckoDisplay getDisplay() {
+        return mDisplay;
+    }
+
+    /**
+     * Acquire the GeckoDisplay instance for providing the session with a drawing Surface.
+     * Be sure to call {@link GeckoDisplay#surfaceChanged(Surface, int, int)} on the
+     * acquired display if there is already a valid Surface.
+     *
+     * @return GeckoDisplay instance.
+     * @see #releaseDisplay(GeckoDisplay)
+     */
+    public @NonNull GeckoDisplay acquireDisplay() {
+        ThreadUtils.assertOnUiThread();
+
+        if (mDisplay != null) {
+            throw new IllegalStateException("Display already acquired");
+        }
+
+        mDisplay = new GeckoDisplay(this);
+        return mDisplay;
+    }
+
+    /**
+     * Release an acquired GeckoDisplay instance. Be sure to call {@link
+     * GeckoDisplay#surfaceDestroyed()} before releasing the display if it still has a
+     * valid Surface.
+     *
+     * @param display Acquired GeckoDisplay instance.
+     * @see #acquireDisplay()
+     */
+    public void releaseDisplay(final @NonNull GeckoDisplay display) {
+        ThreadUtils.assertOnUiThread();
+
+        if (display != mDisplay) {
+            throw new IllegalArgumentException("Display not attached");
+        }
+
+        mDisplay = null;
     }
 
     public GeckoSessionSettings getSettings() {

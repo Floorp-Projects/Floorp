@@ -18,21 +18,25 @@ using namespace jit;
 static void
 AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
 {
-    if (lsh->specialization() != MIRType::Int32)
+    if (lsh->specialization() != MIRType::Int32) {
         return;
+    }
 
-    if (lsh->isRecoveredOnBailout())
+    if (lsh->isRecoveredOnBailout()) {
         return;
+    }
 
     MDefinition* index = lsh->lhs();
     MOZ_ASSERT(index->type() == MIRType::Int32);
 
     MConstant* shiftValue = lsh->rhs()->maybeConstantValue();
-    if (!shiftValue)
+    if (!shiftValue) {
         return;
+    }
 
-    if (shiftValue->type() != MIRType::Int32 || !IsShiftInScaleRange(shiftValue->toInt32()))
+    if (shiftValue->type() != MIRType::Int32 || !IsShiftInScaleRange(shiftValue->toInt32())) {
         return;
+    }
 
     Scale scale = ShiftToScale(shiftValue->toInt32());
 
@@ -40,64 +44,76 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
     MInstruction* last = lsh;
     MDefinition* base = nullptr;
     while (true) {
-        if (!last->hasOneUse())
+        if (!last->hasOneUse()) {
             break;
+        }
 
         MUseIterator use = last->usesBegin();
-        if (!use->consumer()->isDefinition() || !use->consumer()->toDefinition()->isAdd())
+        if (!use->consumer()->isDefinition() || !use->consumer()->toDefinition()->isAdd()) {
             break;
+        }
 
         MAdd* add = use->consumer()->toDefinition()->toAdd();
-        if (add->specialization() != MIRType::Int32 || !add->isTruncated())
+        if (add->specialization() != MIRType::Int32 || !add->isTruncated()) {
             break;
+        }
 
         MDefinition* other = add->getOperand(1 - add->indexOf(*use));
 
         if (MConstant* otherConst = other->maybeConstantValue()) {
             displacement += otherConst->toInt32();
         } else {
-            if (base)
+            if (base) {
                 break;
+            }
             base = other;
         }
 
         last = add;
-        if (last->isRecoveredOnBailout())
+        if (last->isRecoveredOnBailout()) {
             return;
+        }
     }
 
     if (!base) {
         uint32_t elemSize = 1 << ScaleToShift(scale);
-        if (displacement % elemSize != 0)
+        if (displacement % elemSize != 0) {
             return;
+        }
 
-        if (!last->hasOneUse())
+        if (!last->hasOneUse()) {
             return;
+        }
 
         MUseIterator use = last->usesBegin();
-        if (!use->consumer()->isDefinition() || !use->consumer()->toDefinition()->isBitAnd())
+        if (!use->consumer()->isDefinition() || !use->consumer()->toDefinition()->isBitAnd()) {
             return;
+        }
 
         MBitAnd* bitAnd = use->consumer()->toDefinition()->toBitAnd();
-        if (bitAnd->isRecoveredOnBailout())
+        if (bitAnd->isRecoveredOnBailout()) {
             return;
+        }
 
         MDefinition* other = bitAnd->getOperand(1 - bitAnd->indexOf(*use));
         MConstant* otherConst = other->maybeConstantValue();
-        if (!otherConst || otherConst->type() != MIRType::Int32)
+        if (!otherConst || otherConst->type() != MIRType::Int32) {
             return;
+        }
 
         uint32_t bitsClearedByShift = elemSize - 1;
         uint32_t bitsClearedByMask = ~uint32_t(otherConst->toInt32());
-        if ((bitsClearedByShift & bitsClearedByMask) != bitsClearedByMask)
+        if ((bitsClearedByShift & bitsClearedByMask) != bitsClearedByMask) {
             return;
+        }
 
         bitAnd->replaceAllUsesWith(last);
         return;
     }
 
-    if (base->isRecoveredOnBailout())
+    if (base->isRecoveredOnBailout()) {
         return;
+    }
 
     MEffectiveAddress* eaddr = MEffectiveAddress::New(alloc, base, index, scale, displacement);
     last->replaceAllUsesWith(eaddr);
@@ -120,11 +136,13 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
 static void
 AnalyzeLoadUnboxedScalar(MLoadUnboxedScalar* load)
 {
-    if (load->isRecoveredOnBailout())
+    if (load->isRecoveredOnBailout()) {
         return;
+    }
 
-    if (!load->getOperand(1)->isAdd())
+    if (!load->getOperand(1)->isAdd()) {
         return;
+    }
 
     JitSpew(JitSpew_EAA, "analyze: %s%u", load->opName(), load->id());
 
@@ -155,12 +173,14 @@ AnalyzeLoadUnboxedScalar(MLoadUnboxedScalar* load)
     size_t storageSize = Scalar::byteSize(load->storageType());
     int32_t c1 = load->offsetAdjustment();
     int32_t c2 = 0;
-    if (!SafeMul(constant->maybeConstantValue()->toInt32(), storageSize, &c2))
+    if (!SafeMul(constant->maybeConstantValue()->toInt32(), storageSize, &c2)) {
         return;
+    }
 
     int32_t offset = 0;
-    if (!SafeAdd(c1, c2, &offset))
+    if (!SafeAdd(c1, c2, &offset)) {
         return;
+    }
 
     JitSpew(JitSpew_EAA, "set offset: %d + %d = %d on: %s%u", c1, c2, offset,
             load->opName(), load->id());
@@ -182,13 +202,15 @@ EffectiveAddressAnalysis::tryAddDisplacement(AsmJSMemoryAccess* ins, int32_t o)
     // Compute the new offset. Check for overflow.
     uint32_t oldOffset = ins->offset();
     uint32_t newOffset = oldOffset + o;
-    if (o < 0 ? (newOffset >= oldOffset) : (newOffset < oldOffset))
+    if (o < 0 ? (newOffset >= oldOffset) : (newOffset < oldOffset)) {
         return false;
+    }
 
     // The offset must ultimately be written into the offset immediate of a load
     // or store instruction so don't allow folding of the offset is bigger.
-    if (newOffset >= wasm::OffsetGuardLimit)
+    if (newOffset >= wasm::OffsetGuardLimit) {
         return false;
+    }
 
     // Everything checks out. This is the new offset.
     ins->setOffset(newOffset);
@@ -221,8 +243,9 @@ EffectiveAddressAnalysis::analyzeAsmJSHeapAccess(AsmJSMemoryAccess* ins)
         // away the bounds check.
         if (imm >= 0) {
             int32_t end = (uint32_t)imm + ins->byteSize();
-            if (end >= imm && (uint32_t)end <= mir_->minWasmHeapLength())
+            if (end >= imm && (uint32_t)end <= mir_->minWasmHeapLength()) {
                  ins->removeBoundsCheck();
+            }
         }
     } else if (base->isAdd()) {
         // Look for heap[a+i] where i is a constant offset, and fold the offset.
@@ -230,12 +253,14 @@ EffectiveAddressAnalysis::analyzeAsmJSHeapAccess(AsmJSMemoryAccess* ins)
         // Alignment Mask Analysis pass.
         MDefinition* op0 = base->toAdd()->getOperand(0);
         MDefinition* op1 = base->toAdd()->getOperand(1);
-        if (op0->isConstant())
+        if (op0->isConstant()) {
             mozilla::Swap(op0, op1);
+        }
         if (op1->isConstant()) {
             int32_t imm = op1->toConstant()->toInt32();
-            if (tryAddDisplacement(ins, imm))
+            if (tryAddDisplacement(ins, imm)) {
                 ins->replaceBase(op0);
+            }
         }
     }
 }
@@ -259,21 +284,23 @@ EffectiveAddressAnalysis::analyze()
 {
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
         for (MInstructionIterator i = block->begin(); i != block->end(); i++) {
-            if (!graph_.alloc().ensureBallast())
+            if (!graph_.alloc().ensureBallast()) {
                 return false;
+            }
 
             // Note that we don't check for MWasmCompareExchangeHeap
             // or MWasmAtomicBinopHeap, because the backend and the OOB
             // mechanism don't support non-zero offsets for them yet
             // (TODO bug 1254935).
-            if (i->isLsh())
+            if (i->isLsh()) {
                 AnalyzeLsh(graph_.alloc(), i->toLsh());
-            else if (i->isLoadUnboxedScalar())
+            } else if (i->isLoadUnboxedScalar()) {
                 AnalyzeLoadUnboxedScalar(i->toLoadUnboxedScalar());
-            else if (i->isAsmJSLoadHeap())
+            } else if (i->isAsmJSLoadHeap()) {
                 analyzeAsmJSHeapAccess(i->toAsmJSLoadHeap());
-            else if (i->isAsmJSStoreHeap())
+            } else if (i->isAsmJSStoreHeap()) {
                 analyzeAsmJSHeapAccess(i->toAsmJSStoreHeap());
+            }
         }
     }
     return true;

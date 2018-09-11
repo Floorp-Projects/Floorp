@@ -26,8 +26,9 @@ class ScopedICUObject
     {}
 
     ~ScopedICUObject() {
-        if (ptr_)
+        if (ptr_) {
             Delete(ptr_);
+        }
     }
 
     // In cases where an object should be deleted on abnormal exits,

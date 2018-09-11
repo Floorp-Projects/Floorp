@@ -6,6 +6,7 @@ use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize};
 use api::{DeviceUintRect, DeviceUintPoint, ExternalImageType, FilterOp, ImageRendering};
 use api::{YuvColorSpace, YuvFormat, WorldPixel, WorldRect};
 use clip::{ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore};
+use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use euclid::vec3;
 use glyph_rasterizer::GlyphFormat;
 use gpu_cache::{GpuCache, GpuCacheHandle, GpuCacheAddress};
@@ -27,7 +28,7 @@ use resource_cache::{CacheItem, GlyphFetchResult, ImageRequest, ResourceCache};
 use scene::FilterOpHelpers;
 use std::{f32, i32};
 use tiling::{RenderTargetContext};
-use util::{TransformedRectKind};
+use util::{MatrixHelpers, TransformedRectKind};
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
@@ -211,7 +212,7 @@ impl OpaqueBatchList {
     pub fn get_suitable_batch(
         &mut self,
         key: BatchKey,
-        bounding_rect: &WorldRect
+        bounding_rect: &WorldRect,
     ) -> &mut Vec<PrimitiveInstance> {
         let mut selected_batch_index = None;
         let item_area = bounding_rect.size.area();
@@ -439,6 +440,8 @@ impl AlphaBatchBuilder {
         render_tasks: &RenderTaskTree,
         deferred_resolves: &mut Vec<DeferredResolve>,
         prim_headers: &mut PrimitiveHeaders,
+        transforms: &mut TransformPalette,
+        root_spatial_node_index: SpatialNodeIndex,
     ) {
         let task_address = render_tasks.get_task_address(task_id);
 
@@ -458,6 +461,8 @@ impl AlphaBatchBuilder {
                 deferred_resolves,
                 &mut splitter,
                 prim_headers,
+                transforms,
+                root_spatial_node_index,
             );
         }
 
@@ -465,44 +470,79 @@ impl AlphaBatchBuilder {
         // Z axis is directed at the screen, `sort` is ascending, and we need back-to-front order.
         for poly in splitter.sort(vec3(0.0, 0.0, 1.0)) {
             let prim_index = PrimitiveIndex(poly.anchor);
+            let pic_metadata = &ctx.prim_store.primitives[prim_index.0].metadata;
             if cfg!(debug_assertions) && ctx.prim_store.chase_id == Some(prim_index) {
                 println!("\t\tsplit polygon {:?}", poly.points);
             }
-            debug!("process sorted poly {:?} {:?}", prim_index, poly.points);
-            let pp = &poly.points;
-            let gpu_blocks = [
-                [pp[0].x as f32, pp[0].y as f32, pp[0].z as f32, pp[1].x as f32].into(),
-                [pp[1].y as f32, pp[1].z as f32, pp[2].x as f32, pp[2].y as f32].into(),
-                [pp[2].z as f32, pp[3].x as f32, pp[3].y as f32, pp[3].z as f32].into(),
+            let transform = transforms.get_world_transform(pic_metadata.spatial_node_index).inverse().unwrap();
+            let transform_id = transforms.get_id(
+                pic_metadata.spatial_node_index,
+                ROOT_SPATIAL_NODE_INDEX,
+                ctx.clip_scroll_tree,
+            );
+
+            let clip_task_address = pic_metadata
+                .clip_task_id
+                .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
+
+            let prim_header = PrimitiveHeader {
+                local_rect: pic_metadata.local_rect,
+                local_clip_rect: pic_metadata.combined_local_clip_rect,
+                task_address,
+                specific_prim_address: GpuCacheAddress::invalid(),
+                clip_task_address,
+                transform_id,
+            };
+
+            let pic = ctx.prim_store.get_pic(prim_index);
+
+            let (uv_rect_address, _) = pic
+                .raster_config
+                .as_ref()
+                .expect("BUG: no raster config")
+                .surface
+                .as_ref()
+                .expect("BUG: no surface")
+                .resolve(
+                    render_tasks,
+                    ctx.resource_cache,
+                    gpu_cache,
+                );
+
+            let prim_header_index = prim_headers.push(&prim_header, [
+                uv_rect_address.as_int(),
+                0,
+                0,
+            ]);
+
+            let mut local_points = [
+                transform.transform_point3d(&poly.points[0].cast()).unwrap(),
+                transform.transform_point3d(&poly.points[1].cast()).unwrap(),
+                transform.transform_point3d(&poly.points[2].cast()).unwrap(),
+                transform.transform_point3d(&poly.points[3].cast()).unwrap(),
             ];
+            let gpu_blocks = [
+                [local_points[0].x, local_points[0].y, local_points[1].x, local_points[1].y].into(),
+                [local_points[2].x, local_points[2].y, local_points[3].x, local_points[3].y].into(),
+                pic_metadata.local_rect.into(),
+            ];
+
             let gpu_handle = gpu_cache.push_per_frame_blocks(&gpu_blocks);
             let key = BatchKey::new(
                 BatchKind::SplitComposite,
                 BlendMode::PremultipliedAlpha,
                 BatchTextures::no_texture(),
             );
-            let pic_metadata = &ctx.prim_store.primitives[prim_index.0].metadata;
-            let pic = ctx.prim_store.get_pic(prim_index);
             let batch = self.batch_list
                             .get_suitable_batch(
                                 key,
                                 &pic_metadata.clipped_world_rect.as_ref().expect("bug"),
                             );
 
-            let source_task_id = pic
-                .raster_config
-                .as_ref()
-                .expect("BUG: no raster config")
-                .surface
-                .as_ref()
-                .expect("BUG: unexpected surface in splitting")
-                .resolve_render_task_id();
-            let source_task_address = render_tasks.get_task_address(source_task_id);
             let gpu_address = gpu_cache.get_address(&gpu_handle);
 
             let instance = SplitCompositeInstance::new(
-                task_address,
-                source_task_address,
+                prim_header_index,
                 gpu_address,
                 prim_headers.z_generator.next(),
             );
@@ -525,15 +565,20 @@ impl AlphaBatchBuilder {
         deferred_resolves: &mut Vec<DeferredResolve>,
         splitter: &mut BspSplitter<f64, WorldPixel>,
         prim_headers: &mut PrimitiveHeaders,
+        transforms: &mut TransformPalette,
+        root_spatial_node_index: SpatialNodeIndex,
     ) {
         for i in 0 .. run.count {
             let prim_index = PrimitiveIndex(run.base_prim_index.0 + i);
             let metadata = &ctx.prim_store.primitives[prim_index.0].metadata;
 
             if metadata.clipped_world_rect.is_some() {
-                let transform_id = ctx
-                    .transforms
-                    .get_id(metadata.spatial_node_index);
+                let transform_id = transforms
+                    .get_id(
+                        metadata.spatial_node_index,
+                        root_spatial_node_index,
+                        ctx.clip_scroll_tree,
+                    );
 
                 self.add_prim_to_batch(
                     transform_id,
@@ -546,6 +591,8 @@ impl AlphaBatchBuilder {
                     deferred_resolves,
                     splitter,
                     prim_headers,
+                    transforms,
+                    root_spatial_node_index,
                 );
             }
         }
@@ -567,6 +614,8 @@ impl AlphaBatchBuilder {
         deferred_resolves: &mut Vec<DeferredResolve>,
         splitter: &mut BspSplitter<f64, WorldPixel>,
         prim_headers: &mut PrimitiveHeaders,
+        transforms: &mut TransformPalette,
+        root_spatial_node_index: SpatialNodeIndex,
     ) {
         let prim = &ctx.prim_store.primitives[prim_index.0];
         let prim_metadata = &prim.metadata;
@@ -640,29 +689,39 @@ impl AlphaBatchBuilder {
                         if picture.is_in_3d_context {
                             // Push into parent plane splitter.
                             debug_assert!(picture.raster_config.is_some());
-                            let transform = &ctx.transforms
-                                .get_transform_by_id(transform_id);
+                            let transform = transforms.get_world_transform(prim_metadata.spatial_node_index);
 
-                            match transform.transform_kind {
-                                TransformedRectKind::AxisAligned => {
-                                    let polygon = Polygon::from_transformed_rect(
-                                        prim_metadata.local_rect.cast(),
-                                        transform.m.cast(),
-                                        prim_index.0,
-                                    ).unwrap();
-                                    splitter.add(polygon);
-                                }
-                                TransformedRectKind::Complex => {
-                                    let mut clipper = Clipper::new();
-                                    let matrix = transform.m.cast();
-                                    let results = clipper.clip_transformed(
-                                        Polygon::from_rect(prim_metadata.local_rect.cast(), prim_index.0),
-                                        &matrix,
-                                        Some(bounding_rect.to_f64()),
-                                    );
-                                    if let Ok(results) = results {
-                                        for poly in results {
-                                            splitter.add(poly);
+                            // Apply the local clip rect here, before splitting. This is
+                            // because the local clip rect can't be applied in the vertex
+                            // shader for split composites, since we are drawing polygons
+                            // rather that rectangles. The interpolation still works correctly
+                            // since we determine the UVs by doing a bilerp with a factor
+                            // from the original local rect.
+                            let local_rect = prim_metadata.local_rect
+                                                          .intersection(&prim_metadata.combined_local_clip_rect);
+
+                            if let Some(local_rect) = local_rect {
+                                match transform.transform_kind() {
+                                    TransformedRectKind::AxisAligned => {
+                                        let polygon = Polygon::from_transformed_rect(
+                                            local_rect.cast(),
+                                            transform.cast(),
+                                            prim_index.0,
+                                        ).unwrap();
+                                        splitter.add(polygon);
+                                    }
+                                    TransformedRectKind::Complex => {
+                                        let mut clipper = Clipper::new();
+                                        let matrix = transform.cast();
+                                        let results = clipper.clip_transformed(
+                                            Polygon::from_rect(local_rect.cast(), prim_index.0),
+                                            &matrix,
+                                            Some(bounding_rect.to_f64()),
+                                        );
+                                        if let Ok(results) = results {
+                                            for poly in results {
+                                                splitter.add(poly);
+                                            }
                                         }
                                     }
                                 }
@@ -801,12 +860,6 @@ impl AlphaBatchBuilder {
                                                     .push(PrimitiveInstance::from(content_instance));
                                             }
                                             _ => {
-                                                let key = BatchKey::new(
-                                                    BatchKind::Brush(BrushBatchKind::Blend),
-                                                    BlendMode::PremultipliedAlpha,
-                                                    BatchTextures::render_target_cache(),
-                                                );
-
                                                 let filter_mode = match filter {
                                                     FilterOp::Identity => 1, // matches `Contrast(1)`
                                                     FilterOp::Blur(..) => 0,
@@ -846,10 +899,21 @@ impl AlphaBatchBuilder {
                                                     }
                                                 };
 
-                                                let cache_task_id = surface.resolve_render_task_id();
-                                                let cache_task_address = render_tasks.get_task_address(cache_task_id);
+                                                let (uv_rect_address, textures) = surface
+                                                    .resolve(
+                                                        render_tasks,
+                                                        ctx.resource_cache,
+                                                        gpu_cache,
+                                                    );
+
+                                                let key = BatchKey::new(
+                                                    BatchKind::Brush(BrushBatchKind::Blend),
+                                                    BlendMode::PremultipliedAlpha,
+                                                    textures,
+                                                );
+
                                                 let prim_header_index = prim_headers.push(&prim_header, [
-                                                    cache_task_address.0 as i32,
+                                                    uv_rect_address.as_int(),
                                                     filter_mode,
                                                     user_data,
                                                 ]);
@@ -948,6 +1012,8 @@ impl AlphaBatchBuilder {
                                     render_tasks,
                                     deferred_resolves,
                                     prim_headers,
+                                    transforms,
+                                    root_spatial_node_index,
                                 );
                             }
                         }
@@ -1665,7 +1731,8 @@ impl ClipBatcher {
     ) {
         let instance = ClipMaskInstance {
             render_task_address: task_address,
-            transform_id: TransformPaletteId::IDENTITY,
+            clip_transform_id: TransformPaletteId::IDENTITY,
+            prim_transform_id: TransformPaletteId::IDENTITY,
             segment: 0,
             clip_data_address,
             resource_address: GpuCacheAddress::invalid(),
@@ -1678,17 +1745,32 @@ impl ClipBatcher {
         &mut self,
         task_address: RenderTaskAddress,
         clip_node_range: ClipNodeRange,
+        root_spatial_node_index: SpatialNodeIndex,
         resource_cache: &ResourceCache,
         gpu_cache: &GpuCache,
         clip_store: &ClipStore,
-        transforms: &TransformPalette,
+        clip_scroll_tree: &ClipScrollTree,
+        transforms: &mut TransformPalette,
     ) {
         for i in 0 .. clip_node_range.count {
             let (clip_node, flags) = clip_store.get_node_from_range(&clip_node_range, i);
 
+            let clip_transform_id = transforms.get_id(
+                clip_node.spatial_node_index,
+                ROOT_SPATIAL_NODE_INDEX,
+                clip_scroll_tree,
+            );
+
+            let prim_transform_id = transforms.get_id(
+                root_spatial_node_index,
+                ROOT_SPATIAL_NODE_INDEX,
+                clip_scroll_tree,
+            );
+
             let instance = ClipMaskInstance {
                 render_task_address: task_address,
-                transform_id: transforms.get_id(clip_node.spatial_node_index),
+                clip_transform_id,
+                prim_transform_id,
                 segment: 0,
                 clip_data_address: GpuCacheAddress::invalid(),
                 resource_address: GpuCacheAddress::invalid(),

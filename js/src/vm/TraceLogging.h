@@ -324,8 +324,9 @@ class TraceLoggerThread : public mozilla::LinkedListElement<TraceLoggerThread>
         // If we are in the next consecutive iteration we are only sure we
         // didn't lose any events when the lastSize equals the maximum size
         // 'events' can get.
-        if (lastIteration == iteration_ - 1 && lastSize == events.maxSize())
+        if (lastIteration == iteration_ - 1 && lastSize == events.maxSize()) {
             return false;
+        }
 
         return true;
     }
@@ -420,15 +421,17 @@ class TraceLoggerThreadState
     void destroyLogger(TraceLoggerThread* logger);
 
     bool isTextIdEnabled(uint32_t textId) {
-        if (textId < TraceLogger_Last)
+        if (textId < TraceLogger_Last) {
             return enabledTextIds[textId];
+        }
         return true;
     }
     void enableTextId(JSContext* cx, uint32_t textId);
     void disableTextId(JSContext* cx, uint32_t textId);
     void maybeSpewError(const char* text) {
-        if (spewErrors)
+        if (spewErrors) {
             fprintf(stderr, "%s\n", text);
+        }
     }
 
     const char* maybeEventText(uint32_t id);
@@ -467,29 +470,33 @@ inline TraceLoggerThread* TraceLoggerForCurrentThread(JSContext* cx = nullptr) {
 
 inline bool TraceLoggerEnable(TraceLoggerThread* logger) {
 #ifdef JS_TRACE_LOGGING
-    if (logger)
+    if (logger) {
         return logger->enable();
+    }
 #endif
     return false;
 }
 inline bool TraceLoggerEnable(TraceLoggerThread* logger, JSContext* cx) {
 #ifdef JS_TRACE_LOGGING
-    if (logger)
+    if (logger) {
         return logger->enable(cx);
+    }
 #endif
     return false;
 }
 inline bool TraceLoggerDisable(TraceLoggerThread* logger) {
 #ifdef JS_TRACE_LOGGING
-    if (logger)
+    if (logger) {
         return logger->disable();
+    }
 #endif
     return false;
 }
 inline void TraceLoggerSilentFail(TraceLoggerThread* logger, const char* error) {
 #ifdef JS_TRACE_LOGGING
-    if (logger)
+    if (logger) {
         logger->silentFail(error);
+    }
 #endif
 }
 
@@ -506,52 +513,60 @@ inline void TraceLogDisableTextId(JSContext* cx, uint32_t textId) {}
 #endif
 inline void TraceLogTimestamp(TraceLoggerThread* logger, TraceLoggerTextId textId) {
 #ifdef JS_TRACE_LOGGING
-    if (logger)
+    if (logger) {
         logger->logTimestamp(textId);
+    }
 #endif
 }
 inline void TraceLogStartEvent(TraceLoggerThread* logger, TraceLoggerTextId textId) {
 #ifdef JS_TRACE_LOGGING
-    if (logger)
+    if (logger) {
         logger->startEvent(textId);
+    }
 #endif
 }
 inline void TraceLogStartEvent(TraceLoggerThread* logger, const TraceLoggerEvent& event) {
 #ifdef JS_TRACE_LOGGING
-    if (logger)
+    if (logger) {
         logger->startEvent(event);
+    }
 #endif
 }
 inline void TraceLogStopEvent(TraceLoggerThread* logger, TraceLoggerTextId textId) {
 #ifdef JS_TRACE_LOGGING
-    if (logger)
+    if (logger) {
         logger->stopEvent(textId);
+    }
 #endif
 }
 inline void TraceLogStopEvent(TraceLoggerThread* logger, const TraceLoggerEvent& event) {
 #ifdef JS_TRACE_LOGGING
-    if (logger)
+    if (logger) {
         logger->stopEvent(event);
+    }
 #endif
 }
 
 // Helper functions for assembly. May not be used otherwise.
 inline void TraceLogTimestampPrivate(TraceLoggerThread* logger, uint32_t id) {
 #ifdef JS_TRACE_LOGGING
-    if (logger)
+    if (logger) {
         logger->logTimestamp(id);
+    }
 #endif
 }
 inline void TraceLogStartEventPrivate(TraceLoggerThread* logger, uint32_t id) {
 #ifdef JS_TRACE_LOGGING
-    if (logger)
+    if (logger) {
         logger->startEvent(id);
+    }
 #endif
 }
 inline void TraceLogStopEventPrivate(TraceLoggerThread* logger, uint32_t id) {
 #ifdef JS_TRACE_LOGGING
-    if (logger)
+    if (logger) {
         logger->stopEvent(id);
+    }
 #endif
 }
 
@@ -607,8 +622,9 @@ class MOZ_RAII AutoTraceLog
     ~AutoTraceLog()
     {
         if (logger) {
-            while (this != logger->top)
+            while (this != logger->top) {
                 logger->top->stop();
+            }
             stop();
         }
     }
@@ -616,14 +632,16 @@ class MOZ_RAII AutoTraceLog
     void stop() {
         if (!executed) {
             executed = true;
-            if (isEvent)
+            if (isEvent) {
                 logger->stopEvent(*payload.event);
-            else
+            } else {
                 logger->stopEvent(payload.id);
+            }
         }
 
-        if (logger->top == this)
+        if (logger->top == this) {
             logger->top = prev;
+        }
     }
 #else
   public:

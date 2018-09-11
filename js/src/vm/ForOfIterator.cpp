@@ -22,20 +22,23 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
 {
     JSContext* cx = cx_;
     RootedObject iterableObj(cx, ToObject(cx, iterable));
-    if (!iterableObj)
+    if (!iterableObj) {
         return false;
+    }
 
     MOZ_ASSERT(index == NOT_ARRAY);
 
     // Check the PIC first for a match.
     if (iterableObj->is<ArrayObject>()) {
         ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx);
-        if (!stubChain)
+        if (!stubChain) {
             return false;
+        }
 
         bool optimized;
-        if (!stubChain->tryOptimizeArray(cx, iterableObj.as<ArrayObject>(), &optimized))
+        if (!stubChain->tryOptimizeArray(cx, iterableObj.as<ArrayObject>(), &optimized)) {
             return false;
+        }
 
         if (optimized) {
             // Got optimized stub.  Array is optimizable.
@@ -50,14 +53,16 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
 
     RootedValue callee(cx);
     RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
-    if (!GetProperty(cx, iterableObj, iterableObj, iteratorId, &callee))
+    if (!GetProperty(cx, iterableObj, iterableObj, iteratorId, &callee)) {
         return false;
+    }
 
     // If obj[@@iterator] is undefined and we were asked to allow non-iterables,
     // bail out now without setting iterator.  This will make valueIsIterable(),
     // which our caller should check, return false.
-    if (nonIterableBehavior == AllowNonIterable && callee.isUndefined())
+    if (nonIterableBehavior == AllowNonIterable && callee.isUndefined()) {
         return true;
+    }
 
     // Throw if obj[@@iterator] isn't callable.
     // js::Invoke is about to check for this kind of error anyway, but it would
@@ -65,22 +70,26 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
     // one about |obj|.
     if (!callee.isObject() || !callee.toObject().isCallable()) {
         UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, iterable, nullptr);
-        if (!bytes)
+        if (!bytes) {
             return false;
+        }
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NOT_ITERABLE, bytes.get());
         return false;
     }
 
     RootedValue res(cx);
-    if (!js::Call(cx, callee, iterable, &res))
+    if (!js::Call(cx, callee, iterable, &res)) {
         return false;
+    }
 
-    if (!res.isObject())
+    if (!res.isObject()) {
         return ThrowCheckIsObject(cx, CheckIsObjectKind::GetIterator);
+    }
 
     RootedObject iteratorObj(cx, &res.toObject());
-    if (!GetProperty(cx, iteratorObj, iteratorObj, cx->names().next, &res))
+    if (!GetProperty(cx, iteratorObj, iteratorObj, cx->names().next, &res)) {
         return false;
+    }
 
     iterator = iteratorObj;
     nextMethod = res;
@@ -92,8 +101,9 @@ ForOfIterator::nextFromOptimizedArray(MutableHandleValue vp, bool* done)
 {
     MOZ_ASSERT(index != NOT_ARRAY);
 
-    if (!CheckForInterrupt(cx_))
+    if (!CheckForInterrupt(cx_)) {
         return false;
+    }
 
     ArrayObject* arr = &iterator->as<ArrayObject>();
 
@@ -120,19 +130,23 @@ bool
 ForOfIterator::next(MutableHandleValue vp, bool* done)
 {
     MOZ_ASSERT(iterator);
-    if (index != NOT_ARRAY)
+    if (index != NOT_ARRAY) {
         return nextFromOptimizedArray(vp, done);
+    }
 
     RootedValue v(cx_);
-    if (!js::Call(cx_, nextMethod, iterator, &v))
+    if (!js::Call(cx_, nextMethod, iterator, &v)) {
         return false;
+    }
 
-    if (!v.isObject())
+    if (!v.isObject()) {
         return ThrowCheckIsObject(cx_, CheckIsObjectKind::IteratorNext);
+    }
 
     RootedObject resultObj(cx_, &v.toObject());
-    if (!GetProperty(cx_, resultObj, resultObj, cx_->names().done, &v))
+    if (!GetProperty(cx_, resultObj, resultObj, cx_->names().done, &v)) {
         return false;
+    }
 
     *done = ToBoolean(v);
     if (*done) {
@@ -152,16 +166,18 @@ ForOfIterator::closeThrow()
 
     RootedValue completionException(cx_);
     if (cx_->isExceptionPending()) {
-        if (!GetAndClearException(cx_, &completionException))
+        if (!GetAndClearException(cx_, &completionException)) {
             completionException.setUndefined();
+        }
     }
 
     // Steps 1-2 (implicit)
 
     // Step 3 (partial).
     RootedValue returnVal(cx_);
-    if (!GetProperty(cx_, iterator, iterator, cx_->names().return_, &returnVal))
+    if (!GetProperty(cx_, iterator, iterator, cx_->names().return_, &returnVal)) {
         return;
+    }
 
     // Step 4.
     if (returnVal.isUndefined()) {
@@ -183,8 +199,9 @@ ForOfIterator::closeThrow()
     // Step 5.
     RootedValue innerResultValue(cx_);
     if (!js::Call(cx_, returnVal, iterator, &innerResultValue)) {
-        if (cx_->isExceptionPending())
+        if (cx_->isExceptionPending()) {
             cx_->clearPendingException();
+        }
     }
 
     // Step 6.
