@@ -1160,21 +1160,25 @@ nsCSSValue::Array::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
 
 css::URLValueData::URLValueData(already_AddRefed<nsIURI> aURI,
                                 ServoRawOffsetArc<RustString> aString,
-                                already_AddRefed<URLExtraData> aExtraData)
+                                already_AddRefed<URLExtraData> aExtraData,
+                                CORSMode aCORSMode)
   : mURI(std::move(aURI))
   , mExtraData(std::move(aExtraData))
   , mURIResolved(true)
   , mString(aString)
+  , mCORSMode(aCORSMode)
 {
   MOZ_ASSERT(mExtraData);
   MOZ_ASSERT(mExtraData->GetPrincipal());
 }
 
 css::URLValueData::URLValueData(ServoRawOffsetArc<RustString> aString,
-                                already_AddRefed<URLExtraData> aExtraData)
+                                already_AddRefed<URLExtraData> aExtraData,
+                                CORSMode aCORSMode)
   : mExtraData(std::move(aExtraData))
   , mURIResolved(false)
   , mString(aString)
+  , mCORSMode(aCORSMode)
 {
   MOZ_ASSERT(mExtraData);
   MOZ_ASSERT(mExtraData->GetPrincipal());
@@ -1394,18 +1398,16 @@ css::ImageValue::ImageValue(nsIURI* aURI,
                             already_AddRefed<URLExtraData> aExtraData,
                             nsIDocument* aDocument,
                             CORSMode aCORSMode)
-  : URLValueData(do_AddRef(aURI), aString, std::move(aExtraData))
+  : URLValueData(do_AddRef(aURI), aString, std::move(aExtraData), aCORSMode)
 {
-  mCORSMode = aCORSMode;
   Initialize(aDocument);
 }
 
 css::ImageValue::ImageValue(ServoRawOffsetArc<RustString> aString,
                             already_AddRefed<URLExtraData> aExtraData,
                             CORSMode aCORSMode)
-  : URLValueData(aString, std::move(aExtraData))
+  : URLValueData(aString, std::move(aExtraData), aCORSMode)
 {
-  mCORSMode = aCORSMode;
 }
 
 /*static*/ already_AddRefed<css::ImageValue>
