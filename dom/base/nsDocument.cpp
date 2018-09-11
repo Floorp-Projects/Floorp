@@ -3361,6 +3361,13 @@ nsIDocument::LocalizationLinkAdded(Element* aLinkElement)
     AutoTArray<nsString, 1> resourceIds;
     resourceIds.AppendElement(href);
     mDocumentL10n->AddResourceIds(resourceIds);
+  } else if (mReadyState == READYSTATE_COMPLETE) {
+    // Otherwise, if the document has already been parsed
+    // we need to lazily initialize the localization.
+    AutoTArray<nsString, 1> resourceIds;
+    resourceIds.AppendElement(href);
+    InitializeLocalization(resourceIds);
+    mDocumentL10n->TriggerInitialDocumentTranslation();
   } else {
     // Otherwise, we're still parsing the document.
     // In that case, add it to the pending list. This list
