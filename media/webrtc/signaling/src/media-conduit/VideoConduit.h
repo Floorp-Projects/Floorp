@@ -27,6 +27,7 @@
 #endif
 #include "webrtc/video_decoder.h"
 #include "webrtc/video_encoder.h"
+#include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/config.h"
 #include "webrtc/media/base/videosinkinterface.h"
 #include "webrtc/media/base/videoadapter.h"
@@ -466,6 +467,10 @@ private:
   // changes needed for them.
   UniquePtr<cricket::VideoAdapter> mVideoAdapter;
   rtc::VideoBroadcaster mVideoBroadcaster;
+
+  // Buffer pool used for scaling frames.
+  // Accessed on the frame-feeding thread only.
+  webrtc::I420BufferPool mBufferPool;
 
   // Engine state we are concerned with.
   mozilla::Atomic<bool> mEngineTransmitting; // If true ==> Transmit Subsystem is up and running
