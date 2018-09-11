@@ -348,6 +348,13 @@ android-em-7.0-x86/opt:
 
 # android-hw test platforms execute on real devices attached to Autophone hosts.
 
+# android-hw-g5-7-0 Motorola Moto G5 Android 7.0
+
+android-hw-g5-7-0-arm7-api-16/opt:
+    build-platform: android-api-16/opt
+    test-sets:
+        - android-hw-arm7-raptor
+
 # android-hw-p2-8-0 Google Pixel 2 Android 8.0
 
 android-hw-p2-8-0-arm7-api-16/opt:
