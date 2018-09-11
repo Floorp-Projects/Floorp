@@ -9,6 +9,9 @@
 const TEST_URI = `data:text/html,<meta charset=utf8>Test reverse search`;
 
 add_task(async function() {
+  // Force reverse search on.
+  await pushPref("devtools.webconsole.jsterm.reverse-search", true);
+
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const jstermHistory = [
