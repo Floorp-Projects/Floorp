@@ -22,6 +22,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Casting.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorNames.h"
@@ -788,29 +789,25 @@ MakeCompressedIndexDataValues(
 
     MOZ_ASSERT(!keyBuffer.IsEmpty());
 
-    // Don't let |infoLength| overflow.
-    if (NS_WARN_IF(UINT32_MAX - keyBuffer.Length() <
-                   CompressedByteCountForIndexId(info.mIndexId) +
-                   CompressedByteCountForNumber(keyBufferLength) +
-                   CompressedByteCountForNumber(sortKeyBufferLength))) {
-      IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-
-    const uint32_t infoLength =
-      CompressedByteCountForIndexId(info.mIndexId) +
+    const CheckedUint32 infoLength =
+      CheckedUint32(CompressedByteCountForIndexId(info.mIndexId)) +
       CompressedByteCountForNumber(keyBufferLength) +
       CompressedByteCountForNumber(sortKeyBufferLength) +
       keyBufferLength +
       sortKeyBufferLength;
-
-    // Don't let |blobDataLength| overflow.
-    if (NS_WARN_IF(UINT32_MAX - infoLength < blobDataLength)) {
+    // Don't let |infoLength| overflow.
+    if (NS_WARN_IF(!infoLength.isValid())) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    blobDataLength += infoLength;
+    // Don't let |blobDataLength| overflow.
+    if (NS_WARN_IF(UINT32_MAX - infoLength.value() < blobDataLength)) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    blobDataLength += infoLength.value();
   }
 
   UniqueFreePtr<uint8_t> blobData(
