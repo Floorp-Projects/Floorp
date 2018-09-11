@@ -395,12 +395,11 @@ impl SegmentBuilder {
             None => return,
         };
 
+        let mut items = self.items;
+
         // First, filter out any items that don't intersect
         // with the visible bounding rect.
-        let mut items: Vec<Item> = self.items
-            .into_iter()
-            .filter(|item| item.rect.intersects(&bounding_rect))
-            .collect();
+        items.retain(|item| item.rect.intersects(&bounding_rect));
 
         // Create events for each item
         let mut x_events = Vec::new();

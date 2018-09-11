@@ -21,7 +21,7 @@ let testcases = [
     await freePortal(true);
     ensurePortalTab(win);
     ensureNoPortalNotification(win);
-    await closeWindowAndWaitForXulWindowVisible(win);
+    await closeWindowAndWaitForWindowActivate(win);
   },
 
   /**
@@ -82,7 +82,7 @@ let testcases = [
     await freePortal(true);
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);
-    await closeWindowAndWaitForXulWindowVisible(win);
+    await closeWindowAndWaitForWindowActivate(win);
   },
 ];
 

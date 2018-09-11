@@ -899,12 +899,13 @@ ParentAPIManager = {
     if (!this._timingEnabled) {
       return callable();
     }
-    let webExtId = data.childId.split(".")[0];
-    let start = Cu.now();
+    let childId = data.childId;
+    let webExtId = childId.slice(0, childId.lastIndexOf("."));
+    let start = Cu.now() * 1000;
     try {
       return callable();
     } finally {
-      let end = Cu.now();
+      let end = Cu.now() * 1000;
       this.storeExecutionTime(webExtId, data.path, end - start);
     }
   },

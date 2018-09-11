@@ -66,7 +66,7 @@ add_task(async function test_windows_are_restored_in_reversed_z_order() {
   await promiseBrowserState(gBrowserState);
 
   let indexedTabLabels = [...gTestURLsMap.values()];
-  let tabsRestoredLabels = [...BrowserWindowTracker.orderedWindows].map(window => window.gBrowser.selectedTab.label);
+  let tabsRestoredLabels = BrowserWindowTracker.orderedWindows.map(window => window.gBrowser.selectedTab.label);
 
   Assert.equal(tabsRestoredLabels[0], indexedTabLabels[2], "First restored tab should be last used tab");
   Assert.equal(tabsRestoredLabels[1], indexedTabLabels[1], "Second restored tab is correct");

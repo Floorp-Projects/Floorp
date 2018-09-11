@@ -7,8 +7,8 @@
 
 var EXPORTED_SYMBOLS = ["ReadTopManifest", "CreateUrls"];
 
-Cu.import("chrome://reftest/content/globals.jsm", this);
-Cu.import("chrome://reftest/content/reftest.jsm", this);
+Cu.import("resource://reftest/globals.jsm", this);
+Cu.import("resource://reftest/reftest.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 

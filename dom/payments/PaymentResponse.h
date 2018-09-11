@@ -33,7 +33,7 @@ public:
                   const nsAString& aRequestId,
                   const nsAString& aMethodName,
                   const nsAString& aShippingOption,
-                  RefPtr<PaymentAddress> aShippingAddress,
+                  PaymentAddress* aShippingAddress,
                   const nsAString& aDetails,
                   const nsAString& aPayerName,
                   const nsAString& aPayerEmail,
@@ -69,8 +69,23 @@ public:
 
   void RespondComplete();
 
+  already_AddRefed<Promise> Retry(JSContext* aCx,
+                                  const PaymentValidationErrors& errorField,
+                                  ErrorResult& aRv);
+
+  void RespondRetry(const nsAString& aMethodName,
+                    const nsAString& aShippingOption,
+                    PaymentAddress* aShippingAddress,
+                    const nsAString& aDetails,
+                    const nsAString& aPayerName,
+                    const nsAString& aPayerEmail,
+                    const nsAString& aPayerPhone);
+  void RejectRetry(nsresult aRejectReason);
+
 protected:
   ~PaymentResponse();
+
+  nsresult ValidatePaymentValidationErrors(const PaymentValidationErrors& aErrors);
 
 private:
   nsCOMPtr<nsPIDOMWindowInner> mOwner;
@@ -89,6 +104,8 @@ private:
   // Timer for timing out if the page doesn't call
   // complete()
   nsCOMPtr<nsITimer> mTimer;
+  // Promise for "PaymentResponse::Retry"
+  RefPtr<Promise> mRetryPromise;
 };
 
 } // namespace dom

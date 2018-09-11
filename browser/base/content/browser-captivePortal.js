@@ -58,15 +58,13 @@ var CaptivePortalWatcher = {
       this._captivePortalDetected();
 
       // Automatically open a captive portal tab if there's no other browser window.
-      let windows = Services.wm.getEnumerator("navigator:browser");
-      if (windows.getNext() == window && !windows.hasMoreElements()) {
+      if (BrowserWindowTracker.windowCount == 1) {
         this.ensureCaptivePortalTab();
       }
     } else if (cps.state == cps.UNKNOWN) {
       // We trigger a portal check after delayed startup to avoid doing a network
       // request before first paint.
       this._delayedRecheckPending = true;
-      Services.obs.addObserver(this, "browser-delayed-startup-finished");
     }
 
     XPCOMUtils.defineLazyPreferenceGetter(this, "PORTAL_RECHECK_DELAY_MS",
@@ -78,22 +76,18 @@ var CaptivePortalWatcher = {
     Services.obs.removeObserver(this, "captive-portal-login-abort");
     Services.obs.removeObserver(this, "captive-portal-login-success");
 
-    if (this._delayedRecheckPending) {
-      Services.obs.removeObserver(this, "browser-delayed-startup-finished");
-    }
+    this._cancelDelayedCaptivePortal();
+  },
 
-    if (this._delayedCaptivePortalDetectedInProgress) {
-      Services.obs.removeObserver(this, "xul-window-visible");
+  delayedStartup() {
+    if (this._delayedRecheckPending) {
+      delete this._delayedRecheckPending;
+      cps.recheckCaptivePortal();
     }
   },
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "browser-delayed-startup-finished":
-        Services.obs.removeObserver(this, "browser-delayed-startup-finished");
-        delete this._delayedRecheckPending;
-        cps.recheckCaptivePortal();
-        break;
       case "captive-portal-login":
         this._captivePortalDetected();
         break;
@@ -101,8 +95,8 @@ var CaptivePortalWatcher = {
       case "captive-portal-login-success":
         this._captivePortalGone();
         break;
-      case "xul-window-visible":
-        this._delayedCaptivePortalDetected();
+      case "delayed-captive-portal-handled":
+        this._cancelDelayedCaptivePortal();
         break;
     }
   },
@@ -113,9 +107,10 @@ var CaptivePortalWatcher = {
     }
 
     let win = BrowserWindowTracker.getTopWindow();
+
     // Used by tests: ignore the main test window in order to enable testing of
     // the case where we have no open windows.
-    if (win && win.document.documentElement.getAttribute("ignorecaptiveportal")) {
+    if (win.document.documentElement.getAttribute("ignorecaptiveportal")) {
       win = null;
     }
 
@@ -123,9 +118,10 @@ var CaptivePortalWatcher = {
     // This is so that if a different application was focused, when the user
     // (re-)focuses a browser window, we open the tab immediately in that window
     // so they can log in before continuing to browse.
-    if (win != Services.ww.activeWindow) {
+    if (win != Services.focus.activeWindow) {
       this._delayedCaptivePortalDetectedInProgress = true;
-      Services.obs.addObserver(this, "xul-window-visible");
+      window.addEventListener("activate", this, { once: true });
+      Services.obs.addObserver(this, "delayed-captive-portal-handled");
     }
 
     this._showNotification();
@@ -141,24 +137,14 @@ var CaptivePortalWatcher = {
       return;
     }
 
-    let win = BrowserWindowTracker.getTopWindow();
     // Used by tests: ignore the main test window in order to enable testing of
     // the case where we have no open windows.
-    if (win && win.document.documentElement.getAttribute("ignorecaptiveportal")) {
-      win = null;
-    }
-
-    if (win != Services.ww.activeWindow) {
-      // The window that got focused was not a browser window.
+    if (window.document.documentElement.getAttribute("ignorecaptiveportal")) {
       return;
     }
-    Services.obs.removeObserver(this, "xul-window-visible");
-    this._delayedCaptivePortalDetectedInProgress = false;
 
-    if (win != window) {
-      // Some other browser window got focus, we don't have to do anything.
-      return;
-    }
+    Services.obs.notifyObservers(null, "delayed-captive-portal-handled");
+
     // Trigger a portal recheck. The user may have logged into the portal via
     // another client, or changed networks.
     cps.recheckCaptivePortal();
@@ -185,31 +171,42 @@ var CaptivePortalWatcher = {
   },
 
   _captivePortalGone() {
-    if (this._delayedCaptivePortalDetectedInProgress) {
-      Services.obs.removeObserver(this, "xul-window-visible");
-      this._delayedCaptivePortalDetectedInProgress = false;
-    }
-
+    this._cancelDelayedCaptivePortal();
     this._removeNotification();
   },
 
+  _cancelDelayedCaptivePortal() {
+    if (this._delayedCaptivePortalDetectedInProgress) {
+      this._delayedCaptivePortalDetectedInProgress = false;
+      Services.obs.removeObserver(this, "delayed-captive-portal-handled");
+      window.removeEventListener("activate", this);
+    }
+  },
+
   handleEvent(aEvent) {
-    if (aEvent.type != "TabSelect" || !this._captivePortalTab || !this._captivePortalNotification) {
-      return;
-    }
+    switch (aEvent.type) {
+      case "activate":
+        this._delayedCaptivePortalDetected();
+        break;
+      case "TabSelect":
+        if (!this._captivePortalTab || !this._captivePortalNotification) {
+          break;
+        }
 
-    let tab = this._captivePortalTab.get();
-    let n = this._captivePortalNotification;
-    if (!tab || !n) {
-      return;
-    }
+        let tab = this._captivePortalTab.get();
+        let n = this._captivePortalNotification;
+        if (!tab || !n) {
+          break;
+        }
 
-    let doc = tab.ownerDocument;
-    let button = n.querySelector("button.notification-button");
-    if (doc.defaultView.gBrowser.selectedTab == tab) {
-      button.style.visibility = "hidden";
-    } else {
-      button.style.visibility = "visible";
+        let doc = tab.ownerDocument;
+        let button = n.querySelector("button.notification-button");
+        if (doc.defaultView.gBrowser.selectedTab == tab) {
+          button.style.visibility = "hidden";
+        } else {
+          button.style.visibility = "visible";
+        }
+        break;
     }
   },
 
