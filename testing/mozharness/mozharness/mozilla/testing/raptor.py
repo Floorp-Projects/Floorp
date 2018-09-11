@@ -133,6 +133,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
         self.test = None
         self.gecko_profile = self.config.get('gecko_profile')
         self.gecko_profile_interval = self.config.get('gecko_profile_interval')
+        self.test_packages_url = self.config.get('test_packages_url')
 
     # We accept some configuration options from the try commit message in the
     # format mozharness: <options>. Example try commit message: mozharness:
