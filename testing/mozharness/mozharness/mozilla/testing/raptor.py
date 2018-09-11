@@ -19,6 +19,7 @@ import mozharness
 from mozharness.base.errors import PythonErrorList
 from mozharness.base.log import OutputParser, DEBUG, ERROR, CRITICAL, INFO
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
+from mozharness.mozilla.testing.android import AndroidMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
@@ -43,7 +44,7 @@ RaptorErrorList = PythonErrorList + [
 ]
 
 
-class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
+class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
     """
     install and run raptor tests
     """
@@ -123,6 +124,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
             # raptor initiated in production via mozharness
             self.test = self.config['test']
             self.app = self.config.get("app", "firefox")
+            self.binary_path = self.config.get("binary_path", None)
 
         self.installer_url = self.config.get("installer_url")
         self.raptor_json_url = self.config.get("raptor_json_url")
@@ -156,6 +158,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
         abs_dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'],
                                                        'blobber_upload_dir')
         abs_dirs['abs_test_install_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tests')
+
         self.abs_dirs = abs_dirs
         return self.abs_dirs
 
@@ -257,7 +260,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
                 self.fatal("Raptor requires a path to the binary.")
             kw_options['binary'] = binary_path
         else:
-            if not self.run_local:
+            if not self.run_local and self.binary_path is None:
                 # in production we aready installed google chrome, so set the binary path for arg
                 # when running locally a --binary arg as passed in, already in raptor_cmd_line_args
                 kw_options['binary'] = self.chrome_path
@@ -285,6 +288,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
             options.extend(['--code-coverage'])
         for key, value in kw_options.items():
             options.extend(['--%s' % key, value])
+        if self.binary_path is not None:
+            options.extend(['--binary', self.binary_path])
 
         return options
 
@@ -302,6 +307,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
     def download_and_extract(self, extract_dirs=None, suite_categories=None):
         if 'MOZ_FETCHES' in os.environ:
             self.fetch_content()
+
         return super(Raptor, self).download_and_extract(
             suite_categories=['common', 'raptor']
         )
@@ -359,6 +365,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
             requirements=[os.path.join(self.raptor_path,
                                        'requirements.txt')]
         )
+
+    def install(self):
+        if self.app == "geckoview":
+            self.install_apk(os.path.basename(self.installer_url))
+        else:
+            super(Raptor, self).install()
 
     def _validate_treeherder_data(self, parser):
         # late import is required, because install is done in create_virtualenv
@@ -456,6 +468,9 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
 
             return bool(debug_opts.intersection(cmdline))
 
+        if self.app == "geckoview":
+            self.logcat_start()
+
         command = [python, run_tests] + options + mozlog_opts
         if launch_in_debug_mode(command):
             raptor_process = subprocess.Popen(command, cwd=self.workdir, env=env)
@@ -465,6 +480,10 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin):
                                                 output_timeout=output_timeout,
                                                 output_parser=parser,
                                                 env=env)
+
+        if self.app == "geckoview":
+            self.logcat_stop()
+
         if parser.minidump_output:
             self.info("Looking at the minidump files for debugging purposes...")
             for item in parser.minidump_output:
