@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {
+  IdlePromise,
   PollPromise,
   Sleep,
   TimedPromise,
@@ -140,4 +141,16 @@ add_task(async function test_Sleep() {
   }
   Assert.throws(() => new Sleep(1.2), /RangeError/);
   Assert.throws(() => new Sleep(-1), /RangeError/);
+});
+
+add_task(async function test_IdlePromise() {
+  let called = false;
+  let window = {
+    requestAnimationFrame(callback) {
+      called = true;
+      callback();
+    }
+  };
+  await IdlePromise(window);
+  ok(called);
 });
