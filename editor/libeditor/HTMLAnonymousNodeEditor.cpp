@@ -453,7 +453,7 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
       mResizedObjectIsAnImage = true;
     }
     if (mResizedObject) {
-      nsresult rv = RefreshResizers();
+      nsresult rv = RefreshResizersInternal();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
