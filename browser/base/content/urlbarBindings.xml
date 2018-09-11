@@ -1102,10 +1102,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
           }
 
-          if (openUILinkWhere == "current") {
-            // Ensure the start of the URL is visible for usability reasons.
-            this.selectionStart = this.selectionEnd = 0;
-          }
+          // Ensure the start of the URL is visible for usability reasons.
+          this.selectionStart = this.selectionEnd = 0;
         ]]></body>
       </method>
 
