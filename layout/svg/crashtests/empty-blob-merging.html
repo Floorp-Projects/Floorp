@@ -1,0 +1,48 @@
+<html class="reftest-wait">
+<style>
+@keyframes spinnow {
+    100% {
+        transform: rotate(360deg) scale(.2, .2);
+    }
+}
+
+rect {
+    transform: rotate(0deg) scale(0.6, 1);
+    transform-origin: center;
+    animation: 5s spinnow infinite linear;
+}
+
+</style>
+<svg width=400 height=400>
+        <!--
+          onwheel is needed so that we get a hit test info display item
+          before the transform on the rect
+        -->
+	<g onwheel="alert(1)">
+	<g id="gr">
+	<circle r=30 fill=yellow cx=300 cy=100 />
+	<circle r=30 fill=yellow cx=10 cy=100 />
+	<circle r=30 fill=yellow cx=300 cy=300 />
+	<circle r=30 fill=yellow cx=10 cy=300 />
+	</g>
+	<rect width=100 height=100 fill=blue x=100 y=100 />
+	<g opacity=0.5>
+	<circle r=30 fill=pink cx=300 cy=100 />
+	<circle r=30 fill=pink cx=10 cy=100 />
+	<circle r=30 fill=pink cx=300 cy=300 />
+	<circle r=30 fill=pink cx=10 cy=300 />
+	</g>
+	</g>
+</svg>
+<script>
+  function blam() {
+    let gr = document.getElementById("gr");
+    gr.remove();
+    document.documentElement.removeAttribute("class");
+  }
+document.addEventListener("MozReftestInvalidate", function() {
+  requestAnimationFrame(function() {
+    blam();
+  });
+});
+</script>
