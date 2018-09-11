@@ -477,19 +477,18 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecDefaults)
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
   videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(640, 480, mCall->mEncoderConfig);
-  ASSERT_EQ(videoStreams.size(), 1U);
-  ASSERT_EQ(videoStreams[0].min_bitrate_bps, static_cast<int32_t>(WebrtcVideoConduit::kDefaultMinBitrate_bps));
-  ASSERT_EQ(videoStreams[0].target_bitrate_bps, static_cast<int32_t>(WebrtcVideoConduit::kDefaultStartBitrate_bps));
-  ASSERT_EQ(videoStreams[0].max_bitrate_bps, static_cast<int32_t>(WebrtcVideoConduit::kDefaultMaxBitrate_bps));
+  EXPECT_EQ(videoStreams.size(), 1U);
+  EXPECT_EQ(videoStreams[0].min_bitrate_bps, 150000);
+  EXPECT_EQ(videoStreams[0].target_bitrate_bps, 500000);
+  EXPECT_EQ(videoStreams[0].max_bitrate_bps, 2000000);
 
   // SelectBitrates not called until we send a frame
   SendVideoFrame(1280, 720, 1);
   videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(1280, 720, mCall->mEncoderConfig);
-  ASSERT_EQ(videoStreams.size(), 1U);
-  // These values come from a table and are determined by resolution
-  ASSERT_EQ(videoStreams[0].min_bitrate_bps, 600000);
-  ASSERT_EQ(videoStreams[0].target_bitrate_bps, 800000);
-  ASSERT_EQ(videoStreams[0].max_bitrate_bps, 2500000);
+  EXPECT_EQ(videoStreams.size(), 1U);
+  EXPECT_EQ(videoStreams[0].min_bitrate_bps, 600000);
+  EXPECT_EQ(videoStreams[0].target_bitrate_bps, 800000);
+  EXPECT_EQ(videoStreams[0].max_bitrate_bps, 2500000);
   mVideoConduit->StopTransmitting();
 }
 
