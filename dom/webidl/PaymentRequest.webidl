@@ -120,7 +120,6 @@ interface PaymentRequest : EventTarget {
   readonly attribute DOMString?           shippingOption;
   readonly attribute PaymentShippingType? shippingType;
 
-           attribute EventHandler         onmerchantvalidation;
            attribute EventHandler         onshippingaddresschange;
            attribute EventHandler         onshippingoptionchange;
            attribute EventHandler         onpaymentmethodchange;
