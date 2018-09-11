@@ -424,6 +424,25 @@ class BaseContext {
     this.messageManager = null;
     this.contentWindow = null;
     this.innerWindowID = 0;
+
+    // These two properties are assigned in ContentScriptContextChild subclass
+    // to keep a copy of the content script sandbox Error and Promise globals
+    // (which are used by the WebExtensions internals) before any extension
+    // content script code had any chance to redefine them.
+    this.cloneScopeError = null;
+    this.cloneScopePromise = null;
+  }
+
+  get Error() {
+    // Return the copy stored in the context instance (when the context is an instance of
+    // ContentScriptContextChild or the global from extension page window otherwise).
+    return this.cloneScopeError || this.cloneScope.Error;
+  }
+
+  get Promise() {
+    // Return the copy stored in the context instance (when the context is an instance of
+    // ContentScriptContextChild or the global from extension page window otherwise).
+    return this.cloneScopePromise || this.cloneScope.Promise;
   }
 
   setContentWindow(contentWindow) {
@@ -597,7 +616,7 @@ class BaseContext {
    * @returns {Error}
    */
   normalizeError(error, caller) {
-    if (error instanceof this.cloneScope.Error) {
+    if (error instanceof this.Error) {
       return error;
     }
     let message, fileName;
@@ -623,7 +642,7 @@ class BaseContext {
       Cu.reportError(error);
       message = "An unexpected error occurred";
     }
-    return new this.cloneScope.Error(message, fileName);
+    return new this.Error(message, fileName);
   }
 
   /**
@@ -723,7 +742,7 @@ class BaseContext {
           });
         });
     } else {
-      return new this.cloneScope.Promise((resolve, reject) => {
+      return new this.Promise((resolve, reject) => {
         promise.then(
           value => {
             if (this.unloaded) {
