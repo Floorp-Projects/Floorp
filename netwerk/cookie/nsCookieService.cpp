@@ -4439,7 +4439,7 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
   return true;
 }
 
-nsCString
+nsAutoCString
 nsCookieService::GetPathFromURI(nsIURI* aHostURI)
 {
   // strip down everything after the last slash to get the path,

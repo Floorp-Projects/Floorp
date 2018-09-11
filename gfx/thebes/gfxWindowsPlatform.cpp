@@ -451,7 +451,7 @@ gfxWindowsPlatform::GetBackendPrefs() const
       data.mContentDefault = BackendType::DIRECT2D1_1;
     }
   }
-  return std::move(data);
+  return data;
 }
 
 void

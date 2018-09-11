@@ -242,7 +242,7 @@ gfxFontEntry::RealFaceName()
         nsAutoString name;
         nsresult rv = gfxFontUtils::GetFullNameFromTable(nameTable, name);
         if (NS_SUCCEEDED(rv)) {
-            return name;
+            return std::move(name);
         }
     }
     return Name();

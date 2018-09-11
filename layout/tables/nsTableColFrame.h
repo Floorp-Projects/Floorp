@@ -86,8 +86,8 @@ public:
   /** convenience method, calls into cellmap */
   int32_t Count() const;
 
-  nscoord GetIStartBorderWidth() const { return mIStartBorderWidth; }
-  nscoord GetIEndBorderWidth() const { return mIEndBorderWidth; }
+  BCPixelSize GetIStartBorderWidth() const { return mIStartBorderWidth; }
+  BCPixelSize GetIEndBorderWidth() const { return mIEndBorderWidth; }
   void SetIStartBorderWidth(BCPixelSize aWidth) { mIStartBorderWidth = aWidth; }
   void SetIEndBorderWidth(BCPixelSize aWidth) { mIEndBorderWidth = aWidth; }
 

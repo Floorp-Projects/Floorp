@@ -455,7 +455,7 @@ WebExtensionPolicy::IsRestrictedURI(const URLInfo &aURI)
 nsCString
 WebExtensionPolicy::BackgroundPageHTML() const
 {
-  nsAutoCString result;
+  nsCString result;
 
   if (mBackgroundScripts.IsNull()) {
     result.SetIsVoid(true);

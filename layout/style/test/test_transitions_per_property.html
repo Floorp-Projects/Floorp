@@ -1807,9 +1807,6 @@ function test_path_function(prop) {
 }
 
 function test_filter_transition(prop) {
-  if (!SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
-    return;
-  }
   for (var i in filterTests) {
     var test = filterTests[i];
     div.style.setProperty("transition-property", "none", "");

@@ -220,85 +220,111 @@ HTMLEditor::GetZIndex(Element& aElement)
   return zIndexStr.ToInteger(&errorCode);
 }
 
-ManualNACPtr
-HTMLEditor::CreateGrabber(nsIContent& aParentContent)
+bool
+HTMLEditor::CreateGrabberInternal(nsIContent& aParentContent)
 {
-  // let's create a grabber through the element factory
-  ManualNACPtr grabber =
-    CreateAnonymousElement(nsGkAtoms::span, aParentContent,
-                           NS_LITERAL_STRING("mozGrabber"), false);
-  if (NS_WARN_IF(!grabber)) {
-    return nullptr;
+  if (NS_WARN_IF(mGrabber)) {
+    return false;
   }
 
-  // add the mouse listener so we can detect a click on a resizer
+  mGrabber = CreateAnonymousElement(nsGkAtoms::span, aParentContent,
+                                    NS_LITERAL_STRING("mozGrabber"), false);
+
+  // mGrabber may be destroyed during creation due to there may be
+  // mutation event listener.
+  if (NS_WARN_IF(!mGrabber)) {
+    return false;
+  }
+
   EventListenerManager* eventListenerManager =
-    grabber->GetOrCreateListenerManager();
+    mGrabber->GetOrCreateListenerManager();
   eventListenerManager->AddEventListenerByType(
                           mEventListener,
                           NS_LITERAL_STRING("mousedown"),
                           TrustedEventsAtSystemGroupBubble());
-  return grabber;
+  MOZ_ASSERT(mGrabber);
+  return true;
 }
 
 NS_IMETHODIMP
 HTMLEditor::RefreshGrabber()
 {
-  NS_ENSURE_TRUE(mAbsolutelyPositionedObject, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!mAbsolutelyPositionedObject)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  nsresult rv =
-    GetPositionAndDimensions(
-      *mAbsolutelyPositionedObject,
-      mPositionedObjectX,
-      mPositionedObjectY,
-      mPositionedObjectWidth,
-      mPositionedObjectHeight,
-      mPositionedObjectBorderLeft,
-      mPositionedObjectBorderTop,
-      mPositionedObjectMarginLeft,
-      mPositionedObjectMarginTop);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = RefreshGrabberInternal();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
 
-  SetAnonymousElementPosition(mPositionedObjectX+12,
-                              mPositionedObjectY-14,
+nsresult
+HTMLEditor::RefreshGrabberInternal()
+{
+  if (!mAbsolutelyPositionedObject) {
+    return NS_OK;
+  }
+  nsresult rv = GetPositionAndDimensions(*mAbsolutelyPositionedObject,
+                                         mPositionedObjectX,
+                                         mPositionedObjectY,
+                                         mPositionedObjectWidth,
+                                         mPositionedObjectHeight,
+                                         mPositionedObjectBorderLeft,
+                                         mPositionedObjectBorderTop,
+                                         mPositionedObjectMarginLeft,
+                                         mPositionedObjectMarginTop);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  SetAnonymousElementPosition(mPositionedObjectX + 12,
+                              mPositionedObjectY - 14,
                               mGrabber);
   return NS_OK;
 }
 
 void
-HTMLEditor::HideGrabber()
+HTMLEditor::HideGrabberInternal()
 {
-  nsresult rv = mAbsolutelyPositionedObject->UnsetAttr(kNameSpaceID_None,
-                                                       nsGkAtoms::_moz_abspos,
-                                                       true);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_WARN_IF(!mAbsolutelyPositionedObject)) {
     return;
   }
 
-  mAbsolutelyPositionedObject = nullptr;
-  if (NS_WARN_IF(!mGrabber)) {
-    return;
-  }
+  // Move all members to the local variables first since mutation event
+  // listener may try to show grabber while we're hiding them.
+  RefPtr<Element> absolutePositioningObject =
+    std::move(mAbsolutelyPositionedObject);
+  ManualNACPtr grabber = std::move(mGrabber);
+  ManualNACPtr positioningShadow = std::move(mPositioningShadow);
 
-  // get the presshell's document observer interface.
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
+  DebugOnly<nsresult> rv =
+    absolutePositioningObject->UnsetAttr(kNameSpaceID_None,
+                                         nsGkAtoms::_moz_abspos,
+                                         true);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to unset the attribute");
+
   // We allow the pres shell to be null; when it is, we presume there
   // are no document observers to notify, but we still want to
   // UnbindFromTree.
-
-  DeleteRefToAnonymousNode(std::move(mGrabber), ps);
-  DeleteRefToAnonymousNode(std::move(mPositioningShadow), ps);
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  if (grabber) {
+    DeleteRefToAnonymousNode(std::move(grabber), presShell);
+  }
+  if (positioningShadow) {
+    DeleteRefToAnonymousNode(std::move(positioningShadow), presShell);
+  }
 }
 
 nsresult
-HTMLEditor::ShowGrabber(Element& aElement)
+HTMLEditor::ShowGrabberInternal(Element& aElement)
 {
   if (NS_WARN_IF(!IsDescendantOfEditorRoot(&aElement))) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (mGrabber) {
-    NS_ERROR("call HideGrabber first");
+  if (NS_WARN_IF(mGrabber)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -311,7 +337,6 @@ HTMLEditor::ShowGrabber(Element& aElement)
                         classValue, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // first, let's keep track of that element...
   mAbsolutelyPositionedObject = &aElement;
 
   nsIContent* parentContent = aElement.GetParent();
@@ -319,13 +344,22 @@ HTMLEditor::ShowGrabber(Element& aElement)
     return NS_ERROR_FAILURE;
   }
 
-  mGrabber = CreateGrabber(*parentContent);
-  NS_ENSURE_TRUE(mGrabber, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!CreateGrabberInternal(*parentContent))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If we succeeded to create the grabber, HideGrabberInternal() hasn't been
+  // called yet.  So, mAbsolutelyPositionedObject should be non-nullptr.
+  MOZ_ASSERT(mAbsolutelyPositionedObject);
 
   mHasShownGrabber = true;
 
-  // and set its position
-  return RefreshGrabber();
+  // Finally, move the grabber to proper position.
+  rv = RefreshGrabberInternal();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -446,8 +480,11 @@ HTMLEditor::SetFinalPosition(int32_t aX,
   // we want one transaction only from a user's point of view
   AutoPlaceholderBatch batchIt(this);
 
-  nsCOMPtr<Element> absolutelyPositionedObject = mAbsolutelyPositionedObject;
-  NS_ENSURE_STATE(absolutelyPositionedObject);
+  if (NS_WARN_IF(!mAbsolutelyPositionedObject)) {
+    return NS_ERROR_FAILURE;
+  }
+  OwningNonNull<Element> absolutelyPositionedObject =
+    *mAbsolutelyPositionedObject;
   mCSSEditUtils->SetCSSPropertyPixels(*absolutelyPositionedObject,
                                       *nsGkAtoms::top, newY);
   mCSSEditUtils->SetCSSPropertyPixels(*absolutelyPositionedObject,
