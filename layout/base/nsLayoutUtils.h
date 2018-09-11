@@ -3055,6 +3055,12 @@ public:
   static uint32_t ParseFontLanguageOverride(const nsAString& aLangTag);
 
   /**
+   * Returns true if there are any preferences or overrides that indicate a
+   * need to create a MobileViewportManager.
+   */
+  static bool ShouldHandleMetaViewport(nsIDocument* aDocument);
+
+  /**
    * Resolve a CSS <length-percentage> value to a definite size.
    */
   template<bool clampNegativeResultToZero>

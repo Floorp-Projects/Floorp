@@ -10214,6 +10214,28 @@ nsLayoutUtils::ParseFontLanguageOverride(const nsAString& aLangTag)
   return result;
 }
 
+/* static */ bool
+nsLayoutUtils::ShouldHandleMetaViewport(nsIDocument* aDocument)
+{
+  uint32_t metaViewportOverride = nsIDocShell::META_VIEWPORT_OVERRIDE_NONE;
+  if (aDocument) {
+    if (nsIDocShell* docShell = aDocument->GetDocShell()) {
+      docShell->GetMetaViewportOverride(&metaViewportOverride);
+    }
+  }
+  switch (metaViewportOverride) {
+    case nsIDocShell::META_VIEWPORT_OVERRIDE_ENABLED:
+      return true;
+    case nsIDocShell::META_VIEWPORT_OVERRIDE_DISABLED:
+      return false;
+    default:
+      MOZ_ASSERT(metaViewportOverride == nsIDocShell::META_VIEWPORT_OVERRIDE_NONE);
+      // The META_VIEWPORT_OVERRIDE_NONE case means that there is no override
+      // and we rely solely on the gfxPrefs.
+      return gfxPrefs::MetaViewportEnabled();
+  }
+}
+
 /* static */ ComputedStyle*
 nsLayoutUtils::StyleForScrollbar(nsIFrame* aScrollbarPart)
 {

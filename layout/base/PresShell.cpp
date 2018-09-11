@@ -1045,7 +1045,7 @@ PresShell::Init(nsIDocument* aDocument,
   if (mPresContext->IsRootContentDocument()) {
     mZoomConstraintsClient = new ZoomConstraintsClient();
     mZoomConstraintsClient->Init(this, mDocument);
-    if (gfxPrefs::MetaViewportEnabled() || gfxPrefs::APZAllowZooming()) {
+    if (nsLayoutUtils::ShouldHandleMetaViewport(mDocument) || gfxPrefs::APZAllowZooming()) {
       mMobileViewportManager = new MobileViewportManager(this, mDocument);
     }
   }
