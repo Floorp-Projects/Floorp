@@ -10217,18 +10217,21 @@ nsLayoutUtils::ParseFontLanguageOverride(const nsAString& aLangTag)
 /* static */ ComputedStyle*
 nsLayoutUtils::StyleForScrollbar(nsIFrame* aScrollbarPart)
 {
-  // Get the closest non-native-anonymous content node, which should be
-  // the originating element of the scrollbar part. In theory we could
-  // have an XBL binding attached to NAC element, and that binding
-  // creates a scrollable element. It's unlikely we want to control the
-  // style of scrollbars from inside the binding, so that case is not
-  // considered below.
+  // Get the closest content node which is not an anonymous scrollbar
+  // part. It should be the originating element of the scrollbar part.
   nsIContent* content = aScrollbarPart->GetContent();
   // Note that the content may be a normal element with scrollbar part
   // value specified for its -moz-appearance, so don't rely on it being
-  // a native anonymous.
+  // a native anonymous. Also note that we have to check the node name
+  // because anonymous element like generated content may originate a
+  // scrollbar.
   MOZ_ASSERT(content, "No content for the scrollbar part?");
-  while (content && content->IsInNativeAnonymousSubtree()) {
+  while (content && content->IsInNativeAnonymousSubtree() &&
+         content->IsAnyOfXULElements(nsGkAtoms::scrollbar,
+                                     nsGkAtoms::scrollbarbutton,
+                                     nsGkAtoms::scrollcorner,
+                                     nsGkAtoms::slider,
+                                     nsGkAtoms::thumb)) {
     content = content->GetParent();
   }
   MOZ_ASSERT(content, "Native anonymous element with no originating node?");
