@@ -8,8 +8,8 @@
 #include "SrtpFlow.h"
 
 #include "srtp.h"
-#include "ssl.h"
-#include "sslproto.h"
+
+#include "transportlayerdtls.h"
 
 #include "mozilla/RefPtr.h"
 
@@ -52,13 +52,13 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
   // Note that we set the same cipher suite for RTP and RTCP
   // since any flow can only have one cipher suite with DTLS-SRTP
   switch (cipher_suite) {
-    case SRTP_AES128_CM_HMAC_SHA1_80:
+    case kDtlsSrtpAes128CmHmacSha1_80:
       MOZ_MTLOG(ML_DEBUG,
                   "Setting SRTP cipher suite SRTP_AES128_CM_HMAC_SHA1_80");
       srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
       srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
       break;
-    case SRTP_AES128_CM_HMAC_SHA1_32:
+    case kDtlsSrtpAes128CmHmacSha1_32:
       MOZ_MTLOG(ML_DEBUG,
                   "Setting SRTP cipher suite SRTP_AES128_CM_HMAC_SHA1_32");
       srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);

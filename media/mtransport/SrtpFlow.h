@@ -7,8 +7,6 @@
 #ifndef srtpflow_h__
 #define srtpflow_h__
 
-#include "ssl.h"
-#include "sslproto.h"
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
 #include "srtp.h"

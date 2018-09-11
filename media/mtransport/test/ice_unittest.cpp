@@ -17,8 +17,6 @@
 #include "sigslot.h"
 
 #include "logging.h"
-#include "nspr.h"
-#include "nss.h"
 #include "ssl.h"
 
 #include "mozilla/Preferences.h"

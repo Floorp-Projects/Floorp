@@ -8,8 +8,6 @@
 
 #include "logging.h"
 #include "nss.h"
-#include "ssl.h"
-#include "sslproto.h"
 
 #include "AudioSegment.h"
 #include "AudioStreamTrack.h"
@@ -185,7 +183,7 @@ class TransportInfo {
     UniquePtr<TransportLayerSrtp> srtp(new TransportLayerSrtp(*dtls));
 
     std::vector<uint16_t> ciphers;
-    ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_80);
+    ciphers.push_back(kDtlsSrtpAes128CmHmacSha1_80);
     dtls->SetSrtpCiphers(ciphers);
     dtls->SetIdentity(DtlsIdentity::Generate());
     dtls->SetRole(client ? TransportLayerDtls::CLIENT :
