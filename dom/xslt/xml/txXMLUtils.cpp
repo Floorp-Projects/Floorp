@@ -84,18 +84,17 @@ nsresult
 XMLUtils::splitQName(const nsAString& aName, nsAtom** aPrefix,
                      nsAtom** aLocalName)
 {
-    const nsString& qName = PromiseFlatString(aName);
     const char16_t* colon;
-    bool valid = XMLUtils::isValidQName(qName, &colon);
+    bool valid = XMLUtils::isValidQName(aName, &colon);
     if (!valid) {
         return NS_ERROR_FAILURE;
     }
 
     if (colon) {
         const char16_t *end;
-        qName.EndReading(end);
+        aName.EndReading(end);
 
-        *aPrefix = NS_Atomize(Substring(qName.get(), colon)).take();
+        *aPrefix = NS_Atomize(Substring(aName.BeginReading(), colon)).take();
         *aLocalName = NS_Atomize(Substring(colon + 1, end)).take();
     }
     else {
@@ -109,7 +108,7 @@ XMLUtils::splitQName(const nsAString& aName, nsAtom** aPrefix,
 /**
  * Returns true if the given string has only whitespace characters
  */
-bool XMLUtils::isWhitespace(const nsString& aText)
+bool XMLUtils::isWhitespace(const nsAString& aText)
 {
     nsString::const_char_iterator start, end;
     aText.BeginReading(start);
@@ -155,7 +154,7 @@ void XMLUtils::normalizePIValue(nsAString& piValue)
 }
 
 //static
-bool XMLUtils::isValidQName(const nsString& aQName, const char16_t** aColon)
+bool XMLUtils::isValidQName(const nsAString& aQName, const char16_t** aColon)
 {
   return NS_SUCCEEDED(nsContentUtils::CheckQName(aQName, true, aColon));
 }
