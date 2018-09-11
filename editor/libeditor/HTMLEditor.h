@@ -43,6 +43,7 @@ class nsRange;
 
 namespace mozilla {
 class AutoSelectionSetterAfterTableEdit;
+class DocumentResizeEventListener;
 class EmptyEditableFunctor;
 class ResizerSelectionListener;
 enum class EditSubAction : int32_t;
@@ -1797,6 +1798,12 @@ protected: // Shouldn't be used by friend classes
 
   void UpdateRootElement();
 
+  /**
+   * SetAllResizersPosition() moves all resizers to proper position.
+   * If the resizers are hidden or replaced with another set of resizers
+   * while this is running, this returns error.  So, callers shouldn't
+   * keep handling the resizers if this returns error.
+   */
   nsresult SetAllResizersPosition();
 
   /**
@@ -1811,15 +1818,31 @@ protected: // Shouldn't be used by friend classes
    */
   nsresult HideResizersInternal();
 
+  /**
+   * RefreshResizersInternal() moves resizers to proper position.  This does
+   * nothing if there is no resizing target.
+   */
+  nsresult RefreshResizersInternal();
+
   ManualNACPtr CreateResizer(int16_t aLocation, nsIContent& aParentContent);
   void SetAnonymousElementPosition(int32_t aX, int32_t aY,
                                    Element* aResizer);
 
   ManualNACPtr CreateShadow(nsIContent& aParentContent,
                             Element& aOriginalObject);
-  nsresult SetShadowPosition(Element* aShadow, Element* aOriginalObject,
-                             int32_t aOriginalObjectX,
-                             int32_t aOriginalObjectY);
+
+  /**
+   * SetShadowPosition() moves the shadow element to proper position.
+   *
+   * @param aShadowElement      Must be mResizingShadow or mPositioningShadow.
+   * @param aElement            The element which has the shadow.
+   * @param aElementX           Left of aElement.
+   * @param aElementY           Top of aElement.
+   */
+  nsresult SetShadowPosition(Element& aShadowElement,
+                             Element& aElement,
+                             int32_t aElementLeft,
+                             int32_t aElementTop);
 
   ManualNACPtr CreateResizingInfo(nsIContent& aParentContent);
   nsresult SetResizingInfoPosition(int32_t aX, int32_t aY,
@@ -1904,15 +1927,26 @@ protected: // Shouldn't be used by friend classes
                                                         nsAString& aReturn);
 
   /**
-   * Shows inline table editing UI around a table cell
-   * @param aCell [IN] a DOM Element being a table cell, td or th
+   * Shows inline table editing UI around a <table> element which contains
+   * aCellElement.  This returns error if creating UI is hidden during this,
+   * or detects another set of UI during this.  In such case, callers
+   * shouldn't keep handling anything for the UI.
+   *
+   * @param aCellElement    Must be an <td> or <th> element.
    */
-  nsresult ShowInlineTableEditingUI(Element* aCell);
+  nsresult ShowInlineTableEditingUIInternal(Element& aCellElement);
 
   /**
-   * Hide all inline table editing UI
+   * Hide all inline table editing UI.
    */
-  void HideInlineTableEditingUI();
+  void HideInlineTableEditingUIInternal();
+
+  /**
+   * RefreshInlineTableEditingUIInternal() moves inline table editing UI to
+   * proper position.  This returns error if the UI is hidden or replaced
+   * during moving.
+   */
+  nsresult RefreshInlineTableEditingUIInternal();
 
   /**
    * IsEmptyTextNode() returns true if aNode is a text node and does not have
@@ -2092,6 +2126,7 @@ protected:
 
   friend class AutoSelectionSetterAfterTableEdit;
   friend class CSSEditUtils;
+  friend class DocumentResizeEventListener;
   friend class EditorBase;
   friend class EmptyEditableFunctor;
   friend class HTMLEditRules;

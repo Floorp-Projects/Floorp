@@ -290,8 +290,8 @@ HTMLEditor::HideAnonymousEditingUIs()
     NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
   }
   if (mInlineEditedCell) {
-    HideInlineTableEditingUI();
-    NS_ASSERTION(!mInlineEditedCell, "HideInlineTableEditingUI failed");
+    HideInlineTableEditingUIInternal();
+    NS_ASSERTION(!mInlineEditedCell, "HideInlineTableEditingUIInternal failed");
   }
   if (mResizedObject) {
     DebugOnly<nsresult> rv = HideResizersInternal();
@@ -315,8 +315,8 @@ HTMLEditor::HideAnonymousEditingUIsIfUnnecessary()
   if (!IsInlineTableEditorEnabled() && mInlineEditedCell) {
     // XXX If we're resizing a table element, we need to cancel or commit the
     //     operation now.
-    HideInlineTableEditingUI();
-    NS_ASSERTION(!mInlineEditedCell, "HideInlineTableEditingUI failed");
+    HideInlineTableEditingUIInternal();
+    NS_ASSERTION(!mInlineEditedCell, "HideInlineTableEditingUIInternal failed");
   }
   if (!IsObjectResizerEnabled() && mResizedObject) {
     // XXX If we're resizing something, we need to cancel or commit the
@@ -438,10 +438,8 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
 
   if (IsInlineTableEditorEnabled() && mInlineEditedCell &&
       mInlineEditedCell != cellElement) {
-    // XXX HideInlineTableEditingUI() won't return error.  Should be change it
-    //     void later.
-    HideInlineTableEditingUI();
-    NS_ASSERTION(!mInlineEditedCell, "HideInlineTableEditingUI failed");
+    HideInlineTableEditingUIInternal();
+    NS_ASSERTION(!mInlineEditedCell, "HideInlineTableEditingUIInternal failed");
   }
 
   // now, let's display all contextual UI for good
@@ -453,7 +451,7 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
       mResizedObjectIsAnImage = true;
     }
     if (mResizedObject) {
-      nsresult rv = RefreshResizers();
+      nsresult rv = RefreshResizersInternal();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -483,12 +481,12 @@ HTMLEditor::RefereshEditingUI(Selection& aSelection)
   if (IsInlineTableEditorEnabled() && cellElement &&
       IsModifiableNode(*cellElement) && cellElement != hostContent) {
     if (mInlineEditedCell) {
-      nsresult rv = RefreshInlineTableEditingUI();
+      nsresult rv = RefreshInlineTableEditingUIInternal();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     } else {
-      nsresult rv = ShowInlineTableEditingUI(cellElement);
+      nsresult rv = ShowInlineTableEditingUIInternal(*cellElement);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
