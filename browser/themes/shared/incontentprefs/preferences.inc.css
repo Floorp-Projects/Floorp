@@ -951,6 +951,7 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   min-width: 20em;
 }
 
+#LanguagesDialog > .dialog-button-box > .dialog-button[dlgtype="help"],
 #BrowserLanguagesDialog > .dialog-button-box > .dialog-button[dlgtype="help"] {
   margin-inline-start: 0;
 }
@@ -959,11 +960,13 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   min-height: 200px;
 }
 
+#availableLanguages,
 #availableLocales {
   margin: 0;
   margin-inline-end: 4px;
 }
 
+.add-web-language,
 .add-browser-language {
   margin: 0 4px;
 }
