@@ -428,22 +428,10 @@ GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout, int aMaxButtonNums)
   NS_ASSERTION(aMaxButtonNums >= TOOLBAR_BUTTONS,
                "Requested number of buttons is higher than storage capacity!");
 
-  static auto sGtkHeaderBarGetDecorationLayoutPtr =
-    (const gchar* (*)(GtkWidget*))
-    dlsym(RTLD_DEFAULT, "gtk_header_bar_get_decoration_layout");
-
   const gchar* decorationLayout = nullptr;
-  if (sGtkHeaderBarGetDecorationLayoutPtr) {
-      GtkWidget* headerBar = GetWidget(MOZ_GTK_HEADER_BAR);
-      decorationLayout = sGtkHeaderBarGetDecorationLayoutPtr(headerBar);
-      if (!decorationLayout) {
-          GtkSettings *settings = gtk_settings_get_for_screen(
-              gdk_screen_get_default());
-          g_object_get(settings, "gtk-decoration-layout",
-                       &decorationLayout,
-                       nullptr);
-      }
-  }
+  GtkSettings *settings =
+      gtk_settings_get_for_screen(gdk_screen_get_default());
+  g_object_get(settings, "gtk-decoration-layout", &decorationLayout, nullptr);
 
   // Use a default layout
   if (!decorationLayout) {
