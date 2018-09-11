@@ -2837,3 +2837,35 @@ wasm::Validate(JSContext* cx, const ShareableBytes& bytecode, UniqueChars* error
     MOZ_ASSERT(!*error, "unreported error in decoding");
     return true;
 }
+
+bool
+wasm::ValidateForCranelift(const ShareableBytes& bytecode, UniqueChars* error)
+{
+    Decoder d(bytecode.bytes, 0, error);
+
+    // Cranelift doesn't support GC yet.
+    HasGcTypes hasGcTypes = HasGcTypes::False;
+
+    // Cranelift doesn't support threads yet.
+    Shareable threadSupport = Shareable::False;
+
+    CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Optimized,
+                                    OptimizedBackend::Cranelift, DebugEnabled::False, hasGcTypes);
+    ModuleEnvironment env(hasGcTypes, &compilerEnv, threadSupport);
+
+    if (!DecodeModuleEnvironment(d, &env)) {
+        return false;
+    }
+
+    ExclusiveDeferredValidationState dvs(mutexid::WasmDeferredValidation);
+
+    if (!DecodeCodeSection(d, &env, dvs)) {
+        return false;
+    }
+    if (!DecodeModuleTail(d, &env, dvs)) {
+        return false;
+    }
+
+    MOZ_ASSERT(!*error, "unreported error in decoding");
+    return true;
+}
