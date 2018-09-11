@@ -94,29 +94,6 @@ static bool AreShadowArraysEqual(nsCSSShadowArray* lhs, nsCSSShadowArray* rhs);
 // --------------------
 // nsStyleFont
 //
-nsStyleFont::nsStyleFont(const nsFont& aFont, const nsPresContext* aContext)
-  : mFont(aFont)
-  , mSize(nsStyleFont::ZoomText(aContext, mFont.size))
-  , mFontSizeFactor(1.0)
-  , mFontSizeOffset(0)
-  , mFontSizeKeyword(NS_STYLE_FONT_SIZE_MEDIUM)
-  , mGenericID(kGenericFont_NONE)
-  , mScriptLevel(0)
-  , mMathVariant(NS_MATHML_MATHVARIANT_NONE)
-  , mMathDisplay(NS_MATHML_DISPLAYSTYLE_INLINE)
-  , mMinFontSizeRatio(100) // 100%
-  , mExplicitLanguage(false)
-  , mAllowZoom(true)
-  , mScriptUnconstrainedSize(mSize)
-  , mScriptMinSize(nsPresContext::CSSTwipsToAppUnits(
-      NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT)))
-  , mScriptSizeMultiplier(NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER)
-  , mLanguage(GetLanguage(aContext))
-{
-  MOZ_COUNT_CTOR(nsStyleFont);
-  mFont.size = mSize;
-}
-
 nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
   : mFont(aSrc.mFont)
   , mSize(aSrc.mSize)
@@ -139,10 +116,26 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 }
 
 nsStyleFont::nsStyleFont(const nsPresContext* aContext)
-  : nsStyleFont(*aContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
-                                          nullptr),
-                aContext)
+  : mFont(*aContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
+                                    nullptr))
+  , mSize(ZoomText(aContext, mFont.size))
+  , mFontSizeFactor(1.0)
+  , mFontSizeOffset(0)
+  , mFontSizeKeyword(NS_STYLE_FONT_SIZE_MEDIUM)
+  , mGenericID(kGenericFont_NONE)
+  , mScriptLevel(0)
+  , mMathVariant(NS_MATHML_MATHVARIANT_NONE)
+  , mMathDisplay(NS_MATHML_DISPLAYSTYLE_INLINE)
+  , mMinFontSizeRatio(100) // 100%
+  , mExplicitLanguage(false)
+  , mAllowZoom(true)
+  , mScriptUnconstrainedSize(mSize)
+  , mScriptMinSize(nsPresContext::CSSTwipsToAppUnits(
+      NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT)))
+  , mScriptSizeMultiplier(NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER)
+  , mLanguage(GetLanguage(aContext))
 {
+  MOZ_COUNT_CTOR(nsStyleFont);
   MOZ_ASSERT(NS_IsMainThread());
   nscoord minimumFontSize = aContext->MinFontSize(mLanguage);
   if (minimumFontSize > 0 && !aContext->IsChrome()) {
