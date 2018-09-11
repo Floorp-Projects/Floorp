@@ -39,20 +39,23 @@ WeakCollectionPutEntryInternal(JSContext* cx, Handle<WeakCollectionObject*> obj,
     ObjectValueMap* map = obj->getMap();
     if (!map) {
         auto newMap = cx->make_unique<ObjectValueMap>(cx, obj.get());
-        if (!newMap)
+        if (!newMap) {
             return false;
+        }
         map = newMap.release();
         obj->setPrivate(map);
     }
 
     // Preserve wrapped native keys to prevent wrapper optimization.
-    if (!TryPreserveReflector(cx, key))
+    if (!TryPreserveReflector(cx, key)) {
         return false;
+    }
 
     if (JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp()) {
         RootedObject delegate(cx, op(key));
-        if (delegate && !TryPreserveReflector(cx, delegate))
+        if (delegate && !TryPreserveReflector(cx, delegate)) {
             return false;
+        }
     }
 
     MOZ_ASSERT(key->compartment() == obj->compartment());

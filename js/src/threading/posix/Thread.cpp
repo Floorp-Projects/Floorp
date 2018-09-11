@@ -215,6 +215,7 @@ js::ThisThread::GetName(char* nameBuffer, size_t len)
   rv = prctl(PR_GET_NAME, reinterpret_cast<unsigned long>(nameBuffer));
 #endif
 
-  if (rv)
+  if (rv) {
     nameBuffer[0] = '\0';
+  }
 }

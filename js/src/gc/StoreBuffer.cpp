@@ -22,8 +22,9 @@ StoreBuffer::GenericBuffer::trace(StoreBuffer* owner, JSTracer* trc)
 {
     mozilla::ReentrancyGuard g(*owner);
     MOZ_ASSERT(owner->isEnabled());
-    if (!storage_)
+    if (!storage_) {
         return;
+    }
 
     for (LifoAlloc::Enum e(*storage_); !e.empty();) {
         unsigned size = *e.read<unsigned>();
@@ -45,8 +46,9 @@ StoreBuffer::checkEmpty() const
 bool
 StoreBuffer::enable()
 {
-    if (enabled_)
+    if (enabled_) {
         return true;
+    }
 
     checkEmpty();
 
@@ -65,8 +67,9 @@ StoreBuffer::disable()
 {
     checkEmpty();
 
-    if (!enabled_)
+    if (!enabled_) {
         return;
+    }
 
     aboutToOverflow_ = false;
 
@@ -76,8 +79,9 @@ StoreBuffer::disable()
 void
 StoreBuffer::clear()
 {
-    if (!enabled_)
+    if (!enabled_) {
         return;
+    }
 
     aboutToOverflow_ = false;
     cancelIonCompilations_ = false;
@@ -128,19 +132,22 @@ StoreBuffer::WholeCellBuffer::allocateCellSet(Arena* arena)
 {
     Zone* zone = arena->zone;
     JSRuntime* rt = zone->runtimeFromMainThread();
-    if (!rt->gc.nursery().isEnabled())
+    if (!rt->gc.nursery().isEnabled()) {
         return nullptr;
+    }
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
     auto cells = storage_->new_<ArenaCellSet>(arena, head_);
-    if (!cells)
+    if (!cells) {
         oomUnsafe.crash("Failed to allocate ArenaCellSet");
+    }
 
     arena->bufferedCells() = cells;
     head_ = cells;
 
-    if (isAboutToOverflow())
+    if (isAboutToOverflow()) {
         rt->gc.storeBuffer().setAboutToOverflow(JS::gcreason::FULL_WHOLE_CELL_BUFFER);
+    }
 
     return cells;
 }
@@ -148,12 +155,14 @@ StoreBuffer::WholeCellBuffer::allocateCellSet(Arena* arena)
 void
 StoreBuffer::WholeCellBuffer::clear()
 {
-    for (ArenaCellSet* set = head_; set; set = set->next)
+    for (ArenaCellSet* set = head_; set; set = set->next) {
         set->arena->bufferedCells() = &ArenaCellSet::Empty;
+    }
     head_ = nullptr;
 
-    if (storage_)
+    if (storage_) {
         storage_->used() ? storage_->releaseAll() : storage_->freeAll();
+    }
 }
 
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>;

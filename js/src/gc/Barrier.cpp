@@ -40,8 +40,9 @@ IsMarkedBlack(JSObject* obj)
 bool
 HeapSlot::preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot) const
 {
-    if (kind == Slot)
+    if (kind == Slot) {
         return &owner->getSlotRef(slot) == this;
+    }
 
     uint32_t numShifted = owner->getElementsHeader()->numShiftedElements();
     MOZ_ASSERT(slot >= numShifted);
@@ -138,8 +139,9 @@ template <typename T>
 /* static */ bool
 MovableCellHasher<T>::hasHash(const Lookup& l)
 {
-    if (!l)
+    if (!l) {
         return true;
+    }
 
     return l->zoneFromAnyThread()->hasUniqueId(l);
 }
@@ -148,8 +150,9 @@ template <typename T>
 /* static */ bool
 MovableCellHasher<T>::ensureHash(const Lookup& l)
 {
-    if (!l)
+    if (!l) {
         return true;
+    }
 
     uint64_t unusedId;
     return l->zoneFromAnyThread()->getOrCreateUniqueId(l, &unusedId);
@@ -159,8 +162,9 @@ template <typename T>
 /* static */ HashNumber
 MovableCellHasher<T>::hash(const Lookup& l)
 {
-    if (!l)
+    if (!l) {
         return 0;
+    }
 
     // We have to access the zone from-any-thread here: a worker thread may be
     // cloning a self-hosted object from the main runtime's self- hosting zone
@@ -178,10 +182,12 @@ template <typename T>
 MovableCellHasher<T>::match(const Key& k, const Lookup& l)
 {
     // Return true if both are null or false if only one is null.
-    if (!k)
+    if (!k) {
         return !l;
-    if (!l)
+    }
+    if (!l) {
         return false;
+    }
 
     MOZ_ASSERT(k);
     MOZ_ASSERT(l);
@@ -189,8 +195,9 @@ MovableCellHasher<T>::match(const Key& k, const Lookup& l)
                l->zoneFromAnyThread()->isSelfHostingZone());
 
     Zone* zone = k->zoneFromAnyThread();
-    if (zone != l->zoneFromAnyThread())
+    if (zone != l->zoneFromAnyThread()) {
         return false;
+    }
 
 #ifdef DEBUG
     // Incremental table sweeping means that existing table entries may no

@@ -49,22 +49,25 @@ extern const AllocKind slotsToThingKind[];
 static inline AllocKind
 GetGCObjectKind(size_t numSlots)
 {
-    if (numSlots >= SLOTS_TO_THING_KIND_LIMIT)
+    if (numSlots >= SLOTS_TO_THING_KIND_LIMIT) {
         return AllocKind::OBJECT16;
+    }
     return slotsToThingKind[numSlots];
 }
 
 static inline AllocKind
 GetGCObjectKind(const Class* clasp)
 {
-    if (clasp == FunctionClassPtr)
+    if (clasp == FunctionClassPtr) {
         return AllocKind::FUNCTION;
+    }
 
     MOZ_ASSERT(!clasp->isProxy(), "Proxies should use GetProxyGCObjectKind");
 
     uint32_t nslots = JSCLASS_RESERVED_SLOTS(clasp);
-    if (clasp->flags & JSCLASS_HAS_PRIVATE)
+    if (clasp->flags & JSCLASS_HAS_PRIVATE) {
         nslots++;
+    }
     return GetGCObjectKind(nslots);
 }
 
@@ -101,8 +104,9 @@ GetGCObjectKindForBytes(size_t nbytes)
 {
     MOZ_ASSERT(nbytes <= JSObject::MAX_BYTE_SIZE);
 
-    if (nbytes <= sizeof(NativeObject))
+    if (nbytes <= sizeof(NativeObject)) {
         return AllocKind::OBJECT0;
+    }
     nbytes -= sizeof(NativeObject);
 
     size_t dataSlots = AlignBytes(nbytes, sizeof(Value)) / sizeof(Value);
@@ -156,8 +160,9 @@ GetGCKindSlots(AllocKind thingKind, const Class* clasp)
      * Functions have a larger alloc kind than AllocKind::OBJECT to reserve
      * space for the extra fields in JSFunction, but have no fixed slots.
      */
-    if (clasp == FunctionClassPtr)
+    if (clasp == FunctionClassPtr) {
         nslots = 0;
+    }
 
     return nslots;
 }

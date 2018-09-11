@@ -289,17 +289,20 @@
 #include ../services/manifests/FxAccountAndroidManifest_activities.xml.in
 
 #ifdef MOZ_CRASHREPORTER
-  <activity android:name="org.mozilla.gecko.CrashReporterActivity"
-            android:process="@ANDROID_PACKAGE_NAME@.CrashReporter"
-            android:label="@string/crash_reporter_title"
-            android:icon="@drawable/crash_reporter"
-            android:theme="@style/Gecko"
+        <activity android:name="org.mozilla.gecko.CrashReporterActivity"
+                  android:process="@ANDROID_PACKAGE_NAME@.CrashReporter"
+                  android:label="@string/crash_reporter_title"
+                  android:icon="@drawable/crash_reporter"
+                  android:theme="@style/Gecko"
+                  android:exported="false"
+                  android:excludeFromRecents="true">
+        </activity>
+
+        <service
+            android:name="org.mozilla.gecko.CrashHandlerService"
             android:exported="false"
-            android:excludeFromRecents="true">
-          <intent-filter>
-            <action android:name="org.mozilla.gecko.reportCrash" />
-          </intent-filter>
-  </activity>
+            android:process="@ANDROID_PACKAGE_NAME@.CrashHandler">
+        </service>
 #endif
 
         <activity android:name="org.mozilla.gecko.preferences.GeckoPreferences"

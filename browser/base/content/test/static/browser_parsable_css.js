@@ -63,10 +63,6 @@ let whitelist = [
    intermittent: true,
    errorMessage: /Property contained reference to invalid variable.*background/i,
    isFromDevTools: true},
-  {sourceName: /devtools\/skin\/animationinspector\.css$/i,
-   intermittent: true,
-   errorMessage: /Property contained reference to invalid variable.*color/i,
-   isFromDevTools: true},
 ];
 
 if (!Services.prefs.getBoolPref("layout.css.xul-box-display-values.content.enabled")) {

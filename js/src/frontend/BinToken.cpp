@@ -87,14 +87,16 @@ BinaryASTSupport::binKind(JSContext* cx, const CharSlice key)
             const CharSlice& key = getBinKind(variant);
             auto ptr = binKindMap_.lookupForAdd(key);
             MOZ_ASSERT(!ptr);
-            if (!binKindMap_.add(ptr, key, variant))
+            if (!binKindMap_.add(ptr, key, variant)) {
                 return ReportOutOfMemoryResult(cx);
+            }
         }
     }
 
     auto ptr = binKindMap_.lookup(key);
-    if (!ptr)
+    if (!ptr) {
         return nullptr;
+    }
 
     return &ptr->value();
 }
@@ -108,15 +110,17 @@ BinaryASTSupport::binVariant(JSContext* cx, const CharSlice key)
             const CharSlice& key = getBinVariant(variant);
             auto ptr = binVariantMap_.lookupForAdd(key);
             MOZ_ASSERT(!ptr);
-            if (!binVariantMap_.add(ptr, key, variant))
+            if (!binVariantMap_.add(ptr, key, variant)) {
                 return ReportOutOfMemoryResult(cx);
+            }
         }
     }
 
 
     auto ptr = binVariantMap_.lookup(key);
-    if (!ptr)
+    if (!ptr) {
         return nullptr;
+    }
 
     return &ptr->value();
 }

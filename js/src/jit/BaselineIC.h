@@ -510,11 +510,13 @@ class ICStub
 
     template <typename T, typename... Args>
     static T* New(JSContext* cx, ICStubSpace* space, JitCode* code, Args&&... args) {
-        if (!code)
+        if (!code) {
             return nullptr;
+        }
         T* result = space->allocate<T>(code, std::forward<Args>(args)...);
-        if (!result)
+        if (!result) {
             ReportOutOfMemory(cx);
+        }
         return result;
     }
 
@@ -664,8 +666,9 @@ class ICStub
     // This method is not valid on TypeUpdate stub chains!
     inline ICFallbackStub* getChainFallback() {
         ICStub* lastStub = this;
-        while (lastStub->next_)
+        while (lastStub->next_) {
             lastStub = lastStub->next_;
+        }
         MOZ_ASSERT(lastStub->isFallback());
         return lastStub->toFallbackStub();
     }
@@ -788,8 +791,9 @@ class ICFallbackStub : public ICStub
 
     bool hasStub(ICStub::Kind kind) const {
         for (ICStubConstIterator iter = beginChainConst(); !iter.atEnd(); iter++) {
-            if (iter->kind() == kind)
+            if (iter->kind() == kind) {
                 return true;
+            }
         }
         return false;
     }
@@ -797,8 +801,9 @@ class ICFallbackStub : public ICStub
     unsigned numStubsWithKind(ICStub::Kind kind) const {
         unsigned count = 0;
         for (ICStubConstIterator iter = beginChainConst(); !iter.atEnd(); iter++) {
-            if (iter->kind() == kind)
+            if (iter->kind() == kind) {
                 count++;
+            }
         }
         return count;
     }
@@ -925,8 +930,9 @@ class ICUpdatedStub : public ICStub
         } else {
             ICStub* iter = firstUpdateStub_;
             MOZ_ASSERT(iter->next() != nullptr);
-            while (!iter->next()->isTypeUpdate_Fallback())
+            while (!iter->next()->isTypeUpdate_Fallback()) {
                 iter = iter->next();
+            }
             MOZ_ASSERT(iter->next()->next() == nullptr);
             stub->setNext(iter->next());
             iter->setNext(stub);
@@ -944,8 +950,9 @@ class ICUpdatedStub : public ICStub
     bool hasTypeUpdateStub(ICStub::Kind kind) {
         ICStub* stub = firstUpdateStub_;
         do {
-            if (stub->kind() == kind)
+            if (stub->kind() == kind) {
                 return true;
+            }
 
             stub = stub->next();
         } while (stub);
@@ -1162,8 +1169,9 @@ class ICMonitoredFallbackStub : public ICFallbackStub
         return fallbackMonitorStub_;
     }
     ICTypeMonitor_Fallback* getFallbackMonitorStub(JSContext* cx, JSScript* script) {
-        if (!fallbackMonitorStub_ && !initMonitoringChain(cx, script))
+        if (!fallbackMonitorStub_ && !initMonitoringChain(cx, script)) {
             return nullptr;
+        }
         MOZ_ASSERT(fallbackMonitorStub_);
         return fallbackMonitorStub_;
     }
@@ -1199,8 +1207,9 @@ class TypeCheckPrimitiveSetStub : public ICStub
 
     TypeCheckPrimitiveSetStub* updateTypesAndCode(uint16_t flags, JitCode* code) {
         MOZ_ASSERT(flags && !(flags & ~ValidFlags()));
-        if (!code)
+        if (!code) {
             return nullptr;
+        }
         extra_ = flags;
         updateCode(code);
         return this;
@@ -1318,8 +1327,9 @@ class ICTypeMonitor_Fallback : public ICStub
         MOZ_ASSERT((lastMonitorStubPtrAddr_ != nullptr) ==
                    (numOptimizedMonitorStubs_ || !hasFallbackStub_));
 
-        if (lastMonitorStubPtrAddr_)
+        if (lastMonitorStubPtrAddr_) {
             *lastMonitorStubPtrAddr_ = stub;
+        }
 
         if (numOptimizedMonitorStubs_ == 0) {
             MOZ_ASSERT(firstMonitorStub_ == this);
@@ -1336,8 +1346,9 @@ class ICTypeMonitor_Fallback : public ICStub
     bool hasStub(ICStub::Kind kind) {
         ICStub* stub = firstMonitorStub_;
         do {
-            if (stub->kind() == kind)
+            if (stub->kind() == kind) {
                 return true;
+            }
 
             stub = stub->next();
         } while (stub);
@@ -1457,8 +1468,9 @@ class ICTypeMonitor_PrimitiveSet : public TypeCheckPrimitiveSetStub
         ICTypeMonitor_PrimitiveSet* updateStub() {
             TypeCheckPrimitiveSetStub* stub =
                 this->TypeCheckPrimitiveSetStub::Compiler::updateStub();
-            if (!stub)
+            if (!stub) {
                 return nullptr;
+            }
             return stub->toMonitorStub();
         }
 
@@ -1614,8 +1626,9 @@ class ICTypeUpdate_PrimitiveSet : public TypeCheckPrimitiveSetStub
         ICTypeUpdate_PrimitiveSet* updateStub() {
             TypeCheckPrimitiveSetStub* stub =
                 this->TypeCheckPrimitiveSetStub::Compiler::updateStub();
-            if (!stub)
+            if (!stub) {
                 return nullptr;
+            }
             return stub->toUpdateStub();
         }
 
@@ -3227,8 +3240,9 @@ class ICNewObject_Fallback : public ICFallbackStub
 inline bool
 IsCacheableDOMProxy(JSObject* obj)
 {
-    if (!obj->is<ProxyObject>())
+    if (!obj->is<ProxyObject>()) {
         return false;
+    }
 
     const BaseProxyHandler* handler = obj->as<ProxyObject>().handler();
     return handler->family() == GetDOMProxyHandlerFamily();

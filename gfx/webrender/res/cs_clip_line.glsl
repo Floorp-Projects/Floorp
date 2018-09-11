@@ -10,7 +10,6 @@
 #define LINE_STYLE_WAVY         3
 
 varying vec3 vLocalPos;
-
 flat varying int vStyle;
 flat varying float vAxisSelect;
 flat varying vec4 vParams;
@@ -43,14 +42,16 @@ LineDecorationData fetch_data(ivec2 address) {
 void main(void) {
     ClipMaskInstance cmi = fetch_clip_item();
     ClipArea area = fetch_clip_area(cmi.render_task_address);
-    Transform transform = fetch_transform(cmi.transform_id);
+    Transform clip_transform = fetch_transform(cmi.clip_transform_id);
+    Transform prim_transform = fetch_transform(cmi.prim_transform_id);
     LineDecorationData data = fetch_data(cmi.clip_data_address);
 
-    ClipVertexInfo vi = write_clip_tile_vertex(data.local_rect,
-                                               transform,
-                                               area);
-
-
+    ClipVertexInfo vi = write_clip_tile_vertex(
+        data.local_rect,
+        prim_transform,
+        clip_transform,
+        area
+    );
     vLocalPos = vi.local_pos;
 
     vec2 pos, size;

@@ -80,8 +80,9 @@ SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
 LazyScript::functionDelazifying(JSContext* cx, Handle<LazyScript*> script)
 {
     RootedFunction fun(cx, script->function_);
-    if (script->function_ && !JSFunction::getOrCreateScript(cx, fun))
+    if (script->function_ && !JSFunction::getOrCreateScript(cx, fun)) {
         return nullptr;
+    }
     return script->function_;
 }
 
@@ -95,8 +96,9 @@ JSScript::functionDelazifying() const
         fun->setUnlazifiedScript(const_cast<JSScript*>(this));
         // If this script has a LazyScript, make sure the LazyScript has a
         // reference to the script when delazifying its canonical function.
-        if (lazyScript && !lazyScript->maybeScript())
+        if (lazyScript && !lazyScript->maybeScript()) {
             lazyScript->initScript(const_cast<JSScript*>(this));
+        }
     }
     return fun;
 }
@@ -106,8 +108,9 @@ JSScript::ensureNonLazyCanonicalFunction()
 {
     // Infallibly delazify the canonical script.
     JSFunction* fun = function();
-    if (fun && fun->isInterpretedLazy())
+    if (fun && fun->isInterpretedLazy()) {
         functionDelazifying();
+    }
 }
 
 inline JSFunction*
@@ -168,10 +171,12 @@ JSScript::initialEnvironmentShape() const
 {
     js::Scope* scope = bodyScope();
     if (scope->is<js::FunctionScope>()) {
-        if (js::Shape* envShape = scope->environmentShape())
+        if (js::Shape* envShape = scope->environmentShape()) {
             return envShape;
-        if (js::Scope* namedLambdaScope = maybeNamedLambdaScope())
+        }
+        if (js::Scope* namedLambdaScope = maybeNamedLambdaScope()) {
             return namedLambdaScope->environmentShape();
+        }
     } else if (scope->is<js::EvalScope>()) {
         return scope->environmentShape();
     }
@@ -187,8 +192,9 @@ JSScript::principals()
 inline void
 JSScript::setBaselineScript(JSRuntime* rt, js::jit::BaselineScript* baselineScript)
 {
-    if (hasBaselineScript())
+    if (hasBaselineScript()) {
         js::jit::BaselineScript::writeBarrierPre(zone(), baseline);
+    }
     MOZ_ASSERT(!ion || ion == ION_DISABLED_SCRIPT);
     baseline = baselineScript;
     resetWarmUpResetCounter();
@@ -198,8 +204,9 @@ JSScript::setBaselineScript(JSRuntime* rt, js::jit::BaselineScript* baselineScri
 inline bool
 JSScript::ensureHasAnalyzedArgsUsage(JSContext* cx)
 {
-    if (analyzedArgsUsage())
+    if (analyzedArgsUsage()) {
         return true;
+    }
     return js::jit::AnalyzeArgumentsUsage(cx, this);
 }
 

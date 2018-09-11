@@ -129,7 +129,6 @@ public class GeckoThread extends Thread {
     public static final int FLAG_DEBUGGING = 1 << 0; // Debugging mode.
     public static final int FLAG_PRELOAD_CHILD = 1 << 1; // Preload child during main thread start.
     public static final int FLAG_ENABLE_NATIVE_CRASHREPORTER = 1 << 2; // Enable native crash reporting
-    public static final int FLAG_ENABLE_JAVA_CRASHREPORTER = 1 << 3; // Enable java crash reporting
 
     /* package */ static final String EXTRA_ARGS = "args";
     private static final String EXTRA_PREFS_FD = "prefsFd";
@@ -494,10 +493,6 @@ public class GeckoThread extends Thread {
             env.add(0, "MOZ_CRASHREPORTER=1");
         }
 
-        if ((mFlags & FLAG_ENABLE_JAVA_CRASHREPORTER) != 0) {
-            GeckoAppShell.ensureCrashHandling();
-        }
-
         GeckoLoader.setupGeckoEnvironment(context, context.getFilesDir().getPath(), env);
 
         // And go.
@@ -518,15 +513,6 @@ public class GeckoThread extends Thread {
 
         // Remove pumpMessageLoop() idle handler
         Looper.myQueue().removeIdleHandler(idleHandler);
-    }
-
-    public static int getCrashReporterJobId() {
-        synchronized (INSTANCE) {
-            if (!INSTANCE.mInitialized) {
-                return 1024;        // speculative, unique value
-            }
-            return INSTANCE.mExtras.getInt(GeckoRuntimeSettings.EXTRA_CRASH_REPORTING_JOB_ID, 1024);
-        }
     }
 
     @WrapForJNI(calledFrom = "gecko")

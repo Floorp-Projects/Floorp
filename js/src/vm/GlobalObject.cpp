@@ -126,8 +126,9 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
 {
     MOZ_ASSERT(!global->isStandardClassResolved(key));
 
-    if (global->zone()->createdForHelperThread())
+    if (global->zone()->createdForHelperThread()) {
         return resolveOffThreadConstructor(cx, global, key);
+    }
 
     MOZ_ASSERT(!cx->helperThread());
 
@@ -147,15 +148,18 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     // top of this file. The other lives in the ClassSpec for classes that
     // define it. Classes may use one or the other, but not both.
     ClassInitializerOp init = protoTable[key].init;
-    if (init == InitViaClassSpec)
+    if (init == InitViaClassSpec) {
         init = nullptr;
+    }
 
     const Class* clasp = ProtoKeyToClass(key);
-    if (!init && !clasp)
+    if (!init && !clasp) {
         return true;  // JSProto_Null or a compile-time-disabled feature.
+    }
 
-    if (skipDeselectedConstructor(cx, key))
+    if (skipDeselectedConstructor(cx, key)) {
         return true;
+    }
 
     // Some classes have no init routine, which means that they're disabled at
     // compile-time. We could try to enforce that callers never pass such keys
@@ -164,8 +168,9 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     // ensureConstructor with every JSProtoKey. So it's easier to just handle
     // it here.
     bool haveSpec = clasp && clasp->specDefined();
-    if (!init && !haveSpec)
+    if (!init && !haveSpec) {
         return true;
+    }
 
     // See if there's an old-style initialization hook.
     if (init) {
@@ -191,8 +196,9 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     // for Function, which is a problem. So if Function is being resolved
     // before Object.prototype exists, we just resolve Object instead, since we
     // know that Function will also be resolved before we return.
-    if (key == JSProto_Function && global->getPrototype(JSProto_Object).isUndefined())
+    if (key == JSProto_Function && global->getPrototype(JSProto_Object).isUndefined()) {
         return resolveConstructor(cx, global, JSProto_Object);
+    }
 
     // We don't always have a prototype (i.e. Math and JSON). If we don't,
     // |createPrototype|, |prototypeFunctions|, and |prototypeProperties|
@@ -200,8 +206,9 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     RootedObject proto(cx);
     if (ClassObjectCreationOp createPrototype = clasp->specCreatePrototypeHook()) {
         proto = createPrototype(cx, key);
-        if (!proto)
+        if (!proto) {
             return false;
+        }
 
         if (isObjectOrFunction) {
             // Make sure that creating the prototype didn't recursively resolve
@@ -217,15 +224,17 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
 
     // Create the constructor.
     RootedObject ctor(cx, clasp->specCreateConstructorHook()(cx, key));
-    if (!ctor)
+    if (!ctor) {
         return false;
+    }
 
     RootedId id(cx, NameToId(ClassName(key, cx)));
     if (isObjectOrFunction) {
         if (clasp->specShouldDefineConstructor()) {
             RootedValue ctorValue(cx, ObjectValue(*ctor));
-            if (!DefineDataProperty(cx, global, id, ctorValue, JSPROP_RESOLVING))
+            if (!DefineDataProperty(cx, global, id, ctorValue, JSPROP_RESOLVING)) {
                 return false;
+            }
         }
 
         global->setConstructor(key, ObjectValue(*ctor));
@@ -235,31 +244,37 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     // functions and properties on the builtins and their prototypes.
     if (!cx->runtime()->isSelfHostingGlobal(global)) {
         if (const JSFunctionSpec* funs = clasp->specPrototypeFunctions()) {
-            if (!JS_DefineFunctions(cx, proto, funs))
+            if (!JS_DefineFunctions(cx, proto, funs)) {
                 return false;
+            }
         }
         if (const JSPropertySpec* props = clasp->specPrototypeProperties()) {
-            if (!JS_DefineProperties(cx, proto, props))
+            if (!JS_DefineProperties(cx, proto, props)) {
                 return false;
+            }
         }
         if (const JSFunctionSpec* funs = clasp->specConstructorFunctions()) {
-            if (!JS_DefineFunctions(cx, ctor, funs))
+            if (!JS_DefineFunctions(cx, ctor, funs)) {
                 return false;
+            }
         }
         if (const JSPropertySpec* props = clasp->specConstructorProperties()) {
-            if (!JS_DefineProperties(cx, ctor, props))
+            if (!JS_DefineProperties(cx, ctor, props)) {
                 return false;
+            }
         }
     }
 
     // If the prototype exists, link it with the constructor.
-    if (proto && !LinkConstructorAndPrototype(cx, ctor, proto))
+    if (proto && !LinkConstructorAndPrototype(cx, ctor, proto)) {
         return false;
+    }
 
     // Call the post-initialization hook, if provided.
     if (FinishClassInitOp finishInit = clasp->specFinishInitHook()) {
-        if (!finishInit(cx, ctor, proto))
+        if (!finishInit(cx, ctor, proto)) {
             return false;
+        }
     }
 
     if (!isObjectOrFunction) {
@@ -269,14 +284,16 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
         // Fallible operation that modifies the global object.
         if (clasp->specShouldDefineConstructor()) {
             RootedValue ctorValue(cx, ObjectValue(*ctor));
-            if (!DefineDataProperty(cx, global, id, ctorValue, JSPROP_RESOLVING))
+            if (!DefineDataProperty(cx, global, id, ctorValue, JSPROP_RESOLVING)) {
                 return false;
+            }
         }
 
         // Infallible operations that modify the global object.
         global->setConstructor(key, ObjectValue(*ctor));
-        if (proto)
+        if (proto) {
             global->setPrototype(key, ObjectValue(*proto));
+        }
     }
 
     return true;
@@ -285,12 +302,14 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
 /* static */ JSObject*
 GlobalObject::createObject(JSContext* cx, Handle<GlobalObject*> global, unsigned slot, ObjectInitOp init)
 {
-    if (global->zone()->createdForHelperThread())
+    if (global->zone()->createdForHelperThread()) {
         return createOffThreadObject(cx, global, slot);
+    }
 
     MOZ_ASSERT(!cx->helperThread());
-    if (!init(cx, global))
+    if (!init(cx, global)) {
         return nullptr;
+    }
 
     return &global->getSlot(slot).toObject();
 }
@@ -306,8 +325,9 @@ GlobalObject::OffThreadPlaceholderObject::New(JSContext* cx, unsigned slot)
     Rooted<OffThreadPlaceholderObject*> placeholder(cx);
     placeholder =
         NewObjectWithGivenTaggedProto<OffThreadPlaceholderObject>(cx, AsTaggedProto(nullptr));
-    if (!placeholder)
+    if (!placeholder) {
         return nullptr;
+    }
 
     placeholder->setReservedSlot(SlotIndexSlot, Int32Value(slot));
     return placeholder;
@@ -337,8 +357,9 @@ GlobalObject::resolveOffThreadConstructor(JSContext* cx,
 
     Rooted<OffThreadPlaceholderObject*> placeholder(cx);
     placeholder = OffThreadPlaceholderObject::New(cx, prototypeSlot(key));
-    if (!placeholder)
+    if (!placeholder) {
         return false;
+    }
 
     if (key == JSProto_Object &&
         !JSObject::setFlags(cx, placeholder, BaseShape::IMMUTABLE_PROTOTYPE))
@@ -348,8 +369,9 @@ GlobalObject::resolveOffThreadConstructor(JSContext* cx,
 
     if (key == JSProto_Object || key == JSProto_Function || key == JSProto_Array) {
         ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
-        if (!JSObject::setNewGroupUnknown(cx, realm, placeholder->getClass(), placeholder))
+        if (!JSObject::setNewGroupUnknown(cx, realm, placeholder->getClass(), placeholder)) {
             return false;
+        }
     }
 
     global->setPrototype(key, ObjectValue(*placeholder));
@@ -373,8 +395,9 @@ GlobalObject::createOffThreadObject(JSContext* cx, Handle<GlobalObject*> global,
                slot == REQUESTED_MODULE_PROTO);
 
     auto placeholder = OffThreadPlaceholderObject::New(cx, slot);
-    if (!placeholder)
+    if (!placeholder) {
         return nullptr;
+    }
 
     global->setSlot(slot, ObjectValue(*placeholder));
     return placeholder;
@@ -400,8 +423,9 @@ GlobalObject::initBuiltinConstructor(JSContext* cx, Handle<GlobalObject*> global
     MOZ_ASSERT(!global->lookup(cx, id));
 
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!DefineDataProperty(cx, global, id, ctorValue, JSPROP_RESOLVING))
+    if (!DefineDataProperty(cx, global, id, ctorValue, JSPROP_RESOLVING)) {
         return false;
+    }
 
     global->setConstructor(key, ObjectValue(*ctor));
     global->setPrototype(key, ObjectValue(*proto));
@@ -419,8 +443,9 @@ ThrowTypeError(JSContext* cx, unsigned argc, Value* vp)
 GlobalObject::getOrCreateThrowTypeError(JSContext* cx, Handle<GlobalObject*> global)
 {
     Value v = global->getReservedSlot(THROWTYPEERROR);
-    if (v.isObject())
+    if (v.isObject()) {
         return &v.toObject();
+    }
     MOZ_ASSERT(v.isUndefined());
 
     // Construct the unique [[%ThrowTypeError%]] function object, used only for
@@ -430,8 +455,9 @@ GlobalObject::getOrCreateThrowTypeError(JSContext* cx, Handle<GlobalObject*> glo
     // |Function.prototype| right now.)
 
     RootedFunction throwTypeError(cx, NewNativeFunction(cx, ThrowTypeError, 0, nullptr));
-    if (!throwTypeError || !PreventExtensions(cx, throwTypeError))
+    if (!throwTypeError || !PreventExtensions(cx, throwTypeError)) {
         return nullptr;
+    }
 
     // The "length" property of %ThrowTypeError% is non-configurable, adjust
     // the default property attributes accordingly.
@@ -441,8 +467,9 @@ GlobalObject::getOrCreateThrowTypeError(JSContext* cx, Handle<GlobalObject*> glo
 
     RootedId lengthId(cx, NameToId(cx->names().length));
     ObjectOpResult lengthResult;
-    if (!NativeDefineProperty(cx, throwTypeError, lengthId, nonConfigurableDesc, lengthResult))
+    if (!NativeDefineProperty(cx, throwTypeError, lengthId, nonConfigurableDesc, lengthResult)) {
         return nullptr;
+    }
     MOZ_ASSERT(lengthResult);
 
     // Non-standard: Also change "name" to non-configurable. ECMAScript defines
@@ -451,8 +478,9 @@ GlobalObject::getOrCreateThrowTypeError(JSContext* cx, Handle<GlobalObject*> glo
     // anonymous functions, we don't delete %ThrowTypeError%'s "name" property.
     RootedId nameId(cx, NameToId(cx->names().name));
     ObjectOpResult nameResult;
-    if (!NativeDefineProperty(cx, throwTypeError, nameId, nonConfigurableDesc, nameResult))
+    if (!NativeDefineProperty(cx, throwTypeError, nameId, nonConfigurableDesc, nameResult)) {
         return nullptr;
+    }
     MOZ_ASSERT(nameResult);
 
     global->setReservedSlot(THROWTYPEERROR, ObjectValue(*throwTypeError));
@@ -466,34 +494,40 @@ GlobalObject::createInternal(JSContext* cx, const Class* clasp)
     MOZ_ASSERT(clasp->isTrace(JS_GlobalObjectTraceHook));
 
     JSObject* obj = NewObjectWithGivenProto(cx, clasp, nullptr, SingletonObject);
-    if (!obj)
+    if (!obj) {
         return nullptr;
+    }
 
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     MOZ_ASSERT(global->isUnqualifiedVarObj());
 
     // Initialize the private slot to null if present, as GC can call class
     // hooks before the caller gets to set this to a non-garbage value.
-    if (clasp->flags & JSCLASS_HAS_PRIVATE)
+    if (clasp->flags & JSCLASS_HAS_PRIVATE) {
         global->setPrivate(nullptr);
+    }
 
     Rooted<LexicalEnvironmentObject*> lexical(cx,
         LexicalEnvironmentObject::createGlobal(cx, global));
-    if (!lexical)
+    if (!lexical) {
         return nullptr;
+    }
     global->setReservedSlot(LEXICAL_ENVIRONMENT, ObjectValue(*lexical));
 
     Rooted<GlobalScope*> emptyGlobalScope(cx, GlobalScope::createEmpty(cx, ScopeKind::Global));
-    if (!emptyGlobalScope)
+    if (!emptyGlobalScope) {
         return nullptr;
+    }
     global->setReservedSlot(EMPTY_GLOBAL_SCOPE, PrivateGCThingValue(emptyGlobalScope));
 
     cx->realm()->initGlobal(*global);
 
-    if (!JSObject::setQualifiedVarObj(cx, global))
+    if (!JSObject::setQualifiedVarObj(cx, global)) {
         return nullptr;
-    if (!JSObject::setDelegate(cx, global))
+    }
+    if (!JSObject::setDelegate(cx, global)) {
         return nullptr;
+    }
 
     return global;
 }
@@ -507,18 +541,21 @@ GlobalObject::new_(JSContext* cx, const Class* clasp, JSPrincipals* principals,
     MOZ_ASSERT_IF(cx->zone(), !cx->zone()->isAtomsZone());
 
     Realm* realm = NewRealm(cx, principals, options);
-    if (!realm)
+    if (!realm) {
         return nullptr;
+    }
 
     Rooted<GlobalObject*> global(cx);
     {
         AutoRealmUnchecked ar(cx, realm);
         global = GlobalObject::createInternal(cx, clasp);
-        if (!global)
+        if (!global) {
             return nullptr;
+        }
 
-        if (hookOption == JS::FireOnNewGlobalHook)
+        if (hookOption == JS::FireOnNewGlobalHook) {
             JS_FireOnNewGlobalObject(cx, global);
+        }
     }
 
     return global;
@@ -542,8 +579,9 @@ GlobalObject::emptyGlobalScope() const
 GlobalObject::getOrCreateEval(JSContext* cx, Handle<GlobalObject*> global,
                               MutableHandleObject eval)
 {
-    if (!getOrCreateObjectPrototype(cx, global))
+    if (!getOrCreateObjectPrototype(cx, global)) {
         return false;
+    }
     eval.set(&global->getSlot(EVAL).toObject());
     return true;
 }
@@ -566,8 +604,9 @@ GlobalObject::initStandardClasses(JSContext* cx, Handle<GlobalObject*> global)
     }
 
     for (size_t k = 0; k < JSProto_LIMIT; ++k) {
-        if (!ensureConstructor(cx, global, static_cast<JSProtoKey>(k)))
+        if (!ensureConstructor(cx, global, static_cast<JSProtoKey>(k))) {
             return false;
+        }
     }
     return true;
 }
@@ -586,12 +625,14 @@ InitBareBuiltinCtor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey prot
     const Class* clasp = ProtoKeyToClass(protoKey);
     RootedObject proto(cx);
     proto = clasp->specCreatePrototypeHook()(cx, protoKey);
-    if (!proto)
+    if (!proto) {
         return false;
+    }
 
     RootedObject ctor(cx, clasp->specCreateConstructorHook()(cx, protoKey));
-    if (!ctor)
+    if (!ctor) {
         return false;
+    }
 
     return GlobalObject::initBuiltinConstructor(cx, global, protoKey, ctor, proto);
 }
@@ -689,8 +730,9 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext* cx, HandleValue code,
          * and that it permits runtime code generation.
          */
         JSCSPEvalChecker allows = cx->runtime()->securityCallbacks->contentSecurityPolicyAllows;
-        if (allows)
+        if (allows) {
           return allows(cx, code);
+        }
 
         // Let's cache the result only if the contentSecurityPolicyAllows callback is not set. In
         // this way, contentSecurityPolicyAllows callback is executed each time, with the current
@@ -706,11 +748,13 @@ GlobalObject::createConstructor(JSContext* cx, Native ctor, JSAtom* nameArg, uns
 {
     RootedAtom name(cx, nameArg);
     JSFunction* fun = NewNativeConstructor(cx, ctor, length, name, kind);
-    if (!fun)
+    if (!fun) {
         return nullptr;
+    }
 
-    if (jitInfo)
+    if (jitInfo) {
         fun->setJitInfo(jitInfo);
+    }
 
     return fun;
 }
@@ -722,8 +766,9 @@ CreateBlankProto(JSContext* cx, const Class* clasp, HandleObject proto)
 
     RootedNativeObject blankProto(cx, NewNativeObjectWithGivenProto(cx, clasp, proto,
                                                                     SingletonObject));
-    if (!blankProto || !JSObject::setDelegate(cx, blankProto))
+    if (!blankProto || !JSObject::setDelegate(cx, blankProto)) {
         return nullptr;
+    }
 
     return blankProto;
 }
@@ -732,8 +777,9 @@ CreateBlankProto(JSContext* cx, const Class* clasp, HandleObject proto)
 GlobalObject::createBlankPrototype(JSContext* cx, Handle<GlobalObject*> global, const Class* clasp)
 {
     RootedObject objectProto(cx, getOrCreateObjectPrototype(cx, global));
-    if (!objectProto)
+    if (!objectProto) {
         return nullptr;
+    }
 
     return CreateBlankProto(cx, clasp, objectProto);
 }
@@ -762,10 +808,12 @@ bool
 js::DefinePropertiesAndFunctions(JSContext* cx, HandleObject obj,
                                  const JSPropertySpec* ps, const JSFunctionSpec* fs)
 {
-    if (ps && !JS_DefineProperties(cx, obj, ps))
+    if (ps && !JS_DefineProperties(cx, obj, ps)) {
         return false;
-    if (fs && !JS_DefineFunctions(cx, obj, fs))
+    }
+    if (fs && !JS_DefineFunctions(cx, obj, fs)) {
         return false;
+    }
     return true;
 }
 
@@ -807,8 +855,9 @@ GlobalObject::DebuggerVector*
 GlobalObject::getDebuggers() const
 {
     Value debuggers = getReservedSlot(DEBUGGERS);
-    if (debuggers.isUndefined())
+    if (debuggers.isUndefined()) {
         return nullptr;
+    }
     MOZ_ASSERT(debuggers.toObject().getClass() == &GlobalDebuggees_class);
     return (DebuggerVector*) debuggers.toObject().as<NativeObject>().getPrivate();
 }
@@ -818,15 +867,18 @@ GlobalObject::getOrCreateDebuggers(JSContext* cx, Handle<GlobalObject*> global)
 {
     cx->check(global);
     DebuggerVector* debuggers = global->getDebuggers();
-    if (debuggers)
+    if (debuggers) {
         return debuggers;
+    }
 
     NativeObject* obj = NewNativeObjectWithGivenProto(cx, &GlobalDebuggees_class, nullptr);
-    if (!obj)
+    if (!obj) {
         return nullptr;
+    }
     debuggers = cx->new_<DebuggerVector>();
-    if (!debuggers)
+    if (!debuggers) {
         return nullptr;
+    }
     obj->setPrivate(debuggers);
     global->setReservedSlot(DEBUGGERS, ObjectValue(*obj));
     return debuggers;
@@ -837,12 +889,14 @@ GlobalObject::getOrCreateForOfPICObject(JSContext* cx, Handle<GlobalObject*> glo
 {
     cx->check(global);
     NativeObject* forOfPIC = global->getForOfPICObject();
-    if (forOfPIC)
+    if (forOfPIC) {
         return forOfPIC;
+    }
 
     forOfPIC = ForOfPIC::createForOfPICObject(cx, global);
-    if (!forOfPIC)
+    if (!forOfPIC) {
         return nullptr;
+    }
     global->setReservedSlot(FOR_OF_PIC_CHAIN, ObjectValue(*forOfPIC));
     return forOfPIC;
 }
@@ -862,8 +916,9 @@ GlobalObject::getRegExpStatics(JSContext* cx, Handle<GlobalObject*> global)
     if (!val.isObject()) {
         MOZ_ASSERT(val.isUndefined());
         resObj = RegExpStatics::create(cx);
-        if (!resObj)
+        if (!resObj) {
             return nullptr;
+        }
 
         global->initSlot(REGEXP_STATICS, ObjectValue(*resObj));
     } else {
@@ -886,8 +941,9 @@ GlobalObject::getIntrinsicsHolder(JSContext* cx, Handle<GlobalObject*> global)
     Value slot = global->getReservedSlot(INTRINSICS);
     MOZ_ASSERT(slot.isUndefined() || slot.isObject());
 
-    if (slot.isObject())
+    if (slot.isObject()) {
         return &slot.toObject().as<NativeObject>();
+    }
 
     Rooted<NativeObject*> intrinsicsHolder(cx);
     bool isSelfHostingGlobal = cx->runtime()->isSelfHostingGlobal(global);
@@ -895,8 +951,9 @@ GlobalObject::getIntrinsicsHolder(JSContext* cx, Handle<GlobalObject*> global)
         intrinsicsHolder = global;
     } else {
         intrinsicsHolder = NewObjectWithGivenProto<PlainObject>(cx, nullptr, TenuredObject);
-        if (!intrinsicsHolder)
+        if (!intrinsicsHolder) {
             return nullptr;
+        }
     }
 
     /* Define a property 'global' with the current global as its value. */
@@ -918,12 +975,14 @@ GlobalObject::getSelfHostedFunction(JSContext* cx, Handle<GlobalObject*> global,
                                     unsigned nargs, MutableHandleValue funVal)
 {
     bool exists = false;
-    if (!GlobalObject::maybeGetIntrinsicValue(cx, global, selfHostedName, funVal, &exists))
+    if (!GlobalObject::maybeGetIntrinsicValue(cx, global, selfHostedName, funVal, &exists)) {
         return false;
+    }
     if (exists) {
         RootedFunction fun(cx, &funVal.toObject().as<JSFunction>());
-        if (fun->explicitName() == name)
+        if (fun->explicitName() == name) {
             return true;
+        }
 
         if (fun->explicitName() == selfHostedName) {
             // This function was initially cloned because it was called by
@@ -965,8 +1024,9 @@ GlobalObject::addIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
                                 HandlePropertyName name, HandleValue value)
 {
     RootedNativeObject holder(cx, GlobalObject::getIntrinsicsHolder(cx, global));
-    if (!holder)
+    if (!holder) {
         return false;
+    }
 
     uint32_t slot = holder->slotSpan();
     RootedShape last(cx, holder->lastProperty());
@@ -975,11 +1035,13 @@ GlobalObject::addIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
     RootedId id(cx, NameToId(name));
     Rooted<StackShape> child(cx, StackShape(base, id, slot, 0));
     Shape* shape = cx->zone()->propertyTree().getChild(cx, last, child);
-    if (!shape)
+    if (!shape) {
         return false;
+    }
 
-    if (!holder->setLastProperty(cx, shape))
+    if (!holder->setLastProperty(cx, shape)) {
         return false;
+    }
 
     holder->setSlot(shape->slot(), value);
     return true;

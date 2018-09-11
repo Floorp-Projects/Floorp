@@ -34,12 +34,14 @@ class CollectionPool
 
     RepresentativeCollection* allocate() {
         size_t newAllLength = all_.length() + 1;
-        if (!all_.reserve(newAllLength) || !recyclable_.reserve(newAllLength))
+        if (!all_.reserve(newAllLength) || !recyclable_.reserve(newAllLength)) {
             return nullptr;
+        }
 
         RepresentativeCollection* collection = js_new<RepresentativeCollection>();
-        if (collection)
+        if (collection) {
             all_.infallibleAppend(collection);
+        }
         return collection;
     }
 
@@ -50,8 +52,9 @@ class CollectionPool
 
     void purgeAll() {
         void** end = all_.end();
-        for (void** it = all_.begin(); it != end; ++it)
+        for (void** it = all_.begin(); it != end; ++it) {
             js_delete(asRepresentative(*it));
+        }
 
         all_.clearAndFree();
         recyclable_.clearAndFree();
@@ -65,8 +68,9 @@ class CollectionPool
         RepresentativeCollection* collection;
         if (recyclable_.empty()) {
             collection = allocate();
-            if (!collection)
+            if (!collection) {
                 ReportOutOfMemory(cx);
+            }
         } else {
             collection = asRepresentative(recyclable_.popCopy());
             collection->clear();
@@ -90,8 +94,9 @@ class CollectionPool
             }
         }
         MOZ_ASSERT(ok);
-        for (void** it = recyclable_.begin(); it != recyclable_.end(); ++it)
+        for (void** it = recyclable_.begin(); it != recyclable_.end(); ++it) {
             MOZ_ASSERT(*it != *collection);
+        }
 #endif
 
         MOZ_ASSERT(recyclable_.length() < all_.length());
@@ -232,8 +237,9 @@ class NameCollectionPool
     void releaseMap(Map** map) {
         MOZ_ASSERT(hasActiveCompilation());
         MOZ_ASSERT(map);
-        if (*map)
+        if (*map) {
             mapPool_.release(map);
+        }
     }
 
     template <typename Vector>
@@ -246,8 +252,9 @@ class NameCollectionPool
     void releaseVector(Vector** vec) {
         MOZ_ASSERT(hasActiveCompilation());
         MOZ_ASSERT(vec);
-        if (*vec)
+        if (*vec) {
             vectorPool_.release(vec);
+        }
     }
 
     void purge() {

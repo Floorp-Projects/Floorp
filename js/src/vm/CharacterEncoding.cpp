@@ -23,10 +23,12 @@ JS::LossyTwoByteCharsToNewLatin1CharsZ(JSContext* cx,
     MOZ_ASSERT(cx);
     size_t len = tbchars.length();
     unsigned char* latin1 = cx->pod_malloc<unsigned char>(len + 1);
-    if (!latin1)
+    if (!latin1) {
         return Latin1CharsZ();
-    for (size_t i = 0; i < len; ++i)
+    }
+    for (size_t i = 0; i < len; ++i) {
         latin1[i] = static_cast<unsigned char>(tbchars[i]);
+    }
     latin1[len] = '\0';
     return Latin1CharsZ(latin1, len);
 }
@@ -38,8 +40,9 @@ GetDeflatedUTF8StringLength(const CharT* chars, size_t nchars)
     size_t nbytes = nchars;
     for (const CharT* end = chars + nchars; chars < end; chars++) {
         char16_t c = *chars;
-        if (c < 0x80)
+        if (c < 0x80) {
             continue;
+        }
         uint32_t v;
         if (0xD800 <= c && c <= 0xDFFF) {
             /* nbytes sets 1 length since this is surrogate pair. */
@@ -89,8 +92,9 @@ DeflateStringToUTF8Buffer(const CharT* src, size_t srclen, mozilla::RangedPtr<ch
         capacity = *dstlenp;
         *dstlenp = 0;
     }
-    if (numcharsp)
+    if (numcharsp) {
         *numcharsp = 0;
+    }
 
     while (srclen) {
         uint32_t v;
@@ -118,23 +122,28 @@ DeflateStringToUTF8Buffer(const CharT* src, size_t srclen, mozilla::RangedPtr<ch
         size_t utf8Len;
         if (v < 0x0080) {
             /* no encoding necessary - performance hack */
-            if (dstlenp && *dstlenp + 1 > capacity)
+            if (dstlenp && *dstlenp + 1 > capacity) {
                 return;
+            }
             *dst++ = char(v);
             utf8Len = 1;
         } else {
             uint8_t utf8buf[4];
             utf8Len = OneUcs4ToUtf8Char(utf8buf, v);
-            if (dstlenp && *dstlenp + utf8Len > capacity)
+            if (dstlenp && *dstlenp + utf8Len > capacity) {
                 return;
-            for (size_t i = 0; i < utf8Len; i++)
+            }
+            for (size_t i = 0; i < utf8Len; i++) {
                 *dst++ = char(utf8buf[i]);
+            }
         }
 
-        if (dstlenp)
+        if (dstlenp) {
             *dstlenp += utf8Len;
-        if (numcharsp)
+        }
+        if (numcharsp) {
             (*numcharsp)++;
+        }
     }
 }
 
@@ -160,12 +169,14 @@ JS::CharsToNewUTF8CharsZ(JSContext* maybeCx, const mozilla::Range<CharT> chars)
 
     /* Allocate buffer. */
     char* utf8;
-    if (maybeCx)
+    if (maybeCx) {
         utf8 = maybeCx->pod_malloc<char>(len + 1);
-    else
+    } else {
         utf8 = js_pod_malloc<char>(len + 1);
-    if (!utf8)
+    }
+    if (!utf8) {
         return UTF8CharsZ();
+    }
 
     /* Encode to UTF8. */
     ::DeflateStringToUTF8Buffer(str, chars.length(), mozilla::RangedPtr<char>(utf8, len));
@@ -219,8 +230,9 @@ JS::Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length)
         ucs4Char = (ucs4Char << 6) | (*utf8Buffer++ & 0x3F);
     }
 
-    if (MOZ_UNLIKELY(ucs4Char < minucs4Char || (ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF)))
+    if (MOZ_UNLIKELY(ucs4Char < minucs4Char || (ucs4Char >= 0xD800 && ucs4Char <= 0xDFFF))) {
         return INVALID_UTF8;
+    }
 
     return ucs4Char;
 }
@@ -265,8 +277,9 @@ static bool
 InflateUTF8StringToBuffer(ContextT* cx, const UTF8Chars src, CharT* dst, size_t* dstlenp,
                           JS::SmallestEncoding *smallestEncoding)
 {
-    if (Action != AssertNoInvalids)
+    if (Action != AssertNoInvalids) {
         *smallestEncoding = JS::SmallestEncoding::ASCII;
+    }
     auto RequireLatin1 = [&smallestEncoding]{
         *smallestEncoding = std::max(JS::SmallestEncoding::Latin1, *smallestEncoding);
     };
@@ -282,14 +295,16 @@ InflateUTF8StringToBuffer(ContextT* cx, const UTF8Chars src, CharT* dst, size_t*
         uint32_t v = uint32_t(src[i]);
         if (!(v & 0x80)) {
             // ASCII code unit.  Simple copy.
-            if (Action == Copy)
+            if (Action == Copy) {
                 dst[j] = CharT(v);
+            }
 
         } else {
             // Non-ASCII code unit.  Determine its length in bytes (n).
             uint32_t n = 1;
-            while (v & (0x80 >> n))
+            while (v & (0x80 >> n)) {
                 n++;
+            }
 
         #define INVALID(report, arg, n2)                                \
             do {                                                        \
@@ -314,12 +329,14 @@ InflateUTF8StringToBuffer(ContextT* cx, const UTF8Chars src, CharT* dst, size_t*
             } while (0)
 
             // Check the leading byte.
-            if (n < 2 || n > 4)
+            if (n < 2 || n > 4) {
                 INVALID(ReportInvalidCharacter, i, 1);
+            }
 
             // Check that |src| is large enough to hold an n-byte code unit.
-            if (i + n > srclen)
+            if (i + n > srclen) {
                 INVALID(ReportBufferTooSmall, /* dummy = */ 0, 1);
+            }
 
             // Check the second byte.  From Unicode Standard v6.2, Table 3-7
             // Well-Formed UTF-8 Byte Sequences.
@@ -333,8 +350,9 @@ InflateUTF8StringToBuffer(ContextT* cx, const UTF8Chars src, CharT* dst, size_t*
 
             // Check the continuation bytes.
             for (uint32_t m = 1; m < n; m++) {
-                if ((src[i + m] & 0xC0) != 0x80)
+                if ((src[i + m] & 0xC0) != 0x80) {
                     INVALID(ReportInvalidCharacter, i, m);
+                }
             }
 
             // Determine the code unit's length in CharT and act accordingly.
@@ -352,17 +370,20 @@ InflateUTF8StringToBuffer(ContextT* cx, const UTF8Chars src, CharT* dst, size_t*
             }
             if (v < 0x10000) {
                 // The n-byte UTF8 code unit will fit in a single CharT.
-                if (Action == Copy)
+                if (Action == Copy) {
                     dst[j] = CharT(v);
+                }
             } else {
                 v -= 0x10000;
                 if (v <= 0xFFFFF) {
                     // The n-byte UTF8 code unit will fit in two CharT units.
-                    if (Action == Copy)
+                    if (Action == Copy) {
                         dst[j] = CharT((v >> 10) + 0xD800);
+                    }
                     j++;
-                    if (Action == Copy)
+                    if (Action == Copy) {
                         dst[j] = CharT((v & 0x3FF) + 0xDC00);
+                    }
 
                 } else {
                     // The n-byte UTF8 code unit won't fit in two CharT units.
@@ -375,13 +396,15 @@ InflateUTF8StringToBuffer(ContextT* cx, const UTF8Chars src, CharT* dst, size_t*
             // header will do the final i++ to move to the start of the next
             // code unit.
             i += n - 1;
-            if (Action != AssertNoInvalids)
+            if (Action != AssertNoInvalids) {
                 RequireUTF16();
+            }
         }
     }
 
-    if (Action != AssertNoInvalids && Action != FindEncoding)
+    if (Action != AssertNoInvalids && Action != FindEncoding) {
         *dstlenp = j;
+    }
 
     return true;
 }
@@ -394,8 +417,9 @@ InflateUTF8StringHelper(ContextT* cx, const UTF8Chars src, size_t* outlen)
     *outlen = 0;
 
     JS::SmallestEncoding encoding;
-    if (!InflateUTF8StringToBuffer<Action, CharT>(cx, src, /* dst = */ nullptr, outlen, &encoding))
+    if (!InflateUTF8StringToBuffer<Action, CharT>(cx, src, /* dst = */ nullptr, outlen, &encoding)) {
         return CharsT();
+    }
 
     CharT* dst = cx->template pod_malloc<CharT>(*outlen + 1);  // +1 for NUL
     if (!dst) {
@@ -406,8 +430,9 @@ InflateUTF8StringHelper(ContextT* cx, const UTF8Chars src, size_t* outlen)
     if (encoding == JS::SmallestEncoding::ASCII) {
         size_t srclen = src.length();
         MOZ_ASSERT(*outlen == srclen);
-        for (uint32_t i = 0; i < srclen; i++)
+        for (uint32_t i = 0; i < srclen; i++) {
             dst[i] = CharT(src[i]);
+        }
     } else {
         MOZ_ALWAYS_TRUE((InflateUTF8StringToBuffer<Copy, CharT>(cx, src, dst, outlen, &encoding)));
     }
@@ -487,8 +512,9 @@ bool
 JS::StringIsASCII(const char* s)
 {
     while (*s) {
-        if (*s & 0x80)
+        if (*s & 0x80) {
             return false;
+        }
         s++;
     }
     return true;

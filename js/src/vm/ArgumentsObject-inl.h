@@ -53,11 +53,13 @@ ArgumentsObject::maybeGetElements(uint32_t start, uint32_t count, Value* vp)
     MOZ_ASSERT(start + count >= start);
 
     uint32_t length = initialLength();
-    if (start > length || start + count > length || isAnyElementDeleted())
+    if (start > length || start + count > length || isAnyElementDeleted()) {
         return false;
+    }
 
-    for (uint32_t i = start, end = start + count; i < end; ++i, ++vp)
+    for (uint32_t i = start, end = start + count; i < end; ++i, ++vp) {
         *vp = element(i);
+    }
     return true;
 }
 

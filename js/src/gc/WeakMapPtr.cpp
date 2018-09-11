@@ -65,8 +65,9 @@ JS::WeakMapPtr<K, V>::init(JSContext* cx)
     MOZ_ASSERT(!initialized());
     typename WeakMapDetails::Utils<K, V>::PtrType map =
         cx->new_<typename WeakMapDetails::Utils<K,V>::Type>(cx);
-    if (!map)
+    if (!map) {
         return false;
+    }
     ptr = map;
     return true;
 }
@@ -86,8 +87,9 @@ JS::WeakMapPtr<K, V>::lookup(const K& key)
     MOZ_ASSERT(initialized());
     typename WeakMapDetails::Utils<K, V>::Type::Ptr result =
         WeakMapDetails::Utils<K, V>::cast(ptr)->lookup(key);
-    if (!result)
+    if (!result) {
         return WeakMapDetails::DataType<V>::NullValue();
+    }
     return result->value();
 }
 

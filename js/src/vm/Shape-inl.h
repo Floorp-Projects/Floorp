@@ -51,16 +51,18 @@ Shape::search(JSContext* cx, jsid id)
 MOZ_ALWAYS_INLINE bool
 Shape::maybeCreateTableForLookup(JSContext* cx)
 {
-    if (hasTable())
+    if (hasTable()) {
         return true;
+    }
 
     if (!inDictionary() && numLinearSearches() < LINEAR_SEARCHES_MAX) {
         incrementNumLinearSearches();
         return true;
     }
 
-    if (!isBigEnoughForAShapeTable())
+    if (!isBigEnoughForAShapeTable()) {
         return true;
+    }
 
     return Shape::hashify(cx, this);
 }
@@ -72,8 +74,9 @@ Shape::search(JSContext* cx, Shape* start, jsid id, const AutoKeepShapeTables& k
 {
     if (start->inDictionary()) {
         ShapeTable* table = start->ensureTableForDictionary(cx, keep);
-        if (!table)
+        if (!table) {
             return false;
+        }
         *ptable = table;
         *pentry = &table->search<Adding>(id, keep);
         *pshape = (*pentry)->shape();
@@ -115,10 +118,11 @@ Shape::new_(JSContext* cx, Handle<StackShape> other, uint32_t nfixed)
         return nullptr;
     }
 
-    if (other.isAccessorShape())
+    if (other.isAccessorShape()) {
         new (shape) AccessorShape(other, nfixed);
-    else
+    } else {
         new (shape) Shape(other, nfixed);
+    }
 
     return shape;
 }
@@ -127,8 +131,9 @@ inline void
 Shape::updateBaseShapeAfterMovingGC()
 {
     BaseShape* base = base_;
-    if (IsForwarded(base))
+    if (IsForwarded(base)) {
         base_.unsafeSet(Forwarded(base));
+    }
 }
 
 static inline void
@@ -143,25 +148,30 @@ GetterSetterWriteBarrierPost(AccessorShape* shape)
     MOZ_ASSERT(shape);
 
     gc::StoreBuffer* sb = nullptr;
-    if (shape->hasGetterObject())
+    if (shape->hasGetterObject()) {
         sb = shape->getterObject()->storeBuffer();
-    if (!sb && shape->hasSetterObject())
+    }
+    if (!sb && shape->hasSetterObject()) {
         sb = shape->setterObject()->storeBuffer();
-    if (!sb)
+    }
+    if (!sb) {
         return;
+    }
 
     auto& nurseryShapes = shape->zone()->nurseryShapes();
 
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!nurseryShapes.append(shape))
+        if (!nurseryShapes.append(shape)) {
             oomUnsafe.crash("GetterSetterWriteBarrierPost");
+        }
     }
 
-    if (nurseryShapes.length() == 1)
+    if (nurseryShapes.length() == 1) {
         sb->putGeneric(NurseryShapesRef(shape->zone()));
-    else if (nurseryShapes.length() == MaxShapeVectorLength)
+    } else if (nurseryShapes.length() == MaxShapeVectorLength) {
         sb->setAboutToOverflow(JS::gcreason::FULL_SHAPE_BUFFER);
+    }
 }
 
 inline
@@ -177,15 +187,17 @@ AccessorShape::AccessorShape(const StackShape& other, uint32_t nfixed)
 inline void
 Shape::initDictionaryShape(const StackShape& child, uint32_t nfixed, GCPtrShape* dictp)
 {
-    if (child.isAccessorShape())
+    if (child.isAccessorShape()) {
         new (this) AccessorShape(child, nfixed);
-    else
+    } else {
         new (this) Shape(child, nfixed);
+    }
     this->immutableFlags |= IN_DICTIONARY;
 
     this->listp = nullptr;
-    if (dictp)
+    if (dictp) {
         insertIntoDictionary(dictp);
+    }
 }
 
 template<class ObjectSubclass>
@@ -197,13 +209,15 @@ EmptyShape::ensureInitialCustomShape(JSContext* cx, Handle<ObjectSubclass*> obj)
 
     // If the provided object has a non-empty shape, it was given the cached
     // initial shape when created: nothing to do.
-    if (!obj->empty())
+    if (!obj->empty()) {
         return true;
+    }
 
     // If no initial shape was assigned, do so.
     RootedShape shape(cx, ObjectSubclass::assignInitialShape(cx, obj));
-    if (!shape)
+    if (!shape) {
         return false;
+    }
     MOZ_ASSERT(!obj->empty());
 
     // If the object is a standard prototype -- |RegExp.prototype|,
@@ -211,8 +225,9 @@ EmptyShape::ensureInitialCustomShape(JSContext* cx, Handle<ObjectSubclass*> obj)
     // |CreateBlankProto| marked it as a delegate.  These are the only objects
     // of this class that won't use the standard prototype, and there's no
     // reason to pollute the initial shape cache with entries for them.
-    if (obj->isDelegate())
+    if (obj->isDelegate()) {
         return true;
+    }
 
     // Cache the initial shape for non-prototype objects, however, so that
     // future instances will begin life with that shape.
@@ -233,8 +248,9 @@ AutoRooterGetterSetter::AutoRooterGetterSetter(JSContext* cx, uint8_t attrs,
                                                GetterOp* pgetter, SetterOp* psetter
                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
-    if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
+    if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         inner.emplace(cx, attrs, pgetter, psetter);
+    }
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
@@ -244,8 +260,9 @@ GetPropertyAttributes(JSObject* obj, PropertyResult prop)
     MOZ_ASSERT(obj->isNative());
 
     if (prop.isDenseOrTypedArrayElement()) {
-        if (obj->is<TypedArrayObject>())
+        if (obj->is<TypedArrayObject>()) {
             return JSPROP_ENUMERATE | JSPROP_PERMANENT;
+        }
         return obj->as<NativeObject>().getElementsHeader()->elementAttributes();
     }
 
@@ -281,13 +298,15 @@ ShapeTable::searchUnchecked(jsid id)
     Entry* entry = &getEntry(hash1);
 
     /* Miss: return space for a new entry. */
-    if (entry->isFree())
+    if (entry->isFree()) {
         return *entry;
+    }
 
     /* Hit: return entry. */
     Shape* shape = entry->shape();
-    if (shape && shape->propidRaw() == id)
+    if (shape && shape->propidRaw() == id) {
         return *entry;
+    }
 
     /* Collision: double hash. */
     uint32_t sizeLog2 = HASH_BITS - hashShift_;
@@ -301,15 +320,17 @@ ShapeTable::searchUnchecked(jsid id)
             firstRemoved = entry;
         } else {
             firstRemoved = nullptr;
-            if (!entry->hadCollision())
+            if (!entry->hadCollision()) {
                 entry->flagCollision();
+            }
         }
     }
 
 #ifdef DEBUG
     bool collisionFlag = true;
-    if (!entry->isRemoved())
+    if (!entry->isRemoved()) {
         collisionFlag = entry->hadCollision();
+    }
 #endif
 
     while (true) {
@@ -317,8 +338,9 @@ ShapeTable::searchUnchecked(jsid id)
         hash1 &= sizeMask;
         entry = &getEntry(hash1);
 
-        if (entry->isFree())
+        if (entry->isFree()) {
             return (Adding == MaybeAdding::Adding && firstRemoved) ? *firstRemoved : *entry;
+        }
 
         shape = entry->shape();
         if (shape && shape->propidRaw() == id) {
@@ -328,17 +350,20 @@ ShapeTable::searchUnchecked(jsid id)
 
         if (Adding == MaybeAdding::Adding) {
             if (entry->isRemoved()) {
-                if (!firstRemoved)
+                if (!firstRemoved) {
                     firstRemoved = entry;
+                }
             } else {
-                if (!entry->hadCollision())
+                if (!entry->hadCollision()) {
                     entry->flagCollision();
+                }
             }
         }
 
 #ifdef DEBUG
-        if (!entry->isRemoved())
+        if (!entry->isRemoved()) {
             collisionFlag &= entry->hadCollision();
+        }
 #endif
     }
 
@@ -392,8 +417,9 @@ NativeObject::addDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
     ShapeTable::Entry* entry = nullptr;
     if (obj->inDictionaryMode()) {
         table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
-        if (!table)
+        if (!table) {
             return nullptr;
+        }
         entry = &table->search<MaybeAdding::Adding>(id, keep);
     }
 
@@ -413,8 +439,9 @@ NativeObject::addAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
     ShapeTable::Entry* entry = nullptr;
     if (obj->inDictionaryMode()) {
         table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
-        if (!table)
+        if (!table) {
             return nullptr;
+        }
         entry = &table->search<MaybeAdding::Adding>(id, keep);
     }
 

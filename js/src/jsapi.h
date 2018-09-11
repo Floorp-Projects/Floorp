@@ -272,8 +272,9 @@ JS_NumberValue(double d)
 {
     int32_t i;
     d = JS::CanonicalizeNaN(d);
-    if (mozilla::NumberIsInt32(d, &i))
+    if (mozilla::NumberIsInt32(d, &i)) {
         return JS::Int32Value(i);
+    }
     return JS::DoubleValue(d);
 }
 
@@ -1254,10 +1255,11 @@ struct JSPropertySpec {
 
 #ifdef DEBUG
         // Verify that our accessors match our JSPROP_GETTER flag.
-        if (flags & JSPROP_GETTER)
+        if (flags & JSPROP_GETTER) {
             checkAccessorsAreSelfHosted();
-        else
+        } else {
             checkAccessorsAreNative();
+        }
 #endif
         return (flags & JSPROP_GETTER);
     }
@@ -1601,8 +1603,9 @@ class JS_PUBLIC_API(RealmBehaviors)
         Override() : mode_(Default) {}
 
         bool get(bool defaultValue) const {
-            if (mode_ == Default)
+            if (mode_ == Default) {
                 return defaultValue;
+            }
             return mode_ == ForceTrue;
         }
 
@@ -1938,8 +1941,9 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper>
 
     void assertCompleteIfFound() const {
 #ifdef DEBUG
-        if (object())
+        if (object()) {
             assertComplete();
+        }
 #endif
     }
 };
@@ -4825,8 +4829,9 @@ struct JS_PUBLIC_API(FirstSubsumedFrame)
       , principals(p)
       , ignoreSelfHosted(ignoreSelfHostedFrames)
     {
-        if (principals)
+        if (principals) {
             JS_HoldPrincipals(principals);
+        }
     }
 
     // No copying because we want to avoid holding and dropping principals
@@ -4848,8 +4853,9 @@ struct JS_PUBLIC_API(FirstSubsumedFrame)
     }
 
     ~FirstSubsumedFrame() {
-        if (principals)
+        if (principals) {
             JS_DropPrincipals(cx, principals);
+        }
     }
 };
 

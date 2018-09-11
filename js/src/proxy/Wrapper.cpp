@@ -25,8 +25,9 @@ using namespace js;
 bool
 Wrapper::finalizeInBackground(const Value& priv) const
 {
-    if (!priv.isObject())
+    if (!priv.isObject()) {
         return true;
+    }
 
     /*
      * Make the 'background-finalized-ness' of the wrapper the same as the
@@ -170,8 +171,9 @@ ForwardingProxyHandler::call(JSContext* cx, HandleObject proxy, const CallArgs& 
     RootedValue target(cx, proxy->as<ProxyObject>().private_());
 
     InvokeArgs iargs(cx);
-    if (!FillArgumentsFromArraylike(cx, iargs, args))
+    if (!FillArgumentsFromArraylike(cx, iargs, args)) {
         return false;
+    }
 
     return js::Call(cx, target, args.thisv(), iargs, args.rval());
 }
@@ -188,12 +190,14 @@ ForwardingProxyHandler::construct(JSContext* cx, HandleObject proxy, const CallA
     }
 
     ConstructArgs cargs(cx);
-    if (!FillArgumentsFromArraylike(cx, cargs, args))
+    if (!FillArgumentsFromArraylike(cx, cargs, args)) {
         return false;
+    }
 
     RootedObject obj(cx);
-    if (!Construct(cx, target, cargs, args.newTarget(), &obj))
+    if (!Construct(cx, target, cargs, args.newTarget(), &obj)) {
         return false;
+    }
 
     args.rval().setObject(*obj);
     return true;
@@ -345,10 +349,12 @@ Wrapper::wrappedObject(JSObject* wrapper)
         // AutoRealm cannot be used with CCWs).
         MOZ_ASSERT_IF(IsCrossCompartmentWrapper(wrapper),
                       !IsCrossCompartmentWrapper(target));
-        if (wrapper->isMarkedBlack())
+        if (wrapper->isMarkedBlack()) {
             MOZ_ASSERT(JS::ObjectIsNotGray(target));
-        if (!wrapper->isMarkedGray())
+        }
+        if (!wrapper->isMarkedGray()) {
             JS::ExposeObjectToActiveJS(target);
+        }
     }
 
     return target;
@@ -358,14 +364,16 @@ JS_FRIEND_API(JSObject*)
 js::UncheckedUnwrapWithoutExpose(JSObject* wrapped)
 {
     while (true) {
-        if (!wrapped->is<WrapperObject>() || MOZ_UNLIKELY(IsWindowProxy(wrapped)))
+        if (!wrapped->is<WrapperObject>() || MOZ_UNLIKELY(IsWindowProxy(wrapped))) {
             break;
+        }
         wrapped = wrapped->as<WrapperObject>().target();
 
         // This can be called from Wrapper::weakmapKeyDelegate() on a wrapper
         // whose referent has been moved while it is still unmarked.
-        if (wrapped)
+        if (wrapped) {
             wrapped = MaybeForwarded(wrapped);
+        }
     }
     return wrapped;
 }
@@ -386,8 +394,9 @@ js::UncheckedUnwrap(JSObject* wrapped, bool stopAtWindowProxy, unsigned* flagsp)
         flags |= Wrapper::wrapperHandler(wrapped)->flags();
         wrapped = Wrapper::wrappedObject(wrapped);
     }
-    if (flagsp)
+    if (flagsp) {
         *flagsp = flags;
+    }
     return wrapped;
 }
 
@@ -397,8 +406,9 @@ js::CheckedUnwrap(JSObject* obj, bool stopAtWindowProxy)
     while (true) {
         JSObject* wrapper = obj;
         obj = UnwrapOneChecked(obj, stopAtWindowProxy);
-        if (!obj || obj == wrapper)
+        if (!obj || obj == wrapper) {
             return obj;
+        }
     }
 }
 

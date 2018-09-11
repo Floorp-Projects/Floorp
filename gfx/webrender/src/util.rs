@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
-use api::{LayoutPixel, DeviceRect, WorldPixel, WorldRect};
+use api::{LayoutPixel, DeviceRect, WorldPixel, RasterRect};
 use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D};
-use euclid::{TypedTransform2D, TypedTransform3D, TypedVector2D};
+use euclid::{TypedTransform2D, TypedTransform3D, TypedVector2D, TypedScale};
 use num_traits::Zero;
 use plane_split::{Clipper, Polygon};
 use std::{i32, f32, fmt};
@@ -62,7 +62,10 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
     }
 
     fn has_perspective_component(&self) -> bool {
-         self.m14 != 0.0 || self.m24 != 0.0 || self.m34 != 0.0 || self.m44 != 1.0
+         self.m14.abs() > NEARLY_ZERO ||
+         self.m24.abs() > NEARLY_ZERO ||
+         self.m34.abs() > NEARLY_ZERO ||
+         (self.m44 - 1.0).abs() > NEARLY_ZERO
     }
 
     fn has_2d_inverse(&self) -> bool {
@@ -501,10 +504,11 @@ pub fn project_rect<F, T>(
     }
 }
 
-pub fn world_rect_to_device_pixels(
-    rect: WorldRect,
+pub fn raster_rect_to_device_pixels(
+    rect: RasterRect,
     device_pixel_scale: DevicePixelScale,
 ) -> DeviceRect {
-    let device_rect = rect * device_pixel_scale;
+    let world_rect = rect * TypedScale::new(1.0);
+    let device_rect = world_rect * device_pixel_scale;
     device_rect.round_out()
 }

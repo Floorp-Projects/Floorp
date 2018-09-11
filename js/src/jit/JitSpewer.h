@@ -285,8 +285,9 @@ class AutoDisableSpew
     ~AutoDisableSpew()
     {
 #ifdef JS_JITSPEW
-        if (enabled_)
+        if (enabled_) {
             EnableChannel(Channel);
+        }
 #endif
     }
 };

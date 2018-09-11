@@ -30,8 +30,9 @@ js::Nursery::getForwardedPointer(js::gc::Cell** ref)
 {
     js::gc::Cell* cell = (*ref);
     MOZ_ASSERT(IsInsideNursery(cell));
-    if (!cell->isForwarded())
+    if (!cell->isForwarded()) {
         return false;
+    }
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(cell);
     *ref = overlay->forwardingAddress();
     return true;
@@ -40,15 +41,17 @@ js::Nursery::getForwardedPointer(js::gc::Cell** ref)
 inline void
 js::Nursery::maybeSetForwardingPointer(JSTracer* trc, void* oldData, void* newData, bool direct)
 {
-    if (trc->isTenuringTracer())
+    if (trc->isTenuringTracer()) {
         setForwardingPointerWhileTenuring(oldData, newData, direct);
+    }
 }
 
 inline void
 js::Nursery::setForwardingPointerWhileTenuring(void* oldData, void* newData, bool direct)
 {
-    if (isInside(oldData))
+    if (isInside(oldData)) {
         setForwardingPointer(oldData, newData, direct);
+    }
 }
 
 inline void
@@ -105,8 +108,9 @@ AllocateObjectBuffer(JSContext* cx, uint32_t count)
 {
     size_t nbytes = JS_ROUNDUP(count * sizeof(T), sizeof(Value));
     T* buffer = static_cast<T*>(cx->nursery().allocateBuffer(cx->zone(), nbytes));
-    if (!buffer)
+    if (!buffer) {
         ReportOutOfMemory(cx);
+    }
     return buffer;
 }
 
@@ -114,12 +118,14 @@ template <typename T>
 static inline T*
 AllocateObjectBuffer(JSContext* cx, JSObject* obj, uint32_t count)
 {
-    if (cx->helperThread())
+    if (cx->helperThread()) {
         return cx->pod_malloc<T>(count);
+    }
     size_t nbytes = JS_ROUNDUP(count * sizeof(T), sizeof(Value));
     T* buffer = static_cast<T*>(cx->nursery().allocateBuffer(obj, nbytes));
-    if (!buffer)
+    if (!buffer) {
         ReportOutOfMemory(cx);
+    }
     return buffer;
 }
 
@@ -129,13 +135,15 @@ static inline T*
 ReallocateObjectBuffer(JSContext* cx, JSObject* obj, T* oldBuffer,
                        uint32_t oldCount, uint32_t newCount)
 {
-    if (cx->helperThread())
+    if (cx->helperThread()) {
         return obj->zone()->pod_realloc<T>(oldBuffer, oldCount, newCount);
+    }
     T* buffer =  static_cast<T*>(cx->nursery().reallocateBuffer(obj, oldBuffer,
                                                                 oldCount * sizeof(T),
                                                                 newCount * sizeof(T)));
-    if (!buffer)
+    if (!buffer) {
         ReportOutOfMemory(cx);
+    }
     return buffer;
 }
 

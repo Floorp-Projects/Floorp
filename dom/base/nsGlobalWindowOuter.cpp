@@ -216,6 +216,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "prrng.h"
 #include "nsSandboxFlags.h"
+#include "nsBaseCommandController.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/BrowserElementDictionariesBinding.h"
 #include "mozilla/dom/cache/CacheStorage.h"
@@ -2933,10 +2934,10 @@ nsGlobalWindowOuter::GetControllersOuter(ErrorResult& aError)
     }
 
     // Add in the default controller
-    nsCOMPtr<nsIController> controller = do_CreateInstance(
-                               NS_WINDOWCONTROLLER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) {
-      aError.Throw(rv);
+    nsCOMPtr<nsIController> controller =
+      nsBaseCommandController::CreateWindowController();
+    if (!controller) {
+      aError.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
 

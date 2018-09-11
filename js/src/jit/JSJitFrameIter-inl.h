@@ -68,8 +68,9 @@ template <typename T>
 bool
 JSJitFrameIter::isExitFrameLayout() const
 {
-    if (!isExitFrame())
+    if (!isExitFrame()) {
         return false;
+    }
     return exitFrame()->is<T>();
 }
 

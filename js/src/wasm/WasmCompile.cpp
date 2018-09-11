@@ -292,8 +292,9 @@ CodesizeCutoff(SystemClass cls, uint32_t codeSize)
 static double
 EffectiveCores(SystemClass cls, uint32_t cores)
 {
-    if (cores <= 3)
+    if (cores <= 3) {
         return pow(cores, 0.9);
+    }
     return pow(cores, 0.75);
 }
 
@@ -318,8 +319,9 @@ TieringBeneficial(uint32_t codeSize)
     // some kind of sense.  That said, this is a non-issue: as of September 2017
     // 1-core was down to 3.5% of our population and falling.
 
-    if (cpuCount == 1)
+    if (cpuCount == 1) {
         return false;
+    }
 
     MOZ_ASSERT(HelperThreadState().threadCount >= cpuCount);
 
@@ -341,8 +343,9 @@ TieringBeneficial(uint32_t codeSize)
     double cutoffSize = CodesizeCutoff(cls, codeSize);
     double effectiveCores = EffectiveCores(cls, cores);
 
-    if ((codeSize / effectiveCores) < cutoffSize)
+    if ((codeSize / effectiveCores) < cutoffSize) {
         return false;
+    }
 
     // Do not implement a size cutoff for 64-bit systems since the code size
     // budget for 64 bit is so large that it will hardly ever be an issue.
@@ -366,8 +369,9 @@ TieringBeneficial(uint32_t codeSize)
     // If the sum of baseline and ion code makes us exceeds some set percentage
     // of the executable memory then disable tiering.
 
-    if ((MaxCodeBytesPerProcess - availMemory) + needMemory > cutoff)
+    if ((MaxCodeBytesPerProcess - availMemory) + needMemory > cutoff) {
         return false;
+    }
 #endif
 
     return true;
@@ -396,8 +400,9 @@ CompilerEnvironment::computeParameters(HasGcTypes gcFeatureOptIn)
 {
     MOZ_ASSERT(state_ == InitialWithModeTierDebug);
 
-    if (gcTypes_ == HasGcTypes::True)
+    if (gcTypes_ == HasGcTypes::True) {
         gcTypes_ = gcFeatureOptIn;
+    }
     state_ = Computed;
 }
 
@@ -421,8 +426,9 @@ CompilerEnvironment::computeParameters(Decoder& d, HasGcTypes gcFeatureOptIn)
     uint32_t codeSectionSize = 0;
 
     SectionRange range;
-    if (StartsCodeSection(d.begin(), d.end(), &range))
+    if (StartsCodeSection(d.begin(), d.end(), &range)) {
         codeSectionSize = range.size;
+    }
 
     // Attempt to default to ion if baseline is disabled.
     bool baselineEnabled = BaselineCanCompile() && (argBaselineEnabled || argTestTiering);
@@ -451,18 +457,21 @@ static bool
 DecodeFunctionBody(DecoderT& d, ModuleGenerator& mg, uint32_t funcIndex)
 {
     uint32_t bodySize;
-    if (!d.readVarU32(&bodySize))
+    if (!d.readVarU32(&bodySize)) {
         return d.fail("expected number of function body bytes");
+    }
 
-    if (bodySize > MaxFunctionBytes)
+    if (bodySize > MaxFunctionBytes) {
         return d.fail("function body too big");
+    }
 
     const size_t offsetInModule = d.currentOffset();
 
     // Skip over the function body; it will be validated by the compilation thread.
     const uint8_t* bodyBegin;
-    if (!d.readBytes(bodySize, &bodyBegin))
+    if (!d.readBytes(bodySize, &bodyBegin)) {
         return d.fail("function body length too big");
+    }
 
     return mg.compileFuncDef(funcIndex, offsetInModule, bodyBegin, bodyBegin + bodySize);
 }
@@ -472,26 +481,31 @@ static bool
 DecodeCodeSection(const ModuleEnvironment& env, DecoderT& d, ModuleGenerator& mg)
 {
     if (!env.codeSection) {
-        if (env.numFuncDefs() != 0)
+        if (env.numFuncDefs() != 0) {
             return d.fail("expected code section");
+        }
 
         return mg.finishFuncDefs();
     }
 
     uint32_t numFuncDefs;
-    if (!d.readVarU32(&numFuncDefs))
+    if (!d.readVarU32(&numFuncDefs)) {
         return d.fail("expected function body count");
-
-    if (numFuncDefs != env.numFuncDefs())
-        return d.fail("function body count does not match function signature count");
-
-    for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
-        if (!DecodeFunctionBody(d, mg, env.numFuncImports() + funcDefIndex))
-            return false;
     }
 
-    if (!d.finishSection(*env.codeSection, "code"))
+    if (numFuncDefs != env.numFuncDefs()) {
+        return d.fail("function body count does not match function signature count");
+    }
+
+    for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
+        if (!DecodeFunctionBody(d, mg, env.numFuncImports() + funcDefIndex)) {
+            return false;
+        }
+    }
+
+    if (!d.finishSection(*env.codeSection, "code")) {
         return false;
+    }
 
     return mg.finishFuncDefs();
 }
@@ -508,18 +522,22 @@ wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, Uni
     ModuleEnvironment env(args.gcTypesConfigured,
                           &compilerEnv,
                           args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
-    if (!DecodeModuleEnvironment(d, &env))
+    if (!DecodeModuleEnvironment(d, &env)) {
         return nullptr;
+    }
 
     ModuleGenerator mg(args, &env, nullptr, error);
-    if (!mg.init())
+    if (!mg.init()) {
         return nullptr;
+    }
 
-    if (!DecodeCodeSection(env, d, mg))
+    if (!DecodeCodeSection(env, d, mg)) {
         return nullptr;
+    }
 
-    if (!DecodeModuleTail(d, &env, mg.deferredValidationState()))
+    if (!DecodeModuleTail(d, &env, mg.deferredValidationState())) {
         return nullptr;
+    }
 
     return mg.finishModule(bytecode);
 }
@@ -538,23 +556,28 @@ wasm::CompileTier2(const CompileArgs& args, Module& module, Atomic<bool>* cancel
     ModuleEnvironment env(gcTypesConfigured,
                           &compilerEnv,
                           args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
-    if (!DecodeModuleEnvironment(d, &env))
+    if (!DecodeModuleEnvironment(d, &env)) {
         return;
+    }
 
     MOZ_ASSERT(env.gcTypesEnabled() == HasGcTypes::False, "can't ion-compile with gc types yet");
 
     ModuleGenerator mg(args, &env, cancelled, &error);
-    if (!mg.init())
+    if (!mg.init()) {
         return;
+    }
 
-    if (!DecodeCodeSection(env, d, mg))
+    if (!DecodeCodeSection(env, d, mg)) {
         return;
+    }
 
-    if (!DecodeModuleTail(d, &env, mg.deferredValidationState()))
+    if (!DecodeModuleTail(d, &env, mg.deferredValidationState())) {
         return;
+    }
 
-    if (!mg.finishTier2(module))
+    if (!mg.finishTier2(module)) {
         return;
+    }
 
     // The caller doesn't care about success or failure; only that compilation
     // is inactive, so there is no success to return here.
@@ -592,8 +615,9 @@ class StreamingDecoder
         const uint8_t* requiredEnd = d_.currentPosition() + numBytes;
         auto streamEnd = streamEnd_.lock();
         while (streamEnd < requiredEnd) {
-            if (cancelled_)
+            if (cancelled_) {
                 return false;
+            }
             streamEnd.wait();
         }
         return true;
@@ -624,8 +648,9 @@ CreateBytecode(const Bytes& env, const Bytes& code, const Bytes& tail, UniqueCha
     }
 
     MutableBytes bytecode = js_new<ShareableBytes>();
-    if (!bytecode || !bytecode->bytes.resize(size))
+    if (!bytecode || !bytecode->bytes.resize(size)) {
         return nullptr;
+    }
 
     uint8_t* p = bytecode->bytes.begin();
 
@@ -664,22 +689,25 @@ wasm::CompileStreaming(const CompileArgs& args,
         env.emplace(args.gcTypesConfigured,
                     &compilerEnv,
                     args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
-        if (!DecodeModuleEnvironment(d, env.ptr()))
+        if (!DecodeModuleEnvironment(d, env.ptr())) {
             return nullptr;
+        }
 
         MOZ_ASSERT(d.done());
     }
 
     ModuleGenerator mg(args, env.ptr(), &cancelled, error);
-    if (!mg.init())
+    if (!mg.init()) {
         return nullptr;
+    }
 
     {
         MOZ_ASSERT(env->codeSection->size == codeBytes.length());
         StreamingDecoder d(*env, codeBytes, codeStreamEnd, cancelled, error, warnings);
 
-        if (!DecodeCodeSection(*env, d, mg))
+        if (!DecodeCodeSection(*env, d, mg)) {
             return nullptr;
+        }
 
         MOZ_ASSERT(d.done());
     }
@@ -687,8 +715,9 @@ wasm::CompileStreaming(const CompileArgs& args,
     {
         auto tailBytesPtrGuard = tailBytesPtr.lock();
         while (!tailBytesPtrGuard) {
-            if (cancelled)
+            if (cancelled) {
                 return nullptr;
+            }
             tailBytesPtrGuard.wait();
         }
     }
@@ -698,15 +727,17 @@ wasm::CompileStreaming(const CompileArgs& args,
     {
         Decoder d(tailBytes, env->codeSection->end(), error, warnings);
 
-        if (!DecodeModuleTail(d, env.ptr(), mg.deferredValidationState()))
+        if (!DecodeModuleTail(d, env.ptr(), mg.deferredValidationState())) {
             return nullptr;
+        }
 
         MOZ_ASSERT(d.done());
     }
 
     SharedBytes bytecode = CreateBytecode(envBytes, codeBytes, tailBytes, error);
-    if (!bytecode)
+    if (!bytecode) {
         return nullptr;
+    }
 
     return mg.finishModule(*bytecode);
 }

@@ -150,8 +150,9 @@ struct ShareableBase : AtomicRefCounted<T>
     size_t sizeOfIncludingThisIfNotSeen(MallocSizeOf mallocSizeOf, SeenSet* seen) const {
         const T* self = static_cast<const T*>(this);
         typename SeenSet::AddPtr p = seen->lookupForAdd(self);
-        if (p)
+        if (p) {
             return 0;
+        }
         bool ok = seen->add(p, self);
         (void)ok;  // oh well
         return mallocSizeOf(self) + self->sizeOfExcludingThis(mallocSizeOf);
@@ -757,8 +758,9 @@ class FuncType
 
     HashNumber hash() const {
         HashNumber hn = HashNumber(ret_.code());
-        for (const ValType& vt : args_)
+        for (const ValType& vt : args_) {
             hn = mozilla::AddToHash(hn, HashNumber(vt.code()));
+        }
         return hn;
     }
     bool operator==(const FuncType& rhs) const {
@@ -769,28 +771,33 @@ class FuncType
     }
 
     bool hasI64ArgOrRet() const {
-        if (ret() == ExprType::I64)
+        if (ret() == ExprType::I64) {
             return true;
+        }
         for (ValType arg : args()) {
-            if (arg == ValType::I64)
+            if (arg == ValType::I64) {
                 return true;
+            }
         }
         return false;
     }
     bool temporarilyUnsupportedAnyRef() const {
-        if (ret().isRefOrAnyRef())
+        if (ret().isRefOrAnyRef()) {
             return true;
+        }
         for (ValType arg : args()) {
-            if (arg.isRefOrAnyRef())
+            if (arg.isRefOrAnyRef()) {
                 return true;
+            }
         }
         return false;
     }
 #ifdef WASM_PRIVATE_REFTYPES
     bool exposesRef() const {
         for (const ValType& arg : args()) {
-            if (arg.isRef())
+            if (arg.isRef()) {
                 return true;
+            }
         }
         return ret().isRef();
     }
@@ -1041,8 +1048,9 @@ class GlobalDesc
     }
 
     void setIsExport() {
-        if (!isConstant())
+        if (!isConstant()) {
             u.var.isExport_ = true;
+        }
     }
 
     GlobalKind kind() const { return kind_; }
@@ -1542,8 +1550,9 @@ class CodeRange
     void offsetBy(uint32_t offset) {
         begin_ += offset;
         end_ += offset;
-        if (hasReturn())
+        if (hasReturn()) {
             ret_ += offset;
+        }
     }
 
     // All CodeRanges have a begin and end.

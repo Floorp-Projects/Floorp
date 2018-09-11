@@ -22,26 +22,31 @@ using mozilla::Maybe;
 /* static */ bool
 GlobalObject::initAsyncFunction(JSContext* cx, Handle<GlobalObject*> global)
 {
-    if (global->getReservedSlot(ASYNC_FUNCTION_PROTO).isObject())
+    if (global->getReservedSlot(ASYNC_FUNCTION_PROTO).isObject()) {
         return true;
+    }
 
     RootedObject asyncFunctionProto(cx, NewSingletonObjectWithFunctionPrototype(cx, global));
-    if (!asyncFunctionProto)
+    if (!asyncFunctionProto) {
         return false;
+    }
 
-    if (!DefineToStringTag(cx, asyncFunctionProto, cx->names().AsyncFunction))
+    if (!DefineToStringTag(cx, asyncFunctionProto, cx->names().AsyncFunction)) {
         return false;
+    }
 
     RootedValue function(cx, global->getConstructor(JSProto_Function));
-    if (!function.toObjectOrNull())
+    if (!function.toObjectOrNull()) {
         return false;
+    }
     RootedObject proto(cx, &function.toObject());
     RootedAtom name(cx, cx->names().AsyncFunction);
     RootedObject asyncFunction(cx, NewFunctionWithProto(cx, AsyncFunctionConstructor, 1,
                                                         JSFunction::NATIVE_CTOR, nullptr, name,
                                                         proto));
-    if (!asyncFunction)
+    if (!asyncFunction) {
         return false;
+    }
     if (!LinkConstructorAndPrototype(cx, asyncFunction, asyncFunctionProto,
                                      JSPROP_PERMANENT | JSPROP_READONLY, JSPROP_READONLY))
     {
@@ -71,35 +76,41 @@ WrappedAsyncFunction(JSContext* cx, unsigned argc, Value* vp)
     // Step 2.
     // Also does a part of 2.2 steps 1-2.
     InvokeArgs args2(cx);
-    if (!FillArgumentsFromArraylike(cx, args2, args))
+    if (!FillArgumentsFromArraylike(cx, args2, args)) {
         return false;
+    }
 
     RootedValue generatorVal(cx);
     if (Call(cx, unwrappedVal, args.thisv(), args2, &generatorVal)) {
         // Step 1.
         Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectForAsync(cx, generatorVal));
-        if (!resultPromise)
+        if (!resultPromise) {
             return false;
+        }
 
         // Step 3.
-        if (!AsyncFunctionStart(cx, resultPromise, generatorVal))
+        if (!AsyncFunctionStart(cx, resultPromise, generatorVal)) {
             return false;
+        }
 
         // Step 5.
         args.rval().setObject(*resultPromise);
         return true;
     }
 
-    if (!cx->isExceptionPending())
+    if (!cx->isExceptionPending()) {
         return false;
+    }
 
     // Steps 1, 4.
     RootedValue exc(cx);
-    if (!GetAndClearException(cx, &exc))
+    if (!GetAndClearException(cx, &exc)) {
         return false;
+    }
     JSObject* rejectPromise = PromiseObject::unforgeableReject(cx, exc);
-    if (!rejectPromise)
+    if (!rejectPromise) {
         return false;
+    }
 
     // Step 5.
     args.rval().setObject(*rejectPromise);
@@ -123,18 +134,21 @@ js::WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped, HandleOb
 
     RootedAtom funName(cx, unwrapped->explicitName());
     uint16_t length;
-    if (!JSFunction::getLength(cx, unwrapped, &length))
+    if (!JSFunction::getLength(cx, unwrapped, &length)) {
         return nullptr;
+    }
 
     // Steps 3 (partially).
     JSFunction* wrapped = NewFunctionWithProto(cx, WrappedAsyncFunction, length,
                                                JSFunction::NATIVE_FUN, nullptr, funName, proto,
                                                gc::AllocKind::FUNCTION_EXTENDED);
-    if (!wrapped)
+    if (!wrapped) {
         return nullptr;
+    }
 
-    if (unwrapped->hasInferredName())
+    if (unwrapped->hasInferredName()) {
         wrapped->setInferredName(unwrapped->inferredName());
+    }
 
     // Link them to each other to make GetWrappedAsyncFunction and
     // GetUnwrappedAsyncFunction work.
@@ -148,8 +162,9 @@ JSObject*
 js::WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped)
 {
     RootedObject proto(cx, GlobalObject::getOrCreateAsyncFunctionPrototype(cx, cx->global()));
-    if (!proto)
+    if (!proto) {
         return nullptr;
+    }
 
     return WrapAsyncFunctionWithProto(cx, unwrapped, proto);
 }
@@ -182,11 +197,13 @@ AsyncFunctionResume(JSContext* cx, Handle<PromiseObject*> resultPromise, HandleV
     FixedInvokeArgs<1> args(cx);
     args[0].set(valueOrReason);
     RootedValue value(cx);
-    if (!CallSelfHostedFunction(cx, funName, generatorVal, args, &value))
+    if (!CallSelfHostedFunction(cx, funName, generatorVal, args, &value)) {
         return AsyncFunctionThrown(cx, resultPromise);
+    }
 
-    if (generatorVal.toObject().as<GeneratorObject>().isAfterAwait())
+    if (generatorVal.toObject().as<GeneratorObject>().isAfterAwait()) {
         return AsyncFunctionAwait(cx, resultPromise, value);
+    }
 
     return AsyncFunctionReturned(cx, resultPromise, value);
 }

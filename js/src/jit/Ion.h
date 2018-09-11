@@ -191,8 +191,9 @@ inline size_t
 NumLocalsAndArgs(JSScript* script)
 {
     size_t num = 1 /* this */ + script->nfixed();
-    if (JSFunction* fun = script->functionNonDelazifying())
+    if (JSFunction* fun = script->functionNonDelazifying()) {
         num += fun->nargs();
+    }
     return num;
 }
 

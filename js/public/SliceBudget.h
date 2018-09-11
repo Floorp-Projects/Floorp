@@ -79,8 +79,9 @@ class JS_PUBLIC_API(SliceBudget)
     }
 
     bool isOverBudget() {
-        if (counter > 0)
+        if (counter > 0) {
             return false;
+        }
         return checkOverBudget();
     }
 

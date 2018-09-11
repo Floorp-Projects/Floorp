@@ -690,8 +690,9 @@ class ParseNode
         if (getKind() == ParseNodeKind::ExpressionStatement) {
             MOZ_ASSERT(pn_arity == PN_UNARY);
             ParseNode* kid = pn_kid;
-            if (kid->getKind() == ParseNodeKind::String && !kid->pn_parens)
+            if (kid->getKind() == ParseNodeKind::String && !kid->pn_parens) {
                 return kid->pn_atom;
+            }
         }
         return nullptr;
     }
@@ -747,8 +748,9 @@ class ParseNode
 
     void initList(ParseNode* pn) {
         MOZ_ASSERT(pn_arity == PN_LIST);
-        if (pn->pn_pos.begin < pn_pos.begin)
+        if (pn->pn_pos.begin < pn_pos.begin) {
             pn_pos.begin = pn->pn_pos.begin;
+        }
         pn_pos.end = pn->pn_pos.end;
         pn_head = pn;
         pn_tail = &pn->pn_next;
@@ -773,8 +775,9 @@ class ParseNode
         MOZ_ASSERT(pn_arity == PN_LIST);
         pn->pn_next = pn_head;
         pn_head = pn;
-        if (pn_tail == &pn_head)
+        if (pn_tail == &pn_head) {
             pn_tail = &pn->pn_next;
+        }
         pn_count++;
     }
 
@@ -1376,8 +1379,9 @@ struct ClassNode : public TernaryNode {
         return pn_kid2;
     }
     ParseNode* methodList() const {
-        if (pn_kid3->isKind(ParseNodeKind::ClassMethodList))
+        if (pn_kid3->isKind(ParseNodeKind::ClassMethodList)) {
             return pn_kid3;
+        }
 
         MOZ_ASSERT(pn_kid3->is<LexicalScopeNode>());
         ParseNode* list = pn_kid3->scopeBody();

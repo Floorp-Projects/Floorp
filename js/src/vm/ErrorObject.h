@@ -89,8 +89,9 @@ class ErrorObject : public NativeObject
 
     JSErrorReport * getErrorReport() const {
         const Value& slot = getReservedSlot(ERROR_REPORT_SLOT);
-        if (slot.isUndefined())
+        if (slot.isUndefined()) {
             return nullptr;
+        }
         return static_cast<JSErrorReport*>(slot.toPrivate());
     }
 
