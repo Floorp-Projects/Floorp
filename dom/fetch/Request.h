@@ -143,6 +143,14 @@ public:
     mRequest->SetBody(aStream, aBodyLength);
   }
 
+  using FetchBody::BodyLocalPath;
+
+  const nsAString&
+  BodyLocalPath() const
+  {
+    return mRequest->BodyLocalPath();
+  }
+
   static already_AddRefed<Request>
   Constructor(const GlobalObject& aGlobal, const RequestOrUSVString& aInput,
               const RequestInit& aInit, ErrorResult& rv);
