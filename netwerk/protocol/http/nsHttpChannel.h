@@ -38,7 +38,7 @@ class nsDNSPrefetch;
 class nsICancelable;
 class nsIHttpChannelAuthProvider;
 class nsInputStreamPump;
-class nsISSLStatus;
+class nsITransportSecurityInfo;
 
 namespace mozilla { namespace net {
 
@@ -439,8 +439,8 @@ private:
      * from ProcessSecurityHeaders.
      */
     MOZ_MUST_USE nsresult ProcessSingleSecurityHeader(uint32_t aType,
-                                                      nsISSLStatus *aSSLStatus,
-                                                      uint32_t aFlags);
+      nsITransportSecurityInfo* aSecInfo,
+      uint32_t aFlags);
 
     void InvalidateCacheEntryForLocation(const char *location);
     void AssembleCacheKey(const char *spec, uint32_t postID, nsACString &key);

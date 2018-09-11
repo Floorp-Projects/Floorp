@@ -39,7 +39,20 @@
 namespace mozilla { namespace psm {
 
 TransportSecurityInfo::TransportSecurityInfo()
-  : mMutex("TransportSecurityInfo::mMutex")
+  : mCipherSuite(0)
+  , mProtocolVersion(0)
+  , mCertificateTransparencyStatus(nsITransportSecurityInfo::
+      CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE)
+  , mKeaGroup()
+  , mSignatureSchemeName()
+  , mIsDomainMismatch(false)
+  , mIsNotValidAtThisTime(false)
+  , mIsUntrusted(false)
+  , mIsEV(false)
+  , mHasIsEVStatus(false)
+  , mHaveCipherSuiteAndProtocol(false)
+  , mHaveCertErrorBits(false)
+  , mMutex("TransportSecurityInfo::mMutex")
   , mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE)
   , mSubRequestsBrokenSecurity(0)
   , mSubRequestsNoSecurity(0)
@@ -183,50 +196,87 @@ TransportSecurityInfo::GetInterface(const nsIID & uuid, void * *result)
 static NS_DEFINE_CID(kTransportSecurityInfoMagic, TRANSPORTSECURITYINFOMAGIC);
 
 NS_IMETHODIMP
-TransportSecurityInfo::Write(nsIObjectOutputStream* stream)
+TransportSecurityInfo::Write(nsIObjectOutputStream* aStream)
 {
-  nsresult rv = stream->WriteID(kTransportSecurityInfoMagic);
+  nsresult rv = aStream->WriteID(kTransportSecurityInfoMagic);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   MutexAutoLock lock(mMutex);
 
-  rv = stream->Write32(mSecurityState);
+  rv = aStream->Write32(mSecurityState);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = stream->Write32(mSubRequestsBrokenSecurity);
+  rv = aStream->Write32(mSubRequestsBrokenSecurity);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = stream->Write32(mSubRequestsNoSecurity);
+  rv = aStream->Write32(mSubRequestsNoSecurity);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = stream->Write32(static_cast<uint32_t>(mErrorCode));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  // Write empty string where mErrorMessageCached lived before.
-  rv = stream->WriteWStringZ(NS_ConvertUTF8toUTF16("").get());
+  rv = aStream->Write32(static_cast<uint32_t>(mErrorCode));
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  // For successful connections and for connections with overridable errors,
-  // mSSLStatus will be non-null. However, for connections with non-overridable
-  // errors, it will be null.
-  nsCOMPtr<nsISerializable> serializable(mSSLStatus);
-  rv = NS_WriteOptionalCompoundObject(stream,
-                                      serializable,
-                                      NS_GET_IID(nsISSLStatus),
+  // Re-purpose mErrorMessageCached to represent serialization version
+  // If string doesn't match exact version it will be treated as older
+  // serialization.
+  rv = aStream->WriteWStringZ(NS_ConvertUTF8toUTF16("1").get());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // moved from nsISSLStatus
+  rv = NS_WriteOptionalCompoundObject(aStream, mServerCert,
+                                      NS_GET_IID(nsIX509Cert),
                                       true);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_WriteOptionalCompoundObject(stream,
+  rv = aStream->Write16(mCipherSuite);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aStream->Write16(mProtocolVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aStream->WriteBoolean(mIsDomainMismatch);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->WriteBoolean(mIsNotValidAtThisTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->WriteBoolean(mIsUntrusted);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->WriteBoolean(mIsEV);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aStream->WriteBoolean(mHasIsEVStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->WriteBoolean(mHaveCipherSuiteAndProtocol);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->WriteBoolean(mHaveCertErrorBits);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aStream->Write16(mCertificateTransparencyStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aStream->WriteStringZ(mKeaGroup.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aStream->WriteStringZ(mSignatureSchemeName.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = NS_WriteOptionalCompoundObject(aStream,
+                                      mSucceededCertChain,
+                                      NS_GET_IID(nsIX509CertList),
+                                       true);
+   if (NS_FAILED(rv)) {
+     return rv;
+   }
+  // END moved from nsISSLStatus
+
+  rv = NS_WriteOptionalCompoundObject(aStream,
                                       mFailedCertChain,
                                       NS_GET_IID(nsIX509CertList),
                                       true);
@@ -237,11 +287,117 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* stream)
   return NS_OK;
 }
 
+// This is for backward compatability to be able to read nsISSLStatus
+// serialized object.
+nsresult TransportSecurityInfo::ReadSSLStatus(nsIObjectInputStream* aStream)
+{
+  bool nsISSLStatusPresent;
+  nsresult rv = aStream->ReadBoolean(&nsISSLStatusPresent);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!nsISSLStatusPresent) {
+    return NS_OK;
+  }
+  // nsISSLStatus present.  Prepare to read elements.
+  // Throw away cid, validate iid
+  nsCID cid;
+  nsIID iid;
+  rv = aStream->ReadID(&cid);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->ReadID(&iid);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  static const nsIID nsSSLStatusIID = {
+    0xfa9ba95b, 0xca3b, 0x498a,
+    { 0xb8, 0x89, 0x7c, 0x79, 0xcf, 0x28, 0xfe, 0xe8 }
+  };
+  if (!iid.Equals(nsSSLStatusIID)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsISupports> cert;
+  rv = aStream->ReadObject(true, getter_AddRefs(cert));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (cert) {
+    mServerCert = do_QueryInterface(cert);
+    if (!mServerCert) {
+      return NS_NOINTERFACE;
+    }
+  }
+
+  rv = aStream->Read16(&mCipherSuite);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // The code below is a workaround to allow serializing new fields
+  // while preserving binary compatibility with older streams. For more details
+  // on the binary compatibility requirement, refer to bug 1248628.
+  // Here, we take advantage of the fact that mProtocolVersion was originally
+  // stored as a 16 bits integer, but the highest 8 bits were never used.
+  // These bits are now used for stream versioning.
+  uint16_t protocolVersionAndStreamFormatVersion;
+  rv = aStream->Read16(&protocolVersionAndStreamFormatVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mProtocolVersion = protocolVersionAndStreamFormatVersion & 0xFF;
+  const uint8_t streamFormatVersion =
+  (protocolVersionAndStreamFormatVersion >> 8) & 0xFF;
+
+  rv = aStream->ReadBoolean(&mIsDomainMismatch);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->ReadBoolean(&mIsNotValidAtThisTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->ReadBoolean(&mIsUntrusted);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->ReadBoolean(&mIsEV);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aStream->ReadBoolean(&mHasIsEVStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->ReadBoolean(&mHaveCipherSuiteAndProtocol);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aStream->ReadBoolean(&mHaveCertErrorBits);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Added in version 1 (see bug 1305289).
+  if (streamFormatVersion >= 1) {
+    rv = aStream->Read16(&mCertificateTransparencyStatus);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Added in version 2 (see bug 1304923).
+  if (streamFormatVersion >= 2) {
+    rv = aStream->ReadCString(mKeaGroup);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aStream->ReadCString(mSignatureSchemeName);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Added in version 3 (see bug 1406856).
+  if (streamFormatVersion >= 3) {
+    nsCOMPtr<nsISupports> succeededCertChainSupports;
+    rv = NS_ReadOptionalObject(aStream, true,
+                               getter_AddRefs(succeededCertChainSupports));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    mSucceededCertChain = do_QueryInterface(succeededCertChainSupports);
+
+    // Read only to consume bytes from the stream.
+    nsCOMPtr<nsISupports> failedCertChainSupports;
+    rv = NS_ReadOptionalObject(aStream, true,
+                               getter_AddRefs(failedCertChainSupports));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return rv;
+}
+
 NS_IMETHODIMP
-TransportSecurityInfo::Read(nsIObjectInputStream* stream)
+TransportSecurityInfo::Read(nsIObjectInputStream* aStream)
 {
   nsID id;
-  nsresult rv = stream->ReadID(&id);
+  nsresult rv = aStream->ReadID(&id);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -251,12 +407,12 @@ TransportSecurityInfo::Read(nsIObjectInputStream* stream)
 
   MutexAutoLock lock(mMutex);
 
-  rv = stream->Read32(&mSecurityState);
+  rv = aStream->Read32(&mSecurityState);
   if (NS_FAILED(rv)) {
     return rv;
   }
   uint32_t subRequestsBrokenSecurity;
-  rv = stream->Read32(&subRequestsBrokenSecurity);
+  rv = aStream->Read32(&subRequestsBrokenSecurity);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -266,42 +422,93 @@ TransportSecurityInfo::Read(nsIObjectInputStream* stream)
   }
   mSubRequestsBrokenSecurity = subRequestsBrokenSecurity;
   uint32_t subRequestsNoSecurity;
-  rv = stream->Read32(&subRequestsNoSecurity);
+  rv = aStream->Read32(&subRequestsNoSecurity);
   if (NS_FAILED(rv)) {
     return rv;
   }
   if (subRequestsNoSecurity >
-      static_cast<uint32_t>(std::numeric_limits<int32_t>::max())) {
+        static_cast<uint32_t>(std::numeric_limits<int32_t>::max())) {
     return NS_ERROR_UNEXPECTED;
   }
   mSubRequestsNoSecurity = subRequestsNoSecurity;
   uint32_t errorCode;
-  rv = stream->Read32(&errorCode);
+  rv = aStream->Read32(&errorCode);
   if (NS_FAILED(rv)) {
     return rv;
   }
   // PRErrorCode will be a negative value
   mErrorCode = static_cast<PRErrorCode>(errorCode);
 
-  // We don't do error messages here anymore.
-  nsString unused;
-  rv = stream->ReadString(unused);
+  // Re-purpose mErrorMessageCached to represent serialization version
+  // If string doesn't match exact version it will be treated as older
+  // serialization.
+  nsAutoString serVersion;
+  rv = aStream->ReadString(serVersion);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  // For successful connections and for connections with overridable errors,
-  // mSSLStatus will be non-null. For connections with non-overridable errors,
-  // it will be null.
-  nsCOMPtr<nsISupports> supports;
-  rv = NS_ReadOptionalObject(stream, true, getter_AddRefs(supports));
-  if (NS_FAILED(rv)) {
-    return rv;
+  // moved from nsISSLStatus
+  if (!serVersion.EqualsASCII("1")) {
+    // nsISSLStatus may be present
+    rv = ReadSSLStatus(aStream);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    nsCOMPtr<nsISupports> cert;
+    rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(cert));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (cert != nullptr) {
+      mServerCert = do_QueryInterface(cert);
+      if (!mServerCert) {
+        return NS_NOINTERFACE;
+      }
+    }
+
+    rv = aStream->Read16(&mCipherSuite);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aStream->Read16(&mProtocolVersion);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aStream->ReadBoolean(&mIsDomainMismatch);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aStream->ReadBoolean(&mIsNotValidAtThisTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aStream->ReadBoolean(&mIsUntrusted);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aStream->ReadBoolean(&mIsEV);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aStream->ReadBoolean(&mHasIsEVStatus);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aStream->ReadBoolean(&mHaveCipherSuiteAndProtocol);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aStream->ReadBoolean(&mHaveCertErrorBits);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aStream->Read16(&mCertificateTransparencyStatus);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aStream->ReadCString(mKeaGroup);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aStream->ReadCString(mSignatureSchemeName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISupports> succeededCertChainSupports;
+    rv = NS_ReadOptionalObject(aStream, true,
+                               getter_AddRefs(succeededCertChainSupports));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    mSucceededCertChain = do_QueryInterface(succeededCertChainSupports);
   }
-  mSSLStatus = BitwiseCast<nsSSLStatus*, nsISupports*>(supports.get());
+  // END moved from nsISSLStatus
 
   nsCOMPtr<nsISupports> failedCertChainSupports;
-  rv = NS_ReadOptionalObject(stream, true, getter_AddRefs(failedCertChainSupports));
+  rv = NS_ReadOptionalObject(aStream, true,
+                             getter_AddRefs(failedCertChainSupports));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -362,23 +569,6 @@ TransportSecurityInfo::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TransportSecurityInfo::GetSSLStatus(nsISSLStatus** _result)
-{
-  NS_ENSURE_ARG_POINTER(_result);
-
-  *_result = mSSLStatus;
-  NS_IF_ADDREF(*_result);
-
-  return NS_OK;
-}
-
-void
-TransportSecurityInfo::SetSSLStatus(nsSSLStatus *aSSLStatus)
-{
-  mSSLStatus = aSSLStatus;
-}
-
 // RememberCertErrorsTable
 
 /*static*/ RememberCertErrorsTable*
@@ -407,66 +597,67 @@ GetHostPortKey(TransportSecurityInfo* infoObject, /*out*/ nsCString& result)
 
 void
 RememberCertErrorsTable::RememberCertHasError(TransportSecurityInfo* infoObject,
-                                              nsSSLStatus* status,
                                               SECStatus certVerificationResult)
 {
   nsresult rv;
 
   nsAutoCString hostPortKey;
   rv = GetHostPortKey(infoObject, hostPortKey);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return;
+  }
 
   if (certVerificationResult != SECSuccess) {
-    MOZ_ASSERT(status, "Must have nsSSLStatus object when remembering flags");
-
-    if (!status)
+    MOZ_ASSERT(infoObject->mHaveCertErrorBits, "Must have error bits when remembering flags");
+    if (!infoObject->mHaveCertErrorBits) {
       return;
+    }
 
     CertStateBits bits;
-    bits.mIsDomainMismatch = status->mIsDomainMismatch;
-    bits.mIsNotValidAtThisTime = status->mIsNotValidAtThisTime;
-    bits.mIsUntrusted = status->mIsUntrusted;
+    bits.mIsDomainMismatch = infoObject->mIsDomainMismatch;
+    bits.mIsNotValidAtThisTime = infoObject->mIsNotValidAtThisTime;
+    bits.mIsUntrusted = infoObject->mIsUntrusted;
 
     MutexAutoLock lock(mMutex);
     mErrorHosts.Put(hostPortKey, bits);
-  }
-  else {
+  } else {
     MutexAutoLock lock(mMutex);
     mErrorHosts.Remove(hostPortKey);
   }
 }
 
 void
-RememberCertErrorsTable::LookupCertErrorBits(TransportSecurityInfo* infoObject,
-                                             nsSSLStatus* status)
+RememberCertErrorsTable::LookupCertErrorBits(TransportSecurityInfo* infoObject)
 {
   // Get remembered error bits from our cache, because of SSL session caching
   // the NSS library potentially hasn't notified us for this socket.
-  if (status->mHaveCertErrorBits)
+  if (infoObject->mHaveCertErrorBits) {
     // Rather do not modify bits if already set earlier
     return;
+  }
 
   nsresult rv;
 
   nsAutoCString hostPortKey;
   rv = GetHostPortKey(infoObject, hostPortKey);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return;
+  }
 
   CertStateBits bits;
   {
     MutexAutoLock lock(mMutex);
-    if (!mErrorHosts.Get(hostPortKey, &bits))
+    if (!mErrorHosts.Get(hostPortKey, &bits)) {
       // No record was found, this host had no cert errors
       return;
+    }
   }
 
   // This host had cert errors, update the bits correctly
-  status->mHaveCertErrorBits = true;
-  status->mIsDomainMismatch = bits.mIsDomainMismatch;
-  status->mIsNotValidAtThisTime = bits.mIsNotValidAtThisTime;
-  status->mIsUntrusted = bits.mIsUntrusted;
+  infoObject->mHaveCertErrorBits = true;
+  infoObject->mIsDomainMismatch = bits.mIsDomainMismatch;
+  infoObject->mIsNotValidAtThisTime = bits.mIsNotValidAtThisTime;
+  infoObject->mIsUntrusted = bits.mIsUntrusted;
 }
 
 void
@@ -475,23 +666,17 @@ TransportSecurityInfo::SetStatusErrorBits(nsNSSCertificate* cert,
 {
   MutexAutoLock lock(mMutex);
 
-  if (!mSSLStatus) {
-    mSSLStatus = new nsSSLStatus();
-  }
+  SetServerCert(cert, EVStatus::NotEV);
 
-  mSSLStatus->SetServerCert(cert, EVStatus::NotEV);
-  mSSLStatus->SetFailedCertChain(mFailedCertChain);
-
-  mSSLStatus->mHaveCertErrorBits = true;
-  mSSLStatus->mIsDomainMismatch =
+  mHaveCertErrorBits = true;
+  mIsDomainMismatch =
     collected_errors & nsICertOverrideService::ERROR_MISMATCH;
-  mSSLStatus->mIsNotValidAtThisTime =
+  mIsNotValidAtThisTime =
     collected_errors & nsICertOverrideService::ERROR_TIME;
-  mSSLStatus->mIsUntrusted =
+  mIsUntrusted =
     collected_errors & nsICertOverrideService::ERROR_UNTRUSTED;
 
   RememberCertErrorsTable::GetInstance().RememberCertHasError(this,
-                                                              mSSLStatus,
                                                               SECFailure);
 }
 
@@ -513,6 +698,225 @@ TransportSecurityInfo::SetFailedCertChain(UniqueCERTCertList certList)
   mFailedCertChain = new nsNSSCertList(std::move(certList));
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetServerCert(nsIX509Cert** aServerCert)
+{
+  NS_ENSURE_ARG_POINTER(aServerCert);
+
+  nsCOMPtr<nsIX509Cert> cert = mServerCert;
+  cert.forget(aServerCert);
+  return NS_OK;
+}
+
+void
+TransportSecurityInfo::SetServerCert(nsNSSCertificate* aServerCert,
+                                     EVStatus aEVStatus)
+{
+  MOZ_ASSERT(aServerCert);
+
+  mServerCert = aServerCert;
+  mIsEV = (aEVStatus == EVStatus::EV);
+  mHasIsEVStatus = true;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetSucceededCertChain(nsIX509CertList** _result)
+{
+  NS_ENSURE_ARG_POINTER(_result);
+
+  nsCOMPtr<nsIX509CertList> tmpList = mSucceededCertChain;
+  tmpList.forget(_result);
+
+  return NS_OK;
+}
+
+nsresult
+TransportSecurityInfo::SetSucceededCertChain(UniqueCERTCertList aCertList)
+{
+  // nsNSSCertList takes ownership of certList
+  mSucceededCertChain = new nsNSSCertList(std::move(aCertList));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetCipherName(nsACString& aCipherName)
+{
+  if (!mHaveCipherSuiteAndProtocol) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  SSLCipherSuiteInfo cipherInfo;
+  if (SSL_GetCipherSuiteInfo(mCipherSuite, &cipherInfo,
+                             sizeof(cipherInfo)) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aCipherName.Assign(cipherInfo.cipherSuiteName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetKeyLength(uint32_t* aKeyLength)
+{
+  NS_ENSURE_ARG_POINTER(aKeyLength);
+  if (!mHaveCipherSuiteAndProtocol) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  SSLCipherSuiteInfo cipherInfo;
+  if (SSL_GetCipherSuiteInfo(mCipherSuite, &cipherInfo,
+                             sizeof(cipherInfo)) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aKeyLength = cipherInfo.symKeyBits;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetSecretKeyLength(uint32_t* aSecretKeyLength)
+{
+  NS_ENSURE_ARG_POINTER(aSecretKeyLength);
+  if (!mHaveCipherSuiteAndProtocol) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  SSLCipherSuiteInfo cipherInfo;
+  if (SSL_GetCipherSuiteInfo(mCipherSuite, &cipherInfo,
+                             sizeof(cipherInfo)) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aSecretKeyLength = cipherInfo.effectiveKeyBits;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetKeaGroupName(nsACString& aKeaGroup)
+{
+  if (!mHaveCipherSuiteAndProtocol) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  aKeaGroup.Assign(mKeaGroup);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetSignatureSchemeName(nsACString& aSignatureScheme)
+{
+  if (!mHaveCipherSuiteAndProtocol) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  aSignatureScheme.Assign(mSignatureSchemeName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetProtocolVersion(uint16_t* aProtocolVersion)
+{
+  NS_ENSURE_ARG_POINTER(aProtocolVersion);
+  if (!mHaveCipherSuiteAndProtocol) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aProtocolVersion = mProtocolVersion;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetCertificateTransparencyStatus(
+  uint16_t* aCertificateTransparencyStatus)
+{
+  NS_ENSURE_ARG_POINTER(aCertificateTransparencyStatus);
+
+  *aCertificateTransparencyStatus = mCertificateTransparencyStatus;
+  return NS_OK;
+}
+
+void
+TransportSecurityInfo::SetCertificateTransparencyInfo(
+  const mozilla::psm::CertificateTransparencyInfo& info)
+{
+  using mozilla::ct::CTPolicyCompliance;
+
+  mCertificateTransparencyStatus =
+    nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE;
+
+  if (!info.enabled) {
+    // CT disabled.
+    return;
+  }
+
+  switch (info.policyCompliance) {
+    case CTPolicyCompliance::Compliant:
+      mCertificateTransparencyStatus =
+        nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT;
+      break;
+    case CTPolicyCompliance::NotEnoughScts:
+      mCertificateTransparencyStatus =
+        nsITransportSecurityInfo
+          ::CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS;
+      break;
+    case CTPolicyCompliance::NotDiverseScts:
+      mCertificateTransparencyStatus =
+        nsITransportSecurityInfo
+          ::CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS;
+      break;
+    case CTPolicyCompliance::Unknown:
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected CTPolicyCompliance type");
+  }
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetIsDomainMismatch(bool* aIsDomainMismatch)
+{
+  NS_ENSURE_ARG_POINTER(aIsDomainMismatch);
+
+  *aIsDomainMismatch = mHaveCertErrorBits && mIsDomainMismatch;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetIsNotValidAtThisTime(bool* aIsNotValidAtThisTime)
+{
+  NS_ENSURE_ARG_POINTER(aIsNotValidAtThisTime);
+
+  *aIsNotValidAtThisTime = mHaveCertErrorBits && mIsNotValidAtThisTime;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetIsUntrusted(bool* aIsUntrusted)
+{
+  NS_ENSURE_ARG_POINTER(aIsUntrusted);
+
+  *aIsUntrusted = mHaveCertErrorBits && mIsUntrusted;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetIsExtendedValidation(bool* aIsEV)
+{
+  NS_ENSURE_ARG_POINTER(aIsEV);
+  *aIsEV = false;
+
+  // Never allow bad certs for EV, regardless of overrides.
+  if (mHaveCertErrorBits) {
+    return NS_OK;
+  }
+
+  if (mHasIsEVStatus) {
+    *aIsEV = mIsEV;
+    return NS_OK;
+  }
+
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 } } // namespace mozilla::psm

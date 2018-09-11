@@ -37,9 +37,9 @@ function add_tests() {
     let header = `max-age=1000; pin-sha256="${keyHash}"; pin-sha256="${backupKeyHash}"`;
     let ssservice = Cc["@mozilla.org/ssservice;1"]
                       .getService(Ci.nsISiteSecurityService);
-    let sslStatus = new FakeSSLStatus();
-    sslStatus.serverCert = constructCertFromFile("ocsp_certs/must-staple-ee-with-must-staple-int.pem");
-    ssservice.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri, header, sslStatus, 0,
+    let secInfo = new FakeTransportSecurityInfo();
+    secInfo.serverCert = constructCertFromFile("ocsp_certs/must-staple-ee-with-must-staple-int.pem");
+    ssservice.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri, header, secInfo, 0,
                             Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
     ok(ssservice.isSecureURI(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0),
        "ocsp-stapling-must-staple-ee-with-must-staple-int.example.com should have HPKP set");

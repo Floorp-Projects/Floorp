@@ -3107,15 +3107,13 @@ Checker.prototype = {
 
     // Set MitM pref.
     try {
-      var sslStatus = request.channel.QueryInterface(Ci.nsIRequest)
-                        .securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
-                        .SSLStatus.QueryInterface(Ci.nsISSLStatus);
-      if (sslStatus && sslStatus.serverCert && sslStatus.serverCert.issuerName) {
+      var secInfo = request.channel.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+      if (secInfo.serverCert && secInfo.serverCert.issuerName) {
         Services.prefs.setStringPref("security.pki.mitm_canary_issuer",
-                                     sslStatus.serverCert.issuerName);
+                                     secInfo.serverCert.issuerName);
       }
     } catch (e) {
-      LOG("Checker:onError - Getting sslStatus failed.");
+      LOG("Checker:onError - Getting secInfo failed.");
     }
 
     // If we can't find an error string specific to this status code,
