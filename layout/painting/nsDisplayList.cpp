@@ -978,6 +978,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   , mDirtyRect(-1, -1, -1, -1)
   , mGlassDisplayItem(nullptr)
   , mScrollInfoItemsForHoisting(nullptr)
+  , mFirstClipChainToDestroy(nullptr)
   , mActiveScrolledRootForRootScrollframe(nullptr)
   , mMode(aMode)
   , mCurrentScrollParentId(FrameMetrics::NULL_SCROLL_ID)
@@ -1252,8 +1253,11 @@ nsDisplayListBuilder::~nsDisplayListBuilder()
                "All presshells should have been exited");
   NS_ASSERTION(!mCurrentTableItem, "No table item should be active");
 
-  for (DisplayItemClipChain* c : mClipChainsToDestroy) {
+  DisplayItemClipChain* c = mFirstClipChainToDestroy;
+  while (c) {
+    DisplayItemClipChain* next = c->mNextClipChainToDestroy;
     c->DisplayItemClipChain::~DisplayItemClipChain();
+    c = next;
   }
 
   MOZ_COUNT_DTOR(nsDisplayListBuilder);
@@ -1442,18 +1446,19 @@ nsDisplayListBuilder::FreeClipChains()
   // Iterate the clip chains from newest to oldest (forward
   // iteration), so that we destroy descendants first which
   // will drop the ref count on their ancestors.
-  auto it = mClipChainsToDestroy.begin();
+  DisplayItemClipChain** indirect = &mFirstClipChainToDestroy;
 
-  while (it != mClipChainsToDestroy.end()) {
-    DisplayItemClipChain* clip = *it;
+  while (*indirect) {
+    if (!(*indirect)->mRefCount) {
+      DisplayItemClipChain* next = (*indirect)->mNextClipChainToDestroy;
 
-    if (!clip->mRefCount) {
-      mClipDeduplicator.erase(clip);
-      it = mClipChainsToDestroy.erase(it);
-      clip->DisplayItemClipChain::~DisplayItemClipChain();
-      Destroy(DisplayItemType::TYPE_ZERO, clip);
+      mClipDeduplicator.erase(*indirect);
+      (*indirect)->DisplayItemClipChain::~DisplayItemClipChain();
+      Destroy(DisplayItemType::TYPE_ZERO, *indirect);
+
+      *indirect = next;
     } else {
-      ++it;
+      indirect = &(*indirect)->mNextClipChainToDestroy;
     }
   }
 }
@@ -1620,7 +1625,10 @@ nsDisplayListBuilder::AllocateDisplayItemClipChain(
   MOZ_ASSERT(!(aParent && aParent->mOnStack));
   void* p = Allocate(sizeof(DisplayItemClipChain), DisplayItemType::TYPE_ZERO);
   DisplayItemClipChain* c =
-    new (KnownNotNull, p) DisplayItemClipChain(aClip, aASR, aParent);
+    new (KnownNotNull, p) DisplayItemClipChain(aClip,
+                                               aASR,
+                                               aParent,
+                                               mFirstClipChainToDestroy);
 #ifdef DEBUG
   c->mOnStack = false;
 #endif
@@ -1635,7 +1643,7 @@ nsDisplayListBuilder::AllocateDisplayItemClipChain(
     Destroy(DisplayItemType::TYPE_ZERO, c);
     return *(result.first);
   }
-  mClipChainsToDestroy.emplace_front(c);
+  mFirstClipChainToDestroy = c;
   return c;
 }
 
