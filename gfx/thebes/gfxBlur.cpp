@@ -1316,7 +1316,7 @@ gfxAlphaBoxBlur::BlurInsetBox(gfxContext* aDestinationCtx,
       DrawMirroredBoxShadow(destDrawTarget, minBlur.get(), destBlur);
     } else {
       Rect srcBlur(Point(0, 0), Size(minBlur->GetSize()));
-      MOZ_ASSERT(srcBlur.Size() == destBlur.Size());
+      MOZ_ASSERT(RoundedOut(srcBlur).Size() == RoundedOut(destBlur).Size());
       destDrawTarget->DrawSurface(minBlur, destBlur, srcBlur);
     }
   } else {
