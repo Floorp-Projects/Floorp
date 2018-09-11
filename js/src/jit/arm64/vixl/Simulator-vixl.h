@@ -2572,7 +2572,7 @@ class Simulator : public DecoderVisitor {
 
   // Stack
   byte* stack_;
-  static const int stack_protection_size_ = 128 * KBytes;
+  static const int stack_protection_size_ = 512 * KBytes;
   static const int stack_size_ = (2 * MBytes) + (2 * stack_protection_size_);
   byte* stack_limit_;
 
