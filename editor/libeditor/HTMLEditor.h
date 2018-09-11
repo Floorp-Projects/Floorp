@@ -1927,15 +1927,26 @@ protected: // Shouldn't be used by friend classes
                                                         nsAString& aReturn);
 
   /**
-   * Shows inline table editing UI around a table cell
-   * @param aCell [IN] a DOM Element being a table cell, td or th
+   * Shows inline table editing UI around a <table> element which contains
+   * aCellElement.  This returns error if creating UI is hidden during this,
+   * or detects another set of UI during this.  In such case, callers
+   * shouldn't keep handling anything for the UI.
+   *
+   * @param aCellElement    Must be an <td> or <th> element.
    */
-  nsresult ShowInlineTableEditingUI(Element* aCell);
+  nsresult ShowInlineTableEditingUIInternal(Element& aCellElement);
 
   /**
-   * Hide all inline table editing UI
+   * Hide all inline table editing UI.
    */
-  void HideInlineTableEditingUI();
+  void HideInlineTableEditingUIInternal();
+
+  /**
+   * RefreshInlineTableEditingUIInternal() moves inline table editing UI to
+   * proper position.  This returns error if the UI is hidden or replaced
+   * during moving.
+   */
+  nsresult RefreshInlineTableEditingUIInternal();
 
   /**
    * IsEmptyTextNode() returns true if aNode is a text node and does not have
