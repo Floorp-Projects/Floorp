@@ -26,6 +26,7 @@ RELEASE_LOCALES = [
 	"anp",
 	"ar",
 	"ast",
+	"ay",
 	"az",
 	"bg",
 	"bn-BD",
@@ -52,6 +53,7 @@ RELEASE_LOCALES = [
 	"fy-NL",
 	"ga-IE",
 	"gu-IN",
+	"gl",
 	"hi-IN",
 	"hr",
 	"hsb",
@@ -72,6 +74,7 @@ RELEASE_LOCALES = [
 	"lt",
 	"meh",
 	"mix",
+	"mr",
 	"ms",
 	"my",
 	"nb-NO",
@@ -80,8 +83,11 @@ RELEASE_LOCALES = [
 	"nn-NO",
 	"oc",
 	"pai",
+	"pa-IN",
 	"pl",
+	"ppl",
 	"pt-BR",
+	"quc",
 	"quy",
 	"ro",
 	"ru",
@@ -90,6 +96,7 @@ RELEASE_LOCALES = [
 	"sq",
 	"sr",
 	"sv-SE",
+	"su",
 	"ta",
 	"te",
 	"th",
@@ -110,19 +117,15 @@ RELEASE_LOCALES = [
 # in addition to the list of release locales. We want to take screenshots
 # of other locales so that translators of not yet completed locales can
 # verify their work in progress.
+
 ADDITIONAL_SCREENSHOT_LOCALES = [
-	"ay",
-	"quc",
-	"pa-IN",
 	"jv",
-	"ppl",
-	"su",
-	"mr",
-	"gl",
 	"bo",
 	"yua",
 	"hus",
-	"ace"
+	"ace",
+	"zh-HK",
+
 ]
 
 # Those are locales that we take automated screenshots of.
