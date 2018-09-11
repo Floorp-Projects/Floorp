@@ -489,8 +489,6 @@ private:
 
   unsigned short mLastWidth = 0;
   unsigned short mLastHeight = 0;
-  unsigned short mSendingWidth = 0;
-  unsigned short mSendingHeight = 0;
   unsigned short mReceivingWidth = 0;
   unsigned short mReceivingHeight = 0;
   unsigned int   mSendingFramerate;
