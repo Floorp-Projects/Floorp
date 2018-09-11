@@ -252,8 +252,6 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall,
   , mReceivingWidth(0)
   , mReceivingHeight(0)
   , mSendingFramerate(DEFAULT_VIDEO_MAX_FRAMERATE)
-  , mLastFramerateTenths(DEFAULT_VIDEO_MAX_FRAMERATE * 10)
-  , mNumReceivingStreams(1)
   , mVideoLatencyTestEnable(false)
   , mVideoLatencyAvg(0)
   , mMinBitrate(0)
@@ -664,9 +662,9 @@ WebrtcVideoConduit::VideoStreamFactory::CreateEncoderStreams(int width, int heig
     // We should use SelectBitrates here for the case of already-sending and no reconfig needed;
     // overrides the calculations above
     if (mConduit->mSendingWidth) { // cleared if we need a reconfig
-      mConduit->SelectBitrates(video_stream.width, video_stream.height, // use video_stream.foo!
-                               simulcastEncoding.constraints.maxBr,
-                               mConduit->mLastFramerateTenths, video_stream);
+      mConduit->SelectBitrates(
+        video_stream.width, video_stream.height, // use video_stream.foo!
+        simulcastEncoding.constraints.maxBr, video_stream);
     }
 
     video_stream.max_qp = kQpMax;
@@ -715,7 +713,6 @@ WebrtcVideoConduit::VideoStreamFactory::CreateEncoderStreams(int width, int heig
  * changes could be queued until the next frame is delivered using an
  * Atomic pointer and swaps.
  */
-
 MediaConduitErrorCode
 WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
 {
@@ -801,8 +798,8 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   // Always call this to ensure it's reset
   mVideoAdapter->OnScaleResolutionBy(
     (streamCount >= 1 && codecConfig->mSimulcastEncodings[0].constraints.scaleDownBy > 1.0) ?
-    rtc::Optional<float>(codecConfig->mSimulcastEncodings[0].constraints.scaleDownBy) :
-    rtc::Optional<float>());
+      rtc::Optional<float>(codecConfig->mSimulcastEncodings[0].constraints.scaleDownBy) :
+      rtc::Optional<float>());
 
   // XXX parse the encoded SPS/PPS data and set spsData/spsLen/ppsData/ppsLen
   mEncoderConfig.SetEncoderSpecificSettings(ConfigureVideoEncoderSettings(codecConfig, this));
@@ -1313,8 +1310,7 @@ WebrtcVideoConduit::AttachRenderer(RefPtr<mozilla::VideoRenderer> aVideoRenderer
     mRenderer = aVideoRenderer;
     // Make sure the renderer knows the resolution
     mRenderer->FrameSizeChange(mReceivingWidth,
-                               mReceivingHeight,
-                               mNumReceivingStreams);
+                               mReceivingHeight);
   }
 
   return kMediaConduitNoError;
@@ -1687,14 +1683,12 @@ static ResolutionAndBitrateLimits kResolutionAndBitrateLimits[] = {
 void
 WebrtcVideoConduit::SelectBitrates(
   unsigned short width, unsigned short height, int cap,
-  int32_t aLastFramerateTenths,
   webrtc::VideoStream& aVideoStream)
 {
   int& out_min = aVideoStream.min_bitrate_bps;
   int& out_start = aVideoStream.target_bitrate_bps;
   int& out_max = aVideoStream.max_bitrate_bps;
-  // max bandwidth should be proportional (not linearly!) to resolution, and
-  // proportional (perhaps linearly, or close) to current frame rate.
+  // max bandwidth should be proportional (not linearly!) to resolution.
   int fs = MB_OF(width, height);
 
   for (ResolutionAndBitrateLimits resAndLimits : kResolutionAndBitrateLimits) {
@@ -1708,22 +1702,6 @@ WebrtcVideoConduit::SelectBitrates(
       out_max = MinIgnoreZero(resAndLimits.max_bitrate_bps, cap);
       break;
     }
-  }
-
-  // mLastFramerateTenths is scaled by *10
-  double framerate = std::min((aLastFramerateTenths / 10.), 60.0);
-  MOZ_ASSERT(framerate > 0);
-  // Now linear reduction/increase based on fps (max 60fps i.e. doubling)
-  if (framerate >= 10) {
-    out_min = out_min * (framerate / 30);
-    out_start = out_start * (framerate / 30);
-    out_max = std::max(static_cast<int>(out_max * (framerate / 30)), cap);
-  } else {
-    // At low framerates, don't reduce bandwidth as much - cut slope to 1/2.
-    // Mostly this would be ultra-low-light situations/mobile or screensharing.
-    out_min = out_min * ((10 - (framerate / 2)) / 30);
-    out_start = out_start * ((10 - (framerate / 2)) / 30);
-    out_max = std::max(static_cast<int>(out_max * ((10 - (framerate / 2)) / 30)), cap);
   }
 
   // Note: mNegotiatedMaxBitrate is the max transport bitrate - it applies to
@@ -1782,8 +1760,8 @@ WebrtcVideoConduit::SelectSendResolution(unsigned short width,
       if (max_fs > mLastSinkWanted.max_pixel_count.value_or(max_fs)) {
         max_fs = mLastSinkWanted.max_pixel_count.value_or(max_fs);
       }
-      mVideoAdapter->OnResolutionRequest(rtc::Optional<int>(max_fs),
-                                         rtc::Optional<int>());
+      mVideoAdapter->OnResolutionRequest(
+        rtc::Optional<int>(max_fs), rtc::Optional<int>());
     }
   }
 
@@ -1871,31 +1849,38 @@ WebrtcVideoConduit::RemoveSink(
 
 void
 WebrtcVideoConduit::OnSinkWantsChanged(
-  const rtc::VideoSinkWants& wants) {
+  const rtc::VideoSinkWants& wants)
+{
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  if (!mLockScaling) {
-    mLastSinkWanted = wants;
 
-    // limit sink wants based upon max-fs constraint
-    int max_fs = mCurSendCodecConfig->mEncodingConstraints.maxFs*(16*16);
-    rtc::Optional<int> max_pixel_count = wants.max_pixel_count;
-    rtc::Optional<int> max_pixel_count_step_up = wants.max_pixel_count_step_up;
+  if (mLockScaling) {
+    return;
+  }
+  mLastSinkWanted = wants;
 
-    if (max_fs > 0) {
-      // max_fs was explicitly set by signaling and needs to be accounted for
+  if (!mCurSendCodecConfig) {
+    return;
+  }
 
-      if (max_pixel_count.value_or(max_fs) > max_fs) {
-        max_pixel_count = rtc::Optional<int>(max_fs);
-      }
+  // limit sink wants based upon max-fs constraint
+  int max_fs = mCurSendCodecConfig->mEncodingConstraints.maxFs*(16*16);
+  rtc::Optional<int> max_pixel_count = wants.max_pixel_count;
+  rtc::Optional<int> max_pixel_count_step_up = wants.max_pixel_count_step_up;
 
-      if (max_pixel_count_step_up.value_or(max_fs) > max_fs) {
-        max_pixel_count_step_up = rtc::Optional<int>(max_fs);
-      }
+  if (max_fs > 0) {
+    // max_fs was explicitly set by signaling and needs to be accounted for
+
+    if (max_pixel_count.value_or(max_fs) > max_fs) {
+      max_pixel_count = rtc::Optional<int>(max_fs);
     }
 
-    mVideoAdapter->OnResolutionRequest(max_pixel_count,
-                                       max_pixel_count_step_up);
+    if (max_pixel_count_step_up.value_or(max_fs) > max_fs) {
+      max_pixel_count_step_up = rtc::Optional<int>(max_fs);
+    }
   }
+
+  mVideoAdapter->OnResolutionRequest(
+    max_pixel_count, max_pixel_count_step_up);
 }
 
 MediaConduitErrorCode
@@ -2271,7 +2256,7 @@ WebrtcVideoConduit::OnFrame(const webrtc::VideoFrame& video_frame)
       mReceivingHeight != video_frame.height()) {
     mReceivingWidth = video_frame.width();
     mReceivingHeight = video_frame.height();
-    mRenderer->FrameSizeChange(mReceivingWidth, mReceivingHeight, mNumReceivingStreams);
+    mRenderer->FrameSizeChange(mReceivingWidth, mReceivingHeight);
   }
 
   // Attempt to retrieve an timestamp encoded in the image pixels if enabled.

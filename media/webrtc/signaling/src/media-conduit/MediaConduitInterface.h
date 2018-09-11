@@ -88,11 +88,9 @@ public:
    * Callback Function reportng any change in the video-frame dimensions
    * @param width:  current width of the video @ decoder
    * @param height: current height of the video @ decoder
-   * @param number_of_streams: number of participating video streams
    */
   virtual void FrameSizeChange(unsigned int width,
-                               unsigned int height,
-                               unsigned int number_of_streams) = 0;
+                               unsigned int height) = 0;
 
   /**
    * Callback Function reporting decoded frame for processing.
@@ -428,6 +426,7 @@ public:
     const webrtc::VideoFrame& frame) = 0;
 
   virtual MediaConduitErrorCode ConfigureCodecMode(webrtc::VideoCodecMode) = 0;
+
   /**
    * Function to configure send codec for the video session
    * @param sendSessionConfig: CodecConfiguration
@@ -448,10 +447,6 @@ public:
    */
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
       const std::vector<VideoCodecConfig* >& recvCodecConfigList) = 0;
-
-  virtual unsigned int SendingMaxFs() = 0;
-
-  virtual unsigned int SendingMaxFr() = 0;
 
   /**
     * These methods allow unit tests to double-check that the
@@ -556,11 +551,10 @@ public:
   virtual bool IsSamplingFreqSupported(int freq) const = 0;
 
    /**
-    * Function to configure send codec for the audio session
-    * @param sendSessionConfig: CodecConfiguration
-    * NOTE: See VideoConduit for more information
-    */
-
+   * Function to configure send codec for the audio session
+   * @param sendSessionConfig: CodecConfiguration
+   * NOTE: See VideoConduit for more information
+   */
   virtual MediaConduitErrorCode ConfigureSendMediaCodec(const AudioCodecConfig* sendCodecConfig) = 0;
 
    /**

@@ -453,7 +453,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecMaxMbps)
 
   constraints.maxMbps = 10000;
   VideoCodecConfig codecConfig2(120, "VP8", constraints);
-  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig2.mSimulcastEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig2);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mVideoConduit->StartTransmitting();
