@@ -1416,8 +1416,8 @@ add_old_configure_assignment('MOZ_LTO_LDFLAGS', lto.ldflags)
 js_option('--enable-address-sanitizer', help='Enable Address Sanitizer')
 
 
-@depends_if('--enable-address-sanitizer')
-def asan(value):
+@depends_if('--enable-address-sanitizer', '--help')
+def asan(value, _):
     return True
 
 

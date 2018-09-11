@@ -9,7 +9,7 @@ license = "MPL-2.0"
 publish = false
 
 [dependencies]
-base64 = "0.6"
+base64 = "0.9"
 chrono = "^0.2"
 clap = { version = "^2.19", default-features = false, features = ["suggestions", "wrap_help"] }
 hyper = "0.12"

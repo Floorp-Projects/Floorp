@@ -11,6 +11,7 @@ EXPORTS += [
     'nsBaseCommandController.h',
     'nsCommandManager.h',
     'nsCommandParams.h',
+    'nsControllerCommandTable.h',
 ]
 
 XPIDL_SOURCES += [
@@ -30,6 +31,10 @@ UNIFIED_SOURCES += [
     'nsCommandManager.cpp',
     'nsCommandParams.cpp',
     'nsControllerCommandTable.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/dom/base',
 ]
 
 FINAL_LIBRARY = 'xul'

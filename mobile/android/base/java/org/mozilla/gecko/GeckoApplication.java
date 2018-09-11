@@ -232,9 +232,7 @@ public class GeckoApplication extends Application
 
     private static GeckoRuntimeSettings.Builder createSettingsBuilder() {
         return new GeckoRuntimeSettings.Builder()
-                .javaCrashReportingEnabled(true)
-                .nativeCrashReportingEnabled(true)
-                .crashReportingJobId(JobIdsConstants.getIdForCrashReporter())
+                .crashHandler(CrashHandlerService.class)
                 .arguments(getDefaultGeckoArgs());
     }
 
@@ -273,7 +271,7 @@ public class GeckoApplication extends Application
         }
 
         final Context context = getApplicationContext();
-        GeckoAppShell.ensureCrashHandling();
+        GeckoAppShell.ensureCrashHandling(CrashHandlerService.class);
         GeckoAppShell.setApplicationContext(context);
 
         // PRNG is a pseudorandom number generator.

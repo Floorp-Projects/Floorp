@@ -611,15 +611,17 @@ struct JSObject_Slots16 : JSObject { void* data[2]; js::Value fslots[16]; };
 /* static */ MOZ_ALWAYS_INLINE void
 JSObject::readBarrier(JSObject* obj)
 {
-    if (obj && obj->isTenured())
+    if (obj && obj->isTenured()) {
         obj->asTenured().readBarrier(&obj->asTenured());
+    }
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
 JSObject::writeBarrierPre(JSObject* obj)
 {
-    if (obj && obj->isTenured())
+    if (obj && obj->isTenured()) {
         obj->asTenured().writeBarrierPre(&obj->asTenured());
+    }
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
@@ -634,16 +636,18 @@ JSObject::writeBarrierPost(void* cellp, JSObject* prev, JSObject* next)
         // doing the lookup to add the new entry. Note that we cannot safely
         // assert the presence of the entry because it may have been added
         // via a different store buffer.
-        if (prev && prev->storeBuffer())
+        if (prev && prev->storeBuffer()) {
             return;
+        }
         buffer->putCell(static_cast<js::gc::Cell**>(cellp));
         return;
     }
 
     // Remove the prev entry if the new value does not need it. There will only
     // be a prev entry if the prev value was in the nursery.
-    if (prev && (buffer = prev->storeBuffer()))
+    if (prev && (buffer = prev->storeBuffer())) {
         buffer->unputCell(static_cast<js::gc::Cell**>(cellp));
+    }
 }
 
 namespace js {
@@ -971,16 +975,18 @@ ToPrimitiveSlow(JSContext* cx, JSType hint, MutableHandleValue vp);
 inline bool
 ToPrimitive(JSContext* cx, MutableHandleValue vp)
 {
-    if (vp.isPrimitive())
+    if (vp.isPrimitive()) {
         return true;
+    }
     return ToPrimitiveSlow(cx, JSTYPE_UNDEFINED, vp);
 }
 
 inline bool
 ToPrimitive(JSContext* cx, JSType preferredType, MutableHandleValue vp)
 {
-    if (vp.isPrimitive())
+    if (vp.isPrimitive()) {
         return true;
+    }
     return ToPrimitiveSlow(cx, preferredType, vp);
 }
 
@@ -1024,10 +1030,12 @@ GetInitialHeap(NewObjectKind newKind, const Class* clasp)
         MOZ_ASSERT(!CanNurseryAllocateFinalizedClass(clasp));
         return gc::DefaultHeap;
     }
-    if (newKind != GenericObject)
+    if (newKind != GenericObject) {
         return gc::TenuredHeap;
-    if (clasp->hasFinalize() && !CanNurseryAllocateFinalizedClass(clasp))
+    }
+    if (clasp->hasFinalize() && !CanNurseryAllocateFinalizedClass(clasp)) {
         return gc::TenuredHeap;
+    }
     return gc::DefaultHeap;
 }
 
@@ -1195,8 +1203,9 @@ namespace js {
 MOZ_ALWAYS_INLINE JSObject*
 ToObjectFromStack(JSContext* cx, HandleValue vp)
 {
-    if (vp.isObject())
+    if (vp.isObject()) {
         return &vp.toObject();
+    }
     return js::ToObjectSlow(cx, vp, true);
 }
 
@@ -1213,22 +1222,25 @@ ToObjectSlowForPropertyAccess(JSContext* cx, JS::HandleValue val, HandleValue ke
 MOZ_ALWAYS_INLINE JSObject*
 ToObjectFromStackForPropertyAccess(JSContext* cx, HandleValue vp, HandleId key)
 {
-    if (vp.isObject())
+    if (vp.isObject()) {
         return &vp.toObject();
+    }
     return js::ToObjectSlowForPropertyAccess(cx, vp, key, true);
 }
 MOZ_ALWAYS_INLINE JSObject*
 ToObjectFromStackForPropertyAccess(JSContext* cx, HandleValue vp, HandlePropertyName key)
 {
-    if (vp.isObject())
+    if (vp.isObject()) {
         return &vp.toObject();
+    }
     return js::ToObjectSlowForPropertyAccess(cx, vp, key, true);
 }
 MOZ_ALWAYS_INLINE JSObject*
 ToObjectFromStackForPropertyAccess(JSContext* cx, HandleValue vp, HandleValue key)
 {
-    if (vp.isObject())
+    if (vp.isObject()) {
         return &vp.toObject();
+    }
     return js::ToObjectSlowForPropertyAccess(cx, vp, key, true);
 }
 
@@ -1246,8 +1258,9 @@ ReportNotObject(JSContext* cx, HandleValue v);
 inline JSObject*
 NonNullObject(JSContext* cx, HandleValue v)
 {
-    if (v.isObject())
+    if (v.isObject()) {
         return &v.toObject();
+    }
     ReportNotObject(cx, v);
     return nullptr;
 }
@@ -1263,8 +1276,9 @@ ReportNotObjectArg(JSContext* cx, const char* nth, const char* fun, HandleValue 
 inline JSObject*
 NonNullObjectArg(JSContext* cx, const char* nth, const char* fun, HandleValue v)
 {
-    if (v.isObject())
+    if (v.isObject()) {
         return &v.toObject();
+    }
     ReportNotObjectArg(cx, nth, fun, v);
     return nullptr;
 }
@@ -1279,8 +1293,9 @@ ReportNotObjectWithName(JSContext* cx, const char* name, HandleValue v);
 inline JSObject*
 NonNullObjectWithName(JSContext* cx, const char* name, HandleValue v)
 {
-    if (v.isObject())
+    if (v.isObject()) {
         return &v.toObject();
+    }
     ReportNotObjectWithName(cx, name, v);
     return nullptr;
 }
@@ -1332,8 +1347,9 @@ GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj);
 inline bool
 IsObjectValueInCompartment(const Value& v, JS::Compartment* comp)
 {
-    if (!v.isObject())
+    if (!v.isObject()) {
         return true;
+    }
     return v.toObject().compartment() == comp;
 }
 #endif

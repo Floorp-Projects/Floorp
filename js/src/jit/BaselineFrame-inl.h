@@ -25,8 +25,9 @@ BaselineFrame::pushOnEnvironmentChain(SpecificEnvironment& env)
 {
     MOZ_ASSERT(*environmentChain() == env.enclosingEnvironment());
     envChain_ = &env;
-    if (IsFrameInitialEnvironment(this, env))
+    if (IsFrameInitialEnvironment(this, env)) {
         flags_ |= HAS_INITIAL_ENV;
+    }
 }
 
 template <typename SpecificEnvironment>
@@ -49,8 +50,9 @@ inline bool
 BaselineFrame::pushLexicalEnvironment(JSContext* cx, Handle<LexicalScope*> scope)
 {
     LexicalEnvironmentObject* env = LexicalEnvironmentObject::create(cx, scope, this);
-    if (!env)
+    if (!env) {
         return false;
+    }
     pushOnEnvironmentChain(*env);
 
     return true;
@@ -61,8 +63,9 @@ BaselineFrame::freshenLexicalEnvironment(JSContext* cx)
 {
     Rooted<LexicalEnvironmentObject*> current(cx, &envChain_->as<LexicalEnvironmentObject>());
     LexicalEnvironmentObject* clone = LexicalEnvironmentObject::clone(cx, current);
-    if (!clone)
+    if (!clone) {
         return false;
+    }
 
     replaceInnermostEnvironment(*clone);
     return true;
@@ -73,8 +76,9 @@ BaselineFrame::recreateLexicalEnvironment(JSContext* cx)
 {
     Rooted<LexicalEnvironmentObject*> current(cx, &envChain_->as<LexicalEnvironmentObject>());
     LexicalEnvironmentObject* clone = LexicalEnvironmentObject::recreate(cx, current);
-    if (!clone)
+    if (!clone) {
         return false;
+    }
 
     replaceInnermostEnvironment(*clone);
     return true;
@@ -87,8 +91,9 @@ BaselineFrame::callObj() const
     MOZ_ASSERT(callee()->needsCallObject());
 
     JSObject* obj = environmentChain();
-    while (!obj->is<CallObject>())
+    while (!obj->is<CallObject>()) {
         obj = obj->enclosingEnvironment();
+    }
     return obj->as<CallObject>();
 }
 

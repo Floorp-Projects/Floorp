@@ -44,16 +44,19 @@ js::obj_construct(JSContext* cx, unsigned argc, Value* vp)
     if (args.isConstructing() && (&args.newTarget().toObject() != &args.callee())) {
         RootedObject newTarget(cx, &args.newTarget().toObject());
         obj = CreateThis(cx, &PlainObject::class_, newTarget);
-        if (!obj)
+        if (!obj) {
             return false;
+        }
     } else if (args.length() > 0 && !args[0].isNullOrUndefined()) {
         obj = ToObject(cx, args[0]);
-        if (!obj)
+        if (!obj) {
             return false;
+        }
     } else {
         /* Make an object whether this was called with 'new' or not. */
-        if (!NewObjectScriptedCall(cx, &obj))
+        if (!NewObjectScriptedCall(cx, &obj)) {
             return false;
+        }
     }
 
     args.rval().setObject(*obj);
@@ -96,18 +99,21 @@ js::obj_propertyIsEnumerable(JSContext* cx, unsigned argc, Value* vp)
 
     /* Step 1. */
     RootedId idRoot(cx);
-    if (!ToPropertyKey(cx, idValue, &idRoot))
+    if (!ToPropertyKey(cx, idValue, &idRoot)) {
         return false;
+    }
 
     /* Step 2. */
     RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     /* Step 3. */
     Rooted<PropertyDescriptor> desc(cx);
-    if (!GetOwnPropertyDescriptor(cx, obj, idRoot, &desc))
+    if (!GetOwnPropertyDescriptor(cx, obj, idRoot, &desc)) {
         return false;
+    }
 
     /* Steps 4-5. */
     args.rval().setBoolean(desc.object() && desc.enumerable());
@@ -119,16 +125,19 @@ obj_toSource(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!CheckRecursionLimit(cx))
+    if (!CheckRecursionLimit(cx)) {
         return false;
+    }
 
     RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     JSString* str = ObjectToSource(cx, obj);
-    if (!str)
+    if (!str) {
         return false;
+    }
 
     args.rval().setString(str);
     return true;
@@ -139,10 +148,12 @@ static bool
 Consume(const CharT*& s, const CharT* e, const char *chars)
 {
     size_t len = strlen(chars);
-    if (s + len >= e)
+    if (s + len >= e) {
         return false;
-    if (!EqualChars(s, chars, len))
+    }
+    if (!EqualChars(s, chars, len)) {
         return false;
+    }
     s += len;
     return true;
 }
@@ -151,8 +162,9 @@ template <typename CharT>
 static void
 ConsumeSpaces(const CharT*& s, const CharT* e)
 {
-    while (*s == ' ' && s < e)
+    while (*s == ' ' && s < e) {
         s++;
+    }
 }
 
 /*
@@ -167,8 +179,9 @@ ArgsAndBodySubstring(mozilla::Range<const CharT> chars, size_t* outOffset, size_
     const CharT* s = start;
     const CharT* e = chars.end().get();
 
-    if (s == e)
+    if (s == e) {
         return false;
+    }
 
     // Remove enclosing parentheses.
     if (*s == '(' && *(e - 1) == ')') {
@@ -200,16 +213,19 @@ ArgsAndBodySubstring(mozilla::Range<const CharT> chars, size_t* outOffset, size_
     // Jump over the function's name.
     if (Consume(s, e, "[")) {
         s = js_strchr_limit(s, ']', e);
-        if (!s)
+        if (!s) {
             return false;
+        }
         s++;
         ConsumeSpaces(s, e);
-        if (*s != '(')
+        if (*s != '(') {
             return false;
+        }
     } else {
         s = js_strchr_limit(s, '(', e);
-        if (!s)
+        if (!s) {
             return false;
+        }
     }
 
     *outOffset = s - start;
@@ -232,20 +248,25 @@ js::ObjectToSource(JSContext* cx, HandleObject obj)
     bool outermost = cx->cycleDetectorVector().empty();
 
     AutoCycleDetector detector(cx, obj);
-    if (!detector.init())
+    if (!detector.init()) {
         return nullptr;
-    if (detector.foundCycle())
+    }
+    if (detector.foundCycle()) {
         return NewStringCopyZ<CanGC>(cx, "{}");
+    }
 
     StringBuffer buf(cx);
-    if (outermost && !buf.append('('))
+    if (outermost && !buf.append('(')) {
         return nullptr;
-    if (!buf.append('{'))
+    }
+    if (!buf.append('{')) {
         return nullptr;
+    }
 
     AutoIdVector idv(cx);
-    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_SYMBOLS, &idv))
+    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_SYMBOLS, &idv)) {
         return nullptr;
+    }
 
     bool comma = false;
 
@@ -255,13 +276,15 @@ js::ObjectToSource(JSContext* cx, HandleObject obj)
         if (JSID_IS_SYMBOL(id)) {
             RootedValue v(cx, SymbolValue(JSID_TO_SYMBOL(id)));
             idstr = ValueToSource(cx, v);
-            if (!idstr)
+            if (!idstr) {
                 return false;
+            }
         } else {
             RootedValue idv(cx, IdToValue(id));
             idstr = ToString<CanGC>(cx, idv);
-            if (!idstr)
+            if (!idstr) {
                 return false;
+            }
 
             /*
              * If id is a string that's not an identifier, or if it's a
@@ -272,24 +295,29 @@ js::ObjectToSource(JSContext* cx, HandleObject obj)
                 : JSID_TO_INT(id) < 0)
             {
                 UniqueChars quotedId = QuoteString(cx, idstr, '\'');
-                if (!quotedId)
+                if (!quotedId) {
                     return false;
+                }
                 idstr = NewStringCopyZ<CanGC>(cx, quotedId.get());
-                if (!idstr)
+                if (!idstr) {
                     return false;
+                }
             }
         }
 
         RootedString valsource(cx, ValueToSource(cx, val));
-        if (!valsource)
+        if (!valsource) {
             return false;
+        }
 
         RootedLinearString valstr(cx, valsource->ensureLinear(cx));
-        if (!valstr)
+        if (!valstr) {
             return false;
+        }
 
-        if (comma && !buf.append(", "))
+        if (comma && !buf.append(", ")) {
             return false;
+        }
         comma = true;
 
         size_t voffset, vlength;
@@ -320,12 +348,14 @@ js::ObjectToSource(JSContext* cx, HandleObject obj)
                     fun->explicitName())
                 {
                     bool result;
-                    if (!EqualStrings(cx, fun->explicitName(), idstr, &result))
+                    if (!EqualStrings(cx, fun->explicitName(), idstr, &result)) {
                         return false;
+                    }
 
                     if (result)  {
-                        if (!buf.append(valstr))
+                        if (!buf.append(valstr)) {
                             return false;
+                        }
                         return true;
                     }
                 }
@@ -337,51 +367,63 @@ js::ObjectToSource(JSContext* cx, HandleObject obj)
                 // the enclosing parentheses.
                 bool success;
                 JS::AutoCheckCannotGC nogc;
-                if (valstr->hasLatin1Chars())
+                if (valstr->hasLatin1Chars()) {
                     success = ArgsAndBodySubstring(valstr->latin1Range(nogc), &voffset, &vlength);
-                else
+                } else {
                     success = ArgsAndBodySubstring(valstr->twoByteRange(nogc), &voffset, &vlength);
-                if (!success)
+                }
+                if (!success) {
                     kind = PropertyKind::Normal;
+                }
             }
 
             if (kind == PropertyKind::Getter) {
-                if (!buf.append("get "))
+                if (!buf.append("get ")) {
                     return false;
+                }
             } else if (kind == PropertyKind::Setter) {
-                if (!buf.append("set "))
+                if (!buf.append("set ")) {
                     return false;
+                }
             } else if (kind == PropertyKind::Method && fun) {
                 if (IsWrappedAsyncFunction(fun)) {
-                    if (!buf.append("async "))
+                    if (!buf.append("async ")) {
                         return false;
+                    }
                 }
 
                 if (fun->isGenerator()) {
-                    if (!buf.append('*'))
+                    if (!buf.append('*')) {
                         return false;
+                    }
                 }
             }
         }
 
         bool needsBracket = JSID_IS_SYMBOL(id);
-        if (needsBracket && !buf.append('['))
+        if (needsBracket && !buf.append('[')) {
             return false;
-        if (!buf.append(idstr))
+        }
+        if (!buf.append(idstr)) {
             return false;
-        if (needsBracket && !buf.append(']'))
+        }
+        if (needsBracket && !buf.append(']')) {
             return false;
+        }
 
         if (kind == PropertyKind::Getter || kind == PropertyKind::Setter ||
             kind == PropertyKind::Method)
         {
-            if (!buf.appendSubstring(valstr, voffset, vlength))
+            if (!buf.appendSubstring(valstr, voffset, vlength)) {
                 return false;
+            }
         } else {
-            if (!buf.append(':'))
+            if (!buf.append(':')) {
                 return false;
-            if (!buf.append(valstr))
+            }
+            if (!buf.append(valstr)) {
                 return false;
+            }
         }
         return true;
     };
@@ -392,46 +434,55 @@ js::ObjectToSource(JSContext* cx, HandleObject obj)
     RootedFunction fun(cx);
     for (size_t i = 0; i < idv.length(); ++i) {
         id = idv[i];
-        if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
+        if (!GetOwnPropertyDescriptor(cx, obj, id, &desc)) {
             return nullptr;
+        }
 
-        if (!desc.object())
+        if (!desc.object()) {
             continue;
+        }
 
         if (desc.isAccessorDescriptor()) {
             if (desc.hasGetterObject() && desc.getterObject()) {
                 val.setObject(*desc.getterObject());
-                if (!AddProperty(id, val, PropertyKind::Getter))
+                if (!AddProperty(id, val, PropertyKind::Getter)) {
                     return nullptr;
+                }
             }
             if (desc.hasSetterObject() && desc.setterObject()) {
                 val.setObject(*desc.setterObject());
-                if (!AddProperty(id, val, PropertyKind::Setter))
+                if (!AddProperty(id, val, PropertyKind::Setter)) {
                     return nullptr;
+                }
             }
             continue;
         }
 
         val.set(desc.value());
         if (IsFunctionObject(val, fun.address())) {
-            if (IsWrappedAsyncFunction(fun))
+            if (IsWrappedAsyncFunction(fun)) {
                 fun = GetUnwrappedAsyncFunction(fun);
+            }
 
             if (fun->isMethod()) {
-                if (!AddProperty(id, val, PropertyKind::Method))
+                if (!AddProperty(id, val, PropertyKind::Method)) {
                     return nullptr;
+                }
                 continue;
             }
         }
 
-        if (!AddProperty(id, val, PropertyKind::Normal))
+        if (!AddProperty(id, val, PropertyKind::Normal)) {
             return nullptr;
+        }
     }
 
-    if (!buf.append('}'))
+    if (!buf.append('}')) {
         return nullptr;
-    if (outermost && !buf.append(')'))
+    }
+    if (outermost && !buf.append(')')) {
         return nullptr;
+    }
 
     return buf.finishString();
 }
@@ -441,8 +492,9 @@ GetBuiltinTagSlow(JSContext* cx, HandleObject obj, MutableHandleString builtinTa
 {
     // Step 4.
     bool isArray;
-    if (!IsArray(cx, obj, &isArray))
+    if (!IsArray(cx, obj, &isArray)) {
         return false;
+    }
 
     // Step 5.
     if (isArray) {
@@ -452,8 +504,9 @@ GetBuiltinTagSlow(JSContext* cx, HandleObject obj, MutableHandleString builtinTa
 
     // Steps 6-13.
     ESClass cls;
-    if (!GetBuiltinClass(cx, obj, &cls))
+    if (!GetBuiltinClass(cx, obj, &cls)) {
         return false;
+    }
 
     switch (cls) {
       case ESClass::String:
@@ -504,32 +557,41 @@ GetBuiltinTagFast(JSObject* obj, const Class* clasp, JSContext* cx)
         return cx->names().objectObject;
     }
 
-    if (clasp == &ArrayObject::class_)
+    if (clasp == &ArrayObject::class_) {
         return cx->names().objectArray;
+    }
 
-    if (clasp == &JSFunction::class_)
+    if (clasp == &JSFunction::class_) {
         return cx->names().objectFunction;
+    }
 
-    if (clasp == &StringObject::class_)
+    if (clasp == &StringObject::class_) {
         return cx->names().objectString;
+    }
 
-    if (clasp == &NumberObject::class_)
+    if (clasp == &NumberObject::class_) {
         return cx->names().objectNumber;
+    }
 
-    if (clasp == &BooleanObject::class_)
+    if (clasp == &BooleanObject::class_) {
         return cx->names().objectBoolean;
+    }
 
-    if (clasp == &DateObject::class_)
+    if (clasp == &DateObject::class_) {
         return cx->names().objectDate;
+    }
 
-    if (clasp == &RegExpObject::class_)
+    if (clasp == &RegExpObject::class_) {
         return cx->names().objectRegExp;
+    }
 
-    if (obj->is<ArgumentsObject>())
+    if (obj->is<ArgumentsObject>()) {
         return cx->names().objectArguments;
+    }
 
-    if (obj->is<ErrorObject>())
+    if (obj->is<ErrorObject>()) {
         return cx->names().objectError;
+    }
 
     if (obj->isCallable() && !obj->getClass()->isDOMClass()) {
         // Non-standard: Prevent <object> from showing up as Function.
@@ -559,14 +621,16 @@ js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 3.
     RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     RootedString builtinTag(cx);
     const Class* clasp = obj->getClass();
     if (MOZ_UNLIKELY(clasp->isProxy())) {
-        if (!GetBuiltinTagSlow(cx, obj, &builtinTag))
+        if (!GetBuiltinTagSlow(cx, obj, &builtinTag)) {
             return false;
+        }
     } else {
         builtinTag = GetBuiltinTagFast(obj, clasp, cx);
 #ifdef DEBUG
@@ -574,12 +638,14 @@ js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
         // only exception is the PlainObject case: we special-case it here
         // because it's so common, but BuiltinTagSlow doesn't handle this.
         RootedString builtinTagSlow(cx);
-        if (!GetBuiltinTagSlow(cx, obj, &builtinTagSlow))
+        if (!GetBuiltinTagSlow(cx, obj, &builtinTagSlow)) {
             return false;
-        if (clasp == &PlainObject::class_ || clasp == &UnboxedPlainObject::class_)
+        }
+        if (clasp == &PlainObject::class_ || clasp == &UnboxedPlainObject::class_) {
             MOZ_ASSERT(!builtinTagSlow);
-        else
+        } else {
             MOZ_ASSERT(builtinTagSlow == builtinTag);
+        }
 #endif
     }
 
@@ -588,8 +654,9 @@ js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 15.
     RootedValue tag(cx);
-    if (!GetInterestingSymbolProperty(cx, obj, cx->wellKnownSymbols().toStringTag, &tag))
+    if (!GetInterestingSymbolProperty(cx, obj, cx->wellKnownSymbols().toStringTag, &tag)) {
         return false;
+    }
 
     // Step 16.
     if (!tag.isString()) {
@@ -604,8 +671,9 @@ js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
             }
 
             builtinTag = sb.finishAtom();
-            if (!builtinTag)
+            if (!builtinTag) {
                 return false;
+            }
         }
 
         args.rval().setString(builtinTag);
@@ -614,12 +682,14 @@ js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 17.
     StringBuffer sb(cx);
-    if (!sb.append("[object ") || !sb.append(tag.toString()) || !sb.append(']'))
+    if (!sb.append("[object ") || !sb.append(tag.toString()) || !sb.append(']')) {
         return false;
+    }
 
     JSString* str = sb.finishAtom();
-    if (!str)
+    if (!str) {
         return false;
+    }
 
     args.rval().setString(str);
     return true;
@@ -630,8 +700,9 @@ js::ObjectClassToString(JSContext* cx, HandleObject obj)
 {
     const Class* clasp = obj->getClass();
 
-    if (JSString* tag = GetBuiltinTagFast(obj, clasp, cx))
+    if (JSString* tag = GetBuiltinTagFast(obj, clasp, cx)) {
         return tag;
+    }
 
     const char* className = clasp->name;
     StringBuffer sb(cx);
@@ -680,8 +751,9 @@ obj_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
     /* Step 5-7. */
     RootedObject obj(cx, &args[0].toObject());
     RootedObject newProto(cx, args[1].toObjectOrNull());
-    if (!SetPrototype(cx, obj, newProto))
+    if (!SetPrototype(cx, obj, newProto)) {
         return false;
+    }
 
     /* Step 8. */
     args.rval().set(args[0]);
@@ -706,8 +778,9 @@ PropertyIsEnumerable(JSContext* cx, HandleObject obj, HandleId id, bool* enumera
     }
 
     Rooted<PropertyDescriptor> desc(cx);
-    if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
+    if (!GetOwnPropertyDescriptor(cx, obj, id, &desc)) {
         return false;
+    }
 
     *enumerable = desc.object() && desc.enumerable();
     return true;
@@ -718,8 +791,9 @@ TryAssignNative(JSContext* cx, HandleObject to, HandleObject from, bool* optimiz
 {
     *optimized = false;
 
-    if (!from->isNative() || !to->isNative())
+    if (!from->isNative() || !to->isNative()) {
         return true;
+    }
 
     // Don't use the fast path if |from| may have extra indexed or lazy
     // properties.
@@ -743,10 +817,12 @@ TryAssignNative(JSContext* cx, HandleObject to, HandleObject from, bool* optimiz
     for (Shape::Range<NoGC> r(fromShape); !r.empty(); r.popFront()) {
         // Symbol properties need to be assigned last. For now fall back to the
         // slow path if we see a symbol property.
-        if (MOZ_UNLIKELY(JSID_IS_SYMBOL(r.front().propidRaw())))
+        if (MOZ_UNLIKELY(JSID_IS_SYMBOL(r.front().propidRaw()))) {
             return true;
-        if (MOZ_UNLIKELY(!shapes.append(&r.front())))
+        }
+        if (MOZ_UNLIKELY(!shapes.append(&r.front()))) {
             return false;
+        }
     }
 
     *optimized = true;
@@ -767,26 +843,32 @@ TryAssignNative(JSContext* cx, HandleObject to, HandleObject from, bool* optimiz
                        from->as<NativeObject>().lastProperty() == fromShape &&
                        shape->isDataProperty()))
         {
-            if (!shape->enumerable())
+            if (!shape->enumerable()) {
                 continue;
+            }
             propValue = from->as<NativeObject>().getSlot(shape->slot());
         } else {
             // |from| changed shape or the property is not a data property, so
             // we have to do the slower enumerability check and GetProp.
             bool enumerable;
-            if (!PropertyIsEnumerable(cx, from, nextKey, &enumerable))
+            if (!PropertyIsEnumerable(cx, from, nextKey, &enumerable)) {
                 return false;
-            if (!enumerable)
+            }
+            if (!enumerable) {
                 continue;
-            if (!GetProperty(cx, from, from, nextKey, &propValue))
+            }
+            if (!GetProperty(cx, from, from, nextKey, &propValue)) {
                 return false;
+            }
         }
 
         ObjectOpResult result;
-        if (MOZ_UNLIKELY(!SetProperty(cx, to, nextKey, propValue, toReceiver, result)))
+        if (MOZ_UNLIKELY(!SetProperty(cx, to, nextKey, propValue, toReceiver, result))) {
             return false;
-        if (MOZ_UNLIKELY(!result.checkStrict(cx, to, nextKey)))
+        }
+        if (MOZ_UNLIKELY(!result.checkStrict(cx, to, nextKey))) {
             return false;
+        }
     }
 
     return true;
@@ -797,13 +879,15 @@ TryAssignFromUnboxed(JSContext* cx, HandleObject to, HandleObject from, bool* op
 {
     *optimized = false;
 
-    if (!from->is<UnboxedPlainObject>() || !to->isNative())
+    if (!from->is<UnboxedPlainObject>() || !to->isNative()) {
         return true;
+    }
 
     // Don't use the fast path for unboxed objects with expandos.
     UnboxedPlainObject* fromUnboxed = &from->as<UnboxedPlainObject>();
-    if (fromUnboxed->maybeExpando())
+    if (fromUnboxed->maybeExpando()) {
         return true;
+    }
 
     *optimized = true;
 
@@ -827,19 +911,24 @@ TryAssignFromUnboxed(JSContext* cx, HandleObject to, HandleObject from, bool* op
             // |from| changed so we have to do the slower enumerability check
             // and GetProp.
             bool enumerable;
-            if (!PropertyIsEnumerable(cx, from, nextKey, &enumerable))
+            if (!PropertyIsEnumerable(cx, from, nextKey, &enumerable)) {
                 return false;
-            if (!enumerable)
+            }
+            if (!enumerable) {
                 continue;
-            if (!GetProperty(cx, from, from, nextKey, &propValue))
+            }
+            if (!GetProperty(cx, from, from, nextKey, &propValue)) {
                 return false;
+            }
         }
 
         ObjectOpResult result;
-        if (MOZ_UNLIKELY(!SetProperty(cx, to, nextKey, propValue, toReceiver, result)))
+        if (MOZ_UNLIKELY(!SetProperty(cx, to, nextKey, propValue, toReceiver, result))) {
             return false;
-        if (MOZ_UNLIKELY(!result.checkStrict(cx, to, nextKey)))
+        }
+        if (MOZ_UNLIKELY(!result.checkStrict(cx, to, nextKey))) {
             return false;
+        }
     }
 
     return true;
@@ -850,8 +939,9 @@ AssignSlow(JSContext* cx, HandleObject to, HandleObject from)
 {
     // Step 4.b.ii.
     AutoIdVector keys(cx);
-    if (!GetPropertyKeys(cx, from, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &keys))
+    if (!GetPropertyKeys(cx, from, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &keys)) {
         return false;
+    }
 
     // Step 4.c.
     RootedId nextKey(cx);
@@ -861,18 +951,22 @@ AssignSlow(JSContext* cx, HandleObject to, HandleObject from)
 
         // Step 4.c.i.
         bool enumerable;
-        if (MOZ_UNLIKELY(!PropertyIsEnumerable(cx, from, nextKey, &enumerable)))
+        if (MOZ_UNLIKELY(!PropertyIsEnumerable(cx, from, nextKey, &enumerable))) {
             return false;
-        if (!enumerable)
+        }
+        if (!enumerable) {
             continue;
+        }
 
         // Step 4.c.ii.1.
-        if (MOZ_UNLIKELY(!GetProperty(cx, from, from, nextKey, &propValue)))
+        if (MOZ_UNLIKELY(!GetProperty(cx, from, from, nextKey, &propValue))) {
             return false;
+        }
 
         // Step 4.c.ii.2.
-        if (MOZ_UNLIKELY(!SetProperty(cx, to, nextKey, propValue)))
+        if (MOZ_UNLIKELY(!SetProperty(cx, to, nextKey, propValue))) {
             return false;
+        }
     }
 
     return true;
@@ -887,8 +981,9 @@ obj_assign(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1.
     RootedObject to(cx, ToObject(cx, args.get(0)));
-    if (!to)
+    if (!to) {
         return false;
+    }
 
     // Note: step 2 is implicit. If there are 0 arguments, ToObject throws. If
     // there's 1 argument, the loop below is a no-op.
@@ -897,28 +992,35 @@ obj_assign(JSContext* cx, unsigned argc, Value* vp)
     RootedObject from(cx);
     for (size_t i = 1; i < args.length(); i++) {
         // Step 4.a.
-        if (args[i].isNullOrUndefined())
+        if (args[i].isNullOrUndefined()) {
             continue;
+        }
 
         // Step 4.b.i.
         from = ToObject(cx, args[i]);
-        if (!from)
+        if (!from) {
             return false;
+        }
 
         // Steps 4.b.ii, 4.c.
         bool optimized;
-        if (!TryAssignNative(cx, to, from, &optimized))
+        if (!TryAssignNative(cx, to, from, &optimized)) {
             return false;
-        if (optimized)
+        }
+        if (optimized) {
             continue;
+        }
 
-        if (!TryAssignFromUnboxed(cx, to, from, &optimized))
+        if (!TryAssignFromUnboxed(cx, to, from, &optimized)) {
             return false;
-        if (optimized)
+        }
+        if (optimized) {
             continue;
+        }
 
-        if (!AssignSlow(cx, to, from))
+        if (!AssignSlow(cx, to, from)) {
             return false;
+        }
     }
 
     // Step 5.
@@ -940,13 +1042,15 @@ obj_isPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
 
     /* Step 2. */
     RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     /* Step 3. */
     bool isPrototype;
-    if (!IsPrototypeOf(cx, obj, &args[0].toObject(), &isPrototype))
+    if (!IsPrototypeOf(cx, obj, &args[0].toObject(), &isPrototype)) {
         return false;
+    }
     args.rval().setBoolean(isPrototype);
     return true;
 }
@@ -967,8 +1071,9 @@ js::ObjectCreateImpl(JSContext* cx, HandleObject proto, NewObjectKind newKind,
         RootedObjectGroup ngroup(cx, group);
         if (!ngroup) {
             ngroup = ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Null);
-            if (!ngroup)
+            if (!ngroup) {
                 return nullptr;
+            }
         }
 
         MOZ_ASSERT(!ngroup->proto().toObjectOrNull());
@@ -994,13 +1099,15 @@ ObjectDefineProperties(JSContext* cx, HandleObject obj, HandleValue properties)
     // Step 1. implicit
     // Step 2.
     RootedObject props(cx, ToObject(cx, properties));
-    if (!props)
+    if (!props) {
         return false;
+    }
 
     // Step 3.
     AutoIdVector keys(cx);
-    if (!GetPropertyKeys(cx, props, JSITER_OWNONLY | JSITER_SYMBOLS | JSITER_HIDDEN, &keys))
+    if (!GetPropertyKeys(cx, props, JSITER_OWNONLY | JSITER_SYMBOLS | JSITER_HIDDEN, &keys)) {
         return false;
+    }
 
     RootedId nextKey(cx);
     Rooted<PropertyDescriptor> desc(cx);
@@ -1015,8 +1122,9 @@ ObjectDefineProperties(JSContext* cx, HandleObject obj, HandleValue properties)
         nextKey = keys[i];
 
         // Step 5.a.
-        if (!GetOwnPropertyDescriptor(cx, props, nextKey, &desc))
+        if (!GetOwnPropertyDescriptor(cx, props, nextKey, &desc)) {
             return false;
+        }
 
         // Step 5.b.
         if (desc.object() && desc.enumerable()) {
@@ -1032,8 +1140,9 @@ ObjectDefineProperties(JSContext* cx, HandleObject obj, HandleValue properties)
 
     // Step 6.
     for (size_t i = 0, len = descriptors.length(); i < len; i++) {
-        if (!DefineProperty(cx, obj, descriptorKeys[i], descriptors[i]))
+        if (!DefineProperty(cx, obj, descriptorKeys[i], descriptors[i])) {
             return false;
+        }
     }
 
     return true;
@@ -1054,8 +1163,9 @@ js::obj_create(JSContext* cx, unsigned argc, Value* vp)
 
     if (!args[0].isObjectOrNull()) {
         UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, args[0], nullptr);
-        if (!bytes)
+        if (!bytes) {
             return false;
+        }
 
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
                                  bytes.get(), "not an object or null");
@@ -1065,13 +1175,15 @@ js::obj_create(JSContext* cx, unsigned argc, Value* vp)
     // Step 2.
     RootedObject proto(cx, args[0].toObjectOrNull());
     RootedPlainObject obj(cx, ObjectCreateImpl(cx, proto));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     // Step 3.
     if (args.hasDefined(1)) {
-        if (!ObjectDefineProperties(cx, obj, args[1]))
+        if (!ObjectDefineProperties(cx, obj, args[1])) {
             return false;
+        }
     }
 
     // Step 4.
@@ -1096,13 +1208,16 @@ FromPropertyDescriptorToArray(JSContext* cx, Handle<PropertyDescriptor> desc, Mu
     // performance reasons.
 
     int32_t attrsAndKind = 0;
-    if (desc.enumerable())
+    if (desc.enumerable()) {
         attrsAndKind |= ATTR_ENUMERABLE;
-    if (desc.configurable())
+    }
+    if (desc.configurable()) {
         attrsAndKind |= ATTR_CONFIGURABLE;
+    }
     if (!desc.isAccessorDescriptor()) {
-        if (desc.writable())
+        if (desc.writable()) {
             attrsAndKind |= ATTR_WRITABLE;
+        }
         attrsAndKind |= DATA_DESCRIPTOR_KIND;
     } else {
         attrsAndKind |= ACCESSOR_DESCRIPTOR_KIND;
@@ -1111,29 +1226,33 @@ FromPropertyDescriptorToArray(JSContext* cx, Handle<PropertyDescriptor> desc, Mu
     RootedArrayObject result(cx);
     if (!desc.isAccessorDescriptor()) {
         result = NewDenseFullyAllocatedArray(cx, 2);
-        if (!result)
+        if (!result) {
             return false;
+        }
         result->setDenseInitializedLength(2);
 
         result->initDenseElement(PROP_DESC_ATTRS_AND_KIND_INDEX, Int32Value(attrsAndKind));
         result->initDenseElement(PROP_DESC_VALUE_INDEX, desc.value());
     } else {
         result = NewDenseFullyAllocatedArray(cx, 3);
-        if (!result)
+        if (!result) {
             return false;
+        }
         result->setDenseInitializedLength(3);
 
         result->initDenseElement(PROP_DESC_ATTRS_AND_KIND_INDEX, Int32Value(attrsAndKind));
 
-        if (JSObject* get = desc.getterObject())
+        if (JSObject* get = desc.getterObject()) {
             result->initDenseElement(PROP_DESC_GETTER_INDEX, ObjectValue(*get));
-        else
+        } else {
             result->initDenseElement(PROP_DESC_GETTER_INDEX, UndefinedValue());
+        }
 
-        if (JSObject* set = desc.setterObject())
+        if (JSObject* set = desc.setterObject()) {
             result->initDenseElement(PROP_DESC_SETTER_INDEX, ObjectValue(*set));
-        else
+        } else {
             result->initDenseElement(PROP_DESC_SETTER_INDEX, UndefinedValue());
+        }
     }
 
     vp.setObject(*result);
@@ -1150,18 +1269,21 @@ js::GetOwnPropertyDescriptorToArray(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1.
     RootedObject obj(cx, ToObject(cx, args[0]));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     // Step 2.
     RootedId id(cx);
-    if (!ToPropertyKey(cx, args[1], &id))
+    if (!ToPropertyKey(cx, args[1], &id)) {
         return false;
+    }
 
     // Step 3.
     Rooted<PropertyDescriptor> desc(cx);
-    if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
+    if (!GetOwnPropertyDescriptor(cx, obj, id, &desc)) {
         return false;
+    }
 
     // [[GetOwnProperty]] is spec'ed to always return a complete property
     // descriptor record (ES2017, 6.1.7.3, invariants of [[GetOwnProperty]]).
@@ -1175,8 +1297,9 @@ static bool
 NewValuePair(JSContext* cx, HandleValue val1, HandleValue val2, MutableHandleValue rval)
 {
     ArrayObject* array = NewDenseFullyAllocatedArray(cx, 2);
-    if (!array)
+    if (!array) {
         return false;
+    }
 
     array->setDenseInitializedLength(2);
     array->initDenseElement(0, val1);
@@ -1201,8 +1324,9 @@ HasEnumerableStringNonDataProperties(NativeObject* obj)
     // path.
     for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
         Shape* shape = &r.front();
-        if (!shape->isDataProperty() && shape->enumerable() && !JSID_IS_SYMBOL(shape->propid()))
+        if (!shape->isDataProperty() && shape->enumerable() && !JSID_IS_SYMBOL(shape->propid())) {
             return true;
+        }
     }
     return false;
 }
@@ -1231,12 +1355,14 @@ TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj, MutableHandleV
 
     // Resolve lazy properties on |nobj|.
     if (JSEnumerateOp enumerate = nobj->getClass()->getEnumerate()) {
-        if (!enumerate(cx, nobj))
+        if (!enumerate(cx, nobj)) {
             return false;
+        }
 
         // Ensure no extra indexed properties were added through enumerate().
-        if (nobj->isIndexed())
+        if (nobj->isIndexed()) {
             return true;
+        }
     }
 
     *optimized = true;
@@ -1251,16 +1377,18 @@ TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj, MutableHandleV
 
     for (uint32_t i = 0, len = nobj->getDenseInitializedLength(); i < len; i++) {
         value.set(nobj->getDenseElement(i));
-        if (value.isMagic(JS_ELEMENTS_HOLE))
+        if (value.isMagic(JS_ELEMENTS_HOLE)) {
             continue;
+        }
 
         JSString* str;
         if (kind != EnumerableOwnPropertiesKind::Values) {
             static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT <= JSID_INT_MAX,
                           "dense elements don't exceed JSID_INT_MAX");
             str = Int32ToString<CanGC>(cx, i);
-            if (!str)
+            if (!str) {
                 return false;
+            }
         }
 
         if (kind == EnumerableOwnPropertiesKind::Keys ||
@@ -1269,12 +1397,14 @@ TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj, MutableHandleV
             value.setString(str);
         } else if (kind == EnumerableOwnPropertiesKind::KeysAndValues) {
             key.setString(str);
-            if (!NewValuePair(cx, key, value, &value))
+            if (!NewValuePair(cx, key, value, &value)) {
                 return false;
+            }
         }
 
-        if (!properties.append(value))
+        if (!properties.append(value)) {
             return false;
+        }
     }
 
     if (obj->is<TypedArrayObject>()) {
@@ -1291,8 +1421,9 @@ TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj, MutableHandleV
         }
 
         MOZ_ASSERT(properties.empty(), "typed arrays cannot have dense elements");
-        if (!properties.resize(len))
+        if (!properties.resize(len)) {
             return false;
+        }
 
         for (uint32_t i = 0; i < len; i++) {
             JSString* str;
@@ -1300,8 +1431,9 @@ TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj, MutableHandleV
                 static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT <= JSID_INT_MAX,
                               "dense elements don't exceed JSID_INT_MAX");
                 str = Int32ToString<CanGC>(cx, i);
-                if (!str)
+                if (!str) {
                     return false;
+                }
             }
 
             if (kind == EnumerableOwnPropertiesKind::Keys ||
@@ -1313,8 +1445,9 @@ TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj, MutableHandleV
             } else {
                 key.setString(str);
                 value.set(tobj->getElement(i));
-                if (!NewValuePair(cx, key, value, &value))
+                if (!NewValuePair(cx, key, value, &value)) {
                     return false;
+                }
             }
 
             properties[i].set(value);
@@ -1341,15 +1474,17 @@ TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj, MutableHandleV
                                     ? AllowGC::NoGC
                                     : AllowGC::CanGC;
         mozilla::MaybeOneOf<Shape::Range<NoGC>, Shape::Range<CanGC>> m;
-        if (allowGC == AllowGC::NoGC)
+        if (allowGC == AllowGC::NoGC) {
             m.construct<Shape::Range<NoGC>>(nobj->lastProperty());
-        else
+        } else {
             m.construct<Shape::Range<CanGC>>(cx, nobj->lastProperty());
+        }
         for (Shape::Range<allowGC>& r = m.ref<Shape::Range<allowGC>>(); !r.empty(); r.popFront()) {
             Shape* shape = &r.front();
             jsid id = shape->propid();
-            if ((onlyEnumerable && !shape->enumerable()) || JSID_IS_SYMBOL(id))
+            if ((onlyEnumerable && !shape->enumerable()) || JSID_IS_SYMBOL(id)) {
                 continue;
+            }
             MOZ_ASSERT(!JSID_IS_INT(id), "Unexpected indexed property");
             MOZ_ASSERT_IF(kind == EnumerableOwnPropertiesKind::Values ||
                           kind == EnumerableOwnPropertiesKind::KeysAndValues,
@@ -1364,12 +1499,14 @@ TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj, MutableHandleV
             } else {
                 key.setString(JSID_TO_STRING(id));
                 value.set(nobj->getSlot(shape->slot()));
-                if (!NewValuePair(cx, key, value, &value))
+                if (!NewValuePair(cx, key, value, &value)) {
                     return false;
+                }
             }
 
-            if (!properties.append(value))
+            if (!properties.append(value)) {
                 return false;
+            }
         }
 
         // The (non-indexed) properties were visited in reverse iteration
@@ -1389,12 +1526,14 @@ TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj, MutableHandleV
         RootedShape objShape(cx, nobj->lastProperty());
         for (Shape::Range<NoGC> r(objShape); !r.empty(); r.popFront()) {
             Shape* shape = &r.front();
-            if (JSID_IS_SYMBOL(shape->propid()))
+            if (JSID_IS_SYMBOL(shape->propid())) {
                 continue;
+            }
             MOZ_ASSERT(!JSID_IS_INT(shape->propid()), "Unexpected indexed property");
 
-            if (!shapes.append(shape))
+            if (!shapes.append(shape)) {
                 return false;
+            }
         }
 
         RootedId id(cx);
@@ -1409,36 +1548,43 @@ TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj, MutableHandleV
                 obj->as<NativeObject>().lastProperty() == objShape &&
                 shape->isDataProperty())
             {
-                if (!shape->enumerable())
+                if (!shape->enumerable()) {
                     continue;
+                }
                 value = obj->as<NativeObject>().getSlot(shape->slot());
             } else {
                 // |obj| changed shape or the property is not a data property,
                 // so we have to do the slower enumerability check and
                 // GetProperty.
                 bool enumerable;
-                if (!PropertyIsEnumerable(cx, obj, id, &enumerable))
+                if (!PropertyIsEnumerable(cx, obj, id, &enumerable)) {
                     return false;
-                if (!enumerable)
+                }
+                if (!enumerable) {
                     continue;
-                if (!GetProperty(cx, obj, obj, id, &value))
+                }
+                if (!GetProperty(cx, obj, obj, id, &value)) {
                     return false;
+                }
             }
 
             if (kind == EnumerableOwnPropertiesKind::KeysAndValues) {
                 key.setString(JSID_TO_STRING(id));
-                if (!NewValuePair(cx, key, value, &value))
+                if (!NewValuePair(cx, key, value, &value)) {
                     return false;
+                }
             }
 
-            if (!properties.append(value))
+            if (!properties.append(value)) {
                 return false;
+            }
         }
     }
 
     JSObject* array = NewDenseCopiedArray(cx, properties.length(), properties.begin());
-    if (!array)
+    if (!array) {
         return false;
+    }
 
     rval.setObject(*array);
     return true;
@@ -1451,12 +1597,14 @@ TryEnumerableOwnPropertiesUnboxed(JSContext* cx, HandleObject obj, MutableHandle
 {
     *optimized = false;
 
-    if (!obj->is<UnboxedPlainObject>())
+    if (!obj->is<UnboxedPlainObject>()) {
         return true;
+    }
 
     Handle<UnboxedPlainObject*> uobj = obj.as<UnboxedPlainObject>();
-    if (uobj->maybeExpando())
+    if (uobj->maybeExpando()) {
         return true;
+    }
 
     *optimized = true;
 
@@ -1481,17 +1629,20 @@ TryEnumerableOwnPropertiesUnboxed(JSContext* cx, HandleObject obj, MutableHandle
         } else {
             key.setString(property.name);
             value.set(uobj->getValue(property));
-            if (!NewValuePair(cx, key, value, &value))
+            if (!NewValuePair(cx, key, value, &value)) {
                 return false;
+            }
         }
 
-        if (!properties.append(value))
+        if (!properties.append(value)) {
             return false;
+        }
     }
 
     JSObject* array = NewDenseCopiedArray(cx, properties.length(), properties.begin());
-    if (!array)
+    if (!array) {
         return false;
+    }
 
     rval.setObject(*array);
     return true;
@@ -1509,33 +1660,40 @@ EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args)
 
     // Step 1. (Step 1 of Object.{keys,values,entries}, really.)
     RootedObject obj(cx, ToObject(cx, args.get(0)));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     bool optimized;
-    if (!TryEnumerableOwnPropertiesNative<kind>(cx, obj, args.rval(), &optimized))
+    if (!TryEnumerableOwnPropertiesNative<kind>(cx, obj, args.rval(), &optimized)) {
         return false;
-    if (optimized)
+    }
+    if (optimized) {
         return true;
+    }
 
-    if (!TryEnumerableOwnPropertiesUnboxed<kind>(cx, obj, args.rval(), &optimized))
+    if (!TryEnumerableOwnPropertiesUnboxed<kind>(cx, obj, args.rval(), &optimized)) {
         return false;
-    if (optimized)
+    }
+    if (optimized) {
         return true;
+    }
 
     // Typed arrays are always handled in the fast path.
     MOZ_ASSERT(!obj->is<TypedArrayObject>());
 
     // Step 2.
     AutoIdVector ids(cx);
-    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &ids))
+    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &ids)) {
         return false;
+    }
 
     // Step 3.
     AutoValueVector properties(cx);
     size_t len = ids.length();
-    if (!properties.resize(len))
+    if (!properties.resize(len)) {
         return false;
+    }
 
     RootedId id(cx);
     RootedValue key(cx);
@@ -1551,8 +1709,9 @@ EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args)
         MOZ_ASSERT(!JSID_IS_SYMBOL(id));
 
         if (kind != EnumerableOwnPropertiesKind::Values) {
-            if (!IdToStringOrSymbol(cx, id, &key))
+            if (!IdToStringOrSymbol(cx, id, &key)) {
                 return false;
+            }
         }
 
         // Step 4.a.i.
@@ -1562,36 +1721,42 @@ EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args)
                 value = nobj->getDenseOrTypedArrayElement(JSID_TO_INT(id));
             } else {
                 shape = nobj->lookup(cx, id);
-                if (!shape || !shape->enumerable())
+                if (!shape || !shape->enumerable()) {
                     continue;
+                }
                 if (!shape->isAccessorShape()) {
-                    if (!NativeGetExistingProperty(cx, nobj, nobj, shape, &value))
+                    if (!NativeGetExistingProperty(cx, nobj, nobj, shape, &value)) {
                         return false;
+                    }
                 } else if (!GetProperty(cx, obj, obj, id, &value)) {
                     return false;
                 }
             }
         } else {
-            if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
+            if (!GetOwnPropertyDescriptor(cx, obj, id, &desc)) {
                 return false;
+            }
 
             // Step 4.a.ii. (inverted.)
-            if (!desc.object() || !desc.enumerable())
+            if (!desc.object() || !desc.enumerable()) {
                 continue;
+            }
 
             // Step 4.a.ii.1.
             // (Omitted because Object.keys doesn't use this implementation.)
 
             // Step 4.a.ii.2.a.
-            if (!GetProperty(cx, obj, obj, id, &value))
+            if (!GetProperty(cx, obj, obj, id, &value)) {
                 return false;
+            }
         }
 
         // Steps 4.a.ii.2.b-c.
-        if (kind == EnumerableOwnPropertiesKind::Values)
+        if (kind == EnumerableOwnPropertiesKind::Values) {
             properties[out++].set(value);
-        else if (!NewValuePair(cx, key, value, properties[out++]))
+        } else if (!NewValuePair(cx, key, value, properties[out++])) {
             return false;
+        }
     }
 
     // Step 5.
@@ -1599,8 +1764,9 @@ EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args)
 
     // Step 3 of Object.{keys,values,entries}
     JSObject* aobj = NewDenseCopiedArray(cx, out, properties.begin());
-    if (!aobj)
+    if (!aobj) {
         return false;
+    }
 
     args.rval().setObject(*aobj);
     return true;
@@ -1615,20 +1781,25 @@ obj_keys(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1.
     RootedObject obj(cx, ToObject(cx, args.get(0)));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     bool optimized;
     static constexpr EnumerableOwnPropertiesKind kind = EnumerableOwnPropertiesKind::Keys;
-    if (!TryEnumerableOwnPropertiesNative<kind>(cx, obj, args.rval(), &optimized))
+    if (!TryEnumerableOwnPropertiesNative<kind>(cx, obj, args.rval(), &optimized)) {
         return false;
-    if (optimized)
+    }
+    if (optimized) {
         return true;
+    }
 
-    if (!TryEnumerableOwnPropertiesUnboxed<kind>(cx, obj, args.rval(), &optimized))
+    if (!TryEnumerableOwnPropertiesUnboxed<kind>(cx, obj, args.rval(), &optimized)) {
         return false;
-    if (optimized)
+    }
+    if (optimized) {
         return true;
+    }
 
     // Steps 2-3.
     return GetOwnPropertyKeys(cx, obj, JSITER_OWNONLY, args.rval());
@@ -1663,8 +1834,9 @@ js::obj_is(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool same;
-    if (!SameValue(cx, args.get(0), args.get(1), &same))
+    if (!SameValue(cx, args.get(0), args.get(1), &same)) {
         return false;
+    }
 
     args.rval().setBoolean(same);
     return true;
@@ -1675,8 +1847,9 @@ js::IdToStringOrSymbol(JSContext* cx, HandleId id, MutableHandleValue result)
 {
     if (JSID_IS_INT(id)) {
         JSString* str = Int32ToString<CanGC>(cx, JSID_TO_INT(id));
-        if (!str)
+        if (!str) {
             return false;
+        }
         result.setString(str);
     } else if (JSID_IS_ATOM(id)) {
         result.setString(JSID_TO_STRING(id));
@@ -1695,13 +1868,15 @@ js::GetOwnPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags, MutableH
 
     // Steps 2-4.
     AutoIdVector keys(cx);
-    if (!GetPropertyKeys(cx, obj, flags, &keys))
+    if (!GetPropertyKeys(cx, obj, flags, &keys)) {
         return false;
+    }
 
     // Step 5 (Inlined CreateArrayFromList).
     RootedArrayObject array(cx, NewDenseFullyAllocatedArray(cx, keys.length()));
-    if (!array)
+    if (!array) {
         return false;
+    }
 
     array->ensureDenseInitializedLength(cx, 0, keys.length());
 
@@ -1709,8 +1884,9 @@ js::GetOwnPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags, MutableH
     for (size_t i = 0, len = keys.length(); i < len; i++) {
         MOZ_ASSERT_IF(JSID_IS_SYMBOL(keys[i]), flags & JSITER_SYMBOLS);
         MOZ_ASSERT_IF(!JSID_IS_SYMBOL(keys[i]), !(flags & JSITER_SYMBOLSONLY));
-        if (!IdToStringOrSymbol(cx, keys[i], &val))
+        if (!IdToStringOrSymbol(cx, keys[i], &val)) {
             return false;
+        }
         array->initDenseElement(i, val);
     }
 
@@ -1726,20 +1902,25 @@ js::obj_getOwnPropertyNames(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedObject obj(cx, ToObject(cx, args.get(0)));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     bool optimized;
     static constexpr EnumerableOwnPropertiesKind kind = EnumerableOwnPropertiesKind::Names;
-    if (!TryEnumerableOwnPropertiesNative<kind>(cx, obj, args.rval(), &optimized))
+    if (!TryEnumerableOwnPropertiesNative<kind>(cx, obj, args.rval(), &optimized)) {
         return false;
-    if (optimized)
+    }
+    if (optimized) {
         return true;
+    }
 
-    if (!TryEnumerableOwnPropertiesUnboxed<kind>(cx, obj, args.rval(), &optimized))
+    if (!TryEnumerableOwnPropertiesUnboxed<kind>(cx, obj, args.rval(), &optimized)) {
         return false;
-    if (optimized)
+    }
+    if (optimized) {
         return true;
+    }
 
     return GetOwnPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, args.rval());
 }
@@ -1752,8 +1933,9 @@ obj_getOwnPropertySymbols(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedObject obj(cx, ToObject(cx, args.get(0)));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     return GetOwnPropertyKeys(cx, obj,
                               JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS | JSITER_SYMBOLSONLY,
@@ -1768,8 +1950,9 @@ obj_defineProperties(JSContext* cx, unsigned argc, Value* vp)
 
     /* Steps 1 and 7. */
     RootedObject obj(cx);
-    if (!GetFirstArgumentAsObject(cx, args, "Object.defineProperties", &obj))
+    if (!GetFirstArgumentAsObject(cx, args, "Object.defineProperties", &obj)) {
         return false;
+    }
     args.rval().setObject(*obj);
 
     /* Step 2. */
@@ -1791,8 +1974,9 @@ obj_preventExtensions(JSContext* cx, unsigned argc, Value* vp)
     args.rval().set(args.get(0));
 
     // Step 1.
-    if (!args.get(0).isObject())
+    if (!args.get(0).isObject()) {
         return true;
+    }
 
     // Steps 2-5.
     RootedObject obj(cx, &args.get(0).toObject());
@@ -1807,8 +1991,9 @@ obj_freeze(JSContext* cx, unsigned argc, Value* vp)
     args.rval().set(args.get(0));
 
     // Step 1.
-    if (!args.get(0).isObject())
+    if (!args.get(0).isObject()) {
         return true;
+    }
 
     // Steps 2-5.
     RootedObject obj(cx, &args.get(0).toObject());
@@ -1827,8 +2012,9 @@ obj_isFrozen(JSContext* cx, unsigned argc, Value* vp)
     // Step 2.
     if (args.get(0).isObject()) {
         RootedObject obj(cx, &args.get(0).toObject());
-        if (!TestIntegrityLevel(cx, obj, IntegrityLevel::Frozen, &frozen))
+        if (!TestIntegrityLevel(cx, obj, IntegrityLevel::Frozen, &frozen)) {
             return false;
+        }
     }
     args.rval().setBoolean(frozen);
     return true;
@@ -1842,8 +2028,9 @@ obj_seal(JSContext* cx, unsigned argc, Value* vp)
     args.rval().set(args.get(0));
 
     // Step 1.
-    if (!args.get(0).isObject())
+    if (!args.get(0).isObject()) {
         return true;
+    }
 
     // Steps 2-5.
     RootedObject obj(cx, &args.get(0).toObject());
@@ -1862,8 +2049,9 @@ obj_isSealed(JSContext* cx, unsigned argc, Value* vp)
     // Step 2.
     if (args.get(0).isObject()) {
         RootedObject obj(cx, &args.get(0).toObject());
-        if (!TestIntegrityLevel(cx, obj, IntegrityLevel::Sealed, &sealed))
+        if (!TestIntegrityLevel(cx, obj, IntegrityLevel::Sealed, &sealed)) {
             return false;
+        }
     }
     args.rval().setBoolean(sealed);
     return true;
@@ -1881,14 +2069,16 @@ ProtoGetter(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
 
-        if (!BoxNonStrictThis(cx, thisv, &thisv))
+        if (!BoxNonStrictThis(cx, thisv, &thisv)) {
             return false;
+        }
     }
 
     RootedObject obj(cx, &thisv.toObject());
     RootedObject proto(cx);
-    if (!GetPrototype(cx, obj, &proto))
+    if (!GetPrototype(cx, obj, &proto)) {
         return false;
+    }
 
     args.rval().setObjectOrNull(proto);
     return true;
@@ -1919,8 +2109,9 @@ ProtoSetter(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Rooted<JSObject*> newProto(cx, args[0].toObjectOrNull());
-    if (!SetPrototype(cx, obj, newProto))
+    if (!SetPrototype(cx, obj, newProto)) {
         return false;
+    }
 
     args.rval().setUndefined();
     return true;
@@ -1975,15 +2166,17 @@ static JSObject*
 CreateObjectConstructor(JSContext* cx, JSProtoKey key)
 {
     Rooted<GlobalObject*> self(cx, cx->global());
-    if (!GlobalObject::ensureConstructor(cx, self, JSProto_Function))
+    if (!GlobalObject::ensureConstructor(cx, self, JSProto_Function)) {
         return nullptr;
+    }
 
     /* Create the Object function now that we have a [[Prototype]] for it. */
     JSFunction *fun = NewNativeConstructor(cx, obj_construct, 1,
                                            HandlePropertyName(cx->names().Object),
                                            gc::AllocKind::FUNCTION, SingletonObject);
-    if (!fun)
+    if (!fun) {
         return nullptr;
+    }
 
     fun->setJitInfo(&jit::JitInfo_Object);
     return fun;
@@ -2001,12 +2194,14 @@ CreateObjectPrototype(JSContext* cx, JSProtoKey key)
      */
     RootedPlainObject objectProto(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr,
                                                                            SingletonObject));
-    if (!objectProto)
+    if (!objectProto) {
         return nullptr;
+    }
 
     bool succeeded;
-    if (!SetImmutablePrototype(cx, objectProto, &succeeded))
+    if (!SetImmutablePrototype(cx, objectProto, &succeeded)) {
         return nullptr;
+    }
     MOZ_ASSERT(succeeded,
                "should have been able to make a fresh Object.prototype's "
                "[[Prototype]] immutable");
@@ -2017,8 +2212,9 @@ CreateObjectPrototype(JSContext* cx, JSProtoKey key)
      * objects in JSON and script literals.
      */
     ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
-    if (!JSObject::setNewGroupUnknown(cx, realm, &PlainObject::class_, objectProto))
+    if (!JSObject::setNewGroupUnknown(cx, realm, &PlainObject::class_, objectProto)) {
         return nullptr;
+    }
 
     return objectProto;
 }
@@ -2031,8 +2227,9 @@ FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor, JS::HandleObject pro
     /* ES5 15.1.2.1. */
     RootedId evalId(cx, NameToId(cx->names().eval));
     JSObject* evalobj = DefineFunction(cx, global, evalId, IndirectEval, 1, JSPROP_RESOLVING);
-    if (!evalobj)
+    if (!evalobj) {
         return false;
+    }
     global->setOriginalEval(evalobj);
 
 #ifdef FUZZING
@@ -2046,8 +2243,9 @@ FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor, JS::HandleObject pro
 #endif
 
     Rooted<NativeObject*> holder(cx, GlobalObject::getIntrinsicsHolder(cx, global));
-    if (!holder)
+    if (!holder) {
         return false;
+    }
 
     /*
      * The global object should have |Object.prototype| as its [[Prototype]].
@@ -2059,8 +2257,9 @@ FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor, JS::HandleObject pro
      */
     Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
     if (global->shouldSplicePrototype()) {
-        if (!JSObject::splicePrototype(cx, global, global->getClass(), tagged))
+        if (!JSObject::splicePrototype(cx, global, global->getClass(), tagged)) {
             return false;
+        }
     }
     return true;
 }

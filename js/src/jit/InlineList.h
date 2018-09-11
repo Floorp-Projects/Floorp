@@ -99,8 +99,9 @@ class InlineForwardList : protected InlineForwardListNode<T>
 #ifdef DEBUG
         modifyCount_++;
 #endif
-        if (at == tail_)
+        if (at == tail_) {
             tail_ = item;
+        }
         item->next = at->next;
         at->next = item;
     }
@@ -108,8 +109,9 @@ class InlineForwardList : protected InlineForwardListNode<T>
 #ifdef DEBUG
         modifyCount_++;
 #endif
-        if (item == tail_)
+        if (item == tail_) {
             tail_ = at;
+        }
         MOZ_ASSERT(at->next == item);
         at->next = item->next;
         item->next = nullptr;
@@ -120,18 +122,21 @@ class InlineForwardList : protected InlineForwardListNode<T>
         // the list.
         Node* item = where.iter;
         where.iter = item->next;
-        if (item == tail_)
+        if (item == tail_) {
             tail_ = where.prev;
+        }
         MOZ_ASSERT(where.prev->next == item);
         where.prev->next = where.iter;
         item->next = nullptr;
     }
     void splitAfter(Node* at, InlineForwardList<T>* to) {
         MOZ_ASSERT(to->empty());
-        if (!at)
+        if (!at) {
             at = this;
-        if (at == tail_)
+        }
+        if (at == tail_) {
             return;
+        }
 #ifdef DEBUG
         modifyCount_++;
 #endif

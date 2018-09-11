@@ -41,8 +41,9 @@ MarkAtoms(JSContext* cx, jsid id)
 static bool
 MarkAtoms(JSContext* cx, const AutoIdVector& ids)
 {
-    for (size_t i = 0; i < ids.length(); i++)
+    for (size_t i = 0; i < ids.length(); i++) {
         cx->markId(ids[i]);
+    }
     return true;
 }
 
@@ -105,11 +106,13 @@ CrossCompartmentWrapper::getPrototype(JSContext* cx, HandleObject wrapper,
     {
         RootedObject wrapped(cx, wrappedObject(wrapper));
         AutoRealm call(cx, wrapped);
-        if (!GetPrototype(cx, wrapped, protop))
+        if (!GetPrototype(cx, wrapped, protop)) {
             return false;
+        }
         if (protop) {
-            if (!JSObject::setDelegate(cx, protop))
+            if (!JSObject::setDelegate(cx, protop)) {
                 return false;
+            }
         }
     }
 
@@ -134,15 +137,18 @@ CrossCompartmentWrapper::getPrototypeIfOrdinary(JSContext* cx, HandleObject wrap
     {
         RootedObject wrapped(cx, wrappedObject(wrapper));
         AutoRealm call(cx, wrapped);
-        if (!GetPrototypeIfOrdinary(cx, wrapped, isOrdinary, protop))
+        if (!GetPrototypeIfOrdinary(cx, wrapped, isOrdinary, protop)) {
             return false;
+        }
 
-        if (!*isOrdinary)
+        if (!*isOrdinary) {
             return true;
+        }
 
         if (protop) {
-            if (!JSObject::setDelegate(cx, protop))
+            if (!JSObject::setDelegate(cx, protop)) {
                 return false;
+            }
         }
     }
 
@@ -222,11 +228,13 @@ CrossCompartmentWrapper::get(JSContext* cx, HandleObject wrapper, HandleValue re
     RootedValue receiverCopy(cx, receiver);
     {
         AutoRealm call(cx, wrappedObject(wrapper));
-        if (!MarkAtoms(cx, id) || !WrapReceiver(cx, wrapper, &receiverCopy))
+        if (!MarkAtoms(cx, id) || !WrapReceiver(cx, wrapper, &receiverCopy)) {
             return false;
+        }
 
-        if (!Wrapper::get(cx, wrapper, receiverCopy, id, vp))
+        if (!Wrapper::get(cx, wrapper, receiverCopy, id, vp)) {
             return false;
+        }
     }
     return cx->compartment()->wrap(cx, vp);
 }
@@ -277,21 +285,24 @@ Reify(JSContext* cx, JS::Compartment* origin, HandleObject iter)
     RootedObject obj(cx, ni->objectBeingIterated());
 
     // Wrap iteratee.
-    if (!origin->wrap(cx, &obj))
+    if (!origin->wrap(cx, &obj)) {
         return nullptr;
+    }
 
     // Wrap the elements in the iterator's snapshot.
     size_t length = ni->numKeys();
     AutoIdVector keys(cx);
     if (length > 0) {
-        if (!keys.reserve(length))
+        if (!keys.reserve(length)) {
             return nullptr;
+        }
         RootedId id(cx);
         RootedValue v(cx);
         for (size_t i = 0; i < length; ++i) {
             v.setString(ni->propertiesBegin()[i]);
-            if (!ValueToId<CanGC>(cx, v, &id))
+            if (!ValueToId<CanGC>(cx, v, &id)) {
                 return nullptr;
+            }
             cx->markId(id);
             keys.infallibleAppend(id);
         }
@@ -308,14 +319,17 @@ CrossCompartmentWrapper::enumerate(JSContext* cx, HandleObject wrapper) const
     {
         AutoRealm call(cx, wrappedObject(wrapper));
         res = Wrapper::enumerate(cx, wrapper);
-        if (!res)
+        if (!res) {
             return nullptr;
+        }
     }
 
-    if (CanReify(res))
+    if (CanReify(res)) {
         return Reify(cx, cx->compartment(), res);
-    if (!cx->compartment()->wrap(cx, &res))
+    }
+    if (!cx->compartment()->wrap(cx, &res)) {
         return nullptr;
+    }
     return res;
 }
 
@@ -328,16 +342,19 @@ CrossCompartmentWrapper::call(JSContext* cx, HandleObject wrapper, const CallArg
         AutoRealm call(cx, wrapped);
 
         args.setCallee(ObjectValue(*wrapped));
-        if (!cx->compartment()->wrap(cx, args.mutableThisv()))
+        if (!cx->compartment()->wrap(cx, args.mutableThisv())) {
             return false;
-
-        for (size_t n = 0; n < args.length(); ++n) {
-            if (!cx->compartment()->wrap(cx, args[n]))
-                return false;
         }
 
-        if (!Wrapper::call(cx, wrapper, args))
+        for (size_t n = 0; n < args.length(); ++n) {
+            if (!cx->compartment()->wrap(cx, args[n])) {
+                return false;
+            }
+        }
+
+        if (!Wrapper::call(cx, wrapper, args)) {
             return false;
+        }
     }
 
     return cx->compartment()->wrap(cx, args.rval());
@@ -351,13 +368,16 @@ CrossCompartmentWrapper::construct(JSContext* cx, HandleObject wrapper, const Ca
         AutoRealm call(cx, wrapped);
 
         for (size_t n = 0; n < args.length(); ++n) {
-            if (!cx->compartment()->wrap(cx, args[n]))
+            if (!cx->compartment()->wrap(cx, args[n])) {
                 return false;
+            }
         }
-        if (!cx->compartment()->wrap(cx, args.newTarget()))
+        if (!cx->compartment()->wrap(cx, args.newTarget())) {
             return false;
-        if (!Wrapper::construct(cx, wrapper, args))
+        }
+        if (!Wrapper::construct(cx, wrapper, args)) {
             return false;
+        }
     }
     return cx->compartment()->wrap(cx, args.rval());
 }
@@ -374,8 +394,9 @@ CrossCompartmentWrapper::nativeCall(JSContext* cx, IsAcceptableThis test, Native
     {
         AutoRealm call(cx, wrapped);
         InvokeArgs dstArgs(cx);
-        if (!dstArgs.init(cx, srcArgs.length()))
+        if (!dstArgs.init(cx, srcArgs.length())) {
             return false;
+        }
 
         Value* src = srcArgs.base();
         Value* srcend = srcArgs.array() + srcArgs.length();
@@ -384,8 +405,9 @@ CrossCompartmentWrapper::nativeCall(JSContext* cx, IsAcceptableThis test, Native
         RootedValue source(cx);
         for (; src < srcend; ++src, ++dst) {
             source = *src;
-            if (!cx->compartment()->wrap(cx, &source))
+            if (!cx->compartment()->wrap(cx, &source)) {
                 return false;
+            }
             *dst = source.get();
 
             // Handle |this| specially. When we rewrap on the other side of the
@@ -403,8 +425,9 @@ CrossCompartmentWrapper::nativeCall(JSContext* cx, IsAcceptableThis test, Native
             }
         }
 
-        if (!CallNonGenericMethod(cx, test, impl, dstArgs))
+        if (!CallNonGenericMethod(cx, test, impl, dstArgs)) {
             return false;
+        }
 
         srcArgs.rval().set(dstArgs.rval());
     }
@@ -416,8 +439,9 @@ CrossCompartmentWrapper::hasInstance(JSContext* cx, HandleObject wrapper, Mutabl
                                      bool* bp) const
 {
     AutoRealm call(cx, wrappedObject(wrapper));
-    if (!cx->compartment()->wrap(cx, v))
+    if (!cx->compartment()->wrap(cx, v)) {
         return false;
+    }
     return Wrapper::hasInstance(cx, wrapper, v, bp);
 }
 
@@ -435,11 +459,13 @@ CrossCompartmentWrapper::fun_toString(JSContext* cx, HandleObject wrapper, bool 
     {
         AutoRealm call(cx, wrappedObject(wrapper));
         str = Wrapper::fun_toString(cx, wrapper, isToSource);
-        if (!str)
+        if (!str) {
             return nullptr;
+        }
     }
-    if (!cx->compartment()->wrap(cx, &str))
+    if (!cx->compartment()->wrap(cx, &str)) {
         return nullptr;
+    }
     return str;
 }
 
@@ -450,8 +476,9 @@ CrossCompartmentWrapper::regexp_toShared(JSContext* cx, HandleObject wrapper) co
     {
         AutoRealm call(cx, wrappedObject(wrapper));
         re = Wrapper::regexp_toShared(cx, wrapper);
-        if (!re)
+        if (!re) {
             return nullptr;
+        }
     }
 
     // Get an equivalent RegExpShared associated with the current compartment.
@@ -488,8 +515,9 @@ js::NukeCrossCompartmentWrapper(JSContext* cx, JSObject* wrapper)
 {
     JS::Compartment* comp = wrapper->compartment();
     auto ptr = comp->lookupWrapper(Wrapper::wrappedObject(wrapper));
-    if (ptr)
+    if (ptr) {
         comp->removeWrapper(ptr);
+    }
     NukeRemovedCrossCompartmentWrapper(cx, wrapper);
 }
 
@@ -512,8 +540,9 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
     JSRuntime* rt = cx->runtime();
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (!sourceFilter.match(c))
+        if (!sourceFilter.match(c)) {
             continue;
+        }
 
         // If the compartment matches both the source and target filter, we may
         // want to cut both incoming and outgoing wrappers.
@@ -526,17 +555,19 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
         // compartment nullptr. Use Maybe to avoid copying from conditionally
         // initializing NonStringWrapperEnum.
         mozilla::Maybe<Compartment::NonStringWrapperEnum> e;
-        if (MOZ_LIKELY(!nukeAll))
+        if (MOZ_LIKELY(!nukeAll)) {
             e.emplace(c, target);
-        else
+        } else {
             e.emplace(c);
+        }
         for (; !e->empty(); e->popFront()) {
             // Skip debugger references because NukeCrossCompartmentWrapper()
             // doesn't know how to nuke them yet, see bug 1084626 for more
             // information.
             const CrossCompartmentKey& k = e->front().key();
-            if (!k.is<JSObject*>())
+            if (!k.is<JSObject*>()) {
                 continue;
+            }
 
             AutoWrapperRooter wobj(cx, WrapperValue(*e));
 
@@ -616,8 +647,9 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     // the choice to reuse |wobj| or not.
     RootedObject tobj(cx, newTarget);
     AutoRealmUnchecked ar(cx, wrealm);
-    if (!wcompartment->rewrap(cx, &tobj, wobj))
+    if (!wcompartment->rewrap(cx, &tobj, wobj)) {
         MOZ_CRASH();
+    }
 
     // If wrap() reused |wobj|, it will have overwritten it and returned with
     // |tobj == wobj|. Otherwise, |tobj| will point to a new wrapper and |wobj|
@@ -627,8 +659,9 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
         // Now, because we need to maintain object identity, we do a brain
         // transplant on the old object so that it contains the contents of the
         // new one.
-        if (!JSObject::swap(cx, wobj, tobj))
+        if (!JSObject::swap(cx, wobj, tobj)) {
             MOZ_CRASH();
+        }
     }
 
     // Before swapping, this wrapper came out of wrap(), which enforces the
@@ -638,8 +671,9 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     // Update the entry in the compartment's wrapper map to point to the old
     // wrapper, which has now been updated (via reuse or swap).
     MOZ_ASSERT(wobj->is<WrapperObject>());
-    if (!wcompartment->putWrapper(cx, CrossCompartmentKey(newTarget), ObjectValue(*wobj)))
+    if (!wcompartment->putWrapper(cx, CrossCompartmentKey(newTarget), ObjectValue(*wobj))) {
         MOZ_CRASH();
+    }
 }
 
 // Remap all cross-compartment wrappers pointing to |oldTarget| to point to
@@ -659,13 +693,15 @@ js::RemapAllWrappersForObject(JSContext* cx, JSObject* oldTargetArg,
     for (CompartmentsIter c(cx->runtime()); !c.done(); c.next()) {
         if (WrapperMap::Ptr wp = c->lookupWrapper(origv)) {
             // We found a wrapper. Remember and root it.
-            if (!toTransplant.append(WrapperValue(wp)))
+            if (!toTransplant.append(WrapperValue(wp))) {
                 return false;
+            }
         }
     }
 
-    for (const WrapperValue& v : toTransplant)
+    for (const WrapperValue& v : toTransplant) {
         RemapWrapper(cx, &v.toObject(), newTarget);
+    }
 
     return true;
 }
@@ -679,8 +715,9 @@ js::RecomputeWrappers(JSContext* cx, const CompartmentFilter& sourceFilter,
     AutoWrapperVector toRecompute(cx);
     for (CompartmentsIter c(cx->runtime()); !c.done(); c.next()) {
         // Filter by source compartment.
-        if (!sourceFilter.match(c))
+        if (!sourceFilter.match(c)) {
             continue;
+        }
 
         if (!evictedNursery && c->hasNurseryAllocatedWrapperEntries(targetFilter)) {
             cx->runtime()->gc.evictNursery();
@@ -691,12 +728,14 @@ js::RecomputeWrappers(JSContext* cx, const CompartmentFilter& sourceFilter,
         for (Compartment::NonStringWrapperEnum e(c, targetFilter); !e.empty(); e.popFront()) {
             // Filter out non-objects.
             CrossCompartmentKey& k = e.front().mutableKey();
-            if (!k.is<JSObject*>())
+            if (!k.is<JSObject*>()) {
                 continue;
+            }
 
             // Add it to the list.
-            if (!toRecompute.append(WrapperValue(e)))
+            if (!toRecompute.append(WrapperValue(e))) {
                 return false;
+            }
         }
     }
 

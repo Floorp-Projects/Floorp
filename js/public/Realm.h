@@ -25,8 +25,9 @@ template <>
 struct GCPolicy<Realm*> : public NonGCPointerPolicy<Realm*>
 {
     static void trace(JSTracer* trc, Realm** vp, const char* name) {
-        if (*vp)
+        if (*vp) {
             ::js::gc::TraceRealm(trc, *vp, name);
+        }
     }
     static bool needsSweep(Realm** vp) {
         return *vp && ::js::gc::RealmNeedsSweep(*vp);

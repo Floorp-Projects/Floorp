@@ -227,9 +227,6 @@ static char* androidUserSerial = nullptr;
 // Before Android 8 we needed to use "startservice" to start the crash reporting service.
 // After Android 8 we need to use "start-foreground-service"
 static const char* androidStartServiceCommand = nullptr;
-// After targeting API 26 (Oreo) we ned to use a JobIntentService for the background
-// work regarding crash reporting. That Service needs a unique Job Id.
-static const char* androidCrashReporterJobId = nullptr;
 #endif
 
 // this holds additional data sent via the API
@@ -838,35 +835,43 @@ LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath)
  */
 
 static bool
-LaunchCrashReporterActivity(XP_CHAR* aProgramPath, XP_CHAR* aMinidumpPath,
-                            bool aSucceeded)
+LaunchCrashHandlerService(XP_CHAR* aProgramPath, XP_CHAR* aMinidumpPath,
+                          bool aSucceeded)
 {
+  static XP_CHAR extrasPath[XP_PATH_MAX];
+  size_t size = XP_PATH_MAX;
+
+  XP_CHAR* p = Concat(extrasPath, aMinidumpPath, &size);
+  p = Concat(p - 3, "extra", &size);
+
   pid_t pid = sys_fork();
 
   if (pid == -1)
     return false;
   else if (pid == 0) {
-    // Invoke the reportCrash activity using am
+    // Invoke the crash handler service using am
     if (androidUserSerial) {
       Unused << execlp("/system/bin/am",
                        "/system/bin/am",
                        androidStartServiceCommand,
                        "--user", androidUserSerial,
-                       "-a", "org.mozilla.gecko.reportCrash",
+                       "-a", "org.mozilla.gecko.ACTION_CRASHED",
                        "-n", aProgramPath,
                        "--es", "minidumpPath", aMinidumpPath,
-                       "--ei", "jobId", androidCrashReporterJobId,
+                       "--es", "extrasPath", extrasPath,
                        "--ez", "minidumpSuccess", aSucceeded ? "true" : "false",
+                       "--ez", "fatal", "true",
                        (char*)0);
     } else {
       Unused << execlp("/system/bin/am",
                        "/system/bin/am",
                        androidStartServiceCommand,
-                       "-a", "org.mozilla.gecko.reportCrash",
+                       "-a", "org.mozilla.gecko.ACTION_CRASHED",
                        "-n", aProgramPath,
                        "--es", "minidumpPath", aMinidumpPath,
-                       "--ei", "jobId", androidCrashReporterJobId,
+                       "--es", "extrasPath", extrasPath,
                        "--ez", "minidumpSuccess", aSucceeded ? "true" : "false",
+                       "--ez", "fatal", "true",
                        (char*)0);
     }
     _exit(1);
@@ -1132,8 +1137,8 @@ MinidumpCallback(
   }
 
 #if defined(MOZ_WIDGET_ANDROID) // Android
-  returnValue = LaunchCrashReporterActivity(crashReporterPath, minidumpPath,
-                                            succeeded);
+  returnValue = LaunchCrashHandlerService(crashReporterPath, minidumpPath,
+                                          succeeded);
 #else // Windows, Mac, Linux, etc...
   returnValue = LaunchProgram(crashReporterPath, minidumpPath);
 #ifdef XP_WIN
@@ -1551,17 +1556,12 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #endif
 #endif // XP_WIN32
 #else
-  // On Android, we launch using the application package name instead of a
-  // filename, so use the dynamically set MOZ_ANDROID_PACKAGE_NAME, or fall
-  // back to the static ANDROID_PACKAGE_NAME.
-  const char* androidPackageName = PR_GetEnv("MOZ_ANDROID_PACKAGE_NAME");
-  if (androidPackageName != nullptr) {
-    nsCString package(androidPackageName);
-    package.AppendLiteral("/org.mozilla.gecko.CrashReporterService");
-    crashReporterPath = ToNewCString(package);
+  // On Android, we launch a service defined via MOZ_ANDROID_CRASH_HANDLER
+  const char* androidCrashHandler = PR_GetEnv("MOZ_ANDROID_CRASH_HANDLER");
+  if (androidCrashHandler) {
+    crashReporterPath = strdup(androidCrashHandler);
   } else {
-    nsCString package(ANDROID_PACKAGE_NAME "/org.mozilla.gecko.CrashReporterService");
-    crashReporterPath = ToNewCString(package);
+    NS_WARNING("No Android crash handler set");
   }
 
   const char *deviceAndroidVersion = PR_GetEnv("MOZ_ANDROID_DEVICE_SDK_VERSION");
@@ -1572,11 +1572,6 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
     } else {
       androidStartServiceCommand = (char*)"startservice";
     }
-  }
-
-  const char *crashReporterJobId = PR_GetEnv("MOZ_ANDROID_CRASH_REPORTER_JOB_ID");
-  if (crashReporterJobId != nullptr) {
-    androidCrashReporterJobId = crashReporterJobId;
   }
 #endif // !defined(MOZ_WIDGET_ANDROID)
 

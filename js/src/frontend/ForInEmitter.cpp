@@ -41,27 +41,32 @@ ForInEmitter::emitInitialize()
     MOZ_ASSERT(state_ == State::Iterated);
     tdzCacheForIteratedValue_.reset();
 
-    if (!bce_->emit1(JSOP_ITER))                      // ITER
+    if (!bce_->emit1(JSOP_ITER)) {                    // ITER
         return false;
+    }
 
     // For-in loops have both the iterator and the value on the stack. Push
     // undefined to balance the stack.
-    if (!bce_->emit1(JSOP_UNDEFINED))                 // ITER ITERVAL
+    if (!bce_->emit1(JSOP_UNDEFINED)) {               // ITER ITERVAL
         return false;
+    }
 
     loopInfo_.emplace(bce_, StatementKind::ForInLoop);
 
     // Annotate so IonMonkey can find the loop-closing jump.
-    if (!bce_->newSrcNote(SRC_FOR_IN, &noteIndex_))
+    if (!bce_->newSrcNote(SRC_FOR_IN, &noteIndex_)) {
         return false;
+    }
 
     // Jump down to the loop condition to minimize overhead (assuming at
     // least one iteration, just like the other loop forms).
-    if (!loopInfo_->emitEntryJump(bce_))              // ITER ITERVAL
+    if (!loopInfo_->emitEntryJump(bce_)) {            // ITER ITERVAL
         return false;
+    }
 
-    if (!loopInfo_->emitLoopHead(bce_, Nothing()))    // ITER ITERVAL
+    if (!loopInfo_->emitLoopHead(bce_, Nothing())) {  // ITER ITERVAL
         return false;
+    }
 
     // If the loop had an escaping lexical declaration, reset the declaration's
     // bindings to uninitialized to implement TDZ semantics.
@@ -76,13 +81,15 @@ ForInEmitter::emitInitialize()
         MOZ_ASSERT(headLexicalEmitterScope_->scope(bce_)->kind() == ScopeKind::Lexical);
 
         if (headLexicalEmitterScope_->hasEnvironment()) {
-            if (!bce_->emit1(JSOP_RECREATELEXICALENV))
+            if (!bce_->emit1(JSOP_RECREATELEXICALENV)) {
                 return false;                         // ITER ITERVAL
+            }
         }
 
         // For uncaptured bindings, put them back in TDZ.
-        if (!headLexicalEmitterScope_->deadZoneFrameSlots(bce_))
+        if (!headLexicalEmitterScope_->deadZoneFrameSlots(bce_)) {
             return false;
+        }
     }
 
 #ifdef DEBUG
@@ -90,8 +97,9 @@ ForInEmitter::emitInitialize()
 #endif
     MOZ_ASSERT(loopDepth_ >= 2);
 
-    if (!bce_->emit1(JSOP_ITERNEXT))                  // ITER ITERVAL
+    if (!bce_->emit1(JSOP_ITERNEXT)) {                // ITER ITERVAL
         return false;
+    }
 
 #ifdef DEBUG
     state_ = State::Initialize;
@@ -122,21 +130,27 @@ ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos)
 
     if (forPos) {
         // Make sure this code is attributed to the "for".
-        if (!bce_->updateSourceCoordNotes(*forPos))
+        if (!bce_->updateSourceCoordNotes(*forPos)) {
             return false;
+        }
     }
 
-    if (!loopInfo_->emitLoopEntry(bce_, Nothing()))   // ITER ITERVAL
+    if (!loopInfo_->emitLoopEntry(bce_, Nothing())) { // ITER ITERVAL
         return false;
-    if (!bce_->emit1(JSOP_POP))                       // ITER
+    }
+    if (!bce_->emit1(JSOP_POP)) {                     // ITER
         return false;
-    if (!bce_->emit1(JSOP_MOREITER))                  // ITER NEXTITERVAL?
+    }
+    if (!bce_->emit1(JSOP_MOREITER)) {                // ITER NEXTITERVAL?
         return false;
-    if (!bce_->emit1(JSOP_ISNOITER))                  // ITER NEXTITERVAL? ISNOITER
+    }
+    if (!bce_->emit1(JSOP_ISNOITER)) {                // ITER NEXTITERVAL? ISNOITER
         return false;
+    }
 
-    if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFEQ))     // ITER NEXTITERVAL
+    if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFEQ)) {   // ITER NEXTITERVAL
         return false;
+    }
 
     // Set the srcnote offset so we can find the closing jump.
     if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::ForIn::BackJumpOffset,
@@ -145,12 +159,14 @@ ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos)
         return false;
     }
 
-    if (!loopInfo_->patchBreaksAndContinues(bce_))
+    if (!loopInfo_->patchBreaksAndContinues(bce_)) {
         return false;
+    }
 
     // Pop the enumeration value.
-    if (!bce_->emit1(JSOP_POP))                       // ITER
+    if (!bce_->emit1(JSOP_POP)) {                     // ITER
         return false;
+    }
 
     if (!bce_->tryNoteList.append(JSTRY_FOR_IN, bce_->stackDepth, loopInfo_->headOffset(),
                                   bce_->offset()))
@@ -158,8 +174,9 @@ ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos)
         return false;
     }
 
-    if (!bce_->emit1(JSOP_ENDITER))                   //
+    if (!bce_->emit1(JSOP_ENDITER)) {                 //
         return false;
+    }
 
     loopInfo_.reset();
 

@@ -184,8 +184,9 @@ class Nursery
     MOZ_ALWAYS_INLINE bool isInside(gc::Cell* cellp) const = delete;
     MOZ_ALWAYS_INLINE bool isInside(const void* p) const {
         for (auto chunk : chunks_) {
-            if (uintptr_t(p) - uintptr_t(chunk) < gc::ChunkSize)
+            if (uintptr_t(p) - uintptr_t(chunk) < gc::ChunkSize) {
                 return true;
+            }
         }
         return false;
     }
@@ -291,8 +292,9 @@ class Nursery
     }
     size_t sizeOfMallocedBuffers(mozilla::MallocSizeOf mallocSizeOf) const {
         size_t total = 0;
-        for (MallocedBuffersSet::Range r = mallocedBuffers.all(); !r.empty(); r.popFront())
+        for (MallocedBuffersSet::Range r = mallocedBuffers.all(); !r.empty(); r.popFront()) {
             total += mallocSizeOf(r.front());
+        }
         total += mallocedBuffers.shallowSizeOfExcludingThis(mallocSizeOf);
         return total;
     }

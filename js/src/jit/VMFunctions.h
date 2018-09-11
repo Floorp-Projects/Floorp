@@ -667,8 +667,9 @@ class AutoDetectInvalidation
     }
 
     ~AutoDetectInvalidation() {
-        if (MOZ_UNLIKELY(shouldSetReturnOverride()))
+        if (MOZ_UNLIKELY(shouldSetReturnOverride())) {
             setReturnOverride();
+        }
     }
 };
 

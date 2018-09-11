@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import buildconfig
 import os
 import unittest
 from mozunit import main
@@ -37,7 +38,7 @@ class TestPartial(unittest.TestCase):
         os.environ.update(self._old_env)
 
     def _objdir(self):
-        objdir = mkdtemp()
+        objdir = mkdtemp(dir=buildconfig.topsrcdir)
         self.addCleanup(rmtree, objdir)
         return objdir
 

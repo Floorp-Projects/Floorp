@@ -145,11 +145,13 @@ class IndirectBindingMap
 
     template <typename Func>
     void forEachExportedName(Func func) const {
-        if (!map_)
+        if (!map_) {
             return;
+        }
 
-        for (auto r = map_->all(); !r.empty(); r.popFront())
+        for (auto r = map_->all(); !r.empty(); r.popFront()) {
             func(r.front().key());
+        }
     }
 
   private:

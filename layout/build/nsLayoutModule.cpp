@@ -58,7 +58,6 @@
 #include "nsContentCreatorFunctions.h"
 
 #include "nsGlobalWindowCommands.h"
-#include "nsIControllerCommandTable.h"
 #include "nsJSProtocolHandler.h"
 #include "nsIControllerContext.h"
 #include "nsZipArchive.h"
@@ -113,10 +112,6 @@ class nsIDocumentLoaderFactory;
 #define NS_PLUGINDOCLOADERFACTORY_CID \
 { 0x0ddf4df8, 0x4dbb, 0x4133, { 0x8b, 0x79, 0x9a, 0xfb, 0x96, 0x65, 0x14, 0xf5 } }
 
-#define NS_WINDOWCOMMANDTABLE_CID \
- { /* 0DE2FBFA-6B7F-11D7-BBBA-0003938A9D96 */        \
-  0x0DE2FBFA, 0x6B7F, 0x11D7, {0xBB, 0xBA, 0x00, 0x03, 0x93, 0x8A, 0x9D, 0x96} }
-
 #include "inDeepTreeWalker.h"
 
 #ifdef MOZ_XUL
@@ -150,6 +145,7 @@ static void Shutdown();
 
 #include "nsScriptError.h"
 #include "nsBaseCommandController.h"
+#include "nsControllerCommandTable.h"
 
 #include "mozilla/TextInputProcessor.h"
 
@@ -159,14 +155,6 @@ using namespace mozilla::net;
 using mozilla::dom::power::PowerManagerService;
 using mozilla::dom::quota::QuotaManagerService;
 using mozilla::gmp::GeckoMediaPluginService;
-
-#define NS_EDITORCOMMANDTABLE_CID \
-{ 0x4f5e62b8, 0xd659, 0x4156, \
-  { 0x84, 0xfc, 0x2f, 0x60, 0x99, 0x40, 0x03, 0x69 } }
-
-#define NS_EDITINGCOMMANDTABLE_CID \
-{ 0xcb38a746, 0xbeb8, 0x43f3, \
-  { 0x94, 0x29, 0x77, 0x96, 0xe1, 0xa9, 0x3f, 0xb4 } }
 
 #define NS_HAPTICFEEDBACK_CID \
 { 0x1f15dbc8, 0xbfaa, 0x45de, \
@@ -486,8 +474,6 @@ NS_DEFINE_NAMED_CID(NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_JSPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_JSURI_CID);
 NS_DEFINE_NAMED_CID(NS_JSURIMUTATOR_CID);
-NS_DEFINE_NAMED_CID(NS_WINDOWCOMMANDTABLE_CID);
-NS_DEFINE_NAMED_CID(NS_WINDOWCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_PLUGINDOCLOADERFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_PLUGINDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_VIDEODOCUMENT_CID);
@@ -504,10 +490,6 @@ NS_DEFINE_NAMED_CID(STORAGEACTIVITYSERVICE_CID);
 NS_DEFINE_NAMED_CID(NOTIFICATIONTELEMETRYSERVICE_CID);
 NS_DEFINE_NAMED_CID(PUSHNOTIFIER_CID);
 NS_DEFINE_NAMED_CID(WORKERDEBUGGERMANAGER_CID);
-NS_DEFINE_NAMED_CID(NS_EDITORCONTROLLER_CID);
-NS_DEFINE_NAMED_CID(NS_EDITINGCONTROLLER_CID);
-NS_DEFINE_NAMED_CID(NS_EDITORCOMMANDTABLE_CID);
-NS_DEFINE_NAMED_CID(NS_EDITINGCOMMANDTABLE_CID);
 NS_DEFINE_NAMED_CID(NS_GEOLOCATION_CID);
 NS_DEFINE_NAMED_CID(NS_WEBSOCKETEVENT_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_FOCUSMANAGER_CID);
@@ -555,128 +537,6 @@ NS_DEFINE_NAMED_CID(TEXT_INPUT_PROCESSOR_CID);
 
 NS_DEFINE_NAMED_CID(NS_SCRIPTERROR_CID);
 
-static nsresult
-CreateWindowCommandTableConstructor(nsISupports *aOuter,
-                                    REFNSIID aIID, void **aResult)
-{
-  nsresult rv;
-  nsCOMPtr<nsIControllerCommandTable> commandTable =
-      do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = nsWindowCommandRegistration::RegisterWindowCommands(commandTable);
-  if (NS_FAILED(rv)) return rv;
-
-  return commandTable->QueryInterface(aIID, aResult);
-}
-
-static nsresult
-CreateWindowControllerWithSingletonCommandTable(nsISupports *aOuter,
-                                      REFNSIID aIID, void **aResult)
-{
-  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
-
-  nsresult rv;
-  nsCOMPtr<nsIControllerCommandTable> windowCommandTable = do_GetService(kNS_WINDOWCOMMANDTABLE_CID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  // this is a singleton; make it immutable
-  windowCommandTable->MakeImmutable();
-
-  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  controllerContext->Init(windowCommandTable);
-  if (NS_FAILED(rv)) return rv;
-
-  return controller->QueryInterface(aIID, aResult);
-}
-
-// Constructor of a controller which is set up to use, internally, a
-// singleton command-table pre-filled with editor commands.
-static nsresult
-EditorControllerConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
-
-  nsresult rv;
-  nsCOMPtr<nsIControllerCommandTable> editorCommandTable = do_GetService(kNS_EDITORCOMMANDTABLE_CID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  // this guy is a singleton, so make it immutable
-  editorCommandTable->MakeImmutable();
-
-  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = controllerContext->Init(editorCommandTable);
-  if (NS_FAILED(rv)) return rv;
-
-  return controller->QueryInterface(aIID, aResult);
-}
-
-// Constructor of a controller which is set up to use, internally, a
-// singleton command-table pre-filled with editing commands.
-static nsresult
-nsEditingControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
-                                void **aResult)
-{
-  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
-
-  nsresult rv;
-  nsCOMPtr<nsIControllerCommandTable> editingCommandTable = do_GetService(kNS_EDITINGCOMMANDTABLE_CID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  // this guy is a singleton, so make it immutable
-  editingCommandTable->MakeImmutable();
-
-  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = controllerContext->Init(editingCommandTable);
-  if (NS_FAILED(rv)) return rv;
-
-  return controller->QueryInterface(aIID, aResult);
-}
-
-// Constructor for a command-table pre-filled with editor commands
-static nsresult
-nsEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
-                                            void **aResult)
-{
-  nsresult rv;
-  nsCOMPtr<nsIControllerCommandTable> commandTable =
-      do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = EditorController::RegisterEditorCommands(commandTable);
-  if (NS_FAILED(rv)) return rv;
-
-  // we don't know here whether we're being created as an instance,
-  // or a service, so we can't become immutable
-
-  return commandTable->QueryInterface(aIID, aResult);
-}
-
-// Constructor for a command-table pre-filled with editing commands
-static nsresult
-nsEditingCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
-                                              void **aResult)
-{
-  nsresult rv;
-  nsCOMPtr<nsIControllerCommandTable> commandTable =
-      do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = EditorController::RegisterEditingCommands(commandTable);
-  if (NS_FAILED(rv)) return rv;
-
-  // we don't know here whether we're being created as an instance,
-  // or a service, so we can't become immutable
-
-  return commandTable->QueryInterface(aIID, aResult);
-}
-
 static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   XPCONNECT_CIDENTRIES
 #ifdef DEBUG
@@ -709,8 +569,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_JSPROTOCOLHANDLER_CID, false, nullptr, nsJSProtocolHandler::Create },
   { &kNS_JSURI_CID, false, nullptr, nsJSURIMutatorConstructor }, // do_CreateInstance returns mutator
   { &kNS_JSURIMUTATOR_CID, false, nullptr, nsJSURIMutatorConstructor },
-  { &kNS_WINDOWCOMMANDTABLE_CID, false, nullptr, CreateWindowCommandTableConstructor },
-  { &kNS_WINDOWCONTROLLER_CID, false, nullptr, CreateWindowControllerWithSingletonCommandTable },
   { &kNS_PLUGINDOCLOADERFACTORY_CID, false, nullptr, CreateContentDLF },
   { &kNS_PLUGINDOCUMENT_CID, false, nullptr, CreatePluginDocument },
   { &kNS_VIDEODOCUMENT_CID, false, nullptr, CreateVideoDocument },
@@ -727,10 +585,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNOTIFICATIONTELEMETRYSERVICE_CID, false, nullptr, NotificationTelemetryServiceConstructor },
   { &kPUSHNOTIFIER_CID, false, nullptr, PushNotifierConstructor },
   { &kWORKERDEBUGGERMANAGER_CID, true, nullptr, WorkerDebuggerManagerConstructor },
-  { &kNS_EDITORCONTROLLER_CID, false, nullptr, EditorControllerConstructor },
-  { &kNS_EDITINGCONTROLLER_CID, false, nullptr, nsEditingControllerConstructor },
-  { &kNS_EDITORCOMMANDTABLE_CID, false, nullptr, nsEditorCommandTableConstructor },
-  { &kNS_EDITINGCOMMANDTABLE_CID, false, nullptr, nsEditingCommandTableConstructor },
   { &kNS_GEOLOCATION_CID, false, nullptr, GeolocationConstructor },
   { &kNS_WEBSOCKETEVENT_SERVICE_CID, false, nullptr, WebSocketEventServiceConstructor },
   { &kNS_FOCUSMANAGER_CID, false, nullptr, CreateFocusManager },
@@ -805,7 +659,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #endif
   { CONTENT_DLF_CONTRACTID, &kNS_CONTENT_DOCUMENT_LOADER_FACTORY_CID },
   { NS_JSPROTOCOLHANDLER_CONTRACTID, &kNS_JSPROTOCOLHANDLER_CID },
-  { NS_WINDOWCONTROLLER_CONTRACTID, &kNS_WINDOWCONTROLLER_CID },
   { PLUGIN_DLF_CONTRACTID, &kNS_PLUGINDOCLOADERFACTORY_CID },
   { NS_STYLESHEETSERVICE_CONTRACTID, &kNS_STYLESHEETSERVICE_CID },
   { NS_SDBCONNECTION_CONTRACTID, &kNS_SDBCONNECTION_CID },
@@ -818,8 +671,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NOTIFICATIONTELEMETRYSERVICE_CONTRACTID, &kNOTIFICATIONTELEMETRYSERVICE_CID },
   { PUSHNOTIFIER_CONTRACTID, &kPUSHNOTIFIER_CID },
   { WORKERDEBUGGERMANAGER_CONTRACTID, &kWORKERDEBUGGERMANAGER_CID },
-  { "@mozilla.org/editor/editorcontroller;1", &kNS_EDITORCONTROLLER_CID },
-  { "@mozilla.org/editor/editingcontroller;1", &kNS_EDITINGCONTROLLER_CID },
   { "@mozilla.org/geolocation;1", &kNS_GEOLOCATION_CID },
   { "@mozilla.org/websocketevent/service;1", &kNS_WEBSOCKETEVENT_SERVICE_CID },
   { "@mozilla.org/focus-manager;1", &kNS_FOCUSMANAGER_CID },

@@ -5,8 +5,7 @@
 
 package org.mozilla.geckoview.test;
 
-import org.mozilla.gecko.gfx.GeckoDisplay;
-import org.mozilla.geckoview.GeckoResponse;
+import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
@@ -160,10 +159,8 @@ public class TestRunnerActivity extends Activity {
             }
 
             runtimeSettingsBuilder
-                    .nativeCrashReportingEnabled(true)
-                    .javaCrashReportingEnabled(true)
-                    .crashReportingJobId(1024)
-                    .consoleOutput(true);
+                    .consoleOutput(true)
+                    .crashHandler(TestCrashHandler.class);
 
             sRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
             sRuntime.setDelegate(new GeckoRuntime.Delegate() {

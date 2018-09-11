@@ -7,6 +7,9 @@
 #include "nsString.h"
 #include "nsIControllerCommand.h"
 #include "nsControllerCommandTable.h"
+#include "nsGlobalWindowCommands.h"
+#include "mozilla/EditorController.h"
+#include "mozilla/HTMLEditorController.h"
 
 nsresult NS_NewControllerCommandTable(nsIControllerCommandTable** aResult);
 
@@ -192,6 +195,63 @@ nsControllerCommandTable::GetSupportedCommands(uint32_t* aCount,
     commands++;
   }
   return NS_OK;
+}
+
+typedef nsresult (*CommandTableRegistrar)(nsIControllerCommandTable*);
+
+static already_AddRefed<nsIControllerCommandTable>
+CreateCommandTableWithCommands(CommandTableRegistrar aRegistrar)
+{
+  nsCOMPtr<nsIControllerCommandTable> commandTable =
+      new nsControllerCommandTable();
+
+  nsresult rv = aRegistrar(commandTable);
+  if (NS_FAILED(rv)) return nullptr;
+
+  // we don't know here whether we're being created as an instance,
+  // or a service, so we can't become immutable
+
+  return commandTable.forget();
+}
+
+// static
+already_AddRefed<nsIControllerCommandTable>
+nsControllerCommandTable::CreateEditorCommandTable()
+{
+  return CreateCommandTableWithCommands(
+      EditorController::RegisterEditorCommands);
+}
+
+// static
+already_AddRefed<nsIControllerCommandTable>
+nsControllerCommandTable::CreateEditingCommandTable()
+{
+  return CreateCommandTableWithCommands(
+      EditorController::RegisterEditingCommands);
+}
+
+// static
+already_AddRefed<nsIControllerCommandTable>
+nsControllerCommandTable::CreateHTMLEditorCommandTable()
+{
+  return CreateCommandTableWithCommands(
+      HTMLEditorController::RegisterHTMLEditorCommands);
+}
+
+// static
+already_AddRefed<nsIControllerCommandTable>
+nsControllerCommandTable::CreateHTMLEditorDocStateCommandTable()
+{
+  return CreateCommandTableWithCommands(
+      HTMLEditorController::RegisterEditorDocStateCommands);
+}
+
+// static
+already_AddRefed<nsIControllerCommandTable>
+nsControllerCommandTable::CreateWindowCommandTable()
+{
+  return CreateCommandTableWithCommands(
+      nsWindowCommandRegistration::RegisterWindowCommands);
 }
 
 nsresult

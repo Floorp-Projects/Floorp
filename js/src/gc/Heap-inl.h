@@ -29,10 +29,11 @@ js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind, const AutoLockGC& lock)
     hasDelayedMarking = 0;
     markOverflow = 0;
     auxNextLink = 0;
-    if (zone->isAtomsZone())
+    if (zone->isAtomsZone()) {
         zone->runtimeFromAnyThread()->gc.atomMarking.registerArena(this, lock);
-    else
+    } else {
         bufferedCells() = &ArenaCellSet::Empty;
+    }
 
     setAsFullyUnused();
 }
@@ -40,8 +41,9 @@ js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind, const AutoLockGC& lock)
 inline void
 js::gc::Arena::release(const AutoLockGC& lock)
 {
-    if (zone->isAtomsZone())
+    if (zone->isAtomsZone()) {
         zone->runtimeFromAnyThread()->gc.atomMarking.unregisterArena(this, lock);
+    }
     setAsNotAllocated();
 }
 

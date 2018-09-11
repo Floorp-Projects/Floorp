@@ -6,7 +6,6 @@
 package org.mozilla.geckoview_example;
 
 import org.mozilla.geckoview.BasicSelectionActionDelegate;
-import org.mozilla.geckoview.GeckoResponse;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
@@ -122,11 +121,9 @@ public class GeckoViewActivity extends AppCompatActivity {
             runtimeSettingsBuilder
                     .useContentProcessHint(mUseMultiprocess)
                     .remoteDebuggingEnabled(true)
-                    .nativeCrashReportingEnabled(true)
-                    .javaCrashReportingEnabled(true)
-                    .crashReportingJobId(1024)
                     .consoleOutput(true)
-                    .trackingProtectionCategories(TrackingProtectionDelegate.CATEGORY_ALL);
+                    .trackingProtectionCategories(TrackingProtectionDelegate.CATEGORY_ALL)
+                    .crashHandler(ExampleCrashHandler.class);
 
             sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
         }

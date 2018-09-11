@@ -59,8 +59,9 @@ static unsigned
 StackArgBytes(const VectorT& args)
 {
     ABIArgIter<VectorT> iter(args);
-    while (!iter.done())
+    while (!iter.done()) {
         iter++;
+    }
     return iter.stackBytesConsumedSoFar();
 }
 
@@ -75,21 +76,23 @@ SetupABIArguments(MacroAssembler& masm, const FuncExport& fe, Register argv, Reg
         MIRType type = iter.mirType();
         switch (iter->kind()) {
           case ABIArg::GPR:
-            if (type == MIRType::Int32)
+            if (type == MIRType::Int32) {
                 masm.load32(src, iter->gpr());
-            else if (type == MIRType::Int64)
+            } else if (type == MIRType::Int64) {
                 masm.load64(src, iter->gpr64());
-            else if (type == MIRType::Pointer)
+            } else if (type == MIRType::Pointer) {
                 masm.loadPtr(src, iter->gpr());
-            else
+            } else {
                 MOZ_CRASH("unknown GPR type");
+            }
             break;
 #ifdef JS_CODEGEN_REGISTER_PAIR
           case ABIArg::GPR_PAIR:
-            if (type == MIRType::Int64)
+            if (type == MIRType::Int64) {
                 masm.load64(src, iter->gpr64());
-            else
+            } else {
                 MOZ_CRASH("wasm uses hardfp for function calls.");
+            }
             break;
 #endif
           case ABIArg::FPU: {
@@ -285,10 +288,11 @@ static void
 CallFuncExport(MacroAssembler& masm, const FuncExport& fe, const Maybe<ImmPtr>& funcPtr)
 {
     MOZ_ASSERT(fe.hasEagerStubs() == !funcPtr);
-    if (funcPtr)
+    if (funcPtr) {
         masm.call(*funcPtr);
-    else
+    } else {
         masm.call(CallSiteDesc(CallSiteDesc::Func), fe.funcIndex());
+    }
 }
 
 // Generate a stub that enters wasm from a C++ caller via the native ABI. The
@@ -338,22 +342,25 @@ GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe, const Maybe<ImmP
 
     // arg 1: ExportArg*
     arg = abi.next(MIRType::Pointer);
-    if (arg.kind() == ABIArg::GPR)
+    if (arg.kind() == ABIArg::GPR) {
         masm.movePtr(arg.gpr(), argv);
-    else
+    } else {
         masm.loadPtr(Address(masm.getStackPointer(), argBase + arg.offsetFromArgBase()), argv);
+    }
 
     // Arg 2: TlsData*
     arg = abi.next(MIRType::Pointer);
-    if (arg.kind() == ABIArg::GPR)
+    if (arg.kind() == ABIArg::GPR) {
         masm.movePtr(arg.gpr(), WasmTlsReg);
-    else
+    } else {
         masm.loadPtr(Address(masm.getStackPointer(), argBase + arg.offsetFromArgBase()), WasmTlsReg);
+    }
 
 #ifdef ENABLE_WASM_GC
     WasmPush(masm, WasmTlsReg);
-    if (gcTypesConfigured == HasGcTypes::True)
+    if (gcTypesConfigured == HasGcTypes::True) {
         SuppressGC(masm, 1, scratch);
+    }
 #endif
 
     // Save 'argv' on the stack so that we can recover it after the call.
@@ -411,8 +418,9 @@ GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe, const Maybe<ImmP
 
 #ifdef ENABLE_WASM_GC
     WasmPop(masm, WasmTlsReg);
-    if (gcTypesConfigured == HasGcTypes::True)
+    if (gcTypesConfigured == HasGcTypes::True) {
         SuppressGC(masm, -1, WasmTlsReg);
+    }
 #endif
 
     // Store the return value in argv[0].
@@ -461,10 +469,11 @@ static const Register ScratchIonEntry = ABINonArgReg2;
 static void
 CallSymbolicAddress(MacroAssembler& masm, bool isAbsolute, SymbolicAddress sym)
 {
-    if (isAbsolute)
+    if (isAbsolute) {
         masm.call(ImmPtr(SymbolicAddressTarget(sym), ImmPtr::NoCheckToken()));
-    else
+    } else {
         masm.call(sym);
+    }
 }
 
 // Load instance's TLS from the callee.
@@ -703,23 +712,26 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
           case MIRType::Int32: {
             Register target = isStackArg ? ScratchIonEntry : iter->gpr();
             masm.unboxInt32(argv, target);
-            if (isStackArg)
+            if (isStackArg) {
                 masm.storePtr(target, Address(sp, iter->offsetFromArgBase()));
+            }
             break;
           }
           case MIRType::Float32: {
             FloatRegister target = isStackArg ? ABINonArgDoubleReg : iter->fpu();
             masm.unboxDouble(argv, ABINonArgDoubleReg);
             masm.convertDoubleToFloat32(ABINonArgDoubleReg, target);
-            if (isStackArg)
+            if (isStackArg) {
                 masm.storeFloat32(target, Address(sp, iter->offsetFromArgBase()));
+            }
             break;
           }
           case MIRType::Double: {
             FloatRegister target = isStackArg ? ABINonArgDoubleReg : iter->fpu();
             masm.unboxDouble(argv, target);
-            if (isStackArg)
+            if (isStackArg) {
                 masm.storeDouble(target, Address(sp, iter->offsetFromArgBase()));
+            }
             break;
           }
           default: {
@@ -807,17 +819,19 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
         ABIArgMIRTypeIter argsIter(coerceArgTypes);
 
         // argument 0: function export index.
-        if (argsIter->kind() == ABIArg::GPR)
+        if (argsIter->kind() == ABIArg::GPR) {
             masm.movePtr(ImmWord(funcExportIndex), argsIter->gpr());
-        else
+        } else {
             masm.storePtr(ImmWord(funcExportIndex), Address(sp, argsIter->offsetFromArgBase()));
+        }
         argsIter++;
 
         // argument 1: tlsData
-        if (argsIter->kind() == ABIArg::GPR)
+        if (argsIter->kind() == ABIArg::GPR) {
             masm.movePtr(WasmTlsReg, argsIter->gpr());
-        else
+        } else {
             masm.storePtr(WasmTlsReg, Address(sp, argsIter->offsetFromArgBase()));
+        }
         argsIter++;
 
         // argument 2: effective address of start of argv
@@ -887,14 +901,16 @@ wasm::GenerateDirectCallFromJit(MacroAssembler& masm,
     // Move stack arguments to their final locations.
     unsigned bytesNeeded = StackArgBytes(fe.funcType().args());
     bytesNeeded = StackDecrementForCall(WasmStackAlignment, masm.framePushed(), bytesNeeded);
-    if (bytesNeeded)
+    if (bytesNeeded) {
         masm.reserveStack(bytesNeeded);
+    }
 
     for (ABIArgValTypeIter iter(fe.funcType().args()); !iter.done(); iter++) {
         MOZ_ASSERT_IF(iter->kind() == ABIArg::GPR, iter->gpr() != scratch);
         MOZ_ASSERT_IF(iter->kind() == ABIArg::GPR, iter->gpr() != FramePointer);
-        if (iter->kind() != ABIArg::Stack)
+        if (iter->kind() != ABIArg::Stack) {
             continue;
+        }
 
         Address dst(masm.getStackPointer(), iter->offsetFromArgBase());
 
@@ -953,8 +969,9 @@ wasm::GenerateDirectCallFromJit(MacroAssembler& masm,
     masm.loadWasmPinnedRegsFromTls();
 
 #ifdef ENABLE_WASM_GC
-    if (wasmGcEnabled)
+    if (wasmGcEnabled) {
         SuppressGC(masm, 1, ABINonArgReg0);
+    }
 #endif
 
     // Actual call.
@@ -967,8 +984,9 @@ wasm::GenerateDirectCallFromJit(MacroAssembler& masm,
     masm.assertStackAlignment(WasmStackAlignment);
 
 #ifdef ENABLE_WASM_GC
-    if (wasmGcEnabled)
+    if (wasmGcEnabled) {
         SuppressGC(masm, -1, WasmTlsReg);
+    }
 #endif
 
     masm.branchPtr(Assembler::Equal, FramePointer, Imm32(wasm::FailFP), masm.exceptionLabel());
@@ -998,8 +1016,9 @@ wasm::GenerateDirectCallFromJit(MacroAssembler& masm,
     masm.leaveExitFrame(bytesNeeded + ExitFrameLayout::Size());
 
     // If we pushed it, free FramePointer.
-    if (profilingEnabled)
+    if (profilingEnabled) {
         masm.Pop(FramePointer);
+    }
 
     MOZ_ASSERT(framePushedAtStart == masm.framePushed());
 }
@@ -1047,28 +1066,32 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
         switch (i->kind()) {
           case ABIArg::GPR:
             if (type == MIRType::Int32) {
-                if (toValue)
+                if (toValue) {
                     masm.storeValue(JSVAL_TYPE_INT32, i->gpr(), dst);
-                else
+                } else {
                     masm.store32(i->gpr(), dst);
+                }
             } else if (type == MIRType::Int64) {
                 // We can't box int64 into Values (yet).
-                if (toValue)
+                if (toValue) {
                     masm.breakpoint();
-                else
+                } else {
                     masm.store64(i->gpr64(), dst);
+                }
             } else if (type == MIRType::Pointer) {
-                if (toValue)
+                if (toValue) {
                     MOZ_CRASH("generating a jit exit for anyref NYI");
+                }
                 masm.storePtr(i->gpr(), dst);
             }
             break;
 #ifdef JS_CODEGEN_REGISTER_PAIR
           case ABIArg::GPR_PAIR:
-            if (type == MIRType::Int64)
+            if (type == MIRType::Int64) {
                 masm.store64(i->gpr64(), dst);
-            else
+            } else {
                 MOZ_CRASH("wasm uses hardfp for function calls.");
+            }
             break;
 #endif
           case ABIArg::FPU: {
@@ -1161,8 +1184,9 @@ GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, FuncType
     unsigned offsetToCallerStackArgs = sizeof(Frame) + masm.framePushed();
     ABIArgValTypeIter i(fi.funcType().args());
     for (; !i.done(); i++) {
-        if (i->kind() != ABIArg::Stack)
+        if (i->kind() != ABIArg::Stack) {
             continue;
+        }
 
         Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
         Address dst(masm.getStackPointer(), i->offsetFromArgBase());
@@ -1199,15 +1223,18 @@ wasm::GenerateImportFunctions(const ModuleEnvironment& env, const FuncImportVect
         const FuncImport& fi = imports[funcIndex];
 
         FuncOffsets offsets;
-        if (!GenerateImportFunction(masm, fi, env.funcTypes[funcIndex]->id, &offsets))
+        if (!GenerateImportFunction(masm, fi, env.funcTypes[funcIndex]->id, &offsets)) {
             return false;
-        if (!code->codeRanges.emplaceBack(funcIndex, /* bytecodeOffset = */ 0, offsets))
+        }
+        if (!code->codeRanges.emplaceBack(funcIndex, /* bytecodeOffset = */ 0, offsets)) {
             return false;
+        }
     }
 
     masm.finish();
-    if (masm.oom())
+    if (masm.oom()) {
         return false;
+    }
 
     return code->swap(masm);
 }
@@ -1261,18 +1288,20 @@ GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
     i++;
 
     // argument 1: funcImportIndex
-    if (i->kind() == ABIArg::GPR)
+    if (i->kind() == ABIArg::GPR) {
         masm.mov(ImmWord(funcImportIndex), i->gpr());
-    else
+    } else {
         masm.store32(Imm32(funcImportIndex), Address(masm.getStackPointer(), i->offsetFromArgBase()));
+    }
     i++;
 
     // argument 2: argc
     unsigned argc = fi.funcType().args().length();
-    if (i->kind() == ABIArg::GPR)
+    if (i->kind() == ABIArg::GPR) {
         masm.mov(ImmWord(argc), i->gpr());
-    else
+    } else {
         masm.store32(Imm32(argc), Address(masm.getStackPointer(), i->offsetFromArgBase()));
+    }
     i++;
 
     // argument 3: argv
@@ -1558,8 +1587,9 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
             masm.call(SymbolicAddress::CoerceInPlace_ToNumber);
             masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
             masm.loadDouble(Address(masm.getStackPointer(), offsetToCoerceArgv), ReturnDoubleReg);
-            if (fi.funcType().ret() == ExprType::F32)
+            if (fi.funcType().ret() == ExprType::F32) {
                 masm.convertDoubleToFloat32(ReturnDoubleReg, ReturnFloat32Reg);
+            }
             break;
           default:
             MOZ_CRASH("Unsupported convert type");
@@ -1599,8 +1629,9 @@ struct ABIFunctionArgs
     MIRType operator[](size_t i) const {
         MOZ_ASSERT(i < len);
         uint32_t abi = uint32_t(abiType);
-        while (i--)
+        while (i--) {
             abi = abi >> ArgType_Shift;
+        }
         return ToMIRType(ABIArgType(abi & ArgType_Mask));
     }
 };
@@ -1662,8 +1693,9 @@ wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType, ExitRe
 #elif defined(JS_CODEGEN_ARM)
     // Non hard-fp passes the return values in GPRs.
     MIRType retType = ToMIRType(ABIArgType(abiType & ArgType_Mask));
-    if (!UseHardFpABI() && IsFloatingPointType(retType))
+    if (!UseHardFpABI() && IsFloatingPointType(retType)) {
         masm.ma_vxfer(r0, r1, d0);
+    }
 #endif
 
     GenerateExitEpilogue(masm, framePushed, exitReason, offsets);
@@ -1727,8 +1759,9 @@ GenerateTrapExit(MacroAssembler& masm, Label* throwLabel, Offsets* offsets)
     Register preAlignStackPointer = ABINonVolatileReg;
     masm.moveStackPtrTo(preAlignStackPointer);
     masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
-    if (ShadowStackSpace)
+    if (ShadowStackSpace) {
         masm.subFromStackPtr(Imm32(ShadowStackSpace));
+    }
 
     masm.assertStackAlignment(ABIStackAlignment);
     masm.call(SymbolicAddress::HandleTrap);
@@ -1770,8 +1803,9 @@ GenerateThrowStub(MacroAssembler& masm, Label* throwLabel, Offsets* offsets)
     // Conservatively, the stack pointer can be unaligned and we must align it
     // dynamically.
     masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
-    if (ShadowStackSpace)
+    if (ShadowStackSpace) {
         masm.subFromStackPtr(Imm32(ShadowStackSpace));
+    }
 
     // WasmHandleThrow unwinds JitActivation::wasmExitFP() and returns the
     // address of the return address on the stack this stub should return to.
@@ -1824,15 +1858,17 @@ GenerateDebugTrapStub(MacroAssembler& masm, Label* throwLabel, CallableOffsets* 
     masm.storePtr(scratch, Address(masm.getStackPointer(), 0));
 #endif
 
-    if (ShadowStackSpace)
+    if (ShadowStackSpace) {
         masm.subFromStackPtr(Imm32(ShadowStackSpace));
+    }
     masm.assertStackAlignment(ABIStackAlignment);
     masm.call(SymbolicAddress::HandleDebugTrap);
 
     masm.branchIfFalseBool(ReturnReg, throwLabel);
 
-    if (ShadowStackSpace)
+    if (ShadowStackSpace) {
         masm.addToStackPtr(Imm32(ShadowStackSpace));
+    }
 #ifndef JS_CODEGEN_ARM64
     masm.Pop(scratch);
     masm.moveToStackPtr(scratch);
@@ -1855,18 +1891,23 @@ wasm::GenerateEntryStubs(MacroAssembler& masm, size_t funcExportIndex, const Fun
     MOZ_ASSERT_IF(isAsmJS, fe.hasEagerStubs());
 
     Offsets offsets;
-    if (!GenerateInterpEntry(masm, fe, callee, gcTypesConfigured, &offsets))
+    if (!GenerateInterpEntry(masm, fe, callee, gcTypesConfigured, &offsets)) {
         return false;
-    if (!codeRanges->emplaceBack(CodeRange::InterpEntry, fe.funcIndex(), offsets))
+    }
+    if (!codeRanges->emplaceBack(CodeRange::InterpEntry, fe.funcIndex(), offsets)) {
         return false;
+    }
 
-    if (isAsmJS || fe.funcType().temporarilyUnsupportedAnyRef())
+    if (isAsmJS || fe.funcType().temporarilyUnsupportedAnyRef()) {
         return true;
+    }
 
-    if (!GenerateJitEntry(masm, funcExportIndex, fe, callee, gcTypesConfigured, &offsets))
+    if (!GenerateJitEntry(masm, funcExportIndex, fe, callee, gcTypesConfigured, &offsets)) {
         return false;
-    if (!codeRanges->emplaceBack(CodeRange::JitEntry, fe.funcIndex(), offsets))
+    }
+    if (!codeRanges->emplaceBack(CodeRange::JitEntry, fe.funcIndex(), offsets)) {
         return false;
+    }
 
     return true;
 }
@@ -1880,8 +1921,9 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
     WasmMacroAssembler masm(alloc);
 
     // Swap in already-allocated empty vectors to avoid malloc/free.
-    if (!code->swap(masm))
+    if (!code->swap(masm)) {
         return false;
+    }
 
     Label throwLabel;
 
@@ -1891,19 +1933,24 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
         const FuncImport& fi = imports[funcIndex];
 
         CallableOffsets interpOffsets;
-        if (!GenerateImportInterpExit(masm, fi, funcIndex, &throwLabel, &interpOffsets))
+        if (!GenerateImportInterpExit(masm, fi, funcIndex, &throwLabel, &interpOffsets)) {
             return false;
-        if (!code->codeRanges.emplaceBack(CodeRange::ImportInterpExit, funcIndex, interpOffsets))
+        }
+        if (!code->codeRanges.emplaceBack(CodeRange::ImportInterpExit, funcIndex, interpOffsets)) {
             return false;
+        }
 
-        if (fi.funcType().temporarilyUnsupportedAnyRef())
+        if (fi.funcType().temporarilyUnsupportedAnyRef()) {
             continue;
+        }
 
         JitExitOffsets jitOffsets;
-        if (!GenerateImportJitExit(masm, fi, &throwLabel, &jitOffsets))
+        if (!GenerateImportJitExit(masm, fi, &throwLabel, &jitOffsets)) {
             return false;
-        if (!code->codeRanges.emplaceBack(funcIndex, jitOffsets))
+        }
+        if (!code->codeRanges.emplaceBack(funcIndex, jitOffsets)) {
             return false;
+        }
     }
 
     JitSpew(JitSpew_Codegen, "# Emitting wasm export stubs");
@@ -1911,8 +1958,9 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
     Maybe<ImmPtr> noAbsolute;
     for (size_t i = 0; i < exports.length(); i++) {
         const FuncExport& fe = exports[i];
-        if (!fe.hasEagerStubs())
+        if (!fe.hasEagerStubs()) {
             continue;
+        }
         if (!GenerateEntryStubs(masm, i, fe, noAbsolute, env.isAsmJS(),
                                 env.gcTypesConfigured, &code->codeRanges))
         {
@@ -1924,25 +1972,32 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
 
     Offsets offsets;
 
-    if (!GenerateTrapExit(masm, &throwLabel, &offsets))
+    if (!GenerateTrapExit(masm, &throwLabel, &offsets)) {
         return false;
-    if (!code->codeRanges.emplaceBack(CodeRange::TrapExit, offsets))
+    }
+    if (!code->codeRanges.emplaceBack(CodeRange::TrapExit, offsets)) {
         return false;
+    }
 
     CallableOffsets callableOffsets;
-    if (!GenerateDebugTrapStub(masm, &throwLabel, &callableOffsets))
+    if (!GenerateDebugTrapStub(masm, &throwLabel, &callableOffsets)) {
         return false;
-    if (!code->codeRanges.emplaceBack(CodeRange::DebugTrap, callableOffsets))
+    }
+    if (!code->codeRanges.emplaceBack(CodeRange::DebugTrap, callableOffsets)) {
         return false;
+    }
 
-    if (!GenerateThrowStub(masm, &throwLabel, &offsets))
+    if (!GenerateThrowStub(masm, &throwLabel, &offsets)) {
         return false;
-    if (!code->codeRanges.emplaceBack(CodeRange::Throw, offsets))
+    }
+    if (!code->codeRanges.emplaceBack(CodeRange::Throw, offsets)) {
         return false;
+    }
 
     masm.finish();
-    if (masm.oom())
+    if (masm.oom()) {
         return false;
+    }
 
     return code->swap(masm);
 }

@@ -73,8 +73,9 @@ BinTokenReaderTester::readDouble()
     // Decode little-endian.
     const uint64_t asInt = mozilla::LittleEndian::readUint64(bytes);
 
-    if (asInt == NULL_FLOAT_REPRESENTATION)
+    if (asInt == NULL_FLOAT_REPRESENTATION) {
         return raiseError("Not implemented: null double value");
+    }
 
     // Canonicalize NaN, just to make sure another form of signalling NaN
     // doesn't slip past us.
@@ -118,11 +119,13 @@ BinTokenReaderTester::readMaybeAtom()
     BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
 
     // 2. Reject if we can't read
-    if (current_ + byteLen < current_) // Check for overflows
+    if (current_ + byteLen < current_) { // Check for overflows
         return raiseError("Arithmetics overflow: string is too long");
+    }
 
-    if (current_ + byteLen > stop_)
+    if (current_ + byteLen > stop_) {
         return raiseError("Not enough bytes to read chars");
+    }
 
     if (byteLen == 2 && *current_ == 255 && *(current_ + 1) == 0) {
         // 3. Special case: null string.
@@ -157,11 +160,13 @@ BinTokenReaderTester::readChars(Chars& out)
     BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
 
     // 2. Reject if we can't read
-    if (current_ + byteLen < current_) // Check for overflows
+    if (current_ + byteLen < current_) { // Check for overflows
         return raiseError("Arithmetics overflow: string is too long");
+    }
 
-    if (current_ + byteLen > stop_)
+    if (current_ + byteLen > stop_) {
         return raiseError("Not enough bytes to read chars");
+    }
 
     if (byteLen == 2 && *current_ == 255 && *(current_ + 1) == 0) {
         // 3. Special case: null string.
@@ -169,8 +174,9 @@ BinTokenReaderTester::readChars(Chars& out)
     }
 
     // 4. Other strings (bytes are copied)
-    if (!out.resize(byteLen))
+    if (!out.resize(byteLen)) {
         return raiseOOM();
+    }
 
     mozilla::PodCopy(out.begin(), current_, byteLen);
 
@@ -186,8 +192,9 @@ BinTokenReaderTester::readAtom()
     RootedAtom atom(cx_);
     MOZ_TRY_VAR(atom, readMaybeAtom());
 
-    if (!atom)
+    if (!atom) {
         return raiseError("Empty string");
+    }
     return atom.get();
 }
 
@@ -198,11 +205,13 @@ BinTokenReaderTester::readVariant()
     BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
 
     // 2. Reject if we can't read
-    if (current_ + byteLen < current_) // Check for overflows
+    if (current_ + byteLen < current_) { // Check for overflows
         return raiseError("Arithmetics overflow: string is too long");
+    }
 
-    if (current_ + byteLen > stop_)
+    if (current_ + byteLen > stop_) {
         return raiseError("Not enough bytes to read chars");
+    }
 
     if (byteLen == 2 && *current_ == 255 && *(current_ + 1) == 0) {
         // 3. Special case: null string.
@@ -213,8 +222,9 @@ BinTokenReaderTester::readVariant()
     current_ += byteLen;
 
     BINJS_MOZ_TRY_DECL(variant, cx_->runtime()->binast().binVariant(cx_, slice));
-    if (!variant)
+    if (!variant) {
         return raiseError("Not a variant");
+    }
 
     MOZ_TRY(readConst("</string>"));
     return *variant;
@@ -226,8 +236,9 @@ BinTokenReaderTester::readSkippableSubTree()
     updateLatestKnownGood();
     BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
 
-    if (current_ + byteLen > stop_ || current_ + byteLen < current_)
+    if (current_ + byteLen > stop_ || current_ + byteLen < current_) {
         return raiseError("Invalid byte length in readSkippableSubTree");
+    }
 
     const auto start = current_;
 
@@ -286,8 +297,9 @@ BinTokenReaderTester::enterTaggedTuple(BinKind& tag, BinFields& fields, AutoTagg
     BINJS_MOZ_TRY_DECL(fieldNum, readInternalUint32());
 
     fields.clear();
-    if (!fields.reserve(fieldNum))
+    if (!fields.reserve(fieldNum)) {
         return raiseOOM();
+    }
 
     for (uint32_t i = 0; i < fieldNum; ++i) {
         // This would probably be much faster with a HashTable, but we don't
@@ -369,8 +381,9 @@ BinTokenReaderTester::AutoBase::~AutoBase()
 JS::Result<Ok>
 BinTokenReaderTester::AutoBase::checkPosition(const uint8_t* expectedEnd)
 {
-    if (reader_.current_ != expectedEnd)
+    if (reader_.current_ != expectedEnd) {
         return reader_.raiseError("Caller did not consume the expected set of bytes");
+    }
 
     return Ok();
 }

@@ -89,8 +89,9 @@ class PromiseObject : public NativeObject
             MOZ_ASSERT(!(flags & PROMISE_FLAG_FULFILLED));
             return JS::PromiseState::Pending;
         }
-        if (flags & PROMISE_FLAG_FULFILLED)
+        if (flags & PROMISE_FLAG_FULFILLED) {
             return JS::PromiseState::Fulfilled;
+        }
         return JS::PromiseState::Rejected;
     }
     Value reactions() {
@@ -371,8 +372,9 @@ class MOZ_NON_TEMPORARY_CLASS PromiseLookup final
 
     // Purge the cache and all info associated with it.
     void purge() {
-        if (state_ == State::Initialized)
+        if (state_ == State::Initialized) {
             reset();
+        }
     }
 };
 

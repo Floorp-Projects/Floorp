@@ -70,8 +70,9 @@ CompareChars(const Char1* s1, size_t len1, const Char2* s2, size_t len2)
 {
     size_t n = Min(len1, len2);
     for (size_t i = 0; i < n; i++) {
-        if (int32_t cmp = s1[i] - s2[i])
+        if (int32_t cmp = s1[i] - s2[i]) {
             return cmp;
+        }
     }
 
     return int32_t(len1 - len2);
@@ -84,8 +85,9 @@ SkipSpace(const CharT* s, const CharT* end)
 {
     MOZ_ASSERT(s <= end);
 
-    while (s < end && unicode::IsSpace(*s))
+    while (s < end && unicode::IsSpace(*s)) {
         s++;
+    }
 
     return s;
 }
@@ -127,15 +129,17 @@ InflateString(JSContext* cx, const char* bytes, size_t length);
 inline void
 CopyAndInflateChars(char16_t* dst, const char* src, size_t srclen)
 {
-    for (size_t i = 0; i < srclen; i++)
+    for (size_t i = 0; i < srclen; i++) {
         dst[i] = (unsigned char) src[i];
+    }
 }
 
 inline void
 CopyAndInflateChars(char16_t* dst, const JS::Latin1Char* src, size_t srclen)
 {
-    for (size_t i = 0; i < srclen; i++)
+    for (size_t i = 0; i < srclen; i++) {
         dst[i] = src[i];
+    }
 }
 
 /*

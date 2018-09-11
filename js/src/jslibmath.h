@@ -21,10 +21,12 @@ NumberDiv(double a, double b)
 {
     AutoUnsafeCallWithABI unsafe;
     if (b == 0) {
-        if (a == 0 || mozilla::IsNaN(a))
+        if (a == 0 || mozilla::IsNaN(a)) {
             return JS::GenericNaN();
-        if (mozilla::IsNegative(a) != mozilla::IsNegative(b))
+        }
+        if (mozilla::IsNegative(a) != mozilla::IsNegative(b)) {
             return mozilla::NegativeInfinity<double>();
+        }
         return mozilla::PositiveInfinity<double>();
     }
 
@@ -35,8 +37,9 @@ inline double
 NumberMod(double a, double b)
 {
     AutoUnsafeCallWithABI unsafe;
-    if (b == 0)
+    if (b == 0) {
         return JS::GenericNaN();
+    }
     return fmod(a, b);
 }
 

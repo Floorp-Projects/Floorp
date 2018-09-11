@@ -60,14 +60,16 @@ openPerfMap(const char* dir)
     const ssize_t bufferSize = 256;
     char filenameBuffer[bufferSize];
 
-    if (snprintf(filenameBuffer, bufferSize, "%sperf-%d.map", dir, getpid()) >= bufferSize)
+    if (snprintf(filenameBuffer, bufferSize, "%sperf-%d.map", dir, getpid()) >= bufferSize) {
         return false;
+    }
 
     MOZ_ASSERT(!PerfFilePtr);
     PerfFilePtr = fopen(filenameBuffer, "a");
 
-    if (!PerfFilePtr)
+    if (!PerfFilePtr) {
         return false;
+    }
 
     return true;
 }
@@ -97,8 +99,9 @@ js::jit::CheckPerf() {
 
         if (PerfMode != PERF_MODE_NONE) {
             PerfMutex = js_new<js::Mutex>(mutexid::PerfSpewer);
-            if (!PerfMutex)
+            if (!PerfMutex) {
                 MOZ_CRASH("failed to allocate PerfMutex");
+            }
 
             if (openPerfMap(PERF_SPEW_DIR)) {
                 PerfChecked = true;
@@ -134,8 +137,9 @@ namespace {
     struct MOZ_RAII AutoLockPerfMap
     {
         AutoLockPerfMap() {
-            if (!PerfEnabled())
+            if (!PerfEnabled()) {
                 return;
+            }
             PerfMutex->lock();
             MOZ_ASSERT(PerfFilePtr);
         }
@@ -153,8 +157,9 @@ bool
 PerfSpewer::startBasicBlock(MBasicBlock* blk,
                             MacroAssembler& masm)
 {
-    if (!PerfBlockEnabled())
+    if (!PerfBlockEnabled()) {
         return true;
+    }
 
     const char* filename = blk->info().script()->filename();
     unsigned lineNumber, columnNumber;
@@ -174,16 +179,18 @@ PerfSpewer::startBasicBlock(MBasicBlock* blk,
 void
 PerfSpewer::endBasicBlock(MacroAssembler& masm)
 {
-    if (!PerfBlockEnabled())
+    if (!PerfBlockEnabled()) {
         return;
+    }
     masm.bind(&basicBlocks_.back().end);
 }
 
 void
 PerfSpewer::noteEndInlineCode(MacroAssembler& masm)
 {
-    if (!PerfBlockEnabled())
+    if (!PerfBlockEnabled()) {
         return;
+    }
     masm.bind(&endInlineCode);
 }
 
@@ -274,8 +281,9 @@ PerfSpewer::writeProfile(JSScript* script,
 void
 js::jit::writePerfSpewerBaselineProfile(JSScript* script, JitCode* code)
 {
-    if (!PerfEnabled())
+    if (!PerfEnabled()) {
         return;
+    }
 
     size_t size = code->instructionsSize();
     if (size > 0) {
@@ -288,8 +296,9 @@ js::jit::writePerfSpewerBaselineProfile(JSScript* script, JitCode* code)
 void
 js::jit::writePerfSpewerJitCodeProfile(JitCode* code, const char* msg)
 {
-    if (!code || !PerfEnabled())
+    if (!code || !PerfEnabled()) {
         return;
+    }
 
     size_t size = code->instructionsSize();
     if (size > 0) {
@@ -303,8 +312,9 @@ void
 js::jit::writePerfSpewerWasmMap(uintptr_t base, uintptr_t size, const char* filename,
                                 const char* annotation)
 {
-    if (!PerfFuncEnabled() || size == 0U)
+    if (!PerfFuncEnabled() || size == 0U) {
         return;
+    }
 
     AutoLockPerfMap lock;
     PerfSpewer::WriteEntry(lock, base, size, "%s: Function %s", filename, annotation);
@@ -315,8 +325,9 @@ js::jit::writePerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
                                          const char* filename, unsigned lineno,
                                          const char* funcName)
 {
-    if (!PerfFuncEnabled() || size == 0U)
+    if (!PerfFuncEnabled() || size == 0U) {
         return;
+    }
 
     AutoLockPerfMap lock;
     PerfSpewer::WriteEntry(lock, base, size, "%s:%u: Function %s", filename, lineno, funcName);

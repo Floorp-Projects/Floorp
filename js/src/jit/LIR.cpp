@@ -51,8 +51,9 @@ LIRGraph::noteNeedsSafepoint(LInstruction* ins)
 {
     // Instructions with safepoints must be in linear order.
     MOZ_ASSERT_IF(!safepoints_.empty(), safepoints_.back()->id() < ins->id());
-    if (!ins->isCall() && !nonCallSafepoints_.append(ins))
+    if (!ins->isCall() && !nonCallSafepoints_.append(ins)) {
         return false;
+    }
     return safepoints_.append(ins);
 }
 
@@ -99,8 +100,9 @@ LBlock::init(TempAllocator& alloc)
     }
 
     // Allocate space for the LPhis.
-    if (!phis_.init(alloc, numLPhis))
+    if (!phis_.init(alloc, numLPhis)) {
         return false;
+    }
 
     // For each MIR phi, set up LIR phis as appropriate. We'll fill in their
     // operands on each incoming edge, and set their definitions at the start of
@@ -119,8 +121,9 @@ LBlock::init(TempAllocator& alloc)
         }
         for (int i = 0; i < numPhis; i++) {
             LAllocation* inputs = alloc.allocateArray<LAllocation>(numPreds);
-            if (!inputs)
+            if (!inputs) {
                 return false;
+            }
 
             void* addr = &phis_[phiIndex++];
             LPhi* lphi = new (addr) LPhi(phi, inputs);
@@ -134,8 +137,9 @@ const LInstruction*
 LBlock::firstInstructionWithId() const
 {
     for (LInstructionIterator i(instructions_.begin()); i != instructions_.end(); ++i) {
-        if (i->id())
+        if (i->id()) {
             return *i;
+        }
     }
     return 0;
 }
@@ -143,8 +147,9 @@ LBlock::firstInstructionWithId() const
 LMoveGroup*
 LBlock::getEntryMoveGroup(TempAllocator& alloc)
 {
-    if (entryMoveGroup_)
+    if (entryMoveGroup_) {
         return entryMoveGroup_;
+    }
     entryMoveGroup_ = LMoveGroup::New(alloc);
     insertBefore(*begin(), entryMoveGroup_);
     return entryMoveGroup_;
@@ -153,8 +158,9 @@ LBlock::getEntryMoveGroup(TempAllocator& alloc)
 LMoveGroup*
 LBlock::getExitMoveGroup(TempAllocator& alloc)
 {
-    if (exitMoveGroup_)
+    if (exitMoveGroup_) {
         return exitMoveGroup_;
+    }
     exitMoveGroup_ = LMoveGroup::New(alloc);
     insertBefore(*rbegin(), exitMoveGroup_);
     return exitMoveGroup_;
@@ -189,8 +195,9 @@ TotalOperandCount(LRecoverInfo* recoverInfo)
 {
     size_t accum = 0;
     for (LRecoverInfo::OperandIter it(recoverInfo); !it; ++it) {
-        if (!it->isRecoveredOnBailout())
+        if (!it->isRecoveredOnBailout()) {
             accum++;
+        }
     }
     return accum;
 }
@@ -204,8 +211,9 @@ LRecoverInfo*
 LRecoverInfo::New(MIRGenerator* gen, MResumePoint* mir)
 {
     LRecoverInfo* recoverInfo = new(gen->alloc()) LRecoverInfo(gen->alloc());
-    if (!recoverInfo || !recoverInfo->init(mir))
+    if (!recoverInfo || !recoverInfo->init(mir)) {
         return nullptr;
+    }
 
     JitSpew(JitSpew_IonSnapshots, "Generating LIR recover info %p from MIR (%p)",
             (void*)recoverInfo, (void*)mir);
@@ -226,8 +234,9 @@ LRecoverInfo::appendOperands(Node* ins)
         // instruction vector, and not processed by a caller of the current
         // function.
         if (def->isRecoveredOnBailout() && !def->isInWorklist()) {
-            if (!appendDefinition(def))
+            if (!appendDefinition(def)) {
                 return false;
+            }
         }
     }
 
@@ -243,11 +252,13 @@ LRecoverInfo::appendDefinition(MDefinition* def)
         def->setNotInWorklist();
     });
 
-    if (!appendOperands(def))
+    if (!appendOperands(def)) {
         return false;
+    }
 
-    if (!instructions_.append(def))
+    if (!instructions_.append(def)) {
         return false;
+    }
 
     clearWorklistFlagOnFailure.release();
     return true;
@@ -258,15 +269,18 @@ LRecoverInfo::appendResumePoint(MResumePoint* rp)
 {
     // Stores should be recovered first.
     for (auto iter(rp->storesBegin()), end(rp->storesEnd()); iter != end; ++iter) {
-        if (!appendDefinition(iter->operand))
+        if (!appendDefinition(iter->operand)) {
             return false;
+        }
     }
 
-    if (rp->caller() && !appendResumePoint(rp->caller()))
+    if (rp->caller() && !appendResumePoint(rp->caller())) {
         return false;
+    }
 
-    if (!appendOperands(rp))
+    if (!appendOperands(rp)) {
         return false;
+    }
 
     return instructions_.append(rp);
 }
@@ -278,8 +292,9 @@ LRecoverInfo::init(MResumePoint* rp)
     // added in the vector.
     auto clearWorklistFlags = mozilla::MakeScopeExit([&] {
         for (MNode** it = begin(); it != end(); it++) {
-            if (!(*it)->isDefinition())
+            if (!(*it)->isDefinition()) {
                 continue;
+            }
             (*it)->toDefinition()->setNotInWorklist();
         }
     });
@@ -288,8 +303,9 @@ LRecoverInfo::init(MResumePoint* rp)
     // implies that outer frames, as well as operations needed to recover the
     // current frame, are located before the current frame. The inner-most
     // resume point should be the last element in the list.
-    if (!appendResumePoint(rp))
+    if (!appendResumePoint(rp)) {
         return false;
+    }
 
     MOZ_ASSERT(mir() == rp);
     return true;
@@ -315,8 +331,9 @@ LSnapshot*
 LSnapshot::New(MIRGenerator* gen, LRecoverInfo* recover, BailoutKind kind)
 {
     LSnapshot* snapshot = new(gen->alloc()) LSnapshot(recover, kind);
-    if (!snapshot || !snapshot->init(gen))
+    if (!snapshot || !snapshot->init(gen)) {
         return nullptr;
+    }
 
     JitSpew(JitSpew_IonSnapshots, "Generating LIR snapshot %p from recover (%p)",
             (void*)snapshot, (void*)recover);
@@ -330,8 +347,9 @@ LSnapshot::rewriteRecoveredInput(LUse input)
     // Mark any operands to this snapshot with the same value as input as being
     // equal to the instruction's result.
     for (size_t i = 0; i < numEntries(); i++) {
-        if (getEntry(i)->isUse() && getEntry(i)->toUse()->virtualRegister() == input.virtualRegister())
+        if (getEntry(i)->isUse() && getEntry(i)->toUse()->virtualRegister() == input.virtualRegister()) {
             setEntry(i, LUse(input.virtualRegister(), LUse::RECOVERED_INPUT));
+        }
     }
 }
 
@@ -347,8 +365,9 @@ LNode::printName(GenericPrinter& out, Opcode op)
     };
     const char* name = names[uint32_t(op)];
     size_t len = strlen(name);
-    for (size_t i = 0; i < len; i++)
+    for (size_t i = 0; i < len; i++) {
         out.printf("%c", tolower(name[i]));
+    }
 }
 
 void
@@ -361,8 +380,9 @@ LNode::printName(GenericPrinter& out)
 bool
 LAllocation::aliases(const LAllocation& other) const
 {
-    if (isFloatReg() && other.isFloatReg())
+    if (isFloatReg() && other.isFloatReg()) {
         return toFloatReg()->reg().aliases(other.toFloatReg()->reg());
+    }
     return *this == other;
 }
 
@@ -401,15 +421,17 @@ LDefinition::toString() const
     } else {
         buf = JS_smprintf("v%u<%s>", virtualRegister(), DefTypeName(type()));
         if (buf) {
-            if (policy() == LDefinition::FIXED)
+            if (policy() == LDefinition::FIXED) {
                 buf = JS_sprintf_append(std::move(buf), ":%s", output()->toString().get());
-            else if (policy() == LDefinition::MUST_REUSE_INPUT)
+            } else if (policy() == LDefinition::MUST_REUSE_INPUT) {
                 buf = JS_sprintf_append(std::move(buf), ":tied(%u)", getReusedInput());
+            }
         }
     }
 
-    if (!buf)
+    if (!buf) {
         oomUnsafe.crash("LDefinition::toString()");
+    }
 
     return buf;
 }
@@ -468,8 +490,9 @@ LAllocation::toString() const
         }
     }
 
-    if (!buf)
+    if (!buf) {
         oomUnsafe.crash("LAllocation::toString()");
+    }
 
     return buf;
 }
@@ -494,8 +517,9 @@ PrintOperands(GenericPrinter& out, T* node)
 
     for (size_t i = 0; i < numOperands; i++) {
         out.printf(" (%s)", node->getOperand(i)->toString().get());
-        if (i != numOperands - 1)
+        if (i != numOperands - 1) {
             out.printf(",");
+        }
     }
 }
 
@@ -507,10 +531,11 @@ LNode::printOperands(GenericPrinter& out)
         return;
     }
 
-    if (isPhi())
+    if (isPhi()) {
         PrintOperands(out, toPhi());
-    else
+    } else {
         PrintOperands(out, toInstruction());
+    }
 }
 #endif
 
@@ -593,8 +618,9 @@ LNode::dump(GenericPrinter& out)
         for (size_t i = 0; i < numDefs(); i++) {
             const LDefinition* def = isPhi() ? toPhi()->getDef(i) : toInstruction()->getDef(i);
             out.printf("%s", def->toString().get());
-            if (i != numDefs() - 1)
+            if (i != numDefs() - 1) {
                 out.printf(", ");
+            }
         }
         out.printf("} <- ");
     }
@@ -609,8 +635,9 @@ LNode::dump(GenericPrinter& out)
             out.printf(" t=(");
             for (size_t i = 0; i < numTemps; i++) {
                 out.printf("%s", ins->getTemp(i)->toString().get());
-                if (i != numTemps - 1)
+                if (i != numTemps - 1) {
                     out.printf(", ");
+                }
             }
             out.printf(")");
         }
@@ -622,8 +649,9 @@ LNode::dump(GenericPrinter& out)
             for (size_t i = 0; i < numSuccessors; i++) {
                 MBasicBlock* succ = GetSuccessor(ins, i);
                 out.printf("block%u", succ->id());
-                if (i != numSuccessors - 1)
+                if (i != numSuccessors - 1) {
                     out.printf(", ");
+                }
             }
             out.printf(")");
         }
@@ -665,24 +693,27 @@ LMoveGroup::add(LAllocation from, LAllocation to, LDefinition::Type type)
 {
 #ifdef DEBUG
     MOZ_ASSERT(from != to);
-    for (size_t i = 0; i < moves_.length(); i++)
+    for (size_t i = 0; i < moves_.length(); i++) {
         MOZ_ASSERT(to != moves_[i].to());
+    }
 
     // Check that SIMD moves are aligned according to ABI requirements.
     if (LDefinition(type).isSimdType()) {
         MOZ_ASSERT(from.isMemory() || from.isFloatReg());
         if (from.isMemory()) {
-            if (from.isArgument())
+            if (from.isArgument()) {
                 MOZ_ASSERT(from.toArgument()->index() % SimdMemoryAlignment == 0);
-            else
+            } else {
                 MOZ_ASSERT(from.toStackSlot()->slot() % SimdMemoryAlignment == 0);
+            }
         }
         MOZ_ASSERT(to.isMemory() || to.isFloatReg());
         if (to.isMemory()) {
-            if (to.isArgument())
+            if (to.isArgument()) {
                 MOZ_ASSERT(to.toArgument()->index() % SimdMemoryAlignment == 0);
-            else
+            } else {
                 MOZ_ASSERT(to.toStackSlot()->slot() % SimdMemoryAlignment == 0);
+            }
         }
     }
 #endif
@@ -703,8 +734,9 @@ LMoveGroup::addAfter(LAllocation from, LAllocation to, LDefinition::Type type)
         }
     }
 
-    if (from == to)
+    if (from == to) {
         return true;
+    }
 
     for (size_t i = 0; i < moves_.length(); i++) {
         if (to == moves_[i].to()) {
@@ -725,8 +757,9 @@ LMoveGroup::printOperands(GenericPrinter& out)
         out.printf(" [%s -> %s", move.from().toString().get(), move.to().toString().get());
         out.printf(", %s", DefTypeName(move.type()));
         out.printf("]");
-        if (i != numMoves() - 1)
+        if (i != numMoves() - 1) {
             out.printf(",");
+        }
     }
 }
 #endif

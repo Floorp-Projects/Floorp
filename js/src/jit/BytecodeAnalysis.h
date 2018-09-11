@@ -52,8 +52,9 @@ class BytecodeAnalysis
     }
 
     BytecodeInfo* maybeInfo(jsbytecode* pc) {
-        if (infos_[script_->pcToOffset(pc)].initialized)
+        if (infos_[script_->pcToOffset(pc)].initialized) {
             return &infos_[script_->pcToOffset(pc)];
+        }
         return nullptr;
     }
 

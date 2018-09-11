@@ -36,54 +36,67 @@ bool
 GenerateInterfaceHelp(JSContext* cx, HandleObject obj, const char* name)
 {
     AutoIdVector idv(cx);
-    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &idv))
+    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &idv)) {
         return false;
+    }
 
     StringBuffer buf(cx);
     int numEntries = 0;
     for (size_t i = 0; i < idv.length(); i++) {
         RootedId id(cx, idv[i]);
         RootedValue v(cx);
-        if (!JS_GetPropertyById(cx, obj, id, &v))
+        if (!JS_GetPropertyById(cx, obj, id, &v)) {
             return false;
-        if (!v.isObject())
+        }
+        if (!v.isObject()) {
             continue;
+        }
         RootedObject prop(cx, &v.toObject());
 
         RootedValue usage(cx);
         RootedValue help(cx);
-        if (!JS_GetProperty(cx, prop, "usage", &usage))
+        if (!JS_GetProperty(cx, prop, "usage", &usage)) {
             return false;
-        if (!JS_GetProperty(cx, prop, "help", &help))
+        }
+        if (!JS_GetProperty(cx, prop, "help", &help)) {
             return false;
-        if (!usage.isString() && !help.isString())
+        }
+        if (!usage.isString() && !help.isString()) {
             continue;
+        }
 
-        if (numEntries && !buf.append("\n"))
+        if (numEntries && !buf.append("\n")) {
             return false;
+        }
         numEntries++;
 
-        if (!buf.append("  ", 2))
+        if (!buf.append("  ", 2)) {
             return false;
+        }
 
-        if (!buf.append(usage.isString() ? usage.toString() : JSID_TO_FLAT_STRING(id)))
+        if (!buf.append(usage.isString() ? usage.toString() : JSID_TO_FLAT_STRING(id))) {
             return false;
+        }
     }
 
     RootedString s(cx, buf.finishString());
-    if (!s || !JS_DefineProperty(cx, obj, "help", s, 0))
+    if (!s || !JS_DefineProperty(cx, obj, "help", s, 0)) {
         return false;
+    }
 
     buf.clear();
-    if (!buf.append(name, strlen(name)) || !buf.append(" - interface object with ", 25))
+    if (!buf.append(name, strlen(name)) || !buf.append(" - interface object with ", 25)) {
         return false;
+    }
     char cbuf[100];
     SprintfLiteral(cbuf, "%d %s", numEntries, numEntries == 1 ? "entry" : "entries");
-    if (!buf.append(cbuf, strlen(cbuf)))
+    if (!buf.append(cbuf, strlen(cbuf))) {
         return false;
+    }
     s = buf.finishString();
-    if (!s || !JS_DefineProperty(cx, obj, "usage", s, 0))
+    if (!s || !JS_DefineProperty(cx, obj, "usage", s, 0)) {
         return false;
+    }
 
     return true;
 }
@@ -94,8 +107,9 @@ CreateAlias(JSContext* cx, const char* dstName, JS::HandleObject namespaceObj, c
     RootedObject global(cx, JS::GetNonCCWObjectGlobal(namespaceObj));
 
     RootedValue val(cx);
-    if (!JS_GetProperty(cx, namespaceObj, srcName, &val))
+    if (!JS_GetProperty(cx, namespaceObj, srcName, &val)) {
         return false;
+    }
 
     if (!val.isObject()) {
         JS_ReportErrorASCII(cx, "attempted to alias nonexistent function");
@@ -103,8 +117,9 @@ CreateAlias(JSContext* cx, const char* dstName, JS::HandleObject namespaceObj, c
     }
     
     RootedObject function(cx, &val.toObject());
-    if (!JS_DefineProperty(cx, global, dstName, function, 0))
+    if (!JS_DefineProperty(cx, global, dstName, function, 0)) {
         return false;
+    }
 
     return true;
 }

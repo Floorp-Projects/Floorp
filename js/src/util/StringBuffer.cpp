@@ -22,8 +22,9 @@ ExtractWellSized(JSContext* cx, Buffer& cb)
     size_t length = cb.length();
 
     CharT* buf = cb.extractOrCopyRawBuffer();
-    if (!buf)
+    if (!buf) {
         return nullptr;
+    }
 
     /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
     MOZ_ASSERT(capacity >= length);
@@ -42,8 +43,9 @@ ExtractWellSized(JSContext* cx, Buffer& cb)
 char16_t*
 StringBuffer::stealChars()
 {
-    if (isLatin1() && !inflateChars())
+    if (isLatin1() && !inflateChars()) {
         return nullptr;
+    }
 
     return ExtractWellSized<char16_t>(cx, twoByteChars());
 }
@@ -61,8 +63,9 @@ StringBuffer::inflateChars()
      * TwoByteCharBuffer::sInlineCapacitychars, we'd always malloc here.
      */
     size_t capacity = Max(reserved_, latin1Chars().length());
-    if (!twoByte.reserve(capacity))
+    if (!twoByte.reserve(capacity)) {
         return false;
+    }
 
     twoByte.infallibleAppend(latin1Chars().begin(), latin1Chars().length());
 
@@ -76,16 +79,19 @@ static JSFlatString*
 FinishStringFlat(JSContext* cx, StringBuffer& sb, Buffer& cb)
 {
     size_t len = sb.length();
-    if (!sb.append('\0'))
+    if (!sb.append('\0')) {
         return nullptr;
+    }
 
     UniquePtr<CharT[], JS::FreePolicy> buf(ExtractWellSized<CharT>(cx, cb));
-    if (!buf)
+    if (!buf) {
         return nullptr;
+    }
 
     JSFlatString* str = NewStringDontDeflate<CanGC>(cx, std::move(buf), len);
-    if (!str)
+    if (!str) {
         return nullptr;
+    }
 
     /*
      * The allocation was made on a TempAllocPolicy, so account for the string
@@ -100,11 +106,13 @@ JSFlatString*
 StringBuffer::finishString()
 {
     size_t len = length();
-    if (len == 0)
+    if (len == 0) {
         return cx->names().empty;
+    }
 
-    if (!JSString::validateLength(cx, len))
+    if (!JSString::validateLength(cx, len)) {
         return nullptr;
+    }
 
     JS_STATIC_ASSERT(JSFatInlineString::MAX_LENGTH_TWO_BYTE < TwoByteCharBuffer::InlineLength);
     JS_STATIC_ASSERT(JSFatInlineString::MAX_LENGTH_LATIN1 < Latin1CharBuffer::InlineLength);
@@ -130,8 +138,9 @@ JSAtom*
 StringBuffer::finishAtom()
 {
     size_t len = length();
-    if (len == 0)
+    if (len == 0) {
         return cx->names().empty;
+    }
 
     if (isLatin1()) {
         JSAtom* atom = AtomizeChars(cx, latin1Chars().begin(), len);
@@ -148,17 +157,22 @@ bool
 js::ValueToStringBufferSlow(JSContext* cx, const Value& arg, StringBuffer& sb)
 {
     RootedValue v(cx, arg);
-    if (!ToPrimitive(cx, JSTYPE_STRING, &v))
+    if (!ToPrimitive(cx, JSTYPE_STRING, &v)) {
         return false;
+    }
 
-    if (v.isString())
+    if (v.isString()) {
         return sb.append(v.toString());
-    if (v.isNumber())
+    }
+    if (v.isNumber()) {
         return NumberValueToStringBuffer(cx, v, sb);
-    if (v.isBoolean())
+    }
+    if (v.isBoolean()) {
         return BooleanToStringBuffer(v.toBoolean(), sb);
-    if (v.isNull())
+    }
+    if (v.isNull()) {
         return sb.append(cx->names().null);
+    }
     if (v.isSymbol()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SYMBOL_TO_STRING);
         return false;
@@ -166,8 +180,9 @@ js::ValueToStringBufferSlow(JSContext* cx, const Value& arg, StringBuffer& sb)
 #ifdef ENABLE_BIGINT
     if (v.isBigInt()) {
         JSLinearString* str = BigInt::toString(cx, v.toBigInt(), 10);
-        if (!str)
+        if (!str) {
             return false;
+        }
         return sb.append(str);
     }
 #endif

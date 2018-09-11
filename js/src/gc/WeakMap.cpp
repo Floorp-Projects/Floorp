@@ -38,8 +38,9 @@ WeakMapBase::~WeakMapBase()
 void
 WeakMapBase::unmarkZone(JS::Zone* zone)
 {
-    for (WeakMapBase* m : zone->gcWeakMapList())
+    for (WeakMapBase* m : zone->gcWeakMapList()) {
         m->marked = false;
+    }
 }
 
 void
@@ -57,8 +58,9 @@ WeakMapBase::markZoneIteratively(JS::Zone* zone, GCMarker* marker)
 {
     bool markedAny = false;
     for (WeakMapBase* m : zone->gcWeakMapList()) {
-        if (m->marked && m->markIteratively(marker))
+        if (m->marked && m->markIteratively(marker)) {
             markedAny = true;
+        }
     }
     return markedAny;
 }
@@ -67,8 +69,9 @@ bool
 WeakMapBase::findInterZoneEdges(JS::Zone* zone)
 {
     for (WeakMapBase* m : zone->gcWeakMapList()) {
-        if (!m->findZoneEdges())
+        if (!m->findZoneEdges()) {
             return false;
+        }
     }
     return true;
 }
@@ -88,8 +91,9 @@ WeakMapBase::sweepZone(JS::Zone* zone)
     }
 
 #ifdef DEBUG
-    for (WeakMapBase* m : zone->gcWeakMapList())
+    for (WeakMapBase* m : zone->gcWeakMapList()) {
         MOZ_ASSERT(m->isInList() && m->marked);
+    }
 #endif
 }
 
@@ -110,8 +114,9 @@ bool
 WeakMapBase::saveZoneMarkedWeakMaps(JS::Zone* zone, WeakMapSet& markedWeakMaps)
 {
     for (WeakMapBase* m : zone->gcWeakMapList()) {
-        if (m->marked && !markedWeakMaps.put(m))
+        if (m->marked && !markedWeakMaps.put(m)) {
             return false;
+        }
     }
     return true;
 }
@@ -138,16 +143,20 @@ ObjectValueMap::findZoneEdges()
     JS::AutoSuppressGCAnalysis nogc;
     for (Range r = all(); !r.empty(); r.popFront()) {
         JSObject* key = r.front().key();
-        if (key->asTenured().isMarkedBlack())
+        if (key->asTenured().isMarkedBlack()) {
             continue;
+        }
         JSObject* delegate = getDelegate(key);
-        if (!delegate)
+        if (!delegate) {
             continue;
+        }
         Zone* delegateZone = delegate->zone();
-        if (delegateZone == zone() || !delegateZone->isGCMarking())
+        if (delegateZone == zone() || !delegateZone->isGCMarking()) {
             continue;
-        if (!delegateZone->gcSweepGroupEdges().put(key->zone()))
+        }
+        if (!delegateZone->gcSweepGroupEdges().put(key->zone())) {
             return false;
+        }
     }
     return true;
 }
@@ -159,8 +168,9 @@ ObjectWeakMap::ObjectWeakMap(JSContext* cx)
 JSObject*
 ObjectWeakMap::lookup(const JSObject* obj)
 {
-    if (ObjectValueMap::Ptr p = map.lookup(const_cast<JSObject*>(obj)))
+    if (ObjectValueMap::Ptr p = map.lookup(const_cast<JSObject*>(obj))) {
         return &p->value().toObject();
+    }
     return nullptr;
 }
 

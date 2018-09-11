@@ -69,8 +69,9 @@ class ICState
         // Note: we cannot assert that numOptimizedStubs_ <= MaxOptimizedStubs
         // because old-style baseline ICs may attach more stubs than
         // MaxOptimizedStubs allows.
-        if (mode_ == Mode::Generic || JitOptions.disableCacheIR)
+        if (mode_ == Mode::Generic || JitOptions.disableCacheIR) {
             return false;
+        }
         return true;
     }
 
@@ -83,10 +84,12 @@ class ICState
         // Note: we cannot assert that numOptimizedStubs_ <= MaxOptimizedStubs
         // because old-style baseline ICs may attach more stubs than
         // MaxOptimizedStubs allows.
-        if (mode_ == Mode::Generic)
+        if (mode_ == Mode::Generic) {
             return false;
-        if (numOptimizedStubs_ < MaxOptimizedStubs && numFailures_ < maxFailures())
+        }
+        if (numOptimizedStubs_ < MaxOptimizedStubs && numFailures_ < maxFailures()) {
             return false;
+        }
         if (numFailures_ == maxFailures() || mode_ == Mode::Megamorphic) {
             transition(Mode::Generic);
             return true;

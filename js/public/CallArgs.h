@@ -165,12 +165,14 @@ class MOZ_STACK_CLASS CallArgsBase
     // CALLING/CONSTRUCTING-DIFFERENTIATIONS
 
     bool isConstructing() const {
-        if (!argv_[-1].isMagic())
+        if (!argv_[-1].isMagic()) {
             return false;
+        }
 
 #ifdef JS_DEBUG
-        if (!this->usedRval())
+        if (!this->usedRval()) {
             CheckIsValidConstructible(calleev());
+        }
 #endif
 
         return true;
@@ -312,8 +314,9 @@ class MOZ_STACK_CLASS CallArgs : public detail::CallArgsBase<detail::IncludeUsed
 #ifdef DEBUG
         MOZ_ASSERT(ValueIsNotGray(args.thisv()));
         MOZ_ASSERT(ValueIsNotGray(args.calleev()));
-        for (unsigned i = 0; i < argc; ++i)
+        for (unsigned i = 0; i < argc; ++i) {
             MOZ_ASSERT(ValueIsNotGray(argv[i]));
+        }
 #endif
         return args;
     }

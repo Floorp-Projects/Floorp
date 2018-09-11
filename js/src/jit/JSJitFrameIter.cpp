@@ -66,8 +66,9 @@ JSJitFrameIter::checkInvalidation(IonScript** ionScriptOut) const
     // IonScript if the frame has since been invalidated.
     bool invalidated = !script->hasIonScript() ||
                        !script->ionScript()->containsReturnAddress(returnAddr);
-    if (!invalidated)
+    if (!invalidated) {
         return false;
+    }
 
     int32_t invalidationDataOffset = ((int32_t*) returnAddr)[-1];
     uint8_t* ionScriptDataOffset = returnAddr + invalidationDataOffset;
@@ -94,16 +95,18 @@ JSJitFrameIter::callee() const
 JSFunction*
 JSJitFrameIter::maybeCallee() const
 {
-    if (isScripted() && isFunctionFrame())
+    if (isScripted() && isFunctionFrame()) {
         return callee();
+    }
     return nullptr;
 }
 
 bool
 JSJitFrameIter::isBareExit() const
 {
-    if (type_ != FrameType::Exit)
+    if (type_ != FrameType::Exit) {
         return false;
+    }
     return exitFrame()->isBareExit();
 }
 
@@ -117,8 +120,9 @@ JSScript*
 JSJitFrameIter::script() const
 {
     MOZ_ASSERT(isScripted());
-    if (isBaselineJS())
+    if (isBaselineJS()) {
         return baselineFrame()->script();
+    }
     JSScript* script = ScriptFromCalleeToken(calleeToken());
     MOZ_ASSERT(script);
     return script;
@@ -129,8 +133,9 @@ JSJitFrameIter::baselineScriptAndPc(JSScript** scriptRes, jsbytecode** pcRes) co
 {
     MOZ_ASSERT(isBaselineJS());
     JSScript* script = this->script();
-    if (scriptRes)
+    if (scriptRes) {
         *scriptRes = script;
+    }
 
     MOZ_ASSERT(pcRes);
 
@@ -198,15 +203,17 @@ JSJitFrameIter::machineState() const
     MOZ_ASSERT(isIonScripted());
 
     // The MachineState is used by GCs for tracing call-sites.
-    if (MOZ_UNLIKELY(isBailoutJS()))
+    if (MOZ_UNLIKELY(isBailoutJS())) {
         return *activation_->bailoutData()->machineState();
+    }
 
     SafepointReader reader(ionScript(), safepoint());
     uintptr_t* spill = spillBase();
     MachineState machine;
 
-    for (GeneralRegisterBackwardIterator iter(reader.allGprSpills()); iter.more(); ++iter)
+    for (GeneralRegisterBackwardIterator iter(reader.allGprSpills()); iter.more(); ++iter) {
         machine.setRegisterLocation(*iter, --spill);
+    }
 
     uint8_t* spillAlign = alignDoubleSpillWithOffset(reinterpret_cast<uint8_t*>(spill), 0);
 
@@ -230,8 +237,9 @@ JitFrameLayout*
 JSJitFrameIter::jsFrame() const
 {
     MOZ_ASSERT(isScripted());
-    if (isBailoutJS())
+    if (isBailoutJS()) {
         return (JitFrameLayout*) activation_->bailoutData()->fp();
+    }
 
     return (JitFrameLayout*) fp();
 }
@@ -240,12 +248,14 @@ IonScript*
 JSJitFrameIter::ionScript() const
 {
     MOZ_ASSERT(isIonScripted());
-    if (isBailoutJS())
+    if (isBailoutJS()) {
         return activation_->bailoutData()->ionScript();
+    }
 
     IonScript* ionScript = nullptr;
-    if (checkInvalidation(&ionScript))
+    if (checkInvalidation(&ionScript)) {
         return ionScript;
+    }
     return ionScriptFromCalleeToken();
 }
 
@@ -261,8 +271,9 @@ const SafepointIndex*
 JSJitFrameIter::safepoint() const
 {
     MOZ_ASSERT(isIonJS());
-    if (!cachedSafepointIndex_)
+    if (!cachedSafepointIndex_) {
         cachedSafepointIndex_ = ionScript()->getSafepointIndex(returnAddressToFp());
+    }
     return cachedSafepointIndex_;
 }
 
@@ -270,8 +281,9 @@ SnapshotOffset
 JSJitFrameIter::snapshotOffset() const
 {
     MOZ_ASSERT(isIonScripted());
-    if (isBailoutJS())
+    if (isBailoutJS()) {
         return activation_->bailoutData()->snapshotOffset();
+    }
     return osiIndex()->snapshotOffset();
 }
 
@@ -292,8 +304,9 @@ JSJitFrameIter::isConstructing() const
 unsigned
 JSJitFrameIter::numActualArgs() const
 {
-    if (isScripted())
+    if (isScripted()) {
         return jsFrame()->numActualArgs();
+    }
 
     MOZ_ASSERT(isExitFrameLayout<NativeExitFrameLayout>());
     return exitFrame()->as<NativeExitFrameLayout>()->argc();
@@ -363,8 +376,9 @@ JSJitFrameIter::dump() const
         InlineFrameIterator frames(TlsContext.get(), this);
         for (;;) {
             frames.dump();
-            if (!frames.more())
+            if (!frames.more()) {
                 break;
+            }
             ++frames;
         }
         break;
@@ -398,36 +412,42 @@ JSJitFrameIter::verifyReturnAddressUsingNativeToBytecodeMap()
     MOZ_ASSERT(returnAddressToFp_ != nullptr);
 
     // Only handle Ion frames for now.
-    if (type_ != FrameType::IonJS && type_ != FrameType::BaselineJS)
+    if (type_ != FrameType::IonJS && type_ != FrameType::BaselineJS) {
         return true;
+    }
 
     JSRuntime* rt = TlsContext.get()->runtime();
 
     // Don't verify while off thread.
-    if (!CurrentThreadCanAccessRuntime(rt))
+    if (!CurrentThreadCanAccessRuntime(rt)) {
         return true;
+    }
 
     // Don't verify if sampling is being suppressed.
-    if (!TlsContext.get()->isProfilerSamplingEnabled())
+    if (!TlsContext.get()->isProfilerSamplingEnabled()) {
         return true;
+    }
 
-    if (JS::RuntimeHeapIsMinorCollecting())
+    if (JS::RuntimeHeapIsMinorCollecting()) {
         return true;
+    }
 
     JitRuntime* jitrt = rt->jitRuntime();
 
     // Look up and print bytecode info for the native address.
     const JitcodeGlobalEntry* entry = jitrt->getJitcodeGlobalTable()->lookup(returnAddressToFp_);
-    if (!entry)
+    if (!entry) {
         return true;
+    }
 
     JitSpew(JitSpew_Profiling, "Found nativeToBytecode entry for %p: %p - %p",
             returnAddressToFp_, entry->nativeStartAddr(), entry->nativeEndAddr());
 
     JitcodeGlobalEntry::BytecodeLocationVector location;
     uint32_t depth = UINT32_MAX;
-    if (!entry->callStackAtAddr(rt, returnAddressToFp_, location, &depth))
+    if (!entry->callStackAtAddr(rt, returnAddressToFp_, location, &depth)) {
         return false;
+    }
     MOZ_ASSERT(depth > 0 && depth != UINT32_MAX);
     MOZ_ASSERT(location.length() == depth);
 
@@ -457,8 +477,9 @@ JSJitFrameIter::verifyReturnAddressUsingNativeToBytecodeMap()
 
             MOZ_ASSERT(inlineFrames.script() == location[idx].script);
 
-            if (inlineFrames.more())
+            if (inlineFrames.more()) {
                 ++inlineFrames;
+            }
         }
     }
 
@@ -498,23 +519,27 @@ JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(JSContext* cx, void* pc
     MOZ_ASSERT(cx->isProfilerSamplingEnabled());
 
     // Try initializing with sampler pc
-    if (tryInitWithPC(pc))
+    if (tryInitWithPC(pc)) {
         return;
+    }
 
     // Try initializing with sampler pc using native=>bytecode table.
     JitcodeGlobalTable* table = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
-    if (tryInitWithTable(table, pc, /* forLastCallSite = */ false))
+    if (tryInitWithTable(table, pc, /* forLastCallSite = */ false)) {
         return;
+    }
 
     // Try initializing with lastProfilingCallSite pc
     void* lastCallSite = act->lastProfilingCallSite();
     if (lastCallSite) {
-        if (tryInitWithPC(lastCallSite))
+        if (tryInitWithPC(lastCallSite)) {
             return;
+        }
 
         // Try initializing with lastProfilingCallSite pc using native=>bytecode table.
-        if (tryInitWithTable(table, lastCallSite, /* forLastCallSite = */ true))
+        if (tryInitWithTable(table, lastCallSite, /* forLastCallSite = */ true)) {
             return;
+        }
     }
 
     MOZ_ASSERT(frameScript()->hasBaselineScript());
@@ -564,12 +589,14 @@ bool
 JSJitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable* table, void* pc,
                                             bool forLastCallSite)
 {
-    if (!pc)
+    if (!pc) {
         return false;
+    }
 
     const JitcodeGlobalEntry* entry = table->lookup(pc);
-    if (!entry)
+    if (!entry) {
         return false;
+    }
 
     JSScript* callee = frameScript();
 
@@ -585,8 +612,9 @@ JSJitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable* table, void* p
 
     if (entry->isIon()) {
         // If looked-up callee doesn't match frame callee, don't accept lastProfilingCallSite
-        if (entry->ionEntry().getScript(0) != callee)
+        if (entry->ionEntry().getScript(0) != callee) {
             return false;
+        }
 
         type_ = FrameType::IonJS;
         returnAddressToFp_ = pc;
@@ -595,8 +623,9 @@ JSJitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable* table, void* p
 
     if (entry->isBaseline()) {
         // If looked-up callee doesn't match frame callee, don't accept lastProfilingCallSite
-        if (forLastCallSite && entry->baselineEntry().script() != callee)
+        if (forLastCallSite && entry->baselineEntry().script() != callee) {
             return false;
+        }
 
         type_ = FrameType::BaselineJS;
         returnAddressToFp_ = pc;
@@ -608,8 +637,9 @@ JSJitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable* table, void* p
         const JitcodeGlobalEntry& ionEntry = table->lookupInfallible(ptr);
         MOZ_ASSERT(ionEntry.isIon());
 
-        if (ionEntry.ionEntry().getScript(0) != callee)
+        if (ionEntry.ionEntry().getScript(0) != callee) {
             return false;
+        }
 
         type_ = FrameType::IonJS;
         returnAddressToFp_ = pc;

@@ -42,8 +42,9 @@ GetDefCount(jsbytecode* pc)
 static inline unsigned
 GetUseCount(jsbytecode* pc)
 {
-    if (JSOp(*pc) == JSOP_PICK || JSOp(*pc) == JSOP_UNPICK)
+    if (JSOp(*pc) == JSOP_PICK || JSOp(*pc) == JSOP_UNPICK) {
         return pc[1] + 1;
+    }
 
     return StackUses(pc);
 }
@@ -125,24 +126,28 @@ class BytecodeRangeWithPosition : private BytecodeRange
         sn(script->notes()), snpc(script->code()), isEntryPoint(false),
         wasArtifactEntryPoint(false)
     {
-        if (!SN_IS_TERMINATOR(sn))
+        if (!SN_IS_TERMINATOR(sn)) {
             snpc += SN_DELTA(sn);
+        }
         updatePosition();
-        while (frontPC() != script->main())
+        while (frontPC() != script->main()) {
             popFront();
+        }
 
-        if (frontOpcode() != JSOP_JUMPTARGET)
+        if (frontOpcode() != JSOP_JUMPTARGET) {
             isEntryPoint = true;
-        else
+        } else {
             wasArtifactEntryPoint =  true;
+        }
     }
 
     void popFront() {
         BytecodeRange::popFront();
-        if (empty())
+        if (empty()) {
             isEntryPoint = false;
-        else
+        } else {
             updatePosition();
+        }
 
         // The following conditions are handling artifacts introduced by the
         // bytecode emitter, such that we do not add breakpoints on empty
