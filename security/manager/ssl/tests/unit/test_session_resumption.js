@@ -41,16 +41,15 @@ function add_resume_non_ev_with_override_test() {
       ok(transportSecurityInfo.securityState &
          Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN,
          "expired.example.com should have STATE_CERT_USER_OVERRIDDEN flag");
-      let sslStatus = transportSecurityInfo.SSLStatus;
-      ok(!sslStatus.succeededCertChain,
+      ok(!transportSecurityInfo.succeededCertChain,
          "ev-test.example.com should not have succeededCertChain set");
-      ok(!sslStatus.isDomainMismatch,
+      ok(!transportSecurityInfo.isDomainMismatch,
          "expired.example.com should not have isDomainMismatch set");
-      ok(sslStatus.isNotValidAtThisTime,
+      ok(transportSecurityInfo.isNotValidAtThisTime,
          "expired.example.com should have isNotValidAtThisTime set");
-      ok(!sslStatus.isUntrusted,
+      ok(!transportSecurityInfo.isUntrusted,
          "expired.example.com should not have isUntrusted set");
-      ok(!sslStatus.isExtendedValidation,
+      ok(!transportSecurityInfo.isExtendedValidation,
          "expired.example.com should not have isExtendedValidation set");
     }
   );
@@ -66,16 +65,15 @@ function add_one_ev_test() {
       ok(!(transportSecurityInfo.securityState &
            Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN),
          "ev-test.example.com should not have STATE_CERT_USER_OVERRIDDEN flag");
-      let sslStatus = transportSecurityInfo.SSLStatus;
-      ok(sslStatus.succeededCertChain,
+      ok(transportSecurityInfo.succeededCertChain,
          "ev-test.example.com should have succeededCertChain set");
-      ok(!sslStatus.isDomainMismatch,
+      ok(!transportSecurityInfo.isDomainMismatch,
          "ev-test.example.com should not have isDomainMismatch set");
-      ok(!sslStatus.isNotValidAtThisTime,
+      ok(!transportSecurityInfo.isNotValidAtThisTime,
          "ev-test.example.com should not have isNotValidAtThisTime set");
-      ok(!sslStatus.isUntrusted,
+      ok(!transportSecurityInfo.isUntrusted,
          "ev-test.example.com should not have isUntrusted set");
-      ok(!gEVExpected || sslStatus.isExtendedValidation,
+      ok(!gEVExpected || transportSecurityInfo.isExtendedValidation,
          "ev-test.example.com should have isExtendedValidation set " +
          "(or this is a non-debug build)");
     }
@@ -126,16 +124,15 @@ function add_one_non_ev_test() {
       ok(!(transportSecurityInfo.securityState &
            Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN),
          `${GOOD_DOMAIN} should not have STATE_CERT_USER_OVERRIDDEN flag`);
-      let sslStatus = transportSecurityInfo.SSLStatus;
-      ok(sslStatus.succeededCertChain,
+      ok(transportSecurityInfo.succeededCertChain,
          `${GOOD_DOMAIN} should have succeededCertChain set`);
-      ok(!sslStatus.isDomainMismatch,
+      ok(!transportSecurityInfo.isDomainMismatch,
          `${GOOD_DOMAIN} should not have isDomainMismatch set`);
-      ok(!sslStatus.isNotValidAtThisTime,
+      ok(!transportSecurityInfo.isNotValidAtThisTime,
          `${GOOD_DOMAIN} should not have isNotValidAtThisTime set`);
-      ok(!sslStatus.isUntrusted,
+      ok(!transportSecurityInfo.isUntrusted,
          `${GOOD_DOMAIN} should not have isUntrusted set`);
-      ok(!sslStatus.isExtendedValidation,
+      ok(!transportSecurityInfo.isExtendedValidation,
          `${GOOD_DOMAIN} should not have isExtendedValidation set`);
     }
   );

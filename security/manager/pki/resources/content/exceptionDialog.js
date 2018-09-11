@@ -7,7 +7,7 @@
 var gDialog;
 var gBundleBrand;
 var gPKIBundle;
-var gSSLStatus;
+var gSecInfo;
 var gCert;
 var gChecking;
 var gBroken;
@@ -38,9 +38,9 @@ function initExceptionDialog() {
       document.getElementById("locationTextBox").value = args[0].location;
       document.getElementById("checkCertButton").disabled = false;
 
-      if (args[0].sslStatus) {
-        gSSLStatus = args[0].sslStatus;
-        gCert = gSSLStatus.serverCert;
+      if (args[0].securityInfo) {
+        gSecInfo = args[0].securityInfo;
+        gCert = gSecInfo.serverCert;
         gBroken = true;
         updateCertStatus();
       } else if (args[0].prefetchCert) {
@@ -66,7 +66,7 @@ function initExceptionDialog() {
 
 /**
  * Helper function for checkCert. Set as the onerror/onload callbacks for an
- * XMLHttpRequest. Sets gSSLStatus, gCert, gBroken, and gChecking according to
+ * XMLHttpRequest. Sets gSecInfo, gCert, gBroken, and gChecking according to
  * the load information from the request. Probably should not be used directly.
  *
  * @param {XMLHttpRequest} req
@@ -76,10 +76,9 @@ function initExceptionDialog() {
  */
 function grabCert(req, evt) {
   if (req.channel && req.channel.securityInfo) {
-    gSSLStatus = req.channel.securityInfo
-                    .QueryInterface(Ci.nsITransportSecurityInfo).SSLStatus;
-    gCert = gSSLStatus ? gSSLStatus.QueryInterface(Ci.nsISSLStatus).serverCert
-                       : null;
+    gSecInfo = req.channel.securityInfo
+                  .QueryInterface(Ci.nsITransportSecurityInfo);
+    gCert = gSecInfo ? gSecInfo.serverCert : null;
   }
   gBroken = evt.type == "error";
   gChecking = false;
@@ -92,7 +91,7 @@ function grabCert(req, evt) {
  */
 function checkCert() {
   gCert = null;
-  gSSLStatus = null;
+  gSecInfo = null;
   gChecking = true;
   gBroken = false;
   updateCertStatus();
@@ -185,13 +184,13 @@ function updateCertStatus() {
       var uts = "addExceptionUnverifiedOrBadSignatureShort";
       var utl = "addExceptionUnverifiedOrBadSignatureLong2";
       var use1 = false;
-      if (gSSLStatus.isDomainMismatch) {
+      if (gSecInfo.isDomainMismatch) {
         bucketId += gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_DOMAIN;
         use1 = true;
         shortDesc = mms;
         longDesc  = mml;
       }
-      if (gSSLStatus.isNotValidAtThisTime) {
+      if (gSecInfo.isNotValidAtThisTime) {
         bucketId += gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_TIME;
         if (!use1) {
           use1 = true;
@@ -203,7 +202,7 @@ function updateCertStatus() {
           longDesc2  = exl;
         }
       }
-      if (gSSLStatus.isUntrusted) {
+      if (gSecInfo.isUntrusted) {
         bucketId +=
           gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_UNTRUSTED;
         if (!use1) {
@@ -299,7 +298,7 @@ function viewCertButtonClick() {
  * Handle user request to add an exception for the specified cert
  */
 function addException() {
-  if (!gCert || !gSSLStatus) {
+  if (!gCert || !gSecInfo) {
     return;
   }
 
@@ -308,17 +307,17 @@ function addException() {
   var flags = 0;
   let confirmBucketId =
         gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_BASE;
-  if (gSSLStatus.isUntrusted) {
+  if (gSecInfo.isUntrusted) {
     flags |= overrideService.ERROR_UNTRUSTED;
     confirmBucketId +=
         gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_UNTRUSTED;
   }
-  if (gSSLStatus.isDomainMismatch) {
+  if (gSecInfo.isDomainMismatch) {
     flags |= overrideService.ERROR_MISMATCH;
     confirmBucketId +=
            gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_DOMAIN;
   }
-  if (gSSLStatus.isNotValidAtThisTime) {
+  if (gSecInfo.isNotValidAtThisTime) {
     flags |= overrideService.ERROR_TIME;
     confirmBucketId +=
            gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_TIME;

@@ -6,15 +6,20 @@
 
 #include "nsISupports.idl"
 
-interface nsISSLStatus;
+interface nsIX509Cert;
 interface nsIX509CertList;
 
-[builtinclass, scriptable, uuid(216112d3-28bc-4671-b057-f98cc09ba1ea)]
+[scriptable, uuid(216112d3-28bc-4671-b057-f98cc09ba1ea)]
 interface nsITransportSecurityInfo : nsISupports {
     readonly attribute unsigned long securityState;
-    [infallible] readonly attribute long errorCode; // PRErrorCode
+    readonly attribute long errorCode; // PRErrorCode
     // errorCode as string (e.g. "SEC_ERROR_UNKNOWN_ISSUER")
     readonly attribute AString errorCodeString;
+
+    /**
+     * The following parameters are only valid after the TLS handshake
+     * has completed.  Check securityState first.
+     */
 
     /**
      * If certificate verification failed, this will be the peer certificate
@@ -23,6 +28,48 @@ interface nsITransportSecurityInfo : nsISupports {
      */
     readonly attribute nsIX509CertList failedCertChain;
 
-    readonly attribute nsISSLStatus SSLStatus;
+    readonly attribute nsIX509Cert serverCert;
+    readonly attribute nsIX509CertList succeededCertChain;
+
+    [must_use]
+    readonly attribute ACString cipherName;
+    [must_use]
+    readonly attribute unsigned long keyLength;
+    [must_use]
+    readonly attribute unsigned long secretKeyLength;
+    [must_use]
+    readonly attribute ACString keaGroupName;
+    [must_use]
+    readonly attribute ACString signatureSchemeName;
+
+    const short SSL_VERSION_3   = 0;
+    const short TLS_VERSION_1   = 1;
+    const short TLS_VERSION_1_1 = 2;
+    const short TLS_VERSION_1_2 = 3;
+    const short TLS_VERSION_1_3 = 4;
+    [must_use]
+    readonly attribute unsigned short protocolVersion;
+
+    const short CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE          = 0;
+    const short CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT        = 5;
+    const short CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS  = 6;
+    const short CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS = 7;
+    [must_use]
+    readonly attribute unsigned short certificateTransparencyStatus;
+
+    [must_use]
+    readonly attribute boolean isDomainMismatch;
+    [must_use]
+    readonly attribute boolean isNotValidAtThisTime;
+
+    [must_use]
+    readonly attribute boolean isUntrusted;
+
+    /**
+     * True only if (and after) serverCert was successfully validated as
+     * Extended Validation (EV).
+     */
+    [must_use]
+    readonly attribute boolean isExtendedValidation;
 };
 
