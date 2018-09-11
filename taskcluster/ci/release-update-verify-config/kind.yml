@@ -29,23 +29,17 @@ job-defaults:
       app-name: browser
       branch-prefix: mozilla
       archive-prefix:
-         by-project:
-            birch: "http://ftp.stage.mozaws.net/pub"
-            jamun: "http://ftp.stage.mozaws.net/pub"
-            maple: "http://ftp.stage.mozaws.net/pub"
-            default: "https://archive.mozilla.org/pub"
+         by-release-level:
+            staging: "http://ftp.stage.mozaws.net/pub"
+            production: "https://archive.mozilla.org/pub"
       previous-archive-prefix:
-         by-project:
-            birch: "https://archive.mozilla.org/pub"
-            jamun: "https://archive.mozilla.org/pub"
-            maple: "https://archive.mozilla.org/pub"
-            default: null
+         by-release-level:
+            staging: "https://archive.mozilla.org/pub"
+            production: null
       aus-server:
-         by-project:
-            birch: "https://aus4.stage.mozaws.net"
-            jamun: "https://aus4.stage.mozaws.net"
-            maple: "https://aus4.stage.mozaws.net"
-            default: "https://aus5.mozilla.org"
+         by-release-level:
+            staging: "https://aus4.stage.mozaws.net"
+            production: "https://aus5.mozilla.org"
       # This is overridden for devedition to exclude 58.0b1
       # because of the special case added by
       # https://bugzilla.mozilla.org/show_bug.cgi?id=1419189

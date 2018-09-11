@@ -42,7 +42,7 @@ beetmover_description_schema = Schema({
     Optional('label'): basestring,
     Optional('treeherder'): task_description_schema['treeherder'],
 
-    Optional('bucket-scope'): optionally_keyed_by('project', basestring),
+    Optional('bucket-scope'): optionally_keyed_by('release-level', basestring),
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
     Optional('shipping-product'): task_description_schema['shipping-product'],
 })
@@ -91,7 +91,7 @@ def make_task_description(config, jobs):
 
         resolve_keyed_by(
             job, 'bucket-scope', item_name=job['label'],
-            project=config.params['project']
+            **{'release-level': config.params.release_level()}
         )
 
         task = {

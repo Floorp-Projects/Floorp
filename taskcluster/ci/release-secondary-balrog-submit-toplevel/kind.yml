@@ -17,6 +17,14 @@ job-defaults:
       balrog-action: submit-toplevel
       require-mirrors: false
       platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
+      archive-domain:
+         by-release-level:
+            production: archive.mozilla.org
+            staging: ftp.stage.mozaws.net
+      download-domain:
+         by-release-level:
+            production: download.mozilla.org
+            staging: bouncer-bouncer-releng.stage.mozaws.net
 
 jobs:
    firefox:
@@ -25,16 +33,6 @@ jobs:
       shipping-product: firefox
       worker:
          product: firefox
-         archive-domain:
-            by-project:
-               mozilla-release: archive.mozilla.org
-               mozilla-esr60: archive.mozilla.org
-               default: ftp.stage.mozaws.net
-         download-domain:
-            by-project:
-               mozilla-release: download.mozilla.org
-               mozilla-esr60: download.mozilla.org
-               default: download.mozilla.org
          channel-names:
             by-project:
                birch: ["beta", "beta-localtest", "beta-cdntest"]

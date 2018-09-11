@@ -36,11 +36,9 @@ job-defaults:
       tooltool-downloads: false
    extra:
       limit-locales:
-         by-project:
-            birch: true
-            jamun: true
-            maple: true
-            default: false
+         by-release-level:
+            staging: true
+            production: false
 
 jobs:
    linux-nightly:
