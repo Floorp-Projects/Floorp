@@ -1226,9 +1226,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
   nsChangeHint CalcDifference(const nsStyleList& aNewData,
                               const nsStyleDisplay* aOldDisplay) const;
 
-  static void Shutdown() {
+  static void Shutdown()
+  {
     sInitialQuotes = nullptr;
-    sNoneQuotes = nullptr;
   }
 
   imgRequestProxy* GetListStyleImage() const
@@ -1238,12 +1238,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
 
   already_AddRefed<nsIURI> GetListStyleImageURI() const;
 
-  const nsStyleQuoteValues::QuotePairArray& GetQuotePairs() const;
-
-  void SetQuotesInherit(const nsStyleList* aOther);
-  void SetQuotesInitial();
-  void SetQuotesNone();
-  void SetQuotes(nsStyleQuoteValues::QuotePairArray&& aValues);
+  const nsStyleQuoteValues::QuotePairArray& GetQuotePairs() const
+  {
+    return mQuotes->mQuotePairs;
+  }
 
   uint8_t mListStylePosition;
   RefPtr<nsStyleImageRequest> mListStyleImage;
@@ -1259,7 +1257,6 @@ public:
 private:
   // nsStyleQuoteValues objects representing two common values, for sharing.
   static mozilla::StaticRefPtr<nsStyleQuoteValues> sInitialQuotes;
-  static mozilla::StaticRefPtr<nsStyleQuoteValues> sNoneQuotes;
 };
 
 struct nsStyleGridLine
@@ -1302,23 +1299,9 @@ struct nsStyleGridLine
            mLineName != aOther.mLineName;
   }
 
-  void SetToInteger(uint32_t value)
-  {
-    mHasSpan = false;
-    mInteger = value;
-    mLineName.Truncate();
-  }
-
-  void SetAuto()
-  {
-    mHasSpan = false;
-    mInteger = 0;
-    mLineName.Truncate();
-  }
-
   bool IsAuto() const
   {
-    bool haveInitialValues =  mInteger == 0 && mLineName.IsEmpty();
+    bool haveInitialValues = mInteger == 0 && mLineName.IsEmpty();
     MOZ_ASSERT(!(haveInitialValues && mHasSpan),
                "should not have 'span' when other components are "
                "at their initial values");
@@ -1796,13 +1779,6 @@ struct StyleTransition
   nsCSSPropertyID GetProperty() const { return mProperty; }
   nsAtom* GetUnknownProperty() const { return mUnknownProperty; }
 
-  void SetTimingFunction(const nsTimingFunction& aTimingFunction)
-    { mTimingFunction = aTimingFunction; }
-  void SetDelay(float aDelay) { mDelay = aDelay; }
-  void SetDuration(float aDuration) { mDuration = aDuration; }
-
-  nsTimingFunction& TimingFunctionSlot() { return mTimingFunction; }
-
   bool operator==(const StyleTransition& aOther) const;
   bool operator!=(const StyleTransition& aOther) const
     { return !(*this == aOther); }
@@ -1835,19 +1811,8 @@ struct StyleAnimation
   uint8_t GetPlayState() const { return mPlayState; }
   float GetIterationCount() const { return mIterationCount; }
 
-  void SetTimingFunction(const nsTimingFunction& aTimingFunction)
-    { mTimingFunction = aTimingFunction; }
-  void SetDelay(float aDelay) { mDelay = aDelay; }
-  void SetDuration(float aDuration) { mDuration = aDuration; }
   void SetName(already_AddRefed<nsAtom> aName) { mName = aName; }
   void SetName(nsAtom* aName) { mName = aName; }
-  void SetDirection(dom::PlaybackDirection aDirection) { mDirection = aDirection; }
-  void SetFillMode(dom::FillMode aFillMode) { mFillMode = aFillMode; }
-  void SetPlayState(uint8_t aPlayState) { mPlayState = aPlayState; }
-  void SetIterationCount(float aIterationCount)
-    { mIterationCount = aIterationCount; }
-
-  nsTimingFunction& TimingFunctionSlot() { return mTimingFunction; }
 
   bool operator==(const StyleAnimation& aOther) const;
   bool operator!=(const StyleAnimation& aOther) const
@@ -1878,18 +1843,7 @@ public:
   nsCSSKeyword GetShapeTypeName() const;
 
   StyleFillRule GetFillRule() const { return mFillRule; }
-  void SetFillRule(StyleFillRule aFillRule)
-  {
-    MOZ_ASSERT(mType == StyleBasicShapeType::Polygon, "expected polygon");
-    mFillRule = aFillRule;
-  }
 
-  mozilla::Position& GetPosition() {
-    MOZ_ASSERT(mType == StyleBasicShapeType::Circle ||
-               mType == StyleBasicShapeType::Ellipse,
-               "expected circle or ellipse");
-    return mPosition;
-  }
   const mozilla::Position& GetPosition() const {
     MOZ_ASSERT(mType == StyleBasicShapeType::Circle ||
                mType == StyleBasicShapeType::Ellipse,
@@ -1897,7 +1851,8 @@ public:
     return mPosition;
   }
 
-  bool HasRadius() const {
+  bool HasRadius() const
+  {
     MOZ_ASSERT(mType == StyleBasicShapeType::Inset, "expected inset");
     nsStyleCoord zero;
     zero.SetCoordValue(0);
@@ -1908,22 +1863,15 @@ public:
     }
     return false;
   }
-  nsStyleCorners& GetRadius() {
-    MOZ_ASSERT(mType == StyleBasicShapeType::Inset, "expected inset");
-    return mRadius;
-  }
-  const nsStyleCorners& GetRadius() const {
+
+  const nsStyleCorners& GetRadius() const
+  {
     MOZ_ASSERT(mType == StyleBasicShapeType::Inset, "expected inset");
     return mRadius;
   }
 
   // mCoordinates has coordinates for polygon or radii for
   // ellipse and circle.
-  nsTArray<nsStyleCoord>& Coordinates()
-  {
-    return mCoordinates;
-  }
-
   const nsTArray<nsStyleCoord>& Coordinates() const
   {
     return mCoordinates;
@@ -2642,28 +2590,6 @@ public:
     return ImageRequest()->get();
   }
 
-  void SetKeyword(StyleContentType aType)
-  {
-    MOZ_ASSERT(aType == StyleContentType::OpenQuote ||
-               aType == StyleContentType::CloseQuote ||
-               aType == StyleContentType::NoOpenQuote ||
-               aType == StyleContentType::NoCloseQuote ||
-               aType == StyleContentType::AltContent);
-    MOZ_ASSERT(mType == StyleContentType::Uninitialized,
-               "should only initialize nsStyleContentData once");
-    mType = aType;
-  }
-
-  void SetString(StyleContentType aType, const char16_t* aString)
-  {
-    MOZ_ASSERT(aType == StyleContentType::String);
-    MOZ_ASSERT(aString);
-    MOZ_ASSERT(mType == StyleContentType::Uninitialized,
-               "should only initialize nsStyleContentData once");
-    mType = aType;
-    mContent.mString = NS_xstrdup(aString);
-  }
-
   void SetCounters(StyleContentType aType,
                    already_AddRefed<CounterFunction> aCounterFunction)
   {
@@ -3052,27 +2978,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
   }
   bool StrokeWidthFromObject() const {
     return mContextFlags & STROKE_WIDTH_CONTEXT;
-  }
-
-  void SetFillOpacitySource(nsStyleSVGOpacitySource aValue) {
-    mContextFlags = (mContextFlags & ~FILL_OPACITY_SOURCE_MASK) |
-                    (aValue << FILL_OPACITY_SOURCE_SHIFT);
-  }
-  void SetStrokeOpacitySource(nsStyleSVGOpacitySource aValue) {
-    mContextFlags = (mContextFlags & ~STROKE_OPACITY_SOURCE_MASK) |
-                    (aValue << STROKE_OPACITY_SOURCE_SHIFT);
-  }
-  void SetStrokeDasharrayFromObject(bool aValue) {
-    mContextFlags = (mContextFlags & ~STROKE_DASHARRAY_CONTEXT) |
-                    (aValue ? STROKE_DASHARRAY_CONTEXT : 0);
-  }
-  void SetStrokeDashoffsetFromObject(bool aValue) {
-    mContextFlags = (mContextFlags & ~STROKE_DASHOFFSET_CONTEXT) |
-                    (aValue ? STROKE_DASHOFFSET_CONTEXT : 0);
-  }
-  void SetStrokeWidthFromObject(bool aValue) {
-    mContextFlags = (mContextFlags & ~STROKE_WIDTH_CONTEXT) |
-                    (aValue ? STROKE_WIDTH_CONTEXT : 0);
   }
 
   bool HasMarker() const {
