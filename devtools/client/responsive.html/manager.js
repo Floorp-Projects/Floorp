@@ -638,12 +638,19 @@ ResponsiveUI.prototype = {
    *         Whether a reload is needed to apply the change.
    */
   updateTouchSimulation(enabled) {
-    if (!enabled) {
-      return this.emulationFront.clearTouchEventsOverride();
+    let reloadNeeded;
+    if (enabled) {
+      reloadNeeded = this.emulationFront.setTouchEventsOverride(
+        Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED
+      );
+      reloadNeeded |= this.emulationFront.setMetaViewportOverride(
+        Ci.nsIDocShell.META_VIEWPORT_OVERRIDE_ENABLED
+      );
+    } else {
+      reloadNeeded = this.emulationFront.clearTouchEventsOverride();
+      reloadNeeded |= this.emulationFront.clearMetaViewportOverride();
     }
-    return this.emulationFront.setTouchEventsOverride(
-      Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED
-    );
+    return reloadNeeded;
   },
 
   /**
