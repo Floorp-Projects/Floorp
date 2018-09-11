@@ -117,6 +117,16 @@ using namespace std;
 using base::ProcessId;
 using base::Thread;
 
+
+/// Equivalent to asserting CompositorThreadHolder::IsInCompositorThread with the
+/// addition that it doesn't assert if the compositor thread holder is already gone
+/// during late shutdown.
+static void AssertIsInCompositorThread()
+{
+  MOZ_RELEASE_ASSERT(!CompositorThread() ||
+                     CompositorThreadHolder::IsInCompositorThread());
+}
+
 CompositorBridgeParentBase::CompositorBridgeParentBase(CompositorManagerParent* aManager)
   : mCanSend(true)
   , mCompositorManager(aManager)
@@ -1667,15 +1677,14 @@ CompositorBridgeParent::DeallocPLayerTransactionParent(PLayerTransactionParent* 
 
 CompositorBridgeParent* CompositorBridgeParent::GetCompositorBridgeParent(uint64_t id)
 {
-  MOZ_RELEASE_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-
+  AssertIsInCompositorThread();
   CompositorMap::iterator it = sCompositorMap->find(id);
   return it != sCompositorMap->end() ? it->second : nullptr;
 }
 
 void CompositorBridgeParent::AddCompositor(CompositorBridgeParent* compositor, uint64_t* outID)
 {
-  MOZ_RELEASE_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertIsInCompositorThread();
 
   static uint64_t sNextID = 1;
 
@@ -1686,7 +1695,7 @@ void CompositorBridgeParent::AddCompositor(CompositorBridgeParent* compositor, u
 
 CompositorBridgeParent* CompositorBridgeParent::RemoveCompositor(uint64_t id)
 {
-  MOZ_RELEASE_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertIsInCompositorThread();
 
   CompositorMap::iterator it = sCompositorMap->find(id);
   if (it == sCompositorMap->end()) {
