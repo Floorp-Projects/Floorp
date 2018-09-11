@@ -458,48 +458,6 @@ pub(crate) mod desc {
         ],
     };
 
-    pub const BORDER_CORNER_DASH_AND_DOT: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
-        instance_attributes: &[
-            VertexAttribute {
-                name: "aClipRenderTaskAddress",
-                count: 1,
-                kind: VertexAttributeKind::I32,
-            },
-            VertexAttribute {
-                name: "aScrollNodeId",
-                count: 1,
-                kind: VertexAttributeKind::I32,
-            },
-            VertexAttribute {
-                name: "aClipSegment",
-                count: 1,
-                kind: VertexAttributeKind::I32,
-            },
-            VertexAttribute {
-                name: "aClipDataResourceAddress",
-                count: 4,
-                kind: VertexAttributeKind::U16,
-            },
-            VertexAttribute {
-                name: "aDashOrDot0",
-                count: 4,
-                kind: VertexAttributeKind::F32,
-            },
-            VertexAttribute {
-                name: "aDashOrDot1",
-                count: 4,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
-    };
-
     pub const GPU_CACHE_UPDATE: VertexDescriptor = VertexDescriptor {
         vertex_attributes: &[
             VertexAttribute {
@@ -1349,7 +1307,6 @@ pub struct RendererVAOs {
     prim_vao: VAO,
     blur_vao: VAO,
     clip_vao: VAO,
-    dash_and_dot_vao: VAO,
     border_vao: VAO,
 }
 
@@ -1646,8 +1603,6 @@ impl Renderer {
         let clip_vao = device.create_vao_with_new_instances(&desc::CLIP, &prim_vao);
         let border_vao =
             device.create_vao_with_new_instances(&desc::BORDER, &prim_vao);
-        let dash_and_dot_vao =
-            device.create_vao_with_new_instances(&desc::BORDER_CORNER_DASH_AND_DOT, &prim_vao);
         let texture_cache_upload_pbo = device.create_pbo();
 
         let texture_resolver = SourceTextureResolver::new(&mut device);
@@ -1710,7 +1665,6 @@ impl Renderer {
                 Arc::new(worker.unwrap())
             });
         let sampler = options.sampler;
-        let enable_render_on_scroll = options.enable_render_on_scroll;
 
         let blob_image_handler = options.blob_image_handler.take();
         let thread_listener_for_render_backend = thread_listener.clone();
@@ -1792,7 +1746,6 @@ impl Renderer {
                 config,
                 recorder,
                 sampler,
-                enable_render_on_scroll,
             );
             backend.run(backend_profile_counters);
             if let Some(ref thread_listener) = *thread_listener_for_render_backend {
@@ -1836,7 +1789,6 @@ impl Renderer {
                 prim_vao,
                 blur_vao,
                 clip_vao,
-                dash_and_dot_vao,
                 border_vao,
             },
             transforms_texture,
@@ -4060,7 +4012,6 @@ impl Renderer {
         self.device.delete_vao(self.vaos.prim_vao);
         self.device.delete_vao(self.vaos.clip_vao);
         self.device.delete_vao(self.vaos.blur_vao);
-        self.device.delete_vao(self.vaos.dash_and_dot_vao);
         self.device.delete_vao(self.vaos.border_vao);
 
         #[cfg(feature = "debug_renderer")]
@@ -4240,7 +4191,6 @@ pub struct RendererOptions {
     pub blob_image_handler: Option<Box<BlobImageHandler>>,
     pub recorder: Option<Box<ApiRecordingReceiver>>,
     pub thread_listener: Option<Box<ThreadListener + Send + Sync>>,
-    pub enable_render_on_scroll: bool,
     pub cached_programs: Option<Rc<ProgramCache>>,
     pub debug_flags: DebugFlags,
     pub renderer_id: Option<u64>,
@@ -4276,7 +4226,6 @@ impl Default for RendererOptions {
             blob_image_handler: None,
             recorder: None,
             thread_listener: None,
-            enable_render_on_scroll: true,
             renderer_id: None,
             cached_programs: None,
             disable_dual_source_blending: false,

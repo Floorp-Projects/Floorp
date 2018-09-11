@@ -97,12 +97,6 @@ struct Document {
     // A set of pipelines that the caller has requested be
     // made available as output textures.
     output_pipelines: FastHashSet<PipelineId>,
-    // A helper switch to prevent any frames rendering triggered by scrolling
-    // messages between `SetDisplayList` and `GenerateFrame`.
-    // If we allow them, then a reftest that scrolls a few layers before generating
-    // the first frame would produce inconsistent rendering results, because
-    // scroll events are not necessarily received in deterministic order.
-    render_on_scroll: Option<bool>,
 
     /// A data structure to allow hit testing against rendered frames. This is updated
     /// every time we produce a fully rendered frame.
@@ -117,14 +111,8 @@ impl Document {
     pub fn new(
         window_size: DeviceUintSize,
         layer: DocumentLayer,
-        enable_render_on_scroll: bool,
         default_device_pixel_ratio: f32,
     ) -> Self {
-        let render_on_scroll = if enable_render_on_scroll {
-            Some(false)
-        } else {
-            None
-        };
         Document {
             scene: Scene::new(),
             removed_pipelines: Vec::new(),
@@ -141,7 +129,6 @@ impl Document {
             frame_id: FrameId(0),
             frame_builder: None,
             output_pipelines: FastHashSet::default(),
-            render_on_scroll,
             hit_tester: None,
             dynamic_properties: SceneProperties::new(),
         }
@@ -173,7 +160,6 @@ impl Document {
             FrameMsg::Scroll(delta, cursor) => {
                 profile_scope!("Scroll");
 
-                let mut should_render = true;
                 let node_index = match self.hit_tester {
                     Some(ref hit_tester) => {
                         // Ideally we would call self.scroll_nearest_scrolling_ancestor here, but
@@ -182,20 +168,18 @@ impl Document {
                         hit_tester.find_node_under_point(test)
                     }
                     None => {
-                        should_render = false;
                         None
                     }
                 };
 
-                let should_render =
-                    should_render &&
-                    self.scroll_nearest_scrolling_ancestor(delta, node_index) &&
-                    self.render_on_scroll == Some(true);
+                if self.hit_tester.is_some() {
+                    let _scrolled = self.scroll_nearest_scrolling_ancestor(delta, node_index);
+                }
 
                 return DocumentOps {
+                    // TODO: Does it make sense to track this as a scrolling even if we
+                    // ended up not scrolling anything?
                     scroll: true,
-                    build_frame: should_render,
-                    render_frame: should_render,
                     ..DocumentOps::nop()
                 };
             }
@@ -216,13 +200,10 @@ impl Document {
             FrameMsg::ScrollNodeWithId(origin, id, clamp) => {
                 profile_scope!("ScrollNodeWithScrollId");
 
-                let should_render = self.scroll_node(origin, id, clamp)
-                    && self.render_on_scroll == Some(true);
+                let _scrolled = self.scroll_node(origin, id, clamp);
 
                 return DocumentOps {
                     scroll: true,
-                    build_frame: should_render,
-                    render_frame: should_render,
                     ..DocumentOps::nop()
                 };
             }
@@ -350,7 +331,6 @@ static NEXT_NAMESPACE_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct PlainRenderBackend {
     default_device_pixel_ratio: f32,
-    enable_render_on_scroll: bool,
     frame_config: FrameBuilderConfig,
     documents: FastHashMap<DocumentId, DocumentView>,
     resources: PlainResources,
@@ -384,7 +364,6 @@ pub struct RenderBackend {
     sampler: Option<Box<AsyncPropertySampler + Send>>,
 
     last_scene_id: u64,
-    enable_render_on_scroll: bool,
 }
 
 impl RenderBackend {
@@ -401,7 +380,6 @@ impl RenderBackend {
         frame_config: FrameBuilderConfig,
         recorder: Option<Box<ApiRecordingReceiver>>,
         sampler: Option<Box<AsyncPropertySampler + Send>>,
-        enable_render_on_scroll: bool,
     ) -> RenderBackend {
         // The namespace_id should start from 1.
         NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed);
@@ -423,7 +401,6 @@ impl RenderBackend {
             recorder,
             sampler,
             last_scene_id: 0,
-            enable_render_on_scroll,
         }
     }
 
@@ -506,10 +483,6 @@ impl RenderBackend {
                     viewport_size,
                     content_size,
                 });
-
-                if let Some(ref mut ros) = doc.render_on_scroll {
-                    *ros = false; //wait for `GenerateFrame`
-                }
 
                 // Note: this isn't quite right as auxiliary values will be
                 // pulled out somewhere in the prim_store, but aux values are
@@ -597,18 +570,16 @@ impl RenderBackend {
                             self.resource_cache.set_blob_rasterizer(rasterizer);
                         }
 
-                        if txn.build_frame || !txn.resource_updates.is_empty() || !txn.frame_ops.is_empty() {
-                            self.update_document(
+                        self.update_document(
                             txn.document_id,
-                                replace(&mut txn.resource_updates, Vec::new()),
-                                replace(&mut txn.frame_ops, Vec::new()),
-                                txn.build_frame,
-                                txn.render_frame,
-                                &mut frame_counter,
-                                &mut profile_counters,
-                                has_built_scene,
-                            );
-                        }
+                            replace(&mut txn.resource_updates, Vec::new()),
+                            replace(&mut txn.frame_ops, Vec::new()),
+                            txn.build_frame,
+                            txn.render_frame,
+                            &mut frame_counter,
+                            &mut profile_counters,
+                            has_built_scene,
+                        );
                     },
                     SceneBuilderResult::FlushComplete(tx) => {
                         tx.send(()).ok();
@@ -704,7 +675,6 @@ impl RenderBackend {
                 let document = Document::new(
                     initial_size,
                     layer,
-                    self.enable_render_on_scroll,
                     self.default_device_pixel_ratio,
                 );
                 self.documents.insert(document_id, document);
@@ -720,14 +690,7 @@ impl RenderBackend {
             }
             ApiMsg::ClearNamespace(namespace_id) => {
                 self.resource_cache.clear_namespace(namespace_id);
-                let document_ids = self.documents
-                    .keys()
-                    .filter(|did| did.0 == namespace_id)
-                    .cloned()
-                    .collect::<Vec<_>>();
-                for document in document_ids {
-                    self.documents.remove(&document);
-                }
+                self.documents.retain(|did, _doc| did.0 != namespace_id);
             }
             ApiMsg::MemoryPressure => {
                 // This is drastic. It will basically flush everything out of the cache,
@@ -954,12 +917,6 @@ impl RenderBackend {
 
         if doc.dynamic_properties.flush_pending_updates() {
             build_frame = true;
-        }
-
-        if render_frame {
-            if let Some(ref mut ros) = doc.render_on_scroll {
-                *ros = true;
-            }
         }
 
         if !doc.can_render() {
@@ -1225,7 +1182,6 @@ impl RenderBackend {
         info!("\tbackend");
         let backend = PlainRenderBackend {
             default_device_pixel_ratio: self.default_device_pixel_ratio,
-            enable_render_on_scroll: self.enable_render_on_scroll,
             frame_config: self.frame_config.clone(),
             documents: self.documents
                 .iter()
@@ -1290,7 +1246,6 @@ impl RenderBackend {
         self.documents.clear();
         self.default_device_pixel_ratio = backend.default_device_pixel_ratio;
         self.frame_config = backend.frame_config;
-        self.enable_render_on_scroll = backend.enable_render_on_scroll;
 
         let mut scenes_to_build = Vec::new();
 
@@ -1309,7 +1264,6 @@ impl RenderBackend {
                 frame_id: FrameId(0),
                 frame_builder: Some(FrameBuilder::empty()),
                 output_pipelines: FastHashSet::default(),
-                render_on_scroll: None,
                 dynamic_properties: SceneProperties::new(),
                 hit_tester: None,
             };
