@@ -39,7 +39,7 @@ let uri = Services.io.newURI("https://" + host);
 // This test re-uses certificates from pinning tests because that's easier and
 // simpler than recreating new certificates, hence the slightly longer than
 // necessary domain name.
-let sslStatus = new FakeSSLStatus(constructCertFromFile(
+let secInfo = new FakeTransportSecurityInfo(constructCertFromFile(
   "test_pinning_dynamic/a.pinning2.example.com-pinningroot.pem"));
 
 // Check if originAttributes1 and originAttributes2 are isolated with respect
@@ -53,7 +53,7 @@ function doTest(originAttributes1, originAttributes2, shouldShare) {
       header += VALID_PIN + BACKUP_PIN;
     }
     // Set HSTS or HPKP for originAttributes1.
-    sss.processHeader(type, uri, header, sslStatus, 0,
+    sss.processHeader(type, uri, header, secInfo, 0,
                       Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
                       originAttributes1);
     ok(sss.isSecureURI(type, uri, 0, originAttributes1),
@@ -101,7 +101,7 @@ function testInvalidOriginAttributes(originAttributes) {
     }
 
     let callbacks = [
-      () => sss.processHeader(type, uri, header, sslStatus, 0,
+      () => sss.processHeader(type, uri, header, secInfo, 0,
                               Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
                               originAttributes),
       () => sss.isSecureURI(type, uri, 0, originAttributes),

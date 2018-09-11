@@ -35,7 +35,7 @@ jobs:
                mozilla-beta: download.mozilla.org
                mozilla-release: download.mozilla.org
                mozilla-esr60: download.mozilla.org
-               default: download.mozilla.org
+               default: bouncer-bouncer-releng.stage.mozaws.net
          channel-names:
             by-project:
                maple: ["beta", "beta-localtest", "beta-cdntest"]

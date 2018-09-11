@@ -33,8 +33,7 @@ interface nsIHTMLAbsPosEditor : nsISupports
   /**
    * refreshes the grabber if it shown, possibly updating its position or
    * even hiding it.
+   * FYI: Current user in script is only BlueGriffon.
    */
   void refreshGrabber();
-
 };
-

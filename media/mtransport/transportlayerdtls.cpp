@@ -24,7 +24,6 @@
 #include "nsIEventTarget.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
-#include "sslerr.h"
 #include "sslexp.h"
 #include "sslproto.h"
 #include "transportflow.h"

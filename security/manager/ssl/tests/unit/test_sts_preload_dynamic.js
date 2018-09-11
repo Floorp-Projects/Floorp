@@ -15,7 +15,7 @@
 function run_test() {
   let SSService = Cc["@mozilla.org/ssservice;1"]
                     .getService(Ci.nsISiteSecurityService);
-  let sslStatus = new FakeSSLStatus();
+  let secInfo = new FakeTransportSecurityInfo();
   let unlikelyHost = "highlyunlikely.example.com";
   let uri = Services.io.newURI("https://" + unlikelyHost);
   let subDomainUri = Services.io.newURI("https://subdomain." + unlikelyHost);
@@ -60,7 +60,7 @@ function run_test() {
   // Now let's simulate overriding the entry by setting an entry from a header
   // with max-age set to 0
   SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                          "max-age=0", sslStatus, 0,
+                          "max-age=0", secInfo, 0,
                           Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
 
   // this should no longer be an HSTS host

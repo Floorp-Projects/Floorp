@@ -30,11 +30,15 @@ class Sidebar extends PureComponent {
   renderDevices() {
     const { dispatch, networkLocations } = this.props;
     if (!networkLocations.length) {
-      return dom.span(
+      return Localized(
         {
-          className: "sidebar__devices__no-devices-message"
-        },
-        "No devices discovered"
+          id: "about-debugging-sidebar-no-devices"
+        }, dom.span(
+          {
+            className: "sidebar__devices__no-devices-message"
+          },
+          "No devices discovered"
+        )
       );
     }
     return networkLocations.map(location => SidebarItem({

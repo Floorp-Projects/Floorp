@@ -17,8 +17,6 @@
 #include "sigslot.h"
 
 #include "logging.h"
-#include "nspr.h"
-#include "nss.h"
 #include "ssl.h"
 #include "sslexp.h"
 #include "sslproto.h"
@@ -539,8 +537,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
   void SetupSrtp() {
     // this mimics the setup we do elsewhere
     std::vector<uint16_t> srtp_ciphers;
-    srtp_ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_80);
-    srtp_ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_32);
+    srtp_ciphers.push_back(kDtlsSrtpAes128CmHmacSha1_80);
+    srtp_ciphers.push_back(kDtlsSrtpAes128CmHmacSha1_32);
 
     SetSrtpCiphers(srtp_ciphers);
  }
@@ -1019,7 +1017,7 @@ TEST_F(TransportTest, TestConnectSrtp) {
   ASSERT_EQ(TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, p1_->cipherSuite());
 
   // SRTP is on
-  ASSERT_EQ(SRTP_AES128_CM_HMAC_SHA1_80, p1_->srtpCipher());
+  ASSERT_EQ(kDtlsSrtpAes128CmHmacSha1_80, p1_->srtpCipher());
 }
 
 
@@ -1298,9 +1296,9 @@ TEST_F(TransportTest, TestCipherMandatoryOnlyCbc) {
 
 TEST_F(TransportTest, TestSrtpMismatch) {
   std::vector<uint16_t> setA;
-  setA.push_back(SRTP_AES128_CM_HMAC_SHA1_80);
+  setA.push_back(kDtlsSrtpAes128CmHmacSha1_80);
   std::vector<uint16_t> setB;
-  setB.push_back(SRTP_AES128_CM_HMAC_SHA1_32);
+  setB.push_back(kDtlsSrtpAes128CmHmacSha1_32);
 
   p1_->SetSrtpCiphers(setA);
   p2_->SetSrtpCiphers(setB);

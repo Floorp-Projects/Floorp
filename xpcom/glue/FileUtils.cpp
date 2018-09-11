@@ -176,7 +176,7 @@ mozilla::GetLibraryName(mozilla::pathstr_t aDirectory, const char* aLib)
   if (!strstr(aLib, ".dll")) {
     fullName.AppendLiteral(".dll");
   }
-  return fullName;
+  return std::move(fullName);
 #else
   char* temp = PR_GetLibraryName(aDirectory, aLib);
   if (!temp) {
@@ -184,7 +184,7 @@ mozilla::GetLibraryName(mozilla::pathstr_t aDirectory, const char* aLib)
   }
   nsAutoCString libname(temp);
   PR_FreeLibraryName(temp);
-  return libname;
+  return std::move(libname);
 #endif
 }
 
@@ -206,7 +206,7 @@ mozilla::GetLibraryFilePathname(mozilla::pathstr_t aName, PRFuncPtr aAddr)
   }
 
   path.SetLength(len);
-  return path;
+  return std::move(path);
 #else
   char* temp = PR_GetLibraryFilePathname(aName, aAddr);
   if (!temp) {
@@ -214,7 +214,7 @@ mozilla::GetLibraryFilePathname(mozilla::pathstr_t aName, PRFuncPtr aAddr)
   }
   nsAutoCString path(temp);
   PR_Free(temp); // PR_GetLibraryFilePathname() uses PR_Malloc().
-  return path;
+  return std::move(path);
 #endif
 }
 

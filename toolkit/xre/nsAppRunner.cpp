@@ -3670,12 +3670,57 @@ XREMain::XRE_mainInit(bool* aExitFlag)
 }
 
 #ifdef XP_WIN
+static bool QueryOneWMIProperty(IWbemServices* aServices,
+                                const wchar_t* aWMIClass,
+                                const wchar_t* aProperty,
+                                VARIANT* aResult)
+{
+  RefPtr<IEnumWbemClassObject> enumerator;
+
+  _bstr_t query(L"SELECT * FROM ");
+  query += _bstr_t(aWMIClass);
+
+  HRESULT hr = aServices->ExecQuery(_bstr_t(L"WQL"), query,
+                                    WBEM_FLAG_FORWARD_ONLY |
+                                      WBEM_FLAG_RETURN_IMMEDIATELY,
+                                    nullptr, getter_AddRefs(enumerator));
+
+  if (FAILED(hr) || !enumerator) {
+    return false;
+  }
+
+  RefPtr<IWbemClassObject> classObject;
+  ULONG results;
+
+  hr = enumerator->Next(WBEM_INFINITE, 1, getter_AddRefs(classObject), &results);
+
+  if (FAILED(hr) || results == 0) {
+    return false;
+  }
+
+  hr = classObject->Get(aProperty, 0, aResult, 0, 0);
+
+  return SUCCEEDED(hr);
+}
+
 /**
- * Uses WMI to read some manufacturer information that may be useful for
- * diagnosing hardware-specific crashes. This function is best-effort; failures
- * shouldn't burden the caller. COM must be initialized before calling.
+ * Uses WMI to read some information that may be useful for diagnosing
+ * crashes. This function is best-effort; failures shouldn't burden the
+ * caller. COM must be initialized before calling.
  */
-static void AnnotateSystemManufacturer()
+
+static const char kMemoryErrorCorrectionValues[][15] = {
+  "Reserved", // 0
+  "Other", // 1
+  "Unknown", // 2
+  "None", // 3
+  "Parity", // 4
+  "Single-bit ECC", // 5
+  "Multi-bit ECC", // 6
+  "CRC" // 7
+};
+
+static void AnnotateWMIData()
 {
   RefPtr<IWbemLocator> locator;
 
@@ -3703,40 +3748,39 @@ static void AnnotateSystemManufacturer()
     return;
   }
 
-  RefPtr<IEnumWbemClassObject> enumerator;
-
-  hr = services->ExecQuery(_bstr_t(L"WQL"), _bstr_t(L"SELECT * FROM Win32_BIOS"),
-                           WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
-                           nullptr, getter_AddRefs(enumerator));
-
-  if (FAILED(hr) || !enumerator) {
-    return;
-  }
-
-  RefPtr<IWbemClassObject> classObject;
-  ULONG results;
-
-  hr = enumerator->Next(WBEM_INFINITE, 1, getter_AddRefs(classObject), &results);
-
-  if (FAILED(hr) || results == 0) {
-    return;
-  }
 
   VARIANT value;
   VariantInit(&value);
 
-  hr = classObject->Get(L"Manufacturer", 0, &value, 0, 0);
-
-  if (SUCCEEDED(hr) && V_VT(&value) == VT_BSTR) {
+  // Annotate information about the system manufacturer.
+  if (QueryOneWMIProperty(services, L"Win32_BIOS", L"Manufacturer", &value) &&
+      V_VT(&value) == VT_BSTR) {
     CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::BIOS_Manufacturer,
       NS_ConvertUTF16toUTF8(V_BSTR(&value)));
   }
 
   VariantClear(&value);
+
+  // Annotate information about type of memory error correction.
+  if (QueryOneWMIProperty(services, L"Win32_PhysicalMemoryArray",
+                          L"MemoryErrorCorrection", &value) &&
+      V_VT(&value) == VT_I4) {
+    long valueInt = V_I4(&value);
+    nsCString valueString;
+    if (valueInt < 0 || valueInt >= ArrayLength(kMemoryErrorCorrectionValues)) {
+      valueString.AssignLiteral("Unexpected value");
+    } else {
+      valueString.AssignASCII(kMemoryErrorCorrectionValues[valueInt]);
+    }
+    CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::MemoryErrorCorrection, valueString);
+  }
+
+  VariantClear(&value);
 }
 
-static void PR_CALLBACK AnnotateSystemManufacturer_ThreadStart(void*)
+static void PR_CALLBACK AnnotateWMIData_ThreadStart(void*)
 {
   HRESULT hr = CoInitialize(nullptr);
 
@@ -3744,7 +3788,7 @@ static void PR_CALLBACK AnnotateSystemManufacturer_ThreadStart(void*)
     return;
   }
 
-  AnnotateSystemManufacturer();
+  AnnotateWMIData();
 
   CoUninitialize();
 }
@@ -4465,7 +4509,7 @@ XREMain::XRE_mainRun()
   CrashReporter::SetIncludeContextHeap(includeContextHeap);
 
 #ifdef XP_WIN
-  PR_CreateThread(PR_USER_THREAD, AnnotateSystemManufacturer_ThreadStart, 0,
+  PR_CreateThread(PR_USER_THREAD, AnnotateWMIData_ThreadStart, 0,
                   PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
 #endif
 

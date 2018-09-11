@@ -39,10 +39,9 @@ class Security(BaseLib):
         :returns: Certificate details as JSON object.
         """
         cert = self.marionette.execute_script("""
-          var securityUI = arguments[0].linkedBrowser.securityUI;
-          var status = securityUI.secInfo && securityUI.secInfo.SSLStatus;
+          var secInfo = arguments[0].linkedBrowser.securityUI.secInfo;
 
-          return status ? status.serverCert : null;
+          return secInfo ? secInfo.serverCert : null;
         """, script_args=[tab_element])
 
         uri = self.marionette.execute_script("""

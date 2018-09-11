@@ -4547,7 +4547,10 @@ SearchService.prototype = {
         // Locale changed. Re-init. We rely on observers, because we can't
         // return this promise to anyone.
         // FYI, This is also used by the search tests to do an async reinit.
-        this._asyncReInit();
+        // Locales are removed during shutdown, so ignore this message
+        if (!Services.startup.shuttingDown) {
+          this._asyncReInit();
+        }
         break;
     }
   },
