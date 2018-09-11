@@ -19,6 +19,9 @@ interface nsIURI;
  *
  * A session history listener can be registered on a particular nsISHistory
  * instance via the nsISHistory::addSHistoryListener() method.
+ *
+ * Listener methods should not alter the session history. Things are likely to
+ * go haywire if they do.
  */
 [scriptable, uuid(125c0833-746a-400e-9b89-d2d18545c08a)]
 interface nsISHistoryListener : nsISupports
