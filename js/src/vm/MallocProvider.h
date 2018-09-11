@@ -52,16 +52,18 @@ struct MallocProvider
     template <class T>
     T* maybe_pod_malloc(size_t numElems) {
         T* p = js_pod_malloc<T>(numElems);
-        if (MOZ_LIKELY(p))
+        if (MOZ_LIKELY(p)) {
             client()->updateMallocCounter(numElems * sizeof(T));
+        }
         return p;
     }
 
     template <class T>
     T* maybe_pod_calloc(size_t numElems, arena_id_t arena = js::MallocArena) {
         T* p = js_pod_arena_calloc<T>(arena, numElems);
-        if (MOZ_LIKELY(p))
+        if (MOZ_LIKELY(p)) {
             client()->updateMallocCounter(numElems * sizeof(T));
+        }
         return p;
     }
 
@@ -71,8 +73,9 @@ struct MallocProvider
         if (MOZ_LIKELY(p)) {
             // For compatibility we do not account for realloc that decreases
             // previously allocated memory.
-            if (newSize > oldSize)
+            if (newSize > oldSize) {
                 client()->updateMallocCounter((newSize - oldSize) * sizeof(T));
+            }
         }
         return p;
     }
@@ -85,16 +88,18 @@ struct MallocProvider
     template <class T>
     T* pod_malloc(size_t numElems) {
         T* p = maybe_pod_malloc<T>(numElems);
-        if (MOZ_LIKELY(p))
+        if (MOZ_LIKELY(p)) {
             return p;
+        }
         size_t bytes;
         if (MOZ_UNLIKELY(!CalculateAllocSize<T>(numElems, &bytes))) {
             client()->reportAllocationOverflow();
             return nullptr;
         }
         p = (T*)client()->onOutOfMemory(AllocFunction::Malloc, bytes);
-        if (p)
+        if (p) {
             client()->updateMallocCounter(bytes);
+        }
         return p;
     }
 
@@ -111,8 +116,9 @@ struct MallocProvider
             return p;
         }
         p = (T*)client()->onOutOfMemory(AllocFunction::Malloc, bytes);
-        if (p)
+        if (p) {
             client()->updateMallocCounter(bytes);
+        }
         return p;
     }
 
@@ -125,16 +131,18 @@ struct MallocProvider
     template <class T>
     T* pod_calloc(size_t numElems = 1, arena_id_t arena = js::MallocArena) {
         T* p = maybe_pod_calloc<T>(numElems, arena);
-        if (MOZ_LIKELY(p))
+        if (MOZ_LIKELY(p)) {
             return p;
+        }
         size_t bytes;
         if (MOZ_UNLIKELY(!CalculateAllocSize<T>(numElems, &bytes))) {
             client()->reportAllocationOverflow();
             return nullptr;
         }
         p = (T*)client()->onOutOfMemory(AllocFunction::Calloc, bytes);
-        if (p)
+        if (p) {
             client()->updateMallocCounter(bytes);
+        }
         return p;
     }
 
@@ -151,8 +159,9 @@ struct MallocProvider
             return p;
         }
         p = (T*)client()->onOutOfMemory(AllocFunction::Calloc, bytes);
-        if (p)
+        if (p) {
             client()->updateMallocCounter(bytes);
+        }
         return p;
     }
 
@@ -166,16 +175,18 @@ struct MallocProvider
     template <class T>
     T* pod_realloc(T* prior, size_t oldSize, size_t newSize) {
         T* p = maybe_pod_realloc(prior, oldSize, newSize);
-        if (MOZ_LIKELY(p))
+        if (MOZ_LIKELY(p)) {
             return p;
+        }
         size_t bytes;
         if (MOZ_UNLIKELY(!CalculateAllocSize<T>(newSize, &bytes))) {
             client()->reportAllocationOverflow();
             return nullptr;
         }
         p = (T*)client()->onOutOfMemory(AllocFunction::Realloc, bytes, prior);
-        if (p && newSize > oldSize)
+        if (p && newSize > oldSize) {
             client()->updateMallocCounter((newSize - oldSize) * sizeof(T));
+        }
         return p;
     }
 

@@ -127,8 +127,9 @@ class EmitterScope : public Nestable<EmitterScope>
 
     // The first frame slot used.
     uint32_t frameSlotStart() const {
-        if (EmitterScope* inFrame = enclosingInFrame())
+        if (EmitterScope* inFrame = enclosingInFrame()) {
             return inFrame->nextFrameSlot_;
+        }
         return 0;
     }
 

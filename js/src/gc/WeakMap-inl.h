@@ -78,19 +78,22 @@ WeakMap<K, V>::trace(JSTracer* trc)
         return;
     }
 
-    if (trc->weakMapAction() == DoNotTraceWeakMaps)
+    if (trc->weakMapAction() == DoNotTraceWeakMaps) {
         return;
+    }
 
     // Trace keys only if weakMapAction() says to.
     if (trc->weakMapAction() == TraceWeakMapKeysValues) {
-        for (Enum e(*this); !e.empty(); e.popFront())
+        for (Enum e(*this); !e.empty(); e.popFront()) {
             TraceEdge(trc, &e.front().mutableKey(), "WeakMap entry key");
+        }
     }
 
     // Always trace all values (unless weakMapAction() is
     // DoNotTraceWeakMaps).
-    for (Range r = Base::all(); !r.empty(); r.popFront())
+    for (Range r = Base::all(); !r.empty(); r.popFront()) {
         TraceEdge(trc, &r.front().value(), "WeakMap entry value");
+    }
 }
 
 template <class K, class V>
@@ -103,13 +106,15 @@ WeakMap<K, V>::addWeakEntry(GCMarker* marker, JS::GCCellPtr key,
     auto p = zone->gcWeakKeys().get(key);
     if (p) {
         gc::WeakEntryVector& weakEntries = p->value;
-        if (!weakEntries.append(markable))
+        if (!weakEntries.append(markable)) {
             marker->abortLinearWeakMarking();
+        }
     } else {
         gc::WeakEntryVector weakEntries;
         MOZ_ALWAYS_TRUE(weakEntries.append(markable));
-        if (!zone->gcWeakKeys().put(JS::GCCellPtr(key), std::move(weakEntries)))
+        if (!zone->gcWeakKeys().put(JS::GCCellPtr(key), std::move(weakEntries))) {
             marker->abortLinearWeakMarking();
+        }
     }
 }
 
@@ -143,8 +148,9 @@ WeakMap<K, V>::markIteratively(GCMarker* marker)
             JS::GCCellPtr weakKey(extractUnbarriered(e.front().key()));
             gc::WeakMarkable markable(this, weakKey);
             addWeakEntry(marker, weakKey, markable);
-            if (JSObject* delegate = getDelegate(e.front().key()))
+            if (JSObject* delegate = getDelegate(e.front().key())) {
                 addWeakEntry(marker, JS::GCCellPtr(delegate), markable);
+            }
         }
     }
 
@@ -158,12 +164,14 @@ WeakMap<K, V>::getDelegate(JSObject* key) const
     JS::AutoSuppressGCAnalysis nogc;
 
     JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp();
-    if (!op)
+    if (!op) {
         return nullptr;
+    }
 
     JSObject* obj = op(key);
-    if (!obj)
+    if (!obj) {
         return nullptr;
+    }
 
     MOZ_ASSERT(obj->runtimeFromMainThread() == zone()->runtimeFromMainThread());
     return obj;
@@ -216,8 +224,9 @@ WeakMap<K, V>::sweep()
 {
     /* Remove all entries whose keys remain unmarked. */
     for (Enum e(*this); !e.empty(); e.popFront()) {
-        if (gc::IsAboutToBeFinalized(&e.front().mutableKey()))
+        if (gc::IsAboutToBeFinalized(&e.front().mutableKey())) {
             e.removeFront();
+        }
     }
 
 #if DEBUG

@@ -507,8 +507,9 @@ struct IonScript
     void decrementInvalidationCount(FreeOp* fop) {
         MOZ_ASSERT(invalidationCount_);
         invalidationCount_--;
-        if (!invalidationCount_)
+        if (!invalidationCount_) {
             Destroy(fop, this);
+        }
     }
     IonCompilationId compilationId() const {
         return compilationId_;
@@ -577,8 +578,9 @@ struct IonBlockCounts
         numSuccessors_ = numSuccessors;
         if (numSuccessors) {
             successors_ = js_pod_calloc<uint32_t>(numSuccessors);
-            if (!successors_)
+            if (!successors_) {
                 return false;
+            }
         }
         return true;
     }
@@ -657,8 +659,9 @@ struct IonScriptCounts
     IonScriptCounts() = default;
 
     ~IonScriptCounts() {
-        for (size_t i = 0; i < numBlocks_; i++)
+        for (size_t i = 0; i < numBlocks_; i++) {
             blocks_[i].destroy();
+        }
         js_free(blocks_);
         // The list can be long in some corner cases (bug 1140084), so
         // unroll the recursion.
@@ -673,8 +676,9 @@ struct IonScriptCounts
 
     MOZ_MUST_USE bool init(size_t numBlocks) {
         blocks_ = js_pod_calloc<IonBlockCounts>(numBlocks);
-        if (!blocks_)
+        if (!blocks_) {
             return false;
+        }
 
         numBlocks_ = numBlocks;
         return true;
@@ -710,8 +714,9 @@ struct IonScriptCounts
 
     size_t sizeOfOneIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         size_t size = mallocSizeOf(this) + mallocSizeOf(blocks_);
-        for (size_t i = 0; i < numBlocks_; i++)
+        for (size_t i = 0; i < numBlocks_; i++) {
             blocks_[i].sizeOfExcludingThis(mallocSizeOf);
+        }
         return size;
     }
 

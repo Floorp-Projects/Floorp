@@ -68,10 +68,12 @@ AliasAnalysis::spewDependencyList()
                  def != end;
                  ++def)
             {
-                if (!def->dependency())
+                if (!def->dependency()) {
                     continue;
-                if (!def->getAliasSet().isLoad())
+                }
+                if (!def->getAliasSet().isLoad()) {
                     continue;
+                }
 
                 JitSpewHeader(JitSpew_AliasSummaries);
                 print.printf(" ");
@@ -95,12 +97,15 @@ MaybeUnwrap(const MDefinition* object)
         object = object->getOperand(0);
     }
 
-    if (object->isTypedArrayElements())
+    if (object->isTypedArrayElements()) {
         return nullptr;
-    if (object->isTypedObjectElements())
+    }
+    if (object->isTypedObjectElements()) {
         return nullptr;
-    if (object->isConstantElements())
+    }
+    if (object->isConstantElements()) {
         return nullptr;
+    }
 
     return object;
 }
@@ -110,8 +115,9 @@ MaybeUnwrap(const MDefinition* object)
 static inline const MDefinition*
 GetObject(const MDefinition* ins)
 {
-    if (!ins->getAliasSet().isStore() && !ins->getAliasSet().isLoad())
+    if (!ins->getAliasSet().isStore() && !ins->getAliasSet().isLoad()) {
         return nullptr;
+    }
 
     // Note: only return the object if that objects owns that property.
     // I.e. the poperty isn't on the prototype chain.
@@ -194,8 +200,9 @@ GetObject(const MDefinition* ins)
       default:
 #ifdef DEBUG
         // Crash when the default aliasSet is overriden, but when not added in the list above.
-        if (!ins->getAliasSet().isStore() || ins->getAliasSet().flags() != AliasSet::Flag::Any)
+        if (!ins->getAliasSet().isStore() || ins->getAliasSet().flags() != AliasSet::Flag::Any) {
             MOZ_CRASH("Overridden getAliasSet without updating AliasAnalysis GetObject");
+        }
 #endif
 
         return nullptr;
@@ -213,14 +220,17 @@ AliasAnalysis::genericMightAlias(const MDefinition* load, const MDefinition* sto
 {
     const MDefinition* loadObject = GetObject(load);
     const MDefinition* storeObject = GetObject(store);
-    if (!loadObject || !storeObject)
+    if (!loadObject || !storeObject) {
         return MDefinition::AliasType::MayAlias;
+    }
 
-    if (!loadObject->resultTypeSet() || !storeObject->resultTypeSet())
+    if (!loadObject->resultTypeSet() || !storeObject->resultTypeSet()) {
         return MDefinition::AliasType::MayAlias;
+    }
 
-    if (loadObject->resultTypeSet()->objectsIntersect(storeObject->resultTypeSet()))
+    if (loadObject->resultTypeSet()->objectsIntersect(storeObject->resultTypeSet())) {
         return MDefinition::AliasType::MayAlias;
+    }
 
     return MDefinition::AliasType::NoAlias;
 }
@@ -231,15 +241,17 @@ static inline bool
 BlockMightReach(MBasicBlock* src, MBasicBlock* dest)
 {
     while (src->id() <= dest->id()) {
-        if (src == dest)
+        if (src == dest) {
             return true;
+        }
         switch (src->numSuccessors()) {
           case 0:
             return false;
           case 1: {
             MBasicBlock* successor = src->getSuccessor(0);
-            if (successor->id() <= src->id())
+            if (successor->id() <= src->id()) {
                 return true; // Don't iloop.
+            }
             src = successor;
             break;
           }
@@ -254,8 +266,9 @@ static void
 IonSpewDependency(MInstruction* load, MInstruction* store, const char* verb, const char* reason)
 {
 #ifdef JS_JITSPEW
-    if (!JitSpewEnabled(JitSpew_Alias))
+    if (!JitSpewEnabled(JitSpew_Alias)) {
         return;
+    }
 
     Fprinter& out = JitSpewPrinter();
     out.printf("Load ");
@@ -270,8 +283,9 @@ static void
 IonSpewAliasInfo(const char* pre, MInstruction* ins, const char* post)
 {
 #ifdef JS_JITSPEW
-    if (!JitSpewEnabled(JitSpew_Alias))
+    if (!JitSpewEnabled(JitSpew_Alias)) {
         return;
+    }
 
     Fprinter& out = JitSpewPrinter();
     out.printf("%s ", pre);
@@ -305,10 +319,12 @@ AliasAnalysis::analyze()
     MInstruction* firstIns = *graph_.entryBlock()->begin();
     for (unsigned i = 0; i < AliasSet::NumCategories; i++) {
         MInstructionVector defs(alloc());
-        if (!defs.append(firstIns))
+        if (!defs.append(firstIns)) {
             return false;
-        if (!stores.append(std::move(defs)))
+        }
+        if (!stores.append(std::move(defs))) {
             return false;
+        }
     }
 
     // Type analysis may have inserted new instructions. Since this pass depends
@@ -316,18 +332,21 @@ AliasAnalysis::analyze()
     uint32_t newId = 0;
 
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
-        if (mir->shouldCancel("Alias Analysis (main loop)"))
+        if (mir->shouldCancel("Alias Analysis (main loop)")) {
             return false;
+        }
 
         if (block->isLoopHeader()) {
             JitSpew(JitSpew_Alias, "Processing loop header %d", block->id());
             loop_ = new(alloc().fallible()) LoopAliasInfo(alloc(), loop_, *block);
-            if (!loop_)
+            if (!loop_) {
                 return false;
+            }
         }
 
-        for (MPhiIterator def(block->phisBegin()), end(block->phisEnd()); def != end; ++def)
+        for (MPhiIterator def(block->phisBegin()), end(block->phisEnd()); def != end; ++def) {
             def->setId(newId++);
+        }
 
         for (MInstructionIterator def(block->begin()), end(block->begin(block->lastIns()));
              def != end;
@@ -336,19 +355,22 @@ AliasAnalysis::analyze()
             def->setId(newId++);
 
             AliasSet set = def->getAliasSet();
-            if (set.isNone())
+            if (set.isNone()) {
                 continue;
+            }
 
             // For the purposes of alias analysis, all recoverable operations
             // are treated as effect free as the memory represented by these
             // operations cannot be aliased by others.
-            if (def->canRecoverOnBailout())
+            if (def->canRecoverOnBailout()) {
                 continue;
+            }
 
             if (set.isStore()) {
                 for (AliasSetIterator iter(set); iter; iter++) {
-                    if (!stores[*iter].append(*def))
+                    if (!stores[*iter].append(*def)) {
                         return false;
+                    }
                 }
 
 #ifdef JS_JITSPEW
@@ -371,8 +393,9 @@ AliasAnalysis::analyze()
                             def->mightAlias(store) != MDefinition::AliasType::NoAlias &&
                             BlockMightReach(store->block(), *block))
                         {
-                            if (lastStore->id() < store->id())
+                            if (lastStore->id() < store->id()) {
                                 lastStore = store;
+                            }
                             break;
                         }
                     }
@@ -385,8 +408,9 @@ AliasAnalysis::analyze()
                 // is loop invariant. If a later instruction writes to the same location,
                 // we will fix this at the end of the loop.
                 if (loop_ && lastStore->id() < loop_->firstInstruction()->id()) {
-                    if (!loop_->addInvariantLoad(*def))
+                    if (!loop_->addInvariantLoad(*def)) {
                         return false;
+                    }
                 }
             }
         }
@@ -413,8 +437,9 @@ AliasAnalysis::analyze()
                     MInstructionVector& aliasedStores = stores[*iter];
                     for (int i = aliasedStores.length() - 1;; i--) {
                         MInstruction* store = aliasedStores[i];
-                        if (store->id() < firstLoopIns->id())
+                        if (store->id() < firstLoopIns->id()) {
                             break;
+                        }
                         if (genericMightAlias(ins, store) != MDefinition::AliasType::NoAlias &&
                             ins->mightAlias(store) != MDefinition::AliasType::NoAlias)
                         {
@@ -423,8 +448,9 @@ AliasAnalysis::analyze()
                             break;
                         }
                     }
-                    if (hasAlias)
+                    if (hasAlias) {
                         break;
+                    }
                 }
 
                 if (hasAlias) {
@@ -439,8 +465,9 @@ AliasAnalysis::analyze()
 
                     if (outerLoop && ins->dependency()->id() < outerLoop->firstInstruction()->id()) {
                         IonSpewAliasInfo("Load", ins, "may be invariant in outer loop");
-                        if (!outerLoop->addInvariantLoad(ins))
+                        if (!outerLoop->addInvariantLoad(ins)) {
                             return false;
+                        }
                     }
                 }
             }

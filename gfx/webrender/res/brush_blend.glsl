@@ -27,18 +27,20 @@ void brush_vs(
     int brush_flags,
     vec4 unused
 ) {
-    PictureTask src_task = fetch_picture_task(user_data.x);
-    vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
-    vec2 uv = snap_device_pos(vi) +
-        src_task.common_data.task_rect.p0 -
-        src_task.content_origin;
-    vUv = vec3(
-        uv * gl_Position.w / texture_size, // multiply by W to compensate for perspective interpolation
-        src_task.common_data.texture_layer_index
-    );
+    ImageResource res = fetch_image_resource(user_data.x);
+    vec2 uv0 = res.uv_rect.p0;
+    vec2 uv1 = res.uv_rect.p1;
 
-    vec2 uv0 = src_task.common_data.task_rect.p0;
-    vec2 uv1 = uv0 + src_task.common_data.task_rect.size;
+    // PictureTask src_task = fetch_picture_task(user_data.x);
+    vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
+    vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
+    ImageResourceExtra extra_data = fetch_image_resource_extra(user_data.x);
+    vec2 x = mix(extra_data.st_tl, extra_data.st_tr, f.x);
+    vec2 y = mix(extra_data.st_bl, extra_data.st_br, f.x);
+    f = mix(x, y, f.y);
+    vec2 uv = mix(uv0, uv1, f);
+    vUv = vec3(uv / texture_size, res.layer);
+
     vUvClipBounds = vec4(uv0, uv1) / texture_size.xyxy;
 
     float lumR = 0.2126;
@@ -127,8 +129,7 @@ vec3 Brightness(vec3 Cs, float amount) {
 }
 
 Fragment brush_fs() {
-    vec2 base_uv = vUv.xy * gl_FragCoord.w;
-    vec4 Cs = texture(sColor0, vec3(base_uv, vUv.z));
+    vec4 Cs = texture(sColor0, vUv);
 
     if (Cs.a == 0.0) {
         return Fragment(vec4(0.0)); // could also `discard`
@@ -159,7 +160,7 @@ Fragment brush_fs() {
 
     // Fail-safe to ensure that we don't sample outside the rendered
     // portion of a blend source.
-    alpha *= point_inside_rect(base_uv, vUvClipBounds.xy, vUvClipBounds.zw);
+    alpha *= point_inside_rect(vUv.xy, vUvClipBounds.xy, vUvClipBounds.zw);
 
     // Pre-multiply the alpha into the output value.
     return Fragment(alpha * vec4(color, 1.0));

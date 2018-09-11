@@ -51,6 +51,22 @@ pub type PicturePoint3D = TypedPoint3D<f32, PicturePixel>;
 pub type PictureVector2D = TypedVector2D<f32, PicturePixel>;
 pub type PictureVector3D = TypedVector3D<f32, PicturePixel>;
 
+/// Geometry gets rasterized in a given root coordinate space. This
+/// is often the root spatial node (world space), but may be a local
+/// space for a variety of reasons (e.g. perspective).
+#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct RasterPixel;
+
+pub type RasterIntRect = TypedRect<i32, RasterPixel>;
+pub type RasterIntPoint = TypedPoint2D<i32, RasterPixel>;
+pub type RasterIntSize = TypedSize2D<i32, RasterPixel>;
+pub type RasterRect = TypedRect<f32, RasterPixel>;
+pub type RasterPoint = TypedPoint2D<f32, RasterPixel>;
+pub type RasterSize = TypedSize2D<f32, RasterPixel>;
+pub type RasterPoint3D = TypedPoint3D<f32, RasterPixel>;
+pub type RasterVector2D = TypedVector2D<f32, RasterPixel>;
+pub type RasterVector3D = TypedVector3D<f32, RasterPixel>;
+
 /// Geometry in a stacking context's local coordinate space (logical pixels).
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Deserialize, Serialize)]
 pub struct LayoutPixel;
@@ -93,6 +109,12 @@ pub type WorldToLayoutTransform = TypedTransform3D<f32, WorldPixel, LayoutPixel>
 
 pub type LayoutToPictureTransform = TypedTransform3D<f32, LayoutPixel, PicturePixel>;
 pub type PictureToLayoutTransform = TypedTransform3D<f32, PicturePixel, LayoutPixel>;
+
+pub type LayoutToRasterTransform = TypedTransform3D<f32, LayoutPixel, RasterPixel>;
+pub type RasterToLayoutTransform = TypedTransform3D<f32, RasterPixel, LayoutPixel>;
+
+pub type PictureToRasterTransform = TypedTransform3D<f32, PicturePixel, RasterPixel>;
+pub type RasterToPictureTransform = TypedTransform3D<f32, RasterPixel, PicturePixel>;
 
 // Fixed position coordinates, to avoid float precision errors.
 pub type LayoutPointAu = TypedPoint2D<Au, LayoutPixel>;

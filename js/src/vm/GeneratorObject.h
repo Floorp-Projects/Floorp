@@ -49,10 +49,12 @@ class GeneratorObject : public NativeObject
     }
 
     static inline ResumeKind getResumeKind(JSContext* cx, JSAtom* atom) {
-        if (atom == cx->names().next)
+        if (atom == cx->names().next) {
             return NEXT;
-        if (atom == cx->names().throw_)
+        }
+        if (atom == cx->names().throw_) {
             return THROW;
+        }
         MOZ_ASSERT(atom == cx->names().return_);
         return RETURN;
     }

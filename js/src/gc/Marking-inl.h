@@ -83,8 +83,9 @@ template <typename T>
 inline T
 MaybeForwarded(T t)
 {
-    if (IsForwarded(t))
+    if (IsForwarded(t)) {
         t = Forwarded(t);
+    }
     return t;
 }
 
@@ -115,8 +116,9 @@ template <typename T>
 inline void
 CheckGCThingAfterMovingGC(T* t)
 {
-    if (t)
+    if (t) {
         MOZ_RELEASE_ASSERT(IsGCThingValidAfterMovingGC(t));
+    }
 }
 
 template <typename T>

@@ -32,17 +32,40 @@ fn main() {
     print_encode_table(&url_alphabet, "URL_SAFE_ENCODE", 0);
     print_decode_table(&url_alphabet, "URL_SAFE_DECODE", 0);
 
+    // ./0123456789
+    let crypt_alphabet: Vec<u8> = (b'.'..(b'9'+1))
+        // A-Z
+        .chain(b'A'..(b'Z'+1))
+        // a-z
+        .chain(b'a'..(b'z'+1))
+        .collect();
+    print_encode_table(&crypt_alphabet, "CRYPT_ENCODE", 0);
+    print_decode_table(&crypt_alphabet, "CRYPT_DECODE", 0);
 }
 
 fn print_encode_table(alphabet: &[u8], const_name: &str, indent_depth: usize) {
-    println!("{:width$}pub const {}: &'static [u8; 64] = &[", "", const_name, width=indent_depth);
+    println!("#[cfg_attr(rustfmt, rustfmt_skip)]");
+    println!(
+        "{:width$}pub const {}: &'static [u8; 64] = &[",
+        "",
+        const_name,
+        width = indent_depth
+    );
 
     for (i, b) in alphabet.iter().enumerate() {
-        println!("{:width$}{}, // input {} (0x{:X}) => '{}' (0x{:X})", "",
-                 b, i, i, String::from_utf8(vec!(*b as u8)).unwrap(), b, width=indent_depth + 4);
+        println!(
+            "{:width$}{}, // input {} (0x{:X}) => '{}' (0x{:X})",
+            "",
+            b,
+            i,
+            i,
+            String::from_utf8(vec![*b as u8]).unwrap(),
+            b,
+            width = indent_depth + 4
+        );
     }
 
-    println!("{:width$}];", "", width=indent_depth);
+    println!("{:width$}];", "", width = indent_depth);
 }
 
 fn print_decode_table(alphabet: &[u8], const_name: &str, indent_depth: usize) {
@@ -55,19 +78,39 @@ fn print_decode_table(alphabet: &[u8], const_name: &str, indent_depth: usize) {
         let _ = input_to_morsel.insert(*ascii_byte, morsel as u8);
     }
 
-    println!("{:width$}pub const {}: &'static [u8; 256] = &[", "", const_name, width=indent_depth);
+    println!("#[cfg_attr(rustfmt, rustfmt_skip)]");
+    println!(
+        "{:width$}pub const {}: &'static [u8; 256] = &[",
+        "",
+        const_name,
+        width = indent_depth
+    );
     for ascii_byte in 0..256 {
         let (value, comment) = match input_to_morsel.get(&(ascii_byte as u8)) {
-            None => ("INVALID_VALUE".to_string(),
-                    format!("input {} (0x{:X})", ascii_byte, ascii_byte)),
-            Some(v) => (format!("{}", *v),
-                        format!("input {} (0x{:X} char '{}') => {} (0x{:X})",
-                                ascii_byte,
-                                ascii_byte,
-                                String::from_utf8(vec!(ascii_byte as u8)).unwrap(), *v, *v))
+            None => (
+                "INVALID_VALUE".to_string(),
+                format!("input {} (0x{:X})", ascii_byte, ascii_byte),
+            ),
+            Some(v) => (
+                format!("{}", *v),
+                format!(
+                    "input {} (0x{:X} char '{}') => {} (0x{:X})",
+                    ascii_byte,
+                    ascii_byte,
+                    String::from_utf8(vec![ascii_byte as u8]).unwrap(),
+                    *v,
+                    *v
+                ),
+            ),
         };
 
-        println!("{:width$}{}, // {}", "", value, comment, width=indent_depth + 4);
+        println!(
+            "{:width$}{}, // {}",
+            "",
+            value,
+            comment,
+            width = indent_depth + 4
+        );
     }
-    println!("{:width$}];", "", width=indent_depth);
+    println!("{:width$}];", "", width = indent_depth);
 }

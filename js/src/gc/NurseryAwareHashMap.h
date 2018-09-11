@@ -41,8 +41,9 @@ class UnsafeBareReadBarriered : public ReadBarrieredBase<T>
     }
 
     const T get() const {
-        if (!InternalBarrierMethods<T>::isMarkable(this->value))
+        if (!InternalBarrierMethods<T>::isMarkable(this->value)) {
             return JS::SafelyInitialized<T>();
+        }
         this->read();
         return this->value;
     }
@@ -113,16 +114,18 @@ class NurseryAwareHashMap
         auto p = map.lookupForAdd(k);
         if (p) {
             if (!JS::GCPolicy<Key>::isTenured(k) || !JS::GCPolicy<Value>::isTenured(v)) {
-                if (!nurseryEntries.append(k))
+                if (!nurseryEntries.append(k)) {
                     return false;
+                }
             }
             p->value() = v;
             return true;
         }
 
         bool ok = map.add(p, k, v);
-        if (!ok)
+        if (!ok) {
             return false;
+        }
 
         if (!JS::GCPolicy<Key>::isTenured(k) || !JS::GCPolicy<Value>::isTenured(v)) {
             if (!nurseryEntries.append(k)) {
@@ -137,8 +140,9 @@ class NurseryAwareHashMap
     void sweepAfterMinorGC(JSTracer* trc) {
         for (auto& key : nurseryEntries) {
             auto p = map.lookup(key);
-            if (!p)
+            if (!p) {
                 continue;
+            }
 
             // Drop the entry if the value is not marked.
             if (JS::GCPolicy<BarrieredValue>::needsSweep(&p->value())) {

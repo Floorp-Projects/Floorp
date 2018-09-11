@@ -50,25 +50,30 @@ WhileEmitter::emitBody(const Maybe<uint32_t>& whilePos,
         bce_->parser->errorReporter().lineAt(*whilePos) ==
         bce_->parser->errorReporter().lineAt(*endPos))
     {
-        if (!bce_->updateSourceCoordNotes(*whilePos))
+        if (!bce_->updateSourceCoordNotes(*whilePos)) {
             return false;
+        }
     }
 
     JumpTarget top = { -1 };
-    if (!bce_->emitJumpTarget(&top))
+    if (!bce_->emitJumpTarget(&top)) {
         return false;
+    }
 
     loopInfo_.emplace(bce_, StatementKind::WhileLoop);
     loopInfo_->setContinueTarget(top.offset);
 
-    if (!bce_->newSrcNote(SRC_WHILE, &noteIndex_))
+    if (!bce_->newSrcNote(SRC_WHILE, &noteIndex_)) {
         return false;
+    }
 
-    if (!loopInfo_->emitEntryJump(bce_))
+    if (!loopInfo_->emitEntryJump(bce_)) {
         return false;
+    }
 
-    if (!loopInfo_->emitLoopHead(bce_, bodyPos))
+    if (!loopInfo_->emitLoopHead(bce_, bodyPos)) {
         return false;
+    }
 
     tdzCacheForBody_.emplace(bce_);
 
@@ -85,8 +90,9 @@ WhileEmitter::emitCond(const Maybe<uint32_t>& condPos)
 
     tdzCacheForBody_.reset();
 
-    if (!loopInfo_->emitLoopEntry(bce_, condPos))
+    if (!loopInfo_->emitLoopEntry(bce_, condPos)) {
         return false;
+    }
 
 #ifdef DEBUG
     state_ = State::Cond;
@@ -99,8 +105,9 @@ WhileEmitter::emitEnd()
 {
     MOZ_ASSERT(state_ == State::Cond);
 
-    if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFNE))
+    if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFNE)) {
         return false;
+    }
 
     if (!bce_->tryNoteList.append(JSTRY_LOOP, bce_->stackDepth, loopInfo_->headOffset(),
                                   loopInfo_->breakTargetOffset()))
@@ -114,8 +121,9 @@ WhileEmitter::emitEnd()
         return false;
     }
 
-    if (!loopInfo_->patchBreaksAndContinues(bce_))
+    if (!loopInfo_->patchBreaksAndContinues(bce_)) {
         return false;
+    }
 
     loopInfo_.reset();
 

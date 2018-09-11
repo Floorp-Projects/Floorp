@@ -127,8 +127,9 @@ class BitSet::Iterator
         const uint32_t* bits = set_.bits_;
         while (value_ == 0) {
             word_++;
-            if (word_ == numWords)
+            if (word_ == numWords) {
                 return;
+            }
 
             index_ = word_ * BitSet::BitsPerWord;
             value_ = bits[word_];

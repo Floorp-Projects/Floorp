@@ -16,8 +16,9 @@ FrameInfo::pop(StackAdjustment adjust)
     spIndex--;
     StackValue* popped = &stack[spIndex];
 
-    if (adjust == AdjustStack && popped->kind() == StackValue::Stack)
+    if (adjust == AdjustStack && popped->kind() == StackValue::Stack) {
         masm.addToStackPtr(Imm32(sizeof(Value)));
+    }
     // Assert when anything uses this value.
     popped->reset();
 }
@@ -27,12 +28,14 @@ FrameInfo::popn(uint32_t n, StackAdjustment adjust)
 {
     uint32_t poppedStack = 0;
     for (uint32_t i = 0; i < n; i++) {
-        if (peek(-1)->kind() == StackValue::Stack)
+        if (peek(-1)->kind() == StackValue::Stack) {
             poppedStack++;
+        }
         pop(DontAdjustStack);
     }
-    if (adjust == AdjustStack && poppedStack > 0)
+    if (adjust == AdjustStack && poppedStack > 0) {
         masm.addToStackPtr(Imm32(sizeof(Value) * poppedStack));
+    }
 }
 
 } // namespace jit

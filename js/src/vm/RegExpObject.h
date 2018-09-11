@@ -100,10 +100,12 @@ class RegExpObject : public NativeObject
 
     static bool isInitialShape(RegExpObject* rx) {
         Shape* shape = rx->lastProperty();
-        if (shape->isEmptyShape() || !shape->isDataProperty())
+        if (shape->isEmptyShape() || !shape->isDataProperty()) {
             return false;
-        if (shape->maybeSlot() != LAST_INDEX_SLOT)
+        }
+        if (shape->maybeSlot() != LAST_INDEX_SLOT) {
             return false;
+        }
         return true;
     }
 
@@ -202,8 +204,9 @@ ParseRegExpFlags(JSContext* cx, JSString* flagStr, RegExpFlag* flagsOut);
 inline RegExpShared*
 RegExpToShared(JSContext* cx, HandleObject obj)
 {
-    if (obj->is<RegExpObject>())
+    if (obj->is<RegExpObject>()) {
         return RegExpObject::getShared(cx, obj.as<RegExpObject>());
+    }
 
     return Proxy::regexp_toShared(cx, obj);
 }

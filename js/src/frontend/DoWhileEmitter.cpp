@@ -27,25 +27,30 @@ DoWhileEmitter::emitBody(const Maybe<uint32_t>& doPos, const Maybe<uint32_t>& bo
 
     // Ensure that the column of the 'do' is set properly.
     if (doPos) {
-        if (!bce_->updateSourceCoordNotes(*doPos))
+        if (!bce_->updateSourceCoordNotes(*doPos)) {
             return false;
+        }
     }
 
     // We need a nop here to make it possible to set a breakpoint on `do`.
-    if (!bce_->emit1(JSOP_NOP))
+    if (!bce_->emit1(JSOP_NOP)) {
         return false;
+    }
 
     // Emit an annotated nop so IonBuilder can recognize the 'do' loop.
-    if (!bce_->newSrcNote3(SRC_DO_WHILE, 0, 0, &noteIndex_))
+    if (!bce_->newSrcNote3(SRC_DO_WHILE, 0, 0, &noteIndex_)) {
         return false;
+    }
 
     loopInfo_.emplace(bce_, StatementKind::DoLoop);
 
-    if (!loopInfo_->emitLoopHead(bce_, bodyPos))
+    if (!loopInfo_->emitLoopHead(bce_, bodyPos)) {
         return false;
+    }
 
-    if (!loopInfo_->emitLoopEntry(bce_, Nothing()))
+    if (!loopInfo_->emitLoopEntry(bce_, Nothing())) {
         return false;
+    }
 
 #ifdef DEBUG
     state_ = State::Body;
@@ -58,8 +63,9 @@ DoWhileEmitter::emitCond()
 {
     MOZ_ASSERT(state_ == State::Body);
 
-    if (!loopInfo_->emitContinueTarget(bce_))
+    if (!loopInfo_->emitContinueTarget(bce_)) {
         return false;
+    }
 
 #ifdef DEBUG
     state_ = State::Cond;
@@ -72,8 +78,9 @@ DoWhileEmitter::emitEnd()
 {
     MOZ_ASSERT(state_ == State::Cond);
 
-    if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFNE))
+    if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFNE)) {
         return false;
+    }
 
     if (!bce_->tryNoteList.append(JSTRY_LOOP, bce_->stackDepth, loopInfo_->headOffset(),
                                   loopInfo_->breakTargetOffset()))
@@ -94,8 +101,9 @@ DoWhileEmitter::emitEnd()
         return false;
     }
 
-    if (!loopInfo_->patchBreaksAndContinues(bce_))
+    if (!loopInfo_->patchBreaksAndContinues(bce_)) {
         return false;
+    }
 
     loopInfo_.reset();
 

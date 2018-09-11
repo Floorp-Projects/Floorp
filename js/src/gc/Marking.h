@@ -122,8 +122,9 @@ IsAboutToBeFinalizedDuringSweep(TenuredCell& tenured);
 inline Cell*
 ToMarkable(const Value& v)
 {
-    if (v.isGCThing())
+    if (v.isGCThing()) {
         return (Cell*)v.toGCThing();
+    }
     return nullptr;
 }
 

@@ -23,13 +23,15 @@ static inline bool
 OnHelperThread()
 {
     if (Helper == AllowedHelperThread::IonCompile || Helper == AllowedHelperThread::GCTaskOrIonCompile) {
-        if (CurrentThreadIsIonCompiling())
+        if (CurrentThreadIsIonCompiling()) {
             return true;
+        }
     }
 
     if (Helper == AllowedHelperThread::GCTask || Helper == AllowedHelperThread::GCTaskOrIonCompile) {
-        if (TlsContext.get()->performingGC)
+        if (TlsContext.get()->performingGC) {
             return true;
+        }
     }
 
     return false;
@@ -49,8 +51,9 @@ template <AllowedHelperThread Helper>
 void
 CheckMainThread<Helper>::check() const
 {
-    if (OnHelperThread<Helper>())
+    if (OnHelperThread<Helper>()) {
         return;
+    }
 
     JSContext* cx = TlsContext.get();
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
@@ -64,8 +67,9 @@ template <AllowedHelperThread Helper>
 void
 CheckZone<Helper>::check() const
 {
-    if (OnHelperThread<Helper>())
+    if (OnHelperThread<Helper>()) {
         return;
+    }
 
     if (zone->usedByHelperThread()) {
         // This may only be accessed by the helper thread using this zone.
@@ -86,8 +90,9 @@ template <GlobalLock Lock, AllowedHelperThread Helper>
 void
 CheckGlobalLock<Lock, Helper>::check() const
 {
-    if (OnHelperThread<Helper>())
+    if (OnHelperThread<Helper>()) {
         return;
+    }
 
     switch (Lock) {
       case GlobalLock::GCLock:
@@ -112,15 +117,17 @@ CheckArenaListAccess<Helper>::check() const
 {
     MOZ_ASSERT(zone);
 
-    if (OnHelperThread<Helper>())
+    if (OnHelperThread<Helper>()) {
         return;
+    }
 
     JSRuntime* rt = TlsContext.get()->runtime();
     if (zone->isAtomsZone()) {
         // The main thread can access the atoms arenas if it holds all the atoms
         // table locks.
-        if (rt->currentThreadHasAtomsTableAccess())
+        if (rt->currentThreadHasAtomsTableAccess()) {
             return;
+        }
 
         // Otherwise we must hold the GC lock if parallel parsing is running.
         MOZ_ASSERT_IF(rt->isOffThreadParseRunning(), rt->gc.currentThreadHasLockedGC());

@@ -132,15 +132,17 @@ class WeakMap : public HashMap<Key, Value, MovableCellHasher<Key>, ZoneAllocPoli
     // gc/Marking.cpp.
     Ptr lookup(const Lookup& l) const {
         Ptr p = Base::lookup(l);
-        if (p)
+        if (p) {
             exposeGCThingToActiveJS(p->value());
+        }
         return p;
     }
 
     AddPtr lookupForAdd(const Lookup& l) {
         AddPtr p = Base::lookupForAdd(l);
-        if (p)
+        if (p) {
             exposeGCThingToActiveJS(p->value());
+        }
         return p;
     }
 

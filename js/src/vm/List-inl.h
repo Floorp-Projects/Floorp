@@ -27,8 +27,9 @@ AppendToList(JSContext* cx, HandleNativeObject list, HandleValue value)
 {
     uint32_t length = list->getDenseInitializedLength();
 
-    if (!list->ensureElements(cx, length + 1))
+    if (!list->ensureElements(cx, length + 1)) {
         return false;
+    }
 
     list->ensureDenseInitializedLength(cx, length, 1);
     list->setDenseElementWithType(cx, length, value);

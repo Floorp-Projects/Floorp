@@ -126,8 +126,9 @@ js::StartOffThreadWasmCompile(wasm::CompileTask* task, wasm::CompileMode mode)
 {
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().wasmWorklist(lock, mode).pushBack(task))
+    if (!HelperThreadState().wasmWorklist(lock, mode).pushBack(task)) {
         return false;
+    }
 
     HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
     return true;
@@ -140,8 +141,9 @@ js::StartOffThreadWasmTier2Generator(wasm::UniqueTier2GeneratorTask task)
 
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().wasmTier2GeneratorWorklist(lock).append(task.get()))
+    if (!HelperThreadState().wasmTier2GeneratorWorklist(lock).append(task.get())) {
         return;
+    }
 
     Unused << task.release();
 
@@ -151,8 +153,9 @@ js::StartOffThreadWasmTier2Generator(wasm::UniqueTier2GeneratorTask task)
 static void
 CancelOffThreadWasmTier2GeneratorLocked(AutoLockHelperThreadState& lock)
 {
-    if (!HelperThreadState().threads)
+    if (!HelperThreadState().threads) {
         return;
+    }
 
     // Remove pending tasks from the tier2 generator worklist and cancel and
     // delete them.
@@ -183,8 +186,9 @@ CancelOffThreadWasmTier2GeneratorLocked(AutoLockHelperThreadState& lock)
             // tier2 compilation is trying to finish, which requires it to have access
             // to helper threads.
             uint32_t oldFinishedCount = HelperThreadState().wasmTier2GeneratorsFinished(lock);
-            while (HelperThreadState().wasmTier2GeneratorsFinished(lock) == oldFinishedCount)
+            while (HelperThreadState().wasmTier2GeneratorsFinished(lock) == oldFinishedCount) {
                 HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+            }
 
             // At most one of these tasks.
             break;
@@ -202,8 +206,9 @@ js::CancelOffThreadWasmTier2Generator()
 bool
 js::StartOffThreadIonCompile(jit::IonBuilder* builder, const AutoLockHelperThreadState& lock)
 {
-    if (!HelperThreadState().ionWorklist(lock).append(builder))
+    if (!HelperThreadState().ionWorklist(lock).append(builder)) {
         return false;
+    }
 
     // The build is moving off-thread. Freeze the LifoAlloc to prevent any
     // unwanted mutations.
@@ -218,8 +223,9 @@ js::StartOffThreadIonFree(jit::IonBuilder* builder, const AutoLockHelperThreadSt
 {
     MOZ_ASSERT(CanUseExtraThreads());
 
-    if (!HelperThreadState().ionFreeList(lock).append(builder))
+    if (!HelperThreadState().ionFreeList(lock).append(builder)) {
         return false;
+    }
 
     HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
     return true;
@@ -234,8 +240,9 @@ static void
 FinishOffThreadIonCompile(jit::IonBuilder* builder, const AutoLockHelperThreadState& lock)
 {
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!HelperThreadState().ionFinishedList(lock).append(builder))
+    if (!HelperThreadState().ionFinishedList(lock).append(builder)) {
         oomUnsafe.crash("FinishOffThreadIonCompile");
+    }
     builder->script()->runtimeFromAnyThread()->jitRuntime()->numFinishedBuildersRef(lock)++;
 }
 
@@ -302,8 +309,9 @@ static void
 CancelOffThreadIonCompileLocked(const CompilationSelector& selector, bool discardLazyLinkList,
                                 AutoLockHelperThreadState& lock)
 {
-    if (!HelperThreadState().threads)
+    if (!HelperThreadState().threads) {
         return;
+    }
 
     /* Cancel any pending entries for which processing hasn't started. */
     GlobalHelperThreadState::IonBuilderVector& worklist = HelperThreadState().ionWorklist(lock);
@@ -332,8 +340,9 @@ CancelOffThreadIonCompileLocked(const CompilationSelector& selector, bool discar
                 cancelled = true;
             }
         }
-        if (cancelled)
+        if (cancelled) {
             HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+        }
     } while (cancelled);
 
     /* Cancel code generation for any completed entries. */
@@ -355,8 +364,9 @@ CancelOffThreadIonCompileLocked(const CompilationSelector& selector, bool discar
         jit::IonBuilder* builder = runtime->jitRuntime()->ionLazyLinkList(runtime).getFirst();
         while (builder) {
             jit::IonBuilder* next = builder->getNext();
-            if (IonBuilderMatches(selector, builder))
+            if (IonBuilderMatches(selector, builder)) {
                 jit::FinishOffThreadBuilder(runtime, builder, lock);
+            }
             builder = next;
         }
     }
@@ -365,8 +375,9 @@ CancelOffThreadIonCompileLocked(const CompilationSelector& selector, bool discar
 void
 js::CancelOffThreadIonCompile(const CompilationSelector& selector, bool discardLazyLinkList)
 {
-    if (!JitDataStructuresExist(selector))
+    if (!JitDataStructuresExist(selector)) {
         return;
+    }
 
     AutoLockHelperThreadState lock;
     CancelOffThreadIonCompileLocked(selector, discardLazyLinkList, lock);
@@ -378,33 +389,38 @@ js::HasOffThreadIonCompile(Realm* realm)
 {
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().threads)
+    if (!HelperThreadState().threads) {
         return false;
+    }
 
     GlobalHelperThreadState::IonBuilderVector& worklist = HelperThreadState().ionWorklist(lock);
     for (size_t i = 0; i < worklist.length(); i++) {
         jit::IonBuilder* builder = worklist[i];
-        if (builder->script()->realm() == realm)
+        if (builder->script()->realm() == realm) {
             return true;
+        }
     }
 
     for (auto& helper : *HelperThreadState().threads) {
-        if (helper.ionBuilder() && helper.ionBuilder()->script()->realm() == realm)
+        if (helper.ionBuilder() && helper.ionBuilder()->script()->realm() == realm) {
             return true;
+        }
     }
 
     GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList(lock);
     for (size_t i = 0; i < finished.length(); i++) {
         jit::IonBuilder* builder = finished[i];
-        if (builder->script()->realm() == realm)
+        if (builder->script()->realm() == realm) {
             return true;
+        }
     }
 
     JSRuntime* rt = realm->runtimeFromMainThread();
     jit::IonBuilder* builder = rt->jitRuntime()->ionLazyLinkList(rt).getFirst();
     while (builder) {
-        if (builder->script()->realm() == realm)
+        if (builder->script()->realm() == realm) {
             return true;
+        }
         builder = builder->getNext();
     }
 
@@ -445,8 +461,9 @@ ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options, JSObject* 
 {
     MOZ_ASSERT(!cx->helperThread());
 
-    if (!this->options.copy(cx, options))
+    if (!this->options.copy(cx, options)) {
         return false;
+    }
 
     parseGlobal = global;
     return true;
@@ -463,8 +480,9 @@ ParseTask::~ParseTask() = default;
 void
 ParseTask::trace(JSTracer* trc)
 {
-    if (parseGlobal->runtimeFromAnyThread() != trc->runtime())
+    if (parseGlobal->runtimeFromAnyThread() != trc->runtime()) {
         return;
+    }
 
     Zone* zone = MaybeForwarded(parseGlobal)->zoneFromAnyThread();
     if (zone->usedByHelperThread()) {
@@ -502,10 +520,12 @@ ScriptParseTask::parse(JSContext* cx)
     JSScript* script = frontend::CompileGlobalScript(cx, cx->tempLifoAlloc(), scopeKind,
                                                      options, data,
                                                      /* sourceObjectOut = */ &sourceObject.get());
-    if (script)
+    if (script) {
         scripts.infallibleAppend(script);
-    if (sourceObject)
+    }
+    if (sourceObject) {
         sourceObjects.infallibleAppend(sourceObject);
+    }
 }
 
 ModuleParseTask::ModuleParseTask(JSContext* cx, JS::SourceBufferHolder& srcBuf,
@@ -524,8 +544,9 @@ ModuleParseTask::parse(JSContext* cx)
     JSScript* script = frontend::CompileModule(cx, options, data, cx->tempLifoAlloc(), &sourceObject.get());
     if (script) {
         scripts.infallibleAppend(script);
-        if (sourceObject)
+        if (sourceObject) {
             sourceObjects.infallibleAppend(sourceObject);
+        }
     }
 }
 
@@ -549,8 +570,9 @@ ScriptDecodeTask::parse(JSContext* cx)
     MOZ_ASSERT(bool(resultScript) == res.isOk());
     if (res.isOk()) {
         scripts.infallibleAppend(resultScript);
-        if (sourceObject)
+        if (sourceObject) {
             sourceObjects.infallibleAppend(sourceObject);
+        }
     }
 }
 
@@ -574,8 +596,9 @@ BinASTDecodeTask::parse(JSContext* cx)
                                                            &sourceObject.get());
     if (script) {
         scripts.infallibleAppend(script);
-        if (sourceObject)
+        if (sourceObject) {
             sourceObjects.infallibleAppend(sourceObject);
+        }
     }
 }
 
@@ -612,8 +635,9 @@ MultiScriptsDecodeTask::parse(JSContext* cx)
         XDRResult res = decoder.codeScript(&resultScript);
         MOZ_ASSERT(bool(resultScript) == res.isOk());
 
-        if (res.isErr())
+        if (res.isErr()) {
             break;
+        }
         MOZ_ASSERT(resultScript);
         scripts.infallibleAppend(resultScript);
         sourceObjects.infallibleAppend(sourceObject);
@@ -625,14 +649,16 @@ js::CancelOffThreadParses(JSRuntime* rt)
 {
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().threads)
+    if (!HelperThreadState().threads) {
         return;
+    }
 
 #ifdef DEBUG
     GlobalHelperThreadState::ParseTaskVector& waitingOnGC =
         HelperThreadState().parseWaitingOnGC(lock);
-    for (size_t i = 0; i < waitingOnGC.length(); i++)
+    for (size_t i = 0; i < waitingOnGC.length(); i++) {
         MOZ_ASSERT(!waitingOnGC[i]->runtimeMatches(rt));
+    }
 #endif
 
     // Instead of forcibly canceling pending parse tasks, just wait for all scheduled
@@ -643,18 +669,21 @@ js::CancelOffThreadParses(JSRuntime* rt)
         GlobalHelperThreadState::ParseTaskVector& worklist = HelperThreadState().parseWorklist(lock);
         for (size_t i = 0; i < worklist.length(); i++) {
             ParseTask* task = worklist[i];
-            if (task->runtimeMatches(rt))
+            if (task->runtimeMatches(rt)) {
                 pending = true;
+            }
         }
         if (!pending) {
             bool inProgress = false;
             for (auto& thread : *HelperThreadState().threads) {
                 ParseTask* task = thread.parseTask();
-                if (task && task->runtimeMatches(rt))
+                if (task && task->runtimeMatches(rt)) {
                     inProgress = true;
+                }
             }
-            if (!inProgress)
+            if (!inProgress) {
                 break;
+            }
         }
         HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
     }
@@ -674,8 +703,9 @@ js::CancelOffThreadParses(JSRuntime* rt)
             }
             task = next;
         }
-        if (!found)
+        if (!found) {
             break;
+        }
     }
 
 #ifdef DEBUG
@@ -701,8 +731,9 @@ js::OffThreadParsingMustWaitForGC(JSRuntime* rt)
 static bool
 EnsureConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key)
 {
-    if (!GlobalObject::ensureConstructor(cx, global, key))
+    if (!GlobalObject::ensureConstructor(cx, global, key)) {
         return false;
+    }
 
     MOZ_ASSERT(global->getPrototype(key).toObject().isDelegate(),
                "standard class prototype wasn't a delegate from birth");
@@ -716,20 +747,25 @@ EnsureParserCreatedClasses(JSContext* cx, ParseTaskKind kind)
 {
     Handle<GlobalObject*> global = cx->global();
 
-    if (!EnsureConstructor(cx, global, JSProto_Function))
+    if (!EnsureConstructor(cx, global, JSProto_Function)) {
         return false; // needed by functions, also adds object literals' proto
+    }
 
-    if (!EnsureConstructor(cx, global, JSProto_Array))
+    if (!EnsureConstructor(cx, global, JSProto_Array)) {
         return false; // needed by array literals
+    }
 
-    if (!EnsureConstructor(cx, global, JSProto_RegExp))
+    if (!EnsureConstructor(cx, global, JSProto_RegExp)) {
         return false; // needed by regular expression literals
+    }
 
-    if (!GlobalObject::initGenerators(cx, global))
+    if (!GlobalObject::initGenerators(cx, global)) {
         return false; // needed by function*() {}
+    }
 
-    if (kind == ParseTaskKind::Module && !GlobalObject::ensureModulePrototypesCreated(cx, global))
+    if (kind == ParseTaskKind::Module && !GlobalObject::ensureModulePrototypesCreated(cx, global)) {
         return false;
+    }
 
     return true;
 }
@@ -750,8 +786,9 @@ class MOZ_RAII AutoSetCreatedForHelperThread
     }
 
     ~AutoSetCreatedForHelperThread() {
-        if (zone)
+        if (zone) {
             zone->clearUsedByHelperThread();
+        }
     }
 };
 
@@ -808,8 +845,9 @@ StartOffThreadParseTask(JSContext* cx, ParseTask* task, const ReadOnlyCompileOpt
     AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
     JSObject* global = CreateGlobalForOffThreadParse(cx, nogc);
-    if (!global)
+    if (!global) {
         return false;
+    }
 
     // Mark the global's zone as created for a helper thread. This prevents it
     // from being collected until clearUsedByHelperThread() is called after
@@ -817,11 +855,13 @@ StartOffThreadParseTask(JSContext* cx, ParseTask* task, const ReadOnlyCompileOpt
     // cleared automatically.
     AutoSetCreatedForHelperThread createdForHelper(global);
 
-    if (!task->init(cx, options, global))
+    if (!task->init(cx, options, global)) {
         return false;
+    }
 
-    if (!QueueOffThreadParseTask(cx, task))
+    if (!QueueOffThreadParseTask(cx, task)) {
         return false;
+    }
 
     createdForHelper.forget();
     return true;
@@ -833,8 +873,9 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
                               JS::OffThreadCompileCallback callback, void* callbackData)
 {
     auto task = cx->make_unique<ScriptParseTask>(cx, srcBuf, callback, callbackData);
-    if (!task || !StartOffThreadParseTask(cx, task.get(), options))
+    if (!task || !StartOffThreadParseTask(cx, task.get(), options)) {
         return false;
+    }
 
     Unused << task.release();
     return true;
@@ -846,8 +887,9 @@ js::StartOffThreadParseModule(JSContext* cx, const ReadOnlyCompileOptions& optio
                               JS::OffThreadCompileCallback callback, void* callbackData)
 {
     auto task = cx->make_unique<ModuleParseTask>(cx, srcBuf, callback, callbackData);
-    if (!task || !StartOffThreadParseTask(cx, task.get(), options))
+    if (!task || !StartOffThreadParseTask(cx, task.get(), options)) {
         return false;
+    }
 
     Unused << task.release();
     return true;
@@ -859,8 +901,9 @@ js::StartOffThreadDecodeScript(JSContext* cx, const ReadOnlyCompileOptions& opti
                                JS::OffThreadCompileCallback callback, void* callbackData)
 {
     auto task = cx->make_unique<ScriptDecodeTask>(cx, range, callback, callbackData);
-    if (!task || !StartOffThreadParseTask(cx, task.get(), options))
+    if (!task || !StartOffThreadParseTask(cx, task.get(), options)) {
         return false;
+    }
 
     Unused << task.release();
     return true;
@@ -872,8 +915,9 @@ js::StartOffThreadDecodeMultiScripts(JSContext* cx, const ReadOnlyCompileOptions
                                      JS::OffThreadCompileCallback callback, void* callbackData)
 {
     auto task = cx->make_unique<MultiScriptsDecodeTask>(cx, sources, callback, callbackData);
-    if (!task || !StartOffThreadParseTask(cx, task.get(), options))
+    if (!task || !StartOffThreadParseTask(cx, task.get(), options)) {
         return false;
+    }
 
     Unused << task.release();
     return true;
@@ -887,8 +931,9 @@ js::StartOffThreadDecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& opti
                                JS::OffThreadCompileCallback callback, void *callbackData)
 {
     auto task = cx->make_unique<BinASTDecodeTask>(cx, buf, length, callback, callbackData);
-    if (!task || !StartOffThreadParseTask(cx, task.get(), options))
+    if (!task || !StartOffThreadParseTask(cx, task.get(), options)) {
         return false;
+    }
 
     Unused << task.release();
     return true;
@@ -911,28 +956,32 @@ js::EnqueuePendingParseTasksAfterGC(JSRuntime* rt)
             ParseTask* task = waiting[i];
             if (task->runtimeMatches(rt)) {
                 AutoEnterOOMUnsafeRegion oomUnsafe;
-                if (!newTasks.append(task))
+                if (!newTasks.append(task)) {
                     oomUnsafe.crash("EnqueuePendingParseTasksAfterGC");
+                }
                 HelperThreadState().remove(waiting, &i);
             }
         }
     }
 
-    if (newTasks.empty())
+    if (newTasks.empty()) {
         return;
+    }
 
     // This logic should mirror the contents of the
     // !OffThreadParsingMustWaitForGC() branch in QueueOffThreadParseTask:
 
-    for (size_t i = 0; i < newTasks.length(); i++)
+    for (size_t i = 0; i < newTasks.length(); i++) {
         newTasks[i]->activate(rt);
+    }
 
     AutoLockHelperThreadState lock;
 
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!HelperThreadState().parseWorklist(lock).appendAll(newTasks))
+        if (!HelperThreadState().parseWorklist(lock).appendAll(newTasks)) {
             oomUnsafe.crash("EnqueuePendingParseTasksAfterGC");
+        }
     }
 
     HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, lock);
@@ -981,20 +1030,23 @@ GlobalHelperThreadState::ensureInitialized()
     MOZ_ASSERT(this == &HelperThreadState());
     AutoLockHelperThreadState lock;
 
-    if (threads)
+    if (threads) {
         return true;
+    }
 
     threads = js::MakeUnique<HelperThreadVector>();
-    if (!threads || !threads->initCapacity(threadCount))
+    if (!threads || !threads->initCapacity(threadCount)) {
         return false;
+    }
 
     for (size_t i = 0; i < threadCount; i++) {
         threads->infallibleEmplaceBack();
         HelperThread& helper = (*threads)[i];
 
         helper.thread = mozilla::Some(Thread(Thread::Options().setStackSize(HELPER_STACK_SIZE)));
-        if (!helper.thread->init(HelperThread::ThreadMain, &helper))
+        if (!helper.thread->init(HelperThread::ThreadMain, &helper)) {
             goto error;
+        }
 
         continue;
 
@@ -1035,19 +1087,22 @@ GlobalHelperThreadState::finish()
     // destroying a runtime.
     AutoLockHelperThreadState lock;
     auto& freeList = ionFreeList(lock);
-    while (!freeList.empty())
+    while (!freeList.empty()) {
         jit::FreeIonBuilder(freeList.popCopy());
+    }
 }
 
 void
 GlobalHelperThreadState::finishThreads()
 {
-    if (!threads)
+    if (!threads) {
         return;
+    }
 
     MOZ_ASSERT(CanUseExtraThreads());
-    for (auto& thread : *threads)
+    for (auto& thread : *threads) {
         thread.destroy();
+    }
     threads.reset(nullptr);
 }
 
@@ -1093,12 +1148,14 @@ GlobalHelperThreadState::notifyOne(CondVar which, const AutoLockHelperThreadStat
 bool
 GlobalHelperThreadState::hasActiveThreads(const AutoLockHelperThreadState&)
 {
-    if (!threads)
+    if (!threads) {
         return false;
+    }
 
     for (auto& thread : *threads) {
-        if (!thread.idle())
+        if (!thread.idle()) {
             return true;
+        }
     }
 
     return false;
@@ -1117,8 +1174,9 @@ GlobalHelperThreadState::waitForAllThreadsLocked(AutoLockHelperThreadState& lock
     CancelOffThreadIonCompileLocked(CompilationSelector(AllCompilations()), false, lock);
     CancelOffThreadWasmTier2GeneratorLocked(lock);
 
-    while (hasActiveThreads(lock))
+    while (hasActiveThreads(lock)) {
         wait(lock, CONSUMER);
+    }
 }
 
 // A task can be a "master" task, ie, it will block waiting for other worker
@@ -1144,32 +1202,37 @@ GlobalHelperThreadState::checkTaskThreadLimit(size_t maxThreads, bool isMaster) 
 {
     MOZ_ASSERT(maxThreads > 0);
 
-    if (!isMaster && maxThreads >= threadCount)
+    if (!isMaster && maxThreads >= threadCount) {
         return true;
+    }
 
     size_t count = 0;
     size_t idle = 0;
     for (auto& thread : *threads) {
         if (thread.currentTask.isSome()) {
-            if (thread.currentTask->is<T>())
+            if (thread.currentTask->is<T>()) {
                 count++;
+            }
         } else {
             idle++;
         }
-        if (count >= maxThreads)
+        if (count >= maxThreads) {
             return false;
+        }
     }
 
     // It is possible for the number of idle threads to be zero here, because
     // checkTaskThreadLimit() can be called from non-helper threads.  Notably,
     // the compression task scheduler invokes it, and runs off a helper thread.
-    if (idle == 0)
+    if (idle == 0) {
         return false;
+    }
 
     // A master thread that's the last available thread must not be allowed to
     // run.
-    if (isMaster && idle == 1)
+    if (isMaster && idle == 1) {
         return false;
+    }
 
     return true;
 }
@@ -1205,8 +1268,9 @@ GlobalHelperThreadState::addSizeOfIncludingThis(JS::GlobalStats* stats,
 
     htStats.stateData += mallocSizeOf(this);
 
-    if (threads)
+    if (threads) {
         htStats.stateData += threads->sizeOfIncludingThis(mallocSizeOf);
+    }
 
     // Report memory used by various containers
     htStats.stateData +=
@@ -1226,35 +1290,44 @@ GlobalHelperThreadState::addSizeOfIncludingThis(JS::GlobalStats* stats,
         gcParallelWorklist_.sizeOfExcludingThis(mallocSizeOf);
 
     // Report ParseTasks on wait lists
-    for (auto task : parseWorklist_)
+    for (auto task : parseWorklist_) {
         htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
-    for (auto task : parseFinishedList_)
+    }
+    for (auto task : parseFinishedList_) {
         htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
-    for (auto task : parseWaitingOnGC_)
+    }
+    for (auto task : parseWaitingOnGC_) {
         htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
+    }
 
     // Report IonBuilders on wait lists
-    for (auto builder : ionWorklist_)
+    for (auto builder : ionWorklist_) {
         htStats.ionBuilder += builder->sizeOfExcludingThis(mallocSizeOf);
-    for (auto builder : ionFinishedList_)
+    }
+    for (auto builder : ionFinishedList_) {
         htStats.ionBuilder += builder->sizeOfExcludingThis(mallocSizeOf);
-    for (auto builder : ionFreeList_)
+    }
+    for (auto builder : ionFreeList_) {
         htStats.ionBuilder += builder->sizeOfExcludingThis(mallocSizeOf);
+    }
 
     // Report wasm::CompileTasks on wait lists
-    for (auto task : wasmWorklist_tier1_)
+    for (auto task : wasmWorklist_tier1_) {
         htStats.wasmCompile += task->sizeOfExcludingThis(mallocSizeOf);
-    for (auto task : wasmWorklist_tier2_)
+    }
+    for (auto task : wasmWorklist_tier2_) {
         htStats.wasmCompile += task->sizeOfExcludingThis(mallocSizeOf);
+    }
 
     // Report number of helper threads.
     MOZ_ASSERT(htStats.idleThreadCount == 0);
     if (threads) {
         for (auto& thread : *threads) {
-            if (thread.idle())
+            if (thread.idle()) {
                 htStats.idleThreadCount++;
-            else
+            } else {
                 htStats.activeThreadCount++;
+            }
         }
     }
 }
@@ -1262,16 +1335,18 @@ GlobalHelperThreadState::addSizeOfIncludingThis(JS::GlobalStats* stats,
 size_t
 GlobalHelperThreadState::maxIonCompilationThreads() const
 {
-    if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_ION))
+    if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_ION)) {
         return 1;
+    }
     return threadCount;
 }
 
 size_t
 GlobalHelperThreadState::maxWasmCompilationThreads() const
 {
-    if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM))
+    if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM)) {
         return 1;
+    }
     return cpuCount;
 }
 
@@ -1284,24 +1359,27 @@ GlobalHelperThreadState::maxWasmTier2GeneratorThreads() const
 size_t
 GlobalHelperThreadState::maxPromiseHelperThreads() const
 {
-    if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM))
+    if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM)) {
         return 1;
+    }
     return cpuCount;
 }
 
 size_t
 GlobalHelperThreadState::maxParseThreads() const
 {
-    if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_PARSE))
+    if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_PARSE)) {
         return 1;
+    }
     return cpuCount;
 }
 
 size_t
 GlobalHelperThreadState::maxCompressionThreads() const
 {
-    if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_COMPRESS))
+    if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_COMPRESS)) {
         return 1;
+    }
 
     // Compression is triggered on major GCs to compress ScriptSources. It is
     // considered low priority work.
@@ -1311,8 +1389,9 @@ GlobalHelperThreadState::maxCompressionThreads() const
 size_t
 GlobalHelperThreadState::maxGCParallelThreads() const
 {
-    if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_GCPARALLEL))
+    if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_GCPARALLEL)) {
         return 1;
+    }
     return threadCount;
 }
 
@@ -1332,8 +1411,9 @@ bool
 GlobalHelperThreadState::canStartWasmCompile(const AutoLockHelperThreadState& lock,
                                              wasm::CompileMode mode)
 {
-    if (wasmWorklist(lock, mode).empty())
+    if (wasmWorklist(lock, mode).empty()) {
         return false;
+    }
 
     // Parallel compilation and background compilation should be disabled on
     // unicore systems.
@@ -1360,19 +1440,22 @@ GlobalHelperThreadState::canStartWasmCompile(const AutoLockHelperThreadState& lo
 
     size_t threads;
     if (mode == wasm::CompileMode::Tier2) {
-        if (tier2oversubscribed)
+        if (tier2oversubscribed) {
             threads = maxWasmCompilationThreads();
-        else
+        } else {
             threads = physCoresAvailable;
+        }
     } else {
-        if (tier2oversubscribed)
+        if (tier2oversubscribed) {
             threads = 0;
-        else
+        } else {
             threads = maxWasmCompilationThreads();
+        }
     }
 
-    if (!threads || !checkTaskThreadLimit<wasm::CompileTask*>(threads))
+    if (!threads || !checkTaskThreadLimit<wasm::CompileTask*>(threads)) {
         return false;
+    }
 
     return true;
 }
@@ -1404,12 +1487,14 @@ IonBuilderHasHigherPriority(jit::IonBuilder* first, jit::IonBuilder* second)
     // total order. The ordering is allowed to race (change on the fly), however.
 
     // A lower optimization level indicates a higher priority.
-    if (first->optimizationInfo().level() != second->optimizationInfo().level())
+    if (first->optimizationInfo().level() != second->optimizationInfo().level()) {
         return first->optimizationInfo().level() < second->optimizationInfo().level();
+    }
 
     // A script without an IonScript has precedence on one with.
-    if (first->scriptHasIonScript() != second->scriptHasIonScript())
+    if (first->scriptHasIonScript() != second->scriptHasIonScript()) {
         return !first->scriptHasIonScript();
+    }
 
     // A higher warm-up counter indicates a higher priority.
     return first->script()->getWarmUpCount() / first->script()->length() >
@@ -1438,8 +1523,9 @@ GlobalHelperThreadState::highestPriorityPendingIonCompile(const AutoLockHelperTh
     // Get the highest priority IonBuilder which has not started compilation yet.
     size_t index = 0;
     for (size_t i = 1; i < worklist.length(); i++) {
-        if (IonBuilderHasHigherPriority(worklist[i], worklist[index]))
+        if (IonBuilderHasHigherPriority(worklist[i], worklist[index])) {
             index = i;
+        }
     }
 
     jit::IonBuilder* builder = worklist[index];
@@ -1469,8 +1555,9 @@ void
 GlobalHelperThreadState::startHandlingCompressionTasks(const AutoLockHelperThreadState& lock)
 {
     scheduleCompressionTasks(lock);
-    if (canStartCompressionTask(lock))
+    if (canStartCompressionTask(lock)) {
         notifyOne(PRODUCER, lock);
+    }
 }
 
 void
@@ -1513,11 +1600,13 @@ js::GCParallelTask::startWithLockHeld(AutoLockHelperThreadState& lock)
     // If we do the shutdown GC before running anything, we may never
     // have initialized the helper threads. Just use the serial path
     // since we cannot safely intialize them at this point.
-    if (!HelperThreadState().threads)
+    if (!HelperThreadState().threads) {
         return false;
+    }
 
-    if (!HelperThreadState().gcParallelWorklist(lock).append(this))
+    if (!HelperThreadState().gcParallelWorklist(lock).append(this)) {
         return false;
+    }
     setDispatched(lock);
 
     HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
@@ -1535,11 +1624,13 @@ js::GCParallelTask::start()
 void
 js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock)
 {
-    if (isNotStarted(lock))
+    if (isNotStarted(lock)) {
         return;
+    }
 
-    while (!isFinished(lock))
+    while (!isFinished(lock)) {
         HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+    }
 
     setNotStarted(lock);
     cancel_ = false;
@@ -1559,8 +1650,9 @@ TimeSince(TimeStamp prev)
     TimeStamp now = ReallyNow();
     // Sadly this happens sometimes.
     MOZ_ASSERT(now >= prev);
-    if (now < prev)
+    if (now < prev) {
         now = prev;
+    }
     return now - prev;
 }
 
@@ -1666,15 +1758,18 @@ GlobalHelperThreadState::finishParseTaskCommon(JSContext* cx, ParseTaskKind kind
 
     mergeParseTaskRealm(cx, parseTask.get().get(), cx->realm());
 
-    for (auto& script : parseTask->scripts)
+    for (auto& script : parseTask->scripts) {
         cx->releaseCheck(script);
+    }
 
     for (auto& sourceObject : parseTask->sourceObjects) {
         RootedScriptSourceObject sso(cx, sourceObject);
-        if (!ScriptSourceObject::initFromOptions(cx, sso, parseTask->options))
+        if (!ScriptSourceObject::initFromOptions(cx, sso, parseTask->options)) {
             return nullptr;
-        if (!sso->source()->tryCompressOffThread(cx))
+        }
+        if (!sso->source()->tryCompressOffThread(cx)) {
             return nullptr;
+        }
     }
 
     // Report out of memory errors eagerly, or errors could be malformed.
@@ -1684,12 +1779,15 @@ GlobalHelperThreadState::finishParseTaskCommon(JSContext* cx, ParseTaskKind kind
     }
 
     // Report any error or warnings generated during the parse.
-    for (size_t i = 0; i < parseTask->errors.length(); i++)
+    for (size_t i = 0; i < parseTask->errors.length(); i++) {
         parseTask->errors[i]->throwError(cx);
-    if (parseTask->overRecursed)
+    }
+    if (parseTask->overRecursed) {
         ReportOverRecursed(cx);
-    if (cx->isExceptionPending())
+    }
+    if (cx->isExceptionPending()) {
         return nullptr;
+    }
 
     return std::move(parseTask.get());
 }
@@ -1731,8 +1829,9 @@ GlobalHelperThreadState::finishMultiParseTask(JSContext* cx, ParseTaskKind kind,
                                               MutableHandle<ScriptVector> scripts)
 {
     Rooted<UniquePtr<ParseTask>> parseTask(cx, finishParseTaskCommon(cx, kind, token));
-    if (!parseTask)
+    if (!parseTask) {
         return false;
+    }
 
     MOZ_ASSERT(parseTask->kind == ParseTaskKind::MultiScriptsDecode);
     auto task = static_cast<MultiScriptsDecodeTask*>(parseTask.get().get());
@@ -1743,8 +1842,9 @@ GlobalHelperThreadState::finishMultiParseTask(JSContext* cx, ParseTaskKind kind,
         return false;
     }
 
-    for (auto& script : parseTask->scripts)
+    for (auto& script : parseTask->scripts) {
         scripts.infallibleAppend(script);
+    }
 
     if (scripts.length() != expectedLength) {
         // No error was reported, but fewer scripts produced than expected.
@@ -1805,15 +1905,17 @@ JSScript*
 GlobalHelperThreadState::finishModuleParseTask(JSContext* cx, JS::OffThreadToken* token)
 {
     RootedScript script(cx, finishSingleParseTask(cx, ParseTaskKind::Module, token));
-    if (!script)
+    if (!script) {
         return nullptr;
+    }
 
     MOZ_ASSERT(script->module());
 
     RootedModuleObject module(cx, script->module());
     module->fixEnvironmentsAfterCompartmentMerge();
-    if (!ModuleObject::Freeze(cx, module))
+    if (!ModuleObject::Freeze(cx, module)) {
         return nullptr;
+    }
 
     return script;
 }
@@ -1867,8 +1969,9 @@ HelperThread::destroy()
 void
 HelperThread::ensureRegisteredWithProfiler()
 {
-    if (profilingStack || mozilla::recordreplay::IsRecordingOrReplaying())
+    if (profilingStack || mozilla::recordreplay::IsRecordingOrReplaying()) {
         return;
+    }
 
     JS::RegisterThreadCallback callback = HelperThreadState().registerThread;
     if (callback) {
@@ -1880,8 +1983,9 @@ HelperThread::ensureRegisteredWithProfiler()
 void
 HelperThread::unregisterWithProfilerIfNeeded()
 {
-    if (!profilingStack)
+    if (!profilingStack) {
         return;
+    }
 
     JS::UnregisterThreadCallback callback = HelperThreadState().unregisterThread;
     if (callback) {
@@ -2052,12 +2156,14 @@ HelperThread::handleIonFreeWorkload(AutoLockHelperThreadState& locked)
 HelperThread*
 js::CurrentHelperThread()
 {
-    if (!HelperThreadState().threads)
+    if (!HelperThreadState().threads) {
         return nullptr;
+    }
     auto threadId = ThisThread::GetId();
     for (auto& thisThread : *HelperThreadState().threads) {
-        if (thisThread.thread.isSome() && threadId == thisThread.thread->get_id())
+        if (thisThread.thread.isSome() && threadId == thisThread.thread->get_id()) {
             return &thisThread;
+        }
     }
     return nullptr;
 }
@@ -2066,8 +2172,9 @@ bool
 JSContext::addPendingCompileError(js::CompileError** error)
 {
     auto errorPtr = make_unique<js::CompileError>();
-    if (!errorPtr)
+    if (!errorPtr) {
         return false;
+    }
     ParseTask* parseTask = helperThread()->parseTask();
     if (!parseTask->errors.append(std::move(errorPtr))) {
         ReportOutOfMemory(this);
@@ -2080,16 +2187,18 @@ JSContext::addPendingCompileError(js::CompileError** error)
 void
 JSContext::addPendingOverRecursed()
 {
-    if (helperThread()->parseTask())
+    if (helperThread()->parseTask()) {
         helperThread()->parseTask()->overRecursed = true;
+    }
 }
 
 void
 JSContext::addPendingOutOfMemory()
 {
     // Keep in sync with recoverFromOutOfMemory.
-    if (helperThread()->parseTask())
+    if (helperThread()->parseTask()) {
         helperThread()->parseTask()->outOfMemory = true;
+    }
 }
 
 void
@@ -2169,8 +2278,9 @@ HelperThread::handleCompressionWorkload(AutoLockHelperThreadState& locked)
 
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!HelperThreadState().compressionFinishedList(locked).append(std::move(task)))
+        if (!HelperThreadState().compressionFinishedList(locked).append(std::move(task))) {
             oomUnsafe.crash("handleCompressionWorkload");
+        }
     }
 
     currentTask.reset();
@@ -2186,8 +2296,9 @@ js::EnqueueOffThreadCompression(JSContext* cx, UniquePtr<SourceCompressionTask> 
 
     auto& pending = HelperThreadState().compressionPendingList(lock);
     if (!pending.append(std::move(task))) {
-        if (!cx->helperThread())
+        if (!cx->helperThread()) {
             ReportOutOfMemory(cx);
+        }
         return false;
     }
 
@@ -2199,8 +2310,9 @@ static void
 ClearCompressionTaskList(T& list, JSRuntime* runtime)
 {
     for (size_t i = 0; i < list.length(); i++) {
-        if (list[i]->runtimeMatches(runtime))
+        if (list[i]->runtimeMatches(runtime)) {
             HelperThreadState().remove(list, &i);
+        }
     }
 }
 
@@ -2209,8 +2321,9 @@ js::CancelOffThreadCompressions(JSRuntime* runtime)
 {
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().threads)
+    if (!HelperThreadState().threads) {
         return;
+    }
 
     // Cancel all pending compression tasks.
     ClearCompressionTaskList(HelperThreadState().compressionPendingList(lock), runtime);
@@ -2222,12 +2335,14 @@ js::CancelOffThreadCompressions(JSRuntime* runtime)
         bool inProgress = false;
         for (auto& thread : *HelperThreadState().threads) {
             SourceCompressionTask* task = thread.compressionTask();
-            if (task && task->runtimeMatches(runtime))
+            if (task && task->runtimeMatches(runtime)) {
                 inProgress = true;
+            }
         }
 
-        if (!inProgress)
+        if (!inProgress) {
             break;
+        }
 
         HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
     }
@@ -2272,8 +2387,9 @@ js::StartOffThreadPromiseHelperTask(PromiseHelperTask* task)
 
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().promiseHelperTasks(lock).append(task))
+    if (!HelperThreadState().promiseHelperTasks(lock).append(task)) {
         return false;
+    }
 
     HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
     return true;
@@ -2288,13 +2404,15 @@ GlobalHelperThreadState::trace(JSTracer* trc)
         builder->trace(trc);
         builder->alloc().lifoAlloc()->setReadOnly();
     }
-    for (auto builder : ionFinishedList(lock))
+    for (auto builder : ionFinishedList(lock)) {
         builder->trace(trc);
+    }
 
     if (HelperThreadState().threads) {
         for (auto& helper : *HelperThreadState().threads) {
-            if (auto builder = helper.ionBuilder())
+            if (auto builder = helper.ionBuilder()) {
                 builder->trace(trc);
+            }
         }
     }
 
@@ -2307,12 +2425,15 @@ GlobalHelperThreadState::trace(JSTracer* trc)
         }
     }
 
-    for (auto parseTask : parseWorklist_)
+    for (auto parseTask : parseWorklist_) {
         parseTask->trace(trc);
-    for (auto parseTask : parseFinishedList_)
+    }
+    for (auto parseTask : parseFinishedList_) {
         parseTask->trace(trc);
-    for (auto parseTask : parseWaitingOnGC_)
+    }
+    for (auto parseTask : parseWaitingOnGC_) {
         parseTask->trace(trc);
+    }
 }
 
 /* static */ void
@@ -2325,13 +2446,15 @@ HelperThread::WakeupAll()
 void
 JSContext::setHelperThread(HelperThread* thread)
 {
-    if (helperThread_)
+    if (helperThread_) {
         nurserySuppressions_--;
+    }
 
     helperThread_ = thread;
 
-    if (helperThread_)
+    if (helperThread_) {
         nurserySuppressions_++;
+    }
 }
 
 // Definition of helper thread tasks.
@@ -2391,14 +2514,16 @@ HelperThread::AutoProfilerLabel::AutoProfilerLabel(HelperThread* helperThread,
                                                    ProfilingStackFrame::Category category)
   : profilingStack(helperThread->profilingStack)
 {
-    if (profilingStack)
+    if (profilingStack) {
         profilingStack->pushLabelFrame(label, nullptr, this, line, category);
+    }
 }
 
 HelperThread::AutoProfilerLabel::~AutoProfilerLabel()
 {
-    if (profilingStack)
+    if (profilingStack) {
         profilingStack->pop();
+    }
 }
 
 void
@@ -2414,8 +2539,9 @@ HelperThread::threadLoop()
     JSContext cx(nullptr, JS::ContextOptions());
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!cx.init(ContextKind::HelperThread))
+        if (!cx.init(ContextKind::HelperThread)) {
             oomUnsafe.crash("HelperThread cx.init()");
+        }
     }
     cx.setHelperThread(this);
     JS_SetNativeStackQuota(&cx, HELPER_STACK_QUOTA);
@@ -2467,8 +2593,9 @@ HelperThread::findHighestPriorityTask(const AutoLockHelperThreadState& locked)
     // Return the highest priority task that is ready to start, or nullptr.
 
     for (const auto& task : taskSpecs) {
-        if ((HelperThreadState().*(task.canStart))(locked))
+        if ((HelperThreadState().*(task.canStart))(locked)) {
             return &task;
+        }
     }
 
     return nullptr;

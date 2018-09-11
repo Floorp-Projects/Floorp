@@ -7,7 +7,7 @@ use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, Filter
 use api::{LayoutRect, MixBlendMode, PipelineId};
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::{ClipStore};
-use clip_scroll_tree::SpatialNodeIndex;
+use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
 use device::{FrameId, Texture};
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
@@ -47,7 +47,7 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub prim_store: &'a PrimitiveStore,
     pub resource_cache: &'rc mut ResourceCache,
     pub use_dual_source_blending: bool,
-    pub transforms: &'a TransformPalette,
+    pub clip_scroll_tree: &'a ClipScrollTree,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -103,6 +103,7 @@ pub trait RenderTarget {
         _render_tasks: &mut RenderTaskTree,
         _deferred_resolves: &mut Vec<DeferredResolve>,
         _prim_headers: &mut PrimitiveHeaders,
+        _transforms: &mut TransformPalette,
     ) {
     }
     // TODO(gw): It's a bit odd that we need the deferred resolves and mutable
@@ -119,6 +120,7 @@ pub trait RenderTarget {
         gpu_cache: &mut GpuCache,
         render_tasks: &RenderTaskTree,
         clip_store: &ClipStore,
+        transforms: &mut TransformPalette,
         deferred_resolves: &mut Vec<DeferredResolve>,
     );
     fn used_rect(&self) -> DeviceIntRect;
@@ -167,6 +169,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
         deferred_resolves: &mut Vec<DeferredResolve>,
         saved_index: Option<SavedTargetIndex>,
         prim_headers: &mut PrimitiveHeaders,
+        transforms: &mut TransformPalette,
     ) {
         debug_assert_eq!(None, self.saved_index);
         self.saved_index = saved_index;
@@ -178,6 +181,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
                 render_tasks,
                 deferred_resolves,
                 prim_headers,
+                transforms,
             );
         }
     }
@@ -189,6 +193,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
         clip_store: &ClipStore,
+        transforms: &mut TransformPalette,
         deferred_resolves: &mut Vec<DeferredResolve>,
     ) {
         self.targets.last_mut().unwrap().add_task(
@@ -197,6 +202,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
             gpu_cache,
             render_tasks,
             clip_store,
+            transforms,
             deferred_resolves,
         );
     }
@@ -341,6 +347,7 @@ impl RenderTarget for ColorRenderTarget {
         render_tasks: &mut RenderTaskTree,
         deferred_resolves: &mut Vec<DeferredResolve>,
         prim_headers: &mut PrimitiveHeaders,
+        transforms: &mut TransformPalette,
     ) {
         let mut merged_batches = AlphaBatchContainer::new(None);
 
@@ -367,6 +374,8 @@ impl RenderTarget for ColorRenderTarget {
                         render_tasks,
                         deferred_resolves,
                         prim_headers,
+                        transforms,
+                        pic_task.root_spatial_node_index,
                     );
 
                     if let Some(batch_container) = batch_builder.build(&mut merged_batches) {
@@ -389,6 +398,7 @@ impl RenderTarget for ColorRenderTarget {
         gpu_cache: &mut GpuCache,
         render_tasks: &RenderTaskTree,
         _: &ClipStore,
+        _: &mut TransformPalette,
         deferred_resolves: &mut Vec<DeferredResolve>,
     ) {
         let task = &render_tasks[task_id];
@@ -539,6 +549,7 @@ impl RenderTarget for AlphaRenderTarget {
         gpu_cache: &mut GpuCache,
         render_tasks: &RenderTaskTree,
         clip_store: &ClipStore,
+        transforms: &mut TransformPalette,
         _: &mut Vec<DeferredResolve>,
     ) {
         let task = &render_tasks[task_id];
@@ -582,10 +593,12 @@ impl RenderTarget for AlphaRenderTarget {
                 self.clip_batcher.add(
                     task_address,
                     task_info.clip_node_range,
+                    task_info.root_spatial_node_index,
                     ctx.resource_cache,
                     gpu_cache,
                     clip_store,
-                    ctx.transforms,
+                    ctx.clip_scroll_tree,
+                    transforms,
                 );
             }
             RenderTaskKind::ClipRegion(ref task) => {
@@ -794,6 +807,7 @@ impl RenderPass {
         render_tasks: &mut RenderTaskTree,
         deferred_resolves: &mut Vec<DeferredResolve>,
         clip_store: &ClipStore,
+        transforms: &mut TransformPalette,
         prim_headers: &mut PrimitiveHeaders,
     ) {
         profile_scope!("RenderPass::build");
@@ -808,6 +822,7 @@ impl RenderPass {
                         gpu_cache,
                         render_tasks,
                         clip_store,
+                        transforms,
                         deferred_resolves,
                     );
                 }
@@ -817,6 +832,7 @@ impl RenderPass {
                     render_tasks,
                     deferred_resolves,
                     prim_headers,
+                    transforms,
                 );
             }
             RenderPassKind::OffScreen { ref mut color, ref mut alpha, ref mut texture_cache } => {
@@ -901,6 +917,7 @@ impl RenderPass {
                                     gpu_cache,
                                     render_tasks,
                                     clip_store,
+                                    transforms,
                                     deferred_resolves,
                                 ),
                                 RenderTargetKind::Alpha => alpha.add_task(
@@ -909,6 +926,7 @@ impl RenderPass {
                                     gpu_cache,
                                     render_tasks,
                                     clip_store,
+                                    transforms,
                                     deferred_resolves,
                                 ),
                             }
@@ -923,6 +941,7 @@ impl RenderPass {
                     deferred_resolves,
                     saved_color,
                     prim_headers,
+                    transforms,
                 );
                 alpha.build(
                     ctx,
@@ -931,6 +950,7 @@ impl RenderPass {
                     deferred_resolves,
                     saved_alpha,
                     prim_headers,
+                    transforms,
                 );
                 alpha.is_shared = is_shared_alpha;
             }

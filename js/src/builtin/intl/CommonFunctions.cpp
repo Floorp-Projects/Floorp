@@ -35,8 +35,9 @@ js::intl::InitializeObject(JSContext* cx, JS::Handle<JSObject*> obj,
     args[2].set(options);
 
     RootedValue ignored(cx);
-    if (!CallSelfHostedFunction(cx, initializer, JS::NullHandleValue, args, &ignored))
+    if (!CallSelfHostedFunction(cx, initializer, JS::NullHandleValue, args, &ignored)) {
         return false;
+    }
 
     MOZ_ASSERT(ignored.isUndefined(),
                "Unexpected return value from non-legacy Intl object initializer");
@@ -58,8 +59,9 @@ js::intl::LegacyInitializeObject(JSContext* cx, JS::Handle<JSObject*> obj,
     args[3].set(options);
     args[4].setBoolean(dtfOptions == DateTimeFormatOptions::EnableMozExtensions);
 
-    if (!CallSelfHostedFunction(cx, initializer, NullHandleValue, args, result))
+    if (!CallSelfHostedFunction(cx, initializer, NullHandleValue, args, result)) {
         return false;
+    }
 
     MOZ_ASSERT(result.isObject(), "Legacy Intl object initializer must return an object");
     return true;
@@ -73,8 +75,9 @@ js::intl::GetInternalsObject(JSContext* cx, JS::Handle<JSObject*> obj)
     args[0].setObject(*obj);
 
     RootedValue v(cx);
-    if (!js::CallSelfHostedFunction(cx, cx->names().getInternals, NullHandleValue, args, &v))
+    if (!js::CallSelfHostedFunction(cx, cx->names().getInternals, NullHandleValue, args, &v)) {
         return nullptr;
+    }
 
     return &v.toObject();
 }
@@ -116,8 +119,9 @@ js::intl::GetAvailableLocales(JSContext* cx, CountAvailable countAvailable,
                               GetAvailable getAvailable, JS::MutableHandle<JS::Value> result)
 {
     RootedObject locales(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
-    if (!locales)
+    if (!locales) {
         return false;
+    }
 
 #if ENABLE_INTL_API
     RootedAtom a(cx);
@@ -125,16 +129,20 @@ js::intl::GetAvailableLocales(JSContext* cx, CountAvailable countAvailable,
     for (uint32_t i = 0; i < count; i++) {
         const char* locale = getAvailable(i);
         auto lang = DuplicateString(cx, locale);
-        if (!lang)
+        if (!lang) {
             return false;
+        }
         char* p;
-        while ((p = strchr(lang.get(), '_')))
+        while ((p = strchr(lang.get(), '_'))) {
             *p = '-';
+        }
         a = Atomize(cx, lang.get(), strlen(lang.get()));
-        if (!a)
+        if (!a) {
             return false;
-        if (!DefineDataProperty(cx, locales, a->asPropertyName(), TrueHandleValue))
+        }
+        if (!DefineDataProperty(cx, locales, a->asPropertyName(), TrueHandleValue)) {
             return false;
+        }
     }
 #endif
 

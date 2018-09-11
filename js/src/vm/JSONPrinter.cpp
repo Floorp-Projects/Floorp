@@ -18,8 +18,9 @@ using namespace js;
 
 JSONPrinter::~JSONPrinter()
 {
-    if (dtoaState_)
+    if (dtoaState_) {
         DestroyDtoaState(dtoaState_);
+    }
 }
 
 void
@@ -27,15 +28,17 @@ JSONPrinter::indent()
 {
     MOZ_ASSERT(indentLevel_ >= 0);
     out_.printf("\n");
-    for (int i = 0; i < indentLevel_; i++)
+    for (int i = 0; i < indentLevel_; i++) {
         out_.printf("  ");
+    }
 }
 
 void
 JSONPrinter::propertyName(const char* name)
 {
-    if (!first_)
+    if (!first_) {
         out_.printf(",");
+    }
     indent();
     out_.printf("\"%s\":", name);
     first_ = false;
@@ -110,8 +113,9 @@ JSONPrinter::value(const char* format, ...)
     va_list ap;
     va_start(ap, format);
 
-    if (!first_)
+    if (!first_) {
         out_.printf(",");
+    }
     out_.printf("\"");
     out_.vprintf(format, ap);
     out_.printf("\"");
@@ -130,8 +134,9 @@ JSONPrinter::property(const char* name, int32_t value)
 void
 JSONPrinter::value(int val)
 {
-    if (!first_)
+    if (!first_) {
         out_.printf(",");
+    }
     out_.printf("%d", val);
     first_ = false;
 }

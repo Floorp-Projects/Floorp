@@ -29,12 +29,14 @@ TDZCheckCache::ensureCache(BytecodeEmitter* bce)
 Maybe<MaybeCheckTDZ>
 TDZCheckCache::needsTDZCheck(BytecodeEmitter* bce, JSAtom* name)
 {
-    if (!ensureCache(bce))
+    if (!ensureCache(bce)) {
         return Nothing();
+    }
 
     CheckTDZMap::AddPtr p = cache_->lookupForAdd(name);
-    if (p)
+    if (p) {
         return Some(p->value().wrapped);
+    }
 
     MaybeCheckTDZ rv = CheckTDZ;
     for (TDZCheckCache* it = enclosing(); it; it = it->enclosing()) {
@@ -58,8 +60,9 @@ bool
 TDZCheckCache::noteTDZCheck(BytecodeEmitter* bce, JSAtom* name,
                             MaybeCheckTDZ check)
 {
-    if (!ensureCache(bce))
+    if (!ensureCache(bce)) {
         return false;
+    }
 
     CheckTDZMap::AddPtr p = cache_->lookupForAdd(name);
     if (p) {

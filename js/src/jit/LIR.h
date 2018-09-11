@@ -533,20 +533,24 @@ class LDefinition
     }
     bool isCompatibleReg(const AnyRegister& r) const {
         if (isFloatReg() && r.isFloat()) {
-            if (type() == FLOAT32)
+            if (type() == FLOAT32) {
                 return r.fpu().isSingle();
-            if (type() == DOUBLE)
+            }
+            if (type() == DOUBLE) {
                 return r.fpu().isDouble();
-            if (isSimdType())
+            }
+            if (isSimdType()) {
                 return r.fpu().isSimd128();
+            }
             MOZ_CRASH("Unexpected MDefinition type");
         }
         return !isFloatReg() && !r.isFloat();
     }
     bool isCompatibleDef(const LDefinition& other) const {
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32)
-        if (isFloatReg() && other.isFloatReg())
+        if (isFloatReg() && other.isFloatReg()) {
             return type() == other.type();
+        }
         return !isFloatReg() && !other.isFloatReg();
 #else
         return isFloatReg() == other.isFloatReg();
@@ -939,8 +943,9 @@ class LElementVisitor
         ins_ = ins;
         if (ins->mirRaw()) {
             lastPC_ = ins->mirRaw()->trackedPc();
-            if (ins->mirRaw()->trackedTree())
+            if (ins->mirRaw()->trackedTree()) {
                 lastNotInlinedPC_ = ins->mirRaw()->profilerLeavePc();
+            }
         }
     }
 
@@ -1352,30 +1357,35 @@ class LRecoverInfo : public TempObject
                 opEnd_ = (*it_)->numOperands();
             }
             node_ = *it_;
-            if (node_->isResumePoint())
+            if (node_->isResumePoint()) {
                 rp_ = node_->toResumePoint();
+            }
         }
 
         MDefinition* operator*() {
-            if (rp_) // de-virtualize MResumePoint::getOperand calls.
+            if (rp_) { // de-virtualize MResumePoint::getOperand calls.
                 return rp_->getOperand(op_);
+            }
             return node_->getOperand(op_);
         }
         MDefinition* operator ->() {
-            if (rp_) // de-virtualize MResumePoint::getOperand calls.
+            if (rp_) { // de-virtualize MResumePoint::getOperand calls.
                 return rp_->getOperand(op_);
+            }
             return node_->getOperand(op_);
         }
 
         OperandIter& operator ++() {
             ++op_;
-            if (op_ != opEnd_)
+            if (op_ != opEnd_) {
                 return *this;
+            }
             op_ = 0;
             ++it_;
             node_ = rp_ = nullptr;
-            if (!*this)
+            if (!*this) {
                 settle();
+            }
             return *this;
         }
 
@@ -1596,8 +1606,9 @@ class LSafepoint : public TempObject
     }
     MOZ_MUST_USE bool addGcSlot(bool stack, uint32_t slot) {
         bool result = gcSlots_.append(SlotEntry(stack, slot));
-        if (result)
+        if (result) {
             assertInvariants();
+        }
         return result;
     }
     SlotList& gcSlots() {
@@ -1616,53 +1627,62 @@ class LSafepoint : public TempObject
     }
     MOZ_MUST_USE bool addSlotsOrElementsSlot(bool stack, uint32_t slot) {
         bool result = slotsOrElementsSlots_.append(SlotEntry(stack, slot));
-        if (result)
+        if (result) {
             assertInvariants();
+        }
         return result;
     }
     MOZ_MUST_USE bool addSlotsOrElementsPointer(LAllocation alloc) {
-        if (alloc.isMemory())
+        if (alloc.isMemory()) {
             return addSlotsOrElementsSlot(alloc.isStackSlot(), alloc.memorySlot());
+        }
         MOZ_ASSERT(alloc.isRegister());
         addSlotsOrElementsRegister(alloc.toRegister().gpr());
         assertInvariants();
         return true;
     }
     bool hasSlotsOrElementsPointer(LAllocation alloc) const {
-        if (alloc.isRegister())
+        if (alloc.isRegister()) {
             return slotsOrElementsRegs().has(alloc.toRegister().gpr());
+        }
         for (size_t i = 0; i < slotsOrElementsSlots_.length(); i++) {
             const SlotEntry& entry = slotsOrElementsSlots_[i];
-            if (entry.stack == alloc.isStackSlot() && entry.slot == alloc.memorySlot())
+            if (entry.stack == alloc.isStackSlot() && entry.slot == alloc.memorySlot()) {
                 return true;
+            }
         }
         return false;
     }
 
     MOZ_MUST_USE bool addGcPointer(LAllocation alloc) {
-        if (alloc.isMemory())
+        if (alloc.isMemory()) {
             return addGcSlot(alloc.isStackSlot(), alloc.memorySlot());
-        if (alloc.isRegister())
+        }
+        if (alloc.isRegister()) {
             addGcRegister(alloc.toRegister().gpr());
+        }
         assertInvariants();
         return true;
     }
 
     bool hasGcPointer(LAllocation alloc) const {
-        if (alloc.isRegister())
+        if (alloc.isRegister()) {
             return gcRegs().has(alloc.toRegister().gpr());
+        }
         MOZ_ASSERT(alloc.isMemory());
         for (size_t i = 0; i < gcSlots_.length(); i++) {
-            if (gcSlots_[i].stack == alloc.isStackSlot() && gcSlots_[i].slot == alloc.memorySlot())
+            if (gcSlots_[i].stack == alloc.isStackSlot() && gcSlots_[i].slot == alloc.memorySlot()) {
                 return true;
+            }
         }
         return false;
     }
 
     MOZ_MUST_USE bool addValueSlot(bool stack, uint32_t slot) {
         bool result = valueSlots_.append(SlotEntry(stack, slot));
-        if (result)
+        if (result) {
             assertInvariants();
+        }
         return result;
     }
     SlotList& valueSlots() {
@@ -1671,8 +1691,9 @@ class LSafepoint : public TempObject
 
     bool hasValueSlot(bool stack, uint32_t slot) const {
         for (size_t i = 0; i < valueSlots_.length(); i++) {
-            if (valueSlots_[i].stack == stack && valueSlots_[i].slot == slot)
+            if (valueSlots_[i].stack == stack && valueSlots_[i].slot == slot) {
                 return true;
+            }
         }
         return false;
     }
@@ -1681,15 +1702,17 @@ class LSafepoint : public TempObject
 
     MOZ_MUST_USE bool addNunboxParts(uint32_t typeVreg, LAllocation type, LAllocation payload) {
         bool result = nunboxParts_.append(NunboxEntry(typeVreg, type, payload));
-        if (result)
+        if (result) {
             assertInvariants();
+        }
         return result;
     }
 
     MOZ_MUST_USE bool addNunboxType(uint32_t typeVreg, LAllocation type) {
         for (size_t i = 0; i < nunboxParts_.length(); i++) {
-            if (nunboxParts_[i].type == type)
+            if (nunboxParts_[i].type == type) {
                 return true;
+            }
             if (nunboxParts_[i].type == LUse(typeVreg, LUse::ANY)) {
                 nunboxParts_[i].type = type;
                 return true;
@@ -1699,15 +1722,17 @@ class LSafepoint : public TempObject
         // vregs for nunbox pairs are adjacent, with the type coming first.
         uint32_t payloadVreg = typeVreg + 1;
         bool result = nunboxParts_.append(NunboxEntry(typeVreg, type, LUse(payloadVreg, LUse::ANY)));
-        if (result)
+        if (result) {
             assertInvariants();
+        }
         return result;
     }
 
     MOZ_MUST_USE bool addNunboxPayload(uint32_t payloadVreg, LAllocation payload) {
         for (size_t i = 0; i < nunboxParts_.length(); i++) {
-            if (nunboxParts_[i].payload == payload)
+            if (nunboxParts_[i].payload == payload) {
                 return true;
+            }
             if (nunboxParts_[i].payload == LUse(payloadVreg, LUse::ANY)) {
                 nunboxParts_[i].payload = payload;
                 return true;
@@ -1717,8 +1742,9 @@ class LSafepoint : public TempObject
         // vregs for nunbox pairs are adjacent, with the type coming first.
         uint32_t typeVreg = payloadVreg - 1;
         bool result = nunboxParts_.append(NunboxEntry(typeVreg, LUse(typeVreg, LUse::ANY), payload));
-        if (result)
+        if (result) {
             assertInvariants();
+        }
         return result;
     }
 
@@ -1728,19 +1754,22 @@ class LSafepoint : public TempObject
         // look at the value slots in the safepoint, as these aren't used by
         // register allocators which add partial nunbox entries.
         for (size_t i = 0; i < nunboxParts_.length(); i++) {
-            if (nunboxParts_[i].typeVreg == typeVreg && !nunboxParts_[i].type.isUse())
+            if (nunboxParts_[i].typeVreg == typeVreg && !nunboxParts_[i].type.isUse()) {
                 return nunboxParts_[i].type;
+            }
         }
         return LUse(typeVreg, LUse::ANY);
     }
 
 #ifdef DEBUG
     bool hasNunboxPayload(LAllocation payload) const {
-        if (payload.isMemory() && hasValueSlot(payload.isStackSlot(), payload.memorySlot()))
+        if (payload.isMemory() && hasValueSlot(payload.isStackSlot(), payload.memorySlot())) {
             return true;
+        }
         for (size_t i = 0; i < nunboxParts_.length(); i++) {
-            if (nunboxParts_[i].payload == payload)
+            if (nunboxParts_[i].payload == payload) {
                 return true;
+            }
         }
         return false;
     }
@@ -1763,18 +1792,21 @@ class LSafepoint : public TempObject
     MOZ_MUST_USE bool addBoxedValue(LAllocation alloc) {
         if (alloc.isRegister()) {
             Register reg = alloc.toRegister().gpr();
-            if (!valueRegs().has(reg))
+            if (!valueRegs().has(reg)) {
                 addValueRegister(reg);
+            }
             return true;
         }
-        if (hasValueSlot(alloc.isStackSlot(), alloc.memorySlot()))
+        if (hasValueSlot(alloc.isStackSlot(), alloc.memorySlot())) {
             return true;
+        }
         return addValueSlot(alloc.isStackSlot(), alloc.memorySlot());
     }
 
     bool hasBoxedValue(LAllocation alloc) const {
-        if (alloc.isRegister())
+        if (alloc.isRegister()) {
             return valueRegs().has(alloc.toRegister().gpr());
+        }
         return hasValueSlot(alloc.isStackSlot(), alloc.memorySlot());
     }
 
@@ -1830,12 +1862,15 @@ public:
     }
 
     bool more() const {
-        if (snapshot_)
+        if (snapshot_) {
             return idx_ < ins_.snapshot()->numEntries();
-        if (idx_ < ins_.numOperands())
+        }
+        if (idx_ < ins_.numOperands()) {
             return true;
-        if (ins_.snapshot() && ins_.snapshot()->numEntries())
+        }
+        if (ins_.snapshot() && ins_.snapshot()->numEntries()) {
             return true;
+        }
         return false;
     }
 
@@ -1850,15 +1885,17 @@ public:
     }
 
     void replace(const LAllocation& alloc) {
-        if (snapshot_)
+        if (snapshot_) {
             ins_.snapshot()->setEntry(idx_, alloc);
-        else
+        } else {
             ins_.setOperand(idx_, alloc);
+        }
     }
 
     LAllocation* operator*() const {
-        if (snapshot_)
+        if (snapshot_) {
             return ins_.snapshot()->getEntry(idx_);
+        }
         return ins_.getOperand(idx_);
     }
 
@@ -2011,18 +2048,20 @@ class LIRGraph
 
 LAllocation::LAllocation(AnyRegister reg)
 {
-    if (reg.isFloat())
+    if (reg.isFloat()) {
         *this = LFloatReg(reg.fpu());
-    else
+    } else {
         *this = LGeneralReg(reg.gpr());
+    }
 }
 
 AnyRegister
 LAllocation::toRegister() const
 {
     MOZ_ASSERT(isRegister());
-    if (isFloatReg())
+    if (isFloatReg()) {
         return AnyRegister(toFloatReg()->reg());
+    }
     return AnyRegister(toGeneralReg()->reg());
 }
 
@@ -2115,8 +2154,9 @@ AssertTypesFormANunbox(LDefinition::Type type1, LDefinition::Type type2)
 static inline unsigned
 OffsetOfNunboxSlot(LDefinition::Type type)
 {
-    if (type == LDefinition::PAYLOAD)
+    if (type == LDefinition::PAYLOAD) {
         return NUNBOX32_PAYLOAD_OFFSET;
+    }
     return NUNBOX32_TYPE_OFFSET;
 }
 
@@ -2125,8 +2165,9 @@ OffsetOfNunboxSlot(LDefinition::Type type)
 static inline unsigned
 BaseOfNunboxSlot(LDefinition::Type type, unsigned slot)
 {
-    if (type == LDefinition::PAYLOAD)
+    if (type == LDefinition::PAYLOAD) {
         return slot + NUNBOX32_PAYLOAD_OFFSET;
+    }
     return slot + NUNBOX32_TYPE_OFFSET;
 }
 #endif

@@ -248,10 +248,11 @@ class Zone : public JS::shadow::Zone,
     }
 
     bool isCollectingFromAnyThread() const {
-        if (RuntimeHeapIsCollecting())
+        if (RuntimeHeapIsCollecting()) {
             return gcState_ != NoGC;
-        else
+        } else {
             return needsIncrementalBarrier();
+        }
     }
 
     bool shouldMarkInZone() const {
@@ -426,8 +427,9 @@ class Zone : public JS::shadow::Zone,
 
         counter.update(nbytes);
         auto trigger = counter.shouldTriggerGC(rt->gc.tunables);
-        if (MOZ_LIKELY(trigger == js::gc::NoTrigger) || trigger <= counter.triggered())
+        if (MOZ_LIKELY(trigger == js::gc::NoTrigger) || trigger <= counter.triggered()) {
             return;
+        }
 
         maybeTriggerGCForTooMuchMalloc(counter, trigger);
     }

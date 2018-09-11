@@ -8,6 +8,7 @@ use api::FontRenderMode;
 use border::BorderCacheKey;
 use box_shadow::{BoxShadowCacheKey};
 use clip::{ClipItem, ClipStore, ClipNodeRange};
+use clip_scroll_tree::SpatialNodeIndex;
 use device::TextureFilter;
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
@@ -187,6 +188,7 @@ pub enum RenderTaskLocation {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CacheMaskTask {
     actual_rect: DeviceIntRect,
+    pub root_spatial_node_index: SpatialNodeIndex,
     pub clip_node_range: ClipNodeRange,
 }
 
@@ -205,6 +207,7 @@ pub struct PictureTask {
     pub can_merge: bool,
     pub content_origin: DeviceIntPoint,
     pub uv_rect_handle: GpuCacheHandle,
+    pub root_spatial_node_index: SpatialNodeIndex,
     uv_rect_kind: UvRectKind,
 }
 
@@ -346,6 +349,7 @@ impl RenderTask {
         content_origin: DeviceIntPoint,
         children: Vec<RenderTaskId>,
         uv_rect_kind: UvRectKind,
+        root_spatial_node_index: SpatialNodeIndex,
     ) -> Self {
         let size = match location {
             RenderTaskLocation::Dynamic(_, size) => size,
@@ -367,6 +371,7 @@ impl RenderTask {
                 can_merge,
                 uv_rect_handle: GpuCacheHandle::new(),
                 uv_rect_kind,
+                root_spatial_node_index,
             }),
             clear_mode: ClearMode::Transparent,
             saved_index: None,
@@ -422,6 +427,7 @@ impl RenderTask {
     pub fn new_mask(
         outer_rect: DeviceIntRect,
         clip_node_range: ClipNodeRange,
+        root_spatial_node_index: SpatialNodeIndex,
         clip_store: &mut ClipStore,
         gpu_cache: &mut GpuCache,
         resource_cache: &mut ResourceCache,
@@ -498,6 +504,7 @@ impl RenderTask {
             RenderTaskKind::CacheMask(CacheMaskTask {
                 actual_rect: outer_rect,
                 clip_node_range,
+                root_spatial_node_index,
             }),
             ClearMode::One,
         )

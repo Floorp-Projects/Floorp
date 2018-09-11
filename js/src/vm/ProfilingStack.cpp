@@ -35,13 +35,15 @@ ProfilingStack::ensureCapacitySlow()
 
     auto* newFrames =
         new (mozilla::fallible) js::ProfilingStackFrame[newCapacity];
-    if (MOZ_UNLIKELY(!newFrames))
+    if (MOZ_UNLIKELY(!newFrames)) {
         return false;
+    }
 
     // It's important that `frames` / `capacity` / `stackPointer` remain consistent here at
     // all times.
-    for (auto i : mozilla::IntegerRange(capacity))
+    for (auto i : mozilla::IntegerRange(capacity)) {
         newFrames[i] = frames[i];
+    }
 
     js::ProfilingStackFrame* oldFrames = frames;
     frames = newFrames;

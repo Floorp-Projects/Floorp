@@ -117,8 +117,9 @@ js::gc::ArenaList::isCursorAtEnd() const
 void
 js::gc::ArenaList::moveCursorToEnd()
 {
-    while (!isCursorAtEnd())
+    while (!isCursorAtEnd()) {
         cursorp_ = &(*cursorp_)->next;
+    }
 }
 
 js::gc::Arena*
@@ -133,8 +134,9 @@ js::gc::ArenaList::takeNextArena()
 {
     check();
     Arena* arena = *cursorp_;
-    if (!arena)
+    if (!arena) {
         return nullptr;
+    }
     cursorp_ = &arena->next;
     check();
     return arena;
@@ -148,8 +150,9 @@ js::gc::ArenaList::insertAtCursor(Arena* a)
     *cursorp_ = a;
     // At this point, the cursor is sitting before |a|. Move it after |a|
     // if necessary.
-    if (!a->hasFreeThings())
+    if (!a->hasFreeThings()) {
         cursorp_ = &a->next;
+    }
     check();
 }
 
@@ -169,8 +172,9 @@ js::gc::ArenaList::insertListWithCursorAtEnd(const ArenaList& other)
     check();
     other.check();
     MOZ_ASSERT(other.isCursorAtEnd());
-    if (other.isCursorAtHead())
+    if (other.isCursorAtHead()) {
         return *this;
+    }
     // Insert the full arenas of |other| after those of |this|.
     *other.cursorp_ = *cursorp_;
     *cursorp_ = other.head_;
@@ -196,8 +200,9 @@ js::gc::SortedArenaList::reset(size_t thingsPerArena)
 {
     setThingsPerArena(thingsPerArena);
     // Initialize the segments.
-    for (size_t i = 0; i <= thingsPerArena; ++i)
+    for (size_t i = 0; i <= thingsPerArena; ++i) {
         segments[i].clear();
+    }
 }
 
 void
@@ -243,8 +248,9 @@ bool
 js::gc::FreeLists::allEmpty() const
 {
     for (auto i : AllAllocKinds()) {
-        if (!isEmpty(i))
+        if (!isEmpty(i)) {
             return false;
+        }
     }
     return true;
 }
@@ -263,8 +269,9 @@ js::gc::FreeLists::clear()
     for (auto i : AllAllocKinds()) {
 #ifdef DEBUG
         auto old = freeLists_[i];
-        if (!old->isEmpty())
+        if (!old->isEmpty()) {
             old->getArena()->checkNoMarkedFreeCells();
+        }
 #endif
         freeLists_[i] = &emptySentinel;
     }
@@ -280,8 +287,9 @@ void
 js::gc::FreeLists::unmarkPreMarkedFreeCells(AllocKind kind)
 {
     FreeSpan* freeSpan = freeLists_[kind];
-    if (!freeSpan->isEmpty())
+    if (!freeSpan->isEmpty()) {
         freeSpan->getArena()->unmarkPreMarkedFreeCells();
+    }
 }
 
 JSRuntime*
@@ -311,8 +319,9 @@ js::gc::ArenaLists::getFirstArenaToSweep(AllocKind thingKind) const
 js::gc::Arena*
 js::gc::ArenaLists::getFirstSweptArena(AllocKind thingKind) const
 {
-    if (thingKind != incrementalSweptArenaKind.ref())
+    if (thingKind != incrementalSweptArenaKind.ref()) {
         return nullptr;
+    }
     return incrementalSweptArenas.ref().head();
 }
 
@@ -330,10 +339,12 @@ js::gc::ArenaLists::arenaListsAreEmpty() const
          * The arena cannot be empty if the background finalization is not yet
          * done.
          */
-        if (concurrentUse(i) == ConcurrentUse::BackgroundFinalize)
+        if (concurrentUse(i) == ConcurrentUse::BackgroundFinalize) {
             return false;
-        if (!arenaLists(i).isEmpty())
+        }
+        if (!arenaLists(i).isEmpty()) {
             return false;
+        }
     }
     return true;
 }
@@ -344,8 +355,9 @@ js::gc::ArenaLists::unmarkAll()
     for (auto i : AllAllocKinds()) {
         /* The background finalization must have stopped at this point. */
         MOZ_ASSERT(concurrentUse(i) == ConcurrentUse::None);
-        for (Arena* arena = arenaLists(i).head(); arena; arena = arena->next)
+        for (Arena* arena = arenaLists(i).head(); arena; arena = arena->next) {
             arena->unmarkAll();
+        }
     }
 }
 
@@ -376,8 +388,9 @@ js::gc::ArenaLists::allocateFromFreeList(AllocKind thingKind)
 void
 js::gc::ArenaLists::unmarkPreMarkedFreeCells()
 {
-    for (auto i : AllAllocKinds())
+    for (auto i : AllAllocKinds()) {
         freeLists().unmarkPreMarkedFreeCells(i);
+    }
 }
 
 void
@@ -392,8 +405,9 @@ js::gc::ArenaLists::checkEmptyArenaLists()
     bool empty = true;
 #ifdef DEBUG
     for (auto i : AllAllocKinds()) {
-        if (!checkEmptyArenaList(i))
+        if (!checkEmptyArenaList(i)) {
             empty = false;
+        }
     }
 #endif
     return empty;

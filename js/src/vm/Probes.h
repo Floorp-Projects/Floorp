@@ -96,14 +96,17 @@ void DTraceExitJSFun(JSContext* cx, JSFunction* fun, JSScript* script);
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 static const char* ObjectClassname(JSObject* obj) {
-    if (!obj)
+    if (!obj) {
         return "(null object)";
+    }
     const Class* clasp = obj->getClass();
-    if (!clasp)
+    if (!clasp) {
         return "(null)";
+    }
     const char* class_name = clasp->name;
-    if (!class_name)
+    if (!class_name) {
         return "(null class name)";
+    }
     return class_name;
 }
 #endif
@@ -114,8 +117,9 @@ probes::CreateObject(JSContext* cx, JSObject* obj)
     bool ok = true;
 
 #ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_OBJECT_CREATE_ENABLED())
+    if (JAVASCRIPT_OBJECT_CREATE_ENABLED()) {
         JAVASCRIPT_OBJECT_CREATE(ObjectClassname(obj), (uintptr_t)obj);
+    }
 #endif
 
     return ok;

@@ -23,8 +23,9 @@ namespace jit {
 static void
 markNodesAsRecoveredOnBailout(MDefinition* def)
 {
-    if (def->hasLiveDefUses() || !DeadIfUnused(def) || !def->canRecoverOnBailout())
+    if (def->hasLiveDefUses() || !DeadIfUnused(def) || !def->canRecoverOnBailout()) {
         return;
+    }
 
     JitSpew(JitSpew_FLAC, "mark as recovered on bailout: %s%u", def->opName(), def->id());
     def->setRecoveredOnBailoutUnchecked();
@@ -32,25 +33,29 @@ markNodesAsRecoveredOnBailout(MDefinition* def)
     // Recursively mark nodes that do not have multiple uses. This loop is
     // necessary because a node could be an unused right shift zero or an
     // unused add, and both need to be marked as RecoveredOnBailout.
-    for (size_t i = 0; i < def->numOperands(); i++)
+    for (size_t i = 0; i < def->numOperands(); i++) {
         markNodesAsRecoveredOnBailout(def->getOperand(i));
+    }
 }
 
 // Fold AddIs with one variable and two or more constants into one AddI.
 static void
 AnalyzeAdd(TempAllocator& alloc, MAdd* add)
 {
-    if (add->specialization() != MIRType::Int32 || add->isRecoveredOnBailout())
+    if (add->specialization() != MIRType::Int32 || add->isRecoveredOnBailout()) {
         return;
+    }
 
-    if (!add->hasUses())
+    if (!add->hasUses()) {
         return;
+    }
 
     JitSpew(JitSpew_FLAC, "analyze add: %s%u", add->opName(), add->id());
 
     SimpleLinearSum sum = ExtractLinearSum(add);
-    if (sum.constant == 0 || !sum.term)
+    if (sum.constant == 0 || !sum.term) {
         return;
+    }
 
     // Determine which operand is the constant.
     int idx = add->getOperand(0)->isConstant() ? 0 : 1 ;
@@ -83,18 +88,22 @@ bool
 FoldLinearArithConstants(MIRGenerator* mir, MIRGraph& graph)
 {
     for (PostorderIterator block(graph.poBegin()); block != graph.poEnd(); block++) {
-        if (mir->shouldCancel("Fold Linear Arithmetic Constants (main loop)"))
+        if (mir->shouldCancel("Fold Linear Arithmetic Constants (main loop)")) {
             return false;
+        }
 
         for (MInstructionIterator i = block->begin(); i != block->end(); i++) {
-            if (!graph.alloc().ensureBallast())
+            if (!graph.alloc().ensureBallast()) {
                 return false;
+            }
 
-            if (mir->shouldCancel("Fold Linear Arithmetic Constants (inner loop)"))
+            if (mir->shouldCancel("Fold Linear Arithmetic Constants (inner loop)")) {
                 return false;
+            }
 
-            if (i->isAdd())
+            if (i->isAdd()) {
                 AnalyzeAdd(graph.alloc(), i->toAdd());
+            }
         }
     }
     return true;

@@ -58,8 +58,9 @@ class MoveOperand
         MOZ_ASSERT(isMemoryOrEffectiveAddress());
 
         // With a zero offset, this is a plain reg-to-reg move.
-        if (disp == 0 && kind_ == EFFECTIVE_ADDRESS)
+        if (disp == 0 && kind_ == EFFECTIVE_ADDRESS) {
             kind_ = REG;
+        }
     }
     MoveOperand(MacroAssembler& masm, const ABIArg& arg);
     MoveOperand(const MoveOperand& other)
@@ -149,24 +150,31 @@ class MoveOperand
             return false;
         }
 
-        if (kind_ != other.kind_)
+        if (kind_ != other.kind_) {
             return false;
-        if (kind_ == FLOAT_REG)
+        }
+        if (kind_ == FLOAT_REG) {
             return floatReg().aliases(other.floatReg());
-        if (code_ != other.code_)
+        }
+        if (code_ != other.code_) {
             return false;
-        if (isMemoryOrEffectiveAddress())
+        }
+        if (isMemoryOrEffectiveAddress()) {
             return disp_ == other.disp_;
+        }
         return true;
     }
 
     bool operator ==(const MoveOperand& other) const {
-        if (kind_ != other.kind_)
+        if (kind_ != other.kind_) {
             return false;
-        if (code_ != other.code_)
+        }
+        if (code_ != other.code_) {
             return false;
-        if (isMemoryOrEffectiveAddress())
+        }
+        if (isMemoryOrEffectiveAddress()) {
             return disp_ == other.disp_;
+        }
         return true;
     }
     bool operator !=(const MoveOperand& other) const {

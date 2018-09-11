@@ -105,8 +105,9 @@ class NonAssertingLabel : public Label
     ~NonAssertingLabel()
     {
 #ifdef DEBUG
-        if (used())
+        if (used()) {
             bind(0);
+        }
 #endif
     }
 };
