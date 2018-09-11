@@ -5477,13 +5477,13 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
     }
 
     // aFragmentainer.mIsTopOfPage is propagated to the child reflow state.
-    // When it's false the child can request BREAK_BEFORE.  We intentionally
-    // set it to false when the row is growable (as determined in CSS Grid
-    // Fragmentation) and there is a non-zero space between it and the
+    // When it's false the child may request InlineBreak::Before.  We set it
+    // to false when the row is growable (as determined in the CSS Grid
+    // Fragmentation spec) and there is a non-zero space between it and the
     // fragmentainer end (that can be used to grow it).  If the child reports
     // a forced break in this case, we grow this row to fill the fragment and
     // restart the loop.  We also restart the loop with |aEndRow = row|
-    // (but without growing any row) for a BREAK_BEFORE child if it spans
+    // (but without growing any row) for a InlineBreak::Before child if it spans
     // beyond the last row in this fragment.  This is to avoid fragmenting it.
     // We only restart the loop once.
     aFragmentainer.mIsTopOfPage = isRowTopOfPage && !rowCanGrow;
@@ -5503,7 +5503,7 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
 
     if (childStatus.IsInlineBreakBefore()) {
       MOZ_ASSERT(!child->GetPrevInFlow(),
-                 "continuations should never report BREAK_BEFORE status");
+                 "continuations should never report InlineBreak::Before status");
       MOZ_ASSERT(!aFragmentainer.mIsTopOfPage,
                  "got IsInlineBreakBefore() at top of page");
       if (!didGrowRow) {
@@ -5544,16 +5544,23 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
           aStatus.SetIncomplete();
           continue;
         }
-        NS_ERROR("got BREAK_BEFORE at top-of-page");
+        NS_ERROR("got InlineBreak::Before at top-of-page");
         childStatus.Reset();
       } else {
-        NS_ERROR("got BREAK_BEFORE again after growing the row?");
-        childStatus.SetIncomplete();
+        // We got InlineBreak::Before again after growing the row - this can happen
+        // if the child isn't splittable, e.g. some form controls.
+        childStatus.Reset();
+        if (child->GetNextInFlow()) {
+          // The child already has a fragment, so we know it's splittable.
+          childStatus.SetIncomplete();
+        } // else, report that it's complete
       }
     } else if (childStatus.IsInlineBreakAfter()) {
       MOZ_ASSERT_UNREACHABLE("unexpected child reflow status");
     }
 
+    MOZ_ASSERT(!childStatus.IsInlineBreakBefore(),
+               "should've handled InlineBreak::Before above");
     if (childStatus.IsIncomplete()) {
       incompleteItems.PutEntry(child);
     } else if (!childStatus.IsFullyComplete()) {
