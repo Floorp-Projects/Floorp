@@ -413,7 +413,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
    */
   _getOuterQuad(region) {
     const quads = this.currentQuads[region];
-    if (!quads.length) {
+    if (!quads || !quads.length) {
       return null;
     }
 
@@ -595,7 +595,14 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
    * @param {String} region The region around which the guides should be shown.
    */
   _showGuides(region) {
-    const {p1, p2, p3, p4} = this._getOuterQuad(region);
+    const quad = this._getOuterQuad(region);
+
+    if (!quad) {
+      // Invisible element such as a script tag.
+      return;
+    }
+
+    const {p1, p2, p3, p4} = quad;
 
     const allX = [p1.x, p2.x, p3.x, p4.x].sort((a, b) => a - b);
     const allY = [p1.y, p2.y, p3.y, p4.y].sort((a, b) => a - b);
@@ -694,7 +701,13 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     // by any zoom. Since the infobar can be displayed also for text nodes, we can't
     // access the computed style for that, and this is why we recalculate them here.
     const zoom = getCurrentZoom(this.win);
-    const { width, height } = this._getOuterQuad("border").bounds;
+    const quad = this._getOuterQuad("border");
+
+    if (!quad) {
+      return;
+    }
+
+    const { width, height } = quad.bounds;
     const dim = parseFloat((width / zoom).toPrecision(6)) +
               " \u00D7 " +
               parseFloat((height / zoom).toPrecision(6));
