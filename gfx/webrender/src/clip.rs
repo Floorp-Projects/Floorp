@@ -8,10 +8,11 @@ use api::{BoxShadowClipMode, LayoutToWorldScale, LineOrientation, LineStyle, Pic
 use api::{PictureRect, LayoutPixel, WorldPoint, WorldSize, WorldRect, LayoutToWorldTransform};
 use border::{ensure_no_corner_overlap};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
-use clip_scroll_tree::{ClipScrollTree, CoordinateSystemId, SpatialNodeIndex};
+use clip_scroll_tree::{ClipScrollTree, CoordinateSystemId, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use ellipse::Ellipse;
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use gpu_types::{BoxShadowStretchMode};
+use internal_types::FastHashSet;
 use prim_store::{ClipData, ImageMaskData, SpaceMapper};
 use render_task::to_cache_size;
 use resource_cache::{ImageRequest, ResourceCache};
@@ -314,6 +315,7 @@ pub struct ClipStore {
     pub clip_chain_nodes: Vec<ClipChainNode>,
     clip_node_indices: Vec<ClipNodeInstance>,
     clip_node_info: Vec<ClipNodeInfo>,
+    clip_node_collectors: Vec<ClipNodeCollector>,
 }
 
 // A clip chain instance is what gets built for a given clip
@@ -338,6 +340,7 @@ impl ClipStore {
             clip_chain_nodes: Vec::new(),
             clip_node_indices: Vec::new(),
             clip_node_info: Vec::new(),
+            clip_node_collectors: Vec::new(),
         }
     }
 
@@ -347,6 +350,7 @@ impl ClipStore {
             clip_chain_nodes: recycle_vec(self.clip_chain_nodes),
             clip_node_indices: recycle_vec(self.clip_node_indices),
             clip_node_info: recycle_vec(self.clip_node_info),
+            clip_node_collectors: recycle_vec(self.clip_node_collectors),
         }
     }
 
@@ -411,6 +415,25 @@ impl ClipStore {
         (&mut self.clip_nodes[instance.index()], instance.flags())
     }
 
+    // Notify the clip store that a new rasterization root has been created.
+    // This means any clips from an earlier root should be collected rather
+    // than applied on the primitive itself.
+    pub fn push_raster_root(
+        &mut self,
+        raster_spatial_node_index: SpatialNodeIndex,
+    ) {
+        self.clip_node_collectors.push(
+            ClipNodeCollector::new(raster_spatial_node_index),
+        );
+    }
+
+    // Mark the end of a rasterization root.
+    pub fn pop_raster_root(
+        &mut self,
+    ) -> ClipNodeCollector {
+        self.clip_node_collectors.pop().unwrap()
+    }
+
     // The main interface other code uses. Given a local primitive, positioning
     // information, and a clip chain id, build an optimized clip chain instance.
     pub fn build_clip_chain_instance(
@@ -426,15 +449,14 @@ impl ClipStore {
         resource_cache: &mut ResourceCache,
         device_pixel_scale: DevicePixelScale,
         world_rect: &WorldRect,
+        clip_node_collector: &Option<ClipNodeCollector>,
     ) -> Option<ClipChainInstance> {
         let mut local_clip_rect = local_prim_clip_rect;
-        let spatial_nodes = &clip_scroll_tree.spatial_nodes;
 
         // Walk the clip chain to build local rects, and collect the
         // smallest possible local/device clip area.
 
         self.clip_node_info.clear();
-        let ref_spatial_node = &spatial_nodes[spatial_node_index.0];
         let mut current_clip_chain_id = clip_chain_id;
 
         // for each clip chain node
@@ -446,67 +468,52 @@ impl ClipStore {
             for i in 0 .. node_count {
                 let clip_node_index = ClipNodeIndex(clip_chain_node.clip_item_range.index.0 + i);
                 let clip_node = &self.clip_nodes[clip_node_index.0 as usize];
-                let clip_spatial_node = &spatial_nodes[clip_node.spatial_node_index.0 as usize];
 
-                // Determine the most efficient way to convert between coordinate
-                // systems of the primitive and clip node.
-                let conversion = if spatial_node_index == clip_node.spatial_node_index {
-                    Some(ClipSpaceConversion::Local)
-                } else if ref_spatial_node.coordinate_system_id == clip_spatial_node.coordinate_system_id {
-                    let offset = clip_spatial_node.coordinate_system_relative_offset -
-                                 ref_spatial_node.coordinate_system_relative_offset;
-                    Some(ClipSpaceConversion::Offset(offset))
-                } else {
-                    let xf = clip_scroll_tree.get_relative_transform(
-                        clip_node.spatial_node_index,
-                        SpatialNodeIndex(0),
-                    );
-
-                    xf.map(|xf| {
-                        ClipSpaceConversion::Transform(xf.with_destination::<WorldPixel>())
-                    })
-                };
-
-                // If we can convert spaces, try to reduce the size of the region
-                // requested, and cache the conversion information for the next step.
-                if let Some(conversion) = conversion {
-                    if let Some(clip_rect) = clip_node.item.get_local_clip_rect() {
-                        match conversion {
-                            ClipSpaceConversion::Local => {
-                                local_clip_rect = local_clip_rect.intersection(&clip_rect)?;
-                            }
-                            ClipSpaceConversion::Offset(ref offset) => {
-                                let clip_rect = clip_rect.translate(offset);
-                                local_clip_rect = local_clip_rect.intersection(&clip_rect)?;
-                            }
-                            ClipSpaceConversion::Transform(..) => {
-                                // TODO(gw): In the future, we can reduce the size
-                                //           of the pic_clip_rect here. To do this,
-                                //           we can use project_rect or the
-                                //           inverse_rect_footprint method, depending
-                                //           on the relationship of the clip, pic
-                                //           and primitive spatial nodes.
-                                //           I have left this for now until we
-                                //           find some good test cases where this
-                                //           would be a worthwhile perf win.
-                            }
+                // Check if any clip node index should actually be
+                // handled during compositing of a rasterization root.
+                match self.clip_node_collectors.iter_mut().find(|c| {
+                    clip_node.spatial_node_index < c.raster_root
+                }) {
+                    Some(collector) => {
+                        collector.insert(clip_node_index);
+                    }
+                    None => {
+                        if !add_clip_node_to_current_chain(
+                            clip_node_index,
+                            spatial_node_index,
+                            &mut local_clip_rect,
+                            &mut self.clip_node_info,
+                            &self.clip_nodes,
+                            clip_scroll_tree,
+                        ) {
+                            return None;
                         }
                     }
-                    self.clip_node_info.push(ClipNodeInfo {
-                        conversion,
-                        node_index: clip_node_index,
-                        has_non_root_coord_system: clip_spatial_node.coordinate_system_id != CoordinateSystemId::root(),
-                    })
                 }
             }
 
             current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
         }
 
+        // Add any collected clips from primitives that should be
+        // handled as part of this rasterization root.
+        if let Some(clip_node_collector) = clip_node_collector {
+            for clip_node_index in &clip_node_collector.clips {
+                if !add_clip_node_to_current_chain(
+                    *clip_node_index,
+                    spatial_node_index,
+                    &mut local_clip_rect,
+                    &mut self.clip_node_info,
+                    &self.clip_nodes,
+                    clip_scroll_tree,
+                ) {
+                    return None;
+                }
+            }
+        }
+
         let local_bounding_rect = local_prim_rect.intersection(&local_clip_rect)?;
-
         let pic_clip_rect = prim_to_pic_mapper.map(&local_bounding_rect)?;
-
         let world_clip_rect = pic_to_world_mapper.map(&pic_clip_rect)?;
 
         // Now, we've collected all the clip nodes that *potentially* affect this
@@ -1076,4 +1083,105 @@ pub fn project_inner_rect(
         WorldPoint::new(xs[1], ys[1]),
         WorldSize::new(xs[2] - xs[1], ys[2] - ys[1]),
     ))
+}
+
+// Collects a list of unique clips to be applied to a rasterization
+// root at the end of primitive preparation.
+#[derive(Debug)]
+pub struct ClipNodeCollector {
+    raster_root: SpatialNodeIndex,
+    clips: FastHashSet<ClipNodeIndex>,
+}
+
+impl ClipNodeCollector {
+    pub fn new(
+        raster_root: SpatialNodeIndex,
+    ) -> Self {
+        ClipNodeCollector {
+            raster_root,
+            clips: FastHashSet::default(),
+        }
+    }
+
+    pub fn insert(
+        &mut self,
+        clip_node_index: ClipNodeIndex,
+    ) {
+        self.clips.insert(clip_node_index);
+    }
+}
+
+// Add a clip node into the list of clips to be processed
+// for the current clip chain. Returns false if the clip
+// results in the entire primitive being culled out.
+fn add_clip_node_to_current_chain(
+    clip_node_index: ClipNodeIndex,
+    spatial_node_index: SpatialNodeIndex,
+    local_clip_rect: &mut LayoutRect,
+    clip_node_info: &mut Vec<ClipNodeInfo>,
+    clip_nodes: &[ClipNode],
+    clip_scroll_tree: &ClipScrollTree,
+) -> bool {
+    let clip_node = &clip_nodes[clip_node_index.0 as usize];
+    let clip_spatial_node = &clip_scroll_tree.spatial_nodes[clip_node.spatial_node_index.0 as usize];
+    let ref_spatial_node = &clip_scroll_tree.spatial_nodes[spatial_node_index.0];
+
+    // Determine the most efficient way to convert between coordinate
+    // systems of the primitive and clip node.
+    let conversion = if spatial_node_index == clip_node.spatial_node_index {
+        Some(ClipSpaceConversion::Local)
+    } else if ref_spatial_node.coordinate_system_id == clip_spatial_node.coordinate_system_id {
+        let offset = clip_spatial_node.coordinate_system_relative_offset -
+                     ref_spatial_node.coordinate_system_relative_offset;
+        Some(ClipSpaceConversion::Offset(offset))
+    } else {
+        let xf = clip_scroll_tree.get_relative_transform(
+            clip_node.spatial_node_index,
+            ROOT_SPATIAL_NODE_INDEX,
+        );
+
+        xf.map(|xf| {
+            ClipSpaceConversion::Transform(xf.with_destination::<WorldPixel>())
+        })
+    };
+
+    // If we can convert spaces, try to reduce the size of the region
+    // requested, and cache the conversion information for the next step.
+    if let Some(conversion) = conversion {
+        if let Some(clip_rect) = clip_node.item.get_local_clip_rect() {
+            match conversion {
+                ClipSpaceConversion::Local => {
+                    *local_clip_rect = match local_clip_rect.intersection(&clip_rect) {
+                        Some(rect) => rect,
+                        None => return false,
+                    };
+                }
+                ClipSpaceConversion::Offset(ref offset) => {
+                    let clip_rect = clip_rect.translate(offset);
+                    *local_clip_rect = match local_clip_rect.intersection(&clip_rect) {
+                        Some(rect) => rect,
+                        None => return false,
+                    };
+                }
+                ClipSpaceConversion::Transform(..) => {
+                    // TODO(gw): In the future, we can reduce the size
+                    //           of the pic_clip_rect here. To do this,
+                    //           we can use project_rect or the
+                    //           inverse_rect_footprint method, depending
+                    //           on the relationship of the clip, pic
+                    //           and primitive spatial nodes.
+                    //           I have left this for now until we
+                    //           find some good test cases where this
+                    //           would be a worthwhile perf win.
+                }
+            }
+        }
+        clip_node_info.push(ClipNodeInfo {
+            conversion,
+            node_index: clip_node_index,
+            has_non_root_coord_system: clip_spatial_node.coordinate_system_id != CoordinateSystemId::root(),
+        })
+    }
+
+    true
 }
