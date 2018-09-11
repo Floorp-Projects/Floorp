@@ -116,8 +116,8 @@ function processStsHeader(host, header, status, securityInfo) {
   if (header != null && securityInfo != null) {
     try {
       let uri = Services.io.newURI("https://" + host.name);
-      let sslStatus = securityInfo.QueryInterface(Ci.nsITransportSecurityInfo).SSLStatus;
-      gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri, header, sslStatus, 0, Ci.nsISiteSecurityService.SOURCE_PRELOAD_LIST, {}, maxAge, includeSubdomains);
+      let secInfo = securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+      gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri, header, secInfo, 0, Ci.nsISiteSecurityService.SOURCE_PRELOAD_LIST, {}, maxAge, includeSubdomains);
     } catch (e) {
       dump("ERROR: could not process header '" + header + "' from " + host.name + ": " + e + "\n");
       error = e;
