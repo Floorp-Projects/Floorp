@@ -24,7 +24,6 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'BasicCardPayment.cpp',
-    'PaymentActionRequest.cpp',
     'PaymentActionResponse.cpp',
     'PaymentAddress.cpp',
     'PaymentMethodChangeEvent.cpp',

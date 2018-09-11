@@ -1559,6 +1559,8 @@ var gBrowserInit = {
       }
     });
 
+    CaptivePortalWatcher.delayedStartup();
+
     this.delayedStartupFinished = true;
 
     _resolveDelayedStartup();
