@@ -444,6 +444,49 @@ assertErrorMessage(() => ins.pop(),
     assertEq(ins.f(wrapWithProto(n, {})), null);
 }
 
+// Field names.
+
+// Test that names map to the right fields.
+
+{
+    let ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+        `(module
+          (gc_feature_opt_in 1)
+
+          (type $s (struct
+                    (field $x i32)
+                    (field $y i32)))
+
+          (func $f (param $p (ref $s)) (result i32)
+           (struct.get $s $x (get_local $p)))
+
+          (func $g (param $p (ref $s)) (result i32)
+           (struct.get $s $y (get_local $p)))
+
+          (func (export "testf") (param $n i32) (result i32)
+           (call $f (struct.new $s (get_local $n) (i32.mul (get_local $n) (i32.const 2)))))
+
+          (func (export "testg") (param $n i32) (result i32)
+           (call $g (struct.new $s (get_local $n) (i32.mul (get_local $n) (i32.const 2)))))
+
+         )`))).exports;
+
+    assertEq(ins.testf(10), 10);
+    assertEq(ins.testg(10), 20);
+}
+
+// Test that field names must be unique in the module.
+
+assertErrorMessage(() => wasmTextToBinary(
+    `(module
+      (gc_feature_opt_in 1)
+
+      (type $s (struct (field $x i32)))
+      (type $t (struct (field $x i32)))
+     )`),
+                  SyntaxError,
+                  /duplicate field name/);
+
 // negative tests
 
 // Wrong type passed as initializer
