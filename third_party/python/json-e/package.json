@@ -1,6 +1,6 @@
 {
   "name": "json-e",
-  "version": "2.5.0",
+  "version": "2.7.0",
   "description": "json parameterization module inspired from json-parameterization",
   "main": "./src/index.js",
   "scripts": {

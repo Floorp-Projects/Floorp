@@ -143,7 +143,7 @@ def ifConstruct(template, context):
 def jsonConstruct(template, context):
     checkUndefinedProperties(template, ['\$json'])
     value = renderValue(template['$json'], context)
-    return json.dumps(value, separators=(',', ':'), sort_keys=True)
+    return json.dumps(value, separators=(',', ':'), sort_keys=True, ensure_ascii=False)
 
 
 @operator('$let')
@@ -183,24 +183,39 @@ def map(template, context):
     each_var = each_key[5:-1]
     each_template = template[each_key]
 
-    if is_obj:
-        value = [{'key': v[0], 'val': v[1]} for v in value.items()]
-
-    def gen():
+    def gen(val):
         subcontext = context.copy()
-        for elt in value:
+        for elt in val:
             subcontext[each_var] = elt
             elt = renderValue(each_template, subcontext)
             if elt is not DeleteMarker:
                 yield elt
-
     if is_obj:
+        value = [{'key': v[0], 'val': v[1]} for v in value.items()]
         v = dict()
-        for e in gen():
+        for e in gen(value):
+            if not isinstance(e, dict):
+                raise TemplateError(
+                    "$map on objects expects {0} to evaluate to an object".format(each_key))
             v.update(e)
         return v
     else:
-        return list(gen())
+        return list(gen(value))
+
+
+@operator('$match')
+def matchConstruct(template, context):
+    checkUndefinedProperties(template, ['\$match'])
+
+    if not isinstance(template['$match'], dict):
+        raise TemplateError("$match can evaluate objects only")
+
+    result = []
+    for condition in template['$match']:
+        if evaluateExpression(condition, context):
+            result.append(renderValue(template['$match'][condition], context))
+
+    return result
 
 
 @operator('$merge')
