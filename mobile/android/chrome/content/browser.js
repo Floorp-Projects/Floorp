@@ -124,7 +124,7 @@ var lazilyLoadedBrowserScripts = [
   ["RemoteDebugger", "chrome://browser/content/RemoteDebugger.js"],
   ["gViewSourceUtils", "chrome://global/content/viewSourceUtils.js"],
 ];
-if (!AppConstants.RELEASE_OR_BETA) {
+if (!["release", "esr"].includes(AppConstants.MOZ_UPDATE_CHANNEL)) {
   lazilyLoadedBrowserScripts.push(
     ["WebcompatReporter", "chrome://browser/content/WebcompatReporter.js"]);
 }
@@ -538,7 +538,7 @@ var BrowserApp = {
       // AsyncPrefs is needed for reader mode.
       InitLater(() => AsyncPrefs.init());
 
-      if (!AppConstants.RELEASE_OR_BETA) {
+      if (!["release", "esr"].includes(AppConstants.MOZ_UPDATE_CHANNEL)) {
         InitLater(() => WebcompatReporter.init());
       }
 
