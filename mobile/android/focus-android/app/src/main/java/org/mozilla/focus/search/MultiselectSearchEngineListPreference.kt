@@ -4,14 +4,12 @@
 
 package org.mozilla.focus.search
 
-import android.app.Activity
 import android.content.Context
 import android.support.v7.preference.PreferenceViewHolder
-import android.view.ContextThemeWrapper
 import android.util.AttributeSet
 import android.widget.CompoundButton
 import org.mozilla.focus.R
-
+import org.mozilla.focus.utils.asActivity
 import java.util.HashSet
 
 class MultiselectSearchEngineListPreference(context: Context, attrs: AttributeSet) :
@@ -52,13 +50,7 @@ class MultiselectSearchEngineListPreference(context: Context, attrs: AttributeSe
             val engineButton = searchEngineGroup!!.getChildAt(i) as CompoundButton
             engineButton.setOnCheckedChangeListener { _, _ ->
                 val context = context
-                if (context is ContextThemeWrapper) {
-                    if (context.baseContext is Activity) {
-                        (context.baseContext as Activity).invalidateOptionsMenu()
-                    }
-                } else {
-                    (context as Activity).invalidateOptionsMenu()
-                }
+                context?.asActivity()?.invalidateOptionsMenu()
             }
         }
     }
