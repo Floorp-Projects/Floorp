@@ -966,13 +966,6 @@ private:
 // one device pixel.
 #define NS_ROUND_BORDER_TO_PIXELS(l,tpp) \
   ((l) == 0) ? 0 : std::max((tpp), (l) / (tpp) * (tpp))
-// Outline offset is rounded to the nearest integer number of pixels, but values
-// between zero and one device pixels are always rounded up to one device pixel.
-// Note that the offset can be negative.
-#define NS_ROUND_OFFSET_TO_PIXELS(l,tpp) \
-  (((l) == 0) ? 0 : \
-    ((l) > 0) ? std::max( (tpp), ((l) + ((tpp) / 2)) / (tpp) * (tpp)) : \
-                std::min(-(tpp), ((l) - ((tpp) / 2)) / (tpp) * (tpp)))
 
 // Returns if the given border style type is visible or not
 static bool IsVisibleBorderStyle(uint8_t aStyle)
@@ -2899,10 +2892,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn
   uint8_t      mColumnRuleStyle;  // NS_STYLE_BORDER_STYLE_*
   mozilla::StyleColumnFill mColumnFill = mozilla::StyleColumnFill::Balance;
   mozilla::StyleColumnSpan mColumnSpan = mozilla::StyleColumnSpan::None;
-
-  void SetColumnRuleWidth(nscoord aWidth) {
-    mColumnRuleWidth = NS_ROUND_BORDER_TO_PIXELS(aWidth, mTwipsPerPixel);
-  }
 
   nscoord GetComputedColumnRuleWidth() const {
     return (IsVisibleBorderStyle(mColumnRuleStyle) ? mColumnRuleWidth : 0);
