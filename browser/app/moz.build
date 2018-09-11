@@ -7,6 +7,9 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "General")
 
+with Files("blocklist.xml"):
+    BUG_COMPONENT = ("Toolkit", "Blocklist Implementation")
+
 with Files("firefox.exe.manifest"):
     BUG_COMPONENT = ("Core", "Widget: Win32")
 with Files("module.ver"):

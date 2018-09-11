@@ -19,3 +19,7 @@ XPIDL_SOURCES += [
 ]
 
 XPIDL_MODULE = 'xpcom_system'
+
+with Files('nsIBlocklistService.idl'):
+    BUG_COMPONENT = ('Toolkit', 'Blocklist Implementation')
+
