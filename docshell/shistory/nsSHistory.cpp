@@ -218,8 +218,7 @@ nsSHistory::EvictContentViewerForEntry(nsISHEntry* aEntry)
   }
 
   // When dropping bfcache, we have to remove associated dynamic entries as well.
-  int32_t index = -1;
-  GetIndexOfEntry(aEntry, &index);
+  int32_t index = GetIndexOfEntry(aEntry);
   if (index != -1) {
     RemoveDynEntries(index, aEntry);
   }
@@ -700,22 +699,16 @@ nsSHistory::GetEntryAtIndex(int32_t aIndex, nsISHEntry** aResult)
   return NS_OK;
 }
 
-/* Get the index of a given entry */
-NS_IMETHODIMP
-nsSHistory::GetIndexOfEntry(nsISHEntry* aSHEntry, int32_t* aResult)
+NS_IMETHODIMP_(int32_t)
+nsSHistory::GetIndexOfEntry(nsISHEntry* aSHEntry)
 {
-  NS_ENSURE_ARG(aSHEntry);
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = -1;
-
   for (int32_t i = 0; i < Length(); i++) {
     if (aSHEntry == mEntries[i]) {
-      *aResult = i;
-      return NS_OK;
+      return i;
     }
   }
 
-  return NS_ERROR_FAILURE;
+  return -1;
 }
 
 #ifdef DEBUG
@@ -754,8 +747,8 @@ void
 nsSHistory::WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
                           int32_t* aOutEndIndex)
 {
-  *aOutStartIndex = std::max(0, aIndex - nsISHistory::VIEWER_WINDOW);
-  *aOutEndIndex = std::min(Length() - 1, aIndex + nsISHistory::VIEWER_WINDOW);
+  *aOutStartIndex = std::max(0, aIndex - nsSHistory::VIEWER_WINDOW);
+  *aOutEndIndex = std::min(Length() - 1, aIndex + nsSHistory::VIEWER_WINDOW);
 }
 
 NS_IMETHODIMP
@@ -1166,29 +1159,29 @@ nsSHistory::EvictExpiredContentViewerForEntry(nsIBFCacheEntry* aBFEntry)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsSHistory::AddToExpirationTracker(nsIBFCacheEntry* aBFEntry)
 {
   RefPtr<nsSHEntryShared> entry = static_cast<nsSHEntryShared*>(aBFEntry);
   if (!mHistoryTracker || !entry) {
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   mHistoryTracker->AddObject(entry);
-  return NS_OK;
+  return;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsSHistory::RemoveFromExpirationTracker(nsIBFCacheEntry* aBFEntry)
 {
   RefPtr<nsSHEntryShared> entry = static_cast<nsSHEntryShared*>(aBFEntry);
   MOZ_ASSERT(mHistoryTracker && !mHistoryTracker->IsEmpty());
   if (!mHistoryTracker || !entry) {
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   mHistoryTracker->RemoveObject(entry);
-  return NS_OK;
+  return;
 }
 
 // Evicts all content viewers in all history objects.  This is very
@@ -1426,7 +1419,7 @@ nsSHistory::GetCurrentURI(nsIURI** aResultURI)
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsSHistory::GotoIndex(int32_t aIndex)
 {
   return LoadEntry(aIndex, LOAD_HISTORY, HIST_CMD_GOTOINDEX);
@@ -1629,7 +1622,7 @@ nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry, nsIDocShell* aFrameDS,
 
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsSHistory::SetRootDocShell(nsIDocShell* aDocShell)
 {
   mRootDocShell = aDocShell;
@@ -1639,7 +1632,7 @@ nsSHistory::SetRootDocShell(nsIDocShell* aDocShell)
   if (mRootDocShell) {
     nsCOMPtr<nsPIDOMWindowOuter> win = mRootDocShell->GetWindow();
     if (!win) {
-      return NS_ERROR_UNEXPECTED;
+      return;
     }
 
     // Seamonkey moves shistory between <xul:browser>s when restoring a tab.
@@ -1658,6 +1651,4 @@ nsSHistory::SetRootDocShell(nsIDocShell* aDocShell)
                                     CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT),
       global->EventTargetFor(mozilla::TaskCategory::Other));
   }
-
-  return NS_OK;
 }
