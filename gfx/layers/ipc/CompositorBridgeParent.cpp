@@ -314,16 +314,15 @@ CompositorBridgeParent::Setup()
 }
 
 void
-CompositorBridgeParent::Shutdown()
-{
-  MOZ_ASSERT(sCompositorMap);
-  MOZ_ASSERT(sCompositorMap->empty());
-  sCompositorMap = nullptr;
-}
-
-void
 CompositorBridgeParent::FinishShutdown()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (sCompositorMap) {
+    MOZ_ASSERT(sCompositorMap->empty());
+    sCompositorMap = nullptr;
+  }
+
   // TODO: this should be empty by now...
   sIndirectLayerTrees.clear();
 }
