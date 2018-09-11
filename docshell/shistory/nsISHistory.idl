@@ -61,13 +61,6 @@ interface nsISHistory: nsISupports
   readonly attribute long requestedIndex;
 
   /**
-   * A read/write property of the interface, used to Get/Set
-   * the maximum number of toplevel documents, session history
-   * can hold for each instance.
-   */
-  attribute long maxLength;
-
-  /**
    * Get the history entry at a given index. Returns non-null on success.
    *
    * @param index             The index value whose entry is requested.
