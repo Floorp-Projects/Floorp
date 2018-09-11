@@ -14,6 +14,7 @@
 #include "AudioConverter.h"
 #include "DOMMediaStream.h"
 #include "ImageContainer.h"
+#include "ImageToI420.h"
 #include "ImageTypes.h"
 #include "Layers.h"
 #include "LayersLogging.h"
@@ -28,7 +29,6 @@
 #include "VideoSegment.h"
 #include "VideoStreamTrack.h"
 #include "VideoUtils.h"
-#include "libyuv/convert.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/Preferences.h"
@@ -37,6 +37,8 @@
 #include "mozilla/TaskQueue.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/dom/ImageBitmapBinding.h"
+#include "mozilla/dom/ImageUtils.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Types.h"
@@ -53,10 +55,9 @@
 
 #include "webrtc/base/bind.h"
 #include "webrtc/base/keep_ref_until_done.h"
-#include "webrtc/common_types.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
-#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/video_frame.h"
 
 // Max size given stereo is 480*2*2 = 1920 (10ms of 16-bits stereo audio at
 // 48KHz)
@@ -324,36 +325,24 @@ protected:
       return;
     }
 
-    if (!aImage) {
-      MOZ_ASSERT_UNREACHABLE("Must have image if not forcing black");
-      return;
-    }
+    MOZ_RELEASE_ASSERT(aImage, "Must have image if not forcing black");
+    MOZ_ASSERT(aImage->GetSize() == aSize);
 
-    ImageFormat format = aImage->GetFormat();
-    if (format == ImageFormat::PLANAR_YCBCR) {
-      // Cast away constness b/c some of the accessors are non-const
-      const PlanarYCbCrData* data =
-        static_cast<const PlanarYCbCrImage*>(aImage)->GetData();
-      if (data) {
-        uint8_t* y = data->mYChannel;
-        uint8_t* cb = data->mCbChannel;
-        uint8_t* cr = data->mCrChannel;
-        int32_t yStride = data->mYStride;
-        int32_t cbCrStride = data->mCbCrStride;
-        uint32_t width = aImage->GetSize().width;
-        uint32_t height = aImage->GetSize().height;
-
+    if (PlanarYCbCrImage* image = aImage->AsPlanarYCbCrImage()) {
+      ImageUtils utils(image);
+      if (utils.GetFormat() == ImageBitmapFormat::YUV420P && image->GetData()) {
+        const PlanarYCbCrData* data = image->GetData();
         rtc::scoped_refptr<webrtc::WrappedI420Buffer> video_frame_buffer(
           new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
-            width,
-            height,
-            y,
-            yStride,
-            cb,
-            cbCrStride,
-            cr,
-            cbCrStride,
-            rtc::KeepRefUntilDone(aImage)));
+            aImage->GetSize().width,
+            aImage->GetSize().height,
+            data->mYChannel,
+            data->mYStride,
+            data->mCbChannel,
+            data->mCbCrStride,
+            data->mCrChannel,
+            data->mCbCrStride,
+            rtc::KeepRefUntilDone(image)));
 
         webrtc::VideoFrame i420_frame(video_frame_buffer,
                                       0,
@@ -366,90 +355,31 @@ protected:
       }
     }
 
-    RefPtr<SourceSurface> surf = aImage->GetAsSourceSurface();
-    if (!surf) {
-      MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-              ("Getting surface from %s image failed",
-               Stringify(format).c_str()));
-      return;
-    }
-
-    RefPtr<DataSourceSurface> data = surf->GetDataSurface();
-    if (!data) {
-        MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-        ("Getting data surface from %s image with %s (%s) surface failed",
-         Stringify(format).c_str(),
-         Stringify(surf->GetType()).c_str(),
-         Stringify(surf->GetFormat()).c_str()));
-      return;
-    }
-
-    if (aImage->GetSize() != aSize) {
-      MOZ_DIAGNOSTIC_ASSERT(false, "Unexpected intended size");
-      return;
-    }
-
     rtc::scoped_refptr<webrtc::I420Buffer> buffer =
       mBufferPool.CreateBuffer(aSize.width, aSize.height);
     if (!buffer) {
+      MOZ_DIAGNOSTIC_ASSERT(false, "Buffers not leaving scope except for "
+                                   "reconfig, should never leak");
       MOZ_LOG(gMediaPipelineLog, LogLevel::Warning,
               ("Creating a buffer for a black video frame failed"));
       return;
     }
 
-    DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
-    if (!map.IsMapped()) {
-      MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-        ("Reading DataSourceSurface from %s image with %s (%s) surface failed",
-         Stringify(format).c_str(),
-         Stringify(surf->GetType()).c_str(),
-         Stringify(surf->GetFormat()).c_str()));
+    nsresult rv = ConvertToI420(
+      aImage,
+      buffer->MutableDataY(),
+      buffer->StrideY(),
+      buffer->MutableDataU(),
+      buffer->StrideU(),
+      buffer->MutableDataV(),
+      buffer->StrideV());
+
+    if (NS_FAILED(rv)) {
+      MOZ_LOG(gMediaPipelineLog, LogLevel::Warning,
+              ("Image conversion failed"));
       return;
     }
 
-    int rv;
-    switch (surf->GetFormat()) {
-      case SurfaceFormat::B8G8R8A8:
-      case SurfaceFormat::B8G8R8X8:
-        rv = libyuv::ARGBToI420(static_cast<uint8_t*>(map.GetData()),
-                                map.GetStride(),
-                                buffer->MutableDataY(),
-                                buffer->StrideY(),
-                                buffer->MutableDataU(),
-                                buffer->StrideU(),
-                                buffer->MutableDataV(),
-                                buffer->StrideV(),
-                                aSize.width,
-                                aSize.height);
-        break;
-      case SurfaceFormat::R5G6B5_UINT16:
-        rv = libyuv::RGB565ToI420(static_cast<uint8_t*>(map.GetData()),
-                                  map.GetStride(),
-                                  buffer->MutableDataY(),
-                                  buffer->StrideY(),
-                                  buffer->MutableDataU(),
-                                  buffer->StrideU(),
-                                  buffer->MutableDataV(),
-                                  buffer->StrideV(),
-                                  aSize.width,
-                                  aSize.height);
-        break;
-      default:
-        MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-                ("Unsupported RGB video format %s",
-                 Stringify(surf->GetFormat()).c_str()));
-        MOZ_ASSERT(PR_FALSE);
-        return;
-    }
-    if (rv != 0) {
-      MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-              ("%s to I420 conversion failed",
-               Stringify(surf->GetFormat()).c_str()));
-      return;
-    }
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
-            ("Sending an I420 video frame converted from %s",
-             Stringify(surf->GetFormat()).c_str()));
     webrtc::VideoFrame frame(buffer,
                              0, 0, // not setting timestamps
                              webrtc::kVideoRotation_0);
