@@ -76,9 +76,6 @@ public:
 
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame,
                                              WidgetType aWidgetType) override;
-
-  virtual bool WidgetAppearanceDependsOnWindowFocus(WidgetType aWidgetType) override;
-
   nsNativeThemeGTK();
 
 protected:
