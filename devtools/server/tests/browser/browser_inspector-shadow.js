@@ -115,3 +115,25 @@ add_task(async function() {
   is(closedShadowRoot.shadowRootMode, "closed",
     "#mode-closed has a shadow root with closed mode");
 });
+
+add_task(async function() {
+  info("Test that slotted inline text nodes appear in the Shadow DOM tree");
+  const { walker } = await initInspectorFront(URL);
+
+  const el = await walker.querySelector(walker.rootNode, "#slot-inline-text");
+  const hostChildren = await walker.children(el);
+  const originalSlot = hostChildren.nodes[1];
+  is(originalSlot.displayName, "#text", "Shadow host as a text node to be slotted");
+
+  const shadowRoot = hostChildren.nodes[0];
+  const shadowChildren = await walker.children(shadowRoot);
+  const slot = shadowChildren.nodes[0];
+  is(slot.displayName, "slot", "shadow-root has a slot child");
+  ok(!slot._form.inlineTextChild, "Slotted node is not an inline text");
+
+  const slotChildren = await walker.children(slot);
+  const slotted = slotChildren.nodes[0];
+  is(slotted.displayName, "#text", "Slotted node is a text node");
+  is(slotted._form.nodeValue, originalSlot._form.nodeValue,
+    "Slotted content is the same as original's");
+});
