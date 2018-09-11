@@ -75,7 +75,7 @@ this.test = class extends ExtensionAPI {
     const {extension} = context;
 
     function getStack() {
-      return new context.cloneScope.Error().stack.replace(/^/gm, "    ");
+      return new context.Error().stack.replace(/^/gm, "    ");
     }
 
     function assertTrue(value, msg) {
