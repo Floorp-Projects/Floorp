@@ -6,15 +6,20 @@
 
 #include "vm/DateTime.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
 
 #include <algorithm>
-#if defined(XP_WIN)
 #include <cstdlib>
-#endif /* defined(XP_WIN) */
 #include <cstring>
 #include <time.h>
+
+#if !defined(XP_WIN)
+#include <limits.h>
+#include <unistd.h>
+#endif /* !defined(XP_WIN) */
 
 #include "jsutil.h"
 
@@ -509,16 +514,20 @@ js::InitDateTimeState()
 
     IcuTimeZoneStatus initialStatus = IcuTimeZoneStatus::Valid;
 
-#if defined(XP_WIN)
     // Directly set the ICU time zone status into the invalid state when we
     // need to compute the actual default time zone from the TZ environment
     // variable. We don't yet want to initialize ICU's time zone classes,
     // because that may cause I/O operations slowing down the JS engine
     // initialization, which we're currently in the middle of.
-    const char* tz = std::getenv("TZ");
-    if (tz && IsOlsonCompatibleWindowsTimeZoneId(tz))
-        initialStatus = IcuTimeZoneStatus::NeedsUpdate;
-#endif
+    if (const char* tz = std::getenv("TZ")) {
+#if defined(XP_WIN)
+        if (IsOlsonCompatibleWindowsTimeZoneId(tz))
+            initialStatus = IcuTimeZoneStatus::NeedsUpdate;
+#else
+        if (std::strcmp(tz, ":/etc/localtime") == 0)
+            initialStatus = IcuTimeZoneStatus::NeedsUpdate;
+#endif /* defined(XP_WIN) */
+    }
 
     IcuTimeZoneState = js_new<ExclusiveData<IcuTimeZoneStatus>>(mutexid::IcuTimeZoneStateMutex,
                                                                 initialStatus);
@@ -612,7 +621,73 @@ IsOlsonCompatibleWindowsTimeZoneId(const char* tz)
     }
     return false;
 }
-#endif
+#elif ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
+/**
+ * Examine /etc/localtime.
+ *
+ * If it is a symlink to a tzdata zoneinfo file -- a file containing
+ * "/zoneinfo/" in its path, with subsequent path components that follow the
+ * pattern of a time zone name, e.g. "America/New_York" (valid) or
+ * "Fnord/Aliens" (not so much, presently) and so on -- return a string
+ * containing those subsequent path components. (Which may not be a real
+ * time zone name.)
+ *
+ * Otherwise (if the file doesn't exist, isn't a symlink, points to a file with
+ * different path, etc.) return an empty string.
+*/
+static icu::UnicodeString
+ReadSystemTimeZoneId()
+{
+    // The system time zone file, see `man 3 tzset`.
+    static constexpr char SystemTimeZoneFile[] = "/etc/localtime";
+
+    // The resolved link name can have different paths depending on the OS.
+    // Follow ICU and only search for "/zoneinfo/"; see $ICU/common/putil.cpp.
+    static constexpr char ZoneInfoPath[] = "/zoneinfo/";
+    constexpr size_t ZoneInfoPathLength = mozilla::ArrayLength(ZoneInfoPath) - 1; // exclude NUL
+
+    char buf[PATH_MAX];
+    constexpr size_t buflen = mozilla::ArrayLength(buf) - 1; // -1 to null-terminate.
+
+    // Return an empty string on error or if the result was truncated.
+    ssize_t slen = readlink(SystemTimeZoneFile, buf, buflen);
+    if (slen < 0 || size_t(slen) >= buflen)
+        return icu::UnicodeString();
+
+    // Ensure |buf| is null-terminated. (readlink may not necessarily null
+    // terminate the string.)
+    buf[size_t(slen)] = '\0';
+
+    // Return an empty string if the path doesn't include "/zoneinfo/".
+    const char* timeZoneWithZoneInfo = std::strstr(buf, ZoneInfoPath);
+    if (!timeZoneWithZoneInfo)
+        return icu::UnicodeString();
+
+    const char* timeZone = timeZoneWithZoneInfo + ZoneInfoPathLength;
+    size_t timeZoneLen = std::strlen(timeZone);
+
+    // Reject the result if it doesn't match the time zone id pattern or
+    // legacy time zone names.
+    // See <https://github.com/eggert/tz/blob/master/theory.html>.
+    for (size_t i = 0; i < timeZoneLen; i++) {
+        char c = timeZone[i];
+
+        // According to theory.html, '.' is allowed in time zone ids, but the
+        // accompanying zic.c file doesn't allow it. Assume the source file is
+        // correct and disallow '.' here, too.
+        if (mozilla::IsAsciiAlphanumeric(c) || c == '_' || c == '-' || c == '+')
+            continue;
+
+        // Reject leading, trailing, or consecutive '/' characters.
+        if (c == '/' && i > 0 && i + 1 < timeZoneLen && timeZone[i + 1] != '/')
+            continue;
+
+        return icu::UnicodeString();
+    }
+
+    return icu::UnicodeString(timeZone, timeZoneLen, US_INV);
+}
+#endif /* ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT) */
 
 void
 js::ResyncICUDefaultTimeZone()
@@ -621,26 +696,42 @@ js::ResyncICUDefaultTimeZone()
     auto guard = IcuTimeZoneState->lock();
     if (guard.get() == IcuTimeZoneStatus::NeedsUpdate) {
         bool recreate = true;
+
+        if (const char* tz = std::getenv("TZ")) {
+            icu::UnicodeString tzid;
+
 #if defined(XP_WIN)
-        // If TZ is set and its value is valid under Windows' and IANA's time
-        // zone identifier rules, update the ICU default time zone to use this
-        // value.
-        const char* tz = std::getenv("TZ");
-        if (tz && IsOlsonCompatibleWindowsTimeZoneId(tz)) {
-            icu::UnicodeString tzid(tz, -1, US_INV);
-            mozilla::UniquePtr<icu::TimeZone> newTimeZone(icu::TimeZone::createTimeZone(tzid));
-            MOZ_ASSERT(newTimeZone);
-            if (*newTimeZone != icu::TimeZone::getUnknown()) {
-                // adoptDefault() takes ownership of the time zone.
-                icu::TimeZone::adoptDefault(newTimeZone.release());
-                recreate = false;
+            // If TZ is set and its value is valid under Windows' and IANA's
+            // time zone identifier rules, update the ICU default time zone to
+            // use this value.
+            if (IsOlsonCompatibleWindowsTimeZoneId(tz)) {
+                tzid.setTo(icu::UnicodeString(tz, -1, US_INV));
+            } else {
+                // If |tz| isn't a supported time zone identifier, use the
+                // default Windows time zone for ICU.
+                // TODO: Handle invalid time zone identifiers (bug 342068).
             }
-        } else {
-            // If |tz| isn't a supported time zone identifier, use the default
-            // Windows time zone for ICU.
-            // TODO: Handle invalid time zone identifiers (bug 342068).
+#else
+            // Handle ":/etc/localtime" manually because ICU currently doesn't
+            // support the TZ filespec format. We don't support the complete
+            // TZ filespec format for simplicity's sake and because
+            // ":/etc/localtime" should cover most cases.
+            // <https://unicode-org.atlassian.net/browse/ICU-13694>
+            if (std::strcmp(tz, ":/etc/localtime") == 0)
+                tzid.setTo(ReadSystemTimeZoneId());
+#endif /* defined(XP_WIN) */
+
+            if (!tzid.isEmpty()) {
+                mozilla::UniquePtr<icu::TimeZone> newTimeZone(icu::TimeZone::createTimeZone(tzid));
+                MOZ_ASSERT(newTimeZone);
+                if (*newTimeZone != icu::TimeZone::getUnknown()) {
+                    // adoptDefault() takes ownership of the time zone.
+                    icu::TimeZone::adoptDefault(newTimeZone.release());
+                    recreate = false;
+                }
+            }
         }
-#endif
+
         if (recreate)
             icu::TimeZone::recreateDefault();
         guard.get() = IcuTimeZoneStatus::Valid;
