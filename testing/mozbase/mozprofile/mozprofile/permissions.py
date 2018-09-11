@@ -15,7 +15,6 @@ import sqlite3
 
 from six import string_types
 from six.moves.urllib import parse
-import six
 
 __all__ = ['MissingPrimaryLocationError', 'MultiplePrimaryLocationsError',
            'DEFAULT_PORTS', 'DuplicateLocationError', 'BadPortLocationError',
@@ -272,7 +271,7 @@ class Permissions(object):
         for location in locations:
             # set the permissions
             permissions = {'allowXULXBL': 'noxul' not in location.options}
-            for perm, allow in six.iteritems(permissions):
+            for perm, allow in permissions.iteritems():
                 if allow:
                     permission_type = 1
                 else:
