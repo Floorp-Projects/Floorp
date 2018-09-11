@@ -37,14 +37,28 @@
         <column/>
       </columns>
       <rows>
-        <row flex="1">
-          <richlistbox id="activeLocales" flex="1"/>
+        <row>
+          <richlistbox id="requestedLocales"/>
           <vbox>
             <button id="up" disabled="true" data-l10n-id="languages-customize-moveup"/>
             <button id="down" disabled="true" data-l10n-id="languages-customize-movedown"/>
+            <button id="remove" disabled="true" data-l10n-id="languages-customize-remove"/>
           </vbox>
+        </row>
+        <row>
+          <menulist id="availableLocales"
+                    class="available-locales-list"
+                    data-l10n-id="languages-customize-select-language"
+                    data-l10n-attrs="placeholder">
+            <menupopup/>
+          </menulist>
+          <button id="add"
+                  class="add-browser-language"
+                  data-l10n-id="languages-customize-add"
+                  disabled="true"/>
         </row>
       </rows>
     </grid>
+    <separator/>
   </vbox>
 </dialog>
