@@ -1072,12 +1072,6 @@ class ChildAPIManager {
       return false;
     }
 
-    // Do not generate content_only APIs, unless explicitly allowed.
-    if (this.context.envType !== "content_child" &&
-        allowedContexts.includes("content_only")) {
-      return false;
-    }
-
     return true;
   }
 
