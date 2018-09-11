@@ -102,7 +102,7 @@ TransceiverImpl::InitAudio()
 void
 TransceiverImpl::InitVideo()
 {
-  mConduit = VideoSessionConduit::Create(mCallWrapper);
+  mConduit = VideoSessionConduit::Create(mCallWrapper, mStsThread);
 
   if (!mConduit) {
     MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
@@ -877,7 +877,9 @@ TransceiverImpl::UpdateVideoConduit()
   if (mJsepTransceiver->HasBundleLevel() &&
       (!mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() ||
        !mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()->GetExt(webrtc::RtpExtension::kMIdUri))) {
-    conduit->DisableSsrcChanges();
+    mStsThread->Dispatch(NewRunnableMethod(
+      "VideoSessionConduit::DisableSsrcChanges",
+      conduit, &VideoSessionConduit::DisableSsrcChanges));
   }
 
   if (mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() &&
