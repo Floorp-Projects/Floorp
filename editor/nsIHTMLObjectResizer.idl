@@ -40,7 +40,9 @@ interface nsIHTMLObjectResizer : nsISupports
   void hideResizers();
 
   /**
-   * Refresh visible resizers
+   * Refresh positions of resizers.  If you change size of target of resizers,
+   * you need to refresh position of resizers with calling this.
+   * FYI: Current user in script is only BlueGriffon.
    */
   void refreshResizers();
 };
