@@ -428,7 +428,6 @@ ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
                      JS::OffThreadCompileCallback callback, void* callbackData)
   : kind(kind),
     options(cx),
-    alloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     parseGlobal(nullptr),
     callback(callback), callbackData(callbackData),
     overRecursed(false), outOfMemory(false)
@@ -498,7 +497,6 @@ size_t
 ParseTask::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     return options.sizeOfExcludingThis(mallocSizeOf) +
-           alloc.sizeOfExcludingThis(mallocSizeOf) +
            errors.sizeOfExcludingThis(mallocSizeOf);
 }
 
@@ -517,7 +515,7 @@ ScriptParseTask::parse(JSContext* cx)
 
     ScopeKind scopeKind = options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
-    JSScript* script = frontend::CompileGlobalScript(cx, alloc, scopeKind,
+    JSScript* script = frontend::CompileGlobalScript(cx, cx->tempLifoAlloc(), scopeKind,
                                                      options, data,
                                                      /* sourceObjectOut = */ &sourceObject.get());
     if (script)
@@ -539,7 +537,7 @@ ModuleParseTask::parse(JSContext* cx)
 
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
-    JSScript* script = frontend::CompileModule(cx, options, data, alloc, &sourceObject.get());
+    JSScript* script = frontend::CompileModule(cx, options, data, cx->tempLifoAlloc(), &sourceObject.get());
     if (script) {
         scripts.infallibleAppend(script);
         if (sourceObject)
@@ -561,8 +559,8 @@ ScriptDecodeTask::parse(JSContext* cx)
     RootedScript resultScript(cx);
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
-    XDROffThreadDecoder decoder(cx, alloc, &options, /* sourceObjectOut = */ &sourceObject.get(),
-                                range);
+    XDROffThreadDecoder decoder(cx, cx->tempLifoAlloc(), &options,
+                                /* sourceObjectOut = */ &sourceObject.get(), range);
     XDRResult res = decoder.codeScript(&resultScript);
     MOZ_ASSERT(bool(resultScript) == res.isOk());
     if (res.isOk()) {
@@ -587,7 +585,7 @@ BinASTDecodeTask::parse(JSContext* cx)
 
     RootedScriptSourceObject sourceObject(cx);
 
-    JSScript* script = frontend::CompileGlobalBinASTScript(cx, alloc, options,
+    JSScript* script = frontend::CompileGlobalBinASTScript(cx, cx->tempLifoAlloc(), options,
                                                            data.begin().get(), data.length(),
                                                            &sourceObject.get());
     if (script) {
@@ -625,7 +623,8 @@ MultiScriptsDecodeTask::parse(JSContext* cx)
         RootedScript resultScript(cx);
         Rooted<ScriptSourceObject*> sourceObject(cx);
 
-        XDROffThreadDecoder decoder(cx, alloc, &opts, &sourceObject.get(), source.range);
+        XDROffThreadDecoder decoder(cx, cx->tempLifoAlloc(), &opts, &sourceObject.get(),
+                                    source.range);
         XDRResult res = decoder.codeScript(&resultScript);
         MOZ_ASSERT(bool(resultScript) == res.isOk());
 
