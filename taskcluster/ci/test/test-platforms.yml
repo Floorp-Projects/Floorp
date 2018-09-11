@@ -361,6 +361,7 @@ android-hw-p2-8-0-arm7-api-16/opt:
     build-platform: android-api-16/opt
     test-sets:
         - android-hw-arm7-opt-unittests
+        - android-hw-arm7-raptor
 
 android-hw-p2-8-0-arm7-api-16/debug:
     build-platform: android-api-16/debug
@@ -371,3 +372,4 @@ android-hw-p2-8-0-android-aarch64/opt:
     build-platform: android-aarch64/opt
     test-sets:
         - android-hw-aarch64-opt-unittests
+        - android-hw-aarch64-raptor
