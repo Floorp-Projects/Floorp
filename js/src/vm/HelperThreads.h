@@ -702,10 +702,10 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>, public JS::OffT
     // Holds the final scripts between the invocation of the callback and the
     // point where FinishOffThreadScript is called, which will destroy the
     // ParseTask.
-    GCVector<JSScript*, 1> scripts;
+    GCVector<JSScript*, 1, SystemAllocPolicy> scripts;
 
     // Holds the ScriptSourceObjects generated for the script compilation.
-    GCVector<ScriptSourceObject*, 1> sourceObjects;
+    GCVector<ScriptSourceObject*, 1, SystemAllocPolicy> sourceObjects;
 
     // Any errors or warnings produced during compilation. These are reported
     // when finishing the script.
