@@ -222,8 +222,11 @@ def check_nsmodules(target, binary):
     # MSVC linker, when doing incremental linking, adds padding when
     # merging sections. Allow there to be more space between the NSModule
     # symbols, as long as they are in the right order.
-    if buildconfig.substs.get('_MSC_VER') and \
-            buildconfig.substs.get('DEVELOPER_OPTIONS'):
+    test_msvc = (buildconfig.substs.get('_MSC_VER') and \
+        buildconfig.substs.get('DEVELOPER_OPTIONS'))
+    test_clang = (buildconfig.substs.get('CC_TYPE') == 'clang' and \
+        buildconfig.substs.get('OS_ARCH') == 'WINNT')
+    if test_msvc or test_clang:
         sym_cmp = lambda guessed, actual: guessed <= actual
     else:
         sym_cmp = lambda guessed, actual: guessed == actual
