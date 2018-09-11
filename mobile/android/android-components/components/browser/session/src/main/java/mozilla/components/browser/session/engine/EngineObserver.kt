@@ -81,4 +81,8 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
     override fun onDesktopModeChange(enabled: Boolean) {
         session.desktopMode = enabled
     }
+
+    override fun onFullScreenChange(enabled: Boolean) {
+        session.fullScreenMode = enabled
+    }
 }

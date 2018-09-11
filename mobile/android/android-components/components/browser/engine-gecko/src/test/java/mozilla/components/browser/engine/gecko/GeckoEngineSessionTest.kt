@@ -606,4 +606,36 @@ class GeckoEngineSessionTest {
         engineSession.clearFindMatches()
         assertTrue(clearMatchesReceived)
     }
+
+    fun `toggle fullscreen mode triggers exit event`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        val geckoSession = Mockito.spy(engineSession.geckoSession)
+        engineSession.geckoSession = geckoSession
+        val observer: EngineSession.Observer = mock(EngineSession.Observer::class.java)
+
+        // Verify the event is triggered for exiting fullscreen mode and GeckoView is called.
+        var fullScreenExitReceived = false
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
+            BundleEventListener { _, _, _ -> fullScreenExitReceived = true },
+            "GeckoViewContent:ExitFullScreen"
+        )
+        engineSession.exitFullScreenMode()
+        assertTrue(fullScreenExitReceived)
+        verify(geckoSession).exitFullScreen()
+
+        // Verify the call to the observer.
+        engineSession.register(observer)
+        engineSession.geckoSession.contentDelegate.onFullScreen(geckoSession, true)
+        verify(observer).onFullScreenChange(true)
+    }
+
+    @Test
+    fun `toggle fullscreen true has no interaction`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        val geckoSession = Mockito.spy(engineSession.geckoSession)
+        engineSession.geckoSession = geckoSession
+
+        engineSession.exitFullScreenMode()
+        verify(geckoSession).exitFullScreen()
+    }
 }

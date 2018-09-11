@@ -4,19 +4,19 @@
 
 package mozilla.components.support.ktx.android.view
 
+import android.util.DisplayMetrics
+import android.view.View
 import android.widget.EditText
 import android.widget.TextView
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.shadows.ShadowLooper
-import android.util.DisplayMetrics
-import android.view.View
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 
 @RunWith(RobolectricTestRunner::class)
 class ViewTest {

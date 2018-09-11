@@ -33,6 +33,7 @@ abstract class EngineSession(
         fun onDesktopModeChange(enabled: Boolean) = Unit
         fun onFind(text: String) = Unit
         fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) = Unit
+        fun onFullScreenChange(enabled: Boolean) = Unit
 
         @Suppress("LongParameterList")
         fun onExternalResource(
@@ -178,6 +179,11 @@ abstract class EngineSession(
      * Clears the highlighted results of previous calls to [findAll] / [findNext].
      */
     abstract fun clearFindMatches()
+
+    /**
+     * Exits fullscreen mode if currently in it that state.
+     */
+    abstract fun exitFullScreenMode()
 
     /**
      * Close the session. This may free underlying objects. Call this when you are finished using

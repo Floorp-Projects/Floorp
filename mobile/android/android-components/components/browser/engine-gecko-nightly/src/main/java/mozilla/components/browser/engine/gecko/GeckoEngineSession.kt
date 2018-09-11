@@ -4,15 +4,16 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.annotation.SuppressLint
 import kotlinx.coroutines.experimental.CompletableDeferred
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.request.RequestInterceptor
-import mozilla.components.support.ktx.kotlin.isPhone
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
+import mozilla.components.support.ktx.kotlin.isPhone
 import org.mozilla.gecko.util.ThreadUtils
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
@@ -194,6 +195,7 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.findNext]
      */
+    @SuppressLint("WrongConstant") // FinderFindFlags annotation doesn't include a 0 value.
     override fun findNext(forward: Boolean) {
         val findFlags = if (forward) 0 else GeckoSession.FINDER_FIND_BACKWARDS
         geckoSession.finder.find(null, findFlags).then { result: GeckoSession.FinderResult? ->
@@ -209,6 +211,13 @@ class GeckoEngineSession(
      */
     override fun clearFindMatches() {
         geckoSession.finder.clear()
+    }
+
+    /**
+     * See [EngineSession.exitFullScreenMode]
+     */
+    override fun exitFullScreenMode() {
+        geckoSession.exitFullScreen()
     }
 
     /**
@@ -319,7 +328,9 @@ class GeckoEngineSession(
 
         override fun onCrash(session: GeckoSession?) = Unit
 
-        override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) = Unit
+        override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
+            notifyObservers { onFullScreenChange(fullScreen) }
+        }
 
         override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
             notifyObservers {

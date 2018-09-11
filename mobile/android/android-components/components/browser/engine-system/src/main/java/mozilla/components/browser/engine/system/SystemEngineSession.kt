@@ -6,12 +6,12 @@ package mozilla.components.browser.engine.system
 
 import android.os.Bundle
 import android.webkit.WebView
-import mozilla.components.concept.engine.EngineSession
-import mozilla.components.support.ktx.kotlin.toBundle
-import java.lang.ref.WeakReference
 import kotlinx.coroutines.experimental.launch
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.support.ktx.kotlin.toBundle
+import java.lang.ref.WeakReference
 
 internal val additionalHeaders = mapOf(
     // For every request WebView sends a "X-requested-with" header with the package name of the
@@ -26,6 +26,7 @@ internal val additionalHeaders = mapOf(
  */
 @Suppress("TooManyFunctions")
 class SystemEngineSession(private val defaultSettings: Settings? = null) : EngineSession() {
+
     internal var view: WeakReference<SystemEngineView>? = null
     internal var scheduledLoad = ScheduledLoad(null)
     @Volatile internal var trackingProtectionEnabled = false
@@ -215,6 +216,13 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
                 view.reload()
             }
         }
+    }
+
+    /**
+     * See [EngineSession.exitFullScreenMode]
+     */
+    override fun exitFullScreenMode() {
+        // no-op
     }
 
     internal fun toggleDesktopUA(userAgent: String, requestDesktop: Boolean): String {

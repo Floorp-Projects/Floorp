@@ -4,8 +4,8 @@
 
 package mozilla.components.concept.engine
 
-import org.junit.Assert.assertEquals
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -36,6 +36,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onDesktopModeChange(true) }
         session.notifyInternalObservers { onFind("search") }
         session.notifyInternalObservers { onFindResult(0, 1, true) }
+        session.notifyInternalObservers { onFullScreenChange(true) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onLocationChange("https://www.firefox.com")
@@ -49,6 +50,7 @@ class EngineSessionTest {
         verify(observer).onDesktopModeChange(true)
         verify(observer).onFind("search")
         verify(observer).onFindResult(0, 1, true)
+        verify(observer).onFullScreenChange(true)
         verifyNoMoreInteractions(observer)
     }
 
@@ -69,6 +71,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onDesktopModeChange(true) }
         session.notifyInternalObservers { onFind("search") }
         session.notifyInternalObservers { onFindResult(0, 1, true) }
+        session.notifyInternalObservers { onFullScreenChange(true) }
 
         session.unregister(observer)
 
@@ -82,6 +85,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onDesktopModeChange(false) }
         session.notifyInternalObservers { onFind("search2") }
         session.notifyInternalObservers { onFindResult(0, 1, false) }
+        session.notifyInternalObservers { onFullScreenChange(false) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -93,6 +97,7 @@ class EngineSessionTest {
         verify(observer).onDesktopModeChange(true)
         verify(observer).onFind("search")
         verify(observer).onFindResult(0, 1, true)
+        verify(observer).onFullScreenChange(true)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
@@ -103,6 +108,7 @@ class EngineSessionTest {
         verify(observer, never()).onDesktopModeChange(false)
         verify(observer, never()).onFind("search2")
         verify(observer, never()).onFindResult(0, 1, false)
+        verify(observer, never()).onFullScreenChange(false)
         verifyNoMoreInteractions(observer)
     }
 
@@ -125,6 +131,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onDesktopModeChange(true) }
         session.notifyInternalObservers { onFind("search") }
         session.notifyInternalObservers { onFindResult(0, 1, true) }
+        session.notifyInternalObservers { onFullScreenChange(true) }
 
         session.unregisterObservers()
 
@@ -138,6 +145,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onDesktopModeChange(false) }
         session.notifyInternalObservers { onFind("search2") }
         session.notifyInternalObservers { onFindResult(0, 1, false) }
+        session.notifyInternalObservers { onFullScreenChange(false) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -149,6 +157,7 @@ class EngineSessionTest {
         verify(observer).onDesktopModeChange(true)
         verify(observer).onFind("search")
         verify(observer).onFindResult(0, 1, true)
+        verify(observer).onFullScreenChange(true)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
@@ -159,6 +168,7 @@ class EngineSessionTest {
         verify(observer, never()).onDesktopModeChange(false)
         verify(observer, never()).onFind("search2")
         verify(observer, never()).onFindResult(0, 1, false)
+        verify(observer, never()).onFullScreenChange(false)
         verify(otherObserver, never()).onLocationChange("https://www.firefox.com")
         verify(otherObserver, never()).onProgress(100)
         verify(otherObserver, never()).onLoadingStateChange(false)
@@ -169,6 +179,7 @@ class EngineSessionTest {
         verify(otherObserver, never()).onDesktopModeChange(false)
         verify(otherObserver, never()).onFind("search2")
         verify(otherObserver, never()).onFindResult(0, 1, false)
+        verify(otherObserver, never()).onFullScreenChange(false)
     }
 
     @Test
@@ -188,6 +199,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onDesktopModeChange(true) }
         session.notifyInternalObservers { onFind("search") }
         session.notifyInternalObservers { onFindResult(0, 1, true) }
+        session.notifyInternalObservers { onFullScreenChange(true) }
 
         session.close()
 
@@ -201,6 +213,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onDesktopModeChange(false) }
         session.notifyInternalObservers { onFind("search2") }
         session.notifyInternalObservers { onFindResult(0, 1, false) }
+        session.notifyInternalObservers { onFullScreenChange(false) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -212,6 +225,7 @@ class EngineSessionTest {
         verify(observer).onDesktopModeChange(true)
         verify(observer).onFind("search")
         verify(observer).onFindResult(0, 1, true)
+        verify(observer).onFullScreenChange(true)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
@@ -222,6 +236,7 @@ class EngineSessionTest {
         verify(observer, never()).onDesktopModeChange(false)
         verify(observer, never()).onFind("search2")
         verify(observer, never()).onFindResult(0, 1, false)
+        verify(observer, never()).onFullScreenChange(false)
         verifyNoMoreInteractions(observer)
     }
 
@@ -244,6 +259,7 @@ class EngineSessionTest {
         otherSession.notifyInternalObservers { onDesktopModeChange(true) }
         otherSession.notifyInternalObservers { onFind("search") }
         otherSession.notifyInternalObservers { onFindResult(0, 1, true) }
+        otherSession.notifyInternalObservers { onFullScreenChange(true) }
         verify(observer, never()).onLocationChange("https://www.mozilla.org")
         verify(observer, never()).onProgress(25)
         verify(observer, never()).onLoadingStateChange(true)
@@ -254,6 +270,7 @@ class EngineSessionTest {
         verify(observer, never()).onDesktopModeChange(true)
         verify(observer, never()).onFind("search")
         verify(observer, never()).onFindResult(0, 1, true)
+        verify(observer, never()).onFullScreenChange(true)
 
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
         session.notifyInternalObservers { onProgress(25) }
@@ -265,6 +282,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onDesktopModeChange(false) }
         session.notifyInternalObservers { onFind("search") }
         session.notifyInternalObservers { onFindResult(0, 1, true) }
+        session.notifyInternalObservers { onFullScreenChange(true) }
         verify(observer, times(1)).onLocationChange("https://www.mozilla.org")
         verify(observer, times(1)).onProgress(25)
         verify(observer, times(1)).onLoadingStateChange(true)
@@ -275,6 +293,7 @@ class EngineSessionTest {
         verify(observer, times(1)).onDesktopModeChange(false)
         verify(observer, times(1)).onFind("search")
         verify(observer, times(1)).onFindResult(0, 1, true)
+        verify(observer, times(1)).onFullScreenChange(true)
         verifyNoMoreInteractions(observer)
     }
 
@@ -407,6 +426,8 @@ open class DummyEngineSession : EngineSession() {
     override fun findNext(forward: Boolean) {}
 
     override fun clearFindMatches() {}
+
+    override fun exitFullScreenMode() {}
 
     // Helper method to access the protected method from test cases.
     fun notifyInternalObservers(block: Observer.() -> Unit) {

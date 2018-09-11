@@ -7,10 +7,10 @@ package mozilla.components.browser.session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
-import mozilla.components.support.base.observer.Consumable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -498,12 +498,23 @@ class SessionTest {
         val observer = mock(Session.Observer::class.java)
         val session = Session("https://www.mozilla.org")
         session.register(observer)
-
         session.desktopMode = true
-
         verify(observer).onDesktopModeChanged(
                 eq(session),
                 eq(true))
         assertTrue(session.desktopMode)
+    }
+
+    @Test
+    fun `observer is notified on fullscreen mode`() {
+        val observer = mock(Session.Observer::class.java)
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+        session.fullScreenMode = true
+        verify(observer).onFullScreenChanged(session, true)
+        reset(observer)
+        session.unregister(observer)
+        session.fullScreenMode = false
+        verify(observer, never()).onFullScreenChanged(session, false)
     }
 }

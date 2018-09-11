@@ -6,8 +6,8 @@ package mozilla.components.browser.session.engine
 
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.Settings
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -32,13 +32,12 @@ class EngineObserverTest {
             override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun disableTrackingProtection() {}
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
-                notifyObservers {
-                    onDesktopModeChange(enable)
-                }
+                notifyObservers { onDesktopModeChange(enable) }
             }
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
+            override fun exitFullScreenMode() {}
             override fun saveState(): Map<String, Any> {
                 return emptyMap()
             }
@@ -87,6 +86,7 @@ class EngineObserverTest {
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
+            override fun exitFullScreenMode() {}
             override fun saveState(): Map<String, Any> {
                 return emptyMap()
             }
@@ -138,6 +138,7 @@ class EngineObserverTest {
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
+            override fun exitFullScreenMode() {}
         }
         val observer = EngineObserver(session)
         engineSession.register(observer)
@@ -226,5 +227,16 @@ class EngineObserverTest {
 
         observer.onLoadingStateChange(true)
         assertEquals(emptyList<String>(), session.findResults)
+    }
+
+    @Test
+    fun testEngineObserverNotifiesFullscreenMode() {
+        val session = Session("https://www.mozilla.org")
+        val observer = EngineObserver(session)
+
+        observer.onFullScreenChange(true)
+        assertEquals(true, session.fullScreenMode)
+        observer.onFullScreenChange(false)
+        assertEquals(false, session.fullScreenMode)
     }
 }

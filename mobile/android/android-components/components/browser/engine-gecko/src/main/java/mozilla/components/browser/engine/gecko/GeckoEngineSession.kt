@@ -198,6 +198,13 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.exitFullScreenMode]
+     */
+    override fun exitFullScreenMode() {
+        geckoSession.exitFullScreen()
+    }
+
+    /**
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
@@ -303,7 +310,9 @@ class GeckoEngineSession(
 
         override fun onCrash(session: GeckoSession?) = Unit
 
-        override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) = Unit
+        override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
+            notifyObservers { onFullScreenChange(fullScreen) }
+        }
 
         override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
             notifyObservers {

@@ -45,6 +45,7 @@ class SystemEngineView @JvmOverloads constructor(
     internal var currentWebView = createWebView(context)
     internal var currentUrl = ""
     private var session: SystemEngineSession? = null
+    internal var fullScreenCallback: WebChromeClient.CustomViewCallback? = null
 
     init {
         // Currently this implementation supports only a single WebView. Eventually this
@@ -95,6 +96,7 @@ class SystemEngineView @JvmOverloads constructor(
 
     private fun createWebView(context: Context): WebView {
         val webView = WebView(context)
+        webView.tag = "mosac_system_engine_webview"
         webView.webViewClient = createWebViewClient(webView)
         webView.webChromeClient = createWebChromeClient()
         webView.setDownloadListener(createDownloadListener())
@@ -182,6 +184,16 @@ class SystemEngineView @JvmOverloads constructor(
         override fun onReceivedTitle(view: WebView, title: String?) {
             session?.internalNotifyObservers { onTitleChange(title ?: "") }
         }
+
+        override fun onShowCustomView(view: View, callback: CustomViewCallback) {
+            addFullScreenView(view, callback)
+            session?.internalNotifyObservers { onFullScreenChange(true) }
+        }
+
+        override fun onHideCustomView() {
+            removeFullScreenView()
+            session?.internalNotifyObservers { onFullScreenChange(false) }
+        }
     }
 
     internal fun createDownloadListener(): DownloadListener {
@@ -235,6 +247,26 @@ class SystemEngineView @JvmOverloads constructor(
             return true
         }
         return false
+    }
+
+    internal fun addFullScreenView(view: View, callback: WebChromeClient.CustomViewCallback) {
+        val webView = findViewWithTag<WebView>("mosac_system_engine_webview")
+        webView?.apply { this.visibility = View.GONE }
+
+        fullScreenCallback = callback
+
+        view.tag = "mosac_system_engine_fullscreen"
+        addView(view)
+    }
+
+    internal fun removeFullScreenView() {
+        val view = findViewWithTag<View>("mosac_system_engine_fullscreen")
+        val webView = findViewWithTag<WebView>("mosac_system_engine_webview")
+        view?.let {
+            fullScreenCallback?.onCustomViewHidden()
+            webView?.apply { this.visibility = View.VISIBLE }
+            removeView(view)
+        }
     }
 
     class ImageHandler(val session: SystemEngineSession?) : Handler() {

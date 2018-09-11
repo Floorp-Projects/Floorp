@@ -48,6 +48,7 @@ class Session(
         fun onLongPress(session: Session, hitResult: HitResult): Boolean = false
         fun onFindResult(session: Session, result: FindResult) = Unit
         fun onDesktopModeChanged(session: Session, enabled: Boolean) = Unit
+        fun onFullScreenChanged(session: Session, enabled: Boolean) = Unit
     }
 
     /**
@@ -232,9 +233,14 @@ class Session(
      * Desktop Mode state, true if the desktop mode is requested, otherwise false.
      */
     var desktopMode: Boolean by Delegates.observable(false) { _, old, new ->
-        notifyObservers(old, new) {
-            onDesktopModeChanged(this@Session, new)
-        }
+        notifyObservers(old, new) { onDesktopModeChanged(this@Session, new) }
+    }
+
+    /**
+     * Exits fullscreen mode if it's in that state.
+     */
+    var fullScreenMode: Boolean by Delegates.observable(false) { _, old, new ->
+        notifyObservers(old, new) { notifyObservers { onFullScreenChanged(this@Session, fullScreenMode) } }
     }
 
     /**
