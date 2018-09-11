@@ -83,3 +83,10 @@ FINAL_LIBRARY = 'xul'
 
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Add-ons Manager')
+
+with Files('Blocklist.jsm'):
+    BUG_COMPONENT = ('Toolkit', 'Blocklist Implementation')
+
+with Files('content/blocklist**'):
+    BUG_COMPONENT = ('Toolkit', 'Blocklist Implementation')
+
