@@ -955,6 +955,15 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   margin-inline-start: 0;
 }
 
-#activeLocales {
+#requestedLocales {
   min-height: 200px;
+}
+
+#availableLocales {
+  margin: 0;
+  margin-inline-end: 4px;
+}
+
+.add-browser-language {
+  margin: 0 4px;
 }
