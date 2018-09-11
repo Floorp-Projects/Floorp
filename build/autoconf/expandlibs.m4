@@ -20,7 +20,7 @@ AC_CACHE_CHECK(what kind of list files are supported by the linker,
      dnl https://sourceware.org/bugzilla/show_bug.cgi?id=23600
      if AC_TRY_COMMAND(${CC-cc} -o conftest.${OBJ_SUFFIX} -c $MOZ_LTO_CFLAGS $CFLAGS $CPPFLAGS conftest.${ac_ext} 1>&5) && test -s conftest.${OBJ_SUFFIX}; then
          echo "INPUT(conftest.${OBJ_SUFFIX})" > conftest.list
-         if test "$OS_TARGET" = WINNT; then
+         if test "$CC_TYPE" = "msvc" -o "$CC_TYPE" = "clang-cl"; then
              link="$LINKER -OUT:conftest${ac_exeext}"
          else
              link="${CC-cc} -o conftest${ac_exeext}"
