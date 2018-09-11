@@ -741,8 +741,6 @@ DEFINES['EXPORT_JS_API'] = True
 
 if CONFIG['JS_HAS_CTYPES']:
     DEFINES['JS_HAS_CTYPES'] = True
-    for var in ('DLL_PREFIX', 'DLL_SUFFIX'):
-        DEFINES[var] = '"%s"' % CONFIG[var]
 
 if CONFIG['MOZ_LINKER']:
     DEFINES['MOZ_LINKER'] = True

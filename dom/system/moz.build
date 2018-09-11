@@ -95,8 +95,5 @@ LOCAL_INCLUDES += [
     '/xpcom/base',
 ]
 
-DEFINES['DLL_PREFIX'] = '"%s"' % CONFIG['DLL_PREFIX']
-DEFINES['DLL_SUFFIX'] = '"%s"' % CONFIG['DLL_SUFFIX']
-
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
