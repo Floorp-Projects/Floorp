@@ -246,7 +246,6 @@ public:
   }
 
   WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall,
-                     UniquePtr<cricket::VideoAdapter>&& aVideoAdapter,
                      nsCOMPtr<nsIEventTarget> aStsThread);
   virtual ~WebrtcVideoConduit();
 

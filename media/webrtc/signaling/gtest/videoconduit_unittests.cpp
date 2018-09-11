@@ -47,7 +47,6 @@ public:
 
     mVideoConduit = new WebrtcVideoConduit(
       WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall)),
-      MakeUnique<cricket::VideoAdapter>(),
       GetCurrentThreadEventTarget());
     std::vector<unsigned int> ssrcs = {42};
     mVideoConduit->SetLocalSSRCs(ssrcs);
