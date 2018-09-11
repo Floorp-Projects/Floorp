@@ -637,7 +637,6 @@ WMFVideoMFTManager::InitInternal()
       if (SUCCEEDED(hr)) {
         mUseHwAccel = true;
       } else {
-        DeleteOnMainThread(mDXVA2Manager);
         mDXVAFailureReason = nsPrintfCString(
           "MFT_MESSAGE_SET_D3D_MANAGER failed with code %X", hr);
       }
@@ -649,6 +648,12 @@ WMFVideoMFTManager::InitInternal()
   }
 
   if (!mUseHwAccel) {
+    if (mDXVA2Manager) {
+      // Either mDXVAEnabled was set to false prior the second call to
+      // InitInternal() due to CanUseDXVA() returning false, or
+      // MFT_MESSAGE_SET_D3D_MANAGER failed
+      DeleteOnMainThread(mDXVA2Manager);
+    }
     if (mStreamType == VP9 || mStreamType == VP8) {
       return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                          RESULT_DETAIL("Use VP8/9 MFT only if HW acceleration "
@@ -680,7 +685,7 @@ WMFVideoMFTManager::InitInternal()
   LOG("Video Decoder initialized, Using DXVA: %s",
       (mUseHwAccel ? "Yes" : "No"));
 
-  if (mDXVA2Manager) {
+  if (mUseHwAccel) {
     hr = mDXVA2Manager->ConfigureForSize(mVideoInfo.ImageRect().width,
                                          mVideoInfo.ImageRect().height);
     NS_ENSURE_TRUE(SUCCEEDED(hr),
