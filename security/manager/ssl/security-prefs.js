@@ -7,6 +7,11 @@ pref("security.tls.version.max", 4);
 pref("security.tls.version.fallback-limit", 4);
 pref("security.tls.insecure_fallback_hosts", "");
 pref("security.tls.enable_0rtt_data", false);
+#ifdef RELEASE_OR_BETA
+pref("security.tls.hello_downgrade_check", false);
+#else
+pref("security.tls.hello_downgrade_check", true);
+#endif
 
 pref("security.ssl.treat_unsafe_negotiation_as_broken", false);
 pref("security.ssl.require_safe_negotiation",  false);
