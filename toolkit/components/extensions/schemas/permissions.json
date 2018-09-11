@@ -33,7 +33,7 @@
           },
           "origins": {
             "type": "array",
-            "items": { "$ref": "manifest.MatchPatternInternal" },
+            "items": { "$ref": "manifest.MatchPattern" },
             "optional": true,
             "default": []
           }
