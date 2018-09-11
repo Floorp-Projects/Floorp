@@ -32,15 +32,6 @@ interface nsIURI;
 interface nsISHistory: nsISupports
 {
   /**
-   * The size of the window of SHEntries which can have alive viewers in the
-   * bfcache around the currently active SHEntry.
-   *
-   * We try to keep viewers for SHEntries between index - VIEWER_WINDOW and
-   * index + VIEWER_WINDOW alive.
-   */
-  const long VIEWER_WINDOW = 3;
-
-  /**
    * A readonly property of the interface that returns
    * the number of toplevel documents currently available
    * in session history.
@@ -120,6 +111,12 @@ interface nsISHistory: nsISupports
   void reloadCurrentEntry();
 
   /**
+   * Load the entry at the particular index.
+   */
+  [noscript]
+  void gotoIndex(in long aIndex);
+
+  /**
    * Called to obtain the index to a given history entry.
    *
    * @param aEntry            The entry to obtain the index of.
@@ -129,6 +126,7 @@ interface nsISHistory: nsISupports
    *                          <code>NS_ERROR_FAILURE</code> Error in obtaining
    *                          index for the given history entry.
    */
+  [noscript, notxpcom]
   long getIndexOfEntry(in nsISHEntry aEntry);
 
   /**
@@ -145,6 +143,7 @@ interface nsISHistory: nsISupports
   /**
    * Sets the toplevel docshell object to which this SHistory object belongs to.
    */
+  [noscript, notxpcom]
   void setRootDocShell(in nsIDocShell rootDocShell);
 
   /**
@@ -204,11 +203,13 @@ interface nsISHistory: nsISupports
    * Add a BFCache entry to expiration tracker so it gets evicted on
    * expiration.
    */
+  [noscript, notxpcom]
   void addToExpirationTracker(in nsIBFCacheEntry aEntry);
 
   /**
    * Remove a BFCache entry from expiration tracker.
    */
+  [noscript, notxpcom]
   void removeFromExpirationTracker(in nsIBFCacheEntry aEntry);
 
   /**

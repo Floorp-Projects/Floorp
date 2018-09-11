@@ -84,12 +84,6 @@ ChildSHistory::LegacySHistory()
   return mHistory;
 }
 
-nsSHistory*
-ChildSHistory::LegacySHistoryImpl()
-{
-  return mHistory;
-}
-
 ParentSHistory*
 ChildSHistory::GetParentIfSameProcess()
 {
