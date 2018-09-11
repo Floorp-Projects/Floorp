@@ -560,7 +560,10 @@ nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
   }
 
   if (NS_FAILED(status)) {
-    LogBlockedRequest(aRequest, "CORSDidNotSucceed", nullptr, topChannel);
+    if (NS_BINDING_ABORTED != status) {
+      // Don't want to log mere cancellation as an error.
+      LogBlockedRequest(aRequest, "CORSDidNotSucceed", nullptr, topChannel);
+    }
     return status;
   }
 

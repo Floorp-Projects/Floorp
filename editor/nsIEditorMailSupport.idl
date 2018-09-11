@@ -58,10 +58,5 @@ interface nsIEditorMailSupport : nsISupports
    * @param aRespectNewlines  Try to maintain newlines in the original?
    */
   void rewrap(in boolean aRespectNewlines);
-
-  /**
-   * Get a list of IMG and OBJECT tags in the current document.
-   */
-  nsIArray getEmbeddedObjects();
 };
 

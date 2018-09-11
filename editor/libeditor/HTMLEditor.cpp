@@ -3303,50 +3303,6 @@ HTMLEditor::GetStyleSheetForURL(const nsAString& aURL)
   return mStyleSheets[foundIndex];
 }
 
-NS_IMETHODIMP
-HTMLEditor::GetEmbeddedObjects(nsIArray** aNodeList)
-{
-  if (NS_WARN_IF(!aNodeList)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsIMutableArray> nodes = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-
-  nsCOMPtr<nsIDocument> doc = GetDocument();
-  if (NS_WARN_IF(!doc)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  iter->Init(doc->GetRootElement());
-
-  // Loop through the content iterator for each content node.
-  while (!iter->IsDone()) {
-    nsINode* node = iter->GetCurrentNode();
-    if (node->IsElement()) {
-      dom::Element* element = node->AsElement();
-
-      // See if it's an image or an embed and also include all links.
-      // Let mail decide which link to send or not
-      if (element->IsAnyOfHTMLElements(nsGkAtoms::img, nsGkAtoms::embed,
-                                       nsGkAtoms::a) ||
-          (element->IsHTMLElement(nsGkAtoms::body) &&
-           element->HasAttr(kNameSpaceID_None, nsGkAtoms::background))) {
-        nodes->AppendElement(node);
-       }
-     }
-     iter->Next();
-   }
-
-  nodes.forget(aNodeList);
-  return NS_OK;
-}
-
 nsresult
 HTMLEditor::DeleteSelectionWithTransaction(EDirection aAction,
                                            EStripWrappers aStripWrappers)

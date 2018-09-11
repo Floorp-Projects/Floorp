@@ -7,6 +7,7 @@
 "use strict";
 
 var { loader, require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+
 // Require this module to setup core modules
 loader.require("devtools/client/framework/devtools-browser");
 
@@ -16,6 +17,9 @@ var { Toolbox } = require("devtools/client/framework/toolbox");
 var Services = require("Services");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var { PrefsHelper } = require("devtools/client/shared/prefs");
+const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 // Timeout to wait before we assume that a connect() timed out without an error.
 // In milliseconds. (With the Debugger pane open, this has been reported to last
@@ -30,19 +34,23 @@ var Prefs = new PrefsHelper("devtools.debugger", {
   chromeDebuggingWebSocket: ["Bool", "chrome-debugging-websocket"],
 });
 
-var gToolbox, gClient;
+var gToolbox, gClient, gShortcuts;
 
 function appendStatusMessage(msg) {
   const statusMessage = document.getElementById("status-message");
-  statusMessage.value += msg + "\n";
+  statusMessage.textContent += msg + "\n";
   if (msg.stack) {
-    statusMessage.value += msg.stack + "\n";
+    statusMessage.textContent += msg.stack + "\n";
   }
 }
 
 function toggleStatusMessage(visible = true) {
   const statusMessageContainer = document.getElementById("status-message-container");
-  statusMessageContainer.hidden = !visible;
+  if (visible) {
+    statusMessageContainer.removeAttribute("hidden");
+  } else {
+    statusMessageContainer.setAttribute("hidden", "true");
+  }
 }
 
 function revealStatusMessage() {
@@ -62,7 +70,7 @@ var connect = async function() {
 
   // A port needs to be passed in from the environment, for instance:
   //    MOZ_BROWSER_TOOLBOX_PORT=6080 ./mach run -chrome \
-  //      chrome://devtools/content/framework/toolbox-process-window.xul
+  //      chrome://devtools/content/framework/toolbox-process-window.html
   if (!port) {
     throw new Error("Must pass a port in an env variable with MOZ_BROWSER_TOOLBOX_PORT");
   }
@@ -108,9 +116,14 @@ function setPrefDefaults() {
 }
 
 window.addEventListener("load", async function() {
-  const cmdClose = document.getElementById("toolbox-cmd-close");
-  cmdClose.addEventListener("command", onCloseCommand);
+  gShortcuts = new KeyShortcuts({window});
+  gShortcuts.on("CmdOrCtrl+W", onCloseCommand);
+
+  const statusMessageContainer = document.getElementById("status-message-title");
+  statusMessageContainer.textContent = L10N.getStr("browserToolbox.statusMessage");
+
   setPrefDefaults();
+
   // Reveal status message if connecting is slow or if an error occurs.
   const delayedStatusReveal = setTimeout(revealStatusMessage, STATUS_REVEAL_TIME);
   try {
@@ -222,8 +235,6 @@ function updateBadgeText(paused) {
 function onUnload() {
   window.removeEventListener("unload", onUnload);
   window.removeEventListener("message", onMessage);
-  const cmdClose = document.getElementById("toolbox-cmd-close");
-  cmdClose.removeEventListener("command", onCloseCommand);
   gToolbox.destroy();
 }
 
