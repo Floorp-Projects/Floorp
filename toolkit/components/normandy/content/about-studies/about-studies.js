@@ -1,23 +1,24 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
-/* global classnames PropTypes r React ReactDOM remoteValues ShieldStudies */
+/* global classnames PropTypes React ReactDOM */
 
 /**
- * Mapping of pages displayed on the sidebar. Keys are the value used in the
- * URL hash to identify the current page.
- *
- * Pages will appear in the sidebar in the order they are defined here. If the
- * URL doesn't contain a hash, the first page will be displayed in the content area.
+ * Shorthand for creating elements (to avoid using a JSX preprocessor)
  */
-const PAGES = new Map([
-  ["shieldStudies", {
-    name: "title",
-    component: ShieldStudies,
-    icon: "resource://normandy-content/about-studies/img/shield-logo.png",
-  }],
-]);
+const r = React.createElement;
+
+/**
+ * Dispatches a page event to the privileged frame script for this tab.
+ * @param {String} action
+ * @param {Object} data
+ */
+function sendPageEvent(action, data) {
+  const event = new CustomEvent("ShieldPageEvent", { bubbles: true, detail: { action, data } });
+  document.dispatchEvent(event);
+}
 
 /**
  * Handle basic layout and routing within about:studies.
@@ -26,133 +27,172 @@ class AboutStudies extends React.Component {
   constructor(props) {
     super(props);
 
-    let hash = new URL(window.location).hash.slice(1);
-    if (!PAGES.has(hash)) {
-      hash = "shieldStudies";
-    }
-
-    this.state = {
-      currentPageId: hash,
+    this.remoteValueNameMap = {
+      StudyList: "addonStudies",
+      ShieldLearnMoreHref: "learnMoreHref",
+      StudiesEnabled: "studiesEnabled",
+      ShieldTranslations: "translations",
     };
 
-    this.handleEvent = this.handleEvent.bind(this);
+    this.state = {};
+    for (const stateName of Object.values(this.remoteValueNameMap)) {
+      this.state[stateName] = null;
+    }
   }
 
-  componentDidMount() {
-    remoteValues.shieldTranslations.subscribe(this);
-    window.addEventListener("hashchange", this);
+  componentWillMount() {
+    for (const remoteName of Object.keys(this.remoteValueNameMap)) {
+      document.addEventListener(`ReceiveRemoteValue:${remoteName}`, this);
+      sendPageEvent(`GetRemoteValue:${remoteName}`);
+    }
   }
 
   componentWillUnmount() {
-    remoteValues.shieldTranslations.unsubscribe(this);
-    window.removeEventListener("hashchange", this);
-  }
-
-  receiveRemoteValue(name, value) {
-    switch (name) {
-      case "ShieldTranslations": {
-        this.setState({ translations: value });
-        break;
-      }
-      default: {
-        console.error(`Unknown remote value ${name}`);
-      }
+    for (const remoteName of Object.keys(this.remoteValueNameMap)) {
+      document.removeEventListener(`ReceiveRemoteValue:${remoteName}`, this);
     }
   }
 
-  handleEvent(event) {
-    const newHash = new URL(event.newURL).hash.slice(1);
-    if (PAGES.has(newHash)) {
-      this.setState({currentPageId: newHash});
+  /** Event handle to receive remote values from documentAddEventListener */
+  handleEvent({ type, detail: value }) {
+    const prefix = "ReceiveRemoteValue:";
+    if (type.startsWith(prefix)) {
+      const name = type.substring(prefix.length);
+      this.setState({ [this.remoteValueNameMap[name]]: value });
     }
   }
 
   render() {
-    const currentPageId = this.state.currentPageId;
-    const pageEntries = Array.from(PAGES.entries());
-    const currentPage = PAGES.get(currentPageId);
-    const { translations } = this.state;
+    const { translations, learnMoreHref, studiesEnabled, addonStudies } = this.state;
+
+    // Wait for all values to be loaded before rendering. Some of the values may
+    // be falsey, so an explicit null check is needed.
+    if (Object.values(this.state).some(v => v === null)) {
+      return null;
+    }
 
     return (
-      r("div", {className: "about-studies-container"},
-        translations && r(Sidebar, {},
-          pageEntries.map(([id, page]) => (
-            r(SidebarItem, {
-              key: id,
-              pageId: id,
-              selected: id === currentPageId,
-              page,
-              translations,
-            })
-          )),
-        ),
-        r(Content, {},
-          translations && currentPage && r(currentPage.component, {translations})
-        ),
+      r("div", { className: "about-studies-container main-content" },
+        r(WhatsThisBox, { translations, learnMoreHref, studiesEnabled }),
+        r(StudyList, { translations, addonStudies }),
       )
     );
   }
 }
 
-class Sidebar extends React.Component {
+/**
+ * Explains the contents of the page, and offers a way to learn more and update preferences.
+ */
+class WhatsThisBox extends React.Component {
+  handleUpdateClick() {
+    sendPageEvent("NavigateToDataPreferences");
+  }
+
   render() {
-    return r("ul", {id: "categories"}, this.props.children);
+    const { learnMoreHref, studiesEnabled, translations } = this.props;
+
+    return (
+      r("div", { className: "info-box" },
+        r("div", { className: "info-box-content" },
+          r("span", {},
+            studiesEnabled ? translations.enabledList : translations.disabledList,
+          ),
+          r("a", { id: "shield-studies-learn-more", href: learnMoreHref }, translations.learnMore),
+
+          r("button", { id: "shield-studies-update-preferences", onClick: this.handleUpdateClick },
+            r("div", { className: "button-box" },
+              navigator.platform.includes("Win") ? translations.updateButtonWin : translations.updateButtonUnix
+            ),
+          )
+        )
+      )
+    );
   }
 }
-Sidebar.propTypes = {
-  children: PropTypes.node,
+
+/**
+ * Shows a list of studies, with an option to end in-progress ones.
+ */
+class StudyList extends React.Component {
+  render() {
+    const { addonStudies, translations } = this.props;
+
+    if (!addonStudies.length) {
+      return r("p", { className: "study-list-info" }, translations.noStudies);
+    }
+
+    addonStudies.sort((a, b) => {
+      if (a.active !== b.active) {
+        return a.active ? -1 : 1;
+      }
+      return b.studyStartDate - a.studyStartDate;
+    });
+
+    return (
+      r("ul", { className: "study-list" },
+        addonStudies.map(study => (
+          r(StudyListItem, { key: study.name, study, translations })
+        ))
+      )
+    );
+  }
+}
+StudyList.propTypes = {
+  addonStudies: PropTypes.array.isRequired,
   translations: PropTypes.object.isRequired,
 };
 
-class SidebarItem extends React.Component {
+/**
+ * Details about an individual study, with an option to end it if it is active.
+ */
+class StudyListItem extends React.Component {
   constructor(props) {
     super(props);
-    this.handleClick = this.handleClick.bind(this);
+    this.handleClickRemove = this.handleClickRemove.bind(this);
   }
 
-  handleClick() {
-    window.location = `#${this.props.pageId}`;
+  handleClickRemove() {
+    sendPageEvent("RemoveStudy", { recipeId: this.props.study.recipeId, reason: "individual-opt-out" });
   }
 
   render() {
-    const { page, selected, translations } = this.props;
+    const { study, translations } = this.props;
     return (
       r("li", {
-        className: classnames("category", {selected}),
-        onClick: this.handleClick,
+        className: classnames("study", { disabled: !study.active }),
+        "data-study-name": study.name,
       },
-        page.icon && r("img", {className: "category-icon", src: page.icon}),
-        r("span", {className: "category-name"}, translations[page.name]),
-      )
-    );
-  }
-}
-SidebarItem.propTypes = {
-  pageId: PropTypes.string.isRequired,
-  page: PropTypes.shape({
-    icon: PropTypes.string,
-    name: PropTypes.string.isRequired,
-  }).isRequired,
-  selected: PropTypes.bool,
-  translations: PropTypes.object.isRequired,
-};
-
-class Content extends React.Component {
-  render() {
-    return (
-      r("div", {className: "main-content"},
-        r("div", {className: "content-box"},
-          this.props.children,
+        r("div", { className: "study-icon" },
+          study.name.slice(0, 1)
+        ),
+        r("div", { className: "study-details" },
+          r("div", { className: "study-name" }, study.name),
+          r("div", { className: "study-description", title: study.description },
+            r("span", { className: "study-status" }, study.active ? translations.activeStatus : translations.completeStatus),
+            r("span", {}, "\u2022"), // &bullet;
+            r("span", {}, study.description),
+          ),
+        ),
+        r("div", { className: "study-actions" },
+          study.active &&
+          r("button", { className: "remove-button", onClick: this.handleClickRemove },
+            r("div", { className: "button-box" },
+              translations.removeButton
+            ),
+          )
         ),
       )
     );
   }
 }
-Content.propTypes = {
-  children: PropTypes.node,
+StudyListItem.propTypes = {
+  study: PropTypes.shape({
+    recipeId: PropTypes.number.isRequired,
+    name: PropTypes.string.isRequired,
+    active: PropTypes.boolean,
+    description: PropTypes.string.isRequired,
+  }).isRequired,
+  translations: PropTypes.object.isRequired,
 };
 
-ReactDOM.render(
-  r(AboutStudies),
-  document.getElementById("app"),
-);
+ReactDOM.render(r(AboutStudies), document.getElementById("app"));
