@@ -356,6 +356,9 @@ FRAME_STATE_BIT(GridContainer, 26, NS_STATE_GRID_HAS_COL_SUBGRID_ITEM)
 // The container contains one or more items subgridded in its block axis.
 FRAME_STATE_BIT(GridContainer, 27, NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM)
 
+// We've merged some OverflowList children since last reflow.
+FRAME_STATE_BIT(GridContainer, 28, NS_STATE_GRID_HAS_CHILD_NIFS)
+
 // == Frame state bits that apply to SVG frames ===============================
 
 FRAME_STATE_GROUP(SVG, nsSVGDisplayableFrame)
