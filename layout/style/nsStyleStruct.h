@@ -106,15 +106,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont
    * negative results.  The result is clamped to nscoord_MIN .. nscoord_MAX.
    */
   static nscoord ZoomText(const nsPresContext* aPresContext, nscoord aSize);
-  /**
-   * Return aSize divided by the current text zoom factor (in aPresContext).
-   * aSize is allowed to be negative, but the caller is expected to deal with
-   * negative results.  The result is clamped to nscoord_MIN .. nscoord_MAX.
-   */
-  static nscoord UnZoomText(nsPresContext* aPresContext, nscoord aSize);
   static already_AddRefed<nsAtom> GetLanguage(const nsPresContext* aPresContext);
-
-  void EnableZoom(nsPresContext* aContext, bool aEnable);
 
   nsFont  mFont;
   nscoord mSize;        // Our "computed size". Can be different
