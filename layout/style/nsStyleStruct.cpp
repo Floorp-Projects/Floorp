@@ -152,26 +152,6 @@ nsStyleFont::nsStyleFont(const nsPresContext* aContext)
   }
 }
 
-void
-nsStyleFont::EnableZoom(nsPresContext* aContext, bool aEnable)
-{
-  if (mAllowZoom == aEnable) {
-    return;
-  }
-  mAllowZoom = aEnable;
-  if (mAllowZoom) {
-    mSize = nsStyleFont::ZoomText(aContext, mSize);
-    mFont.size = nsStyleFont::ZoomText(aContext, mFont.size);
-    mScriptUnconstrainedSize =
-      nsStyleFont::ZoomText(aContext, mScriptUnconstrainedSize);
-  } else {
-    mSize = nsStyleFont::UnZoomText(aContext, mSize);
-    mFont.size = nsStyleFont::UnZoomText(aContext, mFont.size);
-    mScriptUnconstrainedSize =
-      nsStyleFont::UnZoomText(aContext, mScriptUnconstrainedSize);
-  }
-}
-
 nsChangeHint
 nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const
 {
@@ -215,14 +195,6 @@ nsStyleFont::ZoomText(const nsPresContext* aPresContext, nscoord aSize)
   // aSize can be negative (e.g.: calc(-1px)) so we can't assert that here.
   // The caller is expected deal with that.
   return NSToCoordTruncClamped(float(aSize) * aPresContext->EffectiveTextZoom());
-}
-
-/* static */ nscoord
-nsStyleFont::UnZoomText(nsPresContext *aPresContext, nscoord aSize)
-{
-  // aSize can be negative (e.g.: calc(-1px)) so we can't assert that here.
-  // The caller is expected deal with that.
-  return NSToCoordTruncClamped(float(aSize) / aPresContext->EffectiveTextZoom());
 }
 
 /* static */ already_AddRefed<nsAtom>
