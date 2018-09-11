@@ -44,9 +44,6 @@ if not CONFIG['NSS_NO_EV_CERTS']:
         'ExtendedValidation.cpp',
     ]
 
-for var in ('DLL_PREFIX', 'DLL_SUFFIX'):
-    DEFINES[var] = '"%s"' % CONFIG[var]
-
 LOCAL_INCLUDES += [
     '/security/manager/ssl',
     '/security/pkix/include',

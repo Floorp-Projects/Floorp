@@ -983,12 +983,12 @@ nsNSSComponent::CheckForSmartCardChanges()
 }
 
 // Returns by reference the path to the directory containing the file that has
-// been loaded as DLL_PREFIX nss3 DLL_SUFFIX.
+// been loaded as MOZ_DLL_PREFIX nss3 MOZ_DLL_SUFFIX.
 static nsresult
 GetNSS3Directory(nsCString& result)
 {
   UniquePRString nss3Path(
-    PR_GetLibraryFilePathname(DLL_PREFIX "nss3" DLL_SUFFIX,
+    PR_GetLibraryFilePathname(MOZ_DLL_PREFIX "nss3" MOZ_DLL_SUFFIX,
                               reinterpret_cast<PRFuncPtr>(NSS_Initialize)));
   if (!nss3Path) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nss not loaded?"));
@@ -1068,7 +1068,7 @@ LoadLoadableRootsTask::LoadLoadableRoots()
   // but also ensure the library is at least the version we expect.
   Vector<nsCString> possibleCKBILocations;
   // First try in the directory where we've already loaded
-  // DLL_PREFIX nss3 DLL_SUFFIX, since that's likely to be correct.
+  // MOZ_DLL_PREFIX nss3 MOZ_DLL_SUFFIX, since that's likely to be correct.
   nsAutoCString nss3Dir;
   nsresult rv = GetNSS3Directory(nss3Dir);
   if (NS_SUCCEEDED(rv)) {
