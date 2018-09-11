@@ -192,7 +192,7 @@ public:
    * Note: this is an ordered list and {a,b,c} != {b,a,c}
    */
   virtual bool SetLocalSSRCs(const std::vector<unsigned int>& aSSRCs) = 0;
-  virtual std::vector<unsigned int> GetLocalSSRCs() const = 0;
+  virtual std::vector<unsigned int> GetLocalSSRCs() = 0;
 
   /**
   * Adds negotiated RTP header extensions to the the conduit. Unknown extensions
@@ -378,7 +378,8 @@ public:
    * @result Concrete VideoSessionConduitObject or nullptr in the case
    *         of failure
    */
-  static RefPtr<VideoSessionConduit> Create(RefPtr<WebRtcCallWrapper> aCall);
+  static RefPtr<VideoSessionConduit> Create(
+    RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsIEventTarget> aStsThread);
 
   enum FrameRequestType
   {

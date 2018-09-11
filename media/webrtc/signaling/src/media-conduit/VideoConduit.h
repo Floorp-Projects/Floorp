@@ -114,6 +114,11 @@ public:
   MediaConduitErrorCode StopReceiving() override;
   MediaConduitErrorCode StartReceiving() override;
 
+  MediaConduitErrorCode StopTransmittingLocked();
+  MediaConduitErrorCode StartTransmittingLocked();
+  MediaConduitErrorCode StopReceivingLocked();
+  MediaConduitErrorCode StartReceivingLocked();
+
   /**
    * Function to configure sending codec mode for different content
    */
@@ -170,17 +175,6 @@ public:
                             unsigned short height);
 
   /**
-   * Function to select and change the encoding frame rate based on incoming frame rate
-   * and max-mbps setting.
-   * @param current framerate
-   * @result new framerate
-   */
-  unsigned int SelectSendFrameRate(const VideoCodecConfig* codecConfig,
-                                   unsigned int old_framerate,
-                                   unsigned short sending_width,
-                                   unsigned short sending_height) const;
-
-  /**
    * Function to deliver a capture video frame for encoding and transport.
    * If the frame's timestamp is 0, it will be automatically generated.
    *
@@ -229,6 +223,7 @@ public:
 
   void SetPCHandle(const std::string& aPCHandle) override
   {
+    MOZ_ASSERT(NS_IsMainThread());
     mPCHandle = aPCHandle;
   }
 
@@ -251,13 +246,14 @@ public:
   }
 
   WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall,
-                     UniquePtr<cricket::VideoAdapter>&& aVideoAdapter);
+                     UniquePtr<cricket::VideoAdapter>&& aVideoAdapter,
+                     nsCOMPtr<nsIEventTarget> aStsThread);
   virtual ~WebrtcVideoConduit();
 
   MediaConduitErrorCode InitMain();
   virtual MediaConduitErrorCode Init();
 
-  std::vector<unsigned int> GetLocalSSRCs() const override;
+  std::vector<unsigned int> GetLocalSSRCs() override;
   bool SetLocalSSRCs(const std::vector<unsigned int>& ssrcs) override;
   bool GetRemoteSSRC(unsigned int* ssrc) override;
   bool SetRemoteSSRC(unsigned int ssrc) override;
@@ -265,12 +261,17 @@ public:
   bool SetLocalCNAME(const char* cname) override;
   bool SetLocalMID(const std::string& mid) override;
 
+  bool GetRemoteSSRCLocked(unsigned int* ssrc);
+  bool SetRemoteSSRCLocked(unsigned int ssrc);
+
   bool GetSendPacketTypeStats(
       webrtc::RtcpPacketTypeCounter* aPacketCounts) override;
 
   bool GetRecvPacketTypeStats(
       webrtc::RtcpPacketTypeCounter* aPacketCounts) override;
 
+  void PollStats();
+  void UpdateVideoStatsTimer();
   bool GetVideoEncoderStats(double* framerateMean,
                             double* framerateStdDev,
                             double* bitrateMean,
@@ -299,6 +300,7 @@ public:
   uint64_t MozVideoLatencyAvg();
 
   void DisableSsrcChanges() override {
+    ASSERT_ON_THREAD(mStsThread);
     mAllowSsrcChange = false;
   }
 
@@ -307,11 +309,34 @@ private:
   WebrtcVideoConduit(const WebrtcVideoConduit&) = delete;
   void operator=(const WebrtcVideoConduit&) = delete;
 
-  /** Shared statistics for receive and transmit video streams
+  /**
+   * Statistics for the Call associated with this VideoConduit.
+   * Single threaded.
+   */
+  class CallStatistics {
+  public:
+    explicit CallStatistics(nsCOMPtr<nsIEventTarget> aStatsThread)
+      : mStatsThread(aStatsThread)
+    {}
+    void Update(const webrtc::Call::Stats& aStats);
+    int32_t RttMs() const;
+  protected:
+    const nsCOMPtr<nsIEventTarget> mStatsThread;
+  private:
+    int32_t mRttMs = 0;
+  };
+
+  /**
+   * Shared statistics for receive and transmit video streams.
+   * Single threaded.
    */
   class StreamStatistics {
   public:
-    void Update(const double aFrameRate, const double aBitrate);
+    explicit StreamStatistics(nsCOMPtr<nsIEventTarget> aStatsThread)
+      : mStatsThread(aStatsThread)
+    {}
+    void Update(const double aFrameRate, const double aBitrate,
+                const webrtc::RtcpPacketTypeCounter& aPacketCounts);
     /**
      * Returns gathered stream statistics
      * @param aOutFrMean: mean framerate
@@ -323,58 +348,87 @@ private:
         double& aOutFrStdDev,
         double& aOutBrMean,
         double& aOutBrStdDev) const;
+    const webrtc::RtcpPacketTypeCounter& PacketCounts() const;
+    bool Active() const;
+    void SetActive(bool aActive);
+  protected:
+    const nsCOMPtr<nsIEventTarget> mStatsThread;
   private:
+    bool mActive = false;
     RunningStat mFrameRate;
     RunningStat mBitrate;
+    webrtc::RtcpPacketTypeCounter mPacketCounts;
   };
 
   /**
-   * Statistics for sending streams
+   * Statistics for sending streams. Single threaded.
    */
   class SendStreamStatistics : public StreamStatistics {
   public:
+    explicit SendStreamStatistics(nsCOMPtr<nsIEventTarget> aStatsThread)
+      : StreamStatistics(std::forward<nsCOMPtr<nsIEventTarget>>(aStatsThread))
+    {}
     /**
      * Returns the calculate number of dropped frames
-     * @param aOutDroppedFrames: the number of dropped frames
      */
-    void DroppedFrames(uint32_t& aOutDroppedFrames) const;
+    uint32_t DroppedFrames() const;
     /**
      * Returns the number of frames that have been encoded so far
      */
-    uint32_t FramesEncoded() const {
-      return mFramesEncoded;
-    }
-    void Update(const webrtc::VideoSendStream::Stats& aStats);
+    uint32_t FramesEncoded() const;
+    void Update(const webrtc::VideoSendStream::Stats& aStats,
+                uint32_t aConfiguredSsrc);
     /**
      * Call once for every frame delivered for encoding
      */
-    void FrameDeliveredToEncoder() { ++mFramesDeliveredToEncoder; }
+    void FrameDeliveredToEncoder();
+
+    bool SsrcFound() const;
+    uint32_t JitterMs() const;
+    uint32_t CumulativeLost() const;
+    uint64_t BytesReceived() const;
+    uint32_t PacketsReceived() const;
   private:
     uint32_t mDroppedFrames = 0;
     uint32_t mFramesEncoded = 0;
-    mozilla::Atomic<int32_t> mFramesDeliveredToEncoder;
+    int32_t mFramesDeliveredToEncoder;
+
+    bool mSsrcFound = false;
+    uint32_t mJitterMs = 0;
+    uint32_t mCumulativeLost = 0;
+    uint64_t mBytesReceived = 0;
+    uint32_t mPacketsReceived = 0;
   };
 
-  /** Statistics for receiving streams
+  /**
+   * Statistics for receiving streams. Single threaded.
    */
   class ReceiveStreamStatistics : public StreamStatistics {
   public:
+    explicit ReceiveStreamStatistics(nsCOMPtr<nsIEventTarget> aStatsThread)
+      : StreamStatistics(std::forward<nsCOMPtr<nsIEventTarget>>(aStatsThread))
+    {}
     /**
      * Returns the number of discarded packets
-     * @param aOutDiscPackets: number of discarded packets
      */
-    void DiscardedPackets(uint32_t& aOutDiscPackets) const;
-   /**
-    * Returns the number of frames decoded
-    * @param aOutDiscPackets: number of frames decoded
-    */
-    void FramesDecoded(uint32_t& aFramesDecoded) const;
+    uint32_t DiscardedPackets() const;
+    /**
+     * Returns the number of frames decoded
+     */
+    uint32_t FramesDecoded() const;
+    uint32_t JitterMs() const;
+    uint32_t CumulativeLost() const;
+    uint32_t Ssrc() const;
     void Update(const webrtc::VideoReceiveStream::Stats& aStats);
   private:
     uint32_t mDiscardedPackets = 0;
     uint32_t mFramesDecoded = 0;
+    uint32_t mJitterMs = 0;
+    uint32_t mCumulativeLost = 0;
+    uint32_t mSsrc = 0;
   };
-  /*
+
+  /**
    * Stores encoder configuration information and produces
    * a VideoEncoderConfig from it.
    */
@@ -410,18 +464,8 @@ private:
     std::vector<SimulcastStreamConfig> mSimulcastStreams;
   };
 
-  //Function to convert between WebRTC and Conduit codec structures
-  void CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
-                                webrtc::VideoCodec& cinst);
-
-  //Checks the codec to be applied
-  MediaConduitErrorCode ValidateCodecConfig(const VideoCodecConfig* codecInfo);
-
-  //Utility function to dump recv codec database
+  // Utility function to dump recv codec database
   void DumpCodecDB() const;
-
-  bool CodecsDifferent(const nsTArray<UniquePtr<VideoCodecConfig>>& a,
-                       const nsTArray<UniquePtr<VideoCodecConfig>>& b);
 
   // Factory class for VideoStreams... vie_encoder.cc will call this to reconfigure.
   // We need to give it access to the conduit to make it's decisions
@@ -459,88 +503,155 @@ private:
   bool RequiresNewSendStream(const VideoCodecConfig& newConfig) const;
 
   mozilla::ReentrantMonitor mTransportMonitor;
+
+  // Accessed on any thread under mTransportMonitor.
   RefPtr<TransportInterface> mTransmitterTransport;
+
+  // Accessed on any thread under mTransportMonitor.
   RefPtr<TransportInterface> mReceiverTransport;
+
+  // Accessed on any thread under mTransportMonitor.
   RefPtr<mozilla::VideoRenderer> mRenderer;
 
-  // Frame adapter - handle sinks that we feed data to, and handle resolution
-  // changes needed for them.
+  // Accessed on any thread under mTransportMonitor.
+  unsigned short mReceivingWidth = 0;
+
+  // Accessed on any thread under mTransportMonitor.
+  unsigned short mReceivingHeight = 0;
+
+  // Socket transport service thread that runs stats queries against us. Any thread.
+  const nsCOMPtr<nsIEventTarget> mStsThread;
+
+  Mutex mMutex;
+
+  // Adapter handling resolution constraints from signaling and sinks.
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
   UniquePtr<cricket::VideoAdapter> mVideoAdapter;
+
+  // Our own record of the sinks added to mVideoBroadcaster so we can support
+  // dispatching updates to sinks from off-main-thread. Main thread only.
+  AutoTArray<rtc::VideoSinkInterface<webrtc::VideoFrame>*, 1> mRegisteredSinks;
+
+  // Broadcaster that distributes our frames to all registered sinks.
+  // Sinks can only be added, updated and removed on main thread.
+  // Frames can be passed in on any thread.
   rtc::VideoBroadcaster mVideoBroadcaster;
 
   // Buffer pool used for scaling frames.
   // Accessed on the frame-feeding thread only.
   webrtc::I420BufferPool mBufferPool;
 
-  // Engine state we are concerned with.
+  // Engine state we are concerned with. Written on main thread and read anywhere.
   mozilla::Atomic<bool> mEngineTransmitting; // If true ==> Transmit Subsystem is up and running
   mozilla::Atomic<bool> mEngineReceiving;    // if true ==> Receive Subsystem up and running
 
-  int mCapId = -1; // Capturer for this conduit
-  //Local database of currently applied receive codecs
+  //Local database of currently applied receive codecs. Main thread only.
   nsTArray<UniquePtr<VideoCodecConfig>> mRecvCodecList;
 
-  // protects mCurSendCodecConfig, mVideoSend/RecvStreamStats, mSend/RecvStreams, mSendPacketCounts, mRecvPacketCounts
-  Mutex mCodecMutex;
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
   nsAutoPtr<VideoCodecConfig> mCurSendCodecConfig;
-  SendStreamStatistics mSendStreamStats;
-  ReceiveStreamStatistics mRecvStreamStats;
-  webrtc::RtcpPacketTypeCounter mSendPacketCounts;
-  webrtc::RtcpPacketTypeCounter mRecvPacketCounts;
 
-  // Must call webrtc::Call::DestroyVideoReceive/SendStream to delete these:
+  // Bookkeeping of send stream stats. Sts thread only.
+  SendStreamStatistics mSendStreamStats;
+
+  // Bookkeeping of send stream stats. Sts thread only.
+  ReceiveStreamStatistics mRecvStreamStats;
+
+  // Bookkeeping of call stats. Sts thread only.
+  CallStatistics mCallStats;
+
+  // Must call webrtc::Call::DestroyVideoReceive/SendStream to delete this.
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
   webrtc::VideoReceiveStream* mRecvStream = nullptr;
+
+  // Must call webrtc::Call::DestroyVideoReceive/SendStream to delete this.
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
   webrtc::VideoSendStream* mSendStream = nullptr;
 
+  // Written on the frame feeding thread.
+  // Guarded by mMutex, except for reads on the frame feeding thread.
   unsigned short mLastWidth = 0;
+
+  // Written on the frame feeding thread.
+  // Guarded by mMutex, except for reads on the frame feeding thread.
   unsigned short mLastHeight = 0;
-  unsigned short mReceivingWidth = 0;
-  unsigned short mReceivingHeight = 0;
-  unsigned int   mSendingFramerate;
+
+  // Accessed under mMutex.
+  unsigned int mSendingFramerate;
+
+  // Written on main thread at creation,
+  // then written or read on any thread under mTransportMonitor.
   bool mVideoLatencyTestEnable = false;
+
+  // Accessed from any thread under mTransportMonitor.
   uint64_t mVideoLatencyAvg = 0;
-  // all in bps!
+
+  // All in bps.
+  // All written on main thread and guarded by mMutex, except for reads on main.
   int mMinBitrate = 0;
   int mStartBitrate = 0;
   int mPrefMaxBitrate = 0;
   int mNegotiatedMaxBitrate = 0;
   int mMinBitrateEstimate = 0;
-  bool mDenoising = false;
-  bool mLockScaling = false; // for tests that care about output resolution
-  uint8_t mSpatialLayers = 1;
-  uint8_t mTemporalLayers = 1;
 
-  rtc::VideoSinkWants mLastSinkWanted;
+  // Set to true to force denoising on.
+  // Written at creation, then read anywhere.
+  bool mDenoising = false;
+
+  // Set to true to ignore sink wants (scaling due to bwe and cpu usage).
+  // Written at creation, then read anywhere.
+  bool mLockScaling = false;
+
+  // Written at creation, then read anywhere.
+  uint8_t mSpatialLayers = 1;
+
+  // Written at creation, then read anywhere.
+  uint8_t mTemporalLayers = 1;
 
   static const unsigned int sAlphaNum = 7;
   static const unsigned int sAlphaDen = 8;
   static const unsigned int sRoundingPadding = 1024;
 
+  // Main thread only.
   RefPtr<WebrtcAudioConduit> mSyncedTo;
 
-  webrtc::VideoCodecMode mCodecMode;
+  // Written on main thread, read anywhere.
+  Atomic<webrtc::VideoCodecMode> mCodecMode;
 
   // WEBRTC.ORG Call API
-  RefPtr<WebRtcCallWrapper> mCall;
+  // Const so can be accessed on any thread. Most methods are called on
+  // main thread, though Receiver() is called on STS. This seems fine.
+  const RefPtr<WebRtcCallWrapper> mCall;
 
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
   webrtc::VideoSendStream::Config mSendStreamConfig;
+
+  // Main thread only.
   VideoEncoderConfigBuilder mEncoderConfig;
 
+  // Main thread only.
   webrtc::VideoReceiveStream::Config mRecvStreamConfig;
 
   // Are SSRC changes without signaling allowed or not
+  // Accessed only on mStsThread.
   bool mAllowSsrcChange = true;
+
+  // Accessed only on mStsThread.
   bool mWaitingForInitialSsrc = true;
 
-  // accessed on creation, and when receiving packets
-  uint32_t mRecvSSRC = 0; // this can change during a stream!
-
   // The runnable to set the SSRC is in-flight; queue packets until it's done.
-  bool mRecvSSRCSetInProgress = false;
+  // Accessed only on mStsThread.
+  bool mRecvSsrcSetInProgress = false;
+
+  // Accessed during configuration/signaling (main),
+  // and when receiving packets (sts).
+  Atomic<uint32_t> mRecvSSRC; // this can change during a stream!
+
   struct QueuedPacket {
     int mLen;
     uint8_t mData[1];
   };
+  // Accessed only on mStsThread.
   nsTArray<UniquePtr<QueuedPacket>> mQueuedPackets;
 
   // The lifetime of these codecs are maintained by the VideoConduit instance.
@@ -548,11 +659,17 @@ private:
   // on construction.
   nsAutoPtr<webrtc::VideoEncoder> mEncoder; // only one encoder for now
   std::vector<std::unique_ptr<webrtc::VideoDecoder>> mDecoders;
+  // Main thread only
   WebrtcVideoEncoder* mSendCodecPlugin = nullptr;
+  // Main thread only
   WebrtcVideoDecoder* mRecvCodecPlugin = nullptr;
 
+  // Timer that updates video stats periodically. Main thread only.
   nsCOMPtr<nsITimer> mVideoStatsTimer;
+  // True if mVideoStatsTimer is running. Main thread only.
+  bool mVideoStatsTimerActive = false;
 
+  // Main thread only
   std::string mPCHandle;
 };
 } // end namespace
