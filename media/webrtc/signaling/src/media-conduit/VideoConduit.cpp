@@ -233,43 +233,15 @@ VideoSessionConduit::Create(RefPtr<WebRtcCallWrapper> aCall)
 WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall,
                                        UniquePtr<cricket::VideoAdapter>&& aVideoAdapter)
   : mTransportMonitor("WebrtcVideoConduit")
-  , mRenderer(nullptr)
   , mVideoAdapter(std::move(aVideoAdapter))
-  , mVideoBroadcaster()
   , mEngineTransmitting(false)
   , mEngineReceiving(false)
-  , mCapId(-1)
   , mCodecMutex("VideoConduit codec db")
-  , mRecvStream(nullptr)
-  , mSendStream(nullptr)
-  , mLastWidth(0)
-  , mLastHeight(0) // initializing as 0 forces a check for reconfig at start
-  , mSendingWidth(0)
-  , mSendingHeight(0)
-  , mReceivingWidth(0)
-  , mReceivingHeight(0)
   , mSendingFramerate(DEFAULT_VIDEO_MAX_FRAMERATE)
-  , mVideoLatencyTestEnable(false)
-  , mVideoLatencyAvg(0)
-  , mMinBitrate(0)
-  , mStartBitrate(0)
-  , mPrefMaxBitrate(0)
-  , mNegotiatedMaxBitrate(0)
-  , mMinBitrateEstimate(0)
-  , mDenoising(false)
-  , mLockScaling(false)
-  , mSpatialLayers(1)
-  , mTemporalLayers(1)
   , mCodecMode(webrtc::kRealtimeVideo)
   , mCall(aCall) // refcounted store of the call object
-  , mSendStreamConfig(this) // 'this' is stored but not  dereferenced in the constructor.
-  , mRecvStreamConfig(this) // 'this' is stored but not  dereferenced in the constructor.
-  , mAllowSsrcChange(true)
-  , mWaitingForInitialSsrc(true)
-  , mRecvSSRC(0)
-  , mRecvSSRCSetInProgress(false)
-  , mSendCodecPlugin(nullptr)
-  , mRecvCodecPlugin(nullptr)
+  , mSendStreamConfig(this) // 'this' is stored but not dereferenced in the constructor.
+  , mRecvStreamConfig(this) // 'this' is stored but not dereferenced in the constructor.
   , mVideoStatsTimer(NS_NewTimer())
 {
   mCall->RegisterConduit(this);
