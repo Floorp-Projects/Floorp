@@ -762,7 +762,6 @@ STATIC_ATOMS = [
     Atom("onloadingerror", "onloadingerror"),
     Atom("onpopstate", "onpopstate"),
     Atom("only", "only"),               # this one is not an event
-    Atom("onmerchantvalidation", "onmerchantvalidation"),
     Atom("onmessage", "onmessage"),
     Atom("onmessageerror", "onmessageerror"),
     Atom("onmidimessage", "onmidimessage"),
