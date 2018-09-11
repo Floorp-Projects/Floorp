@@ -7,7 +7,10 @@ Add from parameters.yml into bouncer submission tasks.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import copy
 import logging
+
+import attr
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.l10n import parse_locales_file
@@ -43,18 +46,21 @@ CONFIG_PER_BOUNCER_PRODUCT = {
         },
     },
     'complete-mar': {
+        'name_postfix': '-Complete',
         'path_template': RELEASES_PATH_TEMPLATE,
         'file_names': {
             'default': '{product}-{version}.complete.mar',
         },
     },
     'complete-mar-candidates': {
+        'name_postfix': 'build{build_number}-Complete',
         'path_template': CANDIDATES_PATH_TEMPLATE,
         'file_names': {
             'default': '{product}-{version}.complete.mar',
         },
     },
     'complete-mar-bz2': {
+        'name_postfix': '-Complete-bz2',
         'path_template': RELEASES_PATH_TEMPLATE,
         'file_names': {
             'default': '{product}-{version}.bz2.complete.mar',
@@ -71,18 +77,21 @@ CONFIG_PER_BOUNCER_PRODUCT = {
         },
     },
     'partial-mar': {
+        'name_postfix': '-Partial-{previous_version}',
         'path_template': RELEASES_PATH_TEMPLATE,
         'file_names': {
             'default': '{product}-{previous_version}-{version}.partial.mar',
         },
     },
     'partial-mar-candidates': {
+        'name_postfix': 'build{build_number}-Partial-{previous_version}build{previous_build}',
         'path_template': CANDIDATES_PATH_TEMPLATE,
         'file_names': {
             'default': '{product}-{previous_version}-{version}.partial.mar',
         },
     },
     'stub-installer': {
+        'name_postfix': '-stub',
         'path_template': RELEASES_PATH_TEMPLATE,
         'file_names': {
             'win': '{pretty_product}%20Installer.exe',
@@ -90,7 +99,9 @@ CONFIG_PER_BOUNCER_PRODUCT = {
         },
     },
 }
-CONFIG_PER_BOUNCER_PRODUCT['installer-ssl'] = CONFIG_PER_BOUNCER_PRODUCT['installer']
+CONFIG_PER_BOUNCER_PRODUCT['installer-ssl'] = copy.deepcopy(
+    CONFIG_PER_BOUNCER_PRODUCT['installer'])
+CONFIG_PER_BOUNCER_PRODUCT['installer-ssl']['name_postfix'] = '-SSL'
 
 transforms = TransformSequence()
 
@@ -197,7 +208,7 @@ def craft_paths_per_bouncer_platform(product, bouncer_product, bouncer_platforms
             product=file_name_product,
             pretty_product=file_name_product.capitalize(),
             version=current_version,
-            previous_version=strip_build_data(previous_version),
+            previous_version=split_build_data(previous_version)[0],
         )
 
         path_template = CONFIG_PER_BOUNCER_PRODUCT[bouncer_product]['path_template']
@@ -233,49 +244,30 @@ def _craft_filename_product(product):
     return 'firefox' if product == 'devedition' else product
 
 
+@attr.s
+class InvalidSubstitution(object):
+    error = attr.ib(type=str)
+
+    def __str__(self):
+        raise Exception('Partial is being processed, but no previous version defined.')
+
+
 def craft_bouncer_product_name(product, bouncer_product, current_version,
                                current_build_number=None, previous_version=None):
-    if '-ssl' in bouncer_product:
-        postfix = '-SSL'
-    elif 'stub-' in bouncer_product:
-        postfix = '-stub'
-    elif 'complete-' in bouncer_product:
-        postfix = _set_current_build_number_if_needed(bouncer_product, current_build_number)
-        postfix = '{}-Complete'.format(postfix)
-    elif 'partial-' in bouncer_product:
-        if not previous_version:
-            raise Exception('Partial is being processed, but no previous version defined.')
-
-        if '-candidates' in bouncer_product:
-            postfix = _set_current_build_number_if_needed(bouncer_product, current_build_number)
-            postfix = '{postfix}-Partial-{previous_version_with_build_number}'.format(
-                postfix=postfix,
-                build_number=current_build_number,
-                previous_version_with_build_number=previous_version,
-            )
-        else:
-            postfix = '-Partial-{previous_version}'.format(
-                previous_version=strip_build_data(previous_version)
-            )
-
-    elif 'sha1-' in bouncer_product:
-        postfix = '-sha1'
+    if previous_version is None:
+        previous_version = previous_build = InvalidSubstitution(
+            'Partial is being processed, but no previous version defined.')
     else:
-        postfix = ''
+        previous_version, previous_build = split_build_data(previous_version)
+    postfix = CONFIG_PER_BOUNCER_PRODUCT[bouncer_product].get('name_postfix', '').format(
+        build_number=current_build_number,
+        previous_version=previous_version,
+        previous_build=previous_build,
+    )
 
     return '{product}-{version}{postfix}'.format(
         product=product.capitalize(), version=current_version, postfix=postfix
     )
-
-
-def _set_current_build_number_if_needed(bouncer_product, current_build_number):
-    if '-candidates' in bouncer_product:
-        if not current_build_number:
-            raise Exception('Partial in candidates directory is being processed, \
-but no current build number defined.')
-        return 'build{}'.format(current_build_number)
-
-    return ''
 
 
 def craft_check_uptake(bouncer_product):
@@ -301,5 +293,8 @@ def craft_add_locales(product):
     return product != 'fennec'
 
 
-def strip_build_data(version):
-    return version.split('build')[0] if version and 'build' in version else version
+def split_build_data(version):
+    if version and 'build' in version:
+        return version.split('build')
+    else:
+        return version, InvalidSubstitution("k")
