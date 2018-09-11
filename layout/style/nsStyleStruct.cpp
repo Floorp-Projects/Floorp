@@ -520,8 +520,28 @@ nsStyleList::nsStyleList(const nsPresContext* aContext)
   : mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE)
 {
   MOZ_COUNT_CTOR(nsStyleList);
+  MOZ_ASSERT(NS_IsMainThread());
+
   mCounterStyle = CounterStyleManager::GetDiscStyle();
-  SetQuotesInitial();
+
+  if (!sInitialQuotes) {
+    // The initial value for quotes is the en-US typographic convention:
+    // outermost are LEFT and RIGHT DOUBLE QUOTATION MARK, alternating
+    // with LEFT and RIGHT SINGLE QUOTATION MARK.
+    static const char16_t initialQuotes[8] = {
+      0x201C, 0, 0x201D, 0, 0x2018, 0, 0x2019, 0
+    };
+
+    sInitialQuotes = new nsStyleQuoteValues;
+    sInitialQuotes->mQuotePairs.AppendElement(
+        std::make_pair(nsDependentString(&initialQuotes[0], 1),
+                       nsDependentString(&initialQuotes[2], 1)));
+    sInitialQuotes->mQuotePairs.AppendElement(
+        std::make_pair(nsDependentString(&initialQuotes[4], 1),
+                       nsDependentString(&initialQuotes[6], 1)));
+  }
+
+  mQuotes = sInitialQuotes;
 }
 
 nsStyleList::~nsStyleList()
@@ -549,57 +569,6 @@ nsStyleList::FinishStyle(nsPresContext* aPresContext, const nsStyleList* aOldSty
       aPresContext, aOldStyle ? aOldStyle->mListStyleImage.get() : nullptr);
   }
   mCounterStyle.Resolve(aPresContext->CounterStyleManager());
-}
-
-void
-nsStyleList::SetQuotesInherit(const nsStyleList* aOther)
-{
-  mQuotes = aOther->mQuotes;
-}
-
-void
-nsStyleList::SetQuotesInitial()
-{
-  if (!sInitialQuotes) {
-    // The initial value for quotes is the en-US typographic convention:
-    // outermost are LEFT and RIGHT DOUBLE QUOTATION MARK, alternating
-    // with LEFT and RIGHT SINGLE QUOTATION MARK.
-    static const char16_t initialQuotes[8] = {
-      0x201C, 0, 0x201D, 0, 0x2018, 0, 0x2019, 0
-    };
-
-    sInitialQuotes = new nsStyleQuoteValues;
-    sInitialQuotes->mQuotePairs.AppendElement(
-        std::make_pair(nsDependentString(&initialQuotes[0], 1),
-                       nsDependentString(&initialQuotes[2], 1)));
-    sInitialQuotes->mQuotePairs.AppendElement(
-        std::make_pair(nsDependentString(&initialQuotes[4], 1),
-                       nsDependentString(&initialQuotes[6], 1)));
-  }
-
-  mQuotes = sInitialQuotes;
-}
-
-void
-nsStyleList::SetQuotesNone()
-{
-  if (!sNoneQuotes) {
-    sNoneQuotes = new nsStyleQuoteValues;
-  }
-  mQuotes = sNoneQuotes;
-}
-
-void
-nsStyleList::SetQuotes(nsStyleQuoteValues::QuotePairArray&& aValues)
-{
-  mQuotes = new nsStyleQuoteValues;
-  mQuotes->mQuotePairs = std::move(aValues);
-}
-
-const nsStyleQuoteValues::QuotePairArray&
-nsStyleList::GetQuotePairs() const
-{
-  return mQuotes->mQuotePairs;
 }
 
 nsChangeHint
@@ -659,9 +628,6 @@ nsStyleList::GetListStyleImageURI() const
 
 StaticRefPtr<nsStyleQuoteValues>
 nsStyleList::sInitialQuotes;
-
-StaticRefPtr<nsStyleQuoteValues>
-nsStyleList::sNoneQuotes;
 
 
 // --------------------
