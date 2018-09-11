@@ -43,6 +43,8 @@ public:
 
   virtual nsresult GetScriptLocation(nsACString& aStr) override;
 
+  nsresult GetSiteIdentifier(SiteIdentifier& aSite) override;
+
   static nsresult
   GenerateOriginNoSuffixFromURI(nsIURI* aURI, nsACString& aOrigin);
 
