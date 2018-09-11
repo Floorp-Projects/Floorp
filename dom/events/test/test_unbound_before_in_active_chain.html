@@ -1,0 +1,38 @@
+<!doctype html>
+<title>Test for bug 1489139: Unbound generated content in the active chain</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+#target, #target::before {
+  width: 200px;
+  height: 200px;
+}
+
+#target::before {
+  content: " ";
+  display: block;
+  background: green;
+}
+
+#target:active::before {
+  content: "";
+  background: red;
+}
+</style>
+Should see a green square after clicking.
+<div id="target"></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+onload = function() {
+  let target = document.getElementById("target");
+  requestAnimationFrame(() => {
+    synthesizeMouseAtPoint(100, 100, { type: "mousedown" })
+    ok(target.matches(":active"), "Should have been clicked");
+    requestAnimationFrame(() => {
+      synthesizeMouseAtPoint(100, 100, { type: "mouseup" })
+      ok(!target.matches(':active'), "Should stop matching :active afterwards");
+      SimpleTest.finish();
+    });
+  });
+}
+</script>
