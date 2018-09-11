@@ -187,7 +187,6 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
     private AlertDialog createStandardDialog(final AlertDialog.Builder builder,
                                              final AlertCallback callback) {
         final AlertDialog dialog = builder.create();
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(final DialogInterface dialog) {
