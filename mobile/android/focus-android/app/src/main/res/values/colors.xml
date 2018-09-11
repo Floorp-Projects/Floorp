@@ -44,7 +44,7 @@
     <color name="colorOverlay">#cc000000</color>
 
     <color name="colorTextInactive">#80FFFFFF</color>
-    <color name="urlBarHintText">#B8f9f9fa</color>
+    <color name="urlBarHintText">#ffbbbcc5</color>
 
     <color name="snackbarBackground">#FF414146</color>
     <color name="snackbarTextColor">#ffffffff</color>
