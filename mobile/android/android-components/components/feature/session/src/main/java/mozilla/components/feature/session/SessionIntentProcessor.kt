@@ -10,21 +10,29 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.utils.SafeIntent
 
 typealias IntentHandler = (Intent) -> Boolean
+
+typealias TextSearchHandler = (String, Session) -> Unit
 
 /**
  * Processor for intents which should trigger session-related actions.
  *
  * @param openNewTab Whether a processed Intent should open a new tab or open URLs in the currently
  *                   selected tab.
+ *
+ * @param textSearchHandler Will be invoked for ACTION_SEND intents when the provided EXTRA_TEXT is not a URL,
+ *                          or a empty string. A behavior must provided to handle the search,
+ *                          otherwise by default it will do nothing.
  */
 class SessionIntentProcessor(
     private val sessionUseCases: SessionUseCases,
     private val sessionManager: SessionManager,
     useDefaultHandlers: Boolean = true,
-    private val openNewTab: Boolean = true
+    private val openNewTab: Boolean = true,
+    private val textSearchHandler: TextSearchHandler = { _, _ -> }
 ) {
     private val defaultActionViewHandler = { intent: Intent ->
         val safeIntent = SafeIntent(intent)
@@ -44,21 +52,46 @@ class SessionIntentProcessor(
             }
 
             else -> {
-                val session = if (openNewTab) {
-                    Session(url, false, Source.ACTION_VIEW).also { sessionManager.add(it, selected = true) }
-                } else {
-                    sessionManager.selectedSession ?: Session(url, false, Source.ACTION_VIEW)
-                }
-
+                val session = createSession(url, source = Source.ACTION_VIEW)
                 sessionUseCases.loadUrl.invoke(url, session)
-
                 true
             }
         }
     }
 
+    private val defaultActionSendHandler = { intent: Intent ->
+        val safeIntent = SafeIntent(intent)
+        val extraText = safeIntent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
+
+        when {
+            TextUtils.isEmpty(extraText.trim()) -> false
+
+            extraText.isUrl() -> {
+                val session = createSession(extraText, source = Source.ACTION_SEND)
+                sessionUseCases.loadUrl.invoke(extraText, session)
+                true
+            }
+            else -> {
+                val session = createSession(extraText, source = Source.ACTION_SEND)
+                textSearchHandler(extraText, session)
+                true
+            }
+        }
+    }
+
+    private fun createSession(url: String, private: Boolean = false, source: Source): Session {
+        return if (openNewTab) {
+            Session(url, private, source).also { sessionManager.add(it, selected = true) }
+        } else {
+            sessionManager.selectedSession ?: Session(url, private, source)
+        }
+    }
+
     private val defaultHandlers: MutableMap<String, IntentHandler> by lazy {
-        mutableMapOf(Intent.ACTION_VIEW to defaultActionViewHandler)
+        mutableMapOf(
+            Intent.ACTION_VIEW to defaultActionViewHandler,
+            Intent.ACTION_SEND to defaultActionSendHandler
+        )
     }
 
     private val handlers = if (useDefaultHandlers) defaultHandlers else mutableMapOf()

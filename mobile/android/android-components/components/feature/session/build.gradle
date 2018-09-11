@@ -25,6 +25,7 @@ dependencies {
     implementation project(':browser-session')
     implementation project(':concept-engine')
     implementation project(':support-utils')
+    implementation project(':support-ktx')
 
     implementation Deps.kotlin_stdlib
 

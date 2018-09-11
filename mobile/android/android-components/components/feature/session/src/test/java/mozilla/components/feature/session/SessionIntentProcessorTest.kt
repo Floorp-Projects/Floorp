@@ -151,6 +151,55 @@ class SessionIntentProcessorTest {
         assertNotNull(customTabSession.customTabConfig)
     }
 
+    @Test
+    fun `load url when action send with a valid url`() {
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+
+        val handler = SessionIntentProcessor(useCases, sessionManager)
+
+        val intent = mock(Intent::class.java)
+        `when`(intent.action).thenReturn(Intent.ACTION_SEND)
+        `when`(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("http://mozilla.org")
+
+        handler.process(intent)
+
+        verify(engineSession).loadUrl("http://mozilla.org")
+    }
+
+    @Test
+    fun `perform search when action send with text`() {
+        var searchHandlerCalled = false
+
+        val textSearchHandler = object : TextSearchHandler {
+            override fun invoke(text: String, session: Session) {
+                searchHandlerCalled = true
+            }
+        }
+
+        val handler = SessionIntentProcessor(useCases, sessionManager, textSearchHandler = textSearchHandler)
+
+        val intent = mock(Intent::class.java)
+        `when`(intent.action).thenReturn(Intent.ACTION_SEND)
+        `when`(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("mozilla android")
+
+        handler.process(intent)
+
+        assertTrue(searchHandlerCalled)
+    }
+
+    @Test
+    fun `perform search when action send with empty text`() {
+        val handler = SessionIntentProcessor(useCases, sessionManager)
+
+        val intent = mock(Intent::class.java)
+        `when`(intent.action).thenReturn(Intent.ACTION_SEND)
+        `when`(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn(" ")
+
+        val processed = handler.process(intent)
+
+        assertFalse(processed)
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun <T> anySession(): T {
         any<T>()

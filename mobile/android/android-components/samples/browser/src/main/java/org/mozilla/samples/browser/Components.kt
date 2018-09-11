@@ -21,6 +21,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionIntentProcessor
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.session.TextSearchHandler
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
@@ -54,7 +55,19 @@ class Components(private val applicationContext: Context) {
     }
 
     val sessionUseCases by lazy { SessionUseCases(sessionManager) }
-    val sessionIntentProcessor by lazy { SessionIntentProcessor(sessionUseCases, sessionManager) }
+    val sessionIntentProcessor by lazy {
+        SessionIntentProcessor(
+            sessionUseCases, sessionManager,
+            textSearchHandler = textSearchHandler
+        )
+    }
+
+    private val textSearchHandler by lazy {
+        val handler: TextSearchHandler = { searchTerm, session ->
+            searchUseCases.defaultSearch.invoke(searchTerm, session)
+        }
+        handler
+    }
 
     // Search
     private val searchEngineManager by lazy {
