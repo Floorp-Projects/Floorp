@@ -28,6 +28,13 @@
 
 namespace mozilla {
 
+// RFC 5764 (we don't support the NULL cipher)
+static const uint16_t kDtlsSrtpAes128CmHmacSha1_80 = 0x0001;
+static const uint16_t kDtlsSrtpAes128CmHmacSha1_32 = 0x0002;
+// RFC 7714
+static const uint16_t kDtlsSrtpAeadAes128Gcm =       0x0007;
+static const uint16_t kDtlsSrtpAeadAes256Gcm =       0x0008;
+
 struct Packet;
 
 class TransportLayerNSPRAdapter {
