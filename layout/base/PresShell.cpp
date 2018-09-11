@@ -4265,10 +4265,12 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 
     // Process pending restyles, since any flush of the presshell wants
     // up-to-date style data.
-    if (!mIsDestroying) {
+    if (MOZ_LIKELY(!mIsDestroying)) {
       viewManager->FlushDelayedResize(false);
       mPresContext->FlushPendingMediaFeatureValuesChanged();
+    }
 
+    if (MOZ_LIKELY(!mIsDestroying)) {
       // Now that we have flushed media queries, update the rules before looking
       // up @font-face / @counter-style / @font-feature-values rules.
       mStyleSet->UpdateStylistIfNeeded();
@@ -4290,22 +4292,22 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
       if (aFlush.mFlushAnimations && mPresContext->EffectCompositor()) {
         mPresContext->EffectCompositor()->PostRestyleForThrottledAnimations();
       }
+    }
 
-      // The FlushResampleRequests() above flushed style changes.
-      if (!mIsDestroying) {
-        nsAutoScriptBlocker scriptBlocker;
+    // The FlushResampleRequests() above flushed style changes.
+    if (MOZ_LIKELY(!mIsDestroying)) {
+      nsAutoScriptBlocker scriptBlocker;
 #ifdef MOZ_GECKO_PROFILER
-        AutoProfilerStyleMarker tracingStyleFlush(std::move(mStyleCause));
+      AutoProfilerStyleMarker tracingStyleFlush(std::move(mStyleCause));
 #endif
 
-        mPresContext->RestyleManager()->ProcessPendingRestyles();
-      }
+      mPresContext->RestyleManager()->ProcessPendingRestyles();
     }
 
     // Process whatever XBL constructors those restyles queued up.  This
     // ensures that onload doesn't fire too early and that we won't do extra
     // reflows after those constructors run.
-    if (!mIsDestroying) {
+    if (MOZ_LIKELY(!mIsDestroying)) {
       mDocument->BindingManager()->ProcessAttachedQueue();
     }
 
@@ -4316,7 +4318,7 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     // happen during reflow, might suddenly pick up the new rules and
     // we'll end up with frames whose style doesn't match the frame
     // type.
-    if (!mIsDestroying) {
+    if (MOZ_LIKELY(!mIsDestroying)) {
       nsAutoScriptBlocker scriptBlocker;
 #ifdef MOZ_GECKO_PROFILER
       AutoProfilerStyleMarker tracingStyleFlush(std::move(mStyleCause));

@@ -1,0 +1,11 @@
+<script>
+function go() {
+  b.appendChild(document.createElement("iframe"));
+  a.scroll({left: -1, top: 1});
+  window[0].matchMedia("").addListener(function(){});
+  b.open = false;
+}
+</script>
+<body onload=go()>
+<image id="a"></image>
+<details id="b" open="true">
