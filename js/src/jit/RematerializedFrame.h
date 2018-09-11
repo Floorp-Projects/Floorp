@@ -126,8 +126,9 @@ class RematerializedFrame
     void pushOnEnvironmentChain(SpecificEnvironment& env) {
         MOZ_ASSERT(*environmentChain() == env.enclosingEnvironment());
         envChain_ = &env;
-        if (IsFrameInitialEnvironment(this, env))
+        if (IsFrameInitialEnvironment(this, env)) {
             hasInitialEnv_ = true;
+        }
     }
 
     template <typename SpecificEnvironment>
@@ -230,8 +231,9 @@ class RematerializedFrame
 
     Value newTarget() {
         MOZ_ASSERT(isFunctionFrame());
-        if (callee()->isArrow())
+        if (callee()->isArrow()) {
             return callee()->getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
+        }
         MOZ_ASSERT_IF(!isConstructing(), newTarget_.isUndefined());
         return newTarget_;
     }

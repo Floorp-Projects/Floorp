@@ -24,8 +24,9 @@ namespace js {
 bool
 PerformanceMonitoring::addRecentGroup(PerformanceGroup* group)
 {
-    if (group->isUsedInThisIteration())
+    if (group->isUsedInThisIteration()) {
         return true;
+    }
 
     group->setIsUsedInThisIteration(true);
     return recentGroups_.append(group);
@@ -52,8 +53,9 @@ PerformanceMonitoring::reset()
 void
 PerformanceMonitoring::start()
 {
-    if (!isMonitoringJank_)
+    if (!isMonitoringJank_) {
         return;
+    }
 
     if (iteration_ == startedAtIteration_) {
         // The stopwatch is already started for this iteration.
@@ -61,8 +63,9 @@ PerformanceMonitoring::start()
     }
 
     startedAtIteration_ = iteration_;
-    if (stopwatchStartCallback)
+    if (stopwatchStartCallback) {
         stopwatchStartCallback(iteration_, stopwatchStartClosure);
+    }
 }
 
 // Commit the data that has been collected during the iteration
@@ -157,8 +160,9 @@ PerformanceMonitoring::commit()
     recentGroups_ = PerformanceGroupVector(); // Reconstruct after `Move`.
 
     bool success = true;
-    if (stopwatchCommitCallback)
+    if (stopwatchCommitCallback) {
         success = stopwatchCommitCallback(iteration_, recentGroups, stopwatchCommitClosure);
+    }
 
     // Heuristic: we expect to have roughly the same number of groups as in
     // the previous iteration.
@@ -182,8 +186,9 @@ PerformanceMonitoring::monotonicReadTimestampCounter()
 {
 #if defined(MOZ_HAVE_RDTSC)
     const uint64_t hardware = ReadTimestampCounter();
-    if (highestTimestampCounter_ < hardware)
+    if (highestTimestampCounter_ < hardware) {
         highestTimestampCounter_ = hardware;
+    }
     return highestTimestampCounter_;
 #else
     return 0;
@@ -194,8 +199,9 @@ void
 PerformanceMonitoring::dispose(JSRuntime* rt)
 {
     reset();
-    for (RealmsIter r(rt); !r.done(); r.next())
+    for (RealmsIter r(rt); !r.done(); r.next()) {
         r->performanceMonitoring.unlink();
+    }
 }
 
 PerformanceGroupHolder::~PerformanceGroupHolder()
@@ -213,14 +219,17 @@ PerformanceGroupHolder::unlink()
 const PerformanceGroupVector*
 PerformanceGroupHolder::getGroups(JSContext* cx)
 {
-    if (initialized_)
+    if (initialized_) {
         return &groups_;
+    }
 
-    if (!runtime_->performanceMonitoring().getGroupsCallback)
+    if (!runtime_->performanceMonitoring().getGroupsCallback) {
         return nullptr;
+    }
 
-    if (!runtime_->performanceMonitoring().getGroupsCallback(cx, groups_, runtime_->performanceMonitoring().getGroupsClosure))
+    if (!runtime_->performanceMonitoring().getGroupsCallback(cx, groups_, runtime_->performanceMonitoring().getGroupsClosure)) {
         return nullptr;
+    }
 
     initialized_ = true;
     return &groups_;
@@ -237,8 +246,9 @@ AutoStopwatch::AutoStopwatch(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IM
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
     JS::Compartment* compartment = cx_->compartment();
-    if (MOZ_UNLIKELY(compartment->gcState.scheduledForDestruction))
+    if (MOZ_UNLIKELY(compartment->gcState.scheduledForDestruction)) {
         return;
+    }
 
     JSRuntime* runtime = cx_->runtime();
     iteration_ = runtime->performanceMonitoring().iteration();
@@ -253,8 +263,9 @@ AutoStopwatch::AutoStopwatch(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IM
     for (auto group = groups->begin(); group < groups->end(); group++) {
       auto acquired = acquireGroup(*group);
       if (acquired) {
-          if (!groups_.append(acquired))
+          if (!groups_.append(acquired)) {
               MOZ_CRASH();
+          }
       }
     }
     if (groups_.length() == 0) {
@@ -276,8 +287,9 @@ AutoStopwatch::~AutoStopwatch()
     }
 
     JS::Compartment* compartment = cx_->compartment();
-    if (MOZ_UNLIKELY(compartment->gcState.scheduledForDestruction))
+    if (MOZ_UNLIKELY(compartment->gcState.scheduledForDestruction)) {
         return;
+    }
 
     JSRuntime* runtime = cx_->runtime();
     if (MOZ_UNLIKELY(iteration_ != runtime->performanceMonitoring().iteration())) {
@@ -288,8 +300,9 @@ AutoStopwatch::~AutoStopwatch()
 
     mozilla::Unused << exit(); // Sadly, there is nothing we can do about an error at this point.
 
-    for (auto group = groups_.begin(); group < groups_.end(); group++)
+    for (auto group = groups_.begin(); group < groups_.end(); group++) {
         releaseGroup(*group);
+    }
 }
 
 void
@@ -351,10 +364,11 @@ AutoStopwatch::updateTelemetry(const cpuid_t& cpuStart_, const cpuid_t& cpuEnd)
 {
   JSRuntime* runtime = cx_->runtime();
 
-    if (isSameCPU(cpuStart_, cpuEnd))
+    if (isSameCPU(cpuStart_, cpuEnd)) {
         runtime->performanceMonitoring().testCpuRescheduling.stayed += 1;
-    else
+    } else {
         runtime->performanceMonitoring().testCpuRescheduling.moved += 1;
+    }
 }
 
 PerformanceGroup*
@@ -362,11 +376,13 @@ AutoStopwatch::acquireGroup(PerformanceGroup* group)
 {
     MOZ_ASSERT(group);
 
-    if (group->isAcquired(iteration_))
+    if (group->isAcquired(iteration_)) {
         return nullptr;
+    }
 
-    if (!group->isActive())
+    if (!group->isActive()) {
         return nullptr;
+    }
 
     group->acquire(iteration_, this);
     return group;
@@ -385,8 +401,9 @@ AutoStopwatch::addToGroups(uint64_t cyclesDelta, uint64_t CPOWTimeDelta)
   JSRuntime* runtime = cx_->runtime();
 
     for (auto group = groups_.begin(); group < groups_.end(); ++group) {
-      if (!addToGroup(runtime, cyclesDelta, CPOWTimeDelta, *group))
+      if (!addToGroup(runtime, cyclesDelta, CPOWTimeDelta, *group)) {
         return false;
+      }
     }
     return true;
 }
@@ -397,8 +414,9 @@ AutoStopwatch::addToGroup(JSRuntime* runtime, uint64_t cyclesDelta, uint64_t CPO
     MOZ_ASSERT(group);
     MOZ_ASSERT(group->isAcquired(iteration_, this));
 
-    if (!runtime->performanceMonitoring().addRecentGroup(group))
+    if (!runtime->performanceMonitoring().addRecentGroup(group)) {
       return false;
+    }
     group->addRecentTicks(iteration_, 1);
     group->addRecentCycles(iteration_, cyclesDelta);
     group->addRecentCPOW(iteration_, CPOWTimeDelta);
@@ -408,8 +426,9 @@ AutoStopwatch::addToGroup(JSRuntime* runtime, uint64_t cyclesDelta, uint64_t CPO
 uint64_t
 AutoStopwatch::getDelta(const uint64_t end, const uint64_t start) const
 {
-    if (start >= end)
+    if (start >= end) {
       return 0;
+    }
     return end - start;
 }
 
@@ -490,8 +509,9 @@ PerformanceGroup::acquire(uint64_t it, const AutoStopwatch* owner)
 void
 PerformanceGroup::release(uint64_t it, const AutoStopwatch* owner)
 {
-    if (iteration_ != it)
+    if (iteration_ != it) {
         return;
+    }
 
     MOZ_ASSERT(owner == owner_ || owner_ == nullptr);
     owner_ = nullptr;
@@ -585,8 +605,9 @@ PerformanceGroup::Release()
 {
     MOZ_ASSERT(refCount_ > 0);
     --refCount_;
-    if (refCount_ > 0)
+    if (refCount_ > 0) {
         return;
+    }
 
     JS::AutoSuppressGCAnalysis nogc;
     this->Delete();

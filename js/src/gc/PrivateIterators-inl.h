@@ -67,8 +67,9 @@ class GCZonesIter
         MOZ_ASSERT_IF(rt->gc.atomsZone->isCollectingFromAnyThread(),
                       !rt->hasHelperThreadZones());
 
-        if (!done() && !zone->isCollectingFromAnyThread())
+        if (!done() && !zone->isCollectingFromAnyThread()) {
             next();
+        }
     }
 
     bool done() const { return zone.done(); }

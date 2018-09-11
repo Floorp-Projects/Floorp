@@ -32,8 +32,9 @@ static void
 resc_trace(JSTracer* trc, JSObject* obj)
 {
     void* pdata = obj->as<RegExpStaticsObject>().getPrivate();
-    if (pdata)
+    if (pdata) {
         static_cast<RegExpStatics*>(pdata)->trace(trc);
+    }
 }
 
 static const ClassOps RegExpStaticsObjectClassOps = {
@@ -61,11 +62,13 @@ RegExpStaticsObject*
 RegExpStatics::create(JSContext* cx)
 {
     RegExpStaticsObject* obj = NewObjectWithGivenProto<RegExpStaticsObject>(cx, nullptr);
-    if (!obj)
+    if (!obj) {
         return nullptr;
+    }
     RegExpStatics* res = cx->new_<RegExpStatics>();
-    if (!res)
+    if (!res) {
         return nullptr;
+    }
     obj->setPrivate(static_cast<void*>(res));
     return obj;
 }
@@ -73,8 +76,9 @@ RegExpStatics::create(JSContext* cx)
 bool
 RegExpStatics::executeLazy(JSContext* cx)
 {
-    if (!pendingLazyEvaluation)
+    if (!pendingLazyEvaluation) {
         return true;
+    }
 
     MOZ_ASSERT(lazySource);
     MOZ_ASSERT(matchesInput);
@@ -83,8 +87,9 @@ RegExpStatics::executeLazy(JSContext* cx)
     /* Retrieve or create the RegExpShared in this zone. */
     RootedAtom source(cx, lazySource);
     RootedRegExpShared shared(cx, cx->zone()->regExps().get(cx, source, lazyFlags));
-    if (!shared)
+    if (!shared) {
         return false;
+    }
 
     /*
      * It is not necessary to call aboutToWrite(): evaluation of
@@ -95,8 +100,9 @@ RegExpStatics::executeLazy(JSContext* cx)
     RootedLinearString input(cx, matchesInput);
     RegExpRunStatus status = RegExpShared::execute(cx, &shared, input, lazyIndex, &this->matches,
                                                    nullptr);
-    if (status == RegExpRunStatus_Error)
+    if (status == RegExpRunStatus_Error) {
         return false;
+    }
 
     /*
      * RegExpStatics are only updated on successful (matching) execution.

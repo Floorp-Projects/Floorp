@@ -159,8 +159,9 @@ class LinearSum
         constant_(other.constant_)
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!terms_.appendAll(other.terms_))
+        if (!terms_.appendAll(other.terms_)) {
             oomUnsafe.crash("LinearSum::LinearSum");
+        }
     }
 
     // These return false on an integer overflow, and afterwards the sum must

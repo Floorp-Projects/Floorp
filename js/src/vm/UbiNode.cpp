@@ -73,16 +73,18 @@ struct CopyToBufferMatcher
     copyToBufferHelper(const CharT* src, RangedPtr<char16_t> dest, size_t length)
     {
         size_t i = 0;
-        for ( ; i < length; i++)
+        for ( ; i < length; i++) {
             dest[i] = src[i];
+        }
         return i;
     }
 
     size_t
     match(JSAtom* atom)
     {
-        if (!atom)
+        if (!atom) {
             return 0;
+        }
 
         size_t length = std::min(atom->length(), maxLength);
         JS::AutoCheckCannotGC noGC;
@@ -94,8 +96,9 @@ struct CopyToBufferMatcher
     size_t
     match(const char16_t* chars)
     {
-        if (!chars)
+        if (!chars) {
             return 0;
+        }
 
         size_t length = std::min(js_strlen(chars), maxLength);
         return copyToBufferHelper(chars, destination, length);
@@ -186,8 +189,9 @@ Node::Node(const JS::GCCellPtr &thing)
 
 Node::Node(HandleValue value)
 {
-    if (!DispatchTyped(ConstructFunctor(), value, this))
+    if (!DispatchTyped(ConstructFunctor(), value, this)) {
         construct<void>(nullptr);
+    }
 }
 
 Value
@@ -233,15 +237,18 @@ class EdgeVectorTracer : public JS::CallbackTracer {
     bool wantNames;
 
     void onChild(const JS::GCCellPtr& thing) override {
-        if (!okay)
+        if (!okay) {
             return;
+        }
 
         // Don't trace permanent atoms and well-known symbols that are owned by
         // a parent JSRuntime.
-        if (thing.is<JSString>() && thing.as<JSString>().isPermanentAtom())
+        if (thing.is<JSString>() && thing.as<JSString>().isPermanentAtom()) {
             return;
-        if (thing.is<JS::Symbol>() && thing.as<JS::Symbol>().isWellKnownSymbol())
+        }
+        if (thing.is<JS::Symbol>() && thing.as<JS::Symbol>().isWellKnownSymbol()) {
             return;
+        }
 
         char16_t* name16 = nullptr;
         if (wantNames) {
@@ -258,8 +265,9 @@ class EdgeVectorTracer : public JS::CallbackTracer {
             }
 
             size_t i;
-            for (i = 0; name[i]; i++)
+            for (i = 0; name[i]; i++) {
                 name16[i] = name[i];
+            }
             name16[i] = '\0';
         }
 
@@ -309,11 +317,13 @@ template<typename Referent>
 UniquePtr<EdgeRange>
 TracerConcrete<Referent>::edges(JSContext* cx, bool wantNames) const {
     auto range = js::MakeUnique<SimpleEdgeRange>();
-    if (!range)
+    if (!range) {
         return nullptr;
+    }
 
-    if (!range->addTracerEdges(cx->runtime(), ptr, JS::MapTypeToTraceKind<Referent>::kind, wantNames))
+    if (!range->addTracerEdges(cx->runtime(), ptr, JS::MapTypeToTraceKind<Referent>::kind, wantNames)) {
         return nullptr;
+    }
 
     // Note: Clang 3.8 (or older) require an explicit construction of the
     // target UniquePtr type. When we no longer require to support these Clang
@@ -383,12 +393,14 @@ Concrete<JSObject>::jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& o
     auto size = len + 1;
 
     outName.reset(cx->pod_malloc<char16_t>(size * sizeof(char16_t)));
-    if (!outName)
+    if (!outName) {
         return false;
+    }
 
     mozilla::Range<char16_t> chars(outName.get(), size);
-    if (!JS_CopyStringChars(cx, chars, name))
+    if (!JS_CopyStringChars(cx, chars, name)) {
         return false;
+    }
 
     outName[len] = '\0';
     return true;
@@ -437,8 +449,9 @@ RootList::init()
 {
     EdgeVectorTracer tracer(cx->runtime(), &edges, wantNames);
     js::TraceRuntime(&tracer);
-    if (!tracer.okay)
+    if (!tracer.okay) {
         return false;
+    }
     noGC.emplace();
     return true;
 }
@@ -451,30 +464,36 @@ RootList::init(CompartmentSet& debuggees)
 
     ZoneSet debuggeeZones;
     for (auto range = debuggees.all(); !range.empty(); range.popFront()) {
-        if (!debuggeeZones.put(range.front()->zone()))
+        if (!debuggeeZones.put(range.front()->zone())) {
             return false;
+        }
     }
 
     js::TraceRuntime(&tracer);
-    if (!tracer.okay)
+    if (!tracer.okay) {
         return false;
+    }
     TraceIncomingCCWs(&tracer, debuggees);
-    if (!tracer.okay)
+    if (!tracer.okay) {
         return false;
+    }
 
     for (EdgeVector::Range r = allRootEdges.all(); !r.empty(); r.popFront()) {
         Edge& edge = r.front();
 
         JS::Compartment* compartment = edge.referent.compartment();
-        if (compartment && !debuggees.has(compartment))
+        if (compartment && !debuggees.has(compartment)) {
             continue;
+        }
 
         Zone* zone = edge.referent.zone();
-        if (zone && !debuggeeZones.has(zone))
+        if (zone && !debuggeeZones.has(zone)) {
             continue;
+        }
 
-        if (!edges.append(std::move(edge)))
+        if (!edges.append(std::move(edge))) {
             return false;
+        }
     }
 
     noGC.emplace();
@@ -490,12 +509,14 @@ RootList::init(HandleObject debuggees)
     CompartmentSet debuggeeCompartments;
 
     for (js::WeakGlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty(); r.popFront()) {
-        if (!debuggeeCompartments.put(r.front()->compartment()))
+        if (!debuggeeCompartments.put(r.front()->compartment())) {
             return false;
+        }
     }
 
-    if (!init(debuggeeCompartments))
+    if (!init(debuggeeCompartments)) {
         return false;
+    }
 
     // Ensure that each of our debuggee globals are in the root list.
     for (js::WeakGlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty(); r.popFront()) {
@@ -518,8 +539,9 @@ RootList::addRoot(Node node, const char16_t* edgeName)
     UniqueTwoByteChars name;
     if (edgeName) {
         name = js::DuplicateString(edgeName);
-        if (!name)
+        if (!name) {
             return false;
+        }
     }
 
     return edges.append(Edge(name.release(), node));

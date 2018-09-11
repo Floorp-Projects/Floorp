@@ -67,8 +67,9 @@ class MIRGenerator
     template <typename T>
     T* allocate(size_t count = 1) {
         size_t bytes;
-        if (MOZ_UNLIKELY(!CalculateAllocSize<T>(count, &bytes)))
+        if (MOZ_UNLIKELY(!CalculateAllocSize<T>(count, &bytes))) {
             return nullptr;
+        }
         return static_cast<T*>(alloc().allocate(bytes));
     }
 

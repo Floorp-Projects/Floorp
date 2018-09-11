@@ -131,8 +131,9 @@ class GCVector
     static void trace(GCVector* vec, JSTracer* trc) { vec->trace(trc); }
 
     void trace(JSTracer* trc) {
-        for (auto& elem : vector)
+        for (auto& elem : vector) {
             GCPolicy<T>::trace(trc, &elem, "vector element");
+        }
     }
 
     bool needsSweep() const {
@@ -143,14 +144,16 @@ class GCVector
         uint32_t src, dst = 0;
         for (src = 0; src < length(); src++) {
             if (!GCPolicy<T>::needsSweep(&vector[src])) {
-                if (dst != src)
+                if (dst != src) {
                     vector[dst] = vector[src].unbarrieredGet();
+                }
                 dst++;
             }
         }
 
-        if (dst != length())
+        if (dst != length()) {
             vector.shrinkTo(dst);
+        }
     }
 };
 

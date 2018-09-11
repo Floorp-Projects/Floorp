@@ -55,25 +55,29 @@ NewObjectCache::newObjectFromHit(JSContext* cx, EntryIndex entryIndex, gc::Initi
 
     {
         AutoSweepObjectGroup sweepGroup(group);
-        if (group->shouldPreTenure(sweepGroup))
+        if (group->shouldPreTenure(sweepGroup)) {
             heap = gc::TenuredHeap;
+        }
     }
 
-    if (cx->runtime()->gc.upcomingZealousGC())
+    if (cx->runtime()->gc.upcomingZealousGC()) {
         return nullptr;
+    }
 
     NativeObject* obj = static_cast<NativeObject*>(Allocate<JSObject, NoGC>(cx, entry->kind,
                                                                             /* nDynamicSlots = */ 0,
                                                                             heap, group->clasp()));
-    if (!obj)
+    if (!obj) {
         return nullptr;
+    }
 
     copyCachedToObject(obj, templateObj, entry->kind);
 
-    if (group->clasp()->shouldDelayMetadataBuilder())
+    if (group->clasp()->shouldDelayMetadataBuilder()) {
         cx->realm()->setObjectPendingMetadata(cx, obj);
-    else
+    } else {
         obj = static_cast<NativeObject*>(SetNewObjectMetadata(cx, obj));
+    }
 
     probes::CreateObject(cx, obj);
     gc::gcTracer.traceCreateObject(obj);

@@ -548,8 +548,9 @@ class IonTrackedOptimizationsOffsetsTable
     Entry entry(uint32_t index) const {
         const uint8_t* start = payloadEnd() - entryOffset(index);
         const uint8_t* end = payloadEnd();
-        if (index < numEntries() - 1)
+        if (index < numEntries() - 1) {
             end -= entryOffset(index + 1);
+        }
         return Entry(start, end);
     }
 };

@@ -90,8 +90,9 @@ class NewProxyCache
     MOZ_ALWAYS_INLINE bool lookup(const Class* clasp, TaggedProto proto,
                                   ObjectGroup** group, Shape** shape) const
     {
-        if (!entries_)
+        if (!entries_) {
             return false;
+        }
         for (size_t i = 0; i < NumEntries; i++) {
             const Entry& entry = entries_[i];
             if (entry.group && entry.group->clasp() == clasp && entry.group->proto() == proto) {
@@ -106,11 +107,13 @@ class NewProxyCache
         MOZ_ASSERT(group && shape);
         if (!entries_) {
             entries_.reset(js_pod_calloc<Entry>(NumEntries));
-            if (!entries_)
+            if (!entries_) {
                 return;
+            }
         } else {
-            for (size_t i = NumEntries - 1; i > 0; i--)
+            for (size_t i = NumEntries - 1; i > 0; i--) {
                 entries_[i] = entries_[i - 1];
+            }
         }
         entries_[0].group = group;
         entries_[0].shape = shape;
@@ -665,8 +668,9 @@ class JS::Realm : public JS::shadow::Realm
         return principals_;
     }
     void setPrincipals(JSPrincipals* principals) {
-        if (principals_ == principals)
+        if (principals_ == principals) {
             return;
+        }
 
         // If we change principals, we need to unlink immediately this
         // realm from its PerformanceGroup. For one thing, the performance data

@@ -24,8 +24,9 @@ SymbolObject*
 SymbolObject::create(JSContext* cx, JS::HandleSymbol symbol)
 {
     SymbolObject* obj = NewBuiltinClassInstance<SymbolObject>(cx);
-    if (!obj)
+    if (!obj) {
         return nullptr;
+    }
     obj->setPrimitiveValue(symbol);
     return obj;
 }
@@ -55,13 +56,15 @@ SymbolObject::initClass(JSContext* cx, Handle<GlobalObject*> global, bool define
     // ordinary object. It is not a Symbol instance and does not have a
     // [[SymbolData]] internal slot." (ES6 rev 24, 19.4.3)
     RootedObject proto(cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-    if (!proto)
+    if (!proto) {
         return nullptr;
+    }
 
     RootedFunction ctor(cx, GlobalObject::createConstructor(cx, construct,
                                                             ClassName(JSProto_Symbol, cx), 0));
-    if (!ctor)
+    if (!ctor) {
         return nullptr;
+    }
 
     if (defineMembers) {
         // Define the well-known symbol properties, such as Symbol.iterator.
@@ -71,13 +74,15 @@ SymbolObject::initClass(JSContext* cx, Handle<GlobalObject*> global, bool define
         WellKnownSymbols* wks = cx->runtime()->wellKnownSymbols;
         for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
             value.setSymbol(wks->get(i));
-            if (!NativeDefineDataProperty(cx, ctor, names[i], value, attrs))
+            if (!NativeDefineDataProperty(cx, ctor, names[i], value, attrs)) {
                 return nullptr;
+            }
         }
     }
 
-    if (!LinkConstructorAndPrototype(cx, ctor, proto))
+    if (!LinkConstructorAndPrototype(cx, ctor, proto)) {
         return nullptr;
+    }
 
     if (defineMembers) {
         if (!DefinePropertiesAndFunctions(cx, proto, properties, methods) ||
@@ -88,8 +93,9 @@ SymbolObject::initClass(JSContext* cx, Handle<GlobalObject*> global, bool define
         }
     }
 
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Symbol, ctor, proto))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Symbol, ctor, proto)) {
         return nullptr;
+    }
     return proto;
 }
 
@@ -111,14 +117,16 @@ SymbolObject::construct(JSContext* cx, unsigned argc, Value* vp)
     RootedString desc(cx);
     if (!args.get(0).isUndefined()) {
         desc = ToString(cx, args.get(0));
-        if (!desc)
+        if (!desc) {
             return false;
+        }
     }
 
     // step 4
     RootedSymbol symbol(cx, JS::Symbol::new_(cx, JS::SymbolCode::UniqueSymbol, desc));
-    if (!symbol)
+    if (!symbol) {
         return false;
+    }
     args.rval().setSymbol(symbol);
     return true;
 }
@@ -131,13 +139,15 @@ SymbolObject::for_(JSContext* cx, unsigned argc, Value* vp)
 
     // steps 1-2
     RootedString stringKey(cx, ToString(cx, args.get(0)));
-    if (!stringKey)
+    if (!stringKey) {
         return false;
+    }
 
     // steps 3-7
     JS::Symbol* symbol = JS::Symbol::for_(cx, stringKey);
-    if (!symbol)
+    if (!symbol) {
         return false;
+    }
     args.rval().setSymbol(symbol);
     return true;
 }
@@ -207,10 +217,11 @@ SymbolObject::valueOf_impl(JSContext* cx, const CallArgs& args)
     // Step 3, the error case, is handled by CallNonGenericMethod.
     HandleValue thisv = args.thisv();
     MOZ_ASSERT(IsSymbol(thisv));
-    if (thisv.isSymbol())
+    if (thisv.isSymbol()) {
         args.rval().set(thisv);
-    else
+    } else {
         args.rval().setSymbol(thisv.toObject().as<SymbolObject>().unbox());
+    }
     return true;
 }
 
@@ -243,10 +254,11 @@ SymbolObject::descriptionGetter_impl(JSContext* cx, const CallArgs& args)
                             : thisv.toObject().as<SymbolObject>().unbox());
 
     // Return the symbol's description if present, otherwise return undefined.
-    if (JSString* str = sym->description())
+    if (JSString* str = sym->description()) {
         args.rval().setString(str);
-    else
+    } else {
         args.rval().setUndefined();
+    }
     return true;
 }
 

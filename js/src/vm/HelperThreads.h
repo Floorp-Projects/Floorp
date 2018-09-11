@@ -194,8 +194,9 @@ class GlobalHelperThreadState
     void remove(T& vector, size_t* index)
     {
         // Self-moving is undefined behavior.
-        if (*index != vector.length() - 1)
+        if (*index != vector.length() - 1) {
             vector[*index] = std::move(vector.back());
+        }
         (*index)--;
         vector.popBack();
     }
@@ -444,8 +445,9 @@ struct HelperThread
 
     template <typename T>
     T maybeCurrentTaskAs() {
-        if (currentTask.isSome() && currentTask->is<T>())
+        if (currentTask.isSome() && currentTask->is<T>()) {
             return currentTask->as<T>();
+        }
 
         return nullptr;
     }

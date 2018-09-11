@@ -4,7 +4,7 @@
 
 #include shared,clip_shared,ellipse
 
-varying vec3 vPos;
+varying vec3 vLocalPos;
 flat varying float vClipMode;
 flat varying vec4 vClipCenter_Radius_TL;
 flat varying vec4 vClipCenter_Radius_TR;
@@ -60,13 +60,19 @@ ClipData fetch_clip(ivec2 address) {
 void main(void) {
     ClipMaskInstance cmi = fetch_clip_item();
     ClipArea area = fetch_clip_area(cmi.render_task_address);
-    Transform transform = fetch_transform(cmi.transform_id);
+    Transform clip_transform = fetch_transform(cmi.clip_transform_id);
+    Transform prim_transform = fetch_transform(cmi.prim_transform_id);
     ClipData clip = fetch_clip(cmi.clip_data_address);
     RectWithSize local_rect = clip.rect.rect;
 
-    ClipVertexInfo vi = write_clip_tile_vertex(local_rect, transform, area);
-    vPos = vi.local_pos;
+    ClipVertexInfo vi = write_clip_tile_vertex(
+        local_rect,
+        prim_transform,
+        clip_transform,
+        area
+    );
 
+    vLocalPos = vi.local_pos;
     vClipMode = clip.rect.mode.x;
 
     RectWithEndpoint clip_rect = to_rect_with_endpoint(local_rect);
@@ -92,12 +98,13 @@ void main(void) {
 
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
-    vec2 local_pos = vPos.xy / vPos.z;
-    float alpha = init_transform_fs(local_pos);
+    vec2 local_pos = vLocalPos.xy / vLocalPos.z;
 
-    float aa_range = compute_aa_range(local_pos);
+    float alpha = init_transform_fs(local_pos.xy);
 
-    float clip_alpha = rounded_rect(local_pos,
+    float aa_range = compute_aa_range(local_pos.xy);
+
+    float clip_alpha = rounded_rect(local_pos.xy,
                                     vClipCenter_Radius_TL,
                                     vClipCenter_Radius_TR,
                                     vClipCenter_Radius_BR,

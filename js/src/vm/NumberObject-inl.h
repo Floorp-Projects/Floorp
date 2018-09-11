@@ -17,8 +17,9 @@ inline NumberObject*
 NumberObject::create(JSContext* cx, double d, HandleObject proto /* = nullptr */)
 {
     NumberObject* obj = NewObjectWithClassProto<NumberObject>(cx, proto);
-    if (!obj)
+    if (!obj) {
         return nullptr;
+    }
     obj->setPrimitiveValue(d);
     return obj;
 }

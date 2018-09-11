@@ -26,4 +26,5 @@ For developers
    :maxdepth: 1
 
    Building.md
+   Testing.md
    Releasing.md

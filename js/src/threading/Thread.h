@@ -119,8 +119,9 @@ public:
     AutoEnterOOMUnsafeRegion oom;
     auto trampoline = js_new<Trampoline>(std::forward<F>(f),
                                          std::forward<Args>(args)...);
-    if (!trampoline)
+    if (!trampoline) {
       oom.crash("js::Thread::init");
+    }
     return create(Trampoline::Start, trampoline);
   }
 

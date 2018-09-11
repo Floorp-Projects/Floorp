@@ -73,8 +73,9 @@ jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo)
     // invalidated (see InvalidateActivation), we remove references to it and
     // increment the reference counter for each activation that appear on the
     // stack. As the bailed frame is one of them, we have to decrement it now.
-    if (frame.ionScript()->invalidated())
+    if (frame.ionScript()->invalidated()) {
         frame.ionScript()->decrementInvalidationCount(cx->runtime()->defaultFreeOp());
+    }
 
     // NB: Commentary on how |lastProfilingFrame| is set from bailouts.
     //
@@ -93,8 +94,9 @@ jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo)
     //
     // In both cases, we want to temporarily set the |lastProfilingFrame|
     // to the current frame being bailed out, and then fix it up later.
-    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
+    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime())) {
         cx->jitActivation->setLastProfilingFrame(currentFramePtr);
+    }
 
     return retval;
 }
@@ -163,8 +165,9 @@ jit::InvalidationBailout(InvalidationBailoutStack* sp, size_t* frameSizeOut,
     frame.ionScript()->decrementInvalidationCount(cx->runtime()->defaultFreeOp());
 
     // Make the frame being bailed out the top profiled frame.
-    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
+    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime())) {
         cx->jitActivation->setLastProfilingFrame(currentFramePtr);
+    }
 
     return retval;
 }
@@ -215,8 +218,9 @@ jit::ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
 
         retval = BailoutIonToBaseline(cx, bailoutData.activation(), frameView, true,
                                       &bailoutInfo, &excInfo);
-        if (retval == BAILOUT_RETURN_FATAL_ERROR && cx->isThrowingOutOfMemory())
+        if (retval == BAILOUT_RETURN_FATAL_ERROR && cx->isThrowingOutOfMemory()) {
             oomUnsafe.crash("ExceptionHandlerBailout");
+        }
     }
 
     if (retval == BAILOUT_RETURN_OK) {
@@ -224,8 +228,9 @@ jit::ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
 
         // Overwrite the kind so HandleException after the bailout returns
         // false, jumping directly to the exception tail.
-        if (excInfo.propagatingIonExceptionForDebugMode())
+        if (excInfo.propagatingIonExceptionForDebugMode()) {
             bailoutInfo->bailoutKind = Bailout_IonExceptionDebugMode;
+        }
 
         rfe->kind = ResumeFromException::RESUME_BAILOUT;
         rfe->target = cx->runtime()->jitRuntime()->getBailoutTail().value;
@@ -238,8 +243,9 @@ jit::ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
 
         if (retval == BAILOUT_RETURN_OVERRECURSED) {
             *overrecursed = true;
-            if (!excInfo.propagatingIonExceptionForDebugMode())
+            if (!excInfo.propagatingIonExceptionForDebugMode()) {
                 cx->clearPendingException();
+            }
         } else {
             MOZ_ASSERT(retval == BAILOUT_RETURN_FATAL_ERROR);
 
@@ -250,8 +256,9 @@ jit::ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
     }
 
     // Make the frame being bailed out the top profiled frame.
-    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
+    if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime())) {
         cx->jitActivation->setLastProfilingFrame(currentFramePtr);
+    }
 
     return retval;
 }
@@ -270,8 +277,9 @@ jit::EnsureHasEnvironmentObjects(JSContext* cx, AbstractFramePtr fp)
         MOZ_ASSERT(!fp.callee()->needsExtraBodyVarEnvironment());
 
         if (!fp.hasInitialEnvironment() && fp.callee()->needsFunctionEnvironmentObjects()) {
-            if (!fp.initFunctionEnvironmentObjects(cx))
+            if (!fp.initFunctionEnvironmentObjects(cx)) {
                 return false;
+            }
         }
     }
 
@@ -292,8 +300,9 @@ jit::CheckFrequentBailouts(JSContext* cx, JSScript* script, BailoutKind bailoutK
             // which should prevent this from happening again.  Also note that
             // the first execution bailout can be related to an inlined script,
             // so there is no need to penalize the caller.
-            if (bailoutKind != Bailout_FirstExecution && !script->hadFrequentBailouts())
+            if (bailoutKind != Bailout_FirstExecution && !script->hadFrequentBailouts()) {
                 script->setHadFrequentBailouts();
+            }
 
             JitSpew(JitSpew_IonInvalidate, "Invalidating due to too many bailouts");
 

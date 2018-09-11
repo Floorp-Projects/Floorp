@@ -77,8 +77,9 @@ class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy>
 
     void sweep() {
         for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
-            if (MapSweepPolicy::needsSweep(&e.front().mutableKey(), &e.front().value()))
+            if (MapSweepPolicy::needsSweep(&e.front().mutableKey(), &e.front().value())) {
                 e.removeFront();
+            }
         }
     }
 
@@ -121,10 +122,11 @@ class GCRekeyableHashMap : public JS::GCHashMap<Key, Value, HashPolicy, AllocPol
     void sweep() {
         for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
             Key key(e.front().key());
-            if (MapSweepPolicy::needsSweep(&key, &e.front().value()))
+            if (MapSweepPolicy::needsSweep(&key, &e.front().value())) {
                 e.removeFront();
-            else if (!HashPolicy::match(key, e.front().key()))
+            } else if (!HashPolicy::match(key, e.front().key())) {
                 e.rekeyFront(key);
+            }
         }
     }
 
@@ -242,8 +244,9 @@ class GCHashSet : public js::HashSet<T, HashPolicy, AllocPolicy>
 
     static void trace(GCHashSet* set, JSTracer* trc) { set->trace(trc); }
     void trace(JSTracer* trc) {
-        for (typename Base::Enum e(*this); !e.empty(); e.popFront())
+        for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
             GCPolicy<T>::trace(trc, &e.mutableFront(), "hashset element");
+        }
     }
 
     bool needsSweep() const {
@@ -252,8 +255,9 @@ class GCHashSet : public js::HashSet<T, HashPolicy, AllocPolicy>
 
     void sweep() {
         for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
-            if (GCPolicy<T>::needsSweep(&e.mutableFront()))
+            if (GCPolicy<T>::needsSweep(&e.mutableFront())) {
                 e.removeFront();
+            }
         }
     }
 
@@ -439,8 +443,9 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
         typename Map::Range range;
 
         void settle() {
-            while (!empty() && entryNeedsSweep(front()))
+            while (!empty() && entryNeedsSweep(front())) {
                 popFront();
+            }
         }
     };
 
@@ -531,8 +536,9 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
 
     void remove(const Lookup& l) {
         Ptr p = lookup(l);
-        if (p)
+        if (p) {
             remove(p);
+        }
     }
 
     template<typename KeyInput, typename ValueInput>
@@ -634,8 +640,9 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
         typename Set::Range range;
 
         void settle() {
-            while (!empty() && entryNeedsSweep(front()))
+            while (!empty() && entryNeedsSweep(front())) {
                 popFront();
+            }
         }
     };
 
@@ -726,8 +733,9 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
 
     void remove(const Lookup& l) {
         Ptr p = lookup(l);
-        if (p)
+        if (p) {
             remove(p);
+        }
     }
 
     template<typename TInput>

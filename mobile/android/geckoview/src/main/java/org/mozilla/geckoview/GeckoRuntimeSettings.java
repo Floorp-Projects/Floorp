@@ -9,6 +9,7 @@ package org.mozilla.geckoview;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import android.app.Service;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -20,10 +21,6 @@ import android.support.annotation.Nullable;
 import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 
 public final class GeckoRuntimeSettings implements Parcelable {
-    /**
-     * {@link #mExtras} key for the crash reporting job id.
-     */
-    public static final String EXTRA_CRASH_REPORTING_JOB_ID = "crashReporterJobId";
 
     /**
      * Settings builder used to construct the settings object.
@@ -121,53 +118,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
          */
         public @NonNull Builder webFontsEnabled(final boolean flag) {
             mSettings.mWebFonts.set(flag);
-            return this;
-        }
-
-        /**
-         * Set whether crash reporting for native code should be enabled. This will cause
-         * a SIGSEGV handler to be installed, and any crash encountered there will be
-         * reported to Mozilla.
-         *
-         * <br>If crash reporting is enabled {@link #crashReportingJobId(int)} must also be used.
-         *
-         * @param enabled A flag determining whether native crash reporting should be enabled.
-         *                Defaults to false.
-         * @return This Builder.
-         */
-        public @NonNull Builder nativeCrashReportingEnabled(final boolean enabled) {
-            mSettings.mNativeCrashReporting = enabled;
-            return this;
-        }
-
-        /**
-         * Set whether crash reporting for Java code should be enabled. This will cause
-         * a default unhandled exception handler to be installed, and any exceptions encountered
-         * will automatically reported to Mozilla.
-         *
-         * <br>If crash reporting is enabled {@link #crashReportingJobId(int)} must also be used.
-         *
-         * @param enabled A flag determining whether Java crash reporting should be enabled.
-         *                Defaults to false.
-         * @return This Builder.
-         */
-        public @NonNull Builder javaCrashReportingEnabled(final boolean enabled) {
-            mSettings.mJavaCrashReporting = enabled;
-            return this;
-        }
-
-        /**
-         * On Oreo and later devices we use the JobScheduler for crash reporting in the background.<br>
-         * This allows for setting the unique Job Id to be used.
-         * <a href="https://developer.android.com/reference/android/app/job/JobInfo.Builder#JobInfo.Builder(int,%20android.content.ComponentName)">
-         *           See why it must be unique</a>
-         *
-         * @param id A unique integer.
-         *
-         * @return This Builder.
-         */
-        public @NonNull Builder crashReportingJobId(final int id) {
-            mSettings.mCrashReportingJobId = id;
             return this;
         }
 
@@ -303,6 +253,44 @@ public final class GeckoRuntimeSettings implements Parcelable {
             mSettings.mScreenHeightOverride = height;
             return this;
         }
+
+        /**
+         * When set, the specified {@link android.app.Service} will be started by
+         * an {@link android.content.Intent} with action {@link GeckoRuntime#ACTION_CRASHED} when
+         * a crash is encountered. Crash details can be found in the Intent extras, such as
+         * {@link GeckoRuntime#EXTRA_MINIDUMP_PATH}.
+         * <br><br>
+         * The crash handler Service must be declared to run in a different process from
+         * the {@link GeckoRuntime}. Additionally, the handler will be run as a foreground service,
+         * so the normal rules about activating a foreground service apply.
+         * <br><br>
+         * In practice, you have one of three
+         * options once the crash handler is started:
+         * <ul>
+         * <li>Call {@link android.app.Service#startForeground(int, android.app.Notification)}. You can then
+         * take as much time as necessary to report the crash.</li>
+         * <li>Start an activity. Unless you also call {@link android.app.Service#startForeground(int, android.app.Notification)}
+         * this should be in a different process from the crash handler, since Android will
+         * kill the crash handler process as part of the background execution limitations.</li>
+         * <li>Schedule work via {@link android.app.job.JobScheduler}. This will allow you to
+         * do substantial work in the background without execution limits.</li>
+         * </ul><br>
+         * You can use {@link CrashReporter} to send the report to Mozilla, which provides Mozilla
+         * with data needed to fix the crash. Be aware that the minidump may contain
+         * personally identifiable information (PII). Consult Mozilla's
+         * <a href="https://www.mozilla.org/en-US/privacy/">privacy policy</a> for information
+         * on how this data will be handled.
+         *
+         * @param handler The class for the crash handler Service.
+         * @return This builder instance.
+         *
+         * @see <a href="https://developer.android.com/about/versions/oreo/background">Android Background Execution Limits</a>
+         * @see GeckoRuntime#ACTION_CRASHED
+         */
+        public @NonNull Builder crashHandler(final Class<? extends Service> handler) {
+            mSettings.mCrashHandler = handler;
+            return this;
+        }
     }
 
     /* package */ GeckoRuntime runtime;
@@ -366,14 +354,12 @@ public final class GeckoRuntimeSettings implements Parcelable {
     /* package */ Pref<Boolean> mSafebrowsingPhishing = new Pref<Boolean>(
         "browser.safebrowsing.phishing.enabled", true);
 
-    /* package */ boolean mNativeCrashReporting;
-    /* package */ boolean mJavaCrashReporting;
-    /* package */ int mCrashReportingJobId;
     /* package */ boolean mDebugPause;
     /* package */ float mDisplayDensityOverride = -1.0f;
     /* package */ int mDisplayDpiOverride;
     /* package */ int mScreenWidthOverride;
     /* package */ int mScreenHeightOverride;
+    /* package */ Class<? extends Service> mCrashHandler;
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
         mCookieBehavior, mCookieLifetime, mConsoleOutput,
@@ -410,14 +396,12 @@ public final class GeckoRuntimeSettings implements Parcelable {
             uncheckedPref.set(settings.mPrefs[i].get());
         }
 
-        mNativeCrashReporting = settings.mNativeCrashReporting;
-        mJavaCrashReporting = settings.mJavaCrashReporting;
-        mCrashReportingJobId = settings.mCrashReportingJobId;
         mDebugPause = settings.mDebugPause;
         mDisplayDensityOverride = settings.mDisplayDensityOverride;
         mDisplayDpiOverride = settings.mDisplayDpiOverride;
         mScreenWidthOverride = settings.mScreenWidthOverride;
         mScreenHeightOverride = settings.mScreenHeightOverride;
+        mCrashHandler = settings.mCrashHandler;
     }
 
     /* package */ void flush() {
@@ -514,33 +498,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
     }
 
     /**
-     * Get whether native crash reporting is enabled or not.
-     *
-     * @return True if native crash reporting is enabled.
-     */
-    public boolean getNativeCrashReportingEnabled() {
-        return mNativeCrashReporting;
-    }
-
-    /**
-     * Get whether Java crash reporting is enabled or not.
-     *
-     * @return True if Java crash reporting is enabled.
-     */
-    public boolean getJavaCrashReportingEnabled() {
-        return mJavaCrashReporting;
-    }
-
-    /**
-     * Get the Job ID used on Oreo and later devices to manage crash reporting in background.
-     *
-     * @return Crash reporting service Job ID
-     */
-    public int getCrashReportingServiceJobId() {
-        return mCrashReportingJobId;
-    }
-
-    /**
      * Gets whether the pause-for-debugger is enabled or not.
      *
      * @return True if the pause is enabled.
@@ -569,6 +526,10 @@ public final class GeckoRuntimeSettings implements Parcelable {
             return mDisplayDpiOverride;
         }
         return null;
+    }
+
+    public Class<? extends Service> getCrashHandler() {
+        return mCrashHandler;
     }
 
     /**
@@ -786,14 +747,12 @@ public final class GeckoRuntimeSettings implements Parcelable {
             out.writeValue(pref.get());
         }
 
-        ParcelableUtils.writeBoolean(out, mNativeCrashReporting);
-        ParcelableUtils.writeBoolean(out, mJavaCrashReporting);
-        out.writeInt(mCrashReportingJobId);
         ParcelableUtils.writeBoolean(out, mDebugPause);
         out.writeFloat(mDisplayDensityOverride);
         out.writeInt(mDisplayDpiOverride);
         out.writeInt(mScreenWidthOverride);
         out.writeInt(mScreenHeightOverride);
+        out.writeString(mCrashHandler != null ? mCrashHandler.getName() : null);
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
@@ -809,14 +768,23 @@ public final class GeckoRuntimeSettings implements Parcelable {
             uncheckedPref.set(source.readValue(getClass().getClassLoader()));
         }
 
-        mNativeCrashReporting = ParcelableUtils.readBoolean(source);
-        mJavaCrashReporting = ParcelableUtils.readBoolean(source);
-        mCrashReportingJobId = source.readInt();
         mDebugPause = ParcelableUtils.readBoolean(source);
         mDisplayDensityOverride = source.readFloat();
         mDisplayDpiOverride = source.readInt();
         mScreenWidthOverride = source.readInt();
         mScreenHeightOverride = source.readInt();
+
+        final String crashHandlerName = source.readString();
+        if (crashHandlerName != null) {
+            try {
+                @SuppressWarnings("unchecked")
+                final Class<? extends Service> handler =
+                        (Class<? extends Service>) Class.forName(crashHandlerName);
+
+                mCrashHandler = handler;
+            } catch (ClassNotFoundException e) {
+            }
+        }
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR

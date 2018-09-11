@@ -81,8 +81,9 @@ struct AllocationIntegrityState
         BlockInfo() {}
         BlockInfo(const BlockInfo& o) {
             AutoEnterOOMUnsafeRegion oomUnsafe;
-            if (!phis.appendAll(o.phis))
+            if (!phis.appendAll(o.phis)) {
                 oomUnsafe.crash("BlockInfo::BlockInfo");
+            }
         }
     };
     Vector<BlockInfo, 0, SystemAllocPolicy> blocks;
@@ -234,8 +235,9 @@ class InstructionDataMap
     { }
 
     MOZ_MUST_USE bool init(MIRGenerator* gen, uint32_t numInstructions) {
-        if (!insData_.init(gen->alloc(), numInstructions))
+        if (!insData_.init(gen->alloc(), numInstructions)) {
             return false;
+        }
         memset(&insData_[0], 0, sizeof(LNode*) * numInstructions);
         return true;
     }
@@ -258,8 +260,9 @@ inline void
 TakeJitRegisters(bool isProfiling, AllocatableRegisterSet* set)
 {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64)
-    if (isProfiling)
+    if (isProfiling) {
         set->take(AnyRegister(FramePointer));
+    }
 #endif
 }
 
@@ -289,10 +292,11 @@ class RegisterAllocator
         graph(graph),
         allRegisters_(RegisterSet::All())
     {
-        if (mir->compilingWasm())
+        if (mir->compilingWasm()) {
             takeWasmRegisters(allRegisters_);
-        else
+        } else {
             TakeJitRegisters(mir->instrumentedProfiling(), &allRegisters_);
+        }
     }
 
     MOZ_MUST_USE bool init();
@@ -348,8 +352,9 @@ class RegisterAllocator
         // safepoint information for the instruction may be incorrect.
         while (true) {
             LNode* next = insData[ins->id() + 1];
-            if (!next->isOsiPoint())
+            if (!next->isOsiPoint()) {
                 break;
+            }
             ins = next;
         }
 

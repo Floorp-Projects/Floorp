@@ -7,6 +7,7 @@
 #include "nsString.h"
 #include "nsIComponentManager.h"
 #include "nsBaseCommandController.h"
+#include "nsControllerCommandTable.h"
 
 #include "nsString.h"
 #include "nsWeakPtr.h"
@@ -34,16 +35,13 @@ nsBaseCommandController::~nsBaseCommandController()
 NS_IMETHODIMP
 nsBaseCommandController::Init(nsIControllerCommandTable* aCommandTable)
 {
-  nsresult rv = NS_OK;
-
   if (aCommandTable) {
     mCommandTable = aCommandTable;
   } else {
-    mCommandTable =
-      do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
+    mCommandTable = new nsControllerCommandTable();
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -181,4 +179,62 @@ nsBaseCommandController::GetSupportedCommands(uint32_t* aCount,
 {
   NS_ENSURE_STATE(mCommandTable);
   return mCommandTable->GetSupportedCommands(aCount, aCommands);
+}
+
+typedef already_AddRefed<nsIControllerCommandTable> (*CommandTableCreatorFn)();
+
+static already_AddRefed<nsIController>
+CreateControllerWithSingletonCommandTable(CommandTableCreatorFn aCreatorFn)
+{
+  nsCOMPtr<nsIController> controller = new nsBaseCommandController();
+
+  nsCOMPtr<nsIControllerCommandTable> commandTable = aCreatorFn();
+  if (!commandTable) return nullptr;
+
+  // this is a singleton; make it immutable
+  commandTable->MakeImmutable();
+
+  nsresult rv;
+  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
+  if (NS_FAILED(rv)) return nullptr;
+
+  rv = controllerContext->Init(commandTable);
+  if (NS_FAILED(rv)) return nullptr;
+
+  return controller.forget();
+}
+
+already_AddRefed<nsIController>
+nsBaseCommandController::CreateWindowController()
+{
+  return CreateControllerWithSingletonCommandTable(
+      nsControllerCommandTable::CreateWindowCommandTable);
+}
+
+already_AddRefed<nsIController>
+nsBaseCommandController::CreateEditorController()
+{
+  return CreateControllerWithSingletonCommandTable(
+      nsControllerCommandTable::CreateEditorCommandTable);
+}
+
+already_AddRefed<nsIController>
+nsBaseCommandController::CreateEditingController()
+{
+  return CreateControllerWithSingletonCommandTable(
+      nsControllerCommandTable::CreateEditingCommandTable);
+}
+
+already_AddRefed<nsIController>
+nsBaseCommandController::CreateHTMLEditorController()
+{
+  return CreateControllerWithSingletonCommandTable(
+      nsControllerCommandTable::CreateHTMLEditorCommandTable);
+}
+
+already_AddRefed<nsIController>
+nsBaseCommandController::CreateHTMLEditorDocStateController()
+{
+  return CreateControllerWithSingletonCommandTable(
+      nsControllerCommandTable::CreateHTMLEditorDocStateCommandTable);
 }

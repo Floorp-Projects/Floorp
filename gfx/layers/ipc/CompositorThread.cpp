@@ -69,7 +69,6 @@ CompositorThreadHolder::DestroyCompositorThread(base::Thread* aCompositorThread)
 
   MOZ_ASSERT(!sCompositorThreadHolder, "We shouldn't be destroying the compositor thread yet.");
 
-  CompositorBridgeParent::Shutdown();
   delete aCompositorThread;
   sFinishedCompositorShutDown = true;
 }

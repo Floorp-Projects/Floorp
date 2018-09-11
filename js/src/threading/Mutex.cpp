@@ -35,8 +35,9 @@ js::Mutex::heldMutexStack()
   if (!stack) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
     stack = js_new<MutexVector>();
-    if (!stack)
+    if (!stack) {
       oomUnsafe.crash("js::Mutex::heldMutexStack");
+    }
     HeldMutexStack.set(stack);
   }
   return *stack;
@@ -59,8 +60,9 @@ js::Mutex::lock()
   MutexImpl::lock();
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!stack.append(this))
+  if (!stack.append(this)) {
     oomUnsafe.crash("js::Mutex::lock");
+  }
 }
 
 void
@@ -77,8 +79,9 @@ js::Mutex::ownedByCurrentThread() const
 {
   auto& stack = heldMutexStack();
   for (size_t i = 0; i < stack.length(); i++) {
-    if (stack[i] == this)
+    if (stack[i] == this) {
       return true;
+    }
   }
   return false;
 }

@@ -52,8 +52,9 @@ namespace js {
 void
 GenericPrinter::reportOutOfMemory()
 {
-    if (hadOOM_)
+    if (hadOOM_) {
         return;
+    }
     hadOOM_ = true;
 }
 
@@ -77,8 +78,9 @@ bool
 GenericPrinter::vprintf(const char* fmt, va_list ap)
 {
     // Simple shortcut to avoid allocating strings.
-    if (strchr(fmt, '%') == nullptr)
+    if (strchr(fmt, '%') == nullptr) {
         return put(fmt);
+    }
 
     GenericPrinterPrintfTarget printer(*this);
     if (!printer.vprint(fmt, ap)) {
@@ -117,8 +119,9 @@ Sprinter::Sprinter(JSContext* cx, bool shouldReportOOM)
 Sprinter::~Sprinter()
 {
 #ifdef DEBUG
-    if (initialized)
+    if (initialized) {
         checkInvariants();
+    }
 #endif
     js_free(base);
 }
@@ -153,8 +156,9 @@ UniqueChars
 Sprinter::release()
 {
     checkInvariants();
-    if (hadOOM_)
+    if (hadOOM_) {
         return nullptr;
+    }
 
     char* str = base;
     base = nullptr;
@@ -185,8 +189,9 @@ Sprinter::reserve(size_t len)
     InvariantChecker ic(this);
 
     while (len + 1 > size - offset) { /* Include trailing \0 */
-        if (!realloc_(size * 2))
+        if (!realloc_(size * 2)) {
             return nullptr;
+        }
     }
 
     char* sb = base + offset;
@@ -203,14 +208,16 @@ Sprinter::put(const char* s, size_t len)
     const char* oldEnd = base + size;
 
     char* bp = reserve(len);
-    if (!bp)
+    if (!bp) {
         return false;
+    }
 
     /* s is within the buffer already */
     if (s >= oldBase && s < oldEnd) {
         /* buffer was realloc'ed */
-        if (base != oldBase)
+        if (base != oldBase) {
             s = stringAt(s - oldBase);  /* this is where it lives now */
+        }
         memmove(bp, s, len);
     } else {
         js_memcpy(bp, s, len);
@@ -226,14 +233,16 @@ Sprinter::putString(JSString* s)
     InvariantChecker ic(this);
 
     JSFlatString* flat = s->ensureFlat(context);
-    if (!flat)
+    if (!flat) {
         return false;
+    }
 
     size_t length = JS::GetDeflatedUTF8StringLength(flat);
 
     char* buffer = reserve(length);
-    if (!buffer)
+    if (!buffer) {
         return false;
+    }
 
     JS::DeflateStringToUTF8Buffer(flat, mozilla::RangedPtr<char>(buffer, length));
 
@@ -250,10 +259,12 @@ Sprinter::getOffset() const
 void
 Sprinter::reportOutOfMemory()
 {
-    if (hadOOM_)
+    if (hadOOM_) {
         return;
-    if (context && shouldReportOOM)
+    }
+    if (context && shouldReportOOM) {
         ReportOutOfMemory(context);
+    }
     hadOOM_ = true;
 }
 
@@ -289,8 +300,9 @@ QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars, char quote)
     using CharPtr = mozilla::RangedPtr<const CharT>;
 
     if (quote) {
-        if (!sp->putChar(quote))
+        if (!sp->putChar(quote)) {
             return false;
+        }
     }
 
     const CharPtr end = chars.end();
@@ -302,45 +314,52 @@ QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars, char quote)
         char16_t c = *t;
         while (c < 127 && isprint(c) && c != quote && c != '\\' && c != '\t') {
             ++t;
-            if (t == end)
+            if (t == end) {
                 break;
+            }
             c = *t;
         }
 
         {
             ptrdiff_t len = t - s;
             ptrdiff_t base = sp->getOffset();
-            if (!sp->reserve(len))
+            if (!sp->reserve(len)) {
                 return false;
+            }
 
-            for (ptrdiff_t i = 0; i < len; ++i)
+            for (ptrdiff_t i = 0; i < len; ++i) {
                 (*sp)[base + i] = char(s[i]);
+            }
             (*sp)[base + len] = '\0';
         }
 
-        if (t == end)
+        if (t == end) {
             break;
+        }
 
         /* Use js_EscapeMap, \u, or \x only if necessary. */
         const char* escape;
         if (!(c >> 8) && c != 0 && (escape = strchr(js_EscapeMap, int(c))) != nullptr) {
-            if (!sp->jsprintf("\\%c", escape[1]))
+            if (!sp->jsprintf("\\%c", escape[1])) {
                 return false;
+            }
         } else {
             /*
              * Use \x only if the high byte is 0 and we're in a quoted string,
              * because ECMA-262 allows only \u, not \x, in Unicode identifiers
              * (see bug 621814).
              */
-            if (!sp->jsprintf((quote && !(c >> 8)) ? "\\x%02X" : "\\u%04X", c))
+            if (!sp->jsprintf((quote && !(c >> 8)) ? "\\x%02X" : "\\u%04X", c)) {
                 return false;
+            }
         }
     }
 
     /* Sprint the closing quote and return the quoted string. */
     if (quote) {
-        if (!sp->putChar(quote))
+        if (!sp->putChar(quote)) {
             return false;
+        }
     }
 
     return true;
@@ -350,8 +369,9 @@ bool
 QuoteString(Sprinter* sp, JSString* str, char quote /*= '\0' */)
 {
     JSLinearString* linear = str->ensureLinear(sp->context);
-    if (!linear)
+    if (!linear) {
         return false;
+    }
 
     JS::AutoCheckCannotGC nogc;
     return linear->hasLatin1Chars()
@@ -363,10 +383,12 @@ UniqueChars
 QuoteString(JSContext* cx, JSString* str, char quote /* = '\0' */)
 {
     Sprinter sprinter(cx);
-    if (!sprinter.init())
+    if (!sprinter.init()) {
         return nullptr;
-    if (!QuoteString(&sprinter, str, quote))
+    }
+    if (!QuoteString(&sprinter, str, quote)) {
         return nullptr;
+    }
     return sprinter.release();
 }
 
@@ -389,8 +411,9 @@ Fprinter::init(const char* path)
 {
     MOZ_ASSERT(!file_);
     file_ = fopen(path, "w");
-    if (!file_)
+    if (!file_) {
         return false;
+    }
     init_ = true;
     return true;
 }
@@ -414,8 +437,9 @@ void
 Fprinter::finish()
 {
     MOZ_ASSERT(file_);
-    if (init_)
+    if (init_) {
         fclose(file_);
+    }
     file_ = nullptr;
 }
 
@@ -457,11 +481,13 @@ LSprinter::~LSprinter()
 void
 LSprinter::exportInto(GenericPrinter& out) const
 {
-    if (!head_)
+    if (!head_) {
         return;
+    }
 
-    for (Chunk* it = head_; it != tail_; it = it->next)
+    for (Chunk* it = head_; it != tail_; it = it->next) {
         out.put(it->chars(), it->length);
+    }
     out.put(tail_->chars(), tail_->length - unused_);
 }
 
@@ -523,10 +549,11 @@ LSprinter::put(const char* s, size_t len)
             last->length = availableSpace;
 
             unused_ = availableSpace;
-            if (!head_)
+            if (!head_) {
                 head_ = last;
-            else
+            } else {
                 tail_->next = last;
+            }
 
             tail_ = last;
         }

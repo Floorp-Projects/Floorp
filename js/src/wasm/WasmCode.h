@@ -624,8 +624,9 @@ class CodeTier
     ExclusiveData<LazyStubTier> lazyStubs_;
 
     static const MutexId& mutexForTier(Tier tier) {
-        if (tier == Tier::Baseline)
+        if (tier == Tier::Baseline) {
             return mutexid::WasmLazyStubsTier1;
+        }
         MOZ_ASSERT(tier == Tier::Ion);
         return mutexid::WasmLazyStubsTier2;
     }
@@ -697,8 +698,9 @@ class JumpTables
     void setTieringEntry(size_t i, void* target) const {
         MOZ_ASSERT(i < numFuncs_);
         // See comment in wasm::Module::finishTier2.
-        if (mode_ == CompileMode::Tier1)
+        if (mode_ == CompileMode::Tier1) {
             tiering_.get()[i] = target;
+        }
     }
     void** tiering() const {
         return tiering_.get();

@@ -17,8 +17,9 @@ inline BooleanObject*
 BooleanObject::create(JSContext* cx, bool b, HandleObject proto /* = nullptr */)
 {
     BooleanObject* obj = NewObjectWithClassProto<BooleanObject>(cx, proto);
-    if (!obj)
+    if (!obj) {
         return nullptr;
+    }
     obj->setPrimitiveValue(b);
     return obj;
 }

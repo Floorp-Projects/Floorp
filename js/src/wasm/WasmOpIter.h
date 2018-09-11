@@ -695,8 +695,9 @@ OpIter<Policy>::unrecognizedOpcode(const OpBytes* expr)
 {
     UniqueChars error(JS_smprintf("unrecognized opcode: %x %x", expr->b0,
                                   IsPrefixByte(expr->b0) ? expr->b1 : 0));
-    if (!error)
+    if (!error) {
         return false;
+    }
 
     return fail(error.get());
 }
@@ -730,8 +731,9 @@ OpIter<Policy>::popAnyType(StackType* type, Value* value)
             return valueStack_.reserve(valueStack_.length() + 1);
         }
 
-        if (valueStack_.empty())
+        if (valueStack_.empty()) {
             return fail("popping value from empty stack");
+        }
         return fail("popping value from outside block");
     }
 
@@ -749,8 +751,9 @@ OpIter<Policy>::typeMismatch(StackType actual, StackType expected)
     UniqueChars error(JS_smprintf("type mismatch: expression has type %s but expected %s",
                                   ToCString(NonAnyToValType(actual)),
                                   ToCString(NonAnyToValType(expected))));
-    if (!error)
+    if (!error) {
         return false;
+    }
 
     return fail(error.get());
 }
@@ -776,16 +779,18 @@ OpIter<Policy>::popWithType(StackType expectedType, Value* value)
             return valueStack_.reserve(valueStack_.length() + 1);
         }
 
-        if (valueStack_.empty())
+        if (valueStack_.empty()) {
             return fail("popping value from empty stack");
+        }
         return fail("popping value from outside block");
     }
 
     TypeAndValue<Value> tv = valueStack_.popCopy();
 
     StackType _;
-    if (MOZ_UNLIKELY(!Unify(tv.type(), expectedType, &_)))
+    if (MOZ_UNLIKELY(!Unify(tv.type(), expectedType, &_))) {
         return typeMismatch(tv.type(), expectedType);
+    }
 
     *value = tv.value();
     return true;
@@ -822,22 +827,25 @@ OpIter<Policy>::topWithType(ValType expectedType, Value* value)
         // stack since it is now fixed to a specific type by this type
         // constraint.
         if (block.polymorphicBase()) {
-            if (!valueStack_.emplaceBack(expectedType, Value()))
+            if (!valueStack_.emplaceBack(expectedType, Value())) {
                 return false;
+            }
 
             *value = Value();
             return true;
         }
 
-        if (valueStack_.empty())
+        if (valueStack_.empty()) {
             return fail("reading value from empty stack");
+        }
         return fail("reading value from outside block");
     }
 
     TypeAndValue<Value>& tv = valueStack_.back();
 
-    if (MOZ_UNLIKELY(!Unify(tv.type(), StackType(expectedType), &tv.typeRef())))
+    if (MOZ_UNLIKELY(!Unify(tv.type(), StackType(expectedType), &tv.typeRef()))) {
         return typeMismatch(tv.type(), StackType(expectedType));
+    }
 
     *value = tv.value();
     return true;
@@ -870,11 +878,13 @@ OpIter<Policy>::checkStackAtEndOfBlock(ExprType* type, Value* value)
 
     MOZ_ASSERT(valueStack_.length() >= block.valueStackStart());
     size_t pushed = valueStack_.length() - block.valueStackStart();
-    if (pushed > (IsVoid(block.resultType()) ? 0u : 1u))
+    if (pushed > (IsVoid(block.resultType()) ? 0u : 1u)) {
         return fail("unused values not explicitly dropped by end of block");
+    }
 
-    if (!topWithType(block.resultType(), value))
+    if (!topWithType(block.resultType(), value)) {
         return false;
+    }
 
     *type = block.resultType();
     return true;
@@ -884,8 +894,9 @@ template <typename Policy>
 inline bool
 OpIter<Policy>::getControl(uint32_t relativeDepth, ControlStackEntry<ControlItem>** controlEntry)
 {
-    if (relativeDepth >= controlStack_.length())
+    if (relativeDepth >= controlStack_.length()) {
         return fail("branch depth exceeds current nesting level");
+    }
 
     *controlEntry = &controlStack_[controlStack_.length() - 1 - relativeDepth];
     return true;
@@ -897,8 +908,9 @@ OpIter<Policy>::readBlockType(ExprType* type)
 {
     uint8_t uncheckedCode;
     uint32_t uncheckedRefTypeIndex;
-    if (!d_.readBlockType(&uncheckedCode, &uncheckedRefTypeIndex))
+    if (!d_.readBlockType(&uncheckedCode, &uncheckedRefTypeIndex)) {
         return fail("unable to read block signature");
+    }
 
     bool known = false;
     switch (uncheckedCode) {
@@ -921,8 +933,9 @@ OpIter<Policy>::readBlockType(ExprType* type)
         break;
     }
 
-    if (!known)
+    if (!known) {
         return fail("invalid inline block type");
+    }
 
     *type = ExprType(ExprType::Code(uncheckedCode), uncheckedRefTypeIndex);
     return true;
@@ -936,8 +949,9 @@ OpIter<Policy>::readOp(OpBytes* op)
 
     offsetOfLastReadOp_ = d_.currentOffset();
 
-    if (MOZ_UNLIKELY(!d_.readOp(op)))
+    if (MOZ_UNLIKELY(!d_.readOp(op))) {
         return fail("unable to read opcode");
+    }
 
 #ifdef DEBUG
     op_ = *op;
@@ -952,8 +966,9 @@ OpIter<Policy>::peekOp(OpBytes* op)
 {
     const uint8_t* pos = d_.currentPosition();
 
-    if (MOZ_UNLIKELY(!d_.readOp(op)))
+    if (MOZ_UNLIKELY(!d_.readOp(op))) {
         op->b0 = uint16_t(Op::Limit);
+    }
 
     d_.rollbackPosition(pos);
 }
@@ -973,11 +988,13 @@ template <typename Policy>
 inline bool
 OpIter<Policy>::readFunctionEnd(const uint8_t* bodyEnd)
 {
-    if (d_.currentPosition() != bodyEnd)
+    if (d_.currentPosition() != bodyEnd) {
         return fail("function body length mismatch");
+    }
 
-    if (!controlStack_.empty())
+    if (!controlStack_.empty()) {
         return fail("unbalanced function body control flow");
+    }
 
 #ifdef DEBUG
     op_ = OpBytes(Op::Limit);
@@ -995,8 +1012,9 @@ OpIter<Policy>::readReturn(Value* value)
     ControlStackEntry<ControlItem>& body = controlStack_[0];
     MOZ_ASSERT(body.kind() == LabelKind::Block);
 
-    if (!popWithType(body.resultType(), value))
+    if (!popWithType(body.resultType(), value)) {
         return false;
+    }
 
     afterUnconditionalBranch();
     return true;
@@ -1009,8 +1027,9 @@ OpIter<Policy>::readBlock()
     MOZ_ASSERT(Classify(op_) == OpKind::Block);
 
     ExprType type = ExprType::Limit;
-    if (!readBlockType(&type))
+    if (!readBlockType(&type)) {
         return false;
+    }
 
     return pushControl(LabelKind::Block, type);
 }
@@ -1022,8 +1041,9 @@ OpIter<Policy>::readLoop()
     MOZ_ASSERT(Classify(op_) == OpKind::Loop);
 
     ExprType type = ExprType::Limit;
-    if (!readBlockType(&type))
+    if (!readBlockType(&type)) {
         return false;
+    }
 
     return pushControl(LabelKind::Loop, type);
 }
@@ -1035,11 +1055,13 @@ OpIter<Policy>::readIf(Value* condition)
     MOZ_ASSERT(Classify(op_) == OpKind::If);
 
     ExprType type = ExprType::Limit;
-    if (!readBlockType(&type))
+    if (!readBlockType(&type)) {
         return false;
+    }
 
-    if (!popWithType(ValType::I32, condition))
+    if (!popWithType(ValType::I32, condition)) {
         return false;
+    }
 
     return pushControl(LabelKind::Then, type);
 }
@@ -1052,18 +1074,21 @@ OpIter<Policy>::readElse(ExprType* type, Value* value)
 
     // Finish checking the then-block.
 
-    if (!checkStackAtEndOfBlock(type, value))
+    if (!checkStackAtEndOfBlock(type, value)) {
         return false;
+    }
 
     ControlStackEntry<ControlItem>& block = controlStack_.back();
 
-    if (block.kind() != LabelKind::Then)
+    if (block.kind() != LabelKind::Then) {
         return fail("else can only be used within an if");
+    }
 
     // Switch to the else-block.
 
-    if (!IsVoid(block.resultType()))
+    if (!IsVoid(block.resultType())) {
         valueStack_.popBack();
+    }
 
     MOZ_ASSERT(valueStack_.length() == block.valueStackStart());
 
@@ -1077,15 +1102,17 @@ OpIter<Policy>::readEnd(LabelKind* kind, ExprType* type, Value* value)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::End);
 
-    if (!checkStackAtEndOfBlock(type, value))
+    if (!checkStackAtEndOfBlock(type, value)) {
         return false;
+    }
 
     ControlStackEntry<ControlItem>& block = controlStack_.back();
 
     // If an `if` block ends with `end` instead of `else`, then we must
     // additionally validate that the then-block doesn't push anything.
-    if (block.kind() == LabelKind::Then && !IsVoid(block.resultType()))
+    if (block.kind() == LabelKind::Then && !IsVoid(block.resultType())) {
         return fail("if without else with a result value");
+    }
 
     *kind = block.kind();
     return true;
@@ -1105,8 +1132,9 @@ inline bool
 OpIter<Policy>::checkBranchValue(uint32_t relativeDepth, ExprType* type, Value* value)
 {
     ControlStackEntry<ControlItem>* block = nullptr;
-    if (!getControl(relativeDepth, &block))
+    if (!getControl(relativeDepth, &block)) {
         return false;
+    }
 
     *type = block->branchTargetType();
     return topWithType(*type, value);
@@ -1118,11 +1146,13 @@ OpIter<Policy>::readBr(uint32_t* relativeDepth, ExprType* type, Value* value)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Br);
 
-    if (!readVarU32(relativeDepth))
+    if (!readVarU32(relativeDepth)) {
         return fail("unable to read br depth");
+    }
 
-    if (!checkBranchValue(*relativeDepth, type, value))
+    if (!checkBranchValue(*relativeDepth, type, value)) {
         return false;
+    }
 
     afterUnconditionalBranch();
     return true;
@@ -1134,11 +1164,13 @@ OpIter<Policy>::readBrIf(uint32_t* relativeDepth, ExprType* type, Value* value, 
 {
     MOZ_ASSERT(Classify(op_) == OpKind::BrIf);
 
-    if (!readVarU32(relativeDepth))
+    if (!readVarU32(relativeDepth)) {
         return fail("unable to read br_if depth");
+    }
 
-    if (!popWithType(ValType::I32, condition))
+    if (!popWithType(ValType::I32, condition)) {
         return false;
+    }
 
     return checkBranchValue(*relativeDepth, type, value);
 }
@@ -1148,8 +1180,9 @@ inline bool
 OpIter<Policy>::checkBrTableEntry(uint32_t* relativeDepth, ExprType* branchValueType,
                                   Value* branchValue)
 {
-    if (!readVarU32(relativeDepth))
+    if (!readVarU32(relativeDepth)) {
         return false;
+    }
 
     // For the first encountered branch target, do a normal branch value type
     // check which will change *branchValueType to a non-sentinel value. For all
@@ -1157,15 +1190,18 @@ OpIter<Policy>::checkBrTableEntry(uint32_t* relativeDepth, ExprType* branchValue
     // now-known branch value type.
 
     if (*branchValueType == ExprType::Limit) {
-        if (!checkBranchValue(*relativeDepth, branchValueType, branchValue))
+        if (!checkBranchValue(*relativeDepth, branchValueType, branchValue)) {
             return false;
+        }
     } else {
         ControlStackEntry<ControlItem>* block = nullptr;
-        if (!getControl(*relativeDepth, &block))
+        if (!getControl(*relativeDepth, &block)) {
             return false;
+        }
 
-        if (*branchValueType != block->branchTargetType())
+        if (*branchValueType != block->branchTargetType()) {
             return fail("br_table targets must all have the same value type");
+        }
     }
 
     return true;
@@ -1179,27 +1215,33 @@ OpIter<Policy>::readBrTable(Uint32Vector* depths, uint32_t* defaultDepth,
     MOZ_ASSERT(Classify(op_) == OpKind::BrTable);
 
     uint32_t tableLength;
-    if (!readVarU32(&tableLength))
+    if (!readVarU32(&tableLength)) {
         return fail("unable to read br_table table length");
+    }
 
-    if (tableLength > MaxBrTableElems)
+    if (tableLength > MaxBrTableElems) {
         return fail("br_table too big");
+    }
 
-    if (!popWithType(ValType::I32, index))
+    if (!popWithType(ValType::I32, index)) {
         return false;
+    }
 
-    if (!depths->resize(tableLength))
+    if (!depths->resize(tableLength)) {
         return false;
+    }
 
     *branchValueType = ExprType::Limit;
 
     for (uint32_t i = 0; i < tableLength; i++) {
-        if (!checkBrTableEntry(&(*depths)[i], branchValueType, branchValue))
+        if (!checkBrTableEntry(&(*depths)[i], branchValueType, branchValue)) {
             return false;
+        }
     }
 
-    if (!checkBrTableEntry(defaultDepth, branchValueType, branchValue))
+    if (!checkBrTableEntry(defaultDepth, branchValueType, branchValue)) {
         return false;
+    }
 
     MOZ_ASSERT(*branchValueType != ExprType::Limit);
 
@@ -1233,8 +1275,9 @@ OpIter<Policy>::readUnary(ValType operandType, Value* input)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Unary);
 
-    if (!popWithType(operandType, input))
+    if (!popWithType(operandType, input)) {
         return false;
+    }
 
     infalliblePush(operandType);
 
@@ -1247,8 +1290,9 @@ OpIter<Policy>::readConversion(ValType operandType, ValType resultType, Value* i
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Conversion);
 
-    if (!popWithType(operandType, input))
+    if (!popWithType(operandType, input)) {
         return false;
+    }
 
     infalliblePush(resultType);
 
@@ -1261,11 +1305,13 @@ OpIter<Policy>::readBinary(ValType operandType, Value* lhs, Value* rhs)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Binary);
 
-    if (!popWithType(operandType, rhs))
+    if (!popWithType(operandType, rhs)) {
         return false;
+    }
 
-    if (!popWithType(operandType, lhs))
+    if (!popWithType(operandType, lhs)) {
         return false;
+    }
 
     infalliblePush(operandType);
 
@@ -1278,11 +1324,13 @@ OpIter<Policy>::readComparison(ValType operandType, Value* lhs, Value* rhs)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Comparison);
 
-    if (!popWithType(operandType, rhs))
+    if (!popWithType(operandType, rhs)) {
         return false;
+    }
 
-    if (!popWithType(operandType, lhs))
+    if (!popWithType(operandType, lhs)) {
         return false;
+    }
 
     infalliblePush(ValType::I32);
 
@@ -1293,21 +1341,26 @@ template <typename Policy>
 inline bool
 OpIter<Policy>::readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress<Value>* addr)
 {
-    if (!env_.usesMemory())
+    if (!env_.usesMemory()) {
         return fail("can't touch memory without memory");
+    }
 
     uint8_t alignLog2;
-    if (!readFixedU8(&alignLog2))
+    if (!readFixedU8(&alignLog2)) {
         return fail("unable to read load alignment");
+    }
 
-    if (!readVarU32(&addr->offset))
+    if (!readVarU32(&addr->offset)) {
         return fail("unable to read load offset");
+    }
 
-    if (alignLog2 >= 32 || (uint32_t(1) << alignLog2) > byteSize)
+    if (alignLog2 >= 32 || (uint32_t(1) << alignLog2) > byteSize) {
         return fail("greater than natural alignment");
+    }
 
-    if (!popWithType(ValType::I32, &addr->base))
+    if (!popWithType(ValType::I32, &addr->base)) {
         return false;
+    }
 
     addr->align = uint32_t(1) << alignLog2;
     return true;
@@ -1317,11 +1370,13 @@ template <typename Policy>
 inline bool
 OpIter<Policy>::readLinearMemoryAddressAligned(uint32_t byteSize, LinearMemoryAddress<Value>* addr)
 {
-    if (!readLinearMemoryAddress(byteSize, addr))
+    if (!readLinearMemoryAddress(byteSize, addr)) {
         return false;
+    }
 
-    if (addr->align != byteSize)
+    if (addr->align != byteSize) {
         return fail("not natural alignment");
+    }
 
     return true;
 }
@@ -1332,8 +1387,9 @@ OpIter<Policy>::readLoad(ValType resultType, uint32_t byteSize, LinearMemoryAddr
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Load);
 
-    if (!readLinearMemoryAddress(byteSize, addr))
+    if (!readLinearMemoryAddress(byteSize, addr)) {
         return false;
+    }
 
     infalliblePush(resultType);
 
@@ -1347,11 +1403,13 @@ OpIter<Policy>::readStore(ValType resultType, uint32_t byteSize, LinearMemoryAdd
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Store);
 
-    if (!popWithType(resultType, value))
+    if (!popWithType(resultType, value)) {
         return false;
+    }
 
-    if (!readLinearMemoryAddress(byteSize, addr))
+    if (!readLinearMemoryAddress(byteSize, addr)) {
         return false;
+    }
 
     return true;
 }
@@ -1363,11 +1421,13 @@ OpIter<Policy>::readTeeStore(ValType resultType, uint32_t byteSize, LinearMemory
 {
     MOZ_ASSERT(Classify(op_) == OpKind::TeeStore);
 
-    if (!popWithType(resultType, value))
+    if (!popWithType(resultType, value)) {
         return false;
+    }
 
-    if (!readLinearMemoryAddress(byteSize, addr))
+    if (!readLinearMemoryAddress(byteSize, addr)) {
         return false;
+    }
 
     infalliblePush(TypeAndValue<Value>(resultType, *value));
     return true;
@@ -1388,15 +1448,18 @@ OpIter<Policy>::readCurrentMemory()
 {
     MOZ_ASSERT(Classify(op_) == OpKind::CurrentMemory);
 
-    if (!env_.usesMemory())
+    if (!env_.usesMemory()) {
         return fail("can't touch memory without memory");
+    }
 
     uint8_t flags;
-    if (!readFixedU8(&flags))
+    if (!readFixedU8(&flags)) {
         return false;
+    }
 
-    if (flags != uint8_t(MemoryTableFlags::Default))
+    if (flags != uint8_t(MemoryTableFlags::Default)) {
         return fail("unexpected flags");
+    }
 
     return push(ValType::I32);
 }
@@ -1407,18 +1470,22 @@ OpIter<Policy>::readGrowMemory(Value* input)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::GrowMemory);
 
-    if (!env_.usesMemory())
+    if (!env_.usesMemory()) {
         return fail("can't touch memory without memory");
+    }
 
     uint8_t flags;
-    if (!readFixedU8(&flags))
+    if (!readFixedU8(&flags)) {
         return false;
+    }
 
-    if (flags != uint8_t(MemoryTableFlags::Default))
+    if (flags != uint8_t(MemoryTableFlags::Default)) {
         return fail("unexpected flags");
+    }
 
-    if (!popWithType(ValType::I32, input))
+    if (!popWithType(ValType::I32, input)) {
         return false;
+    }
 
     infalliblePush(ValType::I32);
 
@@ -1431,19 +1498,23 @@ OpIter<Policy>::readSelect(StackType* type, Value* trueValue, Value* falseValue,
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Select);
 
-    if (!popWithType(ValType::I32, condition))
+    if (!popWithType(ValType::I32, condition)) {
         return false;
+    }
 
     StackType falseType;
-    if (!popAnyType(&falseType, falseValue))
+    if (!popAnyType(&falseType, falseValue)) {
         return false;
+    }
 
     StackType trueType;
-    if (!popAnyType(&trueType, trueValue))
+    if (!popAnyType(&trueType, trueValue)) {
         return false;
+    }
 
-    if (!Join(falseType, trueType, type))
+    if (!Join(falseType, trueType, type)) {
         return fail("select operand types must match");
+    }
 
     infalliblePush(*type);
     return true;
@@ -1455,11 +1526,13 @@ OpIter<Policy>::readGetLocal(const ValTypeVector& locals, uint32_t* id)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::GetLocal);
 
-    if (!readVarU32(id))
+    if (!readVarU32(id)) {
         return false;
+    }
 
-    if (*id >= locals.length())
+    if (*id >= locals.length()) {
         return fail("get_local index out of range");
+    }
 
     return push(locals[*id]);
 }
@@ -1470,11 +1543,13 @@ OpIter<Policy>::readSetLocal(const ValTypeVector& locals, uint32_t* id, Value* v
 {
     MOZ_ASSERT(Classify(op_) == OpKind::SetLocal);
 
-    if (!readVarU32(id))
+    if (!readVarU32(id)) {
         return false;
+    }
 
-    if (*id >= locals.length())
+    if (*id >= locals.length()) {
         return fail("set_local index out of range");
+    }
 
     return popWithType(locals[*id], value);
 }
@@ -1485,11 +1560,13 @@ OpIter<Policy>::readTeeLocal(const ValTypeVector& locals, uint32_t* id, Value* v
 {
     MOZ_ASSERT(Classify(op_) == OpKind::TeeLocal);
 
-    if (!readVarU32(id))
+    if (!readVarU32(id)) {
         return false;
+    }
 
-    if (*id >= locals.length())
+    if (*id >= locals.length()) {
         return fail("set_local index out of range");
+    }
 
     return topWithType(locals[*id], value);
 }
@@ -1500,11 +1577,13 @@ OpIter<Policy>::readGetGlobal(uint32_t* id)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::GetGlobal);
 
-    if (!readVarU32(id))
+    if (!readVarU32(id)) {
         return false;
+    }
 
-    if (*id >= env_.globals.length())
+    if (*id >= env_.globals.length()) {
         return fail("get_global index out of range");
+    }
 
     return push(env_.globals[*id].type());
 }
@@ -1515,14 +1594,17 @@ OpIter<Policy>::readSetGlobal(uint32_t* id, Value* value)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::SetGlobal);
 
-    if (!readVarU32(id))
+    if (!readVarU32(id)) {
         return false;
+    }
 
-    if (*id >= env_.globals.length())
+    if (*id >= env_.globals.length()) {
         return fail("set_global index out of range");
+    }
 
-    if (!env_.globals[*id].isMutable())
+    if (!env_.globals[*id].isMutable()) {
         return fail("can't write an immutable global");
+    }
 
     return popWithType(env_.globals[*id].type(), value);
 }
@@ -1533,14 +1615,17 @@ OpIter<Policy>::readTeeGlobal(uint32_t* id, Value* value)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::TeeGlobal);
 
-    if (!readVarU32(id))
+    if (!readVarU32(id)) {
         return false;
+    }
 
-    if (*id >= env_.globals.length())
+    if (*id >= env_.globals.length()) {
         return fail("set_global index out of range");
+    }
 
-    if (!env_.globals[*id].isMutable())
+    if (!env_.globals[*id].isMutable()) {
         return fail("can't write an immutable global");
+    }
 
     return topWithType(env_.globals[*id].type(), value);
 }
@@ -1592,11 +1677,13 @@ OpIter<Policy>::readRefNull(ValType* type)
     MOZ_ASSERT(Classify(op_) == OpKind::RefNull);
     uint8_t code;
     uint32_t refTypeIndex;
-    if (!d_.readValType(&code, &refTypeIndex))
+    if (!d_.readValType(&code, &refTypeIndex)) {
         return fail("unknown nullref type");
+    }
     if (code == uint8_t(TypeCode::Ref)) {
-        if (refTypeIndex >= MaxTypes || refTypeIndex >= env_.types.length())
+        if (refTypeIndex >= MaxTypes || refTypeIndex >= env_.types.length()) {
             return fail("invalid nullref type");
+        }
     } else if (code != uint8_t(TypeCode::AnyRef)) {
         return fail("unknown nullref type");
     }
@@ -1611,12 +1698,14 @@ OpIter<Policy>::popCallArgs(const ValTypeVector& expectedTypes, ValueVector* val
     // Iterate through the argument types backward so that pops occur in the
     // right order.
 
-    if (!values->resize(expectedTypes.length()))
+    if (!values->resize(expectedTypes.length())) {
         return false;
+    }
 
     for (int32_t i = expectedTypes.length() - 1; i >= 0; i--) {
-        if (!popWithType(expectedTypes[i], &(*values)[i]))
+        if (!popWithType(expectedTypes[i], &(*values)[i])) {
             return false;
+        }
     }
 
     return true;
@@ -1628,16 +1717,19 @@ OpIter<Policy>::readCall(uint32_t* funcTypeIndex, ValueVector* argValues)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Call);
 
-    if (!readVarU32(funcTypeIndex))
+    if (!readVarU32(funcTypeIndex)) {
         return fail("unable to read call function index");
+    }
 
-    if (*funcTypeIndex >= env_.funcTypes.length())
+    if (*funcTypeIndex >= env_.funcTypes.length()) {
         return fail("callee index out of range");
+    }
 
     const FuncType& funcType = *env_.funcTypes[*funcTypeIndex];
 
-    if (!popCallArgs(funcType.args(), argValues))
+    if (!popCallArgs(funcType.args(), argValues)) {
         return false;
+    }
 
     return push(funcType.ret());
 }
@@ -1648,37 +1740,46 @@ OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex, Value* callee, ValueVe
 {
     MOZ_ASSERT(Classify(op_) == OpKind::CallIndirect);
 
-    if (!env_.tables.length())
+    if (!env_.tables.length()) {
         return fail("can't call_indirect without a table");
+    }
 
-    if (!readVarU32(funcTypeIndex))
+    if (!readVarU32(funcTypeIndex)) {
         return fail("unable to read call_indirect signature index");
+    }
 
-    if (*funcTypeIndex >= env_.numTypes())
+    if (*funcTypeIndex >= env_.numTypes()) {
         return fail("signature index out of range");
+    }
 
     uint8_t flags;
-    if (!readFixedU8(&flags))
+    if (!readFixedU8(&flags)) {
         return false;
+    }
 
-    if (flags != uint8_t(MemoryTableFlags::Default))
+    if (flags != uint8_t(MemoryTableFlags::Default)) {
         return fail("unexpected flags");
+    }
 
-    if (!popWithType(ValType::I32, callee))
+    if (!popWithType(ValType::I32, callee)) {
         return false;
+    }
 
-    if (!env_.types[*funcTypeIndex].isFuncType())
+    if (!env_.types[*funcTypeIndex].isFuncType()) {
         return fail("expected signature type");
+    }
 
     const FuncType& funcType = env_.types[*funcTypeIndex].funcType();
 
 #ifdef WASM_PRIVATE_REFTYPES
-    if (env_.tables[0].importedOrExported && funcType.exposesRef())
+    if (env_.tables[0].importedOrExported && funcType.exposesRef()) {
         return fail("cannot expose reference type");
+    }
 #endif
 
-    if (!popCallArgs(funcType.args(), argValues))
+    if (!popCallArgs(funcType.args(), argValues)) {
         return false;
+    }
 
     return push(funcType.ret());
 }
@@ -1691,21 +1792,25 @@ OpIter<Policy>::readOldCallDirect(uint32_t numFuncImports, uint32_t* funcTypeInd
     MOZ_ASSERT(Classify(op_) == OpKind::OldCallDirect);
 
     uint32_t funcDefIndex;
-    if (!readVarU32(&funcDefIndex))
+    if (!readVarU32(&funcDefIndex)) {
         return fail("unable to read call function index");
+    }
 
-    if (UINT32_MAX - funcDefIndex < numFuncImports)
+    if (UINT32_MAX - funcDefIndex < numFuncImports) {
         return fail("callee index out of range");
+    }
 
     *funcTypeIndex = numFuncImports + funcDefIndex;
 
-    if (*funcTypeIndex >= env_.funcTypes.length())
+    if (*funcTypeIndex >= env_.funcTypes.length()) {
         return fail("callee index out of range");
+    }
 
     const FuncType& funcType = *env_.funcTypes[*funcTypeIndex];
 
-    if (!popCallArgs(funcType.args(), argValues))
+    if (!popCallArgs(funcType.args(), argValues)) {
         return false;
+    }
 
     return push(funcType.ret());
 }
@@ -1716,25 +1821,31 @@ OpIter<Policy>::readOldCallIndirect(uint32_t* funcTypeIndex, Value* callee, Valu
 {
     MOZ_ASSERT(Classify(op_) == OpKind::OldCallIndirect);
 
-    if (!readVarU32(funcTypeIndex))
+    if (!readVarU32(funcTypeIndex)) {
         return fail("unable to read call_indirect signature index");
+    }
 
-    if (*funcTypeIndex >= env_.numTypes())
+    if (*funcTypeIndex >= env_.numTypes()) {
         return fail("signature index out of range");
+    }
 
-    if (!env_.types[*funcTypeIndex].isFuncType())
+    if (!env_.types[*funcTypeIndex].isFuncType()) {
         return fail("expected signature type");
+    }
 
     const FuncType& funcType = env_.types[*funcTypeIndex].funcType();
 
-    if (!popCallArgs(funcType.args(), argValues))
+    if (!popCallArgs(funcType.args(), argValues)) {
         return false;
+    }
 
-    if (!popWithType(ValType::I32, callee))
+    if (!popWithType(ValType::I32, callee)) {
         return false;
+    }
 
-    if (!push(funcType.ret()))
+    if (!push(funcType.ret())) {
         return false;
+    }
 
     return true;
 }
@@ -1745,16 +1856,19 @@ OpIter<Policy>::readWake(LinearMemoryAddress<Value>* addr, Value* count)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Wake);
 
-    if (!env_.usesSharedMemory())
+    if (!env_.usesSharedMemory()) {
         return fail("can't touch memory with atomic operations without shared memory");
+    }
 
-    if (!popWithType(ValType::I32, count))
+    if (!popWithType(ValType::I32, count)) {
         return false;
+    }
 
     uint32_t byteSize = 4;      // Per spec; smallest WAIT is i32.
 
-    if (!readLinearMemoryAddressAligned(byteSize, addr))
+    if (!readLinearMemoryAddressAligned(byteSize, addr)) {
         return false;
+    }
 
     infalliblePush(ValType::I32);
     return true;
@@ -1770,17 +1884,21 @@ OpIter<Policy>::readWait(LinearMemoryAddress<Value>* addr,
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Wait);
 
-    if (!env_.usesSharedMemory())
+    if (!env_.usesSharedMemory()) {
         return fail("can't touch memory with atomic operations without shared memory");
+    }
 
-    if (!popWithType(ValType::I64, timeout))
+    if (!popWithType(ValType::I64, timeout)) {
         return false;
+    }
 
-    if (!popWithType(valueType, value))
+    if (!popWithType(valueType, value)) {
         return false;
+    }
 
-    if (!readLinearMemoryAddressAligned(byteSize, addr))
+    if (!readLinearMemoryAddressAligned(byteSize, addr)) {
         return false;
+    }
 
     infalliblePush(ValType::I32);
     return true;
@@ -1793,11 +1911,13 @@ OpIter<Policy>::readAtomicLoad(LinearMemoryAddress<Value>* addr, ValType resultT
 {
     MOZ_ASSERT(Classify(op_) == OpKind::AtomicLoad);
 
-    if (!env_.usesSharedMemory())
+    if (!env_.usesSharedMemory()) {
         return fail("can't touch memory with atomic operations without shared memory");
+    }
 
-    if (!readLinearMemoryAddressAligned(byteSize, addr))
+    if (!readLinearMemoryAddressAligned(byteSize, addr)) {
         return false;
+    }
 
     infalliblePush(resultType);
     return true;
@@ -1810,14 +1930,17 @@ OpIter<Policy>::readAtomicStore(LinearMemoryAddress<Value>* addr, ValType result
 {
     MOZ_ASSERT(Classify(op_) == OpKind::AtomicStore);
 
-    if (!env_.usesSharedMemory())
+    if (!env_.usesSharedMemory()) {
         return fail("can't touch memory with atomic operations without shared memory");
+    }
 
-    if (!popWithType(resultType, value))
+    if (!popWithType(resultType, value)) {
         return false;
+    }
 
-    if (!readLinearMemoryAddressAligned(byteSize, addr))
+    if (!readLinearMemoryAddressAligned(byteSize, addr)) {
         return false;
+    }
 
     return true;
 }
@@ -1829,14 +1952,17 @@ OpIter<Policy>::readAtomicRMW(LinearMemoryAddress<Value>* addr, ValType resultTy
 {
     MOZ_ASSERT(Classify(op_) == OpKind::AtomicBinOp);
 
-    if (!env_.usesSharedMemory())
+    if (!env_.usesSharedMemory()) {
         return fail("can't touch memory with atomic operations without shared memory");
+    }
 
-    if (!popWithType(resultType, value))
+    if (!popWithType(resultType, value)) {
         return false;
+    }
 
-    if (!readLinearMemoryAddressAligned(byteSize, addr))
+    if (!readLinearMemoryAddressAligned(byteSize, addr)) {
         return false;
+    }
 
     infalliblePush(resultType);
     return true;
@@ -1849,17 +1975,21 @@ OpIter<Policy>::readAtomicCmpXchg(LinearMemoryAddress<Value>* addr, ValType resu
 {
     MOZ_ASSERT(Classify(op_) == OpKind::AtomicCompareExchange);
 
-    if (!env_.usesSharedMemory())
+    if (!env_.usesSharedMemory()) {
         return fail("can't touch memory with atomic operations without shared memory");
+    }
 
-    if (!popWithType(resultType, newValue))
+    if (!popWithType(resultType, newValue)) {
         return false;
+    }
 
-    if (!popWithType(resultType, oldValue))
+    if (!popWithType(resultType, oldValue)) {
         return false;
+    }
 
-    if (!readLinearMemoryAddressAligned(byteSize, addr))
+    if (!readLinearMemoryAddressAligned(byteSize, addr)) {
         return false;
+    }
 
     infalliblePush(resultType);
     return true;
@@ -1872,21 +2002,26 @@ OpIter<Policy>::readMemOrTableCopy(bool isMem, Value* dst, Value* src, Value* le
     MOZ_ASSERT(Classify(op_) == OpKind::MemOrTableCopy);
 
     if (isMem) {
-        if (!env_.usesMemory())
+        if (!env_.usesMemory()) {
             return fail("can't touch memory without memory");
+        }
     } else {
-        if (env_.tables.length() == 0)
+        if (env_.tables.length() == 0) {
             return fail("can't table.copy without a table");
+        }
     }
 
-    if (!popWithType(ValType::I32, len))
+    if (!popWithType(ValType::I32, len)) {
         return false;
+    }
 
-    if (!popWithType(ValType::I32, src))
+    if (!popWithType(ValType::I32, src)) {
         return false;
+    }
 
-    if (!popWithType(ValType::I32, dst))
+    if (!popWithType(ValType::I32, dst)) {
         return false;
+    }
 
     return true;
 }
@@ -1927,17 +2062,21 @@ OpIter<Policy>::readMemFill(Value* start, Value* val, Value* len)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::MemFill);
 
-    if (!env_.usesMemory())
+    if (!env_.usesMemory()) {
         return fail("can't touch memory without memory");
+    }
 
-    if (!popWithType(ValType::I32, len))
+    if (!popWithType(ValType::I32, len)) {
         return false;
+    }
 
-    if (!popWithType(ValType::I32, val))
+    if (!popWithType(ValType::I32, val)) {
         return false;
+    }
 
-    if (!popWithType(ValType::I32, start))
+    if (!popWithType(ValType::I32, start)) {
         return false;
+    }
 
     return true;
 }

@@ -5,12 +5,12 @@
 #include shared,prim_shared
 
 varying vec3 vUv;
-flat varying vec4 vUvTaskBounds;
 flat varying vec4 vUvSampleBounds;
 
 #ifdef WR_VERTEX_SHADER
 struct SplitGeometry {
-    vec3 points[4];
+    vec2 local[4];
+    RectWithSize local_rect;
 };
 
 SplitGeometry fetch_split_geometry(int address) {
@@ -21,22 +21,25 @@ SplitGeometry fetch_split_geometry(int address) {
     vec4 data2 = TEXEL_FETCH(sResourceCache, uv, 0, ivec2(2, 0));
 
     SplitGeometry geo;
-    geo.points = vec3[4](
-        data0.xyz, vec3(data0.w, data1.xy),
-        vec3(data1.zw, data2.x), data2.yzw
+    geo.local = vec2[4](
+        data0.xy,
+        data0.zw,
+        data1.xy,
+        data1.zw
     );
+    geo.local_rect = RectWithSize(data2.xy, data2.zw);
+
     return geo;
 }
 
-vec3 bilerp(vec3 a, vec3 b, vec3 c, vec3 d, float s, float t) {
-    vec3 x = mix(a, b, t);
-    vec3 y = mix(c, d, t);
+vec2 bilerp(vec2 a, vec2 b, vec2 c, vec2 d, float s, float t) {
+    vec2 x = mix(a, b, t);
+    vec2 y = mix(c, d, t);
     return mix(x, y, s);
 }
 
 struct SplitCompositeInstance {
-    int render_task_index;
-    int src_task_index;
+    int prim_header_index;
     int polygons_address;
     float z;
 };
@@ -44,10 +47,9 @@ struct SplitCompositeInstance {
 SplitCompositeInstance fetch_composite_instance() {
     SplitCompositeInstance ci;
 
-    ci.render_task_index = aData.x;
-    ci.src_task_index = aData.y;
-    ci.polygons_address = aData.z;
-    ci.z = float(aData.w);
+    ci.prim_header_index = aData.x;
+    ci.polygons_address = aData.y;
+    ci.z = float(aData.z);
 
     return ci;
 }
@@ -55,37 +57,63 @@ SplitCompositeInstance fetch_composite_instance() {
 void main(void) {
     SplitCompositeInstance ci = fetch_composite_instance();
     SplitGeometry geometry = fetch_split_geometry(ci.polygons_address);
-    PictureTask src_task = fetch_picture_task(ci.src_task_index);
-    PictureTask dest_task = fetch_picture_task(ci.render_task_index);
+    PrimitiveHeader ph = fetch_prim_header(ci.prim_header_index);
+    PictureTask dest_task = fetch_picture_task(ph.render_task_index);
+    Transform transform = fetch_transform(ph.transform_id);
+    ImageResource res = fetch_image_resource(ph.user_data.x);
+    ImageResourceExtra extra_data = fetch_image_resource_extra(ph.user_data.x);
+    ClipArea clip_area = fetch_clip_area(ph.clip_task_index);
 
     vec2 dest_origin = dest_task.common_data.task_rect.p0 -
                        dest_task.content_origin;
 
-    vec3 world_pos = bilerp(geometry.points[0], geometry.points[1],
-                            geometry.points[3], geometry.points[2],
+    vec2 local_pos = bilerp(geometry.local[0], geometry.local[1],
+                            geometry.local[3], geometry.local[2],
                             aPosition.y, aPosition.x);
-    vec4 final_pos = vec4((world_pos.xy + dest_origin) * uDevicePixelRatio, ci.z, 1.0);
+    vec4 world_pos = transform.m * vec4(local_pos, 0.0, 1.0);
+
+    vec4 final_pos = vec4(
+        dest_origin * world_pos.w + world_pos.xy * uDevicePixelRatio,
+        world_pos.w * ci.z,
+        world_pos.w
+    );
+
+    write_clip(
+        world_pos,
+        clip_area
+    );
 
     gl_Position = uTransform * final_pos;
 
-    vec2 uv_origin = src_task.common_data.task_rect.p0;
-    vec2 uv_pos = uv_origin + world_pos.xy - src_task.content_origin;
     vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
-    vUv = vec3(uv_pos / texture_size, src_task.common_data.texture_layer_index);
-    vUvTaskBounds = vec4(uv_origin, uv_origin + src_task.common_data.task_rect.size) / texture_size.xyxy;
-    vUvSampleBounds = vec4(uv_origin + 0.5, uv_origin + src_task.common_data.task_rect.size - 0.5) / texture_size.xyxy;
+    vec2 uv0 = res.uv_rect.p0;
+    vec2 uv1 = res.uv_rect.p1;
+
+    vec2 min_uv = min(uv0, uv1);
+    vec2 max_uv = max(uv0, uv1);
+
+    vUvSampleBounds = vec4(
+        min_uv + vec2(0.5),
+        max_uv - vec2(0.5)
+    ) / texture_size.xyxy;
+
+    vec2 f = (local_pos - geometry.local_rect.p0) / geometry.local_rect.size;
+
+    f = bilerp(
+        extra_data.st_tl, extra_data.st_tr,
+        extra_data.st_bl, extra_data.st_br,
+        f.y, f.x
+    );
+    vec2 uv = mix(uv0, uv1, f);
+
+    vUv = vec3(uv / texture_size, res.layer);
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
-    bvec4 inside = lessThanEqual(vec4(vUvTaskBounds.xy, vUv.xy),
-                                 vec4(vUv.xy, vUvTaskBounds.zw));
-    if (all(inside)) {
-        vec2 uv = clamp(vUv.xy, vUvSampleBounds.xy, vUvSampleBounds.zw);
-        oFragColor = textureLod(sCacheRGBA8, vec3(uv, vUv.z), 0.0);
-    } else {
-        oFragColor = vec4(0.0);
-    }
+    float alpha = do_clip();
+    vec2 uv = clamp(vUv.xy, vUvSampleBounds.xy, vUvSampleBounds.zw);
+    oFragColor = alpha * textureLod(sCacheRGBA8, vec3(uv, vUv.z), 0.0);
 }
 #endif

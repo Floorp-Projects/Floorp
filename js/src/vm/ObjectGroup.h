@@ -278,8 +278,9 @@ class ObjectGroup : public gc::TenuredCell
     }
 
     TypeNewScript* newScriptDontCheckGeneration() const {
-        if (addendumKind() == Addendum_NewScript)
+        if (addendumKind() == Addendum_NewScript) {
             return reinterpret_cast<TypeNewScript*>(addendum_);
+        }
         return nullptr;
     }
 
@@ -309,8 +310,9 @@ class ObjectGroup : public gc::TenuredCell
     maybePreliminaryObjects(const AutoSweepObjectGroup& sweep);
 
     PreliminaryObjectArrayWithTemplate* maybePreliminaryObjectsDontCheckGeneration() {
-        if (addendumKind() == Addendum_PreliminaryObjects)
+        if (addendumKind() == Addendum_PreliminaryObjects) {
             return reinterpret_cast<PreliminaryObjectArrayWithTemplate*>(addendum_);
+        }
         return nullptr;
     }
 
@@ -332,8 +334,9 @@ class ObjectGroup : public gc::TenuredCell
     inline UnboxedLayout& unboxedLayout(const AutoSweepObjectGroup& sweep);
 
     UnboxedLayout* maybeUnboxedLayoutDontCheckGeneration() const {
-        if (addendumKind() == Addendum_UnboxedLayout)
+        if (addendumKind() == Addendum_UnboxedLayout) {
             return &unboxedLayoutDontCheckGeneration();
+        }
         return nullptr;
     }
 
@@ -347,8 +350,9 @@ class ObjectGroup : public gc::TenuredCell
     }
 
     ObjectGroup* maybeOriginalUnboxedGroup() const {
-        if (addendumKind() == Addendum_OriginalUnboxedGroup)
+        if (addendumKind() == Addendum_OriginalUnboxedGroup) {
             return reinterpret_cast<ObjectGroup*>(addendum_);
+        }
         return nullptr;
     }
 
@@ -359,8 +363,9 @@ class ObjectGroup : public gc::TenuredCell
     TypeDescr* maybeTypeDescr() {
         // Note: there is no need to sweep when accessing the type descriptor
         // of an object, as it is strongly held and immutable.
-        if (addendumKind() == Addendum_TypeDescr)
+        if (addendumKind() == Addendum_TypeDescr) {
             return &typeDescr();
+        }
         return nullptr;
     }
 
@@ -376,8 +381,9 @@ class ObjectGroup : public gc::TenuredCell
     JSFunction* maybeInterpretedFunction() {
         // Note: as with type descriptors, there is no need to sweep when
         // accessing the interpreted function associated with an object.
-        if (addendumKind() == Addendum_InterpretedFunction)
+        if (addendumKind() == Addendum_InterpretedFunction) {
             return reinterpret_cast<JSFunction*>(addendum_);
+        }
         return nullptr;
     }
 

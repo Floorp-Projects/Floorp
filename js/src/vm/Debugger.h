@@ -171,11 +171,13 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
         CheckDebuggeeThing(k, InvisibleKeysOk);
 #endif
         MOZ_ASSERT(!Base::has(k));
-        if (!incZoneCount(k->zone()))
+        if (!incZoneCount(k->zone())) {
             return false;
+        }
         bool ok = Base::relookupOrAdd(p, k, v);
-        if (!ok)
+        if (!ok) {
             decZoneCount(k->zone());
+        }
         return ok;
     }
 
@@ -192,8 +194,9 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
             traceValueEdges(tracer, e.front().value());
             Key key = e.front().key();
             TraceEdge(tracer, &key, "Debugger WeakMap key");
-            if (key != e.front().key())
+            if (key != e.front().key()) {
                 e.rekeyFront(key);
+            }
             key.unsafeSet(nullptr);
         }
     }
@@ -221,8 +224,9 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
 
     MOZ_MUST_USE bool incZoneCount(JS::Zone* zone) {
         CountMap::AddPtr p = zoneCounts.lookupForAdd(zone);
-        if (!p && !zoneCounts.add(p, zone, 0))
+        if (!p && !zoneCounts.add(p, zone, 0)) {
             return false;   // OOM'd while adding
+        }
         ++p->value();
         return true;
     }
@@ -232,8 +236,9 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
         MOZ_ASSERT(p);
         MOZ_ASSERT(p->value() > 0);
         --p->value();
-        if (p->value() == 0)
+        if (p->value() == 0) {
             zoneCounts.remove(zone);
+        }
     }
 };
 
@@ -1772,8 +1777,9 @@ Breakpoint::asWasm()
 Breakpoint*
 Debugger::firstBreakpoint() const
 {
-    if (breakpoints.isEmpty())
+    if (breakpoints.isEmpty()) {
         return nullptr;
+    }
     return &(*breakpoints.begin());
 }
 
@@ -1826,11 +1832,13 @@ Debugger::onNewScript(JSContext* cx, HandleScript script)
                   script->realm()->firedOnNewGlobalObject);
 
     // The script may not be ready to be interrogated by the debugger.
-    if (script->hideScriptFromDebugger())
+    if (script->hideScriptFromDebugger()) {
         return;
+    }
 
-    if (script->realm()->isDebuggee())
+    if (script->realm()->isDebuggee()) {
         slowPathOnNewScript(cx, script);
+    }
 }
 
 /* static */ void
@@ -1840,16 +1848,18 @@ Debugger::onNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global)
 #ifdef DEBUG
     global->realm()->firedOnNewGlobalObject = true;
 #endif
-    if (!cx->runtime()->onNewGlobalObjectWatchers().isEmpty())
+    if (!cx->runtime()->onNewGlobalObjectWatchers().isEmpty()) {
         Debugger::slowPathOnNewGlobalObject(cx, global);
+    }
 }
 
 /* static */ bool
 Debugger::onLogAllocationSite(JSContext* cx, JSObject* obj, HandleSavedFrame frame, mozilla::TimeStamp when)
 {
     GlobalObject::DebuggerVector* dbgs = cx->global()->getDebuggers();
-    if (!dbgs || dbgs->empty())
+    if (!dbgs || dbgs->empty()) {
         return true;
+    }
     RootedObject hobj(cx, obj);
     return Debugger::slowPathOnLogAllocationSite(cx, hobj, frame, when, *dbgs);
 }

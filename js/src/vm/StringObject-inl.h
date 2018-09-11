@@ -19,8 +19,9 @@ StringObject::init(JSContext* cx, Handle<StringObject*> obj, HandleString str)
 {
     MOZ_ASSERT(obj->numFixedSlots() == 2);
 
-    if (!EmptyShape::ensureInitialCustomShape<StringObject>(cx, obj))
+    if (!EmptyShape::ensureInitialCustomShape<StringObject>(cx, obj)) {
         return false;
+    }
 
     MOZ_ASSERT(obj->lookup(cx, NameToId(cx->names().length))->slot() == LENGTH_SLOT);
 
@@ -33,10 +34,12 @@ StringObject::init(JSContext* cx, Handle<StringObject*> obj, HandleString str)
 StringObject::create(JSContext* cx, HandleString str, HandleObject proto, NewObjectKind newKind)
 {
     Rooted<StringObject*> obj(cx, NewObjectWithClassProto<StringObject>(cx, proto, newKind));
-    if (!obj)
+    if (!obj) {
         return nullptr;
-    if (!StringObject::init(cx, obj, str))
+    }
+    if (!StringObject::init(cx, obj, str)) {
         return nullptr;
+    }
     return obj;
 }
 

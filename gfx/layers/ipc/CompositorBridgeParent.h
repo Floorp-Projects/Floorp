@@ -576,12 +576,7 @@ protected:
   static void Setup();
 
   /**
-   * Destroys the compositor thread and global compositor map.
-   */
-  static void Shutdown();
-
-  /**
-   * Finish the shutdown operation on the compositor thread.
+   * Remaning cleanups after the compositore thread is gone.
    */
   static void FinishShutdown();
 

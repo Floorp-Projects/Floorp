@@ -31,10 +31,12 @@ js::ErrorObject::assignInitialShape(JSContext* cx, Handle<ErrorObject*> obj)
 {
     MOZ_ASSERT(obj->empty());
 
-    if (!NativeObject::addDataProperty(cx, obj, cx->names().fileName, FILENAME_SLOT, 0))
+    if (!NativeObject::addDataProperty(cx, obj, cx->names().fileName, FILENAME_SLOT, 0)) {
         return nullptr;
-    if (!NativeObject::addDataProperty(cx, obj, cx->names().lineNumber, LINENUMBER_SLOT, 0))
+    }
+    if (!NativeObject::addDataProperty(cx, obj, cx->names().lineNumber, LINENUMBER_SLOT, 0)) {
         return nullptr;
+    }
     return NativeObject::addDataProperty(cx, obj, cx->names().columnNumber, COLUMNNUMBER_SLOT, 0);
 }
 
@@ -50,8 +52,9 @@ js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj, JSExnType type,
     // Null out early in case of error, for exn_finalize's sake.
     obj->initReservedSlot(ERROR_REPORT_SLOT, PrivateValue(nullptr));
 
-    if (!EmptyShape::ensureInitialCustomShape<ErrorObject>(cx, obj))
+    if (!EmptyShape::ensureInitialCustomShape<ErrorObject>(cx, obj)) {
         return false;
+    }
 
     // The .message property isn't part of the initial shape because it's
     // present in some error objects -- |Error.prototype|, |new Error("f")|,
@@ -60,8 +63,9 @@ js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj, JSExnType type,
     RootedShape messageShape(cx);
     if (message) {
         messageShape = NativeObject::addDataProperty(cx, obj, cx->names().message, MESSAGE_SLOT, 0);
-        if (!messageShape)
+        if (!messageShape) {
             return false;
+        }
         MOZ_ASSERT(messageShape->slot() == MESSAGE_SLOT);
     }
 
@@ -81,8 +85,9 @@ js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj, JSExnType type,
     obj->initReservedSlot(FILENAME_SLOT, StringValue(fileName));
     obj->initReservedSlot(LINENUMBER_SLOT, Int32Value(lineNumber));
     obj->initReservedSlot(COLUMNNUMBER_SLOT, Int32Value(columnNumber));
-    if (message)
+    if (message) {
         obj->setSlotWithType(cx, messageShape, StringValue(message));
+    }
 
     // When recording/replaying and running on the main thread, get a counter
     // which the devtools can use to warp to this point in the future.
@@ -108,16 +113,18 @@ js::ErrorObject::create(JSContext* cx, JSExnType errorType, HandleObject stack,
     RootedObject proto(cx, protoArg);
     if (!proto) {
         proto = GlobalObject::getOrCreateCustomErrorPrototype(cx, cx->global(), errorType);
-        if (!proto)
+        if (!proto) {
             return nullptr;
+        }
     }
 
     Rooted<ErrorObject*> errObject(cx);
     {
         const Class* clasp = ErrorObject::classForType(errorType);
         JSObject* obj = NewObjectWithGivenProto(cx, clasp, proto);
-        if (!obj)
+        if (!obj) {
             return nullptr;
+        }
         errObject = &obj->as<ErrorObject>();
     }
 
@@ -133,8 +140,9 @@ js::ErrorObject::create(JSContext* cx, JSExnType errorType, HandleObject stack,
 JSErrorReport*
 js::ErrorObject::getOrCreateErrorReport(JSContext* cx)
 {
-    if (JSErrorReport* r = getErrorReport())
+    if (JSErrorReport* r = getErrorReport()) {
         return r;
+    }
 
     // We build an error report on the stack and then use CopyErrorReport to do
     // the nitty-gritty malloc stuff.
@@ -146,8 +154,9 @@ js::ErrorObject::getOrCreateErrorReport(JSContext* cx)
 
     // Filename.
     UniqueChars filenameStr = JS_EncodeStringToLatin1(cx, fileName(cx));
-    if (!filenameStr)
+    if (!filenameStr) {
         return nullptr;
+    }
     report.filename = filenameStr.get();
 
     // Coordinates.
@@ -157,20 +166,24 @@ js::ErrorObject::getOrCreateErrorReport(JSContext* cx)
     // Message. Note that |new Error()| will result in an undefined |message|
     // slot, so we need to explicitly substitute the empty string in that case.
     RootedString message(cx, getMessage());
-    if (!message)
+    if (!message) {
         message = cx->runtime()->emptyString;
-    if (!message->ensureFlat(cx))
+    }
+    if (!message->ensureFlat(cx)) {
         return nullptr;
+    }
 
     UniqueChars utf8 = StringToNewUTF8CharsZ(cx, *message);
-    if (!utf8)
+    if (!utf8) {
         return nullptr;
+    }
     report.initOwnedMessage(utf8.release());
 
     // Cache and return.
     UniquePtr<JSErrorReport> copy = CopyErrorReport(cx, &report);
-    if (!copy)
+    if (!copy) {
         return nullptr;
+    }
     setReservedSlot(ERROR_REPORT_SLOT, PrivateValue(copy.get()));
     return copy.release();
 }
@@ -195,8 +208,9 @@ FindErrorInstanceOrPrototype(JSContext* cx, HandleObject obj, MutableHandleObjec
 
     RootedObject proto(cx);
     while (!IsErrorProtoKey(StandardProtoKeyOrNull(target))) {
-        if (!GetPrototype(cx, target, &proto))
+        if (!GetPrototype(cx, target, &proto)) {
             return false;
+        }
 
         if (!proto) {
             // We walked the whole prototype chain and did not find an Error
@@ -238,8 +252,9 @@ js::ErrorObject::getStack_impl(JSContext* cx, const CallArgs& args)
     RootedObject thisObj(cx, &args.thisv().toObject());
 
     RootedObject obj(cx);
-    if (!FindErrorInstanceOrPrototype(cx, thisObj, &obj))
+    if (!FindErrorInstanceOrPrototype(cx, thisObj, &obj)) {
         return false;
+    }
 
     if (!obj->is<ErrorObject>()) {
         args.rval().setString(cx->runtime()->emptyString);
@@ -252,8 +267,9 @@ js::ErrorObject::getStack_impl(JSContext* cx, const CallArgs& args)
 
     RootedObject savedFrameObj(cx, obj->as<ErrorObject>().stack());
     RootedString stackString(cx);
-    if (!BuildStackString(cx, principals, savedFrameObj, &stackString))
+    if (!BuildStackString(cx, principals, savedFrameObj, &stackString)) {
         return false;
+    }
 
     if (cx->runtime()->stackFormat() == js::StackFormat::V8) {
         // When emulating V8 stack frames, we also need to prepend the
@@ -261,8 +277,9 @@ js::ErrorObject::getStack_impl(JSContext* cx, const CallArgs& args)
         HandlePropertyName name = cx->names().ErrorToStringWithTrailingNewline;
         FixedInvokeArgs<0> args2(cx);
         RootedValue rval(cx);
-        if (!CallSelfHostedFunction(cx, name, args.thisv(), args2, &rval))
+        if (!CallSelfHostedFunction(cx, name, args.thisv(), args2, &rval)) {
             return false;
+        }
 
         if (!rval.isString()) {
             args.rval().setString(cx->runtime()->emptyString);
@@ -290,8 +307,9 @@ js::ErrorObject::setStack_impl(JSContext* cx, const CallArgs& args)
 {
     RootedObject thisObj(cx, &args.thisv().toObject());
 
-    if (!args.requireAtLeast(cx, "(set stack)", 1))
+    if (!args.requireAtLeast(cx, "(set stack)", 1)) {
         return false;
+    }
     RootedValue val(cx, args[0]);
 
     return DefineDataProperty(cx, thisObj, cx->names().stack, val);

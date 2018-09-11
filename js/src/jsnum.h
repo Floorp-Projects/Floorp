@@ -199,12 +199,14 @@ StringToNumberDontReportOOM(JSContext* cx, JSString* str, double* result);
 MOZ_ALWAYS_INLINE MOZ_MUST_USE bool
 ToNumber(JSContext* cx, JS::MutableHandleValue vp)
 {
-    if (vp.isNumber())
+    if (vp.isNumber()) {
         return true;
+    }
     double d;
     extern JS_PUBLIC_API(bool) ToNumberSlow(JSContext* cx, HandleValue v, double* dp);
-    if (!ToNumberSlow(cx, vp, &d))
+    if (!ToNumberSlow(cx, vp, &d)) {
         return false;
+    }
 
     vp.setNumber(d);
     return true;
@@ -217,11 +219,13 @@ ToNumericSlow(JSContext* cx, JS::MutableHandleValue vp);
 MOZ_ALWAYS_INLINE MOZ_MUST_USE bool
 ToNumeric(JSContext* cx, JS::MutableHandleValue vp)
 {
-    if (vp.isNumber())
+    if (vp.isNumber()) {
         return true;
+    }
 #ifdef ENABLE_BIGINT
-    if (vp.isBigInt())
+    if (vp.isBigInt()) {
         return true;
+    }
 #endif
     return ToNumericSlow(cx, vp);
 }
@@ -331,8 +335,9 @@ ToInteger(JSContext* cx, HandleValue v, double* dp)
         return true;
     } else {
         extern JS_PUBLIC_API(bool) ToNumberSlow(JSContext* cx, HandleValue v, double* dp);
-        if (!ToNumberSlow(cx, v, dp))
+        if (!ToNumberSlow(cx, v, dp)) {
             return false;
+        }
     }
     *dp = JS::ToInteger(*dp);
     return true;

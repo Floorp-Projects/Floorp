@@ -130,12 +130,14 @@ BinASTParser<Tok>::parseAux(GlobalSharedContext* globalsc,
     tokenizer_.emplace(cx_, start, length);
 
     BinParseContext globalpc(cx_, this, globalsc, /* newDirectives = */ nullptr);
-    if (!globalpc.init())
+    if (!globalpc.init()) {
         return cx_->alreadyReportedError();
+    }
 
     ParseContext::VarScope varScope(cx_, &globalpc, usedNames_);
-    if (!varScope.init(&globalpc))
+    if (!varScope.init(&globalpc)) {
         return cx_->alreadyReportedError();
+    }
 
     MOZ_TRY(tokenizer_->readHeader());
 
@@ -144,8 +146,9 @@ BinASTParser<Tok>::parseAux(GlobalSharedContext* globalsc,
 
     mozilla::Maybe<GlobalScope::Data*> bindings = NewGlobalScopeData(cx_, varScope, alloc_,
                                                                      parseContext_);
-    if (!bindings)
+    if (!bindings) {
         return cx_->alreadyReportedError();
+    }
     globalsc->bindings = *bindings;
 
     return result; // Magic conversion to Ok.
@@ -159,8 +162,9 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
     ParseNode* name)
 {
     RootedAtom atom(cx_);
-    if (name)
+    if (name) {
         atom = name->name();
+    }
 
     // Allocate the function before walking down the tree.
     RootedFunction fun(cx_);
@@ -169,8 +173,9 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
     auto* funbox = alloc_.new_<FunctionBox>(cx_, traceListHead_, fun, /* toStringStart = */ 0,
                                             Directives(parseContext_), /* extraWarning = */ false,
                                             generatorKind, functionAsyncKind);
-    if (!funbox)
+    if (!funbox) {
         return raiseOOM();
+    }
 
     traceListHead_ = funbox;
     funbox->initWithEnclosingParseContext(parseContext_, syntax);
@@ -240,8 +245,9 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
 static bool TryMarkCaptureInScope(ParseContext::Scope& scope, HandleAtom atom)
 {
     auto name = scope.lookupDeclaredName(atom);
-    if (!name)
+    if (!name) {
         return false;
+    }
     name->value()->setClosedOver();
     return true;
 }
@@ -263,22 +269,26 @@ BinASTParser<Tok>::parseAndUpdateCapturedNames(const BinKind kind)
             MOZ_ASSERT(parseContext_->isFunctionBox());
 
             if (parseContext_->functionBox()->function()->isNamedLambda()) {
-                if (TryMarkCaptureInScope(parseContext_->namedLambdaScope(), name))
+                if (TryMarkCaptureInScope(parseContext_->namedLambdaScope(), name)) {
                     continue;
+                }
             }
 
-            if (!TryMarkCaptureInScope(parseContext_->functionScope(), name))
+            if (!TryMarkCaptureInScope(parseContext_->functionScope(), name)) {
                 return raiseUndeclaredCapture(name);
+            }
             continue;
         }
 
         if (kind == BinKind::AssertedVarScope) {
-            if (TryMarkCaptureInScope(parseContext_->varScope(), name))
+            if (TryMarkCaptureInScope(parseContext_->varScope(), name)) {
                 continue;
+            }
         }
 
-        if (!TryMarkCaptureInScope(*parseContext_->innermostScope(), name))
+        if (!TryMarkCaptureInScope(*parseContext_->innermostScope(), name)) {
             return raiseUndeclaredCapture(name);
+        }
     }
     MOZ_TRY(guard.done());
     return Ok();
@@ -297,8 +307,9 @@ BinASTParser<Tok>::parseAndUpdateScopeNames(ParseContext::Scope& scope, Declarat
 
         MOZ_TRY_VAR(name, tokenizer_->readAtom());
         auto ptr = scope.lookupDeclaredNameForAdd(name);
-        if (ptr)
+        if (ptr) {
             return raiseError("Variable redeclaration");
+        }
 
         BINJS_TRY(scope.addDeclaredName(parseContext_, ptr, name.get(), kind, tokenizer_->offset()));
     }
@@ -316,8 +327,9 @@ BinASTParser<Tok>::checkBinding(JSAtom* name)
         : *parseContext_->innermostScope();
 
     auto ptr = scope.lookupDeclaredName(name->asPropertyName());
-    if (!ptr)
+    if (!ptr) {
         return raiseMissingVariableInAssertedScope(name);
+    }
 
     return Ok();
 }
@@ -329,8 +341,9 @@ BinASTParser<Tok>::checkClosedVars(ParseContext::Scope& scope)
         if (UsedNamePtr p = usedNames_.lookup(bi.name())) {
             bool closedOver;
             p->value().noteBoundInScope(parseContext_->scriptId(), scope.id(), &closedOver);
-            if (closedOver && !bi.closedOver())
+            if (closedOver && !bi.closedOver()) {
                 return raiseInvalidClosedVar(bi.name());
+            }
         }
     }
 
@@ -344,8 +357,9 @@ BinASTParser<Tok>::checkFunctionClosedVars()
 
     MOZ_TRY(checkClosedVars(*parseContext_->innermostScope()));
     MOZ_TRY(checkClosedVars(parseContext_->functionScope()));
-    if (parseContext_->functionBox()->function()->isNamedLambda())
+    if (parseContext_->functionBox()->function()->isNamedLambda()) {
         MOZ_TRY(checkClosedVars(parseContext_->namedLambdaScope()));
+    }
 
     return Ok();
 }
@@ -500,8 +514,9 @@ BinASTParser<Tok>::errorAtVA(uint32_t offset, unsigned errorNumber, va_list* arg
 template<typename Tok> bool
 BinASTParser<Tok>::reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset, unsigned errorNumber, va_list* args)
 {
-    if (!options().extraWarningsOption)
+    if (!options().extraWarningsOption) {
         return true;
+    }
 
     ErrorMetadata metadata;
     metadata.filename = getFilename();
@@ -520,8 +535,9 @@ BinASTParser<Tok>::reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes
 bool
 BinASTParserBase::hasUsedName(HandlePropertyName name)
 {
-    if (UsedNamePtr p = usedNames_.lookup(name))
+    if (UsedNamePtr p = usedNames_.lookup(name)) {
         return p->value().isUsedInScript(parseContext_->scriptId());
+    }
 
     return false;
 }

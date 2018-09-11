@@ -32,8 +32,9 @@ struct GraphNodeBase
     ~GraphNodeBase() {}
 
     Node* nextNodeInGroup() const {
-        if (gcNextGraphNode && gcNextGraphNode->gcNextGraphComponent == gcNextGraphComponent)
+        if (gcNextGraphNode && gcNextGraphNode->gcNextGraphComponent == gcNextGraphComponent) {
             return gcNextGraphNode;
+        }
         return nullptr;
     }
 
@@ -128,8 +129,9 @@ class ComponentFinder
     }
 
     static void mergeGroups(Node* first) {
-        for (Node* v = first; v; v = v->gcNextGraphNode)
+        for (Node* v = first; v; v = v->gcNextGraphNode) {
             v->gcNextGraphComponent = nullptr;
+        }
     }
 
   public:
@@ -169,8 +171,9 @@ class ComponentFinder
         cur->findOutgoingEdges(*static_cast<Derived*>(this));
         cur = old;
 
-        if (stackFull)
+        if (stackFull) {
             return;
+        }
 
         if (v->gcLowLink == v->gcDiscoveryTime) {
             Node* nextComponent = firstComponent;
