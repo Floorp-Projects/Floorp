@@ -24,11 +24,6 @@ interface nsIHTMLObjectResizer : nsISupports
   const short eBottomRight = 7;
 
   /**
-   * the element currently displaying resizers
-   */
-  readonly attribute Element resizedObject;
-
-  /**
    * a boolean indicating if object resizing is enabled in the editor
    */
   attribute boolean objectResizingEnabled;

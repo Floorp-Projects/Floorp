@@ -253,9 +253,6 @@ HTMLEditor::SetAllResizersPosition()
 NS_IMETHODIMP
 HTMLEditor::RefreshResizers()
 {
-  if (NS_WARN_IF(!mResizedObject)) {
-    return NS_OK;
-  }
   nsresult rv = RefreshResizersInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -266,6 +263,9 @@ HTMLEditor::RefreshResizers()
 nsresult
 HTMLEditor::RefreshResizersInternal()
 {
+  // Don't warn even if resizers are not visible since script cannot check
+  // if they are visible and this is non-virtual method.  So, the cost of
+  // calling this can be ignored.
   if (!mResizedObject) {
     return NS_OK;
   }
@@ -302,7 +302,8 @@ nsresult
 HTMLEditor::ShowResizersInternal(Element& aResizedElement)
 {
   // When we have visible resizers, we cannot show new resizers.
-  // So, the caller should call HideResizersInternal() first.
+  // So, the caller should call HideResizersInternal() first if this
+  // returns error.
   if (NS_WARN_IF(mResizedObject)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -520,7 +521,10 @@ HTMLEditor::HideResizers()
 nsresult
 HTMLEditor::HideResizersInternal()
 {
-  if (NS_WARN_IF(!mResizedObject)) {
+  // Don't warn even if resizers are visible since script cannot check
+  // if they are visible and this is non-virtual method.  So, the cost of
+  // calling this can be ignored.
+  if (!mResizedObject) {
     return NS_OK;
   }
 
@@ -1143,14 +1147,6 @@ HTMLEditor::SetFinalSize(int32_t aX,
 
   DebugOnly<nsresult> rv = RefreshResizersInternal();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed ot refresh resizers");
-}
-
-NS_IMETHODIMP
-HTMLEditor::GetResizedObject(Element** aResizedObject)
-{
-  RefPtr<Element> ret = mResizedObject;
-  ret.forget(aResizedObject);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
