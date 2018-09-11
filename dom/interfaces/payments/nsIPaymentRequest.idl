@@ -63,9 +63,10 @@ interface nsIPaymentDetails : nsISupports
   readonly attribute AString error;
   [implicit_jscontext]
   readonly attribute jsval shippingAddressErrors;
-
-  void update(in nsIPaymentDetails aDetails, in boolean aRequestShipping);
-  AString shippingAddressErrorsJSON();
+  [implicit_jscontext]
+  readonly attribute jsval payer;
+  [implicit_jscontext]
+  readonly attribute jsval paymentMethod;
 };
 
 [scriptable, builtinclass, uuid(d53f9f20-138e-47cc-9fd5-db16a3f6d301)]
@@ -89,8 +90,4 @@ interface nsIPaymentRequest : nsISupports
   readonly attribute nsIPaymentDetails paymentDetails;
   readonly attribute nsIPaymentOptions paymentOptions;
   readonly attribute AString shippingOption;
-
-  [noscript] void setCompleteStatus(in AString aCompleteStatus);
-  void updatePaymentDetails(in nsIPaymentDetails aDetails,
-                            in AString aShippingOption);
 };

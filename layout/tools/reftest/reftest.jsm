@@ -12,11 +12,11 @@ var EXPORTED_SYMBOLS = [
 ];
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("chrome://reftest/content/globals.jsm", this);
-Cu.import("chrome://reftest/content/httpd.jsm", this);
-Cu.import("chrome://reftest/content/manifest.jsm", this);
-Cu.import("chrome://reftest/content/StructuredLog.jsm", this);
-Cu.import("chrome://reftest/content/PerTestCoverageUtils.jsm", this);
+Cu.import("resource://reftest/globals.jsm", this);
+Cu.import("resource://reftest/httpd.jsm", this);
+Cu.import("resource://reftest/manifest.jsm", this);
+Cu.import("resource://reftest/StructuredLog.jsm", this);
+Cu.import("resource://reftest/PerTestCoverageUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
@@ -1455,7 +1455,7 @@ function RegisterMessageListenersAndLoadContentScript()
         function (m) { RecvExpectProcessCrash(); }
     );
 
-    g.browserMessageManager.loadFrameScript("chrome://reftest/content/reftest-content.js", true, true);
+    g.browserMessageManager.loadFrameScript("resource://reftest/reftest-content.js", true, true);
 }
 
 function RecvAssertionCount(count)

@@ -7,8 +7,7 @@ function load()
   let textarea = document.getElementById("editor");
   textarea.focus();
 
-  SpecialPowers.Cu.import(
-    "chrome://reftest/content/AsyncSpellCheckTestHelper.jsm")
+  SpecialPowers.Cu.import("resource://reftest/AsyncSpellCheckTestHelper.jsm")
   .onSpellCheck(textarea, () => {
     let isc = SpecialPowers.wrap(textarea).editor.getInlineSpellChecker(false);
     let sc = isc.spellChecker;

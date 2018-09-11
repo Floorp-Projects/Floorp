@@ -519,6 +519,16 @@ interface nsIBrowserSearchService : nsISupports
    *        "https://www.google.com/search?q=terms".
    */
   nsISearchParseSubmissionResult parseSubmissionURL(in AString url);
+
+  /**
+   * Determines if a URL is related to search and if so, records the 
+   * appropriate telemtry.
+   *
+   * @param url
+   *        String containing the URL to parse, for example
+   *        "https://www.google.com/search?q=terms".
+   */
+  boolean recordSearchURLTelemetry(in AString url);
 };
 
 %{ C++

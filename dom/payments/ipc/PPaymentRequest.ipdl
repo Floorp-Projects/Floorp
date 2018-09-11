@@ -56,6 +56,8 @@ struct IPCPaymentDetails
   IPCPaymentDetailsModifier[] modifiers;
   nsString error;
   nsString shippingAddressErrors;
+  nsString payerErrors;
+  nsString paymentMethodErrors;
 };
 
 struct IPCPaymentOptions
@@ -110,6 +112,15 @@ struct IPCPaymentCloseActionRequest
   nsString requestId;
 };
 
+struct IPCPaymentRetryActionRequest
+{
+  nsString requestId;
+  nsString error;
+  nsString payerErrors;
+  nsString paymentMethodErrors;
+  nsString shippingAddressErrors;
+};
+
 union IPCPaymentActionRequest
 {
   IPCPaymentCreateActionRequest;
@@ -119,6 +130,7 @@ union IPCPaymentActionRequest
   IPCPaymentCompleteActionRequest;
   IPCPaymentUpdateActionRequest;
   IPCPaymentCloseActionRequest;
+  IPCPaymentRetryActionRequest;
 };
 
 struct IPCPaymentCanMakeActionResponse

@@ -9,6 +9,7 @@
 const { PerformanceStats } = ChromeUtils.import("resource://gre/modules/PerformanceStats.jsm", {});
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm", {});
+const { ExtensionParent } = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm", {});
 
 const {WebExtensionPolicy} = Cu.getGlobalForObject(Services);
 
@@ -70,6 +71,10 @@ const MODE_RECENT = "recent";
 // based on the new performance counters.
 function performanceCountersEnabled() {
   return Services.prefs.getBoolPref("dom.performance.enable_scheduler_timing", false);
+}
+
+function extensionCountersEnabled() {
+  return Services.prefs.getBoolPref("extensions.webextensions.enablePerformanceCounters", false);
 }
 
 let tabFinder = {
@@ -400,6 +405,11 @@ var State = {
       return this._monitor.promiseSnapshot();
     }
 
+    let addons = WebExtensionPolicy.getActiveExtensions();
+    let addonHosts = new Map();
+    for (let addon of addons)
+      addonHosts.set(addon.mozExtensionHostname, addon.id);
+
     let counters = await ChromeUtils.requestPerformanceMetrics();
     let tabs = {};
     for (let counter of counters) {
@@ -414,16 +424,41 @@ var State = {
       }
 
       let tab;
-      if (windowId in tabs) {
-        tab = tabs[windowId];
+      let id = windowId;
+      if (addonHosts.has(host)) {
+        id = addonHosts.get(host);
+      }
+      if (id in tabs) {
+        tab = tabs[id];
       } else {
         tab = {windowId, host, dispatchCount: 0, duration: 0, children: []};
-        tabs[windowId] = tab;
+        tabs[id] = tab;
       }
       tab.dispatchCount += dispatchCount;
       tab.duration += duration;
       if (!isTopLevel) {
         tab.children.push({host, isWorker, dispatchCount, duration});
+      }
+    }
+
+    if (extensionCountersEnabled()) {
+      let extCounters = ExtensionParent.ParentAPIManager.performanceCounters;
+      for (let [id, apiMap] of extCounters) {
+        let dispatchCount = 0, duration = 0;
+        for (let [, counter] of apiMap) {
+          dispatchCount += counter.calls;
+          duration += counter.duration;
+        }
+
+        let tab;
+        if (id in tabs) {
+          tab = tabs[id];
+        } else {
+          tab = {windowId: 0, host: id, dispatchCount: 0, duration: 0, children: []};
+          tabs[id] = tab;
+        }
+        tab.dispatchCount += dispatchCount;
+        tab.duration += duration;
       }
     }
 
@@ -577,11 +612,11 @@ var State = {
       let image = "chrome://mozapps/skin/places/defaultFavicon.svg";
       let found = tabFinder.get(parseInt(id));
       if (found) {
-        name = found.tab.linkedBrowser.contentTitle;
         if (found.tabbrowser) {
+          name = found.tab.getAttribute("label");
           image = found.tab.getAttribute("image");
         } else {
-          name = "Preloaded: " + name;
+          name = "Preloaded: " + found.tab.linkedBrowser.contentTitle;
         }
       } else if (id == 1) {
         name = BRAND_NAME;
