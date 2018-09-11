@@ -1,8 +1,7 @@
 // |reftest| skip-if(!xulRuntime.shell)
 
-// Note: The default time zone is set to PST8PDT for all jstests (when run in the shell).
-
-assertEq(/^(PST|PDT)$/.test(getTimeZone()), true);
+assertEq(/^(PST|PDT)$/.test(getTimeZone()), true,
+         "The default time zone is set to PST8PDT for all jstests (when run in the shell)");
 
 // U.S. daylight saving rules changed in 2007, excerpt from tzdata's
 // northamerica file:
