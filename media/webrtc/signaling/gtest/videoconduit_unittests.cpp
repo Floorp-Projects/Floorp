@@ -90,8 +90,10 @@ public:
   {
     NSS_NoDB_Init(nullptr);
 
-    mVideoConduit = new WebrtcVideoConduit(WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall)),
-                                           UniquePtr<cricket::VideoAdapter>(mAdapter));
+    mVideoConduit = new WebrtcVideoConduit(
+      WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall)),
+      UniquePtr<cricket::VideoAdapter>(mAdapter),
+      GetCurrentThreadEventTarget());
     std::vector<unsigned int> ssrcs = {42};
     mVideoConduit->SetLocalSSRCs(ssrcs);
   }
