@@ -701,13 +701,11 @@ nsHttpChannel::CheckFastBlocked()
     static bool sFastBlockInited = false;
     static bool sIsFastBlockEnabled = false;
     static uint32_t sFastBlockTimeout = 0;
-    static uint32_t sFastBlockLimit = 0;
 
     if (!sFastBlockInited) {
         sFastBlockInited = true;
         Preferences::AddBoolVarCache(&sIsFastBlockEnabled, "browser.fastblock.enabled");
         Preferences::AddUintVarCache(&sFastBlockTimeout, "browser.fastblock.timeout");
-        Preferences::AddUintVarCache(&sFastBlockLimit, "browser.fastblock.limit");
     }
 
     TimeStamp timestamp;
@@ -729,20 +727,14 @@ nsHttpChannel::CheckFastBlocked()
     }
 
     TimeDuration duration = TimeStamp::NowLoRes() - timestamp;
-    bool hasFastBlockStarted = duration.ToMilliseconds() >= sFastBlockTimeout;
-    bool hasFastBlockStopped = false;
-    if ((sFastBlockLimit != 0) && (sFastBlockLimit > sFastBlockTimeout)) {
-        hasFastBlockStopped = duration.ToMilliseconds() > sFastBlockLimit;
-    }
-    const bool isFastBlocking = hasFastBlockStarted && !hasFastBlockStopped;
+    bool isFastBlocking = duration.ToMilliseconds() >= sFastBlockTimeout;
 
     if (isFastBlocking && mLoadInfo) {
         MOZ_ALWAYS_SUCCEEDS(mLoadInfo->SetIsTrackerBlocked(true));
     }
 
-    LOG(("FastBlock started=%d stopped=%d (%lf) [this=%p]\n",
-         static_cast<int>(hasFastBlockStarted),
-         static_cast<int>(hasFastBlockStopped),
+    LOG(("FastBlock %s (%lf) [this=%p]\n",
+         isFastBlocking ? "timeout" : "passed",
          duration.ToMilliseconds(),
          this));
     return isFastBlocking;

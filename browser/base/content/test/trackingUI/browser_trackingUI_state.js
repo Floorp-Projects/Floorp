@@ -20,7 +20,6 @@ const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const FB_PREF = "browser.fastblock.enabled";
 const FB_TIMEOUT_PREF = "browser.fastblock.timeout";
-const FB_LIMIT_PREF = "browser.fastblock.limit";
 const TPC_PREF = "network.cookie.cookieBehavior";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
@@ -41,7 +40,6 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(CB_PREF);
   Services.prefs.clearUserPref(FB_PREF);
   Services.prefs.clearUserPref(FB_TIMEOUT_PREF);
-  Services.prefs.clearUserPref(FB_LIMIT_PREF);
   Services.prefs.clearUserPref(TPC_PREF);
 });
 
@@ -451,7 +449,6 @@ add_task(async function testFastBlock() {
 
   Services.prefs.setBoolPref(FB_PREF, true);
   Services.prefs.setIntPref(FB_TIMEOUT_PREF, 0);
-  Services.prefs.setIntPref(FB_LIMIT_PREF, 0);
   ok(FastBlock.enabled, "FB is enabled after setting the pref");
   Services.prefs.setBoolPref(CB_PREF, true);
   ok(ContentBlocking.enabled, "CB is enabled after setting the pref");
@@ -466,7 +463,6 @@ add_task(async function testFastBlock() {
 
   Services.prefs.clearUserPref(FB_PREF);
   Services.prefs.clearUserPref(FB_TIMEOUT_PREF);
-  Services.prefs.clearUserPref(FB_LIMIT_PREF);
   gBrowser.removeCurrentTab();
 });
 
