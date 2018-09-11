@@ -64,9 +64,6 @@
           </vbox>
         </row>
         <row>
-          <separator class="thin"/>
-        </row>
-        <row>
           <!-- This <vbox> is needed to position search tooltips correctly. -->
           <vbox>
             <menulist id="availableLanguages" oncommand="gLanguagesDialog.onAvailableLanguageSelect();"
@@ -74,12 +71,11 @@
               <menupopup id="availableLanguagesPopup"/>
             </menulist>
           </vbox>
-          <button id="addButton" oncommand="gLanguagesDialog.addLanguage();" disabled="true"
+          <button id="addButton" class="add-web-language" oncommand="gLanguagesDialog.addLanguage();" disabled="true"
                   data-l10n-id="languages-customize-add"/>
         </row>
       </rows>
     </grid>
-    <separator/>
     <separator/>
   </vbox>
 </dialog>
