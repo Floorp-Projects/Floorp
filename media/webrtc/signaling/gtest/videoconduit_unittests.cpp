@@ -22,50 +22,6 @@ using namespace mozilla;
 
 namespace test {
 
-class MockVideoAdapter : public cricket::VideoAdapter {
-public:
-
-  bool AdaptFrameResolution(int in_width,
-                            int in_height,
-                            int64_t in_timestamp_ns,
-                            int* cropped_width,
-                            int* cropped_height,
-                            int* out_width,
-                            int* out_height) override
-  {
-    mInWidth = in_width;
-    mInHeight = in_height;
-    mInTimestampNs = in_timestamp_ns;
-    return cricket::VideoAdapter::AdaptFrameResolution(in_width, in_height,
-                                                       in_timestamp_ns,
-                                                       cropped_width,
-                                                       cropped_height,
-                                                       out_width,
-                                                       out_height);
-  }
-
-  void OnResolutionRequest(rtc::Optional<int> max_pixel_count,
-                           rtc::Optional<int> max_pixel_count_step_up) override
-  {
-    mMaxPixelCount = max_pixel_count.value_or(-1);
-    mMaxPixelCountStepUp = max_pixel_count_step_up.value_or(-1);
-    cricket::VideoAdapter::OnResolutionRequest(max_pixel_count, max_pixel_count_step_up);
-  }
-
-  void OnScaleResolutionBy(rtc::Optional<float> scale_resolution_by) override
-  {
-    mScaleResolutionBy = scale_resolution_by.value_or(-1.0);
-    cricket::VideoAdapter::OnScaleResolutionBy(scale_resolution_by);
-  }
-
-  int mInWidth;
-  int mInHeight;
-  int64_t mInTimestampNs;
-  int mMaxPixelCount;
-  int mMaxPixelCountStepUp;
-  int mScaleResolutionBy;
-};
-
 class MockVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame>
 {
 public:
@@ -86,13 +42,12 @@ public:
 
   VideoConduitTest()
     : mCall(new MockCall())
-    , mAdapter(new MockVideoAdapter)
   {
     NSS_NoDB_Init(nullptr);
 
     mVideoConduit = new WebrtcVideoConduit(
       WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall)),
-      UniquePtr<cricket::VideoAdapter>(mAdapter),
+      MakeUnique<cricket::VideoAdapter>(),
       GetCurrentThreadEventTarget());
     std::vector<unsigned int> ssrcs = {42};
     mVideoConduit->SetLocalSSRCs(ssrcs);
@@ -121,7 +76,6 @@ public:
   }
 
   MockCall* mCall;
-  MockVideoAdapter* mAdapter;
   RefPtr<mozilla::WebrtcVideoConduit> mVideoConduit;
 };
 
@@ -571,15 +525,20 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecScaleResolutionBy)
   codecConfig.mSimulcastEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
+
+  UniquePtr<MockVideoSink> sink(new MockVideoSink());
+  rtc::VideoSinkWants wants;
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+
   mVideoConduit->StartTransmitting();
-  ASSERT_EQ(mAdapter->mScaleResolutionBy, 2);
   SendVideoFrame(640, 360, 1);
-  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(640, 360, mCall->mEncoderConfig);
+  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(
+    sink->mVideoFrame.width(), sink->mVideoFrame.height(), mCall->mEncoderConfig);
   ASSERT_EQ(videoStreams.size(), 2U);
-  ASSERT_EQ(videoStreams[0].width, 320U);
-  ASSERT_EQ(videoStreams[0].height, 180U);
-  ASSERT_EQ(videoStreams[1].width, 640U);
-  ASSERT_EQ(videoStreams[1].height, 360U);
+  ASSERT_EQ(videoStreams[0].width, 160U);
+  ASSERT_EQ(videoStreams[0].height, 90U);
+  ASSERT_EQ(videoStreams[1].width, 320U);
+  ASSERT_EQ(videoStreams[1].height, 180U);
   mVideoConduit->StopTransmitting();
 }
 
@@ -711,31 +670,64 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecRids)
 
 TEST_F(VideoConduitTest, TestOnSinkWantsChanged)
 {
+  UniquePtr<MockVideoSink> sink(new MockVideoSink());
   rtc::VideoSinkWants wants;
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+
   wants.max_pixel_count = rtc::Optional<int>(256000);
   EncodingConstraints constraints;
+  VideoCodecConfig::SimulcastEncoding encoding;
   VideoCodecConfig codecConfig(120, "VP8", constraints);
+  codecConfig.mSimulcastEncodings.push_back(encoding);
+  std::vector<webrtc::VideoStream> videoStreams;
 
   codecConfig.mEncodingConstraints.maxFs = 0;
   mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  mVideoConduit->StartTransmitting();
   mVideoConduit->OnSinkWantsChanged(wants);
-  ASSERT_EQ(mAdapter->mMaxPixelCount, 256000);
+  SendVideoFrame(1920, 1080, 1);
+  EXPECT_LE(sink->mVideoFrame.width() * sink->mVideoFrame.height(), 256000);
+  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(
+    sink->mVideoFrame.width(), sink->mVideoFrame.height(), mCall->mEncoderConfig);
+  ASSERT_EQ(videoStreams.size(), 1U);
+  EXPECT_EQ(videoStreams[0].width, 480U);
+  EXPECT_EQ(videoStreams[0].height, 270U);
 
   codecConfig.mEncodingConstraints.maxFs = 500;
   mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   mVideoConduit->OnSinkWantsChanged(wants);
-  ASSERT_EQ(mAdapter->mMaxPixelCount, 500*16*16); //convert macroblocks to pixels
+  SendVideoFrame(1920, 1080, 2);
+  EXPECT_LE(sink->mVideoFrame.width() * sink->mVideoFrame.height(), 500 * 16 * 16);
+  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(
+    sink->mVideoFrame.width(), sink->mVideoFrame.height(), mCall->mEncoderConfig);
+  ASSERT_EQ(videoStreams.size(), 1U);
+  EXPECT_EQ(videoStreams[0].width, 360U);
+  EXPECT_EQ(videoStreams[0].height, 201U);
 
   codecConfig.mEncodingConstraints.maxFs = 1000;
   mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   mVideoConduit->OnSinkWantsChanged(wants);
-  ASSERT_EQ(mAdapter->mMaxPixelCount, 256000);
+  SendVideoFrame(1920, 1080, 3);
+  EXPECT_LE(sink->mVideoFrame.width() * sink->mVideoFrame.height(), 1000 * 16 * 16);
+  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(
+    sink->mVideoFrame.width(), sink->mVideoFrame.height(), mCall->mEncoderConfig);
+  ASSERT_EQ(videoStreams.size(), 1U);
+  EXPECT_EQ(videoStreams[0].width, 480U);
+  EXPECT_EQ(videoStreams[0].height, 270U);
 
   wants.max_pixel_count = rtc::Optional<int>(64000);
   codecConfig.mEncodingConstraints.maxFs = 500;
   mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   mVideoConduit->OnSinkWantsChanged(wants);
-  ASSERT_EQ(mAdapter->mMaxPixelCount, 64000);
+  SendVideoFrame(1920, 1080, 4);
+  EXPECT_LE(sink->mVideoFrame.width() * sink->mVideoFrame.height(), 64000);
+  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(
+    sink->mVideoFrame.width(), sink->mVideoFrame.height(), mCall->mEncoderConfig);
+  ASSERT_EQ(videoStreams.size(), 1U);
+  EXPECT_EQ(videoStreams[0].width, 240U);
+  EXPECT_EQ(videoStreams[0].height, 135U);
+
+  mVideoConduit->StopTransmitting();
 }
 
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastOddScreen)
