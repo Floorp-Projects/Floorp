@@ -49,7 +49,7 @@ chrome.jar:
   content/aboutExperiments.js          (content/aboutExperiments.js)
   content/aboutLogins.xhtml            (content/aboutLogins.xhtml)
   content/aboutLogins.js               (content/aboutLogins.js)
-#ifndef RELEASE_OR_BETA
+#if MOZ_UPDATE_CHANNEL != release && MOZ_UPDATE_CHANNEL != esr
   content/WebcompatReporter.js         (content/WebcompatReporter.js)
 #endif
   content/ExtensionPermissions.js      (content/ExtensionPermissions.js)
