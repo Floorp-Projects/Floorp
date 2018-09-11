@@ -1,0 +1,17 @@
+<html>
+<head>
+  <script>
+    function start() {
+      o1 = document.createElement('u')
+      o2 = document.createElement('li')
+      o3 = document.createElement('style')
+      o2.textContent = '\nr'
+      o1.appendChild(o2)
+      document.documentElement.appendChild(o1)
+      o3.textContent = 'html { white-space: pre } :first-letter { float: left }'
+      document.documentElement.appendChild(o3)
+    }
+    document.addEventListener('DOMContentLoaded', start)
+  </script>
+</head>
+</html>

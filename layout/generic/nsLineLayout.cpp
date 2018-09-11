@@ -963,7 +963,18 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
         if (psd->mNoWrap &&
-            !LineIsEmpty() && // We can always place floats in an empty line.
+            // We can always place floats in an empty line.
+            !LineIsEmpty() &&
+            // We always place floating letter frames. This kinda sucks. They'd
+            // usually fall into the LineIsEmpty() check anyway, except when
+            // there's something like a bullet before or what not. We actually
+            // need to place them now, because they're pretty nasty and they
+            // create continuations that are in flow and not a kid of the
+            // previous continuation's parent. We don't want the deferred reflow
+            // of the letter frame to kill a continuation after we've stored it
+            // in the line layout data structures. See bug 1490281 to fix the
+            // underlying issue. When that's fixed this check should be removed.
+            !outOfFlowFrame->IsLetterFrame() &&
             !GetOutermostLineLayout()->mBlockRI->mFlags.mCanHaveTextOverflow) {
           // We'll do this at the next break opportunity.
           RecordNoWrapFloat(outOfFlowFrame);
