@@ -13684,6 +13684,29 @@
     "releaseChannelCollection": "opt-out",
     "description": "The number of times a storage.local backend data migration has been completed and results in one of the categories."
   },
+  "WEBEXT_USER_SCRIPT_INJECTION_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1470466],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes for userScripts from a WebExtension to be injected into a window."
+  },
+  "WEBEXT_USER_SCRIPT_INJECTION_MS_BY_ADDONID": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1470466],
+    "expires_in_version": "67",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes for userScripts from a WebExtension to be injected into a window, keyed by addon id.",
+    "keyed": true
+  },
   "EXTENSION_UPDATE_TYPE": {
     "record_in_processes": ["main"],
     "alert_emails": ["addons-dev-internal@mozilla.com"],
