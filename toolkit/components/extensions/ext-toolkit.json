@@ -189,14 +189,6 @@
       ["topSites"]
     ]
   },
-  "userScripts": {
-    "url": "chrome://extensions/content/parent/ext-userScripts.js",
-    "schema": "chrome://extensions/content/schemas/user_scripts.json",
-    "scopes": ["addon_parent", "content_parent"],
-    "paths": [
-      ["userScripts"]
-    ]
-  },
   "webNavigation": {
     "url": "chrome://extensions/content/parent/ext-webNavigation.js",
     "schema": "chrome://extensions/content/schemas/web_navigation.json",

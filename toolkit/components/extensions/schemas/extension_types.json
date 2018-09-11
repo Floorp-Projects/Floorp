@@ -89,38 +89,6 @@
             "additionalProperties": { "type": "any" }
           }
         ]
-      },
-      {
-        "id": "ExtensionFileOrCode",
-        "choices": [
-          {
-            "type": "object",
-            "properties": {
-              "file": {
-                "$ref": "manifest.ExtensionURL"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "properties": {
-              "code": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      {
-        "id": "PlainJSONValue",
-        "description": "A plain JSON value",
-        "choices": [
-          { "type": "number" },
-          { "type": "string" },
-          { "type": "boolean" },
-          { "type": "array", "items": {"$ref": "PlainJSONValue"} },
-          { "type": "object", "additionalProperties": { "$ref": "PlainJSONValue" } }
-        ]
       }
     ]
   }
