@@ -791,7 +791,11 @@ Action.prototype = {
   },
 
   get labelForHistogram() {
-    return this._labelForHistogram || this._id;
+    // The histogram label value has a length limit of 20 and restricted to a
+    // pattern. See MAX_LABEL_LENGTH and CPP_IDENTIFIER_PATTERN in
+    // toolkit/components/telemetry/parse_histograms.py
+    return this._labelForHistogram
+      || this._id.replace(/_\w{1}/g, match => match[1].toUpperCase()).substr(0, 20);
   },
 
   /**
@@ -1034,7 +1038,7 @@ Action.prototype = {
   get _isBuiltIn() {
     let builtInIDs = [
       "pocket",
-      "screenshots",
+      "screenshots_mozilla_org",
       "webcompat-reporter-button",
     ].concat(gBuiltInActions.filter(a => !a.__isSeparator).map(a => a.id));
     return builtInIDs.includes(this.id);
