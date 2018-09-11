@@ -154,8 +154,9 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
     bool uses(Register reg) {
         for (size_t i = 0; i < numMoves(); i++) {
             LMove move = getMove(i);
-            if (move.from() == LGeneralReg(reg) || move.to() == LGeneralReg(reg))
+            if (move.from() == LGeneralReg(reg) || move.to() == LGeneralReg(reg)) {
                 return true;
+            }
         }
         return false;
     }
@@ -1392,8 +1393,9 @@ class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
 
   public:
     uint32_t argslot() const {
-        if (JitStackValueAlignment > 1)
+        if (JitStackValueAlignment > 1) {
             return AlignBytes(mir()->numStackArgs(), JitStackValueAlignment);
+        }
         return mir()->numStackArgs();
     }
     MCall* mir() const {
@@ -2889,8 +2891,9 @@ class LBitOpI : public LInstructionHelper<1, 2, 0>
     { }
 
     const char* extraName() const {
-        if (bitop() == JSOP_URSH && mir_->toUrsh()->bailoutsDisabled())
+        if (bitop() == JSOP_URSH && mir_->toUrsh()->bailoutsDisabled()) {
             return "ursh:BailoutsDisabled";
+        }
         return CodeName[op_];
     }
 
@@ -7476,8 +7479,9 @@ class LSetPropertyCache : public LInstructionHelper<0, 1 + 2 * BOX_PIECES, 3>
         return getTemp(1);
     }
     const LDefinition* tempFloat32() {
-        if (hasUnaliasedDouble())
+        if (hasUnaliasedDouble()) {
             return getTemp(2);
+        }
         return getTemp(1);
     }
 };
@@ -9353,8 +9357,9 @@ class LWasmCallI64 : public LWasmCallBase<INT64_PIECES>
 inline bool
 LNode::isCallPreserved(AnyRegister reg) const
 {
-    if (IsWasmCall(op()))
+    if (IsWasmCall(op())) {
         return LWasmCallBase<0>::isCallPreserved(reg);
+    }
     return false;
 }
 

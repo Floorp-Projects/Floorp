@@ -192,8 +192,9 @@ class JSFunction : public js::NativeObject
     bool needsCallObject() const {
         MOZ_ASSERT(!isInterpretedLazy());
 
-        if (isNative())
+        if (isNative()) {
             return false;
+        }
 
         // Note: this should be kept in sync with
         // FunctionBox::needsCallObjectRegardlessOfBindings().
@@ -295,8 +296,9 @@ class JSFunction : public js::NativeObject
     bool isIntrinsic()              const { return isSelfHostedOrIntrinsic() && isNative(); }
 
     bool hasJITCode() const {
-        if (!hasScript())
+        if (!hasScript()) {
             return false;
+        }
 
         return nonLazyScript()->hasBaselineScript() || nonLazyScript()->hasIonScript();
     }
@@ -392,10 +394,11 @@ class JSFunction : public js::NativeObject
     }
 
     void setAsyncKind(js::FunctionAsyncKind asyncKind) {
-        if (isInterpretedLazy())
+        if (isInterpretedLazy()) {
             lazyScript()->setAsyncKind(asyncKind);
-        else
+        } else {
             nonLazyScript()->setAsyncKind(asyncKind);
+        }
     }
 
     static bool getUnresolvedLength(JSContext* cx, js::HandleFunction fun,
@@ -533,8 +536,9 @@ class JSFunction : public js::NativeObject
         MOZ_ASSERT(fun->isInterpreted());
         MOZ_ASSERT(cx);
         if (fun->isInterpretedLazy()) {
-            if (!createScriptForLazilyInterpretedFunction(cx, fun))
+            if (!createScriptForLazilyInterpretedFunction(cx, fun)) {
                 return nullptr;
+            }
             return fun->nonLazyScript();
         }
         return fun->nonLazyScript();
@@ -559,8 +563,9 @@ class JSFunction : public js::NativeObject
     JSScript* existingScript() {
         MOZ_ASSERT(isInterpreted());
         if (isInterpretedLazy()) {
-            if (shadowZone()->needsIncrementalBarrier())
+            if (shadowZone()->needsIncrementalBarrier()) {
                 js::LazyScript::writeBarrierPre(lazyScript());
+            }
             JSScript* script = existingScriptNonDelazifying();
             flags_ &= ~INTERPRETED_LAZY;
             flags_ |= INTERPRETED;
@@ -598,12 +603,15 @@ class JSFunction : public js::NativeObject
     }
 
     js::GeneratorKind generatorKind() const {
-        if (!isInterpreted())
+        if (!isInterpreted()) {
             return js::GeneratorKind::NotGenerator;
-        if (hasScript())
+        }
+        if (hasScript()) {
             return nonLazyScript()->generatorKind();
-        if (js::LazyScript* lazy = lazyScriptOrNull())
+        }
+        if (js::LazyScript* lazy = lazyScriptOrNull()) {
             return lazy->generatorKind();
+        }
         MOZ_ASSERT(isSelfHostedBuiltin());
         return js::GeneratorKind::NotGenerator;
     }
@@ -615,10 +623,12 @@ class JSFunction : public js::NativeObject
     }
 
     bool isAsync() const {
-        if (isInterpretedLazy())
+        if (isInterpretedLazy()) {
             return lazyScript()->isAsync();
-        if (hasScript())
+        }
+        if (hasScript()) {
             return nonLazyScript()->isAsync();
+        }
         return false;
     }
 
@@ -635,8 +645,9 @@ class JSFunction : public js::NativeObject
         if (lazyScriptOrNull()) {
             // Trigger a pre barrier on the lazy script being overwritten.
             js::LazyScript::writeBarrierPre(lazyScriptOrNull());
-            if (!lazyScript()->maybeScript())
+            if (!lazyScript()->maybeScript()) {
                 lazyScript()->initScript(script);
+            }
         }
         flags_ &= ~INTERPRETED_LAZY;
         flags_ |= INTERPRETED;
@@ -790,8 +801,9 @@ class JSFunction : public js::NativeObject
                       "for getAllocKind() to have a reason to exist");
 
         js::gc::AllocKind kind = js::gc::AllocKind::FUNCTION;
-        if (isExtended())
+        if (isExtended()) {
             kind = js::gc::AllocKind::FUNCTION_EXTENDED;
+        }
         MOZ_ASSERT_IF(isTenured(), kind == asTenured().getAllocKind());
         return kind;
     }

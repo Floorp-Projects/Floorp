@@ -869,8 +869,9 @@ class IonBuilder
 
     AbortReasonOr<Ok> setCurrentAndSpecializePhis(MBasicBlock* block) {
         if (block) {
-            if (!block->specializePhis(alloc()))
+            if (!block->specializePhis(alloc())) {
                 return abort(AbortReason::Alloc);
+            }
         }
         setCurrent(block);
         return Ok();
@@ -978,8 +979,9 @@ class IonBuilder
         MOZ_ASSERT(info().inlineScriptTree()->script()->containsPC(pc));
         // See comment in maybeTrackedOptimizationSite.
         if (isOptimizationTrackingEnabled()) {
-            if (BytecodeSite* site = maybeTrackedOptimizationSite(pc))
+            if (BytecodeSite* site = maybeTrackedOptimizationSite(pc)) {
                 return site;
+            }
         }
         return new(alloc()) BytecodeSite(info().inlineScriptTree(), pc);
     }
@@ -1083,8 +1085,9 @@ class IonBuilder
 
     // Discard the MGetPropertyCache if it is handled by WrapMGetPropertyCache.
     void keepFallbackFunctionGetter(MGetPropertyCache* cache) {
-        if (cache == maybeFallbackFunctionGetter_)
+        if (cache == maybeFallbackFunctionGetter_) {
             maybeFallbackFunctionGetter_ = nullptr;
+        }
     }
 
     MGetPropertyCache* maybeFallbackFunctionGetter_;
@@ -1100,36 +1103,44 @@ class IonBuilder
     void trackTypeInfo(JS::TrackedTypeSite site, MIRType mirType,
                        TemporaryTypeSet* typeSet)
     {
-        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations())) {
             trackTypeInfoUnchecked(site, mirType, typeSet);
+        }
     }
     void trackTypeInfo(JS::TrackedTypeSite site, JSObject* obj) {
-        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations())) {
             trackTypeInfoUnchecked(site, obj);
+        }
     }
     void trackTypeInfo(CallInfo& callInfo) {
-        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations())) {
             trackTypeInfoUnchecked(callInfo);
+        }
     }
     void trackOptimizationAttempt(JS::TrackedStrategy strategy) {
-        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations())) {
             trackOptimizationAttemptUnchecked(strategy);
+        }
     }
     void amendOptimizationAttempt(uint32_t index) {
-        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations())) {
             amendOptimizationAttemptUnchecked(index);
+        }
     }
     void trackOptimizationOutcome(JS::TrackedOutcome outcome) {
-        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations())) {
             trackOptimizationOutcomeUnchecked(outcome);
+        }
     }
     void trackOptimizationSuccess() {
-        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations())) {
             trackOptimizationSuccessUnchecked();
+        }
     }
     void trackInlineSuccess(InliningStatus status = InliningStatus_Inlined) {
-        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations()))
+        if (MOZ_UNLIKELY(current->trackedSite()->hasOptimizations())) {
             trackInlineSuccessUnchecked(status);
+        }
     }
 
     bool forceInlineCaches() {
@@ -1192,11 +1203,13 @@ class CallInfo
         thisArg_ = callInfo.thisArg();
         ignoresReturnValue_ = callInfo.ignoresReturnValue();
 
-        if (constructing())
+        if (constructing()) {
             newTargetArg_ = callInfo.getNewTarget();
+        }
 
-        if (!args_.appendAll(callInfo.argv()))
+        if (!args_.appendAll(callInfo.argv())) {
             return false;
+        }
 
         return true;
     }
@@ -1205,14 +1218,17 @@ class CallInfo
         MOZ_ASSERT(args_.empty());
 
         // Get the arguments in the right order
-        if (!args_.reserve(argc))
+        if (!args_.reserve(argc)) {
             return false;
+        }
 
-        if (constructing())
+        if (constructing()) {
             setNewTarget(current->pop());
+        }
 
-        for (int32_t i = argc; i > 0; i--)
+        for (int32_t i = argc; i > 0; i--) {
             args_.infallibleAppend(current->peek(-i));
+        }
         current->popn(argc);
 
         // Get |this| and |fun|
@@ -1227,17 +1243,20 @@ class CallInfo
     AbortReasonOr<Ok> savePriorCallStack(MIRGenerator* mir, MBasicBlock* current, size_t peekDepth);
 
     void popPriorCallStack(MBasicBlock* current) {
-        if (priorArgs_.empty())
+        if (priorArgs_.empty()) {
             popCallStack(current);
-        else
+        } else {
             current->popn(priorArgs_.length());
+        }
     }
 
     AbortReasonOr<Ok> pushPriorCallStack(MIRGenerator* mir, MBasicBlock* current) {
-        if (priorArgs_.empty())
+        if (priorArgs_.empty()) {
             return pushCallStack(mir, current);
-        for (MDefinition* def : priorArgs_)
+        }
+        for (MDefinition* def : priorArgs_) {
             current->push(def);
+        }
         return Ok();
     }
 
@@ -1250,19 +1269,22 @@ class CallInfo
         if (apply_) {
             uint32_t depth = current->stackDepth() + numFormals();
             if (depth > current->nslots()) {
-                if (!current->increaseSlots(depth - current->nslots()))
+                if (!current->increaseSlots(depth - current->nslots())) {
                     return mir->abort(AbortReason::Alloc);
+                }
             }
         }
 
         current->push(fun());
         current->push(thisArg());
 
-        for (uint32_t i = 0; i < argc(); i++)
+        for (uint32_t i = 0; i < argc(); i++) {
             current->push(getArg(i));
+        }
 
-        if (constructing())
+        if (constructing()) {
             current->push(getNewTarget());
+        }
 
         return Ok();
     }
@@ -1293,8 +1315,9 @@ class CallInfo
     }
 
     MDefinition* getArgWithDefault(uint32_t i, MDefinition* defaultValue) const {
-        if (i < argc())
+        if (i < argc()) {
             return args_[i];
+        }
 
         return defaultValue;
     }
@@ -1349,10 +1372,12 @@ class CallInfo
     void setImplicitlyUsedUnchecked() {
         fun_->setImplicitlyUsedUnchecked();
         thisArg_->setImplicitlyUsedUnchecked();
-        if (newTargetArg_)
+        if (newTargetArg_) {
             newTargetArg_->setImplicitlyUsedUnchecked();
-        for (uint32_t i = 0; i < argc(); i++)
+        }
+        for (uint32_t i = 0; i < argc(); i++) {
             getArg(i)->setImplicitlyUsedUnchecked();
+        }
     }
 };
 

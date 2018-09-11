@@ -87,14 +87,16 @@ class StringBuffer
     }
 
     void clear() {
-        if (isLatin1())
+        if (isLatin1()) {
             latin1Chars().clear();
-        else
+        } else {
             twoByteChars().clear();
+        }
     }
     MOZ_MUST_USE bool reserve(size_t len) {
-        if (len > reserved_)
+        if (len > reserved_) {
             reserved_ = len;
+        }
         return isLatin1() ? latin1Chars().reserve(len) : twoByteChars().reserve(len);
     }
     MOZ_MUST_USE bool resize(size_t len) {
@@ -111,8 +113,9 @@ class StringBuffer
     }
 
     MOZ_MUST_USE bool ensureTwoByteChars() {
-        if (isLatin1() && !inflateChars())
+        if (isLatin1() && !inflateChars()) {
             return false;
+        }
 
 #ifdef DEBUG
         hasEnsuredTwoByteChars_ = true;
@@ -122,10 +125,12 @@ class StringBuffer
 
     MOZ_MUST_USE bool append(const char16_t c) {
         if (isLatin1()) {
-            if (c <= JSString::MAX_LATIN1_CHAR)
+            if (c <= JSString::MAX_LATIN1_CHAR) {
                 return latin1Chars().append(Latin1Char(c));
-            if (!inflateChars())
+            }
+            if (!inflateChars()) {
                 return false;
+            }
         }
         return twoByteChars().append(c);
     }
@@ -177,19 +182,21 @@ class StringBuffer
 
     /* Infallible variants usable when the corresponding space is reserved. */
     void infallibleAppend(Latin1Char c) {
-        if (isLatin1())
+        if (isLatin1()) {
             latin1Chars().infallibleAppend(c);
-        else
+        } else {
             twoByteChars().infallibleAppend(c);
+        }
     }
     void infallibleAppend(char c) {
         infallibleAppend(Latin1Char(c));
     }
     void infallibleAppend(const Latin1Char* chars, size_t len) {
-        if (isLatin1())
+        if (isLatin1()) {
             latin1Chars().infallibleAppend(chars, len);
-        else
+        } else {
             twoByteChars().infallibleAppend(chars, len);
+        }
     }
     void infallibleAppend(const char* chars, size_t len) {
         infallibleAppend(reinterpret_cast<const Latin1Char*>(chars), len);
@@ -245,16 +252,20 @@ StringBuffer::append(const char16_t* begin, const char16_t* end)
     MOZ_ASSERT(begin <= end);
     if (isLatin1()) {
         while (true) {
-            if (begin >= end)
+            if (begin >= end) {
                 return true;
-            if (*begin > JSString::MAX_LATIN1_CHAR)
+            }
+            if (*begin > JSString::MAX_LATIN1_CHAR) {
                 break;
-            if (!latin1Chars().append(*begin))
+            }
+            if (!latin1Chars().append(*begin)) {
                 return false;
+            }
             ++begin;
         }
-        if (!inflateChars())
+        if (!inflateChars()) {
             return false;
+        }
     }
     return twoByteChars().append(begin, end);
 }
@@ -264,10 +275,12 @@ StringBuffer::append(JSLinearString* str)
 {
     JS::AutoCheckCannotGC nogc;
     if (isLatin1()) {
-        if (str->hasLatin1Chars())
+        if (str->hasLatin1Chars()) {
             return latin1Chars().append(str->latin1Chars(nogc), str->length());
-        if (!inflateChars())
+        }
+        if (!inflateChars()) {
             return false;
+        }
     }
     return str->hasLatin1Chars()
            ? twoByteChars().append(str->latin1Chars(nogc), str->length())
@@ -281,10 +294,11 @@ StringBuffer::infallibleAppendSubstring(JSLinearString* base, size_t off, size_t
     MOZ_ASSERT_IF(base->hasTwoByteChars(), isTwoByte());
 
     JS::AutoCheckCannotGC nogc;
-    if (base->hasLatin1Chars())
+    if (base->hasLatin1Chars()) {
         infallibleAppend(base->latin1Chars(nogc) + off, len);
-    else
+    } else {
         infallibleAppend(base->twoByteChars(nogc) + off, len);
+    }
 }
 
 inline bool
@@ -294,10 +308,12 @@ StringBuffer::appendSubstring(JSLinearString* base, size_t off, size_t len)
 
     JS::AutoCheckCannotGC nogc;
     if (isLatin1()) {
-        if (base->hasLatin1Chars())
+        if (base->hasLatin1Chars()) {
             return latin1Chars().append(base->latin1Chars(nogc) + off, len);
-        if (!inflateChars())
+        }
+        if (!inflateChars()) {
             return false;
+        }
     }
     return base->hasLatin1Chars()
            ? twoByteChars().append(base->latin1Chars(nogc) + off, len)
@@ -308,8 +324,9 @@ inline bool
 StringBuffer::appendSubstring(JSString* base, size_t off, size_t len)
 {
     JSLinearString* linear = base->ensureLinear(cx);
-    if (!linear)
+    if (!linear) {
         return false;
+    }
 
     return appendSubstring(linear, off, len);
 }
@@ -318,8 +335,9 @@ inline bool
 StringBuffer::append(JSString* str)
 {
     JSLinearString* linear = str->ensureLinear(cx);
-    if (!linear)
+    if (!linear) {
         return false;
+    }
 
     return append(linear);
 }
@@ -331,8 +349,9 @@ ValueToStringBufferSlow(JSContext* cx, const Value& v, StringBuffer& sb);
 inline bool
 ValueToStringBuffer(JSContext* cx, const Value& v, StringBuffer& sb)
 {
-    if (v.isString())
+    if (v.isString()) {
         return sb.append(v.toString());
+    }
 
     return ValueToStringBufferSlow(cx, v, sb);
 }

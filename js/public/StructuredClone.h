@@ -450,8 +450,9 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) {
 
     void initScope(JS::StructuredCloneScope scope) {
         MOZ_ASSERT(Size() == 0, "initScope() of nonempty JSStructuredCloneData");
-        if (scope_ != JS::StructuredCloneScope::Unassigned)
+        if (scope_ != JS::StructuredCloneScope::Unassigned) {
             MOZ_ASSERT(scope_ == scope, "Cannot change scope after it has been initialized");
+        }
         scope_ = scope;
     }
 
@@ -516,8 +517,9 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) {
     bool ForEachDataChunk(FunctionToApply&& function) const {
         Iterator iter = bufList_.Iter();
         while (!iter.Done()) {
-            if (!function(iter.Data(), iter.RemainingInSegment()))
+            if (!function(iter.Data(), iter.RemainingInSegment())) {
                 return false;
+            }
             iter.Advance(bufList_, iter.RemainingInSegment());
         }
         return true;

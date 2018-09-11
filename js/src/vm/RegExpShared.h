@@ -305,8 +305,9 @@ class RegExpRealm
 
     /* Get or create template object used to base the result of .exec() on. */
     ArrayObject* getOrCreateMatchResultTemplateObject(JSContext* cx) {
-        if (matchResultTemplateObject_)
+        if (matchResultTemplateObject_) {
             return matchResultTemplateObject_;
+        }
         return createMatchResultTemplateObject(cx);
     }
 

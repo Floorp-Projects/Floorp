@@ -43,8 +43,9 @@ struct CatchFinallyRange
 bool
 BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
 {
-    if (!infos_.growByUninitialized(script_->length()))
+    if (!infos_.growByUninitialized(script_->length())) {
         return false;
+    }
 
     // Initialize the env chain slot if either the function needs some
     // EnvironmentObject (like a CallObject) or the script uses the env
@@ -71,13 +72,15 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
                 int(script_->pcToOffset(pc)), int(script_->length()), CodeName[op]);
 
         // If this bytecode info has not yet been initialized, it's not reachable.
-        if (!infos_[offset].initialized)
+        if (!infos_[offset].initialized) {
             continue;
+        }
 
         unsigned stackDepth = infos_[offset].stackDepth;
 #ifdef DEBUG
-        for (jsbytecode* chkpc = pc + 1; chkpc < (pc + GetBytecodeLength(pc)); chkpc++)
+        for (jsbytecode* chkpc = pc + 1; chkpc < (pc + GetBytecodeLength(pc)); chkpc++) {
             MOZ_ASSERT(!infos_[script_->pcToOffset(chkpc)].initialized);
+        }
 #endif
 
         unsigned nuses = GetUseCount(pc);
@@ -146,19 +149,22 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
             infos_[afterTryOffset].jumpTarget = true;
 
             // Pop CatchFinallyRanges that are no longer needed.
-            while (!catchFinallyRanges.empty() && catchFinallyRanges.back().end <= offset)
+            while (!catchFinallyRanges.empty() && catchFinallyRanges.back().end <= offset) {
                 catchFinallyRanges.popBack();
+            }
 
             CatchFinallyRange range(script_->pcToOffset(endOfTry), script_->pcToOffset(afterTry));
-            if (!catchFinallyRanges.append(range))
+            if (!catchFinallyRanges.append(range)) {
                 return false;
+            }
             break;
           }
 
           case JSOP_LOOPENTRY:
             for (size_t i = 0; i < catchFinallyRanges.length(); i++) {
-                if (catchFinallyRanges[i].contains(offset))
+                if (catchFinallyRanges[i].contains(offset)) {
                     infos_[offset].loopEntryInCatchOrFinally = true;
+                }
             }
             break;
 
@@ -184,8 +190,9 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
           case JSOP_SETGNAME:
           case JSOP_STRICTSETGNAME:
           case JSOP_GIMPLICITTHIS:
-            if (script_->hasNonSyntacticScope())
+            if (script_->hasNonSyntacticScope()) {
                 usesEnvironmentChain_ = true;
+            }
             break;
 
           default:
@@ -196,8 +203,9 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
         if (jump) {
             // Case instructions do not push the lvalue back when branching.
             unsigned newStackDepth = stackDepth;
-            if (op == JSOP_CASE)
+            if (op == JSOP_CASE) {
                 newStackDepth--;
+            }
 
             unsigned targetOffset = offset + GET_JUMP_OFFSET(pc);
 
@@ -207,8 +215,9 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
             infos_[targetOffset].init(newStackDepth);
             infos_[targetOffset].jumpTarget = true;
 
-            if (jumpBack)
+            if (jumpBack) {
                 nextpc = script_->offsetToPC(targetOffset);
+            }
         }
 
         // Handle any fallthrough from this opcode.
@@ -220,8 +229,9 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
             infos_[fallthroughOffset].init(stackDepth);
 
             // Treat the fallthrough of a branch instruction as a jump target.
-            if (jump)
+            if (jump) {
                 infos_[fallthroughOffset].jumpTarget = true;
+            }
         }
     }
 

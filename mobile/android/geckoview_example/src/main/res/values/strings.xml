@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">geckoview_example</string>
+    <string name="app_name">GeckoView Example</string>
     <string name="activity_label">GeckoView Example</string>
     <string name="location_hint">Enter URL or search keywords...</string>
     <string name="username">Username</string>
@@ -23,4 +23,7 @@
     <string name="private_browsing">Private Browsing</string>
     <string name="forward">Forward</string>
     <string name="reload">Reload</string>
+    <string name="crashed_title">GeckoView Example Crashed</string>
+    <string name="crashed_text">Tap to report to Mozilla.</string>
+    <string name="crashed_ignore">Ignore</string>
 </resources>

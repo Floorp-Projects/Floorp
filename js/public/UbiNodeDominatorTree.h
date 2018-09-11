@@ -163,8 +163,9 @@ class JS_PUBLIC_API(DominatorTree)
          */
         void skip(size_t n) {
             beginPtr += n;
-            if (beginPtr > endPtr)
+            if (beginPtr > endPtr) {
                 beginPtr = endPtr;
+            }
         }
     };
 
@@ -236,13 +237,15 @@ class JS_PUBLIC_API(DominatorTree)
 
             JS::ubi::Vector<uint32_t> dominated;
             JS::ubi::Vector<uint32_t> indices;
-            if (!dominated.growBy(length) || !indices.growBy(length))
+            if (!dominated.growBy(length) || !indices.growBy(length)) {
                 return mozilla::Nothing();
+            }
 
             // 1
             memset(indices.begin(), 0, length * sizeof(uint32_t));
-            for (uint32_t i = 0; i < length; i++)
+            for (uint32_t i = 0; i < length; i++) {
                 indices[doms[i]]++;
+            }
 
             // 2
             uint32_t sumOfSizes = 0;
@@ -312,10 +315,11 @@ class JS_PUBLIC_API(DominatorTree)
 
     static uint32_t intersect(JS::ubi::Vector<uint32_t>& doms, uint32_t finger1, uint32_t finger2) {
         while (finger1 != finger2) {
-            if (finger1 < finger2)
+            if (finger1 < finger2) {
                 finger1 = doms[finger1];
-            else if (finger2 < finger1)
+            } else if (finger2 < finger1) {
                 finger2 = doms[finger2];
+            }
         }
         return finger1;
     }
@@ -328,8 +332,9 @@ class JS_PUBLIC_API(DominatorTree)
         uint32_t nodeCount = 0;
         auto onNode = [&](const Node& node) {
             nodeCount++;
-            if (MOZ_UNLIKELY(nodeCount == UINT32_MAX))
+            if (MOZ_UNLIKELY(nodeCount == UINT32_MAX)) {
                 return false;
+            }
             return postOrder.append(node);
         };
 
@@ -359,10 +364,12 @@ class JS_PUBLIC_API(DominatorTree)
         MOZ_ASSERT(map.empty());
         MOZ_ASSERT(postOrder.length() < UINT32_MAX);
         uint32_t length = postOrder.length();
-        if (!map.reserve(length))
+        if (!map.reserve(length)) {
             return false;
-        for (uint32_t i = 0; i < length; i++)
+        }
+        for (uint32_t i = 0; i < length; i++) {
             map.putNewInfallible(postOrder[i], i);
+        }
         return true;
     }
 
@@ -379,8 +386,9 @@ class JS_PUBLIC_API(DominatorTree)
         uint32_t length = postOrder.length();
 
         MOZ_ASSERT(predecessorVectors.length() == 0);
-        if (!predecessorVectors.growBy(length))
+        if (!predecessorVectors.growBy(length)) {
             return false;
+        }
 
         for (uint32_t i = 0; i < length - 1; i++) {
             auto& node = postOrder[i];
@@ -393,8 +401,9 @@ class JS_PUBLIC_API(DominatorTree)
                        "did we even find it.");
 
             auto& predecessors = ptr->value();
-            if (!predecessorVectors[i].reserve(predecessors->count()))
+            if (!predecessorVectors[i].reserve(predecessors->count())) {
                 return false;
+            }
             for (auto range = predecessors->all(); !range.empty(); range.popFront()) {
                 auto ptr = nodeToPostOrderIndex.lookup(range.front());
                 MOZ_ASSERT(ptr);
@@ -410,11 +419,13 @@ class JS_PUBLIC_API(DominatorTree)
     static MOZ_MUST_USE bool initializeDominators(JS::ubi::Vector<uint32_t>& doms,
                                                   uint32_t length) {
         MOZ_ASSERT(doms.length() == 0);
-        if (!doms.growByUninitialized(length))
+        if (!doms.growByUninitialized(length)) {
             return false;
+        }
         doms[length - 1] = length - 1;
-        for (uint32_t i = 0; i < length - 1; i++)
+        for (uint32_t i = 0; i < length - 1; i++) {
             doms[i] = UNDEFINED;
+        }
         return true;
     }
 
@@ -513,8 +524,9 @@ class JS_PUBLIC_API(DominatorTree)
     Create(JSContext* cx, AutoCheckCannotGC& noGC, const Node& root) {
         JS::ubi::Vector<Node> postOrder;
         PredecessorSets predecessorSets;
-        if (!doTraversal(cx, noGC, root, postOrder, predecessorSets))
+        if (!doTraversal(cx, noGC, root, postOrder, predecessorSets)) {
             return mozilla::Nothing();
+        }
 
         MOZ_ASSERT(postOrder.length() < UINT32_MAX);
         uint32_t length = postOrder.length();
@@ -527,8 +539,9 @@ class JS_PUBLIC_API(DominatorTree)
         // convert our data structures to play along first.
 
         NodeToIndexMap nodeToPostOrderIndex(postOrder.length());
-        if (!mapNodesToTheirIndices(postOrder, nodeToPostOrderIndex))
+        if (!mapNodesToTheirIndices(postOrder, nodeToPostOrderIndex)) {
             return mozilla::Nothing();
+        }
 
         JS::ubi::Vector<JS::ubi::Vector<uint32_t>> predecessorVectors;
         if (!convertPredecessorSetsToVectors(root, postOrder, predecessorSets, nodeToPostOrderIndex,
@@ -536,8 +549,9 @@ class JS_PUBLIC_API(DominatorTree)
             return mozilla::Nothing();
 
         JS::ubi::Vector<uint32_t> doms;
-        if (!initializeDominators(doms, length))
+        if (!initializeDominators(doms, length)) {
             return mozilla::Nothing();
+        }
 
         bool changed = true;
         while (changed) {
@@ -570,8 +584,9 @@ class JS_PUBLIC_API(DominatorTree)
 
                 for ( ; !range.empty(); range.popFront()) {
                     auto idx = range.front();
-                    if (doms[idx] != UNDEFINED)
+                    if (doms[idx] != UNDEFINED) {
                         newIDomIdx = intersect(doms, newIDomIdx, idx);
+                    }
                 }
 
                 // If the immediate dominator changed, we will have to do
@@ -585,8 +600,9 @@ class JS_PUBLIC_API(DominatorTree)
         }
 
         auto maybeDominatedSets = DominatedSets::Create(doms);
-        if (maybeDominatedSets.isNothing())
+        if (maybeDominatedSets.isNothing()) {
             return mozilla::Nothing();
+        }
 
         return mozilla::Some(DominatorTree(std::move(postOrder),
                                            std::move(nodeToPostOrderIndex),
@@ -609,8 +625,9 @@ class JS_PUBLIC_API(DominatorTree)
     Node getImmediateDominator(const Node& node) const {
         assertSanity();
         auto ptr = nodeToPostOrderIndex.lookup(node);
-        if (!ptr)
+        if (!ptr) {
             return Node();
+        }
 
         auto idx = ptr->value();
         MOZ_ASSERT(idx < postOrder.length());
@@ -636,8 +653,9 @@ class JS_PUBLIC_API(DominatorTree)
     mozilla::Maybe<DominatedSetRange> getDominatedSet(const Node& node) {
         assertSanity();
         auto ptr = nodeToPostOrderIndex.lookup(node);
-        if (!ptr)
+        if (!ptr) {
             return mozilla::Nothing();
+        }
 
         auto idx = ptr->value();
         MOZ_ASSERT(idx < postOrder.length());
@@ -658,8 +676,9 @@ class JS_PUBLIC_API(DominatorTree)
             return true;
         }
 
-        if (retainedSizes.isNothing() && !computeRetainedSizes(mallocSizeOf))
+        if (retainedSizes.isNothing() && !computeRetainedSizes(mallocSizeOf)) {
             return false;
+        }
 
         auto idx = ptr->value();
         MOZ_ASSERT(idx < postOrder.length());

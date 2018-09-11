@@ -504,8 +504,9 @@ class ExitFooterFrame
     ExitFrameType type() const {
         static_assert(sizeof(ExitFrameType) == sizeof(uint8_t),
                       "Code assumes ExitFrameType fits in a byte");
-        if (data_ > UINT8_MAX)
+        if (data_ > UINT8_MAX) {
             return ExitFrameType::VMFunction;
+        }
         MOZ_ASSERT(ExitFrameType(data_) != ExitFrameType::VMFunction);
         return ExitFrameType(data_);
     }

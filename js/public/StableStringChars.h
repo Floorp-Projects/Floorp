@@ -100,8 +100,9 @@ class MOZ_STACK_CLASS JS_FRIEND_API(AutoStableStringChars) final
     /* If we own the chars, transfer ownership to the caller. */
     bool maybeGiveOwnershipToCaller() {
         MOZ_ASSERT(state_ != Uninitialized);
-        if (!ownChars_.isSome() || !ownChars_->extractRawBuffer())
+        if (!ownChars_.isSome() || !ownChars_->extractRawBuffer()) {
             return false;
+        }
         state_ = Uninitialized;
         ownChars_.reset();
         return true;

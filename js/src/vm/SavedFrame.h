@@ -103,8 +103,9 @@ class SavedFrame : public NativeObject {
 
     static bool isSavedFrameOrWrapperAndNotProto(JSObject& obj) {
         auto unwrapped = CheckedUnwrap(&obj);
-        if (!unwrapped)
+        if (!unwrapped) {
             return false;
+        }
         return isSavedFrameAndNotProto(*unwrapped);
     }
 
@@ -271,8 +272,9 @@ class ConcreteStackFrame<SavedFrame> : public BaseStackFrame {
         JSObject* prev = &get();
         JSObject* next = prev;
         js::TraceRoot(trc, &next, "ConcreteStackFrame<SavedFrame>::ptr");
-        if (next != prev)
+        if (next != prev) {
             ptr = next;
+        }
     }
 
     bool isSelfHosted(JSContext* cx) const override {

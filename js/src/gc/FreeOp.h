@@ -62,8 +62,9 @@ class FreeOp : public JSFreeOp
         MOZ_ASSERT(!isDefaultFreeOp());
 
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!freeLaterList.append(p))
+        if (!freeLaterList.append(p)) {
             oomUnsafe.crash("FreeOp::freeLater");
+        }
     }
 
     bool appendJitPoisonRange(const jit::JitPoisonRange& range) {

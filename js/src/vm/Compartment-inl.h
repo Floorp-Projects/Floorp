@@ -19,8 +19,9 @@ inline bool
 JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp)
 {
     /* Only GC things have to be wrapped or copied. */
-    if (!vp.isGCThing())
+    if (!vp.isGCThing()) {
         return true;
+    }
 
     /*
      * Symbols are GC things, but never need to be wrapped or copied because
@@ -35,8 +36,9 @@ JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp)
     /* Handle strings. */
     if (vp.isString()) {
         JS::RootedString str(cx, vp.toString());
-        if (!wrap(cx, &str))
+        if (!wrap(cx, &str)) {
             return false;
+        }
         vp.setString(str);
         return true;
     }
@@ -44,8 +46,9 @@ JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp)
 #ifdef ENABLE_BIGINT
     if (vp.isBigInt()) {
         JS::RootedBigInt bi(cx, vp.toBigInt());
-        if (!wrap(cx, &bi))
+        if (!wrap(cx, &bi)) {
             return false;
+        }
         vp.setBigInt(bi);
         return true;
     }
@@ -88,8 +91,9 @@ JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp)
     }
 
     JS::RootedObject obj(cx, &vp.toObject());
-    if (!wrap(cx, &obj))
+    if (!wrap(cx, &obj)) {
         return false;
+    }
     vp.setObject(*obj);
     MOZ_ASSERT_IF(cacheResult, obj == cacheResult);
     return true;

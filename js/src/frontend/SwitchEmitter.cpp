@@ -23,16 +23,18 @@ using mozilla::Maybe;
 bool
 SwitchEmitter::TableGenerator::addNumber(int32_t caseValue)
 {
-    if (isInvalid())
+    if (isInvalid()) {
         return true;
+    }
 
     if (unsigned(caseValue + int(JS_BIT(15))) >= unsigned(JS_BIT(16))) {
         setInvalid();
         return true;
     }
 
-    if (intmap_.isNothing())
+    if (intmap_.isNothing()) {
         intmap_.emplace();
+    }
 
     low_ = std::min(low_, caseValue);
     high_ = std::max(high_, caseValue);
@@ -40,8 +42,9 @@ SwitchEmitter::TableGenerator::addNumber(int32_t caseValue)
     // Check for duplicates, which require a JSOP_CONDSWITCH.
     // We bias caseValue by 65536 if it's negative, and hope that's a rare case
     // (because it requires a malloc'd bitmap).
-    if (caseValue < 0)
+    if (caseValue < 0) {
         caseValue += JS_BIT(16);
+    }
     if (caseValue >= intmapBitLength_) {
         size_t newLength = NumWordsForBitArrayOfLength(caseValue + 1);
         if (!intmap_->resize(newLength)) {
@@ -68,8 +71,9 @@ SwitchEmitter::TableGenerator::finish(uint32_t caseCount)
     finished_ = true;
 #endif
 
-    if (isInvalid())
+    if (isInvalid()) {
         return;
+    }
 
     if (caseCount == 0) {
         low_ = 0;
@@ -80,8 +84,9 @@ SwitchEmitter::TableGenerator::finish(uint32_t caseCount)
     // Compute table length and select condswitch instead if overlarge
     // or more than half-sparse.
     tableLength_ = uint32_t(high_ - low_ + 1);
-    if (tableLength_ >= JS_BIT(16) || tableLength_ > 2 * caseCount)
+    if (tableLength_ >= JS_BIT(16) || tableLength_ > 2 * caseCount) {
         setInvalid();
+    }
 }
 
 uint32_t
@@ -114,8 +119,9 @@ SwitchEmitter::emitDiscriminant(const Maybe<uint32_t>& switchPos)
 
     if (switchPos_) {
         // Ensure that the column of the switch statement is set properly.
-        if (!bce_->updateSourceCoordNotes(*switchPos_))
+        if (!bce_->updateSourceCoordNotes(*switchPos_)) {
             return false;
+        }
     }
 
     state_ = State::Discriminant;
@@ -130,8 +136,9 @@ SwitchEmitter::emitLexical(Handle<LexicalScope::Data*> bindings)
 
     tdzCacheLexical_.emplace(bce_);
     emitterScope_.emplace(bce_);
-    if (!emitterScope_->enterLexical(bce_, ScopeKind::Lexical, bindings))
+    if (!emitterScope_->enterLexical(bce_, ScopeKind::Lexical, bindings)) {
         return false;
+    }
 
     state_ = State::Lexical;
     return true;
@@ -169,12 +176,14 @@ SwitchEmitter::emitCond()
 
     // The note has two offsets: first tells total switch code length;
     // second tells offset to first JSOP_CASE.
-    if (!bce_->newSrcNote3(SRC_CONDSWITCH, 0, 0, &noteIndex_))
+    if (!bce_->newSrcNote3(SRC_CONDSWITCH, 0, 0, &noteIndex_)) {
         return false;
+    }
 
     MOZ_ASSERT(top_ == bce_->offset());
-    if (!bce_->emitN(JSOP_CONDSWITCH, 0))
+    if (!bce_->emitN(JSOP_CONDSWITCH, 0)) {
         return false;
+    }
 
     tdzCacheCaseAndBody_.emplace(bce_);
 
@@ -196,8 +205,9 @@ SwitchEmitter::emitTable(const TableGenerator& tableGen)
 
     // 3 offsets (len, low, high) before the table, 1 per entry.
     size_t switchSize = size_t(JUMP_OFFSET_LEN * (3 + tableGen.tableLength()));
-    if (!bce_->newSrcNote2(SRC_TABLESWITCH, 0, &noteIndex_))
+    if (!bce_->newSrcNote2(SRC_TABLESWITCH, 0, &noteIndex_)) {
         return false;
+    }
 
     if (!caseOffsets_.resize(tableGen.tableLength())) {
         ReportOutOfMemory(bce_->cx);
@@ -205,8 +215,9 @@ SwitchEmitter::emitTable(const TableGenerator& tableGen)
     }
 
     MOZ_ASSERT(top_ == bce_->offset());
-    if (!bce_->emitN(JSOP_TABLESWITCH, switchSize))
+    if (!bce_->emitN(JSOP_TABLESWITCH, switchSize)) {
         return false;
+    }
 
     // Skip default offset.
     jsbytecode* pc = bce_->code(top_ + JUMP_OFFSET_LEN);
@@ -225,8 +236,9 @@ SwitchEmitter::emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault)
     MOZ_ASSERT(kind_ == Kind::Cond);
 
     if (isDefault) {
-        if (!bce_->emitJump(JSOP_DEFAULT, &condSwitchDefaultOffset_))
+        if (!bce_->emitJump(JSOP_DEFAULT, &condSwitchDefaultOffset_)) {
             return false;
+        }
         return true;
     }
 
@@ -240,23 +252,27 @@ SwitchEmitter::emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault)
         }
     }
 
-    if (!bce_->newSrcNote2(SRC_NEXTCASE, 0, &caseNoteIndex_))
+    if (!bce_->newSrcNote2(SRC_NEXTCASE, 0, &caseNoteIndex_)) {
         return false;
+    }
 
     JumpList caseJump;
-    if (!bce_->emitJump(JSOP_CASE, &caseJump))
+    if (!bce_->emitJump(JSOP_CASE, &caseJump)) {
         return false;
+    }
     caseOffsets_[caseIndex] = caseJump.offset;
     lastCaseOffset_ = caseJump.offset;
 
     if (state_ == State::Cond) {
         // Switch note's second offset is to first JSOP_CASE.
         unsigned noteCount = bce_->notes().length();
-        if (!bce_->setSrcNoteOffset(noteIndex_, 1, lastCaseOffset_ - top_))
+        if (!bce_->setSrcNoteOffset(noteIndex_, 1, lastCaseOffset_ - top_)) {
             return false;
+        }
         unsigned noteCountDelta = bce_->notes().length() - noteCount;
-        if (noteCountDelta != 0)
+        if (noteCountDelta != 0) {
             caseNoteIndex_ += noteCountDelta;
+        }
     }
 
     return true;
@@ -267,8 +283,9 @@ SwitchEmitter::emitCaseJump()
 {
     MOZ_ASSERT(kind_ == Kind::Cond);
     MOZ_ASSERT(state_ == State::Cond || state_ == State::Case);
-    if (!emitCaseOrDefaultJump(caseIndex_, false))
+    if (!emitCaseOrDefaultJump(caseIndex_, false)) {
         return false;
+    }
     caseIndex_++;
 
     state_ = State::Case;
@@ -280,8 +297,9 @@ SwitchEmitter::emitImplicitDefault()
 {
     MOZ_ASSERT(kind_ == Kind::Cond);
     MOZ_ASSERT(state_ == State::Cond || state_ == State::Case);
-    if (!emitCaseOrDefaultJump(0, true))
+    if (!emitCaseOrDefaultJump(0, true)) {
         return false;
+    }
 
     caseIndex_ = 0;
 
@@ -300,18 +318,21 @@ SwitchEmitter::emitCaseBody()
 
     if (state_ == State::Cond || state_ == State::Case) {
         // For cond switch, JSOP_DEFAULT is always emitted.
-        if (!emitImplicitDefault())
+        if (!emitImplicitDefault()) {
             return false;
+        }
     }
 
     JumpList caseJump;
     caseJump.offset = caseOffsets_[caseIndex_];
-    if (!bce_->emitJumpTargetAndPatch(caseJump))
+    if (!bce_->emitJumpTargetAndPatch(caseJump)) {
         return false;
+    }
 
     JumpTarget here;
-    if (!bce_->emitJumpTarget(&here))
+    if (!bce_->emitJumpTarget(&here)) {
         return false;
+    }
     caseIndex_++;
 
     tdzCacheCaseAndBody_.emplace(bce_);
@@ -330,8 +351,9 @@ SwitchEmitter::emitCaseBody(int32_t caseValue, const TableGenerator& tableGen)
     tdzCacheCaseAndBody_.reset();
 
     JumpTarget here;
-    if (!bce_->emitJumpTarget(&here))
+    if (!bce_->emitJumpTarget(&here)) {
         return false;
+    }
     caseOffsets_[tableGen.toCaseIndex(caseValue)] = here.offset;
 
     tdzCacheCaseAndBody_.emplace(bce_);
@@ -352,12 +374,14 @@ SwitchEmitter::emitDefaultBody()
 
     if (state_ == State::Cond || state_ == State::Case) {
         // For cond switch, JSOP_DEFAULT is always emitted.
-        if (!emitImplicitDefault())
+        if (!emitImplicitDefault()) {
             return false;
+        }
     }
     JumpTarget here;
-    if (!bce_->emitJumpTarget(&here))
+    if (!bce_->emitJumpTarget(&here)) {
         return false;
+    }
     defaultJumpTargetOffset_ = here;
 
     tdzCacheCaseAndBody_.emplace(bce_);
@@ -377,8 +401,9 @@ SwitchEmitter::emitEnd()
 
     if (!hasDefault_) {
         // If no default case, offset for default is to end of switch.
-        if (!bce_->emitJumpTarget(&defaultJumpTargetOffset_))
+        if (!bce_->emitJumpTarget(&defaultJumpTargetOffset_)) {
             return false;
+        }
     }
     MOZ_ASSERT(defaultJumpTargetOffset_.offset != -1);
 
@@ -418,11 +443,13 @@ SwitchEmitter::emitEnd()
 
     // Patch breaks before leaving the scope, as all breaks are under the
     // lexical scope if it exists.
-    if (!controlInfo_->patchBreaks(bce_))
+    if (!controlInfo_->patchBreaks(bce_)) {
         return false;
+    }
 
-    if (emitterScope_ && !emitterScope_->leave(bce_))
+    if (emitterScope_ && !emitterScope_->leave(bce_)) {
         return false;
+    }
 
     emitterScope_.reset();
     tdzCacheLexical_.reset();

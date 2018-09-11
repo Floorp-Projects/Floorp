@@ -242,8 +242,9 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     }
 
     virtual bool isOnThisLine(size_t offset, uint32_t lineNum, bool *isOnSameLine) const override {
-        if (lineNum != 0)
+        if (lineNum != 0) {
             return false;
+        }
         *isOnSameLine = true;
         return true;
     }
@@ -253,8 +254,9 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
         *column = offset();
     }
     size_t offset() const {
-        if (tokenizer_.isSome())
+        if (tokenizer_.isSome()) {
             return tokenizer_->offset();
+        }
 
         return 0;
     }

@@ -27,20 +27,24 @@ struct InternalGCPointerPolicy : public JS::GCPointerPolicy<T> {
 #undef IS_BASE_OF_OR
 
     static void preBarrier(T v) {
-        if (v)
+        if (v) {
             Type::writeBarrierPre(v);
+        }
     }
     static void postBarrier(T* vp, T prev, T next) {
-        if (*vp)
+        if (*vp) {
             Type::writeBarrierPost(vp, prev, next);
+        }
     }
     static void readBarrier(T v) {
-        if (v)
+        if (v) {
             Type::readBarrier(v);
+        }
     }
     static void trace(JSTracer* trc, T* vp, const char* name) {
-        if (*vp)
+        if (*vp) {
             TraceManuallyBarrieredEdge(trc, vp, name);
+        }
     }
 };
 

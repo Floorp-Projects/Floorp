@@ -129,8 +129,9 @@ class ExecutablePool
       : m_allocator(allocator), m_freePtr(a.pages), m_end(m_freePtr + a.size), m_allocation(a),
         m_refCount(1), m_mark(false)
     {
-        for (size_t& count : m_codeBytes)
+        for (size_t& count : m_codeBytes) {
             count = 0;
+        }
     }
 
     ~ExecutablePool();
@@ -159,8 +160,9 @@ class ExecutablePool
     // live JitCode objects).
     size_t usedCodeBytes() const {
         size_t res = 0;
-        for (size_t count : m_codeBytes)
+        for (size_t count : m_codeBytes) {
             res += count;
+        }
         return res;
     }
 };

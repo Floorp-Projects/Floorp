@@ -66,16 +66,18 @@ SharedImmutableTwoByteString::operator=(SharedImmutableTwoByteString&& rhs)
 }
 
 SharedImmutableString::~SharedImmutableString() {
-    if (!box_)
+    if (!box_) {
         return;
+    }
 
     auto locked = cache_.inner_->lock();
 
     MOZ_ASSERT(box_->refcount > 0);
 
     box_->refcount--;
-    if (box_->refcount == 0)
+    if (box_->refcount == 0) {
         box_->chars_.reset(nullptr);
+    }
 }
 
 SharedImmutableString

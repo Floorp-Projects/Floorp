@@ -575,10 +575,6 @@ class Telemetry {
     }
 
     if (charts.useTimedEvent) {
-      if (id === "newanimationinspector") {
-        id = "animationinspector";
-      }
-
       this.preparePendingEvent("devtools.main", "tool_timer", id, null, [
         "os",
         "time_open",
@@ -619,10 +615,6 @@ class Telemetry {
     }
 
     if (charts.useTimedEvent) {
-      if (id === "newanimationinspector") {
-        id = "animationinspector";
-      }
-
       const sig = `devtools.main,tool_timer,${id},null`;
       const event = PENDING_EVENTS.get(sig);
       const time = this.msSystemNow() - event.extra.time_open;
@@ -663,9 +655,6 @@ function getChartsFromToolId(id) {
 
   if (id === "PERFORMANCE") {
     id = "JSPROFILER";
-  }
-  if (id === "NEWANIMATIONINSPECTOR") {
-    id = "ANIMATIONINSPECTOR";
   }
 
   switch (id) {

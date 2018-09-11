@@ -93,8 +93,9 @@ struct PostOrder {
     MOZ_MUST_USE bool fillEdgesFromRange(EdgeVector& edges, js::UniquePtr<EdgeRange>& range) {
         MOZ_ASSERT(range);
         for ( ; !range->empty(); range->popFront()) {
-            if (!edges.append(std::move(range->front())))
+            if (!edges.append(std::move(range->front()))) {
                 return false;
+            }
         }
         return true;
     }
@@ -126,8 +127,9 @@ struct PostOrder {
     // Add `node` as a starting point for the traversal. You may add
     // as many starting points as you like. Returns false on OOM.
     MOZ_MUST_USE bool addStart(const Node& node) {
-        if (!seen.put(node))
+        if (!seen.put(node)) {
             return false;
+        }
         return pushForTraversing(node);
     }
 
@@ -152,8 +154,9 @@ struct PostOrder {
             auto& edges = stack.back().edges;
 
             if (edges.empty()) {
-                if (!onNode(origin))
+                if (!onNode(origin)) {
                     return false;
+                }
                 stack.popBack();
                 continue;
             }
@@ -161,13 +164,15 @@ struct PostOrder {
             Edge edge = std::move(edges.back());
             edges.popBack();
 
-            if (!onEdge(origin, edge))
+            if (!onEdge(origin, edge)) {
                 return false;
+            }
 
             auto ptr = seen.lookupForAdd(edge.referent);
             // We've already seen this node, don't follow its edges.
-            if (ptr)
+            if (ptr) {
                 continue;
+            }
 
             // Mark the referent as seen and follow its edges.
             if (!seen.add(ptr, edge.referent) ||

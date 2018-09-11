@@ -25,8 +25,9 @@ AtomToId(JSAtom* atom)
     JS_STATIC_ASSERT(JSID_INT_MIN == 0);
 
     uint32_t index;
-    if (atom->isIndex(&index) && index <= JSID_INT_MAX)
+    if (atom->isIndex(&index) && index <= JSID_INT_MAX) {
         return INT_TO_JSID(int32_t(index));
+    }
 
     return JSID_FROM_BITS(size_t(atom) | JSID_TYPE_STRING);
 }
@@ -39,13 +40,15 @@ MOZ_ALWAYS_INLINE bool
 ValueToIntId(const Value& v, jsid* id)
 {
     int32_t i;
-    if (v.isInt32())
+    if (v.isInt32()) {
         i = v.toInt32();
-    else if (!v.isDouble() || !mozilla::NumberEqualsInt32(v.toDouble(), &i))
+    } else if (!v.isDouble() || !mozilla::NumberEqualsInt32(v.toDouble(), &i)) {
         return false;
+    }
 
-    if (!INT_FITS_IN_JSID(i))
+    if (!INT_FITS_IN_JSID(i)) {
         return false;
+    }
 
     *id = INT_TO_JSID(i);
     return true;
@@ -62,8 +65,9 @@ ValueToIdPure(const Value& v, jsid* id)
         return false;
     }
 
-    if (ValueToIntId(v, id))
+    if (ValueToIntId(v, id)) {
         return true;
+    }
 
     if (v.isSymbol()) {
         *id = SYMBOL_TO_JSID(v.toSymbol());
@@ -84,8 +88,9 @@ ValueToId(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v,
             return true;
         }
     } else {
-        if (ValueToIntId(v, idp.address()))
+        if (ValueToIntId(v, idp.address())) {
             return true;
+        }
 
         if (v.isSymbol()) {
             idp.set(SYMBOL_TO_JSID(v.toSymbol()));
@@ -94,8 +99,9 @@ ValueToId(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v,
     }
 
     JSAtom* atom = ToAtom<allowGC>(cx, v);
-    if (!atom)
+    if (!atom) {
         return false;
+    }
 
     idp.set(AtomToId(atom));
     return true;
@@ -147,16 +153,19 @@ IndexToId(JSContext* cx, uint32_t index, MutableHandleId idp)
 static MOZ_ALWAYS_INLINE JSFlatString*
 IdToString(JSContext* cx, jsid id)
 {
-    if (JSID_IS_STRING(id))
+    if (JSID_IS_STRING(id)) {
         return JSID_TO_ATOM(id);
+    }
 
-    if (MOZ_LIKELY(JSID_IS_INT(id)))
+    if (MOZ_LIKELY(JSID_IS_INT(id))) {
         return Int32ToString<CanGC>(cx, JSID_TO_INT(id));
+    }
 
     RootedValue idv(cx, IdToValue(id));
     JSString* str = ToStringSlow<CanGC>(cx, idv);
-    if (!str)
+    if (!str) {
         return nullptr;
+    }
 
     return str->ensureFlat(cx);
 }

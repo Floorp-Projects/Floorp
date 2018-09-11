@@ -112,8 +112,9 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     }
 
     ~UnboxedLayout() {
-        if (newScript_)
+        if (newScript_) {
             newScript_->clear();
+        }
         js_delete(newScript_);
         js_free(traceList_);
 
@@ -158,15 +159,17 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
 
     const Property* lookup(JSAtom* atom) const {
         for (size_t i = 0; i < properties_.length(); i++) {
-            if (properties_[i].name == atom)
+            if (properties_[i].name == atom) {
                 return &properties_[i];
+            }
         }
         return nullptr;
     }
 
     const Property* lookup(jsid id) const {
-        if (JSID_IS_STRING(id))
+        if (JSID_IS_STRING(id)) {
             return lookup(JSID_TO_ATOM(id));
+        }
         return nullptr;
     }
 

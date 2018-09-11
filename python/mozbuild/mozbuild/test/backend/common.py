@@ -238,11 +238,14 @@ class BackendTester(unittest.TestCase):
         config = CONFIGS[name]
         config['substs']['MOZ_UI_LOCALE'] = 'en-US'
 
-        objdir = mkdtemp()
-        self.addCleanup(rmtree, objdir)
-
         srcdir = mozpath.join(test_data_path, name)
         config['substs']['top_srcdir'] = srcdir
+
+        # Create the objdir in the srcdir to ensure that they share the
+        # same drive on Windows.
+        objdir = mkdtemp(dir=srcdir)
+        self.addCleanup(rmtree, objdir)
+
         return ConfigEnvironment(srcdir, objdir, **config)
 
     def _emit(self, name, env=None):

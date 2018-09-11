@@ -78,8 +78,9 @@ class Compressor
         MOZ_ASSERT(uncompressedBytes > 0);
         size_t lastChunk = (uncompressedBytes - 1) / CHUNK_SIZE;
         MOZ_ASSERT(chunk <= lastChunk);
-        if (chunk < lastChunk || uncompressedBytes % CHUNK_SIZE == 0)
+        if (chunk < lastChunk || uncompressedBytes % CHUNK_SIZE == 0) {
             return CHUNK_SIZE;
+        }
         return uncompressedBytes % CHUNK_SIZE;
     }
 };

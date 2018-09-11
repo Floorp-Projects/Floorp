@@ -48,12 +48,14 @@ bool_toSource_impl(JSContext* cx, const CallArgs& args)
     bool b = thisv.isBoolean() ? thisv.toBoolean() : thisv.toObject().as<BooleanObject>().unbox();
 
     StringBuffer sb(cx);
-    if (!sb.append("(new Boolean(") || !BooleanToStringBuffer(b, sb) || !sb.append("))"))
+    if (!sb.append("(new Boolean(") || !BooleanToStringBuffer(b, sb) || !sb.append("))")) {
         return false;
+    }
 
     JSString* str = sb.finishString();
-    if (!str)
+    if (!str) {
         return false;
+    }
     args.rval().setString(str);
     return true;
 }
@@ -117,12 +119,14 @@ Boolean(JSContext* cx, unsigned argc, Value* vp)
 
     if (args.isConstructing()) {
         RootedObject proto(cx);
-        if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto))
+        if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
             return false;
+        }
 
         JSObject* obj = BooleanObject::create(cx, b, proto);
-        if (!obj)
+        if (!obj) {
             return false;
+        }
         args.rval().setObject(*obj);
     } else {
         args.rval().setBoolean(b);
@@ -134,24 +138,29 @@ JSObject*
 js::InitBooleanClass(JSContext* cx, Handle<GlobalObject*> global)
 {
     Rooted<BooleanObject*> booleanProto(cx, GlobalObject::createBlankPrototype<BooleanObject>(cx, global));
-    if (!booleanProto)
+    if (!booleanProto) {
         return nullptr;
+    }
     booleanProto->setFixedSlot(BooleanObject::PRIMITIVE_VALUE_SLOT, BooleanValue(false));
 
     RootedFunction ctor(cx, GlobalObject::createConstructor(cx, Boolean, cx->names().Boolean, 1,
                                                             gc::AllocKind::FUNCTION,
                                                             &jit::JitInfo_Boolean));
-    if (!ctor)
+    if (!ctor) {
         return nullptr;
+    }
 
-    if (!LinkConstructorAndPrototype(cx, ctor, booleanProto))
+    if (!LinkConstructorAndPrototype(cx, ctor, booleanProto)) {
         return nullptr;
+    }
 
-    if (!DefinePropertiesAndFunctions(cx, booleanProto, nullptr, boolean_methods))
+    if (!DefinePropertiesAndFunctions(cx, booleanProto, nullptr, boolean_methods)) {
         return nullptr;
+    }
 
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Boolean, ctor, booleanProto))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Boolean, ctor, booleanProto)) {
         return nullptr;
+    }
 
     return booleanProto;
 }
@@ -165,11 +174,13 @@ js::BooleanToString(JSContext* cx, bool b)
 JS_PUBLIC_API(bool)
 js::ToBooleanSlow(HandleValue v)
 {
-    if (v.isString())
+    if (v.isString()) {
         return v.toString()->length() != 0;
+    }
 #ifdef ENABLE_BIGINT
-    if (v.isBigInt())
+    if (v.isBigInt()) {
         return v.toBigInt()->toBoolean();
+    }
 #endif
 
     MOZ_ASSERT(v.isObject());

@@ -194,8 +194,9 @@ class ChainedIter
     }
     T get() const {
         MOZ_ASSERT(!done());
-        if (!iter0_.done())
+        if (!iter0_.done()) {
             return iter0_.get();
+        }
         MOZ_ASSERT(!iter1_.done());
         return iter1_.get();
     }
@@ -382,11 +383,13 @@ class GCRuntime
     bool updateMallocCounter(size_t nbytes) {
         mallocCounter.update(nbytes);
         TriggerKind trigger = mallocCounter.shouldTriggerGC(tunables);
-        if (MOZ_LIKELY(trigger == NoTrigger) || trigger <= mallocCounter.triggered())
+        if (MOZ_LIKELY(trigger == NoTrigger) || trigger <= mallocCounter.triggered()) {
             return false;
+        }
 
-        if (!triggerGC(JS::gcreason::TOO_MUCH_MALLOC))
+        if (!triggerGC(JS::gcreason::TOO_MUCH_MALLOC)) {
             return false;
+        }
 
         // Even though this method may be called off the main thread it is safe
         // to access mallocCounter here since triggerGC() will return false in

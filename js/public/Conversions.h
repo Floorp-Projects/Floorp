@@ -109,18 +109,22 @@ OrdinaryToPrimitive(JSContext* cx, HandleObject obj, JSType type, MutableHandleV
 MOZ_ALWAYS_INLINE bool
 ToBoolean(HandleValue v)
 {
-    if (v.isBoolean())
+    if (v.isBoolean()) {
         return v.toBoolean();
-    if (v.isInt32())
+    }
+    if (v.isInt32()) {
         return v.toInt32() != 0;
-    if (v.isNullOrUndefined())
+    }
+    if (v.isNullOrUndefined()) {
         return false;
+    }
     if (v.isDouble()) {
         double d = v.toDouble();
         return !mozilla::IsNaN(d) && d != 0;
     }
-    if (v.isSymbol())
+    if (v.isSymbol()) {
         return true;
+    }
 
     /* The slow path handles strings, BigInts and objects. */
     return js::ToBooleanSlow(v);
@@ -143,12 +147,14 @@ ToNumber(JSContext* cx, HandleValue v, double* out)
 inline double
 ToInteger(double d)
 {
-    if (d == 0)
+    if (d == 0) {
         return d;
+    }
 
     if (!mozilla::IsFinite(d)) {
-        if (mozilla::IsNaN(d))
+        if (mozilla::IsNaN(d)) {
             return 0;
+        }
         return d;
     }
 
@@ -271,8 +277,9 @@ ToString(JSContext* cx, HandleValue v)
 {
     detail::AssertArgumentsAreSane(cx, v);
 
-    if (v.isString())
+    if (v.isString()) {
         return v.toString();
+    }
     return js::ToStringSlow(cx, v);
 }
 
@@ -282,8 +289,9 @@ ToObject(JSContext* cx, HandleValue v)
 {
     detail::AssertArgumentsAreSane(cx, v);
 
-    if (v.isObject())
+    if (v.isObject()) {
         return &v.toObject();
+    }
     return js::ToObjectSlow(cx, v, false);
 }
 
@@ -318,8 +326,9 @@ ToUnsignedInteger(double d)
 
     // If the exponent's less than zero, abs(d) < 1, so the result is 0.  (This
     // also handles subnormals.)
-    if (exp < 0)
+    if (exp < 0) {
         return 0;
+    }
 
     uint_fast16_t exponent = mozilla::AssertedCast<uint_fast16_t>(exp);
 
@@ -330,8 +339,9 @@ ToUnsignedInteger(double d)
     // 2**84 + 2**32.  Thus if UnsignedInteger is uint32_t, an exponent >= 84
     // implies floor(abs(d)) == 0 mod 2**32.)  Return 0 in all these cases.
     constexpr size_t ResultWidth = CHAR_BIT * sizeof(UnsignedInteger);
-    if (exponent >= DoubleExponentShift + ResultWidth)
+    if (exponent >= DoubleExponentShift + ResultWidth) {
         return 0;
+    }
 
     // The significand contains the bits that will determine the final result.
     // Shift those bits left or right, according to the exponent, to their

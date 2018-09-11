@@ -43,8 +43,9 @@ C1Spewer::spewPass(const char* pass)
     out_.printf("begin_cfg\n");
     out_.printf("  name \"%s\"\n", pass);
 
-    for (MBasicBlockIterator block(graph->begin()); block != graph->end(); block++)
+    for (MBasicBlockIterator block(graph->begin()); block != graph->end(); block++) {
         spewPass(out_, *block);
+    }
 
     out_.printf("end_cfg\n");
 }
@@ -55,8 +56,9 @@ C1Spewer::spewRanges(const char* pass, BacktrackingAllocator* regalloc)
     out_.printf("begin_ranges\n");
     out_.printf(" name \"%s\"\n", pass);
 
-    for (MBasicBlockIterator block(graph->begin()); block != graph->end(); block++)
+    for (MBasicBlockIterator block(graph->begin()); block != graph->end(); block++) {
         spewRanges(out_, *block, regalloc);
+    }
 
     out_.printf("end_ranges\n");
 }
@@ -102,8 +104,9 @@ C1Spewer::spewRanges(GenericPrinter& out, BacktrackingAllocator* regalloc, LNode
             out.printf("%s", range->bundle()->allocation().toString().get());
             out.printf("\" %d -1", id);
             out.printf(" [%u, %u[", range->from().bits(), range->to().bits());
-            for (UsePositionIterator usePos(range->usesBegin()); usePos; usePos++)
+            for (UsePositionIterator usePos(range->usesBegin()); usePos; usePos++) {
                 out.printf(" %u M", usePos->pos.bits());
+            }
             out.printf(" \"\"\n");
         }
     }
@@ -113,14 +116,17 @@ void
 C1Spewer::spewRanges(GenericPrinter& out, MBasicBlock* block, BacktrackingAllocator* regalloc)
 {
     LBlock* lir = block->lir();
-    if (!lir)
+    if (!lir) {
         return;
+    }
 
-    for (size_t i = 0; i < lir->numPhis(); i++)
+    for (size_t i = 0; i < lir->numPhis(); i++) {
         spewRanges(out, regalloc, lir->getPhi(i));
+    }
 
-    for (LInstructionIterator ins = lir->begin(); ins != lir->end(); ins++)
+    for (LInstructionIterator ins = lir->begin(); ins != lir->end(); ins++) {
         spewRanges(out, regalloc, *ins);
+    }
 }
 
 void
@@ -165,10 +171,11 @@ C1Spewer::spewPass(GenericPrinter& out, MBasicBlock* block)
             MDefinition* ins = block->getEntrySlot(i);
             out.printf("        ");
             out.printf("%d ", i);
-            if (ins->isUnused())
+            if (ins->isUnused()) {
                 out.printf("unused");
-            else
+            } else {
                 ins->printName(out);
+            }
             out.printf("\n");
         }
         out.printf("      end_locals\n");
@@ -176,18 +183,22 @@ C1Spewer::spewPass(GenericPrinter& out, MBasicBlock* block)
     out.printf("    end_states\n");
 
     out.printf("    begin_HIR\n");
-    for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++)
+    for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
         DumpDefinition(out, *phi);
-    for (MInstructionIterator i(block->begin()); i != block->end(); i++)
+    }
+    for (MInstructionIterator i(block->begin()); i != block->end(); i++) {
         DumpDefinition(out, *i);
+    }
     out.printf("    end_HIR\n");
 
     if (block->lir()) {
         out.printf("    begin_LIR\n");
-        for (size_t i = 0; i < block->lir()->numPhis(); i++)
+        for (size_t i = 0; i < block->lir()->numPhis(); i++) {
             DumpLIR(out, block->lir()->getPhi(i));
-        for (LInstructionIterator i(block->lir()->begin()); i != block->lir()->end(); i++)
+        }
+        for (LInstructionIterator i(block->lir()->begin()); i != block->lir()->end(); i++) {
             DumpLIR(out, *i);
+        }
         out.printf("    end_LIR\n");
     }
 

@@ -38,8 +38,9 @@ namespace js {
 static inline bool
 IsOptimizedArguments(AbstractFramePtr frame, MutableHandleValue vp)
 {
-    if (vp.isMagic(JS_OPTIMIZED_ARGUMENTS) && frame.script()->needsArgsObj())
+    if (vp.isMagic(JS_OPTIMIZED_ARGUMENTS) && frame.script()->needsArgsObj()) {
         vp.setObject(frame.argsObj());
+    }
     return vp.isMagic(JS_OPTIMIZED_ARGUMENTS);
 }
 
@@ -54,8 +55,9 @@ GuardFunApplyArgumentsOptimization(JSContext* cx, AbstractFramePtr frame, CallAr
     if (args.length() == 2 && IsOptimizedArguments(frame, args[1])) {
         if (!IsNativeFunction(args.calleev(), js::fun_apply)) {
             RootedScript script(cx, frame.script());
-            if (!JSScript::argumentsOptimizationFailed(cx, script))
+            if (!JSScript::argumentsOptimizationFailed(cx, script)) {
                 return false;
+            }
             args[1].setObject(frame.argsObj());
         }
     }
@@ -81,16 +83,19 @@ static inline bool
 IsUninitializedLexicalSlot(HandleObject obj, Handle<PropertyResult> prop)
 {
     MOZ_ASSERT(prop);
-    if (obj->is<WithEnvironmentObject>())
+    if (obj->is<WithEnvironmentObject>()) {
         return false;
+    }
 
     // Proxy hooks may return a non-native property.
-    if (prop.isNonNativeProperty())
+    if (prop.isNonNativeProperty()) {
         return false;
+    }
 
     Shape* shape = prop.shape();
-    if (!shape->isDataProperty())
+    if (!shape->isDataProperty()) {
         return false;
+    }
 
     MOZ_ASSERT(obj->as<NativeObject>().containsPure(shape));
     return IsUninitializedLexical(obj->as<NativeObject>().getSlot(shape->slot()));
@@ -191,8 +196,9 @@ FetchName(JSContext* cx, HandleObject receiver, HandleObject holder, HandlePrope
     /* Take the slow path if shape was not found in a native object. */
     if (!receiver->isNative() || !holder->isNative()) {
         Rooted<jsid> id(cx, NameToId(name));
-        if (!GetProperty(cx, receiver, receiver, id, vp))
+        if (!GetProperty(cx, receiver, receiver, id, vp)) {
             return false;
+        }
     } else {
         RootedShape shape(cx, prop.shape());
         if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {
@@ -203,14 +209,16 @@ FetchName(JSContext* cx, HandleObject receiver, HandleObject holder, HandlePrope
             // Unwrap 'with' environments for reasons given in
             // GetNameBoundInEnvironment.
             RootedObject normalized(cx, MaybeUnwrapWithEnvironment(receiver));
-            if (!NativeGetExistingProperty(cx, normalized, holder.as<NativeObject>(), shape, vp))
+            if (!NativeGetExistingProperty(cx, normalized, holder.as<NativeObject>(), shape, vp)) {
                 return false;
+            }
         }
     }
 
     // We do our own explicit checking for |this|
-    if (name == cx->names().dotThis)
+    if (name == cx->names().dotThis) {
         return true;
+    }
 
     // NAME operations are the slow paths already, so unconditionally check
     // for uninitialized lets.
@@ -220,12 +228,14 @@ FetchName(JSContext* cx, HandleObject receiver, HandleObject holder, HandlePrope
 inline bool
 FetchNameNoGC(JSObject* pobj, PropertyResult prop, MutableHandleValue vp)
 {
-    if (!prop || !pobj->isNative())
+    if (!prop || !pobj->isNative()) {
         return false;
+    }
 
     Shape* shape = prop.shape();
-    if (!shape->isDataDescriptor() || !shape->hasDefaultGetter())
+    if (!shape->isDataDescriptor() || !shape->hasDefaultGetter()) {
         return false;
+    }
 
     vp.set(pobj->as<NativeObject>().getSlot(shape->slot()));
     return !IsUninitializedLexical(vp);
@@ -241,15 +251,17 @@ GetEnvironmentName(JSContext* cx, HandleObject envChain, HandlePropertyName name
         JSObject* obj = nullptr;
         JSObject* pobj = nullptr;
         if (LookupNameNoGC(cx, name, envChain, &obj, &pobj, &prop)) {
-            if (FetchNameNoGC(pobj, prop, vp))
+            if (FetchNameNoGC(pobj, prop, vp)) {
                 return true;
+            }
         }
     }
 
     Rooted<PropertyResult> prop(cx);
     RootedObject obj(cx), pobj(cx);
-    if (!LookupName(cx, name, envChain, &obj, &pobj, &prop))
+    if (!LookupName(cx, name, envChain, &obj, &pobj, &prop)) {
         return false;
+    }
 
     return FetchName<mode>(cx, obj, pobj, name, prop, vp);
 }
@@ -274,13 +286,15 @@ HasOwnProperty(JSContext* cx, HandleValue val, HandleValue idValue, bool* result
 
     // Step 1.
     RootedId key(cx);
-    if (!ToPropertyKey(cx, idValue, &key))
+    if (!ToPropertyKey(cx, idValue, &key)) {
         return false;
+    }
 
     // Step 2.
     RootedObject obj(cx, ToObject(cx, val));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     // Step 3.
     return HasOwnProperty(cx, obj, key, result);
@@ -343,10 +357,11 @@ SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleObject e
     RootedValue receiver(cx, ObjectValue(*env));
     if (env->isUnqualifiedVarObj()) {
         RootedNativeObject varobj(cx);
-        if (env->is<DebugEnvironmentProxy>())
+        if (env->is<DebugEnvironmentProxy>()) {
             varobj = &env->as<DebugEnvironmentProxy>().environment().as<NativeObject>();
-        else
+        } else {
             varobj = &env->as<NativeObject>();
+        }
         MOZ_ASSERT(!varobj->getOpsSetProperty());
         ok = NativeSetProperty<Unqualified>(cx, varobj, id, val, receiver, result);
     } else {
@@ -374,8 +389,9 @@ DefLexicalOperation(JSContext* cx, LexicalEnvironmentObject* lexicalEnvArg,
     RootedPropertyName name(cx, script->getName(pc));
 
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
-    if (*pc == JSOP_DEFCONST)
+    if (*pc == JSOP_DEFCONST) {
         attrs |= JSPROP_READONLY;
+    }
 
     Rooted<LexicalEnvironmentObject*> lexicalEnv(cx, lexicalEnvArg);
     RootedObject varObj(cx, varObjArg);
@@ -429,18 +445,21 @@ DefVarOperation(JSContext* cx, HandleObject varobj, HandlePropertyName dn, unsig
 
     Rooted<PropertyResult> prop(cx);
     RootedObject obj2(cx);
-    if (!LookupProperty(cx, varobj, dn, &obj2, &prop))
+    if (!LookupProperty(cx, varobj, dn, &obj2, &prop)) {
         return false;
+    }
 
     /* Steps 8c, 8d. */
     if (!prop || (obj2 != varobj && varobj->is<GlobalObject>())) {
-        if (!DefineDataProperty(cx, varobj, dn, UndefinedHandleValue, attrs))
+        if (!DefineDataProperty(cx, varobj, dn, UndefinedHandleValue, attrs)) {
             return false;
+        }
     }
 
     if (varobj->is<GlobalObject>()) {
-        if (!varobj->as<GlobalObject>().realm()->addToVarNames(cx, dn))
+        if (!varobj->as<GlobalObject>().realm()->addToVarNames(cx, dn)) {
             return false;
+        }
     }
 
     return true;
@@ -460,12 +479,14 @@ NegOperation(JSContext* cx, MutableHandleValue val, MutableHandleValue res)
         return true;
     }
 
-    if (!ToNumeric(cx, val))
+    if (!ToNumeric(cx, val)) {
         return false;
+    }
 
 #ifdef ENABLE_BIGINT
-    if (val.isBigInt())
+    if (val.isBigInt()) {
         return BigInt::neg(cx, val, res);
+    }
 #endif
 
     res.setNumber(-val.toNumber());
@@ -481,8 +502,9 @@ ToIdOperation(JSContext* cx, HandleValue idval, MutableHandleValue res)
     }
 
     RootedId id(cx);
-    if (!ToPropertyKey(cx, idval, &id))
+    if (!ToPropertyKey(cx, idval, &id)) {
         return false;
+    }
 
     res.set(IdToValue(id));
     return true;
@@ -498,33 +520,40 @@ GetObjectElementOperation(JSContext* cx, JSOp op, JS::HandleObject obj, JS::Hand
     do {
         uint32_t index;
         if (IsDefinitelyIndex(key, &index)) {
-            if (GetElementNoGC(cx, obj, receiver, index, res.address()))
+            if (GetElementNoGC(cx, obj, receiver, index, res.address())) {
                 break;
+            }
 
-            if (!GetElement(cx, obj, receiver, index, res))
+            if (!GetElement(cx, obj, receiver, index, res)) {
                 return false;
+            }
             break;
         }
 
         if (key.isString()) {
             JSString* str = key.toString();
             JSAtom* name = str->isAtom() ? &str->asAtom() : AtomizeString(cx, str);
-            if (!name)
+            if (!name) {
                 return false;
+            }
             if (name->isIndex(&index)) {
-                if (GetElementNoGC(cx, obj, receiver, index, res.address()))
+                if (GetElementNoGC(cx, obj, receiver, index, res.address())) {
                     break;
+                }
             } else {
-                if (GetPropertyNoGC(cx, obj, receiver, name->asPropertyName(), res.address()))
+                if (GetPropertyNoGC(cx, obj, receiver, name->asPropertyName(), res.address())) {
                     break;
+                }
             }
         }
 
         RootedId id(cx);
-        if (!ToPropertyKey(cx, key, &id))
+        if (!ToPropertyKey(cx, key, &id)) {
             return false;
-        if (!GetProperty(cx, obj, receiver, id, res))
+        }
+        if (!GetProperty(cx, obj, receiver, id, res)) {
             return false;
+        }
     } while (false);
 
     cx->debugOnlyCheck(res);
@@ -539,39 +568,47 @@ GetPrimitiveElementOperation(JSContext* cx, JSOp op, JS::HandleValue receiver,
 
     // FIXME: Bug 1234324 We shouldn't be boxing here.
     RootedObject boxed(cx, ToObjectFromStackForPropertyAccess(cx, receiver, key));
-    if (!boxed)
+    if (!boxed) {
         return false;
+    }
 
     do {
         uint32_t index;
         if (IsDefinitelyIndex(key, &index)) {
-            if (GetElementNoGC(cx, boxed, receiver, index, res.address()))
+            if (GetElementNoGC(cx, boxed, receiver, index, res.address())) {
                 break;
+            }
 
-            if (!GetElement(cx, boxed, receiver, index, res))
+            if (!GetElement(cx, boxed, receiver, index, res)) {
                 return false;
+            }
             break;
         }
 
         if (key.isString()) {
             JSString* str = key.toString();
             JSAtom* name = str->isAtom() ? &str->asAtom() : AtomizeString(cx, str);
-            if (!name)
+            if (!name) {
                 return false;
+            }
             if (name->isIndex(&index)) {
-                if (GetElementNoGC(cx, boxed, receiver, index, res.address()))
+                if (GetElementNoGC(cx, boxed, receiver, index, res.address())) {
                     break;
+                }
             } else {
-                if (GetPropertyNoGC(cx, boxed, receiver, name->asPropertyName(), res.address()))
+                if (GetPropertyNoGC(cx, boxed, receiver, name->asPropertyName(), res.address())) {
                     break;
+                }
             }
         }
 
         RootedId id(cx);
-        if (!ToPropertyKey(cx, key, &id))
+        if (!ToPropertyKey(cx, key, &id)) {
             return false;
-        if (!GetProperty(cx, boxed, receiver, id, res))
+        }
+        if (!GetProperty(cx, boxed, receiver, id, res)) {
             return false;
+        }
     } while (false);
 
     cx->debugOnlyCheck(res);
@@ -595,8 +632,9 @@ GetElemOptimizedArguments(JSContext* cx, AbstractFramePtr frame, MutableHandleVa
         }
 
         RootedScript script(cx, frame.script());
-        if (!JSScript::argumentsOptimizationFailed(cx, script))
+        if (!JSScript::argumentsOptimizationFailed(cx, script)) {
             return false;
+        }
 
         lref.set(ObjectValue(frame.argsObj()));
     }
@@ -615,8 +653,9 @@ GetElementOperation(JSContext* cx, JSOp op, HandleValue lref, HandleValue rref,
         JSString* str = lref.toString();
         if (index < str->length()) {
             str = cx->staticStrings().getUnitStringForElement(cx, str, index);
-            if (!str)
+            if (!str) {
                 return false;
+            }
             res.setString(str);
             return true;
         }
@@ -645,8 +684,9 @@ InitElemOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, HandleValue i
     MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
 
     RootedId id(cx);
-    if (!ToPropertyKey(cx, idval, &id))
+    if (!ToPropertyKey(cx, idval, &id)) {
         return false;
+    }
 
     unsigned flags = GetInitDataPropAttrs(JSOp(*pc));
     return DefineDataProperty(cx, obj, id, val, flags);
@@ -679,12 +719,14 @@ InitArrayElemOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, uint32_t
      */
     if (val.isMagic(JS_ELEMENTS_HOLE)) {
         if (op == JSOP_INITELEM_INC) {
-            if (!SetLengthProperty(cx, obj, index + 1))
+            if (!SetLengthProperty(cx, obj, index + 1)) {
                 return false;
+            }
         }
     } else {
-        if (!DefineDataElement(cx, obj, index, val, JSPROP_ENUMERATE))
+        if (!DefineDataElement(cx, obj, index, val, JSPROP_ENUMERATE)) {
             return false;
+        }
     }
 
     return true;
@@ -698,12 +740,15 @@ ProcessCallSiteObjOperation(JSContext* cx, HandleObject cso, HandleObject raw)
 
     if (cso->nonProxyIsExtensible()) {
         RootedValue rawValue(cx, ObjectValue(*raw));
-        if (!DefineDataProperty(cx, cso, cx->names().raw, rawValue, 0))
+        if (!DefineDataProperty(cx, cso, cx->names().raw, rawValue, 0)) {
             return false;
-        if (!FreezeObject(cx, raw))
+        }
+        if (!FreezeObject(cx, raw)) {
             return false;
-        if (!FreezeObject(cx, cso))
+        }
+        if (!FreezeObject(cx, cso)) {
             return false;
+        }
     }
     return true;
 }
@@ -759,8 +804,9 @@ static MOZ_ALWAYS_INLINE bool
 BitNot(JSContext* cx, HandleValue in, int* out)
 {
     int i;
-    if (!ToInt32(cx, in, &i))
+    if (!ToInt32(cx, in, &i)) {
         return false;
+    }
     *out = ~i;
     return true;
 }
@@ -769,8 +815,9 @@ static MOZ_ALWAYS_INLINE bool
 BitXor(JSContext* cx, HandleValue lhs, HandleValue rhs, int* out)
 {
     int left, right;
-    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
+    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right)) {
         return false;
+    }
     *out = left ^ right;
     return true;
 }
@@ -779,8 +826,9 @@ static MOZ_ALWAYS_INLINE bool
 BitOr(JSContext* cx, HandleValue lhs, HandleValue rhs, int* out)
 {
     int left, right;
-    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
+    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right)) {
         return false;
+    }
     *out = left | right;
     return true;
 }
@@ -789,8 +837,9 @@ static MOZ_ALWAYS_INLINE bool
 BitAnd(JSContext* cx, HandleValue lhs, HandleValue rhs, int* out)
 {
     int left, right;
-    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
+    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right)) {
         return false;
+    }
     *out = left & right;
     return true;
 }
@@ -799,8 +848,9 @@ static MOZ_ALWAYS_INLINE bool
 BitLsh(JSContext* cx, HandleValue lhs, HandleValue rhs, int* out)
 {
     int32_t left, right;
-    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
+    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right)) {
         return false;
+    }
     *out = uint32_t(left) << (right & 31);
     return true;
 }
@@ -809,8 +859,9 @@ static MOZ_ALWAYS_INLINE bool
 BitRsh(JSContext* cx, HandleValue lhs, HandleValue rhs, int* out)
 {
     int32_t left, right;
-    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
+    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right)) {
         return false;
+    }
     *out = left >> (right & 31);
     return true;
 }
@@ -820,8 +871,9 @@ UrshOperation(JSContext* cx, HandleValue lhs, HandleValue rhs, MutableHandleValu
 {
     uint32_t left;
     int32_t  right;
-    if (!ToUint32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
+    if (!ToUint32(cx, lhs, &left) || !ToInt32(cx, rhs, &right)) {
         return false;
+    }
     left >>= right & 31;
     out.setNumber(uint32_t(left));
     return true;
@@ -832,8 +884,9 @@ static MOZ_ALWAYS_INLINE bool
 SignExtendOperation(JSContext* cx, HandleValue in, int* out)
 {
     int32_t i;
-    if (!ToInt32(cx, in, &i))
+    if (!ToInt32(cx, in, &i)) {
         return false;
+    }
     *out = (T)i;
     return true;
 }
@@ -843,8 +896,9 @@ SignExtendOperation(JSContext* cx, HandleValue in, int* out)
 inline JSFunction*
 ReportIfNotFunction(JSContext* cx, HandleValue v, MaybeConstruct construct = NO_CONSTRUCT)
 {
-    if (v.isObject() && v.toObject().is<JSFunction>())
+    if (v.isObject() && v.toObject().is<JSFunction>()) {
         return &v.toObject().as<JSFunction>();
+    }
 
     ReportIsNotFunction(cx, v, -1, construct);
     return nullptr;

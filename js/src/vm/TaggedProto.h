@@ -48,8 +48,9 @@ class TaggedProto
     HashNumber hashCode() const;
 
     void trace(JSTracer* trc) {
-        if (isObject())
+        if (isObject()) {
             TraceManuallyBarrieredEdge(trc, &proto, "TaggedProto");
+        }
     }
 
   private:
@@ -69,10 +70,12 @@ struct MovableCellHasher<TaggedProto>
         return !l.isObject() || MovableCellHasher<JSObject*>::ensureHash(l.toObject());
     }
     static HashNumber hash(const Lookup& l) {
-        if (l.isDynamic())
+        if (l.isDynamic()) {
             return uint64_t(1);
-        if (!l.isObject())
+        }
+        if (!l.isObject()) {
             return uint64_t(0);
+        }
         return MovableCellHasher<JSObject*>::hash(l.toObject());
     }
     static bool match(const Key& k, const Lookup& l) {
@@ -87,8 +90,9 @@ struct MovableCellHasher<TaggedProto>
 MOZ_ALWAYS_INLINE bool
 TaggedProtoIsNotGray(const TaggedProto& proto)
 {
-    if (!proto.isObject())
+    if (!proto.isObject()) {
         return true;
+    }
 
     return JS::ObjectIsNotGray(proto.toObject());
 }
@@ -139,8 +143,9 @@ auto
 DispatchTyped(F f, const TaggedProto& proto, Args&&... args)
   -> decltype(f(static_cast<JSObject*>(nullptr), std::forward<Args>(args)...))
 {
-    if (proto.isObject())
+    if (proto.isObject()) {
         return f(proto.toObject(), std::forward<Args>(args)...);
+    }
     return F::defaultValue(proto);
 }
 

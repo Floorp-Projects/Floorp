@@ -156,8 +156,9 @@ IsSimulatedOOMAllocation()
 inline bool
 ShouldFailWithOOM()
 {
-    if (!IsThreadSimulatingOOM())
+    if (!IsThreadSimulatingOOM()) {
         return false;
+    }
 
     counter++;
     if (IsSimulatedOOMAllocation()) {
@@ -203,8 +204,9 @@ IsSimulatedStackOOMCheck()
 inline bool
 ShouldFailWithStackOOM()
 {
-    if (!IsThreadSimulatingStackOOM())
+    if (!IsThreadSimulatingStackOOM()) {
         return false;
+    }
 
     stackCheckCounter++;
     if (IsSimulatedStackOOMCheck()) {
@@ -251,8 +253,9 @@ IsSimulatedInterruptCheck()
 inline bool
 ShouldFailWithInterrupt()
 {
-    if (!IsThreadSimulatingInterrupt())
+    if (!IsThreadSimulatingInterrupt()) {
         return false;
+    }
 
     interruptCheckCounter++;
     if (IsSimulatedInterruptCheck()) {
@@ -579,8 +582,9 @@ static MOZ_ALWAYS_INLINE T*
 js_pod_arena_malloc(arena_id_t arena, size_t numElems)
 {
   size_t bytes;
-  if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(numElems, &bytes)))
+  if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(numElems, &bytes))) {
     return nullptr;
+  }
   return static_cast<T*>(js_arena_malloc(arena, bytes));
 }
 
@@ -596,8 +600,9 @@ static MOZ_ALWAYS_INLINE T*
 js_pod_arena_calloc(arena_id_t arena, size_t numElems)
 {
     size_t bytes;
-    if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(numElems, &bytes)))
+    if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(numElems, &bytes))) {
         return nullptr;
+    }
     return static_cast<T*>(js_arena_calloc(arena, bytes, 1));
 }
 
@@ -614,8 +619,9 @@ js_pod_realloc(T* prior, size_t oldSize, size_t newSize)
 {
     MOZ_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
     size_t bytes;
-    if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(newSize, &bytes)))
+    if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(newSize, &bytes))) {
         return nullptr;
+    }
     return static_cast<T*>(js_realloc(prior, bytes));
 }
 

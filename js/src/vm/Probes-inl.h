@@ -24,8 +24,9 @@ inline bool
 probes::CallTrackingActive(JSContext* cx)
 {
 #ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED() || JAVASCRIPT_FUNCTION_RETURN_ENABLED())
+    if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED() || JAVASCRIPT_FUNCTION_RETURN_ENABLED()) {
         return true;
+    }
 #endif
     return false;
 }
@@ -35,22 +36,25 @@ probes::EnterScript(JSContext* cx, JSScript* script, JSFunction* maybeFun,
                     InterpreterFrame* fp)
 {
 #ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED())
+    if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED()) {
         DTraceEnterJSFun(cx, maybeFun, script);
+    }
 #endif
 
     JSRuntime* rt = cx->runtime();
     if (rt->geckoProfiler().enabled()) {
-        if (!cx->geckoProfiler().enter(cx, script, maybeFun))
+        if (!cx->geckoProfiler().enter(cx, script, maybeFun)) {
             return false;
+        }
         MOZ_ASSERT_IF(!fp->script()->isGenerator() &&
                       !fp->script()->isAsync(),
                       !fp->hasPushedGeckoProfilerFrame());
         fp->setPushedGeckoProfilerFrame();
     }
 
-    if (script->trackRecordReplayProgress())
+    if (script->trackRecordReplayProgress()) {
         mozilla::recordreplay::AdvanceExecutionProgressCounter();
+    }
 
     return true;
 }
@@ -59,12 +63,14 @@ inline void
 probes::ExitScript(JSContext* cx, JSScript* script, JSFunction* maybeFun, bool popProfilerFrame)
 {
 #ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
+    if (JAVASCRIPT_FUNCTION_RETURN_ENABLED()) {
         DTraceExitJSFun(cx, maybeFun, script);
+    }
 #endif
 
-    if (popProfilerFrame)
+    if (popProfilerFrame) {
         cx->geckoProfiler().exit(script, maybeFun);
+    }
 }
 
 inline bool
@@ -73,9 +79,10 @@ probes::StartExecution(JSScript* script)
     bool ok = true;
 
 #ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_EXECUTE_START_ENABLED())
+    if (JAVASCRIPT_EXECUTE_START_ENABLED()) {
         JAVASCRIPT_EXECUTE_START((script->filename() ? (char*)script->filename() : nullName),
                                  script->lineno());
+    }
 #endif
 
     return ok;
@@ -87,9 +94,10 @@ probes::StopExecution(JSScript* script)
     bool ok = true;
 
 #ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_EXECUTE_DONE_ENABLED())
+    if (JAVASCRIPT_EXECUTE_DONE_ENABLED()) {
         JAVASCRIPT_EXECUTE_DONE((script->filename() ? (char*)script->filename() : nullName),
                                 script->lineno());
+    }
 #endif
 
     return ok;
