@@ -176,7 +176,7 @@ ActiveScrolledRoot::ToString(const ActiveScrolledRoot* aActiveScrolledRoot)
       str.AppendLiteral(", ");
     }
   }
-  return str;
+  return std::move(str);
 }
 
 static inline CSSAngle

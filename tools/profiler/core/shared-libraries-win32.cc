@@ -108,7 +108,7 @@ GetVersion(WCHAR* dllPath)
                           vInfo->dwFileVersionMS & 0xFFFF,
                           vInfo->dwFileVersionLS >> 16,
                           vInfo->dwFileVersionLS & 0xFFFF);
-  return version;
+  return std::move(version);
 }
 
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()

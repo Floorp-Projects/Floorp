@@ -1610,8 +1610,9 @@ AddOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, Muta
     if (!ToPrimitive(cx, rhs))
         return false;
 
-    bool lIsString, rIsString;
-    if ((lIsString = lhs.isString()) | (rIsString = rhs.isString())) {
+    bool lIsString = lhs.isString();
+    bool rIsString = rhs.isString();
+    if (lIsString || rIsString) {
         JSString* lstr;
         if (lIsString) {
             lstr = lhs.toString();

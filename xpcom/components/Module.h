@@ -133,7 +133,7 @@ struct Module
 
 #if defined(MOZILLA_INTERNAL_API)
 #  define NSMODULE_NAME(_name) _name##_NSModule
-#  if defined(_MSC_VER)
+#  if defined(_MSC_VER) || (defined(__clang__) && defined(__MINGW32__))
 #    pragma section(".kPStaticModules$M", read)
 #    pragma comment(linker, "/merge:.kPStaticModules=.rdata")
 #    define NSMODULE_SECTION __declspec(allocate(".kPStaticModules$M"), dllexport)

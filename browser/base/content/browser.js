@@ -2966,7 +2966,6 @@ var BrowserOnClick = {
   onCertError(browser, elementId, isTopFrame, location, securityInfoAsString, frameId) {
     let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
     let securityInfo;
-    let sslStatus;
 
     switch (elementId) {
       case "exceptionDialogButton":
@@ -2975,24 +2974,23 @@ var BrowserOnClick = {
         }
 
         securityInfo = getSecurityInfo(securityInfoAsString);
-        sslStatus = securityInfo.SSLStatus;
         let params = { exceptionAdded: false,
-                       sslStatus };
+                       securityInfo };
         if (Services.prefs.getBoolPref("browser.security.newcerterrorpage.enabled", false)) {
           let overrideService = Cc["@mozilla.org/security/certoverride;1"]
                                   .getService(Ci.nsICertOverrideService);
           let flags = 0;
-          if (sslStatus.isUntrusted) {
+          if (securityInfo.isUntrusted) {
             flags |= overrideService.ERROR_UNTRUSTED;
           }
-          if (sslStatus.isDomainMismatch) {
+          if (securityInfo.isDomainMismatch) {
             flags |= overrideService.ERROR_MISMATCH;
           }
-          if (sslStatus.isNotValidAtThisTime) {
+          if (securityInfo.isNotValidAtThisTime) {
             flags |= overrideService.ERROR_TIME;
           }
           let uri = Services.uriFixup.createFixupURI(location, 0);
-          let cert = sslStatus.serverCert;
+          let cert = securityInfo.serverCert;
           overrideService.rememberValidityOverride(
             uri.asciiHost, uri.port,
             cert,
@@ -3040,25 +3038,24 @@ var BrowserOnClick = {
         }
 
         securityInfo = getSecurityInfo(securityInfoAsString);
-        sslStatus = securityInfo.SSLStatus;
         let errorInfo = getDetailedCertErrorInfo(location,
                                                  securityInfo);
         let validityInfo = {
-          notAfter: sslStatus.serverCert.validity.notAfter,
-          notBefore: sslStatus.serverCert.validity.notBefore,
-          notAfterLocalTime: sslStatus.serverCert.validity.notAfterLocalTime,
-          notBeforeLocalTime: sslStatus.serverCert.validity.notBeforeLocalTime,
+          notAfter: securityInfo.serverCert.validity.notAfter,
+          notBefore: securityInfo.serverCert.validity.notBefore,
+          notAfterLocalTime: securityInfo.serverCert.validity.notAfterLocalTime,
+          notBeforeLocalTime: securityInfo.serverCert.validity.notBeforeLocalTime,
         };
         browser.messageManager.sendAsyncMessage("CertErrorDetails", {
             code: securityInfo.errorCode,
             info: errorInfo,
             codeString: securityInfo.errorCodeString,
-            certIsUntrusted: sslStatus.isUntrusted,
-            certSubjectAltNames: sslStatus.serverCert.subjectAltNames,
+            certIsUntrusted: securityInfo.isUntrusted,
+            certSubjectAltNames: securityInfo.serverCert.subjectAltNames,
             validity: validityInfo,
             url: location,
-            isDomainMismatch: sslStatus.isDomainMismatch,
-            isNotValidAtThisTime: sslStatus.isNotValidAtThisTime,
+            isDomainMismatch: securityInfo.isDomainMismatch,
+            isNotValidAtThisTime: securityInfo.isNotValidAtThisTime,
             frameId,
         });
         break;

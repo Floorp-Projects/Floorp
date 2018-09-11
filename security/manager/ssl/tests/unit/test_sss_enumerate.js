@@ -43,7 +43,7 @@ let sss = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
 function insertEntries() {
   for (let testcase of TESTCASES) {
     let uri = Services.io.newURI("https://" + testcase.hostname);
-    let sslStatus = new FakeSSLStatus(constructCertFromFile(
+    let secInfo = new FakeTransportSecurityInfo(constructCertFromFile(
       `test_pinning_dynamic/${testcase.hostname}-pinningroot.pem`));
     // MaxAge is in seconds.
     let maxAge = Math.round((testcase.expireTime - Date.now()) / 1000);
@@ -52,13 +52,13 @@ function insertEntries() {
       header += "; includeSubdomains";
     }
     sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri, header,
-                      sslStatus, 0,
+                      secInfo, 0,
                       Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
     for (let key of KEY_HASHES) {
       header += `; pin-sha256="${key}"`;
     }
     sss.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri, header,
-                      sslStatus, 0,
+                      secInfo, 0,
                       Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   }
 }

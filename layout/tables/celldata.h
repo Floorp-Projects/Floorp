@@ -159,11 +159,11 @@ static inline BCPixelSize
 BC_BORDER_END_HALF(BCPixelSize px) { return px / 2; }
 
 static inline nscoord
-BC_BORDER_START_HALF_COORD(int32_t p2t, BCPixelSize px)
-  { return BC_BORDER_START_HALF(px) * p2t; }
+BC_BORDER_START_HALF_COORD(int32_t d2a, BCPixelSize px)
+  { return BC_BORDER_START_HALF(px) * d2a; }
 static inline nscoord
-BC_BORDER_END_HALF_COORD(int32_t p2t, BCPixelSize px)
-  { return BC_BORDER_END_HALF(px) * p2t; }
+BC_BORDER_END_HALF_COORD(int32_t d2a, BCPixelSize px)
+  { return BC_BORDER_END_HALF(px) * d2a; }
 
 // BCData stores the bstart and istart border info and the corner connecting the two.
 class BCData

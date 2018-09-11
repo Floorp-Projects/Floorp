@@ -181,12 +181,12 @@ var AboutCertErrorListener = {
     return content.document.documentURI.startsWith("about:certerror");
   },
 
-  _setTechDetailsMsgPart1(hostString, sslStatus, securityInfo, technicalInfo, doc) {
+  _setTechDetailsMsgPart1(hostString, securityInfo, technicalInfo, doc) {
     let msg = gPipNSSBundle.formatStringFromName("certErrorIntro",
                                                  [hostString], 1);
     msg += "\n\n";
 
-    if (sslStatus.isUntrusted && !sslStatus.serverCert.isSelfSigned) {
+    if (securityInfo.isUntrusted && !securityInfo.serverCert.isSelfSigned) {
       switch (securityInfo.errorCode) {
         case SEC_ERROR_UNKNOWN_ISSUER:
           msg += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer") + "\n";
@@ -215,18 +215,18 @@ var AboutCertErrorListener = {
           msg += gPipNSSBundle.GetStringFromName("certErrorTrust_Untrusted") + "\n";
       }
     }
-    if (sslStatus.isUntrusted && sslStatus.serverCert.isSelfSigned) {
+    if (securityInfo.isUntrusted && securityInfo.serverCert.isSelfSigned) {
       msg += gPipNSSBundle.GetStringFromName("certErrorTrust_SelfSigned") + "\n";
     }
 
     technicalInfo.appendChild(doc.createTextNode(msg));
   },
 
-  _setTechDetails(sslStatus, securityInfo, location) {
-    if (!securityInfo || !sslStatus || !location) {
+  _setTechDetails(securityInfo, location) {
+    if (!securityInfo || !location) {
       return;
     }
-    let validity = sslStatus.serverCert.validity;
+    let validity = securityInfo.serverCert.validity;
 
     let doc = content.document;
     // CSS class and error code are set from nsDocShell.
@@ -258,10 +258,10 @@ var AboutCertErrorListener = {
         gPipNSSBundle.GetStringFromName("certErrorSymantecDistrustAdministrator");
     }
 
-    this._setTechDetailsMsgPart1(hostString, sslStatus, securityInfo, technicalInfo, doc);
+    this._setTechDetailsMsgPart1(hostString, securityInfo, technicalInfo, doc);
 
-    if (sslStatus.isDomainMismatch) {
-      let subjectAltNamesList = sslStatus.serverCert.subjectAltNames;
+    if (securityInfo.isDomainMismatch) {
+      let subjectAltNamesList = securityInfo.serverCert.subjectAltNames;
       let subjectAltNames = subjectAltNamesList.split(",");
       let numSubjectAltNames = subjectAltNames.length;
       let msgPrefix = "";
@@ -343,7 +343,7 @@ var AboutCertErrorListener = {
       }
     }
 
-    if (sslStatus.isNotValidAtThisTime) {
+    if (securityInfo.isNotValidAtThisTime) {
       let nowTime = new Date().getTime() * 1000;
       let dateOptions = { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric" };
       let now = new Services.intl.DateTimeFormat(undefined, dateOptions).format(new Date());
@@ -384,8 +384,7 @@ var AboutCertErrorListener = {
     let securityInfo = docShell.failedChannel && docShell.failedChannel.securityInfo;
     securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
                 .QueryInterface(Ci.nsISerializable);
-    let sslStatus = securityInfo.SSLStatus;
-    this._setTechDetails(sslStatus, securityInfo, ownerDoc.location.href);
+    this._setTechDetails(securityInfo, ownerDoc.location.href);
   },
 };
 AboutCertErrorListener.init();

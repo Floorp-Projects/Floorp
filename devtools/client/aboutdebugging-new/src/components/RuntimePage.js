@@ -9,6 +9,9 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
+
 const DebugTargetPane = createFactory(require("./debugtarget/DebugTargetPane"));
 const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
 const InspectAction = createFactory(require("./debugtarget/InspectAction"));
@@ -59,60 +62,96 @@ class RuntimePage extends PureComponent {
         version: Services.appinfo.version,
       }),
       TemporaryExtensionInstaller({ dispatch }),
-      DebugTargetPane({
-        actionComponent: TemporaryExtensionAction,
-        collapsibilityKey: DEBUG_TARGET_PANE.TEMPORARY_EXTENSION,
-        detailComponent: ExtensionDetail,
-        dispatch,
-        isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.TEMPORARY_EXTENSION),
-        name: "Temporary Extensions",
-        targets: temporaryExtensions,
-      }),
-      DebugTargetPane({
-        actionComponent: InspectAction,
-        collapsibilityKey: DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
-        detailComponent: ExtensionDetail,
-        dispatch,
-        isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.INSTALLED_EXTENSION),
-        name: "Extensions",
-        targets: installedExtensions,
-      }),
-      DebugTargetPane({
-        actionComponent: InspectAction,
-        collapsibilityKey: DEBUG_TARGET_PANE.TAB,
-        detailComponent: TabDetail,
-        dispatch,
-        isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.TAB),
-        name: "Tabs",
-        targets: tabs
-      }),
-      DebugTargetPane({
-        actionComponent: ServiceWorkerAction,
-        collapsibilityKey: DEBUG_TARGET_PANE.SERVICE_WORKER,
-        detailComponent: WorkerDetail,
-        dispatch,
-        isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.SERVICE_WORKER),
-        name: "Service Workers",
-        targets: serviceWorkers
-      }),
-      DebugTargetPane({
-        actionComponent: InspectAction,
-        collapsibilityKey: DEBUG_TARGET_PANE.SHARED_WORKER,
-        detailComponent: WorkerDetail,
-        dispatch,
-        isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.SHARED_WORKER),
-        name: "Shared Workers",
-        targets: sharedWorkers
-      }),
-      DebugTargetPane({
-        actionComponent: InspectAction,
-        collapsibilityKey: DEBUG_TARGET_PANE.OTHER_WORKER,
-        detailComponent: WorkerDetail,
-        dispatch,
-        isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.OTHER_WORKER),
-        name: "Other Workers",
-        targets: otherWorkers
-      }),
+      Localized(
+        {
+          id: "about-debugging-runtime-temporary-extensions",
+          attrs: { name: true }
+        },
+        DebugTargetPane({
+          actionComponent: TemporaryExtensionAction,
+          collapsibilityKey: DEBUG_TARGET_PANE.TEMPORARY_EXTENSION,
+          detailComponent: ExtensionDetail,
+          dispatch,
+          isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.TEMPORARY_EXTENSION),
+          name: "Temporary Extensions",
+          targets: temporaryExtensions,
+        })
+      ),
+      Localized(
+        {
+          id: "about-debugging-runtime-extensions",
+          attrs: { name: true }
+        },
+        DebugTargetPane({
+          actionComponent: InspectAction,
+          collapsibilityKey: DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
+          detailComponent: ExtensionDetail,
+          dispatch,
+          isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.INSTALLED_EXTENSION),
+          name: "Extensions",
+          targets: installedExtensions,
+        })
+      ),
+      Localized(
+        {
+          id: "about-debugging-runtime-tabs",
+          attrs: { name: true }
+        },
+        DebugTargetPane({
+          actionComponent: InspectAction,
+          collapsibilityKey: DEBUG_TARGET_PANE.TAB,
+          detailComponent: TabDetail,
+          dispatch,
+          isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.TAB),
+          name: "Tabs",
+          targets: tabs
+        })
+      ),
+      Localized(
+        {
+          id: "about-debugging-runtime-service-workers",
+          attrs: { name: true }
+        },
+        DebugTargetPane({
+          actionComponent: ServiceWorkerAction,
+          collapsibilityKey: DEBUG_TARGET_PANE.SERVICE_WORKER,
+          detailComponent: WorkerDetail,
+          dispatch,
+          isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.SERVICE_WORKER),
+          name: "Service Workers",
+          targets: serviceWorkers
+        })
+      ),
+      Localized(
+        {
+          id: "about-debugging-runtime-shared-workers",
+          attrs: { name: true }
+        },
+        DebugTargetPane({
+          actionComponent: InspectAction,
+          collapsibilityKey: DEBUG_TARGET_PANE.SHARED_WORKER,
+          detailComponent: WorkerDetail,
+          dispatch,
+          isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.SHARED_WORKER),
+          name: "Shared Workers",
+          targets: sharedWorkers
+        })
+      ),
+      Localized(
+        {
+          id: "about-debugging-runtime-other-workers",
+          attrs: { name: true }
+        },
+        DebugTargetPane({
+          actionComponent: InspectAction,
+          collapsibilityKey: DEBUG_TARGET_PANE.OTHER_WORKER,
+          detailComponent: WorkerDetail,
+          dispatch,
+          isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.OTHER_WORKER),
+          name: "Other Workers",
+          targets: otherWorkers
+        })
+      ),
     );
   }
 }

@@ -5568,18 +5568,18 @@ var IdentityHandler = {
   // Loaded active tracking content. Yellow triangle icon is shown.
   TRACKING_MODE_CONTENT_LOADED: "tracking_content_loaded",
 
-  // Cache the most recent SSLStatus and Location seen in getIdentityStrings
-  _lastStatus : null,
+  // Cache the most recent TransportSecurityInfo and Location seen in
+  // getIdentityStrings
+  _lastSecInfo : null,
   _lastLocation : null,
 
   /**
-   * Helper to parse out the important parts of _lastStatus (of the SSL cert in
+   * Helper to parse out the important parts of _lastSecInfo (of the SSL cert in
    * particular) for use in constructing identity UI strings
   */
   getIdentityData : function() {
     let result = {};
-    let status = this._lastStatus.QueryInterface(Ci.nsISSLStatus);
-    let cert = status.serverCert;
+    let cert = this._lastSecInfo.serverCert;
 
     // Human readable name of Subject
     result.subjectOrg = cert.organization;
@@ -5683,8 +5683,7 @@ var IdentityHandler = {
    * (if available). Return the data needed to update the UI.
    */
   checkIdentity: function checkIdentity(aState, aBrowser) {
-    this._lastStatus = aBrowser.securityUI.secInfo &&
-                       aBrowser.securityUI.secInfo.SSLStatus;
+    this._lastSecInfo = aBrowser.securityUI.secInfo;
 
     // Don't pass in the actual location object, since it can cause us to
     // hold on to the window object too long.  Just pass in the fields we

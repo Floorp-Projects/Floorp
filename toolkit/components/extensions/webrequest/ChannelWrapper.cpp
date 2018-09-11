@@ -882,7 +882,8 @@ ChannelWrapper::GetErrorString(nsString& aRetVal) const
     nsCOMPtr<nsISupports> securityInfo;
     Unused << chan->GetSecurityInfo(getter_AddRefs(securityInfo));
     if (nsCOMPtr<nsITransportSecurityInfo> tsi = do_QueryInterface(securityInfo)) {
-      auto errorCode = tsi->GetErrorCode();
+      int32_t errorCode = 0;
+      tsi->GetErrorCode(&errorCode);
       if (psm::IsNSSErrorCode(errorCode)) {
         nsCOMPtr<nsINSSErrorsService> nsserr =
           do_GetService(NS_NSS_ERRORS_SERVICE_CONTRACTID);

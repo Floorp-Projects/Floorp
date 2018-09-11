@@ -41,7 +41,7 @@ var uri = Services.io.newURI("https://a.pinning2.example.com");
 // This test re-uses certificates from pinning tests because that's easier and
 // simpler than recreating new certificates, hence the slightly longer than
 // necessary domain name.
-var sslStatus = new FakeSSLStatus(constructCertFromFile(
+var secInfo = new FakeTransportSecurityInfo(constructCertFromFile(
   "test_pinning_dynamic/a.pinning2.example.com-pinningroot.pem"));
 
 // Test the normal case of processing HSTS and HPKP headers for
@@ -50,10 +50,10 @@ var sslStatus = new FakeSSLStatus(constructCertFromFile(
 // to be HSTS or HPKP any longer.
 add_task(async function() {
   sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri, GOOD_MAX_AGE,
-                    sslStatus, 0,
+                    secInfo, 0,
                     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   sss.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
-                    GOOD_MAX_AGE + VALID_PIN + BACKUP_PIN, sslStatus, 0,
+                    GOOD_MAX_AGE + VALID_PIN + BACKUP_PIN, secInfo, 0,
                     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
 
   Assert.ok(sss.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0),
@@ -75,10 +75,10 @@ add_task(async function() {
 // unrelated sites don't also get removed.
 add_task(async function() {
   sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri, GOOD_MAX_AGE,
-                    sslStatus, 0,
+                    secInfo, 0,
                     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   sss.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
-                    GOOD_MAX_AGE + VALID_PIN + BACKUP_PIN, sslStatus, 0,
+                    GOOD_MAX_AGE + VALID_PIN + BACKUP_PIN, secInfo, 0,
                     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
 
   Assert.ok(sss.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0),
@@ -90,7 +90,7 @@ add_task(async function() {
   // example.org.
   let unrelatedURI = Services.io.newURI("https://example.org");
   sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, unrelatedURI,
-                    GOOD_MAX_AGE, sslStatus, 0,
+                    GOOD_MAX_AGE, secInfo, 0,
                     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   Assert.ok(sss.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
                              unrelatedURI, 0), "example.org should be HSTS");
@@ -124,11 +124,11 @@ add_task(async function() {
 
   for (let originAttributes of originAttributesList) {
     sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri, GOOD_MAX_AGE,
-                      sslStatus, 0,
+                      secInfo, 0,
                       Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
                       originAttributes);
     sss.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
-                      GOOD_MAX_AGE + VALID_PIN + BACKUP_PIN, sslStatus, 0,
+                      GOOD_MAX_AGE + VALID_PIN + BACKUP_PIN, secInfo, 0,
                       Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
                       originAttributes);
 
@@ -141,7 +141,7 @@ add_task(async function() {
 
     // Add an unrelated site to HSTS.  Not HPKP because we have no valid keys.
     sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, unrelatedURI,
-                      GOOD_MAX_AGE, sslStatus, 0,
+                      GOOD_MAX_AGE, secInfo, 0,
                       Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
                       originAttributes);
     Assert.ok(sss.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,

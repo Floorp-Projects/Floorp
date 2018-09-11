@@ -15,9 +15,9 @@ function run_test() {
   // These cases are only relevant as long as bug 1118522 hasn't been fixed.
   ok(!SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri2, 0));
 
-  let sslStatus = new FakeSSLStatus();
+  let secInfo = new FakeTransportSecurityInfo();
   SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                          "max-age=1000;includeSubdomains", sslStatus, 0,
+                          "max-age=1000;includeSubdomains", secInfo, 0,
                           Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
   ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri1, 0));

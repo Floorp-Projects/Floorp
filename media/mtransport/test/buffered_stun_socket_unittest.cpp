@@ -8,8 +8,6 @@
 
 #include <iostream>
 
-#include "nspr.h"
-#include "nss.h"
 #include "ssl.h"
 
 extern "C" {
