@@ -168,6 +168,9 @@ class Preferences(object):
         lines = [i.strip() for i in mozfile.load(path).readlines()]
         _lines = []
         for line in lines:
+            # decode bytes in case of URL processing
+            if isinstance(line, bytes):
+                line = line.decode()
             if not line.startswith(pref_setter):
                 continue
             if '//' in line:
