@@ -30,11 +30,11 @@ button > .button-box {
 }
 
 .about-studies-container {
-  display: flex;
-  flex-direction: row;
   font-size: 1.25rem;
   min-height: 100%;
   width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 #categories {
@@ -48,10 +48,6 @@ button > .button-box {
   align-items: center;
   display: flex;
   flex-direction: row;
-}
-
-.main-content {
-  flex: 1;
 }
 
 .info-box {
