@@ -37,8 +37,6 @@ using namespace mozilla::dom;
 VP8TrackEncoder::VP8TrackEncoder(TrackRate aTrackRate,
                                  FrameDroppingMode aFrameDroppingMode)
   : VideoTrackEncoder(aTrackRate, aFrameDroppingMode)
-  , mEncodedTimestamp(0)
-  , mDurationSinceLastKeyframe(0)
   , mVPXContext(new vpx_codec_ctx_t())
   , mVPXImageWrapper(new vpx_image_t())
 {

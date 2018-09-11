@@ -65,7 +65,7 @@ private:
                                   int32_t aDisplayHeight, vpx_codec_enc_cfg_t& config);
 
   // Encoded timestamp.
-  StreamTime mEncodedTimestamp;
+  StreamTime mEncodedTimestamp = 0;
 
   // Total duration in mTrackRate extracted by GetEncodedPartitions().
   CheckedInt64 mExtractedDuration;
@@ -83,7 +83,7 @@ private:
   /**
    * A duration of non-key frames in milliseconds.
   */
-  StreamTime mDurationSinceLastKeyframe;
+  StreamTime mDurationSinceLastKeyframe = 0;
 
   /**
    * A local segment queue which takes the raw data out from mRawSegment in the
