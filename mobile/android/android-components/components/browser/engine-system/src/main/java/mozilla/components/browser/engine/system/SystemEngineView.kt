@@ -122,7 +122,6 @@ class SystemEngineView @JvmOverloads constructor(
                 session?.internalNotifyObservers {
                     onLocationChange(it)
                     onLoadingStateChange(false)
-                    onNavigationStateChange(webView.canGoBack(), webView.canGoForward())
                     onSecurityChange(cert != null, cert?.let { URI(url).host }, cert?.issuedBy?.oName)
                 }
             }
@@ -182,7 +181,10 @@ class SystemEngineView @JvmOverloads constructor(
         }
 
         override fun onReceivedTitle(view: WebView, title: String?) {
-            session?.internalNotifyObservers { onTitleChange(title ?: "") }
+            session?.internalNotifyObservers {
+                onTitleChange(title ?: "")
+                onNavigationStateChange(view.canGoBack(), view.canGoForward())
+            }
         }
 
         override fun onShowCustomView(view: View, callback: CustomViewCallback) {

@@ -30,6 +30,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -54,16 +55,10 @@ class SystemEngineViewTest {
 
         var observedUrl = ""
         var observedLoadingState = false
-        var observedCanGoBack = false
-        var observedCanGoForward = false
         var observedSecurityChange: Triple<Boolean, String?, String?> = Triple(false, null, null)
         engineSession.register(object : EngineSession.Observer {
             override fun onLoadingStateChange(loading: Boolean) { observedLoadingState = loading }
             override fun onLocationChange(url: String) { observedUrl = url }
-            override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) {
-                observedCanGoBack = true
-                observedCanGoForward = true
-            }
             override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {
                 observedSecurityChange = Triple(secure, host, issuer)
             }
@@ -76,8 +71,6 @@ class SystemEngineViewTest {
         engineView.currentWebView.webViewClient.onPageFinished(null, "http://mozilla.org")
         assertEquals("http://mozilla.org", observedUrl)
         assertEquals(false, observedLoadingState)
-        assertEquals(true, observedCanGoBack)
-        assertEquals(true, observedCanGoForward)
         assertEquals(Triple(false, null, null), observedSecurityChange)
 
         val view = mock(WebView::class.java)
@@ -207,14 +200,30 @@ class SystemEngineViewTest {
         val engineSession = SystemEngineSession()
 
         val engineView = SystemEngineView(RuntimeEnvironment.application)
+        val observer: EngineSession.Observer = mock()
+        val webView: WebView = mock()
+        `when`(webView.canGoBack()).thenReturn(true)
+        `when`(webView.canGoForward()).thenReturn(true)
+
+        // No observers notified when session isn't rendered.
+        engineSession.register(observer)
+        engineView.currentWebView.webChromeClient.onReceivedTitle(webView, "Hello World!")
+        verify(observer, never()).onTitleChange("Hello World!")
+        verify(observer, never()).onNavigationStateChange(true, true)
+
+        // Observers notified.
         engineView.render(engineSession)
 
-        val observer: EngineSession.Observer = mock()
-        engineSession.register(observer)
-
-        engineView.currentWebView.webChromeClient.onReceivedTitle(engineView.currentWebView, "Hello World!")
-
+        engineView.currentWebView.webChromeClient.onReceivedTitle(webView, "Hello World!")
         verify(observer).onTitleChange(eq("Hello World!"))
+        verify(observer).onNavigationStateChange(true, true)
+
+        reset(observer)
+
+        // Empty title when none provided.
+        engineView.currentWebView.webChromeClient.onReceivedTitle(webView, null)
+        verify(observer).onTitleChange(eq(""))
+        verify(observer).onNavigationStateChange(true, true)
     }
 
     @Test
