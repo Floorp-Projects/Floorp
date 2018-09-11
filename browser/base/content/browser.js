@@ -1477,7 +1477,7 @@ var gBrowserInit = {
 
     // Setup click-and-hold gestures access to the session history
     // menus if global click-and-hold isn't turned on
-    if (!getBoolPref("ui.click_hold_context_menus", false))
+    if (!Services.prefs.getBoolPref("ui.click_hold_context_menus", false))
       SetClickAndHoldHandlers();
 
     PlacesToolbarHelper.init();
@@ -2148,7 +2148,7 @@ function BrowserGoHome(aEvent) {
   case "tabshifted":
   case "tab":
     urls = homePage.split("|");
-    var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground", false);
+    var loadInBackground = Services.prefs.getBoolPref("browser.tabs.loadBookmarksInBackground", false);
     // The homepage observer event should only be triggered when the homepage opens
     // in the foreground. This is mostly to support the homepage changed by extension
     // doorhanger which doesn't currently support background pages. This may change in
