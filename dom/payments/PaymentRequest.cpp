@@ -14,7 +14,6 @@
 #include "nsIURLParser.h"
 #include "nsNetCID.h"
 #include "PaymentRequestManager.h"
-#include "mozilla/dom/MerchantValidationEvent.h"
 
 namespace mozilla {
 namespace dom {
@@ -980,29 +979,6 @@ PaymentRequest::DispatchUpdateEvent(const nsAString& aType)
   event->SetRequest(this);
 
   ErrorResult rv;
-  DispatchEvent(*event, rv);
-  return rv.StealNSResult();
-}
-
-nsresult
-PaymentRequest::DispatchMerchantValidationEvent(const nsAString& aType)
-{
-  MOZ_ASSERT(ReadyForUpdate());
-
-  MerchantValidationEventInit init;
-  init.mBubbles = false;
-  init.mCancelable = false;
-  init.mValidationURL = EmptyString();
-
-  ErrorResult rv;
-  RefPtr<MerchantValidationEvent> event =
-    MerchantValidationEvent::Constructor(this, aType, init, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-  event->SetTrusted(true);
-  event->SetRequest(this);
-
   DispatchEvent(*event, rv);
   return rv.StealNSResult();
 }
