@@ -1,0 +1,53 @@
+/*
+ * Copyright 2018 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+//! Build script for the Baldr <-> Cranelift bindings.
+//!
+//! This file is executed by cargo when this crate is built. It generates the
+//! `$OUT_DIR/bindings.rs` file which is then included by `src/baldrapi.rs`.
+
+extern crate bindgen;
+
+use std::env;
+use std::path::PathBuf;
+
+fn main() {
+    // Tell Cargo to regenerate the bindings if the header file changes.
+    println!("cargo:rerun-if-changed=baldrapi.h");
+
+    let bindings = bindgen::builder()
+        .disable_name_namespacing()
+        // We whitelist the Baldr C functions and get the associated types for free.
+        .whitelist_function("env_.*")
+        .whitelist_function("global_.*")
+        .whitelist_function("table_.*")
+        .whitelist_function("funcType_.*")
+        .whitelist_type("Cranelift.*")
+        // The enum classes defined in baldrapi.h and WasmBinaryConstants are all Rust-safe.
+        .rustified_enum("BD_.*|Trap|TypeCode|FuncTypeIdDescKind")
+        .whitelist_type("BD_.*|Trap|TypeCode|FuncTypeIdDescKind")
+        .header("baldrapi.h")
+        .clang_args(&["-x", "c++", "-std=c++14"])
+        .clang_arg("-I../..")
+        .generate()
+        .expect("Unable to generate baldrapi.h bindings");
+
+    // Write the bindings to the $OUT_DIR/bindings.rs file.
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    bindings
+        .write_to_file(out_path.join("bindings.rs"))
+        .expect("Couldn't write bindings!");
+}
