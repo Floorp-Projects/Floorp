@@ -451,10 +451,7 @@ VideoSessionConduit::Create(
     return nullptr;
   }
 
-  UniquePtr<cricket::VideoAdapter> videoAdapter(new cricket::VideoAdapter(1));
-  nsAutoPtr<WebrtcVideoConduit> obj(new WebrtcVideoConduit(aCall,
-                                    std::move(videoAdapter),
-                                    aStsThread));
+  nsAutoPtr<WebrtcVideoConduit> obj(new WebrtcVideoConduit(aCall, aStsThread));
   if(obj->Init() != kMediaConduitNoError) {
     CSFLogError(LOGTAG, "%s VideoConduit Init Failed ", __FUNCTION__);
     return nullptr;
@@ -464,12 +461,11 @@ VideoSessionConduit::Create(
 }
 
 WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall,
-                                       UniquePtr<cricket::VideoAdapter>&& aVideoAdapter,
                                        nsCOMPtr<nsIEventTarget> aStsThread)
   : mTransportMonitor("WebrtcVideoConduit")
   , mStsThread(aStsThread)
   , mMutex("WebrtcVideoConduit::mMutex")
-  , mVideoAdapter(std::move(aVideoAdapter))
+  , mVideoAdapter(MakeUnique<cricket::VideoAdapter>())
   , mBufferPool(false, SCALER_BUFFER_POOL_SIZE)
   , mEngineTransmitting(false)
   , mEngineReceiving(false)
@@ -981,7 +977,8 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     new rtc::RefCountedObject<WebrtcVideoConduit::VideoStreamFactory>(
       codecConfig->mName, this));
 
-  // Always call this to ensure it's reset
+  // Reset the VideoAdapter. SelectResolution will ensure limits are set.
+  mVideoAdapter = MakeUnique<cricket::VideoAdapter>();
   mVideoAdapter->OnScaleResolutionBy(
     (streamCount >= 1 && codecConfig->mSimulcastEncodings[0].constraints.scaleDownBy > 1.0) ?
       rtc::Optional<float>(codecConfig->mSimulcastEncodings[0].constraints.scaleDownBy) :
