@@ -53,6 +53,14 @@
         <slot></slot>`;
       }
     });
+
+    customElements.define("test-simple-slot", class extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({ mode: "open"});
+        this.shadowRoot.innerHTML = "<slot></slot>";
+      }
+    });
   };
   </script>
   <style>
@@ -93,5 +101,11 @@
 
   <test-empty id="mode-open"></test-empty>
   <test-empty-closed id="mode-closed"></test-empty-closed>
+
+  <hr>
+
+  <test-simple-slot id="slot-inline-text">
+    Lorem ipsum
+  </test-simple-slot>
 </body>
 </html>
