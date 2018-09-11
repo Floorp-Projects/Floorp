@@ -7,8 +7,10 @@ Or call out the harness specifically:
 
 	% ./mach xpcshell-test testing/marionette/test/unit
 
-The latter gives you the `--sequential` option which can be useful
+The latter gives you the --sequential option which can be useful
 when debugging to prevent tests from running in parallel.
 
 When adding new tests you must make sure they are listed in
 xpcshell.ini, otherwise they will not run on try.
+
+See also ../../doc/Testing.md for more advice on our other types of tests.
