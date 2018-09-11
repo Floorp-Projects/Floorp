@@ -58,6 +58,7 @@ const {MarionettePrefs} = ChromeUtils.import("chrome://marionette/content/prefs.
 ChromeUtils.import("chrome://marionette/content/proxy.js");
 ChromeUtils.import("chrome://marionette/content/reftest.js");
 const {
+  IdlePromise,
   PollPromise,
   TimedPromise,
 } = ChromeUtils.import("chrome://marionette/content/sync.js", {});
@@ -1445,10 +1446,11 @@ GeckoDriver.prototype.setWindowRect = async function(cmd) {
 
   // Synchronous resize to |width| and |height| dimensions.
   async function resizeWindow(width, height) {
-    return new Promise(resolve => {
-      win.addEventListener("resize", whenIdle(win, resolve), {once: true});
+    await new Promise(resolve => {
+      win.addEventListener("resize", resolve, {once: true});
       win.resizeTo(width, height);
     });
+    await new IdlePromise(win);
   }
 
   // Wait until window size has changed.  We can't wait for the
@@ -3142,10 +3144,11 @@ GeckoDriver.prototype.dismissDialog = async function() {
   this._checkIfAlertIsPresent();
 
   await new Promise(resolve => {
-    win.addEventListener("DOMModalDialogClosed", whenIdle(win, () => {
+    win.addEventListener("DOMModalDialogClosed", async () => {
+      await new IdlePromise(win);
       this.dialog = null;
       resolve();
-    }), {once: true});
+    }, {once: true});
 
     let {button0, button1} = this.dialog.ui;
     (button1 ? button1 : button0).click();
@@ -3161,10 +3164,11 @@ GeckoDriver.prototype.acceptDialog = async function() {
   this._checkIfAlertIsPresent();
 
   await new Promise(resolve => {
-    win.addEventListener("DOMModalDialogClosed", whenIdle(win, () => {
+    win.addEventListener("DOMModalDialogClosed", async () => {
+      await new IdlePromise(win);
       this.dialog = null;
       resolve();
-    }), {once: true});
+    }, {once: true});
 
     let {button0} = this.dialog.ui;
     button0.click();
@@ -3648,16 +3652,17 @@ function getOuterWindowId(win) {
 }
 
 /**
- * Exit fullscreen and wait for <var>window</var> to resize.
+ * Exit fullscreen and wait for `window` to resize.
  *
  * @param {ChromeWindow} window
  *     Window to exit fullscreen.
  */
 async function exitFullscreen(window) {
-  return new Promise(resolve => {
-    window.addEventListener("sizemodechange", whenIdle(window, resolve), {once: true});
+  await new Promise(resolve => {
+    window.addEventListener("sizemodechange", () => resolve(), {once: true});
     window.fullScreen = false;
   });
+  await new IdlePromise(window);
 }
 
 /**
@@ -3672,25 +3677,5 @@ async function restoreWindow(chromeWindow, contentWindow) {
   return new Promise(resolve => {
     contentWindow.addEventListener("visibilitychange", resolve, {once: true});
     chromeWindow.restore();
-  });
-}
-
-/**
- * Throttle <var>callback</var> until the main thread is idle and
- * <var>window</var> has performed an animation frame.
- *
- * @param {ChromeWindow} window
- *     Window to request the animation frame from.
- * @param {function()} callback
- *     Called when done.
- *
- * @return {function()}
- *     Anonymous function that when invoked will wait for the main
- *     thread to clear up and request an animation frame before calling
- *     <var>callback</var>.
- */
-function whenIdle(window, callback) {
-  return () => Services.tm.idleDispatchToMainThread(() => {
-    window.requestAnimationFrame(callback);
   });
 }
