@@ -3649,11 +3649,6 @@ ParseStructGet(WasmParseContext& c, bool inParens)
         return nullptr;
     }
 
-    if (!fieldDef.name().empty()) {
-        c.ts.generateError(c.ts.peek(), "constant field index required at this time", c.error);
-        return nullptr;
-    }
-
     AstExpr* ptr = ParseExpr(c, inParens);
     if (!ptr) {
         return nullptr;
@@ -3662,7 +3657,7 @@ ParseStructGet(WasmParseContext& c, bool inParens)
     // The field type is not available here, we must first resolve the type.
     // Fortunately, we don't need to inspect the result type of this operation.
 
-    return new(c.lifo) AstStructGet(typeDef, fieldDef.index(), ExprType(), ptr);
+    return new(c.lifo) AstStructGet(typeDef, fieldDef, ExprType(), ptr);
 }
 
 static AstExpr*
@@ -3678,11 +3673,6 @@ ParseStructSet(WasmParseContext& c, bool inParens)
         return nullptr;
     }
 
-    if (!fieldDef.name().empty()) {
-        c.ts.generateError(c.ts.peek(), "constant field index required at this time", c.error);
-        return nullptr;
-    }
-
     AstExpr* ptr = ParseExpr(c, inParens);
     if (!ptr) {
         return nullptr;
@@ -3693,7 +3683,7 @@ ParseStructSet(WasmParseContext& c, bool inParens)
         return nullptr;
     }
 
-    return new(c.lifo) AstStructSet(typeDef, fieldDef.index(), ptr, value);
+    return new(c.lifo) AstStructSet(typeDef, fieldDef, ptr, value);
 }
 
 static AstExpr*
@@ -5001,6 +4991,7 @@ class Resolver
     AstNameMap tableMap_;
     AstNameMap memoryMap_;
     AstNameMap typeMap_;
+    AstNameMap fieldMap_;
     AstNameVector targetStack_;
 
     bool registerName(AstNameMap& map, AstName name, size_t index) {
@@ -5040,6 +5031,7 @@ class Resolver
         tableMap_(lifo),
         memoryMap_(lifo),
         typeMap_(lifo),
+        fieldMap_(lifo),
         targetStack_(lifo)
     {}
     void beginFunc() {
@@ -5059,6 +5051,7 @@ class Resolver
     REGISTER(Table, tableMap_)
     REGISTER(Memory, memoryMap_)
     REGISTER(Type, typeMap_)
+    REGISTER(Field, fieldMap_)
 
 #undef REGISTER
 
@@ -5085,6 +5078,7 @@ class Resolver
     RESOLVE(tableMap_, Table)
     RESOLVE(memoryMap_, Memory)
     RESOLVE(typeMap_, Type)
+    RESOLVE(fieldMap_, Field)
 
 #undef RESOLVE
 
@@ -5508,6 +5502,10 @@ ResolveStructGet(Resolver& r, AstStructGet& s)
         return false;
     }
 
+    if (!r.resolveField(s.fieldName())) {
+        return false;
+    }
+
     return ResolveExpr(r, s.ptr());
 }
 
@@ -5515,6 +5513,10 @@ static bool
 ResolveStructSet(Resolver& r, AstStructSet& s)
 {
     if (!r.resolveType(s.structType())) {
+        return false;
+    }
+
+    if (!r.resolveField(s.fieldName())) {
         return false;
     }
 
@@ -5703,6 +5705,14 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
             AstStructType* structType = &td->asStructType();
             if (!r.registerTypeName(structType->name(), i)) {
                 return r.fail("duplicate type name");
+            }
+
+            size_t numFields = structType->fieldNames().length();
+            for (size_t j = 0; j < numFields; j++) {
+                const AstName& fieldName = structType->fieldNames()[j];
+                if (!r.registerFieldName(fieldName, j)) {
+                    return r.fail("duplicate field name (must be unique in module)");
+                }
             }
         } else {
             MOZ_CRASH("Bad type");
@@ -6363,7 +6373,7 @@ EncodeStructGet(Encoder& e, AstStructGet& s)
     if (!e.writeVarU32(s.structType().index())) {
         return false;
     }
-    if (!e.writeVarU32(s.index())) {
+    if (!e.writeVarU32(s.fieldName().index())) {
         return false;
     }
     return true;
@@ -6384,7 +6394,7 @@ EncodeStructSet(Encoder& e, AstStructSet& s)
     if (!e.writeVarU32(s.structType().index())) {
         return false;
     }
-    if (!e.writeVarU32(s.index())) {
+    if (!e.writeVarU32(s.fieldName().index())) {
         return false;
     }
     return true;

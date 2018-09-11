@@ -1077,40 +1077,40 @@ class AstStructNew : public AstExpr
 class AstStructGet : public AstExpr
 {
     AstRef   structType_;
-    uint32_t index_;
+    AstRef   fieldName_;
     AstExpr* ptr_;
 
   public:
     static const AstExprKind Kind = AstExprKind::StructGet;
-    AstStructGet(AstRef structType, uint32_t index, AstExprType type, AstExpr* ptr)
+    AstStructGet(AstRef structType, AstRef fieldName, AstExprType type, AstExpr* ptr)
       : AstExpr(Kind, type),
         structType_(structType),
-        index_(index),
+        fieldName_(fieldName),
         ptr_(ptr)
     {}
     AstRef& structType() { return structType_; }
-    uint32_t index() { return index_; }
+    AstRef& fieldName() { return fieldName_; }
     AstExpr& ptr() const { return *ptr_; }
 };
 
 class AstStructSet : public AstExpr
 {
     AstRef   structType_;
-    uint32_t index_;
+    AstRef   fieldName_;
     AstExpr* ptr_;
     AstExpr* value_;
 
   public:
     static const AstExprKind Kind = AstExprKind::StructSet;
-    AstStructSet(AstRef structType, uint32_t index, AstExpr* ptr, AstExpr* value)
+    AstStructSet(AstRef structType, AstRef fieldName, AstExpr* ptr, AstExpr* value)
       : AstExpr(Kind, ExprType::Void),
         structType_(structType),
-        index_(index),
+        fieldName_(fieldName),
         ptr_(ptr),
         value_(value)
     {}
     AstRef& structType() { return structType_; }
-    uint32_t index() { return index_; }
+    AstRef& fieldName() { return fieldName_; }
     AstExpr& ptr() const { return *ptr_; }
     AstExpr& value() const { return *value_; }
 };

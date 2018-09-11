@@ -14,11 +14,11 @@ var bin = wasmTextToBinary(
                    (field $cdr (ref $cons))))
 
       (type $odd (struct
-                  (field $x i32)
+                  (field $odd.x i32)
                   (field $to_even (ref $even))))
 
       (type $even (struct
-                   (field $x i32)
+                   (field $even.x i32)
                    (field $to_odd (ref $odd))))
 
       ;; Use anyref on the API since struct types cannot be exposed outside the module yet.
