@@ -8,10 +8,6 @@
 
 #include <iostream>
 
-#include "nspr.h"
-#include "nss.h"
-#include "ssl.h"
-
 extern "C" {
 #include "nr_api.h"
 #include "nr_socket.h"
