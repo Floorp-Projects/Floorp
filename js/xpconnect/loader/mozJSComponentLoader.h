@@ -93,8 +93,9 @@ class mozJSComponentLoader final : public mozilla::ModuleLoader,
 
     JSObject* CompilationScope(JSContext* aCx)
     {
-        if (mLoaderGlobal)
+        if (mLoaderGlobal) {
             return mLoaderGlobal;
+        }
         return GetSharedGlobal(aCx);
     }
 
@@ -170,8 +171,9 @@ class mozJSComponentLoader final : public mozilla::ModuleLoader,
                 thisObjectKey = nullptr;
             }
 
-            if (location)
+            if (location) {
                 free(location);
+            }
 
             obj = nullptr;
             thisObjectKey = nullptr;
