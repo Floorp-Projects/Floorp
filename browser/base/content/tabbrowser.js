@@ -1430,6 +1430,7 @@ window._gBrowser = {
   },
 
   loadTabs(aURIs, {
+    allowInheritPrincipal,
     allowThirdPartyFixup,
     inBackground,
     newIndex,
@@ -1486,6 +1487,9 @@ window._gBrowser = {
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
           Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
       }
+      if (!allowInheritPrincipal) {
+        flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+      }
       try {
         browser.loadURI(aURIs[0], {
           flags,
@@ -1498,6 +1502,7 @@ window._gBrowser = {
       }
     } else {
       let params = {
+        allowInheritPrincipal,
         ownerTab: owner,
         skipAnimation: multiple,
         allowThirdPartyFixup,
@@ -1518,6 +1523,7 @@ window._gBrowser = {
     let tabNum = targetTabIndex;
     for (let i = 1; i < aURIs.length; ++i) {
       let params = {
+        allowInheritPrincipal,
         skipAnimation: true,
         allowThirdPartyFixup,
         postData: postDatas && postDatas[i],
