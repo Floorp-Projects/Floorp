@@ -81,7 +81,8 @@ Addon.prototype = {
     if (addon && addon.userDisabled) {
       await addon.enable();
     } else {
-      const install = await AddonManager.getInstallForURL(this.xpiLink, "application/x-xpinstall");
+      const install = await AddonManager.getInstallForURL(this.xpiLink, "application/x-xpinstall", null,
+                                                          null, null, null, null, {source: "webide"});
       install.addListener(this);
       install.install();
     }
