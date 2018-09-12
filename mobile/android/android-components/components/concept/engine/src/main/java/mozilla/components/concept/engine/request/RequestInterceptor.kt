@@ -26,5 +26,14 @@ interface RequestInterceptor {
      * @return An InterceptionResponse object containing alternative content if the request should be intercepted.
      *         <code>null</code> otherwise.
      */
-    fun onLoadRequest(session: EngineSession, uri: String): InterceptionResponse?
+    fun onLoadRequest(session: EngineSession, uri: String): InterceptionResponse? = null
+
+    /**
+     * A request that the engine wasn't able to handle that resulted in an error.
+     *
+     * @param session The engine session that initiated the callback.
+     * @param errorCode The error code that was provided by the engine related to the type of error caused.
+     * @param uri The uri that resulted in the error.
+     */
+    fun onErrorRequest(session: EngineSession, errorCode: Int, uri: String?) = Unit
 }

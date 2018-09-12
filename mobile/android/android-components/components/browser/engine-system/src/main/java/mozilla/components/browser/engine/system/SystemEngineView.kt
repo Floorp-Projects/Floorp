@@ -4,16 +4,21 @@
 
 package mozilla.components.browser.engine.system
 
+import android.annotation.TargetApi
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.net.http.SslError
+import android.os.Build
 import android.os.Handler
 import android.os.Message
 import android.util.AttributeSet
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.DownloadListener
+import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -172,6 +177,33 @@ class SystemEngineView @JvmOverloads constructor(
             }
 
             return super.shouldInterceptRequest(view, request)
+        }
+
+        override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
+            handler.cancel()
+
+            session?.let { session ->
+                session.settings.requestInterceptor?.onErrorRequest(session, error.primaryError, error.url)
+            }
+        }
+
+        override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+            session?.let { session ->
+                session.settings.requestInterceptor?.onErrorRequest(session, errorCode, failingUrl)
+            }
+        }
+
+        @TargetApi(Build.VERSION_CODES.M)
+        override fun onReceivedError(view: WebView?, request: WebResourceRequest, error: WebResourceError) {
+            session?.let { session ->
+                if (request.isForMainFrame) {
+                    session.settings.requestInterceptor?.onErrorRequest(
+                        session,
+                        error.errorCode,
+                        request.url.toString()
+                    )
+                }
+            }
         }
     }
 

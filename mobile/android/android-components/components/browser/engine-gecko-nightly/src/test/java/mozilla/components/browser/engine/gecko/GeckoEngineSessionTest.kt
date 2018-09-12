@@ -41,6 +41,8 @@ import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_AUDIO
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_IMAGE
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_NONE
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_VIDEO
+import org.mozilla.geckoview.GeckoSession.NavigationDelegate.ERROR_CATEGORY_UNKNOWN
+import org.mozilla.geckoview.GeckoSession.NavigationDelegate.ERROR_UNKNOWN
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.SessionFinder
@@ -480,6 +482,44 @@ class GeckoEngineSessionTest {
 
         assertEquals("sample:about", interceptorCalledWithUri!!)
         verify(engineSession.geckoSession, never()).loadString(anyString(), anyString())
+    }
+
+    @Test
+    fun testOnLoadErrorCallsInterceptor() {
+        var interceptorCalledWithUri: String? = null
+        val requestInterceptor: RequestInterceptor = mock()
+        var defaultSettings = DefaultSettings()
+        var engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
+
+        // Interceptor is not called when there is none attached.
+        var onLoadError = engineSession.geckoSession.navigationDelegate.onLoadError(
+            engineSession.geckoSession,
+            "",
+            ERROR_CATEGORY_UNKNOWN,
+            ERROR_UNKNOWN
+        )
+        verify(requestInterceptor, never()).onErrorRequest(engineSession, ERROR_CATEGORY_UNKNOWN, "")
+        onLoadError.then { value: String? ->
+            interceptorCalledWithUri = value
+            GeckoResult<String>(null)
+        }
+        assertNull(interceptorCalledWithUri)
+
+        // Interceptor is called correctly
+        defaultSettings = DefaultSettings(requestInterceptor = requestInterceptor)
+        engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
+        onLoadError = engineSession.geckoSession.navigationDelegate.onLoadError(
+            engineSession.geckoSession,
+            "",
+            ERROR_CATEGORY_UNKNOWN,
+            ERROR_UNKNOWN
+        )
+        verify(requestInterceptor).onErrorRequest(engineSession, ERROR_UNKNOWN, "")
+        onLoadError.then { value: String? ->
+            interceptorCalledWithUri = value
+            GeckoResult<String>(null)
+        }
+        assertNull(interceptorCalledWithUri)
     }
 
     @Test

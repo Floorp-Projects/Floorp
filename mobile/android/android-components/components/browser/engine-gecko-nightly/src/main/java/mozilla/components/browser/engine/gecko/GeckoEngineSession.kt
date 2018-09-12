@@ -231,10 +231,6 @@ class GeckoEngineSession(
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
-        override fun onLoadError(session: GeckoSession?, uri: String?, category: Int, error: Int): GeckoResult<String> {
-            return GeckoResult.fromValue(null)
-        }
-
         override fun onLocationChange(session: GeckoSession?, url: String) {
             // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
             if (initialLoad && url == ABOUT_BLANK) {
@@ -273,6 +269,20 @@ class GeckoEngineSession(
             session: GeckoSession,
             uri: String
         ): GeckoResult<GeckoSession> = GeckoResult.fromValue(null)
+
+        override fun onLoadError(
+            session: GeckoSession?,
+            uri: String,
+            category: Int,
+            error: Int
+        ): GeckoResult<String> {
+            settings.requestInterceptor?.onErrorRequest(
+                this@GeckoEngineSession,
+                error,
+                uri
+            )
+            return GeckoResult.fromValue(null)
+        }
     }
 
     /**

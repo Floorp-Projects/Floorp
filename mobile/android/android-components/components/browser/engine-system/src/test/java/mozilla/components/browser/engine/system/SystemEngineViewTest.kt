@@ -6,16 +6,20 @@ package mozilla.components.browser.engine.system
 
 import android.net.Uri
 import android.net.http.SslCertificate
+import android.net.http.SslError
 import android.os.Bundle
 import android.os.Message
 import android.view.View
+import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebView.HitTestResult
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -31,7 +35,9 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyZeroInteractions
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
@@ -307,7 +313,83 @@ class SystemEngineViewTest {
     }
 
     @Test
-    fun testWebViewClientBlocksWebFonts() {
+    @Suppress("Deprecation")
+    fun `WebViewClient calls interceptor from deprecated onReceivedError API`() {
+        val engineSession = SystemEngineSession()
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        val requestInterceptor: RequestInterceptor = mock()
+        val webViewClient = engineView.currentWebView.webViewClient
+
+        // No session or interceptor attached.
+        webViewClient.onReceivedError(engineView.currentWebView, -1, null, "http://failed.random")
+        verifyZeroInteractions(requestInterceptor)
+
+        // Session attached, but not interceptor.
+        engineView.render(engineSession)
+        webViewClient.onReceivedError(engineView.currentWebView, -1, null, "http://failed.random")
+        verifyZeroInteractions(requestInterceptor)
+
+        // Session and interceptor.
+        engineSession.settings.requestInterceptor = requestInterceptor
+        webViewClient.onReceivedError(engineView.currentWebView, -1, null, "http://failed.random")
+        verify(requestInterceptor).onErrorRequest(engineSession, -1, "http://failed.random")
+    }
+
+    @Test
+    fun `WebViewClient calls interceptor from new onReceivedError API`() {
+        val engineSession = SystemEngineSession()
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        val requestInterceptor: RequestInterceptor = mock()
+        val webViewClient = engineView.currentWebView.webViewClient
+        val request: WebResourceRequest = mock()
+        val error: WebResourceError = mock()
+        val url: Uri = mock()
+
+        webViewClient.onReceivedError(engineView.currentWebView, request, error)
+        verifyZeroInteractions(requestInterceptor)
+
+        engineView.render(engineSession)
+        webViewClient.onReceivedError(engineView.currentWebView, request, error)
+        verifyZeroInteractions(requestInterceptor)
+
+        `when`(error.errorCode).thenReturn(-1)
+        `when`(request.url).thenReturn(url)
+        `when`(url.toString()).thenReturn("http://failed.random")
+        engineSession.settings.requestInterceptor = requestInterceptor
+        webViewClient.onReceivedError(engineView.currentWebView, request, error)
+        verify(requestInterceptor, never()).onErrorRequest(engineSession, -1, "http://failed.random")
+
+        `when`(request.isForMainFrame).thenReturn(true)
+        webViewClient.onReceivedError(engineView.currentWebView, request, error)
+        verify(requestInterceptor).onErrorRequest(engineSession, -1, "http://failed.random")
+    }
+
+    @Test
+    fun `WebViewClient calls interceptor when onReceivedSslError`() {
+        val engineSession = SystemEngineSession()
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        val requestInterceptor: RequestInterceptor = mock()
+        val webViewClient = engineView.currentWebView.webViewClient
+        val handler: SslErrorHandler = mock()
+        val error: SslError = mock()
+
+        webViewClient.onReceivedSslError(engineView.currentWebView, handler, error)
+        verifyZeroInteractions(requestInterceptor)
+
+        engineView.render(engineSession)
+        webViewClient.onReceivedSslError(engineView.currentWebView, handler, error)
+        verifyZeroInteractions(requestInterceptor)
+
+        `when`(error.primaryError).thenReturn(-1)
+        `when`(error.url).thenReturn("http://failed.random")
+        engineSession.settings.requestInterceptor = requestInterceptor
+        webViewClient.onReceivedSslError(engineView.currentWebView, handler, error)
+        verify(requestInterceptor).onErrorRequest(engineSession, -1, "http://failed.random")
+        verify(handler, times(3)).cancel()
+    }
+
+    @Test
+    fun `WebViewClient blocks WebFonts`() {
         val engineSession = SystemEngineSession()
         val engineView = SystemEngineView(RuntimeEnvironment.application)
         val webViewClient = engineView.currentWebView.webViewClient
