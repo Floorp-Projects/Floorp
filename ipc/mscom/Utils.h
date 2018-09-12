@@ -20,6 +20,7 @@ struct IUnknown;
 namespace mozilla {
 namespace mscom {
 
+bool IsCOMInitializedOnCurrentThread();
 bool IsCurrentThreadMTA();
 bool IsProxy(IUnknown* aUnknown);
 bool IsValidGUID(REFGUID aCheckGuid);
