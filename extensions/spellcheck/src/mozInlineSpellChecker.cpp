@@ -667,13 +667,16 @@ nsresult mozInlineSpellChecker::Cleanup(bool aDestroyingFrames)
 bool // static
 mozInlineSpellChecker::CanEnableInlineSpellChecking()
 {
+  nsresult rv;
   if (gCanEnableSpellChecking == SpellCheck_Uninitialized) {
     gCanEnableSpellChecking = SpellCheck_NotAvailable;
 
-    nsCOMPtr<nsIEditorSpellCheck> spellchecker = new EditorSpellCheck();
+    nsCOMPtr<nsIEditorSpellCheck> spellchecker =
+      do_CreateInstance("@mozilla.org/editor/editorspellchecker;1", &rv);
+    NS_ENSURE_SUCCESS(rv, false);
 
     bool canSpellCheck = false;
-    nsresult rv = spellchecker->CanSpellCheck(&canSpellCheck);
+    rv = spellchecker->CanSpellCheck(&canSpellCheck);
     NS_ENSURE_SUCCESS(rv, false);
 
     if (canSpellCheck)
