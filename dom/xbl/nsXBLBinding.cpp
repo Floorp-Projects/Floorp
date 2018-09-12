@@ -346,11 +346,9 @@ nsXBLBinding::GenerateAnonymousContent()
           point->AppendInsertedChild(child, false);
         } else {
           NodeInfo *ni = child->NodeInfo();
-          if (!child->TextIsOnlyWhitespace() &&
-              (ni->NamespaceID() != kNameSpaceID_XUL ||
-               (!ni->Equals(nsGkAtoms::_template) &&
-                !ni->Equals(nsGkAtoms::observes)))
-          ) {
+          if (ni->NamespaceID() != kNameSpaceID_XUL ||
+              (!ni->Equals(nsGkAtoms::_template) &&
+               !ni->Equals(nsGkAtoms::observes))) {
             // Compatibility hack. For some reason the original XBL
             // implementation dropped the content of a binding if any child of
             // the bound element didn't match any of the <children> in the
