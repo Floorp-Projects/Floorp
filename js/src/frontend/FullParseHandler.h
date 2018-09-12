@@ -247,9 +247,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     }
 
   private:
-    ParseNode* newBinary(ParseNodeKind kind, ParseNode* left, ParseNode* right,
-                         JSOp op = JSOP_NOP)
-    {
+    BinaryNodeType newBinary(ParseNodeKind kind, Node left, Node right, JSOp op = JSOP_NOP) {
         TokenPos pos(left->pn_pos.begin, right->pn_pos.end);
         return new_<BinaryNode>(kind, op, pos, left, right);
     }
@@ -300,7 +298,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         addList(/* list = */ literal, /* child = */ element);
     }
 
-    ParseNode* newCall(ParseNode* callee, ParseNode* args) {
+    BinaryNodeType newCall(Node callee, Node args) {
         return new_<BinaryNode>(ParseNodeKind::Call, JSOP_CALL, callee, args);
     }
 
@@ -308,11 +306,11 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<ListNode>(ParseNodeKind::Arguments, JSOP_NOP, pos);
     }
 
-    ParseNode* newSuperCall(ParseNode* callee, ParseNode* args) {
+    BinaryNodeType newSuperCall(Node callee, Node args) {
         return new_<BinaryNode>(ParseNodeKind::SuperCall, JSOP_SUPERCALL, callee, args);
     }
 
-    ParseNode* newTaggedTemplate(ParseNode* tag, ParseNode* args) {
+    BinaryNodeType newTaggedTemplate(Node tag, Node args) {
         return new_<BinaryNode>(ParseNodeKind::TaggedTemplate, JSOP_CALL, tag, args);
     }
 
@@ -326,10 +324,10 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     ListNodeType newClassMethodList(uint32_t begin) {
         return new_<ListNode>(ParseNodeKind::ClassMethodList, TokenPos(begin, begin + 1));
     }
-    ParseNode* newClassNames(ParseNode* outer, ParseNode* inner, const TokenPos& pos) {
+    ClassNamesType newClassNames(Node outer, Node inner, const TokenPos& pos) {
         return new_<ClassNames>(outer, inner, pos);
     }
-    ParseNode* newNewTarget(ParseNode* newHolder, ParseNode* targetHolder) {
+    BinaryNodeType newNewTarget(Node newHolder, Node targetHolder) {
         return new_<BinaryNode>(ParseNodeKind::NewTarget, JSOP_NOP, newHolder, targetHolder);
     }
     ParseNode* newPosHolder(const TokenPos& pos) {
@@ -353,17 +351,17 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return true;
     }
 
-    ParseNode* newPropertyDefinition(ParseNode* key, ParseNode* val) {
+    BinaryNodeType newPropertyDefinition(Node key, Node val) {
         MOZ_ASSERT(isUsableAsObjectPropertyName(key));
         checkAndSetIsDirectRHSAnonFunction(val);
         return newBinary(ParseNodeKind::Colon, key, val, JSOP_INITPROP);
     }
 
-    void addPropertyDefinition(ListNodeType literal, Node propdef) {
+    void addPropertyDefinition(ListNodeType literal, BinaryNodeType propdef) {
         MOZ_ASSERT(literal->isKind(ParseNodeKind::Object));
         MOZ_ASSERT(propdef->isKind(ParseNodeKind::Colon));
 
-        if (!propdef->pn_right->isConstant()) {
+        if (!propdef->right()->isConstant()) {
             literal->setHasNonConstInitializer();
         }
 
@@ -371,7 +369,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     }
 
     MOZ_MUST_USE bool addPropertyDefinition(ListNodeType literal, Node key, Node val) {
-        ParseNode* propdef = newPropertyDefinition(key, val);
+        BinaryNode* propdef = newPropertyDefinition(key, val);
         if (!propdef) {
             return false;
         }
@@ -386,7 +384,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         MOZ_ASSERT(name->pn_atom == expr->pn_atom);
 
         literal->setHasNonConstInitializer();
-        ParseNode* propdef = newBinary(ParseNodeKind::Shorthand, name, expr, JSOP_INITPROP);
+        BinaryNode* propdef = newBinary(ParseNodeKind::Shorthand, name, expr, JSOP_INITPROP);
         if (!propdef) {
             return false;
         }
@@ -430,7 +428,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
 
         checkAndSetIsDirectRHSAnonFunction(fn);
 
-        ParseNode* classMethod = new_<ClassMethod>(key, fn, AccessorTypeToJSOp(atype), isStatic);
+        ClassMethod* classMethod = new_<ClassMethod>(key, fn, AccessorTypeToJSOp(atype), isStatic);
         if (!classMethod) {
             return false;
         }
@@ -488,14 +486,12 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         list->pn_pos.end = pos.end;
     }
 
-    void addCaseStatementToList(ListNodeType list, Node caseClause) {
+    void addCaseStatementToList(ListNodeType list, CaseClauseType caseClause) {
         MOZ_ASSERT(list->isKind(ParseNodeKind::StatementList));
-        MOZ_ASSERT(caseClause->isKind(ParseNodeKind::Case));
-        MOZ_ASSERT(caseClause->pn_right->isKind(ParseNodeKind::StatementList));
 
         addList(/* list = */ list, /* child = */ caseClause);
 
-        if (caseClause->pn_right->as<ListNode>().hasTopLevelFunctionDeclarations()) {
+        if (caseClause->statementList()->hasTopLevelFunctionDeclarations()) {
             list->setHasTopLevelFunctionDeclarations();
         }
     }
@@ -526,28 +522,22 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return true;
     }
 
-    ParseNode* newSetThis(ParseNode* thisName, ParseNode* val) {
+    BinaryNodeType newSetThis(Node thisName, Node value) {
         MOZ_ASSERT(thisName->getOp() == JSOP_GETNAME);
         thisName->setOp(JSOP_SETNAME);
-        return newBinary(ParseNodeKind::SetThis, thisName, val);
+        return newBinary(ParseNodeKind::SetThis, thisName, value);
     }
 
     ParseNode* newEmptyStatement(const TokenPos& pos) {
         return new_<NullaryNode>(ParseNodeKind::EmptyStatement, pos);
     }
 
-    ParseNode* newImportDeclaration(ParseNode* importSpecSet,
-                                    ParseNode* moduleSpec, const TokenPos& pos)
-    {
-        ParseNode* pn = new_<BinaryNode>(ParseNodeKind::Import, JSOP_NOP, pos,
-                                         importSpecSet, moduleSpec);
-        if (!pn) {
-            return null();
-        }
-        return pn;
+    BinaryNodeType newImportDeclaration(Node importSpecSet, Node moduleSpec, const TokenPos& pos) {
+        return new_<BinaryNode>(ParseNodeKind::Import, JSOP_NOP, pos,
+                                importSpecSet, moduleSpec);
     }
 
-    ParseNode* newImportSpec(ParseNode* importNameNode, ParseNode* bindingName) {
+    BinaryNodeType newImportSpec(Node importNameNode, Node bindingName) {
         return newBinary(ParseNodeKind::ImportSpec, importNameNode, bindingName);
     }
 
@@ -555,20 +545,17 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<UnaryNode>(ParseNodeKind::Export, pos, kid);
     }
 
-    ParseNode* newExportFromDeclaration(uint32_t begin, ParseNode* exportSpecSet,
-                                        ParseNode* moduleSpec)
-    {
-        ParseNode* pn = new_<BinaryNode>(ParseNodeKind::ExportFrom, JSOP_NOP, exportSpecSet,
-                                         moduleSpec);
-        if (!pn) {
-            return null();
+    BinaryNodeType newExportFromDeclaration(uint32_t begin, Node exportSpecSet, Node moduleSpec) {
+        BinaryNode* decl = new_<BinaryNode>(ParseNodeKind::ExportFrom, JSOP_NOP, exportSpecSet,
+                                            moduleSpec);
+        if (!decl) {
+            return nullptr;
         }
-        pn->pn_pos.begin = begin;
-        return pn;
+        decl->pn_pos.begin = begin;
+        return decl;
     }
 
-    ParseNode* newExportDefaultDeclaration(ParseNode* kid, ParseNode* maybeBinding,
-                                           const TokenPos& pos) {
+    BinaryNodeType newExportDefaultDeclaration(Node kid, Node maybeBinding, const TokenPos& pos) {
         if (maybeBinding) {
             MOZ_ASSERT(maybeBinding->isKind(ParseNodeKind::Name));
             MOZ_ASSERT(!maybeBinding->isInParens());
@@ -579,7 +566,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<BinaryNode>(ParseNodeKind::ExportDefault, JSOP_NOP, pos, kid, maybeBinding);
     }
 
-    ParseNode* newExportSpec(ParseNode* bindingName, ParseNode* exportName) {
+    BinaryNodeType newExportSpec(Node bindingName, Node exportName) {
         return newBinary(ParseNodeKind::ExportSpec, bindingName, exportName);
     }
 
@@ -587,11 +574,11 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<NullaryNode>(ParseNodeKind::ExportBatchSpec, JSOP_NOP, pos);
     }
 
-    ParseNode* newImportMeta(ParseNode* importHolder, ParseNode* metaHolder) {
+    BinaryNodeType newImportMeta(Node importHolder, Node metaHolder) {
         return new_<BinaryNode>(ParseNodeKind::ImportMeta, JSOP_NOP, importHolder, metaHolder);
     }
 
-    ParseNode* newCallImport(ParseNode* importHolder, ParseNode* singleArg) {
+    BinaryNodeType newCallImport(Node importHolder, Node singleArg) {
         return new_<BinaryNode>(ParseNodeKind::CallImport, JSOP_NOP, importHolder, singleArg);
     }
 
@@ -610,26 +597,19 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return node;
     }
 
-    ParseNode* newDoWhileStatement(ParseNode* body, ParseNode* cond, const TokenPos& pos) {
+    BinaryNodeType newDoWhileStatement(Node body, Node cond, const TokenPos& pos) {
         return new_<BinaryNode>(ParseNodeKind::DoWhile, JSOP_NOP, pos, body, cond);
     }
 
-    ParseNode* newWhileStatement(uint32_t begin, ParseNode* cond, ParseNode* body) {
+    BinaryNodeType newWhileStatement(uint32_t begin, Node cond, Node body) {
         TokenPos pos(begin, body->pn_pos.end);
         return new_<BinaryNode>(ParseNodeKind::While, JSOP_NOP, pos, cond, body);
     }
 
-    Node newForStatement(uint32_t begin, TernaryNodeType forHead, Node body, unsigned iflags) {
-        /* A FOR node is binary, left is loop control and right is the body. */
-        JSOp op = forHead->isKind(ParseNodeKind::ForIn) ? JSOP_ITER : JSOP_NOP;
-        BinaryNode* pn = new_<BinaryNode>(ParseNodeKind::For, op,
-                                          TokenPos(begin, body->pn_pos.end),
-                                          forHead, body);
-        if (!pn) {
-            return null();
-        }
-        pn->pn_iflags = iflags;
-        return pn;
+    ForNodeType newForStatement(uint32_t begin, TernaryNodeType forHead, Node body,
+                                unsigned iflags)
+    {
+        return new_<ForNode>(TokenPos(begin, body->pn_pos.end), forHead, body, iflags);
     }
 
     TernaryNodeType newForHead(Node init, Node test, Node update, const TokenPos& pos) {
@@ -643,13 +623,13 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<TernaryNode>(kind, target, nullptr, iteratedExpr, pos);
     }
 
-    ParseNode* newSwitchStatement(uint32_t begin, ParseNode* discriminant,
-                                  ParseNode* lexicalForCaseList, bool hasDefault)
+    SwitchStatementType newSwitchStatement(uint32_t begin, Node discriminant,
+                                           Node lexicalForCaseList, bool hasDefault)
     {
         return new_<SwitchStatement>(begin, discriminant, lexicalForCaseList, hasDefault);
     }
 
-    ParseNode* newCaseOrDefault(uint32_t begin, ParseNode* expr, ParseNode* body) {
+    CaseClauseType newCaseOrDefault(uint32_t begin, Node expr, Node body) {
         return new_<CaseClause>(expr, body, begin);
     }
 
@@ -670,7 +650,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<UnaryNode>(ParseNodeKind::Return, expr->pn_pos, expr);
     }
 
-    ParseNode* newWithStatement(uint32_t begin, ParseNode* expr, ParseNode* body) {
+    BinaryNodeType newWithStatement(uint32_t begin, Node expr, Node body) {
         return new_<BinaryNode>(ParseNodeKind::With, JSOP_NOP, TokenPos(begin, body->pn_pos.end),
                                 expr, body);
     }
@@ -699,26 +679,26 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<NameNode>(ParseNodeKind::PropertyName, JSOP_NOP, name, pos);
     }
 
-    ParseNode* newPropertyAccess(ParseNode* expr, ParseNode* key) {
+    PropertyAccessType newPropertyAccess(Node expr, Node key) {
         return new_<PropertyAccess>(expr, key, expr->pn_pos.begin, key->pn_pos.end);
     }
 
-    ParseNode* newPropertyByValue(ParseNode* lhs, ParseNode* index, uint32_t end) {
+    PropertyByValueType newPropertyByValue(Node lhs, Node index, uint32_t end) {
         return new_<PropertyByValue>(lhs, index, lhs->pn_pos.begin, end);
     }
 
     bool setupCatchScope(ParseNode* lexicalScope, ParseNode* catchName, ParseNode* catchBody) {
-        ParseNode* catchpn;
+        BinaryNode* catchClause;
         if (catchName) {
-            catchpn = new_<BinaryNode>(ParseNodeKind::Catch, JSOP_NOP, catchName, catchBody);
+            catchClause = new_<BinaryNode>(ParseNodeKind::Catch, JSOP_NOP, catchName, catchBody);
         } else {
-            catchpn = new_<BinaryNode>(ParseNodeKind::Catch, JSOP_NOP, catchBody->pn_pos,
+            catchClause = new_<BinaryNode>(ParseNodeKind::Catch, JSOP_NOP, catchBody->pn_pos,
                                        catchName, catchBody);
         }
-        if (!catchpn) {
+        if (!catchClause) {
             return false;
         }
-        lexicalScope->setScopeBody(catchpn);
+        lexicalScope->setScopeBody(catchClause);
         return true;
     }
 
@@ -745,7 +725,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<CodeNode>(ParseNodeKind::Function, JSOP_LAMBDA_ARROW, pos);
     }
 
-    ParseNode* newObjectMethodOrPropertyDefinition(ParseNode* key, ParseNode* fn, AccessorType atype) {
+    BinaryNodeType newObjectMethodOrPropertyDefinition(Node key, Node fn, AccessorType atype) {
         MOZ_ASSERT(isUsableAsObjectPropertyName(key));
 
         return newBinary(ParseNodeKind::Colon, key, fn, AccessorTypeToJSOp(atype));
@@ -776,18 +756,19 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<LexicalScopeNode>(bindings, body);
     }
 
-    Node newNewExpression(uint32_t begin, ParseNode* ctor, ParseNode* args) {
-        return new_<BinaryNode>(ParseNodeKind::New, JSOP_NEW, TokenPos(begin, args->pn_pos.end), ctor, args);
+    BinaryNodeType newNewExpression(uint32_t begin, Node ctor, Node args) {
+        return new_<BinaryNode>(ParseNodeKind::New, JSOP_NEW, TokenPos(begin, args->pn_pos.end),
+                                ctor, args);
     }
 
-    ParseNode* newAssignment(ParseNodeKind kind, ParseNode* lhs, ParseNode* rhs) {
+    AssignmentNodeType newAssignment(ParseNodeKind kind, Node lhs, Node rhs) {
         if (kind == ParseNodeKind::Assign && lhs->isKind(ParseNodeKind::Name) &&
             !lhs->isInParens())
         {
             checkAndSetIsDirectRHSAnonFunction(rhs);
         }
 
-        return newBinary(kind, lhs, rhs);
+        return new_<AssignmentNode>(kind, JSOP_NOP, lhs, rhs);
     }
 
     bool isUnparenthesizedAssignment(Node node) {
