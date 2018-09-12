@@ -10,26 +10,32 @@ js::irregexp::ConvertNonLatin1ToLatin1(char16_t c, bool unicode)
     MOZ_ASSERT(c > 0xFF, "Character mustn't be Latin1");
     if (unicode) {
         // "LATIN SMALL LETTER LONG S" case folds to "LATIN SMALL LETTER S".
-        if (c == 0x017F)
+        if (c == 0x017F) {
             return 0x73;
+        }
         // "LATIN CAPITAL LETTER SHARP S" case folds to "LATIN SMALL LETTER SHARP S".
-        if (c == 0x1E9E)
+        if (c == 0x1E9E) {
             return 0xDF;
+        }
         // "KELVIN SIGN" case folds to "LATIN SMALL LETTER K".
-        if (c == 0x212A)
+        if (c == 0x212A) {
             return 0x6B;
+        }
         // "ANGSTROM SIGN" case folds to "LATIN SMALL LETTER A WITH RING ABOVE".
-        if (c == 0x212B)
+        if (c == 0x212B) {
             return 0xE5;
+        }
     }
 
     // "GREEK CAPITAL LETTER MU" case maps to "MICRO SIGN".
     // "GREEK SMALL LETTER MU" case maps to "MICRO SIGN".
-    if (c == 0x039C || c == 0x03BC)
+    if (c == 0x039C || c == 0x03BC) {
         return 0xB5;
+    }
     // "LATIN CAPITAL LETTER Y WITH DIAERESIS" case maps to "LATIN SMALL LETTER Y WITH DIAERESIS".
-    if (c == 0x0178)
+    if (c == 0x0178) {
         return 0xFF;
+    }
     return 0;
 }
 
