@@ -28,8 +28,9 @@
 //!
 //! The basic use of the log crate is through the five logging macros: [`error!`],
 //! [`warn!`], [`info!`], [`debug!`] and [`trace!`]
-//! where `error!` represents the highest-priority log level, and `trace!` the lowest.
-//!
+//! where `error!` represents the highest-priority log messages
+//! and `trace!` the lowest. The log messages are filtered by configuring
+//! the log level to exclude messages with a lower priority.
 //! Each of these macros accept format strings similarly to [`println!`].
 //!
 //!
@@ -220,7 +221,7 @@
 //! These features control the value of the `STATIC_MAX_LEVEL` constant. The logging macros check
 //! this value before logging a message. By default, no levels are disabled.
 //!
-//! For example, a crate can disable trace level logs in debug builds and trace, info, and warn
+//! For example, a crate can disable trace level logs in debug builds and trace, debug, and info
 //! level logs in release builds with the following configuration:
 //!
 //! ```toml
@@ -269,7 +270,7 @@
 #![doc(
     html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
     html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-    html_root_url = "https://docs.rs/log/0.4"
+    html_root_url = "https://docs.rs/log/0.4.5"
 )]
 #![warn(missing_docs)]
 #![deny(missing_debug_implementations)]
@@ -375,12 +376,52 @@ impl PartialOrd for Level {
     fn partial_cmp(&self, other: &Level) -> Option<cmp::Ordering> {
         Some(self.cmp(other))
     }
+
+    #[inline]
+    fn lt(&self, other: &Level) -> bool {
+        (*self as usize) < *other as usize
+    }
+
+    #[inline]
+    fn le(&self, other: &Level) -> bool {
+        *self as usize <= *other as usize
+    }
+
+    #[inline]
+    fn gt(&self, other: &Level) -> bool {
+        *self as usize > *other as usize
+    }
+
+    #[inline]
+    fn ge(&self, other: &Level) -> bool {
+        *self as usize >= *other as usize
+    }
 }
 
 impl PartialOrd<LevelFilter> for Level {
     #[inline]
     fn partial_cmp(&self, other: &LevelFilter) -> Option<cmp::Ordering> {
         Some((*self as usize).cmp(&(*other as usize)))
+    }
+
+    #[inline]
+    fn lt(&self, other: &LevelFilter) -> bool {
+        (*self as usize) < *other as usize
+    }
+
+    #[inline]
+    fn le(&self, other: &LevelFilter) -> bool {
+        *self as usize <= *other as usize
+    }
+
+    #[inline]
+    fn gt(&self, other: &LevelFilter) -> bool {
+        *self as usize > *other as usize
+    }
+
+    #[inline]
+    fn ge(&self, other: &LevelFilter) -> bool {
+        *self as usize >= *other as usize
     }
 }
 
@@ -517,12 +558,52 @@ impl PartialOrd for LevelFilter {
     fn partial_cmp(&self, other: &LevelFilter) -> Option<cmp::Ordering> {
         Some(self.cmp(other))
     }
+
+    #[inline]
+    fn lt(&self, other: &LevelFilter) -> bool {
+        (*self as usize) < *other as usize
+    }
+
+    #[inline]
+    fn le(&self, other: &LevelFilter) -> bool {
+        *self as usize <= *other as usize
+    }
+
+    #[inline]
+    fn gt(&self, other: &LevelFilter) -> bool {
+        *self as usize > *other as usize
+    }
+
+    #[inline]
+    fn ge(&self, other: &LevelFilter) -> bool {
+        *self as usize >= *other as usize
+    }
 }
 
 impl PartialOrd<Level> for LevelFilter {
     #[inline]
     fn partial_cmp(&self, other: &Level) -> Option<cmp::Ordering> {
-        other.partial_cmp(self).map(|x| x.reverse())
+        Some((*self as usize).cmp(&(*other as usize)))
+    }
+
+    #[inline]
+    fn lt(&self, other: &Level) -> bool {
+        (*self as usize) < *other as usize
+    }
+
+    #[inline]
+    fn le(&self, other: &Level) -> bool {
+        *self as usize <= *other as usize
+    }
+
+    #[inline]
+    fn gt(&self, other: &Level) -> bool {
+        *self as usize > *other as usize
+    }
+
+    #[inline]
+    fn ge(&self, other: &Level) -> bool {
+        *self as usize >= *other as usize
     }
 }
 
@@ -1070,13 +1151,18 @@ where
     F: FnOnce() -> &'static Log,
 {
     unsafe {
-        if STATE.compare_and_swap(UNINITIALIZED, INITIALIZING, Ordering::SeqCst) != UNINITIALIZED {
-            return Err(SetLoggerError(()));
+        match STATE.compare_and_swap(UNINITIALIZED, INITIALIZING, Ordering::SeqCst) {
+            UNINITIALIZED => {
+                LOGGER = make_logger();
+                STATE.store(INITIALIZED, Ordering::SeqCst);
+                Ok(())
+            }
+            INITIALIZING => {
+                while STATE.load(Ordering::SeqCst) == INITIALIZING {}
+                Err(SetLoggerError(()))
+            }
+            _ => Err(SetLoggerError(())),
         }
-
-        LOGGER = make_logger();
-        STATE.store(INITIALIZED, Ordering::SeqCst);
-        Ok(())
     }
 }
 
@@ -1141,10 +1227,7 @@ pub fn logger() -> &'static Log {
 pub fn __private_api_log(
     args: fmt::Arguments,
     level: Level,
-    target: &str,
-    module_path: &str,
-    file: &str,
-    line: u32,
+    &(target, module_path, file, line): &(&str, &str, &str, u32),
 ) {
     logger().log(
         &Record::builder()
