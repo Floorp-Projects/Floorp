@@ -147,7 +147,9 @@ test_description_schema = Schema({
         basestring),
 
     # base work directory used to set up the task.
-    Optional('workdir'): basestring,
+    Optional('workdir'): optionally_keyed_by(
+        'test-platform',
+        Any(basestring, 'default')),
 
     # the name by which this test suite is addressed in try syntax; defaults to
     # the test-name.  This will translate to the `unittest_try_name` or
@@ -694,6 +696,7 @@ def handle_keyed_by(config, tests):
         'mozharness.extra-options',
         'mozharness.requires-signed-builds',
         'mozharness.script',
+        'workdir',
         'worker-type',
         'virtualization',
     ]
