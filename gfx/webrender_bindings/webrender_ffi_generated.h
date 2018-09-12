@@ -1728,6 +1728,11 @@ void wr_transaction_set_display_list(Transaction *aTxn,
 WR_FUNC;
 
 WR_INLINE
+void wr_transaction_set_low_priority(Transaction *aTxn,
+                                     bool aLowPriority)
+WR_FUNC;
+
+WR_INLINE
 void wr_transaction_set_root_pipeline(Transaction *aTxn,
                                       WrPipelineId aPipelineId)
 WR_FUNC;
@@ -1769,6 +1774,7 @@ WR_INLINE
 bool wr_window_new(WrWindowId aWindowId,
                    uint32_t aWindowWidth,
                    uint32_t aWindowHeight,
+                   bool aSupportLowPriorityTransactions,
                    void *aGlContext,
                    WrThreadPool *aThreadPool,
                    DocumentHandle **aOutHandle,

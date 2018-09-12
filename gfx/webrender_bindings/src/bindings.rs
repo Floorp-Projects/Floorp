@@ -894,6 +894,7 @@ fn env_var_to_bool(key: &'static str) -> bool {
 pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 window_width: u32,
                                 window_height: u32,
+                                support_low_priority_transactions: bool,
                                 gl_context: *mut c_void,
                                 thread_pool: *mut WrThreadPool,
                                 out_handle: &mut *mut DocumentHandle,
@@ -934,6 +935,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     let opts = RendererOptions {
         enable_aa: true,
         enable_subpixel_aa: true,
+        support_low_priority_transactions,
         recorder: recorder,
         blob_image_handler: Some(Box::new(Moz2dBlobImageHandler::new(workers.clone()))),
         workers: Some(workers.clone()),
@@ -1067,6 +1069,11 @@ pub extern "C" fn wr_transaction_new(do_async: bool) -> *mut Transaction {
 #[no_mangle]
 pub extern "C" fn wr_transaction_delete(txn: *mut Transaction) {
     unsafe { let _ = Box::from_raw(txn); }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_transaction_set_low_priority(txn: &mut Transaction, low_priority: bool) {
+    txn.set_low_priority(low_priority);
 }
 
 #[no_mangle]
