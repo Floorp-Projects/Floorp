@@ -85,7 +85,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       // Similarly to the lexical declarations above, classes cannot add hoisted
       // declarations
       case ParseNodeKind::Class:
-        MOZ_ASSERT(node->isArity(PN_TERNARY));
+        MOZ_ASSERT(node->is<ClassNode>());
         *result = false;
         return true;
 
@@ -163,9 +163,8 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       // if-statement nodes may have hoisted declarations in their consequent
       // and alternative components.
       case ParseNodeKind::If: {
-        MOZ_ASSERT(node->isArity(PN_TERNARY));
-
-        ParseNode* consequent = node->pn_kid2;
+        TernaryNode* ifNode = &node->as<TernaryNode>();
+        ParseNode* consequent = ifNode->kid2();
         if (!ContainsHoistedDeclaration(cx, consequent, result)) {
             return false;
         }
@@ -173,7 +172,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
             return true;
         }
 
-        if ((node = node->pn_kid3)) {
+        if ((node = ifNode->kid3())) {
             goto restart;
         }
 
@@ -184,11 +183,12 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       // try-statements have statements to execute, and one or both of a
       // catch-list and a finally-block.
       case ParseNodeKind::Try: {
-        MOZ_ASSERT(node->isArity(PN_TERNARY));
-        MOZ_ASSERT(node->pn_kid2 || node->pn_kid3,
-                   "must have either catch(es) or finally");
+        TernaryNode* tryNode = &node->as<TernaryNode>();
 
-        ParseNode* tryBlock = node->pn_kid1;
+        MOZ_ASSERT(tryNode->kid2() || tryNode->kid3(),
+                   "must have either catch or finally");
+
+        ParseNode* tryBlock = tryNode->kid1();
         if (!ContainsHoistedDeclaration(cx, tryBlock, result)) {
             return false;
         }
@@ -196,7 +196,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
             return true;
         }
 
-        if (ParseNode* catchScope = node->pn_kid2) {
+        if (ParseNode* catchScope = tryNode->kid2()) {
             MOZ_ASSERT(catchScope->isKind(ParseNodeKind::LexicalScope));
 
             ParseNode* catchNode = catchScope->pn_expr;
@@ -211,7 +211,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
             }
         }
 
-        if (ParseNode* finallyBlock = node->pn_kid3) {
+        if (ParseNode* finallyBlock = tryNode->kid3()) {
             return ContainsHoistedDeclaration(cx, finallyBlock, result);
         }
 
@@ -232,7 +232,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       case ParseNodeKind::For: {
         MOZ_ASSERT(node->isArity(PN_BINARY));
 
-        ParseNode* loopHead = node->pn_left;
+        TernaryNode* loopHead = &node->pn_left->as<TernaryNode>();
         MOZ_ASSERT(loopHead->isKind(ParseNodeKind::ForHead) ||
                    loopHead->isKind(ParseNodeKind::ForIn) ||
                    loopHead->isKind(ParseNodeKind::ForOf));
@@ -243,9 +243,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
             // (at present) hoisted in SpiderMonkey parlance -- but such
             // hoisting doesn't extend outside of this statement, so it is not
             // hoisting in the sense meant by ContainsHoistedDeclaration.)
-            MOZ_ASSERT(loopHead->isArity(PN_TERNARY));
-
-            ParseNode* init = loopHead->pn_kid1;
+            ParseNode* init = loopHead->kid1();
             if (init && init->isKind(ParseNodeKind::Var)) {
                 *result = true;
                 return true;
@@ -264,9 +262,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
             //
             // Either way, if |target| contains a declaration, it's |loopHead|'s
             // first kid.
-            MOZ_ASSERT(loopHead->isArity(PN_TERNARY));
-
-            ParseNode* decl = loopHead->pn_kid1;
+            ParseNode* decl = loopHead->kid1();
             if (decl && decl->isKind(ParseNodeKind::Var)) {
                 *result = true;
                 return true;
@@ -827,21 +823,20 @@ FoldConditional(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHa
         nodePtr = nextNode;
         nextNode = nullptr;
 
-        ParseNode* node = *nodePtr;
+        TernaryNode* node = &(*nodePtr)->as<TernaryNode>();
         MOZ_ASSERT(node->isKind(ParseNodeKind::Conditional));
-        MOZ_ASSERT(node->isArity(PN_TERNARY));
 
-        ParseNode*& expr = node->pn_kid1;
-        if (!FoldCondition(cx, &expr, parser)) {
+        ParseNode** expr = node->unsafeKid1Reference();
+        if (!FoldCondition(cx, expr, parser)) {
             return false;
         }
 
-        ParseNode*& ifTruthy = node->pn_kid2;
-        if (!Fold(cx, &ifTruthy, parser)) {
+        ParseNode** ifTruthy = node->unsafeKid2Reference();
+        if (!Fold(cx, ifTruthy, parser)) {
             return false;
         }
 
-        ParseNode*& ifFalsy = node->pn_kid3;
+        ParseNode** ifFalsy = node->unsafeKid3Reference();
 
         // If our C?T:F node has F as another ?: node, *iteratively* constant-
         // fold F *after* folding C and T (and possibly eliminating C and one
@@ -850,22 +845,23 @@ FoldConditional(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHa
         //
         // Conceivably we could instead/also iteratively constant-fold T, if T
         // were more complex than F.  Such an optimization is unimplemented.
-        if (ifFalsy->isKind(ParseNodeKind::Conditional)) {
-            nextNode = &ifFalsy;
+        if ((*ifFalsy)->isKind(ParseNodeKind::Conditional)) {
+            MOZ_ASSERT((*ifFalsy)->is<TernaryNode>());
+            nextNode = ifFalsy;
         } else {
-            if (!Fold(cx, &ifFalsy, parser)) {
+            if (!Fold(cx, ifFalsy, parser)) {
                 return false;
             }
         }
 
         // Try to constant-fold based on the condition expression.
-        Truthiness t = Boolish(expr);
+        Truthiness t = Boolish(*expr);
         if (t == Unknown) {
             continue;
         }
 
         // Otherwise reduce 'C ? T : F' to T or F as directed by C.
-        ParseNode* replacement = t == Truthy ? ifTruthy : ifFalsy;
+        ParseNode* replacement = t == Truthy ? *ifTruthy : *ifFalsy;
 
         // Otherwise perform a replacement.  This invalidates |nextNode|, so
         // reset it (if the replacement requires folding) or clear it (if
@@ -890,31 +886,31 @@ FoldIf(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& p
         nodePtr = nextNode;
         nextNode = nullptr;
 
-        ParseNode* node = *nodePtr;
+        TernaryNode* node = &(*nodePtr)->as<TernaryNode>();
         MOZ_ASSERT(node->isKind(ParseNodeKind::If));
-        MOZ_ASSERT(node->isArity(PN_TERNARY));
 
-        ParseNode*& expr = node->pn_kid1;
-        if (!FoldCondition(cx, &expr, parser)) {
+        ParseNode** expr = node->unsafeKid1Reference();
+        if (!FoldCondition(cx, expr, parser)) {
             return false;
         }
 
-        ParseNode*& consequent = node->pn_kid2;
-        if (!Fold(cx, &consequent, parser)) {
+        ParseNode** consequent = node->unsafeKid2Reference();
+        if (!Fold(cx, consequent, parser)) {
             return false;
         }
 
-        ParseNode*& alternative = node->pn_kid3;
-        if (alternative) {
+        ParseNode** alternative = node->unsafeKid3Reference();
+        if (*alternative) {
             // If in |if (C) T; else F;| we have |F| as another |if|,
             // *iteratively* constant-fold |F| *after* folding |C| and |T| (and
             // possibly completely replacing the whole thing with |T| or |F|);
             // otherwise fold F normally.  Making |nextNode| non-null causes
             // this loop to run again to fold F.
-            if (alternative->isKind(ParseNodeKind::If)) {
-                nextNode = &alternative;
+            if ((*alternative)->isKind(ParseNodeKind::If)) {
+                MOZ_ASSERT((*alternative)->is<TernaryNode>());
+                nextNode = alternative;
             } else {
-                if (!Fold(cx, &alternative, parser)) {
+                if (!Fold(cx, alternative, parser)) {
                     return false;
                 }
             }
@@ -922,7 +918,7 @@ FoldIf(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& p
 
         // Eliminate the consequent or alternative if the condition has
         // constant truthiness.
-        Truthiness t = Boolish(expr);
+        Truthiness t = Boolish(*expr);
         if (t == Unknown) {
             continue;
         }
@@ -932,11 +928,11 @@ FoldIf(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& p
         ParseNode* replacement;
         ParseNode* discarded;
         if (t == Truthy) {
-            replacement = consequent;
-            discarded = alternative;
+            replacement = *consequent;
+            discarded = *alternative;
         } else {
-            replacement = alternative;
-            discarded = consequent;
+            replacement = *alternative;
+            discarded = *consequent;
         }
 
         bool performReplacement = true;
@@ -1186,24 +1182,25 @@ FoldReturn(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& p
 }
 
 static bool
-FoldTry(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldTry(JSContext* cx, TernaryNode* node, PerHandlerParser<FullParseHandler>& parser)
 {
     MOZ_ASSERT(node->isKind(ParseNodeKind::Try));
-    MOZ_ASSERT(node->isArity(PN_TERNARY));
 
-    ParseNode*& statements = node->pn_kid1;
-    if (!Fold(cx, &statements, parser)) {
+    ParseNode** statements = node->unsafeKid1Reference();
+    if (!Fold(cx, statements, parser)) {
         return false;
     }
 
-    if (ParseNode*& catchScope = node->pn_kid2) {
-        if (!Fold(cx, &catchScope, parser)) {
+    ParseNode** catchScope = node->unsafeKid2Reference();
+    if (*catchScope) {
+        if (!Fold(cx, catchScope, parser)) {
             return false;
         }
     }
 
-    if (ParseNode*& finally = node->pn_kid3) {
-        if (!Fold(cx, &finally, parser)) {
+    ParseNode** finally = node->unsafeKid3Reference();
+    if (*finally) {
+        if (!Fold(cx, finally, parser)) {
             return false;
         }
     }
@@ -1233,25 +1230,26 @@ FoldCatch(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& pa
 }
 
 static bool
-FoldClass(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldClass(JSContext* cx, ClassNode* node, PerHandlerParser<FullParseHandler>& parser)
 {
     MOZ_ASSERT(node->isKind(ParseNodeKind::Class));
-    MOZ_ASSERT(node->isArity(PN_TERNARY));
 
-    if (ParseNode*& classNames = node->pn_kid1) {
-        if (!Fold(cx, &classNames, parser)) {
+    ParseNode** classNames = node->unsafeKid1Reference();
+    if (*classNames) {
+        if (!Fold(cx, classNames, parser)) {
             return false;
         }
     }
 
-    if (ParseNode*& heritage = node->pn_kid2) {
-        if (!Fold(cx, &heritage, parser)) {
+    ParseNode** heritage = node->unsafeKid2Reference();
+    if (*heritage) {
+        if (!Fold(cx, heritage, parser)) {
             return false;
         }
     }
 
-    ParseNode*& body = node->pn_kid3;
-    return Fold(cx, &body, parser);
+    ParseNode** body = node->unsafeKid3Reference();
+    return Fold(cx, body, parser);
 }
 
 static bool
@@ -1524,41 +1522,42 @@ FoldArguments(JSContext* cx, ListNode* node, PerHandlerParser<FullParseHandler>&
 }
 
 static bool
-FoldForInOrOf(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldForInOrOf(JSContext* cx, TernaryNode* node, PerHandlerParser<FullParseHandler>& parser)
 {
     MOZ_ASSERT(node->isKind(ParseNodeKind::ForIn) ||
                node->isKind(ParseNodeKind::ForOf));
-    MOZ_ASSERT(node->isArity(PN_TERNARY));
-    MOZ_ASSERT(!node->pn_kid2);
+    MOZ_ASSERT(!node->kid2());
 
-    return Fold(cx, &node->pn_kid1, parser) &&
-           Fold(cx, &node->pn_kid3, parser);
+    return Fold(cx, node->unsafeKid1Reference(), parser) &&
+           Fold(cx, node->unsafeKid3Reference(), parser);
 }
 
 static bool
-FoldForHead(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldForHead(JSContext* cx, TernaryNode* node, PerHandlerParser<FullParseHandler>& parser)
 {
     MOZ_ASSERT(node->isKind(ParseNodeKind::ForHead));
-    MOZ_ASSERT(node->isArity(PN_TERNARY));
 
-    if (ParseNode*& init = node->pn_kid1) {
-        if (!Fold(cx, &init, parser)) {
+    ParseNode** init = node->unsafeKid1Reference();
+    if (*init) {
+        if (!Fold(cx, init, parser)) {
             return false;
         }
     }
 
-    if (ParseNode*& test = node->pn_kid2) {
-        if (!FoldCondition(cx, &test, parser)) {
+    ParseNode** test = node->unsafeKid2Reference();
+    if (*test) {
+        if (!FoldCondition(cx, test, parser)) {
             return false;
         }
 
-        if (test->isKind(ParseNodeKind::True)) {
-            test = nullptr;
+        if ((*test)->isKind(ParseNodeKind::True)) {
+            (*test) = nullptr;
         }
     }
 
-    if (ParseNode*& update = node->pn_kid3) {
-        if (!Fold(cx, &update, parser)) {
+    ParseNode** update = node->unsafeKid3Reference();
+    if (*update) {
+        if (!Fold(cx, update, parser)) {
             return false;
         }
     }
@@ -1652,9 +1651,11 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         return FoldDeleteProperty(cx, pn, parser);
 
       case ParseNodeKind::Conditional:
+        MOZ_ASSERT((*pnp)->is<TernaryNode>());
         return FoldConditional(cx, pnp, parser);
 
       case ParseNodeKind::If:
+        MOZ_ASSERT((*pnp)->is<TernaryNode>());
         return FoldIf(cx, pnp, parser);
 
       case ParseNodeKind::Not:
@@ -1771,13 +1772,13 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         return FoldReturn(cx, pn, parser);
 
       case ParseNodeKind::Try:
-        return FoldTry(cx, pn, parser);
+        return FoldTry(cx, &pn->as<TernaryNode>(), parser);
 
       case ParseNodeKind::Catch:
         return FoldCatch(cx, pn, parser);
 
       case ParseNodeKind::Class:
-        return FoldClass(cx, pn, parser);
+        return FoldClass(cx, &pn->as<ClassNode>(), parser);
 
       case ParseNodeKind::Elem:
         return FoldElement(cx, pnp, parser);
@@ -1872,10 +1873,10 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
 
       case ParseNodeKind::ForIn:
       case ParseNodeKind::ForOf:
-        return FoldForInOrOf(cx, pn, parser);
+        return FoldForInOrOf(cx, &pn->as<TernaryNode>(), parser);
 
       case ParseNodeKind::ForHead:
-        return FoldForHead(cx, pn, parser);
+        return FoldForHead(cx, &pn->as<TernaryNode>(), parser);
 
       case ParseNodeKind::Label:
         MOZ_ASSERT(pn->isArity(PN_NAME));

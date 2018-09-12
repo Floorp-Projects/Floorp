@@ -6097,16 +6097,15 @@ GeneralParser<ParseHandler, CharT>::checkExportedNameForFunction(Node node)
 
 template<typename CharT>
 bool
-Parser<FullParseHandler, CharT>::checkExportedNameForClass(ParseNode* node)
+Parser<FullParseHandler, CharT>::checkExportedNameForClass(ClassNode* classNode)
 {
-    const ClassNode& cls = node->as<ClassNode>();
-    MOZ_ASSERT(cls.names());
-    return checkExportedName(cls.names()->innerBinding()->pn_atom);
+    MOZ_ASSERT(classNode->names());
+    return checkExportedName(classNode->names()->innerBinding()->pn_atom);
 }
 
 template<typename CharT>
 inline bool
-Parser<SyntaxParseHandler, CharT>::checkExportedNameForClass(Node node)
+Parser<SyntaxParseHandler, CharT>::checkExportedNameForClass(ClassNodeType classNode)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
@@ -6114,9 +6113,9 @@ Parser<SyntaxParseHandler, CharT>::checkExportedNameForClass(Node node)
 
 template<class ParseHandler, typename CharT>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkExportedNameForClass(Node node)
+GeneralParser<ParseHandler, CharT>::checkExportedNameForClass(ClassNodeType classNode)
 {
-    return asFinalParser()->checkExportedNameForClass(node);
+    return asFinalParser()->checkExportedNameForClass(classNode);
 }
 
 template<>
@@ -6442,7 +6441,7 @@ GeneralParser<ParseHandler, CharT>::exportClassDeclaration(uint32_t begin)
 
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Class));
 
-    Node kid = classDefinition(YieldIsName, ClassStatement, NameRequired);
+    ClassNodeType kid = classDefinition(YieldIsName, ClassStatement, NameRequired);
     if (!kid) {
         return null();
     }
@@ -6534,7 +6533,7 @@ GeneralParser<ParseHandler, CharT>::exportDefaultClassDeclaration(uint32_t begin
 
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Class));
 
-    Node kid = classDefinition(YieldIsName, ClassStatement, AllowDefaultName);
+    ClassNodeType kid = classDefinition(YieldIsName, ClassStatement, AllowDefaultName);
     if (!kid) {
         return null();
     }
@@ -6784,7 +6783,7 @@ GeneralParser<ParseHandler, CharT>::consequentOrAlternative(YieldHandling yieldH
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::TernaryNodeType
 GeneralParser<ParseHandler, CharT>::ifStatement(YieldHandling yieldHandling)
 {
     Vector<Node, 4> condList(context), thenList(context);
@@ -6842,14 +6841,16 @@ GeneralParser<ParseHandler, CharT>::ifStatement(YieldHandling yieldHandling)
         break;
     }
 
+    TernaryNodeType ifNode;
     for (int i = condList.length() - 1; i >= 0; i--) {
-        elseBranch = handler.newIfStatement(posList[i], condList[i], thenList[i], elseBranch);
-        if (!elseBranch) {
+        ifNode = handler.newIfStatement(posList[i], condList[i], thenList[i], elseBranch);
+        if (!ifNode) {
             return null();
         }
+        elseBranch = ifNode;
     }
 
-    return elseBranch;
+    return ifNode;
 }
 
 template <class ParseHandler, typename CharT>
@@ -7162,7 +7163,7 @@ GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
         return null();
     }
 
-    Node forHead;
+    TernaryNodeType forHead;
     if (headKind == ParseNodeKind::ForHead) {
         Node init = startNode;
 
@@ -7685,7 +7686,7 @@ GeneralParser<ParseHandler, CharT>::throwStatement(YieldHandling yieldHandling)
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::TernaryNodeType
 GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Try));
@@ -7936,7 +7937,7 @@ ToAccessorType(PropertyType propType)
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::ClassNodeType
 GeneralParser<ParseHandler, CharT>::classDefinition(YieldHandling yieldHandling,
                                                     ClassContext classContext,
                                                     DefaultHandling defaultHandling)

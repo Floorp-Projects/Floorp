@@ -230,7 +230,9 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     template <class Boxer>
     Node newRegExp(Node reobj, const TokenPos& pos, Boxer& boxer) { return NodeGeneric; }
 
-    Node newConditional(Node cond, Node thenExpr, Node elseExpr) { return NodeGeneric; }
+    ConditionalExpressionType newConditional(Node cond, Node thenExpr, Node elseExpr) {
+        return NodeGeneric;
+    }
 
     Node newElision() { return NodeGeneric; }
 
@@ -274,7 +276,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     ListNodeType newObjectLiteral(uint32_t begin) { return NodeUnparenthesizedObject; }
     ListNodeType newClassMethodList(uint32_t begin) { return NodeGeneric; }
     Node newClassNames(Node outer, Node inner, const TokenPos& pos) { return NodeGeneric; }
-    Node newClass(Node name, Node heritage, Node methodBlock, const TokenPos& pos) { return NodeGeneric; }
+    ClassNodeType newClass(Node name, Node heritage, Node methodBlock, const TokenPos& pos) { return NodeGeneric; }
 
     Node newNewTarget(Node newHolder, Node targetHolder) { return NodeGeneric; }
     Node newPosHolder(const TokenPos& pos) { return NodeGeneric; }
@@ -329,7 +331,9 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return expr == NodeUnparenthesizedString ? NodeStringExprStatement : NodeGeneric;
     }
 
-    Node newIfStatement(uint32_t begin, Node cond, Node then, Node else_) { return NodeGeneric; }
+    TernaryNodeType newIfStatement(uint32_t begin, Node cond, Node thenBranch, Node elseBranch) {
+        return NodeGeneric;
+    }
     Node newDoWhileStatement(Node body, Node cond, const TokenPos& pos) { return NodeGeneric; }
     Node newWhileStatement(uint32_t begin, Node cond, Node body) { return NodeGeneric; }
     Node newSwitchStatement(uint32_t begin, Node discriminant, Node lexicalForCaseList,
@@ -349,7 +353,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     }
 
     Node newThrowStatement(Node expr, const TokenPos& pos) { return NodeThrow; }
-    Node newTryStatement(uint32_t begin, Node body, Node catchScope, Node finallyBlock) {
+    TernaryNodeType newTryStatement(uint32_t begin, Node body, Node catchScope, Node finallyBlock) {
         return NodeGeneric;
     }
     Node newDebuggerStatement(const TokenPos& pos) { return NodeGeneric; }
@@ -387,15 +391,15 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     void setFunctionBox(Node pn, FunctionBox* funbox) {}
     void addFunctionFormalParameter(Node pn, Node argpn) {}
 
-    Node newForStatement(uint32_t begin, Node forHead, Node body, unsigned iflags) {
+    Node newForStatement(uint32_t begin, TernaryNodeType forHead, Node body, unsigned iflags) {
         return NodeGeneric;
     }
 
-    Node newForHead(Node init, Node test, Node update, const TokenPos& pos) {
+    TernaryNodeType newForHead(Node init, Node test, Node update, const TokenPos& pos) {
         return NodeGeneric;
     }
 
-    Node newForInOrOfHead(ParseNodeKind kind, Node target, Node iteratedExpr, const TokenPos& pos) {
+    TernaryNodeType newForInOrOfHead(ParseNodeKind kind, Node target, Node iteratedExpr, const TokenPos& pos) {
         return NodeGeneric;
     }
 

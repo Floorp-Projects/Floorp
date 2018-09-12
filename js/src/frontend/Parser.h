@@ -1042,7 +1042,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     Node returnStatement(YieldHandling yieldHandling);
     Node withStatement(YieldHandling yieldHandling);
     Node throwStatement(YieldHandling yieldHandling);
-    Node tryStatement(YieldHandling yieldHandling);
+    TernaryNodeType tryStatement(YieldHandling yieldHandling);
     Node catchBlockStatement(YieldHandling yieldHandling, ParseContext::Scope& catchParamScope);
     Node debuggerStatement();
 
@@ -1051,7 +1051,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     Node labeledStatement(YieldHandling yieldHandling);
     Node labeledItem(YieldHandling yieldHandling);
 
-    Node ifStatement(YieldHandling yieldHandling);
+    TernaryNodeType ifStatement(YieldHandling yieldHandling);
     Node consequentOrAlternative(YieldHandling yieldHandling);
 
     ListNodeType lexicalDeclaration(YieldHandling yieldHandling, DeclarationKind kind);
@@ -1195,12 +1195,12 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     inline bool checkExportedNamesForDeclaration(Node node);
     inline bool checkExportedNamesForDeclarationList(ListNodeType node);
     inline bool checkExportedNameForFunction(Node node);
-    inline bool checkExportedNameForClass(Node node);
+    inline bool checkExportedNameForClass(ClassNodeType classNode);
     inline bool checkExportedNameForClause(Node node);
 
     enum ClassContext { ClassStatement, ClassExpression };
-    Node classDefinition(YieldHandling yieldHandling, ClassContext classContext,
-                         DefaultHandling defaultHandling);
+    ClassNodeType classDefinition(YieldHandling yieldHandling, ClassContext classContext,
+                                  DefaultHandling defaultHandling);
 
     bool checkBindingIdentifier(PropertyName* ident,
                                 uint32_t offset,
@@ -1400,7 +1400,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     inline bool checkExportedNamesForDeclaration(Node node);
     inline bool checkExportedNamesForDeclarationList(ListNodeType node);
     inline bool checkExportedNameForFunction(Node node);
-    inline bool checkExportedNameForClass(Node node);
+    inline bool checkExportedNameForClass(ClassNodeType classNode);
     inline bool checkExportedNameForClause(Node node);
 
     bool trySyntaxParseInnerFunction(Node* funcNode, HandleFunction fun, uint32_t toStringStart,
@@ -1525,7 +1525,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     bool checkExportedNamesForDeclaration(Node node);
     bool checkExportedNamesForDeclarationList(ListNodeType node);
     bool checkExportedNameForFunction(Node node);
-    bool checkExportedNameForClass(Node node);
+    bool checkExportedNameForClass(ClassNodeType classNode);
     inline bool checkExportedNameForClause(Node node);
 
     bool trySyntaxParseInnerFunction(Node* funcNode, HandleFunction fun, uint32_t toStringStart,

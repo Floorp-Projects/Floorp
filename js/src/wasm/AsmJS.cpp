@@ -425,22 +425,19 @@ ReturnExpr(ParseNode* pn)
 static inline ParseNode*
 TernaryKid1(ParseNode* pn)
 {
-    MOZ_ASSERT(pn->isArity(PN_TERNARY));
-    return pn->pn_kid1;
+    return pn->as<TernaryNode>().kid1();
 }
 
 static inline ParseNode*
 TernaryKid2(ParseNode* pn)
 {
-    MOZ_ASSERT(pn->isArity(PN_TERNARY));
-    return pn->pn_kid2;
+    return pn->as<TernaryNode>().kid2();
 }
 
 static inline ParseNode*
 TernaryKid3(ParseNode* pn)
 {
-    MOZ_ASSERT(pn->isArity(PN_TERNARY));
-    return pn->pn_kid3;
+    return pn->as<TernaryNode>().kid3();
 }
 
 static inline ParseNode*
