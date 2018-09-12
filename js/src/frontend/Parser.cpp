@@ -4522,7 +4522,7 @@ GeneralParser<ParseHandler, CharT>::asmJS(ListNodeType list)
  * Recognize Directive Prologue members and directives. Assuming |pn| is a
  * candidate for membership in a directive prologue, recognize directives and
  * set |pc|'s flags accordingly. If |pn| is indeed part of a prologue, set its
- * |pn_prologue| flag.
+ * |prologue| flag.
  *
  * Note that the following is a strict mode function:
  *
@@ -4561,7 +4561,7 @@ GeneralParser<ParseHandler, CharT>::maybeParseDirective(ListNodeType list, Node 
         // directive in the future. We don't want to interfere with people
         // taking advantage of directive-prologue-enabled features that appear
         // in other browsers first.
-        handler.setInDirectivePrologue(possibleDirective);
+        handler.setInDirectivePrologue(handler.asUnary(possibleDirective));
 
         if (directive == context->names().useStrict) {
             // Functions with non-simple parameter lists (destructuring,
@@ -5904,7 +5904,7 @@ Parser<FullParseHandler, CharT>::checkExportedNamesForArrayBinding(ListNode* arr
 
         ParseNode* binding;
         if (node->isKind(ParseNodeKind::Spread)) {
-            binding = node->pn_kid;
+            binding = node->as<UnaryNode>().kid();
         } else if (node->isKind(ParseNodeKind::Assign)) {
             binding = node->as<AssignmentNode>().left();
         } else {
@@ -5948,10 +5948,10 @@ Parser<FullParseHandler, CharT>::checkExportedNamesForObjectBinding(ListNode* ob
 
         ParseNode* target;
         if (node->isKind(ParseNodeKind::Spread)) {
-            target = node->pn_kid;
+            target = node->as<UnaryNode>().kid();
         } else {
             if (node->isKind(ParseNodeKind::MutateProto)) {
-                target = node->pn_kid;
+                target = node->as<UnaryNode>().kid();
             } else {
                 target = node->as<BinaryNode>().right();
             }
@@ -6357,7 +6357,7 @@ GeneralParser<ParseHandler, CharT>::exportClause(uint32_t begin)
         return null();
     }
 
-    Node node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+    UnaryNodeType node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
     if (!node) {
         return null();
     }
@@ -6370,7 +6370,7 @@ GeneralParser<ParseHandler, CharT>::exportClause(uint32_t begin)
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::UnaryNodeType
 GeneralParser<ParseHandler, CharT>::exportVariableStatement(uint32_t begin)
 {
     if (!abortIfSyntaxParser()) {
@@ -6390,7 +6390,7 @@ GeneralParser<ParseHandler, CharT>::exportVariableStatement(uint32_t begin)
         return null();
     }
 
-    Node node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+    UnaryNodeType node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
     if (!node) {
         return null();
     }
@@ -6403,7 +6403,7 @@ GeneralParser<ParseHandler, CharT>::exportVariableStatement(uint32_t begin)
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::UnaryNodeType
 GeneralParser<ParseHandler, CharT>::exportFunctionDeclaration(uint32_t begin,
                                                               uint32_t toStringStart,
                                                               FunctionAsyncKind asyncKind /* = SyncFunction */)
@@ -6423,7 +6423,7 @@ GeneralParser<ParseHandler, CharT>::exportFunctionDeclaration(uint32_t begin,
         return null();
     }
 
-    Node node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+    UnaryNodeType node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
     if (!node) {
         return null();
     }
@@ -6436,7 +6436,7 @@ GeneralParser<ParseHandler, CharT>::exportFunctionDeclaration(uint32_t begin,
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::UnaryNodeType
 GeneralParser<ParseHandler, CharT>::exportClassDeclaration(uint32_t begin)
 {
     if (!abortIfSyntaxParser()) {
@@ -6454,7 +6454,7 @@ GeneralParser<ParseHandler, CharT>::exportClassDeclaration(uint32_t begin)
         return null();
     }
 
-    Node node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+    UnaryNodeType node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
     if (!node) {
         return null();
     }
@@ -6467,7 +6467,7 @@ GeneralParser<ParseHandler, CharT>::exportClassDeclaration(uint32_t begin)
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::UnaryNodeType
 GeneralParser<ParseHandler, CharT>::exportLexicalDeclaration(uint32_t begin, DeclarationKind kind)
 {
     if (!abortIfSyntaxParser()) {
@@ -6486,7 +6486,7 @@ GeneralParser<ParseHandler, CharT>::exportLexicalDeclaration(uint32_t begin, Dec
         return null();
     }
 
-    Node node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+    UnaryNodeType node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
     if (!node) {
         return null();
     }
@@ -6714,7 +6714,7 @@ GeneralParser<ParseHandler, CharT>::exportDeclaration()
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::UnaryNodeType
 GeneralParser<ParseHandler, CharT>::expressionStatement(YieldHandling yieldHandling,
                                                         InvokedPrediction invoked)
 {
@@ -7456,7 +7456,7 @@ GeneralParser<ParseHandler, CharT>::breakStatement(YieldHandling yieldHandling)
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::UnaryNodeType
 GeneralParser<ParseHandler, CharT>::returnStatement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Return));
@@ -7496,7 +7496,7 @@ GeneralParser<ParseHandler, CharT>::returnStatement(YieldHandling yieldHandling)
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::UnaryNodeType
 GeneralParser<ParseHandler, CharT>::yieldExpression(InHandling inHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Yield));
@@ -7660,7 +7660,7 @@ GeneralParser<ParseHandler, CharT>::labeledStatement(YieldHandling yieldHandling
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::UnaryNodeType
 GeneralParser<ParseHandler, CharT>::throwStatement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Throw));
@@ -9250,7 +9250,7 @@ GeneralParser<ParseHandler, CharT>::checkIncDecOperand(Node operand, uint32_t op
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::UnaryNodeType
 GeneralParser<ParseHandler, CharT>::unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind,
                                                 uint32_t begin)
 {
@@ -10476,7 +10476,7 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::UnaryNodeType
 GeneralParser<ParseHandler, CharT>::computedPropertyName(YieldHandling yieldHandling,
                                                          const Maybe<DeclarationKind>& maybeDecl,
                                                          ListNodeType literal)

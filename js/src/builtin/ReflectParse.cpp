@@ -2165,7 +2165,7 @@ ASTSerializer::exportDeclaration(ParseNode* exportNode, MutableHandleValue dst)
     NodeVector elts(cx);
 
     ParseNode* kid = exportNode->isKind(ParseNodeKind::Export)
-                     ? exportNode->pn_kid
+                     ? exportNode->as<UnaryNode>().kid()
                      : exportNode->as<BinaryNode>().left();
     switch (ParseNodeKind kind = kid->getKind()) {
       case ParseNodeKind::ExportSpecList: {
@@ -2421,7 +2421,7 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
       case ParseNodeKind::ExpressionStatement:
       {
         RootedValue expr(cx);
-        return expression(pn->pn_kid, &expr) &&
+        return expression(pn->as<UnaryNode>().kid(), &expr) &&
             builder.expressionStatement(expr, &pn->pn_pos, dst);
       }
 
@@ -2583,22 +2583,26 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
 
       case ParseNodeKind::Throw:
       {
-        MOZ_ASSERT_IF(pn->pn_kid, pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+        UnaryNode* throwNode = &pn->as<UnaryNode>();
+        ParseNode* operand = throwNode->kid();
+        MOZ_ASSERT(throwNode->pn_pos.encloses(operand->pn_pos));
 
         RootedValue arg(cx);
 
-        return optExpression(pn->pn_kid, &arg) &&
-               builder.throwStatement(arg, &pn->pn_pos, dst);
+        return expression(operand, &arg) &&
+               builder.throwStatement(arg, &throwNode->pn_pos, dst);
       }
 
       case ParseNodeKind::Return:
       {
-        MOZ_ASSERT_IF(pn->pn_kid, pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+        UnaryNode* returnNode = &pn->as<UnaryNode>();
+        ParseNode* operand = returnNode->kid();
+        MOZ_ASSERT_IF(operand, returnNode->pn_pos.encloses(operand->pn_pos));
 
         RootedValue arg(cx);
 
-        return optExpression(pn->pn_kid, &arg) &&
-               builder.returnStatement(arg, &pn->pn_pos, dst);
+        return optExpression(operand, &arg) &&
+               builder.returnStatement(arg, &returnNode->pn_pos, dst);
       }
 
       case ParseNodeKind::Debugger:
@@ -2793,23 +2797,27 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       case ParseNodeKind::PreIncrement:
       case ParseNodeKind::PreDecrement:
       {
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+        UnaryNode* incDec = &pn->as<UnaryNode>();
+        ParseNode* operand = incDec->kid();
+        MOZ_ASSERT(incDec->pn_pos.encloses(operand->pn_pos));
 
-        bool inc = pn->isKind(ParseNodeKind::PreIncrement);
+        bool inc = incDec->isKind(ParseNodeKind::PreIncrement);
         RootedValue expr(cx);
-        return expression(pn->pn_kid, &expr) &&
-               builder.updateExpression(expr, inc, true, &pn->pn_pos, dst);
+        return expression(operand, &expr) &&
+               builder.updateExpression(expr, inc, true, &incDec->pn_pos, dst);
       }
 
       case ParseNodeKind::PostIncrement:
       case ParseNodeKind::PostDecrement:
       {
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+        UnaryNode* incDec = &pn->as<UnaryNode>();
+        ParseNode* operand = incDec->kid();
+        MOZ_ASSERT(incDec->pn_pos.encloses(operand->pn_pos));
 
-        bool inc = pn->isKind(ParseNodeKind::PostIncrement);
+        bool inc = incDec->isKind(ParseNodeKind::PostIncrement);
         RootedValue expr(cx);
-        return expression(pn->pn_kid, &expr) &&
-               builder.updateExpression(expr, inc, false, &pn->pn_pos, dst);
+        return expression(operand, &expr) &&
+               builder.updateExpression(expr, inc, false, &incDec->pn_pos, dst);
       }
 
       case ParseNodeKind::Assign:
@@ -2880,14 +2888,16 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       case ParseNodeKind::Pos:
       case ParseNodeKind::Await:
       case ParseNodeKind::Neg: {
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+        UnaryNode* unaryNode = &pn->as<UnaryNode>();
+        ParseNode* operand = unaryNode->kid();
+        MOZ_ASSERT(unaryNode->pn_pos.encloses(operand->pn_pos));
 
-        UnaryOperator op = unop(pn->getKind());
+        UnaryOperator op = unop(unaryNode->getKind());
         LOCAL_ASSERT(op > UNOP_ERR && op < UNOP_LIMIT);
 
         RootedValue expr(cx);
-        return expression(pn->pn_kid, &expr) &&
-               builder.unaryExpression(op, expr, &pn->pn_pos, dst);
+        return expression(operand, &expr) &&
+               builder.unaryExpression(op, expr, &unaryNode->pn_pos, dst);
       }
 
       case ParseNodeKind::New:
@@ -3049,14 +3059,14 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       case ParseNodeKind::Spread:
       {
           RootedValue expr(cx);
-          return expression(pn->pn_kid, &expr) &&
+          return expression(pn->as<UnaryNode>().kid(), &expr) &&
                  builder.spreadExpression(expr, &pn->pn_pos, dst);
       }
 
       case ParseNodeKind::ComputedName:
       {
          RootedValue name(cx);
-         return expression(pn->pn_kid, &name) &&
+         return expression(pn->as<UnaryNode>().kid(), &name) &&
                 builder.computedName(name, &pn->pn_pos, dst);
       }
 
@@ -3120,20 +3130,24 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
 
       case ParseNodeKind::YieldStar:
       {
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+        UnaryNode* yieldNode = &pn->as<UnaryNode>();
+        ParseNode* operand = yieldNode->kid();
+        MOZ_ASSERT(yieldNode->pn_pos.encloses(operand->pn_pos));
 
         RootedValue arg(cx);
-        return expression(pn->pn_kid, &arg) &&
-               builder.yieldExpression(arg, Delegating, &pn->pn_pos, dst);
+        return expression(operand, &arg) &&
+               builder.yieldExpression(arg, Delegating, &yieldNode->pn_pos, dst);
       }
 
       case ParseNodeKind::Yield:
       {
-        MOZ_ASSERT_IF(pn->pn_kid, pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+        UnaryNode* yieldNode = &pn->as<UnaryNode>();
+        ParseNode* operand = yieldNode->kid();
+        MOZ_ASSERT_IF(operand, yieldNode->pn_pos.encloses(operand->pn_pos));
 
         RootedValue arg(cx);
-        return optExpression(pn->pn_kid, &arg) &&
-               builder.yieldExpression(arg, NotDelegating, &pn->pn_pos, dst);
+        return optExpression(operand, &arg) &&
+               builder.yieldExpression(arg, NotDelegating, &yieldNode->pn_pos, dst);
       }
 
       case ParseNodeKind::Class:
@@ -3222,7 +3236,7 @@ ASTSerializer::property(ParseNode* pn, MutableHandleValue dst)
 {
     if (pn->isKind(ParseNodeKind::MutateProto)) {
         RootedValue val(cx);
-        return expression(pn->pn_kid, &val) &&
+        return expression(pn->as<UnaryNode>().kid(), &val) &&
                builder.prototypeMutation(val, &pn->pn_pos, dst);
     }
     if (pn->isKind(ParseNodeKind::Spread)) {
@@ -3328,7 +3342,7 @@ ASTSerializer::arrayPattern(ListNode* array, MutableHandleValue dst)
         } else if (item->isKind(ParseNodeKind::Spread)) {
             RootedValue target(cx);
             RootedValue spread(cx);
-            if (!pattern(item->pn_kid, &target)) {
+            if (!pattern(item->as<UnaryNode>().kid(), &target)) {
                 return false;
             }
             if(!builder.spreadExpression(target, &item->pn_pos, &spread))
@@ -3360,7 +3374,7 @@ ASTSerializer::objectPattern(ListNode* obj, MutableHandleValue dst)
         if (propdef->isKind(ParseNodeKind::Spread)) {
             RootedValue target(cx);
             RootedValue spread(cx);
-            if (!pattern(propdef->pn_kid, &target)) {
+            if (!pattern(propdef->as<UnaryNode>().kid(), &target)) {
                 return false;
             }
             if(!builder.spreadExpression(target, &propdef->pn_pos, &spread))
@@ -3377,7 +3391,7 @@ ASTSerializer::objectPattern(ListNode* obj, MutableHandleValue dst)
             if (!builder.literal(pname, &propdef->pn_pos, &key)) {
                 return false;
             }
-            target = propdef->pn_kid;
+            target = propdef->as<UnaryNode>().kid();
         } else {
             BinaryNode* prop = &propdef->as<BinaryNode>();
             if (!propertyName(prop->left(), &key)) {
@@ -3495,7 +3509,7 @@ ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args, NodeVector& 
     switch (pnbody->getKind()) {
       case ParseNodeKind::Return: /* expression closure, no destructured args */
         return functionArgs(pn, argsList, args, defaults, rest) &&
-               expression(pnbody->pn_kid, body);
+               expression(pnbody->as<UnaryNode>().kid(), body);
 
       case ParseNodeKind::StatementList:     /* statement closure */
       {
@@ -3511,7 +3525,7 @@ ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args, NodeVector& 
         if (isAsync && isExpression) {
             MOZ_ASSERT(firstNode->getKind() == ParseNodeKind::Return);
             return functionArgs(pn, argsList, args, defaults, rest) &&
-                   expression(firstNode->pn_kid, body);
+                   expression(firstNode->as<UnaryNode>().kid(), body);
         }
 
         return functionArgs(pn, argsList, args, defaults, rest) &&
