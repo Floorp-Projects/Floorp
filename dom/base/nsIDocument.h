@@ -1752,7 +1752,7 @@ public:
    * the <iframe> or <browser> that contains this document is also mode
    * fullscreen. This happens recursively in all ancestor documents.
    */
-  void AsyncRequestFullscreen(mozilla::UniquePtr<FullscreenRequest>&&);
+  void AsyncRequestFullscreen(mozilla::UniquePtr<FullscreenRequest>);
 
   // Do the "fullscreen element ready check" from the fullscreen spec.
   // It returns true if the given element is allowed to go into fullscreen.
@@ -1760,7 +1760,7 @@ public:
 
   // This is called asynchronously by nsIDocument::AsyncRequestFullscreen()
   // to move this document into fullscreen mode if allowed.
-  void RequestFullscreen(mozilla::UniquePtr<FullscreenRequest>&& aRequest);
+  void RequestFullscreen(mozilla::UniquePtr<FullscreenRequest> aRequest);
 
   // Removes all elements from the fullscreen stack, removing full-scren
   // styles from the top element in the stack.

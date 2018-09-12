@@ -10890,7 +10890,7 @@ nsIDocument::RestorePreviousFullscreenState()
 class nsCallRequestFullscreen : public Runnable
 {
 public:
-  explicit nsCallRequestFullscreen(UniquePtr<FullscreenRequest>&& aRequest)
+  explicit nsCallRequestFullscreen(UniquePtr<FullscreenRequest> aRequest)
     : mozilla::Runnable("nsCallRequestFullscreen")
     , mRequest(std::move(aRequest))
   {
@@ -10906,7 +10906,7 @@ public:
 };
 
 void
-nsIDocument::AsyncRequestFullscreen(UniquePtr<FullscreenRequest>&& aRequest)
+nsIDocument::AsyncRequestFullscreen(UniquePtr<FullscreenRequest> aRequest)
 {
   if (!aRequest->GetElement()) {
     MOZ_ASSERT_UNREACHABLE(
@@ -11230,7 +11230,7 @@ FullscreenRequest::~FullscreenRequest()
 class PendingFullscreenRequestList
 {
 public:
-  static void Add(UniquePtr<FullscreenRequest>&& aRequest)
+  static void Add(UniquePtr<FullscreenRequest> aRequest)
   {
     sList.insertBack(aRequest.release());
   }
@@ -11365,7 +11365,7 @@ ShouldApplyFullscreenDirectly(nsIDocument* aDoc,
 }
 
 void
-nsIDocument::RequestFullscreen(UniquePtr<FullscreenRequest>&& aRequest)
+nsIDocument::RequestFullscreen(UniquePtr<FullscreenRequest> aRequest)
 {
   nsCOMPtr<nsPIDOMWindowOuter> rootWin = GetRootWindow(this);
   if (!rootWin) {
