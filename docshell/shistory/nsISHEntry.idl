@@ -35,16 +35,13 @@ class nsSHEntryShared;
 interface nsISHEntry : nsISupports
 {
     /**
-     * A readonly property that returns the URI
-     * of the current entry. The object returned is
-     * of type nsIURI
+     * The URI of the current entry.
      */
-    [infallible] readonly attribute nsIURI URI;
+    [infallible] attribute nsIURI URI;
 
     /**
-     * A readonly property that returns the original URI of the current entry.
-     * If an entry is the result of a redirect this attribute holds original
-     * URI. The object returned is of type nsIURI
+     * The original URI of the current entry. If an entry is the result of a
+     * redirect this attribute holds the original URI.
      */
     [infallible] attribute nsIURI originalURI;
 
@@ -66,18 +63,12 @@ interface nsISHEntry : nsISupports
     attribute AString title;
 
     /**
-     * A readonly property that returns a boolean
-     * flag which indicates if the entry was created as a
-     * result of a subframe navigation. This flag will be
-     * 'false' when a frameset page is visited for
-     * the first time. This flag will be 'true' for all
-     * history entries created as a result of a subframe
-     * navigation.
+     * Was the entry created as a result of a subframe navigation?
+     * - Will be 'false' when a frameset page is visited for the first time.
+     * - Will be 'true' for all history entries created as a result of a
+     *   subframe navigation.
      */
-    [infallible] readonly attribute boolean isSubFrame;
-
-    /** URI for the document */
-    void setURI(in nsIURI aURI);
+    [infallible] attribute boolean isSubFrame;
 
     /** Referrer URI */
     [infallible] attribute nsIURI referrerURI;
@@ -206,9 +197,6 @@ interface nsISHEntry : nsISupports
                            in boolean dynamicCreation);
 
     nsISHEntry clone();
-
-    /** Attribute that indicates if this entry is for a subframe navigation */
-    void setIsSubFrame(in boolean aFlag);
 
     /** Return any content viewer present in or below this node in the
         nsSHEntry tree.  This will differ from contentViewer in the case
@@ -345,7 +333,7 @@ interface nsISHEntry : nsISupports
     [noscript, infallible] attribute nsISHistory SHistory;
 
     /**
-     * Sets an SHEntry to reflect that it is a history type load. as
+     * Sets an SHEntry to reflect that it is a history type load. As
      * nsIDocShellLoadInfo and its LoadType enum were removed, this is the
      * equivalent to doing
      *
@@ -353,7 +341,7 @@ interface nsISHEntry : nsISupports
      *
      * in js, but easier to maintain and less opaque.
      */
-    void setAsHistoryLoad();
+    void setLoadTypeAsHistory();
 
     /**
      * A number that is assigned by the sHistory when the entry is activated

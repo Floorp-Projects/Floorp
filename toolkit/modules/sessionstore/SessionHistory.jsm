@@ -335,11 +335,11 @@ var SessionHistoryInternal = {
     var shEntry = Cc["@mozilla.org/browser/session-history-entry;1"].
                   createInstance(Ci.nsISHEntry);
 
-    shEntry.setURI(Services.io.newURI(entry.url));
+    shEntry.URI = Services.io.newURI(entry.url);
     shEntry.title = entry.title || entry.url;
     if (entry.subframe)
-      shEntry.setIsSubFrame(entry.subframe || false);
-    shEntry.setAsHistoryLoad();
+      shEntry.isSubFrame = entry.subframe || false;
+    shEntry.setLoadTypeAsHistory();
     if (entry.contentType)
       shEntry.contentType = entry.contentType;
     if (entry.referrer) {
