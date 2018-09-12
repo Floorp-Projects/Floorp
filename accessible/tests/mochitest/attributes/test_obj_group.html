@@ -24,6 +24,9 @@
       testGroupAttrs("opt3-nosize", 3, 4);
       testGroupAttrs("opt4-nosize", 4, 4);
 
+      // Container should have item count and not hierarchical
+      testGroupParentAttrs(getAccessible("opt1-nosize").parent, 4, false);
+
       // ////////////////////////////////////////////////////////////////////////
       // HTML select
       testGroupAttrs("opt1", 1, 2);
@@ -58,32 +61,45 @@
       testGroupAttrs("li2", 2, 3);
       testGroupAttrs("li3", 3, 3);
 
+      // ul should have item count and not hierarchical
+      testGroupParentAttrs("ul", 3, false);
+
       // ////////////////////////////////////////////////////////////////////////
       // HTML ul/ol (nested lists)
 
       testGroupAttrs("li4", 1, 3, 1);
       testGroupAttrs("li5", 2, 3, 1);
       testGroupAttrs("li6", 3, 3, 1);
+      // ol with nested list should have 1st level item count and be hierarchical
+      testGroupParentAttrs("ol", 3, true);
 
       testGroupAttrs("n_li4", 1, 3, 2);
       testGroupAttrs("n_li5", 2, 3, 2);
       testGroupAttrs("n_li6", 3, 3, 2);
+      // nested ol should have item count and be hierarchical
+      testGroupParentAttrs("ol_nested", 3, true);
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA list
       testGroupAttrs("li7", 1, 3);
       testGroupAttrs("li8", 2, 3);
       testGroupAttrs("li9", 3, 3);
+      // simple flat aria list
+      testGroupParentAttrs("aria-list_1", 3, false);
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA list (nested lists: list -> listitem -> list -> listitem)
       testGroupAttrs("li10", 1, 3, 1);
       testGroupAttrs("li11", 2, 3, 1);
       testGroupAttrs("li12", 3, 3, 1);
+      // aria list with nested list
+      testGroupParentAttrs("aria-list_2", 3, true);
 
       testGroupAttrs("n_li10", 1, 3, 2);
       testGroupAttrs("n_li11", 2, 3, 2);
       testGroupAttrs("n_li12", 3, 3, 2);
+      // nested aria list.
+      testGroupParentAttrs("aria-list_2_1", 3, true);
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA list (nested lists: list -> listitem -> group -> listitem)
@@ -93,6 +109,8 @@
       testGroupAttrs("lgt_li2", 2, 2, 1);
       testGroupAttrs("lgt_li2_nli1", 1, 2, 2);
       testGroupAttrs("lgt_li2_nli2", 2, 2, 2);
+      // aria list with nested list
+      testGroupParentAttrs("aria-list_3", 2, true);
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA menu (menuitem, separator, menuitemradio and menuitemcheckbox)
@@ -103,18 +121,27 @@
       testGroupAttrs("menu_item1.3", 1, 3);
       testGroupAttrs("menu_item1.4", 2, 3);
       testGroupAttrs("menu_item1.5", 3, 3);
+      // menu bar item count
+      testGroupParentAttrs("menubar", 2, false);
+      // Bug 1492529. Menu should have total number of items 5 from both sets,
+      // but only has the first 2 item set.
+      todoAttr("menu", "child-item-count", "5");
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA tab
       testGroupAttrs("tab_1", 1, 3);
       testGroupAttrs("tab_2", 2, 3);
       testGroupAttrs("tab_3", 3, 3);
+      // tab list tab count
+      testGroupParentAttrs("tablist_1", 3, false);
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA radio
       testGroupAttrs("r1", 1, 3);
       testGroupAttrs("r2", 2, 3);
       testGroupAttrs("r3", 3, 3);
+      // explicit aria radio group
+      testGroupParentAttrs("rg1", 3, false);
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA tree
@@ -126,6 +153,7 @@
       testGroupAttrs("ti6", 2, 3, 2);
       testGroupAttrs("ti7", 3, 3, 2);
       testGroupAttrs("ti8", 3, 3, 1);
+      testGroupParentAttrs("tree_1", 3, true);
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA tree (tree -> treeitem -> group -> treeitem)
@@ -135,6 +163,7 @@
       testGroupAttrs("tree2_ti2", 2, 2, 1);
       testGroupAttrs("tree2_ti2a", 1, 2, 2);
       testGroupAttrs("tree2_ti2b", 2, 2, 2);
+      testGroupParentAttrs("tree_2", 2, true);
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA tree (tree -> treeitem, group -> treeitem)
@@ -144,6 +173,7 @@
       testGroupAttrs("tree3_ti2", 2, 2, 1);
       testGroupAttrs("tree3_ti2a", 1, 2, 2);
       testGroupAttrs("tree3_ti2b", 2, 2, 2);
+      testGroupParentAttrs("tree_3", 2, true);
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA grid
@@ -154,6 +184,7 @@
       testGroupAttrs("grid_row2", 2, 2);
       testAbsentAttrs("grid_cell3", {"posinset": "", "setsize": ""});
       testAbsentAttrs("grid_cell4", {"posinset": "", "setsize": ""});
+      testGroupParentAttrs("grid", 2, false);
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA treegrid
@@ -169,6 +200,10 @@
       testAbsentAttrs("treegrid_cell5", {"posinset": "", "setsize": ""});
       testAbsentAttrs("treegrid_cell6", {"posinset": "", "setsize": ""});
 
+      testGroupParentAttrs("treegrid", 2, true);
+      // row child item count provided by parent grid's aria-colcount
+      testGroupParentAttrs("treegrid_row1", 4, false);
+
       // ////////////////////////////////////////////////////////////////////////
       // HTML headings
       testGroupAttrs("h1", 0, 0, 1);
@@ -177,6 +212,8 @@
       testGroupAttrs("h4", 0, 0, 4);
       testGroupAttrs("h5", 0, 0, 5);
       testGroupAttrs("h6", 0, 0, 6);
+      // No child item counts or "hierarchical" flag for parent of headings
+      testAbsentAttrs("headings", {"child-item-count": "", "hierarchical": ""});
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA combobox
@@ -184,26 +221,36 @@
       testGroupAttrs("combo1_opt2", 2, 4);
       testGroupAttrs("combo1_opt3", 3, 4);
       testGroupAttrs("combo1_opt4", 4, 4);
+      testGroupParentAttrs("combo1", 4, false);
 
       // ////////////////////////////////////////////////////////////////////////
       // ARIA table
       testGroupAttrs("table_cell", 3, 4);
       testGroupAttrs("table_row", 2, 2);
 
+      // grid child item count provided by aria-rowcount
+      testGroupParentAttrs("table", 2, false);
+      // row child item count provided by parent grid's aria-colcount
+      testGroupParentAttrs("table_row", 4, false);
+
       // ////////////////////////////////////////////////////////////////////////
       // ARIA list constructed by ARIA owns
       testGroupAttrs("t1_li1", 1, 3);
       testGroupAttrs("t1_li2", 2, 3);
       testGroupAttrs("t1_li3", 3, 3);
+      testGroupParentAttrs("aria-list_4", 3, false);
 
       // Test that group position information updates after deleting node.
       testGroupAttrs("tree4_ti1", 1, 2, 1);
       testGroupAttrs("tree4_ti2", 2, 2, 1);
+      testGroupParentAttrs("tree4", 2, true);
+
       var tree4element = document.getElementById("tree4_ti1");
       var tree4acc = getAccessible("tree4");
       tree4element.remove();
       waitForEvent(EVENT_REORDER, tree4acc, function() {
         testGroupAttrs("tree4_ti2", 1, 1, 1);
+        testGroupParentAttrs("tree4", 1, true);
         SimpleTest.finish();
       });
     }
@@ -269,17 +316,17 @@
   <input type="radio" id="radio3" name="group2"/>
   <input type="radio" id="radio4" name="group2"/>
 
-  <ul>
+  <ul id="ul">
     <li id="li1">Oranges</li>
     <li id="li2">Apples</li>
     <li id="li3">Bananas</li>
   </ul>
 
-  <ol>
+  <ol id="ol">
     <li id="li4">Oranges</li>
     <li id="li5">Apples</li>
     <li id="li6">Bananas
-      <ul>
+      <ul id="ol_nested">
         <li id="n_li4">Oranges</li>
         <li id="n_li5">Apples</li>
         <li id="n_li6">Bananas</li>
@@ -287,17 +334,17 @@
     </li>
   </ol>
 
-  <span role="list">
+  <span role="list" id="aria-list_1">
     <span role="listitem" id="li7">Oranges</span>
     <span role="listitem" id="li8">Apples</span>
     <span role="listitem" id="li9">Bananas</span>
   </span>
 
-  <span role="list">
+  <span role="list" id="aria-list_2">
     <span role="listitem" id="li10">Oranges</span>
     <span role="listitem" id="li11">Apples</span>
     <span role="listitem" id="li12">Bananas
-      <span role="list">
+      <span role="list" id="aria-list_2_1">
         <span role="listitem" id="n_li10">Oranges</span>
         <span role="listitem" id="n_li11">Apples</span>
         <span role="listitem" id="n_li12">Bananas</span>
@@ -305,7 +352,7 @@
     </span>
   </span>
 
-  <div role="list">
+  <div role="list" id="aria-list_3">
     <div role="listitem" id="lgt_li1">Item 1
       <div role="group">
         <div role="listitem" id="lgt_li1_nli1">Item 1A</div>
@@ -320,9 +367,9 @@
     </div>
   </div>
 
-  <ul role="menubar">
+  <ul role="menubar" id="menubar">
     <li role="menuitem" aria-haspopup="true" id="menu_item1">File
-      <ul role="menu">
+      <ul role="menu" id="menu">
         <li role="menuitem" id="menu_item1.1">New</li>
         <li role="menuitem" id="menu_item1.2">Open…</li>
         <li role="separator">-----</li>
@@ -346,7 +393,7 @@
     <li id="r3" role="radio" aria-checked="false">Jimmy Johns</li>
   </ul>
 
-  <table role="tree">
+  <table role="tree" id="tree_1">
     <tr role="presentation">
       <td role="treeitem" aria-expanded="true" aria-level="1"
           id="ti1">vegetables</td>
@@ -375,7 +422,7 @@
     </tr>
   </table>
 
-  <ul role="tree">
+  <ul role="tree" id="tree_2">
     <li role="treeitem" id="tree2_ti1">Item 1
       <ul role="group">
         <li role="treeitem" id="tree2_ti1a">Item 1A</li>
@@ -390,7 +437,7 @@
     </li>
   </div>
 
-  <div role="tree">
+  <div role="tree" id="tree_3">
     <div role="treeitem" id="tree3_ti1">Item 1</div>
     <div role="group">
       <li role="treeitem" id="tree3_ti1a">Item 1A</li>
@@ -408,7 +455,7 @@
     id="tree4_ti1">Item 1</div><div role="treeitem"
     id="tree4_ti2">Item 2</div></div>
 
-  <table role="grid">
+  <table role="grid" id="grid">
     <tr role="row" id="grid_row1">
       <td role="gridcell" id="grid_cell1">cell1</td>
       <td role="gridcell" id="grid_cell2">cell2</td>
@@ -419,7 +466,7 @@
     </tr>
   </table>
 
-  <div role="treegrid">
+  <div role="treegrid" id="treegrid" aria-colcount="4">
     <div role="row" aria-level="1" id="treegrid_row1">
       <div role="gridcell" id="treegrid_cell1">cell1</div>
       <div role="gridcell" id="treegrid_cell2">cell2</div>
@@ -434,12 +481,14 @@
     </div>
   </div>
 
-  <h1 id="h1">heading1</h1>
-  <h2 id="h2">heading2</h2>
-  <h3 id="h3">heading3</h3>
-  <h4 id="h4">heading4</h4>
-  <h5 id="h5">heading5</h5>
-  <h6 id="h6">heading6</h6>
+  <div id="headings">
+    <h1 id="h1">heading1</h1>
+    <h2 id="h2">heading2</h2>
+    <h3 id="h3">heading3</h3>
+    <h4 id="h4">heading4</h4>
+    <h5 id="h5">heading5</h5>
+    <h6 id="h6">heading6</h6>
+  </div>
 
   <ul id="combo1" role="combobox">Password
     <li id="combo1_opt1" role="option">Xyzzy</li>
@@ -453,13 +502,13 @@
     <input type="radio" id="radio5" name="group3">
   </form>
 
-  <div role="table" aria-colcount="4" aria-rowcount="2">
+  <div role="table" aria-colcount="4" aria-rowcount="2" id="table">
     <div role="row" id="table_row" aria-rowindex="2">
       <div role="cell" id="table_cell" aria-colindex="3">cell</div>
     </div>
   </div>
 
-  <div role="list" aria-owns="t1_li1 t1_li2 t1_li3">
+  <div role="list" aria-owns="t1_li1 t1_li2 t1_li3" id="aria-list_4">
     <div role="listitem" id="t1_li2">Apples</div>
     <div role="listitem" id="t1_li1">Oranges</div>
   </span>
