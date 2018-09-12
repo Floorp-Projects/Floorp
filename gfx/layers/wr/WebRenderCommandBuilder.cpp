@@ -856,8 +856,8 @@ Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect
       Matrix4x4Flagged trans = transformItem->GetTransform();
       Matrix trans2d;
       if (!trans.Is2D(&trans2d)) {
-        // We don't currently support doing invalidation inside 3d transforms
-        // for now just paint it as a single item
+        // We don't currently support doing invalidation inside 3d transforms.
+        // For now just paint it as a single item.
         BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
         if (data->mLayerManager->GetRoot()) {
           data->mLayerManager->BeginTransaction();
