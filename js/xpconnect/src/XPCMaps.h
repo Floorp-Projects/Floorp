@@ -46,8 +46,9 @@ public:
 #ifdef DEBUG
     inline bool HasWrapper(nsXPCWrappedJS* wrapper) {
         for (auto iter = mTable.iter(); !iter.done(); iter.next()) {
-            if (iter.get().value() == wrapper)
+            if (iter.get().value() == wrapper) {
                 return true;
+            }
         }
         return false;
     }
@@ -57,10 +58,12 @@ public:
         MOZ_ASSERT(wrapper,"bad param");
         JSObject* obj = wrapper->GetJSObjectPreserveColor();
         Map::AddPtr p = mTable.lookupForAdd(obj);
-        if (p)
+        if (p) {
             return p->value();
-        if (!mTable.add(p, obj, wrapper))
+        }
+        if (!mTable.add(p, obj, wrapper)) {
             return nullptr;
+        }
         return wrapper;
     }
 
@@ -72,8 +75,9 @@ public:
     inline uint32_t Count() {return mTable.count();}
 
     inline void Dump(int16_t depth) {
-        for (auto iter = mTable.iter(); !iter.done(); iter.next())
+        for (auto iter = mTable.iter(); !iter.done(); iter.next()) {
             iter.get().value()->DebugDump(depth);
+        }
     }
 
     void UpdateWeakPointersAfterGC();
@@ -118,10 +122,12 @@ public:
         nsISupports* obj = wrapper->GetIdentityObject();
         MOZ_ASSERT(!Find(obj), "wrapper already in new scope!");
         auto entry = static_cast<Entry*>(mTable.Add(obj, mozilla::fallible));
-        if (!entry)
+        if (!entry) {
             return nullptr;
-        if (entry->key)
+        }
+        if (entry->key) {
             return entry->value;
+        }
         entry->key = obj;
         entry->value = wrapper;
         return wrapper;
@@ -182,10 +188,12 @@ public:
         MOZ_ASSERT(clazz,"bad param");
         const nsIID* iid = &clazz->GetIID();
         auto entry = static_cast<Entry*>(mTable.Add(iid, mozilla::fallible));
-        if (!entry)
+        if (!entry) {
             return nullptr;
-        if (entry->key)
+        }
+        if (entry->key) {
             return entry->value;
+        }
         entry->key = iid;
         entry->value = clazz;
         return clazz;
@@ -236,10 +244,12 @@ public:
         MOZ_ASSERT(iface,"bad param");
         const nsIID* iid = iface->GetIID();
         auto entry = static_cast<Entry*>(mTable.Add(iid, mozilla::fallible));
-        if (!entry)
+        if (!entry) {
             return nullptr;
-        if (entry->key)
+        }
+        if (entry->key) {
             return entry->value;
+        }
         entry->key = iid;
         entry->value = iface;
         return iface;
@@ -293,10 +303,12 @@ public:
     {
         MOZ_ASSERT(info,"bad param");
         auto entry = static_cast<Entry*>(mTable.Add(info, mozilla::fallible));
-        if (!entry)
+        if (!entry) {
             return nullptr;
-        if (entry->key)
+        }
+        if (entry->key) {
             return entry->value;
+        }
         entry->key = info;
         NS_ADDREF(entry->value = set);
         return set;
@@ -346,10 +358,12 @@ public:
     {
         MOZ_ASSERT(info,"bad param");
         auto entry = static_cast<Entry*>(mTable.Add(info, mozilla::fallible));
-        if (!entry)
+        if (!entry) {
             return nullptr;
-        if (entry->key)
+        }
+        if (entry->key) {
             return entry->value;
+        }
         entry->key = info;
         entry->value = proto;
         return proto;
@@ -405,10 +419,12 @@ public:
         MOZ_ASSERT(key, "bad param");
         MOZ_ASSERT(set, "bad param");
         auto entry = static_cast<Entry*>(mTable.Add(key, mozilla::fallible));
-        if (!entry)
+        if (!entry) {
             return nullptr;
-        if (entry->key_value)
+        }
+        if (entry->key_value) {
             return entry->key_value;
+        }
         entry->key_value = set;
         return set;
     }
@@ -463,10 +479,12 @@ public:
         MOZ_ASSERT(proto,"bad param");
         auto entry = static_cast<PLDHashEntryStub*>
                                 (mTable.Add(proto, mozilla::fallible));
-        if (!entry)
+        if (!entry) {
             return nullptr;
-        if (entry->key)
+        }
+        if (entry->key) {
             return (XPCWrappedNativeProto*) entry->key;
+        }
         entry->key = proto;
         return proto;
     }
@@ -504,8 +522,9 @@ public:
 
     inline JSObject* Find(JSObject* key) {
         MOZ_ASSERT(key, "bad param");
-        if (Map::Ptr p = mTable.lookup(key))
+        if (Map::Ptr p = mTable.lookup(key)) {
             return p->value();
+        }
         return nullptr;
     }
 
@@ -513,10 +532,12 @@ public:
     inline JSObject* Add(JSContext* cx, JSObject* key, JSObject* value) {
         MOZ_ASSERT(key,"bad param");
         Map::AddPtr p = mTable.lookupForAdd(key);
-        if (p)
+        if (p) {
             return p->value();
-        if (!mTable.add(p, key, value))
+        }
+        if (!mTable.add(p, key, value)) {
             return nullptr;
+        }
         MOZ_ASSERT(xpc::RealmPrivate::Get(key)->scope->mWaiverWrapperMap == this);
         return value;
     }

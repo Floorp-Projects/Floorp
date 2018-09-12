@@ -81,17 +81,20 @@ XPCStringConvert::ReadableToJSVal(JSContext* cx,
     nsStringBuffer* buf = nsStringBuffer::FromString(readable);
     if (buf) {
         bool shared;
-        if (!StringBufferToJSVal(cx, buf, length, vp, &shared))
+        if (!StringBufferToJSVal(cx, buf, length, vp, &shared)) {
             return false;
-        if (shared)
+        }
+        if (shared) {
             *sharedBuffer = buf;
+        }
         return true;
     }
 
     // blech, have to copy.
     JSString* str = JS_NewUCStringCopyN(cx, readable.BeginReading(), length);
-    if (!str)
+    if (!str) {
         return false;
+    }
     vp.setString(str);
     return true;
 }
@@ -102,8 +105,9 @@ bool
 NonVoidStringToJsval(JSContext* cx, nsAString& str, MutableHandleValue rval)
 {
     nsStringBuffer* sharedBuffer;
-    if (!XPCStringConvert::ReadableToJSVal(cx, str, &sharedBuffer, rval))
+    if (!XPCStringConvert::ReadableToJSVal(cx, str, &sharedBuffer, rval)) {
       return false;
+    }
 
     if (sharedBuffer) {
         // The string was shared but ReadableToJSVal didn't addref it.
