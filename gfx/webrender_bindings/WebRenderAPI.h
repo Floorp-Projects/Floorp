@@ -57,6 +57,8 @@ public:
 
   ~TransactionBuilder();
 
+  void SetLowPriority(bool aIsLowPriority);
+
   void UpdateEpoch(PipelineId aPipelineId, Epoch aEpoch);
 
   void SetRootPipeline(PipelineId aPipelineId);
