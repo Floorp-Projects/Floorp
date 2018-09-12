@@ -187,7 +187,6 @@ let ACTORS = {
   ManifestMessages: {
     child: {
       module: "resource://gre/modules/ManifestMessagesChild.jsm",
-      group: "browsers",
       messages: [
         "DOM:Manifest:FireAppInstalledEvent",
         "DOM:ManifestObtainer:Obtain",
