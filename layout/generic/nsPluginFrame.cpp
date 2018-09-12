@@ -381,7 +381,7 @@ nsPluginFrame::GetMinISize(gfxContext *aRenderingContext)
     }
   }
 
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_MIN_INLINE_SIZE(this, result);
   return result;
 }
 

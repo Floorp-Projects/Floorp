@@ -30,7 +30,7 @@ FixedTableLayoutStrategy::~FixedTableLayoutStrategy()
 /* virtual */ nscoord
 FixedTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext)
 {
-  DISPLAY_MIN_WIDTH(mTableFrame, mMinISize);
+  DISPLAY_MIN_INLINE_SIZE(mTableFrame, mMinISize);
   if (mMinISize != NS_INTRINSIC_WIDTH_UNKNOWN) {
     return mMinISize;
   }
@@ -47,8 +47,8 @@ FixedTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext)
   //   'width' property for the table element and the sum of the column
   //   widths (plus cell spacing or borders).
 
-  // XXX Should we really ignore 'min-width' and 'max-width'?
-  // XXX Should we really ignore widths on column groups?
+  // XXX Should we really ignore 'min-inline-size' and 'max-inline-size'?
+  // XXX Should we really ignore inline sizes on column groups?
 
   nsTableCellMap *cellMap = mTableFrame->GetCellMap();
   int32_t colCount = cellMap->GetColCount();
@@ -128,7 +128,7 @@ FixedTableLayoutStrategy::GetPrefISize(gfxContext* aRenderingContext,
   // those intrinsic inline sizes), but it wouldn't be compatible with
   // other browsers.
   nscoord result = nscoord_MAX;
-  DISPLAY_PREF_WIDTH(mTableFrame, result);
+  DISPLAY_PREF_INLINE_SIZE(mTableFrame, result);
   return result;
 }
 

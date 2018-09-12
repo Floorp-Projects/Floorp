@@ -823,7 +823,7 @@ nscoord
 nsComboboxControlFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord minISize;
-  DISPLAY_MIN_WIDTH(this, minISize);
+  DISPLAY_MIN_INLINE_SIZE(this, minISize);
   minISize = GetIntrinsicISize(aRenderingContext, nsLayoutUtils::MIN_ISIZE);
   return minISize;
 }
@@ -832,7 +832,7 @@ nscoord
 nsComboboxControlFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord prefISize;
-  DISPLAY_PREF_WIDTH(this, prefISize);
+  DISPLAY_PREF_INLINE_SIZE(this, prefISize);
   prefISize = GetIntrinsicISize(aRenderingContext, nsLayoutUtils::PREF_ISIZE);
   return prefISize;
 }

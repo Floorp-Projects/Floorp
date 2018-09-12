@@ -951,6 +951,8 @@ protected:
   int32_t GetDepth() const;
 #endif
 
+  // FIXME The two variables should go through a renaming refactoring to reflect
+  // the fact that they mean an inline size, not a width.
   nscoord mMinWidth, mPrefWidth;
 
   nsLineList mLines;
