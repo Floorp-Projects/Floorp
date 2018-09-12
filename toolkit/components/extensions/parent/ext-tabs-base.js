@@ -2054,32 +2054,4 @@ class WindowManagerBase {
   /* eslint-enable valid-jsdoc */
 }
 
-function getUserContextIdForCookieStoreId(extension, cookieStoreId, isPrivateBrowsing) {
-  if (!extension.hasPermission("cookies")) {
-    throw new ExtensionError(`No permission for cookieStoreId: ${cookieStoreId}`);
-  }
-
-  if (!isValidCookieStoreId(cookieStoreId)) {
-    throw new ExtensionError(`Illegal cookieStoreId: ${cookieStoreId}`);
-  }
-
-  if (isPrivateBrowsing && !isPrivateCookieStoreId(cookieStoreId)) {
-    throw new ExtensionError(`Illegal to set non-private cookieStoreId in a private window`);
-  }
-
-  if (!isPrivateBrowsing && isPrivateCookieStoreId(cookieStoreId)) {
-    throw new ExtensionError(`Illegal to set private cookieStoreId in a non-private window`);
-  }
-
-  if (isContainerCookieStoreId(cookieStoreId)) {
-    let userContextId = getContainerForCookieStoreId(cookieStoreId);
-    if (!userContextId) {
-      throw new ExtensionError(`No cookie store exists with ID ${cookieStoreId}`);
-    }
-    return userContextId;
-  }
-
-  return Services.scriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
-}
-
-Object.assign(global, {TabTrackerBase, TabManagerBase, TabBase, WindowTrackerBase, WindowManagerBase, WindowBase, getUserContextIdForCookieStoreId});
+Object.assign(global, {TabTrackerBase, TabManagerBase, TabBase, WindowTrackerBase, WindowManagerBase, WindowBase});
