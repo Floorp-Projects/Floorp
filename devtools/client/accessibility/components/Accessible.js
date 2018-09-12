@@ -194,6 +194,8 @@ class Accessible extends Component {
       valueProps.onDOMNodeMouseOut = () => this.hideHighlighter();
       valueProps.onDOMNodeMouseOver = () => this.showHighlighter(this.props.DOMNode);
       valueProps.onInspectIconClick = () => this.selectNode(this.props.DOMNode);
+    } else {
+      valueProps.noGrip = true;
     }
 
     const classList = [ "node", "object-node" ];
