@@ -23,6 +23,7 @@
 #include "nsIObserver.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/mscom/AgileReference.h"
 #include "mozilla/ReentrantMonitor.h"
 
 namespace mozilla {
@@ -48,7 +49,7 @@ protected:
   static Atomic<bool> sBuildingList;
 
 private:
-  RefPtr<ICustomDestinationList> mJumpListMgr;
+  mscom::AgileReference mJumpListMgr;
   uint32_t mMaxItems;
   bool mHasCommit;
   nsCOMPtr<nsIThread> mIOThread;
