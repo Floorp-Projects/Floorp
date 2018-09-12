@@ -542,8 +542,9 @@ BEGIN_TEST(testAssemblerBuffer_ARM64)
     masm.bind(&lab2a);
     masm.B(&lab2b);
     // Generate 1,100,000 bytes of NOPs.
-    for (unsigned n = 0; n < 1100000; n += 4)
+    for (unsigned n = 0; n < 1100000; n += 4) {
         masm.Nop();
+    }
     masm.branch(Assembler::LessThan, &lab2b);
     masm.bind(&lab2b);
     CHECK_EQUAL(masm.getInstructionAt(BufferOffset(lab2a.offset()))->InstructionBits(),
@@ -556,8 +557,9 @@ BEGIN_TEST(testAssemblerBuffer_ARM64)
     Label lab3b;
     masm.bind(&lab3a);
     masm.branch(Assembler::LessThan, &lab3b);
-    for (unsigned n = 0; n < 1100000; n += 4)
+    for (unsigned n = 0; n < 1100000; n += 4) {
         masm.Nop();
+    }
     masm.bind(&lab3b);
     masm.B(&lab3a);
     Instruction* bcond3 = masm.getInstructionAt(BufferOffset(lab3a.offset()));

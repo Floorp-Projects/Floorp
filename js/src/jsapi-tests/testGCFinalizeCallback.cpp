@@ -108,8 +108,9 @@ BEGIN_TEST(testGCFinalizeCallback)
     JS::RootedObject global4(cx, createTestGlobal());
     budget = js::SliceBudget(js::WorkBudget(1));
     cx->runtime()->gc.debugGCSlice(budget);
-    while (cx->runtime()->gc.isIncrementalGCInProgress())
+    while (cx->runtime()->gc.isIncrementalGCInProgress()) {
         cx->runtime()->gc.debugGCSlice(budget);
+    }
     CHECK(!cx->runtime()->gc.isIncrementalGCInProgress());
     CHECK(checkSingleGroup());
     CHECK(checkFinalizeStatus());
@@ -138,8 +139,9 @@ JSObject* createTestGlobal()
 
 virtual bool init() override
 {
-    if (!JSAPITest::init())
+    if (!JSAPITest::init()) {
         return false;
+    }
 
     JS_AddFinalizeCallback(cx, FinalizeCallback, nullptr);
     return true;
@@ -188,8 +190,9 @@ bool checkFinalizeStatus()
 static void
 FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status, void* data)
 {
-    if (FinalizeCalls < BufferSize)
+    if (FinalizeCalls < BufferSize) {
         StatusBuffer[FinalizeCalls] = status;
+    }
     ++FinalizeCalls;
 }
 END_TEST(testGCFinalizeCallback)

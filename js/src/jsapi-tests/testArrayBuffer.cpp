@@ -161,10 +161,12 @@ END_TEST(testArrayBuffer_bug720949_viewList)
 
 BEGIN_TEST(testArrayBuffer_externalize)
 {
-    if (!testWithSize(cx, 2))    // ArrayBuffer data stored inline in the object.
+    if (!testWithSize(cx, 2)) {  // ArrayBuffer data stored inline in the object.
         return false;
-    if (!testWithSize(cx, 2000)) // ArrayBuffer data stored out-of-line in a separate heap allocation.
+    }
+    if (!testWithSize(cx, 2000)) { // ArrayBuffer data stored out-of-line in a separate heap allocation.
         return false;
+    }
 
     return true;
 }
@@ -218,8 +220,9 @@ static bool
 hasExpectedLength(JSContext* cx, JS::HandleObject obj, uint32_t* len)
 {
     JS::RootedValue v(cx);
-    if (!JS_GetProperty(cx, obj, "byteLength", &v))
+    if (!JS_GetProperty(cx, obj, "byteLength", &v)) {
         return false;
+    }
     *len = v.toInt32();
     return true;
 }

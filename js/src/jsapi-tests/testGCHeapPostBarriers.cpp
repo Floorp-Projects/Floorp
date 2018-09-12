@@ -52,8 +52,9 @@ template <>
 JSObject* CreateGCThing(JSContext* cx)
 {
     JS::RootedObject obj(cx, JS_NewPlainObject(cx));
-    if (!obj)
+    if (!obj) {
         return nullptr;
+    }
     JS_DefineProperty(cx, obj, "x", 42, 0);
     return obj;
 }

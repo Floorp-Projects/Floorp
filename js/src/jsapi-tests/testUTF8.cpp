@@ -19,8 +19,9 @@ BEGIN_TEST(testUTF8_badUTF8)
     JSString* str = JS_NewStringCopyZ(cx, badUTF8);
     CHECK(str);
     char16_t ch;
-    if (!JS_GetStringCharAt(cx, str, 3, &ch))
+    if (!JS_GetStringCharAt(cx, str, 3, &ch)) {
         return false;
+    }
     CHECK(ch == 0x00C0);
     return true;
 }
@@ -32,8 +33,9 @@ BEGIN_TEST(testUTF8_bigUTF8)
     JSString* str = JS_NewStringCopyZ(cx, bigUTF8);
     CHECK(str);
     char16_t ch;
-    if (!JS_GetStringCharAt(cx, str, 3, &ch))
+    if (!JS_GetStringCharAt(cx, str, 3, &ch)) {
         return false;
+    }
     CHECK(ch == 0x00FB);
     return true;
 }

@@ -74,8 +74,9 @@ BEGIN_TEST(testThreadingThreadVectorMoveConstruct)
         CHECK(v.back().init([](mozilla::Atomic<int>* countp){(*countp)++;}, &count));
         CHECK(v.length() == i + 1);
     }
-    for (auto& th : v)
+    for (auto& th : v) {
         th.join();
+    }
     CHECK(count == 10);
     return true;
 }

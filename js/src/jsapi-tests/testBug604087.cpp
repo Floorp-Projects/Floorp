@@ -21,8 +21,9 @@ wrap(JSContext* cx, JS::HandleObject toWrap, JS::HandleObject target)
 {
     JSAutoRealm ar(cx, target);
     JS::RootedObject wrapper(cx, toWrap);
-    if (!JS_WrapObject(cx, &wrapper))
+    if (!JS_WrapObject(cx, &wrapper)) {
         return nullptr;
+    }
     return wrapper;
 }
 

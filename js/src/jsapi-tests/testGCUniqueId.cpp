@@ -97,8 +97,9 @@ BEGIN_TEST(testGCUID)
     // Tear holes in the heap by unrooting the even objects and collecting.
     JS::Rooted<ObjectVector> vec2(cx, ObjectVector(cx));
     for (size_t i = 0; i < N; ++i) {
-        if (i % 2 == 1)
+        if (i % 2 == 1) {
             CHECK(vec2.append(vec[i]));
+        }
     }
     vec.clear();
     MinimizeHeap(cx);

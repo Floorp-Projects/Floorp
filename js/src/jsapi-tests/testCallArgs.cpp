@@ -54,8 +54,9 @@ CustomConstructor(JSContext* cx, unsigned argc, JS::Value* vp)
 
     if (args.isConstructing()) {
         JSObject* obj = JS_NewPlainObject(cx);
-        if (!obj)
+        if (!obj) {
             return false;
+        }
 
         args.rval().setObject(*obj);
 

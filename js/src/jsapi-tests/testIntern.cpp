@@ -42,7 +42,8 @@ BEGIN_TEST(testPinAcrossGC)
 static void
 FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status, void* data)
 {
-    if (status == JSFINALIZE_GROUP_START)
+    if (status == JSFINALIZE_GROUP_START) {
         sw.strOk = js::gc::IsMarkedUnbarriered(fop->runtime(), &sw.str);
+    }
 }
 END_TEST(testPinAcrossGC)

@@ -47,22 +47,26 @@ document_resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* res
 {
     // If id is "all", resolve document.all=true.
     JS::RootedValue v(cx);
-    if (!JS_IdToValue(cx, id, &v))
+    if (!JS_IdToValue(cx, id, &v)) {
         return false;
+    }
 
     if (v.isString()) {
         JSString* str = v.toString();
         JSFlatString* flatStr = JS_FlattenString(cx, str);
-        if (!flatStr)
+        if (!flatStr) {
             return false;
+        }
         if (JS_FlatStringEqualsAscii(flatStr, "all")) {
             JS::Rooted<JSObject*> docAll(cx, JS_NewObject(cx, &DocumentAllClass));
-            if (!docAll)
+            if (!docAll) {
                 return false;
+            }
 
             JS::Rooted<JS::Value> allValue(cx, JS::ObjectValue(*docAll));
-            if (!JS_DefinePropertyById(cx, obj, id, allValue, JSPROP_RESOLVING))
+            if (!JS_DefinePropertyById(cx, obj, id, allValue, JSPROP_RESOLVING)) {
                 return false;
+            }
 
             *resolvedp = true;
             return true;
