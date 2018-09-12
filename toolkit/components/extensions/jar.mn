@@ -35,6 +35,7 @@ toolkit.jar:
     content/extensions/parent/ext-theme.js (parent/ext-theme.js)
     content/extensions/parent/ext-toolkit.js (parent/ext-toolkit.js)
     content/extensions/parent/ext-topSites.js (parent/ext-topSites.js)
+    content/extensions/parent/ext-userScripts.js (parent/ext-userScripts.js)
     content/extensions/parent/ext-webRequest.js (parent/ext-webRequest.js)
     content/extensions/parent/ext-webNavigation.js (parent/ext-webNavigation.js)
     content/extensions/child/ext-backgroundPage.js (child/ext-backgroundPage.js)
@@ -47,4 +48,5 @@ toolkit.jar:
     content/extensions/child/ext-storage.js (child/ext-storage.js)
     content/extensions/child/ext-test.js (child/ext-test.js)
     content/extensions/child/ext-toolkit.js (child/ext-toolkit.js)
+    content/extensions/child/ext-userScripts.js (child/ext-userScripts.js)
     content/extensions/child/ext-webRequest.js (child/ext-webRequest.js)
