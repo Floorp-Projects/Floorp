@@ -329,7 +329,7 @@ nscoord
 nsListControlFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_PREF_WIDTH(this, result);
+  DISPLAY_PREF_INLINE_SIZE(this, result);
 
   // Always add scrollbar inline sizes to the pref-inline-size of the
   // scrolled content. Combobox frames depend on this happening in the
@@ -347,7 +347,7 @@ nscoord
 nsListControlFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_MIN_INLINE_SIZE(this, result);
 
   // Always add scrollbar inline sizes to the min-inline-size of the
   // scrolled content. Combobox frames depend on this happening in the

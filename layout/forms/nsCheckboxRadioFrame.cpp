@@ -53,7 +53,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsAtomicContainerFrame)
 nsCheckboxRadioFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_MIN_INLINE_SIZE(this, result);
   result = StyleDisplay()->HasAppearance() ? DefaultSize() : 0;
   return result;
 }
@@ -62,7 +62,7 @@ nsCheckboxRadioFrame::GetMinISize(gfxContext *aRenderingContext)
 nsCheckboxRadioFrame::GetPrefISize(gfxContext* aRenderingContext)
 {
   nscoord result;
-  DISPLAY_PREF_WIDTH(this, result);
+  DISPLAY_PREF_INLINE_SIZE(this, result);
   result = StyleDisplay()->HasAppearance() ? DefaultSize() : 0;
   return result;
 }

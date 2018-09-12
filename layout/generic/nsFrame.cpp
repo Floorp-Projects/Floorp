@@ -5259,7 +5259,7 @@ nsFrame::MarkIntrinsicISizesDirty()
 nsFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result = 0;
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_MIN_INLINE_SIZE(this, result);
   return result;
 }
 
@@ -5267,7 +5267,7 @@ nsFrame::GetMinISize(gfxContext *aRenderingContext)
 nsFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result = 0;
-  DISPLAY_PREF_WIDTH(this, result);
+  DISPLAY_PREF_INLINE_SIZE(this, result);
   return result;
 }
 
@@ -11574,7 +11574,7 @@ DR_layout_cookie::~DR_layout_cookie()
   nsFrame::DisplayLayoutExit(mFrame, mValue);
 }
 
-DR_intrinsic_width_cookie::DR_intrinsic_width_cookie(
+DR_intrinsic_inline_size_cookie::DR_intrinsic_inline_size_cookie(
                      nsIFrame*                aFrame,
                      const char*              aType,
                      nscoord&                 aResult)
@@ -11582,13 +11582,13 @@ DR_intrinsic_width_cookie::DR_intrinsic_width_cookie(
   , mType(aType)
   , mResult(aResult)
 {
-  MOZ_COUNT_CTOR(DR_intrinsic_width_cookie);
+  MOZ_COUNT_CTOR(DR_intrinsic_inline_size_cookie);
   mValue = nsFrame::DisplayIntrinsicISizeEnter(mFrame, mType);
 }
 
-DR_intrinsic_width_cookie::~DR_intrinsic_width_cookie()
+DR_intrinsic_inline_size_cookie::~DR_intrinsic_inline_size_cookie()
 {
-  MOZ_COUNT_DTOR(DR_intrinsic_width_cookie);
+  MOZ_COUNT_DTOR(DR_intrinsic_inline_size_cookie);
   nsFrame::DisplayIntrinsicISizeExit(mFrame, mType, mResult, mValue);
 }
 
@@ -12384,7 +12384,7 @@ void* nsFrame::DisplayIntrinsicISizeEnter(nsIFrame* aFrame,
   DR_FrameTreeNode* treeNode = DR_state->CreateTreeNode(aFrame, nullptr);
   if (treeNode && treeNode->mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
-    printf("Get%sWidth\n", aType);
+    printf("Get%sISize\n", aType);
   }
   return treeNode;
 }
@@ -12498,9 +12498,9 @@ void nsFrame::DisplayIntrinsicISizeExit(nsIFrame*            aFrame,
   DR_FrameTreeNode* treeNode = (DR_FrameTreeNode*)aFrameTreeNode;
   if (treeNode->mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
-    char width[16];
-    DR_state->PrettyUC(aResult, width, 16);
-    printf("Get%sWidth=%s\n", aType, width);
+    char iSize[16];
+    DR_state->PrettyUC(aResult, iSize, 16);
+    printf("Get%sISize=%s\n", aType, iSize);
   }
   DR_state->DeleteTreeNode(*treeNode);
 }
