@@ -70,7 +70,7 @@ add_task(async function test_links() {
 
   await testLinkOpensUrl({ win, tab,
     elementId: "startTour",
-    expectedUrl: "https://example.com/tour",
+    expectedUrl: "https://example.com/tour?variation=0",
   });
 
   await BrowserTestUtils.closeWindow(win);
