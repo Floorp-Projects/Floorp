@@ -665,17 +665,19 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   URIParams hostURIParams;
   SerializeURI(aHostURI, hostURIParams);
 
-  nsCOMPtr<nsIURI> channelURI;
-  aChannel->GetURI(getter_AddRefs(channelURI));
-  URIParams channelURIParams;
-  SerializeURI(channelURI, channelURIParams);
-
+  OptionalURIParams channelURIParams;
   mozilla::OriginAttributes attrs;
   if (aChannel) {
+    nsCOMPtr<nsIURI> channelURI;
+    aChannel->GetURI(getter_AddRefs(channelURI));
+    SerializeURI(channelURI, channelURIParams);
+
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
     if (loadInfo) {
       attrs = loadInfo->GetOriginAttributes();
     }
+  } else {
+    SerializeURI(nullptr, channelURIParams);
   }
 
   // Asynchronously call the parent.
