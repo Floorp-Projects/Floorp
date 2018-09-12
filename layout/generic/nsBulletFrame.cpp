@@ -527,8 +527,11 @@ BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
       return true;
     }
     case NS_STYLE_LIST_STYLE_DISC: {
-      AutoTArray<wr::ComplexClipRegion, 1> clips;
-      clips.AppendElement(wr::SimpleRadii(dest, dest.size.width / 2));
+      nsTArray<wr::ComplexClipRegion> clips;
+      clips.AppendElement(wr::ToComplexClipRegion(
+        RoundedRect(mPathRect.ToUnknownRect(),
+                    RectCornerRadii(dest.size.width / 2.0))
+      ));
       auto clipId = aBuilder.DefineClip(Nothing(), dest, &clips, nullptr);
       aBuilder.PushClip(clipId);
       aBuilder.PushRect(dest, dest, isBackfaceVisible, color);
