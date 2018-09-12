@@ -152,7 +152,7 @@ nscoord
 nsDateTimeControlFrame::GetMinISize(gfxContext* aRenderingContext)
 {
   nscoord result;
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_MIN_INLINE_SIZE(this, result);
 
   nsIFrame* kid = mFrames.FirstChild();
   if (kid) { // display:none?
@@ -170,7 +170,7 @@ nscoord
 nsDateTimeControlFrame::GetPrefISize(gfxContext* aRenderingContext)
 {
   nscoord result;
-  DISPLAY_PREF_WIDTH(this, result);
+  DISPLAY_PREF_INLINE_SIZE(this, result);
 
   nsIFrame* kid = mFrames.FirstChild();
   if (kid) { // display:none?

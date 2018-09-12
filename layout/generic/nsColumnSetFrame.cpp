@@ -503,7 +503,7 @@ nscoord
 nsColumnSetFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord iSize = 0;
-  DISPLAY_MIN_WIDTH(this, iSize);
+  DISPLAY_MIN_INLINE_SIZE(this, iSize);
 
   if (mFrames.FirstChild() && !StyleDisplay()->IsContainSize()) {
     // We want to ignore this in the case that we're size contained
@@ -546,7 +546,7 @@ nsColumnSetFrame::GetPrefISize(gfxContext *aRenderingContext)
   // of any required column gaps
   // XXX what about forced column breaks here?
   nscoord result = 0;
-  DISPLAY_PREF_WIDTH(this, result);
+  DISPLAY_PREF_INLINE_SIZE(this, result);
   const nsStyleColumn* colStyle = StyleColumn();
   nscoord colGap = GetColumnGap(this, NS_UNCONSTRAINEDSIZE);
 

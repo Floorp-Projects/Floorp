@@ -43,7 +43,7 @@ BasicTableLayoutStrategy::~BasicTableLayoutStrategy()
 /* virtual */ nscoord
 BasicTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext)
 {
-    DISPLAY_MIN_WIDTH(mTableFrame, mMinISize);
+    DISPLAY_MIN_INLINE_SIZE(mTableFrame, mMinISize);
     if (mMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
         ComputeIntrinsicISizes(aRenderingContext);
     }
@@ -54,7 +54,7 @@ BasicTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext)
 BasicTableLayoutStrategy::GetPrefISize(gfxContext* aRenderingContext,
                                        bool aComputingSize)
 {
-    DISPLAY_PREF_WIDTH(mTableFrame, mPrefISize);
+    DISPLAY_PREF_INLINE_SIZE(mTableFrame, mPrefISize);
     NS_ASSERTION((mPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN) ==
                  (mPrefISizePctExpand == NS_INTRINSIC_WIDTH_UNKNOWN),
                  "dirtyness out of sync");

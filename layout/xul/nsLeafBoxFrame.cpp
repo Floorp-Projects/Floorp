@@ -111,7 +111,7 @@ nsLeafBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 nsLeafBoxFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_MIN_INLINE_SIZE(this, result);
   nsBoxLayoutState state(PresContext(), aRenderingContext);
 
   WritingMode wm = GetWritingMode();
@@ -133,7 +133,7 @@ nsLeafBoxFrame::GetMinISize(gfxContext *aRenderingContext)
 nsLeafBoxFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_PREF_WIDTH(this, result);
+  DISPLAY_PREF_INLINE_SIZE(this, result);
   nsBoxLayoutState state(PresContext(), aRenderingContext);
 
   WritingMode wm = GetWritingMode();

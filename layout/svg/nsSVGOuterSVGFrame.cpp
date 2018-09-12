@@ -156,7 +156,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
 nsSVGOuterSVGFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_MIN_INLINE_SIZE(this, result);
 
   result = nscoord(0);
 
@@ -167,7 +167,7 @@ nsSVGOuterSVGFrame::GetMinISize(gfxContext *aRenderingContext)
 nsSVGOuterSVGFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_PREF_WIDTH(this, result);
+  DISPLAY_PREF_INLINE_SIZE(this, result);
 
   SVGSVGElement *svg = static_cast<SVGSVGElement*>(GetContent());
   WritingMode wm = GetWritingMode();
