@@ -8,6 +8,7 @@ import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.AttributeSet
@@ -47,7 +48,9 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        SentryWrapper.init(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            SentryWrapper.init(this)
+        }
 
         initViewModel()
 
