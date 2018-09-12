@@ -65,7 +65,7 @@
             "pagesets_name": "tp5n.zip",
             "talos_options": [
                 "--xperf_path",
-                "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\""
+                "\"c:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/xperf.exe\""
             ]
         },
         "tp6-e10s": {
