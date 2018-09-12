@@ -66,21 +66,21 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 
     using NullNode = std::nullptr_t;
 
-    bool isPropertyAccess(ParseNode* node) {
+    bool isPropertyAccess(Node node) {
         return node->isKind(ParseNodeKind::Dot) || node->isKind(ParseNodeKind::Elem);
     }
 
-    bool isFunctionCall(ParseNode* node) {
+    bool isFunctionCall(Node node) {
         // Note: super() is a special form, *not* a function call.
         return node->isKind(ParseNodeKind::Call);
     }
 
-    static bool isUnparenthesizedDestructuringPattern(ParseNode* node) {
+    static bool isUnparenthesizedDestructuringPattern(Node node) {
         return !node->isInParens() && (node->isKind(ParseNodeKind::Object) ||
                                        node->isKind(ParseNodeKind::Array));
     }
 
-    static bool isParenthesizedDestructuringPattern(ParseNode* node) {
+    static bool isParenthesizedDestructuringPattern(Node node) {
         // Technically this isn't a destructuring pattern at all -- the grammar
         // doesn't treat it as such.  But we need to know when this happens to
         // consider it a SyntaxError rather than an invalid-left-hand-side
@@ -159,8 +159,8 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return callSiteObj;
     }
 
-    void addToCallSiteObject(CallSiteNodeType callSiteObj, ParseNode* rawNode,
-                             ParseNode* cookedNode) {
+    void addToCallSiteObject(CallSiteNodeType callSiteObj, Node rawNode,
+                             Node cookedNode) {
         MOZ_ASSERT(callSiteObj->isKind(ParseNodeKind::CallSiteObj));
 
         addArrayElement(callSiteObj, cookedNode);
@@ -247,9 +247,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     }
 
   public:
-    ParseNode* appendOrCreateList(ParseNodeKind kind, ParseNode* left, ParseNode* right,
-                                  ParseContext* pc)
-    {
+    Node appendOrCreateList(ParseNodeKind kind, Node left, Node right, ParseContext* pc) {
         return ParseNode::appendOrCreateList(kind, left, right, this, pc);
     }
 
@@ -458,7 +456,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<ListNode>(ParseNodeKind::StatementList, pos);
     }
 
-    MOZ_MUST_USE bool isFunctionStmt(ParseNode* stmt) {
+    MOZ_MUST_USE bool isFunctionStmt(Node stmt) {
         while (stmt->isKind(ParseNodeKind::Label)) {
             stmt = stmt->as<LabeledStatement>().statement();
         }
@@ -702,7 +700,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
                                                                    Node defaultValue);
 
   private:
-    void checkAndSetIsDirectRHSAnonFunction(ParseNode* pn) {
+    void checkAndSetIsDirectRHSAnonFunction(Node pn) {
         if (IsAnonymousFunctionDefinition(pn)) {
             pn->setDirectRHSAnonFunction(true);
         }
@@ -780,7 +778,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return false;
     }
 
-    bool isUnparenthesizedUnaryExpression(ParseNode* node) {
+    bool isUnparenthesizedUnaryExpression(Node node) {
         if (!node->isInParens()) {
             ParseNodeKind kind = node->getKind();
             return kind == ParseNodeKind::Void ||
@@ -794,11 +792,11 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return false;
     }
 
-    bool isReturnStatement(ParseNode* node) {
+    bool isReturnStatement(Node node) {
         return node->isKind(ParseNodeKind::Return);
     }
 
-    bool isStatementPermittedAfterReturnStatement(ParseNode *node) {
+    bool isStatementPermittedAfterReturnStatement(Node node) {
         ParseNodeKind kind = node->getKind();
         return kind == ParseNodeKind::Function ||
                kind == ParseNodeKind::Var ||
@@ -807,11 +805,11 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
                kind == ParseNodeKind::EmptyStatement;
     }
 
-    bool isSuperBase(ParseNode* node) {
+    bool isSuperBase(Node node) {
         return node->isKind(ParseNodeKind::SuperBase);
     }
 
-    bool isUsableAsObjectPropertyName(ParseNode* node) {
+    bool isUsableAsObjectPropertyName(Node node) {
         return node->isKind(ParseNodeKind::Number)
             || node->isKind(ParseNodeKind::ObjectPropertyName)
             || node->isKind(ParseNodeKind::String)
@@ -820,23 +818,23 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
 
     inline MOZ_MUST_USE bool finishInitializerAssignment(NameNodeType nameNode, Node init);
 
-    void setBeginPosition(ParseNode* pn, ParseNode* oth) {
+    void setBeginPosition(Node pn, Node oth) {
         setBeginPosition(pn, oth->pn_pos.begin);
     }
-    void setBeginPosition(ParseNode* pn, uint32_t begin) {
+    void setBeginPosition(Node pn, uint32_t begin) {
         pn->pn_pos.begin = begin;
         MOZ_ASSERT(pn->pn_pos.begin <= pn->pn_pos.end);
     }
 
-    void setEndPosition(ParseNode* pn, ParseNode* oth) {
+    void setEndPosition(Node pn, Node oth) {
         setEndPosition(pn, oth->pn_pos.end);
     }
-    void setEndPosition(ParseNode* pn, uint32_t end) {
+    void setEndPosition(Node pn, uint32_t end) {
         pn->pn_pos.end = end;
         MOZ_ASSERT(pn->pn_pos.begin <= pn->pn_pos.end);
     }
 
-    uint32_t getFunctionNameOffset(ParseNode* func, TokenStreamAnyChars& ts) {
+    uint32_t getFunctionNameOffset(Node func, TokenStreamAnyChars& ts) {
         return func->pn_pos.begin;
     }
 
@@ -862,7 +860,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<ListNode>(kind, JSOP_NOP, pos);
     }
 
-    bool isDeclarationList(ParseNode* node) {
+    bool isDeclarationList(Node node) {
         return isDeclarationKind(node->getKind());
     }
 
@@ -884,7 +882,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         }
     }
 
-    void setOp(ParseNode* pn, JSOp op) {
+    void setOp(Node pn, JSOp op) {
         pn->setOp(op);
     }
     void setListHasNonConstInitializer(ListNodeType literal) {
@@ -903,30 +901,30 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         exprStmt->setIsDirectivePrologueMember();
     }
 
-    bool isName(ParseNode* node) {
+    bool isName(Node node) {
         return node->isKind(ParseNodeKind::Name);
     }
 
-    bool isArgumentsName(ParseNode* node, JSContext* cx) {
+    bool isArgumentsName(Node node, JSContext* cx) {
         return node->isKind(ParseNodeKind::Name) &&
                node->as<NameNode>().atom() == cx->names().arguments;
     }
 
-    bool isEvalName(ParseNode* node, JSContext* cx) {
+    bool isEvalName(Node node, JSContext* cx) {
         return node->isKind(ParseNodeKind::Name) &&
                node->as<NameNode>().atom() == cx->names().eval;
     }
 
-    bool isAsyncKeyword(ParseNode* node, JSContext* cx) {
+    bool isAsyncKeyword(Node node, JSContext* cx) {
         return node->isKind(ParseNodeKind::Name) &&
                node->pn_pos.begin + strlen("async") == node->pn_pos.end &&
                node->as<NameNode>().atom() == cx->names().async;
     }
 
-    PropertyName* maybeDottedProperty(ParseNode* pn) {
+    PropertyName* maybeDottedProperty(Node pn) {
         return pn->is<PropertyAccess>() ? &pn->as<PropertyAccess>().name() : nullptr;
     }
-    JSAtom* isStringExprStatement(ParseNode* pn, TokenPos* pos) {
+    JSAtom* isStringExprStatement(Node pn, TokenPos* pos) {
         if (pn->is<UnaryNode>()) {
             UnaryNode* unary = &pn->as<UnaryNode>();
             if (JSAtom* atom = unary->isStringExprStatement()) {
@@ -937,7 +935,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return nullptr;
     }
 
-    void adjustGetToSet(ParseNode* node) {
+    void adjustGetToSet(Node node) {
         node->setOp(node->isOp(JSOP_GETLOCAL) ? JSOP_SETLOCAL : JSOP_SETNAME);
     }
 
