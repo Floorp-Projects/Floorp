@@ -1651,7 +1651,7 @@ WebSocketImpl::Init(JSContext* aCx,
   mPrivateBrowsing = !!aPrincipal->OriginAttributesRef().mPrivateBrowsingId;
 
   // parses the url
-  rv = ParseURL(PromiseFlatString(aURL));
+  rv = ParseURL(aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> originDoc = mWebSocket->GetDocumentIfCurrent();

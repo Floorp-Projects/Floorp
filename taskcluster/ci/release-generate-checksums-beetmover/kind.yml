@@ -13,10 +13,3 @@ kind-dependencies:
 
 job-template:
    shipping-phase: promote
-   worker-type:
-      by-project:
-         mozilla-central: scriptworker-prov-v1/beetmoverworker-v1
-         mozilla-beta: scriptworker-prov-v1/beetmoverworker-v1
-         mozilla-release: scriptworker-prov-v1/beetmoverworker-v1
-         mozilla-esr60: scriptworker-prov-v1/beetmoverworker-v1
-         default: scriptworker-prov-v1/beetmoverworker-dev

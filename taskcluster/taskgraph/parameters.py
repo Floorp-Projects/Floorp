@@ -16,6 +16,7 @@ from mozbuild.util import ReadOnlyDict, memoize
 from mozversioncontrol import get_repository_object
 
 from . import APP_VERSION_PATH, GECKO, VERSION_PATH
+from .util.attributes import RELEASE_PROJECTS
 
 
 class ParameterMismatch(Exception):
@@ -165,6 +166,14 @@ class Parameters(ReadOnlyDict):
             rev = self['head_rev']
 
         return '{}/file/{}/{}'.format(repo, rev, path)
+
+    def release_level(self):
+        """
+        Whether this is a staging release or not.
+
+        :return basestring: One of "production" or "staging".
+        """
+        return 'production' if self['project'] in RELEASE_PROJECTS else 'staging'
 
 
 def load_parameters_file(filename, strict=True, overrides=None):

@@ -1210,7 +1210,7 @@ void
 SetDirectionalityFromValue(Element* aElement, const nsAString& value,
                            bool aNotify)
 {
-  Directionality dir = GetDirectionFromText(PromiseFlatString(value).get(),
+  Directionality dir = GetDirectionFromText(value.BeginReading(),
                                             value.Length());
   if (dir == eDir_NotSet) {
     dir = eDir_LTR;

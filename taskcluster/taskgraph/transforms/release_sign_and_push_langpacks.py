@@ -26,7 +26,7 @@ langpack_sign_push_description_schema = Schema({
     Required('dependent-task'): object,
     Required('label'): basestring,
     Required('description'): basestring,
-    Required('worker-type'): optionally_keyed_by('project', basestring),
+    Required('worker-type'): optionally_keyed_by('release-level', basestring),
     Required('worker'): {
         Required('implementation'): 'sign-and-push-addons',
         Required('channel'): optionally_keyed_by(
@@ -36,7 +36,7 @@ langpack_sign_push_description_schema = Schema({
     },
 
     Required('run-on-projects'): [],
-    Required('scopes'): optionally_keyed_by('project', [basestring]),
+    Required('scopes'): optionally_keyed_by('release-level', [basestring]),
     Required('shipping-phase'): task_description_schema['shipping-phase'],
     Required('shipping-product'): task_description_schema['shipping-product'],
 })
@@ -65,10 +65,12 @@ def validate(config, jobs):
 def resolve_keys(config, jobs):
     for job in jobs:
         resolve_keyed_by(
-            job, 'worker-type', item_name=job['label'], project=config.params['project']
+            job, 'worker-type', item_name=job['label'],
+            **{'release-level': config.params.release_level()}
         )
         resolve_keyed_by(
-            job, 'scopes', item_name=job['label'], project=config.params['project']
+            job, 'scopes', item_name=job['label'],
+            **{'release-level': config.params.release_level()}
         )
         resolve_keyed_by(
             job, 'worker.channel', item_name=job['label'],

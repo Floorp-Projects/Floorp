@@ -237,8 +237,9 @@ nsresult txPatternParser::createKeyPattern(txExprLexer& aLexer,
         return NS_ERROR_XSLT_CALL_TO_KEY_NOT_ALLOWED;
 
     const char16_t* colon;
-    if (!XMLUtils::isValidQName(PromiseFlatString(key), &colon))
+    if (!XMLUtils::isValidQName(key, &colon)) {
         return NS_ERROR_XPATH_PARSE_FAILURE;
+    }
     RefPtr<nsAtom> prefix, localName;
     int32_t namespaceID;
     nsresult rv = resolveQName(key, getter_AddRefs(prefix), aContext,
