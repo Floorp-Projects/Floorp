@@ -382,7 +382,7 @@ impl TransactionMsg {
     }
 
     // TODO: We only need this for a few RenderApi methods which we should remove.
-    pub fn frame_message(msg: FrameMsg) -> Self {
+    fn frame_message(msg: FrameMsg) -> Self {
         TransactionMsg {
             scene_ops: Vec::new(),
             frame_ops: vec![msg],
@@ -393,7 +393,7 @@ impl TransactionMsg {
         }
     }
 
-    pub fn scene_message(msg: SceneMsg) -> Self {
+    fn scene_message(msg: SceneMsg) -> Self {
         TransactionMsg {
             scene_ops: vec![msg],
             frame_ops: Vec::new(),
