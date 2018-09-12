@@ -521,10 +521,18 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     // - more than one child
     // - unique child is not a text node
     // - unique child is a text node, but is too long to be inlined
+    // - we are a slot -> these are always represented on their own lines with
+    //                    a link to the original node.
+    const isAssignedSlot =
+      !!firstChild &&
+      node.rawNode.nodeName === "SLOT" &&
+      isDirectShadowHostChild(firstChild);
+
     if (!firstChild ||
         walker.nextSibling() ||
         firstChild.nodeType !== Node.TEXT_NODE ||
-        firstChild.nodeValue.length > gValueSummaryLength
+        firstChild.nodeValue.length > gValueSummaryLength ||
+        isAssignedSlot
         ) {
       return undefined;
     }

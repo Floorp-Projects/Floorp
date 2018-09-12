@@ -27,6 +27,7 @@ L10nRegistry.registerSource(source);
 add_task(function test_methods_presence() {
   equal(typeof domLocalization.addResourceIds, "function");
   equal(typeof domLocalization.removeResourceIds, "function");
+  equal(typeof domLocalization.registerObservers, "function");
 
   equal(typeof domLocalization.formatMessages, "function");
   equal(typeof domLocalization.formatValues, "function");
