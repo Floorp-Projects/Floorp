@@ -567,16 +567,6 @@ set_config('MAKENSISU_FLAGS', nsis_flags)
 
 check_prog('7Z', ('7z', '7za'), allow_missing=True, when=target_is_windows)
 
-@depends(host)
-def include_infer_autotest(host):
-    # Do not include autotest configuration on Windows or macos
-    # because infer is not available there
-    if host.os in ['WINNT', 'OSX']:
-        return None
-    return 'tools/infer/test/moz.configure'
-
-include(include_infer_autotest)
-
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')
 
