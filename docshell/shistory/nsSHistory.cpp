@@ -1199,8 +1199,7 @@ GetDynamicChildren(nsISHEntry* aEntry,
     nsCOMPtr<nsISHEntry> child;
     aEntry->GetChildAt(i, getter_AddRefs(child));
     if (child) {
-      bool dynAdded = false;
-      child->IsDynamicallyAdded(&dynAdded);
+      bool dynAdded = child->IsDynamicallyAdded();
       if (dynAdded) {
         nsID docshellID = child->DocshellID();
         aDocshellIDs.AppendElement(docshellID);
