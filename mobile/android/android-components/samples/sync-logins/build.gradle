@@ -35,12 +35,6 @@ android {
     }
 }
 
-repositories {
-    maven {
-        url 'https://dl.bintray.com/ncalexander/application-services/'
-    }
-}
-
 dependencies {
     implementation project(':service-firefox-accounts')
     implementation project(':service-sync-logins')
