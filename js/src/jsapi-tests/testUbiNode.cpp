@@ -419,8 +419,9 @@ BEGIN_TEST(test_ubiPostOrder)
     }
 
     fprintf(stderr, "visited.length() = %lu\n", (unsigned long) visited.length());
-    for (size_t i = 0; i < visited.length(); i++)
+    for (size_t i = 0; i < visited.length(); i++) {
         fprintf(stderr, "visited[%lu] = '%c'\n", (unsigned long) i, visited[i]);
+    }
 
     CHECK(visited.length() == 8);
     CHECK(visited[0] == 'g');

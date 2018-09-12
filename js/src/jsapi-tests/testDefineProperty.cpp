@@ -16,8 +16,9 @@ BEGIN_TEST(testDefineProperty_bug564344)
          "x;", &x);
 
     JS::RootedObject obj(cx, x.toObjectOrNull());
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 2; i++) {
         CHECK(JS_DefineProperty(cx, obj, "q", JS::UndefinedHandleValue, 0));
+    }
     return true;
 }
 END_TEST(testDefineProperty_bug564344)

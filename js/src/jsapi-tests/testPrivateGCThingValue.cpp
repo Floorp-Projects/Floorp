@@ -14,8 +14,9 @@
 class TestTracer : public JS::CallbackTracer
 {
     void onChild(const JS::GCCellPtr& thing) override {
-        if (thing.asCell() == expectedCell && thing.kind() == expectedKind)
+        if (thing.asCell() == expectedCell && thing.kind() == expectedKind) {
             found = true;
+        }
     }
 
   public:

@@ -41,12 +41,15 @@ GetSymbolExceptionType(JSContext* cx)
     js::ErrorReport report(cx);
     MOZ_RELEASE_ASSERT(report.init(cx, exn, js::ErrorReport::WithSideEffects));
 
-    if (strcmp(report.toStringResult().c_str(), "uncaught exception: Symbol(Symbol.iterator)") == 0)
+    if (strcmp(report.toStringResult().c_str(), "uncaught exception: Symbol(Symbol.iterator)") == 0) {
         return SYMBOL_ITERATOR;
-    if (strcmp(report.toStringResult().c_str(), "uncaught exception: Symbol(foo)") == 0)
+    }
+    if (strcmp(report.toStringResult().c_str(), "uncaught exception: Symbol(foo)") == 0) {
         return SYMBOL_FOO;
-    if (strcmp(report.toStringResult().c_str(), "uncaught exception: Symbol()") == 0)
+    }
+    if (strcmp(report.toStringResult().c_str(), "uncaught exception: Symbol()") == 0) {
         return SYMBOL_EMPTY;
+    }
     MOZ_CRASH("Unexpected symbol");
 }
 

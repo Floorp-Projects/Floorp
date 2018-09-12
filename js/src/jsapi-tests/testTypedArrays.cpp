@@ -115,8 +115,9 @@ template<JSObject* CreateWithBuffer(JSContext*, JS::HandleObject, uint32_t, int3
 bool
 TestArrayFromBuffer(JSContext* cx)
 {
-    if (Shared && !cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled())
+    if (Shared && !cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
         return true;
+    }
 
     size_t elts = 8;
     size_t nbytes = elts * sizeof(Element);

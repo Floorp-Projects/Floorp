@@ -11,8 +11,9 @@ BEGIN_TEST(testOOM)
     JS::RootedValue v(cx, JS::Int32Value(9));
     JS::RootedString jsstr(cx, JS::ToString(cx, v));
     char16_t ch;
-    if (!JS_GetStringCharAt(cx, jsstr, 0, &ch))
+    if (!JS_GetStringCharAt(cx, jsstr, 0, &ch)) {
         return false;
+    }
     MOZ_RELEASE_ASSERT(ch == '9');
     return true;
 }
@@ -20,8 +21,9 @@ BEGIN_TEST(testOOM)
 virtual JSContext* createContext() override
 {
     JSContext* cx = JS_NewContext(0);
-    if (!cx)
+    if (!cx) {
         return nullptr;
+    }
     JS_SetGCParameter(cx, JSGC_MAX_BYTES, (uint32_t)-1);
     setNativeStackQuota(cx);
     return cx;
@@ -57,8 +59,9 @@ BEGIN_TEST(testNewContext)
     JSContext* cx;
     START_OOM_TEST("new context");
     cx = JS_NewContext(8L * 1024 * 1024);
-    if (cx)
+    if (cx) {
         OOM_TEST_FINISHED;
+    }
     CHECK(!JSRuntime::hasLiveRuntimes());
     END_OOM_TEST;
     JS_DestroyContext(cx);

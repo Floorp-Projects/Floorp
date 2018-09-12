@@ -45,17 +45,20 @@ void enterJsDirectory() {
 // Go to the directory provided by the test harness, if any.
     const char* destination = getenv("CPP_UNIT_TESTS_DIR_JS_SRC");
     if (destination) {
-        if (chdir(destination) == -1)
+        if (chdir(destination) == -1) {
             MOZ_CRASH_UNSAFE_PRINTF("Could not chdir to %s", destination);
+        }
     }
 }
 
 void exitJsDirectory() {
     MOZ_ASSERT(gJsDirectory);
-    if (fchdir(gJsDirectory) == -1)
+    if (fchdir(gJsDirectory) == -1) {
         MOZ_CRASH("Could not return to original directory");
-    if (close(gJsDirectory) != 0)
+    }
+    if (close(gJsDirectory) != 0) {
         MOZ_CRASH("Could not close js directory");
+    }
     gJsDirectory = 0;
 }
 
@@ -67,33 +70,38 @@ void enterJsDirectory() {
     // Save current directory.
     MOZ_ASSERT(strlen(gJsDirectory) == 0);
     auto result = GetCurrentDirectory(MAX_PATH, gJsDirectory);
-    if (result <= 0)
+    if (result <= 0) {
         MOZ_CRASH("Could not get current directory");
-    if (result > MAX_PATH)
+    }
+    if (result > MAX_PATH) {
         MOZ_CRASH_UNSAFE_PRINTF("Could not get current directory: needed %ld bytes, got %ld\n", result, MAX_PATH);
+    }
 
     // Find destination directory, if any.
     char destination[MAX_PATH];
     result = GetEnvironmentVariable("CPP_UNIT_TESTS_DIR_JS_SRC", destination, MAX_PATH);
     if (result == 0) {
-        if (GetLastError() == ERROR_ENVVAR_NOT_FOUND)
+        if (GetLastError() == ERROR_ENVVAR_NOT_FOUND) {
             return; // No need to chdir
-        else
+        } else {
             MOZ_CRASH("Could not get CPP_UNIT_TESTS_DIR_JS_SRC");
+        }
     }
     if (result > MAX_PATH) {
         MOZ_CRASH_UNSAFE_PRINTF("Could not get CPP_UNIT_TESTS_DIR_JS_SRC: needed %ld bytes, got %ld\n", result, MAX_PATH);
     }
 
     // Go to the directory.
-    if (SetCurrentDirectory(destination) == 0)
+    if (SetCurrentDirectory(destination) == 0) {
         MOZ_CRASH_UNSAFE_PRINTF("Could not chdir to %s", destination);
+    }
 }
 
 void exitJsDirectory() {
     MOZ_ASSERT(strlen(gJsDirectory) > 0);
-    if (SetCurrentDirectory(gJsDirectory) == 0)
+    if (SetCurrentDirectory(gJsDirectory) == 0) {
         MOZ_CRASH("Could not return to original directory");
+    }
     gJsDirectory[0] = 0;
 }
 
@@ -103,21 +111,26 @@ void readFull(const char* path, js::Vector<uint8_t>& buf) {
     enterJsDirectory();
     buf.shrinkTo(0);
     FILE* in = fopen(path, "rb");
-    if (!in)
+    if (!in) {
         MOZ_CRASH_UNSAFE_PRINTF("Could not open %s: %s", path, strerror(errno));
+    }
 
     struct stat info;
-    if (stat(path, &info) < 0)
+    if (stat(path, &info) < 0) {
         MOZ_CRASH_UNSAFE_PRINTF("Could not get stat on %s", path);
+    }
 
-    if (!buf.growBy(info.st_size))
+    if (!buf.growBy(info.st_size)) {
         MOZ_CRASH("OOM");
+    }
 
     int result = fread(buf.begin(), 1, info.st_size, in);
-    if (fclose(in) != 0)
+    if (fclose(in) != 0) {
         MOZ_CRASH("Could not close input file");
-    if (result != info.st_size)
+    }
+    if (result != info.st_size) {
         MOZ_CRASH_UNSAFE_PRINTF("Read error while reading %s: expected %llu bytes, got %llu", path, (unsigned long long)info.st_size, (unsigned long long)result);
+    }
     exitJsDirectory();
 }
 

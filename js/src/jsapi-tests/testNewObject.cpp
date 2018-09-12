@@ -39,8 +39,9 @@ constructHook(JSContext* cx, unsigned argc, JS::Value* vp)
     // Perform a side-effect to indicate that this hook was actually called.
     JS::RootedValue value(cx, args[0]);
     JS::RootedObject callee(cx, &args.callee());
-    if (!JS_SetElement(cx, callee, 0, value))
+    if (!JS_SetElement(cx, callee, 0, value)) {
         return false;
+    }
 
     args.rval().setObject(*obj);
 
@@ -85,8 +86,9 @@ BEGIN_TEST(testNewObject_1)
     CHECK_EQUAL(len, 4u);
 
     // With N arguments.
-    for (size_t i = 0; i < N; i++)
+    for (size_t i = 0; i < N; i++) {
         argv[i].setInt32(i);
+    }
     obj = JS_New(cx, Array, JS::HandleValueArray::subarray(argv, 0, N));
     CHECK(obj);
     rt = JS::ObjectValue(*obj);

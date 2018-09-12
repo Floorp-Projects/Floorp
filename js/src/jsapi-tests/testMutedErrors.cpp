@@ -40,8 +40,9 @@ eval(const char* asciiChars, bool mutedErrors, JS::MutableHandleValue rval)
 {
     size_t len = strlen(asciiChars);
     mozilla::UniquePtr<char16_t[]> chars(new char16_t[len+1]);
-    for (size_t i = 0; i < len; ++i)
+    for (size_t i = 0; i < len; ++i) {
         chars[i] = asciiChars[i];
+    }
     chars[len] = 0;
 
     JS::RealmOptions globalOptions;
