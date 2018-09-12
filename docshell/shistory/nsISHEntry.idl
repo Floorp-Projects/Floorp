@@ -88,56 +88,14 @@ interface nsISHEntry : nsISupports
     /** Saved state of the global window object */
     [infallible] attribute nsISupports windowState;
 
-    /**
-     * Saved position and dimensions of the content viewer; we must adjust the
-     * root view's widget accordingly if this has changed when the presentation
-     * is restored.
-     */
-    [noscript, notxpcom] void getViewerBounds(in nsIntRect bounds);
-    [noscript, notxpcom] void setViewerBounds([const] in nsIntRect bounds);
-
-    /**
-     * Saved child docshells corresponding to contentViewer.  The child shells
-     * are restored as children of the parent docshell, in this order, when the
-     * parent docshell restores a saved presentation.
-     */
-
-    /** Append a child shell to the end of our list. */
-    [noscript, notxpcom] void addChildShell(in nsIDocShellTreeItem shell);
-
-    /**
-     * Get the child shell at |index|; returns null if |index| is out of bounds.
-     */
-    [noscript] nsIDocShellTreeItem childShellAt(in long index);
-
-    /**
-     * Clear the child shell list.
-     */
-    [noscript, notxpcom] void clearChildShells();
-
     /** Saved refresh URI list for the content viewer */
     [infallible] attribute nsIMutableArray refreshURIList;
-
-    /**
-     * Ensure that the cached presentation members are self-consistent.
-     * If either |contentViewer| or |windowState| are null, then all of the
-     * following members are cleared/reset:
-     *  contentViewer, sticky, windowState, viewerBounds, childShells,
-     *  refreshURIList.
-     */
-    [noscript, notxpcom] void syncPresentationState();
 
     /** Post Data for the document */
     [infallible] attribute nsIInputStream postData;
 
     /** LayoutHistoryState for scroll position and form values */
     [infallible] attribute nsILayoutHistoryState layoutHistoryState;
-
-    /**
-     * Initialises the LayoutHistoryState if it doesn't already exist
-     * and returns a reference to it.
-     */
-    nsILayoutHistoryState initLayoutHistoryState();
 
     /** parent of this entry */
     [infallible] attribute nsISHEntry parent;
@@ -182,27 +140,6 @@ interface nsISHEntry : nsISupports
      */
     [infallible] attribute boolean URIWasModified;
 
-    /** Set/Get scrollers' positon in anchored pages */
-    void setScrollPosition(in long x, in long y);
-    void getScrollPosition(out long x, out long y);
-
-    /** Additional ways to create an entry */
-    [noscript] void create(in nsIURI URI, in AString title,
-                           in nsIInputStream inputStream,
-                           in nsILayoutHistoryState layoutHistoryState,
-                           in unsigned long cacheKey, in ACString contentType,
-                           in nsIPrincipal triggeringPrincipal,
-                           in nsIPrincipal principalToInherit,
-                           in nsIDRef docshellID,
-                           in boolean dynamicCreation);
-
-    nsISHEntry clone();
-
-    /** Return any content viewer present in or below this node in the
-        nsSHEntry tree.  This will differ from contentViewer in the case
-        where a child nsSHEntry has the content viewer for this tree. */
-    [noscript] nsIContentViewer getAnyContentViewer(out nsISHEntry ownerEntry);
-
     /**
      * Get the principal, if any, that was associated with the channel
      * that the document that was loaded to create this history entry
@@ -223,73 +160,12 @@ interface nsISHEntry : nsISupports
     [infallible] attribute nsIStructuredCloneContainer stateData;
 
     /**
-     * Gets the owning pointer to the editor data assosicated with
-     * this shistory entry. This forgets its pointer, so free it when
-     * you're done.
-     */
-    [noscript, notxpcom] nsDocShellEditorDataPtr forgetEditorData();
-
-    /**
-     * Sets the owning pointer to the editor data assosicated with
-     * this shistory entry. Unless forgetEditorData() is called, this
-     * shentry will destroy the editor data when it's destroyed.
-     */
-    [noscript, notxpcom] void setEditorData(in nsDocShellEditorDataPtr aData);
-
-    /** Returns true if this shistory entry is storing a detached editor. */
-    [noscript, notxpcom] boolean hasDetachedEditor();
-
-    /**
-     * Returns true if the related docshell was added because of
-     * dynamic addition of an iframe/frame.
-     */
-    [noscript, notxpcom] boolean isDynamicallyAdded();
-
-    /**
-     * Returns true if any of the child entries returns true
-     * when isDynamicallyAdded is called on it.
-     */
-    boolean hasDynamicallyAddedChild();
-
-    /**
      * The history ID of the docshell.
      */
     // Would be [infallible], but we don't support that property for nsIDPtr.
     attribute nsIDPtr docshellID;
 
-    /**
-     * Helper method for accessing this value from C++
-     */
-    [noscript, notxpcom] nsID DocshellID();
-
     [infallible] readonly attribute nsIBFCacheEntry BFCacheEntry;
-
-    /**
-     * Does this SHEntry point to the given BFCache entry?  If so, evicting
-     * the BFCache entry will evict the SHEntry, since the two entries
-     * correspond to the same document.
-     */
-    [noscript, notxpcom] boolean hasBFCacheEntry(in nsIBFCacheEntry aEntry);
-
-    /**
-     * Adopt aEntry's BFCacheEntry, so now both this and aEntry point to
-     * aEntry's BFCacheEntry.
-     */
-    void adoptBFCacheEntry(in nsISHEntry aEntry);
-
-    /**
-     * Create a new BFCache entry and drop our reference to our old one.  This
-     * call unlinks this SHEntry from any other SHEntries for its document.
-     */
-    void abandonBFCacheEntry();
-
-    /**
-     * Does this SHEntry correspond to the same document as aEntry?  This is
-     * true iff the two SHEntries have the same BFCacheEntry.  So in
-     * particular, sharesDocumentWith(aEntry) is guaranteed to return true if
-     * it's preceeded by a call to adoptBFCacheEntry(aEntry).
-     */
-    boolean sharesDocumentWith(in nsISHEntry aEntry);
 
     /**
      * True if this SHEntry corresponds to a document created by a srcdoc
@@ -333,6 +209,148 @@ interface nsISHEntry : nsISupports
     [noscript, infallible] attribute nsISHistory SHistory;
 
     /**
+     * A number that is assigned by the sHistory when the entry is activated
+     */
+    [noscript, infallible] attribute unsigned long lastTouched;
+
+    /**
+     * The current number of nsISHEntries which are immediate children of this
+     * SHEntry.
+     */
+    [infallible] readonly attribute long childCount;
+
+    /**
+     * When an entry is serving is within nsISHistory's array of entries, this
+     * property specifies if it should persist. If not it will be replaced by
+     * new additions to the list.
+     */
+    [infallible] attribute boolean persist;
+
+    /** Set/Get scrollers' position in anchored pages */
+    void setScrollPosition(in long x, in long y);
+    void getScrollPosition(out long x, out long y);
+
+    /**
+     * Saved position and dimensions of the content viewer; we must adjust the
+     * root view's widget accordingly if this has changed when the presentation
+     * is restored.
+     */
+    [noscript, notxpcom] void getViewerBounds(in nsIntRect bounds);
+    [noscript, notxpcom] void setViewerBounds([const] in nsIntRect bounds);
+
+    /**
+     * Saved child docshells corresponding to contentViewer.  The child shells
+     * are restored as children of the parent docshell, in this order, when the
+     * parent docshell restores a saved presentation.
+     */
+
+    /** Append a child shell to the end of our list. */
+    [noscript, notxpcom] void addChildShell(in nsIDocShellTreeItem shell);
+
+    /**
+     * Get the child shell at |index|; returns null if |index| is out of bounds.
+     */
+    [noscript] nsIDocShellTreeItem childShellAt(in long index);
+
+    /**
+     * Clear the child shell list.
+     */
+    [noscript, notxpcom] void clearChildShells();
+
+    /**
+     * Ensure that the cached presentation members are self-consistent.
+     * If either |contentViewer| or |windowState| are null, then all of the
+     * following members are cleared/reset:
+     *  contentViewer, sticky, windowState, viewerBounds, childShells,
+     *  refreshURIList.
+     */
+    [noscript, notxpcom] void syncPresentationState();
+
+    /**
+     * Initialises `layoutHistoryState` if it doesn't already exist
+     * and returns a reference to it.
+     */
+    nsILayoutHistoryState initLayoutHistoryState();
+
+    /** Additional ways to create an entry */
+    [noscript] void create(in nsIURI URI, in AString title,
+                           in nsIInputStream inputStream,
+                           in nsILayoutHistoryState layoutHistoryState,
+                           in unsigned long cacheKey, in ACString contentType,
+                           in nsIPrincipal triggeringPrincipal,
+                           in nsIPrincipal principalToInherit,
+                           in nsIDRef docshellID,
+                           in boolean dynamicCreation);
+
+    nsISHEntry clone();
+
+    /** Return any content viewer present in or below this node in the
+        nsSHEntry tree.  This will differ from contentViewer in the case
+        where a child nsSHEntry has the content viewer for this tree. */
+    [noscript] nsIContentViewer getAnyContentViewer(out nsISHEntry ownerEntry);
+
+    /**
+     * Gets the owning pointer to the editor data assosicated with
+     * this shistory entry. This forgets its pointer, so free it when
+     * you're done.
+     */
+    [noscript, notxpcom] nsDocShellEditorDataPtr forgetEditorData();
+
+    /**
+     * Sets the owning pointer to the editor data assosicated with
+     * this shistory entry. Unless forgetEditorData() is called, this
+     * shentry will destroy the editor data when it's destroyed.
+     */
+    [noscript, notxpcom] void setEditorData(in nsDocShellEditorDataPtr aData);
+
+    /** Returns true if this shistory entry is storing a detached editor. */
+    [noscript, notxpcom] boolean hasDetachedEditor();
+
+    /**
+     * Returns true if the related docshell was added because of
+     * dynamic addition of an iframe/frame.
+     */
+    [noscript, notxpcom] boolean isDynamicallyAdded();
+
+    /**
+     * Returns true if any of the child entries returns true
+     * when isDynamicallyAdded is called on it.
+     */
+    boolean hasDynamicallyAddedChild();
+
+    /**
+     * Helper method for accessing `docshellID` from C++
+     */
+    [noscript, notxpcom] nsID DocshellID();
+
+    /**
+     * Does this SHEntry point to the given BFCache entry? If so, evicting
+     * the BFCache entry will evict the SHEntry, since the two entries
+     * correspond to the same document.
+     */
+    [noscript, notxpcom] boolean hasBFCacheEntry(in nsIBFCacheEntry aEntry);
+
+    /**
+     * Adopt aEntry's BFCacheEntry, so now both this and aEntry point to
+     * aEntry's BFCacheEntry.
+     */
+    void adoptBFCacheEntry(in nsISHEntry aEntry);
+
+    /**
+     * Create a new BFCache entry and drop our reference to our old one. This
+     * call unlinks this SHEntry from any other SHEntries for its document.
+     */
+    void abandonBFCacheEntry();
+
+    /**
+     * Does this SHEntry correspond to the same document as aEntry? This is
+     * true iff the two SHEntries have the same BFCacheEntry. So in particular,
+     * sharesDocumentWith(aEntry) is guaranteed to return true if it's
+     * preceded by a call to adoptBFCacheEntry(aEntry).
+     */
+    boolean sharesDocumentWith(in nsISHEntry aEntry);
+
+    /**
      * Sets an SHEntry to reflect that it is a history type load. As
      * nsIDocShellLoadInfo and its LoadType enum were removed, this is the
      * equivalent to doing
@@ -344,11 +362,6 @@ interface nsISHEntry : nsISupports
     void setLoadTypeAsHistory();
 
     /**
-     * A number that is assigned by the sHistory when the entry is activated
-     */
-    [noscript, infallible] attribute unsigned long lastTouched;
-
-    /**
      * Some state, particularly that related to the back/forward cache, is
      * shared between SHEntries which correspond to the same document.  This
      * method gets a pointer to that shared state.
@@ -357,12 +370,6 @@ interface nsISHEntry : nsISupports
      * hasBFCacheEntry(getSharedState()) is guaranteed to return true.
      */
     [noscript, notxpcom] nsSHEntryShared getSharedState();
-
-    /**
-     * The current number of nsISHEntries which are immediate children of this
-     * SHEntry.
-     */
-    [infallible] readonly attribute long childCount;
 
     /**
      * Add a new child SHEntry. If offset is -1 adds to the end of the list.
@@ -385,13 +392,6 @@ interface nsISHEntry : nsISupports
      * @throw if nothing was replaced.
      */
     [noscript] void ReplaceChild(in nsISHEntry aNewChild);
-
-    /**
-     * When an entry is serving is within nsISHistory's array of entries, this
-     * property specifies if it should persist. If not it will be replaced by
-     * new additions to the list.
-     */
-    [infallible] attribute boolean persist;
 };
 
 %{ C++
