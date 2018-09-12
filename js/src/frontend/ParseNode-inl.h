@@ -18,7 +18,9 @@ inline PropertyName*
 ParseNode::name() const
 {
     MOZ_ASSERT(isKind(ParseNodeKind::Function) || isKind(ParseNodeKind::Name));
-    JSAtom* atom = isKind(ParseNodeKind::Function) ? pn_funbox->function()->explicitName() : pn_atom;
+    JSAtom* atom = isKind(ParseNodeKind::Function)
+                   ? as<CodeNode>().funbox()->function()->explicitName()
+                   : as<NameNode>().atom();
     return atom->asPropertyName();
 }
 
