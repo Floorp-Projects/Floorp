@@ -50,7 +50,7 @@ protected:
                                                       nsCString* aResult) override;
 
   virtual mozilla::ipc::IPCResult RecvSetCookieString(const URIParams& aHost,
-                                                      const URIParams& aChannelURI,
+                                                      const OptionalURIParams& aChannelURI,
                                                       const bool& aIsForeign,
                                                       const bool& aIsTrackingResource,
                                                       const bool& aFirstPartyStorageAccessGranted,
