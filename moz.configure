@@ -237,6 +237,7 @@ set_config('OBJ_SUFFIX', library_name_info.obj.suffix)
 # Lots of compilation tests depend on this variable being present.
 add_old_configure_assignment('OBJ_SUFFIX', library_name_info.obj.suffix)
 set_config('IMPORT_LIB_SUFFIX', library_name_info.import_lib.suffix)
+set_define('MOZ_DLL_PREFIX', depends(library_name_info.dll.prefix)(lambda s: '"%s"' % s))
 set_define('MOZ_DLL_SUFFIX', depends(library_name_info.dll.suffix)(lambda s: '"%s"' % s))
 
 # Depends on host_library_name_info, so needs to go here.

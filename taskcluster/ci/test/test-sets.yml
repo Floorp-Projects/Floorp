@@ -424,3 +424,10 @@ android-hw-arm7-debug-unittests:
 
 android-hw-aarch64-opt-unittests:
     - jittest
+
+# Coming soonish!
+android-hw-arm7-raptor:
+    - raptor-speedometer-geckoview
+
+android-hw-aarch64-raptor:
+    - raptor-speedometer-geckoview

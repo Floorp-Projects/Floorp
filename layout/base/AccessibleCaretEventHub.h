@@ -179,9 +179,6 @@ protected:
   // Flag to avoid calling Reflow() callback recursively.
   bool mIsInReflowCallback = false;
 
-  // Simulate long tap if the platform does not support eMouseLongTap events.
-  static bool sUseLongTapInjector;
-
   static const int32_t kMoveStartToleranceInPixel = 5;
   static const int32_t kInvalidTouchId = -1;
   static const int32_t kDefaultTouchId = 0; // For mouse event

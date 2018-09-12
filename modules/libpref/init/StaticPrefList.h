@@ -446,6 +446,110 @@ VARCACHE_PREF(
 // Layout prefs
 //---------------------------------------------------------------------------
 
+// Debug-only pref to force enable the AccessibleCaret. If you want to
+// control AccessibleCaret by mouse, you'll need to set
+// "layout.accessiblecaret.hide_carets_for_mouse_input" to false.
+VARCACHE_PREF(
+  "layout.accessiblecaret.enabled",
+   layout_accessiblecaret_enabled,
+  bool, false
+)
+
+// Enable the accessible caret on platforms/devices
+// that we detect have touch support. Note that this pref is an
+// additional way to enable the accessible carets, rather than
+// overriding the layout.accessiblecaret.enabled pref.
+VARCACHE_PREF(
+  "layout.accessiblecaret.enabled_on_touch",
+   layout_accessiblecaret_enabled_on_touch,
+  bool, false
+)
+
+// By default, carets become tilt only when they are overlapping.
+VARCACHE_PREF(
+  "layout.accessiblecaret.always_tilt",
+   layout_accessiblecaret_always_tilt,
+  bool, false
+)
+
+// Show caret in cursor mode when long tapping on an empty content. This
+// also changes the default update behavior in cursor mode, which is based
+// on the emptiness of the content, into something more heuristic. See
+// AccessibleCaretManager::UpdateCaretsForCursorMode() for the details.
+VARCACHE_PREF(
+  "layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content",
+   layout_accessiblecaret_caret_shown_when_long_tapping_on_empty_content,
+  bool, false
+)
+
+// 0 = by default, always hide carets for selection changes due to JS calls.
+// 1 = update any visible carets for selection changes due to JS calls,
+//     but don't show carets if carets are hidden.
+// 2 = always show carets for selection changes due to JS calls.
+VARCACHE_PREF(
+  "layout.accessiblecaret.script_change_update_mode",
+   layout_accessiblecaret_script_change_update_mode,
+  int32_t, 0
+)
+
+// Allow one caret to be dragged across the other caret without any limitation.
+// This matches the built-in convention for all desktop platforms.
+VARCACHE_PREF(
+  "layout.accessiblecaret.allow_dragging_across_other_caret",
+   layout_accessiblecaret_allow_dragging_across_other_caret,
+  bool, true
+)
+
+// Optionally provide haptic feedback on long-press selection events.
+VARCACHE_PREF(
+  "layout.accessiblecaret.hapticfeedback",
+   layout_accessiblecaret_hapticfeedback,
+  bool, false
+)
+
+// Smart phone-number selection on long-press is not enabled by default.
+VARCACHE_PREF(
+  "layout.accessiblecaret.extend_selection_for_phone_number",
+   layout_accessiblecaret_extend_selection_for_phone_number,
+  bool, false
+)
+
+// Keep the accessible carets hidden when the user is using mouse input (as
+// opposed to touch/pen/etc.).
+VARCACHE_PREF(
+  "layout.accessiblecaret.hide_carets_for_mouse_input",
+   layout_accessiblecaret_hide_carets_for_mouse_input,
+  bool, true
+)
+
+// CSS attributes (width, height, margin-left) of the AccessibleCaret in CSS
+// pixels.
+VARCACHE_PREF(
+  "layout.accessiblecaret.width",
+   layout_accessiblecaret_width,
+  float, 34.0f
+)
+
+VARCACHE_PREF(
+  "layout.accessiblecaret.height",
+   layout_accessiblecaret_height,
+  float, 36.0f
+)
+
+VARCACHE_PREF(
+  "layout.accessiblecaret.margin-left",
+   layout_accessiblecaret_margin_left,
+  float, -18.5f
+)
+
+// Simulate long tap events to select words. Mainly used in manual testing
+// with mouse.
+VARCACHE_PREF(
+  "layout.accessiblecaret.use_long_tap_injector",
+   layout_accessiblecaret_use_long_tap_injector,
+  bool, false
+)
+
 // Is parallel CSS parsing enabled?
 VARCACHE_PREF(
   "layout.css.parsing.parallel",

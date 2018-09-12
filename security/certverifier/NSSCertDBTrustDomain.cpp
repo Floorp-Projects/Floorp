@@ -1188,7 +1188,7 @@ LoadLoadableRoots(const nsCString& dir)
   int unusedModType;
   Unused << SECMOD_DeleteModule(kRootModuleName, &unusedModType);
   // Some NSS command-line utilities will load a roots module under the name
-  // "Root Certs" if there happens to be a `DLL_PREFIX "nssckbi" DLL_SUFFIX`
+  // "Root Certs" if there happens to be a `MOZ_DLL_PREFIX "nssckbi" MOZ_DLL_SUFFIX`
   // file in the directory being operated on. In some cases this can cause us to
   // fail to load our roots module. In these cases, deleting the "Root Certs"
   // module allows us to load the correct one. See bug 1406396.
@@ -1199,7 +1199,7 @@ LoadLoadableRoots(const nsCString& dir)
     fullLibraryPath.Assign(dir);
     fullLibraryPath.AppendLiteral(FILE_PATH_SEPARATOR);
   }
-  fullLibraryPath.Append(DLL_PREFIX "nssckbi" DLL_SUFFIX);
+  fullLibraryPath.Append(MOZ_DLL_PREFIX "nssckbi" MOZ_DLL_SUFFIX);
   // Escape the \ and " characters.
   fullLibraryPath.ReplaceSubstring("\\", "\\\\");
   fullLibraryPath.ReplaceSubstring("\"", "\\\"");
