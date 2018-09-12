@@ -13,14 +13,6 @@ this.main = (function() {
 
   let hasSeenOnboarding = browser.storage.local.get(["hasSeenOnboarding"]).then((result) => {
     const onboarded = !!result.hasSeenOnboarding;
-    if (!onboarded) {
-      setIconActive(false, null);
-      // Note that the branded name 'Firefox Screenshots' is not localized:
-      startBackground.photonPageActionPort.postMessage({
-        type: "setProperties",
-        title: "Firefox Screenshots"
-      });
-    }
     hasSeenOnboarding = Promise.resolve(onboarded);
     return hasSeenOnboarding;
   }).catch((error) => {
@@ -53,10 +45,7 @@ this.main = (function() {
 
   function setIconActive(active, tabId) {
     const path = active ? "icons/icon-highlight-32-v2.svg" : "icons/icon-v2.svg";
-    startBackground.photonPageActionPort.postMessage({
-      type: "setProperties",
-      iconPath: path
-    });
+    browser.pageAction.setIcon({tabId, path});
   }
 
   function toggleSelector(tab) {
@@ -91,7 +80,8 @@ this.main = (function() {
     return /^about:(?:newtab|blank|home)/i.test(url) || /^resource:\/\/activity-streams\//i.test(url);
   }
 
-  // This is called by startBackground.js, directly in response to clicks on the Photon page action
+  // This is called by startBackground.js, where is registered as a click
+  // handler for the webextension page action.
   exports.onClicked = catcher.watchFunction((tab) => {
     catcher.watchPromise(hasSeenOnboarding.then(onboarded => {
       if (shouldOpenMyShots(tab.url)) {
@@ -290,11 +280,6 @@ this.main = (function() {
   communication.register("hasSeenOnboarding", () => {
     hasSeenOnboarding = Promise.resolve(true);
     catcher.watchPromise(browser.storage.local.set({hasSeenOnboarding: true}));
-    setIconActive(false, null);
-    startBackground.photonPageActionPort.postMessage({
-      type: "setProperties",
-      title: browser.i18n.getMessage("contextMenuLabel")
-    });
   });
 
   communication.register("abortStartShot", () => {
