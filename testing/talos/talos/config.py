@@ -112,6 +112,7 @@ def fix_xperf(config):
     # BBB: remove doubly-quoted xperf values from command line
     # (needed for buildbot)
     # https://bugzilla.mozilla.org/show_bug.cgi?id=704654#c43
+    win7_path = 'c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe'
     if config['xperf_path']:
         xperf_path = config['xperf_path']
         quotes = ('"', "'")
@@ -120,8 +121,11 @@ def fix_xperf(config):
                 config['xperf_path'] = xperf_path[1:-1]
                 break
         if not os.path.exists(config['xperf_path']):
-            raise ConfigurationError(
-                "xperf.exe cannot be found at the path specified")
+            # look for old win7 path
+            if not os.path.exists(win7_path):
+                raise ConfigurationError(
+                    "xperf.exe cannot be found at the path specified")
+            config['xperf_path'] = win7_path
 
 
 @validator
