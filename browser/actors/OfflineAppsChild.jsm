@@ -32,15 +32,6 @@ class OfflineAppsChild extends ActorChild {
 
   handleEvent(event) {
     if (event.type == "MozApplicationManifest") {
-      let doc = event.target;
-      let info = {
-        uri: doc.documentURI,
-        characterSet: doc.characterSet,
-        manifest: doc.documentElement.getAttribute("manifest"),
-        principal: doc.nodePrincipal,
-      };
-      this.mm.sendAsyncMessage("MozApplicationManifest", info);
-
       this.offlineAppRequested(event.originalTarget.defaultView);
     }
   }
