@@ -1075,6 +1075,22 @@ impl<'a> DisplayListFlattener<'a> {
             );
         }
 
+        // preserve-3d's semantics are to hoist all your children to be your siblings
+        // when doing backface-visibility checking, so we need to grab the backface-visibility
+        // of the lowest ancestor which *doesn't* preserve-3d, and AND it in with ours.
+        //
+        // No this isn't obvious or clear, it's just what we worked out over a day of testing.
+        // There's probably a bug in here, but I couldn't find it with the examples and tests
+        // at my disposal!
+        let ancestor_is_backface_visible =
+            self.sc_stack
+                .iter()
+                .rfind(|sc| sc.transform_style == TransformStyle::Flat)
+                .map(|sc| sc.is_backface_visible)
+                .unwrap_or(is_backface_visible);
+
+        let is_backface_visible = is_backface_visible && ancestor_is_backface_visible;
+
         // Push the SC onto the stack, so we know how to handle things in
         // pop_stacking_context.
         let sc = FlattenedStackingContext {
