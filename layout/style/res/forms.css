@@ -11,7 +11,7 @@
 @namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
 *|*::-moz-fieldset-content {
-  display: block; /* nsRuleNode::ComputeDisplayData overrules this in some cases */
+  display: block; /* StyleAdjuster::adjust_for_fieldset_content overrides this in some cases */
   unicode-bidi: inherit;
   text-overflow: inherit;
   overflow: inherit;

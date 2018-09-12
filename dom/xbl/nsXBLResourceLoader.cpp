@@ -180,8 +180,12 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
 
   if (mPendingSheets == 0) {
     // All stylesheets are loaded.
-    mResources->ComputeServoStyles(
-      *mBoundDocument->GetShell()->StyleSet());
+
+    // Our document might have been undisplayed after this sheet load
+    // was started, so check before building the XBL cascade data.
+    if (nsIPresShell* shell = mBoundDocument->GetShell()) {
+      mResources->ComputeServoStyles(*shell->StyleSet());
+    }
 
     // XXX Check for mPendingScripts when scripts also come online.
     if (!mInLoadResourcesFunc)
