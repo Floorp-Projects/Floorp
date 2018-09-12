@@ -5,11 +5,11 @@ module.exports = {
     "mozilla/var-only-at-top-level": "error",
     "require-jsdoc": ["error", {
         "require": {
-            "FunctionDeclaration": false,
-            "MethodDefinition": false,
+            "FunctionDeclaration": true,
+            "MethodDefinition": true,
             "ClassDeclaration": true,
-            "ArrowFunctionExpression": false,
-            "FunctionExpression": false
+            "ArrowFunctionExpression": true,
+            "FunctionExpression": true
         }
     }],
     "valid-jsdoc": ["error", {
