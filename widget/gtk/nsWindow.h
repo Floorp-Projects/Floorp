@@ -15,6 +15,7 @@
 #include "nsITimer.h"
 #include "nsGkAtoms.h"
 #include "nsRefPtrHashtable.h"
+#include "nsIFrame.h"
 
 #include "nsBaseWidget.h"
 #include "CompositorWidget.h"
@@ -427,6 +428,8 @@ public:
      * the XDG_CURRENT_DESKTOP environment variable.
      */
     static CSDSupportLevel GetSystemCSDSupportLevel();
+
+    static bool GetTopLevelWindowActiveState(nsIFrame *aFrame);
 
 protected:
     virtual ~nsWindow();

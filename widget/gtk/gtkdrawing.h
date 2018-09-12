@@ -31,6 +31,7 @@ typedef struct {
   /* The depressed state is for buttons which remain active for a longer period:
    * activated toggle buttons or buttons showing a popup menu. */
   guint8 depressed;
+  guint8 backdrop;
   gint32 curpos; /* curpos and maxpos are used for scrollbars */
   gint32 maxpos;
   gint32 scale;  /* actual widget scale */
