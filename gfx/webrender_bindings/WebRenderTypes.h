@@ -359,15 +359,14 @@ static inline wr::LayoutSize ToLayoutSize(const mozilla::LayoutDeviceSize& size)
   return ls;
 }
 
-static inline wr::ComplexClipRegion SimpleRadii(const wr::LayoutRect& aRect, float aRadii)
+static inline wr::ComplexClipRegion ToComplexClipRegion(const gfx::RoundedRect& rect)
 {
   wr::ComplexClipRegion ret;
-  wr::LayoutSize radii { aRadii, aRadii };
-  ret.rect = aRect;
-  ret.radii.top_left = radii;
-  ret.radii.top_right = radii;
-  ret.radii.bottom_left = radii;
-  ret.radii.bottom_right = radii;
+  ret.rect               = ToLayoutRect(rect.rect);
+  ret.radii.top_left     = ToLayoutSize(LayoutDeviceSize::FromUnknownSize(rect.corners.radii[mozilla::eCornerTopLeft]));
+  ret.radii.top_right    = ToLayoutSize(LayoutDeviceSize::FromUnknownSize(rect.corners.radii[mozilla::eCornerTopRight]));
+  ret.radii.bottom_left  = ToLayoutSize(LayoutDeviceSize::FromUnknownSize(rect.corners.radii[mozilla::eCornerBottomLeft]));
+  ret.radii.bottom_right = ToLayoutSize(LayoutDeviceSize::FromUnknownSize(rect.corners.radii[mozilla::eCornerBottomRight]));
   ret.mode = wr::ClipMode::Clip;
   return ret;
 }
