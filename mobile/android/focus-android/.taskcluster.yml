@@ -80,7 +80,7 @@ tasks:
             - >-
               git fetch origin
               && git config advice.detachedHead false
-              && git checkout ${event.pull_request.head.sha}
+              && git checkout ${event.after}
               && python tools/taskcluster/schedule-master-build.py
           artifacts:
             public:
@@ -130,7 +130,7 @@ tasks:
           - --login
           - -cx
           - >-
-            git fetch ${event.pull_request.head.repo.clone_url} ${event.pull_request.head.ref}
+            git fetch ${event.repository.clone_url} ${event.release.tag_name}
             && git config advice.detachedHead false
             && git checkout ${event.release.tag_name}
             && python tools/taskcluster/release.py \
