@@ -348,7 +348,7 @@ IsTypeofKind(ParseNodeKind kind)
  *             introduced via constant folding or other tree rewriting
  * EmptyStatement (NullaryNode)
  *   (no fields)
- * Label (NameNode)
+ * Label (LabeledStatement)
  *   atom: label
  *   expr: labeled statement
  * Import (BinaryNode)
@@ -698,8 +698,8 @@ class ParseNode
           private:
             friend class NameNode;
             JSAtom*      atom;          /* lexical name or label atom */
-            ParseNode*  expr;           /* var initializer, or argument default
-                                         */
+            ParseNode*  initOrStmt;     /* var initializer, argument default,
+                                         * or label statement target */
         } name;
         struct {
           private:
@@ -814,11 +814,11 @@ class NullaryNode : public ParseNode
 class NameNode : public ParseNode
 {
   protected:
-    NameNode(ParseNodeKind kind, JSOp op, JSAtom* atom, ParseNode* expr, const TokenPos& pos)
+    NameNode(ParseNodeKind kind, JSOp op, JSAtom* atom, ParseNode* initOrStmt, const TokenPos& pos)
       : ParseNode(kind, op, PN_NAME, pos)
     {
         pn_u.name.atom = atom;
-        pn_u.name.expr = expr;
+        pn_u.name.initOrStmt = initOrStmt;
     }
 
   public:
@@ -826,7 +826,7 @@ class NameNode : public ParseNode
       : ParseNode(kind, op, PN_NAME, pos)
     {
         pn_u.name.atom = atom;
-        pn_u.name.expr = nullptr;
+        pn_u.name.initOrStmt = nullptr;
     }
 
     static bool test(const ParseNode& node) {
@@ -841,21 +841,21 @@ class NameNode : public ParseNode
         return pn_u.name.atom;
     }
 
-    ParseNode* expression() const {
-        return pn_u.name.expr;
+    ParseNode* initializer() const {
+        return pn_u.name.initOrStmt;
     }
 
     void setAtom(JSAtom* atom) {
         pn_u.name.atom = atom;
     }
 
-    void setExpression(ParseNode* expr) {
-        pn_u.name.expr = expr;
+    void setInitializer(ParseNode* init) {
+        pn_u.name.initOrStmt = init;
     }
 
     // Methods used by FoldConstants.cpp.
-    ParseNode** unsafeExpressionReference() {
-        return &pn_u.name.expr;
+    ParseNode** unsafeInitializerReference() {
+        return &pn_u.name.initOrStmt;
     }
 };
 
@@ -1543,7 +1543,7 @@ class LabeledStatement : public NameNode
     }
 
     ParseNode* statement() const {
-        return expression();
+        return initializer();
     }
 
     static bool test(const ParseNode& node) {
@@ -1551,6 +1551,11 @@ class LabeledStatement : public NameNode
         MOZ_ASSERT_IF(match, node.isArity(PN_NAME));
         MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
         return match;
+    }
+
+    // Methods used by FoldConstants.cpp.
+    ParseNode** unsafeStatementReference() {
+        return unsafeInitializerReference();
     }
 };
 

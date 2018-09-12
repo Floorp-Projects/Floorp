@@ -698,7 +698,7 @@ ObjectNormalFieldInitializer(ParseNode* pn)
 static inline ParseNode*
 MaybeInitializer(ParseNode* pn)
 {
-    return pn->as<NameNode>().expression();
+    return pn->as<NameNode>().initializer();
 }
 
 static inline bool
