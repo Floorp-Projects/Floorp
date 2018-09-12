@@ -8,6 +8,7 @@
 
 #include "ClientTiledPaintedLayer.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace layers {
@@ -236,11 +237,17 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
   if (asyncPaint) {
     if (!backBuffer->mCapture->IsEmpty()) {
-      RefPtr<PaintTask> task = new PaintTask();
+      UniquePtr<PaintTask> task(new PaintTask());
       task->mCapture = backBuffer->mCapture;
       task->mTarget = backBuffer->mBackBuffer;
       task->mClients = std::move(backBuffer->mTextureClients);
-      PaintThread::Get()->QueuePaintTask(task);
+
+      // The target is an alias for the capture, and the paint thread expects
+      // to be the only one with a reference to the capture
+      backBuffer->mTarget = nullptr;
+      backBuffer->mCapture = nullptr;
+
+      PaintThread::Get()->QueuePaintTask(std::move(task));
       mManager->SetQueuedAsyncPaints();
     }
   } else {
