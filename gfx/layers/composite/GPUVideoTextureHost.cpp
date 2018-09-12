@@ -13,16 +13,29 @@ namespace mozilla {
 namespace layers {
 
 GPUVideoTextureHost::GPUVideoTextureHost(TextureFlags aFlags,
-                                         const SurfaceDescriptorGPUVideo& aDescriptor)
+                                         TextureHost* aWrappedTextureHost)
   : TextureHost(aFlags)
+  , mWrappedTextureHost(aWrappedTextureHost)
 {
   MOZ_COUNT_CTOR(GPUVideoTextureHost);
-  mWrappedTextureHost = VideoBridgeParent::GetSingleton()->LookupTexture(aDescriptor.handle());
 }
 
 GPUVideoTextureHost::~GPUVideoTextureHost()
 {
   MOZ_COUNT_DTOR(GPUVideoTextureHost);
+}
+
+GPUVideoTextureHost*
+GPUVideoTextureHost::CreateFromDescriptor(
+  TextureFlags aFlags,
+  const SurfaceDescriptorGPUVideo& aDescriptor)
+{
+  TextureHost* wrappedTextureHost =
+    VideoBridgeParent::GetSingleton()->LookupTexture(aDescriptor.handle());
+  if (!wrappedTextureHost) {
+    return nullptr;
+  }
+  return new GPUVideoTextureHost(aFlags, wrappedTextureHost);
 }
 
 bool
