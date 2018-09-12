@@ -1886,7 +1886,7 @@ name = "rsdparsa_capi"
 version = "0.1.0"
 dependencies = [
  "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
- "log 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "nserror 0.1.0",
  "rsdparsa 0.1.0",
 ]
