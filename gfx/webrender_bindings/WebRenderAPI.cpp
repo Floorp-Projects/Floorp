@@ -67,8 +67,10 @@ public:
     *mUseANGLE = compositor->UseANGLE();
     *mUseDComp = compositor->UseDComp();
 
+    bool supportLowPriorityTransactions = true; // TODO only for main windows.
     wr::Renderer* wrRenderer = nullptr;
-    if (!wr_window_new(aWindowId, mSize.width, mSize.height, compositor->gl(),
+    if (!wr_window_new(aWindowId, mSize.width, mSize.height, supportLowPriorityTransactions,
+                       compositor->gl(),
                        aRenderThread.ThreadPool().Raw(),
                        mDocHandle, &wrRenderer,
                        mMaxTextureSize)) {
@@ -147,6 +149,12 @@ TransactionBuilder::TransactionBuilder(bool aUseSceneBuilderThread)
 TransactionBuilder::~TransactionBuilder()
 {
   wr_transaction_delete(mTxn);
+}
+
+void
+TransactionBuilder::SetLowPriority(bool aIsLowPriority)
+{
+  wr_transaction_set_low_priority(mTxn, aIsLowPriority);
 }
 
 void
