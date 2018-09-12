@@ -1,0 +1,9 @@
+language: rust
+rust:
+    - stable
+    - beta
+dist: trusty
+sudo: false
+install:
+    - travis_wait ./check-rustfmt.sh --install
+script: ./test-all.sh
