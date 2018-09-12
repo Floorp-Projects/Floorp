@@ -571,7 +571,7 @@ TraceLoggerGraph::getTreeEntry(uint32_t treeId, TreeEntry* entry)
     }
 
     // If treeFile is null and treeOffset is non-zero then something is wrong
-    if (treeFile != nullptr) return false;
+    if (!treeFile) return false;
 
     // Entry has been flushed to disk. Look it up.
     int success = fseek(treeFile, treeId * sizeof(TreeEntry), SEEK_SET);
