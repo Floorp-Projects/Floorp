@@ -146,22 +146,11 @@ ProcessTranslatePart(const nsCSSValue& aValue,
     percent = aValue.GetPercentValue();
   } else if (aValue.GetUnit() == eCSSUnit_Pixel ||
              aValue.GetUnit() == eCSSUnit_Number) {
-    // Handle this here (even though nsRuleNode::CalcLength handles it
-    // fine) so that callers are allowed to pass a null ComputedStyle
-    // and pres context to SetToTransformFunction if they know (as
-    // StyleAnimationValue does) that all lengths within the transform
-    // function have already been computed to pixels and percents.
-    //
     // Raw numbers are treated as being pixels.
-    //
-    // Don't convert to aValue to AppUnits here to avoid precision issues.
     return aValue.GetFloatValue();
   } else if (aValue.IsCalcUnit()) {
-    // Servo backend. We can retrieve the Calc value directly because it has
-    // been computed from Servo side and set by nsCSSValue::SetCalcValue().
-    // We don't use nsRuleNode::SpecifiedCalcToComputedCalc() because it
-    // asserts for null context and we always pass null context for Servo
-    // backend.
+    // We can retrieve the Calc value directly because it has been computed
+    // from the Servo side and set by nsCSSValue::SetCalcValue().
     nsStyleCoord::CalcValue calc = aValue.GetCalcValue();
     percent = calc.mPercent;
     offset = calc.mLength;
