@@ -238,7 +238,7 @@ var UITour = {
       query: (aDocument) => {
         aDocument.ownerGlobal.BrowserPageActions.placeLazyActionsInPanel();
         return aDocument.getElementById("pageAction-urlbar-screenshots") ||
-               aDocument.getElementById("pageAction-panel-screenshots");
+               aDocument.getElementById("pageAction-panel-screenshots_mozilla_org");
       },
     }],
   ]),
