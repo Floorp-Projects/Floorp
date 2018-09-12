@@ -246,7 +246,7 @@ JS::Result<ParseNode*> parseSpreadElement();
 JS::Result<ParseNode*> parseStaticMemberAssignmentTarget();
 JS::Result<ParseNode*> parseStaticMemberExpression();
 JS::Result<ParseNode*> parseSuper();
-JS::Result<ParseNode*> parseSwitchCase();
+JS::Result<CaseClause*> parseSwitchCase();
 JS::Result<ParseNode*> parseSwitchDefault();
 JS::Result<ParseNode*> parseSwitchStatement();
 JS::Result<ParseNode*> parseSwitchStatementWithDefault();
@@ -352,7 +352,7 @@ JS::Result<ParseNode*> parseInterfaceSpreadElement(const size_t start, const Bin
 JS::Result<ParseNode*> parseInterfaceStaticMemberAssignmentTarget(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<ParseNode*> parseInterfaceStaticMemberExpression(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<ParseNode*> parseInterfaceSuper(const size_t start, const BinKind kind, const BinFields& fields);
-JS::Result<ParseNode*> parseInterfaceSwitchCase(const size_t start, const BinKind kind, const BinFields& fields);
+JS::Result<CaseClause*> parseInterfaceSwitchCase(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<ParseNode*> parseInterfaceSwitchDefault(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<ParseNode*> parseInterfaceSwitchStatement(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<ParseNode*> parseInterfaceSwitchStatementWithDefault(const size_t start, const BinKind kind, const BinFields& fields);

@@ -661,7 +661,8 @@ ForInStatement:
         BINJS_TRY(scope.init(parseContext_));
     build: |
         BINJS_TRY_DECL(forHead, factory_.newForInOrOfHead(ParseNodeKind::ForIn, left, right, tokenizer_->pos(start)));
-        BINJS_TRY_DECL(result, factory_.newForStatement(start, forHead, body, /*flags*/ 0));
+        ParseNode* result;
+        BINJS_TRY_VAR(result, factory_.newForStatement(start, forHead, body, /*flags*/ 0));
 
         if (!scope.isEmpty()) {
             BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
@@ -689,7 +690,8 @@ ForStatement:
         BINJS_TRY(scope.init(parseContext_));
     build: |
         BINJS_TRY_DECL(forHead, factory_.newForHead(init, test, update, tokenizer_->pos(start)));
-        BINJS_TRY_DECL(result, factory_.newForStatement(start, forHead, body, /* iflags = */ 0));
+        ParseNode* result;
+        BINJS_TRY_VAR(result, factory_.newForStatement(start, forHead, body, /* iflags = */ 0));
 
         if (!scope.isEmpty()) {
             BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
@@ -909,6 +911,8 @@ ShorthandProperty:
         BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, name, AccessorType::None));
 
 SwitchCase:
+    type-ok:
+        CaseClause*
     build: |
         BINJS_TRY_DECL(result, factory_.newCaseOrDefault(start, test, consequent));
 
