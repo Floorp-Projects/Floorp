@@ -205,3 +205,140 @@ add_task(async function test_userScripts_no_webext_apis() {
 
   await extension.unload();
 });
+
+add_task(async function test_userScripts_exported_APIs() {
+  async function background() {
+    const matches = ["http://localhost/*/file_sample.html"];
+
+    await browser.runtime.onMessage.addListener(async (msg, sender) => {
+      return {bgPageReply: true};
+    });
+
+    async function userScript() {
+      // Explicitly retrieve the custom exported API methods
+      // to prevent eslint to raise a no-undef validation
+      // error for them.
+      const {
+        US_sync_api,
+        US_async_api_with_callback,
+        US_send_api_results,
+      } = this;
+      this.userScriptGlobalVar = "global-sandbox-value";
+
+      const syncAPIResult = US_sync_api("param1", "param2");
+      const cb = (cbParam) => {
+        return `callback param: ${JSON.stringify(cbParam)}`;
+      };
+      const cb2 = cb;
+      const asyncAPIResult = await US_async_api_with_callback("param3", cb, cb2);
+
+      let expectedError;
+
+      // This is expect to raise an exception due to the window parameter which can't
+      // be cloned.
+      try {
+        US_sync_api(window);
+      } catch (err) {
+        expectedError = err.message;
+      }
+
+      US_send_api_results({syncAPIResult, asyncAPIResult, expectedError});
+    }
+
+    await browser.userScripts.register({
+      js: [{
+        code: `(${userScript})();`,
+      }],
+      runAt: "document_end",
+      matches,
+      scriptMetadata: {
+        name: "test-user-script-exported-apis",
+      },
+    });
+
+    browser.test.sendMessage("background-ready");
+  }
+
+  function apiScript() {
+    // Redefine Promise and Error globals to verify that it doesn't break the WebExtensions internals
+    // that are going to use them.
+    this.Promise = {};
+    this.Error = {};
+
+    browser.userScripts.setScriptAPIs({
+      US_sync_api([param1, param2], scriptMetadata, scriptGlobal) {
+        browser.test.assertEq("test-user-script-exported-apis", scriptMetadata.name);
+
+        browser.test.assertEq("param1", param1, "Got the expected parameter value");
+        browser.test.assertEq("param2", param2, "Got the expected parameter value");
+
+        browser.test.sendMessage("US_sync_api", {param1, param2});
+
+        return "returned_value";
+      },
+      async US_async_api_with_callback([param, cb, cb2], scriptMetadata, scriptGlobal) {
+        browser.test.assertEq("function", typeof cb, "Got a callback function parameter");
+        browser.test.assertTrue(cb === cb2, "Got the same cloned function for the same function parameter");
+
+        browser.runtime.sendMessage({param}).then(bgPageRes => {
+          // eslint-disable-next-line no-undef
+          const cbResult = cb(cloneInto(bgPageRes, scriptGlobal));
+          browser.test.sendMessage("US_async_api_with_callback", cbResult);
+        });
+
+        return "resolved_value";
+      },
+      async US_send_api_results([results], scriptMetadata, scriptGlobal) {
+        browser.test.sendMessage("US_send_api_results", results);
+      },
+    });
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: [
+        "http://localhost/*/file_sample.html",
+      ],
+      userScripts: {
+        apiScript: "api-script.js",
+      },
+    },
+    background,
+    files: {
+      "api-script.js": apiScript,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  // Ensure that a content page running in a content process and which has been
+  // already loaded when the content scripts has been registered, it has received
+  // and registered the expected content scripts.
+  let contentPage = await ExtensionTestUtils.loadContentPage(`about:blank`);
+
+  await extension.startup();
+
+  await extension.awaitMessage("background-ready");
+
+  await contentPage.loadURL(`${BASE_URL}/file_sample.html`);
+
+  info("Wait the userScript to call the exported US_sync_api method");
+  await extension.awaitMessage("US_sync_api");
+
+  info("Wait the userScript to call the exported US_async_api_with_callback method");
+  const userScriptCallbackResult = await extension.awaitMessage("US_async_api_with_callback");
+  equal(userScriptCallbackResult, `callback param: {"bgPageReply":true}`,
+        "Got the expected results when the userScript callback has been called");
+
+  info("Wait the userScript to call the exported US_send_api_results method");
+  const userScriptsAPIResults = await extension.awaitMessage("US_send_api_results");
+  Assert.deepEqual(userScriptsAPIResults, {
+    syncAPIResult: "returned_value",
+    asyncAPIResult: "resolved_value",
+    expectedError: "Only serializable parameters are supported",
+  }, "Got the expected userScript API results");
+
+  await extension.unload();
+
+  await contentPage.close();
+});

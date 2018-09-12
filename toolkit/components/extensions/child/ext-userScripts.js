@@ -150,6 +150,9 @@ this.userScripts = class extends ExtensionAPI {
             return convertToAPIObject(scriptId, options);
           });
         },
+        setScriptAPIs(exportedAPIMethods) {
+          context.setUserScriptAPIs(exportedAPIMethods);
+        },
       },
     };
   }
