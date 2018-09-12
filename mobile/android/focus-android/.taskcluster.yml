@@ -1,9 +1,6 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-version: 0
-allowPullRequests: public
+version: 1
+policy:
+  pullRequests: public
 tasks:
 ###############################################################################
 # Task: Pull requests
@@ -14,40 +11,37 @@ tasks:
 # - Run unit tests
 # - Run code quality tools (spotbugs, lint, checkstyle etc.)
 ###############################################################################
-  - provisionerId: '{{ taskcluster.docker.provisionerId }}'
-    workerType: '{{ taskcluster.docker.workerType }}'
-    extra:
-      github:
-        events:
-          - pull_request.opened
-          - pull_request.edited
-          - pull_request.synchronize
-          - pull_request.reopened
-    payload:
-      maxRunTime: 7200
-      deadline: "{{ '2 hours' | $fromNow }}"
-      image: 'mozillamobile/focus-android:1.0'
-      command:
-        - /bin/bash
-        - '--login'
-        - '-cx'
-        - >-
-          git fetch {{ event.head.repo.url }} {{ event.head.repo.branch }}
-          && git config advice.detachedHead false
-          && git checkout {{event.head.sha}}
-          && echo "--" > .adjust_token
-          && python tools/l10n/check_locales.py
-          && ./gradlew --no-daemon clean assembleFocusX86Debug assembleKlarX86Nightly assembleRelease detektCheck ktlint lintFocusX86Debug lintKlarX86Nightly pmd checkstyle spotbugs testFocusX86DebugUnitTest testKlarX86NightlyUnitTest
-      artifacts:
-        'public':
-          type: 'directory'
-          path: '/opt/focus-android/app/build/reports'
-          expires: "{{ '1 week' | $fromNow }}"
-    metadata:
-      name: Focus for Android - Build - Pull Request
-      description: Building Focus for Android (via Gradle) - triggered by a pull request.
-      owner: '{{ event.head.user.email }}'
-      source: '{{ event.head.repo.url }}'
+  - $if: 'tasks_for == "github-pull-request" && event["action"] in ["opened", "reopened", "synchronize"]'
+    then:
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '2 hours'}
+      provisionerId: aws-provisioner-v1
+      workerType: github-worker
+      scopes: []
+      payload:
+        maxRunTime: 7200
+        image: mozillamobile/focus-android:1.0
+        command:
+          - /bin/bash
+          - --login
+          - -cx
+          - >-
+            git fetch ${event.pull_request.head.repo.clone_url} ${event.pull_request.head.ref}
+            && git config advice.detachedHead false
+            && git checkout ${event.pull_request.head.sha}
+            && echo "--" > .adjust_token
+            && python tools/l10n/check_locales.py
+            && ./gradlew --no-daemon clean assembleFocusX86Debug assembleKlarX86Nightly assembleRelease detektCheck ktlint lintFocusX86Debug lintKlarX86Nightly pmd checkstyle spotbugs testFocusX86DebugUnitTest testKlarX86NightlyUnitTest
+        artifacts:
+          public:
+            type: directory
+            path: /opt/focus-android/app/build/reports
+            expires: {$fromNow: '1 week'}
+      metadata:
+        name: Focus for Android - Build - Pull Request
+        description: Building Focus for Android (via Gradle) - triggered by a pull request.
+        owner: ${event.pull_request.user.login}@users.noreply.github.com
+        source: ${event.repository.url}
 ###############################################################################
 # Task: Master builds
 #
@@ -59,42 +53,45 @@ tasks:
 #         \-> Code quality -/
 #
 ###############################################################################
-  - provisionerId: '{{ taskcluster.docker.provisionerId }}'
-    workerType: '{{ taskcluster.docker.workerType }}'
-    extra:
-      github:
-        env: true
-        events:
-          - push
-        branches:
-          - master
-    scopes:
-      - "queue:create-task:aws-provisioner-v1/github-worker"
-      - "queue:scheduler-id:taskcluster-github"
-      - "secrets:get:project/focus/preview-key-store"
-      - "queue:route:index.project.focus.android.preview-builds"
-      - "secrets:get:project/focus/firebase"
-      - "secrets:get:project/focus/nimbledroid"
-    payload:
-      maxRunTime: 7200
-      deadline: "{{ '2 hours' | $fromNow }}"
-      image: 'mozillamobile/focus-android:1.0'
-      command:
-        - /bin/bash
-        - '--login'
-        - '-cx'
-        - >-
-          git fetch origin
-          && git config advice.detachedHead false
-          && git checkout {{event.head.sha}}
-          && python tools/taskcluster/schedule-master-build.py
-      features:
-        taskclusterProxy: true
-    metadata:
-      name: (Focus for Android) Schedule tasks
-      description: Scheduling tasks for master push
-      owner: '{{ event.head.user.email }}'
-      source: '{{ event.head.repo.url }}'
+  - $if: 'tasks_for == "github-push"'
+    then:
+      $if: 'event.ref == "refs/heads/master"'
+      then:
+        created: {$fromNow: ''}
+        deadline: {$fromNow: '2 hours'}
+        provisionerId: aws-provisioner-v1
+        workerType: github-worker
+        scopes:
+          - queue:create-task:aws-provisioner-v1/github-worker
+          - queue:scheduler-id:taskcluster-github
+          - secrets:get:project/focus/preview-key-store
+          - queue:route:index.project.focus.android.preview-builds
+          - secrets:get:project/focus/firebase
+          - secrets:get:project/focus/nimbledroid
+        payload:
+          maxRunTime: 7200
+          image: mozillamobile/focus-android:1.0
+          features:
+            taskclusterProxy: true
+          command:
+            - /bin/bash
+            - --login
+            - -cx
+            - >-
+              git fetch origin
+              && git config advice.detachedHead false
+              && git checkout ${event.pull_request.head.sha}
+              && python tools/taskcluster/schedule-master-build.py
+          artifacts:
+            public:
+              type: directory
+              path: /build/fenix/preview
+              expires: {$fromNow: '1 month'}
+        metadata:
+          name: (Focus for Android) Schedule tasks
+          description: Scheduling tasks for master push
+          owner: ${event.pusher.name}@users.noreply.github.com
+          source: ${event.repository.url}
 ###############################################################################
 # Task: Release builds
 #
@@ -104,64 +101,62 @@ tasks:
 # - Signs the builds with the release key
 # - Uploads the builds to the "alpha" track on Google Play
 ###############################################################################
-  - provisionerId: '{{ taskcluster.docker.provisionerId }}'
-    workerType: 'gecko-focus'
-    extra:
-      github:
-        env: true
-        events:
-          - release
-    scopes:
-      - "queue:create-task:aws-provisioner-v1/github-worker"
-      - "queue:create-task:highest:aws-provisioner-v1/gecko-focus"
-      - "queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1"
-      - "queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-v1"
-      - "queue:scheduler-id:taskcluster-github"
-      - "project:mobile:focus:releng:signing:cert:release-signing"
-      - "project:mobile:focus:releng:signing:format:focus-jar"
-      - "project:mobile:focus:releng:googleplay:product:focus"
-      - "secrets:get:project/focus/tokens"
-      - "queue:route:index.project.mobile.focus.release.latest"
-    payload:
-      maxRunTime: 7200
-      deadline: "{{ '2 hours' | $fromNow }}"
-      expires: "{{ '1 year' | $fromNow }}"
-      image: 'mozillamobile/focus-android:1.0'
-      command:
-        - /bin/bash
-        - '--login'
-        - '-cx'
-        - >-
-          git fetch origin --tags
-          && git config advice.detachedHead false
-          && git checkout {{ event.version }}
-          && python tools/taskcluster/release.py \
-            --tag {{ event.version }} \
-            --track alpha \
-            --commit \
-            --output /opt/focus-android/app/build/outputs/apk \
-            --apk focusX86/release/app-focus-x86-release-unsigned.apk \
-            --apk klarX86/release/app-klar-x86-release-unsigned.apk \
-            --apk focusArm/release/app-focus-arm-release-unsigned.apk \
-            --apk klarArm/release/app-klar-arm-release-unsigned.apk
-      features:
-        taskclusterProxy: true
-        chainOfTrust: true
-      artifacts:
-        'public/task-graph.json':
-          type: 'file'
-          path: '/opt/focus-android/task-graph.json'
-          expires: "{{ '1 year' | $fromNow }}"
-        'public/actions.json':
-          type: 'file'
-          path: '/opt/focus-android/actions.json'
-          expires: "{{ '1 year' | $fromNow }}"
-        'public/parameters.yml':
-          type: 'file'
-          path: '/opt/focus-android/parameters.yml'
-          expires: "{{ '1 year' | $fromNow }}"
-    metadata:
-      name: (Focus for Android) Decision task ({{ event.version }})
-      description: Scheduling tasks for releasing Focus/Klar
-      owner: '{{ event.head.user.email }}'
-      source: '{{ event.head.repo.url }}'
+  - $if: 'tasks_for == "github-release"'
+    then:
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '2 hours'}
+      expires: {$fromNow: '1 year'}
+      provisionerId: aws-provisioner-v1
+      workerType: gecko-focus   # This workerType has ChainOfTrust enabled
+      scopes:
+        - queue:create-task:aws-provisioner-v1/github-worker
+        - queue:create-task:highest:aws-provisioner-v1/gecko-focus
+        - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1
+        - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-v1
+        - queue:scheduler-id:taskcluster-github
+        - project:mobile:focus:releng:signing:cert:release-signing
+        - project:mobile:focus:releng:signing:format:focus-jar
+        - project:mobile:focus:releng:googleplay:product:focus
+        - secrets:get:project/focus/tokens
+        - queue:route:index.project.mobile.focus.release.latest
+      payload:
+        maxRunTime: 7200
+        image: mozillamobile/focus-android:1.0
+        features:
+          taskclusterProxy: true
+          chainOfTrust: true
+        command:
+          - /bin/bash
+          - --login
+          - -cx
+          - >-
+            git fetch ${event.pull_request.head.repo.clone_url} ${event.pull_request.head.ref}
+            && git config advice.detachedHead false
+            && git checkout ${event.release.tag_name}
+            && python tools/taskcluster/release.py \
+              --tag ${event.release.tag_name} \
+              --track alpha \
+              --commit \
+              --output /opt/focus-android/app/build/outputs/apk \
+              --apk focusX86/release/app-focus-x86-release-unsigned.apk \
+              --apk klarX86/release/app-klar-x86-release-unsigned.apk \
+              --apk focusArm/release/app-focus-arm-release-unsigned.apk \
+              --apk klarArm/release/app-klar-arm-release-unsigned.apk
+        artifacts:
+          public/task-graph.json:
+            type: file
+            path: /opt/focus-android/task-graph.json
+            expires: {$fromNow: '1 year'}
+          public/actions.json:
+            type: file
+            path: /opt/focus-android/actions.json
+            expires: {$fromNow: '1 year'}
+          public/parameters.yml:
+            type: file
+            path: /opt/focus-android/parameters.yml
+            expires: {$fromNow: '1 year'}
+      metadata:
+        name: (Focus for Android) Decision task (${event.release.tag_name})
+        description: Scheduling tasks for releasing Focus/Klar
+        owner: ${event.pull_request.user.login}@users.noreply.github.com
+        source: ${event.repository.url}
