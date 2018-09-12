@@ -56,12 +56,13 @@ public:
    * updated, and the SPCSPS needs to be updated. */
   void ResolutionUpdated();
 
-private:
-  ~MobileViewportManager();
-
   /* Called to compute the initial viewport on page load or before-first-paint,
-   * whichever happens first. */
+   * whichever happens first. Also called directly if we are created after the
+   * presShell is initialized. */
   void SetInitialViewport();
+
+  private:
+  ~MobileViewportManager();
 
   /* Main helper method to update the CSS viewport and any other properties that
    * need updating. */
