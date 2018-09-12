@@ -6989,7 +6989,7 @@ BinASTParser<Tok>::parseInterfaceVariableDeclarator(const size_t start, const Bi
 
         BINJS_TRY_VAR(result, factory_.newName(binding->template as<NameNode>().atom()->asPropertyName(), tokenizer_->pos(start), cx_));
         if (init)
-            result->as<NameNode>().setExpression(init);
+            result->as<NameNode>().setInitializer(init);
     } else {
         // `var pattern = bar`
         if (!init) {

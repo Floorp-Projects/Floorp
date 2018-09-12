@@ -1464,7 +1464,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       }
 
       case ParseNodeKind::Label:
-        return checkSideEffects(pn->as<NameNode>().expression(), answer);
+        return checkSideEffects(pn->as<LabeledStatement>().statement(), answer);
 
       case ParseNodeKind::LexicalScope:
         return checkSideEffects(pn->as<LexicalScopeNode>().scopeBody(), answer);
@@ -4258,7 +4258,7 @@ BytecodeEmitter::emitDeclarationList(ListNode* declList)
                 return false;
             }
         } else {
-            if (!emitSingleDeclaration(declList, decl, decl->as<NameNode>().expression())) {
+            if (!emitSingleDeclaration(declList, decl, decl->as<NameNode>().initializer())) {
                 return false;
             }
         }
@@ -5490,7 +5490,7 @@ BytecodeEmitter::emitForIn(ForNode* forInLoop, const EmitterScope* headLexicalEm
         ParseNode* decl =
             parser->astGenerator().singleBindingFromDeclaration(&forInTarget->as<ListNode>());
         if (decl->isKind(ParseNodeKind::Name)) {
-            if (ParseNode* initializer = decl->as<NameNode>().expression()) {
+            if (ParseNode* initializer = decl->as<NameNode>().initializer()) {
                 MOZ_ASSERT(forInTarget->isKind(ParseNodeKind::Var),
                            "for-in initializers are only permitted for |var| declarations");
 
