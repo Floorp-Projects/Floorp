@@ -16,8 +16,9 @@ CPOWTimer::CPOWTimer(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     , startInterval_(0)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (!js::GetStopwatchIsMonitoringCPOW(cx))
+    if (!js::GetStopwatchIsMonitoringCPOW(cx)) {
         return;
+    }
     cx_ = cx;
     startInterval_ = JS_Now();
 }

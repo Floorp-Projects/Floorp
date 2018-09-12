@@ -29,8 +29,9 @@ class ObjectId {
     explicit ObjectId(uint64_t serialNumber, bool hasXrayWaiver)
       : serialNumber_(serialNumber), hasXrayWaiver_(hasXrayWaiver)
     {
-        if (isInvalidSerialNumber(serialNumber))
+        if (isInvalidSerialNumber(serialNumber)) {
             MOZ_CRASH("Bad CPOW Id");
+        }
     }
 
     bool operator==(const ObjectId& other) const {
