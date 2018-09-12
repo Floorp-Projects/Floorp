@@ -17,15 +17,17 @@ WaiveAccessors(JSContext* cx, MutableHandle<PropertyDescriptor> desc)
 {
     if (desc.hasGetterObject() && desc.getterObject()) {
         RootedValue v(cx, JS::ObjectValue(*desc.getterObject()));
-        if (!WrapperFactory::WaiveXrayAndWrap(cx, &v))
+        if (!WrapperFactory::WaiveXrayAndWrap(cx, &v)) {
             return false;
+        }
         desc.setGetterObject(&v.toObject());
     }
 
     if (desc.hasSetterObject() && desc.setterObject()) {
         RootedValue v(cx, JS::ObjectValue(*desc.setterObject()));
-        if (!WrapperFactory::WaiveXrayAndWrap(cx, &v))
+        if (!WrapperFactory::WaiveXrayAndWrap(cx, &v)) {
             return false;
+        }
         desc.setSetterObject(&v.toObject());
     }
     return true;
@@ -59,10 +61,12 @@ JSObject*
 WaiveXrayWrapper::enumerate(JSContext* cx, HandleObject proxy) const
 {
     RootedObject obj(cx, CrossCompartmentWrapper::enumerate(cx, proxy));
-    if (!obj)
+    if (!obj) {
         return nullptr;
-    if (!WrapperFactory::WaiveXrayAndWrap(cx, &obj))
+    }
+    if (!WrapperFactory::WaiveXrayAndWrap(cx, &obj)) {
         return nullptr;
+    }
     return obj;
 }
 
