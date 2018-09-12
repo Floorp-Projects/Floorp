@@ -7,7 +7,9 @@ with Files("**"):
 
 EXTRA_JS_MODULES += [
     'UrlbarController.jsm',
+    'UrlbarInput.jsm',
     'UrlbarTokenizer.jsm',
+    'UrlbarView.jsm',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']

@@ -536,6 +536,10 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 #urlbar {
+  -moz-binding: url(chrome://browser/content/urlbarBindings.xml#legacy-urlbar);
+}
+
+#urlbar[quantumbar] {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
