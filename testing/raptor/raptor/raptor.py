@@ -110,8 +110,7 @@ class Raptor(object):
         if self.config['app'] == "geckoview":
             self.log.info("making the raptor control server port available to device")
             _tcp_port = "tcp:%s" % self.control_server.port
-            _cmd = ["reverse", _tcp_port, _tcp_port]
-            self.device.command_output(_cmd)
+            self.device.create_socket_connection('reverse', _tcp_port, _tcp_port)
 
     def get_playback_config(self, test):
         self.config['playback_tool'] = test.get('playback')
@@ -146,8 +145,7 @@ class Raptor(object):
         if self.config['app'] == "geckoview":
             self.log.info("making the raptor benchmarks server port available to device")
             _tcp_port = "tcp:%s" % benchmark_port
-            _cmd = ["reverse", _tcp_port, _tcp_port]
-            self.device.command_output(_cmd)
+            self.device.create_socket_connection('reverse', _tcp_port, _tcp_port)
 
         # must intall raptor addon each time because we dynamically update some content
         raptor_webext = os.path.join(webext_dir, 'raptor')
@@ -276,6 +274,11 @@ class Raptor(object):
         self.control_server.stop()
         if self.config['app'] != "geckoview":
             self.runner.stop()
+        elif self.config['app'] == 'geckoview':
+            self.log.info('removing reverse socket connections')
+            self.device.remove_socket_connections('reverse')
+        else:
+            pass
         self.log.info("finished")
 
 

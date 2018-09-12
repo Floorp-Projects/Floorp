@@ -15,6 +15,11 @@ setup(name='json-e',
     packages=['jsone'],
     test_suite='nose.collector',
     license='MPL2',
+    extras_require={
+        'release': [
+            'towncrier',
+        ],
+    },
     tests_require=[
         "freezegun",
         "hypothesis",

@@ -2122,7 +2122,7 @@ private:
                      DisplayItemClipChainHasher,
                      DisplayItemClipChainEqualer>
     mClipDeduplicator;
-  std::list<DisplayItemClipChain*> mClipChainsToDestroy;
+  DisplayItemClipChain* mFirstClipChainToDestroy;
   nsTArray<nsDisplayItem*> mTemporaryItems;
   const ActiveScrolledRoot* mActiveScrolledRootForRootScrollframe;
   nsDisplayListBuilderMode mMode;

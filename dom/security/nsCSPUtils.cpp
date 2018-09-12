@@ -118,7 +118,7 @@ CSP_LogStrMessage(const nsAString& aMsg)
   if (!console) {
     return;
   }
-  nsString msg = PromiseFlatString(aMsg);
+  nsString msg(aMsg);
   console->LogStringMessage(msg.get());
 }
 
@@ -345,8 +345,8 @@ CSP_IsKeyword(const nsAString& aValue, enum CSPKeyword aKey)
 bool
 CSP_IsQuotelessKeyword(const nsAString& aKey)
 {
-  nsString lowerKey = PromiseFlatString(aKey);
-  ToLowerCase(lowerKey);
+  nsString lowerKey;
+  ToLowerCase(aKey, lowerKey);
 
   nsAutoString keyword;
   for (uint32_t i = 0; i < CSP_LAST_KEYWORD_VALUE; i++) {

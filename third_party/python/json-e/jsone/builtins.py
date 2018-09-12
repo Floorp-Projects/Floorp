@@ -83,6 +83,7 @@ def build(context):
 
     builtin('len', argument_tests=[is_string_or_array])(len)
     builtin('str', argument_tests=[anything_except_array])(to_str)
+    builtin('number', variadic=is_string, minArgs=1)(float)
 
     @builtin('strip', argument_tests=[is_string])
     def strip(s):

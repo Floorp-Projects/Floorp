@@ -112,6 +112,14 @@ public:
 
   using FetchBody::GetBody;
 
+  using FetchBody::BodyLocalPath;
+
+  const nsAString&
+  BodyLocalPath() const
+  {
+    return mInternalResponse->BodyLocalPath();
+  }
+
   static already_AddRefed<Response>
   Error(const GlobalObject& aGlobal);
 

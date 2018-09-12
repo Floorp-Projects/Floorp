@@ -5,7 +5,7 @@
 # Setup for build cache
 
 # builds where buildprops didn't have the data (eg: taskcluster) and without sccache disabled:
-if test -z "$bucket" -a -z "$SCCACHE_DISABLE"; then
+if test -z "$bucket" -a -z "$SCCACHE_DISABLE" -a -z "$MOZ_PGO"; then
 
     # prevent rerun if az is set, or wget is not available
     if test -z "$availability_zone" -a -x "$(command -v wget)"; then

@@ -343,6 +343,10 @@ test_description_schema = Schema({
         'test-platform',
         [basestring]),
 
+    Optional('run-as-administrator'): optionally_keyed_by(
+        'test-platform',
+        bool),
+
     # -- values supplied by the task-generation infrastructure
 
     # the platform of the build this task is testing
@@ -445,6 +449,7 @@ def set_defaults(config, tests):
         test.setdefault('try-name', test['test-name'])
 
         test.setdefault('os-groups', [])
+        test.setdefault('run-as-administrator', False)
         test.setdefault('chunks', 1)
         test.setdefault('run-on-projects', 'built-projects')
         test.setdefault('instance-size', 'default')
@@ -685,6 +690,7 @@ def handle_keyed_by(config, tests):
         'suite',
         'run-on-projects',
         'os-groups',
+        'run-as-administrator',
         'mozharness.chunked',
         'mozharness.config',
         'mozharness.extra-options',

@@ -94,29 +94,6 @@ static bool AreShadowArraysEqual(nsCSSShadowArray* lhs, nsCSSShadowArray* rhs);
 // --------------------
 // nsStyleFont
 //
-nsStyleFont::nsStyleFont(const nsFont& aFont, const nsPresContext* aContext)
-  : mFont(aFont)
-  , mSize(nsStyleFont::ZoomText(aContext, mFont.size))
-  , mFontSizeFactor(1.0)
-  , mFontSizeOffset(0)
-  , mFontSizeKeyword(NS_STYLE_FONT_SIZE_MEDIUM)
-  , mGenericID(kGenericFont_NONE)
-  , mScriptLevel(0)
-  , mMathVariant(NS_MATHML_MATHVARIANT_NONE)
-  , mMathDisplay(NS_MATHML_DISPLAYSTYLE_INLINE)
-  , mMinFontSizeRatio(100) // 100%
-  , mExplicitLanguage(false)
-  , mAllowZoom(true)
-  , mScriptUnconstrainedSize(mSize)
-  , mScriptMinSize(nsPresContext::CSSTwipsToAppUnits(
-      NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT)))
-  , mScriptSizeMultiplier(NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER)
-  , mLanguage(GetLanguage(aContext))
-{
-  MOZ_COUNT_CTOR(nsStyleFont);
-  mFont.size = mSize;
-}
-
 nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
   : mFont(aSrc.mFont)
   , mSize(aSrc.mSize)
@@ -139,36 +116,32 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 }
 
 nsStyleFont::nsStyleFont(const nsPresContext* aContext)
-  : nsStyleFont(*aContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
-                                          nullptr),
-                aContext)
+  : mFont(*aContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
+                                    nullptr))
+  , mSize(ZoomText(aContext, mFont.size))
+  , mFontSizeFactor(1.0)
+  , mFontSizeOffset(0)
+  , mFontSizeKeyword(NS_STYLE_FONT_SIZE_MEDIUM)
+  , mGenericID(kGenericFont_NONE)
+  , mScriptLevel(0)
+  , mMathVariant(NS_MATHML_MATHVARIANT_NONE)
+  , mMathDisplay(NS_MATHML_DISPLAYSTYLE_INLINE)
+  , mMinFontSizeRatio(100) // 100%
+  , mExplicitLanguage(false)
+  , mAllowZoom(true)
+  , mScriptUnconstrainedSize(mSize)
+  , mScriptMinSize(nsPresContext::CSSTwipsToAppUnits(
+      NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT)))
+  , mScriptSizeMultiplier(NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER)
+  , mLanguage(GetLanguage(aContext))
 {
+  MOZ_COUNT_CTOR(nsStyleFont);
   MOZ_ASSERT(NS_IsMainThread());
   nscoord minimumFontSize = aContext->MinFontSize(mLanguage);
   if (minimumFontSize > 0 && !aContext->IsChrome()) {
     mFont.size = std::max(mSize, minimumFontSize);
   } else {
     mFont.size = mSize;
-  }
-}
-
-void
-nsStyleFont::EnableZoom(nsPresContext* aContext, bool aEnable)
-{
-  if (mAllowZoom == aEnable) {
-    return;
-  }
-  mAllowZoom = aEnable;
-  if (mAllowZoom) {
-    mSize = nsStyleFont::ZoomText(aContext, mSize);
-    mFont.size = nsStyleFont::ZoomText(aContext, mFont.size);
-    mScriptUnconstrainedSize =
-      nsStyleFont::ZoomText(aContext, mScriptUnconstrainedSize);
-  } else {
-    mSize = nsStyleFont::UnZoomText(aContext, mSize);
-    mFont.size = nsStyleFont::UnZoomText(aContext, mFont.size);
-    mScriptUnconstrainedSize =
-      nsStyleFont::UnZoomText(aContext, mScriptUnconstrainedSize);
   }
 }
 
@@ -215,14 +188,6 @@ nsStyleFont::ZoomText(const nsPresContext* aPresContext, nscoord aSize)
   // aSize can be negative (e.g.: calc(-1px)) so we can't assert that here.
   // The caller is expected deal with that.
   return NSToCoordTruncClamped(float(aSize) * aPresContext->EffectiveTextZoom());
-}
-
-/* static */ nscoord
-nsStyleFont::UnZoomText(nsPresContext *aPresContext, nscoord aSize)
-{
-  // aSize can be negative (e.g.: calc(-1px)) so we can't assert that here.
-  // The caller is expected deal with that.
-  return NSToCoordTruncClamped(float(aSize) / aPresContext->EffectiveTextZoom());
 }
 
 /* static */ already_AddRefed<nsAtom>
@@ -555,8 +520,28 @@ nsStyleList::nsStyleList(const nsPresContext* aContext)
   : mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE)
 {
   MOZ_COUNT_CTOR(nsStyleList);
+  MOZ_ASSERT(NS_IsMainThread());
+
   mCounterStyle = CounterStyleManager::GetDiscStyle();
-  SetQuotesInitial();
+
+  if (!sInitialQuotes) {
+    // The initial value for quotes is the en-US typographic convention:
+    // outermost are LEFT and RIGHT DOUBLE QUOTATION MARK, alternating
+    // with LEFT and RIGHT SINGLE QUOTATION MARK.
+    static const char16_t initialQuotes[8] = {
+      0x201C, 0, 0x201D, 0, 0x2018, 0, 0x2019, 0
+    };
+
+    sInitialQuotes = new nsStyleQuoteValues;
+    sInitialQuotes->mQuotePairs.AppendElement(
+        std::make_pair(nsDependentString(&initialQuotes[0], 1),
+                       nsDependentString(&initialQuotes[2], 1)));
+    sInitialQuotes->mQuotePairs.AppendElement(
+        std::make_pair(nsDependentString(&initialQuotes[4], 1),
+                       nsDependentString(&initialQuotes[6], 1)));
+  }
+
+  mQuotes = sInitialQuotes;
 }
 
 nsStyleList::~nsStyleList()
@@ -584,57 +569,6 @@ nsStyleList::FinishStyle(nsPresContext* aPresContext, const nsStyleList* aOldSty
       aPresContext, aOldStyle ? aOldStyle->mListStyleImage.get() : nullptr);
   }
   mCounterStyle.Resolve(aPresContext->CounterStyleManager());
-}
-
-void
-nsStyleList::SetQuotesInherit(const nsStyleList* aOther)
-{
-  mQuotes = aOther->mQuotes;
-}
-
-void
-nsStyleList::SetQuotesInitial()
-{
-  if (!sInitialQuotes) {
-    // The initial value for quotes is the en-US typographic convention:
-    // outermost are LEFT and RIGHT DOUBLE QUOTATION MARK, alternating
-    // with LEFT and RIGHT SINGLE QUOTATION MARK.
-    static const char16_t initialQuotes[8] = {
-      0x201C, 0, 0x201D, 0, 0x2018, 0, 0x2019, 0
-    };
-
-    sInitialQuotes = new nsStyleQuoteValues;
-    sInitialQuotes->mQuotePairs.AppendElement(
-        std::make_pair(nsDependentString(&initialQuotes[0], 1),
-                       nsDependentString(&initialQuotes[2], 1)));
-    sInitialQuotes->mQuotePairs.AppendElement(
-        std::make_pair(nsDependentString(&initialQuotes[4], 1),
-                       nsDependentString(&initialQuotes[6], 1)));
-  }
-
-  mQuotes = sInitialQuotes;
-}
-
-void
-nsStyleList::SetQuotesNone()
-{
-  if (!sNoneQuotes) {
-    sNoneQuotes = new nsStyleQuoteValues;
-  }
-  mQuotes = sNoneQuotes;
-}
-
-void
-nsStyleList::SetQuotes(nsStyleQuoteValues::QuotePairArray&& aValues)
-{
-  mQuotes = new nsStyleQuoteValues;
-  mQuotes->mQuotePairs = std::move(aValues);
-}
-
-const nsStyleQuoteValues::QuotePairArray&
-nsStyleList::GetQuotePairs() const
-{
-  return mQuotes->mQuotePairs;
 }
 
 nsChangeHint
@@ -694,9 +628,6 @@ nsStyleList::GetListStyleImageURI() const
 
 StaticRefPtr<nsStyleQuoteValues>
 nsStyleList::sInitialQuotes;
-
-StaticRefPtr<nsStyleQuoteValues>
-nsStyleList::sNoneQuotes;
 
 
 // --------------------
@@ -1320,7 +1251,7 @@ nsStyleSVGReset::FinishStyle(nsPresContext* aPresContext, const nsStyleSVGReset*
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mMask) {
     nsStyleImage& image = mMask.mLayers[i].mImage;
     if (image.GetType() == eStyleImageType_Image) {
-      URLValueData* url = image.GetURLValue();
+      css::URLValueData* url = image.GetURLValue();
       // If the url is a local ref, it must be a <mask-resource>, so we don't
       // need to resolve the style image.
       if (url->IsLocalRef()) {
@@ -3730,13 +3661,6 @@ nsStyleDisplay::FinishStyle(
   if (mShapeOutside.GetType() == StyleShapeSourceType::Image) {
     const UniquePtr<nsStyleImage>& shapeImage = mShapeOutside.GetShapeImage();
     if (shapeImage) {
-      // Bug 1434963: The CORS mode should instead be set when the
-      // ImageValue is created, in both Gecko and Stylo. That will
-      // avoid doing a mutation here.
-      if (shapeImage->GetType() == eStyleImageType_Image) {
-        shapeImage->ImageRequest()->GetImageValue()->SetCORSMode(
-          CORSMode::CORS_ANONYMOUS);
-      }
       const nsStyleImage* oldShapeImage =
         (aOldStyle &&
          aOldStyle->mShapeOutside.GetType() == StyleShapeSourceType::Image)

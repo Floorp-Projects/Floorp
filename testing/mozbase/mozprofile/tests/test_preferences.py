@@ -72,8 +72,7 @@ def test_basic_prefs(compare_generated):
 
     _prefs = {"browser.startup.homepage": "http://planet.mozilla.org/"}
     commandline = []
-    _prefs = _prefs.items()
-    for pref, value in _prefs:
+    for pref, value in _prefs.items():
         commandline += ["--pref", "%s:%s" % (pref, value)]
     compare_generated(_prefs, commandline)
 
@@ -100,8 +99,8 @@ browser.startup.homepage = http://planet.mozilla.org/
 browser.startup.homepage = http://github.com/
 """
     try:
-        fd, name = tempfile.mkstemp(suffix='.ini')
-        os.write(fd, _ini)
+        fd, name = tempfile.mkstemp(suffix='.ini', text=True)
+        os.write(fd, _ini.encode())
         os.close(fd)
         commandline = ["--preferences", name]
 
@@ -129,8 +128,8 @@ def test_ini_keep_case(compare_generated):
 general.warnOnAboutConfig = False
 """
     try:
-        fd, name = tempfile.mkstemp(suffix='.ini')
-        os.write(fd, _ini)
+        fd, name = tempfile.mkstemp(suffix='.ini', text=True)
+        os.write(fd, _ini.encode())
         os.close(fd)
         commandline = ["--preferences", name]
 
@@ -294,7 +293,7 @@ def test_can_read_prefs_with_multiline_comments():
 
 user_pref("webgl.enabled_for_all_sites", true);
 user_pref("webgl.force-enabled", true);
-""")
+""".encode())
         assert Preferences.read_prefs(user_js.name) == [
                 ('webgl.enabled_for_all_sites', True),
                 ('webgl.force-enabled', True)
@@ -309,7 +308,7 @@ def test_json(compare_generated):
 
     # just repr it...could use the json module but we don't need it here
     with mozfile.NamedTemporaryFile(suffix='.json') as f:
-        f.write(json)
+        f.write(json.encode())
         f.flush()
 
         commandline = ["--preferences", f.name]
@@ -321,7 +320,7 @@ def test_json_datatypes():
     json = """{"zoom.minPercent": 30.1, "zoom.maxPercent": 300}"""
 
     with mozfile.NamedTemporaryFile(suffix='.json') as f:
-        f.write(json)
+        f.write(json.encode())
         f.flush()
 
         with pytest.raises(PreferencesReadError):
@@ -342,7 +341,7 @@ def test_prefs_write():
     path = None
     read_prefs = None
     try:
-        with mozfile.NamedTemporaryFile(suffix='.js', delete=False) as f:
+        with mozfile.NamedTemporaryFile(suffix='.js', delete=False, mode='w+t') as f:
             path = f.name
             preferences.write(f, _prefs)
 

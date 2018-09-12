@@ -19,10 +19,12 @@ def make_task_description(config, jobs):
     release_config = get_release_config(config)
     for job in jobs:
         resolve_keyed_by(
-            job, 'worker-type', item_name=job['name'], project=config.params['project']
+            job, 'worker-type', item_name=job['name'],
+            **{'release-level': config.params.release_level()}
         )
         resolve_keyed_by(
-            job, 'scopes', item_name=job['name'], project=config.params['project']
+            job, 'scopes', item_name=job['name'],
+            **{'release-level': config.params.release_level()}
         )
 
         job['worker']['release-name'] = '{product}-{version}-build{build_number}'.format(
