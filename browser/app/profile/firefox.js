@@ -335,6 +335,8 @@ pref("browser.urlbar.switchTabs.adoptIntoActiveWindow", false);
 // should be opened in new tabs by default.
 pref("browser.urlbar.openintab", false);
 
+pref("browser.urlbar.quantumbar", false);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.
