@@ -117,6 +117,7 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
+#include "nsICookieService.h"
 
 // for radio group stuff
 #include "nsIRadioVisitor.h"
@@ -13527,6 +13528,175 @@ nsIDocument::GetSelection(ErrorResult& aRv)
   }
 
   return nsGlobalWindowInner::Cast(window)->GetSelection(aRv);
+}
+
+already_AddRefed<mozilla::dom::Promise>
+nsIDocument::HasStorageAccess(mozilla::ErrorResult& aRv)
+{
+  nsIGlobalObject* global = GetScopeObject();
+  if (!global) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  if (NodePrincipal()->GetIsNullPrincipal()) {
+    promise->MaybeResolve(false);
+    return promise.forget();
+  }
+
+  if (IsTopLevelContentDocument()) {
+    promise->MaybeResolve(true);
+    return promise.forget();
+  }
+
+  nsCOMPtr<nsIDocument> topLevelDoc = GetTopLevelContentDocument();
+  if (!topLevelDoc) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+  if (topLevelDoc->NodePrincipal()->Equals(NodePrincipal())) {
+    promise->MaybeResolve(true);
+    return promise.forget();
+  }
+
+  nsPIDOMWindowInner* inner = GetInnerWindow();
+  nsGlobalWindowOuter* outer = nullptr;
+  if (inner) {
+    outer = nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
+    promise->MaybeResolve(outer->HasStorageAccess());
+  } else {
+    promise->MaybeRejectWithUndefined();
+  }
+  return promise.forget();
+}
+
+already_AddRefed<mozilla::dom::Promise>
+nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
+{
+  nsIGlobalObject* global = GetScopeObject();
+  if (!global) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Step 1. If the document already has been granted access, resolve.
+  nsPIDOMWindowInner* inner = GetInnerWindow();
+  nsGlobalWindowOuter* outer = nullptr;
+  if (inner) {
+    outer = nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
+    if (outer->HasStorageAccess()) {
+      promise->MaybeResolveWithUndefined();
+      return promise.forget();
+    }
+  }
+
+  // Step 2. If the document has a null origin, reject.
+  if (NodePrincipal()->GetIsNullPrincipal()) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Only enforce third-party checks when there is a reason to enforce them.
+  if (StaticPrefs::network_cookie_cookieBehavior() !=
+        nsICookieService::BEHAVIOR_ACCEPT) {
+    // Step 3. If the document's frame is the main frame, resolve.
+    if (IsTopLevelContentDocument()) {
+      promise->MaybeResolveWithUndefined();
+      return promise.forget();
+    }
+
+    // Step 4. If the sub frame's origin is equal to the main frame's, resolve.
+    nsCOMPtr<nsIDocument> topLevelDoc = GetTopLevelContentDocument();
+    if (!topLevelDoc) {
+      aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+      return nullptr;
+    }
+    if (topLevelDoc->NodePrincipal()->Equals(NodePrincipal())) {
+      promise->MaybeResolveWithUndefined();
+      return promise.forget();
+    }
+  }
+
+  // Step 5. If the sub frame is not sandboxed, skip to step 7.
+  // Step 6. If the sub frame doesn't have the token
+  //         "allow-storage-access-by-user-activation", reject.
+  if (mSandboxFlags & SANDBOXED_STORAGE_ACCESS) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Step 7. If the sub frame's parent frame is not the top frame, reject.
+  nsIDocument* parent = GetParentDocument();
+  if (parent && !parent->IsTopLevelContentDocument()) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Step 8. If the browser is not processing a user gesture, reject.
+  if (!EventStateManager::IsHandlingUserInput()) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Step 9. Check any additional rules that the browser has.
+  //         Examples: Whitelists, blacklists, on-device classification,
+  //         user settings, anti-clickjacking heuristics, or prompting the
+  //         user for explicit permission. Reject if some rule is not fulfilled.
+
+  bool granted = true;
+  bool isTrackingWindow = false;
+  if (StaticPrefs::browser_contentblocking_enabled() &&
+      StaticPrefs::network_cookie_cookieBehavior() ==
+        nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+    // Only do something special for third-party tracking content.
+    if (nsContentUtils::StorageDisabledByAntiTracking(this, nullptr)) {
+      isTrackingWindow = true;
+      // TODO: prompt for permission
+    }
+  }
+
+  // Step 10. Grant the document access to cookies and store that fact for
+  //          the purposes of future calls to hasStorageAccess() and
+  //          requestStorageAccess().
+  if (granted && inner) {
+    outer->SetHasStorageAccess(true);
+    if (isTrackingWindow) {
+      nsCOMPtr<nsIURI> uri = GetDocumentURI();
+      if (NS_WARN_IF(!uri)) {
+        aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+        return nullptr;
+      }
+      nsAutoString origin;
+      nsresult rv = nsContentUtils::GetUTFOrigin(uri, origin);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        aRv.Throw(rv);
+        return nullptr;
+      }
+      AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(origin,
+                                                               inner,
+                                                               AntiTrackingCommon::eStorageAccessAPI)
+        ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+               [promise] (bool) {
+                 promise->MaybeResolveWithUndefined();
+               },
+               [promise] (bool) {
+                 promise->MaybeRejectWithUndefined();
+               });
+    } else {
+      promise->MaybeResolveWithUndefined();
+    }
+  }
+  return promise.forget();
 }
 
 void
