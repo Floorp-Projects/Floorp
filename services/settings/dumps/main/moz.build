@@ -4,6 +4,7 @@
 
 FINAL_TARGET_FILES.defaults.settings.main += [
     'example.json',
+    'onboarding.json',
 ]
 
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
