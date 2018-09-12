@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "nsCOMPtr.h"
+#include "nsISimpleEnumerator.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertList.h"
@@ -29,7 +30,8 @@
 // in service workers.  See bug 1248628.
 void
 deserializeAndVerify(const nsCString &serializedSecInfo,
-                     bool hasFailedCertChain)
+                     bool hasFailedCertChain,
+                     size_t failedCertChainLength = 0)
 {
   nsCOMPtr<nsISupports> secInfo;
   nsresult rv = NS_DeserializeObject(serializedSecInfo, getter_AddRefs(secInfo));
@@ -48,8 +50,26 @@ deserializeAndVerify(const nsCString &serializedSecInfo,
   rv = securityInfo->GetFailedCertChain(getter_AddRefs(failedChain));
   ASSERT_EQ(NS_OK, rv);
  
-  if (hasFailedCertChain) { 
+  if (hasFailedCertChain) {
     ASSERT_TRUE(failedChain);
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    rv = failedChain->GetEnumerator(getter_AddRefs(enumerator));
+    ASSERT_EQ(NS_OK, rv);
+    bool hasMore;
+    rv = enumerator->HasMoreElements(&hasMore);
+    ASSERT_EQ(NS_OK, rv);
+    size_t actualFailedCertChainLength = 0;
+    while (hasMore) {
+      nsCOMPtr<nsISupports> supports;
+      rv = enumerator->GetNext(getter_AddRefs(supports));
+      ASSERT_EQ(NS_OK, rv);
+      nsCOMPtr<nsIX509Cert> cert(do_QueryInterface(supports));
+      actualFailedCertChainLength++;
+      ASSERT_TRUE(cert);
+      rv = enumerator->HasMoreElements(&hasMore);
+      ASSERT_EQ(NS_OK, rv);
+    }
+    ASSERT_EQ(failedCertChainLength, actualFailedCertChainLength);
   } else {
     ASSERT_FALSE(failedChain);
   }
@@ -231,6 +251,6 @@ TEST(psm_DeserializeCert, preSSLStatusConsolidationFailedCertChain)
   "uN2I5mM3NvMnP2Or19O1Bk//iGD6AyJfiZFcii+FsDrJhbzw6lakEV7O/EnD0kk2l7I0VMtg1xZBbEw7P6+V9zz5cAzaaq7EB0mC"
   "E+jJckSzSETBN+7lyVD8gwmHYxxZfPnUM/yvPbMU9L3xWD/z6HHwO6r+9m7BT+2pHjBC");
 
-  deserializeAndVerify(base64Serialization, true);
+  deserializeAndVerify(base64Serialization, true, 2);
 }
 
