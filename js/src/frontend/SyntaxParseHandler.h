@@ -208,7 +208,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return NodeGeneric;
     }
 
-    Node newBooleanLiteral(bool cond, const TokenPos& pos) { return NodeGeneric; }
+    BooleanLiteralType newBooleanLiteral(bool cond, const TokenPos& pos) { return NodeGeneric; }
 
     NameNodeType newStringLiteral(JSAtom* atom, const TokenPos& pos) {
         lastAtom = atom;
@@ -227,8 +227,8 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     void addToCallSiteObject(CallSiteNodeType callSiteObj, Node rawNode, Node cookedNode) {}
 
     ThisLiteralType newThisLiteral(const TokenPos& pos, Node thisName) { return NodeGeneric; }
-    Node newNullLiteral(const TokenPos& pos) { return NodeGeneric; }
-    Node newRawUndefinedLiteral(const TokenPos& pos) { return NodeGeneric; }
+    NullLiteralType newNullLiteral(const TokenPos& pos) { return NodeGeneric; }
+    RawUndefinedLiteralType newRawUndefinedLiteral(const TokenPos& pos) { return NodeGeneric; }
 
     template <class Boxer>
     RegExpLiteralType newRegExp(Node reobj, const TokenPos& pos, Boxer& boxer) {
@@ -285,8 +285,10 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     }
     ClassNodeType newClass(Node name, Node heritage, Node methodBlock, const TokenPos& pos) { return NodeGeneric; }
 
-    BinaryNodeType newNewTarget(Node newHolder, Node targetHolder) { return NodeGeneric; }
-    Node newPosHolder(const TokenPos& pos) { return NodeGeneric; }
+    BinaryNodeType newNewTarget(NullaryNodeType newHolder, NullaryNodeType targetHolder) {
+        return NodeGeneric;
+    }
+    NullaryNodeType newPosHolder(const TokenPos& pos) { return NodeGeneric; }
     UnaryNodeType newSuperBase(Node thisName, const TokenPos& pos) { return NodeSuperBase; }
 
     MOZ_MUST_USE bool addPrototypeMutation(ListNodeType literal, uint32_t begin, Node expr) { return true; }
@@ -315,7 +317,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     void setListEndPosition(ListNodeType list, const TokenPos& pos) {}
     void addCaseStatementToList(ListNodeType list, CaseClauseType caseClause) {}
     MOZ_MUST_USE bool prependInitialYield(ListNodeType stmtList, Node genName) { return true; }
-    Node newEmptyStatement(const TokenPos& pos) { return NodeEmptyStatement; }
+    NullaryNodeType newEmptyStatement(const TokenPos& pos) { return NodeEmptyStatement; }
 
     UnaryNodeType newExportDeclaration(Node kid, const TokenPos& pos) {
         return NodeGeneric;
@@ -329,13 +331,13 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     BinaryNodeType newExportSpec(Node bindingName, Node exportName) {
         return NodeGeneric;
     }
-    Node newExportBatchSpec(const TokenPos& pos) {
+    NullaryNodeType newExportBatchSpec(const TokenPos& pos) {
         return NodeGeneric;
     }
-    BinaryNodeType newImportMeta(Node importHolder, Node metaHolder) {
+    BinaryNodeType newImportMeta(NullaryNodeType importHolder, NullaryNodeType metaHolder) {
         return NodeGeneric;
     }
-    BinaryNodeType newCallImport(Node importHolder, Node singleArg) {
+    BinaryNodeType newCallImport(NullaryNodeType importHolder, Node singleArg) {
         return NodeGeneric;
     }
 
@@ -358,8 +360,8 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return NodeGeneric;
     }
     CaseClauseType newCaseOrDefault(uint32_t begin, Node expr, Node body) { return NodeGeneric; }
-    Node newContinueStatement(PropertyName* label, const TokenPos& pos) { return NodeGeneric; }
-    Node newBreakStatement(PropertyName* label, const TokenPos& pos) { return NodeBreak; }
+    ContinueStatementType newContinueStatement(PropertyName* label, const TokenPos& pos) { return NodeGeneric; }
+    BreakStatementType newBreakStatement(PropertyName* label, const TokenPos& pos) { return NodeBreak; }
     UnaryNodeType newReturnStatement(Node expr, const TokenPos& pos) { return NodeReturn; }
     UnaryNodeType newExpressionBody(Node expr) { return NodeReturn; }
     BinaryNodeType newWithStatement(uint32_t begin, Node expr, Node body) { return NodeGeneric; }
@@ -372,7 +374,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     TernaryNodeType newTryStatement(uint32_t begin, Node body, Node catchScope, Node finallyBlock) {
         return NodeGeneric;
     }
-    Node newDebuggerStatement(const TokenPos& pos) { return NodeGeneric; }
+    DebuggerStatementType newDebuggerStatement(const TokenPos& pos) { return NodeGeneric; }
 
     NameNodeType newPropertyName(PropertyName* name, const TokenPos& pos) {
         lastAtom = name;

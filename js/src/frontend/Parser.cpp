@@ -6218,7 +6218,7 @@ GeneralParser<ParseHandler, CharT>::exportBatch(uint32_t begin)
 
     // Handle the form |export *| by adding a special export batch
     // specifier to the list.
-    Node exportSpec = handler.newExportBatchSpec(pos());
+    NullaryNodeType exportSpec = handler.newExportBatchSpec(pos());
     if (!exportSpec) {
         return null();
     }
@@ -7394,7 +7394,7 @@ GeneralParser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::ContinueStatementType
 GeneralParser<ParseHandler, CharT>::continueStatement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Continue));
@@ -7426,7 +7426,7 @@ GeneralParser<ParseHandler, CharT>::continueStatement(YieldHandling yieldHandlin
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::BreakStatementType
 GeneralParser<ParseHandler, CharT>::breakStatement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Break));
@@ -7918,7 +7918,7 @@ GeneralParser<ParseHandler, CharT>::catchBlockStatement(YieldHandling yieldHandl
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::DebuggerStatementType
 GeneralParser<ParseHandler, CharT>::debuggerStatement()
 {
     TokenPos p;
@@ -10832,7 +10832,7 @@ GeneralParser<ParseHandler, CharT>::tryNewTarget(BinaryNodeType* newTarget)
 
     *newTarget = null();
 
-    Node newHolder = handler.newPosHolder(pos());
+    NullaryNodeType newHolder = handler.newPosHolder(pos());
     if (!newHolder) {
         return false;
     }
@@ -10864,7 +10864,7 @@ GeneralParser<ParseHandler, CharT>::tryNewTarget(BinaryNodeType* newTarget)
         return false;
     }
 
-    Node targetHolder = handler.newPosHolder(pos());
+    NullaryNodeType targetHolder = handler.newPosHolder(pos());
     if (!targetHolder) {
         return false;
     }
@@ -10879,7 +10879,7 @@ GeneralParser<ParseHandler, CharT>::importExpr(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
 
-    Node importHolder = handler.newPosHolder(pos());
+    NullaryNodeType importHolder = handler.newPosHolder(pos());
     if (!importHolder) {
         return null();
     }
@@ -10903,7 +10903,7 @@ GeneralParser<ParseHandler, CharT>::importExpr(YieldHandling yieldHandling)
             return null();
         }
 
-        Node metaHolder = handler.newPosHolder(pos());
+        NullaryNodeType metaHolder = handler.newPosHolder(pos());
         if (!metaHolder) {
             return null();
         }
