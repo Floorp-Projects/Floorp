@@ -99,7 +99,7 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
     dnl middle of the 3.8 cycle, our CLANG_VERSION_FULL is impossible to use
     dnl correctly, so we have to detect this at configure time.
     AC_CACHE_CHECK(for new ASTMatcher API,
-                   ac_cv_have_new_ASTMatcher_api,
+                   ac_cv_have_new_ASTMatcher_names,
         [
             AC_LANG_SAVE
             AC_LANG_CPLUSPLUS
