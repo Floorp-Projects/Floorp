@@ -212,7 +212,7 @@ JS::Result<ParseNode*> parseForInOfBinding();
 JS::Result<ParseNode*> parseForInStatement();
 JS::Result<ParseNode*> parseForOfStatement();
 JS::Result<ParseNode*> parseForStatement();
-JS::Result<ParseNode*> parseFormalParameters();
+JS::Result<ListNode*> parseFormalParameters();
 JS::Result<ParseNode*> parseFunctionBody();
 JS::Result<ParseNode*> parseIdentifierExpression();
 JS::Result<ParseNode*> parseIfStatement();
@@ -318,7 +318,7 @@ JS::Result<ParseNode*> parseInterfaceForInOfBinding(const size_t start, const Bi
 JS::Result<ParseNode*> parseInterfaceForInStatement(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<ParseNode*> parseInterfaceForOfStatement(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<ParseNode*> parseInterfaceForStatement(const size_t start, const BinKind kind, const BinFields& fields);
-JS::Result<ParseNode*> parseInterfaceFormalParameters(const size_t start, const BinKind kind, const BinFields& fields);
+JS::Result<ListNode*> parseInterfaceFormalParameters(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<ParseNode*> parseInterfaceFunctionBody(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<ParseNode*> parseInterfaceIdentifierExpression(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<ParseNode*> parseInterfaceIfStatement(const size_t start, const BinKind kind, const BinFields& fields);
@@ -388,20 +388,20 @@ JS::Result<ParseNode*> parseListOfAssignmentTargetOrAssignmentTargetWithInitiali
 JS::Result<ParseNode*> parseListOfAssignmentTargetProperty();
 JS::Result<ParseNode*> parseListOfBindingProperty();
 JS::Result<ParseNode*> parseListOfClassElement();
-JS::Result<ParseNode*> parseListOfDirective();
+JS::Result<ListNode*> parseListOfDirective();
 JS::Result<ParseNode*> parseListOfExportFromSpecifier();
 JS::Result<ParseNode*> parseListOfExportLocalSpecifier();
 JS::Result<ParseNode*> parseListOfExpressionOrTemplateElement();
 JS::Result<ParseNode*> parseListOfIdentifierName();
 JS::Result<ParseNode*> parseListOfImportDeclarationOrExportDeclarationOrStatement();
 JS::Result<ParseNode*> parseListOfImportSpecifier();
-JS::Result<ParseNode*> parseListOfObjectProperty();
+JS::Result<ListNode*> parseListOfObjectProperty();
 JS::Result<ParseNode*> parseListOfOptionalBindingOrBindingWithInitializer();
-JS::Result<ParseNode*> parseListOfOptionalSpreadElementOrExpression();
-JS::Result<ParseNode*> parseListOfParameter();
-JS::Result<ParseNode*> parseListOfStatement();
-JS::Result<ParseNode*> parseListOfSwitchCase();
-JS::Result<ParseNode*> parseListOfVariableDeclarator();
+JS::Result<ListNode*> parseListOfOptionalSpreadElementOrExpression();
+JS::Result<ListNode*> parseListOfParameter();
+JS::Result<ListNode*> parseListOfStatement();
+JS::Result<ListNode*> parseListOfSwitchCase();
+JS::Result<ListNode*> parseListOfVariableDeclarator();
 
 
 // ----- Default values (by lexicographical order)

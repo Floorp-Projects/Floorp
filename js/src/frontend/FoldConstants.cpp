@@ -33,7 +33,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result);
 static bool
 ListContainsHoistedDeclaration(JSContext* cx, ListNode* list, bool* result)
 {
-    for (ParseNode* node = list->pn_head; node; node = node->pn_next) {
+    for (ParseNode* node : list->contents()) {
         if (!ContainsHoistedDeclaration(cx, node, result)) {
             return false;
         }
@@ -78,7 +78,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       // Non-global lexical declarations are block-scoped (ergo not hoistable).
       case ParseNodeKind::Let:
       case ParseNodeKind::Const:
-        MOZ_ASSERT(node->isArity(PN_LIST));
+        MOZ_ASSERT(node->is<ListNode>());
         *result = false;
         return true;
 
@@ -397,7 +397,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
                   "some parent node without recurring to test this node");
 
       case ParseNodeKind::Pipeline:
-        MOZ_ASSERT(node->isArity(PN_LIST));
+        MOZ_ASSERT(node->is<ListNode>());
         *result = false;
         return true;
 
@@ -748,13 +748,12 @@ FoldIncrementDecrement(JSContext* cx, ParseNode* node, PerHandlerParser<FullPars
 static bool
 FoldAndOr(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& parser)
 {
-    ParseNode* node = *nodePtr;
+    ListNode* node = &(*nodePtr)->as<ListNode>();
 
     MOZ_ASSERT(node->isKind(ParseNodeKind::And) || node->isKind(ParseNodeKind::Or));
-    MOZ_ASSERT(node->isArity(PN_LIST));
 
     bool isOrNode = node->isKind(ParseNodeKind::Or);
-    ParseNode** elem = &node->pn_head;
+    ParseNode** elem = node->unsafeHeadReference();
     do {
         if (!Fold(cx, elem, parser)) {
             return false;
@@ -776,7 +775,7 @@ FoldAndOr(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>
         // the known-truthiness node, as it's the overall result.
         if ((t == Truthy) == isOrNode) {
             for (ParseNode* next = (*elem)->pn_next; next; next = next->pn_next) {
-                --node->pn_count;
+                node->unsafeDecrementCount();
             }
 
             // Terminate the original and/or list at the known-truthiness
@@ -795,7 +794,7 @@ FoldAndOr(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>
             // subsequent nodes.  Remove it.
             ParseNode* elt = *elem;
             *elem = elt->pn_next;
-            --node->pn_count;
+            node->unsafeDecrementCount();
         } else {
             // Otherwise this node is the result of the overall expression,
             // so leave it alone.  And we're done.
@@ -804,16 +803,12 @@ FoldAndOr(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>
         }
     } while (*elem);
 
-    // If the last node in the list was replaced, we need to update the
-    // tail pointer in the original and/or node.
-    node->pn_tail = elem;
-
-    node->checkListConsistency();
+    node->unsafeReplaceTail(elem);
 
     // If we removed nodes, we may have to replace a one-element list with
     // its element.
-    if (node->pn_count == 1) {
-        ParseNode* first = node->pn_head;
+    if (node->count() == 1) {
+        ParseNode* first = node->head();
         ReplaceNode(nodePtr, first);
     }
 
@@ -966,7 +961,7 @@ FoldIf(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& p
             // statement list.
             node->setKind(ParseNodeKind::StatementList);
             node->setArity(PN_LIST);
-            node->makeEmpty();
+            node->as<ListNode>().makeEmpty();
         } else {
             // Replacement invalidates |nextNode|, so reset it (if the
             // replacement requires folding) or clear it (if |alternative|
@@ -1049,7 +1044,7 @@ FoldModule(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& p
 }
 
 static bool
-FoldBinaryArithmetic(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldBinaryArithmetic(JSContext* cx, ListNode* node, PerHandlerParser<FullParseHandler>& parser)
 {
     MOZ_ASSERT(node->isKind(ParseNodeKind::Sub) ||
                node->isKind(ParseNodeKind::Star) ||
@@ -1058,11 +1053,10 @@ FoldBinaryArithmetic(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseH
                node->isKind(ParseNodeKind::Ursh) ||
                node->isKind(ParseNodeKind::Div) ||
                node->isKind(ParseNodeKind::Mod));
-    MOZ_ASSERT(node->isArity(PN_LIST));
-    MOZ_ASSERT(node->pn_count >= 2);
+    MOZ_ASSERT(node->count() >= 2);
 
     // Fold each operand, ideally into a number.
-    ParseNode** listp = &node->pn_head;
+    ParseNode** listp = node->unsafeHeadReference();
     for (; *listp; listp = &(*listp)->pn_next) {
         if (!Fold(cx, listp, parser)) {
             return false;
@@ -1073,15 +1067,14 @@ FoldBinaryArithmetic(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseH
         }
     }
 
-    // Repoint the list's tail pointer.
-    node->pn_tail = listp;
+    node->unsafeReplaceTail(listp);
 
     // Now fold all leading numeric terms together into a single number.
     // (Trailing terms for the non-shift operations can't be folded together
     // due to floating point imprecision.  For example, if |x === -2**53|,
     // |x - 1 - 1 === -2**53| but |x - 2 === -2**53 - 2|.  Shifts could be
     // folded, but it doesn't seem worth the effort.)
-    ParseNode* elem = node->pn_head;
+    ParseNode* elem = node->head();
     ParseNode* next = elem->pn_next;
     if (elem->isKind(ParseNodeKind::Number)) {
         ParseNodeKind kind = node->getKind();
@@ -1100,11 +1093,11 @@ FoldBinaryArithmetic(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseH
             elem->setArity(PN_NULLARY);
             elem->pn_dval = d;
 
-            node->pn_count--;
+            node->unsafeDecrementCount();
         }
 
-        if (node->pn_count == 1) {
-            MOZ_ASSERT(node->pn_head == elem);
+        if (node->count() == 1) {
+            MOZ_ASSERT(node->head() == elem);
             MOZ_ASSERT(elem->isKind(ParseNodeKind::Number));
 
             double d = elem->pn_dval;
@@ -1119,14 +1112,13 @@ FoldBinaryArithmetic(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseH
 }
 
 static bool
-FoldExponentiation(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldExponentiation(JSContext* cx, ListNode* node, PerHandlerParser<FullParseHandler>& parser)
 {
     MOZ_ASSERT(node->isKind(ParseNodeKind::Pow));
-    MOZ_ASSERT(node->isArity(PN_LIST));
-    MOZ_ASSERT(node->pn_count >= 2);
+    MOZ_ASSERT(node->count() >= 2);
 
     // Fold each operand, ideally into a number.
-    ParseNode** listp = &node->pn_head;
+    ParseNode** listp = node->unsafeHeadReference();
     for (; *listp; listp = &(*listp)->pn_next) {
         if (!Fold(cx, listp, parser)) {
             return false;
@@ -1137,19 +1129,18 @@ FoldExponentiation(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHan
         }
     }
 
-    // Repoint the list's tail pointer.
-    node->pn_tail = listp;
+    node->unsafeReplaceTail(listp);
 
     // Unlike all other binary arithmetic operators, ** is right-associative:
     // 2**3**5 is 2**(3**5), not (2**3)**5.  As list nodes singly-link their
     // children, full constant-folding requires either linear space or dodgy
     // in-place linked list reversal.  So we only fold one exponentiation: it's
     // easy and addresses common cases like |2**32|.
-    if (node->pn_count > 2) {
+    if (node->count() > 2) {
         return true;
     }
 
-    ParseNode* base = node->pn_head;
+    ParseNode* base = node->head();
     ParseNode* exponent = base->pn_next;
     if (!base->isKind(ParseNodeKind::Number) || !exponent->isKind(ParseNodeKind::Number)) {
         return true;
@@ -1165,21 +1156,16 @@ FoldExponentiation(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHan
 }
 
 static bool
-FoldList(JSContext* cx, ParseNode* list, PerHandlerParser<FullParseHandler>& parser)
+FoldList(JSContext* cx, ListNode* list, PerHandlerParser<FullParseHandler>& parser)
 {
-    MOZ_ASSERT(list->isArity(PN_LIST));
-
-    ParseNode** elem = &list->pn_head;
+    ParseNode** elem = list->unsafeHeadReference();
     for (; *elem; elem = &(*elem)->pn_next) {
         if (!Fold(cx, elem, parser)) {
             return false;
         }
     }
 
-    // Repoint the list's tail pointer if the final element was replaced.
-    list->pn_tail = elem;
-
-    list->checkListConsistency();
+    list->unsafeReplaceTail(elem);
 
     return true;
 }
@@ -1338,11 +1324,10 @@ FoldElement(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandle
 static bool
 FoldAdd(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& parser)
 {
-    ParseNode* node = *nodePtr;
+    ListNode* node = &(*nodePtr)->as<ListNode>();
 
     MOZ_ASSERT(node->isKind(ParseNodeKind::Add));
-    MOZ_ASSERT(node->isArity(PN_LIST));
-    MOZ_ASSERT(node->pn_count >= 2);
+    MOZ_ASSERT(node->count() >= 2);
 
     // Generically fold all operands first.
     if (!FoldList(cx, node, parser)) {
@@ -1355,7 +1340,7 @@ FoldAdd(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& 
     //
     // Don't go past the leading operands: additions after a string are
     // string concatenations, not additions: ("1" + 2 + 3 === "123").
-    ParseNode* current = node->pn_head;
+    ParseNode* current = node->head();
     ParseNode* next = current->pn_next;
     if (current->isKind(ParseNodeKind::Number)) {
         do {
@@ -1367,8 +1352,7 @@ FoldAdd(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& 
             current->pn_next = next->pn_next;
             next = current->pn_next;
 
-            MOZ_ASSERT(node->pn_count > 1);
-            node->pn_count--;
+            node->unsafeDecrementCount();
         } while (next);
     }
 
@@ -1435,8 +1419,7 @@ FoldAdd(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& 
                 next = next->pn_next;
                 current->pn_next = next;
 
-                MOZ_ASSERT(node->pn_count > 1);
-                node->pn_count--;
+                node->unsafeDecrementCount();
             } while (next);
 
             // Replace |current|'s string with the entire combination.
@@ -1478,10 +1461,9 @@ FoldAdd(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& 
     MOZ_ASSERT(!next, "must have considered all nodes here");
     MOZ_ASSERT(!current->pn_next, "current node must be the last node");
 
-    node->pn_tail = &current->pn_next;
-    node->checkListConsistency();
+    node->unsafeReplaceTail(&current->pn_next);
 
-    if (node->pn_count == 1) {
+    if (node->count() == 1) {
         // We reduced the list to a constant.  Replace the ParseNodeKind::Add node
         // with that constant.
         ReplaceNode(nodePtr, current);
@@ -1526,22 +1508,18 @@ FoldCall(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& par
 }
 
 static bool
-FoldArguments(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldArguments(JSContext* cx, ListNode* node, PerHandlerParser<FullParseHandler>& parser)
 {
     MOZ_ASSERT(node->isKind(ParseNodeKind::Arguments));
-    MOZ_ASSERT(node->isArity(PN_LIST));
 
-    ParseNode** listp = &node->pn_head;
+    ParseNode** listp = node->unsafeHeadReference();
     for (; *listp; listp = &(*listp)->pn_next) {
         if (!Fold(cx, listp, parser)) {
             return false;
         }
     }
 
-    // If the last node in the list was replaced, pn_tail points into the wrong node.
-    node->pn_tail = listp;
-
-    node->checkListConsistency();
+    node->unsafeReplaceTail(listp);
     return true;
 }
 
@@ -1719,6 +1697,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
 
       case ParseNodeKind::And:
       case ParseNodeKind::Or:
+        MOZ_ASSERT((*pnp)->is<ListNode>());
         return FoldAndOr(cx, pnp, parser);
 
       case ParseNodeKind::Function:
@@ -1734,10 +1713,10 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
       case ParseNodeKind::Ursh:
       case ParseNodeKind::Div:
       case ParseNodeKind::Mod:
-        return FoldBinaryArithmetic(cx, pn, parser);
+        return FoldBinaryArithmetic(cx, &pn->as<ListNode>(), parser);
 
       case ParseNodeKind::Pow:
-        return FoldExponentiation(cx, pn, parser);
+        return FoldExponentiation(cx, &pn->as<ListNode>(), parser);
 
       // Various list nodes not requiring care to minimally fold.  Some of
       // these could be further folded/optimized, but we don't make the effort.
@@ -1767,7 +1746,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
       case ParseNodeKind::CallSiteObj:
       case ParseNodeKind::ExportSpecList:
       case ParseNodeKind::ImportSpecList:
-        return FoldList(cx, pn, parser);
+        return FoldList(cx, &pn->as<ListNode>(), parser);
 
       case ParseNodeKind::InitialYield:
         MOZ_ASSERT(pn->isArity(PN_UNARY));
@@ -1804,6 +1783,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         return FoldElement(cx, pnp, parser);
 
       case ParseNodeKind::Add:
+        MOZ_ASSERT((*pnp)->is<ListNode>());
         return FoldAdd(cx, pnp, parser);
 
       case ParseNodeKind::Call:
@@ -1813,7 +1793,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         return FoldCall(cx, pn, parser);
 
       case ParseNodeKind::Arguments:
-        return FoldArguments(cx, pn, parser);
+        return FoldArguments(cx, &pn->as<ListNode>(), parser);
 
       case ParseNodeKind::Switch:
       case ParseNodeKind::Colon:

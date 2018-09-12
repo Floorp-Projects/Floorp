@@ -3156,7 +3156,7 @@ BinASTParser<Tok>::parseInterfaceBinaryExpression(const size_t start, const BinK
         pnk != ParseNodeKind::Pow /* ParseNodeKind::Pow is not left-associative */)
     {
         // Regroup left-associative operations into lists.
-        left->appendWithoutOrderAssumption(right);
+        left->template as<ListNode>().appendWithoutOrderAssumption(right);
         result = left;
     } else {
         BINJS_TRY_DECL(list, factory_.newList(pnk, tokenizer_->pos(start)));
@@ -4982,7 +4982,7 @@ BinASTParser<Tok>::parseInterfaceForStatement(const size_t start, const BinKind 
     Binding? rest;
  }
 */
-template<typename Tok> JS::Result<ParseNode*>
+template<typename Tok> JS::Result<ListNode*>
 BinASTParser<Tok>::parseFormalParameters()
 {
     BinKind kind;
@@ -5000,7 +5000,7 @@ BinASTParser<Tok>::parseFormalParameters()
     return result;
 }
 
-template<typename Tok> JS::Result<ParseNode*>
+template<typename Tok> JS::Result<ListNode*>
 BinASTParser<Tok>::parseInterfaceFormalParameters(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::FormalParameters);
@@ -6466,7 +6466,7 @@ BinASTParser<Tok>::parseInterfaceSwitchStatementWithDefault(const size_t start, 
     // Concatenate `preDefaultCase`, `defaultCase`, `postDefaultCase`
     auto cases = preDefaultCases;
     factory_.addList(cases, defaultCase);
-    ParseNode* iter = postDefaultCases->pn_head;
+    ParseNode* iter = postDefaultCases->head();
     while (iter) {
         ParseNode* next = iter->pn_next;
         factory_.addList(cases, iter);
@@ -6920,7 +6920,7 @@ BinASTParser<Tok>::parseInterfaceVariableDeclaration(const size_t start, const B
     BINJS_MOZ_TRY_DECL(declarators, parseListOfVariableDeclarator());
 
     // By specification, the list may not be empty.
-    if (declarators->pn_count == 0)
+    if (declarators->empty())
         return raiseEmpty("VariableDeclaration");
 
     ParseNodeKind pnk;
@@ -7422,7 +7422,7 @@ BinASTParser<Tok>::parseListOfClassElement()
     return raiseError("FIXME: Not implemented yet (ListOfClassElement)");
 }
 
-template<typename Tok> JS::Result<ParseNode*>
+template<typename Tok> JS::Result<ListNode*>
 BinASTParser<Tok>::parseListOfDirective()
 {
     uint32_t length;
@@ -7477,7 +7477,7 @@ BinASTParser<Tok>::parseListOfImportSpecifier()
     return raiseError("FIXME: Not implemented yet (ListOfImportSpecifier)");
 }
 
-template<typename Tok> JS::Result<ParseNode*>
+template<typename Tok> JS::Result<ListNode*>
 BinASTParser<Tok>::parseListOfObjectProperty()
 {
     uint32_t length;
@@ -7502,7 +7502,7 @@ BinASTParser<Tok>::parseListOfOptionalBindingOrBindingWithInitializer()
     return raiseError("FIXME: Not implemented yet (ListOfOptionalBindingOrBindingWithInitializer)");
 }
 
-template<typename Tok> JS::Result<ParseNode*>
+template<typename Tok> JS::Result<ListNode*>
 BinASTParser<Tok>::parseListOfOptionalSpreadElementOrExpression()
 {
     uint32_t length;
@@ -7524,7 +7524,7 @@ BinASTParser<Tok>::parseListOfOptionalSpreadElementOrExpression()
     return result;
 }
 
-template<typename Tok> JS::Result<ParseNode*>
+template<typename Tok> JS::Result<ListNode*>
 BinASTParser<Tok>::parseListOfParameter()
 {
     uint32_t length;
@@ -7543,7 +7543,7 @@ BinASTParser<Tok>::parseListOfParameter()
     return result;
 }
 
-template<typename Tok> JS::Result<ParseNode*>
+template<typename Tok> JS::Result<ListNode*>
 BinASTParser<Tok>::parseListOfStatement()
 {
     uint32_t length;
@@ -7562,7 +7562,7 @@ BinASTParser<Tok>::parseListOfStatement()
     return result;
 }
 
-template<typename Tok> JS::Result<ParseNode*>
+template<typename Tok> JS::Result<ListNode*>
 BinASTParser<Tok>::parseListOfSwitchCase()
 {
     uint32_t length;
@@ -7581,7 +7581,7 @@ BinASTParser<Tok>::parseListOfSwitchCase()
     return result;
 }
 
-template<typename Tok> JS::Result<ParseNode*>
+template<typename Tok> JS::Result<ListNode*>
 BinASTParser<Tok>::parseListOfVariableDeclarator()
 {
     uint32_t length;

@@ -21,26 +21,24 @@ using mozilla::IsFinite;
 
 #ifdef DEBUG
 void
-ParseNode::checkListConsistency()
+ListNode::checkConsistency() const
 {
-    MOZ_ASSERT(isArity(PN_LIST));
-    ParseNode** tail;
-    uint32_t count = 0;
-    if (pn_head) {
-        ParseNode* last = pn_head;
-        ParseNode* pn = last;
+    ParseNode* const* tailNode;
+    uint32_t actualCount = 0;
+    if (const ParseNode* last = head()) {
+        const ParseNode* pn = last;
         while (pn) {
             last = pn;
             pn = pn->pn_next;
-            count++;
+            actualCount++;
         }
 
-        tail = &last->pn_next;
+        tailNode = &last->pn_next;
     } else {
-        tail = &pn_head;
+        tailNode = &pn_u.list.head;
     }
-    MOZ_ASSERT(pn_tail == tail);
-    MOZ_ASSERT(pn_count == count);
+    MOZ_ASSERT(tail() == tailNode);
+    MOZ_ASSERT(count() == actualCount);
 }
 #endif
 
@@ -93,7 +91,7 @@ ParseNode::appendOrCreateList(ParseNodeKind kind, ParseNode* left, ParseNode* ri
         }
     }
 
-    ParseNode* list = handler->new_<ListNode>(kind, JSOP_NOP, left);
+    ListNode* list = handler->new_<ListNode>(kind, JSOP_NOP, left);
     if (!list) {
         return nullptr;
     }
@@ -163,7 +161,7 @@ ParseNode::dump(GenericPrinter& out, int indent)
         ((CodeNode*) this)->dump(out, indent);
         break;
       case PN_LIST:
-        ((ListNode*) this)->dump(out, indent);
+        as<ListNode>().dump(out, indent);
         break;
       case PN_NAME:
         ((NameNode*) this)->dump(out, indent);
@@ -278,14 +276,12 @@ ListNode::dump(GenericPrinter& out, int indent)
 {
     const char* name = parseNodeNames[size_t(getKind())];
     out.printf("(%s [", name);
-    if (pn_head != nullptr) {
+    if (ParseNode* listHead = head()) {
         indent += strlen(name) + 3;
-        DumpParseTree(pn_head, out, indent);
-        ParseNode* pn = pn_head->pn_next;
-        while (pn != nullptr) {
+        DumpParseTree(listHead, out, indent);
+        for (ParseNode* item : contentsFrom(listHead->pn_next)) {
             IndentNewLine(out, indent);
-            DumpParseTree(pn, out, indent);
-            pn = pn->pn_next;
+            DumpParseTree(item, out, indent);
         }
     }
     out.printf("])");

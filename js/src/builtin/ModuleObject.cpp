@@ -1380,7 +1380,7 @@ ModuleBuilder::processImport(frontend::ParseNode* pn)
         return false;
     }
 
-    for (ParseNode* spec = pn->pn_left->pn_head; spec; spec = spec->pn_next) {
+    for (ParseNode* spec : pn->pn_left->as<ListNode>().contents()) {
         MOZ_ASSERT(spec->isKind(ParseNodeKind::ImportSpec));
         MOZ_ASSERT(spec->pn_left->isArity(PN_NAME));
         MOZ_ASSERT(spec->pn_right->isArity(PN_NAME));
@@ -1430,7 +1430,7 @@ ModuleBuilder::processExport(frontend::ParseNode* pn)
     switch (kid->getKind()) {
       case ParseNodeKind::ExportSpecList:
         MOZ_ASSERT(!isDefault);
-        for (ParseNode* spec = kid->pn_head; spec; spec = spec->pn_next) {
+        for (ParseNode* spec : kid->as<ListNode>().contents()) {
             MOZ_ASSERT(spec->isKind(ParseNodeKind::ExportSpec));
             RootedAtom localName(cx_, spec->pn_left->pn_atom);
             RootedAtom exportName(cx_, spec->pn_right->pn_atom);
@@ -1454,8 +1454,7 @@ ModuleBuilder::processExport(frontend::ParseNode* pn)
       case ParseNodeKind::Var:
       case ParseNodeKind::Const:
       case ParseNodeKind::Let: {
-        MOZ_ASSERT(kid->isArity(PN_LIST));
-        for (ParseNode* binding = kid->pn_head; binding; binding = binding->pn_next) {
+        for (ParseNode* binding : kid->as<ListNode>().contents()) {
             if (binding->isKind(ParseNodeKind::Assign)) {
                 binding = binding->pn_left;
             } else {
@@ -1469,12 +1468,12 @@ ModuleBuilder::processExport(frontend::ParseNode* pn)
                     return false;
                 }
             } else if (binding->isKind(ParseNodeKind::Array)) {
-                if (!processExportArrayBinding(binding)) {
+                if (!processExportArrayBinding(&binding->as<ListNode>())) {
                     return false;
                 }
             } else {
                 MOZ_ASSERT(binding->isKind(ParseNodeKind::Object));
-                if (!processExportObjectBinding(binding)) {
+                if (!processExportObjectBinding(&binding->as<ListNode>())) {
                     return false;
                 }
             }
@@ -1512,22 +1511,21 @@ ModuleBuilder::processExportBinding(frontend::ParseNode* binding)
     }
 
     if (binding->isKind(ParseNodeKind::Array)) {
-        return processExportArrayBinding(binding);
+        return processExportArrayBinding(&binding->as<ListNode>());
     }
 
     MOZ_ASSERT(binding->isKind(ParseNodeKind::Object));
-    return processExportObjectBinding(binding);
+    return processExportObjectBinding(&binding->as<ListNode>());
 }
 
 bool
-ModuleBuilder::processExportArrayBinding(frontend::ParseNode* pn)
+ModuleBuilder::processExportArrayBinding(frontend::ListNode* array)
 {
     using namespace js::frontend;
 
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::Array));
-    MOZ_ASSERT(pn->isArity(PN_LIST));
+    MOZ_ASSERT(array->isKind(ParseNodeKind::Array));
 
-    for (ParseNode* node = pn->pn_head; node; node = node->pn_next) {
+    for (ParseNode* node : array->contents()) {
         if (node->isKind(ParseNodeKind::Elision)) {
             continue;
         }
@@ -1547,14 +1545,13 @@ ModuleBuilder::processExportArrayBinding(frontend::ParseNode* pn)
 }
 
 bool
-ModuleBuilder::processExportObjectBinding(frontend::ParseNode* pn)
+ModuleBuilder::processExportObjectBinding(frontend::ListNode* obj)
 {
     using namespace js::frontend;
 
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::Object));
-    MOZ_ASSERT(pn->isArity(PN_LIST));
+    MOZ_ASSERT(obj->isKind(ParseNodeKind::Object));
 
-    for (ParseNode* node = pn->pn_head; node; node = node->pn_next) {
+    for (ParseNode* node : obj->contents()) {
         MOZ_ASSERT(node->isKind(ParseNodeKind::MutateProto) ||
                    node->isKind(ParseNodeKind::Colon) ||
                    node->isKind(ParseNodeKind::Shorthand) ||
@@ -1598,7 +1595,7 @@ ModuleBuilder::processExportFrom(frontend::ParseNode* pn)
         return false;
     }
 
-    for (ParseNode* spec = pn->pn_left->pn_head; spec; spec = spec->pn_next) {
+    for (ParseNode* spec : pn->pn_left->as<ListNode>().contents()) {
         if (spec->isKind(ParseNodeKind::ExportSpec)) {
             RootedAtom bindingName(cx_, spec->pn_left->pn_atom);
             RootedAtom exportName(cx_, spec->pn_right->pn_atom);

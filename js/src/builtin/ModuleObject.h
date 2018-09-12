@@ -26,6 +26,7 @@ class ModuleEnvironmentObject;
 class ModuleObject;
 
 namespace frontend {
+class ListNode;
 class ParseNode;
 class TokenStreamAnyChars;
 } /* namespace frontend */
@@ -393,8 +394,8 @@ class MOZ_STACK_CLASS ModuleBuilder
     ImportEntryObject* importEntryFor(JSAtom* localName) const;
 
     bool processExportBinding(frontend::ParseNode* pn);
-    bool processExportArrayBinding(frontend::ParseNode* pn);
-    bool processExportObjectBinding(frontend::ParseNode* pn);
+    bool processExportArrayBinding(frontend::ListNode* array);
+    bool processExportObjectBinding(frontend::ListNode* obj);
 
     bool appendImportEntryObject(HandleImportEntryObject importEntry);
 

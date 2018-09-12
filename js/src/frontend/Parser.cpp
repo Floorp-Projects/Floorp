@@ -1164,7 +1164,7 @@ ParserBase::setSourceMapInfo()
  * Parse a top-level JS script.
  */
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, CharT>::parse()
 {
     MOZ_ASSERT(checkOptionsCalled);
@@ -1182,8 +1182,8 @@ GeneralParser<ParseHandler, CharT>::parse()
         return null();
     }
 
-    Node pn = statementList(YieldIsName);
-    if (!pn) {
+    ListNodeType stmtList = statementList(YieldIsName);
+    if (!stmtList) {
         return null();
     }
 
@@ -1196,12 +1196,14 @@ GeneralParser<ParseHandler, CharT>::parse()
         return null();
     }
     if (foldConstants) {
-        if (!FoldConstants(context, &pn, this)) {
+        Node node = stmtList;
+        if (!FoldConstants(context, &node, this)) {
             return null();
         }
+        stmtList = handler.asList(node);
     }
 
-    return pn;
+    return stmtList;
 }
 
 /*
@@ -2457,7 +2459,7 @@ Parser<FullParseHandler, CharT>::evalBody(EvalSharedContext* evalsc)
 }
 
 template <typename CharT>
-ParseNode*
+ListNode*
 Parser<FullParseHandler, CharT>::globalBody(GlobalSharedContext* globalsc)
 {
     SourceParseContext globalpc(this, globalsc, /* newDirectives = */ nullptr);
@@ -2470,7 +2472,7 @@ Parser<FullParseHandler, CharT>::globalBody(GlobalSharedContext* globalsc)
         return nullptr;
     }
 
-    ParseNode* body = statementList(YieldIsName);
+    ListNode* body = statementList(YieldIsName);
     if (!body) {
         return nullptr;
     }
@@ -2479,9 +2481,11 @@ Parser<FullParseHandler, CharT>::globalBody(GlobalSharedContext* globalsc)
         return nullptr;
     }
 
-    if (!FoldConstants(context, &body, this)) {
-        return nullptr;
+    ParseNode* node = body;
+    if (!FoldConstants(context, &node, this)) {
+        return null();
     }
+    body = &node->as<ListNode>();
 
     if (!this->setSourceMapInfo()) {
         return nullptr;
@@ -2525,13 +2529,13 @@ Parser<FullParseHandler, CharT>::moduleBody(ModuleSharedContext* modulesc)
     }
 
     AutoAwaitIsKeyword<FullParseHandler, CharT> awaitIsKeyword(this, AwaitIsModuleKeyword);
-    ParseNode* pn = statementList(YieldIsName);
-    if (!pn) {
+    ListNode* stmtList = statementList(YieldIsName);
+    if (!stmtList) {
         return null();
     }
 
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::StatementList));
-    mn->pn_body = pn;
+    MOZ_ASSERT(stmtList->isKind(ParseNodeKind::StatementList));
+    mn->pn_body = stmtList;
 
     TokenKind tt;
     if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
@@ -2565,9 +2569,11 @@ Parser<FullParseHandler, CharT>::moduleBody(ModuleSharedContext* modulesc)
         p->value()->setClosedOver();
     }
 
-    if (!FoldConstants(context, &pn, this)) {
+    ParseNode* node = stmtList;
+    if (!FoldConstants(context, &node, this)) {
         return null();
     }
+    stmtList = &node->as<ListNode>();
 
     if (!this->setSourceMapInfo()) {
         return null();
@@ -2877,7 +2883,7 @@ Parser<FullParseHandler, CharT>::standaloneFunction(HandleFunction fun,
         return null();
     }
 
-    ParseNode* argsbody = handler.newList(ParseNodeKind::ParamsBody, pos());
+    ListNodeType argsbody = handler.newList(ParseNodeKind::ParamsBody, pos());
     if (!argsbody) {
         return null();
     }
@@ -3017,11 +3023,11 @@ GeneralParser<ParseHandler, CharT>::functionBody(InHandling inHandling,
     uint32_t startYieldOffset = pc->lastYieldOffset;
 #endif
 
-    Node pn;
+    Node body;
     if (type == StatementListBody) {
         bool inheritedStrict = pc->sc()->strict();
-        pn = statementList(yieldHandling);
-        if (!pn) {
+        body = statementList(yieldHandling);
+        if (!body) {
             return null();
         }
 
@@ -3042,7 +3048,7 @@ GeneralParser<ParseHandler, CharT>::functionBody(InHandling inHandling,
 
         // Async functions are implemented as generators, and generators are
         // assumed to be statement lists, to prepend initial `yield`.
-        Node stmtList = null();
+        ListNodeType stmtList = null();
         if (pc->isAsync()) {
             stmtList = handler.newStatementList(pos());
             if (!stmtList) {
@@ -3055,14 +3061,14 @@ GeneralParser<ParseHandler, CharT>::functionBody(InHandling inHandling,
             return null();
         }
 
-        pn = handler.newExpressionBody(kid);
-        if (!pn) {
+        body = handler.newExpressionBody(kid);
+        if (!body) {
             return null();
         }
 
         if (pc->isAsync()) {
-            handler.addStatementToList(stmtList, pn);
-            pn = stmtList;
+            handler.addStatementToList(stmtList, body);
+            body = stmtList;
         }
     }
 
@@ -3079,7 +3085,7 @@ GeneralParser<ParseHandler, CharT>::functionBody(InHandling inHandling,
         if (!generator) {
             return null();
         }
-        if (!handler.prependInitialYield(pn, generator)) {
+        if (!handler.prependInitialYield(handler.asList(body), generator)) {
             return null();
         }
     }
@@ -3096,7 +3102,7 @@ GeneralParser<ParseHandler, CharT>::functionBody(InHandling inHandling,
         }
     }
 
-    return finishLexicalScope(pc->varScope(), pn);
+    return finishLexicalScope(pc->varScope(), body);
 }
 
 JSFunction*
@@ -3357,7 +3363,7 @@ GeneralParser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandlin
         }
     }
 
-    Node argsbody = handler.newList(ParseNodeKind::ParamsBody, firstTokenPos);
+    ListNodeType argsbody = handler.newList(ParseNodeKind::ParamsBody, firstTokenPos);
     if (!argsbody) {
         return false;
     }
@@ -3652,7 +3658,7 @@ GeneralParser<ParseHandler, CharT>::skipLazyInnerFunction(Node funcNode, uint32_
 template <class ParseHandler, typename CharT>
 bool
 GeneralParser<ParseHandler, CharT>::addExprAndGetNextTemplStrToken(YieldHandling yieldHandling,
-                                                                   Node nodeList,
+                                                                   ListNodeType nodeList,
                                                                    TokenKind* ttp)
 {
     Node pn = expr(InAllowed, yieldHandling, TripledotProhibited);
@@ -3675,10 +3681,11 @@ GeneralParser<ParseHandler, CharT>::addExprAndGetNextTemplStrToken(YieldHandling
 
 template <class ParseHandler, typename CharT>
 bool
-GeneralParser<ParseHandler, CharT>::taggedTemplate(YieldHandling yieldHandling, Node tagArgsList,
+GeneralParser<ParseHandler, CharT>::taggedTemplate(YieldHandling yieldHandling,
+                                                   ListNodeType tagArgsList,
                                                    TokenKind tt)
 {
-    Node callSiteObjNode = handler.newCallSiteObject(pos().begin);
+    CallSiteNodeType callSiteObjNode = handler.newCallSiteObject(pos().begin);
     if (!callSiteObjNode) {
         return false;
     }
@@ -3701,7 +3708,7 @@ GeneralParser<ParseHandler, CharT>::taggedTemplate(YieldHandling yieldHandling, 
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, CharT>::templateLiteral(YieldHandling yieldHandling)
 {
     Node pn = noSubstitutionUntaggedTemplate();
@@ -3709,7 +3716,7 @@ GeneralParser<ParseHandler, CharT>::templateLiteral(YieldHandling yieldHandling)
         return null();
     }
 
-    Node nodeList = handler.newList(ParseNodeKind::TemplateStringList, pn);
+    ListNodeType nodeList = handler.newList(ParseNodeKind::TemplateStringList, pn);
     if (!nodeList) {
         return null();
     }
@@ -4025,7 +4032,7 @@ GeneralParser<ParseHandler, CharT>::innerFunction(Node funcNode, ParseContext* o
 
 template <class ParseHandler, typename CharT>
 bool
-GeneralParser<ParseHandler, CharT>::appendToCallSiteObj(Node callSiteObj)
+GeneralParser<ParseHandler, CharT>::appendToCallSiteObj(CallSiteNodeType callSiteObj)
 {
     Node cookedNode = noSubstitutionTaggedTemplate();
     if (!cookedNode) {
@@ -4434,7 +4441,7 @@ IsEscapeFreeStringLiteral(const TokenPos& pos, JSAtom* str)
 
 template <typename CharT>
 bool
-Parser<SyntaxParseHandler, CharT>::asmJS(Node list)
+Parser<SyntaxParseHandler, CharT>::asmJS(ListNodeType list)
 {
     // While asm.js could technically be validated and compiled during syntax
     // parsing, we have no guarantee that some later JS wouldn't abort the
@@ -4455,7 +4462,7 @@ Parser<SyntaxParseHandler, CharT>::asmJS(Node list)
 
 template <>
 bool
-Parser<FullParseHandler, char16_t>::asmJS(Node list)
+Parser<FullParseHandler, char16_t>::asmJS(ListNodeType list)
 {
     // Disable syntax parsing in anything nested inside the asm.js module.
     disableSyntaxParser();
@@ -4496,7 +4503,7 @@ Parser<FullParseHandler, char16_t>::asmJS(Node list)
 
 template <>
 bool
-Parser<FullParseHandler, Utf8Unit>::asmJS(Node list)
+Parser<FullParseHandler, Utf8Unit>::asmJS(ListNodeType list)
 {
     // Just succeed without setting the asm.js directive flag.  Given Web
     // Assembly's rapid advance, it's probably not worth the trouble to really
@@ -4506,7 +4513,7 @@ Parser<FullParseHandler, Utf8Unit>::asmJS(Node list)
 
 template <class ParseHandler, typename CharT>
 inline bool
-GeneralParser<ParseHandler, CharT>::asmJS(Node list)
+GeneralParser<ParseHandler, CharT>::asmJS(ListNodeType list)
 {
     return asFinalParser()->asmJS(list);
 }
@@ -4532,7 +4539,7 @@ GeneralParser<ParseHandler, CharT>::asmJS(Node list)
  */
 template <class ParseHandler, typename CharT>
 bool
-GeneralParser<ParseHandler, CharT>::maybeParseDirective(Node list, Node possibleDirective,
+GeneralParser<ParseHandler, CharT>::maybeParseDirective(ListNodeType list, Node possibleDirective,
                                                         bool* cont)
 {
     TokenPos directivePos;
@@ -4597,15 +4604,15 @@ GeneralParser<ParseHandler, CharT>::maybeParseDirective(Node list, Node possible
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, CharT>::statementList(YieldHandling yieldHandling)
 {
     if (!CheckRecursionLimit(context)) {
         return null();
     }
 
-    Node pn = handler.newStatementList(pos());
-    if (!pn) {
+    ListNodeType stmtList = handler.newStatementList(pos());
+    if (!stmtList) {
         return null();
     }
 
@@ -4629,7 +4636,7 @@ GeneralParser<ParseHandler, CharT>::statementList(YieldHandling yieldHandling)
             if (!tokenStream.peekTokenPos(&pos, TokenStream::Operand)) {
                 return null();
             }
-            handler.setListEndPosition(pn, pos);
+            handler.setListEndPosition(stmtList, pos);
             break;
         }
         if (afterReturn) {
@@ -4659,15 +4666,15 @@ GeneralParser<ParseHandler, CharT>::statementList(YieldHandling yieldHandling)
         }
 
         if (canHaveDirectives) {
-            if (!maybeParseDirective(pn, next, &canHaveDirectives)) {
+            if (!maybeParseDirective(stmtList, next, &canHaveDirectives)) {
                 return null();
             }
         }
 
-        handler.addStatementToList(pn, next);
+        handler.addStatementToList(stmtList, next);
     }
 
-    return pn;
+    return stmtList;
 }
 
 template <class ParseHandler, typename CharT>
@@ -4944,7 +4951,7 @@ GeneralParser<ParseHandler, CharT>::bindingIdentifierOrPattern(DeclarationKind k
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, CharT>::objectBindingPattern(DeclarationKind kind,
                                                          YieldHandling yieldHandling)
 {
@@ -4955,7 +4962,7 @@ GeneralParser<ParseHandler, CharT>::objectBindingPattern(DeclarationKind kind,
     }
 
     uint32_t begin = pos().begin;
-    Node literal = handler.newObjectLiteral(begin);
+    ListNodeType literal = handler.newObjectLiteral(begin);
     if (!literal) {
         return null();
     }
@@ -5091,7 +5098,7 @@ GeneralParser<ParseHandler, CharT>::objectBindingPattern(DeclarationKind kind,
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, CharT>::arrayBindingPattern(DeclarationKind kind,
                                                         YieldHandling yieldHandling)
 {
@@ -5102,7 +5109,7 @@ GeneralParser<ParseHandler, CharT>::arrayBindingPattern(DeclarationKind kind,
     }
 
     uint32_t begin = pos().begin;
-    Node literal = handler.newArrayLiteral(begin);
+    ListNodeType literal = handler.newArrayLiteral(begin);
     if (!literal) {
         return null();
     }
@@ -5241,7 +5248,7 @@ GeneralParser<ParseHandler, CharT>::blockStatement(YieldHandling yieldHandling,
         return null();
     }
 
-    Node list = statementList(yieldHandling);
+    ListNodeType list = statementList(yieldHandling);
     if (!list) {
         return null();
     }
@@ -5475,7 +5482,7 @@ GeneralParser<ParseHandler, CharT>::declarationName(DeclarationKind declKind, To
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, CharT>::declarationList(YieldHandling yieldHandling,
                                                     ParseNodeKind kind,
                                                     ParseNodeKind* forHeadKind /* = nullptr */,
@@ -5500,7 +5507,7 @@ GeneralParser<ParseHandler, CharT>::declarationList(YieldHandling yieldHandling,
         MOZ_CRASH("Unknown declaration kind");
     }
 
-    Node decl = handler.newDeclarationList(kind, pos());
+    ListNodeType decl = handler.newDeclarationList(kind, pos());
     if (!decl) {
         return null();
     }
@@ -5544,7 +5551,7 @@ GeneralParser<ParseHandler, CharT>::declarationList(YieldHandling yieldHandling,
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, CharT>::lexicalDeclaration(YieldHandling yieldHandling,
                                                        DeclarationKind kind)
 {
@@ -5561,10 +5568,10 @@ GeneralParser<ParseHandler, CharT>::lexicalDeclaration(YieldHandling yieldHandli
      *
      * See 8.1.1.1.6 and the note in 13.2.1.
      */
-    Node decl = declarationList(yieldHandling,
-                                kind == DeclarationKind::Const
-                                ? ParseNodeKind::Const
-                                : ParseNodeKind::Let);
+    ListNodeType decl = declarationList(yieldHandling,
+                                        kind == DeclarationKind::Const
+                                        ? ParseNodeKind::Const
+                                        : ParseNodeKind::Let);
     if (!decl || !matchOrInsertSemicolon()) {
         return null();
     }
@@ -5574,7 +5581,8 @@ GeneralParser<ParseHandler, CharT>::lexicalDeclaration(YieldHandling yieldHandli
 
 template <typename CharT>
 bool
-Parser<FullParseHandler, CharT>::namedImportsOrNamespaceImport(TokenKind tt, Node importSpecSet)
+Parser<FullParseHandler, CharT>::namedImportsOrNamespaceImport(TokenKind tt,
+                                                               ListNodeType importSpecSet)
 {
     if (tt == TokenKind::LeftCurly) {
         while (true) {
@@ -5722,7 +5730,7 @@ Parser<FullParseHandler, CharT>::importDeclaration()
         return null();
     }
 
-    Node importSpecSet = handler.newList(ParseNodeKind::ImportSpecList, pos());
+    ListNodeType importSpecSet = handler.newList(ParseNodeKind::ImportSpecList, pos());
     if (!importSpecSet) {
         return null();
     }
@@ -5881,12 +5889,11 @@ GeneralParser<ParseHandler, CharT>::checkExportedName(JSAtom* exportName)
 
 template<typename CharT>
 bool
-Parser<FullParseHandler, CharT>::checkExportedNamesForArrayBinding(ParseNode* pn)
+Parser<FullParseHandler, CharT>::checkExportedNamesForArrayBinding(ListNode* array)
 {
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::Array));
-    MOZ_ASSERT(pn->isArity(PN_LIST));
+    MOZ_ASSERT(array->isKind(ParseNodeKind::Array));
 
-    for (ParseNode* node = pn->pn_head; node; node = node->pn_next) {
+    for (ParseNode* node : array->contents()) {
         if (node->isKind(ParseNodeKind::Elision)) {
             continue;
         }
@@ -5910,7 +5917,7 @@ Parser<FullParseHandler, CharT>::checkExportedNamesForArrayBinding(ParseNode* pn
 
 template<typename CharT>
 inline bool
-Parser<SyntaxParseHandler, CharT>::checkExportedNamesForArrayBinding(Node node)
+Parser<SyntaxParseHandler, CharT>::checkExportedNamesForArrayBinding(ListNodeType array)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
@@ -5918,19 +5925,18 @@ Parser<SyntaxParseHandler, CharT>::checkExportedNamesForArrayBinding(Node node)
 
 template<class ParseHandler, typename CharT>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkExportedNamesForArrayBinding(Node node)
+GeneralParser<ParseHandler, CharT>::checkExportedNamesForArrayBinding(ListNodeType array)
 {
-    return asFinalParser()->checkExportedNamesForArrayBinding(node);
+    return asFinalParser()->checkExportedNamesForArrayBinding(array);
 }
 
 template<typename CharT>
 bool
-Parser<FullParseHandler, CharT>::checkExportedNamesForObjectBinding(ParseNode* pn)
+Parser<FullParseHandler, CharT>::checkExportedNamesForObjectBinding(ListNode* obj)
 {
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::Object));
-    MOZ_ASSERT(pn->isArity(PN_LIST));
+    MOZ_ASSERT(obj->isKind(ParseNodeKind::Object));
 
-    for (ParseNode* node = pn->pn_head; node; node = node->pn_next) {
+    for (ParseNode* node : obj->contents()) {
         MOZ_ASSERT(node->isKind(ParseNodeKind::MutateProto) ||
                    node->isKind(ParseNodeKind::Colon) ||
                    node->isKind(ParseNodeKind::Shorthand) ||
@@ -5961,7 +5967,7 @@ Parser<FullParseHandler, CharT>::checkExportedNamesForObjectBinding(ParseNode* p
 
 template<typename CharT>
 inline bool
-Parser<SyntaxParseHandler, CharT>::checkExportedNamesForObjectBinding(Node node)
+Parser<SyntaxParseHandler, CharT>::checkExportedNamesForObjectBinding(ListNodeType obj)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
@@ -5969,9 +5975,9 @@ Parser<SyntaxParseHandler, CharT>::checkExportedNamesForObjectBinding(Node node)
 
 template<class ParseHandler, typename CharT>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkExportedNamesForObjectBinding(Node node)
+GeneralParser<ParseHandler, CharT>::checkExportedNamesForObjectBinding(ListNodeType obj)
 {
-    return asFinalParser()->checkExportedNamesForObjectBinding(node);
+    return asFinalParser()->checkExportedNamesForObjectBinding(obj);
 }
 
 template<typename CharT>
@@ -5983,12 +5989,12 @@ Parser<FullParseHandler, CharT>::checkExportedNamesForDeclaration(ParseNode* nod
             return false;
         }
     } else if (node->isKind(ParseNodeKind::Array)) {
-        if (!checkExportedNamesForArrayBinding(node)) {
+        if (!checkExportedNamesForArrayBinding(&node->as<ListNode>())) {
             return false;
         }
     } else {
         MOZ_ASSERT(node->isKind(ParseNodeKind::Object));
-        if (!checkExportedNamesForObjectBinding(node)) {
+        if (!checkExportedNamesForObjectBinding(&node->as<ListNode>())) {
             return false;
         }
     }
@@ -6013,10 +6019,9 @@ GeneralParser<ParseHandler, CharT>::checkExportedNamesForDeclaration(Node node)
 
 template<typename CharT>
 bool
-Parser<FullParseHandler, CharT>::checkExportedNamesForDeclarationList(ParseNode* node)
+Parser<FullParseHandler, CharT>::checkExportedNamesForDeclarationList(ListNode* node)
 {
-    MOZ_ASSERT(node->isArity(PN_LIST));
-    for (ParseNode* binding = node->pn_head; binding; binding = binding->pn_next) {
+    for (ParseNode* binding : node->contents()) {
         if (binding->isKind(ParseNodeKind::Assign)) {
             binding = binding->pn_left;
         } else {
@@ -6033,7 +6038,7 @@ Parser<FullParseHandler, CharT>::checkExportedNamesForDeclarationList(ParseNode*
 
 template<typename CharT>
 inline bool
-Parser<SyntaxParseHandler, CharT>::checkExportedNamesForDeclarationList(Node node)
+Parser<SyntaxParseHandler, CharT>::checkExportedNamesForDeclarationList(ListNodeType node)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
@@ -6041,7 +6046,7 @@ Parser<SyntaxParseHandler, CharT>::checkExportedNamesForDeclarationList(Node nod
 
 template<class ParseHandler, typename CharT>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkExportedNamesForDeclarationList(Node node)
+GeneralParser<ParseHandler, CharT>::checkExportedNamesForDeclarationList(ListNodeType node)
 {
     return asFinalParser()->checkExportedNamesForDeclarationList(node);
 }
@@ -6191,7 +6196,7 @@ GeneralParser<ParseHandler, CharT>::exportBatch(uint32_t begin)
 
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Mul));
 
-    Node kid = handler.newList(ParseNodeKind::ExportSpecList, pos());
+    ListNodeType kid = handler.newList(ParseNodeKind::ExportSpecList, pos());
     if (!kid) {
         return null();
     }
@@ -6212,10 +6217,10 @@ GeneralParser<ParseHandler, CharT>::exportBatch(uint32_t begin)
 
 template<typename CharT>
 bool
-Parser<FullParseHandler, CharT>::checkLocalExportNames(ParseNode* node)
+Parser<FullParseHandler, CharT>::checkLocalExportNames(ListNode* node)
 {
     // ES 2017 draft 15.2.3.1.
-    for (ParseNode* next = node->pn_head; next; next = next->pn_next) {
+    for (ParseNode* next : node->contents()) {
         ParseNode* name = next->pn_left;
         MOZ_ASSERT(name->isKind(ParseNodeKind::Name));
 
@@ -6230,7 +6235,7 @@ Parser<FullParseHandler, CharT>::checkLocalExportNames(ParseNode* node)
 
 template<typename CharT>
 bool
-Parser<SyntaxParseHandler, CharT>::checkLocalExportNames(Node node)
+Parser<SyntaxParseHandler, CharT>::checkLocalExportNames(ListNodeType node)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
@@ -6238,7 +6243,7 @@ Parser<SyntaxParseHandler, CharT>::checkLocalExportNames(Node node)
 
 template<class ParseHandler, typename CharT>
 inline bool
-GeneralParser<ParseHandler, CharT>::checkLocalExportNames(Node node)
+GeneralParser<ParseHandler, CharT>::checkLocalExportNames(ListNodeType node)
 {
     return asFinalParser()->checkLocalExportNames(node);
 }
@@ -6253,7 +6258,7 @@ GeneralParser<ParseHandler, CharT>::exportClause(uint32_t begin)
 
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftCurly));
 
-    Node kid = handler.newList(ParseNodeKind::ExportSpecList, pos());
+    ListNodeType kid = handler.newList(ParseNodeKind::ExportSpecList, pos());
     if (!kid) {
         return null();
     }
@@ -6371,7 +6376,7 @@ GeneralParser<ParseHandler, CharT>::exportVariableStatement(uint32_t begin)
 
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Var));
 
-    Node kid = declarationList(YieldIsName, ParseNodeKind::Var);
+    ListNodeType kid = declarationList(YieldIsName, ParseNodeKind::Var);
     if (!kid) {
         return null();
     }
@@ -6470,7 +6475,7 @@ GeneralParser<ParseHandler, CharT>::exportLexicalDeclaration(uint32_t begin, Dec
     MOZ_ASSERT_IF(kind == DeclarationKind::Const, anyChars.isCurrentTokenType(TokenKind::Const));
     MOZ_ASSERT_IF(kind == DeclarationKind::Let, anyChars.isCurrentTokenType(TokenKind::Let));
 
-    Node kid = lexicalDeclaration(YieldIsName, kind);
+    ListNodeType kid = lexicalDeclaration(YieldIsName, kind);
     if (!kid) {
         return null();
     }
@@ -6766,7 +6771,7 @@ GeneralParser<ParseHandler, CharT>::consequentOrAlternative(YieldHandling yieldH
             return null();
         }
 
-        Node block = handler.newStatementList(funcPos);
+        ListNodeType block = handler.newStatementList(funcPos);
         if (!block) {
             return null();
         }
@@ -7270,7 +7275,7 @@ GeneralParser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
         return null();
     }
 
-    Node caseList = handler.newStatementList(pos());
+    ListNodeType caseList = handler.newStatementList(pos());
     if (!caseList) {
         return null();
     }
@@ -7311,7 +7316,7 @@ GeneralParser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
 
         MUST_MATCH_TOKEN_MOD(TokenKind::Colon, TokenStream::Operand, JSMSG_COLON_AFTER_CASE);
 
-        Node body = handler.newStatementList(pos());
+        ListNodeType body = handler.newStatementList(pos());
         if (!body) {
             return null();
         }
@@ -7358,14 +7363,14 @@ GeneralParser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
         handler.addCaseStatementToList(caseList, casepn);
     }
 
-    caseList = finishLexicalScope(scope, caseList);
-    if (!caseList) {
+    Node lexicalForCaseList = finishLexicalScope(scope, caseList);
+    if (!lexicalForCaseList) {
         return null();
     }
 
-    handler.setEndPosition(caseList, pos().end);
+    handler.setEndPosition(lexicalForCaseList, pos().end);
 
-    return handler.newSwitchStatement(begin, discriminant, caseList, seenDefault);
+    return handler.newSwitchStatement(begin, discriminant, lexicalForCaseList, seenDefault);
 }
 
 template <class ParseHandler, typename CharT>
@@ -7877,7 +7882,7 @@ GeneralParser<ParseHandler, CharT>::catchBlockStatement(YieldHandling yieldHandl
         return null();
     }
 
-    Node list = statementList(yieldHandling);
+    ListNodeType list = statementList(yieldHandling);
     if (!list) {
         return null();
     }
@@ -8006,7 +8011,7 @@ GeneralParser<ParseHandler, CharT>::classDefinition(YieldHandling yieldHandling,
 
     MUST_MATCH_TOKEN(TokenKind::LeftCurly, JSMSG_CURLY_BEFORE_CLASS);
 
-    Node classMethods = handler.newClassMethodList(pos().begin);
+    ListNodeType classMethods = handler.newClassMethodList(pos().begin);
     if (!classMethods) {
         return null();
     }
@@ -8208,7 +8213,7 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::variableStatement(YieldHandling yieldHandling)
 {
-    Node vars = declarationList(yieldHandling, ParseNodeKind::Var);
+    ListNodeType vars = declarationList(yieldHandling, ParseNodeKind::Var);
     if (!vars) {
         return null();
     }
@@ -8673,7 +8678,7 @@ GeneralParser<ParseHandler, CharT>::expr(InHandling inHandling, YieldHandling yi
         return pn;
     }
 
-    Node seq = handler.newCommaExpressionList(pn);
+    ListNodeType seq = handler.newCommaExpressionList(pn);
     if (!seq) {
         return null();
     }
@@ -9408,11 +9413,11 @@ GeneralParser<ParseHandler, CharT>::assignExprWithoutYieldOrAwait(YieldHandling 
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, CharT>::argumentList(YieldHandling yieldHandling, bool* isSpread,
                                                  PossibleError* possibleError /* = nullptr */)
 {
-    Node argsList = handler.newArguments(pos());
+    ListNodeType argsList = handler.newArguments(pos());
     if (!argsList) {
         return null();
     }
@@ -9732,7 +9737,7 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                         return null();
                     }
                 } else {
-                    Node args = handler.newArguments(pos());
+                    ListNodeType args = handler.newArguments(pos());
                     if (!args) {
                         return null();
                     }
@@ -10133,14 +10138,14 @@ GeneralParser<ParseHandler, CharT>::checkDestructuringAssignmentElement(Node exp
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, CharT>::arrayInitializer(YieldHandling yieldHandling,
                                                      PossibleError* possibleError)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftBracket));
 
     uint32_t begin = pos().begin;
-    Node literal = handler.newArrayLiteral(begin);
+    ListNodeType literal = handler.newArrayLiteral(begin);
     if (!literal) {
         return null();
     }
@@ -10155,7 +10160,7 @@ GeneralParser<ParseHandler, CharT>::arrayInitializer(YieldHandling yieldHandling
          * Mark empty arrays as non-constant, since we cannot easily
          * determine their type.
          */
-        handler.setListFlag(literal, PNX_NONCONST);
+        handler.setListHasNonConstInitializer(literal);
     } else {
         anyChars.ungetToken();
 
@@ -10254,7 +10259,7 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
                                                  const Maybe<DeclarationKind>& maybeDecl,
-                                                 Node propList,
+                                                 ListNodeType propList,
                                                  PropertyType* propType,
                                                  MutableHandleAtom propAtom)
 {
@@ -10466,7 +10471,7 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::computedPropertyName(YieldHandling yieldHandling,
                                                          const Maybe<DeclarationKind>& maybeDecl,
-                                                         Node literal)
+                                                         ListNodeType literal)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftBracket));
 
@@ -10477,7 +10482,7 @@ GeneralParser<ParseHandler, CharT>::computedPropertyName(YieldHandling yieldHand
             pc->functionBox()->hasParameterExprs = true;
         }
     } else {
-        handler.setListFlag(literal, PNX_NONCONST);
+        handler.setListHasNonConstInitializer(literal);
     }
 
     Node assignNode = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
@@ -10490,7 +10495,7 @@ GeneralParser<ParseHandler, CharT>::computedPropertyName(YieldHandling yieldHand
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
                                                   PossibleError* possibleError)
 {
@@ -10498,7 +10503,7 @@ GeneralParser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
 
     uint32_t openedPos = pos().begin;
 
-    Node literal = handler.newObjectLiteral(pos().begin);
+    ListNodeType literal = handler.newObjectLiteral(pos().begin);
     if (!literal) {
         return null();
     }
