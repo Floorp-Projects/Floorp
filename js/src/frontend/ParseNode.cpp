@@ -176,7 +176,7 @@ ParseNode::dump(GenericPrinter& out, int indent)
         as<LoopControlStatement>().dump(out, indent);
         return;
       case PN_SCOPE:
-        ((LexicalScopeNode*) this)->dump(out, indent);
+        as<LexicalScopeNode>().dump(out, indent);
         return;
     }
     out.printf("#<BAD NODE %p, kind=%u, arity=%u>",
