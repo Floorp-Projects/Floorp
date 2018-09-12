@@ -105,8 +105,12 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
 
       // Statements with no sub-components at all.
       case ParseNodeKind::EmptyStatement:
+        MOZ_ASSERT(node->is<NullaryNode>());
+        *result = false;
+        return true;
+
       case ParseNodeKind::Debugger:
-        MOZ_ASSERT(node->isArity(PN_NULLARY));
+        MOZ_ASSERT(node->is<DebuggerStatement>());
         *result = false;
         return true;
 
@@ -1604,13 +1608,22 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
       case ParseNodeKind::Null:
       case ParseNodeKind::RawUndefined:
       case ParseNodeKind::Elision:
-      case ParseNodeKind::Debugger:
-      case ParseNodeKind::Break:
-      case ParseNodeKind::Continue:
       case ParseNodeKind::Generator:
       case ParseNodeKind::ExportBatchSpec:
       case ParseNodeKind::PosHolder:
-        MOZ_ASSERT(pn->isArity(PN_NULLARY));
+        MOZ_ASSERT(pn->is<NullaryNode>());
+        return true;
+
+      case ParseNodeKind::Debugger:
+        MOZ_ASSERT(pn->is<DebuggerStatement>());
+        return true;
+
+      case ParseNodeKind::Break:
+        MOZ_ASSERT(pn->is<BreakStatement>());
+        return true;
+
+      case ParseNodeKind::Continue:
+        MOZ_ASSERT(pn->is<ContinueStatement>());
         return true;
 
       case ParseNodeKind::ObjectPropertyName:

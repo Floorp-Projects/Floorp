@@ -1043,7 +1043,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case ParseNodeKind::RawUndefined:
       case ParseNodeKind::Elision:
       case ParseNodeKind::Generator:
-        MOZ_ASSERT(pn->isArity(PN_NULLARY));
+        MOZ_ASSERT(pn->is<NullaryNode>());
         *answer = false;
         return true;
 
@@ -1081,9 +1081,17 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       }
 
       case ParseNodeKind::Break:
+        MOZ_ASSERT(pn->is<BreakStatement>());
+        *answer = true;
+        return true;
+
       case ParseNodeKind::Continue:
+        MOZ_ASSERT(pn->is<ContinueStatement>());
+        *answer = true;
+        return true;
+
       case ParseNodeKind::Debugger:
-        MOZ_ASSERT(pn->isArity(PN_NULLARY));
+        MOZ_ASSERT(pn->is<DebuggerStatement>());
         *answer = true;
         return true;
 

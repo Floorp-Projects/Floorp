@@ -146,7 +146,7 @@ ParseNode::dump(GenericPrinter& out, int indent)
 {
     switch (ParseNodeArity(pn_arity)) {
       case PN_NULLARY:
-        ((NullaryNode*) this)->dump(out);
+        as<NullaryNode>().dump(out);
         return;
       case PN_UNARY:
         as<UnaryNode>().dump(out, indent);
@@ -171,6 +171,9 @@ ParseNode::dump(GenericPrinter& out, int indent)
         return;
       case PN_REGEXP:
         as<RegExpLiteral>().dump(out, indent);
+        return;
+      case PN_LOOP:
+        as<LoopControlStatement>().dump(out, indent);
         return;
       case PN_SCOPE:
         ((LexicalScopeNode*) this)->dump(out, indent);
@@ -213,6 +216,18 @@ void
 RegExpLiteral::dump(GenericPrinter& out, int indent)
 {
     out.printf("(%s)", parseNodeNames[size_t(getKind())]);
+}
+
+void
+LoopControlStatement::dump(GenericPrinter& out, int indent)
+{
+    const char* name = parseNodeNames[size_t(getKind())];
+    out.printf("(%s", name);
+    if (label()) {
+        out.printf(" ");
+        label()->dumpCharsNoNewline(out);
+    }
+    out.printf(")");
 }
 
 void
