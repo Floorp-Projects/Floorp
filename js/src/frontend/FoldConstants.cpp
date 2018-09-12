@@ -95,7 +95,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       // that we preserve an unreachable function declaration node against
       // dead-code removal.
       case ParseNodeKind::Function:
-        MOZ_ASSERT(node->isArity(PN_CODE));
+        MOZ_ASSERT(node->is<CodeNode>());
         *result = false;
         return true;
 
@@ -156,7 +156,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
         return ContainsHoistedDeclaration(cx, node->as<BinaryNode>().right(), result);
 
       case ParseNodeKind::Label:
-        return ContainsHoistedDeclaration(cx, node->pn_expr, result);
+        return ContainsHoistedDeclaration(cx, node->as<NameNode>().expression(), result);
 
       // Statements with more complicated structures.
 
@@ -277,14 +277,14 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
 
       case ParseNodeKind::LexicalScope: {
         MOZ_ASSERT(node->isArity(PN_SCOPE));
-        ParseNode* expr = node->pn_expr;
+        ParseNode* expr = node->scopeBody();
 
         if (expr->isKind(ParseNodeKind::For) || expr->isKind(ParseNodeKind::Function)) {
             return ContainsHoistedDeclaration(cx, expr, result);
         }
 
         MOZ_ASSERT(expr->isKind(ParseNodeKind::StatementList));
-        return ListContainsHoistedDeclaration(cx, &node->pn_expr->as<ListNode>(), result);
+        return ListContainsHoistedDeclaration(cx, &node->scopeBody()->as<ListNode>(), result);
       }
 
       // List nodes with all non-null children.
@@ -418,23 +418,26 @@ FoldType(JSContext* cx, ParseNode* pn, ParseNodeKind kind)
           case ParseNodeKind::Number:
             if (pn->isKind(ParseNodeKind::String)) {
                 double d;
-                if (!StringToNumber(cx, pn->pn_atom, &d)) {
+                if (!StringToNumber(cx, pn->as<NameNode>().atom(), &d)) {
                     return false;
                 }
-                pn->pn_dval = d;
                 pn->setKind(ParseNodeKind::Number);
+                pn->setArity(PN_NUMBER);
                 pn->setOp(JSOP_DOUBLE);
+                pn->as<NumericLiteral>().setValue(d);
             }
             break;
 
           case ParseNodeKind::String:
             if (pn->isKind(ParseNodeKind::Number)) {
-                pn->pn_atom = NumberToAtom(cx, pn->pn_dval);
-                if (!pn->pn_atom) {
+                JSAtom* atom = NumberToAtom(cx, pn->as<NumericLiteral>().value());
+                if (!atom) {
                     return false;
                 }
                 pn->setKind(ParseNodeKind::String);
+                pn->setArity(PN_NAME);
                 pn->setOp(JSOP_STRING);
+                pn->as<NameNode>().setAtom(atom);
             }
             break;
 
@@ -478,11 +481,11 @@ Boolish(ParseNode* pn)
 {
     switch (pn->getKind()) {
       case ParseNodeKind::Number:
-        return (pn->pn_dval != 0 && !IsNaN(pn->pn_dval)) ? Truthy : Falsy;
+        return (pn->as<NumericLiteral>().value() != 0 && !IsNaN(pn->as<NumericLiteral>().value())) ? Truthy : Falsy;
 
       case ParseNodeKind::String:
       case ParseNodeKind::TemplateString:
-        return (pn->pn_atom->length() > 0) ? Truthy : Falsy;
+        return (pn->as<NameNode>().atom()->length() > 0) ? Truthy : Falsy;
 
       case ParseNodeKind::True:
       case ParseNodeKind::Function:
@@ -572,9 +575,9 @@ FoldTypeOfExpr(JSContext* cx, UnaryNode* node, PerHandlerParser<FullParseHandler
 
     if (result) {
         node->setKind(ParseNodeKind::String);
-        node->setArity(PN_NULLARY);
+        node->setArity(PN_NAME);
         node->setOp(JSOP_NOP);
-        node->pn_atom = result;
+        node->as<NameNode>().setAtom(result);
     }
 
     return true;
@@ -660,7 +663,7 @@ FoldNot(JSContext* cx, UnaryNode* node, PerHandlerParser<FullParseHandler>& pars
     ParseNode* expr = node->kid();
 
     if (expr->isKind(ParseNodeKind::Number)) {
-        double d = expr->pn_dval;
+        double d = expr->as<NumericLiteral>().value();
 
         if (d == 0 || IsNaN(d)) {
             node->setKind(ParseNodeKind::True);
@@ -700,7 +703,7 @@ FoldUnaryArithmetic(JSContext* cx, UnaryNode* node, PerHandlerParser<FullParseHa
         expr->isKind(ParseNodeKind::False))
     {
         double d = expr->isKind(ParseNodeKind::Number)
-                   ? expr->pn_dval
+                   ? expr->as<NumericLiteral>().value()
                    : double(expr->isKind(ParseNodeKind::True));
 
         if (node->isKind(ParseNodeKind::BitNot)) {
@@ -712,9 +715,9 @@ FoldUnaryArithmetic(JSContext* cx, UnaryNode* node, PerHandlerParser<FullParseHa
         }
 
         node->setKind(ParseNodeKind::Number);
+        node->setArity(PN_NUMBER);
         node->setOp(JSOP_DOUBLE);
-        node->setArity(PN_NULLARY);
-        node->pn_dval = d;
+        node->as<NumericLiteral>().setValue(d);
     }
 
     return true;
@@ -974,20 +977,19 @@ FoldIf(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& p
 }
 
 static bool
-FoldFunction(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldFunction(JSContext* cx, CodeNode* node, PerHandlerParser<FullParseHandler>& parser)
 {
     MOZ_ASSERT(node->isKind(ParseNodeKind::Function));
-    MOZ_ASSERT(node->isArity(PN_CODE));
 
     // Don't constant-fold inside "use asm" code, as this could create a parse
     // tree that doesn't type-check as asm.js.
-    if (node->pn_funbox->useAsmOrInsideUseAsm()) {
+    if (node->funbox()->useAsmOrInsideUseAsm()) {
         return true;
     }
 
-    // Note: pn_body is null for lazily-parsed functions.
-    if (ParseNode*& functionBody = node->pn_body) {
-        if (!Fold(cx, &functionBody, parser)) {
+    // Note: body is null for lazily-parsed functions.
+    if (node->body()) {
+        if (!Fold(cx, node->unsafeBodyReference(), parser)) {
             return false;
         }
     }
@@ -1030,14 +1032,12 @@ ComputeBinary(ParseNodeKind kind, double left, double right)
 }
 
 static bool
-FoldModule(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldModule(JSContext* cx, CodeNode* node, PerHandlerParser<FullParseHandler>& parser)
 {
     MOZ_ASSERT(node->isKind(ParseNodeKind::Module));
-    MOZ_ASSERT(node->isArity(PN_CODE));
 
-    ParseNode*& moduleBody = node->pn_body;
-    MOZ_ASSERT(moduleBody);
-    return Fold(cx, &moduleBody, parser);
+    MOZ_ASSERT(node->body());
+    return Fold(cx, node->unsafeBodyReference(), parser);
 }
 
 static bool
@@ -1080,15 +1080,15 @@ FoldBinaryArithmetic(JSContext* cx, ListNode* node, PerHandlerParser<FullParseHa
                 break;
             }
 
-            double d = ComputeBinary(kind, elem->pn_dval, next->pn_dval);
+            double d = ComputeBinary(kind, elem->as<NumericLiteral>().value(), next->as<NumericLiteral>().value());
 
             next = next->pn_next;
             elem->pn_next = next;
 
             elem->setKind(ParseNodeKind::Number);
+            elem->setArity(PN_NUMBER);
             elem->setOp(JSOP_DOUBLE);
-            elem->setArity(PN_NULLARY);
-            elem->pn_dval = d;
+            elem->as<NumericLiteral>().setValue(d);
 
             node->unsafeDecrementCount();
         }
@@ -1097,11 +1097,11 @@ FoldBinaryArithmetic(JSContext* cx, ListNode* node, PerHandlerParser<FullParseHa
             MOZ_ASSERT(node->head() == elem);
             MOZ_ASSERT(elem->isKind(ParseNodeKind::Number));
 
-            double d = elem->pn_dval;
+            double d = elem->as<NumericLiteral>().value();
             node->setKind(ParseNodeKind::Number);
-            node->setArity(PN_NULLARY);
+            node->setArity(PN_NUMBER);
             node->setOp(JSOP_DOUBLE);
-            node->pn_dval = d;
+            node->as<NumericLiteral>().setValue(d);
         }
     }
 
@@ -1143,12 +1143,13 @@ FoldExponentiation(JSContext* cx, ListNode* node, PerHandlerParser<FullParseHand
         return true;
     }
 
-    double d1 = base->pn_dval, d2 = exponent->pn_dval;
+    double d1 = base->as<NumericLiteral>().value();
+    double d2 = exponent->as<NumericLiteral>().value();
 
     node->setKind(ParseNodeKind::Number);
-    node->setArity(PN_NULLARY);
+    node->setArity(PN_NUMBER);
     node->setOp(JSOP_DOUBLE);
-    node->pn_dval = ecmaPow(d1, d2);
+    node->as<NumericLiteral>().setValue(ecmaPow(d1, d2));
     return true;
 }
 
@@ -1268,20 +1269,21 @@ FoldElement(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandle
     ParseNode* key = &elem->key();
     PropertyName* name = nullptr;
     if (key->isKind(ParseNodeKind::String)) {
-        JSAtom* atom = key->pn_atom;
+        JSAtom* atom = key->as<NameNode>().atom();
         uint32_t index;
 
         if (atom->isIndex(&index)) {
             // Optimization 1: We have something like expr["100"]. This is
             // equivalent to expr[100] which is faster.
             key->setKind(ParseNodeKind::Number);
+            key->setArity(PN_NUMBER);
             key->setOp(JSOP_DOUBLE);
-            key->pn_dval = index;
+            key->as<NumericLiteral>().setValue(index);
         } else {
             name = atom->asPropertyName();
         }
     } else if (key->isKind(ParseNodeKind::Number)) {
-        double number = key->pn_dval;
+        double number = key->as<NumericLiteral>().value();
         if (number != ToUint32(number)) {
             // Optimization 2: We have something like expr[3.14]. The number
             // isn't an array index, so it converts to a string ("3.14"),
@@ -1301,7 +1303,7 @@ FoldElement(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandle
 
     // Optimization 3: We have expr["foo"] where foo is not an index.  Convert
     // to a property access (like expr.foo) that optimizes better downstream.
-    ParseNode* nameNode = parser.newPropertyName(name, key->pn_pos);
+    NameNode* nameNode = parser.newPropertyName(name, key->pn_pos);
     if (!nameNode) {
         return false;
     }
@@ -1342,7 +1344,9 @@ FoldAdd(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& 
                 break;
             }
 
-            current->pn_dval += next->pn_dval;
+            NumericLiteral* num = &current->as<NumericLiteral>();
+
+            num->setValue(num->value() + next->as<NumericLiteral>().value());
             current->pn_next = next->pn_next;
             next = current->pn_next;
 
@@ -1390,7 +1394,7 @@ FoldAdd(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& 
             // and replace them all with that fresh string.
             MOZ_ASSERT(current->isKind(ParseNodeKind::String));
 
-            combination = current->pn_atom;
+            combination = current->as<NameNode>().atom();
 
             do {
                 // Try folding the next operand to a string.
@@ -1404,7 +1408,7 @@ FoldAdd(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& 
                 }
 
                 // Add this string to the combination and remove the node.
-                tmp = next->pn_atom;
+                tmp = next->as<NameNode>().atom();
                 combination = ConcatStrings<CanGC>(cx, combination, tmp);
                 if (!combination) {
                     return false;
@@ -1422,7 +1426,7 @@ FoldAdd(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& 
             if (!combination) {
                 return false;
             }
-            current->pn_atom = &combination->asAtom();
+            current->as<NameNode>().setAtom(&combination->asAtom());
 
 
             // If we're out of nodes, we're done.
@@ -1573,16 +1577,15 @@ FoldDottedProperty(JSContext* cx, PropertyAccess* prop, PerHandlerParser<FullPar
 }
 
 static bool
-FoldName(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldName(JSContext* cx, NameNode* nameNode, PerHandlerParser<FullParseHandler>& parser)
 {
-    MOZ_ASSERT(node->isKind(ParseNodeKind::Name));
-    MOZ_ASSERT(node->isArity(PN_NAME));
+    MOZ_ASSERT(nameNode->isKind(ParseNodeKind::Name));
 
-    if (!node->pn_expr) {
+    if (!nameNode->expression()) {
         return true;
     }
 
-    return Fold(cx, &node->pn_expr, parser);
+    return Fold(cx, nameNode->unsafeExpressionReference(), parser);
 }
 
 bool
@@ -1596,31 +1599,41 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
 
     switch (pn->getKind()) {
       case ParseNodeKind::EmptyStatement:
-      case ParseNodeKind::RegExp:
-      case ParseNodeKind::String:
       case ParseNodeKind::True:
       case ParseNodeKind::False:
       case ParseNodeKind::Null:
       case ParseNodeKind::RawUndefined:
       case ParseNodeKind::Elision:
-      case ParseNodeKind::Number:
       case ParseNodeKind::Debugger:
       case ParseNodeKind::Break:
       case ParseNodeKind::Continue:
-      case ParseNodeKind::TemplateString:
       case ParseNodeKind::Generator:
       case ParseNodeKind::ExportBatchSpec:
-      case ParseNodeKind::ObjectPropertyName:
       case ParseNodeKind::PosHolder:
         MOZ_ASSERT(pn->isArity(PN_NULLARY));
+        return true;
+
+      case ParseNodeKind::ObjectPropertyName:
+      case ParseNodeKind::String:
+      case ParseNodeKind::TemplateString:
+        MOZ_ASSERT(pn->is<NameNode>());
+        return true;
+
+      case ParseNodeKind::RegExp:
+        MOZ_ASSERT(pn->is<RegExpLiteral>());
+        return true;
+
+      case ParseNodeKind::Number:
+        MOZ_ASSERT(pn->is<NumericLiteral>());
         return true;
 
       case ParseNodeKind::SuperBase:
       case ParseNodeKind::TypeOfName: {
 #ifdef DEBUG
         UnaryNode* node = &pn->as<UnaryNode>();
-        MOZ_ASSERT(node->kid()->isKind(ParseNodeKind::Name));
-        MOZ_ASSERT(!node->kid()->expr());
+        NameNode* nameNode = &node->kid()->as<NameNode>();
+        MOZ_ASSERT(nameNode->isKind(ParseNodeKind::Name));
+        MOZ_ASSERT(!nameNode->expression());
 #endif
         return true;
       }
@@ -1693,10 +1706,10 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         return FoldAndOr(cx, pnp, parser);
 
       case ParseNodeKind::Function:
-        return FoldFunction(cx, pn, parser);
+        return FoldFunction(cx, &pn->as<CodeNode>(), parser);
 
       case ParseNodeKind::Module:
-        return FoldModule(cx, pn, parser);
+        return FoldModule(cx, &pn->as<CodeNode>(), parser);
 
       case ParseNodeKind::Sub:
       case ParseNodeKind::Star:
@@ -1883,8 +1896,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         return FoldForHead(cx, &pn->as<TernaryNode>(), parser);
 
       case ParseNodeKind::Label:
-        MOZ_ASSERT(pn->isArity(PN_NAME));
-        return Fold(cx, &pn->pn_expr, parser);
+        return Fold(cx, pn->as<NameNode>().unsafeExpressionReference(), parser);
 
       case ParseNodeKind::PropertyName:
         MOZ_CRASH("unreachable, handled by ::Dot");
@@ -1900,7 +1912,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         return Fold(cx, &pn->pn_u.scope.body, parser);
 
       case ParseNodeKind::Name:
-        return FoldName(cx, pn, parser);
+        return FoldName(cx, &pn->as<NameNode>(), parser);
 
       case ParseNodeKind::Limit: // invalid sentinel value
         MOZ_CRASH("invalid node kind");

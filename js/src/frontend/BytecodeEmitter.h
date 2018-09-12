@@ -480,7 +480,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
         No,
         Yes
     };
-    MOZ_MUST_USE bool emitFunctionScript(ParseNode* fn, TopLevelFunction isTopLevel);
+    MOZ_MUST_USE bool emitFunctionScript(CodeNode* funNode, TopLevelFunction isTopLevel);
 
     // If op is JOF_TYPESET (see the type barriers comment in TypeInference.h),
     // reserve a type set to store its result.
@@ -561,7 +561,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitIndexOp(JSOp op, uint32_t index);
 
     MOZ_MUST_USE bool emitAtomOp(JSAtom* atom, JSOp op);
-    MOZ_MUST_USE bool emitAtomOp(ParseNode* pn, JSOp op);
+    MOZ_MUST_USE bool emitAtomOp(NameNode* nameNode, JSOp op);
 
     MOZ_MUST_USE bool emitArrayLiteral(ListNode* array);
     MOZ_MUST_USE bool emitArray(ParseNode* arrayHead, uint32_t count);
@@ -572,7 +572,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitObjectPairOp(ObjectBox* objbox1, ObjectBox* objbox2, JSOp op);
     MOZ_MUST_USE bool emitRegExp(uint32_t index);
 
-    MOZ_NEVER_INLINE MOZ_MUST_USE bool emitFunction(ParseNode* pn, bool needsProto = false);
+    MOZ_NEVER_INLINE MOZ_MUST_USE bool emitFunction(CodeNode* funNode, bool needsProto = false);
     MOZ_NEVER_INLINE MOZ_MUST_USE bool emitObject(ListNode* objNode);
 
     MOZ_MUST_USE bool replaceNewInitWithNewObject(JSObject* obj, ptrdiff_t offset);

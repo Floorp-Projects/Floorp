@@ -1912,7 +1912,7 @@ BinASTParser<Tok>::parseSumParameter(const size_t start, const BinKind kind, con
         break;
       case BinKind::BindingIdentifier:
         MOZ_TRY_VAR(result, parseInterfaceBindingIdentifier(start, kind, fields));
-        if (!parseContext_->positionalFormalParameterNames().append(result->pn_atom))
+        if (!parseContext_->positionalFormalParameterNames().append(result->template as<NameNode>().atom()))
             return raiseOOM();
         if (parseContext_->isFunctionBox())
             parseContext_->functionBox()->length++;
@@ -4810,7 +4810,7 @@ BinASTParser<Tok>::parseInterfaceForInOfBinding(const size_t start, const BinKin
 
     // Restored by `kindGuard`.
     variableDeclarationKind_ = kind_;
-    MOZ_TRY(checkBinding(binding->pn_atom->asPropertyName()));
+    MOZ_TRY(checkBinding(binding->template as<NameNode>().atom()->asPropertyName()));
     auto pnk =
         kind_ == VariableDeclarationKind::Let
             ? ParseNodeKind::Let
@@ -6985,11 +6985,11 @@ BinASTParser<Tok>::parseInterfaceVariableDeclarator(const size_t start, const Bi
     ParseNode* result;
     if (binding->isKind(ParseNodeKind::Name)) {
         // `var foo [= bar]``
-        MOZ_TRY(checkBinding(binding->pn_atom->asPropertyName()));
+        MOZ_TRY(checkBinding(binding->template as<NameNode>().atom()->asPropertyName()));
 
-        BINJS_TRY_VAR(result, factory_.newName(binding->pn_atom->asPropertyName(), tokenizer_->pos(start), cx_));
+        BINJS_TRY_VAR(result, factory_.newName(binding->template as<NameNode>().atom()->asPropertyName(), tokenizer_->pos(start), cx_));
         if (init)
-            result->pn_expr = init;
+            result->as<NameNode>().setExpression(init);
     } else {
         // `var pattern = bar`
         if (!init) {
