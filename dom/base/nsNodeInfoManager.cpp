@@ -47,7 +47,7 @@ nsNodeInfoManager::nsNodeInfoManager()
     mTextNodeInfo(nullptr),
     mCommentNodeInfo(nullptr),
     mDocumentNodeInfo(nullptr),
-    mRecentlyUsedNodeInfos{},
+    mRecentlyUsedNodeInfos(),
     mSVGEnabled(eTriUnset),
     mMathMLEnabled(eTriUnset)
 {
@@ -154,10 +154,9 @@ nsNodeInfoManager::GetNodeInfo(nsAtom *aName, nsAtom *aPrefix,
   NodeInfo::NodeInfoInner tmpKey(aName, aPrefix, aNamespaceID, aNodeType,
                                  aExtraName);
 
-  uint32_t index = tmpKey.Hash() % RECENTLY_USED_NODEINFOS_SIZE;
-  NodeInfo* ni = mRecentlyUsedNodeInfos[index];
-  if (ni && tmpKey == ni->mInner) {
-    RefPtr<NodeInfo> nodeInfo = ni;
+  auto p = mRecentlyUsedNodeInfos.Lookup(tmpKey);
+  if (p) {
+    RefPtr<NodeInfo> nodeInfo = p.Data();
     return nodeInfo.forget();
   }
 
@@ -176,7 +175,7 @@ nsNodeInfoManager::GetNodeInfo(nsAtom *aName, nsAtom *aPrefix,
 
   // Have to do the swap thing, because already_AddRefed<nsNodeInfo>
   // doesn't cast to already_AddRefed<mozilla::dom::NodeInfo>
-  mRecentlyUsedNodeInfos[index] = nodeInfo;
+  p.Set(nodeInfo);
   return nodeInfo.forget();
 }
 
@@ -196,10 +195,9 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsAtom *aPrefix,
 
   NodeInfo::NodeInfoInner tmpKey(aName, aPrefix, aNamespaceID, aNodeType);
 
-  uint32_t index = tmpKey.Hash() % RECENTLY_USED_NODEINFOS_SIZE;
-  NodeInfo* ni = mRecentlyUsedNodeInfos[index];
-  if (ni && ni->mInner == tmpKey) {
-    RefPtr<NodeInfo> nodeInfo = ni;
+  auto p = mRecentlyUsedNodeInfos.Lookup(tmpKey);
+  if (p) {
+    RefPtr<NodeInfo> nodeInfo = p.Data();
     nodeInfo.forget(aNodeInfo);
     return NS_OK;
   }
@@ -216,7 +214,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsAtom *aPrefix,
     mNodeInfoHash.Put(&nodeInfo->mInner, nodeInfo);
   }
 
-  mRecentlyUsedNodeInfos[index] = nodeInfo;
+  p.Set(nodeInfo);
   nodeInfo.forget(aNodeInfo);
 
   return NS_OK;
@@ -341,11 +339,7 @@ nsNodeInfoManager::RemoveNodeInfo(NodeInfo *aNodeInfo)
     }
   }
 
-  uint32_t index = aNodeInfo->mInner.Hash() % RECENTLY_USED_NODEINFOS_SIZE;
-  if (mRecentlyUsedNodeInfos[index] == aNodeInfo) {
-    mRecentlyUsedNodeInfos[index] = nullptr;
-  }
-
+  mRecentlyUsedNodeInfos.Remove(aNodeInfo->mInner);
   DebugOnly<bool> ret = mNodeInfoHash.Remove(&aNodeInfo->mInner);
   MOZ_ASSERT(ret, "Can't find mozilla::dom::NodeInfo to remove!!!");
 }
