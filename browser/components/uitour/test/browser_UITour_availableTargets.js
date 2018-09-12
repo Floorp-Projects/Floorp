@@ -82,7 +82,7 @@ add_UITour_task(async function test_availableTargets_removeUrlbarPageActionsAll(
   ok_targets(data, expecteds);
   let expectedActions = [
     [ "pocket", "pageAction-panel-pocket" ],
-    [ "screenshots", "pageAction-panel-screenshots" ],
+    [ "screenshots", "pageAction-panel-screenshots_mozilla_org" ],
     [ "pageAction-bookmark", "pageAction-panel-bookmark" ],
     [ "pageAction-copyURL", "pageAction-panel-copyURL" ],
     [ "pageAction-emailLink", "pageAction-panel-emailLink" ],
@@ -102,7 +102,7 @@ add_UITour_task(async function test_availableTargets_addUrlbarPageActionsAll() {
   ok_targets(data, expecteds);
   let expectedActions = [
     [ "pocket", "pocket-button-box" ],
-    [ "screenshots", "pageAction-urlbar-screenshots" ],
+    [ "screenshots", "pageAction-panel-screenshots_mozilla_org" ],
     [ "pageAction-bookmark", "star-button-box" ],
     [ "pageAction-copyURL", "pageAction-urlbar-copyURL" ],
     [ "pageAction-emailLink", "pageAction-urlbar-emailLink" ],
@@ -157,6 +157,6 @@ function ensureScreenshotsEnabled() {
     [ "extensions.screenshots.disabled", false ],
   ]});
   return BrowserTestUtils.waitForCondition(() => {
-    return PageActions.actionForID("screenshots");
+    return PageActions.actionForID("screenshots_mozilla_org");
   }, "Should enable Screenshots");
 }
