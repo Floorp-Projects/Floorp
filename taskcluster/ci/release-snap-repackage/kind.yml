@@ -45,12 +45,10 @@ job-defaults:
          VERSION: "{release_config[version]}"
          BUILD_NUMBER: "{release_config[build_number]}"
          CANDIDATES_DIR:
-            by-project:
-               jamun:
+            by-release-level:
+               staging:
                   https://net-mozaws-stage-delivery-firefox.s3.amazonaws.com/pub/{task[shipping-product]}/candidates
-               maple:
-                  https://net-mozaws-stage-delivery-firefox.s3.amazonaws.com/pub/{task[shipping-product]}/candidates
-               default:
+               production:
                   https://net-mozaws-prod-delivery-firefox.s3.amazonaws.com/pub/{task[shipping-product]}/candidates
          LC_ALL: C.UTF-8
          LANG: C.UTF-8

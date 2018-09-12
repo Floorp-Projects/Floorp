@@ -28,7 +28,7 @@ push_snap_description_schema = Schema({
     Required('description'): task_description_schema['description'],
     Required('treeherder'): task_description_schema['treeherder'],
     Required('run-on-projects'): task_description_schema['run-on-projects'],
-    Required('worker-type'): optionally_keyed_by('project', basestring),
+    Required('worker-type'): optionally_keyed_by('release-level', basestring),
     Required('worker'): object,
     Required('scopes'): optionally_keyed_by('project', [basestring]),
     Required('shipping-phase'): task_description_schema['shipping-phase'],
@@ -58,7 +58,8 @@ def make_task_description(config, jobs):
 
         resolve_keyed_by(job, 'scopes', item_name=job['name'], project=config.params['project'])
         resolve_keyed_by(
-            job, 'worker-type', item_name=job['name'], project=config.params['project']
+            job, 'worker-type', item_name=job['name'],
+            **{'release-level': config.params.release_level()}
         )
 
         yield job

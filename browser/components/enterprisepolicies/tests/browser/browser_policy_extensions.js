@@ -21,6 +21,9 @@ add_task(async function test_addon_install() {
   await installPromise;
   let addon = await AddonManager.getAddonByID(addonID);
   isnot(addon, null, "Addon not installed.");
+
+  Assert.deepEqual(addon.installTelemetryInfo, {source: "enterprise-policy"},
+                   "Got the expected addon.installTelemetryInfo");
 });
 
 add_task(async function test_addon_locked() {

@@ -34,7 +34,7 @@ push_apk_description_schema = Schema({
     Required('attributes'): task_description_schema['attributes'],
     Required('treeherder'): task_description_schema['treeherder'],
     Required('run-on-projects'): task_description_schema['run-on-projects'],
-    Required('worker-type'): optionally_keyed_by('project', basestring),
+    Required('worker-type'): optionally_keyed_by('release-level', basestring),
     Required('worker'): object,
     Required('scopes'): None,
     Required('requires'): task_description_schema['requires'],
@@ -101,7 +101,7 @@ def make_task_description(config, jobs):
         )
         resolve_keyed_by(
             job, 'worker.commit', item_name=job['name'],
-            project=config.params['project']
+            **{'release-level': config.params.release_level()}
         )
 
         resolve_keyed_by(
@@ -113,7 +113,7 @@ def make_task_description(config, jobs):
 
         resolve_keyed_by(
             job, 'worker-type', item_name=job['name'],
-            project=config.params['project']
+            **{'release-level': config.params.release_level()}
         )
 
         yield job

@@ -45,7 +45,7 @@ beetmover_description_schema = Schema({
     Optional('treeherder'): task_description_schema['treeherder'],
 
     Required('description'): basestring,
-    Required('worker-type'): optionally_keyed_by('project', basestring),
+    Required('worker-type'): optionally_keyed_by('release-level', basestring),
     Required('run-on-projects'): [],
 
     # locale is passed only for l10n beetmoving
@@ -79,7 +79,8 @@ def validate(config, jobs):
 def resolve_keys(config, jobs):
     for job in jobs:
         resolve_keyed_by(
-            job, 'worker-type', item_name=job['label'], project=config.params['project']
+            job, 'worker-type', item_name=job['label'],
+            **{'release-level': config.params.release_level()}
         )
         yield job
 

@@ -12,3 +12,7 @@ test_certificates = (
 
 for test_certificate in test_certificates:
     GeneratedTestCertificate(test_certificate)
+
+with Files('**'):
+    BUG_COMPONENT = ('Toolkit', 'Blocklist Implementation')
+

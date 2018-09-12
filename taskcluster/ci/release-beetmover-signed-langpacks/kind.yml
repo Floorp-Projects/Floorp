@@ -18,10 +18,8 @@ only-for-attributes:
 job-template:
    description: Beetmover submission for platform-independent langpacks {locales} in {platform} directory
    worker-type:
-      by-project:
-         mozilla-beta: scriptworker-prov-v1/beetmoverworker-v1
-         mozilla-release: scriptworker-prov-v1/beetmoverworker-v1
-         mozilla-esr60: scriptworker-prov-v1/beetmoverworker-v1
-         default: scriptworker-prov-v1/beetmoverworker-dev
+      by-release-level:
+         production: scriptworker-prov-v1/beetmoverworker-v1
+         staging: scriptworker-prov-v1/beetmoverworker-dev
    run-on-projects: []
    shipping-phase: promote

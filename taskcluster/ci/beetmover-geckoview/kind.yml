@@ -34,8 +34,6 @@ job-template:
    # act only when the release is greenlit.
    shipping-phase: ship
    bucket-scope:
-      by-project:
-         mozilla-central: 'project:releng:beetmover:bucket:maven-production'
-         mozilla-beta: 'project:releng:beetmover:bucket:maven-production'
-         mozilla-release: 'project:releng:beetmover:bucket:maven-production'
-         default: 'project:releng:beetmover:bucket:maven-staging'
+      by-release-level:
+         production: 'project:releng:beetmover:bucket:maven-production'
+         staging: 'project:releng:beetmover:bucket:maven-staging'

@@ -8,10 +8,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
-from taskgraph.util.schema import validate_schema, Schema, resolve_keyed_by, optionally_keyed_by
+from taskgraph.util.schema import validate_schema, Schema
 from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
                                          get_beetmover_action_scope,
-                                         get_phase)
+                                         get_phase,
+                                         get_worker_type_for_scope,
+                                         )
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.transforms.beetmover import craft_release_properties
 from taskgraph.transforms.task import task_description_schema
@@ -56,7 +58,6 @@ release_generate_checksums_beetmover_schema = Schema({
 
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
     Optional('shipping-product'): task_description_schema['shipping-product'],
-    Required('worker-type'): optionally_keyed_by('project', basestring),
 })
 
 
@@ -105,14 +106,10 @@ def make_task_description(config, jobs):
         action_scope = get_beetmover_action_scope(config)
         phase = get_phase(config)
 
-        resolve_keyed_by(
-            job, 'worker-type', item_name=label, project=config.params['project']
-        )
-
         task = {
             'label': label,
             'description': description,
-            'worker-type': job['worker-type'],
+            'worker-type': get_worker_type_for_scope(config, bucket_scope),
             'scopes': [bucket_scope, action_scope],
             'dependencies': dependencies,
             'attributes': attributes,

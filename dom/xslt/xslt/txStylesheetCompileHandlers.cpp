@@ -54,7 +54,7 @@ txFnEndLRE(txStylesheetCompilerState& aState);
 #define TX_RETURN_IF_WHITESPACE(_str, _state)                               \
     do {                                                                    \
       if (!_state.mElementContext->mPreserveWhitespace &&                   \
-          XMLUtils::isWhitespace(PromiseFlatString(_str))) {                \
+          XMLUtils::isWhitespace(_str)) {                                   \
           return NS_OK;                                                     \
       }                                                                     \
     } while(0)
