@@ -33,6 +33,15 @@ namespace mozilla {
 namespace mscom {
 
 bool
+IsCOMInitializedOnCurrentThread()
+{
+  APTTYPE aptType;
+  APTTYPEQUALIFIER aptTypeQualifier;
+  HRESULT hr = CoGetApartmentType(&aptType, &aptTypeQualifier);
+  return hr != CO_E_NOTINITIALIZED;
+}
+
+bool
 IsCurrentThreadMTA()
 {
   APTTYPE aptType;
