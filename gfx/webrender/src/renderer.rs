@@ -2048,7 +2048,10 @@ impl Renderer {
         );
 
         for alpha_batch_container in &target.alpha_batch_containers {
-            for batch in alpha_batch_container.opaque_batches.iter().rev() {
+            for batch in alpha_batch_container
+                .opaque_batches
+                .iter()
+                .rev() {
                 debug_target.add(
                     debug_server::BatchKind::Opaque,
                     batch.key.kind.debug_name(),
@@ -2056,7 +2059,8 @@ impl Renderer {
                 );
             }
 
-            for batch in &alpha_batch_container.alpha_batches {
+            for batch in &alpha_batch_container
+                .alpha_batches {
                 debug_target.add(
                     debug_server::BatchKind::Alpha,
                     batch.key.kind.debug_name(),
