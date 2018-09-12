@@ -113,8 +113,9 @@ let testCasesForBothSuccessAndAbort = [
     await freePortal(aSuccess);
     ensureNoPortalNotification(win1);
     ensureNoPortalNotification(win2);
-    await closeWindowAndWaitForWindowActivate(win2);
-    await closeWindowAndWaitForWindowActivate(win1);
+    await BrowserTestUtils.closeWindow(win2);
+    await BrowserTestUtils.closeWindow(win1);
+    await waitForBrowserWindowActive(window);
   },
 ];
 
