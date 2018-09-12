@@ -32,12 +32,12 @@ jobs:
                mozilla-central: 'beta'
                mozilla-beta: 'rollout'
                mozilla-release: 'rollout'
-               default: 'invalid'
+               default: 'internal'
          rc-google-play-track:
             by-project:
                mozilla-release: 'rollout'
                birch: 'rollout'
-               default: 'invalid'
+               default: 'internal'
          implementation: push-apk
          commit:
             by-release-level:
