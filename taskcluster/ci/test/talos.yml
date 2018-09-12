@@ -603,14 +603,22 @@ talos-xperf:
     treeherder-symbol: T(x)
     virtualization: virtual
     os-groups: ['Administrators']
+    run-as-administrator:
+        by-test-platform:
+            windows7-32.*: false
+            windows10-64.*: true
     run-on-projects:
         by-test-platform:
             windows7-32-msvc/.*: ['mozilla-beta', 'mozilla-central', 'try']
             windows7-32(-pgo)?/.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            windows10-64(-pgo)?/opt: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            .*-qr/.*: []  # this test is not useful with webrender
             default: []
     tier:
         by-test-platform:
             windows7-32.*: default
+            windows10-64(-pgo)?/.*: default
+            windows10-64-ccov/debug: 3
             default: 3  # this should be disabled but might run via try syntax anyway, so explicitly downgrade to tier-3
     mozharness:
         extra-options:
