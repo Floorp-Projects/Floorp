@@ -2394,7 +2394,9 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy,
                  forceAboutBlankViewerInCurrent,
                  allowInheritPrincipal,
                });
-  } catch (e) {}
+  } catch (e) {
+    Cu.reportError(e);
+  }
 }
 
 /**
