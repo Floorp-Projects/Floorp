@@ -112,17 +112,17 @@ interface nsISHEntry : nsISupports
      */
 
     /** Append a child shell to the end of our list. */
-    void addChildShell(in nsIDocShellTreeItem shell);
+    [noscript, notxpcom] void addChildShell(in nsIDocShellTreeItem shell);
 
     /**
      * Get the child shell at |index|; returns null if |index| is out of bounds.
      */
-    nsIDocShellTreeItem childShellAt(in long index);
+    [noscript] nsIDocShellTreeItem childShellAt(in long index);
 
     /**
      * Clear the child shell list.
      */
-    void clearChildShells();
+    [noscript, notxpcom] void clearChildShells();
 
     /** Saved refresh URI list for the content viewer */
     [infallible] attribute nsIMutableArray refreshURIList;
@@ -134,7 +134,7 @@ interface nsISHEntry : nsISupports
      *  contentViewer, sticky, windowState, viewerBounds, childShells,
      *  refreshURIList.
      */
-    void syncPresentationState();
+    [noscript, notxpcom] void syncPresentationState();
 
     /** Post Data for the document */
     [infallible] attribute nsIInputStream postData;
@@ -213,7 +213,7 @@ interface nsISHEntry : nsISupports
     /** Return any content viewer present in or below this node in the
         nsSHEntry tree.  This will differ from contentViewer in the case
         where a child nsSHEntry has the content viewer for this tree. */
-    nsIContentViewer getAnyContentViewer(out nsISHEntry ownerEntry);
+    [noscript] nsIContentViewer getAnyContentViewer(out nsISHEntry ownerEntry);
 
     /**
      * Get the principal, if any, that was associated with the channel
@@ -255,7 +255,7 @@ interface nsISHEntry : nsISupports
      * Returns true if the related docshell was added because of
      * dynamic addition of an iframe/frame.
      */
-    boolean isDynamicallyAdded();
+    [noscript, notxpcom] boolean isDynamicallyAdded();
 
     /**
      * Returns true if any of the child entries returns true
@@ -281,8 +281,7 @@ interface nsISHEntry : nsISupports
      * the BFCache entry will evict the SHEntry, since the two entries
      * correspond to the same document.
      */
-    [notxpcom, noscript]
-    boolean hasBFCacheEntry(in nsIBFCacheEntry aEntry);
+    [noscript, notxpcom] boolean hasBFCacheEntry(in nsIBFCacheEntry aEntry);
 
     /**
      * Adopt aEntry's BFCacheEntry, so now both this and aEntry point to
@@ -369,8 +368,7 @@ interface nsISHEntry : nsISupports
      * This shared state is the SHEntry's BFCacheEntry.  So
      * hasBFCacheEntry(getSharedState()) is guaranteed to return true.
      */
-    [noscript, notxpcom]
-    nsSHEntryShared getSharedState();
+    [noscript, notxpcom] nsSHEntryShared getSharedState();
 
     /**
      * The current number of nsISHEntries which are immediate children of this
@@ -386,7 +384,7 @@ interface nsISHEntry : nsISupports
     /**
      * Remove a child SHEntry.
      */
-    void RemoveChild(in nsISHEntry aChild);
+    [noscript] void RemoveChild(in nsISHEntry aChild);
 
     /**
      * Get child at an index.
@@ -398,7 +396,7 @@ interface nsISHEntry : nsISupports
      * with aNewChild.
      * @throw if nothing was replaced.
      */
-    void ReplaceChild(in nsISHEntry aNewChild);
+    [noscript] void ReplaceChild(in nsISHEntry aNewChild);
 
     /**
      * When an entry is serving is within nsISHistory's array of entries, this

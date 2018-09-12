@@ -695,10 +695,7 @@ nsSHEntry::AddChild(nsISHEntry* aChild, int32_t aOffset)
   //
   NS_ASSERTION(aOffset < (mChildren.Count() + 1023), "Large frames array!\n");
 
-  bool newChildIsDyn = false;
-  if (aChild) {
-    aChild->IsDynamicallyAdded(&newChildIsDyn);
-  }
+  bool newChildIsDyn = aChild ? aChild->IsDynamicallyAdded() : false;
 
   // If the new child is dynamically added, try to add it to aOffset, but if
   // there are non-dynamically added children, the child must be after those.
@@ -707,9 +704,7 @@ nsSHEntry::AddChild(nsISHEntry* aChild, int32_t aOffset)
     for (int32_t i = aOffset; i < mChildren.Count(); ++i) {
       nsISHEntry* entry = mChildren[i];
       if (entry) {
-        bool dyn = false;
-        entry->IsDynamicallyAdded(&dyn);
-        if (dyn) {
+        if (entry->IsDynamicallyAdded()) {
           break;
         } else {
           lastNonDyn = i;
@@ -738,9 +733,7 @@ nsSHEntry::AddChild(nsISHEntry* aChild, int32_t aOffset)
       for (int32_t i = start; i >= 0; --i) {
         nsISHEntry* entry = mChildren[i];
         if (entry) {
-          bool dyn = false;
-          entry->IsDynamicallyAdded(&dyn);
-          if (dyn) {
+          if (entry->IsDynamicallyAdded()) {
             dynEntryIndex = i;
             dynEntry = entry;
           } else {
@@ -777,9 +770,7 @@ nsSHEntry::RemoveChild(nsISHEntry* aChild)
 {
   NS_ENSURE_TRUE(aChild, NS_ERROR_FAILURE);
   bool childRemoved = false;
-  bool dynamic = false;
-  aChild->IsDynamicallyAdded(&dynamic);
-  if (dynamic) {
+  if (aChild->IsDynamicallyAdded()) {
     childRemoved = mChildren.RemoveObject(aChild);
   } else {
     int32_t index = mChildren.IndexOfObject(aChild);
@@ -834,12 +825,11 @@ nsSHEntry::ReplaceChild(nsISHEntry* aNewEntry)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsSHEntry::AddChildShell(nsIDocShellTreeItem* aShell)
 {
-  NS_ASSERTION(aShell, "Null child shell added to history entry");
+  MOZ_ASSERT(aShell, "Null child shell added to history entry");
   mShared->mChildShells.AppendObject(aShell);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -849,11 +839,10 @@ nsSHEntry::ChildShellAt(int32_t aIndex, nsIDocShellTreeItem** aShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsSHEntry::ClearChildShells()
 {
   mShared->mChildShells.Clear();
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -870,10 +859,10 @@ nsSHEntry::SetRefreshURIList(nsIMutableArray* aList)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsSHEntry::SyncPresentationState()
 {
-  return mShared->SyncPresentationState();
+  mShared->SyncPresentationState();
 }
 
 nsDocShellEditorData*
@@ -913,11 +902,10 @@ nsSHEntry::SetStateData(nsIStructuredCloneContainer* aContainer)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHEntry::IsDynamicallyAdded(bool* aAdded)
+NS_IMETHODIMP_(bool)
+nsSHEntry::IsDynamicallyAdded()
 {
-  *aAdded = mShared->mDynamicallyCreated;
-  return NS_OK;
+  return mShared->mDynamicallyCreated;
 }
 
 NS_IMETHODIMP
@@ -927,7 +915,7 @@ nsSHEntry::HasDynamicallyAddedChild(bool* aAdded)
   for (int32_t i = 0; i < mChildren.Count(); ++i) {
     nsISHEntry* entry = mChildren[i];
     if (entry) {
-      entry->IsDynamicallyAdded(aAdded);
+      *aAdded = entry->IsDynamicallyAdded();
       if (*aAdded) {
         break;
       }
