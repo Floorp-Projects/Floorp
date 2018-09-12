@@ -1,22 +1,20 @@
 {
-    "llvm_revision": "338614",
+    "llvm_revision": "341816",
     "stages": "3",
     "build_libcxx": false,
     "build_type": "Release",
     "assertions": false,
-    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/trunk",
-    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/trunk",
-    "lld_repo": "https://llvm.org/svn/llvm-project/lld/trunk",
-    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
-    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_700/rc3",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_700/rc3",
+    "lld_repo": "https://llvm.org/svn/llvm-project/lld/tags/RELEASE_700/rc3",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_700/rc3",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_700/rc3",
     "python_path": "c:/mozilla-build/python/python.exe",
     "cc": "cl.exe",
     "cxx": "cl.exe",
     "ml": "ml64.exe",
     "patches": [
       "workaround-issue38586.patch",
-      "r339636.patch",
-      "r341035.patch",
       "loosen-msvc-detection.patch"
     ]
 }
