@@ -34,18 +34,15 @@ namespace layers {
 // 3. A list of dependent texture clients that must be kept alive for the
 //    task's duration, and then destroyed on the main thread
 class PaintTask {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PaintTask)
 public:
   PaintTask() {}
+  ~PaintTask() {}
 
   void DropTextureClients();
 
   RefPtr<gfx::DrawTarget> mTarget;
   RefPtr<gfx::DrawTargetCapture> mCapture;
   AutoTArray<RefPtr<TextureClient>, 4> mClients;
-
-protected:
-  virtual ~PaintTask() {}
 };
 
 class CompositorBridgeChild;
@@ -73,7 +70,7 @@ public:
 
   // Must be called on the main thread. Queues an async paint
   // task to be completed on the paint thread.
-  void QueuePaintTask(PaintTask* aTask);
+  void QueuePaintTask(UniquePtr<PaintTask>&& aTask);
 
   // Must be called on the main thread. Signifies that the current
   // layer tree transaction has been finished and any async paints

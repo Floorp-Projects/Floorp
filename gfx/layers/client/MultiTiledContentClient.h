@@ -14,6 +14,7 @@
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/LayersMessages.h"      // for TileDescriptor
 #include "mozilla/layers/TiledContentClient.h"  // for ClientTiledPaintedLayer
+#include "mozilla/UniquePtr.h"                  // for UniquePtr
 #include "TiledLayerBuffer.h"                   // for TiledLayerBuffer
 
 namespace mozilla {
@@ -121,8 +122,8 @@ private:
 
   // Parameters that are collected during Update for a paint before they
   // are either executed or replayed on the paint thread.
-  std::vector<gfx::Tile> mPaintTiles;
-  std::vector<RefPtr<PaintTask>> mPaintTasks;
+  AutoTArray<gfx::Tile, 4> mPaintTiles;
+  AutoTArray<UniquePtr<PaintTask>, 4> mPaintTasks;
 
   /**
    * While we're adding tiles, this is used to keep track of the position of
