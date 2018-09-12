@@ -101,8 +101,9 @@ BEGIN_TEST(testWeakMap_keyDelegates)
     CHECK(newCCW(map, delegateRoot));
     js::SliceBudget budget(js::WorkBudget(1000000));
     cx->runtime()->gc.startDebugGC(GC_NORMAL, budget);
-    while (JS::IsIncrementalGCInProgress(cx))
+    while (JS::IsIncrementalGCInProgress(cx)) {
         cx->runtime()->gc.debugGCSlice(budget);
+    }
 #ifdef DEBUG
     CHECK(map->zone()->lastSweepGroupIndex() < delegateRoot->zone()->lastSweepGroupIndex());
 #endif
@@ -117,8 +118,9 @@ BEGIN_TEST(testWeakMap_keyDelegates)
     CHECK(newCCW(map, delegateRoot));
     budget = js::SliceBudget(js::WorkBudget(100000));
     cx->runtime()->gc.startDebugGC(GC_NORMAL, budget);
-    while (JS::IsIncrementalGCInProgress(cx))
+    while (JS::IsIncrementalGCInProgress(cx)) {
         cx->runtime()->gc.debugGCSlice(budget);
+    }
     CHECK(checkSize(map, 1));
 
     /*
@@ -141,8 +143,9 @@ BEGIN_TEST(testWeakMap_keyDelegates)
 static size_t
 DelegateObjectMoved(JSObject* obj, JSObject* old)
 {
-    if (!keyDelegate)
+    if (!keyDelegate) {
         return 0;  // Object got moved before we set keyDelegate to point to it.
+    }
 
     MOZ_RELEASE_ASSERT(keyDelegate == old);
     keyDelegate = obj;
@@ -170,8 +173,9 @@ JSObject* newKey()
     };
 
     JS::RootedObject key(cx, JS_NewObject(cx, Jsvalify(&keyClass)));
-    if (!key)
+    if (!key) {
         return nullptr;
+    }
 
     return key;
 }
@@ -187,13 +191,15 @@ JSObject* newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone)
     {
         JSAutoRealm ar(cx, destZone);
         object = JS_NewPlainObject(cx);
-        if (!object)
+        if (!object) {
             return nullptr;
+        }
     }
     {
         JSAutoRealm ar(cx, sourceZone);
-        if (!JS_WrapObject(cx, &object))
+        if (!JS_WrapObject(cx, &object)) {
             return nullptr;
+        }
     }
 
     // In order to test the SCC algorithm, we need the wrapper/wrappee to be
@@ -237,8 +243,9 @@ JSObject* newDelegate()
     JS::RealmOptions options;
     JS::RootedObject global(cx, JS_NewGlobalObject(cx, Jsvalify(&delegateClass), nullptr,
                                                    JS::FireOnNewGlobalHook, options));
-    if (!global)
+    if (!global) {
         return nullptr;
+    }
 
     JS_SetReservedSlot(global, 0, JS::Int32Value(42));
     return global;

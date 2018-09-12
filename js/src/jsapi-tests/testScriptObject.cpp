@@ -16,8 +16,9 @@ struct ScriptObjectFixture : public JSAPITest {
 
     ScriptObjectFixture()
     {
-        for (int i = 0; i < code_size; i++)
+        for (int i = 0; i < code_size; i++) {
             uc_code[i] = code[i];
+        }
     }
 
     bool tryScript(JS::HandleScript script)

@@ -27,8 +27,9 @@ BEGIN_TEST(testGCChunkPool)
 
     // Iterate.
     uint32_t i = 0;
-    for (js::gc::ChunkPool::Iter iter(pool); !iter.done(); iter.next(), ++i)
+    for (js::gc::ChunkPool::Iter iter(pool); !iter.done(); iter.next(), ++i) {
         CHECK(iter.get());
+    }
     CHECK(i == pool.count());
     MOZ_ASSERT(pool.verify());
 

@@ -42,15 +42,18 @@ static bool Execute(JSContext* cx, MacroAssembler& masm)
     masm.PopRegsInMask(save);
     masm.ret(); // Add return statement to be sure.
 
-    if (masm.oom())
+    if (masm.oom()) {
         return false;
+    }
 
     Linker linker(masm);
     JitCode* code = linker.newCode(cx, CodeKind::Other);
-    if (!code)
+    if (!code) {
         return false;
-    if (!ExecutableAllocator::makeExecutable(code->raw(), code->bufferSize()))
+    }
+    if (!ExecutableAllocator::makeExecutable(code->raw(), code->bufferSize())) {
         return false;
+    }
 
     JS::AutoSuppressGCAnalysis suppress;
     EnterTest test = code->as<EnterTest>();
@@ -62,8 +65,9 @@ BEGIN_TEST(testJitMacroAssembler_flexibleDivMod)
 {
     StackMacroAssembler masm(cx);
 
-    if (!Prepare(masm))
+    if (!Prepare(masm)) {
         return false;
+    }
 
     // Test case divides 9/2;
     const uintptr_t quotient_result = 4;
@@ -83,8 +87,9 @@ BEGIN_TEST(testJitMacroAssembler_flexibleDivMod)
             AllocatableGeneralRegisterSet remainders(GeneralRegisterSet::All());
             while (!remainders.empty()) {
                 Register remainderOutput = remainders.takeAny();
-                if (lhsOutput == rhs || lhsOutput == remainderOutput || rhs == remainderOutput)
+                if (lhsOutput == rhs || lhsOutput == remainderOutput || rhs == remainderOutput) {
                     continue;
+                }
 
                 AllocatableRegisterSet regs(RegisterSet::Volatile());
                 LiveRegisterSet save(regs.asLiveSet());
@@ -115,8 +120,9 @@ BEGIN_TEST(testJitMacroAssembler_flexibleRemainder)
 {
     StackMacroAssembler masm(cx);
 
-    if (!Prepare(masm))
+    if (!Prepare(masm)) {
         return false;
+    }
 
     // Test case divides 9/2;
     const uintptr_t dividend = 9;
@@ -132,8 +138,9 @@ BEGIN_TEST(testJitMacroAssembler_flexibleRemainder)
         while (!rightHandSides.empty()) {
             Register rhs = rightHandSides.takeAny();
 
-            if (lhsOutput == rhs)
+            if (lhsOutput == rhs) {
                 continue;
+            }
 
             AllocatableRegisterSet regs(RegisterSet::Volatile());
             LiveRegisterSet save(regs.asLiveSet());
@@ -162,8 +169,9 @@ BEGIN_TEST(testJitMacroAssembler_flexibleQuotient)
 {
     StackMacroAssembler masm(cx);
 
-    if (!Prepare(masm))
+    if (!Prepare(masm)) {
         return false;
+    }
 
     // Test case divides 9/2;
     const uintptr_t dividend = 9;
@@ -179,8 +187,9 @@ BEGIN_TEST(testJitMacroAssembler_flexibleQuotient)
         while (!rightHandSides.empty()) {
             Register rhs = rightHandSides.takeAny();
 
-            if (lhsOutput == rhs)
+            if (lhsOutput == rhs) {
                 continue;
+            }
 
             AllocatableRegisterSet regs(RegisterSet::Volatile());
             LiveRegisterSet save(regs.asLiveSet());
@@ -209,8 +218,9 @@ BEGIN_TEST(testJitMacroAssembler_truncateDoubleToInt64)
 {
     StackMacroAssembler masm(cx);
 
-    if (!Prepare(masm))
+    if (!Prepare(masm)) {
         return false;
+    }
 
     AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
     AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());
@@ -257,8 +267,9 @@ BEGIN_TEST(testJitMacroAssembler_truncateDoubleToUInt64)
 {
     StackMacroAssembler masm(cx);
 
-    if (!Prepare(masm))
+    if (!Prepare(masm)) {
         return false;
+    }
 
     AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
     AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());
@@ -309,8 +320,9 @@ BEGIN_TEST(testJitMacroAssembler_branchDoubleNotInInt64Range)
 {
     StackMacroAssembler masm(cx);
 
-    if (!Prepare(masm))
+    if (!Prepare(masm)) {
         return false;
+    }
 
     AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
     AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());
@@ -363,8 +375,9 @@ BEGIN_TEST(testJitMacroAssembler_branchDoubleNotInUInt64Range)
 {
     StackMacroAssembler masm(cx);
 
-    if (!Prepare(masm))
+    if (!Prepare(masm)) {
         return false;
+    }
 
     AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
     AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());
@@ -420,8 +433,9 @@ BEGIN_TEST(testJitMacroAssembler_lshift64)
 {
     StackMacroAssembler masm(cx);
 
-    if (!Prepare(masm))
+    if (!Prepare(masm)) {
         return false;
+    }
 
     AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
     AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());
@@ -489,8 +503,9 @@ BEGIN_TEST(testJitMacroAssembler_rshift64Arithmetic)
 {
     StackMacroAssembler masm(cx);
 
-    if (!Prepare(masm))
+    if (!Prepare(masm)) {
         return false;
+    }
 
     AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
     AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());
@@ -557,8 +572,9 @@ BEGIN_TEST(testJitMacroAssembler_rshift64)
 {
     StackMacroAssembler masm(cx);
 
-    if (!Prepare(masm))
+    if (!Prepare(masm)) {
         return false;
+    }
 
     AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
     AllocatableFloatRegisterSet allFloatRegs(FloatRegisterSet::All());

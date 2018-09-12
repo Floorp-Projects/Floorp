@@ -115,18 +115,22 @@ GetIterResult(JSContext* cx, HandleObject promise, MutableHandleValue value, boo
     RootedObject iterResult(cx, &GetPromiseResult(promise).toObject());
 
     bool found;
-    if (!JS_HasProperty(cx, iterResult, "value", &found))
+    if (!JS_HasProperty(cx, iterResult, "value", &found)) {
         return false;
+    }
     MOZ_ASSERT(found);
-    if (!JS_HasProperty(cx, iterResult, "done", &found))
+    if (!JS_HasProperty(cx, iterResult, "done", &found)) {
         return false;
+    }
     MOZ_ASSERT(found);
 
     RootedValue doneVal(cx);
-    if (!JS_GetProperty(cx, iterResult, "value", value))
+    if (!JS_GetProperty(cx, iterResult, "value", value)) {
         return false;
-    if (!JS_GetProperty(cx, iterResult, "done", &doneVal))
+    }
+    if (!JS_GetProperty(cx, iterResult, "done", &doneVal)) {
         return false;
+    }
 
     *done = doneVal.toBoolean();
     MOZ_ASSERT_IF(*done, value.isUndefined());
@@ -541,8 +545,9 @@ struct ReadFromExternalSourceFixture : public JSAPITest
         CHECK(GetPromiseState(promise) == PromiseState::Fulfilled);
         RootedValue iterVal(cx);
         bool done;
-        if (!GetIterResult(cx, promise, &iterVal, &done))
+        if (!GetIterResult(cx, promise, &iterVal, &done)) {
             return false;
+        }
 
         CHECK(!done);
         RootedObject chunk(cx, &iterVal.toObject());
@@ -594,8 +599,9 @@ struct ReadFromExternalSourceFixture : public JSAPITest
         CHECK(GetPromiseState(promise) == PromiseState::Fulfilled);
         RootedValue iterVal(cx);
         bool done;
-        if (!GetIterResult(cx, promise, &iterVal, &done))
+        if (!GetIterResult(cx, promise, &iterVal, &done)) {
             return false;
+        }
 
         CHECK(!done);
         RootedObject chunk(cx, &iterVal.toObject());

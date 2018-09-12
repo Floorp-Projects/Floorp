@@ -569,21 +569,25 @@ struct ColorCheckFunctor
     }
 
     bool operator()(JSObject* obj) {
-        if (!CheckCellColor(obj, color))
+        if (!CheckCellColor(obj, color)) {
             return false;
+        }
 
         NativeObject& nobj = obj->as<NativeObject>();
-        if (!CheckCellColor(nobj.shape(), color))
+        if (!CheckCellColor(nobj.shape(), color)) {
             return false;
+        }
 
         Shape* shape = nobj.shape();
-        if (!CheckCellColor(shape, color))
+        if (!CheckCellColor(shape, color)) {
             return false;
+        }
 
         // Shapes and symbols are never marked gray.
         jsid id = shape->propid();
-        if (JSID_IS_GCTHING(id) && !CheckCellColor(JSID_TO_GCTHING(id).asCell(), MarkColor::Black))
+        if (JSID_IS_GCTHING(id) && !CheckCellColor(JSID_TO_GCTHING(id).asCell(), MarkColor::Black)) {
             return false;
+        }
 
         count++;
         return true;
@@ -605,8 +609,9 @@ bool
 InitGlobals()
 {
     global1.init(cx, global);
-    if (!createGlobal())
+    if (!createGlobal()) {
         return false;
+    }
     global2.init(cx, global);
     return global2 != nullptr;
 }
@@ -649,12 +654,14 @@ JSObject*
 AllocSameCompartmentSourceObject(JSObject* target)
 {
     JS::RootedObject source(cx, JS_NewPlainObject(cx));
-    if (!source)
+    if (!source) {
         return nullptr;
+    }
 
     JS::RootedObject obj(cx, target);
-    if (!JS_DefineProperty(cx, source, "ptr", obj, 0))
+    if (!JS_DefineProperty(cx, source, "ptr", obj, 0)) {
         return nullptr;
+    }
 
     EvictNursery();
 
@@ -668,8 +675,9 @@ GetCrossCompartmentWrapper(JSObject* target)
     MOZ_ASSERT(target->compartment() == global1->compartment());
     JS::RootedObject obj(cx, target);
     JSAutoRealm ar(cx, global2);
-    if (!JS_WrapObject(cx, &obj))
+    if (!JS_WrapObject(cx, &obj)) {
         return nullptr;
+    }
 
     EvictNursery();
 
@@ -700,8 +708,9 @@ AllocWeakmapKeyObject()
     };
 
     JS::RootedObject key(cx, JS_NewObject(cx, Jsvalify(&KeyClass)));
-    if (!key)
+    if (!key) {
         return nullptr;
+    }
 
     EvictNursery();
     return key;
@@ -726,17 +735,20 @@ AllocObjectChain(size_t length)
     // objects.
     RootedString nextPropName(cx, JS_NewStringCopyZ(cx, "unique14142135"));
     RootedId nextId(cx);
-    if (!JS_StringToId(cx, nextPropName, &nextId))
+    if (!JS_StringToId(cx, nextPropName, &nextId)) {
         return nullptr;
+    }
 
     RootedObject head(cx);
     for (size_t i = 0; i < length; i++) {
         RootedValue next(cx, ObjectOrNullValue(head));
         head = AllocPlainObject();
-        if (!head)
+        if (!head) {
             return nullptr;
-        if (!JS_DefinePropertyById(cx, head, nextId, next, 0))
+        }
+        if (!JS_DefinePropertyById(cx, head, nextId, next, 0)) {
             return nullptr;
+        }
     }
 
     return head;
@@ -747,8 +759,9 @@ bool IterateObjectChain(JSObject* chain, F f)
 {
     RootedObject obj(cx, chain);
     while (obj) {
-        if (!f(obj))
+        if (!f(obj)) {
             return false;
+        }
 
         // Access the 'next' property via the object's slots to avoid triggering
         // gray marking assertions when calling JS_GetPropertyById.

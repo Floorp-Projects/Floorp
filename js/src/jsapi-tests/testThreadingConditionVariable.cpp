@@ -20,8 +20,9 @@ struct TestState {
       : mutex(js::mutexid::TestMutex),
         flag(false)
     {
-        if (createThread)
+        if (createThread) {
             MOZ_RELEASE_ASSERT(testThread.init(setFlag, this));
+        }
     }
 
     static void setFlag(TestState* state) {
@@ -40,8 +41,9 @@ BEGIN_TEST(testThreadingConditionVariable)
     auto state = mozilla::MakeUnique<TestState>();
     {
         js::UniqueLock<js::Mutex> lock(state->mutex);
-        while (!state->flag)
+        while (!state->flag) {
             state->condition.wait(lock);
+        }
     }
     state->join();
 
@@ -93,8 +95,9 @@ BEGIN_TEST(testThreadingConditionVariableUntilTimeout)
         while (!state->flag) {
             auto to = mozilla::TimeStamp::Now() + mozilla::TimeDuration::FromMilliseconds(10);
             js::CVStatus res = state->condition.wait_until(lock, to);
-            if (res == js::CVStatus::Timeout)
+            if (res == js::CVStatus::Timeout) {
                 break;
+            }
         }
     }
     CHECK(!state->flag);
@@ -170,8 +173,9 @@ BEGIN_TEST(testThreadingConditionVariableForTimeout)
         while (!state->flag) {
             auto duration = mozilla::TimeDuration::FromMilliseconds(10);
             js::CVStatus res = state->condition.wait_for(lock, duration);
-            if (res == js::CVStatus::Timeout)
+            if (res == js::CVStatus::Timeout) {
                 break;
+            }
         }
     }
     CHECK(!state->flag);

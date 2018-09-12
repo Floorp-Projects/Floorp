@@ -124,8 +124,9 @@ BEGIN_TEST(testJitRValueAlloc_UntypedRegReg)
     RValueAllocation s;
     for (uint32_t i = 0; i < Registers::Total; i++) {
         for (uint32_t j = 0; j < Registers::Total; j++) {
-            if (i == j)
+            if (i == j) {
                 continue;
+            }
             s = RValueAllocation::Untyped(Register::FromCode(i), Register::FromCode(j));
             MOZ_ASSERT(s == Read(s));
             CHECK(s == Read(s));
