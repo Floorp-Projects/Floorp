@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-XPCOMUtils.defineLazyServiceGetter(this, "cps",
-                                   "@mozilla.org/network/captive-portal-service;1",
-                                   "nsICaptivePortalService");
-
 var CaptivePortalWatcher = {
   // This is the value used to identify the captive portal notification.
   PORTAL_NOTIFICATION_VALUE: "captive-portal-detected",
@@ -46,7 +42,10 @@ var CaptivePortalWatcher = {
     Services.obs.addObserver(this, "captive-portal-login-abort");
     Services.obs.addObserver(this, "captive-portal-login-success");
 
-    if (cps.state == cps.LOCKED_PORTAL) {
+    this._cps = Cc["@mozilla.org/network/captive-portal-service;1"]
+                  .getService(Ci.nsICaptivePortalService);
+
+    if (this._cps.state == this._cps.LOCKED_PORTAL) {
       // A captive portal has already been detected.
       this._captivePortalDetected();
 
@@ -54,7 +53,7 @@ var CaptivePortalWatcher = {
       if (BrowserWindowTracker.windowCount == 1) {
         this.ensureCaptivePortalTab();
       }
-    } else if (cps.state == cps.UNKNOWN) {
+    } else if (this._cps.state == this._cps.UNKNOWN) {
       // We trigger a portal check after delayed startup to avoid doing a network
       // request before first paint.
       this._delayedRecheckPending = true;
@@ -78,7 +77,7 @@ var CaptivePortalWatcher = {
   delayedStartup() {
     if (this._delayedRecheckPending) {
       delete this._delayedRecheckPending;
-      cps.recheckCaptivePortal();
+      this._cps.recheckCaptivePortal();
     }
   },
 
@@ -143,27 +142,27 @@ var CaptivePortalWatcher = {
 
     // Trigger a portal recheck. The user may have logged into the portal via
     // another client, or changed networks.
-    cps.recheckCaptivePortal();
+    this._cps.recheckCaptivePortal();
     this._waitingForRecheck = true;
     let requestTime = Date.now();
 
-    let self = this;
-    Services.obs.addObserver(function observer() {
+    let observer = () => {
       let time = Date.now() - requestTime;
       Services.obs.removeObserver(observer, "captive-portal-check-complete");
-      self._waitingForRecheck = false;
-      if (cps.state != cps.LOCKED_PORTAL) {
+      this._waitingForRecheck = false;
+      if (this._cps.state != this._cps.LOCKED_PORTAL) {
         // We're free of the portal!
         return;
       }
 
-      if (time <= self.PORTAL_RECHECK_DELAY_MS) {
+      if (time <= this.PORTAL_RECHECK_DELAY_MS) {
         // The amount of time elapsed since we requested a recheck (i.e. since
         // the browser window was focused) was small enough that we can add and
         // focus a tab with the login page with no noticeable delay.
-        self.ensureCaptivePortalTab();
+        this.ensureCaptivePortalTab();
       }
-    }, "captive-portal-check-complete");
+    };
+    Services.obs.addObserver(observer, "captive-portal-check-complete");
   },
 
   _captivePortalGone() {
