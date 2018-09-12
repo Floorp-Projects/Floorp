@@ -1186,10 +1186,8 @@ FoldReturn(JSContext* cx, UnaryNode* node, PerHandlerParser<FullParseHandler>& p
 }
 
 static bool
-FoldTry(JSContext* cx, TernaryNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldTry(JSContext* cx, TryNode* node, PerHandlerParser<FullParseHandler>& parser)
 {
-    MOZ_ASSERT(node->isKind(ParseNodeKind::Try));
-
     ParseNode** statements = node->unsafeKid1Reference();
     if (!Fold(cx, statements, parser)) {
         return false;
@@ -1790,7 +1788,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         return FoldReturn(cx, &pn->as<UnaryNode>(), parser);
 
       case ParseNodeKind::Try:
-        return FoldTry(cx, &pn->as<TernaryNode>(), parser);
+        return FoldTry(cx, &pn->as<TryNode>(), parser);
 
       case ParseNodeKind::Catch:
         return FoldCatch(cx, &pn->as<BinaryNode>(), parser);

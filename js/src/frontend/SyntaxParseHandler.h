@@ -376,7 +376,9 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     }
 
     UnaryNodeType newThrowStatement(Node expr, const TokenPos& pos) { return NodeThrow; }
-    TernaryNodeType newTryStatement(uint32_t begin, Node body, Node catchScope, Node finallyBlock) {
+    TernaryNodeType newTryStatement(uint32_t begin, Node body, LexicalScopeNodeType catchScope,
+                                    Node finallyBlock)
+    {
         return NodeGeneric;
     }
     DebuggerStatementType newDebuggerStatement(const TokenPos& pos) { return NodeGeneric; }

@@ -661,11 +661,10 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<UnaryNode>(ParseNodeKind::Throw, pos, expr);
     }
 
-    TernaryNodeType newTryStatement(uint32_t begin, Node body, Node catchScope,
+    TernaryNodeType newTryStatement(uint32_t begin, Node body, LexicalScopeNodeType catchScope,
                                     Node finallyBlock)
     {
-        TokenPos pos(begin, (finallyBlock ? finallyBlock : catchScope)->pn_pos.end);
-        return new_<TernaryNode>(ParseNodeKind::Try, body, catchScope, finallyBlock, pos);
+        return new_<TryNode>(begin, body, catchScope, finallyBlock);
     }
 
     DebuggerStatementType newDebuggerStatement(const TokenPos& pos) {

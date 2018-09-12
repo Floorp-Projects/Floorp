@@ -3476,7 +3476,7 @@ BinASTParser<Tok>::parseInterfaceCallExpression(const size_t start, const BinKin
     Block body;
  }
 */
-template<typename Tok> JS::Result<ParseNode*>
+template<typename Tok> JS::Result<LexicalScopeNode*>
 BinASTParser<Tok>::parseCatchClause()
 {
     BinKind kind;
@@ -3494,7 +3494,7 @@ BinASTParser<Tok>::parseCatchClause()
     return result;
 }
 
-template<typename Tok> JS::Result<ParseNode*>
+template<typename Tok> JS::Result<LexicalScopeNode*>
 BinASTParser<Tok>::parseInterfaceCatchClause(const size_t start, const BinKind kind, const BinFields& fields)
 {
     MOZ_ASSERT(kind == BinKind::CatchClause);
@@ -7753,7 +7753,7 @@ BinASTParser<Tok>::parseOptionalBindingOrBindingWithInitializer()
     return result;
 }
 
-template<typename Tok> JS::Result<ParseNode*>
+template<typename Tok> JS::Result<LexicalScopeNode*>
 BinASTParser<Tok>::parseOptionalCatchClause()
 {
     BinKind kind;
@@ -7761,7 +7761,7 @@ BinASTParser<Tok>::parseOptionalCatchClause()
     AutoTaggedTuple guard(*tokenizer_);
 
     MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-    ParseNode* result;
+    LexicalScopeNode* result;
     if (kind == BinKind::_Null) {
         result = nullptr;
     } else if (kind == BinKind::CatchClause) {
