@@ -1,0 +1,43 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.release_mark_as_started:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+   description: mark release as started in Ship-It v1
+   worker-type:
+      by-project:
+         mozilla-beta: scriptworker-prov-v1/shipit-v1
+         default: scriptworker-prov-v1/shipit-dev
+   worker:
+      implementation: shipit-started
+   scopes:
+      by-project:
+         mozilla-beta:
+            - project:releng:ship-it:server:production
+            - project:releng:ship-it:action:mark-as-started
+         default:
+            - project:releng:ship-it:server:staging
+            - project:releng:ship-it:action:mark-as-started
+   run-on-projects: []
+   shipping-phase: promote
+   locales-file: browser/locales/l10n-changesets.json
+
+jobs:
+   fennec:
+      name: release-fennec_mark_as_started
+      shipping-product: fennec
+      locales-file: mobile/locales/l10n-changesets.json
+
+   firefox:
+      name: release-firefox_mark_as_started
+      shipping-product: firefox
+
+   devedition:
+      name: release-devedition_mark_as_started
+      shipping-product: devedition
