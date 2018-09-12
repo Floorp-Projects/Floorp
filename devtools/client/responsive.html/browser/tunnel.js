@@ -34,7 +34,6 @@ const SWAPPED_BROWSER_STATE = [
   "_textZoom",
   "_isSyntheticDocument",
   "_innerWindowID",
-  "_manifestURI",
 ];
 
 /**
