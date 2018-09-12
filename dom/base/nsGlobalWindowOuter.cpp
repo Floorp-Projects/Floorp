@@ -829,6 +829,7 @@ nsGlobalWindowOuter::nsGlobalWindowOuter()
     mIsChrome(false),
     mAllowScriptsToClose(false),
     mTopLevelOuterContentWindow(false),
+    mHasStorageAccess(false),
     mSerial(0),
 #ifdef DEBUG
     mSetOpenerWindowCalled(false),
@@ -2014,6 +2015,8 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
   // to the newly attached document.
   ReportLargeAllocStatus();
   mLargeAllocStatus = LargeAllocStatus::NONE;
+
+  mHasStorageAccess = false;
 
   return NS_OK;
 }
