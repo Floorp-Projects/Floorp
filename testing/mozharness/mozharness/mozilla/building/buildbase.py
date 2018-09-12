@@ -1226,15 +1226,13 @@ or run without that action (ie: --no-{action})"
     def static_analysis_autotest(self):
         """Run mach static-analysis autotest, in order to make sure we dont regress"""
         self.preflight_build()
-        self._run_mach_command_in_build_env(['configure'])
-        self._run_mach_command_in_build_env(['static-analysis', 'autotest',
-                                             '--intree-tool'],
-                                            use_subprocess=True)
+        self._run_mach_command_in_build_env(['static-analysis', 'autotest', '--intree-tool'])
 
-    def _run_mach_command_in_build_env(self, args, use_subprocess=False):
+    def _run_mach_command_in_build_env(self, args):
         """Run a mach command in a build context."""
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
+
         dirs = self.query_abs_dirs()
 
         if 'MOZILLABUILD' in os.environ:
@@ -1247,21 +1245,13 @@ or run without that action (ie: --no-{action})"
         else:
             mach = [sys.executable, 'mach']
 
-        # XXX See bug 1483883
-        # Work around an interaction between Gradle and mozharness
-        # Not using `subprocess` causes gradle to hang
-        if use_subprocess:
-            import subprocess
-            return_code = subprocess.call(mach + ['--log-no-times'] + args,
-                                          env=env, cwd=dirs['abs_src_dir'])
-        else:
-            return_code = self.run_command(
-                command=mach + ['--log-no-times'] + args,
-                cwd=dirs['abs_src_dir'],
-                env=env,
-                output_timeout=self.config.get('max_build_output_timeout',
-                                               60 * 40)
-            )
+        return_code = self.run_command(
+            command=mach + ['--log-no-times'] + args,
+            cwd=dirs['abs_src_dir'],
+            env=env,
+            output_timeout=self.config.get('max_build_output_timeout', 60 * 40)
+        )
+
         if return_code:
             self.return_code = self.worst_level(
                 EXIT_STATUS_DICT[TBPL_FAILURE], self.return_code,
