@@ -128,8 +128,9 @@ class Logging
         nsAutoCString tmp;
         out.Truncate();
         for (size_t i = 0; i < values.Length(); i++) {
-            if (i)
+            if (i) {
                 out.AppendLiteral(", ");
+            }
             if (values[i].type() == JSParam::Tvoid_t) {
                 out.AppendLiteral("<void>");
             } else {
