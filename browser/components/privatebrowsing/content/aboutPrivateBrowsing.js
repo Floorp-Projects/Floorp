@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function() {
   let introURL = RPMGetFormatURLPref("privacy.trackingprotection.introURL");
   // If the CB UI is enabled, tell the tour page to show a different variation
   // that is updated to reflect the CB control center UI.
-  let variation = contentBlockingUIEnabled ? "?variation=1" : "";
+  let variation = "?variation=" + (contentBlockingUIEnabled ? "1" : "0");
 
   document.getElementById("startTour").setAttribute("href", introURL + variation);
 
