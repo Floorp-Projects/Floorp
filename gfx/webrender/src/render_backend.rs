@@ -753,7 +753,31 @@ impl RenderBackend {
                                 window_size: doc.view.window_size,
                             };
                             tx.send(captured).unwrap();
+
+                            // notify the active recorder
+                            if let Some(ref mut r) = self.recorder {
+                                let pipeline_id = doc.scene.root_pipeline_id.unwrap();
+                                let epoch =  doc.scene.pipeline_epochs[&pipeline_id];
+                                let pipeline = &doc.scene.pipelines[&pipeline_id];
+                                let scene_msg = SceneMsg::SetDisplayList {
+                                    list_descriptor: pipeline.display_list.descriptor().clone(),
+                                    epoch,
+                                    pipeline_id,
+                                    background: pipeline.background_color,
+                                    viewport_size: pipeline.viewport_size,
+                                    content_size: pipeline.content_size,
+                                    preserve_frame_state: false,
+                                };
+                                let txn = TransactionMsg::scene_message(scene_msg);
+                                r.write_msg(*frame_counter, &ApiMsg::UpdateDocument(*id, txn));
+                                r.write_payload(*frame_counter, &Payload::construct_data(
+                                    epoch,
+                                    pipeline_id,
+                                    pipeline.display_list.data(),
+                                ));
+                            }
                         }
+
                         // Note: we can't pass `LoadCapture` here since it needs to arrive
                         // before the `PublishDocument` messages sent by `load_capture`.
                         return true;

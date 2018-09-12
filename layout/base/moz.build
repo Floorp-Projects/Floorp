@@ -83,7 +83,6 @@ EXPORTS.mozilla += [
     'ScrollStyles.h',
     'ShapeUtils.h',
     'StaticPresData.h',
-    'UndisplayedNode.h',
 ]
 
 UNIFIED_SOURCES += [
