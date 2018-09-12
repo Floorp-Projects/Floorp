@@ -166,6 +166,11 @@ public:
   static void
   PaintMaskAndClipPath(const PaintFramesParams& aParams);
 
+  // This should use FunctionRef instead of std::function because we don't need
+  // to take ownership of the function. See bug 1490781.
+  static void
+  PaintMaskAndClipPath(const PaintFramesParams& aParams, const std::function<void()>& aPaintChild);
+
   /**
    * Paint mask of non-SVG frame onto a given context, aParams.ctx.
    * aParams.ctx must contain an A8 surface. Returns false if the mask
