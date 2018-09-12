@@ -233,7 +233,7 @@ public:
     // weight - [100, 900] (multiples of 100)
     // stretch = [FontStretch::UltraCondensed(), FontStretch::UltraExpanded()]
     // italic style = constants in gfxFontConstants.h, e.g. NS_FONT_STYLE_NORMAL
-    // language override = result of calling nsRuleNode::ParseFontLanguageOverride
+    // language override = result of calling nsLayoutUtils::ParseFontLanguageOverride
     // TODO: support for unicode ranges not yet implemented
     virtual already_AddRefed<gfxUserFontEntry> CreateUserFontEntry(
                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,

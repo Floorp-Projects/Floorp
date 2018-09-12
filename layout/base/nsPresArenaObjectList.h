@@ -12,12 +12,7 @@
 PRES_ARENA_OBJECT(GeckoComputedStyle)
 
 PRES_ARENA_OBJECT(nsLineBox)
-PRES_ARENA_OBJECT(nsRuleNode)
 PRES_ARENA_OBJECT(DisplayItemData)
-PRES_ARENA_OBJECT(nsInheritedStyleData)
-PRES_ARENA_OBJECT(nsResetStyleData)
-PRES_ARENA_OBJECT(nsConditionalResetStyleData)
-PRES_ARENA_OBJECT(nsConditionalResetStyleDataEntry)
 PRES_ARENA_OBJECT(nsFrameList)
 PRES_ARENA_OBJECT(CustomCounterStyle)
 PRES_ARENA_OBJECT(DependentBuiltinCounterStyle)

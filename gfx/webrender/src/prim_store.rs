@@ -2245,7 +2245,7 @@ impl Primitive {
 
             match segment_clip_chain {
                 Some(segment_clip_chain) => {
-                    if segment_clip_chain.clips_range.count == 0 ||
+                    if !segment_clip_chain.needs_mask ||
                        (!segment.may_need_clip_mask && !segment_clip_chain.has_non_local_clips) {
                         segment.clip_task_id = BrushSegmentTaskId::Opaque;
                         continue;
@@ -2794,7 +2794,7 @@ impl Primitive {
             return;
         }
 
-        if clip_chain.clips_range.count > 0 {
+        if clip_chain.needs_mask {
             if let Some((device_rect, _, _)) = get_raster_rects(
                 clip_chain.pic_clip_rect,
                 &pic_state.map_pic_to_raster,
