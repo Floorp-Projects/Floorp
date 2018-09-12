@@ -408,7 +408,7 @@ ScaleIntrinsicSizeForDensity(nsIContent& aContent, nsSize& aSize)
   }
 
   double density = selector->GetSelectedImageDensity();
-  MOZ_ASSERT(density > 0.0);
+  MOZ_ASSERT(density >= 0.0);
   if (density == 1.0) {
     return;
   }
