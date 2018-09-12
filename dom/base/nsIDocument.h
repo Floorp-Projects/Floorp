@@ -1234,6 +1234,11 @@ public:
 
   mozilla::dom::Selection* GetSelection(mozilla::ErrorResult& aRv);
 
+  already_AddRefed<mozilla::dom::Promise>
+    HasStorageAccess(mozilla::ErrorResult& aRv);
+  already_AddRefed<mozilla::dom::Promise>
+    RequestStorageAccess(mozilla::ErrorResult& aRv);
+
   /**
    * Gets the event target to dispatch key events to if there is no focused
    * content in the document.
