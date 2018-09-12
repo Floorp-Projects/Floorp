@@ -321,7 +321,7 @@ nsTableWrapperFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord iSize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                     InnerTableFrame(), nsLayoutUtils::MIN_ISIZE);
-  DISPLAY_MIN_WIDTH(this, iSize);
+  DISPLAY_MIN_INLINE_SIZE(this, iSize);
   if (mCaptionFrames.NotEmpty()) {
     nscoord capISize =
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
@@ -342,7 +342,7 @@ nsTableWrapperFrame::GetMinISize(gfxContext *aRenderingContext)
 nsTableWrapperFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord maxISize;
-  DISPLAY_PREF_WIDTH(this, maxISize);
+  DISPLAY_PREF_INLINE_SIZE(this, maxISize);
 
   maxISize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                InnerTableFrame(), nsLayoutUtils::PREF_ISIZE);

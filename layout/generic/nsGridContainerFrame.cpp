@@ -6517,7 +6517,7 @@ nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
 nscoord
 nsGridContainerFrame::GetMinISize(gfxContext* aRC)
 {
-  DISPLAY_MIN_WIDTH(this, mCachedMinISize);
+  DISPLAY_MIN_INLINE_SIZE(this, mCachedMinISize);
   if (mCachedMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
     mCachedMinISize = StyleDisplay()->IsContainSize()
       ? 0
@@ -6529,7 +6529,7 @@ nsGridContainerFrame::GetMinISize(gfxContext* aRC)
 nscoord
 nsGridContainerFrame::GetPrefISize(gfxContext* aRC)
 {
-  DISPLAY_PREF_WIDTH(this, mCachedPrefISize);
+  DISPLAY_PREF_INLINE_SIZE(this, mCachedPrefISize);
   if (mCachedPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
     mCachedPrefISize = StyleDisplay()->IsContainSize()
       ? 0

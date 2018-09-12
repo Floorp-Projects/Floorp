@@ -711,7 +711,7 @@ nsCanvasFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt)
 nsCanvasFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_MIN_INLINE_SIZE(this, result);
   if (mFrames.IsEmpty())
     result = 0;
   else
@@ -723,7 +723,7 @@ nsCanvasFrame::GetMinISize(gfxContext *aRenderingContext)
 nsCanvasFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_PREF_WIDTH(this, result);
+  DISPLAY_PREF_INLINE_SIZE(this, result);
   if (mFrames.IsEmpty())
     result = 0;
   else
