@@ -354,6 +354,9 @@ VARCACHE_PREF(
 )
 #endif
 
+// IMPORTANT: Keep this in condition in sync with all.js. The value
+// of MOZILLA_OFFICIAL is different between full and artifact builds, so without
+// it being specified there, dump is disabled in artifact builds (see Bug 1490412).
 #ifdef MOZILLA_OFFICIAL
 # define PREF_VALUE false
 #else
