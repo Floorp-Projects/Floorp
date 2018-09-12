@@ -86,9 +86,9 @@ jobs:
   fetch:
     symbol: I(fetch)
     parent: debian9-base
-  infer-build:
-    symbol: I(infer)
-    parent: debian9-base
+  static-analysis-build:
+    symbol: I(static-analysis-build)
+    parent: android-build
   mingw32-build:
     symbol: I(mingw)
     parent: debian9-base
