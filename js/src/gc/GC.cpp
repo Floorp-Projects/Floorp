@@ -4923,7 +4923,7 @@ void GCRuntime::groupZonesForSweeping(JS::gcreason::Reason reason) {
   }
   sweepGroups = finder.getResultsList();
   currentSweepGroup = sweepGroups;
-  sweepGroupIndex = 0;
+  sweepGroupIndex = 1;
 
   for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
     zone->gcSweepGroupEdges().clear();
