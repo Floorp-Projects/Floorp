@@ -686,6 +686,12 @@ class ContentScriptContextChild extends BaseContext {
         originAttributes: attrs,
       });
 
+      // Preserve a copy of the original Error and Promise globals from the sandbox object,
+      // which are used in the WebExtensions internals (before any content script code had
+      // any chance to redefine them).
+      this.cloneScopePromise = this.sandbox.Promise;
+      this.cloneScopeError = this.sandbox.Error;
+
       // Preserve a copy of the original window's XMLHttpRequest and fetch
       // in a content object (fetch is manually binded to the window
       // to prevent it from raising a TypeError because content object is not
