@@ -54,19 +54,23 @@ nsXPCException::IterateNSResults(nsresult* rv,
                                  const void** iterp)
 {
     const ResultMap* p = (const ResultMap*) *iterp;
-    if (!p)
+    if (!p) {
         p = map;
-    else
+    } else {
         p++;
-    if (!p->name)
+    }
+    if (!p->name) {
         p = nullptr;
-    else {
-        if (rv)
+    } else {
+        if (rv) {
             *rv = p->rv;
-        if (name)
+        }
+        if (name) {
             *name = p->name;
-        if (format)
+        }
+        if (format) {
             *format = p->format;
+        }
     }
     *iterp = p;
     return p;
