@@ -285,16 +285,6 @@ std::ostream& operator<<(std::ostream& aStream,
   return aStream;
 }
 
-nsCString
-nsReflowStatus::ToString() const
-{
-  nsCString result;
-  std::stringstream ss;
-  ss << *this;
-  result.Append(ss.str().c_str());
-  return result;
-}
-
 static bool gShowFrameBorders = false;
 
 void nsFrame::ShowFrameBorders(bool aEnable)
