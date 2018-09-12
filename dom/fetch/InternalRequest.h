@@ -133,6 +133,20 @@ public:
 
     return mURLList.LastElement();
   }
+
+  // A safe guard for ensuring that request's URL is only allowed to be set in a
+  // sw internal redirect.
+  void
+  SetURLForInternalRedirect(const uint32_t aFlag,
+                            const nsACString& aURL,
+                            const nsACString& aFragment)
+  {
+    // Only check in debug build to prevent it from being used unexpectedly.
+    MOZ_ASSERT(aFlag & nsIChannelEventSink::REDIRECT_INTERNAL);
+
+    return SetURL(aURL, aFragment);
+  }
+
   // AddURL should append the url into url list.
   // Normally we strip the fragment from the URL in Request::Constructor and
   // pass the fragment as the second argument into it.
@@ -577,6 +591,18 @@ private:
 
   static bool
   IsWorkerContentPolicy(nsContentPolicyType aContentPolicyType);
+
+  // It should only be called while there is a service-worker-internal-redirect.
+  void
+  SetURL(const nsACString& aURL, const nsACString& aFragment)
+  {
+    MOZ_ASSERT(!aURL.IsEmpty());
+    MOZ_ASSERT(!aURL.Contains('#'));
+    MOZ_ASSERT(mURLList.Length() > 0);
+
+    mURLList.LastElement() = aURL;
+    mFragment.Assign(aFragment);
+  }
 
   nsCString mMethod;
   // mURLList: a list of one or more fetch URLs
