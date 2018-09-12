@@ -19,6 +19,12 @@ class mozSpellChecker;
 class nsIEditor;
 class nsISpellChecker;
 
+#define NS_EDITORSPELLCHECK_CID                     \
+{ /* {75656ad9-bd13-4c5d-939a-ec6351eea0cc} */        \
+    0x75656ad9, 0xbd13, 0x4c5d,                       \
+    { 0x93, 0x9a, 0xec, 0x63, 0x51, 0xee, 0xa0, 0xcc }\
+}
+
 namespace mozilla {
 
 class DictionaryFetcher;
