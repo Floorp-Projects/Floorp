@@ -17,7 +17,7 @@ import java.io.Serializable
 @Suppress("ComplexMethod")
 fun <K, V> Map<K, V>.toBundle(): Bundle {
     return Bundle().apply {
-        forEach({ k, v ->
+        forEach { (k, v) ->
             val key = k.toString()
 
             when (v) {
@@ -45,6 +45,6 @@ fun <K, V> Map<K, V>.toBundle(): Bundle {
                 is Size -> putSize(key, v)
                 is SizeF -> putSizeF(key, v)
             }
-        })
+        }
     }
 }

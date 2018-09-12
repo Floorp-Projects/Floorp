@@ -160,7 +160,7 @@ class DefaultSessionStorage(
             return JSONObject()
         }
         return JSONObject().apply {
-            engineSession.saveState().forEach { k, v -> if (shouldSerialize(v)) put(k, v) }
+            engineSession.saveState().forEach { (k, v) -> if (shouldSerialize(v)) put(k, v) }
         }
     }
 
