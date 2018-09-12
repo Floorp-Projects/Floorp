@@ -43,7 +43,7 @@ public:
     // Restore the mov edi, edi to the beginning of each function we patched.
 
     for (auto&& ptr : mPatchedFns) {
-      WritableTargetFunction<MMPolicyT> fn(mVMPolicy,
+      WritableTargetFunction<MMPolicyT> fn(this->mVMPolicy,
                                            reinterpret_cast<uintptr_t>(ptr),
                                            sizeof(uint16_t));
       if (!fn) {
@@ -146,7 +146,7 @@ public:
     }
 
     ReadOnlyTargetFunction<MMPolicyT> readOnlyTargetFn(
-      ResolveRedirectedAddress(aTargetFn));
+      this->ResolveRedirectedAddress(aTargetFn));
 
     if (!WriteHook(readOnlyTargetFn, aHookDest, aOrigFunc)) {
       return false;
