@@ -39,25 +39,6 @@ class nsXPCOMDetector :
     nsCOMPtr<nsICharsetDetectionObserver> mObserver;
 };
 
-
-//=====================================================================
-class nsXPCOMStringDetector :
-      public nsUniversalDetector,
-      public nsIStringCharsetDetector
-{
-  NS_DECL_ISUPPORTS
-  public:
-    nsXPCOMStringDetector();
-    NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen,
-                    const char** oCharset, nsDetectionConfident &oConf) override;
-  protected:
-    virtual ~nsXPCOMStringDetector();
-    virtual void Report(const char* aCharset) override;
-  private:
-    nsCOMPtr<nsICharsetDetectionObserver> mObserver;
-    const char* mResult;
-};
-
 //=====================================================================
 
 class nsJAPSMDetector final : public nsXPCOMDetector
