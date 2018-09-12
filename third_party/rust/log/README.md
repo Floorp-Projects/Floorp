@@ -5,6 +5,9 @@ A Rust library providing a lightweight logging *facade*.
 
 [![Build Status](https://travis-ci.org/rust-lang-nursery/log.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/log)
 [![Build status](https://ci.appveyor.com/api/projects/status/nopdjmmjt45xcrki?svg=true)](https://ci.appveyor.com/project/alexcrichton/log)
+[![Latest version](https://img.shields.io/crates/v/log.svg)](https://crates.io/crates/log)
+[![Documentation](https://docs.rs/log/badge.svg)](https://docs.rs/log)
+![License](https://img.shields.io/crates/l/log.svg)
 
 * [`log` documentation](https://docs.rs/log)
 
