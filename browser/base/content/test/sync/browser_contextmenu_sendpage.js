@@ -31,6 +31,33 @@ add_task(async function test_page_contextmenu() {
   sandbox.restore();
 });
 
+add_task(async function test_link_contextmenu() {
+  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: remoteClientsFixture,
+                                      state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
+
+  // Add a link to the page
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+    let a = content.document.createElement("a");
+    a.href = "https://www.example.org";
+    a.id = "testingLink";
+    a.textContent = "Click on me!!";
+    content.document.body.appendChild(a);
+  });
+
+  await openContentContextMenu("#testingLink", "context-sendlinktodevice");
+  is(document.getElementById("context-sendlinktodevice").hidden, false, "Send tab to device is shown");
+  is(document.getElementById("context-sendlinktodevice").disabled, false, "Send tab to device is enabled");
+  checkPopup([
+    { label: "Foo" },
+    { label: "Bar" },
+    "----",
+    { label: "Send to All Devices" },
+  ]);
+  await hideContentContextMenu();
+
+  sandbox.restore();
+});
+
 add_task(async function test_page_contextmenu_no_remote_clients() {
   const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: [],
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });

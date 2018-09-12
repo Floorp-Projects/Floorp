@@ -316,7 +316,7 @@
             accesskey="&sendLinkToDevice.accesskey;"
             hidden="true">
         <menupopup id="context-sendlinktodevice-popup"
-                   onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, gContextMenu.linkURL, gContextMenu.linkTextStr);"/>
+                   onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, gBrowser.selectedTab);"/>
       </menu>
       <menuseparator id="frame-sep"/>
       <menu id="frame" label="&thisFrameMenu.label;" accesskey="&thisFrameMenu.accesskey;">

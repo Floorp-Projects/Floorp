@@ -63,8 +63,6 @@ function getUnicodeUrlPath(urlPath) {
   try {
     return decodeURIComponent(urlPath);
   } catch (err) {
-    dump("Warning: getUnicodeUrlPath failed to get a Unicode URL from" +
-            `${urlPath}, reason: ${err}`);
   }
   return urlPath;
 }
@@ -105,8 +103,6 @@ function getUnicodeUrl(url) {
     url = decodeURIComponent(url);
     return url.replace(hostname, readableHostname);
   } catch (err) {
-    dump("Warning: getUnicodeUrl failed to get a Unicode URL from" +
-            `${url}, reason: ${err}`);
   }
   return url;
 }
