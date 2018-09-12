@@ -1037,14 +1037,14 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     Node expressionAfterForInOrOf(ParseNodeKind forHeadKind, YieldHandling yieldHandling);
 
     SwitchStatementType switchStatement(YieldHandling yieldHandling);
-    Node continueStatement(YieldHandling yieldHandling);
-    Node breakStatement(YieldHandling yieldHandling);
+    ContinueStatementType continueStatement(YieldHandling yieldHandling);
+    BreakStatementType breakStatement(YieldHandling yieldHandling);
     UnaryNodeType returnStatement(YieldHandling yieldHandling);
     BinaryNodeType withStatement(YieldHandling yieldHandling);
     UnaryNodeType throwStatement(YieldHandling yieldHandling);
     TernaryNodeType tryStatement(YieldHandling yieldHandling);
     Node catchBlockStatement(YieldHandling yieldHandling, ParseContext::Scope& catchParamScope);
-    Node debuggerStatement();
+    DebuggerStatementType debuggerStatement();
 
     Node variableStatement(YieldHandling yieldHandling);
 

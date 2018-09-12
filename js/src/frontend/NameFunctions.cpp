@@ -429,12 +429,21 @@ class NameResolver
           case ParseNodeKind::RawUndefined:
           case ParseNodeKind::Elision:
           case ParseNodeKind::Generator:
-          case ParseNodeKind::Break:
-          case ParseNodeKind::Continue:
-          case ParseNodeKind::Debugger:
           case ParseNodeKind::ExportBatchSpec:
           case ParseNodeKind::PosHolder:
-            MOZ_ASSERT(cur->isArity(PN_NULLARY));
+            MOZ_ASSERT(cur->is<NullaryNode>());
+            break;
+
+          case ParseNodeKind::Debugger:
+            MOZ_ASSERT(cur->is<DebuggerStatement>());
+            break;
+
+          case ParseNodeKind::Break:
+            MOZ_ASSERT(cur->is<BreakStatement>());
+            break;
+
+          case ParseNodeKind::Continue:
+            MOZ_ASSERT(cur->is<ContinueStatement>());
             break;
 
           case ParseNodeKind::ObjectPropertyName:
@@ -857,7 +866,7 @@ class NameResolver
             ListNode* list = &cur->as<ListNode>();
             ParseNode* item = list->head();
             if (!isImport && item && item->isKind(ParseNodeKind::ExportBatchSpec)) {
-                MOZ_ASSERT(item->isArity(PN_NULLARY));
+                MOZ_ASSERT(item->is<NullaryNode>());
                 break;
             }
             for (ParseNode* item : list->contents()) {

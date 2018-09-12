@@ -131,7 +131,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<NumericLiteral>(value, decimalPoint, pos);
     }
 
-    ParseNode* newBooleanLiteral(bool cond, const TokenPos& pos) {
+    BooleanLiteralType newBooleanLiteral(bool cond, const TokenPos& pos) {
         return new_<BooleanLiteral>(cond, pos);
     }
 
@@ -177,11 +177,11 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<ThisLiteral>(pos, thisName);
     }
 
-    ParseNode* newNullLiteral(const TokenPos& pos) {
+    NullLiteralType newNullLiteral(const TokenPos& pos) {
         return new_<NullLiteral>(pos);
     }
 
-    ParseNode* newRawUndefinedLiteral(const TokenPos& pos) {
+    RawUndefinedLiteralType newRawUndefinedLiteral(const TokenPos& pos) {
         return new_<RawUndefinedLiteral>(pos);
     }
 
@@ -262,7 +262,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     MOZ_MUST_USE bool addElision(ListNodeType literal, const TokenPos& pos) {
         MOZ_ASSERT(literal->isKind(ParseNodeKind::Array));
 
-        ParseNode* elision = new_<NullaryNode>(ParseNodeKind::Elision, pos);
+        NullaryNode* elision = new_<NullaryNode>(ParseNodeKind::Elision, pos);
         if (!elision) {
             return false;
         }
@@ -321,10 +321,10 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     ClassNamesType newClassNames(Node outer, Node inner, const TokenPos& pos) {
         return new_<ClassNames>(outer, inner, pos);
     }
-    BinaryNodeType newNewTarget(Node newHolder, Node targetHolder) {
+    BinaryNodeType newNewTarget(NullaryNodeType newHolder, NullaryNodeType targetHolder) {
         return new_<BinaryNode>(ParseNodeKind::NewTarget, JSOP_NOP, newHolder, targetHolder);
     }
-    ParseNode* newPosHolder(const TokenPos& pos) {
+    NullaryNodeType newPosHolder(const TokenPos& pos) {
         return new_<NullaryNode>(ParseNodeKind::PosHolder, pos);
     }
     UnaryNodeType newSuperBase(Node thisName, const TokenPos& pos) {
@@ -496,7 +496,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         MOZ_ASSERT(stmtList->isKind(ParseNodeKind::StatementList));
 
         TokenPos yieldPos(stmtList->pn_pos.begin, stmtList->pn_pos.begin + 1);
-        ParseNode* makeGen = new_<NullaryNode>(ParseNodeKind::Generator, yieldPos);
+        NullaryNode* makeGen = new_<NullaryNode>(ParseNodeKind::Generator, yieldPos);
         if (!makeGen) {
             return false;
         }
@@ -524,7 +524,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return newBinary(ParseNodeKind::SetThis, thisName, value);
     }
 
-    ParseNode* newEmptyStatement(const TokenPos& pos) {
+    NullaryNodeType newEmptyStatement(const TokenPos& pos) {
         return new_<NullaryNode>(ParseNodeKind::EmptyStatement, pos);
     }
 
@@ -566,15 +566,15 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return newBinary(ParseNodeKind::ExportSpec, bindingName, exportName);
     }
 
-    ParseNode* newExportBatchSpec(const TokenPos& pos) {
+    NullaryNodeType newExportBatchSpec(const TokenPos& pos) {
         return new_<NullaryNode>(ParseNodeKind::ExportBatchSpec, JSOP_NOP, pos);
     }
 
-    BinaryNodeType newImportMeta(Node importHolder, Node metaHolder) {
+    BinaryNodeType newImportMeta(NullaryNodeType importHolder, NullaryNodeType metaHolder) {
         return new_<BinaryNode>(ParseNodeKind::ImportMeta, JSOP_NOP, importHolder, metaHolder);
     }
 
-    BinaryNodeType newCallImport(Node importHolder, Node singleArg) {
+    BinaryNodeType newCallImport(NullaryNodeType importHolder, Node singleArg) {
         return new_<BinaryNode>(ParseNodeKind::CallImport, JSOP_NOP, importHolder, singleArg);
     }
 
@@ -629,11 +629,11 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<CaseClause>(expr, body, begin);
     }
 
-    ParseNode* newContinueStatement(PropertyName* label, const TokenPos& pos) {
+    ContinueStatementType newContinueStatement(PropertyName* label, const TokenPos& pos) {
         return new_<ContinueStatement>(label, pos);
     }
 
-    ParseNode* newBreakStatement(PropertyName* label, const TokenPos& pos) {
+    BreakStatementType newBreakStatement(PropertyName* label, const TokenPos& pos) {
         return new_<BreakStatement>(label, pos);
     }
 
@@ -667,7 +667,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<TernaryNode>(ParseNodeKind::Try, body, catchScope, finallyBlock, pos);
     }
 
-    ParseNode* newDebuggerStatement(const TokenPos& pos) {
+    DebuggerStatementType newDebuggerStatement(const TokenPos& pos) {
         return new_<DebuggerStatement>(pos);
     }
 
