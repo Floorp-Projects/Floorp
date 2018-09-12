@@ -23,8 +23,6 @@ android {
 
 dependencies {
     implementation project(':browser-search')
-
-    implementation project(':feature-session')
     implementation project(':browser-session')
     implementation project(':concept-engine')
 
