@@ -1055,7 +1055,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       // |this| can throw in derived class constructors, including nested arrow
       // functions or eval.
       case ParseNodeKind::This:
-        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        MOZ_ASSERT(pn->is<UnaryNode>());
         *answer = sc->needsThisTDZChecks();
         return true;
 
@@ -1085,8 +1085,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case ParseNodeKind::TypeOfExpr:
       case ParseNodeKind::Void:
       case ParseNodeKind::Not:
-        MOZ_ASSERT(pn->isArity(PN_UNARY));
-        return checkSideEffects(pn->pn_kid, answer);
+        return checkSideEffects(pn->as<UnaryNode>().kid(), answer);
 
       // Even if the name expression is effect-free, performing ToPropertyKey on
       // it might not be effect-free:
@@ -1100,13 +1099,13 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       //   Q.toString = () => { throw 17; };
       //   new Q; // new.target will be Q, ToPropertyKey(Q) throws 17
       case ParseNodeKind::ComputedName:
-        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        MOZ_ASSERT(pn->is<UnaryNode>());
         *answer = true;
         return true;
 
       // Looking up or evaluating the associated name could throw.
       case ParseNodeKind::TypeOfName:
-        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        MOZ_ASSERT(pn->is<UnaryNode>());
         *answer = true;
         return true;
 
@@ -1117,8 +1116,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       // is no, because an object literal having a mutated prototype only
       // produces a value, without affecting anything else.
       case ParseNodeKind::MutateProto:
-        MOZ_ASSERT(pn->isArity(PN_UNARY));
-        return checkSideEffects(pn->pn_kid, answer);
+        return checkSideEffects(pn->as<UnaryNode>().kid(), answer);
 
       // Unary cases with obvious side effects.
       case ParseNodeKind::PreIncrement:
@@ -1126,7 +1124,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case ParseNodeKind::PreDecrement:
       case ParseNodeKind::PostDecrement:
       case ParseNodeKind::Throw:
-        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        MOZ_ASSERT(pn->is<UnaryNode>());
         *answer = true;
         return true;
 
@@ -1135,13 +1133,13 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case ParseNodeKind::BitNot:
       case ParseNodeKind::Pos:
       case ParseNodeKind::Neg:
-        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        MOZ_ASSERT(pn->is<UnaryNode>());
         *answer = true;
         return true;
 
       // This invokes the (user-controllable) iterator protocol.
       case ParseNodeKind::Spread:
-        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        MOZ_ASSERT(pn->is<UnaryNode>());
         *answer = true;
         return true;
 
@@ -1149,7 +1147,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case ParseNodeKind::YieldStar:
       case ParseNodeKind::Yield:
       case ParseNodeKind::Await:
-        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        MOZ_ASSERT(pn->is<UnaryNode>());
         *answer = true;
         return true;
 
@@ -1157,21 +1155,19 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case ParseNodeKind::DeleteName:
       case ParseNodeKind::DeleteProp:
       case ParseNodeKind::DeleteElem:
-        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        MOZ_ASSERT(pn->is<UnaryNode>());
         *answer = true;
         return true;
 
       // Deletion of a non-Reference expression has side effects only through
       // evaluating the expression.
       case ParseNodeKind::DeleteExpr: {
-        MOZ_ASSERT(pn->isArity(PN_UNARY));
-        ParseNode* expr = pn->pn_kid;
+        ParseNode* expr = pn->as<UnaryNode>().kid();
         return checkSideEffects(expr, answer);
       }
 
       case ParseNodeKind::ExpressionStatement:
-        MOZ_ASSERT(pn->isArity(PN_UNARY));
-        return checkSideEffects(pn->pn_kid, answer);
+        return checkSideEffects(pn->as<UnaryNode>().kid(), answer);
 
       // Binary cases with obvious side effects.
       case ParseNodeKind::Assign:
@@ -1278,7 +1274,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
 
       // Likewise.
       case ParseNodeKind::Export:
-        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        MOZ_ASSERT(pn->is<UnaryNode>());
         *answer = true;
         return true;
 
@@ -2067,7 +2063,7 @@ BytecodeEmitter::emitPropLHS(PropertyAccess* prop)
 }
 
 bool
-BytecodeEmitter::emitSuperPropLHS(ParseNode* superBase, bool isCall)
+BytecodeEmitter::emitSuperPropLHS(UnaryNode* superBase, bool isCall)
 {
     if (!emitGetThisForSuperBase(superBase)) {
         return false;
@@ -2106,7 +2102,7 @@ BytecodeEmitter::emitPropOp(PropertyAccess* prop, JSOp op)
 bool
 BytecodeEmitter::emitSuperGetProp(PropertyAccess* prop, bool isCall)
 {
-    ParseNode* base = &prop->expression();
+    UnaryNode* base = &prop->expression().as<UnaryNode>();
     if (!emitSuperPropLHS(base, isCall)) {
         return false;
     }
@@ -2123,16 +2119,16 @@ BytecodeEmitter::emitSuperGetProp(PropertyAccess* prop, bool isCall)
 }
 
 bool
-BytecodeEmitter::emitPropIncDec(ParseNode* pn)
+BytecodeEmitter::emitPropIncDec(UnaryNode* incDec)
 {
-    PropertyAccess* prop = &pn->pn_kid->as<PropertyAccess>();
+    PropertyAccess* prop = &incDec->kid()->as<PropertyAccess>();
 
     bool post;
     bool isSuper = prop->isSuper();
-    JSOp binop = GetIncDecInfo(pn->getKind(), &post);
+    JSOp binop = GetIncDecInfo(incDec->getKind(), &post);
 
     if (isSuper) {
-        ParseNode* base = &prop->expression();
+        UnaryNode* base = &prop->expression().as<UnaryNode>();
         if (!emitSuperPropLHS(base)) {              // THIS OBJ
             return false;
         }
@@ -2219,17 +2215,17 @@ BytecodeEmitter::emitGetNameAtLocationForCompoundAssignment(JSAtom* name, const 
 }
 
 bool
-BytecodeEmitter::emitNameIncDec(ParseNode* pn)
+BytecodeEmitter::emitNameIncDec(UnaryNode* incDec)
 {
-    MOZ_ASSERT(pn->pn_kid->isKind(ParseNodeKind::Name));
+    MOZ_ASSERT(incDec->kid()->isKind(ParseNodeKind::Name));
 
     bool post;
-    JSOp binop = GetIncDecInfo(pn->getKind(), &post);
+    JSOp binop = GetIncDecInfo(incDec->getKind(), &post);
 
-    auto emitRhs = [pn, post, binop](BytecodeEmitter* bce, const NameLocation& loc,
-                                     bool emittedBindOp)
+    auto emitRhs = [incDec, post, binop](BytecodeEmitter* bce, const NameLocation& loc,
+                                         bool emittedBindOp)
     {
-        JSAtom* name = pn->pn_kid->name();
+        JSAtom* name = incDec->kid()->name();
         if (!bce->emitGetNameAtLocationForCompoundAssignment(name, loc)) { // ENV? V
             return false;
         }
@@ -2258,7 +2254,7 @@ BytecodeEmitter::emitNameIncDec(ParseNode* pn)
         return true;
     };
 
-    if (!emitSetName(pn->pn_kid, emitRhs)) {
+    if (!emitSetName(incDec->kid(), emitRhs)) {
         return false;
     }
 
@@ -2303,7 +2299,7 @@ BytecodeEmitter::emitSuperElemOperands(PropertyByValue* elem, EmitElemOption opt
 {
     MOZ_ASSERT(elem->isSuper());
 
-    if (!emitGetThisForSuperBase(&elem->expression())) {
+    if (!emitGetThisForSuperBase(&elem->expression().as<UnaryNode>())) {
         return false;                               // THIS
     }
 
@@ -2378,9 +2374,9 @@ BytecodeEmitter::emitSuperGetElem(PropertyByValue* elem, bool isCall)
 }
 
 bool
-BytecodeEmitter::emitElemIncDec(ParseNode* pn)
+BytecodeEmitter::emitElemIncDec(UnaryNode* incDec)
 {
-    PropertyByValue* elem = &pn->pn_kid->as<PropertyByValue>();
+    PropertyByValue* elem = &incDec->kid()->as<PropertyByValue>();
     bool isSuper = elem->isSuper();
 
     // We need to convert the key to an object id first, so that we do not do
@@ -2397,7 +2393,7 @@ BytecodeEmitter::emitElemIncDec(ParseNode* pn)
     }
 
     bool post;
-    JSOp binop = GetIncDecInfo(pn->getKind(), &post);
+    JSOp binop = GetIncDecInfo(incDec->getKind(), &post);
 
     JSOp getOp;
     if (isSuper) {
@@ -2454,16 +2450,15 @@ BytecodeEmitter::emitElemIncDec(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitCallIncDec(ParseNode* incDec)
+BytecodeEmitter::emitCallIncDec(UnaryNode* incDec)
 {
     MOZ_ASSERT(incDec->isKind(ParseNodeKind::PreIncrement) ||
                incDec->isKind(ParseNodeKind::PostIncrement) ||
                incDec->isKind(ParseNodeKind::PreDecrement) ||
                incDec->isKind(ParseNodeKind::PostDecrement));
 
-    MOZ_ASSERT(incDec->pn_kid->isKind(ParseNodeKind::Call));
-
-    ParseNode* call = incDec->pn_kid;
+    ParseNode* call = incDec->kid();
+    MOZ_ASSERT(call->isKind(ParseNodeKind::Call));
     if (!emitTree(call)) {                              // CALLRESULT
         return false;
     }
@@ -2943,7 +2938,7 @@ BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target, size_t* emitted)
     *emitted = 0;
 
     if (target->isKind(ParseNodeKind::Spread)) {
-        target = target->pn_kid;
+        target = target->as<UnaryNode>().kid();
     } else if (target->isKind(ParseNodeKind::Assign)) {
         target = target->as<AssignmentNode>().left();
     }
@@ -2967,7 +2962,7 @@ BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target, size_t* emitted)
       case ParseNodeKind::Dot: {
         PropertyAccess* prop = &target->as<PropertyAccess>();
         if (prop->isSuper()) {
-            if (!emitSuperPropLHS(&prop->expression())) {
+            if (!emitSuperPropLHS(&prop->expression().as<UnaryNode>())) {
                 return false;
             }
             *emitted = 2;
@@ -3019,7 +3014,7 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
     // the matched value. Otherwise emit an lvalue bytecode sequence followed
     // by an assignment op.
     if (target->isKind(ParseNodeKind::Spread)) {
-        target = target->pn_kid;
+        target = target->as<UnaryNode>().kid();
     } else if (target->isKind(ParseNodeKind::Assign)) {
         target = target->as<AssignmentNode>().left();
     }
@@ -3883,10 +3878,10 @@ BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern, DestructuringFlavo
 }
 
 bool
-BytecodeEmitter::emitComputedPropertyName(ParseNode* computedPropName)
+BytecodeEmitter::emitComputedPropertyName(UnaryNode* computedPropName)
 {
     MOZ_ASSERT(computedPropName->isKind(ParseNodeKind::ComputedName));
-    return emitTree(computedPropName->pn_kid) && emit1(JSOP_TOID);
+    return emitTree(computedPropName->kid()) && emit1(JSOP_TOID);
 }
 
 bool
@@ -3917,7 +3912,7 @@ BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern, DestructuringFlav
         if (member->isKind(ParseNodeKind::MutateProto) ||
             member->isKind(ParseNodeKind::Spread))
         {
-            subpattern = member->pn_kid;
+            subpattern = member->as<UnaryNode>().kid();
         } else {
             MOZ_ASSERT(member->isKind(ParseNodeKind::Colon) ||
                        member->isKind(ParseNodeKind::Shorthand));
@@ -4005,8 +4000,8 @@ BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern, DestructuringFlav
                 }
                 needsGetElem = false;
             } else {
-                if (!emitComputedPropertyName(key)) {             // ... *SET RHS *LREF RHS KEY
-                    return false;
+                if (!emitComputedPropertyName(&key->as<UnaryNode>())) {
+                    return false;                                 // ... *SET RHS *LREF RHS KEY
                 }
 
                 // Add the computed property key to the exclusion set.
@@ -4378,7 +4373,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
       case ParseNodeKind::Dot: {
         PropertyAccess* prop = &lhs->as<PropertyAccess>();
         if (prop->isSuper()) {
-            if (!emitSuperPropLHS(&prop->expression())) {
+            if (!emitSuperPropLHS(&prop->expression().as<UnaryNode>())) {
                 return false;
             }
             offset += 2;
@@ -6066,18 +6061,16 @@ BytecodeEmitter::emitGetFunctionThis(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitGetThisForSuperBase(ParseNode* pn)
+BytecodeEmitter::emitGetThisForSuperBase(UnaryNode* superBase)
 {
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::SuperBase));
-    return emitGetFunctionThis(pn->pn_kid);
+    MOZ_ASSERT(superBase->isKind(ParseNodeKind::SuperBase));
+    return emitGetFunctionThis(superBase->kid());
 }
 
 bool
-BytecodeEmitter::emitThisLiteral(ParseNode* pn)
+BytecodeEmitter::emitThisLiteral(ThisLiteral* pn)
 {
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::This));
-
-    if (ParseNode* thisName = pn->pn_kid) {
+    if (ParseNode* thisName = pn->kid()) {
         return emitGetFunctionThis(thisName);
     }
 
@@ -6103,9 +6096,9 @@ BytecodeEmitter::emitCheckDerivedClassConstructorReturn()
 }
 
 bool
-BytecodeEmitter::emitReturn(ParseNode* pn)
+BytecodeEmitter::emitReturn(UnaryNode* returnNode)
 {
-    if (!updateSourceCoordNotes(pn->pn_pos.begin)) {
+    if (!updateSourceCoordNotes(returnNode->pn_pos.begin)) {
         return false;
     }
 
@@ -6117,8 +6110,8 @@ BytecodeEmitter::emitReturn(ParseNode* pn)
     }
 
     /* Push a return value */
-    if (ParseNode* pn2 = pn->pn_kid) {
-        if (!emitTree(pn2)) {
+    if (ParseNode* expr = returnNode->kid()) {
+        if (!emitTree(expr)) {
             return false;
         }
 
@@ -6219,9 +6212,9 @@ BytecodeEmitter::emitGetDotGeneratorInScope(EmitterScope& currentScope)
 }
 
 bool
-BytecodeEmitter::emitInitialYield(ParseNode* pn)
+BytecodeEmitter::emitInitialYield(UnaryNode* yieldNode)
 {
-    if (!emitTree(pn->pn_kid)) {
+    if (!emitTree(yieldNode->kid())) {
         return false;
     }
 
@@ -6237,10 +6230,10 @@ BytecodeEmitter::emitInitialYield(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitYield(ParseNode* pn)
+BytecodeEmitter::emitYield(UnaryNode* yieldNode)
 {
     MOZ_ASSERT(sc->isFunctionBox());
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::Yield));
+    MOZ_ASSERT(yieldNode->isKind(ParseNodeKind::Yield));
 
     bool needsIteratorResult = sc->asFunctionBox()->needsIteratorResult();
     if (needsIteratorResult) {
@@ -6248,8 +6241,8 @@ BytecodeEmitter::emitYield(ParseNode* pn)
             return false;
         }
     }
-    if (pn->pn_kid) {
-        if (!emitTree(pn->pn_kid)) {
+    if (ParseNode* expr = yieldNode->kid()) {
+        if (!emitTree(expr)) {
             return false;
         }
     } else {
@@ -6284,12 +6277,12 @@ BytecodeEmitter::emitYield(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitAwaitInInnermostScope(ParseNode* pn)
+BytecodeEmitter::emitAwaitInInnermostScope(UnaryNode* awaitNode)
 {
     MOZ_ASSERT(sc->isFunctionBox());
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::Await));
+    MOZ_ASSERT(awaitNode->isKind(ParseNodeKind::Await));
 
-    if (!emitTree(pn->pn_kid)) {
+    if (!emitTree(awaitNode->kid())) {
         return false;
     }
     return emitAwaitInInnermostScope();
@@ -6697,9 +6690,9 @@ BytecodeEmitter::emitStatementList(ListNode* stmtList)
 }
 
 bool
-BytecodeEmitter::emitExpressionStatement(ParseNode* pn)
+BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt)
 {
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::ExpressionStatement));
+    MOZ_ASSERT(exprStmt->isKind(ParseNodeKind::ExpressionStatement));
 
     /*
      * Top-level or called-from-a-native JS_Execute/EvaluateScript,
@@ -6719,7 +6712,7 @@ BytecodeEmitter::emitExpressionStatement(ParseNode* pn)
     }
 
     /* Don't eliminate expressions with side effects. */
-    ParseNode* expr = pn->pn_kid;
+    ParseNode* expr = exprStmt->kid();
     if (!useful) {
         if (!checkSideEffects(expr, &useful)) {
             return false;
@@ -6742,7 +6735,7 @@ BytecodeEmitter::emitExpressionStatement(ParseNode* pn)
         JSOp op = wantval ? JSOP_SETRVAL : JSOP_POP;
         ValueUsage valueUsage = wantval ? ValueUsage::WantValue : ValueUsage::IgnoreValue;
         MOZ_ASSERT_IF(expr->isKind(ParseNodeKind::Assign), expr->isOp(JSOP_NOP));
-        if (!updateSourceCoordNotes(pn->pn_pos.begin)) {
+        if (!updateSourceCoordNotes(exprStmt->pn_pos.begin)) {
             return false;
         }
         if (!emitTree(expr, valueUsage)) {
@@ -6751,11 +6744,11 @@ BytecodeEmitter::emitExpressionStatement(ParseNode* pn)
         if (!emit1(op)) {
             return false;
         }
-    } else if (pn->isDirectivePrologueMember()) {
+    } else if (exprStmt->isDirectivePrologueMember()) {
         // Don't complain about directive prologue members; just don't emit
         // their code.
     } else {
-        if (JSAtom* atom = pn->isStringExprStatement()) {
+        if (JSAtom* atom = exprStmt->isStringExprStatement()) {
             // Warn if encountering a non-directive prologue member string
             // expression statement, that is inconsistent with the current
             // directive prologue.  That is, a script *not* starting with
@@ -6790,31 +6783,29 @@ BytecodeEmitter::emitExpressionStatement(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitDeleteName(ParseNode* node)
+BytecodeEmitter::emitDeleteName(UnaryNode* deleteNode)
 {
-    MOZ_ASSERT(node->isKind(ParseNodeKind::DeleteName));
-    MOZ_ASSERT(node->isArity(PN_UNARY));
+    MOZ_ASSERT(deleteNode->isKind(ParseNodeKind::DeleteName));
 
-    ParseNode* nameExpr = node->pn_kid;
+    ParseNode* nameExpr = deleteNode->kid();
     MOZ_ASSERT(nameExpr->isKind(ParseNodeKind::Name));
 
     return emitAtomOp(nameExpr, JSOP_DELNAME);
 }
 
 bool
-BytecodeEmitter::emitDeleteProperty(ParseNode* node)
+BytecodeEmitter::emitDeleteProperty(UnaryNode* deleteNode)
 {
-    MOZ_ASSERT(node->isKind(ParseNodeKind::DeleteProp));
-    MOZ_ASSERT(node->isArity(PN_UNARY));
+    MOZ_ASSERT(deleteNode->isKind(ParseNodeKind::DeleteProp));
 
-    PropertyAccess* propExpr = &node->pn_kid->as<PropertyAccess>();
+    PropertyAccess* propExpr = &deleteNode->kid()->as<PropertyAccess>();
 
     if (propExpr->isSuper()) {
         // The expression |delete super.foo;| has to evaluate |super.foo|,
         // which could throw if |this| hasn't yet been set by a |super(...)|
         // call or the super-base is not an object, before throwing a
         // ReferenceError for attempting to delete a super-reference.
-        if (!emitGetThisForSuperBase(&propExpr->expression())) {
+        if (!emitGetThisForSuperBase(&propExpr->expression().as<UnaryNode>())) {
             return false;
         }
 
@@ -6837,12 +6828,11 @@ BytecodeEmitter::emitDeleteProperty(ParseNode* node)
 }
 
 bool
-BytecodeEmitter::emitDeleteElement(ParseNode* node)
+BytecodeEmitter::emitDeleteElement(UnaryNode* deleteNode)
 {
-    MOZ_ASSERT(node->isKind(ParseNodeKind::DeleteElem));
-    MOZ_ASSERT(node->isArity(PN_UNARY));
+    MOZ_ASSERT(deleteNode->isKind(ParseNodeKind::DeleteElem));
 
-    PropertyByValue* elemExpr = &node->pn_kid->as<PropertyByValue>();
+    PropertyByValue* elemExpr = &deleteNode->kid()->as<PropertyByValue>();
 
     if (elemExpr->isSuper()) {
         // The expression |delete super[foo];| has to evaluate |super[foo]|,
@@ -6850,7 +6840,7 @@ BytecodeEmitter::emitDeleteElement(ParseNode* node)
         // call, or trigger side-effects when evaluating ToPropertyKey(foo),
         // or also throw when the super-base is not an object, before throwing
         // a ReferenceError for attempting to delete a super-reference.
-        if (!emitGetThisForSuperBase(&elemExpr->expression())) {
+        if (!emitGetThisForSuperBase(&elemExpr->expression().as<UnaryNode>())) {
             return false;
         }
 
@@ -6880,12 +6870,11 @@ BytecodeEmitter::emitDeleteElement(ParseNode* node)
 }
 
 bool
-BytecodeEmitter::emitDeleteExpression(ParseNode* node)
+BytecodeEmitter::emitDeleteExpression(UnaryNode* deleteNode)
 {
-    MOZ_ASSERT(node->isKind(ParseNodeKind::DeleteExpr));
-    MOZ_ASSERT(node->isArity(PN_UNARY));
+    MOZ_ASSERT(deleteNode->isKind(ParseNodeKind::DeleteExpr));
 
-    ParseNode* expression = node->pn_kid;
+    ParseNode* expression = deleteNode->kid();
 
     // If useless, just emit JSOP_TRUE; otherwise convert |delete <expr>| to
     // effectively |<expr>, true|.
@@ -7333,7 +7322,8 @@ BytecodeEmitter::emitArguments(ListNode* argsList, bool callop, bool spread)
         }
     } else {
         ParseNode* args = argsList->head();
-        bool emitOptCode = (argc == 1) && isRestParameter(args->pn_kid);
+        MOZ_ASSERT_IF(argc == 1, args->isKind(ParseNodeKind::Spread));
+        bool emitOptCode = (argc == 1) && isRestParameter(args->as<UnaryNode>().kid());
         InternalIfEmitter ifNotOptimizable(this);
 
         if (emitOptCode) {
@@ -7349,7 +7339,7 @@ BytecodeEmitter::emitArguments(ListNode* argsList, bool callop, bool spread)
             // operation.  See the comment in OptimizeSpreadCall in
             // Interpreter.cpp for the optimizable conditons.
 
-            if (!emitTree(args->pn_kid)) {
+            if (!emitTree(args->as<UnaryNode>().kid())) {
                 return false;
             }
 
@@ -7727,17 +7717,17 @@ BytecodeEmitter::emitSequenceExpr(ListNode* node,
 // Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
 // the comment on emitSwitch.
 MOZ_NEVER_INLINE bool
-BytecodeEmitter::emitIncOrDec(ParseNode* pn)
+BytecodeEmitter::emitIncOrDec(UnaryNode* incDec)
 {
-    switch (pn->pn_kid->getKind()) {
+    switch (incDec->kid()->getKind()) {
       case ParseNodeKind::Dot:
-        return emitPropIncDec(pn);
+        return emitPropIncDec(incDec);
       case ParseNodeKind::Elem:
-        return emitElemIncDec(pn);
+        return emitElemIncDec(incDec);
       case ParseNodeKind::Call:
-        return emitCallIncDec(pn);
+        return emitCallIncDec(incDec);
       default:
-        return emitNameIncDec(pn);
+        return emitNameIncDec(incDec);
     }
 }
 
@@ -7827,7 +7817,7 @@ BytecodeEmitter::emitPropertyList(ListNode* obj, MutableHandlePlainObject objp, 
         // involving "__proto__", performs [[Prototype]] mutation.
         if (propdef->isKind(ParseNodeKind::MutateProto)) {
             MOZ_ASSERT(type == ObjectLiteral);
-            if (!emitTree(propdef->pn_kid)) {
+            if (!emitTree(propdef->as<UnaryNode>().kid())) {
                 return false;
             }
             objp.set(nullptr);
@@ -7844,7 +7834,7 @@ BytecodeEmitter::emitPropertyList(ListNode* obj, MutableHandlePlainObject objp, 
                 return false;
             }
 
-            if (!emitTree(propdef->pn_kid)) {
+            if (!emitTree(propdef->as<UnaryNode>().kid())) {
                 return false;
             }
 
@@ -7885,7 +7875,8 @@ BytecodeEmitter::emitPropertyList(ListNode* obj, MutableHandlePlainObject objp, 
                 continue;
             }
         } else {
-            if (!emitComputedPropertyName(key)) {
+            MOZ_ASSERT(key->isKind(ParseNodeKind::ComputedName));
+            if (!emitComputedPropertyName(&key->as<UnaryNode>())) {
                 return false;
             }
             isIndex = true;
@@ -8181,7 +8172,7 @@ BytecodeEmitter::emitArray(ParseNode* arrayHead, uint32_t count)
         } else {
             ParseNode* expr;
             if (elem->isKind(ParseNodeKind::Spread)) {
-                expr = elem->pn_kid;
+                expr = elem->as<UnaryNode>().kid();
 
                 if (emitterMode == BytecodeEmitter::SelfHosting &&
                     expr->isKind(ParseNodeKind::Call) &&
@@ -8243,27 +8234,27 @@ UnaryOpParseNodeKindToJSOp(ParseNodeKind pnk)
 }
 
 bool
-BytecodeEmitter::emitUnary(ParseNode* pn)
+BytecodeEmitter::emitUnary(UnaryNode* unaryNode)
 {
-    if (!updateSourceCoordNotes(pn->pn_pos.begin)) {
+    if (!updateSourceCoordNotes(unaryNode->pn_pos.begin)) {
         return false;
     }
-    if (!emitTree(pn->pn_kid)) {
+    if (!emitTree(unaryNode->kid())) {
         return false;
     }
-    return emit1(UnaryOpParseNodeKindToJSOp(pn->getKind()));
+    return emit1(UnaryOpParseNodeKindToJSOp(unaryNode->getKind()));
 }
 
 bool
-BytecodeEmitter::emitTypeof(ParseNode* node, JSOp op)
+BytecodeEmitter::emitTypeof(UnaryNode* typeofNode, JSOp op)
 {
     MOZ_ASSERT(op == JSOP_TYPEOF || op == JSOP_TYPEOFEXPR);
 
-    if (!updateSourceCoordNotes(node->pn_pos.begin)) {
+    if (!updateSourceCoordNotes(typeofNode->pn_pos.begin)) {
         return false;
     }
 
-    if (!emitTree(node->pn_kid)) {
+    if (!emitTree(typeofNode->kid())) {
         return false;
     }
 
@@ -9040,13 +9031,13 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
         break;
 
       case ParseNodeKind::Return:
-        if (!emitReturn(pn)) {
+        if (!emitReturn(&pn->as<UnaryNode>())) {
             return false;
         }
         break;
 
       case ParseNodeKind::YieldStar:
-        if (!emitYieldStar(pn->pn_kid)) {
+        if (!emitYieldStar(pn->as<UnaryNode>().kid())) {
             return false;
         }
         break;
@@ -9058,19 +9049,19 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
         break;
 
       case ParseNodeKind::InitialYield:
-        if (!emitInitialYield(pn)) {
+        if (!emitInitialYield(&pn->as<UnaryNode>())) {
             return false;
         }
         break;
 
       case ParseNodeKind::Yield:
-        if (!emitYield(pn)) {
+        if (!emitYield(&pn->as<UnaryNode>())) {
             return false;
         }
         break;
 
       case ParseNodeKind::Await:
-        if (!emitAwaitInInnermostScope(pn)) {
+        if (!emitAwaitInInnermostScope(&pn->as<UnaryNode>())) {
             return false;
         }
         break;
@@ -9085,7 +9076,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
         break;
 
       case ParseNodeKind::ExpressionStatement:
-        if (!emitExpressionStatement(pn)) {
+        if (!emitExpressionStatement(&pn->as<UnaryNode>())) {
             return false;
         }
         break;
@@ -9174,13 +9165,13 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
         break;
 
       case ParseNodeKind::TypeOfName:
-        if (!emitTypeof(pn, JSOP_TYPEOF)) {
+        if (!emitTypeof(&pn->as<UnaryNode>(), JSOP_TYPEOF)) {
             return false;
         }
         break;
 
       case ParseNodeKind::TypeOfExpr:
-        if (!emitTypeof(pn, JSOP_TYPEOFEXPR)) {
+        if (!emitTypeof(&pn->as<UnaryNode>(), JSOP_TYPEOFEXPR)) {
             return false;
         }
         break;
@@ -9191,7 +9182,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
       case ParseNodeKind::BitNot:
       case ParseNodeKind::Pos:
       case ParseNodeKind::Neg:
-        if (!emitUnary(pn)) {
+        if (!emitUnary(&pn->as<UnaryNode>())) {
             return false;
         }
         break;
@@ -9200,31 +9191,31 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
       case ParseNodeKind::PreDecrement:
       case ParseNodeKind::PostIncrement:
       case ParseNodeKind::PostDecrement:
-        if (!emitIncOrDec(pn)) {
+        if (!emitIncOrDec(&pn->as<UnaryNode>())) {
             return false;
         }
         break;
 
       case ParseNodeKind::DeleteName:
-        if (!emitDeleteName(pn)) {
+        if (!emitDeleteName(&pn->as<UnaryNode>())) {
             return false;
         }
         break;
 
       case ParseNodeKind::DeleteProp:
-        if (!emitDeleteProperty(pn)) {
+        if (!emitDeleteProperty(&pn->as<UnaryNode>())) {
             return false;
         }
         break;
 
       case ParseNodeKind::DeleteElem:
-        if (!emitDeleteElement(pn)) {
+        if (!emitDeleteElement(&pn->as<UnaryNode>())) {
             return false;
         }
         break;
 
       case ParseNodeKind::DeleteExpr:
-        if (!emitDeleteExpression(pn)) {
+        if (!emitDeleteExpression(&pn->as<UnaryNode>())) {
             return false;
         }
         break;
@@ -9283,14 +9274,17 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
         MOZ_ASSERT(sc->isModuleContext());
         break;
 
-      case ParseNodeKind::Export:
+      case ParseNodeKind::Export: {
         MOZ_ASSERT(sc->isModuleContext());
-        if (pn->pn_kid->getKind() != ParseNodeKind::ExportSpecList) {
-            if (!emitTree(pn->pn_kid)) {
+        UnaryNode* node = &pn->as<UnaryNode>();
+        ParseNode* decl = node->kid();
+        if (decl->getKind() != ParseNodeKind::ExportSpecList) {
+            if (!emitTree(decl)) {
                 return false;
             }
         }
         break;
+      }
 
       case ParseNodeKind::ExportDefault:
         MOZ_ASSERT(sc->isModuleContext());
@@ -9362,7 +9356,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
         break;
 
       case ParseNodeKind::This:
-        if (!emitThisLiteral(pn)) {
+        if (!emitThisLiteral(&pn->as<ThisLiteral>())) {
             return false;
         }
         break;

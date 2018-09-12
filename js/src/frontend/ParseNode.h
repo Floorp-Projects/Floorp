@@ -247,7 +247,8 @@ IsTypeofKind(ParseNodeKind kind)
  *           * StatementList node for function body statements
  *           * Return for expression closure
  *   count: number of formal parameters + 1
- * Spread   unary       pn_kid: expression being spread
+ * Spread (UnaryNode)
+ *   kid: expression being spread
  * Class (ClassNode)
  *   kid1: ClassNames for class name. can be null for anonymous class.
  *   kid2: expression after `extends`. null if no expression
@@ -306,7 +307,8 @@ IsTypeofKind(ParseNodeKind kind)
  *   kid1:  init expr before first ';' or nullptr
  *   kid2:  cond expr before second ';' or nullptr
  *   kid3:  update expr after second ';' or nullptr
- * Throw    unary       pn_kid: exception
+ * Throw (UnaryNode)
+ *   kid: thrown exception
  * Try (TernaryNode)
  *   kid1: try block
  *   kid2: null or LexicalScope for catch-block with scopeBody pointing to a
@@ -337,11 +339,12 @@ IsTypeofKind(ParseNodeKind kind)
  *                    pn_lexdef (NOT pn_expr) set
  *           right: initializer
  *   count: N > 0
- * Return   unary       pn_kid: return expr or null
- * ExpressionStatement unary    pn_kid: expr
- *                              pn_prologue: true if Directive Prologue member
- *                                  in original source, not introduced via
- *                                  constant folding or other tree rewriting
+ * Return (UnaryNode)
+ *   kid: returned expression, or null if none
+ * ExpressionStatement (UnaryNode)
+ *   kid: expr
+ *   prologue: true if Directive Prologue member in original source, not
+ *             introduced via constant folding or other tree rewriting
  * EmptyStatement nullary      (no fields)
  * Label    name        pn_atom: label, pn_expr: labeled statement
  * Import (BinaryNode)
@@ -353,7 +356,8 @@ IsTypeofKind(ParseNodeKind kind)
  * ImportSpec (BinaryNode)
  *   left: import name
  *   right: local binding name
- * Export   unary       pn_kid: declaration expression
+ * Export (UnaryNode)
+ *   kid: declaration expression
  * ExportFrom (BinaryNode)
  *   left: ExportSpecList export specifiers
  *   right: String module specifier
@@ -395,28 +399,22 @@ IsTypeofKind(ParseNodeKind kind)
  *         right-associative, but still forms a list (see comments in
  *         ParseNode::appendOrCreateList).
  *   count: N >= 2
- * Pos,     unary       pn_kid: UNARY expr
- * Neg
- * Void,    unary       pn_kid: UNARY expr
- * Not,
- * BitNot
- * TypeOfName, unary    pn_kid: UNARY expr
- * TypeOfExpr
- * PreIncrement, unary  pn_kid: MEMBER expr
- * PostIncrement,
- * PreDecrement,
- * PostDecrement
+ * Pos, Neg, Void, Not, BitNot, TypeOfName, TypeOfExpr (UnaryNode)
+ *   kid: unary expr
+ * PreIncrement PostIncrement, PreDecrement, PostDecrement (UnaryNode)
+ *   kid: member expr
  * New (BinaryNode)
  *   left: ctor expression on the left of the '('
  *   right: Arguments
- * DeleteName unary     pn_kid: Name expr
- * DeleteProp unary     pn_kid: Dot expr
- * DeleteElem unary     pn_kid: Elem expr
- * DeleteExpr unary     pn_kid: MEMBER expr that's evaluated, then the
- *                          overall delete evaluates to true; can't be a kind
- *                          for a more-specific PNK_DELETE* unless constant
- *                          folding (or a similar parse tree manipulation) has
- *                          occurred
+ * DeleteName, DeleteProp, DeleteElem, DeleteExpr (UnaryNode)
+ *   kid: expression that's evaluated, then the overall delete evaluates to
+ *        true; can't be a kind for a more-specific ParseNodeKind::Delete*
+ *        unless constant folding (or a similar parse tree manipulation) has
+ *        occurred
+ *          * DeleteName: Name expr
+ *          * DeleteProp: Dot expr
+ *          * DeleteElem: Elem expr
+ *          * DeleteExpr: Member expr
  * PropertyName name    pn_atom: property name being accessed
  * Dot (PropertyAccess)
  *   left: MEMBER expr to left of '.'
@@ -449,8 +447,9 @@ IsTypeofKind(ParseNodeKind kind)
  * Shorthand (BinaryNode)
  *   Same fields as Colon. This is used for object literal properties using
  *   shorthand ({x}).
- * ComputedName unary  ES6 ComputedPropertyName.
- *                          pn_kid: the AssignmentExpression inside the square brackets
+ * ComputedName (UnaryNode)
+ *   ES6 ComputedPropertyName.
+ *   kid: the AssignmentExpression inside the square brackets
  * Name,    name        pn_atom: name, string, or object atom
  * String               pn_op: JSOP_GETNAME, JSOP_STRING, or JSOP_OBJECT
  *                          If JSOP_GETNAME, pn_op may be JSOP_*ARG or JSOP_*VAR
@@ -479,8 +478,10 @@ IsTypeofKind(ParseNodeKind kind)
  * Null,
  * RawUndefined
  *
- * This,        unary   pn_kid: '.this' Name if function `this`, else nullptr
- * SuperBase    unary   pn_kid: '.this' Name
+ * This (UnaryNode)
+ *   kid: '.this' Name if function `this`, else nullptr
+ * SuperBase (UnaryNode)
+ *   kid: '.this' Name
  * SuperCall (BinaryNode)
  *   left: SuperBase
  *   right: Arguments
@@ -491,10 +492,10 @@ IsTypeofKind(ParseNodeKind kind)
  * LexicalScope scope   pn_u.scope.bindings: scope bindings
  *                          pn_u.scope.body: scope body
  * Generator    nullary
- * InitialYield unary   pn_kid: generator object
- * Yield,       unary   pn_kid: expr or null
- * YieldStar,
- * Await
+ * InitialYield (UnaryNode)
+ *   kid: generator object
+ * Yield, YieldStar, Await (UnaryNode)
+ *   kid: expr or null
  * Nop          nullary
  */
 enum ParseNodeArity
@@ -525,7 +526,9 @@ enum ParseNodeArity
     \
     macro(TernaryNode, TernaryNodeType, asTernary) \
     macro(ClassNode, ClassNodeType, asClass) \
-    macro(ConditionalExpression, ConditionalExpressionType, asConditionalExpression)
+    macro(ConditionalExpression, ConditionalExpressionType, asConditionalExpression) \
+    macro(UnaryNode, UnaryNodeType, asUnary) \
+    macro(ThisLiteral, ThisLiteralType, asThisLiteral)
 
 class LoopControlStatement;
 class BreakStatement;
@@ -650,9 +653,10 @@ class ParseNode
             };
         } binary;
         struct {                        /* one kid if unary */
+          private:
+            friend class UnaryNode;
             ParseNode*  kid;
-            bool        prologue;       /* directive prologue member (as
-                                           pn_prologue) */
+            bool        prologue;       /* directive prologue member */
         } unary;
         struct {                        /* name, labeled statement, etc. */
             union {
@@ -680,8 +684,6 @@ class ParseNode
 #define pn_objbox       pn_u.name.objbox
 #define pn_funbox       pn_u.name.funbox
 #define pn_body         pn_u.name.expr
-#define pn_kid          pn_u.unary.kid
-#define pn_prologue     pn_u.unary.prologue
 #define pn_atom         pn_u.name.atom
 #define pn_objbox       pn_u.name.objbox
 #define pn_expr         pn_u.name.expr
@@ -739,30 +741,6 @@ class ParseNode
         return !isOp(JSOP_LAMBDA) && !isOp(JSOP_LAMBDA_ARROW) && !isOp(JSOP_DEFFUN);
     }
 
-    /*
-     * True if this statement node could be a member of a Directive Prologue: an
-     * expression statement consisting of a single string literal.
-     *
-     * This considers only the node and its children, not its context. After
-     * parsing, check the node's pn_prologue flag to see if it is indeed part of
-     * a directive prologue.
-     *
-     * Note that a Directive Prologue can contain statements that cannot
-     * themselves be directives (string literals that include escape sequences
-     * or escaped newlines, say). This member function returns true for such
-     * nodes; we use it to determine the extent of the prologue.
-     */
-    JSAtom* isStringExprStatement() const {
-        if (getKind() == ParseNodeKind::ExpressionStatement) {
-            MOZ_ASSERT(pn_arity == PN_UNARY);
-            ParseNode* kid = pn_kid;
-            if (kid->getKind() == ParseNodeKind::String && !kid->pn_parens) {
-                return kid->pn_atom;
-            }
-        }
-        return nullptr;
-    }
-
     /* True if pn is a parsenode representing a literal constant. */
     bool isLiteral() const {
         return isKind(ParseNodeKind::Number) ||
@@ -772,9 +750,6 @@ class ParseNode
                isKind(ParseNodeKind::Null) ||
                isKind(ParseNodeKind::RawUndefined);
     }
-
-    /* Return true if this node appears in a Directive Prologue. */
-    bool isDirectivePrologueMember() const { return pn_prologue; }
 
     // True iff this is a for-in/of loop variable declaration (var/let/const).
     inline bool isForLoopDeclaration() const;
@@ -844,12 +819,13 @@ struct NullaryNode : public ParseNode
 #endif
 };
 
-struct UnaryNode : public ParseNode
+class UnaryNode : public ParseNode
 {
+  public:
     UnaryNode(ParseNodeKind kind, const TokenPos& pos, ParseNode* kid)
       : ParseNode(kind, JSOP_NOP, PN_UNARY, pos)
     {
-        pn_kid = kid;
+        pn_u.unary.kid = kid;
     }
 
     static bool test(const ParseNode& node) {
@@ -859,6 +835,47 @@ struct UnaryNode : public ParseNode
 #ifdef DEBUG
     void dump(GenericPrinter& out, int indent);
 #endif
+
+    ParseNode* kid() const {
+        return pn_u.unary.kid;
+    }
+
+    /* Return true if this node appears in a Directive Prologue. */
+    bool isDirectivePrologueMember() const {
+        return pn_u.unary.prologue;
+    }
+
+    void setIsDirectivePrologueMember() {
+        pn_u.unary.prologue = true;
+    }
+
+    /*
+     * Non-null if this is a statement node which could be a member of a
+     * Directive Prologue: an expression statement consisting of a single
+     * string literal.
+     *
+     * This considers only the node and its children, not its context. After
+     * parsing, check the node's prologue flag to see if it is indeed part of
+     * a directive prologue.
+     *
+     * Note that a Directive Prologue can contain statements that cannot
+     * themselves be directives (string literals that include escape sequences
+     * or escaped newlines, say). This member function returns true for such
+     * nodes; we use it to determine the extent of the prologue.
+     */
+    JSAtom* isStringExprStatement() const {
+        if (isKind(ParseNodeKind::ExpressionStatement)) {
+            if (kid()->isKind(ParseNodeKind::String) && !kid()->isInParens()) {
+                return kid()->pn_atom;
+            }
+        }
+        return nullptr;
+    }
+
+    // Methods used by FoldConstants.cpp.
+    ParseNode** unsafeKidReference() {
+        return &pn_u.unary.kid;
+    }
 };
 
 class BinaryNode : public ParseNode
@@ -1546,6 +1563,12 @@ class ThisLiteral : public UnaryNode
     ThisLiteral(const TokenPos& pos, ParseNode* thisName)
       : UnaryNode(ParseNodeKind::This, pos, thisName)
     { }
+
+    static bool test(const ParseNode& node) {
+        bool match = node.isKind(ParseNodeKind::This);
+        MOZ_ASSERT_IF(match, node.is<UnaryNode>());
+        return match;
+    }
 };
 
 class NullLiteral : public ParseNode

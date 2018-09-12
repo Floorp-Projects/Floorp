@@ -119,7 +119,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<NameNode>(ParseNodeKind::Name, JSOP_GETNAME, name, pos);
     }
 
-    ParseNode* newComputedName(ParseNode* expr, uint32_t begin, uint32_t end) {
+    UnaryNodeType newComputedName(Node expr, uint32_t begin, uint32_t end) {
         TokenPos pos(begin, end);
         return new_<UnaryNode>(ParseNodeKind::ComputedName, pos, expr);
     }
@@ -179,7 +179,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         setEndPosition(callSiteObj, callSiteObj->rawNodes());
     }
 
-    ParseNode* newThisLiteral(const TokenPos& pos, ParseNode* thisName) {
+    ThisLiteralType newThisLiteral(const TokenPos& pos, Node thisName) {
         return new_<ThisLiteral>(pos, thisName);
     }
 
@@ -207,7 +207,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<ConditionalExpression>(cond, thenExpr, elseExpr);
     }
 
-    ParseNode* newDelete(uint32_t begin, ParseNode* expr) {
+    UnaryNodeType newDelete(uint32_t begin, Node expr) {
         if (expr->isKind(ParseNodeKind::Name)) {
             expr->setOp(JSOP_DELNAME);
             return newUnary(ParseNodeKind::DeleteName, begin, expr);
@@ -224,24 +224,24 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return newUnary(ParseNodeKind::DeleteExpr, begin, expr);
     }
 
-    ParseNode* newTypeof(uint32_t begin, ParseNode* kid) {
+    UnaryNodeType newTypeof(uint32_t begin, Node kid) {
         ParseNodeKind pnk = kid->isKind(ParseNodeKind::Name)
                             ? ParseNodeKind::TypeOfName
                             : ParseNodeKind::TypeOfExpr;
         return newUnary(pnk, begin, kid);
     }
 
-    ParseNode* newUnary(ParseNodeKind kind, uint32_t begin, ParseNode* kid) {
+    UnaryNodeType newUnary(ParseNodeKind kind, uint32_t begin, Node kid) {
         TokenPos pos(begin, kid->pn_pos.end);
         return new_<UnaryNode>(kind, pos, kid);
     }
 
-    ParseNode* newUpdate(ParseNodeKind kind, uint32_t begin, ParseNode* kid) {
+    UnaryNodeType newUpdate(ParseNodeKind kind, uint32_t begin, Node kid) {
         TokenPos pos(begin, kid->pn_pos.end);
         return new_<UnaryNode>(kind, pos, kid);
     }
 
-    ParseNode* newSpread(uint32_t begin, ParseNode* kid) {
+    UnaryNodeType newSpread(uint32_t begin, Node kid) {
         TokenPos pos(begin, kid->pn_pos.end);
         return new_<UnaryNode>(ParseNodeKind::Spread, pos, kid);
     }
@@ -333,7 +333,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     ParseNode* newPosHolder(const TokenPos& pos) {
         return new_<NullaryNode>(ParseNodeKind::PosHolder, pos);
     }
-    ParseNode* newSuperBase(ParseNode* thisName, const TokenPos& pos) {
+    UnaryNodeType newSuperBase(Node thisName, const TokenPos& pos) {
         return new_<UnaryNode>(ParseNodeKind::SuperBase, pos, thisName);
     }
     MOZ_MUST_USE bool addPrototypeMutation(ListNodeType literal, uint32_t begin, Node expr) {
@@ -343,7 +343,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         // singleton objects will have Object.prototype as their [[Prototype]].
         literal->setHasNonConstInitializer();
 
-        ParseNode* mutation = newUnary(ParseNodeKind::MutateProto, begin, expr);
+        UnaryNode* mutation = newUnary(ParseNodeKind::MutateProto, begin, expr);
         if (!mutation) {
             return false;
         }
@@ -436,22 +436,22 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return true;
     }
 
-    ParseNode* newInitialYieldExpression(uint32_t begin, ParseNode* gen) {
+    UnaryNodeType newInitialYieldExpression(uint32_t begin, Node gen) {
         TokenPos pos(begin, begin + 1);
         return new_<UnaryNode>(ParseNodeKind::InitialYield, pos, gen);
     }
 
-    ParseNode* newYieldExpression(uint32_t begin, ParseNode* value) {
+    UnaryNodeType newYieldExpression(uint32_t begin, Node value) {
         TokenPos pos(begin, value ? value->pn_pos.end : begin + 1);
         return new_<UnaryNode>(ParseNodeKind::Yield, pos, value);
     }
 
-    ParseNode* newYieldStarExpression(uint32_t begin, ParseNode* value) {
+    UnaryNodeType newYieldStarExpression(uint32_t begin, Node value) {
         TokenPos pos(begin, value->pn_pos.end);
         return new_<UnaryNode>(ParseNodeKind::YieldStar, pos, value);
     }
 
-    ParseNode* newAwaitExpression(uint32_t begin, ParseNode* value) {
+    UnaryNodeType newAwaitExpression(uint32_t begin, Node value) {
         TokenPos pos(begin, value ? value->pn_pos.end : begin + 1);
         return new_<UnaryNode>(ParseNodeKind::Await, pos, value);
     }
@@ -513,7 +513,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
             return false;
         }
 
-        ParseNode* initialYield = newInitialYieldExpression(yieldPos.begin, genInit);
+        UnaryNode* initialYield = newInitialYieldExpression(yieldPos.begin, genInit);
         if (!initialYield) {
             return false;
         }
@@ -541,7 +541,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return newBinary(ParseNodeKind::ImportSpec, importNameNode, bindingName);
     }
 
-    ParseNode* newExportDeclaration(ParseNode* kid, const TokenPos& pos) {
+    UnaryNodeType newExportDeclaration(Node kid, const TokenPos& pos) {
         return new_<UnaryNode>(ParseNodeKind::Export, pos, kid);
     }
 
@@ -582,7 +582,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<BinaryNode>(ParseNodeKind::CallImport, JSOP_NOP, importHolder, singleArg);
     }
 
-    ParseNode* newExprStatement(ParseNode* expr, uint32_t end) {
+    UnaryNodeType newExprStatement(Node expr, uint32_t end) {
         MOZ_ASSERT(expr->pn_pos.end <= end);
         return new_<UnaryNode>(ParseNodeKind::ExpressionStatement,
                                TokenPos(expr->pn_pos.begin, end), expr);
@@ -641,12 +641,12 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<BreakStatement>(label, pos);
     }
 
-    ParseNode* newReturnStatement(ParseNode* expr, const TokenPos& pos) {
+    UnaryNodeType newReturnStatement(Node expr, const TokenPos& pos) {
         MOZ_ASSERT_IF(expr, pos.encloses(expr->pn_pos));
         return new_<UnaryNode>(ParseNodeKind::Return, pos, expr);
     }
 
-    ParseNode* newExpressionBody(ParseNode* expr) {
+    UnaryNodeType newExpressionBody(Node expr) {
         return new_<UnaryNode>(ParseNodeKind::Return, expr->pn_pos, expr);
     }
 
@@ -659,7 +659,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<LabeledStatement>(label, stmt, begin);
     }
 
-    ParseNode* newThrowStatement(ParseNode* expr, const TokenPos& pos) {
+    UnaryNodeType newThrowStatement(Node expr, const TokenPos& pos) {
         MOZ_ASSERT(pos.encloses(expr->pn_pos));
         return new_<UnaryNode>(ParseNodeKind::Throw, pos, expr);
     }
@@ -905,8 +905,8 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     MOZ_MUST_USE ParseNode* setLikelyIIFE(ParseNode* pn) {
         return parenthesize(pn);
     }
-    void setInDirectivePrologue(ParseNode* pn) {
-        pn->pn_prologue = true;
+    void setInDirectivePrologue(UnaryNodeType exprStmt) {
+        exprStmt->setIsDirectivePrologueMember();
     }
 
     bool isName(ParseNode* node) {
@@ -931,9 +931,12 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return pn->is<PropertyAccess>() ? &pn->as<PropertyAccess>().name() : nullptr;
     }
     JSAtom* isStringExprStatement(ParseNode* pn, TokenPos* pos) {
-        if (JSAtom* atom = pn->isStringExprStatement()) {
-            *pos = pn->pn_kid->pn_pos;
-            return atom;
+        if (pn->is<UnaryNode>()) {
+            UnaryNode* unary = &pn->as<UnaryNode>();
+            if (JSAtom* atom = unary->isStringExprStatement()) {
+                *pos = unary->kid()->pn_pos;
+                return atom;
+            }
         }
         return nullptr;
     }

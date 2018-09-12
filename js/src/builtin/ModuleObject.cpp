@@ -1426,10 +1426,11 @@ ModuleBuilder::processExport(frontend::ParseNode* exportNode)
 
     MOZ_ASSERT(exportNode->isKind(ParseNodeKind::Export) ||
                exportNode->isKind(ParseNodeKind::ExportDefault));
-    MOZ_ASSERT_IF(exportNode->isKind(ParseNodeKind::Export), exportNode->is<UnaryNode>());
 
     bool isDefault = exportNode->isKind(ParseNodeKind::ExportDefault);
-    ParseNode* kid = isDefault ? exportNode->as<BinaryNode>().left() : exportNode->pn_kid;
+    ParseNode* kid = isDefault
+                     ? exportNode->as<BinaryNode>().left()
+                     : exportNode->as<UnaryNode>().kid();
 
     if (isDefault && exportNode->as<BinaryNode>().right()) {
         // This is an export default containing an expression.
@@ -1549,7 +1550,7 @@ ModuleBuilder::processExportArrayBinding(frontend::ListNode* array)
         }
 
         if (node->isKind(ParseNodeKind::Spread)) {
-            node = node->pn_kid;
+            node = node->as<UnaryNode>().kid();
         } else if (node->isKind(ParseNodeKind::Assign)) {
             node = node->as<AssignmentNode>().left();
         }
@@ -1577,10 +1578,10 @@ ModuleBuilder::processExportObjectBinding(frontend::ListNode* obj)
 
         ParseNode* target;
         if (node->isKind(ParseNodeKind::Spread)) {
-            target = node->pn_kid;
+            target = node->as<UnaryNode>().kid();
         } else {
             if (node->isKind(ParseNodeKind::MutateProto)) {
-                target = node->pn_kid;
+                target = node->as<UnaryNode>().kid();
             } else {
                 target = node->as<BinaryNode>().right();
             }

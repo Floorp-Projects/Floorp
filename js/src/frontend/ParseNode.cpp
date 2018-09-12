@@ -149,7 +149,7 @@ ParseNode::dump(GenericPrinter& out, int indent)
         ((NullaryNode*) this)->dump(out);
         break;
       case PN_UNARY:
-        ((UnaryNode*) this)->dump(out, indent);
+        as<UnaryNode>().dump(out, indent);
         break;
       case PN_BINARY:
         as<BinaryNode>().dump(out, indent);
@@ -215,7 +215,7 @@ UnaryNode::dump(GenericPrinter& out, int indent)
     const char* name = parseNodeNames[size_t(getKind())];
     out.printf("(%s ", name);
     indent += strlen(name) + 2;
-    DumpParseTree(pn_kid, out, indent);
+    DumpParseTree(kid(), out, indent);
     out.printf(")");
 }
 
