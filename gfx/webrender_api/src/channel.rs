@@ -24,21 +24,26 @@ pub struct Payload {
 impl Payload {
     /// Convert the payload to a raw byte vector, in order for it to be
     /// efficiently shared via shmem, for example.
+    /// This is a helper static method working on a slice.
+    pub fn construct_data(epoch: Epoch, pipeline_id: PipelineId, dl_data: &[u8]) -> Vec<u8> {
+        let mut data = Vec::with_capacity(
+            mem::size_of::<u32>() + 2 * mem::size_of::<u32>() + mem::size_of::<u64>() + dl_data.len(),
+        );
+        data.write_u32::<LittleEndian>(epoch.0).unwrap();
+        data.write_u32::<LittleEndian>(pipeline_id.0).unwrap();
+        data.write_u32::<LittleEndian>(pipeline_id.1).unwrap();
+        data.write_u64::<LittleEndian>(dl_data.len() as u64)
+            .unwrap();
+        data.extend_from_slice(dl_data);
+        data
+    }
+    /// Convert the payload to a raw byte vector, in order for it to be
+    /// efficiently shared via shmem, for example.
     ///
     /// TODO(emilio, #1049): Consider moving the IPC boundary to the
     /// constellation in Servo and remove this complexity from WR.
     pub fn to_data(&self) -> Vec<u8> {
-        let mut data = Vec::with_capacity(
-            mem::size_of::<u32>() + 2 * mem::size_of::<u32>() + mem::size_of::<u64>() +
-                self.display_list_data.len(),
-        );
-        data.write_u32::<LittleEndian>(self.epoch.0).unwrap();
-        data.write_u32::<LittleEndian>(self.pipeline_id.0).unwrap();
-        data.write_u32::<LittleEndian>(self.pipeline_id.1).unwrap();
-        data.write_u64::<LittleEndian>(self.display_list_data.len() as u64)
-            .unwrap();
-        data.extend_from_slice(&self.display_list_data);
-        data
+        Self::construct_data(self.epoch, self.pipeline_id, &self.display_list_data)
     }
 
     /// Deserializes the given payload from a raw byte vector.
