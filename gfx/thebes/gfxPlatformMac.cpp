@@ -351,7 +351,7 @@ gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
 
 /*static*/ void
 gfxPlatformMac::LookupSystemFont(mozilla::LookAndFeel::FontID aSystemFontID,
-                                 nsAString& aSystemFontName,
+                                 nsACString& aSystemFontName,
                                  gfxFontStyle& aFontStyle,
                                  float aDevPixPerCSSPixel)
 {

@@ -136,7 +136,7 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
         char warnBuf[1024];
         SprintfLiteral(warnBuf,
                        "Failed to create Cairo font face: %s status: %d",
-                       NS_ConvertUTF16toUTF8(GetName()).get(), cairoerr);
+                       GetName().get(), cairoerr);
         NS_WARNING(warnBuf);
 #endif
         return;
@@ -168,7 +168,7 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
 #ifdef DEBUG
         char warnBuf[1024];
         SprintfLiteral(warnBuf, "Failed to create scaled font: %s status: %d",
-                       NS_ConvertUTF16toUTF8(GetName()).get(), cairoerr);
+                       GetName().get(), cairoerr);
         NS_WARNING(warnBuf);
 #endif
     }
@@ -313,7 +313,7 @@ gfxMacFont::InitMetrics()
         char warnBuf[1024];
         SprintfLiteral(warnBuf,
                        "Bad font metrics for: %s (invalid unitsPerEm value)",
-                       NS_ConvertUTF16toUTF8(mFontEntry->Name()).get());
+                       mFontEntry->Name().get());
         NS_WARNING(warnBuf);
 #endif
         return;

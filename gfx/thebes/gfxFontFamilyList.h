@@ -66,6 +66,12 @@ struct FontFamilyName final {
         mName = aFamilyName;
     }
 
+    explicit FontFamilyName(const nsACString& aFamilyName,
+                            QuotedName aQuoted = eUnquotedName) {
+        mType = (aQuoted == eQuotedName) ? eFamily_named_quoted : eFamily_named;
+        mName.Append(NS_ConvertUTF8toUTF16(aFamilyName));
+    }
+
     // generic font family - e.g. sans-serif
     explicit FontFamilyName(FontFamilyType aType) {
         NS_ASSERTION(aType != eFamily_named &&
@@ -193,6 +199,11 @@ public:
     {
     }
 
+    SharedFontList(const nsACString& aFamilyName, QuotedName aQuoted)
+        : mNames { FontFamilyName(aFamilyName, aQuoted) }
+    {
+    }
+
     explicit SharedFontList(const FontFamilyName& aName)
         : mNames { aName }
     {
@@ -268,6 +279,13 @@ public:
     }
 
     FontFamilyList(const nsAString& aFamilyName,
+                   QuotedName aQuoted)
+        : mFontlist(MakeNotNull<SharedFontList*>(aFamilyName, aQuoted))
+        , mDefaultFontType(eFamily_none)
+    {
+    }
+
+    FontFamilyList(const nsACString& aFamilyName,
                    QuotedName aQuoted)
         : mFontlist(MakeNotNull<SharedFontList*>(aFamilyName, aQuoted))
         , mDefaultFontType(eFamily_none)

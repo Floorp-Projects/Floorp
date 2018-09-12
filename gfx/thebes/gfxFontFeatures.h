@@ -69,18 +69,18 @@ public:
 
     // returns true if found, false otherwise
     bool
-    GetFontFeatureValuesFor(const nsAString& aFamily,
+    GetFontFeatureValuesFor(const nsACString& aFamily,
                             uint32_t aVariantProperty,
                             const nsAString& aName,
                             nsTArray<uint32_t>& aValues);
     void
-    AddFontFeatureValues(const nsAString& aFamily,
+    AddFontFeatureValues(const nsACString& aFamily,
                 const nsTArray<gfxFontFeatureValueSet::FeatureValues>& aValues);
 
     // Appends a new hash entry with given key values and returns a pointer to
     // mValues array to fill. This should be filled first.
     nsTArray<uint32_t>*
-    AppendFeatureValueHashEntry(const nsAString& aFamily,
+    AppendFeatureValueHashEntry(const nsACString& aFamily,
                                 const nsAString& aName,
                                 uint32_t aAlternate);
 
@@ -89,14 +89,14 @@ private:
     ~gfxFontFeatureValueSet() {}
 
     struct FeatureValueHashKey {
-        nsString mFamily;
+        nsCString mFamily;
         uint32_t mPropVal;
         nsString mName;
 
         FeatureValueHashKey()
             : mPropVal(0)
         { }
-        FeatureValueHashKey(const nsAString& aFamily,
+        FeatureValueHashKey(const nsACString& aFamily,
                             uint32_t aPropVal,
                             const nsAString& aName)
             : mFamily(aFamily), mPropVal(aPropVal), mName(aName)
