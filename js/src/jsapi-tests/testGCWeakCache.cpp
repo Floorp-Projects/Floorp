@@ -684,16 +684,18 @@ TestUniqueIDLookups()
         JSObject* obj = JS_NewPlainObject(cx);
         CHECK(obj);
         CHECK(cache.put(obj));
-        if (j % DeadFactor == 0)
+        if (j % DeadFactor == 0) {
             CHECK(liveObjects.get().append(obj));
+        }
     }
 
     CHECK(cache.count() == ObjectCount);
 
     CHECK(GCUntilCacheSweep(cx, cache));
 
-    for (size_t j = 0; j < liveObjects.length(); j++)
+    for (size_t j = 0; j < liveObjects.length(); j++) {
         CHECK(cache.has(liveObjects[j]));
+    }
 
     CHECK(SweepCacheAndFinishGC(cx, cache));
 

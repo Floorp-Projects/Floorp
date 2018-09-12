@@ -28,17 +28,20 @@ BEGIN_TEST(testJitDCEinGVN_ins)
     block->add(p);
     MMul* mul0 = MMul::New(func.alloc, p, p, MIRType::Double);
     block->add(mul0);
-    if (!mul0->typePolicy()->adjustInputs(func.alloc, mul0))
+    if (!mul0->typePolicy()->adjustInputs(func.alloc, mul0)) {
         return false;
+    }
     MMul* mul1 = MMul::New(func.alloc, mul0, mul0, MIRType::Double);
     block->add(mul1);
-    if (!mul1->typePolicy()->adjustInputs(func.alloc, mul1))
+    if (!mul1->typePolicy()->adjustInputs(func.alloc, mul1)) {
         return false;
+    }
     MReturn* ret = MReturn::New(func.alloc, p);
     block->end(ret);
 
-    if (!func.runGVN())
+    if (!func.runGVN()) {
         return false;
+    }
 
     // mul0 and mul1 should be deleted.
     for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
@@ -131,8 +134,9 @@ BEGIN_TEST(testJitDCEinGVN_phi)
     MReturn* ret = MReturn::New(func.alloc, y);
     joinBlock->end(ret);
 
-    if (!func.runGVN())
+    if (!func.runGVN()) {
         return false;
+    }
 
     // c1 should be deleted.
     for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {

@@ -43,8 +43,9 @@ static bool
 CharsMatch(const char16_t* p, const char* q)
 {
     while (*q) {
-        if (*p++ != *q++)
+        if (*p++ != *q++) {
             return false;
+        }
     }
     return true;
 }

@@ -207,8 +207,9 @@ END_TEST(testAtomicOperationsI32)
 
 BEGIN_TEST(testAtomicOperationsU64)
 {
-    if (!jit::AtomicOperations::hasAtomic8())
+    if (!jit::AtomicOperations::hasAtomic8()) {
         return true;
+    }
 
     const uint64_t A(0x9aadf00ddeadbeef);
     const uint64_t B(0x4eedbead1337f001);
@@ -218,8 +219,9 @@ END_TEST(testAtomicOperationsU64)
 
 BEGIN_TEST(testAtomicOperationsI64)
 {
-    if (!jit::AtomicOperations::hasAtomic8())
+    if (!jit::AtomicOperations::hasAtomic8()) {
         return true;
+    }
 
     const int64_t A(0x2aadf00ddeadbeef);
     const int64_t B(0x4eedbead1337f001);

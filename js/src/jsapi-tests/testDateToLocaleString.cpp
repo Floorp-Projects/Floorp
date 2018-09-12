@@ -17,8 +17,9 @@ BEGIN_TEST(testDateToLocaleString)
     // affect the behavior of the locale-sensitive Date methods tested here.
     JS::Rooted<JS::Value> haveIntl(cx);
     EVAL("typeof Intl !== 'undefined'", &haveIntl);
-    if (!haveIntl.toBoolean())
+    if (!haveIntl.toBoolean()) {
         return true;
+    }
 
     // Pervasive assumption: our Intl support includes "de" (German) and
     // "en" (English) and treats them differently for purposes of

@@ -26,8 +26,9 @@ struct MinimalAlloc {
       : lifo(128 * 1024),
         alloc(&lifo)
     {
-        if (!alloc.ensureBallast())
+        if (!alloc.ensureBallast()) {
             MOZ_CRASH("[OOM] Not enough RAM for the test.");
+        }
     }
 };
 
@@ -78,37 +79,48 @@ struct MinimalFunc : MinimalAlloc
 
     bool runGVN()
     {
-        if (!SplitCriticalEdges(graph))
+        if (!SplitCriticalEdges(graph)) {
             return false;
+        }
         RenumberBlocks(graph);
-        if (!BuildDominatorTree(graph))
+        if (!BuildDominatorTree(graph)) {
             return false;
-        if (!BuildPhiReverseMapping(graph))
+        }
+        if (!BuildPhiReverseMapping(graph)) {
             return false;
+        }
         ValueNumberer gvn(&mir, graph);
-        if (!gvn.run(ValueNumberer::DontUpdateAliasAnalysis))
+        if (!gvn.run(ValueNumberer::DontUpdateAliasAnalysis)) {
             return false;
+        }
         return true;
     }
 
     bool runRangeAnalysis()
     {
-        if (!SplitCriticalEdges(graph))
+        if (!SplitCriticalEdges(graph)) {
             return false;
+        }
         RenumberBlocks(graph);
-        if (!BuildDominatorTree(graph))
+        if (!BuildDominatorTree(graph)) {
             return false;
-        if (!BuildPhiReverseMapping(graph))
+        }
+        if (!BuildPhiReverseMapping(graph)) {
             return false;
+        }
         RangeAnalysis rangeAnalysis(&mir, graph);
-        if (!rangeAnalysis.addBetaNodes())
+        if (!rangeAnalysis.addBetaNodes()) {
             return false;
-        if (!rangeAnalysis.analyze())
+        }
+        if (!rangeAnalysis.analyze()) {
             return false;
-        if (!rangeAnalysis.addRangeAssertions())
+        }
+        if (!rangeAnalysis.addRangeAssertions()) {
             return false;
-        if (!rangeAnalysis.removeBetaNodes())
+        }
+        if (!rangeAnalysis.removeBetaNodes()) {
             return false;
+        }
         return true;
     }
 };

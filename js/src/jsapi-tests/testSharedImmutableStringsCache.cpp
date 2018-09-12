@@ -73,8 +73,9 @@ BEGIN_TEST(testSharedImmutableStringsCache)
         CHECK(threads.back().init(getString, cacheAndIndex));
     }
 
-    for (auto& thread : threads)
+    for (auto& thread : threads) {
         thread.join();
+    }
 
     return true;
 }

@@ -23,16 +23,21 @@ static bool
 CheckDescriptor(JS::Handle<JS::PropertyDescriptor> desc, PropertyDescriptorKind kind,
                 bool enumerable, bool writable, bool configurable)
 {
-    if (!desc.object())
+    if (!desc.object()) {
         return false;
-    if (!(kind == DataDescriptor ? desc.isDataDescriptor() : desc.isAccessorDescriptor()))
+    }
+    if (!(kind == DataDescriptor ? desc.isDataDescriptor() : desc.isAccessorDescriptor())) {
         return false;
-    if (desc.enumerable() != enumerable)
+    }
+    if (desc.enumerable() != enumerable) {
         return false;
-    if (kind == DataDescriptor && desc.writable() != writable)
+    }
+    if (kind == DataDescriptor && desc.writable() != writable) {
         return false;
-    if (desc.configurable() != configurable)
+    }
+    if (desc.configurable() != configurable) {
         return false;
+    }
     return true;
 }
 

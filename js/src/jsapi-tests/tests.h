@@ -36,14 +36,16 @@ class JSAPITestString {
     void clear() { chars.clearAndFree(); }
 
     JSAPITestString& operator +=(const char* s) {
-        if (!chars.append(s, strlen(s)))
+        if (!chars.append(s, strlen(s))) {
             abort();
+        }
         return *this;
     }
 
     JSAPITestString& operator +=(const JSAPITestString& s) {
-        if (!chars.append(s.begin(), s.length()))
+        if (!chars.append(s.begin(), s.length())) {
             abort();
+        }
         return *this;
     }
 };
@@ -104,8 +106,9 @@ class JSAPITest
 
     JSAPITestString jsvalToSource(JS::HandleValue v) {
         if (JSString* str = JS_ValueToSource(cx, v)) {
-            if (JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str))
+            if (JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str)) {
                 return JSAPITestString(bytes.get());
+            }
         }
         JS_ClearPendingException(cx);
         return JSAPITestString("<<error converting value to string>>");
@@ -231,15 +234,17 @@ class JSAPITest
             JS_ClearPendingException(cx);
             JSString* s = JS::ToString(cx, v);
             if (s) {
-                if (JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, s))
+                if (JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, s)) {
                     message += bytes.get();
+                }
             }
         }
 
         fprintf(stderr, "%.*s\n", int(message.length()), message.begin());
 
-        if (msgs.length() != 0)
+        if (msgs.length() != 0) {
             msgs += " | ";
+        }
         msgs += message;
         return false;
     }
@@ -268,11 +273,13 @@ class JSAPITest
 
         for (unsigned i = 0; i < args.length(); i++) {
             JSString* str = JS::ToString(cx, args[i]);
-            if (!str)
+            if (!str) {
                 return false;
+            }
             JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str);
-            if (!bytes)
+            if (!bytes) {
                 return false;
+            }
             printf("%s%s", i ? " " : "", bytes.get());
         }
 
@@ -304,8 +311,9 @@ class JSAPITest
 
     virtual JSContext* createContext() {
         JSContext* cx = JS_NewContext(8L * 1024 * 1024);
-        if (!cx)
+        if (!cx) {
             return nullptr;
+        }
         JS::SetWarningReporter(cx, &reportWarning);
         setNativeStackQuota(cx);
         return cx;
@@ -376,10 +384,12 @@ class TempFile {
   public:
     TempFile() : name(), stream() { }
     ~TempFile() {
-        if (stream)
+        if (stream) {
             close();
-        if (name)
+        }
+        if (name) {
             remove();
+        }
     }
 
     /*
@@ -490,8 +500,9 @@ class AutoLeaveZeal
     ~AutoLeaveZeal() {
         JS_SetGCZeal(cx_, 0, 0);
         for (size_t i = 0; i < sizeof(zealBits_) * 8; i++) {
-            if (zealBits_ & (1 << i))
+            if (zealBits_ & (1 << i)) {
                 JS_SetGCZeal(cx_, i, frequency_);
+            }
         }
 
 #ifdef DEBUG

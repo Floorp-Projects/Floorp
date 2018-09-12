@@ -62,8 +62,9 @@ Prof(JSContext* cx, unsigned argc, JS::Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     JSObject* obj = JS_NewObjectForConstructor(cx, &ptestClass, args);
-    if (!obj)
+    if (!obj) {
         return false;
+    }
     args.rval().setObject(*obj);
     return true;
 }
