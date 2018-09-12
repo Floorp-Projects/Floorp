@@ -11094,8 +11094,8 @@ nsresult nsIDocument::RemoteFrameFullscreenChanged(Element* aFrameElement)
   // Ensure the frame element is the fullscreen element in this document.
   // If the frame element is already the fullscreen element in this document,
   // this has no effect.
-  auto request = MakeUnique<FullscreenRequest>(aFrameElement);
-  request->mIsCallerChrome = false;
+  auto request = MakeUnique<FullscreenRequest>(aFrameElement,
+                                               CallerType::NonSystem);
   request->mShouldNotifyNewOrigin = false;
   RequestFullscreen(std::move(request));
 
@@ -11128,10 +11128,10 @@ HasFullscreenSubDocument(nsIDocument* aDoc)
 // in the given document. Returns a static string indicates the reason
 // why it is not enabled otherwise.
 static const char*
-GetFullscreenError(nsIDocument* aDoc, bool aCallerIsChrome)
+GetFullscreenError(nsIDocument* aDoc, CallerType aCallerType)
 {
   bool apiEnabled = nsContentUtils::IsFullscreenApiEnabled();
-  if (apiEnabled && aCallerIsChrome) {
+  if (apiEnabled && aCallerType == CallerType::System) {
     // Chrome code can always use the fullscreen API, provided it's not
     // explicitly disabled.
     return nullptr;
@@ -11152,7 +11152,7 @@ GetFullscreenError(nsIDocument* aDoc, bool aCallerIsChrome)
 
 bool
 nsIDocument::FullscreenElementReadyCheck(Element* aElement,
-                                         bool aWasCallerChrome)
+                                         CallerType aCallerType)
 {
   NS_ASSERTION(aElement,
     "Must pass non-null element to nsDocument::RequestFullscreen");
@@ -11171,7 +11171,7 @@ nsIDocument::FullscreenElementReadyCheck(Element* aElement,
     DispatchFullscreenError("FullscreenDeniedLostWindow");
     return false;
   }
-  if (const char* msg = GetFullscreenError(this, aWasCallerChrome)) {
+  if (const char* msg = GetFullscreenError(this, aCallerType)) {
     DispatchFullscreenError(msg);
     return false;
   }
@@ -11210,9 +11210,10 @@ nsIDocument::FullscreenElementReadyCheck(Element* aElement,
   return true;
 }
 
-FullscreenRequest::FullscreenRequest(Element* aElement)
+FullscreenRequest::FullscreenRequest(Element* aElement, CallerType aCallerType)
   : mElement(aElement)
   , mDocument(static_cast<nsDocument*>(aElement->OwnerDoc()))
+  , mCallerType(aCallerType)
 {
   MOZ_COUNT_CTOR(FullscreenRequest);
 }
@@ -11389,7 +11390,7 @@ nsIDocument::RequestFullscreen(UniquePtr<FullscreenRequest> aRequest)
 
   // We don't need to check element ready before this point, because
   // if we called ApplyFullscreen, it would check that for us.
-  if (!FullscreenElementReadyCheck(elem, aRequest->mIsCallerChrome)) {
+  if (!FullscreenElementReadyCheck(elem, aRequest->mCallerType)) {
     return;
   }
 
@@ -11436,7 +11437,7 @@ bool
 nsIDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
 {
   Element* elem = aRequest.GetElement();
-  if (!FullscreenElementReadyCheck(elem, aRequest.mIsCallerChrome)) {
+  if (!FullscreenElementReadyCheck(elem, aRequest.mCallerType)) {
     return false;
   }
 
@@ -11534,7 +11535,7 @@ nsIDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
 bool
 nsIDocument::FullscreenEnabled(CallerType aCallerType)
 {
-  return !GetFullscreenError(this, aCallerType == CallerType::System);
+  return !GetFullscreenError(this, aCallerType);
 }
 
 void

@@ -1756,7 +1756,8 @@ public:
 
   // Do the "fullscreen element ready check" from the fullscreen spec.
   // It returns true if the given element is allowed to go into fullscreen.
-  bool FullscreenElementReadyCheck(Element* aElement, bool aWasCallerChrome);
+  bool FullscreenElementReadyCheck(Element* aElement,
+                                   mozilla::dom::CallerType aCallerType);
 
   // This is called asynchronously by nsIDocument::AsyncRequestFullscreen()
   // to move this document into fullscreen mode if allowed.
