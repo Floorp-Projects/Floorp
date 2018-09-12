@@ -256,8 +256,9 @@ IsTypeofKind(ParseNodeKind kind)
  *           * LexicalScopeNode which contains ClassMethodList as scopeBody,
  *             if named class
  * ClassNames (ClassNames)
- *   pn_left: Name node for outer binding. can be null
- *   pn_right: Name node for inner binding
+ *   left: Name node for outer binding, or null if the class is an expression
+ *         that doesn't create an outer binding
+ *   right: Name node for inner binding
  * ClassMethodList (ListNode)
  *   head: list of N ClassMethod nodes
  *   count: N >= 0
@@ -273,20 +274,26 @@ IsTypeofKind(ParseNodeKind kind)
  *   kid1: cond
  *   kid2: then
  *   kid3: else or null
- * Switch   binary      pn_left: discriminant
- *                      pn_right: LexicalScope node that contains the list
- *                        of Case nodes, with at most one
- *                        default node.
- *                      hasDefault: true if there's a default case
- * Case     binary      pn_left: case-expression if CaseClause, or
- *                            null if DefaultClause
- *                          pn_right: StatementList node for this case's
- *                            statements
- * While    binary      pn_left: cond, pn_right: body
- * DoWhile  binary      pn_left: body, pn_right: cond
- * For      binary      pn_left: either ForIn (for-in statement),
- *                            ForOf (for-of) or ForHead (for(;;))
- *                          pn_right: body
+ * Switch (SwitchStatement)
+ *   left: discriminant
+ *   right: LexicalScope node that contains the list of Case nodes, with at
+ *          most one default node.
+ *   hasDefault: true if there's a default case
+ * Case (CaseClause)
+ *   left: case-expression if CaseClause, or null if DefaultClause
+ *   right: StatementList node for this case's statements
+ * While (BinaryNode)
+ *   left: cond
+ *   right: body
+ * DoWhile (BinaryNode)
+ *   left: body
+ *   right: cond
+ * For (ForNode)
+ *   left: one of
+ *           * ForIn: for (x in y) ...
+ *           * ForOf: for (x of x) ...
+ *           * ForHead: for (;;) ...
+ *   right: body
  * ForIn (TernaryNode)
  *   kid1: declaration or expression to left of 'in'
  *   kid2: null
@@ -305,14 +312,16 @@ IsTypeofKind(ParseNodeKind kind)
  *   kid2: null or LexicalScope for catch-block with scopeBody pointing to a
  *         Catch node
  *   kid3: null or finally block
- * Catch    binary      pn_left: Name, Array, or Object catch
- *                                   var node
- *                                   (Array or Object if destructuring),
- *                                   or null if optional catch binding
- *                          pn_right: catch block statements
+ * Catch (BinaryNode)
+ *   left: Name, Array, or Object catch var node
+ *         (Array or Object if destructuring),
+ *         or null if optional catch binding
+ *   right: catch block statements
  * Break    name        pn_atom: label or null
  * Continue name        pn_atom: label or null
- * With     binary      pn_left: head expr; pn_right: body;
+ * With (BinaryNode)
+ *   left: head expr
+ *   right: body
  * Var, Let, Const (ListNode)
  *   head: list of N Name or Assign nodes
  *         each name node has either
@@ -324,9 +333,9 @@ IsTypeofKind(ParseNodeKind kind)
  *           pn_atom: variable name
  *           pn_lexdef: def node
  *         each assignment node has
- *           pn_left: Name with pn_used true and
+ *           left: Name with pn_used true and
  *                    pn_lexdef (NOT pn_expr) set
- *           pn_right: initializer
+ *           right: initializer
  *   count: N > 0
  * Return   unary       pn_kid: return expr or null
  * ExpressionStatement unary    pn_kid: expr
@@ -335,18 +344,28 @@ IsTypeofKind(ParseNodeKind kind)
  *                                  constant folding or other tree rewriting
  * EmptyStatement nullary      (no fields)
  * Label    name        pn_atom: label, pn_expr: labeled statement
- * Import   binary      pn_left: ImportSpecList import specifiers
- *                          pn_right: String module specifier
+ * Import (BinaryNode)
+ *   left: ImportSpecList import specifiers
+ *   right: String module specifier
  * ImportSpecList (ListNode)
  *   head: list of N ImportSpec nodes
  *   count: N >= 0 (N = 0 for `import {} from ...`)
+ * ImportSpec (BinaryNode)
+ *   left: import name
+ *   right: local binding name
  * Export   unary       pn_kid: declaration expression
- * ExportFrom binary   pn_left: ExportSpecList export specifiers
- *                          pn_right: String module specifier
+ * ExportFrom (BinaryNode)
+ *   left: ExportSpecList export specifiers
+ *   right: String module specifier
  * ExportSpecList (ListNode)
  *   head: list of N ExportSpec nodes
  *   count: N >= 0 (N = 0 for `export {}`)
- * ExportDefault unary pn_kid: export default declaration or expression
+ * ExportSpec (BinaryNode)
+ *   left: local binding name
+ *   right: export name
+ * ExportDefault (BinaryNode)
+ *   left: export default declaration or expression
+ *   right: Name node for assignment
  *
  * <Expressions>
  * All left-associated binary trees of the same type are optimized into lists
@@ -354,19 +373,15 @@ IsTypeofKind(ParseNodeKind kind)
  * Comma (ListNode)
  *   head: list of N comma-separated exprs
  *   count: N >= 2
- * Assign   binary      pn_left: lvalue, pn_right: rvalue
- * AddAssign,   binary  pn_left: lvalue, pn_right: rvalue
- * SubAssign,           pn_op: JSOP_ADD for +=, etc.
- * BitOrAssign,
- * BitXorAssign,
- * BitAndAssign,
- * LshAssign,
- * RshAssign,
- * UrshAssign,
- * MulAssign,
- * DivAssign,
- * ModAssign,
- * PowAssign
+ * Assign (BinaryNode)
+ *   left: target of assignment
+ *   right: value to assign
+ * AddAssign, SubAssign, BitOrAssign, BitXorAssign, BitAndAssign,
+ * LshAssign, RshAssign, UrshAssign, MulAssign, DivAssign, ModAssign,
+ * PowAssign (AssignmentNode)
+ *   left: target of assignment
+ *   right: value to assign
+ *   pn_op: JSOP_ADD for +=, etc
  * Conditional (ConditionalExpression)
  *   (cond ? thenExpr : elseExpr)
  *   kid1: cond
@@ -391,8 +406,9 @@ IsTypeofKind(ParseNodeKind kind)
  * PostIncrement,
  * PreDecrement,
  * PostDecrement
- * New      binary      pn_left: ctor expression on the left of the (
- *                          pn_right: Arguments
+ * New (BinaryNode)
+ *   left: ctor expression on the left of the '('
+ *   right: Arguments
  * DeleteName unary     pn_kid: Name expr
  * DeleteProp unary     pn_kid: Dot expr
  * DeleteElem unary     pn_kid: Elem expr
@@ -402,12 +418,15 @@ IsTypeofKind(ParseNodeKind kind)
  *                          folding (or a similar parse tree manipulation) has
  *                          occurred
  * PropertyName name    pn_atom: property name being accessed
- * Dot      binary      pn_left: MEMBER expr to left of .
- *                          pn_right: PropertyName to right of .
- * Elem     binary      pn_left: MEMBER expr to left of [
- *                          pn_right: expr between [ and ]
- * Call     binary      pn_left: callee expression on the left of the (
- *                          pn_right: Arguments
+ * Dot (PropertyAccess)
+ *   left: MEMBER expr to left of '.'
+ *   right: PropertyName to right of '.'
+ * Elem (PropertyByValue)
+ *   left: MEMBER expr to left of '['
+ *   right: expr between '[' and ']'
+ * Call (BinaryNode)
+ *   left: callee expression on the left of the '('
+ *   right: Arguments
  * Arguments (ListNode)
  *   head: list of arg1, arg2, ... argN
  *   count: N >= 0
@@ -423,11 +442,13 @@ IsTypeofKind(ParseNodeKind kind)
  *           * Shorthand
  *           * Spread
  *   count: N >= 0
- * Colon    binary      key-value pair in object initializer or
- *                          destructuring lhs
- *                          pn_left: property id, pn_right: value
- * Shorthand binary     Same fields as Colon. This is used for object
- *                          literal properties using shorthand ({x}).
+ * Colon (BinaryNode)
+ *   key-value pair in object initializer or destructuring lhs
+ *   left: property id
+ *   right: value
+ * Shorthand (BinaryNode)
+ *   Same fields as Colon. This is used for object literal properties using
+ *   shorthand ({x}).
  * ComputedName unary  ES6 ComputedPropertyName.
  *                          pn_kid: the AssignmentExpression inside the square brackets
  * Name,    name        pn_atom: name, string, or object atom
@@ -441,9 +462,10 @@ IsTypeofKind(ParseNodeKind kind)
  *         no ${}-delimited expression, it's parsed as a single TemplateString
  * TemplateString      pn_atom: template string atom
                 nullary     pn_op: JSOP_NOP
- * TaggedTemplate      pn_left: tag expression
- *              binary       pn_right: Arguments, with the first being the
- *                           call site object, then arg1, arg2, ... argN
+ * TaggedTemplate (BinaryNode)
+ *   left: tag expression
+ *   right: Arguments, with the first being the call site object, then
+ *          arg1, arg2, ... argN
  * CallSiteObj (CallSiteNode)
  *   head:  an Array of raw TemplateString, then corresponding cooked
  *          TemplateString nodes
@@ -459,8 +481,12 @@ IsTypeofKind(ParseNodeKind kind)
  *
  * This,        unary   pn_kid: '.this' Name if function `this`, else nullptr
  * SuperBase    unary   pn_kid: '.this' Name
- * SuperCall    binary  pn_left: SuperBase pn_right: Arguments
- * SetThis      binary  pn_left: '.this' Name, pn_right: SuperCall
+ * SuperCall (BinaryNode)
+ *   left: SuperBase
+ *   right: Arguments
+ * SetThis (BinaryNode)
+ *   left: '.this' Name
+ *   right: SuperCall
  *
  * LexicalScope scope   pn_u.scope.bindings: scope bindings
  *                          pn_u.scope.body: scope body
@@ -484,6 +510,16 @@ enum ParseNodeArity
 };
 
 #define FOR_EACH_PARSENODE_SUBCLASS(macro) \
+    macro(BinaryNode, BinaryNodeType, asBinary) \
+    macro(AssignmentNode, AssignmentNodeType, asAssignment) \
+    macro(CaseClause, CaseClauseType, asCaseClause) \
+    macro(ClassMethod, ClassMethodType, asClassMethod) \
+    macro(ClassNames, ClassNamesType, asClassNames) \
+    macro(ForNode, ForNodeType, asFor) \
+    macro(PropertyAccess, PropertyAccessType, asPropertyAccess) \
+    macro(PropertyByValue, PropertyByValueType, asPropertyByValue) \
+    macro(SwitchStatement, SwitchStatementType, asSwitchStatement) \
+    \
     macro(ListNode, ListNodeType, asList) \
     macro(CallSiteNode, CallSiteNodeType, asCallSite) \
     \
@@ -494,7 +530,6 @@ enum ParseNodeArity
 class LoopControlStatement;
 class BreakStatement;
 class ContinueStatement;
-class PropertyAccess;
 
 #define DECLARE_CLASS(typeName, longTypeName, asMethodName) \
 class typeName;
@@ -563,11 +598,6 @@ class ParseNode
     bool isArity(ParseNodeArity a) const   { return getArity() == a; }
     void setArity(ParseNodeArity a)        { pn_arity = a; }
 
-    bool isAssignment() const {
-        ParseNodeKind kind = getKind();
-        return ParseNodeKind::AssignmentStart <= kind && kind <= ParseNodeKind::AssignmentLast;
-    }
-
     bool isBinaryOperation() const {
         ParseNodeKind kind = getKind();
         return ParseNodeKind::BinOpFirst <= kind && kind <= ParseNodeKind::BinOpLast;
@@ -605,6 +635,12 @@ class ParseNode
             ParseNode*  kid3;           /* else-part, default case, etc. */
         } ternary;
         struct {                        /* two kids if binary */
+          private:
+            friend class BinaryNode;
+            friend class ForNode;
+            friend class ClassMethod;
+            friend class PropertyAccess;
+            friend class SwitchStatement;
             ParseNode*  left;
             ParseNode*  right;
             union {
@@ -644,10 +680,6 @@ class ParseNode
 #define pn_objbox       pn_u.name.objbox
 #define pn_funbox       pn_u.name.funbox
 #define pn_body         pn_u.name.expr
-#define pn_left         pn_u.binary.left
-#define pn_right        pn_u.binary.right
-#define pn_pval         pn_u.binary.pval
-#define pn_iflags       pn_u.binary.iflags
 #define pn_kid          pn_u.unary.kid
 #define pn_prologue     pn_u.unary.prologue
 #define pn_atom         pn_u.name.atom
@@ -820,30 +852,106 @@ struct UnaryNode : public ParseNode
         pn_kid = kid;
     }
 
+    static bool test(const ParseNode& node) {
+        return node.isArity(PN_UNARY);
+    }
+
 #ifdef DEBUG
     void dump(GenericPrinter& out, int indent);
 #endif
 };
 
-struct BinaryNode : public ParseNode
+class BinaryNode : public ParseNode
 {
+  public:
     BinaryNode(ParseNodeKind kind, JSOp op, const TokenPos& pos, ParseNode* left, ParseNode* right)
       : ParseNode(kind, op, PN_BINARY, pos)
     {
-        pn_left = left;
-        pn_right = right;
+        pn_u.binary.left = left;
+        pn_u.binary.right = right;
     }
 
     BinaryNode(ParseNodeKind kind, JSOp op, ParseNode* left, ParseNode* right)
       : ParseNode(kind, op, PN_BINARY, TokenPos::box(left->pn_pos, right->pn_pos))
     {
-        pn_left = left;
-        pn_right = right;
+        pn_u.binary.left = left;
+        pn_u.binary.right = right;
+    }
+
+    static bool test(const ParseNode& node) {
+        return node.isArity(PN_BINARY);
     }
 
 #ifdef DEBUG
     void dump(GenericPrinter& out, int indent);
 #endif
+
+    ParseNode* left() const {
+        return pn_u.binary.left;
+    }
+
+    ParseNode* right() const {
+        return pn_u.binary.right;
+    }
+
+    // Methods used by FoldConstants.cpp.
+    // caller are responsible for keeping the list consistent.
+    ParseNode** unsafeLeftReference() {
+        return &pn_u.binary.left;
+    }
+
+    ParseNode** unsafeRightReference() {
+        return &pn_u.binary.right;
+    }
+};
+
+class AssignmentNode : public BinaryNode
+{
+  public:
+    AssignmentNode(ParseNodeKind kind, JSOp op, ParseNode* left, ParseNode* right)
+      : BinaryNode(kind, op, TokenPos(left->pn_pos.begin, right->pn_pos.end), left, right)
+    {}
+
+    static bool test(const ParseNode& node) {
+        ParseNodeKind kind = node.getKind();
+        bool match = ParseNodeKind::AssignmentStart <= kind &&
+                     kind <= ParseNodeKind::AssignmentLast;
+        MOZ_ASSERT_IF(match, node.is<BinaryNode>());
+        return match;
+    }
+};
+
+class ForNode : public BinaryNode
+{
+  public:
+    ForNode(const TokenPos& pos, ParseNode* forHead, ParseNode* body, unsigned iflags)
+      : BinaryNode(ParseNodeKind::For,
+                   forHead->isKind(ParseNodeKind::ForIn) ? JSOP_ITER : JSOP_NOP,
+                   pos, forHead, body)
+    {
+        MOZ_ASSERT(forHead->isKind(ParseNodeKind::ForIn) ||
+                   forHead->isKind(ParseNodeKind::ForOf) ||
+                   forHead->isKind(ParseNodeKind::ForHead));
+        pn_u.binary.iflags = iflags;
+    }
+
+    static bool test(const ParseNode& node) {
+        bool match = node.isKind(ParseNodeKind::For);
+        MOZ_ASSERT_IF(match, node.is<BinaryNode>());
+        return match;
+    }
+
+    TernaryNode* head() const {
+        return &left()->as<TernaryNode>();
+    }
+
+    ParseNode* body() const {
+        return right();
+    }
+
+    unsigned iflags() const {
+        return pn_u.binary.iflags;
+    }
 };
 
 class TernaryNode : public ParseNode
@@ -1315,15 +1423,24 @@ class CaseClause : public BinaryNode
 {
   public:
     CaseClause(ParseNode* expr, ParseNode* stmts, uint32_t begin)
-      : BinaryNode(ParseNodeKind::Case, JSOP_NOP, TokenPos(begin, stmts->pn_pos.end), expr, stmts) {}
+      : BinaryNode(ParseNodeKind::Case, JSOP_NOP, TokenPos(begin, stmts->pn_pos.end), expr, stmts)
+    {}
 
-    ParseNode* caseExpression() const { return pn_left; }
-    bool isDefault() const { return !caseExpression(); }
-    ListNode* statementList() const { return &pn_right->as<ListNode>(); }
+    ParseNode* caseExpression() const {
+        return left();
+    }
+
+    bool isDefault() const {
+        return !caseExpression();
+    }
+
+    ListNode* statementList() const {
+        return &right()->as<ListNode>();
+    }
 
     static bool test(const ParseNode& node) {
         bool match = node.isKind(ParseNodeKind::Case);
-        MOZ_ASSERT_IF(match, node.isArity(PN_BINARY));
+        MOZ_ASSERT_IF(match, node.is<BinaryNode>());
         MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
         return match;
     }
@@ -1490,17 +1607,32 @@ class PropertyAccess : public BinaryNode
 
     static bool test(const ParseNode& node) {
         bool match = node.isKind(ParseNodeKind::Dot);
-        MOZ_ASSERT_IF(match, node.isArity(PN_BINARY));
-        MOZ_ASSERT_IF(match, node.pn_right->isKind(ParseNodeKind::PropertyName));
+        MOZ_ASSERT_IF(match, node.is<BinaryNode>());
+        MOZ_ASSERT_IF(match, node.as<BinaryNode>().right()->isKind(ParseNodeKind::PropertyName));
         return match;
     }
 
     ParseNode& expression() const {
-        return *pn_u.binary.left;
+        return *left();
+    }
+
+    ParseNode& key() const {
+        return *right();
+    }
+
+    // Method used by BytecodeEmitter::emitPropLHS for optimization.
+    // Those methods allow expression to temporarily be nullptr for
+    // optimization purpose.
+    ParseNode* maybeExpression() const {
+        return left();
+    }
+
+    void setExpression(ParseNode* pn) {
+        pn_u.binary.left = pn;
     }
 
     PropertyName& name() const {
-        return *pn_u.binary.right->pn_atom->asPropertyName();
+        return *right()->pn_atom->asPropertyName();
     }
 
     bool isSuper() const {
@@ -1509,24 +1641,29 @@ class PropertyAccess : public BinaryNode
     }
 };
 
-class PropertyByValue : public ParseNode
+class PropertyByValue : public BinaryNode
 {
   public:
     PropertyByValue(ParseNode* lhs, ParseNode* propExpr, uint32_t begin, uint32_t end)
-      : ParseNode(ParseNodeKind::Elem, JSOP_NOP, PN_BINARY, TokenPos(begin, end))
-    {
-        pn_u.binary.left = lhs;
-        pn_u.binary.right = propExpr;
-    }
+      : BinaryNode(ParseNodeKind::Elem, JSOP_NOP, TokenPos(begin, end), lhs, propExpr)
+    {}
 
     static bool test(const ParseNode& node) {
         bool match = node.isKind(ParseNodeKind::Elem);
-        MOZ_ASSERT_IF(match, node.isArity(PN_BINARY));
+        MOZ_ASSERT_IF(match, node.is<BinaryNode>());
         return match;
     }
 
+    ParseNode& expression() const {
+        return *left();
+    }
+
+    ParseNode& key() const {
+        return *right();
+    }
+
     bool isSuper() const {
-        return pn_left->isKind(ParseNodeKind::SuperBase);
+        return left()->isKind(ParseNodeKind::SuperBase);
     }
 };
 
@@ -1554,7 +1691,9 @@ class CallSiteNode : public ListNode
     }
 };
 
-struct ClassMethod : public BinaryNode {
+class ClassMethod : public BinaryNode
+{
+  public:
     /*
      * Method definitions often keep a name and function body that overlap,
      * so explicitly define the beginning and end here.
@@ -1567,22 +1706,26 @@ struct ClassMethod : public BinaryNode {
 
     static bool test(const ParseNode& node) {
         bool match = node.isKind(ParseNodeKind::ClassMethod);
-        MOZ_ASSERT_IF(match, node.isArity(PN_BINARY));
+        MOZ_ASSERT_IF(match, node.is<BinaryNode>());
         return match;
     }
 
     ParseNode& name() const {
-        return *pn_u.binary.left;
+        return *left();
     }
+
     ParseNode& method() const {
-        return *pn_u.binary.right;
+        return *right();
     }
+
     bool isStatic() const {
         return pn_u.binary.isStatic;
     }
 };
 
-struct SwitchStatement : public BinaryNode {
+class SwitchStatement : public BinaryNode
+{
+  public:
     SwitchStatement(uint32_t begin, ParseNode* discriminant, ParseNode* lexicalForCaseList,
                     bool hasDefault)
       : BinaryNode(ParseNodeKind::Switch, JSOP_NOP,
@@ -1609,22 +1752,26 @@ struct SwitchStatement : public BinaryNode {
 
     static bool test(const ParseNode& node) {
         bool match = node.isKind(ParseNodeKind::Switch);
-        MOZ_ASSERT_IF(match, node.isArity(PN_BINARY));
+        MOZ_ASSERT_IF(match, node.is<BinaryNode>());
         return match;
     }
 
     ParseNode& discriminant() const {
-        return *pn_u.binary.left;
+        return *left();
     }
+
     ParseNode& lexicalForCaseList() const {
-        return *pn_u.binary.right;
+        return *right();
     }
+
     bool hasDefault() const {
         return pn_u.binary.hasDefault;
     }
 };
 
-struct ClassNames : public BinaryNode {
+class ClassNames : public BinaryNode
+{
+  public:
     ClassNames(ParseNode* outerBinding, ParseNode* innerBinding, const TokenPos& pos)
       : BinaryNode(ParseNodeKind::ClassNames, JSOP_NOP, pos, outerBinding, innerBinding)
     {
@@ -1635,7 +1782,7 @@ struct ClassNames : public BinaryNode {
 
     static bool test(const ParseNode& node) {
         bool match = node.isKind(ParseNodeKind::ClassNames);
-        MOZ_ASSERT_IF(match, node.isArity(PN_BINARY));
+        MOZ_ASSERT_IF(match, node.is<BinaryNode>());
         return match;
     }
 
@@ -1648,10 +1795,11 @@ struct ClassNames : public BinaryNode {
      * the outer binding has been overwritten.
      */
     ParseNode* outerBinding() const {
-        return pn_u.binary.left;
+        return left();
     }
+
     ParseNode* innerBinding() const {
-        return pn_u.binary.right;
+        return right();
     }
 };
 

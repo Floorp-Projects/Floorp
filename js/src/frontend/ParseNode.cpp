@@ -152,7 +152,7 @@ ParseNode::dump(GenericPrinter& out, int indent)
         ((UnaryNode*) this)->dump(out, indent);
         break;
       case PN_BINARY:
-        ((BinaryNode*) this)->dump(out, indent);
+        as<BinaryNode>().dump(out, indent);
         break;
       case PN_TERNARY:
         as<TernaryNode>().dump(out, indent);
@@ -225,13 +225,13 @@ BinaryNode::dump(GenericPrinter& out, int indent)
     if (isKind(ParseNodeKind::Dot)) {
         out.put("(.");
 
-        DumpParseTree(pn_right, out, indent + 2);
+        DumpParseTree(right(), out, indent + 2);
 
         out.putChar(' ');
         if (as<PropertyAccess>().isSuper()) {
             out.put("super");
         } else {
-            DumpParseTree(pn_left, out, indent + 2);
+            DumpParseTree(left(), out, indent + 2);
         }
 
         out.printf(")");
@@ -241,9 +241,9 @@ BinaryNode::dump(GenericPrinter& out, int indent)
     const char* name = parseNodeNames[size_t(getKind())];
     out.printf("(%s ", name);
     indent += strlen(name) + 2;
-    DumpParseTree(pn_left, out, indent);
+    DumpParseTree(left(), out, indent);
     IndentNewLine(out, indent);
-    DumpParseTree(pn_right, out, indent);
+    DumpParseTree(right(), out, indent);
     out.printf(")");
 }
 

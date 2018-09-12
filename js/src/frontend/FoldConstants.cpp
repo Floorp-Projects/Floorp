@@ -146,14 +146,14 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       // Statements possibly containing hoistable declarations only in the left
       // half, in ParseNode terms -- the loop body in AST terms.
       case ParseNodeKind::DoWhile:
-        return ContainsHoistedDeclaration(cx, node->pn_left, result);
+        return ContainsHoistedDeclaration(cx, node->as<BinaryNode>().left(), result);
 
       // Statements possibly containing hoistable declarations only in the
       // right half, in ParseNode terms -- the loop body or nested statement
       // (usually a block statement), in AST terms.
       case ParseNodeKind::While:
       case ParseNodeKind::With:
-        return ContainsHoistedDeclaration(cx, node->pn_right, result);
+        return ContainsHoistedDeclaration(cx, node->as<BinaryNode>().right(), result);
 
       case ParseNodeKind::Label:
         return ContainsHoistedDeclaration(cx, node->pn_expr, result);
@@ -199,10 +199,10 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
         if (ParseNode* catchScope = tryNode->kid2()) {
             MOZ_ASSERT(catchScope->isKind(ParseNodeKind::LexicalScope));
 
-            ParseNode* catchNode = catchScope->pn_expr;
+            BinaryNode* catchNode = &catchScope->scopeBody()->as<BinaryNode>();
             MOZ_ASSERT(catchNode->isKind(ParseNodeKind::Catch));
 
-            ParseNode* catchStatements = catchNode->pn_right;
+            ParseNode* catchStatements = catchNode->right();
             if (!ContainsHoistedDeclaration(cx, catchStatements, result)) {
                 return false;
             }
@@ -222,17 +222,19 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       // A switch node's left half is an expression; only its right half (a
       // list of cases/defaults, or a block node) could contain hoisted
       // declarations.
-      case ParseNodeKind::Switch:
-        MOZ_ASSERT(node->isArity(PN_BINARY));
-        return ContainsHoistedDeclaration(cx, node->pn_right, result);
+      case ParseNodeKind::Switch: {
+        SwitchStatement* switchNode = &node->as<SwitchStatement>();
+        return ContainsHoistedDeclaration(cx, &switchNode->lexicalForCaseList(), result);
+      }
 
-      case ParseNodeKind::Case:
-        return ContainsHoistedDeclaration(cx, node->as<CaseClause>().statementList(), result);
+      case ParseNodeKind::Case: {
+        CaseClause* caseClause = &node->as<CaseClause>();
+        return ContainsHoistedDeclaration(cx, caseClause->statementList(), result);
+      }
 
       case ParseNodeKind::For: {
-        MOZ_ASSERT(node->isArity(PN_BINARY));
-
-        TernaryNode* loopHead = &node->pn_left->as<TernaryNode>();
+        ForNode* forNode = &node->as<ForNode>();
+        TernaryNode* loopHead = forNode->head();
         MOZ_ASSERT(loopHead->isKind(ParseNodeKind::ForHead) ||
                    loopHead->isKind(ParseNodeKind::ForIn) ||
                    loopHead->isKind(ParseNodeKind::ForOf));
@@ -269,7 +271,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
             }
         }
 
-        ParseNode* loopBody = node->pn_right;
+        ParseNode* loopBody = forNode->body();
         return ContainsHoistedDeclaration(cx, loopBody, result);
       }
 
@@ -1209,19 +1211,18 @@ FoldTry(JSContext* cx, TernaryNode* node, PerHandlerParser<FullParseHandler>& pa
 }
 
 static bool
-FoldCatch(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldCatch(JSContext* cx, BinaryNode* node, PerHandlerParser<FullParseHandler>& parser)
 {
-    MOZ_ASSERT(node->isKind(ParseNodeKind::Catch));
-    MOZ_ASSERT(node->isArity(PN_BINARY));
-
-    if (ParseNode*& declPattern = node->pn_left) {
-        if (!Fold(cx, &declPattern, parser)) {
+    ParseNode** declPattern = node->unsafeLeftReference();
+    if (*declPattern) {
+        if (!Fold(cx, declPattern, parser)) {
             return false;
         }
     }
 
-    if (ParseNode*& statements = node->pn_right) {
-        if (!Fold(cx, &statements, parser)) {
+    ParseNode** statements = node->unsafeRightReference();
+    if (*statements) {
+        if (!Fold(cx, statements, parser)) {
             return false;
         }
     }
@@ -1255,21 +1256,18 @@ FoldClass(JSContext* cx, ClassNode* node, PerHandlerParser<FullParseHandler>& pa
 static bool
 FoldElement(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& parser)
 {
-    ParseNode* node = *nodePtr;
+    PropertyByValue* elem = &(*nodePtr)->as<PropertyByValue>();
 
-    MOZ_ASSERT(node->isKind(ParseNodeKind::Elem));
-    MOZ_ASSERT(node->isArity(PN_BINARY));
-
-    ParseNode*& expr = node->pn_left;
-    if (!Fold(cx, &expr, parser)) {
+    if (!Fold(cx, elem->unsafeLeftReference(), parser)) {
         return false;
     }
 
-    ParseNode*& key = node->pn_right;
-    if (!Fold(cx, &key, parser)) {
+    if (!Fold(cx, elem->unsafeRightReference(), parser)) {
         return false;
     }
 
+    ParseNode* expr = &elem->expression();
+    ParseNode* key = &elem->key();
     PropertyName* name = nullptr;
     if (key->isKind(ParseNodeKind::String)) {
         JSAtom* atom = key->pn_atom;
@@ -1313,7 +1311,7 @@ FoldElement(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandle
     if (!dottedAccess) {
         return false;
     }
-    dottedAccess->setInParens(node->isInParens());
+    dottedAccess->setInParens(elem->isInParens());
     ReplaceNode(nodePtr, dottedAccess);
 
     return true;
@@ -1471,13 +1469,12 @@ FoldAdd(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandler>& 
 }
 
 static bool
-FoldCall(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldCall(JSContext* cx, BinaryNode* node, PerHandlerParser<FullParseHandler>& parser)
 {
     MOZ_ASSERT(node->isKind(ParseNodeKind::Call) ||
                node->isKind(ParseNodeKind::SuperCall) ||
                node->isKind(ParseNodeKind::New) ||
                node->isKind(ParseNodeKind::TaggedTemplate));
-    MOZ_ASSERT(node->isArity(PN_BINARY));
 
     // Don't fold a parenthesized callable component in an invocation, as this
     // might cause a different |this| value to be used, changing semantics:
@@ -1490,15 +1487,14 @@ FoldCall(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& par
     //   assertEq(obj.f``, "obj");
     //
     // See bug 537673 and bug 1182373.
-    ParseNode** pn_callee = &node->pn_left;
-    if (node->isKind(ParseNodeKind::New) || !(*pn_callee)->isInParens()) {
-        if (!Fold(cx, pn_callee, parser)) {
+    ParseNode* callee = node->left();
+    if (node->isKind(ParseNodeKind::New) || !callee->isInParens()) {
+        if (!Fold(cx, node->unsafeLeftReference(), parser)) {
             return false;
         }
     }
 
-    ParseNode** pn_args = &node->pn_right;
-    if (!Fold(cx, pn_args, parser)) {
+    if (!Fold(cx, node->unsafeRightReference(), parser)) {
         return false;
     }
 
@@ -1566,17 +1562,13 @@ FoldForHead(JSContext* cx, TernaryNode* node, PerHandlerParser<FullParseHandler>
 }
 
 static bool
-FoldDottedProperty(JSContext* cx, ParseNode* node, PerHandlerParser<FullParseHandler>& parser)
+FoldDottedProperty(JSContext* cx, PropertyAccess* prop, PerHandlerParser<FullParseHandler>& parser)
 {
-    MOZ_ASSERT(node->isKind(ParseNodeKind::Dot));
-    MOZ_ASSERT(node->isArity(PN_BINARY));
-
     // Iterate through a long chain of dotted property accesses to find the
     // most-nested non-dotted property node, then fold that.
-    ParseNode** nested = &node->pn_left;
+    ParseNode** nested = prop->unsafeLeftReference();
     while ((*nested)->isKind(ParseNodeKind::Dot)) {
-        MOZ_ASSERT((*nested)->isArity(PN_BINARY));
-        nested = &(*nested)->pn_left;
+        nested = (*nested)->as<PropertyAccess>().unsafeLeftReference();
     }
 
     return Fold(cx, nested, parser);
@@ -1683,8 +1675,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         return Fold(cx, &pn->pn_kid, parser);
 
       case ParseNodeKind::ExportDefault:
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-        return Fold(cx, &pn->pn_left, parser);
+        return Fold(cx, pn->as<BinaryNode>().unsafeLeftReference(), parser);
 
       case ParseNodeKind::This:
         MOZ_ASSERT(pn->isArity(PN_UNARY));
@@ -1749,12 +1740,15 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
       case ParseNodeKind::ImportSpecList:
         return FoldList(cx, &pn->as<ListNode>(), parser);
 
-      case ParseNodeKind::InitialYield:
+      case ParseNodeKind::InitialYield: {
         MOZ_ASSERT(pn->isArity(PN_UNARY));
-        MOZ_ASSERT(pn->pn_kid->isKind(ParseNodeKind::Assign) &&
-                   pn->pn_kid->pn_left->isKind(ParseNodeKind::Name) &&
-                   pn->pn_kid->pn_right->isKind(ParseNodeKind::Generator));
+#ifdef DEBUG
+        AssignmentNode* assignNode = &pn->pn_kid->as<AssignmentNode>();
+        MOZ_ASSERT(assignNode->left()->isKind(ParseNodeKind::Name));
+        MOZ_ASSERT(assignNode->right()->isKind(ParseNodeKind::Generator));
+#endif
         return true;
+      }
 
       case ParseNodeKind::YieldStar:
         MOZ_ASSERT(pn->isArity(PN_UNARY));
@@ -1775,13 +1769,15 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         return FoldTry(cx, &pn->as<TernaryNode>(), parser);
 
       case ParseNodeKind::Catch:
-        return FoldCatch(cx, pn, parser);
+        return FoldCatch(cx, &pn->as<BinaryNode>(), parser);
 
       case ParseNodeKind::Class:
         return FoldClass(cx, &pn->as<ClassNode>(), parser);
 
-      case ParseNodeKind::Elem:
+      case ParseNodeKind::Elem: {
+        MOZ_ASSERT((*pnp)->is<PropertyByValue>());
         return FoldElement(cx, pnp, parser);
+      }
 
       case ParseNodeKind::Add:
         MOZ_ASSERT((*pnp)->is<ListNode>());
@@ -1791,7 +1787,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
       case ParseNodeKind::New:
       case ParseNodeKind::SuperCall:
       case ParseNodeKind::TaggedTemplate:
-        return FoldCall(cx, pn, parser);
+        return FoldCall(cx, &pn->as<BinaryNode>(), parser);
 
       case ParseNodeKind::Arguments:
         return FoldArguments(cx, &pn->as<ListNode>(), parser);
@@ -1818,58 +1814,67 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
       case ParseNodeKind::ClassMethod:
       case ParseNodeKind::ImportSpec:
       case ParseNodeKind::ExportSpec:
-      case ParseNodeKind::SetThis:
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-        return Fold(cx, &pn->pn_left, parser) &&
-               Fold(cx, &pn->pn_right, parser);
-
-      case ParseNodeKind::NewTarget:
-      case ParseNodeKind::ImportMeta:
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-        MOZ_ASSERT(pn->pn_left->isKind(ParseNodeKind::PosHolder));
-        MOZ_ASSERT(pn->pn_right->isKind(ParseNodeKind::PosHolder));
-        return true;
-
-      case ParseNodeKind::CallImport:
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-        MOZ_ASSERT(pn->pn_left->isKind(ParseNodeKind::PosHolder));
-        return Fold(cx, &pn->pn_right, parser);
-
-      case ParseNodeKind::ClassNames:
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-        if (ParseNode*& outerBinding = pn->pn_left) {
-            if (!Fold(cx, &outerBinding, parser)) {
-                return false;
-            }
-        }
-        return Fold(cx, &pn->pn_right, parser);
-
-      case ParseNodeKind::DoWhile:
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-        return Fold(cx, &pn->pn_left, parser) &&
-               FoldCondition(cx, &pn->pn_right, parser);
-
-      case ParseNodeKind::While:
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-        return FoldCondition(cx, &pn->pn_left, parser) &&
-               Fold(cx, &pn->pn_right, parser);
-
-      case ParseNodeKind::Case: {
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-
-        // pn_left is null for DefaultClauses.
-        if (pn->pn_left) {
-            if (!Fold(cx, &pn->pn_left, parser)) {
-                return false;
-            }
-        }
-        return Fold(cx, &pn->pn_right, parser);
+      case ParseNodeKind::SetThis: {
+        BinaryNode* node = &pn->as<BinaryNode>();
+        return Fold(cx, node->unsafeLeftReference(), parser) &&
+               Fold(cx, node->unsafeRightReference(), parser);
       }
 
-      case ParseNodeKind::With:
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-        return Fold(cx, &pn->pn_left, parser) &&
-               Fold(cx, &pn->pn_right, parser);
+      case ParseNodeKind::NewTarget:
+      case ParseNodeKind::ImportMeta: {
+#ifdef DEBUG
+        BinaryNode* node = &pn->as<BinaryNode>();
+        MOZ_ASSERT(node->left()->isKind(ParseNodeKind::PosHolder));
+        MOZ_ASSERT(node->right()->isKind(ParseNodeKind::PosHolder));
+#endif
+        return true;
+      }
+
+      case ParseNodeKind::CallImport: {
+        BinaryNode* node = &pn->as<BinaryNode>();
+        MOZ_ASSERT(node->left()->isKind(ParseNodeKind::PosHolder));
+        return Fold(cx, node->unsafeRightReference(), parser);
+      }
+
+      case ParseNodeKind::ClassNames: {
+        ClassNames* names = &pn->as<ClassNames>();
+        if (names->outerBinding()) {
+            if (!Fold(cx, names->unsafeLeftReference(), parser)) {
+                return false;
+            }
+        }
+        return Fold(cx, names->unsafeRightReference(), parser);
+      }
+
+      case ParseNodeKind::DoWhile: {
+        BinaryNode* node = &pn->as<BinaryNode>();
+        return Fold(cx, node->unsafeLeftReference(), parser) &&
+               FoldCondition(cx, node->unsafeRightReference(), parser);
+      }
+
+      case ParseNodeKind::While: {
+        BinaryNode* node = &pn->as<BinaryNode>();
+        return FoldCondition(cx, node->unsafeLeftReference(), parser) &&
+               Fold(cx, node->unsafeRightReference(), parser);
+      }
+
+      case ParseNodeKind::Case: {
+        CaseClause* caseClause = &pn->as<CaseClause>();
+
+        // left (caseExpression) is null for DefaultClauses.
+        if (caseClause->left()) {
+            if (!Fold(cx, caseClause->unsafeLeftReference(), parser)) {
+                return false;
+            }
+        }
+        return Fold(cx, caseClause->unsafeRightReference(), parser);
+      }
+
+      case ParseNodeKind::With: {
+        BinaryNode* node = &pn->as<BinaryNode>();
+        return Fold(cx, node->unsafeLeftReference(), parser) &&
+               Fold(cx, node->unsafeRightReference(), parser);
+      }
 
       case ParseNodeKind::ForIn:
       case ParseNodeKind::ForOf:
@@ -1886,7 +1891,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         MOZ_CRASH("unreachable, handled by ::Dot");
 
       case ParseNodeKind::Dot:
-        return FoldDottedProperty(cx, pn, parser);
+        return FoldDottedProperty(cx, &pn->as<PropertyAccess>(), parser);
 
       case ParseNodeKind::LexicalScope:
         MOZ_ASSERT(pn->isArity(PN_SCOPE));
