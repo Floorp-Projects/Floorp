@@ -734,8 +734,8 @@ class NameResolver
                 return false;
             }
             MOZ_ASSERT(tryNode->kid2() || tryNode->kid3());
-            if (ParseNode* catchScope = tryNode->kid2()) {
-                MOZ_ASSERT(catchScope->isKind(ParseNodeKind::LexicalScope));
+            if (tryNode->kid2()) {
+                LexicalScopeNode* catchScope = &tryNode->kid2()->as<LexicalScopeNode>();
                 MOZ_ASSERT(catchScope->scopeBody()->isKind(ParseNodeKind::Catch));
                 MOZ_ASSERT(catchScope->scopeBody()->is<BinaryNode>());
                 if (!resolve(catchScope->scopeBody(), prefix)) {
@@ -918,8 +918,7 @@ class NameResolver
             break;
 
           case ParseNodeKind::LexicalScope:
-            MOZ_ASSERT(cur->isArity(PN_SCOPE));
-            if (!resolve(cur->scopeBody(), prefix)) {
+            if (!resolve(cur->as<LexicalScopeNode>().scopeBody(), prefix)) {
                 return false;
             }
             break;

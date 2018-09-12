@@ -620,7 +620,8 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     }
 
     SwitchStatementType newSwitchStatement(uint32_t begin, Node discriminant,
-                                           Node lexicalForCaseList, bool hasDefault)
+                                           LexicalScopeNodeType lexicalForCaseList,
+                                           bool hasDefault)
     {
         return new_<SwitchStatement>(begin, discriminant, lexicalForCaseList, hasDefault);
     }
@@ -683,7 +684,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<PropertyByValue>(lhs, index, lhs->pn_pos.begin, end);
     }
 
-    bool setupCatchScope(ParseNode* lexicalScope, ParseNode* catchName, ParseNode* catchBody) {
+    bool setupCatchScope(LexicalScopeNodeType lexicalScope, Node catchName, Node catchBody) {
         BinaryNode* catchClause;
         if (catchName) {
             catchClause = new_<BinaryNode>(ParseNodeKind::Catch, JSOP_NOP, catchName, catchBody);
@@ -739,7 +740,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     void addFunctionFormalParameter(CodeNodeType funNode, Node argpn) {
         addList(/* list = */ funNode->body(), /* child = */ argpn);
     }
-    void setFunctionBody(CodeNodeType funNode, Node body) {
+    void setFunctionBody(CodeNodeType funNode, LexicalScopeNodeType body) {
         MOZ_ASSERT(funNode->body()->isKind(ParseNodeKind::ParamsBody));
         addList(/* list = */ funNode->body(), /* child = */ body);
     }
@@ -748,7 +749,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<CodeNode>(ParseNodeKind::Module, JSOP_NOP, pos);
     }
 
-    ParseNode* newLexicalScope(LexicalScope::Data* bindings, ParseNode* body) {
+    LexicalScopeNodeType newLexicalScope(LexicalScope::Data* bindings, Node body) {
         return new_<LexicalScopeNode>(bindings, body);
     }
 

@@ -323,9 +323,9 @@ IsTypeofKind(ParseNodeKind kind)
  *         or null if optional catch binding
  *   right: catch block statements
  * Break (BreakStatement)
- *   atom: label or null
+ *   label: label or null
  * Continue (ContinueStatement)
- *   atom: label or null
+ *   label: label or null
  * With (BinaryNode)
  *   left: head expr
  *   right: body
@@ -501,8 +501,9 @@ IsTypeofKind(ParseNodeKind kind)
  *   left: '.this' Name
  *   right: SuperCall
  *
- * LexicalScope scope   pn_u.scope.bindings: scope bindings
- *                          pn_u.scope.body: scope body
+ * LexicalScope (LexicalScopeNode)
+ *   scopeBindings: scope bindings
+ *   scopeBody: scope body
  * Generator (NullaryNode)
  * InitialYield (UnaryNode)
  *   kid: generator object
@@ -537,6 +538,8 @@ enum ParseNodeArity
     macro(SwitchStatement, SwitchStatementType, asSwitchStatement) \
     \
     macro(CodeNode, CodeNodeType, asCode) \
+    \
+    macro(LexicalScopeNode, LexicalScopeNodeType, asLexicalScope) \
     \
     macro(ListNode, ListNodeType, asList) \
     macro(CallSiteNode, CallSiteNodeType, asCallSite) \
@@ -707,6 +710,8 @@ class ParseNode
             ParseNode*  body;           /* module or function body */
         } code;
         struct {
+          private:
+            friend class LexicalScopeNode;
             LexicalScope::Data* bindings;
             ParseNode*          body;
         } scope;
@@ -717,6 +722,7 @@ class ParseNode
             DecimalPoint decimalPoint;  /* Whether the number has a decimal point */
         } number;
         class {
+          private:
             friend class LoopControlStatement;
             PropertyName*    label;    /* target of break/continue statement */
         } loopControl;
@@ -733,28 +739,6 @@ class ParseNode
 
     // include "ParseNode-inl.h" for these methods.
     inline PropertyName* name() const;
-
-    bool isEmptyScope() const {
-        MOZ_ASSERT(pn_arity == PN_SCOPE);
-        return !pn_u.scope.bindings;
-    }
-
-    Handle<LexicalScope::Data*> scopeBindings() const {
-        MOZ_ASSERT(!isEmptyScope());
-        // Bindings' GC safety depend on the presence of an AutoKeepAtoms that
-        // the rest of the frontend also depends on.
-        return Handle<LexicalScope::Data*>::fromMarkedLocation(&pn_u.scope.bindings);
-    }
-
-    ParseNode* scopeBody() const {
-        MOZ_ASSERT(pn_arity == PN_SCOPE);
-        return pn_u.scope.body;
-    }
-
-    void setScopeBody(ParseNode* body) {
-        MOZ_ASSERT(pn_arity == PN_SCOPE);
-        pn_u.scope.body = body;
-    }
 
     /* True if pn is a parsenode representing a literal constant. */
     bool isLiteral() const {
@@ -1500,8 +1484,9 @@ class NumericLiteral : public ParseNode
     }
 };
 
-struct LexicalScopeNode : public ParseNode
+class LexicalScopeNode : public ParseNode
 {
+  public:
     LexicalScopeNode(LexicalScope::Data* bindings, ParseNode* body)
       : ParseNode(ParseNodeKind::LexicalScope, JSOP_NOP, PN_SCOPE, body->pn_pos)
     {
@@ -1510,12 +1495,37 @@ struct LexicalScopeNode : public ParseNode
     }
 
     static bool test(const ParseNode& node) {
-        return node.isKind(ParseNodeKind::LexicalScope);
+        bool match = node.isKind(ParseNodeKind::LexicalScope);
+        MOZ_ASSERT_IF(match, node.isArity(PN_SCOPE));
+        return match;
     }
 
 #ifdef DEBUG
     void dump(GenericPrinter& out, int indent);
 #endif
+
+    Handle<LexicalScope::Data*> scopeBindings() const {
+        MOZ_ASSERT(!isEmptyScope());
+        // Bindings' GC safety depend on the presence of an AutoKeepAtoms that
+        // the rest of the frontend also depends on.
+        return Handle<LexicalScope::Data*>::fromMarkedLocation(&pn_u.scope.bindings);
+    }
+
+    ParseNode* scopeBody() const {
+        return pn_u.scope.body;
+    }
+
+    void setScopeBody(ParseNode* body) {
+        pn_u.scope.body = body;
+    }
+
+    bool isEmptyScope() const {
+        return !pn_u.scope.bindings;
+    }
+
+    ParseNode** unsafeScopeBodyReference() {
+        return &pn_u.scope.body;
+    }
 };
 
 class LabeledStatement : public NameNode
@@ -1894,14 +1904,13 @@ class ClassMethod : public BinaryNode
 class SwitchStatement : public BinaryNode
 {
   public:
-    SwitchStatement(uint32_t begin, ParseNode* discriminant, ParseNode* lexicalForCaseList,
+    SwitchStatement(uint32_t begin, ParseNode* discriminant, LexicalScopeNode* lexicalForCaseList,
                     bool hasDefault)
       : BinaryNode(ParseNodeKind::Switch, JSOP_NOP,
                    TokenPos(begin, lexicalForCaseList->pn_pos.end),
                    discriminant, lexicalForCaseList)
     {
 #ifdef DEBUG
-        MOZ_ASSERT(lexicalForCaseList->isKind(ParseNodeKind::LexicalScope));
         ListNode* cases = &lexicalForCaseList->scopeBody()->as<ListNode>();
         MOZ_ASSERT(cases->isKind(ParseNodeKind::StatementList));
         bool found = false;
@@ -1928,8 +1937,8 @@ class SwitchStatement : public BinaryNode
         return *left();
     }
 
-    ParseNode& lexicalForCaseList() const {
-        return *right();
+    LexicalScopeNode& lexicalForCaseList() const {
+        return right()->as<LexicalScopeNode>();
     }
 
     bool hasDefault() const {
@@ -2005,15 +2014,13 @@ class ClassNode : public TernaryNode
             return &methodsOrBlock->as<ListNode>();
         }
 
-        MOZ_ASSERT(methodsOrBlock->is<LexicalScopeNode>());
-        ListNode* list = &methodsOrBlock->scopeBody()->as<ListNode>();
+        ListNode* list = &methodsOrBlock->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
         MOZ_ASSERT(list->isKind(ParseNodeKind::ClassMethodList));
         return list;
     }
     Handle<LexicalScope::Data*> scopeBindings() const {
         ParseNode* scope = kid3();
-        MOZ_ASSERT(scope->is<LexicalScopeNode>());
-        return scope->scopeBindings();
+        return scope->as<LexicalScopeNode>().scopeBindings();
     }
 };
 
@@ -2145,8 +2152,8 @@ FunctionFormalParametersList(ParseNode* fn, unsigned* numFormals)
     MOZ_ASSERT(argsBody->isKind(ParseNodeKind::ParamsBody));
     *numFormals = argsBody->count();
     if (*numFormals > 0 &&
-        argsBody->last()->isKind(ParseNodeKind::LexicalScope) &&
-        argsBody->last()->scopeBody()->isKind(ParseNodeKind::StatementList))
+        argsBody->last()->is<LexicalScopeNode>() &&
+        argsBody->last()->as<LexicalScopeNode>().scopeBody()->isKind(ParseNodeKind::StatementList))
     {
         (*numFormals)--;
     }

@@ -532,7 +532,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     bool propagateFreeNamesAndMarkClosedOverBindings(ParseContext::Scope& scope);
 
     bool finishFunctionScopes(bool isStandaloneFunction);
-    Node finishLexicalScope(ParseContext::Scope& scope, Node body);
+    LexicalScopeNodeType finishLexicalScope(ParseContext::Scope& scope, Node body);
     bool finishFunction(bool isStandaloneFunction = false);
 
     bool declareFunctionThis();
@@ -1023,8 +1023,8 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     Node statement(YieldHandling yieldHandling);
     bool maybeParseDirective(ListNodeType list, Node pn, bool* cont);
 
-    Node blockStatement(YieldHandling yieldHandling,
-                        unsigned errorNumber = JSMSG_CURLY_IN_COMPOUND);
+    LexicalScopeNodeType blockStatement(YieldHandling yieldHandling,
+                                        unsigned errorNumber = JSMSG_CURLY_IN_COMPOUND);
     BinaryNodeType doWhileStatement(YieldHandling yieldHandling);
     BinaryNodeType whileStatement(YieldHandling yieldHandling);
 
@@ -1043,7 +1043,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     BinaryNodeType withStatement(YieldHandling yieldHandling);
     UnaryNodeType throwStatement(YieldHandling yieldHandling);
     TernaryNodeType tryStatement(YieldHandling yieldHandling);
-    Node catchBlockStatement(YieldHandling yieldHandling, ParseContext::Scope& catchParamScope);
+    LexicalScopeNodeType catchBlockStatement(YieldHandling yieldHandling, ParseContext::Scope& catchParamScope);
     DebuggerStatementType debuggerStatement();
 
     Node variableStatement(YieldHandling yieldHandling);
@@ -1177,8 +1177,8 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     // Parse a function body.  Pass StatementListBody if the body is a list of
     // statements; pass ExpressionBody if the body is a single expression.
     enum FunctionBodyType { StatementListBody, ExpressionBody };
-    Node functionBody(InHandling inHandling, YieldHandling yieldHandling, FunctionSyntaxKind kind,
-                      FunctionBodyType type);
+    LexicalScopeNodeType functionBody(InHandling inHandling, YieldHandling yieldHandling,
+                                      FunctionSyntaxKind kind, FunctionBodyType type);
 
     UnaryNodeType unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind, uint32_t begin);
 
@@ -1549,7 +1549,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     // Eval scripts are distinguished from global scripts in that in ES6, per
     // 18.2.1.1 steps 9 and 10, all eval scripts are executed under a fresh
     // lexical scope.
-    Node evalBody(EvalSharedContext* evalsc);
+    LexicalScopeNodeType evalBody(EvalSharedContext* evalsc);
 
     // Parse a function, given only its arguments and body. Used for lazily
     // parsed functions.

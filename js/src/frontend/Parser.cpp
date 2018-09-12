@@ -2351,18 +2351,18 @@ ParserBase::newLexicalScopeData(ParseContext::Scope& scope)
 }
 
 template <>
-SyntaxParseHandler::Node
+SyntaxParseHandler::LexicalScopeNodeType
 PerHandlerParser<SyntaxParseHandler>::finishLexicalScope(ParseContext::Scope& scope, Node body)
 {
     if (!propagateFreeNamesAndMarkClosedOverBindings(scope)) {
         return null();
     }
 
-    return body;
+    return handler.newLexicalScope(body);
 }
 
 template <>
-ParseNode*
+LexicalScopeNode*
 PerHandlerParser<FullParseHandler>::finishLexicalScope(ParseContext::Scope& scope, ParseNode* body)
 {
     if (!propagateFreeNamesAndMarkClosedOverBindings(scope)) {
@@ -2378,7 +2378,7 @@ PerHandlerParser<FullParseHandler>::finishLexicalScope(ParseContext::Scope& scop
 }
 
 template <typename CharT>
-ParseNode*
+LexicalScopeNode*
 Parser<FullParseHandler, CharT>::evalBody(EvalSharedContext* evalsc)
 {
     SourceParseContext evalpc(this, evalsc, /* newDirectives = */ nullptr);
@@ -2391,7 +2391,7 @@ Parser<FullParseHandler, CharT>::evalBody(EvalSharedContext* evalsc)
         return nullptr;
     }
 
-    ParseNode* body;
+    LexicalScopeNode* body;
     {
         // All evals have an implicit non-extensible lexical scope.
         ParseContext::Scope lexicalScope(this);
@@ -2399,8 +2399,8 @@ Parser<FullParseHandler, CharT>::evalBody(EvalSharedContext* evalsc)
             return nullptr;
         }
 
-        body = statementList(YieldIsName);
-        if (!body) {
+        ParseNode* list = statementList(YieldIsName);
+        if (!list) {
             return nullptr;
         }
 
@@ -2408,7 +2408,7 @@ Parser<FullParseHandler, CharT>::evalBody(EvalSharedContext* evalsc)
             return nullptr;
         }
 
-        body = finishLexicalScope(lexicalScope, body);
+        body = finishLexicalScope(lexicalScope, list);
         if (!body) {
             return nullptr;
         }
@@ -2437,9 +2437,11 @@ Parser<FullParseHandler, CharT>::evalBody(EvalSharedContext* evalsc)
     }
 #endif
 
-    if (!FoldConstants(context, &body, this)) {
+    ParseNode* node = body;
+    if (!FoldConstants(context, &node, this)) {
         return nullptr;
     }
+    body = handler.asLexicalScope(node);
 
     if (!this->setSourceMapInfo()) {
         return nullptr;
@@ -3018,7 +3020,7 @@ PerHandlerParser<ParseHandler>::declareFunctionArgumentsObject()
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::LexicalScopeNodeType
 GeneralParser<ParseHandler, CharT>::functionBody(InHandling inHandling,
                                                  YieldHandling yieldHandling,
                                                  FunctionSyntaxKind kind, FunctionBodyType type)
@@ -4216,7 +4218,7 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
     YieldHandling bodyYieldHandling = GetYieldHandling(pc->generatorKind());
     AwaitHandling bodyAwaitHandling = GetAwaitHandling(pc->asyncKind());
     bool inheritedStrict = pc->sc()->strict();
-    Node body;
+    LexicalScopeNodeType body;
     {
         AutoAwaitIsKeyword<ParseHandler, CharT> awaitIsKeyword(this, bodyAwaitHandling);
         AutoInParametersOfAsyncFunction<ParseHandler, CharT> inParameters(this, false);
@@ -5251,7 +5253,7 @@ GeneralParser<ParseHandler, CharT>::destructuringDeclarationWithoutYieldOrAwait(
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::LexicalScopeNodeType
 GeneralParser<ParseHandler, CharT>::blockStatement(YieldHandling yieldHandling,
                                                    unsigned errorNumber)
 {
@@ -7383,7 +7385,7 @@ GeneralParser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
         handler.addCaseStatementToList(caseList, caseClause);
     }
 
-    Node lexicalForCaseList = finishLexicalScope(scope, caseList);
+    LexicalScopeNodeType lexicalForCaseList = finishLexicalScope(scope, caseList);
     if (!lexicalForCaseList) {
         return null();
     }
@@ -7755,7 +7757,7 @@ GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
                                                               JSMSG_CURLY_OPENED, openedPos));
     }
 
-    Node catchScope = null();
+    LexicalScopeNodeType catchScope = null();
     TokenKind tt;
     if (!tokenStream.getToken(&tt)) {
         return null();
@@ -7821,7 +7823,7 @@ GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
             MUST_MATCH_TOKEN(TokenKind::LeftCurly, JSMSG_CURLY_BEFORE_CATCH);
         }
 
-        Node catchBody = catchBlockStatement(yieldHandling, scope);
+        LexicalScopeNodeType catchBody = catchBlockStatement(yieldHandling, scope);
         if (!catchBody) {
             return null();
         }
@@ -7879,7 +7881,7 @@ GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
 }
 
 template <class ParseHandler, typename CharT>
-typename ParseHandler::Node
+typename ParseHandler::LexicalScopeNodeType
 GeneralParser<ParseHandler, CharT>::catchBlockStatement(YieldHandling yieldHandling,
                                                         ParseContext::Scope& catchParamScope)
 {

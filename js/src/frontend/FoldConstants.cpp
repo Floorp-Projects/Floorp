@@ -201,9 +201,8 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
         }
 
         if (ParseNode* catchScope = tryNode->kid2()) {
-            MOZ_ASSERT(catchScope->isKind(ParseNodeKind::LexicalScope));
-
-            BinaryNode* catchNode = &catchScope->scopeBody()->as<BinaryNode>();
+            BinaryNode* catchNode =
+                &catchScope->as<LexicalScopeNode>().scopeBody()->as<BinaryNode>();
             MOZ_ASSERT(catchNode->isKind(ParseNodeKind::Catch));
 
             ParseNode* catchStatements = catchNode->right();
@@ -280,15 +279,15 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       }
 
       case ParseNodeKind::LexicalScope: {
-        MOZ_ASSERT(node->isArity(PN_SCOPE));
-        ParseNode* expr = node->scopeBody();
+        LexicalScopeNode* scope = &node->as<LexicalScopeNode>();
+        ParseNode* expr = scope->scopeBody();
 
         if (expr->isKind(ParseNodeKind::For) || expr->isKind(ParseNodeKind::Function)) {
             return ContainsHoistedDeclaration(cx, expr, result);
         }
 
         MOZ_ASSERT(expr->isKind(ParseNodeKind::StatementList));
-        return ListContainsHoistedDeclaration(cx, &node->scopeBody()->as<ListNode>(), result);
+        return ListContainsHoistedDeclaration(cx, &scope->scopeBody()->as<ListNode>(), result);
       }
 
       // List nodes with all non-null children.
@@ -1917,12 +1916,13 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
       case ParseNodeKind::Dot:
         return FoldDottedProperty(cx, &pn->as<PropertyAccess>(), parser);
 
-      case ParseNodeKind::LexicalScope:
-        MOZ_ASSERT(pn->isArity(PN_SCOPE));
-        if (!pn->scopeBody()) {
+      case ParseNodeKind::LexicalScope: {
+        LexicalScopeNode* node = &pn->as<LexicalScopeNode>();
+        if (!node->scopeBody()) {
             return true;
         }
-        return Fold(cx, &pn->pn_u.scope.body, parser);
+        return Fold(cx, node->unsafeScopeBodyReference(), parser);
+      }
 
       case ParseNodeKind::Name:
         return FoldName(cx, &pn->as<NameNode>(), parser);

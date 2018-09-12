@@ -285,6 +285,10 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     }
     ClassNodeType newClass(Node name, Node heritage, Node methodBlock, const TokenPos& pos) { return NodeGeneric; }
 
+    LexicalScopeNodeType newLexicalScope(Node body) {
+        return NodeLexicalDeclaration;
+    }
+
     BinaryNodeType newNewTarget(NullaryNodeType newHolder, NullaryNodeType targetHolder) {
         return NodeGeneric;
     }
@@ -355,7 +359,8 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     }
     BinaryNodeType newWhileStatement(uint32_t begin, Node cond, Node body) { return NodeGeneric; }
     SwitchStatementType newSwitchStatement(uint32_t begin, Node discriminant,
-                                           Node lexicalForCaseList, bool hasDefault)
+                                           LexicalScopeNodeType lexicalForCaseList,
+                                           bool hasDefault)
     {
         return NodeGeneric;
     }
@@ -389,7 +394,9 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return NodeElement;
     }
 
-    MOZ_MUST_USE bool setupCatchScope(Node letBlock, Node catchName, Node catchBody) {
+    MOZ_MUST_USE bool setupCatchScope(LexicalScopeNodeType lexicalScope, Node catchName,
+                                      Node catchBody)
+    {
         return true;
     }
 
@@ -410,7 +417,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
     CodeNodeType newArrowFunction(const TokenPos& pos) { return NodeFunctionArrow; }
 
     void setFunctionFormalParametersAndBody(CodeNodeType funNode, ListNodeType paramsBody) {}
-    void setFunctionBody(CodeNodeType funNode, Node body) {}
+    void setFunctionBody(CodeNodeType funNode, LexicalScopeNodeType body) {}
     void setFunctionBox(CodeNodeType funNode, FunctionBox* funbox) {}
     void addFunctionFormalParameter(CodeNodeType funNode, Node argpn) {}
 

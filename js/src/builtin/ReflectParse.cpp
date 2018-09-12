@@ -2331,8 +2331,8 @@ ASTSerializer::tryStatement(TernaryNode* tryNode, MutableHandleValue dst)
     }
 
     RootedValue handler(cx, NullValue());
-    if (ParseNode* catchScope = catchNode) {
-        MOZ_ASSERT(catchScope->isKind(ParseNodeKind::LexicalScope));
+    if (catchNode) {
+        LexicalScopeNode* catchScope = &catchNode->as<LexicalScopeNode>();
         if (!catchClause(&catchScope->scopeBody()->as<BinaryNode>(), &handler)) {
             return false;
         }
@@ -2430,7 +2430,7 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
       }
 
       case ParseNodeKind::LexicalScope:
-        pn = pn->scopeBody();
+        pn = pn->as<LexicalScopeNode>().scopeBody();
         if (!pn->isKind(ParseNodeKind::StatementList)) {
             return statement(pn, dst);
         }
@@ -2529,8 +2529,9 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
 
         if (head->isKind(ParseNodeKind::ForIn) || head->isKind(ParseNodeKind::ForOf)) {
             RootedValue var(cx);
-            if (initNode->isKind(ParseNodeKind::LexicalScope)) {
-                if (!variableDeclaration(&initNode->scopeBody()->as<ListNode>(), true, &var)) {
+            if (initNode->is<LexicalScopeNode>()) {
+                LexicalScopeNode* scopeNode = &initNode->as<LexicalScopeNode>();
+                if (!variableDeclaration(&scopeNode->scopeBody()->as<ListNode>(), true, &var)) {
                     return false;
                 }
             } else if (!initNode->isKind(ParseNodeKind::Var) &&
@@ -3498,30 +3499,30 @@ ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args, NodeVector& 
                                    MutableHandleValue body, MutableHandleValue rest)
 {
     ListNode* argsList;
-    ParseNode* pnbody;
+    ParseNode* bodyNode;
 
     /* Extract the args and body separately. */
     if (pn->isKind(ParseNodeKind::ParamsBody)) {
         argsList = &pn->as<ListNode>();
-        pnbody = argsList->last();
+        bodyNode = argsList->last();
     } else {
         argsList = nullptr;
-        pnbody = pn;
+        bodyNode = pn;
     }
 
-    if (pnbody->isKind(ParseNodeKind::LexicalScope)) {
-        pnbody = pnbody->scopeBody();
+    if (bodyNode->is<LexicalScopeNode>()) {
+        bodyNode = bodyNode->as<LexicalScopeNode>().scopeBody();
     }
 
     /* Serialize the arguments and body. */
-    switch (pnbody->getKind()) {
+    switch (bodyNode->getKind()) {
       case ParseNodeKind::Return: /* expression closure, no destructured args */
         return functionArgs(pn, argsList, args, defaults, rest) &&
-               expression(pnbody->as<UnaryNode>().kid(), body);
+               expression(bodyNode->as<UnaryNode>().kid(), body);
 
       case ParseNodeKind::StatementList:     /* statement closure */
       {
-        ParseNode* firstNode = pnbody->as<ListNode>().head();
+        ParseNode* firstNode = bodyNode->as<ListNode>().head();
 
         // Skip over initial yield in generator.
         if (firstNode && firstNode->isKind(ParseNodeKind::InitialYield)) {
@@ -3537,7 +3538,7 @@ ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args, NodeVector& 
         }
 
         return functionArgs(pn, argsList, args, defaults, rest) &&
-               functionBody(firstNode, &pnbody->pn_pos, body);
+               functionBody(firstNode, &bodyNode->pn_pos, body);
       }
 
       default:
