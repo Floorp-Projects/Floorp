@@ -837,13 +837,6 @@ ReflowInput::InitFrameType(LayoutFrameType aFrameType)
   const nsStyleDisplay *disp = mStyleDisplay;
   nsCSSFrameType frameType;
 
-  // Section 9.7 of the CSS2 spec indicates that absolute position
-  // takes precedence over float which takes precedence over display.
-  // XXXldb nsRuleNode::ComputeDisplayData should take care of this, right?
-  // Make sure the frame was actually moved out of the flow, and don't
-  // just assume what the style says, because we might not have had a
-  // useful float/absolute containing block
-
   DISPLAY_INIT_TYPE(mFrame, this);
 
   if (aFrameType == LayoutFrameType::Table) {

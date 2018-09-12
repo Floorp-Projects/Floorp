@@ -5,7 +5,6 @@
 const gTests = [
   test_eventMatchesKey,
   test_getTopWin,
-  test_getBoolPref,
   test_openNewTabWith,
   test_openUILink,
 ];
@@ -78,14 +77,6 @@ function test_eventMatchesKey() {
 
 function test_getTopWin() {
   is(getTopWin(), window, "got top window");
-  runNextTest();
-}
-
-
-function test_getBoolPref() {
-  is(getBoolPref("browser.search.openintab", false), false, "getBoolPref");
-  is(getBoolPref("this.pref.doesnt.exist", true), true, "getBoolPref fallback");
-  is(getBoolPref("this.pref.doesnt.exist", false), false, "getBoolPref fallback #2");
   runNextTest();
 }
 

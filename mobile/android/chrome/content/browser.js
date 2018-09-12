@@ -4677,24 +4677,14 @@ Tab.prototype = {
 
   OnHistoryGotoIndex: function(index, gotoURI) {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
-    return true;
   },
 
   OnHistoryPurge: function(numEntries) {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
-    return true;
   },
 
   OnHistoryReplaceEntry: function(index) {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
-  },
-
-  OnLengthChanged: function(aCount) {
-    // Ignore, the method is implemented so that XPConnect doesn't throw!
-  },
-
-  OnIndexChanged: function(aIndex) {
-    // Ignore, the method is implemented so that XPConnect doesn't throw!
   },
 
   UpdateMediaPlaybackRelatedObserver: function(active) {

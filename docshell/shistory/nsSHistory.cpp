@@ -641,9 +641,6 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
   mEntries.AppendElement(aSHEntry);
   mIndex++;
 
-  NOTIFY_LISTENERS(OnLengthChanged, (Length()));
-  NOTIFY_LISTENERS(OnIndexChanged, (mIndex));
-
   // Purge History list if it is too long
   if (gHistoryMaxSize >= 0 && Length() > gHistoryMaxSize) {
     PurgeHistory(Length() - gHistoryMaxSize);
@@ -677,8 +674,6 @@ nsSHistory::SetIndex(int32_t aIndex)
   }
 
   mIndex = aIndex;
-  NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
-
   return NS_OK;
 }
 
@@ -796,14 +791,7 @@ nsSHistory::PurgeHistory(int32_t aNumEntries)
 
   aNumEntries = std::min(aNumEntries, Length());
 
-  bool purgeHistory = true;
-  NOTIFY_LISTENERS_CANCELABLE(OnHistoryPurge, purgeHistory,
-                              (aNumEntries, &purgeHistory));
-
-  if (!purgeHistory) {
-    // Listener asked us not to purge
-    return NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA;
-  }
+  NOTIFY_LISTENERS(OnHistoryPurge, (aNumEntries));
 
   // Remove the first `aNumEntries` entries.
   mEntries.RemoveElementsAt(0, aNumEntries);
@@ -813,9 +801,6 @@ nsSHistory::PurgeHistory(int32_t aNumEntries)
   mIndex = std::max(mIndex, -1);
   mRequestedIndex -= aNumEntries;
   mRequestedIndex = std::max(mRequestedIndex, -1);
-
-  NOTIFY_LISTENERS(OnLengthChanged, (Length()));
-  NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
 
   if (mRootDocShell) {
     mRootDocShell->HistoryPurged(aNumEntries);
@@ -952,14 +937,9 @@ NS_IMETHODIMP
 nsSHistory::ReloadCurrentEntry()
 {
   // Notify listeners
-  bool canNavigate = true;
   nsCOMPtr<nsIURI> currentURI;
   GetCurrentURI(getter_AddRefs(currentURI));
-  NOTIFY_LISTENERS_CANCELABLE(OnHistoryGotoIndex, canNavigate,
-                              (mIndex, currentURI, &canNavigate));
-  if (!canNavigate) {
-    return NS_OK;
-  }
+  NOTIFY_LISTENERS(OnHistoryGotoIndex, (mIndex, currentURI));
 
   return LoadEntry(mIndex, LOAD_HISTORY, HIST_CMD_RELOAD);
 }
@@ -1368,7 +1348,6 @@ nsSHistory::RemoveDuplicate(int32_t aIndex, bool aKeepNext)
     // Adjust our indices to reflect the removed entry.
     if (mIndex > aIndex) {
       mIndex = mIndex - 1;
-      NOTIFY_LISTENERS(OnIndexChanged, (mIndex));
     }
 
     // NB: If the entry we are removing is the entry currently
@@ -1386,7 +1365,6 @@ nsSHistory::RemoveDuplicate(int32_t aIndex, bool aKeepNext)
     if (mRequestedIndex > aIndex || (mRequestedIndex == aIndex && !aKeepNext)) {
       mRequestedIndex = mRequestedIndex - 1;
     }
-    NOTIFY_LISTENERS(OnLengthChanged, (Length()));
     return true;
   }
   return false;
@@ -1451,7 +1429,6 @@ nsSHistory::UpdateIndex()
   // Update the actual index with the right value.
   if (mIndex != mRequestedIndex && mRequestedIndex != -1) {
     mIndex = mRequestedIndex;
-    NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
   }
 
   mRequestedIndex = -1;
@@ -1529,18 +1506,9 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
   MOZ_ASSERT((prevEntry && nextEntry && nextURI), "prevEntry, nextEntry and nextURI can't be null");
 
   // Send appropriate listener notifications.
-  bool canNavigate = true;
   if (aHistCmd == HIST_CMD_GOTOINDEX) {
     // We are going somewhere else. This is not reload either
-    NOTIFY_LISTENERS_CANCELABLE(OnHistoryGotoIndex, canNavigate,
-                                (aIndex, nextURI, &canNavigate));
-  }
-
-  if (!canNavigate) {
-    // If the listener asked us not to proceed with
-    // the operation, simply return.
-    mRequestedIndex = -1;
-    return NS_OK;  // XXX Maybe I can return some other error code?
+    NOTIFY_LISTENERS(OnHistoryGotoIndex, (aIndex, nextURI));
   }
 
   if (mRequestedIndex == mIndex) {
