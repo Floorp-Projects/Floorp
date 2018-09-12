@@ -1,6 +1,6 @@
 "use strict";
 
-const BUTTON_ID = "pageAction-panel-screenshots";
+const BUTTON_ID = "pageAction-panel-screenshots_mozilla_org";
 
 function checkElements(expectPresent, l) {
   for (const id of l) {
