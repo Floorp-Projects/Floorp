@@ -30,6 +30,7 @@
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsScriptSecurityManager.h"
+#include "nsSandboxFlags.h"
 #include "prtime.h"
 
 #define ANTITRACKING_PERM_KEY "3rdPartyStorage"
@@ -63,6 +64,12 @@ GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner* a3rdPartyTrackingWindow
                                     nsACString& aTrackingOrigin)
 {
   MOZ_ASSERT(nsContentUtils::IsTrackingResourceWindow(a3rdPartyTrackingWindow));
+
+  nsIDocument* doc = a3rdPartyTrackingWindow->GetDocument();
+  // Make sure storage access isn't disabled
+  if (doc && (doc->GetSandboxFlags() & SANDBOXED_STORAGE_ACCESS)) {
+    return false;
+  }
 
   // Now we need the principal and the origin of the parent window.
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal =
