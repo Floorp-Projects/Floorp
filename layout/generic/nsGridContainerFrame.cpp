@@ -3604,7 +3604,8 @@ MeasuringReflow(nsIFrame*           aChild,
 
   ReflowOutput childSize(childRI);
   nsReflowStatus childStatus;
-  const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
+  const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW |
+                         NS_FRAME_NO_DELETE_NEXT_IN_FLOW_CHILD;
   parent->ReflowChild(aChild, pc, childSize, childRI, wm,
                       LogicalPoint(wm), nsSize(), flags, childStatus);
   nsContainerFrame::FinishReflowChild(aChild, pc, childSize, &childRI, wm,
@@ -5477,13 +5478,13 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
     }
 
     // aFragmentainer.mIsTopOfPage is propagated to the child reflow state.
-    // When it's false the child can request BREAK_BEFORE.  We intentionally
-    // set it to false when the row is growable (as determined in CSS Grid
-    // Fragmentation) and there is a non-zero space between it and the
+    // When it's false the child may request InlineBreak::Before.  We set it
+    // to false when the row is growable (as determined in the CSS Grid
+    // Fragmentation spec) and there is a non-zero space between it and the
     // fragmentainer end (that can be used to grow it).  If the child reports
     // a forced break in this case, we grow this row to fill the fragment and
     // restart the loop.  We also restart the loop with |aEndRow = row|
-    // (but without growing any row) for a BREAK_BEFORE child if it spans
+    // (but without growing any row) for a InlineBreak::Before child if it spans
     // beyond the last row in this fragment.  This is to avoid fragmenting it.
     // We only restart the loop once.
     aFragmentainer.mIsTopOfPage = isRowTopOfPage && !rowCanGrow;
@@ -5503,7 +5504,7 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
 
     if (childStatus.IsInlineBreakBefore()) {
       MOZ_ASSERT(!child->GetPrevInFlow(),
-                 "continuations should never report BREAK_BEFORE status");
+                 "continuations should never report InlineBreak::Before status");
       MOZ_ASSERT(!aFragmentainer.mIsTopOfPage,
                  "got IsInlineBreakBefore() at top of page");
       if (!didGrowRow) {
@@ -5544,16 +5545,23 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
           aStatus.SetIncomplete();
           continue;
         }
-        NS_ERROR("got BREAK_BEFORE at top-of-page");
+        NS_ERROR("got InlineBreak::Before at top-of-page");
         childStatus.Reset();
       } else {
-        NS_ERROR("got BREAK_BEFORE again after growing the row?");
-        childStatus.SetIncomplete();
+        // We got InlineBreak::Before again after growing the row - this can happen
+        // if the child isn't splittable, e.g. some form controls.
+        childStatus.Reset();
+        if (child->GetNextInFlow()) {
+          // The child already has a fragment, so we know it's splittable.
+          childStatus.SetIncomplete();
+        } // else, report that it's complete
       }
     } else if (childStatus.IsInlineBreakAfter()) {
       MOZ_ASSERT_UNREACHABLE("unexpected child reflow status");
     }
 
+    MOZ_ASSERT(!childStatus.IsInlineBreakBefore(),
+               "should've handled InlineBreak::Before above");
     if (childStatus.IsIncomplete()) {
       incompleteItems.PutEntry(child);
     } else if (!childStatus.IsFullyComplete()) {
@@ -5879,6 +5887,31 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
         DestroyOverflowList();
       }
     }
+  }
+
+  // Push any child next-in-flows in our principal list to OverflowList.
+  if (HasAnyStateBits(NS_STATE_GRID_HAS_CHILD_NIFS)) {
+    nsFrameList framesToPush;
+    nsIFrame* firstChild = mFrames.FirstChild();
+    // Note that we potentially modify our mFrames list as we go.
+    for (auto child = firstChild; child; child = child->GetNextSibling()) {
+      if (auto* childNIF = child->GetNextInFlow()) {
+        if (childNIF->GetParent() == this) {
+          for (auto c = child->GetNextSibling(); c; c = c->GetNextSibling()) {
+            if (c == childNIF) {
+              // child's next-in-flow is in our principal child list, push it.
+              mFrames.RemoveFrame(childNIF);
+              framesToPush.AppendFrame(nullptr, childNIF);
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (!framesToPush.IsEmpty()) {
+      MergeSortedOverflow(framesToPush);
+    }
+    RemoveStateBits(NS_STATE_GRID_HAS_CHILD_NIFS);
   }
 
   // Pull up any first-in-flow children we might have pushed.
@@ -6546,10 +6579,14 @@ nsGridContainerFrame::DrainSelfOverflowList()
 {
   // Unlike nsContainerFrame::DrainSelfOverflowList we need to merge these lists
   // so that the resulting mFrames is in document content order.
-  // NOTE: nsContainerFrame::AppendFrames/InsertFrames calls this method.
+  // NOTE: nsContainerFrame::AppendFrames/InsertFrames calls this method and
+  // there are also direct calls from the fctor (FindAppendPrevSibling).
   AutoFrameListPtr overflowFrames(PresContext(), StealOverflowFrames());
   if (overflowFrames) {
     ::MergeSortedFrameLists(mFrames, *overflowFrames, GetContent());
+    // We set a frame bit to push them again in Reflow() to avoid creating
+    // multiple grid items per grid container fragment for the same content.
+    AddStateBits(NS_STATE_GRID_HAS_CHILD_NIFS);
     return true;
   }
   return false;
