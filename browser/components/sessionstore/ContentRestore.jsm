@@ -381,8 +381,8 @@ HistoryListener.prototype = {
     }
   },
 
-  OnHistoryGotoIndex(index, gotoURI) { return true; },
-  OnHistoryPurge(numEntries) { return true; },
+  OnHistoryGotoIndex(index, gotoURI) {},
+  OnHistoryPurge(numEntries) {},
   OnHistoryReplaceEntry(index) {},
 
   // This will be called for a pending tab when loadURI(uri) is called where
@@ -416,14 +416,6 @@ HistoryListener.prototype = {
 
     // Cancel the load.
     return false;
-  },
-
-  OnLengthChanged(aCount) {
-    // Ignore, the method is implemented so that XPConnect doesn't throw!
-  },
-
-  OnIndexChanged(aIndex) {
-    // Ignore, the method is implemented so that XPConnect doesn't throw!
   },
 };
 

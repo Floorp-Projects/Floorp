@@ -301,12 +301,10 @@ class SessionHistoryListener extends Handler {
   OnHistoryGotoIndex(index, gotoURI) {
     // We ought to collect the previously current entry as well, see bug 1350567.
     this.collectFrom(kLastIndex);
-    return true;
   }
 
   OnHistoryPurge(numEntries) {
     this.collect();
-    return true;
   }
 
   OnHistoryReload(reloadURI, reloadFlags) {
@@ -316,14 +314,6 @@ class SessionHistoryListener extends Handler {
 
   OnHistoryReplaceEntry(index) {
     this.collect();
-  }
-
-  OnLengthChanged(aCount) {
-    // Ignore, the method is implemented so that XPConnect doesn't throw!
-  }
-
-  OnIndexChanged(aIndex) {
-    // Ignore, the method is implemented so that XPConnect doesn't throw!
   }
 }
 SessionHistoryListener.prototype.QueryInterface =
