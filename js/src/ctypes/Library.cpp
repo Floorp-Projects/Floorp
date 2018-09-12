@@ -76,9 +76,9 @@ Library::Name(JSContext* cx, unsigned argc, Value* vp)
   }
 
   AutoString resultString;
-  AppendString(cx, resultString, DLL_PREFIX);
+  AppendString(cx, resultString, MOZ_DLL_PREFIX);
   AppendString(cx, resultString, str);
-  AppendString(cx, resultString, DLL_SUFFIX);
+  AppendString(cx, resultString, MOZ_DLL_SUFFIX);
   if (!resultString)
     return false;
   auto resultStr = resultString.finish();

@@ -906,9 +906,9 @@ OSFileConstantsService::DefineOSFileConstants(JSContext* aCx,
   // On other platforms, libxul is a library "xul" with regular
   // library prefix/suffix.
   nsAutoString libxul;
-  libxul.AppendLiteral(DLL_PREFIX);
+  libxul.AppendLiteral(MOZ_DLL_PREFIX);
   libxul.AppendLiteral("xul");
-  libxul.AppendLiteral(DLL_SUFFIX);
+  libxul.AppendLiteral(MOZ_DLL_SUFFIX);
 #endif // defined(XP_MACOSX)
 
   if (!SetStringProperty(aCx, objPath, "libxul", libxul)) {
@@ -953,14 +953,14 @@ OSFileConstantsService::DefineOSFileConstants(JSContext* aCx,
   nsAutoString libsqlite3;
 #if defined(ANDROID)
   // On Android, we use the system's libsqlite3
-  libsqlite3.AppendLiteral(DLL_PREFIX);
+  libsqlite3.AppendLiteral(MOZ_DLL_PREFIX);
   libsqlite3.AppendLiteral("sqlite3");
-  libsqlite3.AppendLiteral(DLL_SUFFIX);
+  libsqlite3.AppendLiteral(MOZ_DLL_SUFFIX);
 #elif defined(XP_WIN)
   // On Windows, for some reason, this is part of nss3.dll
-  libsqlite3.AppendLiteral(DLL_PREFIX);
+  libsqlite3.AppendLiteral(MOZ_DLL_PREFIX);
   libsqlite3.AppendLiteral("nss3");
-  libsqlite3.AppendLiteral(DLL_SUFFIX);
+  libsqlite3.AppendLiteral(MOZ_DLL_SUFFIX);
 #else
     // On other platforms, we link sqlite3 into libxul
   libsqlite3 = libxul;
