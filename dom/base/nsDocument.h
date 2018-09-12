@@ -106,7 +106,7 @@ public:
   // This value denotes whether we should trigger a NewOrigin event if
   // requesting fullscreen in its document causes the origin which is
   // fullscreen to change. We may want *not* to trigger that event if
-  // we're calling RequestFullScreen() as part of a continuation of a
+  // we're calling RequestFullscreen() as part of a continuation of a
   // request in a subdocument in different process, whereupon the caller
   // need to send some notification itself with the real origin.
   bool mShouldNotifyNewOrigin = true;
@@ -292,7 +292,7 @@ public:
 
   nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
 
-  friend class nsCallRequestFullScreen;
+  friend class nsCallRequestFullscreen;
 
   // The application cache that this document is associated with, if
   // any.  This can change during the lifetime of the document.

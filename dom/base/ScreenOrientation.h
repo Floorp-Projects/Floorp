@@ -57,7 +57,7 @@ private:
   virtual ~ScreenOrientation();
 
   // Listener to unlock orientation if we leave fullscreen.
-  class FullScreenEventListener;
+  class FullscreenEventListener;
 
   // Listener to update document's orienation lock when document becomes
   // visible.
@@ -98,7 +98,7 @@ private:
   nsIDocument* GetResponsibleDocument() const;
 
   RefPtr<nsScreen> mScreen;
-  RefPtr<FullScreenEventListener> mFullScreenListener;
+  RefPtr<FullscreenEventListener> mFullscreenListener;
   RefPtr<VisibleEventListener> mVisibleListener;
   OrientationType mType;
   uint16_t mAngle;

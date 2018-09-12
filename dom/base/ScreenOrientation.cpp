@@ -89,14 +89,14 @@ ScreenOrientation::ScreenOrientation(nsPIDOMWindowInner* aWindow, nsScreen* aScr
 ScreenOrientation::~ScreenOrientation()
 {
   hal::UnregisterScreenConfigurationObserver(this);
-  MOZ_ASSERT(!mFullScreenListener);
+  MOZ_ASSERT(!mFullscreenListener);
 }
 
-class ScreenOrientation::FullScreenEventListener final : public nsIDOMEventListener
+class ScreenOrientation::FullscreenEventListener final : public nsIDOMEventListener
 {
-  ~FullScreenEventListener() {}
+  ~FullscreenEventListener() = default;
 public:
-  FullScreenEventListener() {}
+  FullscreenEventListener() = default;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
@@ -123,7 +123,7 @@ public:
                       Promise* aPromise,
                       hal::ScreenOrientation aOrientationLock,
                       nsIDocument* aDocument,
-                      bool aIsFullScreen);
+                      bool aIsFullscreen);
 protected:
   bool OrientationLockContains(OrientationType aOrientationType);
 
@@ -131,7 +131,7 @@ protected:
   RefPtr<Promise> mPromise;
   hal::ScreenOrientation mOrientationLock;
   nsCOMPtr<nsIDocument> mDocument;
-  bool mIsFullScreen;
+  bool mIsFullscreen;
 };
 
 NS_IMPL_ISUPPORTS(ScreenOrientation::LockOrientationTask, nsIRunnable)
@@ -139,10 +139,10 @@ NS_IMPL_ISUPPORTS(ScreenOrientation::LockOrientationTask, nsIRunnable)
 ScreenOrientation::LockOrientationTask::LockOrientationTask(
   ScreenOrientation* aScreenOrientation, Promise* aPromise,
   hal::ScreenOrientation aOrientationLock,
-  nsIDocument* aDocument, bool aIsFullScreen)
+  nsIDocument* aDocument, bool aIsFullscreen)
   : mScreenOrientation(aScreenOrientation), mPromise(aPromise),
     mOrientationLock(aOrientationLock), mDocument(aDocument),
-    mIsFullScreen(aIsFullScreen)
+    mIsFullscreen(aIsFullscreen)
 {
   MOZ_ASSERT(aScreenOrientation);
   MOZ_ASSERT(aPromise);
@@ -189,7 +189,7 @@ ScreenOrientation::LockOrientationTask::Run()
 
   ErrorResult rv;
   bool result = mScreenOrientation->LockDeviceOrientation(mOrientationLock,
-                                                          mIsFullScreen, rv);
+                                                          mIsFullscreen, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
@@ -351,7 +351,7 @@ ScreenOrientation::LockInternal(hal::ScreenOrientation aOrientation,
 
 bool
 ScreenOrientation::LockDeviceOrientation(hal::ScreenOrientation aOrientation,
-                                         bool aIsFullScreen, ErrorResult& aRv)
+                                         bool aIsFullscreen, ErrorResult& aRv)
 {
   if (!GetOwner()) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -359,11 +359,11 @@ ScreenOrientation::LockDeviceOrientation(hal::ScreenOrientation aOrientation,
   }
 
   nsCOMPtr<EventTarget> target = do_QueryInterface(GetOwner()->GetDoc());
-  // We need to register a listener so we learn when we leave full-screen
+  // We need to register a listener so we learn when we leave fullscreen
   // and when we will have to unlock the screen.
   // This needs to be done before LockScreenOrientation call to make sure
   // the locking can be unlocked.
-  if (aIsFullScreen && !target) {
+  if (aIsFullscreen && !target) {
     return false;
   }
 
@@ -372,13 +372,13 @@ ScreenOrientation::LockDeviceOrientation(hal::ScreenOrientation aOrientation,
   }
 
   // We are fullscreen and lock has been accepted.
-  if (aIsFullScreen) {
-    if (!mFullScreenListener) {
-      mFullScreenListener = new FullScreenEventListener();
+  if (aIsFullscreen) {
+    if (!mFullscreenListener) {
+      mFullscreenListener = new FullscreenEventListener();
     }
 
     aRv = target->AddSystemEventListener(NS_LITERAL_STRING("fullscreenchange"),
-                                         mFullScreenListener, /* useCapture = */ true);
+                                         mFullscreenListener, /* useCapture = */ true);
     if (NS_WARN_IF(aRv.Failed())) {
       return false;
     }
@@ -398,8 +398,8 @@ ScreenOrientation::UnlockDeviceOrientation()
 {
   hal::UnlockScreenOrientation();
 
-  if (!mFullScreenListener || !GetOwner()) {
-    mFullScreenListener = nullptr;
+  if (!mFullscreenListener || !GetOwner()) {
+    mFullscreenListener = nullptr;
     return;
   }
 
@@ -407,11 +407,11 @@ ScreenOrientation::UnlockDeviceOrientation()
   nsCOMPtr<EventTarget> target = do_QueryInterface(GetOwner()->GetDoc());
   if (target) {
     target->RemoveSystemEventListener(NS_LITERAL_STRING("fullscreenchange"),
-                                      mFullScreenListener,
+                                      mFullscreenListener,
                                       /* useCapture */ true);
   }
 
-  mFullScreenListener = nullptr;
+  mFullscreenListener = nullptr;
 }
 
 OrientationType
@@ -488,7 +488,7 @@ ScreenOrientation::GetLockOrientationPermission(bool aCheckSandbox) const
     return LOCK_ALLOWED;
   }
 
-  // Other content must be full-screen in order to lock orientation.
+  // Other content must be fullscreen in order to lock orientation.
   return doc->Fullscreen() ? FULLSCREEN_LOCK_ALLOWED : LOCK_DENIED;
 }
 
@@ -655,10 +655,10 @@ ScreenOrientation::VisibleEventListener::HandleEvent(Event* aEvent)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(ScreenOrientation::FullScreenEventListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS(ScreenOrientation::FullscreenEventListener, nsIDOMEventListener)
 
 NS_IMETHODIMP
-ScreenOrientation::FullScreenEventListener::HandleEvent(Event* aEvent)
+ScreenOrientation::FullscreenEventListener::HandleEvent(Event* aEvent)
 {
 #ifdef DEBUG
   nsAutoString eventType;

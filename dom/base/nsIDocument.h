@@ -1745,36 +1745,36 @@ public:
    * Asynchronously requests that the document make aElement the fullscreen
    * element, and move into fullscreen mode. The current fullscreen element
    * (if any) is pushed onto the fullscreen element stack, and it can be
-   * returned to fullscreen status by calling RestorePreviousFullScreenState().
+   * returned to fullscreen status by calling RestorePreviousFullscreenState().
    *
    * Note that requesting fullscreen in a document also makes the element which
    * contains this document in this document's parent document fullscreen. i.e.
    * the <iframe> or <browser> that contains this document is also mode
    * fullscreen. This happens recursively in all ancestor documents.
    */
-  void AsyncRequestFullScreen(mozilla::UniquePtr<FullscreenRequest>&&);
+  void AsyncRequestFullscreen(mozilla::UniquePtr<FullscreenRequest>&&);
 
   // Do the "fullscreen element ready check" from the fullscreen spec.
   // It returns true if the given element is allowed to go into fullscreen.
   bool FullscreenElementReadyCheck(Element* aElement, bool aWasCallerChrome);
 
-  // This is called asynchronously by nsIDocument::AsyncRequestFullScreen()
-  // to move this document into full-screen mode if allowed.
-  void RequestFullScreen(mozilla::UniquePtr<FullscreenRequest>&& aRequest);
+  // This is called asynchronously by nsIDocument::AsyncRequestFullscreen()
+  // to move this document into fullscreen mode if allowed.
+  void RequestFullscreen(mozilla::UniquePtr<FullscreenRequest>&& aRequest);
 
-  // Removes all elements from the full-screen stack, removing full-scren
+  // Removes all elements from the fullscreen stack, removing full-scren
   // styles from the top element in the stack.
   void CleanupFullscreenState();
 
-  // Pushes aElement onto the full-screen stack, and removes full-screen styles
-  // from the former full-screen stack top, and its ancestors, and applies the
-  // styles to aElement. aElement becomes the new "full-screen element".
-  bool FullScreenStackPush(Element* aElement);
+  // Pushes aElement onto the fullscreen stack, and removes fullscreen styles
+  // from the former fullscreen stack top, and its ancestors, and applies the
+  // styles to aElement. aElement becomes the new "fullscreen element".
+  bool FullscreenStackPush(Element* aElement);
 
-  // Remove the top element from the full-screen stack. Removes the full-screen
+  // Remove the top element from the fullscreen stack. Removes the fullscreen
   // styles from the former top element, and applies them to the new top
   // element, if there is one.
-  void FullScreenStackPop();
+  void FullscreenStackPop();
 
   /**
    * Called when a frame in a child process has entered fullscreen or when a
@@ -1796,11 +1796,11 @@ public:
    nsresult RemoteFrameFullscreenReverted();
 
   /**
-   * Restores the previous full-screen element to full-screen status. If there
-   * is no former full-screen element, this exits full-screen, moving the
-   * top-level browser window out of full-screen mode.
+   * Restores the previous fullscreen element to fullscreen status. If there
+   * is no former fullscreen element, this exits fullscreen, moving the
+   * top-level browser window out of fullscreen mode.
    */
-  void RestorePreviousFullScreenState();
+  void RestorePreviousFullscreenState();
 
   /**
    * Returns true if this document is a fullscreen leaf document, i.e. it
@@ -3277,9 +3277,9 @@ public:
   void ReleaseCapture() const;
   void MozSetImageElement(const nsAString& aImageElementId, Element* aElement);
   nsIURI* GetDocumentURIObject() const;
-  // Not const because all the full-screen goop is not const
+  // Not const because all the fullscreen goop is not const
   bool FullscreenEnabled(mozilla::dom::CallerType aCallerType);
-  Element* FullScreenStackTop();
+  Element* FullscreenStackTop();
   bool Fullscreen()
   {
     return !!GetFullscreenElement();
@@ -4576,10 +4576,10 @@ protected:
   nsTHashtable<nsPtrHashKey<mozilla::dom::DOMIntersectionObserver>>
     mIntersectionObservers;
 
-  // Stack of full-screen elements. When we request full-screen we push the
-  // full-screen element onto this stack, and when we cancel full-screen we
-  // pop one off this stack, restoring the previous full-screen state
-  nsTArray<nsWeakPtr> mFullScreenStack;
+  // Stack of fullscreen elements. When we request fullscreen we push the
+  // fullscreen element onto this stack, and when we cancel fullscreen we
+  // pop one off this stack, restoring the previous fullscreen state
+  nsTArray<nsWeakPtr> mFullscreenStack;
 
   // The root of the doc tree in which this document is in. This is only
   // non-null when this document is in fullscreen mode.

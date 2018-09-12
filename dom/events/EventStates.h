@@ -214,8 +214,8 @@ private:
 // Content is URL's target (ref).
 #define NS_EVENT_STATE_URLTARGET     NS_DEFINE_EVENT_STATE_MACRO(8)
 // Content is the full screen element, or a frame containing the
-// current full-screen element.
-#define NS_EVENT_STATE_FULL_SCREEN   NS_DEFINE_EVENT_STATE_MACRO(9)
+// current fullscreen element.
+#define NS_EVENT_STATE_FULLSCREEN    NS_DEFINE_EVENT_STATE_MACRO(9)
 // Content is valid (and can be invalid).
 #define NS_EVENT_STATE_VALID         NS_DEFINE_EVENT_STATE_MACRO(10)
 // Content is invalid.
@@ -360,7 +360,7 @@ private:
   NS_EVENT_STATE_FOCUS |                      \
   NS_EVENT_STATE_FOCUSRING |                  \
   NS_EVENT_STATE_FOCUS_WITHIN |               \
-  NS_EVENT_STATE_FULL_SCREEN |                \
+  NS_EVENT_STATE_FULLSCREEN |                 \
   NS_EVENT_STATE_HOVER |                      \
   NS_EVENT_STATE_URLTARGET                    \
 )
