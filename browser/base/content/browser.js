@@ -3658,7 +3658,8 @@ const DOMEventHandler = {
         break;
 
       case "Link:SetIcon":
-        this.setIconFromLink(aMsg.target, aMsg.data.originalURL, aMsg.data.canUseForTab,
+        this.setIconFromLink(aMsg.target, aMsg.data.pageURL,
+                             aMsg.data.originalURL, aMsg.data.canUseForTab,
                              aMsg.data.expiration, aMsg.data.iconURL);
         break;
 
@@ -3696,14 +3697,15 @@ const DOMEventHandler = {
     tab.removeAttribute("pendingicon");
   },
 
-  setIconFromLink(aBrowser, aOriginalURL, aCanUseForTab, aExpiration, aIconURL) {
+  setIconFromLink(aBrowser, aPageURL, aOriginalURL, aCanUseForTab, aExpiration, aIconURL) {
     let tab = gBrowser.getTabForBrowser(aBrowser);
-    if (!tab)
+    if (!tab) {
       return false;
-
+    }
     try {
       PlacesUIUtils.loadFavicon(aBrowser, Services.scriptSecurityManager.getSystemPrincipal(),
-                                makeURI(aOriginalURL), aExpiration, makeURI(aIconURL));
+                                makeURI(aPageURL), makeURI(aOriginalURL),
+                                aExpiration, makeURI(aIconURL));
     } catch (ex) {
       Cu.reportError(ex);
     }
