@@ -225,7 +225,7 @@ PUSH_APK_SCOPES = {
     'central': 'googleplay:aurora',
     'beta': 'googleplay:beta',
     'release': 'googleplay:release',
-    'default': 'googleplay:invalid',
+    'default': 'googleplay:dep',
 }
 
 
