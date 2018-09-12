@@ -1658,22 +1658,17 @@ var gBrowserInit = {
           gBrowser.loadTabs(specs, {
             inBackground: false,
             replace: true,
-            // See below for the semantics of window.arguments. Only the minimum is supported.
-            userContextId: window.arguments[6],
-            triggeringPrincipal: window.arguments[8] || Services.scriptSecurityManager.getSystemPrincipal(),
-            allowInheritPrincipal: window.arguments[9],
+            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
           });
         } catch (e) {}
       } else if (window.arguments.length >= 3) {
-        // window.arguments[1]: unused (bug 871161)
-        //                 [2]: referrer (nsIURI | string)
+        // window.arguments[2]: referrer (nsIURI | string)
         //                 [3]: postData (nsIInputStream)
         //                 [4]: allowThirdPartyFixup (bool)
         //                 [5]: referrerPolicy (int)
         //                 [6]: userContextId (int)
         //                 [7]: originPrincipal (nsIPrincipal)
         //                 [8]: triggeringPrincipal (nsIPrincipal)
-        //                 [9]: allowInheritPrincipal (bool)
         let referrerURI = window.arguments[2];
         if (typeof(referrerURI) == "string") {
           try {
@@ -1691,9 +1686,9 @@ var gBrowserInit = {
                 // pass the origin principal (if any) and force its use to create
                 // an initial about:blank viewer if present:
                 window.arguments[7], !!window.arguments[7], window.arguments[8],
-                // TODO fix allowInheritPrincipal to default to false.
-                // Default to true unless explicitly set to false because of bug 1475201.
-                window.arguments[9] !== false);
+                // TODO fix allowInheritPrincipal
+                // (this is required by javascript: drop to the new window) Bug 1475201
+                true);
         window.focus();
       } else {
         // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
