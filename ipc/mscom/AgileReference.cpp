@@ -6,10 +6,11 @@
 
 #include "mozilla/mscom/AgileReference.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
+#include "mozilla/mscom/Utils.h"
 
 #if NTDDI_VERSION < NTDDI_WINBLUE
 
@@ -137,6 +138,7 @@ AgileReference::Resolve(REFIID aIid, void** aOutInterface) const
 {
   MOZ_ASSERT(aOutInterface);
   MOZ_ASSERT(mAgileRef || mGitCookie);
+  MOZ_ASSERT(IsCOMInitializedOnCurrentThread());
 
   if (!aOutInterface) {
     return E_INVALIDARG;
