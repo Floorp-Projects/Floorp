@@ -4,7 +4,11 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createElement,
+  Fragment,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
@@ -17,14 +21,15 @@ class FontPropertyValue extends PureComponent {
     return {
       autoIncrement: PropTypes.bool,
       className: PropTypes.string,
-      defaultValue: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
+      defaultValue: PropTypes.number,
       label: PropTypes.string.isRequired,
       min: PropTypes.number.isRequired,
       max: PropTypes.number.isRequired,
       name: PropTypes.string.isRequired,
+      nameLabel: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
       onChange: PropTypes.func.isRequired,
       step: PropTypes.number,
-      unit: PropTypes.oneOfType([ PropTypes.string, null ]),
+      unit: PropTypes.string,
       unitOptions: PropTypes.array,
       value: PropTypes.number,
     };
@@ -34,7 +39,9 @@ class FontPropertyValue extends PureComponent {
     return {
       autoIncrement: false,
       className: "",
+      nameLabel: false,
       step: 1,
+      unit: null,
       unitOptions: []
     };
   }
@@ -357,6 +364,37 @@ class FontPropertyValue extends PureComponent {
     );
   }
 
+  renderLabelContent() {
+    const {
+      label,
+      name,
+      nameLabel,
+    } = this.props;
+
+    const labelEl = dom.span(
+      {
+        className: "font-control-label-text",
+        "aria-describedby": nameLabel ? `detail-${name}` : null,
+      },
+      label
+    );
+
+    // If this.props.nameLabel is boolean true, the detail label text is the property
+    // name. If it's a string, use that. Otherwise, do not show the additional label text.
+    const detailEl = nameLabel ?
+      dom.span(
+        {
+          className: "font-control-label-detail",
+          id: `detail-${name}`
+        },
+        typeof nameLabel === "boolean" ? name : nameLabel
+      )
+      :
+      null;
+
+    return createElement(Fragment, null, labelEl, detailEl);
+  }
+
   render() {
     // Guard against bad axis data.
     if (this.props.min === this.props.max) {
@@ -409,11 +447,12 @@ class FontPropertyValue extends PureComponent {
       {
         className: `font-control ${this.props.className}`,
       },
-      dom.span(
+      dom.div(
         {
           className: "font-control-label",
+          title: this.props.label,
         },
-        this.props.label
+        this.renderLabelContent()
       ),
       dom.div(
         {

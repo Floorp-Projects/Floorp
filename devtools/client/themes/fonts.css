@@ -221,9 +221,23 @@
   display: inline-block;
   flex: 1;
   font-size: 12px;
-  max-width: 70px;
+  min-width: 70px;
   margin-right: 10px;
+  text-transform: capitalize;
   -moz-user-select: none;
+}
+
+.font-control-label-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.font-control-label-detail {
+  color: var(--grey-45);
+  font-size: smaller;
+  text-transform: none;
 }
 
 .font-value-input {
