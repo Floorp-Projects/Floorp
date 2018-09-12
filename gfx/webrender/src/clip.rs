@@ -328,6 +328,9 @@ pub struct ClipChainInstance {
     pub local_clip_rect: LayoutRect,
     pub has_non_root_coord_system: bool,
     pub has_non_local_clips: bool,
+    // If true, this clip chain requires allocation
+    // of a clip mask.
+    pub needs_mask: bool,
     // Combined clip rect in picture space (may
     // be more conservative that local_clip_rect).
     pub pic_clip_rect: PictureRect,
@@ -524,6 +527,7 @@ impl ClipStore {
         let first_clip_node_index = self.clip_node_indices.len() as u32;
         let mut has_non_root_coord_system = false;
         let mut has_non_local_clips = false;
+        let mut needs_mask = false;
 
         // For each potential clip node
         for node_info in self.clip_node_info.drain(..) {
@@ -580,6 +584,26 @@ impl ClipStore {
                         }
                     };
 
+                    // As a special case, a partial accept of a clip rect that is
+                    // in the same coordinate system as the primitive doesn't need
+                    // a clip mask. Instead, it can be handled by the primitive
+                    // vertex shader as part of the local clip rect. This is an
+                    // important optimization for reducing the number of clip
+                    // masks that are allocated on common pages.
+                    needs_mask |= match node.item {
+                        ClipItem::Rectangle(_, ClipMode::ClipOut) |
+                        ClipItem::RoundedRectangle(..) |
+                        ClipItem::Image(..) |
+                        ClipItem::BoxShadow(..) |
+                        ClipItem::LineDecoration(..) => {
+                            true
+                        }
+
+                        ClipItem::Rectangle(_, ClipMode::Clip) => {
+                            !flags.contains(ClipNodeFlags::SAME_COORD_SYSTEM)
+                        }
+                    };
+
                     // Store this in the index buffer for this clip chain instance.
                     self.clip_node_indices
                         .push(ClipNodeInstance::new(node_info.node_index, flags));
@@ -602,6 +626,7 @@ impl ClipStore {
             has_non_local_clips,
             local_clip_rect,
             pic_clip_rect,
+            needs_mask,
         })
     }
 }
