@@ -1770,7 +1770,7 @@ class ASTSerializer
     bool blockStatement(ListNode* node, MutableHandleValue dst);
     bool switchStatement(SwitchStatement* switchStmt, MutableHandleValue dst);
     bool switchCase(CaseClause* caseClause, MutableHandleValue dst);
-    bool tryStatement(TernaryNode* tryNode, MutableHandleValue dst);
+    bool tryStatement(TryNode* tryNode, MutableHandleValue dst);
     bool catchClause(BinaryNode* catchClause, MutableHandleValue dst);
 
     bool optExpression(ParseNode* pn, MutableHandleValue dst) {
@@ -2314,15 +2314,15 @@ ASTSerializer::catchClause(BinaryNode* catchClause, MutableHandleValue dst)
 }
 
 bool
-ASTSerializer::tryStatement(TernaryNode* tryNode, MutableHandleValue dst)
+ASTSerializer::tryStatement(TryNode* tryNode, MutableHandleValue dst)
 {
-    ParseNode* bodyNode = tryNode->kid1();
+    ParseNode* bodyNode = tryNode->body();
     MOZ_ASSERT(tryNode->pn_pos.encloses(bodyNode->pn_pos));
 
-    ParseNode* catchNode = tryNode->kid2();
+    LexicalScopeNode* catchNode = tryNode->catchScope();
     MOZ_ASSERT_IF(catchNode, tryNode->pn_pos.encloses(catchNode->pn_pos));
 
-    ParseNode* finallyNode = tryNode->kid3();
+    ParseNode* finallyNode = tryNode->finallyBlock();
     MOZ_ASSERT_IF(finallyNode, tryNode->pn_pos.encloses(finallyNode->pn_pos));
 
     RootedValue body(cx);
@@ -2464,7 +2464,7 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
         return switchStatement(&pn->as<SwitchStatement>(), dst);
 
       case ParseNodeKind::Try:
-        return tryStatement(&pn->as<TernaryNode>(), dst);
+        return tryStatement(&pn->as<TryNode>(), dst);
 
       case ParseNodeKind::With:
       case ParseNodeKind::While:

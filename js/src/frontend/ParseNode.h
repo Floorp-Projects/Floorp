@@ -526,6 +526,7 @@ enum ParseNodeArity
     PN_SCOPE                            /* lexical scope */
 };
 
+// FIXME: Remove `*Type` (bug 1489008)
 #define FOR_EACH_PARSENODE_SUBCLASS(macro) \
     macro(BinaryNode, BinaryNodeType, asBinary) \
     macro(AssignmentNode, AssignmentNodeType, asAssignment) \
@@ -564,6 +565,8 @@ enum ParseNodeArity
     macro(TernaryNode, TernaryNodeType, asTernary) \
     macro(ClassNode, ClassNodeType, asClass) \
     macro(ConditionalExpression, ConditionalExpressionType, asConditionalExpression) \
+    macro(TryNode, TryNodeType, asTry) \
+    \
     macro(UnaryNode, UnaryNodeType, asUnary) \
     macro(ThisLiteral, ThisLiteralType, asThisLiteral)
 
@@ -1682,6 +1685,37 @@ class ConditionalExpression : public TernaryNode
         MOZ_ASSERT_IF(match, node.is<TernaryNode>());
         MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
         return match;
+    }
+};
+
+class TryNode : public TernaryNode
+{
+  public:
+    TryNode(uint32_t begin, ParseNode* body, LexicalScopeNode* catchScope,
+            ParseNode* finallyBlock)
+      : TernaryNode(ParseNodeKind::Try, body, catchScope, finallyBlock,
+                    TokenPos(begin, (finallyBlock ? finallyBlock : catchScope)->pn_pos.end))
+    {
+        MOZ_ASSERT(body);
+        MOZ_ASSERT(catchScope || finallyBlock);
+    }
+
+    static bool test(const ParseNode& node) {
+        bool match = node.isKind(ParseNodeKind::Try);
+        MOZ_ASSERT_IF(match, node.is<TernaryNode>());
+        return match;
+    }
+
+    ParseNode* body() const {
+        return kid1();
+    }
+
+    LexicalScopeNode* catchScope() const {
+        return kid2() ? &kid2()->as<LexicalScopeNode>() : nullptr;
+    }
+
+    ParseNode* finallyBlock() const {
+        return kid3();
     }
 };
 

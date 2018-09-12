@@ -434,6 +434,8 @@ CallExpression:
 
 
 CatchClause:
+    type-ok:
+        LexicalScopeNode*
     init: |
         ParseContext::Statement stmt(parseContext_, StatementKind::Catch);
         ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
@@ -867,6 +869,10 @@ OptionalAssertedVarScope:
 OptionalAssertedParameterScope:
     type-ok:
         Ok
+
+OptionalCatchClause:
+    type-ok:
+        LexicalScopeNode*
 
 Parameter:
     sum-arms:
