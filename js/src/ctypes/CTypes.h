@@ -250,15 +250,8 @@ PrependString(JSContext* cx, StringBuilder<char16_t, N>& v, JSString* str)
   }
 }
 
-template <typename CharT>
-extern size_t
-GetDeflatedUTF8StringLength(JSContext* maybecx, const CharT* chars,
-                            size_t charsLength);
-
-template <typename CharT>
 MOZ_MUST_USE bool
-DeflateStringToUTF8Buffer(JSContext* maybecx, const CharT* src, size_t srclen,
-                          char* dst, size_t* dstlenp);
+ReportErrorIfUnpairedSurrogatePresent(JSContext* cx, JSLinearString* str);
 
 MOZ_MUST_USE JSObject*
 GetThisObject(JSContext* cx, const CallArgs& args, const char* msg);
@@ -266,12 +259,6 @@ GetThisObject(JSContext* cx, const CallArgs& args, const char* msg);
 /*******************************************************************************
 ** Function and struct API definitions
 *******************************************************************************/
-
-MOZ_ALWAYS_INLINE void
-ASSERT_OK(bool ok)
-{
-  MOZ_ASSERT(ok);
-}
 
 // for JS error reporting
 enum ErrorNum {
