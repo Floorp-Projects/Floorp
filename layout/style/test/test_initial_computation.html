@@ -102,14 +102,20 @@ function test_property(property)
     isnot(other_computed_f, initial_computed_f,
           "should be testing with values that compute to different things " +
           "for '" + property + "'");
-    // It's important (given the current design of nsRuleNode) that we're
-    // modifying the most specific rule that matches the element, and that
-    // we've already requested style while that rule was empty.  This
-    // means we'll have a cached aStartStruct from the parent in the rule
-    // tree (caching the "other" value), so we'll make sure we don't get
-    // the initial value from the luck of default-initialization.
-    // This means that it's important that we set the prereqs on
+    // It used to be important for values that are supposed to compute to the
+    // initial value (given the design of the old rule tree, nsRuleNode) that
+    // we're modifying the most specific rule that matches the element, and
+    // that we've already requested style while that rule was empty.  This
+    // means we'd have a cached aStartStruct from the parent in the rule
+    // tree (caching the "other" value), so we'd make sure we don't get the
+    // initial value from the luck of default-initialization.  This means
+    // that it would've been important that we set the prereqs on
     // gRule1.style rather than on gElement.style.
+    //
+    // However, the rule tree no longer stores cached structs, and we only
+    // temporarily cache reset structs during a single restyle.  So the
+    // particular failure mode this was designed to test for isn't as
+    // likely to eventuate.
     gRule2.style.setProperty(property, keyword, "");
     var initial_val_computed_n = get_computed_value(getComputedStyle(gElementN, ""), property);
     var initial_val_computed_f = get_computed_value(getComputedStyle(gElementF, ""), property);

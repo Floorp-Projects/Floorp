@@ -3270,7 +3270,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
       break;
     default: {
       MOZ_ASSERT(fieldsetContentDisplay->mDisplay == StyleDisplay::Block,
-                 "bug in nsRuleNode::ComputeDisplayData?");
+                 "bug in StyleAdjuster::adjust_for_fieldset_content?");
 
       contentFrame = NS_NewBlockFormattingContext(mPresShell, fieldsetContentStyle);
       contentFrameTop =
@@ -4897,9 +4897,10 @@ nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
 
   // Handle <math> specially, because it sometimes produces inlines
   if (tag == nsGkAtoms::math) {
-    // This needs to match the test in EnsureBlockDisplay in
-    // nsRuleNode.cpp.  Though the behavior here for the display:table
-    // case is pretty weird...
+    // The IsBlockOutsideStyle() check must match what
+    // specified::Display::equivalent_block_display is checking for
+    // already-block-outside things. Though the behavior here for the
+    // display:table case is pretty weird...
     if (aStyle.StyleDisplay()->IsBlockOutsideStyle()) {
       static const FrameConstructionData sBlockMathData =
         FCDATA_DECL(FCDATA_FORCE_NULL_ABSPOS_CONTAINER |
