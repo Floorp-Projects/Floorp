@@ -752,7 +752,7 @@ nsBlockFrame::GetMinISize(gfxContext *aRenderingContext)
   if (firstInFlow != this)
     return firstInFlow->GetMinISize(aRenderingContext);
 
-  DISPLAY_MIN_WIDTH(this, mMinWidth);
+  DISPLAY_MIN_INLINE_SIZE(this, mMinWidth);
 
   CheckIntrinsicCacheAgainstShrinkWrapState();
 
@@ -845,7 +845,7 @@ nsBlockFrame::GetPrefISize(gfxContext *aRenderingContext)
   if (firstInFlow != this)
     return firstInFlow->GetPrefISize(aRenderingContext);
 
-  DISPLAY_PREF_WIDTH(this, mPrefWidth);
+  DISPLAY_PREF_INLINE_SIZE(this, mPrefWidth);
 
   CheckIntrinsicCacheAgainstShrinkWrapState();
 

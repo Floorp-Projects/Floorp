@@ -19,7 +19,7 @@ nsLeafFrame::~nsLeafFrame()
 nsLeafFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_MIN_INLINE_SIZE(this, result);
   result = GetIntrinsicISize();
   return result;
 }
@@ -28,7 +28,7 @@ nsLeafFrame::GetMinISize(gfxContext *aRenderingContext)
 nsLeafFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_PREF_WIDTH(this, result);
+  DISPLAY_PREF_INLINE_SIZE(this, result);
   result = GetIntrinsicISize();
   return result;
 }

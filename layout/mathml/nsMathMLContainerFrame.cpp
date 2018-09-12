@@ -977,7 +977,7 @@ nsMathMLContainerFrame::UpdateIntrinsicWidth(gfxContext* aRenderingContext)
 nsMathMLContainerFrame::GetMinISize(gfxContext* aRenderingContext)
 {
   nscoord result;
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_MIN_INLINE_SIZE(this, result);
   UpdateIntrinsicWidth(aRenderingContext);
   result = mIntrinsicWidth;
   return result;
@@ -987,7 +987,7 @@ nsMathMLContainerFrame::GetMinISize(gfxContext* aRenderingContext)
 nsMathMLContainerFrame::GetPrefISize(gfxContext* aRenderingContext)
 {
   nscoord result;
-  DISPLAY_PREF_WIDTH(this, result);
+  DISPLAY_PREF_INLINE_SIZE(this, result);
   UpdateIntrinsicWidth(aRenderingContext);
   result = mIntrinsicWidth;
   return result;

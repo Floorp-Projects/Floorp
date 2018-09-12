@@ -756,7 +756,7 @@ nsTableCellFrame::GetColSpan()
 nsTableCellFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result = 0;
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_MIN_INLINE_SIZE(this, result);
 
   nsIFrame *inner = mFrames.FirstChild();
   result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, inner,
@@ -768,7 +768,7 @@ nsTableCellFrame::GetMinISize(gfxContext *aRenderingContext)
 nsTableCellFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result = 0;
-  DISPLAY_PREF_WIDTH(this, result);
+  DISPLAY_PREF_INLINE_SIZE(this, result);
 
   nsIFrame *inner = mFrames.FirstChild();
   result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, inner,
