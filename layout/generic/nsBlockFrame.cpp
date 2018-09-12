@@ -16,6 +16,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ToString.h"
 #include "mozilla/UniquePtr.h"
 
 #include "nsCOMPtr.h"
@@ -4274,7 +4275,7 @@ nsBlockFrame::ReflowInlineFrame(BlockReflowInput& aState,
 
 #ifdef REALLY_NOISY_REFLOW
   nsFrame::ListTag(stdout, aFrame);
-  printf(": status=%s\n", frameReflowStatus.ToString().get());
+  printf(": status=%s\n", ToString(frameReflowStatus).c_str());
 #endif
 
 #if defined(REFLOW_STATUS_COVERAGE)
