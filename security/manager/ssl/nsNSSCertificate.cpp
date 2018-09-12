@@ -25,6 +25,7 @@
 #include "nsIX509Cert.h"
 #include "nsNSSASN1Object.h"
 #include "nsNSSCertHelper.h"
+#include "nsNSSCertTrust.h"
 #include "nsNSSCertValidity.h"
 #include "nsPK11TokenDB.h"
 #include "nsPKCS12Blob.h"
@@ -138,6 +139,31 @@ nsNSSCertificate::~nsNSSCertificate()
       SEC_DeletePermCertificate(mCert.get());
     }
   }
+}
+
+static uint32_t
+getCertType(CERTCertificate* cert)
+{
+  nsNSSCertTrust trust(cert->trust);
+  if (cert->nickname && trust.HasAnyUser()) {
+    return nsIX509Cert::USER_CERT;
+  }
+  if (trust.HasAnyCA()) {
+    return nsIX509Cert::CA_CERT;
+  }
+  if (trust.HasPeer(true, false)) {
+    return nsIX509Cert::SERVER_CERT;
+  }
+  if (trust.HasPeer(false, true) && cert->emailAddr) {
+    return nsIX509Cert::EMAIL_CERT;
+  }
+  if (CERT_IsCACert(cert, nullptr)) {
+    return nsIX509Cert::CA_CERT;
+  }
+  if (cert->emailAddr) {
+    return nsIX509Cert::EMAIL_CERT;
+  }
+  return nsIX509Cert::UNKNOWN_CERT;
 }
 
 nsresult
@@ -877,12 +903,6 @@ nsNSSCertList::DupCertList(const UniqueCERTCertList& certList)
     Unused << cert.release(); // Ownership transferred to the cert list.
   }
   return newList;
-}
-
-CERTCertList*
-nsNSSCertList::GetRawCertList()
-{
-  return mCertList.get();
 }
 
 NS_IMETHODIMP

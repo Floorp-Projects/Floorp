@@ -8,11 +8,6 @@ interface nsISimpleEnumerator;
 interface nsIX509Cert;
 
 %{C++
-typedef struct CERTCertListStr CERTCertList;
-%}
-[ptr] native CERTCertListPtr(CERTCertList);
-
-%{C++
 class nsNSSCertList;
 %}
 [ptr] native nsNSSCertListPtr(nsNSSCertList);
@@ -23,12 +18,6 @@ interface nsIX509CertList : nsISupports {
   void addCert(in nsIX509Cert cert);
   [must_use]
   nsISimpleEnumerator getEnumerator();
-
-  /**
-   * Returns the raw, backing cert list.
-   */
-  [notxpcom, noscript, must_use]
-  CERTCertListPtr getRawCertList();
 
   /**
    * Test whether two certificate list instances represent the same

@@ -110,11 +110,6 @@ protected:
   nsCertCompareFunc GetCompareFuncFromCertType(uint32_t aType);
   int32_t CountOrganizations();
 
-  nsresult GetCertsByType(uint32_t aType, nsCertCompareFunc aCertCmpFn,
-                          void *aCertCmpFnArg);
-
-  nsresult GetCertsByTypeFromCache(nsIX509CertList *aCache, uint32_t aType,
-                                   nsCertCompareFunc aCertCmpFn, void *aCertCmpFnArg);
 private:
   static const uint32_t kInitialCacheLength = 64;
 
@@ -136,7 +131,7 @@ private:
   void FreeCertArray();
   nsresult UpdateUIContents();
 
-  nsresult GetCertsByTypeFromCertList(CERTCertList *aCertList,
+  nsresult GetCertsByTypeFromCertList(nsIX509CertList* aCertList,
                                       uint32_t aType,
                                       nsCertCompareFunc  aCertCmpFn,
                                       void              *aCertCmpFnArg);
