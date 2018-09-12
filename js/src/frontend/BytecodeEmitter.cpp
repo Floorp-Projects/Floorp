@@ -1419,22 +1419,22 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
 
       case ParseNodeKind::Try:
       {
-        TernaryNode* tryNode = &pn->as<TernaryNode>();
-        if (!checkSideEffects(tryNode->kid1(), answer)) {
+        TryNode* tryNode = &pn->as<TryNode>();
+        if (!checkSideEffects(tryNode->body(), answer)) {
             return false;
         }
         if (*answer) {
             return true;
         }
-        if (ParseNode* catchScope = tryNode->kid2()) {
-            if (!checkSideEffects(&catchScope->as<LexicalScopeNode>(), answer)) {
+        if (LexicalScopeNode* catchScope = tryNode->catchScope()) {
+            if (!checkSideEffects(catchScope, answer)) {
                 return false;
             }
             if (*answer) {
                 return true;
             }
         }
-        if (ParseNode* finallyBlock = tryNode->kid3()) {
+        if (ParseNode* finallyBlock = tryNode->finallyBlock()) {
             if (!checkSideEffects(finallyBlock, answer)) {
                 return false;
             }
@@ -4813,10 +4813,10 @@ BytecodeEmitter::emitCatch(BinaryNode* catchClause)
 // Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See the
 // comment on EmitSwitch.
 MOZ_NEVER_INLINE bool
-BytecodeEmitter::emitTry(TernaryNode* tryNode)
+BytecodeEmitter::emitTry(TryNode* tryNode)
 {
-    ParseNode* catchScope = tryNode->kid2();
-    ParseNode* finallyNode = tryNode->kid3();
+    LexicalScopeNode* catchScope = tryNode->catchScope();
+    ParseNode* finallyNode = tryNode->finallyBlock();
 
     TryEmitter::Kind kind;
     if (catchScope) {
@@ -4835,7 +4835,7 @@ BytecodeEmitter::emitTry(TernaryNode* tryNode)
         return false;
     }
 
-    if (!emitTree(tryNode->kid1())) {
+    if (!emitTree(tryNode->body())) {
         return false;
     }
 
@@ -4857,7 +4857,6 @@ BytecodeEmitter::emitTry(TernaryNode* tryNode)
         }
 
         // Emit the lexical scope and catch body.
-        MOZ_ASSERT(catchScope->is<LexicalScopeNode>());
         if (!emitTree(catchScope)) {
             return false;
         }
@@ -9036,7 +9035,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
         break;
 
       case ParseNodeKind::Try:
-        if (!emitTry(&pn->as<TernaryNode>())) {
+        if (!emitTry(&pn->as<TryNode>())) {
             return false;
         }
         break;

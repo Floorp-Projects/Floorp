@@ -729,20 +729,19 @@ class NameResolver
           // and finally block are optional (but at least one or the other must
           // be present).
           case ParseNodeKind::Try: {
-            TernaryNode* tryNode = &cur->as<TernaryNode>();
-            if (!resolve(tryNode->kid1(), prefix)) {
+            TryNode* tryNode = &cur->as<TryNode>();
+            if (!resolve(tryNode->body(), prefix)) {
                 return false;
             }
-            MOZ_ASSERT(tryNode->kid2() || tryNode->kid3());
-            if (tryNode->kid2()) {
-                LexicalScopeNode* catchScope = &tryNode->kid2()->as<LexicalScopeNode>();
+            MOZ_ASSERT(tryNode->catchScope() || tryNode->finallyBlock());
+            if (LexicalScopeNode* catchScope = tryNode->catchScope()) {
                 MOZ_ASSERT(catchScope->scopeBody()->isKind(ParseNodeKind::Catch));
                 MOZ_ASSERT(catchScope->scopeBody()->is<BinaryNode>());
                 if (!resolve(catchScope->scopeBody(), prefix)) {
                     return false;
                 }
             }
-            if (ParseNode* finallyBlock = tryNode->kid3()) {
+            if (ParseNode* finallyBlock = tryNode->finallyBlock()) {
                 if (!resolve(finallyBlock, prefix)) {
                     return false;
                 }
