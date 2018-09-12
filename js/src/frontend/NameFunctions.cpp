@@ -314,12 +314,12 @@ class NameResolver
      * for new variables and then return an anonymous function using this scope.
      */
     bool isDirectCall(int pos, ParseNode* cur) {
-        return pos >= 0 && call(parents[pos]) && parents[pos]->pn_head == cur;
+        return pos >= 0 && call(parents[pos]) && parents[pos]->pn_left == cur;
     }
 
-    bool resolveTemplateLiteral(ParseNode* node, HandleAtom prefix) {
+    bool resolveTemplateLiteral(ListNode* node, HandleAtom prefix) {
         MOZ_ASSERT(node->isKind(ParseNodeKind::TemplateStringList));
-        ParseNode* element = node->pn_head;
+        ParseNode* element = node->head();
         while (true) {
             MOZ_ASSERT(element->isKind(ParseNodeKind::TemplateString));
 
@@ -350,18 +350,17 @@ class NameResolver
         // The callsite object node is first.  This node only contains
         // internal strings or undefined and an array -- no user-controlled
         // expressions.
-        ParseNode* element = node->pn_right->pn_head;
+        CallSiteNode* element = &node->pn_right->as<ListNode>().head()->as<CallSiteNode>();
 #ifdef DEBUG
         {
-            MOZ_ASSERT(element->isKind(ParseNodeKind::CallSiteObj));
-            ParseNode* array = element->pn_head;
-            MOZ_ASSERT(array->isKind(ParseNodeKind::Array));
-            for (ParseNode* kid = array->pn_head; kid; kid = kid->pn_next) {
-                MOZ_ASSERT(kid->isKind(ParseNodeKind::TemplateString));
+            ListNode* rawNodes = &element->head()->as<ListNode>();
+            MOZ_ASSERT(rawNodes->isKind(ParseNodeKind::Array));
+            for (ParseNode* raw : rawNodes->contents()) {
+                MOZ_ASSERT(raw->isKind(ParseNodeKind::TemplateString));
             }
-            for (ParseNode* next = array->pn_next; next; next = next->pn_next) {
-                MOZ_ASSERT(next->isKind(ParseNodeKind::TemplateString) ||
-                           next->isKind(ParseNodeKind::RawUndefined));
+            for (ParseNode* cooked : element->contentsFrom(rawNodes->pn_next)) {
+                MOZ_ASSERT(cooked->isKind(ParseNodeKind::TemplateString) ||
+                           cooked->isKind(ParseNodeKind::RawUndefined));
             }
         }
 #endif
@@ -767,8 +766,7 @@ class NameResolver
           case ParseNodeKind::Var:
           case ParseNodeKind::Const:
           case ParseNodeKind::Let:
-            MOZ_ASSERT(cur->isArity(PN_LIST));
-            for (ParseNode* element = cur->pn_head; element; element = element->pn_next) {
+            for (ParseNode* element : cur->as<ListNode>().contents()) {
                 if (!resolve(element, prefix)) {
                     return false;
                 }
@@ -777,8 +775,7 @@ class NameResolver
 
           case ParseNodeKind::Object:
           case ParseNodeKind::ClassMethodList:
-            MOZ_ASSERT(cur->isArity(PN_LIST));
-            for (ParseNode* element = cur->pn_head; element; element = element->pn_next) {
+            for (ParseNode* element : cur->as<ListNode>().contents()) {
                 if (!resolve(element, prefix)) {
                     return false;
                 }
@@ -788,8 +785,7 @@ class NameResolver
           // A template string list's contents alternate raw template string
           // contents with expressions interpolated into the overall literal.
           case ParseNodeKind::TemplateStringList:
-            MOZ_ASSERT(cur->isArity(PN_LIST));
-            if (!resolveTemplateLiteral(cur, prefix)) {
+            if (!resolveTemplateLiteral(&cur->as<ListNode>(), prefix)) {
                 return false;
             }
             break;
@@ -817,8 +813,7 @@ class NameResolver
           // the Arguments node used by tagged template literals, since that is
           // special-cased inside of resolveTaggedTemplate.
           case ParseNodeKind::Arguments:
-            MOZ_ASSERT(cur->isArity(PN_LIST));
-            for (ParseNode* element = cur->pn_head; element; element = element->pn_next) {
+            for (ParseNode* element : cur->as<ListNode>().contents()) {
                 if (!resolve(element, prefix)) {
                     return false;
                 }
@@ -830,15 +825,15 @@ class NameResolver
           // contain a single export batch specifier.
           case ParseNodeKind::ExportSpecList:
           case ParseNodeKind::ImportSpecList: {
-            MOZ_ASSERT(cur->isArity(PN_LIST));
 #ifdef DEBUG
             bool isImport = cur->isKind(ParseNodeKind::ImportSpecList);
-            ParseNode* item = cur->pn_head;
+            ListNode* list = &cur->as<ListNode>();
+            ParseNode* item = list->head();
             if (!isImport && item && item->isKind(ParseNodeKind::ExportBatchSpec)) {
                 MOZ_ASSERT(item->isArity(PN_NULLARY));
                 break;
             }
-            for (; item; item = item->pn_next) {
+            for (ParseNode* item : list->contents()) {
                 MOZ_ASSERT(item->isKind(isImport
                                         ? ParseNodeKind::ImportSpec
                                         : ParseNodeKind::ExportSpec));
