@@ -30,15 +30,17 @@ struct CounterAndBit
 void
 printDiagnosticMessage(uint8_t bit, uint64_t seen)
 {
-    if (!ShowDiagnostics)
+    if (!ShowDiagnostics) {
         return;
+    }
 
     fprintf(stderr, "Thread %d saw ", bit);
     for (auto i : mozilla::IntegerRange(NumThreads)) {
-        if (seen & (uint64_t(1) << i))
+        if (seen & (uint64_t(1) << i)) {
             fprintf(stderr, "1");
-        else
+        } else {
             fprintf(stderr, "0");
+        }
     }
     fprintf(stderr, "\n");
 }
@@ -81,8 +83,9 @@ BEGIN_TEST(testExclusiveData)
         CHECK(threads.back().init(setBitAndCheck, counterAndBit));
     }
 
-    for (auto& thread : threads)
+    for (auto& thread : threads) {
         thread.join();
+    }
 
     return true;
 }

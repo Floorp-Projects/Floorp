@@ -57,8 +57,9 @@ virtual JSContext* createContext() override {
     // the nursery will start out with only a single chunk before triggering a
     // major GC.)
     JSContext* cx = JS_NewContext(1024 * 1024, 128 * 1024);
-    if (!cx)
+    if (!cx) {
         return nullptr;
+    }
     setNativeStackQuota(cx);
     return cx;
 }

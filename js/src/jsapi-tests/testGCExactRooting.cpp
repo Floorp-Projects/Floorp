@@ -182,10 +182,12 @@ FillMyHashMap(JSContext* cx, MutableHandle<MyHashMap> map)
         char buffer[2];
         buffer[0] = 'a' + i;
         buffer[1] = '\0';
-        if (!JS_SetProperty(cx, obj, buffer, val))
+        if (!JS_SetProperty(cx, obj, buffer, val)) {
             return false;
-        if (!map.putNew(obj->as<NativeObject>().lastProperty(), obj))
+        }
+        if (!map.putNew(obj->as<NativeObject>().lastProperty(), obj)) {
             return false;
+        }
     }
     return true;
 }
@@ -195,8 +197,9 @@ CheckMyHashMap(JSContext* cx, Handle<MyHashMap> map)
 {
     for (auto r = map.all(); !r.empty(); r.popFront()) {
         RootedObject obj(cx, r.front().value());
-        if (obj->as<NativeObject>().lastProperty() != r.front().key())
+        if (obj->as<NativeObject>().lastProperty() != r.front().key()) {
             return false;
+        }
     }
     return true;
 }
@@ -248,8 +251,9 @@ BEGIN_TEST(testGCRootedVector)
     }
 
     // Ensure iterator enumeration works through the rooted.
-    for (auto shape : shapes)
+    for (auto shape : shapes) {
         CHECK(shape);
+    }
 
     CHECK(receiveConstRefToShapeVector(shapes));
 
@@ -264,8 +268,9 @@ bool
 receiveConstRefToShapeVector(const JS::Rooted<GCVector<Shape*>>& rooted)
 {
     // Ensure range enumeration works through the reference.
-    for (auto shape : rooted)
+    for (auto shape : rooted) {
         CHECK(shape);
+    }
     return true;
 }
 
@@ -273,8 +278,9 @@ bool
 receiveHandleToShapeVector(JS::Handle<GCVector<Shape*>> handle)
 {
     // Ensure range enumeration works through the handle.
-    for (auto shape : handle)
+    for (auto shape : handle) {
         CHECK(shape);
+    }
     return true;
 }
 
@@ -282,8 +288,9 @@ bool
 receiveMutableHandleToShapeVector(JS::MutableHandle<GCVector<Shape*>> handle)
 {
     // Ensure range enumeration works through the handle.
-    for (auto shape : handle)
+    for (auto shape : handle) {
         CHECK(shape);
+    }
     return true;
 }
 END_TEST(testGCRootedVector)
@@ -340,16 +347,19 @@ FillVector(JSContext* cx, MutableHandle<ShapeVec> shapes)
         char buffer[2];
         buffer[0] = 'a' + i;
         buffer[1] = '\0';
-        if (!JS_SetProperty(cx, obj, buffer, val))
+        if (!JS_SetProperty(cx, obj, buffer, val)) {
             return false;
-        if (!shapes.append(obj->as<NativeObject>().lastProperty()))
+        }
+        if (!shapes.append(obj->as<NativeObject>().lastProperty())) {
             return false;
+        }
     }
 
     // Ensure iterator enumeration works through the mutable handle.
     for (auto shape : shapes) {
-        if (!shape)
+        if (!shape) {
             return false;
+        }
     }
 
     return true;
@@ -364,16 +374,19 @@ CheckVector(JSContext* cx, Handle<ShapeVec> shapes)
         buffer[0] = 'a' + i;
         buffer[1] = '\0';
         bool match;
-        if (!JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes[i]->propid()), buffer, &match))
+        if (!JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes[i]->propid()), buffer, &match)) {
             return false;
-        if (!match)
+        }
+        if (!match) {
             return false;
+        }
     }
 
     // Ensure iterator enumeration works through the handle.
     for (auto shape : shapes) {
-        if (!shape)
+        if (!shape) {
             return false;
+        }
     }
 
     return true;

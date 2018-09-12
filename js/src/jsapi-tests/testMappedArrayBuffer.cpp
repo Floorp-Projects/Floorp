@@ -68,8 +68,9 @@ JSObject* CreateNewObject(const int offset, const int length)
     int fd = open(test_filename, O_RDONLY);
     void* ptr = JS_CreateMappedArrayBufferContents(GET_OS_FD(fd), offset, length);
     close(fd);
-    if (!ptr)
+    if (!ptr) {
         return nullptr;
+    }
     JSObject* obj = JS_NewMappedArrayBufferWithContents(cx, length, ptr);
     if (!obj) {
         JS_ReleaseMappedArrayBufferContents(ptr, length);
@@ -85,10 +86,11 @@ bool VerifyObject(JS::HandleObject obj, uint32_t offset, uint32_t length, const 
     CHECK(obj);
     CHECK(JS_IsArrayBufferObject(obj));
     CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), length);
-    if (mapped)
+    if (mapped) {
         CHECK(JS_IsMappedArrayBufferObject(obj));
-    else
+    } else {
         CHECK(!JS_IsMappedArrayBufferObject(obj));
+    }
     bool sharedDummy;
     const char* data =
         reinterpret_cast<const char*>(JS_GetArrayBufferData(obj, &sharedDummy, nogc));
@@ -111,8 +113,9 @@ bool TestReleaseContents()
     int fd = open(test_filename, O_RDONLY);
     void* ptr = JS_CreateMappedArrayBufferContents(GET_OS_FD(fd), 0, 12);
     close(fd);
-    if (!ptr)
+    if (!ptr) {
         return false;
+    }
     JS_ReleaseMappedArrayBufferContents(ptr, 12);
 
     return true;
@@ -163,8 +166,9 @@ bool TestTransferObject()
 
     // Create an Array of transferable values.
     JS::AutoValueVector argv(cx);
-    if (!argv.append(v1))
+    if (!argv.append(v1)) {
         return false;
+    }
 
     JS::RootedObject obj(cx, JS_NewArrayObject(cx, JS::HandleValueArray::subarray(argv, 0, 1)));
     CHECK(obj);

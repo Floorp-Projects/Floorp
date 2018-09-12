@@ -31,8 +31,9 @@ static JSObject*
 CreatePromise(JSContext* cx)
 {
     RootedFunction executor(cx, JS_NewFunction(cx, PromiseExecutor, 2, 0, "executor"));
-    if (!executor)
+    if (!executor) {
         return nullptr;
+    }
     return JS::NewPromiseObject(cx, executor);
 }
 
@@ -49,8 +50,9 @@ END_TEST(testPromise_NewPromise)
 BEGIN_TEST(testPromise_GetPromiseState)
 {
     RootedObject promise(cx, CreatePromise(cx));
-    if (!promise)
+    if (!promise) {
         return false;
+    }
 
     CHECK(JS::GetPromiseState(promise) == JS::PromiseState::Pending);
 
@@ -61,8 +63,9 @@ END_TEST(testPromise_GetPromiseState)
 BEGIN_TEST(testPromise_ResolvePromise)
 {
     RootedObject promise(cx, CreatePromise(cx));
-    if (!promise)
+    if (!promise) {
         return false;
+    }
 
     RootedValue result(cx);
     result.setInt32(42);
@@ -77,8 +80,9 @@ END_TEST(testPromise_ResolvePromise)
 BEGIN_TEST(testPromise_RejectPromise)
 {
     RootedObject promise(cx, CreatePromise(cx));
-    if (!promise)
+    if (!promise) {
         return false;
+    }
 
     RootedValue result(cx);
     result.setInt32(42);
@@ -121,15 +125,18 @@ PromiseCatchHandler(JSContext* cx, unsigned argc, Value* vp)
 BEGIN_TEST(testPromise_PromiseThen)
 {
     RootedObject promise(cx, CreatePromise(cx));
-    if (!promise)
+    if (!promise) {
         return false;
+    }
 
     RootedFunction thenHandler(cx, JS_NewFunction(cx, PromiseThenHandler, 1, 0, "thenHandler"));
-    if (!thenHandler)
+    if (!thenHandler) {
         return false;
+    }
     RootedFunction catchHandler(cx, JS_NewFunction(cx, PromiseCatchHandler, 1, 0, "catchHandler"));
-    if (!catchHandler)
+    if (!catchHandler) {
         return false;
+    }
     JS::AddPromiseReactions(cx, promise, thenHandler, catchHandler);
 
     RootedValue result(cx);
@@ -146,15 +153,18 @@ END_TEST(testPromise_PromiseThen)
 BEGIN_TEST(testPromise_PromiseCatch)
 {
     RootedObject promise(cx, CreatePromise(cx));
-    if (!promise)
+    if (!promise) {
         return false;
+    }
 
     RootedFunction thenHandler(cx, JS_NewFunction(cx, PromiseThenHandler, 1, 0, "thenHandler"));
-    if (!thenHandler)
+    if (!thenHandler) {
         return false;
+    }
     RootedFunction catchHandler(cx, JS_NewFunction(cx, PromiseCatchHandler, 1, 0, "catchHandler"));
-    if (!catchHandler)
+    if (!catchHandler) {
         return false;
+    }
     JS::AddPromiseReactions(cx, promise, thenHandler, catchHandler);
 
     RootedValue result(cx);

@@ -53,8 +53,9 @@ BEGIN_TEST(testGCAllocator)
     bool growUp;
     CHECK(addressesGrowUp(&growUp));
 
-    if (growUp)
+    if (growUp) {
         return testGCAllocatorUp(PageSize);
+    }
     return testGCAllocatorDown(PageSize);
 }
 
@@ -84,14 +85,16 @@ addressesGrowUp(bool* resultOut)
     int downCount = 0;
 
     for (unsigned i = 0; i < ChunksToTest - 1; i++) {
-        if (chunks[i] < chunks[i + 1])
+        if (chunks[i] < chunks[i + 1]) {
             upCount++;
-        else
+        } else {
             downCount++;
+        }
     }
 
-    for (unsigned i = 0; i < ChunksToTest; i++)
+    for (unsigned i = 0; i < ChunksToTest; i++) {
         unmapPages(chunks[i], 2 * Chunk);
+    }
 
     /* Check results were mostly consistent. */
     CHECK(abs(upCount - downCount) >= ThresholdCount);
@@ -119,8 +122,9 @@ testGCAllocatorUp(const size_t PageSize)
     void* chunkPool[MaxTempChunks];
     // Allocate a contiguous chunk that we can partition for testing.
     void* stagingArea = mapMemory(UnalignedSize);
-    if (!stagingArea)
+    if (!stagingArea) {
         return false;
+    }
     // Ensure that the staging area is aligned.
     unmapPages(stagingArea, UnalignedSize);
     if (offsetFromAligned(stagingArea)) {
@@ -131,8 +135,9 @@ testGCAllocatorUp(const size_t PageSize)
     mapMemoryAt(stagingArea, StagingSize);
     // Make sure there are no available chunks below the staging area.
     int tempChunks;
-    if (!fillSpaceBeforeStagingArea(tempChunks, stagingArea, chunkPool, false))
+    if (!fillSpaceBeforeStagingArea(tempChunks, stagingArea, chunkPool, false)) {
         return false;
+    }
     // Unmap the staging area so we can set it up for testing.
     unmapPages(stagingArea, StagingSize);
     // Check that the first chunk is used if it is aligned.
@@ -156,8 +161,9 @@ testGCAllocatorUp(const size_t PageSize)
                             UseLastDitchAllocator));
 
     // Clean up.
-    while (--tempChunks >= 0)
+    while (--tempChunks >= 0) {
         unmapPages(chunkPool[tempChunks], 2 * Chunk);
+    }
     return true;
 }
 
@@ -168,8 +174,9 @@ testGCAllocatorDown(const size_t PageSize)
     void* chunkPool[MaxTempChunks];
     // Allocate a contiguous chunk that we can partition for testing.
     void* stagingArea = mapMemory(UnalignedSize);
-    if (!stagingArea)
+    if (!stagingArea) {
         return false;
+    }
     // Ensure that the staging area is aligned.
     unmapPages(stagingArea, UnalignedSize);
     if (offsetFromAligned(stagingArea)) {
@@ -181,8 +188,9 @@ testGCAllocatorDown(const size_t PageSize)
     mapMemoryAt(stagingArea, StagingSize);
     // Make sure there are no available chunks above the staging area.
     int tempChunks;
-    if (!fillSpaceBeforeStagingArea(tempChunks, stagingArea, chunkPool, true))
+    if (!fillSpaceBeforeStagingArea(tempChunks, stagingArea, chunkPool, true)) {
         return false;
+    }
     // Unmap the staging area so we can set it up for testing.
     unmapPages(stagingArea, StagingSize);
     // Check that the first chunk is used if it is aligned.
@@ -200,8 +208,9 @@ testGCAllocatorDown(const size_t PageSize)
                             UseLastDitchAllocator));
 
     // Clean up.
-    while (--tempChunks >= 0)
+    while (--tempChunks >= 0) {
         unmapPages(chunkPool[tempChunks], 2 * Chunk);
+    }
     return true;
 }
 
@@ -215,10 +224,12 @@ fillSpaceBeforeStagingArea(int& tempChunks, void* stagingArea,
     while (tempChunks < MaxTempChunks && chunkPool[tempChunks - 1] &&
            (chunkPool[tempChunks - 1] < stagingArea) ^ addressesGrowDown) {
         chunkPool[tempChunks++] = mapMemory(2 * Chunk);
-        if (!chunkPool[tempChunks - 1])
+        if (!chunkPool[tempChunks - 1]) {
             break; // We already have our staging area, so OOM here is okay.
-        if ((chunkPool[tempChunks - 1] < chunkPool[tempChunks - 2]) ^ addressesGrowDown)
+        }
+        if ((chunkPool[tempChunks - 1] < chunkPool[tempChunks - 2]) ^ addressesGrowDown) {
             break; // The address growth direction is inconsistent!
+        }
     }
     // OOM also means success in this case.
     if (!chunkPool[tempChunks - 1]) {
@@ -229,8 +240,9 @@ fillSpaceBeforeStagingArea(int& tempChunks, void* stagingArea,
     if ((chunkPool[tempChunks - 1] < stagingArea) ^ addressesGrowDown || (tempChunks > 1 &&
             (chunkPool[tempChunks - 1] < chunkPool[tempChunks - 2]) ^ addressesGrowDown))
     {
-        while (--tempChunks >= 0)
+        while (--tempChunks >= 0) {
             unmapPages(chunkPool[tempChunks], 2 * Chunk);
+        }
         unmapPages(stagingArea, StagingSize);
         return false;
     }
@@ -255,26 +267,31 @@ positionIsCorrect(const char* str, void* base, void** chunkPool, int tempChunks,
     void* desired = (void*)(uintptr_t(base) + i * Chunk);
     // Map the regions indicated by str.
     for (i = 0; i < len; ++i) {
-        if (str[i] == 'x')
+        if (str[i] == 'x') {
             mapMemoryAt((void*)(uintptr_t(base) +  i * Chunk), Chunk);
+        }
     }
     // Allocate using the GC's allocator.
     void* result;
-    if (allocator == UseNormalAllocator)
+    if (allocator == UseNormalAllocator) {
         result = js::gc::MapAlignedPages(2 * Chunk, Alignment);
-    else
+    } else {
         result = js::gc::TestMapAlignedPagesLastDitch(2 * Chunk, Alignment);
+    }
     // Clean up the mapped regions.
-    if (result)
+    if (result) {
         js::gc::UnmapPages(result, 2 * Chunk);
+    }
     for (--i; i >= 0; --i) {
-        if (str[i] == 'x')
+        if (str[i] == 'x') {
             js::gc::UnmapPages((void*)(uintptr_t(base) +  i * Chunk), Chunk);
+        }
     }
     // CHECK returns, so clean up on failure.
     if (result != desired) {
-        while (--tempChunks >= 0)
+        while (--tempChunks >= 0) {
             js::gc::UnmapPages(chunkPool[tempChunks], 2 * Chunk);
+        }
     }
     return result == desired;
 }
@@ -324,11 +341,13 @@ mapMemoryAt(void* desired, size_t length)
     MOZ_RELEASE_ASSERT((0xffff800000000000ULL & (uintptr_t(desired) + length - 1)) == 0);
 #endif
     void* region = mmap(desired, length, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
-    if (region == MAP_FAILED)
+    if (region == MAP_FAILED) {
         return nullptr;
+    }
     if (region != desired) {
-        if (munmap(region, length))
+        if (munmap(region, length)) {
             MOZ_RELEASE_ASSERT(errno == ENOMEM);
+        }
         return nullptr;
     }
     return region;
@@ -344,11 +363,13 @@ mapMemory(size_t length)
     // The test code must be aligned with the implementation in gc/Memory.cpp.
 #if defined(__ia64__) || (defined(__sparc__) && defined(__arch64__) && defined(__NetBSD__))
     void* region = mmap((void*)0x0000070000000000, length, prot, flags, fd, offset);
-    if (region == MAP_FAILED)
+    if (region == MAP_FAILED) {
         return nullptr;
+    }
     if ((uintptr_t(region) + (length - 1)) & 0xffff800000000000) {
-        if (munmap(region, length))
+        if (munmap(region, length)) {
             MOZ_RELEASE_ASSERT(errno == ENOMEM);
+        }
         return nullptr;
     }
     return region;
@@ -372,8 +393,9 @@ mapMemory(size_t length)
     return region == MAP_FAILED ? nullptr : region;
 #else
     void* region = mmap(nullptr, length, prot, flags, fd, offset);
-    if (region == MAP_FAILED)
+    if (region == MAP_FAILED) {
         return nullptr;
+    }
     return region;
 #endif
 }
@@ -381,8 +403,9 @@ mapMemory(size_t length)
 void
 unmapPages(void* p, size_t size)
 {
-    if (munmap(p, size))
+    if (munmap(p, size)) {
         MOZ_RELEASE_ASSERT(errno == ENOMEM);
+    }
 }
 
 #else // !defined(XP_WIN) && !defined(SOLARIS) && !defined(XP_UNIX)

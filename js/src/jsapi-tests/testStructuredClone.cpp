@@ -206,8 +206,9 @@ struct StructuredCloneTestPrincipals final : public JSPrincipals {
     static bool read(JSContext* cx, JSStructuredCloneReader *reader, JSPrincipals** outPrincipals) {
         uint32_t rank;
         uint32_t unused;
-        if (!JS_ReadUint32Pair(reader, &rank, &unused))
+        if (!JS_ReadUint32Pair(reader, &rank, &unused)) {
             return false;
+        }
 
         *outPrincipals = new StructuredCloneTestPrincipals(rank);
         return !!*outPrincipals;
@@ -219,8 +220,9 @@ struct StructuredCloneTestPrincipals final : public JSPrincipals {
     }
 
     static uint32_t getRank(JSPrincipals* p) {
-        if (!p)
+        if (!p) {
             return 0;
+        }
         return static_cast<StructuredCloneTestPrincipals*>(p)->rank;
     }
 

@@ -61,8 +61,9 @@ static bool
 test_callback(JSContext* cx, unsigned argc, JS::Value* vp)
 {
     JS::RootedObject env(cx, js::GetJSMEnvironmentOfScriptedCaller(cx));
-    if (!env)
+    if (!env) {
         return false;
+    }
 
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     args.rval().setObject(*env);
