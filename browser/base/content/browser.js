@@ -67,6 +67,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Translation: "resource:///modules/translation/Translation.jsm",
   UITour: "resource:///modules/UITour.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
+  UrlbarInput: "resource:///modules/UrlbarInput.jsm",
   Utils: "resource://gre/modules/sessionstore/Utils.jsm",
   Weave: "resource://services-sync/main.js",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
@@ -251,27 +252,41 @@ if (AppConstants.platform != "macosx") {
   var gEditUIVisible = true;
 }
 
-/* globals gNavToolbox, gURLBar:true */
-[
-  ["gNavToolbox",         "navigator-toolbox"],
-  ["gURLBar",             "urlbar"],
-].forEach(function(elementGlobal) {
-  var [name, id] = elementGlobal;
-  Object.defineProperty(window, name, {
-    configurable: true,
-    enumerable: true,
-    get() {
-      var element = document.getElementById(id);
-      if (!element)
-        return null;
-      delete window[name];
-      return window[name] = element;
-    },
-    set(val) {
-      delete window[name];
-      return window[name] = val;
-    },
-  });
+Object.defineProperty(this, "gURLBar", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    delete this.gURLBar;
+
+    let element = document.getElementById("urlbar");
+
+    // For now, always use the legacy implementation in the first window to
+    // have a usable address bar e.g. for accessing about:config.
+    if (BrowserWindowTracker.windowCount <= 1 ||
+        !Services.prefs.getBoolPref("browser.urlbar.quantumbar", false)) {
+      return this.gURLBar = element;
+    }
+
+    // Disable the legacy XBL binding.
+    element.setAttribute("quantumbar", "true");
+
+    // Re-focus the input field if it was focused before switching bindings.
+    if (element.hasAttribute("focused")) {
+      element.inputField.focus();
+    }
+
+    return this.gURLBar =
+      new UrlbarInput(element, document.getElementById("urlbar-results"));
+  },
+});
+
+Object.defineProperty(this, "gNavToolbox", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    delete this.gNavToolbox;
+    return this.gNavToolbox = document.getElementById("navigator-toolbox");
+  },
 });
 
 // Smart getter for the findbar.  If you don't wish to force the creation of
