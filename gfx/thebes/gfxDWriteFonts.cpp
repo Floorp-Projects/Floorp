@@ -138,7 +138,7 @@ gfxDWriteFont::GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics)
 
     gfxFontEntry* fe =
         gfxPlatformFontList::PlatformFontList()->
-            FindFontForFamily(NS_LITERAL_STRING("Arial"), &style);
+            FindFontForFamily(NS_LITERAL_CSTRING("Arial"), &style);
     if (!fe || fe == mFontEntry) {
         return false;
     }

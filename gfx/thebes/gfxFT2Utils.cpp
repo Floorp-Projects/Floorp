@@ -117,7 +117,7 @@ gfxFT2Utils::GetVariationAxes(const FT_MM_Var* aMMVar,
         axis.mMaxValue = a.maximum / 65536.0;
         axis.mDefaultValue = a.def / 65536.0;
         axis.mTag = a.tag;
-        axis.mName.Assign(NS_ConvertUTF8toUTF16(a.name));
+        axis.mName = a.name;
         aAxes.AppendElement(axis);
     }
 }

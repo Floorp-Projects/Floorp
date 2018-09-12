@@ -169,7 +169,7 @@ public:
     void GetVariationInstances(nsTArray<gfxFontVariationInstance>&) override {}
 
     // create a font entry for a font with a given name
-    static GDIFontEntry* CreateFontEntry(const nsAString& aName,
+    static GDIFontEntry* CreateFontEntry(const nsACString& aName,
                                          gfxWindowsFontType aFontType,
                                          SlantStyleRange aStyle,
                                          WeightRange aWeight,
@@ -184,11 +184,11 @@ public:
 protected:
     friend class gfxGDIFont;
 
-    GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
+    GDIFontEntry(const nsACString& aFaceName, gfxWindowsFontType aFontType,
                  SlantStyleRange aStyle, WeightRange aWeight, StretchRange aStretch,
                  gfxUserFontData *aUserFontData);
 
-    void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
+    void InitLogFont(const nsACString& aName, gfxWindowsFontType aFontType);
 
     gfxFont* CreateFontInstance(const gfxFontStyle *aFontStyle) override;
 
@@ -206,7 +206,7 @@ protected:
 class GDIFontFamily : public gfxFontFamily
 {
 public:
-    explicit GDIFontFamily(const nsAString& aName) :
+    explicit GDIFontFamily(const nsACString& aName) :
         gfxFontFamily(aName),
         mWindowsFamily(0),
         mWindowsPitch(0),
@@ -323,20 +323,20 @@ public:
     // initialize font lists
     virtual nsresult InitFontListForPlatform() override;
 
-    gfxFontFamily* CreateFontFamily(const nsAString& aName) const override;
+    gfxFontFamily* CreateFontFamily(const nsACString& aName) const override;
 
-    bool FindAndAddFamilies(const nsAString& aFamily,
+    bool FindAndAddFamilies(const nsACString& aFamily,
                             nsTArray<FamilyAndGeneric>* aOutput,
                             FindFamiliesFlags aFlags,
                             gfxFontStyle* aStyle = nullptr,
                             gfxFloat aDevToCssSize = 1.0) override;
 
-    virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
+    virtual gfxFontEntry* LookupLocalFont(const nsACString& aFontName,
                                           WeightRange aWeightForEntry,
                                           StretchRange aStretchForEntry,
                                           SlantStyleRange aStyleForEntry);
 
-    virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
+    virtual gfxFontEntry* MakePlatformFont(const nsACString& aFontName,
                                            WeightRange aWeightForEntry,
                                            StretchRange aStretchForEntry,
                                            SlantStyleRange aStyleForEntry,
@@ -371,7 +371,7 @@ private:
 #endif
 
     FontFamilyTable mFontSubstitutes;
-    nsTArray<nsString> mNonExistingFonts;
+    nsTArray<nsCString> mNonExistingFonts;
 };
 
 #endif /* GFX_GDIFONTLIST_H */

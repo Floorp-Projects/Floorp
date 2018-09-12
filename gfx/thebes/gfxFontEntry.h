@@ -126,7 +126,7 @@ public:
     // Used by stylo
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxFontEntry)
 
-    explicit gfxFontEntry(const nsAString& aName, bool aIsStandardFace = false);
+    explicit gfxFontEntry(const nsACString& aName, bool aIsStandardFace = false);
 
     // Create a new entry that refers to the same font as this, but without
     // additional state that may have been set up (such as family name).
@@ -136,10 +136,10 @@ public:
 
     // unique name for the face, *not* the family; not necessarily the
     // "real" or user-friendly name, may be an internal identifier
-    const nsString& Name() const { return mName; }
+    const nsCString& Name() const { return mName; }
 
     // family name
-    const nsString& FamilyName() const { return mFamilyName; }
+    const nsCString& FamilyName() const { return mFamilyName; }
 
     // The following two methods may be relatively expensive, as they
     // will (usually, except on Linux) load and parse the 'name' table;
@@ -148,7 +148,7 @@ public:
 
     // The "real" name of the face, if available from the font resource;
     // returns Name() if nothing better is available.
-    virtual nsString RealFaceName();
+    virtual nsCString RealFaceName();
 
     WeightRange Weight() const { return mWeightRange; }
     StretchRange Stretch() const { return mStretchRange; }
@@ -401,8 +401,8 @@ public:
     // This is only called on platforms where we use FreeType.
     virtual FT_MM_Var* GetMMVar() { return nullptr; }
 
-    nsString         mName;
-    nsString         mFamilyName;
+    nsCString         mName;
+    nsCString         mFamilyName;
 
     RefPtr<gfxCharacterMap> mCharacterMap;
 
@@ -716,7 +716,7 @@ public:
     // Used by stylo
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxFontFamily)
 
-    explicit gfxFontFamily(const nsAString& aName) :
+    explicit gfxFontFamily(const nsACString& aName) :
         mName(aName),
         mOtherFamilyNamesInitialized(false),
         mHasOtherFamilyNames(false),
@@ -730,9 +730,9 @@ public:
         mCheckedForLegacyFamilyNames(false)
         { }
 
-    const nsString& Name() { return mName; }
+    const nsCString& Name() { return mName; }
 
-    virtual void LocalizedName(nsAString& aLocalizedName);
+    virtual void LocalizedName(nsACString& aLocalizedName);
     virtual bool HasOtherFamilyNames();
 
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=835204:
@@ -801,10 +801,10 @@ public:
 
     // helper method for reading localized family names from the name table
     // of a single face
-    static void ReadOtherFamilyNamesForFace(const nsAString& aFamilyName,
+    static void ReadOtherFamilyNamesForFace(const nsACString& aFamilyName,
                                             const char *aNameData,
                                             uint32_t aDataLength,
-                                            nsTArray<nsString>& aOtherFamilyNames,
+                                            nsTArray<nsCString>& aOtherFamilyNames,
                                             bool useFullName);
 
     // set when other family names have been read in
@@ -823,7 +823,7 @@ public:
     virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr) { }
 
     // search for a specific face using the Postscript name
-    gfxFontEntry* FindFont(const nsAString& aPostscriptName);
+    gfxFontEntry* FindFont(const nsACString& aPostscriptName);
 
     // read in cmaps for all the faces
     void ReadAllCMAPs(FontInfoData *aFontInfoData = nullptr);
@@ -903,7 +903,7 @@ protected:
         }
     }
 
-    nsString mName;
+    nsCString mName;
     nsTArray<RefPtr<gfxFontEntry> >  mAvailableFonts;
     gfxSparseBitSet mFamilyCharacterMap;
     bool mOtherFamilyNamesInitialized : 1;
