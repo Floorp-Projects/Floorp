@@ -58,7 +58,7 @@ public:
      * \param aFamily IDWriteFontFamily object representing the directwrite
      * family object.
      */
-    gfxDWriteFontFamily(const nsAString& aName,
+    gfxDWriteFontFamily(const nsACString& aName,
                         IDWriteFontFamily *aFamily,
                         bool aIsSystemFontFamily = false)
       : gfxFontFamily(aName), mDWFamily(aFamily),
@@ -67,7 +67,7 @@ public:
     
     void FindStyleVariations(FontInfoData *aFontInfoData = nullptr) final;
 
-    void LocalizedName(nsAString& aLocalizedName) final;
+    void LocalizedName(nsACString& aLocalizedName) final;
 
     void ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
                        bool aNeedFullnamePostscriptNames,
@@ -107,7 +107,7 @@ public:
      * \param aFaceName The name of the corresponding font face.
      * \param aFont DirectWrite font object
      */
-    gfxDWriteFontEntry(const nsAString& aFaceName,
+    gfxDWriteFontEntry(const nsACString& aFaceName,
                        IDWriteFont *aFont,
                        bool aIsSystemFont = false)
       : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nullptr),
@@ -144,7 +144,7 @@ public:
      * \param aStretch Stretch of the font
      * \param aStyle italic or oblique of font
      */
-    gfxDWriteFontEntry(const nsAString& aFaceName,
+    gfxDWriteFontEntry(const nsACString& aFaceName,
                        IDWriteFont *aFont,
                        WeightRange aWeight,
                        StretchRange aStretch,
@@ -170,7 +170,7 @@ public:
      * \param aStretch Stretch of the font
      * \param aStyle italic or oblique of font
      */
-    gfxDWriteFontEntry(const nsAString& aFaceName,
+    gfxDWriteFontEntry(const nsACString& aFaceName,
                               IDWriteFontFile *aFontFile,
                               IDWriteFontFileStream *aFontFileStream,
                               WeightRange aWeight,
@@ -385,12 +385,12 @@ public:
         return S_OK;
     }
 
-    const nsString& FallbackFamilyName() { return mFamilyName; }
+    const nsCString& FallbackFamilyName() { return mFamilyName; }
 
 protected:
     long mRefCount;
     RefPtr<IDWriteFontCollection> mSystemFonts;
-    nsString mFamilyName;
+    nsCString mFamilyName;
 };
 
 
@@ -406,27 +406,27 @@ public:
     // initialize font lists
     virtual nsresult InitFontListForPlatform() override;
 
-    gfxFontFamily* CreateFontFamily(const nsAString& aName) const override;
+    gfxFontFamily* CreateFontFamily(const nsACString& aName) const override;
 
-    virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
+    virtual gfxFontEntry* LookupLocalFont(const nsACString& aFontName,
                                           WeightRange aWeightForEntry,
                                           StretchRange aStretchForEntry,
                                           SlantStyleRange aStyleForEntry);
 
-    virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
+    virtual gfxFontEntry* MakePlatformFont(const nsACString& aFontName,
                                            WeightRange aWeightForEntry,
                                            StretchRange aStretchForEntry,
                                            SlantStyleRange aStyleForEntry,
                                            const uint8_t* aFontData,
                                            uint32_t aLength);
     
-    bool GetStandardFamilyName(const nsAString& aFontName,
-                                 nsAString& aFamilyName);
+    bool GetStandardFamilyName(const nsCString& aFontName,
+                                 nsACString& aFamilyName);
 
     IDWriteGdiInterop *GetGDIInterop() { return mGDIInterop; }
     bool UseGDIFontTableAccess() { return mGDIFontTableAccess; }
 
-    bool FindAndAddFamilies(const nsAString& aFamily,
+    bool FindAndAddFamilies(const nsACString& aFamily,
                             nsTArray<FamilyAndGeneric>* aOutput,
                             FindFamiliesFlags aFlags,
                             gfxFontStyle* aStyle = nullptr,
@@ -471,7 +471,7 @@ private:
      * Fonts listed in the registry as substitutes but for which no actual
      * font family is found.
      */
-    nsTArray<nsString> mNonExistingFonts;
+    nsTArray<nsCString> mNonExistingFonts;
 
     /**
      * Table of font substitutes, we grab this from the registry to get

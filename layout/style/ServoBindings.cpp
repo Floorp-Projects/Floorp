@@ -1231,7 +1231,7 @@ Gecko_AppendFeatureValueHashEntry(gfxFontFeatureValueSet* aFontFeatureValues,
   static_assert(sizeof(unsigned int) == sizeof(uint32_t),
                 "sizeof unsigned int and uint32_t must be the same");
   return aFontFeatureValues->AppendFeatureValueHashEntry(
-    nsDependentAtomString(aFamily),
+    nsAtomCString(aFamily),
     nsDependentAtomString(aName),
     aAlternate
   );

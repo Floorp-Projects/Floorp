@@ -964,7 +964,7 @@ gfxHarfBuzzShaper::GetHKerning(uint16_t aFirstGlyph,
                     char buf[1024];
                     SprintfLiteral(buf, "unknown kern subtable in %s: "
                                         "ver 0 format %d\n",
-                                   NS_ConvertUTF16toUTF8(mFont->GetName()).get(),
+                                   mFont->GetName().get(),
                                    format);
                     NS_WARNING(buf);
                 }
@@ -1026,7 +1026,7 @@ gfxHarfBuzzShaper::GetHKerning(uint16_t aFirstGlyph,
                         char buf[1024];
                         SprintfLiteral(buf, "unknown kern subtable in %s: "
                                             "ver 0 format %d\n",
-                                       NS_ConvertUTF16toUTF8(mFont->GetName()).get(),
+                                       mFont->GetName().get(),
                                        format);
                         NS_WARNING(buf);
                     }
