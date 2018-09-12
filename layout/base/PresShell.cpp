@@ -7938,7 +7938,6 @@ DispatchKeyPressEventsEvenForNonPrintableKeys(nsIURI* aURI)
     host = NS_LITERAL_CSTRING("*") +
              nsDependentCSubstring(host, startIndexOfNextLevel);
   }
-  return false;
 }
 #endif // #ifdef NIGHTLY_BUILD
 
