@@ -240,6 +240,11 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
 
         //Open a new tab
         openNewTabTitle.click();
+        TestHelper.mDevice.wait(Until.findObject(
+                By.res(TestHelper.getAppName(), "snackbar_text")), 5000);
+        Screengrab.screenshot("New_Tab_Popup");
+        TestHelper.mDevice.wait(Until.gone(
+                By.res(TestHelper.getAppName(), "snackbar_text")), 5000);
 
         assertTrue(multiTabBtn.waitForExists(waitingTime));
         multiTabBtn.click();
@@ -248,7 +253,8 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
 
         eraseHistoryBtn.click();
 
-        device.wait(Until.findObject(By.res(TestHelper.getAppName(), "snackbar_text")), waitingTime);
+        device.wait(Until.findObject(
+                By.res(TestHelper.getAppName(), "snackbar_text")), waitingTime);
 
         Screengrab.screenshot("YourBrowsingHistoryHasBeenErased");
     }
