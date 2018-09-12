@@ -9,11 +9,18 @@
 #include "mozilla/Unused.h"
 #include "gfxPrefs.h"
 #include "nsColumnSetFrame.h"
+
+#include "mozilla/Logging.h"
+#include "mozilla/ToString.h"
 #include "nsCSSRendering.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;
 
+// To see this log, use $ MOZ_LOG=ColumnSet:4 ./mach run
+static LazyLogModule sColumnSetLog("ColumnSet");
+#define COLUMN_SET_LOG(msg, ...)                                               \
+  MOZ_LOG(sColumnSetLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
 class nsDisplayColumnRule : public nsDisplayItem {
 public:
@@ -442,11 +449,15 @@ nsColumnSetFrame::ChooseColumnStrategy(const ReflowInput& aReflowInput,
     colBSize = std::max(colBSize, nsPresContext::CSSPixelsToAppUnits(1));
   }
 
-#ifdef DEBUG_roc
-  printf("*** nsColumnSetFrame::ChooseColumnStrategy: numColumns=%d, colISize=%d,"
-         " expectedISizeLeftOver=%d, colBSize=%d, colGap=%d\n",
-         numColumns, colISize, expectedISizeLeftOver, colBSize, colGap);
-#endif
+  COLUMN_SET_LOG("%s: numColumns=%d, colISize=%d, expectedISizeLeftOver=%d,"
+                 " colBSize=%d, colGap=%d",
+                 __func__,
+                 numColumns,
+                 colISize,
+                 expectedISizeLeftOver,
+                 colBSize,
+                 colGap);
+
   ReflowConfig config = { numColumns, colISize, expectedISizeLeftOver, colGap,
                           colBSize, isBalancing, knownFeasibleBSize,
                           knownInfeasibleBSize, computedBSize, consumedBSize };
@@ -591,12 +602,16 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
   bool shrinkingBSize = mLastBalanceBSize > aConfig.mColMaxBSize;
   bool changingBSize = mLastBalanceBSize != aConfig.mColMaxBSize;
 
-#ifdef DEBUG_roc
-  printf("*** Doing column reflow pass: mLastBalanceBSize=%d, mColMaxBSize=%d, RTL=%d\n"
-         "    mBalanceColCount=%d, mColISize=%d, mColGap=%d\n",
-         mLastBalanceBSize, aConfig.mColMaxBSize, isRTL, aConfig.mBalanceColCount,
-         aConfig.mColISize, aConfig.mColGap);
-#endif
+  COLUMN_SET_LOG("%s: Doing column reflow pass: mLastBalanceBSize=%d,"
+                 " mColMaxBSize=%d, RTL=%d, mBalanceColCount=%d,"
+                 " mColISize=%d, mColGap=%d",
+                 __func__,
+                 mLastBalanceBSize,
+                 aConfig.mColMaxBSize,
+                 isRTL,
+                 aConfig.mBalanceColCount,
+                 aConfig.mColISize,
+                 aConfig.mColGap);
 
   DrainOverflowColumns();
 
@@ -644,9 +659,8 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
     if (availISize != NS_INTRINSICSIZE) {
       childOrigin.I(wm) = containerSize.width - borderPadding.Left(wm) -
                           availISize;
-#ifdef DEBUG_roc
-      printf("*** childOrigin.iCoord = %d\n", childOrigin.I(wm));
-#endif
+
+      COLUMN_SET_LOG("%s: childOrigin.iCoord=%d", __func__, childOrigin.I(wm));
     }
   }
 
@@ -725,10 +739,13 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
         aStatus = mLastFrameStatus;
       }
       childContentBEnd = nsLayoutUtils::CalculateContentBEnd(wm, child);
-#ifdef DEBUG_roc
-      printf("*** Skipping child #%d %p (incremental %d): status = %d\n",
-             columnCount, (void*)child, skipIncremental, aStatus);
-#endif
+
+      COLUMN_SET_LOG("%s: Skipping child #%d %p (incremental %d): status=%s",
+                     __func__,
+                     columnCount,
+                     child,
+                     skipIncremental,
+                     ToString(aStatus).c_str());
     } else {
       LogicalSize availSize(wm, aConfig.mColISize, aConfig.mColMaxBSize);
       if (aUnboundedLastColumn && columnCount == aConfig.mBalanceColCount - 1) {
@@ -751,10 +768,11 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
       // hasn't changed.
       kidReflowInput.mFlags.mMustReflowPlaceholders = !colBSizeChanged;
 
-#ifdef DEBUG_roc
-      printf("*** Reflowing child #%d %p: availHeight=%d\n",
-             columnCount, (void*)child,availSize.BSize(wm));
-#endif
+      COLUMN_SET_LOG("%s: Reflowing child #%d %p: availBSize=%d",
+                     __func__,
+                     columnCount,
+                     child,
+                     availSize.BSize(wm));
 
       // Note if the column's next in flow is not being changed by this incremental reflow.
       // This may allow the current column to avoid trying to pull lines from the next column.
@@ -785,11 +803,15 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
 
       reflowNext = aStatus.NextInFlowNeedsReflow();
 
-#ifdef DEBUG_roc
-      printf("*** Reflowed child #%d %p: status = %d, desiredSize=%d,%d CarriedOutBEndMargin=%d\n",
-             columnCount, (void*)child, aStatus, kidDesiredSize.Width(), kidDesiredSize.Height(),
-             kidDesiredSize.mCarriedOutBEndMargin.get());
-#endif
+      COLUMN_SET_LOG("%s: Reflowed child #%d %p: status=%s,"
+                     " desiredSize=(%d,%d), CarriedOutBEndMargin=%d",
+                     __func__,
+                     columnCount,
+                     child,
+                     ToString(aStatus).c_str(),
+                     kidDesiredSize.ISize(wm),
+                     kidDesiredSize.BSize(wm),
+                     kidDesiredSize.mCarriedOutBEndMargin.get());
 
       NS_FRAME_TRACE_REFLOW_OUT("Column::Reflow", aStatus);
 
@@ -891,9 +913,9 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
     if (child) {
       childOrigin.I(wm) += aConfig.mColISize + aConfig.mColGap;
 
-#ifdef DEBUG_roc
-      printf("*** NEXT CHILD ORIGIN.icoord = %d\n", childOrigin.I(wm));
-#endif
+      COLUMN_SET_LOG("%s: Next childOrigin.iCoord=%d",
+                     __func__,
+                     childOrigin.I(wm));
     }
   }
 
@@ -967,12 +989,12 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
     }
   }
 
-#ifdef DEBUG_roc
-  printf("*** DONE PASS feasible=%d\n", allFit && aStatus.IsFullyComplete()
-         && !aStatus.IsTruncated());
-#endif
-  return allFit && aStatus.IsFullyComplete()
-    && !aStatus.IsTruncated();
+  bool feasible = allFit && aStatus.IsFullyComplete() && !aStatus.IsTruncated();
+  COLUMN_SET_LOG("%s: Done column reflow pass: %s",
+                 __func__,
+                 feasible ? "Feasible :)" : "Infeasible :(");
+
+  return feasible;
 }
 
 void
@@ -1066,11 +1088,10 @@ nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
       }
     }
 
-#ifdef DEBUG_roc
-    printf("*** nsColumnSetFrame::Reflow balancing knownInfeasible=%d knownFeasible=%d\n",
-           aConfig.mKnownInfeasibleBSize, aConfig.mKnownFeasibleBSize);
-#endif
-
+    COLUMN_SET_LOG("%s: KnownInfeasibleBSize=%d, KnownFeasibleBSize=%d",
+                   __func__,
+                   aConfig.mKnownInfeasibleBSize,
+                   aConfig.mKnownFeasibleBSize);
 
     if (aConfig.mKnownInfeasibleBSize >= aConfig.mKnownFeasibleBSize - 1) {
       // aConfig.mKnownFeasibleBSize is where we want to be
@@ -1113,9 +1134,7 @@ nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
     // Don't bother guessing more than our height constraint.
     nextGuess = std::min(availableContentBSize, nextGuess);
 
-#ifdef DEBUG_roc
-    printf("*** nsColumnSetFrame::Reflow balancing choosing next guess=%d\n", nextGuess);
-#endif
+    COLUMN_SET_LOG("%s: Choosing next guess=%d", __func__, nextGuess);
 
     aConfig.mColMaxBSize = nextGuess;
 
