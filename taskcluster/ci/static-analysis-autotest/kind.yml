@@ -36,6 +36,10 @@ jobs:
         description: "Linux64 Debug Static Analysis Autotest"
         index:
             job-name: linux64-st-autotest-debug
+        worker:
+            docker-image: {in-tree: static-analysis-build}
+            env:
+                PERFHERDER_EXTRA_OPTIONS: static-analysis-autotest
         treeherder:
             platform: linux64/debug
         worker-type: aws-provisioner-v1/gecko-t-linux-large
