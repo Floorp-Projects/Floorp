@@ -41,8 +41,9 @@ public:
 
     nsIClassInfo* GetClassInfo()
     {
-        if (!mClassInfo)
+        if (!mClassInfo) {
             mClassInfo = do_QueryInterface(mObject);
+        }
         return mClassInfo;
     }
 

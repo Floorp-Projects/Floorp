@@ -880,10 +880,12 @@ public:
     }
 
     void TraceInside(JSTracer* trc) {
-        if (mContentXBLScope)
+        if (mContentXBLScope) {
             mContentXBLScope.trace(trc, "XPCWrappedNativeScope::mXBLScope");
-        if (mXrayExpandos.initialized())
+        }
+        if (mXrayExpandos.initialized()) {
             mXrayExpandos.trace(trc);
+        }
     }
 
     static void
@@ -1316,8 +1318,9 @@ public:
     void DebugDump(int16_t depth);
 
     void TraceSelf(JSTracer* trc) {
-        if (mJSProtoObject)
+        if (mJSProtoObject) {
             mJSProtoObject.trace(trc, "XPCWrappedNativeProto::mJSProtoObject");
+        }
     }
 
     void TraceInside(JSTracer* trc) {
@@ -1331,8 +1334,9 @@ public:
 
     void WriteBarrierPre(JSContext* cx)
     {
-        if (JS::IsIncrementalBarrierNeeded(cx) && mJSProtoObject)
+        if (JS::IsIncrementalBarrierNeeded(cx) && mJSProtoObject) {
             mJSProtoObject.writeBarrierPre(cx);
+        }
     }
 
     // NOP. This is just here to make the AutoMarkingPtr code compile.
@@ -1576,10 +1580,11 @@ public:
     void Mark() const {}
 
     inline void TraceInside(JSTracer* trc) {
-        if (HasProto())
+        if (HasProto()) {
             GetProto()->TraceSelf(trc);
-        else
+        } else {
             GetScope()->TraceSelf(trc);
+        }
 
         JSObject* obj = mFlatJSObject.unbarrieredGetPtr();
         if (obj && JS_IsGlobalObject(obj)) {
@@ -1848,8 +1853,9 @@ public:
     nsXPCWrappedJS* FindInherited(REFNSIID aIID);
     nsXPCWrappedJS* FindOrFindInherited(REFNSIID aIID) {
         nsXPCWrappedJS* wrapper = Find(aIID);
-        if (wrapper)
+        if (wrapper) {
             return wrapper;
+        }
         return FindInherited(aIID);
     }
 
@@ -2386,13 +2392,15 @@ class AutoMarkingPtr
     }
 
     void TraceJSAll(JSTracer* trc) {
-        for (AutoMarkingPtr* cur = this; cur; cur = cur->mNext)
+        for (AutoMarkingPtr* cur = this; cur; cur = cur->mNext) {
             cur->TraceJS(trc);
+        }
     }
 
     void MarkAfterJSFinalizeAll() {
-        for (AutoMarkingPtr* cur = this; cur; cur = cur->mNext)
+        for (AutoMarkingPtr* cur = this; cur; cur = cur->mNext) {
             cur->MarkAfterJSFinalize();
+        }
     }
 
   protected:
@@ -2428,8 +2436,9 @@ class TypedAutoMarkingPtr : public AutoMarkingPtr
 
     virtual void MarkAfterJSFinalize() override
     {
-        if (mPtr)
+        if (mPtr) {
             mPtr->Mark();
+        }
     }
 
   private:
@@ -2758,14 +2767,16 @@ public:
 
     JSObject* ToJSObject(JSContext* cx) {
         JS::RootedObject obj(cx, JS_NewObjectWithGivenProto(cx, nullptr, nullptr));
-        if (!obj)
+        if (!obj) {
             return nullptr;
+        }
 
         JS::RootedValue val(cx);
         unsigned attrs = JSPROP_READONLY | JSPROP_PERMANENT;
         val = JS::BooleanValue(allowCrossOriginArguments);
-        if (!JS_DefineProperty(cx, obj, "allowCrossOriginArguments", val, attrs))
+        if (!JS_DefineProperty(cx, obj, "allowCrossOriginArguments", val, attrs)) {
             return nullptr;
+        }
 
         return obj;
     }
@@ -3091,17 +3102,21 @@ public:
     }
 
     void SetLocation(const nsACString& aLocation) {
-        if (aLocation.IsEmpty())
+        if (aLocation.IsEmpty()) {
             return;
-        if (!location.IsEmpty() || locationURI)
+        }
+        if (!location.IsEmpty() || locationURI) {
             return;
+        }
         location = aLocation;
     }
     void SetLocationURI(nsIURI* aLocationURI) {
-        if (!aLocationURI)
+        if (!aLocationURI) {
             return;
-        if (locationURI)
+        }
+        if (locationURI) {
             return;
+        }
         locationURI = aLocationURI;
     }
 

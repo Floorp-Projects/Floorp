@@ -36,18 +36,21 @@ RemoteXULForbidsXBLScope(nsIPrincipal* aPrincipal, HandleObject aGlobal)
   // to call into AllowXULXBLForPrincipal. We never create XBL scopes for
   // sandboxes anway, and certainly not for these singleton scopes. So we just
   // short-circuit here.
-  if (IsSandbox(aGlobal))
+  if (IsSandbox(aGlobal)) {
       return false;
+  }
 
   // AllowXULXBLForPrincipal will return true for system principal, but we
   // don't want that here.
   MOZ_ASSERT(nsContentUtils::IsInitialized());
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal))
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
       return false;
+  }
 
   // If this domain isn't whitelisted, we're done.
-  if (!nsContentUtils::AllowXULXBLForPrincipal(aPrincipal))
+  if (!nsContentUtils::AllowXULXBLForPrincipal(aPrincipal)) {
       return false;
+  }
 
   // Check the pref to determine how we should behave.
   return !Preferences::GetBool("dom.use_xbl_scopes_for_remote_xul", false);
@@ -69,8 +72,9 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
                                    JSCLASS_HAS_PRIVATE) ||
                    mozilla::dom::IsDOMClass(clasp));
 #ifdef DEBUG
-        for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
+        for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
             MOZ_ASSERT(aGlobal != cur->GetGlobalJSObjectPreserveColor(), "dup object");
+        }
 #endif
 
         mNext = gScopes;
@@ -113,8 +117,9 @@ bool
 XPCWrappedNativeScope::IsDyingScope(XPCWrappedNativeScope* scope)
 {
     for (XPCWrappedNativeScope* cur = gDyingScopes; cur; cur = cur->mNext) {
-        if (scope == cur)
+        if (scope == cur) {
             return true;
+        }
     }
     return false;
 }
@@ -134,17 +139,20 @@ XPCWrappedNativeScope::GetComponentsJSObject(JS::MutableHandleObject obj)
     xpcObjectHelper helper(mComponents);
     bool ok = XPCConvert::NativeInterface2JSObject(&val, helper, nullptr,
                                                    false, nullptr);
-    if (NS_WARN_IF(!ok))
+    if (NS_WARN_IF(!ok)) {
         return false;
+    }
 
-    if (NS_WARN_IF(!val.isObject()))
+    if (NS_WARN_IF(!val.isObject())) {
         return false;
+    }
 
     // The call to wrap() here is necessary even though the object is same-
     // compartment, because it applies our security wrapper.
     obj.set(&val.toObject());
-    if (NS_WARN_IF(!JS_WrapObject(cx, obj)))
+    if (NS_WARN_IF(!JS_WrapObject(cx, obj))) {
         return false;
+    }
     return true;
 }
 
@@ -152,8 +160,9 @@ void
 XPCWrappedNativeScope::ForcePrivilegedComponents()
 {
     nsCOMPtr<nsIXPCComponents> c = do_QueryInterface(mComponents);
-    if (!c)
+    if (!c) {
         mComponents = new nsXPCComponents(this);
+    }
 }
 
 static bool
@@ -168,8 +177,9 @@ DefineSubcomponentProperty(JSContext* aCx,
     if (!XPCConvert::NativeInterface2JSObject(&subcompVal, helper,
                                               aIID, false, nullptr))
         return false;
-    if (NS_WARN_IF(!subcompVal.isObject()))
+    if (NS_WARN_IF(!subcompVal.isObject())) {
         return false;
+    }
     RootedId id(aCx, XPCJSContext::Get()->GetStringID(aStringIndex));
     return JS_DefinePropertyById(aCx, aGlobal, id, subcompVal, 0);
 }
@@ -178,8 +188,9 @@ bool
 XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx)
 {
     RootedObject components(aCx);
-    if (!GetComponentsJSObject(&components))
+    if (!GetComponentsJSObject(&components)) {
         return false;
+    }
 
     RootedObject global(aCx, GetGlobalJSObject());
     MOZ_ASSERT(js::IsObjectInContextCompartment(global, aCx));
@@ -189,12 +200,14 @@ XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx)
     // enableUniversalXPConnect can upgrade it later.
     unsigned attrs = JSPROP_READONLY | JSPROP_RESOLVING;
     nsCOMPtr<nsIXPCComponents> c = do_QueryInterface(mComponents);
-    if (c)
+    if (c) {
         attrs |= JSPROP_PERMANENT;
+    }
 
     RootedId id(aCx, XPCJSContext::Get()->GetStringID(XPCJSContext::IDX_COMPONENTS));
-    if (!JS_DefinePropertyById(aCx, global, id, components, attrs))
+    if (!JS_DefinePropertyById(aCx, global, id, components, attrs)) {
         return false;
+    }
 
 // _iid can be nullptr if the object implements classinfo.
 #define DEFINE_SUBCOMPONENT_PROPERTY(_comp, _type, _iid, _id)                     \
@@ -208,8 +221,9 @@ XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx)
     DEFINE_SUBCOMPONENT_PROPERTY(mComponents, Interfaces, nullptr, CI)
     DEFINE_SUBCOMPONENT_PROPERTY(mComponents, Results, nullptr, CR)
 
-    if (!c)
+    if (!c) {
         return true;
+    }
 
     DEFINE_SUBCOMPONENT_PROPERTY(c, Classes, nullptr, CC)
     DEFINE_SUBCOMPONENT_PROPERTY(c, Utils, &NS_GET_IID(nsIXPCComponents_Utils), CU)
@@ -229,12 +243,14 @@ XPCWrappedNativeScope::EnsureContentXBLScope(JSContext* cx)
                       "nsXBLPrototypeScript compilation scope"));
 
     // If we already have a special XBL scope object, we know what to use.
-    if (mContentXBLScope)
+    if (mContentXBLScope) {
         return mContentXBLScope;
+    }
 
     // If this scope doesn't need an XBL scope, just return the global.
-    if (!mUseContentXBLScope)
+    if (!mUseContentXBLScope) {
         return global;
+    }
 
     // Set up the sandbox options. Note that we use the DOM global as the
     // sandboxPrototype so that the XBL scope can access all the DOM objects
@@ -364,15 +380,17 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
 
     // This should not be necessary, since the Components object should die
     // with the scope but just in case.
-    if (mComponents)
+    if (mComponents) {
         mComponents->mScope = nullptr;
+    }
 
     // XXX we should assert that we are dead or that xpconnect has shutdown
     // XXX might not want to do this at xpconnect shutdown time???
     mComponents = nullptr;
 
-    if (mXrayExpandos.initialized())
+    if (mXrayExpandos.initialized()) {
         mXrayExpandos.destroy();
+    }
 
     JSContext* cx = dom::danger::GetJSContext();
     mGlobalJSObject.finalize(cx);
@@ -388,8 +406,9 @@ XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc)
         for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
             auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
             XPCWrappedNative* wrapper = entry->value;
-            if (wrapper->HasExternalReference() && !wrapper->IsWrapperExpired())
+            if (wrapper->HasExternalReference() && !wrapper->IsWrapperExpired()) {
                 wrapper->TraceSelf(trc);
+            }
         }
     }
 }
@@ -448,11 +467,13 @@ void
 XPCWrappedNativeScope::UpdateWeakPointersAfterGC()
 {
     // Sweep waivers.
-    if (mWaiverWrapperMap)
+    if (mWaiverWrapperMap) {
         mWaiverWrapperMap->Sweep();
+    }
 
-    if (!js::IsObjectZoneSweepingOrCompacting(mGlobalJSObject.unbarrieredGet()))
+    if (!js::IsObjectZoneSweepingOrCompacting(mGlobalJSObject.unbarrieredGet())) {
         return;
+    }
 
     // Update our pointer to the global object in case it was moved or
     // finalized.
@@ -487,8 +508,9 @@ XPCWrappedNativeScope::UpdateWeakPointersAfterGC()
         JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
         MOZ_ASSERT(!obj || obj == wrapper->GetFlatJSObjectPreserveColor());
         AssertSameCompartment(comp, obj);
-        if (!obj)
+        if (!obj) {
             iter.Remove();
+        }
     }
 
     // Sweep mWrappedNativeProtoMap for dying prototype JSObjects. Moving has
@@ -499,8 +521,9 @@ XPCWrappedNativeScope::UpdateWeakPointersAfterGC()
         JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
         AssertSameCompartment(comp, obj);
         MOZ_ASSERT(!obj || obj == entry->value->GetJSProtoObjectPreserveColor());
-        if (!obj)
+        if (!obj) {
             i.Remove();
+        }
     }
 }
 
@@ -523,8 +546,9 @@ XPCWrappedNativeScope::KillDyingScopes()
     XPCWrappedNativeScope* cur = gDyingScopes;
     while (cur) {
         XPCWrappedNativeScope* next = cur->mNext;
-        if (cur->mGlobalJSObject)
+        if (cur->mGlobalJSObject) {
             RealmPrivate::Get(cur->mGlobalJSObject)->scope = nullptr;
+        }
         delete cur;
         cur = next;
     }
@@ -557,8 +581,9 @@ XPCWrappedNativeScope::SystemIsBeingShutDown()
 
     for (cur = gDyingScopes; cur; cur = cur->mNext) {
         // Give the Components object a chance to try to clean up.
-        if (cur->mComponents)
+        if (cur->mComponents) {
             cur->mComponents->SystemIsBeingShutDown();
+        }
 
         // Walk the protos first. Wrapper shutdown can leave dangling
         // proto pointers in the proto map.
@@ -591,8 +616,9 @@ JSObject*
 XPCWrappedNativeScope::GetExpandoChain(HandleObject target)
 {
     MOZ_ASSERT(ObjectScope(target) == this);
-    if (!mXrayExpandos.initialized())
+    if (!mXrayExpandos.initialized()) {
         return nullptr;
+    }
     return mXrayExpandos.lookup(target);
 }
 
@@ -600,8 +626,9 @@ JSObject*
 XPCWrappedNativeScope::DetachExpandoChain(HandleObject target)
 {
     MOZ_ASSERT(ObjectScope(target) == this);
-    if (!mXrayExpandos.initialized())
+    if (!mXrayExpandos.initialized()) {
         return nullptr;
+    }
     return mXrayExpandos.removeValue(target);
 }
 
@@ -612,8 +639,9 @@ XPCWrappedNativeScope::SetExpandoChain(JSContext* cx, HandleObject target,
     MOZ_ASSERT(ObjectScope(target) == this);
     MOZ_ASSERT(js::IsObjectInContextCompartment(target, cx));
     MOZ_ASSERT_IF(chain, ObjectScope(chain) == this);
-    if (!mXrayExpandos.initialized() && !mXrayExpandos.init(cx))
+    if (!mXrayExpandos.initialized() && !mXrayExpandos.init(cx)) {
         return false;
+    }
     return mXrayExpandos.put(cx, target, chain);
 }
 
@@ -630,15 +658,18 @@ XPCWrappedNativeScope::DebugDumpAllScopes(int16_t depth)
     // get scope count.
     int count = 0;
     XPCWrappedNativeScope* cur;
-    for (cur = gScopes; cur; cur = cur->mNext)
+    for (cur = gScopes; cur; cur = cur->mNext) {
         count++ ;
+    }
 
     XPC_LOG_ALWAYS(("chain of %d XPCWrappedNativeScope(s)", count));
     XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("gDyingScopes @ %p", gDyingScopes));
-        if (depth)
-            for (cur = gScopes; cur; cur = cur->mNext)
+        if (depth) {
+            for (cur = gScopes; cur; cur = cur->mNext) {
                 cur->DebugDump(depth);
+            }
+        }
     XPC_LOG_OUTDENT();
 #endif
 }
@@ -685,8 +716,9 @@ XPCWrappedNativeScope::DebugDump(int16_t depth)
 void
 XPCWrappedNativeScope::AddSizeOfAllScopesIncludingThis(ScopeSizeInfo* scopeSizeInfo)
 {
-    for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
+    for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         cur->AddSizeOfIncludingThis(scopeSizeInfo);
+    }
 }
 
 void
