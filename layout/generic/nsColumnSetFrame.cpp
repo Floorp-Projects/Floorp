@@ -6,8 +6,6 @@
 
 /* rendering object for css3 multi-column layout */
 
-#include "mozilla/Unused.h"
-#include "gfxPrefs.h"
 #include "nsColumnSetFrame.h"
 
 #include "mozilla/Logging.h"
