@@ -164,42 +164,27 @@ nsDisplayFieldSetBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
   auto frame = static_cast<nsFieldSetFrame*>(mFrame);
   auto offset = ToReferenceFrame();
   nsRect rect;
-  bool pushedClip = false;
 
   if (nsIFrame* legend = frame->GetLegend()) {
     rect = frame->VisualBorderRectRelativeToSelf() + offset;
+
+    // Legends require a "negative" clip around the text, which WR doesn't support yet.
     nsRect legendRect = legend->GetNormalRect() + offset;
-
     if (!legendRect.IsEmpty()) {
-      auto appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
-      auto layoutRect = wr::ToLayoutRect(LayoutDeviceRect::FromAppUnits(rect, appUnitsPerDevPixel));
-
-      wr::ComplexClipRegion region;
-      region.rect = wr::ToLayoutRect(LayoutDeviceRect::FromAppUnits(legendRect, appUnitsPerDevPixel));
-      region.mode = wr::ClipMode::ClipOut;
-      nsTArray<mozilla::wr::ComplexClipRegion> array{region};
-
-      wr::WrClipId clip = aBuilder.DefineClip(Nothing(), layoutRect, &array, nullptr);
-      aBuilder.PushClip(clip);
-      pushedClip = true;
+      return false;
     }
-
   } else {
     rect = nsRect(offset, frame->GetRect().Size());
   }
 
-  bool result = nsCSSRendering::CreateWebRenderCommandsForBorder(this,
-                                                                 mFrame,
-                                                                 rect,
-                                                                 aBuilder,
-                                                                 aResources,
-                                                                 aSc,
-                                                                 aManager,
-                                                                 aDisplayListBuilder);
-  if (pushedClip) {
-    aBuilder.PopClip();
-  }
-  return result;
+  return nsCSSRendering::CreateWebRenderCommandsForBorder(this,
+                                                          mFrame,
+                                                          rect,
+                                                          aBuilder,
+                                                          aResources,
+                                                          aSc,
+                                                          aManager,
+                                                          aDisplayListBuilder);
 };
 
 void
