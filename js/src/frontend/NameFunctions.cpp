@@ -445,9 +445,8 @@ class NameResolver
 
           case ParseNodeKind::TypeOfName:
           case ParseNodeKind::SuperBase:
-            MOZ_ASSERT(cur->isArity(PN_UNARY));
-            MOZ_ASSERT(cur->pn_kid->isKind(ParseNodeKind::Name));
-            MOZ_ASSERT(!cur->pn_kid->expr());
+            MOZ_ASSERT(cur->as<UnaryNode>().kid()->isKind(ParseNodeKind::Name));
+            MOZ_ASSERT(!cur->as<UnaryNode>().kid()->expr());
             break;
 
           case ParseNodeKind::NewTarget:
@@ -478,16 +477,14 @@ class NameResolver
           case ParseNodeKind::Spread:
           case ParseNodeKind::MutateProto:
           case ParseNodeKind::Export:
-            MOZ_ASSERT(cur->isArity(PN_UNARY));
-            if (!resolve(cur->pn_kid, prefix)) {
+            if (!resolve(cur->as<UnaryNode>().kid(), prefix)) {
                 return false;
             }
             break;
 
           // Nodes with a single nullable child.
           case ParseNodeKind::This:
-            MOZ_ASSERT(cur->isArity(PN_UNARY));
-            if (ParseNode* expr = cur->pn_kid) {
+            if (ParseNode* expr = cur->as<ThisLiteral>().kid()) {
                 if (!resolve(expr, prefix)) {
                     return false;
                 }
@@ -563,7 +560,7 @@ class NameResolver
 
           case ParseNodeKind::InitialYield: {
 #ifdef DEBUG
-            AssignmentNode* assignNode = &cur->pn_kid->as<AssignmentNode>();
+            AssignmentNode* assignNode = &cur->as<UnaryNode>().kid()->as<AssignmentNode>();
             MOZ_ASSERT(assignNode->left()->isKind(ParseNodeKind::Name));
             MOZ_ASSERT(assignNode->right()->isKind(ParseNodeKind::Generator));
 #endif
@@ -571,25 +568,22 @@ class NameResolver
           }
 
           case ParseNodeKind::YieldStar:
-            MOZ_ASSERT(cur->isArity(PN_UNARY));
-            if (!resolve(cur->pn_kid, prefix)) {
+            if (!resolve(cur->as<UnaryNode>().kid(), prefix)) {
                 return false;
             }
             break;
 
           case ParseNodeKind::Yield:
           case ParseNodeKind::Await:
-            MOZ_ASSERT(cur->isArity(PN_UNARY));
-            if (cur->pn_kid) {
-                if (!resolve(cur->pn_kid, prefix)) {
+            if (ParseNode* expr = cur->as<UnaryNode>().kid()) {
+                if (!resolve(expr, prefix)) {
                     return false;
                 }
             }
             break;
 
           case ParseNodeKind::Return:
-            MOZ_ASSERT(cur->isArity(PN_UNARY));
-            if (ParseNode* returnValue = cur->pn_kid) {
+            if (ParseNode* returnValue = cur->as<UnaryNode>().kid()) {
                 if (!resolve(returnValue, prefix)) {
                     return false;
                 }
