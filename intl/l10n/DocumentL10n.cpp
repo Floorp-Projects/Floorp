@@ -65,6 +65,12 @@ DocumentL10n::Init(nsTArray<nsString>& aResourceIds)
   // is ready for localization.
   uint32_t ret;
   mDOMLocalization->AddResourceIds(aResourceIds, true, &ret);
+
+  // Register observers for this instance of
+  // mozDOMLocalization to allow it to retranslate
+  // the document when locale changes or pseudolocalization
+  // gets turned on.
+  mDOMLocalization->RegisterObservers();
   return true;
 }
 

@@ -14,6 +14,7 @@ interface mozIDOMLocalization : nsISupports
 {
   unsigned long addResourceIds(in Array<AString> resourceIds, in bool aEager);
   unsigned long removeResourceIds(in Array<AString> resourceIds);
+  void registerObservers();
 
   Promise formatMessages(in Array<jsval> aKeys);
   Promise formatValues(in Array<jsval> aKeys);
