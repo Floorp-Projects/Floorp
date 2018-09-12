@@ -7,13 +7,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "cps",
                                    "nsICaptivePortalService");
 
 var CaptivePortalWatcher = {
-  /**
-   * This constant is chosen to be large enough for a portal recheck to complete,
-   * and small enough that the delay in opening a tab isn't too noticeable.
-   * Please see comments for _delayedCaptivePortalDetected for more details.
-   */
-  PORTAL_RECHECK_DELAY_MS: Services.prefs.getIntPref("captivedetect.portalRecheckDelayMS", 500),
-
   // This is the value used to identify the captive portal notification.
   PORTAL_NOTIFICATION_VALUE: "captive-portal-detected",
 
@@ -67,6 +60,9 @@ var CaptivePortalWatcher = {
       this._delayedRecheckPending = true;
     }
 
+    // This constant is chosen to be large enough for a portal recheck to complete,
+    // and small enough that the delay in opening a tab isn't too noticeable.
+    // Please see comments for _delayedCaptivePortalDetected for more details.
     XPCOMUtils.defineLazyPreferenceGetter(this, "PORTAL_RECHECK_DELAY_MS",
                                           "captivedetect.portalRecheckDelayMS", 500);
   },
