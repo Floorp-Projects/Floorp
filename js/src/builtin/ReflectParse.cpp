@@ -1751,7 +1751,7 @@ class ASTSerializer
     bool importSpecifier(ParseNode* pn, MutableHandleValue dst);
     bool exportDeclaration(ParseNode* pn, MutableHandleValue dst);
     bool exportSpecifier(ParseNode* pn, MutableHandleValue dst);
-    bool classDefinition(ParseNode* pn, bool expr, MutableHandleValue dst);
+    bool classDefinition(ClassNode* pn, bool expr, MutableHandleValue dst);
 
     bool optStatement(ParseNode* pn, MutableHandleValue dst) {
         if (!pn) {
@@ -1762,15 +1762,15 @@ class ASTSerializer
     }
 
     bool forInit(ParseNode* pn, MutableHandleValue dst);
-    bool forIn(ParseNode* loop, ParseNode* head, HandleValue var, HandleValue stmt,
+    bool forIn(ParseNode* loop, ParseNode* iterExpr, HandleValue var, HandleValue stmt,
                MutableHandleValue dst);
-    bool forOf(ParseNode* loop, ParseNode* head, HandleValue var, HandleValue stmt,
+    bool forOf(ParseNode* loop, ParseNode* iterExpr, HandleValue var, HandleValue stmt,
                MutableHandleValue dst);
     bool statement(ParseNode* pn, MutableHandleValue dst);
     bool blockStatement(ListNode* node, MutableHandleValue dst);
     bool switchStatement(ParseNode* pn, MutableHandleValue dst);
     bool switchCase(ParseNode* pn, MutableHandleValue dst);
-    bool tryStatement(ParseNode* pn, MutableHandleValue dst);
+    bool tryStatement(TernaryNode* tryNode, MutableHandleValue dst);
     bool catchClause(ParseNode* pn, MutableHandleValue dst);
 
     bool optExpression(ParseNode* pn, MutableHandleValue dst) {
@@ -2191,7 +2191,7 @@ ASTSerializer::exportDeclaration(ParseNode* pn, MutableHandleValue dst)
         break;
 
       case ParseNodeKind::Class:
-        if (!classDefinition(kid, false, &decl)) {
+        if (!classDefinition(&kid->as<ClassNode>(), false, &decl)) {
             return false;
         }
         break;
@@ -2301,19 +2301,24 @@ ASTSerializer::catchClause(ParseNode* pn, MutableHandleValue dst)
 }
 
 bool
-ASTSerializer::tryStatement(ParseNode* pn, MutableHandleValue dst)
+ASTSerializer::tryStatement(TernaryNode* tryNode, MutableHandleValue dst)
 {
-    MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
-    MOZ_ASSERT_IF(pn->pn_kid2, pn->pn_pos.encloses(pn->pn_kid2->pn_pos));
-    MOZ_ASSERT_IF(pn->pn_kid3, pn->pn_pos.encloses(pn->pn_kid3->pn_pos));
+    ParseNode* bodyNode = tryNode->kid1();
+    MOZ_ASSERT(tryNode->pn_pos.encloses(bodyNode->pn_pos));
+
+    ParseNode* catchNode = tryNode->kid2();
+    MOZ_ASSERT_IF(catchNode, tryNode->pn_pos.encloses(catchNode->pn_pos));
+
+    ParseNode* finallyNode = tryNode->kid3();
+    MOZ_ASSERT_IF(finallyNode, tryNode->pn_pos.encloses(finallyNode->pn_pos));
 
     RootedValue body(cx);
-    if (!statement(pn->pn_kid1, &body)) {
+    if (!statement(bodyNode, &body)) {
         return false;
     }
 
     RootedValue handler(cx, NullValue());
-    if (ParseNode* catchScope = pn->pn_kid2) {
+    if (ParseNode* catchScope = catchNode) {
         MOZ_ASSERT(catchScope->isKind(ParseNodeKind::LexicalScope));
         if (!catchClause(catchScope->scopeBody(), &handler)) {
             return false;
@@ -2321,8 +2326,8 @@ ASTSerializer::tryStatement(ParseNode* pn, MutableHandleValue dst)
     }
 
     RootedValue finally(cx);
-    return optStatement(pn->pn_kid3, &finally) &&
-           builder.tryStatement(body, handler, finally, &pn->pn_pos, dst);
+    return optStatement(finallyNode, &finally) &&
+           builder.tryStatement(body, handler, finally, &tryNode->pn_pos, dst);
 }
 
 bool
@@ -2340,40 +2345,40 @@ ASTSerializer::forInit(ParseNode* pn, MutableHandleValue dst)
 }
 
 bool
-ASTSerializer::forOf(ParseNode* loop, ParseNode* head, HandleValue var, HandleValue stmt,
+ASTSerializer::forOf(ParseNode* loop, ParseNode* iterExpr, HandleValue var, HandleValue stmt,
                          MutableHandleValue dst)
 {
     RootedValue expr(cx);
 
-    return expression(head->pn_kid3, &expr) &&
+    return expression(iterExpr, &expr) &&
         builder.forOfStatement(var, expr, stmt, &loop->pn_pos, dst);
 }
 
 bool
-ASTSerializer::forIn(ParseNode* loop, ParseNode* head, HandleValue var, HandleValue stmt,
+ASTSerializer::forIn(ParseNode* loop, ParseNode* iterExpr, HandleValue var, HandleValue stmt,
                          MutableHandleValue dst)
 {
     RootedValue expr(cx);
 
-    return expression(head->pn_kid3, &expr) &&
+    return expression(iterExpr, &expr) &&
         builder.forInStatement(var, expr, stmt, &loop->pn_pos, dst);
 }
 
 bool
-ASTSerializer::classDefinition(ParseNode* pn, bool expr, MutableHandleValue dst)
+ASTSerializer::classDefinition(ClassNode* pn, bool expr, MutableHandleValue dst)
 {
     RootedValue className(cx, MagicValue(JS_SERIALIZE_NO_NODE));
     RootedValue heritage(cx);
     RootedValue classBody(cx);
 
-    if (pn->pn_kid1) {
-        if (!identifier(pn->pn_kid1->as<ClassNames>().innerBinding(), &className)) {
+    if (ClassNames* names = pn->names()) {
+        if (!identifier(names->innerBinding(), &className)) {
             return false;
         }
     }
 
-    return optExpression(pn->pn_kid2, &heritage) &&
-           statement(pn->pn_kid3, &classBody) &&
+    return optExpression(pn->heritage(), &heritage) &&
+           statement(pn->methodList(), &classBody) &&
            builder.classDefinition(expr, className, heritage, classBody, &pn->pn_pos, dst);
 }
 
@@ -2423,23 +2428,30 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
 
       case ParseNodeKind::If:
       {
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid2->pn_pos));
-        MOZ_ASSERT_IF(pn->pn_kid3, pn->pn_pos.encloses(pn->pn_kid3->pn_pos));
+        TernaryNode* ifNode = &pn->as<TernaryNode>();
+
+        ParseNode* testNode = ifNode->kid1();
+        MOZ_ASSERT(ifNode->pn_pos.encloses(testNode->pn_pos));
+
+        ParseNode* consNode = ifNode->kid2();
+        MOZ_ASSERT(ifNode->pn_pos.encloses(consNode->pn_pos));
+
+        ParseNode* altNode = ifNode->kid3();
+        MOZ_ASSERT_IF(altNode, ifNode->pn_pos.encloses(altNode->pn_pos));
 
         RootedValue test(cx), cons(cx), alt(cx);
 
-        return expression(pn->pn_kid1, &test) &&
-               statement(pn->pn_kid2, &cons) &&
-               optStatement(pn->pn_kid3, &alt) &&
-               builder.ifStatement(test, cons, alt, &pn->pn_pos, dst);
+        return expression(testNode, &test) &&
+               statement(consNode, &cons) &&
+               optStatement(altNode, &alt) &&
+               builder.ifStatement(test, cons, alt, &ifNode->pn_pos, dst);
       }
 
       case ParseNodeKind::Switch:
         return switchStatement(pn, dst);
 
       case ParseNodeKind::Try:
-        return tryStatement(pn, dst);
+        return tryStatement(&pn->as<TernaryNode>(), dst);
 
       case ParseNodeKind::With:
       case ParseNodeKind::While:
@@ -2473,11 +2485,16 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
 
-        ParseNode* head = pn->pn_left;
+        TernaryNode* head = &pn->pn_left->as<TernaryNode>();
 
-        MOZ_ASSERT_IF(head->pn_kid1, head->pn_pos.encloses(head->pn_kid1->pn_pos));
-        MOZ_ASSERT_IF(head->pn_kid2, head->pn_pos.encloses(head->pn_kid2->pn_pos));
-        MOZ_ASSERT_IF(head->pn_kid3, head->pn_pos.encloses(head->pn_kid3->pn_pos));
+        ParseNode* initNode = head->kid1();
+        MOZ_ASSERT_IF(initNode, head->pn_pos.encloses(initNode->pn_pos));
+
+        ParseNode* maybeTest = head->kid2();
+        MOZ_ASSERT_IF(maybeTest, head->pn_pos.encloses(maybeTest->pn_pos));
+
+        ParseNode* updateOrIter = head->kid3();
+        MOZ_ASSERT_IF(updateOrIter, head->pn_pos.encloses(updateOrIter->pn_pos));
 
         RootedValue stmt(cx);
         if (!statement(pn->pn_right, &stmt)) {
@@ -2486,37 +2503,37 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
 
         if (head->isKind(ParseNodeKind::ForIn) || head->isKind(ParseNodeKind::ForOf)) {
             RootedValue var(cx);
-            if (head->pn_kid1->isKind(ParseNodeKind::LexicalScope)) {
-                if (!variableDeclaration(&head->pn_kid1->scopeBody()->as<ListNode>(), true, &var)) {
+            if (initNode->isKind(ParseNodeKind::LexicalScope)) {
+                if (!variableDeclaration(&initNode->scopeBody()->as<ListNode>(), true, &var)) {
                     return false;
                 }
-            } else if (!head->pn_kid1->isKind(ParseNodeKind::Var) &&
-                       !head->pn_kid1->isKind(ParseNodeKind::Let) &&
-                       !head->pn_kid1->isKind(ParseNodeKind::Const))
+            } else if (!initNode->isKind(ParseNodeKind::Var) &&
+                       !initNode->isKind(ParseNodeKind::Let) &&
+                       !initNode->isKind(ParseNodeKind::Const))
             {
-                if (!pattern(head->pn_kid1, &var)) {
+                if (!pattern(initNode, &var)) {
                     return false;
                 }
             } else {
-                if (!variableDeclaration(&head->pn_kid1->as<ListNode>(),
-                                         head->pn_kid1->isKind(ParseNodeKind::Let) ||
-                                         head->pn_kid1->isKind(ParseNodeKind::Const),
+                if (!variableDeclaration(&initNode->as<ListNode>(),
+                                         initNode->isKind(ParseNodeKind::Let) ||
+                                         initNode->isKind(ParseNodeKind::Const),
                                          &var))
                 {
                     return false;
                 }
             }
             if (head->isKind(ParseNodeKind::ForIn)) {
-                return forIn(pn, head, var, stmt, dst);
+                return forIn(pn, updateOrIter, var, stmt, dst);
             }
-            return forOf(pn, head, var, stmt, dst);
+            return forOf(pn, updateOrIter, var, stmt, dst);
         }
 
         RootedValue init(cx), test(cx), update(cx);
 
-        return forInit(head->pn_kid1, &init) &&
-               optExpression(head->pn_kid2, &test) &&
-               optExpression(head->pn_kid3, &update) &&
+        return forInit(initNode, &init) &&
+               optExpression(maybeTest, &test) &&
+               optExpression(updateOrIter, &update) &&
                builder.forStatement(init, test, update, stmt, &pn->pn_pos, dst);
       }
 
@@ -2566,7 +2583,7 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
         return builder.debuggerStatement(&pn->pn_pos, dst);
 
       case ParseNodeKind::Class:
-        return classDefinition(pn, false, dst);
+        return classDefinition(&pn->as<ClassNode>(), false, dst);
 
       case ParseNodeKind::ClassMethodList:
       {
@@ -2730,16 +2747,20 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
 
       case ParseNodeKind::Conditional:
       {
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid2->pn_pos));
-        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid3->pn_pos));
+        ConditionalExpression* condNode = &pn->as<ConditionalExpression>();
+        ParseNode* testNode = condNode->kid1();
+        ParseNode* consNode = condNode->kid2();
+        ParseNode* altNode = condNode->kid3();
+        MOZ_ASSERT(condNode->pn_pos.encloses(testNode->pn_pos));
+        MOZ_ASSERT(condNode->pn_pos.encloses(consNode->pn_pos));
+        MOZ_ASSERT(condNode->pn_pos.encloses(altNode->pn_pos));
 
         RootedValue test(cx), cons(cx), alt(cx);
 
-        return expression(pn->pn_kid1, &test) &&
-               expression(pn->pn_kid2, &cons) &&
-               expression(pn->pn_kid3, &alt) &&
-               builder.conditionalExpression(test, cons, alt, &pn->pn_pos, dst);
+        return expression(testNode, &test) &&
+               expression(consNode, &cons) &&
+               expression(altNode, &alt) &&
+               builder.conditionalExpression(test, cons, alt, &condNode->pn_pos, dst);
       }
 
       case ParseNodeKind::Or:
@@ -3088,7 +3109,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       }
 
       case ParseNodeKind::Class:
-        return classDefinition(pn, true, dst);
+        return classDefinition(&pn->as<ClassNode>(), true, dst);
 
       case ParseNodeKind::NewTarget:
       case ParseNodeKind::ImportMeta:
