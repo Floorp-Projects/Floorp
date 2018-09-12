@@ -74,6 +74,30 @@
   "c:\\windows\\prefetch\\{prefetch}.pf": {
     "ignore": true
   },
+  "c:\\windows\\system32\\windows.storage.dll": {
+    "mincount": 2,
+    "maxcount": 2,
+    "minbytes": 0,
+    "maxbytes": 24576
+  },
+  "c:\\windows\\system32\\ole32.dll": {
+    "mincount": 4,
+    "maxcount": 4,
+    "minbytes": 0,
+    "maxbytes": 65536
+  },
+  "c:\\windows\\system32\\ucrtbase.dll": {
+    "mincount": 4,
+    "maxcount": 4,
+    "minbytes": 16384,
+    "maxbytes": 32768
+  },
+  "c:\\windows\\system32\\user32.dll": {
+    "mincount": 4,
+    "maxcount": 4,
+    "minbytes": 0,
+    "maxbytes": 65536
+  },
   "c:\\windows\\system32\\audioses.dll": {
     "mincount": 4,
     "maxcount": 4,
