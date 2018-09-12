@@ -46,22 +46,20 @@ enum class CSSPseudoElementType : uint8_t;
 class ComputedStyle;
 
 /**
- * A ComputedStyle represents the computed style data for an element.  The
- * computed style data are stored in a set of structs (see nsStyleStruct.h) that
- * are cached either on the ComputedStyle or in the rule tree (see nsRuleNode.h
- * for a description of this caching and how the cached structs are shared).
+ * A ComputedStyle represents the computed style data for an element.
  *
- * Since the data in |nsIStyleRule|s and |nsRuleNode|s are immutable (with a few
- * exceptions, like system color changes), the data in an ComputedStyle are also
- * immutable (with the additional exception of GetUniqueStyleData).  When style
- * data change, ElementRestyler::Restyle creates a new ComputedStyle.
+ * The computed style data are stored in a set of reference counted structs
+ * (see nsStyleStruct.h) that are stored directly on the ComputedStyle.
+ *
+ * Style structs are immutable once they have been produced, so when any change
+ * is made that needs a restyle, we create a new ComputedStyle.
  *
  * ComputedStyles are reference counted. References are generally held by:
- *  1. the |nsIFrame|s that are using the ComputedStyle and
- *  2. any *child* ComputedStyle (this might be the reverse of
- *     expectation, but it makes sense in this case)
  *
- * FIXME(emilio): This comment is somewhat outdated now.
+ *  1. nsIFrame::mComputedStyle, for every frame
+ *  2. Element::mServoData, for every element not inside a display:none subtree
+ *  3. nsComputedDOMStyle, when created for elements in display:none subtrees
+ *  4. media_queries::Device, which holds the initial value of every property
  */
 
 enum class ComputedStyleBit : uint8_t
