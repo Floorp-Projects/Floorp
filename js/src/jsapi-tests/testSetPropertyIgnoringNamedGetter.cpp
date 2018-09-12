@@ -32,8 +32,9 @@ class CustomProxyHandler : public Wrapper
              ObjectOpResult& result) const override
     {
         Rooted<PropertyDescriptor> desc(cx);
-        if (!Wrapper::getPropertyDescriptor(cx, proxy, id, &desc))
+        if (!Wrapper::getPropertyDescriptor(cx, proxy, id, &desc)) {
             return false;
+        }
         return SetPropertyIgnoringNamedGetter(cx, proxy, id, v, receiver, desc, result);
     }
 
@@ -43,8 +44,9 @@ class CustomProxyHandler : public Wrapper
     {
         if (JSID_IS_STRING(id)) {
             bool match;
-            if (!JS_StringEqualsAscii(cx, JSID_TO_STRING(id), "phantom", &match))
+            if (!JS_StringEqualsAscii(cx, JSID_TO_STRING(id), "phantom", &match)) {
                 return false;
+            }
             if (match) {
                 desc.object().set(proxy);
                 desc.attributesRef() = JSPROP_ENUMERATE;
@@ -53,8 +55,9 @@ class CustomProxyHandler : public Wrapper
             }
         }
 
-        if (ownOnly)
+        if (ownOnly) {
             return Wrapper::getOwnPropertyDescriptor(cx, proxy, id, desc);
+        }
         return Wrapper::getPropertyDescriptor(cx, proxy, id, desc);
     }
 

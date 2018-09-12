@@ -15,8 +15,9 @@ using namespace js::jit;
 static bool
 CoPrime(size_t a, size_t b)
 {
-    if (b <= 1)
+    if (b <= 1) {
         return a == 1 || b == 1;
+    }
     return CoPrime(b, a % b);
 }
 
@@ -166,8 +167,9 @@ void pullAllFpus(AllocatableFloatRegisterSet& set, uint32_t& max_bits, uint32_t 
         pullAllFpus(set, max_bits, bits + 128);
         set.add(tmp);
     }
-    if (bits >= max_bits)
+    if (bits >= max_bits) {
         max_bits = bits;
+    }
 }
 
 BEGIN_TEST(testJitRegisterSet_FPU_Aliases)
@@ -182,14 +184,17 @@ BEGIN_TEST(testJitRegisterSet_FPU_Aliases)
             FloatRegister alias = reg.alignedAliased(i);
 
             if (alias.isSingle()) {
-                if (alias_bits <= 32)
+                if (alias_bits <= 32) {
                     alias_bits = 32;
+                }
             } else if (alias.isDouble()) {
-                if (alias_bits <= 64)
+                if (alias_bits <= 64) {
                     alias_bits = 64;
+                }
             } else if (alias.isSimd128()) {
-                if (alias_bits <= 128)
+                if (alias_bits <= 128) {
                     alias_bits = 128;
+                }
             }
         }
 

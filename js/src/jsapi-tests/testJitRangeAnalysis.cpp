@@ -20,24 +20,33 @@ using namespace js::jit;
 
 static bool
 EquivalentRanges(const Range* a, const Range* b) {
-    if (a->hasInt32UpperBound() != b->hasInt32UpperBound())
+    if (a->hasInt32UpperBound() != b->hasInt32UpperBound()) {
         return false;
-    if (a->hasInt32LowerBound() != b->hasInt32LowerBound())
+    }
+    if (a->hasInt32LowerBound() != b->hasInt32LowerBound()) {
         return false;
-    if (a->hasInt32UpperBound() && (a->upper() != b->upper()))
+    }
+    if (a->hasInt32UpperBound() && (a->upper() != b->upper())) {
         return false;
-    if (a->hasInt32LowerBound() && (a->lower() != b->lower()))
+    }
+    if (a->hasInt32LowerBound() && (a->lower() != b->lower())) {
         return false;
-    if (a->canHaveFractionalPart() != b->canHaveFractionalPart())
+    }
+    if (a->canHaveFractionalPart() != b->canHaveFractionalPart()) {
         return false;
-    if (a->canBeNegativeZero() != b->canBeNegativeZero())
+    }
+    if (a->canBeNegativeZero() != b->canBeNegativeZero()) {
         return false;
-    if (a->canBeNaN() != b->canBeNaN())
+    }
+    if (a->canBeNaN() != b->canBeNaN()) {
         return false;
-    if (a->canBeInfiniteOrNaN() != b->canBeInfiniteOrNaN())
+    }
+    if (a->canBeInfiniteOrNaN() != b->canBeInfiniteOrNaN()) {
         return false;
-    if (!a->canBeInfiniteOrNaN() && (a->exponent() != b->exponent()))
+    }
+    if (!a->canBeInfiniteOrNaN() && (a->exponent() != b->exponent())) {
         return false;
+    }
     return true;
 }
 
@@ -170,8 +179,9 @@ BEGIN_TEST(testJitRangeAnalysis_MathSignBeta)
     MReturn* elseElseRet = MReturn::New(func.alloc, elseElseSign);
     elseElseBlock->end(elseElseRet);
 
-    if (!func.runRangeAnalysis())
+    if (!func.runRangeAnalysis()) {
         return false;
+    }
 
     CHECK(!p->range());
     CHECK(EquivalentRanges(c0->range(), Range::NewDoubleSingletonRange(func.alloc, 0.0)));
@@ -260,16 +270,18 @@ BEGIN_TEST(testJitRangeAnalysis_StrictCompareBeta)
     };
     for (size_t i = 0; i < mozilla::ArrayLength(nonNumerics); ++i) {
         cmp->setCompareType(nonNumerics[i]);
-        if (!func.runRangeAnalysis())
+        if (!func.runRangeAnalysis()) {
             return false;
+        }
         CHECK(!thenAdd->range() || thenAdd->range()->isUnknown());
         ClearDominatorTree(func.graph);
     }
 
     // We can do it with a numeric comparison.
     cmp->setCompareType(MCompare::Compare_Double);
-    if (!func.runRangeAnalysis())
+    if (!func.runRangeAnalysis()) {
         return false;
+    }
     CHECK(EquivalentRanges(thenAdd->range(),
                            Range::NewDoubleRange(func.alloc, 0.0, 0.0)));
 
@@ -307,8 +319,9 @@ checkShiftRightRange(int32_t lhsLow, int32_t lhsHigh, int32_t lhsInc,
             Range* lhsRange = Range::NewInt32Range(func.alloc, lhsLower, lhsUpper);
             for (rhsLower = rhsLow; rhsLower <= rhsHigh; rhsLower += rhsInc) {
                 for (rhsUpper = rhsLower; rhsUpper <= rhsHigh; rhsUpper += rhsInc) {
-                    if (!func.alloc.ensureBallast())
+                    if (!func.alloc.ensureBallast()) {
                         return false;
+                    }
 
                     Range* rhsRange = Range::NewInt32Range(func.alloc, rhsLower, rhsUpper);
                     Range* result = Range::rsh(func.alloc, lhsRange, rhsRange);

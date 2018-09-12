@@ -39,8 +39,9 @@ void
 TestNode::findOutgoingEdges(TestComponentFinder& finder)
 {
     for (unsigned i = 0; i < MaxVertices; ++i) {
-        if (hasEdge[i])
+        if (hasEdge[i]) {
             finder.addEdgeTo(&Vertex[i]);
+        }
     }
 }
 
@@ -158,8 +159,9 @@ void edge(unsigned src_index, unsigned dest_index)
 void run()
 {
     finder = new TestComponentFinder(cx->nativeStackLimit[JS::StackForSystemCode]);
-    for (unsigned i = 0; i < vertex_count; ++i)
+    for (unsigned i = 0; i < vertex_count; ++i) {
         finder->addNode(&Vertex[i]);
+    }
     resultsList = finder->getResultsList();
 }
 
@@ -231,8 +233,9 @@ struct TestComponentFinder2 : public ComponentFinder<TestNode2, TestComponentFin
 void
 TestNode2::findOutgoingEdges(TestComponentFinder2& finder)
 {
-    if (edge)
+    if (edge) {
         finder.addEdgeTo(edge);
+    }
 }
 
 BEGIN_TEST(testFindSCCsStackLimit)
@@ -253,12 +256,14 @@ BEGIN_TEST(testFindSCCsStackLimit)
     const unsigned initial = 10;
 
     TestNode2* vertices = new TestNode2[max]();
-    for (unsigned i = initial; i < (max - 10); ++i)
+    for (unsigned i = initial; i < (max - 10); ++i) {
         vertices[i].edge = &vertices[i + 1];
+    }
 
     TestComponentFinder2 finder(cx->nativeStackLimit[JS::StackForSystemCode]);
-    for (unsigned i = 0; i < max; ++i)
+    for (unsigned i = 0; i < max; ++i) {
         finder.addNode(&vertices[i]);
+    }
 
     TestNode2* r = finder.getResultsList();
     CHECK(r);

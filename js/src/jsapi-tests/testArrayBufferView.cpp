@@ -93,8 +93,9 @@ static JSObject*
 CreateDataView(JSContext* cx)
 {
     JS::Rooted<JSObject*> buffer(cx, JS_NewArrayBuffer(cx, 8));
-    if (!buffer)
+    if (!buffer) {
         return nullptr;
+    }
     return JS_NewDataView(cx, buffer, 0, 8);
 }
 

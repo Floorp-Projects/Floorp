@@ -60,8 +60,9 @@ MOZ_NEVER_INLINE static Kennel*
 Allocate(JSContext* cx)
 {
     RootedObject barker(cx, JS_NewObject(cx, &BarkWhenTracedClass::class_));
-    if (!barker)
+    if (!barker) {
         return nullptr;
+    }
 
     return new Kennel(cx, barker);
 }

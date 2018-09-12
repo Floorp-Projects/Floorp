@@ -31,8 +31,9 @@ JS_STATIC_ASSERT(TestSize <= 0x0000FFFF / 2);
 struct LowToHigh
 {
     static uint32_t rekey(uint32_t initial) {
-        if (initial > uint32_t(0x0000FFFF))
+        if (initial > uint32_t(0x0000FFFF)) {
             return initial;
+        }
         return initial << 16;
     }
 
@@ -44,14 +45,16 @@ struct LowToHigh
 struct LowToHighWithRemoval
 {
     static uint32_t rekey(uint32_t initial) {
-        if (initial > uint32_t(0x0000FFFF))
+        if (initial > uint32_t(0x0000FFFF)) {
             return initial;
+        }
         return initial << 16;
     }
 
     static bool shouldBeRemoved(uint32_t initial) {
-        if (initial >= 0x00010000)
+        if (initial >= 0x00010000) {
             return (initial >> 16) % 2 == 0;
+        }
         return initial % 2 == 0;
     }
 };
@@ -110,11 +113,13 @@ AddLowKeys(IntMap* am, IntMap* bm, int seed)
     while (i < TestSize) {
         uint32_t n = rand() & 0x0000FFFF;
         if (!am->has(n)) {
-            if (bm->has(n))
+            if (bm->has(n)) {
                 return false;
+            }
 
-            if (!am->putNew(n, n) || !bm->putNew(n, n))
+            if (!am->putNew(n, n) || !bm->putNew(n, n)) {
                 return false;
+            }
             i++;
         }
     }
@@ -129,10 +134,12 @@ AddLowKeys(IntSet* as, IntSet* bs, int seed)
     while (i < TestSize) {
         uint32_t n = rand() & 0x0000FFFF;
         if (!as->has(n)) {
-            if (bs->has(n))
+            if (bs->has(n)) {
                 return false;
-            if (!as->putNew(n) || !bs->putNew(n))
+            }
+            if (!as->putNew(n) || !bs->putNew(n)) {
                 return false;
+            }
             i++;
         }
     }
@@ -145,19 +152,23 @@ SlowRekey(IntMap* m) {
     IntMap tmp;
 
     for (auto iter = m->iter(); !iter.done(); iter.next()) {
-        if (NewKeyFunction::shouldBeRemoved(iter.get().key()))
+        if (NewKeyFunction::shouldBeRemoved(iter.get().key())) {
             continue;
+        }
         uint32_t hi = NewKeyFunction::rekey(iter.get().key());
-        if (tmp.has(hi))
+        if (tmp.has(hi)) {
             return false;
-        if (!tmp.putNew(hi, iter.get().value()))
+        }
+        if (!tmp.putNew(hi, iter.get().value())) {
             return false;
+        }
     }
 
     m->clear();
     for (auto iter = tmp.iter(); !iter.done(); iter.next()) {
-        if (!m->putNew(iter.get().key(), iter.get().value()))
+        if (!m->putNew(iter.get().key(), iter.get().value())) {
             return false;
+        }
     }
 
     return true;
@@ -169,19 +180,23 @@ SlowRekey(IntSet* s) {
     IntSet tmp;
 
     for (auto iter = s->iter(); !iter.done(); iter.next()) {
-        if (NewKeyFunction::shouldBeRemoved(iter.get()))
+        if (NewKeyFunction::shouldBeRemoved(iter.get())) {
             continue;
+        }
         uint32_t hi = NewKeyFunction::rekey(iter.get());
-        if (tmp.has(hi))
+        if (tmp.has(hi)) {
             return false;
-        if (!tmp.putNew(hi))
+        }
+        if (!tmp.putNew(hi)) {
             return false;
+        }
     }
 
     s->clear();
     for (auto iter = tmp.iter(); !iter.done(); iter.next()) {
-        if (!s->putNew(iter.get()))
+        if (!s->putNew(iter.get())) {
             return false;
+        }
     }
 
     return true;
@@ -199,8 +214,9 @@ BEGIN_TEST(testHashRekeyManual)
 
         for (auto iter = am.modIter(); !iter.done(); iter.next()) {
             uint32_t tmp = LowToHigh::rekey(iter.get().key());
-            if (tmp != iter.get().key())
+            if (tmp != iter.get().key()) {
                 iter.rekey(tmp);
+            }
         }
         CHECK(SlowRekey<LowToHigh>(&bm));
 
@@ -219,8 +235,9 @@ BEGIN_TEST(testHashRekeyManual)
 
         for (auto iter = as.modIter(); !iter.done(); iter.next()) {
             uint32_t tmp = LowToHigh::rekey(iter.get());
-            if (tmp != iter.get())
+            if (tmp != iter.get()) {
                 iter.rekey(tmp);
+            }
         }
         CHECK(SlowRekey<LowToHigh>(&bs));
 
@@ -248,8 +265,9 @@ BEGIN_TEST(testHashRekeyManualRemoval)
                 iter.remove();
             } else {
                 uint32_t tmp = LowToHighWithRemoval::rekey(iter.get().key());
-                if (tmp != iter.get().key())
+                if (tmp != iter.get().key()) {
                     iter.rekey(tmp);
+                }
             }
         }
         CHECK(SlowRekey<LowToHighWithRemoval>(&bm));
@@ -272,8 +290,9 @@ BEGIN_TEST(testHashRekeyManualRemoval)
                 iter.remove();
             } else {
                 uint32_t tmp = LowToHighWithRemoval::rekey(iter.get());
-                if (tmp != iter.get())
+                if (tmp != iter.get()) {
                     iter.rekey(tmp);
+                }
             }
         }
         CHECK(SlowRekey<LowToHighWithRemoval>(&bs));
@@ -350,8 +369,9 @@ GrowUntilResize()
     uint32_t key = 0;
     while (resizes < 4) {
         auto p = m.lookupForAdd(key);
-        if (!p && !m.add(p, key, 0))
+        if (!p && !m.add(p, key, 0)) {
             return false;   // OOM'd in lookupForAdd() or add()
+        }
 
         size_t capacity = m.capacity();
         if (capacity != lastCapacity) {
@@ -386,8 +406,9 @@ BEGIN_TEST(testHashTableMovableModIterator)
     // Exercise returning a hash table ModIterator object from a function.
 
     CHECK(set.put(1));
-    for (auto iter = setModIter(set); !iter.done(); iter.next())
+    for (auto iter = setModIter(set); !iter.done(); iter.next()) {
         iter.remove();
+    }
     CHECK(set.count() == 0);
 
     // Test moving an ModIterator object explicitly.

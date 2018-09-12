@@ -80,8 +80,9 @@ class CCWTestTracer : public JS::CallbackTracer {
         printf("kind         = %d\n", static_cast<int>(thing.kind()));
         printf("expectedKind = %d\n", static_cast<int>(expectedKind));
 
-        if (thing.asCell() != *expectedThingp || thing.kind() != expectedKind)
+        if (thing.asCell() != *expectedThingp || thing.kind() != expectedKind) {
             okay = false;
+        }
     }
 
   public:
@@ -138,8 +139,9 @@ static size_t
 countWrappers(JS::Compartment* comp)
 {
     size_t count = 0;
-    for (JS::Compartment::WrapperEnum e(comp); !e.empty(); e.popFront())
+    for (JS::Compartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
         ++count;
+    }
     return count;
 }
 
@@ -294,8 +296,9 @@ BEGIN_TEST(testIncrementalRoots)
     // with leafOwner the object that has the 'obj' and 'leaf2' properties.
 
     JS::RootedObject obj(cx, JS_NewObject(cx, nullptr));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     JS::RootedObject root(cx, obj);
 
@@ -304,10 +307,12 @@ BEGIN_TEST(testIncrementalRoots)
 
     for (size_t i = 0; i < 3000; i++) {
         JS::RootedObject subobj(cx, JS_NewObject(cx, nullptr));
-        if (!subobj)
+        if (!subobj) {
             return false;
-        if (!JS_DefineProperty(cx, obj, "obj", subobj, 0))
+        }
+        if (!JS_DefineProperty(cx, obj, "obj", subobj, 0)) {
             return false;
+        }
         leafOwner = obj;
         obj = subobj;
         leaf = subobj;
@@ -316,16 +321,19 @@ BEGIN_TEST(testIncrementalRoots)
     // Give the leaf owner a second leaf.
     {
         JS::RootedObject leaf2(cx, JS_NewObject(cx, nullptr));
-        if (!leaf2)
+        if (!leaf2) {
             return false;
-        if (!JS_DefineProperty(cx, leafOwner, "leaf2", leaf2, 0))
+        }
+        if (!JS_DefineProperty(cx, leafOwner, "leaf2", leaf2, 0)) {
             return false;
+        }
     }
 
     // This is marked during markRuntime
     JS::AutoObjectVector vec(cx);
-    if (!vec.append(root))
+    if (!vec.append(root)) {
         return false;
+    }
 
     // Tenure everything so intentionally unrooted objects don't move before we
     // can use them.
@@ -380,11 +388,13 @@ BEGIN_TEST(testIncrementalRoots)
     // 'leaf' out of the graph and stick it into an already-marked region (hang
     // it off the un-prebarriered root, in fact). The pre-barrier on the
     // overwrite of the source location should cause this object to be marked.
-    if (!JS_SetProperty(cx, leafOwnerHandle, "obj", JS::UndefinedHandleValue))
+    if (!JS_SetProperty(cx, leafOwnerHandle, "obj", JS::UndefinedHandleValue)) {
         return false;
+    }
     MOZ_ASSERT(rt->gc.gcNumber() == currentGCNumber);
-    if (!JS_SetProperty(cx, vec[0], "newobj", leafValueHandle))
+    if (!JS_SetProperty(cx, vec[0], "newobj", leafValueHandle)) {
         return false;
+    }
     MOZ_ASSERT(rt->gc.gcNumber() == currentGCNumber);
     MOZ_ASSERT(leafHandle->asTenured().isMarkedBlack());
 
@@ -399,12 +409,14 @@ BEGIN_TEST(testIncrementalRoots)
     // pointers.
     {
         JS::RootedValue leaf2(cx);
-        if (!JS_GetProperty(cx, leafOwnerHandle, "leaf2", &leaf2))
+        if (!JS_GetProperty(cx, leafOwnerHandle, "leaf2", &leaf2)) {
             return false;
+        }
         MOZ_ASSERT(rt->gc.gcNumber() == currentGCNumber);
         MOZ_ASSERT(!leaf2.toObject().asTenured().isMarkedBlack());
-        if (!JS_SetProperty(cx, vec[0], "leafcopy", leaf2))
+        if (!JS_SetProperty(cx, vec[0], "leafcopy", leaf2)) {
             return false;
+        }
         MOZ_ASSERT(rt->gc.gcNumber() == currentGCNumber);
         MOZ_ASSERT(!leaf2.toObject().asTenured().isMarkedBlack());
     }
@@ -414,8 +426,9 @@ BEGIN_TEST(testIncrementalRoots)
     rt->gc.debugGCSlice(unlimited);
 
     // Access the leaf object to try to trigger a crash if it is dead.
-    if (!JS_SetProperty(cx, leafHandle, "toes", JS::UndefinedHandleValue))
+    if (!JS_SetProperty(cx, leafHandle, "toes", JS::UndefinedHandleValue)) {
         return false;
+    }
 
     return true;
 }

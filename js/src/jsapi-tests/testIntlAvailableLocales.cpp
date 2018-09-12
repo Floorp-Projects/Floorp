@@ -15,8 +15,9 @@ BEGIN_TEST(testIntlAvailableLocales)
     // This test should only attempt to run if we have Intl support.
     JS::Rooted<JS::Value> haveIntl(cx);
     EVAL("typeof Intl !== 'undefined'", &haveIntl);
-    if (!haveIntl.toBoolean())
+    if (!haveIntl.toBoolean()) {
         return true;
+    }
 
     // Assumption: our Intl support always includes "de" (German) support,
     // and our Intl support *does not* natively support de-ZA-ghijk.  :-)
