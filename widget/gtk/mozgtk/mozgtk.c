@@ -658,4 +658,3 @@ XShmQueryExtension(Display* aDisplay)
   return False;
 }
 #endif
-
