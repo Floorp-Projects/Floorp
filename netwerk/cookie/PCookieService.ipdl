@@ -117,7 +117,7 @@ parent:
    * @see mozIThirdPartyUtil.isThirdPartyChannel
    */
   nested(inside_cpow) async SetCookieString(URIParams host,
-                                            URIParams channelURI,
+                                            OptionalURIParams channelURI,
                                             bool isForeign,
                                             bool isTrackingResource,
                                             bool firstPartyStorageAccessGranted,

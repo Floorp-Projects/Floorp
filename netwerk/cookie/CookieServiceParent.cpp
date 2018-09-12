@@ -259,7 +259,7 @@ CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
 
 mozilla::ipc::IPCResult
 CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
-                                         const URIParams& aChannelURI,
+                                         const OptionalURIParams& aChannelURI,
                                          const bool& aIsForeign,
                                          const bool& aIsTrackingResource,
                                          const bool& aFirstPartyStorageAccessGranted,
@@ -278,8 +278,6 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
     return IPC_FAIL_NO_REASON(this);
 
   nsCOMPtr<nsIURI> channelURI = DeserializeURI(aChannelURI);
-  if (!channelURI)
-    return IPC_FAIL_NO_REASON(this);
 
   // This is a gross hack. We've already computed everything we need to know
   // for whether to set this cookie or not, but we need to communicate all of
