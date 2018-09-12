@@ -862,10 +862,10 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
   return true;
 }
 
-void
-nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
+template<class T>
+void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams, const T& aPaintChild)
 {
-  MOZ_ASSERT(UsingMaskOrClipPathForFrame(aParams.frame),
+  MOZ_ASSERT(nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(aParams.frame),
              "Should not use this method when no mask or clipPath effect"
              "on this frame");
 
@@ -1016,12 +1016,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 
   /* Paint the child */
   context.SetMatrix(matrixAutoSaveRestore.Matrix());
-  BasicLayerManager* basic = aParams.layerManager->AsBasicLayerManager();
-  RefPtr<gfxContext> oldCtx = basic->GetTarget();
-  basic->SetTarget(&context);
-  aParams.layerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer,
-                                       aParams.builder);
-  basic->SetTarget(oldCtx);
+  aPaintChild();
 
   if (gfxPrefs::DrawMaskLayer()) {
     gfxContextAutoSaveRestore saver(&context);
@@ -1056,6 +1051,27 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
     context.PopGroupAndBlend();
   }
 
+}
+
+
+void
+nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
+{
+  PaintMaskAndClipPathInternal(aParams, [&] {
+    gfxContext& context = aParams.ctx;
+    BasicLayerManager* basic = aParams.layerManager->AsBasicLayerManager();
+    RefPtr<gfxContext> oldCtx = basic->GetTarget();
+    basic->SetTarget(&context);
+    aParams.layerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer,
+                                         aParams.builder);
+    basic->SetTarget(oldCtx);
+  });
+}
+
+void
+nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams, const std::function<void()>& aPaintChild)
+{
+  PaintMaskAndClipPathInternal(aParams, aPaintChild);
 }
 
 void
