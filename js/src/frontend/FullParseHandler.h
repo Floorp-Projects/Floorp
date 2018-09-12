@@ -203,7 +203,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<RegExpLiteral>(objbox, pos);
     }
 
-    ParseNode* newConditional(ParseNode* cond, ParseNode* thenExpr, ParseNode* elseExpr) {
+    ConditionalExpressionType newConditional(Node cond, Node thenExpr, Node elseExpr) {
         return new_<ConditionalExpression>(cond, thenExpr, elseExpr);
     }
 
@@ -320,9 +320,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<ListNode>(ParseNodeKind::Object, TokenPos(begin, begin + 1));
     }
 
-    ParseNode* newClass(ParseNode* name, ParseNode* heritage, ParseNode* methodBlock,
-                        const TokenPos& pos)
-    {
+    ClassNodeType newClass(Node name, Node heritage, Node methodBlock, const TokenPos& pos) {
         return new_<ClassNode>(name, heritage, methodBlock, pos);
     }
     ListNodeType newClassMethodList(uint32_t begin) {
@@ -603,15 +601,13 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
                                TokenPos(expr->pn_pos.begin, end), expr);
     }
 
-    ParseNode* newIfStatement(uint32_t begin, ParseNode* cond, ParseNode* thenBranch,
-                              ParseNode* elseBranch)
-    {
-        ParseNode* pn = new_<TernaryNode>(ParseNodeKind::If, cond, thenBranch, elseBranch);
-        if (!pn) {
-            return null();
+    TernaryNodeType newIfStatement(uint32_t begin, Node cond, Node thenBranch, Node elseBranch) {
+        TernaryNode* node = new_<TernaryNode>(ParseNodeKind::If, cond, thenBranch, elseBranch);
+        if (!node) {
+            return nullptr;
         }
-        pn->pn_pos.begin = begin;
-        return pn;
+        node->pn_pos.begin = begin;
+        return node;
     }
 
     ParseNode* newDoWhileStatement(ParseNode* body, ParseNode* cond, const TokenPos& pos) {
@@ -623,9 +619,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<BinaryNode>(ParseNodeKind::While, JSOP_NOP, pos, cond, body);
     }
 
-    ParseNode* newForStatement(uint32_t begin, ParseNode* forHead, ParseNode* body,
-                               unsigned iflags)
-    {
+    Node newForStatement(uint32_t begin, TernaryNodeType forHead, Node body, unsigned iflags) {
         /* A FOR node is binary, left is loop control and right is the body. */
         JSOp op = forHead->isKind(ParseNodeKind::ForIn) ? JSOP_ITER : JSOP_NOP;
         BinaryNode* pn = new_<BinaryNode>(ParseNodeKind::For, op,
@@ -638,14 +632,12 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return pn;
     }
 
-    ParseNode* newForHead(ParseNode* init, ParseNode* test, ParseNode* update,
-                          const TokenPos& pos)
-    {
+    TernaryNodeType newForHead(Node init, Node test, Node update, const TokenPos& pos) {
         return new_<TernaryNode>(ParseNodeKind::ForHead, init, test, update, pos);
     }
 
-    ParseNode* newForInOrOfHead(ParseNodeKind kind, ParseNode* target, ParseNode* iteratedExpr,
-                                const TokenPos& pos)
+    TernaryNodeType newForInOrOfHead(ParseNodeKind kind, Node target, Node iteratedExpr,
+                                     const TokenPos& pos)
     {
         MOZ_ASSERT(kind == ParseNodeKind::ForIn || kind == ParseNodeKind::ForOf);
         return new_<TernaryNode>(kind, target, nullptr, iteratedExpr, pos);
@@ -692,8 +684,9 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return new_<UnaryNode>(ParseNodeKind::Throw, pos, expr);
     }
 
-    ParseNode* newTryStatement(uint32_t begin, ParseNode* body, ParseNode* catchScope,
-                               ParseNode* finallyBlock) {
+    TernaryNodeType newTryStatement(uint32_t begin, Node body, Node catchScope,
+                                    Node finallyBlock)
+    {
         TokenPos pos(begin, (finallyBlock ? finallyBlock : catchScope)->pn_pos.end);
         return new_<TernaryNode>(ParseNodeKind::Try, body, catchScope, finallyBlock, pos);
     }
