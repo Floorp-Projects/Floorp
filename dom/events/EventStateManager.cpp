@@ -5117,9 +5117,9 @@ GetLabelTarget(nsIContent* aPossibleLabel)
 
 /* static */
 void
-EventStateManager::SetFullScreenState(Element* aElement, bool aIsFullScreen)
+EventStateManager::SetFullscreenState(Element* aElement, bool aIsFullscreen)
 {
-  DoStateChange(aElement, NS_EVENT_STATE_FULL_SCREEN, aIsFullScreen);
+  DoStateChange(aElement, NS_EVENT_STATE_FULLSCREEN, aIsFullscreen);
 }
 
 /* static */
