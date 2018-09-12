@@ -1048,6 +1048,20 @@ Accessible::NativeAttributes()
   nsAccUtils::SetAccGroupAttrs(attributes, groupPos.level,
                                groupPos.setSize, groupPos.posInSet);
 
+  bool hierarchical = false;
+  uint32_t itemCount = AccGroupInfo::TotalItemCount(this, &hierarchical);
+  if (itemCount) {
+    nsAutoString itemCountStr;
+    itemCountStr.AppendInt(itemCount);
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("child-item-count"),
+      itemCountStr, unused);
+  }
+
+  if (hierarchical) {
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("hierarchical"),
+      NS_LITERAL_STRING("true"), unused);
+  }
+
   // If the accessible doesn't have own content (such as list item bullet or
   // xul tree item) then don't calculate content based attributes.
   if (!HasOwnContent())
