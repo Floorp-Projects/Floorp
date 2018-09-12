@@ -1080,7 +1080,7 @@ nsBulletFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   WritingMode wm = GetWritingMode();
   ReflowOutput reflowOutput(wm);
-  DISPLAY_MIN_WIDTH(this, reflowOutput.ISize(wm));
+  DISPLAY_MIN_INLINE_SIZE(this, reflowOutput.ISize(wm));
   LogicalMargin padding(wm);
   GetDesiredSize(PresContext(), aRenderingContext, reflowOutput, 1.0f, &padding);
   reflowOutput.ISize(wm) += padding.IStartEnd(wm);
@@ -1092,7 +1092,7 @@ nsBulletFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   WritingMode wm = GetWritingMode();
   ReflowOutput metrics(wm);
-  DISPLAY_PREF_WIDTH(this, metrics.ISize(wm));
+  DISPLAY_PREF_INLINE_SIZE(this, metrics.ISize(wm));
   LogicalMargin padding(wm);
   GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f, &padding);
   metrics.ISize(wm) += padding.IStartEnd(wm);

@@ -419,9 +419,9 @@ nscoord
 nsFileControlFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_MIN_INLINE_SIZE(this, result);
 
-  // Our min width is our pref width
+  // Our min inline size is our pref inline size
   result = GetPrefISize(aRenderingContext);
   return result;
 }

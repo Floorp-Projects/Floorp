@@ -792,10 +792,10 @@ public:
     void* mValue;
   };
 
-  struct DR_intrinsic_width_cookie {
-    DR_intrinsic_width_cookie(nsIFrame* aFrame, const char* aType,
+  struct DR_intrinsic_inline_size_cookie {
+    DR_intrinsic_inline_size_cookie(nsIFrame* aFrame, const char* aType,
                               nscoord& aResult);
-    ~DR_intrinsic_width_cookie();
+    ~DR_intrinsic_inline_size_cookie();
 
     nsIFrame* mFrame;
     const char* mType;
@@ -854,12 +854,10 @@ public:
   dr_cookie.Change();
 #define DISPLAY_LAYOUT(dr_frame) \
   DR_layout_cookie dr_cookie(dr_frame);
-// FIXME DISPLAY_*_WIDTH should go through a renaming refactoring to reflect the
-// fact that it's displaying a minimum inline size, not a minimum width.
-#define DISPLAY_MIN_WIDTH(dr_frame, dr_result) \
-  DR_intrinsic_width_cookie dr_cookie(dr_frame, "Min", dr_result)
-#define DISPLAY_PREF_WIDTH(dr_frame, dr_result) \
-  DR_intrinsic_width_cookie dr_cookie(dr_frame, "Pref", dr_result)
+#define DISPLAY_MIN_INLINE_SIZE(dr_frame, dr_result) \
+  DR_intrinsic_inline_size_cookie dr_cookie(dr_frame, "Min", dr_result)
+#define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) \
+  DR_intrinsic_inline_size_cookie dr_cookie(dr_frame, "Pref", dr_result)
 #define DISPLAY_PREF_SIZE(dr_frame, dr_result) \
   DR_intrinsic_size_cookie dr_cookie(dr_frame, "Pref", dr_result)
 #define DISPLAY_MIN_SIZE(dr_frame, dr_result) \
@@ -882,8 +880,8 @@ public:
 #define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status)
 #define DISPLAY_REFLOW_CHANGE()
 #define DISPLAY_LAYOUT(dr_frame) PR_BEGIN_MACRO PR_END_MACRO
-#define DISPLAY_MIN_WIDTH(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
-#define DISPLAY_PREF_WIDTH(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+#define DISPLAY_MIN_INLINE_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
+#define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
 #define DISPLAY_PREF_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
 #define DISPLAY_MIN_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
 #define DISPLAY_MAX_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO

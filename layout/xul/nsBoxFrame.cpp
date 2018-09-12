@@ -545,7 +545,7 @@ static void printSize(char * aDesc, nscoord aSize)
 nsBoxFrame::GetMinISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_MIN_INLINE_SIZE(this, result);
 
   nsBoxLayoutState state(PresContext(), aRenderingContext);
   nsSize minSize = GetXULMinSize(state);
@@ -567,7 +567,7 @@ nsBoxFrame::GetMinISize(gfxContext *aRenderingContext)
 nsBoxFrame::GetPrefISize(gfxContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_PREF_WIDTH(this, result);
+  DISPLAY_PREF_INLINE_SIZE(this, result);
 
   nsBoxLayoutState state(PresContext(), aRenderingContext);
   nsSize prefSize = GetXULPrefSize(state);
