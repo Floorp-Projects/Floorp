@@ -201,6 +201,7 @@ this.AntiTracking = {
   async _setupTest(win, cookieBehavior, blockingByContentBlocking, extraPrefs) {
     await SpecialPowers.flushPrefEnv();
     await SpecialPowers.pushPrefEnv({"set": [
+      ["dom.storage_access.enabled", true],
       ["browser.contentblocking.enabled", blockingByContentBlocking],
       ["network.cookie.cookieBehavior", cookieBehavior],
       ["privacy.trackingprotection.enabled", false],
