@@ -980,7 +980,7 @@ FullParseHandler::finishInitializerAssignment(NameNodeType nameNode, Node init)
 
     checkAndSetIsDirectRHSAnonFunction(init);
 
-    nameNode->setExpression(init);
+    nameNode->setInitializer(init);
     nameNode->setOp(JSOP_SETNAME);
 
     /* The declarator's position must include the initializer. */

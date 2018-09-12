@@ -463,7 +463,7 @@ class NameResolver
           case ParseNodeKind::TypeOfName:
           case ParseNodeKind::SuperBase:
             MOZ_ASSERT(cur->as<UnaryNode>().kid()->isKind(ParseNodeKind::Name));
-            MOZ_ASSERT(!cur->as<UnaryNode>().kid()->as<NameNode>().expression());
+            MOZ_ASSERT(!cur->as<UnaryNode>().kid()->as<NameNode>().initializer());
             break;
 
           case ParseNodeKind::NewTarget:
@@ -688,12 +688,12 @@ class NameResolver
                 ClassNames* names = classNode->names();
                 if (NameNode* outerBinding = names->outerBinding()) {
                     MOZ_ASSERT(outerBinding->isKind(ParseNodeKind::Name));
-                    MOZ_ASSERT(!outerBinding->expression());
+                    MOZ_ASSERT(!outerBinding->initializer());
                 }
 
                 NameNode* innerBinding = names->innerBinding();
                 MOZ_ASSERT(innerBinding->isKind(ParseNodeKind::Name));
-                MOZ_ASSERT(!innerBinding->expression());
+                MOZ_ASSERT(!innerBinding->initializer());
             }
 #endif
             if (ParseNode* heritage = classNode->heritage()) {
@@ -874,9 +874,9 @@ class NameResolver
                                         ? ParseNodeKind::ImportSpec
                                         : ParseNodeKind::ExportSpec));
                 MOZ_ASSERT(spec->left()->isKind(ParseNodeKind::Name));
-                MOZ_ASSERT(!spec->left()->as<NameNode>().expression());
+                MOZ_ASSERT(!spec->left()->as<NameNode>().initializer());
                 MOZ_ASSERT(spec->right()->isKind(ParseNodeKind::Name));
-                MOZ_ASSERT(!spec->right()->as<NameNode>().expression());
+                MOZ_ASSERT(!spec->right()->as<NameNode>().initializer());
             }
 #endif
             break;
@@ -903,13 +903,13 @@ class NameResolver
           }
 
           case ParseNodeKind::Label:
-            if (!resolve(cur->as<NameNode>().expression(), prefix)) {
+            if (!resolve(cur->as<LabeledStatement>().statement(), prefix)) {
                 return false;
             }
             break;
 
           case ParseNodeKind::Name:
-            if (ParseNode* init = cur->as<NameNode>().expression()) {
+            if (ParseNode* init = cur->as<NameNode>().initializer()) {
                 if (!resolve(init, prefix)) {
                     return false;
                 }

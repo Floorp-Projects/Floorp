@@ -160,7 +160,7 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
         return ContainsHoistedDeclaration(cx, node->as<BinaryNode>().right(), result);
 
       case ParseNodeKind::Label:
-        return ContainsHoistedDeclaration(cx, node->as<NameNode>().expression(), result);
+        return ContainsHoistedDeclaration(cx, node->as<LabeledStatement>().statement(), result);
 
       // Statements with more complicated structures.
 
@@ -1582,11 +1582,11 @@ FoldName(JSContext* cx, NameNode* nameNode, PerHandlerParser<FullParseHandler>& 
 {
     MOZ_ASSERT(nameNode->isKind(ParseNodeKind::Name));
 
-    if (!nameNode->expression()) {
+    if (!nameNode->initializer()) {
         return true;
     }
 
-    return Fold(cx, nameNode->unsafeExpressionReference(), parser);
+    return Fold(cx, nameNode->unsafeInitializerReference(), parser);
 }
 
 bool
@@ -1643,7 +1643,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         UnaryNode* node = &pn->as<UnaryNode>();
         NameNode* nameNode = &node->kid()->as<NameNode>();
         MOZ_ASSERT(nameNode->isKind(ParseNodeKind::Name));
-        MOZ_ASSERT(!nameNode->expression());
+        MOZ_ASSERT(!nameNode->initializer());
 #endif
         return true;
       }
@@ -1906,7 +1906,7 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
         return FoldForHead(cx, &pn->as<TernaryNode>(), parser);
 
       case ParseNodeKind::Label:
-        return Fold(cx, pn->as<NameNode>().unsafeExpressionReference(), parser);
+        return Fold(cx, pn->as<LabeledStatement>().unsafeStatementReference(), parser);
 
       case ParseNodeKind::PropertyName:
         MOZ_CRASH("unreachable, handled by ::Dot");

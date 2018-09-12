@@ -345,7 +345,7 @@ NameNode::dump(GenericPrinter& out, int indent)
         } else if (getOp() == JSOP_GETARG && atom()->length() == 0) {
             // Dump destructuring parameter.
             out.put("(#<zero-length name> ");
-            DumpParseTree(expression(), out, indent + 21);
+            DumpParseTree(initializer(), out, indent + 21);
             out.printf(")");
         } else {
             JS::AutoCheckCannotGC nogc;
@@ -357,12 +357,23 @@ NameNode::dump(GenericPrinter& out, int indent)
         }
         return;
 
+      case ParseNodeKind::Label: {
+        const char* name = parseNodeNames[size_t(getKind())];
+        out.printf("(%s ", name);
+        atom()->dumpCharsNoNewline(out);
+        indent += strlen(name) + atom()->length() + 2;
+        DumpParseTree(initializer(), out, indent);
+        out.printf(")");
+        return;
+      }
+
       default: {
         const char* name = parseNodeNames[size_t(getKind())];
         out.printf("(%s ", name);
         indent += strlen(name) + 2;
-        DumpParseTree(expression(), out, indent);
+        DumpParseTree(initializer(), out, indent);
         out.printf(")");
+        return;
       }
     }
 }
