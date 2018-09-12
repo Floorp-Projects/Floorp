@@ -377,7 +377,6 @@ class IconLoader {
 
     if (LOCAL_FAVICON_SCHEMES.includes(iconInfo.iconUri.scheme)) {
       this.mm.sendAsyncMessage("Link:SetIcon", {
-        pageURL: iconInfo.pageUri.spec,
         originalURL: iconInfo.iconUri.spec,
         canUseForTab: !iconInfo.isRichIcon,
         expiration: undefined,
@@ -397,7 +396,6 @@ class IconLoader {
       let { dataURL, expiration } = await this._loader.load();
 
       this.mm.sendAsyncMessage("Link:SetIcon", {
-        pageURL: iconInfo.pageUri.spec,
         originalURL: iconInfo.iconUri.spec,
         canUseForTab: !iconInfo.isRichIcon,
         expiration,
@@ -455,28 +453,21 @@ class FaviconLoader {
     }
   }
 
-  addIconFromLink(aLink, aIsRichIcon) {
-    let iconInfo = makeFaviconFromLink(aLink, aIsRichIcon);
-    if (iconInfo) {
-      this.iconInfos.push(iconInfo);
-      this.iconTask.arm();
-      return true;
-    }
-    return false;
+  addIcon(iconInfo) {
+    this.iconInfos.push(iconInfo);
+    this.iconTask.arm();
   }
 
-  addDefaultIcon(pageUri) {
+  addDefaultIcon(baseURI) {
     // Currently ImageDocuments will just load the default favicon, see bug
     // 403651 for discussion.
-    this.iconInfos.push({
-      pageUri,
-      iconUri: pageUri.mutate().setPathQueryRef("/favicon.ico").finalize(),
+    this.addIcon({
+      iconUri: baseURI.mutate().setPathQueryRef("/favicon.ico").finalize(),
       width: -1,
       isRichIcon: false,
       type: TYPE_ICO,
       node: this.mm.content.document,
     });
-    this.iconTask.arm();
   }
 
   onPageShow() {
@@ -494,22 +485,21 @@ class FaviconLoader {
     this.iconTask.disarm();
     this.iconInfos = [];
   }
-}
 
-function makeFaviconFromLink(aLink, aIsRichIcon) {
-  let iconUri = getLinkIconURI(aLink);
-  if (!iconUri)
-    return null;
+  static makeFaviconFromLink(aLink, aIsRichIcon) {
+    let iconUri = getLinkIconURI(aLink);
+    if (!iconUri)
+      return null;
 
-  // Extract the size type and width.
-  let width = extractIconSize(aLink.sizes);
+    // Extract the size type and width.
+    let width = extractIconSize(aLink.sizes);
 
-  return {
-    pageUri: aLink.ownerDocument.documentURIObject,
-    iconUri,
-    width,
-    isRichIcon: aIsRichIcon,
-    type: aLink.type,
-    node: aLink,
-  };
+    return {
+      iconUri,
+      width,
+      isRichIcon: aIsRichIcon,
+      type: aLink.type,
+      node: aLink,
+    };
+  }
 }
