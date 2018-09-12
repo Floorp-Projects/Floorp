@@ -336,7 +336,8 @@ CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
       break;
     }
     case SurfaceDescriptor::TSurfaceDescriptorGPUVideo: {
-      result = new GPUVideoTextureHost(aFlags, aDesc.get_SurfaceDescriptorGPUVideo());
+      result = GPUVideoTextureHost::CreateFromDescriptor(
+        aFlags, aDesc.get_SurfaceDescriptorGPUVideo());
       break;
     }
 #ifdef XP_WIN
