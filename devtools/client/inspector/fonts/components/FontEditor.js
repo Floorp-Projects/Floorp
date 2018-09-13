@@ -55,8 +55,6 @@ class FontEditor extends PureComponent {
         key: axis.tag,
         axis,
         onChange: this.props.onPropertyChange,
-        minLabel: true,
-        maxLabel: true,
         value: editedAxes[axis.tag] || axis.defaultValue,
       });
     });
