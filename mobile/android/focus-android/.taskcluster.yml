@@ -57,6 +57,9 @@ tasks:
     then:
       $if: 'event.ref == "refs/heads/master"'
       then:
+        taskId: {$eval: as_slugid("decision_task")}
+        # The next line won't be needed anymore after https://github.com/taskcluster/taskcluster-github/pull/273
+        taskGroupId: {$eval: as_slugid("decision_task")}
         created: {$fromNow: ''}
         deadline: {$fromNow: '2 hours'}
         provisionerId: aws-provisioner-v1
@@ -73,6 +76,11 @@ tasks:
           image: mozillamobile/focus-android:1.0
           features:
             taskclusterProxy: true
+          env:
+            TASK_ID: {$eval: as_slugid("decision_task")}
+            GITHUB_HEAD_REPO_URL: ${event.repository.clone_url}
+            GITHUB_HEAD_BRANCH: ${event.ref}
+            GITHUB_HEAD_SHA: ${event.after}
           command:
             - /bin/bash
             - --login
@@ -103,6 +111,9 @@ tasks:
 ###############################################################################
   - $if: 'tasks_for == "github-release"'
     then:
+      taskId: {$eval: as_slugid("decision_task")}
+      # The next line won't be needed anymore after https://github.com/taskcluster/taskcluster-github/pull/273
+      taskGroupId: {$eval: as_slugid("decision_task")}
       created: {$fromNow: ''}
       deadline: {$fromNow: '2 hours'}
       expires: {$fromNow: '1 year'}
@@ -125,6 +136,11 @@ tasks:
         features:
           taskclusterProxy: true
           chainOfTrust: true
+        env:
+          TASK_ID: {$eval: as_slugid("decision_task")}
+          GITHUB_HEAD_REPO_URL: ${event.repository.clone_url}
+          GITHUB_HEAD_BRANCH: ${event.release.target_commitish}
+          GITHUB_HEAD_SHA: ${event.release.tag_name}
         command:
           - /bin/bash
           - --login
