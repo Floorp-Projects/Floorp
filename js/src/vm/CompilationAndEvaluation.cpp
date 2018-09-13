@@ -172,22 +172,6 @@ JS::CompileLatin1ForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOption
 }
 
 JS_PUBLIC_API(bool)
-JS_CompileScript(JSContext* cx, const char* bytes, size_t length,
-                 const JS::CompileOptions& options, MutableHandleScript script)
-{
-    return options.utf8
-           ? ::CompileUtf8(cx, options, bytes, length, script)
-           : ::CompileLatin1(cx, options, bytes, length, script);
-}
-
-JS_PUBLIC_API(bool)
-JS_CompileUCScript(JSContext* cx, JS::SourceBufferHolder& srcBuf,
-                   const JS::CompileOptions& options, MutableHandleScript script)
-{
-    return CompileSourceBuffer(cx, options, srcBuf, script);
-}
-
-JS_PUBLIC_API(bool)
 JS_Utf8BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, size_t length)
 {
     AssertHeapIsIdle();
