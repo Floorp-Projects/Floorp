@@ -20,7 +20,9 @@ class SettingsMenu extends PureComponent {
       leftAlignmentEnabled: PropTypes.bool.isRequired,
       onChangeReloadCondition: PropTypes.func.isRequired,
       onToggleLeftAlignment: PropTypes.func.isRequired,
+      onToggleUserAgentInput: PropTypes.func.isRequired,
       reloadConditions: PropTypes.shape(Types.reloadConditions).isRequired,
+      showUserAgentInput: PropTypes.bool.isRequired,
     };
   }
 
@@ -34,7 +36,9 @@ class SettingsMenu extends PureComponent {
       leftAlignmentEnabled,
       onChangeReloadCondition,
       onToggleLeftAlignment,
+      onToggleUserAgentInput,
       reloadConditions,
+      showUserAgentInput,
     } = this.props;
 
     const menuItems = [
@@ -45,6 +49,16 @@ class SettingsMenu extends PureComponent {
         type: "checkbox",
         click: () => {
           onToggleLeftAlignment();
+        },
+      },
+      "-",
+      {
+        id: "toggleUserAgentInput",
+        checked: showUserAgentInput,
+        label: getStr("responsive.showUserAgentInput"),
+        type: "checkbox",
+        click: () => {
+          onToggleUserAgentInput();
         },
       },
       "-",
@@ -88,6 +102,7 @@ class SettingsMenu extends PureComponent {
 const mapStateToProps = state => {
   return {
     leftAlignmentEnabled: state.ui.leftAlignmentEnabled,
+    showUserAgentInput: state.ui.showUserAgentInput,
   };
 };
 
