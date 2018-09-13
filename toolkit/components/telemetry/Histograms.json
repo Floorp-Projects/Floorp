@@ -199,6 +199,45 @@
     "description": "The operating system audio back-end used when successfully opening an audio stream, or whether the failure occurred on the first try or not <https://dxr.mozilla.org/mozilla-central/search?q=AUDIOSTREAM_BACKEND_ID_STR>",
     "releaseChannelCollection": "opt-out"
   },
+  "AUSHELPER_CPU_ERROR_CODE": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1296630],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 16,
+    "releaseChannelCollection": "opt-out",
+    "description": "The error code from the aushelper system add-on when querying the registry for CPU information for bug 1296630 (see browser/extensions/aushelper/bootstrap.js)."
+  },
+  "AUSHELPER_CPU_RESULT_CODE": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1296630],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 5,
+    "releaseChannelCollection": "opt-out",
+    "description": "Whether the system is affected by bug 1296630 (1=No, 2=Yes, 3=Error, and 4=Unknown)."
+  },
+  "AUSHELPER_WEBSENSE_ERROR_CODE": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1305847],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 8,
+    "releaseChannelCollection": "opt-out",
+    "description": "The error code from the aushelper system add-on when gathering information on Websense (see browser/extensions/aushelper/bootstrap.js)."
+  },
+  "AUSHELPER_WEBSENSE_REG_EXISTS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1305847],
+    "expires_in_version": "60",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Whether the system has a Websense InstallVersion registry value (see browser/extensions/aushelper/bootstrap.js)."
+  },
   "BACKGROUNDFILESAVER_THREAD_COUNT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
