@@ -66,7 +66,6 @@ imgRequest::imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey)
  , mMutex("imgRequest")
  , mProgressTracker(new ProgressTracker())
  , mIsMultiPartChannel(false)
- , mGotData(false)
  , mIsInCache(false)
  , mDecodeRequested(false)
  , mNewPartPending(false)
@@ -473,17 +472,6 @@ imgRequest::GetImageErrorCode()
   return mImageErrorCode;
 }
 
-nsresult
-imgRequest::GetSecurityInfo(nsISupports** aSecurityInfo)
-{
-  LOG_FUNC(gImgLog, "imgRequest::GetSecurityInfo");
-
-  // Missing security info means this is not a security load
-  // i.e. it is not an error when security info is missing
-  NS_IF_ADDREF(*aSecurityInfo = mSecurityInfo);
-  return NS_OK;
-}
-
 void
 imgRequest::RemoveFromCache()
 {
@@ -593,13 +581,6 @@ imgRequest::BoostPriority(uint32_t aCategory)
 
   AdjustPriorityInternal(delta);
   mBoostCategoriesRequested |= newRequestedCategory;
-}
-
-bool
-imgRequest::HasTransferredData() const
-{
-  MutexAutoLock lock(mMutex);
-  return mGotData;
 }
 
 void
@@ -797,8 +778,6 @@ imgRequest::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
 
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (channel) {
-    channel->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
-
     /* Get our principal */
     nsCOMPtr<nsIScriptSecurityManager>
       secMan = nsContentUtils::GetSecurityManager();
@@ -1172,7 +1151,6 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
   // Retrieve and update our state.
   {
     MutexAutoLock lock(mMutex);
-    mGotData = true;
     image = mImage;
     progressTracker = mProgressTracker;
     isMultipart = mIsMultiPartChannel;

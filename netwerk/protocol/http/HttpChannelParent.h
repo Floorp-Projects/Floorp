@@ -23,7 +23,6 @@
 #include "nsIDeprecationWarner.h"
 
 class nsICacheEntry;
-class nsIAssociatedContentSecurity;
 
 #define HTTP_CHANNEL_PARENT_IID \
   { 0x982b2372, 0x7aa5, 0x4e8a, \
@@ -200,8 +199,6 @@ protected:
                                                       const OptionalURIParams& apiRedirectUri,
                                                       const OptionalCorsPreflightArgs& aCorsPreflightArgs,
                                                       const bool& aChooseAppcache) override;
-  virtual mozilla::ipc::IPCResult RecvUpdateAssociatedContentSecurity(const int32_t& broken,
-                                                   const int32_t& no) override;
   virtual mozilla::ipc::IPCResult RecvDocumentChannelCleanup(const bool& clearCacheEntry) override;
   virtual mozilla::ipc::IPCResult RecvMarkOfflineCacheEntryAsForeign() override;
   virtual mozilla::ipc::IPCResult RecvDivertOnDataAvailable(const nsCString& data,
@@ -279,7 +276,6 @@ private:
 
   RefPtr<HttpBaseChannel>       mChannel;
   nsCOMPtr<nsICacheEntry>       mCacheEntry;
-  nsCOMPtr<nsIAssociatedContentSecurity>  mAssociatedContentSecurity;
 
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;

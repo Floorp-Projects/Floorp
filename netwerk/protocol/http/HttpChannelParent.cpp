@@ -29,7 +29,6 @@
 #include "nsIBackgroundChannelRegistrar.h"
 #include "nsSerializationHelper.h"
 #include "nsISerializable.h"
-#include "nsIAssociatedContentSecurity.h"
 #include "nsIApplicationCacheService.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -879,17 +878,6 @@ HttpChannelParent::RecvSetCacheTokenCachedCharset(const nsCString& charset)
 }
 
 mozilla::ipc::IPCResult
-HttpChannelParent::RecvUpdateAssociatedContentSecurity(const int32_t& broken,
-                                                       const int32_t& no)
-{
-  if (mAssociatedContentSecurity) {
-    mAssociatedContentSecurity->SetCountSubRequestsBrokenSecurity(broken);
-    mAssociatedContentSecurity->SetCountSubRequestsNoSecurity(no);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 HttpChannelParent::RecvRedirect2Verify(const nsresult& aResult,
                                        const RequestHeaderTuples& changedHeaders,
                                        const ChildLoadInfoForwarderArgs& aLoadInfoForwarder,
@@ -1071,7 +1059,6 @@ HttpChannelParent::ContinueRedirect2Verify(const nsresult& aResult)
 mozilla::ipc::IPCResult
 HttpChannelParent::RecvDocumentChannelCleanup(const bool& clearCacheEntry)
 {
-  // From now on only using mAssociatedContentSecurity.  Free everything else.
   CleanupBackgroundChannel(); // Background channel can be closed.
   mChannel = nullptr;          // Reclaim some memory sooner.
   if (clearCacheEntry) {
@@ -2398,7 +2385,6 @@ HttpChannelParent::UpdateAndSerializeSecurityInfo(nsACString& aSerializedSecurit
   nsCOMPtr<nsISupports> secInfoSupp;
   mChannel->GetSecurityInfo(getter_AddRefs(secInfoSupp));
   if (secInfoSupp) {
-    mAssociatedContentSecurity = do_QueryInterface(secInfoSupp);
     nsCOMPtr<nsISerializable> secInfoSer = do_QueryInterface(secInfoSupp);
     if (secInfoSer) {
       NS_SerializeToString(secInfoSer, aSerializedSecurityInfoOut);

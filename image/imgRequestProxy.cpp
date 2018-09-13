@@ -103,7 +103,6 @@ NS_INTERFACE_MAP_BEGIN(imgRequestProxy)
   NS_INTERFACE_MAP_ENTRY(imgIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
-  NS_INTERFACE_MAP_ENTRY(nsISecurityInfoProvider)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsITimedChannel,
                                      TimedChannel() != nullptr)
 NS_INTERFACE_MAP_END
@@ -992,31 +991,6 @@ imgRequestProxy::AdjustPriority(int32_t priority)
   // from the load group.
   NS_ENSURE_STATE(GetOwner());
   GetOwner()->AdjustPriority(this, priority);
-  return NS_OK;
-}
-
-/** nsISecurityInfoProvider methods **/
-
-NS_IMETHODIMP
-imgRequestProxy::GetSecurityInfo(nsISupports** _retval)
-{
-  if (GetOwner()) {
-    return GetOwner()->GetSecurityInfo(_retval);
-  }
-
-  *_retval = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-imgRequestProxy::GetHasTransferredData(bool* hasData)
-{
-  if (GetOwner()) {
-    *hasData = GetOwner()->HasTransferredData();
-  } else {
-    // The safe thing to do is to claim we have data
-    *hasData = true;
-  }
   return NS_OK;
 }
 
