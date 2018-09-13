@@ -25,6 +25,7 @@
 #include "jsfriendapi.h"
 #include <algorithm>
 #include "mozilla/dom/NodeInfoInlines.h"
+#include "mozilla/MruCache.h"
 
 #include "PLDHashTable.h"
 
@@ -172,15 +173,20 @@ nsEmptyContentList::Item(uint32_t aIndex)
 // Hashtable for storing nsContentLists
 static PLDHashTable* gContentListHashTable;
 
-#define RECENTLY_USED_CONTENT_LIST_CACHE_SIZE 31
-static nsContentList*
-  sRecentlyUsedContentLists[RECENTLY_USED_CONTENT_LIST_CACHE_SIZE] = {};
-
-static MOZ_ALWAYS_INLINE uint32_t
-RecentlyUsedCacheIndex(const nsContentListKey& aKey)
+struct ContentListCache :
+  public MruCache<nsContentListKey, nsContentList*, ContentListCache>
 {
-  return aKey.GetHash() % RECENTLY_USED_CONTENT_LIST_CACHE_SIZE;
-}
+  static HashNumber Hash(const nsContentListKey& aKey)
+  {
+    return aKey.GetHash();
+  }
+  static bool Match(const nsContentListKey& aKey, const nsContentList* aVal)
+  {
+    return aVal->MatchesKey(aKey);
+  }
+};
+
+static ContentListCache sRecentlyUsedContentLists;
 
 struct ContentListHashEntry : public PLDHashEntryHdr
 {
@@ -215,10 +221,9 @@ NS_GetContentList(nsINode* aRootNode,
   RefPtr<nsContentList> list;
   nsContentListKey hashKey(aRootNode, aMatchNameSpaceId, aTagname,
                            aRootNode->OwnerDoc()->IsHTMLDocument());
-  uint32_t recentlyUsedCacheIndex = RecentlyUsedCacheIndex(hashKey);
-  nsContentList* cachedList = sRecentlyUsedContentLists[recentlyUsedCacheIndex];
-  if (cachedList && cachedList->MatchesKey(hashKey)) {
-    list = cachedList;
+  auto p = sRecentlyUsedContentLists.Lookup(hashKey);
+  if (p) {
+    list = p.Data();
     return list.forget();
   }
 
@@ -260,7 +265,7 @@ NS_GetContentList(nsINode* aRootNode,
     }
   }
 
-  sRecentlyUsedContentLists[recentlyUsedCacheIndex] = list;
+  p.Set(list);
   return list.forget();
 }
 
@@ -928,10 +933,7 @@ nsContentList::RemoveFromHashtable()
 
   nsDependentAtomString str(mXMLMatchAtom);
   nsContentListKey key(mRootNode, mMatchNameSpaceId, str, mIsHTMLDocument);
-  uint32_t recentlyUsedCacheIndex = RecentlyUsedCacheIndex(key);
-  if (sRecentlyUsedContentLists[recentlyUsedCacheIndex] == this) {
-    sRecentlyUsedContentLists[recentlyUsedCacheIndex] = nullptr;
-  }
+  sRecentlyUsedContentLists.Remove(key);
 
   if (!gContentListHashTable)
     return;
