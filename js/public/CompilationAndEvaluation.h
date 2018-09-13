@@ -86,7 +86,7 @@ JS_ExecuteScript(JSContext* cx, JS::AutoVector<JSObject*>& envChain, JS::Handle<
  * |script| will always be set. On failure, it will be set to nullptr.
  */
 extern JS_PUBLIC_API(bool)
-JS_CompileScript(JSContext* cx, const char* ascii, size_t length,
+JS_CompileScript(JSContext* cx, const char* bytes, size_t length,
                  const JS::CompileOptions& options,
                  JS::MutableHandle<JSScript*> script);
 
@@ -152,9 +152,63 @@ extern JS_PUBLIC_API(bool)
 Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
         SourceBufferHolder& srcBuf, MutableHandle<JSScript*> script);
 
+/**
+ * Compile the provided UTF-8 data into a script.  If the data contains invalid
+ * UTF-8, an error is reported.
+ *
+ * The |options.utf8| flag is asserted to be true.  At a future time this flag
+ * will be removed and UTF-8-ness of source bytes will be entirely determined
+ * by which compilation function is called.
+ *
+ * |script| is always set to the compiled script or to null in case of error.
+ */
 extern JS_PUBLIC_API(bool)
+CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
+            const char* bytes, size_t length, MutableHandle<JSScript*> script);
+
+/**
+ * Compile the provided Latin-1 data (i.e. each byte directly corresponds to
+ * the same Unicode code point) into a script.
+ *
+ * The |options.utf8| flag is asserted to be false.  At a future time this flag
+ * will be removed and UTF-8-ness of source bytes will be entirely determined
+ * by which compilation function is called.
+ *
+ * This function may eventually be removed, such that *only* bytes containing
+ * UTF-8 source text may be directly compiled.  Avoid using it if you can.
+ *
+ * |script| is always set to the compiled script or to null in case of error.
+ */
+extern JS_PUBLIC_API(bool)
+CompileLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
+              const char* bytes, size_t length, MutableHandle<JSScript*> script);
+
+/**
+ * DEPRECATED
+ *
+ * Compile the provided bytes into a script.
+ *
+ * If |options.utf8|, the bytes are interpreted as UTF-8 data.  If the data
+ * contains any malformed UTF-8, an error is reported.
+ *
+ * Otherwise they are interpreted as Latin-1, i.e. each byte directly
+ * corresponds to the same Unicode code point.
+ *
+ * |script| is always set to the compiled script or to null in case of error.
+ *
+ * Do not use this API.  The JS::CompileOptions::utf8 flag that indicates how
+ * to interpret |bytes| is currently being replaced by functions indicating an
+ * exact expected encoding.  If you have byte data to compile, you should use
+ * either JS::CompileUtf8 or JS::CompileLatin1, as appropriate.
+ */
+inline bool
 Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-        const char* bytes, size_t length, MutableHandle<JSScript*> script);
+        const char* bytes, size_t length, MutableHandle<JSScript*> script)
+{
+    return options.utf8
+           ? CompileUtf8(cx, options, bytes, length, script)
+           : CompileLatin1(cx, options, bytes, length, script);
+}
 
 extern JS_PUBLIC_API(bool)
 Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -168,9 +222,17 @@ extern JS_PUBLIC_API(bool)
 CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
                             SourceBufferHolder& srcBuf, MutableHandle<JSScript*> script);
 
+/**
+ * Compile the given Latin-1 data for non-syntactic scope.
+ *
+ * There is no way to compile UTF-8 data for non-syntactic scope because no
+ * user currently needs it.  Such way could be added in the future if it's ever
+ * needed.
+ */
 extern JS_PUBLIC_API(bool)
-CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
-                            const char* bytes, size_t length, MutableHandle<JSScript*> script);
+CompileLatin1ForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
+                                  const char* bytes, size_t length,
+                                  MutableHandle<JSScript*> script);
 
 extern JS_PUBLIC_API(bool)
 CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
