@@ -12,9 +12,9 @@
 #include "gfxPrefs.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCanvasFrame.h"
@@ -363,9 +363,17 @@ MOZ_IMPL_STATE_CLASS_GETTER(PressNoCaretState)
 MOZ_IMPL_STATE_CLASS_GETTER(ScrollState)
 MOZ_IMPL_STATE_CLASS_GETTER(LongTapState)
 
+bool AccessibleCaretEventHub::sUseLongTapInjector = false;
+
 AccessibleCaretEventHub::AccessibleCaretEventHub(nsIPresShell* aPresShell)
   : mPresShell(aPresShell)
 {
+  static bool prefsAdded = false;
+  if (!prefsAdded) {
+    Preferences::AddBoolVarCache(
+      &sUseLongTapInjector, "layout.accessiblecaret.use_long_tap_injector");
+    prefsAdded = true;
+  }
 }
 
 void
@@ -408,7 +416,7 @@ AccessibleCaretEventHub::Init()
 
   mDocShell = static_cast<nsDocShell*>(docShell);
 
-  if (StaticPrefs::layout_accessiblecaret_use_long_tap_injector()) {
+  if (sUseLongTapInjector) {
     mLongTapInjectorTimer = NS_NewTimer();
   }
 
