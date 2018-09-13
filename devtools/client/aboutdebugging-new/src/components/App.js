@@ -14,7 +14,7 @@ const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
 const { PAGES } = require("../constants");
 
-const ConnectPage = createFactory(require("./ConnectPage"));
+const ConnectPage = createFactory(require("./connect/ConnectPage"));
 const RuntimePage = createFactory(require("./RuntimePage"));
 const Sidebar = createFactory(require("./sidebar/Sidebar"));
 
