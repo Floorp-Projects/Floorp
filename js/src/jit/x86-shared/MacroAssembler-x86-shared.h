@@ -93,17 +93,19 @@ class MacroAssemblerX86Shared : public Assembler
     void minMaxFloat32(FloatRegister srcDest, FloatRegister second, bool canBeNaN, bool isMax);
 
     void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
-        if (cond & DoubleConditionBitInvert)
+        if (cond & DoubleConditionBitInvert) {
             vucomisd(lhs, rhs);
-        else
+        } else {
             vucomisd(rhs, lhs);
+        }
     }
 
     void compareFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
-        if (cond & DoubleConditionBitInvert)
+        if (cond & DoubleConditionBitInvert) {
             vucomiss(lhs, rhs);
-        else
+        } else {
             vucomiss(rhs, lhs);
+        }
     }
 
     void branchNegativeZero(FloatRegister reg, Register scratch, Label* label,
@@ -170,10 +172,11 @@ class MacroAssemblerX86Shared : public Assembler
 
     void storeLoadFence() {
         // This implementation follows Linux.
-        if (HasSSE2())
+        if (HasSSE2()) {
             masm.mfence();
-        else
+        } else {
             lock_addl(Imm32(0), Operand(Address(esp, 0)));
+        }
     }
 
     void branch16(Condition cond, Register lhs, Register rhs, Label* label) {
@@ -277,8 +280,9 @@ class MacroAssemblerX86Shared : public Assembler
         }
 
         ~AutoEnsureByteRegister() {
-            if (original_ != substitute_)
+            if (original_ != substitute_) {
                 masm->pop(substitute_);
+            }
         }
 
         Register reg() {
@@ -480,16 +484,18 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     void addSatInt8x16(FloatRegister lhs, Operand rhs, SimdSign sign, FloatRegister output) {
-        if (sign == SimdSign::Signed)
+        if (sign == SimdSign::Signed) {
             vpaddsb(rhs, lhs, output);
-        else
+        } else {
             vpaddusb(rhs, lhs, output);
+        }
     }
     void addSatInt16x8(FloatRegister lhs, Operand rhs, SimdSign sign, FloatRegister output) {
-        if (sign == SimdSign::Signed)
+        if (sign == SimdSign::Signed) {
             vpaddsw(rhs, lhs, output);
-        else
+        } else {
             vpaddusw(rhs, lhs, output);
+        }
     }
 
     void subInt8x16(FloatRegister lhs, Operand rhs, FloatRegister output) {
@@ -506,16 +512,18 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     void subSatInt8x16(FloatRegister lhs, Operand rhs, SimdSign sign, FloatRegister output) {
-        if (sign == SimdSign::Signed)
+        if (sign == SimdSign::Signed) {
             vpsubsb(rhs, lhs, output);
-        else
+        } else {
             vpsubusb(rhs, lhs, output);
+        }
     }
     void subSatInt16x8(FloatRegister lhs, Operand rhs, SimdSign sign, FloatRegister output) {
-        if (sign == SimdSign::Signed)
+        if (sign == SimdSign::Signed) {
             vpsubsw(rhs, lhs, output);
-        else
+        } else {
             vpsubusw(rhs, lhs, output);
+        }
     }
 
     void mulInt16x8(FloatRegister lhs, Operand rhs, FloatRegister output) {
@@ -595,10 +603,11 @@ class MacroAssemblerX86Shared : public Assembler
                        FloatRegister temp, FloatRegister output);
     void selectX4(FloatRegister mask, FloatRegister onTrue, FloatRegister onFalse,
                   FloatRegister temp, FloatRegister output) {
-        if (AssemblerX86Shared::HasAVX())
+        if (AssemblerX86Shared::HasAVX()) {
             vblendvps(mask, onTrue, onFalse, output);
-        else
+        } else {
             selectSimd128(mask, onTrue, onFalse, temp, output);
+        }
     }
 
     template <class T, class Reg> inline void loadScalar(const Operand& src, Reg dest);
@@ -619,14 +628,16 @@ class MacroAssemblerX86Shared : public Assembler
         vmovdqa(src, dest);
     }
     FloatRegister reusedInputInt32x4(FloatRegister src, FloatRegister dest) {
-        if (HasAVX())
+        if (HasAVX()) {
             return src;
+        }
         moveSimd128Int(src, dest);
         return dest;
     }
     FloatRegister reusedInputAlignedInt32x4(const Operand& src, FloatRegister dest) {
-        if (HasAVX() && src.kind() == Operand::FPREG)
+        if (HasAVX() && src.kind() == Operand::FPREG) {
             return FloatRegister::FromCode(src.fpu());
+        }
         loadAlignedSimd128Int(src, dest);
         return dest;
     }
@@ -736,14 +747,16 @@ class MacroAssemblerX86Shared : public Assembler
         vmovaps(src, dest);
     }
     FloatRegister reusedInputFloat32x4(FloatRegister src, FloatRegister dest) {
-        if (HasAVX())
+        if (HasAVX()) {
             return src;
+        }
         moveSimd128Float(src, dest);
         return dest;
     }
     FloatRegister reusedInputAlignedFloat32x4(const Operand& src, FloatRegister dest) {
-        if (HasAVX() && src.kind() == Operand::FPREG)
+        if (HasAVX() && src.kind() == Operand::FPREG) {
             return FloatRegister::FromCode(src.fpu());
+        }
         loadAlignedSimd128Float(src, dest);
         return dest;
     }
@@ -858,8 +871,9 @@ class MacroAssemblerX86Shared : public Assembler
                               bool negativeZeroCheck = true)
     {
         // Check for -0.0
-        if (negativeZeroCheck)
+        if (negativeZeroCheck) {
             branchNegativeZero(src, dest, fail);
+        }
 
         ScratchDoubleScope scratch(asMasm());
         vcvttsd2si(src, dest);
@@ -876,8 +890,9 @@ class MacroAssemblerX86Shared : public Assembler
                                bool negativeZeroCheck = true)
     {
         // Check for -0.0
-        if (negativeZeroCheck)
+        if (negativeZeroCheck) {
             branchNegativeZeroFloat32(src, dest, fail);
+        }
 
         ScratchFloat32Scope scratch(asMasm());
         vcvttss2si(src, dest);
@@ -964,16 +979,18 @@ class MacroAssemblerX86Shared : public Assembler
             Label end;
             Label ifFalse;
 
-            if (ifNaN == Assembler::NaN_IsFalse)
+            if (ifNaN == Assembler::NaN_IsFalse) {
                 j(Assembler::Parity, &ifFalse);
+            }
             // Note a subtlety here: FLAGS is live at this point, and the
             // mov interface doesn't guarantee to preserve FLAGS. Use
             // movl instead of mov, because the movl instruction
             // preserves FLAGS.
             movl(Imm32(1), dest);
             j(cond, &end);
-            if (ifNaN == Assembler::NaN_IsTrue)
+            if (ifNaN == Assembler::NaN_IsTrue) {
                 j(Assembler::Parity, &end);
+            }
             bind(&ifFalse);
             mov(ImmWord(0), dest);
 

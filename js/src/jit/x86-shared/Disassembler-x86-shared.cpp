@@ -213,8 +213,9 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
             goto rex_done;
 #endif
           case PRE_VEX_C4: {
-            if (type != VEX_PS)
+            if (type != VEX_PS) {
                 MOZ_CRASH("Unable to disassemble instruction");
+            }
             ++ptr;
             uint8_t c4a = *ptr++ ^ 0xe0;
             uint8_t c4b = *ptr++ ^ 0x78;
@@ -228,8 +229,9 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
             break;
           }
           case PRE_VEX_C5: {
-            if (type != VEX_PS)
+            if (type != VEX_PS) {
               MOZ_CRASH("Unable to disassemble instruction");
+            }
             ++ptr;
             uint8_t c5 = *ptr++ ^ 0xf8;
             r = (c5 >> 7) & 0x1;
@@ -240,8 +242,9 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
           default:
             goto rex_done;
         }
-        if (l != 0) // 256-bit SIMD
+        if (l != 0) { // 256-bit SIMD
             MOZ_CRASH("Unable to disassemble instruction");
+        }
         type = VexOperandType(p);
         rex = MakeREXFlags(w, r, x, b);
         switch (m) {
@@ -259,8 +262,9 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
         }
     }
   rex_done:;
-    if (REX_W(rex))
+    if (REX_W(rex)) {
         opsize = 8;
+    }
 
     // Opcode.
     opcode = *ptr++;
@@ -295,8 +299,9 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
     modrm = *ptr++;
 
     // SIB
-    if (ModRM_hasSIB(modrm))
+    if (ModRM_hasSIB(modrm)) {
         sib = *ptr++;
+    }
 
     // Address Displacement
     if (HasDisp8(modrm)) {
@@ -362,8 +367,9 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
     }
 
     // Interpret the opcode.
-    if (HasRIP(modrm, sib, rex))
+    if (HasRIP(modrm, sib, rex)) {
         MOZ_CRASH("Unable to disassemble instruction");
+    }
 
     size_t memSize = 0;
     OtherOperand otherOperand(imm);
@@ -376,15 +382,17 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
                         DecodeScale(modrm, sib, rex));
     switch (opcode) {
       case OP_GROUP11_EvIb:
-        if (gpr != RegisterID(GROUP11_MOV))
+        if (gpr != RegisterID(GROUP11_MOV)) {
             MOZ_CRASH("Unable to disassemble instruction");
+        }
         MOZ_RELEASE_ASSERT(haveImm);
         memSize = 1;
         kind = HeapAccess::Store;
         break;
       case OP_GROUP11_EvIz:
-        if (gpr != RegisterID(GROUP11_MOV))
+        if (gpr != RegisterID(GROUP11_MOV)) {
             MOZ_CRASH("Unable to disassemble instruction");
+        }
         MOZ_RELEASE_ASSERT(haveImm);
         memSize = opsize;
         kind = HeapAccess::Store;
@@ -402,14 +410,16 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
         kind = HeapAccess::Load;
         break;
       case OP_MOV_EvGv:
-        if (!haveImm)
+        if (!haveImm) {
             otherOperand = OtherOperand(gpr);
+        }
         memSize = opsize;
         kind = HeapAccess::Store;
         break;
       case OP_MOV_EbGv:
-        if (!haveImm)
+        if (!haveImm) {
             otherOperand = OtherOperand(gpr);
+        }
         memSize = 1;
         kind = HeapAccess::Store;
         break;
