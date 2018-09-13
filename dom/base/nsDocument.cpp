@@ -5307,7 +5307,10 @@ void
 nsDocument::EndLoad()
 {
 #if defined(DEBUG) && !defined(ANDROID)
-  AssertContentPrivilegedAboutPageHasCSP(mDocumentURI, NodePrincipal());
+  // only assert if nothing stopped the load on purpose
+  if (!mParserAborted) {
+    AssertContentPrivilegedAboutPageHasCSP(mDocumentURI, NodePrincipal());
+  }
 #endif
 
   // EndLoad may have been called without a matching call to BeginLoad, in the
