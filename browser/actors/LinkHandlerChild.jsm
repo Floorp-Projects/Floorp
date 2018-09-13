@@ -34,10 +34,10 @@ class LinkHandlerChild extends ActorChild {
         Services.prefs.getBoolPref("browser.chrome.site_icons", true)) {
       // Inject the default icon. Use documentURIObject so that we do the right
       // thing with about:-style error pages. See bug 453442
-      let baseURI = this.content.document.documentURIObject;
-      if (["http", "https"].includes(baseURI.scheme)) {
+      let pageURI = this.content.document.documentURIObject;
+      if (["http", "https"].includes(pageURI.scheme)) {
         this.seenTabIcon = true;
-        this.iconLoader.addDefaultIcon(baseURI);
+        this.iconLoader.addDefaultIcon(pageURI);
       }
     }
   }
@@ -137,13 +137,11 @@ class LinkHandlerChild extends ActorChild {
             return;
           }
 
-          let iconInfo = FaviconLoader.makeFaviconFromLink(link, isRichIcon);
-          if (iconInfo) {
+          if (this.iconLoader.addIconFromLink(link, isRichIcon)) {
             iconAdded = true;
             if (!isRichIcon) {
               this.seenTabIcon = true;
             }
-            this.iconLoader.addIcon(iconInfo);
           }
           break;
         case "search":

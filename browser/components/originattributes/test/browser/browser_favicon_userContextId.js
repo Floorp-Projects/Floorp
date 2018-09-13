@@ -2,14 +2,14 @@
  * Bug 1277803 - A test caes for testing favicon loading across different userContextId.
  */
 
-const CC = Components.Constructor;
-
-ChromeUtils.defineModuleGetter(this, "Promise",
-  "resource://gre/modules/Promise.jsm");
-
 let EventUtils = {};
 Services.scriptloader.loadSubScript(
   "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+
+ChromeUtils.defineModuleGetter(this, "PromiseUtils",
+                              "resource://gre/modules/PromiseUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
+                              "resource://testing-common/PlacesTestUtils.jsm");
 
 const TEST_SITE = "http://example.net";
 const TEST_THIRD_PARTY_SITE = "http://mochi.test:8888";
@@ -27,7 +27,6 @@ const USER_CONTEXT_ID_PERSONAL = 1;
 const USER_CONTEXT_ID_WORK     = 2;
 
 let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-let makeURI = ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm", {}).BrowserUtils.makeURI;
 
 function clearAllImageCaches() {
   var tools = SpecialPowers.Cc["@mozilla.org/image/tools;1"]
@@ -110,7 +109,7 @@ FaviconObserver.prototype = {
     this._expectedPrincipal = Services.scriptSecurityManager
                                       .createCodebasePrincipal(aPageURI, { userContextId: aUserContextId });
     this._faviconURL = aFaviconURL;
-    this._faviconLoaded = new Promise.defer();
+    this._faviconLoaded = PromiseUtils.defer();
   },
 
   get promise() {
@@ -119,20 +118,11 @@ FaviconObserver.prototype = {
 };
 
 function waitOnFaviconLoaded(aFaviconURL) {
-  return new Promise(resolve => {
-    let observer = {
-      onPageChanged(uri, attr, value, id) {
-
-        if (attr === Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
-            value === aFaviconURL) {
-          resolve();
-          PlacesUtils.history.removeObserver(observer, false);
-        }
-      },
-    };
-
-    PlacesUtils.history.addObserver(observer);
-  });
+  return PlacesTestUtils.waitForNotification(
+    "onPageChanged",
+    (uri, attr, value, id) => attr === Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON &&
+                              value === aFaviconURL,
+    "history");
 }
 
 async function generateCookies(aHost) {
