@@ -35,7 +35,7 @@ enum nsSortState_direction {
 };
 
 // the sort state holds info about the current sort
-struct nsSortState
+struct MOZ_STACK_CLASS nsSortState final
 {
   bool initialized;
   MOZ_INIT_OUTSIDE_CTOR bool invertSort;
@@ -125,7 +125,7 @@ SetSortHints(Element* aElement, nsSortState* aSortState)
                     direction, true);
 
   // for trees, also set the sort info on the currently sorted column
-  if (aElement->NodeInfo()->Equals(nsGkAtoms::tree, kNameSpaceID_XUL)) {
+  if (aElement->IsXULElement(nsGkAtoms::tree)) {
     if (aSortState->sortKeys.Length() >= 1) {
       nsAutoString sortkey;
       aSortState->sortKeys[0]->ToString(sortkey);
@@ -150,7 +150,7 @@ GetItemsToSort(nsIContent *aContainer,
   // Get the children. For trees, get the treechildren element and
   // use that as the parent
   RefPtr<Element> treechildren;
-  if (aContainer->NodeInfo()->Equals(nsGkAtoms::tree, kNameSpaceID_XUL)) {
+  if (aContainer->IsXULElement(nsGkAtoms::tree)) {
     nsXULContentUtils::FindChildByTag(aContainer,
                                       kNameSpaceID_XUL,
                                       nsGkAtoms::treechildren,
