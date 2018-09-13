@@ -14,32 +14,32 @@
  Pref="media.webspeech.recognition.enable",
  Func="SpeechRecognition::IsAuthorized"]
 interface SpeechRecognition : EventTarget {
-    // recognition parameters
-    attribute SpeechGrammarList grammars;
-    attribute DOMString lang;
-    [Throws]
-    attribute boolean continuous;
-    attribute boolean interimResults;
-    attribute unsigned long maxAlternatives;
-    [Throws]
-    attribute DOMString serviceURI;
+  // recognition parameters
+  attribute SpeechGrammarList grammars;
+  attribute DOMString lang;
+  [Throws]
+  attribute boolean continuous;
+  attribute boolean interimResults;
+  attribute unsigned long maxAlternatives;
+  [Throws]
+  attribute DOMString serviceURI;
 
-    // methods to drive the speech interaction
-    [Throws, NeedsCallerType]
-    void start(optional MediaStream stream);
-    void stop();
-    void abort();
+  // methods to drive the speech interaction
+  [Throws, NeedsCallerType]
+  void start(optional MediaStream stream);
+  void stop();
+  void abort();
 
-    // event methods
-    attribute EventHandler onaudiostart;
-    attribute EventHandler onsoundstart;
-    attribute EventHandler onspeechstart;
-    attribute EventHandler onspeechend;
-    attribute EventHandler onsoundend;
-    attribute EventHandler onaudioend;
-    attribute EventHandler onresult;
-    attribute EventHandler onnomatch;
-    attribute EventHandler onerror;
-    attribute EventHandler onstart;
-    attribute EventHandler onend;
+  // event methods
+  attribute EventHandler onaudiostart;
+  attribute EventHandler onsoundstart;
+  attribute EventHandler onspeechstart;
+  attribute EventHandler onspeechend;
+  attribute EventHandler onsoundend;
+  attribute EventHandler onaudioend;
+  attribute EventHandler onresult;
+  attribute EventHandler onnomatch;
+  attribute EventHandler onerror;
+  attribute EventHandler onstart;
+  attribute EventHandler onend;
 };

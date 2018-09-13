@@ -8,33 +8,33 @@
  */
 
 enum RTCIceCredentialType {
-    "password",
-    "token"
+  "password",
+  "token"
 };
 
 dictionary RTCIceServer {
-    (DOMString or sequence<DOMString>) urls;
-    DOMString  url; //deprecated
-    DOMString username;
-    DOMString credential;
-    RTCIceCredentialType credentialType = "password";
+  (DOMString or sequence<DOMString>) urls;
+  DOMString  url; //deprecated
+  DOMString username;
+  DOMString credential;
+  RTCIceCredentialType credentialType = "password";
 };
 
 enum RTCIceTransportPolicy {
-    "relay",
-    "all"
+  "relay",
+  "all"
 };
 
 enum RTCBundlePolicy {
-    "balanced",
-    "max-compat",
-    "max-bundle"
+  "balanced",
+  "max-compat",
+  "max-bundle"
 };
 
 dictionary RTCConfiguration {
-    sequence<RTCIceServer> iceServers;
-    RTCIceTransportPolicy  iceTransportPolicy = "all";
-    RTCBundlePolicy bundlePolicy = "balanced";
-    DOMString? peerIdentity = null;
-    sequence<RTCCertificate> certificates;
+  sequence<RTCIceServer> iceServers;
+  RTCIceTransportPolicy  iceTransportPolicy = "all";
+  RTCBundlePolicy bundlePolicy = "balanced";
+  DOMString? peerIdentity = null;
+  sequence<RTCCertificate> certificates;
 };

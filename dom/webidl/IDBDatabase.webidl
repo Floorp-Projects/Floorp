@@ -12,37 +12,37 @@
 
 [Exposed=(Window,Worker,System)]
 interface IDBDatabase : EventTarget {
-    readonly    attribute DOMString          name;
-    readonly    attribute unsigned long long version;
+  readonly    attribute DOMString          name;
+  readonly    attribute unsigned long long version;
 
-    readonly    attribute DOMStringList      objectStoreNames;
+  readonly    attribute DOMStringList      objectStoreNames;
 
-    [Throws]
-    IDBObjectStore createObjectStore (DOMString name, optional IDBObjectStoreParameters optionalParameters);
+  [Throws]
+  IDBObjectStore createObjectStore (DOMString name, optional IDBObjectStoreParameters optionalParameters);
 
-    [Throws]
-    void           deleteObjectStore (DOMString name);
+  [Throws]
+  void           deleteObjectStore (DOMString name);
 
-    [Throws]
-    IDBTransaction transaction ((DOMString or sequence<DOMString>) storeNames,
-                                optional IDBTransactionMode mode = "readonly");
+  [Throws]
+  IDBTransaction transaction ((DOMString or sequence<DOMString>) storeNames,
+                              optional IDBTransactionMode mode = "readonly");
 
-    void           close ();
+  void           close ();
 
-                attribute EventHandler       onabort;
-                attribute EventHandler       onclose;
-                attribute EventHandler       onerror;
-                attribute EventHandler       onversionchange;
+              attribute EventHandler       onabort;
+              attribute EventHandler       onclose;
+              attribute EventHandler       onerror;
+              attribute EventHandler       onversionchange;
 };
 
 partial interface IDBDatabase {
-    [Func="mozilla::dom::IndexedDatabaseManager::ExperimentalFeaturesEnabled"]
-    readonly    attribute StorageType        storage;
+  [Func="mozilla::dom::IndexedDatabaseManager::ExperimentalFeaturesEnabled"]
+  readonly    attribute StorageType        storage;
 
-    [Exposed=Window, Throws, UseCounter]
-    IDBRequest createMutableFile (DOMString name, optional DOMString type);
+  [Exposed=Window, Throws, UseCounter]
+  IDBRequest createMutableFile (DOMString name, optional DOMString type);
 
-    // this is deprecated due to renaming in the spec
-    [Exposed=Window, Throws, UseCounter]
-    IDBRequest mozCreateFileHandle (DOMString name, optional DOMString type); // now createMutableFile
+  // this is deprecated due to renaming in the spec
+  [Exposed=Window, Throws, UseCounter]
+  IDBRequest mozCreateFileHandle (DOMString name, optional DOMString type); // now createMutableFile
 };

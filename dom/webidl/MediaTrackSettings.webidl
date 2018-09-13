@@ -8,30 +8,30 @@
  */
 
 dictionary MediaTrackSettings {
-    long      width;
-    long      height;
-    double    frameRate;
-    DOMString facingMode;
-    DOMString deviceId;
-    boolean echoCancellation;
-    boolean noiseSuppression;
-    boolean autoGainControl;
-    long      channelCount;
+  long      width;
+  long      height;
+  double    frameRate;
+  DOMString facingMode;
+  DOMString deviceId;
+  boolean echoCancellation;
+  boolean noiseSuppression;
+  boolean autoGainControl;
+  long      channelCount;
 
-    // Mozilla-specific extensions:
+  // Mozilla-specific extensions:
 
-    // http://fluffy.github.io/w3c-screen-share/#screen-based-video-constraints
-    // OBE by http://w3c.github.io/mediacapture-screen-share
+  // http://fluffy.github.io/w3c-screen-share/#screen-based-video-constraints
+  // OBE by http://w3c.github.io/mediacapture-screen-share
 
-    DOMString mediaSource;
+  DOMString mediaSource;
 
-    // Experimental https://bugzilla.mozilla.org/show_bug.cgi?id=1131568#c3
-    //              https://bugzilla.mozilla.org/show_bug.cgi?id=1193075
+  // Experimental https://bugzilla.mozilla.org/show_bug.cgi?id=1131568#c3
+  //              https://bugzilla.mozilla.org/show_bug.cgi?id=1193075
 
-    long long browserWindow;
-    boolean scrollWithPage;
-    long viewportOffsetX;
-    long viewportOffsetY;
-    long viewportWidth;
-    long viewportHeight;
+  long long browserWindow;
+  boolean scrollWithPage;
+  long viewportOffsetX;
+  long viewportOffsetY;
+  long viewportWidth;
+  long viewportHeight;
 };

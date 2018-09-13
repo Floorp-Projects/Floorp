@@ -15,27 +15,27 @@
              optional DOMPointInit p3, optional DOMPointInit p4),
  Constructor(DOMRectReadOnly rect)]
 interface DOMQuad {
-    [SameObject] readonly attribute DOMPoint p1;
-    [SameObject] readonly attribute DOMPoint p2;
-    [SameObject] readonly attribute DOMPoint p3;
-    [SameObject] readonly attribute DOMPoint p4;
-    [NewObject] DOMRectReadOnly getBounds();
+  [SameObject] readonly attribute DOMPoint p1;
+  [SameObject] readonly attribute DOMPoint p2;
+  [SameObject] readonly attribute DOMPoint p3;
+  [SameObject] readonly attribute DOMPoint p4;
+  [NewObject] DOMRectReadOnly getBounds();
 
-    [SameObject, Deprecated=DOMQuadBoundsAttr] readonly attribute DOMRectReadOnly bounds;
+  [SameObject, Deprecated=DOMQuadBoundsAttr] readonly attribute DOMRectReadOnly bounds;
 
-    DOMQuadJSON toJSON();
+  DOMQuadJSON toJSON();
 };
 
 dictionary DOMQuadJSON {
-    DOMPoint p1;
-    DOMPoint p2;
-    DOMPoint p3;
-    DOMPoint p4;
+  DOMPoint p1;
+  DOMPoint p2;
+  DOMPoint p3;
+  DOMPoint p4;
 };
 
 dictionary DOMQuadInit {
-    DOMPointInit p1;
-    DOMPointInit p2;
-    DOMPointInit p3;
-    DOMPointInit p4;
+  DOMPointInit p1;
+  DOMPointInit p2;
+  DOMPointInit p3;
+  DOMPointInit p4;
 };

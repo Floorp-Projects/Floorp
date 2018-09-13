@@ -8,36 +8,36 @@
  */
 
 dictionary MediaTrackSupportedConstraints {
-    boolean width = true;
-    boolean height = true;
-    boolean aspectRatio;        // to be supported
-    boolean frameRate = true;
-    boolean facingMode = true;
-    boolean volume;             // to be supported
-    boolean sampleRate;         // to be supported
-    boolean sampleSize;         // to be supported
-    boolean echoCancellation = true;
-    boolean noiseSuppression = true;
-    boolean autoGainControl = true;
-    boolean latency;            // to be supported
-    boolean channelCount = true;
-    boolean deviceId = true;
-    boolean groupId;            // to be supported
+  boolean width = true;
+  boolean height = true;
+  boolean aspectRatio;        // to be supported
+  boolean frameRate = true;
+  boolean facingMode = true;
+  boolean volume;             // to be supported
+  boolean sampleRate;         // to be supported
+  boolean sampleSize;         // to be supported
+  boolean echoCancellation = true;
+  boolean noiseSuppression = true;
+  boolean autoGainControl = true;
+  boolean latency;            // to be supported
+  boolean channelCount = true;
+  boolean deviceId = true;
+  boolean groupId;            // to be supported
 
-    // Mozilla-specific extensions:
+  // Mozilla-specific extensions:
 
-    // http://fluffy.github.io/w3c-screen-share/#screen-based-video-constraints
-    // OBE by http://w3c.github.io/mediacapture-screen-share
+  // http://fluffy.github.io/w3c-screen-share/#screen-based-video-constraints
+  // OBE by http://w3c.github.io/mediacapture-screen-share
 
-    boolean mediaSource = true;
+  boolean mediaSource = true;
 
-    // Experimental https://bugzilla.mozilla.org/show_bug.cgi?id=1131568#c3
-    //              https://bugzilla.mozilla.org/show_bug.cgi?id=1193075
+  // Experimental https://bugzilla.mozilla.org/show_bug.cgi?id=1131568#c3
+  //              https://bugzilla.mozilla.org/show_bug.cgi?id=1193075
 
-    boolean browserWindow = true;
-    boolean scrollWithPage = true;
-    boolean viewportOffsetX = true;
-    boolean viewportOffsetY = true;
-    boolean viewportWidth = true;
-    boolean viewportHeight = true;
+  boolean browserWindow = true;
+  boolean scrollWithPage = true;
+  boolean viewportOffsetX = true;
+  boolean viewportOffsetY = true;
+  boolean viewportWidth = true;
+  boolean viewportHeight = true;
 };
