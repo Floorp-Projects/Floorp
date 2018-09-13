@@ -38,7 +38,7 @@ class App extends PureComponent {
       case PAGES.THIS_FIREFOX:
         return RuntimePage({ dispatch });
       case PAGES.CONNECT:
-        return ConnectPage({ networkLocations });
+        return ConnectPage({ dispatch, networkLocations });
       default:
         // Invalid page, blank.
         return null;

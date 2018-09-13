@@ -11,6 +11,8 @@ const {
   PAGES,
 } = require("../constants");
 
+const NetworkLocationsModule = require("../modules/network-locations");
+
 const Actions = require("./index");
 
 function selectPage(page) {
@@ -35,11 +37,25 @@ function updateDebugTargetCollapsibility(key, isCollapsed) {
   return { type: DEBUG_TARGET_COLLAPSIBILITY_UPDATED, key, isCollapsed };
 }
 
+function addNetworkLocation(location) {
+  return (dispatch, getState) => {
+    NetworkLocationsModule.addNetworkLocation(location);
+  };
+}
+
+function removeNetworkLocation(location) {
+  return (dispatch, getState) => {
+    NetworkLocationsModule.removeNetworkLocation(location);
+  };
+}
+
 function updateNetworkLocations(locations) {
   return { type: NETWORK_LOCATIONS_UPDATED, locations };
 }
 
 module.exports = {
+  addNetworkLocation,
+  removeNetworkLocation,
   selectPage,
   updateDebugTargetCollapsibility,
   updateNetworkLocations,
