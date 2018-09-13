@@ -9,6 +9,9 @@
 #include "js/CompilationAndEvaluation.h"
 
 #include "mozilla/Maybe.h" // mozilla::None, mozilla::Some
+#include "mozilla/TextUtils.h" // mozilla::IsAscii
+
+#include <algorithm> // std::all_of
 
 #include "jstypes.h" // JS_PUBLIC_API
 
@@ -50,15 +53,27 @@ Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 static bool
-Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-        const char* bytes, size_t length, JS::MutableHandleScript script)
+CompileLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
+              const char* bytes, size_t length, JS::MutableHandleScript script)
 {
-    char16_t* chars;
-    if (options.utf8) {
-        chars = JS::UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
-    } else {
-        chars = InflateString(cx, bytes, length);
+    MOZ_ASSERT(!options.utf8);
+
+    char16_t* chars = InflateString(cx, bytes, length);
+    if (!chars) {
+        return false;
     }
+
+    SourceBufferHolder source(chars, length, SourceBufferHolder::GiveOwnership);
+    return ::Compile(cx, options, source, script);
+}
+
+static bool
+CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
+            const char* bytes, size_t length, JS::MutableHandleScript script)
+{
+    MOZ_ASSERT(options.utf8);
+
+    char16_t* chars = JS::UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     if (!chars) {
         return false;
     }
@@ -76,7 +91,12 @@ Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
         return false;
     }
 
-    return ::Compile(cx, options, reinterpret_cast<const char*>(buffer.begin()), buffer.length(), script);
+    return options.utf8
+           ? ::CompileUtf8(cx, options,
+                           reinterpret_cast<const char*>(buffer.begin()), buffer.length(), script)
+           : ::CompileLatin1(cx, options,
+                             reinterpret_cast<const char*>(buffer.begin()), buffer.length(),
+                             script);
 }
 
 static bool
@@ -100,10 +120,19 @@ JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 bool
-JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-            const char* bytes, size_t length, JS::MutableHandleScript script)
+JS::CompileLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
+                  const char* bytes, size_t length, JS::MutableHandleScript script)
 {
-    return ::Compile(cx, options, bytes, length, script);
+    MOZ_ASSERT(!options.utf8);
+    return ::CompileLatin1(cx, options, bytes, length, script);
+}
+
+bool
+JS::CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
+                const char* bytes, size_t length, JS::MutableHandleScript script)
+{
+    MOZ_ASSERT(options.utf8);
+    return ::CompileUtf8(cx, options, bytes, length, script);
 }
 
 bool
@@ -130,12 +159,16 @@ JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& opt
 }
 
 bool
-JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-                                const char* bytes, size_t length, JS::MutableHandleScript script)
+JS::CompileLatin1ForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
+                                      const char* bytes, size_t length,
+                                      JS::MutableHandleScript script)
 {
+    MOZ_ASSERT(!optionsArg.utf8,
+               "this function only compiles Latin-1 source text");
+
     CompileOptions options(cx, optionsArg);
     options.setNonSyntacticScope(true);
-    return ::Compile(cx, options, bytes, length, script);
+    return ::CompileLatin1(cx, options, bytes, length, script);
 }
 
 bool
@@ -157,10 +190,12 @@ JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& opt
 }
 
 JS_PUBLIC_API(bool)
-JS_CompileScript(JSContext* cx, const char* ascii, size_t length,
+JS_CompileScript(JSContext* cx, const char* bytes, size_t length,
                  const JS::CompileOptions& options, MutableHandleScript script)
 {
-    return ::Compile(cx, options, ascii, length, script);
+    return options.utf8
+           ? ::CompileUtf8(cx, options, bytes, length, script)
+           : ::CompileLatin1(cx, options, bytes, length, script);
 }
 
 JS_PUBLIC_API(bool)
