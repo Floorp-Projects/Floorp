@@ -46,6 +46,7 @@ class gfxVarReceiver;
   _(ProfDirectory,              nsString,         nsString())           \
   _(UseOMTP,                    bool,             false)                \
   _(AllowD3D11KeyedMutex,       bool,             false)                \
+  _(SystemTextQuality,          int32_t,          5 /* CLEARTYPE_QUALITY */) \
 
   /* Add new entries above this line. */
 
@@ -108,6 +109,9 @@ private:
     {}
     void SetValue(const GfxVarValue& aValue) override {
       aValue.get(&mValue);
+      if (mListener) {
+        mListener();
+      }
     }
     void GetValue(GfxVarValue* aOutValue) override {
       *aOutValue = GfxVarValue(mValue);
@@ -125,10 +129,19 @@ private:
         return false;
       }
       mValue = aValue;
+      if (mListener) {
+        mListener();
+      }
       return true;
+    }
+
+    void SetListener(const std::function<void()>& aListener)
+    {
+      mListener = aListener;
     }
   private:
     T mValue;
+    std::function<void()> mListener;
   };
 
 #define GFX_VAR_DECL(CxxName, DataType, DefaultValue)           \
@@ -151,6 +164,12 @@ public:                                                         \
     if (sInstance->mVar##CxxName.Set(aValue)) {                 \
       sInstance->NotifyReceivers(&sInstance->mVar##CxxName);    \
     }                                                           \
+  }                                                             \
+                                                                \
+  static void                                                   \
+  Set##CxxName##Listener(const std::function<void()>& aListener)  \
+  {                                                             \
+    sInstance->mVar##CxxName.SetListener(aListener);            \
   }
 
   GFX_VARS_LIST(GFX_VAR_DECL)
