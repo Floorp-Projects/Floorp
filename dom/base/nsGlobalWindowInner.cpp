@@ -3638,15 +3638,15 @@ nsGlobalWindowInner::GetNearestWidget() const
 }
 
 void
-nsGlobalWindowInner::SetFullScreen(bool aFullScreen, mozilla::ErrorResult& aError)
+nsGlobalWindowInner::SetFullScreen(bool aFullscreen, mozilla::ErrorResult& aError)
 {
-  FORWARD_TO_OUTER_OR_THROW(SetFullScreenOuter, (aFullScreen, aError), aError, /* void */);
+  FORWARD_TO_OUTER_OR_THROW(SetFullscreenOuter, (aFullscreen, aError), aError, /* void */);
 }
 
 bool
 nsGlobalWindowInner::GetFullScreen(ErrorResult& aError)
 {
-  FORWARD_TO_OUTER_OR_THROW(GetFullScreenOuter, (), aError, false);
+  FORWARD_TO_OUTER_OR_THROW(GetFullscreenOuter, (), aError, false);
 }
 
 bool

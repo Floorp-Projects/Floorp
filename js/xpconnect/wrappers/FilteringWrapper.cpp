@@ -56,13 +56,15 @@ Filter(JSContext* cx, HandleObject wrapper, AutoIdVector& props)
     RootedId id(cx);
     for (size_t n = 0; n < props.length(); ++n) {
         id = props[n];
-        if (Policy::check(cx, wrapper, id, Wrapper::GET) || Policy::check(cx, wrapper, id, Wrapper::SET))
+        if (Policy::check(cx, wrapper, id, Wrapper::GET) || Policy::check(cx, wrapper, id, Wrapper::SET)) {
             props[w++].set(id);
-        else if (JS_IsExceptionPending(cx))
+        } else if (JS_IsExceptionPending(cx)) {
             return false;
+        }
     }
-    if (!props.resize(w))
+    if (!props.resize(w)) {
         return false;
+    }
 
     return true;
 }
@@ -73,26 +75,31 @@ FilterPropertyDescriptor(JSContext* cx, HandleObject wrapper, HandleId id, Mutab
 {
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
     bool getAllowed = Policy::check(cx, wrapper, id, Wrapper::GET);
-    if (JS_IsExceptionPending(cx))
+    if (JS_IsExceptionPending(cx)) {
         return false;
+    }
     bool setAllowed = Policy::check(cx, wrapper, id, Wrapper::SET);
-    if (JS_IsExceptionPending(cx))
+    if (JS_IsExceptionPending(cx)) {
         return false;
+    }
 
     MOZ_ASSERT(getAllowed || setAllowed,
                "Filtering policy should not allow GET_PROPERTY_DESCRIPTOR in this case");
 
     if (!desc.hasGetterOrSetter()) {
         // Handle value properties.
-        if (!getAllowed)
+        if (!getAllowed) {
             desc.value().setUndefined();
+        }
     } else {
         // Handle accessor properties.
         MOZ_ASSERT(desc.value().isUndefined());
-        if (!getAllowed)
+        if (!getAllowed) {
             desc.setGetter(nullptr);
-        if (!setAllowed)
+        }
+        if (!setAllowed) {
             desc.setSetter(nullptr);
+        }
     }
 
     return true;
@@ -106,8 +113,9 @@ FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext* cx, HandleObjec
 {
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET |
                                          BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
-    if (!Base::getPropertyDescriptor(cx, wrapper, id, desc))
+    if (!Base::getPropertyDescriptor(cx, wrapper, id, desc)) {
         return false;
+    }
     return FilterPropertyDescriptor<Policy>(cx, wrapper, id, desc);
 }
 
@@ -119,8 +127,9 @@ FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext* cx, HandleOb
 {
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET |
                                          BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
-    if (!Base::getOwnPropertyDescriptor(cx, wrapper, id, desc))
+    if (!Base::getOwnPropertyDescriptor(cx, wrapper, id, desc)) {
         return false;
+    }
     return FilterPropertyDescriptor<Policy>(cx, wrapper, id, desc);
 }
 
@@ -162,8 +171,9 @@ bool
 FilteringWrapper<Base, Policy>::call(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                     const JS::CallArgs& args) const
 {
-    if (!Policy::checkCall(cx, wrapper, args))
+    if (!Policy::checkCall(cx, wrapper, args)) {
         return false;
+    }
     return Base::call(cx, wrapper, args);
 }
 
@@ -172,8 +182,9 @@ bool
 FilteringWrapper<Base, Policy>::construct(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                           const JS::CallArgs& args) const
 {
-    if (!Policy::checkCall(cx, wrapper, args))
+    if (!Policy::checkCall(cx, wrapper, args)) {
         return false;
+    }
     return Base::construct(cx, wrapper, args);
 }
 
@@ -182,8 +193,9 @@ bool
 FilteringWrapper<Base, Policy>::nativeCall(JSContext* cx, JS::IsAcceptableThis test,
                                            JS::NativeImpl impl, const JS::CallArgs& args) const
 {
-    if (Policy::allowNativeCall(cx, test, impl))
+    if (Policy::allowNativeCall(cx, test, impl)) {
         return Base::Permissive::nativeCall(cx, test, impl, args);
+    }
     return Base::Restrictive::nativeCall(cx, test, impl, args);
 }
 
@@ -218,8 +230,9 @@ CrossOriginXrayWrapper::getPropertyDescriptor(JSContext* cx,
                                               JS::Handle<jsid> id,
                                               JS::MutableHandle<PropertyDescriptor> desc) const
 {
-    if (!SecurityXrayDOM::getPropertyDescriptor(cx, wrapper, id, desc))
+    if (!SecurityXrayDOM::getPropertyDescriptor(cx, wrapper, id, desc)) {
         return false;
+    }
     if (desc.object()) {
         // Cross-origin DOM objects do not have symbol-named properties apart
         // from the ones we add ourselves here.
@@ -237,8 +250,9 @@ CrossOriginXrayWrapper::getPropertyDescriptor(JSContext* cx,
             desc.attributesRef() &= ~JSPROP_ENUMERATE;
         }
         desc.attributesRef() &= ~JSPROP_PERMANENT;
-        if (!desc.getter() && !desc.setter())
+        if (!desc.getter() && !desc.setter()) {
             desc.attributesRef() |= JSPROP_READONLY;
+        }
     } else if (IsCrossOriginWhitelistedProp(cx, id)) {
         // Spec says to return PropertyDescriptor {
         //   [[Value]]: undefined, [[Writable]]: false, [[Enumerable]]: false,

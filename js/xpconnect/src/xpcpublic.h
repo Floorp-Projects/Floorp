@@ -118,8 +118,9 @@ inline JSObject*
 GetXBLScopeOrGlobal(JSContext* cx, JSObject* obj)
 {
     MOZ_ASSERT(!js::IsCrossCompartmentWrapper(obj));
-    if (IsInContentXBLScope(obj))
+    if (IsInContentXBLScope(obj)) {
         return JS::GetNonCCWObjectGlobal(obj);
+    }
     return GetXBLScope(cx, obj);
 }
 
@@ -276,8 +277,9 @@ public:
         bool ignored;
         JSString* str = JS_NewMaybeExternalString(cx, literal, length,
                                                   &sLiteralFinalizer, &ignored);
-        if (!str)
+        if (!str) {
             return false;
+        }
         rval.setString(str);
         return true;
     }
@@ -291,8 +293,9 @@ public:
                                                   atom->GetLength(),
                                                   &sDynamicAtomFinalizer,
                                                   &sharedAtom);
-        if (!str)
+        if (!str) {
             return false;
+        }
         if (sharedAtom) {
             // We only have non-owning atoms in DOMString for now.
             // nsDynamicAtom::AddRef is always-inline and defined in a

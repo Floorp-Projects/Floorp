@@ -1,0 +1,159 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
+Cu.importGlobalProperties(["crypto", "TextEncoder"]);
+
+var {
+  DefaultMap,
+  ExtensionError,
+} = ExtensionUtils;
+
+/**
+ * Represents a registered userScript in the child extension process.
+ *
+ * @param {ExtensionPageContextChild} context
+ *        The extension context which has registered the user script.
+ * @param {string} scriptId
+ *        An unique id that represents the registered user script
+ *        (generated and used internally to identify it across the different processes).
+ */
+class UserScriptChild {
+  constructor({context, scriptId, onScriptUnregister}) {
+    this.context = context;
+    this.scriptId = scriptId;
+    this.onScriptUnregister = onScriptUnregister;
+    this.unregistered = false;
+  }
+
+  async unregister() {
+    if (this.unregistered) {
+      throw new ExtensionError("User script already unregistered");
+    }
+
+    this.unregistered = true;
+
+    await this.context.childManager.callParentAsyncFunction(
+      "userScripts.unregister", [this.scriptId]);
+
+    this.context = null;
+
+    this.onScriptUnregister();
+  }
+
+  api() {
+    const {context} = this;
+
+    // Returns the RegisteredUserScript API object.
+    return {
+      unregister: () => {
+        return context.wrapPromise(this.unregister());
+      },
+    };
+  }
+}
+
+this.userScripts = class extends ExtensionAPI {
+  getAPI(context) {
+    // Cache of the script code already converted into blob urls:
+    //   Map<textHash, blobURLs>
+    const blobURLsByHash = new Map();
+
+    // Keep track of the userScript that are sharing the same blob urls,
+    // so that we can revoke any blob url that is not used by a registered
+    // userScripts:
+    //   Map<blobURL, Set<scriptId>>
+    const userScriptsByBlobURL = new DefaultMap(() => new Set());
+
+    function trackBlobURLs(scriptId, options) {
+      for (let url of options.js) {
+        if (userScriptsByBlobURL.has(url)) {
+          userScriptsByBlobURL.get(url).add(scriptId);
+        }
+      }
+    }
+
+    function revokeBlobURLs(scriptId, options) {
+      for (let url of options.js) {
+        if (userScriptsByBlobURL.has(url)) {
+          let scriptIds = userScriptsByBlobURL.get(url);
+          scriptIds.delete(scriptId);
+          if (scriptIds.size === 0) {
+            userScriptsByBlobURL.delete(url);
+            context.cloneScope.URL.revokeObjectURL(url);
+          }
+        }
+      }
+    }
+
+    // Convert a script code string into a blob URL (and use a cached one
+    // if the script hash is already associated to a blob URL).
+    const getBlobURL = async (text) => {
+      // Compute the hash of the js code string and reuse the blob url if we already have
+      // for the same hash.
+      const buffer = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(text));
+      const hash = String.fromCharCode(...new Uint16Array(buffer));
+
+      let blobURL = blobURLsByHash.get(hash);
+
+      if (blobURL) {
+        return blobURL;
+      }
+
+      const blob = new context.cloneScope.Blob([text], {type: "text/javascript"});
+      blobURL = context.cloneScope.URL.createObjectURL(blob);
+
+      // Start to track this blob URL.
+      userScriptsByBlobURL.get(blobURL);
+
+      blobURLsByHash.set(hash, blobURL);
+
+      return blobURL;
+    };
+
+    function convertToAPIObject(scriptId, options) {
+      const registeredScript = new UserScriptChild({
+        context, scriptId,
+        onScriptUnregister: () => revokeBlobURLs(scriptId, options),
+      });
+      trackBlobURLs(scriptId, options);
+
+      const scriptAPI = Cu.cloneInto(registeredScript.api(), context.cloneScope,
+                                     {cloneFunctions: true});
+      return scriptAPI;
+    }
+
+    // Revoke all the created blob urls once the context is destroyed.
+    context.callOnClose({
+      close() {
+        if (!context.cloneScope) {
+          return;
+        }
+
+        for (let blobURL of blobURLsByHash.values()) {
+          context.cloneScope.URL.revokeObjectURL(blobURL);
+        }
+      },
+    });
+
+    return {
+      userScripts: {
+        register(options) {
+          return context.cloneScope.Promise.resolve().then(async () => {
+            options.js = await Promise.all(options.js.map(js => {
+              return js.file || getBlobURL(js.code);
+            }));
+
+            const scriptId = await context.childManager.callParentAsyncFunction(
+              "userScripts.register", [options]);
+
+            return convertToAPIObject(scriptId, options);
+          });
+        },
+        setScriptAPIs(exportedAPIMethods) {
+          context.setUserScriptAPIs(exportedAPIMethods);
+        },
+      },
+    };
+  }
+};

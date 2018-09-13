@@ -122,12 +122,14 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
 
     map = scope->GetWrappedNativeProtoMap();
     proto = map->Find(classInfo);
-    if (proto)
+    if (proto) {
         return proto;
+    }
 
     RefPtr<XPCNativeSet> set = XPCNativeSet::GetNewOrUsed(classInfo);
-    if (!set)
+    if (!set) {
         return nullptr;
+    }
 
     proto = new XPCWrappedNativeProto(scope, classInfo, set.forget());
 

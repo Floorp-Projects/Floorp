@@ -304,8 +304,8 @@ public:
   static void SetActiveManager(EventStateManager* aNewESM,
                                nsIContent* aContent);
 
-  // Sets the full-screen event state on aElement to aIsFullScreen.
-  static void SetFullScreenState(dom::Element* aElement, bool aIsFullScreen);
+  // Sets the fullscreen event state on aElement to aIsFullscreen.
+  static void SetFullscreenState(dom::Element* aElement, bool aIsFullscreen);
 
   static bool IsRemoteTarget(nsIContent* aTarget);
 

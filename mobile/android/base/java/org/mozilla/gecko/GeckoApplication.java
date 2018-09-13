@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Application;
+import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -230,10 +231,24 @@ public class GeckoApplication extends Application
         return createRuntime(context, null);
     }
 
+    private static Class<? extends Service> getCrashHandlerServiceClass() {
+        try {
+            return Class.forName("org.mozilla.gecko.CrashHandlerService").asSubclass(Service.class);
+        } catch (Exception e) {
+            // This can only happen as part of a misconfigured build, so rethrow
+            throw new IllegalStateException("Unable to find CrashHandlerService", e);
+        }
+    }
+
     private static GeckoRuntimeSettings.Builder createSettingsBuilder() {
-        return new GeckoRuntimeSettings.Builder()
-                .crashHandler(CrashHandlerService.class)
+        GeckoRuntimeSettings.Builder builder = new GeckoRuntimeSettings.Builder()
                 .arguments(getDefaultGeckoArgs());
+
+        if (AppConstants.MOZ_CRASHREPORTER) {
+            builder.crashHandler(getCrashHandlerServiceClass());
+        }
+
+        return builder;
     }
 
     public static GeckoRuntime createRuntime(@NonNull Context context,
@@ -271,7 +286,9 @@ public class GeckoApplication extends Application
         }
 
         final Context context = getApplicationContext();
-        GeckoAppShell.ensureCrashHandling(CrashHandlerService.class);
+        if (AppConstants.MOZ_CRASHREPORTER) {
+            GeckoAppShell.ensureCrashHandling(getCrashHandlerServiceClass());
+        }
         GeckoAppShell.setApplicationContext(context);
 
         // PRNG is a pseudorandom number generator.

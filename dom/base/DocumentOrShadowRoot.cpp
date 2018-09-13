@@ -215,9 +215,9 @@ DocumentOrShadowRoot::GetFullscreenElement()
     return nullptr;
   }
 
-  Element* element = AsNode().OwnerDoc()->FullScreenStackTop();
+  Element* element = AsNode().OwnerDoc()->FullscreenStackTop();
   NS_ASSERTION(!element ||
-               element->State().HasState(NS_EVENT_STATE_FULL_SCREEN),
+               element->State().HasState(NS_EVENT_STATE_FULLSCREEN),
     "Fullscreen element should have fullscreen styles applied");
 
   nsIContent* retargeted = Retarget(element);

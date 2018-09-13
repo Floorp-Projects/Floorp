@@ -57,8 +57,9 @@ JSObject2WrappedJSMap::UpdateWeakPointersAfterGC()
         while (wrapper) {
             if (wrapper->IsSubjectToFinalization()) {
                 wrapper->UpdateObjectPointerAfterGC();
-                if (!wrapper->GetJSObjectPreserveColor())
+                if (!wrapper->GetJSObjectPreserveColor()) {
                     dying.AppendElement(dont_AddRef(wrapper));
+                }
             }
             wrapper = wrapper->GetNextWrapper();
         }
@@ -66,10 +67,11 @@ JSObject2WrappedJSMap::UpdateWeakPointersAfterGC()
         // Remove or update the JSObject key in the table if necessary.
         JSObject* obj = iter.get().key().unbarrieredGet();
         JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
-        if (!obj)
+        if (!obj) {
             iter.remove();
-        else
+        } else {
             iter.get().mutableKey() = obj;
+        }
     }
 }
 
@@ -96,8 +98,9 @@ size_t
 JSObject2WrappedJSMap::SizeOfWrappedJS(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t n = 0;
-    for (auto iter = mTable.iter(); !iter.done(); iter.next())
+    for (auto iter = mTable.iter(); !iter.done(); iter.next()) {
         n += iter.get().value()->SizeOfIncludingThis(mallocSizeOf);
+    }
     return n;
 }
 
@@ -290,18 +293,21 @@ NativeSetMap::Entry::Match(const PLDHashEntryHdr* entry, const void* key)
                 SetInTable->GetInterfaceAt(1) == Addition);
     }
 
-    if (!Addition && Set == SetInTable)
+    if (!Addition && Set == SetInTable) {
         return true;
+    }
 
     uint16_t count = Set->GetInterfaceCount();
-    if (count + (Addition ? 1 : 0) != SetInTable->GetInterfaceCount())
+    if (count + (Addition ? 1 : 0) != SetInTable->GetInterfaceCount()) {
         return false;
+    }
 
     XPCNativeInterface** CurrentInTable = SetInTable->GetInterfaceArray();
     XPCNativeInterface** Current = Set->GetInterfaceArray();
     for (uint16_t i = 0; i < count; i++) {
-        if (*(Current++) != *(CurrentInTable++))
+        if (*(Current++) != *(CurrentInTable++)) {
             return false;
+        }
     }
     return !Addition || Addition == *(CurrentInTable++);
 }

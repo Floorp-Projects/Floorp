@@ -59,8 +59,9 @@ WrapperFactory::GetXrayWaiver(HandleObject obj)
     XPCWrappedNativeScope* scope = ObjectScope(obj);
     MOZ_ASSERT(scope);
 
-    if (!scope->mWaiverWrapperMap)
+    if (!scope->mWaiverWrapperMap) {
         return nullptr;
+    }
 
     return scope->mWaiverWrapperMap->Find(obj);
 }
@@ -75,8 +76,9 @@ WrapperFactory::CreateXrayWaiver(JSContext* cx, HandleObject obj)
 
     JSAutoRealm ar(cx, obj);
     JSObject* waiver = Wrapper::New(cx, obj, &XrayWaiver);
-    if (!waiver)
+    if (!waiver) {
         return nullptr;
+    }
 
     // Add the new waiver to the map. It's important that we only ever have
     // one waiver for the lifetime of the target object.
@@ -84,8 +86,9 @@ WrapperFactory::CreateXrayWaiver(JSContext* cx, HandleObject obj)
         scope->mWaiverWrapperMap =
           JSObject2JSObjectMap::newMap(XPC_WRAPPER_MAP_LENGTH);
     }
-    if (!scope->mWaiverWrapperMap->Add(cx, obj, waiver))
+    if (!scope->mWaiverWrapperMap->Add(cx, obj, waiver)) {
         return nullptr;
+    }
     return waiver;
 }
 
@@ -125,14 +128,16 @@ ShouldWaiveXray(JSContext* cx, JSObject* originalObj)
     (void) js::UncheckedUnwrap(originalObj, /* stopAtWindowProxy = */ true, &flags);
 
     // If the original object did not point through an Xray waiver, we're done.
-    if (!(flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG))
+    if (!(flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG)) {
         return false;
+    }
 
     // If the original object was not a cross-compartment wrapper, that means
     // that the caller explicitly created a waiver. Preserve it so that things
     // like WaiveXrayAndWrap work.
-    if (!(flags & Wrapper::CROSS_COMPARTMENT))
+    if (!(flags & Wrapper::CROSS_COMPARTMENT)) {
         return true;
+    }
 
     // Otherwise, this is a case of explicitly passing a wrapper across a
     // compartment boundary. In that case, we only want to preserve waivers
@@ -392,26 +397,29 @@ SelectWrapper(bool securityWrapper, XrayType xrayType, bool waiveXrays, JSObject
     // If we don't want or can't use Xrays, select a wrapper that's either
     // entirely transparent or entirely opaque.
     if (xrayType == NotXray) {
-        if (!securityWrapper)
+        if (!securityWrapper) {
             return &CrossCompartmentWrapper::singleton;
+        }
         return &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
     }
 
     // Ok, we're using Xray. If this isn't a security wrapper, use the permissive
     // version and skip the filter.
     if (!securityWrapper) {
-        if (xrayType == XrayForDOMObject)
+        if (xrayType == XrayForDOMObject) {
             return &PermissiveXrayDOM::singleton;
-        else if (xrayType == XrayForJSObject)
+        } else if (xrayType == XrayForJSObject) {
             return &PermissiveXrayJS::singleton;
+        }
         MOZ_ASSERT(xrayType == XrayForOpaqueObject);
         return &PermissiveXrayOpaque::singleton;
     }
 
     // This is a security wrapper. Use the security versions and filter.
-    if (xrayType == XrayForDOMObject && IdentifyCrossOriginObject(obj) != CrossOriginOpaque)
+    if (xrayType == XrayForDOMObject && IdentifyCrossOriginObject(obj) != CrossOriginOpaque) {
         return &FilteringWrapper<CrossOriginXrayWrapper,
                                  CrossOriginAccessiblePropertiesOnly>::singleton;
+    }
 
     // There's never any reason to expose other objects to non-subsuming actors.
     // Just use an opaque wrapper in these cases.
@@ -421,8 +429,9 @@ SelectWrapper(bool securityWrapper, XrayType xrayType, bool waiveXrays, JSObject
     // functions exposed from the XBL scope. We could remove this exception,
     // if needed, by using ExportFunction to generate the content-side
     // representations of XBL methods.
-    if (xrayType == XrayForJSObject && IsInContentXBLScope(obj))
+    if (xrayType == XrayForJSObject && IsInContentXBLScope(obj)) {
         return &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
+    }
     return &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
 }
 
@@ -546,8 +555,9 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
 
     DEBUG_CheckUnwrapSafety(obj, wrapper, origin, target);
 
-    if (existing)
+    if (existing) {
         return Wrapper::Renew(existing, obj, wrapper);
+    }
 
     return Wrapper::New(cx, obj, wrapper);
 }
@@ -559,12 +569,14 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
 bool
 WrapperFactory::WaiveXrayAndWrap(JSContext* cx, MutableHandleValue vp)
 {
-    if (vp.isPrimitive())
+    if (vp.isPrimitive()) {
         return JS_WrapValue(cx, vp);
+    }
 
     RootedObject obj(cx, &vp.toObject());
-    if (!WaiveXrayAndWrap(cx, &obj))
+    if (!WaiveXrayAndWrap(cx, &obj)) {
         return false;
+    }
 
     vp.setObject(*obj);
     return true;
@@ -592,11 +604,13 @@ WrapperFactory::WaiveXrayAndWrap(JSContext* cx, MutableHandleObject argObj)
     JS::Compartment* target = js::GetContextCompartment(cx);
     JS::Compartment* origin = js::GetObjectCompartment(obj);
     obj = AllowWaiver(target, origin) ? WaiveXray(cx, obj) : obj;
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
-    if (!JS_WrapObject(cx, &obj))
+    if (!JS_WrapObject(cx, &obj)) {
         return false;
+    }
     argObj.set(obj);
     return true;
 }
@@ -617,13 +631,15 @@ FixWaiverAfterTransplant(JSContext* cx, HandleObject oldWaiver, HandleObject new
     // created from scratch, or was previously cross-compartment wrapper (which
     // should have no waiver). CreateXrayWaiver asserts this.
     JSObject* newWaiver = WrapperFactory::CreateXrayWaiver(cx, newobj);
-    if (!newWaiver)
+    if (!newWaiver) {
         return false;
+    }
 
     // Update all the cross-compartment references to oldWaiver to point to
     // newWaiver.
-    if (!js::RemapAllWrappersForObject(cx, oldWaiver, newWaiver))
+    if (!js::RemapAllWrappersForObject(cx, oldWaiver, newWaiver)) {
         return false;
+    }
 
     // There should be no same-compartment references to oldWaiver, and we
     // just remapped all cross-compartment references. It's dead, so we can
@@ -640,11 +656,13 @@ TransplantObject(JSContext* cx, JS::HandleObject origobj, JS::HandleObject targe
 {
     RootedObject oldWaiver(cx, WrapperFactory::GetXrayWaiver(origobj));
     RootedObject newIdentity(cx, JS_TransplantObject(cx, origobj, target));
-    if (!newIdentity || !oldWaiver)
+    if (!newIdentity || !oldWaiver) {
        return newIdentity;
+    }
 
-    if (!FixWaiverAfterTransplant(cx, oldWaiver, newIdentity))
+    if (!FixWaiverAfterTransplant(cx, oldWaiver, newIdentity)) {
         return nullptr;
+    }
     return newIdentity;
 }
 

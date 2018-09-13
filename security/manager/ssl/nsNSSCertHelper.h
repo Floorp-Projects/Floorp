@@ -15,9 +15,6 @@
 extern const char* kRootModuleName;
 extern const size_t kRootModuleNameLen;
 
-uint32_t
-getCertType(CERTCertificate* cert);
-
 nsresult
 GetCertFingerprintByOidTag(CERTCertificate* nsscert, SECOidTag aOidTag,
                            nsCString& fp);

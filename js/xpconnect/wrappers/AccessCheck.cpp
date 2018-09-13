@@ -110,14 +110,17 @@ static bool
 IsPermitted(CrossOriginObjectType type, JSFlatString* prop, bool set)
 {
     size_t propLength = JS_GetStringLength(JS_FORGET_STRING_FLATNESS(prop));
-    if (!propLength)
+    if (!propLength) {
         return false;
+    }
 
     char16_t propChar0 = JS_GetFlatStringCharAt(prop, 0);
-    if (type == CrossOriginLocation)
+    if (type == CrossOriginLocation) {
         return dom::Location_Binding::IsPermitted(prop, propChar0, set);
-    if (type == CrossOriginWindow)
+    }
+    if (type == CrossOriginWindow) {
         return dom::Window_Binding::IsPermitted(prop, propChar0, set);
+    }
 
     return false;
 }
@@ -158,10 +161,12 @@ IdentifyCrossOriginObject(JSObject* obj)
     obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
     const js::Class* clasp = js::GetObjectClass(obj);
 
-    if (clasp->name[0] == 'L' && !strcmp(clasp->name, "Location"))
+    if (clasp->name[0] == 'L' && !strcmp(clasp->name, "Location")) {
         return CrossOriginLocation;
-    if (clasp->name[0] == 'W' && !strcmp(clasp->name, "Window"))
+    }
+    if (clasp->name[0] == 'W' && !strcmp(clasp->name, "Window")) {
         return CrossOriginWindow;
+    }
 
     return CrossOriginOpaque;
 }
@@ -170,11 +175,13 @@ bool
 AccessCheck::isCrossOriginAccessPermitted(JSContext* cx, HandleObject wrapper, HandleId id,
                                           Wrapper::Action act)
 {
-    if (act == Wrapper::CALL)
+    if (act == Wrapper::CALL) {
         return false;
+    }
 
-    if (act == Wrapper::ENUMERATE)
+    if (act == Wrapper::ENUMERATE) {
         return true;
+    }
 
     // For the case of getting a property descriptor, we allow if either GET or SET
     // is allowed, and rely on FilteringWrapper to filter out any disallowed accessors.
@@ -186,8 +193,9 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext* cx, HandleObject wrapper, H
     RootedObject obj(cx, js::UncheckedUnwrap(wrapper, /* stopAtWindowProxy = */ false));
     CrossOriginObjectType type = IdentifyCrossOriginObject(obj);
     if (JSID_IS_STRING(id)) {
-        if (IsPermitted(type, JSID_TO_FLAT_STRING(id), act == Wrapper::SET))
+        if (IsPermitted(type, JSID_TO_FLAT_STRING(id), act == Wrapper::SET)) {
             return true;
+        }
     }
 
     if (type != CrossOriginOpaque &&
@@ -198,8 +206,9 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext* cx, HandleObject wrapper, H
         return true;
     }
 
-    if (act != Wrapper::GET)
+    if (act != Wrapper::GET) {
         return false;
+    }
 
     // Check for frame IDs. If we're resolving named frames, make sure to only
     // resolve ones that don't shadow native properties. See bug 860494.
@@ -234,13 +243,15 @@ bool
 AccessCheck::checkPassToPrivilegedCode(JSContext* cx, HandleObject wrapper, HandleValue v)
 {
     // Primitives are fine.
-    if (!v.isObject())
+    if (!v.isObject()) {
         return true;
+    }
     RootedObject obj(cx, &v.toObject());
 
     // Non-wrappers are fine.
-    if (!js::IsWrapper(obj))
+    if (!js::IsWrapper(obj)) {
         return true;
+    }
 
     // CPOWs use COWs (in the unprivileged junk scope) for all child->parent
     // references. Without this test, the child process wouldn't be able to
@@ -253,8 +264,9 @@ AccessCheck::checkPassToPrivilegedCode(JSContext* cx, HandleObject wrapper, Hand
     }
 
     // Same-origin wrappers are fine.
-    if (AccessCheck::wrapperSubsumes(obj))
+    if (AccessCheck::wrapperSubsumes(obj)) {
         return true;
+    }
 
     // Badness.
     JS_ReportErrorASCII(cx, "Permission denied to pass object to privileged code");
@@ -264,11 +276,13 @@ AccessCheck::checkPassToPrivilegedCode(JSContext* cx, HandleObject wrapper, Hand
 bool
 AccessCheck::checkPassToPrivilegedCode(JSContext* cx, HandleObject wrapper, const CallArgs& args)
 {
-    if (!checkPassToPrivilegedCode(cx, wrapper, args.thisv()))
+    if (!checkPassToPrivilegedCode(cx, wrapper, args.thisv())) {
         return false;
+    }
     for (size_t i = 0; i < args.length(); ++i) {
-        if (!checkPassToPrivilegedCode(cx, wrapper, args[i]))
+        if (!checkPassToPrivilegedCode(cx, wrapper, args[i])) {
             return false;
+        }
     }
     return true;
 }

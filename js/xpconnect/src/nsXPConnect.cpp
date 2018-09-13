@@ -143,10 +143,12 @@ nsXPConnect::InitStatics()
     MOZ_RELEASE_ASSERT(gSystemPrincipal);
 
     JSContext* cx = XPCJSContext::Get()->Context();
-    if (!JS::InitSelfHostedCode(cx))
+    if (!JS::InitSelfHostedCode(cx)) {
         MOZ_CRASH("InitSelfHostedCode failed");
-    if (!gSelf->mRuntime->InitializeStrings(cx))
+    }
+    if (!gSelf->mRuntime->InitializeStrings(cx)) {
         MOZ_CRASH("InitializeStrings failed");
+    }
 
     // Initialize our singleton scopes.
     gSelf->mRuntime->InitSingletonScopes();
@@ -181,10 +183,11 @@ nsXPConnect::IsISupportsDescendant(const nsXPTInterfaceInfo* info)
 void
 xpc::ErrorBase::Init(JSErrorBase* aReport)
 {
-    if (!aReport->filename)
+    if (!aReport->filename) {
         mFileName.SetIsVoid(true);
-    else
+    } else {
       CopyUTF8toUTF16(mozilla::MakeStringSpan(aReport->filename), mFileName);
+    }
 
     mLineNumber = aReport->lineno;
     mColumn = aReport->column;
@@ -225,8 +228,9 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
     mIsMuted = aReport->isMuted;
 
     if (aReport->notes) {
-        if (!mNotes.SetLength(aReport->notes->length(), fallible))
+        if (!mNotes.SetLength(aReport->notes->length(), fallible)) {
             return;
+        }
 
         size_t i = 0;
         for (auto&& note : *aReport->notes) {
@@ -271,8 +275,9 @@ xpc::ErrorBase::AppendErrorDetailsTo(nsCString& error)
 void
 xpc::ErrorNote::LogToStderr()
 {
-    if (!DOMPrefs::DumpEnabled())
+    if (!DOMPrefs::DumpEnabled()) {
         return;
+    }
 
     nsAutoCString error;
     error.AssignLiteral("JavaScript note: ");
@@ -285,17 +290,20 @@ xpc::ErrorNote::LogToStderr()
 void
 xpc::ErrorReport::LogToStderr()
 {
-    if (!DOMPrefs::DumpEnabled())
+    if (!DOMPrefs::DumpEnabled()) {
         return;
+    }
 
     nsAutoCString error;
     error.AssignLiteral("JavaScript ");
-    if (JSREPORT_IS_STRICT(mFlags))
+    if (JSREPORT_IS_STRICT(mFlags)) {
         error.AppendLiteral("strict ");
-    if (JSREPORT_IS_WARNING(mFlags))
+    }
+    if (JSREPORT_IS_WARNING(mFlags)) {
         error.AppendLiteral("warning: ");
-    else
+    } else {
         error.AppendLiteral("error: ");
+    }
     AppendErrorDetailsTo(error);
 
     fprintf(stderr, "%s\n", error.get());
@@ -320,8 +328,9 @@ xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack,
 {
     // Don't log failures after diverging from a recording during replay, as
     // this will cause the associated debugger operation to fail.
-    if (recordreplay::HasDivergedFromRecording())
+    if (recordreplay::HasDivergedFromRecording()) {
         return;
+    }
 
     if (aStack) {
         MOZ_ASSERT(aStackGlobal);
@@ -382,8 +391,9 @@ xpc::ErrorNote::ErrorNoteToMessageString(JSErrorNotes::Note* aNote,
                                          nsAString& aString)
 {
     aString.Truncate();
-    if (aNote->message())
+    if (aNote->message()) {
         aString.Append(NS_ConvertUTF8toUTF16(aNote->message().c_str()));
+    }
 }
 
 /* static */
@@ -430,15 +440,17 @@ static inline T UnexpectedFailure(T rv)
 void
 xpc::TraceXPCGlobal(JSTracer* trc, JSObject* obj)
 {
-    if (js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL)
+    if (js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL) {
         mozilla::dom::TraceProtoAndIfaceCache(trc, obj);
+    }
 
     // We might be called from a GC during the creation of a global, before we've
     // been able to set up the compartment private or the XPCWrappedNativeScope,
     // so we need to null-check those.
     xpc::RealmPrivate* realmPrivate = xpc::RealmPrivate::Get(obj);
-    if (realmPrivate && realmPrivate->scope)
+    if (realmPrivate && realmPrivate->scope) {
         realmPrivate->scope->TraceInside(trc);
+    }
 }
 
 
@@ -457,8 +469,9 @@ CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
     RootedObject global(cx,
                         JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal),
                                            JS::DontFireOnNewGlobalHook, aOptions));
-    if (!global)
+    if (!global) {
         return nullptr;
+    }
     JSAutoRealm ar(cx, global);
 
     // The constructor automatically attaches the scope to the compartment private
@@ -473,8 +486,7 @@ CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
         // thing.  Also note that we only check this for JSCLASS_DOM_GLOBAL
         // classes because xpc::TraceXPCGlobal won't call
         // TraceProtoAndIfaceCache unless that flag is set.
-        if (!((const js::Class*)clasp)->isWrappedNative())
-        {
+        if (!((const js::Class*)clasp)->isWrappedNative()) {
             VerifyTraceProtoAndIfaceCacheCalledTracer trc(cx);
             TraceChildren(&trc, GCCellPtr(global.get()));
             MOZ_ASSERT(trc.ok, "Trace hook on global needs to call TraceXPCGlobal for XPConnect compartments.");
@@ -514,8 +526,9 @@ InitGlobalObjectOptions(JS::RealmOptions& aOptions,
     }
 
     if (extraWarningsForSystemJS) {
-        if (isSystem)
+        if (isSystem) {
             aOptions.behaviors().extraWarningsOverride().set(true);
+        }
     }
 }
 
@@ -537,8 +550,9 @@ InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal, uint32_t 
         }
     }
 
-    if (!(aFlags & xpc::DONT_FIRE_ONNEWGLOBALHOOK))
+    if (!(aFlags & xpc::DONT_FIRE_ONNEWGLOBALHOOK)) {
         JS_FireOnNewGlobalObject(aJSContext, aGlobal);
+    }
 
     return true;
 }
@@ -579,8 +593,9 @@ InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
     RootedObject global(aJSContext, wrappedGlobal->GetFlatJSObject());
     MOZ_ASSERT(JS_IsGlobalObject(global));
 
-    if (!InitGlobalObject(aJSContext, global, aFlags))
+    if (!InitGlobalObject(aJSContext, global, aFlags)) {
         return UnexpectedFailure(NS_ERROR_FAILURE);
+    }
 
     aNewGlobal.set(global);
     return NS_OK;
@@ -601,8 +616,9 @@ NativeInterface2JSObject(HandleObject aScope,
 
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
-    if (!XPCConvert::NativeInterface2JSObject(aVal, helper, aIID, aAllowWrapping, &rv))
+    if (!XPCConvert::NativeInterface2JSObject(aVal, helper, aIID, aAllowWrapping, &rv)) {
         return rv;
+    }
 
     MOZ_ASSERT(aAllowWrapping || !xpc::WrapperFactory::IsXrayWrapper(&aVal.toObject()),
                "Shouldn't be returning a xray wrapper here");
@@ -625,11 +641,13 @@ nsXPConnect::WrapNative(JSContext * aJSContext,
     RootedValue v(aJSContext);
     nsresult rv = NativeInterface2JSObject(aScope, aCOMObj, nullptr, &aIID,
                                            true, &v);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
         return rv;
+    }
 
-    if (!v.isObjectOrNull())
+    if (!v.isObjectOrNull()) {
         return NS_ERROR_FAILURE;
+    }
 
     *aRetVal = v.toObjectOrNull();
     return NS_OK;
@@ -736,14 +754,16 @@ xpc::UnwrapReflectorToISupports(JSObject* reflector)
 {
     // Unwrap security wrappers, if allowed.
     reflector = js::CheckedUnwrap(reflector, /* stopAtWindowProxy = */ false);
-    if (!reflector)
+    if (!reflector) {
         return nullptr;
+    }
 
     // Try XPCWrappedNatives.
     if (IS_WN_REFLECTOR(reflector)) {
         XPCWrappedNative* wn = XPCWrappedNative::Get(reflector);
-        if (!wn)
+        if (!wn) {
             return nullptr;
+        }
         nsCOMPtr<nsISupports> native = wn->Native();
         return native.forget();
     }
@@ -780,8 +800,9 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, const char* filename,
                                  JSContext* cx, JSObject* sandboxArg,
                                  MutableHandleValue rval)
 {
-    if (!sandboxArg)
+    if (!sandboxArg) {
         return NS_ERROR_INVALID_ARG;
+    }
 
     RootedObject sandbox(cx, sandboxArg);
     nsCString filenameStr;
@@ -812,8 +833,9 @@ NS_IMETHODIMP
 nsXPConnect::DebugDumpObject(nsISupports* p, int16_t depth)
 {
 #ifdef DEBUG
-    if (!depth)
+    if (!depth) {
         return NS_OK;
+    }
     if (!p) {
         XPC_LOG_ALWAYS(("*** Cound not dump object with NULL address"));
         return NS_OK;
@@ -870,8 +892,9 @@ nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scopeArg, nsIVariant* value,
 
     nsresult rv = NS_OK;
     if (!XPCVariant::VariantDataToJS(value, &rv, _retval)) {
-        if (NS_FAILED(rv))
+        if (NS_FAILED(rv)) {
             return rv;
+        }
 
         return NS_ERROR_FAILURE;
     }
@@ -886,8 +909,9 @@ nsXPConnect::JSToVariant(JSContext* ctx, HandleValue value, nsIVariant** _retval
 
     RefPtr<XPCVariant> variant = XPCVariant::newVariant(ctx, value);
     variant.forget(_retval);
-    if (!(*_retval))
+    if (!(*_retval)) {
         return NS_ERROR_FAILURE;
+    }
 
     return NS_OK;
 }
@@ -911,8 +935,9 @@ Base64Encode(JSContext* cx, HandleValue val, MutableHandleValue out)
     }
 
     JSString* str = JS_NewStringCopyN(cx, result.get(), result.Length());
-    if (!str)
+    if (!str) {
         return false;
+    }
 
     out.setString(str);
     return true;
@@ -935,8 +960,9 @@ Base64Decode(JSContext* cx, HandleValue val, MutableHandleValue out)
     }
 
     JSString* str = JS_NewStringCopyN(cx, result.get(), result.Length());
-    if (!str)
+    if (!str) {
         return false;
+    }
 
     out.setString(str);
     return true;
@@ -973,33 +999,38 @@ WriteScriptOrFunction(nsIObjectOutputStream* stream, JSContext* cx,
 
     uint8_t flags = 0; // We don't have flags anymore.
     nsresult rv = stream->Write8(flags);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
         return rv;
+    }
 
 
     TranscodeBuffer buffer;
     TranscodeResult code;
     {
-        if (functionObj)
+        if (functionObj) {
             code = EncodeInterpretedFunction(cx, buffer, functionObj);
-        else
+        } else {
             code = EncodeScript(cx, buffer, script);
+        }
     }
 
     if (code != TranscodeResult_Ok) {
-        if ((code & TranscodeResult_Failure) != 0)
+        if ((code & TranscodeResult_Failure) != 0) {
             return NS_ERROR_FAILURE;
+        }
         MOZ_ASSERT((code & TranscodeResult_Throw) != 0);
         JS_ClearPendingException(cx);
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
     size_t size = buffer.length();
-    if (size > UINT32_MAX)
+    if (size > UINT32_MAX) {
         return NS_ERROR_FAILURE;
+    }
     rv = stream->Write32(size);
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv)) {
         rv = stream->WriteBytes(reinterpret_cast<char*>(buffer.begin()), size);
+    }
 
     return rv;
 }
@@ -1013,8 +1044,9 @@ ReadScriptOrFunction(nsIObjectInputStream* stream, JSContext* cx,
 
     uint8_t flags;
     nsresult rv = stream->Read8(&flags);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
         return rv;
+    }
 
     // We don't serialize mutedError-ness of scripts, which is fine as long as
     // we only serialize system and XUL-y things. We can detect this by checking
@@ -1028,13 +1060,15 @@ ReadScriptOrFunction(nsIObjectInputStream* stream, JSContext* cx,
 
     uint32_t size;
     rv = stream->Read32(&size);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
         return rv;
+    }
 
     char* data;
     rv = stream->ReadBytes(size, &data);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
         return rv;
+    }
 
     TranscodeBuffer buffer;
     buffer.replaceRawBuffer(reinterpret_cast<uint8_t*>(data), size);
@@ -1044,18 +1078,21 @@ ReadScriptOrFunction(nsIObjectInputStream* stream, JSContext* cx,
         if (scriptp) {
             Rooted<JSScript*> script(cx);
             code = DecodeScript(cx, buffer, &script);
-            if (code == TranscodeResult_Ok)
+            if (code == TranscodeResult_Ok) {
                 *scriptp = script.get();
+            }
         } else {
             Rooted<JSFunction*> funobj(cx);
             code = DecodeInterpretedFunction(cx, buffer, &funobj);
-            if (code == TranscodeResult_Ok)
+            if (code == TranscodeResult_Ok) {
                 *functionObjp = JS_GetFunctionObject(funobj.get());
+            }
         }
 
         if (code != TranscodeResult_Ok) {
-            if ((code & TranscodeResult_Failure) != 0)
+            if ((code & TranscodeResult_Failure) != 0) {
                 return NS_ERROR_FAILURE;
+            }
             MOZ_ASSERT((code & TranscodeResult_Throw) != 0);
             JS_ClearPendingException(cx);
             return NS_ERROR_OUT_OF_MEMORY;
@@ -1149,8 +1186,9 @@ bool
 Atob(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.length())
+    if (!args.length()) {
         return true;
+    }
 
     return xpc::Base64Decode(cx, args[0], args.rval());
 }
@@ -1159,8 +1197,9 @@ bool
 Btoa(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.length())
+    if (!args.length()) {
         return true;
+    }
 
     return xpc::Base64Encode(cx, args[0], args.rval());
 }
