@@ -116,7 +116,7 @@ private:
   media::TimeUnit mLoopingOffset = media::TimeUnit::Zero();
   // To keep tracking the latest time of decoded audio data.
   media::TimeUnit mLastAudioEndTime = media::TimeUnit::Zero();
-  // The duration of the audio track.
+  // The estimated duration of the audio track used to adjust the time in MDSM.
   media::TimeUnit mAudioDuration = media::TimeUnit::Invalid();
 
   // To prevent seamless looping while seeking.
