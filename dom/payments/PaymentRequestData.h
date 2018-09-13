@@ -225,6 +225,36 @@ public:
                const nsAString& aPaymentMethodErrors,
                const nsAString& aShippingAddressErrors);
 
+  // The state represents the PaymentRequest's state in the spec. The state is
+  // not synchronized between content and parent processes.
+  // eCreated     - the state means a PaymentRequest is created when new
+  //                PaymentRequest() is called. This is the initial state.
+  // eInteractive - When PaymentRequest is requested to show to users, the state
+  //                becomes eInteractive. Under eInteractive state, Payment UI
+  //                pop up and gather the user's information until the user
+  //                accepts or rejects the PaymentRequest.
+  // eClosed      - When the user accepts or rejects the PaymentRequest, the
+  //                state becomes eClosed. Under eClosed state, response from
+  //                Payment UI would not be accepted by PaymentRequestService
+  //                anymore, except the Complete response.
+  enum eState {
+    eCreated,
+    eInteractive,
+    eClosed
+  };
+
+  void
+  SetState(const eState aState)
+  {
+    mState = aState;
+  }
+
+  const eState&
+  GetState() const
+  {
+    return mState;
+  }
+
 private:
   ~PaymentRequest() = default;
 
@@ -240,6 +270,7 @@ private:
   // IPC's life cycle should be controlled by IPC mechanism.
   // PaymentRequest should not own the reference of it.
   PaymentRequestParent* mIPC;
+  eState mState;
 };
 
 class PaymentAddress final : public nsIPaymentAddress
