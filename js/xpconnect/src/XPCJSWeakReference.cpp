@@ -19,8 +19,9 @@ NS_IMPL_ISUPPORTS(xpcJSWeakReference, xpcIJSWeakReference)
 
 nsresult xpcJSWeakReference::Init(JSContext* cx, const JS::Value& object)
 {
-    if (!object.isObject())
+    if (!object.isObject()) {
         return NS_OK;
+    }
 
     JS::RootedObject obj(cx, &object.toObject());
 

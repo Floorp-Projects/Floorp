@@ -126,6 +126,7 @@ android {
 
                 if (!mozconfig.substs.MOZ_CRASHREPORTER) {
                     exclude 'org/mozilla/gecko/CrashReporterActivity.java'
+                    exclude 'org/mozilla/gecko/CrashHandlerService.java'
                 }
 
                 if (!mozconfig.substs.MOZ_NATIVE_DEVICES) {

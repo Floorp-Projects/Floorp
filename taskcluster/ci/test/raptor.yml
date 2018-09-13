@@ -71,7 +71,7 @@ raptor-speedometer-geckoview:
     run-on-projects:
         by-test-platform:
             android-hw.*: ['try', 'mozilla-central']
-    max-run-time: 1500
+    max-run-time: 900
     mozharness:
         extra-options:
             - --test=raptor-speedometer

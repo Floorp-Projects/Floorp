@@ -129,8 +129,9 @@ ReportError(JSContext* cx, const char* origMsg, nsIURI* uri)
 
     nsAutoCString spec;
     nsresult rv = uri->GetSpec(spec);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
         spec.AssignLiteral("(unknown)");
+    }
 
     nsAutoCString msg(origMsg);
     msg.AppendLiteral(": ");
@@ -612,11 +613,13 @@ mozJSSubScriptLoader::LoadSubScriptWithOptions(const nsAString& url,
                                                JSContext* cx,
                                                MutableHandleValue retval)
 {
-    if (!optionsVal.isObject())
+    if (!optionsVal.isObject()) {
         return NS_ERROR_INVALID_ARG;
+    }
     LoadSubScriptOptions options(cx, &optionsVal.toObject());
-    if (!options.Parse())
+    if (!options.Parse()) {
         return NS_ERROR_INVALID_ARG;
+    }
     return DoLoadSubScriptWithOptions(url, options, cx, retval);
 }
 
@@ -632,20 +635,23 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
     mozJSComponentLoader* loader = mozJSComponentLoader::Get();
     loader->FindTargetObject(cx, &loadScope);
 
-    if (options.target)
+    if (options.target) {
         targetObj = options.target;
-    else
+    } else {
         targetObj = loadScope;
+    }
 
     targetObj = JS_FindCompilationScope(cx, targetObj);
-    if (!targetObj || !loadScope)
+    if (!targetObj || !loadScope) {
         return NS_ERROR_FAILURE;
+    }
 
     MOZ_ASSERT(!js::IsWrapper(targetObj),
                "JS_FindCompilationScope must unwrap");
 
-    if (js::GetObjectCompartment(loadScope) != js::GetObjectCompartment(targetObj))
+    if (js::GetObjectCompartment(loadScope) != js::GetObjectCompartment(targetObj)) {
         loadScope = nullptr;
+    }
 
     /* load up the url.  From here on, failures are reflected as ``custom''
      * js exceptions */
@@ -743,10 +749,12 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
 
     RootedScript script(cx);
     if (!options.ignoreCache) {
-        if (!options.wantReturnValue)
+        if (!options.wantReturnValue) {
             script = ScriptPreloader::GetSingleton().GetCachedScript(cx, cachePath);
-        if (!script && cache)
+        }
+        if (!script && cache) {
             rv = ReadCachedScript(cache, cachePath, cx, &script);
+        }
         if (NS_FAILED(rv) || !script) {
             // ReadCachedScript may have set a pending exception.
             JS_ClearPendingException(cx);

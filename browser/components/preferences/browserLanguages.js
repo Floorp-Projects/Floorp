@@ -7,32 +7,31 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class OrderedListBox {
-  constructor({richlistbox, upButton, downButton}) {
+  constructor({richlistbox, upButton, downButton, removeButton, onRemove}) {
     this.richlistbox = richlistbox;
     this.upButton = upButton;
     this.downButton = downButton;
+    this.removeButton = removeButton;
+    this.onRemove = onRemove;
 
     this.items = [];
 
     this.richlistbox.addEventListener("select", () => this.setButtonState());
     this.upButton.addEventListener("command", () => this.moveUp());
     this.downButton.addEventListener("command", () => this.moveDown());
+    this.removeButton.addEventListener("command", () => this.removeItem());
+  }
+
+  get selectedItem() {
+    return this.items[this.richlistbox.selectedIndex];
   }
 
   setButtonState() {
-    let { upButton, downButton } = this;
-    switch (this.richlistbox.selectedCount) {
-    case 0:
-      upButton.disabled = downButton.disabled = true;
-      break;
-    case 1:
-      upButton.disabled = this.richlistbox.selectedIndex == 0;
-      downButton.disabled = this.richlistbox.selectedIndex == this.richlistbox.childNodes.length - 1;
-      break;
-    default:
-      upButton.disabled = true;
-      downButton.disabled = true;
-    }
+    let {upButton, downButton, removeButton} = this;
+    let {selectedIndex, itemCount} = this.richlistbox;
+    upButton.disabled = selectedIndex == 0;
+    downButton.disabled = selectedIndex == itemCount - 1;
+    removeButton.disabled = itemCount == 1 || !this.selectedItem.canRemove;
   }
 
   moveUp() {
@@ -69,59 +68,188 @@ class OrderedListBox {
     this.setButtonState();
   }
 
+  removeItem() {
+    let {selectedIndex} = this.richlistbox;
+
+    if (selectedIndex == -1) {
+      return;
+    }
+
+    let [item] = this.items.splice(selectedIndex, 1);
+    this.richlistbox.selectedItem.remove();
+    this.richlistbox.selectedIndex = Math.min(
+      selectedIndex, this.richlistbox.itemCount - 1);
+    this.richlistbox.ensureElementIsVisible(this.richlistbox.selectedItem);
+    this.onRemove(item);
+  }
+
   setItems(items) {
     this.items = items;
     this.populate();
     this.setButtonState();
   }
 
+  /**
+   * Add an item to the top of the ordered list.
+   *
+   * @param {object} item The item to insert.
+   */
+  addItem(item) {
+    this.items.unshift(item);
+    this.richlistbox.insertBefore(
+      this.createItem(item),
+      this.richlistbox.firstElementChild);
+    this.richlistbox.selectedIndex = 0;
+    this.richlistbox.ensureElementIsVisible(this.richlistbox.selectedItem);
+  }
+
   populate() {
     this.richlistbox.textContent = "";
 
-    for (let {id, label, value} of this.items) {
-      let listitem = document.createElement("richlistitem");
-      listitem.setAttribute("value", value);
-      let labelEl = document.createElement("label");
-      listitem.id = id;
-      labelEl.textContent = label;
-      listitem.appendChild(labelEl);
-      this.richlistbox.appendChild(listitem);
+    let frag = document.createDocumentFragment();
+    for (let item of this.items) {
+      frag.appendChild(this.createItem(item));
     }
+    this.richlistbox.appendChild(frag);
 
     this.richlistbox.selectedIndex = 0;
+    this.richlistbox.ensureElementIsVisible(this.richlistbox.selectedItem);
+  }
+
+  createItem({id, label, value}) {
+    let listitem = document.createElement("richlistitem");
+    listitem.id = id;
+    listitem.setAttribute("value", value);
+
+    let labelEl = document.createElement("label");
+    labelEl.textContent = label;
+    listitem.appendChild(labelEl);
+
+    return listitem;
+  }
+}
+
+class SortedItemSelectList {
+  constructor({menulist, button, onSelect}) {
+    this.menulist = menulist;
+    this.popup = menulist.firstElementChild;
+    this.items = [];
+
+    menulist.addEventListener("command", () => {
+      button.disabled = !menulist.selectedItem;
+    });
+    button.addEventListener("command", () => {
+      if (!menulist.selectedItem) return;
+
+      let [item] = this.items.splice(menulist.selectedIndex, 1);
+      menulist.selectedItem.remove();
+      menulist.setAttribute("label", menulist.getAttribute("placeholder"));
+      button.disabled = true;
+      menulist.disabled = menulist.itemCount == 0;
+
+      onSelect(item);
+    });
+  }
+
+  setItems(items) {
+    this.items = items.sort((a, b) => a.label > b.label);
+    this.populate();
+  }
+
+  populate() {
+    let {items, menulist, popup} = this;
+    popup.textContent = "";
+
+    let frag = document.createDocumentFragment();
+    for (let item of items) {
+      frag.appendChild(this.createItem(item));
+    }
+    popup.appendChild(frag);
+
+    menulist.setAttribute("label", menulist.getAttribute("placeholder"));
+    menulist.disabled = menulist.itemCount == 0;
+  }
+
+  /**
+   * Add an item to the list sorted by the label.
+   *
+   * @param {object} item The item to insert.
+   */
+  addItem(item) {
+    let {items, menulist, popup} = this;
+    let i;
+
+    // Find the index of the item to insert before.
+    for (i = 0; i < items.length && items[i].label < item.label; i++)
+      ;
+
+    items.splice(i, 0, item);
+    popup.insertBefore(this.createItem(item), menulist.getItemAtIndex(i));
+    menulist.disabled = menulist.itemCount == 0;
+  }
+
+  createItem({label, value}) {
+    let item = document.createElement("menuitem");
+    item.value = value;
+    item.setAttribute("label", label);
+    return item;
   }
 }
 
 function getLocaleDisplayInfo(localeCodes) {
+  let packagedLocales = new Set(Services.locale.getPackagedLocales());
   let localeNames = Services.intl.getLocaleDisplayNames(undefined, localeCodes);
   return localeCodes.map((code, i) => {
     return {
       id: "locale-" + code,
       label: localeNames[i],
       value: code,
+      canRemove: !packagedLocales.has(code),
     };
   });
 }
 
 var gBrowserLanguagesDialog = {
-  _orderedListBox: null,
+  _availableLocales: null,
+  _requestedLocales: null,
   requestedLocales: null,
 
   beforeAccept() {
-    this.requestedLocales = this._orderedListBox.items.map(item => item.value);
+    this.requestedLocales = this._requestedLocales.items.map(item => item.value);
     return true;
   },
 
   onLoad() {
-    this._orderedListBox = new OrderedListBox({
-      richlistbox: document.getElementById("activeLocales"),
-      upButton: document.getElementById("up"),
-      downButton: document.getElementById("down"),
-    });
     // Maintain the previously requested locales even if we cancel out.
     this.requestedLocales = window.arguments[0];
-    let locales = window.arguments[0]
-      || Services.locale.getRequestedLocales();
-    this._orderedListBox.setItems(getLocaleDisplayInfo(locales));
+
+    let requested = this.requestedLocales || Services.locale.getRequestedLocales();
+    let requestedSet = new Set(requested);
+    let available = Services.locale.getAvailableLocales()
+      .filter(locale => !requestedSet.has(locale));
+
+    this.initRequestedLocales(requested);
+    this.initAvailableLocales(available);
+    this.initialized = true;
+  },
+
+  initRequestedLocales(requested) {
+    this._requestedLocales = new OrderedListBox({
+      richlistbox: document.getElementById("requestedLocales"),
+      upButton: document.getElementById("up"),
+      downButton: document.getElementById("down"),
+      removeButton: document.getElementById("remove"),
+      onRemove: (item) => this._availableLocales.addItem(item),
+    });
+    this._requestedLocales.setItems(getLocaleDisplayInfo(requested));
+  },
+
+  initAvailableLocales(available) {
+    this._availableLocales = new SortedItemSelectList({
+      menulist: document.getElementById("availableLocales"),
+      button: document.getElementById("add"),
+      onSelect: (item) => this._requestedLocales.addItem(item),
+    });
+    this._availableLocales.setItems(getLocaleDisplayInfo(available));
   },
 };

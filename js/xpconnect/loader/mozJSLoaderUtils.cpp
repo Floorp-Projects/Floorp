@@ -26,17 +26,20 @@ ReadCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
     UniquePtr<char[]> buf;
     uint32_t len;
     nsresult rv = cache->GetBuffer(PromiseFlatCString(uri).get(), &buf, &len);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
         return rv; // don't warn since NOT_AVAILABLE is an ok error
+    }
 
     JS::TranscodeBuffer buffer;
     buffer.replaceRawBuffer(reinterpret_cast<uint8_t*>(buf.release()), len);
     JS::TranscodeResult code = JS::DecodeScript(cx, buffer, scriptp);
-    if (code == JS::TranscodeResult_Ok)
+    if (code == JS::TranscodeResult_Ok) {
         return NS_OK;
+    }
 
-    if ((code & JS::TranscodeResult_Failure) != 0)
+    if ((code & JS::TranscodeResult_Failure) != 0) {
         return NS_ERROR_FAILURE;
+    }
 
     MOZ_ASSERT((code & JS::TranscodeResult_Throw) != 0);
     JS_ClearPendingException(cx);
@@ -52,16 +55,18 @@ WriteCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
     JS::TranscodeBuffer buffer;
     JS::TranscodeResult code = JS::EncodeScript(cx, buffer, script);
     if (code != JS::TranscodeResult_Ok) {
-        if ((code & JS::TranscodeResult_Failure) != 0)
+        if ((code & JS::TranscodeResult_Failure) != 0) {
             return NS_ERROR_FAILURE;
+        }
         MOZ_ASSERT((code & JS::TranscodeResult_Throw) != 0);
         JS_ClearPendingException(cx);
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
     size_t size = buffer.length();
-    if (size > UINT32_MAX)
+    if (size > UINT32_MAX) {
         return NS_ERROR_FAILURE;
+    }
 
     // Move the vector buffer into a unique pointer buffer.
     UniquePtr<char[]> buf(reinterpret_cast<char*>(buffer.extractOrCopyRawBuffer()));

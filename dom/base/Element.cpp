@@ -1920,14 +1920,14 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   if (HasPointerLock()) {
     nsIDocument::UnlockPointer();
   }
-  if (mState.HasState(NS_EVENT_STATE_FULL_SCREEN)) {
-    // The element being removed is an ancestor of the full-screen element,
-    // exit full-screen state.
+  if (mState.HasState(NS_EVENT_STATE_FULLSCREEN)) {
+    // The element being removed is an ancestor of the fullscreen element,
+    // exit fullscreen state.
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     NS_LITERAL_CSTRING("DOM"), OwnerDoc(),
                                     nsContentUtils::eDOM_PROPERTIES,
                                     "RemovedFullscreenElement");
-    // Fully exit full-screen.
+    // Fully exit fullscreen.
     nsIDocument::ExitFullscreenInDocTree(OwnerDoc());
   }
 
@@ -3560,9 +3560,9 @@ Element::AttrValueToCORSMode(const nsAttrValue* aValue)
 }
 
 static const char*
-GetFullScreenError(CallerType aCallerType)
+GetFullscreenError(CallerType aCallerType)
 {
-  if (!nsContentUtils::IsRequestFullScreenAllowed(aCallerType)) {
+  if (!nsContentUtils::IsRequestFullscreenAllowed(aCallerType)) {
     return "FullscreenDeniedNotInputDriven";
   }
 
@@ -3572,22 +3572,20 @@ GetFullScreenError(CallerType aCallerType)
 void
 Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aError)
 {
-  // Only grant full-screen requests if this is called from inside a trusted
+  // Only grant fullscreen requests if this is called from inside a trusted
   // event handler (i.e. inside an event handler for a user initiated event).
-  // This stops the full-screen from being abused similar to the popups of old,
-  // and it also makes it harder for bad guys' script to go full-screen and
+  // This stops the fullscreen from being abused similar to the popups of old,
+  // and it also makes it harder for bad guys' script to go fullscreen and
   // spoof the browser chrome/window and phish logins etc.
   // Note that requests for fullscreen inside a web app's origin are exempt
   // from this restriction.
-  if (const char* error = GetFullScreenError(aCallerType)) {
+  if (const char* error = GetFullscreenError(aCallerType)) {
     OwnerDoc()->DispatchFullscreenError(error);
     return;
   }
 
-  auto request = MakeUnique<FullscreenRequest>(this);
-  request->mIsCallerChrome = (aCallerType == CallerType::System);
-
-  OwnerDoc()->AsyncRequestFullScreen(std::move(request));
+  auto request = MakeUnique<FullscreenRequest>(this, aCallerType);
+  OwnerDoc()->AsyncRequestFullscreen(std::move(request));
 }
 
 void

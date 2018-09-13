@@ -42,12 +42,14 @@ class SecretsMixin(object):
         The `filename` key in the dictionary gives the filename to which the
         secret should be written.
 
-        The optional `min_scm_level` key gives a minimum SCM level at which this
-        secret is required.  For lower levels, the value of the 'default` key
-        is used, or no secret is written.
+        The optional `min_scm_level` key gives a minimum SCM level at which
+        this secret is required.  For lower levels, the value of the 'default`
+        key or the contents of the file specified by `default-file` is used, or
+        no secret is written.
 
         The optional 'mode' key allows a mode change (chmod) after the file is written
         """
+        dirs = self.query_abs_dirs()
         secret_files = self.config.get('secret_files', [])
 
         scm_level = self.config.get('scm_level', 1)
@@ -63,6 +65,10 @@ class SecretsMixin(object):
                 if 'default' in sf:
                     self.info("Using default value for " + filename)
                     secret = sf['default']
+                elif 'default-file' in sf:
+                    default_path = sf['default-file'].format(**dirs)
+                    with open(default_path, 'r') as f:
+                        secret = f.read()
                 else:
                     self.info("No default for secret; not writing " + filename)
                     continue

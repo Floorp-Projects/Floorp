@@ -28,8 +28,9 @@ bool
 IsReflector(JSObject* obj)
 {
     obj = js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
-    if (!obj)
+    if (!obj) {
         return false;
+    }
     return IS_WN_REFLECTOR(obj) || dom::IsDOMObject(obj);
 }
 
@@ -79,15 +80,17 @@ public:
             MOZ_ASSERT(!aData);
 
             size_t idx;
-            if (!JS_ReadBytes(aReader, &idx, sizeof(size_t)))
+            if (!JS_ReadBytes(aReader, &idx, sizeof(size_t))) {
                 return nullptr;
+            }
 
             RootedObject reflector(aCx, mReflectors[idx]);
             MOZ_ASSERT(reflector, "No object pointer?");
             MOZ_ASSERT(IsReflector(reflector), "Object pointer must be a reflector!");
 
-            if (!JS_WrapObject(aCx, &reflector))
+            if (!JS_WrapObject(aCx, &reflector)) {
                 return nullptr;
+            }
 
             return reflector;
         }
@@ -98,8 +101,9 @@ public:
           RootedValue functionValue(aCx);
           RootedObject obj(aCx, mFunctions[aData]);
 
-          if (!JS_WrapObject(aCx, &obj))
+          if (!JS_WrapObject(aCx, &obj)) {
               return nullptr;
+          }
 
           FunctionForwarderOptions forwarderOptions;
           if (!xpc::NewFunctionForwarder(aCx, JSID_VOIDHANDLE, obj, forwarderOptions,
@@ -150,8 +154,9 @@ public:
                 BlobImpl* blobImpl = blob->Impl();
                 MOZ_ASSERT(blobImpl);
 
-                if (!mBlobImpls.AppendElement(blobImpl))
+                if (!mBlobImpls.AppendElement(blobImpl)) {
                     return false;
+                }
 
                 size_t idx = mBlobImpls.Length() - 1;
                 return JS_WriteUint32Pair(aWriter, SCTAG_BLOB, 0) &&
@@ -162,21 +167,25 @@ public:
         if ((mOptions->wrapReflectors && IsReflector(aObj)) ||
             IsFileList(aObj))
         {
-            if (!mReflectors.append(aObj))
+            if (!mReflectors.append(aObj)) {
                 return false;
+            }
 
             size_t idx = mReflectors.length() - 1;
-            if (!JS_WriteUint32Pair(aWriter, SCTAG_REFLECTOR, 0))
+            if (!JS_WriteUint32Pair(aWriter, SCTAG_REFLECTOR, 0)) {
                 return false;
-            if (!JS_WriteBytes(aWriter, &idx, sizeof(size_t)))
+            }
+            if (!JS_WriteBytes(aWriter, &idx, sizeof(size_t))) {
                 return false;
+            }
             return true;
         }
 
         if (JS::IsCallable(aObj)) {
             if (mOptions->cloneFunctions) {
-                if (!mFunctions.append(aObj))
+                if (!mFunctions.append(aObj)) {
                     return false;
+                }
                 return JS_WriteUint32Pair(aWriter, SCTAG_FUNCTION, mFunctions.length() - 1);
             } else {
                 JS_ReportErrorASCII(aCx, "Permission denied to pass a Function via structured clone");
@@ -213,19 +222,22 @@ StackScopedClone(JSContext* cx, StackScopedCloneOptions& options, HandleObject s
     {
         // For parsing val we have to enter (a realm in) its compartment.
         JSAutoRealm ar(cx, sourceScope);
-        if (!data.Write(cx, val))
+        if (!data.Write(cx, val)) {
             return false;
+        }
     }
 
     // Now recreate the clones in the target realm.
-    if (!data.Read(cx, val))
+    if (!data.Read(cx, val)) {
         return false;
+    }
 
     // Deep-freeze if requested.
     if (options.deepFreeze && val.isObject()) {
         RootedObject obj(cx, &val.toObject());
-        if (!JS_DeepFreezeObject(cx, obj))
+        if (!JS_DeepFreezeObject(cx, obj)) {
             return false;
+        }
     }
 
     return true;
@@ -238,28 +250,33 @@ CheckSameOriginArg(JSContext* cx, FunctionForwarderOptions& options, HandleValue
 {
     // Consumers can explicitly opt out of this security check. This is used in
     // the web console to allow the utility functions to accept cross-origin Windows.
-    if (options.allowCrossOriginArguments)
+    if (options.allowCrossOriginArguments) {
         return true;
+    }
 
     // Primitives are fine.
-    if (!v.isObject())
+    if (!v.isObject()) {
         return true;
+    }
     RootedObject obj(cx, &v.toObject());
     MOZ_ASSERT(js::GetObjectCompartment(obj) != js::GetContextCompartment(cx),
                "This should be invoked after entering the compartment but before "
                "wrapping the values");
 
     // Non-wrappers are fine.
-    if (!js::IsWrapper(obj))
+    if (!js::IsWrapper(obj)) {
         return true;
+    }
 
     // Wrappers leading back to the scope of the exported function are fine.
-    if (js::GetObjectCompartment(js::UncheckedUnwrap(obj)) == js::GetContextCompartment(cx))
+    if (js::GetObjectCompartment(js::UncheckedUnwrap(obj)) == js::GetContextCompartment(cx)) {
         return true;
+    }
 
     // Same-origin wrappers are fine.
-    if (AccessCheck::wrapperSubsumes(obj))
+    if (AccessCheck::wrapperSubsumes(obj)) {
         return true;
+    }
 
     // Badness.
     JS_ReportErrorASCII(cx, "Permission denied to pass object to exported function");
@@ -274,8 +291,9 @@ FunctionForwarder(JSContext* cx, unsigned argc, Value* vp)
     // Grab the options from the reserved slot.
     RootedObject optionsObj(cx, &js::GetFunctionNativeReserved(&args.callee(), 1).toObject());
     FunctionForwarderOptions options(cx, optionsObj);
-    if (!options.Parse())
+    if (!options.Parse()) {
         return false;
+    }
 
     // Grab and unwrap the underlying callable.
     RootedValue v(cx, js::GetFunctionNativeReserved(&args.callee(), 0));
@@ -284,8 +302,9 @@ FunctionForwarder(JSContext* cx, unsigned argc, Value* vp)
     RootedValue thisVal(cx, NullValue());
     if (!args.isConstructing()) {
         RootedObject thisObject(cx);
-        if (!args.computeThis(cx, &thisObject))
+        if (!args.computeThis(cx, &thisObject)) {
             return false;
+        }
         thisVal.setObject(*thisObject);
     }
 
@@ -294,23 +313,27 @@ FunctionForwarder(JSContext* cx, unsigned argc, Value* vp)
         // here, because certain function wrappers (notably content->nsEP) are
         // not callable.
         JSAutoRealm ar(cx, unwrappedFun);
-        if (!CheckSameOriginArg(cx, options, thisVal) || !JS_WrapValue(cx, &thisVal))
+        if (!CheckSameOriginArg(cx, options, thisVal) || !JS_WrapValue(cx, &thisVal)) {
             return false;
+        }
 
         for (size_t n = 0;  n < args.length(); ++n) {
-            if (!CheckSameOriginArg(cx, options, args[n]) || !JS_WrapValue(cx, args[n]))
+            if (!CheckSameOriginArg(cx, options, args[n]) || !JS_WrapValue(cx, args[n])) {
                 return false;
+            }
         }
 
         RootedValue fval(cx, ObjectValue(*unwrappedFun));
         if (args.isConstructing()) {
             RootedObject obj(cx);
-            if (!JS::Construct(cx, fval, args, &obj))
+            if (!JS::Construct(cx, fval, args, &obj)) {
                 return false;
+            }
             args.rval().setObject(*obj);
         } else {
-            if (!JS::Call(cx, thisVal, fval, args, args.rval()))
+            if (!JS::Call(cx, thisVal, fval, args, args.rval())) {
                 return false;
+            }
         }
     }
 
@@ -323,16 +346,18 @@ NewFunctionForwarder(JSContext* cx, HandleId idArg, HandleObject callable,
                      FunctionForwarderOptions& options, MutableHandleValue vp)
 {
     RootedId id(cx, idArg);
-    if (id == JSID_VOIDHANDLE)
+    if (id == JSID_VOIDHANDLE) {
         id = GetJSIDByIndex(cx, XPCJSContext::IDX_EMPTYSTRING);
+    }
 
     // If our callable is a (possibly wrapped) function, we can give
     // the exported thing the right number of args.
     unsigned nargs = 0;
     RootedObject unwrapped(cx, js::UncheckedUnwrap(callable));
     if (unwrapped) {
-        if (JSFunction* fun = JS_GetObjectFunction(unwrapped))
+        if (JSFunction* fun = JS_GetObjectFunction(unwrapped)) {
             nargs = JS_GetFunctionArity(fun);
+        }
     }
 
     // We have no way of knowing whether the underlying function wants to be a
@@ -340,8 +365,9 @@ NewFunctionForwarder(JSContext* cx, HandleId idArg, HandleObject callable,
     // let the underlying function throw for construct calls if it wants.
     JSFunction* fun = js::NewFunctionByIdWithReserved(cx, FunctionForwarder,
                                                       nargs, JSFUN_CONSTRUCTOR, id);
-    if (!fun)
+    if (!fun) {
         return false;
+    }
 
     // Stash the callable in slot 0.
     AssertSameCompartment(cx, callable);
@@ -350,8 +376,9 @@ NewFunctionForwarder(JSContext* cx, HandleId idArg, HandleObject callable,
 
     // Stash the options in slot 1.
     RootedObject optionsObj(cx, options.ToJSObject(cx));
-    if (!optionsObj)
+    if (!optionsObj) {
         return false;
+    }
     js::SetFunctionNativeReserved(funobj, 1, ObjectValue(*optionsObj));
 
     vp.setObject(*funobj);
@@ -371,8 +398,9 @@ ExportFunction(JSContext* cx, HandleValue vfunction, HandleValue vscope, HandleV
     RootedObject funObj(cx, &vfunction.toObject());
     RootedObject targetScope(cx, &vscope.toObject());
     ExportFunctionOptions options(cx, hasOptions ? &voptions.toObject() : nullptr);
-    if (hasOptions && !options.Parse())
+    if (hasOptions && !options.Parse()) {
         return false;
+    }
 
     // Restrictions:
     // * We must subsume the scope we are exporting to.
@@ -408,12 +436,14 @@ ExportFunction(JSContext* cx, HandleValue vfunction, HandleValue vscope, HandleV
             // copy the name from the function being imported.
             JSFunction* fun = JS_GetObjectFunction(funObj);
             RootedString funName(cx, JS_GetFunctionId(fun));
-            if (!funName)
+            if (!funName) {
                 funName = JS_AtomizeAndPinString(cx, "");
+            }
             JS_MarkCrossZoneIdValue(cx, StringValue(funName));
 
-            if (!JS_StringToId(cx, funName, &id))
+            if (!JS_StringToId(cx, funName, &id)) {
                 return false;
+            }
         } else {
             JS_MarkCrossZoneId(cx, id);
         }
@@ -422,8 +452,9 @@ ExportFunction(JSContext* cx, HandleValue vfunction, HandleValue vscope, HandleV
         // The function forwarder will live in the target compartment. Since
         // this function will be referenced from its private slot, to avoid a
         // GC hazard, we must wrap it to the same compartment.
-        if (!JS_WrapObject(cx, &funObj))
+        if (!JS_WrapObject(cx, &funObj)) {
             return false;
+        }
 
         // And now, let's create the forwarder function in the target compartment
         // for the function the be exported.
@@ -446,8 +477,9 @@ ExportFunction(JSContext* cx, HandleValue vfunction, HandleValue vscope, HandleV
     }
 
     // Finally we have to re-wrap the exported function back to the caller compartment.
-    if (!JS_WrapValue(cx, rval))
+    if (!JS_WrapValue(cx, rval)) {
         return false;
+    }
 
     return true;
 }
@@ -480,8 +512,9 @@ CreateObjectIn(JSContext* cx, HandleValue vobj, CreateObjectInOptions& options,
         JS_MarkCrossZoneId(cx, options.defineAs);
 
         obj = JS_NewPlainObject(cx);
-        if (!obj)
+        if (!obj) {
             return false;
+        }
 
         if (define) {
             if (!JS_DefinePropertyById(cx, scope, options.defineAs, obj,
@@ -491,8 +524,9 @@ CreateObjectIn(JSContext* cx, HandleValue vobj, CreateObjectInOptions& options,
     }
 
     rval.setObject(*obj);
-    if (!WrapperFactory::WaiveXrayAndWrap(cx, rval))
+    if (!WrapperFactory::WaiveXrayAndWrap(cx, rval)) {
         return false;
+    }
 
     return true;
 }
