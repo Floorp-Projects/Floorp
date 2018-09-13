@@ -43,13 +43,12 @@ public:
 };
 
 
-nsresult NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+already_AddRefed<nsIControllers> NS_NewXULControllers();
 
 class nsXULControllers : public nsIControllers
 {
 public:
-    friend nsresult
-    NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+    friend already_AddRefed<nsIControllers> NS_NewXULControllers();
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULControllers, nsIControllers)
