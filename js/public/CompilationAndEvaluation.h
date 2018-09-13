@@ -37,12 +37,15 @@ union Value;
  * and possibly the entirety of such a script).
  *
  * The intent of this function is to enable interactive compilation: accumulate
- * lines in a buffer until JS_BufferIsCompilableUnit is true, then pass it to
- * the compiler.
+ * lines in a buffer until JS_Utf8BufferIsCompilableUnit is true, then pass it
+ * to the compiler.
+ *
+ * The provided buffer is interpreted as UTF-8 data.  An error is reported if
+ * a UTF-8 encoding error is encountered.
  */
 extern JS_PUBLIC_API(bool)
-JS_BufferIsCompilableUnit(JSContext* cx, JS::Handle<JSObject*> obj, const char* utf8,
-                          size_t length);
+JS_Utf8BufferIsCompilableUnit(JSContext* cx, JS::Handle<JSObject*> obj,
+                              const char* utf8, size_t length);
 
 /*
  * NB: JS_ExecuteScript and the JS::Evaluate APIs come in two flavors: either
