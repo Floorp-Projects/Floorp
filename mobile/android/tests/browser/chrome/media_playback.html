@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<audio id="testAudio" src="audio.ogg" loop></audio>
+<!-- autoplay blocked UI only shows up in <video>, not <audio> -->
+<video id="testAudio" src="audio.ogg" loop></video>
 <script type="text/javascript">
 var audio = document.getElementById("testAudio");
 audio.oncanplay = function() {
