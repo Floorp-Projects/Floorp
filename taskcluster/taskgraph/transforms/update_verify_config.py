@@ -47,6 +47,7 @@ def add_command(config, tasks):
         "archive-prefix",
         "previous-archive-prefix",
         "aus-server",
+        "override-certs",
         "include-version",
         "mar-channel-id-override",
         "last-watershed",

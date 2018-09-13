@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1200533
 /** Test for Bug 1200533 **/
 /** Visit the elements defined above and check the dictionary we got **/
 SimpleTest.waitForExplicitFinish();
-var content = document.getElementById('content');
+var content = document.getElementById("content");
 
 var tests = [
     // text area, value of spellchecker.dictionary, result.
@@ -52,7 +52,9 @@ var script;
 
 var loadListener = function(evt) {
   if (loadCount == 0) {
+    /* eslint-env mozilla/frame-script */
     script = SpecialPowers.loadChromeScript(function() {
+      // eslint-disable-next-line mozilla/use-services
       var dir = Cc["@mozilla.org/file/directory_service;1"]
                   .getService(Ci.nsIProperties)
                   .get("CurWorkD", Ci.nsIFile);
@@ -91,8 +93,8 @@ var loadListener = function(evt) {
   }
 
   SpecialPowers.pushPrefEnv({set: [["spellchecker.dictionary", tests[loadCount][1]]]},
-                            function() { continueTest(evt) });
-}
+                            function() { continueTest(evt); });
+};
 
 function continueTest(evt) {
   var doc = evt.target.contentDocument;
@@ -103,23 +105,23 @@ function continueTest(evt) {
 
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(elem, function () {
+  .onSpellCheck(elem, function() {
     var spellchecker = inlineSpellChecker.spellChecker;
     try {
       var dict = spellchecker.GetCurrentDictionary();
-    } catch(e) {}
+    } catch (e) {}
 
     if (tests[loadCount][2] != "*") {
-      is (dict, tests[loadCount][2], "expected " + tests[loadCount][2]);
+      is(dict, tests[loadCount][2], "expected " + tests[loadCount][2]);
     } else {
       var gotEn = (dict == "en-GB" || dict == "en-AU" || dict == "en-US");
-      is (gotEn, true, "expected en-AU or en-GB or en-US");
+      is(gotEn, true, "expected en-AU or en-GB or en-US");
     }
 
     loadCount++;
     if (loadCount < tests.length) {
       // Load the iframe again.
-      content.src = 'http://mochi.test:8888/tests/editor/spellchecker/tests/bug1200533_subframe.html?firstload=false';
+      content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug1200533_subframe.html?firstload=false";
     } else {
       // Remove the fake  dictionaries again, since it's otherwise picked up by later tests.
       script.sendSyncMessage("destroy");
@@ -130,9 +132,9 @@ function continueTest(evt) {
 
 }
 
-content.addEventListener('load', loadListener);
+content.addEventListener("load", loadListener);
 
-content.src = 'http://mochi.test:8888/tests/editor/spellchecker/tests/bug1200533_subframe.html?firstload=true';
+content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug1200533_subframe.html?firstload=true";
 
 </script>
 </pre>

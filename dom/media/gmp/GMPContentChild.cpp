@@ -129,41 +129,37 @@ GMPContentChild::RecvPGMPVideoEncoderConstructor(PGMPVideoEncoderChild* aActor)
   return IPC_OK();
 }
 
-
-class ChromiumCDM8BackwardsCompat : public cdm::ContentDecryptionModule_9
+// Convert CDM10 calls to CDM9 calls, massage args where needed
+class ChromiumCDM9BackwardsCompat : public cdm::ContentDecryptionModule_10
 {
 public:
-  explicit ChromiumCDM8BackwardsCompat(
-    cdm::Host_9* aHost,
-    cdm::ContentDecryptionModule_8* aCDM)
-      : mCDM(aCDM),
-        mHost(aHost) { }
+  explicit ChromiumCDM9BackwardsCompat(cdm::Host_10* aHost,
+                                       cdm::ContentDecryptionModule_9* aCDM)
+    : mCDM(aCDM)
+    , mHost(aHost)
+  {
+  }
 
   void Initialize(bool aAllowDistinctiveIdentifier,
-                  bool aAllowPersistentState) override
+                  bool aAllowPersistentState,
+                  bool /* aUseHardwareSecureCodec */) override
   {
+    // aUseHardwareSecureCodec is not used by CDM9
     mCDM->Initialize(aAllowDistinctiveIdentifier, aAllowPersistentState);
+  }
+
+  void GetStatusForPolicy(uint32_t aPromiseId,
+                          const cdm::Policy& policy) override
+  {
+    mCDM->GetStatusForPolicy(aPromiseId, policy);
   }
 
   void SetServerCertificate(uint32_t aPromiseId,
                             const uint8_t* aServerCertificateData,
                             uint32_t aServerCertificateDataSize) override
   {
-    mCDM->SetServerCertificate(aPromiseId,
-                               aServerCertificateData,
-                               aServerCertificateDataSize);
-  }
-
-  void GetStatusForPolicy(uint32_t aPromiseId,
-                          const cdm::Policy& policy) override
-  {
-    //Only support on version 9 CDM, so rejecting the promise.
-    mHost->OnRejectPromise(aPromiseId,
-                           cdm::Exception::kExceptionNotSupportedError,
-                           0,
-                           nullptr,
-                           0);
-
+    mCDM->SetServerCertificate(
+      aPromiseId, aServerCertificateData, aServerCertificateDataSize);
   }
 
   void CreateSessionAndGenerateRequest(uint32_t aPromiseId,
@@ -190,11 +186,8 @@ public:
                      const uint8_t* aResponse,
                      uint32_t aResponseSize) override
   {
-    mCDM->UpdateSession(aPromiseId,
-                        aSessionId,
-                        aSessionIdSize,
-                        aResponse,
-                        aResponseSize);
+    mCDM->UpdateSession(
+      aPromiseId, aSessionId, aSessionIdSize, aResponse, aResponseSize);
   }
 
   void CloseSession(uint32_t aPromiseId,
@@ -213,22 +206,40 @@ public:
 
   void TimerExpired(void* aContext) override { mCDM->TimerExpired(aContext); }
 
-  cdm::Status Decrypt(const cdm::InputBuffer& aEncryptedBuffer,
+  cdm::Status Decrypt(const cdm::InputBuffer_2& aEncryptedBuffer,
                       cdm::DecryptedBlock* aDecryptedBuffer) override
   {
-    return mCDM->Decrypt(aEncryptedBuffer, aDecryptedBuffer);
+    // Handle possible encryption mismatch
+    if (!IsEncryptionSchemeSupported(aEncryptedBuffer.encryption_scheme)) {
+      return cdm::Status::kDecryptError;
+    }
+
+    return mCDM->Decrypt(ConvertToInputBuffer_1(aEncryptedBuffer),
+                         aDecryptedBuffer);
   }
 
   cdm::Status InitializeAudioDecoder(
-    const cdm::AudioDecoderConfig& aAudioDecoderConfig) override
+    const cdm::AudioDecoderConfig_2& aAudioDecoderConfig) override
   {
-    return mCDM->InitializeAudioDecoder(aAudioDecoderConfig);
+    // Handle possible encryption mismatch
+    if (!IsEncryptionSchemeSupported(aAudioDecoderConfig.encryption_scheme)) {
+      return cdm::Status::kInitializationError;
+    }
+
+    return mCDM->InitializeAudioDecoder(
+      ConverToAudioDecoderConfig_1(aAudioDecoderConfig));
   }
 
   cdm::Status InitializeVideoDecoder(
-    const cdm::VideoDecoderConfig& aVideoDecoderConfig) override
+    const cdm::VideoDecoderConfig_2& aVideoDecoderConfig) override
   {
-    return mCDM->InitializeVideoDecoder(aVideoDecoderConfig);
+    // Handle possible encryption mismatch
+    if (!IsEncryptionSchemeSupported(aVideoDecoderConfig.encryption_scheme)) {
+      return cdm::Status::kInitializationError;
+    }
+
+    return mCDM->InitializeVideoDecoder(
+      ConvertToVideoDecoderConfig_1(aVideoDecoderConfig));
   }
 
   void DeinitializeDecoder(cdm::StreamType aDecoderType) override
@@ -241,20 +252,33 @@ public:
     mCDM->ResetDecoder(aDecoderType);
   }
 
-  cdm::Status DecryptAndDecodeFrame(const cdm::InputBuffer& aEncryptedBuffer,
+  cdm::Status DecryptAndDecodeFrame(const cdm::InputBuffer_2& aEncryptedBuffer,
                                     cdm::VideoFrame* aVideoFrame) override
   {
-    return mCDM->DecryptAndDecodeFrame(aEncryptedBuffer, aVideoFrame);
+    // Handle possible encryption mismatch
+    if (!IsEncryptionSchemeSupported(aEncryptedBuffer.encryption_scheme)) {
+      return cdm::Status::kDecryptError;
+    }
+
+    return mCDM->DecryptAndDecodeFrame(ConvertToInputBuffer_1(aEncryptedBuffer),
+                                       aVideoFrame);
   }
 
-  cdm::Status DecryptAndDecodeSamples(const cdm::InputBuffer& aEncryptedBuffer,
-                                      cdm::AudioFrames* aAudioFrames) override
+  cdm::Status DecryptAndDecodeSamples(
+    const cdm::InputBuffer_2& aEncryptedBuffer,
+    cdm::AudioFrames* aAudioFrames) override
   {
-    return mCDM->DecryptAndDecodeSamples(aEncryptedBuffer, aAudioFrames);
+    // Handle possible encryption mismatch
+    if (!IsEncryptionSchemeSupported(aEncryptedBuffer.encryption_scheme)) {
+      return cdm::Status::kDecryptError;
+    }
+
+    return mCDM->DecryptAndDecodeSamples(
+      ConvertToInputBuffer_1(aEncryptedBuffer), aAudioFrames);
   }
 
   void OnPlatformChallengeResponse(
-      const cdm::PlatformChallengeResponse& aResponse) override
+    const cdm::PlatformChallengeResponse& aResponse) override
   {
     mCDM->OnPlatformChallengeResponse(aResponse);
   }
@@ -263,14 +287,15 @@ public:
                                      uint32_t aLinkMask,
                                      uint32_t aOutputProtectionMask) override
   {
-    mCDM->OnQueryOutputProtectionStatus(aResult, aLinkMask, aOutputProtectionMask);
+    mCDM->OnQueryOutputProtectionStatus(
+      aResult, aLinkMask, aOutputProtectionMask);
   }
 
   void OnStorageId(uint32_t aVersion,
                    const uint8_t* aStorageId,
                    uint32_t aStorageIdSize) override
   {
-    //Only support on version 9 CDM.
+    mCDM->OnStorageId(aVersion, aStorageId, aStorageIdSize);
   }
 
   void Destroy() override
@@ -278,34 +303,81 @@ public:
     mCDM->Destroy();
     delete this;
   }
-  cdm::ContentDecryptionModule_8* mCDM;
-  cdm::Host_9* mHost;
-}; // class ChromiumCDM8BackwardsCompat
+
+  cdm::ContentDecryptionModule_9* mCDM;
+  cdm::Host_10* mHost;
+
+private:
+  // CDM9 supports non-encrypted or cenc encrypted media, anything else should
+  // be rejected.
+  static bool IsEncryptionSchemeSupported(
+    const cdm::EncryptionScheme& aEncryptionScheme)
+  {
+    return aEncryptionScheme == cdm::EncryptionScheme::kUnencrypted ||
+           aEncryptionScheme == cdm::EncryptionScheme::kCenc;
+  }
+
+  // Conversion functions that drop the encryption scheme member. CDMs prior to
+  // 10 assumed no encryption or cenc encryption (if encryption is present). So
+  // we can drop the scheme member if we check to make sure it was one of these
+  // two options.
+  static cdm::InputBuffer_1 ConvertToInputBuffer_1(
+    const cdm::InputBuffer_2& aInputBuffer)
+  {
+    MOZ_ASSERT(
+      IsEncryptionSchemeSupported(aInputBuffer.encryption_scheme),
+      "Encryption scheme should be checked before attempting conversion!");
+    return { aInputBuffer.data,       aInputBuffer.data_size,
+             aInputBuffer.key_id,     aInputBuffer.key_id_size,
+             aInputBuffer.iv,         aInputBuffer.iv_size,
+             aInputBuffer.subsamples, aInputBuffer.num_subsamples,
+             aInputBuffer.timestamp };
+  }
+
+  static cdm::AudioDecoderConfig_1 ConverToAudioDecoderConfig_1(
+    const cdm::AudioDecoderConfig_2& aAudioConfig)
+  {
+    MOZ_ASSERT(
+      IsEncryptionSchemeSupported(aAudioConfig.encryption_scheme),
+      "Encryption scheme should be checked before attempting conversion!");
+    return { aAudioConfig.codec,
+             aAudioConfig.channel_count,
+             aAudioConfig.bits_per_channel,
+             aAudioConfig.samples_per_second,
+             aAudioConfig.extra_data,
+             aAudioConfig.extra_data_size };
+  }
+
+  static cdm::VideoDecoderConfig_1 ConvertToVideoDecoderConfig_1(
+    const cdm::VideoDecoderConfig_2& aVideoConfig)
+  {
+    MOZ_ASSERT(
+      IsEncryptionSchemeSupported(aVideoConfig.encryption_scheme),
+      "Encryption scheme should be checked before attempting conversion!");
+    return { aVideoConfig.codec,      aVideoConfig.profile,
+             aVideoConfig.format,     aVideoConfig.coded_size,
+             aVideoConfig.extra_data, aVideoConfig.extra_data_size };
+  }
+}; // class ChromiumCDM9BackwardsCompat
 
 mozilla::ipc::IPCResult
 GMPContentChild::RecvPChromiumCDMConstructor(PChromiumCDMChild* aActor)
 {
   ChromiumCDMChild* child = static_cast<ChromiumCDMChild*>(aActor);
+  // TODO: Once we support CDM10, create one here, for now try and create CDM9
   cdm::Host_9* host9 = child;
 
   void* cdm = nullptr;
-  // Create version 9 CDM first.
-  GMPErr err = mGMPChild->GetAPI(CHROMIUM_CDM_API, host9, &cdm);
+  GMPErr err = mGMPChild->GetAPI(CHROMIUM_CDM_API_BACKWARD_COMPAT, host9, &cdm);
   if (err != GMPNoErr || !cdm) {
-    // Try to create older version 8 CDM.
-    cdm::Host_8* host8 = child;
-    err = mGMPChild->GetAPI(CHROMIUM_CDM_API_BACKWARD_COMPAT, host8, &cdm);
-    if (err != GMPNoErr) {
-      NS_WARNING("GMPGetAPI call failed trying to get CDM.");
-      return IPC_FAIL_NO_REASON(this);
-    }
-    cdm =
-      new ChromiumCDM8BackwardsCompat(
-        host9,
-        static_cast<cdm::ContentDecryptionModule_8*>(cdm));
+    NS_WARNING("GMPGetAPI call failed trying to get CDM.");
+    return IPC_FAIL_NO_REASON(this);
   }
+  cdm::Host_10* host10 = child;
+  cdm = new ChromiumCDM9BackwardsCompat(
+    host10, static_cast<cdm::ContentDecryptionModule_9*>(cdm));
 
-  child->Init(static_cast<cdm::ContentDecryptionModule_9*>(cdm),
+  child->Init(static_cast<cdm::ContentDecryptionModule_10*>(cdm),
               mGMPChild->mStorageId);
 
   return IPC_OK();

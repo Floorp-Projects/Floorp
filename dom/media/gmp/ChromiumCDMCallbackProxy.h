@@ -33,7 +33,7 @@ public:
   void ResolvePromise(uint32_t aPromiseId) override;
 
   void RejectPromise(uint32_t aPromiseId,
-                     nsresult aError,
+                     nsresult aException,
                      const nsCString& aErrorMessage) override;
 
   void SessionMessage(const nsACString& aSessionId,
@@ -48,10 +48,6 @@ public:
 
   void SessionClosed(const nsCString& aSessionId) override;
 
-  void LegacySessionError(const nsCString& aSessionId,
-                          nsresult aError,
-                          uint32_t aSystemCode,
-                          const nsCString& aMessage) override;
   void Terminated() override;
 
   void Shutdown() override;

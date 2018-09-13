@@ -32,16 +32,16 @@ SimpleTest.waitForFocus(function() {
       { "string": "\u3042",
         "clauses":
         [
-          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-        ]
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+        ],
       },
-      "caret": { "start": 1, "length": 0 }
+      "caret": { "start": 1, "length": 0 },
     });
 
   ok(isThereIMESelection(), "There should be IME selection");
 
   var compositionEnd = false;
-  editor.addEventListener("compositionend", function () { compositionEnd = true; }, true);
+  editor.addEventListener("compositionend", function() { compositionEnd = true; }, true);
 
   synthesizeMouseAtCenter(span, {});
 
@@ -51,8 +51,7 @@ SimpleTest.waitForFocus(function() {
   SimpleTest.finish();
 });
 
-function isThereIMESelection()
-{
+function isThereIMESelection() {
   var selCon = SpecialPowers.wrap(window).
         docShell.
         editingSession.
@@ -62,7 +61,7 @@ function isThereIMESelection()
     SpecialPowers.Ci.nsISelectionController.SELECTION_IME_RAWINPUT,
     SpecialPowers.Ci.nsISelectionController.SELECTION_IME_SELECTEDRAWTEXT,
     SpecialPowers.Ci.nsISelectionController.SELECTION_IME_CONVERTEDTEXT,
-    SpecialPowers.Ci.nsISelectionController.SELECTION_IME_SELECTEDCONVERTEDTEXT
+    SpecialPowers.Ci.nsISelectionController.SELECTION_IME_SELECTEDCONVERTEDTEXT,
   ];
   for (var i = 0; i < kIMESelections.length; i++) {
     var sel = selCon.getSelection(kIMESelections[i]);

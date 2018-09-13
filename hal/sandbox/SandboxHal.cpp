@@ -205,18 +205,6 @@ SetProcessPrioritySupported()
   MOZ_CRASH("Only the main process may call SetProcessPrioritySupported().");
 }
 
-void
-StartDiskSpaceWatcher()
-{
-  MOZ_CRASH("StartDiskSpaceWatcher() can't be called from sandboxed contexts.");
-}
-
-void
-StopDiskSpaceWatcher()
-{
-  MOZ_CRASH("StopDiskSpaceWatcher() can't be called from sandboxed contexts.");
-}
-
 class HalParent : public PHalParent
                 , public BatteryObserver
                 , public NetworkObserver

@@ -39,8 +39,7 @@ function onSpellCheck(editableElement, callback) {
     // False is important here.  Pass false so that the inline spell checker
     // isn't created if it doesn't already exist.
     var isc = editor.getInlineSpellChecker(false);
-  }
-  catch (err) {
+  } catch (err) {
     // getInlineSpellChecker throws if spell checking is not enabled instead of
     // just returning null, which seems kind of lame.  (Spell checking is not
     // enabled on Android.)  The point here is only to determine whether spell
@@ -61,6 +60,7 @@ function onSpellCheck(editableElement, callback) {
     waitingForEnded = !waitingForEnded;
   }
 
+  // eslint-disable-next-line mozilla/use-services
   let os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
   os.addObserver(observe, SPELL_CHECK_STARTED_TOPIC);
@@ -77,4 +77,4 @@ function onSpellCheck(editableElement, callback) {
     os.removeObserver(observe, SPELL_CHECK_ENDED_TOPIC);
     callback();
   }, 0, Ci.nsITimer.TYPE_REPEATING_SLACK);
-};
+}

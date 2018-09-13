@@ -26,7 +26,7 @@ addLoadEvent(runTest);
 var gMisspeltWords;
 
 function getEdit() {
-  return document.getElementById('edit');
+  return document.getElementById("edit");
 }
 
 function editDoc() {
@@ -34,7 +34,6 @@ function editDoc() {
 }
 
 function getEditor() {
-  var Ci = SpecialPowers.Ci;
   var win = editDoc().defaultView;
   var editingSession = SpecialPowers.wrap(win).docShell.editingSession;
   return editingSession.getEditorForWindow(win);

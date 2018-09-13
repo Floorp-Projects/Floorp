@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795785
   <div id="div" contenteditable style="overflow: hidden; height: 3em; width: 5em;"></div>
 </div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -30,13 +30,12 @@ SimpleTest.requestFlakyTimeout("This test uses setTimeouts in order to fix an in
 // Turn off spatial navigation because it hijacks arrow key events and VK_RETURN
 // events.
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, runTests);
+  SpecialPowers.pushPrefEnv({"set": [["snav.enabled", false]]}, runTests);
 });
 var textarea = document.getElementById("textarea");
 var div = document.getElementById("div");
 
-function hitEventLoop(aFunc, aTimes)
-{
+function hitEventLoop(aFunc, aTimes) {
   if (--aTimes) {
     setTimeout(hitEventLoop, 0, aFunc, aTimes);
   } else {
@@ -44,39 +43,37 @@ function hitEventLoop(aFunc, aTimes)
   }
 }
 
-function doKeyEventTest(aElement, aElementDescription, aCallback)
-{
+function doKeyEventTest(aElement, aElementDescription, aCallback) {
   aElement.focus();
   aElement.scrollTop = 0;
-  hitEventLoop(function () {
+  hitEventLoop(function() {
     is(aElement.scrollTop, 0,
        aElementDescription + "'s scrollTop isn't 0");
     synthesizeKey("KEY_Enter", {shiftKey: true, repeat: 6});
-    hitEventLoop(function () {
+    hitEventLoop(function() {
       isnot(aElement.scrollTop, 0,
             aElementDescription + " was not scrolled by inserting line breaks");
       var scrollTop = aElement.scrollTop;
       synthesizeKey("KEY_ArrowUp", {repeat: 5});
-      hitEventLoop(function () {
+      hitEventLoop(function() {
         isnot(aElement.scrollTop, scrollTop,
               aElementDescription + " was not scrolled by up key events");
         synthesizeKey("KEY_ArrowDown", {repeat: 5});
-        hitEventLoop(function () {
+        hitEventLoop(function() {
           is(aElement.scrollTop, scrollTop,
              aElementDescription + " was not scrolled by down key events");
           var longWord = "aaaaaaaaaaaaaaaaaaaa";
           sendString(longWord);
-          hitEventLoop(function () {
+          hitEventLoop(function() {
             isnot(aElement.scrollLeft, 0,
                   aElementDescription + " was not scrolled by typing long word");
             var scrollLeft = aElement.scrollLeft;
-            var i;
             synthesizeKey("KEY_ArrowLeft", {repeat: longWord.length});
-            hitEventLoop(function () {
+            hitEventLoop(function() {
               isnot(aElement.scrollLeft, scrollLeft,
                     aElementDescription + " was not scrolled by left key events");
               synthesizeKey("KEY_ArrowRight", {repeat: longWord.length});
-              hitEventLoop(function () {
+              hitEventLoop(function() {
                 is(aElement.scrollLeft, scrollLeft,
                    aElementDescription + " was not scrolled by right key events");
                 aCallback();
@@ -89,11 +86,10 @@ function doKeyEventTest(aElement, aElementDescription, aCallback)
   }, 20);
 }
 
-function doCompositionTest(aElement, aElementDescription, aCallback)
-{
+function doCompositionTest(aElement, aElementDescription, aCallback) {
   aElement.focus();
   aElement.scrollTop = 0;
-  hitEventLoop(function () {
+  hitEventLoop(function() {
     is(aElement.scrollTop, 0,
        aElementDescription + "'s scrollTop isn't 0");
     var str = "Web \u958b\u767a\u8005\u306e\u7686\u3055\u3093\u306f\u3001" +
@@ -108,16 +104,16 @@ function doCompositionTest(aElement, aElementDescription, aCallback)
         composition: {
           string: str,
           clauses: [
-            { length: str.length, attr: COMPOSITION_ATTR_RAW_CLAUSE }
-          ]
+            { length: str.length, attr: COMPOSITION_ATTR_RAW_CLAUSE },
+          ],
         },
-        caret: { start: str.length, length: 0 }
+        caret: { start: str.length, length: 0 },
       });
-    hitEventLoop(function () {
+    hitEventLoop(function() {
       isnot(aElement.scrollTop, 0,
             aElementDescription + " was not scrolled by composition");
       synthesizeComposition({ type: "compositioncommit", data: "" });
-      hitEventLoop(function () {
+      hitEventLoop(function() {
         is(aElement.scrollTop, 0,
            aElementDescription + " was not scrolled back to the top by canceling composition");
         aCallback();
@@ -126,18 +122,17 @@ function doCompositionTest(aElement, aElementDescription, aCallback)
   }, 20);
 }
 
-function runTests()
-{
+function runTests() {
   doKeyEventTest(textarea, "textarea",
-    function () {
+    function() {
       textarea.value = "";
       doKeyEventTest(div, "div (contenteditable)",
-        function () {
+        function() {
           div.innerHTML = "";
           doCompositionTest(textarea, "textarea",
-            function () {
+            function() {
               doCompositionTest(div, "div (contenteditable)",
-                function () {
+                function() {
                   SimpleTest.finish();
                 });
             });

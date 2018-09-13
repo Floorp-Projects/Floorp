@@ -212,10 +212,6 @@ if (!window.runTest) {
 
 function finishTest()
 {
-  SpecialPowers.notifyObserversInParentProcess(null,
-                                               "disk-space-watcher",
-                                               "free");
-
   SimpleTest.executeSoon(function() {
     clearAllDatabases(function() { SimpleTest.finish(); });
   });

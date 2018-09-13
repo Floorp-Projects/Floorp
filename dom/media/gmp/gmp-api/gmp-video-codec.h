@@ -223,4 +223,14 @@ struct GMPCodecSpecificInfo
   GMPCodecSpecificInfoUnion mCodecSpecific;
 };
 
+// The encryption scheme used. Historically Widevine only supported none or
+// cenc, but starting at interface version 10 the CDM should also support cbcs.
+enum class GMPEncryptionScheme : uint8_t
+{
+  kGMPEncryptionNone = 0,
+  kGMPEncryptionCenc = 1,
+  kGMPEncryptionCbcs = 2,
+  kGMPEncryptionInvalid = 3,
+};
+
 #endif // GMP_VIDEO_CODEC_h_

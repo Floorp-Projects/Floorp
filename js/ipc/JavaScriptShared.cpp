@@ -28,8 +28,9 @@ void
 IdToObjectMap::trace(JSTracer* trc, uint64_t minimumId)
 {
     for (Table::Range r(table_.all()); !r.empty(); r.popFront()) {
-        if (r.front().key().serialNumber() >= minimumId)
+        if (r.front().key().serialNumber() >= minimumId) {
             JS::TraceEdge(trc, &r.front().value(), "ipc-object");
+        }
     }
 }
 
@@ -39,8 +40,9 @@ IdToObjectMap::sweep()
     for (Table::Enum e(table_); !e.empty(); e.popFront()) {
         JS::Heap<JSObject*>* objp = &e.front().value();
         JS_UpdateWeakPointerAfterGC(objp);
-        if (!*objp)
+        if (!*objp) {
             e.removeFront();
+        }
     }
 }
 
@@ -48,8 +50,9 @@ JSObject*
 IdToObjectMap::find(ObjectId id)
 {
     Table::Ptr p = table_.lookup(id);
-    if (!p)
+    if (!p) {
         return nullptr;
+    }
     return p->value();
 }
 
@@ -57,8 +60,9 @@ JSObject*
 IdToObjectMap::findPreserveColor(ObjectId id)
 {
     Table::Ptr p = table_.lookup(id);
-    if (!p)
+    if (!p) {
         return nullptr;
+    }
     return p->value().unbarrieredGet();
 }
 
@@ -91,8 +95,9 @@ bool
 IdToObjectMap::has(const ObjectId& id, const JSObject* obj) const
 {
     auto p = table_.lookup(id);
-    if (!p)
+    if (!p) {
         return false;
+    }
     return p->value() == obj;
 }
 #endif
@@ -118,8 +123,9 @@ ObjectId
 ObjectToIdMap::find(JSObject* obj)
 {
     Table::Ptr p = table_.lookup(obj);
-    if (!p)
+    if (!p) {
         return ObjectId::nullId();
+    }
     return p->value();
 }
 
@@ -174,8 +180,9 @@ void
 JavaScriptShared::decref()
 {
     refcount_--;
-    if (!refcount_)
+    if (!refcount_) {
         delete this;
+    }
 }
 
 void
@@ -188,12 +195,14 @@ bool
 JavaScriptShared::convertIdToGeckoString(JSContext* cx, JS::HandleId id, nsString* to)
 {
     RootedValue idval(cx);
-    if (!JS_IdToValue(cx, id, &idval))
+    if (!JS_IdToValue(cx, id, &idval)) {
         return false;
+    }
 
     RootedString str(cx, ToString(cx, idval));
-    if (!str)
+    if (!str) {
         return false;
+    }
 
     return AssignJSString(cx, *to, str);
 }
@@ -202,8 +211,9 @@ bool
 JavaScriptShared::convertGeckoStringToId(JSContext* cx, const nsString& from, JS::MutableHandleId to)
 {
     RootedString str(cx, JS_NewUCStringCopyN(cx, from.BeginReading(), from.Length()));
-    if (!str)
+    if (!str) {
         return false;
+    }
 
     return JS_StringToId(cx, str, to);
 }
@@ -235,8 +245,9 @@ JavaScriptShared::toVariant(JSContext* cx, JS::HandleValue from, JSVariant* to)
         }
 
         ObjectVariant objVar;
-        if (!toObjectVariant(cx, obj, &objVar))
+        if (!toObjectVariant(cx, obj, &objVar)) {
             return false;
+        }
         *to = objVar;
         return true;
       }
@@ -246,8 +257,9 @@ JavaScriptShared::toVariant(JSContext* cx, JS::HandleValue from, JSVariant* to)
         RootedSymbol sym(cx, from.toSymbol());
 
         SymbolVariant symVar;
-        if (!toSymbolVariant(cx, sym, &symVar))
+        if (!toSymbolVariant(cx, sym, &symVar)) {
             return false;
+        }
         *to = symVar;
         return true;
       }
@@ -255,17 +267,19 @@ JavaScriptShared::toVariant(JSContext* cx, JS::HandleValue from, JSVariant* to)
       case JSTYPE_STRING:
       {
         nsAutoJSString autoStr;
-        if (!autoStr.init(cx, from))
+        if (!autoStr.init(cx, from)) {
             return false;
+        }
         *to = autoStr;
         return true;
       }
 
       case JSTYPE_NUMBER:
-        if (from.isInt32())
+        if (from.isInt32()) {
             *to = double(from.toInt32());
-        else
+        } else {
             *to = from.toDouble();
+        }
         return true;
 
       case JSTYPE_BOOLEAN:
@@ -293,8 +307,9 @@ JavaScriptShared::fromVariant(JSContext* cx, const JSVariant& from, MutableHandl
         case JSVariant::TObjectVariant:
         {
           JSObject* obj = fromObjectVariant(cx, from.get_ObjectVariant());
-          if (!obj)
+          if (!obj) {
               return false;
+          }
           to.set(ObjectValue(*obj));
           return true;
         }
@@ -302,8 +317,9 @@ JavaScriptShared::fromVariant(JSContext* cx, const JSVariant& from, MutableHandl
         case JSVariant::TSymbolVariant:
         {
           Symbol* sym = fromSymbolVariant(cx, from.get_SymbolVariant());
-          if (!sym)
+          if (!sym) {
               return false;
+          }
           to.setSymbol(sym);
           return true;
         }
@@ -320,8 +336,9 @@ JavaScriptShared::fromVariant(JSContext* cx, const JSVariant& from, MutableHandl
         {
           const nsString& old = from.get_nsString();
           JSString* str = JS_NewUCStringCopyN(cx, old.BeginReading(), old.Length());
-          if (!str)
+          if (!str) {
               return false;
+          }
           to.set(StringValue(str));
           return true;
         }
@@ -334,8 +351,9 @@ JavaScriptShared::fromVariant(JSContext* cx, const JSVariant& from, MutableHandl
 
           RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
           JSObject* obj = xpc_NewIDObject(cx, global, iid);
-          if (!obj)
+          if (!obj) {
               return false;
+          }
           to.set(ObjectValue(*obj));
           return true;
         }
@@ -351,8 +369,9 @@ JavaScriptShared::toJSIDVariant(JSContext* cx, HandleId from, JSIDVariant* to)
 {
     if (JSID_IS_STRING(from)) {
         nsAutoJSString autoStr;
-        if (!autoStr.init(cx, JSID_TO_STRING(from)))
+        if (!autoStr.init(cx, JSID_TO_STRING(from))) {
             return false;
+        }
         *to = autoStr;
         return true;
     }
@@ -362,8 +381,9 @@ JavaScriptShared::toJSIDVariant(JSContext* cx, HandleId from, JSIDVariant* to)
     }
     if (JSID_IS_SYMBOL(from)) {
         SymbolVariant symVar;
-        if (!toSymbolVariant(cx, JSID_TO_SYMBOL(from), &symVar))
+        if (!toSymbolVariant(cx, JSID_TO_SYMBOL(from), &symVar)) {
             return false;
+        }
         *to = symVar;
         return true;
     }
@@ -377,8 +397,9 @@ JavaScriptShared::fromJSIDVariant(JSContext* cx, const JSIDVariant& from, Mutabl
     switch (from.type()) {
       case JSIDVariant::TSymbolVariant: {
         Symbol* sym = fromSymbolVariant(cx, from.get_SymbolVariant());
-        if (!sym)
+        if (!sym) {
             return false;
+        }
         to.set(SYMBOL_TO_JSID(sym));
         return true;
       }
@@ -408,8 +429,9 @@ JavaScriptShared::toSymbolVariant(JSContext* cx, JS::Symbol* symArg, SymbolVaria
     }
     if (code == SymbolCode::InSymbolRegistry) {
         nsAutoJSString autoStr;
-        if (!autoStr.init(cx, GetSymbolDescription(sym)))
+        if (!autoStr.init(cx, GetSymbolDescription(sym))) {
             return false;
+        }
         *symVarp = RegisteredSymbol(autoStr);
         return true;
     }
@@ -424,8 +446,9 @@ JavaScriptShared::fromSymbolVariant(JSContext* cx, const SymbolVariant& symVar)
     switch (symVar.type()) {
       case SymbolVariant::TWellKnownSymbol: {
         uint32_t which = symVar.get_WellKnownSymbol().which();
-        if (which < WellKnownSymbolLimit)
+        if (which < WellKnownSymbolLimit) {
             return GetWellKnownSymbol(cx, static_cast<SymbolCode>(which));
+        }
         MOZ_ASSERT(false, "bad child data");
         return nullptr;
       }
@@ -433,8 +456,9 @@ JavaScriptShared::fromSymbolVariant(JSContext* cx, const SymbolVariant& symVar)
       case SymbolVariant::TRegisteredSymbol: {
         nsString key = symVar.get_RegisteredSymbol().key();
         RootedString str(cx, JS_NewUCStringCopyN(cx, key.get(), key.Length()));
-        if (!str)
+        if (!str) {
             return nullptr;
+        }
         return GetSymbolFor(cx, str);
       }
 
@@ -479,8 +503,9 @@ JSObject*
 JavaScriptShared::findCPOWById(const ObjectId& objId)
 {
     JSObject* obj = findCPOWByIdPreserveColor(objId);
-    if (obj)
+    if (obj) {
         JS::ExposeObjectToActiveJS(obj);
+    }
     return obj;
 }
 
@@ -488,8 +513,9 @@ JSObject*
 JavaScriptShared::findCPOWByIdPreserveColor(const ObjectId& objId)
 {
     JSObject* obj = cpows_.findPreserveColor(objId);
-    if (!obj)
+    if (!obj) {
         return nullptr;
+    }
 
     if (js::gc::EdgeNeedsSweepUnbarriered(&obj)) {
         cpows_.remove(objId);
@@ -516,11 +542,13 @@ JavaScriptShared::findObjectById(JSContext* cx, const ObjectId& objId)
     if (objId.hasXrayWaiver()) {
         obj = js::ToWindowProxyIfWindow(obj);
         MOZ_ASSERT(obj);
-        if (!xpc::WrapperFactory::WaiveXrayAndWrap(cx, &obj))
+        if (!xpc::WrapperFactory::WaiveXrayAndWrap(cx, &obj)) {
             return nullptr;
+        }
     } else {
-        if (!JS_WrapObject(cx, &obj))
+        if (!JS_WrapObject(cx, &obj)) {
             return nullptr;
+        }
     }
     return obj;
 }
@@ -532,19 +560,22 @@ JavaScriptShared::fromDescriptor(JSContext* cx, Handle<PropertyDescriptor> desc,
                                  PPropertyDescriptor* out)
 {
     out->attrs() = desc.attributes();
-    if (!toVariant(cx, desc.value(), &out->value()))
+    if (!toVariant(cx, desc.value(), &out->value())) {
         return false;
+    }
 
-    if (!toObjectOrNullVariant(cx, desc.object(), &out->obj()))
+    if (!toObjectOrNullVariant(cx, desc.object(), &out->obj())) {
         return false;
+    }
 
     if (!desc.getter()) {
         out->getter() = 0;
     } else if (desc.hasGetterObject()) {
         JSObject* getter = desc.getterObject();
         ObjectVariant objVar;
-        if (!toObjectVariant(cx, getter, &objVar))
+        if (!toObjectVariant(cx, getter, &objVar)) {
             return false;
+        }
         out->getter() = objVar;
     } else {
         out->getter() = UnknownPropertyOp;
@@ -555,8 +586,9 @@ JavaScriptShared::fromDescriptor(JSContext* cx, Handle<PropertyDescriptor> desc,
     } else if (desc.hasSetterObject()) {
         JSObject* setter = desc.setterObject();
         ObjectVariant objVar;
-        if (!toObjectVariant(cx, setter, &objVar))
+        if (!toObjectVariant(cx, setter, &objVar)) {
             return false;
+        }
         out->setter() = objVar;
     } else {
         out->setter() = UnknownPropertyOp;
@@ -585,8 +617,9 @@ JavaScriptShared::toDescriptor(JSContext* cx, const PPropertyDescriptor& in,
                                MutableHandle<PropertyDescriptor> out)
 {
     out.setAttributes(in.attrs());
-    if (!fromVariant(cx, in.value(), out.value()))
+    if (!fromVariant(cx, in.value(), out.value())) {
         return false;
+    }
     out.object().set(fromObjectOrNullVariant(cx, in.obj()));
 
     if (in.getter().type() == GetterSetter::Tuint64_t && !in.getter().get_uint64_t()) {
@@ -594,8 +627,9 @@ JavaScriptShared::toDescriptor(JSContext* cx, const PPropertyDescriptor& in,
     } else if (in.attrs() & JSPROP_GETTER) {
         Rooted<JSObject*> getter(cx);
         getter = fromObjectVariant(cx, in.getter().get_ObjectVariant());
-        if (!getter)
+        if (!getter) {
             return false;
+        }
         out.setGetter(JS_DATA_TO_FUNC_PTR(JSGetterOp, getter.get()));
     } else {
         out.setGetter(UnknownPropertyStub);
@@ -606,8 +640,9 @@ JavaScriptShared::toDescriptor(JSContext* cx, const PPropertyDescriptor& in,
     } else if (in.attrs() & JSPROP_SETTER) {
         Rooted<JSObject*> setter(cx);
         setter = fromObjectVariant(cx, in.setter().get_ObjectVariant());
-        if (!setter)
+        if (!setter) {
             return false;
+        }
         out.setSetter(JS_DATA_TO_FUNC_PTR(JSSetterOp, setter.get()));
     } else {
         out.setSetter(UnknownStrictPropertyStub);
@@ -625,8 +660,9 @@ JavaScriptShared::toObjectOrNullVariant(JSContext* cx, JSObject* obj, ObjectOrNu
     }
 
     ObjectVariant objVar;
-    if (!toObjectVariant(cx, obj, &objVar))
+    if (!toObjectVariant(cx, obj, &objVar)) {
         return false;
+    }
 
     *objVarp = objVar;
     return true;
@@ -635,8 +671,9 @@ JavaScriptShared::toObjectOrNullVariant(JSContext* cx, JSObject* obj, ObjectOrNu
 JSObject*
 JavaScriptShared::fromObjectOrNullVariant(JSContext* cx, const ObjectOrNullVariant& objVar)
 {
-    if (objVar.type() == ObjectOrNullVariant::TNullVariant)
+    if (objVar.type() == ObjectOrNullVariant::TNullVariant) {
         return nullptr;
+    }
 
     return fromObjectVariant(cx, objVar.get_ObjectVariant());
 }
@@ -648,8 +685,9 @@ CrossProcessCpowHolder::CrossProcessCpowHolder(dom::CPOWManagerGetter* managerGe
     unwrapped_(false)
 {
     // Only instantiate the CPOW manager if we might need it later.
-    if (cpows.Length())
+    if (cpows.Length()) {
         js_ = managerGetter->GetCPOWManager();
+    }
 }
 
 CrossProcessCpowHolder::~CrossProcessCpowHolder()
@@ -665,11 +703,13 @@ CrossProcessCpowHolder::~CrossProcessCpowHolder()
         // recording or replaying, as they do not have a CPOW manager
         // and the message will also be received in the recording
         // process.
-        if (recordreplay::IsMiddleman())
+        if (recordreplay::IsMiddleman()) {
             return;
+        }
         AutoJSAPI jsapi;
-        if (!jsapi.Init(xpc::PrivilegedJunkScope()))
+        if (!jsapi.Init(xpc::PrivilegedJunkScope())) {
             return;
+        }
         JSContext* cx = jsapi.cx();
         JS::Rooted<JSObject*> cpows(cx);
         js_->Unwrap(cx, cpows_, &cpows);
@@ -681,8 +721,9 @@ CrossProcessCpowHolder::ToObject(JSContext* cx, JS::MutableHandleObject objp)
 {
     unwrapped_ = true;
 
-    if (!cpows_.Length())
+    if (!cpows_.Length()) {
         return true;
+    }
 
     return js_->Unwrap(cx, cpows_, objp);
 }
@@ -696,20 +737,23 @@ JavaScriptShared::Unwrap(JSContext* cx, const InfallibleTArray<CpowEntry>& aCpow
 
     objp.set(nullptr);
 
-    if (!aCpows.Length())
+    if (!aCpows.Length()) {
         return true;
+    }
 
     RootedObject obj(cx, JS_NewPlainObject(cx));
-    if (!obj)
+    if (!obj) {
         return false;
+    }
 
     RootedValue v(cx);
     RootedString str(cx);
     for (size_t i = 0; i < aCpows.Length(); i++) {
         const nsString& name = aCpows[i].name();
 
-        if (!fromVariant(cx, aCpows[i].value(), &v))
+        if (!fromVariant(cx, aCpows[i].value(), &v)) {
             return false;
+        }
 
         if (!JS_DefineUCProperty(cx,
                                  obj,
@@ -729,12 +773,14 @@ JavaScriptShared::Unwrap(JSContext* cx, const InfallibleTArray<CpowEntry>& aCpow
 bool
 JavaScriptShared::Wrap(JSContext* cx, HandleObject aObj, InfallibleTArray<CpowEntry>* outCpows)
 {
-    if (!aObj)
+    if (!aObj) {
         return true;
+    }
 
     Rooted<IdVector> ids(cx, IdVector(cx));
-    if (!JS_Enumerate(cx, aObj, &ids))
+    if (!JS_Enumerate(cx, aObj, &ids)) {
         return false;
+    }
 
     RootedId id(cx);
     RootedValue v(cx);
@@ -742,15 +788,18 @@ JavaScriptShared::Wrap(JSContext* cx, HandleObject aObj, InfallibleTArray<CpowEn
         id = ids[i];
 
         nsString str;
-        if (!convertIdToGeckoString(cx, id, &str))
+        if (!convertIdToGeckoString(cx, id, &str)) {
             return false;
+        }
 
-        if (!JS_GetPropertyById(cx, aObj, id, &v))
+        if (!JS_GetPropertyById(cx, aObj, id, &v)) {
             return false;
+        }
 
         JSVariant var;
-        if (!toVariant(cx, v, &var))
+        if (!toVariant(cx, v, &var)) {
             return false;
+        }
 
         outCpows->AppendElement(CpowEntry(str, var));
     }

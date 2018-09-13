@@ -52,10 +52,10 @@ SimpleTest.waitForFocus(function() {
           synthesizeKey("C", {accelKey: true});
         },
         function() {
-          var ed = document.getElementById("editor");
-          ed.focus();
+          var ed1 = document.getElementById("editor");
+          ed1.focus();
           synthesizeKey("V", {accelKey: true});
-          isnot(ed.innerHTML.indexOf("<span style=\"color: green;\">green text</span>"), -1,
+          isnot(ed1.innerHTML.indexOf("<span style=\"color: green;\">green text</span>"), -1,
                 "Content should be pasted in HTML format");
           is(gPasteEvents, 2, "Two paste events must be fired");
 

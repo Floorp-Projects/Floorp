@@ -8,7 +8,7 @@
 <script class="testbody" type="application/javascript">
 function runTest() {
 
-  function setupIframe(e,html,focus_id) {
+  function setupIframe(e, html, focus_id) {
     var doc = e.contentDocument;
     doc.body.innerHTML = html;
     doc.designMode = "on";
@@ -18,32 +18,32 @@ function runTest() {
     return e;
   }
 
-  var i1 = document.getElementById('i1')
-  var li1 = setupIframe(i1,'<ul><li id="li1">one</li><li>two</li><ul><li>a</li></ul></ul>','li1')
+  var i1 = document.getElementById("i1");
+  var li1 = setupIframe(i1, '<ul><li id="li1">one</li><li>two</li><ul><li>a</li></ul></ul>', "li1");
   var doc = li1.ownerDocument;
 
   var selection = doc.defaultView.getSelection();
   selection.removeAllRanges();
 
   var range = doc.createRange();
-  range.setStart(li1,0);
-  range.setEnd(li1.nextSibling,0);
+  range.setStart(li1, 0);
+  range.setEnd(li1.nextSibling, 0);
   selection.addRange(range);
 
-  sendKey('delete');
-  is(doc.body.innerHTML,'<ul><li>two</li><ul><li>a</li></ul></ul>','delete 1st LI');
+  sendKey("delete");
+  is(doc.body.innerHTML, "<ul><li>two</li><ul><li>a</li></ul></ul>", "delete 1st LI");
 
-  var li2 = setupIframe(i1,'<ul><li id="li2">two</li><ul><li>a</li></ul></ul>','li2')
+  var li2 = setupIframe(i1, '<ul><li id="li2">two</li><ul><li>a</li></ul></ul>', "li2");
   selection = doc.defaultView.getSelection();
   selection.removeAllRanges();
 
   range = doc.createRange();
-  range.setStart(li2,0);
-  range.setEnd(li2.nextSibling.firstChild,0);
+  range.setStart(li2, 0);
+  range.setEnd(li2.nextSibling.firstChild, 0);
   selection.addRange(range);
 
-  sendKey('delete');
-  is(doc.body.innerHTML,'<ul><ul><li>a</li></ul></ul>','delete 2nd LI');
+  sendKey("delete");
+  is(doc.body.innerHTML, "<ul><ul><li>a</li></ul></ul>", "delete 2nd LI");
 
   SimpleTest.finish();
 }

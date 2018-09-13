@@ -30,7 +30,7 @@ function init() {
     spellchecker.enableRealTimeSpell = true;
     textarea.focus();
 
-    onSpellCheck(textarea, function () {
+    onSpellCheck(textarea, function() {
         var list = {}, count = {};
         spellchecker.spellChecker.GetDictionaryList(list, count);
         ok(count.value > 0, "At least one dictionary should be present");
@@ -38,11 +38,11 @@ function init() {
         var lang = list.value[0];
         spellchecker.spellChecker.SetCurrentDictionary(lang);
 
-        onSpellCheck(textarea, function () {
+        onSpellCheck(textarea, function() {
             try {
                 var dictionary =
                     spellchecker.spellChecker.GetCurrentDictionary();
-            } catch(e) {}
+            } catch (e) {}
             is(dictionary, lang, "Unexpected spell check dictionary");
 
             // This will clear the content preferences and reset "spellchecker.dictionary".

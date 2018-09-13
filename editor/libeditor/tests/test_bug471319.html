@@ -23,16 +23,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
     <script type="application/javascript">
 
       /** Test for Bug 471319 **/
-    
+
       SimpleTest.waitForExplicitFinish();
 
       function doTest() {
         let t1 = SpecialPowers.wrap($("t1"));
-        let editor = null;
 
         // Test 1: Undo on an empty editor - the editor should not forget about
         // the bogus node
-        t1Editor = t1.editor;
+        let t1Editor = t1.editor;
 
         // Did the editor recognize the new bogus node?
         t1Editor.undo(1);
@@ -42,7 +41,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
         // Test 2: Redo on an empty editor - the editor should not forget about
         // the bogus node
         let t2 = SpecialPowers.wrap($("t2"));
-        t2Editor = t2.editor;
+        let t2Editor = t2.editor;
 
         // Did the editor recognize the new bogus node?
         t2Editor.redo(1);

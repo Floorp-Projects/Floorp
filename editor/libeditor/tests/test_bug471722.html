@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471722
     <script type="application/javascript">
 
       /** Test for Bug 471722 **/
-    
+
       SimpleTest.waitForExplicitFinish();
 
       function doTest() {
@@ -41,7 +41,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471722
           ok(editor.canCut(), "can cut text");
           editor.cut();
           is(t1.value, "", "initial text was removed");
- 
+
           // So now we will have emptied the textfield
           // and the editor will have created a bogus node
           // Check the transaction is in the undo stack...
@@ -67,7 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471722
           // Did the editor notice a bogus node reappeared?
           is(t1.value, "", "editor found bogus node");
        } catch (e) {
-         ok(false, "test failed with error "+e);
+         ok(false, "test failed with error " + e);
        }
        SimpleTest.finish();
      }

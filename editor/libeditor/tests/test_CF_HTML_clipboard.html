@@ -32,11 +32,10 @@ function copyCF_HTML(cfhtml, success, failure) {
                  .QueryInterface(Ci.nsILoadContext);
   }
 
-  var cb = Cc["@mozilla.org/widget/clipboard;1"].
-           getService(Ci.nsIClipboard);
+  var cb = SpecialPowers.Services.clipboard;
 
   var counter = 0;
-  function copyCF_HTML_worker(success, failure) {
+  function copyCF_HTML_worker(successFn, failureFn) {
     if (++counter > 50) {
       ok(false, "Timed out while polling clipboard for pasted data");
       failure();
@@ -45,7 +44,7 @@ function copyCF_HTML(cfhtml, success, failure) {
 
     var flavors = [CF_HTML];
     if (!cb.hasDataMatchingFlavors(flavors, flavors.length, cb.kGlobalClipboard)) {
-      setTimeout(function() { copyCF_HTML_worker(success, failure); }, 100);
+      setTimeout(function() { copyCF_HTML_worker(successFn, failureFn); }, 100);
       return;
     }
 
@@ -59,7 +58,7 @@ function copyCF_HTML(cfhtml, success, failure) {
       trans.getTransferData(CF_HTML, data, {});
       data = SpecialPowers.wrap(data).value.QueryInterface(Ci.nsISupportsCString).data;
     } catch (e) {
-      setTimeout(function() { copyCF_HTML_worker(success, failure); }, 100);
+      setTimeout(function() { copyCF_HTML_worker(successFn, failureFn); }, 100);
       return;
     }
     success();

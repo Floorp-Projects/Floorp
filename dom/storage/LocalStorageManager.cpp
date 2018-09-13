@@ -60,7 +60,6 @@ NS_IMPL_ISUPPORTS(LocalStorageManager,
 
 LocalStorageManager::LocalStorageManager()
   : mCaches(8)
-  , mLowDiskSpace(false)
 {
   StorageObserver* observer = StorageObserver::Self();
   NS_ASSERTION(observer, "No StorageObserver, cannot observe private data delete notifications!");
@@ -448,16 +447,6 @@ LocalStorageManager::Observe(const char* aTopic,
     // For case caches are still referenced - clear them completely
     ClearCaches(LocalStorageCache::kUnloadComplete, pattern, EmptyCString());
     mCaches.Clear();
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, "low-disk-space")) {
-    mLowDiskSpace = true;
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, "no-low-disk-space")) {
-    mLowDiskSpace = false;
     return NS_OK;
   }
 
