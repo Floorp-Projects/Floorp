@@ -54,8 +54,8 @@ void*
 ChromiumCdmHost(int aHostInterfaceVersion, void* aUserData)
 {
   GMP_LOG("ChromiumCdmHostFunc(%d, %p)", aHostInterfaceVersion, aUserData);
-  if (aHostInterfaceVersion != cdm::Host_8::kVersion &&
-      aHostInterfaceVersion != cdm::Host_9::kVersion) {
+  if (aHostInterfaceVersion != cdm::Host_9::kVersion &&
+      aHostInterfaceVersion != cdm::Host_10::kVersion) {
     return nullptr;
   }
   return aUserData;
@@ -122,9 +122,9 @@ ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName,
           aPluginAPI,
           aDecryptorId,
           this);
-  bool isCDM9 = !strcmp(aAPIName, CHROMIUM_CDM_API);
-  bool isCDM8 = !strcmp(aAPIName, CHROMIUM_CDM_API_BACKWARD_COMPAT);
-  if (isCDM8 || isCDM9) {
+  bool isCDM10 = !strcmp(aAPIName, CHROMIUM_CDM_API);
+  bool isCDM9 = !strcmp(aAPIName, CHROMIUM_CDM_API_BACKWARD_COMPAT);
+  if (isCDM9 || isCDM10) {
     auto create = reinterpret_cast<decltype(::CreateCdmInstance)*>(
       PR_FindFunctionSymbol(mLib, "CreateCdmInstance"));
     if (!create) {
@@ -138,8 +138,8 @@ ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName,
       return GMPGenericErr;
     }
 
-    int version = isCDM8 ? cdm::ContentDecryptionModule_8::kVersion :
-                           cdm::ContentDecryptionModule_9::kVersion;
+    int version = isCDM9 ? cdm::ContentDecryptionModule_9::kVersion
+                         : cdm::ContentDecryptionModule_10::kVersion;
     void* cdm =
       create(version,
              kEMEKeySystemWidevine.get(),
@@ -183,10 +183,10 @@ ChromiumCDMAdapter::Supports(int32_t aModuleVersion,
                              int32_t aHostVersion)
 {
   return aModuleVersion == CDM_MODULE_VERSION &&
-         (aInterfaceVersion == cdm::ContentDecryptionModule_8::kVersion ||
-         aInterfaceVersion == cdm::ContentDecryptionModule_9::kVersion) &&
-         (aHostVersion == cdm::Host_8::kVersion ||
-         aHostVersion == cdm::Host_9::kVersion);
+         (aInterfaceVersion == cdm::ContentDecryptionModule_9::kVersion ||
+          aInterfaceVersion == cdm::ContentDecryptionModule_10::kVersion) &&
+         (aHostVersion == cdm::Host_9::kVersion ||
+          aHostVersion == cdm::Host_10::kVersion);
 }
 
 #ifdef XP_WIN
