@@ -55,13 +55,13 @@ ChromiumCDMCallbackProxy::ResolvePromise(uint32_t aPromiseId)
 
 void
 ChromiumCDMCallbackProxy::RejectPromise(uint32_t aPromiseId,
-                                        nsresult aError,
+                                        nsresult aException,
                                         const nsCString& aErrorMessage)
 {
   DispatchToMainThread("ChromiumCDMProxy::RejectPromise",
                        &ChromiumCDMProxy::RejectPromise,
                        aPromiseId,
-                       aError,
+                       aException,
                        aErrorMessage);
 }
 
@@ -167,20 +167,6 @@ ChromiumCDMCallbackProxy::SessionClosed(const nsCString& aSessionId)
   DispatchToMainThread("ChromiumCDMProxy::OnSessionClosed",
                        &ChromiumCDMProxy::OnSessionClosed ,
                        NS_ConvertUTF8toUTF16(aSessionId));
-}
-
-void
-ChromiumCDMCallbackProxy::LegacySessionError(const nsCString& aSessionId,
-                                             nsresult aError,
-                                             uint32_t aSystemCode,
-                                             const nsCString& aMessage)
-{
-  DispatchToMainThread("ChromiumCDMProxy::OnSessionError",
-                       &ChromiumCDMProxy::OnSessionError ,
-                       NS_ConvertUTF8toUTF16(aSessionId),
-                       aError,
-                       aSystemCode,
-                       NS_ConvertUTF8toUTF16(aMessage));
 }
 
 void

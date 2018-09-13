@@ -14,9 +14,12 @@ async protocol PChromiumCDM
   manager PGMPContent;
 child:
 
-  // cdm::ContentDecryptionModule8
+  // cdm::ContentDecryptionModule9
   async Init(bool aAllowDistinctiveIdentifier,
              bool aAllowPersistentState);
+
+  async GetStatusForPolicy(uint32_t aPromiseId,
+                           nsCString aMinHdcpVersion);
 
   async SetServerCertificate(uint32_t aPromiseId,
                              uint8_t[] aServerCert);
@@ -57,10 +60,7 @@ child:
   async GiveBuffer(Shmem aShmem);
 
   async PurgeShmems();
-
-  // cdm::ContentDecryptionModule9
-  async GetStatusForPolicy(uint32_t aPromiseId,
-                           nsCString aMinHdcpVersion);
+  
 
 parent:
   async __delete__();
@@ -68,13 +68,12 @@ parent:
   // cdm::Host9
   async OnResolvePromiseWithKeyStatus(uint32_t aPromiseId, uint32_t aKeyStatus);
 
-  // cdm::Host8
   async OnResolveNewSessionPromise(uint32_t aPromiseId, nsCString aSessionId);
 
   async OnResolvePromise(uint32_t aPromiseId);
 
   async OnRejectPromise(uint32_t aPromiseId,
-                        uint32_t aError,
+                        uint32_t aException,
                         uint32_t aSystemCode,
                         nsCString aErrorMessage);
 
@@ -90,20 +89,15 @@ parent:
 
   async OnSessionClosed(nsCString aSessionId);
 
-  async OnLegacySessionError(nsCString aSessionId,
-                             uint32_t aError,
-                             uint32_t aSystemCode,
-                             nsCString aMessage);
-
   async ResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccessful);
 
-  // Return values of cdm::ContentDecryptionModule8::Decrypt
+  // Return values of cdm::ContentDecryptionModule9::Decrypt
   async Decrypted(uint32_t aId, uint32_t aStatus, Shmem aDecryptedData);
   async DecryptFailed(uint32_t aId, uint32_t aStatus);
 
   async OnDecoderInitDone(uint32_t aStatus);
 
-  // Return values of cdm::ContentDecryptionModule8::DecryptAndDecodeFrame
+  // Return values of cdm::ContentDecryptionModule9::DecryptAndDecodeFrame
   async DecodedShmem(CDMVideoFrame aFrame, Shmem aData);
   async DecodedData(CDMVideoFrame aFrame, uint8_t[] aData);
   async DecodeFailed(uint32_t aStatus);
