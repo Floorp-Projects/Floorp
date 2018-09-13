@@ -20,6 +20,7 @@ const GLOBE_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-globe-icon.
 class ConnectPage extends PureComponent {
   static get propTypes() {
     return {
+      dispatch: PropTypes.func.isRequired,
       networkLocations: PropTypes.arrayOf(PropTypes.object).isRequired,
     };
   }
@@ -58,16 +59,16 @@ class ConnectPage extends PureComponent {
   }
 
   renderNetwork() {
-    const { networkLocations } = this.props;
+    const { dispatch, networkLocations } = this.props;
     return ConnectSection(
       {
         className: "connect-page__network",
         icon: GLOBE_ICON_SRC,
         title: "Via Network Location",
       },
-      NetworkLocationsList({ networkLocations }),
+      NetworkLocationsList({ dispatch, networkLocations }),
       dom.hr({ className: "connect-page__network__separator" }),
-      NetworkLocationsForm(),
+      NetworkLocationsForm({ dispatch }),
     );
   }
 
