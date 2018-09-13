@@ -51,10 +51,11 @@ LIRGeneratorX86Shared::lowerForShift(LInstructionHelper<1, 2, 0>* ins, MDefiniti
 
     // shift operator should be constant or in register ecx
     // x86 can't shift a non-ecx register
-    if (rhs->isConstant())
+    if (rhs->isConstant()) {
         ins->setOperand(1, useOrConstantAtStart(rhs));
-    else
+    } else {
         ins->setOperand(1, lhs != rhs ? useFixed(rhs, ecx) : useFixedAtStart(rhs, ecx));
+    }
 
     defineReuseInput(ins, mir, 0);
 }
@@ -66,8 +67,9 @@ LIRGeneratorX86Shared::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64
 {
     ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
 #if defined(JS_NUNBOX32)
-    if (mir->isRotate())
+    if (mir->isRotate()) {
         ins->setTemp(0, temp());
+    }
 #endif
 
     static_assert(LShiftI64::Rhs == INT64_PIECES, "Assume Rhs is located at INT64_PIECES.");
@@ -151,8 +153,9 @@ LIRGeneratorX86Shared::lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs)
     // Note: If we need a negative zero check, lhs is used twice.
     LAllocation lhsCopy = mul->canBeNegativeZero() ? use(lhs) : LAllocation();
     LMulI* lir = new(alloc()) LMulI(useRegisterAtStart(lhs), useOrConstant(rhs), lhsCopy);
-    if (mul->fallible())
+    if (mul->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
     defineReuseInput(lir, mul, 0);
 }
 
@@ -183,16 +186,18 @@ LIRGeneratorX86Shared::lowerDivI(MDiv* div)
                 // lhs copy register is needed.
                 lir = new(alloc()) LDivPowTwoI(lhs, useRegister(div->lhs()), shift, rhs < 0);
             }
-            if (div->fallible())
+            if (div->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             defineReuseInput(lir, div, 0);
             return;
         }
         if (rhs != 0) {
             LDivOrModConstantI* lir;
             lir = new(alloc()) LDivOrModConstantI(useRegister(div->lhs()), rhs, tempFixed(eax));
-            if (div->fallible())
+            if (div->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             defineFixed(lir, div, LAllocation(AnyRegister(edx)));
             return;
         }
@@ -200,8 +205,9 @@ LIRGeneratorX86Shared::lowerDivI(MDiv* div)
 
     LDivI* lir = new(alloc()) LDivI(useRegister(div->lhs()), useRegister(div->rhs()),
                                     tempFixed(edx));
-    if (div->fallible())
+    if (div->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
     defineFixed(lir, div, LAllocation(AnyRegister(eax)));
 }
 
@@ -218,16 +224,18 @@ LIRGeneratorX86Shared::lowerModI(MMod* mod)
         int32_t shift = FloorLog2(Abs(rhs));
         if (rhs != 0 && uint32_t(1) << shift == Abs(rhs)) {
             LModPowTwoI* lir = new(alloc()) LModPowTwoI(useRegisterAtStart(mod->lhs()), shift);
-            if (mod->fallible())
+            if (mod->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             defineReuseInput(lir, mod, 0);
             return;
         }
         if (rhs != 0) {
             LDivOrModConstantI* lir;
             lir = new(alloc()) LDivOrModConstantI(useRegister(mod->lhs()), rhs, tempFixed(edx));
-            if (mod->fallible())
+            if (mod->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             defineFixed(lir, mod, LAllocation(AnyRegister(eax)));
             return;
         }
@@ -236,8 +244,9 @@ LIRGeneratorX86Shared::lowerModI(MMod* mod)
     LModI* lir = new(alloc()) LModI(useRegister(mod->lhs()),
                                     useRegister(mod->rhs()),
                                     tempFixed(eax));
-    if (mod->fallible())
+    if (mod->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
     defineFixed(lir, mod, LAllocation(AnyRegister(edx)));
 }
 
@@ -288,14 +297,16 @@ LIRGeneratorX86Shared::lowerUDiv(MDiv* div)
         LAllocation lhs = useRegisterAtStart(div->lhs());
         if (rhs != 0 && uint32_t(1) << shift == rhs) {
             LDivPowTwoI* lir = new(alloc()) LDivPowTwoI(lhs, lhs, shift, false);
-            if (div->fallible())
+            if (div->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             defineReuseInput(lir, div, 0);
         } else {
             LUDivOrModConstant* lir = new(alloc()) LUDivOrModConstant(useRegister(div->lhs()),
                                                                       rhs, tempFixed(eax));
-            if (div->fallible())
+            if (div->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             defineFixed(lir, div, LAllocation(AnyRegister(edx)));
         }
         return;
@@ -304,8 +315,9 @@ LIRGeneratorX86Shared::lowerUDiv(MDiv* div)
     LUDivOrMod* lir = new(alloc()) LUDivOrMod(useRegister(div->lhs()),
                                               useRegister(div->rhs()),
                                               tempFixed(edx));
-    if (div->fallible())
+    if (div->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
     defineFixed(lir, div, LAllocation(AnyRegister(eax)));
 }
 
@@ -318,14 +330,16 @@ LIRGeneratorX86Shared::lowerUMod(MMod* mod)
 
         if (rhs != 0 && uint32_t(1) << shift == rhs) {
             LModPowTwoI* lir = new(alloc()) LModPowTwoI(useRegisterAtStart(mod->lhs()), shift);
-            if (mod->fallible())
+            if (mod->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             defineReuseInput(lir, mod, 0);
         } else {
             LUDivOrModConstant* lir = new(alloc()) LUDivOrModConstant(useRegister(mod->lhs()),
                                                                       rhs, tempFixed(edx));
-            if (mod->fallible())
+            if (mod->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             defineFixed(lir, mod, LAllocation(AnyRegister(eax)));
         }
         return;
@@ -334,8 +348,9 @@ LIRGeneratorX86Shared::lowerUMod(MMod* mod)
     LUDivOrMod* lir = new(alloc()) LUDivOrMod(useRegister(mod->lhs()),
                                               useRegister(mod->rhs()),
                                               tempFixed(eax));
-    if (mod->fallible())
+    if (mod->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
     defineFixed(lir, mod, LAllocation(AnyRegister(edx)));
 }
 
@@ -416,10 +431,11 @@ LIRGeneratorX86Shared::lowerCompareExchangeTypedArrayElement(MCompareExchangeTyp
         newval = useRegister(ins->newval());
     } else {
         fixedOutput = true;
-        if (useI386ByteRegisters && ins->isByteArray())
+        if (useI386ByteRegisters && ins->isByteArray()) {
             newval = useFixed(ins->newval(), ebx);
-        else
+        } else {
             newval = useRegister(ins->newval());
+        }
     }
 
     const LAllocation oldval = useRegister(ins->oldval());
@@ -427,10 +443,11 @@ LIRGeneratorX86Shared::lowerCompareExchangeTypedArrayElement(MCompareExchangeTyp
     LCompareExchangeTypedArrayElement* lir =
         new(alloc()) LCompareExchangeTypedArrayElement(elements, index, oldval, newval, tempDef);
 
-    if (fixedOutput)
+    if (fixedOutput) {
         defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
-    else
+    } else {
         define(lir, ins);
+    }
 }
 
 void
@@ -466,10 +483,11 @@ LIRGeneratorX86Shared::lowerAtomicExchangeTypedArrayElement(MAtomicExchangeTyped
     LAtomicExchangeTypedArrayElement* lir =
         new(alloc()) LAtomicExchangeTypedArrayElement(elements, index, value, tempDef);
 
-    if (useI386ByteRegisters && ins->isByteArray())
+    if (useI386ByteRegisters && ins->isByteArray()) {
         defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
-    else
+    } else {
         define(lir, ins);
+    }
 }
 
 void
@@ -493,10 +511,11 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
 
     if (!ins->hasUses()) {
         LAllocation value;
-        if (useI386ByteRegisters && ins->isByteArray() && !ins->value()->isConstant())
+        if (useI386ByteRegisters && ins->isByteArray() && !ins->value()->isConstant()) {
             value = useFixed(ins->value(), ebx);
-        else
+        } else {
             value = useRegisterOrConstant(ins->value());
+        }
 
         LAtomicTypedArrayElementBinopForEffect* lir =
             new(alloc()) LAtomicTypedArrayElementBinopForEffect(elements, index, value);
@@ -556,12 +575,14 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
             tempDef1 = temp();
         }
     } else if (useI386ByteRegisters && ins->isByteArray()) {
-        if (ins->value()->isConstant())
+        if (ins->value()->isConstant()) {
             value = useRegisterOrConstant(ins->value());
-        else
+        } else {
             value = useFixed(ins->value(), ebx);
-        if (bitOp)
+        }
+        if (bitOp) {
             tempDef1 = tempFixed(ecx);
+        }
     } else if (bitOp) {
         value = useRegisterOrConstant(ins->value());
         tempDef1 = temp();
@@ -577,12 +598,13 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
     LAtomicTypedArrayElementBinop* lir =
         new(alloc()) LAtomicTypedArrayElementBinop(elements, index, value, tempDef1, tempDef2);
 
-    if (fixedOutput)
+    if (fixedOutput) {
         defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
-    else if (reuseInput)
+    } else if (reuseInput) {
         defineReuseInput(lir, ins, LAtomicTypedArrayElementBinop::valueOp);
-    else
+    } else {
         define(lir, ins);
+    }
 }
 
 void
@@ -596,16 +618,18 @@ LIRGenerator::visitCopySign(MCopySign* ins)
     MOZ_ASSERT(lhs->type() == ins->type());
 
     LInstructionHelper<1, 2, 2>* lir;
-    if (lhs->type() == MIRType::Double)
+    if (lhs->type() == MIRType::Double) {
         lir = new(alloc()) LCopySignD();
-    else
+    } else {
         lir = new(alloc()) LCopySignF();
+    }
 
     // As lowerForFPU, but we want rhs to be in a FP register too.
     lir->setOperand(0, useRegisterAtStart(lhs));
     lir->setOperand(1, lhs != rhs ? useRegister(rhs) : useRegisterAtStart(rhs));
-    if (!Assembler::HasAVX())
+    if (!Assembler::HasAVX()) {
         defineReuseInput(lir, ins, 0);
-    else
+    } else {
         define(lir, ins);
+    }
 }

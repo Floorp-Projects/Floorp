@@ -145,8 +145,9 @@ MacroAssembler::popcnt32(Register input, Register output, Register tmp)
     // Equivalent to mozilla::CountPopulation32()
 
     movl(input, tmp);
-    if (input != output)
+    if (input != output) {
         movl(input, output);
+    }
     shrl(Imm32(1), output);
     andl(Imm32(0x55555555), output);
     subl(output, tmp);
@@ -381,8 +382,9 @@ MacroAssembler::rotateLeft(Imm32 count, Register input, Register dest)
 {
     MOZ_ASSERT(input == dest, "defineReuseInput");
     count.value &= 0x1f;
-    if (count.value)
+    if (count.value) {
         roll(count, input);
+    }
 }
 
 void
@@ -398,8 +400,9 @@ MacroAssembler::rotateRight(Imm32 count, Register input, Register dest)
 {
     MOZ_ASSERT(input == dest, "defineReuseInput");
     count.value &= 0x1f;
-    if (count.value)
+    if (count.value) {
         rorl(count, input);
+    }
 }
 
 void
@@ -424,22 +427,25 @@ inline void
 FlexibleShift32(MacroAssembler& masm, Register shift, Register dest, bool left, bool arithmetic = false)
 {
     if (shift != ecx) {
-        if (dest != ecx)
+        if (dest != ecx) {
             masm.push(ecx);
+        }
         masm.mov(shift, ecx);
     }
 
     if (left) {
         masm.lshift32(ecx, dest);
     } else {
-        if (arithmetic)
+        if (arithmetic) {
             masm.rshift32Arithmetic(ecx, dest);
-        else
+        } else {
             masm.rshift32(ecx, dest);
+        }
     }
 
-    if (shift != ecx && dest != ecx)
+    if (shift != ecx && dest != ecx) {
         masm.pop(ecx);
+    }
 }
 
 void
@@ -1229,8 +1235,9 @@ MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest)
 void
 MacroAssembler::memoryBarrier(MemoryBarrierBits barrier)
 {
-    if (barrier & MembarStoreLoad)
+    if (barrier & MembarStoreLoad) {
         storeLoadFence();
+    }
 }
 
 // ========================================================================
@@ -1245,10 +1252,12 @@ MacroAssembler::truncateFloat32ToInt64(Address src, Address dest, Register temp)
         return;
     }
 
-    if (src.base == esp)
+    if (src.base == esp) {
         src.offset += 2 * sizeof(int32_t);
-    if (dest.base == esp)
+    }
+    if (dest.base == esp) {
         dest.offset += 2 * sizeof(int32_t);
+    }
 
     reserveStack(2 * sizeof(int32_t));
 
@@ -1278,10 +1287,12 @@ MacroAssembler::truncateDoubleToInt64(Address src, Address dest, Register temp)
         return;
     }
 
-    if (src.base == esp)
+    if (src.base == esp) {
         src.offset += 2*sizeof(int32_t);
-    if (dest.base == esp)
+    }
+    if (dest.base == esp) {
         dest.offset += 2*sizeof(int32_t);
+    }
 
     reserveStack(2*sizeof(int32_t));
 
