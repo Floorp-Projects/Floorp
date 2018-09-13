@@ -32,12 +32,12 @@ SimpleTest.waitForFocus(() => {
     }
     function isComposing() {
       return isNSEditableElement() ? SpecialPowers.wrap(aEditor)
-                                                   .editor
-                                                   .composing :
-                                      SpecialPowers.wrap(window)
-                                                   .docShell
-                                                   .editor
-                                                   .composing;
+                                                  .editor
+                                                  .composing :
+                                     SpecialPowers.wrap(window)
+                                                  .docShell
+                                                  .editor
+                                                  .composing;
     }
     function clear() {
       if (isNSEditableElement()) {

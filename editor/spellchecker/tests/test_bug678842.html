@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=678842
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=678842">Mozilla Bug 678842</a>
 <p id="display"></p>
 <iframe id="content"></iframe>
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -30,7 +30,9 @@ var script;
 
 var loadListener = function(evt) {
   if (firstLoad) {
+    /* eslint-env mozilla/frame-script */
     script = SpecialPowers.loadChromeScript(function() {
+      // eslint-disable-next-line mozilla/use-services
       var dir = Cc["@mozilla.org/file/directory_service;1"]
                   .getService(Ci.nsIProperties)
                   .get("CurWorkD", Ci.nsIFile);
@@ -43,7 +45,7 @@ var loadListener = function(evt) {
                        .getService(Ci.mozISpellCheckingEngine);
 
       // Install en-GB dictionary.
-      en_GB = dir.clone();
+      let en_GB = dir.clone();
       en_GB.append("en-GB");
       hunspell.addDirectory(en_GB);
 

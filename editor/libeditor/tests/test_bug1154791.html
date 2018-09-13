@@ -34,9 +34,9 @@ SimpleTest.waitForFocus(function() {
     synthesizeKey("KEY_ArrowLeft");
     synthesizeKey("KEY_ArrowLeft");
 
-    setTimeout(function() {
+    SimpleTest.executeSoon(function() {
       synthesizeKey("KEY_Backspace");
-      setTimeout(function() {
+      SimpleTest.executeSoon(function() {
         sendString(" ");
 
         onSpellCheck(div, function() {
@@ -47,13 +47,12 @@ SimpleTest.waitForFocus(function() {
 
           SimpleTest.finish();
         });
-      }, 0);
-    }, 0);
+      });
+    });
   });
 });
 
 function getEditor() {
-  var Ci = SpecialPowers.Ci;
   var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
   return editingSession.getEditorForWindow(window);
 }

@@ -25,8 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850043
 <script>
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(() => {
-  let fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
-    getService(SpecialPowers.Ci.nsIFocusManager);
+  let fm = SpecialPowers.Services.focus;
 
   let element = document.getElementById("textarea");
   element.setSelectionRange(element.value.length, element.value.length);

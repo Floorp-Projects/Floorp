@@ -16,7 +16,6 @@
 
 <script class="testbody" type="application/javascript">
 function getEditor() {
-  const Ci = SpecialPowers.Ci;
   let editframe = window.frames[0];
   return SpecialPowers.wrap(editframe).docShell.editingSession
                       .getEditorForWindow(editframe);

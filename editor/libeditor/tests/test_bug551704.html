@@ -106,10 +106,11 @@ function continueTest() {
       return;
     }
     var div = divs[current++];
+    let type;
     if (div.textContent == "a") {
-      var type = typeBCDEF;
+      type = typeBCDEF;
     } else {
-      var type = typeABCDEF;
+      type = typeABCDEF;
     }
     var expectedHTML = "<div>abc</div><div>def<br></div>";
     var expectedText = "abc\ndef";

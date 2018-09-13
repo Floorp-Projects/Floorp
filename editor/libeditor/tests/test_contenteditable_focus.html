@@ -33,7 +33,7 @@
   </div>
 </div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -49,8 +49,7 @@ function runTests() {
 }
 
 function runTestsInternal() {
-  var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
-             getService(SpecialPowers.Ci.nsIFocusManager);
+  var fm = SpecialPowers.Services.focus;
   // XXX using selCon for checking the visibility of the caret, however,
   // selCon is shared in document, cannot get the element of owner of the
   // caret from javascript?
@@ -60,20 +59,8 @@ function runTestsInternal() {
         QueryInterface(SpecialPowers.Ci.nsISelectionController);
   var selection = window.getSelection();
 
-  var inputText = document.getElementById("inputText");
-  var inputTextReadonly = document.getElementById("inputTextReadonly");
-  var inputButton = document.getElementById("inputButton");
-  var button = document.getElementById("button");
   var editor = document.getElementById("editor");
   var inputTextInEditor = document.getElementById("inputTextInEditor");
-  var inputTextReadonlyInEditor = document.getElementById("inputTextReadonlyInEditor");
-  var inputButtonInEditor = document.getElementById("inputButtonInEditor");
-  var noeditableInEditor = document.getElementById("noeditableInEditor");
-  var spanInNoneditableInEditor = document.getElementById("spanInNoneditableInEditor");
-  var inputTextInNoneditableInEditor = document.getElementById("inputTextInNoneditableInEditor");
-  var inputTextReadonlyInNoneditableInEditor = document.getElementById("inputTextReadonlyInNoneditableInEditor");
-  var inputButtonInNoneditableInEditor = document.getElementById("inputButtonInNoneditableInEditor");
-  var buttonInNoneditableInEditor = document.getElementById("buttonInNoneditableInEditor");
   var spanInEditor = document.getElementById("spanInEditor");
   var otherEditor = document.getElementById("otherEditor");
 
@@ -108,7 +95,7 @@ function runTestsInternal() {
      "there is no selection range when the other editor has focus");
   range = selection.getRangeAt(0);
   ok(range.collapsed, "the selection range isn't collapsed");
-  var startNode = range.startContainer;
+  startNode = range.startContainer;
   is(startNode.nodeType, Node.TEXT_NODE, "the caret isn't set to the text node");
   is(startNode, otherEditor.firstChild, "the caret isn't set to the other editor");
   ok(selCon.caretVisible, "caret isn't visible in the other editor");
@@ -119,7 +106,7 @@ function runTestsInternal() {
   is(selection.rangeCount, 1, "selection range is lost from the document");
   range = selection.getRangeAt(0);
   ok(range.collapsed, "the selection range isn't collapsed");
-  var startNode = range.startContainer;
+  startNode = range.startContainer;
   is(startNode.nodeType, Node.TEXT_NODE, "the caret isn't set to the first text node");
   // XXX maybe, the caret can stay on the other editor if it's better.
   is(startNode, editor.firstChild,
@@ -148,7 +135,7 @@ function runTestsInternal() {
   ok(range.collapsed, "the selection range isn't collapsed");
   is(range.startOffset, 5,
      "the caret is moved when the editor was focused (offset)");
-  var startNode = range.startContainer;
+  startNode = range.startContainer;
   is(startNode.nodeType, 3, "the caret isn't in text node");
   is(startNode.parentNode, spanInEditor,
      "the caret is moved when the editor was focused (node)");

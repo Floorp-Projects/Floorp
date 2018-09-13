@@ -19,21 +19,21 @@ SimpleTest.waitForFocus(function() {
   let editor = document.getElementById("content");
 
   try {
-    let ret = SpecialPowers.unwrap(getTableEditor().getFirstRow(undefined));
+    SpecialPowers.unwrap(getTableEditor().getFirstRow(undefined));
     ok(false, "nsITableEditor.getFirstRow(undefined) should cause throwing an exception");
   } catch (e) {
     ok(true, "nsITableEditor.getFirstRow(undefined) should cause throwing an exception");
   }
 
   try {
-    let ret = SpecialPowers.unwrap(getTableEditor().getFirstRow(null));
+    SpecialPowers.unwrap(getTableEditor().getFirstRow(null));
     ok(false, "nsITableEditor.getFirstRow(null) should cause throwing an exception");
   } catch (e) {
     ok(true, "nsITableEditor.getFirstRow(null) should cause throwing an exception");
   }
 
   try {
-    let ret = SpecialPowers.unwrap(getTableEditor().getFirstRow(editor));
+    SpecialPowers.unwrap(getTableEditor().getFirstRow(editor));
     ok(false, "nsITableEditor.getFirstRow() should cause throwing an exception if given node is not in <table>");
   } catch (e) {
     ok(true, "nsITableEditor.getFirstRow() should cause throwing an exception if given node is not in <table>");
@@ -42,7 +42,7 @@ SimpleTest.waitForFocus(function() {
   // Set id to "test" for the argument for getFirstRow().
   // Set id to "expected" for the expected <tr> element result (if there is).
   // Set class of <table> to "hasAnonymousRow" if it does not has <tr> but will be anonymous <tr> element is created.
-  kTests = [
+  const kTests = [
     '<table id="test"><tr id="expected"><td>cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>',
     '<table><tr id="expected"><td id="test">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>',
     '<table><tr id="expected"><td id="test">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>',

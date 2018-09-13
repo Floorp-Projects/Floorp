@@ -43,7 +43,7 @@ SimpleTest.waitForFocus(function() {
 
   // Set id to "test" for the argument for getTableSize().
   // Set data-rows and data-cols to expected count of them.
-  kTests = [
+  const kTests = [
     '<table><tr><td id="test" data-rows="2" data-cols="3">cell1-1</td><td>cell1-2</td><td>cell1-3</td></tr><tr><td>cell2-1</td><td>cell2-2</td><td>cell2-3</td></tr></table>',
     '<table><tr id="test" data-rows="2" data-cols="3"><td>cell1-1</td><td>cell1-2</td><td>cell1-3</td></tr><tr><td>cell2-1</td><td>cell2-2</td><td>cell2-3</td></tr></table>',
     '<table id="test" data-rows="2" data-cols="3"><tr><td>cell1-1</td><td>cell1-2</td><td>cell1-3</td></tr><tr><td>cell2-1</td><td>cell2-2</td><td>cell2-3</td></tr></table>',

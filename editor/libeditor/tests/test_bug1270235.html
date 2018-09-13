@@ -23,7 +23,7 @@ SimpleTest.waitForFocus(() => {
   element.focus();
   let textNode = element.firstChild.firstChild;
   let node = textNode.splitText(0);
-  node.parentNode.removeChild(node);
+  node.remove();
 
   ok(!node.parentNode, "parent must be null");
 

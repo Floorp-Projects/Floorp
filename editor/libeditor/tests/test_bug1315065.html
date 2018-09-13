@@ -55,13 +55,13 @@ SimpleTest.waitForFocus(() => {
     }
   }
 
-  for (var i = 0; i < 4; i++) {
+  for (let i = 0; i < 4; i++) {
     const kDescription = i == 0 ? "Backspace from immediately after the last character" :
                                   "Backspace from " + i + "th empty text node";
     editor.focus();
     initForBackspace(i);
     synthesizeKey("KEY_Backspace");
-    var p = document.getElementById("p");
+    let p = document.getElementById("p");
     ok(p, kDescription + ": <p> element shouldn't be removed by Backspace key press");
     is(p.tagName.toLowerCase(), "p", kDescription + ": <p> element shouldn't be removed by Backspace key press");
     // When Backspace key is pressed even in empty text nodes, Gecko should not remove empty text nodes for now
@@ -112,7 +112,7 @@ SimpleTest.waitForFocus(() => {
     }
   }
 
-  for (var i = 0; i < 4; i++) {
+  for (let i = 0; i < 4; i++) {
     const kDescription = i == 0 ? "Delete from immediately before the first character" :
                                   "Delete from " + i + "th empty text node";
     editor.focus();

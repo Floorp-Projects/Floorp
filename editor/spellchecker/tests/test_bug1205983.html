@@ -35,7 +35,9 @@ var onSpellCheck =
 /** Test for Bug 1205983 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
+  /* eslint-env mozilla/frame-script */
   script = SpecialPowers.loadChromeScript(function() {
+    // eslint-disable-next-line mozilla/use-services
     var dir = Cc["@mozilla.org/file/directory_service;1"]
                 .getService(Ci.nsIProperties)
                 .get("CurWorkD", Ci.nsIFile);
@@ -65,7 +67,6 @@ function deFocus() {
   elem_de = document.getElementById("de-DE");
 
   onSpellCheck(elem_de, function() {
-    var Ci = SpecialPowers.Ci;
     var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
     editor_de = editingSession.getEditorForWindow(window);
     selcon_de = editor_de.selectionController;
@@ -89,6 +90,7 @@ function enFocus() {
 
   onSpellCheck(elem_en, function() {
     var spellchecker = inlineSpellChecker.spellChecker;
+    let currentDictonary;
     try {
       currentDictonary = spellchecker.GetCurrentDictionary();
     } catch (e) {}
@@ -113,8 +115,9 @@ function enFocus() {
 
     // After removal, the de_DE editor should refresh the spelling with en-US.
     onSpellCheck(elem_de, function() {
-      var sel = selcon_de.getSelection(selcon_de.SELECTION_SPELLCHECK);
-      is(sel.toString(), "heute" + "ist" + "ein" + "guter",
+      var endSel = selcon_de.getSelection(selcon_de.SELECTION_SPELLCHECK);
+      // eslint-disable-next-line no-useless-concat
+      is(endSel.toString(), "heute" + "ist" + "ein" + "guter",
          "some misspelled words expected: heute ist ein guter");
 
       // If we don't reset this, we cause massive leaks.

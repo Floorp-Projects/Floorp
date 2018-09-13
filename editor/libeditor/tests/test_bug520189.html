@@ -7,7 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=520182
   <title>Test for Bug 520182</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=520182">Mozilla Bug 520182</a>
@@ -78,6 +78,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=520182
 </div>
 <pre id="test">
 <script type="application/javascript">
+
+/* eslint-disable no-useless-concat */
 
 /** Test for Bug 520182 **/
 
@@ -536,6 +538,7 @@ var tests = [
 ];
 
 function doNextTest() {
+  /* global testCounter:true */
   if (typeof testCounter == "undefined")
     testCounter = 0;
   else if (++testCounter == tests.length) {
@@ -581,8 +584,7 @@ function runTest(test) {
     editor = SpecialPowers.wrap(win).docShell.editor;
     editor.pasteTransferable(trans);
   } else {
-    var clipboard = SpecialPowers.Cc["@mozilla.org/widget/clipboard;1"]
-                                 .getService(SpecialPowers.Ci.nsIClipboard);
+    var clipboard = SpecialPowers.Services.clipboard;
 
     clipboard.setData(trans, null, SpecialPowers.Ci.nsIClipboard.kGlobalClipboard);
 

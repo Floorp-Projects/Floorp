@@ -17,7 +17,7 @@ function boom() {
   }
   root.appendChild(document.createTextNode("Mozilla"));
   root.focus();
-  cespan = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  let cespan = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
   cespan.setAttributeNS(null, "contenteditable", "true");
   root.appendChild(cespan);
   try {

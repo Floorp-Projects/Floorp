@@ -68,7 +68,7 @@ SimpleTest.waitForFocus(function() {
   var theEdit = document.getElementById("editable");
   makeMailEditor();
 
-  for (i = 0; i < tests.length; i++) {
+  for (let i = 0; i < tests.length; i++) {
     theEdit.innerHTML = tests[i][0];
     theEdit.focus();
     var theText = theEdit.firstChild.firstChild;

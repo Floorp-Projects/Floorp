@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=408231">Mozilla Bug 408231</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -183,8 +183,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
     function callQueryCommandEnabled(cmdName) {
       var result;
       try {
-        result = "" + document.queryCommandEnabled( cmdName );
-      } catch ( error ) {
+        result = "" + document.queryCommandEnabled(cmdName);
+      } catch (error) {
         result = "name" in error ? error.name : "exception";
       }
       return result;
@@ -193,8 +193,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
     function callQueryCommandIndeterm(cmdName) {
       var result;
       try {
-        result = "" + document.queryCommandIndeterm( cmdName );
-      } catch ( error ) {
+        result = "" + document.queryCommandIndeterm(cmdName);
+      } catch (error) {
         result = "name" in error ? error.name : "exception";
       }
       return result;
@@ -203,8 +203,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
     function callQueryCommandState(cmdName) {
       var result;
       try {
-        result = "" + document.queryCommandState( cmdName );
-      } catch ( error ) {
+        result = "" + document.queryCommandState(cmdName);
+      } catch (error) {
         result = "name" in error ? error.name : "exception";
       }
       return result;
@@ -213,15 +213,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
     function callQueryCommandValue(cmdName) {
       var result;
       try {
-        result = "" + document.queryCommandValue( cmdName );
-      } catch ( error ) {
+        result = "" + document.queryCommandValue(cmdName);
+      } catch (error) {
         result = "name" in error ? error.name : "exception";
       }
       return result;
     }
 
     function testQueryCommand(expectedResults, fun, funName) {
-      for (i = 0; i < expectedResults.length; i++) {
+      for (let i = 0; i < expectedResults.length; i++) {
         var commandName = expectedResults[i][0];
         var expectedResult = expectedResults[i][1];
         var result = fun(commandName);
@@ -247,4 +247,3 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
 </pre>
 </body>
 </html>
-

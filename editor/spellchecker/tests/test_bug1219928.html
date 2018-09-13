@@ -29,8 +29,9 @@ var spellchecker;
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
+  var onSpellCheck =
+    SpecialPowers.Cu.import(
+      "resource://testing-common/AsyncSpellCheckTestHelper.jsm", null).onSpellCheck;
 
   var elem = document.getElementById("en-US");
   elem.focus();

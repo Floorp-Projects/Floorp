@@ -27,10 +27,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1053048
     var selectionListener = {
       count: 0,
       notifySelectionChanged(aDocument, aSelection, aReason) {
-      ok(true, "selectionStart: " + textarea.selectionStart);
-      ok(true, "selectionEnd: " + textarea.selectionEnd);
-      this.count++;
-    },
+        ok(true, "selectionStart: " + textarea.selectionStart);
+        ok(true, "selectionEnd: " + textarea.selectionEnd);
+        this.count++;
+      },
     };
 
     // Move caret to the end of the textarea

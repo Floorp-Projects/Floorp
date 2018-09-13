@@ -34,7 +34,6 @@ function editDoc() {
 }
 
 function getEditor() {
-  var Ci = SpecialPowers.Ci;
   var win = editDoc().defaultView;
   var editingSession = SpecialPowers.wrap(win).docShell.editingSession;
   return editingSession.getEditorForWindow(win);

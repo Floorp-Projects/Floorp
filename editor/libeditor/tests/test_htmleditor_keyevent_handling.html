@@ -13,12 +13,14 @@
   <div id="htmlEditor" contenteditable="true"><br></div>
 </div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
 
 <script class="testbody" type="application/javascript">
+
+/* eslint-disable no-nested-ternary */
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests, window);
@@ -33,8 +35,7 @@ function runTests() {
   document.execCommand("stylewithcss", false, "true");
   document.execCommand("defaultParagraphSeparator", false, "div");
 
-  var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
-    getService(SpecialPowers.Ci.nsIFocusManager);
+  var fm = SpecialPowers.Services.focus;
 
   var capturingPhase = { fired: false, prevented: false };
   var bubblingPhase = { fired: false, prevented: false };
@@ -83,6 +84,7 @@ function runTests() {
   SpecialPowers.addSystemEventListener(window, "keypress", listener, true);
   SpecialPowers.addSystemEventListener(window, "keypress", listener, false);
 
+  // eslint-disable-next-line complexity
   function doTest(aElement, aDescription,
                   aIsReadonly, aIsTabbable, aIsPlaintext) {
     function reset(aText) {

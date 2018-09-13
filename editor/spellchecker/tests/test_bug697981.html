@@ -35,7 +35,9 @@ var onSpellCheck =
 /** Test for Bug 697981 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
+  /* eslint-env mozilla/frame-script */
   script = SpecialPowers.loadChromeScript(function() {
+    // eslint-disable-next-line mozilla/use-services
     var dir = Cc["@mozilla.org/file/directory_service;1"]
                 .getService(Ci.nsIProperties)
                 .get("CurWorkD", Ci.nsIFile);
@@ -90,6 +92,7 @@ function enFocus() {
 
   onSpellCheck(elem_en, function() {
     var spellchecker = inlineSpellChecker.spellChecker;
+    let currentDictonary;
     try {
       currentDictonary = spellchecker.GetCurrentDictionary();
     } catch (e) {}
@@ -120,6 +123,7 @@ function enFocus() {
 
       // Check that the default English dictionary is loaded and that the spell check has worked.
       is(currentDictonary, "en-US", "expected en-US");
+      // eslint-disable-next-line no-useless-concat
       is(getMisspelledWords(editor_de), "heute" + "ist" + "ein" + "guter",
          "some misspelled words expected: heute ist ein guter");
 

@@ -11,8 +11,8 @@
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
+  const {onSpellCheck} = SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
   var x = document.getElementById("x");
   x.focus();
   onSpellCheck(x, function() {
@@ -27,7 +27,6 @@ function runTest() {
       var spellCheckTrueAgain = snapshotWindow(window);
       x.removeAttribute("spellcheck");
       var spellCheckNone = snapshotWindow(window);
-      var after = snapshotWindow(window);
       var ret = compareSnapshots(spellCheckTrue, spellCheckFalse, false)[0];
       ok(ret,
          "Setting the spellcheck attribute to false should work");

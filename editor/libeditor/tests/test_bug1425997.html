@@ -30,7 +30,6 @@ SimpleTest.expectAssertions(3, 3);
 SimpleTest.waitForFocus(function() {
   let selection = window.getSelection();
   let editor = document.getElementById("editor");
-  let originalContent = editor.innerHTML;
   function onCharacterDataModified() {
     // Until removing all NBSPs which were inserted by the editor,
     // emulates Backspace key with "delete" command.

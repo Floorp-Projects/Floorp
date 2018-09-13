@@ -31,7 +31,9 @@ var script;
 
 var loadListener = function(evt) {
   if (firstLoad) {
+    /* eslint-env mozilla/frame-script */
     script = SpecialPowers.loadChromeScript(function() {
+      // eslint-disable-next-line mozilla/use-services
       var dir = Cc["@mozilla.org/file/directory_service;1"]
                   .getService(Ci.nsIProperties)
                   .get("CurWorkD", Ci.nsIFile);
@@ -44,7 +46,7 @@ var loadListener = function(evt) {
                        .getService(Ci.mozISpellCheckingEngine);
 
       // Install en-GB dictionary.
-      en_GB = dir.clone();
+      let en_GB = dir.clone();
       en_GB.append("en-GB");
       hunspell.addDirectory(en_GB);
 

@@ -63,53 +63,54 @@ async function runTest() {
     } else {
       trans.addDataFlavor("text/unicode");
     }
-    var clip = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+    var clip = SpecialPowers.Services.clipboard;
     clip.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
     return trans;
   }
 
-  function makeTransferable(s, asHTML, target_id) {
-    var e = document.getElementById("i2");
-    var doc = e.contentDocument;
-    if (asHTML) {
-      doc.body.innerHTML = s;
-    } else {
-      var text = doc.createTextNode(s);
-      doc.body.appendChild(text);
-    }
-    doc.designMode = "on";
-    doc.defaultView.focus();
-    var selection = doc.defaultView.getSelection();
-    selection.removeAllRanges();
-    if (!target_id) {
-      selection.selectAllChildren(doc.body);
-    } else {
-      var range = document.createRange();
-      range.selectNode(doc.getElementById(target_id));
-      selection.addRange(range);
-    }
-
-    // We cannot use plain strings, we have to use nsSupportsString.
-    var supportsStringClass = SpecialPowers.Components.classes["@mozilla.org/supports-string;1"];
-    var ssData = supportsStringClass.createInstance(Ci.nsISupportsString);
-
-    // Create the transferable.
-    var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
-    trans.init(getLoadContext());
-
-    // Add the data to the transferable.
-    if (asHTML) {
-      trans.addDataFlavor("text/html");
-      ssData.data = doc.body.innerHTML;
-      trans.setTransferData("text/html", ssData, ssData.length * 2);
-    } else {
-      trans.addDataFlavor("text/unicode");
-      ssData.data = doc.body.innerHTML;
-      trans.setTransferData("text/unicode", ssData, ssData.length * 2);
-    }
-
-    return trans;
-  }
+  // Commented out as the test for it below is also commented out.
+  // function makeTransferable(s, asHTML, target_id) {
+  //   var e = document.getElementById("i2");
+  //   var doc = e.contentDocument;
+  //   if (asHTML) {
+  //     doc.body.innerHTML = s;
+  //   } else {
+  //     var text = doc.createTextNode(s);
+  //     doc.body.appendChild(text);
+  //   }
+  //   doc.designMode = "on";
+  //   doc.defaultView.focus();
+  //   var selection = doc.defaultView.getSelection();
+  //   selection.removeAllRanges();
+  //   if (!target_id) {
+  //     selection.selectAllChildren(doc.body);
+  //   } else {
+  //     var range = document.createRange();
+  //     range.selectNode(doc.getElementById(target_id));
+  //     selection.addRange(range);
+  //   }
+  //
+  //   // We cannot use plain strings, we have to use nsSupportsString.
+  //   var supportsStringClass = SpecialPowers.Components.classes["@mozilla.org/supports-string;1"];
+  //   var ssData = supportsStringClass.createInstance(Ci.nsISupportsString);
+  //
+  //   // Create the transferable.
+  //   var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
+  //   trans.init(getLoadContext());
+  //
+  //   // Add the data to the transferable.
+  //   if (asHTML) {
+  //     trans.addDataFlavor("text/html");
+  //     ssData.data = doc.body.innerHTML;
+  //     trans.setTransferData("text/html", ssData, ssData.length * 2);
+  //   } else {
+  //     trans.addDataFlavor("text/unicode");
+  //     ssData.data = doc.body.innerHTML;
+  //     trans.setTransferData("text/unicode", ssData, ssData.length * 2);
+  //   }
+  //
+  //   return trans;
+  // }
 
   async function copyToClipBoard(s, asHTML, target_id) {
     var e = document.getElementById("i2");
