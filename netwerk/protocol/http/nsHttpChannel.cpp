@@ -759,7 +759,7 @@ nsHttpChannel::ConnectOnTailUnblock()
     if (isTrackingResource && CheckFastBlocked()) {
         AntiTrackingCommon::NotifyRejection(this,
                                             nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
-        Unused << AsyncAbort(NS_ERROR_TRACKING_ANNOTATION_URI);
+        Unused << AsyncAbort(NS_ERROR_ABORT);
         CloseCacheEntry(false);
         return NS_OK;
     }
