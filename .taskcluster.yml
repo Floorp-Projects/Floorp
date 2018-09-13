@@ -13,10 +13,6 @@ tasks:
         ownerEmail: {$if: '"@" in push.owner', then: '${push.owner}', else: '${push.owner}@noreply.mozilla.org'}
         # ensure there's no trailing `/` on the repo URL
         repoUrl: {$if: 'repository.url[-1] == "/"', then: {$eval: 'repository.url[:-1]'}, else: {$eval: 'repository.url'}}
-        # Hardcode cron push info for now, so that we can transition to using real values without breaking callers of Chain of Trust
-        _pushId: {$if: 'tasks_for == "cron"', then: '-1', else: {$eval: 'push.pushlog_id'}}
-        _pushDate: {$if: 'tasks_for == "cron"', then: '0', else: {$eval: 'push.pushdate'}}
-        _pushComment: {$if: 'tasks_for == "cron"', then: '', else: {$eval: 'push.comment'}}
       in:
         taskId: {$if: 'tasks_for != "action"', then: '${as_slugid("decision")}'}
         taskGroupId:
@@ -67,12 +63,12 @@ tasks:
 
         routes:
           $flatten:
-            - "tc-treeherder.v2.${repository.project}.${push.revision}.${_pushId}"
+            - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
             - $if: 'tasks_for == "hg-push"'
               then:
                 - "index.gecko.v2.${repository.project}.latest.taskgraph.decision"
                 - "index.gecko.v2.${repository.project}.revision.${push.revision}.taskgraph.decision"
-                - "index.gecko.v2.${repository.project}.pushlog-id.${_pushId}.decision"
+                - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision"
                 - "notify.email.${ownerEmail}.on-failed"
                 - "notify.email.${ownerEmail}.on-exception"
                 # These are the old index routes for the decision task.
@@ -84,10 +80,9 @@ tasks:
                 then:
                 - "notify.email.taskcluster-notifications+action-task@mozilla.com.on-failed"
                 - "notify.email.taskcluster-notifications+action-task@mozilla.com.on-exception"
-                - "index.gecko.v2.${repository.project}.pushlog-id.${_pushId}.actions.${ownTaskId}"
+                - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.actions.${ownTaskId}"
                 else:  # cron
                 - "index.gecko.v2.${repository.project}.latest.taskgraph.decision-${cron.job_name}"
-                # These are the old index routes for the decision task.
                 - "index.gecko.v2.${repository.project}.latest.firefox.decision-${cron.job_name}"
 
         scopes:
@@ -119,7 +114,7 @@ tasks:
                 GECKO_HEAD_REPOSITORY: '${repoUrl}'
                 GECKO_HEAD_REF: '${push.revision}'
                 GECKO_HEAD_REV: '${push.revision}'
-                GECKO_COMMIT_MSG: {$if: 'tasks_for != "action"', then: '${_pushComment}'}
+                GECKO_COMMIT_MSG: {$if: 'tasks_for != "action"', then: '${push.comment}'}
                 HG_STORE_PATH: /builds/worker/checkouts/hg-store
                 TASKCLUSTER_CACHES: /builds/worker/checkouts
               - $if: 'tasks_for == "action"'
@@ -162,8 +157,8 @@ tasks:
                   cd /builds/worker/checkouts/gecko &&
                   ln -s /builds/worker/artifacts artifacts &&
                   ./mach --log-no-times taskgraph decision
-                  --pushlog-id='${_pushId}'
-                  --pushdate='${_pushDate}'
+                  --pushlog-id='${push.pushlog_id}'
+                  --pushdate='${push.pushdate}'
                   --project='${repository.project}'
                   --message="$GECKO_COMMIT_MSG"
                   --owner='${ownerEmail}'
