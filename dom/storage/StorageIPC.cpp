@@ -15,7 +15,6 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/Unused.h"
-#include "nsIDiskSpaceWatcher.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -625,60 +624,6 @@ StorageDBParent::ReleaseIPDLReference()
 
 namespace {
 
-class CheckLowDiskSpaceRunnable
-  : public Runnable
-{
-  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
-  RefPtr<StorageDBParent> mParent;
-  bool mLowDiskSpace;
-
-public:
-  explicit CheckLowDiskSpaceRunnable(StorageDBParent* aParent)
-    : Runnable("dom::CheckLowDiskSpaceRunnable")
-    , mOwningEventTarget(GetCurrentThreadEventTarget())
-    , mParent(aParent)
-    , mLowDiskSpace(false)
-  {
-    AssertIsOnBackgroundThread();
-    MOZ_ASSERT(aParent);
-  }
-
-private:
-  NS_IMETHOD Run() override
-  {
-    if (IsOnBackgroundThread()) {
-      MOZ_ASSERT(mParent);
-
-      if (!mParent->IPCOpen()) {
-        return NS_OK;
-      }
-
-      if (mLowDiskSpace) {
-        mozilla::Unused << mParent->SendObserve(
-          nsDependentCString("low-disk-space"), EmptyString(), EmptyCString());
-      }
-
-      mParent = nullptr;
-
-      return NS_OK;
-    }
-
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsCOMPtr<nsIDiskSpaceWatcher> diskSpaceWatcher =
-      do_GetService("@mozilla.org/toolkit/disk-space-watcher;1");
-    if (!diskSpaceWatcher) {
-      return NS_OK;
-    }
-
-    diskSpaceWatcher->GetIsDiskFull(&mLowDiskSpace);
-
-    MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
-
-    return NS_OK;
-  }
-};
-
 } // namespace
 
 StorageDBParent::StorageDBParent(const nsString& aProfilePath)
@@ -720,14 +665,6 @@ StorageDBParent::Init()
     storageThread->GetOriginsHavingData(&scopes);
     mozilla::Unused << SendOriginsHavingData(scopes);
   }
-
-  // We need to check if the device is in a low disk space situation, so
-  // we can forbid in that case any write in localStorage.
-
-  RefPtr<CheckLowDiskSpaceRunnable> runnable =
-    new CheckLowDiskSpaceRunnable(this);
-
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
 }
 
 StorageDBParent::CacheParentBridge*
