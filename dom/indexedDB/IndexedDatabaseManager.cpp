@@ -8,11 +8,9 @@
 
 #include "chrome/common/ipc_channel.h" // for IPC::Channel::kMaximumMessageSize
 #include "nsIConsoleService.h"
-#include "nsIDiskSpaceWatcher.h"
 #include "nsIDOMWindow.h"
 #include "nsIEventTarget.h"
 #include "nsIFile.h"
-#include "nsIObserverService.h"
 #include "nsIScriptError.h"
 #include "nsIScriptGlobalObject.h"
 
@@ -62,11 +60,6 @@
 #include "mozilla/dom/IDBVersionChangeEventBinding.h"
 
 #define IDB_STR "indexedDB"
-
-// The two possible values for the data argument when receiving the disk space
-// observer notification.
-#define LOW_DISK_SPACE_DATA_FULL "full"
-#define LOW_DISK_SPACE_DATA_FREE "free"
 
 namespace mozilla {
 namespace dom {
@@ -313,8 +306,6 @@ Atomic<IndexedDatabaseManager::LoggingMode>
   IndexedDatabaseManager::sLoggingMode(
     IndexedDatabaseManager::Logging_Disabled);
 
-mozilla::Atomic<bool> IndexedDatabaseManager::sLowDiskSpaceMode(false);
-
 // static
 IndexedDatabaseManager*
 IndexedDatabaseManager::GetOrCreate()
@@ -328,24 +319,6 @@ IndexedDatabaseManager::GetOrCreate()
 
   if (!gDBManager) {
     sIsMainProcess = XRE_IsParentProcess();
-
-    if (sIsMainProcess && Preferences::GetBool("disk_space_watcher.enabled", false)) {
-      // See if we're starting up in low disk space conditions.
-      nsCOMPtr<nsIDiskSpaceWatcher> watcher =
-        do_GetService(DISKSPACEWATCHER_CONTRACTID);
-      if (watcher) {
-        bool isDiskFull;
-        if (NS_SUCCEEDED(watcher->GetIsDiskFull(&isDiskFull))) {
-          sLowDiskSpaceMode = isDiskFull;
-        }
-        else {
-          NS_WARNING("GetIsDiskFull failed!");
-        }
-      }
-      else {
-        NS_WARNING("No disk space watcher component available!");
-      }
-    }
 
     RefPtr<IndexedDatabaseManager> instance(new IndexedDatabaseManager());
 
@@ -380,13 +353,6 @@ IndexedDatabaseManager::Init()
   // During Init() we can't yet call IsMainProcess(), just check sIsMainProcess
   // directly.
   if (sIsMainProcess) {
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    NS_ENSURE_STATE(obs);
-
-    nsresult rv =
-      obs->AddObserver(this, DISKSPACEWATCHER_OBSERVER_TOPIC, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     mDeleteTimer = NS_NewTimer();
     NS_ENSURE_STATE(mDeleteTimer);
 
@@ -692,16 +658,6 @@ IndexedDatabaseManager::IsMainProcess()
   NS_ASSERTION((XRE_IsParentProcess()) ==
                sIsMainProcess, "XRE_GetProcessType changed its tune!");
   return sIsMainProcess;
-}
-
-//static
-bool
-IndexedDatabaseManager::InLowDiskSpaceMode()
-{
-  NS_ASSERTION(gDBManager,
-               "InLowDiskSpaceMode() called before indexedDB has been "
-               "initialized!");
-  return sLowDiskSpaceMode;
 }
 
 // static
@@ -1109,37 +1065,7 @@ IndexedDatabaseManager::GetLocale()
 
 NS_IMPL_ADDREF(IndexedDatabaseManager)
 NS_IMPL_RELEASE_WITH_DESTROY(IndexedDatabaseManager, Destroy())
-NS_IMPL_QUERY_INTERFACE(IndexedDatabaseManager, nsIObserver, nsITimerCallback,
-                        nsINamed)
-
-NS_IMETHODIMP
-IndexedDatabaseManager::Observe(nsISupports* aSubject, const char* aTopic,
-                                const char16_t* aData)
-{
-  NS_ASSERTION(IsMainProcess(), "Wrong process!");
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (!strcmp(aTopic, DISKSPACEWATCHER_OBSERVER_TOPIC)) {
-    NS_ASSERTION(aData, "No data?!");
-
-    const nsDependentString data(aData);
-
-    if (data.EqualsLiteral(LOW_DISK_SPACE_DATA_FULL)) {
-      sLowDiskSpaceMode = true;
-    }
-    else if (data.EqualsLiteral(LOW_DISK_SPACE_DATA_FREE)) {
-      sLowDiskSpaceMode = false;
-    }
-    else {
-      MOZ_ASSERT_UNREACHABLE("Unknown data value!");
-    }
-
-    return NS_OK;
-  }
-
-   MOZ_ASSERT_UNREACHABLE("Unknown topic!");
-   return NS_ERROR_UNEXPECTED;
-}
+NS_IMPL_QUERY_INTERFACE(IndexedDatabaseManager, nsITimerCallback, nsINamed)
 
 NS_IMETHODIMP
 IndexedDatabaseManager::Notify(nsITimer* aTimer)
