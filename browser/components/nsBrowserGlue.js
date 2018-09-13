@@ -71,7 +71,6 @@ let ACTORS = {
   ClickHandler: {
     child: {
       module: "resource:///actors/ClickHandlerChild.jsm",
-      group: "browsers",
       events: {
         "click": {capture: true, mozSystemGroup: true},
       },
