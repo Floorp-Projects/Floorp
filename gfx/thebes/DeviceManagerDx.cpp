@@ -201,7 +201,15 @@ DeviceManagerDx::CreateCompositorDevices()
     return false;
   }
 
-  PreloadAttachmentsOnCompositorThread();
+  // When WR is used, do not preload attachments for D3D11 Non-WR compositor.
+  //
+  // Fallback from WR to D3D11 Non-WR compositor without re-creating gpu process
+  // could happen when WR causes error. In this case, the attachments are loaded
+  // synchronously.
+  if (!gfx::gfxVars::UseWebRender()) {
+    PreloadAttachmentsOnCompositorThread();
+  }
+
   return true;
 }
 

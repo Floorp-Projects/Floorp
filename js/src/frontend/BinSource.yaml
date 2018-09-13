@@ -368,7 +368,7 @@ BinaryExpression:
             pnk != ParseNodeKind::Pow /* ParseNodeKind::Pow is not left-associative */)
         {
             // Regroup left-associative operations into lists.
-            left->appendWithoutOrderAssumption(right);
+            left->template as<ListNode>().appendWithoutOrderAssumption(right);
             result = left;
         } else {
             BINJS_TRY_DECL(list, factory_.newList(pnk, tokenizer_->pos(start)));
@@ -434,6 +434,8 @@ CallExpression:
 
 
 CatchClause:
+    type-ok:
+        LexicalScopeNode*
     init: |
         ParseContext::Statement stmt(parseContext_, StatementKind::Catch);
         ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
@@ -640,7 +642,7 @@ ForInOfBinding:
     build: |
         // Restored by `kindGuard`.
         variableDeclarationKind_ = kind_;
-        MOZ_TRY(checkBinding(binding->pn_atom->asPropertyName()));
+        MOZ_TRY(checkBinding(binding->template as<NameNode>().atom()->asPropertyName()));
         auto pnk =
             kind_ == VariableDeclarationKind::Let
                 ? ParseNodeKind::Let
@@ -661,7 +663,8 @@ ForInStatement:
         BINJS_TRY(scope.init(parseContext_));
     build: |
         BINJS_TRY_DECL(forHead, factory_.newForInOrOfHead(ParseNodeKind::ForIn, left, right, tokenizer_->pos(start)));
-        BINJS_TRY_DECL(result, factory_.newForStatement(start, forHead, body, /*flags*/ 0));
+        ParseNode* result;
+        BINJS_TRY_VAR(result, factory_.newForStatement(start, forHead, body, /*flags*/ 0));
 
         if (!scope.isEmpty()) {
             BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
@@ -669,6 +672,8 @@ ForInStatement:
         }
 
 FormalParameters:
+    type-ok:
+        ListNode*
     build: |
         auto result = items;
         if (rest) {
@@ -687,7 +692,8 @@ ForStatement:
         BINJS_TRY(scope.init(parseContext_));
     build: |
         BINJS_TRY_DECL(forHead, factory_.newForHead(init, test, update, tokenizer_->pos(start)));
-        BINJS_TRY_DECL(result, factory_.newForStatement(start, forHead, body, /* iflags = */ 0));
+        ParseNode* result;
+        BINJS_TRY_VAR(result, factory_.newForStatement(start, forHead, body, /* iflags = */ 0));
 
         if (!scope.isEmpty()) {
             BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
@@ -721,16 +727,22 @@ LabelledStatement:
         BINJS_TRY_DECL(result, factory_.newLabeledStatement(label->asPropertyName(), body, start));
 
 ListOfDirective:
+    type-ok:
+        ListNode*
     init:
         BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
     append:
         factory_.addStatementToList(result, item);
 
 ListOfObjectProperty:
+    type-ok:
+        ListNode*
     init:
         BINJS_TRY_DECL(result, factory_.newObjectLiteral(start));
 
 ListOfOptionalSpreadElementOrExpression:
+    type-ok:
+        ListNode*
     init:
         BINJS_TRY_DECL(result, factory_.newArrayLiteral(start));
     append: |
@@ -740,12 +752,16 @@ ListOfOptionalSpreadElementOrExpression:
             BINJS_TRY(factory_.addElision(result, tokenizer_->pos(start)));
 
 ListOfParameter:
+    type-ok:
+        ListNode*
     init: |
         BINJS_TRY_DECL(result, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
     append:
         factory_.addList(/* list = */ result, /* kid = */ item);
 
 ListOfStatement:
+    type-ok:
+        ListNode*
     init:
         BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
     append:
@@ -753,18 +769,24 @@ ListOfStatement:
 
 
 #ListOfSpreadElementOrExpression:
+#    type-ok:
+#        ListNode*
 #    init:
 #        BINJS_TRY_DECL(result, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos()));
 #    append:
 #        result->appendWithoutOrderAssumption(item);
 
 ListOfSwitchCase:
+    type-ok:
+        ListNode*
     init:
         BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
     append:
         factory_.addCaseStatementToList(result, item);
 
 ListOfVariableDeclarator:
+    type-ok:
+        ListNode*
     init: |
         BINJS_TRY_DECL(result, factory_.newDeclarationList(ParseNodeKind::Const /*Placeholder*/,
             tokenizer_->pos(start)));
@@ -848,11 +870,15 @@ OptionalAssertedParameterScope:
     type-ok:
         Ok
 
+OptionalCatchClause:
+    type-ok:
+        LexicalScopeNode*
+
 Parameter:
     sum-arms:
         BindingIdentifier:
             after: |
-                if (!parseContext_->positionalFormalParameterNames().append(result->pn_atom))
+                if (!parseContext_->positionalFormalParameterNames().append(result->template as<NameNode>().atom()))
                     return raiseOOM();
                 if (parseContext_->isFunctionBox())
                     parseContext_->functionBox()->length++;
@@ -891,6 +917,8 @@ ShorthandProperty:
         BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, name, AccessorType::None));
 
 SwitchCase:
+    type-ok:
+        CaseClause*
     build: |
         BINJS_TRY_DECL(result, factory_.newCaseOrDefault(start, test, consequent));
 
@@ -908,7 +936,7 @@ SwitchStatementWithDefault:
         // Concatenate `preDefaultCase`, `defaultCase`, `postDefaultCase`
         auto cases = preDefaultCases;
         factory_.addList(cases, defaultCase);
-        ParseNode* iter = postDefaultCases->pn_head;
+        ParseNode* iter = postDefaultCases->head();
         while (iter) {
             ParseNode* next = iter->pn_next;
             factory_.addList(cases, iter);
@@ -1067,7 +1095,7 @@ VariableDeclaration:
 
     build: |
         // By specification, the list may not be empty.
-        if (declarators->pn_count == 0)
+        if (declarators->empty())
             return raiseEmpty("VariableDeclaration");
 
         ParseNodeKind pnk;
@@ -1090,11 +1118,11 @@ VariableDeclarator:
         ParseNode* result;
         if (binding->isKind(ParseNodeKind::Name)) {
             // `var foo [= bar]``
-            MOZ_TRY(checkBinding(binding->pn_atom->asPropertyName()));
+            MOZ_TRY(checkBinding(binding->template as<NameNode>().atom()->asPropertyName()));
 
-            BINJS_TRY_VAR(result, factory_.newName(binding->pn_atom->asPropertyName(), tokenizer_->pos(start), cx_));
+            BINJS_TRY_VAR(result, factory_.newName(binding->template as<NameNode>().atom()->asPropertyName(), tokenizer_->pos(start), cx_));
             if (init)
-                result->pn_expr = init;
+                result->as<NameNode>().setInitializer(init);
         } else {
             // `var pattern = bar`
             if (!init) {

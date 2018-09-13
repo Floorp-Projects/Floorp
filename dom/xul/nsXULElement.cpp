@@ -620,27 +620,6 @@ nsXULElement::UpdateEditableState(bool aNotify)
     UpdateState(aNotify);
 }
 
-#ifdef DEBUG
-/**
- * Returns true if the user-agent style sheet rules for this XUL element are
- * in minimal-xul.css instead of xul.css.
- */
-static inline bool XULElementsRulesInMinimalXULSheet(nsAtom* aTag)
-{
-  return // scrollbar parts:
-         aTag == nsGkAtoms::scrollbar ||
-         aTag == nsGkAtoms::scrollbarbutton ||
-         aTag == nsGkAtoms::scrollcorner ||
-         aTag == nsGkAtoms::slider ||
-         aTag == nsGkAtoms::thumb ||
-         // other
-         aTag == nsGkAtoms::datetimebox ||
-         aTag == nsGkAtoms::resizer ||
-         aTag == nsGkAtoms::label ||
-         aTag == nsGkAtoms::videocontrols;
-}
-#endif
-
 class XULInContentErrorReporter : public Runnable
 {
 public:
@@ -697,11 +676,23 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
     // 'scrollbar' that may be created implicitly for their content (those
     // rules being in minimal-xul.css).
     //
-    // This assertion makes sure no other XUL element than the ones in the
-    // minimal XUL sheet is used in the bindings.
-    if (!XULElementsRulesInMinimalXULSheet(NodeInfo()->NameAtom())) {
-      NS_ERROR("Unexpected XUL element in non-XUL doc");
-    }
+    // This assertion makes sure no other XUL element is used in a non-XUL
+    // document.
+    nsAtom* tag = NodeInfo()->NameAtom();
+    MOZ_ASSERT(
+      // scrollbar parts
+      tag == nsGkAtoms::scrollbar ||
+      tag == nsGkAtoms::scrollbarbutton ||
+      tag == nsGkAtoms::scrollcorner ||
+      tag == nsGkAtoms::slider ||
+      tag == nsGkAtoms::thumb ||
+      // other
+      tag == nsGkAtoms::datetimebox ||
+      tag == nsGkAtoms::resizer ||
+      tag == nsGkAtoms::label ||
+      tag == nsGkAtoms::videocontrols,
+      "Unexpected XUL element in non-XUL doc"
+    );
   }
 #endif
 

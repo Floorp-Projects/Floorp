@@ -16,7 +16,6 @@
 //----------------------------------------------------------------------
 // Interface nsISupports [implementation]
 NS_IMPL_ISUPPORTS(nsCyrXPCOMDetector, nsICharsetDetector)
-NS_IMPL_ISUPPORTS(nsCyrXPCOMStringDetector, nsIStringCharsetDetector)
 
 void nsCyrillicDetector::HandleData(const char* aBuf, uint32_t aLen)
 {
@@ -124,38 +123,3 @@ void nsCyrXPCOMDetector::Report(const char* aCharset)
   NS_ASSERTION(mObserver != nullptr , "have not init yet");
   mObserver->Notify(aCharset, eBestAnswer);
 }
-
-//---------------------------------------------------------------------
-nsCyrXPCOMStringDetector:: nsCyrXPCOMStringDetector(uint8_t aItems,
-                      const uint8_t ** aCyrillicClass,
-                      const char **aCharsets)
-	     : nsCyrillicDetector(aItems, aCyrillicClass, aCharsets)
-	     , mResult(nullptr)
-{
-}
-
-//---------------------------------------------------------------------
-nsCyrXPCOMStringDetector::~nsCyrXPCOMStringDetector()
-{
-}
-
-//---------------------------------------------------------------------
-void nsCyrXPCOMStringDetector::Report(const char *aCharset)
-{
-   mResult = aCharset;
-}
-
-//---------------------------------------------------------------------
-NS_IMETHODIMP nsCyrXPCOMStringDetector::DoIt(const char* aBuf, uint32_t aLen,
-                     const char** oCharset, nsDetectionConfident &oConf)
-{
-   mResult = nullptr;
-   mDone = false;
-   this->HandleData(aBuf, aLen);
-   this->DataEnd();
-   *oCharset=mResult;
-   oConf = eBestAnswer;
-   return NS_OK;
-}
-
-

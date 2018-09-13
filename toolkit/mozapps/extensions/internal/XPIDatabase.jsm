@@ -579,7 +579,7 @@ class AddonInternal {
     }
   }
 
-  async setUserDisabled(val) {
+  async setUserDisabled(val, allowSystemAddons = false) {
     if (val == (this.userDisabled || this.softDisabled)) {
       return;
     }
@@ -587,7 +587,7 @@ class AddonInternal {
     if (this.inDatabase) {
       // System add-ons should not be user disabled, as there is no UI to
       // re-enable them.
-      if (this.location.isSystem) {
+      if (this.location.isSystem && !allowSystemAddons) {
         throw new Error(`Cannot disable system add-on ${this.id}`);
       }
       await XPIDatabase.updateAddonDisabledState(this, val);
@@ -980,12 +980,14 @@ AddonWrapper = class {
     return addon.softDisabled || addon.userDisabled;
   }
 
-  enable() {
-    return addonFor(this).setUserDisabled(false);
+  enable(options = {}) {
+    const {allowSystemAddons = false} = options;
+    return addonFor(this).setUserDisabled(false, allowSystemAddons);
   }
 
-  disable() {
-    return addonFor(this).setUserDisabled(true);
+  disable(options = {}) {
+    const {allowSystemAddons = false} = options;
+    return addonFor(this).setUserDisabled(true, allowSystemAddons);
   }
 
   set softDisabled(val) {

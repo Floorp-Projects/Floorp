@@ -45,8 +45,7 @@ SimpleTest.waitForFocus(function() {
 
     is(sel.toString(), "missspelled", "one misspelled word expected: missspelled");
 
-    spellchecker = SpecialPowers.Cc["@mozilla.org/editor/editorspellchecker;1"]
-                                .createInstance(Ci.nsIEditorSpellCheck);
+    spellchecker = SpecialPowers.Cu.createSpellChecker();
     spellchecker.setFilterType(spellchecker.FILTERTYPE_NORMAL);
     spellchecker.InitSpellChecker(editor, false, spellCheckStarted);
   });

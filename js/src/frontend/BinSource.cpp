@@ -184,13 +184,13 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNode* name,
-                                 ParseNode* params, ParseNode* body, FunctionBox* funbox)
+                                 ListNode* params, ParseNode* body, FunctionBox* funbox)
 {
     TokenPos pos = tokenizer_->pos(start);
 
     // Set the argument count for building argument packets. Function.length is handled
     // by setting the appropriate funbox field during argument parsing.
-    funbox->function()->setArgCount(params ? uint16_t(params->pn_count) : 0);
+    funbox->function()->setArgCount(params ? uint16_t(params->count()) : 0);
 
     // ParseNode represents the body as concatenated after the params.
     params->appendWithoutOrderAssumption(body);
@@ -365,21 +365,24 @@ BinASTParser<Tok>::checkFunctionClosedVars()
 }
 
 template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::appendDirectivesToBody(ParseNode* body, ParseNode* directives)
+BinASTParser<Tok>::appendDirectivesToBody(ListNode* body, ListNode* directives)
 {
-    ParseNode* result = body;
-    if (directives && directives->pn_count >= 1) {
-        MOZ_ASSERT(directives->isArity(PN_LIST));
+    if (!directives) {
+        return body;
+    }
 
+    ParseNode* result = body;
+    if (!directives->empty()) {
         // Convert directive list to a list of strings.
-        BINJS_TRY_DECL(prefix, factory_.newStatementList(directives->pn_head->pn_pos));
-        for (ParseNode* iter = directives->pn_head; iter != nullptr; iter = iter->pn_next) {
+        auto pos = directives->head()->pn_pos;
+        BINJS_TRY_DECL(prefix, factory_.newStatementList(pos));
+        for (ParseNode* iter : directives->contents()) {
             BINJS_TRY_DECL(statement, factory_.newExprStatement(iter, iter->pn_pos.end));
             prefix->appendWithoutOrderAssumption(statement);
         }
 
         // Prepend to the body.
-        ParseNode* iter = body->pn_head;
+        ParseNode* iter = body->head();
         while (iter) {
             ParseNode* next = iter->pn_next;
             prefix->appendWithoutOrderAssumption(iter);
@@ -388,9 +391,6 @@ BinASTParser<Tok>::appendDirectivesToBody(ParseNode* body, ParseNode* directives
         prefix->setKind(body->getKind());
         prefix->setOp(body->getOp());
         result = prefix;
-#if defined(DEBUG)
-        result->checkListConsistency();
-#endif // defined(DEBUG)
     }
 
     return result;
