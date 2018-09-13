@@ -9,32 +9,32 @@
  */
 
 dictionary UDPOptions {
-    DOMString      localAddress;
-    unsigned short localPort;
-    DOMString      remoteAddress;
-    unsigned short remotePort;
-    boolean        addressReuse = true;
-    boolean        loopback = false;
+  DOMString      localAddress;
+  unsigned short localPort;
+  DOMString      remoteAddress;
+  unsigned short remotePort;
+  boolean        addressReuse = true;
+  boolean        loopback = false;
 };
 
 [Constructor (optional UDPOptions options),
  Pref="dom.udpsocket.enabled",
  ChromeOnly]
 interface UDPSocket : EventTarget {
-    readonly    attribute DOMString?       localAddress;
-    readonly    attribute unsigned short?  localPort;
-    readonly    attribute DOMString?       remoteAddress;
-    readonly    attribute unsigned short?  remotePort;
-    readonly    attribute boolean          addressReuse;
-    readonly    attribute boolean          loopback;
-    readonly    attribute SocketReadyState readyState;
-    readonly    attribute Promise<void>    opened;
-    readonly    attribute Promise<void>    closed;
-//    readonly    attribute ReadableStream   input; //Bug 1056444: Stream API is not ready
-//    readonly    attribute WriteableStream  output; //Bug 1056444: Stream API is not ready
+  readonly    attribute DOMString?       localAddress;
+  readonly    attribute unsigned short?  localPort;
+  readonly    attribute DOMString?       remoteAddress;
+  readonly    attribute unsigned short?  remotePort;
+  readonly    attribute boolean          addressReuse;
+  readonly    attribute boolean          loopback;
+  readonly    attribute SocketReadyState readyState;
+  readonly    attribute Promise<void>    opened;
+  readonly    attribute Promise<void>    closed;
+//  readonly    attribute ReadableStream   input; //Bug 1056444: Stream API is not ready
+//  readonly    attribute WriteableStream  output; //Bug 1056444: Stream API is not ready
                 attribute EventHandler     onmessage; //Bug 1056444: use event interface before Stream API is ready
-    Promise<void> close ();
-    [Throws] void    joinMulticastGroup (DOMString multicastGroupAddress);
-    [Throws] void    leaveMulticastGroup (DOMString multicastGroupAddress);
-    [Throws] boolean send ((DOMString or Blob or ArrayBuffer or ArrayBufferView) data, optional DOMString? remoteAddress, optional unsigned short? remotePort); //Bug 1056444: use send method before Stream API is ready
+  Promise<void> close ();
+  [Throws] void    joinMulticastGroup (DOMString multicastGroupAddress);
+  [Throws] void    leaveMulticastGroup (DOMString multicastGroupAddress);
+  [Throws] boolean send ((DOMString or Blob or ArrayBuffer or ArrayBufferView) data, optional DOMString? remoteAddress, optional unsigned short? remotePort); //Bug 1056444: use send method before Stream API is ready
 };

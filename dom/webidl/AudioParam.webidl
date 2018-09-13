@@ -13,31 +13,31 @@
 [Pref="dom.webaudio.enabled"]
 interface AudioParam {
 
-                    attribute float value;
-    readonly        attribute float defaultValue;
-    readonly        attribute float minValue;
-    readonly        attribute float maxValue;
+                  attribute float value;
+  readonly        attribute float defaultValue;
+  readonly        attribute float minValue;
+  readonly        attribute float maxValue;
 
-    // Parameter automation. 
-    [Throws]
-    AudioParam setValueAtTime(float value, double startTime);
-    [Throws]
-    AudioParam linearRampToValueAtTime(float value, double endTime);
-    [Throws]
-    AudioParam exponentialRampToValueAtTime(float value, double endTime);
+  // Parameter automation.
+  [Throws]
+  AudioParam setValueAtTime(float value, double startTime);
+  [Throws]
+  AudioParam linearRampToValueAtTime(float value, double endTime);
+  [Throws]
+  AudioParam exponentialRampToValueAtTime(float value, double endTime);
 
-    // Exponentially approach the target value with a rate having the given time constant. 
-    [Throws]
-    AudioParam setTargetAtTime(float target, double startTime, double timeConstant);
+  // Exponentially approach the target value with a rate having the given time constant.
+  [Throws]
+  AudioParam setTargetAtTime(float target, double startTime, double timeConstant);
 
-    // Sets an array of arbitrary parameter values starting at time for the given duration. 
-    // The number of values will be scaled to fit into the desired duration. 
-    [Throws]
-    AudioParam setValueCurveAtTime(sequence<float> values, double startTime, double duration);
+  // Sets an array of arbitrary parameter values starting at time for the given duration.
+  // The number of values will be scaled to fit into the desired duration.
+  [Throws]
+  AudioParam setValueCurveAtTime(sequence<float> values, double startTime, double duration);
 
-    // Cancels all scheduled parameter changes with times greater than or equal to startTime. 
-    [Throws]
-    AudioParam cancelScheduledValues(double startTime);
+  // Cancels all scheduled parameter changes with times greater than or equal to startTime.
+  [Throws]
+  AudioParam cancelScheduledValues(double startTime);
 
 };
 

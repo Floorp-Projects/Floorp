@@ -10,32 +10,32 @@ enum SecurityPolicyViolationEventDisposition
 [Constructor(DOMString type, optional SecurityPolicyViolationEventInit eventInitDict)]
 interface SecurityPolicyViolationEvent : Event
 {
-    readonly attribute DOMString      documentURI;
-    readonly attribute DOMString      referrer;
-    readonly attribute DOMString      blockedURI;
-    readonly attribute DOMString      violatedDirective;
-    readonly attribute DOMString      effectiveDirective;
-    readonly attribute DOMString      originalPolicy;
-    readonly attribute DOMString      sourceFile;
-    readonly attribute DOMString      sample;
-    readonly attribute SecurityPolicyViolationEventDisposition disposition;
-    readonly attribute unsigned short statusCode;
-    readonly attribute long           lineNumber;
-    readonly attribute long           columnNumber;
+  readonly attribute DOMString      documentURI;
+  readonly attribute DOMString      referrer;
+  readonly attribute DOMString      blockedURI;
+  readonly attribute DOMString      violatedDirective;
+  readonly attribute DOMString      effectiveDirective;
+  readonly attribute DOMString      originalPolicy;
+  readonly attribute DOMString      sourceFile;
+  readonly attribute DOMString      sample;
+  readonly attribute SecurityPolicyViolationEventDisposition disposition;
+  readonly attribute unsigned short statusCode;
+  readonly attribute long           lineNumber;
+  readonly attribute long           columnNumber;
 };
 
 dictionary SecurityPolicyViolationEventInit : EventInit
 {
-    DOMString      documentURI = "";
-    DOMString      referrer = "";
-    DOMString      blockedURI = "";
-    DOMString      violatedDirective = "";
-    DOMString      effectiveDirective = "";
-    DOMString      originalPolicy = "";
-    DOMString      sourceFile = "";
-    DOMString      sample = "";
-    SecurityPolicyViolationEventDisposition disposition = "report";
-    unsigned short statusCode = 0;
-    long           lineNumber = 0;
-    long           columnNumber = 0;
+  DOMString      documentURI = "";
+  DOMString      referrer = "";
+  DOMString      blockedURI = "";
+  DOMString      violatedDirective = "";
+  DOMString      effectiveDirective = "";
+  DOMString      originalPolicy = "";
+  DOMString      sourceFile = "";
+  DOMString      sample = "";
+  SecurityPolicyViolationEventDisposition disposition = "report";
+  unsigned short statusCode = 0;
+  long           lineNumber = 0;
+  long           columnNumber = 0;
 };
