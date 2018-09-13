@@ -30,9 +30,28 @@ button > .button-box {
 }
 
 .about-studies-container {
+  display: flex;
+  flex-direction: row;
   font-size: 1.25rem;
-  max-width: 960px;
-  margin: 0 auto;
+  min-height: 100%;
+  width: 100%;
+}
+
+#categories {
+  flex: 0 0;
+  margin: 0;
+  min-width: 200px;
+  padding: 40px 0 0;
+}
+
+#categories .category {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+}
+
+.main-content {
+  flex: 1;
 }
 
 .info-box {
@@ -141,19 +160,21 @@ button > .button-box {
 .study-name {
   font-weight: bold;
   margin-bottom: 0.3em;
-  white-space: pre;
 }
 
-.study-header > * {
+.study-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.study-description > * {
   margin-right: 5px;
 }
 
-.study-header > *:last-child {
+.study-description > *:last-child {
   margin-right: 0;
-}
-
-.study-description code {
-  font: italic 1.0rem 'Fira Mono', 'mono', 'monospace';
 }
 
 .study-actions {

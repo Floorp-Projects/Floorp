@@ -28,8 +28,9 @@ function experimentFactory(attrs) {
 
 // clearAllExperimentStorage
 decorate_task(
-  withMockExperiments([experimentFactory({ name: "test" })]),
+  withMockExperiments,
   async function(experiments) {
+    experiments.test = experimentFactory({name: "test"});
     ok(await PreferenceExperiments.has("test"), "Mock experiment is detected.");
     await PreferenceExperiments.clearAllExperimentStorage();
     ok(
@@ -41,9 +42,10 @@ decorate_task(
 
 // start should throw if an experiment with the given name already exists
 decorate_task(
-  withMockExperiments([experimentFactory({ name: "test" })]),
+  withMockExperiments,
   withSendEventStub,
   async function(experiments, sendEventStub) {
+    experiments.test = experimentFactory({name: "test"});
     await Assert.rejects(
       PreferenceExperiments.start({
         name: "test",
@@ -67,9 +69,10 @@ decorate_task(
 
 // start should throw if an experiment for the given preference is active
 decorate_task(
-  withMockExperiments([experimentFactory({ name: "test", preferenceName: "fake.preference" })]),
+  withMockExperiments,
   withSendEventStub,
   async function(experiments, sendEventStub) {
+    experiments.test = experimentFactory({name: "test", preferenceName: "fake.preference"});
     await Assert.rejects(
       PreferenceExperiments.start({
         name: "different",
@@ -93,7 +96,7 @@ decorate_task(
 
 // start should throw if an invalid preferenceBranchType is given
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   withSendEventStub,
   async function(experiments, sendEventStub) {
     await Assert.rejects(
@@ -120,7 +123,7 @@ decorate_task(
 // start should save experiment data, modify the preference, and register a
 // watcher.
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "startObserver"),
   withSendEventStub,
@@ -136,7 +139,7 @@ decorate_task(
       preferenceBranchType: "default",
       preferenceType: "string",
     });
-    ok(await PreferenceExperiments.get("test"), "start saved the experiment");
+    ok("test" in experiments, "start saved the experiment");
     ok(
       startObserverStub.calledWith("test", "fake.preference", "string", "newvalue"),
       "start registered an observer",
@@ -153,8 +156,7 @@ decorate_task(
       preferenceBranchType: "default",
     };
     const experiment = {};
-    const actualExperiment = await PreferenceExperiments.get("test");
-    Object.keys(expectedExperiment).forEach(key => experiment[key] = actualExperiment[key]);
+    Object.keys(expectedExperiment).forEach(key => experiment[key] = experiments.test[key]);
     Assert.deepEqual(experiment, expectedExperiment, "start saved the experiment");
 
     is(
@@ -177,7 +179,7 @@ decorate_task(
 
 // start should modify the user preference for the user branch type
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "startObserver"),
   async function(experiments, mockPreferences, startObserver) {
@@ -209,8 +211,7 @@ decorate_task(
     };
 
     const experiment = {};
-    const actualExperiment = await PreferenceExperiments.get("test");
-    Object.keys(expectedExperiment).forEach(key => experiment[key] = actualExperiment[key]);
+    Object.keys(expectedExperiment).forEach(key => experiment[key] = experiments.test[key]);
     Assert.deepEqual(experiment, expectedExperiment, "start saved the experiment");
 
     Assert.notEqual(
@@ -253,7 +254,7 @@ decorate_task(
 // startObserver should throw if an observer for the experiment is already
 // active.
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   async function() {
     PreferenceExperiments.startObserver("test", "fake.preference", "string", "newvalue");
     Assert.throws(
@@ -268,7 +269,7 @@ decorate_task(
 // startObserver should register an observer that calls stop when a preference
 // changes from its experimental value.
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   withMockPreferences,
   async function(mockExperiments, mockPreferences) {
     const tests = [
@@ -299,7 +300,7 @@ decorate_task(
 );
 
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   async function testHasObserver() {
     PreferenceExperiments.startObserver("test", "fake.preference", "string", "experimentValue");
 
@@ -315,7 +316,7 @@ decorate_task(
 
 // stopObserver should throw if there is no observer active for it to stop.
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   async function() {
     Assert.throws(
       () => PreferenceExperiments.stopObserver("neveractive", "another.fake", "othervalue"),
@@ -327,7 +328,7 @@ decorate_task(
 
 // stopObserver should cancel an active observer.
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   withMockPreferences,
   async function(mockExperiments, mockPreferences) {
     const stop = sinon.stub(PreferenceExperiments, "stop");
@@ -356,7 +357,7 @@ decorate_task(
 
 // stopAllObservers
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   withMockPreferences,
   async function(mockExperiments, mockPreferences) {
     const stop = sinon.stub(PreferenceExperiments, "stop");
@@ -389,7 +390,7 @@ decorate_task(
 
 // markLastSeen should throw if it can't find a matching experiment
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   async function() {
     await Assert.rejects(
       PreferenceExperiments.markLastSeen("neveractive"),
@@ -400,13 +401,14 @@ decorate_task(
 );
 
 // markLastSeen should update the lastSeen date
-const oldDate = new Date(1988, 10, 1).toJSON();
 decorate_task(
-  withMockExperiments([experimentFactory({ name: "test", lastSeen: oldDate })]),
-  async function([experiment]) {
+  withMockExperiments,
+  async function(experiments) {
+    const oldDate = new Date(1988, 10, 1).toJSON();
+    experiments.test = experimentFactory({name: "test", lastSeen: oldDate});
     await PreferenceExperiments.markLastSeen("test");
     Assert.notEqual(
-      experiment.lastSeen,
+      experiments.test.lastSeen,
       oldDate,
       "markLastSeen updated the experiment lastSeen date",
     );
@@ -415,7 +417,7 @@ decorate_task(
 
 // stop should throw if an experiment with the given name doesn't exist
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   withSendEventStub,
   async function(experiments, sendEventStub) {
     await Assert.rejects(
@@ -434,9 +436,10 @@ decorate_task(
 
 // stop should throw if the experiment is already expired
 decorate_task(
-  withMockExperiments([experimentFactory({ name: "test", expired: true })]),
+  withMockExperiments,
   withSendEventStub,
   async function(experiments, sendEventStub) {
+    experiments.test = experimentFactory({name: "test", expired: true});
     await Assert.rejects(
       PreferenceExperiments.stop("test"),
       /already expired/,
@@ -454,18 +457,7 @@ decorate_task(
 // stop should mark the experiment as expired, stop its observer, and revert the
 // preference value.
 decorate_task(
-  withMockExperiments([
-    experimentFactory({
-      name: "test",
-      expired: false,
-      branch: "fakebranch",
-      preferenceName: "fake.preference",
-      preferenceValue: "experimentvalue",
-      preferenceType: "string",
-      previousPreferenceValue: "oldvalue",
-      preferenceBranchType: "default",
-    }),
-  ]),
+  withMockExperiments,
   withMockPreferences,
   withSpy(PreferenceExperiments, "stopObserver"),
   withSendEventStub,
@@ -476,12 +468,21 @@ decorate_task(
 
     mockPreferences.set(`${startupPrefs}.fake.preference`, "experimentvalue", "user");
     mockPreferences.set("fake.preference", "experimentvalue", "default");
+    experiments.test = experimentFactory({
+      name: "test",
+      expired: false,
+      branch: "fakebranch",
+      preferenceName: "fake.preference",
+      preferenceValue: "experimentvalue",
+      preferenceType: "string",
+      previousPreferenceValue: "oldvalue",
+      preferenceBranchType: "default",
+    });
     PreferenceExperiments.startObserver("test", "fake.preference", "string", "experimentvalue");
 
     await PreferenceExperiments.stop("test", {reason: "test-reason"});
     ok(stopObserverSpy.calledWith("test"), "stop removed an observer");
-    const experiment = await PreferenceExperiments.get("test");
-    is(experiment.expired, true, "stop marked the experiment as expired");
+    is(experiments.test.expired, true, "stop marked the experiment as expired");
     is(
       DefaultPreferences.get("fake.preference"),
       "oldvalue",
@@ -494,7 +495,7 @@ decorate_task(
 
     Assert.deepEqual(
       sendEventStub.args,
-      [["unenroll", "preference_study", "test", {
+      [["unenroll", "preference_study", experiments.test.name, {
         didResetValue: "true",
         reason: "test-reason",
         branch: "fakebranch",
@@ -508,15 +509,7 @@ decorate_task(
 
 // stop should also support user pref experiments
 decorate_task(
-  withMockExperiments([experimentFactory({
-    name: "test",
-    expired: false,
-    preferenceName: "fake.preference",
-    preferenceValue: "experimentvalue",
-    preferenceType: "string",
-    previousPreferenceValue: "oldvalue",
-    preferenceBranchType: "user",
-  })]),
+  withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
   withStub(PreferenceExperiments, "hasObserver"),
@@ -524,12 +517,20 @@ decorate_task(
     hasObserver.returns(true);
 
     mockPreferences.set("fake.preference", "experimentvalue", "user");
+    experiments.test = experimentFactory({
+      name: "test",
+      expired: false,
+      preferenceName: "fake.preference",
+      preferenceValue: "experimentvalue",
+      preferenceType: "string",
+      previousPreferenceValue: "oldvalue",
+      preferenceBranchType: "user",
+    });
     PreferenceExperiments.startObserver("test", "fake.preference", "string", "experimentvalue");
 
     await PreferenceExperiments.stop("test");
     ok(stopObserver.calledWith("test"), "stop removed an observer");
-    const experiment = await PreferenceExperiments.get("test");
-    is(experiment.expired, true, "stop marked the experiment as expired");
+    is(experiments.test.expired, true, "stop marked the experiment as expired");
     is(
       Preferences.get("fake.preference"),
       "oldvalue",
@@ -542,19 +543,20 @@ decorate_task(
 
 // stop should remove a preference that had no value prior to an experiment for user prefs
 decorate_task(
-  withMockExperiments([experimentFactory({
-    name: "test",
-    expired: false,
-    preferenceName: "fake.preference",
-    preferenceValue: "experimentvalue",
-    preferenceType: "string",
-    previousPreferenceValue: null,
-    preferenceBranchType: "user",
-  })]),
+  withMockExperiments,
   withMockPreferences,
   async function(experiments, mockPreferences) {
     const stopObserver = sinon.stub(PreferenceExperiments, "stopObserver");
     mockPreferences.set("fake.preference", "experimentvalue", "user");
+    experiments.test = experimentFactory({
+      name: "test",
+      expired: false,
+      preferenceName: "fake.preference",
+      preferenceValue: "experimentvalue",
+      preferenceType: "string",
+      previousPreferenceValue: null,
+      preferenceBranchType: "user",
+    });
 
     await PreferenceExperiments.stop("test");
     ok(
@@ -568,21 +570,22 @@ decorate_task(
 
 // stop should not modify a preference if resetValue is false
 decorate_task(
-  withMockExperiments([experimentFactory({
-    name: "test",
-    expired: false,
-    branch: "fakebranch",
-    preferenceName: "fake.preference",
-    preferenceValue: "experimentvalue",
-    preferenceType: "string",
-    previousPreferenceValue: "oldvalue",
-    preferenceBranchType: "default",
-  })]),
+  withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
   withSendEventStub,
   async function testStopReset(experiments, mockPreferences, stopObserverStub, sendEventStub) {
     mockPreferences.set("fake.preference", "customvalue", "default");
+    experiments.test = experimentFactory({
+      name: "test",
+      expired: false,
+      branch: "fakebranch",
+      preferenceName: "fake.preference",
+      preferenceValue: "experimentvalue",
+      preferenceType: "string",
+      previousPreferenceValue: "oldvalue",
+      preferenceBranchType: "default",
+    });
 
     await PreferenceExperiments.stop("test", {reason: "test-reason", resetValue: false});
     is(
@@ -592,7 +595,7 @@ decorate_task(
     );
     Assert.deepEqual(
       sendEventStub.args,
-      [["unenroll", "preference_study", "test", {
+      [["unenroll", "preference_study", experiments.test.name, {
         didResetValue: "false",
         reason: "test-reason",
         branch: "fakebranch",
@@ -604,7 +607,7 @@ decorate_task(
 
 // get should throw if no experiment exists with the given name
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   async function() {
     await Assert.rejects(
       PreferenceExperiments.get("neverexisted"),
@@ -616,25 +619,29 @@ decorate_task(
 
 // get
 decorate_task(
-  withMockExperiments([experimentFactory({ name: "test" })]),
+  withMockExperiments,
   async function(experiments) {
-    const experiment = await PreferenceExperiments.get("test");
-    is(experiment.name, "test", "get fetches the correct experiment");
+    const experiment = experimentFactory({name: "test"});
+    experiments.test = experiment;
+
+    const fetchedExperiment = await PreferenceExperiments.get("test");
+    Assert.deepEqual(fetchedExperiment, experiment, "get fetches the correct experiment");
 
     // Modifying the fetched experiment must not edit the data source.
-    experiment.name = "othername";
-    const refetched = await PreferenceExperiments.get("test");
-    is(refetched.name, "test", "get returns a copy of the experiment");
+    fetchedExperiment.name = "othername";
+    is(experiments.test.name, "test", "get returns a copy of the experiment");
   }
 );
 
 // get all
 decorate_task(
-  withMockExperiments([
-    experimentFactory({ name: "experiment1", disabled: false }),
-    experimentFactory({ name: "experiment2", disabled: true }),
-  ]),
-  async function testGetAll([experiment1, experiment2]) {
+  withMockExperiments,
+  async function testGetAll(experiments) {
+    const experiment1 = experimentFactory({name: "experiment1"});
+    const experiment2 = experimentFactory({name: "experiment2", disabled: true});
+    experiments.experiment1 = experiment1;
+    experiments.experiment2 = experiment2;
+
     const fetchedExperiments = await PreferenceExperiments.getAll();
     is(fetchedExperiments.length, 2, "getAll returns a list of all stored experiments");
     Assert.deepEqual(
@@ -656,29 +663,28 @@ decorate_task(
 
 // get all active
 decorate_task(
-  withMockExperiments([
-    experimentFactory({
+  withMockExperiments,
+  withMockPreferences,
+  async function testGetAllActive(experiments) {
+    experiments.active = experimentFactory({
       name: "active",
       expired: false,
-    }),
-    experimentFactory({
+    });
+    experiments.inactive = experimentFactory({
       name: "inactive",
       expired: true,
-    }),
-  ]),
-  withMockPreferences,
-  async function testGetAllActive([activeExperiment, inactiveExperiment]) {
-    let allActiveExperiments = await PreferenceExperiments.getAllActive();
+    });
+
+    const activeExperiments = await PreferenceExperiments.getAllActive();
     Assert.deepEqual(
-      allActiveExperiments,
-      [activeExperiment],
+      activeExperiments,
+      [experiments.active],
       "getAllActive only returns active experiments",
     );
 
-    allActiveExperiments[0].name = "newfakename";
-    allActiveExperiments = await PreferenceExperiments.getAllActive();
+    activeExperiments[0].name = "newfakename";
     Assert.notEqual(
-      allActiveExperiments,
+      experiments.active.name,
       "newfakename",
       "getAllActive returns copies of stored experiments",
     );
@@ -687,8 +693,9 @@ decorate_task(
 
 // has
 decorate_task(
-  withMockExperiments([experimentFactory({ name: "test" })]),
+  withMockExperiments,
   async function(experiments) {
+    experiments.test = experimentFactory({name: "test"});
     ok(await PreferenceExperiments.has("test"), "has returned true for a stored experiment");
     ok(!(await PreferenceExperiments.has("missing")), "has returned false for a missing experiment");
   }
@@ -696,22 +703,25 @@ decorate_task(
 
 // init should register telemetry experiments
 decorate_task(
-  withMockExperiments([experimentFactory({
-    name: "test",
-    branch: "branch",
-    preferenceName: "fake.pref",
-    preferenceValue: "experiment value",
-    expired: false,
-    preferenceBranchType: "default",
-  })]),
+  withMockExperiments,
   withMockPreferences,
   withStub(TelemetryEnvironment, "setExperimentActive"),
   withStub(PreferenceExperiments, "startObserver"),
   async function testInit(experiments, mockPreferences, setActiveStub, startObserverStub) {
     mockPreferences.set("fake.pref", "experiment value");
+
+    experiments.test = experimentFactory({
+      name: "test",
+      branch: "branch",
+      preferenceName: "fake.pref",
+      preferenceValue: "experiment value",
+      expired: false,
+      preferenceBranchType: "default",
+    });
+
     await PreferenceExperiments.init();
     ok(
-      setActiveStub.calledWith("test", "branch", { type: "normandy-exp" }),
+      setActiveStub.calledWith("test", "branch", {type: "normandy-exp"}),
       "Experiment is registered by init",
     );
   },
@@ -719,21 +729,24 @@ decorate_task(
 
 // init should use the provided experiment type
 decorate_task(
-  withMockExperiments([experimentFactory({
-    name: "test",
-    branch: "branch",
-    preferenceName: "fake.pref",
-    preferenceValue: "experiment value",
-    experimentType: "pref-test",
-  })]),
+  withMockExperiments,
   withMockPreferences,
   withStub(TelemetryEnvironment, "setExperimentActive"),
   withStub(PreferenceExperiments, "startObserver"),
   async function testInit(experiments, mockPreferences, setActiveStub, startObserverStub) {
     mockPreferences.set("fake.pref", "experiment value");
+
+    experiments.test = experimentFactory({
+      name: "test",
+      branch: "branch",
+      preferenceName: "fake.pref",
+      preferenceValue: "experiment value",
+      experimentType: "pref-test",
+    });
+
     await PreferenceExperiments.init();
     ok(
-      setActiveStub.calledWith("test", "branch", { type: "normandy-pref-test" }),
+      setActiveStub.calledWith("test", "branch", {type: "normandy-pref-test"}),
       "init should use the provided experiment type",
     );
   },
@@ -741,7 +754,7 @@ decorate_task(
 
 // starting and stopping experiments should register in telemetry
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   withStub(TelemetryEnvironment, "setExperimentActive"),
   withStub(TelemetryEnvironment, "setExperimentInactive"),
   withSendEventStub,
@@ -757,10 +770,10 @@ decorate_task(
 
     Assert.deepEqual(
       setActiveStub.getCall(0).args,
-      ["test", "branch", { type: "normandy-exp" }],
+      ["test", "branch", {type: "normandy-exp"}],
       "Experiment is registered by start()",
     );
-    await PreferenceExperiments.stop("test", { reason: "test-reason" });
+    await PreferenceExperiments.stop("test", {reason: "test-reason"});
     Assert.deepEqual(setInactiveStub.args, [["test"]], "Experiment is unregistered by stop()");
 
     Assert.deepEqual(
@@ -783,7 +796,7 @@ decorate_task(
 
 // starting experiments should use the provided experiment type
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   withStub(TelemetryEnvironment, "setExperimentActive"),
   withStub(TelemetryEnvironment, "setExperimentInactive"),
   withSendEventStub,
@@ -800,7 +813,7 @@ decorate_task(
 
     Assert.deepEqual(
       setActiveStub.getCall(0).args,
-      ["test", "branch", { type: "normandy-pref-test" }],
+      ["test", "branch", {type: "normandy-pref-test"}],
       "start() should register the experiment with the provided type",
     );
 
@@ -821,9 +834,10 @@ decorate_task(
 
 // Experiments shouldn't be recorded by init() in telemetry if they are expired
 decorate_task(
-  withMockExperiments([experimentFactory({ name: "expired", branch: "branch", expired: true })]),
+  withMockExperiments,
   withStub(TelemetryEnvironment, "setExperimentActive"),
   async function testInitTelemetryExpired(experiments, setActiveStub) {
+    experiments.experiment1 = experimentFactory({name: "expired", branch: "branch", expired: true});
     await PreferenceExperiments.init();
     ok(!setActiveStub.called, "Expired experiment is not registered by init");
   },
@@ -831,16 +845,17 @@ decorate_task(
 
 // Experiments should end if the preference has been changed when init() is called
 decorate_task(
-  withMockExperiments([experimentFactory({
-    name: "test",
-    preferenceName: "fake.preference",
-    preferenceValue: "experiment value",
-  })]),
+  withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "stop"),
   async function testInitChanges(experiments, mockPreferences, stopStub) {
     mockPreferences.set("fake.preference", "experiment value", "default");
-    mockPreferences.set("fake.preference", "changed value", "user");
+    experiments.test = experimentFactory({
+      name: "test",
+      preferenceName: "fake.preference",
+      preferenceValue: "experiment value",
+    });
+    mockPreferences.set("fake.preference", "changed value");
     await PreferenceExperiments.init();
 
     is(Preferences.get("fake.preference"), "changed value", "Preference value was not changed");
@@ -858,11 +873,7 @@ decorate_task(
 
 // init should register an observer for experiments
 decorate_task(
-  withMockExperiments([experimentFactory({
-    name: "test",
-    preferenceName: "fake.preference",
-    preferenceValue: "experiment value",
-  })]),
+  withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "startObserver"),
   withStub(PreferenceExperiments, "stop"),
@@ -871,6 +882,11 @@ decorate_task(
     stop.throws("Stop should not be called");
     mockPreferences.set("fake.preference", "experiment value", "default");
     is(Preferences.get("fake.preference"), "experiment value", "pref shouldn't have a user value");
+    experiments.test = experimentFactory({
+      name: "test",
+      preferenceName: "fake.preference",
+      preferenceValue: "experiment value",
+    });
     await PreferenceExperiments.init();
 
     ok(startObserver.calledOnce, "init should register an observer");
@@ -884,24 +900,21 @@ decorate_task(
 
 // saveStartupPrefs
 decorate_task(
-  withMockExperiments([
-    experimentFactory({
-      name: "char",
-      preferenceName: `fake.char`,
-      preferenceValue: "string",
-    }),
-    experimentFactory({
-      name: "int",
-      preferenceName: `fake.int`,
-      preferenceValue: 2,
-    }),
-    experimentFactory({
-      name: "bool",
-      preferenceName: `fake.bool`,
-      preferenceValue: true,
-    }),
-  ]),
+  withMockExperiments,
   async function testSaveStartupPrefs(experiments) {
+    const experimentPrefs = {
+      char: "string",
+      int: 2,
+      bool: true,
+    };
+
+    for (const [key, value] of Object.entries(experimentPrefs)) {
+      experiments[key] = experimentFactory({
+        preferenceName: `fake.${key}`,
+        preferenceValue: value,
+      });
+    }
+
     Services.prefs.deleteBranch(startupPrefs);
     Services.prefs.setBoolPref(`${startupPrefs}.fake.old`, true);
     await PreferenceExperiments.saveStartupPrefs();
@@ -929,12 +942,13 @@ decorate_task(
 
 // saveStartupPrefs errors for invalid pref type
 decorate_task(
-  withMockExperiments([experimentFactory({
-    name: "test",
-    preferenceName: "fake.invalidValue",
-    preferenceValue: new Date(),
-  })]),
+  withMockExperiments,
   async function testSaveStartupPrefsError(experiments) {
+    experiments.test = experimentFactory({
+      preferenceName: "fake.invalidValue",
+      preferenceValue: new Date(),
+    });
+
     await Assert.rejects(
       PreferenceExperiments.saveStartupPrefs(),
       /invalid preference type/i,
@@ -945,21 +959,19 @@ decorate_task(
 
 // saveStartupPrefs should not store values for user-branch recipes
 decorate_task(
-  withMockExperiments([
-    experimentFactory({
-      name: "defaultBranchRecipe",
+  withMockExperiments,
+  async function testSaveStartupPrefsUserBranch(experiments) {
+    experiments.defaultBranchRecipe = experimentFactory({
       preferenceName: "fake.default",
       preferenceValue: "experiment value",
       branch: "default",
-    }),
-    experimentFactory({
-      name: "userBranchRecipe",
+    });
+    experiments.userBranchRecipe = experimentFactory({
       preferenceName: "fake.user",
       preferenceValue: "experiment value",
       branch: "user",
-    }),
-  ]),
-  async function testSaveStartupPrefsUserBranch(experiments) {
+    });
+
     await PreferenceExperiments.saveStartupPrefs();
 
     is(
@@ -979,7 +991,7 @@ decorate_task(
 
 // test that default branch prefs restore to the right value if the default pref changes
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "startObserver"),
   withStub(PreferenceExperiments, "stopObserver"),
@@ -1027,7 +1039,7 @@ decorate_task(
 
 // test that default branch prefs restore to the right value if the preference is removed
 decorate_task(
-  withMockExperiments(),
+  withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "startObserver"),
   withStub(PreferenceExperiments, "stopObserver"),
@@ -1074,12 +1086,13 @@ decorate_task(
 
 // stop should pass "unknown" to telemetry event for `reason` if none is specified
 decorate_task(
-  withMockExperiments([experimentFactory({ name: "test", preferenceName: "fake.preference" })]),
+  withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
   withSendEventStub,
   async function testStopUnknownReason(experiments, mockPreferences, stopObserverStub, sendEventStub) {
     mockPreferences.set("fake.preference", "default value", "default");
+    experiments.test = experimentFactory({ name: "test", preferenceName: "fake.preference" });
     await PreferenceExperiments.stop("test");
     is(
       sendEventStub.getCall(0).args[3].reason,
@@ -1091,16 +1104,14 @@ decorate_task(
 
 // stop should pass along the value for resetValue to Telemetry Events as didResetValue
 decorate_task(
-  withMockExperiments([
-    experimentFactory({ name: "test1", preferenceName: "fake.preference1" }),
-    experimentFactory({ name: "test2", preferenceName: "fake.preference2" }),
-  ]),
+  withMockExperiments,
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
   withSendEventStub,
   async function testStopResetValue(experiments, mockPreferences, stopObserverStub, sendEventStub) {
     mockPreferences.set("fake.preference1", "default value", "default");
-    await PreferenceExperiments.stop("test1", { resetValue: true });
+    experiments.test1 = experimentFactory({ name: "test1", preferenceName: "fake.preference1" });
+    await PreferenceExperiments.stop("test1", {resetValue: true});
     is(sendEventStub.callCount, 1);
     is(
       sendEventStub.getCall(0).args[3].didResetValue,
@@ -1109,7 +1120,8 @@ decorate_task(
     );
 
     mockPreferences.set("fake.preference2", "default value", "default");
-    await PreferenceExperiments.stop("test2", { resetValue: false });
+    experiments.test2 = experimentFactory({ name: "test2", preferenceName: "fake.preference2" });
+    await PreferenceExperiments.stop("test2", {resetValue: false});
     is(sendEventStub.callCount, 2);
     is(
       sendEventStub.getCall(1).args[3].didResetValue,
@@ -1124,19 +1136,20 @@ decorate_task(
 decorate_task(
   withMockPreferences,
   withSendEventStub,
-  withMockExperiments([experimentFactory({
-    name: "test",
-    expired: false,
-    branch: "fakebranch",
-    preferenceName: "fake.preference",
-    preferenceValue: "experimentvalue",
-    preferenceType: "string",
-    previousPreferenceValue: "oldvalue",
-    preferenceBranchType: "default",
-  })]),
+  withMockExperiments,
   async function testPrefChangeEventTelemetry(mockPreferences, sendEventStub, mockExperiments) {
     is(Preferences.get("fake.preference"), null, "preference should start unset");
     mockPreferences.set("fake.preference", "oldvalue", "default");
+    mockExperiments.test = experimentFactory({
+      name: "test",
+      expired: false,
+      branch: "fakebranch",
+      preferenceName: "fake.preference",
+      preferenceValue: "experimentvalue",
+      preferenceType: "string",
+      previousPreferenceValue: "oldvalue",
+      preferenceBranchType: "default",
+    });
     PreferenceExperiments.startObserver("test", "fake.preference", "string", "experimentvalue");
 
     // setting the preference on the user branch should trigger the observer to stop the experiment

@@ -6,10 +6,9 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonStudies", "resource://normandy/lib/AddonStudies.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonStudyAction", "resource://normandy/actions/AddonStudyAction.jsm");
 ChromeUtils.defineModuleGetter(this, "CleanupManager", "resource://normandy/lib/CleanupManager.jsm");
-ChromeUtils.defineModuleGetter(this, "PreferenceExperiments", "resource://normandy/lib/PreferenceExperiments.jsm");
+ChromeUtils.defineModuleGetter(this, "AddonStudies", "resource://normandy/lib/AddonStudies.jsm");
 ChromeUtils.defineModuleGetter(this, "RecipeRunner", "resource://normandy/lib/RecipeRunner.jsm");
 
 var EXPORTED_SYMBOLS = ["AboutPages"];
@@ -62,7 +61,7 @@ var AboutPages = {
     this.aboutStudies.registerParentListeners();
 
     CleanupManager.addCleanupHandler(() => {
-      // Stop loading process scripts and notify existing scripts to clean up.
+      // Stop loading processs scripts and notify existing scripts to clean up.
       Services.ppmm.broadcastAsyncMessage("Shield:ShuttingDown");
       Services.mm.broadcastAsyncMessage("Shield:ShuttingDown");
 
@@ -96,10 +95,8 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
      * Register listeners for messages from the content processes.
      */
     registerParentListeners() {
-      Services.mm.addMessageListener("Shield:GetAddonStudyList", this);
-      Services.mm.addMessageListener("Shield:GetPreferenceStudyList", this);
-      Services.mm.addMessageListener("Shield:RemoveAddonStudy", this);
-      Services.mm.addMessageListener("Shield:RemovePreferenceStudy", this);
+      Services.mm.addMessageListener("Shield:GetStudyList", this);
+      Services.mm.addMessageListener("Shield:RemoveStudy", this);
       Services.mm.addMessageListener("Shield:OpenDataPreferences", this);
       Services.mm.addMessageListener("Shield:GetStudiesEnabled", this);
     },
@@ -108,10 +105,8 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
      * Unregister listeners for messages from the content process.
      */
     unregisterParentListeners() {
-      Services.mm.removeMessageListener("Shield:GetAddonStudyList", this);
-      Services.mm.removeMessageListener("Shield:GetPreferenceStudyList", this);
-      Services.mm.removeMessageListener("Shield:RemoveAddonStudy", this);
-      Services.mm.removeMessageListener("Shield:RemovePreferenceStudy", this);
+      Services.mm.removeMessageListener("Shield:GetStudyList", this);
+      Services.mm.removeMessageListener("Shield:RemoveStudy", this);
       Services.mm.removeMessageListener("Shield:OpenDataPreferences", this);
       Services.mm.removeMessageListener("Shield:GetStudiesEnabled", this);
     },
@@ -123,17 +118,11 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
      */
     receiveMessage(message) {
       switch (message.name) {
-        case "Shield:GetAddonStudyList":
-          this.sendAddonStudyList(message.target);
+        case "Shield:GetStudyList":
+          this.sendStudyList(message.target);
           break;
-        case "Shield:GetPreferenceStudyList":
-          this.sendPreferenceStudyList(message.target);
-          break;
-        case "Shield:RemoveAddonStudy":
-          this.removeAddonStudy(message.data.recipeId, message.data.reason);
-          break;
-        case "Shield:RemovePreferenceStudy":
-          this.removePreferenceStudy(message.data.experimentName, message.data.reason);
+        case "Shield:RemoveStudy":
+          this.removeStudy(message.data.recipeId, message.data.reason);
           break;
         case "Shield:OpenDataPreferences":
           this.openDataPreferences();
@@ -145,34 +134,16 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
     },
 
     /**
-     * Fetch a list of add-on studies from storage and send it to the process
-     * that requested them.
+     * Fetch a list of studies from storage and send it to the process that
+     * requested them.
      * @param {<browser>} target
      *   XUL <browser> element for the tab containing the about:studies page
      *   that requested a study list.
      */
-    async sendAddonStudyList(target) {
+    async sendStudyList(target) {
       try {
-        target.messageManager.sendAsyncMessage("Shield:ReceiveAddonStudyList", {
+        target.messageManager.sendAsyncMessage("Shield:ReceiveStudyList", {
           studies: await AddonStudies.getAll(),
-        });
-      } catch (err) {
-        // The child process might be gone, so no need to throw here.
-        Cu.reportError(err);
-      }
-    },
-
-    /**
-     * Fetch a list of preference studies from storage and send it to the
-     * process that requested them.
-     * @param {<browser>} target
-     *   XUL <browser> element for the tab containing the about:studies page
-     *   that requested a study list.
-     */
-    async sendPreferenceStudyList(target) {
-      try {
-        target.messageManager.sendAsyncMessage("Shield:ReceivePreferenceStudyList", {
-          studies: await PreferenceExperiments.getAll(),
         });
       } catch (err) {
         // The child process might be gone, so no need to throw here.
@@ -203,29 +174,16 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
     },
 
     /**
-     * Disable an active add-on study and remove its add-on.
+     * Disable an active study and remove its add-on.
      * @param {String} studyName
      */
-    async removeAddonStudy(recipeId, reason) {
+    async removeStudy(recipeId, reason) {
       const action = new AddonStudyAction();
       await action.unenroll(recipeId, reason);
 
       // Update any open tabs with the new study list now that it has changed.
-      Services.mm.broadcastAsyncMessage("Shield:ReceiveAddonStudyList", {
+      Services.mm.broadcastAsyncMessage("Shield:ReceiveStudyList", {
         studies: await AddonStudies.getAll(),
-      });
-    },
-
-    /**
-     * Disable an active preference study
-     * @param {String} studyName
-     */
-    async removePreferenceStudy(experimentName, reason) {
-      PreferenceExperiments.stop(experimentName, { reason });
-
-      // Update any open tabs with the new study list now that it has changed.
-      Services.mm.broadcastAsyncMessage("Shield:ReceivePreferenceStudyList", {
-        studies: await PreferenceExperiments.getAll(),
       });
     },
 

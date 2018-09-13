@@ -11,8 +11,8 @@ ShieldPreferences.init();
 decorate_task(
   withMockPreferences,
   AddonStudies.withStudies([
-    addonStudyFactory({active: true}),
-    addonStudyFactory({active: true}),
+    studyFactory({active: true}),
+    studyFactory({active: true}),
   ]),
   async function testDisableStudiesWhenOptOutDisabled(mockPreferences, [study1, study2]) {
 
