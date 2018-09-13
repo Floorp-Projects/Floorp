@@ -66,7 +66,8 @@ ChromiumCDMParent::Init(ChromiumCDMCallback* aCDMCallback,
   mCDMCallback = aCDMCallback;
   mMainThread = aMainThread;
 
-  if (SendInit(aAllowDistinctiveIdentifier, aAllowPersistentState)) {
+  if (SendInit(aAllowDistinctiveIdentifier,
+               aAllowPersistentState)) {
     return true;
   }
 
@@ -253,7 +254,14 @@ ChromiumCDMParent::InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer,
                                 aSample->mDuration.ToMicroseconds(),
                                 crypto.mPlainSizes,
                                 crypto.mEncryptedSizes,
-                                crypto.mValid);
+                                crypto.mValid
+                                  ? GMPEncryptionScheme::kGMPEncryptionCenc
+                                  : GMPEncryptionScheme::kGMPEncryptionNone);
+  MOZ_ASSERT(
+    aBuffer.mEncryptionScheme() == GMPEncryptionScheme::kGMPEncryptionNone ||
+      aBuffer.mEncryptionScheme() == GMPEncryptionScheme::kGMPEncryptionCenc,
+    "aBuffer should use either no encryption or cenc, other kinds are not yet "
+    "supported");
   return true;
 }
 

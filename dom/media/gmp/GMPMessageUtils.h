@@ -12,56 +12,69 @@
 
 namespace IPC {
 
-template <>
+template<>
 struct ParamTraits<GMPErr>
-: public ContiguousEnumSerializer<GMPErr,
-                                  GMPNoErr,
-                                  GMPLastErr>
-{};
+  : public ContiguousEnumSerializer<GMPErr, GMPNoErr, GMPLastErr>
+{
+};
 
-template <>
+template<>
 struct ParamTraits<GMPVideoFrameType>
-: public ContiguousEnumSerializer<GMPVideoFrameType,
-                                  kGMPKeyFrame,
-                                  kGMPVideoFrameInvalid>
-{};
+  : public ContiguousEnumSerializer<GMPVideoFrameType,
+                                    kGMPKeyFrame,
+                                    kGMPVideoFrameInvalid>
+{
+};
 
-template <>
+template<>
 struct ParamTraits<GMPVideoCodecComplexity>
-: public ContiguousEnumSerializer<GMPVideoCodecComplexity,
-                                  kGMPComplexityNormal,
-                                  kGMPComplexityInvalid>
-{};
+  : public ContiguousEnumSerializer<GMPVideoCodecComplexity,
+                                    kGMPComplexityNormal,
+                                    kGMPComplexityInvalid>
+{
+};
 
-template <>
+template<>
 struct ParamTraits<GMPVP8ResilienceMode>
-: public ContiguousEnumSerializer<GMPVP8ResilienceMode,
-                                  kResilienceOff,
-                                  kResilienceInvalid>
-{};
+  : public ContiguousEnumSerializer<GMPVP8ResilienceMode,
+                                    kResilienceOff,
+                                    kResilienceInvalid>
+{
+};
 
-template <>
+template<>
 struct ParamTraits<GMPVideoCodecType>
-: public ContiguousEnumSerializer<GMPVideoCodecType,
-                                  kGMPVideoCodecVP8,
-                                  kGMPVideoCodecInvalid>
-{};
+  : public ContiguousEnumSerializer<GMPVideoCodecType,
+                                    kGMPVideoCodecVP8,
+                                    kGMPVideoCodecInvalid>
+{
+};
 
-template <>
+template<>
 struct ParamTraits<GMPVideoCodecMode>
-: public ContiguousEnumSerializer<GMPVideoCodecMode,
-                                  kGMPRealtimeVideo,
-                                  kGMPCodecModeInvalid>
-{};
+  : public ContiguousEnumSerializer<GMPVideoCodecMode,
+                                    kGMPRealtimeVideo,
+                                    kGMPCodecModeInvalid>
+{
+};
 
-template <>
+template<>
 struct ParamTraits<GMPBufferType>
-: public ContiguousEnumSerializer<GMPBufferType,
-                                  GMP_BufferSingle,
-                                  GMP_BufferInvalid>
-{};
+  : public ContiguousEnumSerializer<GMPBufferType,
+                                    GMP_BufferSingle,
+                                    GMP_BufferInvalid>
+{
+};
 
-template <>
+template<>
+struct ParamTraits<GMPEncryptionScheme>
+  : public ContiguousEnumSerializer<GMPEncryptionScheme,
+                                    GMPEncryptionScheme::kGMPEncryptionNone,
+                                    GMPEncryptionScheme::kGMPEncryptionInvalid>
+{
+};
+
+template<>
 struct ParamTraits<GMPSimulcastStream>
 {
   typedef GMPSimulcastStream paramType;
