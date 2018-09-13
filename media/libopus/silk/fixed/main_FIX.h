@@ -66,7 +66,8 @@ void silk_HP_variable_cutoff(
 
 /* Encoder main function */
 void silk_encode_do_VAD_FIX(
-    silk_encoder_state_FIX          *psEnc                                  /* I/O  Pointer to Silk FIX encoder state                                           */
+    silk_encoder_state_FIX          *psEnc,                                 /* I/O  Pointer to Silk FIX encoder state                                           */
+    opus_int                        activity                                /* I    Decision of Opus voice activity detector                                    */
 );
 
 /* Encoder main function */

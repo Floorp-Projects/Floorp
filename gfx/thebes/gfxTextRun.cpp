@@ -1777,13 +1777,12 @@ gfxTextRun::Dump(FILE* aOutput) {
         }
         gfxFont* font = glyphRuns[i].mFont;
         const gfxFontStyle* style = font->GetStyle();
-        NS_ConvertUTF16toUTF8 fontName(font->GetName());
         nsAutoString styleString;
         nsStyleUtil::AppendFontSlantStyle(style->style, styleString);
         nsAutoCString lang;
         style->language->ToUTF8String(lang);
         fprintf(aOutput, "%d: %s %f/%g/%s/%s", glyphRuns[i].mCharacterOffset,
-                fontName.get(), style->size,
+                font->GetName().get(), style->size,
                 style->weight.ToFloat(),
                 NS_ConvertUTF16toUTF8(styleString).get(),
                 lang.get());
@@ -1831,7 +1830,7 @@ gfxFontGroup::BuildFontList()
     // lookup fonts in the fontlist
     for (const FontFamilyName& name : mFamilyList.GetFontlist()->mNames) {
         if (name.IsNamed()) {
-            AddPlatformFont(name.mName, fonts);
+            AddPlatformFont(NS_ConvertUTF16toUTF8(name.mName), fonts);
         } else {
             pfl->AddGenericFonts(name.mType, mStyle.language, fonts);
             if (mTextPerf) {
@@ -1857,7 +1856,7 @@ gfxFontGroup::BuildFontList()
 }
 
 void
-gfxFontGroup::AddPlatformFont(const nsAString& aName,
+gfxFontGroup::AddPlatformFont(const nsACString& aName,
                               nsTArray<FamilyAndGeneric>& aFamilyList)
 {
     // First, look up in the user font set...
@@ -3304,7 +3303,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
             }
             fontMatches.AppendPrintf(" [%u:%u] %.200s (%s)", r.start, r.end,
                 (r.font.get() ?
-                 NS_ConvertUTF16toUTF8(r.font->GetName()).get() : "<null>"),
+                 r.font->GetName().get() : "<null>"),
                 matchTypes.get());
         }
         MOZ_LOG(log, LogLevel::Debug,\

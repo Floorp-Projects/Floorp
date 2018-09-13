@@ -90,7 +90,9 @@ extern opus_val32
 (*const CELT_PITCH_XCORR_IMPL[OPUS_ARCHMASK+1])(const opus_val16 *,
       const opus_val16 *, opus_val32 *, int, int, int);
 #   define OVERRIDE_PITCH_XCORR (1)
-#   define celt_pitch_xcorr (*CELT_PITCH_XCORR_IMPL[(arch)&OPUS_ARCHMASK])
+#   define celt_pitch_xcorr(_x, _y, xcorr, len, max_pitch, arch) \
+  ((*CELT_PITCH_XCORR_IMPL[(arch)&OPUS_ARCHMASK])(_x, _y, \
+        xcorr, len, max_pitch, arch))
 
 #  elif defined(OPUS_ARM_PRESUME_EDSP) || \
     defined(OPUS_ARM_PRESUME_MEDIA) || \
@@ -142,7 +144,9 @@ extern void
       const opus_val16 *, opus_val32 *, int, int, int);
 
 #  define OVERRIDE_PITCH_XCORR (1)
-#  define celt_pitch_xcorr (*CELT_PITCH_XCORR_IMPL[(arch)&OPUS_ARCHMASK])
+#  define celt_pitch_xcorr(_x, _y, xcorr, len, max_pitch, arch) \
+  ((*CELT_PITCH_XCORR_IMPL[(arch)&OPUS_ARCHMASK])(_x, _y, \
+        xcorr, len, max_pitch, arch))
 
 #  elif defined(OPUS_ARM_PRESUME_NEON_INTR)
 

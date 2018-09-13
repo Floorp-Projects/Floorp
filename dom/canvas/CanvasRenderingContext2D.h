@@ -45,7 +45,7 @@ class ImageData;
 class StringOrCanvasGradientOrCanvasPattern;
 class OwningStringOrCanvasGradientOrCanvasPattern;
 class TextMetrics;
-class CanvasFilterChainObserver;
+class SVGFilterObserverListForCanvas;
 class CanvasPath;
 
 extern const mozilla::gfx::Float SIGMA_MAX;
@@ -1052,7 +1052,7 @@ protected:
           lineJoin(aOther.lineJoin),
           filterString(aOther.filterString),
           filterChain(aOther.filterChain),
-          filterChainObserver(aOther.filterChainObserver),
+          filterObserverList(aOther.filterObserverList),
           filter(aOther.filter),
           filterAdditionalImages(aOther.filterAdditionalImages),
           filterSourceGraphicTainted(aOther.filterSourceGraphicTainted),
@@ -1130,7 +1130,7 @@ protected:
 
     nsString filterString;
     nsTArray<nsStyleFilter> filterChain;
-    RefPtr<nsSVGFilterChainObserver> filterChainObserver;
+    RefPtr<SVGFilterObserverList> filterObserverList;
     mozilla::gfx::FilterDescription filter;
     nsTArray<RefPtr<mozilla::gfx::SourceSurface>> filterAdditionalImages;
 
@@ -1162,7 +1162,7 @@ protected:
   }
 
   friend class CanvasGeneralPattern;
-  friend class CanvasFilterChainObserver;
+  friend class SVGFilterObserverListForCanvas;
   friend class AdjustedTarget;
   friend class AdjustedTargetForShadow;
   friend class AdjustedTargetForFilter;

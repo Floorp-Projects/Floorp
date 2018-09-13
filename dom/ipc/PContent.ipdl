@@ -115,8 +115,8 @@ namespace dom {
 // Used on Android/B2G to pass the list of fonts on the device
 // to the child process
 struct FontListEntry {
-    nsString  familyName;
-    nsString  faceName;
+    nsCString familyName;
+    nsCString faceName;
     nsCString filepath;
     uint32_t  weightRange;
     uint32_t  stretchRange;
@@ -129,8 +129,8 @@ struct FontListEntry {
 // The entryType field distinguishes several types of font family
 // record; see gfxMacPlatformFontList.h for values and meaning.
 struct FontFamilyListEntry {
-    nsString familyName;
-    uint8_t  entryType;
+    nsCString familyName;
+    uint8_t   entryType;
 };
 
 // Used on Linux to pass list of font patterns from chrome to content.

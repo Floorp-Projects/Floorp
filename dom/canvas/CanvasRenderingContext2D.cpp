@@ -958,13 +958,13 @@ private:
   CanvasRenderingContext2D* mContext;
 };
 
-class CanvasFilterChainObserver : public nsSVGFilterChainObserver
+class SVGFilterObserverListForCanvas final : public SVGFilterObserverList
 {
 public:
-  CanvasFilterChainObserver(nsTArray<nsStyleFilter>& aFilters,
-                            Element* aCanvasElement,
-                            CanvasRenderingContext2D* aContext)
-    : nsSVGFilterChainObserver(aFilters, aCanvasElement)
+  SVGFilterObserverListForCanvas(nsTArray<nsStyleFilter>& aFilters,
+                                 Element* aCanvasElement,
+                                 CanvasRenderingContext2D* aContext)
+    : SVGFilterObserverList(aFilters, aCanvasElement)
     , mContext(aContext)
   {
   }
@@ -1004,12 +1004,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CanvasRenderingContext2D)
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].patternStyles[Style::FILL]);
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].gradientStyles[Style::STROKE]);
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].gradientStyles[Style::FILL]);
-    auto filterChainObserver =
-      static_cast<CanvasFilterChainObserver*>(tmp->mStyleStack[i].filterChainObserver.get());
-    if (filterChainObserver) {
-      filterChainObserver->DetachFromContext();
+    auto filterObserverList =
+      static_cast<SVGFilterObserverListForCanvas*>(tmp->mStyleStack[i].filterObserverList.get());
+    if (filterObserverList) {
+      filterObserverList->DetachFromContext();
     }
-    ImplCycleCollectionUnlink(tmp->mStyleStack[i].filterChainObserver);
+    ImplCycleCollectionUnlink(tmp->mStyleStack[i].filterObserverList);
   }
   for (size_t x = 0 ; x < tmp->mHitRegionsOptions.Length(); x++) {
     RegionInfo& info = tmp->mHitRegionsOptions[x];
@@ -1028,7 +1028,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CanvasRenderingContext2D)
     ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].patternStyles[Style::FILL], "Fill CanvasPattern");
     ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].gradientStyles[Style::STROKE], "Stroke CanvasGradient");
     ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].gradientStyles[Style::FILL], "Fill CanvasGradient");
-    ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].filterChainObserver, "Filter Chain Observer");
+    ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].filterObserverList, "Filter Observer List");
   }
   for (size_t x = 0 ; x < tmp->mHitRegionsOptions.Length(); x++) {
     RegionInfo& info = tmp->mHitRegionsOptions[x];
@@ -2825,9 +2825,9 @@ CanvasRenderingContext2D::SetFilter(const nsAString& aFilter, ErrorResult& aErro
     CurrentState().filterString = aFilter;
     filterChain.SwapElements(CurrentState().filterChain);
     if (mCanvasElement) {
-      CurrentState().filterChainObserver =
-        new CanvasFilterChainObserver(CurrentState().filterChain,
-                                      mCanvasElement, this);
+      CurrentState().filterObserverList =
+        new SVGFilterObserverListForCanvas(CurrentState().filterChain,
+                                           mCanvasElement, this);
       UpdateFilter();
     }
   }

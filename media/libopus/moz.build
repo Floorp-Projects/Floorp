@@ -20,8 +20,9 @@ AllowCompilerWarnings()
 FINAL_LIBRARY = 'gkmedias'
 
 DEFINES['OPUS_BUILD'] = True
-DEFINES['OPUS_VERSION'] = '"v1.2.1-mozilla"'
+DEFINES['OPUS_VERSION'] = '"v1.3-rc-19-g5cbd7d5f-mozilla"'
 DEFINES['USE_ALLOCA'] = True
+DEFINES['ENABLE_HARDENING'] = True
 
 # Don't export symbols
 DEFINES['OPUS_EXPORT'] = ''

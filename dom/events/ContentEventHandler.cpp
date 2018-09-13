@@ -941,7 +941,7 @@ ContentEventHandler::AppendFontRanges(FontRangeArray& aFontRanges,
       }
 
       FontRange* fontRange = AppendFontRange(aFontRanges, baseOffset);
-      fontRange->mFontName = font->GetName();
+      fontRange->mFontName.Append(NS_ConvertUTF8toUTF16(font->GetName()));
       fontRange->mFontSize = font->GetAdjustedSize();
 
       // The converted original offset may exceed the range,
