@@ -80,33 +80,9 @@
         </xul:vbox>
       </xul:hbox>
       <xul:toolbarseparator />
-      <xul:stack class="downloadButtonArea">
-        <xul:button class="downloadButton downloadCancel downloadIconCancel"
-                    tooltiptext="&cmd.cancel.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_cancel');"/>
-        <xul:button class="downloadButton downloadRetry downloadIconRetry"
-                    tooltiptext="&cmd.retry.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_retry');"/>
-        <xul:button class="downloadButton downloadShow downloadIconShow"
-#ifdef XP_MACOSX
-                    tooltiptext="&cmd.showMac.label;"
-#else
-                    tooltiptext="&cmd.show.label;"
-#endif
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_show');"/>
-        <xul:button class="downloadButton downloadConfirmBlock downloadIconCancel"
-                    tooltiptext="&cmd.removeFile.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_confirmBlock');"/>
-        <xul:button class="downloadButton downloadChooseUnblock downloadIconShow"
-                    tooltiptext="&cmd.chooseUnblock.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_chooseUnblock');"/>
-        <xul:button class="downloadButton downloadChooseOpen downloadIconShow"
-                    tooltiptext="&cmd.chooseOpen.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_chooseOpen');"/>
-        <xul:button class="downloadButton downloadShowBlockedInfo"
-                    tooltiptext="&cmd.chooseUnblock.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_showBlockedInfo');"/>
-      </xul:stack>
+      <xul:button class="downloadButton"
+                  xbl:inherits="class=buttonclass,aria-label=buttonarialabel,tooltiptext=buttontooltiptext"
+                  oncommand="DownloadsView.onDownloadButton(event);"/>
     </content>
   </binding>
 
