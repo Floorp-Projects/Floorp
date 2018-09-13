@@ -2338,7 +2338,8 @@ Run(JSContext* cx, unsigned argc, Value* vp)
                .setFileAndLine(filename.get(), 1)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
-        if (!JS_CompileUCScript(cx, srcBuf, options, &script)) {
+
+        if (!JS::Compile(cx, options, srcBuf, &script)) {
             return false;
         }
     }
@@ -4603,7 +4604,7 @@ Compile(JSContext* cx, unsigned argc, Value* vp)
     JS::SourceBufferHolder srcBuf(stableChars.twoByteRange().begin().get(),
                                   scriptContents->length(),
                                   JS::SourceBufferHolder::NoOwnership);
-    bool ok = JS_CompileUCScript(cx, srcBuf, options, &script);
+    bool ok = JS::Compile(cx, options, srcBuf, &script);
     args.rval().setUndefined();
     return ok;
 }

@@ -739,7 +739,7 @@ ProcessUtf8Line(AutoJSAPI& jsapi, const char* buffer, int startline)
            .setUTF8(true);
 
     JS::RootedScript script(cx);
-    if (!JS_CompileScript(cx, buffer, strlen(buffer), options, &script)) {
+    if (!JS::CompileUtf8(cx, options, buffer, strlen(buffer), &script)) {
         return false;
     }
     if (compileOnly) {
