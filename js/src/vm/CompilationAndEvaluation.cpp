@@ -188,7 +188,7 @@ JS_CompileUCScript(JSContext* cx, JS::SourceBufferHolder& srcBuf,
 }
 
 JS_PUBLIC_API(bool)
-JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, size_t length)
+JS_Utf8BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, size_t length)
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);

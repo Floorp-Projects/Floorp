@@ -1198,9 +1198,9 @@ AddIntlExtras(JSContext* cx, unsigned argc, Value* vp)
 }
 #endif // ENABLE_INTL_API
 
-static bool
-EvalAndPrint(JSContext* cx, const char* bytes, size_t length,
-             int lineno, bool compileOnly)
+static MOZ_MUST_USE bool
+EvalUtf8AndPrint(JSContext* cx, const char* bytes, size_t length,
+                 int lineno, bool compileOnly)
 {
     // Eval.
     JS::CompileOptions options(cx);
@@ -1208,8 +1208,9 @@ EvalAndPrint(JSContext* cx, const char* bytes, size_t length,
            .setUTF8(true)
            .setIsRunOnce(true)
            .setFileAndLine("typein", lineno);
+
     RootedScript script(cx);
-    if (!JS::Compile(cx, options, bytes, length, &script)) {
+    if (!JS::CompileUtf8(cx, options, bytes, length, &script)) {
         return false;
     }
     if (compileOnly) {
@@ -1282,7 +1283,7 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, bool compileOnly)
                 hitEOF = true;
                 break;
             }
-        } while (!JS_BufferIsCompilableUnit(cx, cx->global(), buffer.begin(), buffer.length()));
+        } while (!JS_Utf8BufferIsCompilableUnit(cx, cx->global(), buffer.begin(), buffer.length()));
 
         if (hitEOF && buffer.empty()) {
             break;
@@ -1291,7 +1292,8 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, bool compileOnly)
         {
             // Report exceptions but keep going.
             AutoReportException are(cx);
-            (void) EvalAndPrint(cx, buffer.begin(), buffer.length(), startline, compileOnly);
+            mozilla::Unused <<
+                EvalUtf8AndPrint(cx, buffer.begin(), buffer.length(), startline, compileOnly);
         }
 
         // If a let or const fail to initialize they will remain in an unusable
