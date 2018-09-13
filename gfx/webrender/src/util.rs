@@ -4,16 +4,171 @@
 
 use api::{BorderRadius, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
 use api::{LayoutPixel, DeviceRect, WorldPixel, RasterRect};
-use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D};
+use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D, Vector2D};
 use euclid::{TypedTransform2D, TypedTransform3D, TypedVector2D, TypedScale};
 use num_traits::Zero;
 use plane_split::{Clipper, Polygon};
 use std::{i32, f32, fmt};
 use std::borrow::Cow;
 
-
 // Matches the definition of SK_ScalarNearlyZero in Skia.
 const NEARLY_ZERO: f32 = 1.0 / 4096.0;
+
+// Represents an optimized transform where there is only
+// a scale and translation (which are guaranteed to maintain
+// an axis align rectangle under transformation). The
+// scaling is applied first, followed by the translation.
+// TODO(gw): We should try and incorporate F <-> T units here,
+//           but it's a bit tricky to do that now with the
+//           way the current clip-scroll tree works.
+#[derive(Debug, Clone, Copy)]
+pub struct ScaleOffset {
+    pub scale: Vector2D<f32>,
+    pub offset: Vector2D<f32>,
+}
+
+impl ScaleOffset {
+    pub fn identity() -> Self {
+        ScaleOffset {
+            scale: Vector2D::new(1.0, 1.0),
+            offset: Vector2D::zero(),
+        }
+    }
+
+    // Construct a ScaleOffset from a transform. Returns
+    // None if the matrix is not a pure scale / translation.
+    pub fn from_transform<F, T>(
+        m: &TypedTransform3D<f32, F, T>,
+    ) -> Option<ScaleOffset> {
+
+        // To check that we have a pure scale / translation:
+        // Every field must match an identity matrix, except:
+        //  - Any value present in tx,ty
+        //  - Any non-neg value present in sx,sy (avoid negative for reflection/rotation)
+
+        if m.m11 < 0.0 ||
+           m.m12.abs() > NEARLY_ZERO ||
+           m.m13.abs() > NEARLY_ZERO ||
+           m.m14.abs() > NEARLY_ZERO ||
+           m.m21.abs() > NEARLY_ZERO ||
+           m.m22 < 0.0 ||
+           m.m23.abs() > NEARLY_ZERO ||
+           m.m24.abs() > NEARLY_ZERO ||
+           m.m31.abs() > NEARLY_ZERO ||
+           m.m32.abs() > NEARLY_ZERO ||
+           (m.m33 - 1.0).abs() > NEARLY_ZERO ||
+           m.m34.abs() > NEARLY_ZERO ||
+           m.m43.abs() > NEARLY_ZERO ||
+           (m.m44 - 1.0).abs() > NEARLY_ZERO {
+            return None;
+        }
+
+        Some(ScaleOffset {
+            scale: Vector2D::new(m.m11, m.m22),
+            offset: Vector2D::new(m.m41, m.m42),
+        })
+    }
+
+    pub fn inverse(&self) -> Self {
+        ScaleOffset {
+            scale: Vector2D::new(
+                1.0 / self.scale.x,
+                1.0 / self.scale.y,
+            ),
+            offset: Vector2D::new(
+                -self.offset.x / self.scale.x,
+                -self.offset.y / self.scale.y,
+            ),
+        }
+    }
+
+    pub fn offset(&self, offset: Vector2D<f32>) -> Self {
+        ScaleOffset {
+            scale: self.scale,
+            offset: self.offset + offset,
+        }
+    }
+
+    // Produce a ScaleOffset that includes both self
+    // and other. The 'self' ScaleOffset is applied
+    // after other.
+    pub fn accumulate(&self, other: &ScaleOffset) -> Self {
+        ScaleOffset {
+            scale: Vector2D::new(
+                self.scale.x * other.scale.x,
+                self.scale.y * other.scale.y,
+            ),
+            offset: Vector2D::new(
+                self.offset.x + self.scale.x * other.offset.x,
+                self.offset.y + self.scale.y * other.offset.y,
+            ),
+        }
+    }
+
+    // Find the difference between two ScaleOffset types.
+    pub fn difference(&self, other: &ScaleOffset) -> Self {
+        ScaleOffset {
+            scale: Vector2D::new(
+                other.scale.x / self.scale.x,
+                other.scale.y / self.scale.y,
+            ),
+            offset: Vector2D::new(
+                (other.offset.x - self.offset.x) / self.scale.x,
+                (other.offset.y - self.offset.y) / self.scale.y,
+            ),
+        }
+    }
+
+    pub fn map_rect<F, T>(&self, rect: &TypedRect<f32, F>) -> TypedRect<f32, T> {
+        TypedRect::new(
+            TypedPoint2D::new(
+                rect.origin.x * self.scale.x + self.offset.x,
+                rect.origin.y * self.scale.y + self.offset.y,
+            ),
+            TypedSize2D::new(
+                rect.size.width * self.scale.x,
+                rect.size.height * self.scale.y,
+            )
+        )
+    }
+
+    pub fn unmap_rect<F, T>(&self, rect: &TypedRect<f32, F>) -> TypedRect<f32, T> {
+        TypedRect::new(
+            TypedPoint2D::new(
+                (rect.origin.x - self.offset.x) / self.scale.x,
+                (rect.origin.y - self.offset.y) / self.scale.y,
+            ),
+            TypedSize2D::new(
+                rect.size.width / self.scale.x,
+                rect.size.height / self.scale.y,
+            )
+        )
+    }
+
+    pub fn to_transform<F, T>(&self) -> TypedTransform3D<f32, F, T> {
+        TypedTransform3D::row_major(
+            self.scale.x,
+            0.0,
+            0.0,
+            0.0,
+
+            0.0,
+            self.scale.y,
+            0.0,
+            0.0,
+
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+
+            self.offset.x,
+            self.offset.y,
+            0.0,
+            1.0,
+        )
+    }
+}
 
 // TODO: Implement these in euclid!
 pub trait MatrixHelpers<Src, Dst> {
@@ -511,4 +666,64 @@ pub fn raster_rect_to_device_pixels(
     let world_rect = rect * TypedScale::new(1.0);
     let device_rect = world_rect * device_pixel_scale;
     device_rect.round_out()
+}
+
+/// Run the first callback over all elements in the array. If the callback returns true,
+/// the element is removed from the array and moved to a second callback.
+///
+/// This is a simple implementation waiting for Vec::drain_filter to be stable.
+/// When that happens, code like:
+///
+/// let filter = |op| {
+///     match *op {
+///         Enum::Foo | Enum::Bar => true,
+///         Enum::Baz => false,
+///     }
+/// };
+/// drain_filter(
+///     &mut ops,
+///     filter,
+///     |op| {
+///         match op {
+///             Enum::Foo => { foo(); }
+///             Enum::Bar => { bar(); }
+///             Enum::Baz => { unreachable!(); }
+///         }
+///     },
+/// );
+///
+/// Can be rewritten as:
+///
+/// let filter = |op| {
+///     match *op {
+///         Enum::Foo | Enum::Bar => true,
+///         Enum::Baz => false,
+///     }
+/// };
+/// for op in ops.drain_filter(filter) {
+///     match op {
+///         Enum::Foo => { foo(); }
+///         Enum::Bar => { bar(); }
+///         Enum::Baz => { unreachable!(); }
+///     }
+/// }
+///
+/// See https://doc.rust-lang.org/std/vec/struct.Vec.html#method.drain_filter
+pub fn drain_filter<T, Filter, Action>(
+    vec: &mut Vec<T>,
+    mut filter: Filter,
+    mut action: Action,
+)
+where
+    Filter: FnMut(&mut T) -> bool,
+    Action: FnMut(T)
+{
+    let mut i = 0;
+    while i != vec.len() {
+        if filter(&mut vec[i]) {
+            action(vec.remove(i));
+        } else {
+            i += 1;
+        }
+    }
 }

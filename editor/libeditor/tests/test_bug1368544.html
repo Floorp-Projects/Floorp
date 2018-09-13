@@ -21,9 +21,7 @@ SimpleTest.waitForFocus(() => {
   let textarea = document.getElementById("textarea");
   let editor = SpecialPowers.wrap(textarea).editor;
 
-  let spellChecker =
-    SpecialPowers.Cc["@mozilla.org/editor/editorspellchecker;1"]
-    .createInstance(SpecialPowers.Ci.nsIEditorSpellCheck);
+  let spellChecker = SpecialPowers.Cu.createSpellChecker();
   spellChecker.InitSpellChecker(editor, false);
 
   textarea.focus();

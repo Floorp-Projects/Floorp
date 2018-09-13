@@ -78,41 +78,45 @@ class NameResolver
      */
     bool nameExpression(ParseNode* n, bool* foundName) {
         switch (n->getKind()) {
-          case ParseNodeKind::Dot:
-            if (!nameExpression(n->pn_left, foundName)) {
+          case ParseNodeKind::Dot: {
+            PropertyAccess* prop = &n->as<PropertyAccess>();
+            if (!nameExpression(&prop->expression(), foundName)) {
                 return false;
             }
             if (!*foundName) {
                 return true;
             }
-            return appendPropertyReference(n->pn_right->pn_atom);
+            return appendPropertyReference(prop->right()->as<NameNode>().atom());
+          }
 
           case ParseNodeKind::Name:
             *foundName = true;
-            return buf->append(n->pn_atom);
+            return buf->append(n->as<NameNode>().atom());
 
           case ParseNodeKind::This:
             *foundName = true;
             return buf->append("this");
 
-          case ParseNodeKind::Elem:
-            if (!nameExpression(n->pn_left, foundName)) {
+          case ParseNodeKind::Elem: {
+            PropertyByValue* elem = &n->as<PropertyByValue>();
+            if (!nameExpression(&elem->expression(), foundName)) {
                 return false;
             }
             if (!*foundName) {
                 return true;
             }
-            if (!buf->append('[') || !nameExpression(n->pn_right, foundName)) {
+            if (!buf->append('[') || !nameExpression(elem->right(), foundName)) {
                 return false;
             }
             if (!*foundName) {
                 return true;
             }
             return buf->append(']');
+          }
 
           case ParseNodeKind::Number:
             *foundName = true;
-            return appendNumber(n->pn_dval);
+            return appendNumber(n->as<NumericLiteral>().value());
 
           default:
             /* We're confused as to what to call this function. */
@@ -139,7 +143,7 @@ class NameResolver
 
         for (int pos = nparents - 1; pos >= 0; pos--) {
             ParseNode* cur = parents[pos];
-            if (cur->isAssignment()) {
+            if (cur->is<AssignmentNode>()) {
                 return cur;
             }
 
@@ -199,11 +203,10 @@ class NameResolver
      * listed, then it is skipped. Otherwise an intelligent name is guessed to
      * assign to the function's displayAtom field.
      */
-    bool resolveFun(ParseNode* pn, HandleAtom prefix, MutableHandleAtom retAtom) {
-        MOZ_ASSERT(pn != nullptr);
-        MOZ_ASSERT(pn->isKind(ParseNodeKind::Function));
-        MOZ_ASSERT(pn->isArity(PN_CODE));
-        RootedFunction fun(cx, pn->pn_funbox->function());
+    bool resolveFun(CodeNode* funNode, HandleAtom prefix, MutableHandleAtom retAtom) {
+        MOZ_ASSERT(funNode != nullptr);
+        MOZ_ASSERT(funNode->isKind(ParseNodeKind::Function));
+        RootedFunction fun(cx, funNode->funbox()->function());
 
         StringBuffer buf(cx);
         this->buf = &buf;
@@ -236,8 +239,8 @@ class NameResolver
 
         /* If the function is assigned to something, then that is very relevant */
         if (assignment) {
-            if (assignment->isAssignment()) {
-                assignment = assignment->pn_left;
+            if (assignment->is<AssignmentNode>()) {
+                assignment = assignment->as<AssignmentNode>().left();
             }
             bool foundName = false;
             if (!nameExpression(assignment, &foundName)) {
@@ -257,15 +260,15 @@ class NameResolver
             ParseNode* node = toName[pos];
 
             if (node->isKind(ParseNodeKind::Colon) || node->isKind(ParseNodeKind::Shorthand)) {
-                ParseNode* left = node->pn_left;
+                ParseNode* left = node->as<BinaryNode>().left();
                 if (left->isKind(ParseNodeKind::ObjectPropertyName) ||
                     left->isKind(ParseNodeKind::String))
                 {
-                    if (!appendPropertyReference(left->pn_atom)) {
+                    if (!appendPropertyReference(left->as<NameNode>().atom())) {
                         return false;
                     }
                 } else if (left->isKind(ParseNodeKind::Number)) {
-                    if (!appendNumericPropertyReference(left->pn_dval)) {
+                    if (!appendNumericPropertyReference(left->as<NumericLiteral>().value())) {
                         return false;
                     }
                 } else {
@@ -302,7 +305,7 @@ class NameResolver
 
         // Skip assigning the guessed name if the function has a (dynamically)
         // computed inferred name.
-        if (!pn->isDirectRHSAnonFunction()) {
+        if (!funNode->isDirectRHSAnonFunction()) {
             fun->setGuessedAtom(retAtom);
         }
         return true;
@@ -314,12 +317,12 @@ class NameResolver
      * for new variables and then return an anonymous function using this scope.
      */
     bool isDirectCall(int pos, ParseNode* cur) {
-        return pos >= 0 && call(parents[pos]) && parents[pos]->pn_head == cur;
+        return pos >= 0 && call(parents[pos]) && parents[pos]->as<BinaryNode>().left() == cur;
     }
 
-    bool resolveTemplateLiteral(ParseNode* node, HandleAtom prefix) {
+    bool resolveTemplateLiteral(ListNode* node, HandleAtom prefix) {
         MOZ_ASSERT(node->isKind(ParseNodeKind::TemplateStringList));
-        ParseNode* element = node->pn_head;
+        ParseNode* element = node->head();
         while (true) {
             MOZ_ASSERT(element->isKind(ParseNodeKind::TemplateString));
 
@@ -336,10 +339,10 @@ class NameResolver
         }
     }
 
-    bool resolveTaggedTemplate(ParseNode* node, HandleAtom prefix) {
-        MOZ_ASSERT(node->isKind(ParseNodeKind::TaggedTemplate));
+    bool resolveTaggedTemplate(BinaryNode* taggedTemplate, HandleAtom prefix) {
+        MOZ_ASSERT(taggedTemplate->isKind(ParseNodeKind::TaggedTemplate));
 
-        ParseNode* tag = node->pn_left;
+        ParseNode* tag = taggedTemplate->left();
 
         // The leading expression, e.g. |tag| in |tag`foo`|,
         // that might contain functions.
@@ -350,18 +353,18 @@ class NameResolver
         // The callsite object node is first.  This node only contains
         // internal strings or undefined and an array -- no user-controlled
         // expressions.
-        ParseNode* element = node->pn_right->pn_head;
+        CallSiteNode* element =
+            &taggedTemplate->right()->as<ListNode>().head()->as<CallSiteNode>();
 #ifdef DEBUG
         {
-            MOZ_ASSERT(element->isKind(ParseNodeKind::CallSiteObj));
-            ParseNode* array = element->pn_head;
-            MOZ_ASSERT(array->isKind(ParseNodeKind::Array));
-            for (ParseNode* kid = array->pn_head; kid; kid = kid->pn_next) {
-                MOZ_ASSERT(kid->isKind(ParseNodeKind::TemplateString));
+            ListNode* rawNodes = &element->head()->as<ListNode>();
+            MOZ_ASSERT(rawNodes->isKind(ParseNodeKind::Array));
+            for (ParseNode* raw : rawNodes->contents()) {
+                MOZ_ASSERT(raw->isKind(ParseNodeKind::TemplateString));
             }
-            for (ParseNode* next = array->pn_next; next; next = next->pn_next) {
-                MOZ_ASSERT(next->isKind(ParseNodeKind::TemplateString) ||
-                           next->isKind(ParseNodeKind::RawUndefined));
+            for (ParseNode* cooked : element->contentsFrom(rawNodes->pn_next)) {
+                MOZ_ASSERT(cooked->isKind(ParseNodeKind::TemplateString) ||
+                           cooked->isKind(ParseNodeKind::RawUndefined));
             }
         }
 #endif
@@ -389,11 +392,11 @@ class NameResolver
         RootedAtom prefix(cx, prefixArg);
 
         MOZ_ASSERT(cur != nullptr);
-        MOZ_ASSERT(cur->isArity(PN_CODE) == (cur->isKind(ParseNodeKind::Function) ||
-                                             cur->isKind(ParseNodeKind::Module)));
+        MOZ_ASSERT(cur->is<CodeNode>() == (cur->isKind(ParseNodeKind::Function) ||
+                                           cur->isKind(ParseNodeKind::Module)));
         if (cur->isKind(ParseNodeKind::Function)) {
             RootedAtom prefix2(cx);
-            if (!resolveFun(cur, prefix, &prefix2)) {
+            if (!resolveFun(&cur->as<CodeNode>(), prefix, &prefix2)) {
                 return false;
             }
 
@@ -420,38 +423,55 @@ class NameResolver
           // Nodes with no children that might require name resolution need no
           // further work.
           case ParseNodeKind::EmptyStatement:
-          case ParseNodeKind::String:
-          case ParseNodeKind::TemplateString:
-          case ParseNodeKind::RegExp:
           case ParseNodeKind::True:
           case ParseNodeKind::False:
           case ParseNodeKind::Null:
           case ParseNodeKind::RawUndefined:
           case ParseNodeKind::Elision:
           case ParseNodeKind::Generator:
-          case ParseNodeKind::Number:
-          case ParseNodeKind::Break:
-          case ParseNodeKind::Continue:
-          case ParseNodeKind::Debugger:
           case ParseNodeKind::ExportBatchSpec:
-          case ParseNodeKind::ObjectPropertyName:
           case ParseNodeKind::PosHolder:
-            MOZ_ASSERT(cur->isArity(PN_NULLARY));
+            MOZ_ASSERT(cur->is<NullaryNode>());
+            break;
+
+          case ParseNodeKind::Debugger:
+            MOZ_ASSERT(cur->is<DebuggerStatement>());
+            break;
+
+          case ParseNodeKind::Break:
+            MOZ_ASSERT(cur->is<BreakStatement>());
+            break;
+
+          case ParseNodeKind::Continue:
+            MOZ_ASSERT(cur->is<ContinueStatement>());
+            break;
+
+          case ParseNodeKind::ObjectPropertyName:
+          case ParseNodeKind::String:
+          case ParseNodeKind::TemplateString:
+            MOZ_ASSERT(cur->is<NameNode>());
+            break;
+
+          case ParseNodeKind::RegExp:
+            MOZ_ASSERT(cur->is<RegExpLiteral>());
+            break;
+
+          case ParseNodeKind::Number:
+            MOZ_ASSERT(cur->is<NumericLiteral>());
             break;
 
           case ParseNodeKind::TypeOfName:
           case ParseNodeKind::SuperBase:
-            MOZ_ASSERT(cur->isArity(PN_UNARY));
-            MOZ_ASSERT(cur->pn_kid->isKind(ParseNodeKind::Name));
-            MOZ_ASSERT(!cur->pn_kid->expr());
+            MOZ_ASSERT(cur->as<UnaryNode>().kid()->isKind(ParseNodeKind::Name));
+            MOZ_ASSERT(!cur->as<UnaryNode>().kid()->as<NameNode>().initializer());
             break;
 
           case ParseNodeKind::NewTarget:
-          case ParseNodeKind::ImportMeta:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            MOZ_ASSERT(cur->pn_left->isKind(ParseNodeKind::PosHolder));
-            MOZ_ASSERT(cur->pn_right->isKind(ParseNodeKind::PosHolder));
+          case ParseNodeKind::ImportMeta: {
+            MOZ_ASSERT(cur->as<BinaryNode>().left()->isKind(ParseNodeKind::PosHolder));
+            MOZ_ASSERT(cur->as<BinaryNode>().right()->isKind(ParseNodeKind::PosHolder));
             break;
+          }
 
           // Nodes with a single non-null child requiring name resolution.
           case ParseNodeKind::ExpressionStatement:
@@ -474,16 +494,14 @@ class NameResolver
           case ParseNodeKind::Spread:
           case ParseNodeKind::MutateProto:
           case ParseNodeKind::Export:
-            MOZ_ASSERT(cur->isArity(PN_UNARY));
-            if (!resolve(cur->pn_kid, prefix)) {
+            if (!resolve(cur->as<UnaryNode>().kid(), prefix)) {
                 return false;
             }
             break;
 
           // Nodes with a single nullable child.
           case ParseNodeKind::This:
-            MOZ_ASSERT(cur->isArity(PN_UNARY));
-            if (ParseNode* expr = cur->pn_kid) {
+            if (ParseNode* expr = cur->as<ThisLiteral>().kid()) {
                 if (!resolve(expr, prefix)) {
                     return false;
                 }
@@ -511,74 +529,78 @@ class NameResolver
           case ParseNodeKind::Switch:
           case ParseNodeKind::For:
           case ParseNodeKind::ClassMethod:
-          case ParseNodeKind::SetThis:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            if (!resolve(cur->pn_left, prefix)) {
+          case ParseNodeKind::SetThis: {
+            BinaryNode* node = &cur->as<BinaryNode>();
+            if (!resolve(node->left(), prefix)) {
                 return false;
             }
-            if (!resolve(cur->pn_right, prefix)) {
-                return false;
-            }
-            break;
-
-          case ParseNodeKind::Elem:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            if (!cur->as<PropertyByValue>().isSuper() && !resolve(cur->pn_left, prefix)) {
-                return false;
-            }
-            if (!resolve(cur->pn_right, prefix)) {
+            if (!resolve(node->right(), prefix)) {
                 return false;
             }
             break;
+          }
 
-          case ParseNodeKind::With:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            if (!resolve(cur->pn_left, prefix)) {
+          case ParseNodeKind::Elem: {
+            PropertyByValue* elem = &cur->as<PropertyByValue>();
+            if (!elem->isSuper() && !resolve(&elem->expression(), prefix)) {
                 return false;
             }
-            if (!resolve(cur->pn_right, prefix)) {
+            if (!resolve(&elem->key(), prefix)) {
                 return false;
             }
             break;
+          }
 
-          case ParseNodeKind::Case:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            if (ParseNode* caseExpr = cur->pn_left) {
+          case ParseNodeKind::With: {
+            BinaryNode* node = &cur->as<BinaryNode>();
+            if (!resolve(node->left(), prefix)) {
+                return false;
+            }
+            if (!resolve(node->right(), prefix)) {
+                return false;
+            }
+            break;
+          }
+
+          case ParseNodeKind::Case: {
+            CaseClause* caseClause = &cur->as<CaseClause>();
+            if (ParseNode* caseExpr = caseClause->caseExpression()) {
                 if (!resolve(caseExpr, prefix)) {
                     return false;
                 }
             }
-            if (!resolve(cur->pn_right, prefix)) {
+            if (!resolve(caseClause->statementList(), prefix)) {
                 return false;
             }
             break;
+          }
 
-          case ParseNodeKind::InitialYield:
-            MOZ_ASSERT(cur->pn_kid->isKind(ParseNodeKind::Assign) &&
-                       cur->pn_kid->pn_left->isKind(ParseNodeKind::Name) &&
-                       cur->pn_kid->pn_right->isKind(ParseNodeKind::Generator));
+          case ParseNodeKind::InitialYield: {
+#ifdef DEBUG
+            AssignmentNode* assignNode = &cur->as<UnaryNode>().kid()->as<AssignmentNode>();
+            MOZ_ASSERT(assignNode->left()->isKind(ParseNodeKind::Name));
+            MOZ_ASSERT(assignNode->right()->isKind(ParseNodeKind::Generator));
+#endif
             break;
+          }
 
           case ParseNodeKind::YieldStar:
-            MOZ_ASSERT(cur->isArity(PN_UNARY));
-            if (!resolve(cur->pn_kid, prefix)) {
+            if (!resolve(cur->as<UnaryNode>().kid(), prefix)) {
                 return false;
             }
             break;
 
           case ParseNodeKind::Yield:
           case ParseNodeKind::Await:
-            MOZ_ASSERT(cur->isArity(PN_UNARY));
-            if (cur->pn_kid) {
-                if (!resolve(cur->pn_kid, prefix)) {
+            if (ParseNode* expr = cur->as<UnaryNode>().kid()) {
+                if (!resolve(expr, prefix)) {
                     return false;
                 }
             }
             break;
 
           case ParseNodeKind::Return:
-            MOZ_ASSERT(cur->isArity(PN_UNARY));
-            if (ParseNode* returnValue = cur->pn_kid) {
+            if (ParseNode* returnValue = cur->as<UnaryNode>().kid()) {
                 if (!resolve(returnValue, prefix)) {
                     return false;
                 }
@@ -587,31 +609,33 @@ class NameResolver
 
           case ParseNodeKind::Import:
           case ParseNodeKind::ExportFrom:
-          case ParseNodeKind::ExportDefault:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
+          case ParseNodeKind::ExportDefault: {
+            BinaryNode* node = &cur->as<BinaryNode>();
             // The left halves of Import and ExportFrom don't contain any
             // unconstrained expressions, but it's very hard to assert this to
             // safely rely on it. So recur anyway.
-            if (!resolve(cur->pn_left, prefix)) {
+            if (!resolve(node->left(), prefix)) {
                 return false;
             }
-            MOZ_ASSERT_IF(!cur->isKind(ParseNodeKind::ExportDefault),
-                          cur->pn_right->isKind(ParseNodeKind::String));
+            MOZ_ASSERT_IF(!node->isKind(ParseNodeKind::ExportDefault),
+                          node->right()->isKind(ParseNodeKind::String));
             break;
+          }
 
           // Ternary nodes with three expression children.
-          case ParseNodeKind::Conditional:
-            MOZ_ASSERT(cur->isArity(PN_TERNARY));
-            if (!resolve(cur->pn_kid1, prefix)) {
+          case ParseNodeKind::Conditional: {
+            TernaryNode* condNode = &cur->as<TernaryNode>();
+            if (!resolve(condNode->kid1(), prefix)) {
                 return false;
             }
-            if (!resolve(cur->pn_kid2, prefix)) {
+            if (!resolve(condNode->kid2(), prefix)) {
                 return false;
             }
-            if (!resolve(cur->pn_kid3, prefix)) {
+            if (!resolve(condNode->kid3(), prefix)) {
                 return false;
             }
             break;
+          }
 
           // The first part of a for-in/of is the declaration in the loop (or
           // null if no declaration).  The latter two parts are the location
@@ -620,117 +644,127 @@ class NameResolver
           // computed property names, and possibly through [deprecated!]
           // initializers) also contain functions to name.
           case ParseNodeKind::ForIn:
-          case ParseNodeKind::ForOf:
-            MOZ_ASSERT(cur->isArity(PN_TERNARY));
-            if (!resolve(cur->pn_kid1, prefix)) {
+          case ParseNodeKind::ForOf: {
+            TernaryNode* forHead = &cur->as<TernaryNode>();
+            if (!resolve(forHead->kid1(), prefix)) {
                 return false;
             }
-            MOZ_ASSERT(!cur->pn_kid2);
-            if (!resolve(cur->pn_kid3, prefix)) {
+            MOZ_ASSERT(!forHead->kid2());
+            if (!resolve(forHead->kid3(), prefix)) {
                 return false;
             }
             break;
+          }
 
           // Every part of a for(;;) head may contain a function needing name
           // resolution.
-          case ParseNodeKind::ForHead:
-            MOZ_ASSERT(cur->isArity(PN_TERNARY));
-            if (ParseNode* init = cur->pn_kid1) {
+          case ParseNodeKind::ForHead: {
+            TernaryNode* forHead = &cur->as<TernaryNode>();
+            if (ParseNode* init = forHead->kid1()) {
                 if (!resolve(init, prefix)) {
                     return false;
                 }
             }
-            if (ParseNode* cond = cur->pn_kid2) {
+            if (ParseNode* cond = forHead->kid2()) {
                 if (!resolve(cond, prefix)) {
                     return false;
                 }
             }
-            if (ParseNode* step = cur->pn_kid3) {
-                if (!resolve(step, prefix)) {
+            if (ParseNode* update = forHead->kid3()) {
+                if (!resolve(update, prefix)) {
                     return false;
                 }
             }
             break;
+          }
 
           // The first child of a class is a pair of names referring to it,
           // inside and outside the class.  The second is the class's heritage,
           // if any.  The third is the class body.
-          case ParseNodeKind::Class:
-            MOZ_ASSERT(cur->isArity(PN_TERNARY));
-            MOZ_ASSERT_IF(cur->pn_kid1, cur->pn_kid1->isKind(ParseNodeKind::ClassNames));
-            MOZ_ASSERT_IF(cur->pn_kid1, cur->pn_kid1->isArity(PN_BINARY));
-            MOZ_ASSERT_IF(cur->pn_kid1 && cur->pn_kid1->pn_left,
-                          cur->pn_kid1->pn_left->isKind(ParseNodeKind::Name));
-            MOZ_ASSERT_IF(cur->pn_kid1 && cur->pn_kid1->pn_left,
-                          !cur->pn_kid1->pn_left->expr());
-            MOZ_ASSERT_IF(cur->pn_kid1, cur->pn_kid1->pn_right->isKind(ParseNodeKind::Name));
-            MOZ_ASSERT_IF(cur->pn_kid1, !cur->pn_kid1->pn_right->expr());
-            if (cur->pn_kid2) {
-                if (!resolve(cur->pn_kid2, prefix)) {
+          case ParseNodeKind::Class: {
+            ClassNode* classNode = &cur->as<ClassNode>();
+#ifdef DEBUG
+            if (classNode->names()) {
+                ClassNames* names = classNode->names();
+                if (NameNode* outerBinding = names->outerBinding()) {
+                    MOZ_ASSERT(outerBinding->isKind(ParseNodeKind::Name));
+                    MOZ_ASSERT(!outerBinding->initializer());
+                }
+
+                NameNode* innerBinding = names->innerBinding();
+                MOZ_ASSERT(innerBinding->isKind(ParseNodeKind::Name));
+                MOZ_ASSERT(!innerBinding->initializer());
+            }
+#endif
+            if (ParseNode* heritage = classNode->heritage()) {
+                if (!resolve(heritage, prefix)) {
                     return false;
                 }
             }
-            if (!resolve(cur->pn_kid3, prefix)) {
+            if (!resolve(classNode->methodList(), prefix)) {
                 return false;
             }
             break;
+          }
 
           // The condition and consequent are non-optional, but the alternative
           // might be omitted.
-          case ParseNodeKind::If:
-            MOZ_ASSERT(cur->isArity(PN_TERNARY));
-            if (!resolve(cur->pn_kid1, prefix)) {
+          case ParseNodeKind::If: {
+            TernaryNode* ifNode = &cur->as<TernaryNode>();
+            if (!resolve(ifNode->kid1(), prefix)) {
                 return false;
             }
-            if (!resolve(cur->pn_kid2, prefix)) {
+            if (!resolve(ifNode->kid2(), prefix)) {
                 return false;
             }
-            if (cur->pn_kid3) {
-                if (!resolve(cur->pn_kid3, prefix)) {
+            if (ParseNode* alternative = ifNode->kid3()) {
+                if (!resolve(alternative, prefix)) {
                     return false;
                 }
             }
             break;
+          }
 
           // The statements in the try-block are mandatory.  The catch-blocks
           // and finally block are optional (but at least one or the other must
           // be present).
-          case ParseNodeKind::Try:
-            MOZ_ASSERT(cur->isArity(PN_TERNARY));
-            if (!resolve(cur->pn_kid1, prefix)) {
+          case ParseNodeKind::Try: {
+            TryNode* tryNode = &cur->as<TryNode>();
+            if (!resolve(tryNode->body(), prefix)) {
                 return false;
             }
-            MOZ_ASSERT(cur->pn_kid2 || cur->pn_kid3);
-            if (ParseNode* catchScope = cur->pn_kid2) {
-                MOZ_ASSERT(catchScope->isKind(ParseNodeKind::LexicalScope));
+            MOZ_ASSERT(tryNode->catchScope() || tryNode->finallyBlock());
+            if (LexicalScopeNode* catchScope = tryNode->catchScope()) {
                 MOZ_ASSERT(catchScope->scopeBody()->isKind(ParseNodeKind::Catch));
-                MOZ_ASSERT(catchScope->scopeBody()->isArity(PN_BINARY));
+                MOZ_ASSERT(catchScope->scopeBody()->is<BinaryNode>());
                 if (!resolve(catchScope->scopeBody(), prefix)) {
                     return false;
                 }
             }
-            if (ParseNode* finallyBlock = cur->pn_kid3) {
+            if (ParseNode* finallyBlock = tryNode->finallyBlock()) {
                 if (!resolve(finallyBlock, prefix)) {
                     return false;
                 }
             }
             break;
+          }
 
           // The first child, the catch-pattern, may contain functions via
           // computed property names.  The optional catch-conditions may
           // contain any expression.  The catch statements, of course, may
           // contain arbitrary expressions.
-          case ParseNodeKind::Catch:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            if (cur->pn_left) {
-                if (!resolve(cur->pn_left, prefix)) {
+          case ParseNodeKind::Catch: {
+            BinaryNode* node = &cur->as<BinaryNode>();
+            if (ParseNode* varNode = node->left()) {
+                if (!resolve(varNode, prefix)) {
                     return false;
                 }
             }
-            if (!resolve(cur->pn_right, prefix)) {
+            if (!resolve(node->right(), prefix)) {
                 return false;
             }
             break;
+          }
 
           // Nodes with arbitrary-expression children.
           case ParseNodeKind::Or:
@@ -767,8 +801,7 @@ class NameResolver
           case ParseNodeKind::Var:
           case ParseNodeKind::Const:
           case ParseNodeKind::Let:
-            MOZ_ASSERT(cur->isArity(PN_LIST));
-            for (ParseNode* element = cur->pn_head; element; element = element->pn_next) {
+            for (ParseNode* element : cur->as<ListNode>().contents()) {
                 if (!resolve(element, prefix)) {
                     return false;
                 }
@@ -777,8 +810,7 @@ class NameResolver
 
           case ParseNodeKind::Object:
           case ParseNodeKind::ClassMethodList:
-            MOZ_ASSERT(cur->isArity(PN_LIST));
-            for (ParseNode* element = cur->pn_head; element; element = element->pn_next) {
+            for (ParseNode* element : cur->as<ListNode>().contents()) {
                 if (!resolve(element, prefix)) {
                     return false;
                 }
@@ -788,37 +820,35 @@ class NameResolver
           // A template string list's contents alternate raw template string
           // contents with expressions interpolated into the overall literal.
           case ParseNodeKind::TemplateStringList:
-            MOZ_ASSERT(cur->isArity(PN_LIST));
-            if (!resolveTemplateLiteral(cur, prefix)) {
+            if (!resolveTemplateLiteral(&cur->as<ListNode>(), prefix)) {
                 return false;
             }
             break;
 
           case ParseNodeKind::TaggedTemplate:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            if (!resolveTaggedTemplate(cur, prefix)) {
+            if (!resolveTaggedTemplate(&cur->as<BinaryNode>(), prefix)) {
                 return false;
             }
             break;
 
           case ParseNodeKind::New:
           case ParseNodeKind::Call:
-          case ParseNodeKind::SuperCall:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            if (!resolve(cur->pn_left, prefix)) {
+          case ParseNodeKind::SuperCall: {
+            BinaryNode* callNode = &cur->as<BinaryNode>();
+            if (!resolve(callNode->left(), prefix)) {
                 return false;
             }
-            if (!resolve(cur->pn_right, prefix)) {
+            if (!resolve(callNode->right(), prefix)) {
                 return false;
             }
             break;
+          }
 
           // Handles the arguments for new/call/supercall, but does _not_ handle
           // the Arguments node used by tagged template literals, since that is
           // special-cased inside of resolveTaggedTemplate.
           case ParseNodeKind::Arguments:
-            MOZ_ASSERT(cur->isArity(PN_LIST));
-            for (ParseNode* element = cur->pn_head; element; element = element->pn_next) {
+            for (ParseNode* element : cur->as<ListNode>().contents()) {
                 if (!resolve(element, prefix)) {
                     return false;
                 }
@@ -830,56 +860,56 @@ class NameResolver
           // contain a single export batch specifier.
           case ParseNodeKind::ExportSpecList:
           case ParseNodeKind::ImportSpecList: {
-            MOZ_ASSERT(cur->isArity(PN_LIST));
 #ifdef DEBUG
             bool isImport = cur->isKind(ParseNodeKind::ImportSpecList);
-            ParseNode* item = cur->pn_head;
+            ListNode* list = &cur->as<ListNode>();
+            ParseNode* item = list->head();
             if (!isImport && item && item->isKind(ParseNodeKind::ExportBatchSpec)) {
-                MOZ_ASSERT(item->isArity(PN_NULLARY));
+                MOZ_ASSERT(item->is<NullaryNode>());
                 break;
             }
-            for (; item; item = item->pn_next) {
-                MOZ_ASSERT(item->isKind(isImport
+            for (ParseNode* item : list->contents()) {
+                BinaryNode* spec = &item->as<BinaryNode>();
+                MOZ_ASSERT(spec->isKind(isImport
                                         ? ParseNodeKind::ImportSpec
                                         : ParseNodeKind::ExportSpec));
-                MOZ_ASSERT(item->isArity(PN_BINARY));
-                MOZ_ASSERT(item->pn_left->isKind(ParseNodeKind::Name));
-                MOZ_ASSERT(!item->pn_left->expr());
-                MOZ_ASSERT(item->pn_right->isKind(ParseNodeKind::Name));
-                MOZ_ASSERT(!item->pn_right->expr());
+                MOZ_ASSERT(spec->left()->isKind(ParseNodeKind::Name));
+                MOZ_ASSERT(!spec->left()->as<NameNode>().initializer());
+                MOZ_ASSERT(spec->right()->isKind(ParseNodeKind::Name));
+                MOZ_ASSERT(!spec->right()->as<NameNode>().initializer());
             }
 #endif
             break;
           }
 
-          case ParseNodeKind::CallImport:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            if (!resolve(cur->pn_right, prefix))
+          case ParseNodeKind::CallImport: {
+            BinaryNode* node = &cur->as<BinaryNode>();
+            if (!resolve(node->right(), prefix)) {
                 return false;
+            }
             break;
+          }
 
-          case ParseNodeKind::Dot:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-
+          case ParseNodeKind::Dot: {
             // Super prop nodes do not have a meaningful LHS
-            if (cur->as<PropertyAccess>().isSuper()) {
+            PropertyAccess* prop = &cur->as<PropertyAccess>();
+            if (prop->isSuper()) {
                 break;
             }
-            if (!resolve(cur->pn_left, prefix)) {
+            if (!resolve(&prop->expression(), prefix)) {
                 return false;
             }
             break;
+          }
 
           case ParseNodeKind::Label:
-            MOZ_ASSERT(cur->isArity(PN_NAME));
-            if (!resolve(cur->expr(), prefix)) {
+            if (!resolve(cur->as<LabeledStatement>().statement(), prefix)) {
                 return false;
             }
             break;
 
           case ParseNodeKind::Name:
-            MOZ_ASSERT(cur->isArity(PN_NAME));
-            if (ParseNode* init = cur->expr()) {
+            if (ParseNode* init = cur->as<NameNode>().initializer()) {
                 if (!resolve(init, prefix)) {
                     return false;
                 }
@@ -887,16 +917,14 @@ class NameResolver
             break;
 
           case ParseNodeKind::LexicalScope:
-            MOZ_ASSERT(cur->isArity(PN_SCOPE));
-            if (!resolve(cur->scopeBody(), prefix)) {
+            if (!resolve(cur->as<LexicalScopeNode>().scopeBody(), prefix)) {
                 return false;
             }
             break;
 
           case ParseNodeKind::Function:
           case ParseNodeKind::Module:
-            MOZ_ASSERT(cur->isArity(PN_CODE));
-            if (ParseNode* body = cur->pn_body) {
+            if (ParseNode* body = cur->as<CodeNode>().body()) {
                 if (!resolve(body, prefix)) {
                     return false;
                 }
