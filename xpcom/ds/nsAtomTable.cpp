@@ -8,6 +8,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/MruCache.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Sprintf.h"
@@ -221,9 +222,17 @@ struct AtomTableEntry : public PLDHashEntryHdr
   nsAtom* MOZ_NON_OWNING_REF mAtom;
 };
 
-#define RECENTLY_USED_MAIN_THREAD_ATOM_CACHE_SIZE 31
-static nsAtom*
-  sRecentlyUsedMainThreadAtoms[RECENTLY_USED_MAIN_THREAD_ATOM_CACHE_SIZE] = {};
+struct AtomCache : public MruCache<AtomTableKey, nsAtom*, AtomCache>
+{
+  static HashNumber Hash(const AtomTableKey& aKey) { return aKey.mHash; }
+  static bool Match(const AtomTableKey& aKey, const nsAtom* aVal)
+  {
+    MOZ_ASSERT(aKey.mUTF16String);
+    return aVal->Equals(aKey.mUTF16String, aKey.mLength);
+  }
+};
+
+static AtomCache sRecentlyUsedMainThreadAtoms;
 
 // In order to reduce locking contention for concurrent atomization, we segment
 // the atom table into N subtables, each with a separate lock. If the hash
@@ -418,9 +427,7 @@ nsAtomTable::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 void nsAtomTable::GC(GCKind aKind)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  for (uint32_t i = 0; i < RECENTLY_USED_MAIN_THREAD_ATOM_CACHE_SIZE; ++i) {
-    sRecentlyUsedMainThreadAtoms[i] = nullptr;
-  }
+  sRecentlyUsedMainThreadAtoms.Clear();
 
   // Note that this is effectively an incremental GC, since only one subtable
   // is locked at a time.
@@ -770,16 +777,10 @@ nsAtomTable::AtomizeMainThread(const nsAString& aUTF16String)
   RefPtr<nsAtom> retVal;
   uint32_t hash;
   AtomTableKey key(aUTF16String.Data(), aUTF16String.Length(), &hash);
-  uint32_t index = hash % RECENTLY_USED_MAIN_THREAD_ATOM_CACHE_SIZE;
-  nsAtom* atom = sRecentlyUsedMainThreadAtoms[index];
-  if (atom) {
-    uint32_t length = atom->GetLength();
-    if (length == key.mLength &&
-        (memcmp(atom->GetUTF16String(),
-                key.mUTF16String, length * sizeof(char16_t)) == 0)) {
-      retVal = atom;
-      return retVal.forget();
-    }
+  auto p = sRecentlyUsedMainThreadAtoms.Lookup(key);
+  if (p) {
+    retVal = p.Data();
+    return retVal.forget();
   }
 
   nsAtomSubTable& table = SelectSubTable(key);
@@ -795,7 +796,7 @@ nsAtomTable::AtomizeMainThread(const nsAString& aUTF16String)
     retVal = newAtom.forget();
   }
 
-  sRecentlyUsedMainThreadAtoms[index] = he->mAtom;
+  p.Set(retVal);
   return retVal.forget();
 }
 
