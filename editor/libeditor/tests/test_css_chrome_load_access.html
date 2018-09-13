@@ -24,31 +24,27 @@ function runTest() {
 
   var editframe = window.frames[0];
   var editdoc = editframe.document;
-  editdoc.designMode = 'on';
+  editdoc.designMode = "on";
   var editor = SpecialPowers.wrap(editframe).docShell.editingSession
                             .getEditorForWindow(editframe);
 
   styleSheets = editor.QueryInterface(Ci.nsIEditorStyleSheets);
 
   // test 1: try to access chrome:// url that is accessible to content
-  try
-  {
+  try {
     styleSheets.addOverrideStyleSheet("chrome://browser/content/pageinfo/pageInfo.css");
     ok(true, "should be allowed to access chrome://*.css if contentaccessible");
-  }
-  catch (ex) {
+  } catch (ex) {
     ok(false, "should be allowed to access chrome://*.css if contentaccessible");
   }
 
   // test 2: try to access chrome:// url that is *not* accessible to content
   // please note that addOverrideStyleSheet() is triggered by the system,
   // so the load should also *always* succeed.
-  try
-  {
+  try {
     styleSheets.addOverrideStyleSheet("chrome://mozapps/skin/aboutNetworking.css");
     ok(true, "should be allowed to access chrome://*.css even if *not* contentaccessible");
-  }
-  catch (ex) {
+  } catch (ex) {
     ok(false, "should be allowed to access chrome://*.css even if *not* contentaccessible");
   }
   SimpleTest.finish();

@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1204147
 
 /** Test for Bug 1204147 **/
 SimpleTest.waitForExplicitFinish();
-var content = document.getElementById('content');
+var content = document.getElementById("content");
 // Load a subframe containing an editor with using "en-GB". At first
 // load, it will set the dictionary to "en-GB". The bug was that a content preference
 // was also created. At second load, we check the dictionary for another element,
@@ -58,9 +58,9 @@ var loadListener = function(evt) {
   var doc = evt.target.contentDocument;
   var elem;
   if (firstLoad) {
-    elem = doc.getElementById('en-GB');
+    elem = doc.getElementById("en-GB");
   } else {
-    elem = doc.getElementById('en-US');
+    elem = doc.getElementById("en-US");
   }
 
   var editor = SpecialPowers.wrap(elem).editor;
@@ -69,17 +69,17 @@ var loadListener = function(evt) {
 
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(elem, function () {
+  .onSpellCheck(elem, function() {
     var spellchecker = inlineSpellChecker.spellChecker;
     try {
       var currentDictonary = spellchecker.GetCurrentDictionary();
-    } catch(e) {}
+    } catch (e) {}
 
     if (firstLoad) {
       firstLoad = false;
 
        // First time around, the element's language should be used.
-      is (currentDictonary, "en-GB", "unexpected lang " + currentDictonary + " instead of en-GB");
+      is(currentDictonary, "en-GB", "unexpected lang " + currentDictonary + " instead of en-GB");
 
       // Note that on second load, we load a different page, which does NOT have the trouble-causing
       // contenteditable in it. Sadly, loading the same page with the trouble-maker in it
@@ -87,12 +87,12 @@ var loadListener = function(evt) {
       // because the trouble-maker causes the 'global' spell check dictionary to be set to "en-GB"
       // (since it picks the first one from the list) before we have the chance to retrieve
       // the dictionary for the element (which happens asynchonously after the spell check has completed).
-      content.src = 'http://mochi.test:8888/tests/editor/spellchecker/tests/bug1204147_subframe2.html?firstload=false';
+      content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug1204147_subframe2.html?firstload=false";
     } else {
       // Second time around, the element should default to en-US.
       // Without the fix, the first run sets the content preference to en-GB for the whole site.
-      is (currentDictonary, "en-US", "unexpected lang " + currentDictonary + " instead of en-US");
-      content.removeEventListener('load', loadListener);
+      is(currentDictonary, "en-US", "unexpected lang " + currentDictonary + " instead of en-US");
+      content.removeEventListener("load", loadListener);
 
       // Remove the fake en-GB dictionary again, since it's otherwise picked up by later tests.
       script.sendSyncMessage("destroy");
@@ -101,11 +101,11 @@ var loadListener = function(evt) {
       SimpleTest.finish();
     }
   });
-}
+};
 
-content.addEventListener('load', loadListener);
+content.addEventListener("load", loadListener);
 
-content.src = 'http://mochi.test:8888/tests/editor/spellchecker/tests/bug1204147_subframe.html?firstload=true';
+content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug1204147_subframe.html?firstload=true";
 
 </script>
 </pre>

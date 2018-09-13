@@ -56,7 +56,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
       ["underline", "true"],
       ["undo", "false"],
       ["unlink", "true"],
-      ["not-a-command", "false"]
+      ["not-a-command", "false"],
     ];
 
     var commandIndetermResults = [
@@ -85,7 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
       ["justifyleft", "false"],
       ["justifyright", "false"],
       ["outdent", "false"],
-      //["paste", "false"],
+      // ["paste", "false"],
       ["redo", "false"],
       ["removeformat", "false"],
       ["selectall", "false"],
@@ -96,9 +96,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
       ["underline", "false"],
       ["undo", "false"],
       ["unlink", "false"],
-      ["not-a-command", "false"]
+      ["not-a-command", "false"],
     ];
-    
+
     var commandStateResults = [
       ["contentReadOnly", "false"],
       ["copy", "false"],
@@ -125,7 +125,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
       ["justifyleft", "true"],
       ["justifyright", "false"],
       ["outdent", "false"],
-      //["paste", "false"],
+      // ["paste", "false"],
       ["redo", "false"],
       ["removeformat", "false"],
       ["selectall", "false"],
@@ -136,9 +136,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
       ["underline", "false"],
       ["undo", "false"],
       ["unlink", "false"],
-      ["not-a-command", "false"]
+      ["not-a-command", "false"],
     ];
-    
+
     var commandValueResults = [
       ["contentReadOnly", ""],
       ["copy", ""],
@@ -165,7 +165,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
       ["justifyleft", "left"],
       ["justifyright", "left"],
       ["outdent", ""],
-      //["paste", ""],
+      // ["paste", ""],
       ["redo", ""],
       ["removeformat", ""],
       ["selectall", ""],
@@ -178,14 +178,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
       ["unlink", ""],
       ["not-a-command", ""],
     ];
-    
-  
+
+
     function callQueryCommandEnabled(cmdName) {
       var result;
       try {
-        result = '' + document.queryCommandEnabled( cmdName );
-      } catch( error ) {
-        result = 'name' in error ? error.name : 'exception';
+        result = "" + document.queryCommandEnabled( cmdName );
+      } catch ( error ) {
+        result = "name" in error ? error.name : "exception";
       }
       return result;
     }
@@ -193,19 +193,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
     function callQueryCommandIndeterm(cmdName) {
       var result;
       try {
-        result = '' + document.queryCommandIndeterm( cmdName );
-      } catch( error ) {
-        result = 'name' in error ? error.name : 'exception';
+        result = "" + document.queryCommandIndeterm( cmdName );
+      } catch ( error ) {
+        result = "name" in error ? error.name : "exception";
       }
       return result;
     }
-    
+
     function callQueryCommandState(cmdName) {
       var result;
       try {
-        result = '' + document.queryCommandState( cmdName );
-      } catch( error ) {
-        result = 'name' in error ? error.name : 'exception';
+        result = "" + document.queryCommandState( cmdName );
+      } catch ( error ) {
+        result = "name" in error ? error.name : "exception";
       }
       return result;
     }
@@ -213,33 +213,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=408231
     function callQueryCommandValue(cmdName) {
       var result;
       try {
-        result = '' + document.queryCommandValue( cmdName );
-      } catch( error ) {
-        result = 'name' in error ? error.name : 'exception';
+        result = "" + document.queryCommandValue( cmdName );
+      } catch ( error ) {
+        result = "name" in error ? error.name : "exception";
       }
-      return result;    
+      return result;
     }
 
     function testQueryCommand(expectedResults, fun, funName) {
-      for (i=0; i<expectedResults.length; i++) {
+      for (i = 0; i < expectedResults.length; i++) {
         var commandName = expectedResults[i][0];
         var expectedResult = expectedResults[i][1];
         var result = fun(commandName);
-        ok(result == expectedResult, funName + '('+commandName+') result=' +result+ ' expected=' + expectedResult);
+        ok(result == expectedResult, funName + "(" + commandName + ") result=" + result + " expected=" + expectedResult);
       }
     }
 
     function runTests() {
-      document.designMode='on';
+      document.designMode = "on";
       window.getSelection().collapse(document.body, 0);
       testQueryCommand(commandEnabledResults, callQueryCommandEnabled, "queryCommandEnabled");
       testQueryCommand(commandIndetermResults, callQueryCommandIndeterm, "queryCommandIndeterm");
       testQueryCommand(commandStateResults, callQueryCommandState, "queryCommandState");
       testQueryCommand(commandValueResults, callQueryCommandValue, "queryCommandValue");
-      document.designMode='off';
+      document.designMode = "off";
       SimpleTest.finish();
     }
-    
+
     window.onload = runTests;
     SimpleTest.waitForExplicitFinish();
 

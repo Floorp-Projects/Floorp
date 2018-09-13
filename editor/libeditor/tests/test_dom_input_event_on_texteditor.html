@@ -26,17 +26,15 @@ SimpleTest.waitForFocus(runTests, window);
 
 const kIsMac = navigator.platform.indexOf("Mac") == 0;
 
-function runTests()
-{
-  function doTests(aElement, aDescription, aIsTextarea)
-  {
+function runTests() {
+  function doTests(aElement, aDescription, aIsTextarea) {
     aDescription += ": ";
     aElement.focus();
     aElement.value = "";
 
     var inputEvent = null;
 
-    var handler = function (aEvent) {
+    var handler = function(aEvent) {
       is(aEvent.target, aElement,
          "input event is fired on unexpected element: " + aEvent.target.tagName);
       ok(!aEvent.cancelable, "input event must not be cancelable");

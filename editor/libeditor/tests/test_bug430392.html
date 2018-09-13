@@ -40,7 +40,7 @@ function test() {
     synthesizeKey("KEY_Backspace");
   // For some reason this test fails if the separator is not "br"
   }, () => document.queryCommandValue("defaultParagraphSeparator") == "br"
-           ?  undefined : " A; B ; C "],
+           ? undefined : " A; B ; C "],
   ["adding shift-returns", () => {
     getSelection().collapse(edit.firstChild, 0);
     synthesizeKey("KEY_ArrowRight");
@@ -57,7 +57,7 @@ function test() {
   .forEach(item => {
       var cmd = Array.isArray(item) ? item[0] : item;
       var param = Array.isArray(item) ? item[1] : "";
-      tests.push([cmd, () => { document.execCommand(cmd, false, param) }]);
+      tests.push([cmd, () => { document.execCommand(cmd, false, param); }]);
    });
   // These are all TODO -- they don't move the non-editable elements
   [
@@ -74,15 +74,15 @@ function test() {
     ["fontsize", "1"],
     "justifyright",
     "justifycenter",
-    "justifyfull"
+    "justifyfull",
   ]
   .forEach(item => {
       var cmd = Array.isArray(item) ? item[0] : item;
       var param = Array.isArray(item) ? item[1] : "";
-      tests.push([cmd, () => { document.execCommand(cmd, false, param) },
+      tests.push([cmd, () => { document.execCommand(cmd, false, param); },
                   " A ;  ; BC "]);
    });
-  tests.push(["indent", () => { document.execCommand("indent") },
+  tests.push(["indent", () => { document.execCommand("indent"); },
               "  ;  ;  ABC"]);
   tests.forEach(arr => {
     ["div", "br", "p"].forEach(sep => {

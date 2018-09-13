@@ -14,17 +14,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=629845
 <p id="display"></p>
 
 <script>
-function initFrame(frame)
-{
-  frame.contentWindow.document.designMode="on";
+function initFrame(frame) {
+  frame.contentWindow.document.designMode = "on";
   frame.contentWindow.document.writeln("<body></body>");
 
-  document.getElementsByTagName('button')[0].click();
+  document.getElementsByTagName("button")[0].click();
 }
 
-function command(aName)
-{
-  var frame = document.getElementsByTagName('iframe')[0];
+function command(aName) {
+  var frame = document.getElementsByTagName("iframe")[0];
 
   is(frame.contentDocument.designMode, "on", "design mode should be on!");
   var caught = false;
@@ -38,7 +36,7 @@ function command(aName)
   ok(!caught, "No exception should have been thrown.");
 
   // Stop the document load before finishing, just to be clean.
-  document.getElementsByTagName('iframe')[0].contentWindow.document.close();
+  document.getElementsByTagName("iframe")[0].contentWindow.document.close();
   SimpleTest.finish();
 }
 </script>

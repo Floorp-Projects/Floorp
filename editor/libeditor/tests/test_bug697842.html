@@ -26,8 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=697842
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests);
 
-function runTests()
-{
+function runTests() {
   var editor = document.getElementById("editor");
   editor.focus();
 
@@ -63,10 +62,10 @@ function runTests()
         { "string": composingString,
           "clauses":
           [
-            { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-          ]
+            { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+          ],
         },
-        "caret": { "start": 1, "length": 0 }
+        "caret": { "start": 1, "length": 0 },
       });
 
     // input second character
@@ -76,10 +75,10 @@ function runTests()
         { "string": composingString,
           "clauses":
           [
-            { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-          ]
+            { "length": 2, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+          ],
         },
-        "caret": { "start": 2, "length": 0 }
+        "caret": { "start": 2, "length": 0 },
       });
 
     // convert them
@@ -89,10 +88,10 @@ function runTests()
           "clauses":
           [
             { "length": 2,
-              "attr": COMPOSITION_ATTR_SELECTED_CLAUSE }
-          ]
+              "attr": COMPOSITION_ATTR_SELECTED_CLAUSE },
+          ],
         },
-        "caret": { "start": 2, "length": 0 }
+        "caret": { "start": 2, "length": 0 },
       });
 
     synthesizeComposition({ type: "compositioncommitasis" });

@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1316302
 <script type="application/javascript">
 /** Test for Bug 1316302 **/
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(()=>{
+SimpleTest.waitForFocus(() => {
   var editor = document.getElementsByTagName("div")[0];
   var blockquote = document.getElementsByTagName("blockquote")[0];
   var selection = window.getSelection();

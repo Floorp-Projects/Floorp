@@ -43,14 +43,12 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests, window);
 
-function runTests()
-{
+function runTests() {
   runTestsInternal();
   SimpleTest.finish();
 }
 
-function runTestsInternal()
-{
+function runTestsInternal() {
   var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
              getService(SpecialPowers.Ci.nsIFocusManager);
   // XXX using selCon for checking the visibility of the caret, however,
@@ -157,8 +155,7 @@ function runTestsInternal()
   ok(selCon.caretVisible, "caret isn't visible in the editor (spanInEditor)");
 
   // Move focus to each focusable element in the editor.
-  function testFocusMove(aSetFocusElementID, aFocusable, aCaretVisible)
-  {
+  function testFocusMove(aSetFocusElementID, aFocusable, aCaretVisible) {
     editor.focus();
     is(SpecialPowers.unwrap(fm.focusedElement), editor,
        "testFocusMove: the editor didn't get focus at initializing (" +

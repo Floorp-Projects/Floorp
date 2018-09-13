@@ -17,8 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1053048
 
   const nsISelectionListener = SpecialPowers.Ci.nsISelectionListener;
 
-  function runTests()
-  {
+  function runTests() {
     var textarea = SpecialPowers.wrap(document.getElementById("textarea"));
     textarea.focus();
 
@@ -27,12 +26,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1053048
 
     var selectionListener = {
       count: 0,
-      notifySelectionChanged: function (aDocument, aSelection, aReason)
-      {
-        ok(true, "selectionStart: " + textarea.selectionStart);
-        ok(true, "selectionEnd: " + textarea.selectionEnd);
-        this.count++;
-      }
+      notifySelectionChanged(aDocument, aSelection, aReason) {
+      ok(true, "selectionStart: " + textarea.selectionStart);
+      ok(true, "selectionEnd: " + textarea.selectionEnd);
+      this.count++;
+    },
     };
 
     // Move caret to the end of the textarea

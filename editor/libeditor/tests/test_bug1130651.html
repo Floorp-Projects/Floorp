@@ -11,7 +11,7 @@ getSelection().collapse(div.firstChild, 2);
 try {
   document.execCommand("inserttext", false, "\n");
   ok(true, "No exception thrown");
-} catch(e) {
+} catch (e) {
   ok(false, "Exception: " + e);
 }
 </script>

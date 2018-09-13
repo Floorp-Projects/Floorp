@@ -26,8 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=551704
 <pre id="test">
 <script type="application/javascript">
 
-function testLineBreak(div, type, expectedText, expectedHTML, callback)
-{
+function testLineBreak(div, type, expectedText, expectedHTML, callback) {
   div.focus();
   getSelection().collapse(div, 0);
   type();
@@ -98,7 +97,7 @@ SimpleTest.waitForFocus(function() {
 function continueTest() {
   var divs = [];
   for (var i = 0; i < 8; ++i) {
-    divs[i] = document.getElementById("test" + (i+1));
+    divs[i] = document.getElementById("test" + (i + 1));
   }
   var current = 0;
   function doNextTest() {

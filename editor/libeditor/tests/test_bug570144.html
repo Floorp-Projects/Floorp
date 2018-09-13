@@ -78,13 +78,13 @@ function try2split(list) {
 
 function testSection(element, context, shouldCreateLI, shouldCreateP) {
   var nbLI = shouldCreateLI ? 2 : 1; // number of expected list items
-  var nbP  = shouldCreateP  ? 2 : 1; // number of expected paragraphs
+  var nbP  = shouldCreateP ? 2 : 1; // number of expected paragraphs
 
   function message(nodeName, dup) {
     return context + ":[Return] should " + (dup ? "" : "not ")
-                   + "create another <" + nodeName + ">."
+                   + "create another <" + nodeName + ">.";
   }
-  var msgP  = message("p",  shouldCreateP);
+  var msgP  = message("p", shouldCreateP);
   var msgLI = message("li", shouldCreateLI);
   var msgDT = message("dt", shouldCreateLI);
   var msgDD = message("dd", false);
@@ -109,7 +109,7 @@ function testSection(element, context, shouldCreateLI, shouldCreateP) {
 function runTests() {
   testSection(document.getElementById("test1"), "editable paragraph in list item", false, false);
   testSection(document.getElementById("test2"), "paragraph in editable list item", false, true);
-  testSection(document.getElementById("test3"), "paragraph in editable list",      true,  false);
+  testSection(document.getElementById("test3"), "paragraph in editable list", true, false);
   /* Note: concerning #test3, it would be preferrable that [Return] creates
    * another paragraph in another list item (i.e. last argument = 'true').
    * Currently it just creates an empty list item, which is acceptable.

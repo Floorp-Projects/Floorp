@@ -21,19 +21,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1162952
 /** Test for Bug 1162952 **/
 var userCallbackRun = false;
 
-document.addEventListener('keydown', function() {
+document.addEventListener("keydown", function() {
     // During a user callback, the commands should be enabled
     userCallbackRun = true;
-    is(true, document.queryCommandEnabled('cut'));
-    is(true, document.queryCommandEnabled('copy'));
+    is(true, document.queryCommandEnabled("cut"));
+    is(true, document.queryCommandEnabled("copy"));
 });
 
 // Otherwise, they should be disabled
-is(false, document.queryCommandEnabled('cut'));
-is(false, document.queryCommandEnabled('copy'));
+is(false, document.queryCommandEnabled("cut"));
+is(false, document.queryCommandEnabled("copy"));
 
 // Fire a user callback
-sendString('A');
+sendString("A");
 
 ok(userCallbackRun, "User callback should've been run");
 

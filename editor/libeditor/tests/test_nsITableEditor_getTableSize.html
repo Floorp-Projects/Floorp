@@ -59,7 +59,7 @@ SimpleTest.waitForFocus(function() {
     '<table><tr><td><table id="test" data-rows="3" data-cols="2"><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table></td></tr></table>',
     '<table><tr><td><table><tr><td id="test" data-rows="3" data-cols="2">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table></td></tr></table>',
     '<table><tr><td><table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td><p id="test" data-rows="3" data-cols="2">cell2-2</p></td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table></td></tr></table>',
-  ]
+  ];
 
   for (const kTest of kTests) {
     editor.innerHTML = kTest;

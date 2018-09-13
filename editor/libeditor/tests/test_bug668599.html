@@ -33,12 +33,12 @@ SimpleTest.waitForFocus(runTests);
 function select(element) {
   // select the element text content
   var userSelection = window.getSelection();
-  window.getSelection().removeAllRanges(); 
+  window.getSelection().removeAllRanges();
   var range = document.createRange();
   range.setStart(element.firstChild, 0);
   range.setEnd(element.firstChild, element.textContent.length);
   userSelection.addRange(range);
-};
+}
 
 function runTests() {
   var span = document.querySelector("#test1 span");

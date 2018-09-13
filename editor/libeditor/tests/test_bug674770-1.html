@@ -23,16 +23,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=674770
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[["middlemouse.paste", true]]}, startTests);
+  SpecialPowers.pushPrefEnv({"set": [["middlemouse.paste", true]]}, startTests);
 });
 
 function startTests() {
   var tests = [
     { description: "Testing link in <div>: ",
-      target: function () { return document.querySelector("#link1"); },
+      target() { return document.querySelector("#link1"); },
       linkShouldWork: true },
     { description: "Testing link in <div contenteditable>: ",
-      target: function () { return document.querySelector("#link2"); },
+      target() { return document.querySelector("#link2"); },
       linkShouldWork: false },
   ];
   var currentTest;
@@ -55,7 +55,7 @@ function startTests() {
     SimpleTest.executeSoon(runNextTest);
   }, false);
 
-  SpecialPowers.addSystemEventListener(window, "click", function (aEvent) {
+  SpecialPowers.addSystemEventListener(window, "click", function(aEvent) {
     // When the click event should cause default action, e.g., opening the link,
     // the event shouldn't have been consumed except the link handler.
     // However, in e10s mode, it's not consumed during propagating the event but

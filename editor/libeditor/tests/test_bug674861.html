@@ -86,7 +86,7 @@ function try2split(element, caretPos) {
       pos = 0;
       break;
     case CARET_MIDDLE:
-      pos = Math.floor(len/2);
+      pos = Math.floor(len / 2);
       break;
     case CARET_END:
       pos = len;
@@ -103,7 +103,7 @@ function try2split(element, caretPos) {
   range.setStart(element.firstChild, pos);
   range.setEnd(element.firstChild, pos);
   sel.addRange(range);
-  
+
   // simulates two [Return] keypresses
   synthesizeKey("KEY_Enter");
   synthesizeKey("KEY_Enter");

@@ -49,12 +49,12 @@ function runTest() {
 
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
-  onSpellCheck(edit, function () {
+  onSpellCheck(edit, function() {
     ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
        "All misspellings before editing are accounted for.");
 
     append(" becaz I'm a lulcat!");
-    onSpellCheck(edit, function () {
+    onSpellCheck(edit, function() {
       gMisspeltWords.push("becaz");
       gMisspeltWords.push("lulcat");
       ok(isSpellingCheckOk(getEditor(), gMisspeltWords),

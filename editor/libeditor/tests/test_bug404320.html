@@ -25,8 +25,7 @@ function runTests() {
   var win = document.getElementById("testIframe").contentWindow;
   var doc = document.getElementById("testIframe").contentDocument;
 
-  function testFormatBlock(tag, withAngleBrackets, shouldSucceed)
-  {
+  function testFormatBlock(tag, withAngleBrackets, shouldSucceed) {
     win.getSelection().selectAllChildren(doc.body.firstChild);
     doc.execCommand("FormatBlock", false,
                     withAngleBrackets ? tag : "<" + tag + ">");
@@ -34,16 +33,14 @@ function runTests() {
     if (shouldSucceed && (tag == "dd" || tag == "dt")) {
       is(doc.body.firstChild.tagName, "DL", "tag was changed");
       resultNode = doc.body.firstChild.firstChild;
-    }
-    else {
+    } else {
       resultNode = doc.body.firstChild;
     }
 
     is(resultNode.tagName, shouldSucceed ? tag.toUpperCase() : "P", "tag was changed");
   }
 
-  function formatBlockTests(tags, shouldSucceed)
-  {
+  function formatBlockTests(tags, shouldSucceed) {
     var html = "<p>Content</p>";
     for (var i = 0; i < tags.length; ++i) {
       var tag = tags[i];

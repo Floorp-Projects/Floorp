@@ -88,16 +88,16 @@ SimpleTest.waitForFocus(function() {
      "true expected (de_DE directory should exist)");
   script.addMessageListener("popupshown", handlePopup);
 
-  elem_de = document.getElementById('de-DE');
+  elem_de = document.getElementById("de-DE");
   editor_de = SpecialPowers.wrap(elem_de).editor;
   editor_de.setSpellcheckUserOverride(true);
 
-  onSpellCheck(elem_de, function () {
+  onSpellCheck(elem_de, function() {
     var inlineSpellChecker = editor_de.getInlineSpellChecker(true);
     var spellchecker = inlineSpellChecker.spellChecker;
     try {
       var currentDictonary = spellchecker.GetCurrentDictionary();
-    } catch(e) {}
+    } catch (e) {}
 
     // Check that the German dictionary is loaded and that the spell check has worked.
     is(currentDictonary, "de-DE", "expected de-DE");
@@ -107,8 +107,8 @@ SimpleTest.waitForFocus(function() {
     elem_de.focus();
 
     // Make sure all spell checking action is done before right-click to select the en-US dictionary.
-    onSpellCheck(elem_de, function () {
-      synthesizeMouse(elem_de, 2, 2, { type : "contextmenu", button : 2 }, window);
+    onSpellCheck(elem_de, function() {
+      synthesizeMouse(elem_de, 2, 2, { type: "contextmenu", button: 2 }, window);
     });
   });
 });
@@ -117,12 +117,12 @@ function handlePopup() {
   var state = script.sendSyncMessage("hidepopup")[0][0];
   is(state, "open", "checking if popup is open");
 
-  onSpellCheck(elem_de, function () {
+  onSpellCheck(elem_de, function() {
     var inlineSpellChecker = editor_de.getInlineSpellChecker(true);
     var spellchecker = inlineSpellChecker.spellChecker;
     try {
       currentDictonary = spellchecker.GetCurrentDictionary();
-    } catch(e) {}
+    } catch (e) {}
 
     // Check that the English dictionary is loaded and that the spell check has worked.
     is(currentDictonary, "en-US", "expected en-US");

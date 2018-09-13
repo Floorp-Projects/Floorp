@@ -9,13 +9,13 @@
 
 function runTest() {
   function verifyContent(s) {
-    var e = document.getElementById('i1');
+    var e = document.getElementById("i1");
     var doc = e.contentDocument;
     is(doc.body.innerHTML, s, "");
   }
 
-  function pasteInto(html,target_id) {
-    var e = document.getElementById('i1');
+  function pasteInto(html, target_id) {
+    var e = document.getElementById("i1");
     var doc = e.contentDocument;
     doc.designMode = "on";
     doc.body.innerHTML = html;
@@ -32,8 +32,8 @@ function runTest() {
    return e;
   }
 
-  function copyToClipBoard(s,asHTML,target_id) {
-    var e = document.getElementById('i2');
+  function copyToClipBoard(s, asHTML, target_id) {
+    var e = document.getElementById("i2");
     var doc = e.contentDocument;
     if (asHTML) {
       doc.body.innerHTML = s;
@@ -56,12 +56,12 @@ function runTest() {
     return e;
   }
 
-  copyToClipBoard('<span>Hello</span><span>Kitty</span>', true);
-  pasteInto('');
-  verifyContent('<span>Hello</span><span>Kitty</span>');
+  copyToClipBoard("<span>Hello</span><span>Kitty</span>", true);
+  pasteInto("");
+  verifyContent("<span>Hello</span><span>Kitty</span>");
 
   copyToClipBoard("<dl><dd>Hello Kitty</dd></dl><span>Hello</span><span>Kitty</span>", true);
-  pasteInto('<ol><li id="paste_here">X</li></ol>',"paste_here");
+  pasteInto('<ol><li id="paste_here">X</li></ol>', "paste_here");
   verifyContent('<ol><li id="paste_here">X<dl><dd>Hello Kitty</dd></dl><span>Hello</span><span>Kitty</span></li></ol>');
 
 // The following test doesn't do what I expected, because the special handling
@@ -72,7 +72,7 @@ function runTest() {
 //  verifyContent('<ol><li id="paste_here">X</li><li>Hello Kitty</li><span>Hello</span></ol>');
 
   copyToClipBoard("<pre>Kitty</pre><span>Hello</span>", true);
-  pasteInto('<pre id="paste_here">Hello </pre>',"paste_here");
+  pasteInto('<pre id="paste_here">Hello </pre>', "paste_here");
   verifyContent('<pre id="paste_here">Hello Kitty<span>Hello</span></pre>');
 
   SimpleTest.finish();
