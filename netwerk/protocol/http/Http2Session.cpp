@@ -405,7 +405,7 @@ Http2Session::RegisterStreamID(Http2Stream *stream, uint32_t aNewID)
     }
   }
 
-  if (stream->StreamID() & 1) {
+  if (aNewID & 1) {
     // don't count push streams here
     MOZ_ASSERT(stream->Transaction(), "no transation for the stream!");
     RefPtr<nsHttpConnectionInfo> ci(stream->Transaction()->ConnectionInfo());
