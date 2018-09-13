@@ -323,14 +323,15 @@ nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
   // already have been set up during reflow/ComputeFrameEffectsRect
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
-  nsSVGFilterProperty *prop = SVGObserverUtils::GetFilterProperty(firstFrame);
-  if (!prop || !prop->IsInObserverLists()) {
+  SVGFilterObserverListForCSSProp* observers =
+    SVGObserverUtils::GetFilterObserverList(firstFrame);
+  if (!observers || !observers->IsInObserverLists()) {
     return aInvalidRegion;
   }
 
   int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
 
-  if (!prop || !prop->ReferencesValidResources()) {
+  if (!observers || !observers->ReferencesValidResources()) {
     // The frame is either not there or not currently available,
     // perhaps because we're in the middle of tearing stuff down.
     // Be conservative, return our visual overflow rect relative
@@ -363,8 +364,9 @@ nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(nsIFrame* aFrame,
   // already have been set up during reflow/ComputeFrameEffectsRect
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
-  nsSVGFilterProperty *prop = SVGObserverUtils::GetFilterProperty(firstFrame);
-  if (!prop || !prop->ReferencesValidResources()) {
+  SVGFilterObserverListForCSSProp* observers =
+    SVGObserverUtils::GetFilterObserverList(firstFrame);
+  if (!observers || !observers->ReferencesValidResources()) {
     return aDirtyRect;
   }
 

@@ -36,7 +36,7 @@ FontInfoData::Load()
         } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
             gfxCriticalError() <<
                 "Exception occurred reading font data for " <<
-                NS_ConvertUTF16toUTF8(mFontFamiliesToLoad[i]).get();
+                mFontFamiliesToLoad[i].get();
         }
     }
 

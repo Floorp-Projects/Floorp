@@ -1813,7 +1813,8 @@ struct MOZ_STACK_CLASS IterativeFailureTestParams
     RootedFunction testFunction;
     unsigned threadStart = 0;
     unsigned threadEnd = 0;
-    bool expectExceptionOnFailure = false;
+    bool expectExceptionOnFailure = true;
+    bool keepFailing = false;
     bool verbose = false;
 };
 
@@ -1821,7 +1822,7 @@ struct IterativeFailureSimulator
 {
     virtual void setup(JSContext* cx) {}
     virtual void teardown(JSContext* cx) {}
-    virtual void startSimulating(JSContext* cx, unsigned iteration, unsigned thread) = 0;
+    virtual void startSimulating(JSContext* cx, unsigned iteration, unsigned thread, bool keepFailing) = 0;
     virtual bool stopSimulating() = 0;
     virtual void cleanup(JSContext* cx) {}
 };
@@ -1849,6 +1850,8 @@ RunIterativeFailureTest(JSContext* cx, const IterativeFailureTestParams& params,
 
     size_t compartmentCount = CountCompartments(cx);
 
+    RootedValue exception(cx);
+
     simulator.setup(cx);
 
     for (unsigned thread = params.threadStart; thread < params.threadEnd; thread++) {
@@ -1865,7 +1868,7 @@ RunIterativeFailureTest(JSContext* cx, const IterativeFailureTestParams& params,
 
             MOZ_ASSERT(!cx->isExceptionPending());
 
-            simulator.startSimulating(cx, iteration, thread);
+            simulator.startSimulating(cx, iteration, thread, params.keepFailing);
 
             RootedValue result(cx);
             bool ok = JS_CallFunction(cx, cx->global(), params.testFunction,
@@ -1890,8 +1893,14 @@ RunIterativeFailureTest(JSContext* cx, const IterativeFailureTestParams& params,
             // it. More correct would be to have the caller pass some kind of
             // exception specification and to check the exception against it.
 
+            if (!failureWasSimulated && cx->isExceptionPending()) {
+                if (!cx->getPendingException(&exception))
+                    return false;
+            }
             cx->clearPendingException();
             simulator.cleanup(cx);
+
+            gc::FinishGC(cx);
 
             // Some tests create a new compartment or zone on every
             // iteration. Our GC is triggered by GC allocations and not by
@@ -1919,6 +1928,14 @@ RunIterativeFailureTest(JSContext* cx, const IterativeFailureTestParams& params,
 
         if (params.verbose) {
             fprintf(stderr, "  finished after %d iterations\n", iteration - 2);
+            if (!exception.isUndefined()) {
+                RootedString str(cx, JS::ToString(cx, exception));
+                UniqueChars bytes(JS_EncodeStringToLatin1(cx, str));
+                if (!bytes) {
+                    return false;
+                }
+                fprintf(stderr, "  threw %s\n", bytes.get());
+            }
         }
     }
 
@@ -1947,13 +1964,33 @@ ParseIterativeFailureTestParams(JSContext* cx, const CallArgs& args,
 
     // There are some places where we do fail without raising an exception, so
     // we can't expose this to the fuzzers by default.
-    params->expectExceptionOnFailure = !fuzzingSafe;
+    if (fuzzingSafe)
+        params->expectExceptionOnFailure = false;
+
     if (args.length() == 2) {
-        if (!args[1].isBoolean()) {
-            JS_ReportErrorASCII(cx, "The optional second argument must be a boolean.");
+        if (args[1].isBoolean()) {
+            params->expectExceptionOnFailure = args[1].toBoolean();
+        } else if (args[1].isObject()) {
+            RootedObject options(cx, &args[1].toObject());
+            RootedValue value(cx);
+
+            if (!JS_GetProperty(cx, options, "expectExceptionOnFailure", &value)) {
+                return false;
+            }
+            if (!value.isUndefined()) {
+                params->expectExceptionOnFailure = ToBoolean(value);
+            }
+
+            if (!JS_GetProperty(cx, options, "keepFailing", &value)) {
+                return false;
+            }
+            if (!value.isUndefined()) {
+                params->keepFailing = ToBoolean(value);
+            }
+        } else {
+            JS_ReportErrorASCII(cx, "The optional second argument must be an object or a boolean.");
             return false;
         }
-        params->expectExceptionOnFailure = args[1].toBoolean();
     }
 
     // Test all threads by default.
@@ -1983,9 +2020,9 @@ struct OOMSimulator : public IterativeFailureSimulator
         cx->runtime()->hadOutOfMemory = false;
     }
 
-    void startSimulating(JSContext* cx, unsigned i, unsigned thread) override {
+    void startSimulating(JSContext* cx, unsigned i, unsigned thread, bool keepFailing) override {
         MOZ_ASSERT(!cx->runtime()->hadOutOfMemory);
-        js::oom::SimulateOOMAfter(i, thread, false);
+        js::oom::SimulateOOMAfter(i, thread, keepFailing);
     }
 
     bool stopSimulating() override {
@@ -2020,8 +2057,8 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
 
 struct StackOOMSimulator : public IterativeFailureSimulator
 {
-    void startSimulating(JSContext* cx, unsigned i, unsigned thread) override {
-        js::oom::SimulateStackOOMAfter(i, thread, false);
+    void startSimulating(JSContext* cx, unsigned i, unsigned thread, bool keepFailing) override {
+        js::oom::SimulateStackOOMAfter(i, thread, keepFailing);
     }
 
     bool stopSimulating() override {
@@ -2068,8 +2105,8 @@ struct FailingIterruptSimulator : public IterativeFailureSimulator
         cx->interruptCallbacks().erase(prevEnd, cx->interruptCallbacks().end());
     }
 
-    void startSimulating(JSContext* cx, unsigned i, unsigned thread) override {
-        js::oom::SimulateInterruptAfter(i, thread, false);
+    void startSimulating(JSContext* cx, unsigned i, unsigned thread, bool keepFailing) override {
+        js::oom::SimulateInterruptAfter(i, thread, keepFailing);
     }
 
     bool stopSimulating() override {
@@ -5570,13 +5607,16 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  oomAtAllocation() and return whether any allocation had been caused to fail."),
 
     JS_FN_HELP("oomTest", OOMTest, 0, 0,
-"oomTest(function, [expectExceptionOnFailure = true])",
+"oomTest(function, [expectExceptionOnFailure = true | options])",
 "  Test that the passed function behaves correctly under OOM conditions by\n"
 "  repeatedly executing it and simulating allocation failure at successive\n"
 "  allocations until the function completes without seeing a failure.\n"
 "  By default this tests that an exception is raised if execution fails, but\n"
 "  this can be disabled by passing false as the optional second parameter.\n"
-"  This is also disabled when --fuzzing-safe is specified."),
+"  This is also disabled when --fuzzing-safe is specified.\n"
+"  Alternatively an object can be passed to set the following options:\n"
+"    expectExceptionOnFailure: bool - as described above.\n"
+"    keepFailing: bool - continue to fail after first simulated failure.\n"),
 
     JS_FN_HELP("stackTest", StackTest, 0, 0,
 "stackTest(function, [expectExceptionOnFailure = true])",

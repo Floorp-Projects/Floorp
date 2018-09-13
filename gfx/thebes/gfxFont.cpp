@@ -362,7 +362,7 @@ gfxFontCache::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 
 static void
 LookupAlternateValues(gfxFontFeatureValueSet *featureLookup,
-                      const nsAString& aFamily,
+                      const nsACString& aFamily,
                       const nsTArray<gfxAlternateValue>& altValue,
                       nsTArray<gfxFontFeature>& aFontFeatures)
 {
@@ -450,7 +450,7 @@ gfxFontShaper::MergeFontFeatures(
     const gfxFontStyle *aStyle,
     const nsTArray<gfxFontFeature>& aFontFeatures,
     bool aDisableLigatures,
-    const nsAString& aFamilyName,
+    const nsACString& aFamilyName,
     bool aAddSmallCaps,
     void (*aHandleFeature)(const uint32_t&, uint32_t&, void*),
     void* aHandleFeatureData)
@@ -1330,7 +1330,7 @@ gfxFont::CheckForFeaturesInvolvingSpace()
             "subst default: %8.8x %8.8x %8.8x %8.8x "
             "subst non-default: %8.8x %8.8x %8.8x %8.8x "
             "kerning: %s non-kerning: %s time: %6.3f\n",
-            NS_ConvertUTF16toUTF8(mFontEntry->Name()).get(),
+            mFontEntry->Name().get(),
             mFontEntry->mDefaultSubSpaceFeatures[3],
             mFontEntry->mDefaultSubSpaceFeatures[2],
             mFontEntry->mDefaultSubSpaceFeatures[1],

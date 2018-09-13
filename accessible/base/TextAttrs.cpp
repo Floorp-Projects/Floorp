@@ -480,7 +480,7 @@ TextAttrsMgr::FontFamilyTextAttr::
   gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
   gfxFont* font = fontGroup->GetFirstValidFont();
   gfxFontEntry* fontEntry = font->GetFontEntry();
-  aFamily = fontEntry->FamilyName();
+  aFamily.Append(NS_ConvertUTF8toUTF16(fontEntry->FamilyName()));
   return true;
 }
 
