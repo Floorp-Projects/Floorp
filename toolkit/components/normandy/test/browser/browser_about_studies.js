@@ -183,7 +183,7 @@ decorate_task(
 
       await ContentTask.spawn(browser, null, async () => {
         const doc = content.document;
-        await ContentTaskUtils.waitForCondition(() => !!doc.querySelector(".info-box-content > span"));
+        await ContentTaskUtils.waitForCondition(() => doc.querySelector(".info-box-content > span"));
 
         is(
           doc.querySelector(".info-box-content > span").textContent,
@@ -196,4 +196,4 @@ decorate_task(
       RecipeRunner.checkPrefs();
     }
   }
-);
+).only();
