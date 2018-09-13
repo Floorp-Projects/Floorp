@@ -158,7 +158,7 @@ linux64-infer:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: infer-build}
+        docker-image: {in-tree: static-analysis-build}
         max-run-time: 3600
     run:
         using: toolchain-script
