@@ -9,11 +9,11 @@
       {
         "$extend": "WebExtensionManifest",
         "properties": {
-          "user_scripts": {
+          "userScripts": {
             "type": "object",
             "optional": true,
             "properties": {
-              "api_script": { "$ref": "manifest.ExtensionURL"}
+              "apiScript": { "$ref": "manifest.ExtensionURL"}
             }
           }
         }

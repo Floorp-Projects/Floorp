@@ -40,8 +40,8 @@ add_task(async function test_userScripts_telemetry() {
       permissions: [
         "http://*/*/file_sample.html",
       ],
-      user_scripts: {
-        api_script: "api-script.js",
+      userScripts: {
+        apiScript: "api-script.js",
       },
     },
     background,
