@@ -14,12 +14,6 @@ let panelWin = null;
 
 const URL = "data:text/html;charset=utf8,test split console key delegation";
 
-// Force the old debugger UI since it's directly used (see Bug 1301705)
-Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
-});
-
 add_task(async function() {
   const tab = await addTab(URL);
   const target = TargetFactory.forTab(tab);
