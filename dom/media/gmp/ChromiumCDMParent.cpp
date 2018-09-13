@@ -406,7 +406,7 @@ ChromiumCDMParent::RecvOnResolvePromise(const uint32_t& aPromiseId)
 
 void
 ChromiumCDMParent::RejectPromise(uint32_t aPromiseId,
-                                 nsresult aError,
+                                 nsresult aException,
                                  const nsCString& aErrorMessage)
 {
   GMP_LOG(
@@ -417,7 +417,7 @@ ChromiumCDMParent::RejectPromise(uint32_t aPromiseId,
     return;
   }
 
-  mCDMCallback->RejectPromise(aPromiseId, aError, aErrorMessage);
+  mCDMCallback->RejectPromise(aPromiseId, aException, aErrorMessage);
 }
 
 static nsresult
@@ -439,11 +439,11 @@ ToNsresult(uint32_t aException)
 
 ipc::IPCResult
 ChromiumCDMParent::RecvOnRejectPromise(const uint32_t& aPromiseId,
-                                       const uint32_t& aError,
+                                       const uint32_t& aException,
                                        const uint32_t& aSystemCode,
                                        const nsCString& aErrorMessage)
 {
-  RejectPromise(aPromiseId, ToNsresult(aError), aErrorMessage);
+  RejectPromise(aPromiseId, ToNsresult(aException), aErrorMessage);
   return IPC_OK();
 }
 
@@ -504,26 +504,10 @@ ChromiumCDMParent::RecvOnSessionClosed(const nsCString& aSessionId)
   return IPC_OK();
 }
 
-ipc::IPCResult
-ChromiumCDMParent::RecvOnLegacySessionError(const nsCString& aSessionId,
-                                            const uint32_t& aError,
-                                            const uint32_t& aSystemCode,
-                                            const nsCString& aMessage)
-{
-  GMP_LOG("ChromiumCDMParent::RecvOnLegacySessionError(this=%p)", this);
-  if (!mCDMCallback || mIsShutdown) {
-    return IPC_OK();
-  }
-
-  mCDMCallback->LegacySessionError(
-    aSessionId, ToNsresult(aError), aSystemCode, aMessage);
-  return IPC_OK();
-}
-
 DecryptStatus
-ToDecryptStatus(uint32_t aError)
+ToDecryptStatus(uint32_t aStatus)
 {
-  switch (static_cast<cdm::Status>(aError)) {
+  switch (static_cast<cdm::Status>(aStatus)) {
     case cdm::kSuccess:
       return DecryptStatus::Ok;
     case cdm::kNoKey:

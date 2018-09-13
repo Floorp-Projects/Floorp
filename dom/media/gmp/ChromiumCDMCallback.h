@@ -43,10 +43,6 @@ public:
 
   virtual void SessionClosed(const nsCString& aSessionId) = 0;
 
-  virtual void LegacySessionError(const nsCString& aSessionId,
-                                  nsresult aError,
-                                  uint32_t aSystemCode,
-                                  const nsCString& aMessage) = 0;
   virtual void Terminated() = 0;
 
   virtual void Shutdown() = 0;

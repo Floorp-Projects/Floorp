@@ -1090,11 +1090,6 @@ private:
 
     void SessionClosed(const nsCString& aSessionId) override { }
 
-    void LegacySessionError(const nsCString& aSessionId,
-                            nsresult aError,
-                            uint32_t aSystemCode,
-                            const nsCString& aMessage) override { }
-
     void Terminated() override { mRunner->Terminated(); }
 
     void Shutdown() override { mRunner->Shutdown(); }
