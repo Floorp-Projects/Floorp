@@ -38,6 +38,7 @@
   <string name="preference_category_data_collection_use">Datainnsamling og bruk</string>
   <string name="preference_category_search">Søk</string>
   <string name="preference_show_search_suggestions">Få søkjeforslag</string>
+  <string name="preference_show_search_suggestions_summary">%1$s sender det du skriv i adressefeltet til søkjemotoren din</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_state_on">På</string>
   <string name="preference_state_off">Av</string>
@@ -78,8 +79,10 @@
   <string name="preference_privacy_should_block_cookies_no_option">Nei</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokker berre tredjepartsinfokapslar</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
+  <string name="preference_security_biometric">Bruk fingeravtrykk for å låse opp appen</string>
+  <string name="preference_security_biometric_summary">Fingeravtrykket ditt kan låse opp %1$s, viss ein URL allereie er open i appen. Skjult tilstand vil bli slått på.</string>
   <string name="preference_privacy_secure_mode">Usynleg løyndmodus</string>
-  <string name="preference_privacy_stealth_summary">Gøym nettsider når du byter appar og blokker skjermbildeknipsing.</string>
+  <string name="preference_privacy_stealth_summary">Gøym nettsider når du byter appar og unngå at det vert knipsa skjermbilde.</string>
   <string name="preference_category_security">Sikkerheit</string>
   <string name="preference_category_performance">Yting</string>
   <string name="preference_performance_block_webfonts">Blokker nettfontar</string>
@@ -206,11 +209,25 @@
   <string name="custom_tab_copy_url_action">URL kopiert</string>
   <string name="preference_advanced_summary">Utviklarverktøy</string>
   <string name="preference_category_advanced">Avansert</string>
+  <string name="preference_remote_debugging">Ekstern debugging via USB/Wi-Fi</string>
   <string name="biometric_auth_title">Lås opp %1$s</string>
+  <string name="biometric_auth_description">Trykk på fingeravtrykks-sensoren for å fortsetja.</string>
   <string name="biometric_auth_new_session">Ny økt</string>
   <string name="biometric_auth_image_description">Fingeravtrykkikon</string>
+  <string name="biometric_auth_not_recognized_error">Fingeravtrykk ikkje identifisert. Prøv igjen.</string>
+  <string name="biometric_auth_moved_too_quickly">Fingeren rørte seg for fort. Prøv igjen.</string>
+  <string name="enable_search_suggestion_title">Vil du skru på søkjeforslag?</string>
+  <string name="enable_search_suggestion_subtitle">For å få søkjeforslag treng %1$s å senda det du skriv i adressefeltet til søkjemotoren du har valt. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Les meir</string>
   <string name="enable_search_suggestions_no">Nei</string>
   <string name="enable_search_suggestions_yes">Ja</string>
+  <string name="no_suggestions_message">Nokre søkjemotorar kan ikkje vise forslag.</string>
   <string name="dismiss_no_suggestions_prompt_button">Ignorer</string>
+  <string name="tip_disable_tracking_protection">Oppfører sida seg uventa?\n Prøv å deaktivera sporingsvern</string>
+  <string name="tip_add_to_homescreen">Få tilgang dei meste besøkte nettstedene med eit knapptrykk%1$s Meny &gt; Legg til på startskjermen</string>
+  <string name="tip_set_default_browser">Opna kvar lenke i %1$s\n Vel %1$s som standardnettlesar</string>
+  <string name="tip_autocomplete_url">Autofullfør nettadresser for nettstadar du brukar mest\n Trykk og hald på ei nettadresse i adressefeltet</string>
+  <string name="tip_open_in_new_tab">Opna ei lenke i ei ny fane\n Trykk og hald på ei lenke på ei side</string>
+  <string name="tip_request_desktop">Vil du heller sjå full skrivebordsversjon?%1$s Meny &gt; Vis skrivebordversjon</string>
+  <string name="tip_disable_tips">Slå av tips på startskjermen for %1$s</string>
 </resources>

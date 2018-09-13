@@ -37,6 +37,8 @@
   <string name="preference_category_general">Основни</string>
   <string name="preference_category_data_collection_use">Събиране на данни и начини на употреба</string>
   <string name="preference_category_search">Търсене</string>
+  <string name="preference_show_search_suggestions">Получаване на предложения за търсене</string>
+  <string name="preference_show_search_suggestions_summary">%1$s ще изпраща въвежданото от вас в адресната лента към търсачката</string>
   <string name="preference_search_engine_default">Използвана търсеща машина</string>
   <string name="preference_state_on">Включено</string>
   <string name="preference_state_off">Изключено</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">не</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">забраняване от трети страни</string>
   <string name="preference_privacy_should_block_cookies_yes_option">да</string>
+  <string name="preference_security_biometric">Използване на пръстов отпечатък за отключване на приложението</string>
+  <string name="preference_security_biometric_summary">Вашият пръстов отпечатък ще отключи %1$s, ако вече има отворена страница в приложението. Невидимият режим ще се включи.</string>
   <string name="preference_privacy_secure_mode">Невидим</string>
-  <string name="preference_privacy_stealth_summary">Скриване на страниците при превключване на приложения</string>
+  <string name="preference_privacy_stealth_summary">Скриване на страниците при превключване между приложения и блокиране на правенето на снимки на екрана.</string>
+  <string name="preference_category_security">Защита</string>
   <string name="preference_category_performance">Производителност</string>
   <string name="preference_performance_block_webfonts">Спиране на уеб шрифтовете</string>
   <string name="preference_performance_block_webfonts_summary">Може да доведе до липсващи икони или изображения</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+Добавяне на друга търсачка</string>
   <string name="preference_search_remove_title">Премахване на търсачките</string>
   <string name="preference_search_remove">Премахване</string>
+  <string name="preference_homescreen_tips">Показване на съвети на началния екран</string>
   <string name="action_option_add_search_engine">Добавяне на търсачка</string>
   <string name="search_add_manually_name_hint">Име на търсачката</string>
   <string name="search_add_manually_string">Низ за търсене, който да се използва</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Връщане назад</string>
   <string name="content_description_stop">Спиране зареждането на страницата</string>
   <string name="content_description_customtab_exit">Връщане към предишното приложение</string>
+  <string name="content_description_trackers_blocked">Брой спрени проследяващи елементи</string>
   <string name="content_description_blocking_switch">Спиране на следенето</string>
   <string name="your_rights">Вашите права</string>
   <string name="external_app_prompt_title">Отваряне на препратка в приложение</string>
@@ -200,4 +207,27 @@
   <string name="http_auth_dialog_password">Парола</string>
   <string name="preference_performance_request_desktop_site">Настолна версия на сайта</string>
   <string name="custom_tab_copy_url_action">Адресът е копиран</string>
+  <string name="preference_advanced_summary">Развойни инструменти</string>
+  <string name="preference_category_advanced">Разширени</string>
+  <string name="preference_remote_debugging">Отдалечено отстраняване на дефекти през USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Отключване на %1$s</string>
+  <string name="biometric_auth_description">Докоснете датчика за пръстов отпечатък, за да продължите.</string>
+  <string name="biometric_auth_new_session">Нова сесия</string>
+  <string name="biometric_auth_image_description">Картинка на пръстов отпечатък</string>
+  <string name="biometric_auth_not_recognized_error">Пръстовият отпечатък не е разпознат. Опитайте отново.</string>
+  <string name="biometric_auth_moved_too_quickly">Пръстът се придвижи твърде бързо. Опитайте пак.</string>
+  <string name="enable_search_suggestion_title">Желаете ли да включите предложенията при търсене?</string>
+  <string name="enable_search_suggestion_subtitle">За да получавате предложения при търсене, %1$s трябва да изпраща въвежданото в адресната лента на търсачката, която сте избрали. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Научете повече</string>
+  <string name="enable_search_suggestions_no">Не</string>
+  <string name="enable_search_suggestions_yes">Да</string>
+  <string name="no_suggestions_message">Някои търсачки не могат да показват предложения.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Затваряне</string>
+  <string name="tip_disable_tracking_protection">Сайтът се държи неочаквано?\n Опитайте да изключите защитата от проследяване</string>
+  <string name="tip_add_to_homescreen">Получете достъп с едно докосване до сайтовете, които използвате често%1$sМеню &gt; Добавяне към екрана</string>
+  <string name="tip_set_default_browser">Отваряйте всяка препратка в %1$s\n Задайте %1$s като стандартен четец</string>
+  <string name="tip_autocomplete_url">Автоматизирано завършвайте адреси на често посещавани сайтове\n Натиснете продължително върху адрес в адресната лента</string>
+  <string name="tip_open_in_new_tab">Отваряйте препратки в нов раздел\n Натиснете продължително върху препратка в страница</string>
+  <string name="tip_request_desktop">Искате да видите пълния настолен изглед на сайт?%1$s Меню &gt; Настолна версия на сайта</string>
+  <string name="tip_disable_tips">Изключване на съветите на началния екран на %1$s</string>
 </resources>

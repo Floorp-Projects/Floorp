@@ -79,10 +79,10 @@
   <string name="preference_privacy_should_block_cookies_no_option">Nei</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokker bare tredjepartsinfokapsler</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
-  <string name="preference_security_biometric">Brug fingeravtrykk til å låse opp appen</string>
+  <string name="preference_security_biometric">Bruk fingeravtrykk til å låse opp appen</string>
   <string name="preference_security_biometric_summary">Ditt fingeravtrykk kan låse opp %1$s, hvis en URL allerede er åpen i appen. Skjult tilstand vil bli slått på.</string>
   <string name="preference_privacy_secure_mode">Usynlig</string>
-  <string name="preference_privacy_stealth_summary">Skjul nettsider når du bytter appar</string>
+  <string name="preference_privacy_stealth_summary">Skjul nettsider når du bytter apper og unngå at det tas skjermbilder.</string>
   <string name="preference_category_security">Sikkerhet</string>
   <string name="preference_category_performance">Ytelse</string>
   <string name="preference_performance_block_webfonts">Blokker nettfonter</string>
@@ -221,7 +221,7 @@
   <string name="enable_search_suggestion_subtitle_learnmore">Les mer</string>
   <string name="enable_search_suggestions_no">Nei</string>
   <string name="enable_search_suggestions_yes">Ja</string>
-  <string name="no_suggestions_message">Noen søkmotorer kan ikke vise forslag.</string>
+  <string name="no_suggestions_message">Noen søkemotorer kan ikke vise forslag.</string>
   <string name="dismiss_no_suggestions_prompt_button">Ignorer</string>
   <string name="tip_disable_tracking_protection">Oppfører siden seg uventet?\n Prøv å deaktivere sporingsbeskyttelse</string>
   <string name="tip_add_to_homescreen">Få tilgang de meste besøkte nettstedene med et knapptrykk%1$s Meny &gt; Legg til på startskjermen</string>

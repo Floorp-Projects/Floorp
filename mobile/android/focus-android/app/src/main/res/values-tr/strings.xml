@@ -80,6 +80,7 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Yalnızca 3. taraf çerezlerini engelle</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Evet</string>
   <string name="preference_security_biometric">Uygulama kilidini açmak için parmak izimi kullan</string>
+  <string name="preference_security_biometric_summary">%1$s’ta açık bir sayfa varsa uygulamanın kilidini parmak izinizle açmanız gerekir. Görünmezlik özelliği de açılır.</string>
   <string name="preference_privacy_secure_mode">Görünmezlik</string>
   <string name="preference_privacy_stealth_summary">Uygulama değiştirirken web sayfalarını gizle ve ekran görüntüsü almayı engelle.</string>
   <string name="preference_category_security">Güvenlik</string>
@@ -158,7 +159,7 @@
   <string name="contextmenu_link_share">Bağlantıyı paylaş</string>
   <string name="contextmenu_link_copy">Bağlantı adresini kopyala</string>
   <string name="contextmenu_image_share">Resmi paylaş</string>
-  <string name="contextmenu_image_copy">Resmin adresini kopyala</string>
+  <string name="contextmenu_image_copy">Resim adresini kopyala</string>
   <string name="contextmenu_image_save">Resmi kaydet</string>
   <string name="contextmenu_open_in_new_tab">Bağlantıyı yeni sekmede aç</string>
   <string name="contextmenu_image_warning"><![CDATA["%1$s geçmişini sildiğinizde, kaydettiğiniz ve paylaştığınız resimler "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinmeyecektir</b>.]]></string>
@@ -190,7 +191,7 @@
   <string name="gv_prompt_password_hint">Parola</string>
   <string name="gv_prompt_clear">Temizle</string>
   <string name="security_popup_secure_connection">Güvenli bağlantı</string>
-  <string name="security_popup_insecure_connection">Güvensiz Bağlantı</string>
+  <string name="security_popup_insecure_connection">Güvensiz bağlantı</string>
   <string name="security_popup_security_verified">Doğrulayan: %1$s</string>
   <string name="site_security_icon_content_description">Site güvenliği</string>
   <string name="preference_autocomplete_duplicate_url_error">Adres zaten mevcut</string>
@@ -216,9 +217,17 @@
   <string name="biometric_auth_not_recognized_error">Parmak izi tanınamadı. Yeniden deneyin.</string>
   <string name="biometric_auth_moved_too_quickly">Parmağınızı çok hızlı hareket ettirdiniz. Yeniden deneyin.</string>
   <string name="enable_search_suggestion_title">Arama önerilerini açmak ister misiniz?</string>
+  <string name="enable_search_suggestion_subtitle">Arama önerileri alabilmeniz için %1$s’un adres çubuğuna yazdığınız şeyleri seçtiğiniz arama motoruna göndermesi gerekir. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Daha fazla bilgi al</string>
   <string name="enable_search_suggestions_no">Hayır</string>
   <string name="enable_search_suggestions_yes">Evet</string>
   <string name="no_suggestions_message">Bazı arama motorlarında öneriler gösterilemez.</string>
   <string name="dismiss_no_suggestions_prompt_button">Kapat</string>
+  <string name="tip_disable_tracking_protection">Düzgün görünmeyen bir site mi var?\n İzlenme Koruması’nı kapatmayı deneyin</string>
+  <string name="tip_add_to_homescreen">En sık kullandığınız sitelere tek dokunuşla ulaşın%1$s Menü &gt; Ana ekrana ekle</string>
+  <string name="tip_set_default_browser">Her bağlantıyı %1$s ile açabilirsiniz\n %1$s’u varsayılan tarayıcınız yapın</string>
+  <string name="tip_autocomplete_url">En çok kullandığınız sitelerin adreslerini otomatik tamamlayabilirsiniz\n Adres çubuğundaki herhangi bir adrese basılı tutun</string>
+  <string name="tip_open_in_new_tab">Bağlantıları yeni sekmede açabilirsiniz\n Bir sayfadaki herhangi bir bağlantıya uzun basın</string>
+  <string name="tip_request_desktop">Sitenin bilgisayar sürümünü görmek mü istiyorsunuz?%1$s Menü &gt; Masaüstü sitesini iste</string>
+  <string name="tip_disable_tips">%1$s başlangıç ekranındaki ipuçlarını kapat</string>
 </resources>

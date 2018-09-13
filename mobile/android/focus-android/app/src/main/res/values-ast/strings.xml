@@ -37,6 +37,8 @@
   <string name="preference_category_general">Xeneral</string>
   <string name="preference_category_data_collection_use">Recoyida y usu de datos</string>
   <string name="preference_category_search">Gueta</string>
+  <string name="preference_show_search_suggestions">Consiguir suxerencies de gueta</string>
+  <string name="preference_show_search_suggestions_summary">%1$s va unviar lo que teclexes na barra de direiciones al motor de gueta</string>
   <string name="preference_search_engine_default">Por defeutu</string>
   <string name="preference_state_on">Sí</string>
   <string name="preference_state_off">Non</string>
@@ -76,8 +78,10 @@
   <string name="preference_privacy_should_block_cookies_no_option">Non</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloquiar namái cookies de terceros</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Sí</string>
+  <string name="preference_security_biometric">Usa la buelga pa desbloquiar l\'aplicación</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
-  <string name="preference_privacy_stealth_summary">Anubre les páxines web al camudar d\'aplicaciones</string>
+  <string name="preference_privacy_stealth_summary">Anubre les páxines web al camudar d\'aplicaciones y bloquia la fechura de caputres de pantalla.</string>
+  <string name="preference_category_security">Seguranza</string>
   <string name="preference_category_performance">Rindimientu</string>
   <string name="preference_performance_block_webfonts">Bloquiar fontes web</string>
   <string name="preference_performance_block_webfonts_summary">Pue facer que falten iconos o imáxenes</string>
@@ -95,6 +99,7 @@
   <string name="preference_search_add2">+ Amestar otru motor de gueta</string>
   <string name="preference_search_remove_title">Desaniciar motores de gueta</string>
   <string name="preference_search_remove">Desaniciar</string>
+  <string name="preference_homescreen_tips">Amosar conseyos na pantalla d\'aniciu</string>
   <string name="action_option_add_search_engine">Amestar motor de gueta</string>
   <string name="search_add_manually_name_hint">Nome del motor de gueta</string>
   <string name="search_add_manually_string">Cadena de gueta a usar</string>
@@ -118,6 +123,7 @@
   <string name="content_description_back">Restolar p\'atrás</string>
   <string name="content_description_stop">Parar carga del sitiu web</string>
   <string name="content_description_customtab_exit">Volver a l\'aplicación previa</string>
+  <string name="content_description_trackers_blocked">Númberu de rastrexadores bloquiaos</string>
   <string name="content_description_blocking_switch">Bloquia los rastrexadores</string>
   <string name="your_rights">Los tos drechos</string>
   <string name="external_app_prompt_title">Apertura d\'enllaz n\'otra aplicación</string>
@@ -187,6 +193,15 @@
   <string name="security_popup_security_verified">Verificáu por: %1$s</string>
   <string name="site_security_icon_content_description">Seguranza del sitiu</string>
   <string name="preference_autocomplete_duplicate_url_error">Yá esiste la URL</string>
+  <string name="find_in_page">Alcontrar na páxina</string>
+  <string name="find_in_page_input">Alcontrar na páxina</string>
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <string name="accessibility_find_in_page_result">%1$d de %2$d</string>
   <string name="http_auth_dialog_username">Nome d\'usuariu</string>
   <string name="http_auth_dialog_password">Contraseña</string>
+  <string name="biometric_auth_new_session">Sesión</string>
+  <string name="enable_search_suggestions_no">Non</string>
+  <string name="enable_search_suggestions_yes">Sí</string>
+  <string name="no_suggestions_message">Dalgunos motores de gueta nun puen amosar suxerencies.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Escartar</string>
 </resources>

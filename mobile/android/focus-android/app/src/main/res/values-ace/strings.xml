@@ -26,6 +26,9 @@
   <string name="shortcut_erase_short_label">Sampôh</string>
   <string name="shortcut_erase_long_label">Sampôh riwayat browsing</string>
   <string name="text_selection_search_action">Mita deungön Rahsia</string>
+  <string name="preference_privacy_and_security_header">Privasi &amp; Keuamanan</string>
+  <string name="preference_privacy_and_security_summary">Seumeutöt, kuki, peuniléh data</string>
+  <string name="preference_search_summary">Ato teutap, peuleungkap keudroe</string>
   <string name="preference_mozilla_summary">Bhaih %1$s, beunantu</string>
   <string name="preference_category_tracking_protection">Peulindông seutöt</string>
   <string name="preference_category_web_content">Asoe Web</string>
@@ -35,4 +38,9 @@
   <string name="preference_category_search">Mita</string>
   <string name="preference_state_on">Udép</string>
   <string name="preference_state_off">Maté</string>
+  <string name="preference_autocomplete_learn_more">Meurunoë lom</string>
+  <string name="preference_mozilla_telemetry_summary">Meurunoë lom</string>
+  <string name="download_dialog_action_cancel">Bateuë</string>
+  <string name="dialog_addtohomescreen_action_cancel">Bateuë</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Meurunoë lom</string>
 </resources>

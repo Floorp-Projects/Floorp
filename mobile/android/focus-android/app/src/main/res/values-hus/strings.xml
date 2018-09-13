@@ -229,4 +229,5 @@
   <string name="tip_autocomplete_url">"Ka eyendha\' an kweten putundhach URLs abal an xeklek axi a eyendal\n Ka ni\'a\' jawakits tum URLs ti alimtaláb\n "</string>
   <string name="tip_open_in_new_tab">Ka japiy jun i ne\'dhach al jun i it xeklek\n Ka jila\' ni\'adh jawakitsk\'ij tum ne\'dhach al jun i xeklek</string>
   <string name="tip_request_desktop">A le\' ka meta\' an xeklek ta mexajil%1$s Takuxtaláb &gt; Ka konoy an xeklek ta mexajil</string>
+  <string name="tip_disable_tips">Ka tepdha\' an kawchix axi ti olchal ti ok\'ox xeklek ti %1$s</string>
 </resources>

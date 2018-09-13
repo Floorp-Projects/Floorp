@@ -82,7 +82,7 @@
   <string name="preference_security_biometric">Garasun\' dej ro\'ô\' daj gatu\' riña aplikasion</string>
   <string name="preference_security_biometric_summary">Si gutat dej ra\'at nī ga\'ue na\'nī ma %1$s si \'ngà hua URL hua ni\'ninj. Se si gurui\' ma.</string>
   <string name="preference_privacy_secure_mode">Dugumî sa achrûnt</string>
-  <string name="preference_privacy_stealth_summary">Nagi\'iaj huì nej pâjina si ruhuât garasunt a\'ngô app</string>
+  <string name="preference_privacy_stealth_summary">Nagi\'iaj huì nej pâjina si ruhuât garasunt a\'ngô app ni si ga\'ue nari\' riña pantayâ.</string>
   <string name="preference_category_security">Sa dugumin</string>
   <string name="preference_category_performance">suun</string>
   <string name="preference_performance_block_webfonts">Nará riña nej yi\'nïn\' web</string>

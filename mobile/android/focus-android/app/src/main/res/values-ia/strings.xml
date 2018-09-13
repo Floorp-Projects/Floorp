@@ -37,6 +37,8 @@
   <string name="preference_category_general">General</string>
   <string name="preference_category_data_collection_use">Colligimento e uso de datos</string>
   <string name="preference_category_search">Cercar</string>
+  <string name="preference_show_search_suggestions">Obtener suggestiones de recerca</string>
+  <string name="preference_show_search_suggestions_summary">%1$s inviara a tu motor de recerca lo que tu scribe in le barra de adresse</string>
   <string name="preference_search_engine_default">Predefinite</string>
   <string name="preference_state_on">Activar</string>
   <string name="preference_state_off">Inactive</string>
@@ -77,7 +79,9 @@
   <string name="preference_privacy_should_block_cookies_no_option">No</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloca solo le cookies de tertie partes</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Si</string>
-  <string name="preference_privacy_secure_mode">Invisibile</string>
+  <string name="preference_security_biometric">Usa le impression digital pro disblocar le application</string>
+  <string name="preference_security_biometric_summary">Tu impression digital pote disblocar %1$s si un URL es ja aperte in le application. Le modo furtive sera activate.</string>
+  <string name="preference_privacy_secure_mode">Modo furtive</string>
   <string name="preference_privacy_stealth_summary">Celar le paginas web quando on cambia de applicationes e blocar le prisa de instantaneos.</string>
   <string name="preference_category_security">Securitate</string>
   <string name="preference_category_performance">Rendimento</string>
@@ -97,13 +101,14 @@
   <string name="preference_search_add2">+ Adder un altere motor de recerca</string>
   <string name="preference_search_remove_title">Remover le motores de recerca</string>
   <string name="preference_search_remove">Remover</string>
+  <string name="preference_homescreen_tips">Monstrar le suggestiones del pagina principal</string>
   <string name="action_option_add_search_engine">Adder le motor de recerca</string>
   <string name="search_add_manually_name_hint">Nomine del motor de recerca</string>
   <string name="search_add_manually_string">Catena de recerca a usar</string>
   <string name="search_add_manually_save">Salvar</string>
   <string name="search_add_manually_example">Exemplo: example.com/search/?q=%s</string>
   <string name="search_add_confirmation">Nove motor de recerca addite.</string>
-  <string name="search_add_error_empty_name">Insere le omine del fila de recerca</string>
+  <string name="search_add_error_empty_name">Insere le nomine del fila de recerca</string>
   <string name="search_add_error_duplicate_name">Un motor de recerca installate usa jam ille nomine.</string>
   <string name="search_add_error_empty_search">Insere un fila de characteres pro le recerca</string>
   <string name="search_add_error_format">Verifica que le fila de recerca concorda con le formato de exemplo</string>
@@ -120,6 +125,7 @@
   <string name="content_description_back">Naviga a retro</string>
   <string name="content_description_stop">Cessa le cargamento del sito web</string>
   <string name="content_description_customtab_exit">Retorna al application previe</string>
+  <string name="content_description_trackers_blocked">Numero de traciatores blocate</string>
   <string name="content_description_blocking_switch">Bloca le traciatores</string>
   <string name="your_rights">Tu derectos</string>
   <string name="external_app_prompt_title">Aperir le ligamine in un altere application</string>
@@ -201,10 +207,22 @@
   <string name="http_auth_dialog_password">Contrasigno</string>
   <string name="preference_performance_request_desktop_site">Requirer le sito del scriptorio</string>
   <string name="custom_tab_copy_url_action">URL copiate</string>
+  <string name="preference_advanced_summary">Instrumentos de developpator</string>
   <string name="preference_category_advanced">Avantiate</string>
+  <string name="preference_remote_debugging">Correction de errores remote per USB/wifi</string>
+  <string name="biometric_auth_title">Disblocar %1$s</string>
+  <string name="biometric_auth_description">Tocca le sensor del impression digital pro continuar.</string>
   <string name="biometric_auth_new_session">Nove session</string>
+  <string name="biometric_auth_image_description">Icone del impression digital</string>
+  <string name="biometric_auth_not_recognized_error">Impression digital non recognoscite. Prova de novo.</string>
+  <string name="biometric_auth_moved_too_quickly">Digito movite troppo rapide. Prova de novo.</string>
+  <string name="enable_search_suggestion_title">Vole tu activar le suggestiones de recerca?</string>
+  <string name="enable_search_suggestion_subtitle">Pro obtener suggestiones de recerca, %1$s ha besonio de haber inviate lo que tu scribe in le barra de adresse al motor de recerca que tu ha eligite. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Saper plus</string>
   <string name="enable_search_suggestions_no">No</string>
   <string name="enable_search_suggestions_yes">Si</string>
+  <string name="no_suggestions_message">Alcun motores de recerca non pote monstrar suggestiones.</string>
   <string name="dismiss_no_suggestions_prompt_button">Dimitter</string>
+  <string name="tip_disable_tracking_protection">Se comporta le sito inexpectatemente?\n Prova a disactivar le Protection de traciamento</string>
+  <string name="tip_set_default_browser">Aperir cata ligamine in %1$s\n Pone %1$s como navigator predefinite</string>
 </resources>

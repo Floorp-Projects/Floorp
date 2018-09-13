@@ -37,6 +37,8 @@
   <string name="preference_category_general">General</string>
   <string name="preference_category_data_collection_use">Recopilación de datos y uso</string>
   <string name="preference_category_search">Búsqueda</string>
+  <string name="preference_show_search_suggestions">Obtener sugerencias de búsqueda</string>
+  <string name="preference_show_search_suggestions_summary">%1$s enviará lo que escribas en la barra de direcciones a tu buscador</string>
   <string name="preference_search_engine_default">Predeterminado</string>
   <string name="preference_state_on">Activado</string>
   <string name="preference_state_off">Desactivado</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">No</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloquear sólo cookies de terceros</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Sí</string>
+  <string name="preference_security_biometric">Usar la huella digital para desbloquear la aplicación</string>
+  <string name="preference_security_biometric_summary">Tu huella digital puede desbloquear %1$s si ya está abierta una URL en la aplicación. Se activará el modo invisible.</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
-  <string name="preference_privacy_stealth_summary">Ocultar páginas web al intercambiar aplicaciones y bloquear las capturas de pantalla.</string>
+  <string name="preference_privacy_stealth_summary">Ocultar páginas web al cambiar entre aplicaciones y bloquear las capturas de pantalla.</string>
+  <string name="preference_category_security">Seguridad</string>
   <string name="preference_category_performance">Rendimiento</string>
   <string name="preference_performance_block_webfonts">Bloquear fuentes web</string>
   <string name="preference_performance_block_webfonts_summary">Puede hacer que falten iconos o imágenes</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Añadir otro motor de búsqueda</string>
   <string name="preference_search_remove_title">Eliminar motores de búsqueda</string>
   <string name="preference_search_remove">Eliminar</string>
+  <string name="preference_homescreen_tips">Mostrar consejos en la pantalla de inicio</string>
   <string name="action_option_add_search_engine">Añadir motor de búsqueda</string>
   <string name="search_add_manually_name_hint">Nombre del motor de búsqueda</string>
   <string name="search_add_manually_string">Cadena de búsqueda que se usará</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Ir a la página anterior</string>
   <string name="content_description_stop">Parar la carga de esta página</string>
   <string name="content_description_customtab_exit">Volver a la aplicación anterior</string>
+  <string name="content_description_trackers_blocked">Número de rastreadores bloqueados</string>
   <string name="content_description_blocking_switch">Bloquear rastreadores</string>
   <string name="your_rights">Tus derechos</string>
   <string name="external_app_prompt_title">Abrir enlace con otra aplicación</string>
@@ -200,4 +207,27 @@
   <string name="http_auth_dialog_password">Contraseña</string>
   <string name="preference_performance_request_desktop_site">Solicitar sitio de escritorio</string>
   <string name="custom_tab_copy_url_action">Se copió la URL</string>
+  <string name="preference_advanced_summary">Herramientas de desarrollo</string>
+  <string name="preference_category_advanced">Avanzado</string>
+  <string name="preference_remote_debugging">Depuración remota a través de USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Desbloquear %1$s</string>
+  <string name="biometric_auth_description">Toca el sensor de huellas digitales para continuar.</string>
+  <string name="biometric_auth_new_session">Nueva sesión</string>
+  <string name="biometric_auth_image_description">Icono de huella digital</string>
+  <string name="biometric_auth_not_recognized_error">Huella digital no reconocida. Vuelve a intentarlo.</string>
+  <string name="biometric_auth_moved_too_quickly">El dedo se movió demasiado rápido. Vuelve a intentarlo.</string>
+  <string name="enable_search_suggestion_title">¿Te gustaría activar las sugerencias de búsqueda?</string>
+  <string name="enable_search_suggestion_subtitle">Para obtener sugerencias de búsqueda, %1$s necesita enviar lo que escribes en la barra de direcciones al motor de búsqueda que has elegido. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Saber más</string>
+  <string name="enable_search_suggestions_no">No</string>
+  <string name="enable_search_suggestions_yes">Si</string>
+  <string name="no_suggestions_message">Algunos motores de búsqueda no pueden mostrar sugerencias.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Ignorar</string>
+  <string name="tip_disable_tracking_protection">¿El sitio se comporta de forma inesperada?\n Intenta desactivar la protección contra el rastreo</string>
+  <string name="tip_add_to_homescreen">Obtén acceso con un toque a los sitios que más usas %1$s Menú &gt; Añadir a la pantalla de inicio</string>
+  <string name="tip_set_default_browser">Abrir todos los enlaces en %1$s\n Establecer %1$s como navegador predeterminado</string>
+  <string name="tip_autocomplete_url">Autocompletar las URLs para los sitios que más usas\n Mantén presionada cualquier URL en la barra de direcciones</string>
+  <string name="tip_open_in_new_tab">Abrir un enlace en una nueva pestaña\n Mantén presionado cualquier enlace de una página</string>
+  <string name="tip_request_desktop">¿Prefieres ver el sitio de escritorio?%1$s Menú &gt; Solicitar sitio de escritorio</string>
+  <string name="tip_disable_tips">Desactivar los consejos en la pantalla de inicio de %1$s</string>
 </resources>
