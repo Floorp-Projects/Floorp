@@ -116,7 +116,6 @@ class nsIDocumentLoaderFactory;
 
 #ifdef MOZ_XUL
 #include "XULDocument.h"
-#include "nsIXULSortService.h"
 #endif
 
 static void Shutdown();
@@ -341,7 +340,6 @@ MAKE_CTOR(CreateXHTMLContentSerializer,   nsIContentSerializer,        NS_NewXHT
 MAKE_CTOR(CreatePlainTextSerializer,      nsIContentSerializer,        NS_NewPlainTextSerializer)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
 #ifdef MOZ_XUL
-MAKE_CTOR(CreateXULSortService,           nsIXULSortService,           NS_NewXULSortService)
 MAKE_CTOR(CreateXULDocument,              nsIDocument,                 NS_NewXULDocument)
 // NS_NewXULControllers
 #endif
@@ -467,7 +465,6 @@ NS_DEFINE_NAMED_CID(NS_DATADOCUMENTCONTENTPOLICY_CID);
 NS_DEFINE_NAMED_CID(NS_NODATAPROTOCOLCONTENTPOLICY_CID);
 NS_DEFINE_NAMED_CID(NS_XULCONTROLLERS_CID);
 #ifdef MOZ_XUL
-NS_DEFINE_NAMED_CID(NS_XULSORTSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_XULDOCUMENT_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID);
@@ -562,7 +559,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_NODATAPROTOCOLCONTENTPOLICY_CID, false, nullptr, nsNoDataProtocolContentPolicyConstructor },
   { &kNS_XULCONTROLLERS_CID, false, nullptr, NS_NewXULControllers },
 #ifdef MOZ_XUL
-  { &kNS_XULSORTSERVICE_CID, false, nullptr, CreateXULSortService },
   { &kNS_XULDOCUMENT_CID, false, nullptr, CreateXULDocument },
 #endif
   { &kNS_CONTENT_DOCUMENT_LOADER_FACTORY_CID, false, nullptr, CreateContentDLF },
@@ -654,9 +650,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID, &kNS_DATADOCUMENTCONTENTPOLICY_CID },
   { NS_NODATAPROTOCOLCONTENTPOLICY_CONTRACTID, &kNS_NODATAPROTOCOLCONTENTPOLICY_CID },
   { "@mozilla.org/xul/xul-controllers;1", &kNS_XULCONTROLLERS_CID },
-#ifdef MOZ_XUL
-  { "@mozilla.org/xul/xul-sort-service;1", &kNS_XULSORTSERVICE_CID },
-#endif
   { CONTENT_DLF_CONTRACTID, &kNS_CONTENT_DOCUMENT_LOADER_FACTORY_CID },
   { NS_JSPROTOCOLHANDLER_CONTRACTID, &kNS_JSPROTOCOLHANDLER_CID },
   { PLUGIN_DLF_CONTRACTID, &kNS_PLUGINDOCLOADERFACTORY_CID },

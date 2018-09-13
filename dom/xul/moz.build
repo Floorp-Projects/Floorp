@@ -18,6 +18,7 @@ if CONFIG['MOZ_XUL']:
     EXPORTS += [
         'nsXULCommandDispatcher.h',
         'nsXULElement.h',
+        'nsXULSortService.h',
     ]
 
     EXPORTS.mozilla.dom += [
