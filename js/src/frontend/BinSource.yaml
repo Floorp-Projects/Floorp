@@ -218,6 +218,17 @@ ArrayExpression:
 AssertedBlockScope:
     type-ok:
         Ok
+    init: |
+        const auto scopeKind = AssertedScopeKind::Block;
+    fields:
+        declaredNames:
+            extra-args: scopeKind
+        hasDirectEval:
+            after: |
+                if (hasDirectEval) {
+                    parseContext_->sc()->setHasDirectEval();
+                    parseContext_->sc()->setBindingsAccessedDynamically();
+                }
     build: |
         if (hasDirectEval && parseContext_->isFunctionBox() && !parseContext_->sc()->strict()) {
             // In non-strict mode code, direct calls to eval can
@@ -225,45 +236,91 @@ AssertedBlockScope:
             parseContext_->functionBox()->setHasExtensibleScope();
         }
         auto result = Ok();
+
+AssertedBoundName:
+    type-ok:
+        Ok
+    extra-params: AssertedScopeKind scopeKind
+    extra-args: scopeKind
     fields:
-        capturedNames:
-            block:
-                replace: |
-                    MOZ_TRY(parseAndUpdateCapturedNames(kind));
-        hasDirectEval:
+        isCaptured:
+             after: |
+                ParseContext::Scope* scope;
+                DeclarationKind declKind;
+                MOZ_TRY(getBoundScope(scopeKind, scope, declKind));
+    build: |
+        MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured));
+        auto result = Ok();
+
+AssertedDeclaredName:
+    inherits: AssertedBoundName
+    fields:
+        isCaptured:
             after: |
-                if (hasDirectEval) {
-                    parseContext_->sc()->setHasDirectEval();
-                    parseContext_->sc()->setBindingsAccessedDynamically();
-                }
-        lexicallyDeclaredNames:
-            block:
-                replace:
-                    MOZ_TRY(parseAndUpdateScopeNames(*parseContext_->innermostScope(), DeclarationKind::Let));
+                ParseContext::Scope* scope;
+                DeclarationKind declKind;
+                MOZ_TRY(getDeclaredScope(scopeKind, kind_, scope, declKind));
+
+AssertedMaybePositionalParameterName:
+    inherits: AssertedBoundName
+    extra-params: |
+        AssertedScopeKind scopeKind,
+        MutableHandle<GCVector<JSAtom*>> positionalParams
+    extra-args: |
+        scopeKind, positionalParams
+
+AssertedPositionalParameterName:
+    inherits: AssertedMaybePositionalParameterName
+    fields:
+        name:
+            after: |
+                // FIXME: The following checks should be performed inside
+                // checkPositionalParameterIndices to match the spec's order
+                // (bug 1490976).
+                if (index >= positionalParams.get().length())
+                    return raiseError("AssertedPositionalParameterName.length out of range");
+                if (positionalParams.get()[index])
+                    return raiseError("AssertedPositionalParameterName has duplicate entry for the same index");
+                positionalParams.get()[index] = name;
+
+AssertedRestParameterName:
+    inherits: AssertedMaybePositionalParameterName
+
+AssertedParameterName:
+    inherits: AssertedMaybePositionalParameterName
+
+AssertedBoundNamesScope:
+    inherits: AssertedBlockScope
+    init: |
+        const auto scopeKind = AssertedScopeKind::Catch;
+    fields:
+        boundNames:
+            extra-args: scopeKind
 
 AssertedParameterScope:
     inherits: AssertedBlockScope
+    extra-params: |
+        MutableHandle<GCVector<JSAtom*>> positionalParams
+    extra-args: |
+        positionalParams
+    init: |
+        const auto scopeKind = AssertedScopeKind::Parameter;
     fields:
-        parameterNames:
-            block:
-                replace: |
-                    ParseContext::Statement* inStatement = parseContext_->innermostStatement();
+        isSimpleParameterList:
+            after: |
+                (void) isSimpleParameterList;
+        paramNames:
+            extra-args: scopeKind, positionalParams
 
-                    // If we are in a `CatchClause`, the binding is a implicit CatchParameter
-                    // and it goes into the innermost scope. Otherwise, we're in a function,
-                    // so it goes in the function scope.
-                    if (inStatement && inStatement->kind() == StatementKind::Catch)
-                        MOZ_TRY(parseAndUpdateScopeNames(*parseContext_->innermostScope(), DeclarationKind::CatchParameter));
-                    else
-                        MOZ_TRY(parseAndUpdateScopeNames(parseContext_->functionScope(), DeclarationKind::PositionalFormalParameter));
+AssertedScriptGlobalScope:
+    inherits: AssertedBlockScope
+    init: |
+        const auto scopeKind = AssertedScopeKind::Global;
 
 AssertedVarScope:
     inherits: AssertedBlockScope
-    fields:
-        varDeclaredNames:
-            block:
-                replace:
-                    MOZ_TRY(parseAndUpdateScopeNames(parseContext_->varScope(), DeclarationKind::Var));
+    init: |
+        const auto scopeKind = AssertedScopeKind::Var;
 
 AssignmentExpression:
     build: |
@@ -549,18 +606,77 @@ EagerFunctionDeclaration:
         const auto syntax = FunctionSyntaxKind::Statement;
     inherits: EagerFunctionExpression
 
+FunctionExpressionContents:
+    type-ok:
+        Ok
+    extra-params: |
+        uint32_t funLength,
+        ListNode** paramsOut,
+        ListNode** bodyOut
+    extra-args: |
+        funLength, paramsOut, bodyOut
+    fields:
+        isThisCaptured:
+            after: |
+                // TODO: Use this in BinASTParser::buildFunction.
+                (void) isThisCaptured;
+        isFunctionNameCaptured:
+            after: |
+                // Per spec, isFunctionNameCaptured can be true for anonymous
+                // function.  Check isFunctionNameCaptured only for named
+                // function.
+                if (parseContext_->functionBox()->function()->isNamedLambda() &&
+                    isFunctionNameCaptured)
+                {
+                    captureFunctionName();
+                }
+        parameterScope:
+            before: |
+                Rooted<GCVector<JSAtom*>> positionalParams(cx_, GCVector<JSAtom*>(cx_));
+            extra-args: |
+                &positionalParams
+        params:
+            after: |
+                MOZ_TRY(checkFunctionLength(funLength));
+                MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
+    build: |
+        *paramsOut = params;
+        *bodyOut = body;
+        auto result = Ok();
+
+FunctionOrMethodContents:
+    inherits: FunctionExpressionContents
+
+GetterContents:
+    inherits: FunctionExpressionContents
+    fields:
+        body:
+            before: |
+                BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
+
+SetterContents:
+    inherits: FunctionExpressionContents
+    fields:
+        param:
+            after: |
+              BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos));
+              factory_.addList(params, param);
+              MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
+
 EagerFunctionExpression:
     init: |
         const auto syntax = FunctionSyntaxKind::Expression;
     fields:
-        parameterScope:
+        contents:
             before: |
                 BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
                     isGenerator ? GeneratorKind::Generator
                                 : GeneratorKind::NotGenerator,
                     isAsync ? FunctionAsyncKind::AsyncFunction
                             : FunctionAsyncKind::SyncFunction,
-                    syntax, name));
+                    syntax,
+                    (syntax != FunctionSyntaxKind::Setter &&
+                     syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
 
                 // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
                 BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
@@ -570,63 +686,42 @@ EagerFunctionExpression:
 
                 ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
                 BINJS_TRY(lexicalScope.init(parseContext_));
+                ListNode* params;
+                ListNode* tmpBody;
+            extra-args: |
+                length, &params, &tmpBody
+            after: |
+                BINJS_MOZ_TRY_DECL(body, appendDirectivesToBody(tmpBody, directives));
     build: |
         BINJS_TRY_DECL(lexicalScopeData, NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
         BINJS_TRY_VAR(body, factory_.newLexicalScope(*lexicalScopeData, body));
         BINJS_MOZ_TRY_DECL(result, buildFunction(start, kind, name, params, body, funbox));
 
 EagerGetter:
-    fields:
-        name:
-            after: |
-                BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
-                    GeneratorKind::NotGenerator,
-                    FunctionAsyncKind::SyncFunction,
-                    FunctionSyntaxKind::Getter, /* name = */ nullptr));
-
-                // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
-                BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
-                BINJS_TRY(funpc.init());
-                parseContext_->functionScope().useAsVarScope(parseContext_);
-                MOZ_ASSERT(parseContext_->isFunctionBox());
-
-                ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
-                BINJS_TRY(lexicalScope.init(parseContext_));
-    build: |
-        BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
-        BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
-        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::Getter));
+    init: |
+        const auto syntax = FunctionSyntaxKind::Setter;
+        const bool isGenerator = false;
+        const bool isAsync = false;
+        const auto accessorType = AccessorType::Getter;
+        const uint32_t length = 0;
+    inherits: EagerMethod
 
 EagerMethod:
     init: |
         const auto syntax = FunctionSyntaxKind::Method;
+        const auto accessorType = AccessorType::None;
     inherits: EagerFunctionExpression
     build: |
         BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
-        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::None));
+        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, accessorType));
 
 EagerSetter:
-    fields:
-        name:
-            after: |
-                BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
-                    GeneratorKind::NotGenerator,
-                    FunctionAsyncKind::SyncFunction,
-                    FunctionSyntaxKind::Setter, /* name = */ nullptr));
-
-                // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
-                BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
-                BINJS_TRY(funpc.init());
-                parseContext_->functionScope().useAsVarScope(parseContext_);
-                MOZ_ASSERT(parseContext_->isFunctionBox());
-
-                ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
-                BINJS_TRY(lexicalScope.init(parseContext_));
-    build: |
-        BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos));
-        factory_.addList(params, param);
-        BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
-        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::Setter));
+    init: |
+        const auto syntax = FunctionSyntaxKind::Setter;
+        const bool isGenerator = false;
+        const bool isAsync = false;
+        const auto accessorType = AccessorType::Setter;
+    inherits: EagerMethod
 
 EmptyStatement:
     build:
@@ -701,9 +796,7 @@ ForStatement:
         }
 
 FunctionBody:
-    build: |
-        BINJS_MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
-
+    inherits: ListOfStatement
 
 IdentifierExpression:
     build: |
@@ -725,6 +818,34 @@ LabelledStatement:
                 ParseContext::LabelStatement stmt(parseContext_, label);
     build:
         BINJS_TRY_DECL(result, factory_.newLabeledStatement(label->asPropertyName(), body, start));
+
+ListOfAssertedBoundName:
+    extra-params: AssertedScopeKind scopeKind
+    extra-args: scopeKind
+    type-ok:
+        Ok
+    init: |
+        (void) start;
+        auto result = Ok();
+    append: |
+        // Nothing to do here.
+
+ListOfAssertedMaybePositionalParameterName:
+    inherits: ListOfAssertedBoundName
+    extra-params: |
+        AssertedScopeKind scopeKind,
+        MutableHandle<GCVector<JSAtom*>> positionalParams
+    extra-args: |
+        scopeKind, positionalParams
+    init: |
+        (void) start;
+        auto result = Ok();
+        BINJS_TRY(positionalParams.get().resize(length));
+        for (uint32_t i = 0; i < length; i++)
+            positionalParams.get()[i] = nullptr;
+
+ListOfAssertedDeclaredName:
+    inherits: ListOfAssertedBoundName
 
 ListOfDirective:
     type-ok:
@@ -858,18 +979,6 @@ ObjectExpression:
     build:
         auto result = properties;
 
-OptionalAssertedBlockScope:
-    type-ok:
-        Ok
-
-OptionalAssertedVarScope:
-    type-ok:
-        Ok
-
-OptionalAssertedParameterScope:
-    type-ok:
-        Ok
-
 OptionalCatchClause:
     type-ok:
         LexicalScopeNode*
@@ -898,16 +1007,6 @@ Script:
     build:
         MOZ_TRY(checkClosedVars(parseContext_->varScope()));
         BINJS_MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
-
-Setter:
-    inherits: Method
-    init: |
-        const auto isAsync = false;
-        const auto isGenerator = false;
-    build: |
-        BINJS_TRY_DECL(params, factory_.newList(ParseNodeKind::ParamsBody, param));
-        BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
-        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::Setter));
 
 ShorthandProperty:
     build: |

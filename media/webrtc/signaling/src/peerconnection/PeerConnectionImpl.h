@@ -433,28 +433,6 @@ public:
     rv = ReplaceTrackNoRenegotiation(aTransceiver, aWithTrack);
   }
 
-  NS_IMETHODIMP_TO_ERRORRESULT(SetParameters, ErrorResult &rv,
-                               dom::MediaStreamTrack& aTrack,
-                               const dom::RTCRtpParameters& aParameters)
-  {
-    rv = SetParameters(aTrack, aParameters);
-  }
-
-  NS_IMETHODIMP_TO_ERRORRESULT(GetParameters, ErrorResult &rv,
-                               dom::MediaStreamTrack& aTrack,
-                               dom::RTCRtpParameters& aOutParameters)
-  {
-    rv = GetParameters(aTrack, aOutParameters);
-  }
-
-  nsresult
-  SetParameters(dom::MediaStreamTrack& aTrack,
-                const std::vector<JsepTrack::JsConstraints>& aConstraints);
-
-  nsresult
-  GetParameters(dom::MediaStreamTrack& aTrack,
-                std::vector<JsepTrack::JsConstraints>* aOutConstraints);
-
   // test-only: called from contributing sources mochitests.
   NS_IMETHODIMP_TO_ERRORRESULT(InsertAudioLevelForContributingSource,
                                ErrorResult &rv,

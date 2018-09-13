@@ -142,7 +142,7 @@ bool WebrtcAudioConduit::SetLocalSSRCs(const std::vector<unsigned int> & aSSRCs)
   return true;
 }
 
-std::vector<unsigned int> WebrtcAudioConduit::GetLocalSSRCs() const {
+std::vector<unsigned int> WebrtcAudioConduit::GetLocalSSRCs() {
   unsigned int ssrc;
   if (!mPtrRTP->GetLocalSSRC(mChannel, ssrc)) {
     return std::vector<unsigned int>(1,ssrc);

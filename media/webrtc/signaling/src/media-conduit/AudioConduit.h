@@ -203,7 +203,7 @@ public:
    *   this list should contain only a single ssrc.
    */
   bool SetLocalSSRCs(const std::vector<unsigned int>& aSSRCs) override;
-  std::vector<unsigned int> GetLocalSSRCs() const override;
+  std::vector<unsigned int> GetLocalSSRCs() override;
   bool SetRemoteSSRC(unsigned int ssrc) override
   {
     return false;

@@ -1795,7 +1795,7 @@ class JSScript : public js::gc::TenuredCell
     inline bool typesNeedsSweep() const;
 
     void sweepTypes(const js::AutoSweepTypeScript& sweep,
-                    js::AutoClearTypeInferenceStateOnOOM* oom);
+                    js::AutoClearTypeInferenceStateOnOOM& oom);
 
     inline js::GlobalObject& global() const;
     js::GlobalObject& uninlinedGlobal() const;
