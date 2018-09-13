@@ -1,5 +1,4 @@
-/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -20,49 +19,49 @@ typedef unsigned short ErrorCode;
 typedef sequence<Transport> Transports;
 
 enum Transport {
-  "bt",
-  "ble",
-  "nfc",
-  "usb"
+    "bt",
+    "ble",
+    "nfc",
+    "usb"
 };
 
 dictionary U2FClientData {
-  DOMString             typ; // Spelling is from the specification
-  DOMString             challenge;
-  DOMString             origin;
-  // cid_pubkey for Token Binding is not implemented
+    DOMString             typ; // Spelling is from the specification
+    DOMString             challenge;
+    DOMString             origin;
+    // cid_pubkey for Token Binding is not implemented
 };
 
 dictionary RegisterRequest {
-  DOMString version;
-  DOMString challenge;
+    DOMString version;
+    DOMString challenge;
 };
 
 dictionary RegisterResponse {
-  DOMString version;
-  DOMString registrationData;
-  DOMString clientData;
+    DOMString version;
+    DOMString registrationData;
+    DOMString clientData;
 
-  // From Error
-  ErrorCode? errorCode;
-  DOMString? errorMessage;
+    // From Error
+    ErrorCode? errorCode;
+    DOMString? errorMessage;
 };
 
 dictionary RegisteredKey {
-  DOMString   version;
-  DOMString   keyHandle;
-  Transports? transports;
-  DOMString?  appId;
+    DOMString   version;
+    DOMString   keyHandle;
+    Transports? transports;
+    DOMString?  appId;
 };
 
 dictionary SignResponse {
-  DOMString keyHandle;
-  DOMString signatureData;
-  DOMString clientData;
+    DOMString keyHandle;
+    DOMString signatureData;
+    DOMString clientData;
 
-  // From Error
-  ErrorCode? errorCode;
-  DOMString? errorMessage;
+    // From Error
+    ErrorCode? errorCode;
+    DOMString? errorMessage;
 };
 
 callback U2FRegisterCallback = void(RegisterResponse response);

@@ -1,5 +1,4 @@
-/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -9,42 +8,42 @@
  */
 
 enum IDBCursorDirection {
-  "next",
-  "nextunique",
-  "prev",
-  "prevunique"
+    "next",
+    "nextunique",
+    "prev",
+    "prevunique"
 };
 
 [Exposed=(Window,Worker,System)]
 interface IDBCursor {
-  readonly    attribute (IDBObjectStore or IDBIndex) source;
+    readonly    attribute (IDBObjectStore or IDBIndex) source;
 
-  readonly    attribute IDBCursorDirection           direction;
+    readonly    attribute IDBCursorDirection           direction;
 
-  [Throws]
-  readonly    attribute any                          key;
+    [Throws]
+    readonly    attribute any                          key;
 
-  [Throws]
-  readonly    attribute any                          primaryKey;
+    [Throws]
+    readonly    attribute any                          primaryKey;
 
-  [Throws]
-  IDBRequest update (any value);
+    [Throws]
+    IDBRequest update (any value);
 
-  [Throws]
-  void       advance ([EnforceRange] unsigned long count);
+    [Throws]
+    void       advance ([EnforceRange] unsigned long count);
 
-  [Throws]
-  void       continue (optional any key);
+    [Throws]
+    void       continue (optional any key);
 
-  [Throws]
-  void       continuePrimaryKey(any key, any primaryKey);
+    [Throws]
+    void       continuePrimaryKey(any key, any primaryKey);
 
-  [Throws]
-  IDBRequest delete ();
+    [Throws]
+    IDBRequest delete ();
 };
 
 [Exposed=(Window,Worker,System)]
 interface IDBCursorWithValue : IDBCursor {
-  [Throws]
-  readonly    attribute any value;
+    [Throws]
+    readonly    attribute any value;
 };

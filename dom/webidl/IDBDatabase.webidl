@@ -1,5 +1,4 @@
-/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -13,37 +12,37 @@
 
 [Exposed=(Window,Worker,System)]
 interface IDBDatabase : EventTarget {
-  readonly    attribute DOMString          name;
-  readonly    attribute unsigned long long version;
+    readonly    attribute DOMString          name;
+    readonly    attribute unsigned long long version;
 
-  readonly    attribute DOMStringList      objectStoreNames;
+    readonly    attribute DOMStringList      objectStoreNames;
 
-  [Throws]
-  IDBObjectStore createObjectStore (DOMString name, optional IDBObjectStoreParameters optionalParameters);
+    [Throws]
+    IDBObjectStore createObjectStore (DOMString name, optional IDBObjectStoreParameters optionalParameters);
 
-  [Throws]
-  void           deleteObjectStore (DOMString name);
+    [Throws]
+    void           deleteObjectStore (DOMString name);
 
-  [Throws]
-  IDBTransaction transaction ((DOMString or sequence<DOMString>) storeNames,
-                              optional IDBTransactionMode mode = "readonly");
+    [Throws]
+    IDBTransaction transaction ((DOMString or sequence<DOMString>) storeNames,
+                                optional IDBTransactionMode mode = "readonly");
 
-  void           close ();
+    void           close ();
 
-              attribute EventHandler       onabort;
-              attribute EventHandler       onclose;
-              attribute EventHandler       onerror;
-              attribute EventHandler       onversionchange;
+                attribute EventHandler       onabort;
+                attribute EventHandler       onclose;
+                attribute EventHandler       onerror;
+                attribute EventHandler       onversionchange;
 };
 
 partial interface IDBDatabase {
-  [Func="mozilla::dom::IndexedDatabaseManager::ExperimentalFeaturesEnabled"]
-  readonly    attribute StorageType        storage;
+    [Func="mozilla::dom::IndexedDatabaseManager::ExperimentalFeaturesEnabled"]
+    readonly    attribute StorageType        storage;
 
-  [Exposed=Window, Throws, UseCounter]
-  IDBRequest createMutableFile (DOMString name, optional DOMString type);
+    [Exposed=Window, Throws, UseCounter]
+    IDBRequest createMutableFile (DOMString name, optional DOMString type);
 
-  // this is deprecated due to renaming in the spec
-  [Exposed=Window, Throws, UseCounter]
-  IDBRequest mozCreateFileHandle (DOMString name, optional DOMString type); // now createMutableFile
+    // this is deprecated due to renaming in the spec
+    [Exposed=Window, Throws, UseCounter]
+    IDBRequest mozCreateFileHandle (DOMString name, optional DOMString type); // now createMutableFile
 };

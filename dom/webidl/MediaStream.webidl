@@ -1,5 +1,4 @@
-/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -15,13 +14,13 @@
 // MediaTrackConstraints* counterparts due to a webidl compiler limitation.
 
 dictionary MediaStreamConstraints {
-  (boolean or MediaTrackConstraints) audio = false;
-  (boolean or MediaTrackConstraints) video = false;
-  boolean picture = false; // Mozilla legacy
-  boolean fake;       // For testing purpose. Generates frames of solid
-                      // colors if video is enabled, and sound of 1Khz sine
-                      // wave if audio is enabled.
-  DOMString? peerIdentity = null;
+    (boolean or MediaTrackConstraints) audio = false;
+    (boolean or MediaTrackConstraints) video = false;
+    boolean picture = false; // Mozilla legacy
+    boolean fake;       // For testing purpose. Generates frames of solid
+                        // colors if video is enabled, and sound of 1Khz sine
+                        // wave if audio is enabled.
+    DOMString? peerIdentity = null;
 };
 
 [Exposed=Window,
@@ -29,24 +28,24 @@ dictionary MediaStreamConstraints {
  Constructor (MediaStream stream),
  Constructor (sequence<MediaStreamTrack> tracks)]
 interface MediaStream : EventTarget {
-  readonly    attribute DOMString    id;
-  sequence<AudioStreamTrack> getAudioTracks ();
-  sequence<VideoStreamTrack> getVideoTracks ();
-  sequence<MediaStreamTrack> getTracks ();
-  MediaStreamTrack?          getTrackById (DOMString trackId);
-  void                       addTrack (MediaStreamTrack track);
-  void                       removeTrack (MediaStreamTrack track);
-  MediaStream                clone ();
-  readonly    attribute boolean      active;
-              attribute EventHandler onaddtrack;
-              attribute EventHandler onremovetrack;
-  readonly attribute double currentTime;
+    readonly    attribute DOMString    id;
+    sequence<AudioStreamTrack> getAudioTracks ();
+    sequence<VideoStreamTrack> getVideoTracks ();
+    sequence<MediaStreamTrack> getTracks ();
+    MediaStreamTrack?          getTrackById (DOMString trackId);
+    void                       addTrack (MediaStreamTrack track);
+    void                       removeTrack (MediaStreamTrack track);
+    MediaStream                clone ();
+    readonly    attribute boolean      active;
+                attribute EventHandler onaddtrack;
+                attribute EventHandler onremovetrack;
+    readonly attribute double currentTime;
 
-  [ChromeOnly, Throws]
-  static Promise<long> countUnderlyingStreams();
+    [ChromeOnly, Throws]
+    static Promise<long> countUnderlyingStreams();
 
-  // Webrtc allows the remote side to name a stream whatever it wants, and we
-  // need to surface this to content.
-  [ChromeOnly]
-  void assignId(DOMString id);
+    // Webrtc allows the remote side to name a stream whatever it wants, and we
+    // need to surface this to content.
+    [ChromeOnly]
+    void assignId(DOMString id);
 };

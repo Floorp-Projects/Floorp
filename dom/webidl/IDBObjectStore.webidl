@@ -1,5 +1,4 @@
-/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -15,48 +14,48 @@ dictionary IDBObjectStoreParameters {
 
 [Exposed=(Window,Worker,System)]
 interface IDBObjectStore {
-  [SetterThrows]
-  attribute DOMString name;
+    [SetterThrows]
+    attribute DOMString name;
 
-  [Throws]
-  readonly    attribute any            keyPath;
+    [Throws]
+    readonly    attribute any            keyPath;
 
-  readonly    attribute DOMStringList  indexNames;
-  readonly    attribute IDBTransaction transaction;
-  readonly    attribute boolean        autoIncrement;
+    readonly    attribute DOMStringList  indexNames;
+    readonly    attribute IDBTransaction transaction;
+    readonly    attribute boolean        autoIncrement;
 
-  [Throws]
-  IDBRequest put (any value, optional any key);
+    [Throws]
+    IDBRequest put (any value, optional any key);
 
-  [Throws]
-  IDBRequest add (any value, optional any key);
+    [Throws]
+    IDBRequest add (any value, optional any key);
 
-  [Throws]
-  IDBRequest delete (any key);
+    [Throws]
+    IDBRequest delete (any key);
 
-  [Throws]
-  IDBRequest get (any key);
+    [Throws]
+    IDBRequest get (any key);
 
-  [Throws]
-  IDBRequest getKey (any key);
+    [Throws]
+    IDBRequest getKey (any key);
 
-  [Throws]
-  IDBRequest clear ();
+    [Throws]
+    IDBRequest clear ();
 
-  [Throws]
-  IDBRequest openCursor (optional any range, optional IDBCursorDirection direction = "next");
+    [Throws]
+    IDBRequest openCursor (optional any range, optional IDBCursorDirection direction = "next");
 
-  [Throws]
-  IDBIndex   createIndex (DOMString name, (DOMString or sequence<DOMString>) keyPath, optional IDBIndexParameters optionalParameters);
+    [Throws]
+    IDBIndex   createIndex (DOMString name, (DOMString or sequence<DOMString>) keyPath, optional IDBIndexParameters optionalParameters);
 
-  [Throws]
-  IDBIndex   index (DOMString name);
+    [Throws]
+    IDBIndex   index (DOMString name);
 
-  [Throws]
-  void       deleteIndex (DOMString indexName);
+    [Throws]
+    void       deleteIndex (DOMString indexName);
 
-  [Throws]
-  IDBRequest count (optional any key);
+    [Throws]
+    IDBRequest count (optional any key);
 };
 
 partial interface IDBObjectStore {

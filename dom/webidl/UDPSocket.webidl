@@ -1,5 +1,4 @@
-/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -10,32 +9,32 @@
  */
 
 dictionary UDPOptions {
-  DOMString      localAddress;
-  unsigned short localPort;
-  DOMString      remoteAddress;
-  unsigned short remotePort;
-  boolean        addressReuse = true;
-  boolean        loopback = false;
+    DOMString      localAddress;
+    unsigned short localPort;
+    DOMString      remoteAddress;
+    unsigned short remotePort;
+    boolean        addressReuse = true;
+    boolean        loopback = false;
 };
 
 [Constructor (optional UDPOptions options),
  Pref="dom.udpsocket.enabled",
  ChromeOnly]
 interface UDPSocket : EventTarget {
-  readonly    attribute DOMString?       localAddress;
-  readonly    attribute unsigned short?  localPort;
-  readonly    attribute DOMString?       remoteAddress;
-  readonly    attribute unsigned short?  remotePort;
-  readonly    attribute boolean          addressReuse;
-  readonly    attribute boolean          loopback;
-  readonly    attribute SocketReadyState readyState;
-  readonly    attribute Promise<void>    opened;
-  readonly    attribute Promise<void>    closed;
-//  readonly    attribute ReadableStream   input; //Bug 1056444: Stream API is not ready
-//  readonly    attribute WriteableStream  output; //Bug 1056444: Stream API is not ready
+    readonly    attribute DOMString?       localAddress;
+    readonly    attribute unsigned short?  localPort;
+    readonly    attribute DOMString?       remoteAddress;
+    readonly    attribute unsigned short?  remotePort;
+    readonly    attribute boolean          addressReuse;
+    readonly    attribute boolean          loopback;
+    readonly    attribute SocketReadyState readyState;
+    readonly    attribute Promise<void>    opened;
+    readonly    attribute Promise<void>    closed;
+//    readonly    attribute ReadableStream   input; //Bug 1056444: Stream API is not ready
+//    readonly    attribute WriteableStream  output; //Bug 1056444: Stream API is not ready
                 attribute EventHandler     onmessage; //Bug 1056444: use event interface before Stream API is ready
-  Promise<void> close ();
-  [Throws] void    joinMulticastGroup (DOMString multicastGroupAddress);
-  [Throws] void    leaveMulticastGroup (DOMString multicastGroupAddress);
-  [Throws] boolean send ((DOMString or Blob or ArrayBuffer or ArrayBufferView) data, optional DOMString? remoteAddress, optional unsigned short? remotePort); //Bug 1056444: use send method before Stream API is ready
+    Promise<void> close ();
+    [Throws] void    joinMulticastGroup (DOMString multicastGroupAddress);
+    [Throws] void    leaveMulticastGroup (DOMString multicastGroupAddress);
+    [Throws] boolean send ((DOMString or Blob or ArrayBuffer or ArrayBufferView) data, optional DOMString? remoteAddress, optional unsigned short? remotePort); //Bug 1056444: use send method before Stream API is ready
 };
