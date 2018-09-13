@@ -74,7 +74,11 @@ namespace frontend {
     F(AssertedBoundNamesScope, "AssertedBoundNamesScope") \
     F(AssertedDeclaredKind, "AssertedDeclaredKind") \
     F(AssertedDeclaredName, "AssertedDeclaredName") \
+    F(AssertedMaybePositionalParameterName, "AssertedMaybePositionalParameterName") \
+    F(AssertedParameterName, "AssertedParameterName") \
     F(AssertedParameterScope, "AssertedParameterScope") \
+    F(AssertedPositionalParameterName, "AssertedPositionalParameterName") \
+    F(AssertedRestParameterName, "AssertedRestParameterName") \
     F(AssertedScriptGlobalScope, "AssertedScriptGlobalScope") \
     F(AssertedVarScope, "AssertedVarScope") \
     F(AssignmentExpression, "AssignmentExpression") \
@@ -171,6 +175,7 @@ namespace frontend {
     F(LazySetter, "LazySetter") \
     F(ListOfAssertedBoundName, "ListOfAssertedBoundName") \
     F(ListOfAssertedDeclaredName, "ListOfAssertedDeclaredName") \
+    F(ListOfAssertedMaybePositionalParameterName, "ListOfAssertedMaybePositionalParameterName") \
     F(ListOfAssignmentTargetOrAssignmentTargetWithInitializer, "ListOfAssignmentTargetOrAssignmentTargetWithInitializer") \
     F(ListOfAssignmentTargetProperty, "ListOfAssignmentTargetProperty") \
     F(ListOfBindingProperty, "ListOfBindingProperty") \
@@ -262,7 +267,7 @@ enum class BinKind {
 };
 
 // The number of distinct values of BinKind.
-const size_t BINKIND_LIMIT = 193;
+const size_t BINKIND_LIMIT = 198;
 
 
 
@@ -310,6 +315,7 @@ const size_t BINKIND_LIMIT = 193;
     F(Finalizer, "finalizer") \
     F(Flags, "flags") \
     F(HasDirectEval, "hasDirectEval") \
+    F(Index, "index") \
     F(Init, "init") \
     F(IsAsync, "isAsync") \
     F(IsCaptured, "isCaptured") \
@@ -333,6 +339,7 @@ const size_t BINKIND_LIMIT = 193;
     F(Operand, "operand") \
     F(Operator, "operator") \
     F(Param, "param") \
+    F(ParamNames, "paramNames") \
     F(ParameterScope, "parameterScope") \
     F(Params, "params") \
     F(Pattern, "pattern") \
@@ -358,7 +365,7 @@ enum class BinField {
 };
 
 // The number of distinct values of BinField.
-const size_t BINFIELD_LIMIT = 66;
+const size_t BINFIELD_LIMIT = 68;
 
 
 
