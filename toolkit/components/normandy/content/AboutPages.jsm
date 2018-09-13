@@ -61,7 +61,7 @@ var AboutPages = {
     this.aboutStudies.registerParentListeners();
 
     CleanupManager.addCleanupHandler(() => {
-      // Stop loading processs scripts and notify existing scripts to clean up.
+      // Stop loading process scripts and notify existing scripts to clean up.
       Services.ppmm.broadcastAsyncMessage("Shield:ShuttingDown");
       Services.mm.broadcastAsyncMessage("Shield:ShuttingDown");
 
