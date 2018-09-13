@@ -106,3 +106,11 @@ kernel_preprocessor_checks = {
 }
 
 assert sorted(kernel_preprocessor_checks.keys()) == sorted(Kernel.POSSIBLE_VALUES)
+
+OS_preprocessor_checks = {
+    'Android': '__ANDROID__',
+}
+
+# We intentionally don't include all possible OSes in our checks, because we
+# only care about OS mismatches for specific target OSes.
+# assert sorted(OS_preprocessor_checks.keys()) == sorted(OS.POSSIBLE_VALUES)
