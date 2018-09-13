@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ExternalScrollId, LayoutPoint, LayoutRect, LayoutVector2D};
+use api::{ExternalScrollId, LayoutPoint, LayoutRect, LayoutVector2D, LayoutVector3D};
 use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation};
 use api::{LayoutSize, LayoutTransform, PropertyBinding, ScrollSensitivity, WorldPoint};
 use gpu_types::TransformPalette;
@@ -11,7 +11,7 @@ use print_tree::{PrintTree, PrintTreePrinter};
 use scene::SceneProperties;
 use smallvec::SmallVec;
 use spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyFrameInfo};
-use util::{LayoutToWorldFastTransform, ScaleOffset};
+use util::LayoutToWorldFastTransform;
 
 pub type ScrollStates = FastHashMap<ExternalScrollId, ScrollFrameInfo>;
 
@@ -28,6 +28,7 @@ pub struct CoordinateSystemId(pub u32);
 /// transforms.
 #[derive(Debug)]
 pub struct CoordinateSystem {
+    pub offset: LayoutVector3D,
     pub transform: LayoutTransform,
     pub parent: Option<CoordinateSystemId>,
 }
@@ -35,6 +36,7 @@ pub struct CoordinateSystem {
 impl CoordinateSystem {
     fn root() -> Self {
         CoordinateSystem {
+            offset: LayoutVector3D::zero(),
             transform: LayoutTransform::identity(),
             parent: None,
         }
@@ -85,8 +87,8 @@ pub struct TransformUpdateState {
     /// coordinate systems which are relatively axis aligned.
     pub current_coordinate_system_id: CoordinateSystemId,
 
-    /// Scale and offset from the coordinate system that started this compatible coordinate system.
-    pub coordinate_system_relative_scale_offset: ScaleOffset,
+    /// Offset from the coordinate system that started this compatible coordinate system.
+    pub coordinate_system_relative_offset: LayoutVector2D,
 
     /// True if this node is transformed by an invertible transform.  If not, display items
     /// transformed by this node will not be displayed and display items not transformed by this
@@ -133,17 +135,24 @@ impl ClipScrollTree {
 
         nodes.reverse();
 
-        let mut transform = parent.coordinate_system_relative_scale_offset
-                                  .inverse()
-                                  .to_transform();
+        let mut transform = LayoutTransform::create_translation(
+            -parent.coordinate_system_relative_offset.x,
+            -parent.coordinate_system_relative_offset.y,
+            0.0,
+        );
 
         for node in nodes {
             let coord_system = &self.coord_systems[node.0 as usize];
-            transform = transform.pre_mul(&coord_system.transform);
+            transform = transform.pre_translate(coord_system.offset)
+                                 .pre_mul(&coord_system.transform);
         }
 
-        let transform = transform.pre_mul(
-            &child.coordinate_system_relative_scale_offset.to_transform(),
+        let transform = transform.pre_translate(
+            LayoutVector3D::new(
+                child.coordinate_system_relative_offset.x,
+                child.coordinate_system_relative_offset.y,
+                0.0,
+            )
         );
 
         if inverse {
@@ -265,7 +274,7 @@ impl ClipScrollTree {
             nearest_scrolling_ancestor_offset: LayoutVector2D::zero(),
             nearest_scrolling_ancestor_viewport: LayoutRect::zero(),
             current_coordinate_system_id: CoordinateSystemId::root(),
-            coordinate_system_relative_scale_offset: ScaleOffset::identity(),
+            coordinate_system_relative_offset: LayoutVector2D::zero(),
             invertible: true,
         };
 
