@@ -43,7 +43,7 @@ public:
   // From https://xiph.org/flac/format.html#frame_header
   // A valid header is one that can be decoded without error and that has a
   // valid CRC.
-  bool Parse(const uint8_t* aPacket, size_t aBytes)
+  bool Parse(const uint8_t* aPacket, size_t aBytes, int64_t aPrevIndex)
   {
     BitReader br(aPacket, aBytes * 8);
 
@@ -111,6 +111,20 @@ public:
     // A frame is made of Blocksize sample.
     mIndex = mVariableBlockSize ? frame_or_sample_num
                                 : frame_or_sample_num * mBlocksize;
+
+    // The blocksize of the last frame in a fixed-blocksize stream may be
+    // smaller than its previous constant one(even it's fixed size). Hence,
+    // n * blocksize(n) may be smaller than (n-1) * blocksize(n-1),
+    // where n is the number of frames in the stream and
+    // blocksize(n) < blocksize(n-1). To make sure the index of frame is
+    // increasing (larger than its previous index), the minimal index is
+    // calculated as a index guard.
+    // `aPrevIndex` is 0 when this is called when seeking.
+    if (aPrevIndex && frame_or_sample_num > 0) {
+      int64_t minIndex = mVariableBlockSize ? aPrevIndex + 1
+                                            : aPrevIndex + mBlocksize;
+      mIndex = std::max(minIndex, mIndex);
+    }
 
     // Sample rate.
     if (sr_code < 12) {
@@ -227,7 +241,7 @@ public:
   // mandatorily set to 0, so we need to find either of 0xfffc or 0xfffd 2-bytes
   // signature. We first use a bitmask to see if 0xfc or 0xfd is present. And if
   // so we check for the whole signature.
-  int64_t FindNext(const uint8_t* aData, const uint32_t aLength)
+  int64_t FindNext(const uint8_t* aData, const uint32_t aLength, int64_t aCurrentIndex = 0)
   {
     // The non-variable size of a FLAC header is 32 bits followed by variable
     // size data and a 8 bits CRC.
@@ -241,7 +255,7 @@ public:
 
     for (i = 0; i < modOffset; i++) {
       if ((BigEndian::readUint16(aData + i) & 0xfffe) == 0xfff8) {
-        if (mHeader.Parse(aData + i, aLength - i)) {
+        if (mHeader.Parse(aData + i, aLength - i, aCurrentIndex)) {
           return i;
         }
       }
@@ -252,7 +266,7 @@ public:
       if (((x & ~(x + 0x01010101)) & 0x80808080)) {
         for (j = 0; j < 4; j++) {
           if ((BigEndian::readUint16(aData + i + j) & 0xfffe) == 0xfff8) {
-            if (mHeader.Parse(aData + i + j, aLength - i - j)) {
+            if (mHeader.Parse(aData + i + j, aLength - i - j, aCurrentIndex)) {
               return i + j;
             }
           }
@@ -264,7 +278,7 @@ public:
 
   // Find the next frame start in the current resource.
   // On exit return true, offset is set and resource points to the frame found.
-  bool FindNext(MediaResourceIndex& aResource)
+  bool FindNext(MediaResourceIndex& aResource, int64_t aCurrentIndex = 0)
   {
     static const int BUFFER_SIZE = 4096;
 
@@ -286,7 +300,7 @@ public:
 
       const size_t bufSize = read + innerOffset;
       int64_t foundOffset =
-        FindNext(reinterpret_cast<uint8_t*>(buffer.Elements()), bufSize);
+        FindNext(reinterpret_cast<uint8_t*>(buffer.Elements()), bufSize, aCurrentIndex);
 
       if (foundOffset >= 0) {
         SetOffset(aResource, foundOffset + offset);
@@ -450,7 +464,7 @@ public:
 private:
   bool GetNextFrame(MediaResourceIndex& aResource)
   {
-    while (mNextFrame.FindNext(aResource)) {
+    while (mNextFrame.FindNext(aResource, mFrame.Header().Index())) {
       // Move our offset slightly, so that we don't find the same frame at the
       // next FindNext call.
       aResource.Seek(SEEK_CUR, mNextFrame.Header().Size());
