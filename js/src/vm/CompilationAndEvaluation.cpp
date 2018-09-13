@@ -39,8 +39,8 @@ using JS::SourceBufferHolder;
 using namespace js;
 
 static bool
-Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-        SourceBufferHolder& srcBuf, JS::MutableHandleScript script)
+CompileSourceBuffer(JSContext* cx, const ReadOnlyCompileOptions& options,
+                    SourceBufferHolder& srcBuf, JS::MutableHandleScript script)
 {
     ScopeKind scopeKind = options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
@@ -64,7 +64,7 @@ CompileLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
     }
 
     SourceBufferHolder source(chars, length, SourceBufferHolder::GiveOwnership);
-    return ::Compile(cx, options, source, script);
+    return CompileSourceBuffer(cx, options, source, script);
 }
 
 static bool
@@ -79,7 +79,7 @@ CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
     }
 
     SourceBufferHolder source(chars, length, SourceBufferHolder::GiveOwnership);
-    return ::Compile(cx, options, source, script);
+    return CompileSourceBuffer(cx, options, source, script);
 }
 
 static bool
@@ -116,7 +116,7 @@ bool
 JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
             SourceBufferHolder& srcBuf, JS::MutableHandleScript script)
 {
-    return ::Compile(cx, options, srcBuf, script);
+    return CompileSourceBuffer(cx, options, srcBuf, script);
 }
 
 bool
@@ -155,7 +155,7 @@ JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& opt
 {
     CompileOptions options(cx, optionsArg);
     options.setNonSyntacticScope(true);
-    return ::Compile(cx, options, srcBuf, script);
+    return CompileSourceBuffer(cx, options, srcBuf, script);
 }
 
 bool
@@ -202,7 +202,7 @@ JS_PUBLIC_API(bool)
 JS_CompileUCScript(JSContext* cx, JS::SourceBufferHolder& srcBuf,
                    const JS::CompileOptions& options, MutableHandleScript script)
 {
-    return ::Compile(cx, options, srcBuf, script);
+    return CompileSourceBuffer(cx, options, srcBuf, script);
 }
 
 JS_PUBLIC_API(bool)
