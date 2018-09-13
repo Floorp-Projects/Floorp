@@ -30,8 +30,7 @@ var gClicking = null;
 var gDoPreventDefault1 = null;
 var gDoPreventDefault2 = null;
 
-function clickEventHandler(aEvent)
-{
+function clickEventHandler(aEvent) {
   if (aEvent.button == 1 && aEvent.target == gClicking) {
     gClicked = true;
   }
@@ -47,8 +46,8 @@ function clickEventHandler(aEvent)
 //       modified.  Sometimes, the modification is delayed. Therefore, there
 //       are a lot of functions and SimpleTest.executeSoon()s.
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[["middlemouse.contentLoadURL", false],
-                                    ["middlemouse.paste", true]]}, startTest);
+  SpecialPowers.pushPrefEnv({"set": [["middlemouse.contentLoadURL", false],
+                                     ["middlemouse.paste", true]]}, startTest);
 });
 function startTest() {
   frameWindow = iframe.contentWindow;
@@ -71,7 +70,7 @@ function startTest() {
   if (!SpecialPowers.supportsSelectionClipboard()) {
     SimpleTest.waitForClipboard("pasted",
       function() { synthesizeKey("c", { accelKey: true }, frameWindow); },
-      function() { SimpleTest.executeSoon(runInputTests1) },
+      function() { SimpleTest.executeSoon(runInputTests1); },
       cleanup);
   } else {
     // Otherwise, don't call waitForClipboard since it breaks primary
@@ -80,8 +79,7 @@ function startTest() {
   }
 }
 
-function runInputTests1()
-{
+function runInputTests1() {
   var input = frameDocument.getElementById("input");
 
   // first, copy text.
@@ -107,8 +105,7 @@ function runInputTests1()
   });
 }
 
-function runInputTests2()
-{
+function runInputTests2() {
   var input = frameDocument.getElementById("input");
 
   // even if the input element hasn't had focus, middle click should set focus
@@ -134,8 +131,7 @@ function runInputTests2()
   });
 }
 
-function runInputTests3()
-{
+function runInputTests3() {
   var input = frameDocument.getElementById("input");
   var editor1 = frameDocument.getElementById("editor1");
 
@@ -162,10 +158,8 @@ function runInputTests3()
   });
 }
 
-function runInputTests4()
-{
+function runInputTests4() {
   var input = frameDocument.getElementById("input");
-  var editor1 = frameDocument.getElementById("editor1");
 
   // preventDefault() of input element's click event handler should prevent
   // middle click pasting in it.
@@ -190,8 +184,7 @@ function runInputTests4()
   });
 }
 
-function runContentEditableTests1()
-{
+function runContentEditableTests1() {
   var editor1 = frameDocument.getElementById("editor1");
 
   // when middle clicked in focused contentediable editor, text should be
@@ -216,8 +209,7 @@ function runContentEditableTests1()
   });
 }
 
-function runContentEditableTests2()
-{
+function runContentEditableTests2() {
   var editor1 = frameDocument.getElementById("editor1");
 
   // even if the contenteditable editor hasn't had focus, middle click should
@@ -242,8 +234,7 @@ function runContentEditableTests2()
   });
 }
 
-function runContentEditableTests3()
-{
+function runContentEditableTests3() {
   var editor1 = frameDocument.getElementById("editor1");
   var editor2 = frameDocument.getElementById("editor2");
 
@@ -272,8 +263,7 @@ function runContentEditableTests3()
   });
 }
 
-function runContentEditableTests4()
-{
+function runContentEditableTests4() {
   var editor1 = frameDocument.getElementById("editor1");
 
   // preventDefault() of editor1's click event handler should prevent
@@ -298,8 +288,7 @@ function runContentEditableTests4()
   });
 }
 
-function runContentEditableTests5()
-{
+function runContentEditableTests5() {
   var editor1 = frameDocument.getElementById("editor1");
   var editor2 = frameDocument.getElementById("editor2");
 
@@ -329,19 +318,17 @@ function runContentEditableTests5()
   });
 }
 
-function initForBodyEditableDocumentTests()
-{
+function initForBodyEditableDocumentTests() {
   frameDocument.getElementById("input").removeEventListener("click", clickEventHandler);
   frameDocument.getElementById("editor1").removeEventListener("click", clickEventHandler);
   frameDocument.getElementById("editor2").removeEventListener("click", clickEventHandler);
 
   iframe.onload =
-    function (aEvent) { SimpleTest.executeSoon(runBodyEditableDocumentTests1); };
+    function(aEvent) { SimpleTest.executeSoon(runBodyEditableDocumentTests1); };
   iframe.srcdoc = "<body contenteditable>body:</body>";
 }
 
-function runBodyEditableDocumentTests1()
-{
+function runBodyEditableDocumentTests1() {
   frameWindow = iframe.contentWindow;
   frameDocument = iframe.contentDocument;
 
@@ -362,8 +349,7 @@ function runBodyEditableDocumentTests1()
   });
 }
 
-function runBodyEditableDocumentTests2()
-{
+function runBodyEditableDocumentTests2() {
   frameDocument.body.innerHTML = "body:<span id='span' contenteditable='false'>non-editable</span>";
 
   var body = frameDocument.body;
@@ -382,8 +368,7 @@ function runBodyEditableDocumentTests2()
   });
 }
 
-function cleanup()
-{
+function cleanup() {
   SimpleTest.finish();
 }
 

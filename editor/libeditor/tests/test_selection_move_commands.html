@@ -25,15 +25,15 @@ function* runTests() {
   var root = doc.documentElement;
   var body = doc.body;
 
-  body.style.fontSize='16px';
-  body.style.lineHeight='16px';
-  body.style.height='400px';
-  body.style.padding='0px';
-  body.style.margin='0px';
-  body.style.borderWidth='0px';
+  body.style.fontSize = "16px";
+  body.style.lineHeight = "16px";
+  body.style.height = "400px";
+  body.style.padding = "0px";
+  body.style.margin = "0px";
+  body.style.borderWidth = "0px";
 
   var sel = win.getSelection();
-  doc.designMode='on';
+  doc.designMode = "on";
   body.innerHTML = "1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>";
   win.focus();
   // Flush out layout to make sure that the subdocument will be the size we
@@ -56,9 +56,9 @@ function* runTests() {
     is(sel.anchorOffset, expectOffset, "offset after " + cmd);
   }
 
-  function findChildNum(e, child) {
+  function findChildNum(element, child) {
     var i = 0;
-    var n = e.firstChild;
+    var n = element.firstChild;
     while (n && n != child) {
       n = n.nextSibling;
       ++i;
@@ -180,7 +180,7 @@ function* runTests() {
     SpecialPowers.doCommand(window, "cmd_moveBottom");
     SpecialPowers.doCommand(window, "cmd_beginLine");
     is(testPageSelectCommand("cmd_selectPageUp", 0), 22 - lineNum, "cmd_selectPageUp");
-  }
+  };
 
   yield SpecialPowers.pushPrefEnv({set: [["layout.word_select.eat_space_to_next_word", false]]});
   runSelectionTests(body, 1);

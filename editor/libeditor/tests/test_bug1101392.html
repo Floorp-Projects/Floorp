@@ -14,8 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1101392
   SimpleTest.waitForExplicitFinish();
   SimpleTest.waitForFocus(runTests);
 
-  function runCopyCommand(element, compareText, nextTest)
-  {
+  function runCopyCommand(element, compareText, nextTest) {
     element.focus();
     var expectedEndpoint, sel;
     if (element.localName == "textarea") {
@@ -48,20 +47,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1101392
         checkCollapse, checkCollapse);
   }
 
-  function testDiv()
-  {
+  function testDiv() {
     var content = document.getElementById("content");
-    runCopyCommand(content, 'abc', testTextarea);
+    runCopyCommand(content, "abc", testTextarea);
   }
 
-  function testTextarea()
-  {
+  function testTextarea() {
     var textarea = document.getElementById("textarea");
-    runCopyCommand(textarea, 'def', SimpleTest.finish);
+    runCopyCommand(textarea, "def", SimpleTest.finish);
   }
 
-  function runTests()
-  {
+  function runTests() {
     testDiv();
   }
   </script>

@@ -75,8 +75,9 @@ JavaScriptParent::allowMessage(JSContext* cx)
     MessageChannel* channel = GetIPCChannel();
     bool isSafe = channel->IsInTransaction();
 
-    if (isSafe)
+    if (isSafe) {
         return true;
+    }
 
     nsIGlobalObject* global = dom::GetIncumbentGlobal();
     JS::Rooted<JSObject*> jsGlobal(cx, global ? global->GetGlobalJSObject() : nullptr);
@@ -134,14 +135,16 @@ JavaScriptParent::scopeForTargetObjects()
 void
 JavaScriptParent::afterProcessTask()
 {
-    if (savedNextCPOWNumber_ == nextCPOWNumber_)
+    if (savedNextCPOWNumber_ == nextCPOWNumber_) {
         return;
+    }
 
     savedNextCPOWNumber_ = nextCPOWNumber_;
 
     MOZ_ASSERT(nextCPOWNumber_ > 0);
-    if (active())
+    if (active()) {
         Unused << SendDropTemporaryStrongReferences(nextCPOWNumber_ - 1);
+    }
 }
 
 PJavaScriptParent*
@@ -160,7 +163,8 @@ void
 mozilla::jsipc::AfterProcessTask()
 {
     for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
-        if (PJavaScriptParent* p = LoneManagedOrNullAsserts(cp->ManagedPJavaScriptParent()))
+        if (PJavaScriptParent* p = LoneManagedOrNullAsserts(cp->ManagedPJavaScriptParent())) {
             static_cast<JavaScriptParent*>(p)->afterProcessTask();
+        }
     }
 }

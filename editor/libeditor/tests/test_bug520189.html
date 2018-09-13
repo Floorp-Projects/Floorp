@@ -7,7 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=520182
   <title>Test for Bug 520182</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=520182">Mozilla Bug 520182</a>
@@ -79,12 +79,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=520182
 <pre id="test">
 <script type="application/javascript">
 
+/* eslint-disable no-useless-concat */
+
 /** Test for Bug 520182 **/
 
 const dataPayload = "foo<iframe src=\"data:text/html,bar\"></iframe>baz";
 const jsPayload = "foo<iframe src=\"javascript:void('bar');\"></iframe>baz";
 const httpPayload = "foo<iframe src=\"http://mochi.test:8888/\"></iframe>baz";
-const scriptPayload ="foo<script>document.write(\"<iframe></iframe>\");</sc" + "ript>baz";
+const scriptPayload = "foo<script>document.write(\"<iframe></iframe>\");</sc" + "ript>baz";
 const scriptExternalPayload = "foo<script src=\"data:text/javascript,document.write('<iframe></iframe>');\"></sc" + "ript>baz";
 const validStyle1Payload = "foo<style>#bar{color:red;}</style>baz";
 const validStyle2Payload = "foo<span style=\"color:red\">bar</span>baz";
@@ -140,14 +142,14 @@ var tests = [
     isIFrame: true,
     payload: scriptPayload,
     rootElement() { return document.getElementById("g").contentDocument.documentElement; },
-    iframeCount: 0
+    iframeCount: 0,
   },
   {
     id: "h",
     isIFrame: true,
     payload: scriptExternalPayload,
     rootElement() { return document.getElementById("h").contentDocument.documentElement; },
-    iframeCount: 0
+    iframeCount: 0,
   },
   {
     id: "d",
@@ -171,13 +173,13 @@ var tests = [
     id: "i",
     payload: scriptPayload,
     rootElement() { return document.getElementById("i"); },
-    iframeCount: 0
+    iframeCount: 0,
   },
   {
     id: "j",
     payload: scriptExternalPayload,
     rootElement() { return document.getElementById("j"); },
-    iframeCount: 0
+    iframeCount: 0,
   },
   {
     id: "k",
@@ -288,21 +290,21 @@ var tests = [
     isIFrame: true,
     payload: nestedStylePayload,
     rootElement() { return document.getElementById("aa").contentDocument.documentElement; },
-    checkResult: function(html, text) {
+    checkResult(html, text) {
       is(html.indexOf("binding-1"), -1, "Should not have retained the binding-1 style");
       isnot(text.indexOf("#bar2"), -1, "Should have retained binding-2 as text content");
       is(text.indexOf("binding-2"), -1, "Should not have retained binding-2 as a tag");
-    }
+    },
   },
   {
     id: "bb",
     payload: nestedStylePayload,
     rootElement() { return document.getElementById("bb"); },
-    checkResult: function(html, text) {
+    checkResult(html, text) {
       is(html.indexOf("binding-1"), -1, "Should not have retained the binding-1 style");
       isnot(text.indexOf("#bar2"), -1, "Should have retained binding-2 as text content");
       is(text.indexOf("binding-2"), -1, "Should not have retained binding-2 as a tag");
-    }
+    },
   },
   {
     id: "cc",
@@ -375,20 +377,20 @@ var tests = [
     indirectPaste: true,
     payload: invalidStyle7Payload,
     rootElement() { return document.getElementById("mm").contentDocument.documentElement; },
-    checkResult: function(html) {
+    checkResult(html) {
       is(html.indexOf("xxx"), -1, "Should not have retained the title text");
       isnot(html.indexOf("foo"), -1, "Should have retained the body text");
-    }
+    },
   },
   {
     id: "nn",
     indirectPaste: true,
     payload: invalidStyle7Payload,
     rootElement() { return document.getElementById("nn"); },
-    checkResult: function(html) {
+    checkResult(html) {
       is(html.indexOf("xxx"), -1, "Should not have retained the title text");
       isnot(html.indexOf("foo"), -1, "Should have retained the body text");
-    }
+    },
   },
   {
     id: "oo",
@@ -524,18 +526,19 @@ var tests = [
     id: "yyy",
     payload: microdataPayload,
     rootElement() { return document.getElementById("yyy"); },
-    checkResult: function(html) { is(html.indexOf("name"), -1, "Should have dropped name."); is(html.indexOf("rel"), -1, "Should have dropped rel."); isnot(html.indexOf("itemprop"), -1, "Should not have dropped itemprop."); }
+    checkResult(html) { is(html.indexOf("name"), -1, "Should have dropped name."); is(html.indexOf("rel"), -1, "Should have dropped rel."); isnot(html.indexOf("itemprop"), -1, "Should not have dropped itemprop."); },
   },
   {
     id: "yyyy",
     isIFrame: true,
     payload: microdataPayload,
     rootElement() { return document.getElementById("yyyy").contentDocument.documentElement; },
-    checkResult: function(html) { is(html.indexOf("name"), -1, "Should have dropped name."); is(html.indexOf("rel"), -1, "Should have dropped rel."); isnot(html.indexOf("itemprop"), -1, "Should not have dropped itemprop."); }
-  }
+    checkResult(html) { is(html.indexOf("name"), -1, "Should have dropped name."); is(html.indexOf("rel"), -1, "Should have dropped rel."); isnot(html.indexOf("itemprop"), -1, "Should not have dropped itemprop."); },
+  },
 ];
 
 function doNextTest() {
+  /* global testCounter:true */
   if (typeof testCounter == "undefined")
     testCounter = 0;
   else if (++testCounter == tests.length) {
@@ -581,8 +584,7 @@ function runTest(test) {
     editor = SpecialPowers.wrap(win).docShell.editor;
     editor.pasteTransferable(trans);
   } else {
-    var clipboard = SpecialPowers.Cc["@mozilla.org/widget/clipboard;1"]
-                                 .getService(SpecialPowers.Ci.nsIClipboard);
+    var clipboard = SpecialPowers.Services.clipboard;
 
     clipboard.setData(trans, null, SpecialPowers.Ci.nsIClipboard.kGlobalClipboard);
 
@@ -611,7 +613,7 @@ SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   SpecialPowers.pushPrefEnv(
     { "set": [["layout.css.moz-document.content.enabled", true]]},
-    doNextTest)
+    doNextTest);
 });
 </script>
 </pre>

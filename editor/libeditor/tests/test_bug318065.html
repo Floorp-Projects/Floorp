@@ -40,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=318065
           is(this.value, expectedValues[step], messages[step]);
           step++;
           if (step == expectedValues.length) {
-            this.removeEventListener("input", onInput); 
+            this.removeEventListener("input", onInput);
             SimpleTest.finish();
           }
         }

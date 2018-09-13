@@ -5,10 +5,19 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const TEST_WINDOW = window;
 
+function windowActivated(win) {
+  if (Services.ww.activeWindow == win) {
+    return Promise.resolve();
+  }
+  return BrowserTestUtils.waitForEvent(win, "activate");
+}
+
 async function withOpenWindows(amount, cont) {
   let windows = [];
   for (let i = 0; i < amount; ++i) {
-    windows.push(await BrowserTestUtils.openNewBrowserWindow());
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+    await windowActivated(win);
+    windows.push(win);
   }
   await cont(windows);
   await Promise.all(windows.map(window => BrowserTestUtils.closeWindow(window)));
@@ -67,6 +76,7 @@ add_task(async function test_getTopWindow() {
       content.window.open("about:blank", "_blank", features);
     });
     let popupWindow = await popupWindowPromise;
+    await windowActivated(popupWindow);
     window = BrowserWindowTracker.getTopWindow({ allowPopups: true });
     Assert.equal(window, popupWindow,
       "The popup window should be the most recent one, when requested.");

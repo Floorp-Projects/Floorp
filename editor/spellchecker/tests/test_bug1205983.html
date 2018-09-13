@@ -35,7 +35,9 @@ var onSpellCheck =
 /** Test for Bug 1205983 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
+  /* eslint-env mozilla/frame-script */
   script = SpecialPowers.loadChromeScript(function() {
+    // eslint-disable-next-line mozilla/use-services
     var dir = Cc["@mozilla.org/file/directory_service;1"]
                 .getService(Ci.nsIProperties)
                 .get("CurWorkD", Ci.nsIFile);
@@ -58,14 +60,13 @@ SimpleTest.waitForFocus(function() {
   is(script.sendSyncMessage("de_DE-exists")[0][0], true,
      "true expected (de_DE directory should exist)");
 
-  document.getElementById('de-DE').focus();
+  document.getElementById("de-DE").focus();
 });
 
 function deFocus() {
-  elem_de = document.getElementById('de-DE');
+  elem_de = document.getElementById("de-DE");
 
-  onSpellCheck(elem_de, function () {
-    var Ci = SpecialPowers.Ci;
+  onSpellCheck(elem_de, function() {
     var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
     editor_de = editingSession.getEditorForWindow(window);
     selcon_de = editor_de.selectionController;
@@ -75,23 +76,24 @@ function deFocus() {
     is(sel.toString(), "German", "one misspelled word expected: German");
 
     // Now focus the textarea, which requires English spelling.
-    document.getElementById('en-US').focus();
+    document.getElementById("en-US").focus();
   });
 }
 
 function enFocus() {
-  var elem_en = document.getElementById('en-US');
+  var elem_en = document.getElementById("en-US");
   var editor_en =
     SpecialPowers.wrap(elem_en)
                  .editor;
   editor_en.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor_en.getInlineSpellChecker(true);
 
-  onSpellCheck(elem_en, function () {
+  onSpellCheck(elem_en, function() {
     var spellchecker = inlineSpellChecker.spellChecker;
+    let currentDictonary;
     try {
       currentDictonary = spellchecker.GetCurrentDictionary();
-    } catch(e) {}
+    } catch (e) {}
 
     // Check that the English dictionary is loaded and that the spell check has worked.
     is(currentDictonary, "en-US", "expected en-US");
@@ -112,9 +114,10 @@ function enFocus() {
     elem_de.focus();
 
     // After removal, the de_DE editor should refresh the spelling with en-US.
-    onSpellCheck(elem_de, function () {
-      var sel = selcon_de.getSelection(selcon_de.SELECTION_SPELLCHECK);
-      is(sel.toString(), "heute" + "ist" + "ein" + "guter",
+    onSpellCheck(elem_de, function() {
+      var endSel = selcon_de.getSelection(selcon_de.SELECTION_SPELLCHECK);
+      // eslint-disable-next-line no-useless-concat
+      is(endSel.toString(), "heute" + "ist" + "ein" + "guter",
          "some misspelled words expected: heute ist ein guter");
 
       // If we don't reset this, we cause massive leaks.

@@ -8,7 +8,7 @@
 <body>
 <div id="display"></div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -18,25 +18,21 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests);
 
-function runTests()
-{
+function runTests() {
 
   var container = document.getElementById("display");
 
-  function reset()
-  {
+  function reset() {
     document.execCommand("Undo", false, null);
   }
 
   var selection = window.getSelection();
-  function moveCaretToStartOf(aEditor)
-  {
+  function moveCaretToStartOf(aEditor) {
     selection.selectAllChildren(aEditor);
     selection.collapseToStart();
   }
 
-  function moveCaretToEndOf(aEditor)
-  {
+  function moveCaretToEndOf(aEditor) {
     selection.selectAllChildren(aEditor);
     selection.collapseToEnd();
   }

@@ -163,9 +163,9 @@ let InternalFaviconLoader = {
     });
   },
 
-  loadFavicon(browser, principal, uri, expiration, iconURI) {
+  loadFavicon(browser, principal, pageURI, uri, expiration, iconURI) {
     this.ensureInitialized();
-    let win = browser.ownerGlobal;
+    let {ownerGlobal: win, innerWindowID} = browser;
     if (!gFaviconLoadDataMap.has(win)) {
       gFaviconLoadDataMap.set(win, []);
       let unloadHandler = event => {
@@ -179,8 +179,6 @@ let InternalFaviconLoader = {
       win.addEventListener("unload", unloadHandler, true);
     }
 
-    let {innerWindowID, currentURI} = browser;
-
     // First we do the actual setAndFetch call:
     let loadType = PrivateBrowsingUtils.isWindowPrivate(win)
       ? PlacesUtils.favicons.FAVICON_LOAD_PRIVATE
@@ -193,8 +191,8 @@ let InternalFaviconLoader = {
                                                          expiration, principal);
     }
 
-    let request = PlacesUtils.favicons.setAndFetchFaviconForPage(currentURI, uri, false,
-                                                                 loadType, callback, principal);
+    let request = PlacesUtils.favicons.setAndFetchFaviconForPage(
+      pageURI, uri, false, loadType, callback, principal);
 
     // Now register the result so we can cancel it if/when necessary.
     if (!request) {
@@ -313,15 +311,16 @@ var PlacesUIUtils = {
    * set and fetch a favicon. Can only be used from the parent process.
    * @param browser    {Browser}   The XUL browser element for which we're fetching a favicon.
    * @param principal  {Principal} The loading principal to use for the fetch.
+   * @pram pageURI     {URI}       The page URI associated to this favicon load.
    * @param uri        {URI}       The URI to fetch.
    * @param expiration {Number}    An optional expiration time.
    * @param iconURI    {URI}       An optional data: URI holding the icon's data.
    */
-  loadFavicon(browser, principal, uri, expiration = 0, iconURI = null) {
+  loadFavicon(browser, principal, pageURI, uri, expiration = 0, iconURI = null) {
     if (gInContentProcess) {
       throw new Error("Can't track loads from within the child process!");
     }
-    InternalFaviconLoader.loadFavicon(browser, principal, uri, expiration, iconURI);
+    InternalFaviconLoader.loadFavicon(browser, principal, pageURI, uri, expiration, iconURI);
   },
 
   /**

@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717433
 
 /** Test for Bug 717433 **/
 SimpleTest.waitForExplicitFinish();
-var content = document.getElementById('content');
+var content = document.getElementById("content");
 // Load a subframe containing an editor with language "en". At first
 // load, it will set the dictionary to en-GB or en-US. We set the other one.
 // At second load, it will return the current dictionary. We can check that the
@@ -32,7 +32,9 @@ var script;
 var loadListener = function(evt) {
 
   if (firstLoad) {
+    /* eslint-env mozilla/frame-script */
     script = SpecialPowers.loadChromeScript(function() {
+      // eslint-disable-next-line mozilla/use-services
       var dir = Cc["@mozilla.org/file/directory_service;1"]
                   .getService(Ci.nsIProperties)
                   .get("CurWorkD", Ci.nsIFile);
@@ -57,18 +59,18 @@ var loadListener = function(evt) {
   }
 
   var doc = evt.target.contentDocument;
-  var elem = doc.getElementById('textarea');
+  var elem = doc.getElementById("textarea");
   var editor = SpecialPowers.wrap(elem).editor;
   editor.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor.getInlineSpellChecker(true);
 
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(elem, function () {
+  .onSpellCheck(elem, function() {
     var spellchecker = inlineSpellChecker.spellChecker;
     try {
       var currentDictonary = spellchecker.GetCurrentDictionary();
-    } catch(e) {}
+    } catch (e) {}
 
     if (firstLoad) {
       firstLoad = false;
@@ -83,10 +85,10 @@ var loadListener = function(evt) {
       } else {
         is(true, false, "Neither en-US nor en-GB are current");
       }
-      content.src = 'http://mochi.test:8888/tests/editor/spellchecker/tests/bug717433_subframe.html?firstload=false';
+      content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug717433_subframe.html?firstload=false";
     } else {
       is(currentDictonary, expected, expected + " expected");
-      content.removeEventListener('load', loadListener);
+      content.removeEventListener("load", loadListener);
 
       // Remove the fake en-GB dictionary again, since it's otherwise picked up by later tests.
       script.sendSyncMessage("destroy");
@@ -96,11 +98,11 @@ var loadListener = function(evt) {
       SimpleTest.finish();
     }
   });
-}
+};
 
-content.addEventListener('load', loadListener);
+content.addEventListener("load", loadListener);
 
-content.src = 'http://mochi.test:8888/tests/editor/spellchecker/tests/bug717433_subframe.html?firstload=true';
+content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug717433_subframe.html?firstload=true";
 
 </script>
 </pre>

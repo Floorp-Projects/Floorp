@@ -22,8 +22,7 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTest);
 
-function runDesignModeTest(aDoc, aFocus, aNewSource)
-{
+function runDesignModeTest(aDoc, aFocus, aNewSource) {
   aDoc.designMode = "on";
 
   if (aFocus) {
@@ -36,8 +35,7 @@ function runDesignModeTest(aDoc, aFocus, aNewSource)
   aDoc.documentElement.focus();
 }
 
-function runContentEditableTest(aDoc, aFocus, aNewSource)
-{
+function runContentEditableTest(aDoc, aFocus, aNewSource) {
   if (aFocus) {
     aDoc.body.setAttribute("contenteditable", "true");
     aDoc.body.focus();
@@ -79,8 +77,7 @@ const kTests = [
 var gIFrame;
 var gSetFocusToIFrame = false;
 
-function onLoadIFrame()
-{
+function onLoadIFrame() {
   var frameDoc = gIFrame.contentWindow.document;
 
   var selCon = SpecialPowers.wrap(gIFrame).contentWindow.
@@ -132,8 +129,7 @@ function onLoadIFrame()
   }
 }
 
-function runTest()
-{
+function runTest() {
   gIFrame = document.createElement("iframe");
   document.getElementById("display").appendChild(gIFrame);
   gIFrame.src = "about:blank";

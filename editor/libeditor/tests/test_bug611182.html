@@ -75,7 +75,7 @@ SimpleTest.waitForFocus(function() {
     }, {once: true});
     iframe.src = src;
   }
-  
+
   var totalTests = 0;
   var currentTest = 0;
   function runAllTests() {
@@ -83,7 +83,7 @@ SimpleTest.waitForFocus(function() {
       SimpleTest.finish();
       return;
     }
-    testBackspace("file_bug611182.sjs?" + currentTest, runAllTests)
+    testBackspace("file_bug611182.sjs?" + currentTest, runAllTests);
     currentTest++;
   }
 
@@ -94,7 +94,7 @@ SimpleTest.waitForFocus(function() {
   myXHR.onload = function(e) {
     totalTests = myXHR.responseText;
     runAllTests();
-  }
+  };
   myXHR.send();
 });
 

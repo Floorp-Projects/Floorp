@@ -1296,27 +1296,31 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   // However, ignore internal redirects here.  We don't want to flip
   // Response.redirected to true if an internal redirect occurs.  These
   // should be transparent to script.
+  nsCOMPtr<nsIURI> uri;
+  MOZ_ALWAYS_SUCCEEDS(aNewChannel->GetURI(getter_AddRefs(uri)));
+
+  nsCOMPtr<nsIURI> uriClone;
+  nsresult rv = NS_GetURIWithoutRef(uri, getter_AddRefs(uriClone));
+  if(NS_WARN_IF(NS_FAILED(rv))){
+    return rv;
+  }
+  nsCString spec;
+  rv = uriClone->GetSpec(spec);
+  if(NS_WARN_IF(NS_FAILED(rv))){
+    return rv;
+  }
+  nsCString fragment;
+  rv = uri->GetRef(fragment);
+  if(NS_WARN_IF(NS_FAILED(rv))){
+    return rv;
+  }
+
   if (!(aFlags & nsIChannelEventSink::REDIRECT_INTERNAL)) {
-    nsCOMPtr<nsIURI> uri;
-    MOZ_ALWAYS_SUCCEEDS(aNewChannel->GetURI(getter_AddRefs(uri)));
-
-    nsCOMPtr<nsIURI> uriClone;
-    nsresult rv = NS_GetURIWithoutRef(uri, getter_AddRefs(uriClone));
-    if(NS_WARN_IF(NS_FAILED(rv))){
-      return rv;
-    }
-    nsCString spec;
-    rv = uriClone->GetSpec(spec);
-    if(NS_WARN_IF(NS_FAILED(rv))){
-      return rv;
-    }
-    nsCString fragment;
-    rv = uri->GetRef(fragment);
-    if(NS_WARN_IF(NS_FAILED(rv))){
-      return rv;
-    }
-
     mRequest->AddURL(spec, fragment);
+  } else {
+    // Overwrite the URL only when the request is redirected by a service
+    // worker.
+    mRequest->SetURLForInternalRedirect(aFlags, spec, fragment);
   }
 
   NS_ConvertUTF8toUTF16 tRPHeaderValue(tRPHeaderCValue);

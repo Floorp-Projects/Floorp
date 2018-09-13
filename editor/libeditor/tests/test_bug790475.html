@@ -28,7 +28,6 @@ addLoadEvent(runTest);
 var gMisspeltWords;
 
 function getEditor() {
-  const Ci = SpecialPowers.Ci;
   var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
   return editingSession.getEditorForWindow(window);
 }
@@ -75,7 +74,7 @@ function isSpellingCheckOk() {
 
   for (var i = 0; i < numWords; i++) {
     var word = sel.getRangeAt(i);
-    is (word, gMisspeltWords[i], "Misspelling is what we think it is.");
+    is(word, gMisspeltWords[i], "Misspelling is what we think it is.");
     if (word != gMisspeltWords[i])
       return false;
   }

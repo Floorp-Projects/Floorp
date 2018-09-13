@@ -30,18 +30,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=578771
         var ce = document.getElementById("ce");
         ce.focus();
 
-        synthesizeMouse(elem, 5, 5, {clickCount: 2 });   
+        synthesizeMouse(elem, 5, 5, {clickCount: 2 });
         ok(elem.selectionStart == 0 && elem.selectionEnd == 7,
            " Double-clicking on another " + elemTag + " works correctly");
 
         ce.focus();
-        synthesizeMouse(elem, 5, 5, {clickCount: 3 });   
+        synthesizeMouse(elem, 5, 5, {clickCount: 3 });
         ok(elem.selectionStart == 0 && elem.selectionEnd == 14,
            "Triple-clicking on another " + elemTag + " works correctly");
       }
       // Avoid platform selection differences
       SimpleTest.waitForFocus(function() {
-         SpecialPowers.pushPrefEnv({"set":[["layout.word_select.eat_space_to_next_word", false]]}, startTest);
+         SpecialPowers.pushPrefEnv({"set": [["layout.word_select.eat_space_to_next_word", false]]}, startTest);
       });
 
       function startTest() {

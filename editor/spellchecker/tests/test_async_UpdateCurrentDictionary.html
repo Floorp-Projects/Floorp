@@ -26,7 +26,7 @@ function start() {
 
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(textarea, function () {
+  .onSpellCheck(textarea, function() {
     var isc = SpecialPowers.wrap(textarea).editor.getInlineSpellChecker(false);
     ok(isc, "Inline spell checker should exist after focus and spell check");
     var sc = isc.spellChecker;
@@ -37,7 +37,7 @@ function start() {
     // sure the spell checker's language was updated appropriately.
     var lang = "en-US";
     textarea.setAttribute("lang", lang);
-    sc.UpdateCurrentDictionary(function () {
+    sc.UpdateCurrentDictionary(function() {
       is(sc.GetCurrentDictionary(), lang,
          "UpdateCurrentDictionary should set the current dictionary.");
 
@@ -46,7 +46,7 @@ function start() {
       // called nonetheless.
       var numCalls = 3;
       for (var i = 0; i < numCalls; i++) {
-        sc.UpdateCurrentDictionary(function () {
+        sc.UpdateCurrentDictionary(function() {
           is(sc.GetCurrentDictionary(), "",
              "No dictionary should be active after Update.");
           if (--numCalls == 0) {
@@ -58,8 +58,7 @@ function start() {
       }
       try {
         sc.SetCurrentDictionary("testing-XX");
-      }
-      catch (err) {
+      } catch (err) {
         // Set throws NS_ERROR_NOT_AVAILABLE because "testing-XX" isn't really
         // an available dictionary.
       }

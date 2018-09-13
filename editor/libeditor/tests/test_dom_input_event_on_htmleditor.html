@@ -17,7 +17,7 @@
   <iframe id="editor5" srcdoc="<html><body id='eventTarget'></body><script>document.designMode='on';</script></html>"></iframe>
 </div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -29,10 +29,8 @@ SimpleTest.waitForFocus(runTests, window);
 
 const kIsMac = navigator.platform.indexOf("Mac") == 0;
 
-function runTests()
-{
-  function doTests(aDocument, aWindow, aDescription)
-  {
+function runTests() {
+  function doTests(aDocument, aWindow, aDescription) {
     aDescription += ": ";
     aWindow.focus();
 
@@ -62,20 +60,20 @@ function runTests()
 
     var inputEvent = null;
 
-    var handler = function (aEvent) {
+    var handler = function(aEvent) {
       is(aEvent.target, eventTarget,
          "input event is fired on unexpected element: " + aEvent.target.tagName);
       ok(!aEvent.cancelable, "input event must not be cancelable");
       ok(aEvent.bubbles, "input event must be bubbles");
       if (SpecialPowers.getBoolPref("dom.event.highrestimestamp.enabled")) {
-        var duration = Math.abs(window.performance.now() - aEvent.timeStamp);
+        let duration = Math.abs(window.performance.now() - aEvent.timeStamp);
         ok(duration < 30 * 1000,
            "perhaps, timestamp wasn't set correctly :" + aEvent.timeStamp +
            " (expected it to be within 30s of the current time but it " +
            "differed by " + duration + "ms)");
       } else {
         var eventTime = new Date(aEvent.timeStamp);
-        var duration = Math.abs(Date.now() - aEvent.timeStamp);
+        let duration = Math.abs(Date.now() - aEvent.timeStamp);
         ok(duration < 30 * 1000,
            "perhaps, timestamp wasn't set correctly :" +
            eventTime.toLocaleString() +

@@ -5,14 +5,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=519928
 -->
 <head>
   <title>Test for Bug 519928</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=519928">Mozilla Bug 519928</a>
 <p id="display"></p>
 <div id="content">
-<iframe id="load-frame"></iframe>  
+<iframe id="load-frame"></iframe>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -38,11 +38,13 @@ function expectJSAllowed(allowed, testCondition, callback) {
     is(self_.ICanRunMyJS, allowed, msg);
     callback();
   }, {once: true});
+  // eslint-disable-next-line no-useless-concat
   var iframeSrc = "<script>parent.parent.ICanRunMyJS = true;</scr" + "ipt>";
   innerFrame.srcdoc = iframeSrc;
 }
 
 SimpleTest.waitForExplicitFinish();
+/* eslint-disable max-nested-callbacks */
 addLoadEvent(function() {
   var enterDesignMode = function() { document.designMode = "on"; };
   var leaveDesignMode = function() { document.designMode = "off"; };
@@ -82,6 +84,7 @@ addLoadEvent(function() {
     });
   });
 });
+/* eslint-enable max-nested-callbacks */
 
 function testDocumentDisabledJS() {
   window.ICanRunMyJS = false;
@@ -105,6 +108,7 @@ function testDocumentDisabledJS() {
     is(self_.ICanRunMyJS, false, msg);
     SimpleTest.finish();
   }, {once: true});
+  // eslint-disable-next-line no-useless-concat
   var iframeSrc = "<script>parent.parent.ICanRunMyJS = true;</scr" + "ipt>";
   innerFrame.srcdoc = iframeSrc;
 }

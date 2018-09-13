@@ -692,6 +692,26 @@ template<typename T, typename... Args>
 typename detail::UniqueSelector<T>::KnownBound
 MakeUnique(Args&&... aArgs) = delete;
 
+/**
+ * WrapUnique is a helper function to transfer ownership from a raw pointer
+ * into a UniquePtr<T>. It can only be used with a single non-array type.
+ *
+ * It is generally used this way:
+ *
+ *   auto p = WrapUnique(new char);
+ *
+ * It can be used when MakeUnique is not usable, for example, when the
+ * constructor you are using is private, or you want to use aggregate
+ * initialization.
+ */
+
+template<typename T>
+typename detail::UniqueSelector<T>::SingleObject
+WrapUnique(T* aPtr)
+{
+  return UniquePtr<T>(aPtr);
+}
+
 } // namespace mozilla
 
 #endif /* mozilla_UniquePtr_h */

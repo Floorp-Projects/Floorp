@@ -55,7 +55,7 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("KEY_ArrowRight");
   synthesizeKey("KEY_ArrowRight");
   synthesizeKey("KEY_Backspace");
-  if (div.innerHTML, "x<br> ", "pre-wrap: Don't delete uncollapsed space");
+  is(div.innerHTML, "x<br> ", "pre-wrap: Don't delete uncollapsed space");
   ok(getSelection().isCollapsed, "pre-wrap: Selection must be collapsed");
   is(getSelection().focusNode, div.lastChild,
      "pre-wrap: Focus must be in final text node");

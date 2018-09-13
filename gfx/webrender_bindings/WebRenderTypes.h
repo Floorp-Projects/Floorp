@@ -371,6 +371,19 @@ static inline wr::ComplexClipRegion ToComplexClipRegion(const gfx::RoundedRect& 
   return ret;
 }
 
+static inline wr::ComplexClipRegion SimpleRadii(const wr::LayoutRect& aRect, float aRadii)
+{
+  wr::ComplexClipRegion ret;
+  wr::LayoutSize radii { aRadii, aRadii };
+  ret.rect = aRect;
+  ret.radii.top_left = radii;
+  ret.radii.top_right = radii;
+  ret.radii.bottom_left = radii;
+  ret.radii.bottom_right = radii;
+  ret.mode = wr::ClipMode::Clip;
+  return ret;
+}
+
 static inline wr::LayoutSize ToLayoutSize(const mozilla::LayoutDeviceIntSize& size)
 {
   return ToLayoutSize(LayoutDeviceSize(size));

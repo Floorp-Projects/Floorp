@@ -18,10 +18,10 @@ function getLoadContext() {
 
 async function runTest() {
   var pasteCount = 0;
-  var pasteFunc = function (event) { pasteCount++; };
+  var pasteFunc = function(event) { pasteCount++; };
 
   function verifyContent(s) {
-    var e = document.getElementById('i1');
+    var e = document.getElementById("i1");
     var doc = e.contentDocument;
     if (navigator.platform.includes("Win")) {
       // On Windows ignore \n which got left over from the removal of the fragment tags
@@ -33,7 +33,7 @@ async function runTest() {
   }
 
   function pasteInto(trans, html, target_id) {
-    var e = document.getElementById('i1');
+    var e = document.getElementById("i1");
     var doc = e.contentDocument;
     doc.designMode = "on";
     doc.body.innerHTML = html;
@@ -62,57 +62,58 @@ async function runTest() {
       trans.addDataFlavor("text/html");
     } else {
       trans.addDataFlavor("text/unicode");
-    }    
-    var clip = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+    }
+    var clip = SpecialPowers.Services.clipboard;
     clip.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
     return trans;
   }
 
-  function makeTransferable(s,asHTML,target_id) {
-    var e = document.getElementById('i2');
-    var doc = e.contentDocument;
-    if (asHTML) {
-      doc.body.innerHTML = s;
-    } else {
-      var text = doc.createTextNode(s);
-      doc.body.appendChild(text);
-    }
-    doc.designMode = "on";
-    doc.defaultView.focus();
-    var selection = doc.defaultView.getSelection();
-    selection.removeAllRanges();
-    if (!target_id) {
-      selection.selectAllChildren(doc.body);
-    } else {
-      var range = document.createRange();
-      range.selectNode(doc.getElementById(target_id));
-      selection.addRange(range);
-    }
+  // Commented out as the test for it below is also commented out.
+  // function makeTransferable(s, asHTML, target_id) {
+  //   var e = document.getElementById("i2");
+  //   var doc = e.contentDocument;
+  //   if (asHTML) {
+  //     doc.body.innerHTML = s;
+  //   } else {
+  //     var text = doc.createTextNode(s);
+  //     doc.body.appendChild(text);
+  //   }
+  //   doc.designMode = "on";
+  //   doc.defaultView.focus();
+  //   var selection = doc.defaultView.getSelection();
+  //   selection.removeAllRanges();
+  //   if (!target_id) {
+  //     selection.selectAllChildren(doc.body);
+  //   } else {
+  //     var range = document.createRange();
+  //     range.selectNode(doc.getElementById(target_id));
+  //     selection.addRange(range);
+  //   }
+  //
+  //   // We cannot use plain strings, we have to use nsSupportsString.
+  //   var supportsStringClass = SpecialPowers.Components.classes["@mozilla.org/supports-string;1"];
+  //   var ssData = supportsStringClass.createInstance(Ci.nsISupportsString);
+  //
+  //   // Create the transferable.
+  //   var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
+  //   trans.init(getLoadContext());
+  //
+  //   // Add the data to the transferable.
+  //   if (asHTML) {
+  //     trans.addDataFlavor("text/html");
+  //     ssData.data = doc.body.innerHTML;
+  //     trans.setTransferData("text/html", ssData, ssData.length * 2);
+  //   } else {
+  //     trans.addDataFlavor("text/unicode");
+  //     ssData.data = doc.body.innerHTML;
+  //     trans.setTransferData("text/unicode", ssData, ssData.length * 2);
+  //   }
+  //
+  //   return trans;
+  // }
 
-    // We cannot use plain strings, we have to use nsSupportsString.
-    var supportsStringClass = SpecialPowers.Components.classes["@mozilla.org/supports-string;1"];
-    var ssData = supportsStringClass.createInstance(Ci.nsISupportsString);
-
-    // Create the transferable.
-    var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);  
-    trans.init(getLoadContext());
-
-    // Add the data to the transferable.
-    if (asHTML) {
-      trans.addDataFlavor("text/html");
-      ssData.data = doc.body.innerHTML;
-      trans.setTransferData("text/html", ssData, ssData.length * 2);
-    } else {
-      trans.addDataFlavor("text/unicode");
-      ssData.data = doc.body.innerHTML;
-      trans.setTransferData("text/unicode", ssData, ssData.length * 2);
-    }
-
-    return trans;
-  }
-
-  async function copyToClipBoard(s,asHTML,target_id) {
-    var e = document.getElementById('i2');
+  async function copyToClipBoard(s, asHTML, target_id) {
+    var e = document.getElementById("i2");
     var doc = e.contentDocument;
     if (asHTML) {
       doc.body.innerHTML = s;
@@ -138,21 +139,21 @@ async function runTest() {
     return e;
   }
 
-  await copyToClipBoard('<span>Hello</span><span>Kitty</span>', true);
+  await copyToClipBoard("<span>Hello</span><span>Kitty</span>", true);
   var trans = getTransferableFromClipboard(true);
-  pasteInto(trans, '');
-  verifyContent('<span>Hello</span><span>Kitty</span>');
+  pasteInto(trans, "");
+  verifyContent("<span>Hello</span><span>Kitty</span>");
   is(pasteCount, 1, "paste event was not triggered");
 
   // this test is not working out exactly like the clipboard test
   // has to do with generating the nsITransferable above
-  //trans = makeTransferable('<span>Hello</span><span>Kitty</span>', true);
-  //pasteInto(trans, '');
-  //verifyContent('<span>Hello</span><span>Kitty</span>');
+  // trans = makeTransferable('<span>Hello</span><span>Kitty</span>', true);
+  // pasteInto(trans, '');
+  // verifyContent('<span>Hello</span><span>Kitty</span>');
 
   await copyToClipBoard("<dl><dd>Hello Kitty</dd></dl><span>Hello</span><span>Kitty</span>", true);
   trans = getTransferableFromClipboard(true);
-  pasteInto(trans, '<ol><li id="paste_here">X</li></ol>',"paste_here");
+  pasteInto(trans, '<ol><li id="paste_here">X</li></ol>', "paste_here");
   verifyContent('<ol><li id="paste_here">X<dl><dd>Hello Kitty</dd></dl><span>Hello</span><span>Kitty</span></li></ol>');
   is(pasteCount, 1, "paste event was not triggered");
 
@@ -165,21 +166,21 @@ async function runTest() {
 
   await copyToClipBoard("<pre>Kitty</pre><span>Hello</span>", true);
   trans = getTransferableFromClipboard(true);
-  pasteInto(trans, '<pre id="paste_here">Hello </pre>',"paste_here");
+  pasteInto(trans, '<pre id="paste_here">Hello </pre>', "paste_here");
   verifyContent('<pre id="paste_here">Hello Kitty<span>Hello</span></pre>');
   is(pasteCount, 1, "paste event was not triggered");
 
   await copyToClipBoard('1<span style="display: contents">2</span>3', true);
   trans = getTransferableFromClipboard(true);
-  pasteInto(trans, '<div id="paste_here"></div>',"paste_here");
+  pasteInto(trans, '<div id="paste_here"></div>', "paste_here");
   verifyContent('<div id="paste_here">1<span style="display: contents">2</span>3</div>');
   is(pasteCount, 1, "paste event was not triggered");
 
   // test that we can preventDefault pastes
-  pasteFunc = function (event) { event.preventDefault(); return false; };
+  pasteFunc = function(event) { event.preventDefault(); return false; };
   await copyToClipBoard("<pre>Kitty</pre><span>Hello</span>", true);
   trans = getTransferableFromClipboard(true);
-  pasteInto(trans, '<pre id="paste_here">Hello </pre>',"paste_here");
+  pasteInto(trans, '<pre id="paste_here">Hello </pre>', "paste_here");
   verifyContent('<pre id="paste_here">Hello </pre>');
   is(pasteCount, 0, "paste event was triggered");
 }

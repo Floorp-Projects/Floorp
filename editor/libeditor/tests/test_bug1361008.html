@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi=id=1361008
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(() => {
-  document.execCommand("defaultparagraphseparator", false, "div")
+  document.execCommand("defaultparagraphseparator", false, "div");
   let edit1 = document.getElementById("edit1");
   edit1.focus();
   let selection = window.getSelection();
@@ -31,14 +31,14 @@ SimpleTest.waitForFocus(() => {
   sendString("AB");
   synthesizeKey("KEY_Enter");
   // count <div> element into contenteidable
-  is(edit1.getElementsByTagName('div').length, 2,
+  is(edit1.getElementsByTagName("div").length, 2,
      "DIV element should be 2 children");
-  is(edit1.getElementsByTagName('div')[0].innerText,
+  is(edit1.getElementsByTagName("div")[0].innerText,
      "AB", "AB should be in 1st DIV element");
-  is(edit1.getElementsByTagName('div')[1].innerHTML,
+  is(edit1.getElementsByTagName("div")[1].innerHTML,
      "<br>", "BR element should be in 2nd DIV element");
 
-  document.execCommand("defaultparagraphseparator", false, "p")
+  document.execCommand("defaultparagraphseparator", false, "p");
   let edit2 = document.getElementById("edit2");
   edit2.focus();
   selection.collapse(edit2, 0);
@@ -46,11 +46,11 @@ SimpleTest.waitForFocus(() => {
   sendString("AB");
   synthesizeKey("KEY_Enter");
 
-  is(edit2.getElementsByTagName('p').length, 2,
+  is(edit2.getElementsByTagName("p").length, 2,
      "P element should be 2 children");
-  is(edit2.getElementsByTagName('p')[0].innerText,
+  is(edit2.getElementsByTagName("p")[0].innerText,
      "AB", "AB should be in 1st P element");
-  is(edit2.getElementsByTagName('p')[1].innerHTML,
+  is(edit2.getElementsByTagName("p")[1].innerHTML,
      "<br>", "BR element should be into 2nd P element");
 
   SimpleTest.finish();

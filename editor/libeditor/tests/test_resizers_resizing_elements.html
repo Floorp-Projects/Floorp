@@ -118,16 +118,18 @@ SimpleTest.waitForFocus(async function() {
     const needlessGrowth = aPreserveRatio ? 1 : 0;
     const reversedGrowth = aPreserveRatio ? -1 : 1;
 
+    /* eslint-disable no-multi-spaces */
+
     // top resizer
-    await testResizer(W/2,   0, -10, -10,   0,  10);
-    await testResizer(W/2,   0, -10,   0,   0,   0);
-    await testResizer(W/2,   0, -10,  10,   0, -10);
-    await testResizer(W/2,   0,   0, -10,   0,  10);
-    await testResizer(W/2,   0,   0,   0,   0,   0);
-    await testResizer(W/2,   0,   0,  10,   0, -10);
-    await testResizer(W/2,   0,  10, -10,   0,  10);
-    await testResizer(W/2,   0,  10,   0,   0,   0);
-    await testResizer(W/2,   0,  10,  10,   0, -10);
+    await testResizer(W / 2,   0, -10, -10,   0,  10);
+    await testResizer(W / 2,   0, -10,   0,   0,   0);
+    await testResizer(W / 2,   0, -10,  10,   0, -10);
+    await testResizer(W / 2,   0,   0, -10,   0,  10);
+    await testResizer(W / 2,   0,   0,   0,   0,   0);
+    await testResizer(W / 2,   0,   0,  10,   0, -10);
+    await testResizer(W / 2,   0,  10, -10,   0,  10);
+    await testResizer(W / 2,   0,  10,   0,   0,   0);
+    await testResizer(W / 2,   0,  10,  10,   0, -10);
 
     // top right resizer
     await testResizer(  W,   0, -10, -10, -10 * reversedGrowth, 10);
@@ -141,15 +143,15 @@ SimpleTest.waitForFocus(async function() {
     await testResizer(  W,   0,  10,  10,  10, -10 * reversedGrowth);
 
     // right resizer
-    await testResizer(  W, H/2, -10, -10, -10,   0);
-    await testResizer(  W, H/2, -10,   0, -10,   0);
-    await testResizer(  W, H/2, -10,  10, -10,   0);
-    await testResizer(  W, H/2,   0, -10,   0,   0);
-    await testResizer(  W, H/2,   0,   0,   0,   0);
-    await testResizer(  W, H/2,   0,  10,   0,   0);
-    await testResizer(  W, H/2,  10, -10,  10,   0);
-    await testResizer(  W, H/2,  10,   0,  10,   0);
-    await testResizer(  W, H/2,  10,  10,  10,   0);
+    await testResizer(  W, H / 2, -10, -10, -10,   0);
+    await testResizer(  W, H / 2, -10,   0, -10,   0);
+    await testResizer(  W, H / 2, -10,  10, -10,   0);
+    await testResizer(  W, H / 2,   0, -10,   0,   0);
+    await testResizer(  W, H / 2,   0,   0,   0,   0);
+    await testResizer(  W, H / 2,   0,  10,   0,   0);
+    await testResizer(  W, H / 2,  10, -10,  10,   0);
+    await testResizer(  W, H / 2,  10,   0,  10,   0);
+    await testResizer(  W, H / 2,  10,  10,  10,   0);
 
     // bottom right resizer
     await testResizer(  W,   H, -10, -10, -10, -10);
@@ -163,15 +165,15 @@ SimpleTest.waitForFocus(async function() {
     await testResizer(  W,   H,  10,  10,  10,  10);
 
     // bottom resizer
-    await testResizer(W/2,   H, -10, -10,   0, -10);
-    await testResizer(W/2,   H, -10,   0,   0,   0);
-    await testResizer(W/2,   H, -10,  10,   0,  10);
-    await testResizer(W/2,   H,   0, -10,   0, -10);
-    await testResizer(W/2,   H,   0,   0,   0,   0);
-    await testResizer(W/2,   H,   0,  10,   0,  10);
-    await testResizer(W/2,   H,  10, -10,   0, -10);
-    await testResizer(W/2,   H,  10,   0,   0,   0);
-    await testResizer(W/2,   H,  10,  10,   0,  10);
+    await testResizer(W / 2,   H, -10, -10,   0, -10);
+    await testResizer(W / 2,   H, -10,   0,   0,   0);
+    await testResizer(W / 2,   H, -10,  10,   0,  10);
+    await testResizer(W / 2,   H,   0, -10,   0, -10);
+    await testResizer(W / 2,   H,   0,   0,   0,   0);
+    await testResizer(W / 2,   H,   0,  10,   0,  10);
+    await testResizer(W / 2,   H,  10, -10,   0, -10);
+    await testResizer(W / 2,   H,  10,   0,   0,   0);
+    await testResizer(W / 2,   H,  10,  10,   0,  10);
 
     // bottom left resizer
     await testResizer(  0,   H, -10, -10,  10, -10 * reversedGrowth);
@@ -185,15 +187,15 @@ SimpleTest.waitForFocus(async function() {
     await testResizer(  0,   H,  10,  10, -10 * reversedGrowth,  10);
 
     // left resizer
-    await testResizer(  0, H/2, -10, -10,  10,   0);
-    await testResizer(  0, H/2, -10,   0,  10,   0);
-    await testResizer(  0, H/2, -10,  10,  10,   0);
-    await testResizer(  0, H/2,   0, -10,   0,   0);
-    await testResizer(  0, H/2,   0,   0,   0,   0);
-    await testResizer(  0, H/2,   0,  10,   0,   0);
-    await testResizer(  0, H/2,  10, -10, -10,   0);
-    await testResizer(  0, H/2,  10,   0, -10,   0);
-    await testResizer(  0, H/2,  10,  10, -10,   0);
+    await testResizer(  0, H / 2, -10, -10,  10,   0);
+    await testResizer(  0, H / 2, -10,   0,  10,   0);
+    await testResizer(  0, H / 2, -10,  10,  10,   0);
+    await testResizer(  0, H / 2,   0, -10,   0,   0);
+    await testResizer(  0, H / 2,   0,   0,   0,   0);
+    await testResizer(  0, H / 2,   0,  10,   0,   0);
+    await testResizer(  0, H / 2,  10, -10, -10,   0);
+    await testResizer(  0, H / 2,  10,   0, -10,   0);
+    await testResizer(  0, H / 2,  10,  10, -10,   0);
 
     // top left resizer
     await testResizer(  0,   0, -10, -10,  10,  10);
@@ -205,6 +207,8 @@ SimpleTest.waitForFocus(async function() {
     await testResizer(  0,   0,  10, -10, -10 * reversedGrowth,  10);
     await testResizer(  0,   0,  10,   0, -10 * ignoredGrowth,   0);
     await testResizer(  0,   0,  10,  10, -10, -10);
+
+    /* eslint-enable no-multi-spaces */
   }
 
   const kTests = [
@@ -227,7 +231,7 @@ SimpleTest.waitForFocus(async function() {
 
   // Resizers for absolute positioned element and table element are available
   // only when enableAbsolutePositionEditing or enableInlineTableEditing is
-  // enabled for each.  So, let's enable them during testing resizers for 
+  // enabled for each.  So, let's enable them during testing resizers for
   // absolute positioned elements or table elements.
   await SpecialPowers.pushPrefEnv({"set": [["editor.resizing.preserve_ratio", false]]});
   for (const kTest of kTests) {
