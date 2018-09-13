@@ -42,7 +42,6 @@ use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use tiling::SpecialRenderPasses;
-use util::drain_filter;
 
 const DEFAULT_TILE_SIZE: TileSize = 512;
 
@@ -519,8 +518,9 @@ impl ResourceCache {
         updates: &mut Vec<ResourceUpdate>,
         profile_counters: &mut ResourceProfileCounters,
     ) {
-        for update in updates.iter() {
-            match *update {
+        let mut new_updates = Vec::with_capacity(updates.len());
+        for update in mem::replace(updates, Vec::new()) {
+            match update {
                 ResourceUpdate::AddImage(ref img) => {
                     if let ImageData::Blob(ref blob_data) = img.data {
                         self.add_blob_image(
@@ -541,7 +541,7 @@ impl ResourceCache {
                         );
                     }
                 }
-                ResourceUpdate::SetImageVisibleArea(ref key, ref area) => {
+                ResourceUpdate::SetImageVisibleArea(key, area) => {
                     if let Some(template) = self.blob_image_templates.get_mut(&key) {
                         if let Some(tile_size) = template.tiling {
                             template.viewport_tiles = Some(compute_tile_range(
@@ -554,17 +554,8 @@ impl ResourceCache {
                 }
                 _ => {}
             }
-        }
 
-        drain_filter(
-            updates,
-            |update| match *update {
-                ResourceUpdate::AddFont(_) |
-                ResourceUpdate::AddFontInstance(_) => true,
-                _ => false,
-            },
-            // Updates that were moved out of the array:
-            |update: ResourceUpdate| match update {
+            match update {
                 ResourceUpdate::AddFont(font) => {
                     match font {
                         AddFont::Raw(id, bytes, index) => {
@@ -576,7 +567,7 @@ impl ResourceCache {
                         }
                     }
                 }
-                ResourceUpdate::AddFontInstance(instance) => {
+                ResourceUpdate::AddFontInstance(mut instance) => {
                     self.add_font_instance(
                         instance.key,
                         instance.font_key,
@@ -586,9 +577,13 @@ impl ResourceCache {
                         instance.variations,
                     );
                 }
-                _ => { unreachable!(); }
+                other => {
+                    new_updates.push(other);
+                }
             }
-        );
+        }
+
+        *updates = new_updates;
     }
 
     pub fn set_blob_rasterizer(&mut self, rasterizer: Box<AsyncBlobImageRasterizer>) {
