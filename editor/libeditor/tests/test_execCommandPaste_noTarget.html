@@ -13,18 +13,16 @@
     let seenPaste = false;
     let seenCopy = false;
     document.addEventListener("copy", function oncpy(e) {
-      document.removeEventListener("copy", oncpy);
       e.clipboardData.setData("text/plain", "my text");
       e.preventDefault();
       seenCopy = true;
-    });
+    }, {once: true});
     document.addEventListener("paste", function onpst(e) {
-      document.removeEventListener("paste", onpst);
       is(e.clipboardData.getData("text/plain"), "my text",
          "The correct text was read from the clipboard");
       e.preventDefault();
       seenPaste = true;
-    });
+    }, {once: true});
 
     ok(SpecialPowers.wrap(document).execCommand("copy"),
        "Call should succeed");

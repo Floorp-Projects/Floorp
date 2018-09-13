@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1230473
 <script type="application/javascript">
 /** Test for Bug 1230473 **/
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(()=>{
+SimpleTest.waitForFocus(() => {
   function runTest(aEditor) {
     function committer() {
       aEditor.blur();
@@ -31,13 +31,13 @@ SimpleTest.waitForFocus(()=>{
       return isNSEditableElement() ? aEditor.value : aEditor.textContent;
     }
     function isComposing() {
-      return isNSEditableElement() ?  SpecialPowers.wrap(aEditor)
-                                                   .editor
-                                                   .composing :
-                                      SpecialPowers.wrap(window)
-                                                   .docShell
-                                                   .editor
-                                                   .composing;
+      return isNSEditableElement() ? SpecialPowers.wrap(aEditor)
+                                                  .editor
+                                                  .composing :
+                                     SpecialPowers.wrap(window)
+                                                  .docShell
+                                                  .editor
+                                                  .composing;
     }
     function clear() {
       if (isNSEditableElement()) {

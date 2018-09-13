@@ -4,9 +4,9 @@ add_task(async function() {
   const kPageURL = "http://example.org/browser/editor/libeditor/tests/bug629172.html";
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: kPageURL
-  }, async function(aBrowser) {
-    await ContentTask.spawn(aBrowser, {}, async function() {
+    url: kPageURL,
+  }, async function(browser) {
+    await ContentTask.spawn(browser, {}, async function() {
       var window = content.window.wrappedJSObject;
       var document = window.document;
 
@@ -50,8 +50,8 @@ add_task(async function() {
       return Promise.resolve();
     }
 
-    async function testDirection(initialDir, aBrowser) {
-      await ContentTask.spawn(aBrowser, {initialDir}, function({initialDir}) {
+    async function testDirection(initDir, aBrowser) {
+      await ContentTask.spawn(aBrowser, {initialDir: initDir}, function({initialDir}) {
         var window = content.window.wrappedJSObject;
         var document = window.document;
 
@@ -74,9 +74,9 @@ add_task(async function() {
         is(window.inputEventCount, 0, "input event count must be 0 before");
       });
       await simulateCtrlShiftX(aBrowser);
-      await ContentTask.spawn(aBrowser, {initialDir}, function({initialDir}) {
+      await ContentTask.spawn(aBrowser, {initialDir: initDir}, function({initialDir}) {
         var window = content.window.wrappedJSObject;
-        var expectedDir = initialDir == "ltr" ? "rtl" : "ltr"
+        var expectedDir = initialDir == "ltr" ? "rtl" : "ltr";
         is(window.t.getAttribute("dir"), expectedDir,
            "The dir attribute must be correctly updated");
         is(window.inputEventCount, 1, "input event count must be 1 after");
@@ -93,7 +93,7 @@ add_task(async function() {
         is(window.inputEventCount, 1, "input event count must be 1 before");
       });
       await simulateCtrlShiftX(aBrowser);
-      await ContentTask.spawn(aBrowser, {initialDir}, function({initialDir}) {
+      await ContentTask.spawn(aBrowser, {initialDir: initDir}, function({initialDir}) {
         var window = content.window.wrappedJSObject;
 
         is(window.inputEventCount, 2, "input event count must be 2 after");
@@ -111,7 +111,7 @@ add_task(async function() {
       });
     }
 
-    await testDirection("ltr", aBrowser);
-    await testDirection("rtl", aBrowser);
+    await testDirection("ltr", browser);
+    await testDirection("rtl", browser);
   });
 });

@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=569988
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=569988">Mozilla Bug 569988</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -24,12 +24,12 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTest);
 
 
-function runTest()
-{
+function runTest() {
+  /* eslint-env mozilla/frame-script */
   var script = SpecialPowers.loadChromeScript(function() {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", null);
     var gPromptInput = null;
-    var os = Cc["@mozilla.org/observer-service;1"]
-               .getService(Ci.nsIObserverService);
+    var os = Services.obs;
 
     os.addObserver(onPromptLoad, "common-dialog-loaded");
     os.addObserver(onPromptLoad, "tabmodal-dialog-loaded");
@@ -47,9 +47,7 @@ function runTest()
       sendAsyncMessage("ok", [true, "onPromptFocus is called"]);
       gPromptInput.removeEventListener("focus", onPromptFocus);
 
-      var listenerService =
-        Cc["@mozilla.org/eventlistenerservice;1"]
-          .getService(Ci.nsIEventListenerService);
+      var listenerService = Services.els;
 
       var listener = {
         handleEvent: function _hv(aEvent) {
@@ -58,7 +56,7 @@ function runTest()
                            "ESC key event is prevented by editor"]);
           listenerService.removeSystemEventListener(gPromptInput, "keypress",
                                                     listener, false);
-        }
+        },
       };
       listenerService.addSystemEventListener(gPromptInput, "keypress",
                                              listener, false);
@@ -68,12 +66,11 @@ function runTest()
       EventUtils.window = {};
       EventUtils._EU_Ci = Ci;
       EventUtils._EU_Cc = Cc;
-      Cc['@mozilla.org/moz/jssubscript-loader;1']
-        .getService(Ci.mozIJSSubScriptLoader)
+      Services.scriptloader
         .loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
                        EventUtils);
       EventUtils.synthesizeKey("VK_ESCAPE", {},
-                               gPromptInput.ownerDocument.defaultView);
+                               gPromptInput.ownerGlobal);
     }
 
     addMessageListener("destroy", function() {

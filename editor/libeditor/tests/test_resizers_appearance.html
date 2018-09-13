@@ -44,7 +44,7 @@ SimpleTest.waitForFocus(async function() {
     },
     { description: "absolute positioned <div>",
       innerHTML: "<div id=\"target\" style=\"position: absolute; top: 50px; left: 50px;\">positioned</div>",
-      resizable: function () { return document.queryCommandState("enableAbsolutePositionEditing"); },
+      resizable() { return document.queryCommandState("enableAbsolutePositionEditing"); },
     },
     { description: "fixed positioned <div>",
       innerHTML: "<div id=\"target\" style=\"position: fixed; top: 50px; left: 50px;\">positioned</div>",

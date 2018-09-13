@@ -7,14 +7,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=432225
   <title>Test for Bug 432225</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script src="spellcheck.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=432225">Mozilla Bug 432225</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -29,7 +29,7 @@ addLoadEvent(runTest);
 var gMisspeltWords = [];
 
 function getEdit() {
-  return document.getElementById('edit');
+  return document.getElementById("edit");
 }
 
 function editDoc() {
@@ -37,7 +37,6 @@ function editDoc() {
 }
 
 function getEditor() {
-  var Ci = SpecialPowers.Ci;
   var win = editDoc().defaultView;
   var editingSession = SpecialPowers.wrap(win).docShell.editingSession;
   return editingSession.getEditorForWindow(win);
@@ -46,8 +45,8 @@ function getEditor() {
 function runTest() {
   editDoc().designMode = "on";
   setTimeout(function() { addWords(100); }, 0);
-}  
- 
+}
+
 function addWords(aLimit) {
   if (aLimit == 0) {
     ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
@@ -56,10 +55,10 @@ function addWords(aLimit) {
     return;
   }
   getEdit().focus();
-  sendString('aa OK ');
+  sendString("aa OK ");
   gMisspeltWords.push("aa");
   onSpellCheck(editDoc(), function() {
-    addWords(aLimit-1);
+    addWords(aLimit - 1);
   });
 }
 </script>

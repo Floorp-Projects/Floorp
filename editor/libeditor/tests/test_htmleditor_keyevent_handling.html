@@ -13,12 +13,14 @@
   <div id="htmlEditor" contenteditable="true"><br></div>
 </div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
 
 <script class="testbody" type="application/javascript">
+
+/* eslint-disable no-nested-ternary */
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests, window);
@@ -29,20 +31,17 @@ const kIsMac = navigator.platform.indexOf("Mac") == 0;
 const kIsWin = navigator.platform.indexOf("Win") == 0;
 const kIsLinux = navigator.platform.indexOf("Linux") == 0 || navigator.platform.indexOf("SunOS") == 0 ;
 
-function runTests()
-{
+function runTests() {
   document.execCommand("stylewithcss", false, "true");
   document.execCommand("defaultParagraphSeparator", false, "div");
 
-  var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
-    getService(SpecialPowers.Ci.nsIFocusManager);
+  var fm = SpecialPowers.Services.focus;
 
   var capturingPhase = { fired: false, prevented: false };
   var bubblingPhase = { fired: false, prevented: false };
 
   var listener = {
-    handleEvent: function _hv(aEvent)
-    {
+    handleEvent: function _hv(aEvent) {
       is(aEvent.type, "keypress", "unexpected event is handled");
       switch (aEvent.eventPhase) {
       case aEvent.CAPTURING_PHASE:
@@ -57,14 +56,12 @@ function runTests()
       default:
         ok(false, "event is handled in unexpected phase");
       }
-    }
+    },
   };
 
   function check(aDescription,
-                 aFiredOnCapture, aFiredOnBubbling, aPreventedOnBubbling)
-  {
-    function getDesciption(aExpected)
-    {
+                 aFiredOnCapture, aFiredOnBubbling, aPreventedOnBubbling) {
+    function getDesciption(aExpected) {
       return aDescription + (aExpected ? " wasn't " : " was ");
     }
     is(capturingPhase.fired, aFiredOnCapture,
@@ -87,11 +84,10 @@ function runTests()
   SpecialPowers.addSystemEventListener(window, "keypress", listener, true);
   SpecialPowers.addSystemEventListener(window, "keypress", listener, false);
 
+  // eslint-disable-next-line complexity
   function doTest(aElement, aDescription,
-                  aIsReadonly, aIsTabbable, aIsPlaintext)
-  {
-    function reset(aText)
-    {
+                  aIsReadonly, aIsTabbable, aIsPlaintext) {
+    function reset(aText) {
       capturingPhase.fired = false;
       capturingPhase.prevented = false;
       bubblingPhase.fired = false;
@@ -104,8 +100,7 @@ function runTests()
       sel.addRange(range);
     }
 
-    function resetForIndent(aText)
-    {
+    function resetForIndent(aText) {
       capturingPhase.fired = false;
       capturingPhase.prevented = false;
       bubblingPhase.fired = false;
@@ -123,7 +118,7 @@ function runTests()
       document.activeElement.blur();
     }
 
-    aDescription += ": "
+    aDescription += ": ";
 
     aElement.focus();
     is(SpecialPowers.unwrap(fm.focusedElement), aElement, aDescription + "failed to move focus");

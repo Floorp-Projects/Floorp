@@ -18,9 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=966552
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
-var win = window.open("file_bug966552.html", "", "test-966552");
-win.addEventListener("load", function() {
-  runTest(win);
+var testWindow = window.open("file_bug966552.html", "", "test-966552");
+testWindow.addEventListener("load", function() {
+  runTest(testWindow);
 }, {once: true});
 
 function runTest(win) {

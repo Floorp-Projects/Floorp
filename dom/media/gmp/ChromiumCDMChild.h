@@ -16,37 +16,35 @@ namespace gmp {
 
 class GMPContentChild;
 
-class ChromiumCDMChild : public PChromiumCDMChild
-                       , public cdm::Host_8
-                       , public cdm::Host_9
+class ChromiumCDMChild
+  : public PChromiumCDMChild
+  , public cdm::Host_9
+  , public cdm::Host_10
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChromiumCDMChild);
 
   explicit ChromiumCDMChild(GMPContentChild* aPlugin);
 
-  void Init(cdm::ContentDecryptionModule_9* aCDM, const nsCString& aStorageId);
+  void Init(cdm::ContentDecryptionModule_10* aCDM, const nsCString& aStorageId);
 
   void TimerExpired(void* aContext);
 
-  // cdm::Host_9 implementation
+  // Shared cdm::Host_9 and cdm::Host10 implementation
   cdm::Buffer* Allocate(uint32_t aCapacity) override;
   void SetTimer(int64_t aDelayMs, void* aContext) override;
   cdm::Time GetCurrentWallTime() override;
-  // cdm::Host_9 interface
   void OnResolveKeyStatusPromise(uint32_t aPromiseId,
                                  cdm::KeyStatus aKeyStatus) override;
   void OnResolveNewSessionPromise(uint32_t aPromiseId,
                                   const char* aSessionId,
                                   uint32_t aSessionIdSize) override;
   void OnResolvePromise(uint32_t aPromiseId) override;
-  // cdm::Host_9 interface
   void OnRejectPromise(uint32_t aPromiseId,
                        cdm::Exception aException,
                        uint32_t aSystemCode,
                        const char* aErrorMessage,
                        uint32_t aErrorMessageSize) override;
-  // cdm::Host_9 interface
   void OnSessionMessage(const char* aSessionId,
                         uint32_t aSessionIdSize,
                         cdm::MessageType aMessageType,
@@ -70,29 +68,12 @@ public:
   void QueryOutputProtectionStatus() override {}
   void OnDeferredInitializationDone(cdm::StreamType aStreamType,
                                     cdm::Status aDecoderStatus) override {}
-  // cdm::Host_9 interface
   void RequestStorageId(uint32_t aVersion) override;
   cdm::FileIO* CreateFileIO(cdm::FileIOClient* aClient) override;
-
-  // cdm::Host_8 implementation
-  void OnSessionMessage(const char* aSessionId,
-                        uint32_t aSessionIdSize,
-                        cdm::MessageType aMessageType,
-                        const char* aMessage,
-                        uint32_t aMessageSize,
-                        const char* aLegacyDestinationUrl,
-                        uint32_t aLegacyDestinationUrlLength) override;
-  void OnRejectPromise(uint32_t aPromiseId,
-                       cdm::Error aError,
-                       uint32_t aSystemCode,
-                       const char* aErrorMessage,
-                       uint32_t aErrorMessageSize) override;
-  void OnLegacySessionError(const char* aSessionId,
-                            uint32_t aSessionIdLength,
-                            cdm::Error aError,
-                            uint32_t aSystemCode,
-                            const char* aErrorMessage,
-                            uint32_t aErrorMessageLength) override;
+  // End shared cdm::Host_9 and cdm::Host10 implementation
+  // cdm::Host_10 specific
+  void OnInitialized(bool success) override {}
+  // end cdm::Host_10 specific
 
   void GiveBuffer(ipc::Shmem&& aBuffer);
 
@@ -150,13 +131,13 @@ protected:
   void CallOnMessageLoopThread(const char* const, MethodType, ParamType&&...);
 
   GMPContentChild* mPlugin = nullptr;
-  cdm::ContentDecryptionModule_9* mCDM = nullptr;
+  cdm::ContentDecryptionModule_10* mCDM = nullptr;
 
   typedef SimpleMap<uint64_t> DurationMap;
   DurationMap mFrameDurations;
   nsTArray<uint32_t> mLoadSessionPromiseIds;
 
-  cdm::Size mCodedSize;
+  cdm::Size mCodedSize = { 0, 0 };
   nsTArray<ipc::Shmem> mBuffers;
 
   bool mDecoderInitialized = false;

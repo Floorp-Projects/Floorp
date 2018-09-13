@@ -15,7 +15,7 @@
   <textarea id="textarea"></textarea>
 </div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -33,17 +33,14 @@ const kIsMac = navigator.platform.indexOf("Mac") == 0;
 const kIsWin = navigator.platform.indexOf("Win") == 0;
 const kIsLinux = navigator.platform.indexOf("Linux") == 0;
 
-function runTests()
-{
-  var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
-    getService(SpecialPowers.Ci.nsIFocusManager);
+function runTests() {
+  var fm = SpecialPowers.Services.focus;
 
   var capturingPhase = { fired: false, prevented: false };
   var bubblingPhase = { fired: false, prevented: false };
 
   var listener = {
-    handleEvent: function _hv(aEvent)
-    {
+    handleEvent: function _hv(aEvent) {
       is(aEvent.type, "keypress", "unexpected event is handled");
       switch (aEvent.eventPhase) {
       case aEvent.CAPTURING_PHASE:
@@ -58,14 +55,12 @@ function runTests()
       default:
         ok(false, "event is handled in unexpected phase");
       }
-    }
+    },
   };
 
   function check(aDescription,
-                 aFiredOnCapture, aFiredOnBubbling, aPreventedOnBubbling)
-  {
-    function getDesciption(aExpected)
-    {
+                 aFiredOnCapture, aFiredOnBubbling, aPreventedOnBubbling) {
+    function getDesciption(aExpected) {
       return aDescription + (aExpected ? " wasn't " : " was ");
     }
 
@@ -93,10 +88,8 @@ function runTests()
                                        false);
 
   function doTest(aElement, aDescription, aIsSingleLine, aIsReadonly,
-                  aIsTabbable)
-  {
-    function reset(aText)
-    {
+                  aIsTabbable) {
+    function reset(aText) {
       capturingPhase.fired = false;
       capturingPhase.prevented = false;
       bubblingPhase.fired = false;
@@ -108,7 +101,7 @@ function runTests()
       document.activeElement.blur();
     }
 
-    aDescription += ": "
+    aDescription += ": ";
 
     aElement.focus();
     is(SpecialPowers.unwrap(fm.focusedElement), aElement, aDescription + "failed to move focus");

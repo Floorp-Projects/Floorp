@@ -30,7 +30,6 @@ SimpleTest.expectAssertions(3, 3);
 SimpleTest.waitForFocus(function() {
   let selection = window.getSelection();
   let editor = document.getElementById("editor");
-  let originalContent = editor.innerHTML;
   function onCharacterDataModified() {
     // Until removing all NBSPs which were inserted by the editor,
     // emulates Backspace key with "delete" command.
@@ -45,7 +44,7 @@ SimpleTest.waitForFocus(function() {
   editor.addEventListener("DOMCharacterDataModified", onCharacterDataModified, { once: true });
   editor.focus();
   selection.selectAllChildren(document.getElementById("inline"));
-  document.execCommand('insertHTML', false, 'text');
+  document.execCommand("insertHTML", false, "text");
   // This expected result is just same as the result of Chrome.
   // If the spec says this is wrong, feel free to change this result.
   todo_is(editor.innerHTML, "\n<!-- --><span id=\"inline\">text</span>",

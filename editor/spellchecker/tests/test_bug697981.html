@@ -35,7 +35,9 @@ var onSpellCheck =
 /** Test for Bug 697981 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
+  /* eslint-env mozilla/frame-script */
   script = SpecialPowers.loadChromeScript(function() {
+    // eslint-disable-next-line mozilla/use-services
     var dir = Cc["@mozilla.org/file/directory_service;1"]
                 .getService(Ci.nsIProperties)
                 .get("CurWorkD", Ci.nsIFile);
@@ -58,41 +60,42 @@ SimpleTest.waitForFocus(function() {
   is(script.sendSyncMessage("de_DE-exists")[0][0], true,
      "true expected (de_DE directory should exist)");
 
-  document.getElementById('de-DE').focus();
+  document.getElementById("de-DE").focus();
 });
 
 function deFocus() {
-  elem_de = document.getElementById('de-DE');
+  elem_de = document.getElementById("de-DE");
   editor_de = SpecialPowers.wrap(elem_de).editor;
   editor_de.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor_de.getInlineSpellChecker(true);
 
-  onSpellCheck(elem_de, function () {
+  onSpellCheck(elem_de, function() {
     var spellchecker = inlineSpellChecker.spellChecker;
     try {
       var currentDictonary = spellchecker.GetCurrentDictionary();
-    } catch(e) {}
+    } catch (e) {}
 
     // Check that the German dictionary is loaded and that the spell check has worked.
     is(currentDictonary, "de-DE", "expected de-DE");
     is(getMisspelledWords(editor_de), "German", "one misspelled word expected: German");
 
     // Now focus the other textarea, which requires English spelling.
-    document.getElementById('en-US').focus();
+    document.getElementById("en-US").focus();
   });
 }
 
 function enFocus() {
-  var elem_en = document.getElementById('en-US');
+  var elem_en = document.getElementById("en-US");
   var editor_en = SpecialPowers.wrap(elem_en).editor;
   editor_en.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor_en.getInlineSpellChecker(true);
 
-  onSpellCheck(elem_en, function () {
+  onSpellCheck(elem_en, function() {
     var spellchecker = inlineSpellChecker.spellChecker;
+    let currentDictonary;
     try {
       currentDictonary = spellchecker.GetCurrentDictionary();
-    } catch(e) {}
+    } catch (e) {}
 
     // Check that the English dictionary is loaded and that the spell check has worked.
     is(currentDictonary, "en-US", "expected en-US");
@@ -112,14 +115,15 @@ function enFocus() {
     elem_de.focus();
 
     // After removal, the de_DE editor should refresh the spelling with en-US.
-    onSpellCheck(elem_de, function () {
+    onSpellCheck(elem_de, function() {
       spellchecker = inlineSpellChecker.spellChecker;
       try {
         currentDictonary = spellchecker.GetCurrentDictionary();
-      } catch(e) {}
+      } catch (e) {}
 
       // Check that the default English dictionary is loaded and that the spell check has worked.
       is(currentDictonary, "en-US", "expected en-US");
+      // eslint-disable-next-line no-useless-concat
       is(getMisspelledWords(editor_de), "heute" + "ist" + "ein" + "guter",
          "some misspelled words expected: heute ist ein guter");
 

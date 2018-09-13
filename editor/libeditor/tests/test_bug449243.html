@@ -45,14 +45,14 @@ function split(element, caretPos, nbKeyPresses) {
       pos = 0;
       break;
     case CARET_MIDDLE:
-      pos = Math.floor(len/2);
+      pos = Math.floor(len / 2);
       break;
     case CARET_END:
       pos = len;
       break;
   }
   sel.collapse(element.firstChild, pos);
-  
+
   // simulates a [Return] keypress
   for (var i = 0; i < nbKeyPresses; i++)
     synthesizeKey("KEY_Enter");
@@ -85,30 +85,30 @@ function runTests() {
   // beginning of selection: split current node
   split(header, CARET_BEGIN, 1);
   ok(SameTypeAsPreviousSibling(header),
-    "Pressing [Return] at the beginning of a header " + 
+    "Pressing [Return] at the beginning of a header " +
     "should create another header.");
   split(ulItem, CARET_BEGIN, 2);
   ok(SameTypeAsPreviousSibling(ulItem),
-    "Pressing [Return] at the beginning of an unordered list item " + 
+    "Pressing [Return] at the beginning of an unordered list item " +
     "should create another list item.");
   split(olItem, CARET_BEGIN, 2);
   ok(SameTypeAsPreviousSibling(olItem),
-    "Pressing [Return] at the beginning of an ordered list item " + 
+    "Pressing [Return] at the beginning of an ordered list item " +
     "should create another list item.");
   undo(3);
 
   // middle of selection: split current node
   split(header, CARET_MIDDLE, 1);
   ok(SameTypeAsPreviousSibling(header),
-    "Pressing [Return] at the middle of a header " + 
+    "Pressing [Return] at the middle of a header " +
     "should create another header.");
   split(ulItem, CARET_MIDDLE, 2);
   ok(SameTypeAsPreviousSibling(ulItem),
-    "Pressing [Return] at the middle of an unordered list item " + 
+    "Pressing [Return] at the middle of an unordered list item " +
     "should create another list item.");
   split(olItem, CARET_MIDDLE, 2);
   ok(SameTypeAsPreviousSibling(olItem),
-    "Pressing [Return] at the middle of an ordered list item " + 
+    "Pressing [Return] at the middle of an ordered list item " +
     "should create another list item.");
   undo(3);
 

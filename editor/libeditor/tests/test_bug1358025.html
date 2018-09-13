@@ -31,25 +31,25 @@ SimpleTest.waitForFocus(() => {
   // Enable undo because this is user input
   SpecialPowers.wrap(input).setUserInput("");
   is(input.value, "", "value is empty");
-  ok(controller.isCommandEnabled('cmd_undo'),
+  ok(controller.isCommandEnabled("cmd_undo"),
      "Undo is enabled by same empty string");
 
   SpecialPowers.wrap(input).setUserInput("ABC");
   is(input.value, "ABC", "value is ABC");
-  ok(controller.isCommandEnabled('cmd_undo'), "Undo is enabled by a string");
+  ok(controller.isCommandEnabled("cmd_undo"), "Undo is enabled by a string");
 
   SpecialPowers.wrap(input).setUserInput("ABC");
   is(input.value, "ABC", "value is ABC");
-  ok(controller.isCommandEnabled('cmd_undo'), "Undo is enabled by same string");
+  ok(controller.isCommandEnabled("cmd_undo"), "Undo is enabled by same string");
 
   SpecialPowers.wrap(input).setUserInput("DEF");
   is(input.value, "DEF", "value is DEF");
-  ok(controller.isCommandEnabled('cmd_undo'),
+  ok(controller.isCommandEnabled("cmd_undo"),
      "Undo is enabled by different string");
 
   SpecialPowers.wrap(input).setUserInput("");
   is(input.value, "", "value is empty");
-  ok(controller.isCommandEnabled('cmd_undo'),
+  ok(controller.isCommandEnabled("cmd_undo"),
      "Undo is enabled by empty string");
 
   // disable undo because this is by script
@@ -57,38 +57,38 @@ SimpleTest.waitForFocus(() => {
   // But Edge and Chrome still turn on undo when setting empty value from
   // empty value.  So we are same behaviour for this case.
   input.value = "";
-  is (input.value, "", "value is empty");
-  ok(controller.isCommandEnabled('cmd_undo'),
+  is(input.value, "", "value is empty");
+  ok(controller.isCommandEnabled("cmd_undo"),
      "Undo is still enabled by same empty string");
 
   input.value = "ABC";
   is(input.value, "ABC", "value is ABC");
-  ok(!controller.isCommandEnabled('cmd_undo'), "Undo is disabled by a string");
+  ok(!controller.isCommandEnabled("cmd_undo"), "Undo is disabled by a string");
 
   // When setting same value by script, all browsers (Edge, Safari and Chrome)
   // keep undo state.
   input.value = "";
   SpecialPowers.wrap(input).setUserInput("ABC");
-  ok(controller.isCommandEnabled('cmd_undo'), "Undo is enabled");
+  ok(controller.isCommandEnabled("cmd_undo"), "Undo is enabled");
   input.value = "ABC";
   is(input.value, "ABC", "value is ABC");
-  ok(controller.isCommandEnabled('cmd_undo'),
+  ok(controller.isCommandEnabled("cmd_undo"),
      "Undo is still enabled by same string");
 
   input.value = "";
   SpecialPowers.wrap(input).setUserInput("ABC");
-  ok(controller.isCommandEnabled('cmd_undo'), "Undo is enabled");
+  ok(controller.isCommandEnabled("cmd_undo"), "Undo is enabled");
   input.value = "DEF";
   is(input.value, "DEF", "value is DEF");
-  ok(!controller.isCommandEnabled('cmd_undo'),
+  ok(!controller.isCommandEnabled("cmd_undo"),
      "Undo is disabled by different string");
 
   input.value = "";
   SpecialPowers.wrap(input).setUserInput("DEF");
-  ok(controller.isCommandEnabled('cmd_undo'), "Undo is enabled");
+  ok(controller.isCommandEnabled("cmd_undo"), "Undo is enabled");
   input.value = "";
   is(input.value, "", "value is empty");
-  ok(!controller.isCommandEnabled('cmd_undo'),
+  ok(!controller.isCommandEnabled("cmd_undo"),
      "Undo is disabled by empty string");
 
   SimpleTest.finish();

@@ -21,6 +21,7 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(() => {
   let textarea = document.getElementById("editor");
   let editor = SpecialPowers.wrap(textarea).editor;
+
   let spellChecker = SpecialPowers.Cu.createSpellChecker();
 
   // Callback parameter isn't set
@@ -35,7 +36,7 @@ SimpleTest.waitForFocus(() => {
     spellChecker.UpdateCurrentDictionary();
 
     var canSpellCheck = spellChecker.canSpellCheck();
-    ok(canSpellCheck, 'spellCheck is enabled');
+    ok(canSpellCheck, "spellCheck is enabled");
     SimpleTest.finish();
   });
 });

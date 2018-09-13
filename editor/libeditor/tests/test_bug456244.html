@@ -17,7 +17,7 @@ function runTest() {
   function setupIframe(id) {
     var e = document.getElementById(id);
     var doc = e.contentDocument;
-    doc.body.innerHTML = String.fromCharCode(10)+'<span id="' + id + '_span" style="border:1px solid blue" contenteditable="true">X</span>'+String.fromCharCode(10);
+    doc.body.innerHTML = String.fromCharCode(10) + '<span id="' + id + '_span" style="border:1px solid blue" contenteditable="true">X</span>' + String.fromCharCode(10);
     e = doc.getElementById(id + "_span");
     e.focus();
     return e;
@@ -34,11 +34,11 @@ function runTest() {
   }
 
   test_end_bs(select("t1"));
-  test_end_bs(setupIframe('i1',0));
+  test_end_bs(setupIframe("i1", 0));
 
   {
     const msg = "Deleting all text in contenteditable body element";
-    var e = document.getElementById('i2');
+    var e = document.getElementById("i2");
     var doc = e.contentDocument;
     doc.body.setAttribute("contenteditable", "true");
     doc.body.focus();

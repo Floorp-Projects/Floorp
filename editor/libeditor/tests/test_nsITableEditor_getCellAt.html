@@ -20,14 +20,14 @@ SimpleTest.waitForFocus(function() {
   let selection = document.getSelection();
 
   try {
-    let cell = SpecialPowers.unwrap(getTableEditor().getCellAt(undefined, 0, 0));
+    SpecialPowers.unwrap(getTableEditor().getCellAt(undefined, 0, 0));
     ok(false, "nsITableEditor.getCellAt(undefined) should cause throwing an exception when editor does not have Selection");
   } catch (e) {
     ok(true, "nsITableEditor.getCellAt(undefined) should cause throwing an exception when editor does not have Selection");
   }
 
   try {
-    let cell = SpecialPowers.unwrap(getTableEditor().getTableSize(null, 0, 0));
+    SpecialPowers.unwrap(getTableEditor().getTableSize(null, 0, 0));
     ok(false, "nsITableEditor.getCellAt(null) should cause throwing an exception when editor does not have Selection");
   } catch (e) {
     ok(true, "nsITableEditor.getCellAt(null) should cause throwing an exception when editor does not have Selection");
@@ -54,7 +54,7 @@ SimpleTest.waitForFocus(function() {
       '<tr><td id="c5-2">cell5-2</td><td id="c5-3" colspan="2">cell5-3</td><td id="c5-5">cell5-5</td></tr>' +
       '<tr><td id="c6-2">cell6-2</td><td id="c6-3">cell6-3</td><td id="c6-4"><p>cell6-4</p></td><td id="c6-5">cell6-5</td></tr>' +
       '<tr><td id="c7-2" colspan="4">cell7-2</td></tr>' +
-    '</table>';
+    "</table>";
   editor.scrollTop; // compute layout now.
 
   const kTestsInParent = [
