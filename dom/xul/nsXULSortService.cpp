@@ -7,6 +7,7 @@
   This file provides the implementation for the sort service manager.
  */
 
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsIServiceManager.h"
@@ -19,39 +20,61 @@
 #include "nsXULSortService.h"
 #include "nsXULElement.h"
 #include "nsICollation.h"
+#include "nsTArray.h"
 #include "nsUnicharUtils.h"
+
+enum nsSortState_direction {
+  nsSortState_descending,
+  nsSortState_ascending,
+  nsSortState_natural
+};
+
+// the sort state holds info about the current sort
+struct nsSortState
+{
+  bool initialized;
+  MOZ_INIT_OUTSIDE_CTOR bool invertSort;
+
+  uint32_t sortHints;
+
+  MOZ_INIT_OUTSIDE_CTOR nsSortState_direction direction;
+  nsAutoString sort;
+  nsTArray<RefPtr<nsAtom>> sortKeys;
+
+  nsCOMPtr<nsIContent> lastContainer;
+  MOZ_INIT_OUTSIDE_CTOR bool lastWasFirst, lastWasLast;
+
+  nsSortState()
+    : initialized(false),
+      sortHints(0)
+  {
+  }
+};
+
+// information about a particular item to be sorted
+struct contentSortInfo {
+  nsCOMPtr<nsIContent> content;
+  nsCOMPtr<nsIContent> parent;
+  void swap(contentSortInfo& other)
+  {
+    content.swap(other.content);
+    parent.swap(other.parent);
+  }
+};
+
 
 NS_IMPL_ISUPPORTS(XULSortServiceImpl, nsIXULSortService)
 
-void
-XULSortServiceImpl::SetSortHints(Element* aElement, nsSortState* aSortState)
-{
-  // set sort and sortDirection attributes when is sort is done
-  aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::sort,
-                    aSortState->sort, true);
-
-  nsAutoString direction;
-  if (aSortState->direction == nsSortState_descending)
-    direction.AssignLiteral("descending");
-  else if (aSortState->direction == nsSortState_ascending)
-    direction.AssignLiteral("ascending");
-  aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
-                    direction, true);
-
-  // for trees, also set the sort info on the currently sorted column
-  if (aElement->NodeInfo()->Equals(nsGkAtoms::tree, kNameSpaceID_XUL)) {
-    if (aSortState->sortKeys.Length() >= 1) {
-      nsAutoString sortkey;
-      aSortState->sortKeys[0]->ToString(sortkey);
-      SetSortColumnHints(aElement, sortkey, direction);
-    }
-  }
-}
-
-void
-XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
-                                       const nsAString &sortResource,
-                                       const nsAString &sortDirection)
+/**
+ * Set sortActive and sortDirection attributes on a tree column when a sort
+ * is done. The column to change is the one with a sort attribute that
+ * matches the sort key. The sort attributes are removed from the other
+ * columns.
+ */
+static void
+SetSortColumnHints(nsIContent *content,
+                   const nsAString &sortResource,
+                   const nsAString &sortDirection)
 {
   // set sort info on current column. This ensures that the
   // column header sort indicator is updated properly.
@@ -81,10 +104,46 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
   }
 }
 
-nsresult
-XULSortServiceImpl::GetItemsToSort(nsIContent *aContainer,
-                                   nsSortState* aSortState,
-                                   nsTArray<contentSortInfo>& aSortItems)
+/**
+ * Set sort and sortDirection attributes when a sort is done.
+ */
+static void
+SetSortHints(Element* aElement, nsSortState* aSortState)
+{
+  // set sort and sortDirection attributes when is sort is done
+  aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::sort,
+                    aSortState->sort, true);
+
+  nsAutoString direction;
+  if (aSortState->direction == nsSortState_descending)
+    direction.AssignLiteral("descending");
+  else if (aSortState->direction == nsSortState_ascending)
+    direction.AssignLiteral("ascending");
+  aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
+                    direction, true);
+
+  // for trees, also set the sort info on the currently sorted column
+  if (aElement->NodeInfo()->Equals(nsGkAtoms::tree, kNameSpaceID_XUL)) {
+    if (aSortState->sortKeys.Length() >= 1) {
+      nsAutoString sortkey;
+      aSortState->sortKeys[0]->ToString(sortkey);
+      SetSortColumnHints(aElement, sortkey, direction);
+    }
+  }
+}
+
+/**
+ * Determine the list of items which need to be sorted. This is determined
+ * in the following way:
+ *   - for elements that have a content builder, get its list of generated
+ *     results
+ *   - otherwise, for trees, get the child treeitems
+ *   - otherwise, get the direct children
+ */
+static nsresult
+GetItemsToSort(nsIContent *aContainer,
+               nsSortState* aSortState,
+               nsTArray<contentSortInfo>& aSortItems)
 {
   // Get the children. For trees, get the treechildren element and
   // use that as the parent
@@ -113,8 +172,43 @@ XULSortServiceImpl::GetItemsToSort(nsIContent *aContainer,
   return NS_OK;
 }
 
+/**
+ * Compares aLeft and aRight and returns < 0, 0, or > 0. The sort
+ * hints are checked for case matching and integer sorting.
+ */
+static int32_t
+CompareValues(const nsAString& aLeft,
+              const nsAString& aRight,
+              uint32_t aSortHints)
+{
+  if (aSortHints & nsIXULSortService::SORT_INTEGER) {
+    nsresult err;
+    int32_t leftint = PromiseFlatString(aLeft).ToInteger(&err);
+    if (NS_SUCCEEDED(err)) {
+      int32_t rightint = PromiseFlatString(aRight).ToInteger(&err);
+      if (NS_SUCCEEDED(err)) {
+        return leftint - rightint;
+      }
+    }
+    // if they aren't integers, just fall through and compare strings
+  }
 
-int
+  if (aSortHints & nsIXULSortService::SORT_COMPARECASE) {
+    return ::Compare(aLeft, aRight);
+  }
+
+  nsICollation* collation = nsXULContentUtils::GetCollation();
+  if (collation) {
+    int32_t result;
+    collation->CompareString(nsICollation::kCollationCaseInSensitive,
+                             aLeft, aRight, &result);
+    return result;
+  }
+
+  return ::Compare(aLeft, aRight, nsCaseInsensitiveStringComparator());
+}
+
+static int
 testSortCallback(const void *data1, const void *data2, void *privateData)
 {
   /// Note: testSortCallback is a small C callback stub for NS_QuickSort
@@ -138,7 +232,7 @@ testSortCallback(const void *data1, const void *data2, void *privateData)
                                            sortState->sortKeys[t], rightstr);
     }
 
-    sortOrder = XULSortServiceImpl::CompareValues(leftstr, rightstr, sortState->sortHints);
+    sortOrder = CompareValues(leftstr, rightstr, sortState->sortHints);
   }
 
   if (sortState->direction == nsSortState_descending)
@@ -147,8 +241,31 @@ testSortCallback(const void *data1, const void *data2, void *privateData)
   return sortOrder;
 }
 
-nsresult
-XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortState)
+/**
+ * Given a list of sortable items, reverse the list. This is done
+ * when simply changing the sort direction for the same key.
+ */
+static nsresult
+InvertSortInfo(nsTArray<contentSortInfo>& aData,
+               int32_t aStart, int32_t aNumItems)
+{
+  if (aNumItems > 1) {
+    // reverse the items in the array starting from aStart
+    int32_t upPoint = (aNumItems + 1) / 2 + aStart;
+    int32_t downPoint = (aNumItems - 2) / 2 + aStart;
+    int32_t half = aNumItems / 2;
+    while (half-- > 0) {
+      aData[downPoint--].swap(aData[upPoint++]);
+    }
+  }
+  return NS_OK;
+}
+
+/**
+ * Sort a container using the supplied sort state details.
+ */
+static nsresult
+SortContainer(nsIContent *aContainer, nsSortState* aSortState)
 {
   nsTArray<contentSortInfo> items;
   nsresult rv = GetItemsToSort(aContainer, aSortState, items);
@@ -215,28 +332,22 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
   return NS_OK;
 }
 
-nsresult
-XULSortServiceImpl::InvertSortInfo(nsTArray<contentSortInfo>& aData,
-                                   int32_t aStart, int32_t aNumItems)
-{
-  if (aNumItems > 1) {
-    // reverse the items in the array starting from aStart
-    int32_t upPoint = (aNumItems + 1) / 2 + aStart;
-    int32_t downPoint = (aNumItems - 2) / 2 + aStart;
-    int32_t half = aNumItems / 2;
-    while (half-- > 0) {
-      aData[downPoint--].swap(aData[upPoint++]);
-    }
-  }
-  return NS_OK;
-}
-
-nsresult
-XULSortServiceImpl::InitializeSortState(Element* aRootElement,
-                                        Element* aContainer,
-                                        const nsAString& aSortKey,
-                                        const nsAString& aSortHints,
-                                        nsSortState* aSortState)
+/**
+ * Initialize sort information from attributes specified on the container,
+ * the sort key and sort direction.
+ *
+ * @param aRootElement the element that contains sort attributes
+ * @param aContainer the container to sort, usually equal to aRootElement
+ * @param aSortKey space separated list of sort keys
+ * @param aSortDirection direction to sort in
+ * @param aSortState structure filled in with sort data
+ */
+static nsresult
+InitializeSortState(Element* aRootElement,
+                    Element* aContainer,
+                    const nsAString& aSortKey,
+                    const nsAString& aSortHints,
+                    nsSortState* aSortState)
 {
   // used as an optimization for the content builder
   if (aContainer != aSortState->lastContainer.get()) {
@@ -303,38 +414,6 @@ XULSortServiceImpl::InitializeSortState(Element* aRootElement,
   aSortState->initialized = true;
 
   return NS_OK;
-}
-
-int32_t
-XULSortServiceImpl::CompareValues(const nsAString& aLeft,
-                                  const nsAString& aRight,
-                                  uint32_t aSortHints)
-{
-  if (aSortHints & SORT_INTEGER) {
-    nsresult err;
-    int32_t leftint = PromiseFlatString(aLeft).ToInteger(&err);
-    if (NS_SUCCEEDED(err)) {
-      int32_t rightint = PromiseFlatString(aRight).ToInteger(&err);
-      if (NS_SUCCEEDED(err)) {
-        return leftint - rightint;
-      }
-    }
-    // if they aren't integers, just fall through and compare strings
-  }
-
-  if (aSortHints & SORT_COMPARECASE) {
-    return ::Compare(aLeft, aRight);
-  }
-
-  nsICollation* collation = nsXULContentUtils::GetCollation();
-  if (collation) {
-    int32_t result;
-    collation->CompareString(nsICollation::kCollationCaseInSensitive,
-                             aLeft, aRight, &result);
-    return result;
-  }
-
-  return ::Compare(aLeft, aRight, nsCaseInsensitiveStringComparator());
 }
 
 NS_IMETHODIMP
