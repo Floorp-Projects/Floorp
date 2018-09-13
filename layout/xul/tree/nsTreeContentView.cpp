@@ -660,7 +660,6 @@ nsTreeContentView::CycleHeader(nsTreeColumn& aColumn, ErrorResult& aError)
   nsAutoString sort;
   column->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
   if (!sort.IsEmpty()) {
-    nsCOMPtr<nsIXULSortService> xs = new XULSortServiceImpl();
     nsAutoString sortdirection;
     static Element::AttrValuesArray strings[] =
       {&nsGkAtoms::ascending, &nsGkAtoms::descending, nullptr};
@@ -677,7 +676,7 @@ nsTreeContentView::CycleHeader(nsTreeColumn& aColumn, ErrorResult& aError)
     sortdirection.Append(' ');
     sortdirection += hints;
 
-    xs->Sort(mRoot, sort, sortdirection);
+    XULWidgetSort(mRoot, sort, sortdirection);
   }
 }
 
