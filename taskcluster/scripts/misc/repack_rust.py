@@ -370,6 +370,7 @@ def expand_platform(name):
     platforms = {
         'android': "armv7-linux-androideabi",
         'android_x86': "i686-linux-android",
+        'android_x86-64': "x86_64-linux-android",
         'android_aarch64': "aarch64-linux-android",
         'linux64': "x86_64-unknown-linux-gnu",
         'linux32': "i686-unknown-linux-gnu",

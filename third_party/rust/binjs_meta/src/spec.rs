@@ -100,12 +100,20 @@ impl TypeSum {
     }
 }
 
+/// Lazy for a field with [lazy] attribute. Eager for others.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Laziness {
+    Eager,
+    Lazy,
+}
+
 /// Representation of a field in an interface.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Field {
     name: FieldName,
     type_: Type,
     documentation: Option<String>,
+    laziness: Laziness,
 }
 impl Hash for Field {
     fn hash<H>(&self, state: &mut H) where H: Hasher {
@@ -118,6 +126,7 @@ impl Field {
             name,
             type_,
             documentation: None,
+            laziness: Laziness::Eager,
         }
     }
     pub fn name(&self) -> &FieldName {
@@ -125,6 +134,12 @@ impl Field {
     }
     pub fn type_(&self) -> &Type {
         &self.type_
+    }
+    pub fn is_lazy(&self) -> bool {
+        self.laziness == Laziness::Lazy
+    }
+    pub fn laziness(&self) -> Laziness {
+        self.laziness.clone()
     }
     pub fn doc(&self) -> Option<&str> {
         match self.documentation {
@@ -163,11 +178,13 @@ pub enum TypeSpec {
     /// A number, as per JavaScript specifications.
     Number,
 
+    UnsignedLong,
+
     /// A number of bytes in the binary file.
     ///
     /// This spec is used only internally, as a hidden
     /// field injected by deanonymization, to represent
-    /// Skippable nodes.
+    /// lazy fields.
     Offset,
 
     /// Nothing.
@@ -275,6 +292,7 @@ impl TypeSpec {
             TypeSpec::Boolean => Some(IsNullable::non_nullable(Primitive::Boolean)),
             TypeSpec::Void => Some(IsNullable::non_nullable(Primitive::Void)),
             TypeSpec::Number => Some(IsNullable::non_nullable(Primitive::Number)),
+            TypeSpec::UnsignedLong => Some(IsNullable::non_nullable(Primitive::UnsignedLong)),
             TypeSpec::String => Some(IsNullable::non_nullable(Primitive::String)),
             TypeSpec::Offset => Some(IsNullable::non_nullable(Primitive::Offset)),
             TypeSpec::NamedType(ref name) => {
@@ -311,6 +329,7 @@ pub enum Primitive {
     Boolean,
     Void,
     Number,
+    UnsignedLong,
     Offset,
     Interface(Rc<Interface>),
 }
@@ -364,6 +383,9 @@ impl Type {
     }
     pub fn number() -> TypeSpec {
         TypeSpec::Number
+    }
+    pub fn unsigned_long() -> TypeSpec {
+        TypeSpec::UnsignedLong
     }
     pub fn bool() -> TypeSpec {
         TypeSpec::Boolean
@@ -445,7 +467,8 @@ impl Obj {
         self
     }
 
-    fn with_field_aux(self, name: &FieldName, type_: Type, doc: Option<&str>) -> Self {
+    fn with_field_aux(self, name: &FieldName, type_: Type, laziness: Laziness,
+                      doc: Option<&str>) -> Self {
         if self.field(name).is_some() {
             warn!("Field: attempting to overwrite {:?}", name);
             return self
@@ -455,6 +478,7 @@ impl Obj {
             name: name.clone(),
             type_,
             documentation: doc.map(str::to_string),
+            laziness,
         });
         Obj {
             fields
@@ -463,12 +487,12 @@ impl Obj {
     }
 
     /// Extend a structure with a field.
-    pub fn with_field(self, name: &FieldName, type_: Type) -> Self {
-        self.with_field_aux(name, type_, None)
+    pub fn with_field(self, name: &FieldName, type_: Type, laziness: Laziness) -> Self {
+        self.with_field_aux(name, type_, laziness, None)
     }
 
-    pub fn with_field_doc(self, name: &FieldName, type_: Type, doc: &str) -> Self {
-        self.with_field_aux(name, type_, Some(doc))
+    pub fn with_field_doc(self, name: &FieldName, type_: Type, laziness: Laziness, doc: &str) -> Self {
+        self.with_field_aux(name, type_, laziness, Some(doc))
     }
 }
 
@@ -505,9 +529,6 @@ pub struct InterfaceDeclaration {
 
     /// The contents of this interface, excluding the contents of parent interfaces.
     contents: Obj,
-
-    /// If `true`, objects of this interface may be skipped during parsing.
-    is_skippable: bool,
 }
 
 impl InterfaceDeclaration {
@@ -515,24 +536,17 @@ impl InterfaceDeclaration {
         let _ = self.contents.with_full_field(contents);
         self
     }
-    pub fn with_field(&mut self, name: &FieldName, type_: Type) -> &mut Self {
-        self.with_field_aux(name, type_, None)
+    pub fn with_field(&mut self, name: &FieldName, type_: Type, laziness: Laziness) -> &mut Self {
+        self.with_field_aux(name, type_, laziness, None)
     }
-    pub fn with_field_doc(&mut self, name: &FieldName, type_: Type, doc: &str) -> &mut Self {
-        self.with_field_aux(name, type_, Some(doc))
+    pub fn with_field_doc(&mut self, name: &FieldName, type_: Type, laziness: Laziness, doc: &str) -> &mut Self {
+        self.with_field_aux(name, type_, laziness, Some(doc))
     }
-    fn with_field_aux(&mut self, name: &FieldName, type_: Type, doc: Option<&str>) -> &mut Self {
+    fn with_field_aux(&mut self, name: &FieldName, type_: Type, laziness: Laziness, doc: Option<&str>) -> &mut Self {
         let mut contents = Obj::new();
         std::mem::swap(&mut self.contents, &mut contents);
-        self.contents = contents.with_field_aux(name, type_, doc);
+        self.contents = contents.with_field_aux(name, type_, laziness, doc);
         self
-    }
-    pub fn with_skippable(&mut self, value: bool) -> &mut Self {
-        self.is_skippable = value;
-        self
-    }
-    pub fn is_skippable(&self) -> bool {
-        self.is_skippable
     }
 }
 
@@ -603,7 +617,6 @@ impl SpecBuilder {
         let result = RefCell::new(InterfaceDeclaration {
             name: name.clone(),
             contents: Obj::new(),
-            is_skippable: false,
         });
         self.interfaces_by_name.insert(name.clone(), result);
         self.interfaces_by_name.get(name)
@@ -750,7 +763,7 @@ impl SpecBuilder {
                         debug!(target: "spec", "classify_type => don't put me in an interface");
                         TypeClassification::Array
                     },
-                    TypeSpec::Boolean | TypeSpec::Number | TypeSpec::String | TypeSpec::Void | TypeSpec::Offset => {
+                    TypeSpec::Boolean | TypeSpec::Number | TypeSpec::UnsignedLong | TypeSpec::String | TypeSpec::Void | TypeSpec::Offset => {
                         debug!(target: "spec", "classify_type => don't put me in an interface");
                         TypeClassification::Primitive
                     }
@@ -849,8 +862,7 @@ impl SpecBuilder {
 ///
 /// Interfaces represent nodes in the AST. Each interface
 /// has a name, a type, defines properties (also known as
-/// `attribute` in webidl) which hold values. Interfaces
-/// may also have meta-properties, such as their skippability.
+/// `attribute` in webidl) which hold values.
 #[derive(Debug)]
 pub struct Interface {
     declaration: InterfaceDeclaration,
@@ -889,12 +901,6 @@ impl Interface {
             }
         }
         None
-    }
-
-    /// `true` if parsers should have the ability to skip instances of this
-    /// interface.
-    pub fn is_skippable(&self) -> bool {
-        self.declaration.is_skippable
     }
 }
 

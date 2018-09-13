@@ -552,6 +552,7 @@ linux64-rust-android-1.28:
             '--target', 'armv7-linux-androideabi',
             '--target', 'aarch64-linux-android',
             '--target', 'i686-linux-android',
+            '--target', 'x86_64-linux-android',
         ]
         toolchain-alias: linux64-rust-android
         toolchain-artifact: public/build/rustc.tar.xz

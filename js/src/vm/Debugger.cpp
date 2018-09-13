@@ -5069,6 +5069,16 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
                                           "neither undefined nor a string");
                 return false;
             }
+            JSLinearString* str = cls.toString()->ensureLinear(cx);
+            if (!str) {
+                return false;
+            }
+            if (!StringIsAscii(str)) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                          "query object's 'class' property",
+                                          "not a string containing only ASCII characters");
+                return false;
+            }
             className = cls;
         }
         return true;
@@ -5197,7 +5207,7 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
      */
     bool prepareQuery() {
         if (className.isString()) {
-            classNameCString = JS_EncodeStringToLatin1(cx, className.toString());
+            classNameCString = JS_EncodeStringToASCII(cx, className.toString());
             if (!classNameCString) {
                 return false;
             }
