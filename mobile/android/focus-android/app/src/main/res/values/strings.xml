@@ -491,6 +491,8 @@ be temporary, and you can try again later.</li>
     <string name="error_generic_message">We can’t load this page for some reason.</string>
 
     <!-- Label used in the contextmenu shown when long-pressing on a link -->
+    <string name="contextmenu_open_in_app">Open with app</string>
+    <!-- Label used in the contextmenu shown when long-pressing on a link -->
     <string name="contextmenu_link_share">Share link</string>
     <!-- Label used in the contextmenu shown when long-pressing on a link -->
     <string name="contextmenu_link_copy">Copy link address</string>

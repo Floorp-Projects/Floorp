@@ -4,6 +4,9 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:id="@+id/menu_open_with_app"
+        android:title="@string/contextmenu_open_in_app" />
+    <item
         android:id="@+id/menu_new_tab"
         android:title="@string/contextmenu_open_in_new_tab" />
     <item

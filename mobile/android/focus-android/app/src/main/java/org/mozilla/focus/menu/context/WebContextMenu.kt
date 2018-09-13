@@ -10,6 +10,9 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
@@ -17,16 +20,19 @@ import android.os.Environment
 import android.preference.PreferenceManager
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
+import android.support.v4.app.FragmentManager
 import android.support.v7.app.AlertDialog
 import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
 import org.mozilla.focus.R
+import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper.BrowserContextMenuValue
+import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
@@ -44,7 +50,12 @@ object WebContextMenu {
     }
 
     @Suppress("ComplexMethod")
-    fun show(context: Context, callback: IWebView.Callback, hitTarget: IWebView.HitTarget) {
+    fun show(
+        context: Context,
+        fragmentManager: FragmentManager,
+        callback: IWebView.Callback,
+        hitTarget: IWebView.HitTarget
+    ) {
         if (!(hitTarget.isLink || hitTarget.isImage)) {
             // We don't support any other classes yet:
             throw IllegalStateException("WebContextMenu can only handle long-press on images and/or links.")
@@ -88,7 +99,8 @@ object WebContextMenu {
             navigationMenuView.isVerticalScrollBarEnabled = false
         }
 
-        setupMenuForHitTarget(dialog, menu, callback, hitTarget, context)
+        setupMenuForHitTarget(fragmentManager, dialog, menu, callback, hitTarget,
+                getAppDataForLink(context, hitTarget.linkURL), context)
 
         val warningView = view.findViewById<View>(R.id.warning) as TextView
         if (hitTarget.isImage) {
@@ -105,6 +117,23 @@ object WebContextMenu {
         dialog.show()
     }
 
+    private fun getAppDataForLink(context: Context, url: String): Array<ActivityInfo>? {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(url)
+
+        val browsers = Browsers(context, url)
+
+        val resolveInfos: List<ResolveInfo> = context.packageManager
+                .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
+                .filter {
+                    !browsers.installedBrowsers.contains(it.activityInfo) &&
+                            it.activityInfo.packageName != context.packageName
+                }
+
+        return if (resolveInfos.isEmpty()) null
+            else resolveInfos.map { it.activityInfo }.toTypedArray()
+    }
+
     /**
      * Set up the correct menu contents. Note: this method can only be called once the Dialog
      * has already been created - we need the dialog in order to be able to dismiss it in the
@@ -112,14 +141,17 @@ object WebContextMenu {
      */
     @Suppress("ComplexMethod")
     private fun setupMenuForHitTarget(
+        fragmentManager: FragmentManager,
         dialog: Dialog,
         navigationView: NavigationView,
         callback: IWebView.Callback,
         hitTarget: IWebView.HitTarget,
+        appLinkData: Array<ActivityInfo>?,
         context: Context
     ) = with(navigationView) {
         inflateMenu(R.menu.menu_browser_context)
 
+        menu.findItem(R.id.menu_open_with_app).isVisible = appLinkData != null
         menu.findItem(R.id.menu_new_tab).isVisible = hitTarget.isLink
         menu.findItem(R.id.menu_link_share).isVisible = hitTarget.isLink
         menu.findItem(R.id.menu_link_copy).isVisible = hitTarget.isLink
@@ -133,6 +165,12 @@ object WebContextMenu {
             dialog.dismiss()
 
             when (item.itemId) {
+                R.id.menu_open_with_app -> {
+                    val fragment = OpenWithFragment.newInstance(appLinkData!!, hitTarget.linkURL, null)
+                    fragment.show(fragmentManager, OpenWithFragment.FRAGMENT_TAG)
+
+                    true
+                }
                 R.id.menu_new_tab -> {
                     SessionManager.getInstance()
                             .createNewTabSession(Source.MENU, hitTarget.linkURL, context).also { session ->
