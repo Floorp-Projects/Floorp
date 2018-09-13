@@ -97,6 +97,7 @@ let expectedBackgroundApis = [
   "theme.onUpdated",
   "types.LevelOfControl",
   "types.SettingScope",
+  "userScripts.register",
 ];
 
 function sendAllApis() {

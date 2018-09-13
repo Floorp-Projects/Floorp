@@ -331,8 +331,9 @@ ScriptPreloader::InvalidateCache()
     MOZ_ASSERT(mParsingSources.empty());
     MOZ_ASSERT(mPendingScripts.isEmpty());
 
-    for (auto& script : IterHash(mScripts))
+    for (auto& script : IterHash(mScripts)) {
         script.Remove();
+    }
 
     // If we've already finished saving the cache at this point, start a new
     // delayed save operation. This will write out an empty cache file in place
@@ -1067,8 +1068,9 @@ ScriptPreloader::MaybeFinishOffThreadDecode()
     unsigned i = 0;
     for (auto script : mParsingScripts) {
         LOG(Debug, "Finished off-thread decode of %s\n", script->mURL.get());
-        if (i < jsScripts.length())
+        if (i < jsScripts.length()) {
             script->mScript = jsScripts[i++];
+        }
         script->mReadyToExecute = true;
     }
 }

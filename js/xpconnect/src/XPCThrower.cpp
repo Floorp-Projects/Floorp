@@ -25,10 +25,12 @@ void
 XPCThrower::Throw(nsresult rv, JSContext* cx)
 {
     const char* format;
-    if (JS_IsExceptionPending(cx))
+    if (JS_IsExceptionPending(cx)) {
         return;
-    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format))
+    }
+    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format)) {
         format = "";
+    }
     dom::Throw(cx, rv, nsDependentCString(format));
 }
 
@@ -53,12 +55,14 @@ bool
 XPCThrower::CheckForPendingException(nsresult result, JSContext* cx)
 {
     RefPtr<Exception> e = XPCJSContext::Get()->GetPendingException();
-    if (!e)
+    if (!e) {
         return false;
+    }
     XPCJSContext::Get()->SetPendingException(nullptr);
 
-    if (e->GetResult() != result)
+    if (e->GetResult() != result) {
         return false;
+    }
 
     ThrowExceptionObject(cx, e);
     return true;
@@ -71,22 +75,26 @@ XPCThrower::Throw(nsresult rv, XPCCallContext& ccx)
     char* sz;
     const char* format;
 
-    if (CheckForPendingException(rv, ccx))
+    if (CheckForPendingException(rv, ccx)) {
         return;
+    }
 
-    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format))
+    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format)) {
         format = "";
+    }
 
     sz = (char*) format;
     NS_ENSURE_TRUE_VOID(sz);
 
-    if (sz && sVerbose)
+    if (sz && sVerbose) {
         Verbosify(ccx, &sz, false);
+    }
 
     dom::Throw(ccx, rv, nsDependentCString(sz));
 
-    if (sz && sz != format)
+    if (sz && sz != format) {
         js_free(sz);
+    }
 }
 
 
@@ -108,27 +116,32 @@ XPCThrower::ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx)
     *  nsresult!
     */
 
-    if (CheckForPendingException(result, ccx))
+    if (CheckForPendingException(result, ccx)) {
         return;
+    }
 
     // else...
 
-    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format) || !format)
+    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format) || !format) {
         format = "";
+    }
 
-    if (nsXPCException::NameAndFormatForNSResult(result, &name, nullptr) && name)
+    if (nsXPCException::NameAndFormatForNSResult(result, &name, nullptr) && name) {
         sz = JS_smprintf("%s 0x%x (%s)", format, (unsigned) result, name).release();
-    else
+    } else {
         sz = JS_smprintf("%s 0x%x", format, (unsigned) result).release();
+    }
     NS_ENSURE_TRUE_VOID(sz);
 
-    if (sz && sVerbose)
+    if (sz && sVerbose) {
         Verbosify(ccx, &sz, true);
+    }
 
     dom::Throw(ccx, result, nsDependentCString(sz));
 
-    if (sz)
+    if (sz) {
         js_free(sz);
+    }
 }
 
 // static
@@ -138,19 +151,22 @@ XPCThrower::ThrowBadParam(nsresult rv, unsigned paramNum, XPCCallContext& ccx)
     char* sz;
     const char* format;
 
-    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format))
+    if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format)) {
         format = "";
+    }
 
     sz = JS_smprintf("%s arg %d", format, paramNum).release();
     NS_ENSURE_TRUE_VOID(sz);
 
-    if (sz && sVerbose)
+    if (sz && sVerbose) {
         Verbosify(ccx, &sz, true);
+    }
 
     dom::Throw(ccx, rv, nsDependentCString(sz));
 
-    if (sz)
+    if (sz) {
         js_free(sz);
+    }
 }
 
 
@@ -176,8 +192,9 @@ XPCThrower::Verbosify(XPCCallContext& ccx,
     }
 
     if (sz) {
-        if (own)
+        if (own) {
             js_free(*psz);
+        }
         *psz = sz;
     }
 }

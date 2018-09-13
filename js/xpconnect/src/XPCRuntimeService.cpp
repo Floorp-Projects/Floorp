@@ -36,8 +36,9 @@ NS_IMPL_ISUPPORTS(BackstagePass,
 JSObject*
 BackstagePass::GetGlobalJSObject()
 {
-    if (mWrapper)
+    if (mWrapper) {
         return mWrapper->GetFlatJSObject();
+    }
     return nullptr;
 }
 
@@ -145,8 +146,9 @@ BackstagePass::PreCreate(nsISupports* nativeObj, JSContext* cx,
     MOZ_ASSERT(global, "nativeObj not a global object!");
 
     JSObject* jsglobal = global->GetGlobalJSObject();
-    if (jsglobal)
+    if (jsglobal) {
         *parentObj = jsglobal;
+    }
     return NS_OK;
 }
 

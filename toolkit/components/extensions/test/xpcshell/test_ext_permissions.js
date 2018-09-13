@@ -2,7 +2,6 @@
 
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
-ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
@@ -12,38 +11,6 @@ AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 Services.prefs.setBoolPref("extensions.webextensions.background-delayed-startup", false);
-
-let extensionHandlers = new WeakSet();
-
-function frameScript() {
-  /* globals content */
-  ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
-
-  let handle;
-  MessageChannel.addListener(this, "ExtensionTest:HandleUserInput", {
-    receiveMessage({name, data}) {
-      if (data) {
-        handle = content.windowUtils.setHandlingUserInput(true);
-      } else if (handle) {
-        handle.destruct();
-        handle = null;
-      }
-    },
-  });
-}
-
-async function withHandlingUserInput(extension, fn) {
-  let {messageManager} = extension.extension.groupFrameLoader;
-
-  if (!extensionHandlers.has(extension)) {
-    messageManager.loadFrameScript(`data:,(${frameScript}).call(this)`, false, true);
-    extensionHandlers.add(extension);
-  }
-
-  await MessageChannel.sendMessage(messageManager, "ExtensionTest:HandleUserInput", true);
-  await fn();
-  await MessageChannel.sendMessage(messageManager, "ExtensionTest:HandleUserInput", false);
-}
 
 let sawPrompt = false;
 let acceptPrompt = false;

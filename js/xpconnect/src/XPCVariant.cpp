@@ -58,8 +58,9 @@ XPCTraceableVariant::~XPCTraceableVariant()
 
     mData.Cleanup();
 
-    if (!val.isNull())
+    if (!val.isNull()) {
         RemoveFromRootSet();
+    }
 }
 
 void XPCTraceableVariant::TraceJS(JSTracer* trc)
@@ -98,13 +99,15 @@ XPCVariant::newVariant(JSContext* cx, const Value& aJSVal)
 {
     RefPtr<XPCVariant> variant;
 
-    if (!aJSVal.isGCThing())
+    if (!aJSVal.isGCThing()) {
         variant = new XPCVariant(cx, aJSVal);
-    else
+    } else {
         variant = new XPCTraceableVariant(cx, aJSVal);
+    }
 
-    if (!variant->InitializeData(cx))
+    if (!variant->InitializeData(cx)) {
         return nullptr;
+    }
 
     return variant.forget();
 }
@@ -170,8 +173,9 @@ XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, HandleObject array,
     RootedValue val(cx);
     RootedObject jsobj(cx);
     for (uint32_t i = 0; i < length; i++) {
-        if (!JS_GetElement(cx, array, i, &val))
+        if (!JS_GetElement(cx, array, i, &val)) {
             return false;
+        }
 
         if (val.isInt32()) {
             type = tInt;
@@ -191,15 +195,17 @@ XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, HandleObject array,
             jsobj = &val.toObject();
 
             bool isArray;
-            if (!JS_IsArrayObject(cx, jsobj, &isArray))
+            if (!JS_IsArrayObject(cx, jsobj, &isArray)) {
                 return false;
+            }
 
-            if (isArray)
+            if (isArray) {
                 type = tArr;
-            else if (xpc_JSObjectIsID(cx, jsobj))
+            } else if (xpc_JSObjectIsID(cx, jsobj)) {
                 type = tID;
-            else
+            } else {
                 type = tISup;
+            }
         }
 
         MOZ_ASSERT(state != tErr, "bad state table!");
@@ -212,8 +218,9 @@ XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, HandleObject array,
         MOZ_ASSERT(state != tErr, "bad state table!");
         MOZ_ASSERT(state != tUnk, "bad state table!");
 
-        if (state == tVar)
+        if (state == tVar) {
             break;
+        }
     }
 
     switch (state) {
@@ -257,8 +264,9 @@ XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, HandleObject array,
 
 bool XPCVariant::InitializeData(JSContext* cx)
 {
-    if (!js::CheckRecursionLimit(cx))
+    if (!js::CheckRecursionLimit(cx)) {
         return false;
+    }
 
     RootedValue val(cx, GetJSVal());
 
@@ -285,8 +293,9 @@ bool XPCVariant::InitializeData(JSContext* cx)
     }
     if (val.isString()) {
         JSString* str = val.toString();
-        if (!str)
+        if (!str) {
             return false;
+        }
 
         MOZ_ASSERT(mData.GetType() == nsIDataType::VTYPE_EMPTY,
                    "Why do we already have data?");
@@ -295,8 +304,9 @@ bool XPCVariant::InitializeData(JSContext* cx)
         mData.AllocateWStringWithSize(length);
 
         mozilla::Range<char16_t> destChars(mData.u.wstr.mWStringValue, length);
-        if (!JS_CopyStringChars(cx, destChars, str))
+        if (!JS_CopyStringChars(cx, destChars, str)) {
             return false;
+        }
 
         MOZ_ASSERT(mData.u.wstr.mWStringValue[length] == '\0');
         return true;
@@ -336,8 +346,9 @@ bool XPCVariant::InitializeData(JSContext* cx)
         nsXPTType type;
         nsID id;
 
-        if (!XPCArrayHomogenizer::GetTypeForArray(cx, jsobj, len, &type, &id))
+        if (!XPCArrayHomogenizer::GetTypeForArray(cx, jsobj, len, &type, &id)) {
             return false;
+        }
 
         if (!XPCConvert::JSData2Native(cx, &mData.u.array.mArrayValue,
                                        val, type, &id, len, nullptr))
@@ -345,8 +356,9 @@ bool XPCVariant::InitializeData(JSContext* cx)
 
         const nsXPTType& elty = type.ArrayElementType();
         mData.mType = nsIDataType::VTYPE_ARRAY;
-        if (elty.IsInterfacePointer())
+        if (elty.IsInterfacePointer()) {
             mData.u.array.mArrayInterfaceID = id;
+        }
         mData.u.array.mArrayCount = len;
         mData.u.array.mArrayType = elty.Tag();
 
@@ -381,8 +393,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
 {
     // Get the type early because we might need to spoof it below.
     uint16_t type;
-    if (NS_FAILED(variant->GetDataType(&type)))
+    if (NS_FAILED(variant->GetDataType(&type))) {
         return false;
+    }
 
     AutoJSContext cx;
     RootedValue realVal(cx);
@@ -393,8 +406,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
          type == nsIDataType::VTYPE_ARRAY ||
          type == nsIDataType::VTYPE_EMPTY_ARRAY ||
          type == nsIDataType::VTYPE_ID)) {
-        if (!JS_WrapValue(cx, &realVal))
+        if (!JS_WrapValue(cx, &realVal)) {
             return false;
+        }
         pJSVal.set(realVal);
         return true;
     }
@@ -405,8 +419,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
                    type == nsIDataType::VTYPE_INTERFACE_IS,
                    "Weird variant");
 
-        if (!JS_WrapValue(cx, &realVal))
+        if (!JS_WrapValue(cx, &realVal)) {
             return false;
+        }
         pJSVal.set(realVal);
         return true;
     }
@@ -436,73 +451,83 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
         case nsIDataType::VTYPE_DOUBLE:
         {
             double d;
-            if (NS_FAILED(variant->GetAsDouble(&d)))
+            if (NS_FAILED(variant->GetAsDouble(&d))) {
                 return false;
+            }
             pJSVal.setNumber(d);
             return true;
         }
         case nsIDataType::VTYPE_BOOL:
         {
             bool b;
-            if (NS_FAILED(variant->GetAsBool(&b)))
+            if (NS_FAILED(variant->GetAsBool(&b))) {
                 return false;
+            }
             pJSVal.setBoolean(b);
             return true;
         }
         case nsIDataType::VTYPE_CHAR:
         {
             char c;
-            if (NS_FAILED(variant->GetAsChar(&c)))
+            if (NS_FAILED(variant->GetAsChar(&c))) {
                 return false;
+            }
             return XPCConvert::NativeData2JS(pJSVal, (const void*)&c, { TD_CHAR }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_WCHAR:
         {
             char16_t wc;
-            if (NS_FAILED(variant->GetAsWChar(&wc)))
+            if (NS_FAILED(variant->GetAsWChar(&wc))) {
                 return false;
+            }
             return XPCConvert::NativeData2JS(pJSVal, (const void*)&wc, { TD_WCHAR }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_ID:
         {
-            if (NS_FAILED(variant->GetAsID(&iid)))
+            if (NS_FAILED(variant->GetAsID(&iid))) {
                 return false;
+            }
             nsID* v = &iid;
             return XPCConvert::NativeData2JS(pJSVal, (const void*)&v, { TD_PNSIID }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_ASTRING:
         {
             nsAutoString astring;
-            if (NS_FAILED(variant->GetAsAString(astring)))
+            if (NS_FAILED(variant->GetAsAString(astring))) {
                 return false;
+            }
             return XPCConvert::NativeData2JS(pJSVal, &astring, { TD_ASTRING }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_DOMSTRING:
         {
             nsAutoString astring;
-            if (NS_FAILED(variant->GetAsAString(astring)))
+            if (NS_FAILED(variant->GetAsAString(astring))) {
                 return false;
+            }
             return XPCConvert::NativeData2JS(pJSVal, &astring, { TD_DOMSTRING }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_CSTRING:
         {
             nsAutoCString cString;
-            if (NS_FAILED(variant->GetAsACString(cString)))
+            if (NS_FAILED(variant->GetAsACString(cString))) {
                 return false;
+            }
             return XPCConvert::NativeData2JS(pJSVal, &cString, { TD_CSTRING }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_UTF8STRING:
         {
             nsUTF8String utf8String;
-            if (NS_FAILED(variant->GetAsAUTF8String(utf8String)))
+            if (NS_FAILED(variant->GetAsAUTF8String(utf8String))) {
                 return false;
+            }
             return XPCConvert::NativeData2JS(pJSVal, &utf8String, { TD_UTF8STRING }, &iid, 0, pErr);
         }
         case nsIDataType::VTYPE_CHAR_STR:
         {
             char* pc;
-            if (NS_FAILED(variant->GetAsString(&pc)))
+            if (NS_FAILED(variant->GetAsString(&pc))) {
                 return false;
+            }
             bool success = XPCConvert::NativeData2JS(pJSVal, (const void*)&pc,
                                                      { TD_PSTRING }, &iid, 0, pErr);
             free(pc);
@@ -512,8 +537,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
         {
             char* pc;
             uint32_t size;
-            if (NS_FAILED(variant->GetAsStringWithSize(&size, &pc)))
+            if (NS_FAILED(variant->GetAsStringWithSize(&size, &pc))) {
                 return false;
+            }
             bool success = XPCConvert::NativeData2JS(pJSVal, (const void*)&pc,
                                                      { TD_PSTRING_SIZE_IS },
                                                      &iid, size, pErr);
@@ -523,8 +549,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
         case nsIDataType::VTYPE_WCHAR_STR:
         {
             char16_t* pwc;
-            if (NS_FAILED(variant->GetAsWString(&pwc)))
+            if (NS_FAILED(variant->GetAsWString(&pwc))) {
                 return false;
+            }
             bool success = XPCConvert::NativeData2JS(pJSVal, (const void*)&pwc,
                                                      { TD_PSTRING }, &iid, 0, pErr);
             free(pwc);
@@ -534,8 +561,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
         {
             char16_t* pwc;
             uint32_t size;
-            if (NS_FAILED(variant->GetAsWStringWithSize(&size, &pwc)))
+            if (NS_FAILED(variant->GetAsWStringWithSize(&size, &pwc))) {
                 return false;
+            }
             bool success = XPCConvert::NativeData2JS(pJSVal, (const void*)&pwc,
                                                      { TD_PWSTRING_SIZE_IS },
                                                      &iid, size, pErr);
@@ -547,8 +575,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
         {
             nsISupports* pi;
             nsID* piid;
-            if (NS_FAILED(variant->GetAsInterface(&piid, (void**)&pi)))
+            if (NS_FAILED(variant->GetAsInterface(&piid, (void**)&pi))) {
                 return false;
+            }
 
             iid = *piid;
             free((char*)piid);
@@ -556,8 +585,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
             bool success = XPCConvert::NativeData2JS(pJSVal, (const void*)&pi,
                                                      { TD_INTERFACE_IS_TYPE },
                                                      &iid, 0, pErr);
-            if (pi)
+            if (pi) {
                 pi->Release();
+            }
             return success;
         }
         case nsIDataType::VTYPE_ARRAY:
@@ -569,8 +599,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
                                      &du.u.array.mArrayInterfaceID,
                                      &du.u.array.mArrayCount,
                                      &du.u.array.mArrayValue);
-            if (NS_FAILED(rv))
+            if (NS_FAILED(rv)) {
                 return false;
+            }
 
             // must exit via VARIANT_DONE from here on...
             du.mType = nsIDataType::VTYPE_ARRAY;
@@ -663,8 +694,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
         case nsIDataType::VTYPE_EMPTY_ARRAY:
         {
             JSObject* array = JS_NewArrayObject(cx, 0);
-            if (!array)
+            if (!array) {
                 return false;
+            }
             pJSVal.setObject(*array);
             return true;
         }

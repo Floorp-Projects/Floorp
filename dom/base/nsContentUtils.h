@@ -2260,9 +2260,9 @@ public:
   static bool IsFocusedContent(const nsIContent *aContent);
 
   /**
-   * Returns true if the DOM full-screen API is enabled.
+   * Returns true if the DOM fullscreen API is enabled.
    */
-  static bool IsFullScreenApiEnabled();
+  static bool IsFullscreenApiEnabled();
 
   /**
    * Returns true if the unprefixed fullscreen API is enabled.
@@ -2271,12 +2271,12 @@ public:
     { return sIsUnprefixedFullscreenApiEnabled; }
 
   /**
-   * Returns true if requests for full-screen are allowed in the current
+   * Returns true if requests for fullscreen are allowed in the current
    * context. Requests are only allowed if the user initiated them (like with
    * a mouse-click or key press), unless this check has been disabled by
    * setting the pref "full-screen-api.allow-trusted-requests-only" to false.
    */
-  static bool IsRequestFullScreenAllowed(mozilla::dom::CallerType aCallerType);
+  static bool IsRequestFullscreenAllowed(mozilla::dom::CallerType aCallerType);
 
   /**
    * Returns true if calling execCommand with 'cut' or 'copy' arguments
@@ -3449,9 +3449,9 @@ private:
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
   static bool sDisablePopups;
-  static bool sIsFullScreenApiEnabled;
+  static bool sIsFullscreenApiEnabled;
   static bool sIsUnprefixedFullscreenApiEnabled;
-  static bool sTrustedFullScreenOnly;
+  static bool sTrustedFullscreenOnly;
   static bool sIsCutCopyAllowed;
   static uint32_t sHandlingInputTimeout;
   static bool sIsPerformanceTimingEnabled;

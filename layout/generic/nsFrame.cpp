@@ -257,7 +257,6 @@ nsIFrame::DestroyAnonymousContent(nsPresContext* aPresContext,
 
 // Formerly the nsIFrameDebug interface
 
-#ifdef DEBUG
 std::ostream& operator<<(std::ostream& aStream,
                          const nsReflowStatus& aStatus)
 {
@@ -285,16 +284,7 @@ std::ostream& operator<<(std::ostream& aStream,
   return aStream;
 }
 
-nsCString
-nsReflowStatus::ToString() const
-{
-  nsCString result;
-  std::stringstream ss;
-  ss << *this;
-  result.Append(ss.str().c_str());
-  return result;
-}
-
+#ifdef DEBUG
 static bool gShowFrameBorders = false;
 
 void nsFrame::ShowFrameBorders(bool aEnable)

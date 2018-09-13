@@ -59,10 +59,11 @@ XPC_Log_print(const char* fmt, ...)
     va_start(ap, fmt);
     VsprintfLiteral(line, fmt, ap);
     va_end(ap);
-    if (g_Indent)
+    if (g_Indent) {
         PR_LogPrint("%s%s",g_Spaces+SPACE_COUNT-(INDENT_FACTOR*g_Indent),line);
-    else
+    } else {
         PR_LogPrint("%s",line);
+    }
 }
 
 bool
@@ -74,15 +75,17 @@ XPC_Log_Check(int i)
 void
 XPC_Log_Indent()
 {
-    if (INDENT_FACTOR*(++g_Indent) > SPACE_COUNT)
+    if (INDENT_FACTOR*(++g_Indent) > SPACE_COUNT) {
         g_Indent-- ;
+    }
 }
 
 void
 XPC_Log_Outdent()
 {
-    if (--g_Indent < 0)
+    if (--g_Indent < 0) {
         g_Indent++;
+    }
 }
 
 void

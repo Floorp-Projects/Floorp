@@ -9,21 +9,22 @@
  *
  * The format for each JS error message is:
  *
- * MSG_DEF(<SYMBOLIC_NAME>, <ARGUMENT_COUNT>, <EXCEPTION_NAME>,
- *         <FORMAT_STRING>)
+ *     MSG_DEF(<SYMBOLIC_NAME>, <ARGUMENT_COUNT>, <EXCEPTION_NAME>,
+ *             <FORMAT_STRING>)
  *
- * where ;
- * <SYMBOLIC_NAME> is a legal C identifer that will be used in the
- * JS engine source.
+ * where:
  *
- * <ARGUMENT_COUNT> is an integer literal specifying the total number of
- * replaceable arguments in the following format string.
+ *     <SYMBOLIC_NAME> is a legal C identifer that will be used in the
+ *     JS engine source.
  *
- * <EXCEPTION_NAME> is an enum JSExnType value, defined in jsapi.h.
+ *     <ARGUMENT_COUNT> is an integer literal specifying the total number of
+ *     replaceable arguments in the following format string.
  *
- * <FORMAT_STRING> is a string literal, optionally containing sequences
- * {X} where X  is an integer representing the argument number that will
- * be replaced with a string value when the error is reported.
+ *     <EXCEPTION_NAME> is an enum JSExnType value, defined in jsapi.h.
+ *
+ *     <FORMAT_STRING> is a string literal, optionally containing sequences
+ *     {X} where X  is an integer representing the argument number that will
+ *     be replaced with a string value when the error is reported.
  *
  * e.g.
  *
@@ -55,7 +56,8 @@ MSG_DEF(JSMSG_TOPRIMITIVE_NOT_CALLABLE, 2, JSEXN_TYPEERR, "can't convert {0} to 
 MSG_DEF(JSMSG_TOPRIMITIVE_RETURNED_OBJECT, 2, JSEXN_TYPEERR, "can't convert {0} to {1}: its [Symbol.toPrimitive] method returned an object")
 MSG_DEF(JSMSG_NO_PROPERTIES,           1, JSEXN_TYPEERR, "{0} has no properties")
 MSG_DEF(JSMSG_PROPERTY_FAIL,           2, JSEXN_TYPEERR, "can't access property {0} of {1}")
-MSG_DEF(JSMSG_PROPERTY_FAIL_EXPR,      3, JSEXN_TYPEERR, "{0} is {1}, can't access property {2} of it")
+MSG_DEF(JSMSG_PROPERTY_FAIL_EXPR,      3, JSEXN_TYPEERR, "{0} is {1}; can't access its {2} property")
+MSG_DEF(JSMSG_ELEMENT_FAIL_EXPR,       3, JSEXN_TYPEERR, "{0} is {1}; can't access element at index {2}")
 MSG_DEF(JSMSG_BAD_REGEXP_FLAG,         1, JSEXN_SYNTAXERR, "invalid regular expression flag {0}")
 MSG_DEF(JSMSG_INVALID_DATA_VIEW_LENGTH, 0, JSEXN_RANGEERR, "invalid data view length")
 MSG_DEF(JSMSG_OFFSET_LARGER_THAN_FILESIZE, 0, JSEXN_RANGEERR, "offset is larger than filesize")

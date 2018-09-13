@@ -43,8 +43,9 @@ XPCCallContext::XPCCallContext(JSContext* cx,
     MOZ_ASSERT(cx);
     MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
 
-    if (!mXPC)
+    if (!mXPC) {
         return;
+    }
 
     mXPCJSContext = XPCJSContext::Get();
 
@@ -53,8 +54,9 @@ XPCCallContext::XPCCallContext(JSContext* cx,
 
     mState = HAVE_CONTEXT;
 
-    if (!obj)
+    if (!obj) {
         return;
+    }
 
     mMethodIndex = 0xDEAD;
 
@@ -81,11 +83,13 @@ XPCCallContext::XPCCallContext(JSContext* cx,
         mScriptable = mWrapper->GetScriptable();
     }
 
-    if (!JSID_IS_VOID(name))
+    if (!JSID_IS_VOID(name)) {
         SetName(name);
+    }
 
-    if (argc != NO_ARGS)
+    if (argc != NO_ARGS) {
         SetArgsAndResultPtr(argc, argv, rval);
+    }
 
     CHECK_STATE(HAVE_OBJECT);
 }
@@ -102,8 +106,9 @@ XPCCallContext::SetName(jsid name)
         mInterface = mTearOff->GetInterface();
         mMember = mInterface->FindMember(mName);
         mStaticMemberIsLocal = true;
-        if (mMember && !mMember->IsConstant())
+        if (mMember && !mMember->IsConstant()) {
             mMethodIndex = mMember->GetIndex();
+        }
     } else {
         mSet = mWrapper ? mWrapper->GetSet() : nullptr;
 
@@ -113,8 +118,9 @@ XPCCallContext::SetName(jsid name)
                              mWrapper->GetProto()->GetSet() :
                              nullptr,
                              &mStaticMemberIsLocal)) {
-            if (mMember && !mMember->IsConstant())
+            if (mMember && !mMember->IsConstant()) {
                 mMethodIndex = mMember->GetIndex();
+            }
         } else {
             mMember = nullptr;
             mInterface = nullptr;
@@ -135,8 +141,9 @@ XPCCallContext::SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
     // by id.
 
     // don't be tricked if method is called with wrong 'this'
-    if (mTearOff && mTearOff->GetInterface() != iface)
+    if (mTearOff && mTearOff->GetInterface() != iface) {
         mTearOff = nullptr;
+    }
 
     mSet = nullptr;
     mInterface = iface;
@@ -144,8 +151,9 @@ XPCCallContext::SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
     mMethodIndex = mMember->GetIndex() + (isSetter ? 1 : 0);
     mName = mMember->GetName();
 
-    if (mState < HAVE_NAME)
+    if (mState < HAVE_NAME) {
         mState = HAVE_NAME;
+    }
 }
 
 void
@@ -174,10 +182,12 @@ XPCCallContext::CanCallNow()
 {
     nsresult rv;
 
-    if (!HasInterfaceAndMember())
+    if (!HasInterfaceAndMember()) {
         return NS_ERROR_UNEXPECTED;
-    if (mState < HAVE_ARGS)
+    }
+    if (mState < HAVE_ARGS) {
         return NS_ERROR_UNEXPECTED;
+    }
 
     if (!mTearOff) {
         mTearOff = mWrapper->FindTearOff(mInterface, false, &rv);
@@ -206,8 +216,9 @@ XPCCallContext::SystemIsBeingShutDown()
     mSet = nullptr;
     mInterface = nullptr;
 
-    if (mPrevCallContext)
+    if (mPrevCallContext) {
         mPrevCallContext->SystemIsBeingShutDown();
+    }
 }
 
 XPCCallContext::~XPCCallContext()

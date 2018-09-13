@@ -65,6 +65,13 @@ extensions.registerModules({
       ["test"],
     ],
   },
+  userScripts: {
+    url: "chrome://extensions/content/child/ext-userScripts.js",
+    scopes: ["addon_child", "content_child"],
+    paths: [
+      ["userScripts"],
+    ],
+  },
   webRequest: {
     url: "chrome://extensions/content/child/ext-webRequest.js",
     scopes: ["addon_child"],

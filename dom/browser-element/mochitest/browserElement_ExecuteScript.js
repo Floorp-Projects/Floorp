@@ -91,7 +91,7 @@ function runTest() {
       ok(c(rv, 'YQ=='), `scriptId: ${scriptId++}`);
       return iframe.executeScript('window.wrappedJSObject.btoa("a")', {url})
     }, bail).then(bail, (error) => {
-      is(error.message, `TypeError: window.wrappedJSObject is undefined, can't access property "btoa" of it`, `scriptId: ${scriptId++}`);
+      is(error.message, `TypeError: window.wrappedJSObject is undefined; can't access its "btoa" property`, `scriptId: ${scriptId++}`);
       return iframe.executeScript('42', {})
     }).then(bail, error => {
       is(error.name, 'InvalidAccessError', `scriptId: ${scriptId++}`);

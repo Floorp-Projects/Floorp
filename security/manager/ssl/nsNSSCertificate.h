@@ -81,7 +81,12 @@ public:
   NS_DECL_NSIX509CERTLIST
   NS_DECL_NSISERIALIZABLE
 
-  // certList is adopted
+  // The only way to call this is with std::move(some cert list) (because the
+  // copy constructor should be deleted for UniqueCERTCertList), so we
+  // effectively take ownership of it. What actually happens is we iterate
+  // through the list getting our own owned reference to each certificate in the
+  // list, and then the UniqueCERTCertList is dropped as it goes out of scope
+  // (thus releasing its own reference to each certificate).
   explicit nsNSSCertList(mozilla::UniqueCERTCertList certList);
 
   nsNSSCertList();
@@ -117,27 +122,10 @@ public:
 private:
    virtual ~nsNSSCertList() {}
 
-   mozilla::UniqueCERTCertList mCertList;
+   std::vector<mozilla::UniqueCERTCertificate> mCerts;
 
    nsNSSCertList(const nsNSSCertList&) = delete;
    void operator=(const nsNSSCertList&) = delete;
-};
-
-class nsNSSCertListEnumerator : public nsSimpleEnumerator
-{
-public:
-   NS_DECL_NSISIMPLEENUMERATOR
-
-   const nsID& DefaultInterface() override { return NS_GET_IID(nsIX509Cert); }
-
-   explicit nsNSSCertListEnumerator(const mozilla::UniqueCERTCertList& certList);
-private:
-   virtual ~nsNSSCertListEnumerator() {}
-
-   mozilla::UniqueCERTCertList mCertList;
-
-   nsNSSCertListEnumerator(const nsNSSCertListEnumerator&) = delete;
-   void operator=(const nsNSSCertListEnumerator&) = delete;
 };
 
 #define NS_X509CERT_CID { /* 660a3226-915c-4ffb-bb20-8985a632df05 */   \

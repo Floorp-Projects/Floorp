@@ -1139,7 +1139,7 @@ public:
 
   virtual bool Closed() = 0;
   virtual bool GetFullScreen() = 0;
-  virtual nsresult SetFullScreen(bool aFullScreen) = 0;
+  virtual nsresult SetFullScreen(bool aFullscreen) = 0;
 
   virtual nsresult Focus() = 0;
   virtual nsresult Close() = 0;
