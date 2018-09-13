@@ -243,14 +243,6 @@ CompileLatin1ForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& o
                                   const char* bytes, size_t length,
                                   MutableHandle<JSScript*> script);
 
-extern JS_PUBLIC_API(bool)
-CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
-                            FILE* file, MutableHandle<JSScript*> script);
-
-extern JS_PUBLIC_API(bool)
-CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
-                            const char* filename, MutableHandle<JSScript*> script);
-
 /**
  * Compile a function with envChain plus the global as its scope chain.
  * envChain must contain objects in the current compartment of cx.  The actual

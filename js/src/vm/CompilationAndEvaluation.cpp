@@ -173,24 +173,6 @@ JS::CompileLatin1ForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOption
     return ::CompileLatin1(cx, options, bytes, length, script);
 }
 
-bool
-JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-                                FILE* file, JS::MutableHandleScript script)
-{
-    CompileOptions options(cx, optionsArg);
-    options.setNonSyntacticScope(true);
-    return CompileFile(cx, options, file, script);
-}
-
-bool
-JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-                                const char* filename, JS::MutableHandleScript script)
-{
-    CompileOptions options(cx, optionsArg);
-    options.setNonSyntacticScope(true);
-    return CompilePath(cx, options, filename, script);
-}
-
 JS_PUBLIC_API(bool)
 JS_CompileScript(JSContext* cx, const char* bytes, size_t length,
                  const JS::CompileOptions& options, MutableHandleScript script)
