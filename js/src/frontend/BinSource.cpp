@@ -196,7 +196,7 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
     params->appendWithoutOrderAssumption(body);
 
     bool isStatement = kind == BinKind::EagerFunctionDeclaration ||
-                       kind == BinKind::SkippableFunctionDeclaration;
+                       kind == BinKind::LazyFunctionDeclaration;
 
     BINJS_TRY_DECL(result, isStatement
                      ? factory_.newFunctionStatement(pos)
@@ -240,80 +240,77 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
     return result;
 }
 
-// Try to mark the capture in the given scope, if the variable exists.
-// Return whether it was found in this scope and marked successfully.
-static bool TryMarkCaptureInScope(ParseContext::Scope& scope, HandleAtom atom)
-{
-    auto name = scope.lookupDeclaredName(atom);
-    if (!name) {
-        return false;
-    }
-    name->value()->setClosedOver();
-    return true;
-}
-
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::parseAndUpdateCapturedNames(const BinKind kind)
+BinASTParser<Tok>::addScopeName(AssertedScopeKind scopeKind, HandleAtom name,
+                                ParseContext::Scope* scope, DeclarationKind declKind,
+                                bool isCaptured)
 {
-    // For the moment, we do not attempt to validate the list of captured names.
-    AutoList guard(*tokenizer_);
-    uint32_t length = 0;
-
-    MOZ_TRY(tokenizer_->enterList(length, guard));
-    RootedAtom name(cx_);
-    for (uint32_t i = 0; i < length; ++i) {
-        name = nullptr;
-
-        MOZ_TRY_VAR(name, tokenizer_->readAtom());
-        if (kind == BinKind::AssertedParameterScope) {
-            MOZ_ASSERT(parseContext_->isFunctionBox());
-
-            if (parseContext_->functionBox()->function()->isNamedLambda()) {
-                if (TryMarkCaptureInScope(parseContext_->namedLambdaScope(), name)) {
-                    continue;
-                }
-            }
-
-            if (!TryMarkCaptureInScope(parseContext_->functionScope(), name)) {
-                return raiseUndeclaredCapture(name);
-            }
-            continue;
-        }
-
-        if (kind == BinKind::AssertedVarScope) {
-            if (TryMarkCaptureInScope(parseContext_->varScope(), name)) {
-                continue;
-            }
-        }
-
-        if (!TryMarkCaptureInScope(*parseContext_->innermostScope(), name)) {
-            return raiseUndeclaredCapture(name);
-        }
+    auto ptr = scope->lookupDeclaredNameForAdd(name);
+    if (ptr) {
+        return raiseError("Variable redeclaration");
     }
-    MOZ_TRY(guard.done());
+
+    BINJS_TRY(scope->addDeclaredName(parseContext_, ptr, name.get(), declKind,
+                                     tokenizer_->offset()));
+
+    if (isCaptured) {
+        auto declaredPtr = scope->lookupDeclaredName(name);
+        MOZ_ASSERT(declaredPtr);
+        declaredPtr->value()->setClosedOver();
+    }
+
     return Ok();
 }
 
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::parseAndUpdateScopeNames(ParseContext::Scope& scope, DeclarationKind kind)
+BinASTParser<Tok>::getDeclaredScope(AssertedScopeKind scopeKind, AssertedDeclaredKind kind,
+                                    ParseContext::Scope*& scope, DeclarationKind& declKind)
 {
-    AutoList guard(*tokenizer_);
-    uint32_t length = 0;
-
-    MOZ_TRY(tokenizer_->enterList(length, guard));
-    RootedAtom name(cx_);
-    for (uint32_t i = 0; i < length; ++i) {
-        name = nullptr;
-
-        MOZ_TRY_VAR(name, tokenizer_->readAtom());
-        auto ptr = scope.lookupDeclaredNameForAdd(name);
-        if (ptr) {
-            return raiseError("Variable redeclaration");
+    MOZ_ASSERT(scopeKind == AssertedScopeKind::Block ||
+               scopeKind == AssertedScopeKind::Global ||
+               scopeKind == AssertedScopeKind::Var);
+    switch (kind) {
+      case AssertedDeclaredKind::Var:
+        if (scopeKind == AssertedScopeKind::Block) {
+            return raiseError("AssertedBlockScope cannot contain 'var' binding");
         }
-
-        BINJS_TRY(scope.addDeclaredName(parseContext_, ptr, name.get(), kind, tokenizer_->offset()));
+        declKind = DeclarationKind::Var;
+        scope = &parseContext_->varScope();
+        break;
+      case AssertedDeclaredKind::NonConstLexical:
+        declKind = DeclarationKind::Let;
+        scope = parseContext_->innermostScope();
+        break;
+      case AssertedDeclaredKind::ConstLexical:
+        declKind = DeclarationKind::Const;
+        scope = parseContext_->innermostScope();
+        break;
     }
-    MOZ_TRY(guard.done());
+
+    return Ok();
+}
+
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::getBoundScope(AssertedScopeKind scopeKind,
+                                 ParseContext::Scope*& scope, DeclarationKind& declKind)
+{
+    MOZ_ASSERT(scopeKind == AssertedScopeKind::Catch ||
+               scopeKind == AssertedScopeKind::Parameter);
+    switch (scopeKind) {
+      case AssertedScopeKind::Catch:
+        declKind = DeclarationKind::CatchParameter;
+        scope = parseContext_->innermostScope();
+        break;
+      case AssertedScopeKind::Parameter:
+        MOZ_ASSERT(parseContext_->isFunctionBox());
+        declKind = DeclarationKind::PositionalFormalParameter;
+        scope = &parseContext_->functionScope();
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE();
+        break;
+    }
+
     return Ok();
 }
 

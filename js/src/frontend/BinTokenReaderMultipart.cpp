@@ -24,7 +24,7 @@ namespace frontend {
 // The magic header, at the start of every binjs file.
 const char MAGIC_HEADER[] = "BINJS";
 // The latest format version understood by this tokenizer.
-const uint32_t MAGIC_FORMAT_VERSION = 0;
+const uint32_t MAGIC_FORMAT_VERSION = 1;
 
 // The headers at the start of each section of the binjs file.
 const char SECTION_HEADER_GRAMMAR[] = "[GRAMMAR]";
