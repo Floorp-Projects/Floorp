@@ -44,16 +44,16 @@ InspectorFontFace::GetName(nsAString& aName)
 {
   if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
-    aName = mFontEntry->mUserFontData->mRealName;
+    aName.Append(NS_ConvertUTF8toUTF16(mFontEntry->mUserFontData->mRealName));
   } else {
-    aName = mFontEntry->RealFaceName();
+    aName.Append(NS_ConvertUTF8toUTF16(mFontEntry->RealFaceName()));
   }
 }
 
 void
 InspectorFontFace::GetCSSFamilyName(nsAString& aCSSFamilyName)
 {
-  aCSSFamilyName = mFontEntry->FamilyName();
+  aCSSFamilyName.Append(NS_ConvertUTF8toUTF16(mFontEntry->FamilyName()));
 }
 
 void
@@ -129,11 +129,10 @@ InspectorFontFace::GetURI(nsAString& aURI)
 void
 InspectorFontFace::GetLocalName(nsAString& aLocalName)
 {
+  aLocalName.Truncate();
   if (mFontEntry->IsLocalUserFont()) {
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
-    aLocalName = mFontEntry->mUserFontData->mLocalName;
-  } else {
-    aLocalName.Truncate();
+    aLocalName.Append(NS_ConvertUTF8toUTF16(mFontEntry->mUserFontData->mLocalName));
   }
 }
 
@@ -257,7 +256,7 @@ InspectorFontFace::GetVariationAxes(nsTArray<InspectorVariationAxis>& aResult,
   for (auto a : axes) {
     InspectorVariationAxis& axis = *aResult.AppendElement();
     AppendTagAsASCII(axis.mTag, a.mTag);
-    axis.mName = a.mName;
+    axis.mName.Append(NS_ConvertUTF8toUTF16(a.mName));
     axis.mMinValue = a.mMinValue;
     axis.mMaxValue = a.mMaxValue;
     axis.mDefaultValue = a.mDefaultValue;
@@ -280,7 +279,7 @@ InspectorFontFace::GetVariationInstances(
   }
   for (auto i : instances) {
     InspectorVariationInstance& inst = *aResult.AppendElement();
-    inst.mName = i.mName;
+    inst.mName.Append(NS_ConvertUTF8toUTF16(i.mName));
     // inst.mValues is a webidl sequence<>, which is a fallible array,
     // so we are required to use fallible SetCapacity and AppendElement calls,
     // and check the result. In practice we don't expect failure here; the

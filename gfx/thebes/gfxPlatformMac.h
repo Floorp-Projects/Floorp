@@ -56,7 +56,7 @@ public:
     // the name and style characteristics
     static void
     LookupSystemFont(mozilla::LookAndFeel::FontID aSystemFontID,
-                     nsAString& aSystemFontName,
+                     nsACString& aSystemFontName,
                      gfxFontStyle &aFontStyle,
                      float aDevPixPerCSSPixel);
 

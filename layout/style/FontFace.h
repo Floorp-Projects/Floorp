@@ -108,7 +108,7 @@ public:
    * opposed to GetFamily, which returns a CSS-escaped string, such as
    * '"Times"').  Returns whether a valid family name was available.
    */
-  bool GetFamilyName(nsString& aResult);
+  bool GetFamilyName(nsCString& aResult);
 
   /**
    * Returns whether this object is CSS-connected, i.e. reflecting an

@@ -3,8 +3,7 @@
 
 "use strict";
 
-// Test toggling the grid highlighter in the grid inspector panel with multiple grids in
-// the page.
+// Test toggling the multiple grid highlighters in the grid inspector panel.
 
 const TEST_URI = `
   <style type='text/css'>
@@ -20,9 +19,18 @@ const TEST_URI = `
     <div class="cell1">cell1</div>
     <div class="cell2">cell2</div>
   </div>
+  <div id="grid3" class="grid">
+    <div class="cell1">cell1</div>
+    <div class="cell2">cell2</div>
+  </div>
+  <div id="grid4" class="grid">
+    <div class="cell1">cell1</div>
+    <div class="cell2">cell2</div>
+  </div>
 `;
 
 add_task(async function() {
+  await pushPref("devtools.gridinspector.maxHighlighters", 3);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, gridInspector } = await openLayoutView();
   const { document: doc } = gridInspector;
@@ -32,53 +40,111 @@ add_task(async function() {
   const gridList = doc.getElementById("grid-list");
   const checkbox1 = gridList.children[0].querySelector("input");
   const checkbox2 = gridList.children[1].querySelector("input");
+  const checkbox3 = gridList.children[2].querySelector("input");
+  const checkbox4 = gridList.children[3].querySelector("input");
 
   info("Checking the initial state of the Grid Inspector.");
-  is(gridList.childNodes.length, 2, "2 grid containers are listed.");
+  is(gridList.childNodes.length, 4, "4 grid containers are listed.");
   ok(!checkbox1.checked, `Grid item ${checkbox1.value} is unchecked in the grid list.`);
   ok(!checkbox2.checked, `Grid item ${checkbox2.value} is unchecked in the grid list.`);
-  ok(!highlighters.highlighters[HIGHLIGHTER_TYPE],
-    "No CSS grid highlighter exists in the highlighters overlay.");
-  ok(!highlighters.gridHighlighterShown, "No CSS grid highlighter is shown.");
+  ok(!checkbox3.checked, `Grid item ${checkbox3.value} is unchecked in the grid list.`);
+  ok(!checkbox4.checked, `Grid item ${checkbox4.value} is unchecked in the grid list.`);
+  ok(!highlighters.gridHighlighters.size, "No CSS grid highlighter is shown.");
 
   info("Toggling ON the CSS grid highlighter for #grid1.");
   let onHighlighterShown = highlighters.once("grid-highlighter-shown");
   let onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 2 &&
-    state.grids[0].highlighted &&
-    !state.grids[1].highlighted);
+    state.grids.length == 4 &&
+    state.grids[0].highlighted && !state.grids[0].disabled &&
+    !state.grids[1].highlighted && !state.grids[1].disabled &&
+    !state.grids[2].highlighted && !state.grids[2].disabled &&
+    !state.grids[3].highlighted && !state.grids[3].disabled);
   checkbox1.click();
   await onHighlighterShown;
   await onCheckboxChange;
 
-  info("Checking the CSS grid highlighter is created.");
-  ok(highlighters.highlighters[HIGHLIGHTER_TYPE],
-    "CSS grid highlighter is created in the highlighters overlay.");
-  ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
+  info("Check that the CSS grid highlighter is created and the saved grid state.");
+  is(highlighters.gridHighlighters.size, 1,
+    "Got expected number of grid highlighters shown.");
+  is(highlighters.state.grids.size, 1, "Got expected number of grids in the saved state");
 
   info("Toggling ON the CSS grid highlighter for #grid2.");
   onHighlighterShown = highlighters.once("grid-highlighter-shown");
   onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 2 &&
-    !state.grids[0].highlighted &&
-    state.grids[1].highlighted);
+    state.grids.length == 4 &&
+    state.grids[0].highlighted && !state.grids[0].disabled &&
+    state.grids[1].highlighted && !state.grids[1].disabled &&
+    !state.grids[2].highlighted && !state.grids[2].disabled &&
+    !state.grids[3].highlighted && !state.grids[3].disabled);
   checkbox2.click();
   await onHighlighterShown;
   await onCheckboxChange;
 
-  info("Checking the CSS grid highlighter is still shown.");
-  ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
+  is(highlighters.gridHighlighters.size, 2,
+    "Got expected number of grid highlighters shown.");
+  is(highlighters.state.grids.size, 2, "Got expected number of grids in the saved state");
 
-  info("Toggling OFF the CSS grid highlighter from the layout panel.");
-  const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
+  info("Toggling ON the CSS grid highlighter for #grid3.");
+  onHighlighterShown = highlighters.once("grid-highlighter-shown");
   onCheckboxChange = waitUntilState(store, state =>
-    state.grids.length == 2 &&
-    !state.grids[0].highlighted &&
-    !state.grids[1].highlighted);
+    state.grids.length == 4 &&
+    state.grids[0].highlighted && !state.grids[0].disabled &&
+    state.grids[1].highlighted && !state.grids[1].disabled &&
+    state.grids[2].highlighted && !state.grids[2].disabled &&
+    !state.grids[3].highlighted && state.grids[3].disabled);
+  checkbox3.click();
+  await onHighlighterShown;
+  await onCheckboxChange;
+
+  is(highlighters.gridHighlighters.size, 3,
+    "Got expected number of grid highlighters shown.");
+  is(highlighters.state.grids.size, 3, "Got expected number of grids in the saved state");
+
+  info("Toggling OFF the CSS grid highlighter for #grid3.");
+  let onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
+  onCheckboxChange = waitUntilState(store, state =>
+    state.grids.length == 4 &&
+    state.grids[0].highlighted && !state.grids[0].disabled &&
+    state.grids[1].highlighted && !state.grids[1].disabled &&
+    !state.grids[2].highlighted && !state.grids[2].disabled &&
+    !state.grids[3].highlighted && !state.grids[3].disabled);
+  checkbox3.click();
+  await onHighlighterHidden;
+  await onCheckboxChange;
+
+  is(highlighters.gridHighlighters.size, 2,
+    "Got expected number of grid highlighters shown.");
+  is(highlighters.state.grids.size, 2, "Got expected number of grids in the saved state");
+
+  info("Toggling OFF the CSS grid highlighter for #grid2.");
+  onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
+  onCheckboxChange = waitUntilState(store, state =>
+    state.grids.length == 4 &&
+    state.grids[0].highlighted && !state.grids[0].disabled &&
+    !state.grids[1].highlighted && !state.grids[1].disabled &&
+    !state.grids[2].highlighted && !state.grids[2].disabled &&
+    !state.grids[3].highlighted && !state.grids[3].disabled);
   checkbox2.click();
   await onHighlighterHidden;
   await onCheckboxChange;
 
-  info("Checking the CSS grid highlighter is not shown.");
-  ok(!highlighters.gridHighlighterShown, "No CSS grid highlighter is shown.");
+  is(highlighters.gridHighlighters.size, 1,
+    "Got expected number of grid highlighters shown.");
+  is(highlighters.state.grids.size, 1, "Got expected number of grids in the saved state");
+
+  info("Toggling OFF the CSS grid highlighter for #grid1.");
+  onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
+  onCheckboxChange = waitUntilState(store, state =>
+    state.grids.length == 4 &&
+    !state.grids[0].highlighted && !state.grids[0].disabled &&
+    !state.grids[1].highlighted && !state.grids[1].disabled &&
+    !state.grids[2].highlighted && !state.grids[2].disabled &&
+    !state.grids[3].highlighted && !state.grids[3].disabled);
+  checkbox1.click();
+  await onHighlighterHidden;
+  await onCheckboxChange;
+
+  info("Check that the CSS grid highlighter is not shown and the saved grid state.");
+  ok(!highlighters.gridHighlighters.size, "No CSS grid highlighter is shown.");
+  ok(!highlighters.state.grids.size, "No grids in the saved state");
 });

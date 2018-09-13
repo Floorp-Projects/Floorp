@@ -319,12 +319,9 @@ let ACTORS = {
   if (!width || !height)
     return;
 
-  let screenX = getValue("screenX");
-  let screenY = getValue("screenY");
   let browserWindowFeatures =
     "chrome,all,dialog=no,extrachrome,menubar,resizable,scrollbars,status," +
-    "location,toolbar,personalbar," +
-    `left=${screenX},top=${screenY}`;
+    "location,toolbar,personalbar";
   let win = Services.ww.openWindow(null, "about:blank", null,
                                    browserWindowFeatures, null);
 
@@ -333,20 +330,23 @@ let ACTORS = {
     win.windowUtils.setChromeMargin(0, 2, 2, 2);
   }
 
-  if (AppConstants.platform != "macosx") {
-    // On Windows/Linux the position is in device pixels rather than CSS pixels.
-    let scale = win.devicePixelRatio;
-    if (scale > 1)
-      win.moveTo(screenX / scale, screenY / scale);
-  }
+  let docElt = win.document.documentElement;
+  docElt.setAttribute("screenX", getValue("screenX"));
+  docElt.setAttribute("screenY", getValue("screenY"));
 
   // The sizemode="maximized" attribute needs to be set before first paint.
-  let docElt = win.document.documentElement;
   let sizemode = getValue("sizemode");
   if (sizemode == "maximized") {
     docElt.setAttribute("sizemode", sizemode);
 
-    // Needed for when the user leaves the maximized mode.
+    // Set the size to use when the user leaves the maximized mode.
+    // The persisted size is the outer size, but the height/width
+    // attributes set the inner size.
+    let xulWin = win.docShell.treeOwner
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIXULWindow);
+    height -= xulWin.outerToInnerHeightDifferenceInCSSPixels;
+    width -= xulWin.outerToInnerWidthDifferenceInCSSPixels;
     docElt.setAttribute("height", height);
     docElt.setAttribute("width", width);
   } else {

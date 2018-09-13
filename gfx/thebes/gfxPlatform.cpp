@@ -1645,22 +1645,21 @@ gfxPlatform::UpdateFontList()
     return NS_OK;
 }
 
-nsresult
-gfxPlatform::GetStandardFamilyName(const nsAString& aFontName,
-                                   nsAString& aFamilyName)
+void
+gfxPlatform::GetStandardFamilyName(const nsCString& aFontName,
+                                   nsACString& aFamilyName)
 {
     gfxPlatformFontList::PlatformFontList()->GetStandardFamilyName(aFontName,
                                                                    aFamilyName);
-    return NS_OK;
 }
 
-nsAutoString
+nsAutoCString
 gfxPlatform::GetDefaultFontName(const nsACString& aLangGroup,
                                 const nsACString& aGenericFamily)
 {
     // To benefit from Return Value Optimization, all paths here must return
     // this one variable:
-    nsAutoString result;
+    nsAutoCString result;
 
     gfxFontFamily* fontFamily = gfxPlatformFontList::PlatformFontList()->
         GetDefaultFontFamily(aLangGroup, aGenericFamily);
@@ -1765,7 +1764,7 @@ gfxPlatform::IsFontFormatSupported(uint32_t aFormatFlags)
 }
 
 gfxFontEntry*
-gfxPlatform::LookupLocalFont(const nsAString& aFontName,
+gfxPlatform::LookupLocalFont(const nsACString& aFontName,
                              WeightRange aWeightForEntry,
                              StretchRange aStretchForEntry,
                              SlantStyleRange aStyleForEntry)
@@ -1776,7 +1775,7 @@ gfxPlatform::LookupLocalFont(const nsAString& aFontName,
 }
 
 gfxFontEntry*
-gfxPlatform::MakePlatformFont(const nsAString& aFontName,
+gfxPlatform::MakePlatformFont(const nsACString& aFontName,
                               WeightRange aWeightForEntry,
                               StretchRange aStretchForEntry,
                               SlantStyleRange aStyleForEntry,

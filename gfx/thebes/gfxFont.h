@@ -715,7 +715,7 @@ public:
     MergeFontFeatures(const gfxFontStyle *aStyle,
                       const nsTArray<gfxFontFeature>& aFontFeatures,
                       bool aDisableLigatures,
-                      const nsAString& aFamilyName,
+                      const nsACString& aFamilyName,
                       bool aAddSmallCaps,
                       void (*aHandleFeature)(const uint32_t&,
                                              uint32_t&, void*),
@@ -1558,7 +1558,7 @@ public:
             // as it does not use cached glyph extents in the font.
     } BoundingBoxType;
 
-    const nsString& GetName() const { return mFontEntry->Name(); }
+    const nsCString& GetName() const { return mFontEntry->Name(); }
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
     cairo_scaled_font_t* GetCairoScaledFont() { return mScaledFont; }

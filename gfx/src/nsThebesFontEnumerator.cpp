@@ -242,7 +242,7 @@ nsThebesFontEnumerator::GetDefaultFont(const char *aLangGroup,
     }
 
     *aResult = nullptr;
-    nsAutoString defaultFontName(gfxPlatform::GetPlatform()->
+    nsAutoCString defaultFontName(gfxPlatform::GetPlatform()->
         GetDefaultFontName(nsDependentCString(aLangGroup),
                            nsDependentCString(aGeneric)));
     if (!defaultFontName.IsEmpty()) {
@@ -272,10 +272,10 @@ nsThebesFontEnumerator::GetStandardFamilyName(const char16_t *aName,
         return NS_OK;
     }
 
-    nsAutoString family;
-    nsresult rv = gfxPlatform::GetPlatform()->
-        GetStandardFamilyName(nsDependentString(aName), family);
-    if (NS_FAILED(rv) || family.IsEmpty()) {
+    nsAutoCString family;
+    gfxPlatform::GetPlatform()->
+        GetStandardFamilyName(NS_ConvertUTF16toUTF8(aName), family);
+    if (family.IsEmpty()) {
         *aResult = nullptr;
         return NS_OK;
     }

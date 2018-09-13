@@ -17,7 +17,7 @@ where endpoints are mapped to the different WebDriver commands.
 WebDriver API in Rust, not the client side.**
 
 [webdriver crate]: https://crates.io/crates/webdriver
-[W3C WebDriver standard]: https://w3c.github.io/webdriver/webdriver-spec.html
+[W3C WebDriver standard]: https://w3c.github.io/webdriver/
 
 
 Building
@@ -25,68 +25,14 @@ Building
 
 The library is built using the usual [Rust conventions]:
 
-    % cargo build
+	% cargo build
 
 To run the tests:
 
-    % cargo test
+	% cargo test
 
 [Rust conventions]: http://doc.crates.io/guide.html
 
-
-Usage
-=====
-
-To start an HTTP server that handles incoming command requests, a request
-handler needs to be implemented.  It takes an incoming `WebDriverMessage`
-and emits a `WebDriverResponse`:
-
-	impl WebDriverHandler for MyHandler {
-	    fn handle_command(
-	        &mut self,
-	        _: &Option<Session>,
-	        msg: WebDriverMessage,
-	    ) -> WebDriverResult<WebDriverResponse> {
-	        …
-	    }
-
-	    fn delete_session(&mut self, _: &Option<Session>) {
-	        …
-	    }
-	}
-
-	let addr = SocketAddr::new("localhost", 4444);
-	let handler = MyHandler {};
-	let server = webdriver::server::start(addr, handler, vec![])?;
-	info!("Listening on {}", server.socket);
-
-It is also possible to provide so called [extension commands] by providing
-a vector of known extension routes, for which each new route needs to
-implement the `WebDriverExtensionRoute` trait.  Each route needs to map
-to a `WebDriverExtensionCommand`:
-
-	pub enum MyExtensionRoute { HelloWorld }
-	pub enum MyExtensionCommand { HelloWorld }
-
-	impl WebDriverExtensionRoute for MyExtensionRoute {
-	    fn command(
-	        &self,
-	        captures: &Captures,
-	        body: &Json,
-	    ) -> WebDriverResult<WebDriverCommand<MyExtensionCommand>> {
-	        …
-	    }
-	}
-
-	let extension_routes = vec![
-	    (Method::Get, "/session/{sessionId}/moz/hello", MyExtensions::HelloWorld)
-	];
-
-	…
-
-	let server = webdriver::server::start(addr, handler, extension_routes[..])?;
-
-[extension commands]: https://w3c.github.io/webdriver/webdriver-spec.html#dfn-extension-commands
 
 Contact
 =======
@@ -94,8 +40,8 @@ Contact
 The mailing list for webdriver discussion is
 tools-marionette@lists.mozilla.org ([subscribe], [archive]).
 
-There is also an IRC channel to talk about using and developing webdriver
-in #ateam on irc.mozilla.org.
+There is also an IRC channel to talk about using and developing
+webdriver in #ateam on irc.mozilla.org.
 
 [subscribe]: https://lists.mozilla.org/listinfo/tools-marionette
-[archive]: http://groups.google.com/group/mozilla.tools.marionette
+[archive]: https://lists.mozilla.org/pipermail/tools-marionette/
