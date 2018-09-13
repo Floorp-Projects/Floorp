@@ -78,29 +78,6 @@ const emulationSpec = generateActorSpec({
       }
     },
 
-    setMetaViewportOverride: {
-      request: {
-        flag: Arg(0, "number")
-      },
-      response: {
-        valueChanged: RetVal("boolean")
-      }
-    },
-
-    getMetaViewportOverride: {
-      request: {},
-      response: {
-        flag: RetVal("number")
-      }
-    },
-
-    clearMetaViewportOverride: {
-      request: {},
-      response: {
-        valueChanged: RetVal("boolean")
-      }
-    },
-
     setUserAgentOverride: {
       request: {
         flag: Arg(0, "string")
