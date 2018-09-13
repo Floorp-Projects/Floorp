@@ -152,7 +152,8 @@ def main(argv):
                         choices=['armeabi',
                                  'armeabi-v7a',
                                  'arm64-v8a',
-                                 'x86'],
+                                 'x86',
+                                 'x86_64'],
                         help='The target CPU architecture')
     parser.add_argument('--with-android-min-sdk-version', dest='min_sdk',
                         type=int, default=0,
