@@ -125,6 +125,9 @@ public:
   static void UpdateDrawResult(nsDisplayItem* aItem,
                                mozilla::image::ImgDrawResult aResult)
   {
+    MOZ_ASSERT(aResult != mozilla::image::ImgDrawResult::NOT_SUPPORTED,
+               "ImgDrawResult::NOT_SUPPORTED should be handled already!");
+
     auto lastGeometry =
       static_cast<T*>(mozilla::FrameLayerBuilder::GetMostRecentGeometry(aItem));
     if (lastGeometry) {
