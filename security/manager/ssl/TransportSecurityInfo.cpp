@@ -298,7 +298,12 @@ TransportSecurityInfo::Read(nsIObjectInputStream* stream)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  mSSLStatus = BitwiseCast<nsSSLStatus*, nsISupports*>(supports.get());
+  nsCOMPtr<nsISSLStatus> castGuard(do_QueryInterface(supports));
+  if (castGuard) {
+    mSSLStatus = BitwiseCast<nsSSLStatus*, nsISSLStatus*>(castGuard.get());
+  } else {
+    mSSLStatus = nullptr;
+  }
 
   nsCOMPtr<nsISupports> failedCertChainSupports;
   rv = NS_ReadOptionalObject(stream, true, getter_AddRefs(failedCertChainSupports));
