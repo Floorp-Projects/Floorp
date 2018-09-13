@@ -212,6 +212,8 @@ def android_toolchain(target, host, ndk, toolchain, _):
             target_base = 'arm-linux-androideabi'
         elif target.cpu == 'x86':
             target_base = 'x86'
+        elif target.cpu == 'x86_64':
+            target_base = 'x86_64'
         elif target.cpu == 'aarch64' and target.endianness == 'little':
             target_base = 'aarch64-linux-android'
         else:

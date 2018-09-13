@@ -47,6 +47,9 @@ if test "$OS_TARGET" = "Android"; then
     x86)
         ANDROID_CPU_ARCH=x86
         ;;
+    x86_64)
+        ANDROID_CPU_ARCH=x86_64
+        ;;
     aarch64)
         ANDROID_CPU_ARCH=arm64-v8a
         ;;

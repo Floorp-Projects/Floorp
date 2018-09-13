@@ -1018,6 +1018,10 @@
                 'android_app_abi%': 'x86',
                 'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-16/arch-x86',
               }],
+              ['target_arch == "x64"', {
+                'android_app_abi%': 'x86_64',
+                'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-21/arch-x86_64',
+              }],
               ['target_arch=="arm"', {
                 'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-16/arch-arm',
                 'conditions': [
