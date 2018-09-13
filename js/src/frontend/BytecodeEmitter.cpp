@@ -8408,8 +8408,8 @@ BytecodeEmitter::emitFunctionFormalParameters(ListNode* paramsBody)
     bool hasParameterExprs = funbox->hasParameterExprs;
     bool hasRest = funbox->hasRest();
 
-    int16_t argSlot = 0;
-    for (ParseNode* arg : paramsBody->contentsTo(funBody)) {
+    uint16_t argSlot = 0;
+    for (ParseNode* arg = paramsBody->head(); arg != funBody; arg = arg->pn_next, argSlot++) {
         ParseNode* bindingElement = arg;
         ParseNode* initializer = nullptr;
         if (arg->isKind(ParseNodeKind::Assign)) {
@@ -8548,8 +8548,6 @@ BytecodeEmitter::emitFunctionFormalParameters(ListNode* paramsBody)
                 return false;
             }
         }
-
-        argSlot++;
     }
 
     return true;
