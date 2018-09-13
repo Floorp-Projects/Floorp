@@ -6,8 +6,6 @@
 #include "nspr.h"
 #include "mozilla/Logging.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/dom/PromiseNativeHandler.h"
 
 #include "nsDocLoader.h"
 #include "nsCURILoader.h"
@@ -36,8 +34,6 @@
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsILoadURIDelegate.h"
-#include "nsIBrowserDOMWindow.h"
 
 using mozilla::DebugOnly;
 using mozilla::LogLevel;
@@ -1425,106 +1421,11 @@ int64_t nsDocLoader::CalculateMaxProgress()
   return max;
 }
 
-class LoadURIDelegateRedirectHandler final : public mozilla::dom::PromiseNativeHandler
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(LoadURIDelegateRedirectHandler)
-
-  LoadURIDelegateRedirectHandler(nsDocLoader* aDocLoader,
-                                 nsIChannel* aOldChannel,
-                                 nsIChannel* aNewChannel,
-                                 uint32_t aFlags,
-                                 nsIAsyncVerifyRedirectCallback* aCallback)
-  : mDocLoader(aDocLoader)
-  , mOldChannel(aOldChannel)
-  , mNewChannel(aNewChannel)
-  , mFlags(aFlags)
-  , mCallback(aCallback)
-  {}
-
-  void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
-  {
-    if (aValue.isBoolean() && aValue.toBoolean()) {
-      // The app handled the redirect, notify the callback
-      mCallback->OnRedirectVerifyCallback(NS_ERROR_ABORT);
-    } else {
-      UnhandledCallback();
-    }
-  }
-
-  void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
-  {
-    UnhandledCallback();
-  }
-
-private:
-  ~LoadURIDelegateRedirectHandler()
-  {}
-
-  void UnhandledCallback()
-  {
-    // If the redirect wasn't handled by the nsILoadURIDelegate, let Gecko
-    // handle it.
-    mFlags |= nsIChannelEventSink::REDIRECT_DELEGATES_CHECKED;
-    mDocLoader->AsyncOnChannelRedirect(mOldChannel, mNewChannel, mFlags,
-                                       mCallback);
-  }
-
-  RefPtr<nsDocLoader> mDocLoader;
-  nsCOMPtr<nsIChannel> mOldChannel;
-  nsCOMPtr<nsIChannel> mNewChannel;
-  uint32_t mFlags;
-  nsCOMPtr<nsIAsyncVerifyRedirectCallback> mCallback;
-};
-
-NS_IMPL_CYCLE_COLLECTION(LoadURIDelegateRedirectHandler, mDocLoader, 
-                         mOldChannel, mNewChannel, mCallback)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LoadURIDelegateRedirectHandler)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(LoadURIDelegateRedirectHandler)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadURIDelegateRedirectHandler)
-
 NS_IMETHODIMP nsDocLoader::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
                                                   nsIChannel *aNewChannel,
                                                   uint32_t aFlags,
                                                   nsIAsyncVerifyRedirectCallback *cb)
 {
-  if ((aFlags &
-      (nsIChannelEventSink::REDIRECT_TEMPORARY |
-       nsIChannelEventSink::REDIRECT_PERMANENT)) &&
-      !(aFlags & nsIChannelEventSink::REDIRECT_DELEGATES_CHECKED)) {
-    nsCOMPtr<nsIDocShell> docShell =
-      do_QueryInterface(static_cast<nsIRequestObserver*>(this));
-
-    nsCOMPtr<nsILoadURIDelegate> delegate;
-    docShell->GetLoadURIDelegate(getter_AddRefs(delegate));
-
-    nsCOMPtr<nsIURI> newURI;
-    aNewChannel->GetURI(getter_AddRefs(newURI));
-
-    if (newURI && delegate) {
-      RefPtr<mozilla::dom::Promise> promise;
-      const int where = nsIBrowserDOMWindow::OPEN_CURRENTWINDOW;
-      nsresult rv = delegate->LoadURI(newURI, where, /* flags */ 0,
-                                      /* triggering principal */ nullptr,
-                                      getter_AddRefs(promise));
-      if (NS_SUCCEEDED(rv) && promise) {
-        RefPtr<LoadURIDelegateRedirectHandler> handler =
-          new LoadURIDelegateRedirectHandler(this, aOldChannel, aNewChannel,
-                                             aFlags, cb);
-
-        promise->AppendNativeHandler(handler);
-        return NS_OK;
-      }
-    }
-  }
-
   if (aOldChannel)
   {
     nsLoadFlags loadFlags = 0;

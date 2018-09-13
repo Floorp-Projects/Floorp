@@ -23,7 +23,7 @@ class GeckoViewNavigationContent extends GeckoViewContentModule {
                     where=${aWhere} flags=${aFlags}`;
 
     if (!this.enabled) {
-      return Promise.resolve(false);
+      return false;
     }
 
     // TODO: Remove this when we have a sensible error API.
