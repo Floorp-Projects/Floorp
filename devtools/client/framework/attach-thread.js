@@ -42,16 +42,9 @@ function attachThread(toolbox) {
   // Sourcemaps are always turned off when using the new debugger
   // frontend. This is because it does sourcemapping on the
   // client-side, so the server should not do it.
-  let useSourceMaps = false;
-  let autoBlackBox = false;
-  let ignoreFrameEnvironment = false;
-  const newDebuggerEnabled = Services.prefs.getBoolPref("devtools.debugger.new-debugger-frontend");
-  if (!newDebuggerEnabled) {
-    useSourceMaps = Services.prefs.getBoolPref("devtools.debugger.source-maps-enabled");
-    autoBlackBox = Services.prefs.getBoolPref("devtools.debugger.auto-black-box");
-  } else {
-    ignoreFrameEnvironment = true;
-  }
+  const useSourceMaps = false;
+  const autoBlackBox = false;
+  const ignoreFrameEnvironment = true;
 
   const threadOptions = { useSourceMaps, autoBlackBox, ignoreFrameEnvironment };
 
