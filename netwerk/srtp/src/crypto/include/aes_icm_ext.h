@@ -1,6 +1,15 @@
 /*
+ * aes_icm.h
  *
- * Copyright(c) 2001-2017 Cisco Systems, Inc.
+ * Header for AES Integer Counter Mode.
+ *
+ * David A. McGrew
+ * Cisco Systems, Inc.
+ *
+ */
+/*
+ *
+ * Copyright (c) 2001-2017, Cisco Systems, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,51 +43,39 @@
  *
  */
 
-#ifndef CIHPER_TYPES_H
-#define CIHPER_TYPES_H
+#ifndef AES_ICM_H
+#define AES_ICM_H
 
 #include "cipher.h"
-#include "auth.h"
+#include "datatypes.h"
 
-/*
- * cipher types that can be included in the kernel
- */
-
-extern const srtp_cipher_type_t srtp_null_cipher;
-extern const srtp_cipher_type_t srtp_aes_icm_128;
-extern const srtp_cipher_type_t srtp_aes_icm_256;
-#ifdef GCM
-extern const srtp_cipher_type_t srtp_aes_icm_192;
-extern const srtp_cipher_type_t srtp_aes_gcm_128;
-extern const srtp_cipher_type_t srtp_aes_gcm_256;
-#endif
-
-/*
- * auth func types that can be included in the kernel
- */
-
-extern const srtp_auth_type_t srtp_null_auth;
-extern const srtp_auth_type_t srtp_hmac;
-
-/*
- * other generic debug modules that can be included in the kernel
- */
-
-extern srtp_debug_module_t srtp_mod_auth;
-extern srtp_debug_module_t srtp_mod_cipher;
-extern srtp_debug_module_t srtp_mod_stat;
-extern srtp_debug_module_t srtp_mod_alloc;
-
-/* debug modules for cipher types */
-extern srtp_debug_module_t srtp_mod_aes_icm;
 #ifdef OPENSSL
-extern srtp_debug_module_t srtp_mod_aes_gcm;
-#endif
+
+#include <openssl/evp.h>
+#include <openssl/aes.h>
+
+typedef struct {
+    v128_t counter; /* holds the counter value          */
+    v128_t offset;  /* initial offset value             */
+    int key_size;
+    EVP_CIPHER_CTX *ctx;
+} srtp_aes_icm_ctx_t;
+
+#endif /* OPENSSL */
+
 #ifdef NSS
-extern srtp_debug_module_t srtp_mod_aes_gcm;
-#endif
 
-/* debug modules for auth types */
-extern srtp_debug_module_t srtp_mod_hmac;
+#include <pk11pub.h>
 
-#endif
+typedef struct {
+    v128_t counter;
+    v128_t offset;
+    int key_size;
+    uint8_t iv[16];
+    PK11SymKey *key;
+    PK11Context *ctx;
+} srtp_aes_icm_ctx_t;
+
+#endif /* NSS */
+
+#endif /* AES_ICM_H */

@@ -49,7 +49,7 @@
 
 #include "stat.h"
 
-srtp_debug_module_t mod_stat = {
+srtp_debug_module_t srtp_mod_stat = {
     0,                  /* debugging is off by default */
     (char *)"stat test" /* printable module name       */
 };
@@ -72,7 +72,7 @@ srtp_err_status_t stat_test_monobit(uint8_t *data)
         data++;
     }
 
-    debug_print(mod_stat, "bit count: %d", ones_count);
+    debug_print(srtp_mod_stat, "bit count: %d", ones_count);
 
     if ((ones_count < 9725) || (ones_count > 10275))
         return srtp_err_status_algo_fail;
@@ -100,7 +100,7 @@ srtp_err_status_t stat_test_poker(uint8_t *data)
     poker *= (16.0 / 5000.0);
     poker -= 5000.0;
 
-    debug_print(mod_stat, "poker test: %f\n", poker);
+    debug_print(srtp_mod_stat, "poker test: %f\n", poker);
 
     if ((poker < 2.16) || (poker > 46.17))
         return srtp_err_status_algo_fail;
@@ -139,14 +139,14 @@ srtp_err_status_t stat_test_runs(uint8_t *data)
 
                     /* check for long runs */
                     if (state > 25) {
-                        debug_print(mod_stat, ">25 runs: %d", state);
+                        debug_print(srtp_mod_stat, ">25 runs: %d", state);
                         return srtp_err_status_algo_fail;
                     }
 
                 } else if (state < 0) {
                     /* prefix is a gap  */
                     if (state < -25) {
-                        debug_print(mod_stat, ">25 gaps: %d", state);
+                        debug_print(srtp_mod_stat, ">25 gaps: %d", state);
                         return srtp_err_status_algo_fail; /* long-runs test
                                                              failed   */
                     }
@@ -164,7 +164,7 @@ srtp_err_status_t stat_test_runs(uint8_t *data)
                 if (state > 0) {
                     /* prefix is a run */
                     if (state > 25) {
-                        debug_print(mod_stat, ">25 runs (2): %d", state);
+                        debug_print(srtp_mod_stat, ">25 runs (2): %d", state);
                         return srtp_err_status_algo_fail; /* long-runs test
                                                              failed   */
                     }
@@ -180,7 +180,7 @@ srtp_err_status_t stat_test_runs(uint8_t *data)
 
                     /* check for long gaps */
                     if (state < -25) {
-                        debug_print(mod_stat, ">25 gaps (2): %d", state);
+                        debug_print(srtp_mod_stat, ">25 gaps (2): %d", state);
                         return srtp_err_status_algo_fail;
                     }
 
@@ -195,12 +195,12 @@ srtp_err_status_t stat_test_runs(uint8_t *data)
         data++;
     }
 
-    if (mod_stat.on) {
-        debug_print(mod_stat, "runs test", NULL);
+    if (srtp_mod_stat.on) {
+        debug_print(srtp_mod_stat, "runs test", NULL);
         for (i = 0; i < 6; i++)
-            debug_print(mod_stat, "  runs[]: %d", runs[i]);
+            debug_print(srtp_mod_stat, "  runs[]: %d", runs[i]);
         for (i = 0; i < 6; i++)
-            debug_print(mod_stat, "  gaps[]: %d", gaps[i]);
+            debug_print(srtp_mod_stat, "  gaps[]: %d", gaps[i]);
     }
 
     /* check run and gap counts against the fixed limits */

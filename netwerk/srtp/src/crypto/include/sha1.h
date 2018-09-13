@@ -81,7 +81,7 @@ extern "C" {
 
 /* OpenSSL 1.1.0 made EVP_MD_CTX an opaque structure, which must be allocated
    using EVP_MD_CTX_new. But this function doesn't exist in OpenSSL 1.0.x. */
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || LIBRESSL_VERSION_NUMBER
 
 typedef EVP_MD_CTX srtp_sha1_ctx_t;
 
