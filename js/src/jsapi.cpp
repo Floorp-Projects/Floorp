@@ -6268,6 +6268,15 @@ JS_DecodeBytes(JSContext* cx, const char* src, size_t srclen, char16_t* dst, siz
 }
 
 JS_PUBLIC_API(JS::UniqueChars)
+JS_EncodeStringToASCII(JSContext* cx, JSString* str)
+{
+    AssertHeapIsIdle();
+    CHECK_THREAD(cx);
+
+    return js::EncodeAscii(cx, str);
+}
+
+JS_PUBLIC_API(JS::UniqueChars)
 JS_EncodeStringToLatin1(JSContext* cx, JSString* str)
 {
     AssertHeapIsIdle();
