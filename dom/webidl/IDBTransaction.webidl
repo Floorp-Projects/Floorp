@@ -1,5 +1,4 @@
-/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -10,36 +9,36 @@
  */
 
 enum IDBTransactionMode {
-  "readonly",
-  "readwrite",
-  // The "readwriteflush" mode is only available when the
-  // |IndexedDatabaseManager::ExperimentalFeaturesEnabled()| function returns
-  // true. This mode is not yet part of the standard.
-  "readwriteflush",
-  "cleanup",
-  "versionchange"
+    "readonly",
+    "readwrite",
+    // The "readwriteflush" mode is only available when the
+    // |IndexedDatabaseManager::ExperimentalFeaturesEnabled()| function returns
+    // true. This mode is not yet part of the standard.
+    "readwriteflush",
+    "cleanup",
+    "versionchange"
 };
 
 [Exposed=(Window,Worker,System)]
 interface IDBTransaction : EventTarget {
-  [Throws]
-  readonly    attribute IDBTransactionMode mode;
-  readonly    attribute IDBDatabase        db;
+    [Throws]
+    readonly    attribute IDBTransactionMode mode;
+    readonly    attribute IDBDatabase        db;
 
-  readonly    attribute DOMException?      error;
+    readonly    attribute DOMException?      error;
 
-  [Throws]
-  IDBObjectStore objectStore (DOMString name);
+    [Throws]
+    IDBObjectStore objectStore (DOMString name);
 
-  [Throws]
-  void           abort();
+    [Throws]
+    void           abort();
 
-              attribute EventHandler       onabort;
-              attribute EventHandler       oncomplete;
-              attribute EventHandler       onerror;
+                attribute EventHandler       onabort;
+                attribute EventHandler       oncomplete;
+                attribute EventHandler       onerror;
 };
 
 // This seems to be custom
 partial interface IDBTransaction {
-  readonly    attribute DOMStringList objectStoreNames;
+    readonly    attribute DOMStringList objectStoreNames;
 };

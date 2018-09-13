@@ -1,5 +1,4 @@
-/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -14,31 +13,31 @@
 [Pref="dom.webaudio.enabled"]
 interface AudioParam {
 
-                  attribute float value;
-  readonly        attribute float defaultValue;
-  readonly        attribute float minValue;
-  readonly        attribute float maxValue;
+                    attribute float value;
+    readonly        attribute float defaultValue;
+    readonly        attribute float minValue;
+    readonly        attribute float maxValue;
 
-  // Parameter automation.
-  [Throws]
-  AudioParam setValueAtTime(float value, double startTime);
-  [Throws]
-  AudioParam linearRampToValueAtTime(float value, double endTime);
-  [Throws]
-  AudioParam exponentialRampToValueAtTime(float value, double endTime);
+    // Parameter automation. 
+    [Throws]
+    AudioParam setValueAtTime(float value, double startTime);
+    [Throws]
+    AudioParam linearRampToValueAtTime(float value, double endTime);
+    [Throws]
+    AudioParam exponentialRampToValueAtTime(float value, double endTime);
 
-  // Exponentially approach the target value with a rate having the given time constant.
-  [Throws]
-  AudioParam setTargetAtTime(float target, double startTime, double timeConstant);
+    // Exponentially approach the target value with a rate having the given time constant. 
+    [Throws]
+    AudioParam setTargetAtTime(float target, double startTime, double timeConstant);
 
-  // Sets an array of arbitrary parameter values starting at time for the given duration.
-  // The number of values will be scaled to fit into the desired duration.
-  [Throws]
-  AudioParam setValueCurveAtTime(sequence<float> values, double startTime, double duration);
+    // Sets an array of arbitrary parameter values starting at time for the given duration. 
+    // The number of values will be scaled to fit into the desired duration. 
+    [Throws]
+    AudioParam setValueCurveAtTime(sequence<float> values, double startTime, double duration);
 
-  // Cancels all scheduled parameter changes with times greater than or equal to startTime.
-  [Throws]
-  AudioParam cancelScheduledValues(double startTime);
+    // Cancels all scheduled parameter changes with times greater than or equal to startTime. 
+    [Throws]
+    AudioParam cancelScheduledValues(double startTime);
 
 };
 
