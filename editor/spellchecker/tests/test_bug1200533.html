@@ -52,7 +52,9 @@ var script;
 
 var loadListener = function(evt) {
   if (loadCount == 0) {
+    /* eslint-env mozilla/frame-script */
     script = SpecialPowers.loadChromeScript(function() {
+      // eslint-disable-next-line mozilla/use-services
       var dir = Cc["@mozilla.org/file/directory_service;1"]
                   .getService(Ci.nsIProperties)
                   .get("CurWorkD", Ci.nsIFile);

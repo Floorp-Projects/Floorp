@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795785
   <div id="div" contenteditable style="overflow: hidden; height: 3em; width: 5em;"></div>
 </div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -68,7 +68,6 @@ function doKeyEventTest(aElement, aElementDescription, aCallback) {
             isnot(aElement.scrollLeft, 0,
                   aElementDescription + " was not scrolled by typing long word");
             var scrollLeft = aElement.scrollLeft;
-            var i;
             synthesizeKey("KEY_ArrowLeft", {repeat: longWord.length});
             hitEventLoop(function() {
               isnot(aElement.scrollLeft, scrollLeft,

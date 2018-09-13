@@ -14,7 +14,7 @@
   <textarea id="textarea"></textarea>
 </div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -40,14 +40,14 @@ function runTests() {
       ok(!aEvent.cancelable, "input event must not be cancelable");
       ok(aEvent.bubbles, "input event must be bubbles");
       if (SpecialPowers.getBoolPref("dom.event.highrestimestamp.enabled")) {
-        var duration = Math.abs(window.performance.now() - aEvent.timeStamp);
+        let duration = Math.abs(window.performance.now() - aEvent.timeStamp);
         ok(duration < 30 * 1000,
            "perhaps, timestamp wasn't set correctly :" + aEvent.timeStamp +
            " (expected it to be within 30s of the current time but it " +
            "differed by " + duration + "ms)");
       } else {
         var eventTime = new Date(aEvent.timeStamp);
-        var duration = Math.abs(Date.now() - aEvent.timeStamp);
+        let duration = Math.abs(Date.now() - aEvent.timeStamp);
         ok(duration < 30 * 1000,
            "perhaps, timestamp wasn't set correctly :" +
            eventTime.toLocaleString() +

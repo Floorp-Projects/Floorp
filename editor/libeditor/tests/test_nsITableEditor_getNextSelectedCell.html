@@ -35,7 +35,7 @@ SimpleTest.waitForFocus(function() {
 
   let tr = document.getElementById("r1");
   selection.setBaseAndExtent(tr, 0, tr, 1);
-  cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell(rangeWrapper));
+  let cell = SpecialPowers.unwrap(getTableEditor().getFirstSelectedCell(rangeWrapper));
   is(cell.getAttribute("id"), "c1-1",
      "#1-1 nsITableEditor.getFirstSelectedCell() should return the first cell element in the first row");
 

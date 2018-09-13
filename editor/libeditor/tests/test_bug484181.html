@@ -27,7 +27,6 @@ addLoadEvent(runTest);
 var gMisspeltWords;
 
 function getEditor() {
-  var Ci = SpecialPowers.Ci;
   var win = window;
   var editingSession = SpecialPowers.wrap(win).docShell.editingSession;
   return editingSession.getEditorForWindow(win);
@@ -47,8 +46,8 @@ function runTest() {
   var edit = document.getElementById("edit");
   edit.focus();
 
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
+  const {onSpellCheck} = SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", null);
   onSpellCheck(edit, function() {
     ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
        "All misspellings before editing are accounted for.");

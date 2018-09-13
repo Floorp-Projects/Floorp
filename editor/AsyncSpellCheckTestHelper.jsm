@@ -60,6 +60,7 @@ function onSpellCheck(editableElement, callback) {
     waitingForEnded = !waitingForEnded;
   }
 
+  // eslint-disable-next-line mozilla/use-services
   let os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
   os.addObserver(observe, SPELL_CHECK_STARTED_TOPIC);

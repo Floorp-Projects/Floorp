@@ -56,9 +56,9 @@ function* runTests() {
     is(sel.anchorOffset, expectOffset, "offset after " + cmd);
   }
 
-  function findChildNum(e, child) {
+  function findChildNum(element, child) {
     var i = 0;
-    var n = e.firstChild;
+    var n = element.firstChild;
     while (n && n != child) {
       n = n.nextSibling;
       ++i;

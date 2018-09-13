@@ -19,11 +19,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=612128
 <pre id="test">
 <script type="application/javascript">
 
+/* eslint-disable no-useless-concat */
+
 /** Test for Bug 612128 **/
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   document.querySelector("input").focus();
-  var threw = false;
   try {
     is(document.execCommand("inserthtml", null, "<span>f" + "oo</span>"),
        false, "The insertHTML command should return false");

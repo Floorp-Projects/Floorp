@@ -39,7 +39,6 @@ SimpleTest.waitForFocus(function() {
 
   function checkResult() {
     var iframe = document.querySelector("iframe");
-    var iframeWindow = iframe.contentWindow;
     var theEdit = iframe.contentDocument.firstChild;
     theEdit.offsetHeight;
     is(theEdit.innerHTML,
