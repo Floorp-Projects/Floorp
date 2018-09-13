@@ -6,6 +6,7 @@
 
 #include "frontend/ParseNode-inl.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/FloatingPoint.h"
 
 #include "jsnum.h"
@@ -17,6 +18,7 @@
 using namespace js;
 using namespace js::frontend;
 
+using mozilla::ArrayLength;
 using mozilla::IsFinite;
 
 #ifdef DEBUG
@@ -344,8 +346,10 @@ NameNode::dump(GenericPrinter& out, int indent)
             out.put("#<null name>");
         } else if (getOp() == JSOP_GETARG && atom()->length() == 0) {
             // Dump destructuring parameter.
-            out.put("(#<zero-length name> ");
-            DumpParseTree(initializer(), out, indent + 21);
+            static const char ZeroLengthPrefix[] = "(#<zero-length name> ";
+            constexpr size_t ZeroLengthPrefixLength = ArrayLength(ZeroLengthPrefix) - 1;
+            out.put(ZeroLengthPrefix);
+            DumpParseTree(initializer(), out, indent + ZeroLengthPrefixLength);
             out.printf(")");
         } else {
             JS::AutoCheckCannotGC nogc;
