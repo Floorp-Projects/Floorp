@@ -58,6 +58,7 @@ RELEASE_LOCALES = [
 	"hr",
 	"hsb",
 	"hu",
+	"hus",
 	"hy-AM",
 	"ia",
 	"in",
@@ -108,6 +109,7 @@ RELEASE_LOCALES = [
 	"ur",
 	"vi",
 	"wo",
+	"yua",
 	"zam",
 	"zh-CN",
 	"zh-TW"
@@ -121,11 +123,8 @@ RELEASE_LOCALES = [
 ADDITIONAL_SCREENSHOT_LOCALES = [
 	"jv",
 	"bo",
-	"yua",
-	"hus",
 	"ace",
-	"zh-HK",
-
+	"zh-HK"
 ]
 
 # Those are locales that we take automated screenshots of.
