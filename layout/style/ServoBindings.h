@@ -56,6 +56,7 @@ namespace mozilla {
   class ComputedStyle;
   class StyleSheet;
   class ServoElementSnapshotTable;
+  enum class PointerCapabilities : uint8_t;
 }
 using mozilla::FontFamilyList;
 using mozilla::FontFamilyName;
@@ -750,6 +751,8 @@ uint32_t Gecko_MediaFeatures_GetColorDepth(nsIDocument*);
 void Gecko_MediaFeatures_GetDeviceSize(nsIDocument*, nscoord* width, nscoord* height);
 float Gecko_MediaFeatures_GetResolution(nsIDocument*);
 bool Gecko_MediaFeatures_PrefersReducedMotion(nsIDocument*);
+mozilla::PointerCapabilities Gecko_MediaFeatures_PrimaryPointerCapabilities(nsIDocument*);
+mozilla::PointerCapabilities Gecko_MediaFeatures_AllPointerCapabilities(nsIDocument*);
 float Gecko_MediaFeatures_GetDevicePixelRatio(nsIDocument*);
 bool Gecko_MediaFeatures_HasSystemMetric(nsIDocument*,
                                          nsAtom* metric,

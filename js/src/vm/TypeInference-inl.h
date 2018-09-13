@@ -286,9 +286,6 @@ struct AutoEnterAnalysis
     // Prevent GC activity in the middle of analysis.
     gc::AutoSuppressGC suppressGC;
 
-    // Allow clearing inference info on OOM during incremental sweeping.
-    mozilla::Maybe<AutoClearTypeInferenceStateOnOOM> oom;
-
     // Pending recompilations to perform before execution of JIT code can resume.
     RecompileInfoVector pendingRecompiles;
 
@@ -1282,8 +1279,20 @@ ObjectGroup::getProperty(const AutoSweepObjectGroup& sweep, unsigned i)
 }
 
 inline
+AutoSweepObjectGroup::AutoSweepObjectGroup(ObjectGroup* group)
+#ifdef DEBUG
+  : group_(group)
+#endif
+{
+    if (group->needsSweep()) {
+        AutoClearTypeInferenceStateOnOOM oom(group->zone());
+        group->sweep(*this, oom);
+    }
+}
+
+inline
 AutoSweepObjectGroup::AutoSweepObjectGroup(ObjectGroup* group,
-                                           AutoClearTypeInferenceStateOnOOM* oom)
+                                           AutoClearTypeInferenceStateOnOOM& oom)
 #ifdef DEBUG
   : group_(group)
 #endif
@@ -1303,8 +1312,19 @@ AutoSweepObjectGroup::~AutoSweepObjectGroup()
 #endif
 
 inline
-AutoSweepTypeScript::AutoSweepTypeScript(JSScript* script,
-                                         AutoClearTypeInferenceStateOnOOM* oom)
+AutoSweepTypeScript::AutoSweepTypeScript(JSScript* script)
+#ifdef DEBUG
+  : script_(script)
+#endif
+{
+    if (script->typesNeedsSweep()) {
+        AutoClearTypeInferenceStateOnOOM oom(script->zone());
+        script->sweepTypes(*this, oom);
+    }
+}
+
+inline
+AutoSweepTypeScript::AutoSweepTypeScript(JSScript* script, AutoClearTypeInferenceStateOnOOM& oom)
 #ifdef DEBUG
   : script_(script)
 #endif

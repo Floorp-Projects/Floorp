@@ -64,6 +64,7 @@
 #include "GeckoNetworkManager.h"
 #include "GeckoProcessManager.h"
 #include "GeckoScreenOrientation.h"
+#include "GeckoInputDeviceListener.h"
 #include "GeckoVRManager.h"
 #include "PrefsHelper.h"
 #include "fennec/MemoryMonitor.h"
@@ -427,6 +428,7 @@ nsAppShell::nsAppShell()
         GeckoAppShellSupport::Init();
         GeckoThreadSupport::Init();
         mozilla::GeckoBatteryManager::Init();
+        mozilla::GeckoInputDeviceListener::Init();
         mozilla::GeckoNetworkManager::Init();
         mozilla::GeckoProcessManager::Init();
         mozilla::GeckoScreenOrientation::Init();

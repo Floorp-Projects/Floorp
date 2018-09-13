@@ -1150,6 +1150,41 @@ GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
 }
 
 void
+GCRuntime::unsetZeal(uint8_t zeal)
+{
+    MOZ_ASSERT(zeal <= unsigned(ZealMode::Limit));
+    ZealMode zealMode = ZealMode(zeal);
+
+    if (temporaryAbortIfWasmGc(rt->mainContextFromOwnThread())) {
+        return;
+    }
+
+    if (!hasZealMode(zealMode)) {
+        return;
+    }
+
+    if (verifyPreData) {
+        VerifyBarriers(rt, PreBarrierVerifier);
+    }
+
+    if (zealMode == ZealMode::GenerationalGC) {
+        evictNursery(JS::gcreason::DEBUG_GC);
+        nursery().leaveZealMode();
+    }
+
+    clearZealMode(zealMode);
+
+    if (zealModeBits == 0) {
+        if (isIncrementalGCInProgress()) {
+            finishGC(JS::gcreason::DEBUG_GC);
+        }
+
+        zealFrequency = 0;
+        nextScheduled = 0;
+    }
+}
+
+void
 GCRuntime::setNextScheduled(uint32_t count)
 {
     nextScheduled = count;
@@ -2616,10 +2651,10 @@ GCRuntime::sweepTypesAfterCompacting(Zone* zone)
     AutoClearTypeInferenceStateOnOOM oom(zone);
 
     for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next()) {
-        AutoSweepTypeScript sweep(script, &oom);
+        AutoSweepTypeScript sweep(script, oom);
     }
     for (auto group = zone->cellIter<ObjectGroup>(); !group.done(); group.next()) {
-        AutoSweepObjectGroup sweep(group, &oom);
+        AutoSweepObjectGroup sweep(group, oom);
     }
 
     zone->types.endSweep(rt);
@@ -6239,24 +6274,24 @@ SweepThing(Shape* shape)
 }
 
 static void
-SweepThing(JSScript* script, AutoClearTypeInferenceStateOnOOM* oom)
+SweepThing(JSScript* script, AutoClearTypeInferenceStateOnOOM& oom)
 {
     AutoSweepTypeScript sweep(script, oom);
 }
 
 static void
-SweepThing(ObjectGroup* group, AutoClearTypeInferenceStateOnOOM* oom)
+SweepThing(ObjectGroup* group, AutoClearTypeInferenceStateOnOOM& oom)
 {
     AutoSweepObjectGroup sweep(group, oom);
 }
 
 template <typename T, typename... Args>
 static bool
-SweepArenaList(Arena** arenasToSweep, SliceBudget& sliceBudget, Args... args)
+SweepArenaList(Arena** arenasToSweep, SliceBudget& sliceBudget, Args&&... args)
 {
     while (Arena* arena = *arenasToSweep) {
         for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
-            SweepThing(i.get<T>(), args...);
+            SweepThing(i.get<T>(), std::forward<Args>(args)...);
         }
 
         *arenasToSweep = (*arenasToSweep)->next;
@@ -6288,11 +6323,11 @@ GCRuntime::sweepTypeInformation(FreeOp* fop, SliceBudget& budget, Zone* zone)
 
     AutoClearTypeInferenceStateOnOOM oom(zone);
 
-    if (!SweepArenaList<JSScript>(&al.gcScriptArenasToUpdate.ref(), budget, &oom)) {
+    if (!SweepArenaList<JSScript>(&al.gcScriptArenasToUpdate.ref(), budget, oom)) {
         return NotFinished;
     }
 
-    if (!SweepArenaList<ObjectGroup>(&al.gcObjectGroupArenasToUpdate.ref(), budget, &oom)) {
+    if (!SweepArenaList<ObjectGroup>(&al.gcObjectGroupArenasToUpdate.ref(), budget, oom)) {
         return NotFinished;
     }
 
@@ -8069,8 +8104,7 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
         return;
     }
 
-    stats().writeLogMessage("GC starting in state %s",
-        StateName(incrementalState));
+    stats().writeLogMessage("GC starting in state %s", StateName(incrementalState));
 
     AutoTraceLog logGC(TraceLoggerForCurrentThread(), TraceLogger_GC);
     AutoStopVerifyingBarriers av(rt, IsShutdownGC(reason));
@@ -8127,7 +8161,7 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
         MOZ_RELEASE_ASSERT(CheckGrayMarkingState(rt));
     }
 #endif
-    stats().writeLogMessage("GC ending");
+    stats().writeLogMessage("GC ending in state %s", StateName(incrementalState));
 }
 
 js::AutoEnqueuePendingParseTasksAfterGC::~AutoEnqueuePendingParseTasksAfterGC()

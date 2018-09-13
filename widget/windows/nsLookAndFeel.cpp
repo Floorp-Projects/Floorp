@@ -609,11 +609,23 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         res = SystemWantsDarkTheme(aResult);
         break;
     case eIntID_PrefersReducedMotion: {
-      BOOL enableAnimation = TRUE;
-      ::SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION,
-                              0, &enableAnimation, 0);
-      aResult = enableAnimation ? 0 : 1;
-      break;
+        BOOL enableAnimation = TRUE;
+        ::SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION,
+                                0, &enableAnimation, 0);
+        aResult = enableAnimation ? 0 : 1;
+        break;
+    }
+    case eIntID_PrimaryPointerCapabilities: {
+        PointerCapabilities caps =
+            widget::WinUtils::GetPrimaryPointerCapabilities();
+        aResult = static_cast<int32_t>(caps);
+        break;
+    }
+    case eIntID_AllPointerCapabilities: {
+        PointerCapabilities caps =
+            widget::WinUtils::GetAllPointerCapabilities();
+        aResult = static_cast<int32_t>(caps);
+        break;
     }
     default:
         aResult = 0;

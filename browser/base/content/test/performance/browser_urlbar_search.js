@@ -15,21 +15,26 @@ requestLongerTimeout(5);
  */
 
 /* These reflows happen only the first time the awesomebar panel opens. */
-const EXPECTED_REFLOWS_FIRST_OPEN = [
-  {
+const EXPECTED_REFLOWS_FIRST_OPEN = [];
+if (AppConstants.DEBUG ||
+    AppConstants.platform == "linux" ||
+    AppConstants.platform == "macosx" ||
+    AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+  EXPECTED_REFLOWS_FIRST_OPEN.push({
     stack: [
       "_rebuild@chrome://browser/content/search/search.xml",
       "set_popup@chrome://browser/content/search/search.xml",
       "set_oneOffSearchesEnabled@chrome://browser/content/urlbarBindings.xml",
       "_enableOrDisableOneOffSearches@chrome://browser/content/urlbarBindings.xml",
-      "urlbar_XBL_Constructor/<@chrome://browser/content/urlbarBindings.xml",
+      "@chrome://browser/content/urlbarBindings.xml",
       "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openPopup@chrome://global/content/bindings/autocomplete.xml",
       "set_popupOpen@chrome://global/content/bindings/autocomplete.xml",
     ],
-  },
-
+  });
+}
+EXPECTED_REFLOWS_FIRST_OPEN.push(
   {
     stack: [
       "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
@@ -62,8 +67,8 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       "openPopup@chrome://global/content/bindings/autocomplete.xml",
       "set_popupOpen@chrome://global/content/bindings/autocomplete.xml",
     ],
-  },
-];
+  }
+);
 
 /* These reflows happen everytime the awesomebar panel opens. */
 const EXPECTED_REFLOWS_SECOND_OPEN = [

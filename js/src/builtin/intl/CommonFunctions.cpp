@@ -91,27 +91,22 @@ js::intl::ReportInternalError(JSContext* cx)
 js::UniqueChars
 js::intl::EncodeLocale(JSContext* cx, JSString* locale)
 {
-#ifdef DEBUG
-    auto containsOnlyValidBCP47Chars = [](auto* chars, size_t length) {
-        return length > 0 &&
-               mozilla::IsAsciiAlpha(chars[0]) &&
-               std::all_of(chars, chars + length, [](auto c) {
-                   return mozilla::IsAsciiAlphanumeric(c) || c == '-';
-               });
-    };
+    MOZ_ASSERT(locale->length() > 0);
 
-    if (JSLinearString* linear = locale->ensureLinear(cx)) {
-        JS::AutoCheckCannotGC nogc;
-        MOZ_ASSERT(linear->hasLatin1Chars()
-                   ? containsOnlyValidBCP47Chars(linear->latin1Chars(nogc), linear->length())
-                   : containsOnlyValidBCP47Chars(linear->twoByteChars(nogc), linear->length()));
-    } else {
-        // Ignore OOM when only performing a debug assertion.
-        cx->recoverFromOutOfMemory();
+    js::UniqueChars chars = EncodeAscii(cx, locale);
+
+#ifdef DEBUG
+    // Ensure the returned value contains only valid BCP 47 characters.
+    // (Lambdas can't be placed inside MOZ_ASSERT, so move the checks in an
+    // #ifdef block.)
+    if (chars) {
+        auto alnumOrDash = [](char c) { return mozilla::IsAsciiAlphanumeric(c) || c == '-'; };
+        MOZ_ASSERT(mozilla::IsAsciiAlpha(chars[0]));
+        MOZ_ASSERT(std::all_of(chars.get(), chars.get() + locale->length(), alnumOrDash));
     }
 #endif
 
-    return EncodeLatin1(cx, locale);
+    return chars;
 }
 
 bool

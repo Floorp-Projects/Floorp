@@ -1,4 +1,4 @@
-use spec::{ self, SpecBuilder, TypeSum };
+use spec::{ self, SpecBuilder, TypeSum, Laziness };
 
 use webidl::ast::*;
 
@@ -12,33 +12,52 @@ impl Importer {
     /// extern crate binjs_meta;
     /// extern crate webidl;
     /// use webidl;
+    /// use binjs_meta::spec::SpecOptions;
     ///
     /// let ast = webidl::parse_string("
-    ///    [Skippable] interface SkippableFoo {
-    ///       attribute EagerFoo eager;
+    ///    interface FooContents {
+    ///      attribute boolean value;
+    ///    };
+    ///    interface LazyFoo {
+    ///       [Lazy] attribute FooContents contents;
     ///    };
     ///    interface EagerFoo {
-    ///       attribute bool value;
+    ///       attribute FooContents contents;
     ///    };
     /// ").expect("Could not parse");
     ///
     /// let mut builder = binjs_meta::import::Importer::import(&ast);
     ///
-    /// let name_eager = builder.get_node_name("EagerFoo")
+    /// let fake_root = builder.node_name("@@ROOT@@"); // Unused
+    /// let null = builder.node_name(""); // Used
+    /// let spec = builder.into_spec(SpecOptions {
+    ///     root: &fake_root,
+    ///     null: &null,
+    /// });
+    ///
+    /// let name_eager = spec.get_node_name("EagerFoo")
     ///     .expect("Missing name EagerFoo");
-    /// let name_skippable = builder.get_node_name("SkippableFoo")
-    ///     .expect("Missing name SkippableFoo");
+    /// let name_lazy = spec.get_node_name("LazyFoo")
+    ///     .expect("Missing name LazyFoo");
+    /// let name_contents = spec.get_field_name("contents")
+    ///     .expect("Missing name contents");
     ///
     /// {
-    ///     let interface_eager = builder.get_interface(&name_eager)
+    ///     let interface_eager = spec.get_interface_by_name(&name_eager)
     ///         .expect("Missing interface EagerFoo");
-    ///     assert_eq!(interface_eager.is_skippable(), false);
+    ///     let contents_field =
+    ///         interface_eager.get_field_by_name(&name_contents)
+    ///         .expect("Missing field contents");
+    ///     assert_eq!(contents_field.is_lazy(), false);
     /// }
     ///
     /// {
-    ///     let interface_skippable = builder.get_interface(&name_skippable)
-    ///         .expect("Missing interface SkippableFoo");
-    ///     assert_eq!(interface_skippable.is_skippable(), true);
+    ///     let interface_lazy = spec.get_interface_by_name(&name_lazy)
+    ///         .expect("Missing interface LazyFoo");
+    ///     let contents_field =
+    ///         interface_lazy.get_field_by_name(&name_contents)
+    ///         .expect("Missing field contents");
+    ///     assert_eq!(contents_field.is_lazy(), true);
     /// }
     /// ```
     pub fn import(ast: &AST) -> SpecBuilder {
@@ -95,7 +114,19 @@ impl Importer {
             if let InterfaceMember::Attribute(Attribute::Regular(ref attribute)) = *member {
                 let name = self.builder.field_name(&attribute.name);
                 let type_ = self.convert_type(&*attribute.type_);
-                fields.push((name, type_));
+                let mut laziness = Laziness::Eager;
+
+                for extended_attribute in &attribute.extended_attributes {
+                    use webidl::ast::ExtendedAttribute::NoArguments;
+                    use webidl::ast::Other::Identifier;
+                    if let &NoArguments(Identifier(ref id)) = extended_attribute.as_ref() {
+                        if &*id == "Lazy" {
+                            laziness = Laziness::Lazy;
+                        }
+                    }
+                }
+
+                fields.push((name, type_, laziness));
             } else {
                 panic!("Expected an attribute, got {:?}", member);
             }
@@ -103,18 +134,8 @@ impl Importer {
         let name = self.builder.node_name(&interface.name);
         let mut node = self.builder.add_interface(&name)
             .expect("Name already present");
-        for (field_name, field_type) in fields.drain(..) {
-            node.with_field(&field_name, field_type);
-        }
-
-        for extended_attribute in &interface.extended_attributes {
-            use webidl::ast::ExtendedAttribute::NoArguments;
-            use webidl::ast::Other::Identifier;
-            if let &NoArguments(Identifier(ref id)) = extended_attribute.as_ref() {
-                if &*id == "Skippable" {
-                    node.with_skippable(true);
-                }
-            }
+        for (field_name, field_type, field_laziness) in fields.drain(..) {
+            node.with_field(&field_name, field_type, field_laziness);
         }
     }
     fn convert_type(&mut self, t: &Type) -> spec::Type {
@@ -140,6 +161,8 @@ impl Importer {
             }
             TypeKind::RestrictedDouble =>
                 spec::TypeSpec::Number,
+            TypeKind::UnsignedLong =>
+                spec::TypeSpec::UnsignedLong,
             _ => {
                 panic!("I don't know how to import {:?} yet", t);
             }

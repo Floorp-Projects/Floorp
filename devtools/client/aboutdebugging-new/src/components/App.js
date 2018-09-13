@@ -14,7 +14,7 @@ const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
 const { PAGES } = require("../constants");
 
-const ConnectPage = createFactory(require("./ConnectPage"));
+const ConnectPage = createFactory(require("./connect/ConnectPage"));
 const RuntimePage = createFactory(require("./RuntimePage"));
 const Sidebar = createFactory(require("./sidebar/Sidebar"));
 
@@ -38,7 +38,7 @@ class App extends PureComponent {
       case PAGES.THIS_FIREFOX:
         return RuntimePage({ dispatch });
       case PAGES.CONNECT:
-        return ConnectPage({ networkLocations });
+        return ConnectPage({ dispatch, networkLocations });
       default:
         // Invalid page, blank.
         return null;

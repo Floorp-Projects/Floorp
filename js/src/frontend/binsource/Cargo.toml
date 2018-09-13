@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["David Teller <D.O.Teller@gmail.com>"]
 
 [dependencies]
-binjs_meta = "^0.3.8"
+binjs_meta = "^0.3.10"
 clap = "^2"
 env_logger = "^0.5.6"
 itertools = "^0.7.6"
