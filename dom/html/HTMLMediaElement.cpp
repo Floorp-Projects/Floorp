@@ -4147,7 +4147,7 @@ HTMLMediaElement::DispatchEventsWhenPlayWasNotAllowed()
   }
 #if defined(MOZ_WIDGET_ANDROID)
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(OwnerDoc(),
+    new AsyncEventDispatcher(this,
                              NS_LITERAL_STRING("MozAutoplayMediaBlocked"),
                              CanBubble::eYes,
                              ChromeOnlyDispatch::eYes);

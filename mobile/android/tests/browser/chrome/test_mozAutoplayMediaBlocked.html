@@ -13,7 +13,10 @@
  * This test is used to check whether 'MozAutoplayMediaBlocked' would be fired
  * correctly when the media was blocked.
  */
+
 "use strict";
+
+/* globals InspectorUtils */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -40,7 +43,7 @@ add_task(async function test_MozAutoplayMediaBlocked() {
   let tab = gBrowserApp.addTab(URL);
   let browser = tab.browser;
 
-  const mediaBlockedPromise = promiseBrowserEvent(browser, "MozAutoplayMediaBlocked");
+  const mediaBlockedPromise = promiseTabEvent(browser, "MozAutoplayMediaBlocked");
 
   info("- wait for loading tab's content -");
   await promiseBrowserEvent(browser, "load");
@@ -48,6 +51,14 @@ add_task(async function test_MozAutoplayMediaBlocked() {
   info("- wait for 'MozAutoplayMediaBlocked' event -");
   await mediaBlockedPromise;
   ok(true, "got `MozAutoplayMediaBlocked` event");
+
+  let doc = browser.contentWindow.document;
+  let video = doc.getElementById("testAudio");
+
+  let kids = InspectorUtils.getChildrenForNode(video, true);
+  let videocontrols = kids[1];
+  let button = doc.getAnonymousElementByAttribute(videocontrols, "anonid", "clickToPlay");
+  ok(!button.hidden, "Click to play button is not hidden");
 
   info("- remove tab -");
   gBrowserApp.closeTab(tab);

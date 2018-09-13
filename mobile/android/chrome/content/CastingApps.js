@@ -186,7 +186,7 @@ var CastingApps = {
       }
       case "MozAutoplayMediaBlocked": {
         if (this._bound && this._bound.has(aEvent.target)) {
-          aEvent.target.dispatchEvent(new CustomEvent("MozNoControlsBlockedVideo"));
+          aEvent.target.dispatchEvent(new aEvent.target.ownerGlobal.CustomEvent("MozNoControlsBlockedVideo"));
         } else {
           if (!this._blocked) {
             this._blocked = new WeakMap;
@@ -202,7 +202,7 @@ var CastingApps = {
         this._bound.set(aEvent.target, true);
         if (this._blocked && this._blocked.has(aEvent.target)) {
           this._blocked.delete(aEvent.target);
-          aEvent.target.dispatchEvent(new CustomEvent("MozNoControlsBlockedVideo"));
+          aEvent.target.dispatchEvent(new aEvent.target.ownerGlobal.CustomEvent("MozNoControlsBlockedVideo"));
         }
         break;
       }
