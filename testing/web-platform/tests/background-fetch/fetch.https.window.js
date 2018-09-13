@@ -73,7 +73,7 @@ backgroundFetchTest(async (test, backgroundFetch) => {
   assert_equals(registration.uploadTotal, 0);
   assert_equals(registration.uploaded, 0);
   assert_equals(registration.downloadTotal, 0);
-  assert_equals(registration.state, 'pending');
+  assert_equals(registration.result, '');
   assert_equals(registration.failureReason, '');
   // Skip `downloaded`, as the transfer may have started already.
 
@@ -82,7 +82,7 @@ backgroundFetchTest(async (test, backgroundFetch) => {
   assert_equals(results.length, 1);
 
   assert_equals(eventRegistration.id, registration.id);
-  assert_equals(eventRegistration.state, 'success');
+  assert_equals(eventRegistration.result, 'success');
   assert_equals(eventRegistration.failureReason, '');
 
   assert_true(results[0].url.includes('resources/feature-name.txt'));
@@ -112,7 +112,7 @@ backgroundFetchTest(async (test, backgroundFetch) => {
   assert_equals(results.length, 2);
 
   assert_equals(eventRegistration.id, registration.id);
-  assert_equals(eventRegistration.state, 'success');
+  assert_equals(eventRegistration.result, 'success');
   assert_equals(eventRegistration.failureReason, '');
 
   for (const result of results) {
