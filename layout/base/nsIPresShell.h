@@ -366,15 +366,9 @@ public:
                        ResizeReflowOptions::eBSizeExact) = 0;
 
   /**
-   * Returns true if the platform/pref or docshell require a meta viewport.
+   * Returns true if ResizeReflowOverride has been called.
    */
   virtual bool GetIsViewportOverridden() = 0;
-
-  /**
-   * Note that the assumptions that determine the need for a meta viewport
-   * may have changed.
-   */
-  virtual void UpdateViewportOverridden(bool aAfterInitialization) = 0;
 
   /**
    * Return true if the presshell expects layout flush.
