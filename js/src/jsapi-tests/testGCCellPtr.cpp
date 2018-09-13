@@ -27,9 +27,12 @@ BEGIN_TEST(testGCCellPtr)
     CHECK(str);
 
     const char* code = "function foo() { return 'bar'; }";
+
     JS::CompileOptions opts(cx);
+    opts.setUTF8(true);
+
     JS::RootedScript script(cx);
-    CHECK(JS_CompileScript(cx, code, strlen(code), opts, &script));
+    CHECK(JS::CompileUtf8(cx, opts, code, strlen(code), &script));
     CHECK(script);
 
     CHECK(!JS::GCCellPtr(nullptr));

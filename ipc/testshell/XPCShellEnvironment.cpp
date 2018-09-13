@@ -341,7 +341,7 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
         options.setUTF8(true);
 
         JS::Rooted<JSScript*> script(cx);
-        if (JS_CompileScript(cx, buffer, strlen(buffer), options, &script)) {
+        if (JS::CompileUtf8(cx, options, buffer, strlen(buffer), &script)) {
             JS::WarningReporter older;
 
             ok = JS_ExecuteScript(cx, script, &result);
@@ -492,10 +492,11 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
 
   JS::CompileOptions options(cx);
   options.setFileAndLine("typein", 0);
+
   JS::Rooted<JSScript*> script(cx);
   JS::SourceBufferHolder srcBuf(aString.get(), aString.Length(),
                                 JS::SourceBufferHolder::NoOwnership);
-  if (!JS_CompileUCScript(cx, srcBuf, options, &script))
+  if (!JS::Compile(cx, options, srcBuf, &script))
   {
      return false;
   }

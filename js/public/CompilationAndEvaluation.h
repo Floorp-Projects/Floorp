@@ -85,22 +85,6 @@ JS_ExecuteScript(JSContext* cx, JS::AutoVector<JSObject*>& envChain,
 extern JS_PUBLIC_API(bool)
 JS_ExecuteScript(JSContext* cx, JS::AutoVector<JSObject*>& envChain, JS::Handle<JSScript*> script);
 
-/**
- * |script| will always be set. On failure, it will be set to nullptr.
- */
-extern JS_PUBLIC_API(bool)
-JS_CompileScript(JSContext* cx, const char* bytes, size_t length,
-                 const JS::CompileOptions& options,
-                 JS::MutableHandle<JSScript*> script);
-
-/**
- * |script| will always be set. On failure, it will be set to nullptr.
- */
-extern JS_PUBLIC_API(bool)
-JS_CompileUCScript(JSContext* cx, JS::SourceBufferHolder& srcBuf,
-                   const JS::CompileOptions& options,
-                   JS::MutableHandle<JSScript*> script);
-
 namespace JS {
 
 /**
@@ -185,33 +169,6 @@ CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
 extern JS_PUBLIC_API(bool)
 CompileLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
               const char* bytes, size_t length, MutableHandle<JSScript*> script);
-
-/**
- * DEPRECATED
- *
- * Compile the provided bytes into a script.
- *
- * If |options.utf8|, the bytes are interpreted as UTF-8 data.  If the data
- * contains any malformed UTF-8, an error is reported.
- *
- * Otherwise they are interpreted as Latin-1, i.e. each byte directly
- * corresponds to the same Unicode code point.
- *
- * |script| is always set to the compiled script or to null in case of error.
- *
- * Do not use this API.  The JS::CompileOptions::utf8 flag that indicates how
- * to interpret |bytes| is currently being replaced by functions indicating an
- * exact expected encoding.  If you have byte data to compile, you should use
- * either JS::CompileUtf8 or JS::CompileLatin1, as appropriate.
- */
-inline bool
-Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-        const char* bytes, size_t length, MutableHandle<JSScript*> script)
-{
-    return options.utf8
-           ? CompileUtf8(cx, options, bytes, length, script)
-           : CompileLatin1(cx, options, bytes, length, script);
-}
 
 /**
  * Compile the UTF-8 contents of the given file into a script.  If the contents
