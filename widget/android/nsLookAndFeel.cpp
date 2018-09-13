@@ -420,10 +420,17 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         case eIntID_ScrollbarButtonAutoRepeatBehavior:
             aResult = 0;
             break;
-        
+
         case eIntID_ContextMenuOffsetVertical:
         case eIntID_ContextMenuOffsetHorizontal:
             aResult = 2;
+            break;
+
+        case eIntID_PrimaryPointerCapabilities:
+            aResult = java::GeckoAppShell::GetPrimaryPointerCapabilities();
+            break;
+        case eIntID_AllPointerCapabilities:
+            aResult = java::GeckoAppShell::GetAllPointerCapabilities();
             break;
 
         default:

@@ -260,6 +260,14 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
         "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
     ]
 
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/filter_ar_fast_q12.c",
+        "/media/webrtc/trunk/webrtc/common_audio/signal_processing/spl_sqrt_floor.c"
+    ]
+
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     UNIFIED_SOURCES += [

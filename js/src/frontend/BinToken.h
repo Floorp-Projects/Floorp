@@ -67,8 +67,19 @@ namespace frontend {
     F(ArrayBinding, "ArrayBinding") \
     F(ArrayExpression, "ArrayExpression") \
     F(ArrowExpression, "ArrowExpression") \
+    F(ArrowExpressionContentsWithExpression, "ArrowExpressionContentsWithExpression") \
+    F(ArrowExpressionContentsWithFunctionBody, "ArrowExpressionContentsWithFunctionBody") \
     F(AssertedBlockScope, "AssertedBlockScope") \
+    F(AssertedBoundName, "AssertedBoundName") \
+    F(AssertedBoundNamesScope, "AssertedBoundNamesScope") \
+    F(AssertedDeclaredKind, "AssertedDeclaredKind") \
+    F(AssertedDeclaredName, "AssertedDeclaredName") \
+    F(AssertedMaybePositionalParameterName, "AssertedMaybePositionalParameterName") \
+    F(AssertedParameterName, "AssertedParameterName") \
     F(AssertedParameterScope, "AssertedParameterScope") \
+    F(AssertedPositionalParameterName, "AssertedPositionalParameterName") \
+    F(AssertedRestParameterName, "AssertedRestParameterName") \
+    F(AssertedScriptGlobalScope, "AssertedScriptGlobalScope") \
     F(AssertedVarScope, "AssertedVarScope") \
     F(AssignmentExpression, "AssignmentExpression") \
     F(AssignmentTarget, "AssignmentTarget") \
@@ -108,7 +119,8 @@ namespace frontend {
     F(DebuggerStatement, "DebuggerStatement") \
     F(Directive, "Directive") \
     F(DoWhileStatement, "DoWhileStatement") \
-    F(EagerArrowExpression, "EagerArrowExpression") \
+    F(EagerArrowExpressionWithExpression, "EagerArrowExpressionWithExpression") \
+    F(EagerArrowExpressionWithFunctionBody, "EagerArrowExpressionWithFunctionBody") \
     F(EagerFunctionDeclaration, "EagerFunctionDeclaration") \
     F(EagerFunctionExpression, "EagerFunctionExpression") \
     F(EagerGetter, "EagerGetter") \
@@ -134,12 +146,14 @@ namespace frontend {
     F(ForStatement, "ForStatement") \
     F(FormalParameters, "FormalParameters") \
     F(FunctionBody, "FunctionBody") \
-    F(FunctionBodyOrExpression, "FunctionBodyOrExpression") \
     F(FunctionDeclaration, "FunctionDeclaration") \
     F(FunctionDeclarationOrClassDeclarationOrExpression, "FunctionDeclarationOrClassDeclarationOrExpression") \
     F(FunctionDeclarationOrClassDeclarationOrVariableDeclaration, "FunctionDeclarationOrClassDeclarationOrVariableDeclaration") \
     F(FunctionExpression, "FunctionExpression") \
+    F(FunctionExpressionContents, "FunctionExpressionContents") \
+    F(FunctionOrMethodContents, "FunctionOrMethodContents") \
     F(Getter, "Getter") \
+    F(GetterContents, "GetterContents") \
     F(Identifier, "Identifier") \
     F(IdentifierExpression, "IdentifierExpression") \
     F(IdentifierName, "IdentifierName") \
@@ -152,6 +166,16 @@ namespace frontend {
     F(IterationStatement, "IterationStatement") \
     F(Label, "Label") \
     F(LabelledStatement, "LabelledStatement") \
+    F(LazyArrowExpressionWithExpression, "LazyArrowExpressionWithExpression") \
+    F(LazyArrowExpressionWithFunctionBody, "LazyArrowExpressionWithFunctionBody") \
+    F(LazyFunctionDeclaration, "LazyFunctionDeclaration") \
+    F(LazyFunctionExpression, "LazyFunctionExpression") \
+    F(LazyGetter, "LazyGetter") \
+    F(LazyMethod, "LazyMethod") \
+    F(LazySetter, "LazySetter") \
+    F(ListOfAssertedBoundName, "ListOfAssertedBoundName") \
+    F(ListOfAssertedDeclaredName, "ListOfAssertedDeclaredName") \
+    F(ListOfAssertedMaybePositionalParameterName, "ListOfAssertedMaybePositionalParameterName") \
     F(ListOfAssignmentTargetOrAssignmentTargetWithInitializer, "ListOfAssignmentTargetOrAssignmentTargetWithInitializer") \
     F(ListOfAssignmentTargetProperty, "ListOfAssignmentTargetProperty") \
     F(ListOfBindingProperty, "ListOfBindingProperty") \
@@ -160,7 +184,6 @@ namespace frontend {
     F(ListOfExportFromSpecifier, "ListOfExportFromSpecifier") \
     F(ListOfExportLocalSpecifier, "ListOfExportLocalSpecifier") \
     F(ListOfExpressionOrTemplateElement, "ListOfExpressionOrTemplateElement") \
-    F(ListOfIdentifierName, "ListOfIdentifierName") \
     F(ListOfImportDeclarationOrExportDeclarationOrStatement, "ListOfImportDeclarationOrExportDeclarationOrStatement") \
     F(ListOfImportSpecifier, "ListOfImportSpecifier") \
     F(ListOfObjectProperty, "ListOfObjectProperty") \
@@ -187,9 +210,6 @@ namespace frontend {
     F(ObjectBinding, "ObjectBinding") \
     F(ObjectExpression, "ObjectExpression") \
     F(ObjectProperty, "ObjectProperty") \
-    F(OptionalAssertedBlockScope, "OptionalAssertedBlockScope") \
-    F(OptionalAssertedParameterScope, "OptionalAssertedParameterScope") \
-    F(OptionalAssertedVarScope, "OptionalAssertedVarScope") \
     F(OptionalAssignmentTarget, "OptionalAssignmentTarget") \
     F(OptionalBinding, "OptionalBinding") \
     F(OptionalBindingIdentifier, "OptionalBindingIdentifier") \
@@ -207,14 +227,9 @@ namespace frontend {
     F(ReturnStatement, "ReturnStatement") \
     F(Script, "Script") \
     F(Setter, "Setter") \
+    F(SetterContents, "SetterContents") \
     F(ShorthandProperty, "ShorthandProperty") \
     F(SimpleAssignmentTarget, "SimpleAssignmentTarget") \
-    F(SkippableArrowExpression, "SkippableArrowExpression") \
-    F(SkippableFunctionDeclaration, "SkippableFunctionDeclaration") \
-    F(SkippableFunctionExpression, "SkippableFunctionExpression") \
-    F(SkippableGetter, "SkippableGetter") \
-    F(SkippableMethod, "SkippableMethod") \
-    F(SkippableSetter, "SkippableSetter") \
     F(SpreadElement, "SpreadElement") \
     F(SpreadElementOrExpression, "SpreadElementOrExpression") \
     F(Statement, "Statement") \
@@ -252,7 +267,7 @@ enum class BinKind {
 };
 
 // The number of distinct values of BinKind.
-const size_t BINKIND_LIMIT = 183;
+const size_t BINKIND_LIMIT = 198;
 
 
 
@@ -274,20 +289,22 @@ const size_t BINKIND_LIMIT = 183;
  * (sorted by alphabetical order)
  */
 #define FOR_EACH_BIN_FIELD(F) \
-    F(Skip, "_skip") \
     F(Alternate, "alternate") \
     F(Arguments, "arguments") \
     F(Binding, "binding") \
     F(BindingScope, "bindingScope") \
     F(Body, "body") \
     F(BodyScope, "bodyScope") \
+    F(BoundNames, "boundNames") \
     F(Callee, "callee") \
-    F(CapturedNames, "capturedNames") \
     F(Cases, "cases") \
     F(CatchClause, "catchClause") \
     F(Consequent, "consequent") \
+    F(Contents, "contents") \
+    F(ContentsSkip, "contents_skip") \
     F(Declaration, "declaration") \
     F(Declarators, "declarators") \
+    F(DeclaredNames, "declaredNames") \
     F(DefaultBinding, "defaultBinding") \
     F(DefaultCase, "defaultCase") \
     F(Directives, "directives") \
@@ -298,16 +315,21 @@ const size_t BINKIND_LIMIT = 183;
     F(Finalizer, "finalizer") \
     F(Flags, "flags") \
     F(HasDirectEval, "hasDirectEval") \
+    F(Index, "index") \
     F(Init, "init") \
     F(IsAsync, "isAsync") \
+    F(IsCaptured, "isCaptured") \
+    F(IsFunctionNameCaptured, "isFunctionNameCaptured") \
     F(IsGenerator, "isGenerator") \
     F(IsPrefix, "isPrefix") \
+    F(IsSimpleParameterList, "isSimpleParameterList") \
     F(IsStatic, "isStatic") \
+    F(IsThisCaptured, "isThisCaptured") \
     F(Items, "items") \
     F(Kind, "kind") \
     F(Label, "label") \
     F(Left, "left") \
-    F(LexicallyDeclaredNames, "lexicallyDeclaredNames") \
+    F(Length, "length") \
     F(Method, "method") \
     F(ModuleSpecifier, "moduleSpecifier") \
     F(Name, "name") \
@@ -318,7 +340,7 @@ const size_t BINKIND_LIMIT = 183;
     F(Operand, "operand") \
     F(Operator, "operator") \
     F(Param, "param") \
-    F(ParameterNames, "parameterNames") \
+    F(ParamNames, "paramNames") \
     F(ParameterScope, "parameterScope") \
     F(Params, "params") \
     F(Pattern, "pattern") \
@@ -330,14 +352,12 @@ const size_t BINKIND_LIMIT = 183;
     F(Rest, "rest") \
     F(Right, "right") \
     F(Scope, "scope") \
-    F(Skipped, "skipped") \
     F(Statements, "statements") \
     F(Super, "super") \
     F(Tag, "tag") \
     F(Test, "test") \
     F(Update, "update") \
-    F(Value, "value") \
-    F(VarDeclaredNames, "varDeclaredNames")
+    F(Value, "value")
 
 enum class BinField {
 #define EMIT_ENUM(name, _) name,
@@ -346,11 +366,14 @@ enum class BinField {
 };
 
 // The number of distinct values of BinField.
-const size_t BINFIELD_LIMIT = 64;
+const size_t BINFIELD_LIMIT = 69;
 
 
 
 #define FOR_EACH_BIN_VARIANT(F) \
+    F(AssertedDeclaredKindConstLexical, "const lexical") \
+    F(AssertedDeclaredKindNonConstLexical, "non-const lexical") \
+    F(AssertedDeclaredKindOrVariableDeclarationKindVar, "var") \
     F(BinaryOperatorBitAnd, "&") \
     F(BinaryOperatorBitOr, "|") \
     F(BinaryOperatorBitXor, "^") \
@@ -396,8 +419,7 @@ const size_t BINFIELD_LIMIT = 64;
     F(UpdateOperatorDecr, "--") \
     F(UpdateOperatorIncr, "++") \
     F(VariableDeclarationKindConst, "const") \
-    F(VariableDeclarationKindLet, "let") \
-    F(VariableDeclarationKindVar, "var")
+    F(VariableDeclarationKindLet, "let")
 
 enum class BinVariant {
 #define EMIT_ENUM(name, _) name,
@@ -406,7 +428,7 @@ enum class BinVariant {
 };
 
 // The number of distinct values of BinVariant.
-const size_t BINVARIANT_LIMIT = 47;
+const size_t BINVARIANT_LIMIT = 49;
 
 
 

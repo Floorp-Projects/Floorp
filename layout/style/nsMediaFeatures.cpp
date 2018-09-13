@@ -262,6 +262,43 @@ Gecko_MediaFeatures_PrefersReducedMotion(nsIDocument* aDocument)
   return LookAndFeel::GetInt(LookAndFeel::eIntID_PrefersReducedMotion, 0) == 1;
 }
 
+static PointerCapabilities
+GetPointerCapabilities(nsIDocument* aDocument, LookAndFeel::IntID aID)
+{
+  MOZ_ASSERT(aID == LookAndFeel::eIntID_PrimaryPointerCapabilities ||
+             aID == LookAndFeel::eIntID_AllPointerCapabilities);
+
+  // The default value is mouse-type pointer.
+  const PointerCapabilities kDefaultCapabilities =
+    PointerCapabilities::Fine | PointerCapabilities::Hover;
+
+  if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
+    return kDefaultCapabilities;
+  }
+
+  int32_t intValue;
+  nsresult rv = LookAndFeel::GetInt(aID, &intValue);
+  if (NS_FAILED(rv)) {
+    return kDefaultCapabilities;
+  }
+
+  return static_cast<PointerCapabilities>(intValue);
+}
+
+PointerCapabilities
+Gecko_MediaFeatures_PrimaryPointerCapabilities(nsIDocument* aDocument)
+{
+  return GetPointerCapabilities(aDocument,
+                                LookAndFeel::eIntID_PrimaryPointerCapabilities);
+}
+
+PointerCapabilities
+Gecko_MediaFeatures_AllPointerCapabilities(nsIDocument* aDocument)
+{
+  return GetPointerCapabilities(aDocument,
+                                LookAndFeel::eIntID_AllPointerCapabilities);
+}
+
 /* static */ void
 nsMediaFeatures::InitSystemMetrics()
 {

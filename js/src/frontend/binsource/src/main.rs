@@ -76,6 +76,8 @@ struct NodeRules {
     extra_params: Option<Rc<String>>,
 
     /// Extra arguments passed to the method when parsing this interface.
+    /// For ListOf* interfaces, this arguments are passed to each item.
+    /// For sum interface, this arguments are passed to each interface.
     extra_args: Option<Rc<String>>,
 
     /// Things to add before calling the method when the optional field has
@@ -1371,6 +1373,15 @@ impl CPPExporter {
                     } else {
                         (None,
                             Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readDouble());", var_name = var_name)))
+                    }
+                }
+                Some(IsNullable { is_nullable: false, content: Primitive::UnsignedLong }) => {
+                    if needs_block {
+                        (Some(format!("uint32_t {var_name};", var_name = var_name)),
+                            Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readUnsignedLong());", var_name = var_name)))
+                    } else {
+                        (None,
+                            Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readUnsignedLong());", var_name = var_name)))
                     }
                 }
                 Some(IsNullable { is_nullable: false, content: Primitive::Boolean }) => {

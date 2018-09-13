@@ -78,9 +78,11 @@ _MOBILE_UPSTREAM_ARTIFACTS_SIGNED_MULTI = [
 # See example in bug 1348286
 UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
     'android-x86-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
+    'android-x86_64-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
     'android-aarch64-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
     'android-api-16-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
     'android-x86-nightly-multi': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI,
+    'android-x86_64-nightly-multi': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI,
     'android-aarch64-nightly-multi': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI,
     'android-api-16-nightly-l10n': [],
     'android-api-16-nightly-multi': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI,
@@ -91,9 +93,11 @@ UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
 # See example in bug 1348286
 UPSTREAM_ARTIFACT_SIGNED_PATHS = {
     'android-x86-nightly': ["en-US/target.apk"],
+    'android-x86_64-nightly': ["en-US/target.apk"],
     'android-aarch64-nightly': ["en-US/target.apk"],
     'android-api-16-nightly': ["en-US/target.apk"],
     'android-x86-nightly-multi': ["target.apk"],
+    'android-x86_64-nightly-multi': ["target.apk"],
     'android-aarch64-nightly-multi': ["target.apk"],
     'android-api-16-nightly-l10n': ["target.apk"],
     'android-api-16-nightly-multi': ["target.apk"],

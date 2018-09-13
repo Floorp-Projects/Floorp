@@ -77,6 +77,7 @@
 #include <wtsapi32.h>
 #include <process.h>
 #include <commctrl.h>
+#include <dbt.h>
 #include <unknwn.h>
 #include <psapi.h>
 
@@ -143,6 +144,7 @@
 #include "nsStyleConsts.h"
 #include "gfxConfig.h"
 #include "InProcessWinCompositorWidget.h"
+#include "InputDeviceUtils.h"
 #include "ScreenHelperWin.h"
 
 #include "nsIGfxInfo.h"
@@ -604,6 +606,7 @@ nsWindow::nsWindow(bool aIsChildWindow)
   mPaintDC              = nullptr;
   mPrevWndProc          = nullptr;
   mNativeDragTarget     = nullptr;
+  mDeviceNotifyHandle   = nullptr;
   mInDtor               = false;
   mIsVisible            = false;
   mIsTopWidgetWindow    = false;
@@ -848,6 +851,9 @@ nsWindow::Create(nsIWidget* aParent,
     NS_WARNING("nsWindow CreateWindowEx failed.");
     return NS_ERROR_FAILURE;
   }
+
+  mDeviceNotifyHandle = InputDeviceUtils::RegisterNotification(mWnd);
+
   // If mDefaultScale is set before mWnd has been set, it will have the scale of the
   // primary monitor, rather than the monitor that the window is actually on. For
   // non-popup windows this gets corrected by the WM_DPICHANGED message which resets
@@ -980,6 +986,9 @@ void nsWindow::Destroy()
   /* We should clear our cached resources now and not wait for the GC to
    * delete the nsWindow. */
   ClearCachedResources();
+
+  InputDeviceUtils::UnregisterNotification(mDeviceNotifyHandle);
+  mDeviceNotifyHandle = nullptr;
 
   // The DestroyWindow function destroys the specified window. The function sends WM_DESTROY
   // and WM_NCDESTROY messages to the window to deactivate it and remove the keyboard focus
@@ -5339,6 +5348,22 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
               uiUtils->UpdateTabletModeState();
             }
           }
+        }
+      }
+    }
+    break;
+
+    case WM_DEVICECHANGE:
+    {
+      if (wParam == DBT_DEVICEARRIVAL ||
+          wParam == DBT_DEVICEREMOVECOMPLETE) {
+        DEV_BROADCAST_HDR* hdr = reinterpret_cast<DEV_BROADCAST_HDR*>(lParam);
+        // Check dbch_devicetype explicitly since we will get other device types
+        // (e.g. DBT_DEVTYP_VOLUME) for some reasons even if we specify
+        // DBT_DEVTYP_DEVICEINTERFACE in the filter for
+        // RegisterDeviceNotification.
+        if (hdr->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE) {
+          NotifyThemeChanged();
         }
       }
     }

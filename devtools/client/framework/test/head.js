@@ -277,8 +277,7 @@ function prepareToolTabReorderTest(toolbox, startingOrder) {
      "The size of the screen being too small");
 
   for (const id of startingOrder) {
-    ok(getElementByToolIdOrExtensionIdOrSelector(toolbox, id),
-       `Tab element should exist for ${ id }`);
+    ok(getElementByToolId(toolbox, id), `Tab element should exist for ${ id }`);
   }
 }
 
@@ -341,15 +340,20 @@ function assertToolTabPreferenceOrder(expectedOrder) {
      "The preference should be correct");
 }
 
-function getElementByToolIdOrExtensionIdOrSelector(toolbox, idOrSelector) {
+function getElementByToolId(toolbox, id) {
   for (const tabEl of toolbox.doc.querySelectorAll(".devtools-tab")) {
-    if (tabEl.dataset.id === idOrSelector ||
-        tabEl.dataset.extensionId === idOrSelector) {
+    if (tabEl.dataset.id === id ||
+        tabEl.dataset.extensionId === id) {
       return tabEl;
     }
   }
 
-  return toolbox.doc.querySelector(idOrSelector);
+  return null;
+}
+
+function getElementByToolIdOrExtensionIdOrSelector(toolbox, idOrSelector) {
+  const tabEl = getElementByToolId(toolbox, idOrSelector);
+  return tabEl ? tabEl : toolbox.doc.querySelector(idOrSelector);
 }
 
 function getWindow(toolbox) {
