@@ -395,6 +395,8 @@ gfxWindowsPlatform::InitDWriteSupport()
 
   SetupClearTypeParams();
   reporter.SetSuccessful();
+  Factory::SetSystemTextQuality(gfxVars::SystemTextQuality());
+  gfxVars::SetSystemTextQualityListener(gfxDWriteFont::SystemTextQualityChanged);
   return true;
 }
 

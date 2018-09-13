@@ -12,17 +12,19 @@
 
 #include "gfxFont.h"
 #include "gfxUserFontSet.h"
-#include "cairo-win32.h"
-
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/UnscaledFontDWrite.h"
+
+struct _cairo_font_face;
+typedef _cairo_font_face cairo_font_face_t;
 
 /**
  * \brief Class representing a font face for a font entry.
  */
-class gfxDWriteFont : public gfxFont 
+class gfxDWriteFont : public gfxFont
 {
 public:
     gfxDWriteFont(const RefPtr<mozilla::gfx::UnscaledFontDWrite>& aUnscaledFont,
@@ -31,7 +33,8 @@ public:
                   AntialiasOption = kAntialiasDefault);
     ~gfxDWriteFont();
 
-    static void UpdateClearTypeUsage();
+    static void UpdateSystemTextQuality();
+    static void SystemTextQualityChanged();
 
     mozilla::UniquePtr<gfxFont>
     CopyWithAntialiasOption(AntialiasOption anAAOption) override;
@@ -107,7 +110,7 @@ protected:
     // was set up, so we can tell if it's stale and needs to be re-created.
     bool mAzureScaledFontUsedClearType;
 
-    static bool sUseClearType;
+    bool UsingClearType() { return mozilla::gfx::gfxVars::SystemTextQuality() == CLEARTYPE_QUALITY; }
 };
 
 #endif

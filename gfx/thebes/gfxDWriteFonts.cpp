@@ -9,9 +9,12 @@
 #include "gfxDWriteFontList.h"
 #include "gfxContext.h"
 #include "gfxTextRun.h"
+#include "mozilla/gfx/gfxVars.h"
 
 #include "harfbuzz/hb.h"
 #include "mozilla/FontPropertyTypes.h"
+#include "mozilla/dom/ContentParent.h"
+#include "cairo-win32.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -45,26 +48,32 @@ GetCairoAntialiasOption(gfxFont::AntialiasOption anAntialiasOption)
 #define FE_FONTSMOOTHINGCLEARTYPE 2
 #endif
 
-bool gfxDWriteFont::sUseClearType = true;
-
-// This function is expensive so we only want to call it when we have to.
-static bool
-UsingClearType()
+// Cleartype can be dynamically enabled/disabled, so we have to allow for dynamically
+// updating it.
+static BYTE
+GetSystemTextQuality()
 {
-    BOOL fontSmoothing;
-    if (!SystemParametersInfo(SPI_GETFONTSMOOTHING, 0, &fontSmoothing, 0) ||
-        !fontSmoothing)
-    {
-        return false;
-    }
+  BOOL font_smoothing;
+  UINT smoothing_type;
 
-    UINT type;
-    if (SystemParametersInfo(SPI_GETFONTSMOOTHINGTYPE, 0, &type, 0) &&
-        type == FE_FONTSMOOTHINGCLEARTYPE)
-    {
-        return true;
-    }
-    return false;
+  if (!SystemParametersInfo(SPI_GETFONTSMOOTHING, 0, &font_smoothing, 0)) {
+    return DEFAULT_QUALITY;
+  }
+
+  if (font_smoothing) {
+      if (!SystemParametersInfo(SPI_GETFONTSMOOTHINGTYPE,
+                                0, &smoothing_type, 0)) { 
+        return DEFAULT_QUALITY;
+      }
+
+      if (smoothing_type == FE_FONTSMOOTHINGCLEARTYPE) {
+        return CLEARTYPE_QUALITY;
+      }
+
+      return ANTIALIASED_QUALITY;
+  }
+
+  return DEFAULT_QUALITY;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,18 +111,38 @@ gfxDWriteFont::~gfxDWriteFont()
     delete mMetrics;
 }
 
-void
-gfxDWriteFont::UpdateClearTypeUsage()
+static void ForceFontUpdate()
 {
-    Factory::UpdateSystemTextQuality();
-    // Check if ClearType status has changed; if so, toggle our flag,
-    // flush cached stuff that depended on the old setting, and force
-    // reflow everywhere to ensure we are using correct glyph metrics.
-    if (sUseClearType != UsingClearType()) {
-        sUseClearType = !sUseClearType;
-        gfxPlatform::FlushFontAndWordCaches();
-        gfxPlatform::ForceGlobalReflow();
-    }
+  // update device context font cache
+  // Dirty but easiest way:
+  // Changing nsIPrefBranch entry which triggers callbacks
+  // and flows into calling mDeviceContext->FlushFontCache()
+  // to update the font cache in all the instance of Browsers
+  static const char kPrefName[] = "font.internaluseonly.changed";
+  bool fontInternalChange =
+    Preferences::GetBool(kPrefName, false);
+  Preferences::SetBool(kPrefName, !fontInternalChange);
+}
+
+void
+gfxDWriteFont::UpdateSystemTextQuality()
+{
+  BYTE newQuality = GetSystemTextQuality();
+  if (gfxVars::SystemTextQuality() != newQuality) {
+    gfxVars::SetSystemTextQuality(newQuality);
+  }
+}
+
+void
+gfxDWriteFont::SystemTextQualityChanged()
+{
+  // If ClearType status has changed, update our value,
+  // flush cached stuff that depended on the old setting, and force
+  // reflow everywhere to ensure we are using correct glyph metrics.
+  ForceFontUpdate();
+  Factory::SetSystemTextQuality(gfxVars::SystemTextQuality());
+  gfxPlatform::FlushFontAndWordCaches();
+  gfxPlatform::ForceGlobalReflow();
 }
 
 UniquePtr<gfxFont>
@@ -173,7 +202,7 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
 
     // Note that GetMeasuringMode depends on mAdjustedSize
     if ((anAAOption == gfxFont::kAntialiasDefault &&
-         sUseClearType &&
+         UsingClearType() &&
          GetMeasuringMode() == DWRITE_MEASURING_MODE_NATURAL) ||
         anAAOption == gfxFont::kAntialiasSubpixel)
     {
@@ -666,7 +695,7 @@ gfxDWriteFont::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 already_AddRefed<ScaledFont>
 gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
 {
-    if (mAzureScaledFontUsedClearType != sUseClearType) {
+    if (mAzureScaledFontUsedClearType != UsingClearType()) {
         mAzureScaledFont = nullptr;
     }
     if (!mAzureScaledFont) {
@@ -678,7 +707,7 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
         bool forceGDI = GetForceGDIClassic();
 
         IDWriteRenderingParams* params = gfxWindowsPlatform::GetPlatform()->GetRenderingParams(
-            sUseClearType ?
+            UsingClearType() ?
                 (forceGDI ?
                     gfxWindowsPlatform::TEXT_RENDERING_GDI_CLASSIC :
                     gfxWindowsPlatform::TEXT_RENDERING_NORMAL) :
@@ -698,7 +727,7 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
             return nullptr;
         }
         InitializeScaledFont();
-        mAzureScaledFontUsedClearType = sUseClearType;
+        mAzureScaledFontUsedClearType = UsingClearType();
     }
 
     if (aTarget->GetBackendType() == BackendType::CAIRO) {
