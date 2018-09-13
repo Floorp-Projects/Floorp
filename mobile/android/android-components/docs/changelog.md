@@ -4,6 +4,76 @@ title: Changelog
 permalink: /changelog/
 ---
 
+# 0.23 (2018-09-13)
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.22...v0.23),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/23?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.23/index)
+
+* Compiled against:
+  * Android
+    * SDK: 27
+    * Support Libraries: 27.1.1
+  * Kotlin
+    * Standard library: 1.2.61
+    * Coroutines: 0.23.4
+  * GeckoView
+    * Nightly: **64.0.20180905100117** 🔺
+    * Beta: **63.0b3** (0269319281578bff4e01d77a21350bf91ba08620) 🔺
+    * Release: **62.0** (9cbae12a3fff404ed2c12070ad475424d0ae869f) 🔺
+
+* Added initial documentation for the browser-session component: https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/README.md
+* **sync-logins**: New component for integrating with Firefox Sync (for Logins). A sample app showcasing this new functionality can be found at: https://github.com/mozilla-mobile/android-components/tree/master/samples/sync-logins
+* **browser-engine-***:
+  * Added support for fullscreen mode and the ability to exit it programmatically if needed.
+  ```Kotlin
+  session.register(object : Session.Observer {
+      fun onFullScreenChange(enabled: Boolean) {
+          if (enabled) {
+              // ..
+              sessionManager.getEngineSession().exitFullScreenMode()
+          }
+      }
+  })
+  ```
+* **concept-engine**, **browser-engine-system**, **browser-engine-gecko(-beta/nightly)**:
+  * We've extended support for intercepting requests to also include intercepting of errors
+  ```Kotlin
+  val interceptor = object : RequestInterceptor {
+    override fun onErrorRequest(
+      session: EngineSession, 
+      errorCode: Int, 
+      uri: String?
+    ) {
+      engineSession.loadData("<html><body>Couldn't load $uri!</body></html>")
+    }
+  }
+  // GeckoEngine (beta/nightly) and SystemEngine support request interceptors.
+  GeckoEngine(runtime, DefaultSettings(requestInterceptor = interceptor))
+  ```
+* **browser-engine-system**:
+    * Added functionality to clear all browsing data
+    ```Kotlin
+    sessionManager.getEngineSession().clearData()
+    ``` 
+    * `onNavigationStateChange` is now called earlier (when the title of a web page is available) to allow for faster toolbar updates.
+* **feature-session**: Added support for processing `ACTION_SEND` intents (`ACTION_VIEW` was already supported)   
+   
+  ```Kotlin
+  // Triggering a search if the provided EXTRA_TEXT is not a URL
+  val searchHandler: TextSearchHandler = { searchTerm, session ->
+       searchUseCases.defaultSearch.invoke(searchTerm, session)
+  }
+      
+  // Handles both ACTION_VIEW and ACTION_SEND intents
+  val intentProcessor = SessionIntentProcessor(
+      sessionUseCases, sessionManager, textSearchHandler = searchHandler
+  )    
+  intentProcessor.process(intent)
+  ```
+* Replaced some miscellaneous uses of Java 8 `forEach` with Kotlin's for consistency and backward-compatibility.
+* Various bug fixes (see [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.22...v0.23) for details).
+
 # 0.22 (2018-09-07)
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.21...v0.22),
