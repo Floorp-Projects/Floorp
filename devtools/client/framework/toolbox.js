@@ -1860,7 +1860,7 @@ Toolbox.prototype = {
       Object.defineProperty(doc, "visibilityState", { value: state, configurable: true });
 
       // 2) Fake the 'visibilitychange' event
-      win.dispatchEvent(new win.Event("visibilitychange"));
+      doc.dispatchEvent(new win.Event("visibilitychange"));
     }
   },
 

@@ -326,7 +326,7 @@ ElementEditor.prototype = {
     this._displayBadge.title = DISPLAY_TYPES[this.node.displayType];
     this._displayBadge.classList.toggle("active",
       this.highlighters.flexboxHighlighterShown === this.node ||
-      this.highlighters.gridHighlighterShown === this.node);
+      this.highlighters.gridHighlighters.has(this.node));
     this._displayBadge.classList.toggle("interactive",
       Services.prefs.getBoolPref("devtools.inspector.flexboxHighlighter.enabled") &&
       (this.node.displayType === "flex" || this.node.displayType === "inline-flex"));

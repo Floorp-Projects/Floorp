@@ -323,7 +323,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,0-1,0-10000) ==
 
 fuzzy-if(Android,0-8,0-200) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg
 
-fuzzy-if(skiaContent,0-7,0-175) == outline.html outline-ref.html
+fuzzy-if(skiaContent,0-7,0-175) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == outline.html outline-ref.html # Bug 1392106
 
 == overflow-on-outer-svg-01.svg overflow-on-outer-svg-01-ref.svg
 == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02-ref.xhtml
@@ -443,7 +443,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) random-if(gtkWidget) == tex
 == text-gradient-01.svg text-gradient-01-ref.svg
 random-if(winWidget) fuzzy-if(Android,0-10,0-2) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101
 fuzzy-if(skiaContent,0-1,0-5500) == text-gradient-03.svg pass.svg
-== text-gradient-04.svg text-gradient-04-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-gradient-04.svg text-gradient-04-ref.svg # Bug 1392106
 == text-in-link-01.svg text-in-link-01-ref.svg
 == text-in-link-02.svg text-in-link-02-ref.svg
 == text-in-link-03.svg text-in-link-03-ref.svg
@@ -494,16 +494,16 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textPath-line-01.svg tex
 == tspan-dxdy-04.svg tspan-dxdy-ref.svg
 == tspan-dxdy-05.svg tspan-dxdy-ref.svg
 == tspan-dxdy-06.svg tspan-dxdy-ref.svg
-== tspan-dxdy-textPath-01.svg tspan-dxdy-textPath-01-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-dxdy-textPath-01.svg tspan-dxdy-textPath-01-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-01.svg tspan-rotate-ref.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,0-1,0-550) == tspan-rotate-02.svg tspan-rotate-02.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,0-1,0-550) == tspan-rotate-02.svg tspan-rotate-02-ref.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,0-1,0-550) == tspan-rotate-03.svg tspan-rotate-ref.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,0-1,0-550) == tspan-rotate-04.svg tspan-rotate-04.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,0-1,0-550) == tspan-rotate-04.svg tspan-rotate-04-ref.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,0-1,0-550) == tspan-rotate-05.svg tspan-rotate-ref.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,0-1,0-550) == tspan-rotate-06.svg tspan-rotate-ref.svg # bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-07.svg tspan-rotate-07-ref.svg # Bug 1392106
+fuzzy-if(skiaContent,0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-02.svg tspan-rotate-02.svg # Bug 1392106
+fuzzy-if(skiaContent,0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-02.svg tspan-rotate-02-ref.svg # Bug 1392106
+fuzzy-if(skiaContent,0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-03.svg tspan-rotate-ref.svg # Bug 1392106
+fuzzy-if(skiaContent,0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-04.svg tspan-rotate-04.svg # Bug 1392106
+fuzzy-if(skiaContent,0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-04.svg tspan-rotate-04-ref.svg # Bug 1392106
+fuzzy-if(skiaContent,0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-05.svg tspan-rotate-ref.svg # Bug 1392106
+fuzzy-if(skiaContent,0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-06.svg tspan-rotate-ref.svg # Bug 1392106
+fuzzy-if(skiaContent,0-1,0-550) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-07.svg tspan-rotate-07-ref.svg # Bug 1392106
 == tspan-rotate-textPath-01.svg tspan-rotate-textPath-01-ref.svg
 fuzzy-if(skiaContent,0-1,0-100) == tspan-xy-01.svg tspan-xy-ref.svg
 == tspan-xy-02.svg tspan-xy-ref.svg
@@ -554,13 +554,13 @@ fuzzy-if(skiaContent,0-1,0-100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-en
 == currentColor-override-stop.svg pass.svg
 
 # Shadow DOM id tracking.
-pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-1.html fragid-shadow-ref.html
-pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-2.html fragid-shadow-ref.html
-pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-3.html fragid-shadow-ref.html
-pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-4.html fragid-shadow-ref.html
-pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-5.html fragid-shadow-ref.html
-pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-6.html fragid-shadow-ref.html
-pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-7.html fragid-shadow-ref.html
-pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-8.html fragid-shadow-ref.html
-pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-9.html fragid-shadow-ref.html
-pref(dom.webcomponents.shadowdom.enabled,true) == fragid-shadow-10.html fragid-shadow-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-1.html fragid-shadow-ref.html # Bug 1392106
+pref(dom.webcomponents.shadowdom.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-2.html fragid-shadow-ref.html # Bug 1392106
+pref(dom.webcomponents.shadowdom.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-3.html fragid-shadow-ref.html # Bug 1392106
+pref(dom.webcomponents.shadowdom.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-4.html fragid-shadow-ref.html # Bug 1392106
+pref(dom.webcomponents.shadowdom.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-5.html fragid-shadow-ref.html # Bug 1392106
+pref(dom.webcomponents.shadowdom.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-6.html fragid-shadow-ref.html # Bug 1392106
+pref(dom.webcomponents.shadowdom.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-7.html fragid-shadow-ref.html # Bug 1392106
+pref(dom.webcomponents.shadowdom.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-8.html fragid-shadow-ref.html # Bug 1392106
+pref(dom.webcomponents.shadowdom.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-9.html fragid-shadow-ref.html # Bug 1392106
+pref(dom.webcomponents.shadowdom.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-10.html fragid-shadow-ref.html # Bug 1392106

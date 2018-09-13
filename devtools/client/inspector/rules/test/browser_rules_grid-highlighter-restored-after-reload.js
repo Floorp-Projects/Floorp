@@ -47,7 +47,7 @@ add_task(async function() {
   gridToggle.click();
   await onHighlighterShown;
 
-  ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
+  is(highlighters.gridHighlighters.size, 1, "CSS grid highlighter is shown.");
 
   info("Reload the page, expect the highlighter to be displayed once again");
   let onStateRestored = highlighters.once("grid-state-restored");
@@ -56,7 +56,7 @@ add_task(async function() {
   ok(restored, "The highlighter state was restored");
 
   info("Check that the grid highlighter can be displayed after reloading the page");
-  ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
+  is(highlighters.gridHighlighters.size, 1, "CSS grid highlighter is shown.");
 
   info("Navigate to another URL, and check that the highlighter is hidden");
   const otherUri = "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
@@ -64,5 +64,5 @@ add_task(async function() {
   await navigateTo(inspector, otherUri);
   ({ restored } = await onStateRestored);
   ok(!restored, "The highlighter state was not restored");
-  ok(!highlighters.gridHighlighterShown, "CSS grid highlighter is hidden.");
+  ok(!highlighters.gridHighlighters.size, "CSS grid highlighter is hidden.");
 });

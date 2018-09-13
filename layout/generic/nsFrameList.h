@@ -57,13 +57,10 @@ namespace layout {
     PostFrameDestroyData(const PostFrameDestroyData&) = delete;
     PostFrameDestroyData() = default;
 
-    AutoTArray<RefPtr<nsIContent>, 50> mAnonymousContent;
-    AutoTArray<RefPtr<nsIContent>, 50> mGeneratedContent;
-    void AddAnonymousContent(already_AddRefed<nsIContent>&& aContent) {
+    AutoTArray<RefPtr<nsIContent>, 100> mAnonymousContent;
+    void AddAnonymousContent(already_AddRefed<nsIContent>&& aContent)
+    {
       mAnonymousContent.AppendElement(aContent);
-    }
-    void AddGeneratedContent(already_AddRefed<nsIContent>&& aContent) {
-      mGeneratedContent.AppendElement(aContent);
     }
   };
 } // namespace layout

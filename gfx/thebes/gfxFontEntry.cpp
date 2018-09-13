@@ -88,7 +88,7 @@ gfxFontEntry::gfxFontEntry() :
     memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
 }
 
-gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
+gfxFontEntry::gfxFontEntry(const nsACString& aName, bool aIsStandardFace) :
     mName(aName),
     mFixedPitch(false),
     mIsBadUnderlineFont(false),
@@ -234,12 +234,12 @@ nsresult gfxFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
     return NS_OK;
 }
 
-nsString
+nsCString
 gfxFontEntry::RealFaceName()
 {
     AutoTable nameTable(this, TRUETYPE_TAG('n','a','m','e'));
     if (nameTable) {
-        nsAutoString name;
+        nsAutoCString name;
         nsresult rv = gfxFontUtils::GetFullNameFromTable(nameTable, name);
         if (NS_SUCCEEDED(rv)) {
             return std::move(name);
@@ -1829,7 +1829,7 @@ gfxFontFamily::ContainsFace(gfxFontEntry* aFontEntry) {
 }
 #endif
 
-void gfxFontFamily::LocalizedName(nsAString& aLocalizedName)
+void gfxFontFamily::LocalizedName(nsACString& aLocalizedName)
 {
     // just return the primary name; subclasses should override
     aLocalizedName = mName;
@@ -1865,7 +1865,7 @@ gfxFontFamily::FindFontForChar(GlobalFontMatch* aMatchData)
                     "unicode-range: %d script: %d match: [%s]\n",
                     aMatchData->mCh,
                     unicodeRange, int(script),
-                    NS_ConvertUTF16toUTF8(fe->Name()).get()));
+                    fe->Name().get()));
         }
 
         distance = WeightStyleStretchDistance(fe, aMatchData->mStyle);
@@ -1923,10 +1923,10 @@ gfxFontFamily::~gfxFontFamily()
 }
 
 /*static*/ void
-gfxFontFamily::ReadOtherFamilyNamesForFace(const nsAString& aFamilyName,
+gfxFontFamily::ReadOtherFamilyNamesForFace(const nsACString& aFamilyName,
                                            const char *aNameData,
                                            uint32_t aDataLength,
-                                           nsTArray<nsString>& aOtherFamilyNames,
+                                           nsTArray<nsCString>& aOtherFamilyNames,
                                            bool useFullName)
 {
     const gfxFontUtils::NameHeader *nameHeader =
@@ -1955,7 +1955,7 @@ gfxFontFamily::ReadOtherFamilyNamesForFace(const nsAString& aFamilyName,
         if ((useFullName && nameID == gfxFontUtils::NAME_ID_FULL) ||
             (!useFullName && (nameID == gfxFontUtils::NAME_ID_FAMILY ||
                               nameID == gfxFontUtils::NAME_ID_PREFERRED_FAMILY))) {
-            nsAutoString otherFamilyName;
+            nsAutoCString otherFamilyName;
             bool ok = gfxFontUtils::DecodeFontName(aNameData + stringsBase + nameOff,
                                                      nameLen,
                                                      uint32_t(nameRecord->platformID),
@@ -1978,7 +1978,7 @@ gfxFontFamily::ReadOtherFamilyNamesForFace(gfxPlatformFontList *aPlatformFontLis
 {
     uint32_t dataLength;
     const char *nameData = hb_blob_get_data(aNameTable, &dataLength);
-    AutoTArray<nsString,4> otherFamilyNames;
+    AutoTArray<nsCString,4> otherFamilyNames;
 
     ReadOtherFamilyNamesForFace(mName, nameData, dataLength,
                                 otherFamilyNames, useFullName);
@@ -2040,10 +2040,10 @@ gfxFontFamily::ReadOtherFamilyNames(gfxPlatformFontList *aPlatformFontList)
 }
 
 static bool
-LookForLegacyFamilyName(const nsAString& aCanonicalName,
+LookForLegacyFamilyName(const nsACString& aCanonicalName,
                         const char* aNameData,
                         uint32_t aDataLength,
-                        nsAString& aLegacyName /* outparam */)
+                        nsACString& aLegacyName /* outparam */)
 {
     const gfxFontUtils::NameHeader* nameHeader =
         reinterpret_cast<const gfxFontUtils::NameHeader*>(aNameData);
@@ -2106,7 +2106,7 @@ gfxFontFamily::CheckForLegacyFamilyNames(gfxPlatformFontList* aFontList)
         if (!nameTable) {
             continue;
         }
-        nsAutoString legacyName;
+        nsAutoCString legacyName;
         uint32_t dataLength;
         const char* nameData = hb_blob_get_data(nameTable, &dataLength);
         if (LookForLegacyFamilyName(Name(), nameData, dataLength,
@@ -2136,7 +2136,7 @@ gfxFontFamily::ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
         aFontInfoData->mLoadOtherNames &&
         !asyncFontLoaderDisabled)
     {
-        AutoTArray<nsString,4> otherFamilyNames;
+        AutoTArray<nsCString,4> otherFamilyNames;
         bool foundOtherNames =
             aFontInfoData->GetOtherFamilyNames(mName, otherFamilyNames);
         if (foundOtherNames) {
@@ -2172,7 +2172,7 @@ gfxFontFamily::ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
             continue;
         }
 
-        nsAutoString fullname, psname;
+        nsAutoCString fullname, psname;
         bool foundFaceNames = false;
         if (!mFaceNamesInitialized &&
             aNeedFullnamePostscriptNames &&
@@ -2238,7 +2238,7 @@ gfxFontFamily::ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
 
 
 gfxFontEntry*
-gfxFontFamily::FindFont(const nsAString& aPostscriptName)
+gfxFontFamily::FindFont(const nsACString& aPostscriptName)
 {
     // find the font using a simple linear search
     uint32_t numFonts = mAvailableFonts.Length();

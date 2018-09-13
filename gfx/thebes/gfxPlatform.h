@@ -368,7 +368,7 @@ public:
      * Resolving a font name to family name. The result MUST be in the result of GetFontList().
      * If the name doesn't in the system, aFamilyName will be empty string, but not failed.
      */
-    virtual nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
+    void GetStandardFamilyName(const nsCString& aFontName, nsACString& aFamilyName);
 
     /**
      * Returns default font name (localized family name) for aLangGroup and
@@ -377,8 +377,8 @@ public:
      * available in the system, this may return second or later font in the
      * pref.  If there are no available fonts in the pref, returns empty string.
      */
-    nsAutoString GetDefaultFontName(const nsACString& aLangGroup,
-                                    const nsACString& aGenericFamily);
+    nsAutoCString GetDefaultFontName(const nsACString& aLangGroup,
+                                     const nsACString& aGenericFamily);
 
     /**
      * Create the appropriate platform font group
@@ -396,7 +396,7 @@ public:
      * Ownership of the returned gfxFontEntry is passed to the caller,
      * who must either AddRef() or delete.
      */
-    gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
+    gfxFontEntry* LookupLocalFont(const nsACString& aFontName,
                                   WeightRange aWeightForEntry,
                                   StretchRange aStretchForEntry,
                                   SlantStyleRange aStyleForEntry);
@@ -409,7 +409,7 @@ public:
      * Ownership of the returned gfxFontEntry is passed to the caller,
      * who must either AddRef() or delete.
      */
-    gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
+    gfxFontEntry* MakePlatformFont(const nsACString& aFontName,
                                    WeightRange aWeightForEntry,
                                    StretchRange aStretchForEntry,
                                    SlantStyleRange aStyleForEntry,

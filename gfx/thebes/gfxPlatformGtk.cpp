@@ -264,14 +264,6 @@ gfxPlatformGtk::CreatePlatformFontList()
     return nullptr;
 }
 
-nsresult
-gfxPlatformGtk::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
-{
-    gfxPlatformFontList::PlatformFontList()->
-        GetStandardFamilyName(aFontName, aFamilyName);
-    return NS_OK;
-}
-
 gfxFontGroup *
 gfxPlatformGtk::CreateFontGroup(const FontFamilyList& aFontFamilyList,
                                 const gfxFontStyle* aStyle,

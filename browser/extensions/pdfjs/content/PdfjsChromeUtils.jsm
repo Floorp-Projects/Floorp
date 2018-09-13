@@ -166,6 +166,7 @@ var PdfjsChromeUtils = {
     let detail = {
       query: aEvent.detail.query,
       caseSensitive: aEvent.detail.caseSensitive,
+      entireWord: aEvent.detail.entireWord,
       highlightAll: aEvent.detail.highlightAll,
       findPrevious: aEvent.detail.findPrevious,
     };

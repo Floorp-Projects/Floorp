@@ -663,7 +663,7 @@ FontFace::SetUserFontEntry(gfxUserFontEntry* aEntry)
 }
 
 bool
-FontFace::GetFamilyName(nsString& aResult)
+FontFace::GetFamilyName(nsCString& aResult)
 {
   nsCSSValue value;
   GetDesc(eCSSFontDesc_Family, value);
@@ -671,7 +671,7 @@ FontFace::GetFamilyName(nsString& aResult)
   if (value.GetUnit() == eCSSUnit_String) {
     nsString familyname;
     value.GetStringValue(familyname);
-    aResult.Append(familyname);
+    AppendUTF16toUTF8(familyname, aResult);
   }
 
   return !aResult.IsEmpty();

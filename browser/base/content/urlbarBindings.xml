@@ -816,7 +816,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // don't revert to last valid url unless page is NOT loading
           // and user is NOT key-scrolling through autocomplete list
           if (!XULBrowserWindow.isBusy && !isScrolling) {
-            URLBarSetURI();
+            URLBarSetURI(null, true);
 
             // If the value isn't empty and the urlbar has focus, select the value.
             if (this.value && this.hasAttribute("focused"))
@@ -1274,7 +1274,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             this.handleCommand(null, undefined, undefined, triggeringPrincipal);
             // Force not showing the dropped URI immediately.
             gBrowser.userTypedValue = null;
-            URLBarSetURI();
+            URLBarSetURI(null, true);
           }
         ]]></body>
       </method>

@@ -935,21 +935,6 @@ IsValidSFNTVersion(uint32_t version)
            version == TRUETYPE_TAG('t','r','u','e');
 }
 
-// Copy and swap UTF-16 values, assume no surrogate pairs, can be in place.
-// aInBuf and aOutBuf are NOT necessarily 16-bit-aligned, so we should avoid
-// accessing them directly as uint16_t* values.
-// aLen is count of UTF-16 values, so the byte buffers are twice that.
-static void
-CopySwapUTF16(const char* aInBuf, char* aOutBuf, uint32_t aLen)
-{
-    const char* end = aInBuf + aLen * 2;
-    while (aInBuf < end) {
-        uint8_t b0 = *aInBuf++;
-        *aOutBuf++ = *aInBuf++;
-        *aOutBuf++ = b0;
-    }
-}
-
 gfxUserFontType
 gfxFontUtils::DetermineFontDataType(const uint8_t *aFontData, uint32_t aFontDataLength)
 {
@@ -1164,9 +1149,9 @@ gfxFontUtils::RenameFont(const nsAString& aName, const uint8_t *aFontData,
 // other checks here are just for extra paranoia.
 nsresult
 gfxFontUtils::GetFullNameFromSFNT(const uint8_t* aFontData, uint32_t aLength,
-                                  nsAString& aFullName)
+                                  nsACString& aFullName)
 {
-    aFullName.AssignLiteral("(MISSING NAME)"); // should always get replaced
+    aFullName = "(MISSING NAME)"; // should always get replaced
 
     const TableDirEntry *dirEntry =
         FindTableDirEntry(aFontData, TRUETYPE_TAG('n','a','m','e'));
@@ -1189,9 +1174,9 @@ gfxFontUtils::GetFullNameFromSFNT(const uint8_t* aFontData, uint32_t aLength,
 
 nsresult
 gfxFontUtils::GetFullNameFromTable(hb_blob_t *aNameTable,
-                                   nsAString& aFullName)
+                                   nsACString& aFullName)
 {
-    nsAutoString name;
+    nsAutoCString name;
     nsresult rv =
         gfxFontUtils::ReadCanonicalName(aNameTable,
                                         gfxFontUtils::NAME_ID_FULL,
@@ -1204,7 +1189,7 @@ gfxFontUtils::GetFullNameFromTable(hb_blob_t *aNameTable,
                                          gfxFontUtils::NAME_ID_FAMILY,
                                          name);
     if (NS_SUCCEEDED(rv) && !name.IsEmpty()) {
-        nsAutoString styleName;
+        nsAutoCString styleName;
         rv = gfxFontUtils::ReadCanonicalName(aNameTable,
                                              gfxFontUtils::NAME_ID_STYLE,
                                              styleName);
@@ -1221,15 +1206,15 @@ gfxFontUtils::GetFullNameFromTable(hb_blob_t *aNameTable,
 
 nsresult
 gfxFontUtils::GetFamilyNameFromTable(hb_blob_t *aNameTable,
-                                     nsAString& aFullName)
+                                     nsACString& aFamilyName)
 {
-    nsAutoString name;
+    nsAutoCString name;
     nsresult rv =
         gfxFontUtils::ReadCanonicalName(aNameTable,
                                         gfxFontUtils::NAME_ID_FAMILY,
                                         name);
     if (NS_SUCCEEDED(rv) && !name.IsEmpty()) {
-        aFullName = name;
+        aFamilyName = name;
         return NS_OK;
     }
     return NS_ERROR_NOT_AVAILABLE;
@@ -1248,7 +1233,7 @@ enum {
 nsresult
 gfxFontUtils::ReadNames(const char *aNameData, uint32_t aDataLen,
                         uint32_t aNameID, int32_t aPlatformID,
-                        nsTArray<nsString>& aNames)
+                        nsTArray<nsCString>& aNames)
 {
     return ReadNames(aNameData, aDataLen, aNameID, LANG_ALL,
                      aPlatformID, aNames);
@@ -1256,7 +1241,7 @@ gfxFontUtils::ReadNames(const char *aNameData, uint32_t aDataLen,
 
 nsresult
 gfxFontUtils::ReadCanonicalName(hb_blob_t *aNameTable, uint32_t aNameID,
-                                nsString& aName)
+                                nsCString& aName)
 {
     uint32_t nameTableLen;
     const char *nameTable = hb_blob_get_data(aNameTable, &nameTableLen);
@@ -1265,11 +1250,11 @@ gfxFontUtils::ReadCanonicalName(hb_blob_t *aNameTable, uint32_t aNameID,
 
 nsresult
 gfxFontUtils::ReadCanonicalName(const char *aNameData, uint32_t aDataLen,
-                                uint32_t aNameID, nsString& aName)
+                                uint32_t aNameID, nsCString& aName)
 {
     nsresult rv;
 
-    nsTArray<nsString> names;
+    nsTArray<nsCString> names;
 
     // first, look for the English name (this will succeed 99% of the time)
     rv = ReadNames(aNameData, aDataLen, aNameID, CANONICAL_LANG_ID,
@@ -1450,7 +1435,7 @@ StartsWith(const nsACString& string, const char (&prefix)[N])
 bool
 gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
                              uint32_t aPlatformCode, uint32_t aScriptCode,
-                             uint32_t aLangCode, nsAString& aName)
+                             uint32_t aLangCode, nsACString& aName)
 {
     if (aByteLen <= 0) {
         NS_WARNING("empty font name");
@@ -1473,19 +1458,6 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
         return false;
     }
 
-    if (encoding == UTF_16BE_ENCODING) {
-        // no need to instantiate a converter
-        uint32_t strLen = aByteLen / 2;
-        aName.SetLength(strLen);
-#ifdef IS_LITTLE_ENDIAN
-        CopySwapUTF16(aNameData, reinterpret_cast<char*>(aName.BeginWriting()),
-                      strLen);
-#else
-        memcpy(aName.BeginWriting(), aNameData, strLen * 2);
-#endif
-        return true;
-    }
-
     if (encoding == X_USER_DEFINED_ENCODING) {
 #ifdef XP_MACOSX
         // Special case for macOS only: support legacy Mac encodings
@@ -1497,10 +1469,12 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
                                         aScriptCode, false);
             if (str) {
                 CFIndex length = CFStringGetLength(str);
-                aName.SetLength(length);
+                nsAutoString name16;
+                name16.SetLength(length);
                 CFStringGetCharacters(str, CFRangeMake(0, length),
-                                      (UniChar*)aName.BeginWriting());
+                                      (UniChar*)name16.BeginWriting());
                 CFRelease(str);
+                CopyUTF16toUTF8(name16, aName);
                 return true;
             }
         }
@@ -1510,7 +1484,7 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
     }
 
     auto rv = encoding->DecodeWithoutBOMHandling(
-      AsBytes(MakeSpan(aNameData, aByteLen)), aName);
+        nsDependentCSubstring(aNameData, aByteLen), aName);
     return NS_SUCCEEDED(rv);
 }
 
@@ -1518,7 +1492,7 @@ nsresult
 gfxFontUtils::ReadNames(const char *aNameData, uint32_t aDataLen,
                         uint32_t aNameID,
                         int32_t aLangID, int32_t aPlatformID,
-                        nsTArray<nsString>& aNames)
+                        nsTArray<nsCString>& aNames)
 {
     NS_ASSERTION(aDataLen != 0, "null name table");
 
@@ -1577,7 +1551,7 @@ gfxFontUtils::ReadNames(const char *aNameData, uint32_t aDataLen,
         }
 
         // -- decode if necessary and make nsString
-        nsAutoString name;
+        nsAutoCString name;
 
         DecodeFontName(aNameData + nameStringsBase + nameoff, namelen,
                        platformID, uint32_t(nameRecord->encodingID),

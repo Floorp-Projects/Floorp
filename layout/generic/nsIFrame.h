@@ -655,9 +655,6 @@ public:
       for (auto& content : mozilla::Reversed(mData.mAnonymousContent)) {
         nsIFrame::DestroyAnonymousContent(mPresContext, content.forget());
       }
-      for (auto& content : mozilla::Reversed(mData.mGeneratedContent)) {
-        content->UnbindFromTree();
-      }
     }
     nsPresContext* mPresContext;
     PostDestroyData mData;

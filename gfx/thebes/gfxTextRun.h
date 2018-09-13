@@ -1275,7 +1275,7 @@ protected:
    // helper methods for looking up fonts
 
     // lookup and add a font with a given name (i.e. *not* a generic!)
-    void AddPlatformFont(const nsAString& aName,
+    void AddPlatformFont(const nsACString& aName,
                          nsTArray<FamilyAndGeneric>& aFamilyList);
 
     // do style selection and add entries to list

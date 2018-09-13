@@ -296,7 +296,7 @@ FontFaceSet::FindMatchingFontFaces(const nsAString& aFont,
 
   for (const FontFamilyName& fontFamilyName : familyList->mNames) {
     RefPtr<gfxFontFamily> family =
-      mUserFontSet->LookupFamily(fontFamilyName.mName);
+      mUserFontSet->LookupFamily(NS_ConvertUTF16toUTF8(fontFamilyName.mName));
 
     if (!family) {
       continue;
@@ -852,7 +852,7 @@ void
 FontFaceSet::InsertNonRuleFontFace(FontFace* aFontFace,
                                    bool& aFontSetModified)
 {
-  nsAutoString fontfamily;
+  nsAutoCString fontfamily;
   if (!aFontFace->GetFamilyName(fontfamily)) {
     // If there is no family name, this rule cannot contribute a
     // usable font, so there is no point in processing it further.
@@ -881,7 +881,7 @@ FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
                                 nsTArray<FontFaceRecord>& aOldRecords,
                                 bool& aFontSetModified)
 {
-  nsAutoString fontfamily;
+  nsAutoCString fontfamily;
   if (!aFontFace->GetFamilyName(fontfamily)) {
     // If there is no family name, this rule cannot contribute a
     // usable font, so there is no point in processing it further.
@@ -981,7 +981,7 @@ FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
 /* static */ already_AddRefed<gfxUserFontEntry>
 FontFaceSet::FindOrCreateUserFontEntryFromFontFace(FontFace* aFontFace)
 {
-  nsAutoString fontfamily;
+  nsAutoCString fontfamily;
   if (!aFontFace->GetFamilyName(fontfamily)) {
     // If there is no family name, this rule cannot contribute a
     // usable font, so there is no point in processing it further.
@@ -1087,7 +1087,7 @@ GetStretchRangeForDescriptor(const nsCSSValue& aVal,
 }
 
 /* static */ already_AddRefed<gfxUserFontEntry>
-FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
+FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsACString& aFamilyName,
                                                    FontFace* aFontFace,
                                                    SheetType aSheetType)
 {
@@ -1195,13 +1195,16 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
 
         switch (unit) {
 
-        case eCSSUnit_Local_Font:
-          val.GetStringValue(face->mLocalName);
+        case eCSSUnit_Local_Font: {
+          nsAutoString localName;
+          val.GetStringValue(localName);
+          face->mLocalName.Append(NS_ConvertUTF16toUTF8(localName));
           face->mSourceType = gfxFontFaceSrc::eSourceType_Local;
           face->mURI = nullptr;
           face->mFormatFlags = 0;
           face->mReferrerPolicy = mozilla::net::RP_Unset;
           break;
+        }
         case eCSSUnit_URL: {
           face->mSourceType = gfxFontFaceSrc::eSourceType_URL;
           nsIURI* uri = val.GetURLValue();

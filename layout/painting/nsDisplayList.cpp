@@ -10038,7 +10038,8 @@ nsDisplayFilter::BuildLayer(
     return nullptr;
   }
 
-  MOZ_ASSERT(effectProperties.mFilter && mFrame->StyleEffects()->HasFilters(),
+  MOZ_ASSERT(effectProperties.mFilterObservers &&
+             mFrame->StyleEffects()->HasFilters(),
              "By getting here, we must have valid CSS filters.");
 
   ContainerLayerParameters newContainerParameters = aContainerParameters;
