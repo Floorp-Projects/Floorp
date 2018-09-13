@@ -423,7 +423,7 @@ if not args.nobuild:
             'make',
             'recurse_syms',
             'MOZ_SOURCE_REPO=file://' + DIR.source,
-            'RUST_TARGET=0', 'RUSTC_COMMIT=0',
+            'RUSTC_COMMIT=0',
             'MOZ_CRASHREPORTER=1',
             'MOZ_AUTOMATION_BUILD_SYMBOLS=1',
         ], check=True)
