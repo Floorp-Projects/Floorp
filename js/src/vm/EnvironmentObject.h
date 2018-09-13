@@ -612,10 +612,6 @@ class NonSyntacticVariablesObject : public EnvironmentObject
     static NonSyntacticVariablesObject* create(JSContext* cx);
 };
 
-extern bool
-CreateNonSyntacticEnvironmentChain(JSContext* cx, JS::AutoObjectVector& envChain,
-                                   MutableHandleObject env, MutableHandleScope scope);
-
 // With environment objects on the run-time environment chain.
 class WithEnvironmentObject : public EnvironmentObject
 {
