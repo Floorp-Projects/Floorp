@@ -1,0 +1,342 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+  ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
+  ### DO NOT edit it by hand.                                       ###
+
+COMPILE_FLAGS["OS_INCLUDES"] = []
+AllowCompilerWarnings()
+
+DEFINES["CHROMIUM_BUILD"] = True
+DEFINES["V8_DEPRECATION_WARNINGS"] = True
+DEFINES["WEBRTC_APM_DEBUG_DUMP"] = "1"
+DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
+DEFINES["WEBRTC_INTELLIGIBILITY_ENHANCER"] = "0"
+DEFINES["WEBRTC_MOZILLA_BUILD"] = True
+DEFINES["WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS"] = "0"
+DEFINES["WEBRTC_RESTRICT_LOGGING"] = True
+
+FINAL_LIBRARY = "webrtc"
+
+
+LOCAL_INCLUDES += [
+    "!/ipc/ipdl/_ipdlheaders",
+    "/ipc/chromium/src",
+    "/ipc/glue",
+    "/media/webrtc/trunk/webrtc/",
+    "/media/webrtc/trunk/webrtc/common_audio/resampler/include/",
+    "/media/webrtc/trunk/webrtc/common_audio/signal_processing/include/",
+    "/media/webrtc/trunk/webrtc/common_audio/vad/include/",
+    "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+]
+
+SOURCES += [
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec/echo_cancellation.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aecm/aecm_core.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aecm/aecm_core_c.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aecm/echo_control_mobile.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/beamformer/covariance_matrix_generator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/beamformer/nonlinear_beamformer.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/echo_cancellation_impl.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/echo_control_mobile_impl.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/echo_detector/normalized_covariance_estimator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/gain_control_impl.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/noise_suppression_impl.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/rms_level.cc"
+]
+
+UNIFIED_SOURCES += [
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec/aec_core.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec/aec_resampler.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/adaptive_fir_filter.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/aec3_common.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/aec3_fft.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/aec_state.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/block_framer.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/block_processor.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/block_processor_metrics.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/cascaded_biquad_filter.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/comfort_noise_generator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/decimator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/downsampled_render_buffer.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/echo_canceller3.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/echo_path_delay_estimator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/echo_path_variability.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/echo_remover.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/echo_remover_metrics.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/erl_estimator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/erle_estimator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/frame_blocker.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/main_filter_update_gain.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/matched_filter.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/matched_filter_lag_aggregator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/output_selector.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/render_buffer.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/render_delay_buffer.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/render_delay_controller.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/render_delay_controller_metrics.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/render_signal_analyzer.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/residual_echo_estimator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/shadow_filter_update_gain.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/subtractor.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/suppression_filter.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/aec3/suppression_gain.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/agc/agc.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/agc/agc_manager_direct.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/agc/loudness_histogram.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/agc/utility.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/agc2/gain_controller2.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_buffer.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_impl.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/beamformer/array_util.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/echo_detector/circular_buffer.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/echo_detector/mean_variance_estimator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/echo_detector/moving_max.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/gain_control_for_experimental_agc.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/include/audio_processing.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/include/config.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/level_controller/biquad_filter.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/level_controller/down_sampler.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/level_controller/gain_applier.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/level_controller/gain_selector.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/level_controller/level_controller.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/level_controller/noise_level_estimator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/level_controller/noise_spectrum_estimator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/level_controller/peak_level_estimator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/level_controller/saturating_gain_estimator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/level_controller/signal_classifier.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/level_estimator_impl.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/logging/apm_data_dumper.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/low_cut_filter.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/residual_echo_detector.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/splitting_filter.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/three_band_filter_bank.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/transient/moving_moments.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/transient/transient_detector.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/transient/transient_suppressor.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/transient/wpd_node.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/transient/wpd_tree.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/typing_detection.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/utility/block_mean_calculator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/utility/delay_estimator.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/utility/delay_estimator_wrapper.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/utility/ooura_fft.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/vad/gmm.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/vad/pitch_based_vad.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/vad/pitch_internal.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/vad/pole_zero_filter.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/vad/standalone_vad.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/vad/vad_audio_proc.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/vad/vad_circular_buffer.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/vad/voice_activity_detector.cc",
+    "/media/webrtc/trunk/webrtc/modules/audio_processing/voice_detection_impl.cc"
+]
+
+if not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
+    DEFINES["NDEBUG"] = True
+    DEFINES["NVALGRIND"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
+
+if CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["ANDROID"] = True
+    DEFINES["ANDROID_NDK_VERSION"] = "r12b"
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["HAVE_SYS_UIO_H"] = True
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["USE_OPENSSL_CERTS"] = "1"
+    DEFINES["WEBRTC_ANDROID"] = True
+    DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["__GNU_SOURCE"] = "1"
+
+    OS_LIBS += [
+        "log"
+    ]
+
+if CONFIG["OS_TARGET"] == "Darwin":
+
+    DEFINES["CR_XCODE_VERSION"] = "0920"
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["WEBRTC_MAC"] = True
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
+
+    OS_LIBS += [
+        "-framework Foundation"
+    ]
+
+if CONFIG["OS_TARGET"] == "DragonFly":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
+if CONFIG["OS_TARGET"] == "FreeBSD":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
+if CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["USE_NSS_CERTS"] = "1"
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
+    OS_LIBS += [
+        "m",
+        "rt"
+    ]
+
+if CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
+if CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+
+if CONFIG["OS_TARGET"] == "WINNT":
+
+    DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
+    DEFINES["NOMINMAX"] = True
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["NTDDI_VERSION"] = "0x0A000000"
+    DEFINES["PSAPI_VERSION"] = "1"
+    DEFINES["UNICODE"] = True
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+    DEFINES["WEBRTC_WIN"] = True
+    DEFINES["WIN32"] = True
+    DEFINES["WIN32_LEAN_AND_MEAN"] = True
+    DEFINES["WINVER"] = "0x0A00"
+    DEFINES["_ATL_NO_OPENGL"] = True
+    DEFINES["_CRT_RAND_S"] = True
+    DEFINES["_CRT_SECURE_NO_DEPRECATE"] = True
+    DEFINES["_CRT_SECURE_NO_WARNINGS"] = True
+    DEFINES["_HAS_EXCEPTIONS"] = "0"
+    DEFINES["_SCL_SECURE_NO_DEPRECATE"] = True
+    DEFINES["_SECURE_ATL"] = True
+    DEFINES["_UNICODE"] = True
+    DEFINES["_USING_V110_SDK71_"] = True
+    DEFINES["_WIN32_WINNT"] = "0x0A00"
+    DEFINES["_WINDOWS"] = True
+    DEFINES["__STD_C"] = True
+
+    OS_LIBS += [
+        "winmm"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_NS_FIXED"] = True
+
+if CONFIG["CPU_ARCH"] == "arm":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_NS_FIXED"] = True
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Darwin":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "DragonFly":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+Library("audio_processing_gn")
