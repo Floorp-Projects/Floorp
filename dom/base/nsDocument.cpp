@@ -10898,7 +10898,8 @@ public:
 
   NS_IMETHOD Run() override
   {
-    mRequest->GetDocument()->RequestFullscreen(std::move(mRequest));
+    nsIDocument* doc = mRequest->GetDocument();
+    doc->RequestFullscreen(std::move(mRequest));
     return NS_OK;
   }
 
