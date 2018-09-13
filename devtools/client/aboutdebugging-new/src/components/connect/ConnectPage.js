@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -12,6 +12,9 @@ const {
   addNetworkLocation,
   removeNetworkLocation
 } = require("../../modules/network-locations");
+
+const ConnectSection = createFactory(require("./ConnectSection"));
+const ConnectSteps = createFactory(require("./ConnectSteps"));
 
 const USB_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const WIFI_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
@@ -31,85 +34,47 @@ class ConnectPage extends PureComponent {
     };
   }
 
-  renderSteps(steps) {
-    return dom.ul(
-      {
-        className: "connect-page__steps"
-      },
-      steps.map(step => dom.li(
-        {
-          className: "connect-page__step"
-        },
-        step)
-      )
-    );
-  }
-
   renderWifi() {
-    return dom.section(
-      {},
-      dom.h2(
-        {
-          className: "connect-page__section__title"
-        },
-        dom.img(
-          {
-            className: "connect-page__section__icon",
-            src: WIFI_ICON_SRC
-          }
-        ),
-        "Via WiFi (Recommended)"
-      ),
-      this.renderSteps([
-        "Ensure that your browser and device are on the same network",
-        "Open Firefox for Android",
-        "Go to Options -> Settings -> Advanced",
-        "Enable Remote Debugging via WiFi in the Developer Tools section",
-      ])
+    return ConnectSection(
+      {
+        icon: WIFI_ICON_SRC,
+        title: "Via WiFi (Recommended)",
+      },
+      ConnectSteps({
+        steps: [
+          "Ensure that your browser and device are on the same network",
+          "Open Firefox for Android",
+          "Go to Options -> Settings -> Advanced",
+          "Enable Remote Debugging via WiFi in the Developer Tools section",
+        ]
+      })
     );
   }
 
   renderUsb() {
-    return dom.section(
-      {},
-      dom.h2(
-        {
-          className: "connect-page__section__title"
-        },
-        dom.img(
-          {
-            className: "connect-page__section__icon",
-            src: USB_ICON_SRC
-          }
-        ),
-        "Via USB"
-      ),
-      this.renderSteps([
-        "Enable Developer menu on your Android device",
-        "Enable USB Debugging on the Android Developer Menu",
-        "Connect the USB Device to your computer",
-      ])
+    return ConnectSection(
+      {
+        icon: USB_ICON_SRC,
+        title: "Via USB",
+      },
+      ConnectSteps({
+        steps: [
+          "Enable Developer menu on your Android device",
+          "Enable USB Debugging on the Android Developer Menu",
+          "Connect the USB Device to your computer",
+        ]
+      })
     );
   }
 
   renderNetwork() {
     const { networkLocations } = this.props;
-    return dom.section(
+    return ConnectSection(
       {
-        className: "connect-page__network"
+        className: "connect-page__network",
+        icon: GLOBE_ICON_SRC,
+        title: "Via Network Location",
       },
-      dom.h2(
-        {
-          className: "connect-page__section__title"
-        },
-        dom.img(
-          {
-            className: "connect-page__section__icon",
-            src: GLOBE_ICON_SRC
-          }
-        ),
-        "Via Network Location"
-      ),
       dom.ul(
         {},
         networkLocations.map(location =>
