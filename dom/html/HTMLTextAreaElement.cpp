@@ -41,8 +41,7 @@
 #include "nsTextEditorState.h"
 #include "nsIController.h"
 #include "nsBaseCommandController.h"
-
-static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
+#include "nsXULControllers.h"
 
 #define NS_NO_CONTENT_DISPATCH (1 << 0)
 
@@ -624,10 +623,9 @@ HTMLTextAreaElement::GetControllers(ErrorResult& aError)
 {
   if (!mControllers)
   {
-    nsresult rv;
-    mControllers = do_CreateInstance(kXULControllersCID, &rv);
-    if (NS_FAILED(rv)) {
-      aError.Throw(rv);
+    mControllers = NS_NewXULControllers();
+    if (!mControllers) {
+      aError.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
 

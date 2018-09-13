@@ -15,6 +15,7 @@
 #include "nsIControllers.h"
 #include "nsXULControllers.h"
 #include "nsIController.h"
+#include "mozilla/RefPtr.h"
 
 //----------------------------------------------------------------------
 
@@ -42,19 +43,11 @@ nsXULControllers::DeleteControllers()
 }
 
 
-nsresult
-NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+already_AddRefed<nsIControllers>
+NS_NewXULControllers()
 {
-  MOZ_ASSERT(aOuter == nullptr, "no aggregation");
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-
-  nsXULControllers* controllers = new nsXULControllers();
-  nsresult rv;
-  NS_ADDREF(controllers);
-  rv = controllers->QueryInterface(aIID, aResult);
-  NS_RELEASE(controllers);
-  return rv;
+  RefPtr<nsXULControllers> controllers = new nsXULControllers();
+  return controllers.forget();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULControllers)

@@ -1138,13 +1138,7 @@ nsXULElement::GetControllers(ErrorResult& rv)
     if (! Controllers()) {
         nsExtendedDOMSlots* slots = ExtendedDOMSlots();
 
-        rv = NS_NewXULControllers(nullptr, NS_GET_IID(nsIControllers),
-                                  reinterpret_cast<void**>(&slots->mControllers));
-
-        NS_ASSERTION(!rv.Failed(), "unable to create a controllers");
-        if (rv.Failed()) {
-            return nullptr;
-        }
+        slots->mControllers = NS_NewXULControllers();
     }
 
     return Controllers();
