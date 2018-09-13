@@ -1634,7 +1634,7 @@ LoadScript(JSContext* cx, unsigned argc, Value* vp, bool scriptRelative)
             .setNoScriptRval(true);
         RootedScript script(cx);
         RootedValue unused(cx);
-        if ((compileOnly && !Compile(cx, opts, filename.get(), &script)) ||
+        if ((compileOnly && !CompileUtf8Path(cx, opts, filename.get(), &script)) ||
             !Evaluate(cx, opts, filename.get(), &unused))
         {
             return false;
@@ -3375,7 +3375,7 @@ DisassFile(JSContext* cx, unsigned argc, Value* vp)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
 
-        if (!JS::Compile(cx, options, filename.get(), &script)) {
+        if (!JS::CompileUtf8Path(cx, options, filename.get(), &script)) {
             return false;
         }
     }
