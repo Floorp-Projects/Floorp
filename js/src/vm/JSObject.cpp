@@ -95,8 +95,8 @@ js::ReportNotObjectArg(JSContext* cx, const char* nth, const char* fun, HandleVa
 
     UniqueChars bytes;
     if (const char* chars = ValueToSourceForError(cx, v, bytes)) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT_ARG,
-                                 nth, fun, chars);
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT_ARG,
+                                   nth, fun, chars);
     }
 }
 
@@ -107,8 +107,8 @@ js::ReportNotObjectWithName(JSContext* cx, const char* name, HandleValue v)
 
     UniqueChars bytes;
     if (const char* chars = ValueToSourceForError(cx, v, bytes)) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT_NAME,
-                                 name, chars);
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT_NAME,
+                                   name, chars);
     }
 }
 
