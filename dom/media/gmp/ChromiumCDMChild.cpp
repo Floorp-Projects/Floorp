@@ -224,7 +224,6 @@ ChromiumCDMChild::CallOnMessageLoopThread(const char* const aName,
   }
 }
 
-// cdm::Host_9 interface
 void
 ChromiumCDMChild::OnResolveKeyStatusPromise(uint32_t aPromiseId,
                                             cdm::KeyStatus aKeyStatus) {
@@ -284,46 +283,6 @@ void ChromiumCDMChild::OnResolvePromise(uint32_t aPromiseId)
                           aPromiseId);
 }
 
-// Align with spec, the Exceptions used by CDM to reject promises .
-// https://w3c.github.io/encrypted-media/#exceptions
-cdm::Exception
-ConvertCDMErrorToCDMException(cdm::Error error) {
-  switch (error) {
-    case cdm::kNotSupportedError:
-      return cdm::Exception::kExceptionNotSupportedError;
-    case cdm::kInvalidStateError:
-      return cdm::Exception::kExceptionInvalidStateError;
-    case cdm::kInvalidAccessError:
-      return cdm::Exception::kExceptionTypeError;
-    case cdm::kQuotaExceededError:
-      return cdm::Exception::kExceptionQuotaExceededError;
-
-    // cdm8 only error
-    case cdm::kUnknownError:
-    case cdm::kClientError:
-    case cdm::kOutputError:
-      break;
-  }
-
-  return cdm::Exception::kExceptionInvalidStateError;
-}
-
-// cdm::Host_8 only interface
-void
-ChromiumCDMChild::OnRejectPromise(uint32_t aPromiseId,
-                                  cdm::Error aError,
-                                  uint32_t aSystemCode,
-                                  const char* aErrorMessage,
-                                  uint32_t aErrorMessageSize)
-{
-  OnRejectPromise(aPromiseId,
-                  ConvertCDMErrorToCDMException(aError),
-                  aSystemCode,
-                  aErrorMessage,
-                  aErrorMessageSize);
-}
-
-// cdm::Host_9 interface
 void
 ChromiumCDMChild::OnRejectPromise(uint32_t aPromiseId,
                                   cdm::Exception aException,
@@ -345,20 +304,6 @@ ChromiumCDMChild::OnRejectPromise(uint32_t aPromiseId,
                           nsCString(aErrorMessage, aErrorMessageSize));
 }
 
-// cdm::Host_8 only interface
-void
-ChromiumCDMChild::OnSessionMessage(const char* aSessionId,
-                                   uint32_t aSessionIdSize,
-                                   cdm::MessageType aMessageType,
-                                   const char* aMessage,
-                                   uint32_t aMessageSize,
-                                   const char* aLegacyDestinationUrl,
-                                   uint32_t aLegacyDestinationUrlLength)
-{
-  OnSessionMessage(aSessionId, aSessionIdSize, aMessageType, aMessage, aMessageSize);
-}
-
-// cdm::Host_9 interface
 void
 ChromiumCDMChild::OnSessionMessage(const char* aSessionId,
                                    uint32_t aSessionIdSize,
@@ -444,27 +389,6 @@ ChromiumCDMChild::OnSessionClosed(const char* aSessionId,
   CallOnMessageLoopThread("gmp::ChromiumCDMChild::OnSessionClosed",
                           &ChromiumCDMChild::SendOnSessionClosed,
                           nsCString(aSessionId, aSessionIdSize));
-}
-
-void
-ChromiumCDMChild::OnLegacySessionError(const char* aSessionId,
-                                       uint32_t aSessionIdLength,
-                                       cdm::Error aError,
-                                       uint32_t aSystemCode,
-                                       const char* aErrorMessage,
-                                       uint32_t aErrorMessageLength)
-{
-  GMP_LOG("ChromiumCDMChild::OnLegacySessionError(sid=%s, error=%" PRIu32
-          " msg='%s')",
-          aSessionId,
-          aError,
-          aErrorMessage);
-  CallOnMessageLoopThread("gmp::ChromiumCDMChild::OnLegacySessionError",
-                          &ChromiumCDMChild::SendOnLegacySessionError,
-                          nsCString(aSessionId, aSessionIdLength),
-                          ConvertCDMErrorToCDMException(aError),
-                          aSystemCode,
-                          nsCString(aErrorMessage, aErrorMessageLength));
 }
 
 cdm::FileIO*
@@ -703,8 +627,6 @@ ChromiumCDMChild::RecvGetStatusForPolicy(const uint32_t& aPromiseId,
     cdm::Policy policy;
     // We didn't check the return value of ToCDMHdcpVersion.
     // Let CDM to handle the cdm::HdcpVersion::kHdcpVersionNone case.
-    // ChromiumCDM8BackwardsCompat::GetStatusForPolicy will reject the promise
-    // since this API is only supported by CDM version 9.
     // CDM will callback by OnResolveKeyStatusPromise when it successfully executes.
     policy.min_hdcp_version = ToCDMHdcpVersion(aMinHdcpVersion);
     mCDM->GetStatusForPolicy(aPromiseId, policy);
@@ -715,7 +637,7 @@ ChromiumCDMChild::RecvGetStatusForPolicy(const uint32_t& aPromiseId,
 static void
 InitInputBuffer(const CDMInputBuffer& aBuffer,
                 nsTArray<cdm::SubsampleEntry>& aSubSamples,
-                cdm::InputBuffer& aInputBuffer)
+                cdm::InputBuffer_1& aInputBuffer)
 {
   aInputBuffer.data = aBuffer.mData().get<uint8_t>();
   aInputBuffer.data_size = aBuffer.mData().Size<uint8_t>();
@@ -729,8 +651,8 @@ InitInputBuffer(const CDMInputBuffer& aBuffer,
 
     aSubSamples.SetCapacity(aBuffer.mClearBytes().Length());
     for (size_t i = 0; i < aBuffer.mCipherBytes().Length(); i++) {
-      aSubSamples.AppendElement(cdm::SubsampleEntry(aBuffer.mClearBytes()[i],
-                                                    aBuffer.mCipherBytes()[i]));
+      aSubSamples.AppendElement(cdm::SubsampleEntry{
+        aBuffer.mClearBytes()[i], aBuffer.mCipherBytes()[i] });
     }
     aInputBuffer.subsamples = aSubSamples.Elements();
     aInputBuffer.num_subsamples = aSubSamples.Length();
@@ -790,7 +712,7 @@ ChromiumCDMChild::RecvDecrypt(const uint32_t& aId,
     return IPC_OK();
   }
 
-  cdm::InputBuffer input;
+  cdm::InputBuffer_1 input = {};
   nsTArray<cdm::SubsampleEntry> subsamples;
   InitInputBuffer(aBuffer, subsamples, input);
 
@@ -831,11 +753,9 @@ ChromiumCDMChild::RecvInitializeVideoDecoder(
     Unused << SendOnDecoderInitDone(cdm::kInitializationError);
     return IPC_OK();
   }
-  cdm::VideoDecoderConfig config;
-  config.codec =
-    static_cast<cdm::VideoDecoderConfig::VideoCodec>(aConfig.mCodec());
-  config.profile =
-    static_cast<cdm::VideoDecoderConfig::VideoCodecProfile>(aConfig.mProfile());
+  cdm::VideoDecoderConfig_1 config = {};
+  config.codec = static_cast<cdm::VideoCodec>(aConfig.mCodec());
+  config.profile = static_cast<cdm::VideoCodecProfile>(aConfig.mProfile());
   config.format = static_cast<cdm::VideoFormat>(aConfig.mFormat());
   config.coded_size =
     mCodedSize = { aConfig.mImageWidth(), aConfig.mImageHeight() };
@@ -901,7 +821,7 @@ ChromiumCDMChild::RecvDecryptAndDecodeFrame(const CDMInputBuffer& aBuffer)
   // on output.
   mFrameDurations.Insert(aBuffer.mTimestamp(), aBuffer.mDuration());
 
-  cdm::InputBuffer input;
+  cdm::InputBuffer_1 input = {};
   nsTArray<cdm::SubsampleEntry> subsamples;
   InitInputBuffer(aBuffer, subsamples, input);
 
@@ -988,7 +908,7 @@ ChromiumCDMChild::RecvDrain()
     return IPC_OK();
   }
   WidevineVideoFrame frame;
-  cdm::InputBuffer sample;
+  cdm::InputBuffer_1 sample = {};
   cdm::Status rv = mCDM->DecryptAndDecodeFrame(sample, &frame);
   GMP_LOG("ChromiumCDMChild::RecvDrain();  DecryptAndDecodeFrame() rv=%d", rv);
   if (rv == cdm::kSuccess) {

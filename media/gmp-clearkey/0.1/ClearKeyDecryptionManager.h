@@ -33,12 +33,12 @@ class CryptoMetaData
 public:
   CryptoMetaData() {}
 
-  explicit CryptoMetaData(const cdm::InputBuffer* aInputBuffer)
+  explicit CryptoMetaData(const cdm::InputBuffer_1* aInputBuffer)
   {
     Init(aInputBuffer);
   }
 
-  void Init(const cdm::InputBuffer* aInputBuffer)
+  void Init(const cdm::InputBuffer_1* aInputBuffer)
   {
     if (!aInputBuffer) {
       assert(!IsValid());

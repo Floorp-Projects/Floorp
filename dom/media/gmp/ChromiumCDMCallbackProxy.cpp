@@ -76,6 +76,8 @@ ToDOMMessageType(uint32_t aMessageType)
       return dom::MediaKeyMessageType::License_renewal;
     case cdm::kLicenseRelease:
       return dom::MediaKeyMessageType::License_release;
+    case cdm::kIndividualizationRequest:
+      return dom::MediaKeyMessageType::Individualization_request;
   }
   MOZ_ASSERT_UNREACHABLE("Invalid cdm::MessageType enum value.");
   return dom::MediaKeyMessageType::License_request;

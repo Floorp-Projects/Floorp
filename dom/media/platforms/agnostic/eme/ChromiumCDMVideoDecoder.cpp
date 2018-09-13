@@ -34,21 +34,21 @@ ToCDMH264Profile(uint8_t aProfile)
 {
   switch (aProfile) {
     case 66:
-      return cdm::VideoDecoderConfig::kH264ProfileBaseline;
+      return cdm::VideoCodecProfile::kH264ProfileBaseline;
     case 77:
-      return cdm::VideoDecoderConfig::kH264ProfileMain;
+      return cdm::VideoCodecProfile::kH264ProfileMain;
     case 88:
-      return cdm::VideoDecoderConfig::kH264ProfileExtended;
+      return cdm::VideoCodecProfile::kH264ProfileExtended;
     case 100:
-      return cdm::VideoDecoderConfig::kH264ProfileHigh;
+      return cdm::VideoCodecProfile::kH264ProfileHigh;
     case 110:
-      return cdm::VideoDecoderConfig::kH264ProfileHigh10;
+      return cdm::VideoCodecProfile::kH264ProfileHigh10;
     case 122:
-      return cdm::VideoDecoderConfig::kH264ProfileHigh422;
+      return cdm::VideoCodecProfile::kH264ProfileHigh422;
     case 144:
-      return cdm::VideoDecoderConfig::kH264ProfileHigh444Predictive;
+      return cdm::VideoCodecProfile::kH264ProfileHigh444Predictive;
   }
-  return cdm::VideoDecoderConfig::kUnknownVideoCodecProfile;
+  return cdm::VideoCodecProfile::kUnknownVideoCodecProfile;
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
@@ -64,17 +64,17 @@ ChromiumCDMVideoDecoder::Init()
 
   gmp::CDMVideoDecoderConfig config;
   if (MP4Decoder::IsH264(mConfig.mMimeType)) {
-    config.mCodec() = cdm::VideoDecoderConfig::kCodecH264;
+    config.mCodec() = cdm::VideoCodec::kCodecH264;
     config.mProfile() =
       ToCDMH264Profile(mConfig.mExtraData->SafeElementAt(1, 0));
     config.mExtraData() = *mConfig.mExtraData;
     mConvertToAnnexB = true;
   } else if (VPXDecoder::IsVP8(mConfig.mMimeType)) {
-    config.mCodec() = cdm::VideoDecoderConfig::kCodecVp8;
-    config.mProfile() = cdm::VideoDecoderConfig::kProfileNotNeeded;
+    config.mCodec() = cdm::VideoCodec::kCodecVp8;
+    config.mProfile() = cdm::VideoCodecProfile::kProfileNotNeeded;
   } else if (VPXDecoder::IsVP9(mConfig.mMimeType)) {
-    config.mCodec() = cdm::VideoDecoderConfig::kCodecVp9;
-    config.mProfile() = cdm::VideoDecoderConfig::kProfileNotNeeded;
+    config.mCodec() = cdm::VideoCodec::kCodecVp9;
+    config.mProfile() = cdm::VideoCodecProfile::kProfileNotNeeded;
   } else {
     return MediaDataDecoder::InitPromise::CreateAndReject(
       NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);

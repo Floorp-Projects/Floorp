@@ -32,9 +32,9 @@ class VideoDecoder : public RefCounted
 public:
   explicit VideoDecoder(cdm::Host_9 *aHost);
 
-  cdm::Status InitDecode(const cdm::VideoDecoderConfig& aConfig);
+  cdm::Status InitDecode(const cdm::VideoDecoderConfig_1& aConfig);
 
-  cdm::Status Decode(const cdm::InputBuffer& aEncryptedBuffer,
+  cdm::Status Decode(const cdm::InputBuffer_1& aEncryptedBuffer,
                      cdm::VideoFrame* aVideoFrame);
 
   void Reset();
