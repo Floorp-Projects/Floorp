@@ -692,7 +692,9 @@ def default_c_compilers(host_or_target):
             return ('clang-cl', 'cl') + gcc + ('clang',)
         if host_or_target.kernel == 'Darwin':
             return ('clang',)
-        return ('clang',) + gcc
+        if developer_options:
+            return ('clang',) + gcc
+        return gcc + ('clang',)
 
     return default_c_compilers
 
