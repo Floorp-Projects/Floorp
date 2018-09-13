@@ -276,7 +276,7 @@ TextTrackManager::UpdateCueDisplay()
 
   nsCOMPtr<nsIContent> overlay = videoFrame->GetCaptionOverlay();
   nsCOMPtr<nsIContent> controls = videoFrame->GetVideoControls();
-  if (!overlay || !controls) {
+  if (!overlay) {
     return;
   }
 
