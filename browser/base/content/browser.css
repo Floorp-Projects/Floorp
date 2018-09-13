@@ -603,7 +603,7 @@ html|input.urlbar-input[textoverflow="start"]:not([focused]) {
   mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
 }
 
-html|input.urlbar-input:not([focused]) {
+html|input.urlbar-input {
   mask-repeat: no-repeat;
 }
 
