@@ -14,6 +14,7 @@ DevToolsModules(
     'ResizableViewport.js',
     'SettingsMenu.js',
     'Toolbar.js',
+    'UserAgentInput.js',
     'ViewportDimension.js',
     'Viewports.js',
 )

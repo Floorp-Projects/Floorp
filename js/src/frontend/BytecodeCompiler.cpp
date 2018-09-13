@@ -441,7 +441,7 @@ BytecodeCompiler::compileModule()
     if (!emplaceEmitter(emitter, &modulesc)) {
         return nullptr;
     }
-    if (!emitter->emitScript(pn->pn_body)) {
+    if (!emitter->emitScript(pn->as<CodeNode>().body())) {
         return nullptr;
     }
 
@@ -498,22 +498,25 @@ BytecodeCompiler::compileStandaloneFunction(MutableHandleFunction fun,
         }
     } while (!fn);
 
-    if (fn->pn_funbox->function()->isInterpreted()) {
-        MOZ_ASSERT(fun == fn->pn_funbox->function());
+    FunctionBox* funbox = fn->as<CodeNode>().funbox();
+    if (funbox->function()->isInterpreted()) {
+        MOZ_ASSERT(fun == funbox->function());
 
-        if (!createScript(fn->pn_funbox->toStringStart, fn->pn_funbox->toStringEnd)) {
+        if (!createScript(funbox->toStringStart, funbox->toStringEnd)) {
             return false;
         }
 
         Maybe<BytecodeEmitter> emitter;
-        if (!emplaceEmitter(emitter, fn->pn_funbox)) {
+        if (!emplaceEmitter(emitter, funbox)) {
             return false;
         }
-        if (!emitter->emitFunctionScript(fn, BytecodeEmitter::TopLevelFunction::Yes)) {
+        if (!emitter->emitFunctionScript(&fn->as<CodeNode>(),
+                                         BytecodeEmitter::TopLevelFunction::Yes))
+        {
             return false;
         }
     } else {
-        fun.set(fn->pn_funbox->function());
+        fun.set(funbox->function());
         MOZ_ASSERT(IsAsmJSModule(fun));
     }
 
@@ -897,13 +900,13 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
         script->setHasBeenCloned();
     }
 
-    BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->pn_funbox, script, lazy,
+    BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->as<CodeNode>().funbox(), script, lazy,
                         pn->pn_pos, BytecodeEmitter::LazyFunction);
     if (!bce.init()) {
         return false;
     }
 
-    if (!bce.emitFunctionScript(pn, BytecodeEmitter::TopLevelFunction::Yes)) {
+    if (!bce.emitFunctionScript(&pn->as<CodeNode>(), BytecodeEmitter::TopLevelFunction::Yes)) {
         return false;
     }
 

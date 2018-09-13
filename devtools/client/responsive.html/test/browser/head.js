@@ -29,6 +29,7 @@ const { _loadPreferredDevices } = require("devtools/client/responsive.html/actio
 const { getStr } = require("devtools/client/responsive.html/utils/l10n");
 const { getTopLevelWindow } = require("devtools/client/responsive.html/utils/window");
 const { addDevice, removeDevice, removeLocalDevices } = require("devtools/client/shared/devices");
+const { KeyCodes } = require("devtools/client/shared/keycodes");
 const asyncStorage = require("devtools/shared/async-storage");
 
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
@@ -36,6 +37,9 @@ loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsiv
 const E10S_MULTI_ENABLED = Services.prefs.getIntPref("dom.ipc.processCount") > 1;
 const TEST_URI_ROOT = "http://example.com/browser/devtools/client/responsive.html/test/browser/";
 const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";
+const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
+  .getService(Ci.nsIHttpProtocolHandler)
+  .userAgent;
 
 SimpleTest.requestCompleteLog();
 SimpleTest.waitForExplicitFinish();
@@ -51,6 +55,7 @@ Services.prefs.setCharPref("devtools.devices.url", TEST_URI_ROOT + "devices.json
 Services.prefs.setBoolPref("devtools.responsive.reloadNotification.enabled", false);
 // Don't show the setting onboarding tooltip in the test suites.
 Services.prefs.setBoolPref("devtools.responsive.show-setting-tooltip", false);
+Services.prefs.setBoolPref("devtools.responsive.showUserAgentInput", true);
 
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("devtools.devices.url");
@@ -59,6 +64,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("devtools.responsive.reloadConditions.touchSimulation");
   Services.prefs.clearUserPref("devtools.responsive.reloadConditions.userAgent");
   Services.prefs.clearUserPref("devtools.responsive.show-setting-tooltip");
+  Services.prefs.clearUserPref("devtools.responsive.showUserAgentInput");
   await asyncStorage.removeItem("devtools.devices.url_cache");
   await removeLocalDevices();
 });
@@ -394,8 +400,17 @@ async function toggleTouchSimulation(ui) {
   await Promise.all([ changed, loaded ]);
 }
 
-function testUserAgent(ui, expected) {
-  testUserAgentFromBrowser(ui.getViewportBrowser(), expected);
+async function testUserAgent(ui, expected) {
+  const { document } = ui.toolWindow;
+  const userAgentInput = document.getElementById("user-agent-input");
+
+  if (expected === DEFAULT_UA) {
+    is(userAgentInput.value, "", "UA input should be empty");
+  } else {
+    is(userAgentInput.value, expected, `UA input should be set to ${expected}`);
+  }
+
+  await testUserAgentFromBrowser(ui.getViewportBrowser(), expected);
 }
 
 async function testUserAgentFromBrowser(browser, expected) {
@@ -403,6 +418,22 @@ async function testUserAgentFromBrowser(browser, expected) {
     return content.navigator.userAgent;
   });
   is(ua, expected, `UA should be set to ${expected}`);
+}
+
+async function changeUserAgentInput(ui, value) {
+  const { Simulate } =
+    ui.toolWindow.require("devtools/client/shared/vendor/react-dom-test-utils");
+  const { document, store } = ui.toolWindow;
+
+  const userAgentInput = document.getElementById("user-agent-input");
+  userAgentInput.value = value;
+  Simulate.change(userAgentInput);
+
+  const userAgentChanged = waitUntilState(store, state => state.ui.userAgent === value);
+  const changed = once(ui, "user-agent-changed");
+  const loaded = waitForViewportLoad(ui);
+  Simulate.keyUp(userAgentInput, { keyCode: KeyCodes.DOM_VK_RETURN });
+  await Promise.all([ changed, loaded, userAgentChanged ]);
 }
 
 /**

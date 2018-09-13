@@ -1401,6 +1401,22 @@ BrowserGlue.prototype = {
     Normandy.uninit();
   },
 
+  // Set up a listener to enable/disable the screenshots extension
+  // based on its preference.
+  _monitorScreenshotsPref() {
+    const PREF = "extensions.screenshots.disabled";
+    const ID = "screenshots@mozilla.org";
+    Services.prefs.addObserver(PREF, async () => {
+      let addon = await AddonManager.getAddonByID(ID);
+      let disabled = Services.prefs.getBoolPref(PREF, false);
+      if (disabled) {
+        await addon.disable({allowSystemAddons: true});
+      } else {
+        await addon.enable({allowSystemAddons: true});
+      }
+    });
+  },
+
   // All initial windows have opened.
   _onWindowsRestored: function BG__onWindowsRestored() {
     if (this._windowsWereRestored) {
@@ -1457,6 +1473,8 @@ BrowserGlue.prototype = {
     };
     this._idleService.addIdleObserver(
       this._lateTasksIdleObserver, LATE_TASKS_IDLE_TIME_SEC);
+
+    this._monitorScreenshotsPref();
   },
 
   /**
