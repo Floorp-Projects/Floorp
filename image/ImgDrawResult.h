@@ -51,6 +51,9 @@ namespace image {
  * permanent condition.
  *
  * BAD_ARGS: We failed to draw because bad arguments were passed to draw().
+ *
+ * NOT_SUPPORTED: The requested operation is not supported, but the image is
+ *                otherwise valid.
  */
 enum class MOZ_MUST_USE_TYPE ImgDrawResult : uint8_t
 {
@@ -61,7 +64,8 @@ enum class MOZ_MUST_USE_TYPE ImgDrawResult : uint8_t
   NOT_READY,
   TEMPORARY_ERROR,
   BAD_IMAGE,
-  BAD_ARGS
+  BAD_ARGS,
+  NOT_SUPPORTED
 };
 
 /**

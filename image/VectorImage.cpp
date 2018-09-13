@@ -849,16 +849,31 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
 }
 
 //******************************************************************************
-IntSize
+Tuple<ImgDrawResult, IntSize>
 VectorImage::GetImageContainerSize(LayerManager* aManager,
                                    const IntSize& aSize,
                                    uint32_t aFlags)
 {
-  if (!IsImageContainerAvailableAtSize(aManager, aSize, aFlags)) {
-    return IntSize(0, 0);
+  if (mError) {
+    return MakeTuple(ImgDrawResult::BAD_IMAGE, IntSize(0, 0));
   }
 
-  return aSize;
+  if (!mIsFullyLoaded) {
+    return MakeTuple(ImgDrawResult::NOT_READY, IntSize(0, 0));
+  }
+
+  if (mHaveAnimations ||
+      aManager->GetBackendType() != LayersBackend::LAYERS_WR) {
+    return MakeTuple(ImgDrawResult::NOT_SUPPORTED, IntSize(0, 0));
+  }
+
+  // We don't need to check if the size is too big since we only support
+  // WebRender backends.
+  if (aSize.IsEmpty()) {
+    return MakeTuple(ImgDrawResult::BAD_ARGS, IntSize(0, 0));
+  }
+
+  return MakeTuple(ImgDrawResult::SUCCESS, aSize);
 }
 
 NS_IMETHODIMP_(bool)
@@ -893,11 +908,12 @@ VectorImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
 }
 
 //******************************************************************************
-NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
-VectorImage::GetImageContainerAtSize(LayerManager* aManager,
-                                     const IntSize& aSize,
+NS_IMETHODIMP_(ImgDrawResult)
+VectorImage::GetImageContainerAtSize(layers::LayerManager* aManager,
+                                     const gfx::IntSize& aSize,
                                      const Maybe<SVGImageContext>& aSVGContext,
-                                     uint32_t aFlags)
+                                     uint32_t aFlags,
+                                     layers::ImageContainer** aOutContainer)
 {
   Maybe<SVGImageContext> newSVGContext;
   MaybeRestrictSVGContext(newSVGContext, aSVGContext, aFlags);
@@ -910,7 +926,7 @@ VectorImage::GetImageContainerAtSize(LayerManager* aManager,
                               FLAG_FORCE_PRESERVEASPECTRATIO_NONE);
   return GetImageContainerImpl(aManager, aSize,
                                newSVGContext ? newSVGContext : aSVGContext,
-                               flags);
+                               flags, aOutContainer);
 }
 
 bool
