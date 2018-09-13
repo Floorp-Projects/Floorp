@@ -5,9 +5,11 @@
 "use strict";
 
 const {
+  CHANGE_USER_AGENT,
   CHANGE_DISPLAY_PIXEL_RATIO,
   TOGGLE_LEFT_ALIGNMENT,
   TOGGLE_TOUCH_SIMULATION,
+  TOGGLE_USER_AGENT_INPUT,
 } = require("./index");
 
 module.exports = {
@@ -24,6 +26,13 @@ module.exports = {
     };
   },
 
+  changeUserAgent(userAgent) {
+    return {
+      type: CHANGE_USER_AGENT,
+      userAgent,
+    };
+  },
+
   toggleLeftAlignment(enabled) {
     return {
       type: TOGGLE_LEFT_ALIGNMENT,
@@ -34,6 +43,13 @@ module.exports = {
   toggleTouchSimulation(enabled) {
     return {
       type: TOGGLE_TOUCH_SIMULATION,
+      enabled,
+    };
+  },
+
+  toggleUserAgentInput(enabled) {
+    return {
+      type: TOGGLE_USER_AGENT_INPUT,
       enabled,
     };
   },

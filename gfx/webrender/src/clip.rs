@@ -17,7 +17,7 @@ use prim_store::{ClipData, ImageMaskData, SpaceMapper};
 use render_task::to_cache_size;
 use resource_cache::{ImageRequest, ResourceCache};
 use std::{cmp, u32};
-use util::{extract_inner_rect_safe, pack_as_float, project_rect, recycle_vec};
+use util::{extract_inner_rect_safe, pack_as_float, project_rect, recycle_vec, ScaleOffset};
 
 /*
 
@@ -200,7 +200,7 @@ pub struct ClipNodeRange {
 #[derive(Debug)]
 enum ClipSpaceConversion {
     Local,
-    Offset(LayoutVector2D),
+    ScaleOffset(ScaleOffset),
     Transform(LayoutToWorldTransform),
 }
 
@@ -538,9 +538,9 @@ impl ClipStore {
                 ClipSpaceConversion::Local => {
                     node.item.get_clip_result(&local_bounding_rect)
                 }
-                ClipSpaceConversion::Offset(offset) => {
+                ClipSpaceConversion::ScaleOffset(ref scale_offset) => {
                     has_non_local_clips = true;
-                    node.item.get_clip_result(&local_bounding_rect.translate(&-offset))
+                    node.item.get_clip_result(&scale_offset.unmap_rect(&local_bounding_rect))
                 }
                 ClipSpaceConversion::Transform(ref transform) => {
                     has_non_local_clips = true;
@@ -576,7 +576,7 @@ impl ClipStore {
                         ClipSpaceConversion::Local => {
                             ClipNodeFlags::SAME_SPATIAL_NODE | ClipNodeFlags::SAME_COORD_SYSTEM
                         }
-                        ClipSpaceConversion::Offset(..) => {
+                        ClipSpaceConversion::ScaleOffset(..) => {
                             ClipNodeFlags::SAME_COORD_SYSTEM
                         }
                         ClipSpaceConversion::Transform(..) => {
@@ -1156,9 +1156,12 @@ fn add_clip_node_to_current_chain(
     let conversion = if spatial_node_index == clip_node.spatial_node_index {
         Some(ClipSpaceConversion::Local)
     } else if ref_spatial_node.coordinate_system_id == clip_spatial_node.coordinate_system_id {
-        let offset = clip_spatial_node.coordinate_system_relative_offset -
-                     ref_spatial_node.coordinate_system_relative_offset;
-        Some(ClipSpaceConversion::Offset(offset))
+        let scale_offset = ref_spatial_node
+            .coordinate_system_relative_scale_offset
+            .difference(
+                &clip_spatial_node.coordinate_system_relative_scale_offset
+            );
+        Some(ClipSpaceConversion::ScaleOffset(scale_offset))
     } else {
         let xf = clip_scroll_tree.get_relative_transform(
             clip_node.spatial_node_index,
@@ -1181,8 +1184,8 @@ fn add_clip_node_to_current_chain(
                         None => return false,
                     };
                 }
-                ClipSpaceConversion::Offset(ref offset) => {
-                    let clip_rect = clip_rect.translate(offset);
+                ClipSpaceConversion::ScaleOffset(ref scale_offset) => {
+                    let clip_rect = scale_offset.map_rect(&clip_rect);
                     *local_clip_rect = match local_clip_rect.intersection(&clip_rect) {
                         Some(rect) => rect,
                         None => return false,

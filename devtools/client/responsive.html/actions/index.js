@@ -40,6 +40,9 @@ createEnum([
   // Change the network throttling profile.
   CHANGE_NETWORK_THROTTLING,
 
+  // Change the user agent of the viewport.
+  "CHANGE_USER_AGENT",
+
   // The pixel ratio of the viewport has changed. This may be triggered by the user
   // when changing the device displayed in the viewport, or when a pixel ratio is
   // selected from the device pixel ratio dropdown.
@@ -83,6 +86,9 @@ createEnum([
 
   // Toggles the touch simulation state of the viewports.
   "TOGGLE_TOUCH_SIMULATION",
+
+  // Toggles the user agent input displayed in the toolbar.
+  "TOGGLE_USER_AGENT_INPUT",
 
   // Update the device display state in the device selector.
   "UPDATE_DEVICE_DISPLAYED",

@@ -65,15 +65,10 @@ body,
 #toolbar {
   background-color: var(--theme-tab-toolbar-background);
   border-bottom: 1px solid var(--theme-splitter-color);
-  display: grid;
-  grid-template-columns: min-content auto min-content;
+  display: flex;
   width: 100%;
   min-height: 29px;
   -moz-user-select: none;
-}
-
-#toolbar.left-aligned {
-  grid-template-columns: min-content min-content min-content auto;
 }
 
 #toolbar-center-controls,
@@ -83,8 +78,13 @@ body,
 }
 
 #toolbar-center-controls {
-  justify-self: center;
+  flex: 1;
+  justify-content: center;
   margin: 1px;
+}
+
+#toolbar-center-controls.left-aligned {
+  justify-content: start;
 }
 
 #toolbar.left-aligned #toolbar-end-controls {
@@ -93,6 +93,23 @@ body,
 
 #rotate-button::before {
   background-image: url("./images/rotate-viewport.svg");
+}
+
+#user-agent-label {
+  display: flex;
+  align-items: center;
+  margin-inline-start: 3px;
+  margin-inline-end: 3px;
+  width: 300px;
+}
+
+#user-agent-label:focus-within {
+  flex: 1;
+}
+
+#user-agent-input {
+  margin-inline-start: 3px;;
+  width: 100%;
 }
 
 #touch-simulation-button::before {

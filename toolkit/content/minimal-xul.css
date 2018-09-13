@@ -19,7 +19,6 @@
  */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
-@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 
 * {
   -moz-user-focus: ignore;
@@ -46,29 +45,6 @@
 [collapsed="true"],
 [moz-collapsed="true"] {
   visibility: collapse;
-}
-
-/********** label **********/
-
-description {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#text-base");
-}
-
-label {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#text-label");
-}
-
-label.text-link, label[onclick] {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#text-link");
-  -moz-user-focus: normal;
-}
-
-label[control], label.radio-label, label.checkbox-label, label.toolbarbutton-multiline-text {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#label-control");
-}
-
-label html|span.accesskey {
-  text-decoration: underline;
 }
 
 /********** resizer **********/

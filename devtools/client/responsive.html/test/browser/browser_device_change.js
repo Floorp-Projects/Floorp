@@ -4,12 +4,9 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 // Tests changing viewport device (need HTTP load for proper UA testing)
-const TEST_URL = `${URL_ROOT}doc_page_state.html`;
 
+const TEST_URL = `${URL_ROOT}doc_page_state.html`;
 const DEFAULT_DPPX = window.devicePixelRatio;
-const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
-  .getService(Ci.nsIHttpProtocolHandler)
-  .userAgent;
 
 const Types = require("devtools/client/responsive.html/types");
 

@@ -503,6 +503,9 @@ ResponsiveUI.prototype = {
       case "change-touch-simulation":
         this.onChangeTouchSimulation(event);
         break;
+      case "change-user-agent":
+        this.onChangeUserAgent(event);
+        break;
       case "content-resize":
         this.onContentResize(event);
         break;
@@ -551,6 +554,16 @@ ResponsiveUI.prototype = {
     }
     // Used by tests
     this.emit("touch-simulation-changed");
+  },
+
+  async onChangeUserAgent(event) {
+    const { userAgent } = event.data;
+    const reloadNeeded = await this.updateUserAgent(userAgent) &&
+                         this.reloadOnChange("userAgent");
+    if (reloadNeeded) {
+      this.getViewportBrowser().reload();
+    }
+    this.emit("user-agent-changed");
   },
 
   onContentResize(event) {
