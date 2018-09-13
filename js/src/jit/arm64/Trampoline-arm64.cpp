@@ -604,8 +604,9 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
         break;
     }
 
-    if (!generateTLEnterVM(masm, f))
+    if (!generateTLEnterVM(masm, f)) {
         return false;
+    }
 
     masm.setupUnalignedABICall(regs.getAny());
     masm.passABIArg(reg_cx);
@@ -637,17 +638,20 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
     // It is not a C++-abi outparam, which would get passed in the
     // outparam register, but a real parameter to the function, which
     // was stack-allocated above.
-    if (outReg != InvalidReg)
+    if (outReg != InvalidReg) {
         masm.passABIArg(outReg);
+    }
 
     masm.callWithABI(f.wrapped, MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
-    if (!generateTLExitVM(masm, f))
+    if (!generateTLExitVM(masm, f)) {
         return false;
+    }
 
     // SP is used to transfer stack across call boundaries.
-    if (!masm.GetStackPointer64().Is(vixl::sp))
+    if (!masm.GetStackPointer64().Is(vixl::sp)) {
         masm.Mov(masm.GetStackPointer64(), vixl::sp);
+    }
 
     // Test for failure.
     switch (f.failType()) {
@@ -702,8 +706,9 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
 
     // Until C++ code is instrumented against Spectre, prevent speculative
     // execution from returning any private data.
-    if (f.returnsData() && JitOptions.spectreJitToCxxCalls)
+    if (f.returnsData() && JitOptions.spectreJitToCxxCalls) {
         masm.speculationBarrier();
+    }
 
     masm.leaveExitFrame();
     masm.retn(Imm32(sizeof(ExitFrameLayout) +

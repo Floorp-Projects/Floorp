@@ -379,13 +379,15 @@ struct FloatRegister
         return 2;
     }
     static FloatRegisters::Kind otherkind(FloatRegisters::Kind k) {
-        if (k == FloatRegisters::Double)
+        if (k == FloatRegisters::Double) {
             return FloatRegisters::Single;
+        }
         return FloatRegisters::Double;
     }
     FloatRegister aliased(uint32_t aliasIdx) {
-        if (aliasIdx == 0)
+        if (aliasIdx == 0) {
             return *this;
+        }
         return FloatRegister(code_, otherkind(k_));
     }
     // This function mostly exists for the ARM backend.  It is to ensure that two

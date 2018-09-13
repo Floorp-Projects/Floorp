@@ -15,8 +15,9 @@ MoveEmitterARM64::toMemOperand(const MoveOperand& operand) const
 {
     MOZ_ASSERT(operand.isMemory());
     ARMRegister base(operand.base(), 64);
-    if (operand.base() == masm.getStackPointer())
+    if (operand.base() == masm.getStackPointer()) {
         return MemOperand(base, operand.disp() + (masm.framePushed() - pushedAtStart_));
+    }
     return MemOperand(base, operand.disp());
 }
 
@@ -28,8 +29,9 @@ MoveEmitterARM64::emit(const MoveResolver& moves)
         pushedAtCycle_ = masm.framePushed();
     }
 
-    for (size_t i = 0; i < moves.numMoves(); i++)
+    for (size_t i = 0; i < moves.numMoves(); i++) {
         emitMove(moves.getMove(i));
+    }
 }
 
 void
@@ -79,10 +81,11 @@ void
 MoveEmitterARM64::emitFloat32Move(const MoveOperand& from, const MoveOperand& to)
 {
     if (from.isFloatReg()) {
-        if (to.isFloatReg())
+        if (to.isFloatReg()) {
             masm.Fmov(toFPReg(to, MoveOp::FLOAT32), toFPReg(from, MoveOp::FLOAT32));
-        else
+        } else {
             masm.Str(toFPReg(from, MoveOp::FLOAT32), toMemOperand(to));
+        }
         return;
     }
 
@@ -101,10 +104,11 @@ void
 MoveEmitterARM64::emitDoubleMove(const MoveOperand& from, const MoveOperand& to)
 {
     if (from.isFloatReg()) {
-        if (to.isFloatReg())
+        if (to.isFloatReg()) {
             masm.Fmov(toFPReg(to, MoveOp::DOUBLE), toFPReg(from, MoveOp::DOUBLE));
-        else
+        } else {
             masm.Str(toFPReg(from, MoveOp::DOUBLE), toMemOperand(to));
+        }
         return;
     }
 
@@ -123,10 +127,11 @@ void
 MoveEmitterARM64::emitInt32Move(const MoveOperand& from, const MoveOperand& to)
 {
     if (from.isGeneralReg()) {
-        if (to.isGeneralReg())
+        if (to.isGeneralReg()) {
             masm.Mov(toARMReg32(to), toARMReg32(from));
-        else
+        } else {
             masm.Str(toARMReg32(from), toMemOperand(to));
+        }
         return;
     }
 
@@ -146,20 +151,22 @@ MoveEmitterARM64::emitGeneralMove(const MoveOperand& from, const MoveOperand& to
 {
     if (from.isGeneralReg()) {
         MOZ_ASSERT(to.isGeneralReg() || to.isMemory());
-        if (to.isGeneralReg())
+        if (to.isGeneralReg()) {
             masm.Mov(toARMReg64(to), toARMReg64(from));
-        else
+        } else {
             masm.Str(toARMReg64(from), toMemOperand(to));
+        }
         return;
     }
 
     // {Memory OR EffectiveAddress} -> Register move.
     if (to.isGeneralReg()) {
         MOZ_ASSERT(from.isMemoryOrEffectiveAddress());
-        if (from.isMemory())
+        if (from.isMemory()) {
             masm.Ldr(toARMReg64(to), toMemOperand(from));
-        else
+        } else {
             masm.Add(toARMReg64(to), toARMReg64(from), Operand(from.disp()));
+        }
         return;
     }
 
