@@ -203,8 +203,9 @@ class CPUInfo
     };
 
     static SSEVersion GetSSEVersion() {
-        if (maxSSEVersion == UnknownSSE)
+        if (maxSSEVersion == UnknownSSE) {
             SetSSEVersion();
+        }
 
         MOZ_ASSERT(maxSSEVersion != UnknownSSE);
         MOZ_ASSERT_IF(maxEnabledSSEVersion != UnknownSSE, maxSSEVersion <= maxEnabledSSEVersion);
@@ -212,8 +213,9 @@ class CPUInfo
     }
 
     static bool IsAVXPresent() {
-        if (MOZ_UNLIKELY(maxSSEVersion == UnknownSSE))
+        if (MOZ_UNLIKELY(maxSSEVersion == UnknownSSE)) {
             SetSSEVersion();
+        }
 
         MOZ_ASSERT_IF(!avxEnabled, !avxPresent);
         return avxPresent;
@@ -270,8 +272,9 @@ class AssemblerX86Shared : public AssemblerShared
 
     void writeDataRelocation(ImmGCPtr ptr) {
         if (ptr.value) {
-            if (gc::IsInsideNursery(ptr.value))
+            if (gc::IsInsideNursery(ptr.value)) {
                 embedsNurseryPointers_ = true;
+            }
             dataRelocations_.writeUnsigned(masm.currentOffset());
         }
     }
@@ -285,8 +288,9 @@ class AssemblerX86Shared : public AssemblerShared
   public:
     AssemblerX86Shared()
     {
-        if (!HasAVX())
+        if (!HasAVX()) {
             masm.disableVEX();
+        }
     }
 
     enum Condition {
@@ -398,8 +402,9 @@ class AssemblerX86Shared : public AssemblerShared
     void assertNoGCThings() const {
 #ifdef DEBUG
         MOZ_ASSERT(dataRelocations_.length() == 0);
-        for (auto& j : jumps_)
+        for (auto& j : jumps_) {
             MOZ_ASSERT(j.kind == RelocationKind::HARDCODED);
+        }
 #endif
     }
 
@@ -871,8 +876,9 @@ class AssemblerX86Shared : public AssemblerShared
             // Thread the jump list through the unpatched jump targets.
             JmpSrc j = masm.jCC(static_cast<X86Encoding::Condition>(cond));
             JmpSrc prev;
-            if (label->used())
+            if (label->used()) {
                 prev = JmpSrc(label->offset());
+            }
             label->use(j.offset());
             masm.setNextJump(j, prev);
         }
@@ -885,8 +891,9 @@ class AssemblerX86Shared : public AssemblerShared
             // Thread the jump list through the unpatched jump targets.
             JmpSrc j = masm.jmp();
             JmpSrc prev;
-            if (label->used())
+            if (label->used()) {
                 prev = JmpSrc(label->offset());
+            }
             label->use(j.offset());
             masm.setNextJump(j, prev);
         }
@@ -901,8 +908,9 @@ class AssemblerX86Shared : public AssemblerShared
         } else {
             // Thread the jump list through the unpatched jump targets.
             JmpSrc prev;
-            if (label->used())
+            if (label->used()) {
                 prev = JmpSrc(label->offset());
+            }
             label->use(j.offset());
             masm.setNextJump(j, prev);
         }
@@ -986,8 +994,9 @@ class AssemblerX86Shared : public AssemblerShared
 
     // Re-routes pending jumps to a new label.
     void retarget(Label* label, Label* target) {
-        if (!label->used())
+        if (!label->used()) {
             return;
+        }
         bool more;
         JmpSrc jmp(label->offset());
         do {
@@ -999,8 +1008,9 @@ class AssemblerX86Shared : public AssemblerShared
             } else {
                 // Thread the jump list through the unpatched jump targets.
                 JmpSrc prev;
-                if (target->used())
+                if (target->used()) {
                     prev = JmpSrc(target->offset());
+                }
                 target->use(jmp.offset());
                 masm.setNextJump(jmp, prev);
             }
@@ -1030,8 +1040,9 @@ class AssemblerX86Shared : public AssemblerShared
             masm.linkJump(j, JmpDst(label->offset()));
         } else {
             JmpSrc prev;
-            if (label->used())
+            if (label->used()) {
                 prev = JmpSrc(label->offset());
+            }
             label->use(j.offset());
             masm.setNextJump(j, prev);
         }
