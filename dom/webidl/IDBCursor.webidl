@@ -8,42 +8,42 @@
  */
 
 enum IDBCursorDirection {
-    "next",
-    "nextunique",
-    "prev",
-    "prevunique"
+  "next",
+  "nextunique",
+  "prev",
+  "prevunique"
 };
 
 [Exposed=(Window,Worker,System)]
 interface IDBCursor {
-    readonly    attribute (IDBObjectStore or IDBIndex) source;
+  readonly    attribute (IDBObjectStore or IDBIndex) source;
 
-    readonly    attribute IDBCursorDirection           direction;
+  readonly    attribute IDBCursorDirection           direction;
 
-    [Throws]
-    readonly    attribute any                          key;
+  [Throws]
+  readonly    attribute any                          key;
 
-    [Throws]
-    readonly    attribute any                          primaryKey;
+  [Throws]
+  readonly    attribute any                          primaryKey;
 
-    [Throws]
-    IDBRequest update (any value);
+  [Throws]
+  IDBRequest update (any value);
 
-    [Throws]
-    void       advance ([EnforceRange] unsigned long count);
+  [Throws]
+  void       advance ([EnforceRange] unsigned long count);
 
-    [Throws]
-    void       continue (optional any key);
+  [Throws]
+  void       continue (optional any key);
 
-    [Throws]
-    void       continuePrimaryKey(any key, any primaryKey);
+  [Throws]
+  void       continuePrimaryKey(any key, any primaryKey);
 
-    [Throws]
-    IDBRequest delete ();
+  [Throws]
+  IDBRequest delete ();
 };
 
 [Exposed=(Window,Worker,System)]
 interface IDBCursorWithValue : IDBCursor {
-    [Throws]
-    readonly    attribute any value;
+  [Throws]
+  readonly    attribute any value;
 };

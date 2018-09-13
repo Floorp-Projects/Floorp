@@ -21,26 +21,26 @@ dictionary AnalyserOptions : AudioNodeOptions {
  Constructor(BaseAudioContext context, optional AnalyserOptions options)]
 interface AnalyserNode : AudioNode {
 
-    // Real-time frequency-domain data
-    void getFloatFrequencyData(Float32Array array);
-    void getByteFrequencyData(Uint8Array array);
+  // Real-time frequency-domain data
+  void getFloatFrequencyData(Float32Array array);
+  void getByteFrequencyData(Uint8Array array);
 
-    // Real-time waveform data
-    void getFloatTimeDomainData(Float32Array array);
-    void getByteTimeDomainData(Uint8Array array);
+  // Real-time waveform data
+  void getFloatTimeDomainData(Float32Array array);
+  void getByteTimeDomainData(Uint8Array array);
 
-    [SetterThrows, Pure]
-    attribute unsigned long fftSize;
-    [Pure]
-    readonly attribute unsigned long frequencyBinCount;
+  [SetterThrows, Pure]
+  attribute unsigned long fftSize;
+  [Pure]
+  readonly attribute unsigned long frequencyBinCount;
 
-    [SetterThrows, Pure]
-    attribute double minDecibels;
-    [SetterThrows, Pure]
-    attribute double maxDecibels;
+  [SetterThrows, Pure]
+  attribute double minDecibels;
+  [SetterThrows, Pure]
+  attribute double maxDecibels;
 
-    [SetterThrows, Pure]
-    attribute double smoothingTimeConstant;
+  [SetterThrows, Pure]
+  attribute double smoothingTimeConstant;
 
 };
 

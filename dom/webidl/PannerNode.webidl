@@ -22,57 +22,57 @@ enum DistanceModelType {
 };
 
 dictionary PannerOptions : AudioNodeOptions {
-             PanningModelType  panningModel = "equalpower";
-             DistanceModelType distanceModel = "inverse";
-             float             positionX = 0;
-             float             positionY = 0;
-             float             positionZ = 0;
-             float             orientationX = 1;
-             float             orientationY = 0;
-             float             orientationZ = 0;
-             double            refDistance = 1;
-             double            maxDistance = 10000;
-             double            rolloffFactor = 1;
-             double            coneInnerAngle = 360;
-             double            coneOuterAngle = 360;
-             double            coneOuterGain = 0;
+  PanningModelType  panningModel = "equalpower";
+  DistanceModelType distanceModel = "inverse";
+  float             positionX = 0;
+  float             positionY = 0;
+  float             positionZ = 0;
+  float             orientationX = 1;
+  float             orientationY = 0;
+  float             orientationZ = 0;
+  double            refDistance = 1;
+  double            maxDistance = 10000;
+  double            rolloffFactor = 1;
+  double            coneInnerAngle = 360;
+  double            coneOuterAngle = 360;
+  double            coneOuterGain = 0;
 };
 
 [Pref="dom.webaudio.enabled",
  Constructor(BaseAudioContext context, optional PannerOptions options)]
 interface PannerNode : AudioNode {
 
-    // Default for stereo is equalpower
-    attribute PanningModelType panningModel;
+  // Default for stereo is equalpower
+  attribute PanningModelType panningModel;
 
-    // Uses a 3D cartesian coordinate system
-    void setPosition(double x, double y, double z);
-    void setOrientation(double x, double y, double z);
+  // Uses a 3D cartesian coordinate system
+  void setPosition(double x, double y, double z);
+  void setOrientation(double x, double y, double z);
 
-    // Cartesian coordinate for position
-    readonly attribute AudioParam positionX;
-    readonly attribute AudioParam positionY;
-    readonly attribute AudioParam positionZ;
+  // Cartesian coordinate for position
+  readonly attribute AudioParam positionX;
+  readonly attribute AudioParam positionY;
+  readonly attribute AudioParam positionZ;
 
-    // Cartesian coordinate for orientation
-    readonly attribute AudioParam orientationX;
-    readonly attribute AudioParam orientationY;
-    readonly attribute AudioParam orientationZ;
+  // Cartesian coordinate for orientation
+  readonly attribute AudioParam orientationX;
+  readonly attribute AudioParam orientationY;
+  readonly attribute AudioParam orientationZ;
 
-    // Distance model and attributes
-    attribute DistanceModelType distanceModel;
-    [SetterThrows]
-    attribute double refDistance;
-    [SetterThrows]
-    attribute double maxDistance;
-    [SetterThrows]
-    attribute double rolloffFactor;
+  // Distance model and attributes
+  attribute DistanceModelType distanceModel;
+  [SetterThrows]
+  attribute double refDistance;
+  [SetterThrows]
+  attribute double maxDistance;
+  [SetterThrows]
+  attribute double rolloffFactor;
 
-    // Directional sound cone
-    attribute double coneInnerAngle;
-    attribute double coneOuterAngle;
-    [SetterThrows]
-    attribute double coneOuterGain;
+  // Directional sound cone
+  attribute double coneInnerAngle;
+  attribute double coneOuterAngle;
+  [SetterThrows]
+  attribute double coneOuterGain;
 
 };
 

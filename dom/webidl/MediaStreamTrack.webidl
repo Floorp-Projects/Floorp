@@ -15,22 +15,22 @@
 // Their binding code is used in the implementation.
 
 enum VideoFacingModeEnum {
-    "user",
-    "environment",
-    "left",
-    "right"
+  "user",
+  "environment",
+  "left",
+  "right"
 };
 
 enum MediaSourceEnum {
-    "camera",
-    "screen",
-    "application",
-    "window",
-    "browser",
-    "microphone",
-    "audioCapture",
-    "other"
-    // If values are added, adjust n_values in Histograms.json (2 places)
+  "camera",
+  "screen",
+  "application",
+  "window",
+  "browser",
+  "microphone",
+  "audioCapture",
+  "other"
+  // If values are added, adjust n_values in Histograms.json (2 places)
 };
 
 typedef (long or ConstrainLongRange) ConstrainLong;
@@ -42,60 +42,60 @@ typedef (DOMString or sequence<DOMString> or ConstrainDOMStringParameters) Const
 // function in MediaManager.cpp to make OverconstrainedError's constraint work!
 
 dictionary MediaTrackConstraintSet {
-    ConstrainLong width;
-    ConstrainLong height;
-    ConstrainDouble frameRate;
-    ConstrainDOMString facingMode;
-    DOMString mediaSource = "camera";
-    long long browserWindow;
-    boolean scrollWithPage;
-    ConstrainDOMString deviceId;
-    ConstrainLong viewportOffsetX;
-    ConstrainLong viewportOffsetY;
-    ConstrainLong viewportWidth;
-    ConstrainLong viewportHeight;
-    ConstrainBoolean echoCancellation;
-    ConstrainBoolean noiseSuppression;
-    ConstrainBoolean autoGainControl;
-    ConstrainLong channelCount;
+  ConstrainLong width;
+  ConstrainLong height;
+  ConstrainDouble frameRate;
+  ConstrainDOMString facingMode;
+  DOMString mediaSource = "camera";
+  long long browserWindow;
+  boolean scrollWithPage;
+  ConstrainDOMString deviceId;
+  ConstrainLong viewportOffsetX;
+  ConstrainLong viewportOffsetY;
+  ConstrainLong viewportWidth;
+  ConstrainLong viewportHeight;
+  ConstrainBoolean echoCancellation;
+  ConstrainBoolean noiseSuppression;
+  ConstrainBoolean autoGainControl;
+  ConstrainLong channelCount;
 
-    // Deprecated with warnings:
-    ConstrainBoolean mozNoiseSuppression;
-    ConstrainBoolean mozAutoGainControl;
+  // Deprecated with warnings:
+  ConstrainBoolean mozNoiseSuppression;
+  ConstrainBoolean mozAutoGainControl;
 };
 
 dictionary MediaTrackConstraints : MediaTrackConstraintSet {
-    sequence<MediaTrackConstraintSet> advanced;
+  sequence<MediaTrackConstraintSet> advanced;
 };
 
 enum MediaStreamTrackState {
-    "live",
-    "ended"
+  "live",
+  "ended"
 };
 
 [Exposed=Window]
 interface MediaStreamTrack : EventTarget {
-    readonly    attribute DOMString             kind;
-    readonly    attribute DOMString             id;
-    [NeedsCallerType]
-    readonly    attribute DOMString             label;
-                attribute boolean               enabled;
-    readonly    attribute boolean               muted;
-                attribute EventHandler          onmute;
-                attribute EventHandler          onunmute;
-    readonly    attribute MediaStreamTrackState readyState;
-                attribute EventHandler          onended;
-    MediaStreamTrack       clone ();
-    void                   stop ();
-//  MediaTrackCapabilities getCapabilities ();
-    MediaTrackConstraints  getConstraints ();
-    [NeedsCallerType]
-    MediaTrackSettings     getSettings ();
+  readonly    attribute DOMString             kind;
+  readonly    attribute DOMString             id;
+  [NeedsCallerType]
+  readonly    attribute DOMString             label;
+              attribute boolean               enabled;
+  readonly    attribute boolean               muted;
+              attribute EventHandler          onmute;
+              attribute EventHandler          onunmute;
+  readonly    attribute MediaStreamTrackState readyState;
+              attribute EventHandler          onended;
+  MediaStreamTrack       clone ();
+  void                   stop ();
+//MediaTrackCapabilities getCapabilities ();
+  MediaTrackConstraints  getConstraints ();
+  [NeedsCallerType]
+  MediaTrackSettings     getSettings ();
 
-    [Throws, NeedsCallerType]
-    Promise<void>          applyConstraints (optional MediaTrackConstraints constraints);
-//              attribute EventHandler          onoverconstrained;
+  [Throws, NeedsCallerType]
+  Promise<void>          applyConstraints (optional MediaTrackConstraints constraints);
+//            attribute EventHandler          onoverconstrained;
 
-    [ChromeOnly]
-    void mutedChanged(boolean muted);
+  [ChromeOnly]
+  void mutedChanged(boolean muted);
 };

@@ -14,31 +14,31 @@
  Constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,
              optional unrestricted double z = 0, optional unrestricted double w = 1)]
 interface DOMPointReadOnly {
-    [NewObject] static DOMPointReadOnly fromPoint(optional DOMPointInit other);
+  [NewObject] static DOMPointReadOnly fromPoint(optional DOMPointInit other);
 
-    readonly attribute unrestricted double x;
-    readonly attribute unrestricted double y;
-    readonly attribute unrestricted double z;
-    readonly attribute unrestricted double w; 
+  readonly attribute unrestricted double x;
+  readonly attribute unrestricted double y;
+  readonly attribute unrestricted double z;
+  readonly attribute unrestricted double w;
 
-    [Default] object toJSON();
+  [Default] object toJSON();
 };
 
 [Pref="layout.css.DOMPoint.enabled",
  Constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,
              optional unrestricted double z = 0, optional unrestricted double w = 1)]
 interface DOMPoint : DOMPointReadOnly {
-    [NewObject] static DOMPoint fromPoint(optional DOMPointInit other);
+  [NewObject] static DOMPoint fromPoint(optional DOMPointInit other);
 
-    inherit attribute unrestricted double x;
-    inherit attribute unrestricted double y;
-    inherit attribute unrestricted double z;
-    inherit attribute unrestricted double w;
+  inherit attribute unrestricted double x;
+  inherit attribute unrestricted double y;
+  inherit attribute unrestricted double z;
+  inherit attribute unrestricted double w;
 };
 
 dictionary DOMPointInit {
-    unrestricted double x = 0;
-    unrestricted double y = 0;
-    unrestricted double z = 0;
-    unrestricted double w = 1;
+  unrestricted double x = 0;
+  unrestricted double y = 0;
+  unrestricted double z = 0;
+  unrestricted double w = 1;
 };
