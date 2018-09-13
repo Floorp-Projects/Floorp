@@ -100,8 +100,8 @@ CompileFile(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 static bool
-Compile(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-        const char* filename, JS::MutableHandleScript script)
+CompilePath(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
+            const char* filename, JS::MutableHandleScript script)
 {
     AutoFile file;
     if (!file.open(cx, filename)) {
@@ -146,7 +146,7 @@ bool
 JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
             const char* filename, JS::MutableHandleScript script)
 {
-    return ::Compile(cx, options, filename, script);
+    return CompilePath(cx, options, filename, script);
 }
 
 bool
@@ -186,7 +186,7 @@ JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& opt
 {
     CompileOptions options(cx, optionsArg);
     options.setNonSyntacticScope(true);
-    return ::Compile(cx, options, filename, script);
+    return CompilePath(cx, options, filename, script);
 }
 
 JS_PUBLIC_API(bool)
