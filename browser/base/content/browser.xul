@@ -213,6 +213,22 @@ xmlns="http://www.w3.org/1999/xhtml"
            level="parent"
            overflowpadding="15" />
 
+    <!-- for url bar autocomplete -->
+    <panel id="urlbar-results"
+           role="group"
+           noautofocus="true"
+           hidden="true"
+           flip="none"
+           level="parent">
+      <html:div class="urlbarView-body-outer">
+        <html:div class="urlbarView-body-inner">
+          <!-- TODO: add search suggestions notification -->
+          <html:div class="urlbarView-results"/>
+          <!-- TODO: add footer -->
+        </html:div>
+      </html:div>
+    </panel>
+
    <!-- for date/time picker. consumeoutsideclicks is set to never, so that
         clicks on the anchored input box are never consumed. -->
     <panel id="DateTimePickerPanel"

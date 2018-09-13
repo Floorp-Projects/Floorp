@@ -15,21 +15,25 @@ requestLongerTimeout(5);
  */
 
 /* These reflows happen only the first time the awesomebar panel opens. */
-const EXPECTED_REFLOWS_FIRST_OPEN = [
-  {
+const EXPECTED_REFLOWS_FIRST_OPEN = [];
+if (AppConstants.DEBUG ||
+    AppConstants.platform == "win" ||
+    AppConstants.platform == "macosx") {
+  EXPECTED_REFLOWS_FIRST_OPEN.push({
     stack: [
       "_rebuild@chrome://browser/content/search/search.xml",
       "set_popup@chrome://browser/content/search/search.xml",
       "set_oneOffSearchesEnabled@chrome://browser/content/urlbarBindings.xml",
       "_enableOrDisableOneOffSearches@chrome://browser/content/urlbarBindings.xml",
-      "urlbar_XBL_Constructor/<@chrome://browser/content/urlbarBindings.xml",
+      "@chrome://browser/content/urlbarBindings.xml",
       "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
       "openPopup@chrome://global/content/bindings/autocomplete.xml",
       "set_popupOpen@chrome://global/content/bindings/autocomplete.xml",
     ],
-  },
-
+  });
+}
+EXPECTED_REFLOWS_FIRST_OPEN.push(
   {
     stack: [
       "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
@@ -62,8 +66,8 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       "openPopup@chrome://global/content/bindings/autocomplete.xml",
       "set_popupOpen@chrome://global/content/bindings/autocomplete.xml",
     ],
-  },
-];
+  }
+);
 
 // These extra reflows happen on beta/release as one of the default bookmarks in
 // bookmarks.html.in has a long URL.
@@ -75,16 +79,16 @@ if (AppConstants.RELEASE_OR_BETA) {
       "onunderflow@chrome://browser/content/browser.xul",
     ],
     maxCount: 6,
-  });
-  EXPECTED_REFLOWS_FIRST_OPEN.push({
+  },
+  {
     stack: [
       "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
       "_onOverflow@chrome://global/content/bindings/autocomplete.xml",
       "onoverflow@chrome://browser/content/browser.xul",
     ],
     maxCount: 6,
-  });
-  EXPECTED_REFLOWS_FIRST_OPEN.push({
+  },
+  {
     stack: [
       "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
       "_adjustAcItem@chrome://global/content/bindings/autocomplete.xml",
