@@ -1415,6 +1415,9 @@ pref("javascript.options.asmjs",            true);
 pref("javascript.options.wasm",             true);
 pref("javascript.options.wasm_ionjit",      true);
 pref("javascript.options.wasm_baselinejit", true);
+#ifdef ENABLE_WASM_CRANELIFT
+pref("javascript.options.wasm_cranelift",   false);
+#endif
 #ifdef ENABLE_WASM_GC
 pref("javascript.options.wasm_gc",          false);
 #endif
