@@ -87,6 +87,11 @@ a {
   overflow: hidden;
 }
 
+/* Reset the overflow for the network info panel (when a network message is expanded) */
+.message .network-info * {
+  overflow: unset;
+}
+
 .message:hover {
   border-inline-start-color: var(--theme-highlight-blue);
 }
