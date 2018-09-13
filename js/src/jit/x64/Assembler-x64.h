@@ -903,10 +903,11 @@ class Assembler : public AssemblerX86Shared
         // though. Use xorl instead of xorq since they are functionally
         // equivalent (32-bit instructions zero-extend their results to 64 bits)
         // and xorl has a smaller encoding.
-        if (word.value == 0)
+        if (word.value == 0) {
             xorl(dest, dest);
-        else
+        } else {
             movq(word, dest);
+        }
     }
     void mov(ImmPtr imm, Register dest) {
         movq(imm, dest);
@@ -1138,8 +1139,9 @@ GetIntArgReg(uint32_t intArg, uint32_t floatArg, Register* out)
 #else
     uint32_t arg = intArg;
 #endif
-    if (arg >= NumIntArgRegs)
+    if (arg >= NumIntArgRegs) {
         return false;
+    }
     *out = IntArgRegs[arg];
     return true;
 }
@@ -1152,8 +1154,9 @@ GetIntArgReg(uint32_t intArg, uint32_t floatArg, Register* out)
 static inline bool
 GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
 {
-    if (GetIntArgReg(usedIntArgs, usedFloatArgs, out))
+    if (GetIntArgReg(usedIntArgs, usedFloatArgs, out)) {
         return true;
+    }
     // Unfortunately, we have to assume things about the point at which
     // GetIntArgReg returns false, because we need to know how many registers it
     // can allocate.
@@ -1163,8 +1166,9 @@ GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
     uint32_t arg = usedIntArgs;
 #endif
     arg -= NumIntArgRegs;
-    if (arg >= NumCallTempNonArgRegs)
+    if (arg >= NumCallTempNonArgRegs) {
         return false;
+    }
     *out = CallTempNonArgRegs[arg];
     return true;
 }
@@ -1177,8 +1181,9 @@ GetFloatArgReg(uint32_t intArg, uint32_t floatArg, FloatRegister* out)
 #else
     uint32_t arg = floatArg;
 #endif
-    if (floatArg >= NumFloatArgRegs)
+    if (floatArg >= NumFloatArgRegs) {
         return false;
+    }
     *out = FloatArgRegs[arg];
     return true;
 }
