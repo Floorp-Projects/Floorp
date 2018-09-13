@@ -16,7 +16,6 @@ const {
   UPDATE_DEVICE_DISPLAYED,
   UPDATE_DEVICE_MODAL,
 } = require("./index");
-const { removeDeviceAssociation } = require("./viewports");
 
 const { addDevice, getDevices, removeDevice } = require("devtools/client/shared/devices");
 
@@ -102,15 +101,7 @@ module.exports = {
   },
 
   removeCustomDevice(device) {
-    return async function(dispatch, getState) {
-      // Check if the custom device is currently associated with any viewports
-      const { viewports } = getState();
-      for (const viewport of viewports) {
-        if (viewport.device == device.name) {
-          dispatch(removeDeviceAssociation(viewport.id));
-        }
-      }
-
+    return async function(dispatch) {
       // Remove custom device from device storage
       await removeDevice(device, "custom");
       dispatch({
