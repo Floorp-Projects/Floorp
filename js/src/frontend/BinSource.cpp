@@ -374,6 +374,17 @@ BinASTParser<Tok>::checkPositionalParameterIndices(Handle<GCVector<JSAtom*>> pos
     return Ok();
 }
 
+// Binary AST (revision 8eab67e0c434929a66ff6abe99ff790bca087dda)
+// 3.1.13 CheckFunctionLength.
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::checkFunctionLength(uint32_t expectedLength)
+{
+    if (parseContext_->functionBox()->length != expectedLength) {
+        return raiseError("Function length does't match");
+    }
+    return Ok();
+}
+
 template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::checkClosedVars(ParseContext::Scope& scope)
 {

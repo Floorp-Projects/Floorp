@@ -467,6 +467,7 @@ interface EagerMethod : Node {
   attribute boolean isAsync;
   attribute boolean isGenerator;
   attribute PropertyName name;
+  attribute unsigned long length;
   attribute FrozenArray<Directive> directives;
   attribute FunctionOrMethodContents contents;
 };
@@ -474,6 +475,7 @@ interface LazyMethod : Node {
   attribute boolean isAsync;
   attribute boolean isGenerator;
   attribute PropertyName name;
+  attribute unsigned long length;
   attribute FrozenArray<Directive> directives;
   [Lazy] attribute FunctionOrMethodContents contents;
 };
@@ -499,11 +501,13 @@ interface GetterContents : Node {
 // `set PropertyName ( PropertySetParameterList ) { FunctionBody }`
 interface EagerSetter : Node {
   attribute PropertyName name;
+  attribute unsigned long length;
   attribute FrozenArray<Directive> directives;
   attribute SetterContents contents;
 };
 interface LazySetter : Node {
   attribute PropertyName name;
+  attribute unsigned long length;
   attribute FrozenArray<Directive> directives;
   [Lazy] attribute SetterContents contents;
 };
@@ -582,23 +586,27 @@ interface ArrayExpression : Node {
 interface EagerArrowExpressionWithFunctionBody : Node {
   // True for `AsyncArrowFunction`, false otherwise.
   attribute boolean isAsync;
+  attribute unsigned long length;
   attribute FrozenArray<Directive> directives;
   attribute ArrowExpressionContentsWithFunctionBody contents;
 };
 interface LazyArrowExpressionWithFunctionBody : Node {
   // True for `AsyncArrowFunction`, false otherwise.
   attribute boolean isAsync;
+  attribute unsigned long length;
   attribute FrozenArray<Directive> directives;
   [Lazy] attribute ArrowExpressionContentsWithFunctionBody contents;
 };
 interface EagerArrowExpressionWithExpression : Node {
   // True for `AsyncArrowFunction`, false otherwise.
   attribute boolean isAsync;
+  attribute unsigned long length;
   attribute ArrowExpressionContentsWithExpression contents;
 };
 interface LazyArrowExpressionWithExpression : Node {
   // True for `AsyncArrowFunction`, false otherwise.
   attribute boolean isAsync;
+  attribute unsigned long length;
   [Lazy] attribute ArrowExpressionContentsWithExpression contents;
 };
 
@@ -681,6 +689,7 @@ interface EagerFunctionExpression : Node {
   attribute boolean isAsync;
   attribute boolean isGenerator;
   attribute BindingIdentifier? name;
+  attribute unsigned long length;
   attribute FrozenArray<Directive> directives;
   attribute FunctionExpressionContents contents;
 };
@@ -688,6 +697,7 @@ interface LazyFunctionExpression : Node {
   attribute boolean isAsync;
   attribute boolean isGenerator;
   attribute BindingIdentifier? name;
+  attribute unsigned long length;
   attribute FrozenArray<Directive> directives;
   [Lazy] attribute FunctionExpressionContents contents;
 };
@@ -941,6 +951,7 @@ interface EagerFunctionDeclaration : Node {
   attribute boolean isAsync;
   attribute boolean isGenerator;
   attribute BindingIdentifier name;
+  attribute unsigned long length;
   attribute FrozenArray<Directive> directives;
   attribute FunctionOrMethodContents contents;
 };
@@ -949,6 +960,7 @@ interface LazyFunctionDeclaration : Node {
   attribute boolean isAsync;
   attribute boolean isGenerator;
   attribute BindingIdentifier name;
+  attribute unsigned long length;
   attribute FrozenArray<Directive> directives;
   [Lazy] attribute FunctionOrMethodContents contents;
 };

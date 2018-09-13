@@ -610,9 +610,11 @@ FunctionExpressionContents:
     type-ok:
         Ok
     extra-params: |
+        uint32_t funLength,
         ListNode** paramsOut,
         ListNode** bodyOut
-    extra-args: paramsOut, bodyOut
+    extra-args: |
+        funLength, paramsOut, bodyOut
     fields:
         isThisCaptured:
             after: |
@@ -628,6 +630,7 @@ FunctionExpressionContents:
                 &positionalParams
         params:
             after: |
+                MOZ_TRY(checkFunctionLength(funLength));
                 MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
     build: |
         *paramsOut = params;
@@ -679,7 +682,7 @@ EagerFunctionExpression:
                 ListNode* params;
                 ListNode* tmpBody;
             extra-args: |
-                &params, &tmpBody
+                length, &params, &tmpBody
             after: |
                 BINJS_MOZ_TRY_DECL(body, appendDirectivesToBody(tmpBody, directives));
     build: |
@@ -693,6 +696,7 @@ EagerGetter:
         const bool isGenerator = false;
         const bool isAsync = false;
         const auto accessorType = AccessorType::Getter;
+        const uint32_t length = 0;
     inherits: EagerMethod
 
 EagerMethod:
