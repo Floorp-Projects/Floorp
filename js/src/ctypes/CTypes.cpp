@@ -1175,6 +1175,55 @@ static void
 BuildTypeSource(JSContext* cx, JSObject* typeObj_, bool makeShort,
                 AutoString& result);
 
+static JS::UniqueChars
+TypeSourceForError(JSContext* cx, JSObject* typeObj)
+{
+  AutoString source;
+  BuildTypeSource(cx, typeObj, true, source);
+  if (!source)
+    return nullptr;
+  return EncodeLatin1(cx, source);
+}
+
+static JS::UniqueChars
+FunctionTypeSourceForError(JSContext* cx, HandleObject funObj)
+{
+  AutoString funSource;
+  BuildFunctionTypeSource(cx, funObj, funSource);
+  if (!funSource)
+    return nullptr;
+  return EncodeLatin1(cx, funSource);
+}
+
+static JS::UniqueChars
+ConversionPositionForError(JSContext* cx, ConversionType convType, HandleObject funObj,
+                           unsigned argIndex)
+{
+  AutoString posSource;
+  BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
+  if (!posSource)
+    return nullptr;
+  return EncodeLatin1(cx, posSource);
+}
+
+class IndexCString final
+{
+    char indexStr[21]; // space for UINT64_MAX plus terminating null
+
+  public:
+    explicit IndexCString(unsigned index)
+    {
+      SprintfLiteral(indexStr, "%u", index);
+    }
+
+    explicit IndexCString(size_t index)
+    {
+      SprintfLiteral(indexStr, "%zu", index);
+    }
+
+    const char* get() const { return indexStr; }
+};
+
 static bool
 ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
           ConversionType convType,
@@ -1193,20 +1242,15 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     case TYPE_array: {
       MOZ_ASSERT(!funObj);
 
-      char indexStr[16];
-      SprintfLiteral(indexStr, "%u", arrIndex);
+      IndexCString indexStr(arrIndex);
 
-      AutoString arrSource;
-      BuildTypeSource(cx, arrObj, true, arrSource);
-      if (!arrSource)
-          return false;
-      JS::UniqueChars arrStr = EncodeLatin1(cx, arrSource);
+      JS::UniqueChars arrStr = TypeSourceForError(cx, arrObj);
       if (!arrStr)
         return false;
 
       JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
                                  CTYPESMSG_CONV_ERROR_ARRAY,
-                                 valStr, indexStr, arrStr.get());
+                                 valStr, indexStr.get(), arrStr.get());
       break;
     }
     case TYPE_struct: {
@@ -1216,21 +1260,13 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
       if (!nameStr)
         return false;
 
-      AutoString structSource;
-      BuildTypeSource(cx, arrObj, true, structSource);
-      if (!structSource)
-          return false;
-      JS::UniqueChars structStr = EncodeLatin1(cx, structSource);
+      JS::UniqueChars structStr = TypeSourceForError(cx, arrObj);
       if (!structStr)
         return false;
 
       JS::UniqueChars posStr;
       if (funObj) {
-        AutoString posSource;
-        BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
-        if (!posSource)
-            return false;
-        posStr = EncodeLatin1(cx, posSource);
+        posStr = ConversionPositionForError(cx, convType, funObj, argIndex);
         if (!posStr)
           return false;
       }
@@ -1251,30 +1287,21 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
   case ConversionType::Argument: {
     MOZ_ASSERT(funObj);
 
-    char indexStr[16];
-    SprintfLiteral(indexStr, "%u", argIndex + 1);
+    IndexCString indexStr(argIndex + 1);
 
-    AutoString funSource;
-    BuildFunctionTypeSource(cx, funObj, funSource);
-    if (!funSource)
-        return false;
-    JS::UniqueChars funStr = EncodeLatin1(cx, funSource);
+    JS::UniqueChars funStr = FunctionTypeSourceForError(cx, funObj);
     if (!funStr)
       return false;
 
     JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
                                CTYPESMSG_CONV_ERROR_ARG,
-                               valStr, indexStr, funStr.get());
+                               valStr, indexStr.get(), funStr.get());
     break;
   }
   case ConversionType::Finalizer: {
     MOZ_ASSERT(funObj);
 
-    AutoString funSource;
-    BuildFunctionTypeSource(cx, funObj, funSource);
-    if (!funSource)
-        return false;
-    JS::UniqueChars funStr = EncodeLatin1(cx, funSource);
+    JS::UniqueChars funStr = FunctionTypeSourceForError(cx, funObj);
     if (!funStr)
       return false;
 
@@ -1285,11 +1312,7 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
   case ConversionType::Return: {
     MOZ_ASSERT(funObj);
 
-    AutoString funSource;
-    BuildFunctionTypeSource(cx, funObj, funSource);
-    if (!funSource)
-        return false;
-    JS::UniqueChars funStr = EncodeLatin1(cx, funSource);
+    JS::UniqueChars funStr = FunctionTypeSourceForError(cx, funObj);
     if (!funStr)
       return false;
 
@@ -1317,11 +1340,7 @@ ConvError(JSContext* cx, HandleObject expectedType, HandleValue actual,
 {
   MOZ_ASSERT(CType::IsCType(expectedType));
 
-  AutoString expectedSource;
-  BuildTypeSource(cx, expectedType, true, expectedSource);
-  if (!expectedSource)
-      return false;
-  JS::UniqueChars expectedStr = EncodeLatin1(cx, expectedSource);
+  JS::UniqueChars expectedStr = TypeSourceForError(cx, expectedType);
   if (!expectedStr)
     return false;
 
@@ -1338,11 +1357,10 @@ ArgumentConvError(JSContext* cx, HandleValue actual, const char* funStr,
   if (!valStr)
     return false;
 
-  char indexStr[16];
-  SprintfLiteral(indexStr, "%u", argIndex + 1);
+  IndexCString indexStr(argIndex + 1);
 
   JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_CONV_ERROR_ARG, valStr, indexStr, funStr);
+                             CTYPESMSG_CONV_ERROR_ARG, valStr, indexStr.get(), funStr);
   return false;
 }
 
@@ -1367,22 +1385,16 @@ ArrayLengthMismatch(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
   if (!valStr)
     return false;
 
-  char expectedLengthStr[16];
-  SprintfLiteral(expectedLengthStr, "%u", expectedLength);
-  char actualLengthStr[16];
-  SprintfLiteral(actualLengthStr, "%u", actualLength);
+  IndexCString expectedLengthStr(expectedLength);
+  IndexCString actualLengthStr(actualLength);
 
-  AutoString arrSource;
-  BuildTypeSource(cx, arrObj, true, arrSource);
-  if (!arrSource)
-      return false;
-  JS::UniqueChars arrStr = EncodeLatin1(cx, arrSource);
+  JS::UniqueChars arrStr = TypeSourceForError(cx, arrObj);
   if (!arrStr)
     return false;
 
   JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
                              CTYPESMSG_ARRAY_MISMATCH,
-                             valStr, arrStr.get(), expectedLengthStr, actualLengthStr);
+                             valStr, arrStr.get(), expectedLengthStr.get(), actualLengthStr.get());
   return false;
 }
 
@@ -1398,22 +1410,16 @@ ArrayLengthOverflow(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
   if (!valStr)
     return false;
 
-  char expectedLengthStr[16];
-  SprintfLiteral(expectedLengthStr, "%u", expectedLength);
-  char actualLengthStr[16];
-  SprintfLiteral(actualLengthStr, "%u", actualLength);
+  IndexCString expectedLengthStr(expectedLength);
+  IndexCString actualLengthStr(actualLength);
 
-  AutoString arrSource;
-  BuildTypeSource(cx, arrObj, true, arrSource);
-  if (!arrSource)
-      return false;
-  JS::UniqueChars arrStr = EncodeLatin1(cx, arrSource);
+  JS::UniqueChars arrStr = TypeSourceForError(cx, arrObj);
   if (!arrStr)
     return false;
 
   JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
                              CTYPESMSG_ARRAY_OVERFLOW,
-                             valStr, arrStr.get(), expectedLengthStr, actualLengthStr);
+                             valStr, arrStr.get(), expectedLengthStr.get(), actualLengthStr.get());
   return false;
 }
 
@@ -1468,11 +1474,7 @@ EmptyFinalizerError(JSContext* cx, ConversionType convType,
 {
   JS::UniqueChars posStr;
   if (funObj) {
-    AutoString posSource;
-    BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
-    if (!posSource)
-        return false;
-    posStr = EncodeLatin1(cx, posSource);
+    posStr = ConversionPositionForError(cx, convType, funObj, argIndex);
     if (!posStr)
       return false;
   }
@@ -1496,33 +1498,23 @@ FieldCountMismatch(JSContext* cx,
   if (!valStr)
     return false;
 
-  AutoString structSource;
-  BuildTypeSource(cx, structObj, true, structSource);
-  if (!structSource)
-      return false;
-  JS::UniqueChars structStr = EncodeLatin1(cx, structSource);
+  JS::UniqueChars structStr = TypeSourceForError(cx, structObj);
   if (!structStr)
     return false;
 
-  char expectedCountStr[16];
-  SprintfLiteral(expectedCountStr, "%u", expectedCount);
-  char actualCountStr[16];
-  SprintfLiteral(actualCountStr, "%u", actualCount);
+  IndexCString expectedCountStr(expectedCount);
+  IndexCString actualCountStr(actualCount);
 
   JS::UniqueChars posStr;
   if (funObj) {
-    AutoString posSource;
-    BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
-    if (!posSource)
-        return false;
-    posStr = EncodeLatin1(cx, posSource);
+    posStr = ConversionPositionForError(cx, convType, funObj, argIndex);
     if (!posStr)
       return false;
   }
 
   JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
                              CTYPESMSG_FIELD_MISMATCH,
-                             valStr, structStr.get(), expectedCountStr, actualCountStr,
+                             valStr, structStr.get(), expectedCountStr.get(), actualCountStr.get(),
                              (posStr ? posStr.get() : ""));
   return false;
 }
@@ -1535,11 +1527,10 @@ FieldDescriptorCountError(JSContext* cx, HandleValue typeVal, size_t length)
   if (!valStr)
     return false;
 
-  char lengthStr[16];
-  SprintfLiteral(lengthStr, "%zu", length);
+  IndexCString lengthStr(length);
 
   JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_FIELD_DESC_COUNT, valStr, lengthStr);
+                             CTYPESMSG_FIELD_DESC_COUNT, valStr, lengthStr.get());
   return false;
 }
 
@@ -1636,11 +1627,7 @@ FinalizerSizeError(JSContext* cx, HandleObject funObj, HandleValue actual)
   if (!valStr)
     return false;
 
-  AutoString funSource;
-  BuildFunctionTypeSource(cx, funObj, funSource);
-  if (!funSource)
-      return false;
-  JS::UniqueChars funStr = EncodeLatin1(cx, funSource);
+  JS::UniqueChars funStr = FunctionTypeSourceForError(cx, funObj);
   if (!funStr)
     return false;
 
@@ -1655,30 +1642,25 @@ FunctionArgumentLengthMismatch(JSContext* cx,
                                HandleObject funObj, HandleObject typeObj,
                                bool isVariadic)
 {
-  AutoString funSource;
+  JS::UniqueChars funStr;
   Value slot = JS_GetReservedSlot(funObj, SLOT_REFERENT);
   if (!slot.isUndefined() && Library::IsLibrary(&slot.toObject())) {
-    BuildFunctionTypeSource(cx, funObj, funSource);
+    funStr = FunctionTypeSourceForError(cx, funObj);
   } else {
-    BuildFunctionTypeSource(cx, typeObj, funSource);
+    funStr = FunctionTypeSourceForError(cx, typeObj);
   }
-  if (!funSource)
-      return false;
-  JS::UniqueChars funStr = EncodeLatin1(cx, funSource);
   if (!funStr)
     return false;
 
-  char expectedCountStr[16];
-  SprintfLiteral(expectedCountStr, "%u", expectedCount);
-  char actualCountStr[16];
-  SprintfLiteral(actualCountStr, "%u", actualCount);
+  IndexCString expectedCountStr(expectedCount);
+  IndexCString actualCountStr(actualCount);
 
   const char* variadicStr = isVariadic ? " or more": "";
 
   JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
                              CTYPESMSG_ARG_COUNT_MISMATCH,
-                             funStr.get(), expectedCountStr, variadicStr,
-                             actualCountStr);
+                             funStr.get(), expectedCountStr.get(), variadicStr,
+                             actualCountStr.get());
   return false;
 }
 
@@ -1691,12 +1673,11 @@ FunctionArgumentTypeError(JSContext* cx,
   if (!valStr)
     return false;
 
-  char indexStr[16];
-  SprintfLiteral(indexStr, "%u", index + 1);
+  IndexCString indexStr(index + 1);
 
   JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
                              CTYPESMSG_ARG_TYPE_ERROR,
-                             indexStr, reason, valStr);
+                             indexStr.get(), reason, valStr);
   return false;
 }
 
@@ -1798,14 +1779,11 @@ InvalidIndexError(JSContext* cx, HandleId id)
 static bool
 InvalidIndexRangeError(JSContext* cx, size_t index, size_t length)
 {
-  char indexStr[16];
-  SprintfLiteral(indexStr, "%zu", index);
-
-  char lengthStr[16];
-  SprintfLiteral(lengthStr,"%zu", length);
+  IndexCString indexStr(index);
+  IndexCString lengthStr(length);
 
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            CTYPESMSG_INVALID_RANGE, indexStr, lengthStr);
+                            CTYPESMSG_INVALID_RANGE, indexStr.get(), lengthStr.get());
   return false;
 }
 
@@ -1814,11 +1792,7 @@ NonPrimitiveError(JSContext* cx, HandleObject typeObj)
 {
   MOZ_ASSERT(CType::IsCType(typeObj));
 
-  AutoString typeSource;
-  BuildTypeSource(cx, typeObj, true, typeSource);
-  if (!typeSource)
-      return false;
-  JS::UniqueChars typeStr = EncodeLatin1(cx, typeSource);
+  JS::UniqueChars typeStr = TypeSourceForError(cx, typeObj);
   if (!typeStr)
     return false;
 
@@ -1872,11 +1846,7 @@ PropNameNonStringError(JSContext* cx, HandleId id, HandleValue actual,
 
   JS::UniqueChars posStr;
   if (funObj) {
-    AutoString posSource;
-    BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
-    if (!posSource)
-        return false;
-    posStr = EncodeLatin1(cx, posSource);
+    posStr = ConversionPositionForError(cx, convType, funObj, argIndex);
     if (!posStr)
       return false;
   }
@@ -1924,11 +1894,7 @@ TypeOverflow(JSContext* cx, const char* expected, HandleValue actual)
 static bool
 UndefinedSizeCastError(JSContext* cx, HandleObject targetTypeObj)
 {
-  AutoString targetTypeSource;
-  BuildTypeSource(cx, targetTypeObj, true, targetTypeSource);
-  if (!targetTypeSource)
-      return false;
-  JS::UniqueChars targetTypeStr = EncodeLatin1(cx, targetTypeSource);
+  JS::UniqueChars targetTypeStr = TypeSourceForError(cx, targetTypeObj);
   if (!targetTypeStr)
     return false;
 
@@ -1942,31 +1908,21 @@ SizeMismatchCastError(JSContext* cx,
                       HandleObject sourceTypeObj, HandleObject targetTypeObj,
                       size_t sourceSize, size_t targetSize)
 {
-  AutoString sourceTypeSource;
-  BuildTypeSource(cx, sourceTypeObj, true, sourceTypeSource);
-  if (!sourceTypeSource)
-      return false;
-  JS::UniqueChars sourceTypeStr = EncodeLatin1(cx, sourceTypeSource);
+  JS::UniqueChars sourceTypeStr = TypeSourceForError(cx, sourceTypeObj);
   if (!sourceTypeStr)
     return false;
 
-  AutoString targetTypeSource;
-  BuildTypeSource(cx, targetTypeObj, true, targetTypeSource);
-  if (!targetTypeSource)
-      return false;
-  JS::UniqueChars targetTypeStr = EncodeLatin1(cx, targetTypeSource);
+  JS::UniqueChars targetTypeStr = TypeSourceForError(cx, targetTypeObj);
   if (!targetTypeStr)
     return false;
 
-  char sourceSizeStr[16];
-  char targetSizeStr[16];
-  SprintfLiteral(sourceSizeStr, "%zu", sourceSize);
-  SprintfLiteral(targetSizeStr, "%zu", targetSize);
+  IndexCString sourceSizeStr(sourceSize);
+  IndexCString targetSizeStr(targetSize);
 
   JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
                              CTYPESMSG_SIZE_MISMATCH_CAST,
                              targetTypeStr.get(), sourceTypeStr.get(),
-                             targetSizeStr, sourceSizeStr);
+                             targetSizeStr.get(), sourceSizeStr.get());
   return false;
 }
 
@@ -1992,11 +1948,10 @@ VariadicArgumentTypeError(JSContext* cx, uint32_t index, HandleValue actual)
   if (!valStr)
     return false;
 
-  char indexStr[16];
-  SprintfLiteral(indexStr, "%u", index + 1);
+  IndexCString indexStr(index + 1);
 
   JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_VARG_TYPE_ERROR, indexStr, valStr);
+                             CTYPESMSG_VARG_TYPE_ERROR, indexStr.get(), valStr);
   return false;
 }
 
