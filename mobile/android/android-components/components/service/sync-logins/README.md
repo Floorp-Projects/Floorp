@@ -24,16 +24,6 @@ You will also need the Firefox Accounts component to be able to obtain the keys 
 implementation "org.mozilla.components:fxa:{latest-version}
 ```
 
-For now you have to temporary add the following to your application `gradle` file:
-
-```
-repositories {
-    maven {
-        url 'https://dl.bintray.com/ncalexander/application-services/'
-    }
-}
-```
-
 ### Known Issues
 
 * Android 6.0 is temporary not supported and will probably crash the application.
