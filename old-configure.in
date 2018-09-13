@@ -1472,6 +1472,11 @@ Darwin)
   ;;
 esac
 
+dnl Turn on warnings-as-errors to prevent implicit declaration of
+dnl pthread_cond_timedwait_monotonic_np, which can cause this test to
+dnl inadvertently pass even if the function does not really exist.
+_SAVE_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS $WARNINGS_AS_ERRORS"
 AC_CACHE_CHECK(for pthread_cond_timedwait_monotonic_np,
                ac_cv_pthread_cond_timedwait_monotonic_np,
                AC_TRY_LINK([#include <pthread.h>],
@@ -1481,6 +1486,7 @@ AC_CACHE_CHECK(for pthread_cond_timedwait_monotonic_np,
 if test "$ac_cv_pthread_cond_timewait_monotonic_np" != "no"; then
     AC_DEFINE(HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC)
 fi
+CFLAGS=$_SAVE_CFLAGS
 
 AC_CACHE_CHECK(
     [for res_ninit()],
