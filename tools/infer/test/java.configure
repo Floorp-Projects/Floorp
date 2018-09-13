@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('java_common.configure')
+include('../../../build/moz.configure/java_common.configure')
 
 @depends(javac)
 @checking('for javac version')
@@ -14,16 +14,9 @@ def javac_version(javac):
         output = subprocess.check_output([javac, '-version'],
                                          stderr=subprocess.STDOUT).rstrip()
         version = Version(output.split(' ')[-1])
-        if version < '1.8':
-            die('javac 1.8 or higher is required (found %s). '
+        if version < '1.7':
+            die('javac 1.7 or higher is required (found %s). '
                 'Check the JAVA_HOME environment variable.' % version)
         return version
     except subprocess.CalledProcessError as e:
         die('Failed to get javac version: %s', e.output)
-
-
-# Java Code Coverage
-# ========================================================
-option('--enable-java-coverage', env='MOZ_JAVA_CODE_COVERAGE', help='Enable Java code coverage')
-
-set_config('MOZ_JAVA_CODE_COVERAGE', depends('--enable-java-coverage')(lambda v: bool(v)))
