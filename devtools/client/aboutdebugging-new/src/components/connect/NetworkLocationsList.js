@@ -8,9 +8,7 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const {
-  removeNetworkLocation
-} = require("../../modules/network-locations");
+const Actions = require("../../actions/index");
 
 class NetworkLocationsList extends PureComponent {
   static get propTypes() {
@@ -37,7 +35,9 @@ class NetworkLocationsList extends PureComponent {
           dom.button(
             {
               className: "aboutdebugging-button",
-              onClick: () => removeNetworkLocation(location)
+              onClick: () => {
+                this.props.dispatch(Actions.removeNetworkLocation(location));
+              }
             },
             "Remove"
           )

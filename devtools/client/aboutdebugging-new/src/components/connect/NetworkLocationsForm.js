@@ -6,12 +6,17 @@
 
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const {
-  addNetworkLocation
-} = require("../../modules/network-locations");
+const Actions = require("../../actions/index");
 
 class NetworkLocationsForm extends PureComponent {
+  static get propTypes() {
+    return {
+      dispatch: PropTypes.func.isRequired,
+    };
+  }
+
   constructor(props) {
     super(props);
     this.state = {
@@ -26,7 +31,7 @@ class NetworkLocationsForm extends PureComponent {
         onSubmit: (e) => {
           const { value } = this.state;
           if (value) {
-            addNetworkLocation(value);
+            this.props.dispatch(Actions.addNetworkLocation(value));
             this.setState({ value: "" });
           }
           e.preventDefault();
