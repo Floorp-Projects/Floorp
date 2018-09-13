@@ -200,11 +200,5 @@ if __name__ == "__main__":
 	uiWebviewX86TestTaskId, uiWebviewX86TestTask = generate_webview_X86_ui_test_task([unitTestTaskId, codeQualityTaskId])
 	schedule_task(queue, uiWebviewX86TestTaskId, uiWebviewX86TestTask)
 
-	uiGeckoX86TestTaskId, uiGeckoX86TestTask = generate_gecko_X86_ui_test_task([unitTestTaskId, codeQualityTaskId])
-	schedule_task(queue, uiGeckoX86TestTaskId, uiGeckoX86TestTask)
-
-	uiGeckoARMTestTaskId, uiGeckoARMTestTask = generate_gecko_ARM_ui_test_task([unitTestTaskId, codeQualityTaskId])
-	schedule_task(queue, uiGeckoARMTestTaskId, uiGeckoARMTestTask)
-
 	uploadNDTaskId, uploadNDTask = upload_apk_nimbledroid_task([unitTestTaskId, codeQualityTaskId])
 	schedule_task(queue, uploadNDTaskId, uploadNDTask)
