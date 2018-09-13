@@ -24,8 +24,7 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTest);
 
 
-function runTest()
-{
+function runTest() {
   var script = SpecialPowers.loadChromeScript(function() {
     var gPromptInput = null;
     var os = Cc["@mozilla.org/observer-service;1"]
@@ -58,7 +57,7 @@ function runTest()
                            "ESC key event is prevented by editor"]);
           listenerService.removeSystemEventListener(gPromptInput, "keypress",
                                                     listener, false);
-        }
+        },
       };
       listenerService.addSystemEventListener(gPromptInput, "keypress",
                                              listener, false);
@@ -68,7 +67,7 @@ function runTest()
       EventUtils.window = {};
       EventUtils._EU_Ci = Ci;
       EventUtils._EU_Cc = Cc;
-      Cc['@mozilla.org/moz/jssubscript-loader;1']
+      Cc["@mozilla.org/moz/jssubscript-loader;1"]
         .getService(Ci.mozIJSSubScriptLoader)
         .loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
                        EventUtils);

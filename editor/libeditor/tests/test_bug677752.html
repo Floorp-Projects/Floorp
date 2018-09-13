@@ -34,7 +34,7 @@ function selectEditor(aEditor) {
 
 function runTests() {
   var editor, node, initialHTML;
-  document.execCommand('styleWithCSS', false, true);
+  document.execCommand("styleWithCSS", false, true);
 
   // editable <section>
   editor = document.querySelector("section[contenteditable]");
@@ -44,13 +44,13 @@ function runTests() {
   document.execCommand("justifyright", false, null);
   node = editor.querySelector("*");
   is(node.nodeName.toLowerCase(), "div", "'justifyright' should create a <div> in the editable <section>.");
-  is(node.style.textAlign,      "right", "'justifyright' should create a 'text-align: right' CSS rule.");
+  is(node.style.textAlign, "right", "'justifyright' should create a 'text-align: right' CSS rule.");
   document.execCommand("undo", false, null);
   // editable <section>: indent
   document.execCommand("indent", false, null);
   node = editor.querySelector("*");
   is(node.nodeName.toLowerCase(), "div", "'indent' should create a <div> in the editable <section>.");
-  is(node.style.marginLeft,      "40px", "'indent' should create a 'margin-left: 40px' CSS rule.");
+  is(node.style.marginLeft, "40px", "'indent' should create a 'margin-left: 40px' CSS rule.");
   // editable <section>: undo with outdent
   // this should remove the whole <div> but only removing the CSS rule would be acceptable, too
   document.execCommand("outdent", false, null);
@@ -67,13 +67,13 @@ function runTests() {
   document.execCommand("justifyright", false, null);
   node = editor.querySelector("*");
   is(node.nodeName.toLowerCase(), "div", "'justifyright' should create a <div> in the editable <div>.");
-  is(node.style.textAlign,      "right", "'justifyright' should create a 'text-align: right' CSS rule.");
+  is(node.style.textAlign, "right", "'justifyright' should create a 'text-align: right' CSS rule.");
   document.execCommand("undo", false, null);
   // editable <div>: indent
   document.execCommand("indent", false, null);
   node = editor.querySelector("*");
   is(node.nodeName.toLowerCase(), "div", "'indent' should create a <div> in the editable <div>.");
-  is(node.style.marginLeft,      "40px", "'indent' should create a 'margin-left: 40px' CSS rule.");
+  is(node.style.marginLeft, "40px", "'indent' should create a 'margin-left: 40px' CSS rule.");
   // editable <div>: undo with outdent
   // this should remove the whole <div> but only removing the CSS rule would be acceptable, too
   document.execCommand("outdent", false, null);

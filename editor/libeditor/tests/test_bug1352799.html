@@ -25,53 +25,53 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(() => {
   var input = document.getElementById("input");
 
-  var inputcontainer = document.getElementById('input-container');
-  input.setAttribute('maxlength', 2);
-  inputcontainer.style.display = 'block';
+  var inputcontainer = document.getElementById("input-container");
+  input.setAttribute("maxlength", 2);
+  inputcontainer.style.display = "block";
 
   input.focus();
 
   sendString("123");
 
-  is(input.value, '12', 'value should be 12 with maxlength = 2');
+  is(input.value, "12", "value should be 12 with maxlength = 2");
 
-  input.value = '';
-  inputcontainer.style.display = 'none';
+  input.value = "";
+  inputcontainer.style.display = "none";
 
   window.setTimeout(() => {
-    input.setAttribute('maxlength', 4);
-    inputcontainer.style.display = 'block';
+    input.setAttribute("maxlength", 4);
+    inputcontainer.style.display = "block";
 
     input.focus();
 
     sendString("45678");
 
-    is(input.value, '4567', 'value should be 4567 with maxlength = 4');
+    is(input.value, "4567", "value should be 4567 with maxlength = 4");
 
-    inputcontainer.style.display = 'none';
+    inputcontainer.style.display = "none";
 
     window.setTimeout(() => {
-      input.setAttribute('maxlength', 2);
-      inputcontainer.style.display = 'block';
+      input.setAttribute("maxlength", 2);
+      inputcontainer.style.display = "block";
 
       input.focus();
 
       sendString("12");
 
-      todo_is(input.value, '45', 'value should be 45 with maxlength = 2');
+      todo_is(input.value, "45", "value should be 45 with maxlength = 2");
 
-      input.value = '';
-      inputcontainer.style.display = 'none';
+      input.value = "";
+      inputcontainer.style.display = "none";
 
       window.setTimeout(() => {
-        input.removeAttribute('maxlength');
-        inputcontainer.style.display = 'block';
+        input.removeAttribute("maxlength");
+        inputcontainer.style.display = "block";
 
         input.focus();
 
         sendString("12345678");
 
-        is(input.value, '12345678', 'value should be 12345678 without maxlength');
+        is(input.value, "12345678", "value should be 12345678 without maxlength");
 
         SimpleTest.finish();
       }, 0);

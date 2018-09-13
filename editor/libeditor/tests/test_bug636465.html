@@ -15,14 +15,14 @@ function runTest() {
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
   var x = document.getElementById("x");
   x.focus();
-  onSpellCheck(x, function () {
+  onSpellCheck(x, function() {
     x.blur();
     var spellCheckTrue = snapshotWindow(window);
     x.setAttribute("spellcheck", "false");
     var spellCheckFalse = snapshotWindow(window);
     x.setAttribute("spellcheck", "true");
     x.focus();
-    onSpellCheck(x, function () {
+    onSpellCheck(x, function() {
       x.blur();
       var spellCheckTrueAgain = snapshotWindow(window);
       x.removeAttribute("spellcheck");

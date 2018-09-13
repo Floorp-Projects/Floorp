@@ -42,8 +42,7 @@ var alwaysEnabledCommands = [
   "styleWithCSS",
 ];
 
-function ensureNobodyHasFocus()
-{
+function ensureNobodyHasFocus() {
   document.activeElement.blur();
 }
 
@@ -81,7 +80,7 @@ function runTests() {
     "contentReadOnly", "createLink",
     "decreaseFontSize", "increaseFontSize",
     "insertHTML", "insertHorizontalRule", "insertImage",
-    "removeFormat", "selectAll", "styleWithCSS"
+    "removeFormat", "selectAll", "styleWithCSS",
   ];
   document.execCommand("styleWithCSS", false, false);
   for (i = 0; i < commands.length; i++)

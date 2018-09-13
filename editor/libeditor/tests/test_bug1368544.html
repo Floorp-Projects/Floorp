@@ -22,7 +22,7 @@ SimpleTest.waitForFocus(() => {
   let editor = SpecialPowers.wrap(textarea).editor;
 
   let spellChecker =
-    SpecialPowers.Cc['@mozilla.org/editor/editorspellchecker;1']
+    SpecialPowers.Cc["@mozilla.org/editor/editorspellchecker;1"]
     .createInstance(SpecialPowers.Ci.nsIEditorSpellCheck);
   spellChecker.InitSpellChecker(editor, false);
 

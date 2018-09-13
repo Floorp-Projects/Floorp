@@ -17,7 +17,7 @@ function runTest() {
   function setupIframe(id) {
     var e = document.getElementById(id);
     var doc = e.contentDocument;
-    doc.body.innerHTML = String.fromCharCode(10)+'<span id="' + id + '_span" style="border:1px solid blue" contenteditable="true">X</span>'+String.fromCharCode(10);
+    doc.body.innerHTML = String.fromCharCode(10) + '<span id="' + id + '_span" style="border:1px solid blue" contenteditable="true">X</span>' + String.fromCharCode(10);
     e = doc.getElementById(id + "_span");
     e.focus();
     return e;
@@ -54,7 +54,7 @@ function runTest() {
     sendKey("right");
     sendChar(" ");
     is(e.parentNode.childNodes[2].nodeValue, before, msg + " with id=" + e.id);
-    is(e.innerHTML, "X" + (e.tagName=="SPAN" ? "&nbsp;" : " <br>"), msg + " with id=" + e.id);
+    is(e.innerHTML, "X" + (e.tagName == "SPAN" ? "&nbsp;" : " <br>"), msg + " with id=" + e.id);
   }
 
   test_begin_bs(select("t1"));
@@ -63,10 +63,10 @@ function runTest() {
   test_end_space(select("t4"));
   test_end_space(select("t5"));
 
-  test_begin_bs(setupIframe('i1'));
-  test_begin_space(setupIframe('i2'));
-  test_end_delete(setupIframe('i3'));
-  test_end_space(setupIframe('i4'));
+  test_begin_bs(setupIframe("i1"));
+  test_begin_space(setupIframe("i2"));
+  test_end_delete(setupIframe("i3"));
+  test_end_space(setupIframe("i4"));
 
   SimpleTest.finish();
 }

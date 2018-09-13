@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=678842
 
 /** Test for Bug 678842 **/
 SimpleTest.waitForExplicitFinish();
-var content = document.getElementById('content');
+var content = document.getElementById("content");
 // load a subframe containing an editor with a defined unknown lang. At first
 // load, it will set dictionary to en-US. At second load, it will return current
 // dictionary. So, we can check, dictionary is correctly remembered between
@@ -55,36 +55,36 @@ var loadListener = function(evt) {
   }
 
   var doc = evt.target.contentDocument;
-  var elem = doc.getElementById('textarea');
+  var elem = doc.getElementById("textarea");
   var editor = SpecialPowers.wrap(elem).editor;
   editor.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor.getInlineSpellChecker(true);
 
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(elem, function () {
+  .onSpellCheck(elem, function() {
     var spellchecker = inlineSpellChecker.spellChecker;
     try {
       var currentDictonary = spellchecker.GetCurrentDictionary();
-    } catch(e) {}
+    } catch (e) {}
 
     if (!currentDictonary) {
-      spellchecker.SetCurrentDictionary('en-US');
+      spellchecker.SetCurrentDictionary("en-US");
     }
 
     if (firstLoad) {
       firstLoad = false;
 
        // First time around, the dictionary defaults to the locale.
-      is (currentDictonary, "en-US", "unexpected lang " + currentDictonary + " instead of en-US");
+      is(currentDictonary, "en-US", "unexpected lang " + currentDictonary + " instead of en-US");
 
       // Select en-GB.
       spellchecker.SetCurrentDictionary("en-GB");
 
-      content.src = 'http://mochi.test:8888/tests/editor/spellchecker/tests/bug678842_subframe.html?firstload=false';
+      content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug678842_subframe.html?firstload=false";
     } else {
-      is (currentDictonary, "en-GB", "unexpected lang " + currentDictonary + " instead of en-GB");
-      content.removeEventListener('load', loadListener);
+      is(currentDictonary, "en-GB", "unexpected lang " + currentDictonary + " instead of en-GB");
+      content.removeEventListener("load", loadListener);
 
       // Remove the fake en-GB dictionary again, since it's otherwise picked up by later tests.
       script.sendSyncMessage("destroy");
@@ -94,11 +94,11 @@ var loadListener = function(evt) {
       SimpleTest.finish();
     }
   });
-}
+};
 
-content.addEventListener('load', loadListener);
+content.addEventListener("load", loadListener);
 
-content.src = 'http://mochi.test:8888/tests/editor/spellchecker/tests/bug678842_subframe.html?firstload=true';
+content.src = "http://mochi.test:8888/tests/editor/spellchecker/tests/bug678842_subframe.html?firstload=true";
 
 </script>
 </pre>

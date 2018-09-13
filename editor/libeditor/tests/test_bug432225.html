@@ -29,7 +29,7 @@ addLoadEvent(runTest);
 var gMisspeltWords = [];
 
 function getEdit() {
-  return document.getElementById('edit');
+  return document.getElementById("edit");
 }
 
 function editDoc() {
@@ -46,8 +46,8 @@ function getEditor() {
 function runTest() {
   editDoc().designMode = "on";
   setTimeout(function() { addWords(100); }, 0);
-}  
- 
+}
+
 function addWords(aLimit) {
   if (aLimit == 0) {
     ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
@@ -56,10 +56,10 @@ function addWords(aLimit) {
     return;
   }
   getEdit().focus();
-  sendString('aa OK ');
+  sendString("aa OK ");
   gMisspeltWords.push("aa");
   onSpellCheck(editDoc(), function() {
-    addWords(aLimit-1);
+    addWords(aLimit - 1);
   });
 }
 </script>

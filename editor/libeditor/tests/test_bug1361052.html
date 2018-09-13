@@ -17,14 +17,14 @@
 SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(() => {
-  var strike = document.createElement('strike');
+  var strike = document.createElement("strike");
   strike.contentEditable = true;
   document.documentElement.appendChild(strike);
 
-  var textarea = document.createElement('textarea');
+  var textarea = document.createElement("textarea");
   document.documentElement.appendChild(textarea);
 
-  var h5 = document.createElement('h5');
+  var h5 = document.createElement("h5");
   strike.appendChild(h5);
 
   textarea.setCustomValidity("A");

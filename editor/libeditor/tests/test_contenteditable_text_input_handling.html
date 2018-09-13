@@ -26,16 +26,14 @@ SimpleTest.waitForFocus(runTests);
 
 const kLF = !navigator.platform.indexOf("Win") ? "\r\n" : "\n";
 
-function runTests()
-{
+function runTests() {
   var fm = Cc["@mozilla.org/focus-manager;1"].
              getService(Ci.nsIFocusManager);
 
   var listener = {
-    handleEvent: function _hv(aEvent)
-    {
+    handleEvent: function _hv(aEvent) {
       aEvent.preventDefault(); // prevent the browser default behavior
-    }
+    },
   };
   var els = Cc["@mozilla.org/eventlistenerservice;1"].
     getService(Ci.nsIEventListenerService);
@@ -78,8 +76,7 @@ function runTests()
   textareaInEditor._isContentEditable = false;
   textareaInEditor._description = "textarea element in contenteditable editor";
 
-  function getTextValue(aElement)
-  {
+  function getTextValue(aElement) {
     if (aElement == editor) {
       var value = "";
       for (var node = aElement.firstChild; node; node = node.nextSibling) {
@@ -103,14 +100,12 @@ function runTests()
     return aElement.value;
   }
 
-  function testTextInput(aFocus)
-  {
+  function testTextInput(aFocus) {
     var when = " when " +
       ((aFocus && aFocus._isFocusable) ? aFocus._description + " has focus" :
                                          "nobody has focus");
 
-    function checkValue(aElement, aInsertedText)
-    {
+    function checkValue(aElement, aInsertedText) {
       if (aElement == aFocus && aElement._isEditable) {
         is(getTextValue(aElement), aInsertedText + aElement._defaultValue,
            aElement._description +
@@ -156,11 +151,9 @@ function runTests()
     }
 
     // When key events are fired on unfocused editor.
-    function testDispatchedKeyEvent(aTarget)
-    {
+    function testDispatchedKeyEvent(aTarget) {
       var targetDescription = " (dispatched to " + aTarget._description + ")";
-      function dispatchKeyEvent(aKeyCode, aChar, aTarget)
-      {
+      function dispatchKeyEvent(aKeyCode, aChar, aTarget) {
         var keyEvent = document.createEvent("KeyboardEvent");
         keyEvent.initKeyEvent("keypress", true, true, null, false, false,
                                false, false, aKeyCode,
@@ -168,8 +161,7 @@ function runTests()
         aTarget.dispatchEvent(keyEvent);
       }
 
-      function checkValueForDispatchedKeyEvent(aElement, aInsertedText)
-      {
+      function checkValueForDispatchedKeyEvent(aElement, aInsertedText) {
         if (aElement == aTarget && aElement._isEditable &&
             (!aElement._isContentEditable || aElement == aFocus)) {
           is(getTextValue(aElement), aInsertedText + aElement._defaultValue,
@@ -232,10 +224,10 @@ function runTests()
         { "string": "\u3089",
           "clauses":
           [
-            { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-          ]
+            { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+          ],
         },
-        "caret": { "start": 1, "length": 0 }
+        "caret": { "start": 1, "length": 0 },
       });
     var queryText = synthesizeQueryTextContent(0, 100);
     ok(queryText, "query text event result is null" + when);

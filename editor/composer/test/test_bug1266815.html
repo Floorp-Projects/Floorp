@@ -32,13 +32,13 @@ var helperAppDlgPromise = new Promise(function(resolve) {
   }
 
   HelperAppLauncherDialog.prototype = {
-    show: function(aLauncher, aWindowContext, aReason) {
+    show(aLauncher, aWindowContext, aReason) {
       ok(true, "Whether showing Dialog");
       resolve();
       registrar.unregisterFactory(MOCK_HELPERAPP_DIALOG_CID,
                                   mockHelperAppService);
     },
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog])
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
   };
 
   mockHelperAppService = XPCOMUtils._getFactory(HelperAppLauncherDialog);

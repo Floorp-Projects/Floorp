@@ -21,7 +21,7 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   let input = document.getElementById("input1");
 
-  input.value = "ABC DEF"
+  input.value = "ABC DEF";
   input.focus();
   input.setSelectionRange(4, 7, "backward");
   synthesizeKey("KEY_Backspace");

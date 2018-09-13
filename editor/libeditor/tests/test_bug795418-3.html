@@ -51,7 +51,7 @@ SimpleTest.waitForFocus(function() {
     var iframe = document.querySelector("iframe");
     var iframeWindow = iframe.contentWindow;
     var theEdit = iframe.contentDocument.body;
-    iframe.contentDocument.designMode='on';
+    iframe.contentDocument.designMode = "on";
     iframe.contentDocument.body.offsetHeight;
     iframeWindow.focus();
     SimpleTest.waitForFocus(function() {

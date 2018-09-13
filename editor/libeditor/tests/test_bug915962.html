@@ -30,7 +30,7 @@ function step() {
   cwu.advanceTimeAndRefresh(100);
 }
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, startTest);
+  SpecialPowers.pushPrefEnv({"set": [[smoothScrollPref, false]]}, startTest);
 }, win);
 function startTest() {
   // Make sure that pressing Space when a tabindex=-1 element is focused
@@ -70,7 +70,7 @@ function startTest() {
   oldY = win.scrollY;
   synthesizeKey(" ", {}, win);
 
-  step()
+  step();
 
   ok(win.scrollY >= oldY, "Page is scrolled down");
 

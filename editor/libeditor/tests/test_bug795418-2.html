@@ -57,7 +57,7 @@ SimpleTest.waitForFocus(function() {
     SimpleTest.waitForFocus(function() {
       var iframeSel = iframeWindow.getSelection();
       iframeSel.removeAllRanges();
-      let span = iframe.contentDocument.querySelector('span');
+      let span = iframe.contentDocument.querySelector("span");
       iframeSel.collapse(span, 1);
 
       SpecialPowers.doCommand(iframeWindow, "cmd_pasteQuote");

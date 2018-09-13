@@ -38,7 +38,7 @@ SimpleTest.waitForFocus(() => {
   is(element.value, "b\u{9080}\u{e010f}\u{8fba}\u{e0101}a", "a isn't last character");
 
   synthesizeKey("KEY_Backspace", {repeat: 3});
-  is(element.value, 'b', "cannot remove all IVS characters");
+  is(element.value, "b", "cannot remove all IVS characters");
 
   element = document.getElementById("edit");
   element.focus();
@@ -51,7 +51,7 @@ SimpleTest.waitForFocus(() => {
   is(element.textContent, "b\u{9080}\u{e010f}\u{8fba}\u{e0101}a", "a isn't last character");
 
   synthesizeKey("KEY_Backspace", {repeat: 3});
-  is(element.textContent, 'b', "cannot remove all IVS characters");
+  is(element.textContent, "b", "cannot remove all IVS characters");
 
   SimpleTest.finish();
 });

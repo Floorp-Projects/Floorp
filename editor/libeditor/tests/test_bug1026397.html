@@ -21,15 +21,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1026397
 /** Test for Bug 1026397 **/
 SimpleTest.waitForExplicitFinish();
 
-function runTests()
-{
+function runTests() {
   var input = document.getElementById("input");
   input.focus();
 
   function doTest(aMaxLength, aInitialValue, aCaretOffset,
                   aInsertString, aExpectedValueDuringComposition,
-                  aExpectedValueAfterCompositionEnd, aAdditionalExplanation)
-  {
+                  aExpectedValueAfterCompositionEnd, aAdditionalExplanation) {
     input.value = aInitialValue;
     var maxLengthStr = "";
     if (aMaxLength >= 0) {
@@ -51,10 +49,10 @@ function runTests()
         { "string": aInsertString,
           "clauses":
           [
-            { "length": aInsertString.length, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-          ]
+            { "length": aInsertString.length, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+          ],
         },
-        "caret": { "start": aInsertString.length, "length": 0 }
+        "caret": { "start": aInsertString.length, "length": 0 },
       });
     is(input.value, aExpectedValueDuringComposition,
        "The value of input whose maxlength is " + maxLengthStr + " should be "

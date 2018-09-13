@@ -26,20 +26,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795418
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   var iframe = document.querySelector("iframe");
-  iframe.contentDocument.designMode='on';
+  iframe.contentDocument.designMode = "on";
 
-  iframe.contentWindow.addEventListener('keypress', function() {
-    iframe.style.display='none';
+  iframe.contentWindow.addEventListener("keypress", function() {
+    iframe.style.display = "none";
     document.body.offsetHeight;
     ok(true, "did not crash");
     SimpleTest.finish();
   });
 
-  iframe.contentWindow.addEventListener('click', function() {
-    synthesizeKey('a', {}, iframe.contentWindow);
+  iframe.contentWindow.addEventListener("click", function() {
+    synthesizeKey("a", {}, iframe.contentWindow);
   });
 
-  synthesizeMouse(iframe,20,20,{})
+  synthesizeMouse(iframe, 20, 20, {});
 });
 
 </script>

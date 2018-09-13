@@ -20,8 +20,7 @@ SimpleTest.waitForExplicitFinish();
 
 var gInputElement = document.getElementById("input");
 
-function getEditor(aInputElement)
-{
+function getEditor(aInputElement) {
   var editableElement = SpecialPowers.wrap(aInputElement);
   ok(editableElement.editor, "There is no editor for the input element");
   return editableElement.editor;
@@ -29,8 +28,7 @@ function getEditor(aInputElement)
 
 var gEditor;
 
-function testNotGenerateCompositionByCreatedEvents(aEventInterface)
-{
+function testNotGenerateCompositionByCreatedEvents(aEventInterface) {
   var compositionEvent = document.createEvent(aEventInterface);
   if (compositionEvent.initCompositionEvent) {
     compositionEvent.initCompositionEvent("compositionstart", true, true, window, "", "");
@@ -61,8 +59,7 @@ function testNotGenerateCompositionByCreatedEvents(aEventInterface)
   is(gInputElement.value, "", "Input element shouldn't be committed with a created compositionend event (" + aEventInterface + ")");
 }
 
-function doTests()
-{
+function doTests() {
   gInputElement.focus();
   gEditor = getEditor(gInputElement);
 

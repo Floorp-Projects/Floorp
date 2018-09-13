@@ -11,7 +11,7 @@ function runTest() {
   SpecialPowers.setCommandNode(window, document.getElementById("i"));
   SpecialPowers.doCommand(window, "cmd_copyImageContents");
 
-  var e = document.getElementById('i1');
+  var e = document.getElementById("i1");
   var doc = e.contentDocument;
   doc.designMode = "on";
   doc.defaultView.focus();

@@ -20,8 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=635636
 /** Test for Bug 635636 **/
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(async function() {
-  function openNewWindow(aURL)
-  {
+  function openNewWindow(aURL) {
     return new Promise(resolve => {
       let contentWindow = window.open(aURL);
       contentWindow.addEventListener("load", () => {
@@ -31,8 +30,7 @@ addLoadEvent(async function() {
     });
   }
 
-  function unloadWindow(aWindow)
-  {
+  function unloadWindow(aWindow) {
     return new Promise(resolve => {
       aWindow.addEventListener("unload", () => {
         ok(true, "The window has been unloaded");
@@ -48,7 +46,7 @@ addLoadEvent(async function() {
   contentWindow.addEventListener("pageshow", () => { ok(true, "pageshow"); });
 
   let div = contentWindow.document.getElementsByTagName("div")[0];
-  contentWindow.document.designMode = 'on';
+  contentWindow.document.designMode = "on";
 
   await unloadWindow(contentWindow);
 

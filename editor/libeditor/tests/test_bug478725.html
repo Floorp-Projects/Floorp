@@ -9,13 +9,13 @@
 
 function runTest() {
   function verifyContent(s) {
-    var e = document.getElementById('i1');
+    var e = document.getElementById("i1");
     var doc = e.contentDocument;
     is(doc.body.innerHTML, s, "");
   }
 
-  function pasteInto(html,target_id) {
-    var e = document.getElementById('i1');
+  function pasteInto(html, target_id) {
+    var e = document.getElementById("i1");
     var doc = e.contentDocument;
     doc.designMode = "on";
     doc.body.innerHTML = html;
@@ -29,8 +29,8 @@ function runTest() {
    return e;
   }
 
-  function copyToClipBoard(s,asHTML,target_id) {
-    var e = document.getElementById('i2');
+  function copyToClipBoard(s, asHTML, target_id) {
+    var e = document.getElementById("i2");
     var doc = e.contentDocument;
     if (asHTML) {
       doc.body.innerHTML = s;
@@ -54,39 +54,39 @@ function runTest() {
   }
 
   copyToClipBoard("<dl><dd>Hello Kitty</dd></dl>", true);
-  pasteInto('<ol><li id="paste_here">X</li></ol>',"paste_here");
+  pasteInto('<ol><li id="paste_here">X</li></ol>', "paste_here");
   verifyContent('<ol><li id="paste_here">X<dl><dd>Hello Kitty</dd></dl></li></ol>');
 
   copyToClipBoard("<li>Hello Kitty</li>", true);
-  pasteInto('<ol><li id="paste_here">X</li></ol>',"paste_here");
+  pasteInto('<ol><li id="paste_here">X</li></ol>', "paste_here");
   verifyContent('<ol><li id="paste_here">X</li><li>Hello Kitty</li></ol>');
 
   copyToClipBoard("<ol><li>Hello Kitty</li></ol>", true);
-  pasteInto('<ol><li id="paste_here">X</li></ol>',"paste_here");
+  pasteInto('<ol><li id="paste_here">X</li></ol>', "paste_here");
   verifyContent('<ol><li id="paste_here">X</li><li>Hello Kitty</li></ol>');
 
   copyToClipBoard("<ul><li>Hello Kitty</li></ul>", true);
-  pasteInto('<ol><li id="paste_here">X</li></ol>',"paste_here");
+  pasteInto('<ol><li id="paste_here">X</li></ol>', "paste_here");
   verifyContent('<ol><li id="paste_here">X</li><li>Hello Kitty</li></ol>');
 
   copyToClipBoard("<ul><li>Hello</li><ul><li>Kitty</li></ul></ul>", true);
-  pasteInto('<ol><li id="paste_here">X</li></ol>',"paste_here");
+  pasteInto('<ol><li id="paste_here">X</li></ol>', "paste_here");
   verifyContent('<ol><li id="paste_here">X</li><li>Hello</li><ul><li>Kitty</li></ul></ol>');
 
   copyToClipBoard("<dl><dd>Hello</dd><dd>Kitty</dd></dl>", true);
-  pasteInto('<dl><dd id="paste_here">X</dd></dl>',"paste_here");
+  pasteInto('<dl><dd id="paste_here">X</dd></dl>', "paste_here");
   verifyContent('<dl><dd id="paste_here">X</dd><dd>Hello</dd><dd>Kitty</dd></dl>');
 
   copyToClipBoard("<dl><dd>Hello</dd><dd>Kitty</dd></dl>", true);
-  pasteInto('<dl><dt id="paste_here">X</dt></dl>',"paste_here");
+  pasteInto('<dl><dt id="paste_here">X</dt></dl>', "paste_here");
   verifyContent('<dl><dt id="paste_here">X</dt><dd>Hello</dd><dd>Kitty</dd></dl>');
 
   copyToClipBoard("<dl><dt>Hello</dt><dd>Kitty</dd></dl>", true);
-  pasteInto('<dl><dd id="paste_here">X</dd></dl>',"paste_here");
+  pasteInto('<dl><dd id="paste_here">X</dd></dl>', "paste_here");
   verifyContent('<dl><dd id="paste_here">X</dd><dt>Hello</dt><dd>Kitty</dd></dl>');
 
   copyToClipBoard("<pre>Kitty</pre>", true);
-  pasteInto('<pre id="paste_here">Hello </pre>',"paste_here");
+  pasteInto('<pre id="paste_here">Hello </pre>', "paste_here");
   verifyContent('<pre id="paste_here">Hello Kitty</pre>');
 
 // I was expecting these to trigger the special TABLE/TR rules in nsHTMLEditor::InsertHTMLWithContext

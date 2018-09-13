@@ -74,7 +74,7 @@ function split(element, caretPos) {
       pos = 0;
       break;
     case CARET_MIDDLE:
-      pos = Math.floor(len/2);
+      pos = Math.floor(len / 2);
       break;
     case CARET_END:
       pos = len;
@@ -87,7 +87,7 @@ function split(element, caretPos) {
   range.setStart(element.firstChild, pos);
   range.setEnd(element.firstChild, pos);
   sel.addRange(range);
-  
+
   // simulates a [Return] keypress
   synthesizeKey("VK_RETURN", {shiftKey: true});
 }

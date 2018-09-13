@@ -13,5 +13,5 @@ var text = document.createTextNode("");
 div.insertBefore(text, div.firstChild);
 getSelection().collapse(text, 0);
 document.execCommand("inserthtml", false, "x");
-is(div.textContent, 'x', "Empty textnodes should be editable");
+is(div.textContent, "x", "Empty textnodes should be editable");
 </script>
