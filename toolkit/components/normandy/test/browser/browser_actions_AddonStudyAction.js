@@ -41,7 +41,7 @@ function ensureAddonCleanup(testFunction) {
 // Test that enroll is not called if recipe is already enrolled
 decorate_task(
   ensureAddonCleanup,
-  AddonStudies.withStudies([addonStudyFactory()]),
+  AddonStudies.withStudies([studyFactory()]),
   withSendEventStub,
   async function enrollTwiceFail([study], sendEventStub) {
     const recipe = recipeFactory({
@@ -176,7 +176,7 @@ decorate_task(
 decorate_task(
   ensureAddonCleanup,
   AddonStudies.withStudies([
-    addonStudyFactory({active: false}),
+    studyFactory({active: false}),
   ]),
   withSendEventStub,
   async ([study], sendEventStub) => {
@@ -194,7 +194,7 @@ const testStopId = "testStop@example.com";
 decorate_task(
   ensureAddonCleanup,
   AddonStudies.withStudies([
-    addonStudyFactory({active: true, addonId: testStopId, studyEndDate: null}),
+    studyFactory({active: true, addonId: testStopId, studyEndDate: null}),
   ]),
   withInstalledWebExtension({id: testStopId}, /* expectUninstall: */ true),
   withSendEventStub,
@@ -228,7 +228,7 @@ decorate_task(
 decorate_task(
   ensureAddonCleanup,
   AddonStudies.withStudies([
-    addonStudyFactory({active: true, addonId: "missingAddon@example.com", studyEndDate: null}),
+    studyFactory({active: true, addonId: "missingAddon@example.com", studyEndDate: null}),
   ]),
   withSendEventStub,
   async function unenrollTest([study], sendEventStub) {
@@ -291,7 +291,7 @@ decorate_task(
 // Test that enroll is not called if recipe is already enrolled
 decorate_task(
   ensureAddonCleanup,
-  AddonStudies.withStudies([addonStudyFactory()]),
+  AddonStudies.withStudies([studyFactory()]),
   async function enrollTwiceFail([study]) {
     const action = new AddonStudyAction();
     const unenrollSpy = sinon.stub(action, "unenroll");

@@ -42,23 +42,16 @@ class ShieldFrameChild extends ActorChild {
     // We waited until after we received an event to register message listeners
     // in order to save resources for tabs that don't ever load about:studies.
     this.mm.addMessageListener("Shield:ShuttingDown", this);
-    this.mm.addMessageListener("Shield:ReceiveAddonStudyList", this);
-    this.mm.addMessageListener("Shield:ReceivePreferenceStudyList", this);
+    this.mm.addMessageListener("Shield:ReceiveStudyList", this);
     this.mm.addMessageListener("Shield:ReceiveStudiesEnabled", this);
 
     switch (event.detail.action) {
       // Actions that require the parent process
-      case "GetRemoteValue:AddonStudyList":
-        this.mm.sendAsyncMessage("Shield:GetAddonStudyList");
+      case "GetRemoteValue:StudyList":
+        this.mm.sendAsyncMessage("Shield:GetStudyList");
         break;
-      case "GetRemoteValue:PreferenceStudyList":
-        this.mm.sendAsyncMessage("Shield:GetPreferenceStudyList");
-        break;
-      case "RemoveAddonStudy":
-        this.mm.sendAsyncMessage("Shield:RemoveAddonStudy", event.detail.data);
-        break;
-      case "RemovePreferenceStudy":
-        this.mm.sendAsyncMessage("Shield:RemovePreferenceStudy", event.detail.data);
+      case "RemoveStudy":
+        this.mm.sendAsyncMessage("Shield:RemoveStudy", event.detail.data);
         break;
       case "GetRemoteValue:StudiesEnabled":
         this.mm.sendAsyncMessage("Shield:GetStudiesEnabled");
@@ -96,11 +89,8 @@ class ShieldFrameChild extends ActorChild {
    */
   receiveMessage(message) {
     switch (message.name) {
-      case "Shield:ReceiveAddonStudyList":
-        this.triggerPageCallback("ReceiveRemoteValue:AddonStudyList", message.data.studies);
-        break;
-      case "Shield:ReceivePreferenceStudyList":
-        this.triggerPageCallback("ReceiveRemoteValue:PreferenceStudyList", message.data.studies);
+      case "Shield:ReceiveStudyList":
+        this.triggerPageCallback("ReceiveRemoteValue:StudyList", message.data.studies);
         break;
       case "Shield:ReceiveStudiesEnabled":
         this.triggerPageCallback("ReceiveRemoteValue:StudiesEnabled", message.data.studiesEnabled);

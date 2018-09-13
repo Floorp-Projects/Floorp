@@ -90,14 +90,14 @@ const PreferenceBranchType = {
 /**
  * Asynchronously load the JSON file that stores experiment status in the profile.
  */
-let gStorePromise;
+let storePromise;
 function ensureStorage() {
-  if (gStorePromise === undefined) {
+  if (storePromise === undefined) {
     const path = OS.Path.join(OS.Constants.Path.profileDir, EXPERIMENT_FILE);
     const storage = new JSONFile({path});
-    gStorePromise = storage.load().then(() => storage);
+    storePromise = storage.load().then(() => storage);
   }
-  return gStorePromise;
+  return storePromise;
 }
 
 const log = LogManager.getLogger("preference-experiments");
@@ -248,30 +248,23 @@ var PreferenceExperiments = {
    * Test wrapper that temporarily replaces the stored experiment data with fake
    * data for testing.
    */
-  withMockExperiments(mockExperiments = []) {
-    return function wrapper(testFunction) {
-      return async function wrappedTestFunction(...args) {
-        const data = {};
-
-        for (const exp of mockExperiments) {
-          data[exp.name] = exp;
-        }
-
-        const oldPromise = gStorePromise;
-        gStorePromise = Promise.resolve({
-          data,
-          saveSoon() { },
-        });
-        const oldObservers = experimentObservers;
-        experimentObservers = new Map();
-        try {
-          await testFunction(...args, mockExperiments);
-        } finally {
-          gStorePromise = oldPromise;
-          PreferenceExperiments.stopAllObservers();
-          experimentObservers = oldObservers;
-        }
-      };
+  withMockExperiments(testFunction) {
+    return async function inner(...args) {
+      const oldPromise = storePromise;
+      const mockExperiments = {};
+      storePromise = Promise.resolve({
+        data: mockExperiments,
+        saveSoon() { },
+      });
+      const oldObservers = experimentObservers;
+      experimentObservers = new Map();
+      try {
+        await testFunction(...args, mockExperiments);
+      } finally {
+        storePromise = oldPromise;
+        PreferenceExperiments.stopAllObservers();
+        experimentObservers = oldObservers;
+      }
     };
   },
 
