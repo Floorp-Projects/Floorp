@@ -9,4 +9,8 @@ DevToolsModules(
     'ConnectSection.js',
     'ConnectSteps.css',
     'ConnectSteps.js',
+    'NetworkLocationsForm.css',
+    'NetworkLocationsForm.js',
+    'NetworkLocationsList.css',
+    'NetworkLocationsList.js',
 )
