@@ -1,5 +1,4 @@
-/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -22,26 +21,26 @@ dictionary AnalyserOptions : AudioNodeOptions {
  Constructor(BaseAudioContext context, optional AnalyserOptions options)]
 interface AnalyserNode : AudioNode {
 
-  // Real-time frequency-domain data
-  void getFloatFrequencyData(Float32Array array);
-  void getByteFrequencyData(Uint8Array array);
+    // Real-time frequency-domain data
+    void getFloatFrequencyData(Float32Array array);
+    void getByteFrequencyData(Uint8Array array);
 
-  // Real-time waveform data
-  void getFloatTimeDomainData(Float32Array array);
-  void getByteTimeDomainData(Uint8Array array);
+    // Real-time waveform data
+    void getFloatTimeDomainData(Float32Array array);
+    void getByteTimeDomainData(Uint8Array array);
 
-  [SetterThrows, Pure]
-  attribute unsigned long fftSize;
-  [Pure]
-  readonly attribute unsigned long frequencyBinCount;
+    [SetterThrows, Pure]
+    attribute unsigned long fftSize;
+    [Pure]
+    readonly attribute unsigned long frequencyBinCount;
 
-  [SetterThrows, Pure]
-  attribute double minDecibels;
-  [SetterThrows, Pure]
-  attribute double maxDecibels;
+    [SetterThrows, Pure]
+    attribute double minDecibels;
+    [SetterThrows, Pure]
+    attribute double maxDecibels;
 
-  [SetterThrows, Pure]
-  attribute double smoothingTimeConstant;
+    [SetterThrows, Pure]
+    attribute double smoothingTimeConstant;
 
 };
 
