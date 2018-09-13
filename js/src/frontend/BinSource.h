@@ -156,6 +156,15 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     // Ensure that this parser will never be used again.
     void poison();
 
+    // The owner or the target of Asserted*Scope.
+    enum class AssertedScopeKind {
+        Block,
+        Catch,
+        Global,
+        Parameter,
+        Var,
+    };
+
     // Auto-generated methods
 #include "frontend/BinSource-auto.h"
 
@@ -168,13 +177,23 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     JS::Result<FunctionBox*>
     buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKind functionAsyncKind, FunctionSyntaxKind syntax, ParseNode* name);
 
-    // Parse full scope information to a specific var scope / let scope combination.
-    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateScope(ParseContext::Scope& varScope,
-        ParseContext::Scope& letScope);
-    // Parse a list of names and add it to a given scope.
-    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateScopeNames(ParseContext::Scope& scope,
-        DeclarationKind kind);
-    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateCapturedNames(const BinKind kind);
+    // Add name to a given scope.
+    MOZ_MUST_USE JS::Result<Ok> addScopeName(AssertedScopeKind scopeKind, HandleAtom name,
+                                             ParseContext::Scope* scope,
+                                             DeclarationKind declKind,
+                                             bool isCaptured);
+
+    // Map AssertedScopeKind and AssertedDeclaredKind for single binding to
+    // corresponding ParseContext::Scope to store the binding, and
+    // DeclarationKind for the binding.
+    MOZ_MUST_USE JS::Result<Ok> getDeclaredScope(AssertedScopeKind scopeKind,
+                                                 AssertedDeclaredKind kind,
+                                                 ParseContext::Scope*& scope,
+                                                 DeclarationKind& declKind);
+    MOZ_MUST_USE JS::Result<Ok> getBoundScope(AssertedScopeKind scopeKind,
+                                              ParseContext::Scope*& scope,
+                                              DeclarationKind& declKind);
+
     MOZ_MUST_USE JS::Result<Ok> checkBinding(JSAtom* name);
 
     // When leaving a scope, check that none of its bindings are known closed over and un-marked.
