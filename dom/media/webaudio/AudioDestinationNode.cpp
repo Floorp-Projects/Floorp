@@ -334,6 +334,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   , mAudioChannelSuspended(false)
   , mCaptured(false)
   , mAudible(AudioChannelService::AudibleState::eAudible)
+  , mCreatedTime(TimeStamp::Now())
 {
   nsPIDOMWindowInner* window = aContext->GetParentObject();
   MediaStreamGraph* graph =
@@ -634,6 +635,13 @@ AudioDestinationNode::InputMuted(bool aMuted)
     // Reset the state, and it would always be regard as audible.
     mAudible = AudioChannelService::AudibleState::eAudible;
     return;
+  }
+
+  if (mDurationBeforeFirstTimeAudible.IsZero()) {
+    MOZ_ASSERT(!aMuted);
+    mDurationBeforeFirstTimeAudible = TimeStamp::Now() - mCreatedTime;
+    Telemetry::Accumulate(Telemetry::WEB_AUDIO_BECOMES_AUDIBLE_TIME,
+                          mDurationBeforeFirstTimeAudible.ToSeconds());
   }
 
   AudioPlaybackConfig config;

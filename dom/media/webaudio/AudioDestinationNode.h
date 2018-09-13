@@ -10,6 +10,7 @@
 #include "AudioChannelService.h"
 #include "AudioNode.h"
 #include "nsIAudioChannelAgent.h"
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 namespace dom {
@@ -100,6 +101,11 @@ private:
 
   bool mCaptured;
   AudioChannelService::AudibleState mAudible;
+
+  // These varaibles are used to know how long AudioContext would become audible
+  // since it was created.
+  TimeStamp mCreatedTime;
+  TimeDuration mDurationBeforeFirstTimeAudible;
 };
 
 } // namespace dom
