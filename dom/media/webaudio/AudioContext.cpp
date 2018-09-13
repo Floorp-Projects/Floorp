@@ -14,6 +14,7 @@
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 
 #include "mozilla/dom/AnalyserNode.h"
 #include "mozilla/dom/AnalyserNodeBinding.h"
@@ -210,6 +211,7 @@ AudioContext::EnsureAutoplayRequested()
               AUTOPLAY_LOG("%p Autoplay request denied request=%p",
                           self.get(),
                           request.get());
+              self->DispatchBlockedEvent();
            });
 }
 
@@ -1079,7 +1081,10 @@ AudioContext::Resume(ErrorResult& aRv)
   const bool isAllowedToPlay = AutoplayPolicy::IsAllowedToPlay(*this);
   if (isAllowedToPlay) {
     ResumeInternal();
+  } else {
+    DispatchBlockedEvent();
   }
+
   AUTOPLAY_LOG("Resume AudioContext %p, IsAllowedToPlay=%d",
     this, isAllowedToPlay);
   return promise.forget();
@@ -1103,6 +1108,38 @@ AudioContext::ResumeInternal()
                                       AudioContextOperation::Resume,
                                       nullptr);
   mSuspendCalled = false;
+}
+
+void
+AudioContext::DispatchBlockedEvent()
+{
+  if (!StaticPrefs::MediaBlockEventEnabled()) {
+    return;
+  }
+
+  RefPtr<AudioContext> self = this;
+  RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "AudioContext::AutoplayBlocked",
+    [self] () {
+      nsPIDOMWindowInner* parent = self->GetParentObject();
+      if (!parent) {
+        return;
+      }
+
+      nsIDocument* doc = parent->GetExtantDoc();
+      if (!doc) {
+        return;
+      }
+
+      AUTOPLAY_LOG("Dispatch `blocked` event for AudioContext %p", self.get());
+      nsContentUtils::DispatchTrustedEvent(
+        doc,
+        static_cast<DOMEventTargetHelper*>(self),
+        NS_LITERAL_STRING("blocked"),
+        CanBubble::eNo,
+        Cancelable::eNo);
+  });
+  Dispatch(r.forget());
 }
 
 already_AddRefed<Promise>
