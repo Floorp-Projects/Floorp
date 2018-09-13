@@ -1699,9 +1699,9 @@ JS::GetFirstArgumentAsTypeHint(JSContext* cx, CallArgs args, JSType *result)
         return false;
     }
 
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             "Symbol.toPrimitive",
-                             "\"string\", \"number\", or \"default\"", source);
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                               "Symbol.toPrimitive",
+                               "\"string\", \"number\", or \"default\"", source);
     return false;
 }
 

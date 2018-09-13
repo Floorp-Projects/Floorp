@@ -44,7 +44,6 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
-#include "util/Unicode.h"
 #include "util/Windows.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
@@ -62,44 +61,155 @@ using JS::AutoStableStringChars;
 namespace js {
 namespace ctypes {
 
-static bool
-HasUnpairedSurrogate(const char16_t* chars, size_t nchars, char16_t* unpaired)
+template <typename CharT>
+size_t
+GetDeflatedUTF8StringLength(JSContext* maybecx, const CharT* chars,
+                            size_t nchars)
 {
-  for (const char16_t* end = chars + nchars; chars != end; chars++) {
-    char16_t c = *chars;
-    if (unicode::LeadSurrogateMin <= c && c <= unicode::TrailSurrogateMax) {
-      chars++;
-      if (c >= unicode::TrailSurrogateMin || chars == end) {
-        *unpaired = c;
-        return true;
-      }
-      char16_t c2 = *chars;
-      if (c2 < unicode::TrailSurrogateMin || c2 > unicode::TrailSurrogateMax) {
-        *unpaired = c;
-        return true;
-      }
+    size_t nbytes;
+    const CharT* end;
+    unsigned c, c2;
+
+    nbytes = nchars;
+    for (end = chars + nchars; chars != end; chars++) {
+        c = *chars;
+        if (c < 0x80)
+            continue;
+        if (0xD800 <= c && c <= 0xDFFF) {
+            /* Surrogate pair. */
+            chars++;
+
+            /* nbytes sets 1 length since this is surrogate pair. */
+            nbytes--;
+            if (c >= 0xDC00 || chars == end)
+                goto bad_surrogate;
+            c2 = *chars;
+            if (c2 < 0xDC00 || c2 > 0xDFFF)
+                goto bad_surrogate;
+            c = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
+        }
+        c >>= 11;
+        nbytes++;
+        while (c) {
+            c >>= 5;
+            nbytes++;
+        }
     }
-  }
-  return false;
+    return nbytes;
+
+  bad_surrogate:
+    if (maybecx) {
+        js::gc::AutoSuppressGC suppress(maybecx);
+        char buffer[10];
+        SprintfLiteral(buffer, "0x%x", c);
+        JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr, JSMSG_BAD_SURROGATE_CHAR,
+                                  buffer);
+    }
+    return (size_t) -1;
 }
 
-bool
-ReportErrorIfUnpairedSurrogatePresent(JSContext* cx, JSLinearString* str)
+template size_t
+GetDeflatedUTF8StringLength(JSContext* maybecx, const Latin1Char* chars,
+                            size_t nchars);
+
+template size_t
+GetDeflatedUTF8StringLength(JSContext* maybecx, const char16_t* chars,
+                            size_t nchars);
+
+static size_t
+GetDeflatedUTF8StringLength(JSContext* maybecx, JSLinearString* str)
 {
-  if (str->hasLatin1Chars())
+    size_t length = str->length();
+
+    JS::AutoCheckCannotGC nogc;
+    return str->hasLatin1Chars()
+           ? GetDeflatedUTF8StringLength(maybecx, str->latin1Chars(nogc), length)
+           : GetDeflatedUTF8StringLength(maybecx, str->twoByteChars(nogc), length);
+}
+
+template <typename CharT>
+bool
+DeflateStringToUTF8Buffer(JSContext* maybecx, const CharT* src, size_t srclen,
+                          char* dst, size_t* dstlenp)
+{
+    size_t i, utf8Len;
+    char16_t c, c2;
+    uint32_t v;
+    uint8_t utf8buf[6];
+
+    size_t dstlen = *dstlenp;
+    size_t origDstlen = dstlen;
+
+    while (srclen) {
+        c = *src++;
+        srclen--;
+        if (c >= 0xDC00 && c <= 0xDFFF)
+            goto badSurrogate;
+        if (c < 0xD800 || c > 0xDBFF) {
+            v = c;
+        } else {
+            if (srclen < 1)
+                goto badSurrogate;
+            c2 = *src;
+            if ((c2 < 0xDC00) || (c2 > 0xDFFF))
+                goto badSurrogate;
+            src++;
+            srclen--;
+            v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
+        }
+        if (v < 0x0080) {
+            /* no encoding necessary - performance hack */
+            if (dstlen == 0)
+                goto bufferTooSmall;
+            *dst++ = (char) v;
+            utf8Len = 1;
+        } else {
+            utf8Len = js::OneUcs4ToUtf8Char(utf8buf, v);
+            if (utf8Len > dstlen)
+                goto bufferTooSmall;
+            for (i = 0; i < utf8Len; i++)
+                *dst++ = (char) utf8buf[i];
+        }
+        dstlen -= utf8Len;
+    }
+    *dstlenp = (origDstlen - dstlen);
     return true;
 
-  char16_t unpaired;
-  {
-    JS::AutoCheckCannotGC nogc;
-    if (!HasUnpairedSurrogate(str->twoByteChars(nogc), str->length(), &unpaired))
-      return true;
-  }
+badSurrogate:
+    *dstlenp = (origDstlen - dstlen);
+    /* Delegate error reporting to the measurement function. */
+    if (maybecx)
+        GetDeflatedUTF8StringLength(maybecx, src - 1, srclen + 1);
+    return false;
 
-  char buffer[10];
-  SprintfLiteral(buffer, "0x%x", unpaired);
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_SURROGATE_CHAR, buffer);
-  return false;
+bufferTooSmall:
+    *dstlenp = (origDstlen - dstlen);
+    if (maybecx) {
+        js::gc::AutoSuppressGC suppress(maybecx);
+        JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr,
+                                  JSMSG_BUFFER_TOO_SMALL);
+    }
+    return false;
+}
+
+template bool
+DeflateStringToUTF8Buffer(JSContext* maybecx, const Latin1Char* src, size_t srclen,
+                          char* dst, size_t* dstlenp);
+
+template bool
+DeflateStringToUTF8Buffer(JSContext* maybecx, const char16_t* src, size_t srclen,
+                          char* dst, size_t* dstlenp);
+
+static bool
+DeflateStringToUTF8Buffer(JSContext* maybecx, JSLinearString* str, char* dst,
+                          size_t* dstlenp)
+{
+    size_t length = str->length();
+
+    JS::AutoCheckCannotGC nogc;
+    return str->hasLatin1Chars()
+           ? DeflateStringToUTF8Buffer(maybecx, str->latin1Chars(nogc), length, dst, dstlenp)
+           : DeflateStringToUTF8Buffer(maybecx, str->twoByteChars(nogc), length, dst, dstlenp);
 }
 
 /*******************************************************************************
@@ -873,12 +983,9 @@ GetErrorMessage(void* userRef, const unsigned errorNumber)
 }
 
 static JS::UniqueChars
-EncodeUTF8(JSContext* cx, AutoString& str)
+EncodeLatin1(JSContext* cx, AutoString& str)
 {
-  RootedString string(cx, NewUCString(cx, str.finish()));
-  if (!string)
-    return nullptr;
-  return JS_EncodeStringToUTF8(cx, string);
+  return JS_EncodeStringToLatin1(cx, NewUCString(cx, str.finish()));
 }
 
 static const char*
@@ -889,7 +996,7 @@ CTypesToSourceForError(JSContext* cx, HandleValue val, JS::UniqueChars& bytes)
       if (CType::IsCType(obj) || CData::IsCDataMaybeUnwrap(&obj)) {
           RootedValue v(cx, ObjectValue(*obj));
           RootedString str(cx, JS_ValueToSource(cx, v));
-          bytes = JS_EncodeStringToUTF8(cx, str);
+          bytes = JS_EncodeStringToLatin1(cx, str);
           return bytes.get();
       }
   }
@@ -1068,55 +1175,6 @@ static void
 BuildTypeSource(JSContext* cx, JSObject* typeObj_, bool makeShort,
                 AutoString& result);
 
-static JS::UniqueChars
-TypeSourceForError(JSContext* cx, JSObject* typeObj)
-{
-  AutoString source;
-  BuildTypeSource(cx, typeObj, true, source);
-  if (!source)
-    return nullptr;
-  return EncodeUTF8(cx, source);
-}
-
-static JS::UniqueChars
-FunctionTypeSourceForError(JSContext* cx, HandleObject funObj)
-{
-  AutoString funSource;
-  BuildFunctionTypeSource(cx, funObj, funSource);
-  if (!funSource)
-    return nullptr;
-  return EncodeUTF8(cx, funSource);
-}
-
-static JS::UniqueChars
-ConversionPositionForError(JSContext* cx, ConversionType convType, HandleObject funObj,
-                           unsigned argIndex)
-{
-  AutoString posSource;
-  BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
-  if (!posSource)
-    return nullptr;
-  return EncodeUTF8(cx, posSource);
-}
-
-class IndexCString final
-{
-    char indexStr[21]; // space for UINT64_MAX plus terminating null
-
-  public:
-    explicit IndexCString(unsigned index)
-    {
-      SprintfLiteral(indexStr, "%u", index);
-    }
-
-    explicit IndexCString(size_t index)
-    {
-      SprintfLiteral(indexStr, "%zu", index);
-    }
-
-    const char* get() const { return indexStr; }
-};
-
 static bool
 ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
           ConversionType convType,
@@ -1135,39 +1193,52 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     case TYPE_array: {
       MOZ_ASSERT(!funObj);
 
-      IndexCString indexStr(arrIndex);
+      char indexStr[16];
+      SprintfLiteral(indexStr, "%u", arrIndex);
 
-      JS::UniqueChars arrStr = TypeSourceForError(cx, arrObj);
+      AutoString arrSource;
+      BuildTypeSource(cx, arrObj, true, arrSource);
+      if (!arrSource)
+          return false;
+      JS::UniqueChars arrStr = EncodeLatin1(cx, arrSource);
       if (!arrStr)
         return false;
 
-      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               CTYPESMSG_CONV_ERROR_ARRAY,
-                               valStr, indexStr.get(), arrStr.get());
+      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                 CTYPESMSG_CONV_ERROR_ARRAY,
+                                 valStr, indexStr, arrStr.get());
       break;
     }
     case TYPE_struct: {
-      RootedString name(cx, GetFieldName(arrObj, arrIndex));
+      JSFlatString* name = GetFieldName(arrObj, arrIndex);
       MOZ_ASSERT(name);
-      JS::UniqueChars nameStr = JS_EncodeStringToUTF8(cx, name);
+      JS::UniqueChars nameStr = JS_EncodeStringToLatin1(cx, name);
       if (!nameStr)
         return false;
 
-      JS::UniqueChars structStr = TypeSourceForError(cx, arrObj);
+      AutoString structSource;
+      BuildTypeSource(cx, arrObj, true, structSource);
+      if (!structSource)
+          return false;
+      JS::UniqueChars structStr = EncodeLatin1(cx, structSource);
       if (!structStr)
         return false;
 
       JS::UniqueChars posStr;
       if (funObj) {
-        posStr = ConversionPositionForError(cx, convType, funObj, argIndex);
+        AutoString posSource;
+        BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
+        if (!posSource)
+            return false;
+        posStr = EncodeLatin1(cx, posSource);
         if (!posStr)
           return false;
       }
 
-      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               CTYPESMSG_CONV_ERROR_STRUCT,
-                               valStr, nameStr.get(), expectedStr, structStr.get(),
-                               (posStr ? posStr.get() : ""));
+      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                 CTYPESMSG_CONV_ERROR_STRUCT,
+                                 valStr, nameStr.get(), expectedStr, structStr.get(),
+                                 (posStr ? posStr.get() : ""));
       break;
     }
     default:
@@ -1180,45 +1251,58 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
   case ConversionType::Argument: {
     MOZ_ASSERT(funObj);
 
-    IndexCString indexStr(argIndex + 1);
+    char indexStr[16];
+    SprintfLiteral(indexStr, "%u", argIndex + 1);
 
-    JS::UniqueChars funStr = FunctionTypeSourceForError(cx, funObj);
+    AutoString funSource;
+    BuildFunctionTypeSource(cx, funObj, funSource);
+    if (!funSource)
+        return false;
+    JS::UniqueChars funStr = EncodeLatin1(cx, funSource);
     if (!funStr)
       return false;
 
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_CONV_ERROR_ARG,
-                             valStr, indexStr.get(), funStr.get());
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                               CTYPESMSG_CONV_ERROR_ARG,
+                               valStr, indexStr, funStr.get());
     break;
   }
   case ConversionType::Finalizer: {
     MOZ_ASSERT(funObj);
 
-    JS::UniqueChars funStr = FunctionTypeSourceForError(cx, funObj);
+    AutoString funSource;
+    BuildFunctionTypeSource(cx, funObj, funSource);
+    if (!funSource)
+        return false;
+    JS::UniqueChars funStr = EncodeLatin1(cx, funSource);
     if (!funStr)
       return false;
 
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_CONV_ERROR_FIN, valStr, funStr.get());
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                               CTYPESMSG_CONV_ERROR_FIN, valStr, funStr.get());
     break;
   }
   case ConversionType::Return: {
     MOZ_ASSERT(funObj);
 
-    JS::UniqueChars funStr = FunctionTypeSourceForError(cx, funObj);
+    AutoString funSource;
+    BuildFunctionTypeSource(cx, funObj, funSource);
+    if (!funSource)
+        return false;
+    JS::UniqueChars funStr = EncodeLatin1(cx, funSource);
     if (!funStr)
       return false;
 
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_CONV_ERROR_RET, valStr, funStr.get());
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                               CTYPESMSG_CONV_ERROR_RET, valStr, funStr.get());
     break;
   }
   case ConversionType::Setter:
   case ConversionType::Construct:
     MOZ_ASSERT(!funObj);
 
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_CONV_ERROR_SET, valStr, expectedStr);
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                               CTYPESMSG_CONV_ERROR_SET, valStr, expectedStr);
     break;
   }
 
@@ -1233,7 +1317,11 @@ ConvError(JSContext* cx, HandleObject expectedType, HandleValue actual,
 {
   MOZ_ASSERT(CType::IsCType(expectedType));
 
-  JS::UniqueChars expectedStr = TypeSourceForError(cx, expectedType);
+  AutoString expectedSource;
+  BuildTypeSource(cx, expectedType, true, expectedSource);
+  if (!expectedSource)
+      return false;
+  JS::UniqueChars expectedStr = EncodeLatin1(cx, expectedSource);
   if (!expectedStr)
     return false;
 
@@ -1245,17 +1333,16 @@ static bool
 ArgumentConvError(JSContext* cx, HandleValue actual, const char* funStr,
                   unsigned argIndex)
 {
-  MOZ_ASSERT(JS::StringIsASCII(funStr));
-
   JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
   if (!valStr)
     return false;
 
-  IndexCString indexStr(argIndex + 1);
+  char indexStr[16];
+  SprintfLiteral(indexStr, "%u", argIndex + 1);
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_CONV_ERROR_ARG, valStr, indexStr.get(), funStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_CONV_ERROR_ARG, valStr, indexStr, funStr);
   return false;
 }
 
@@ -1263,8 +1350,8 @@ static bool
 ArgumentLengthError(JSContext* cx, const char* fun, const char* count,
                     const char* s)
 {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            CTYPESMSG_WRONG_ARG_LENGTH, fun, count, s);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_WRONG_ARG_LENGTH, fun, count, s);
   return false;
 }
 
@@ -1280,16 +1367,22 @@ ArrayLengthMismatch(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
   if (!valStr)
     return false;
 
-  IndexCString expectedLengthStr(expectedLength);
-  IndexCString actualLengthStr(actualLength);
+  char expectedLengthStr[16];
+  SprintfLiteral(expectedLengthStr, "%u", expectedLength);
+  char actualLengthStr[16];
+  SprintfLiteral(actualLengthStr, "%u", actualLength);
 
-  JS::UniqueChars arrStr = TypeSourceForError(cx, arrObj);
+  AutoString arrSource;
+  BuildTypeSource(cx, arrObj, true, arrSource);
+  if (!arrSource)
+      return false;
+  JS::UniqueChars arrStr = EncodeLatin1(cx, arrSource);
   if (!arrStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_ARRAY_MISMATCH,
-                           valStr, arrStr.get(), expectedLengthStr.get(), actualLengthStr.get());
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_ARRAY_MISMATCH,
+                             valStr, arrStr.get(), expectedLengthStr, actualLengthStr);
   return false;
 }
 
@@ -1305,16 +1398,22 @@ ArrayLengthOverflow(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
   if (!valStr)
     return false;
 
-  IndexCString expectedLengthStr(expectedLength);
-  IndexCString actualLengthStr(actualLength);
+  char expectedLengthStr[16];
+  SprintfLiteral(expectedLengthStr, "%u", expectedLength);
+  char actualLengthStr[16];
+  SprintfLiteral(actualLengthStr, "%u", actualLength);
 
-  JS::UniqueChars arrStr = TypeSourceForError(cx, arrObj);
+  AutoString arrSource;
+  BuildTypeSource(cx, arrObj, true, arrSource);
+  if (!arrSource)
+      return false;
+  JS::UniqueChars arrStr = EncodeLatin1(cx, arrSource);
   if (!arrStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_ARRAY_OVERFLOW,
-                           valStr, arrStr.get(), expectedLengthStr.get(), actualLengthStr.get());
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_ARRAY_OVERFLOW,
+                             valStr, arrStr.get(), expectedLengthStr, actualLengthStr);
   return false;
 }
 
@@ -1346,12 +1445,12 @@ CannotConstructError(JSContext* cx, const char* type)
 static bool
 DuplicateFieldError(JSContext* cx, Handle<JSFlatString*> name)
 {
-  JS::UniqueChars nameStr = JS_EncodeStringToUTF8(cx, name);
+  JS::UniqueChars nameStr = JS_EncodeStringToLatin1(cx, name);
   if (!nameStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_DUPLICATE_FIELD, nameStr.get());
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_DUPLICATE_FIELD, nameStr.get());
   return false;
 }
 
@@ -1369,13 +1468,17 @@ EmptyFinalizerError(JSContext* cx, ConversionType convType,
 {
   JS::UniqueChars posStr;
   if (funObj) {
-    posStr = ConversionPositionForError(cx, convType, funObj, argIndex);
+    AutoString posSource;
+    BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
+    if (!posSource)
+        return false;
+    posStr = EncodeLatin1(cx, posSource);
     if (!posStr)
       return false;
   }
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_EMPTY_FIN, (posStr ? posStr.get() : ""));
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_EMPTY_FIN, (posStr ? posStr.get() : ""));
   return false;
 }
 
@@ -1393,24 +1496,34 @@ FieldCountMismatch(JSContext* cx,
   if (!valStr)
     return false;
 
-  JS::UniqueChars structStr = TypeSourceForError(cx, structObj);
+  AutoString structSource;
+  BuildTypeSource(cx, structObj, true, structSource);
+  if (!structSource)
+      return false;
+  JS::UniqueChars structStr = EncodeLatin1(cx, structSource);
   if (!structStr)
     return false;
 
-  IndexCString expectedCountStr(expectedCount);
-  IndexCString actualCountStr(actualCount);
+  char expectedCountStr[16];
+  SprintfLiteral(expectedCountStr, "%u", expectedCount);
+  char actualCountStr[16];
+  SprintfLiteral(actualCountStr, "%u", actualCount);
 
   JS::UniqueChars posStr;
   if (funObj) {
-    posStr = ConversionPositionForError(cx, convType, funObj, argIndex);
+    AutoString posSource;
+    BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
+    if (!posSource)
+        return false;
+    posStr = EncodeLatin1(cx, posSource);
     if (!posStr)
       return false;
   }
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_FIELD_MISMATCH,
-                           valStr, structStr.get(), expectedCountStr.get(), actualCountStr.get(),
-                           (posStr ? posStr.get() : ""));
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_FIELD_MISMATCH,
+                             valStr, structStr.get(), expectedCountStr, actualCountStr,
+                             (posStr ? posStr.get() : ""));
   return false;
 }
 
@@ -1422,10 +1535,11 @@ FieldDescriptorCountError(JSContext* cx, HandleValue typeVal, size_t length)
   if (!valStr)
     return false;
 
-  IndexCString lengthStr(length);
+  char lengthStr[16];
+  SprintfLiteral(lengthStr, "%zu", length);
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_FIELD_DESC_COUNT, valStr, lengthStr.get());
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_FIELD_DESC_COUNT, valStr, lengthStr);
   return false;
 }
 
@@ -1438,8 +1552,8 @@ FieldDescriptorNameError(JSContext* cx, HandleId id)
   if (!propStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_FIELD_DESC_NAME, propStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_FIELD_DESC_NAME, propStr);
   return false;
 }
 
@@ -1453,12 +1567,12 @@ FieldDescriptorSizeError(JSContext* cx, HandleObject typeObj, HandleId id)
     return false;
 
   RootedString idStr(cx, IdToString(cx, id));
-  JS::UniqueChars propStr = JS_EncodeStringToUTF8(cx, idStr);
+  JS::UniqueChars propStr = JS_EncodeStringToLatin1(cx, idStr);
   if (!propStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_FIELD_DESC_SIZE, typeStr, propStr.get());
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_FIELD_DESC_SIZE, typeStr, propStr.get());
   return false;
 }
 
@@ -1470,8 +1584,8 @@ FieldDescriptorNameTypeError(JSContext* cx, HandleValue typeVal)
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_FIELD_DESC_NAMETYPE, valStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_FIELD_DESC_NAMETYPE, valStr);
   return false;
 }
 
@@ -1484,12 +1598,12 @@ FieldDescriptorTypeError(JSContext* cx, HandleValue poroVal, HandleId id)
     return false;
 
   RootedString idStr(cx, IdToString(cx, id));
-  JS::UniqueChars propStr = JS_EncodeStringToUTF8(cx, idStr);
+  JS::UniqueChars propStr = JS_EncodeStringToLatin1(cx, idStr);
   if (!propStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_FIELD_DESC_TYPE, typeStr, propStr.get());
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_FIELD_DESC_TYPE, typeStr, propStr.get());
   return false;
 }
 
@@ -1503,12 +1617,12 @@ FieldMissingError(JSContext* cx, JSObject* typeObj, JSFlatString* name_)
   if (!typeStr)
     return false;
 
-  JS::UniqueChars nameStr = JS_EncodeStringToUTF8(cx, name);
+  JS::UniqueChars nameStr = JS_EncodeStringToLatin1(cx, name);
   if (!nameStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_FIELD_MISSING, typeStr, nameStr.get());
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_FIELD_MISSING, typeStr, nameStr.get());
   return false;
 }
 
@@ -1522,12 +1636,16 @@ FinalizerSizeError(JSContext* cx, HandleObject funObj, HandleValue actual)
   if (!valStr)
     return false;
 
-  JS::UniqueChars funStr = FunctionTypeSourceForError(cx, funObj);
+  AutoString funSource;
+  BuildFunctionTypeSource(cx, funObj, funSource);
+  if (!funSource)
+      return false;
+  JS::UniqueChars funStr = EncodeLatin1(cx, funSource);
   if (!funStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_FIN_SIZE_ERROR, funStr.get(), valStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_FIN_SIZE_ERROR, funStr.get(), valStr);
   return false;
 }
 
@@ -1537,25 +1655,30 @@ FunctionArgumentLengthMismatch(JSContext* cx,
                                HandleObject funObj, HandleObject typeObj,
                                bool isVariadic)
 {
-  JS::UniqueChars funStr;
+  AutoString funSource;
   Value slot = JS_GetReservedSlot(funObj, SLOT_REFERENT);
   if (!slot.isUndefined() && Library::IsLibrary(&slot.toObject())) {
-    funStr = FunctionTypeSourceForError(cx, funObj);
+    BuildFunctionTypeSource(cx, funObj, funSource);
   } else {
-    funStr = FunctionTypeSourceForError(cx, typeObj);
+    BuildFunctionTypeSource(cx, typeObj, funSource);
   }
+  if (!funSource)
+      return false;
+  JS::UniqueChars funStr = EncodeLatin1(cx, funSource);
   if (!funStr)
     return false;
 
-  IndexCString expectedCountStr(expectedCount);
-  IndexCString actualCountStr(actualCount);
+  char expectedCountStr[16];
+  SprintfLiteral(expectedCountStr, "%u", expectedCount);
+  char actualCountStr[16];
+  SprintfLiteral(actualCountStr, "%u", actualCount);
 
   const char* variadicStr = isVariadic ? " or more": "";
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_ARG_COUNT_MISMATCH,
-                           funStr.get(), expectedCountStr.get(), variadicStr,
-                           actualCountStr.get());
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_ARG_COUNT_MISMATCH,
+                             funStr.get(), expectedCountStr, variadicStr,
+                             actualCountStr);
   return false;
 }
 
@@ -1563,49 +1686,44 @@ static bool
 FunctionArgumentTypeError(JSContext* cx,
                           uint32_t index, HandleValue typeVal, const char* reason)
 {
-  MOZ_ASSERT(JS::StringIsASCII(reason));
-
   JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, typeVal, valBytes);
   if (!valStr)
     return false;
 
-  IndexCString indexStr(index + 1);
+  char indexStr[16];
+  SprintfLiteral(indexStr, "%u", index + 1);
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_ARG_TYPE_ERROR,
-                           indexStr.get(), reason, valStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_ARG_TYPE_ERROR,
+                             indexStr, reason, valStr);
   return false;
 }
 
 static bool
 FunctionReturnTypeError(JSContext* cx, HandleValue type, const char* reason)
 {
-  MOZ_ASSERT(JS::StringIsASCII(reason));
-
   JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, type, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_RET_TYPE_ERROR, reason, valStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_RET_TYPE_ERROR, reason, valStr);
   return false;
 }
 
 static bool
 IncompatibleCallee(JSContext* cx, const char* funName, HandleObject actualObj)
 {
-  MOZ_ASSERT(JS::StringIsASCII(funName));
-
   JS::UniqueChars valBytes;
   RootedValue val(cx, ObjectValue(*actualObj));
   const char* valStr = CTypesToSourceForError(cx, val, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_INCOMPATIBLE_CALLEE, funName, valStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_INCOMPATIBLE_CALLEE, funName, valStr);
   return false;
 }
 
@@ -1613,25 +1731,23 @@ static bool
 IncompatibleThisProto(JSContext* cx, const char* funName,
                       const char* actualType)
 {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            CTYPESMSG_INCOMPATIBLE_THIS,
-                            funName, actualType);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_INCOMPATIBLE_THIS,
+                             funName, actualType);
   return false;
 }
 
 static bool
 IncompatibleThisProto(JSContext* cx, const char* funName, HandleValue actualVal)
 {
-  MOZ_ASSERT(JS::StringIsASCII(funName));
-
   JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actualVal, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_INCOMPATIBLE_THIS_VAL,
-                           funName, "incompatible object", valStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_INCOMPATIBLE_THIS_VAL,
+                             funName, "incompatible object", valStr);
   return false;
 }
 
@@ -1648,17 +1764,14 @@ static bool
 IncompatibleThisType(JSContext* cx, const char* funName, const char* actualType,
                      HandleValue actualVal)
 {
-  MOZ_ASSERT(JS::StringIsASCII(funName));
-  MOZ_ASSERT(JS::StringIsASCII(actualType));
-
   JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actualVal, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_INCOMPATIBLE_THIS_VAL,
-                           funName, actualType, valStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_INCOMPATIBLE_THIS_VAL,
+                             funName, actualType, valStr);
   return false;
 }
 
@@ -1670,8 +1783,8 @@ InvalidIndexError(JSContext* cx, HandleValue val)
   if (!indexStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_INVALID_INDEX, indexStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_INVALID_INDEX, indexStr);
   return false;
 }
 
@@ -1685,11 +1798,14 @@ InvalidIndexError(JSContext* cx, HandleId id)
 static bool
 InvalidIndexRangeError(JSContext* cx, size_t index, size_t length)
 {
-  IndexCString indexStr(index);
-  IndexCString lengthStr(length);
+  char indexStr[16];
+  SprintfLiteral(indexStr, "%zu", index);
+
+  char lengthStr[16];
+  SprintfLiteral(lengthStr,"%zu", length);
 
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            CTYPESMSG_INVALID_RANGE, indexStr.get(), lengthStr.get());
+                            CTYPESMSG_INVALID_RANGE, indexStr, lengthStr);
   return false;
 }
 
@@ -1698,12 +1814,16 @@ NonPrimitiveError(JSContext* cx, HandleObject typeObj)
 {
   MOZ_ASSERT(CType::IsCType(typeObj));
 
-  JS::UniqueChars typeStr = TypeSourceForError(cx, typeObj);
+  AutoString typeSource;
+  BuildTypeSource(cx, typeObj, true, typeSource);
+  if (!typeSource)
+      return false;
+  JS::UniqueChars typeStr = EncodeLatin1(cx, typeSource);
   if (!typeStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_NON_PRIMITIVE, typeStr.get());
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_NON_PRIMITIVE, typeStr.get());
   return false;
 }
 
@@ -1715,24 +1835,22 @@ NonStringBaseError(JSContext* cx, HandleValue thisVal)
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_NON_STRING_BASE, valStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_NON_STRING_BASE, valStr);
   return false;
 }
 
 static bool
 NullPointerError(JSContext* cx, const char* action, HandleObject obj)
 {
-  MOZ_ASSERT(JS::StringIsASCII(action));
-
   JS::UniqueChars valBytes;
   RootedValue val(cx, ObjectValue(*obj));
   const char* valStr = CTypesToSourceForError(cx, val, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_NULL_POINTER, action, valStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_NULL_POINTER, action, valStr);
   return false;
 }
 
@@ -1754,14 +1872,18 @@ PropNameNonStringError(JSContext* cx, HandleId id, HandleValue actual,
 
   JS::UniqueChars posStr;
   if (funObj) {
-    posStr = ConversionPositionForError(cx, convType, funObj, argIndex);
+    AutoString posSource;
+    BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
+    if (!posSource)
+        return false;
+    posStr = EncodeLatin1(cx, posSource);
     if (!posStr)
       return false;
   }
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_PROP_NONSTRING, propStr, valStr,
-                           (posStr ? posStr.get() : ""));
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_PROP_NONSTRING, propStr, valStr,
+                             (posStr ? posStr.get() : ""));
   return false;
 }
 
@@ -1776,42 +1898,42 @@ SizeOverflow(JSContext* cx, const char* name, const char* limit)
 static bool
 TypeError(JSContext* cx, const char* expected, HandleValue actual)
 {
-  MOZ_ASSERT(JS::StringIsASCII(expected));
-
   JS::UniqueChars bytes;
   const char* src = CTypesToSourceForError(cx, actual, bytes);
   if (!src)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_TYPE_ERROR, expected, src);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_TYPE_ERROR, expected, src);
   return false;
 }
 
 static bool
 TypeOverflow(JSContext* cx, const char* expected, HandleValue actual)
 {
-  MOZ_ASSERT(JS::StringIsASCII(expected));
-
   JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_TYPE_OVERFLOW, valStr, expected);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_TYPE_OVERFLOW, valStr, expected);
   return false;
 }
 
 static bool
 UndefinedSizeCastError(JSContext* cx, HandleObject targetTypeObj)
 {
-  JS::UniqueChars targetTypeStr = TypeSourceForError(cx, targetTypeObj);
+  AutoString targetTypeSource;
+  BuildTypeSource(cx, targetTypeObj, true, targetTypeSource);
+  if (!targetTypeSource)
+      return false;
+  JS::UniqueChars targetTypeStr = EncodeLatin1(cx, targetTypeSource);
   if (!targetTypeStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_UNDEFINED_SIZE_CAST, targetTypeStr.get());
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_UNDEFINED_SIZE_CAST, targetTypeStr.get());
   return false;
 }
 
@@ -1820,37 +1942,45 @@ SizeMismatchCastError(JSContext* cx,
                       HandleObject sourceTypeObj, HandleObject targetTypeObj,
                       size_t sourceSize, size_t targetSize)
 {
-  JS::UniqueChars sourceTypeStr = TypeSourceForError(cx, sourceTypeObj);
+  AutoString sourceTypeSource;
+  BuildTypeSource(cx, sourceTypeObj, true, sourceTypeSource);
+  if (!sourceTypeSource)
+      return false;
+  JS::UniqueChars sourceTypeStr = EncodeLatin1(cx, sourceTypeSource);
   if (!sourceTypeStr)
     return false;
 
-  JS::UniqueChars targetTypeStr = TypeSourceForError(cx, targetTypeObj);
+  AutoString targetTypeSource;
+  BuildTypeSource(cx, targetTypeObj, true, targetTypeSource);
+  if (!targetTypeSource)
+      return false;
+  JS::UniqueChars targetTypeStr = EncodeLatin1(cx, targetTypeSource);
   if (!targetTypeStr)
     return false;
 
-  IndexCString sourceSizeStr(sourceSize);
-  IndexCString targetSizeStr(targetSize);
+  char sourceSizeStr[16];
+  char targetSizeStr[16];
+  SprintfLiteral(sourceSizeStr, "%zu", sourceSize);
+  SprintfLiteral(targetSizeStr, "%zu", targetSize);
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_SIZE_MISMATCH_CAST,
-                           targetTypeStr.get(), sourceTypeStr.get(),
-                           targetSizeStr.get(), sourceSizeStr.get());
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_SIZE_MISMATCH_CAST,
+                             targetTypeStr.get(), sourceTypeStr.get(),
+                             targetSizeStr, sourceSizeStr);
   return false;
 }
 
 static bool
 UndefinedSizePointerError(JSContext* cx, const char* action, HandleObject obj)
 {
-  MOZ_ASSERT(JS::StringIsASCII(action));
-
   JS::UniqueChars valBytes;
   RootedValue val(cx, ObjectValue(*obj));
   const char* valStr = CTypesToSourceForError(cx, val, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_UNDEFINED_SIZE, action, valStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_UNDEFINED_SIZE, action, valStr);
   return false;
 }
 
@@ -1862,10 +1992,11 @@ VariadicArgumentTypeError(JSContext* cx, uint32_t index, HandleValue actual)
   if (!valStr)
     return false;
 
-  IndexCString indexStr(index + 1);
+  char indexStr[16];
+  SprintfLiteral(indexStr, "%u", index + 1);
 
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           CTYPESMSG_VARG_TYPE_ERROR, indexStr.get(), valStr);
+  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_VARG_TYPE_ERROR, indexStr, valStr);
   return false;
 }
 
@@ -3437,28 +3568,25 @@ ImplicitConvert(JSContext* cx,
       // TODO: Extend this so we can safely convert strings at other times also.
       JSString* sourceString = val.toString();
       size_t sourceLength = sourceString->length();
-      JSFlatString* sourceFlat = sourceString->ensureFlat(cx);
-      if (!sourceFlat)
+      JSLinearString* sourceLinear = sourceString->ensureLinear(cx);
+      if (!sourceLinear)
         return false;
 
       switch (CType::GetTypeCode(baseType)) {
       case TYPE_char:
       case TYPE_signed_char:
       case TYPE_unsigned_char: {
-        // Reject if unpaired surrogate characters are present.
-        if (!ReportErrorIfUnpairedSurrogatePresent(cx, sourceFlat))
-          return false;
-
         // Convert from UTF-16 to UTF-8.
-        size_t nbytes = JS::GetDeflatedUTF8StringLength(sourceFlat);
+        size_t nbytes = GetDeflatedUTF8StringLength(cx, sourceLinear);
+        if (nbytes == (size_t) -1)
+          return false;
 
         char** charBuffer = static_cast<char**>(buffer);
         *charBuffer = cx->pod_malloc<char>(nbytes + 1);
         if (!*charBuffer)
           return false;
 
-        JS::DeflateStringToUTF8Buffer(sourceFlat, mozilla::RangedPtr<char>(*charBuffer, nbytes),
-                                      &nbytes);
+        ASSERT_OK(DeflateStringToUTF8Buffer(cx, sourceLinear, *charBuffer, &nbytes));
         (*charBuffer)[nbytes] = 0;
         *freePointer = true;
         break;
@@ -3473,12 +3601,12 @@ ImplicitConvert(JSContext* cx,
           return false;
 
         *freePointer = true;
-        if (sourceFlat->hasLatin1Chars()) {
+        if (sourceLinear->hasLatin1Chars()) {
             AutoCheckCannotGC nogc;
-            CopyAndInflateChars(*char16Buffer, sourceFlat->latin1Chars(nogc), sourceLength);
+            CopyAndInflateChars(*char16Buffer, sourceLinear->latin1Chars(nogc), sourceLength);
         } else {
             AutoCheckCannotGC nogc;
-            mozilla::PodCopy(*char16Buffer, sourceFlat->twoByteChars(nogc), sourceLength);
+            mozilla::PodCopy(*char16Buffer, sourceLinear->twoByteChars(nogc), sourceLength);
         }
         (*char16Buffer)[sourceLength] = 0;
         break;
@@ -3558,20 +3686,19 @@ ImplicitConvert(JSContext* cx,
     if (val.isString()) {
       JSString* sourceString = val.toString();
       size_t sourceLength = sourceString->length();
-      JSFlatString* sourceFlat = sourceString->ensureFlat(cx);
-      if (!sourceFlat)
+      JSLinearString* sourceLinear = sourceString->ensureLinear(cx);
+      if (!sourceLinear)
         return false;
 
       switch (CType::GetTypeCode(baseType)) {
       case TYPE_char:
       case TYPE_signed_char:
       case TYPE_unsigned_char: {
-        // Reject if unpaired surrogate characters are present.
-        if (!ReportErrorIfUnpairedSurrogatePresent(cx, sourceFlat))
-          return false;
-
         // Convert from UTF-16 or Latin1 to UTF-8.
-        size_t nbytes = JS::GetDeflatedUTF8StringLength(sourceFlat);
+        size_t nbytes =
+          GetDeflatedUTF8StringLength(cx, sourceLinear);
+        if (nbytes == (size_t) -1)
+          return false;
 
         if (targetLength < nbytes) {
           MOZ_ASSERT(!funObj);
@@ -3580,8 +3707,8 @@ ImplicitConvert(JSContext* cx,
         }
 
         char* charBuffer = static_cast<char*>(buffer);
-        JS::DeflateStringToUTF8Buffer(sourceFlat, mozilla::RangedPtr<char>(charBuffer, nbytes),
-                                      &nbytes);
+        ASSERT_OK(DeflateStringToUTF8Buffer(cx, sourceLinear, charBuffer,
+                                            &nbytes));
 
         if (targetLength > nbytes)
           charBuffer[nbytes] = 0;
@@ -3598,12 +3725,12 @@ ImplicitConvert(JSContext* cx,
         }
 
         char16_t* dest = static_cast<char16_t*>(buffer);
-        if (sourceFlat->hasLatin1Chars()) {
+        if (sourceLinear->hasLatin1Chars()) {
             AutoCheckCannotGC nogc;
-            CopyAndInflateChars(dest, sourceFlat->latin1Chars(nogc), sourceLength);
+            CopyAndInflateChars(dest, sourceLinear->latin1Chars(nogc), sourceLength);
         } else {
             AutoCheckCannotGC nogc;
-            mozilla::PodCopy(dest, sourceFlat->twoByteChars(nogc), sourceLength);
+            mozilla::PodCopy(dest, sourceLinear->twoByteChars(nogc), sourceLength);
         }
 
         if (targetLength > sourceLength)
@@ -5454,20 +5581,18 @@ ArrayType::ConstructData(JSContext* cx,
       // including space for the terminator.
       JSString* sourceString = args[0].toString();
       size_t sourceLength = sourceString->length();
-      JSFlatString* sourceFlat = sourceString->ensureFlat(cx);
-      if (!sourceFlat)
+      JSLinearString* sourceLinear = sourceString->ensureLinear(cx);
+      if (!sourceLinear)
         return false;
 
       switch (CType::GetTypeCode(baseType)) {
       case TYPE_char:
       case TYPE_signed_char:
       case TYPE_unsigned_char: {
-        // Reject if unpaired surrogate characters are present.
-        if (!ReportErrorIfUnpairedSurrogatePresent(cx, sourceFlat))
-          return false;
-
         // Determine the UTF-8 length.
-        length = JS::GetDeflatedUTF8StringLength(sourceFlat);
+        length = GetDeflatedUTF8StringLength(cx, sourceLinear);
+        if (length == (size_t) -1)
+          return false;
 
         ++length;
         break;
@@ -5933,7 +6058,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
   RootedObject fieldsObj(cx, fieldsObj_);
 
   uint32_t len;
-  MOZ_ALWAYS_TRUE(JS_GetArrayLength(cx, fieldsObj, &len));
+  ASSERT_OK(JS_GetArrayLength(cx, fieldsObj, &len));
 
   // Get the common prototype for CData objects of this type from
   // ctypes.CType.prototype.
@@ -6826,7 +6951,7 @@ FunctionType::Create(JSContext* cx, unsigned argc, Value* vp)
     arrayObj = &args[2].toObject();
 
     uint32_t len;
-    MOZ_ALWAYS_TRUE(JS_GetArrayLength(cx, arrayObj, &len));
+    ASSERT_OK(JS_GetArrayLength(cx, arrayObj, &len));
 
     if (!argTypes.resize(len)) {
       JS_ReportOutOfMemory(cx);
@@ -8676,7 +8801,7 @@ Int64::Construct(JSContext* cx,
   // Get ctypes.Int64.prototype from the 'prototype' property of the ctor.
   RootedValue slot(cx);
   RootedObject callee(cx, &args.callee());
-  MOZ_ALWAYS_TRUE(JS_GetProperty(cx, callee, "prototype", &slot));
+  ASSERT_OK(JS_GetProperty(cx, callee, "prototype", &slot));
   RootedObject proto(cx, slot.toObjectOrNull());
   MOZ_ASSERT(JS_GetClass(proto) == &sInt64ProtoClass);
 
@@ -8860,7 +8985,7 @@ UInt64::Construct(JSContext* cx,
   // Get ctypes.UInt64.prototype from the 'prototype' property of the ctor.
   RootedValue slot(cx);
   RootedObject callee(cx, &args.callee());
-  MOZ_ALWAYS_TRUE(JS_GetProperty(cx, callee, "prototype", &slot));
+  ASSERT_OK(JS_GetProperty(cx, callee, "prototype", &slot));
   RootedObject proto(cx, &slot.toObject());
   MOZ_ASSERT(JS_GetClass(proto) == &sUInt64ProtoClass);
 
