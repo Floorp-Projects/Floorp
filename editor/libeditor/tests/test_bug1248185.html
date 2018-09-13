@@ -15,12 +15,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1248185
   // Avoid platform selection differences
   SimpleTest.waitForFocus(function() {
     SpecialPowers.pushPrefEnv({
-      "set": [["layout.word_select.eat_space_to_next_word", true]]
+      "set": [["layout.word_select.eat_space_to_next_word", true]],
     }, runTests);
   });
 
-  function runTests()
-  {
+  function runTests() {
     var editor = document.querySelector("#test");
     editor.focus();
 

@@ -62,7 +62,7 @@ function runOnFocus() {
   ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
      "All misspellings before editing are accounted for.");
   append(" becaz I'm a lulcat!");
-  onSpellCheck(edit, function () {
+  onSpellCheck(edit, function() {
     gMisspeltWords.push("becaz");
     gMisspeltWords.push("lulcat");
     ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
@@ -72,7 +72,7 @@ function runOnFocus() {
     // the textarea and see if the spell check after the blur event catches it.
     append(" workd");
     edit.blur();
-    onSpellCheck(edit, function () {
+    onSpellCheck(edit, function() {
       gMisspeltWords.push("workd");
       ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
          "All misspellings after blur are accounted for.");
@@ -81,7 +81,7 @@ function runOnFocus() {
       gMisspeltWords = ["workd"];
       edit.value = "";
       append("workd ");
-      onSpellCheck(edit, function () {
+      onSpellCheck(edit, function() {
         ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
            "Misspelling in the first entered word is accounted for.");
 
@@ -90,7 +90,7 @@ function runOnFocus() {
         edit.value = "";
         append("workd");
         paste("           x");
-        onSpellCheck(edit, function () {
+        onSpellCheck(edit, function() {
           ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
              "Misspelling is accounted for after pasting.");
 
@@ -101,8 +101,7 @@ function runOnFocus() {
   });
 }
 
-function runTest()
-{
+function runTest() {
   var edit = document.getElementById("edit");
   edit.focus();
 

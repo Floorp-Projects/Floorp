@@ -10,14 +10,14 @@
 function runTest() {
   function verifyContent() {
     const kExpectedImgSpec = "data:image/png;base64,";
-    var e = document.getElementById('i1');
+    var e = document.getElementById("i1");
     var doc = e.contentDocument;
     is(doc.getElementsByTagName("img")[0].src.substring(0, kExpectedImgSpec.length),
        kExpectedImgSpec, "The pasted image is a base64-encoded data: URI");
   }
 
   function pasteInto() {
-    var e = document.getElementById('i1');
+    var e = document.getElementById("i1");
     var doc = e.contentDocument;
     doc.designMode = "on";
     doc.defaultView.focus();

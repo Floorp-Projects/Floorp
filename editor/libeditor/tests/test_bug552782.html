@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=552782
 /** Test for Bug 552782 **/
 SimpleTest.waitForExplicitFinish();
 
-var original = '<ol><li>Item 1</li><ol><li>Item 2</li><li>Item 3</li><li>Item 4</li></ol></ol>';
+var original = "<ol><li>Item 1</li><ol><li>Item 2</li><li>Item 3</li><li>Item 4</li></ol></ol>";
 var editor = document.getElementById("editor");
 editor.innerHTML = original;
 editor.focus();
@@ -32,7 +32,7 @@ addLoadEvent(function() {
   var lis = document.getElementsByTagName("li");
   sel.selectAllChildren(lis[2]);
   document.execCommand("outdent", false, false);
-  var expected = '<ol><li>Item 1</li><ol><li>Item 2</li></ol><li>Item 3</li><ol><li>Item 4</li></ol></ol>';
+  var expected = "<ol><li>Item 1</li><ol><li>Item 2</li></ol><li>Item 3</li><ol><li>Item 4</li></ol></ol>";
   is(editor.innerHTML, expected, "outdenting third item in a partially indented numbered list");
   document.execCommand("indent", false, false);
   todo_is(editor.innerHTML, original, "re-indenting third item in a partially indented numbered list");

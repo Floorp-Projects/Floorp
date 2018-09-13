@@ -12,10 +12,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=389350
 
 function runTest() {
   var e = document.getElementById("edit");
-  e.contentDocument.designMode='on';
-  e.style.display='block';
+  e.contentDocument.designMode = "on";
+  e.style.display = "block";
   e.focus();
-  sendString('abc');
+  sendString("abc");
   var expected = "<head></head><body>abc</body>";
   var result = e.contentDocument.documentElement.innerHTML;
   is(result, expected, "iframe with designmode on had incorrect content");

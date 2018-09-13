@@ -67,7 +67,7 @@ SimpleTest.waitForFocus(async function() {
 
       // left is abs positioned element's left + margin-left + border-left-width + 12.
       // XXX Perhaps, we need to add border-left-width here if you add new test to have thick border.
-      const kPositionerX = 18
+      const kPositionerX = 18;
       // top is abs positioned element's top + margin-top + border-top-width - 14.
       // XXX Perhaps, we need to add border-top-width here if you add new test to have thick border.
       const kPositionerY = -7;
@@ -90,9 +90,9 @@ SimpleTest.waitForFocus(async function() {
       isfuzzy(newRect.y, rect.y + aDeltaY, 1, description + "The top should be increased by " + aDeltaY + "pixels");
     }
 
-    await testPositioner( 10,  10);
+    await testPositioner( 10, 10);
     await testPositioner( 10, -10);
-    await testPositioner(-10,  10);
+    await testPositioner(-10, 10);
     await testPositioner(-10, -10);
   }
 

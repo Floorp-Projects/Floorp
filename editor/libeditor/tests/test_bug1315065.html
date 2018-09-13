@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1315065
 <script type="application/javascript">
 /** Test for Bug 1315065 **/
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(()=>{
+SimpleTest.waitForFocus(() => {
   var editor = document.getElementsByTagName("div")[0];
   function initForBackspace(aSelectionCollapsedTo /* = 0 ~ 3 */) {
     editor.innerHTML = "<p id='p'>abc<br></p>";

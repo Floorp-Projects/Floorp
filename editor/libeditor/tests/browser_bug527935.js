@@ -4,7 +4,7 @@ add_task(async function() {
   const kPageURL = "http://example.org/browser/editor/libeditor/tests/bug527935.html";
   await BrowserTestUtils.withNewTab({
     gBrowser,
-    url: kPageURL
+    url: kPageURL,
   }, async function(aBrowser) {
     var popupShown = false;
     function listener() {

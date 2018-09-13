@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502673
     <script type="application/javascript">
 
       /** Test for Bug 502673 **/
-    
+
       SimpleTest.waitForExplicitFinish();
 
       function listener() {
@@ -32,18 +32,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502673
 
       listener.prototype =
       {
-        NotifyDocumentWillBeDestroyed: function () {
-          var editor = SpecialPowers.wrap(this.input).editor;
-          editor.removeDocumentStateListener(this);
-        },
+        NotifyDocumentWillBeDestroyed() {
+    var editor = SpecialPowers.wrap(this.input).editor;
+    editor.removeDocumentStateListener(this);
+  },
 
-        NotifyDocumentCreated: function () {
-        },
+        NotifyDocumentCreated() {
+  },
 
-        NotifyDocumentStateChanged: function (aNowDirty) {
-          var editor = SpecialPowers.wrap(this.input).editor;
-          editor.removeDocumentStateListener(this);
-        },
+        NotifyDocumentStateChanged(aNowDirty) {
+    var editor = SpecialPowers.wrap(this.input).editor;
+    editor.removeDocumentStateListener(this);
+  },
 
         QueryInterface: SpecialPowers.wrapCallback(function(iid) {
           if (iid.equals(SpecialPowers.Ci.nsIDocumentStateListener) ||
@@ -81,7 +81,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502673
         editor.addDocumentStateListener(listener1);
         editor.addDocumentStateListener(listener2);
         editor.addDocumentStateListener(listener3);
-        
+      
         // Test 2. Fire NotifyDocumentWillBeDestroyed notifications where the
         // listeners remove themselves (though in the real world, listeners
         // shouldn't do this as nsEditor::PreDestroy removes them as

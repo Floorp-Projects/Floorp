@@ -49,8 +49,7 @@ addLoadEvent(function() {
   });
 });
 
-function runTextareaTest()
-{
+function runTextareaTest() {
   textarea.addEventListener("keypress",
     function(aEvent) {
       is(aEvent.target, textarea,
@@ -69,8 +68,7 @@ function runTextareaTest()
   textarea.dispatchEvent(keypress);
 }
 
-function runContentediableTest()
-{
+function runContentediableTest() {
   div.addEventListener("keypress",
     function(aEvent) {
       is(aEvent.target, div,

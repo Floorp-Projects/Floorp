@@ -31,14 +31,14 @@ function resetSelection() {
 }
 
 function runTest() {
-    var rightClickDown = {type: 'mousedown', button: 2},
-        rightClickUp = {type: 'mouseup', button: 2},
-        singleClickDown = {type: 'mousedown', button: 0},
-        singleClickUp = {type: 'mouseup', button: 0};
+    var rightClickDown = {type: "mousedown", button: 2},
+        rightClickUp = {type: "mouseup", button: 2},
+        singleClickDown = {type: "mousedown", button: 0},
+        singleClickUp = {type: "mouseup", button: 0};
     var selection = window.getSelection();
 
-    var div = document.getElementById('display');
-    var img = document.getElementById('img');
+    var div = document.getElementById("display");
+    var img = document.getElementById("img");
     var divRect = div.getBoundingClientRect();
     var imgselected;
 

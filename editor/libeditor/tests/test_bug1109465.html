@@ -43,10 +43,10 @@ SimpleTest.waitForFocus(function() {
       { "string": composingString,
         "clauses":
         [
-          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-        ]
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+        ],
       },
-      "caret": { "start": 1, "length": 0 }
+      "caret": { "start": 1, "length": 0 },
     });
   synthesizeComposition({ type: "compositioncommitasis" });
   is(t.value, "foo\u306B\nbar", "Correct value after composition");

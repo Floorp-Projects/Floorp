@@ -28,7 +28,7 @@ SimpleTest.waitForFocus(function() {
   var editor = document.getElementById("editor");
   editor.focus();
   selection.collapse(editor, 0);
-  document.execCommand('insertText', false, 'A');
+  document.execCommand("insertText", false, "A");
   is(editor.firstChild.textContent, "A",
      "'A' should be inserted at start of the editor");
   is(editor.firstChild.nextSibling.tagName, "SELECT",
