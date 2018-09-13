@@ -28,6 +28,7 @@ args = ["-DOS_ANDROID=1"]
 "arch=aarch64" = ["--target=aarch64-linux-android"]
 "arch=arm" = ["--target=armv7-linux-androideabi"]
 "arch=x86" = ["--target=i686-linux-android"]
+"arch=x86_64" = ["--target=x86_64-linux-android"]
 
 [build."os=windows"]
 args = [
