@@ -88,11 +88,9 @@ public:
    * Callback Function reportng any change in the video-frame dimensions
    * @param width:  current width of the video @ decoder
    * @param height: current height of the video @ decoder
-   * @param number_of_streams: number of participating video streams
    */
   virtual void FrameSizeChange(unsigned int width,
-                               unsigned int height,
-                               unsigned int number_of_streams) = 0;
+                               unsigned int height) = 0;
 
   /**
    * Callback Function reporting decoded frame for processing.
@@ -194,7 +192,7 @@ public:
    * Note: this is an ordered list and {a,b,c} != {b,a,c}
    */
   virtual bool SetLocalSSRCs(const std::vector<unsigned int>& aSSRCs) = 0;
-  virtual std::vector<unsigned int> GetLocalSSRCs() const = 0;
+  virtual std::vector<unsigned int> GetLocalSSRCs() = 0;
 
   /**
   * Adds negotiated RTP header extensions to the the conduit. Unknown extensions
@@ -380,7 +378,8 @@ public:
    * @result Concrete VideoSessionConduitObject or nullptr in the case
    *         of failure
    */
-  static RefPtr<VideoSessionConduit> Create(RefPtr<WebRtcCallWrapper> aCall);
+  static RefPtr<VideoSessionConduit> Create(
+    RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsIEventTarget> aStsThread);
 
   enum FrameRequestType
   {
@@ -428,6 +427,7 @@ public:
     const webrtc::VideoFrame& frame) = 0;
 
   virtual MediaConduitErrorCode ConfigureCodecMode(webrtc::VideoCodecMode) = 0;
+
   /**
    * Function to configure send codec for the video session
    * @param sendSessionConfig: CodecConfiguration
@@ -448,10 +448,6 @@ public:
    */
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
       const std::vector<VideoCodecConfig* >& recvCodecConfigList) = 0;
-
-  virtual unsigned int SendingMaxFs() = 0;
-
-  virtual unsigned int SendingMaxFr() = 0;
 
   /**
     * These methods allow unit tests to double-check that the
@@ -556,11 +552,10 @@ public:
   virtual bool IsSamplingFreqSupported(int freq) const = 0;
 
    /**
-    * Function to configure send codec for the audio session
-    * @param sendSessionConfig: CodecConfiguration
-    * NOTE: See VideoConduit for more information
-    */
-
+   * Function to configure send codec for the audio session
+   * @param sendSessionConfig: CodecConfiguration
+   * NOTE: See VideoConduit for more information
+   */
   virtual MediaConduitErrorCode ConfigureSendMediaCodec(const AudioCodecConfig* sendCodecConfig) = 0;
 
    /**

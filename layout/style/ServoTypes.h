@@ -125,6 +125,17 @@ enum class InheritTarget {
   PlaceholderFrame,
 };
 
+// Represents values for interaction media features.
+// https://drafts.csswg.org/mediaqueries-4/#mf-interaction
+enum class PointerCapabilities : uint8_t {
+  None = 0,
+  Coarse = 1 << 0,
+  Fine = 1 << 1,
+  Hover = 1 << 2,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PointerCapabilities)
+
 // These measurements are obtained for both the UA cache and the Stylist, but
 // not all the fields are used in both cases.
 class ServoStyleSetSizes

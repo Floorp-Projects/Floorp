@@ -368,4 +368,23 @@ JS_EncodeStringToLatin1(JSContext* cx, JSString* str);
 extern JS_PUBLIC_API(JS::UniqueChars)
 JS_EncodeStringToUTF8(JSContext* cx, JS::Handle<JSString*> str);
 
+/**
+ * DEPRECATED
+ *
+ * Same behavior as JS_EncodeStringToLatin1(), but encode into an ASCII string.
+ *
+ * This function asserts in debug mode that the input string contains only
+ * ASCII characters.
+ *
+ * The returned string is also subject to misinterpretation if |str| contains
+ * any nulls (which are faithfully transcribed into the returned string, but
+ * which will implicitly truncate the string if it's passed to functions that
+ * expect null-terminated strings).
+ *
+ * Avoid using this function if possible, because we'll remove it once we can
+ * devise a better API for the task.
+ */
+extern JS_PUBLIC_API(JS::UniqueChars)
+JS_EncodeStringToASCII(JSContext* cx, JSString* str);
+
 #endif /* js_CharacterEncoding_h */

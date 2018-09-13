@@ -439,7 +439,8 @@ class TransportConduitTest : public ::testing::Test
     int err = 0;
     RefPtr<mozilla::VideoSessionConduit> videoSession;
     //get pointer to VideoSessionConduit
-    videoSession = VideoSessionConduit::Create(WebRtcCallWrapper::Create());
+    videoSession = VideoSessionConduit::Create(
+      WebRtcCallWrapper::Create(), GetCurrentThreadEventTarget());
     if( !videoSession ) {
       ASSERT_NE(videoSession, (void*)nullptr);
     }

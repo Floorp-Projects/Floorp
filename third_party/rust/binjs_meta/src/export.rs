@@ -77,13 +77,21 @@ impl TypeDeanonymizer {
             builder: SpecBuilder::new(),
             supersums_of: HashMap::new(),
         };
+        let mut skip_name_map: HashMap<&FieldName, FieldName> = HashMap::new();
+
         // Copy field names
         for (_, name) in spec.field_names() {
             result.builder.import_field_name(name)
         }
 
-        // We may need to introduce name `_skip`, we'll see.
-        let mut field_skip = None;
+        for (_, interface) in spec.interfaces_by_name() {
+            for field in interface.contents().fields() {
+                if field.is_lazy() {
+                    let skip_name = result.builder.field_name(format!("{}_skip", field.name().to_str()).to_str());
+                    skip_name_map.insert(field.name(), skip_name);
+                }
+            }
+        }
 
         // Copy and deanonymize interfaces.
         for (name, interface) in spec.interfaces_by_name() {
@@ -92,16 +100,6 @@ impl TypeDeanonymizer {
             // and walk through their fields to deanonymize types.
 
             let mut fields = vec![];
-            // If the interface is skippable, introduce a first invisible field `_skip`.
-            if interface.is_skippable() {
-                let name = field_skip.get_or_insert_with(||
-                    result.builder.field_name("_skip")
-                );
-                fields.push(Field::new(
-                    name.clone(),
-                    Type::offset().required()
-                ))
-            }
 
             // Copy other fields.
             for field in interface.contents().fields() {
@@ -113,9 +111,16 @@ impl TypeDeanonymizer {
             let mut declaration = result.builder.add_interface(name)
                 .unwrap();
             for field in fields.drain(..) {
-                declaration.with_field(field.name(), field.type_().clone());
+                // Create *_skip field just before the lazy field.
+                // See also tagged_tuple in write.rs.
+                if field.is_lazy() {
+                    declaration.with_field(skip_name_map.get(field.name()).unwrap(),
+                                           Type::offset().required(),
+                                           Laziness::Eager);
+                }
+                declaration.with_field(field.name(), field.type_().clone(),
+                                       field.laziness());
             }
-            declaration.with_skippable(interface.is_skippable());
         }
         // Copy and deanonymize typedefs
         for (name, definition) in spec.typedefs_by_name() {
@@ -185,6 +190,7 @@ impl TypeDeanonymizer {
         match *type_spec {
             TypeSpec::Boolean |
             TypeSpec::Number |
+            TypeSpec::UnsignedLong |
             TypeSpec::String |
             TypeSpec::Offset |
             TypeSpec::Void    => {
@@ -233,6 +239,7 @@ impl TypeDeanonymizer {
                             Some(IsNullable { content: Primitive::Interface(_), .. }) => Type::named(&content).required(),
                             Some(IsNullable { content: Primitive::String, .. }) => Type::string().required(),
                             Some(IsNullable { content: Primitive::Number, .. }) => Type::number().required(),
+                            Some(IsNullable { content: Primitive::UnsignedLong, .. }) => Type::unsigned_long().required(),
                             Some(IsNullable { content: Primitive::Boolean, .. }) => Type::bool().required(),
                             Some(IsNullable { content: Primitive::Offset, .. }) => Type::offset().required(),
                             Some(IsNullable { content: Primitive::Void, .. }) => Type::void().required()
@@ -362,6 +369,8 @@ impl TypeName {
                 "_Bool".to_string(),
             TypeSpec::Number =>
                 "_Number".to_string(),
+            TypeSpec::UnsignedLong =>
+                "_UnsignedLong".to_string(),
             TypeSpec::String =>
                 "_String".to_string(),
             TypeSpec::Void =>
@@ -401,6 +410,8 @@ impl ToWebidl {
                 "string".to_string(),
             TypeSpec::Number =>
                 "number".to_string(),
+            TypeSpec::UnsignedLong =>
+                "unsigned long".to_string(),
             TypeSpec::NamedType(ref name) =>
                 name.to_str().to_string(),
             TypeSpec::TypeSum(ref sum) => {

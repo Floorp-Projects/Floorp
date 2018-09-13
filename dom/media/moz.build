@@ -116,6 +116,7 @@ EXPORTS += [
     'DOMMediaStream.h',
     'FileBlockCache.h',
     'FrameStatistics.h',
+    'ImageToI420.h',
     'Intervals.h',
     'Latency.h',
     'MediaCache.h',
@@ -236,6 +237,7 @@ UNIFIED_SOURCES += [
     'FileMediaResource.cpp',
     'GetUserMediaRequest.cpp',
     'GraphDriver.cpp',
+    'ImageToI420.cpp',
     'Latency.cpp',
     'MediaCache.cpp',
     'MediaContainerType.cpp',
@@ -323,6 +325,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/layout/generic',
     '/layout/xul',
+    '/media/libyuv/libyuv/include',
     '/netwerk/base',
 ]
 

@@ -54,7 +54,7 @@ class RuntimePage extends PureComponent {
 
     return dom.article(
       {
-        className: "page",
+        className: "page js-runtime-page",
       },
       RuntimeInfo({
         icon: "chrome://branding/content/icon64.png",
