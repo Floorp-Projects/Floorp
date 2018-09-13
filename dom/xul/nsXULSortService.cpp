@@ -23,6 +23,11 @@
 #include "nsTArray.h"
 #include "nsUnicharUtils.h"
 
+#include "mozilla/dom/Element.h"
+
+const unsigned long SORT_COMPARECASE = 0x0001;
+const unsigned long SORT_INTEGER = 0x0100;
+
 enum nsSortState_direction {
   nsSortState_descending,
   nsSortState_ascending,
@@ -61,9 +66,6 @@ struct contentSortInfo {
     parent.swap(other.parent);
   }
 };
-
-
-NS_IMPL_ISUPPORTS(XULSortServiceImpl, nsIXULSortService)
 
 /**
  * Set sortActive and sortDirection attributes on a tree column when a sort
@@ -181,7 +183,7 @@ CompareValues(const nsAString& aLeft,
               const nsAString& aRight,
               uint32_t aSortHints)
 {
-  if (aSortHints & nsIXULSortService::SORT_INTEGER) {
+  if (aSortHints & SORT_INTEGER) {
     nsresult err;
     int32_t leftint = PromiseFlatString(aLeft).ToInteger(&err);
     if (NS_SUCCEEDED(err)) {
@@ -193,7 +195,7 @@ CompareValues(const nsAString& aLeft,
     // if they aren't integers, just fall through and compare strings
   }
 
-  if (aSortHints & nsIXULSortService::SORT_COMPARECASE) {
+  if (aSortHints & SORT_COMPARECASE) {
     return ::Compare(aLeft, aRight);
   }
 
@@ -374,9 +376,9 @@ InitializeSortState(Element* aRootElement,
   while (hintsTokenizer.hasMoreTokens()) {
     const nsDependentSubstring& token(hintsTokenizer.nextToken());
     if (token.EqualsLiteral("comparecase"))
-      aSortState->sortHints |= nsIXULSortService::SORT_COMPARECASE;
+      aSortState->sortHints |= SORT_COMPARECASE;
     else if (token.EqualsLiteral("integer"))
-      aSortState->sortHints |= nsIXULSortService::SORT_INTEGER;
+      aSortState->sortHints |= SORT_INTEGER;
     else if (token.EqualsLiteral("descending"))
       aSortState->direction = nsSortState_descending;
     else if (token.EqualsLiteral("ascending"))
@@ -416,10 +418,10 @@ InitializeSortState(Element* aRootElement,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-XULSortServiceImpl::Sort(Element* aNode,
-                         const nsAString& aSortKey,
-                         const nsAString& aSortHints)
+nsresult
+mozilla::XULWidgetSort(Element* aNode,
+                       const nsAString& aSortKey,
+                       const nsAString& aSortHints)
 {
   nsSortState sortState;
   nsresult rv = InitializeSortState(aNode, aNode,
