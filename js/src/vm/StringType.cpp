@@ -17,6 +17,8 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
+#include <algorithm>
+
 #include "jsfriendapi.h"
 
 #include "frontend/BytecodeCompiler.h"
@@ -1039,14 +1041,26 @@ js::CompareAtoms(JSAtom* atom1, JSAtom* atom2)
 }
 
 bool
+js::StringIsAscii(JSLinearString* str)
+{
+    auto containsOnlyAsciiCharacters = [](const auto* chars, size_t length) {
+        return std::all_of(chars, chars + length, [](auto c) {
+            return mozilla::IsAscii(c);
+        });
+    };
+
+    JS::AutoCheckCannotGC nogc;
+    return str->hasLatin1Chars()
+           ? containsOnlyAsciiCharacters(str->latin1Chars(nogc), str->length())
+           : containsOnlyAsciiCharacters(str->twoByteChars(nogc), str->length());
+}
+
+bool
 js::StringEqualsAscii(JSLinearString* str, const char* asciiBytes)
 {
+    MOZ_ASSERT(JS::StringIsASCII(asciiBytes));
+
     size_t length = strlen(asciiBytes);
-#ifdef DEBUG
-    for (size_t i = 0; i != length; ++i) {
-        MOZ_ASSERT(unsigned(asciiBytes[i]) <= 127);
-    }
-#endif
     if (length != str->length()) {
         return false;
     }
@@ -2192,6 +2206,18 @@ js::EncodeLatin1(JSContext* cx, JSString* str)
     mozilla::PodCopy(buf, linear->latin1Chars(nogc), len);
     buf[len] = '\0';
     return UniqueChars(reinterpret_cast<char*>(buf));
+}
+
+UniqueChars
+js::EncodeAscii(JSContext* cx, JSString* str)
+{
+    JSLinearString* linear = str->ensureLinear(cx);
+    if (!linear) {
+        return nullptr;
+    }
+
+    MOZ_ASSERT(StringIsAscii(linear));
+    return EncodeLatin1(cx, linear);
 }
 
 UniqueChars

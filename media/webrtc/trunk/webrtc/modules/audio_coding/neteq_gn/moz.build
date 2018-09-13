@@ -314,6 +314,21 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["WEBRTC_CODEC_ISAC"] = True
+
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/",
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
+
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     DEFINES["WEBRTC_CODEC_ISAC"] = True

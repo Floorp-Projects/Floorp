@@ -17,7 +17,7 @@ option('--with-android-googlevr-sdk', nargs=1,
 
 @depends(target)
 def min_android_version(target):
-    if target.cpu in ['aarch64', 'x86_64', 'mips64']:
+    if target.cpu in ['aarch64', 'x86_64']:
         # 64-bit support was added in API 21.
         return '21'
     return '16'
@@ -119,9 +119,7 @@ def android_platform(target, android_version, ndk, _):
     if target.os != 'Android':
         return
 
-    if 'mips' in target.cpu:
-        target_dir_name = 'mips'
-    elif 'aarch64' == target.cpu:
+    if 'aarch64' == target.cpu:
         target_dir_name = 'arm64'
     else:
         target_dir_name = target.cpu
@@ -214,8 +212,8 @@ def android_toolchain(target, host, ndk, toolchain, _):
             target_base = 'arm-linux-androideabi'
         elif target.cpu == 'x86':
             target_base = 'x86'
-        elif target.cpu == 'mips32' and target.endianness == 'little':
-            target_base = 'mipsel-linux-android'
+        elif target.cpu == 'x86_64':
+            target_base = 'x86_64'
         elif target.cpu == 'aarch64' and target.endianness == 'little':
             target_base = 'aarch64-linux-android'
         else:

@@ -1659,6 +1659,12 @@ CompareStrings(JSContext* cx, JSString* str1, JSString* str2, int32_t* result);
 extern int32_t
 CompareAtoms(JSAtom* atom1, JSAtom* atom2);
 
+/**
+ * Return true if the string contains only ASCII characters.
+ */
+extern bool
+StringIsAscii(JSLinearString* str);
+
 /*
  * Return true if the string matches the given sequence of ASCII bytes.
  */
@@ -1687,6 +1693,14 @@ SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt, int32_t lengt
 
 
 /*** Conversions *********************************************************************************/
+
+/*
+ * Convert a string to a printable C string.
+ *
+ * Asserts if the input contains any non-ASCII characters.
+ */
+UniqueChars
+EncodeAscii(JSContext* cx, JSString* str);
 
 /*
  * Convert a string to a printable C string.

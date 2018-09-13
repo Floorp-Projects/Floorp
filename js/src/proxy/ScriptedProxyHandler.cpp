@@ -187,12 +187,12 @@ GetProxyTrap(JSContext* cx, HandleObject handler, HandlePropertyName name, Mutab
 
     // Step 4.
     if (!IsCallable(func)) {
-        UniqueChars bytes = EncodeLatin1(cx, name);
+        UniqueChars bytes = EncodeAscii(cx, name);
         if (!bytes) {
             return false;
         }
 
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_BAD_TRAP, bytes.get());
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_TRAP, bytes.get());
         return false;
     }
 

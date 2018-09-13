@@ -30,6 +30,7 @@ const {
 const {
   addNetworkLocationsObserver,
   getNetworkLocations,
+  removeNetworkLocationsObserver,
 } = require("./src/modules/network-locations");
 
 const App = createFactory(require("./src/components/App"));
@@ -44,6 +45,8 @@ const AboutDebugging = {
       return;
     }
 
+    this.onNetworkLocationsUpdated = this.onNetworkLocationsUpdated.bind(this);
+
     this.store = configureStore();
     this.actions = bindActionCreators(actions, this.store.dispatch);
 
@@ -55,9 +58,7 @@ const AboutDebugging = {
     );
 
     this.actions.selectPage(PAGES.THIS_FIREFOX);
-    addNetworkLocationsObserver(() => {
-      this.actions.updateNetworkLocations(getNetworkLocations());
-    });
+    addNetworkLocationsObserver(this.onNetworkLocationsUpdated);
   },
 
   async createMessageContexts() {
@@ -85,7 +86,16 @@ const AboutDebugging = {
     return contexts;
   },
 
-  destroy() {
+  onNetworkLocationsUpdated() {
+    this.actions.updateNetworkLocations(getNetworkLocations());
+  },
+
+  async destroy() {
+    L10nRegistry.removeSource("aboutdebugging");
+    // Call removeNetworkLocationsObserver before disconnectRuntime,
+    // follow up in Bug 1490950.
+    removeNetworkLocationsObserver(this.onNetworkLocationsUpdated);
+    await this.actions.disconnectRuntime();
     setDebugTargetCollapsibilities(this.store.getState().ui.debugTargetCollapsibilities);
     unmountComponentAtNode(this.mount);
   },

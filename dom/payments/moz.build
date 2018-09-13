@@ -14,6 +14,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'MerchantValidationEvent.h',
     'PaymentAddress.h',
     'PaymentMethodChangeEvent.h',
     'PaymentRequest.h',
@@ -24,6 +25,7 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'BasicCardPayment.cpp',
+    'MerchantValidationEvent.cpp',
     'PaymentActionResponse.cpp',
     'PaymentAddress.cpp',
     'PaymentMethodChangeEvent.cpp',
