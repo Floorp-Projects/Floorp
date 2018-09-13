@@ -83,8 +83,8 @@ CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 static bool
-Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-        FILE* fp, JS::MutableHandleScript script)
+CompileFile(JSContext* cx, const ReadOnlyCompileOptions& options,
+            FILE* fp, JS::MutableHandleScript script)
 {
     FileContents buffer(cx);
     if (!ReadCompleteFile(cx, fp, buffer)) {
@@ -109,7 +109,7 @@ Compile(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
     }
     CompileOptions options(cx, optionsArg);
     options.setFileAndLine(filename, 1);
-    return ::Compile(cx, options, file.fp(), script);
+    return CompileFile(cx, options, file.fp(), script);
 }
 
 bool
@@ -139,7 +139,7 @@ bool
 JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
             FILE* file, JS::MutableHandleScript script)
 {
-    return ::Compile(cx, options, file, script);
+    return CompileFile(cx, options, file, script);
 }
 
 bool
@@ -177,7 +177,7 @@ JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& opt
 {
     CompileOptions options(cx, optionsArg);
     options.setNonSyntacticScope(true);
-    return ::Compile(cx, options, file, script);
+    return CompileFile(cx, options, file, script);
 }
 
 bool
