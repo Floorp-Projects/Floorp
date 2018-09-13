@@ -157,9 +157,6 @@ public:
 
   nsresult GetImageErrorCode(void);
 
-  /// Returns true if we've received any data.
-  bool HasTransferredData() const;
-
   /// Returns a non-owning pointer to this imgRequest's MIME type.
   const char* GetMimeType() const { return mContentType.get(); }
 
@@ -177,8 +174,6 @@ public:
   nsIRequest* GetRequest() const { return mRequest; }
 
   nsITimedChannel* GetTimedChannel() const { return mTimedChannel; }
-
-  nsresult GetSecurityInfo(nsISupports** aSecurityInfoOut);
 
   imgCacheValidator* GetValidator() const { return mValidator; }
   void SetValidator(imgCacheValidator* aValidator) { mValidator = aValidator; }
@@ -243,7 +238,6 @@ private:
   // The principal of this image.
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIProperties> mProperties;
-  nsCOMPtr<nsISupports> mSecurityInfo;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIInterfaceRequestor> mPrevChannelSink;
   nsCOMPtr<nsIApplicationCache> mApplicationCache;
@@ -291,7 +285,6 @@ private:
   RefPtr<ProgressTracker> mProgressTracker;
   RefPtr<Image> mImage;
   bool mIsMultiPartChannel : 1;
-  bool mGotData : 1;
   bool mIsInCache : 1;
   bool mDecodeRequested : 1;
   bool mNewPartPending : 1;

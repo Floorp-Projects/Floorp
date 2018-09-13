@@ -54,8 +54,6 @@ TransportSecurityInfo::TransportSecurityInfo()
   , mHaveCertErrorBits(false)
   , mMutex("TransportSecurityInfo::mMutex")
   , mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE)
-  , mSubRequestsBrokenSecurity(0)
-  , mSubRequestsNoSecurity(0)
   , mErrorCode(0)
   , mPort(0)
 {
@@ -64,7 +62,6 @@ TransportSecurityInfo::TransportSecurityInfo()
 NS_IMPL_ISUPPORTS(TransportSecurityInfo,
                   nsITransportSecurityInfo,
                   nsIInterfaceRequestor,
-                  nsIAssociatedContentSecurity,
                   nsISerializable,
                   nsIClassInfo)
 
@@ -115,44 +112,6 @@ void
 TransportSecurityInfo::SetSecurityState(uint32_t aState)
 {
   mSecurityState = aState;
-}
-
-NS_IMETHODIMP
-TransportSecurityInfo::GetCountSubRequestsBrokenSecurity(
-  int32_t *aSubRequestsBrokenSecurity)
-{
-  *aSubRequestsBrokenSecurity = mSubRequestsBrokenSecurity;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TransportSecurityInfo::SetCountSubRequestsBrokenSecurity(
-  int32_t aSubRequestsBrokenSecurity)
-{
-  mSubRequestsBrokenSecurity = aSubRequestsBrokenSecurity;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TransportSecurityInfo::GetCountSubRequestsNoSecurity(
-  int32_t *aSubRequestsNoSecurity)
-{
-  *aSubRequestsNoSecurity = mSubRequestsNoSecurity;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TransportSecurityInfo::SetCountSubRequestsNoSecurity(
-  int32_t aSubRequestsNoSecurity)
-{
-  mSubRequestsNoSecurity = aSubRequestsNoSecurity;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TransportSecurityInfo::Flush()
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -209,11 +168,13 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* aStream)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = aStream->Write32(mSubRequestsBrokenSecurity);
+  // mSubRequestsBrokenSecurity was removed in bug 748809
+  rv = aStream->Write32(0);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = aStream->Write32(mSubRequestsNoSecurity);
+  // mSubRequestsNoSecurity was removed in bug 748809
+  rv = aStream->Write32(0);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -411,26 +372,18 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  uint32_t subRequestsBrokenSecurity;
-  rv = aStream->Read32(&subRequestsBrokenSecurity);
+  // mSubRequestsBrokenSecurity was removed in bug 748809
+  uint32_t unusedSubRequestsBrokenSecurity;
+  rv = aStream->Read32(&unusedSubRequestsBrokenSecurity);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (subRequestsBrokenSecurity >
-      static_cast<uint32_t>(std::numeric_limits<int32_t>::max())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  mSubRequestsBrokenSecurity = subRequestsBrokenSecurity;
-  uint32_t subRequestsNoSecurity;
-  rv = aStream->Read32(&subRequestsNoSecurity);
+  // mSubRequestsNoSecurity was removed in bug 748809
+  uint32_t unusedSubRequestsNoSecurity;
+  rv = aStream->Read32(&unusedSubRequestsNoSecurity);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (subRequestsNoSecurity >
-        static_cast<uint32_t>(std::numeric_limits<int32_t>::max())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  mSubRequestsNoSecurity = subRequestsNoSecurity;
   uint32_t errorCode;
   rv = aStream->Read32(&errorCode);
   if (NS_FAILED(rv)) {
