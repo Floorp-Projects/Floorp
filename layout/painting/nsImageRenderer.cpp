@@ -641,9 +641,10 @@ nsImageRenderer::BuildWebRenderDisplayItems(
                                                               aSc,
                                                               containerFlags,
                                                               svgContext);
-      RefPtr<layers::ImageContainer> container =
-        mImageContainer->GetImageContainerAtSize(
-          aManager, decodeSize, svgContext, containerFlags);
+
+      RefPtr<layers::ImageContainer> container;
+      mImageContainer->GetImageContainerAtSize(aManager, decodeSize, svgContext,
+                                               containerFlags, getter_AddRefs(container));
       if (!container) {
         NS_WARNING("Failed to get image container");
         return ImgDrawResult::NOT_READY;

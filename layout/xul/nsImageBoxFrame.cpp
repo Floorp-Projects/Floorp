@@ -452,8 +452,10 @@ nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
   gfx::IntSize decodeSize =
     nsLayoutUtils::ComputeImageContainerDrawingParameters(imgCon, aItem->Frame(), fillRect,
                                                           aSc, containerFlags, svgContext);
-  RefPtr<layers::ImageContainer> container =
-    imgCon->GetImageContainerAtSize(aManager, decodeSize, svgContext, containerFlags);
+
+  RefPtr<layers::ImageContainer> container;
+  imgCon->GetImageContainerAtSize(aManager, decodeSize, svgContext,
+                                  containerFlags, getter_AddRefs(container));
   if (!container) {
     NS_WARNING("Failed to get image container");
     return Nothing();
