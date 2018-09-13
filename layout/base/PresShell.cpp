@@ -4342,11 +4342,6 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
                         ? FlushType::Layout
                         : FlushType::InterruptibleLayout) &&
         !mIsDestroying) {
-#ifdef MOZ_GECKO_PROFILER
-      AutoProfilerTracing tracingLayoutFlush("Paint", "Reflow",
-                                              std::move(mReflowCause));
-      mReflowCause = nullptr;
-#endif
       didLayoutFlush = true;
       mFrameConstructor->RecalcQuotesAndCounters();
       viewManager->FlushDelayedResize(true);
@@ -8937,6 +8932,12 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   if (isTimelineRecording) {
     timelines->AddMarkerForDocShell(docShell, "Reflow", MarkerTracingType::START);
   }
+
+#ifdef MOZ_GECKO_PROFILER
+  AutoProfilerTracing tracingLayoutFlush("Paint", "Reflow",
+                                          std::move(mReflowCause));
+  mReflowCause = nullptr;
+#endif
 
   if (mReflowContinueTimer) {
     mReflowContinueTimer->Cancel();
