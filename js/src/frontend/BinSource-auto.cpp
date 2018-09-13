@@ -87,6 +87,55 @@ BinASTParser<Tok>::parseSumArrowExpression(const size_t start, const BinKind kin
 }
 
 /*
+AssertedMaybePositionalParameterName ::= AssertedParameterName
+    AssertedPositionalParameterName
+    AssertedRestParameterName
+*/
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::parseAssertedMaybePositionalParameterName(
+        AssertedScopeKind scopeKind,
+        MutableHandle<GCVector<JSAtom*>> positionalParams)
+{
+    BinKind kind;
+    BinFields fields(cx_);
+    AutoTaggedTuple guard(*tokenizer_);
+    const auto start = tokenizer_->offset();
+
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+
+    BINJS_MOZ_TRY_DECL(result, parseSumAssertedMaybePositionalParameterName(start, kind, fields,
+        scopeKind, positionalParams));
+
+    MOZ_TRY(guard.done());
+    return result;
+}
+
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::parseSumAssertedMaybePositionalParameterName(const size_t start, const BinKind kind, const BinFields& fields,
+        AssertedScopeKind scopeKind,
+        MutableHandle<GCVector<JSAtom*>> positionalParams)
+{
+    Ok result;
+    switch (kind) {
+      case BinKind::AssertedParameterName:
+        MOZ_TRY_VAR(result, parseInterfaceAssertedParameterName(start, kind, fields,
+            scopeKind, positionalParams));
+        break;
+      case BinKind::AssertedPositionalParameterName:
+        MOZ_TRY_VAR(result, parseInterfaceAssertedPositionalParameterName(start, kind, fields,
+            scopeKind, positionalParams));
+        break;
+      case BinKind::AssertedRestParameterName:
+        MOZ_TRY_VAR(result, parseInterfaceAssertedRestParameterName(start, kind, fields,
+            scopeKind, positionalParams));
+        break;
+      default:
+        return raiseInvalidKind("AssertedMaybePositionalParameterName", kind);
+    }
+    return result;
+}
+
+/*
 AssignmentTarget ::= ArrayAssignmentTarget
     AssignmentTargetIdentifier
     ComputedMemberAssignmentTarget
@@ -2832,14 +2881,68 @@ BinASTParser<Tok>::parseInterfaceAssertedDeclaredName(const size_t start, const 
 
 
 /*
+ interface AssertedParameterName : Node {
+    IdentifierName name;
+    bool isCaptured;
+ }
+*/
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::parseAssertedParameterName(
+        AssertedScopeKind scopeKind,
+        MutableHandle<GCVector<JSAtom*>> positionalParams)
+{
+    BinKind kind;
+    BinFields fields(cx_);
+    AutoTaggedTuple guard(*tokenizer_);
+
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    if (kind != BinKind::AssertedParameterName) {
+        return raiseInvalidKind("AssertedParameterName", kind);
+    }
+    const auto start = tokenizer_->offset();
+    BINJS_MOZ_TRY_DECL(result, parseInterfaceAssertedParameterName(start, kind, fields,
+        scopeKind, positionalParams));
+    MOZ_TRY(guard.done());
+
+    return result;
+}
+
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::parseInterfaceAssertedParameterName(const size_t start, const BinKind kind, const BinFields& fields,
+        AssertedScopeKind scopeKind,
+        MutableHandle<GCVector<JSAtom*>> positionalParams)
+{
+    MOZ_ASSERT(kind == BinKind::AssertedParameterName);
+    BINJS_TRY(CheckRecursionLimit(cx_));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Name, BinField::IsCaptured };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
+    RootedAtom name(cx_);
+    MOZ_TRY_VAR(name, tokenizer_->readAtom());
+
+    BINJS_MOZ_TRY_DECL(isCaptured, tokenizer_->readBool());
+    ParseContext::Scope* scope;
+    DeclarationKind declKind;
+    MOZ_TRY(getBoundScope(scopeKind, scope, declKind));
+    MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured));
+    auto result = Ok();
+    return result;
+}
+
+
+/*
  interface AssertedParameterScope : Node {
-    FrozenArray<AssertedBoundName> boundNames;
+    FrozenArray<AssertedMaybePositionalParameterName> paramNames;
     bool hasDirectEval;
     bool isSimpleParameterList;
  }
 */
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::parseAssertedParameterScope()
+BinASTParser<Tok>::parseAssertedParameterScope(
+        MutableHandle<GCVector<JSAtom*>> positionalParams)
 {
     BinKind kind;
     BinFields fields(cx_);
@@ -2850,26 +2953,28 @@ BinASTParser<Tok>::parseAssertedParameterScope()
         return raiseInvalidKind("AssertedParameterScope", kind);
     }
     const auto start = tokenizer_->offset();
-    BINJS_MOZ_TRY_DECL(result, parseInterfaceAssertedParameterScope(start, kind, fields));
+    BINJS_MOZ_TRY_DECL(result, parseInterfaceAssertedParameterScope(start, kind, fields,
+        positionalParams));
     MOZ_TRY(guard.done());
 
     return result;
 }
 
 template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::parseInterfaceAssertedParameterScope(const size_t start, const BinKind kind, const BinFields& fields)
+BinASTParser<Tok>::parseInterfaceAssertedParameterScope(const size_t start, const BinKind kind, const BinFields& fields,
+        MutableHandle<GCVector<JSAtom*>> positionalParams)
 {
     MOZ_ASSERT(kind == BinKind::AssertedParameterScope);
     BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-    const BinField expected_fields[3] = { BinField::BoundNames, BinField::HasDirectEval, BinField::IsSimpleParameterList };
+    const BinField expected_fields[3] = { BinField::ParamNames, BinField::HasDirectEval, BinField::IsSimpleParameterList };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
     const auto scopeKind = AssertedScopeKind::Parameter;
 
-    MOZ_TRY(parseListOfAssertedBoundName(
-        scopeKind));
+    MOZ_TRY(parseListOfAssertedMaybePositionalParameterName(
+        scopeKind, positionalParams));
 
     BINJS_MOZ_TRY_DECL(hasDirectEval, tokenizer_->readBool());
     if (hasDirectEval) {
@@ -2883,6 +2988,122 @@ BinASTParser<Tok>::parseInterfaceAssertedParameterScope(const size_t start, cons
         // add variables to the call object.
         parseContext_->functionBox()->setHasExtensibleScope();
     }
+    auto result = Ok();
+    return result;
+}
+
+
+/*
+ interface AssertedPositionalParameterName : Node {
+    unsigned long index;
+    IdentifierName name;
+    bool isCaptured;
+ }
+*/
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::parseAssertedPositionalParameterName(
+        AssertedScopeKind scopeKind,
+        MutableHandle<GCVector<JSAtom*>> positionalParams)
+{
+    BinKind kind;
+    BinFields fields(cx_);
+    AutoTaggedTuple guard(*tokenizer_);
+
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    if (kind != BinKind::AssertedPositionalParameterName) {
+        return raiseInvalidKind("AssertedPositionalParameterName", kind);
+    }
+    const auto start = tokenizer_->offset();
+    BINJS_MOZ_TRY_DECL(result, parseInterfaceAssertedPositionalParameterName(start, kind, fields,
+        scopeKind, positionalParams));
+    MOZ_TRY(guard.done());
+
+    return result;
+}
+
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(const size_t start, const BinKind kind, const BinFields& fields,
+        AssertedScopeKind scopeKind,
+        MutableHandle<GCVector<JSAtom*>> positionalParams)
+{
+    MOZ_ASSERT(kind == BinKind::AssertedPositionalParameterName);
+    BINJS_TRY(CheckRecursionLimit(cx_));
+
+#if defined(DEBUG)
+    const BinField expected_fields[3] = { BinField::Index, BinField::Name, BinField::IsCaptured };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
+    BINJS_MOZ_TRY_DECL(index, tokenizer_->readUnsignedLong());
+
+    RootedAtom name(cx_);
+    MOZ_TRY_VAR(name, tokenizer_->readAtom());
+    // FIXME: The following checks should be performed inside
+    // checkPositionalParameterIndices to match the spec's order
+    // (bug 1490976).
+    if (index >= positionalParams.get().length())
+        return raiseError("AssertedPositionalParameterName.length out of range");
+    if (positionalParams.get()[index])
+        return raiseError("AssertedPositionalParameterName has duplicate entry for the same index");
+    positionalParams.get()[index] = name;
+    BINJS_MOZ_TRY_DECL(isCaptured, tokenizer_->readBool());
+    ParseContext::Scope* scope;
+    DeclarationKind declKind;
+    MOZ_TRY(getBoundScope(scopeKind, scope, declKind));
+    MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured));
+    auto result = Ok();
+    return result;
+}
+
+
+/*
+ interface AssertedRestParameterName : Node {
+    IdentifierName name;
+    bool isCaptured;
+ }
+*/
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::parseAssertedRestParameterName(
+        AssertedScopeKind scopeKind,
+        MutableHandle<GCVector<JSAtom*>> positionalParams)
+{
+    BinKind kind;
+    BinFields fields(cx_);
+    AutoTaggedTuple guard(*tokenizer_);
+
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    if (kind != BinKind::AssertedRestParameterName) {
+        return raiseInvalidKind("AssertedRestParameterName", kind);
+    }
+    const auto start = tokenizer_->offset();
+    BINJS_MOZ_TRY_DECL(result, parseInterfaceAssertedRestParameterName(start, kind, fields,
+        scopeKind, positionalParams));
+    MOZ_TRY(guard.done());
+
+    return result;
+}
+
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::parseInterfaceAssertedRestParameterName(const size_t start, const BinKind kind, const BinFields& fields,
+        AssertedScopeKind scopeKind,
+        MutableHandle<GCVector<JSAtom*>> positionalParams)
+{
+    MOZ_ASSERT(kind == BinKind::AssertedRestParameterName);
+    BINJS_TRY(CheckRecursionLimit(cx_));
+
+#if defined(DEBUG)
+    const BinField expected_fields[2] = { BinField::Name, BinField::IsCaptured };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+
+    RootedAtom name(cx_);
+    MOZ_TRY_VAR(name, tokenizer_->readAtom());
+
+    BINJS_MOZ_TRY_DECL(isCaptured, tokenizer_->readBool());
+    ParseContext::Scope* scope;
+    DeclarationKind declKind;
+    MOZ_TRY(getBoundScope(scopeKind, scope, declKind));
+    MOZ_TRY(addScopeName(scopeKind, name, scope, declKind, isCaptured));
     auto result = Ok();
     return result;
 }
@@ -5295,10 +5516,12 @@ BinASTParser<Tok>::parseInterfaceFunctionExpressionContents(const size_t start, 
     BINJS_MOZ_TRY_DECL(isThisCaptured, tokenizer_->readBool());
     // TODO: Use this in BinASTParser::buildFunction.
     (void) isThisCaptured;
-    MOZ_TRY(parseAssertedParameterScope());
+    Rooted<GCVector<JSAtom*>> positionalParams(cx_, GCVector<JSAtom*>(cx_));
+    MOZ_TRY(parseAssertedParameterScope(
+        &positionalParams));
 
     BINJS_MOZ_TRY_DECL(params, parseFormalParameters());
-
+    MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
     MOZ_TRY(parseAssertedVarScope());
 
     BINJS_MOZ_TRY_DECL(body, parseFunctionBody());
@@ -5356,10 +5579,12 @@ BinASTParser<Tok>::parseInterfaceFunctionOrMethodContents(const size_t start, co
     BINJS_MOZ_TRY_DECL(isThisCaptured, tokenizer_->readBool());
     // TODO: Use this in BinASTParser::buildFunction.
     (void) isThisCaptured;
-    MOZ_TRY(parseAssertedParameterScope());
+    Rooted<GCVector<JSAtom*>> positionalParams(cx_, GCVector<JSAtom*>(cx_));
+    MOZ_TRY(parseAssertedParameterScope(
+        &positionalParams));
 
     BINJS_MOZ_TRY_DECL(params, parseFormalParameters());
-
+    MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
     MOZ_TRY(parseAssertedVarScope());
 
     BINJS_MOZ_TRY_DECL(body, parseFunctionBody());
@@ -6539,11 +6764,14 @@ BinASTParser<Tok>::parseInterfaceSetterContents(const size_t start, const BinKin
     BINJS_MOZ_TRY_DECL(isThisCaptured, tokenizer_->readBool());
     // TODO: Use this in BinASTParser::buildFunction.
     (void) isThisCaptured;
-    MOZ_TRY(parseAssertedParameterScope());
+    Rooted<GCVector<JSAtom*>> positionalParams(cx_, GCVector<JSAtom*>(cx_));
+    MOZ_TRY(parseAssertedParameterScope(
+        &positionalParams));
 
     BINJS_MOZ_TRY_DECL(param, parseParameter());
     BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos));
     factory_.addList(params, param);
+    MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
     MOZ_TRY(parseAssertedVarScope());
 
     BINJS_MOZ_TRY_DECL(body, parseFunctionBody());
@@ -7948,6 +8176,32 @@ BinASTParser<Tok>::parseListOfAssertedDeclaredName(
     for (uint32_t i = 0; i < length; ++i) {
         MOZ_TRY(parseAssertedDeclaredName(
             scopeKind));
+        // Nothing to do here.
+    }
+
+    MOZ_TRY(guard.done());
+    return result;
+}
+
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::parseListOfAssertedMaybePositionalParameterName(
+        AssertedScopeKind scopeKind,
+        MutableHandle<GCVector<JSAtom*>> positionalParams)
+{
+    uint32_t length;
+    AutoList guard(*tokenizer_);
+
+    const auto start = tokenizer_->offset();
+    MOZ_TRY(tokenizer_->enterList(length, guard));
+    (void) start;
+    auto result = Ok();
+    BINJS_TRY(positionalParams.get().resize(length));
+    for (uint32_t i = 0; i < length; i++)
+        positionalParams.get()[i] = nullptr;
+
+    for (uint32_t i = 0; i < length; ++i) {
+        MOZ_TRY(parseAssertedMaybePositionalParameterName(
+            scopeKind, positionalParams));
         // Nothing to do here.
     }
 

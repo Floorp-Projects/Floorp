@@ -84,6 +84,27 @@ interface AssertedDeclaredName {
   attribute boolean isCaptured;
 };
 
+interface AssertedPositionalParameterName {
+  attribute unsigned long index;
+  attribute IdentifierName name;
+  attribute boolean isCaptured;
+};
+
+interface AssertedRestParameterName {
+  attribute IdentifierName name;
+  attribute boolean isCaptured;
+};
+
+interface AssertedParameterName {
+  attribute IdentifierName name;
+  attribute boolean isCaptured;
+};
+
+typedef (AssertedPositionalParameterName or
+         AssertedRestParameterName or
+         AssertedParameterName)
+        AssertedMaybePositionalParameterName;
+
 interface AssertedBoundName {
   attribute IdentifierName name;
   attribute boolean isCaptured;
@@ -105,7 +126,7 @@ interface AssertedVarScope {
 };
 
 interface AssertedParameterScope {
-  attribute FrozenArray<AssertedBoundName> boundNames;
+  attribute FrozenArray<AssertedMaybePositionalParameterName> paramNames;
   attribute boolean hasDirectEval;
   attribute boolean isSimpleParameterList;
 };
