@@ -78,6 +78,7 @@ TEST_F(ImageContainers, RasterImageContainer)
                                               imgIContainer::FLAG_SYNC_DECODE |
                                               imgIContainer::FLAG_HIGH_QUALITY_SCALING,
                                               getter_AddRefs(upscaleContainer));
+  EXPECT_EQ(drawResult, ImgDrawResult::SUCCESS);
   ASSERT_TRUE(upscaleContainer != nullptr);
   containerSize = upscaleContainer->GetCurrentSize();
   EXPECT_EQ(testCase.mSize.width, containerSize.width);
@@ -94,6 +95,8 @@ TEST_F(ImageContainers, RasterImageContainer)
                                               imgIContainer::FLAG_SYNC_DECODE |
                                               imgIContainer::FLAG_HIGH_QUALITY_SCALING,
                                               getter_AddRefs(downscaleContainer));
+  EXPECT_EQ(drawResult, ImgDrawResult::SUCCESS);
+  ASSERT_TRUE(downscaleContainer != nullptr);
   containerSize = downscaleContainer->GetCurrentSize();
   EXPECT_EQ(requestedSize.width, containerSize.width);
   EXPECT_EQ(requestedSize.height, containerSize.height);
@@ -105,5 +108,6 @@ TEST_F(ImageContainers, RasterImageContainer)
                                               Nothing(),
                                               imgIContainer::FLAG_SYNC_DECODE,
                                               getter_AddRefs(againContainer));
+  EXPECT_EQ(drawResult, ImgDrawResult::SUCCESS);
   ASSERT_EQ(nativeContainer.get(), againContainer.get());
 }

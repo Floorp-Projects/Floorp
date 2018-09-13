@@ -177,14 +177,21 @@ nsDisplayFieldSetBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
     rect = nsRect(offset, frame->GetRect().Size());
   }
 
-  return nsCSSRendering::CreateWebRenderCommandsForBorder(this,
-                                                          mFrame,
-                                                          rect,
-                                                          aBuilder,
-                                                          aResources,
-                                                          aSc,
-                                                          aManager,
-                                                          aDisplayListBuilder);
+  ImgDrawResult drawResult =
+    nsCSSRendering::CreateWebRenderCommandsForBorder(this,
+                                                     mFrame,
+                                                     rect,
+                                                     aBuilder,
+                                                     aResources,
+                                                     aSc,
+                                                     aManager,
+                                                     aDisplayListBuilder);
+  if (drawResult == ImgDrawResult::NOT_SUPPORTED) {
+    return false;
+  }
+
+  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, drawResult);
+  return true;
 };
 
 void

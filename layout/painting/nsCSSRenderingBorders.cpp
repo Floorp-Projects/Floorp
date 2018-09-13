@@ -3801,7 +3801,7 @@ nsCSSBorderImageRenderer::DrawBorderImage(nsPresContext* aPresContext,
   return result;
 }
 
-void
+ImgDrawResult
 nsCSSBorderImageRenderer::CreateWebRenderCommands(
   nsDisplayItem* aItem,
   nsIFrame* aForFrame,
@@ -3812,7 +3812,7 @@ nsCSSBorderImageRenderer::CreateWebRenderCommands(
   nsDisplayListBuilder* aDisplayListBuilder)
 {
   if (!mImageRenderer.IsReady()) {
-    return;
+    return ImgDrawResult::NOT_READY;
   }
 
   float widths[4];
@@ -3838,6 +3838,7 @@ nsCSSBorderImageRenderer::CreateWebRenderCommands(
     clip = wr::ToRoundedLayoutRect(clipRect);
   }
 
+  ImgDrawResult drawResult = ImgDrawResult::SUCCESS;
   switch (mImageRenderer.GetType()) {
     case eStyleImageType_Image: {
       uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
@@ -3855,10 +3856,10 @@ nsCSSBorderImageRenderer::CreateWebRenderCommands(
           img, aForFrame, destRect, aSc, flags, svgContext);
 
       RefPtr<layers::ImageContainer> container;
-      img->GetImageContainerAtSize(aManager, decodeSize, svgContext,
-                                   flags, getter_AddRefs(container));
+      drawResult = img->GetImageContainerAtSize(aManager, decodeSize, svgContext,
+                                                flags, getter_AddRefs(container));
       if (!container) {
-        return;
+        break;
       }
 
       mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
@@ -3874,7 +3875,7 @@ nsCSSBorderImageRenderer::CreateWebRenderCommands(
                                                   size,
                                                   Nothing());
       if (key.isNothing()) {
-        return;
+        break;
       }
 
       aBuilder.PushBorderImage(
@@ -3939,7 +3940,10 @@ nsCSSBorderImageRenderer::CreateWebRenderCommands(
     }
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupport border image type");
+      drawResult = ImgDrawResult::NOT_SUPPORTED;
   }
+
+  return drawResult;
 }
 
 nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(

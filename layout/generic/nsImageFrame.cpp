@@ -1842,6 +1842,8 @@ nsDisplayImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilde
         updatePrevImage = true;
       }
       break;
+    case ImgDrawResult::NOT_SUPPORTED:
+      return false;
     default:
       updatePrevImage = mPrevImage != mImage;
       break;
@@ -1858,14 +1860,14 @@ nsDisplayImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilde
     }
   }
 
-  if (!container) {
-    return false;
-  }
-
   // If the image container is empty, we don't want to fallback. Any other
   // failure will be due to resource constraints and fallback is unlikely to
   // help us. Hence we can ignore the return value from PushImage.
-  aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources, aSc, destRect);
+  if (container) {
+    aManager->CommandBuilder().PushImage(this, container, aBuilder, aResources, aSc, destRect);
+  }
+
+  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, drawResult);
   return true;
 }
 
