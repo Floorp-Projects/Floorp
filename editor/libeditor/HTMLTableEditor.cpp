@@ -427,7 +427,11 @@ HTMLEditor::InsertTableColumn(int32_t aNumber,
   // Make sure table is "well formed"
   //  before appending new column
   if (startColIndex >= tableSize.mColumnCount) {
-    NormalizeTable(table);
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
+    DebugOnly<nsresult> rv = NormalizeTable(*selection, *table);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to normalize the table");
   }
 
   RefPtr<Element> rowElement;
@@ -2418,7 +2422,8 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
 
 
     // Fixup disturbances in table layout
-    NormalizeTable(table);
+    DebugOnly<nsresult> rv = NormalizeTable(*selection, *table);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to normalize the table");
   } else {
     // Joining with cell to the right -- get rowspan and colspan data of target cell
     rv = GetCellDataAt(table, startRowIndex, startColIndex,
@@ -2584,7 +2589,10 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
                     &actualRowSpan, &actualColSpan, &isSelected);
     // NOTE: This is a *real* failure.
     // GetCellDataAt passes if cell is missing from cellmap
-    if (NS_FAILED(rv)) {
+    // XXX If <table> has large rowspan value or colspan value than actual
+    //     cells, we may hit error.  So, this method is always failed to
+    //     "fix" the rowspan...
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     if (!cell) {
@@ -2608,7 +2616,7 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
         GetCellDataAt(aTable, aRowIndex, colIndex, getter_AddRefs(cell),
                       &startRowIndex, &startColIndex, &rowSpan, &colSpan,
                       &actualRowSpan, &actualColSpan, &isSelected);
-      if (NS_FAILED(rv)) {
+      if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
       // Fixup rowspans only for cells starting in current row
@@ -2616,7 +2624,7 @@ HTMLEditor::FixBadRowSpan(Element* aTable,
           startRowIndex == aRowIndex &&
           startColIndex ==  colIndex ) {
         rv = SetRowSpan(cell, rowSpan-rowsReduced);
-        if (NS_FAILED(rv)) {
+        if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       }
@@ -2662,7 +2670,10 @@ HTMLEditor::FixBadColSpan(Element* aTable,
                     &actualRowSpan, &actualColSpan, &isSelected);
     // NOTE: This is a *real* failure.
     // GetCellDataAt passes if cell is missing from cellmap
-    if (NS_FAILED(rv)) {
+    // XXX If <table> has large rowspan value or colspan value than actual
+    //     cells, we may hit error.  So, this method is always failed to
+    //     "fix" the colspan...
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     if (!cell) {
@@ -2686,7 +2697,7 @@ HTMLEditor::FixBadColSpan(Element* aTable,
         GetCellDataAt(aTable, rowIndex, aColIndex, getter_AddRefs(cell),
                       &startRowIndex, &startColIndex, &rowSpan, &colSpan,
                       &actualRowSpan, &actualColSpan, &isSelected);
-      if (NS_FAILED(rv)) {
+      if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
       // Fixup colspans only for cells starting in current column
@@ -2694,7 +2705,7 @@ HTMLEditor::FixBadColSpan(Element* aTable,
           startColIndex == aColIndex &&
           startRowIndex ==  rowIndex) {
         rv = SetColSpan(cell, colSpan-colsReduced);
-        if (NS_FAILED(rv)) {
+        if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       }
@@ -2710,30 +2721,51 @@ HTMLEditor::FixBadColSpan(Element* aTable,
 }
 
 NS_IMETHODIMP
-HTMLEditor::NormalizeTable(Element* aTable)
+HTMLEditor::NormalizeTable(Element* aTableOrElementInTable)
 {
   RefPtr<Selection> selection = GetSelection();
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
   }
-
-  RefPtr<Element> table =
-    aTable ?
-      GetElementOrParentByTagNameInternal(*nsGkAtoms::table, *aTable) :
+  if (!aTableOrElementInTable) {
+    aTableOrElementInTable =
       GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
-  if (NS_WARN_IF(!table)) {
-    // Don't fail if we didn't find a table.
-    return NS_OK;
+    if (!aTableOrElementInTable) {
+      return NS_OK; // Don't throw error even if the element is not in <table>.
+    }
+  }
+  nsresult rv = NormalizeTable(*selection, *aTableOrElementInTable);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::NormalizeTable(Selection& aSelection,
+                           Element& aTableOrElementInTable)
+{
+
+  RefPtr<Element> tableElement;
+  if (aTableOrElementInTable.NodeInfo()->NameAtom() == nsGkAtoms::table) {
+    tableElement = &aTableOrElementInTable;
+  } else {
+    tableElement =
+      GetElementOrParentByTagNameInternal(*nsGkAtoms::table,
+                                          aTableOrElementInTable);
+    if (!tableElement) {
+      return NS_OK; // Don't throw error even if the element is not in <table>.
+    }
   }
 
   ErrorResult error;
-  TableSize tableSize(*this, *table, error);
+  TableSize tableSize(*this, *tableElement, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
 
   // Save current selection
-  AutoSelectionRestorer selectionRestorer(selection, this);
+  AutoSelectionRestorer selectionRestorer(&aSelection, this);
 
   AutoPlaceholderBatch beginBatching(this);
   // Prevent auto insertion of BR in new cell until we're done
@@ -2741,20 +2773,19 @@ HTMLEditor::NormalizeTable(Element* aTable)
                                       *this, EditSubAction::eInsertNode,
                                       nsIEditor::eNext);
 
-  RefPtr<Element> cell;
-  int32_t startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
-  bool    isSelected;
-
+  // XXX If there is a cell which has bigger or smaller "rowspan" or "colspan"
+  //     values, FixBadRowSpan() will return error.  So, we can do nothing
+  //     if the table needs normalization...
   // Scan all cells in each row to detect bad rowspan values
   for (int32_t rowIndex = 0; rowIndex < tableSize.mRowCount; rowIndex++) {
-    nsresult rv = FixBadRowSpan(table, rowIndex, tableSize.mRowCount);
+    nsresult rv = FixBadRowSpan(tableElement, rowIndex, tableSize.mRowCount);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
   // and same for colspans
   for (int32_t colIndex = 0; colIndex < tableSize.mColumnCount; colIndex++) {
-    nsresult rv = FixBadColSpan(table, colIndex, tableSize.mColumnCount);
+    nsresult rv = FixBadColSpan(tableElement, colIndex, tableSize.mColumnCount);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2762,46 +2793,47 @@ HTMLEditor::NormalizeTable(Element* aTable)
 
   // Fill in missing cellmap locations with empty cells
   for (int32_t rowIndex = 0; rowIndex < tableSize.mRowCount; rowIndex++) {
-    RefPtr<Element> previousCellInRow;
+    RefPtr<Element> previousCellElementInRow;
     for (int32_t colIndex = 0; colIndex < tableSize.mColumnCount; colIndex++) {
+      int32_t startRowIndex = 0, startColIndex = 0;
+      int32_t rowSpan = 0, colSpan = 0;
+      int32_t actualRowSpan = 0, actualColSpan = 0;
+      bool isSelected;
+      RefPtr<Element> cellElement;
       nsresult rv =
-        GetCellDataAt(table, rowIndex, colIndex, getter_AddRefs(cell),
+        GetCellDataAt(tableElement, rowIndex, colIndex,
+                      getter_AddRefs(cellElement),
                       &startRowIndex, &startColIndex, &rowSpan, &colSpan,
                       &actualRowSpan, &actualColSpan, &isSelected);
       // NOTE: This is a *real* failure.
       // GetCellDataAt passes if cell is missing from cellmap
-      if (NS_FAILED(rv)) {
+      if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      if (!cell) {
-        //We are missing a cell at a cellmap location
-#ifdef DEBUG
-        printf("NormalizeTable found missing cell at row=%d, col=%d\n",
-               rowIndex, colIndex);
-#endif
-        // Add a cell after the previous Cell in the current row
-        if (!previousCellInRow) {
+      if (!cellElement) {
+        // We are missing a cell at a cellmap location.
+        // Add a cell after the previous cell element in the current row.
+        if (NS_WARN_IF(!previousCellElementInRow)) {
           // We don't have any cells in this row -- We are really messed up!
-#ifdef DEBUG
-          printf("NormalizeTable found no cells in row=%d, col=%d\n",
-                 rowIndex, colIndex);
-#endif
           return NS_ERROR_FAILURE;
         }
 
         // Insert a new cell after (true), and return the new cell to us
-        rv = InsertCell(previousCellInRow, 1, 1, true, false,
-                        getter_AddRefs(cell));
-        NS_ENSURE_SUCCESS(rv, rv);
+        rv = InsertCell(previousCellElementInRow, 1, 1, true, false,
+                        getter_AddRefs(cellElement));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
 
-        // Set this so we use returned new "cell" to set previousCellInRow below
-        if (cell) {
+        // Set this so we use returned new "cell" to set
+        // previousCellElementInRow below.
+        if (cellElement) {
           startRowIndex = rowIndex;
         }
       }
       // Save the last cell found in the same row we are scanning
       if (startRowIndex == rowIndex) {
-        previousCellInRow = cell;
+        previousCellElementInRow = cellElement;
       }
     }
   }
