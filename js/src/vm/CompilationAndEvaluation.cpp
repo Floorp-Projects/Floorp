@@ -99,19 +99,6 @@ CompileFile(JSContext* cx, const ReadOnlyCompileOptions& options,
                              script);
 }
 
-static bool
-CompilePath(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-            const char* filename, JS::MutableHandleScript script)
-{
-    AutoFile file;
-    if (!file.open(cx, filename)) {
-        return false;
-    }
-    CompileOptions options(cx, optionsArg);
-    options.setFileAndLine(filename, 1);
-    return CompileFile(cx, options, file.fp(), script);
-}
-
 bool
 JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
             SourceBufferHolder& srcBuf, JS::MutableHandleScript script)
@@ -145,10 +132,21 @@ JS::CompileUtf8File(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 bool
-JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
+JS::CompileUtf8Path(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
             const char* filename, JS::MutableHandleScript script)
 {
-    return CompilePath(cx, options, filename, script);
+    MOZ_ASSERT(optionsArg.utf8,
+               "this function only compiles UTF-8 source text in the file at "
+               "the given path");
+
+    AutoFile file;
+    if (!file.open(cx, filename)) {
+        return false;
+    }
+
+    CompileOptions options(cx, optionsArg);
+    options.setFileAndLine(filename, 1);
+    return CompileUtf8File(cx, options, file.fp(), script);
 }
 
 bool

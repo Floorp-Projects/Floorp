@@ -110,10 +110,14 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile)
     FILE* script_stream = tempScript.open(script_filename);
     CHECK(fputs(code, script_stream) != EOF);
     tempScript.close();
+
     JS::CompileOptions options(cx);
     options.setFileAndLine(script_filename, 1);
+    options.setUTF8(true);
+
     JS::RootedScript script(cx);
-    CHECK(JS::Compile(cx, options, script_filename, &script));
+    CHECK(JS::CompileUtf8Path(cx, options, script_filename, &script));
+
     tempScript.remove();
     return tryScript(script);
 }
@@ -125,10 +129,14 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile_empty)
     static const char script_filename[] = "temp-bug438633_JS_CompileFile_empty";
     tempScript.open(script_filename);
     tempScript.close();
+
     JS::CompileOptions options(cx);
     options.setFileAndLine(script_filename, 1);
+    options.setUTF8(true);
+
     JS::RootedScript script(cx);
-    CHECK(JS::Compile(cx, options, script_filename, &script));
+    CHECK(JS::CompileUtf8Path(cx, options, script_filename, &script));
+
     tempScript.remove();
     return tryScript(script);
 }

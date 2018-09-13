@@ -223,9 +223,19 @@ extern JS_PUBLIC_API(bool)
 CompileUtf8File(JSContext* cx, const ReadOnlyCompileOptions& options,
                 FILE* file, MutableHandle<JSScript*> script);
 
+/**
+ * Compile the UTF-8 contents of the file at the given path into a script.
+ * (The path itself is in the system encoding, not [necessarily] UTF-8.)  If
+ * the contents contain any malformed UTF-8, an error is reported.
+ *
+ * |script| is always set to the compiled script or to null in case of error.
+ *
+ * The |options.utf8| flag is asserted to be true.  At a future time this flag
+ * will be removed.
+ */
 extern JS_PUBLIC_API(bool)
-Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-        const char* filename, MutableHandle<JSScript*> script);
+CompileUtf8Path(JSContext* cx, const ReadOnlyCompileOptions& options,
+                const char* filename, MutableHandle<JSScript*> script);
 
 extern JS_PUBLIC_API(bool)
 CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options,
