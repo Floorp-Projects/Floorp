@@ -1,0 +1,125 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Telemetry - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">org.mozilla.telemetry</a>&nbsp;/&nbsp;<a href="./index.html">Telemetry</a><br/>
+<br/>
+<h1>Telemetry</h1>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">Telemetry</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/Telemetry.java#L31">(source)</a>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Telemetry</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.Telemetry$<init>(org.mozilla.telemetry.config.TelemetryConfiguration, org.mozilla.telemetry.storage.TelemetryStorage, org.mozilla.telemetry.net.TelemetryClient, org.mozilla.telemetry.schedule.TelemetryScheduler)/configuration">configuration</span><span class="symbol">:</span>&nbsp;<a href="../../org.mozilla.telemetry.config/-telemetry-configuration/index.html"><span class="identifier">TelemetryConfiguration</span></a><span class="symbol">, </span><span class="identifier" id="org.mozilla.telemetry.Telemetry$<init>(org.mozilla.telemetry.config.TelemetryConfiguration, org.mozilla.telemetry.storage.TelemetryStorage, org.mozilla.telemetry.net.TelemetryClient, org.mozilla.telemetry.schedule.TelemetryScheduler)/storage">storage</span><span class="symbol">:</span>&nbsp;<a href="../../org.mozilla.telemetry.storage/-telemetry-storage/index.html"><span class="identifier">TelemetryStorage</span></a><span class="symbol">, </span><span class="identifier" id="org.mozilla.telemetry.Telemetry$<init>(org.mozilla.telemetry.config.TelemetryConfiguration, org.mozilla.telemetry.storage.TelemetryStorage, org.mozilla.telemetry.net.TelemetryClient, org.mozilla.telemetry.schedule.TelemetryScheduler)/client">client</span><span class="symbol">:</span>&nbsp;<a href="../../org.mozilla.telemetry.net/-telemetry-client/index.html"><span class="identifier">TelemetryClient</span></a><span class="symbol">, </span><span class="identifier" id="org.mozilla.telemetry.Telemetry$<init>(org.mozilla.telemetry.config.TelemetryConfiguration, org.mozilla.telemetry.storage.TelemetryStorage, org.mozilla.telemetry.net.TelemetryClient, org.mozilla.telemetry.schedule.TelemetryScheduler)/scheduler">scheduler</span><span class="symbol">:</span>&nbsp;<a href="../../org.mozilla.telemetry.schedule/-telemetry-scheduler/index.html"><span class="identifier">TelemetryScheduler</span></a><span class="symbol">)</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="add-ping-builder.html">addPingBuilder</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">addPingBuilder</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.Telemetry$addPingBuilder(org.mozilla.telemetry.ping.TelemetryPingBuilder)/builder">builder</span><span class="symbol">:</span>&nbsp;<a href="../../org.mozilla.telemetry.ping/-telemetry-ping-builder/index.html"><span class="identifier">TelemetryPingBuilder</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Telemetry</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-builders.html">getBuilders</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getBuilders</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-collection/index.html"><span class="identifier">MutableCollection</span></a><span class="symbol">&lt;</span><a href="../../org.mozilla.telemetry.ping/-telemetry-ping-builder/index.html"><span class="identifier">TelemetryPingBuilder</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-client.html">getClient</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getClient</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../org.mozilla.telemetry.net/-telemetry-client/index.html"><span class="identifier">TelemetryClient</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-configuration.html">getConfiguration</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getConfiguration</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../org.mozilla.telemetry.config/-telemetry-configuration/index.html"><span class="identifier">TelemetryConfiguration</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-storage.html">getStorage</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getStorage</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../org.mozilla.telemetry.storage/-telemetry-storage/index.html"><span class="identifier">TelemetryStorage</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="queue-event.html">queueEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">queueEvent</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.Telemetry$queueEvent(org.mozilla.telemetry.event.TelemetryEvent)/event">event</span><span class="symbol">:</span>&nbsp;<a href="../../org.mozilla.telemetry.event/-telemetry-event/index.html"><span class="identifier">TelemetryEvent</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Telemetry</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="queue-ping.html">queuePing</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">queuePing</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.Telemetry$queuePing(kotlin.String)/pingType">pingType</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Telemetry</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="record-active-experiments.html">recordActiveExperiments</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">recordActiveExperiments</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.Telemetry$recordActiveExperiments(kotlin.collections.MutableList((kotlin.String)))/activeExperimentsIds">activeExperimentsIds</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-list/index.html"><span class="identifier">MutableList</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Telemetry</span></a></code>
+<p>Records the list of active experiments</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="record-search.html">recordSearch</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">recordSearch</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.Telemetry$recordSearch(kotlin.String, kotlin.String)/location">location</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="org.mozilla.telemetry.Telemetry$recordSearch(kotlin.String, kotlin.String)/identifier">identifier</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Telemetry</span></a></code>
+<p>Record a search for the given location and search engine identifier. Common location values used by Fennec and Focus: actionbar: the user types in the url bar and hits enter to use the default search engine listitem: the user selects a search engine from the list of secondary search engines at the bottom of the screen suggestion: the user clicks on a search suggestion or, in the case that suggestions are disabled, the row corresponding with the main engine</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="record-session-end.html">recordSessionEnd</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">recordSessionEnd</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Telemetry</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="record-session-start.html">recordSessionStart</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">recordSessionStart</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="schedule-upload.html">scheduleUpload</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">scheduleUpload</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Telemetry</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-default-search-provider.html">setDefaultSearchProvider</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setDefaultSearchProvider</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.Telemetry$setDefaultSearchProvider(org.mozilla.telemetry.measurement.DefaultSearchMeasurement.DefaultSearchEngineProvider)/provider">provider</span><span class="symbol">:</span>&nbsp;<a href="../../org.mozilla.telemetry.measurement/-default-search-measurement/-default-search-engine-provider/index.html"><span class="identifier">DefaultSearchEngineProvider</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Telemetry</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

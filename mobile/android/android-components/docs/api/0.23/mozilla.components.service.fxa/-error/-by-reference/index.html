@@ -1,0 +1,92 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Error.ByReference - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.service.fxa</a>&nbsp;/&nbsp;<a href="../index.html">Error</a>&nbsp;/&nbsp;<a href="./index.html">ByReference</a><br/>
+<br/>
+<h1>ByReference</h1>
+<code><span class="keyword">class </span><span class="identifier">ByReference</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../index.html"><span class="identifier">Error</span></a><span class="symbol">, </span><span class="identifier">ByReference</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Error.kt#L13">(source)</a>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">ByReference</span><span class="symbol">(</span><span class="symbol">)</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../code.html">code</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">code</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../message.html">message</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">message</span><span class="symbol">: </span><span class="identifier">Pointer</span><span class="symbol">?</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../consume-message.html">consumeMessage</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">consumeMessage</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Get and consume the error message, or null if there is none.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../get-field-order.html">getFieldOrder</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getFieldOrder</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="../get-message.html">getMessage</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getMessage</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Get the error message or null if there is none.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../is-failure.html">isFailure</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isFailure</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Does this represent failure?</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../is-success.html">isSuccess</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isSuccess</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Does this represent success?</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,150 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Experiment - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fretboard</a>&nbsp;/&nbsp;<a href="./index.html">Experiment</a><br/>
+<br/>
+<h1>Experiment</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Experiment</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/Experiment.kt#L12">(source)</a>
+<p>Represents an A/B test experiment,
+independent of the underlying
+storage mechanism</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-bucket/index.html">Bucket</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Bucket</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-matcher/index.html">Matcher</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Matcher</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Experiment</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Experiment$<init>(kotlin.String, kotlin.String, kotlin.String, mozilla.components.service.fretboard.Experiment.Matcher, mozilla.components.service.fretboard.Experiment.Bucket, kotlin.Long, mozilla.components.service.fretboard.ExperimentPayload, kotlin.Long)/id">id</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment$<init>(kotlin.String, kotlin.String, kotlin.String, mozilla.components.service.fretboard.Experiment.Matcher, mozilla.components.service.fretboard.Experiment.Bucket, kotlin.Long, mozilla.components.service.fretboard.ExperimentPayload, kotlin.Long)/name">name</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment$<init>(kotlin.String, kotlin.String, kotlin.String, mozilla.components.service.fretboard.Experiment.Matcher, mozilla.components.service.fretboard.Experiment.Bucket, kotlin.Long, mozilla.components.service.fretboard.ExperimentPayload, kotlin.Long)/description">description</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment$<init>(kotlin.String, kotlin.String, kotlin.String, mozilla.components.service.fretboard.Experiment.Matcher, mozilla.components.service.fretboard.Experiment.Bucket, kotlin.Long, mozilla.components.service.fretboard.ExperimentPayload, kotlin.Long)/match">match</span><span class="symbol">:</span>&nbsp;<a href="-matcher/index.html"><span class="identifier">Matcher</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment$<init>(kotlin.String, kotlin.String, kotlin.String, mozilla.components.service.fretboard.Experiment.Matcher, mozilla.components.service.fretboard.Experiment.Bucket, kotlin.Long, mozilla.components.service.fretboard.ExperimentPayload, kotlin.Long)/bucket">bucket</span><span class="symbol">:</span>&nbsp;<a href="-bucket/index.html"><span class="identifier">Bucket</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment$<init>(kotlin.String, kotlin.String, kotlin.String, mozilla.components.service.fretboard.Experiment.Matcher, mozilla.components.service.fretboard.Experiment.Bucket, kotlin.Long, mozilla.components.service.fretboard.ExperimentPayload, kotlin.Long)/lastModified">lastModified</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment$<init>(kotlin.String, kotlin.String, kotlin.String, mozilla.components.service.fretboard.Experiment.Matcher, mozilla.components.service.fretboard.Experiment.Bucket, kotlin.Long, mozilla.components.service.fretboard.ExperimentPayload, kotlin.Long)/payload">payload</span><span class="symbol">:</span>&nbsp;<a href="../-experiment-payload/index.html"><span class="identifier">ExperimentPayload</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Experiment$<init>(kotlin.String, kotlin.String, kotlin.String, mozilla.components.service.fretboard.Experiment.Matcher, mozilla.components.service.fretboard.Experiment.Bucket, kotlin.Long, mozilla.components.service.fretboard.ExperimentPayload, kotlin.Long)/schema">schema</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span></code>
+<p>Represents an A/B test experiment,
+independent of the underlying
+storage mechanism</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="bucket.html">bucket</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">bucket</span><span class="symbol">: </span><a href="-bucket/index.html"><span class="identifier">Bucket</span></a><span class="symbol">?</span></code>
+<p>Experiment buckets</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="description.html">description</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">description</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Detailed description of the experiment</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="id.html">id</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><s><span class="identifier">id</span></s><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Unique identifier of the experiment</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="last-modified.html">lastModified</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">lastModified</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">?</span></code>
+<p>Last modified date, as a UNIX timestamp</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="match.html">match</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">match</span><span class="symbol">: </span><a href="-matcher/index.html"><span class="identifier">Matcher</span></a><span class="symbol">?</span></code>
+<p>Filters for enabling the experiment</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="name.html">name</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">name</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Human-readable name of the experiment</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="payload.html">payload</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">payload</span><span class="symbol">: </span><a href="../-experiment-payload/index.html"><span class="identifier">ExperimentPayload</span></a><span class="symbol">?</span></code>
+<p>Experiment associated metadata</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="schema.html">schema</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">schema</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">?</span></code>
+<p>Last time the experiment schema was modified
+(as a UNIX timestamp)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="equals.html">equals</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">equals</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Experiment$equals(kotlin.Any)/other">other</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Compares experiments by their id</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="hash-code.html">hashCode</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">hashCode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

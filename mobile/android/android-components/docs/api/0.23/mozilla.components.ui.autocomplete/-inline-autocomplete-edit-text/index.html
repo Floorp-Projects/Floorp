@@ -1,0 +1,320 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>InlineAutocompleteEditText - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.ui.autocomplete</a>&nbsp;/&nbsp;<a href="./index.html">InlineAutocompleteEditText</a><br/>
+<br/>
+<h1>InlineAutocompleteEditText</h1>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">InlineAutocompleteEditText</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">AppCompatEditText</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L62">(source)</a>
+<p>A UI edit text component which supports inline autocompletion.</p>
+<p>The background color of autocomplete spans can be configured using
+the custom autocompleteBackgroundColor attribute e.g.
+app:autocompleteBackgroundColor="#ffffff".</p>
+<p>A filter listener (see <a href="set-on-filter-listener.html">setOnFilterListener</a>) needs to be attached to
+provide autocomplete results. It will be invoked when the input
+text changes. The listener gets direct access to this component (via its view
+parameter), so it can call {@link applyAutocompleteResult} in return.</p>
+<p>A commit listener (see <a href="set-on-commit-listener.html">setOnCommitListener</a>) can be attached which is
+invoked when the user selected the result i.e. is done editing.</p>
+<p>Various other listeners can be attached to enhance default behaviour e.g.
+<a href="set-on-selection-changed-listener.html">setOnSelectionChangedListener</a> and <a href="set-on-windows-focus-change-listener.html">setOnWindowsFocusChangeListener</a> which
+will be invoked in response to <a href="on-selection-changed.html">onSelectionChanged</a> and <a href="on-window-focus-changed.html">onWindowFocusChanged</a>
+respectively (see also <a href="set-on-text-change-listener.html">setOnTextChangeListener</a>,
+<a href="set-on-selection-changed-listener.html">setOnSelectionChangedListener</a>, and <a href="set-on-windows-focus-change-listener.html">setOnWindowsFocusChangeListener</a>).</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-autocomplete-result/index.html">AutocompleteResult</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">AutocompleteResult</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">InlineAutocompleteEditText</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/ctx">ctx</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/attrs">attrs</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/util/AttributeSet.html"><span class="identifier">AttributeSet</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$<init>(android.content.Context, android.util.AttributeSet, kotlin.Int)/defStyleAttr">defStyleAttr</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;R.attr.editTextStyle<span class="symbol">)</span></code>
+<p>A UI edit text component which supports inline autocompletion.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="autocomplete-result.html">autocompleteResult</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">autocompleteResult</span><span class="symbol">: </span><a href="-autocomplete-result/index.html"><span class="identifier">AutocompleteResult</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="ctx.html">ctx</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">ctx</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="non-autocomplete-text.html">nonAutocompleteText</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">nonAutocompleteText</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="original-text.html">originalText</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">originalText</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="apply-autocomplete-result.html">applyAutocompleteResult</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">applyAutocompleteResult</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$applyAutocompleteResult(mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult)/result">result</span><span class="symbol">:</span>&nbsp;<a href="-autocomplete-result/index.html"><span class="identifier">AutocompleteResult</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Applies the provided result by updating the current autocomplete
+text and selection, if any.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-attached-to-window.html">onAttachedToWindow</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onAttachedToWindow</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="on-create-input-connection.html">onCreateInputConnection</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onCreateInputConnection</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$onCreateInputConnection(android.view.inputmethod.EditorInfo)/outAttrs">outAttrs</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/inputmethod/EditorInfo.html"><span class="identifier">EditorInfo</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/view/inputmethod/InputConnection.html"><span class="identifier">InputConnection</span></a><span class="symbol">?</span></code>
+<p>Code to handle deleting autocomplete first when backspacing.
+If there is no autocomplete text, both removeAutocomplete() and commitAutocomplete()
+are no-ops and return false. Therefore we can use them here without checking explicitly
+if we have autocomplete text or not.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-focus-changed.html">onFocusChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onFocusChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$onFocusChanged(kotlin.Boolean, kotlin.Int, android.graphics.Rect)/gainFocus">gainFocus</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$onFocusChanged(kotlin.Boolean, kotlin.Int, android.graphics.Rect)/direction">direction</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$onFocusChanged(kotlin.Boolean, kotlin.Int, android.graphics.Rect)/previouslyFocusedRect">previouslyFocusedRect</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/graphics/Rect.html"><span class="identifier">Rect</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="on-key-pre-ime.html">onKeyPreIme</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onKeyPreIme</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$onKeyPreIme(kotlin.Int, android.view.KeyEvent)/keyCode">keyCode</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$onKeyPreIme(kotlin.Int, android.view.KeyEvent)/event">event</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/KeyEvent.html"><span class="identifier">KeyEvent</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="on-selection-changed.html">onSelectionChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSelectionChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$onSelectionChanged(kotlin.Int, kotlin.Int)/selStart">selStart</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$onSelectionChanged(kotlin.Int, kotlin.Int)/selEnd">selEnd</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="on-touch-event.html">onTouchEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onTouchEvent</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$onTouchEvent(android.view.MotionEvent)/event">event</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/MotionEvent.html"><span class="identifier">MotionEvent</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="on-window-focus-changed.html">onWindowFocusChanged</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onWindowFocusChanged</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$onWindowFocusChanged(kotlin.Boolean)/hasFocus">hasFocus</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="send-accessibility-event-unchecked.html">sendAccessibilityEventUnchecked</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">sendAccessibilityEventUnchecked</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$sendAccessibilityEventUnchecked(android.view.accessibility.AccessibilityEvent)/event">event</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/accessibility/AccessibilityEvent.html"><span class="identifier">AccessibilityEvent</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-on-commit-listener.html">setOnCommitListener</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setOnCommitListener</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$setOnCommitListener(kotlin.Function0((kotlin.Unit)))/l">l</span><span class="symbol">:</span>&nbsp;<a href="../-on-commit-listener.html"><span class="identifier">OnCommitListener</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-on-filter-listener.html">setOnFilterListener</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setOnFilterListener</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$setOnFilterListener(kotlin.Function2((kotlin.String, mozilla.components.ui.autocomplete.InlineAutocompleteEditText, kotlin.Unit)))/l">l</span><span class="symbol">:</span>&nbsp;<a href="../-on-filter-listener.html"><span class="identifier">OnFilterListener</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-on-key-pre-ime-listener.html">setOnKeyPreImeListener</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setOnKeyPreImeListener</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$setOnKeyPreImeListener(kotlin.Function3((android.view.View, kotlin.Int, android.view.KeyEvent, kotlin.Boolean)))/l">l</span><span class="symbol">:</span>&nbsp;<a href="../-on-key-pre-ime-listener.html"><span class="identifier">OnKeyPreImeListener</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-on-search-state-change-listener.html">setOnSearchStateChangeListener</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setOnSearchStateChangeListener</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$setOnSearchStateChangeListener(kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/l">l</span><span class="symbol">:</span>&nbsp;<a href="../-on-search-state-change-listener.html"><span class="identifier">OnSearchStateChangeListener</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-on-selection-changed-listener.html">setOnSelectionChangedListener</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setOnSelectionChangedListener</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$setOnSelectionChangedListener(kotlin.Function2((kotlin.Int, , kotlin.Unit)))/l">l</span><span class="symbol">:</span>&nbsp;<a href="../-on-selection-changed-listener.html"><span class="identifier">OnSelectionChangedListener</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-on-text-change-listener.html">setOnTextChangeListener</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setOnTextChangeListener</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$setOnTextChangeListener(kotlin.Function2((kotlin.String, , kotlin.Unit)))/l">l</span><span class="symbol">:</span>&nbsp;<a href="../-on-text-change-listener.html"><span class="identifier">OnTextChangeListener</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-on-windows-focus-change-listener.html">setOnWindowsFocusChangeListener</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setOnWindowsFocusChangeListener</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$setOnWindowsFocusChangeListener(kotlin.Function1((kotlin.Boolean, kotlin.Unit)))/l">l</span><span class="symbol">:</span>&nbsp;<a href="../-on-windows-focus-change-listener.html"><span class="identifier">OnWindowsFocusChangeListener</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="set-text.html">setText</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setText</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$setText(kotlin.CharSequence, android.widget.TextView.BufferType)/text">text</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html"><span class="identifier">CharSequence</span></a><span class="symbol">?</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.ui.autocomplete.InlineAutocompleteEditText$setText(kotlin.CharSequence, android.widget.TextView.BufferType)/type">type</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/widget/TextView/BufferType.html"><span class="identifier">BufferType</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-a-u-t-o-c-o-m-p-l-e-t-e_-s-p-a-n.html">AUTOCOMPLETE_SPAN</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">AUTOCOMPLETE_SPAN</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/text/NoCopySpan/Concrete.html"><span class="identifier">Concrete</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="-d-e-f-a-u-l-t_-a-u-t-o-c-o-m-p-l-e-t-e_-b-a-c-k-g-r-o-u-n-d_-c-o-l-o-r.html">DEFAULT_AUTOCOMPLETE_BACKGROUND_COLOR</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">DEFAULT_AUTOCOMPLETE_BACKGROUND_COLOR</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Extension Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-l-t-r.html">isLTR</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isLTR</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Is the horizontal layout direction of this view from Left to Right?</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-r-t-l.html">isRTL</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isRTL</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Is the horizontal layout direction of this view from Right to Left?</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Extension Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/dp.html">dp</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">dp</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$dp(android.view.View, kotlin.Int)/pixels">pixels</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Converts a value in density independent pixels (dp) to the actual pixel values for the display.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/hide-keyboard.html">hideKeyboard</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">hideKeyboard</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Hides the soft input window.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-gone.html">isGone</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isGone</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.GONE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-invisible.html">isInvisible</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isInvisible</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.INVISIBLE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-visible.html">isVisible</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isVisible</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.VISIBLE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/show-keyboard.html">showKeyboard</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">showKeyboard</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$showKeyboard(android.view.View, kotlin.Int)/flags">flags</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;InputMethodManager.SHOW_IMPLICIT<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Tries to focus this view and show the soft input window for it.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

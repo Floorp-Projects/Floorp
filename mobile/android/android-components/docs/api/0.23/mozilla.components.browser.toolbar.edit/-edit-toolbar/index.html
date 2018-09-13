@@ -1,0 +1,165 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>EditToolbar - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.toolbar.edit</a>&nbsp;/&nbsp;<a href="./index.html">EditToolbar</a><br/>
+<br/>
+<h1>EditToolbar</h1>
+<code><span class="keyword">class </span><span class="identifier">EditToolbar</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/ViewGroup.html"><span class="identifier">ViewGroup</span></a></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/edit/EditToolbar.kt#L34">(source)</a>
+<p>Sub-component of the browser toolbar responsible for allowing the user to edit the URL.</p>
+<p>Structure:
++---------------------------------+---------+------+
+|                 url             | actions | exit |
++---------------------------------+---------+------+</p>
+<ul><li>url: Editable URL of the currently displayed website</li>
+<li>actions: Optional action icons injected by other components (e.g. barcode scanner)</li>
+<li>exit: Button that switches back to display mode.</li>
+</ul>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">EditToolbar</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.edit.EditToolbar$<init>(android.content.Context, mozilla.components.browser.toolbar.BrowserToolbar)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.edit.EditToolbar$<init>(android.content.Context, mozilla.components.browser.toolbar.BrowserToolbar)/toolbar">toolbar</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.toolbar/-browser-toolbar/index.html"><span class="identifier">BrowserToolbar</span></a><span class="symbol">)</span></code>
+<p>Sub-component of the browser toolbar responsible for allowing the user to edit the URL.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="focus.html">focus</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">focus</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Focus the URL editing component and show the virtual keyboard if needed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-layout.html">onLayout</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onLayout</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.edit.EditToolbar$onLayout(kotlin.Boolean, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/changed">changed</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.edit.EditToolbar$onLayout(kotlin.Boolean, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/left">left</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.edit.EditToolbar$onLayout(kotlin.Boolean, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/top">top</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.edit.EditToolbar$onLayout(kotlin.Boolean, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/right">right</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.edit.EditToolbar$onLayout(kotlin.Boolean, kotlin.Int, kotlin.Int, kotlin.Int, kotlin.Int)/bottom">bottom</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="on-measure.html">onMeasure</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onMeasure</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.edit.EditToolbar$onMeasure(kotlin.Int, kotlin.Int)/widthMeasureSpec">widthMeasureSpec</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.toolbar.edit.EditToolbar$onMeasure(kotlin.Int, kotlin.Int)/heightMeasureSpec">heightMeasureSpec</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="update-url.html">updateUrl</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">updateUrl</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.toolbar.edit.EditToolbar$updateUrl(kotlin.String)/url">url</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Updates the URL. This should only be called if the toolbar is not in editing mode. Otherwise
+this might override the URL the user is currently typing.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Extension Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-l-t-r.html">isLTR</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isLTR</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Is the horizontal layout direction of this view from Left to Right?</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-r-t-l.html">isRTL</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isRTL</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Is the horizontal layout direction of this view from Right to Left?</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Extension Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/dp.html">dp</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">dp</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$dp(android.view.View, kotlin.Int)/pixels">pixels</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Converts a value in density independent pixels (dp) to the actual pixel values for the display.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view-group/for-each.html">forEach</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/ViewGroup.html"><span class="identifier">ViewGroup</span></a><span class="symbol">.</span><span class="identifier">forEach</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$forEach(android.view.ViewGroup, kotlin.Function1((android.view.View, kotlin.Unit)))/action">action</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Performs the given action on each View in this ViewGroup.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/hide-keyboard.html">hideKeyboard</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">hideKeyboard</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Hides the soft input window.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-gone.html">isGone</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isGone</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.GONE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-invisible.html">isInvisible</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isInvisible</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.INVISIBLE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/is-visible.html">isVisible</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">isVisible</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns true if this view's visibility is set to View.VISIBLE.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.support.ktx.android.view/android.view.-view/show-keyboard.html">showKeyboard</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">.</span><span class="identifier">showKeyboard</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.ktx.android.view$showKeyboard(android.view.View, kotlin.Int)/flags">flags</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a>&nbsp;<span class="symbol">=</span>&nbsp;InputMethodManager.SHOW_IMPLICIT<span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Tries to focus this view and show the soft input window for it.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

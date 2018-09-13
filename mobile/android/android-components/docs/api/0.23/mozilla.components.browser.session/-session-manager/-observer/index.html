@@ -1,0 +1,92 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SessionManager.Observer - android-components</title>
+<link rel="stylesheet" href="../../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../../index.html">mozilla.components.browser.session</a>&nbsp;/&nbsp;<a href="../index.html">SessionManager</a>&nbsp;/&nbsp;<a href="./index.html">Observer</a><br/>
+<br/>
+<h1>Observer</h1>
+<code><span class="keyword">interface </span><span class="identifier">Observer</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L217">(source)</a>
+<p>Interface to be implemented by classes that want to observe the session manager.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="on-all-sessions-removed.html">onAllSessionsRemoved</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onAllSessionsRemoved</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>All sessions have been removed. Note that this will callback will be invoked whenever
+removeAll() or removeSessions have been called on the
+SessionManager. This callback will NOT be invoked when just the last
+session has been removed by calling remove() on the SessionManager.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-session-added.html">onSessionAdded</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSessionAdded</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SessionManager.Observer$onSessionAdded(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>The given session has been added.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-session-removed.html">onSessionRemoved</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSessionRemoved</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SessionManager.Observer$onSessionRemoved(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>The given session has been removed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-session-selected.html">onSessionSelected</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">onSessionSelected</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.SessionManager.Observer$onSessionSelected(mozilla.components.browser.session.Session)/session">session</span><span class="symbol">:</span>&nbsp;<a href="../../-session/index.html"><span class="identifier">Session</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>The selection has changed and the given session is now the selected session.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../../mozilla.components.feature.session/-engine-view-presenter/index.html">EngineViewPresenter</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">EngineViewPresenter</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Observer</span></a></code>
+<p>Presenter implementation for EngineView.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../mozilla.components.feature.tabs.tabstray/-tabs-tray-presenter/index.html">TabsTrayPresenter</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">TabsTrayPresenter</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Observer</span></a></code>
+<p>Presenter implementation for a tabs tray implementation in order to update the tabs tray whenever
+the state of the session manager changes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../../mozilla.components.feature.toolbar/-toolbar-presenter/index.html">ToolbarPresenter</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ToolbarPresenter</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Observer</span></a><span class="symbol">, </span><a href="../../-session/-observer/index.html"><span class="identifier">Observer</span></a></code>
+<p>Presenter implementation for a toolbar implementation in order to update the toolbar whenever
+the state of the selected session changes.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

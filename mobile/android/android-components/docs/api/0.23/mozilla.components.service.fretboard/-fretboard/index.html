@@ -1,0 +1,157 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Fretboard - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fretboard</a>&nbsp;/&nbsp;<a href="./index.html">Fretboard</a><br/>
+<br/>
+<h1>Fretboard</h1>
+<code><span class="keyword">class </span><span class="identifier">Fretboard</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/Fretboard.kt#L18">(source)</a>
+<p>Entry point of the library</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Fretboard</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$<init>(mozilla.components.service.fretboard.ExperimentSource, mozilla.components.service.fretboard.ExperimentStorage, mozilla.components.service.fretboard.ValuesProvider)/source">source</span><span class="symbol">:</span>&nbsp;<a href="../-experiment-source/index.html"><span class="identifier">ExperimentSource</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$<init>(mozilla.components.service.fretboard.ExperimentSource, mozilla.components.service.fretboard.ExperimentStorage, mozilla.components.service.fretboard.ValuesProvider)/storage">storage</span><span class="symbol">:</span>&nbsp;<a href="../-experiment-storage/index.html"><span class="identifier">ExperimentStorage</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$<init>(mozilla.components.service.fretboard.ExperimentSource, mozilla.components.service.fretboard.ExperimentStorage, mozilla.components.service.fretboard.ValuesProvider)/valuesProvider">valuesProvider</span><span class="symbol">:</span>&nbsp;<a href="../-values-provider/index.html"><span class="identifier">ValuesProvider</span></a>&nbsp;<span class="symbol">=</span>&nbsp;ValuesProvider()<span class="symbol">)</span></code>
+<p>Entry point of the library</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="experiments.html">experiments</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">experiments</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-experiment/index.html"><span class="identifier">Experiment</span></a><span class="symbol">&gt;</span></code>
+<p>Provides the list of experiments (active or not)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="clear-all-overrides.html">clearAllOverrides</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">clearAllOverrides</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$clearAllOverrides(android.content.Context)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Clears all experiment overrides asynchronously</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="clear-all-overrides-now.html">clearAllOverridesNow</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">clearAllOverridesNow</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$clearAllOverridesNow(android.content.Context)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Clears all experiment overrides as a blocking operation</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="clear-override.html">clearOverride</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">clearOverride</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$clearOverride(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$clearOverride(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor)/descriptor">descriptor</span><span class="symbol">:</span>&nbsp;<a href="../-experiment-descriptor/index.html"><span class="identifier">ExperimentDescriptor</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Clears an override for a specified experiment asynchronously</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="clear-override-now.html">clearOverrideNow</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">clearOverrideNow</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$clearOverrideNow(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$clearOverrideNow(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor)/descriptor">descriptor</span><span class="symbol">:</span>&nbsp;<a href="../-experiment-descriptor/index.html"><span class="identifier">ExperimentDescriptor</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Clears an override for a specified experiment as a blocking operation</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-active-experiments.html">getActiveExperiments</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getActiveExperiments</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$getActiveExperiments(android.content.Context)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="../-experiment/index.html"><span class="identifier">Experiment</span></a><span class="symbol">&gt;</span></code>
+<p>Provides the list of active experiments</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-experiment.html">getExperiment</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getExperiment</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$getExperiment(mozilla.components.service.fretboard.ExperimentDescriptor)/descriptor">descriptor</span><span class="symbol">:</span>&nbsp;<a href="../-experiment-descriptor/index.html"><span class="identifier">ExperimentDescriptor</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-experiment/index.html"><span class="identifier">Experiment</span></a><span class="symbol">?</span></code>
+<p>Gets the metadata associated with the specified experiment, even if the user is not part of it</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-in-experiment.html">isInExperiment</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isInExperiment</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$isInExperiment(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$isInExperiment(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor)/descriptor">descriptor</span><span class="symbol">:</span>&nbsp;<a href="../-experiment-descriptor/index.html"><span class="identifier">ExperimentDescriptor</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Checks if the user is part of
+the specified experiment</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="load-experiments.html">loadExperiments</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">loadExperiments</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Loads experiments from local storage</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-override.html">setOverride</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setOverride</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$setOverride(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor, kotlin.Boolean)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$setOverride(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor, kotlin.Boolean)/descriptor">descriptor</span><span class="symbol">:</span>&nbsp;<a href="../-experiment-descriptor/index.html"><span class="identifier">ExperimentDescriptor</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$setOverride(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor, kotlin.Boolean)/active">active</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Overrides a specified experiment asynchronously</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-override-now.html">setOverrideNow</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">setOverrideNow</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$setOverrideNow(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor, kotlin.Boolean)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$setOverrideNow(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor, kotlin.Boolean)/descriptor">descriptor</span><span class="symbol">:</span>&nbsp;<a href="../-experiment-descriptor/index.html"><span class="identifier">ExperimentDescriptor</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$setOverrideNow(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor, kotlin.Boolean)/active">active</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Overrides a specified experiment as a blocking operation</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="update-experiments.html">updateExperiments</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">updateExperiments</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Requests new experiments from the server and
+saves them to local storage</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="with-experiment.html">withExperiment</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">withExperiment</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$withExperiment(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor, kotlin.Function1((mozilla.components.service.fretboard.Experiment, kotlin.Unit)))/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$withExperiment(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor, kotlin.Function1((mozilla.components.service.fretboard.Experiment, kotlin.Unit)))/descriptor">descriptor</span><span class="symbol">:</span>&nbsp;<a href="../-experiment-descriptor/index.html"><span class="identifier">ExperimentDescriptor</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.service.fretboard.Fretboard$withExperiment(android.content.Context, mozilla.components.service.fretboard.ExperimentDescriptor, kotlin.Function1((mozilla.components.service.fretboard.Experiment, kotlin.Unit)))/block">block</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><a href="../-experiment/index.html"><span class="identifier">Experiment</span></a><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Performs an action if the user is part of the specified experiment</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,23 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SessionIntentProcessor.<init> - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.feature.session</a>&nbsp;/&nbsp;<a href="index.html">SessionIntentProcessor</a>&nbsp;/&nbsp;<a href="./-init-.html">&lt;init&gt;</a><br/>
+<br/>
+<h1>&lt;init&gt;</h1>
+<a name="mozilla.components.feature.session.SessionIntentProcessor$&lt;init&gt;(mozilla.components.feature.session.SessionUseCases, mozilla.components.browser.session.SessionManager, kotlin.Boolean, kotlin.Boolean, kotlin.Function2((kotlin.String, mozilla.components.browser.session.Session, kotlin.Unit)))"></a>
+<code><span class="identifier">SessionIntentProcessor</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.feature.session.SessionIntentProcessor$<init>(mozilla.components.feature.session.SessionUseCases, mozilla.components.browser.session.SessionManager, kotlin.Boolean, kotlin.Boolean, kotlin.Function2((kotlin.String, mozilla.components.browser.session.Session, kotlin.Unit)))/sessionUseCases">sessionUseCases</span><span class="symbol">:</span>&nbsp;<a href="../-session-use-cases/index.html"><span class="identifier">SessionUseCases</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.session.SessionIntentProcessor$<init>(mozilla.components.feature.session.SessionUseCases, mozilla.components.browser.session.SessionManager, kotlin.Boolean, kotlin.Boolean, kotlin.Function2((kotlin.String, mozilla.components.browser.session.Session, kotlin.Unit)))/sessionManager">sessionManager</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.session/-session-manager/index.html"><span class="identifier">SessionManager</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.session.SessionIntentProcessor$<init>(mozilla.components.feature.session.SessionUseCases, mozilla.components.browser.session.SessionManager, kotlin.Boolean, kotlin.Boolean, kotlin.Function2((kotlin.String, mozilla.components.browser.session.Session, kotlin.Unit)))/useDefaultHandlers">useDefaultHandlers</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.session.SessionIntentProcessor$<init>(mozilla.components.feature.session.SessionUseCases, mozilla.components.browser.session.SessionManager, kotlin.Boolean, kotlin.Boolean, kotlin.Function2((kotlin.String, mozilla.components.browser.session.Session, kotlin.Unit)))/openNewTab">openNewTab</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;true<span class="symbol">, </span><span class="identifier" id="mozilla.components.feature.session.SessionIntentProcessor$<init>(mozilla.components.feature.session.SessionUseCases, mozilla.components.browser.session.SessionManager, kotlin.Boolean, kotlin.Boolean, kotlin.Function2((kotlin.String, mozilla.components.browser.session.Session, kotlin.Unit)))/textSearchHandler">textSearchHandler</span><span class="symbol">:</span>&nbsp;<a href="../-text-search-handler.html"><span class="identifier">TextSearchHandler</span></a>&nbsp;<span class="symbol">=</span>&nbsp;{ _, _ -&gt; }<span class="symbol">)</span></code>
+<p>Processor for intents which should trigger session-related actions.</p>
+<h3>Parameters</h3>
+<p><a name="openNewTab"></a>
+<code>openNewTab</code> - Whether a processed Intent should open a new tab or open URLs in the currently
+    selected tab.</p>
+<p><a name="textSearchHandler"></a>
+<code>textSearchHandler</code> - Will be invoked for ACTION_SEND intents when the provided EXTRA_TEXT is not a URL,
+    or a empty string. A behavior must provided to handle the search,
+    otherwise by default it will do nothing.</p>
+</BODY>
+</HTML>

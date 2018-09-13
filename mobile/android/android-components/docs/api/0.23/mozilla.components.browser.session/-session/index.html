@@ -1,0 +1,268 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Session - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.session</a>&nbsp;/&nbsp;<a href="./index.html">Session</a><br/>
+<br/>
+<h1>Session</h1>
+<code><span class="keyword">class </span><span class="identifier">Session</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.support.base.observer/-observable/index.html"><span class="identifier">Observable</span></a><span class="symbol">&lt;</span><a href="-observer/index.html"><span class="identifier">Observer</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L20">(source)</a>
+<p>Value type that represents the state of a browser session. Changes can be observed.</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-find-result/index.html">FindResult</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">FindResult</span></code>
+<p>A value type representing a result of a "find in page" operation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-observer/index.html">Observer</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">Observer</span></code>
+<p>Interface to be implemented by classes that want to observe a session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-security-info/index.html">SecurityInfo</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">SecurityInfo</span></code>
+<p>A value type holding security information for a Session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-source/index.html">Source</a></p>
+</td>
+<td>
+<code><span class="keyword">enum</span> <span class="keyword">class </span><span class="identifier">Source</span></code>
+<p>Represents the origin of a session to describe how and why it was created.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Session</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session$<init>(kotlin.String, kotlin.Boolean, mozilla.components.browser.session.Session.Source, kotlin.String, mozilla.components.support.base.observer.Observable((mozilla.components.browser.session.Session.Observer)))/initialUrl">initialUrl</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session$<init>(kotlin.String, kotlin.Boolean, mozilla.components.browser.session.Session.Source, kotlin.String, mozilla.components.support.base.observer.Observable((mozilla.components.browser.session.Session.Observer)))/private">private</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session$<init>(kotlin.String, kotlin.Boolean, mozilla.components.browser.session.Session.Source, kotlin.String, mozilla.components.support.base.observer.Observable((mozilla.components.browser.session.Session.Observer)))/source">source</span><span class="symbol">:</span>&nbsp;<a href="-source/index.html"><span class="identifier">Source</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Source.NONE<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session$<init>(kotlin.String, kotlin.Boolean, mozilla.components.browser.session.Session.Source, kotlin.String, mozilla.components.support.base.observer.Observable((mozilla.components.browser.session.Session.Observer)))/id">id</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a>&nbsp;<span class="symbol">=</span>&nbsp;UUID.randomUUID().toString()<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Session$<init>(kotlin.String, kotlin.Boolean, mozilla.components.browser.session.Session.Source, kotlin.String, mozilla.components.support.base.observer.Observable((mozilla.components.browser.session.Session.Observer)))/delegate">delegate</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.support.base.observer/-observable/index.html"><span class="identifier">Observable</span></a><span class="symbol">&lt;</span><a href="-observer/index.html"><span class="identifier">Observer</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;ObserverRegistry()<span class="symbol">)</span></code>
+<p>Value type that represents the state of a browser session. Changes can be observed.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="can-go-back.html">canGoBack</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">canGoBack</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Navigation state, true if there's an history item to go back to, otherwise false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="can-go-forward.html">canGoForward</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">canGoForward</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Navigation state, true if there's an history item to go forward to, otherwise false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="custom-tab-config.html">customTabConfig</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">customTabConfig</span><span class="symbol">: </span><a href="../../mozilla.components.browser.session.tab/-custom-tab-config/index.html"><span class="identifier">CustomTabConfig</span></a><span class="symbol">?</span></code>
+<p>Configuration data in case this session is used for a Custom Tab.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="desktop-mode.html">desktopMode</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">desktopMode</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Desktop Mode state, true if the desktop mode is requested, otherwise false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="download.html">download</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">download</span><span class="symbol">: </span><a href="../../mozilla.components.support.base.observer/-consumable/index.html"><span class="identifier">Consumable</span></a><span class="symbol">&lt;</span><a href="../-download/index.html"><span class="identifier">Download</span></a><span class="symbol">&gt;</span></code>
+<p>Last download request if it wasn't consumed by at least one observer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="find-results.html">findResults</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">findResults</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="-find-result/index.html"><span class="identifier">FindResult</span></a><span class="symbol">&gt;</span></code>
+<p>List of results of that latest "find in page" operation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="full-screen-mode.html">fullScreenMode</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">fullScreenMode</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Exits fullscreen mode if it's in that state.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="hit-result.html">hitResult</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">hitResult</span><span class="symbol">: </span><a href="../../mozilla.components.support.base.observer/-consumable/index.html"><span class="identifier">Consumable</span></a><span class="symbol">&lt;</span><a href="../../mozilla.components.concept.engine/-hit-result/index.html"><span class="identifier">HitResult</span></a><span class="symbol">&gt;</span></code>
+<p>The target of the latest long click operation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="id.html">id</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">id</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="loading.html">loading</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">loading</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Loading state, true if this session's url is currently loading, otherwise false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="private.html">private</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">private</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="progress.html">progress</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">progress</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>The progress loading the current URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="search-terms.html">searchTerms</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">searchTerms</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>The currently / last used search terms.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="security-info.html">securityInfo</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">securityInfo</span><span class="symbol">: </span><a href="-security-info/index.html"><span class="identifier">SecurityInfo</span></a></code>
+<p>Security information indicating whether or not the current session is
+for a secure URL, as well as the host and SSL certificate authority, if applicable.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="source.html">source</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">source</span><span class="symbol">: </span><a href="-source/index.html"><span class="identifier">Source</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="title.html">title</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">title</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>The title of the currently displayed website changed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="tracker-blocking-enabled.html">trackerBlockingEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">trackerBlockingEnabled</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Tracker blocking state, true if blocking trackers is enabled, otherwise false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="trackers-blocked.html">trackersBlocked</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">trackersBlocked</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code>
+<p>List of URIs that have been blocked in this session.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="url.html">url</a></p>
+</td>
+<td>
+<code><span class="keyword">var </span><span class="identifier">url</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>The currently loading or loaded URL.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="equals.html">equals</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">equals</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Session$equals(kotlin.Any)/other">other</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">?</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="hash-code.html">hashCode</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">hashCode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="is-custom-tab-session.html">isCustomTabSession</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">isCustomTabSession</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Returns whether or not this session is used for a Custom Tab.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
