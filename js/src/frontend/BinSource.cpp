@@ -321,7 +321,7 @@ BinASTParser<Tok>::getBoundScope(AssertedScopeKind scopeKind,
         scope = &parseContext_->functionScope();
         break;
       default:
-        MOZ_ASSERT_UNREACHABLE();
+        MOZ_ASSERT_UNREACHABLE("Unexpected AssertedScopeKind");
         break;
     }
 
