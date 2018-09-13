@@ -4,7 +4,7 @@
 
 use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageParams, BlobImageResult};
 use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, ResourceUpdate, Epoch};
-use api::{BuiltDisplayList, ColorF, LayoutSize};
+use api::{BuiltDisplayList, ColorF, LayoutSize, NotificationRequest, Checkpoint};
 use api::channel::MsgSender;
 use frame_builder::{FrameBuilderConfig, FrameBuilder};
 use clip_scroll_tree::ClipScrollTree;
@@ -17,6 +17,7 @@ use scene::Scene;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::mem::replace;
 use time::precise_time_ns;
+use util::drain_filter;
 
 /// Represents the work associated to a transaction before scene building.
 pub struct Transaction {
@@ -30,6 +31,7 @@ pub struct Transaction {
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
     pub resource_updates: Vec<ResourceUpdate>,
     pub frame_ops: Vec<FrameMsg>,
+    pub notifications: Vec<NotificationRequest>,
     pub set_root_pipeline: Option<PipelineId>,
     pub build_frame: bool,
     pub render_frame: bool,
@@ -61,6 +63,7 @@ pub struct BuiltTransaction {
     pub blob_rasterizer: Option<Box<AsyncBlobImageRasterizer>>,
     pub frame_ops: Vec<FrameMsg>,
     pub removed_pipelines: Vec<PipelineId>,
+    pub notifications: Vec<NotificationRequest>,
     pub scene_build_start_time: u64,
     pub scene_build_end_time: u64,
     pub build_frame: bool,
@@ -251,6 +254,7 @@ impl SceneBuilder {
                 blob_rasterizer: None,
                 frame_ops: Vec::new(),
                 removed_pipelines: Vec::new(),
+                notifications: Vec::new(),
                 scene_build_start_time,
                 scene_build_end_time: precise_time_ns(),
             });
@@ -322,6 +326,12 @@ impl SceneBuilder {
         );
         rasterized_blobs.append(&mut txn.rasterized_blobs);
 
+        drain_filter(
+            &mut txn.notifications,
+            |n| { n.when() == Checkpoint::SceneBuilt },
+            |n| { n.notify(); },
+        );
+
         Box::new(BuiltTransaction {
             document_id: txn.document_id,
             build_frame: txn.build_frame || built_scene.is_some(),
@@ -332,6 +342,7 @@ impl SceneBuilder {
             blob_rasterizer: replace(&mut txn.blob_rasterizer, None),
             frame_ops: replace(&mut txn.frame_ops, Vec::new()),
             removed_pipelines: replace(&mut txn.removed_pipelines, Vec::new()),
+            notifications: replace(&mut txn.notifications, Vec::new()),
             scene_build_start_time,
             scene_build_end_time: precise_time_ns(),
         })

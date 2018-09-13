@@ -13,6 +13,7 @@ interface xpcIJSWeakReference;
 interface nsIClassInfo;
 interface nsIComponentManager;
 interface nsICycleCollectorListener;
+interface nsIEditorSpellCheck;
 interface nsIFile;
 interface nsIURI;
 interface nsIJSCID;
@@ -716,6 +717,9 @@ interface nsIXPCComponents_Utils : nsISupports
 
     /* Give a directive to the record/replay system. */
     void recordReplayDirective(in long directive);
+
+    /* Create a spellchecker object. */
+    nsIEditorSpellCheck createSpellChecker();
 };
 
 /**
