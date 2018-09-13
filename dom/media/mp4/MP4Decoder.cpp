@@ -121,7 +121,7 @@ MP4Decoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
     if (IsAV1CodecString(codec)) {
       tracks.AppendElement(
         CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("video/") + NS_ConvertUTF16toUTF8(codec), aType));
+          NS_LITERAL_CSTRING("video/av1"), aType));
       continue;
     }
 #endif
