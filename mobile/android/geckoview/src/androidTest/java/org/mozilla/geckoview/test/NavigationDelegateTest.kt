@@ -20,6 +20,7 @@ import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
 import org.junit.Assume.assumeThat
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -201,6 +202,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
+    @Ignore
     @Test fun redirectLoad() {
         val redirectUri = if (sessionRule.env.isAutomation) {
             "http://example.org/tests/robocop/robocop_blank_02.html"
