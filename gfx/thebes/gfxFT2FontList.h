@@ -24,7 +24,7 @@ class nsZipArchive;
 class FT2FontEntry : public gfxFontEntry
 {
 public:
-    explicit FT2FontEntry(const nsAString& aFaceName) :
+    explicit FT2FontEntry(const nsACString& aFaceName) :
         gfxFontEntry(aFaceName),
         mFTFace(nullptr),
         mFontFace(nullptr),
@@ -36,13 +36,13 @@ public:
 
     gfxFontEntry* Clone() const override;
 
-    const nsString& GetName() const {
+    const nsCString& GetName() const {
         return Name();
     }
 
     // create a font entry for a downloaded font
     static FT2FontEntry* 
-    CreateFontEntry(const nsAString& aFontName,
+    CreateFontEntry(const nsACString& aFontName,
                     WeightRange aWeight,
                     StretchRange aStretch,
                     SlantStyleRange aStyle,
@@ -63,7 +63,7 @@ public:
     static FT2FontEntry* 
     CreateFontEntry(FT_Face aFace,
                     const char *aFilename, uint8_t aIndex,
-                    const nsAString& aName,
+                    const nsACString& aName,
                     const uint8_t* aFontData = nullptr,
                     uint32_t aLength = 0);
 
@@ -119,7 +119,7 @@ public:
 class FT2FontFamily : public gfxFontFamily
 {
 public:
-    explicit FT2FontFamily(const nsAString& aName) :
+    explicit FT2FontFamily(const nsACString& aName) :
         gfxFontFamily(aName) { }
 
     // Append this family's faces to the IPC fontlist
@@ -132,12 +132,12 @@ public:
     gfxFT2FontList();
     virtual ~gfxFT2FontList();
 
-    virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
+    virtual gfxFontEntry* LookupLocalFont(const nsACString& aFontName,
                                           WeightRange aWeightForEntry,
                                           StretchRange aStretchForEntry,
                                           SlantStyleRange aStyleForEntry) override;
 
-    virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
+    virtual gfxFontEntry* MakePlatformFont(const nsACString& aFontName,
                                            WeightRange aWeightForEntry,
                                            StretchRange aStretchForEntry,
                                            SlantStyleRange aStyleForEntry,
@@ -152,7 +152,7 @@ public:
 
     virtual void GetFontFamilyList(nsTArray<RefPtr<gfxFontFamily> >& aFamilyArray) override;
 
-    gfxFontFamily* CreateFontFamily(const nsAString& aName) const override;
+    gfxFontFamily* CreateFontFamily(const nsACString& aName) const override;
 
     void WillShutdown();
 
@@ -195,7 +195,7 @@ protected:
     virtual gfxFontFamily*
     GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
 
-    nsTHashtable<nsStringHashKey> mSkipSpaceLookupCheckFamilies;
+    nsTHashtable<nsCStringHashKey> mSkipSpaceLookupCheckFamilies;
 
 private:
     mozilla::UniquePtr<FontNameCache> mFontNameCache;

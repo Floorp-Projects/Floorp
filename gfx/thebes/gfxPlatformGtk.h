@@ -51,9 +51,6 @@ public:
 
     virtual gfxPlatformFontList* CreatePlatformFontList() override;
 
-    virtual nsresult GetStandardFamilyName(const nsAString& aFontName,
-                                           nsAString& aFamilyName) override;
-
     gfxFontGroup*
     CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
                     const gfxFontStyle *aStyle,
