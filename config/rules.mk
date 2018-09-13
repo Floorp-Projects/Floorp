@@ -842,7 +842,14 @@ cargo_build_flags = $(CARGOFLAGS)
 ifndef MOZ_DEBUG_RUST
 cargo_build_flags += --release
 endif
+
+# The Spidermonkey library can be built from a package tarball outside the
+# tree, so we want to let Cargo create lock files in this case. When built
+# within a tree, the Rust dependencies have been vendored in so Cargo won't
+# touch the lock file.
+ifndef JS_STANDALONE
 cargo_build_flags += --frozen
+endif
 
 cargo_build_flags += --manifest-path $(CARGO_FILE)
 ifdef BUILD_VERBOSE_LOG
