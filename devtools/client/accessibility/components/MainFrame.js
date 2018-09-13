@@ -44,8 +44,6 @@ class MainFrame extends Component {
   }
 
   componentWillMount() {
-    // Need inspector for many things such as dom node preview etc.
-    gToolbox.loadTool("inspector");
     this.props.accessibility.on("init", this.resetAccessibility);
     this.props.accessibility.on("shutdown", this.resetAccessibility);
     this.props.walker.on("document-ready", this.resetAccessibility);
