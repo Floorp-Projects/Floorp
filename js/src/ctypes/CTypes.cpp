@@ -983,9 +983,12 @@ GetErrorMessage(void* userRef, const unsigned errorNumber)
 }
 
 static JS::UniqueChars
-EncodeLatin1(JSContext* cx, AutoString& str)
+EncodeUTF8(JSContext* cx, AutoString& str)
 {
-  return JS_EncodeStringToLatin1(cx, NewUCString(cx, str.finish()));
+  RootedString string(cx, NewUCString(cx, str.finish()));
+  if (!string)
+    return nullptr;
+  return JS_EncodeStringToUTF8(cx, string);
 }
 
 static const char*
@@ -996,7 +999,7 @@ CTypesToSourceForError(JSContext* cx, HandleValue val, JS::UniqueChars& bytes)
       if (CType::IsCType(obj) || CData::IsCDataMaybeUnwrap(&obj)) {
           RootedValue v(cx, ObjectValue(*obj));
           RootedString str(cx, JS_ValueToSource(cx, v));
-          bytes = JS_EncodeStringToLatin1(cx, str);
+          bytes = JS_EncodeStringToUTF8(cx, str);
           return bytes.get();
       }
   }
@@ -1182,7 +1185,7 @@ TypeSourceForError(JSContext* cx, JSObject* typeObj)
   BuildTypeSource(cx, typeObj, true, source);
   if (!source)
     return nullptr;
-  return EncodeLatin1(cx, source);
+  return EncodeUTF8(cx, source);
 }
 
 static JS::UniqueChars
@@ -1192,7 +1195,7 @@ FunctionTypeSourceForError(JSContext* cx, HandleObject funObj)
   BuildFunctionTypeSource(cx, funObj, funSource);
   if (!funSource)
     return nullptr;
-  return EncodeLatin1(cx, funSource);
+  return EncodeUTF8(cx, funSource);
 }
 
 static JS::UniqueChars
@@ -1203,7 +1206,7 @@ ConversionPositionForError(JSContext* cx, ConversionType convType, HandleObject 
   BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
   if (!posSource)
     return nullptr;
-  return EncodeLatin1(cx, posSource);
+  return EncodeUTF8(cx, posSource);
 }
 
 class IndexCString final
@@ -1248,15 +1251,15 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
       if (!arrStr)
         return false;
 
-      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                                 CTYPESMSG_CONV_ERROR_ARRAY,
-                                 valStr, indexStr.get(), arrStr.get());
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               CTYPESMSG_CONV_ERROR_ARRAY,
+                               valStr, indexStr.get(), arrStr.get());
       break;
     }
     case TYPE_struct: {
-      JSFlatString* name = GetFieldName(arrObj, arrIndex);
+      RootedString name(cx, GetFieldName(arrObj, arrIndex));
       MOZ_ASSERT(name);
-      JS::UniqueChars nameStr = JS_EncodeStringToLatin1(cx, name);
+      JS::UniqueChars nameStr = JS_EncodeStringToUTF8(cx, name);
       if (!nameStr)
         return false;
 
@@ -1271,10 +1274,10 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
           return false;
       }
 
-      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                                 CTYPESMSG_CONV_ERROR_STRUCT,
-                                 valStr, nameStr.get(), expectedStr, structStr.get(),
-                                 (posStr ? posStr.get() : ""));
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               CTYPESMSG_CONV_ERROR_STRUCT,
+                               valStr, nameStr.get(), expectedStr, structStr.get(),
+                               (posStr ? posStr.get() : ""));
       break;
     }
     default:
@@ -1293,9 +1296,9 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     if (!funStr)
       return false;
 
-    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                               CTYPESMSG_CONV_ERROR_ARG,
-                               valStr, indexStr.get(), funStr.get());
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_CONV_ERROR_ARG,
+                             valStr, indexStr.get(), funStr.get());
     break;
   }
   case ConversionType::Finalizer: {
@@ -1305,8 +1308,8 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     if (!funStr)
       return false;
 
-    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                               CTYPESMSG_CONV_ERROR_FIN, valStr, funStr.get());
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_CONV_ERROR_FIN, valStr, funStr.get());
     break;
   }
   case ConversionType::Return: {
@@ -1316,16 +1319,16 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     if (!funStr)
       return false;
 
-    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                               CTYPESMSG_CONV_ERROR_RET, valStr, funStr.get());
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_CONV_ERROR_RET, valStr, funStr.get());
     break;
   }
   case ConversionType::Setter:
   case ConversionType::Construct:
     MOZ_ASSERT(!funObj);
 
-    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                               CTYPESMSG_CONV_ERROR_SET, valStr, expectedStr);
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             CTYPESMSG_CONV_ERROR_SET, valStr, expectedStr);
     break;
   }
 
@@ -1352,6 +1355,8 @@ static bool
 ArgumentConvError(JSContext* cx, HandleValue actual, const char* funStr,
                   unsigned argIndex)
 {
+  MOZ_ASSERT(JS::StringIsASCII(funStr));
+
   JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
   if (!valStr)
@@ -1359,8 +1364,8 @@ ArgumentConvError(JSContext* cx, HandleValue actual, const char* funStr,
 
   IndexCString indexStr(argIndex + 1);
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_CONV_ERROR_ARG, valStr, indexStr.get(), funStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_CONV_ERROR_ARG, valStr, indexStr.get(), funStr);
   return false;
 }
 
@@ -1368,8 +1373,8 @@ static bool
 ArgumentLengthError(JSContext* cx, const char* fun, const char* count,
                     const char* s)
 {
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_WRONG_ARG_LENGTH, fun, count, s);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            CTYPESMSG_WRONG_ARG_LENGTH, fun, count, s);
   return false;
 }
 
@@ -1392,9 +1397,9 @@ ArrayLengthMismatch(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
   if (!arrStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_ARRAY_MISMATCH,
-                             valStr, arrStr.get(), expectedLengthStr.get(), actualLengthStr.get());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_ARRAY_MISMATCH,
+                           valStr, arrStr.get(), expectedLengthStr.get(), actualLengthStr.get());
   return false;
 }
 
@@ -1417,9 +1422,9 @@ ArrayLengthOverflow(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
   if (!arrStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_ARRAY_OVERFLOW,
-                             valStr, arrStr.get(), expectedLengthStr.get(), actualLengthStr.get());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_ARRAY_OVERFLOW,
+                           valStr, arrStr.get(), expectedLengthStr.get(), actualLengthStr.get());
   return false;
 }
 
@@ -1451,12 +1456,12 @@ CannotConstructError(JSContext* cx, const char* type)
 static bool
 DuplicateFieldError(JSContext* cx, Handle<JSFlatString*> name)
 {
-  JS::UniqueChars nameStr = JS_EncodeStringToLatin1(cx, name);
+  JS::UniqueChars nameStr = JS_EncodeStringToUTF8(cx, name);
   if (!nameStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_DUPLICATE_FIELD, nameStr.get());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_DUPLICATE_FIELD, nameStr.get());
   return false;
 }
 
@@ -1479,8 +1484,8 @@ EmptyFinalizerError(JSContext* cx, ConversionType convType,
       return false;
   }
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_EMPTY_FIN, (posStr ? posStr.get() : ""));
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_EMPTY_FIN, (posStr ? posStr.get() : ""));
   return false;
 }
 
@@ -1512,10 +1517,10 @@ FieldCountMismatch(JSContext* cx,
       return false;
   }
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_FIELD_MISMATCH,
-                             valStr, structStr.get(), expectedCountStr.get(), actualCountStr.get(),
-                             (posStr ? posStr.get() : ""));
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_FIELD_MISMATCH,
+                           valStr, structStr.get(), expectedCountStr.get(), actualCountStr.get(),
+                           (posStr ? posStr.get() : ""));
   return false;
 }
 
@@ -1529,8 +1534,8 @@ FieldDescriptorCountError(JSContext* cx, HandleValue typeVal, size_t length)
 
   IndexCString lengthStr(length);
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_FIELD_DESC_COUNT, valStr, lengthStr.get());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_FIELD_DESC_COUNT, valStr, lengthStr.get());
   return false;
 }
 
@@ -1543,8 +1548,8 @@ FieldDescriptorNameError(JSContext* cx, HandleId id)
   if (!propStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_FIELD_DESC_NAME, propStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_FIELD_DESC_NAME, propStr);
   return false;
 }
 
@@ -1558,12 +1563,12 @@ FieldDescriptorSizeError(JSContext* cx, HandleObject typeObj, HandleId id)
     return false;
 
   RootedString idStr(cx, IdToString(cx, id));
-  JS::UniqueChars propStr = JS_EncodeStringToLatin1(cx, idStr);
+  JS::UniqueChars propStr = JS_EncodeStringToUTF8(cx, idStr);
   if (!propStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_FIELD_DESC_SIZE, typeStr, propStr.get());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_FIELD_DESC_SIZE, typeStr, propStr.get());
   return false;
 }
 
@@ -1575,8 +1580,8 @@ FieldDescriptorNameTypeError(JSContext* cx, HandleValue typeVal)
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_FIELD_DESC_NAMETYPE, valStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_FIELD_DESC_NAMETYPE, valStr);
   return false;
 }
 
@@ -1589,12 +1594,12 @@ FieldDescriptorTypeError(JSContext* cx, HandleValue poroVal, HandleId id)
     return false;
 
   RootedString idStr(cx, IdToString(cx, id));
-  JS::UniqueChars propStr = JS_EncodeStringToLatin1(cx, idStr);
+  JS::UniqueChars propStr = JS_EncodeStringToUTF8(cx, idStr);
   if (!propStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_FIELD_DESC_TYPE, typeStr, propStr.get());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_FIELD_DESC_TYPE, typeStr, propStr.get());
   return false;
 }
 
@@ -1608,12 +1613,12 @@ FieldMissingError(JSContext* cx, JSObject* typeObj, JSFlatString* name_)
   if (!typeStr)
     return false;
 
-  JS::UniqueChars nameStr = JS_EncodeStringToLatin1(cx, name);
+  JS::UniqueChars nameStr = JS_EncodeStringToUTF8(cx, name);
   if (!nameStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_FIELD_MISSING, typeStr, nameStr.get());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_FIELD_MISSING, typeStr, nameStr.get());
   return false;
 }
 
@@ -1631,8 +1636,8 @@ FinalizerSizeError(JSContext* cx, HandleObject funObj, HandleValue actual)
   if (!funStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_FIN_SIZE_ERROR, funStr.get(), valStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_FIN_SIZE_ERROR, funStr.get(), valStr);
   return false;
 }
 
@@ -1657,10 +1662,10 @@ FunctionArgumentLengthMismatch(JSContext* cx,
 
   const char* variadicStr = isVariadic ? " or more": "";
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_ARG_COUNT_MISMATCH,
-                             funStr.get(), expectedCountStr.get(), variadicStr,
-                             actualCountStr.get());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_ARG_COUNT_MISMATCH,
+                           funStr.get(), expectedCountStr.get(), variadicStr,
+                           actualCountStr.get());
   return false;
 }
 
@@ -1668,6 +1673,8 @@ static bool
 FunctionArgumentTypeError(JSContext* cx,
                           uint32_t index, HandleValue typeVal, const char* reason)
 {
+  MOZ_ASSERT(JS::StringIsASCII(reason));
+
   JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, typeVal, valBytes);
   if (!valStr)
@@ -1675,36 +1682,40 @@ FunctionArgumentTypeError(JSContext* cx,
 
   IndexCString indexStr(index + 1);
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_ARG_TYPE_ERROR,
-                             indexStr.get(), reason, valStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_ARG_TYPE_ERROR,
+                           indexStr.get(), reason, valStr);
   return false;
 }
 
 static bool
 FunctionReturnTypeError(JSContext* cx, HandleValue type, const char* reason)
 {
+  MOZ_ASSERT(JS::StringIsASCII(reason));
+
   JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, type, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_RET_TYPE_ERROR, reason, valStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_RET_TYPE_ERROR, reason, valStr);
   return false;
 }
 
 static bool
 IncompatibleCallee(JSContext* cx, const char* funName, HandleObject actualObj)
 {
+  MOZ_ASSERT(JS::StringIsASCII(funName));
+
   JS::UniqueChars valBytes;
   RootedValue val(cx, ObjectValue(*actualObj));
   const char* valStr = CTypesToSourceForError(cx, val, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_INCOMPATIBLE_CALLEE, funName, valStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_INCOMPATIBLE_CALLEE, funName, valStr);
   return false;
 }
 
@@ -1712,23 +1723,25 @@ static bool
 IncompatibleThisProto(JSContext* cx, const char* funName,
                       const char* actualType)
 {
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_INCOMPATIBLE_THIS,
-                             funName, actualType);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            CTYPESMSG_INCOMPATIBLE_THIS,
+                            funName, actualType);
   return false;
 }
 
 static bool
 IncompatibleThisProto(JSContext* cx, const char* funName, HandleValue actualVal)
 {
+  MOZ_ASSERT(JS::StringIsASCII(funName));
+
   JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actualVal, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_INCOMPATIBLE_THIS_VAL,
-                             funName, "incompatible object", valStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_INCOMPATIBLE_THIS_VAL,
+                           funName, "incompatible object", valStr);
   return false;
 }
 
@@ -1745,14 +1758,17 @@ static bool
 IncompatibleThisType(JSContext* cx, const char* funName, const char* actualType,
                      HandleValue actualVal)
 {
+  MOZ_ASSERT(JS::StringIsASCII(funName));
+  MOZ_ASSERT(JS::StringIsASCII(actualType));
+
   JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actualVal, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_INCOMPATIBLE_THIS_VAL,
-                             funName, actualType, valStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_INCOMPATIBLE_THIS_VAL,
+                           funName, actualType, valStr);
   return false;
 }
 
@@ -1764,8 +1780,8 @@ InvalidIndexError(JSContext* cx, HandleValue val)
   if (!indexStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_INVALID_INDEX, indexStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_INVALID_INDEX, indexStr);
   return false;
 }
 
@@ -1796,8 +1812,8 @@ NonPrimitiveError(JSContext* cx, HandleObject typeObj)
   if (!typeStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_NON_PRIMITIVE, typeStr.get());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_NON_PRIMITIVE, typeStr.get());
   return false;
 }
 
@@ -1809,22 +1825,24 @@ NonStringBaseError(JSContext* cx, HandleValue thisVal)
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_NON_STRING_BASE, valStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_NON_STRING_BASE, valStr);
   return false;
 }
 
 static bool
 NullPointerError(JSContext* cx, const char* action, HandleObject obj)
 {
+  MOZ_ASSERT(JS::StringIsASCII(action));
+
   JS::UniqueChars valBytes;
   RootedValue val(cx, ObjectValue(*obj));
   const char* valStr = CTypesToSourceForError(cx, val, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_NULL_POINTER, action, valStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_NULL_POINTER, action, valStr);
   return false;
 }
 
@@ -1851,9 +1869,9 @@ PropNameNonStringError(JSContext* cx, HandleId id, HandleValue actual,
       return false;
   }
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_PROP_NONSTRING, propStr, valStr,
-                             (posStr ? posStr.get() : ""));
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_PROP_NONSTRING, propStr, valStr,
+                           (posStr ? posStr.get() : ""));
   return false;
 }
 
@@ -1868,26 +1886,30 @@ SizeOverflow(JSContext* cx, const char* name, const char* limit)
 static bool
 TypeError(JSContext* cx, const char* expected, HandleValue actual)
 {
+  MOZ_ASSERT(JS::StringIsASCII(expected));
+
   JS::UniqueChars bytes;
   const char* src = CTypesToSourceForError(cx, actual, bytes);
   if (!src)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_TYPE_ERROR, expected, src);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_TYPE_ERROR, expected, src);
   return false;
 }
 
 static bool
 TypeOverflow(JSContext* cx, const char* expected, HandleValue actual)
 {
+  MOZ_ASSERT(JS::StringIsASCII(expected));
+
   JS::UniqueChars valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_TYPE_OVERFLOW, valStr, expected);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_TYPE_OVERFLOW, valStr, expected);
   return false;
 }
 
@@ -1898,8 +1920,8 @@ UndefinedSizeCastError(JSContext* cx, HandleObject targetTypeObj)
   if (!targetTypeStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_UNDEFINED_SIZE_CAST, targetTypeStr.get());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_UNDEFINED_SIZE_CAST, targetTypeStr.get());
   return false;
 }
 
@@ -1919,24 +1941,26 @@ SizeMismatchCastError(JSContext* cx,
   IndexCString sourceSizeStr(sourceSize);
   IndexCString targetSizeStr(targetSize);
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_SIZE_MISMATCH_CAST,
-                             targetTypeStr.get(), sourceTypeStr.get(),
-                             targetSizeStr.get(), sourceSizeStr.get());
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_SIZE_MISMATCH_CAST,
+                           targetTypeStr.get(), sourceTypeStr.get(),
+                           targetSizeStr.get(), sourceSizeStr.get());
   return false;
 }
 
 static bool
 UndefinedSizePointerError(JSContext* cx, const char* action, HandleObject obj)
 {
+  MOZ_ASSERT(JS::StringIsASCII(action));
+
   JS::UniqueChars valBytes;
   RootedValue val(cx, ObjectValue(*obj));
   const char* valStr = CTypesToSourceForError(cx, val, valBytes);
   if (!valStr)
     return false;
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_UNDEFINED_SIZE, action, valStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_UNDEFINED_SIZE, action, valStr);
   return false;
 }
 
@@ -1950,8 +1974,8 @@ VariadicArgumentTypeError(JSContext* cx, uint32_t index, HandleValue actual)
 
   IndexCString indexStr(index + 1);
 
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                             CTYPESMSG_VARG_TYPE_ERROR, indexStr.get(), valStr);
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           CTYPESMSG_VARG_TYPE_ERROR, indexStr.get(), valStr);
   return false;
 }
 
