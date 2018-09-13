@@ -28,7 +28,6 @@ addLoadEvent(runTest);
 var gMisspeltWords;
 
 function getEditor() {
-  const Ci = SpecialPowers.Ci;
   var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
   return editingSession.getEditorForWindow(window);
 }

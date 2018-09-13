@@ -47,7 +47,7 @@ function clickEventHandler(aEvent) {
 //       are a lot of functions and SimpleTest.executeSoon()s.
 SimpleTest.waitForFocus(function() {
   SpecialPowers.pushPrefEnv({"set": [["middlemouse.contentLoadURL", false],
-                                    ["middlemouse.paste", true]]}, startTest);
+                                     ["middlemouse.paste", true]]}, startTest);
 });
 function startTest() {
   frameWindow = iframe.contentWindow;
@@ -160,7 +160,6 @@ function runInputTests3() {
 
 function runInputTests4() {
   var input = frameDocument.getElementById("input");
-  var editor1 = frameDocument.getElementById("editor1");
 
   // preventDefault() of input element's click event handler should prevent
   // middle click pasting in it.

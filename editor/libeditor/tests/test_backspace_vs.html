@@ -51,7 +51,7 @@ function test(edit, bsCount) {
   edit.focus();
   var sel = window.getSelection();
   sel.collapse(edit.childNodes[0], edit.textContent.length - 1);
-  for (i = 0; i < bsCount; ++i) {
+  for (let i = 0; i < bsCount; ++i) {
     synthesizeKey("KEY_Backspace");
   }
   is(edit.textContent, "ab", "The backspace key should delete the characters correctly");
@@ -92,7 +92,7 @@ function runTest() {
    * Once the Firefox Emoji font is ready, we can load that via @font-face
    * and expect these tests to work across all platforms.
    */
-  hasEmojiFont =
+  let hasEmojiFont =
     (navigator.platform.indexOf("Mac") == 0 &&
      /10\.([7-9]|[1-9][0-9])/.test(navigator.oscpu));
 

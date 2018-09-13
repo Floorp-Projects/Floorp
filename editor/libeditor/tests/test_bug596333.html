@@ -26,6 +26,7 @@ SimpleTest.waitForExplicitFinish();
 addLoadEvent(runTest);
 
 var gMisspeltWords;
+var onSpellCheck;
 
 function getEditor() {
   return SpecialPowers.wrap(document.getElementById("edit")).editor;
@@ -35,7 +36,6 @@ function append(str) {
   var edit = document.getElementById("edit");
   edit.focus();
   edit.selectionStart = edit.selectionEnd = edit.value.length;
-  var editor = getEditor();
   sendString(str);
 }
 
@@ -44,8 +44,7 @@ function getLoadContext() {
 }
 
 function paste(str) {
-  var edit = document.getElementById("edit");
-  var Cc = SpecialPowers.Cc, Ci = SpecialPowers.Ci;
+  var Cc = SpecialPowers.Cc;
   var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
   trans.init(getLoadContext());
   var s = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
@@ -105,8 +104,8 @@ function runTest() {
   var edit = document.getElementById("edit");
   edit.focus();
 
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
+  onSpellCheck = SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", null).onSpellCheck;
   onSpellCheck(edit, runOnFocus);
 }
 </script>

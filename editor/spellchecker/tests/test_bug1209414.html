@@ -42,6 +42,8 @@ var onSpellCheck =
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
+  /* global browserElement */
+  /* eslint-env mozilla/frame-script */
   script = SpecialPowers.loadChromeScript(function() {
     var chromeWin = browserElement.ownerGlobal.docShell
                     .rootTreeItem.domWindow
@@ -50,6 +52,7 @@ SimpleTest.waitForFocus(function() {
     contextMenu.addEventListener("popupshown",
                                  () => sendAsyncMessage("popupshown"));
 
+    // eslint-disable-next-line mozilla/use-services
     var dir = Cc["@mozilla.org/file/directory_service;1"]
                 .getService(Ci.nsIProperties)
                 .get("CurWorkD", Ci.nsIFile);
@@ -62,7 +65,7 @@ SimpleTest.waitForFocus(function() {
                      .getService(Ci.mozISpellCheckingEngine);
 
     // Install de-DE dictionary.
-    de_DE = dir.clone();
+    let de_DE = dir.clone();
     de_DE.append("de-DE");
     hunspell.addDirectory(de_DE);
 
@@ -101,6 +104,7 @@ SimpleTest.waitForFocus(function() {
 
     // Check that the German dictionary is loaded and that the spell check has worked.
     is(currentDictonary, "de-DE", "expected de-DE");
+    // eslint-disable-next-line no-useless-concat
     is(getMisspelledWords(editor_de), "today" + "is" + "a" + "good" + "day", "some misspelled words expected: today is a good day");
 
     // Focus again, just to be sure that the context-click won't trigger another spell check.
@@ -120,12 +124,14 @@ function handlePopup() {
   onSpellCheck(elem_de, function() {
     var inlineSpellChecker = editor_de.getInlineSpellChecker(true);
     var spellchecker = inlineSpellChecker.spellChecker;
+    let currentDictonary;
     try {
       currentDictonary = spellchecker.GetCurrentDictionary();
     } catch (e) {}
 
     // Check that the English dictionary is loaded and that the spell check has worked.
     is(currentDictonary, "en-US", "expected en-US");
+    // eslint-disable-next-line no-useless-concat
     is(getMisspelledWords(editor_de), "heute" + "ist" + "ein" + "guter", "some misspelled words expected: heute ist ein guter");
 
     // Remove the fake de_DE dictionary again.

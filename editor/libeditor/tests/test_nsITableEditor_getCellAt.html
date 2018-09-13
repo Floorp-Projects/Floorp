@@ -20,14 +20,14 @@ SimpleTest.waitForFocus(function() {
   let selection = document.getSelection();
 
   try {
-    let cell = SpecialPowers.unwrap(getTableEditor().getCellAt(undefined, 0, 0));
+    SpecialPowers.unwrap(getTableEditor().getCellAt(undefined, 0, 0));
     ok(false, "nsITableEditor.getCellAt(undefined) should cause throwing an exception when editor does not have Selection");
   } catch (e) {
     ok(true, "nsITableEditor.getCellAt(undefined) should cause throwing an exception when editor does not have Selection");
   }
 
   try {
-    let cell = SpecialPowers.unwrap(getTableEditor().getTableSize(null, 0, 0));
+    SpecialPowers.unwrap(getTableEditor().getTableSize(null, 0, 0));
     ok(false, "nsITableEditor.getCellAt(null) should cause throwing an exception when editor does not have Selection");
   } catch (e) {
     ok(true, "nsITableEditor.getCellAt(null) should cause throwing an exception when editor does not have Selection");

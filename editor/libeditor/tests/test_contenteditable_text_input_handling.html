@@ -14,7 +14,7 @@
   <p id="editor"contenteditable="true">content editable<input id="inputInEditor"><textarea id="textareaInEditor"></textarea></p>
 </div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -27,16 +27,15 @@ SimpleTest.waitForFocus(runTests);
 const kLF = !navigator.platform.indexOf("Win") ? "\r\n" : "\n";
 
 function runTests() {
-  var fm = Cc["@mozilla.org/focus-manager;1"].
-             getService(Ci.nsIFocusManager);
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", null);
+  var fm = Services.focus;
 
   var listener = {
     handleEvent: function _hv(aEvent) {
       aEvent.preventDefault(); // prevent the browser default behavior
     },
   };
-  var els = Cc["@mozilla.org/eventlistenerservice;1"].
-    getService(Ci.nsIEventListenerService);
+  var els = Services.els;
   els.addSystemEventListener(window, "keypress", listener, false);
 
   var staticContent = document.getElementById("static");
@@ -153,12 +152,12 @@ function runTests() {
     // When key events are fired on unfocused editor.
     function testDispatchedKeyEvent(aTarget) {
       var targetDescription = " (dispatched to " + aTarget._description + ")";
-      function dispatchKeyEvent(aKeyCode, aChar, aTarget) {
+      function dispatchKeyEvent(aKeyCode, aChar, aDispatchTarget) {
         var keyEvent = document.createEvent("KeyboardEvent");
         keyEvent.initKeyEvent("keypress", true, true, null, false, false,
                                false, false, aKeyCode,
                                aChar ? aChar.charCodeAt(0) : 0);
-        aTarget.dispatchEvent(keyEvent);
+        aDispatchTarget.dispatchEvent(keyEvent);
       }
 
       function checkValueForDispatchedKeyEvent(aElement, aInsertedText) {

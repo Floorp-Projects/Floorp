@@ -31,7 +31,8 @@ SimpleTest.waitForFocus(function() {
   isnot(tableNode.getAttribute("_moz_resizing"), "true",
          "_moz_resizing attribute shouldn't be true without object resizing");
 
-  ok(document.getElementById("tr2"), "id=tr2 should exist");
+  let tr2 = document.getElementById("tr2");
+  ok(tr2, "id=tr2 should exist");
   synthesizeMouse(tr2, 0, tr2.clientHeight / 2, {});
   ok(!document.getElementById("tr2"),
      "id=tr2 should be removed by a click in the row");

@@ -44,7 +44,6 @@ function runTests() {
     var html = "<p>Content</p>";
     for (var i = 0; i < tags.length; ++i) {
       var tag = tags[i];
-      var resultTag = tag.toUpperCase();
 
       doc.body.innerHTML = html;
       testFormatBlock(tag, false, shouldSucceed);

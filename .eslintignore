@@ -6,6 +6,7 @@
 **/crashtests/**
 # Also ignore reftest - specially crafted to produce expected output.
 **/reftest/**
+**/reftests/**
 
 # Exclude expected objdirs.
 obj*/**
@@ -14,7 +15,6 @@ obj*/**
 # If you are enabling a directory, please add directory specific exclusions
 # below.
 docshell/**
-editor/**
 extensions/cookie/**
 extensions/spellcheck/**
 extensions/universalchardet/**
@@ -257,6 +257,9 @@ dom/xul/**
 
 # Third-party
 dom/media/webvtt/**
+
+# Third-party
+editor/libeditor/tests/browserscope/**
 
 # Third-party
 gfx/ots/**

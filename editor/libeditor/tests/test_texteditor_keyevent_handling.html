@@ -15,7 +15,7 @@
   <textarea id="textarea"></textarea>
 </div>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -34,8 +34,7 @@ const kIsWin = navigator.platform.indexOf("Win") == 0;
 const kIsLinux = navigator.platform.indexOf("Linux") == 0;
 
 function runTests() {
-  var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"].
-    getService(SpecialPowers.Ci.nsIFocusManager);
+  var fm = SpecialPowers.Services.focus;
 
   var capturingPhase = { fired: false, prevented: false };
   var bubblingPhase = { fired: false, prevented: false };

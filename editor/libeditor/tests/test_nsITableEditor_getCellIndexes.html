@@ -43,7 +43,7 @@ SimpleTest.waitForFocus(function() {
 
   // Set id to "test" for the argument for getCellIndexes().
   // Set data-row and data-col to expected indexes.
-  kTests = [
+  const kTests = [
     '<table><tr><td id="test" data-row="0" data-col="0">cell1-1</td><td>cell1-2</td><td>cell1-3</tr><tr><td>cell2-1</td><td>cell2-2</td><td>cell2-3</td></tr><tr><td>cell3-1</td><td>cell3-2</td><td>cell3-3</td></tr></table>',
     '<table><tr><td>cell1-1</td><td id="test" data-row="0" data-col="1">cell1-2</td><td>cell1-3</tr><tr><td>cell2-1</td><td>cell2-2</td><td>cell2-3</td></tr><tr><td>cell3-1</td><td>cell3-2</td><td>cell3-3</td></tr></table>',
     '<table><tr><td>cell1-1</td><td>cell1-2</td><td id="test" data-row="0" data-col="2">cell1-3</tr><tr><td>cell2-1</td><td>cell2-2</td><td>cell2-3</td></tr><tr><td>cell3-1</td><td>cell3-2</td><td>cell3-3</td></tr></table>',

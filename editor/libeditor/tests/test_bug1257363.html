@@ -96,8 +96,8 @@ SimpleTest.waitForFocus(function() {
   div.focus();
   synthesizeMouse(div, 100, 2, {}); /* click behind and down */
 
-  var sel = window.getSelection();
-  var selRange = sel.getRangeAt(0);
+  sel = window.getSelection();
+  selRange = sel.getRangeAt(0);
   is(selRange.endContainer.nodeName, "#text", "selection should be at the end of text node");
   is(selRange.endOffset, 1, "offset should be 1");
 
@@ -136,8 +136,8 @@ SimpleTest.waitForFocus(function() {
   div.focus();
   synthesizeMouse(div, 100, 2, {}); /* click behind and down */
 
-  var sel = window.getSelection();
-  var selRange = sel.getRangeAt(0);
+  sel = window.getSelection();
+  selRange = sel.getRangeAt(0);
   is(selRange.endContainer.nodeName, "#text", "selection should be at the end of text node");
   is(selRange.endOffset, 1, "offset should be 1");
 
