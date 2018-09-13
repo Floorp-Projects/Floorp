@@ -353,11 +353,3 @@ XULSortServiceImpl::Sort(Element* aNode,
 
   return rv;
 }
-
-nsresult
-NS_NewXULSortService(nsIXULSortService** sortService)
-{
-  *sortService = new XULSortServiceImpl();
-  NS_ADDREF(*sortService);
-  return NS_OK;
-}
