@@ -328,9 +328,11 @@ int bitvector_alloc(bitvector_t *v, unsigned long length)
     l = length / bits_per_word * bytes_per_word;
 
     /* allocate memory, then set parameters */
-    if (l == 0)
+    if (l == 0) {
         v->word = NULL;
-    else {
+        v->length = 0;
+        return -1;
+    } else {
         v->word = (uint32_t *)srtp_crypto_alloc(l);
         if (v->word == NULL) {
             v->length = 0;
@@ -434,7 +436,7 @@ void srtp_cleanse(void *s, size_t len)
 
 void octet_string_set_to_zero(void *s, size_t len)
 {
-#ifdef OPENSSL
+#if defined(OPENSSL) && !defined(OPENSSL_CLEANSE_BROKEN)
     OPENSSL_cleanse(s, len);
 #else
     srtp_cleanse(s, len);
