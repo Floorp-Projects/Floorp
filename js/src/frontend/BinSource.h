@@ -136,7 +136,6 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     //
     // These methods return a (failed) JS::Result for convenience.
 
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseUndeclaredCapture(JSAtom* name);
     MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidClosedVar(JSAtom* name);
     MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingVariableInAssertedScope(JSAtom* name);
     MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingDirectEvalInAssertedScope();
@@ -182,6 +181,8 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
                                              ParseContext::Scope* scope,
                                              DeclarationKind declKind,
                                              bool isCaptured);
+
+    void captureFunctionName();
 
     // Map AssertedScopeKind and AssertedDeclaredKind for single binding to
     // corresponding ParseContext::Scope to store the binding, and
