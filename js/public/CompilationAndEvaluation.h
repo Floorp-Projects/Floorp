@@ -210,9 +210,18 @@ Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
            : CompileLatin1(cx, options, bytes, length, script);
 }
 
+/**
+ * Compile the UTF-8 contents of the given file into a script.  If the contents
+ * contain any malformed UTF-8, an error is reported.
+ *
+ * |script| is always set to the compiled script or to null in case of error.
+ *
+ * The |options.utf8| flag is asserted to be true.  At a future time this flag
+ * will be removed.
+ */
 extern JS_PUBLIC_API(bool)
-Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-        FILE* file, MutableHandle<JSScript*> script);
+CompileUtf8File(JSContext* cx, const ReadOnlyCompileOptions& options,
+                FILE* file, MutableHandle<JSScript*> script);
 
 extern JS_PUBLIC_API(bool)
 Compile(JSContext* cx, const ReadOnlyCompileOptions& options,

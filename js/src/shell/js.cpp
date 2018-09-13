@@ -877,7 +877,7 @@ RunFile(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
 
-        if (!JS::Compile(cx, options, file, &script)) {
+        if (!JS::CompileUtf8File(cx, options, file, &script)) {
             return false;
         }
         MOZ_ASSERT(script);

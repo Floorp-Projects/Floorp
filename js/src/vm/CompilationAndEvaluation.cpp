@@ -136,9 +136,11 @@ JS::CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 bool
-JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-            FILE* file, JS::MutableHandleScript script)
+JS::CompileUtf8File(JSContext* cx, const ReadOnlyCompileOptions& options,
+                    FILE* file, JS::MutableHandleScript script)
 {
+    MOZ_ASSERT(options.utf8,
+               "options.utf8 must be set when JS::CompileUtf8File is called");
     return CompileFile(cx, options, file, script);
 }
 
