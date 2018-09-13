@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Range.h"
@@ -447,13 +448,13 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     offset = extra_end;
   }
 
-#if 0
-  dt->SetTransform(gfx::Matrix());
-  float r = float(rand()) / RAND_MAX;
-  float g = float(rand()) / RAND_MAX;
-  float b = float(rand()) / RAND_MAX;
-  dt->FillRect(gfx::Rect(0, 0, aSize.width, aSize.height), gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
-#endif
+  if (gfxPrefs::WebRenderBlobPaintFlashing()) {
+    dt->SetTransform(gfx::Matrix());
+    float r = float(rand()) / RAND_MAX;
+    float g = float(rand()) / RAND_MAX;
+    float b = float(rand()) / RAND_MAX;
+    dt->FillRect(gfx::Rect(origin.x, origin.y, aSize.width, aSize.height), gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
+  }
 
   if (aDirtyRect) {
     dt->PopClip();
