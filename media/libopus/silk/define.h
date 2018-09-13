@@ -46,7 +46,6 @@ extern "C"
 /* Limits on bitrate */
 #define MIN_TARGET_RATE_BPS                     5000
 #define MAX_TARGET_RATE_BPS                     80000
-#define TARGET_RATE_TAB_SZ                      8
 
 /* LBRR thresholds */
 #define LBRR_NB_MIN_RATE_BPS                    12000
@@ -57,6 +56,11 @@ extern "C"
 #define NB_SPEECH_FRAMES_BEFORE_DTX             10      /* eq 200 ms */
 #define MAX_CONSECUTIVE_DTX                     20      /* eq 400 ms */
 #define DTX_ACTIVITY_THRESHOLD                  0.1f
+
+/* VAD decision */
+#define VAD_NO_DECISION                         -1
+#define VAD_NO_ACTIVITY                         0
+#define VAD_ACTIVITY                            1
 
 /* Maximum sampling frequency */
 #define MAX_FS_KHZ                              16

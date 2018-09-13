@@ -17,7 +17,7 @@ typedef mozilla::gfx::FontVariation gfxFontVariation;
 // OpenType Variation or Multiple-Master font.
 struct gfxFontVariationAxis {
     uint32_t mTag;
-    nsString mName; // may be empty
+    nsCString mName; // may be empty
     float    mMinValue;
     float    mMaxValue;
     float    mDefaultValue;
@@ -34,7 +34,7 @@ struct gfxFontVariationValue {
 // and a list of the corresponding <variation-axis, value> pairs
 // to be used.
 struct gfxFontVariationInstance {
-    nsString mName;
+    nsCString mName;
     nsTArray<gfxFontVariationValue> mValues;
 };
 

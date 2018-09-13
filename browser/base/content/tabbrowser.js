@@ -934,7 +934,7 @@ window._gBrowser = {
     // Update the URL bar.
     let webProgress = newBrowser.webProgress;
     this._callProgressListeners(null, "onLocationChange",
-                                [webProgress, null, newBrowser.currentURI, 0],
+                                [webProgress, null, newBrowser.currentURI, 0, true],
                                 true, false);
 
     let securityUI = newBrowser.securityUI;

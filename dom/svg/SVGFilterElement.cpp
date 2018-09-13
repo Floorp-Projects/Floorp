@@ -12,7 +12,9 @@
 #include "mozilla/dom/SVGFilterElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
+#include "nsQueryObject.h"
 #include "nsSVGUtils.h"
+#include "SVGObserverUtils.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Filter)
 
@@ -144,9 +146,10 @@ SVGFilterElement::Invalidate()
     nsAutoTObserverArray<nsIMutationObserver*, 1>::ForwardIterator iter(*observers);
     while (iter.HasMore()) {
       nsCOMPtr<nsIMutationObserver> obs(iter.GetNext());
-      nsCOMPtr<nsISVGFilterReference> filter = do_QueryInterface(obs);
-      if (filter)
+      RefPtr<SVGFilterObserver> filter = do_QueryObject(obs);
+      if (filter) {
         filter->Invalidate();
+      }
     }
   }
 }

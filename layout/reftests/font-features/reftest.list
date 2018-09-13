@@ -87,7 +87,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == font-features-across-spa
 # tests whether word cache is in use by testing for ignored space kerns
 == spacelookups-wordcache.html spacelookups-wordcache-ref.html
 # requires Japanese font with feature support, WinXP lacks one
-random-if(!winWidget&&!cocoaWidget) == fwid-spaces.html fwid-spaces-ref.html
+random-if(!winWidget&&!cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fwid-spaces.html fwid-spaces-ref.html # Bug 1392106
 # Arial/Times New Roman on Win7+/OSX 10.6+ have kerning pairs that include spaces
 random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != kerning-spaces-arial-nokern.html kerning-spaces-arial-default.html # Bug 1392106
 random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == kerning-spaces-arial-kern.html kerning-spaces-arial-default.html # Bug 1392106

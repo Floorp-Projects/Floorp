@@ -5378,9 +5378,7 @@ EventStateManager::RemoveNodeFromChainIfNeeded(EventStates aState,
 void
 EventStateManager::NativeAnonymousContentRemoved(nsIContent* aContent)
 {
-  // FIXME(bug 1450250): <svg:use> is nasty.
-  MOZ_ASSERT(aContent->IsRootOfNativeAnonymousSubtree() ||
-             aContent->GetParentNode()->IsSVGElement(nsGkAtoms::use));
+  MOZ_ASSERT(aContent->IsRootOfNativeAnonymousSubtree());
   RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_HOVER, aContent, false);
   RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_ACTIVE, aContent, false);
 }

@@ -270,7 +270,7 @@ private:
   };
 
   static already_AddRefed<gfxUserFontEntry> FindOrCreateUserFontEntryFromFontFace(
-                                                   const nsAString& aFamilyName,
+                                                   const nsACString& aFamilyName,
                                                    FontFace* aFontFace,
                                                    SheetType aSheetType);
 

@@ -577,7 +577,7 @@ async function test_tabNavigate() {
   Services.perms.remove(makeURI("http://example.com/"), "install");
   await loadPromise;
 
-  await removeTabAndWaitForNotificationClose();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 },
 
 async function test_urlBar() {

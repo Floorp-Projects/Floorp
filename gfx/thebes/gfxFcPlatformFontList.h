@@ -87,13 +87,13 @@ private:
 class gfxFontconfigFontEntry : public gfxFontEntry {
 public:
     // used for system fonts with explicit patterns
-    explicit gfxFontconfigFontEntry(const nsAString& aFaceName,
+    explicit gfxFontconfigFontEntry(const nsACString& aFaceName,
                                     FcPattern* aFontPattern,
                                     bool aIgnoreFcCharmap);
 
     // used for data fonts where the fontentry takes ownership
     // of the font data and the FT_Face
-    explicit gfxFontconfigFontEntry(const nsAString& aFaceName,
+    explicit gfxFontconfigFontEntry(const nsACString& aFaceName,
                                     WeightRange aWeight,
                                     StretchRange aStretch,
                                     SlantStyleRange aStyle,
@@ -102,7 +102,7 @@ public:
                                     FT_Face aFace);
 
     // used for @font-face local system fonts with explicit patterns
-    explicit gfxFontconfigFontEntry(const nsAString& aFaceName,
+    explicit gfxFontconfigFontEntry(const nsACString& aFaceName,
                                     FcPattern* aFontPattern,
                                     WeightRange aWeight,
                                     StretchRange aStretch,
@@ -208,7 +208,7 @@ protected:
 
 class gfxFontconfigFontFamily : public gfxFontFamily {
 public:
-    explicit gfxFontconfigFontFamily(const nsAString& aName) :
+    explicit gfxFontconfigFontFamily(const nsACString& aName) :
         gfxFontFamily(aName),
         mContainsAppFonts(false),
         mHasNonScalableFaces(false),
@@ -292,27 +292,27 @@ public:
         InfallibleTArray<mozilla::dom::SystemFontListEntry>* retValue);
 
     gfxFontEntry*
-    LookupLocalFont(const nsAString& aFontName,
+    LookupLocalFont(const nsACString& aFontName,
                     WeightRange aWeightForEntry,
                     StretchRange aStretchForEntry,
                     SlantStyleRange aStyleForEntry) override;
 
     gfxFontEntry*
-    MakePlatformFont(const nsAString& aFontName,
+    MakePlatformFont(const nsACString& aFontName,
                      WeightRange aWeightForEntry,
                      StretchRange aStretchForEntry,
                      SlantStyleRange aStyleForEntry,
                      const uint8_t* aFontData,
                      uint32_t aLength) override;
 
-    bool FindAndAddFamilies(const nsAString& aFamily,
+    bool FindAndAddFamilies(const nsACString& aFamily,
                             nsTArray<FamilyAndGeneric>* aOutput,
                             FindFamiliesFlags aFlags,
                             gfxFontStyle* aStyle = nullptr,
                             gfxFloat aDevToCssSize = 1.0) override;
 
-    bool GetStandardFamilyName(const nsAString& aFontName,
-                               nsAString& aFamilyName) override;
+    bool GetStandardFamilyName(const nsCString& aFontName,
+                               nsACString& aFamilyName) override;
 
     FcConfig* GetLastConfig() const { return mLastConfig; }
 
@@ -354,7 +354,7 @@ protected:
 
     // Helper for above, to add a single font pattern.
     void AddPatternToFontList(FcPattern* aFont, FcChar8*& aLastFamilyName,
-                              nsAString& aFamilyName,
+                              nsACString& aFamilyName,
                               RefPtr<gfxFontconfigFontFamily>& aFontFamily,
                               bool aAppFonts);
 
@@ -371,7 +371,7 @@ protected:
     virtual gfxFontFamily*
     GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
 
-    gfxFontFamily* CreateFontFamily(const nsAString& aName) const override;
+    gfxFontFamily* CreateFontFamily(const nsACString& aName) const override;
 
     // helper method for finding an appropriate lang string
     bool TryLangForGroup(const nsACString& aOSLang, nsAtom* aLangGroup,
@@ -385,7 +385,7 @@ protected:
 
     // to avoid enumerating all fonts, maintain a mapping of local font
     // names to family
-    nsBaseHashtable<nsStringHashKey,
+    nsBaseHashtable<nsCStringHashKey,
                     nsCountedRef<FcPattern>,
                     FcPattern*> mLocalNames;
 

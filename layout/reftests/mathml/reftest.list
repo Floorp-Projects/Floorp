@@ -1,11 +1,11 @@
 == dir-1.html dir-1-ref.html
-== dir-2.html dir-2-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir-2.html dir-2-ref.html # Bug 1392106
 random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
 == dir-4.html dir-4-ref.html
 == dir-5.html dir-5-ref.html
 == dir-6.html dir-6-ref.html
 == dir-6a.html dir-6a-ref.html
-== dir-7.html dir-7-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir-7.html dir-7-ref.html # Bug 1392106
 fails == dir-8.html dir-8-ref.html
 fails == dir-9.html dir-9-ref.html # Bug 787215
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir-10.html dir-10-ref.html # Bug 1392106
@@ -128,7 +128,7 @@ fails-if(gtkWidget||Android) random-if(winWidget) == semantics-1.xhtml semantics
 == mathbackground-4.xml mathbackground-4-ref.xml
 == mstyle-1.xhtml mstyle-1-ref.xhtml
 == mstyle-2.xhtml mstyle-2-ref.xhtml
-fuzzy-if(OSX,0-16,0-8) == mstyle-3.xhtml mstyle-3-ref.xhtml
+fuzzy-if(OSX,0-16,0-8) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mstyle-3.xhtml mstyle-3-ref.xhtml # Bug 1392106
 == mstyle-4.xhtml mstyle-4-ref.xhtml
 == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
 == scale-stretchy-1.xhtml scale-stretchy-1-ref.xhtml
