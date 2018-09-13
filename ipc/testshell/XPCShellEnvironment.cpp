@@ -162,7 +162,7 @@ Load(JSContext *cx,
         options.setUTF8(true)
                .setFileAndLine(filename.get(), 1);
         JS::Rooted<JSScript*> script(cx);
-        bool ok = JS::Compile(cx, options, file, &script);
+        bool ok = JS::CompileUtf8File(cx, options, file, &script);
         fclose(file);
         if (!ok)
             return false;
@@ -304,7 +304,7 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
         options.setUTF8(true)
                .setFileAndLine(filename, 1);
         JS::Rooted<JSScript*> script(cx);
-        if (JS::Compile(cx, options, file, &script))
+        if (JS::CompileUtf8File(cx, options, file, &script))
             (void)JS_ExecuteScript(cx, script, &result);
 
         return;
