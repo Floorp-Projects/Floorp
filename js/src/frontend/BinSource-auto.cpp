@@ -4489,6 +4489,7 @@ BinASTParser<Tok>::parseInterfaceDoWhileStatement(const size_t start, const BinK
 /*
  interface EagerArrowExpressionWithExpression : Node {
     bool isAsync;
+    unsigned long length;
     ArrowExpressionContentsWithExpression contents;
  }
 */
@@ -4520,6 +4521,7 @@ BinASTParser<Tok>::parseInterfaceEagerArrowExpressionWithExpression(const size_t
 /*
  interface EagerArrowExpressionWithFunctionBody : Node {
     bool isAsync;
+    unsigned long length;
     FrozenArray<Directive> directives;
     ArrowExpressionContentsWithFunctionBody contents;
  }
@@ -4554,6 +4556,7 @@ BinASTParser<Tok>::parseInterfaceEagerArrowExpressionWithFunctionBody(const size
     bool isAsync;
     bool isGenerator;
     BindingIdentifier name;
+    unsigned long length;
     FrozenArray<Directive> directives;
     FunctionOrMethodContents contents;
  }
@@ -4583,7 +4586,7 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(const size_t start, co
     BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-    const BinField expected_fields[5] = { BinField::IsAsync, BinField::IsGenerator, BinField::Name, BinField::Directives, BinField::Contents };
+    const BinField expected_fields[6] = { BinField::IsAsync, BinField::IsGenerator, BinField::Name, BinField::Length, BinField::Directives, BinField::Contents };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
     const auto syntax = FunctionSyntaxKind::Statement;
@@ -4593,6 +4596,8 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(const size_t start, co
     BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool());
 
     BINJS_MOZ_TRY_DECL(name, parseBindingIdentifier());
+
+    BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong());
 
     BINJS_MOZ_TRY_DECL(directives, parseListOfDirective());
 
@@ -4616,7 +4621,7 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(const size_t start, co
     ListNode* params;
     ListNode* tmpBody;
     MOZ_TRY(parseFunctionOrMethodContents(
-        &params, &tmpBody));
+        length, &params, &tmpBody));
     BINJS_MOZ_TRY_DECL(body, appendDirectivesToBody(tmpBody, directives));
     BINJS_TRY_DECL(lexicalScopeData, NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
     BINJS_TRY_VAR(body, factory_.newLexicalScope(*lexicalScopeData, body));
@@ -4630,6 +4635,7 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(const size_t start, co
     bool isAsync;
     bool isGenerator;
     BindingIdentifier? name;
+    unsigned long length;
     FrozenArray<Directive> directives;
     FunctionExpressionContents contents;
  }
@@ -4659,7 +4665,7 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(const size_t start, con
     BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-    const BinField expected_fields[5] = { BinField::IsAsync, BinField::IsGenerator, BinField::Name, BinField::Directives, BinField::Contents };
+    const BinField expected_fields[6] = { BinField::IsAsync, BinField::IsGenerator, BinField::Name, BinField::Length, BinField::Directives, BinField::Contents };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
     const auto syntax = FunctionSyntaxKind::Expression;
@@ -4669,6 +4675,8 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(const size_t start, con
     BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool());
 
     BINJS_MOZ_TRY_DECL(name, parseOptionalBindingIdentifier());
+
+    BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong());
 
     BINJS_MOZ_TRY_DECL(directives, parseListOfDirective());
 
@@ -4692,7 +4700,7 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(const size_t start, con
     ListNode* params;
     ListNode* tmpBody;
     MOZ_TRY(parseFunctionExpressionContents(
-        &params, &tmpBody));
+        length, &params, &tmpBody));
     BINJS_MOZ_TRY_DECL(body, appendDirectivesToBody(tmpBody, directives));
     BINJS_TRY_DECL(lexicalScopeData, NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
     BINJS_TRY_VAR(body, factory_.newLexicalScope(*lexicalScopeData, body));
@@ -4740,6 +4748,7 @@ BinASTParser<Tok>::parseInterfaceEagerGetter(const size_t start, const BinKind k
     const bool isGenerator = false;
     const bool isAsync = false;
     const auto accessorType = AccessorType::Getter;
+    const uint32_t length = 0;
 
     BINJS_MOZ_TRY_DECL(name, parsePropertyName());
 
@@ -4765,7 +4774,7 @@ BinASTParser<Tok>::parseInterfaceEagerGetter(const size_t start, const BinKind k
     ListNode* params;
     ListNode* tmpBody;
     MOZ_TRY(parseGetterContents(
-        &params, &tmpBody));
+        length, &params, &tmpBody));
     BINJS_MOZ_TRY_DECL(body, appendDirectivesToBody(tmpBody, directives));
     BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
     BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, accessorType));
@@ -4778,6 +4787,7 @@ BinASTParser<Tok>::parseInterfaceEagerGetter(const size_t start, const BinKind k
     bool isAsync;
     bool isGenerator;
     PropertyName name;
+    unsigned long length;
     FrozenArray<Directive> directives;
     FunctionOrMethodContents contents;
  }
@@ -4807,7 +4817,7 @@ BinASTParser<Tok>::parseInterfaceEagerMethod(const size_t start, const BinKind k
     BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-    const BinField expected_fields[5] = { BinField::IsAsync, BinField::IsGenerator, BinField::Name, BinField::Directives, BinField::Contents };
+    const BinField expected_fields[6] = { BinField::IsAsync, BinField::IsGenerator, BinField::Name, BinField::Length, BinField::Directives, BinField::Contents };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
     const auto syntax = FunctionSyntaxKind::Method;
@@ -4818,6 +4828,8 @@ BinASTParser<Tok>::parseInterfaceEagerMethod(const size_t start, const BinKind k
     BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool());
 
     BINJS_MOZ_TRY_DECL(name, parsePropertyName());
+
+    BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong());
 
     BINJS_MOZ_TRY_DECL(directives, parseListOfDirective());
 
@@ -4841,7 +4853,7 @@ BinASTParser<Tok>::parseInterfaceEagerMethod(const size_t start, const BinKind k
     ListNode* params;
     ListNode* tmpBody;
     MOZ_TRY(parseFunctionOrMethodContents(
-        &params, &tmpBody));
+        length, &params, &tmpBody));
     BINJS_MOZ_TRY_DECL(body, appendDirectivesToBody(tmpBody, directives));
     BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
     BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, accessorType));
@@ -4852,6 +4864,7 @@ BinASTParser<Tok>::parseInterfaceEagerMethod(const size_t start, const BinKind k
 /*
  interface EagerSetter : Node {
     PropertyName name;
+    unsigned long length;
     FrozenArray<Directive> directives;
     SetterContents contents;
  }
@@ -4881,7 +4894,7 @@ BinASTParser<Tok>::parseInterfaceEagerSetter(const size_t start, const BinKind k
     BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-    const BinField expected_fields[3] = { BinField::Name, BinField::Directives, BinField::Contents };
+    const BinField expected_fields[4] = { BinField::Name, BinField::Length, BinField::Directives, BinField::Contents };
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)
     const auto syntax = FunctionSyntaxKind::Setter;
@@ -4890,6 +4903,8 @@ BinASTParser<Tok>::parseInterfaceEagerSetter(const size_t start, const BinKind k
     const auto accessorType = AccessorType::Setter;
 
     BINJS_MOZ_TRY_DECL(name, parsePropertyName());
+
+    BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong());
 
     BINJS_MOZ_TRY_DECL(directives, parseListOfDirective());
 
@@ -4913,7 +4928,7 @@ BinASTParser<Tok>::parseInterfaceEagerSetter(const size_t start, const BinKind k
     ListNode* params;
     ListNode* tmpBody;
     MOZ_TRY(parseSetterContents(
-        &params, &tmpBody));
+        length, &params, &tmpBody));
     BINJS_MOZ_TRY_DECL(body, appendDirectivesToBody(tmpBody, directives));
     BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
     BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, accessorType));
@@ -5479,6 +5494,7 @@ BinASTParser<Tok>::parseInterfaceFormalParameters(const size_t start, const BinK
 */
 template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::parseFunctionExpressionContents(
+        uint32_t funLength,
         ListNode** paramsOut,
         ListNode** bodyOut)
 {
@@ -5492,7 +5508,7 @@ BinASTParser<Tok>::parseFunctionExpressionContents(
     }
     const auto start = tokenizer_->offset();
     BINJS_MOZ_TRY_DECL(result, parseInterfaceFunctionExpressionContents(start, kind, fields,
-        paramsOut, bodyOut));
+        funLength, paramsOut, bodyOut));
     MOZ_TRY(guard.done());
 
     return result;
@@ -5500,6 +5516,7 @@ BinASTParser<Tok>::parseFunctionExpressionContents(
 
 template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::parseInterfaceFunctionExpressionContents(const size_t start, const BinKind kind, const BinFields& fields,
+        uint32_t funLength,
         ListNode** paramsOut,
         ListNode** bodyOut)
 {
@@ -5512,7 +5529,14 @@ BinASTParser<Tok>::parseInterfaceFunctionExpressionContents(const size_t start, 
 #endif // defined(DEBUG)
 
     BINJS_MOZ_TRY_DECL(isFunctionNameCaptured, tokenizer_->readBool());
-    (void) isFunctionNameCaptured;
+    // Per spec, isFunctionNameCaptured can be true for anonymous
+    // function.  Check isFunctionNameCaptured only for named
+    // function.
+    if (parseContext_->functionBox()->function()->isNamedLambda() &&
+        isFunctionNameCaptured)
+    {
+        captureFunctionName();
+    }
     BINJS_MOZ_TRY_DECL(isThisCaptured, tokenizer_->readBool());
     // TODO: Use this in BinASTParser::buildFunction.
     (void) isThisCaptured;
@@ -5521,6 +5545,7 @@ BinASTParser<Tok>::parseInterfaceFunctionExpressionContents(const size_t start, 
         &positionalParams));
 
     BINJS_MOZ_TRY_DECL(params, parseFormalParameters());
+    MOZ_TRY(checkFunctionLength(funLength));
     MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
     MOZ_TRY(parseAssertedVarScope());
 
@@ -5544,6 +5569,7 @@ BinASTParser<Tok>::parseInterfaceFunctionExpressionContents(const size_t start, 
 */
 template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::parseFunctionOrMethodContents(
+        uint32_t funLength,
         ListNode** paramsOut,
         ListNode** bodyOut)
 {
@@ -5557,7 +5583,7 @@ BinASTParser<Tok>::parseFunctionOrMethodContents(
     }
     const auto start = tokenizer_->offset();
     BINJS_MOZ_TRY_DECL(result, parseInterfaceFunctionOrMethodContents(start, kind, fields,
-        paramsOut, bodyOut));
+        funLength, paramsOut, bodyOut));
     MOZ_TRY(guard.done());
 
     return result;
@@ -5565,6 +5591,7 @@ BinASTParser<Tok>::parseFunctionOrMethodContents(
 
 template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::parseInterfaceFunctionOrMethodContents(const size_t start, const BinKind kind, const BinFields& fields,
+        uint32_t funLength,
         ListNode** paramsOut,
         ListNode** bodyOut)
 {
@@ -5584,6 +5611,7 @@ BinASTParser<Tok>::parseInterfaceFunctionOrMethodContents(const size_t start, co
         &positionalParams));
 
     BINJS_MOZ_TRY_DECL(params, parseFormalParameters());
+    MOZ_TRY(checkFunctionLength(funLength));
     MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
     MOZ_TRY(parseAssertedVarScope());
 
@@ -5605,6 +5633,7 @@ BinASTParser<Tok>::parseInterfaceFunctionOrMethodContents(const size_t start, co
 */
 template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::parseGetterContents(
+        uint32_t funLength,
         ListNode** paramsOut,
         ListNode** bodyOut)
 {
@@ -5618,7 +5647,7 @@ BinASTParser<Tok>::parseGetterContents(
     }
     const auto start = tokenizer_->offset();
     BINJS_MOZ_TRY_DECL(result, parseInterfaceGetterContents(start, kind, fields,
-        paramsOut, bodyOut));
+        funLength, paramsOut, bodyOut));
     MOZ_TRY(guard.done());
 
     return result;
@@ -5626,6 +5655,7 @@ BinASTParser<Tok>::parseGetterContents(
 
 template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::parseInterfaceGetterContents(const size_t start, const BinKind kind, const BinFields& fields,
+        uint32_t funLength,
         ListNode** paramsOut,
         ListNode** bodyOut)
 {
@@ -5889,6 +5919,7 @@ BinASTParser<Tok>::parseInterfaceLabelledStatement(const size_t start, const Bin
 /*
  interface LazyArrowExpressionWithExpression : Node {
     bool isAsync;
+    unsigned long length;
     ArrowExpressionContentsWithExpression contents;
  }
 */
@@ -5920,6 +5951,7 @@ BinASTParser<Tok>::parseInterfaceLazyArrowExpressionWithExpression(const size_t 
 /*
  interface LazyArrowExpressionWithFunctionBody : Node {
     bool isAsync;
+    unsigned long length;
     FrozenArray<Directive> directives;
     ArrowExpressionContentsWithFunctionBody contents;
  }
@@ -5954,6 +5986,7 @@ BinASTParser<Tok>::parseInterfaceLazyArrowExpressionWithFunctionBody(const size_
     bool isAsync;
     bool isGenerator;
     BindingIdentifier name;
+    unsigned long length;
     FrozenArray<Directive> directives;
     FunctionOrMethodContents contents;
  }
@@ -5988,6 +6021,7 @@ BinASTParser<Tok>::parseInterfaceLazyFunctionDeclaration(const size_t start, con
     bool isAsync;
     bool isGenerator;
     BindingIdentifier? name;
+    unsigned long length;
     FrozenArray<Directive> directives;
     FunctionExpressionContents contents;
  }
@@ -6054,6 +6088,7 @@ BinASTParser<Tok>::parseInterfaceLazyGetter(const size_t start, const BinKind ki
     bool isAsync;
     bool isGenerator;
     PropertyName name;
+    unsigned long length;
     FrozenArray<Directive> directives;
     FunctionOrMethodContents contents;
  }
@@ -6086,6 +6121,7 @@ BinASTParser<Tok>::parseInterfaceLazyMethod(const size_t start, const BinKind ki
 /*
  interface LazySetter : Node {
     PropertyName name;
+    unsigned long length;
     FrozenArray<Directive> directives;
     SetterContents contents;
  }
@@ -6729,6 +6765,7 @@ BinASTParser<Tok>::parseInterfaceScript(const size_t start, const BinKind kind, 
 */
 template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::parseSetterContents(
+        uint32_t funLength,
         ListNode** paramsOut,
         ListNode** bodyOut)
 {
@@ -6742,7 +6779,7 @@ BinASTParser<Tok>::parseSetterContents(
     }
     const auto start = tokenizer_->offset();
     BINJS_MOZ_TRY_DECL(result, parseInterfaceSetterContents(start, kind, fields,
-        paramsOut, bodyOut));
+        funLength, paramsOut, bodyOut));
     MOZ_TRY(guard.done());
 
     return result;
@@ -6750,6 +6787,7 @@ BinASTParser<Tok>::parseSetterContents(
 
 template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::parseInterfaceSetterContents(const size_t start, const BinKind kind, const BinFields& fields,
+        uint32_t funLength,
         ListNode** paramsOut,
         ListNode** bodyOut)
 {

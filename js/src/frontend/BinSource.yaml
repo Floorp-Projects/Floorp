@@ -622,7 +622,14 @@ FunctionExpressionContents:
                 (void) isThisCaptured;
         isFunctionNameCaptured:
             after: |
-                (void) isFunctionNameCaptured;
+                // Per spec, isFunctionNameCaptured can be true for anonymous
+                // function.  Check isFunctionNameCaptured only for named
+                // function.
+                if (parseContext_->functionBox()->function()->isNamedLambda() &&
+                    isFunctionNameCaptured)
+                {
+                    captureFunctionName();
+                }
         parameterScope:
             before: |
                 Rooted<GCVector<JSAtom*>> positionalParams(cx_, GCVector<JSAtom*>(cx_));

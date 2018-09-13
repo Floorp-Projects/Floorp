@@ -329,6 +329,7 @@ const size_t BINKIND_LIMIT = 198;
     F(Kind, "kind") \
     F(Label, "label") \
     F(Left, "left") \
+    F(Length, "length") \
     F(Method, "method") \
     F(ModuleSpecifier, "moduleSpecifier") \
     F(Name, "name") \
@@ -365,7 +366,7 @@ enum class BinField {
 };
 
 // The number of distinct values of BinField.
-const size_t BINFIELD_LIMIT = 68;
+const size_t BINFIELD_LIMIT = 69;
 
 
 

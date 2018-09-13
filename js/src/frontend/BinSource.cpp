@@ -262,6 +262,20 @@ BinASTParser<Tok>::addScopeName(AssertedScopeKind scopeKind, HandleAtom name,
     return Ok();
 }
 
+template<typename Tok> void
+BinASTParser<Tok>::captureFunctionName()
+{
+    MOZ_ASSERT(parseContext_->isFunctionBox());
+    MOZ_ASSERT(parseContext_->functionBox()->function()->isNamedLambda());
+
+    RootedAtom funName(cx_, parseContext_->functionBox()->function()->explicitName());
+    MOZ_ASSERT(funName);
+
+    auto ptr = parseContext_->namedLambdaScope().lookupDeclaredName(funName);
+    MOZ_ASSERT(ptr);
+    ptr->value()->setClosedOver();
+}
+
 template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::getDeclaredScope(AssertedScopeKind scopeKind, AssertedDeclaredKind kind,
                                     ParseContext::Scope*& scope, DeclarationKind& declKind)
@@ -451,13 +465,6 @@ template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
 BinASTParser<Tok>::raiseInvalidClosedVar(JSAtom* name)
 {
     return raiseError("Captured variable was not declared as captured");
-}
-
-template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseUndeclaredCapture(JSAtom* name)
-{
-    // As below, don't put the name in a message.
-    return raiseError("Captured variable undeclared in scope");
 }
 
 template<typename Tok> mozilla::GenericErrorResult<JS::Error&>

@@ -243,12 +243,15 @@ JS::Result<ParseNode*> parseForOfStatement();
 JS::Result<ParseNode*> parseForStatement();
 JS::Result<ListNode*> parseFormalParameters();
 JS::Result<Ok> parseFunctionExpressionContents(
+    uint32_t funLength,
     ListNode** paramsOut,
     ListNode** bodyOut);
 JS::Result<Ok> parseFunctionOrMethodContents(
+    uint32_t funLength,
     ListNode** paramsOut,
     ListNode** bodyOut);
 JS::Result<Ok> parseGetterContents(
+    uint32_t funLength,
     ListNode** paramsOut,
     ListNode** bodyOut);
 JS::Result<ParseNode*> parseIdentifierExpression();
@@ -280,6 +283,7 @@ JS::Result<ParseNode*> parseObjectExpression();
 JS::Result<ParseNode*> parseReturnStatement();
 JS::Result<ParseNode*> parseScript();
 JS::Result<Ok> parseSetterContents(
+    uint32_t funLength,
     ListNode** paramsOut,
     ListNode** bodyOut);
 JS::Result<ParseNode*> parseShorthandProperty();
@@ -380,12 +384,15 @@ JS::Result<ParseNode*> parseInterfaceForOfStatement(const size_t start, const Bi
 JS::Result<ParseNode*> parseInterfaceForStatement(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<ListNode*> parseInterfaceFormalParameters(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<Ok> parseInterfaceFunctionExpressionContents(const size_t start, const BinKind kind, const BinFields& fields,
+    uint32_t funLength,
     ListNode** paramsOut,
     ListNode** bodyOut);
 JS::Result<Ok> parseInterfaceFunctionOrMethodContents(const size_t start, const BinKind kind, const BinFields& fields,
+    uint32_t funLength,
     ListNode** paramsOut,
     ListNode** bodyOut);
 JS::Result<Ok> parseInterfaceGetterContents(const size_t start, const BinKind kind, const BinFields& fields,
+    uint32_t funLength,
     ListNode** paramsOut,
     ListNode** bodyOut);
 JS::Result<ParseNode*> parseInterfaceIdentifierExpression(const size_t start, const BinKind kind, const BinFields& fields);
@@ -417,6 +424,7 @@ JS::Result<ParseNode*> parseInterfaceObjectExpression(const size_t start, const 
 JS::Result<ParseNode*> parseInterfaceReturnStatement(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<ParseNode*> parseInterfaceScript(const size_t start, const BinKind kind, const BinFields& fields);
 JS::Result<Ok> parseInterfaceSetterContents(const size_t start, const BinKind kind, const BinFields& fields,
+    uint32_t funLength,
     ListNode** paramsOut,
     ListNode** bodyOut);
 JS::Result<ParseNode*> parseInterfaceShorthandProperty(const size_t start, const BinKind kind, const BinFields& fields);
