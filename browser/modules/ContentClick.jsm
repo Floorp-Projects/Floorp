@@ -44,6 +44,13 @@ var ContentClick = {
       return;
     }
 
+    // If the browser is not in a place where we can open links, bail out.
+    // This can happen in osx sheets, dialogs, etc. that are not browser
+    // windows.  Specifically the payments UI is in an osx sheet.
+    if (window.openLinkIn === undefined) {
+      return;
+    }
+
     // Mark the page as a user followed link.  This is done so that history can
     // distinguish automatic embed visits from user activated ones.  For example
     // pages loaded in frames are embed visits and lost with the session, while
