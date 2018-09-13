@@ -770,16 +770,42 @@ InitTraceLog()
 extern "C" {
 
 static void
+EnsureWrite(FILE* aStream, const char* aBuf, size_t aLen)
+{
+#ifdef XP_WIN
+  int fd = _fileno(aStream);
+#else
+  int fd = fileno(aStream);
+#endif
+  while (aLen > 0) {
+#ifdef XP_WIN
+    auto written = _write(fd, aBuf, aLen);
+#else
+    auto written = write(fd, aBuf, aLen);
+#endif
+    if (written <= 0 || size_t(written) > aLen) {
+      break;
+    }
+    aBuf += written;
+    aLen -= written;
+  }
+}
+
+static void
 PrintStackFrame(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
 {
   FILE* stream = (FILE*)aClosure;
   MozCodeAddressDetails details;
-  char buf[1024];
+  static const size_t buflen = 1024;
+  char buf[buflen + 1];  // 1 for trailing '\n'
 
   MozDescribeCodeAddress(aPC, &details);
-  MozFormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
-  fprintf(stream, "%s\n", buf);
+  MozFormatCodeAddressDetails(buf, buflen, aFrameNumber, aPC, &details);
+  size_t len = std::min(strlen(buf), buflen + 1 - 2);
+  buf[len++] = '\n';
+  buf[len] = '\0';
   fflush(stream);
+  EnsureWrite(stream, buf, len);
 }
 
 static void
@@ -788,10 +814,13 @@ PrintStackFrameCached(uint32_t aFrameNumber, void* aPC, void* aSP,
 {
   auto stream = static_cast<FILE*>(aClosure);
   static const size_t buflen = 1024;
-  char buf[buflen];
-  gCodeAddressService->GetLocation(aFrameNumber, aPC, buf, buflen);
-  fprintf(stream, "    %s\n", buf);
+  char buf[buflen + 5] = "    ";  // 5 for leading "    " and trailing '\n'
+  gCodeAddressService->GetLocation(aFrameNumber, aPC, buf + 4, buflen);
+  size_t len = std::min(strlen(buf), buflen + 5 - 2);
+  buf[len++] = '\n';
+  buf[len] = '\0';
   fflush(stream);
+  EnsureWrite(stream, buf, len);
 }
 
 static void
