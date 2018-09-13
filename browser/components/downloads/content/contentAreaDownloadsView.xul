@@ -47,5 +47,6 @@
                  mousethrough="always"/>
   </stack>
 #include downloadsCommands.inc.xul
+#include downloadsStrings.inc.xul
 #include downloadsContextMenu.inc.xul
 </window>
