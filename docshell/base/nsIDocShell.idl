@@ -1157,28 +1157,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   const unsigned long TOUCHEVENTS_OVERRIDE_NONE = 2;
 
   /**
-   * Override platform/pref default behaviour and force-disable support for
-   * <meta name="viewport">.
-   */
-  const unsigned long META_VIEWPORT_OVERRIDE_DISABLED = 0;
-  /**
-   * Override platform/pref default behaviour and force-enable support for
-   * <meta name="viewport">.
-   */
-  const unsigned long META_VIEWPORT_OVERRIDE_ENABLED = 1;
-  /**
-   * Don't override the platform/pref default behaviour for support for
-   * <meta name="viewport">.
-   */
-  const unsigned long META_VIEWPORT_OVERRIDE_NONE = 2;
-  /**
-   * This allows chrome to override the default choice of whether the
-   * <meta name="viewport"> tag is respected in a specific docshell.
-   * Possible values are listed above.
-   */
-  attribute unsigned long metaViewportOverride;
-
-  /**
    * This value is `true` if its corresponding unit of related browsing contexts
    * (TabGroup) contains only 1 toplevel window, and that window is the outer
    * window corresponding to this docshell.

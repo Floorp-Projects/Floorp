@@ -337,7 +337,6 @@ nsDocShell::nsDocShell()
   , mDisplayMode(nsIDocShell::DISPLAY_MODE_BROWSER)
   , mJSRunToCompletionDepth(0)
   , mTouchEventsOverride(nsIDocShell::TOUCHEVENTS_OVERRIDE_NONE)
-  , mMetaViewportOverride(nsIDocShell::META_VIEWPORT_OVERRIDE_NONE)
   , mFullscreenAllowed(CHECK_ATTRIBUTES)
   , mCreatingDocument(false)
 #ifdef DEBUG
@@ -2642,36 +2641,6 @@ nsDocShell::SetTouchEventsOverride(uint32_t aTouchEventsOverride)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetMetaViewportOverride(uint32_t* aMetaViewportOverride)
-{
-  NS_ENSURE_ARG_POINTER(aMetaViewportOverride);
-
-  *aMetaViewportOverride = mMetaViewportOverride;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetMetaViewportOverride(uint32_t aMetaViewportOverride)
-{
-  if (!(aMetaViewportOverride == nsIDocShell::META_VIEWPORT_OVERRIDE_NONE ||
-        aMetaViewportOverride == nsIDocShell::META_VIEWPORT_OVERRIDE_ENABLED ||
-        aMetaViewportOverride == nsIDocShell::META_VIEWPORT_OVERRIDE_DISABLED)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mMetaViewportOverride = aMetaViewportOverride;
-
-  // Inform our presShell that it needs to re-check its need for a viewport
-  // override.
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-  if (presShell) {
-    presShell->UpdateViewportOverridden(true);
-  }
-
-  return NS_OK;
-}
-
 /* virtual */ int32_t
 nsDocShell::ItemType()
 {
@@ -2951,9 +2920,6 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
     if (NS_SUCCEEDED(parentAsDocShell->GetTouchEventsOverride(&touchEventsOverride))) {
       SetTouchEventsOverride(touchEventsOverride);
     }
-    // We don't need to inherit metaViewportOverride, because the viewport
-    // is only relevant for the outermost nsDocShell, not for any iframes
-    // like this that might be embedded within it.
   }
 
   nsCOMPtr<nsILoadContext> parentAsLoadContext(do_QueryInterface(parent));
