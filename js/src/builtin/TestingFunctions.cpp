@@ -5016,7 +5016,17 @@ SetTimeZone(JSContext* cx, unsigned argc, Value* vp)
     };
 
     if (args[0].isString() && !args[0].toString()->empty()) {
-        UniqueChars timeZone = JS_EncodeStringToLatin1(cx, args[0].toString());
+        RootedLinearString str(cx, args[0].toString()->ensureLinear(cx));
+        if (!str) {
+            return false;
+        }
+
+        if (!StringIsAscii(str)) {
+            ReportUsageErrorASCII(cx, callee, "First argument contains non-ASCII characters");
+            return false;
+        }
+
+        UniqueChars timeZone = JS_EncodeStringToASCII(cx, str);
         if (!timeZone) {
             return false;
         }
@@ -5081,35 +5091,28 @@ SetDefaultLocale(JSContext* cx, unsigned argc, Value* vp)
     }
 
     if (args[0].isString() && !args[0].toString()->empty()) {
-        auto containsOnlyValidBCP47Characters = [](auto* chars, size_t length) {
-            return mozilla::IsAsciiAlpha(chars[0]) &&
-                   std::all_of(chars, chars + length, [](auto c) {
-                       return mozilla::IsAsciiAlphanumeric(c) || c == '-';
-                   });
-        };
-
         RootedLinearString str(cx, args[0].toString()->ensureLinear(cx));
         if (!str) {
             return false;
         }
 
-        bool hasValidChars;
-        {
-            JS::AutoCheckCannotGC nogc;
-
-            size_t length = str->length();
-            hasValidChars = str->hasLatin1Chars()
-                            ? containsOnlyValidBCP47Characters(str->latin1Chars(nogc), length)
-                            : containsOnlyValidBCP47Characters(str->twoByteChars(nogc), length);
-        }
-
-        if (!hasValidChars) {
-            ReportUsageErrorASCII(cx, callee, "First argument should be BCP47 language tag");
+        if (!StringIsAscii(str)) {
+            ReportUsageErrorASCII(cx, callee, "First argument contains non-ASCII characters");
             return false;
         }
 
-        UniqueChars locale = JS_EncodeStringToLatin1(cx, str);
+        UniqueChars locale = JS_EncodeStringToASCII(cx, str);
         if (!locale) {
+            return false;
+        }
+
+        bool containsOnlyValidBCP47Characters = mozilla::IsAsciiAlpha(locale[0]) &&
+            std::all_of(locale.get(), locale.get() + str->length(), [](auto c) {
+                return mozilla::IsAsciiAlphanumeric(c) || c == '-';
+            });
+
+        if (!containsOnlyValidBCP47Characters) {
+            ReportUsageErrorASCII(cx, callee, "First argument should be a BCP47 language tag");
             return false;
         }
 

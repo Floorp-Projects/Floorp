@@ -842,7 +842,7 @@ num_toLocaleString_impl(JSContext* cx, const CallArgs& args)
      * Create the string, move back to bytes to make string twiddling
      * a bit easier and so we can insert platform charset seperators.
      */
-    UniqueChars numBytes = JS_EncodeStringToLatin1(cx, str);
+    UniqueChars numBytes = EncodeAscii(cx, str);
     if (!numBytes) {
         return false;
     }
