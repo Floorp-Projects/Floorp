@@ -261,22 +261,56 @@ AssertedDeclaredName:
                 DeclarationKind declKind;
                 MOZ_TRY(getDeclaredScope(scopeKind, kind_, scope, declKind));
 
+AssertedMaybePositionalParameterName:
+    inherits: AssertedBoundName
+    extra-params: |
+        AssertedScopeKind scopeKind,
+        MutableHandle<GCVector<JSAtom*>> positionalParams
+    extra-args: |
+        scopeKind, positionalParams
+
+AssertedPositionalParameterName:
+    inherits: AssertedMaybePositionalParameterName
+    fields:
+        name:
+            after: |
+                // FIXME: The following checks should be performed inside
+                // checkPositionalParameterIndices to match the spec's order
+                // (bug 1490976).
+                if (index >= positionalParams.get().length())
+                    return raiseError("AssertedPositionalParameterName.length out of range");
+                if (positionalParams.get()[index])
+                    return raiseError("AssertedPositionalParameterName has duplicate entry for the same index");
+                positionalParams.get()[index] = name;
+
+AssertedRestParameterName:
+    inherits: AssertedMaybePositionalParameterName
+
+AssertedParameterName:
+    inherits: AssertedMaybePositionalParameterName
 
 AssertedBoundNamesScope:
-    inherits: AssertedParameterScope
+    inherits: AssertedBlockScope
     init: |
         const auto scopeKind = AssertedScopeKind::Catch;
+    fields:
+        boundNames:
+            extra-args: scopeKind
 
 AssertedParameterScope:
     inherits: AssertedBlockScope
+    extra-params: |
+        MutableHandle<GCVector<JSAtom*>> positionalParams
+    extra-args: |
+        positionalParams
     init: |
         const auto scopeKind = AssertedScopeKind::Parameter;
     fields:
         isSimpleParameterList:
             after: |
                 (void) isSimpleParameterList;
-        boundNames:
-            extra-args: scopeKind
+        paramNames:
+            extra-args: scopeKind, positionalParams
 
 AssertedScriptGlobalScope:
     inherits: AssertedBlockScope
@@ -587,6 +621,14 @@ FunctionExpressionContents:
         isFunctionNameCaptured:
             after: |
                 (void) isFunctionNameCaptured;
+        parameterScope:
+            before: |
+                Rooted<GCVector<JSAtom*>> positionalParams(cx_, GCVector<JSAtom*>(cx_));
+            extra-args: |
+                &positionalParams
+        params:
+            after: |
+                MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
     build: |
         *paramsOut = params;
         *bodyOut = body;
@@ -609,6 +651,7 @@ SetterContents:
             after: |
               BINJS_TRY_DECL(params, new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos));
               factory_.addList(params, param);
+              MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
 
 EagerFunctionExpression:
     init: |
@@ -775,6 +818,20 @@ ListOfAssertedBoundName:
         auto result = Ok();
     append: |
         // Nothing to do here.
+
+ListOfAssertedMaybePositionalParameterName:
+    inherits: ListOfAssertedBoundName
+    extra-params: |
+        AssertedScopeKind scopeKind,
+        MutableHandle<GCVector<JSAtom*>> positionalParams
+    extra-args: |
+        scopeKind, positionalParams
+    init: |
+        (void) start;
+        auto result = Ok();
+        BINJS_TRY(positionalParams.get().resize(length));
+        for (uint32_t i = 0; i < length; i++)
+            positionalParams.get()[i] = nullptr;
 
 ListOfAssertedDeclaredName:
     inherits: ListOfAssertedBoundName

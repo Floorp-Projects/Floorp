@@ -331,6 +331,49 @@ BinASTParser<Tok>::checkBinding(JSAtom* name)
     return Ok();
 }
 
+// Binary AST (revision 8eab67e0c434929a66ff6abe99ff790bca087dda)
+// 3.1.5 CheckPositionalParameterIndices.
+template<typename Tok> JS::Result<Ok>
+BinASTParser<Tok>::checkPositionalParameterIndices(Handle<GCVector<JSAtom*>> positionalParams,
+                                                   ListNode* params)
+{
+    MOZ_ASSERT(positionalParams.get().length() == params->count());
+
+    uint32_t i = 0;
+    for (ParseNode* param : params->contents()) {
+        if (param->isKind(ParseNodeKind::Assign)) {
+            param = param->as<AssignmentNode>().left();
+        }
+        MOZ_ASSERT(param->isKind(ParseNodeKind::Name) ||
+                   param->isKind(ParseNodeKind::Object) ||
+                   param->isKind(ParseNodeKind::Array) ||
+                   param->isKind(ParseNodeKind::Spread));
+
+        if (JSAtom* name = positionalParams.get()[i]) {
+            // Simple or default parameter.
+            if (param->isKind(ParseNodeKind::Object) || param->isKind(ParseNodeKind::Array)) {
+                return raiseError("AssertedPositionalParameterName: expected positional parameter, got destructuring parameter");
+            }
+            if (param->isKind(ParseNodeKind::Spread)) {
+                return raiseError("AssertedPositionalParameterName: expected positional parameter, got rest parameter");
+            }
+
+            if (param->name() != name) {
+                return raiseError("AssertedPositionalParameterName: name mismatch");
+            }
+        } else {
+            // Destructuring or rest parameter.
+            if (param->isKind(ParseNodeKind::Name)) {
+                return raiseError("AssertedParameterName/AssertedRestParameterName: expected destructuring/rest parameter, got positional parameter");
+            }
+        }
+
+        i++;
+    }
+
+    return Ok();
+}
+
 template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::checkClosedVars(ParseContext::Scope& scope)
 {
