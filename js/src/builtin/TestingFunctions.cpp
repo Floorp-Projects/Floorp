@@ -976,6 +976,23 @@ GCPreserveCode(JSContext* cx, unsigned argc, Value* vp)
 #ifdef JS_GC_ZEAL
 
 static bool
+ParseGCZealMode(JSContext* cx, const CallArgs& args, uint8_t* zeal)
+{
+    uint32_t value;
+    if (!ToUint32(cx, args.get(0), &value)) {
+        return false;
+    }
+
+    if (value > uint32_t(gc::ZealMode::Limit)) {
+        JS_ReportErrorASCII(cx, "gczeal argument out of range");
+        return false;
+    }
+
+    *zeal = static_cast<uint8_t>(value);
+    return true;
+}
+
+static bool
 GCZeal(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -986,13 +1003,8 @@ GCZeal(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    uint32_t zeal;
-    if (!ToUint32(cx, args.get(0), &zeal)) {
-        return false;
-    }
-
-    if (zeal > uint32_t(gc::ZealMode::Limit)) {
-        JS_ReportErrorASCII(cx, "gczeal argument out of range");
+    uint8_t zeal;
+    if (!ParseGCZealMode(cx, args, &zeal)) {
         return false;
     }
 
@@ -1003,7 +1015,28 @@ GCZeal(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    JS_SetGCZeal(cx, (uint8_t)zeal, frequency);
+    JS_SetGCZeal(cx, zeal, frequency);
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+UnsetGCZeal(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() > 1) {
+        RootedObject callee(cx, &args.callee());
+        ReportUsageErrorASCII(cx, callee, "Too many arguments");
+        return false;
+    }
+
+    uint8_t zeal;
+    if (!ParseGCZealMode(cx, args, &zeal)) {
+        return false;
+    }
+
+    JS_UnsetGCZeal(cx, zeal);
     args.rval().setUndefined();
     return true;
 }
@@ -5680,8 +5713,13 @@ JS_FN_HELP("streamsAreEnabled", StreamsAreEnabled, 0, 0,
 
 #ifdef JS_GC_ZEAL
     JS_FN_HELP("gczeal", GCZeal, 2, 0,
-"gczeal(level, [N])",
+"gczeal(mode, [frequency])",
 gc::ZealModeHelpText),
+
+    JS_FN_HELP("unsetgczeal", UnsetGCZeal, 2, 0,
+"unsetgczeal(mode)",
+"  Turn off a single zeal mode set with gczeal() and don't finish any ongoing\n"
+"  collection that may be happening."),
 
     JS_FN_HELP("schedulegc", ScheduleGC, 1, 0,
 "schedulegc([num | obj | string])",

@@ -7297,6 +7297,12 @@ JS_SetGCZeal(JSContext* cx, uint8_t zeal, uint32_t frequency)
 }
 
 JS_PUBLIC_API(void)
+JS_UnsetGCZeal(JSContext* cx, uint8_t zeal)
+{
+    cx->runtime()->gc.unsetZeal(zeal);
+}
+
+JS_PUBLIC_API(void)
 JS_ScheduleGC(JSContext* cx, uint32_t count)
 {
     cx->runtime()->gc.setNextScheduled(count);
