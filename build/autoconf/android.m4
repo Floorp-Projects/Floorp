@@ -47,9 +47,6 @@ if test "$OS_TARGET" = "Android"; then
     x86)
         ANDROID_CPU_ARCH=x86
         ;;
-    mips32) # When target_cpu is mipsel, CPU_ARCH is mips32
-        ANDROID_CPU_ARCH=mips
-        ;;
     aarch64)
         ANDROID_CPU_ARCH=arm64-v8a
         ;;

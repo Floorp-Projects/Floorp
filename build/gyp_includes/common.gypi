@@ -1016,10 +1016,10 @@
             'conditions': [
               ['target_arch == "ia32"', {
                 'android_app_abi%': 'x86',
-                'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-9/arch-x86',
+                'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-16/arch-x86',
               }],
               ['target_arch=="arm"', {
-                'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-9/arch-arm',
+                'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-16/arch-arm',
                 'conditions': [
                   ['armv7==0', {
                     'android_app_abi%': 'armeabi',
