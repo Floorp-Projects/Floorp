@@ -5,12 +5,12 @@
 
 use api::{ExternalScrollId, LayoutPixel, LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use api::{LayoutVector2D, PipelineId, PropertyBinding, ScrollClamping, ScrollLocation};
-use api::{ScrollSensitivity, StickyOffsetBounds};
+use api::{ScrollSensitivity, StickyOffsetBounds, LayoutVector3D};
 use clip_scroll_tree::{CoordinateSystem, CoordinateSystemId, SpatialNodeIndex, TransformUpdateState};
 use euclid::SideOffsets2D;
 use gpu_types::TransformPalette;
 use scene::SceneProperties;
-use util::{LayoutFastTransform, LayoutToWorldFastTransform, ScaleOffset, TransformedRectKind};
+use util::{LayoutFastTransform, LayoutToWorldFastTransform, MatrixHelpers, TransformedRectKind};
 
 #[derive(Clone, Debug)]
 pub enum SpatialNodeType {
@@ -66,7 +66,7 @@ pub struct SpatialNode {
     /// The transformation from the coordinate system which established our compatible coordinate
     /// system (same coordinate system id) and us. This can change via scroll offsets and via new
     /// reference frame transforms.
-    pub coordinate_system_relative_scale_offset: ScaleOffset,
+    pub coordinate_system_relative_offset: LayoutVector2D,
 }
 
 impl SpatialNode {
@@ -85,7 +85,7 @@ impl SpatialNode {
             node_type,
             invertible: true,
             coordinate_system_id: CoordinateSystemId(0),
-            coordinate_system_relative_scale_offset: ScaleOffset::identity(),
+            coordinate_system_relative_offset: LayoutVector2D::zero(),
         }
     }
 
@@ -275,28 +275,27 @@ impl SpatialNode {
 
                 // Try to update our compatible coordinate system transform. If we cannot, start a new
                 // incompatible coordinate system.
-                match ScaleOffset::from_transform(&relative_transform) {
-                    Some(ref scale_offset) => {
-                        self.coordinate_system_relative_scale_offset =
-                            state.coordinate_system_relative_scale_offset.accumulate(scale_offset);
-                    }
-                    None => {
-                        // If we break 2D axis alignment or have a perspective component, we need to start a
-                        // new incompatible coordinate system with which we cannot share clips without masking.
-                        self.coordinate_system_relative_scale_offset = ScaleOffset::identity();
+                if relative_transform.is_simple_2d_translation() {
+                    self.coordinate_system_relative_offset =
+                        state.coordinate_system_relative_offset +
+                        LayoutVector2D::new(relative_transform.m41, relative_transform.m42);
+                } else {
+                    // If we break 2D axis alignment or have a perspective component, we need to start a
+                    // new incompatible coordinate system with which we cannot share clips without masking.
+                    self.coordinate_system_relative_offset = LayoutVector2D::zero();
 
-                        let transform = state.coordinate_system_relative_scale_offset
-                                             .to_transform()
-                                             .pre_mul(&relative_transform);
-
-                        // Push that new coordinate system and record the new id.
-                        let coord_system = CoordinateSystem {
-                            transform,
-                            parent: Some(state.current_coordinate_system_id),
-                        };
-                        state.current_coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);
-                        coord_systems.push(coord_system);
-                    }
+                    // Push that new coordinate system and record the new id.
+                    let coord_system = CoordinateSystem {
+                        offset: LayoutVector3D::new(
+                            state.coordinate_system_relative_offset.x,
+                            state.coordinate_system_relative_offset.y,
+                            0.0,
+                        ),
+                        transform: relative_transform,
+                        parent: Some(state.current_coordinate_system_id),
+                    };
+                    state.current_coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);
+                    coord_systems.push(coord_system);
                 }
 
                 self.coordinate_system_id = state.current_coordinate_system_id;
@@ -328,8 +327,8 @@ impl SpatialNode {
                 };
 
                 let added_offset = state.parent_accumulated_scroll_offset + sticky_offset + scroll_offset;
-                self.coordinate_system_relative_scale_offset =
-                    state.coordinate_system_relative_scale_offset.offset(added_offset.to_untyped());
+                self.coordinate_system_relative_offset =
+                    state.coordinate_system_relative_offset + added_offset;
 
                 if let SpatialNodeType::StickyFrame(ref mut info) = self.node_type {
                     info.current_offset = sticky_offset;
@@ -476,7 +475,7 @@ impl SpatialNode {
             SpatialNodeType::ReferenceFrame(ref info) => {
                 state.parent_reference_frame_transform = self.world_viewport_transform;
                 state.parent_accumulated_scroll_offset = LayoutVector2D::zero();
-                state.coordinate_system_relative_scale_offset = self.coordinate_system_relative_scale_offset;
+                state.coordinate_system_relative_offset = self.coordinate_system_relative_offset;
                 let translation = -info.origin_in_parent_reference_frame;
                 state.nearest_scrolling_ancestor_viewport =
                     state.nearest_scrolling_ancestor_viewport

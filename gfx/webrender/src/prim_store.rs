@@ -12,7 +12,7 @@ use app_units::Au;
 use border::{BorderCacheKey, BorderRenderTaskInfo};
 use clip_scroll_tree::{ClipScrollTree, CoordinateSystemId, SpatialNodeIndex};
 use clip::{ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem, ClipNodeCollector};
-use euclid::{TypedTransform3D, TypedRect};
+use euclid::{TypedVector2D, TypedTransform3D, TypedRect};
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
 use frame_builder::PrimitiveContext;
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
@@ -30,7 +30,7 @@ use resource_cache::{ImageProperties, ImageRequest, ResourceCache};
 use scene::SceneProperties;
 use segment::SegmentBuilder;
 use std::{cmp, fmt, mem, usize};
-use util::{ScaleOffset, MatrixHelpers, pack_as_float, recycle_vec, project_rect, raster_rect_to_device_pixels};
+use util::{MatrixHelpers, pack_as_float, recycle_vec, project_rect, raster_rect_to_device_pixels};
 
 
 const MIN_BRUSH_SPLIT_AREA: f32 = 256.0 * 256.0;
@@ -95,7 +95,7 @@ impl PrimitiveOpacity {
 #[derive(Debug)]
 pub enum CoordinateSpaceMapping<F, T> {
     Local,
-    ScaleOffset(ScaleOffset),
+    Offset(TypedVector2D<f32, F>),
     Transform(TypedTransform3D<f32, F, T>),
 }
 
@@ -145,12 +145,13 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             self.kind = if self.ref_spatial_node_index == target_node_index {
                 CoordinateSpaceMapping::Local
             } else if ref_spatial_node.coordinate_system_id == target_spatial_node.coordinate_system_id {
-                CoordinateSpaceMapping::ScaleOffset(
-                    ref_spatial_node.coordinate_system_relative_scale_offset
-                        .difference(
-                            &target_spatial_node.coordinate_system_relative_scale_offset
-                        )
-                )
+                let offset = TypedVector2D::new(
+                    target_spatial_node.coordinate_system_relative_offset.x -
+                        ref_spatial_node.coordinate_system_relative_offset.x,
+                    target_spatial_node.coordinate_system_relative_offset.y -
+                        ref_spatial_node.coordinate_system_relative_offset.y,
+                );
+                CoordinateSpaceMapping::Offset(offset)
             } else {
                 let transform = clip_scroll_tree.get_relative_transform(
                     target_node_index,
@@ -169,8 +170,8 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             CoordinateSpaceMapping::Local => {
                 TypedTransform3D::identity()
             }
-            CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => {
-                scale_offset.to_transform()
+            CoordinateSpaceMapping::Offset(offset) => {
+                TypedTransform3D::create_translation(offset.x, offset.y, 0.0)
             }
             CoordinateSpaceMapping::Transform(transform) => {
                 transform
@@ -183,8 +184,9 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             CoordinateSpaceMapping::Local => {
                 Some(TypedRect::from_untyped(&rect.to_untyped()))
             }
-            CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => {
-                Some(scale_offset.unmap_rect(rect))
+            CoordinateSpaceMapping::Offset(ref offset) => {
+                let offset = TypedVector2D::new(-offset.x, -offset.y);
+                Some(TypedRect::from_untyped(&rect.translate(&offset).to_untyped()))
             }
             CoordinateSpaceMapping::Transform(ref transform) => {
                 transform.inverse_rect_footprint(rect)
@@ -197,8 +199,8 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             CoordinateSpaceMapping::Local => {
                 Some(TypedRect::from_untyped(&rect.to_untyped()))
             }
-            CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => {
-                Some(scale_offset.map_rect(rect))
+            CoordinateSpaceMapping::Offset(ref offset) => {
+                Some(TypedRect::from_untyped(&rect.translate(offset).to_untyped()))
             }
             CoordinateSpaceMapping::Transform(ref transform) => {
                 match project_rect(transform, rect, &self.bounds) {
