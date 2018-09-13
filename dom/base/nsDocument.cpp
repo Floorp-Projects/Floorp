@@ -13653,6 +13653,13 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
   //         user settings, anti-clickjacking heuristics, or prompting the
   //         user for explicit permission. Reject if some rule is not fulfilled.
 
+  if (nsContentUtils::IsInPrivateBrowsing(this)) {
+    // If the document is in PB mode, it doesn't have access to its persistent
+    // cookie jar, so reject the promise here.
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
   bool granted = true;
   bool isTrackingWindow = false;
   if (StaticPrefs::browser_contentblocking_enabled() &&
