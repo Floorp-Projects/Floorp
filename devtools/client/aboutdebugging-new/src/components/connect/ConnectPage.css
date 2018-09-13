@@ -2,29 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.connect-page__steps {
-  line-height: 1.5em;
-  list-style-type: decimal;
-  margin-block-end: 20px;
-  margin-inline-start: 40px;
-}
-
-.connect-page__step {
-  padding-inline-start: 20px;
-}
-
-.connect-page__section__title {
-  display: flex;
-}
-
-.connect-page__section__icon {
-  fill: currentColor;
-  height: 32px;
-  margin-inline-end: 5px;
-  width: 32px;
-  -moz-context-properties: fill;
-}
-
 .connect-page__network {
   max-width: 600px;
 }
