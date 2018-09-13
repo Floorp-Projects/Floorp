@@ -107,12 +107,12 @@
   background-color: -moz-fieldtext;
 }
 
-@itemFocused@ > .downloadButtonArea > .downloadButton:hover > .button-box {
+@itemFocused@ > .downloadButton:hover > .button-box {
   background-color: HighlightText;
   color: Highlight;
 }
 
-@itemFocused@ > .downloadButtonArea > .downloadButton:hover:active > .button-box {
+@itemFocused@ > .downloadButton:hover:active > .button-box {
   background-color: -moz-field;
   color: -moz-fieldtext;
 }

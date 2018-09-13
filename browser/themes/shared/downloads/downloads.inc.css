@@ -252,13 +252,13 @@
 }
 
 @itemFinished@[exists] .downloadMainArea:hover,
-@item@:not([verdict]) > .downloadButtonArea:hover,
+@item@:not([verdict]) > .downloadButton:hover,
 @item@[verdict]:hover {
   background-color: var(--arrowpanel-dimmed);
 }
 
 @itemFinished@[exists] > .downloadMainArea:hover:active,
-@item@:not([verdict]) > .downloadButtonArea:hover:active,
+@item@:not([verdict]) > .downloadButton:hover:active,
 @item@[verdict]:hover:active {
   background-color: var(--arrowpanel-dimmed-further);
 }
@@ -287,11 +287,11 @@
   list-style-image: url("chrome://browser/skin/panel-icon-retry.svg");
 }
 
-.downloadShowBlockedInfo > .button-box > .button-icon {
+.downloadIconSubviewArrow > .button-box > .button-icon {
   list-style-image: url("chrome://browser/skin/panel-icon-arrow-right.svg");
 }
 
-.downloadShowBlockedInfo > .button-box > .button-icon:-moz-locale-dir(rtl) {
+.downloadIconSubviewArrow > .button-box > .button-icon:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/panel-icon-arrow-left.svg");
 }
 
