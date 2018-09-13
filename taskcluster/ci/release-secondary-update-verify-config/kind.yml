@@ -42,6 +42,10 @@ job-defaults:
          by-release-level:
             staging: "https://aus4.stage.mozaws.net"
             production: "https://aus5.mozilla.org"
+      override-certs:
+         by-release-level:
+            staging: dep
+            production: null
       include-version:
          by-project:
             birch: beta

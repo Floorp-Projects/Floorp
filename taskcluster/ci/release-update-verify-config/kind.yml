@@ -40,6 +40,10 @@ job-defaults:
          by-release-level:
             staging: "https://aus4.stage.mozaws.net"
             production: "https://aus5.mozilla.org"
+      override-certs:
+         by-release-level:
+            staging: dep
+            production: null
       # This is overridden for devedition to exclude 58.0b1
       # because of the special case added by
       # https://bugzilla.mozilla.org/show_bug.cgi?id=1419189
