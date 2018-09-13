@@ -63,7 +63,7 @@ ReaderProxy::OnAudioDataRequestCompleted(RefPtr<AudioData> aAudio)
     StartTime().ToMicroseconds() - mLoopingOffset.ToMicroseconds();
   aAudio->AdjustForStartTime(offset);
   if (aAudio->mTime.IsValid()) {
-    mLastAudioEndTime = aAudio->mTime;
+    mLastAudioEndTime = aAudio->GetEndTime();
     return AudioDataPromise::CreateAndResolve(aAudio.forget(), __func__);
   }
   return AudioDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
