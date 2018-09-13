@@ -14,7 +14,7 @@ async protocol PChromiumCDM
   manager PGMPContent;
 child:
 
-  // cdm::ContentDecryptionModule9
+  // cdm::ContentDecryptionModule9+10
   async Init(bool aAllowDistinctiveIdentifier,
              bool aAllowPersistentState);
 
@@ -65,7 +65,7 @@ child:
 parent:
   async __delete__();
 
-  // cdm::Host9
+  // cdm::Host9+10
   async OnResolvePromiseWithKeyStatus(uint32_t aPromiseId, uint32_t aKeyStatus);
 
   async OnResolveNewSessionPromise(uint32_t aPromiseId, nsCString aSessionId);
