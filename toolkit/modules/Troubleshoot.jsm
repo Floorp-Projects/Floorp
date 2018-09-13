@@ -90,6 +90,8 @@ const PREFS_WHITELIST = [
 
 // The blacklist, unlike the whitelist, is a list of regular expressions.
 const PREFS_BLACKLIST = [
+  /^media[.]webrtc[.]debug[.]aec_log_dir/,
+  /^media[.]webrtc[.]debug[.]log_file/,
   /^network[.]proxy[.]/,
   /[.]print_to_filename$/,
   /^print[.]macosx[.]pagesetup/,
