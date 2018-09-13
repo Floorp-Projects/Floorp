@@ -123,7 +123,7 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/content_description_menu"
+                    android:contentDescription="@string/indicator_content_description_menu"
                     android:visibility="gone" />
 
             </LinearLayout>
