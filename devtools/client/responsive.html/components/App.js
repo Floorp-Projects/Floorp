@@ -28,8 +28,10 @@ const {
 const { changeReloadCondition } = require("../actions/reload-conditions");
 const { takeScreenshot } = require("../actions/screenshot");
 const {
+  changeUserAgent,
   toggleTouchSimulation,
   toggleLeftAlignment,
+  toggleUserAgentInput,
 } = require("../actions/ui");
 const {
   changeDevice,
@@ -63,6 +65,7 @@ class App extends PureComponent {
     this.onChangePixelRatio = this.onChangePixelRatio.bind(this);
     this.onChangeReloadCondition = this.onChangeReloadCondition.bind(this);
     this.onChangeTouchSimulation = this.onChangeTouchSimulation.bind(this);
+    this.onChangeUserAgent = this.onChangeUserAgent.bind(this);
     this.onContentResize = this.onContentResize.bind(this);
     this.onDeviceListUpdate = this.onDeviceListUpdate.bind(this);
     this.onExit = this.onExit.bind(this);
@@ -72,6 +75,7 @@ class App extends PureComponent {
     this.onRotateViewport = this.onRotateViewport.bind(this);
     this.onScreenshot = this.onScreenshot.bind(this);
     this.onToggleLeftAlignment = this.onToggleLeftAlignment.bind(this);
+    this.onToggleUserAgentInput = this.onToggleUserAgentInput.bind(this);
     this.onUpdateDeviceDisplayed = this.onUpdateDeviceDisplayed.bind(this);
     this.onUpdateDeviceModal = this.onUpdateDeviceModal.bind(this);
   }
@@ -93,8 +97,9 @@ class App extends PureComponent {
       device,
     }, "*");
     this.props.dispatch(changeDevice(id, device.name, deviceType));
-    this.props.dispatch(toggleTouchSimulation(device.touch));
     this.props.dispatch(changePixelRatio(id, device.pixelRatio));
+    this.props.dispatch(changeUserAgent(device.userAgent));
+    this.props.dispatch(toggleTouchSimulation(device.touch));
   }
 
   onChangeNetworkThrottling(enabled, profile) {
@@ -126,6 +131,14 @@ class App extends PureComponent {
     this.props.dispatch(toggleTouchSimulation(enabled));
   }
 
+  onChangeUserAgent(userAgent) {
+    window.postMessage({
+      type: "change-user-agent",
+      userAgent,
+    }, "*");
+    this.props.dispatch(changeUserAgent(userAgent));
+  }
+
   onContentResize({ width, height }) {
     window.postMessage({
       type: "content-resize",
@@ -143,6 +156,14 @@ class App extends PureComponent {
   }
 
   onRemoveCustomDevice(device) {
+    // If the custom device is currently selected on any of the viewports,
+    // remove the device association and reset all the ui state.
+    for (const viewport of this.props.viewports) {
+      if (viewport.device === device.name) {
+        this.onRemoveDeviceAssociation(viewport.id);
+      }
+    }
+
     this.props.dispatch(removeCustomDevice(device));
   }
 
@@ -152,6 +173,7 @@ class App extends PureComponent {
     this.props.dispatch(removeDeviceAssociation(id));
     this.props.dispatch(toggleTouchSimulation(false));
     this.props.dispatch(changePixelRatio(id, 0));
+    this.props.dispatch(changeUserAgent(""));
   }
 
   onResizeViewport(id, width, height) {
@@ -168,6 +190,10 @@ class App extends PureComponent {
 
   onToggleLeftAlignment() {
     this.props.dispatch(toggleLeftAlignment());
+  }
+
+  onToggleUserAgentInput() {
+    this.props.dispatch(toggleUserAgentInput());
   }
 
   onUpdateDeviceDisplayed(device, deviceType, displayed) {
@@ -195,6 +221,7 @@ class App extends PureComponent {
       onChangePixelRatio,
       onChangeReloadCondition,
       onChangeTouchSimulation,
+      onChangeUserAgent,
       onContentResize,
       onDeviceListUpdate,
       onExit,
@@ -204,6 +231,7 @@ class App extends PureComponent {
       onRotateViewport,
       onScreenshot,
       onToggleLeftAlignment,
+      onToggleUserAgentInput,
       onUpdateDeviceDisplayed,
       onUpdateDeviceModal,
     } = this;
@@ -235,12 +263,14 @@ class App extends PureComponent {
           onChangePixelRatio,
           onChangeReloadCondition,
           onChangeTouchSimulation,
+          onChangeUserAgent,
           onExit,
           onRemoveDeviceAssociation,
           onResizeViewport,
           onRotateViewport,
           onScreenshot,
           onToggleLeftAlignment,
+          onToggleUserAgentInput,
           onUpdateDeviceModal,
         }),
         Viewports({

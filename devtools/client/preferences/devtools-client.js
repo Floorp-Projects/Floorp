@@ -335,6 +335,12 @@ pref("devtools.responsive.show-setting-tooltip", true);
 #else
 pref("devtools.responsive.show-setting-tooltip", false);
 #endif
+// Show the custom user agent input in Nightly builds.
+#if defined(NIGHTLY_BUILD)
+pref("devtools.responsive.showUserAgentInput", true);
+#else
+pref("devtools.responsive.showUserAgentInput", false);
+#endif
 
 // Enable new about:debugging.
 pref("devtools.aboutdebugging.new-enabled", false);
