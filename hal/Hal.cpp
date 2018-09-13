@@ -81,12 +81,6 @@ InSandbox()
   return GeckoProcessType_Content == XRE_GetProcessType();
 }
 
-void
-AssertMainProcess()
-{
-  MOZ_ASSERT(GeckoProcessType_Default == XRE_GetProcessType());
-}
-
 bool
 WindowIsActive(nsPIDOMWindowInner* aWindow)
 {
@@ -535,22 +529,6 @@ ProcessPriorityToString(ProcessPriority aPriority)
     MOZ_ASSERT(false);
     return "???";
   }
-}
-
-void
-StartDiskSpaceWatcher()
-{
-  AssertMainProcess();
-  AssertMainThread();
-  PROXY_IF_SANDBOXED(StartDiskSpaceWatcher());
-}
-
-void
-StopDiskSpaceWatcher()
-{
-  AssertMainProcess();
-  AssertMainThread();
-  PROXY_IF_SANDBOXED(StopDiskSpaceWatcher());
 }
 
 void
