@@ -1160,96 +1160,44 @@
       ]]></handler>
 
       <handler event="keydown" group="system"><![CDATA[
-        let {altKey, shiftKey} = event;
-        let [accel, nonAccel] = AppConstants.platform == "macosx" ? [event.metaKey, event.ctrlKey] : [event.ctrlKey, event.metaKey];
-
-        let keyComboForMove = accel && shiftKey && !altKey && !nonAccel;
-        let keyComboForFocus = accel && !shiftKey && !altKey && !nonAccel;
-
-        if (!keyComboForMove && !keyComboForFocus) {
+        if (event.altKey || event.shiftKey)
           return;
+
+        let wrongModifiers;
+        if (AppConstants.platform == "macosx") {
+          wrongModifiers = !event.metaKey;
+        } else {
+          wrongModifiers = !event.ctrlKey || event.metaKey;
         }
+
+        if (wrongModifiers)
+          return;
 
         // Don't check if the event was already consumed because tab navigation
         // should work always for better user experience.
-        let {visibleTabs, selectedTab} = gBrowser;
-        let {arrowKeysShouldWrap} = this;
-        let focusedTabIndex = this.ariaFocusedIndex;
-        if (focusedTabIndex == -1) {
-          focusedTabIndex = visibleTabs.indexOf(selectedTab);
-        }
-        let lastFocusedTabIndex = focusedTabIndex;
+
         switch (event.keyCode) {
           case KeyEvent.DOM_VK_UP:
-            if (keyComboForMove) {
-              gBrowser.moveTabBackward();
-            } else {
-              focusedTabIndex--;
-            }
+            gBrowser.moveTabBackward();
             break;
           case KeyEvent.DOM_VK_DOWN:
-            if (keyComboForMove) {
-              gBrowser.moveTabForward();
-            } else {
-              focusedTabIndex++;
-            }
+            gBrowser.moveTabForward();
             break;
           case KeyEvent.DOM_VK_RIGHT:
           case KeyEvent.DOM_VK_LEFT:
-            if (keyComboForMove) {
-              gBrowser.moveTabOver(event);
-            } else {
-              let isRTL = Services.locale.isAppLocaleRTL;
-              if ((!isRTL && event.keyCode == KeyEvent.DOM_VK_RIGHT) ||
-                  (isRTL && event.keyCode == KeyEvent.DOM_VK_LEFT)) {
-                focusedTabIndex++;
-              } else {
-                focusedTabIndex--;
-              }
-            }
+            gBrowser.moveTabOver(event);
             break;
           case KeyEvent.DOM_VK_HOME:
-            if (keyComboForMove) {
-              gBrowser.moveTabToStart();
-            } else {
-              focusedTabIndex = 0;
-            }
+            gBrowser.moveTabToStart();
             break;
           case KeyEvent.DOM_VK_END:
-            if (keyComboForMove) {
-              gBrowser.moveTabToEnd();
-            } else {
-              focusedTabIndex = visibleTabs.length - 1;
-            }
-            break;
-          case KeyEvent.DOM_VK_SPACE:
-            if (visibleTabs[lastFocusedTabIndex].multiselected) {
-              gBrowser.removeFromMultiSelectedTabs(visibleTabs[lastFocusedTabIndex]);
-            } else {
-              gBrowser.addToMultiSelectedTabs(visibleTabs[lastFocusedTabIndex], false);
-            }
+            gBrowser.moveTabToEnd();
             break;
           default:
             // Consume the keydown event for the above keyboard
             // shortcuts only.
             return;
         }
-
-        if (arrowKeysShouldWrap) {
-          if (focusedTabIndex >= visibleTabs.length) {
-            focusedTabIndex = 0;
-          } else if (focusedTabIndex < 0) {
-            focusedTabIndex = visibleTabs.length - 1;
-          }
-        } else {
-          focusedTabIndex = Math.min(visibleTabs.length - 1, Math.max(0, focusedTabIndex));
-        }
-
-        if (keyComboForFocus &&
-            focusedTabIndex != lastFocusedTabIndex) {
-          this.ariaFocusedItem = visibleTabs[focusedTabIndex];
-        }
-
         event.preventDefault();
       ]]></handler>
 
