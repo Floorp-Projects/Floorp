@@ -83,6 +83,11 @@ operator&(const ImgDrawResult aLeft, const ImgDrawResult aRight)
     return aRight;
   }
 
+  if (aLeft == ImgDrawResult::NOT_SUPPORTED ||
+      aRight == ImgDrawResult::NOT_SUPPORTED) {
+    return ImgDrawResult::NOT_SUPPORTED;
+  }
+
   if ((aLeft == ImgDrawResult::BAD_IMAGE ||
        aLeft == ImgDrawResult::SUCCESS_NOT_COMPLETE) &&
       aRight != ImgDrawResult::SUCCESS &&

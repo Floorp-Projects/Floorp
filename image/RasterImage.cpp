@@ -670,6 +670,10 @@ RasterImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
   ImgDrawResult drawResult =
     GetImageContainerImpl(aManager, mSize, Nothing(), aFlags,
                           getter_AddRefs(container));
+
+  // We silence the unused warning here because anything that needs the draw
+  // result should be using GetImageContainerAtSize, not GetImageContainer.
+  (void)drawResult;
   return container.forget();
 }
 

@@ -96,13 +96,13 @@ public:
                         const nsRect& aDirtyRect,
                         nsPoint aPt, uint32_t aFlags);
 
-  Maybe<ImgDrawResult> CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                                               mozilla::wr::IpcResourceUpdateQueue& aResources,
-                                               const mozilla::layers::StackingContextHelper& aSc,
-                                               mozilla::layers::WebRenderLayerManager* aManager,
-                                               nsDisplayItem* aItem,
-                                               nsPoint aPt,
-                                               uint32_t aFlags);
+  ImgDrawResult CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                        const mozilla::layers::StackingContextHelper& aSc,
+                                        mozilla::layers::WebRenderLayerManager* aManager,
+                                        nsDisplayItem* aItem,
+                                        nsPoint aPt,
+                                        uint32_t aFlags);
 
   bool CanOptimizeToImageLayer();
 
