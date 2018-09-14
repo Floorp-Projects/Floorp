@@ -901,9 +901,11 @@ MediaEngineRemoteVideoSource::ChooseCapability(
       // algorithm there.
       // TODO: This can be removed in bug 1453269.
       aCapability.width =
-        (c.mWidth.mIdeal.valueOr(0) & 0xffff) << 16 | (c.mWidth.mMax & 0xffff);
+        (std::min(0xffff, c.mWidth.mIdeal.valueOr(0)) & 0xffff) << 16 |
+        (std::min(0xffff, c.mWidth.mMax) & 0xffff);
       aCapability.height =
-        (c.mHeight.mIdeal.valueOr(0) & 0xffff) << 16 | (c.mHeight.mMax & 0xffff);
+        (std::min(0xffff, c.mHeight.mIdeal.valueOr(0)) & 0xffff) << 16 |
+        (std::min(0xffff, c.mHeight.mMax) & 0xffff);
       aCapability.maxFPS =
         c.mFrameRate.Clamp(c.mFrameRate.mIdeal.valueOr(aPrefs.mFPS));
       return true;
