@@ -12,6 +12,7 @@
 #define mozilla_FullscreenRequest_h
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 
@@ -19,12 +20,16 @@ namespace mozilla {
 
 struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
 {
-  FullscreenRequest(dom::Element* aElement, dom::CallerType aCallerType)
-    : mElement(aElement)
-    , mDocument(aElement->OwnerDoc())
-    , mCallerType(aCallerType)
+  static UniquePtr<FullscreenRequest> Create(Element* aElement,
+                                             dom::CallerType aCallerType)
   {
-    MOZ_COUNT_CTOR(FullscreenRequest);
+    return WrapUnique(new FullscreenRequest(aElement, aCallerType, true));
+  }
+
+  static UniquePtr<FullscreenRequest> CreateForRemote(Element* aElement)
+  {
+    return WrapUnique(
+      new FullscreenRequest(aElement, dom::CallerType::NonSystem, false));
   }
 
   FullscreenRequest(const FullscreenRequest&) = delete;
@@ -51,7 +56,19 @@ public:
   // we're calling RequestFullscreen() as part of a continuation of a
   // request in a subdocument in different process, whereupon the caller
   // need to send some notification itself with the real origin.
-  bool mShouldNotifyNewOrigin = true;
+  const bool mShouldNotifyNewOrigin;
+
+private:
+  FullscreenRequest(dom::Element* aElement,
+                    dom::CallerType aCallerType,
+                    bool aShouldNotifyNewOrigin)
+    : mElement(aElement)
+    , mDocument(aElement->OwnerDoc())
+    , mCallerType(aCallerType)
+    , mShouldNotifyNewOrigin(aShouldNotifyNewOrigin)
+  {
+    MOZ_COUNT_CTOR(FullscreenRequest);
+  }
 };
 
 } // namespace mozilla
