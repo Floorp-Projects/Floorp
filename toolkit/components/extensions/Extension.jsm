@@ -2091,6 +2091,11 @@ class Langpack extends ExtensionData {
   }
 
   async shutdown(reason) {
+    if (reason === "APP_SHUTDOWN") {
+      // If we're shutting down, let's not bother updating the state of each
+      // system.
+      return;
+    }
     for (const sourceName of Object.keys(this.startupData.l10nRegistrySources)) {
       L10nRegistry.removeSource(`${sourceName}-${this.startupData.langpackId}`);
     }
