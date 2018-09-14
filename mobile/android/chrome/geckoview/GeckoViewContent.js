@@ -7,9 +7,9 @@ ChromeUtils.import("resource://gre/modules/GeckoViewContentModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   FormData: "resource://gre/modules/FormData.jsm",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
+  GeckoViewAutoFill: "resource://gre/modules/GeckoViewAutoFill.jsm",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   ScrollPosition: "resource://gre/modules/ScrollPosition.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -49,6 +49,9 @@ class GeckoViewContent extends GeckoViewContentModule {
     addEventListener("pageshow", this, options);
     addEventListener("focusin", this, options);
     addEventListener("focusout", this, options);
+
+    XPCOMUtils.defineLazyGetter(this, "_autoFill", () =>
+        new GeckoViewAutoFill(this.eventDispatcher));
 
     // Notify WebExtension process script that this tab is ready for extension content to load.
     Services.obs.notifyObservers(this.messageManager, "tab-content-frameloader-created");
@@ -267,13 +270,13 @@ class GeckoViewContent extends GeckoViewContentModule {
         }
         break;
       case "DOMFormHasPassword":
-        this._addAutoFillElement(
+        this._autoFill.addElement(
             FormLikeFactory.createFromForm(aEvent.composedTarget));
         break;
       case "DOMInputPasswordAdded": {
         const input = aEvent.composedTarget;
         if (!input.form) {
-          this._addAutoFillElement(FormLikeFactory.createFromField(input));
+          this._autoFill.addElement(FormLikeFactory.createFromField(input));
         }
         break;
       }
@@ -315,22 +318,22 @@ class GeckoViewContent extends GeckoViewContentModule {
         break;
       case "focusin":
         if (aEvent.composedTarget instanceof content.HTMLInputElement) {
-          this._onAutoFillFocus(aEvent.composedTarget);
+          this._autoFill.onFocus(aEvent.composedTarget);
         }
         break;
       case "focusout":
         if (aEvent.composedTarget instanceof content.HTMLInputElement) {
-          this._onAutoFillFocus(null);
+          this._autoFill.onFocus(null);
         }
         break;
       case "pagehide":
         if (aEvent.target === content.document) {
-          this._clearAutoFillElements();
+          this._autoFill.clearElements();
         }
         break;
       case "pageshow":
         if (aEvent.target === content.document && aEvent.persisted) {
-          this._scanAutoFillDocument(aEvent.target);
+          this._autoFill.scanDocument(aEvent.target);
         }
         break;
     }
@@ -355,200 +358,6 @@ class GeckoViewContent extends GeckoViewContentModule {
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.removeProgressListener(this.progressFilter);
-  }
-
-  /**
-   * Process an auto-fillable form and send the relevant details of the form
-   * to Java. Multiple calls within a short time period for the same form are
-   * coalesced, so that, e.g., if multiple inputs are added to a form in
-   * succession, we will only perform one processing pass. Note that for inputs
-   * without forms, FormLikeFactory treats the document as the "form", but
-   * there is no difference in how we process them.
-   *
-   * @param aFormLike A FormLike object produced by FormLikeFactory.
-   * @param aFromDeferredTask Signal that this call came from our internal
-   *                          coalescing task. Other caller must not use this
-   *                          parameter.
-   */
-  _addAutoFillElement(aFormLike, aFromDeferredTask) {
-    let task = this._autoFillTasks &&
-               this._autoFillTasks.get(aFormLike.rootElement);
-    if (task && !aFromDeferredTask) {
-      // We already have a pending task; cancel that and start a new one.
-      debug `Canceling previous auto-fill task`;
-      task.disarm();
-      task = null;
-    }
-
-    if (!task) {
-      if (aFromDeferredTask) {
-        // Canceled before we could run the task.
-        debug `Auto-fill task canceled`;
-        return;
-      }
-      // Start a new task so we can coalesce adding elements in one batch.
-      debug `Deferring auto-fill task`;
-      task = new DeferredTask(
-          () => this._addAutoFillElement(aFormLike, true), 100);
-      task.arm();
-      if (!this._autoFillTasks) {
-        this._autoFillTasks = new WeakMap();
-      }
-      this._autoFillTasks.set(aFormLike.rootElement, task);
-      return;
-    }
-
-    debug `Adding auto-fill ${aFormLike}`;
-
-    this._autoFillTasks.delete(aFormLike.rootElement);
-    this._autoFillId = this._autoFillId || 0;
-
-    if (!this._autoFillInfos) {
-      this._autoFillInfos = new WeakMap();
-      this._autoFillElements = new Map();
-    }
-
-    let sendFocusEvent = false;
-    const getInfo = (element, parent) => {
-      let info = this._autoFillInfos.get(element);
-      if (info) {
-        return info;
-      }
-      info = {
-        id: ++this._autoFillId,
-        parent,
-        tag: element.tagName,
-        type: element instanceof content.HTMLInputElement ? element.type : null,
-        editable: (element instanceof content.HTMLInputElement) &&
-                  ["color", "date", "datetime-local", "email", "month",
-                   "number", "password", "range", "search", "tel", "text",
-                   "time", "url", "week"].includes(element.type),
-        disabled: element instanceof content.HTMLInputElement ? element.disabled
-                                                              : null,
-        attributes: Object.assign({}, ...Array.from(element.attributes)
-            .filter(attr => attr.localName !== "value")
-            .map(attr => ({[attr.localName]: attr.value}))),
-        origin: element.ownerDocument.location.origin,
-      };
-      this._autoFillInfos.set(element, info);
-      this._autoFillElements.set(info.id, Cu.getWeakReference(element));
-      sendFocusEvent |= (element === element.ownerDocument.activeElement);
-      return info;
-    };
-
-    const rootInfo = getInfo(aFormLike.rootElement, null);
-    rootInfo.children = aFormLike.elements.map(
-        element => getInfo(element, rootInfo.id));
-
-    this.eventDispatcher.dispatch("GeckoView:AddAutoFill", rootInfo, {
-      onSuccess: responses => {
-        // `responses` is an object with IDs as keys.
-        debug `Performing auto-fill ${responses}`;
-
-        const AUTOFILL_STATE = "-moz-autofill";
-        const winUtils = content.windowUtils;
-
-        for (let id in responses) {
-          const entry = this._autoFillElements &&
-                        this._autoFillElements.get(+id);
-          const element = entry && entry.get();
-          const value = responses[id] || "";
-
-          if (element instanceof content.HTMLInputElement &&
-              !element.disabled && element.parentElement) {
-            element.value = value;
-
-            // Fire both "input" and "change" events.
-            element.dispatchEvent(new element.ownerGlobal.Event(
-                "input", { bubbles: true }));
-            element.dispatchEvent(new element.ownerGlobal.Event(
-                "change", { bubbles: true }));
-
-            if (winUtils && element.value === value) {
-              // Add highlighting for autofilled fields.
-              winUtils.addManuallyManagedState(element, AUTOFILL_STATE);
-
-              // Remove highlighting when the field is changed.
-              element.addEventListener("input", _ =>
-                  winUtils.removeManuallyManagedState(element, AUTOFILL_STATE),
-                  { mozSystemGroup: true, once: true });
-            }
-
-          } else if (element) {
-            warn `Don't know how to auto-fill ${element.tagName}`;
-          }
-        }
-      },
-      onError: error => {
-        warn `Cannot perform autofill ${error}`;
-      },
-    });
-
-    if (sendFocusEvent) {
-      // We might have missed sending a focus event for the active element.
-      this._onAutoFillFocus(aFormLike.ownerDocument.activeElement);
-    }
-  }
-
-  /**
-   * Called when an auto-fillable field is focused or blurred.
-   *
-   * @param aTarget Focused element, or null if an element has lost focus.
-   */
-  _onAutoFillFocus(aTarget) {
-    debug `Auto-fill focus on ${aTarget && aTarget.tagName}`;
-
-    let info = aTarget && this._autoFillInfos &&
-               this._autoFillInfos.get(aTarget);
-    if (!aTarget || info) {
-      this.eventDispatcher.dispatch("GeckoView:OnAutoFillFocus", info);
-    }
-  }
-
-  /**
-   * Clear all tracked auto-fill forms and notify Java.
-   */
-  _clearAutoFillElements() {
-    debug `Clearing auto-fill`;
-
-    this._autoFillTasks = undefined;
-    this._autoFillInfos = undefined;
-    this._autoFillElements = undefined;
-
-    this.eventDispatcher.sendRequest({
-      type: "GeckoView:ClearAutoFill",
-    });
-  }
-
-  /**
-   * Scan for auto-fillable forms and add them if necessary. Called when a page
-   * is navigated to through history, in which case we don't get our typical
-   * "input added" notifications.
-   *
-   * @param aDoc Document to scan.
-   */
-  _scanAutoFillDocument(aDoc) {
-    // Add forms first; only check forms with password inputs.
-    const inputs = aDoc.querySelectorAll("input[type=password]");
-    let inputAdded = false;
-    for (let i = 0; i < inputs.length; i++) {
-      if (inputs[i].form) {
-        // Let _addAutoFillElement coalesce multiple calls for the same form.
-        this._addAutoFillElement(
-            FormLikeFactory.createFromForm(inputs[i].form));
-      } else if (!inputAdded) {
-        // Treat inputs without forms as one unit, and process them only once.
-        inputAdded = true;
-        this._addAutoFillElement(
-            FormLikeFactory.createFromField(inputs[i]));
-      }
-    }
-
-    // Finally add frames.
-    const frames = aDoc.defaultView.frames;
-    for (let i = 0; i < frames.length; i++) {
-      this._scanAutoFillDocument(frames[i].document);
-    }
   }
 }
 
