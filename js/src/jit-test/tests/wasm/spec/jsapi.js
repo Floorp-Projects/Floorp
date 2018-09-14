@@ -442,11 +442,11 @@ test(() => {
     assertThrows(() => Memory(), TypeError);
     assertThrows(() => new Memory(1), TypeError);
     assertThrows(() => new Memory({initial:{valueOf() { throw new Error("here")}}}), Error);
-    assertThrows(() => new Memory({initial:-1}), RangeError);
-    assertThrows(() => new Memory({initial:Math.pow(2,32)}), RangeError);
+    assertThrows(() => new Memory({initial:-1}), TypeError);
+    assertThrows(() => new Memory({initial:Math.pow(2,32)}), TypeError);
     assertThrows(() => new Memory({initial:1, maximum: Math.pow(2,32)/Math.pow(2,14) }), RangeError);
     assertThrows(() => new Memory({initial:2, maximum:1 }), RangeError);
-    assertThrows(() => new Memory({maximum: -1 }), RangeError);
+    assertThrows(() => new Memory({maximum: -1 }), TypeError);
     assert_equals(new Memory({initial:1}) instanceof Memory, true);
     assert_equals(new Memory({initial:1.5}).buffer.byteLength, WasmPage);
 }, "'WebAssembly.Memory' constructor function");
@@ -504,8 +504,8 @@ test(() => {
     assert_equals(memGrow.length, 1);
     assertThrows(() => memGrow.call(), TypeError);
     assertThrows(() => memGrow.call({}), TypeError);
-    assertThrows(() => memGrow.call(mem1, -1), RangeError);
-    assertThrows(() => memGrow.call(mem1, Math.pow(2,32)), RangeError);
+    assertThrows(() => memGrow.call(mem1, -1), TypeError);
+    assertThrows(() => memGrow.call(mem1, Math.pow(2,32)), TypeError);
     var mem = new Memory({initial:1, maximum:2});
     var buf = mem.buffer;
     assert_equals(buf.byteLength, WasmPage);
@@ -550,10 +550,10 @@ test(() => {
     assertThrows(() => new Table({initial:1, element:"any"}), TypeError);
     assertThrows(() => new Table({initial:1, element:{valueOf() { return "anyfunc" }}}), TypeError);
     assertThrows(() => new Table({initial:{valueOf() { throw new Error("here")}}, element:"anyfunc"}), Error);
-    assertThrows(() => new Table({initial:-1, element:"anyfunc"}), RangeError);
-    assertThrows(() => new Table({initial:Math.pow(2,32), element:"anyfunc"}), RangeError);
+    assertThrows(() => new Table({initial:-1, element:"anyfunc"}), TypeError);
+    assertThrows(() => new Table({initial:Math.pow(2,32), element:"anyfunc"}), TypeError);
     assertThrows(() => new Table({initial:2, maximum:1, element:"anyfunc"}), RangeError);
-    assertThrows(() => new Table({initial:2, maximum:Math.pow(2,32), element:"anyfunc"}), RangeError);
+    assertThrows(() => new Table({initial:2, maximum:Math.pow(2,32), element:"anyfunc"}), TypeError);
     assert_equals(new Table({initial:1, element:"anyfunc"}) instanceof Table, true);
     assert_equals(new Table({initial:1.5, element:"anyfunc"}) instanceof Table, true);
     assert_equals(new Table({initial:1, maximum:1.5, element:"anyfunc"}) instanceof Table, true);
@@ -619,8 +619,8 @@ test(() => {
     assert_equals(get.call(tbl1, 1.5), null);
     assertThrows(() => get.call(tbl1, 2), RangeError);
     assertThrows(() => get.call(tbl1, 2.5), RangeError);
-    assertThrows(() => get.call(tbl1, -1), RangeError);
-    assertThrows(() => get.call(tbl1, Math.pow(2,33)), RangeError);
+    assertThrows(() => get.call(tbl1, -1), TypeError);
+    assertThrows(() => get.call(tbl1, Math.pow(2,33)), TypeError);
     assertThrows(() => get.call(tbl1, {valueOf() { throw new Error("hi") }}), Error);
 }, "'WebAssembly.Table.prototype.get' method");
 
@@ -639,8 +639,8 @@ test(() => {
     assertThrows(() => set.call({}), TypeError);
     assertThrows(() => set.call(tbl1, 0), TypeError);
     assertThrows(() => set.call(tbl1, 2, null), RangeError);
-    assertThrows(() => set.call(tbl1, -1, null), RangeError);
-    assertThrows(() => set.call(tbl1, Math.pow(2,33), null), RangeError);
+    assertThrows(() => set.call(tbl1, -1, null), TypeError);
+    assertThrows(() => set.call(tbl1, Math.pow(2,33), null), TypeError);
     assertThrows(() => set.call(tbl1, 0, undefined), TypeError);
     assertThrows(() => set.call(tbl1, 0, {}), TypeError);
     assertThrows(() => set.call(tbl1, 0, function() {}), TypeError);
@@ -663,8 +663,8 @@ test(() => {
     assert_equals(tblGrow.length, 1);
     assertThrows(() => tblGrow.call(), TypeError);
     assertThrows(() => tblGrow.call({}), TypeError);
-    assertThrows(() => tblGrow.call(tbl1, -1), RangeError);
-    assertThrows(() => tblGrow.call(tbl1, Math.pow(2,32)), RangeError);
+    assertThrows(() => tblGrow.call(tbl1, -1), TypeError);
+    assertThrows(() => tblGrow.call(tbl1, Math.pow(2,32)), TypeError);
     var tbl = new Table({element:"anyfunc", initial:1, maximum:2});
     assert_equals(tbl.length, 1);
     assert_equals(tbl.grow(0), 1);
