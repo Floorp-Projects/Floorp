@@ -7,8 +7,6 @@ package org.mozilla.focus.fragment;
 
 import android.app.Dialog;
 import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -108,7 +106,6 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
             }
         });
         AlertDialog dialog = builder.create();
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         return dialog;
     }
 
