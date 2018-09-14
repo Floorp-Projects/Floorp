@@ -684,6 +684,22 @@ IsSelectionInsideRuby(Selection* aSelection)
   return true;
 }
 
+static Element*
+GetElementOrNearestFlattenedTreeParentElement(nsINode* aNode)
+{
+  if (!aNode->IsContent()) {
+    return nullptr;
+  }
+  for (nsIContent* content = aNode->AsContent();
+      content;
+      content = content->GetFlattenedTreeParent()) {
+    if (content->IsElement()) {
+      return content->AsElement();
+    }
+  }
+  return nullptr;
+}
+
 bool
 nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
                                   int32_t aClipboardType,
@@ -716,29 +732,32 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
   if (!piWindow)
     return false;
 
-  // if a selection was not supplied, try to find it
-  nsCOMPtr<nsIContent> content;
+  // Event target of clipboard events should be an element node which
+  // contains selection start container.
+  RefPtr<Element> targetElement;
+
+  // If a selection was not supplied, try to find it.
   RefPtr<Selection> sel = aSelection;
   if (!sel) {
-    content = GetSelectionForCopy(doc, getter_AddRefs(sel));
+    GetSelectionForCopy(doc, getter_AddRefs(sel));
   }
 
-  // retrieve the event target node from the start of the selection
+  // Retrieve the event target node from the start of the selection.
   if (sel) {
-    RefPtr<nsRange> range = sel->GetRangeAt(0);
+    nsRange* range = sel->GetRangeAt(0);
     if (range) {
-      nsINode* startContainer = range->GetStartContainer();
-      if (startContainer) {
-        content = do_QueryInterface(startContainer);
-      }
+      targetElement =
+        GetElementOrNearestFlattenedTreeParentElement(
+          range->GetStartContainer());
     }
   }
 
-  // if no content node was set, just get the root
-  if (!content) {
-    content = doc->GetRootElement();
-    if (!content)
+  // If there is no selection ranges, use the <body> or <frameset> element.
+  if (!targetElement) {
+    targetElement = doc->GetBody();
+    if (!targetElement) {
       return false;
+    }
   }
 
   // It seems to be unsafe to fire an event handler during reflow (bug 393696)
@@ -762,7 +781,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     nsEventStatus status = nsEventStatus_eIgnore;
     InternalClipboardEvent evt(true, originalEventMessage);
     evt.mClipboardData = clipboardData;
-    EventDispatcher::Dispatch(content, presShell->GetPresContext(), &evt,
+    EventDispatcher::Dispatch(targetElement, presShell->GetPresContext(), &evt,
                               nullptr, &status);
     // If the event was cancelled, don't do the clipboard operation
     doDefault = (status != nsEventStatus_eConsumeNoDefault);
@@ -807,13 +826,13 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
   uint32_t count = 0;
   if (doDefault) {
     // find the focused node
-    nsCOMPtr<nsIContent> srcNode = content;
-    if (content->IsInNativeAnonymousSubtree()) {
-      srcNode = content->FindFirstNonChromeOnlyAccessContent();
+    nsIContent* sourceContent = targetElement.get();
+    if (targetElement->IsInNativeAnonymousSubtree()) {
+      sourceContent = targetElement->FindFirstNonChromeOnlyAccessContent();
     }
 
     // check if we are looking at a password input
-    nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(srcNode);
+    nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(sourceContent);
     if (formControl) {
       if (formControl->ControlType() == NS_FORM_INPUT_PASSWORD) {
         return false;
@@ -822,7 +841,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
 
     // when cutting non-editable content, do nothing
     // XXX this is probably the wrong editable flag to check
-    if (originalEventMessage != eCut || content->IsEditable()) {
+    if (originalEventMessage != eCut || targetElement->IsEditable()) {
       // get the data from the selection if any
       if (sel->IsCollapsed()) {
         if (aActionTaken) {

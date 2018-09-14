@@ -54,8 +54,8 @@ public:
         name = NS_LITERAL_STRING("fullscreenerror");
         break;
     }
-    nsINode* target =
-      mTarget->GetComposedDoc() == mDocument ? mTarget : mDocument;
+    nsINode* target = mTarget->GetComposedDoc() == mDocument
+      ? mTarget.get() : mDocument.get();
     Unused << nsContentUtils::DispatchTrustedEvent(
       mDocument, target, name,
       CanBubble::eYes, Cancelable::eNo, Composed::eYes);
