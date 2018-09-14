@@ -8,6 +8,7 @@
 
 @import url("chrome://global/content/autocomplete.css");
 @import url("chrome://global/skin/autocomplete.css");
+@import url("chrome://global/skin/checkbox.css");
 @import url("chrome://global/skin/dialog.css");
 @import url("chrome://global/skin/dropmarker.css");
 @import url("chrome://global/skin/groupbox.css");
@@ -16,6 +17,7 @@
 @import url("chrome://global/skin/notification.css");
 @import url("chrome://global/skin/popup.css");
 @import url("chrome://global/skin/progressmeter.css");
+@import url("chrome://global/skin/radio.css");
 @import url("chrome://global/skin/richlistbox.css");
 @import url("chrome://global/skin/splitter.css");
 @import url("chrome://global/skin/tabbox.css");
