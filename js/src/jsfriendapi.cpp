@@ -346,6 +346,12 @@ js::GetBuiltinClass(JSContext* cx, HandleObject obj, ESClass* cls)
     return true;
 }
 
+JS_FRIEND_API(bool)
+js::IsArgumentsObject(HandleObject obj)
+{
+    return obj->is<ArgumentsObject>();
+}
+
 JS_FRIEND_API(const char*)
 js::ObjectClassName(JSContext* cx, HandleObject obj)
 {
