@@ -16,7 +16,6 @@ const TIMEOUT = 2000;
 
 const ua = Cc["@mozilla.org/network/protocol;1?name=http"]
            .getService(Ci.nsIHttpProtocolHandler).userAgent;
-const isWinXP = ua.includes("Windows NT 5.1");
 
 var gConverter;
 
@@ -85,19 +84,15 @@ add_test(() => {
   );
 });
 
-// The following multicast interface test doesn't work on Windows XP, as it
-// appears to allow packets no matter what address is given, so we'll skip the
-// test there.
-if (!isWinXP) {
-  add_test(() => {
-    info("Changing multicast interface");
-    let socket = createSocketAndJoin(ADDRESS_TEST3);
-    socket.multicastInterface = "127.0.0.1";
-    sendPing(socket, ADDRESS_TEST3).then(
-      () => do_throw("Changed interface, but still got a packet"),
-      run_next_test
-    );
-  });
+add_test(() => {
+  info("Changing multicast interface");
+  let socket = createSocketAndJoin(ADDRESS_TEST3);
+  socket.multicastInterface = "127.0.0.1";
+  sendPing(socket, ADDRESS_TEST3).then(
+    () => do_throw("Changed interface, but still got a packet"),
+    run_next_test
+  );
+});
 
 add_test(() => {
   info("Leaving multicast group");
@@ -108,4 +103,3 @@ add_test(() => {
     run_next_test
   );
 });
-}
