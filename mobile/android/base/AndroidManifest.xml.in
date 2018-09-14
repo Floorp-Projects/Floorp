@@ -25,7 +25,7 @@
 
     <application android:label="@string/moz_app_displayname"
                  android:icon="@mipmap/ic_launcher"
-                 android:roundIcon="@mipmap/ic_launcher"
+                 android:roundIcon="@mipmap/ic_launcher_round"
                  android:logo="@drawable/logo"
                  android:name="@MOZ_ANDROID_APPLICATION_CLASS@"
                  android:hardwareAccelerated="true"
