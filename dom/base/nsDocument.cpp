@@ -11245,20 +11245,20 @@ public:
       }
     }
 
-    void DeleteAndNext()
+    UniquePtr<FullscreenRequest> TakeAndNext()
     {
-      DeleteAndNextInternal();
+      auto thisRequest = TakeAndNextInternal();
       SkipToNextMatch();
+      return thisRequest;
     }
     bool AtEnd() const { return mCurrent == nullptr; }
-    const FullscreenRequest& Get() const { return *mCurrent; }
 
   private:
-    void DeleteAndNextInternal()
+    UniquePtr<FullscreenRequest> TakeAndNextInternal()
     {
-      FullscreenRequest* thisRequest = mCurrent;
-      mCurrent = mCurrent->getNext();
-      delete thisRequest;
+      UniquePtr<FullscreenRequest> thisRequest(mCurrent);
+      mCurrent = mCurrent->removeAndGetNext();
+      return thisRequest;
     }
     void SkipToNextMatch()
     {
@@ -11268,7 +11268,7 @@ public:
         if (!docShell) {
           // Always automatically drop documents which has been
           // detached from the doc shell.
-          DeleteAndNextInternal();
+          TakeAndNextInternal();
         } else {
           while (docShell && docShell != mRootShellForIteration) {
             docShell->GetParent(getter_AddRefs(docShell));
@@ -11350,7 +11350,7 @@ nsIDocument::RequestFullscreen(UniquePtr<FullscreenRequest> aRequest)
   }
 
   if (ShouldApplyFullscreenDirectly(this, rootWin)) {
-    ApplyFullscreen(*aRequest);
+    ApplyFullscreen(std::move(aRequest));
     return;
   }
 
@@ -11390,11 +11390,11 @@ nsIDocument::HandlePendingFullscreenRequests(nsIDocument* aDoc)
   PendingFullscreenRequestList::Iterator iter(
     aDoc, PendingFullscreenRequestList::eDocumentsWithSameRoot);
   while (!iter.AtEnd()) {
-    const FullscreenRequest& request = iter.Get();
-    if (request.Document()->ApplyFullscreen(request)) {
+    UniquePtr<FullscreenRequest> request = iter.TakeAndNext();
+    nsIDocument* doc = request->Document();
+    if (doc->ApplyFullscreen(std::move(request))) {
       handled = true;
     }
-    iter.DeleteAndNext();
   }
   return handled;
 }
@@ -11405,15 +11405,14 @@ ClearPendingFullscreenRequests(nsIDocument* aDoc)
   PendingFullscreenRequestList::Iterator iter(
     aDoc, PendingFullscreenRequestList::eInclusiveDescendants);
   while (!iter.AtEnd()) {
-    iter.DeleteAndNext();
+    iter.TakeAndNext();
   }
 }
 
 bool
-nsIDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
+nsIDocument::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest)
 {
-  Element* elem = aRequest.Element();
-  if (!FullscreenElementReadyCheck(aRequest)) {
+  if (!FullscreenElementReadyCheck(*aRequest)) {
     return false;
   }
 
@@ -11439,11 +11438,12 @@ nsIDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
   // Set the fullscreen element. This sets the fullscreen style on the
   // element, and the fullscreen-ancestor styles on ancestors of the element
   // in this document.
+  Element* elem = aRequest->Element();
   DebugOnly<bool> x = FullscreenStackPush(elem);
   NS_ASSERTION(x, "Fullscreen state of requesting doc should always change!");
   // Set the iframe fullscreen flag.
-  if (elem->IsHTMLElement(nsGkAtoms::iframe)) {
-    static_cast<HTMLIFrameElement*>(elem)->SetFullscreenFlag(true);
+  if (auto* iframe = HTMLIFrameElement::FromNode(elem)) {
+    iframe->SetFullscreenFlag(true);
   }
   changed.AppendElement(this);
 
@@ -11494,7 +11494,7 @@ nsIDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
   // process browser, the code in content process is responsible for
   // sending message with the origin to its parent, and the parent
   // shouldn't rely on this event itself.
-  if (aRequest.mShouldNotifyNewOrigin &&
+  if (aRequest->mShouldNotifyNewOrigin &&
       !nsContentUtils::HaveEqualPrincipals(previousFullscreenDoc, this)) {
     DispatchFullscreenNewOriginEvent(this);
   }
