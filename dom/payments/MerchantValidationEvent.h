@@ -60,6 +60,10 @@ public:
 
   void SetValidationURL(nsAString& aValidationURL);
 
+  void GetMethodName(nsAString& aMethodName);
+
+  void SetMethodName(const nsAString& aMethodName);
+
 protected:
   bool init(const MerchantValidationEventInit& aEventInitDict, ErrorResult& aRv);
   ~MerchantValidationEvent();
@@ -69,6 +73,7 @@ private:
   bool mWaitForUpdate;
   nsString mValidationURL;
   RefPtr<PaymentRequest> mRequest;
+  nsString mMethodName;
 };
 
 } // namespace dom
