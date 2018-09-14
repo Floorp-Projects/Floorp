@@ -230,10 +230,9 @@
 
 /* Override OSX-specific toolkit findbar button styles */
 .findbar-button {
-  background: none;
-  box-shadow: none;
+  background: none !important;
+  box-shadow: none !important;
   border: none;
-  color: inherit;
 }
 
 /* On Mac, native buttons keep their full opacity when they become disabled
