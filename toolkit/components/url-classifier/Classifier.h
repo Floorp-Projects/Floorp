@@ -134,6 +134,7 @@ private:
   nsresult RecoverBackups();
   nsresult CleanToDelete();
   nsresult CopyInUseDirForUpdate();
+  nsresult CopyDirectoryInterruptible(nsCOMPtr<nsIFile>& aDestDir, nsCOMPtr<nsIFile>& aSourceDir);
   nsresult RegenActiveTables();
 
   void MergeNewLookupCaches(); // Merge mNewLookupCaches into mLookupCaches.
