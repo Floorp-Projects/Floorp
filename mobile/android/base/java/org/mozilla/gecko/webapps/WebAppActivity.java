@@ -29,6 +29,8 @@ import org.mozilla.gecko.FormAssistPopup;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.prompts.PromptService;
@@ -86,6 +88,8 @@ public class WebAppActivity extends AppCompatActivity
 
             Intent lastLaunchIntent = savedInstanceState.getParcelable(SAVED_INTENT);
             setIntent(lastLaunchIntent);
+        } else {
+            Telemetry.sendUIEvent(TelemetryContract.Event.PWA, TelemetryContract.Method.HOMESCREEN);
         }
 
         super.onCreate(savedInstanceState);
