@@ -44,6 +44,7 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
+#include "util/Unicode.h"
 #include "util/Windows.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
@@ -61,165 +62,46 @@ using JS::AutoStableStringChars;
 namespace js {
 namespace ctypes {
 
-template <typename CharT>
-size_t
-GetDeflatedUTF8StringLength(JSContext* maybecx, const CharT* chars,
-                            size_t nchars)
-{
-    size_t nbytes;
-    const CharT* end;
-    unsigned c, c2;
-
-    nbytes = nchars;
-    for (end = chars + nchars; chars != end; chars++) {
-        c = *chars;
-        if (c < 0x80) {
-            continue;
-        }
-        if (0xD800 <= c && c <= 0xDFFF) {
-            /* Surrogate pair. */
-            chars++;
-
-            /* nbytes sets 1 length since this is surrogate pair. */
-            nbytes--;
-            if (c >= 0xDC00 || chars == end) {
-                goto bad_surrogate;
-            }
-            c2 = *chars;
-            if (c2 < 0xDC00 || c2 > 0xDFFF) {
-                goto bad_surrogate;
-            }
-            c = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
-        }
-        c >>= 11;
-        nbytes++;
-        while (c) {
-            c >>= 5;
-            nbytes++;
-        }
-    }
-    return nbytes;
-
-  bad_surrogate:
-    if (maybecx) {
-        js::gc::AutoSuppressGC suppress(maybecx);
-        char buffer[10];
-        SprintfLiteral(buffer, "0x%x", c);
-        JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr, JSMSG_BAD_SURROGATE_CHAR,
-                                  buffer);
-    }
-    return (size_t) -1;
-}
-
-template size_t
-GetDeflatedUTF8StringLength(JSContext* maybecx, const Latin1Char* chars,
-                            size_t nchars);
-
-template size_t
-GetDeflatedUTF8StringLength(JSContext* maybecx, const char16_t* chars,
-                            size_t nchars);
-
-static size_t
-GetDeflatedUTF8StringLength(JSContext* maybecx, JSLinearString* str)
-{
-    size_t length = str->length();
-
-    JS::AutoCheckCannotGC nogc;
-    return str->hasLatin1Chars()
-           ? GetDeflatedUTF8StringLength(maybecx, str->latin1Chars(nogc), length)
-           : GetDeflatedUTF8StringLength(maybecx, str->twoByteChars(nogc), length);
-}
-
-template <typename CharT>
-bool
-DeflateStringToUTF8Buffer(JSContext* maybecx, const CharT* src, size_t srclen,
-                          char* dst, size_t* dstlenp)
-{
-    size_t i, utf8Len;
-    char16_t c, c2;
-    uint32_t v;
-    uint8_t utf8buf[6];
-
-    size_t dstlen = *dstlenp;
-    size_t origDstlen = dstlen;
-
-    while (srclen) {
-        c = *src++;
-        srclen--;
-        if (c >= 0xDC00 && c <= 0xDFFF) {
-            goto badSurrogate;
-        }
-        if (c < 0xD800 || c > 0xDBFF) {
-            v = c;
-        } else {
-            if (srclen < 1) {
-                goto badSurrogate;
-            }
-            c2 = *src;
-            if ((c2 < 0xDC00) || (c2 > 0xDFFF)) {
-                goto badSurrogate;
-            }
-            src++;
-            srclen--;
-            v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
-        }
-        if (v < 0x0080) {
-            /* no encoding necessary - performance hack */
-            if (dstlen == 0) {
-                goto bufferTooSmall;
-            }
-            *dst++ = (char) v;
-            utf8Len = 1;
-        } else {
-            utf8Len = js::OneUcs4ToUtf8Char(utf8buf, v);
-            if (utf8Len > dstlen) {
-                goto bufferTooSmall;
-            }
-            for (i = 0; i < utf8Len; i++) {
-                *dst++ = (char) utf8buf[i];
-            }
-        }
-        dstlen -= utf8Len;
-    }
-    *dstlenp = (origDstlen - dstlen);
-    return true;
-
-badSurrogate:
-    *dstlenp = (origDstlen - dstlen);
-    /* Delegate error reporting to the measurement function. */
-    if (maybecx) {
-        GetDeflatedUTF8StringLength(maybecx, src - 1, srclen + 1);
-    }
-    return false;
-
-bufferTooSmall:
-    *dstlenp = (origDstlen - dstlen);
-    if (maybecx) {
-        js::gc::AutoSuppressGC suppress(maybecx);
-        JS_ReportErrorNumberASCII(maybecx, GetErrorMessage, nullptr,
-                                  JSMSG_BUFFER_TOO_SMALL);
-    }
-    return false;
-}
-
-template bool
-DeflateStringToUTF8Buffer(JSContext* maybecx, const Latin1Char* src, size_t srclen,
-                          char* dst, size_t* dstlenp);
-
-template bool
-DeflateStringToUTF8Buffer(JSContext* maybecx, const char16_t* src, size_t srclen,
-                          char* dst, size_t* dstlenp);
-
 static bool
-DeflateStringToUTF8Buffer(JSContext* maybecx, JSLinearString* str, char* dst,
-                          size_t* dstlenp)
+HasUnpairedSurrogate(const char16_t* chars, size_t nchars, char16_t* unpaired)
 {
-    size_t length = str->length();
+  for (const char16_t* end = chars + nchars; chars != end; chars++) {
+    char16_t c = *chars;
+    if (unicode::LeadSurrogateMin <= c && c <= unicode::TrailSurrogateMax) {
+      chars++;
+      if (c >= unicode::TrailSurrogateMin || chars == end) {
+        *unpaired = c;
+        return true;
+      }
+      char16_t c2 = *chars;
+      if (c2 < unicode::TrailSurrogateMin || c2 > unicode::TrailSurrogateMax) {
+        *unpaired = c;
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
+bool
+ReportErrorIfUnpairedSurrogatePresent(JSContext* cx, JSLinearString* str)
+{
+  if (str->hasLatin1Chars()) {
+    return true;
+  }
+
+  char16_t unpaired;
+  {
     JS::AutoCheckCannotGC nogc;
-    return str->hasLatin1Chars()
-           ? DeflateStringToUTF8Buffer(maybecx, str->latin1Chars(nogc), length, dst, dstlenp)
-           : DeflateStringToUTF8Buffer(maybecx, str->twoByteChars(nogc), length, dst, dstlenp);
+    if (!HasUnpairedSurrogate(str->twoByteChars(nogc), str->length(), &unpaired)) {
+      return true;
+    }
+  }
+
+  char buffer[10];
+  SprintfLiteral(buffer, "0x%x", unpaired);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_SURROGATE_CHAR, buffer);
+  return false;
 }
 
 /*******************************************************************************
@@ -3668,8 +3550,8 @@ ImplicitConvert(JSContext* cx,
       // TODO: Extend this so we can safely convert strings at other times also.
       JSString* sourceString = val.toString();
       size_t sourceLength = sourceString->length();
-      JSLinearString* sourceLinear = sourceString->ensureLinear(cx);
-      if (!sourceLinear) {
+      Rooted<JSFlatString*> sourceFlat(cx, sourceString->ensureFlat(cx));
+      if (!sourceFlat) {
         return false;
       }
 
@@ -3677,11 +3559,13 @@ ImplicitConvert(JSContext* cx,
       case TYPE_char:
       case TYPE_signed_char:
       case TYPE_unsigned_char: {
-        // Convert from UTF-16 to UTF-8.
-        size_t nbytes = GetDeflatedUTF8StringLength(cx, sourceLinear);
-        if (nbytes == (size_t) -1) {
+        // Reject if unpaired surrogate characters are present.
+        if (!ReportErrorIfUnpairedSurrogatePresent(cx, sourceFlat)) {
           return false;
         }
+
+        // Convert from UTF-16 to UTF-8.
+        size_t nbytes = JS::GetDeflatedUTF8StringLength(sourceFlat);
 
         char** charBuffer = static_cast<char**>(buffer);
         *charBuffer = cx->pod_malloc<char>(nbytes + 1);
@@ -3689,7 +3573,8 @@ ImplicitConvert(JSContext* cx,
           return false;
         }
 
-        ASSERT_OK(DeflateStringToUTF8Buffer(cx, sourceLinear, *charBuffer, &nbytes));
+        JS::DeflateStringToUTF8Buffer(sourceFlat, mozilla::RangedPtr<char>(*charBuffer, nbytes),
+                                      &nbytes);
         (*charBuffer)[nbytes] = 0;
         *freePointer = true;
         break;
@@ -3705,12 +3590,12 @@ ImplicitConvert(JSContext* cx,
         }
 
         *freePointer = true;
-        if (sourceLinear->hasLatin1Chars()) {
+        if (sourceFlat->hasLatin1Chars()) {
             AutoCheckCannotGC nogc;
-            CopyAndInflateChars(*char16Buffer, sourceLinear->latin1Chars(nogc), sourceLength);
+            CopyAndInflateChars(*char16Buffer, sourceFlat->latin1Chars(nogc), sourceLength);
         } else {
             AutoCheckCannotGC nogc;
-            mozilla::PodCopy(*char16Buffer, sourceLinear->twoByteChars(nogc), sourceLength);
+            mozilla::PodCopy(*char16Buffer, sourceFlat->twoByteChars(nogc), sourceLength);
         }
         (*char16Buffer)[sourceLength] = 0;
         break;
@@ -3790,8 +3675,8 @@ ImplicitConvert(JSContext* cx,
     if (val.isString()) {
       JSString* sourceString = val.toString();
       size_t sourceLength = sourceString->length();
-      JSLinearString* sourceLinear = sourceString->ensureLinear(cx);
-      if (!sourceLinear) {
+      Rooted<JSFlatString*> sourceFlat(cx, sourceString->ensureFlat(cx));
+      if (!sourceFlat) {
         return false;
       }
 
@@ -3799,12 +3684,13 @@ ImplicitConvert(JSContext* cx,
       case TYPE_char:
       case TYPE_signed_char:
       case TYPE_unsigned_char: {
-        // Convert from UTF-16 or Latin1 to UTF-8.
-        size_t nbytes =
-          GetDeflatedUTF8StringLength(cx, sourceLinear);
-        if (nbytes == (size_t) -1) {
+        // Reject if unpaired surrogate characters are present.
+        if (!ReportErrorIfUnpairedSurrogatePresent(cx, sourceFlat)) {
           return false;
         }
+
+        // Convert from UTF-16 or Latin1 to UTF-8.
+        size_t nbytes = JS::GetDeflatedUTF8StringLength(sourceFlat);
 
         if (targetLength < nbytes) {
           MOZ_ASSERT(!funObj);
@@ -3813,8 +3699,8 @@ ImplicitConvert(JSContext* cx,
         }
 
         char* charBuffer = static_cast<char*>(buffer);
-        ASSERT_OK(DeflateStringToUTF8Buffer(cx, sourceLinear, charBuffer,
-                                            &nbytes));
+        JS::DeflateStringToUTF8Buffer(sourceFlat, mozilla::RangedPtr<char>(charBuffer, nbytes),
+                                      &nbytes);
 
         if (targetLength > nbytes) {
           charBuffer[nbytes] = 0;
@@ -3832,12 +3718,12 @@ ImplicitConvert(JSContext* cx,
         }
 
         char16_t* dest = static_cast<char16_t*>(buffer);
-        if (sourceLinear->hasLatin1Chars()) {
+        if (sourceFlat->hasLatin1Chars()) {
             AutoCheckCannotGC nogc;
-            CopyAndInflateChars(dest, sourceLinear->latin1Chars(nogc), sourceLength);
+            CopyAndInflateChars(dest, sourceFlat->latin1Chars(nogc), sourceLength);
         } else {
             AutoCheckCannotGC nogc;
-            mozilla::PodCopy(dest, sourceLinear->twoByteChars(nogc), sourceLength);
+            mozilla::PodCopy(dest, sourceFlat->twoByteChars(nogc), sourceLength);
         }
 
         if (targetLength > sourceLength) {
@@ -5784,8 +5670,8 @@ ArrayType::ConstructData(JSContext* cx,
       // including space for the terminator.
       JSString* sourceString = args[0].toString();
       size_t sourceLength = sourceString->length();
-      JSLinearString* sourceLinear = sourceString->ensureLinear(cx);
-      if (!sourceLinear) {
+      Rooted<JSFlatString*> sourceFlat(cx, sourceString->ensureFlat(cx));
+      if (!sourceFlat) {
         return false;
       }
 
@@ -5793,11 +5679,13 @@ ArrayType::ConstructData(JSContext* cx,
       case TYPE_char:
       case TYPE_signed_char:
       case TYPE_unsigned_char: {
-        // Determine the UTF-8 length.
-        length = GetDeflatedUTF8StringLength(cx, sourceLinear);
-        if (length == (size_t) -1) {
+        // Reject if unpaired surrogate characters are present.
+        if (!ReportErrorIfUnpairedSurrogatePresent(cx, sourceFlat)) {
           return false;
         }
+
+        // Determine the UTF-8 length.
+        length = JS::GetDeflatedUTF8StringLength(sourceFlat);
 
         ++length;
         break;
@@ -6288,7 +6176,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
   RootedObject fieldsObj(cx, fieldsObj_);
 
   uint32_t len;
-  ASSERT_OK(JS_GetArrayLength(cx, fieldsObj, &len));
+  MOZ_ALWAYS_TRUE(JS_GetArrayLength(cx, fieldsObj, &len));
 
   // Get the common prototype for CData objects of this type from
   // ctypes.CType.prototype.
@@ -7228,7 +7116,7 @@ FunctionType::Create(JSContext* cx, unsigned argc, Value* vp)
     arrayObj = &args[2].toObject();
 
     uint32_t len;
-    ASSERT_OK(JS_GetArrayLength(cx, arrayObj, &len));
+    MOZ_ALWAYS_TRUE(JS_GetArrayLength(cx, arrayObj, &len));
 
     if (!argTypes.resize(len)) {
       JS_ReportOutOfMemory(cx);
@@ -9140,7 +9028,7 @@ Int64::Construct(JSContext* cx,
   // Get ctypes.Int64.prototype from the 'prototype' property of the ctor.
   RootedValue slot(cx);
   RootedObject callee(cx, &args.callee());
-  ASSERT_OK(JS_GetProperty(cx, callee, "prototype", &slot));
+  MOZ_ALWAYS_TRUE(JS_GetProperty(cx, callee, "prototype", &slot));
   RootedObject proto(cx, slot.toObjectOrNull());
   MOZ_ASSERT(JS_GetClass(proto) == &sInt64ProtoClass);
 
@@ -9331,7 +9219,7 @@ UInt64::Construct(JSContext* cx,
   // Get ctypes.UInt64.prototype from the 'prototype' property of the ctor.
   RootedValue slot(cx);
   RootedObject callee(cx, &args.callee());
-  ASSERT_OK(JS_GetProperty(cx, callee, "prototype", &slot));
+  MOZ_ALWAYS_TRUE(JS_GetProperty(cx, callee, "prototype", &slot));
   RootedObject proto(cx, &slot.toObject());
   MOZ_ASSERT(JS_GetClass(proto) == &sUInt64ProtoClass);
 
