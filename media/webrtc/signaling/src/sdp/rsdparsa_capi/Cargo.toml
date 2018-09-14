@@ -6,6 +6,6 @@ authors = ["Paul Ellenbogen <pe5@cs.princeton.edu>",
 
 [dependencies]
 libc = "^0.2.0"
-log = "^0.3"
+log = "0.4"
 rsdparsa = {version = "0.1.0", path = "../rsdparsa"}
 nserror = { path = "../../../../../../xpcom/rust/nserror" }

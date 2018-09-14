@@ -13,14 +13,6 @@
 #include "nsIFactory.h"
 #include "nsUniversalDetector.h"
 
-// {12BB8F1B-2389-11d3-B3BF-00805F8A6670}
-#define NS_JA_PSMDETECTOR_CID \
-{ 0x12bb8f1b, 0x2389, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
-
-// {12BB8F1C-2389-11d3-B3BF-00805F8A6670}
-#define NS_JA_STRING_PSMDETECTOR_CID \
-{ 0x12bb8f1c, 0x2389, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
-
 //=====================================================================
 class nsXPCOMDetector :
       public nsUniversalDetector,

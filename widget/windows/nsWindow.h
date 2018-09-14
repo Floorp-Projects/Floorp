@@ -131,6 +131,7 @@ public:
   virtual void            Move(double aX, double aY) override;
   virtual void            Resize(double aWidth, double aHeight, bool aRepaint) override;
   virtual void            Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
+  virtual mozilla::Maybe<bool> IsResizingNativeWidget() override;
   virtual MOZ_MUST_USE nsresult
                           BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
                                           int32_t aHorizontal,

@@ -16,6 +16,7 @@ const {Log} = ChromeUtils.import("chrome://marionette/content/log.js", {});
 XPCOMUtils.defineLazyGetter(this, "logger", Log.get);
 
 this.EXPORTED_SYMBOLS = [
+  "IdlePromise",
   "MessageManagerDestroyedPromise",
   "PollPromise",
   "Sleep",
@@ -263,5 +264,22 @@ function MessageManagerDestroyedPromise(messageManager) {
     }
 
     Services.obs.addObserver(observe, "message-manager-disconnect");
+  });
+}
+
+/**
+ * Throttle until the main thread is idle and `window` has performed
+ * an animation frame (in that order).
+ *
+ * @param {ChromeWindow} window
+ *     Window to request the animation frame from.
+ *
+ * @return Promise
+ */
+function IdlePromise(window) {
+  return new Promise(resolve => {
+    Services.tm.idleDispatchToMainThread(() => {
+      window.requestAnimationFrame(resolve);
+    });
   });
 }

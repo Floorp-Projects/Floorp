@@ -27,7 +27,6 @@ RUN apt-get update && \
       gawk \
       gcc-multilib \
       gnupg \
-      openjdk-7-jdk \
       p7zip-full \
       procps \
       python-pip \
