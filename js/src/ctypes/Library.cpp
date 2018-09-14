@@ -119,55 +119,55 @@ Library::Create(JSContext* cx, HandleValue path, const JSCTypesCallbacks* callba
   if (!pathStr) {
     return nullptr;
   }
+#ifdef XP_WIN
+  // On Windows, converting to native charset may corrupt path string.
+  // So, we have to use Unicode path directly.
   AutoStableStringChars pathStrChars(cx);
   if (!pathStrChars.initTwoByte(cx, pathStr)) {
     return nullptr;
   }
-#ifdef XP_WIN
-  // On Windows, converting to native charset may corrupt path string.
-  // So, we have to use Unicode path directly.
   char16ptr_t pathChars = pathStrChars.twoByteChars();
   libSpec.value.pathname_u = pathChars;
   libSpec.type = PR_LibSpec_PathnameU;
 #else
   // Convert to platform native charset if the appropriate callback has been
   // provided.
-  char* pathBytes;
+  JS::UniqueChars pathBytes;
   if (callbacks && callbacks->unicodeToNative) {
-    pathBytes =
-      callbacks->unicodeToNative(cx, pathStrChars.twoByteChars(), pathStr->length());
-    if (!pathBytes) {
+    AutoStableStringChars pathStrChars(cx);
+    if (!pathStrChars.initTwoByte(cx, pathStr)) {
       return nullptr;
     }
 
+    pathBytes.reset(callbacks->unicodeToNative(cx, pathStrChars.twoByteChars(),
+                                               pathStr->length()));
+    if (!pathBytes) {
+      return nullptr;
+    }
   } else {
     // Fallback: assume the platform native charset is UTF-8. This is true
     // for Mac OS X, Android, and probably Linux.
-    size_t nbytes =
-      GetDeflatedUTF8StringLength(cx, pathStrChars.twoByteChars(), pathStr->length());
-    if (nbytes == (size_t) -1) {
+    if (!ReportErrorIfUnpairedSurrogatePresent(cx, pathStr)) {
       return nullptr;
     }
 
-    pathBytes = static_cast<char*>(JS_malloc(cx, nbytes + 1));
+    size_t nbytes = JS::GetDeflatedUTF8StringLength(pathStr);
+
+    pathBytes.reset(static_cast<char*>(JS_malloc(cx, nbytes + 1)));
     if (!pathBytes) {
       return nullptr;
     }
 
-    ASSERT_OK(DeflateStringToUTF8Buffer(cx, pathStrChars.twoByteChars(),
-                pathStr->length(), pathBytes, &nbytes));
+    JS::DeflateStringToUTF8Buffer(pathStr, mozilla::RangedPtr<char>(pathBytes.get(), nbytes),
+                                  &nbytes);
     pathBytes[nbytes] = 0;
   }
 
-  libSpec.value.pathname = pathBytes;
+  libSpec.value.pathname = pathBytes.get();
   libSpec.type = PR_LibSpec_Pathname;
 #endif
 
   PRLibrary* library = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW);
-
-#ifndef XP_WIN
-  JS_free(cx, pathBytes);
-#endif
 
   if (!library) {
 #define MAX_ERROR_LEN 1024
