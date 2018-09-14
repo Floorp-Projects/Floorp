@@ -74,6 +74,8 @@ class UrlInputFragment :
         @JvmField
         val FRAGMENT_TAG = "url_input"
 
+        private const val duckDuckGo = "DuckDuckGo"
+
         private val ARGUMENT_ANIMATION = "animation"
         private val ARGUMENT_X = "x"
         private val ARGUMENT_Y = "y"
@@ -303,9 +305,19 @@ class UrlInputFragment :
 
         urlView?.setOnCommitListener(::onCommit)
 
+        val geckoViewAndDDG: Boolean =
+            Settings.getInstance(requireContext()).defaultSearchEngineName == duckDuckGo &&
+                    AppConstants.isGeckoBuild
+
         session?.let {
-            urlView?.setText(if (it.isSearch && Features.SEARCH_TERMS_OR_URL) it.searchTerms else
-                it.url.value)
+            urlView?.setText(
+                if (it.isSearch &&
+                    !geckoViewAndDDG &&
+                    Features.SEARCH_TERMS_OR_URL
+                )
+                    it.searchTerms else
+                    it.url.value
+            )
             clearView?.visibility = View.VISIBLE
             searchViewContainer?.visibility = View.GONE
         }
