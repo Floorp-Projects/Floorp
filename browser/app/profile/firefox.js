@@ -1499,13 +1499,6 @@ pref("browser.ping-centre.production.endpoint", "https://tiles.services.mozilla.
 // Enable GMP support in the addon manager.
 pref("media.gmp-provider.enabled", true);
 
-// Enable the new Content Blocking UI only on Nightly.
-#ifdef NIGHTLY_BUILD
-pref("browser.contentblocking.ui.enabled", true);
-#else
-pref("browser.contentblocking.ui.enabled", false);
-#endif
-
 pref("browser.contentblocking.global-toggle.enabled", true);
 
 // Define a set of default features for the Content Blocking UI
