@@ -1040,6 +1040,29 @@ JSXrayTraits::createHolder(JSContext* cx, JSObject* wrapper)
     }
     MOZ_ASSERT(key != JSProto_Null);
 
+    // Special case: pretend Arguments objects are arrays for Xrays.
+    //
+    // Arguments objects are strange beasts - they inherit Object.prototype,
+    // and implement iteration by defining an |own| property for
+    // Symbol.iterator. Since this value is callable, Array/Object Xrays will
+    // filter it out, causing the Xray view to be non-iterable, which in turn
+    // breaks consumers.
+    //
+    // We can't trust the iterator value from the content compartment,
+    // but the generic one on Array.prototype works well enough. So we force
+    // the Xray view of Arguments objects to inherit Array.prototype, which
+    // in turn allows iteration via the inherited Array.prototype[Symbol.iterator].
+    // This doesn't emulate any of the weird semantics of Arguments iterators,
+    // but is probably good enough.
+    //
+    // Note that there are various Xray traps that do other special behavior for
+    // JSProto_Array, but they also provide that special behavior for
+    // JSProto_Object, and since Arguments would otherwise get JSProto_Object,
+    // this does not cause any behavior change at those sites.
+    if (key == JSProto_Object && js::IsArgumentsObject(target)) {
+        key = JSProto_Array;
+    }
+
     // Store it on the holder.
     RootedValue v(cx);
     v.setNumber(static_cast<uint32_t>(key));
