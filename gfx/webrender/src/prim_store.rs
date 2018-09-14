@@ -30,7 +30,7 @@ use resource_cache::{ImageProperties, ImageRequest, ResourceCache};
 use scene::SceneProperties;
 use segment::SegmentBuilder;
 use std::{cmp, fmt, mem, usize};
-use util::{ScaleOffset, MatrixHelpers, pack_as_float, recycle_vec, project_rect, raster_rect_to_device_pixels};
+use util::{ScaleOffset, MatrixHelpers, pack_as_float, project_rect, raster_rect_to_device_pixels};
 
 
 const MIN_BRUSH_SPLIT_AREA: f32 = 256.0 * 256.0;
@@ -1383,13 +1383,6 @@ impl PrimitiveStore {
         PrimitiveStore {
             primitives: Vec::new(),
             chase_id: None,
-        }
-    }
-
-    pub fn recycle(self) -> Self {
-        PrimitiveStore {
-            primitives: recycle_vec(self.primitives),
-            chase_id: self.chase_id,
         }
     }
 
