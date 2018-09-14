@@ -1619,25 +1619,31 @@ LoadScript(JSContext* cx, unsigned argc, Value* vp, bool scriptRelative)
                                       "load");
             return false;
         }
+
         str = ResolvePath(cx, str, scriptRelative ? ScriptRelative : RootRelative);
         if (!str) {
             JS_ReportErrorASCII(cx, "unable to resolve path");
             return false;
         }
+
         UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
         if (!filename) {
             return false;
         }
+
         errno = 0;
+
         CompileOptions opts(cx);
         opts.setIntroductionType("js shell load")
             .setUTF8(true)
             .setIsRunOnce(true)
             .setNoScriptRval(true);
+
         RootedScript script(cx);
         RootedValue unused(cx);
-        if ((compileOnly && !CompileUtf8Path(cx, opts, filename.get(), &script)) ||
-            !Evaluate(cx, opts, filename.get(), &unused))
+        if (!(compileOnly
+              ? JS::CompileUtf8Path(cx, opts, filename.get(), &script)
+              : JS::EvaluateUtf8Path(cx, opts, filename.get(), &unused)))
         {
             return false;
         }
