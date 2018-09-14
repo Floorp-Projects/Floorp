@@ -224,8 +224,9 @@ class Assembler : public AssemblerX86Shared
     }
     void addPendingJump(JmpSrc src, ImmPtr target, RelocationKind kind) {
         enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), target.value, kind));
-        if (kind == RelocationKind::JITCODE)
+        if (kind == RelocationKind::JITCODE) {
             writeRelocation(src);
+        }
     }
 
   public:
@@ -313,10 +314,11 @@ class Assembler : public AssemblerX86Shared
         // Use xor for setting registers to zero, as it is specially optimized
         // for this purpose on modern hardware. Note that it does clobber FLAGS
         // though.
-        if (imm.value == 0)
+        if (imm.value == 0) {
             xorl(dest, dest);
-        else
+        } else {
             movl(imm, dest);
+        }
     }
     void mov(ImmPtr imm, Register dest) {
         mov(ImmWord(uintptr_t(imm.value)), dest);
@@ -1070,8 +1072,9 @@ class Assembler : public AssemblerX86Shared
 static inline bool
 GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
 {
-    if (usedIntArgs >= NumCallTempNonArgRegs)
+    if (usedIntArgs >= NumCallTempNonArgRegs) {
         return false;
+    }
     *out = CallTempNonArgRegs[usedIntArgs];
     return true;
 }
