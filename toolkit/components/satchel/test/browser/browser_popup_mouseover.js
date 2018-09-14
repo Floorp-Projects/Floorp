@@ -35,7 +35,7 @@ add_task(async function test() {
     is(listItemElems.length, mockHistory.length, "ensure result length");
     is(itemsBox.mousedOverIndex, -1, "mousedOverIndex should be -1");
 
-    // navigate to the firt item
+    // navigate to the first item
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     is(autoCompletePopup.selectedIndex, 0, "selectedIndex should be 0");
 
