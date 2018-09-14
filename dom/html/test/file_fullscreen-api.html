@@ -51,7 +51,23 @@ function sendMouseClick(element) {
   synthesizeMouseAtCenter(element, {});
 }
 
+function assertPromiseResolved(promise, msg) {
+  let { state, value } = SpecialPowers.PromiseDebugging.getState(promise);
+  is(state, "fulfilled", "Promise should have been resolved " + msg);
+  is(value, undefined, "Promise should be resolved with undefined " + msg);
+}
+
+function assertPromiseRejected(promise, msg) {
+  let { state, reason } = SpecialPowers.PromiseDebugging.getState(promise);
+  is(state, "rejected", "Promise should have been rejected " + msg);
+  // XXX Actually we should be testing "instanceof TypeError", but it
+  // doesn't work as expected currently. See bug 1412856.
+  is(reason.name, "TypeError",
+     "Promise should be rejected with TypeError " + msg);
+}
+
 const FULLSCREEN_ELEMENT = document.getElementById("fullscreen-element");
+let promise;
 
 function enter1(event) {
   is(event.target, FULLSCREEN_ELEMENT,
@@ -103,7 +119,7 @@ function exit2(event) {
      "Full-screen element in subframe should be null");
   
   addFullscreenChangeContinuation("enter", enter3);
-  FULLSCREEN_ELEMENT.requestFullscreen();
+  promise = FULLSCREEN_ELEMENT.requestFullscreen();
 }
 
 function enter3(event) {
@@ -111,6 +127,7 @@ function enter3(event) {
      "Event target should be the fullscreen element #3");
   is(document.fullscreenElement, FULLSCREEN_ELEMENT,
      "Full-screen element should be div.");
+  assertPromiseResolved(promise, "in enter3");
   
   // Transplant the FSE into subdoc. Should exit full-screen.
   addFullscreenChangeContinuation("exit", exit3);
@@ -135,12 +152,13 @@ function exit3(event) {
   // Continue test in the following fullscreenerror handler.
   outOfDocElement = document.createElement("div");
   addFullscreenErrorContinuation(error1);    
-  outOfDocElement.requestFullscreen();
+  promise = outOfDocElement.requestFullscreen();
 }
 
 function error1(event) {
   ok(!document.fullscreenElement,
      "Requests for full-screen from not-in-doc elements should fail.");
+  assertPromiseRejected(promise, "in error1");
   container = document.createElement("div");
   inDocElement = document.createElement("div");
   container.appendChild(inDocElement);

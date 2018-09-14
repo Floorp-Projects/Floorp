@@ -1248,7 +1248,7 @@ public:
     }
   }
 
-  void RequestFullscreen(CallerType aCallerType, ErrorResult& aError);
+  already_AddRefed<Promise> RequestFullscreen(CallerType, ErrorResult&);
   void RequestPointerLock(CallerType aCallerType);
   Attr* GetAttributeNode(const nsAString& aName);
   already_AddRefed<Attr> SetAttributeNode(Attr& aNewAttr,
