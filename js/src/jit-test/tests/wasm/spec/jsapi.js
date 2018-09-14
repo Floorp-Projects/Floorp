@@ -256,7 +256,7 @@ test(() => {
     const moduleImportsDesc = Object.getOwnPropertyDescriptor(Module, 'imports');
     assert_equals(typeof moduleImportsDesc.value, "function");
     assert_equals(moduleImportsDesc.writable, true);
-    assert_equals(moduleImportsDesc.enumerable, false);
+    assert_equals(moduleImportsDesc.enumerable, true);
     assert_equals(moduleImportsDesc.configurable, true);
 }, "'WebAssembly.Module.imports' data property");
 
@@ -291,7 +291,7 @@ test(() => {
     const moduleExportsDesc = Object.getOwnPropertyDescriptor(Module, 'exports');
     assert_equals(typeof moduleExportsDesc.value, "function");
     assert_equals(moduleExportsDesc.writable, true);
-    assert_equals(moduleExportsDesc.enumerable, false);
+    assert_equals(moduleExportsDesc.enumerable, true);
     assert_equals(moduleExportsDesc.configurable, true);
 }, "'WebAssembly.Module.exports' data property");
 
@@ -322,7 +322,7 @@ test(() => {
     const customSectionsDesc = Object.getOwnPropertyDescriptor(Module, 'customSections');
     assert_equals(typeof customSectionsDesc.value, "function");
     assert_equals(customSectionsDesc.writable, true);
-    assert_equals(customSectionsDesc.enumerable, false);
+    assert_equals(customSectionsDesc.enumerable, true);
     assert_equals(customSectionsDesc.configurable, true);
 }, "'WebAssembly.Module.customSections' data property");
 
@@ -393,7 +393,7 @@ test(() => {
     const exportsDesc = Object.getOwnPropertyDescriptor(instanceProto, 'exports');
     assert_equals(typeof exportsDesc.get, "function");
     assert_equals(exportsDesc.set, undefined);
-    assert_equals(exportsDesc.enumerable, false);
+    assert_equals(exportsDesc.enumerable, true);
     assert_equals(exportsDesc.configurable, true);
     const exportsGetter = exportsDesc.get;
     assertThrows(() => exportsGetter.call(), TypeError);
@@ -478,7 +478,7 @@ test(() => {
     const bufferDesc = Object.getOwnPropertyDescriptor(memoryProto, 'buffer');
     assert_equals(typeof bufferDesc.get, "function");
     assert_equals(bufferDesc.set, undefined);
-    assert_equals(bufferDesc.enumerable, false);
+    assert_equals(bufferDesc.enumerable, true);
     assert_equals(bufferDesc.configurable, true);
 }, "'WebAssembly.Memory.prototype.buffer' accessor property");
 
@@ -494,7 +494,7 @@ test(() => {
 test(() => {
     const memGrowDesc = Object.getOwnPropertyDescriptor(memoryProto, 'grow');
     assert_equals(typeof memGrowDesc.value, "function");
-    assert_equals(memGrowDesc.enumerable, false);
+    assert_equals(memGrowDesc.enumerable, true);
     assert_equals(memGrowDesc.configurable, true);
 }, "'WebAssembly.Memory.prototype.grow' data property");
 
@@ -587,7 +587,7 @@ test(() => {
     const lengthDesc = Object.getOwnPropertyDescriptor(tableProto, 'length');
     assert_equals(typeof lengthDesc.get, "function");
     assert_equals(lengthDesc.set, undefined);
-    assert_equals(lengthDesc.enumerable, false);
+    assert_equals(lengthDesc.enumerable, true);
     assert_equals(lengthDesc.configurable, true);
 }, "'WebAssembly.Table.prototype.length' accessor data property");
 
@@ -604,7 +604,7 @@ test(() => {
 test(() => {
     const getDesc = Object.getOwnPropertyDescriptor(tableProto, 'get');
     assert_equals(typeof getDesc.value, "function");
-    assert_equals(getDesc.enumerable, false);
+    assert_equals(getDesc.enumerable, true);
     assert_equals(getDesc.configurable, true);
 }, "'WebAssembly.Table.prototype.get' data property");
 
@@ -627,7 +627,7 @@ test(() => {
 test(() => {
     const setDesc = Object.getOwnPropertyDescriptor(tableProto, 'set');
     assert_equals(typeof setDesc.value, "function");
-    assert_equals(setDesc.enumerable, false);
+    assert_equals(setDesc.enumerable, true);
     assert_equals(setDesc.configurable, true);
 }, "'WebAssembly.Table.prototype.set' data property");
 
@@ -653,7 +653,7 @@ test(() => {
 test(() => {
     const tblGrowDesc = Object.getOwnPropertyDescriptor(tableProto, 'grow');
     assert_equals(typeof tblGrowDesc.value, "function");
-    assert_equals(tblGrowDesc.enumerable, false);
+    assert_equals(tblGrowDesc.enumerable, true);
     assert_equals(tblGrowDesc.configurable, true);
 }, "'WebAssembly.Table.prototype.grow' data property");
 
@@ -837,7 +837,7 @@ test(() => {
 test(() => {
     const valueOfDesc = Object.getOwnPropertyDescriptor(globalProto, 'valueOf');
     assert_equals(typeof valueOfDesc.value, "function");
-    assert_equals(valueOfDesc.enumerable, false);
+    assert_equals(valueOfDesc.enumerable, true);
     assert_equals(valueOfDesc.configurable, true);
 }, "'WebAssembly.Global.prototype.valueOf' data property");
 
@@ -959,7 +959,7 @@ test(() => {
     const compileDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'compile');
     assert_equals(typeof compileDesc.value, "function");
     assert_equals(compileDesc.writable, true);
-    assert_equals(compileDesc.enumerable, false);
+    assert_equals(compileDesc.enumerable, true);
     assert_equals(compileDesc.configurable, true);
 }, "'WebAssembly.compile' data property");
 
@@ -1011,7 +1011,7 @@ test(() => {
     const instantiateDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'instantiate');
     assert_equals(typeof instantiateDesc.value, "function");
     assert_equals(instantiateDesc.writable, true);
-    assert_equals(instantiateDesc.enumerable, false);
+    assert_equals(instantiateDesc.enumerable, true);
     assert_equals(instantiateDesc.configurable, true);
 }, "'WebAssembly.instantiate' data property");
 
