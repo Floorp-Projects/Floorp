@@ -3787,7 +3787,7 @@ protected:
   // Apply the fullscreen state to the document, and trigger related
   // events. It returns false if the fullscreen element ready check
   // fails and nothing gets changed.
-  bool ApplyFullscreen(const FullscreenRequest& aRequest);
+  bool ApplyFullscreen(mozilla::UniquePtr<FullscreenRequest> aRequest);
 
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
