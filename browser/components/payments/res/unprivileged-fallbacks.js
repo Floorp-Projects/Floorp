@@ -31,7 +31,7 @@ var PaymentDialogUtils = {
     return `${address.name} (${address.guid})`;
   },
 
-  getCreditCardNetworks() {
+  getCreditCardNetworks(address) {
     // Shim for list of known and supported credit card network ids as exposed by
     // toolkit/modules/CreditCard.jsm
     return [

@@ -59,7 +59,7 @@ export default class RichPicker extends PaymentStateSubscriberMixin(HTMLElement)
     this.editLink.hidden = !this.dropdown.value;
 
     this.classList.toggle("invalid-selected-option",
-                          !this.isSelectedOptionValid(state));
+                          this.missingFieldsOfSelectedOption().length);
   }
 
   get selectedOption() {
@@ -69,10 +69,6 @@ export default class RichPicker extends PaymentStateSubscriberMixin(HTMLElement)
 
   get fieldNames() {
     return [];
-  }
-
-  isSelectedOptionValid() {
-    return !this.missingFieldsOfSelectedOption().length;
   }
 
   missingFieldsOfSelectedOption() {
