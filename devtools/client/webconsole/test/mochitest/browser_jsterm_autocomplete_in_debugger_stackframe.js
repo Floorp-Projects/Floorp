@@ -8,6 +8,12 @@
 
 "use strict";
 
+// Import helpers for the new debugger
+/* import-globals-from ../../../debugger/new/test/mochitest/helpers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers.js",
+  this);
+
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-autocomplete-in-stackframe.html";
 
@@ -21,9 +27,6 @@ add_task(async function() {
 });
 
 async function performTests() {
-  // Force the old debugger UI since it's directly used (see Bug 1301705)
-  await pushPref("devtools.debugger.new-debugger-frontend", false);
-
   const { jsterm } = await openNewTabAndConsole(TEST_URI);
   const {
     autocompletePopup: popup,
@@ -60,10 +63,12 @@ async function performTests() {
     `"foo1Obj.prop2." gave the expected suggestions`);
 
   info("Opening Debugger");
-  const {panel} = await openDebugger();
+  await openDebugger();
+  const dbg = createDebuggerContext(toolbox);
 
   info("Waiting for pause");
-  const stackFrames = await pauseDebugger(panel);
+  await pauseDebugger(dbg);
+  const stackFrames = dbg.selectors.getCallStackFrames(dbg.getState());
 
   info("Opening Console again");
   await toolbox.selectTool("webconsole");
@@ -77,7 +82,7 @@ async function performTests() {
   await openDebugger();
 
   // Select the frame for the `firstCall` function.
-  stackFrames.selectFrame(1);
+  await dbg.actions.selectFrame(stackFrames[1]);
 
   info("openConsole");
   await toolbox.selectTool("webconsole");
@@ -109,18 +114,10 @@ function getPopupLabels(popup) {
   return popup.getItems().map(item => item.label);
 }
 
-function pauseDebugger(debuggerPanel) {
-  const debuggerWin = debuggerPanel.panelWin;
-  const debuggerController = debuggerWin.DebuggerController;
-  const thread = debuggerController.activeThread;
-
-  return new Promise(resolve => {
-    thread.addOneTimeListener("framesadded", () =>
-      resolve(debuggerController.StackFrames));
-
-    info("firstCall()");
-    ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-      content.wrappedJSObject.firstCall();
-    });
+async function pauseDebugger(dbg) {
+  info("Waiting for debugger to pause");
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+    content.wrappedJSObject.firstCall();
   });
+  await waitForPaused(dbg);
 }
