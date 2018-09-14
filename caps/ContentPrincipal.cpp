@@ -367,15 +367,27 @@ ContentPrincipal::SetDomain(nsIURI* aDomain)
                                   js::ContentCompartmentsOnly());
   NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
 
+  // Set the changed-document-domain flag on compartments containing realms
+  // using this principal.
+  auto cb = [](JSContext*, void*, JS::Handle<JS::Realm*> aRealm) {
+    JS::Compartment* comp = JS::GetCompartmentForRealm(aRealm);
+    xpc::SetCompartmentChangedDocumentDomain(comp);
+  };
+  JS::IterateRealmsWithPrincipals(cx, principals, nullptr, cb);
+
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ContentPrincipal::GetBaseDomain(nsACString& aBaseDomain)
+static nsresult
+GetBaseDomainHelper(const nsCOMPtr<nsIURI>& aCodebase,
+                    bool* aHasBaseDomain,
+                    nsACString& aBaseDomain)
 {
+  *aHasBaseDomain = false;
+
   // For a file URI, we return the file path.
-  if (NS_URIIsLocalFile(mCodebase)) {
-    nsCOMPtr<nsIURL> url = do_QueryInterface(mCodebase);
+  if (NS_URIIsLocalFile(aCodebase)) {
+    nsCOMPtr<nsIURL> url = do_QueryInterface(aCodebase);
 
     if (url) {
       return url->GetFilePath(aBaseDomain);
@@ -383,7 +395,7 @@ ContentPrincipal::GetBaseDomain(nsACString& aBaseDomain)
   }
 
   bool hasNoRelativeFlag;
-  nsresult rv = NS_URIChainHasFlags(mCodebase,
+  nsresult rv = NS_URIChainHasFlags(aCodebase,
                                     nsIProtocolHandler::URI_NORELATIVE,
                                     &hasNoRelativeFlag);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -391,34 +403,41 @@ ContentPrincipal::GetBaseDomain(nsACString& aBaseDomain)
   }
 
   if (hasNoRelativeFlag) {
-    return mCodebase->GetSpec(aBaseDomain);
+    return aCodebase->GetSpec(aBaseDomain);
   }
+
+  *aHasBaseDomain = true;
 
   // For everything else, we ask the TLD service via
   // the ThirdPartyUtil.
   nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
     do_GetService(THIRDPARTYUTIL_CONTRACTID);
   if (thirdPartyUtil) {
-    return thirdPartyUtil->GetBaseDomain(mCodebase, aBaseDomain);
+    return thirdPartyUtil->GetBaseDomain(aCodebase, aBaseDomain);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
+ContentPrincipal::GetBaseDomain(nsACString& aBaseDomain)
+{
+  bool hasBaseDomain;
+  return GetBaseDomainHelper(mCodebase, &hasBaseDomain, aBaseDomain);
+}
+
+NS_IMETHODIMP
 ContentPrincipal::GetSiteOrigin(nsACString& aSiteOrigin)
 {
-  // Get the eTLDService & determine our base domain. If we don't have a valid
-  // BaseDomain, we can fall-back to GetOrigin.
-  nsCOMPtr<nsIEffectiveTLDService> tldService =
-    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-  if (NS_WARN_IF(!tldService)) {
-    return GetOrigin(aSiteOrigin);
-  }
-
+  // Determine our base domain.
+  bool hasBaseDomain;
   nsAutoCString baseDomain;
-  nsresult rv = tldService->GetBaseDomain(mCodebase, 0, baseDomain);
-  if (NS_FAILED(rv)) {
+  nsresult rv = GetBaseDomainHelper(mCodebase, &hasBaseDomain, baseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!hasBaseDomain) {
+    // This is a special URI ("file:", "about:", "view-source:", etc). Just
+    // return the origin.
     return GetOrigin(aSiteOrigin);
   }
 
@@ -431,24 +450,35 @@ ContentPrincipal::GetSiteOrigin(nsACString& aSiteOrigin)
     .SetHostPort(baseDomain)
     .Finalize(siteUri);
   MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to create siteUri");
-  if (NS_FAILED(rv)) {
-    return GetOrigin(aSiteOrigin);
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = GenerateOriginNoSuffixFromURI(siteUri, aSiteOrigin);
   MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to create siteOriginNoSuffix");
-  if (NS_FAILED(rv)) {
-    return GetOrigin(aSiteOrigin);
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString suffix;
   rv = GetOriginSuffix(suffix);
   MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to create suffix");
-  if (NS_FAILED(rv)) {
-    return GetOrigin(aSiteOrigin);
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   aSiteOrigin.Append(suffix);
+  return NS_OK;
+}
+
+nsresult
+ContentPrincipal::GetSiteIdentifier(SiteIdentifier& aSite)
+{
+  nsCString siteOrigin;
+  nsresult rv = GetSiteOrigin(siteOrigin);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RefPtr<BasePrincipal> principal = CreateCodebasePrincipal(siteOrigin);
+  if (!principal) {
+    NS_WARNING("could not instantiate codebase principal");
+    return NS_ERROR_FAILURE;
+  }
+
+  aSite.Init(principal);
   return NS_OK;
 }
 

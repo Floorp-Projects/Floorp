@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>Bug 1490700 - Divide-by-zero for screen-capture with max-dimension 0</title>
+</head>
+</body>
+<script type="application/javascript">
+async function test() {
+  await window.navigator.mediaDevices.getUserMedia({
+    video: {
+      mediaSource: 'screen',
+      height: {max: 0},
+    },
+  });
+  await window.navigator.mediaDevices.getUserMedia({
+    video: {
+      mediaSource: 'screen',
+      advanced: [{height: 0}],
+    },
+  });
+  document.documentElement.removeAttribute("class");
+}
+
+test();
+</script>
+</body>
+</html>

@@ -466,6 +466,10 @@ CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
     MOZ_RELEASE_ASSERT(principal != nsContentUtils::GetNullSubjectPrincipal(),
                        "The null subject principal is getting inherited - fix that!");
 
+    SiteIdentifier site;
+    nsresult rv = BasePrincipal::Cast(principal)->GetSiteIdentifier(site);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+
     RootedObject global(cx,
                         JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal),
                                            JS::DontFireOnNewGlobalHook, aOptions));
@@ -474,9 +478,9 @@ CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
     }
     JSAutoRealm ar(cx, global);
 
-    // The constructor automatically attaches the scope to the compartment private
+    // The constructor automatically attaches the scope to the realm private
     // of |global|.
-    (void) new XPCWrappedNativeScope(cx, global);
+    (void) new XPCWrappedNativeScope(cx, global, site);
 
     if (clasp->flags & JSCLASS_DOM_GLOBAL) {
 #ifdef DEBUG

@@ -74,7 +74,6 @@ _OPT\.OBJ/
 
 # Gradle cache.
 ^.gradle/
-^tools/infer/test/.gradle/
 
 # Local Gradle configuration properties.
 ^local.properties$

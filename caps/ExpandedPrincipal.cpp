@@ -309,3 +309,25 @@ ExpandedPrincipal::Write(nsIObjectOutputStream* aStream)
 
   return NS_OK;
 }
+
+nsresult
+ExpandedPrincipal::GetSiteIdentifier(SiteIdentifier& aSite)
+{
+  // Call GetSiteIdentifier on each of our principals and return a new
+  // ExpandedPrincipal.
+
+  nsTArray<nsCOMPtr<nsIPrincipal>> whitelist;
+  for (const auto& principal : mPrincipals) {
+    SiteIdentifier site;
+    nsresult rv = Cast(principal)->GetSiteIdentifier(site);
+    NS_ENSURE_SUCCESS(rv, rv);
+    whitelist.AppendElement(site.GetPrincipal());
+  }
+
+  RefPtr<ExpandedPrincipal> expandedPrincipal =
+    ExpandedPrincipal::Create(whitelist, OriginAttributesRef());
+  MOZ_ASSERT(expandedPrincipal, "ExpandedPrincipal::Create returned nullptr?");
+
+  aSite.Init(expandedPrincipal);
+  return NS_OK;
+}

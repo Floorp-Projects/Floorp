@@ -47,6 +47,8 @@ public:
   // URL. See BasePrincipal::PrincipalToInherit.
   nsIPrincipal* PrincipalToInherit(nsIURI* aRequestedURI = nullptr);
 
+  nsresult GetSiteIdentifier(mozilla::SiteIdentifier& aSite) override;
+
 protected:
   explicit ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList);
 
