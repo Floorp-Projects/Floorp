@@ -3580,7 +3580,7 @@ Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aError)
   // Note that requests for fullscreen inside a web app's origin are exempt
   // from this restriction.
   if (const char* error = GetFullscreenError(aCallerType)) {
-    OwnerDoc()->DispatchFullscreenError(error);
+    OwnerDoc()->DispatchFullscreenError(error, this);
     return;
   }
 
