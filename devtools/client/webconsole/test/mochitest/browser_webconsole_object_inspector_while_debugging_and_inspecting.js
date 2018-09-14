@@ -8,6 +8,12 @@
 
 "use strict";
 
+// Import helpers for the new debugger
+/* import-globals-from ../../../debugger/new/test/mochitest/helpers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers.js",
+  this);
+
 const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-eval-in-stackframe.html";
 
