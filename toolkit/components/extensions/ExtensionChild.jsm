@@ -28,6 +28,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   NativeApp: "resource://gre/modules/NativeMessaging.jsm",
+  PerformanceCounters: "resource://gre/modules/PerformanceCounters.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
@@ -36,6 +37,10 @@ XPCOMUtils.defineLazyGetter(
   () => Cc["@mozilla.org/webextensions/extension-process-script;1"]
           .getService().wrappedJSObject);
 
+// We're using the pref to avoid loading PerformanceCounters.jsm for nothing.
+XPCOMUtils.defineLazyPreferenceGetter(this, "gTimingEnabled",
+                                      "extensions.webextensions.enablePerformanceCounters",
+                                      false);
 ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
@@ -863,6 +868,39 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
   }
 }
 
+class ChildLocalAPIImplementation extends LocalAPIImplementation {
+  constructor(pathObj, name, childApiManager) {
+    super(pathObj, name, childApiManager.context);
+    this.childApiManagerId = childApiManager.id;
+  }
+
+  withTiming(callable) {
+    if (!gTimingEnabled) {
+      return callable();
+    }
+    let start = Cu.now() * 1000;
+    try {
+      return callable();
+    } finally {
+      let end = Cu.now() * 1000;
+      PerformanceCounters.storeExecutionTime(this.context.extension.id, this.name,
+                                             end - start, this.childApiManagerId);
+    }
+  }
+
+  callFunction(args) {
+    return this.withTiming(() => super.callFunction(args));
+  }
+
+  callFunctionNoReturn(args) {
+    return this.withTiming(() => super.callFunctionNoReturn(args));
+  }
+
+  callAsyncFunction(args, callback, requireUserInput) {
+    return this.withTiming(() => super.callAsyncFunction(args, callback, requireUserInput));
+  }
+}
+
 // We create one instance of this class for every extension context that
 // needs to use remote APIs. It uses the message manager to communicate
 // with the ParentAPIManager singleton in ExtensionParent.jsm. It
@@ -1086,7 +1124,7 @@ class ChildAPIManager {
     let obj = this.apiCan.findAPIPath(namespace);
 
     if (obj && name in obj) {
-      return new LocalAPIImplementation(obj, name, this.context);
+      return new ChildLocalAPIImplementation(obj, name, this);
     }
 
     return this.getFallbackImplementation(namespace, name);
