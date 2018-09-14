@@ -114,6 +114,12 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
     });
   }
 
+  function P_MozAfterPaint() {
+    return new Promise(function(resolve) {
+      win.addEventListener("MozAfterPaint", () => resolve(), { once: true});
+    });
+  }
+
   function myNow() {
     return (win.performance && win.performance.now) ?
             win.performance.now() :
@@ -196,7 +202,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
         }
 
         lastScrollPos = getPos();
-        rAF(tick);
+        P_MozAfterPaint().then(tick);
       }
 
       if (typeof(TalosContentProfiler) !== "undefined") {

@@ -88,7 +88,7 @@ with Files('counter-style/**'):
 with Files('counters/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('css-animations/**'):
-    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+    BUG_COMPONENT = ('Core', 'CSS Transitions and Animations')
 with Files('css-blending/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('css-break/**'):
@@ -130,7 +130,7 @@ with Files('css-selectors/**'):
 with Files('css-submit-invalid/**'):
     BUG_COMPONENT = ('Core', 'Layout: Form Controls')
 with Files('css-transitions/**'):
-    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+    BUG_COMPONENT = ('Core', 'CSS Transitions and Animations')
 with Files('css-ui-invalid/**'):
     BUG_COMPONENT = ('Core', 'Layout: Form Controls')
 with Files('css-ui-valid/**'):

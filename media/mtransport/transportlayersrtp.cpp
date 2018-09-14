@@ -159,8 +159,13 @@ TransportLayerSrtp::StateChange(TransportLayer* layer, State state)
       return;
     }
 
+    unsigned int key_size = SrtpFlow::KeySize(cipher_suite);
+    unsigned int salt_size = SrtpFlow::SaltSize(cipher_suite);
+    unsigned int master_key_size = key_size + salt_size;
+    MOZ_ASSERT(master_key_size <= SRTP_MAX_KEY_LENGTH);
+
     // SRTP Key Exporter as per RFC 5764 S 4.2
-    unsigned char srtp_block[SRTP_TOTAL_KEY_LENGTH * 2];
+    unsigned char srtp_block[SRTP_MAX_KEY_LENGTH * 2];
     res = dtls->ExportKeyingMaterial(
       kDTLSExporterLabel, false, "", srtp_block, sizeof(srtp_block));
     if (NS_FAILED(res)) {
@@ -170,22 +175,17 @@ TransportLayerSrtp::StateChange(TransportLayer* layer, State state)
     }
 
     // Slice and dice as per RFC 5764 S 4.2
-    unsigned char client_write_key[SRTP_TOTAL_KEY_LENGTH];
-    unsigned char server_write_key[SRTP_TOTAL_KEY_LENGTH];
-    int offset = 0;
-    memcpy(client_write_key, srtp_block + offset, SRTP_MASTER_KEY_LENGTH);
-    offset += SRTP_MASTER_KEY_LENGTH;
-    memcpy(server_write_key, srtp_block + offset, SRTP_MASTER_KEY_LENGTH);
-    offset += SRTP_MASTER_KEY_LENGTH;
-    memcpy(client_write_key + SRTP_MASTER_KEY_LENGTH,
-           srtp_block + offset,
-           SRTP_MASTER_SALT_LENGTH);
-    offset += SRTP_MASTER_SALT_LENGTH;
-    memcpy(server_write_key + SRTP_MASTER_KEY_LENGTH,
-           srtp_block + offset,
-           SRTP_MASTER_SALT_LENGTH);
-    offset += SRTP_MASTER_SALT_LENGTH;
-    MOZ_ASSERT(offset == sizeof(srtp_block));
+    unsigned char client_write_key[SRTP_MAX_KEY_LENGTH];
+    unsigned char server_write_key[SRTP_MAX_KEY_LENGTH];
+    unsigned int offset = 0;
+    memcpy(client_write_key, srtp_block + offset, key_size);
+    offset += key_size;
+    memcpy(server_write_key, srtp_block + offset, key_size);
+    offset += key_size;
+    memcpy(client_write_key + key_size, srtp_block + offset, salt_size);
+    offset += salt_size;
+    memcpy(server_write_key + key_size, srtp_block + offset, salt_size);
+    MOZ_ASSERT((offset + salt_size) == (2 * master_key_size));
 
     unsigned char* write_key;
     unsigned char* read_key;
@@ -200,9 +200,9 @@ TransportLayerSrtp::StateChange(TransportLayer* layer, State state)
 
     MOZ_ASSERT(!mSendSrtp && !mRecvSrtp);
     mSendSrtp =
-      SrtpFlow::Create(cipher_suite, false, write_key, SRTP_TOTAL_KEY_LENGTH);
+      SrtpFlow::Create(cipher_suite, false, write_key, master_key_size);
     mRecvSrtp =
-      SrtpFlow::Create(cipher_suite, true, read_key, SRTP_TOTAL_KEY_LENGTH);
+      SrtpFlow::Create(cipher_suite, true, read_key, master_key_size);
     if (!mSendSrtp || !mRecvSrtp) {
       MOZ_MTLOG(ML_ERROR, "Couldn't create SRTP flow.");
       TL_SET_STATE(TS_ERROR);

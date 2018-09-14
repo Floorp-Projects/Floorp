@@ -84,7 +84,7 @@ else:
     elif CONFIG['FFI_TARGET'] == 'X86_WIN32':
         ffi_srcs = ['ffi.c']
         # MinGW Build for 32 bit
-        if CONFIG['CC_TYPE'] == 'gcc':
+        if CONFIG['CC_TYPE'] in ('gcc', 'clang'):
             DEFINES['SYMBOL_UNDERSCORE'] = True
             ffi_srcs += ['win32.S']
         else:

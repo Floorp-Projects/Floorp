@@ -18,10 +18,13 @@
                         oncopy="compareSynthetic(event, 'copy')"
                         onpaste="compareSynthetic(event, 'paste')">Spot</div>
 
+<div id="contenteditableContainer"></div>
+
 <pre id="test">
 <script class="testbody" type="text/javascript">
 var content = document.getElementById("content");
 var contentInput = document.getElementById("content-input");
+var contenteditableContainer = document.getElementById("contenteditableContainer");
 var clipboardInitialValue = "empty";
 
 var cachedCutData, cachedCopyData, cachedPasteData;
@@ -766,6 +769,44 @@ add_task(async function test_image_dataTransfer() {
   } finally {
     document.onpaste = null;
   }
+});
+
+add_task(async function test_event_target() {
+  await reset();
+
+  let copyTarget = null;
+  document.addEventListener("copy", (event) => { copyTarget = event.target; }, {once: true});
+
+  if (document.activeElement) {
+    document.activeElement.blur();
+  }
+
+  let selection = document.getSelection();
+  selection.setBaseAndExtent(content.firstChild, "CONTENT ".length,
+                             content.firstChild, "CONTENT TEXT".length);
+
+  await putOnClipboard("TEXT", () => {
+    synthesizeKey("c", {accelKey: 1});
+  }, "copy text from non-editable element");
+
+  is(copyTarget.getAttribute("id"), "content", "Copy event's target should be always an element");
+
+  // Create a contenteditable element to check complicated event target.
+  contenteditableContainer.innerHTML = '<div contenteditable><p id="p1">foo</p><p id="p2">bar</p></div>';
+  contenteditableContainer.firstChild.focus();
+
+  let p1 = document.getElementById("p1");
+  let p2 = document.getElementById("p2");
+  selection.setBaseAndExtent(p1.firstChild, 1, p2.firstChild, 1);
+
+  let pasteTarget = null;
+  document.addEventListener("paste", (event) => { pasteTarget = event.target; }, {once: true});
+
+  synthesizeKey("v", {accelKey: 1});
+  is(pasteTarget.getAttribute("id"), "p1",
+     "'paste' event's target should be always an element which includes start container of the first Selection range");
+
+  contenteditableContainer.innerHTML = "";
 });
 
 </script>
