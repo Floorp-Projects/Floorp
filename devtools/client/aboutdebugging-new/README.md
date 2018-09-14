@@ -22,7 +22,7 @@ Actions should cover all user or external events that change the UI.
   - List of devices updated
   - List of addons/tabs/workers(...) updated
   - Connection status of device changes
-  - ADBHelper is enabled/disabled/in-progress
+  - ADBExtension is enabled/disabled/in-progress
   - WiFi debugging is enabled/disabled/in-progress
   - Network location list is updated
 
@@ -93,7 +93,7 @@ Some ideas of how we could extend the state. Names, properties, values are all u
     - tabs: Array of target
     - workers: Array of target
   config:
-    - adbhelper: boolean
+    - adbextension: boolean
     - wifi: boolean
     - network-locations: Array of network-location
 

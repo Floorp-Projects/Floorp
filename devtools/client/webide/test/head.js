@@ -31,7 +31,7 @@ var registerCleanupFunction = registerCleanupFunction ||
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webide.enabled");
   Services.prefs.clearUserPref("devtools.webide.enableLocalRuntime");
-  Services.prefs.clearUserPref("devtools.webide.autoinstallADBHelper");
+  Services.prefs.clearUserPref("devtools.webide.autoinstallADBExtension");
   Services.prefs.clearUserPref("devtools.webide.busyTimeout");
   Services.prefs.clearUserPref("devtools.webide.lastSelectedProject");
   Services.prefs.clearUserPref("devtools.webide.lastConnectedRuntime");
@@ -40,7 +40,7 @@ registerCleanupFunction(() => {
 var openWebIDE = async function(autoInstallAddons) {
   info("opening WebIDE");
 
-  Services.prefs.setBoolPref("devtools.webide.autoinstallADBHelper", !!autoInstallAddons);
+  Services.prefs.setBoolPref("devtools.webide.autoinstallADBExtension", !!autoInstallAddons);
 
   const win = Services.ww.openWindow(null, "chrome://webide/content/", "webide",
                                    "chrome,centerscreen,resizable", null);

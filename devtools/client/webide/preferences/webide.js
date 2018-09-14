@@ -3,7 +3,7 @@
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 pref("devtools.webide.templatesURL", "https://code.cdn.mozilla.net/templates/list.json");
-pref("devtools.webide.autoinstallADBHelper", true);
+pref("devtools.webide.autoinstallADBExtension", true);
 pref("devtools.webide.autoConnectRuntime", true);
 pref("devtools.webide.restoreLastProject", true);
 pref("devtools.webide.enableLocalRuntime", false);
