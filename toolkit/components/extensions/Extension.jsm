@@ -1211,16 +1211,31 @@ class BootstrapScope {
 
   startup(data, reason) {
     // eslint-disable-next-line no-use-before-define
-    this.extension = new Extension(data, AddonManagerPrivate.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+    this.extension = new Extension(data, this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
     return this.extension.startup();
   }
 
   shutdown(data, reason) {
-    let result = this.extension.shutdown(AddonManagerPrivate.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+    let result = this.extension.shutdown(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
     this.extension = null;
     return result;
   }
 }
+
+XPCOMUtils.defineLazyGetter(BootstrapScope.prototype, "BOOTSTRAP_REASON_TO_STRING_MAP", () => {
+  const {BOOTSTRAP_REASONS} = AddonManagerPrivate;
+
+  return Object.freeze({
+    [BOOTSTRAP_REASONS.APP_STARTUP]: "APP_STARTUP",
+    [BOOTSTRAP_REASONS.APP_SHUTDOWN]: "APP_SHUTDOWN",
+    [BOOTSTRAP_REASONS.ADDON_ENABLE]: "ADDON_ENABLE",
+    [BOOTSTRAP_REASONS.ADDON_DISABLE]: "ADDON_DISABLE",
+    [BOOTSTRAP_REASONS.ADDON_INSTALL]: "ADDON_INSTALL",
+    [BOOTSTRAP_REASONS.ADDON_UNINSTALL]: "ADDON_UNINSTALL",
+    [BOOTSTRAP_REASONS.ADDON_UPGRADE]: "ADDON_UPGRADE",
+    [BOOTSTRAP_REASONS.ADDON_DOWNGRADE]: "ADDON_DOWNGRADE",
+  });
+});
 
 class DictionaryBootstrapScope extends BootstrapScope {
   install(data, reason) {}
@@ -1229,11 +1244,11 @@ class DictionaryBootstrapScope extends BootstrapScope {
   startup(data, reason) {
     // eslint-disable-next-line no-use-before-define
     this.dictionary = new Dictionary(data);
-    return this.dictionary.startup(AddonManagerPrivate.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+    return this.dictionary.startup(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
   }
 
   shutdown(data, reason) {
-    this.dictionary.shutdown(AddonManagerPrivate.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+    this.dictionary.shutdown(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
     this.dictionary = null;
   }
 }
