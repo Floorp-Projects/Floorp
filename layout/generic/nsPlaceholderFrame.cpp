@@ -26,7 +26,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-nsIFrame*
+nsPlaceholderFrame*
 NS_NewPlaceholderFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle,
                        nsFrameState aTypeBits)
 {
