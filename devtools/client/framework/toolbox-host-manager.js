@@ -10,6 +10,11 @@ const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties"
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Telemetry = require("devtools/client/shared/telemetry");
 
+// The min-width of toolbox and browser toolbox.
+const WIDTH_CHEVRON_AND_MEATBALL = 50;
+const WIDTH_CHEVRON_AND_MEATBALL_AND_CLOSE = 74;
+const ZOOM_VALUE_PREF = "devtools.toolbox.zoomValue";
+
 loader.lazyRequireGetter(this, "Toolbox", "devtools/client/framework/toolbox", true);
 loader.lazyRequireGetter(this, "Hosts", "devtools/client/framework/toolbox-hosts", true);
 
@@ -54,6 +59,8 @@ function ToolboxHostManager(target, hostType, hostOptions) {
   this.host = this.createHost(hostType, hostOptions);
   this.hostType = hostType;
   this.telemetry = new Telemetry();
+  this.setMinWidthWithZoom = this.setMinWidthWithZoom.bind(this);
+  Services.prefs.addObserver(ZOOM_VALUE_PREF, this.setMinWidthWithZoom);
 }
 
 ToolboxHostManager.prototype = {
@@ -81,7 +88,25 @@ ToolboxHostManager.prototype = {
     // access to the toolbox internals in order to get the session ID.
     this.host.frame.setAttribute("session_id", msSinceProcessStart);
 
+    this.setMinWidthWithZoom();
     return toolbox;
+  },
+
+  setMinWidthWithZoom: function() {
+    const zoomValue =
+          parseFloat(Services.prefs.getCharPref(ZOOM_VALUE_PREF));
+
+    if (isNaN(zoomValue)) {
+      return;
+    }
+
+    if (this.hostType === Toolbox.HostType.LEFT ||
+        this.hostType === Toolbox.HostType.RIGHT) {
+      this.host.frame.minWidth = WIDTH_CHEVRON_AND_MEATBALL_AND_CLOSE * zoomValue;
+    } else if (this.hostType === Toolbox.HostType.WINDOW ||
+               this.hostType === Toolbox.HostType.CUSTOM) {
+      this.host.frame.minWidth = WIDTH_CHEVRON_AND_MEATBALL * zoomValue;
+    }
   },
 
   handleEvent(event) {
@@ -137,6 +162,7 @@ ToolboxHostManager.prototype = {
   },
 
   destroy() {
+    Services.prefs.removeObserver(ZOOM_VALUE_PREF, this.setMinWidthWithZoom);
     this.destroyHost();
     this.host = null;
     this.hostType = null;
@@ -198,6 +224,8 @@ ToolboxHostManager.prototype = {
     this.host.setTitle(this.host.frame.contentWindow.document.title);
     this.host.frame.ownerDocument.defaultView.addEventListener("message", this);
     this.host.frame.addEventListener("unload", this, true);
+
+    this.setMinWidthWithZoom();
 
     if (hostType != Toolbox.HostType.CUSTOM) {
       Services.prefs.setCharPref(LAST_HOST, hostType);

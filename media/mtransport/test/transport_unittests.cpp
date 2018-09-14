@@ -537,6 +537,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
   void SetupSrtp() {
     // this mimics the setup we do elsewhere
     std::vector<uint16_t> srtp_ciphers;
+    srtp_ciphers.push_back(kDtlsSrtpAeadAes256Gcm);
+    srtp_ciphers.push_back(kDtlsSrtpAeadAes128Gcm);
     srtp_ciphers.push_back(kDtlsSrtpAes128CmHmacSha1_80);
     srtp_ciphers.push_back(kDtlsSrtpAes128CmHmacSha1_32);
 
@@ -1017,7 +1019,7 @@ TEST_F(TransportTest, TestConnectSrtp) {
   ASSERT_EQ(TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, p1_->cipherSuite());
 
   // SRTP is on
-  ASSERT_EQ(kDtlsSrtpAes128CmHmacSha1_80, p1_->srtpCipher());
+  ASSERT_EQ(kDtlsSrtpAeadAes256Gcm, p1_->srtpCipher());
 }
 
 
@@ -1407,6 +1409,22 @@ TEST_F(TransportTest, OnlyClientSendsSrtpXtn) {
   // after connecting and aborts.
   ConnectSocketExpectState(TransportLayer::TS_CLOSED,
                            TransportLayer::TS_ERROR);
+}
+
+TEST_F(TransportTest, TestSrtpFallback) {
+  std::vector<uint16_t> setA;
+  setA.push_back(kDtlsSrtpAeadAes256Gcm);
+  setA.push_back(kDtlsSrtpAes128CmHmacSha1_80);
+  std::vector<uint16_t> setB;
+  setB.push_back(kDtlsSrtpAes128CmHmacSha1_80);
+
+  p1_->SetSrtpCiphers(setA);
+  p2_->SetSrtpCiphers(setB);
+  SetDtlsPeer();
+  ConnectSocket();
+
+  ASSERT_EQ(kDtlsSrtpAes128CmHmacSha1_80, p1_->srtpCipher());
+  ASSERT_EQ(kDtlsSrtpAes128CmHmacSha1_80, p1_->srtpCipher());
 }
 
 // NSS doesn't support DHE suites on the server end.

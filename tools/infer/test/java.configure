@@ -1,0 +1,22 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include('../../../build/moz.configure/java_common.configure')
+
+@depends(javac)
+@checking('for javac version')
+@imports('subprocess')
+def javac_version(javac):
+    try:
+        output = subprocess.check_output([javac, '-version'],
+                                         stderr=subprocess.STDOUT).rstrip()
+        version = Version(output.split(' ')[-1])
+        if version < '1.7':
+            die('javac 1.7 or higher is required (found %s). '
+                'Check the JAVA_HOME environment variable.' % version)
+        return version
+    except subprocess.CalledProcessError as e:
+        die('Failed to get javac version: %s', e.output)
