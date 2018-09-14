@@ -74,7 +74,7 @@
 <!ENTITY runtimePanel_usb "USB Devices">
 <!ENTITY runtimePanel_wifi "Wi-Fi Devices">
 <!ENTITY runtimePanel_other "Other">
-<!ENTITY runtimePanel_noadbhelper "Install ADB Helper">
+<!ENTITY runtimePanel_noadbextension "Install ADB Extension">
 <!ENTITY runtimePanel_nousbdevice "Can’t see your device?">
 <!ENTITY runtimePanel_refreshDevices_label "Refresh Devices">
 

@@ -42,16 +42,16 @@
         }
 
         (async function() {
-          ok(!Devices.helperAddonInstalled, "Helper not installed");
+          ok(!Devices.adbExtensionInstalled, "ADB extension not installed");
 
           const win = await openWebIDE(true);
 
           // ADB is installed asynchronously after starting WebIDE.
-          while (!Devices.helperAddonInstalled) {
+          while (!Devices.adbExtensionInstalled) {
             await Devices.once("addon-status-updated");
           }
 
-          ok(Devices.helperAddonInstalled, "Helper has been auto-installed");
+          ok(Devices.adbExtensionInstalled, "ADB extension has been auto-installed");
 
           await nextTick();
 
