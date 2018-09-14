@@ -1838,6 +1838,16 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
 
     masm.bind(&nonEmpty);
 
+    // Complete matches use the base string.
+    Label nonBaseStringMatch;
+    masm.branchTest32(Assembler::NonZero, temp2_, temp2_, &nonBaseStringMatch);
+    masm.branch32(Assembler::NotEqual, Address(base, JSString::offsetOfLength()), temp1_,
+                  &nonBaseStringMatch);
+    masm.movePtr(base, string_);
+    masm.jump(&done);
+
+    masm.bind(&nonBaseStringMatch);
+
     Label notInline;
 
     int32_t maxInlineLength = encoding_ == CharEncoding::Latin1
@@ -1852,6 +1862,25 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
                                       ? JSThinInlineString::MAX_LENGTH_LATIN1
                                       : JSThinInlineString::MAX_LENGTH_TWO_BYTE;
         masm.branch32(Assembler::Above, temp1_, Imm32(maxThinInlineLength), &fatInline);
+        if (encoding_ == CharEncoding::Latin1) {
+            // One character Latin-1 strings can be loaded directly from the
+            // static strings table.
+            Label thinInline;
+            masm.branch32(Assembler::Above, temp1_, Imm32(1), &thinInline);
+            {
+                static_assert(StaticStrings::UNIT_STATIC_LIMIT -1 == JSString::MAX_LATIN1_CHAR,
+                              "Latin-1 strings can be loaded from static strings");
+
+                masm.loadStringChars(base, temp1_, encoding_);
+                masm.loadChar(temp1_, temp2_, temp1_, encoding_);
+
+                masm.movePtr(ImmPtr(&runtime->staticStrings().unitStaticTable), string_);
+                masm.loadPtr(BaseIndex(string_, temp1_, ScalePointer), string_);
+
+                masm.jump(&done);
+            }
+            masm.bind(&thinInline);
+        }
         {
             newGCString(FallbackKind::InlineString);
             masm.jump(&stringAllocated);

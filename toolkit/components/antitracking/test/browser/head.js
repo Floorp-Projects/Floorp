@@ -207,6 +207,7 @@ this.AntiTracking = {
       ["privacy.trackingprotection.pbmode.enabled", false],
       ["privacy.trackingprotection.annotate_channels", cookieBehavior != BEHAVIOR_ACCEPT],
       [win.ContentBlocking.prefIntroCount, win.ContentBlocking.MAX_INTROS],
+      ["browser.fastblock.enabled", false], // prevent intermittent failures
     ]});
 
     if (extraPrefs && Array.isArray(extraPrefs) && extraPrefs.length) {
