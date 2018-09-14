@@ -5030,6 +5030,11 @@ pref("extensions.webextensions.ExtensionStorageIDB.enabled", false);
 // if enabled, store execution times for API calls
 pref("extensions.webextensions.enablePerformanceCounters", false);
 
+// Maximum age in milliseconds of performance counters in children
+// When reached, the counters are sent to the main process and
+// reset, so we reduce memory footprint.
+pref("extensions.webextensions.performanceCountersMaxAge", 1000);
+
 // Report Site Issue button
 pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/issues/new");
 #if defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
