@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko.util;
 
+import android.os.Bundle;
+import android.os.Parcel;
+
 import java.util.List;
 
 public class JavaUtil {
@@ -20,5 +23,16 @@ public class JavaUtil {
             list.set(i, list.get(i + step));
         }
         list.set(to, movedTab);
+    }
+
+    public static int getBundleSizeInBytes(Bundle bundle) {
+        Parcel parcel = Parcel.obtain();
+        int size;
+
+        parcel.writeBundle(bundle);
+        size = parcel.dataSize();
+        parcel.recycle();
+
+        return size;
     }
 }

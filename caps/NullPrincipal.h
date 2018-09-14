@@ -77,6 +77,11 @@ public:
 
   virtual nsresult GetScriptLocation(nsACString &aStr) override;
 
+  nsresult GetSiteIdentifier(SiteIdentifier& aSite) override {
+    aSite.Init(this);
+    return NS_OK;
+  }
+
  protected:
   virtual ~NullPrincipal() = default;
 
