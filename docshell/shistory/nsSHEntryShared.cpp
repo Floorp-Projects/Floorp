@@ -97,17 +97,15 @@ nsSHEntryShared::RemoveFromExpirationTracker()
   }
 }
 
-nsresult
+void
 nsSHEntryShared::SyncPresentationState()
 {
   if (mContentViewer && mWindowState) {
     // If we have a content viewer and a window state, we should be ok.
-    return NS_OK;
+    return;
   }
 
   DropPresentationState();
-
-  return NS_OK;
 }
 
 void

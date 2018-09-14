@@ -64,7 +64,7 @@ private:
   static already_AddRefed<nsSHEntryShared> Duplicate(nsSHEntryShared* aEntry);
 
   void RemoveFromExpirationTracker();
-  nsresult SyncPresentationState();
+  void SyncPresentationState();
   void DropPresentationState();
 
   nsresult SetContentViewer(nsIContentViewer* aViewer);
