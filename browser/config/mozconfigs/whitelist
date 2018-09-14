@@ -32,18 +32,18 @@ for platform in all_platforms:
         'MOZ_AUTOMATION_UPDATE_PACKAGING=1',
         'fi',
     ]
-whitelist['release']['win32'] += ['ac_add_options MOZ_PGO=1']
-whitelist['release']['win64'] += ['ac_add_options MOZ_PGO=1']
+whitelist['release']['win32'] += ['export MOZ_PGO=1']
+whitelist['release']['win64'] += ['export MOZ_PGO=1']
 
 whitelist['release']['linux32'] += [
     'export MOZILLA_OFFICIAL=1',
     'export MOZ_TELEMETRY_REPORTING=1',
-    'ac_add_options MOZ_PGO=1',
+    'export MOZ_PGO=1',
 ]
 whitelist['release']['linux64'] += [
     'export MOZILLA_OFFICIAL=1',
     'export MOZ_TELEMETRY_REPORTING=1',
-    'ac_add_options MOZ_PGO=1',
+    'export MOZ_PGO=1',
 ]
 
 if __name__ == '__main__':

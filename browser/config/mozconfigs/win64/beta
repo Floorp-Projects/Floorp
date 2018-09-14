@@ -2,11 +2,12 @@ if [ -n "$ENABLE_RELEASE_PROMOTION" ]; then
   MOZ_AUTOMATION_UPDATE_PACKAGING=1
 fi
 
+export MOZ_PGO=1
+
 . "$topsrcdir/build/mozconfig.win-common"
 . "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
 . "$topsrcdir/browser/config/mozconfigs/win64/common-opt"
 
-ac_add_options MOZ_PGO=1
 ac_add_options --enable-official-branding
 ac_add_options --enable-verify-mar
 
