@@ -15,7 +15,6 @@ ChromeUtils.defineModuleGetter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
 
 const ORIGIN_TOP_RIGHT = 1;
-const ORIGIN_BOTTOM_LEFT = 2;
 
 var LightweightThemeImageOptimizer = {
   optimize(aThemeData, aScreen) {
@@ -26,11 +25,6 @@ var LightweightThemeImageOptimizer = {
 
     data.headerURL = ImageCropper.getCroppedImageURL(
       data.headerURL, aScreen, ORIGIN_TOP_RIGHT);
-
-    if (data.footerURL) {
-      data.footerURL = ImageCropper.getCroppedImageURL(
-        data.footerURL, aScreen, ORIGIN_BOTTOM_LEFT);
-    }
 
     return data;
   },
