@@ -115,6 +115,7 @@
         "id": "PlainJSONValue",
         "description": "A plain JSON value",
         "choices": [
+          { "type": "null" },
           { "type": "number" },
           { "type": "string" },
           { "type": "boolean" },

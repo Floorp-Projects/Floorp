@@ -534,4 +534,12 @@ BasePrincipal::FinishInit(const nsACString& aOriginNoSuffix,
   mOriginNoSuffix = NS_Atomize(aOriginNoSuffix);
 }
 
+bool
+SiteIdentifier::Equals(const SiteIdentifier& aOther) const
+{
+  MOZ_ASSERT(IsInitialized());
+  MOZ_ASSERT(aOther.IsInitialized());
+  return mPrincipal->FastEquals(aOther.mPrincipal);
+}
+
 } // namespace mozilla
