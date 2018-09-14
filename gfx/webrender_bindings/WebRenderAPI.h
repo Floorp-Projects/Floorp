@@ -337,9 +337,10 @@ public:
                                  const wr::LayoutRect& aContentRect, // TODO: We should work with strongly typed rects
                                  const wr::LayoutRect& aClipRect);
 
-  void PushClipAndScrollInfo(const wr::WrClipId& aScrollId,
-                             const wr::WrClipChainId* aClipChainId);
-  void PopClipAndScrollInfo();
+  void PushClipAndScrollInfo(const wr::WrClipId* aScrollId,
+                             const wr::WrClipChainId* aClipChainId,
+                             const Maybe<wr::LayoutRect>& aClipChainLeaf);
+  void PopClipAndScrollInfo(const wr::WrClipId* aScrollId);
 
   void PushRect(const wr::LayoutRect& aBounds,
                 const wr::LayoutRect& aClip,
@@ -525,12 +526,25 @@ public:
   };
 
 protected:
+  wr::LayoutRect MergeClipLeaf(const wr::LayoutRect& aClip)
+  {
+    if (mClipChainLeaf) {
+      return wr::IntersectLayoutRect(*mClipChainLeaf, aClip);
+    }
+    return aClip;
+  }
+
   wr::WrState* mWrState;
 
   // Track each scroll id that we encountered. We use this structure to
   // ensure that we don't define a particular scroll layer multiple times,
   // as that results in undefined behaviour in WR.
   std::unordered_map<layers::FrameMetrics::ViewID, wr::WrClipId> mScrollIds;
+
+  // Contains the current leaf of the clip chain to be merged with the
+  // display item's clip rect when pushing an item. May be set to Nothing() if
+  // there is no clip rect to merge with.
+  Maybe<wr::LayoutRect> mClipChainLeaf;
 
   FixedPosScrollTargetTracker* mActiveFixedPosTracker;
 
