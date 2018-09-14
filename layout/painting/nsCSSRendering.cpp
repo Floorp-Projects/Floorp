@@ -759,7 +759,7 @@ nsCSSRendering::CreateBorderRenderer(nsPresContext* aPresContext,
                                              aSkipSides);
 }
 
-bool
+ImgDrawResult
 nsCSSRendering::CreateWebRenderCommandsForBorder(
   nsDisplayItem* aItem,
   nsIFrame* aForFrame,
@@ -783,12 +783,12 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(
                                            &borderIsEmpty,
                                            aForFrame->GetSkipSides());
     if (borderIsEmpty) {
-      return true;
+      return ImgDrawResult::SUCCESS;
     }
 
     if (br) {
       br->CreateWebRenderCommands(aItem, aBuilder, aResources, aSc);
-      return true;
+      return ImgDrawResult::SUCCESS;
     }
   }
 
@@ -798,7 +798,7 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(
 
   // Filter out unsupported image/border types
   if (!image) {
-    return false;
+    return ImgDrawResult::NOT_SUPPORTED;
   }
 
   // All this code bitrotted too much (but is almost right); disabled for now.
@@ -807,14 +807,14 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(
   // FIXME(1409774): fix this: image->GetType() == eStyleImageType_Gradient;
 
   if (!imageTypeSupported) {
-    return false;
+    return ImgDrawResult::NOT_SUPPORTED;
   }
 
   if (styleBorder->mBorderImageRepeatH == StyleBorderImageRepeat::Round ||
       styleBorder->mBorderImageRepeatH == StyleBorderImageRepeat::Space ||
       styleBorder->mBorderImageRepeatV == StyleBorderImageRepeat::Round ||
       styleBorder->mBorderImageRepeatV == StyleBorderImageRepeat::Space) {
-    return false;
+    return ImgDrawResult::NOT_SUPPORTED;
   }
 
   uint32_t flags = 0;
@@ -835,18 +835,11 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(
       &result);
 
   if (!bir) {
-    return false;
+    return result;
   }
 
-  if (image->GetType() == eStyleImageType_Image &&
-      !bir->mImageRenderer.IsImageContainerAvailable(aManager, flags)) {
-    return false;
-  }
-
-  bir->CreateWebRenderCommands(
+  return bir->CreateWebRenderCommands(
     aItem, aForFrame, aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
-
-  return true;
 }
 
 static nsCSSBorderRenderer

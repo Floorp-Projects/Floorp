@@ -79,6 +79,7 @@ class ProgressDelegateTest : BaseSessionTest() {
         })
     }
 
+    @Ignore
     @Test fun multipleLoads() {
         sessionRule.session.loadUri(UNKNOWN_HOST_URI)
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)

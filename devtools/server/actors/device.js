@@ -6,35 +6,16 @@
 
 const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
-const defer = require("devtools/shared/defer");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {DebuggerServer} = require("devtools/server/main");
-const {getSystemInfo, getSetting} = require("devtools/shared/system");
+const {getSystemInfo} = require("devtools/shared/system");
 const {deviceSpec} = require("devtools/shared/specs/device");
-const FileReader = require("FileReader");
 
 exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
   _desc: null,
 
   getDescription: function() {
     return getSystemInfo();
-  },
-
-  getWallpaper: function() {
-    const deferred = defer();
-    getSetting("wallpaper.image").then((blob) => {
-      const reader = new FileReader();
-      const conn = this.conn;
-      reader.addEventListener("load", function() {
-        const str = new LongStringActor(conn, reader.result);
-        deferred.resolve(str);
-      });
-      reader.addEventListener("error", function() {
-        deferred.reject(reader.error);
-      });
-      reader.readAsDataURL(blob);
-    });
-    return deferred.promise;
   },
 
   screenshotToDataURL: function() {

@@ -2660,8 +2660,11 @@ BytecodeEmitter::emitSwitch(SwitchStatement* switchStmt)
 
                 NumericLiteral* literal = &caseValue->as<NumericLiteral>();
 #ifdef DEBUG
+                // Use NumberEqualsInt32 here because switches compare using
+                // strict equality, which will equate -0 and +0.  In contrast
+                // NumberIsInt32 would return false for -0.
                 int32_t v;
-                MOZ_ASSERT(mozilla::NumberIsInt32(literal->value(), &v));
+                MOZ_ASSERT(mozilla::NumberEqualsInt32(literal->value(), &v));
 #endif
                 int32_t i = int32_t(literal->value());
 

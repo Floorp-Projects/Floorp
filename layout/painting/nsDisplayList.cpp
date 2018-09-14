@@ -4298,8 +4298,11 @@ nsDisplayBackgroundImage::CreateWebRenderCommands(
   ImgDrawResult result =
     nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(
       params, aBuilder, aResources, aSc, aManager, this);
-  nsDisplayBackgroundGeometry::UpdateDrawResult(this, result);
+  if (result == ImgDrawResult::NOT_SUPPORTED) {
+    return false;
+  }
 
+  nsDisplayBackgroundGeometry::UpdateDrawResult(this, result);
   return true;
 }
 
@@ -5537,14 +5540,22 @@ nsDisplayBorder::CreateWebRenderCommands(
 {
   nsRect rect = nsRect(ToReferenceFrame(), mFrame->GetSize());
 
-  return nsCSSRendering::CreateWebRenderCommandsForBorder(this,
-                                                          mFrame,
-                                                          rect,
-                                                          aBuilder,
-                                                          aResources,
-                                                          aSc,
-                                                          aManager,
-                                                          aDisplayListBuilder);
+  ImgDrawResult drawResult =
+    nsCSSRendering::CreateWebRenderCommandsForBorder(this,
+                                                     mFrame,
+                                                     rect,
+                                                     aBuilder,
+                                                     aResources,
+                                                     aSc,
+                                                     aManager,
+                                                     aDisplayListBuilder);
+
+  if (drawResult == ImgDrawResult::NOT_SUPPORTED) {
+    return false;
+  }
+
+  nsDisplayBorderGeometry::UpdateDrawResult(this, drawResult);
+  return true;
 };
 
 void

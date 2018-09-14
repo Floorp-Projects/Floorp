@@ -57,6 +57,7 @@ native nsIntRectByVal(nsIntRect);
 native nsSize(nsSize);
 [ptr] native nsIFrame(nsIFrame);
 native TempRefImageContainer(already_AddRefed<mozilla::layers::ImageContainer>);
+[ptr] native ImageContainer(mozilla::layers::ImageContainer);
 [ref] native ImageRegion(mozilla::image::ImageRegion);
 [ptr] native LayerManager(mozilla::layers::LayerManager);
 native Orientation(mozilla::image::Orientation);
@@ -296,15 +297,6 @@ interface imgIContainer : nsISupports
                                                                in uint32_t aFlags);
 
   /**
-   * @return true if getImageContainer() is expected to return a valid
-   *         ImageContainer when passed the given @Manager, @Size and @Flags
-   *         parameters.
-   */
-  [noscript, notxpcom] boolean isImageContainerAvailableAtSize(in LayerManager aManager,
-                                                               [const] in nsIntSize aSize,
-                                                               in uint32_t aFlags);
-
-  /**
    * Attempts to create an ImageContainer (and Image) containing the current
    * frame at the given size. Match the requested size is best effort; it's
    * not guaranteed that the surface you get will be a perfect match. (Some
@@ -322,13 +314,24 @@ interface imgIContainer : nsISupports
    * @param aFlags Decoding / drawing flags (in other words, FLAG_* flags).
    *               Currently only FLAG_SYNC_DECODE and FLAG_SYNC_DECODE_IF_FAST
    *               are supported.
-   * @return An ImageContainer for the current frame, or nullptr if one could
-   *         not be created.
+   * @param aContainer Return value for ImageContainer for the current frame.
+   *                   May be null depending on the draw result.
+   * @return The draw result for the current frame.
    */
-  [noscript, notxpcom] TempRefImageContainer getImageContainerAtSize(in LayerManager aManager,
-                                                                     [const] in nsIntSize aSize,
-                                                                     [const] in MaybeSVGImageContext aSVGContext,
-                                                                     in uint32_t aFlags);
+  [noscript, notxpcom] ImgDrawResult getImageContainerAtSize(in LayerManager aManager,
+                                                             [const] in nsIntSize aSize,
+                                                             [const] in MaybeSVGImageContext aSVGContext,
+                                                             in uint32_t aFlags,
+                                                             out ImageContainer aOutContainer);
+
+  /**
+   * @return true if getImageContainer() is expected to return a valid
+   *         ImageContainer when passed the given @Manager, @Size and @Flags
+   *         parameters.
+   */
+  [noscript, notxpcom] boolean isImageContainerAvailableAtSize(in LayerManager aManager,
+                                                               [const] in nsIntSize aSize,
+                                                               in uint32_t aFlags);
 
   /**
    * Draw the requested frame of this image onto the context specified.
