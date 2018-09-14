@@ -23,7 +23,7 @@ const DEFAULT_MAX_USED_THEMES_COUNT = 30;
 const MAX_PREVIEW_SECONDS = 30;
 
 const MANDATORY = ["id", "name"];
-const OPTIONAL = ["headerURL", "footerURL", "textcolor", "accentcolor",
+const OPTIONAL = ["headerURL", "textcolor", "accentcolor",
                   "iconURL", "previewURL", "author", "description",
                   "homepageURL", "updateURL", "version"];
 
@@ -31,7 +31,6 @@ const PERSIST_ENABLED = true;
 const PERSIST_BYPASS_CACHE = false;
 const PERSIST_FILES = {
   headerURL: "lightweighttheme-header",
-  footerURL: "lightweighttheme-footer",
 };
 
 ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
