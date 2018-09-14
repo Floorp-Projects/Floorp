@@ -23,12 +23,6 @@ worker.onmessage = function(event) {
 
   } else if (event.data.type == 'status') {
     ok(event.data.status, event.data.msg);
-
-  } else if (event.data.type == 'getOSCPU') {
-    worker.postMessage({
-      type: 'returnOSCPU',
-      result: navigator.oscpu
-    });
   }
 }
 
