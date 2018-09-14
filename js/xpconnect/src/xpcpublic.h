@@ -92,6 +92,8 @@ bool IsInUAWidgetScope(JSObject* obj);
 
 bool IsInSandboxCompartment(JSObject* obj);
 
+bool MightBeWebContentCompartment(JS::Compartment* compartment);
+
 void SetCompartmentChangedDocumentDomain(JS::Compartment* compartment);
 
 // Return a raw XBL scope object corresponding to contentScope, which must
