@@ -1251,6 +1251,26 @@ protected: // Shouldn't be used by friend classes
                                  int32_t aColumnIndex) const;
 
   /**
+   * GetSelectedOrParentTableElement() returns <td>, <th>, <tr> or <table>
+   * element:
+   *   #1 if the first selection range selects a cell, returns it.
+   *   #2 if the first selection range does not select a cell and
+   *      the selection anchor refers a <table>, returns it.
+   *   #3 if the first selection range does not select a cell and
+   *      the selection anchor refers a <tr>, returns it.
+   *   #4 if the first selection range does not select a cell and
+   *      the selection anchor refers a <td>, returns it.
+   *   #5 otherwise, nearest ancestor <td> or <th> element of the
+   *      selection anchor if there is.
+   * In #1 and #4, *aIsCellSelected will be set to true (i.e,, when
+   * a selection range selects a cell element).
+   */
+  already_AddRefed<Element>
+  GetSelectedOrParentTableElement(Selection& aSelection,
+                                  ErrorResult& aRv,
+                                  bool* aIsCellSelected = nullptr) const;
+
+  /**
    * PasteInternal() pasts text with replacing selected content.
    * This tries to dispatch ePaste event first.  If its defaultPrevent() is
    * called, this does nothing but returns NS_OK.
