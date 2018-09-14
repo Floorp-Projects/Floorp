@@ -45,6 +45,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -321,12 +322,12 @@ public class CrashReporterActivity extends AppCompatActivity
         backgroundSendReport();
     }
 
-    private String getProfileName(File profileDir) throws GeckoProfileDirectories.NoMozillaDirectoryException {
+    private String getProfileName(@Nullable File profileDir) throws GeckoProfileDirectories.NoMozillaDirectoryException {
         final File mozillaDir = GeckoProfileDirectories.getMozillaDirectory(this);
         final INIParser parser = GeckoProfileDirectories.getProfilesINI(mozillaDir);
         String profileName = null;
 
-        if (parser.getSections() != null) {
+        if (parser.getSections() != null && profileDir != null) {
             for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
                 final INISection section = e.nextElement();
                 final String path = section.getStringProperty("Path");
