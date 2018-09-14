@@ -224,5 +224,10 @@
   <string name="no_suggestions_message">Alcun motores de recerca non pote monstrar suggestiones.</string>
   <string name="dismiss_no_suggestions_prompt_button">Dimitter</string>
   <string name="tip_disable_tracking_protection">Se comporta le sito inexpectatemente?\n Prova a disactivar le Protection de traciamento</string>
+  <string name="tip_add_to_homescreen">Installa le accesso a un tocco pro le sitos que tu usa plus %1$s Menu &gt; Adder al Pagina initial</string>
   <string name="tip_set_default_browser">Aperir cata ligamine in %1$s\n Pone %1$s como navigator predefinite</string>
+  <string name="tip_autocomplete_url">Auto-completar URLs pro le sitos que tu usa plus\n Retene pulsate longemente ulle URL in le barra de adresse</string>
+  <string name="tip_open_in_new_tab">Aperi le ligamine in un nove scheda\n Retene pulsate longemente ulle ligamine sur un pagina</string>
+  <string name="tip_request_desktop">Vider plus tosto le sito in modo plen scriptorio?%1$s Menu &gt; Requirer sito de scriptorio</string>
+  <string name="tip_disable_tips">Disactivar le suggestiones sur le pagina initial de %1$s</string>
 </resources>
