@@ -562,23 +562,6 @@ JS::Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
     return ok;
 }
 
-static bool
-Evaluate(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-         const char* filename, MutableHandleValue rval)
-{
-    FileContents buffer(cx);
-    {
-        AutoFile file;
-        if (!file.open(cx, filename) || !file.readAll(cx, buffer)) {
-            return false;
-        }
-    }
-
-    CompileOptions options(cx, optionsArg);
-    options.setFileAndLine(filename, 1);
-    return Evaluate(cx, options, reinterpret_cast<const char*>(buffer.begin()), buffer.length(), rval);
-}
-
 JS_PUBLIC_API(bool)
 JS::Evaluate(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
              SourceBufferHolder& srcBuf, MutableHandleValue rval)
@@ -595,8 +578,24 @@ JS::Evaluate(JSContext* cx, AutoObjectVector& envChain, const ReadOnlyCompileOpt
 }
 
 JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-             const char* filename, MutableHandleValue rval)
+JS::EvaluateUtf8Path(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
+                     const char* filename, MutableHandleValue rval)
 {
-    return ::Evaluate(cx, optionsArg, filename, rval);
+    MOZ_ASSERT(optionsArg.utf8,
+               "this function only evaluates UTF-8 source text in the file at "
+               "the given path");
+
+    FileContents buffer(cx);
+    {
+        AutoFile file;
+        if (!file.open(cx, filename) || !file.readAll(cx, buffer)) {
+            return false;
+        }
+    }
+
+    CompileOptions options(cx, optionsArg);
+    options.setFileAndLine(filename, 1);
+
+    return Evaluate(cx, options,
+                    reinterpret_cast<const char*>(buffer.begin()), buffer.length(), rval);
 }
