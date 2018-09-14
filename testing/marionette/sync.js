@@ -23,7 +23,7 @@ this.EXPORTED_SYMBOLS = [
   "TimedPromise",
 ];
 
-const {TYPE_ONE_SHOT, TYPE_REPEATING_PRECISE_CAN_SKIP} = Ci.nsITimer;
+const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
 
 /**
  * @callback Condition
@@ -126,7 +126,7 @@ function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
     // before invoking |evalFn|
     evalFn();
 
-    timer.init(evalFn, interval, TYPE_REPEATING_PRECISE_CAN_SKIP);
+    timer.init(evalFn, interval, TYPE_REPEATING_SLACK);
 
   }).then(res => {
     timer.cancel();
