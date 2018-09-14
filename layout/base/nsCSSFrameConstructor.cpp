@@ -656,6 +656,9 @@ void
 nsFrameItems::AddChild(nsIFrame* aChild)
 {
   MOZ_ASSERT(aChild, "nsFrameItems::AddChild");
+  MOZ_ASSERT(!aChild->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) ||
+             aChild->GetPlaceholderFrame(),
+             "An out-of-flow child without a placeholder frame?");
 
   // It'd be really nice if we could just AppendFrames(kPrincipalList, aChild) here,
   // but some of our callers put frames that have different
@@ -690,24 +693,11 @@ struct nsAbsoluteItems : nsFrameItems {
                  "Dangling child list.  Someone forgot to insert it?");
   }
 #endif
-
-  // Appends the frame to the end of the list
-  void AddChild(nsIFrame* aChild);
 };
 
 nsAbsoluteItems::nsAbsoluteItems(nsContainerFrame* aContainingBlock)
   : containingBlock(aContainingBlock)
 {
-}
-
-// Additional behavior is that it sets the frame's NS_FRAME_OUT_OF_FLOW flag
-void
-nsAbsoluteItems::AddChild(nsIFrame* aChild)
-{
-  aChild->AddStateBits(NS_FRAME_OUT_OF_FLOW);
-  NS_ASSERTION(aChild->GetPlaceholderFrame(),
-               "Child without placeholder being added to nsAbsoluteItems?");
-  nsFrameItems::AddChild(aChild);
 }
 
 // -----------------------------------------------------------
@@ -2990,8 +2980,7 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*     aPresShell,
 
   // The placeholder frame gets a pseudo style.
   nsPlaceholderFrame* placeholderFrame =
-    (nsPlaceholderFrame*)NS_NewPlaceholderFrame(aPresShell, placeholderStyle,
-                                                aTypeBit);
+    NS_NewPlaceholderFrame(aPresShell, placeholderStyle, aTypeBit);
 
   placeholderFrame->Init(aContent, aParentFrame, aPrevInFlow);
 

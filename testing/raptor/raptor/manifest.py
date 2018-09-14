@@ -76,6 +76,8 @@ def write_test_settings_json(test_details, oskey):
 
     if test_details['type'] == "pageload":
         test_settings['raptor-options']['measure'] = {}
+        if "dcf" in test_details['measure']:
+            test_settings['raptor-options']['measure']['dcf'] = True
         if "fnbpaint" in test_details['measure']:
             test_settings['raptor-options']['measure']['fnbpaint'] = True
         if "fcp" in test_details['measure']:

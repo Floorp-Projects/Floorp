@@ -129,6 +129,9 @@ decorate_task(
     addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
     ok(addon, "After start is called, the add-on is installed");
 
+    Assert.deepEqual(addon.installTelemetryInfo, {source: "internal"},
+                     "Got the expected installTelemetryInfo");
+
     const study = await AddonStudies.get(recipe.id);
     Assert.deepEqual(
       study,

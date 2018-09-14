@@ -341,6 +341,15 @@ private:
 
   nsTArray<MediaStream*> GetAllStreams() const;
 
+  // Request the prompt to ask for user's approval for autoplay.
+  void EnsureAutoplayRequested();
+
+  void ResumeInternal();
+  void SuspendInternal(void* aPromise);
+
+  // This event is used for testing only.
+  void DispatchBlockedEvent();
+
 private:
   // Each AudioContext has an id, that is passed down the MediaStreams that
   // back the AudioNodes, so we can easily compute the set of all the
