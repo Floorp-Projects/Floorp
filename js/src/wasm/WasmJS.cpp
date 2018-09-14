@@ -604,9 +604,9 @@ const JSFunctionSpec WasmModuleObject::methods[] =
 
 const JSFunctionSpec WasmModuleObject::static_methods[] =
 {
-    JS_FN("imports", WasmModuleObject::imports, 1, 0),
-    JS_FN("exports", WasmModuleObject::exports, 1, 0),
-    JS_FN("customSections", WasmModuleObject::customSections, 2, 0),
+    JS_FN("imports", WasmModuleObject::imports, 1, JSPROP_ENUMERATE),
+    JS_FN("exports", WasmModuleObject::exports, 1, JSPROP_ENUMERATE),
+    JS_FN("customSections", WasmModuleObject::customSections, 2, JSPROP_ENUMERATE),
     JS_FS_END
 };
 
@@ -1132,7 +1132,7 @@ WasmInstanceObject::exportsGetter(JSContext* cx, unsigned argc, Value* vp)
 
 const JSPropertySpec WasmInstanceObject::properties[] =
 {
-    JS_PSG("exports", WasmInstanceObject::exportsGetter, 0),
+    JS_PSG("exports", WasmInstanceObject::exportsGetter, JSPROP_ENUMERATE),
     JS_PS_END
 };
 
@@ -1742,7 +1742,7 @@ WasmMemoryObject::bufferGetter(JSContext* cx, unsigned argc, Value* vp)
 
 const JSPropertySpec WasmMemoryObject::properties[] =
 {
-    JS_PSG("buffer", WasmMemoryObject::bufferGetter, 0),
+    JS_PSG("buffer", WasmMemoryObject::bufferGetter, JSPROP_ENUMERATE),
     JS_PS_END
 };
 
@@ -1776,7 +1776,7 @@ WasmMemoryObject::grow(JSContext* cx, unsigned argc, Value* vp)
 
 const JSFunctionSpec WasmMemoryObject::methods[] =
 {
-    JS_FN("grow", WasmMemoryObject::grow, 1, 0),
+    JS_FN("grow", WasmMemoryObject::grow, 1, JSPROP_ENUMERATE),
     JS_FS_END
 };
 
@@ -2130,7 +2130,7 @@ WasmTableObject::lengthGetter(JSContext* cx, unsigned argc, Value* vp)
 
 const JSPropertySpec WasmTableObject::properties[] =
 {
-    JS_PSG("length", WasmTableObject::lengthGetter, 0),
+    JS_PSG("length", WasmTableObject::lengthGetter, JSPROP_ENUMERATE),
     JS_PS_END
 };
 
@@ -2268,9 +2268,9 @@ WasmTableObject::grow(JSContext* cx, unsigned argc, Value* vp)
 
 const JSFunctionSpec WasmTableObject::methods[] =
 {
-    JS_FN("get", WasmTableObject::get, 1, 0),
-    JS_FN("set", WasmTableObject::set, 2, 0),
-    JS_FN("grow", WasmTableObject::grow, 1, 0),
+    JS_FN("get", WasmTableObject::get, 1, JSPROP_ENUMERATE),
+    JS_FN("set", WasmTableObject::set, 2, JSPROP_ENUMERATE),
+    JS_FN("grow", WasmTableObject::grow, 1, JSPROP_ENUMERATE),
     JS_FS_END
 };
 
@@ -2592,7 +2592,7 @@ const JSPropertySpec WasmGlobalObject::properties[] =
 
 const JSFunctionSpec WasmGlobalObject::methods[] =
 {
-    JS_FN(js_valueOf_str, WasmGlobalObject::valueGetter, 0, 0),
+    JS_FN(js_valueOf_str, WasmGlobalObject::valueGetter, 0, JSPROP_ENUMERATE),
     JS_FS_END
 };
 
@@ -3479,11 +3479,11 @@ WebAssembly_instantiateStreaming(JSContext* cx, unsigned argc, Value* vp)
 static const JSFunctionSpec WebAssembly_static_methods[] =
 {
     JS_FN(js_toSource_str, WebAssembly_toSource, 0, 0),
-    JS_FN("compile", WebAssembly_compile, 1, 0),
-    JS_FN("instantiate", WebAssembly_instantiate, 1, 0),
-    JS_FN("validate", WebAssembly_validate, 1, 0),
-    JS_FN("compileStreaming", WebAssembly_compileStreaming, 1, 0),
-    JS_FN("instantiateStreaming", WebAssembly_instantiateStreaming, 1, 0),
+    JS_FN("compile", WebAssembly_compile, 1, JSPROP_ENUMERATE),
+    JS_FN("instantiate", WebAssembly_instantiate, 1, JSPROP_ENUMERATE),
+    JS_FN("validate", WebAssembly_validate, 1, JSPROP_ENUMERATE),
+    JS_FN("compileStreaming", WebAssembly_compileStreaming, 1, JSPROP_ENUMERATE),
+    JS_FN("instantiateStreaming", WebAssembly_instantiateStreaming, 1, JSPROP_ENUMERATE),
     JS_FS_END
 };
 
