@@ -10,6 +10,8 @@ import android.support.v7.preference.PreferenceManager
 import kotlinx.coroutines.experimental.CoroutineDispatcher
 import kotlinx.coroutines.experimental.asCoroutineDispatcher
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.experimental.withTimeoutOrNull
 import mozilla.components.service.fretboard.Fretboard
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
@@ -20,13 +22,13 @@ import org.mozilla.focus.session.VisibilityLifeCycleCallback
 import org.mozilla.focus.telemetry.SentryWrapper
 import org.mozilla.focus.telemetry.TelemetrySessionObserver
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.StethoWrapper
 import org.mozilla.focus.utils.AdjustHelper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.EXPERIMENTS_BASE_URL
-import org.mozilla.focus.utils.EXPERIMENTS_JSON_FILENAME
 import org.mozilla.focus.utils.EXPERIMENTS_BUCKET_NAME
 import org.mozilla.focus.utils.EXPERIMENTS_COLLECTION_NAME
+import org.mozilla.focus.utils.EXPERIMENTS_JSON_FILENAME
+import org.mozilla.focus.utils.StethoWrapper
 import org.mozilla.focus.web.CleanupSessionObserver
 import org.mozilla.focus.web.WebViewProvider
 import java.io.File
@@ -38,6 +40,10 @@ val IO: CoroutineDispatcher by lazy {
 
 class FocusApplication : LocaleAwareApplication() {
     lateinit var fretboard: Fretboard
+
+    companion object {
+        private const val FRETBOARD_BLOCKING_DISK_READ_TIMEOUT = 1000
+    }
 
     var visibilityLifeCycleCallback: VisibilityLifeCycleCallback? = null
         private set
@@ -84,8 +90,12 @@ class FocusApplication : LocaleAwareApplication() {
         val experimentSource = KintoExperimentSource(
                 EXPERIMENTS_BASE_URL, EXPERIMENTS_BUCKET_NAME, EXPERIMENTS_COLLECTION_NAME)
         fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile))
+        runBlocking {
+            withTimeoutOrNull(FRETBOARD_BLOCKING_DISK_READ_TIMEOUT) {
+                fretboard.loadExperiments() // load current settings from disk
+            }
+        }
         launch(IO) {
-            fretboard.loadExperiments() // load current settings from disk
             fretboard.updateExperiments() // then update disk and memory from the network
         }
     }
