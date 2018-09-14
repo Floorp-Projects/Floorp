@@ -293,8 +293,8 @@ APZCCallbackHelper::UpdateRootFrame(FrameMetrics& aMetrics)
   if (gfxPrefs::APZAllowZooming() && aMetrics.GetScrollOffsetUpdated()) {
     // If zooming is disabled then we don't really want to let APZ fiddle
     // with these things. In theory setting the resolution here should be a
-    // no-op, but setting the SPCSPS is bad because it can cause a stale value
-    // to be returned by window.innerWidth/innerHeight (see bug 1187792).
+    // no-op, but setting the visual viewport size is bad because it can cause a
+    // stale value to be returned by window.innerWidth/innerHeight (see bug 1187792).
     //
     // We also skip this codepath unless the metrics has a scroll offset update
     // type other eNone, because eNone just means that this repaint request
