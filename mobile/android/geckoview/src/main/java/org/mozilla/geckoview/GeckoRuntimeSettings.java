@@ -18,6 +18,8 @@ import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 
 public final class GeckoRuntimeSettings implements Parcelable {
@@ -291,6 +293,17 @@ public final class GeckoRuntimeSettings implements Parcelable {
             mSettings.mCrashHandler = handler;
             return this;
         }
+
+        /**
+         * Set the locale.
+         *
+         * @param languageTag The locale code in Gecko format ("en" or "en-US").
+         * @return The builder instance.
+         */
+        public @NonNull Builder locale(String languageTag) {
+            mSettings.mLocale = languageTag;
+            return this;
+        }
     }
 
     /* package */ GeckoRuntime runtime;
@@ -360,6 +373,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
     /* package */ int mScreenWidthOverride;
     /* package */ int mScreenHeightOverride;
     /* package */ Class<? extends Service> mCrashHandler;
+    /* package */ String mLocale;
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
         mCookieBehavior, mCookieLifetime, mConsoleOutput,
@@ -402,9 +416,11 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mScreenWidthOverride = settings.mScreenWidthOverride;
         mScreenHeightOverride = settings.mScreenHeightOverride;
         mCrashHandler = settings.mCrashHandler;
+        mLocale = settings.mLocale;
     }
 
     /* package */ void flush() {
+        flushLocale();
         for (final Pref<?> pref: mPrefs) {
             pref.flush();
         }
@@ -543,6 +559,29 @@ public final class GeckoRuntimeSettings implements Parcelable {
             return new Rect(0, 0, mScreenWidthOverride, mScreenHeightOverride);
         }
         return null;
+    }
+
+    /**
+     * Gets the locale code in Gecko format ("en" or "en-US").
+     */
+    public String getLocale() {
+        return mLocale;
+    }
+
+    /**
+     * Set the locale.
+     *
+     * @param languageTag The locale code in Gecko format ("en-US").
+     */
+    public void setLocale(String languageTag) {
+        mLocale = languageTag;
+        flushLocale();
+    }
+
+    private void flushLocale() {
+        final GeckoBundle data = new GeckoBundle(1);
+        data.putString("languageTag", mLocale);
+        EventDispatcher.getInstance().dispatch("GeckoView:SetLocale", data);
     }
 
     // Sync values with nsICookieService.idl.
@@ -753,6 +792,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         out.writeInt(mScreenWidthOverride);
         out.writeInt(mScreenHeightOverride);
         out.writeString(mCrashHandler != null ? mCrashHandler.getName() : null);
+        out.writeString(mLocale);
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
@@ -785,6 +825,8 @@ public final class GeckoRuntimeSettings implements Parcelable {
             } catch (ClassNotFoundException e) {
             }
         }
+
+        mLocale = source.readString();
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR
