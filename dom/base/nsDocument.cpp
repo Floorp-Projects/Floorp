@@ -11109,11 +11109,8 @@ nsresult nsIDocument::RemoteFrameFullscreenChanged(Element* aFrameElement)
   // Ensure the frame element is the fullscreen element in this document.
   // If the frame element is already the fullscreen element in this document,
   // this has no effect.
-  auto request = MakeUnique<FullscreenRequest>(aFrameElement,
-                                               CallerType::NonSystem);
-  request->mShouldNotifyNewOrigin = false;
+  auto request = FullscreenRequest::CreateForRemote(aFrameElement);
   RequestFullscreen(std::move(request));
-
   return NS_OK;
 }
 

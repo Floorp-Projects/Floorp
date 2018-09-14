@@ -3585,7 +3585,7 @@ Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aError)
     return;
   }
 
-  auto request = MakeUnique<FullscreenRequest>(this, aCallerType);
+  auto request = FullscreenRequest::Create(this, aCallerType);
   OwnerDoc()->AsyncRequestFullscreen(std::move(request));
 }
 
