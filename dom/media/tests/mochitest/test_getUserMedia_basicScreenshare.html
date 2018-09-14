@@ -67,12 +67,6 @@
    * cycle for a screenshare MediaStream on a video HTMLMediaElement.
    */
   runTest(async function () {
-    const isWinXP = navigator.userAgent.includes("Windows NT 5.1");
-    if (IsMacOSX10_6orOlder() || isWinXP) {
-        ok(true, "Screensharing disabled for OSX10.6 and WinXP");
-        return;
-    }
-
     await pushPrefs(
       ["full-screen-api.enabled", true],
       ["full-screen-api.unprefix.enabled", true],
