@@ -20,7 +20,6 @@ import android.os.Environment
 import android.preference.PreferenceManager
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
-import android.support.v4.app.FragmentManager
 import android.support.v7.app.AlertDialog
 import android.text.Html
 import android.view.LayoutInflater
@@ -36,6 +35,7 @@ import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
+import org.mozilla.focus.utils.asFragmentActivity
 import org.mozilla.focus.web.Download
 import org.mozilla.focus.web.IWebView
 
@@ -52,7 +52,6 @@ object WebContextMenu {
     @Suppress("ComplexMethod")
     fun show(
         context: Context,
-        fragmentManager: FragmentManager,
         callback: IWebView.Callback,
         hitTarget: IWebView.HitTarget
     ) {
@@ -99,8 +98,7 @@ object WebContextMenu {
             navigationMenuView.isVerticalScrollBarEnabled = false
         }
 
-        setupMenuForHitTarget(fragmentManager, dialog, menu, callback, hitTarget,
-                getAppDataForLink(context, hitTarget.linkURL), context)
+        setupMenuForHitTarget(dialog, menu, callback, hitTarget, context)
 
         val warningView = view.findViewById<View>(R.id.warning) as TextView
         if (hitTarget.isImage) {
@@ -141,14 +139,13 @@ object WebContextMenu {
      */
     @Suppress("ComplexMethod")
     private fun setupMenuForHitTarget(
-        fragmentManager: FragmentManager,
         dialog: Dialog,
         navigationView: NavigationView,
         callback: IWebView.Callback,
         hitTarget: IWebView.HitTarget,
-        appLinkData: Array<ActivityInfo>?,
         context: Context
     ) = with(navigationView) {
+        val appLinkData = getAppDataForLink(context, hitTarget.linkURL)
         inflateMenu(R.menu.menu_browser_context)
 
         menu.findItem(R.id.menu_open_with_app).isVisible = appLinkData != null
@@ -159,7 +156,7 @@ object WebContextMenu {
         menu.findItem(R.id.menu_image_copy).isVisible = hitTarget.isImage
 
         menu.findItem(R.id.menu_image_save).isVisible = hitTarget.isImage &&
-            UrlUtils.isHttpOrHttps(hitTarget.imageURL)
+                UrlUtils.isHttpOrHttps(hitTarget.imageURL)
 
         setNavigationItemSelectedListener { item ->
             dialog.dismiss()
@@ -167,7 +164,7 @@ object WebContextMenu {
             when (item.itemId) {
                 R.id.menu_open_with_app -> {
                     val fragment = OpenWithFragment.newInstance(appLinkData!!, hitTarget.linkURL, null)
-                    fragment.show(fragmentManager, OpenWithFragment.FRAGMENT_TAG)
+                    fragment.show(context.asFragmentActivity()!!.supportFragmentManager, OpenWithFragment.FRAGMENT_TAG)
 
                     true
                 }
@@ -187,10 +184,10 @@ object WebContextMenu {
                             }
                     TelemetryWrapper.openLinkInNewTabEvent()
                     PreferenceManager.getDefaultSharedPreferences(context).edit()
-                        .putBoolean(
-                            context.getString(R.string.has_opened_new_tab),
-                            true
-                        ).apply()
+                            .putBoolean(
+                                    context.getString(R.string.has_opened_new_tab),
+                                    true
+                            ).apply()
 
                     true
                 }
@@ -200,10 +197,10 @@ object WebContextMenu {
                     shareIntent.type = "text/plain"
                     shareIntent.putExtra(Intent.EXTRA_TEXT, hitTarget.linkURL)
                     dialog.context.startActivity(
-                        Intent.createChooser(
-                            shareIntent,
-                            dialog.context.getString(R.string.share_dialog_title)
-                        )
+                            Intent.createChooser(
+                                    shareIntent,
+                                    dialog.context.getString(R.string.share_dialog_title)
+                            )
                     )
                     true
                 }
@@ -213,16 +210,16 @@ object WebContextMenu {
                     shareIntent.type = "text/plain"
                     shareIntent.putExtra(Intent.EXTRA_TEXT, hitTarget.imageURL)
                     dialog.context.startActivity(
-                        Intent.createChooser(
-                            shareIntent,
-                            dialog.context.getString(R.string.share_dialog_title)
-                        )
+                            Intent.createChooser(
+                                    shareIntent,
+                                    dialog.context.getString(R.string.share_dialog_title)
+                            )
                     )
                     true
                 }
                 R.id.menu_image_save -> {
                     val download =
-                        Download(hitTarget.imageURL, null, null, null, -1, Environment.DIRECTORY_PICTURES, null)
+                            Download(hitTarget.imageURL, null, null, null, -1, Environment.DIRECTORY_PICTURES, null)
                     callback.onDownloadStart(download)
                     TelemetryWrapper.saveImageEvent()
                     true

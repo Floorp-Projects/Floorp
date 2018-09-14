@@ -50,7 +50,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.browser_display_toolbar.*
-
+import mozilla.components.support.utils.ColorUtils
+import mozilla.components.support.utils.DownloadUtils
+import mozilla.components.support.utils.DrawableUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.InstallFirefoxActivity
 import org.mozilla.focus.activity.MainActivity
@@ -62,6 +64,7 @@ import org.mozilla.focus.biometrics.BiometricAuthenticationHandler
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.broadcastreceiver.DownloadBroadcastReceiver
 import org.mozilla.focus.findinpage.FindInPageCoordinator
+import org.mozilla.focus.gecko.NestedGeckoView
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.menu.browser.BrowserMenu
 import org.mozilla.focus.menu.context.WebContextMenu
@@ -89,13 +92,8 @@ import org.mozilla.focus.web.IWebView
 import org.mozilla.focus.widget.AnimatedProgressBar
 import org.mozilla.focus.widget.FloatingEraseButton
 import org.mozilla.focus.widget.FloatingSessionsButton
-
 import java.lang.ref.WeakReference
 import java.util.Objects
-import mozilla.components.support.utils.ColorUtils
-import mozilla.components.support.utils.DownloadUtils
-import mozilla.components.support.utils.DrawableUtils
-import org.mozilla.focus.gecko.NestedGeckoView
 
 /**
  * Fragment for displaying the browser UI.
@@ -534,7 +532,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             override fun onRequestDesktopStateChanged(shouldRequestDesktop: Boolean) {}
 
             override fun onLongPress(hitTarget: IWebView.HitTarget) {
-                WebContextMenu.show(activity!!, fragmentManager!!, this, hitTarget)
+                WebContextMenu.show(activity!!, this, hitTarget)
             }
 
             override fun onEnterFullScreen(callback: IWebView.FullscreenCallback, view: View?) {
