@@ -54,7 +54,8 @@ function sendMouseClick(element) {
 const FULLSCREEN_ELEMENT = document.getElementById("fullscreen-element");
 
 function enter1(event) {
-  is(event.target, document, "Event target should be full-screen document #1");
+  is(event.target, FULLSCREEN_ELEMENT,
+     "Event target should be the fullscreen element #1");
   ok(document.fullscreen, "Document should be in fullscreen");
   is(document.fullscreenElement, FULLSCREEN_ELEMENT,
      "Full-screen element should be div element.");
@@ -64,13 +65,13 @@ function enter1(event) {
   FULLSCREEN_ELEMENT.remove();
   is(document.fullscreenElement, null,
      "Full-screen element should be null after removing.");
-  document.body.appendChild(FULLSCREEN_ELEMENT);
-  is(document.fullscreenElement, null,
-     "Full-screen element should still be null after re-adding former FSE.");
 }
 
 function exit1(event) {
-  is(event.target, document, "Event target should be full-screen document #2");
+  document.body.appendChild(FULLSCREEN_ELEMENT);
+  is(document.fullscreenElement, null,
+     "Full-screen element should still be null after re-adding former FSE.");
+  is(event.target, document, "Event target should be the document #2");
   ok(!document.fullscreen, "Document should not be in fullscreen");
   is(document.fullscreenElement, null, "Full-screen element should be null.");
   iframe = document.createElement("iframe");
@@ -81,7 +82,8 @@ function exit1(event) {
 }
 
 function enter2(event) {
-  is(event.target, document, "Event target should be full-screen document #3");
+  is(event.target, iframe,
+     "Event target should be the fullscreen iframe #3");
   is(document.fullscreenElement, iframe,
      "Full-screen element should be iframe element.");
   is(iframe.contentDocument.fullscreenElement, iframe.contentDocument.body,
@@ -105,7 +107,8 @@ function exit2(event) {
 }
 
 function enter3(event) {
-  is(event.target, document, "Event target should be full-screen document #3");
+  is(event.target, FULLSCREEN_ELEMENT,
+     "Event target should be the fullscreen element #3");
   is(document.fullscreenElement, FULLSCREEN_ELEMENT,
      "Full-screen element should be div.");
   
@@ -119,12 +122,11 @@ function enter3(event) {
      "Full-screen element in outer frame should be null.");
   is(_innerFrame.contentDocument.fullscreenElement, null,
      "Full-screen element in inner frame should be null.");
-  
-  document.body.appendChild(FULLSCREEN_ELEMENT);
 }
 
 function exit3(event) {
-  is(event.target, document, "Event target should be full-screen document #4");
+  document.body.appendChild(FULLSCREEN_ELEMENT);
+  is(event.target, document, "Event target should be the document #3");
   is(document.fullscreenElement, null, "Full-screen element should be null.");
   document.body.removeChild(iframe);
   iframe = null;
@@ -149,7 +151,8 @@ function error1(event) {
 }
 
 function enter4(event) {
-  is(event.target, document, "Event target should be full-screen document #5");
+  is(event.target, inDocElement,
+     "Event target should be the fullscreen element #4");
   is(document.fullscreenElement, inDocElement, "FSE should be inDocElement.");
 
   // Remove full-screen ancestor element from document, verify it stops being reported as current FSE.
