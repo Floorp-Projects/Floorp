@@ -1928,12 +1928,13 @@ pub extern "C" fn wr_dp_pop_clip_and_scroll_info(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
                                     rect: LayoutRect,
+                                    clip: LayoutRect,
                                     is_backface_visible: bool,
                                     pipeline_id: WrPipelineId,
                                     ignore_missing_pipeline: bool) {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::new(rect);
+    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
     state.frame_builder.dl_builder.push_iframe(&prim_info, pipeline_id, ignore_missing_pipeline);
@@ -1956,10 +1957,11 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_clear_rect(state: &mut WrState,
-                                        rect: LayoutRect) {
+                                        rect: LayoutRect,
+                                        clip: LayoutRect) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
-    let prim_info = LayoutPrimitiveInfo::new(rect);
+    let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     state.frame_builder.dl_builder.push_clear_rect(&prim_info);
 }
 
