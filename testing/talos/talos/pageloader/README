@@ -1,11 +1,9 @@
 Pageload Test Component
 =======================
 
-Usage:
-
-  ./firefox -tp file:///path/to/manifest.txt [-tpargs...]
-
-See ./firefox -help for other arguments.
+Pageloader tests are defined by tp.manifest, the location of which is
+provided in the preference talos.tpmanifest.  If that preference is not
+set (ie, for startup tests), this extension has no effect.
 
 
 Manifest file format
