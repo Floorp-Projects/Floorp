@@ -2323,7 +2323,7 @@ Toolbox.prototype = {
           this.onSelectFrame(frame.id);
         },
         hover: () => {
-          this.onHightlightFrame(frame.id);
+          this.onHighlightFrame(frame.id);
         }
       }));
     });
@@ -2379,7 +2379,7 @@ Toolbox.prototype = {
   /**
    * Highlight a frame in the page
    */
-  onHightlightFrame: async function(frameId) {
+  onHighlightFrame: async function(frameId) {
     // Only enable frame highlighting when the top level document is targeted
     if (this._supportsFrameHighlight && this.rootFrameSelected) {
       const frameActor = await this.walker.getNodeActorFromWindowID(frameId);
