@@ -180,8 +180,10 @@ public:
 
 namespace xpc {
 
-CompartmentPrivate::CompartmentPrivate(JS::Compartment* c)
-    : wantXrays(false)
+CompartmentPrivate::CompartmentPrivate(JS::Compartment* c, mozilla::BasePrincipal* origin,
+                                       const SiteIdentifier& site)
+    : originInfo(origin, site)
+    , wantXrays(false)
     , allowWaivers(true)
     , isWebExtensionContentScript(false)
     , allowCPOWs(false)
@@ -567,6 +569,20 @@ EnableUniversalXPConnect(JSContext* cx)
     }
     scope->ForcePrivilegedComponents();
     return scope->AttachComponentsObject(cx);
+}
+
+bool
+CompartmentOriginInfo::IsSameOrigin(nsIPrincipal* aOther) const
+{
+    return mOrigin->FastEquals(aOther);
+}
+
+void
+SetCompartmentChangedDocumentDomain(JS::Compartment* compartment)
+{
+    CompartmentPrivate* priv = CompartmentPrivate::Get(compartment);
+    MOZ_ASSERT(priv);
+    priv->originInfo.SetChangedDocumentDomain();
 }
 
 JSObject*

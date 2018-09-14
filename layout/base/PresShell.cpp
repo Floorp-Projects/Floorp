@@ -4342,11 +4342,6 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
                         ? FlushType::Layout
                         : FlushType::InterruptibleLayout) &&
         !mIsDestroying) {
-#ifdef MOZ_GECKO_PROFILER
-      AutoProfilerTracing tracingLayoutFlush("Paint", "Reflow",
-                                              std::move(mReflowCause));
-      mReflowCause = nullptr;
-#endif
       didLayoutFlush = true;
       mFrameConstructor->RecalcQuotesAndCounters();
       viewManager->FlushDelayedResize(true);
@@ -8909,6 +8904,13 @@ PresShell::ScheduleReflowOffTimer()
 bool
 PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
 {
+#ifdef MOZ_GECKO_PROFILER
+  nsIURI* uri = mDocument->GetDocumentURI();
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
+    "PresShell::DoReflow", LAYOUT,
+    uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A"));
+#endif
+
   gfxTextPerfMetrics* tp = mPresContext->GetTextPerfMetrics();
   TimeStamp timeStart;
   if (tp) {
@@ -8923,13 +8925,6 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   // schedule a similar paint when a frame is deleted.
   target->SchedulePaint(nsIFrame::PAINT_DEFAULT, false);
 
-#ifdef MOZ_GECKO_PROFILER
-  nsIURI* uri = mDocument->GetDocumentURI();
-  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
-    "PresShell::DoReflow", LAYOUT,
-    uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A"));
-#endif
-
   nsDocShell* docShell = static_cast<nsDocShell*>(GetPresContext()->GetDocShell());
   RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
   bool isTimelineRecording = timelines && timelines->HasConsumer(docShell);
@@ -8937,6 +8932,12 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   if (isTimelineRecording) {
     timelines->AddMarkerForDocShell(docShell, "Reflow", MarkerTracingType::START);
   }
+
+#ifdef MOZ_GECKO_PROFILER
+  AutoProfilerTracing tracingLayoutFlush("Paint", "Reflow",
+                                          std::move(mReflowCause));
+  mReflowCause = nullptr;
+#endif
 
   if (mReflowContinueTimer) {
     mReflowContinueTimer->Cancel();
