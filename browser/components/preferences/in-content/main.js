@@ -1738,7 +1738,7 @@ var gMainPane = {
                    getService(Ci.nsIGIOService);
       var gioApps = gIOSvc.getAppsForURIScheme(handlerInfo.type);
       let possibleHandlers = handlerInfo.possibleApplicationHandlers;
-      for (let handler of gioApps.enumerate()) {
+      for (let handler of gioApps.enumerate(Ci.nsIHandlerApp)) {
         // OS handler share the same name, it's most likely the same app, skipping...
         if (handler.name == handlerInfo.defaultDescription) {
           continue;
