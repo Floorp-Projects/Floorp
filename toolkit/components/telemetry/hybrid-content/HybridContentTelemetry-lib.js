@@ -50,7 +50,7 @@ if (typeof Mozilla == "undefined") {
    */
   function _registerInternalPolicyHandler() {
     // Create a promise to wait on for HCT to be completely initialized.
-    _initPromise = new Promise(function(resolveInit) {
+    _initPromise = new Promise(function(resolveInit, rejectInit) {
       // Register the handler that will update the policy boolean.
       function policyChangeHandler(updatedPref) {
         if (!("detail" in updatedPref) ||
@@ -64,6 +64,9 @@ if (typeof Mozilla == "undefined") {
         resolveInit();
       }
       document.addEventListener("mozTelemetryPolicyChange", policyChangeHandler);
+      document.addEventListener("mozTelemetryUntrustedOrigin",
+                                () => rejectInit(new Error("Origin not trusted or HCT disabled.")),
+                                {once: true});
     });
 
     // Make sure the chrome is initialized.
