@@ -10912,7 +10912,7 @@ public:
 
   NS_IMETHOD Run() override
   {
-    nsIDocument* doc = mRequest->GetDocument();
+    nsIDocument* doc = mRequest->Document();
     doc->RequestFullscreen(std::move(mRequest));
     return NS_OK;
   }
@@ -10923,12 +10923,6 @@ public:
 void
 nsIDocument::AsyncRequestFullscreen(UniquePtr<FullscreenRequest> aRequest)
 {
-  if (!aRequest->GetElement()) {
-    MOZ_ASSERT_UNREACHABLE(
-      "Must pass non-null element to nsDocument::AsyncRequestFullscreen");
-    return;
-  }
-
   // Request fullscreen asynchronously.
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> event = new nsCallRequestFullscreen(std::move(aRequest));
@@ -11287,7 +11281,7 @@ public:
     {
       while (mCurrent) {
         nsCOMPtr<nsIDocShellTreeItem>
-          docShell = mCurrent->GetDocument()->GetDocShell();
+          docShell = mCurrent->Document()->GetDocShell();
         if (!docShell) {
           // Always automatically drop documents which has been
           // detached from the doc shell.
@@ -11379,7 +11373,7 @@ nsIDocument::RequestFullscreen(UniquePtr<FullscreenRequest> aRequest)
 
   // Per spec only HTML, <svg>, and <math> should be allowed, but
   // we also need to allow XUL elements right now.
-  Element* elem = aRequest->GetElement();
+  Element* elem = aRequest->Element();
   if (!elem->IsHTMLElement() && !elem->IsXULElement() &&
       !elem->IsSVGElement(nsGkAtoms::svg) &&
       !elem->IsMathMLElement(nsGkAtoms::math)) {
@@ -11414,7 +11408,7 @@ nsIDocument::HandlePendingFullscreenRequests(nsIDocument* aDoc)
     aDoc, PendingFullscreenRequestList::eDocumentsWithSameRoot);
   while (!iter.AtEnd()) {
     const FullscreenRequest& request = iter.Get();
-    if (request.GetDocument()->ApplyFullscreen(request)) {
+    if (request.Document()->ApplyFullscreen(request)) {
       handled = true;
     }
     iter.DeleteAndNext();
@@ -11435,7 +11429,7 @@ ClearPendingFullscreenRequests(nsIDocument* aDoc)
 bool
 nsIDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
 {
-  Element* elem = aRequest.GetElement();
+  Element* elem = aRequest.Element();
   if (!FullscreenElementReadyCheck(elem, aRequest.mCallerType)) {
     return false;
   }

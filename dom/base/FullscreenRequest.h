@@ -39,8 +39,8 @@ struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
     MOZ_COUNT_DTOR(FullscreenRequest);
   }
 
-  dom::Element* GetElement() const { return mElement; }
-  nsIDocument* GetDocument() const { return mDocument; }
+  dom::Element* Element() const { return mElement; }
+  nsIDocument* Document() const { return mDocument; }
 
 private:
   RefPtr<dom::Element> mElement;
