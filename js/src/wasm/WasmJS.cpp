@@ -512,17 +512,13 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
     }
     RootedId maximumId(cx, AtomToId(maximumAtom));
 
-    bool foundMaximum;
-    if (!HasProperty(cx, obj, maximumId, &foundMaximum)) {
+    RootedValue maxVal(cx);
+    if (!GetProperty(cx, obj, obj, maximumId, &maxVal)) {
         return false;
     }
 
-    if (foundMaximum) {
-        RootedValue maxVal(cx);
-        if (!GetProperty(cx, obj, obj, maximumId, &maxVal)) {
-            return false;
-        }
-
+    // maxVal does not have a default value.
+    if (!maxVal.isUndefined()) {
         limits->maximum.emplace();
         if (!EnforceRangeU32(cx, maxVal, kind, "maximum size", limits->maximum.ptr())) {
             return false;
@@ -545,21 +541,17 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
         }
         RootedId sharedId(cx, AtomToId(sharedAtom));
 
-        bool foundShared;
-        if (!HasProperty(cx, obj, sharedId, &foundShared)) {
+        RootedValue sharedVal(cx);
+        if (!GetProperty(cx, obj, obj, sharedId, &sharedVal)) {
             return false;
         }
 
-        if (foundShared) {
-            RootedValue sharedVal(cx);
-            if (!GetProperty(cx, obj, obj, sharedId, &sharedVal)) {
-                return false;
-            }
-
+        // shared's default value is false, which is already the value set above.
+        if (!sharedVal.isUndefined()) {
             limits->shared = ToBoolean(sharedVal) ? Shareable::True : Shareable::False;
 
             if (limits->shared == Shareable::True) {
-                if (!foundMaximum) {
+                if (maxVal.isUndefined()) {
                     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_MISSING_MAXIMUM,
                                               kind);
                     return false;
