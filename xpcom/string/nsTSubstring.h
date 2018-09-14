@@ -24,6 +24,11 @@
 #error "Using XPCOM strings is limited to code linked into libxul."
 #endif
 
+// The max number of logically uninitialized code units to
+// fill with a marker byte or to mark as unintialized for
+// memory checking. (Limited to avoid quadratic behavior.)
+const size_t kNsStringBufferMaxPoison = 16;
+
 template <typename T> class nsTSubstringSplitter;
 template <typename T> class nsTString;
 template <typename T> class nsTSubstring;
@@ -1393,7 +1398,9 @@ private:
     // counting after the zero terminator the we just wrote above,
     // we end up overwriting the space for terminator not reflected
     // in the capacity number.
-    char_traits::uninitialize(base_string_type::mData + aLength + 1, Capacity() - aLength);
+    char_traits::uninitialize(
+      base_string_type::mData + aLength + 1,
+      XPCOM_MIN(size_t(Capacity() - aLength), kNsStringBufferMaxPoison));
 #endif
   }
 

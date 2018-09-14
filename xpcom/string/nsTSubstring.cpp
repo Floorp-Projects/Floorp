@@ -128,14 +128,19 @@ nsTSubstring<T>::StartBulkWriteImpl(size_type aCapacity,
                         this->mData + aOldSuffixStart,
                         aSuffixLength);
       if (aSuffixLength) {
-        char_traits::uninitialize(this->mData + aPrefixToPreserve,
-                                  aNewSuffixStart - aPrefixToPreserve);
-        char_traits::uninitialize(this->mData + aNewSuffixStart + aSuffixLength,
-                                  curCapacity + 1 - aNewSuffixStart -
-                                    aSuffixLength);
+        char_traits::uninitialize(
+          this->mData + aPrefixToPreserve,
+          XPCOM_MIN(size_t(aNewSuffixStart - aPrefixToPreserve),
+                    kNsStringBufferMaxPoison));
+        char_traits::uninitialize(
+          this->mData + aNewSuffixStart + aSuffixLength,
+          XPCOM_MIN(size_t(curCapacity + 1 - aNewSuffixStart - aSuffixLength),
+                    kNsStringBufferMaxPoison));
       } else {
-        char_traits::uninitialize(this->mData + aPrefixToPreserve,
-                                  curCapacity + 1 - aPrefixToPreserve);
+        char_traits::uninitialize(
+          this->mData + aPrefixToPreserve,
+          XPCOM_MIN(size_t(curCapacity + 1 - aPrefixToPreserve),
+                    kNsStringBufferMaxPoison));
       }
       return curCapacity;
     }
@@ -235,14 +240,19 @@ nsTSubstring<T>::StartBulkWriteImpl(size_type aCapacity,
     char_traits::move(
       newData + aNewSuffixStart, oldData + aOldSuffixStart, aSuffixLength);
     if (aSuffixLength) {
-      char_traits::uninitialize(this->mData + aPrefixToPreserve,
-                                aNewSuffixStart - aPrefixToPreserve);
-      char_traits::uninitialize(this->mData + aNewSuffixStart + aSuffixLength,
-                                newCapacity + 1 - aNewSuffixStart -
-                                  aSuffixLength);
+      char_traits::uninitialize(
+        this->mData + aPrefixToPreserve,
+        XPCOM_MIN(size_t(aNewSuffixStart - aPrefixToPreserve),
+                  kNsStringBufferMaxPoison));
+      char_traits::uninitialize(
+        this->mData + aNewSuffixStart + aSuffixLength,
+        XPCOM_MIN(size_t(newCapacity + 1 - aNewSuffixStart - aSuffixLength),
+                  kNsStringBufferMaxPoison));
     } else {
-      char_traits::uninitialize(this->mData + aPrefixToPreserve,
-                                newCapacity + 1 - aPrefixToPreserve);
+      char_traits::uninitialize(
+        this->mData + aPrefixToPreserve,
+        XPCOM_MIN(size_t(newCapacity + 1 - aPrefixToPreserve),
+                  kNsStringBufferMaxPoison));
     }
   } else {
     char_traits::copy(newData, oldData, aPrefixToPreserve);
