@@ -73,6 +73,7 @@
   <!ENTITY timeoutErrorPage.doneButton.label     "Close">
   <!ENTITY webPaymentsBranding.label             "&brandShortName; Checkout">
   <!ENTITY invalidOption.label                   "Missing or invalid information">
+  <!ENTITY acceptedCards.label                   "Merchant accepts:">
 ]>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -92,6 +93,7 @@
   <link rel="stylesheet" href="components/basic-card-option.css"/>
   <link rel="stylesheet" href="components/shipping-option.css"/>
   <link rel="stylesheet" href="components/payment-details-item.css"/>
+  <link rel="stylesheet" href="components/accepted-cards.css"/>
   <link rel="stylesheet" href="containers/address-form.css"/>
   <link rel="stylesheet" href="containers/basic-card-form.css"/>
   <link rel="stylesheet" href="containers/order-details.css"/>
@@ -145,6 +147,7 @@
                                  data-invalid-label="&invalidOption.label;"
                                  label="&paymentMethodsLabel;">
           </payment-method-picker>
+          <accepted-cards hidden="hidden" label="&acceptedCards.label;"></accepted-cards>
           <address-picker class="payer-related"
                           label="&payerLabel;"
                           data-add-link-label="&payer.addLink.label;"
@@ -182,6 +185,7 @@
                        data-update-button-label="&basicCardPage.updateButton.label;"
                        data-cancel-button-label="&cancelPaymentButton.label;"
                        data-persist-checkbox-label="&basicCardPage.persistCheckbox.label;"
+                       data-accepted-cards-label="&acceptedCards.label;"
                        data-field-required-symbol="&fieldRequiredSymbol;"
                        hidden="hidden"></basic-card-form>
 
