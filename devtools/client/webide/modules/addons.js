@@ -54,7 +54,7 @@ function Addon() {}
 Addon.prototype = {
   _status: "unknown",
   set status(value) {
-    Devices.helperAddonInstalled = (value == "installed");
+    Devices.adbExtensionInstalled = (value == "installed");
     if (this._status != value) {
       this._status = value;
       this.emit("update");
