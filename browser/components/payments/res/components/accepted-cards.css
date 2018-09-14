@@ -1,0 +1,42 @@
+accepted-cards {
+  margin: 1em 0;
+}
+
+.accepted-cards-label {
+  display: inline-block;
+  margin-inline-end: 1em;
+  color: GrayText;
+  font-size: smaller;
+}
+
+.accepted-cards-list {
+  display: inline-block;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.accepted-cards-list > .accepted-cards-item {
+  display: inline-block;
+  width: 47px;
+  height: 30px;
+  padding: 0;
+  text-align: center;
+  margin-inline-end: 8px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* placeholders for specific card icons we don't yet have assets for */
+.accepted-cards-item[data-network-id] {
+  background-image: url("./card-icon.svg");
+}
+.accepted-cards-item[data-network-id]:after {
+  content: attr(data-network-id);
+  padding: 4px;
+  text-align: center;
+  font-size: 0.7rem;
+  display: block;
+  overflow: hidden;
+  width: 36px;
+}
