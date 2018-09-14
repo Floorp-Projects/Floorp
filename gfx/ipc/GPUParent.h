@@ -26,6 +26,11 @@ public:
 
   static GPUParent* GetSingleton();
 
+  // Gets the name of the GPU process, in the format expected by about:memory.
+  // There must be a GPU process active, and the caller must be either in that
+  // process or the parent process.
+  static void GetGPUProcessName(nsACString& aStr);
+
   bool Init(base::ProcessId aParentPid,
             const char* aParentBuildID,
             MessageLoop* aIOLoop,
