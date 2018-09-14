@@ -221,12 +221,12 @@ function getFamilyName(fontEl) {
  *         from the corresponding input fron the font editor.
  *         @Example:
  *         {
- *          value: {Number|String|null}
+ *          value: {String|null}
  *          unit: {String|null}
  *         }
  */
 function getPropertyValue(viewDoc, name) {
-  const selector = `#font-editor .font-value-slider[name=${name}]`;
+  const selector = `#font-editor .font-value-input[name=${name}]`;
   return {
     // Ensure value input exists before querying its value
     value: viewDoc.querySelector(selector) &&

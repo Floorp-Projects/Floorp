@@ -4,21 +4,23 @@
 
 /* CSS Variables specific to the font editor that aren't defined by the themes */
 :root {
-  --slider-thumb-color: var(--grey-50);
-  --slider-track-color: var(--grey-30);
+  --highlight-color: var(--blue-55);
   --input-background-color: white;
   --input-border-color: var(--grey-30);
   --input-text-color: var(--grey-90);
   --preview-input-background: var(--theme-toolbar-background);
+  --secondary-label-color: var(--grey-45);
+  --slider-thumb-color: var(--grey-50);
+  --slider-track-color: var(--grey-30);
 }
 
 :root.theme-dark {
-  --slider-thumb-color: var(--grey-40);
-  --slider-track-color: var(--grey-60);
   --input-background-color: var(--grey-70);
   --input-border-color: var(--grey-70);
   --input-text-color: var(--grey-40);
   --preview-input-background: #222225;
+  --slider-thumb-color: var(--grey-40);
+  --slider-track-color: var(--grey-60);
 }
 
 #sidebar-panel-fontinspector {
@@ -235,7 +237,7 @@
 }
 
 .font-control-label-detail {
-  color: var(--grey-45);
+  color: var(--secondary-label-color);
   font-size: smaller;
   text-transform: none;
 }
@@ -308,14 +310,47 @@
 
 .font-value-input:focus,
 .font-value-select:focus {
-  outline: 1px solid var(--blue-55);
+  outline: 1px solid var(--highlight-color);
   outline-offset: -1px;
 }
 
-.font-value-slider {
+.font-value-slider-container {
   flex: 1;
-  margin: 0;
   min-width: 50px;
+  position: relative;
+}
+
+/* Firefox doesn't support pseudo-elements on inputs. Using the container instead. */
+.font-value-slider-container::before,
+.font-value-slider-container::after {
+  -moz-user-select: none;
+  color: var(--secondary-label-color);
+  font-size: smaller;
+  position: absolute;
+  bottom: -.6em;
+  visibility: hidden;
+}
+
+.font-control-input:hover .font-value-slider-container::before,
+.font-control-input:hover .font-value-slider-container::after,
+.font-control-input:focus-within .font-value-slider-container::before,
+.font-control-input:focus-within .font-value-slider-container::after{
+  visibility: visible;
+}
+
+.font-value-slider-container::before {
+  content: attr(data-min);
+  left: .3em;
+}
+
+.font-value-slider-container::after {
+  content: attr(data-max);
+  right: .3em;
+}
+
+.font-value-slider {
+  width: 100%;
+  margin: 0;
 }
 
 /*
@@ -349,7 +384,7 @@
 }
 
 .font-value-slider:focus::-moz-range-thumb {
-  background-color: var(--blue-55);
+  background-color: var(--highlight-color);
 }
 
 .font-value-slider::-moz-range-track {
