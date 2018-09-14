@@ -39,9 +39,10 @@
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
 
-nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
-                                 mozilla::ComputedStyle* aStyle,
-                                 nsFrameState aTypeBits);
+class nsPlaceholderFrame;
+nsPlaceholderFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
+                                           mozilla::ComputedStyle* aStyle,
+                                           nsFrameState aTypeBits);
 
 #define PLACEHOLDER_TYPE_MASK    (PLACEHOLDER_FOR_FLOAT | \
                                   PLACEHOLDER_FOR_ABSPOS | \
@@ -64,9 +65,10 @@ public:
    * Create a new placeholder frame.  aTypeBit must be one of the
    * PLACEHOLDER_FOR_* constants above.
    */
-  friend nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
-                                          ComputedStyle* aStyle,
-                                          nsFrameState aTypeBits);
+  friend nsPlaceholderFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
+                                                    ComputedStyle* aStyle,
+                                                    nsFrameState aTypeBits);
+
   nsPlaceholderFrame(ComputedStyle* aStyle, nsFrameState aTypeBits)
     : nsFrame(aStyle, kClassID)
     , mOutOfFlowFrame(nullptr)

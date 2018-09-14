@@ -419,7 +419,7 @@ class CodeCoverageMixin(SingleTestMixin):
                     with open(grcov_file, 'r') as f:
                         data = json.load(f)
 
-                    if suite in test:
+                    if suite in os.path.split(test)[-1]:
                         baseline_tests_suite_cov[suite] = data
                     else:
                         _, baseline_filetype = os.path.splitext(test)

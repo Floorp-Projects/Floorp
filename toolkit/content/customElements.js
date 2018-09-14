@@ -156,7 +156,6 @@ function getInterfaceProxy(obj) {
 window.MozXULElement = MozXULElement;
 
 for (let script of [
-  "chrome://global/content/elements/stringbundle.js",
   "chrome://global/content/elements/general.js",
   "chrome://global/content/elements/textbox.js",
   "chrome://global/content/elements/tabbox.js",
@@ -164,14 +163,15 @@ for (let script of [
   Services.scriptloader.loadSubScript(script, window);
 }
 
-customElements.setElementCreationCallback("printpreview-toolbar", type => {
-  Services.scriptloader.loadSubScript(
-    "chrome://global/content/printPreviewToolbar.js", window);
-});
-
-customElements.setElementCreationCallback("editor", type => {
-  Services.scriptloader.loadSubScript(
-    "chrome://global/content/elements/editor.js", window);
-});
+for (let [tag, script] of [
+  ["findbar", "chrome://global/content/elements/findbar.js"],
+  ["stringbundle", "chrome://global/content/elements/stringbundle.js"],
+  ["printpreview-toolbar", "chrome://global/content/printPreviewToolbar.js"],
+  ["editor", "chrome://global/content/elements/editor.js"],
+]) {
+  customElements.setElementCreationCallback(tag, () => {
+    Services.scriptloader.loadSubScript(script, window);
+  });
+}
 
 }

@@ -1091,6 +1091,8 @@ protected: // Shouldn't be used by friend classes
   GetNextTableRowElement(Element& aTableRowElement,
                          ErrorResult& aRv) const;
 
+  struct CellAndIndexes;
+
   /**
    * CellIndexes store both row index and column index of a table cell.
    */
@@ -1145,6 +1147,42 @@ protected: // Shouldn't be used by friend classes
      * contains anchor of Selection.
      *
      * @param                   See above.
+     */
+    void Update(HTMLEditor& aHTMLEditor, Selection& aSelection,
+                ErrorResult& aRv);
+
+  private:
+    CellIndexes()
+      : mRow(-1)
+      , mColumn(-1)
+    {
+    }
+
+    friend struct CellAndIndexes;
+  };
+
+  struct MOZ_STACK_CLASS CellAndIndexes final
+  {
+    RefPtr<Element> mElement;
+    CellIndexes mIndexes;
+
+    /**
+     * This constructor initializes the members with cell element which is
+     * selected by first range of the Selection.  Note that even if the
+     * first range is in the cell element, this does not treat it as the
+     * cell element is selected.
+     */
+    CellAndIndexes(HTMLEditor& aHTMLEditor, Selection& aSelection,
+                   ErrorResult& aRv)
+    {
+      Update(aHTMLEditor, aSelection, aRv);
+    }
+
+    /**
+     * Update mElement and mIndexes with cell element which is selected by
+     * first range of the Selection.  Note that even if the first range is
+     * in the cell element, this does not treat it as the cell element is
+     * selected.
      */
     void Update(HTMLEditor& aHTMLEditor, Selection& aSelection,
                 ErrorResult& aRv);
@@ -1211,6 +1249,26 @@ protected: // Shouldn't be used by friend classes
   Element* GetTableCellElementAt(Element& aTableElement,
                                  int32_t aRowIndex,
                                  int32_t aColumnIndex) const;
+
+  /**
+   * GetSelectedOrParentTableElement() returns <td>, <th>, <tr> or <table>
+   * element:
+   *   #1 if the first selection range selects a cell, returns it.
+   *   #2 if the first selection range does not select a cell and
+   *      the selection anchor refers a <table>, returns it.
+   *   #3 if the first selection range does not select a cell and
+   *      the selection anchor refers a <tr>, returns it.
+   *   #4 if the first selection range does not select a cell and
+   *      the selection anchor refers a <td>, returns it.
+   *   #5 otherwise, nearest ancestor <td> or <th> element of the
+   *      selection anchor if there is.
+   * In #1 and #4, *aIsCellSelected will be set to true (i.e,, when
+   * a selection range selects a cell element).
+   */
+  already_AddRefed<Element>
+  GetSelectedOrParentTableElement(Selection& aSelection,
+                                  ErrorResult& aRv,
+                                  bool* aIsCellSelected = nullptr) const;
 
   /**
    * PasteInternal() pasts text with replacing selected content.
