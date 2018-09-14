@@ -176,8 +176,6 @@ SOURCES += [
     # we could consider removing soon (affects Ubuntus older than 10.04 LTS)
     # which currently prevent it from joining UNIFIED_SOURCES.
     'gfxDrawable.cpp',
-    # gfxFontInfoLoader.cpp needs to set no_pgo for clang-cl
-    'gfxFontInfoLoader.cpp',
     # gfxFontUtils.cpp and gfxPlatform.cpp include mac system header conflicting with point/size
     'gfxFontUtils.cpp',
     'gfxPlatform.cpp',
@@ -185,10 +183,6 @@ SOURCES += [
     'PrintTarget.cpp',
     'PrintTargetThebes.cpp',
 ]
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    # clang-cl crashes trying to PGO this file (Bug 1479842)
-    SOURCES['gfxFontInfoLoader.cpp'].no_pgo = True
 
 UNIFIED_SOURCES += [
     'CJKCompatSVS.cpp',
@@ -199,6 +193,7 @@ UNIFIED_SOURCES += [
     'gfxFont.cpp',
     'gfxFontEntry.cpp',
     'gfxFontFeatures.cpp',
+    'gfxFontInfoLoader.cpp',
     'gfxFontMissingGlyphs.cpp',
     'gfxFontSrcPrincipal.cpp',
     'gfxFontSrcURI.cpp',

@@ -1988,6 +1988,15 @@ nsWindow::Resize(double aX, double aY, double aWidth,
   NotifyRollupGeometryChange();
 }
 
+mozilla::Maybe<bool>
+nsWindow::IsResizingNativeWidget()
+{
+  if (mResizeState == RESIZING) {
+    return Some(true);
+  }
+  return Some(false);
+}
+
 nsresult
 nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent,
                           int32_t aHorizontal,

@@ -697,6 +697,7 @@ PaymentRequest::PaymentRequest(const uint64_t aTabId,
   , mPaymentDetails(aPaymentDetails)
   , mPaymentOptions(aPaymentOptions)
   , mShippingOption(aShippingOption)
+  , mState(eCreated)
 {
 }
 

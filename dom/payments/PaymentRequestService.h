@@ -8,11 +8,11 @@
 #define mozilla_dom_PaymentRequestService_h
 
 #include "nsInterfaceHashtable.h"
-#include "nsIPaymentRequest.h"
 #include "nsIPaymentRequestService.h"
 #include "nsISimpleEnumerator.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
+#include "PaymentRequestData.h"
 
 namespace mozilla {
 namespace dom {
@@ -29,7 +29,7 @@ public:
 
   static already_AddRefed<PaymentRequestService> GetSingleton();
 
-  already_AddRefed<nsIPaymentRequest>
+  already_AddRefed<payments::PaymentRequest>
   GetPaymentRequestByIndex(const uint32_t index);
 
   uint32_t NumPayments() const;
@@ -40,6 +40,9 @@ public:
 private:
   ~PaymentRequestService() = default;
 
+  nsresult GetPaymentRequestById(const nsAString& aRequestId,
+                                 payments::PaymentRequest** aRequest);
+
   nsresult
   LaunchUIAction(const nsAString& aRequestId, uint32_t aActionType);
 
@@ -49,11 +52,11 @@ private:
   bool
   IsBasicCardPayment(const nsAString& aRequestId);
 
-  FallibleTArray<nsCOMPtr<nsIPaymentRequest>> mRequestQueue;
+  FallibleTArray<RefPtr<payments::PaymentRequest>> mRequestQueue;
 
   nsCOMPtr<nsIPaymentUIService> mTestingUIService;
 
-  nsCOMPtr<nsIPaymentRequest> mShowingRequest;
+  RefPtr<payments::PaymentRequest> mShowingRequest;
 };
 
 } // end of namespace dom
