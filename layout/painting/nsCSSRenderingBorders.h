@@ -291,7 +291,7 @@ public:
                                                 gfxContext& aRenderingContext,
                                                 nsIFrame* aForFrame,
                                                 const nsRect& aDirtyRect);
-  void CreateWebRenderCommands(
+  mozilla::image::ImgDrawResult CreateWebRenderCommands(
     nsDisplayItem* aItem,
     nsIFrame* aForFrame,
     mozilla::wr::DisplayListBuilder& aBuilder,

@@ -602,6 +602,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(
     return ImgDrawResult::SUCCESS;
   }
 
+  ImgDrawResult drawResult = ImgDrawResult::SUCCESS;
   switch (mType) {
     case eStyleImageType_Gradient: {
       nsCSSGradientRenderer renderer = nsCSSGradientRenderer::Create(
@@ -641,12 +642,13 @@ nsImageRenderer::BuildWebRenderDisplayItems(
                                                               aSc,
                                                               containerFlags,
                                                               svgContext);
-      RefPtr<layers::ImageContainer> container =
-        mImageContainer->GetImageContainerAtSize(
-          aManager, decodeSize, svgContext, containerFlags);
+
+      RefPtr<layers::ImageContainer> container;
+      drawResult = mImageContainer->GetImageContainerAtSize(aManager, decodeSize, svgContext,
+                                                            containerFlags, getter_AddRefs(container));
       if (!container) {
         NS_WARNING("Failed to get image container");
-        return ImgDrawResult::NOT_READY;
+        break;
       }
 
       mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
@@ -663,7 +665,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(
                                                   Nothing());
 
       if (key.isNothing()) {
-        return ImgDrawResult::NOT_READY;
+        break;
       }
 
       nsPoint firstTilePos = nsLayoutUtils::GetBackgroundFirstTilePos(
@@ -721,8 +723,10 @@ nsImageRenderer::BuildWebRenderDisplayItems(
       break;
   }
 
-  return mImage->IsComplete() ? ImgDrawResult::SUCCESS
-                              : ImgDrawResult::SUCCESS_NOT_COMPLETE;
+  if (!mImage->IsComplete() && drawResult == ImgDrawResult::SUCCESS) {
+    return ImgDrawResult::SUCCESS_NOT_COMPLETE;
+  }
+  return drawResult;
 }
 
 already_AddRefed<gfxDrawable>

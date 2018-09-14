@@ -291,6 +291,7 @@ impl PicturePrimitive {
         let state = PictureState {
             tasks: Vec::new(),
             has_non_root_coord_system: false,
+            is_cacheable: true,
             local_rect_changed: false,
             raster_spatial_node_index,
             surface_spatial_node_index,
@@ -472,7 +473,8 @@ impl PicturePrimitive {
                         // anyway. In the future we should relax this a bit, so that we can
                         // cache tasks with complex coordinate systems if we detect the
                         // relevant transforms haven't changed from frame to frame.
-                        let surface = if pic_state_for_children.has_non_root_coord_system {
+                        let surface = if pic_state_for_children.has_non_root_coord_system ||
+                                         !pic_state_for_children.is_cacheable {
                             let picture_task = RenderTask::new_picture(
                                 RenderTaskLocation::Dynamic(None, device_rect.size),
                                 unclipped.size,
