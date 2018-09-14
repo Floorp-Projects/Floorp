@@ -48,18 +48,7 @@ public:
   static void CleanupContexts(uint64_t aProcessId);
 
   static already_AddRefed<BrowsingContext> Get(uint64_t aId);
-
-  // Create a new BrowsingContext for 'aDocShell'. The id will be
-  // generated so that it is unique across all content child processes
-  // and the content parent process.
-  explicit BrowsingContext(nsIDocShell* aDocShell);
-  // Create a BrowsingContext for a particular BrowsingContext id, in
-  // the case where the id is known beforehand and a nsDocShell isn't
-  // needed (e.g. when creating BrowsingContexts in the parent
-  // process).
-  BrowsingContext(uint64_t aBrowsingContextId,
-                  const nsAString& aName,
-                  const Maybe<uint64_t>& aProcessId = Nothing());
+  static already_AddRefed<BrowsingContext> Create(nsIDocShell* aDocShell);
 
   // Attach the current BrowsingContext to its parent, in both the
   // child and the parent process. If 'aParent' is null, 'this' is
@@ -82,7 +71,6 @@ public:
 
   uint64_t Id() const { return mBrowsingContextId; }
   uint64_t OwnerProcessId() const;
-  bool IsOwnedByProcess() const { return mProcessId.isSome(); }
 
   already_AddRefed<BrowsingContext> GetParent()
   {
@@ -104,14 +92,17 @@ public:
 
   using Children = AutoCleanLinkedList<RefPtr<BrowsingContext>>;
 
-private:
+protected:
   virtual ~BrowsingContext();
+  // Create a new BrowsingContext for 'aDocShell'. The id will be
+  // generated so that it is unique across all content child processes
+  // and the content parent process.
+  explicit BrowsingContext(nsIDocShell* aDocShell);
+  BrowsingContext(uint64_t aBrowsingContextId,
+                  const nsAString& aName);
 
+private:
   const uint64_t mBrowsingContextId;
-
-  // Indicates which process owns the docshell. Only valid in the
-  // parent process.
-  Maybe<uint64_t> mProcessId;
 
   WeakPtr<BrowsingContext> mParent;
   Children mChildren;
