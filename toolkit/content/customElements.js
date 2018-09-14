@@ -72,6 +72,38 @@ class MozXULElement extends XULElement {
   }
 
   /**
+   * Insert a localization link to an FTL file. This is used so that
+   * a Custom Element can wait to inject the link until it's connected,
+   * and so that consuming documents don't require the correct <link>
+   * present in the markup.
+   *
+   * @param path
+   *        The path to the FTL file
+   */
+  static insertFTLIfNeeded(path) {
+    let container = document.head || document.querySelector("linkset");
+    if (!container) {
+      if (document.contentType != "application/vnd.mozilla.xul+xml") {
+        throw new Error("Attempt to inject localization link before document.head is available");
+      }
+      container = document.createXULElement("linkset");
+      document.documentElement.appendChild(container);
+    }
+
+    for (let link of container.querySelectorAll("link")) {
+      if (link.getAttribute("href") == path) {
+        return;
+      }
+    }
+
+    let link = document.createElement("link");
+    link.setAttribute("rel", "localization");
+    link.setAttribute("href", path);
+
+    container.appendChild(link);
+  }
+
+  /**
    * Indicate that a class defining an element implements one or more
    * XPCOM interfaces. The custom element getCustomInterface is added
    * as well as an implementation of QueryInterface.
