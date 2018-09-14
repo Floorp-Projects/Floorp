@@ -2598,7 +2598,9 @@ gfxPlatform::InitWebRenderConfig()
           featureWebRenderQualified.Disable(FeatureStatus::Blocked,
                                             "Bad device id",
                                             NS_LITERAL_CSTRING("FEATURE_FAILURE_BAD_DEVICE_ID"));
-        } else if (deviceID < 1000) { // > 1000 or 0x3e8 roughly corresponds to Tesla and newer
+        } else if (deviceID < 0x6c0) {
+           // 0x6c0 is the lowest Fermi device id. Unfortunately some Tesla devices that don't support D3D 10.1
+           // have higher deviceIDs. They will be included, but blocked by ANGLE.
           featureWebRenderQualified.Disable(FeatureStatus::Blocked,
                                             "Device too old",
                                             NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_TOO_OLD"));
