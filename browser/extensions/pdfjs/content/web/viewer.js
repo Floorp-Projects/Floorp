@@ -4100,15 +4100,20 @@ class PDFFindBar {
     if (!this.findResultsCount) {
       return;
     }
-    let matchesCountMsg = '';
+    let matchesCountMsg = '',
+        limit = MATCHES_COUNT_LIMIT;
     if (total) {
-      if (total > MATCHES_COUNT_LIMIT) {
-        matchesCountMsg = this.l10n.get('find_matches_count_limit', { limit: MATCHES_COUNT_LIMIT.toLocaleString() }, 'More than {{limit}} matches');
+      if (total > limit) {
+        matchesCountMsg = this.l10n.get('find_matches_count_limit', {
+          n: limit,
+          limit: limit.toLocaleString()
+        }, 'More than {{limit}} match' + (limit !== 1 ? 'es' : ''));
       } else {
         matchesCountMsg = this.l10n.get('find_matches_count', {
+          n: total,
           current: current.toLocaleString(),
           total: total.toLocaleString()
-        }, '{{current}} of {{total}} matches');
+        }, '{{current}} of {{total}} match' + (total !== 1 ? 'es' : ''));
       }
     }
     Promise.resolve(matchesCountMsg).then(msg => {
@@ -4544,16 +4549,20 @@ class PDFFindController {
   }
   _requestMatchesCount() {
     const { pageIdx, matchIdx } = this.selected;
-    let current = 0;
+    let current = 0,
+        total = this.matchesCountTotal;
     if (matchIdx !== -1) {
       for (let i = 0; i < pageIdx; i++) {
         current += this.pageMatches[i] && this.pageMatches[i].length || 0;
       }
       current += matchIdx + 1;
     }
+    if (current > total) {
+      current = total = 0;
+    }
     return {
       current,
-      total: this.matchesCountTotal
+      total
     };
   }
   _updateUIResultsCount() {
