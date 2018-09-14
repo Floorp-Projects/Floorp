@@ -1,0 +1,36 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+android {
+    compileSdkVersion Config.compileSdkVersion
+
+    defaultConfig {
+        applicationId "org.mozilla.samples.dataprotect"
+
+        minSdkVersion Config.minSdkVersion_dataprotect
+        targetSdkVersion Config.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation project(':support-base')
+    implementation project(':support-ktx')
+    implementation project(':lib-dataprotect')
+
+    implementation Deps.kotlin_stdlib
+    implementation Deps.kotlin_coroutines
+
+    implementation Deps.support_appcompat
+    implementation Deps.support_recyclerview
+}

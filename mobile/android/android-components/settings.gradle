@@ -152,3 +152,6 @@ project(':samples-sync-logins').projectDir = new File(rootDir, 'samples/sync-log
 
 include ':samples-toolbar'
 project(':samples-toolbar').projectDir = new File(rootDir, 'samples/toolbar')
+
+include ':samples-dataprotect'
+project(':samples-dataprotect').projectDir = new File(rootDir, 'samples/dataprotect')

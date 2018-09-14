@@ -198,6 +198,8 @@ _Sample apps using various components._
 
 * [**Toolbar**](samples/toolbar) - An app demoing multiple customized toolbars using the [**browser-toolbar**](components/browser/toolbar/README.md) component.
 
+* [**DataProtect**](samples/dataprotect) - An app demoing how to use the [**Dataprotect**](components/lib/dataprotect/README.md) component to load and store encrypted data in `SharedPreferences`.
+
 # License
 
     This Source Code Form is subject to the terms of the Mozilla Public
