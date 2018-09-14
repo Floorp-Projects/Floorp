@@ -58,6 +58,7 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/FullscreenRequest.h"
 
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -11222,19 +11223,6 @@ nsIDocument::FullscreenElementReadyCheck(Element* aElement,
     return false;
   }
   return true;
-}
-
-FullscreenRequest::FullscreenRequest(Element* aElement, CallerType aCallerType)
-  : mElement(aElement)
-  , mDocument(static_cast<nsDocument*>(aElement->OwnerDoc()))
-  , mCallerType(aCallerType)
-{
-  MOZ_COUNT_CTOR(FullscreenRequest);
-}
-
-FullscreenRequest::~FullscreenRequest()
-{
-  MOZ_COUNT_DTOR(FullscreenRequest);
 }
 
 // Any fullscreen request waiting for the widget to finish being full-
