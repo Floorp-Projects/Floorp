@@ -125,6 +125,7 @@ class Encoding;
 class ErrorResult;
 class EventStates;
 class EventListenerManager;
+struct FullscreenRequest;
 class PendingAnimationTracker;
 class ServoStyleSet;
 template<typename> class OwningNonNull;
@@ -160,7 +161,6 @@ class Event;
 class EventTarget;
 class FontFaceSet;
 class FrameRequestCallback;
-struct FullscreenRequest;
 class ImageTracker;
 class HTMLBodyElement;
 class HTMLSharedElement;
@@ -446,9 +446,9 @@ protected:
 
 public:
   typedef nsExternalResourceMap::ExternalResourceLoad ExternalResourceLoad;
+  typedef mozilla::FullscreenRequest FullscreenRequest;
   typedef mozilla::net::ReferrerPolicy ReferrerPolicyEnum;
   typedef mozilla::dom::Element Element;
-  typedef mozilla::dom::FullscreenRequest FullscreenRequest;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
 
