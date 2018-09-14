@@ -41,8 +41,6 @@ function Test(test) {
   return res;
 }
 
-const isWinXP = navigator.userAgent.includes("Windows NT 5.1");
-
 var tests = [
   {
     keySystem: CLEARKEY_KEYSYSTEM,
@@ -56,12 +54,12 @@ var tests = [
   },
   {
     keySystem: "com.widevine.alpha",
-    expectedStatus: (isWinXP ? 'cdm-not-supported' : 'cdm-disabled'),
+    expectedStatus: 'cdm-disabled',
     prefs: [["media.eme.enabled", true], ["media.gmp-widevinecdm.enabled", false]]
   },
   {
     keySystem: "com.widevine.alpha",
-    expectedStatus: (isWinXP ? 'cdm-not-supported' : 'cdm-not-installed'),
+    expectedStatus: 'cdm-not-installed',
     prefs: [["media.eme.enabled", true], , ["media.gmp-widevinecdm.enabled", true]]
   },
   {

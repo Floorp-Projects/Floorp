@@ -1140,21 +1140,6 @@ class VideoStreamHelper {
   }
 }
 
-
-function IsMacOSX10_6orOlder() {
-  if (navigator.platform.indexOf("Mac") !== 0) {
-    return false;
-  }
-
-  var version = Cc["@mozilla.org/system-info;1"]
-      .getService(Ci.nsIPropertyBag2)
-      .getProperty("version");
-  // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10.x !
-  // Mac OS 10.7 is Darwin version 11.x. the |version| string we've got here
-  // is the Darwin version.
-  return (parseFloat(version) < 11.0);
-}
-
 (function(){
   var el = document.createElement("link");
   el.rel = "stylesheet";
