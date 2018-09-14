@@ -27,7 +27,7 @@
 #ifndef HB_OT_KERN_TABLE_HH
 #define HB_OT_KERN_TABLE_HH
 
-#include "hb-open-type-private.hh"
+#include "hb-open-type.hh"
 
 /*
  * kern -- Kerning
@@ -389,6 +389,8 @@ struct kern
   public:
   DEFINE_SIZE_UNION (2, major);
 };
+
+struct kern_accelerator_t : kern::accelerator_t {};
 
 } /* namespace OT */
 

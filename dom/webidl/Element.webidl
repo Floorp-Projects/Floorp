@@ -265,6 +265,12 @@ partial interface Element {
   void requestFullscreen();
   [Throws, BinaryName="requestFullscreen", NeedsCallerType]
   void mozRequestFullScreen();
+
+  // Events handlers
+  [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
+  attribute EventHandler onfullscreenchange;
+  [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
+  attribute EventHandler onfullscreenerror;
 };
 
 // https://w3c.github.io/pointerlock/#extensions-to-the-element-interface

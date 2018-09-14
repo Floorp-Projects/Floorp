@@ -27,7 +27,7 @@
 #ifndef HB_DSALGS_HH
 #define HB_DSALGS_HH
 
-#include "hb-private.hh"
+#include "hb.hh"
 
 
 /* Void! For when we need a expression-type of void. */
@@ -492,6 +492,15 @@ template <typename Type>
 struct hb_auto_t : Type
 {
   hb_auto_t (void) { Type::init (); }
+  /* Explicitly allow the following only for pointer and references,
+   * to avoid any accidental copies.
+   *
+   * Apparently if we template for all types, then gcc seems to
+   * capture a reference argument in the type, but clang doesn't,
+   * causing unwanted copies and bugs that come with it.  Ideally
+   * we should use C++11-style rvalue reference &&t1. */
+  template <typename T1> explicit hb_auto_t (T1 *t1) { Type::init (t1); }
+  template <typename T1> explicit hb_auto_t (T1 &t1) { Type::init (t1); }
   ~hb_auto_t (void) { Type::fini (); }
   private: /* Hide */
   void init (void) {}
@@ -502,6 +511,9 @@ struct hb_bytes_t
 {
   inline hb_bytes_t (void) : bytes (nullptr), len (0) {}
   inline hb_bytes_t (const char *bytes_, unsigned int len_) : bytes (bytes_), len (len_) {}
+  inline hb_bytes_t (const void *bytes_, unsigned int len_) : bytes ((const char *) bytes_), len (len_) {}
+
+  inline void free (void) { ::free ((void *) bytes); bytes = nullptr; len = 0; }
 
   inline int cmp (const hb_bytes_t &a) const
   {

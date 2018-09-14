@@ -27,8 +27,8 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-buffer-private.hh"
-#include "hb-utf-private.hh"
+#include "hb-buffer.hh"
+#include "hb-utf.hh"
 
 
 /**

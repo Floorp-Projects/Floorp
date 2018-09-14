@@ -1,3 +1,22 @@
+Overview of changes leading to 1.9.0
+Monday, September 10, 2018
+====================================
+- Added 'cmap' API to hb_face_t.
+- Face-builder API.
+- hb-ot-font re-creation should be much leaner now, as the
+  font tables it uses are cached on hb_face_t now.
+- Internal source header file name changes:
+  hb-*-private.hh is renamed to hb-*.hh.
+
+New API:
++HB_UNICODE_MAX
++hb_face_collect_unicodes()
++hb_face_collect_variation_selectors()
++hb_face_collect_variation_unicodes()
++hb_face_builder_create()
++hb_face_builder_add_table()
+
+
 Overview of changes leading to 1.8.8
 Tuesday, August 14, 2018
 ====================================

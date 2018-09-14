@@ -18,6 +18,7 @@ if CONFIG['MOZ_XUL']:
     EXPORTS += [
         'nsXULCommandDispatcher.h',
         'nsXULElement.h',
+        'nsXULSortService.h',
     ]
 
     EXPORTS.mozilla.dom += [
@@ -44,7 +45,6 @@ if CONFIG['MOZ_XUL']:
 XPIDL_SOURCES += [
     'nsIController.idl',
     'nsIControllers.idl',
-    'nsIXULSortService.idl',
 ]
 
 XPIDL_MODULE = 'xul'

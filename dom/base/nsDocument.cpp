@@ -3361,6 +3361,13 @@ nsIDocument::LocalizationLinkAdded(Element* aLinkElement)
     AutoTArray<nsString, 1> resourceIds;
     resourceIds.AppendElement(href);
     mDocumentL10n->AddResourceIds(resourceIds);
+  } else if (mReadyState == READYSTATE_COMPLETE) {
+    // Otherwise, if the document has already been parsed
+    // we need to lazily initialize the localization.
+    AutoTArray<nsString, 1> resourceIds;
+    resourceIds.AppendElement(href);
+    InitializeLocalization(resourceIds);
+    mDocumentL10n->TriggerInitialDocumentTranslation();
   } else {
     // Otherwise, we're still parsing the document.
     // In that case, add it to the pending list. This list
@@ -8555,11 +8562,11 @@ NotifyPageHide(nsIDocument* aDocument, void* aData)
 }
 
 static void
-DispatchFullscreenChange(nsIDocument* aTarget)
+DispatchFullscreenChange(nsIDocument* aDocument, nsINode* aTarget)
 {
-  if (nsPresContext* presContext = aTarget->GetPresContext()) {
-    auto pendingEvent =
-      MakeUnique<PendingFullscreenEvent>(FullscreenEventType::Change, aTarget);
+  if (nsPresContext* presContext = aDocument->GetPresContext()) {
+    auto pendingEvent = MakeUnique<PendingFullscreenEvent>(
+      FullscreenEventType::Change, aDocument, aTarget);
     presContext->RefreshDriver()->
       ScheduleFullscreenEvent(std::move(pendingEvent));
   }
@@ -10709,13 +10716,13 @@ GetFullscreenLeaf(nsIDocument* aDoc)
 static bool
 ResetFullscreen(nsIDocument* aDocument, void* aData)
 {
-  if (aDocument->FullscreenStackTop()) {
+  if (Element* fsElement = aDocument->FullscreenStackTop()) {
     NS_ASSERTION(CountFullscreenSubDocuments(aDocument) <= 1,
         "Should have at most 1 fullscreen subdocument.");
     aDocument->CleanupFullscreenState();
     NS_ASSERTION(!aDocument->FullscreenStackTop(),
                  "Should reset fullscreen");
-    DispatchFullscreenChange(aDocument);
+    DispatchFullscreenChange(aDocument, fsElement);
     aDocument->EnumerateSubDocuments(ResetFullscreen, nullptr);
   }
   return true;
@@ -10816,35 +10823,38 @@ nsIDocument::RestorePreviousFullscreenState()
   }
 
   nsCOMPtr<nsIDocument> fullScreenDoc = GetFullscreenLeaf(this);
-  AutoTArray<nsIDocument*, 8> exitDocs;
+  AutoTArray<Element*, 8> exitElements;
 
   nsIDocument* doc = fullScreenDoc;
   // Collect all subdocuments.
   for (; doc != this; doc = doc->GetParentDocument()) {
-    exitDocs.AppendElement(doc);
+    Element* fsElement = doc->FullscreenStackTop();
+    MOZ_ASSERT(fsElement, "Parent document of "
+               "a fullscreen document without fullscreen element?");
+    exitElements.AppendElement(fsElement);
   }
   MOZ_ASSERT(doc == this, "Must have reached this doc");
   // Collect all ancestor documents which we are going to change.
   for (; doc; doc = doc->GetParentDocument()) {
     MOZ_ASSERT(!doc->mFullscreenStack.IsEmpty(),
                "Ancestor of fullscreen document must also be in fullscreen");
+    Element* fsElement = doc->FullscreenStackTop();
     if (doc != this) {
-      Element* top = doc->FullscreenStackTop();
-      if (top->IsHTMLElement(nsGkAtoms::iframe)) {
-        if (static_cast<HTMLIFrameElement*>(top)->FullscreenFlag()) {
+      if (auto* iframe = HTMLIFrameElement::FromNode(fsElement)) {
+        if (iframe->FullscreenFlag()) {
           // If this is an iframe, and it explicitly requested
           // fullscreen, don't rollback it automatically.
           break;
         }
       }
     }
-    exitDocs.AppendElement(doc);
+    exitElements.AppendElement(fsElement);
     if (doc->mFullscreenStack.Length() > 1) {
       break;
     }
   }
 
-  nsIDocument* lastDoc = exitDocs.LastElement();
+  nsIDocument* lastDoc = exitElements.LastElement()->OwnerDoc();
   if (!lastDoc->GetParentDocument() &&
       lastDoc->mFullscreenStack.Length() == 1) {
     // If we are fully exiting fullscreen, don't touch anything here,
@@ -10857,8 +10867,8 @@ nsIDocument::RestorePreviousFullscreenState()
   UnlockPointer();
   // All documents listed in the array except the last one are going to
   // completely exit from the fullscreen state.
-  for (auto i : IntegerRange(exitDocs.Length() - 1)) {
-    exitDocs[i]->CleanupFullscreenState();
+  for (auto i : IntegerRange(exitElements.Length() - 1)) {
+    exitElements[i]->OwnerDoc()->CleanupFullscreenState();
   }
   // The last document will either rollback one fullscreen element, or
   // completely exit from the fullscreen state as well.
@@ -10873,8 +10883,8 @@ nsIDocument::RestorePreviousFullscreenState()
   // Dispatch the fullscreenchange event to all document listed. Note
   // that the loop order is reversed so that events are dispatched in
   // the tree order as indicated in the spec.
-  for (nsIDocument* d : Reversed(exitDocs)) {
-    DispatchFullscreenChange(d);
+  for (Element* e : Reversed(exitElements)) {
+    DispatchFullscreenChange(e->OwnerDoc(), e);
   }
 
   MOZ_ASSERT(newFullscreenDoc, "If we were going to exit from fullscreen on "
@@ -10925,11 +10935,11 @@ nsIDocument::AsyncRequestFullscreen(UniquePtr<FullscreenRequest> aRequest)
 }
 
 void
-nsIDocument::DispatchFullscreenError(const char* aMessage)
+nsIDocument::DispatchFullscreenError(const char* aMessage, nsINode* aTarget)
 {
   if (nsPresContext* presContext = GetPresContext()) {
-    auto pendingEvent =
-      MakeUnique<PendingFullscreenEvent>(FullscreenEventType::Error, this);
+    auto pendingEvent = MakeUnique<PendingFullscreenEvent>(
+      FullscreenEventType::Error, this, aTarget);
     presContext->RefreshDriver()->
       ScheduleFullscreenEvent(std::move(pendingEvent));
   }
@@ -11164,27 +11174,27 @@ nsIDocument::FullscreenElementReadyCheck(Element* aElement,
     return false;
   }
   if (!aElement->IsInComposedDoc()) {
-    DispatchFullscreenError("FullscreenDeniedNotInDocument");
+    DispatchFullscreenError("FullscreenDeniedNotInDocument", aElement);
     return false;
   }
   if (aElement->OwnerDoc() != this) {
-    DispatchFullscreenError("FullscreenDeniedMovedDocument");
+    DispatchFullscreenError("FullscreenDeniedMovedDocument", aElement);
     return false;
   }
   if (!GetWindow()) {
-    DispatchFullscreenError("FullscreenDeniedLostWindow");
+    DispatchFullscreenError("FullscreenDeniedLostWindow", aElement);
     return false;
   }
   if (const char* msg = GetFullscreenError(this, aCallerType)) {
-    DispatchFullscreenError(msg);
+    DispatchFullscreenError(msg, aElement);
     return false;
   }
   if (!IsVisible()) {
-    DispatchFullscreenError("FullscreenDeniedHidden");
+    DispatchFullscreenError("FullscreenDeniedHidden", aElement);
     return false;
   }
   if (HasFullscreenSubDocument(this)) {
-    DispatchFullscreenError("FullscreenDeniedSubDocFullScreen");
+    DispatchFullscreenError("FullscreenDeniedSubDocFullScreen", aElement);
     return false;
   }
   //XXXsmaug Note, we don't follow the latest fullscreen spec here.
@@ -11194,11 +11204,11 @@ nsIDocument::FullscreenElementReadyCheck(Element* aElement,
                                                           FullscreenStackTop())) {
     // If this document is fullscreen, only grant fullscreen requests from
     // a descendant of the current fullscreen element.
-    DispatchFullscreenError("FullscreenDeniedNotDescendant");
+    DispatchFullscreenError("FullscreenDeniedNotDescendant", aElement);
     return false;
   }
   if (!nsContentUtils::IsChromeDoc(this) && !IsInActiveTab(this)) {
-    DispatchFullscreenError("FullscreenDeniedNotFocusedTab");
+    DispatchFullscreenError("FullscreenDeniedNotFocusedTab", aElement);
     return false;
   }
   // Deny requests when a windowed plugin is focused.
@@ -11208,7 +11218,7 @@ nsIDocument::FullscreenElementReadyCheck(Element* aElement,
     return false;
   }
   if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(fm->GetFocusedElement())) {
-    DispatchFullscreenError("FullscreenDeniedFocusedPlugin");
+    DispatchFullscreenError("FullscreenDeniedFocusedPlugin", aElement);
     return false;
   }
   return true;
@@ -11388,7 +11398,7 @@ nsIDocument::RequestFullscreen(UniquePtr<FullscreenRequest> aRequest)
   if (!elem->IsHTMLElement() && !elem->IsXULElement() &&
       !elem->IsSVGElement(nsGkAtoms::svg) &&
       !elem->IsMathMLElement(nsGkAtoms::math)) {
-    DispatchFullscreenError("FullscreenDeniedNotHTMLSVGOrMathML");
+    DispatchFullscreenError("FullscreenDeniedNotHTMLSVGOrMathML", elem);
     return;
   }
 
@@ -11531,7 +11541,7 @@ nsIDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
   // reversed so that events are dispatched in the tree order as
   // indicated in the spec.
   for (nsIDocument* d : Reversed(changed)) {
-    DispatchFullscreenChange(d);
+    DispatchFullscreenChange(d, d->FullscreenStackTop());
   }
   return true;
 }

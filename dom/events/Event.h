@@ -158,7 +158,8 @@ public:
 
   void InitEvent(const nsAString& aEventTypeArg,
                  mozilla::CanBubble,
-                 mozilla::Cancelable);
+                 mozilla::Cancelable,
+                 mozilla::Composed = mozilla::Composed::eDefault);
 
   void SetTarget(EventTarget* aTarget);
   virtual void DuplicatePrivateData();

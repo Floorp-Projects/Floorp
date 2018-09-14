@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <!-- Tracking iframe contains some trackers -->
+  <iframe id="fastIFrame" data-touched="not sure" src="http://tracking.example.org/chrome/toolkit/components/url-classifier/tests/mochitest/fastblock_iframe.html" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></iframe>
+
+  <!-- Tracking URL -->
+  <script id="goodScript" data-touched="not sure" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/good.js" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></script>
+
+  <!-- Tracking Annotation -->
+  <script id="fastScript" data-touched="not sure" src="http://tracking.example.org/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></script>
+
+  <!-- Tracking Annotation -->
+  <script id="slowScript" data-touched="not sure" src="http://tracking.example.org/tests/toolkit/components/url-classifier/tests/mochitest/trackingRequest.js" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></script>
+</body>
+</html>

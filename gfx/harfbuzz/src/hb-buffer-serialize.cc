@@ -24,7 +24,7 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-buffer-private.hh"
+#include "hb-buffer.hh"
 
 
 static const char *serialize_formats[] = {

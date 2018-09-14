@@ -27,11 +27,10 @@
 #ifndef HB_OT_HMTX_TABLE_HH
 #define HB_OT_HMTX_TABLE_HH
 
-#include "hb-open-type-private.hh"
+#include "hb-open-type.hh"
 #include "hb-ot-hhea-table.hh"
 #include "hb-ot-os2-table.hh"
 #include "hb-ot-var-hvar-table.hh"
-#include "hb-subset-plan.hh"
 
 /*
  * hmtx -- Horizontal Metrics
@@ -331,6 +330,9 @@ struct vmtx : hmtxvmtx<vmtx, vhea> {
   static const hb_tag_t variationsTag	= HB_OT_TAG_VVAR;
   static const hb_tag_t os2Tag		= HB_TAG_NONE;
 };
+
+struct hmtx_accelerator_t : hmtx::accelerator_t {};
+struct vmtx_accelerator_t : vmtx::accelerator_t {};
 
 } /* namespace OT */
 

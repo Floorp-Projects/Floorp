@@ -1,0 +1,538 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1477046
+
+------------------------------------------
+| ID               | Tracker | FastBlock |
+-------------------+---------+------------
+| fastblock.html   | No      | N/A       |
+-------------------+---------+------------
+| goodScript       | No      | N/A       |
+| fastScript       | Yes     | No        |
+| slowScript       | Yes     | Yes       |
+-------------------+---------+------------
+| fastIFrame       | Yes     | No        |
+-------------------+---------+------------
+| goodIFrameScript | No      | N/A       |
+| fastIFrameScript | Yes     | No        |
+| slowIFrameScript | Yes     | Yes       |
+-------------------+---------+------------
+| badIFrame        | Yes     | Yes       |
+-------------------+---------+------------
+| goodIFrameScript | N/A     | N/A       |
+| fastIFrameScript | N/A     | N/A       |
+| slowIFrameScript | N/A     | N/A       |
+-------------------+---------+------------
+| goodIFrame       | No      | N/A       |
+-------------------+---------+------------
+| goodIFrameScript | No      | N/A       |
+| fastIFrameScript | Yes     | Yes       |
+| slowIFrameScript | Yes     | Yes       |
+------------------------------------------
+
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1477046</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script src="head.js"></script>
+<script class="testbody" type="text/javascript">
+
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
+ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+
+const gContentPage =
+  "http://example.com/chrome/toolkit/components/url-classifier/tests/mochitest/fastblock.html";
+const gGoodIFramePage =
+  "http://example.com/chrome/toolkit/components/url-classifier/tests/mochitest/fastblock_iframe.html";
+const gBadIFramePage =
+  "http://itisatracker.org/chrome/toolkit/components/url-classifier/tests/mochitest/fastblock_iframe.html";
+const gSlowTrackers = [
+  "http://tracking.example.org/tests/toolkit/components/url-classifier/tests/mochitest/trackingRequest.js",
+  "http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackingRequest.js",
+];
+const gInfiniteTimeout = 300000;
+const gDebug = false;
+
+function log(aMsg) {
+  if (gDebug) {
+    info("[FastBlock] " + aMsg + "\n");
+  }
+}
+
+function awaitBrowserLoaded(browser) {
+  return ContentTask.spawn(browser, null, () => {
+    if (content.document.readyState !== "complete" ||
+        content.document.documentURI === "about:blank") {
+      return ContentTaskUtils.waitForEvent(this, "load", true, event => {
+        return content.document.documentURI !== "about:blank";
+      }).then(() => {
+        return ContentTaskUtils.waitForCondition(() => {
+          return content.document.readyState === "complete";
+        }, "page load complete");
+      });
+    }
+    return Promise.resolve();
+  });
+}
+
+function testOnWindow(aCallback) {
+  const mainWindow = window.docShell.rootTreeItem.domWindow;
+  let win = mainWindow.OpenBrowserWindow({remote: true});
+
+  whenDelayedStartupFinished(win, function() {
+    SimpleTest.executeSoon(function() { win.gBrowser.loadURI(gContentPage); });
+    awaitBrowserLoaded(win.gBrowser.selectedBrowser).then(() => {
+      aCallback(win);
+    });
+  });
+}
+
+async function setupTest() {
+  log("setupTest");
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.registerCleanupFunction(() => {
+    log("cleanup()");
+    UrlClassifierTestUtils.cleanupTestTrackers();
+  });
+
+  await SpecialPowers.pushPrefEnv({ "set": [
+    ["browser.contentblocking.enabled", true],
+    ["browser.fastblock.enabled", true],
+    ["browser.fastblock.timeout", 5000],
+    ["network.http.tailing.enabled", true],
+    ["privacy.trackingprotection.enabled", false],
+    ["privacy.trackingprotection.annotate_channels", true],
+  ]});
+  await UrlClassifierTestUtils.addTestTrackers();
+
+}
+
+/**
+ * This is a helper function that detects slower trackers loaded before timeout.
+ * All such trackers will be suspended until other resources are loaded.
+ * At the moment, the timeout will be set to immediately, which makes all following
+ * trackers blocked by FastBlock. This test depends on the implementation in
+ * |nsHttpChannel|, where the timeout check is after resume.
+ */
+function SlowTrackerDetector(aNumNonSlowTargets) {
+  this.numTargets = aNumNonSlowTargets;
+  this.suspendedRequests = [];
+  this._onBC = this.onBeforeConnect.bind(this);
+  this._onSR = this.onStopRequest.bind(this);
+}
+
+SlowTrackerDetector.prototype = {
+  async init() {
+    SpecialPowers.addObserver(this._onBC, "http-on-before-connect");
+    SpecialPowers.addObserver(this._onSR, "http-on-stop-request");
+
+    await SpecialPowers.pushPrefEnv({
+      "set": [
+        ["browser.fastblock.timeout", gInfiniteTimeout],
+      ],
+    });
+  },
+  async close() {
+    ok(!this._onBC, "observer removed");
+    ok(!this._onSR, "observer removed");
+    is(this.suspendedRequests.length, 0, "no suspended request");
+    await SpecialPowers.popPrefEnv();
+  },
+
+  onBeforeConnect(aSubject) {
+    let channel = aSubject.QueryInterface(Ci.nsIChannel);
+    log("onBeforeConnect: " + channel.name);
+    if (gSlowTrackers.includes(channel.name) &&
+        this.numTargets > 0) {
+      this.onSlowTrackerFound(channel);
+    }
+  },
+
+  onStopRequest(aSubject) {
+    let channel = aSubject.QueryInterface(Ci.nsIChannel);
+    log("onStopRequest: " + channel.name);
+    if (!gSlowTrackers.includes(channel.name)) {
+      --this.numTargets;
+      if (this.numTargets == 0) {
+        this.onAllNonSlowTargetsLoaded();
+      }
+    }
+  },
+
+  onSlowTrackerFound(aChannel) {
+    log("onSlowTrackerFound: " + aChannel.name);
+    aChannel.suspend();
+    this.suspendedRequests.push(aChannel);
+  },
+
+  onAllNonSlowTargetsLoaded() {
+    is(this.numTargets, 0, "resources are loaded");
+
+    SpecialPowers.removeObserver(this._onBC, "http-on-before-connect");
+    SpecialPowers.removeObserver(this._onSR, "http-on-stop-request");
+    this._onBC = this._onSR = null;
+
+    log("=========== TIMEOUT ===========");
+    // FastBlock from now on
+    SpecialPowers.setIntPref("browser.fastblock.timeout", 1);
+
+    for (let channel of this.suspendedRequests) {
+      log("resuming: " + channel.name);
+      channel.resume();
+    }
+    this.suspendedRequests = [];
+  },
+};
+
+/**
+ * DOM will do some SpeculativeLoad thing, which increases the tracker counter
+ * incorrectly. This class is introduced to cancel those duplicated channels.
+ */
+function ChannelUnifier() {
+  this._onOR = this.onOpeningRequest.bind(this);
+}
+
+ChannelUnifier.prototype = {
+  init() {
+    this.uris = new Set();
+    SpecialPowers.addObserver(this._onOR, "http-on-opening-request");
+  },
+
+  close() {
+    SpecialPowers.removeObserver(this._onOR, "http-on-opening-request");
+  },
+
+  onOpeningRequest(aSubject) {
+    let channel = aSubject.QueryInterface(Ci.nsIChannel);
+    if (this.uris.has(channel.name)) {
+      log("ChannelUnifier cancels: " + channel.name);
+      channel.cancel(Cr.NS_BINDING_ABORTED);
+    } else {
+      this.uris.add(channel.name);
+    }
+  },
+};
+
+async function runTest(aPrefs, aFunction, aNumNonSlowTrackers) {
+  if (aPrefs) {
+    await SpecialPowers.pushPrefEnv(aPrefs);
+  }
+
+  let detector;
+  if (aNumNonSlowTrackers) {
+    detector = new SlowTrackerDetector(aNumNonSlowTrackers);
+    await detector.init();
+  }
+
+  await new Promise(resolve => {
+    let monitor = new ChannelUnifier();
+    monitor.init();
+
+    testOnWindow(async function(aWindow) {
+      monitor.close();
+      await aFunction(aWindow);
+      await BrowserTestUtils.closeWindow(aWindow);
+
+      if (detector) {
+        await detector.close();
+        detector = null;
+      }
+
+      if (aPrefs) {
+        await SpecialPowers.popPrefEnv();
+      }
+      resolve();
+    });
+  });
+}
+
+async function finishTest() {
+  log("finishTest()");
+  SimpleTest.finish();
+}
+
+async function addIFrame(aWindow, aUrl, aId) {
+  let monitor = new ChannelUnifier();
+  monitor.init();
+
+  let loadIFramePromise = new Promise(resolve => {
+    let onStopRequest = aSubject => {
+      let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+      if (channel.name == aUrl) {
+        try {
+          is(channel.responseStatus, 200, "the channel is loaded");
+          resolve(true);
+        } catch (e) {
+          is(e.name, "NS_ERROR_NOT_AVAILABLE", "the channel is canceled");
+          resolve(false);
+        } finally {
+          SpecialPowers.removeObserver(onStopRequest, "http-on-stop-request");
+        }
+      }
+    };
+    SpecialPowers.addObserver(onStopRequest, "http-on-stop-request");
+  });
+
+  let loadIFrameContentPromise = ContentTask.spawn(aWindow.gBrowser.selectedBrowser,
+                                                   [aUrl, aId],
+                                                   async function([url, id]) {
+    return new Promise((resolve, err) => {
+      let iframe = content.document.createElement("iframe");
+      iframe.id = id;
+      iframe.src = url;
+
+      // onload/onerror are triggered only when the iframe is not blocked
+      iframe.dataset.touched = "no";
+      iframe.onload = function() {
+        this.dataset.touched = "yes";
+        resolve();
+      };
+      content.document.body.appendChild(iframe);
+    });
+  });
+
+  let isIFrameLoaded = await loadIFramePromise; // wait until page load finish
+  if (isIFrameLoaded) {
+    // make sure all content are also loaded, this promise will never be resolved
+    // for the case it's blocked.
+    await loadIFrameContentPromise;
+  }
+
+  monitor.close();
+  return isIFrameLoaded;
+}
+
+async function testFastBlock(aWindow) {
+  let browser = aWindow.gBrowser.selectedBrowser;
+  let results = await ContentTask.spawn(browser, {}, () => {
+    let iframe = content.document.getElementById("fastIFrame").contentDocument;
+    return {
+      goodScript: content.document.getElementById("goodScript").dataset.touched,
+      fastScript: content.document.getElementById("fastScript").dataset.touched,
+      slowScript: content.document.getElementById("slowScript").dataset.touched,
+      fastIFrame: content.document.getElementById("fastIFrame").dataset.touched,
+      goodIFrameScript: iframe.getElementById("goodIFrameScript").dataset.touched,
+      fastIFrameScript: iframe.getElementById("fastIFrameScript").dataset.touched,
+      slowIFrameScript: iframe.getElementById("slowIFrameScript").dataset.touched,
+      numTrackersFound: content.document.numTrackersFound,
+      numTrackersBlocked: content.document.numTrackersBlocked,
+    };
+  });
+
+  let { goodScript,
+        fastScript,
+        slowScript,
+        fastIFrame,
+        goodIFrameScript,
+        fastIFrameScript,
+        slowIFrameScript,
+        numTrackersFound,
+        numTrackersBlocked,
+  } = results;
+
+  is(goodScript, "yes", "is not a tracker");
+  is(fastScript, "yes", "is a fast tracker");
+  is(slowScript, "no", "is a blocked tracker");
+  is(fastIFrame, "yes", "fast iframe loaded");
+  is(goodIFrameScript, "yes", "is not a tracker");
+  is(fastIFrameScript, "yes", "is a fast tracker");
+  is(slowIFrameScript, "no", "is a blocked tracker");
+  is(numTrackersFound, 5, "5 trackers found");
+  is(numTrackersBlocked, 2, "2 tracker blocked");
+
+  let badIFrameLoaded = await addIFrame(aWindow, gBadIFramePage, "badIFrame");
+  ok(!badIFrameLoaded, "tracking iframe is blocked");
+
+  results = await ContentTask.spawn(browser, {}, () => {
+    let iframe = content.document.getElementById("badIFrame").contentDocument;
+    return {
+      badIFrame: content.document.getElementById("badIFrame").dataset.touched,
+      goodIFrameScript: iframe.getElementById("goodIFrameScript"),
+      fastIFrameScript: iframe.getElementById("fastIFrameScript"),
+      slowIFrameScript: iframe.getElementById("slowIFrameScript"),
+      numTrackersFound: content.document.numTrackersFound,
+      numTrackersBlocked: content.document.numTrackersBlocked,
+    };
+  });
+
+  is(results.badIFrame, "no", "bad iframe blocked");
+  ok(!results.goodIFrameScript, "iframe is not loaded");
+  ok(!results.fastIFrameScript, "iframe is not loaded");
+  ok(!results.slowIFrameScript, "iframe is not loaded");
+
+  is(results.numTrackersFound, 6, "6 trackers found");
+  is(results.numTrackersBlocked, 3, "3 tracker blocked");
+
+  let goodIFrameLoaded = await addIFrame(aWindow, gGoodIFramePage, "goodIFrame");
+  ok(goodIFrameLoaded, "non tracking iframe is loaded");
+
+  results = await ContentTask.spawn(browser, {}, () => {
+    let iframe = content.document.getElementById("goodIFrame").contentDocument;
+    return {
+      goodIFrame: content.document.getElementById("goodIFrame").dataset.touched,
+      goodIFrameScript: iframe.getElementById("goodIFrameScript").dataset.touched,
+      fastIFrameScript: iframe.getElementById("fastIFrameScript").dataset.touched,
+      slowIFrameScript: iframe.getElementById("slowIFrameScript").dataset.touched,
+      numTrackersFound: content.document.numTrackersFound,
+      numTrackersBlocked: content.document.numTrackersBlocked,
+    };
+  });
+
+  is(results.goodIFrame, "yes", "non tracking iframe is loaded");
+  is(results.goodIFrameScript, "yes", "is not a tracker");
+  is(results.fastIFrameScript, "no", "is a blocked tracker");
+  is(results.slowIFrameScript, "no", "is a blocked tracker");
+
+  is(results.numTrackersFound, 8, "8 trackers found");
+  is(results.numTrackersBlocked, 5, "5 tracker blocked");
+}
+
+async function testNoFastBlock(aWindow) {
+  let browser = aWindow.gBrowser.selectedBrowser;
+  let results = await ContentTask.spawn(browser, {}, () => {
+    let iframe = content.document.getElementById("fastIFrame").contentDocument;
+    return {
+      goodScript: content.document.getElementById("goodScript").dataset.touched,
+      fastScript: content.document.getElementById("fastScript").dataset.touched,
+      slowScript: content.document.getElementById("slowScript").dataset.touched,
+      fastIFrame: content.document.getElementById("fastIFrame").dataset.touched,
+      goodIFrameScript: iframe.getElementById("goodIFrameScript").dataset.touched,
+      fastIFrameScript: iframe.getElementById("fastIFrameScript").dataset.touched,
+      slowIFrameScript: iframe.getElementById("slowIFrameScript").dataset.touched,
+      numTrackersFound: content.document.numTrackersFound,
+      numTrackersBlocked: content.document.numTrackersBlocked,
+    };
+  });
+
+  let { goodScript,
+        fastScript,
+        slowScript,
+        fastIFrame,
+        goodIFrameScript,
+        fastIFrameScript,
+        slowIFrameScript,
+        numTrackersFound,
+        numTrackersBlocked,
+  } = results;
+
+  is(goodScript, "yes", "is not a tracker");
+  is(fastScript, "yes", "FastBlock is disabled");
+  is(slowScript, "yes", "FastBlock is disabled");
+  is(fastIFrame, "yes", "fast iframe loaded");
+  is(goodIFrameScript, "yes", "is not a tracker");
+  is(fastIFrameScript, "yes", "FastBlock is disabled");
+  is(slowIFrameScript, "yes", "FastBlock is disabled");
+  is(numTrackersFound, 5, "5 trackers found");
+  is(numTrackersBlocked, 0, "no tracker blocked");
+
+  let iframeLoaded = await addIFrame(aWindow, gBadIFramePage, "badIFrame");
+  ok(iframeLoaded, "tracking iframe is loaded");
+
+  results = await ContentTask.spawn(browser, log, (LOG) => {
+    let iframe = content.document.getElementById("badIFrame").contentDocument;
+    return {
+      badIFrame: content.document.getElementById("badIFrame").dataset.touched,
+      goodIFrameScript: iframe.getElementById("goodIFrameScript").dataset.touched,
+      fastIFrameScript: iframe.getElementById("fastIFrameScript").dataset.touched,
+      slowIFrameScript: iframe.getElementById("slowIFrameScript").dataset.touched,
+      numTrackersFound: content.document.numTrackersFound,
+      numTrackersBlocked: content.document.numTrackersBlocked,
+    };
+  });
+
+  is(results.badIFrame, "yes", "FastBlock is disabled");
+  is(results.goodIFrameScript, "yes", "is not a tracker");
+  is(results.fastIFrameScript, "yes", "FastBlock is disabled");
+  is(results.slowIFrameScript, "yes", "FastBlock is disabled");
+
+  is(results.numTrackersFound, 8, "8 trackers found");
+  is(results.numTrackersBlocked, 0, "0 tracker blocked");
+
+  let goodIFrameLoaded = await addIFrame(aWindow, gGoodIFramePage, "goodIFrame");
+  ok(goodIFrameLoaded, "non tracking iframe is loaded");
+
+  results = await ContentTask.spawn(browser, {}, () => {
+    let iframe = content.document.getElementById("goodIFrame").contentDocument;
+    return {
+      goodIFrame: content.document.getElementById("goodIFrame").dataset.touched,
+      goodIFrameScript: iframe.getElementById("goodIFrameScript").dataset.touched,
+      fastIFrameScript: iframe.getElementById("fastIFrameScript").dataset.touched,
+      slowIFrameScript: iframe.getElementById("slowIFrameScript").dataset.touched,
+      numTrackersFound: content.document.numTrackersFound,
+      numTrackersBlocked: content.document.numTrackersBlocked,
+    };
+  });
+
+  is(results.goodIFrame, "yes", "non tracking iframe is loaded");
+  is(results.goodIFrameScript, "yes", "is not a tracker");
+  is(results.fastIFrameScript, "yes", "FastBlock is disabled");
+  is(results.slowIFrameScript, "yes", "FastBlock is disabled");
+
+  is(results.numTrackersFound, 10, "10 trackers found");
+  is(results.numTrackersBlocked, 0, "0 tracker blocked");
+}
+
+async function testPrefsSwitch() {
+  // FastBlock ON
+  await runTest({
+    "set": [
+      ["browser.contentblocking.enabled", true],
+      ["browser.fastblock.enabled", true],
+    ]}, testFastBlock, 6);
+
+  // FastBlock OFF
+  await runTest({
+    "set": [
+      ["browser.contentblocking.enabled", false],
+      ["browser.fastblock.enabled", true],
+      ["browser.fastblock.timeout", 1],
+    ]}, testNoFastBlock, 0);
+
+  // FastBlock OFF
+  await runTest({
+    "set": [
+      ["browser.contentblocking.enabled", true],
+      ["browser.fastblock.enabled", false],
+      ["browser.fastblock.timeout", 1],
+    ]}, testNoFastBlock, 0);
+}
+
+async function test() {
+  await setupTest();
+
+  await runTest(null,
+                testFastBlock,
+                6);
+
+  // A long-timeout that FastBlock never happens
+  await runTest({ "set": [["browser.fastblock.timeout", gInfiniteTimeout]]},
+                testNoFastBlock, 0);
+
+  await testPrefsSwitch();
+
+  await finishTest();
+}
+
+test();
+
+</script>
+
+</pre>
+</body>
+</html>

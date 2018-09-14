@@ -41,8 +41,13 @@ case $(uname -s) in
     *CYGWIN*|*MINGW*)
         EXE=".exe"
         ;;
-    *)
+    *Linux*)
         EXE=""
+        export LD_LIBRARY_PATH=$CRYPTO_LIBDIR
+        ;;
+    *Darwin*)
+        EXE=""
+        export DYLD_LIBRARY_PATH=$CRYPTO_LIBDIR
         ;;
 esac
 

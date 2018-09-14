@@ -24,7 +24,7 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-ot-shape-complex-use-private.hh"
+#include "hb-ot-shape-complex-use.hh"
 
 int
 main (void)
