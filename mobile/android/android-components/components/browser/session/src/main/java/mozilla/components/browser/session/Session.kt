@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session
 
+import android.graphics.Bitmap
 import mozilla.components.browser.session.engine.EngineSessionHolder
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.HitResult
@@ -49,6 +50,7 @@ class Session(
         fun onFindResult(session: Session, result: FindResult) = Unit
         fun onDesktopModeChanged(session: Session, enabled: Boolean) = Unit
         fun onFullScreenChanged(session: Session, enabled: Boolean) = Unit
+        fun onThumbnailChanged(session: Session, bitmap: Bitmap?) = Unit
     }
 
     /**
@@ -227,6 +229,13 @@ class Session(
     var hitResult: Consumable<HitResult> by Delegates.vetoable(Consumable.empty()) { _, _, result ->
         val consumers = wrapConsumers<HitResult> { onLongPress(this@Session, it) }
         !result.consumeBy(consumers)
+    }
+
+    /**
+     * The target of the latest thumbnail.
+     */
+    var thumbnail: Bitmap? by Delegates.observable<Bitmap?>(null) {
+        _, _, new -> notifyObservers { onThumbnailChanged(this@Session, new) }
     }
 
     /**

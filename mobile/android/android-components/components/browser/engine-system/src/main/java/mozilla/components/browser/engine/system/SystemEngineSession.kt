@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.system
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.webkit.CookieManager
 import android.webkit.WebSettings
@@ -304,6 +305,17 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
      */
     override fun exitFullScreenMode() {
         // no-op
+    }
+
+    override fun captureThumbnail(): Bitmap? {
+        val webView = currentView()
+
+        return webView?.let {
+            it.buildDrawingCache()
+            val outBitmap = Bitmap.createBitmap(webView.drawingCache)
+            it.destroyDrawingCache()
+            outBitmap
+        }
     }
 
     internal fun toggleDesktopUA(userAgent: String, requestDesktop: Boolean): String {

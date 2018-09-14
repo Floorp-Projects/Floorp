@@ -4,14 +4,17 @@
 
 package mozilla.components.browser.tabstray
 
+import android.graphics.Bitmap
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.test.mock
 import mozilla.components.support.base.observer.ObserverRegistry
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
@@ -105,5 +108,20 @@ class TabViewHolderTest {
         view.findViewById<View>(R.id.mozac_browser_tabstray_close).performClick()
 
         verify(observer).onTabClosed(session)
+    }
+
+    @Test
+    fun `thumbnail from session is assigned to thumbnail image view`() {
+        val view = LayoutInflater.from(RuntimeEnvironment.application).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val thumbnailView = view.findViewById<ImageView>(R.id.mozac_browser_tabstray_thumbnail)
+
+        val holder = TabViewHolder(view)
+        assertEquals(null, thumbnailView.drawable)
+
+        val session = Session("https://www.mozilla.org")
+        val emptyBitmap = Bitmap.createBitmap(40, 40, Bitmap.Config.ARGB_8888)
+        session.thumbnail = emptyBitmap
+        holder.bind(session, isSelected = false, observable = mock())
+        assertTrue(thumbnailView.drawable != null)
     }
 }

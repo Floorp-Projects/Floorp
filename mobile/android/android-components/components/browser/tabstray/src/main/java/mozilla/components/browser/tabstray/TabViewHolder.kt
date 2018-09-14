@@ -10,6 +10,7 @@ import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.tabstray.TabsTray
@@ -24,8 +25,10 @@ class TabViewHolder(
     private val cardView: CardView = itemView as CardView
     private val tabView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_url)
     private val closeView: ImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
+    private val thumbnailView: ImageView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
     private val selectedColor = ContextCompat.getColor(
-        itemView.context, mozilla.components.ui.colors.R.color.photonBlue40)
+        itemView.context, mozilla.components.ui.colors.R.color.photonBlue40
+    )
 
     private var session: Session? = null
 
@@ -49,6 +52,10 @@ class TabViewHolder(
             cardView.setCardBackgroundColor(selectedColor)
         } else {
             cardView.setCardBackgroundColor(Color.WHITE)
+        }
+
+        if (session.thumbnail != null) {
+            thumbnailView.setImageBitmap(session.thumbnail)
         }
     }
 

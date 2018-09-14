@@ -1,29 +1,50 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="100dp"
+    android:layout_height="150dp"
+    android:layout_margin="4dp"
     android:clickable="true"
-    android:focusable="true"
-    android:layout_margin="4dp">
+    android:focusable="true">
 
-    <ImageButton
-        android:id="@+id/mozac_browser_tabstray_close"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_gravity="top|end"
-        android:contentDescription="@string/mozac_browser_tabstray_close_tab"
-        android:src="@drawable/mozac_ic_close"/>
-    
-    <TextView
-        android:id="@+id/mozac_browser_tabstray_url"
-        android:background="?android:attr/selectableItemBackground"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:lines="1"
-        android:ellipsize="end"
-        android:padding="16dp" />
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/mozac_browser_tabstray_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_toStartOf="@id/mozac_browser_tabstray_close"
+            android:background="?android:attr/selectableItemBackground"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:lines="1"
+            android:padding="8dp"
+            tools:text="www.mozilla.org" />
+
+        <ImageButton
+            android:id="@+id/mozac_browser_tabstray_close"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:contentDescription="@string/mozac_browser_tabstray_close_tab"
+            android:src="@drawable/mozac_ic_close" />
+
+        <ImageView
+            android:id="@+id/mozac_browser_tabstray_thumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/mozac_browser_tabstray_url"
+            android:background="@color/photonGrey30"
+            android:contentDescription="@string/mozac_browser_tabstray_close_tab"
+            app:srcCompat="@drawable/mozac_ic_globe" />
+
+    </RelativeLayout>
 </android.support.v7.widget.CardView>

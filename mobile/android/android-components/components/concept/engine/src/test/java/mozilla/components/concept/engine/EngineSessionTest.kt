@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.engine
 
+import android.graphics.Bitmap
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -447,4 +448,6 @@ open class DummyEngineSession : EngineSession() {
     fun notifyInternalObservers(block: Observer.() -> Unit) {
         notifyObservers(block)
     }
+
+    override fun captureThumbnail(): Bitmap? = null
 }

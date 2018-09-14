@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session
 
+import android.graphics.Bitmap
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.HitResult
@@ -25,6 +26,7 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.spy
 
 class SessionTest {
     @Test
@@ -516,5 +518,19 @@ class SessionTest {
         session.unregister(observer)
         session.fullScreenMode = false
         verify(observer, never()).onFullScreenChanged(session, false)
+    }
+
+    @Test
+    fun `observer is notified on on thumbnail changed `() {
+        val observer = mock(Session.Observer::class.java)
+        val session = Session("https://www.mozilla.org")
+        val emptyThumbnail = spy(Bitmap::class.java)
+        session.register(observer)
+        session.thumbnail = emptyThumbnail
+        verify(observer).onThumbnailChanged(session, emptyThumbnail)
+        reset(observer)
+        session.unregister(observer)
+        session.thumbnail = emptyThumbnail
+        verify(observer, never()).onThumbnailChanged(session, emptyThumbnail)
     }
 }

@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.session
 
+import android.graphics.Bitmap
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -18,6 +19,7 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.spy
 
 class SessionManagerTest {
     @Test
@@ -386,5 +388,36 @@ class SessionManagerTest {
     fun `exception is thrown from selectedSessionOrThrow with no selection`() {
         val manager = SessionManager(mock())
         manager.selectedSessionOrThrow
+    }
+
+    @Test
+    fun `all not selected sessions should be removed on Low Memory`() {
+        val manager = SessionManager(mock())
+
+        val emptyBitmap = spy(Bitmap::class.java)
+
+        val session1 = Session("https://www.mozilla.org")
+        session1.thumbnail = emptyBitmap
+
+        val session2 = Session("https://getPocket.com")
+        session2.thumbnail = emptyBitmap
+
+        val session3 = Session("https://www.firefox.com")
+        session3.thumbnail = emptyBitmap
+
+        manager.add(session1, true)
+        manager.add(session2, false)
+        manager.add(session3, false)
+
+        val allSessionsMustHaveAThumbnail = manager.all.all { it.thumbnail != null }
+
+        assertTrue(allSessionsMustHaveAThumbnail)
+
+        manager.onLowMemory()
+
+        val onlySelectedSessionMustHaveAThumbnail =
+                session1.thumbnail != null && session2.thumbnail == null && session3.thumbnail == null
+
+        assertTrue(onlySelectedSessionMustHaveAThumbnail)
     }
 }

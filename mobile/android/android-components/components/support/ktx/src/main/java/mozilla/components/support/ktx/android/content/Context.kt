@@ -4,6 +4,7 @@
 
 package mozilla.components.support.ktx.android.content
 
+import android.app.ActivityManager
 import android.content.Context
 
 /**
@@ -21,4 +22,14 @@ val Context.appVersionName: String?
  */
 inline fun <reified T> Context.systemService(name: String): T {
     return getSystemService(name) as T
+}
+
+/**
+ * Returns whether or not the operating system is under low memory conditions.
+ */
+fun Context.isOSOnLowMemory(): Boolean {
+    val activityManager = systemService<ActivityManager>(Context.ACTIVITY_SERVICE)
+    return ActivityManager.MemoryInfo().also { memoryInfo ->
+        activityManager.getMemoryInfo(memoryInfo)
+    }.lowMemory
 }

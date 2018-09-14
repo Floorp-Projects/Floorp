@@ -13,6 +13,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
 /**
  * This class provides access to a centralized registry of all active sessions.
  */
+@Suppress("TooManyFunctions")
 class SessionManager(
     val engine: Engine,
     delegate: Observable<SessionManager.Observer> = ObserverRegistry()
@@ -206,6 +207,19 @@ class SessionManager(
      * found.
      */
     fun findSessionById(id: String): Session? = values.find { session -> session.id == id }
+
+    /**
+     * Informs this [SessionManager] that the OS is in low memory condition so it
+     * can reduce its allocated objects.
+     */
+    fun onLowMemory() {
+        // Removing the all the thumbnails except for the selected session to
+        // reduce memory consumption.
+        sessions.forEach {
+            if (it != selectedSession)
+                it.thumbnail = null
+        }
+    }
 
     companion object {
         const val NO_SELECTION = -1

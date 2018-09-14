@@ -40,6 +40,10 @@ android {
             dimension "channel"
         }
 
+        systemEngine {
+            dimension "channel"
+        }
+        
         // Processor architecture
         arm {
             dimension "abi"

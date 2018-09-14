@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.system
 
+import android.graphics.Bitmap
 import android.net.Uri
 import android.net.http.SslCertificate
 import android.net.http.SslError
@@ -542,5 +543,41 @@ class SystemEngineViewTest {
 
         engineView.currentWebView.webChromeClient.onHideCustomView()
         assertNull(engineView.fullScreenCallback)
+    }
+
+    @Test
+    fun `when a page is loaded a thumbnail should be captured`() {
+        val engineSession = SystemEngineSession()
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        engineView.render(engineSession)
+        var thumbnailChanged = false
+        engineSession.register(object : EngineSession.Observer {
+
+            override fun onThumbnailChange(bitmap: Bitmap?) {
+                thumbnailChanged = bitmap != null
+            }
+        })
+
+        engineView.currentWebView.webViewClient.onPageFinished(null, "http://mozilla.org")
+        assertTrue(thumbnailChanged)
+    }
+
+    @Test
+    fun `when a page is loaded and the os is in low memory condition none thumbnail should be captured`() {
+        val engineSession = SystemEngineSession()
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        engineView.render(engineSession)
+
+        engineView.testLowMemory = true
+
+        var thumbnailChanged = false
+        engineSession.register(object : EngineSession.Observer {
+
+            override fun onThumbnailChange(bitmap: Bitmap?) {
+                thumbnailChanged = bitmap != null
+            }
+        })
+        engineView.currentWebView.webViewClient.onPageFinished(null, "http://mozilla.org")
+        assertFalse(thumbnailChanged)
     }
 }

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package mozilla.components.browser.session.engine
-
+import android.graphics.Bitmap
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
@@ -14,6 +14,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.spy
 
 class EngineObserverTest {
 
@@ -39,6 +40,7 @@ class EngineObserverTest {
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
+            override fun captureThumbnail(): Bitmap? = null
             override fun saveState(): Map<String, Any> {
                 return emptyMap()
             }
@@ -89,6 +91,7 @@ class EngineObserverTest {
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
+            override fun captureThumbnail(): Bitmap? = null
             override fun saveState(): Map<String, Any> {
                 return emptyMap()
             }
@@ -131,6 +134,7 @@ class EngineObserverTest {
             }
 
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
+            override fun captureThumbnail(): Bitmap? = null
             override fun saveState(): Map<String, Any> {
                 return emptyMap()
             }
@@ -241,5 +245,14 @@ class EngineObserverTest {
         assertEquals(true, session.fullScreenMode)
         observer.onFullScreenChange(false)
         assertEquals(false, session.fullScreenMode)
+    }
+
+    @Test
+    fun `Engine observer notified when thumbnail is assigned`() {
+        val session = Session("https://www.mozilla.org")
+        val observer = EngineObserver(session)
+        val emptyBitmap = spy(Bitmap::class.java)
+        observer.onThumbnailChange(emptyBitmap)
+        assertEquals(emptyBitmap, session.thumbnail)
     }
 }

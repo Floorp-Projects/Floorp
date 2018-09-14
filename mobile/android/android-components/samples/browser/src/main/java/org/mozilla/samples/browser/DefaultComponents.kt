@@ -7,7 +7,7 @@ package org.mozilla.samples.browser
 import android.content.Context
 import android.widget.Toast
 import kotlinx.coroutines.experimental.async
-import mozilla.components.browser.engine.gecko.GeckoEngine
+import mozilla.components.browser.engine.system.SystemEngine
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuCheckbox
@@ -16,28 +16,18 @@ import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.DefaultSessionStorage
-import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionIntentProcessor
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.TextSearchHandler
 import mozilla.components.feature.tabs.TabsUseCases
-import org.mozilla.geckoview.GeckoRuntime
-import org.mozilla.samples.browser.request.SampleRequestInterceptor
 
-/**
- * Helper class for lazily instantiating components needed by the application.
- */
-class Components(private val applicationContext: Context) {
+open class DefaultComponents(private val applicationContext: Context) {
+
     // Engine
-    val engine: Engine by lazy {
-        val defaultSettings = DefaultSettings().apply {
-            requestInterceptor = SampleRequestInterceptor()
-        }
-
-        val runtime = GeckoRuntime.getDefault(applicationContext)
-        GeckoEngine(runtime, defaultSettings)
+   open val engine: Engine by lazy {
+        SystemEngine()
     }
 
     // Session
@@ -57,8 +47,8 @@ class Components(private val applicationContext: Context) {
     val sessionUseCases by lazy { SessionUseCases(sessionManager) }
     val sessionIntentProcessor by lazy {
         SessionIntentProcessor(
-            sessionUseCases, sessionManager,
-            textSearchHandler = textSearchHandler
+                sessionUseCases, sessionManager,
+                textSearchHandler = textSearchHandler
         )
     }
 
@@ -84,19 +74,19 @@ class Components(private val applicationContext: Context) {
 
     private val menuItems by lazy {
         listOf(
-            menuToolbar,
-            SimpleBrowserMenuItem("Share") {
-                Toast.makeText(applicationContext, "Share", Toast.LENGTH_SHORT).show()
-            },
-            SimpleBrowserMenuItem("Settings") {
-                Toast.makeText(applicationContext, "Settings", Toast.LENGTH_SHORT).show()
-            },
-            SimpleBrowserMenuItem("Clear Data") {
-                sessionUseCases.clearData.invoke()
-            },
-            SimpleBrowserMenuCheckbox("Request desktop site") { checked ->
-                sessionUseCases.requestDesktopSite.invoke(checked)
-            }
+                menuToolbar,
+                SimpleBrowserMenuItem("Share") {
+                    Toast.makeText(applicationContext, "Share", Toast.LENGTH_SHORT).show()
+                },
+                SimpleBrowserMenuItem("Settings") {
+                    Toast.makeText(applicationContext, "Settings", Toast.LENGTH_SHORT).show()
+                },
+                SimpleBrowserMenuItem("Clear Data") {
+                    sessionUseCases.clearData.invoke()
+                },
+                SimpleBrowserMenuCheckbox("Request desktop site") { checked ->
+                    sessionUseCases.requestDesktopSite.invoke(checked)
+                }
         )
     }
 

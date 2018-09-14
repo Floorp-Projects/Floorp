@@ -4,6 +4,7 @@
 
 package org.mozilla.samples.browser
 
+import android.content.ComponentCallbacks2
 import android.content.Context
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -16,7 +17,7 @@ import mozilla.components.feature.session.SessionIntentProcessor
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.samples.browser.ext.components
 
-open class BrowserActivity : AppCompatActivity() {
+open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -46,4 +47,8 @@ open class BrowserActivity : AppCompatActivity() {
             TabsTray::class.java.name -> BrowserTabsTray(context, attrs)
             else -> super.onCreateView(parent, name, context, attrs)
         }
+
+    override fun onTrimMemory(level: Int) {
+        components.sessionManager.onLowMemory()
+    }
 }

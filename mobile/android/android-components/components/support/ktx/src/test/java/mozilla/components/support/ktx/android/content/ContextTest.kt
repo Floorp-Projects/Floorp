@@ -4,6 +4,7 @@
 
 package mozilla.components.support.ktx.android.content
 
+import android.app.ActivityManager
 import android.content.Context
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -28,5 +29,19 @@ class ContextTest {
         assertEquals(
             context.getSystemService(Context.LOCATION_SERVICE),
             context.systemService(Context.LOCATION_SERVICE))
+    }
+
+    @Test
+    fun `isOSOnLowMemory() should return the same as getMemoryInfo() lowMemory`() {
+        val context = RuntimeEnvironment.application
+        val extensionFunctionResult = context.isOSOnLowMemory()
+
+        val activityManager = context.systemService<ActivityManager>(Context.ACTIVITY_SERVICE)
+
+        val normalMethodResult = ActivityManager.MemoryInfo().also { memoryInfo ->
+            activityManager.getMemoryInfo(memoryInfo)
+        }.lowMemory
+
+        assertEquals(extensionFunctionResult, normalMethodResult)
     }
 }
