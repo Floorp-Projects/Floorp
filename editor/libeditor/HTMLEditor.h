@@ -1091,6 +1091,8 @@ protected: // Shouldn't be used by friend classes
   GetNextTableRowElement(Element& aTableRowElement,
                          ErrorResult& aRv) const;
 
+  struct CellAndIndexes;
+
   /**
    * CellIndexes store both row index and column index of a table cell.
    */
@@ -1145,6 +1147,42 @@ protected: // Shouldn't be used by friend classes
      * contains anchor of Selection.
      *
      * @param                   See above.
+     */
+    void Update(HTMLEditor& aHTMLEditor, Selection& aSelection,
+                ErrorResult& aRv);
+
+  private:
+    CellIndexes()
+      : mRow(-1)
+      , mColumn(-1)
+    {
+    }
+
+    friend struct CellAndIndexes;
+  };
+
+  struct MOZ_STACK_CLASS CellAndIndexes final
+  {
+    RefPtr<Element> mElement;
+    CellIndexes mIndexes;
+
+    /**
+     * This constructor initializes the members with cell element which is
+     * selected by first range of the Selection.  Note that even if the
+     * first range is in the cell element, this does not treat it as the
+     * cell element is selected.
+     */
+    CellAndIndexes(HTMLEditor& aHTMLEditor, Selection& aSelection,
+                   ErrorResult& aRv)
+    {
+      Update(aHTMLEditor, aSelection, aRv);
+    }
+
+    /**
+     * Update mElement and mIndexes with cell element which is selected by
+     * first range of the Selection.  Note that even if the first range is
+     * in the cell element, this does not treat it as the cell element is
+     * selected.
      */
     void Update(HTMLEditor& aHTMLEditor, Selection& aSelection,
                 ErrorResult& aRv);
