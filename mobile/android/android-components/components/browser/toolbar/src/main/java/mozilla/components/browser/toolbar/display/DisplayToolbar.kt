@@ -19,7 +19,7 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.support.ktx.android.view.dp
+import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.isVisible
 
 /**
@@ -71,7 +71,7 @@ internal class DisplayToolbar(
         }
 
     internal val iconView = ImageView(context).apply {
-        val padding = dp(ICON_PADDING_DP)
+        val padding = resources.pxToDp(ICON_PADDING_DP)
         setPadding(padding, padding, padding, padding)
 
         setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_globe)
@@ -95,7 +95,7 @@ internal class DisplayToolbar(
     }
 
     private val menuView = ImageButton(context).apply {
-        val padding = dp(MENU_PADDING_DP)
+        val padding = resources.pxToDp(MENU_PADDING_DP)
         setPadding(padding, padding, padding, padding)
 
         setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_menu)
@@ -272,7 +272,8 @@ internal class DisplayToolbar(
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
         urlView.measure(urlWidthSpec, fixedHeightSpec)
 
-        val progressHeightSpec = MeasureSpec.makeMeasureSpec(dp(PROGRESS_BAR_HEIGHT_DP), MeasureSpec.EXACTLY)
+        val progressHeightSpec = MeasureSpec.makeMeasureSpec(resources.pxToDp(PROGRESS_BAR_HEIGHT_DP),
+                MeasureSpec.EXACTLY)
         progressView.measure(widthMeasureSpec, progressHeightSpec)
 
         urlBoxView?.let {

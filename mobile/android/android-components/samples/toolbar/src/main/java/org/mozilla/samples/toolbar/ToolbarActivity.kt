@@ -22,7 +22,7 @@ import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.support.ktx.android.view.dp
+import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 
@@ -210,12 +210,12 @@ class ToolbarActivity : AppCompatActivity() {
         ////////////////////////////////////////////////////////////////////////////////////////////
 
         toolbar.setBackgroundColor(0xFF38383D.toInt())
-        toolbar.layoutParams.height = toolbar.dp(104)
+        toolbar.layoutParams.height = toolbar.resources.pxToDp(104)
         toolbar.setPadding(
-                toolbar.dp(58),
-                toolbar.dp(24),
-                toolbar.dp(58),
-                toolbar.dp(24))
+                resources.pxToDp(58),
+                resources.pxToDp(24),
+                resources.pxToDp(58),
+                resources.pxToDp(24))
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Hide the site security icon and set padding around the URL
@@ -224,11 +224,11 @@ class ToolbarActivity : AppCompatActivity() {
         toolbar.displaySiteSecurityIcon = false
 
         toolbar.setUrlTextPadding(
-                left = toolbar.dp(16),
-                right = toolbar.dp(16)
+                left = resources.pxToDp(16),
+                right = resources.pxToDp(16)
         )
 
-        toolbar.browserActionMargin = toolbar.dp(16)
+        toolbar.browserActionMargin = toolbar.resources.pxToDp(16)
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Add a custom "URL box" (url + page actions) background view that also acts as a custom
@@ -238,7 +238,7 @@ class ToolbarActivity : AppCompatActivity() {
         val urlBoxProgress = UrlBoxProgressView(this)
 
         toolbar.urlBoxView = urlBoxProgress
-        toolbar.urlBoxMargin = toolbar.dp(16)
+        toolbar.urlBoxMargin = toolbar.resources.pxToDp(16)
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Add navigation actions
@@ -324,7 +324,7 @@ class ToolbarActivity : AppCompatActivity() {
         // Add a fixed size element for spacing and a branding image
         ////////////////////////////////////////////////////////////////////////////////////////////
 
-        val space = Toolbar.ActionSpace(toolbar.dp(128))
+        val space = Toolbar.ActionSpace(toolbar.resources.pxToDp(128))
 
         toolbar.addBrowserAction(space)
 

@@ -9,12 +9,13 @@ import android.support.annotation.DrawableRes
 import android.support.annotation.VisibleForTesting
 import android.util.AttributeSet
 import android.view.View
+import android.view.View.OnFocusChangeListener
 import android.view.ViewGroup
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.support.ktx.android.view.dp
+import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
@@ -164,7 +165,7 @@ class BrowserToolbar @JvmOverloads constructor(
         val height = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) {
             MeasureSpec.getSize(heightMeasureSpec)
         } else {
-            dp(DEFAULT_TOOLBAR_HEIGHT_DP)
+            resources.pxToDp(DEFAULT_TOOLBAR_HEIGHT_DP)
         }
 
         setMeasuredDimension(width, height)
@@ -312,7 +313,7 @@ class BrowserToolbar @JvmOverloads constructor(
         override fun createView(parent: ViewGroup): View {
             val view = super.createView(parent)
 
-            val padding = view.dp(ACTION_PADDING_DP)
+            val padding = view.resources.pxToDp(ACTION_PADDING_DP)
             view.setPadding(padding, padding, padding, padding)
 
             return view
@@ -353,7 +354,7 @@ class BrowserToolbar @JvmOverloads constructor(
     ) {
         override fun createView(parent: ViewGroup): View {
             return super.createView(parent).apply {
-                val padding = dp(ACTION_PADDING_DP)
+                val padding = resources.pxToDp(ACTION_PADDING_DP)
                 setPadding(padding, padding, padding, padding)
             }
         }

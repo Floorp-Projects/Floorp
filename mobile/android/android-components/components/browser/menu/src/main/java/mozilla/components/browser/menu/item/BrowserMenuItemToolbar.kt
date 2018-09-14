@@ -12,7 +12,7 @@ import android.widget.LinearLayout
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
-import mozilla.components.support.ktx.android.view.dp
+import mozilla.components.support.ktx.android.content.res.pxToDp
 
 /**
  * A toolbar of buttons to show inside the browser menu.
@@ -50,7 +50,7 @@ class BrowserMenuItemToolbar(
             }
 
             layout.addView(button,
-                LinearLayout.LayoutParams(0, view.dp(ICON_HEIGHT_DP), 1f))
+                LinearLayout.LayoutParams(0, view.resources.pxToDp(ICON_HEIGHT_DP), 1f))
         }
     }
 

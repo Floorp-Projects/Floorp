@@ -13,7 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import android.widget.PopupWindow
-import mozilla.components.support.ktx.android.view.dp
+import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.isRTL
 
 /**
@@ -41,7 +41,7 @@ class BrowserMenu internal constructor(
         ).apply {
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             isFocusable = true
-            elevation = view.dp(MENU_ELEVATION_DP).toFloat()
+            elevation = view.resources.pxToDp(MENU_ELEVATION_DP).toFloat()
 
             setOnDismissListener {
                 adapter.menu = null

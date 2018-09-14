@@ -4,13 +4,10 @@
 
 package mozilla.components.support.ktx.android.view
 
-import android.util.DisplayMetrics
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,20 +26,6 @@ class ViewTest {
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
 
         assertTrue(view.hasFocus())
-    }
-
-    @Test
-    fun `dp returns same value as manual conversion`() {
-        val view = TextView(RuntimeEnvironment.application)
-
-        val resources = RuntimeEnvironment.application.getResources()
-        val metrics = resources.getDisplayMetrics()
-
-        for (i in 1..500) {
-            val px = (i * (metrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT)).toInt()
-            assertEquals(px, view.dp(i))
-            assertNotEquals(0, view.dp(i))
-        }
     }
 
     @Test

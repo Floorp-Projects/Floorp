@@ -14,7 +14,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
-import mozilla.components.support.ktx.android.view.dp
+import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 
@@ -43,7 +43,7 @@ class EditToolbar(
         textSize = URL_TEXT_SIZE
         inputType = InputType.TYPE_TEXT_VARIATION_URI
 
-        val padding = dp(URL_PADDING_DP)
+        val padding = resources.pxToDp(URL_PADDING_DP)
         setPadding(padding, padding, padding, padding)
         setSelectAllOnFocus(true)
 
@@ -51,7 +51,7 @@ class EditToolbar(
     }
 
     private val cancelView = ImageView(context).apply {
-        val padding = dp(CANCEL_PADDING_DP)
+        val padding = resources.pxToDp(CANCEL_PADDING_DP)
         setPadding(padding, padding, padding, padding)
         setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_close)
         contentDescription = context.getString(R.string.mozac_close_button_description)
