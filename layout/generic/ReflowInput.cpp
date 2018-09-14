@@ -2247,14 +2247,12 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
 
     // See if the containing block height is based on the size of its
     // content
-    LayoutFrameType fType;
     if (NS_AUTOHEIGHT == cbSize.BSize(wm)) {
       // See if the containing block is a cell frame which needs
       // to use the mComputedHeight of the cell instead of what the cell block passed in.
       // XXX It seems like this could lead to bugs with min-height and friends
       if (cbri->mParentReflowInput) {
-        fType = cbri->mFrame->Type();
-        if (IS_TABLE_CELL(fType)) {
+        if (IS_TABLE_CELL(cbri->mFrame->Type())) {
           // use the cell's computed block size
           cbSize.BSize(wm) = cbri->ComputedSize(wm).BSize(wm);
         }
@@ -2291,7 +2289,7 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
           // in quirks mode, get the cb height using the special quirk method
           if (!wm.IsVertical() &&
               eCompatibility_NavQuirks == aPresContext->CompatibilityMode()) {
-            if (!IS_TABLE_CELL(fType)) {
+            if (!IS_TABLE_CELL(cbri->mFrame->Type())) {
               cbSize.BSize(wm) = CalcQuirkContainingBlockHeight(cbri);
               if (cbSize.BSize(wm) == NS_AUTOHEIGHT) {
                 blockSizeUnit = eStyleUnit_Auto;
