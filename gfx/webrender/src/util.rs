@@ -376,22 +376,6 @@ pub fn extract_inner_rect_safe<U>(
     extract_inner_rect_impl(rect, radii, 1.0)
 }
 
-/// Consumes the old vector and returns a new one that may reuse the old vector's allocated
-/// memory.
-pub fn recycle_vec<T>(mut old_vec: Vec<T>) -> Vec<T> {
-    if old_vec.capacity() > 2 * old_vec.len() {
-        // Avoid reusing the buffer if it is a lot larger than it needs to be. This prevents
-        // a frame with exceptionally large allocations to cause subsequent frames to retain
-        // more memory than they need.
-        return Vec::with_capacity(old_vec.len());
-    }
-
-    old_vec.clear();
-
-    old_vec
-}
-
-
 #[cfg(test)]
 pub mod test {
     use super::*;
