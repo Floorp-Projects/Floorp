@@ -28,6 +28,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   MessageManagerProxy: "resource://gre/modules/MessageManagerProxy.jsm",
   NativeApp: "resource://gre/modules/NativeMessaging.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  PerformanceCounters: "resource://gre/modules/PerformanceCounters.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
 });
@@ -36,6 +37,10 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
 });
 
+// We're using the pref to avoid loading PerformanceCounters.jsm for nothing.
+XPCOMUtils.defineLazyPreferenceGetter(this, "gTimingEnabled",
+                                      "extensions.webextensions.enablePerformanceCounters",
+                                      false);
 ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
@@ -60,7 +65,6 @@ const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 const CATEGORY_EXTENSION_MODULES = "webextension-modules";
 const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";
 const CATEGORY_EXTENSION_SCRIPTS = "webextension-scripts";
-const TIMING_ENABLED_PREF = "extensions.webextensions.enablePerformanceCounters";
 
 let schemaURLs = new Set();
 
@@ -513,8 +517,8 @@ GlobalManager = {
       ProxyMessenger.init();
       apiManager.on("extension-browser-inserted", this._onExtensionBrowser);
       this.initialized = true;
+      Services.ppmm.addMessageListener("Extension:SendPerformanceCounter", this);
     }
-
     this.extensionMap.set(extension.id, extension);
   },
 
@@ -524,6 +528,15 @@ GlobalManager = {
     if (this.extensionMap.size == 0 && this.initialized) {
       apiManager.off("extension-browser-inserted", this._onExtensionBrowser);
       this.initialized = false;
+      Services.ppmm.removeMessageListener("Extension:SendPerformanceCounter", this);
+    }
+  },
+
+  async receiveMessage({name, data}) {
+    switch (name) {
+      case "Extension:SendPerformanceCounter":
+        PerformanceCounters.merge(data.counters);
+        break;
     }
   },
 
@@ -758,9 +771,6 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
 }
 
 ParentAPIManager = {
-  // stores dispatches counts per web extension and API
-  performanceCounters: new DefaultMap(() => new DefaultMap(() => ({duration: 0, calls: 0}))),
-
   proxyContexts: new Map(),
 
   init() {
@@ -771,7 +781,6 @@ ParentAPIManager = {
     Services.mm.addMessageListener("API:Call", this);
     Services.mm.addMessageListener("API:AddListener", this);
     Services.mm.addMessageListener("API:RemoveListener", this);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "_timingEnabled", TIMING_ENABLED_PREF, false);
   },
 
   attachMessageManager(extension, processMessageManager) {
@@ -889,14 +898,13 @@ ParentAPIManager = {
     }
   },
 
-  storeExecutionTime(webExtensionId, apiPath, duration) {
-    let apiCounter = this.performanceCounters.get(webExtensionId).get(apiPath);
-    apiCounter.duration += duration;
-    apiCounter.calls += 1;
+  async retrievePerformanceCounters() {
+    // getting the parent counters
+    return PerformanceCounters.getData();
   },
 
   async withTiming(data, callable) {
-    if (!this._timingEnabled) {
+    if (!gTimingEnabled) {
       return callable();
     }
     let childId = data.childId;
@@ -906,7 +914,7 @@ ParentAPIManager = {
       return callable();
     } finally {
       let end = Cu.now() * 1000;
-      this.storeExecutionTime(webExtId, data.path, end - start);
+      PerformanceCounters.storeExecutionTime(webExtId, data.path, end - start);
     }
   },
 

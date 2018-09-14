@@ -442,7 +442,7 @@ var State = {
     }
 
     if (extensionCountersEnabled()) {
-      let extCounters = ExtensionParent.ParentAPIManager.performanceCounters;
+      let extCounters = await ExtensionParent.ParentAPIManager.retrievePerformanceCounters();
       for (let [id, apiMap] of extCounters) {
         let dispatchCount = 0, duration = 0;
         for (let [, counter] of apiMap) {
