@@ -5279,14 +5279,15 @@ TSFTextStore::InsertTextAtSelectionInternal(const nsAString& aInsertStr,
   TS_SELECTION_ACP oldSelection = contentForTSF.Selection().ACP();
   if (!mComposition.IsComposing()) {
     // Use a temporary composition to contain the text
-    PendingAction* compositionStart = mPendingActions.AppendElement();
+    PendingAction* compositionStart = mPendingActions.AppendElements(2);
+    PendingAction* compositionEnd = compositionStart + 1;
+
     compositionStart->mType = PendingAction::Type::eCompositionStart;
     compositionStart->mSelectionStart = oldSelection.acpStart;
     compositionStart->mSelectionLength =
       oldSelection.acpEnd - oldSelection.acpStart;
     compositionStart->mAdjustSelection = false;
 
-    PendingAction* compositionEnd = mPendingActions.AppendElement();
     compositionEnd->mType = PendingAction::Type::eCompositionEnd;
     compositionEnd->mData = aInsertStr;
     compositionEnd->mSelectionStart = compositionStart->mSelectionStart;
@@ -5515,10 +5516,13 @@ TSFTextStore::RecordCompositionEndAction()
       }
       // When only setting selection is necessary, we should append it.
       if (pendingAction.mAdjustSelection) {
+        LONG selectionStart = pendingAction.mSelectionStart;
+        LONG selectionLength = pendingAction.mSelectionLength;
+
         PendingAction* setSelection = mPendingActions.AppendElement();
         setSelection->mType = PendingAction::Type::eSetSelection;
-        setSelection->mSelectionStart = pendingAction.mSelectionStart;
-        setSelection->mSelectionLength = pendingAction.mSelectionLength;
+        setSelection->mSelectionStart = selectionStart;
+        setSelection->mSelectionLength = selectionLength;
         setSelection->mSelectionReversed = false;
       }
       // Remove the redundant pending composition.

@@ -22,4 +22,3 @@ exclude =
     testing/mochitest/pywebsocket,
     tools/lint/test/files,
     build/build-infer/build-infer.py,
-    tools/infer/test/*.configure,
