@@ -1008,7 +1008,6 @@ add_task(async function test_7() {
     author: "Mozilla",
     homepageURL: "http://example.com/data/index.html",
     headerURL: "http://example.com/data/header.png",
-    footerURL: "http://example.com/data/footer.png",
     previewURL: "http://example.com/data/preview.png",
     iconURL: "http://example.com/data/icon.png",
     updateURL: "http://example.com/data/lwtheme.js",
@@ -1034,7 +1033,6 @@ add_task(async function test_7() {
       author: "Mozilla",
       homepageURL: "http://example.com/data/index2.html",
       headerURL: "http://example.com/data/header.png",
-      footerURL: "http://example.com/data/footer.png",
       previewURL: "http://example.com/data/preview.png",
       iconURL: "http://example.com/data/icon2.png",
       updateURL: "http://example.com/data/lwtheme.js",
@@ -1102,7 +1100,6 @@ add_task(async function() {
       author: "John Smith",
       homepageURL: "http://example.com/data/index3.html?v=3",
       headerURL: "http://example.com/data/header.png?v=3",
-      footerURL: "http://example.com/data/footer.png?v=3",
       previewURL: "http://example.com/data/preview.png?v=3",
       iconURL: "http://example.com/data/icon2.png?v=3",
       updateURL: "https://example.com/data/lwtheme.js?v=3",
@@ -1142,7 +1139,6 @@ add_task(async function() {
   equal(p1.screenshots[0].url, "http://example.com/data/preview.png?v=3");
   equal(p1.iconURL, "http://example.com/data/icon2.png?v=3");
   equal(currentTheme.headerURL, "http://example.com/data/header.png?v=3");
-  equal(currentTheme.footerURL, "http://example.com/data/footer.png?v=3");
   equal(currentTheme.updateURL, "https://example.com/data/lwtheme.js?v=3");
 
   equal(p1.installDate.getTime(), gInstallDate);

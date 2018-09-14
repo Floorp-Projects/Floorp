@@ -61,7 +61,6 @@ add_task(async function test_theme_updates() {
       version,
       updateURL: `http://example.com/${n}`,
       headerURL: `http://example.com/${image}`,
-      footerURL: `http://example.com/${image}`,
       textcolor: "#000000",
       accentcolor: "#ffffff",
     };
