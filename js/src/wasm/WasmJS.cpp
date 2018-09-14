@@ -448,8 +448,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
 //    ConvertToInt(v, 32, 'unsigned')
 // defined in Web IDL Section 3.2.4.9.
 static bool
-EnforceRangeU32(JSContext* cx, HandleValue v, uint32_t max, const char* kind, const char* noun,
-                uint32_t* u32)
+EnforceRangeU32(JSContext* cx, HandleValue v, const char* kind, const char* noun, uint32_t* u32)
 {
     // Step 4.
     double x;
@@ -471,8 +470,8 @@ EnforceRangeU32(JSContext* cx, HandleValue v, uint32_t max, const char* kind, co
     // Step 6.2.
     x = JS::ToInteger(x);
 
-    // Step 6.3, allowing caller to supply a more restrictive uint32_t max.
-    if (x < 0 || x > double(max)) {
+    // Step 6.3.
+    if (x < 0 || x > double(UINT32_MAX)) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32, kind, noun);
         return false;
     }
@@ -497,7 +496,13 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
         return false;
     }
 
-    if (!EnforceRangeU32(cx, initialVal, maxInitial, kind, "initial size", &limits->initial)) {
+    if (!EnforceRangeU32(cx, initialVal, kind, "initial size", &limits->initial)) {
+        return false;
+    }
+
+    if (limits->initial > maxInitial) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_RANGE,
+                                 kind, "initial size");
         return false;
     }
 
@@ -519,12 +524,12 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
         }
 
         limits->maximum.emplace();
-        if (!EnforceRangeU32(cx, maxVal, maxMaximum, kind, "maximum size", limits->maximum.ptr())) {
+        if (!EnforceRangeU32(cx, maxVal, kind, "maximum size", limits->maximum.ptr())) {
             return false;
         }
 
-        if (limits->initial > *limits->maximum) {
-            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32,
+        if (*limits->maximum > maxMaximum || limits->initial > *limits->maximum) {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_RANGE,
                                      kind, "maximum size");
             return false;
         }
@@ -1756,7 +1761,7 @@ WasmMemoryObject::growImpl(JSContext* cx, const CallArgs& args)
     }
 
     uint32_t delta;
-    if (!EnforceRangeU32(cx, args.get(0), UINT32_MAX, "Memory", "grow delta", &delta)) {
+    if (!EnforceRangeU32(cx, args.get(0), "Memory", "grow delta", &delta)) {
         return false;
     }
 
@@ -2141,12 +2146,12 @@ const JSPropertySpec WasmTableObject::properties[] =
 static bool
 ToTableIndex(JSContext* cx, HandleValue v, const Table& table, const char* noun, uint32_t* index)
 {
-    if (!EnforceRangeU32(cx, v, UINT32_MAX, "Table", noun, index)) {
+    if (!EnforceRangeU32(cx, v, "Table", noun, index)) {
         return false;
     }
 
     if (*index >= table.length()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32, "Table", noun);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_RANGE, "Table", noun);
         return false;
     }
 
@@ -2256,7 +2261,7 @@ WasmTableObject::growImpl(JSContext* cx, const CallArgs& args)
     }
 
     uint32_t delta;
-    if (!EnforceRangeU32(cx, args.get(0), UINT32_MAX, "Table", "grow delta", &delta)) {
+    if (!EnforceRangeU32(cx, args.get(0), "Table", "grow delta", &delta)) {
         return false;
     }
 
