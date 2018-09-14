@@ -12,9 +12,11 @@
 #define mozilla_FullscreenRequest_h
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/PendingFullscreenEvent.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
+#include "nsIScriptError.h"
 
 namespace mozilla {
 
@@ -41,6 +43,23 @@ struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
 
   dom::Element* Element() const { return mElement; }
   nsIDocument* Document() const { return mDocument; }
+
+  // Reject the fullscreen request with the given reason.
+  // It will dispatch the fullscreenerror event.
+  void Reject(const char* aReason) const
+  {
+    if (nsPresContext* presContext = mDocument->GetPresContext()) {
+      auto pendingEvent = MakeUnique<PendingFullscreenEvent>(
+          FullscreenEventType::Error, mDocument, mElement);
+      presContext->RefreshDriver()->
+        ScheduleFullscreenEvent(std::move(pendingEvent));
+    }
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("DOM"),
+                                    mDocument,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    aReason);
+  }
 
 private:
   RefPtr<dom::Element> mElement;

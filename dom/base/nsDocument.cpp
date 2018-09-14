@@ -10929,21 +10929,6 @@ nsIDocument::AsyncRequestFullscreen(UniquePtr<FullscreenRequest> aRequest)
   Dispatch(TaskCategory::Other, event.forget());
 }
 
-void
-nsIDocument::DispatchFullscreenError(const char* aMessage, nsINode* aTarget)
-{
-  if (nsPresContext* presContext = GetPresContext()) {
-    auto pendingEvent = MakeUnique<PendingFullscreenEvent>(
-      FullscreenEventType::Error, this, aTarget);
-    presContext->RefreshDriver()->
-      ScheduleFullscreenEvent(std::move(pendingEvent));
-  }
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("DOM"), this,
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  aMessage);
-}
-
 static void
 UpdateViewportScrollbarOverrideForFullscreen(nsIDocument* aDoc)
 {
@@ -11157,50 +11142,48 @@ GetFullscreenError(nsIDocument* aDoc, CallerType aCallerType)
 }
 
 bool
-nsIDocument::FullscreenElementReadyCheck(Element* aElement,
-                                         CallerType aCallerType)
+nsIDocument::FullscreenElementReadyCheck(const FullscreenRequest& aRequest)
 {
-  NS_ASSERTION(aElement,
-    "Must pass non-null element to nsDocument::RequestFullscreen");
-  if (!aElement || aElement == FullscreenStackTop()) {
+  Element* elem = aRequest.Element();
+  if (elem == FullscreenStackTop()) {
     return false;
   }
-  if (!aElement->IsInComposedDoc()) {
-    DispatchFullscreenError("FullscreenDeniedNotInDocument", aElement);
+  if (!elem->IsInComposedDoc()) {
+    aRequest.Reject("FullscreenDeniedNotInDocument");
     return false;
   }
-  if (aElement->OwnerDoc() != this) {
-    DispatchFullscreenError("FullscreenDeniedMovedDocument", aElement);
+  if (elem->OwnerDoc() != this) {
+    aRequest.Reject("FullscreenDeniedMovedDocument");
     return false;
   }
   if (!GetWindow()) {
-    DispatchFullscreenError("FullscreenDeniedLostWindow", aElement);
+    aRequest.Reject("FullscreenDeniedLostWindow");
     return false;
   }
-  if (const char* msg = GetFullscreenError(this, aCallerType)) {
-    DispatchFullscreenError(msg, aElement);
+  if (const char* msg = GetFullscreenError(this, aRequest.mCallerType)) {
+    aRequest.Reject(msg);
     return false;
   }
   if (!IsVisible()) {
-    DispatchFullscreenError("FullscreenDeniedHidden", aElement);
+    aRequest.Reject("FullscreenDeniedHidden");
     return false;
   }
   if (HasFullscreenSubDocument(this)) {
-    DispatchFullscreenError("FullscreenDeniedSubDocFullScreen", aElement);
+    aRequest.Reject("FullscreenDeniedSubDocFullScreen");
     return false;
   }
   //XXXsmaug Note, we don't follow the latest fullscreen spec here.
   //         This whole check could be probably removed.
   if (FullscreenStackTop() &&
-      !nsContentUtils::ContentIsHostIncludingDescendantOf(aElement,
+      !nsContentUtils::ContentIsHostIncludingDescendantOf(elem,
                                                           FullscreenStackTop())) {
     // If this document is fullscreen, only grant fullscreen requests from
     // a descendant of the current fullscreen element.
-    DispatchFullscreenError("FullscreenDeniedNotDescendant", aElement);
+    aRequest.Reject("FullscreenDeniedNotDescendant");
     return false;
   }
   if (!nsContentUtils::IsChromeDoc(this) && !IsInActiveTab(this)) {
-    DispatchFullscreenError("FullscreenDeniedNotFocusedTab", aElement);
+    aRequest.Reject("FullscreenDeniedNotFocusedTab");
     return false;
   }
   // Deny requests when a windowed plugin is focused.
@@ -11210,7 +11193,7 @@ nsIDocument::FullscreenElementReadyCheck(Element* aElement,
     return false;
   }
   if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(fm->GetFocusedElement())) {
-    DispatchFullscreenError("FullscreenDeniedFocusedPlugin", aElement);
+    aRequest.Reject("FullscreenDeniedFocusedPlugin");
     return false;
   }
   return true;
@@ -11377,13 +11360,13 @@ nsIDocument::RequestFullscreen(UniquePtr<FullscreenRequest> aRequest)
   if (!elem->IsHTMLElement() && !elem->IsXULElement() &&
       !elem->IsSVGElement(nsGkAtoms::svg) &&
       !elem->IsMathMLElement(nsGkAtoms::math)) {
-    DispatchFullscreenError("FullscreenDeniedNotHTMLSVGOrMathML", elem);
+    aRequest->Reject("FullscreenDeniedNotHTMLSVGOrMathML");
     return;
   }
 
   // We don't need to check element ready before this point, because
   // if we called ApplyFullscreen, it would check that for us.
-  if (!FullscreenElementReadyCheck(elem, aRequest->mCallerType)) {
+  if (!FullscreenElementReadyCheck(*aRequest)) {
     return;
   }
 
@@ -11430,7 +11413,7 @@ bool
 nsIDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
 {
   Element* elem = aRequest.Element();
-  if (!FullscreenElementReadyCheck(elem, aRequest.mCallerType)) {
+  if (!FullscreenElementReadyCheck(aRequest)) {
     return false;
   }
 

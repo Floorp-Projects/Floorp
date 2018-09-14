@@ -3573,6 +3573,7 @@ GetFullscreenError(CallerType aCallerType)
 void
 Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aError)
 {
+  auto request = FullscreenRequest::Create(this, aCallerType);
   // Only grant fullscreen requests if this is called from inside a trusted
   // event handler (i.e. inside an event handler for a user initiated event).
   // This stops the fullscreen from being abused similar to the popups of old,
@@ -3581,11 +3582,9 @@ Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aError)
   // Note that requests for fullscreen inside a web app's origin are exempt
   // from this restriction.
   if (const char* error = GetFullscreenError(aCallerType)) {
-    OwnerDoc()->DispatchFullscreenError(error, this);
+    request->Reject(error);
     return;
   }
-
-  auto request = FullscreenRequest::Create(this, aCallerType);
   OwnerDoc()->AsyncRequestFullscreen(std::move(request));
 }
 
