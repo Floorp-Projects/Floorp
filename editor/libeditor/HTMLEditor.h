@@ -1550,6 +1550,20 @@ protected: // Shouldn't be used by friend classes
                          int32_t& aNewColCount);
 
   /**
+   * XXX NormalizeTable() is broken.  If it meets a cell which has bigger or
+   *     smaller rowspan or colspan than actual number of cells, this always
+   *     failed to scan the table.  Therefore, this does nothing when the
+   *     table should be normalized.
+   *
+   * @param aSelection              The Selection for the editor.
+   * @param aTableOrElementInTable  An element which is in a <table> element
+   *                                or <table> element itself.  Otherwise,
+   *                                this returns NS_OK but does nothing.
+   */
+  nsresult NormalizeTable(Selection& aSelection,
+                          Element& aTableOrElementInTable);
+
+  /**
    * Fallback method: Call this after using ClearSelection() and you
    * failed to set selection to some other content in the document.
    */
