@@ -30,7 +30,7 @@ radio {
 }
 
 .radio-label {
-  margin: 0 !important;
+  margin: 0;
 }
 
 /* ..... focused state ..... */
