@@ -64,6 +64,7 @@ nsSHEntry::nsSHEntry(const nsSHEntry& aOther)
   , mIsSrcdocEntry(aOther.mIsSrcdocEntry)
   , mScrollRestorationIsManual(false)
   , mLoadedInThisProcess(aOther.mLoadedInThisProcess)
+  , mPersist(aOther.mPersist)
 {
 }
 
