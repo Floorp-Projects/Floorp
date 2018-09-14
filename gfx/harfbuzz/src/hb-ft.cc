@@ -27,12 +27,12 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-private.hh"
+#include "hb.hh"
 
 #include "hb-ft.h"
 
-#include "hb-font-private.hh"
-#include "hb-machinery-private.hh"
+#include "hb-font.hh"
+#include "hb-machinery.hh"
 
 #include FT_ADVANCES_H
 #include FT_MULTIPLE_MASTERS_H
@@ -417,7 +417,9 @@ hb_ft_get_font_h_extents (hb_font_t *font HB_UNUSED,
   return true;
 }
 
+#ifdef HB_USE_ATEXIT
 static void free_static_ft_funcs (void);
+#endif
 
 static struct hb_ft_font_funcs_lazy_loader_t : hb_font_funcs_lazy_loader_t<hb_ft_font_funcs_lazy_loader_t>
 {
@@ -682,8 +684,9 @@ hb_ft_font_create_referenced (FT_Face ft_face)
   return hb_ft_font_create (ft_face, _hb_ft_face_destroy);
 }
 
-
+#ifdef HB_USE_ATEXIT
 static void free_static_ft_library (void);
+#endif
 
 static struct hb_ft_library_lazy_loader_t : hb_lazy_loader_t<hb_remove_ptr_t<FT_Library>::value,
 							     hb_ft_library_lazy_loader_t>

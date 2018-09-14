@@ -479,13 +479,14 @@
 
 /* Shift the url-bar text fading to stop the recommendation overlapping */
 #urlbar[cfr-recommendation-state] html|input.urlbar-input {
+  /* A mask-image is usually only defined for the url bar when text overflows.
+     We need to re-define the mask image here so that it shows up correctly when
+     we transition to or from an `expanded` state (in which the right end of the
+     url bar may be obscured without overflow). */
+  mask-image: linear-gradient(to left, transparent, black 3ch);
   transition: mask-position-x ease-in-out var(--cfr-animation-duration);
 }
 #urlbar[cfr-recommendation-state="expanded"] html|input.urlbar-input {
-  /* A mask-image is only defined for the url bar when text overflows. When
-     expanded, the right end of the url bar may be obscured without overflow so
-     we need to redefine the mask-image here, as well as the mask-position-x. */
-  mask-image: linear-gradient(to left, transparent, black 3ch);
   mask-position-x: calc(var(--cfr-label-width) * -1);
 }
 

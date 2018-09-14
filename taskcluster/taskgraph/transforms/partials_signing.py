@@ -40,7 +40,7 @@ def generate_upstream_artifacts(job, release_history, platform, locale=None):
             # considered smaller than Firefox 56
             if version is None or version >= '56'
         ],
-        "formats": ["mar_sha384"],
+        "formats": ["autograph_mar384"],
     }]
 
     old_mar_upstream_artifacts = {
@@ -103,7 +103,7 @@ def make_task_description(config, jobs):
             build_platform, is_nightly, config
         )
 
-        scopes = [signing_cert_scope, 'project:releng:signing:format:mar_sha384']
+        scopes = [signing_cert_scope, 'project:releng:signing:format:autograph_mar384']
         if any("mar" in upstream_details["formats"] for upstream_details in upstream_artifacts):
             scopes.append('project:releng:signing:format:mar')
 

@@ -26,12 +26,12 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-private.hh"
+#include "hb.hh"
 
 #include "hb-glib.h"
 
-#include "hb-unicode-private.hh"
-#include "hb-machinery-private.hh"
+#include "hb-unicode.hh"
+#include "hb-machinery.hh"
 
 
 #if !GLIB_CHECK_VERSION(2,29,14)
@@ -366,8 +366,9 @@ hb_glib_unicode_decompose_compatibility (hb_unicode_funcs_t *ufuncs HB_UNUSED,
 }
 
 
-
+#ifdef HB_USE_ATEXIT
 static void free_static_glib_funcs (void);
+#endif
 
 static struct hb_glib_unicode_funcs_lazy_loader_t : hb_unicode_funcs_lazy_loader_t<hb_glib_unicode_funcs_lazy_loader_t>
 {

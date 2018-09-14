@@ -8,7 +8,6 @@
 #define mozilla_image_imgRequestProxy_h
 
 #include "imgIRequest.h"
-#include "nsISecurityInfoProvider.h"
 
 #include "nsILoadGroup.h"
 #include "nsISupportsPriority.h"
@@ -49,7 +48,6 @@ class ProgressTracker;
 class imgRequestProxy : public imgIRequest,
                         public mozilla::image::IProgressObserver,
                         public nsISupportsPriority,
-                        public nsISecurityInfoProvider,
                         public nsITimedChannel
 {
 protected:
@@ -64,7 +62,6 @@ public:
   NS_DECL_IMGIREQUEST
   NS_DECL_NSIREQUEST
   NS_DECL_NSISUPPORTSPRIORITY
-  NS_DECL_NSISECURITYINFOPROVIDER
   // nsITimedChannel declared below
 
   imgRequestProxy();

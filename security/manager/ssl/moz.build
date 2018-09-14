@@ -10,7 +10,6 @@ XPIDL_SOURCES += [
     'nsIASN1Object.idl',
     'nsIASN1PrintableItem.idl',
     'nsIASN1Sequence.idl',
-    'nsIAssociatedContentSecurity.idl',
     'nsIBadCertListener2.idl',
     'nsICertBlocklist.idl',
     'nsICertificateDialogs.idl',

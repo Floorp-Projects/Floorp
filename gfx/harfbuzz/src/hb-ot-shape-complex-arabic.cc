@@ -24,9 +24,9 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-private.hh"
-#include "hb-ot-shape-complex-arabic-private.hh"
-#include "hb-ot-shape-private.hh"
+#include "hb.hh"
+#include "hb-ot-shape-complex-arabic.hh"
+#include "hb-ot-shape.hh"
 
 
 /* buffer var allocations */

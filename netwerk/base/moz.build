@@ -97,7 +97,6 @@ XPIDL_SOURCES += [
     'nsISecCheckWrapChannel.idl',
     'nsISecureBrowserUI.idl',
     'nsISecurityEventSink.idl',
-    'nsISecurityInfoProvider.idl',
     'nsISensitiveInfoHiddenURI.idl',
     'nsISerializationHelper.idl',
     'nsIServerSocket.idl',

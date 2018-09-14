@@ -12,10 +12,11 @@ function is(a, b, msg) {
 }
 
 let fullscreenEvents = [];
-let iframeDoc;
+let iframe, iframeDoc;
 
 function begin() {
-  iframeDoc = document.querySelector("iframe").contentDocument;
+  iframe = document.querySelector("iframe");
+  iframeDoc = iframe.contentDocument;
   document.addEventListener("fullscreenchange", evt => {
     fullscreenEvents.push(evt);
   });
@@ -29,9 +30,9 @@ function begin() {
 function assertFullscreenEvents(action) {
   is(fullscreenEvents.length, 2,
     "Two documents should have event dispatched for " + action);
-  is(fullscreenEvents[0].target, document,
+  is(fullscreenEvents[0].target, iframe,
      "Root document should have the event dispatched first after " + action);
-  is(fullscreenEvents[1].target, iframeDoc,
+  is(fullscreenEvents[1].target, iframeDoc.body,
      "Inner document should have the event dispatched second after " + action);
 }
 

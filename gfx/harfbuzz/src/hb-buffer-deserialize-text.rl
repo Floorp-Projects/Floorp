@@ -27,7 +27,7 @@
 #ifndef HB_BUFFER_DESERIALIZE_TEXT_HH
 #define HB_BUFFER_DESERIALIZE_TEXT_HH
 
-#include "hb-private.hh"
+#include "hb.hh"
 
 %%{
 

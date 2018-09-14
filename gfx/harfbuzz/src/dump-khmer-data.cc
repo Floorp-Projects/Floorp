@@ -24,7 +24,7 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-ot-shape-complex-khmer-private.hh"
+#include "hb-ot-shape-complex-khmer.hh"
 
 int
 main (void)

@@ -24,7 +24,7 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-private.hh"
+#include "hb.hh"
 
 /* g++ didn't like older gtype.h gcc-only code path. */
 #include <glib.h>

@@ -27,7 +27,7 @@
 #ifndef HB_NULL_HH
 #define HB_NULL_HH
 
-#include "hb-private.hh"
+#include "hb.hh"
 
 
 /*
@@ -51,27 +51,40 @@ static inline Type const & Null (void) {
 
 /* Specializaitons for arbitrary-content Null objects expressed in bytes. */
 #define DECLARE_NULL_NAMESPACE_BYTES(Namespace, Type) \
-} /* Close namespace. */ \
-extern HB_INTERNAL const unsigned char _hb_Null_##Namespace##_##Type[Namespace::Type::min_size]; \
-template <> \
-/*static*/ inline const Namespace::Type& Null<Namespace::Type> (void) { \
-  return *reinterpret_cast<const Namespace::Type *> (_hb_Null_##Namespace##_##Type); \
-} \
-namespace Namespace { \
-static_assert (true, "Just so we take semicolon after.")
+	} /* Close namespace. */ \
+	extern HB_INTERNAL const unsigned char _hb_Null_##Namespace##_##Type[Namespace::Type::min_size]; \
+	template <> \
+	/*static*/ inline const Namespace::Type& Null<Namespace::Type> (void) { \
+	  return *reinterpret_cast<const Namespace::Type *> (_hb_Null_##Namespace##_##Type); \
+	} \
+	namespace Namespace { \
+	static_assert (true, "Just so we take semicolon after.")
 #define DEFINE_NULL_NAMESPACE_BYTES(Namespace, Type) \
-const unsigned char _hb_Null_##Namespace##_##Type[Namespace::Type::min_size]
+	const unsigned char _hb_Null_##Namespace##_##Type[Namespace::Type::min_size]
 
 /* Specializaitons for arbitrary-content Null objects expressed as struct initializer. */
 #define DECLARE_NULL_INSTANCE(Type) \
-extern HB_INTERNAL const Type _hb_Null_##Type; \
-template <> \
-/*static*/ inline const Type& Null<Type> (void) { \
-  return _hb_Null_##Type; \
-} \
+	extern HB_INTERNAL const Type _hb_Null_##Type; \
+	template <> \
+	/*static*/ inline const Type& Null<Type> (void) { \
+	  return _hb_Null_##Type; \
+	} \
 static_assert (true, "Just so we take semicolon after.")
 #define DEFINE_NULL_INSTANCE(Type) \
-const Type _hb_Null_##Type
+	const Type _hb_Null_##Type
+
+/* Specializaiton to disallow Null objects. */
+#define DECLARE_NULL_DISALLOW(Type) \
+	template <> inline const Type& Null<Type> (void)
+#define DECLARE_NULL_NAMSPACE_DISALLOW(Namespace, Type) \
+	} /* Close namespace. */ \
+	template <> \
+	/*static*/ inline const Namespace::Type& Null<Namespace::Type> (void) { \
+	  extern void *_hb_undefined; \
+	  return *reinterpret_cast<const Namespace::Type *> (_hb_undefined); \
+	} \
+	namespace Namespace { \
+	static_assert (true, "Just so we take semicolon after.")
 
 /* Global writable pool.  Enlarge as necessary. */
 

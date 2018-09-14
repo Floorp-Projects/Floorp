@@ -101,11 +101,11 @@ srtp_err_status_t srtp_crypto_kernel_init()
     if (status) {
         return status;
     }
-    status = srtp_crypto_kernel_load_debug_module(&mod_stat);
+    status = srtp_crypto_kernel_load_debug_module(&srtp_mod_stat);
     if (status) {
         return status;
     }
-    status = srtp_crypto_kernel_load_debug_module(&mod_alloc);
+    status = srtp_crypto_kernel_load_debug_module(&srtp_mod_alloc);
     if (status) {
         return status;
     }
@@ -130,18 +130,18 @@ srtp_err_status_t srtp_crypto_kernel_init()
     if (status) {
         return status;
     }
-#ifdef OPENSSL
+#ifdef GCM
     status = srtp_crypto_kernel_load_cipher_type(&srtp_aes_icm_192,
                                                  SRTP_AES_ICM_192);
     if (status) {
         return status;
     }
-    status = srtp_crypto_kernel_load_cipher_type(&srtp_aes_gcm_128_openssl,
+    status = srtp_crypto_kernel_load_cipher_type(&srtp_aes_gcm_128,
                                                  SRTP_AES_GCM_128);
     if (status) {
         return status;
     }
-    status = srtp_crypto_kernel_load_cipher_type(&srtp_aes_gcm_256_openssl,
+    status = srtp_crypto_kernel_load_cipher_type(&srtp_aes_gcm_256,
                                                  SRTP_AES_GCM_256);
     if (status) {
         return status;
@@ -512,7 +512,7 @@ srtp_err_status_t srtp_crypto_kernel_load_debug_module(
     srtp_kernel_debug_module_t *kdm, *new;
 
     /* defensive coding */
-    if (new_dm == NULL) {
+    if (new_dm == NULL || new_dm->name == NULL) {
         return srtp_err_status_bad_param;
     }
 

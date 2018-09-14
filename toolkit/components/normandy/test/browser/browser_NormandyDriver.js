@@ -173,7 +173,7 @@ decorate_task(
 decorate_task(
   withSandboxManager(Assert),
   withMockPreferences,
-  PreferenceExperiments.withMockExperiments,
+  PreferenceExperiments.withMockExperiments(),
   async function testPreferenceStudies(sandboxManager) {
     const driver = new NormandyDriver(sandboxManager);
     sandboxManager.cloneIntoGlobal("driver", driver, {cloneFunctions: true});

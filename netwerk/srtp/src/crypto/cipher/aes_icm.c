@@ -121,6 +121,7 @@ static srtp_err_status_t srtp_aes_icm_alloc(srtp_cipher_t **c,
     icm = (srtp_aes_icm_ctx_t *)srtp_crypto_alloc(sizeof(srtp_aes_icm_ctx_t));
     if (icm == NULL) {
         srtp_crypto_free(*c);
+        *c = NULL;
         return srtp_err_status_alloc_fail;
     }
 

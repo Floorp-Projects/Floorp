@@ -1,28 +1,28 @@
 # Base and default-included sources and headers
 
 HB_BASE_sources = \
-	hb-atomic-private.hh \
-	hb-blob-private.hh \
+	hb-atomic.hh \
+	hb-blob.hh \
 	hb-blob.cc \
-	hb-buffer-private.hh \
+	hb-buffer.hh \
 	hb-buffer-serialize.cc \
 	hb-buffer.cc \
 	hb-common.cc \
 	hb-debug.hh \
 	hb-dsalgs.hh \
-	hb-face-private.hh \
+	hb-face.hh \
 	hb-face.cc \
-	hb-font-private.hh \
+	hb-font.hh \
 	hb-font.cc \
-	hb-iter-private.hh \
-	hb-map-private.hh \
+	hb-iter.hh \
+	hb-map.hh \
 	hb-map.cc \
-	hb-machinery-private.hh \
-	hb-mutex-private.hh \
+	hb-machinery.hh \
+	hb-mutex.hh \
 	hb-null.hh \
-	hb-object-private.hh \
-	hb-open-file-private.hh \
-	hb-open-type-private.hh \
+	hb-object.hh \
+	hb-open-file.hh \
+	hb-open-type.hh \
 	hb-ot-color-cbdt-table.hh \
 	hb-ot-cmap-table.hh \
 	hb-ot-glyf-table.hh \
@@ -38,23 +38,23 @@ HB_BASE_sources = \
 	hb-ot-post-macroman.hh \
 	hb-ot-post-table.hh \
 	hb-ot-tag.cc \
-	hb-private.hh \
-	hb-set-digest-private.hh \
-	hb-set-private.hh \
+	hb.hh \
+	hb-set-digest.hh \
+	hb-set.hh \
 	hb-set.cc \
 	hb-shape.cc \
-	hb-shape-plan-private.hh \
+	hb-shape-plan.hh \
 	hb-shape-plan.cc \
 	hb-shaper-list.hh \
-	hb-shaper-impl-private.hh \
-	hb-shaper-private.hh \
+	hb-shaper-impl.hh \
+	hb-shaper.hh \
 	hb-shaper.cc \
 	hb-static.cc \
 	hb-string-array.hh \
-	hb-unicode-private.hh \
+	hb-unicode.hh \
 	hb-unicode.cc \
-	hb-vector-private.hh \
-	hb-utf-private.hh \
+	hb-vector.hh \
+	hb-utf.hh \
 	hb-warning.cc \
 	$(NULL)
 
@@ -89,61 +89,63 @@ HB_FALLBACK_sources = \
 
 HB_OT_sources = \
 	hb-aat-layout.cc \
-	hb-aat-layout-common-private.hh \
+	hb-aat-layout-common.hh \
 	hb-aat-layout-ankr-table.hh \
 	hb-aat-layout-bsln-table.hh \
 	hb-aat-layout-feat-table.hh \
 	hb-aat-layout-kerx-table.hh \
 	hb-aat-layout-morx-table.hh \
 	hb-aat-layout-trak-table.hh \
-	hb-aat-layout-private.hh \
+	hb-aat-layout.hh \
 	hb-aat-ltag-table.hh \
+	hb-ot-face.hh \
+	hb-ot-face.cc \
 	hb-ot-font.cc \
 	hb-ot-layout.cc \
 	hb-ot-layout-base-table.hh \
-	hb-ot-layout-common-private.hh \
+	hb-ot-layout-common.hh \
 	hb-ot-layout-gdef-table.hh \
 	hb-ot-layout-gpos-table.hh \
-	hb-ot-layout-gsubgpos-private.hh \
+	hb-ot-layout-gsubgpos.hh \
 	hb-ot-layout-gsub-table.hh \
 	hb-ot-layout-jstf-table.hh \
-	hb-ot-layout-private.hh \
+	hb-ot-layout.hh \
 	hb-ot-color.cc \
 	hb-ot-color-colr-table.hh \
 	hb-ot-color-cpal-table.hh \
 	hb-ot-color-sbix-table.hh \
 	hb-ot-color-svg-table.hh \
 	hb-ot-map.cc \
-	hb-ot-map-private.hh \
+	hb-ot-map.hh \
 	hb-ot-math.cc \
 	hb-ot-math-table.hh \
 	hb-ot-shape.cc \
 	hb-ot-shape-complex-arabic.cc \
 	hb-ot-shape-complex-arabic-fallback.hh \
-	hb-ot-shape-complex-arabic-private.hh \
+	hb-ot-shape-complex-arabic.hh \
 	hb-ot-shape-complex-arabic-table.hh \
 	hb-ot-shape-complex-arabic-win1256.hh \
 	hb-ot-shape-complex-default.cc \
 	hb-ot-shape-complex-hangul.cc \
 	hb-ot-shape-complex-hebrew.cc \
 	hb-ot-shape-complex-indic.cc \
-	hb-ot-shape-complex-indic-private.hh \
+	hb-ot-shape-complex-indic.hh \
 	hb-ot-shape-complex-indic-table.cc \
-	hb-ot-shape-complex-khmer-private.hh \
+	hb-ot-shape-complex-khmer.hh \
 	hb-ot-shape-complex-khmer.cc \
-	hb-ot-shape-complex-myanmar-private.hh \
+	hb-ot-shape-complex-myanmar.hh \
 	hb-ot-shape-complex-myanmar.cc \
 	hb-ot-shape-complex-thai.cc \
 	hb-ot-shape-complex-tibetan.cc \
 	hb-ot-shape-complex-use.cc \
-	hb-ot-shape-complex-use-private.hh \
+	hb-ot-shape-complex-use.hh \
 	hb-ot-shape-complex-use-table.cc \
-	hb-ot-shape-complex-private.hh \
-	hb-ot-shape-normalize-private.hh \
+	hb-ot-shape-complex.hh \
+	hb-ot-shape-normalize.hh \
 	hb-ot-shape-normalize.cc \
-	hb-ot-shape-fallback-private.hh \
+	hb-ot-shape-fallback.hh \
 	hb-ot-shape-fallback.cc \
-	hb-ot-shape-private.hh \
+	hb-ot-shape.hh \
 	hb-ot-var.cc \
 	hb-ot-var-avar-table.hh \
 	hb-ot-var-fvar-table.hh \
@@ -207,16 +209,17 @@ HB_ICU_headers = hb-icu.h
 HB_SUBSET_sources = \
 	hb-static.cc \
 	hb-subset.cc \
+	hb-subset.hh \
 	hb-subset-glyf.cc \
+	hb-subset-glyf.hh \
 	hb-subset-input.cc \
+	hb-subset-input.hh \
 	hb-subset-plan.cc \
+	hb-subset-plan.hh \
 	$(NULL)
 
 HB_SUBSET_headers = \
 	hb-subset.h \
-	hb-subset-glyf.hh \
-	hb-subset-plan.hh \
-	hb-subset-private.hh \
 	$(NULL)
 
 HB_GOBJECT_DIST_sources = hb-gobject-structs.cc

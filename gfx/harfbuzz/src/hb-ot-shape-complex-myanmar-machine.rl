@@ -27,7 +27,7 @@
 #ifndef HB_OT_SHAPE_COMPLEX_MYANMAR_MACHINE_HH
 #define HB_OT_SHAPE_COMPLEX_MYANMAR_MACHINE_HH
 
-#include "hb-private.hh"
+#include "hb.hh"
 
 %%{
   machine myanmar_syllable_machine;

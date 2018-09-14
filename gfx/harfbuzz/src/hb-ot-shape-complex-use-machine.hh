@@ -31,7 +31,7 @@
 #ifndef HB_OT_SHAPE_COMPLEX_USE_MACHINE_HH
 #define HB_OT_SHAPE_COMPLEX_USE_MACHINE_HH
 
-#include "hb-private.hh"
+#include "hb.hh"
 
 
 #line 38 "hb-ot-shape-complex-use-machine.hh"

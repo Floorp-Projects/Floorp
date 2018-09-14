@@ -26,11 +26,15 @@ enum class FullscreenEventType
 class PendingFullscreenEvent
 {
 public:
-  PendingFullscreenEvent(FullscreenEventType aType, nsIDocument* aDoc)
-    : mDocument(aDoc)
+  PendingFullscreenEvent(FullscreenEventType aType,
+                         nsIDocument* aDocument,
+                         nsINode* aTarget)
+    : mDocument(aDocument)
+    , mTarget(aTarget)
     , mType(aType)
   {
-    MOZ_ASSERT(aDoc);
+    MOZ_ASSERT(aDocument);
+    MOZ_ASSERT(aTarget);
   }
 
   nsIDocument* Document() const { return mDocument; }
@@ -50,13 +54,16 @@ public:
         name = NS_LITERAL_STRING("fullscreenerror");
         break;
     }
+    nsINode* target =
+      mTarget->GetComposedDoc() == mDocument ? mTarget : mDocument;
     Unused << nsContentUtils::DispatchTrustedEvent(
-      mDocument, mDocument, name,
-      CanBubble::eYes, Cancelable::eNo, nullptr);
+      mDocument, target, name,
+      CanBubble::eYes, Cancelable::eNo, Composed::eYes);
   }
 
 private:
   nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<nsINode> mTarget;
   FullscreenEventType mType;
 #ifdef DEBUG
   bool mDispatched = false;

@@ -130,8 +130,12 @@ class SymFileManager:
                         if len(fields) < 4:
                             LogTrace("Line " + str(lineNum) + " is messed")
                             continue
-                        address = int(fields[1], 16)
-                        symbolMap[address] = " ".join(fields[3:])
+                        if fields[1] == "m":
+                            address = int(fields[2], 16)
+                            symbolMap[address] = " ".join(fields[4:])
+                        else:
+                            address = int(fields[1], 16)
+                            symbolMap[address] = " ".join(fields[3:])
                         publicCount += 1
                     elif line[0:5] == "FUNC ":
                         line = line.rstrip()
@@ -139,8 +143,12 @@ class SymFileManager:
                         if len(fields) < 5:
                             LogTrace("Line " + str(lineNum) + " is messed")
                             continue
-                        address = int(fields[1], 16)
-                        symbolMap[address] = " ".join(fields[4:])
+                        if fields[1] == "m":
+                            address = int(fields[2], 16)
+                            symbolMap[address] = " ".join(fields[5:])
+                        else:
+                            address = int(fields[1], 16)
+                            symbolMap[address] = " ".join(fields[4:])
                         funcCount += 1
             elif path.endswith(".nmsym"):
                 addressLength = 0

@@ -226,10 +226,9 @@ function nextCycle() {
   }
 }
 
-function timeoutAlarmListener(alarm) {
-  var text = alarm.name;
-  console.error(text);
-  postToControlServer("status", text);
+function timeoutAlarmListener() {
+  console.error("raptor-page-timeout on %s" % testURL);
+  postToControlServer("raptor-page-timeout", [testName, testURL]);
   // call clean-up to shutdown gracefully
   cleanUp();
 }

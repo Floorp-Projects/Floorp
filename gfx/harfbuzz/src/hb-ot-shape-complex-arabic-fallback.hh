@@ -27,9 +27,9 @@
 #ifndef HB_OT_SHAPE_COMPLEX_ARABIC_FALLBACK_HH
 #define HB_OT_SHAPE_COMPLEX_ARABIC_FALLBACK_HH
 
-#include "hb-private.hh"
+#include "hb.hh"
 
-#include "hb-ot-shape-private.hh"
+#include "hb-ot-shape.hh"
 #include "hb-ot-layout-gsub-table.hh"
 
 
@@ -173,7 +173,6 @@ arabic_fallback_synthesize_lookup_ligature (const hb_ot_shape_plan_t *plan HB_UN
 					 ligatures_supplier,
 					 component_count_supplier,
 					 component_supplier);
-
   c.end_serialize ();
   /* TODO sanitize the results? */
 

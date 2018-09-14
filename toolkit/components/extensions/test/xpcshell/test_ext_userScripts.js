@@ -299,8 +299,8 @@ add_task(async function test_userScripts_exported_APIs() {
       permissions: [
         "http://localhost/*/file_sample.html",
       ],
-      userScripts: {
-        apiScript: "api-script.js",
+      user_scripts: {
+        api_script: "api-script.js",
       },
     },
     background,

@@ -348,6 +348,9 @@ double rdbx_check_adds_per_second(int num_trials, unsigned long ws)
             ++failures;
     }
     timer = clock() - timer;
+    if (timer < 1) {
+        timer = 1;
+    }
 
     printf("number of failures: %d \n", failures);
 

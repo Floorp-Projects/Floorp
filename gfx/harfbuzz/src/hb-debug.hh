@@ -27,8 +27,8 @@
 #ifndef HB_DEBUG_HH
 #define HB_DEBUG_HH
 
-#include "hb-private.hh"
-#include "hb-atomic-private.hh"
+#include "hb.hh"
+#include "hb-atomic.hh"
 #include "hb-dsalgs.hh"
 
 

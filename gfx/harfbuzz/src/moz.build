@@ -45,6 +45,7 @@ UNIFIED_SOURCES += [
     'hb-face.cc',
     'hb-font.cc',
     'hb-ot-color.cc',
+    'hb-ot-face.cc',
     'hb-ot-layout.cc',
     'hb-ot-map.cc',
     'hb-ot-shape-complex-arabic.cc',
