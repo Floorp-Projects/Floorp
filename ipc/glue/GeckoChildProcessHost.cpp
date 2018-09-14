@@ -331,17 +331,9 @@ void GeckoChildProcessHost::InitWindowsGroupID()
 bool
 GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTimeoutMs)
 {
-  PrepareLaunch();
-
-  MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-  NS_ASSERTION(MessageLoop::current() != ioLoop, "sync launch from the IO thread NYI");
-
-  ioLoop->PostTask(NewNonOwningRunnableMethod<std::vector<std::string>>(
-    "ipc::GeckoChildProcessHost::RunPerformAsyncLaunch",
-    this,
-    &GeckoChildProcessHost::RunPerformAsyncLaunch,
-    aExtraOpts));
-
+  if (!AsyncLaunch(std::move(aExtraOpts))) {
+    return false;
+  }
   return WaitUntilConnected(aTimeoutMs);
 }
 
@@ -352,18 +344,14 @@ GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
 
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
 
+  // Currently this can't fail (see the MOZ_ALWAYS_SUCCEEDS in
+  // MessageLoop::PostTask_Helper), but in the future it possibly
+  // could, in which case this method could return false.
   ioLoop->PostTask(NewNonOwningRunnableMethod<std::vector<std::string>>(
     "ipc::GeckoChildProcessHost::RunPerformAsyncLaunch",
     this,
     &GeckoChildProcessHost::RunPerformAsyncLaunch,
     aExtraOpts));
-
-  // This may look like the sync launch wait, but we only delay as
-  // long as it takes to create the channel.
-  MonitorAutoLock lock(mMonitor);
-  while (mProcessState < CHANNEL_INITIALIZED) {
-    lock.Wait();
-  }
 
   return true;
 }
@@ -408,14 +396,9 @@ GeckoChildProcessHost::WaitUntilConnected(int32_t aTimeoutMs)
 bool
 GeckoChildProcessHost::LaunchAndWaitForProcessHandle(StringVector aExtraOpts)
 {
-  PrepareLaunch();
-
-  MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-  ioLoop->PostTask(NewNonOwningRunnableMethod<std::vector<std::string>>(
-    "ipc::GeckoChildProcessHost::RunPerformAsyncLaunch",
-    this,
-    &GeckoChildProcessHost::RunPerformAsyncLaunch,
-    aExtraOpts));
+  if (!AsyncLaunch(std::move(aExtraOpts))) {
+    return false;
+  }
 
   MonitorAutoLock lock(mMonitor);
   while (mProcessState < PROCESS_CREATED) {

@@ -45,9 +45,9 @@ public:
 
   static uint32_t GetUniqueID();
 
-  // Block until the IPC channel for our subprocess is initialized,
-  // but no longer.  The child process may or may not have been
-  // created when this method returns.
+  // Does not block.  The IPC channel may not be initialized yet, and
+  // the child process may or may not have been created when this
+  // method returns.
   bool AsyncLaunch(StringVector aExtraOpts=StringVector());
 
   virtual bool WaitUntilConnected(int32_t aTimeoutMs = 0);
