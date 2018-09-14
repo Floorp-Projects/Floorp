@@ -17,6 +17,12 @@ var heroesToCapture = [];
 // default only; this is set via control server settings json
 var getFNBPaint = false;
 
+// measure firefox domContentFlushed
+// note: this browser pref must be enabled:
+// dom.performance.time_to_dom_content_flushed.enabled = True
+// default only; this is set via control server settings json
+var getDCF = false;
+
 // measure google's first-contentful-paint
 // default only; this is set via control server settings json
 var getFCP = false;
@@ -54,6 +60,14 @@ function setup(settings) {
     if (getFNBPaint) {
       console.log("will be measuring fnbpaint");
       measureFNBPaint();
+    }
+  }
+
+  if (settings.measure.dcf !== undefined) {
+    getDCF = settings.measure.dcf;
+    if (getDCF) {
+      console.log("will be measuring dcf");
+      measureDCF();
     }
   }
 
@@ -138,6 +152,29 @@ function measureFNBPaint() {
       window.setTimeout(measureFNBPaint, 100);
     } else {
       console.log("\nunable to get a value for fnbpaint after " + gRetryCounter + " retries\n");
+    }
+  }
+}
+
+function measureDCF() {
+  var x = window.performance.timing.timeToDOMContentFlushed;
+
+  if (typeof(x) == "undefined") {
+    console.log("ERROR: domContentFlushed is undefined; ensure the pref is enabled");
+    return;
+  }
+  if (x > 0) {
+    console.log("got domContentFlushed: " + x);
+    gRetryCounter = 0;
+    var startTime = perfData.timing.fetchStart;
+    sendResult("dcf", x - startTime);
+  } else {
+    gRetryCounter += 1;
+    if (gRetryCounter <= 10) {
+      console.log("\dcf is not yet available (0), retry number " + gRetryCounter + "...\n");
+      window.setTimeout(measureDCF, 100);
+    } else {
+      console.log("\nunable to get a value for dcf after " + gRetryCounter + " retries\n");
     }
   }
 }

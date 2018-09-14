@@ -822,12 +822,7 @@ richlistitem {
 
 /*********** findbar ************/
 findbar {
-  -moz-binding: url('chrome://global/content/bindings/findbar.xml#findbar');
   overflow-x: hidden;
-}
-
-.findbar-textbox {
-  -moz-binding: url("chrome://global/content/bindings/findbar.xml#findbar-textbox");
 }
 
 /*********** tabmodalprompt ************/
