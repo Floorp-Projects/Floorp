@@ -265,21 +265,30 @@ interface nsITableEditor : nsISupports
     * Used for aDirection param in SetSelectionAfterTableEdit
     */
 
-  /** Examine the current selection and find
-    *   a selected TABLE, TD or TH, or TR element.
-    *   or return the parent TD or TH if selection is inside a table cell
-    *   Returns null if no table element is found.
-    *
-    * @param aTagName         The tagname of returned element
-    *                         Note that "td" will be returned if name
-    *                         is actually "th"
-    * @param aCount           How many table elements were selected
-    *                         This tells us if we have multiple cells selected
-    *                           (0 if element is a parent cell of selection)
-    * @return                 The table element (table, row, or first selected cell)
-    *
-    */
-  Element getSelectedOrParentTableElement(out AString aTagName, out long aCount);
+  /**
+   * getSelectedOrParentTableElement() returns a <td>, <th>, <tr> or <table>.
+   * If first selection range selects a <td> or <th>, returns it.  aTagName
+   * is set to "td" even if the result is a <th> and aCount is set to
+   * Selection.rangeCount.
+   * If first selection range does not select <td> nor <th>, but selection
+   * anchor refers <table>, returns it.  aTagName is set to "table" and
+   * aCount is set to 1.
+   * If first selection range does not select <td> nor <th>, but selection
+   * anchor refers <tr>, returns it.  aTagName is set to "tr" and aCount is
+   * set to 1.
+   * If first selection range does not select <td> nor <th>, but selection
+   * anchor refers <td> (not include <th>!), returns it.  aTagName is set to
+   * "td" and aCount is set to 0.
+   * Otherwise, if container of selection anchor is in a <td> or <th>,
+   * returns it.  aTagName is set to "td" but aCount is set to 0.
+   * Otherwise, returns null, aTagName is set to empty string and aCount is
+   * set to 0.  I.e., does not throw exception even if a cell is not found.
+   * NOTE: Calling this resets internal counter of getFirstSelectedCell()
+   *       and getNextSelectedCell().  I.e., getNextSelectedCell() will
+   *       return second selected cell element.
+   */
+  Element getSelectedOrParentTableElement(out AString aTagName,
+                                          out long aCount);
 
   /** Generally used after GetSelectedOrParentTableElement
     *   to test if selected cells are complete rows or columns
@@ -320,20 +329,24 @@ interface nsITableEditor : nsISupports
    */
   Element getFirstSelectedCell(out Range aFirstRangeOfSelection);
 
-  /** Get first selected element in the table
-    *   This is the upper-left-most selected cell in table,
-    *   ignoring the order that the user selected them (order in the selection ranges)
-    * Assumes cell-selection model where each cell
-    * is in a separate range (selection parent node is table row)
-    * @param aCell       Selected cell or null if ranges don't contain
-    *                    cell selections
-    * @param aRowIndex   Optional: if not null, return row index of 1st cell
-    * @param aColIndex   Optional: if not null, return column index of 1st cell
-    *
-    * Returns the DOM cell element
-    *   (in C++: returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    *    passes NS_SUCCEEDED macro)
-    */
+  /**
+   * getFirstSelectedCellInTable() returns a cell element, its row index and
+   * its column index if first range of Selection selects a cell.  Note that
+   * that "selects a cell" means that the range container is a <tr> element
+   * and endOffset is startOffset + 1.  So, even if first range of Selection
+   * is in a cell element, this treats the range does not select a cell.
+   * NOTE: Calling this resets internal counter of getFirstSelectedCell()
+   *       and getNextSelectedCell().  I.e., getNextSelectedCell() will
+   *       return second selected cell element.
+   *
+   * @param aRowIndex    [OUT} Returns row index of the found cell.  If not
+   *                     found, returns 0.
+   * @param aColumnIndex [OUT] Returns column index of the found cell.  If
+   *                     not found, returns 0.
+   * @return             The cell element which is selected by the first
+   *                     range of Selection.  Even if this is not found,
+   *                     this returns null, not throwing exception.
+   */
   Element getFirstSelectedCellInTable(out long aRowIndex, out long aColIndex);
 
   /**

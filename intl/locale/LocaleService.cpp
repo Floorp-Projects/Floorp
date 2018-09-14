@@ -122,15 +122,6 @@ ReadRequestedLocales(nsTArray<nsCString>& aRetVal)
     aRetVal.AppendElement(defaultLocale);
   }
 
-  // Last fallback locale is a locale for the requested locale chain.
-  // In the future we'll want to make the fallback chain differ per-locale.
-  //
-  // Notice: This is not the same as DefaultLocale,
-  // which follows the default locale the build is in.
-  LocaleService::GetInstance()->GetLastFallbackLocale(str);
-  if (!aRetVal.Contains(str)) {
-    aRetVal.AppendElement(str);
-  }
   return true;
 }
 

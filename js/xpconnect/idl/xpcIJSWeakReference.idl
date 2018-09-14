@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(75767928-ecb1-4e6c-9f55-c118b297fcef)]
+[scriptable, builtinclass, uuid(75767928-ecb1-4e6c-9f55-c118b297fcef)]
 interface xpcIJSWeakReference : nsISupports
 {
   /**

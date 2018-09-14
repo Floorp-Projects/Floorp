@@ -2198,15 +2198,14 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<Element> firstCell;
-  int32_t firstRowIndex, firstColIndex;
-  rv = GetFirstSelectedCellInTable(&firstRowIndex, &firstColIndex,
-                                   getter_AddRefs(firstCell));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   ErrorResult error;
+  CellAndIndexes firstSelectedCell(*this, *selection, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
   bool joinSelectedCells = false;
-  if (firstCell) {
+  if (firstSelectedCell.mElement) {
     RefPtr<Element> secondCell =
       GetNextSelectedTableCellElement(*selection, error);
     if (NS_WARN_IF(error.Failed())) {
@@ -2227,23 +2226,29 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
 
     // Get spans for cell we will merge into
     int32_t firstRowSpan, firstColSpan;
-    rv = GetCellSpansAt(table, firstRowIndex, firstColIndex,
+    rv = GetCellSpansAt(table,
+                        firstSelectedCell.mIndexes.mRow,
+                        firstSelectedCell.mIndexes.mColumn,
                         firstRowSpan, firstColSpan);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     // This defines the last indexes along the "edges"
     //  of the contiguous block of cells, telling us
     //  that we can join adjacent cells to the block
     // Start with same as the first values,
     //  then expand as we find adjacent selected cells
-    int32_t lastRowIndex = firstRowIndex;
-    int32_t lastColIndex = firstColIndex;
+    int32_t lastRowIndex = firstSelectedCell.mIndexes.mRow;
+    int32_t lastColIndex = firstSelectedCell.mIndexes.mColumn;
     int32_t rowIndex, colIndex;
 
     // First pass: Determine boundaries of contiguous rectangular block
     //  that we will join into one cell,
     //  favoring adjacent cells in the same row
-    for (rowIndex = firstRowIndex; rowIndex <= lastRowIndex; rowIndex++) {
+    for (rowIndex = firstSelectedCell.mIndexes.mRow;
+         rowIndex <= lastRowIndex;
+         rowIndex++) {
       int32_t currentRowCount = tableSize.mRowCount;
       // Be sure each row doesn't have rowspan errors
       rv = FixBadRowSpan(table, rowIndex, tableSize.mRowCount);
@@ -2254,8 +2259,8 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
       bool cellFoundInRow = false;
       bool lastRowIsSet = false;
       int32_t lastColInRow = 0;
-      int32_t firstColInRow = firstColIndex;
-      for (colIndex = firstColIndex;
+      int32_t firstColInRow = firstSelectedCell.mIndexes.mColumn;
+      for (colIndex = firstSelectedCell.mIndexes.mColumn;
            colIndex < tableSize.mColumnCount;
            colIndex += std::max(actualColSpan2, 1)) {
         rv = GetCellDataAt(table, rowIndex, colIndex, getter_AddRefs(cell2),
@@ -2269,7 +2274,8 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
             // We've just found the first selected cell in this row
             firstColInRow = colIndex;
           }
-          if (rowIndex > firstRowIndex && firstColInRow != firstColIndex) {
+          if (rowIndex > firstSelectedCell.mIndexes.mRow &&
+              firstColInRow != firstSelectedCell.mIndexes.mColumn) {
             // We're in at least the second row,
             // but left boundary is "ragged" (not the same as 1st row's start)
             //Let's just end block on previous row
@@ -2285,7 +2291,8 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
           cellFoundInRow = true;
         } else if (cellFoundInRow) {
           // No cell or not selected, but at least one cell in row was found
-          if (rowIndex > (firstRowIndex + 1) && colIndex <= lastColIndex) {
+          if (rowIndex > firstSelectedCell.mIndexes.mRow + 1 &&
+              colIndex <= lastColIndex) {
             // Cell is in a column less than current right border in
             //  the third or higher selected row, so stop block at the previous row
             lastRowIndex = std::max(0,rowIndex - 1);
@@ -2298,7 +2305,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
 
       // Done with this row
       if (cellFoundInRow) {
-        if (rowIndex == firstRowIndex) {
+        if (rowIndex == firstSelectedCell.mIndexes.mRow) {
           // First row always initializes the right boundary
           lastColIndex = lastColInRow;
         }
@@ -2344,9 +2351,11 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
         }
 
         // Merge only selected cells (skip cell we're merging into, of course)
-        if (isSelected2 && cell2 != firstCell) {
-          if (rowIndex >= firstRowIndex && rowIndex <= lastRowIndex &&
-              colIndex >= firstColIndex && colIndex <= lastColIndex) {
+        if (isSelected2 && cell2 != firstSelectedCell.mElement) {
+          if (rowIndex >= firstSelectedCell.mIndexes.mRow &&
+              rowIndex <= lastRowIndex &&
+              colIndex >= firstSelectedCell.mIndexes.mColumn &&
+              colIndex <= lastColIndex) {
             // We are within the join region
             // Problem: It is very tricky to delete cells as we merge,
             //  since that will upset the cellmap
@@ -2365,15 +2374,19 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
               }
             }
 
-            rv = MergeCells(firstCell, cell2, false);
-            NS_ENSURE_SUCCESS(rv, rv);
+            rv = MergeCells(firstSelectedCell.mElement, cell2, false);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
 
             // Add cell to list to delete
             deleteList.AppendElement(cell2.get());
           } else if (aMergeNonContiguousContents) {
             // Cell is outside join region -- just merge the contents
-            rv = MergeCells(firstCell, cell2, false);
-            NS_ENSURE_SUCCESS(rv, rv);
+            rv = MergeCells(firstSelectedCell.mElement, cell2, false);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
           }
         }
       }
@@ -2414,12 +2427,17 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
       }
     }
 
-    // Set spans for the cell everthing merged into
-    rv = SetRowSpan(firstCell, lastRowIndex-firstRowIndex+1);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = SetColSpan(firstCell, lastColIndex-firstColIndex+1);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    // Set spans for the cell everything merged into
+    rv = SetRowSpan(firstSelectedCell.mElement,
+                    lastRowIndex - firstSelectedCell.mIndexes.mRow + 1);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    rv = SetColSpan(firstSelectedCell.mElement,
+                    lastColIndex - firstSelectedCell.mIndexes.mColumn + 1);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     // Fixup disturbances in table layout
     DebugOnly<nsresult> rv = NormalizeTable(*selection, *table);
@@ -3220,27 +3238,29 @@ HTMLEditor::GetCellContext(Selection** aSelection,
   //    or get the enclosing by a cell
   if (!cell) {
     // Find a selected or enclosing table element
-    RefPtr<Element> cellOrTableElement;
-    int32_t selectedCount;
-    nsAutoString tagName;
-    nsresult rv =
-      GetSelectedOrParentTableElement(tagName, &selectedCount,
-                                      getter_AddRefs(cellOrTableElement));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (tagName.EqualsLiteral("table")) {
+    ErrorResult error;
+    RefPtr<Element> cellOrRowOrTableElement =
+      GetSelectedOrParentTableElement(*selection, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+    if (!cellOrRowOrTableElement) {
+      return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+    }
+    if (cellOrRowOrTableElement->IsHTMLElement(nsGkAtoms::table)) {
       // We have a selected table, not a cell
       if (aTable) {
-        cellOrTableElement.forget(aTable);
+        cellOrRowOrTableElement.forget(aTable);
       }
       return NS_OK;
     }
-    if (!tagName.EqualsLiteral("td")) {
+    if (!cellOrRowOrTableElement->IsAnyOfHTMLElements(nsGkAtoms::td,
+                                                      nsGkAtoms::th)) {
       return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
     }
 
     // We found a cell
-    MOZ_ASSERT(cellOrTableElement);
-    cell = cellOrTableElement;
+    cell = std::move(cellOrRowOrTableElement);
   }
   if (aCell) {
     // we don't want to cell.forget() here, because we use it below.
@@ -3498,16 +3518,17 @@ HTMLEditor::GetNextSelectedTableCellElement(Selection& aSelection,
 NS_IMETHODIMP
 HTMLEditor::GetFirstSelectedCellInTable(int32_t* aRowIndex,
                                         int32_t* aColumnIndex,
-                                        Element** aCell)
+                                        Element** aCellElement)
 {
-  NS_ENSURE_TRUE(aCell, NS_ERROR_NULL_POINTER);
-  *aCell = nullptr;
-  if (aRowIndex) {
-    *aRowIndex = 0;
+  if (NS_WARN_IF(!aRowIndex) || NS_WARN_IF(!aColumnIndex) ||
+      NS_WARN_IF(!aCellElement)) {
+    return NS_ERROR_INVALID_ARG;
   }
-  if (aColumnIndex) {
-    *aColumnIndex = 0;
-  }
+  
+
+  *aRowIndex = 0;
+  *aColumnIndex = 0;
+  *aCellElement = nullptr;
 
   RefPtr<Selection> selection = GetSelection();
   if (NS_WARN_IF(!selection)) {
@@ -3515,34 +3536,37 @@ HTMLEditor::GetFirstSelectedCellInTable(int32_t* aRowIndex,
   }
 
   ErrorResult error;
-  RefPtr<Element> firstSelectedCellElement =
-    GetFirstSelectedTableCellElement(*selection, error);
+  CellAndIndexes result(*this, *selection, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
-  if (NS_WARN_IF(!firstSelectedCellElement)) {
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
-  }
-
-  // We don't want to cell.forget() here, because we use "cell" below.
-  firstSelectedCellElement.forget(aCell);
-
-  if (!aRowIndex && !aColumnIndex) {
-    return NS_OK;
-  }
-
-  // Also return the row and/or column if requested
-  CellIndexes cellIndexes(*firstSelectedCellElement, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-  if (aRowIndex) {
-    *aRowIndex = cellIndexes.mRow;
-  }
-  if (aColumnIndex) {
-    *aColumnIndex = cellIndexes.mColumn;
-  }
+  result.mElement.forget(aCellElement);
+  *aRowIndex = std::max(result.mIndexes.mRow, 0);
+  *aColumnIndex = std::max(result.mIndexes.mColumn, 0);
   return NS_OK;
+}
+
+void
+HTMLEditor::CellAndIndexes::Update(HTMLEditor& aHTMLEditor,
+                                   Selection& aSelection,
+                                   ErrorResult& aRv)
+{
+  MOZ_ASSERT(!aRv.Failed());
+
+  mIndexes.mRow = -1;
+  mIndexes.mColumn = -1;
+
+  mElement = aHTMLEditor.GetFirstSelectedTableCellElement(aSelection, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+  if (!mElement) {
+    return;
+  }
+
+  mIndexes.Update(*mElement, aRv);
+  NS_WARNING_ASSERTION(!aRv.Failed(),
+    "Selected element is found, but failed to compute its indexes");
 }
 
 void
@@ -3631,12 +3655,14 @@ HTMLEditor::SetSelectionAfterTableEdit(Element* aTable,
 NS_IMETHODIMP
 HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
                                             int32_t* aSelectedCount,
-                                            Element** aTableElement)
+                                            Element** aCellOrRowOrTableElement)
 {
-  NS_ENSURE_ARG_POINTER(aTableElement);
-  NS_ENSURE_ARG_POINTER(aSelectedCount);
-  *aTableElement = nullptr;
+  if (NS_WARN_IF(!aSelectedCount) || NS_WARN_IF(!aCellOrRowOrTableElement)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   aTagName.Truncate();
+  *aCellOrRowOrTableElement = nullptr;
   *aSelectedCount = 0;
 
   RefPtr<Selection> selection = GetSelection();
@@ -3644,59 +3670,114 @@ HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
     return NS_ERROR_FAILURE;
   }
 
-  // Try to get the first selected cell
-  ErrorResult error;
-  RefPtr<Element> tableOrCellElement =
-    GetFirstSelectedTableCellElement(*selection, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
+  bool isCellSelected = false;
+  ErrorResult aRv;
+  RefPtr<Element> cellOrRowOrTableElement =
+    GetSelectedOrParentTableElement(*selection, aRv, &isCellSelected);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return aRv.StealNSResult();
+  }
+  if (!cellOrRowOrTableElement) {
+    return NS_OK;
   }
 
-  if (tableOrCellElement) {
-      // Each cell is in its own selection range,
-      //  so count signals multiple-cell selection
-      *aSelectedCount = selection->RangeCount();
-      aTagName = NS_LITERAL_STRING("td");
-  } else {
-    nsCOMPtr<nsINode> anchorNode = selection->GetAnchorNode();
-    if (NS_WARN_IF(!anchorNode)) {
-      return NS_ERROR_FAILURE;
-    }
+  if (isCellSelected) {
+    aTagName.AssignLiteral("td");
+    *aSelectedCount = selection->RangeCount();
+    cellOrRowOrTableElement.forget(aCellOrRowOrTableElement);
+    return NS_OK;
+  }
 
-    // Get child of anchor node, if exists
-    if (anchorNode->HasChildNodes()) {
-      nsINode* selectedNode = selection->GetChildAtAnchorOffset();
-      if (selectedNode) {
-        if (selectedNode->IsHTMLElement(nsGkAtoms::td)) {
-          tableOrCellElement = selectedNode->AsElement();
-          aTagName = NS_LITERAL_STRING("td");
-          // Each cell is in its own selection range,
-          //  so count signals multiple-cell selection
-          *aSelectedCount = selection->RangeCount();
-        } else if (selectedNode->IsHTMLElement(nsGkAtoms::table)) {
-          tableOrCellElement = selectedNode->AsElement();
-          aTagName.AssignLiteral("table");
-          *aSelectedCount = 1;
-        } else if (selectedNode->IsHTMLElement(nsGkAtoms::tr)) {
-          tableOrCellElement = selectedNode->AsElement();
-          aTagName.AssignLiteral("tr");
-          *aSelectedCount = 1;
+  if (cellOrRowOrTableElement->IsAnyOfHTMLElements(nsGkAtoms::td,
+                                                   nsGkAtoms::th)) {
+    aTagName.AssignLiteral("td");
+    // Keep *aSelectedCount as 0.
+    cellOrRowOrTableElement.forget(aCellOrRowOrTableElement);
+    return NS_OK;
+  }
+
+  if (cellOrRowOrTableElement->IsHTMLElement(nsGkAtoms::table)) {
+    aTagName.AssignLiteral("table");
+    *aSelectedCount = 1;
+    cellOrRowOrTableElement.forget(aCellOrRowOrTableElement);
+    return NS_OK;
+  }
+
+  if (cellOrRowOrTableElement->IsHTMLElement(nsGkAtoms::tr)) {
+    aTagName.AssignLiteral("tr");
+    *aSelectedCount = 1;
+    cellOrRowOrTableElement.forget(aCellOrRowOrTableElement);
+    return NS_OK;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Which element was returned?");
+  return NS_ERROR_UNEXPECTED;
+}
+
+already_AddRefed<Element>
+HTMLEditor::GetSelectedOrParentTableElement(
+              Selection& aSelection,
+              ErrorResult& aRv,
+              bool* aIsCellSelected /* = nullptr */) const
+{
+  MOZ_ASSERT(!aRv.Failed());
+
+  if (aIsCellSelected) {
+    *aIsCellSelected = false;
+  }
+
+  // Try to get the first selected cell, first.
+  RefPtr<Element> cellElement =
+    GetFirstSelectedTableCellElement(aSelection, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  if (cellElement) {
+    if (aIsCellSelected) {
+      *aIsCellSelected = true;
+    }
+    return cellElement.forget();
+  }
+
+  const RangeBoundary& anchorRef = aSelection.AnchorRef();
+  if (NS_WARN_IF(!anchorRef.IsSet())) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  // If anchor selects a <td>, <table> or <tr>, return it.
+  if (anchorRef.Container()->HasChildNodes()) {
+    nsIContent* selectedContent = anchorRef.GetChildAtOffset();
+    if (selectedContent) {
+      // XXX Why do we ignore <th> element in this case?
+      if (selectedContent->IsHTMLElement(nsGkAtoms::td)) {
+        // FYI: If first range selects a <tr> element, but the other selects
+        //      a <td> element, you can reach here.
+        // Each cell is in its own selection range in this case.
+        // XXX Although, other ranges may not select cells, though.
+        if (aIsCellSelected) {
+          *aIsCellSelected = true;
         }
+        return do_AddRef(selectedContent->AsElement());
       }
-    }
-    if (!tableOrCellElement) {
-      // Didn't find a table element -- find a cell parent
-      tableOrCellElement =
-        GetElementOrParentByTagNameInternal(*nsGkAtoms::td, *anchorNode);
-      if (tableOrCellElement) {
-        aTagName = NS_LITERAL_STRING("td");
+      if (selectedContent->IsAnyOfHTMLElements(nsGkAtoms::table,
+                                               nsGkAtoms::tr)) {
+        return do_AddRef(selectedContent->AsElement());
       }
     }
   }
-  if (tableOrCellElement) {
-    tableOrCellElement.forget(aTableElement);
+
+  // Then, look for a cell element (either <td> or <th>) which contains
+  // the anchor container.
+  cellElement = GetElementOrParentByTagNameInternal(*nsGkAtoms::td,
+                                                    *anchorRef.Container());
+  if (!cellElement) {
+    return nullptr; // Not in table.
   }
-  return NS_OK;
+  // Don't set *aIsCellSelected to true in this case because it does NOT
+  // select a cell, just in a cell.
+  return cellElement.forget();
 }
 
 NS_IMETHODIMP

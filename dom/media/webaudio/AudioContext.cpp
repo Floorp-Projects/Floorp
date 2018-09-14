@@ -8,11 +8,13 @@
 
 #include "blink/PeriodicWave.h"
 
+#include "mozilla/AutoplayPermissionManager.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 
 #include "mozilla/dom/AnalyserNode.h"
 #include "mozilla/dom/AnalyserNodeBinding.h"
@@ -73,6 +75,11 @@
 #include "ScriptProcessorNode.h"
 #include "StereoPannerNode.h"
 #include "WaveShaperNode.h"
+
+extern mozilla::LazyLogModule gAutoplayPermissionLog;
+
+#define AUTOPLAY_LOG(msg, ...)                                             \
+  MOZ_LOG(gAutoplayPermissionLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {
@@ -153,7 +160,7 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow,
 
   // Note: AudioDestinationNode needs an AudioContext that must already be
   // bound to the window.
-  bool allowedToStart = AutoplayPolicy::IsAudioContextAllowedToPlay(WrapNotNull(this));
+  bool allowedToStart = AutoplayPolicy::IsAllowedToPlay(*this);
   mDestination = new AudioDestinationNode(this,
                                           aIsOffline,
                                           allowedToStart,
@@ -166,17 +173,46 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow,
     Mute();
   }
 
-  // If we won't allow audio context to start, we need to suspend all its stream
-  // in order to delay the state changing from 'suspend' to 'start'.
   if (!allowedToStart) {
-    ErrorResult rv;
-    RefPtr<Promise> dummy = Suspend(rv);
-    MOZ_ASSERT(!rv.Failed(), "can't create promise");
-    MOZ_ASSERT(dummy->State() != Promise::PromiseState::Rejected,
-               "suspend failed");
+    // Not allowed to start, delay the transition from `suspended` to `running`.
+    SuspendInternal(nullptr);
+    EnsureAutoplayRequested();
   }
 
   FFTBlock::MainThreadInit();
+}
+
+void
+AudioContext::EnsureAutoplayRequested()
+{
+  nsPIDOMWindowInner* parent = GetParentObject();
+  if (!parent || !parent->AsGlobal()) {
+    return;
+  }
+
+  RefPtr<AutoplayPermissionManager> request =
+    AutoplayPolicy::RequestFor(*(parent->GetExtantDoc()));
+  if (!request) {
+    return;
+  }
+
+  RefPtr<AudioContext> self = this;
+  request->RequestWithPrompt()
+    ->Then(parent->AsGlobal()->AbstractMainThreadFor(TaskCategory::Other),
+           __func__,
+           [ self, request ](
+             bool aApproved) {
+              AUTOPLAY_LOG("%p Autoplay request approved request=%p",
+                          self.get(),
+                          request.get());
+              self->ResumeInternal();
+           },
+           [self, request](nsresult aError) {
+              AUTOPLAY_LOG("%p Autoplay request denied request=%p",
+                          self.get(),
+                          request.get());
+              self->DispatchBlockedEvent();
+           });
 }
 
 nsresult
@@ -930,11 +966,6 @@ AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
 #endif // XP_MACOSX
 #endif // WIN32
 
-  MOZ_ASSERT(
-    mIsOffline || aPromise || aNewState == AudioContextState::Running,
-    "We should have a promise here if this is a real-time AudioContext."
-    "Or this is the first time we switch to \"running\".");
-
   if (aPromise) {
     Promise* promise = reinterpret_cast<Promise*>(aPromise);
     // It is possible for the promise to have been removed from
@@ -998,9 +1029,15 @@ AudioContext::Suspend(ErrorResult& aRv)
     return promise.forget();
   }
 
-  Destination()->Suspend();
-
   mPromiseGripArray.AppendElement(promise);
+  SuspendInternal(promise);
+  return promise.forget();
+}
+
+void
+AudioContext::SuspendInternal(void* aPromise)
+{
+  Destination()->Suspend();
 
   nsTArray<MediaStream*> streams;
   // If mSuspendCalled is true then we already suspended all our streams,
@@ -1012,11 +1049,10 @@ AudioContext::Suspend(ErrorResult& aRv)
   }
   Graph()->ApplyAudioContextOperation(DestinationStream()->AsAudioNodeStream(),
                                       streams,
-                                      AudioContextOperation::Suspend, promise);
+                                      AudioContextOperation::Suspend,
+                                      aPromise);
 
   mSuspendCalled = true;
-
-  return promise.forget();
 }
 
 already_AddRefed<Promise>
@@ -1042,24 +1078,68 @@ AudioContext::Resume(ErrorResult& aRv)
 
   mPendingResumePromises.AppendElement(promise);
 
-  if (AutoplayPolicy::IsAudioContextAllowedToPlay(WrapNotNull(this))) {
-    Destination()->Resume();
-
-    nsTArray<MediaStream*> streams;
-    // If mSuspendCalled is false then we already resumed all our streams,
-    // so don't resume them again (since suspend(); resume(); resume(); should
-    // be OK). But we still need to do ApplyAudioContextOperation
-    // to ensure our new promise is resolved.
-    if (mSuspendCalled) {
-      streams = GetAllStreams();
-    }
-    Graph()->ApplyAudioContextOperation(DestinationStream()->AsAudioNodeStream(),
-                                        streams,
-                                        AudioContextOperation::Resume, promise);
-    mSuspendCalled = false;
+  const bool isAllowedToPlay = AutoplayPolicy::IsAllowedToPlay(*this);
+  if (isAllowedToPlay) {
+    ResumeInternal();
+  } else {
+    DispatchBlockedEvent();
   }
 
+  AUTOPLAY_LOG("Resume AudioContext %p, IsAllowedToPlay=%d",
+    this, isAllowedToPlay);
   return promise.forget();
+}
+
+void
+AudioContext::ResumeInternal()
+{
+  Destination()->Resume();
+
+  nsTArray<MediaStream*> streams;
+  // If mSuspendCalled is false then we already resumed all our streams,
+  // so don't resume them again (since suspend(); resume(); resume(); should
+  // be OK). But we still need to do ApplyAudioContextOperation
+  // to ensure our new promise is resolved.
+  if (mSuspendCalled) {
+    streams = GetAllStreams();
+  }
+  Graph()->ApplyAudioContextOperation(DestinationStream()->AsAudioNodeStream(),
+                                      streams,
+                                      AudioContextOperation::Resume,
+                                      nullptr);
+  mSuspendCalled = false;
+}
+
+void
+AudioContext::DispatchBlockedEvent()
+{
+  if (!StaticPrefs::MediaBlockEventEnabled()) {
+    return;
+  }
+
+  RefPtr<AudioContext> self = this;
+  RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "AudioContext::AutoplayBlocked",
+    [self] () {
+      nsPIDOMWindowInner* parent = self->GetParentObject();
+      if (!parent) {
+        return;
+      }
+
+      nsIDocument* doc = parent->GetExtantDoc();
+      if (!doc) {
+        return;
+      }
+
+      AUTOPLAY_LOG("Dispatch `blocked` event for AudioContext %p", self.get());
+      nsContentUtils::DispatchTrustedEvent(
+        doc,
+        static_cast<DOMEventTargetHelper*>(self),
+        NS_LITERAL_STRING("blocked"),
+        CanBubble::eNo,
+        Cancelable::eNo);
+  });
+  Dispatch(r.forget());
 }
 
 already_AddRefed<Promise>

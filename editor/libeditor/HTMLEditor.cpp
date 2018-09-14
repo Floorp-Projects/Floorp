@@ -2036,15 +2036,21 @@ HTMLEditor::GetHTMLBackgroundColorState(bool* aMixed,
   *aMixed = false;
   aOutColor.Truncate();
 
-  RefPtr<Element> element;
-  int32_t selectedCount;
-  nsAutoString tagName;
-  nsresult rv = GetSelectedOrParentTableElement(tagName,
-                                                &selectedCount,
-                                                getter_AddRefs(element));
-  NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<Selection> selection = GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  while (element) {
+  ErrorResult error;
+  RefPtr<Element> cellOrRowOrTableElement =
+    GetSelectedOrParentTableElement(*selection, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
+  for (RefPtr<Element> element = std::move(cellOrRowOrTableElement);
+       element;
+       element = element->GetParentElement()) {
     // We are in a cell or selected table
     element->GetAttr(kNameSpaceID_None, nsGkAtoms::bgcolor, aOutColor);
 
@@ -2059,8 +2065,8 @@ HTMLEditor::GetHTMLBackgroundColorState(bool* aMixed,
     }
 
     // No color is set, but we need to report visible color inherited
-    // from nested cells/tables, so search up parent chain
-    element = element->GetParentElement();
+    // from nested cells/tables, so search up parent chain so that
+    // let's keep checking the ancestors.
   }
 
   // If no table or cell found, get page body
@@ -2990,31 +2996,41 @@ HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
 {
   MOZ_ASSERT(IsInitialized(), "The HTMLEditor hasn't been initialized yet");
 
+  RefPtr<Selection> selection = GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Find a selected or enclosing table element to set background on
-  RefPtr<Element> element;
-  int32_t selectedCount;
-  nsAutoString tagName;
-  nsresult rv = GetSelectedOrParentTableElement(tagName, &selectedCount,
-                                                getter_AddRefs(element));
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult error;
+  bool isCellSelected = false;
+  RefPtr<Element> cellOrRowOrTableElement =
+    GetSelectedOrParentTableElement(*selection, error, &isCellSelected);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
 
   bool setColor = !aColor.IsEmpty();
-
-  RefPtr<nsAtom> bgColorAtom = NS_Atomize("bgcolor");
-  if (element) {
-    if (selectedCount > 0) {
-      RefPtr<Selection> selection = GetSelection();
-      if (NS_WARN_IF(!selection)) {
-        return NS_ERROR_FAILURE;
-      }
+  RefPtr<Element> rootElementOfBackgroundColor;
+  if (cellOrRowOrTableElement) {
+    rootElementOfBackgroundColor = std::move(cellOrRowOrTableElement);
+    // Needs to set or remove background color of each selected cell elements.
+    // Therefore, just the cell contains selection range, we don't need to
+    // do this.  Note that users can select each cell, but with Selection API,
+    // web apps can select <tr> and <td> at same time. With <table>, looks
+    // odd, though.
+    if (isCellSelected ||
+        cellOrRowOrTableElement->IsAnyOfHTMLElements(nsGkAtoms::table,
+                                                    nsGkAtoms::tr)) {
       IgnoredErrorResult ignoredError;
       RefPtr<Element> cellElement =
         GetFirstSelectedTableCellElement(*selection, ignoredError);
       if (cellElement) {
         if (setColor) {
           while (cellElement) {
-            rv =
-              SetAttributeWithTransaction(*cellElement, *bgColorAtom, aColor);
+            nsresult rv =
+              SetAttributeWithTransaction(*cellElement, *nsGkAtoms::bgcolor,
+                                          aColor);
             if (NS_WARN_IF(NS_FAILED(rv))) {
               return rv;
             }
@@ -3024,7 +3040,8 @@ HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
           return NS_OK;
         }
         while (cellElement) {
-          rv = RemoveAttributeWithTransaction(*cellElement, *bgColorAtom);
+          nsresult rv =
+            RemoveAttributeWithTransaction(*cellElement, *nsGkAtoms::bgcolor);
           if (NS_FAILED(rv)) {
             return rv;
           }
@@ -3037,15 +3054,17 @@ HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
     // If we failed to find a cell, fall through to use originally-found element
   } else {
     // No table element -- set the background color on the body tag
-    element = GetRoot();
-    if (NS_WARN_IF(!element)) {
+    rootElementOfBackgroundColor = GetRoot();
+    if (NS_WARN_IF(!rootElementOfBackgroundColor)) {
       return NS_ERROR_FAILURE;
     }
   }
   // Use the editor method that goes through the transaction system
   return setColor ?
-           SetAttributeWithTransaction(*element, *bgColorAtom, aColor) :
-           RemoveAttributeWithTransaction(*element, *bgColorAtom);
+           SetAttributeWithTransaction(*rootElementOfBackgroundColor,
+                                       *nsGkAtoms::bgcolor, aColor) :
+           RemoveAttributeWithTransaction(*rootElementOfBackgroundColor,
+                                          *nsGkAtoms::bgcolor);
 }
 
 NS_IMETHODIMP
