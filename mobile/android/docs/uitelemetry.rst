@@ -177,6 +177,9 @@ Events
   Sent when a user has accepted the data notification policy. Can be ``false``
   instead of ``true`` if an error occurs.
 
+``pwa.1``
+  When the user interacts with a Progressive Web Application
+
 ``sanitize.1``
   Sent when the user chooses to clear private data.
 
