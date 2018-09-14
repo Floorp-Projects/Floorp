@@ -2465,19 +2465,22 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
     // Extract the initial value, or provide a suitable default.
     RootedVal globalVal(cx);
-    if (args.length() >= 2) {
-        RootedValue valueVal(cx, args.get(1));
+
+    // Initialize with default value.
+    switch (globalType.code()) {
+      case ValType::I32:    globalVal = Val(uint32_t(0)); break;
+      case ValType::I64:    globalVal = Val(uint64_t(0)); break;
+      case ValType::F32:    globalVal = Val(float(0.0));  break;
+      case ValType::F64:    globalVal = Val(double(0.0)); break;
+      case ValType::AnyRef: globalVal = Val(nullptr);     break;
+      case ValType::Ref:    MOZ_CRASH("Ref NYI");
+    }
+
+    // Override with non-undefined value, if provided.
+    RootedValue valueVal(cx, args.get(1));
+    if (!valueVal.isUndefined()) {
         if (!ToWebAssemblyValue(cx, globalType, valueVal, &globalVal)) {
             return false;
-        }
-    } else {
-        switch (globalType.code()) {
-          case ValType::I32:    globalVal = Val(uint32_t(0)); break;
-          case ValType::I64:    globalVal = Val(uint64_t(0)); break;
-          case ValType::F32:    globalVal = Val(float(0.0));  break;
-          case ValType::F64:    globalVal = Val(double(0.0)); break;
-          case ValType::AnyRef: globalVal = Val(nullptr);     break;
-          case ValType::Ref:    MOZ_CRASH("Ref NYI");
         }
     }
 
