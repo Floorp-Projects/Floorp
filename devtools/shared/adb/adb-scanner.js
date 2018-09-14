@@ -11,20 +11,33 @@ const { Devices } = require("devtools/shared/apps/Devices.jsm");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { RuntimeTypes } =
   require("devtools/client/webide/modules/runtime-types");
+const { ADB } = require("devtools/shared/adb/adb");
+loader.lazyRequireGetter(this, "Device", "devtools/shared/adb/adb-device");
 
 const ADBScanner = {
 
   _runtimes: [],
 
   enable() {
+    this._onDeviceConnected = this._onDeviceConnected.bind(this);
+    this._onDeviceDisconnected = this._onDeviceDisconnected.bind(this);
+    EventEmitter.on(ADB, "device-connected", this._onDeviceConnected);
+    EventEmitter.on(ADB, "device-disconnected", this._onDeviceDisconnected);
+
     this._updateRuntimes = this._updateRuntimes.bind(this);
     Devices.on("register", this._updateRuntimes);
     Devices.on("unregister", this._updateRuntimes);
     Devices.on("addon-status-updated", this._updateRuntimes);
+
+    ADB.start().then(() => {
+      ADB.trackDevices();
+    });
     this._updateRuntimes();
   },
 
   disable() {
+    EventEmitter.off(ADB, "device-connected", this._onDeviceConnected);
+    EventEmitter.off(ADB, "device-disconnected", this._onDeviceDisconnected);
     Devices.off("register", this._updateRuntimes);
     Devices.off("unregister", this._updateRuntimes);
     Devices.off("addon-status-updated", this._updateRuntimes);
@@ -32,6 +45,15 @@ const ADBScanner = {
 
   _emitUpdated() {
     this.emit("runtime-list-updated");
+  },
+
+  _onDeviceConnected(deviceId) {
+    const device = new Device(deviceId);
+    Devices.register(deviceId, device);
+  },
+
+  _onDeviceDisconnected(deviceId) {
+    Devices.unregister(deviceId);
   },
 
   _updateRuntimes() {
