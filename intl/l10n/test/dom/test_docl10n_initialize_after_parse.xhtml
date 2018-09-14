@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8"></meta>
+  <title>Test lazy injecting l10n resource links in XHTML environment</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"></link>
+  <script type="application/javascript">
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  document.addEventListener("DOMContentLoaded", async function() {
+    ok(!document.l10n, "l10n not initialized");
+    MozXULElement.insertFTLIfNeeded("crashreporter/aboutcrashes.ftl");
+    ok(document.querySelector("head link[rel=localization][href='crashreporter/aboutcrashes.ftl']"), "link exists");
+    ok(document.l10n, "l10n initialized");
+    await document.l10n.ready;
+
+    ok(document.getElementById("main-desc").textContent.length > 0, "Text updated after init");
+
+    info("Confirming a second call doesn't inject another link");
+    MozXULElement.insertFTLIfNeeded("crashreporter/aboutcrashes.ftl");
+    is(document.querySelectorAll("head link[rel=localization]").length, 1, "link exists");
+
+    SimpleTest.finish();
+  });
+  </script>
+</head>
+<body>
+  <h1 id="main-desc" data-l10n-id="crash-reports-title"></h1>
+</body>
+</html>
