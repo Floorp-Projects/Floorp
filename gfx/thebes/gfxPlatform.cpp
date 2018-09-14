@@ -906,7 +906,7 @@ gfxPlatform::Init()
     }
 
     RegisterStrongMemoryReporter(new GfxMemoryImageReporter());
-    if (XRE_IsParentProcess()) {
+    if (XRE_IsParentProcess() && gfxVars::UseWebRender()) {
       RegisterStrongAsyncMemoryReporter(new WebRenderMemoryReporter());
     }
 
