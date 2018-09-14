@@ -280,6 +280,7 @@ function spoofTheme(aId, aName, aDesc) {
     name: aName,
     description: aDesc,
     headerURL: "http://lwttest.invalid/a.png",
+    footerURL: "http://lwttest.invalid/b.png",
     textcolor: Math.random().toString(),
     accentcolor: Math.random().toString(),
   };

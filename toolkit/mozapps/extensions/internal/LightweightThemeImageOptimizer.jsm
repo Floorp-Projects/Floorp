@@ -27,6 +27,11 @@ var LightweightThemeImageOptimizer = {
     data.headerURL = ImageCropper.getCroppedImageURL(
       data.headerURL, aScreen, ORIGIN_TOP_RIGHT);
 
+    if (data.footerURL) {
+      data.footerURL = ImageCropper.getCroppedImageURL(
+        data.footerURL, aScreen, ORIGIN_BOTTOM_LEFT);
+    }
+
     return data;
   },
 

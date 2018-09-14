@@ -1,5 +1,5 @@
 const MANDATORY = ["id", "name"];
-const OPTIONAL = ["headerURL", "textcolor", "accentcolor",
+const OPTIONAL = ["headerURL", "footerURL", "textcolor", "accentcolor",
                   "iconURL", "previewURL", "author", "description",
                   "homepageURL", "updateURL", "version"];
 
@@ -12,6 +12,7 @@ function dummy(id) {
     id: id || Math.random().toString(),
     name: Math.random().toString(),
     headerURL: "http://lwttest.invalid/a.png",
+    footerURL: "http://lwttest.invalid/b.png",
     textcolor: Math.random().toString(),
     accentcolor: Math.random().toString(),
   };
