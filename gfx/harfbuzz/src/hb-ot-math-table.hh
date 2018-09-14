@@ -27,8 +27,8 @@
 #ifndef HB_OT_MATH_TABLE_HH
 #define HB_OT_MATH_TABLE_HH
 
-#include "hb-open-type-private.hh"
-#include "hb-ot-layout-common-private.hh"
+#include "hb-open-type.hh"
+#include "hb-ot-layout-common.hh"
 #include "hb-ot-math.h"
 
 namespace OT {

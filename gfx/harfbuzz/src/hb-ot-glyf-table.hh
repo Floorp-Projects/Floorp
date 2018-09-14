@@ -27,11 +27,9 @@
 #ifndef HB_OT_GLYF_TABLE_HH
 #define HB_OT_GLYF_TABLE_HH
 
-#include "hb-open-type-private.hh"
+#include "hb-open-type.hh"
 #include "hb-ot-head-table.hh"
 #include "hb-subset-glyf.hh"
-#include "hb-subset-plan.hh"
-#include "hb-subset-private.hh"
 
 namespace OT {
 
@@ -489,6 +487,8 @@ struct glyf
 
   DEFINE_SIZE_ARRAY (0, dataZ);
 };
+
+struct glyf_accelerator_t : glyf::accelerator_t {};
 
 } /* namespace OT */
 

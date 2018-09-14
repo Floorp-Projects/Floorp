@@ -27,7 +27,7 @@
 #ifndef HB_OT_VAR_MVAR_TABLE_HH
 #define HB_OT_VAR_MVAR_TABLE_HH
 
-#include "hb-ot-layout-common-private.hh"
+#include "hb-ot-layout-common.hh"
 
 
 namespace OT {

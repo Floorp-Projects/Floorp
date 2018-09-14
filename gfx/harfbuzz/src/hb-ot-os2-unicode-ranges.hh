@@ -27,7 +27,7 @@
 #ifndef HB_OT_OS2_UNICODE_RANGES_HH
 #define HB_OT_OS2_UNICODE_RANGES_HH
 
-#include "hb-private.hh"
+#include "hb.hh"
 
 namespace OT {
 

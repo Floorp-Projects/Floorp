@@ -394,7 +394,7 @@ for h in headers:
 		print (" * %s" % (l.strip()))
 print (" */")
 print ()
-print ('#include "hb-ot-shape-complex-use-private.hh"')
+print ('#include "hb-ot-shape-complex-use.hh"')
 print ()
 
 total = 0

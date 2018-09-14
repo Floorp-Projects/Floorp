@@ -27,8 +27,7 @@
 #ifndef HB_OT_POST_TABLE_HH
 #define HB_OT_POST_TABLE_HH
 
-#include "hb-open-type-private.hh"
-#include "hb-subset-plan.hh"
+#include "hb-open-type.hh"
 
 #define HB_STRING_ARRAY_NAME format1_names
 #define HB_STRING_ARRAY_LIST "hb-ot-post-macroman.hh"
@@ -294,6 +293,8 @@ struct post
 /*postV2Tail	v2[VAR];*/
   DEFINE_SIZE_STATIC (32);
 };
+
+struct post_accelerator_t : post::accelerator_t {};
 
 } /* namespace OT */
 
