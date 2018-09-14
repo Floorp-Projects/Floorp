@@ -87,9 +87,10 @@ private:
                      uint32_t aWhichFrame,
                      uint32_t aFlags) override;
 
-  IntSize GetImageContainerSize(layers::LayerManager* aManager,
-                                const IntSize& aSize,
-                                uint32_t aFlags) override;
+  Tuple<ImgDrawResult, IntSize>
+    GetImageContainerSize(layers::LayerManager* aManager,
+                          const IntSize& aSize,
+                          uint32_t aFlags) override;
 
   /// Attempt to find a matching cached surface in the SurfaceCache.
   already_AddRefed<SourceSurface>
