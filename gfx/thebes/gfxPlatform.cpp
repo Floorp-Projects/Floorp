@@ -663,8 +663,18 @@ struct WebRenderMemoryReporterHelper {
 
   void Report(size_t aBytes, const char* aName) const
   {
+    // Generally, memory reporters pass the empty string as the process name to
+    // indicate "current process". However, if we're using a GPU process, the
+    // measurements will actually take place in that process, and it's easier to
+    // just note that here rather than trying to invoke the memory reporter in
+    // the GPU process.
+    nsAutoCString processName;
+    if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+      GPUParent::GetGPUProcessName(processName);
+    }
+
     nsPrintfCString path("explicit/gfx/webrender/%s", aName);
-    mCallback->Callback(EmptyCString(), path,
+    mCallback->Callback(processName, path,
                         nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
                         aBytes, EmptyCString(), mData);
   }
