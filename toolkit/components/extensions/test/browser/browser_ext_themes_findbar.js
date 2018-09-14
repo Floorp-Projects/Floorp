@@ -28,7 +28,7 @@ add_task(async function test_support_toolbar_properties_on_findbar() {
   await extension.startup();
   await gBrowser.getFindBar();
 
-  let findbar_button = document.getAnonymousElementByAttribute(gFindBar, "anonid", "highlight");
+  let findbar_button = gFindBar.getElement("highlight");
 
   info("Checking findbar background is set as toolbar color");
   Assert.equal(window.getComputedStyle(gFindBar).backgroundColor,
@@ -73,14 +73,11 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
   await extension.startup();
   await gBrowser.getFindBar();
 
-  let findbar_textbox =
-    document.getAnonymousElementByAttribute(gFindBar, "anonid", "findbar-textbox");
+  let findbar_textbox = gFindBar.getElement("findbar-textbox");
 
-  let findbar_prev_button =
-    document.getAnonymousElementByAttribute(gFindBar, "anonid", "find-previous");
+  let findbar_prev_button = gFindBar.getElement("find-previous");
 
-  let findbar_next_button =
-    document.getAnonymousElementByAttribute(gFindBar, "anonid", "find-next");
+  let findbar_next_button = gFindBar.getElement("find-next");
 
   info("Checking findbar textbox background is set as toolbar field background color");
   Assert.equal(window.getComputedStyle(findbar_textbox).backgroundColor,
