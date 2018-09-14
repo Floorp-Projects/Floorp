@@ -3570,10 +3570,11 @@ GetFullscreenError(CallerType aCallerType)
   return nullptr;
 }
 
-void
-Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aError)
+already_AddRefed<Promise>
+Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aRv)
 {
-  auto request = FullscreenRequest::Create(this, aCallerType);
+  auto request = FullscreenRequest::Create(this, aCallerType, aRv);
+  RefPtr<Promise> promise = request->GetPromise();
   // Only grant fullscreen requests if this is called from inside a trusted
   // event handler (i.e. inside an event handler for a user initiated event).
   // This stops the fullscreen from being abused similar to the popups of old,
@@ -3583,9 +3584,10 @@ Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aError)
   // from this restriction.
   if (const char* error = GetFullscreenError(aCallerType)) {
     request->Reject(error);
-    return;
+  } else {
+    OwnerDoc()->AsyncRequestFullscreen(std::move(request));
   }
-  OwnerDoc()->AsyncRequestFullscreen(std::move(request));
+  return promise.forget();
 }
 
 void

@@ -262,9 +262,9 @@ Element implements GeometryUtils;
 // https://fullscreen.spec.whatwg.org/#api
 partial interface Element {
   [Throws, Func="nsDocument::IsUnprefixedFullscreenEnabled", NeedsCallerType]
-  void requestFullscreen();
+  Promise<void> requestFullscreen();
   [Throws, BinaryName="requestFullscreen", NeedsCallerType]
-  void mozRequestFullScreen();
+  Promise<void> mozRequestFullScreen();
 
   // Events handlers
   [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
