@@ -11145,7 +11145,13 @@ bool
 nsIDocument::FullscreenElementReadyCheck(const FullscreenRequest& aRequest)
 {
   Element* elem = aRequest.Element();
+  // Strictly speaking, this isn't part of the fullscreen element ready
+  // check in the spec, but per steps in the spec, when an element which
+  // is already the fullscreen element requests fullscreen, nothing
+  // should change and no event should be dispatched, but we still need
+  // to resolve the returned promise.
   if (elem == FullscreenStackTop()) {
+    aRequest.MayResolvePromise();
     return false;
   }
   if (!elem->IsInComposedDoc()) {
@@ -11190,6 +11196,7 @@ nsIDocument::FullscreenElementReadyCheck(const FullscreenRequest& aRequest)
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     NS_WARNING("Failed to retrieve focus manager in fullscreen request.");
+    aRequest.MayRejectPromise();
     return false;
   }
   if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(fm->GetFocusedElement())) {
@@ -11266,9 +11273,10 @@ public:
         nsCOMPtr<nsIDocShellTreeItem>
           docShell = mCurrent->Document()->GetDocShell();
         if (!docShell) {
-          // Always automatically drop documents which has been
-          // detached from the doc shell.
-          TakeAndNextInternal();
+          // Always automatically drop fullscreen requests which is from
+          // a document detached from the doc shell.
+          UniquePtr<FullscreenRequest> request = TakeAndNextInternal();
+          request->MayRejectPromise();
         } else {
           while (docShell && docShell != mRootShellForIteration) {
             docShell->GetParent(getter_AddRefs(docShell));
@@ -11346,6 +11354,7 @@ nsIDocument::RequestFullscreen(UniquePtr<FullscreenRequest> aRequest)
 {
   nsCOMPtr<nsPIDOMWindowOuter> rootWin = GetRootWindow(this);
   if (!rootWin) {
+    aRequest->MayRejectPromise();
     return;
   }
 
@@ -11405,7 +11414,8 @@ ClearPendingFullscreenRequests(nsIDocument* aDoc)
   PendingFullscreenRequestList::Iterator iter(
     aDoc, PendingFullscreenRequestList::eInclusiveDescendants);
   while (!iter.AtEnd()) {
-    iter.TakeAndNext();
+    UniquePtr<FullscreenRequest> request = iter.TakeAndNext();
+    request->MayRejectPromise();
   }
 }
 
@@ -11505,6 +11515,7 @@ nsIDocument::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest)
   for (nsIDocument* d : Reversed(changed)) {
     DispatchFullscreenChange(d, d->FullscreenStackTop());
   }
+  aRequest->MayResolvePromise();
   return true;
 }
 

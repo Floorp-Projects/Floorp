@@ -15,6 +15,7 @@
 #include "mozilla/PendingFullscreenEvent.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Promise.h"
 #include "nsIDocument.h"
 #include "nsIScriptError.h"
 
@@ -22,16 +23,22 @@ namespace mozilla {
 
 struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
 {
+  typedef dom::Promise Promise;
+
   static UniquePtr<FullscreenRequest> Create(Element* aElement,
-                                             dom::CallerType aCallerType)
+                                             dom::CallerType aCallerType,
+                                             ErrorResult& aRv)
   {
-    return WrapUnique(new FullscreenRequest(aElement, aCallerType, true));
+    RefPtr<Promise> promise = Promise::Create(aElement->GetOwnerGlobal(), aRv);
+    return WrapUnique(new FullscreenRequest(aElement, promise.forget(),
+                                            aCallerType, true));
   }
 
   static UniquePtr<FullscreenRequest> CreateForRemote(Element* aElement)
   {
-    return WrapUnique(
-      new FullscreenRequest(aElement, dom::CallerType::NonSystem, false));
+    return WrapUnique(new FullscreenRequest(aElement, nullptr,
+                                            dom::CallerType::NonSystem,
+                                            false));
   }
 
   FullscreenRequest(const FullscreenRequest&) = delete;
@@ -39,10 +46,29 @@ struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
   ~FullscreenRequest()
   {
     MOZ_COUNT_DTOR(FullscreenRequest);
+    MOZ_ASSERT_IF(mPromise,
+                  mPromise->State() != Promise::PromiseState::Pending);
   }
 
   dom::Element* Element() const { return mElement; }
   nsIDocument* Document() const { return mDocument; }
+  dom::Promise* GetPromise() const { return mPromise; }
+
+  void MayResolvePromise() const
+  {
+    if (mPromise) {
+      MOZ_ASSERT(mPromise->State() == Promise::PromiseState::Pending);
+      mPromise->MaybeResolveWithUndefined();
+    }
+  }
+
+  void MayRejectPromise() const
+  {
+    if (mPromise) {
+      MOZ_ASSERT(mPromise->State() == Promise::PromiseState::Pending);
+      mPromise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+    }
+  }
 
   // Reject the fullscreen request with the given reason.
   // It will dispatch the fullscreenerror event.
@@ -54,6 +80,7 @@ struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
       presContext->RefreshDriver()->
         ScheduleFullscreenEvent(std::move(pendingEvent));
     }
+    MayRejectPromise();
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     NS_LITERAL_CSTRING("DOM"),
                                     mDocument,
@@ -64,6 +91,7 @@ struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
 private:
   RefPtr<dom::Element> mElement;
   RefPtr<nsIDocument> mDocument;
+  RefPtr<dom::Promise> mPromise;
 
 public:
   // This value should be true if the fullscreen request is
@@ -79,10 +107,12 @@ public:
 
 private:
   FullscreenRequest(dom::Element* aElement,
+                    already_AddRefed<dom::Promise> aPromise,
                     dom::CallerType aCallerType,
                     bool aShouldNotifyNewOrigin)
     : mElement(aElement)
     , mDocument(aElement->OwnerDoc())
+    , mPromise(aPromise)
     , mCallerType(aCallerType)
     , mShouldNotifyNewOrigin(aShouldNotifyNewOrigin)
   {
