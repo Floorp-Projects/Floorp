@@ -69,7 +69,7 @@ a11y::ProxyVirtualCursorChangeEvent(ProxyAccessible*, ProxyAccessible*,
 }
 
 void
-a11y::ProxyScrollingEvent(ProxyAccessible*, uint32_t, uint32_t, uint32_t, uint32_t)
+a11y::ProxyScrollingEvent(ProxyAccessible*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t)
 {
 }
 #endif

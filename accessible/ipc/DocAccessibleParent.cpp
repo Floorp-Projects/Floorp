@@ -451,7 +451,7 @@ DocAccessibleParent::RecvScrollingEvent(const uint64_t& aID,
   }
 
 #if defined(ANDROID)
-  ProxyScrollingEvent(target, aScrollX, aScrollY, aMaxScrollX, aMaxScrollY);
+  ProxyScrollingEvent(target, aType, aScrollX, aScrollY, aMaxScrollX, aMaxScrollY);
 #endif
 
   if (!nsCoreUtils::AccEventObserversExist()) {
