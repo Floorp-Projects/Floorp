@@ -6,8 +6,6 @@
 const { Cc, Ci } = require("chrome");
 
 loader.lazyRequireGetter(this, "Services");
-loader.lazyRequireGetter(this, "promise");
-loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm", true);
@@ -239,30 +237,5 @@ function getScreenDimensions() {
   return 11;
 }
 
-function getSetting(name) {
-  const deferred = defer();
-
-  if ("@mozilla.org/settingsService;1" in Cc) {
-    let settingsService;
-
-    // TODO bug 1205797, make this work in child processes.
-    try {
-      settingsService = Cc["@mozilla.org/settingsService;1"]
-                          .getService(Ci.nsISettingsService);
-    } catch (e) {
-      return promise.reject(e);
-    }
-
-    settingsService.createLock().get(name, {
-      handle: (_, value) => deferred.resolve(value),
-      handleError: (error) => deferred.reject(error),
-    });
-  } else {
-    deferred.reject(new Error("No settings service"));
-  }
-  return deferred.promise;
-}
-
 exports.getSystemInfo = getSystemInfo;
-exports.getSetting = getSetting;
 exports.getScreenDimensions = getScreenDimensions;

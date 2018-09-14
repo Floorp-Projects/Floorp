@@ -241,7 +241,7 @@ public:
     MOZ_ASSERT(IsTextType());
   }
 
-  bool
+  ImgDrawResult
   CreateWebRenderCommands(nsDisplayItem* aItem,
                           wr::DisplayListBuilder& aBuilder,
                           wr::IpcResourceUpdateQueue& aResources,
@@ -291,7 +291,7 @@ public:
   IsImageContainerAvailable(layers::LayerManager* aManager, uint32_t aFlags);
 
 private:
-  bool
+  ImgDrawResult
   CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
                                   wr::DisplayListBuilder& aBuilder,
                                   wr::IpcResourceUpdateQueue& aResources,
@@ -349,7 +349,7 @@ private:
   int32_t mListStyleType;
 };
 
-bool
+ImgDrawResult
 BulletRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
                                         wr::DisplayListBuilder& aBuilder,
                                         wr::IpcResourceUpdateQueue& aResources,
@@ -360,14 +360,19 @@ BulletRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
   if (IsImageType()) {
     return CreateWebRenderCommandsForImage(aItem, aBuilder, aResources,
                                     aSc, aManager, aDisplayListBuilder);
-  } else if (IsPathType()) {
-    return CreateWebRenderCommandsForPath(aItem, aBuilder, aResources,
-                                   aSc, aManager, aDisplayListBuilder);
+  }
+
+  bool success;
+  if (IsPathType()) {
+    success = CreateWebRenderCommandsForPath(aItem, aBuilder, aResources, aSc,
+                                             aManager, aDisplayListBuilder);
   } else {
     MOZ_ASSERT(IsTextType());
-    return CreateWebRenderCommandsForText(aItem, aBuilder, aResources, aSc,
-                                          aManager, aDisplayListBuilder);
+    success = CreateWebRenderCommandsForText(aItem, aBuilder, aResources, aSc,
+                                             aManager, aDisplayListBuilder);
   }
+
+  return success ? ImgDrawResult::SUCCESS : ImgDrawResult::NOT_SUPPORTED;
 }
 
 ImgDrawResult
@@ -454,7 +459,7 @@ BulletRenderer::IsImageContainerAvailable(layers::LayerManager* aManager, uint32
   return mImage->IsImageContainerAvailable(aManager, aFlags);
 }
 
-bool
+ImgDrawResult
 BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
                                                 wr::DisplayListBuilder& aBuilder,
                                                 wr::IpcResourceUpdateQueue& aResources,
@@ -479,10 +484,13 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
   gfx::IntSize decodeSize =
     nsLayoutUtils::ComputeImageContainerDrawingParameters(mImage, aItem->Frame(), destRect,
                                                           aSc, flags, svgContext);
-  RefPtr<layers::ImageContainer> container =
-    mImage->GetImageContainerAtSize(aManager, decodeSize, svgContext, flags);
+
+  RefPtr<layers::ImageContainer> container;
+  ImgDrawResult drawResult =
+    mImage->GetImageContainerAtSize(aManager, decodeSize, svgContext,
+                                    flags, getter_AddRefs(container));
   if (!container) {
-    return false;
+    return drawResult;
   }
 
   mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
@@ -491,7 +499,7 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
   Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageKey(
     aItem, container, aBuilder, aResources, rendering, aSc, size, Nothing());
   if (key.isNothing()) {
-    return true;  // Nothing to do
+    return drawResult;
   }
 
   wr::LayoutRect dest = wr::ToRoundedLayoutRect(destRect);
@@ -499,7 +507,7 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
   aBuilder.PushImage(
     dest, dest, !aItem->BackfaceIsHidden(), rendering, key.value());
 
-  return true;
+  return drawResult;
 }
 
 bool
@@ -665,8 +673,15 @@ nsDisplayBullet::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
     return false;
   }
 
-  return br->CreateWebRenderCommands(this, aBuilder, aResources, aSc,
-                                     aManager, aDisplayListBuilder);
+  ImgDrawResult drawResult =
+    br->CreateWebRenderCommands(this, aBuilder, aResources, aSc,
+                                aManager, aDisplayListBuilder);
+  if (drawResult == ImgDrawResult::NOT_SUPPORTED) {
+    return false;
+  }
+
+  nsDisplayBulletGeometry::UpdateDrawResult(this, drawResult);
+  return true;
 }
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,

@@ -233,7 +233,7 @@ struct nsCSSRendering
     const nsRect& aBorderArea,
     mozilla::ComputedStyle* aComputedStyle);
 
-  static bool CreateWebRenderCommandsForBorder(
+  static ImgDrawResult CreateWebRenderCommandsForBorder(
     nsDisplayItem* aItem,
     nsIFrame* aForFrame,
     const nsRect& aBorderArea,
