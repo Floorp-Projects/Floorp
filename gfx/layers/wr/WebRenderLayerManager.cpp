@@ -637,8 +637,12 @@ WebRenderLayerManager::FlushRendering()
   }
   MOZ_ASSERT(mWidget);
 
-  // When DirectComposition and compositor window are used, we do not need to do sync FlushRendering.
-  if (WrBridge()->GetCompositorUseDComp()) {
+  // If value of IsResizingNativeWidget() is nothing, we assume that resizing might happen.
+  bool resizing = mWidget && mWidget->IsResizingNativeWidget().valueOr(true);
+
+  // Limit async FlushRendering to !resizing and Win DComp.
+  // XXX relax the limitation
+  if (WrBridge()->GetCompositorUseDComp() && !resizing) {
     cBridge->SendFlushRenderingAsync();
   } else if (mWidget->SynchronouslyRepaintOnResize() || gfxPrefs::LayersForceSynchronousResize()) {
     cBridge->SendFlushRendering();
