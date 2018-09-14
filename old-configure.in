@@ -2040,13 +2040,8 @@ if test -n "$MOZ_GRAPHENE"; then
     AC_DEFINE(MOZ_GRAPHENE)
 fi
 
-if test -n "$MOZ_MULET"; then
-    AC_DEFINE(MOZ_MULET)
-fi
-
 AC_SUBST(MOZ_PHOENIX)
 AC_SUBST(MOZ_XULRUNNER)
-AC_SUBST(MOZ_MULET)
 
 dnl ========================================================
 dnl Ensure Android SDK and build-tools versions depending on
