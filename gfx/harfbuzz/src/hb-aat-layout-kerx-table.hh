@@ -28,8 +28,8 @@
 #ifndef HB_AAT_LAYOUT_KERX_TABLE_HH
 #define HB_AAT_LAYOUT_KERX_TABLE_HH
 
-#include "hb-open-type-private.hh"
-#include "hb-aat-layout-common-private.hh"
+#include "hb-open-type.hh"
+#include "hb-aat-layout-common.hh"
 #include "hb-aat-layout-ankr-table.hh"
 
 /*

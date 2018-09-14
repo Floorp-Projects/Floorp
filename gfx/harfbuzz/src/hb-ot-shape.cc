@@ -27,21 +27,21 @@
  */
 
 #define HB_SHAPER ot
-#define hb_ot_face_data_t hb_ot_layout_t
 #define hb_ot_shape_plan_data_t hb_ot_shape_plan_t
-#include "hb-shaper-impl-private.hh"
+#include "hb-shaper-impl.hh"
 
-#include "hb-ot-shape-private.hh"
-#include "hb-ot-shape-complex-private.hh"
-#include "hb-ot-shape-fallback-private.hh"
-#include "hb-ot-shape-normalize-private.hh"
+#include "hb-ot-shape.hh"
+#include "hb-ot-shape-complex.hh"
+#include "hb-ot-shape-fallback.hh"
+#include "hb-ot-shape-normalize.hh"
 
-#include "hb-ot-layout-private.hh"
-#include "hb-unicode-private.hh"
-#include "hb-set-private.hh"
+#include "hb-ot-face.hh"
+#include "hb-ot-layout.hh"
+#include "hb-unicode.hh"
+#include "hb-set.hh"
 
-#include "hb-ot-layout-gsubgpos-private.hh"
-#include "hb-aat-layout-private.hh"
+#include "hb-ot-layout-gsubgpos.hh"
+#include "hb-aat-layout.hh"
 
 static hb_tag_t common_features[] = {
   HB_TAG('c','c','m','p'),
@@ -135,13 +135,13 @@ HB_SHAPER_DATA_ENSURE_DEFINE(ot, face)
 hb_ot_face_data_t *
 _hb_ot_shaper_face_data_create (hb_face_t *face)
 {
-  return _hb_ot_layout_create (face);
+  return _hb_ot_face_data_create (face);
 }
 
 void
 _hb_ot_shaper_face_data_destroy (hb_ot_face_data_t *data)
 {
-  _hb_ot_layout_destroy (data);
+  _hb_ot_face_data_destroy (data);
 }
 
 

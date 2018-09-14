@@ -27,7 +27,7 @@
 #ifndef HB_OT_VAR_FVAR_TABLE_HH
 #define HB_OT_VAR_FVAR_TABLE_HH
 
-#include "hb-open-type-private.hh"
+#include "hb-open-type.hh"
 
 /*
  * fvar -- Font Variations

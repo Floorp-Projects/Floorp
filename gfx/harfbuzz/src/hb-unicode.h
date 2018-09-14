@@ -40,6 +40,14 @@
 HB_BEGIN_DECLS
 
 
+/**
+ * HB_UNICODE_MAX
+ *
+ * Since: 1.9.0
+ */
+#define HB_UNICODE_MAX 0x10FFFFu
+
+
 /* hb_unicode_general_category_t */
 
 /* Unicode Character Database property: General_Category (gc) */

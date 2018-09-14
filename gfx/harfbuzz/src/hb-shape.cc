@@ -26,13 +26,13 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-private.hh"
+#include "hb.hh"
 
-#include "hb-shaper-private.hh"
-#include "hb-shape-plan-private.hh"
-#include "hb-buffer-private.hh"
-#include "hb-font-private.hh"
-#include "hb-machinery-private.hh"
+#include "hb-shaper.hh"
+#include "hb-shape-plan.hh"
+#include "hb-buffer.hh"
+#include "hb-font.hh"
+#include "hb-machinery.hh"
 
 /**
  * SECTION:hb-shape
@@ -46,8 +46,10 @@
  * contains the output glyphs and their positions.
  **/
 
-
+#ifdef HB_USE_ATEXIT
 static void free_static_shaper_list (void);
+#endif
+
 static const char *nil_shaper_list[] = {nullptr};
 
 static struct hb_shaper_list_lazy_loader_t : hb_lazy_loader_t<const char *,

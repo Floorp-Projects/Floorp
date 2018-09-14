@@ -27,7 +27,7 @@
  */
 
 #define HB_SHAPER graphite2
-#include "hb-shaper-impl-private.hh"
+#include "hb-shaper-impl.hh"
 
 #include "hb-graphite2.h"
 

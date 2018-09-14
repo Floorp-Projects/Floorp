@@ -24,9 +24,9 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-ot-shape-normalize-private.hh"
-#include "hb-ot-shape-complex-private.hh"
-#include "hb-ot-shape-private.hh"
+#include "hb-ot-shape-normalize.hh"
+#include "hb-ot-shape-complex.hh"
+#include "hb-ot-shape.hh"
 
 
 /*

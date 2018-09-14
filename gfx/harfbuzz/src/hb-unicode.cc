@@ -28,9 +28,9 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-private.hh"
+#include "hb.hh"
 
-#include "hb-unicode-private.hh"
+#include "hb-unicode.hh"
 
 
 
@@ -450,7 +450,7 @@ hb_unicode_decompose_compatibility (hb_unicode_funcs_t *ufuncs,
 }
 
 
-/* See hb-unicode-private.hh for details. */
+/* See hb-unicode.hh for details. */
 const uint8_t
 _hb_modified_combining_class[256] =
 {

@@ -25,7 +25,7 @@
  */
 
 #define HB_SHAPER fallback
-#include "hb-shaper-impl-private.hh"
+#include "hb-shaper-impl.hh"
 
 
 HB_SHAPER_DATA_ENSURE_DEFINE(fallback, face)

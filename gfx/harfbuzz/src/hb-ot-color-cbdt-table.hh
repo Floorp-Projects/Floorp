@@ -27,7 +27,7 @@
 #ifndef HB_OT_COLOR_CBDT_TABLE_HH
 #define HB_OT_COLOR_CBDT_TABLE_HH
 
-#include "hb-open-type-private.hh"
+#include "hb-open-type.hh"
 
 /*
  * CBLC -- Color Bitmap Location
@@ -532,6 +532,8 @@ struct CBDT
   public:
   DEFINE_SIZE_ARRAY(4, dataZ);
 };
+
+struct CBDT_accelerator_t : CBDT::accelerator_t {};
 
 } /* namespace OT */
 

@@ -23,14 +23,14 @@ grep -v 'hb[.]h:' |
 grep . >&2 && stat=1
 
 
-echo 'Checking that source files #include "hb-*private.hh" first (or none)'
+echo 'Checking that source files #include a private header first (or none)'
 
 for x in $HBSOURCES; do
 	test -f "$srcdir/$x" -a ! -f "$x" && x="$srcdir/$x"
-	grep '#.*\<include\>' "$x" /dev/null | grep -v 'include _' | head -n 1
+	grep '#.*\<include\>' "$x" /dev/null | head -n 1
 done |
-grep -v '"hb-.*private[.]hh"' |
-grep -v 'hb-private[.]hh:' |
+grep -v '"hb-.*[.]hh"' |
+grep -v 'hb[.]hh' |
 grep . >&2 && stat=1
 
 

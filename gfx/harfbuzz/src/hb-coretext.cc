@@ -28,8 +28,8 @@
 
 #define HB_SHAPER coretext
 
-#include "hb-private.hh"
-#include "hb-shaper-impl-private.hh"
+#include "hb.hh"
+#include "hb-shaper-impl.hh"
 
 #include "hb-coretext.h"
 #include <math.h>

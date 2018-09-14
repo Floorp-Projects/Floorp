@@ -24,7 +24,7 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-ot-shape-complex-private.hh"
+#include "hb-ot-shape-complex.hh"
 
 
 /* Hangul shaper */
