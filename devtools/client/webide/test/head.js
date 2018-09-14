@@ -22,7 +22,7 @@ if (window.location === AppConstants.BROWSER_CHROME_URL) {
 Services.prefs.setBoolPref("devtools.webide.enabled", true);
 Services.prefs.setBoolPref("devtools.webide.enableLocalRuntime", true);
 
-Services.prefs.setCharPref("devtools.webide.adbExtensionURL", TEST_BASE + "addons/adbhelper-#OS#.xpi");
+Services.prefs.setCharPref("devtools.webide.adbExtensionURL", TEST_BASE + "addons/adb-extension-#OS#.xpi");
 Services.prefs.setCharPref("devtools.webide.templatesURL", TEST_BASE + "templates.json");
 Services.prefs.setCharPref("devtools.devices.url", TEST_BASE + "browser_devices.json");
 
@@ -180,6 +180,10 @@ function getRuntimeWindow(win) {
 
 function getProjectWindow(win) {
   return win.document.querySelector("#project-listing-panel-details").contentWindow;
+}
+
+function getAddonsDocument(win) {
+  return win.document.querySelector("#deck-panel-addons").contentDocument;
 }
 
 function connectToLocalRuntime(win) {
