@@ -6790,6 +6790,11 @@ public:
                     gfxContext* aCtx,
                     LayerManager* aManager);
 
+  void PaintWithContentsPaintCallback(nsDisplayListBuilder* aBuilder,
+                                      gfxContext* aCtx,
+                                      const std::function<void()>& aPaintChildren);
+
+
   /*
    * Paint mask onto aMaskContext in mFrame's coordinate space and
    * return whether the mask layer was painted successfully.

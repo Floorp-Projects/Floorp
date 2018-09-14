@@ -907,16 +907,14 @@ Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect
     }
     case DisplayItemType::TYPE_MASK: {
       GP("Paint Mask\n");
-      // We don't currently support doing invalidation inside nsDisplayMask
-      // for now just paint it as a single item
-      BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
-      if (data->mLayerManager->GetRoot()) {
-        data->mLayerManager->BeginTransaction();
-        static_cast<nsDisplayMask*>(aItem)->PaintAsLayer(mDisplayListBuilder,
-                                                       aContext, data->mLayerManager);
-        if (data->mLayerManager->InTransaction()) {
-          data->mLayerManager->AbortTransaction();
-        }
+      auto maskItem = static_cast<nsDisplayMask*>(aItem);
+      if (maskItem->IsValidMask()) {
+        maskItem->PaintWithContentsPaintCallback(mDisplayListBuilder, aContext, [&] {
+          GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(), aItem->GetPerFrameKey());
+          aContext->GetDrawTarget()->FlushItem(aItemBounds);
+          aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr, aContext, aRecorder);
+          GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(), aItem->GetPerFrameKey());
+          });
         aContext->GetDrawTarget()->FlushItem(aItemBounds);
       }
       break;
@@ -1110,8 +1108,7 @@ Grouper::ConstructItemInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
   nsDisplayList* children = aItem->GetChildren();
   BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
 
-  if (aItem->GetType() == DisplayItemType::TYPE_FILTER ||
-      aItem->GetType() == DisplayItemType::TYPE_MASK) {
+  if (aItem->GetType() == DisplayItemType::TYPE_FILTER) {
     gfx::Size scale(1, 1);
     // If ComputeDifferences finds any change, we invalidate the entire container item.
     // This is needed because blob merging requires the entire item to be within the invalid region.
