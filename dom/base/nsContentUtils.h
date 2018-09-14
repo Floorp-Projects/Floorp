@@ -203,6 +203,7 @@ class nsContentUtils
   typedef mozilla::dom::Element Element;
   typedef mozilla::Cancelable Cancelable;
   typedef mozilla::CanBubble CanBubble;
+  typedef mozilla::Composed Composed;
   typedef mozilla::ChromeOnlyDispatch ChromeOnlyDispatch;
   typedef mozilla::EventMessage EventMessage;
   typedef mozilla::TimeDuration TimeDuration;
@@ -1345,6 +1346,7 @@ public:
    * @param aEventName     The name of the event.
    * @param aCanBubble     Whether the event can bubble.
    * @param aCancelable    Is the event cancelable.
+   * @param aCopmosed      Is the event composed.
    * @param aDefaultAction Set to true if default action should be taken,
    *                       see EventTarget::DispatchEvent.
    */
@@ -1353,7 +1355,20 @@ public:
                                        const nsAString& aEventName,
                                        CanBubble,
                                        Cancelable,
+                                       Composed aComposed = Composed::eDefault,
                                        bool* aDefaultAction = nullptr);
+
+  static nsresult DispatchTrustedEvent(nsIDocument* aDoc,
+                                       nsISupports* aTarget,
+                                       const nsAString& aEventName,
+                                       CanBubble aCanBubble,
+                                       Cancelable aCancelable,
+                                       bool* aDefaultAction)
+  {
+    return DispatchTrustedEvent(aDoc, aTarget, aEventName,
+                                aCanBubble, aCancelable,
+                                Composed::eDefault, aDefaultAction);
+  }
 
   /**
    * This method creates and dispatches a trusted event using an event message.
@@ -3339,6 +3354,7 @@ private:
                                 const nsAString& aEventName,
                                 CanBubble,
                                 Cancelable,
+                                Composed,
                                 Trusted,
                                 bool* aDefaultAction = nullptr,
                                 ChromeOnlyDispatch = ChromeOnlyDispatch::eNo);

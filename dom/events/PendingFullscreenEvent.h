@@ -52,7 +52,7 @@ public:
     }
     Unused << nsContentUtils::DispatchTrustedEvent(
       mDocument, mDocument, name,
-      CanBubble::eYes, Cancelable::eNo, nullptr);
+      CanBubble::eYes, Cancelable::eNo, Composed::eYes);
   }
 
 private:
