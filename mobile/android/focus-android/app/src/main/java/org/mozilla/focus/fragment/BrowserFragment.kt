@@ -890,7 +890,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                 }
 
                 // We can't show a snackbar outside of the app. So let's show a toast instead.
-                Toast.makeText(context, R.string.feedback_erase, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.feedback_erase_custom_tab, Toast.LENGTH_SHORT).show()
             } else {
                 // Just go back to the home screen.
                 TelemetryWrapper.eraseBackToHomeEvent()

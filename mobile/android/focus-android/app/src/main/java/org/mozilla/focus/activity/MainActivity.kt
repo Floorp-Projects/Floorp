@@ -110,12 +110,14 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             val showFirstrun = Settings.getInstance(this@MainActivity).shouldShowFirstrun()
 
             if (t.isEmpty()) {
-                // There's no active session. Show the URL input screen so that the user can
-                // start a new session.
-                if (showFirstrun) {
-                    showFirstrun()
-                } else {
-                    showUrlInputScreen()
+                if (!isCustomTabMode) {
+                    // There's no active session. Show the URL input screen so that the user can
+                    // start a new session.
+                    if (showFirstrun) {
+                        showFirstrun()
+                    } else {
+                        showUrlInputScreen()
+                    }
                 }
 
                 wasSessionsEmpty = true
