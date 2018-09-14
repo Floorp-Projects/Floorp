@@ -38,10 +38,11 @@ ChromeUtils.defineModuleGetter(this, "PerTestCoverageUtils",
   "resource://testing-common/PerTestCoverageUtils.jsm");
 
 try {
-    Cu.importGlobalProperties(["DOMParser", "File", "InspectorUtils", "NodeFilter"]);
+    Cu.importGlobalProperties(["DOMParser", "File", "InspectorUtils",
+                               "NodeFilter", "PromiseDebugging"]);
 } catch (e) {
- // We are in window scope hence DOMParser, File, InspectorUtils and NodeFilter
- // are already defined, So do nothing.
+  // We are in window scope hence DOMParser, File, InspectorUtils, NodeFilter,
+  // and PromiseDebugging are already defined, So do nothing.
 }
 
 // Allow stuff from this scope to be accessed from non-privileged scopes. This
@@ -691,6 +692,8 @@ SpecialPowersAPI.prototype = {
   },
 
   get InspectorUtils() { return wrapPrivileged(InspectorUtils); },
+
+  get PromiseDebugging() { return wrapPrivileged(PromiseDebugging); },
 
   waitForCrashes(aExpectingProcessCrash) {
     return new Promise((resolve, reject) => {

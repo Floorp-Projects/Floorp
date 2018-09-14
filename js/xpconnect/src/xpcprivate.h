@@ -2630,6 +2630,7 @@ struct GlobalProperties {
     bool MessageChannel: 1;
     bool Node : 1;
     bool NodeFilter : 1;
+    bool PromiseDebugging : 1;
     bool TextDecoder : 1;
     bool TextEncoder : 1;
     bool URL : 1;
