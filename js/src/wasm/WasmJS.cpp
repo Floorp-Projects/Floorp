@@ -2421,6 +2421,13 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject obj(cx, &args[0].toObject());
 
+    // Extract properties in lexicographic order per spec.
+
+    RootedValue mutableVal(cx);
+    if (!JS_GetProperty(cx, obj, "mutable", &mutableVal)) {
+        return false;
+    }
+
     RootedValue typeVal(cx);
     if (!JS_GetProperty(cx, obj, "value", &typeVal)) {
         return false;
@@ -2453,11 +2460,6 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
 #endif
     } else {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GLOBAL_TYPE);
-        return false;
-    }
-
-    RootedValue mutableVal(cx);
-    if (!JS_GetProperty(cx, obj, "mutable", &mutableVal)) {
         return false;
     }
 
