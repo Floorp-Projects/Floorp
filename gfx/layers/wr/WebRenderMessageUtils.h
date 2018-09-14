@@ -177,12 +177,6 @@ struct ParamTraits<mozilla::wr::WebRenderError>
 {
 };
 
-template<>
-struct ParamTraits<mozilla::wr::MemoryReport>
-  : public PlainOldDataSerializer<mozilla::wr::MemoryReport>
-{
-};
-
 } // namespace IPC
 
 #endif // GFX_WEBRENDERMESSAGEUTILS_H
