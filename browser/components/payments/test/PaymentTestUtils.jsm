@@ -181,16 +181,6 @@ var PaymentTestUtils = {
       EventUtils.synthesizeKey(option.textContent, {}, content.window);
     },
 
-    selectPaymentOptionByGuid: guid => {
-      let doc = content.document;
-      let methodPicker = doc.querySelector("payment-method-picker");
-      let select = Cu.waiveXrays(methodPicker).dropdown.popupBox;
-      let option = select.querySelector(`[guid="${guid}"]`);
-      select.focus();
-      // eslint-disable-next-line no-undef
-      EventUtils.synthesizeKey(option.label, {}, content.window);
-    },
-
     /**
      * Click the primary button for the current page
      *

@@ -9,7 +9,6 @@ import paymentRequest from "../paymentRequest.js";
 
 import "../components/currency-amount.js";
 import "../components/payment-request-page.js";
-import "../components/accepted-cards.js";
 import "./address-picker.js";
 import "./address-form.js";
 import "./basic-card-form.js";
@@ -53,7 +52,6 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     this._payerRelatedEls = contents.querySelectorAll(".payer-related");
     this._payerAddressPicker = contents.querySelector("address-picker.payer-related");
     this._paymentMethodPicker = contents.querySelector("payment-method-picker");
-    this._acceptedCardsList = contents.querySelector("accepted-cards");
 
     this._header = contents.querySelector("header");
 
@@ -347,10 +345,6 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     }
     this._payerAddressPicker.dataset.addAddressTitle = this.dataset.payerTitleAdd;
     this._payerAddressPicker.dataset.editAddressTitle = this.dataset.payerTitleEdit;
-
-    // hide the accepted cards list if the merchant didn't specify a preference
-    let acceptedNetworks = paymentRequest.getAcceptedNetworks(state.request);
-    this._acceptedCardsList.hidden = !acceptedNetworks.length;
 
     this._renderPayButton(state);
 
