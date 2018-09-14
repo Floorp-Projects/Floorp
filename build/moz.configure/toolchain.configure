@@ -698,19 +698,16 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
     other_c_compiler = () if other_c_compiler is None else (other_c_compiler,)
 
     @depends(host_or_target, target, toolchain_prefix, android_clang_compiler,
-             developer_options, *other_c_compiler)
+             *other_c_compiler)
     def default_c_compilers(host_or_target, target, toolchain_prefix,
-                            android_clang_compiler, developer_options,
-                            *other_c_compiler):
+                            android_clang_compiler, *other_c_compiler):
         if host_or_target.kernel == 'WINNT':
             supported = types = ('clang-cl', 'msvc', 'gcc', 'clang')
         elif host_or_target.kernel == 'Darwin':
             types = ('clang',)
             supported = ('clang', 'gcc')
-        elif developer_options:
-            supported = types = ('clang', 'gcc')
         else:
-            supported = types = ('gcc', 'clang')
+            supported = types = ('clang', 'gcc')
 
         info = other_c_compiler[0] if other_c_compiler else None
         if info and info.type in supported:
