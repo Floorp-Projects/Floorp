@@ -78,13 +78,24 @@ add_task(async function test_serializeRequest_paymentMethods() {
     ok(state, "got request store state");
 
     let result = state.request;
-
     is(result.paymentMethods.length, 2, "Correct number of payment methods");
     ok(result.paymentMethods[0].supportedMethods && result.paymentMethods[1].supportedMethods,
        "Both payment methods look valid");
+
+    let cardMethod = result.paymentMethods.find(m => m.supportedMethods == "basic-card");
+    is(cardMethod.data.supportedNetworks.length, 2,
+       "Correct number of supportedNetworks");
+    ok(cardMethod.data.supportedNetworks.includes("visa") &&
+       cardMethod.data.supportedNetworks.includes("mastercard"),
+       "Got the expected supportedNetworks contents");
   };
+  let basicCardMethod = Object.assign({}, PTU.MethodData.basicCard, {
+    data: {
+      supportedNetworks: ["visa", "mastercard"],
+    },
+  });
   const args = {
-    methodData: [PTU.MethodData.basicCard, PTU.MethodData.bobPay],
+    methodData: [basicCardMethod, PTU.MethodData.bobPay],
     details: PTU.Details.total60USD,
   };
   await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, testTask, args);
