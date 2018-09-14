@@ -982,7 +982,7 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams, const T& aPa
     }
 
     if (shouldPushMask) {
-      if (aParams.layerManager->GetRoot()->GetContentFlags() &
+      if (aParams.layerManager && aParams.layerManager->GetRoot()->GetContentFlags() &
           Layer::CONTENT_COMPONENT_ALPHA) {
         context.PushGroupAndCopyBackground(gfxContentType::COLOR_ALPHA,
                                            opacityApplied

@@ -9904,6 +9904,43 @@ nsDisplayMask::PaintAsLayer(nsDisplayListBuilder* aBuilder,
   nsDisplayMaskGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
+void
+nsDisplayMask::PaintWithContentsPaintCallback(nsDisplayListBuilder* aBuilder,
+                                              gfxContext* aCtx,
+                                              const std::function<void()>& aPaintChildren)
+{
+  // Clip the drawing target by mVisibleRect, which contains the visible
+  // region of the target frame and its out-of-flow and inflow descendants.
+  gfxContext* context = aCtx;
+
+  Rect bounds =
+    NSRectToRect(GetPaintRect(), mFrame->PresContext()->AppUnitsPerDevPixel());
+  bounds.RoundOut();
+  context->Clip(bounds);
+
+  imgDrawingParams imgParams(aBuilder->ShouldSyncDecodeImages()
+                               ? imgIContainer::FLAG_SYNC_DECODE
+                               : imgIContainer::FLAG_SYNC_DECODE_IF_FAST);
+  nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  nsSVGIntegrationUtils::PaintFramesParams params(*aCtx,
+                                                  mFrame,
+                                                  GetPaintRect(),
+                                                  borderArea,
+                                                  aBuilder,
+                                                  nullptr,
+                                                  mHandleOpacity,
+                                                  imgParams);
+
+  ComputeMaskGeometry(params);
+
+  nsSVGIntegrationUtils::PaintMaskAndClipPath(params, aPaintChildren);
+
+  context->PopClip();
+
+  nsDisplayMaskGeometry::UpdateDrawResult(this, imgParams.result);
+}
+
+
 bool
 nsDisplayMask::CreateWebRenderCommands(
   mozilla::wr::DisplayListBuilder& aBuilder,
