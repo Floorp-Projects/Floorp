@@ -778,6 +778,11 @@ class nsIWidget : public nsISupports
                         double aHeight,
                         bool   aRepaint) = 0;
 
+    virtual mozilla::Maybe<bool> IsResizingNativeWidget()
+    {
+        return mozilla::Nothing();
+    }
+
     /**
      * Resize the widget so that the inner client area has the given size.
      *
