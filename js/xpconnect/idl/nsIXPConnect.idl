@@ -39,13 +39,13 @@ interface nsIObjectInputStream;
 interface nsIObjectOutputStream;
 
 /***************************************************************************/
-[uuid(73e6ff4a-ab99-4d99-ac00-ba39ccb8e4d7)]
+[builtinclass, uuid(73e6ff4a-ab99-4d99-ac00-ba39ccb8e4d7)]
 interface nsIXPConnectJSObjectHolder : nsISupports
 {
     [notxpcom, nostdcall] JSObjectPtr GetJSObject();
 };
 
-[uuid(e787be29-db5d-4a45-a3d6-1de1d6b85c30)]
+[builtinclass, uuid(e787be29-db5d-4a45-a3d6-1de1d6b85c30)]
 interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
@@ -84,7 +84,7 @@ do_QueryWrappedNative(nsIXPConnectWrappedNative *aWrappedNative,
 
 %}
 
-[uuid(3a01b0d6-074b-49ed-bac3-08c76366cae4)]
+[builtinclass, uuid(3a01b0d6-074b-49ed-bac3-08c76366cae4)]
 interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
@@ -182,7 +182,7 @@ interface nsIXPConnectWrappedJSUnmarkGray : nsIXPConnectWrappedJS
  *  the interface id is that of nsIXPCWrappedJSObjectGetter.
  */
 
-[scriptable, uuid(254bb2e0-6439-11d4-8fe0-0010a4e73d9a)]
+[builtinclass, uuid(254bb2e0-6439-11d4-8fe0-0010a4e73d9a)]
 interface nsIXPCWrappedJSObjectGetter : nsISupports
 {
     readonly attribute nsISupports neverCalled;
