@@ -24,9 +24,9 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-private.hh"
-#include "hb-shaper-private.hh"
-#include "hb-machinery-private.hh"
+#include "hb.hh"
+#include "hb-shaper.hh"
+#include "hb-machinery.hh"
 
 
 static const hb_shaper_pair_t all_shapers[] = {
@@ -35,8 +35,9 @@ static const hb_shaper_pair_t all_shapers[] = {
 #undef HB_SHAPER_IMPLEMENT
 };
 
-
+#ifdef HB_USE_ATEXIT
 static void free_static_shapers (void);
+#endif
 
 static struct hb_shapers_lazy_loader_t : hb_lazy_loader_t<const hb_shaper_pair_t,
 							  hb_shapers_lazy_loader_t>

@@ -25,9 +25,9 @@
  */
 
 #include "hb-static.cc"
-#include "hb-open-file-private.hh"
+#include "hb-open-file.hh"
 #include "hb-ot-layout-gdef-table.hh"
-#include "hb-ot-layout-gsubgpos-private.hh"
+#include "hb-ot-layout-gsubgpos.hh"
 
 #ifdef HAVE_GLIB
 #include <glib.h>

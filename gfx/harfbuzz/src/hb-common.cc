@@ -26,9 +26,9 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-private.hh"
+#include "hb.hh"
 
-#include "hb-machinery-private.hh"
+#include "hb-machinery.hh"
 
 #include <locale.h>
 #ifdef HAVE_XLOCALE_H
@@ -731,8 +731,9 @@ parse_uint32 (const char **pp, const char *end, uint32_t *pv)
 
 #ifdef USE_XLOCALE
 
-
+#ifdef HB_USE_ATEXIT
 static void free_static_C_locale (void);
+#endif
 
 static struct hb_C_locale_lazy_loader_t : hb_lazy_loader_t<hb_remove_ptr_t<HB_LOCALE_T>::value,
 							  hb_C_locale_lazy_loader_t>

@@ -25,7 +25,7 @@
 #ifndef HB_AAT_LTAG_TABLE_HH
 #define HB_AAT_LTAG_TABLE_HH
 
-#include "hb-aat-layout-common-private.hh"
+#include "hb-aat-layout-common.hh"
 
 /*
  * ltag -- Language Tag

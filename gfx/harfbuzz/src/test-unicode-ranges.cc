@@ -24,7 +24,7 @@
  * Google Author(s): Garret Rieger
  */
 
-#include "hb-private.hh"
+#include "hb.hh"
 
 #include "hb-ot-os2-unicode-ranges.hh"
 

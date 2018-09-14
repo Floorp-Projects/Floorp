@@ -24,12 +24,12 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-private.hh"
+#include "hb.hh"
 
-#include "hb-open-type-private.hh"
-#include "hb-ot-layout-common-private.hh"
+#include "hb-open-type.hh"
+#include "hb-ot-layout-common.hh"
 
-#include "hb-face-private.hh"
+#include "hb-face.hh"
 #include "hb-ot-head-table.hh"
 #include "hb-ot-maxp-table.hh"
 

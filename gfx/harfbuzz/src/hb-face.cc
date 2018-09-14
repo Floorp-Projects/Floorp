@@ -26,11 +26,13 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-private.hh"
+#include "hb.hh"
 
-#include "hb-face-private.hh"
-#include "hb-blob-private.hh"
-#include "hb-open-file-private.hh"
+#include "hb-face.hh"
+#include "hb-blob.hh"
+#include "hb-open-file.hh"
+#include "hb-ot-face.hh"
+#include "hb-ot-cmap-table.hh"
 
 
 /**
@@ -511,4 +513,209 @@ hb_face_get_table_tags (const hb_face_t *face,
   const OT::OpenTypeFontFace &ot_face = ot_file.get_face (data->index);
 
   return ot_face.get_table_tags (start_offset, table_count, table_tags);
+}
+
+
+/*
+ * Character set.
+ */
+
+
+/**
+ * hb_face_collect_unicodes:
+ * @face: font face.
+ * @out: set to add Unicode characters covered by @face to.
+ *
+ * Since: 1.9.0
+ */
+void
+hb_face_collect_unicodes (hb_face_t *face,
+			  hb_set_t  *out)
+{
+  if (unlikely (!hb_ot_shaper_face_data_ensure (face))) return;
+  hb_ot_face_data (face)->cmap->collect_unicodes (out);
+}
+
+/**
+ * hb_face_collect_variation_selectors:
+ * @face: font face.
+ * @out: set to add Variation Selector characters covered by @face to.
+ *
+ *
+ *
+ * Since: 1.9.0
+ */
+void
+hb_face_collect_variation_selectors (hb_face_t *face,
+				     hb_set_t  *out)
+{
+  if (unlikely (!hb_ot_shaper_face_data_ensure (face))) return;
+  hb_ot_face_data (face)->cmap->collect_variation_selectors (out);
+}
+
+/**
+ * hb_face_collect_variation_unicodes:
+ * @face: font face.
+ * @out: set to add Unicode characters for @variation_selector covered by @face to.
+ *
+ *
+ *
+ * Since: 1.9.0
+ */
+void
+hb_face_collect_variation_unicodes (hb_face_t *face,
+				    hb_codepoint_t variation_selector,
+				    hb_set_t  *out)
+{
+  if (unlikely (!hb_ot_shaper_face_data_ensure (face))) return;
+  hb_ot_face_data (face)->cmap->collect_variation_unicodes (variation_selector, out);
+}
+
+
+
+/*
+ * face-builder: A face that has add_table().
+ */
+
+struct hb_face_builder_data_t
+{
+  struct table_entry_t
+  {
+    inline int cmp (const hb_tag_t *t) const
+    {
+      if (*t < tag) return -1;
+      if (*t > tag) return -1;
+      return 0;
+    }
+
+    hb_tag_t   tag;
+    hb_blob_t *blob;
+  };
+
+  hb_vector_t<table_entry_t, 32> tables;
+};
+
+static hb_face_builder_data_t *
+_hb_face_builder_data_create (void)
+{
+  hb_face_builder_data_t *data = (hb_face_builder_data_t *) calloc (1, sizeof (hb_face_builder_data_t));
+  if (unlikely (!data))
+    return nullptr;
+
+  data->tables.init ();
+
+  return data;
+}
+
+static void
+_hb_face_builder_data_destroy (void *user_data)
+{
+  hb_face_builder_data_t *data = (hb_face_builder_data_t *) user_data;
+
+  for (unsigned int i = 0; i < data->tables.len; i++)
+    hb_blob_destroy (data->tables[i].blob);
+
+  data->tables.fini ();
+
+  free (data);
+}
+
+static hb_blob_t *
+_hb_face_builder_data_reference_blob (hb_face_builder_data_t *data)
+{
+
+  unsigned int table_count = data->tables.len;
+  unsigned int face_length = table_count * 16 + 12;
+
+  for (unsigned int i = 0; i < table_count; i++)
+    face_length += hb_ceil_to_4 (hb_blob_get_length (data->tables.arrayZ[i].blob));
+
+  char *buf = (char *) malloc (face_length);
+  if (unlikely (!buf))
+    return nullptr;
+
+  hb_serialize_context_t c (buf, face_length);
+  OT::OpenTypeFontFile *f = c.start_serialize<OT::OpenTypeFontFile> ();
+
+  bool is_cff = data->tables.lsearch (HB_TAG ('C','F','F',' ')) || data->tables.lsearch (HB_TAG ('C','F','F','2'));
+  hb_tag_t sfnt_tag = is_cff ? OT::OpenTypeFontFile::CFFTag : OT::OpenTypeFontFile::TrueTypeTag;
+
+  Supplier<hb_tag_t>    tags_supplier  (&data->tables[0].tag, table_count, sizeof (data->tables[0]));
+  Supplier<hb_blob_t *> blobs_supplier (&data->tables[0].blob, table_count, sizeof (data->tables[0]));
+  bool ret = f->serialize_single (&c,
+				  sfnt_tag,
+				  tags_supplier,
+				  blobs_supplier,
+				  table_count);
+
+  c.end_serialize ();
+
+  if (unlikely (!ret))
+  {
+    free (buf);
+    return nullptr;
+  }
+
+  return hb_blob_create (buf, face_length, HB_MEMORY_MODE_WRITABLE, buf, free);
+}
+
+static hb_blob_t *
+_hb_face_builder_reference_table (hb_face_t *face, hb_tag_t tag, void *user_data)
+{
+  hb_face_builder_data_t *data = (hb_face_builder_data_t *) user_data;
+
+  if (!tag)
+    return _hb_face_builder_data_reference_blob (data);
+
+  hb_face_builder_data_t::table_entry_t *entry = data->tables.lsearch (tag);
+  if (entry)
+    return hb_blob_reference (entry->blob);
+
+  return nullptr;
+}
+
+
+/**
+ * hb_face_builder_create:
+ *
+ * Creates a #hb_face_t that can be used with hb_face_builder_add_table().
+ * After tables are added to the face, it can be compiled to a binary
+ * font file by calling hb_face_reference_blob().
+ *
+ * Return value: (transfer full) New face.
+ *
+ * Since: 1.9.0
+ **/
+hb_face_t *
+hb_face_builder_create (void)
+{
+  hb_face_builder_data_t *data = _hb_face_builder_data_create ();
+  if (unlikely (!data)) return hb_face_get_empty ();
+
+  return hb_face_create_for_tables (_hb_face_builder_reference_table,
+				    data,
+				    _hb_face_builder_data_destroy);
+}
+
+/**
+ * hb_face_builder_add_table:
+ *
+ * Add table for @tag with data provided by @blob to the face.  @face must
+ * be created using hb_face_builder_create().
+ *
+ * Since: 1.9.0
+ **/
+hb_bool_t
+hb_face_builder_add_table (hb_face_t *face, hb_tag_t tag, hb_blob_t *blob)
+{
+  if (unlikely (face->destroy != (hb_destroy_func_t) _hb_face_builder_data_destroy))
+    return false;
+
+  hb_face_builder_data_t *data = (hb_face_builder_data_t *) face->user_data;
+  hb_face_builder_data_t::table_entry_t *entry = data->tables.push ();
+
+  entry->tag = tag;
+  entry->blob = hb_blob_reference (blob);
+
+  return true;
 }
