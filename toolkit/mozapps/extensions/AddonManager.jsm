@@ -2803,20 +2803,6 @@ var AddonManagerInternal = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(AddonManagerInternal, "BOOTSTRAP_REASON_TO_STRING_MAP", () => {
-  const {BOOTSTRAP_REASONS} = AddonManagerPrivate;
-  return Object.freeze({
-    [BOOTSTRAP_REASONS.APP_STARTUP]: "APP_STARTUP",
-    [BOOTSTRAP_REASONS.APP_SHUTDOWN]: "APP_SHUTDOWN",
-    [BOOTSTRAP_REASONS.ADDON_ENABLE]: "ADDON_ENABLE",
-    [BOOTSTRAP_REASONS.ADDON_DISABLE]: "ADDON_DISABLE",
-    [BOOTSTRAP_REASONS.ADDON_INSTALL]: "ADDON_INSTALL",
-    [BOOTSTRAP_REASONS.ADDON_UNINSTALL]: "ADDON_UNINSTALL",
-    [BOOTSTRAP_REASONS.ADDON_UPGRADE]: "ADDON_UPGRADE",
-    [BOOTSTRAP_REASONS.ADDON_DOWNGRADE]: "ADDON_DOWNGRADE",
-  });
-});
-
 /**
  * Should not be used outside of core Mozilla code. This is a private API for
  * the startup and platform integration code to use. Refer to the methods on
@@ -2909,10 +2895,6 @@ var AddonManagerPrivate = {
   get BOOTSTRAP_REASONS() {
     return AddonManagerInternal._getProviderByName("XPIProvider")
             .BOOTSTRAP_REASONS;
-  },
-
-  get BOOTSTRAP_REASON_TO_STRING_MAP() {
-    return AddonManagerInternal.BOOTSTRAP_REASON_TO_STRING_MAP;
   },
 
   recordTimestamp(name, value) {
@@ -3521,5 +3503,6 @@ this.AddonManager.init();
 
 // load the timestamps module into AddonManagerInternal
 ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm", AddonManagerInternal);
+Object.freeze(AddonManagerInternal);
 Object.freeze(AddonManagerPrivate);
 Object.freeze(AddonManager);
