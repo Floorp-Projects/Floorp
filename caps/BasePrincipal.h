@@ -25,6 +25,39 @@ namespace extensions {
   class WebExtensionPolicy;
 }
 
+class BasePrincipal;
+
+// Codebase principals (and codebase principals embedded within expanded
+// principals) stored in SiteIdentifier are guaranteed to contain only the
+// eTLD+1 part of the original domain. This is used to determine whether two
+// origins are same-site: if it's possible for two origins to access each other
+// (maybe after mutating document.domain), then they must have the same site
+// identifier.
+class SiteIdentifier
+{
+public:
+  void Init(BasePrincipal* aPrincipal)
+  {
+    MOZ_ASSERT(aPrincipal);
+    mPrincipal = aPrincipal;
+  }
+
+  bool IsInitialized() const { return !!mPrincipal; }
+
+  bool Equals(const SiteIdentifier& aOther) const;
+
+private:
+  friend class ::ExpandedPrincipal;
+
+  BasePrincipal* GetPrincipal() const
+  {
+    MOZ_ASSERT(IsInitialized());
+    return mPrincipal;
+  }
+
+  RefPtr<BasePrincipal> mPrincipal;
+};
+
 /*
  * Base class from which all nsIPrincipal implementations inherit. Use this for
  * default implementations and other commonalities between principal
@@ -165,6 +198,8 @@ public:
   }
 
   uint32_t GetOriginNoSuffixHash() const { return mOriginNoSuffix->hash(); }
+
+  virtual nsresult GetSiteIdentifier(SiteIdentifier& aSite) = 0;
 
 protected:
   virtual ~BasePrincipal();

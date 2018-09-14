@@ -122,8 +122,9 @@ add_task(async function test_userScripts_no_webext_apis() {
       matches,
       scriptMetadata: {
         name: "test-user-script",
-        arrayToMatch: ["el1"],
-        objectToMatch: {nestedProp: "nestedValue"},
+        arrayProperty: ["el1"],
+        objectProperty: {nestedProp: "nestedValue"},
+        nullProperty: null,
       },
     });
 
@@ -253,6 +254,9 @@ add_task(async function test_userScripts_exported_APIs() {
       matches,
       scriptMetadata: {
         name: "test-user-script-exported-apis",
+        arrayProperty: ["el1"],
+        objectProperty: {nestedProp: "nestedValue"},
+        nullProperty: null,
       },
     });
 
@@ -267,7 +271,17 @@ add_task(async function test_userScripts_exported_APIs() {
 
     browser.userScripts.setScriptAPIs({
       US_sync_api([param1, param2], scriptMetadata, scriptGlobal) {
-        browser.test.assertEq("test-user-script-exported-apis", scriptMetadata.name);
+        browser.test.assertEq("test-user-script-exported-apis", scriptMetadata.name,
+                              "Got the expected value for a string scriptMetadata property");
+        browser.test.assertEq(null, scriptMetadata.nullProperty,
+                              "Got the expected value for a null scriptMetadata property");
+        browser.test.assertTrue(scriptMetadata.arrayProperty &&
+                                scriptMetadata.arrayProperty.length === 1 &&
+                                scriptMetadata.arrayProperty[0] === "el1",
+                                "Got the expected value for an array scriptMetadata property");
+        browser.test.assertTrue(scriptMetadata.objectProperty &&
+                                scriptMetadata.objectProperty.nestedProp === "nestedValue",
+                                "Got the expected value for an object scriptMetadata property");
 
         browser.test.assertEq("param1", param1, "Got the expected parameter value");
         browser.test.assertEq("param2", param2, "Got the expected parameter value");
