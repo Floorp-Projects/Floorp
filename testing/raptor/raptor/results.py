@@ -18,12 +18,16 @@ class RaptorResultsHandler():
 
     def __init__(self):
         self.results = []
+        self.page_timeout_list = []
 
     def add(self, new_result_json):
         # add to results
         LOG.info("received results in RaptorResultsHandler.add")
         new_result = RaptorTestResult(new_result_json)
         self.results.append(new_result)
+
+    def add_page_timeout(self, test_name, page_url):
+        self.page_timeout_list.append({'test_name': test_name, 'url': page_url})
 
     def summarize_and_output(self, test_config):
         # summarize the result data, write to file and output PERFHERDER_DATA

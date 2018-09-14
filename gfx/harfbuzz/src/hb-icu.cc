@@ -27,12 +27,12 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-private.hh"
+#include "hb.hh"
 
 #include "hb-icu.h"
 
-#include "hb-unicode-private.hh"
-#include "hb-machinery-private.hh"
+#include "hb-unicode.hh"
+#include "hb-machinery.hh"
 
 #include <unicode/uchar.h>
 #include <unicode/unorm2.h>
@@ -343,8 +343,9 @@ hb_icu_unicode_decompose_compatibility (hb_unicode_funcs_t *ufuncs HB_UNUSED,
   return utf32_len;
 }
 
-
+#ifdef HB_USE_ATEXIT
 static void free_static_icu_funcs (void);
+#endif
 
 static struct hb_icu_unicode_funcs_lazy_loader_t : hb_unicode_funcs_lazy_loader_t<hb_icu_unicode_funcs_lazy_loader_t>
 {

@@ -280,10 +280,10 @@ this.decorate_task = function(...args) {
   return add_task(decorate(...args));
 };
 
-let _studyFactoryId = 0;
-this.studyFactory = function(attrs) {
+let _addonStudyFactoryId = 0;
+this.addonStudyFactory = function(attrs) {
   return Object.assign({
-    recipeId: _studyFactoryId++,
+    recipeId: _addonStudyFactoryId++,
     name: "Test study",
     description: "fake",
     active: true,
@@ -291,6 +291,22 @@ this.studyFactory = function(attrs) {
     addonUrl: "http://test/addon.xpi",
     addonVersion: "1.0.0",
     studyStartDate: new Date(),
+  }, attrs);
+};
+
+let _preferenceStudyFactoryId = 0;
+this.preferenceStudyFactory = function(attrs) {
+  return Object.assign({
+    name: "Test study",
+    branch: "control",
+    expired: false,
+    lastSeen: new Date().toJSON(),
+    preferenceName: "test.study",
+    preferenceValue: false,
+    preferenceType: "boolean",
+    previousPreferenceValue: undefined,
+    preferenceBranchType: "default",
+    experimentType: "exp",
   }, attrs);
 };
 

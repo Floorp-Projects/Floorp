@@ -102,7 +102,7 @@ for h in headers:
 		print (" * %s" % (l.strip()))
 print (" */")
 print ()
-print ('#include "hb-ot-shape-complex-indic-private.hh"')
+print ('#include "hb-ot-shape-complex-indic.hh"')
 print ()
 
 # Shorten values

@@ -11,7 +11,7 @@
 #include "nsTreeContentView.h"
 #include "ChildIterator.h"
 #include "nsError.h"
-#include "nsIXULSortService.h"
+#include "nsXULSortService.h"
 #include "nsTreeBodyFrame.h"
 #include "nsTreeColumns.h"
 #include "mozilla/ErrorResult.h"
@@ -660,26 +660,23 @@ nsTreeContentView::CycleHeader(nsTreeColumn& aColumn, ErrorResult& aError)
   nsAutoString sort;
   column->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
   if (!sort.IsEmpty()) {
-    nsCOMPtr<nsIXULSortService> xs = do_GetService("@mozilla.org/xul/xul-sort-service;1");
-    if (xs) {
-      nsAutoString sortdirection;
-      static Element::AttrValuesArray strings[] =
-        {&nsGkAtoms::ascending, &nsGkAtoms::descending, nullptr};
-      switch (column->FindAttrValueIn(kNameSpaceID_None,
-                                      nsGkAtoms::sortDirection,
-                                      strings, eCaseMatters)) {
-        case 0: sortdirection.AssignLiteral("descending"); break;
-        case 1: sortdirection.AssignLiteral("natural"); break;
-        default: sortdirection.AssignLiteral("ascending"); break;
-      }
-
-      nsAutoString hints;
-      column->GetAttr(kNameSpaceID_None, nsGkAtoms::sorthints, hints);
-      sortdirection.Append(' ');
-      sortdirection += hints;
-
-      xs->Sort(mRoot, sort, sortdirection);
+    nsAutoString sortdirection;
+    static Element::AttrValuesArray strings[] =
+      {&nsGkAtoms::ascending, &nsGkAtoms::descending, nullptr};
+    switch (column->FindAttrValueIn(kNameSpaceID_None,
+                                    nsGkAtoms::sortDirection,
+                                    strings, eCaseMatters)) {
+      case 0: sortdirection.AssignLiteral("descending"); break;
+      case 1: sortdirection.AssignLiteral("natural"); break;
+      default: sortdirection.AssignLiteral("ascending"); break;
     }
+
+    nsAutoString hints;
+    column->GetAttr(kNameSpaceID_None, nsGkAtoms::sorthints, hints);
+    sortdirection.Append(' ');
+    sortdirection += hints;
+
+    XULWidgetSort(mRoot, sort, sortdirection);
   }
 }
 

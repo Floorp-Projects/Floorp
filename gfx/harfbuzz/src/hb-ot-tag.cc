@@ -26,7 +26,7 @@
  * Google Author(s): Behdad Esfahbod, Roozbeh Pournader
  */
 
-#include "hb-private.hh"
+#include "hb.hh"
 
 
 /* hb_script_t */

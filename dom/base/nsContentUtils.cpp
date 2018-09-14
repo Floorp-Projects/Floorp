@@ -4371,6 +4371,7 @@ nsresult GetEventAndTarget(nsIDocument* aDoc, nsISupports* aTarget,
                            const nsAString& aEventName,
                            CanBubble aCanBubble,
                            Cancelable aCancelable,
+                           Composed aComposed,
                            Trusted aTrusted,
                            Event** aEvent,
                            EventTarget** aTargetOut)
@@ -4385,7 +4386,7 @@ nsresult GetEventAndTarget(nsIDocument* aDoc, nsISupports* aTarget,
     return err.StealNSResult();
   }
 
-  event->InitEvent(aEventName, aCanBubble, aCancelable);
+  event->InitEvent(aEventName, aCanBubble, aCancelable, aComposed);
   event->SetTrusted(aTrusted == Trusted::eYes);
 
   event->SetTarget(target);
@@ -4401,10 +4402,11 @@ nsContentUtils::DispatchTrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
                                      const nsAString& aEventName,
                                      CanBubble aCanBubble,
                                      Cancelable aCancelable,
+                                     Composed aComposed,
                                      bool* aDefaultAction)
 {
   return DispatchEvent(aDoc, aTarget, aEventName, aCanBubble, aCancelable,
-                       Trusted::eYes, aDefaultAction);
+                       aComposed, Trusted::eYes, aDefaultAction);
 }
 
 // static
@@ -4416,7 +4418,7 @@ nsContentUtils::DispatchUntrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
                                        bool* aDefaultAction)
 {
   return DispatchEvent(aDoc, aTarget, aEventName, aCanBubble, aCancelable,
-                       Trusted::eNo, aDefaultAction);
+                       Composed::eDefault, Trusted::eNo, aDefaultAction);
 }
 
 // static
@@ -4425,6 +4427,7 @@ nsContentUtils::DispatchEvent(nsIDocument* aDoc, nsISupports* aTarget,
                               const nsAString& aEventName,
                               CanBubble aCanBubble,
                               Cancelable aCancelable,
+                              Composed aComposed,
                               Trusted aTrusted,
                               bool* aDefaultAction,
                               ChromeOnlyDispatch aOnlyChromeDispatch)
@@ -4432,7 +4435,8 @@ nsContentUtils::DispatchEvent(nsIDocument* aDoc, nsISupports* aTarget,
   RefPtr<Event> event;
   nsCOMPtr<EventTarget> target;
   nsresult rv = GetEventAndTarget(aDoc, aTarget, aEventName, aCanBubble,
-                                  aCancelable, aTrusted, getter_AddRefs(event),
+                                  aCancelable, aComposed, aTrusted,
+                                  getter_AddRefs(event),
                                   getter_AddRefs(target));
   NS_ENSURE_SUCCESS(rv, rv);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch =
@@ -4496,7 +4500,8 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
   RefPtr<Event> event;
   nsCOMPtr<EventTarget> target;
   nsresult rv = GetEventAndTarget(aDoc, aTarget, aEventName, aCanBubble,
-                                  aCancelable, Trusted::eYes,
+                                  aCancelable, Composed::eDefault,
+                                  Trusted::eYes,
                                   getter_AddRefs(event),
                                   getter_AddRefs(target));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4543,7 +4548,8 @@ nsContentUtils::DispatchEventOnlyToChrome(nsIDocument* aDoc,
                                           bool* aDefaultAction)
 {
   return DispatchEvent(aDoc, aTarget, aEventName, aCanBubble, aCancelable,
-                       Trusted::eYes, aDefaultAction, ChromeOnlyDispatch::eYes);
+                       Composed::eDefault, Trusted::eYes, aDefaultAction,
+                       ChromeOnlyDispatch::eYes);
 }
 
 /* static */

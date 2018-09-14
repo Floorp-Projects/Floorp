@@ -5,8 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'crypto/cipher/aes.c',
-    'crypto/cipher/aes_icm.c',
+    'crypto/cipher/aes_gcm_nss.c',
+    'crypto/cipher/aes_icm_nss.c',
     'crypto/cipher/cipher.c',
     'crypto/cipher/null_cipher.c',
     'crypto/hash/auth.c',
@@ -49,6 +49,11 @@ DEFINES['HAVE_CONFIG_H'] = 1
 for var in ('HAVE_STDLIB_H', 'HAVE_UINT8_T', 'HAVE_UINT16_T',
             'HAVE_INT32_T', 'HAVE_UINT32_T', 'HAVE_UINT64_T'):
     DEFINES[var] = 1
+
+# Enable AES-GCM cipher suite in libsrtp
+DEFINES['GCM'] = 1
+# Let libsrtp use NSS instead of build-in crypto
+DEFINES['NSS'] = 1
 
 # XXX while arm is not a CISC architecture, the code guarded by CPU_RISC makes
 # (at least) the AES ciphers fail their self-tests on ARM, so for now we're

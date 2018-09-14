@@ -33,7 +33,7 @@ decorate_task(
 
 decorate_task(
   AddonStudies.withStudies([
-    studyFactory({name: "test-study"}),
+    addonStudyFactory({name: "test-study"}),
   ]),
   async function testGet([study]) {
     const storedStudy = await AddonStudies.get(study.recipeId);
@@ -43,8 +43,8 @@ decorate_task(
 
 decorate_task(
   AddonStudies.withStudies([
-    studyFactory(),
-    studyFactory(),
+    addonStudyFactory(),
+    addonStudyFactory(),
   ]),
   async function testGetAll(studies) {
     const storedStudies = await AddonStudies.getAll();
@@ -58,7 +58,7 @@ decorate_task(
 
 decorate_task(
   AddonStudies.withStudies([
-    studyFactory({name: "test-study"}),
+    addonStudyFactory({name: "test-study"}),
   ]),
   async function testHas([study]) {
     let hasStudy = await AddonStudies.has(study.recipeId);
@@ -95,8 +95,8 @@ decorate_task(
 
 decorate_task(
   AddonStudies.withStudies([
-    studyFactory({name: "test-study1"}),
-    studyFactory({name: "test-study2"}),
+    addonStudyFactory({name: "test-study1"}),
+    addonStudyFactory({name: "test-study2"}),
   ]),
   async function testClear([study1, study2]) {
     const hasAll = (
@@ -116,9 +116,9 @@ decorate_task(
 
 decorate_task(
   AddonStudies.withStudies([
-    studyFactory({active: true, addonId: "does.not.exist@example.com", studyEndDate: null}),
-    studyFactory({active: true, addonId: "installed@example.com"}),
-    studyFactory({active: false, addonId: "already.gone@example.com", studyEndDate: new Date(2012, 1)}),
+    addonStudyFactory({active: true, addonId: "does.not.exist@example.com", studyEndDate: null}),
+    addonStudyFactory({active: true, addonId: "installed@example.com"}),
+    addonStudyFactory({active: false, addonId: "already.gone@example.com", studyEndDate: new Date(2012, 1)}),
   ]),
   withSendEventStub,
   withInstalledWebExtension({id: "installed@example.com"}),
@@ -162,7 +162,7 @@ decorate_task(
 
 decorate_task(
   AddonStudies.withStudies([
-    studyFactory({active: true, addonId: "installed@example.com", studyEndDate: null}),
+    addonStudyFactory({active: true, addonId: "installed@example.com", studyEndDate: null}),
   ]),
   withInstalledWebExtension({id: "installed@example.com"}, /* expectUninstall: */ true),
   async function testInit([study], [id, addonFile]) {

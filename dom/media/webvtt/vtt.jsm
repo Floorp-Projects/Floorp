@@ -1021,6 +1021,10 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
         controlBar = controls.parentNode.getElementById("controlBar");
       }
       controlBarShown = controlBar ? !!controlBar.clientHeight : false;
+    } else {
+      // There is no controls element. This only happen to UA Widget because
+      // it is created lazily.
+      controlBarShown = false;
     }
 
     // Determine if we need to compute the display states of the cues. This could

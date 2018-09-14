@@ -30,8 +30,8 @@
 #define _POSIX_C_SOURCE 200809L
 #endif
 
-#include "hb-private.hh"
-#include "hb-blob-private.hh"
+#include "hb.hh"
+#include "hb-blob.hh"
 
 #ifdef HAVE_SYS_MMAN_H
 #ifdef HAVE_UNISTD_H
