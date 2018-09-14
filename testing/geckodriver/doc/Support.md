@@ -1,6 +1,63 @@
 Supported platforms
 ===================
 
+The following table shows a mapping between [geckodriver releases],
+supported versions of Firefox, and required Selenium version:
+
+<table>
+ <thead>
+  <tr>
+    <th rowspan="2">geckodriver
+    <th rowspan="2">Selenium
+    <th colspan="2">Supported versions of Firefox
+  </tr>
+  <tr>
+    <th>min
+    <th>max
+  </tr>
+ </thead>
+
+ <tr>
+  <td>0.22.0
+  <td>≥ 3.11 (3.14 Python)
+  <td>57
+  <td>n/a
+ <tr>
+  <td>0.21.0
+  <td>≥ 3.11 (3.14 Python)
+  <td>57
+  <td>n/a
+ <tr>
+  <td>0.20.1
+  <td>≥ 3.5
+  <td>55
+  <td>62
+ <tr>
+  <td>0.20.0
+  <td>≥ 3.5
+  <td>55
+  <td>62
+ <tr>
+  <td>0.19.1
+  <td>≥ 3.5
+  <td>55
+  <td>62
+ <tr>
+  <td>0.19.0
+  <td>≥ 3.5
+  <td>55
+  <td>62
+ <tr>
+  <td>0.18.0
+  <td>≥ 3.4
+  <td>53
+  <td>62
+ <tr>
+  <td>0.17.0
+  <td>≥ 3.4
+  <td>52
+  <td>62
+
 
 Clients
 -------
@@ -28,6 +85,7 @@ latest [Firefox Nightly] with geckodriver.  Since Windows XP support
 in Firefox was dropped with Firefox 53, we do not support this platform.
 
 
+[geckodriver releases]: https://github.com/mozilla/geckodriver/releases
 [Selenium]: https://github.com/seleniumhq/selenium
 [WebDriver]: https://w3c.github.io/webdriver/
 [implementation status]: https://bugzilla.mozilla.org/showdependencytree.cgi?id=721859&hide_resolved=1
