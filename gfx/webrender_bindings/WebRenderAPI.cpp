@@ -24,8 +24,6 @@ namespace wr {
 
 using layers::Stringify;
 
-MOZ_DEFINE_MALLOC_SIZE_OF(WebRenderMallocSizeOf)
-
 class NewRenderer : public RendererEvent
 {
 public:
@@ -74,7 +72,6 @@ public:
     if (!wr_window_new(aWindowId, mSize.width, mSize.height, supportLowPriorityTransactions,
                        compositor->gl(),
                        aRenderThread.ThreadPool().Raw(),
-                       &WebRenderMallocSizeOf,
                        mDocHandle, &wrRenderer,
                        mMaxTextureSize)) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false
@@ -517,12 +514,6 @@ void
 WebRenderAPI::NotifyMemoryPressure()
 {
   wr_api_notify_memory_pressure(mDocHandle);
-}
-
-void
-WebRenderAPI::AccumulateMemoryReport(MemoryReport* aReport)
-{
-  wr_api_accumulate_memory_report(mDocHandle, aReport);
 }
 
 void
