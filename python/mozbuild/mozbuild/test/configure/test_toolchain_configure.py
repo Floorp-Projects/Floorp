@@ -1454,6 +1454,36 @@ class OSXCrossToolchainTest(BaseToolchainTest):
         })
 
 
+class WindowsCrossToolchainTest(BaseToolchainTest):
+    TARGET = 'x86_64-pc-mingw32'
+    DEFAULT_GCC_RESULT = LinuxToolchainTest.DEFAULT_GCC_RESULT
+    DEFAULT_GXX_RESULT = LinuxToolchainTest.DEFAULT_GXX_RESULT
+
+    def test_wsl_cross(self):
+        paths = {
+            '/usr/bin/cl': VS_2017u6 + VS_PLATFORM_X86_64,
+        }
+        paths.update(LinuxToolchainTest.PATHS)
+        self.do_toolchain_test(paths, {
+            'c_compiler': WindowsToolchainTest.VS_2017u6_RESULT,
+            'cxx_compiler': WindowsToolchainTest.VSXX_2017u6_RESULT,
+            'host_c_compiler': self.DEFAULT_GCC_RESULT,
+            'host_cxx_compiler': self.DEFAULT_GXX_RESULT,
+        })
+
+    def test_clang_cl_cross(self):
+        paths = {
+            '/usr/bin/clang-cl': CLANG_CL_3_9 + CLANG_CL_PLATFORM_X86_64,
+        }
+        paths.update(LinuxToolchainTest.PATHS)
+        self.do_toolchain_test(paths, {
+            'c_compiler': WindowsToolchainTest.CLANG_CL_3_9_RESULT,
+            'cxx_compiler': WindowsToolchainTest.CLANGXX_CL_3_9_RESULT,
+            'host_c_compiler': self.DEFAULT_GCC_RESULT,
+            'host_cxx_compiler': self.DEFAULT_GXX_RESULT,
+        })
+
+
 class OpenBSDToolchainTest(BaseToolchainTest):
     HOST = 'x86_64-unknown-openbsd6.1'
     TARGET = 'x86_64-unknown-openbsd6.1'
