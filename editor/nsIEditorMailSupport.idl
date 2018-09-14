@@ -13,33 +13,6 @@ webidl Node;
 
 interface nsIEditorMailSupport : nsISupports
 {
-  /** Paste the text in the OS clipboard at the cursor position,
-    * as a quotation (whose representation is dependant on the editor type),
-    * replacing the selected text (if any).
-    * @param aSelectionType Text or html?
-    */
-  void pasteAsQuotation(in long aSelectionType);
-
-  /** Insert a string as quoted text
-    * (whose representation is dependant on the editor type),
-    * replacing the selected text (if any).
-    * @param aQuotedText  The actual text to be quoted
-    * @return             The node which was inserted
-    */
-  Node insertAsQuotation(in AString aQuotedText);
-
-  /**
-   * Inserts a plaintext string at the current location,
-   * with special processing for lines beginning with ">",
-   * which will be treated as mail quotes and inserted
-   * as plaintext quoted blocks.
-   * If the selection is not collapsed, the selection is deleted
-   * and the insertion takes place at the resulting collapsed selection.
-   *
-   * @param aString   the string to be inserted
-   */
-   void insertTextWithQuotations(in DOMString aStringToInsert);
-
   /** Insert a string as quoted text
     * (whose representation is dependant on the editor type),
     * replacing the selected text (if any),
