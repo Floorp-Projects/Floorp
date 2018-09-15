@@ -12,8 +12,6 @@
     COMPONENT(SCRIPTABLEBASE64ENCODER, nsScriptableBase64EncoderConstructor)
     COMPONENT(PIPE, nsPipeConstructor)
 
-    COMPONENT(PROPERTIES, nsPropertiesConstructor)
-
     COMPONENT(PERSISTENTPROPERTIES, nsPersistentProperties::Create)
 
     COMPONENT(ARRAY, nsArrayBase::XPCOMConstructor)

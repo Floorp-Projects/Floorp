@@ -50,6 +50,7 @@
 #include "GeckoProfiler.h"
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
+#include "nsProperties.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -1056,10 +1057,7 @@ NS_IMETHODIMP
 RasterImage::Set(const char* prop, nsISupports* value)
 {
   if (!mProperties) {
-    mProperties = do_CreateInstance("@mozilla.org/properties;1");
-  }
-  if (!mProperties) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    mProperties = new nsProperties();
   }
   return mProperties->Set(prop, value);
 }
