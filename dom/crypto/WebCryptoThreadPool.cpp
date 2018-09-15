@@ -14,7 +14,7 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsXPCOMPrivate.h"
 #include "nsIObserverService.h"
-#include "nsIThreadPool.h"
+#include "nsThreadPool.h"
 
 namespace mozilla {
 namespace dom {
@@ -73,7 +73,7 @@ WebCryptoThreadPool::DispatchInternal(nsIRunnable* aRunnable)
   if (!mPool) {
     NS_ENSURE_TRUE(EnsureNSSInitializedChromeOrContent(), NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIThreadPool> pool(do_CreateInstance(NS_THREADPOOL_CONTRACTID));
+    nsCOMPtr<nsIThreadPool> pool(new nsThreadPool());
     NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
 
     nsresult rv = pool->SetName(NS_LITERAL_CSTRING("SubtleCrypto"));

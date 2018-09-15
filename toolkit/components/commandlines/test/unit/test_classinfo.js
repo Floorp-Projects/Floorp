@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
-  var clClass = Cc["@mozilla.org/toolkit/command-line;1"];
-  var commandLine = clClass.createInstance();
+  var commandLine = Cu.createCommandLine();
   Assert.ok("length" in commandLine);
 }

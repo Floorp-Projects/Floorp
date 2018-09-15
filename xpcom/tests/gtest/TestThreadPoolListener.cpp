@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIThread.h"
-#include "nsIThreadPool.h"
 
 #include "nsComponentManagerUtils.h"
+#include "nsThreadPool.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "pratom.h"
@@ -136,9 +136,7 @@ TEST(ThreadPoolListener, Test)
 
   nsresult rv;
 
-  nsCOMPtr<nsIThreadPool> pool =
-    do_CreateInstance(NS_THREADPOOL_CONTRACTID, &rv);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
 
   rv = pool->SetThreadLimit(NUMBER_OF_THREADS);
   ASSERT_TRUE(NS_SUCCEEDED(rv));

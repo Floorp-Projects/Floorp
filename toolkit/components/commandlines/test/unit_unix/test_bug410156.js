@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
-  var clClass = Cc["@mozilla.org/toolkit/command-line;1"];
-  var commandLine = clClass.createInstance();
+  var commandLine = Cu.createCommandLine();
   var urlFile = do_get_file("../unit/data/test_bug410156.desktop");
   var uri = commandLine.resolveURI(urlFile.path);
   Assert.equal(uri.spec, "http://www.bug410156.com/");

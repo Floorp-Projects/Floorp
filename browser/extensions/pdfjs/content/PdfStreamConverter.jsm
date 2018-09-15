@@ -121,6 +121,18 @@ function getLocalizedString(strings, id, property) {
   return id;
 }
 
+function isValidMatchesCount(data) {
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  const {current, total} = data;
+  if ((typeof total !== "number" || total < 0) ||
+      (typeof current !== "number" || current < 0 || current > total)) {
+    return false;
+  }
+  return true;
+}
+
 // PDF data storage
 function PdfDataListener(length) {
   this.length = length; // less than 0, if length is unknown
@@ -434,10 +446,30 @@ class ChromeActions {
         (findPreviousType !== "undefined" && findPreviousType !== "boolean")) {
       return;
     }
+    // Allow the `matchesCount` property to be optional, and ensure that
+    // it's valid before including it in the data sent to the findbar.
+    let matchesCount = null;
+    if (isValidMatchesCount(data.matchesCount)) {
+      matchesCount = data.matchesCount;
+    }
 
     var winmm = this.domWindow.docShell.messageManager;
+    winmm.sendAsyncMessage("PDFJS:Parent:updateControlState", {
+      result, findPrevious, matchesCount,
+    });
+  }
 
-    winmm.sendAsyncMessage("PDFJS:Parent:updateControlState", data);
+  updateFindMatchesCount(data) {
+    if (!this.supportsIntegratedFind()) {
+      return;
+    }
+    // Verify what we're sending to the findbar.
+    if (!isValidMatchesCount(data)) {
+      return;
+    }
+
+    const winmm = this.domWindow.docShell.messageManager;
+    winmm.sendAsyncMessage("PDFJS:Parent:updateMatchesCount", data);
   }
 
   setPreferences(prefs, sendResponse) {
