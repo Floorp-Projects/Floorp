@@ -25,11 +25,24 @@ public:
     virtual uint32_t GetPasswordMaskDelayImpl() override;
     virtual char16_t GetPasswordCharacterImpl() override;
 
+    void SetPrefersReducedMotionOverrideForTest(bool aValue)
+    {
+      mIsInPrefersReducedMotionForTest = true;
+      mPrefersReducedMotionForTest = aValue;
+    }
+    void ResetPrefersReducedMotionOverrideForTest()
+    {
+      mIsInPrefersReducedMotionForTest = false;
+      mPrefersReducedMotionForTest = false;
+    }
+
 protected:
     static bool mInitializedSystemColors;
     static mozilla::AndroidSystemColors mSystemColors;
     static bool mInitializedShowPassword;
     static bool mShowPassword;
+    static bool mIsInPrefersReducedMotionForTest;
+    static bool mPrefersReducedMotionForTest;
 
     nsresult GetSystemColors();
     nsresult CallRemoteGetSystemColors();

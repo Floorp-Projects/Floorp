@@ -90,6 +90,13 @@ public class GeckoSystemStateListener
                                         1) == 0.0f;
     }
 
+    @WrapForJNI(calledFrom = "gecko")
+    private static void notifyPrefersReducedMotionChangedForTest() {
+        ContentResolver contentResolver = sApplicationContext.getContentResolver();
+        Uri animationSetting = Settings.System.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE);
+        contentResolver.notifyChange(animationSetting, null);
+    }
+
     @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
     private static native void onDeviceChanged();
 
