@@ -208,7 +208,7 @@ ProcessPendingGetURLAppleEvents()
   if (NS_FAILED(rv))
     return NO;
 
-  nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLinew());
+  nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
 
   nsCString filePath;
   rv = inFile->GetNativePath(filePath);
