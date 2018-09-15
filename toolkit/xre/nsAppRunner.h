@@ -57,6 +57,7 @@ extern bool gIsGtest;
  * @note XPCOMInit has not happened yet.
  */
 nsresult NS_CreateNativeAppSupport(nsINativeAppSupport* *aResult);
+already_AddRefed<nsINativeAppSupport> NS_GetNativeAppSupport();
 
 nsresult
 NS_NewToolkitProfileService(nsIToolkitProfileService* *aResult);
@@ -109,8 +110,6 @@ WinLaunchChild(const wchar_t *exePath, int argc,
 
 #define PREF_WIN_REGISTER_APPLICATION_RESTART "toolkit.winRegisterApplicationRestart"
 #endif
-
-#define NS_NATIVEAPPSUPPORT_CONTRACTID "@mozilla.org/toolkit/native-app-support;1"
 
 namespace mozilla {
 namespace startup {
