@@ -1478,6 +1478,13 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Whether FastBlock has been enabled.
+VARCACHE_PREF(
+  "browser.fastblock.enabled",
+  browser_fastblock_enabled,
+  bool, false
+)
+
 // Anti-tracking permission expiration
 VARCACHE_PREF(
   "privacy.restrict3rdpartystorage.expiration",

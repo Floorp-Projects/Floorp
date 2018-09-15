@@ -929,6 +929,16 @@ public final class GeckoSession extends LayerSession
         }
     };
 
+    @Override
+    public int hashCode() {
+        return mId.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof GeckoSession && mId.equals(((GeckoSession) obj).mId);
+    }
+
     /**
      * Return whether this session is open.
      *

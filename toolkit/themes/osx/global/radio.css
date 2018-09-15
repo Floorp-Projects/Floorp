@@ -15,21 +15,16 @@ radio {
   -moz-user-focus: ignore;
 }
 
-.radio-label-box {
-  margin-inline-start: 0px;
-  padding: 0px;
-}
-
 .radio-icon {
   margin-inline-end: 2px;
 }
 
 .radio-label {
-  margin: 1px 0 !important;
+  margin: 1px 0;
 }
 
 radio[disabled="true"] {
-  color: GrayText !important;
+  color: GrayText;
 }
 
 .radio-check {

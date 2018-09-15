@@ -1625,47 +1625,6 @@ AC_LANG_C
 MOZ_EXPAND_LIBS
 
 dnl ========================================================
-dnl =
-dnl = Build depencency options
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Build dependencies)
-
-if test "$GNU_CC" -a "$GNU_CXX"; then
-  _DEPEND_CFLAGS='-MD -MP -MF $(MDDEPDIR)/$(@F).pp'
-else
-  # clang-cl doesn't accept the normal -MD -MP -MF options that clang does, but
-  # the underlying cc1 binary understands how to generate dependency files.
-  # These options are based on analyzing what the normal clang driver sends to
-  # cc1 when given the "correct" dependency options.
-  if test -n "$CLANG_CL"; then
-   _DEPEND_CFLAGS='-Xclang -MP -Xclang -dependency-file -Xclang $(MDDEPDIR)/$(@F).pp -Xclang -MT -Xclang $@'
-  fi
-  dnl Don't override this for MSVC
-  if test -z "$_WIN32_MSVC"; then
-    _USE_CPP_INCLUDE_FLAG=
-    _DEFINES_CFLAGS='$(ACDEFINES) -D_JS_CONFDEFS_H_ -DMOZILLA_CLIENT'
-    _DEFINES_CXXFLAGS='$(ACDEFINES) -D_JS_CONFDEFS_H_ -DMOZILLA_CLIENT'
-  else
-    echo '#include <stdio.h>' > dummy-hello.c
-    changequote(,)
-    dnl This output is localized, split at the first double space or colon and space.
-    _CL_PREFIX_REGEX="^\([^:]*:.*[ :] \)\(.*\\\stdio.h\)$"
-    CL_INCLUDES_PREFIX=`${CC} -showIncludes -c -Fonul dummy-hello.c 2>&1 | sed -ne 's/'"$_CL_PREFIX_REGEX"'/\1/p'`
-    _CL_STDIO_PATH=`${CC} -showIncludes -c -Fonul dummy-hello.c 2>&1 | sed -ne 's/'"$_CL_PREFIX_REGEX"'/\2/p'`
-    changequote([,])
-    if ! test -e "$_CL_STDIO_PATH"; then
-        AC_MSG_ERROR([Unable to parse cl -showIncludes prefix. This compiler's locale has an unsupported formatting.])
-    fi
-    if test -z "$CL_INCLUDES_PREFIX"; then
-        AC_MSG_ERROR([Cannot find cl -showIncludes prefix.])
-    fi
-    AC_SUBST(CL_INCLUDES_PREFIX)
-    rm -f dummy-hello.c
-  fi
-fi
-
-dnl ========================================================
 dnl = Link js shell to system readline
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(readline,
@@ -1805,7 +1764,6 @@ HOST_CXXFLAGS=`echo \
     $_COMPILATION_HOST_CXXFLAGS \
     $HOST_CXXFLAGS`
 
-AC_SUBST(_DEPEND_CFLAGS)
 AC_SUBST(MOZ_SYSTEM_NSPR)
 
 OS_CFLAGS="$CFLAGS"

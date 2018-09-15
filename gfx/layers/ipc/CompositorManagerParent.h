@@ -46,6 +46,8 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvNotifyMemoryPressure() override;
 
+  virtual mozilla::ipc::IPCResult RecvReportMemory(ReportMemoryResolver&&) override;
+
   void BindComplete();
   void ActorDestroy(ActorDestroyReason aReason) override;
 

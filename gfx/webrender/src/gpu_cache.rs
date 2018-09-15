@@ -25,12 +25,14 @@
 //! for this frame.
 
 use api::{PremultipliedColorF, TexelRect};
+use api::{VoidPtrToSizeFn};
 use device::FrameId;
 use euclid::TypedRect;
 use profiler::GpuCacheProfileCounters;
 use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use std::{mem, u16, u32};
 use std::ops::Add;
+use std::os::raw::c_void;
 
 
 pub const GPU_CACHE_INITIAL_HEIGHT: u32 = 512;
@@ -340,6 +342,18 @@ impl Texture {
         }
     }
 
+    // Reports the CPU heap usage of this Texture struct.
+    fn malloc_size_of(&self, op: VoidPtrToSizeFn) -> usize {
+        let mut size = 0;
+        unsafe {
+            size += op(self.blocks.as_ptr() as *const c_void);
+            size += op(self.rows.as_ptr() as *const c_void);
+            size += op(self.pending_blocks.as_ptr() as *const c_void);
+            size += op(self.updates.as_ptr() as *const c_void);
+        }
+        size
+    }
+
     // Push new data into the cache. The ```pending_block_index``` field represents
     // where the data was pushed into the texture ```pending_blocks``` array.
     // Return the allocated address for this data.
@@ -644,5 +658,10 @@ impl GpuCache {
         debug_assert_eq!(block.epoch, location.epoch);
         debug_assert_eq!(block.last_access_time, self.frame_id);
         block.address
+    }
+
+    /// Reports the CPU heap usage of this GpuCache struct.
+    pub fn malloc_size_of(&self, op: VoidPtrToSizeFn) -> usize {
+        self.texture.malloc_size_of(op)
     }
 }

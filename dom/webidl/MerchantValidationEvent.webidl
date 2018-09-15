@@ -6,6 +6,9 @@
  * The origin of this WebIDL file is
  *   https://w3c.github.io/payment-request/#merchantvalidationevent-interface
  *   https://w3c.github.io/payment-request/#merchantvalidationeventinit-dictionary
+ *
+ * Copyright © 2018 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
+ * liability, trademark and document use rules apply.
  */
 
 [Constructor(DOMString type, optional MerchantValidationEventInit eventInitDict),

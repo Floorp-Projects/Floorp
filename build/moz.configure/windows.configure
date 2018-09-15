@@ -484,6 +484,32 @@ set_config('PATH', alter_path)
 
 check_prog('MAKECAB', ('makecab.exe',))
 
+
+@depends(c_compiler, using_sccache)
+def need_showincludes_prefix(info, using_sccache):
+    # sccache does its own -showIncludes prefix checking.
+    # clang-cl uses a gcc-style dependency scheme, see toolchain.configure.
+    if info.type == 'msvc' and not using_sccache:
+        return True
+
+
+@depends(c_compiler, when=need_showincludes_prefix)
+@imports(_from='re', _import='compile', _as='re_compile')
+def msvc_showincludes_prefix(c_compiler):
+    pattern = re_compile(br'^([^:]*:.*[ :] )(.*\\stdio.h)$')
+    output = try_invoke_compiler([c_compiler.compiler], 'C', '#include <stdio.h>\n',
+                                 ['-nologo', '-c', '-Fonul', '-showIncludes'])
+    for line in output.splitlines():
+        if line.endswith(b'\\stdio.h'):
+            m = pattern.match(line)
+            if m:
+                return m.group(1)
+    # We should have found the prefix and returned earlier
+    die('Cannot find cl -showIncludes prefix.')
+
+
+set_config('CL_INCLUDES_PREFIX', msvc_showincludes_prefix)
+
 # Make sure that the build system can handle non-ASCII characters in
 # environment variables to prevent silent breakage on non-English systems.
 set_config('NONASCII', b'\241\241')
