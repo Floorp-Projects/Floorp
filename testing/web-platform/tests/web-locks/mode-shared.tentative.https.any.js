@@ -1,5 +1,4 @@
 // META: title=Web Locks API: Shared Mode
-// META: global=window,dedicatedworker,sharedworker,serviceworker
 
 'use strict';
 
