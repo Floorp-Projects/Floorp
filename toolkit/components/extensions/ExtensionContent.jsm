@@ -472,7 +472,10 @@ class Script {
       }
     }
 
-    let scripts = await this.awaitCompiledScripts(context);
+    let scripts = this.getCompiledScripts(context);
+    if (scripts instanceof Promise) {
+      scripts = await scripts;
+    }
 
     let result;
 
@@ -497,7 +500,18 @@ class Script {
     return result;
   }
 
-  async awaitCompiledScripts(context) {
+  /**
+   *  Get the compiled scripts (if they are already precompiled and cached) or a promise which resolves
+   *  to the precompiled scripts (once they have been compiled and cached).
+   *
+   * @param {BaseContext} context
+   *        The document to block the parsing on, if the scripts are not yet precompiled and cached.
+   *
+   * @returns {Array<PreloadedScript> | Promise<Array<PreloadedScript>>}
+   *          Returns an array of preloaded scripts if they are already available, or a promise which
+   *          resolves to the array of the preloaded scripts once they are precompiled and cached.
+   */
+  getCompiledScripts(context) {
     let scriptPromises = this.compileScripts();
     let scripts = scriptPromises.map(promise => promise.script);
 
@@ -509,12 +523,12 @@ class Script {
       // If we're supposed to inject at the start of the document load,
       // and we haven't already missed that point, block further parsing
       // until the scripts have been loaded.
-      let {document} = context.contentWindow;
+      const {document} = context.contentWindow;
       if (this.runAt === "document_start" && document.readyState !== "complete") {
         document.blockParsing(promise, {blockScriptCreated: false});
       }
 
-      scripts = await promise;
+      return promise;
     }
 
     return scripts;
@@ -538,8 +552,10 @@ class UserScript extends Script {
     this.scriptMetadata = matcher.userScriptOptions.scriptMetadata;
     this.apiScriptURL = extension.manifest.user_scripts && extension.manifest.user_scripts.api_script;
 
-    this.promiseAPIScript = null;
-    this.scriptPromises = null;
+    // Add the apiScript to the js scripts to compile.
+    if (this.apiScriptURL) {
+      this.js = [this.apiScriptURL].concat(this.js);
+    }
 
     // WeakMap<ContentScriptContextChild, Sandbox>
     this.sandboxes = new DefaultWeakMap((context) => {
@@ -547,32 +563,19 @@ class UserScript extends Script {
     });
   }
 
-  compileScripts() {
-    if (this.apiScriptURL && !this.promiseAPIScript) {
-      this.promiseAPIScript = this.scriptCache.get(this.apiScriptURL);
-    }
-
-    if (!this.scriptPromises) {
-      this.scriptPromises = this.js.map(url => this.scriptCache.get(url));
-    }
-
-    if (this.promiseAPIScript) {
-      return [this.promiseAPIScript, ...this.scriptPromises];
-    }
-
-    return this.scriptPromises;
-  }
-
   async inject(context) {
     const {extension} = context;
 
     DocumentManager.lazyInit();
 
-    let scripts = await this.awaitCompiledScripts(context);
+    let scripts = this.getCompiledScripts(context);
+    if (scripts instanceof Promise) {
+      scripts = await scripts;
+    }
 
     let apiScript, sandboxScripts;
 
-    if (this.promiseAPIScript) {
+    if (this.apiScriptURL) {
       [apiScript, ...sandboxScripts] = scripts;
     } else {
       sandboxScripts = scripts;

@@ -158,16 +158,23 @@ add_task(async function test_contentscript_window_open() {
   let url = `${BASE_URL}/file_document_open.html`;
   let contentPage = await ExtensionTestUtils.loadContentPage(url);
 
-  Assert.deepEqual(await extension.awaitMessage("content-script"),
-                   [url, true]);
+  let [pageURL, pageIsTop] = await extension.awaitMessage("content-script");
+
+  // Sometimes we get a content script load for the initial about:blank
+  // top level frame here, sometimes we don't. Either way is fine, as long as we
+  // don't get two loads into the same document.open() document.
+  if (pageURL === "about:blank") {
+    equal(pageIsTop, true);
+    [pageURL, pageIsTop] = await extension.awaitMessage("content-script");
+  }
+
+  Assert.deepEqual([pageURL, pageIsTop], [url, true]);
 
   let [frameURL, isTop] = await extension.awaitMessage("content-script");
   // Sometimes we get a content script load for the initial about:blank
-  // iframe here, sometimes we don't. Either way is fine, as long as we
-  // don't get two loads into the same document.open() document.
+  // iframe here, sometimes we don't.
   if (frameURL === "about:blank") {
     equal(isTop, false);
-
     [frameURL, isTop] = await extension.awaitMessage("content-script");
   }
 
@@ -175,4 +182,55 @@ add_task(async function test_contentscript_window_open() {
 
   await contentPage.close();
   await extension.unload();
+});
+
+// This test verify that a cached script is still able to catch the document
+// while it is still loading (when we do not block the document parsing as
+// we do for a non cached script).
+add_task(async function test_cached_contentscript_on_document_start() {
+  let extension =  ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [
+        {
+          "matches": ["http://localhost/*/file_document_open.html"],
+          "js": ["content_script.js"],
+          "run_at": "document_start",
+        },
+      ],
+    },
+
+    files: {
+      "content_script.js": `
+        browser.test.sendMessage("content-script-loaded", {
+          url: window.location.href,
+          documentReadyState: document.readyState,
+        });
+      `,
+    },
+  });
+
+  await extension.startup();
+
+  let url = `${BASE_URL}/file_document_open.html`;
+  let contentPage = await ExtensionTestUtils.loadContentPage(url);
+
+  let msg = await extension.awaitMessage("content-script-loaded");
+  Assert.deepEqual(msg, {
+    url,
+    documentReadyState: "loading",
+  }, "Got the expected url and document.readyState from a non cached script");
+
+  // Reload the page and check that the cached content script is still able to
+  // run on document_start.
+  await contentPage.loadURL(url);
+
+  let msgFromCached = await extension.awaitMessage("content-script-loaded");
+  Assert.deepEqual(msgFromCached, {
+    url,
+    documentReadyState: "loading",
+  }, "Got the expected url and document.readyState from a cached script");
+
+  await extension.unload();
+
+  await contentPage.close();
 });
