@@ -426,6 +426,11 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
             aResult = 2;
             break;
 
+        case eIntID_PrefersReducedMotion:
+            aResult =
+              java::GeckoSystemStateListener::PrefersReducedMotion() ? 1 : 0;
+            break;
+
         case eIntID_PrimaryPointerCapabilities:
             aResult = java::GeckoAppShell::GetPrimaryPointerCapabilities();
             break;
