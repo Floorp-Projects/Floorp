@@ -1727,12 +1727,26 @@ nsFlexContainerFrame::
  * to be used. This can be extended later if needed.
  *
  * The assumption here is that a given flex item measurement won't change until
- * either the available size or computed height changes, or the flex container
+ * either the available size or computed height changes, or the flex item's
  * intrinsic size is marked as dirty (due to a style or DOM change).
  *
- * In particular the computed height may change between measuring reflows due to
- * how the mIsFlexContainerMeasuringBSize flag affects size computation (see
- * bug 1336708).
+ * Note that the components of "Key" (mComputed{Min,Max,}BSize and
+ * mAvailableSize) are sufficient to catch any changes to the flex container's
+ * size that the item may care about for its cached measuring reflow. If
+ * the item cares about the container's BSize -- e.g. if it has a percent
+ * height and the container's height changes, in a horizontal-WM container --
+ * then that'll be detectable via the item's resolved "mComputedBSize"
+ * differing from the value in our Key.  And if the item cares about the
+ * container's ISize -- e.g. if it has a percent width and the container's
+ * width changes, in a horizontal-WM container -- then that'll be detectable
+ * via mAvailableSize changing, because we always use the flex container's
+ * ComputedISize as the Available ISize for its flex items.
+ *
+ * One particular case to consider (& need to be sure not to break when
+ * changing this class): the flex item's computed BSize may change between
+ * measuring reflows due to how the mIsFlexContainerMeasuringBSize flag affects
+ * size computation (see bug 1336708). This is one reason we need to use the
+ * computed BSize as part of the key.
  *
  * Caching it prevents us from doing exponential reflows in cases of deeply
  * nested flex and scroll frames.
@@ -1777,6 +1791,11 @@ public:
     , mAscent(aDesiredSize.BlockStartAscent())
   { }
 
+  /**
+   * Returns true if this cached flex item measurement is valid for (i.e. can
+   * be expected to match the output of) a measuring reflow whose input
+   * parameters are given via aReflowInput.
+   */
   bool IsValidFor(const ReflowInput& aReflowInput) const
   {
     return mKey == Key(aReflowInput);
@@ -1837,9 +1856,6 @@ nsFlexContainerFrame::MarkIntrinsicISizesDirty()
   mCachedMinISize = NS_INTRINSIC_WIDTH_UNKNOWN;
   mCachedPrefISize = NS_INTRINSIC_WIDTH_UNKNOWN;
 
-  for (nsIFrame* childFrame : mFrames) {
-    childFrame->DeleteProperty(CachedFlexMeasuringReflow());
-  }
   nsContainerFrame::MarkIntrinsicISizesDirty();
 }
 
