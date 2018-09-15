@@ -719,7 +719,7 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
                 if (target.cpu != host_or_target.cpu and
                         (target.cpu, host_or_target.cpu) not in same_arch and
                         (host_or_target.cpu, target.cpu) not in same_arch):
-                    # If the target C compiler if GCC, and it can't be used with
+                    # If the target C compiler is GCC, and it can't be used with
                     # -m32/-m64 for the host, it's probably toolchain-prefixed,
                     # so we prioritize a raw 'gcc' instead.
                     prioritized = info.type
@@ -764,9 +764,9 @@ def default_cxx_compilers(c_compiler, other_c_compiler=None, other_cxx_compiler=
     same compiler suite, we derive the default C++ compilers from the C
     compiler that was found if none was provided.
 
-    We also factor the target C++ compiler when getting the default host
-    C++ compiler, using the same if the corresponding C compilers are the
-    same.
+    We also factor in the target C++ compiler when getting the default host
+    C++ compiler, using the target C++ compiler if the host and target C
+    compilers are the same.
     '''
 
     assert (other_c_compiler is None) == (other_cxx_compiler is None)
