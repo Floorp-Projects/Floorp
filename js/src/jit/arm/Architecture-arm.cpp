@@ -68,43 +68,46 @@ ParseARMCpuFeatures(const char* features, bool override = false)
         const char* end = features + 1;
         for (; ; end++) {
             ch = *end;
-            if (!ch || ch == ' ' || ch == ',')
+            if (!ch || ch == ' ' || ch == ',') {
                 break;
+            }
         }
         size_t count = end - features;
-        if (count == 3 && strncmp(features, "vfp", 3) == 0)
+        if (count == 3 && strncmp(features, "vfp", 3) == 0) {
             flags |= HWCAP_VFP;
-        else if (count == 4 && strncmp(features, "neon", 4) == 0)
+        } else if (count == 4 && strncmp(features, "neon", 4) == 0) {
             flags |= HWCAP_NEON;
-        else if (count == 5 && strncmp(features, "vfpv3", 5) == 0)
+        } else if (count == 5 && strncmp(features, "vfpv3", 5) == 0) {
             flags |= HWCAP_VFPv3;
-        else if (count == 8 && strncmp(features, "vfpv3d16", 8) == 0)
+        } else if (count == 8 && strncmp(features, "vfpv3d16", 8) == 0) {
             flags |= HWCAP_VFPv3D16;
-        else if (count == 5 && strncmp(features, "vfpv4", 5) == 0)
+        } else if (count == 5 && strncmp(features, "vfpv4", 5) == 0) {
             flags |= HWCAP_VFPv4;
-        else if (count == 5 && strncmp(features, "idiva", 5) == 0)
+        } else if (count == 5 && strncmp(features, "idiva", 5) == 0) {
             flags |= HWCAP_IDIVA;
-        else if (count == 5 && strncmp(features, "idivt", 5) == 0)
+        } else if (count == 5 && strncmp(features, "idivt", 5) == 0) {
             flags |= HWCAP_IDIVT;
-        else if (count == 6 && strncmp(features, "vfpd32", 6) == 0)
+        } else if (count == 6 && strncmp(features, "vfpd32", 6) == 0) {
             flags |= HWCAP_VFPD32;
-        else if (count == 5 && strncmp(features, "armv7", 5) == 0)
+        } else if (count == 5 && strncmp(features, "armv7", 5) == 0) {
             flags |= HWCAP_ARMv7;
-        else if (count == 5 && strncmp(features, "align", 5) == 0)
+        } else if (count == 5 && strncmp(features, "align", 5) == 0) {
             flags |= HWCAP_ALIGNMENT_FAULT | HWCAP_FIXUP_FAULT;
 #if defined(JS_SIMULATOR_ARM)
-        else if (count == 7 && strncmp(features, "nofixup", 7) == 0)
+        } else if (count == 7 && strncmp(features, "nofixup", 7) == 0) {
             fixupAlignmentFault = false;
-        else if (count == 6 && strncmp(features, "hardfp", 6) == 0)
+        } else if (count == 6 && strncmp(features, "hardfp", 6) == 0) {
             flags |= HWCAP_USE_HARDFP_ABI;
 #endif
-        else if (override)
+        } else if (override) {
             fprintf(stderr, "Warning: unexpected ARM feature at: %s\n", features);
+        }
         features = end;
     }
 
-    if (!fixupAlignmentFault)
+    if (!fixupAlignmentFault) {
         flags &= ~HWCAP_FIXUP_FAULT;
+    }
 
     return flags;
 }
@@ -117,21 +120,25 @@ CanonicalizeARMHwCapFlags(uint32_t flags)
 
     // The VFPv3 feature is expected when the VFPv3D16 is reported, but add it
     // just in case of a kernel difference in feature reporting.
-    if (flags & HWCAP_VFPv3D16)
+    if (flags & HWCAP_VFPv3D16) {
         flags |= HWCAP_VFPv3;
+    }
 
     // If VFPv3 or Neon is supported then this must be an ARMv7.
-    if (flags & (HWCAP_VFPv3 | HWCAP_NEON))
+    if (flags & (HWCAP_VFPv3 | HWCAP_NEON)) {
         flags |= HWCAP_ARMv7;
+    }
 
     // Some old kernels report VFP and not VFPv3, but if ARMv7 then it must be
     // VFPv3.
-    if (flags & HWCAP_VFP && flags & HWCAP_ARMv7)
+    if (flags & HWCAP_VFP && flags & HWCAP_ARMv7) {
         flags |= HWCAP_VFPv3;
+    }
 
     // Older kernels do not implement the HWCAP_VFPD32 flag.
-    if ((flags & HWCAP_VFPv3) && !(flags & HWCAP_VFPv3D16))
+    if ((flags & HWCAP_VFPv3) && !(flags & HWCAP_VFPv3D16)) {
         flags |= HWCAP_VFPD32;
+    }
 
     return flags;
 }
@@ -152,8 +159,9 @@ ParseARMHwCapFlags(const char* armHwCap)
 {
     uint32_t flags = 0;
 
-    if (!armHwCap)
+    if (!armHwCap) {
         return false;
+    }
 
     if (strstr(armHwCap, "help")) {
         fflush(NULL);
@@ -197,12 +205,14 @@ InitARMFlags()
 {
     uint32_t flags = 0;
 
-    if (armHwCapFlags != HWCAP_UNINITIALIZED)
+    if (armHwCapFlags != HWCAP_UNINITIALIZED) {
         return;
+    }
 
     const char* env = getenv("ARMHWCAP");
-    if (ParseARMHwCapFlags(env))
+    if (ParseARMHwCapFlags(env)) {
         return;
+    }
 
 #ifdef JS_SIMULATOR_ARM
     // HWCAP_FIXUP_FAULT is on by default even if HWCAP_ALIGNMENT_FAULT is
@@ -240,20 +250,23 @@ InitARMFlags()
         if (!readAuxv) {
             char* featureList = strstr(buf, "Features");
             if (featureList) {
-                if (char* featuresEnd = strstr(featureList, "\n"))
+                if (char* featuresEnd = strstr(featureList, "\n")) {
                     *featuresEnd = '\0';
+                }
                 flags = ParseARMCpuFeatures(featureList + 8);
             }
-            if (strstr(buf, "ARMv7"))
+            if (strstr(buf, "ARMv7")) {
                 flags |= HWCAP_ARMv7;
+            }
         }
 
         // The exynos7420 cpu (EU galaxy S6 (Note)) has a bug where sometimes
         // flushing doesn't invalidate the instruction cache. As a result we force
         // it by calling the cacheFlush twice on different start addresses.
         char* exynos7420 = strstr(buf, "Exynos7420");
-        if (exynos7420)
+        if (exynos7420) {
             forceDoubleCacheFlush = true;
+        }
     }
 #endif
 
@@ -361,18 +374,23 @@ Registers::Code
 Registers::FromName(const char* name)
 {
     // Check for some register aliases first.
-    if (strcmp(name, "ip") == 0)
+    if (strcmp(name, "ip") == 0) {
         return ip;
-    if (strcmp(name, "r13") == 0)
+    }
+    if (strcmp(name, "r13") == 0) {
         return r13;
-    if (strcmp(name, "lr") == 0)
+    }
+    if (strcmp(name, "lr") == 0) {
         return lr;
-    if (strcmp(name, "r15") == 0)
+    }
+    if (strcmp(name, "r15") == 0) {
         return r15;
+    }
 
     for (size_t i = 0; i < Total; i++) {
-        if (strcmp(GetName(i), name) == 0)
+        if (strcmp(GetName(i), name) == 0) {
             return Code(i);
+        }
     }
 
     return Invalid;
@@ -382,12 +400,14 @@ FloatRegisters::Code
 FloatRegisters::FromName(const char* name)
 {
     for (size_t i = 0; i < TotalSingle; ++i) {
-        if (strcmp(GetSingleName(Encoding(i)), name) == 0)
+        if (strcmp(GetSingleName(Encoding(i)), name) == 0) {
             return VFPRegister(i, VFPRegister::Single).code();
+        }
     }
     for (size_t i = 0; i < TotalDouble; ++i) {
-        if (strcmp(GetDoubleName(Encoding(i)), name) == 0)
+        if (strcmp(GetDoubleName(Encoding(i)), name) == 0) {
             return VFPRegister(i, VFPRegister::Double).code();
+        }
     }
 
     return Invalid;
@@ -425,18 +445,21 @@ VFPRegister::GetPushSizeInBytes(const FloatRegisterSet& s)
 uint32_t
 VFPRegister::getRegisterDumpOffsetInBytes()
 {
-    if (isSingle())
+    if (isSingle()) {
         return id() * sizeof(float);
-    if (isDouble())
+    }
+    if (isDouble()) {
         return id() * sizeof(double);
+    }
     MOZ_CRASH("not Single or Double");
 }
 
 uint32_t
 FloatRegisters::ActualTotalPhys()
 {
-    if (Has32DP())
+    if (Has32DP()) {
         return 32;
+    }
     return 16;
 }
 

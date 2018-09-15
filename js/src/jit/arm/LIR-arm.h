@@ -149,19 +149,22 @@ class LDivOrModI64 : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES*2,
         return static_cast<MBinaryArithInstruction*>(mir_);
     }
     bool canBeDivideByZero() const {
-        if (mir_->isMod())
+        if (mir_->isMod()) {
             return mir_->toMod()->canBeDivideByZero();
+        }
         return mir_->toDiv()->canBeDivideByZero();
     }
     bool canBeNegativeOverflow() const {
-        if (mir_->isMod())
+        if (mir_->isMod()) {
             return mir_->toMod()->canBeNegativeDividend();
+        }
         return mir_->toDiv()->canBeNegativeOverflow();
     }
     wasm::BytecodeOffset bytecodeOffset() const {
         MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
-        if (mir_->isMod())
+        if (mir_->isMod()) {
             return mir_->toMod()->bytecodeOffset();
+        }
         return mir_->toDiv()->bytecodeOffset();
     }
 };
@@ -186,19 +189,22 @@ class LUDivOrModI64 : public LCallInstructionHelper<INT64_PIECES, INT64_PIECES*2
         return static_cast<MBinaryArithInstruction*>(mir_);
     }
     bool canBeDivideByZero() const {
-        if (mir_->isMod())
+        if (mir_->isMod()) {
             return mir_->toMod()->canBeDivideByZero();
+        }
         return mir_->toDiv()->canBeDivideByZero();
     }
     bool canBeNegativeOverflow() const {
-        if (mir_->isMod())
+        if (mir_->isMod()) {
             return mir_->toMod()->canBeNegativeDividend();
+        }
         return mir_->toDiv()->canBeNegativeOverflow();
     }
     wasm::BytecodeOffset bytecodeOffset() const {
         MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
-        if (mir_->isMod())
+        if (mir_->isMod()) {
             return mir_->toMod()->bytecodeOffset();
+        }
         return mir_->toDiv()->bytecodeOffset();
     }
 };
