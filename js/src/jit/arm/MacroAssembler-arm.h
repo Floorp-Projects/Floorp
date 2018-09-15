@@ -82,8 +82,9 @@ class MacroAssemblerARM : public Assembler
 
     Address ToPayloadAfterStackPush(const Address& base) const {
         // If we are based on StackPointer, pass over the type tag just pushed.
-        if (base.base == StackPointer)
+        if (base.base == StackPointer) {
             return Address(base.base, base.offset + sizeof(void *));
+        }
         return ToPayload(base);
     }
 
@@ -530,8 +531,9 @@ class MacroAssemblerARM : public Assembler
             int32_t reg = (*iter).code();
             do {
                 offset += delta;
-                if ((*iter).isDouble())
+                if ((*iter).isDouble()) {
                     offset += delta;
+                }
                 transferFloatReg(*iter);
             } while ((++iter).more() && int32_t((*iter).code()) == (reg += sign));
             finishFloatTransfer();
@@ -881,10 +883,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     void loadUnboxedValue(BaseIndex address, MIRType type, AnyRegister dest) {
-        if (dest.isFloat())
+        if (dest.isFloat()) {
             loadInt32OrDouble(address.base, address.index, dest.fpu(), address.scale);
-        else
+        } else {
             load32(address, dest.gpr());
+        }
     }
 
     template <typename T>
@@ -912,10 +915,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_alu(dest.base, lsl(dest.index, dest.scale), scratch, OpAdd);
 
         // Store the payload.
-        if (payloadoffset < 4096 && payloadoffset > -4096)
+        if (payloadoffset < 4096 && payloadoffset > -4096) {
             ma_str(reg, DTRAddr(scratch, DtrOffImm(payloadoffset)));
-        else
+        } else {
             ma_str(reg, Address(scratch, payloadoffset), scratch2);
+        }
 
         // Store the type.
         if (typeoffset < 4096 && typeoffset > -4096) {
@@ -944,10 +948,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
         ma_mov(Imm32(val.toNunboxTag()), scratch);
         ma_str(scratch, ToType(dest), scratch2);
-        if (val.isGCThing())
+        if (val.isGCThing()) {
             ma_mov(ImmGCPtr(val.toGCThing()), scratch);
-        else
+        } else {
             ma_mov(Imm32(val.toNunboxPayload()), scratch);
+        }
         ma_str(scratch, ToPayload(dest), scratch2);
     }
     void storeValue(const Value& val, BaseIndex dest) {
@@ -973,17 +978,19 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
         // Store the payload, marking if necessary.
         if (payloadoffset < 4096 && payloadoffset > -4096) {
-            if (val.isGCThing())
+            if (val.isGCThing()) {
                 ma_mov(ImmGCPtr(val.toGCThing()), scratch2);
-            else
+            } else {
                 ma_mov(Imm32(val.toNunboxPayload()), scratch2);
+            }
             ma_str(scratch2, DTRAddr(scratch, DtrOffImm(payloadoffset)));
         } else {
             ma_add(Imm32(payloadoffset), scratch, scratch2);
-            if (val.isGCThing())
+            if (val.isGCThing()) {
                 ma_mov(ImmGCPtr(val.toGCThing()), scratch2);
-            else
+            } else {
                 ma_mov(Imm32(val.toNunboxPayload()), scratch2);
+            }
             ma_str(scratch2, DTRAddr(scratch, DtrOffImm(0)));
         }
     }
@@ -1006,10 +1013,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void popValue(ValueOperand val);
     void pushValue(const Value& val) {
         push(Imm32(val.toNunboxTag()));
-        if (val.isGCThing())
+        if (val.isGCThing()) {
             push(ImmGCPtr(val.toGCThing()));
-        else
+        } else {
             push(Imm32(val.toNunboxPayload()));
+        }
     }
     void pushValue(JSValueType type, Register reg) {
         push(ImmTag(JSVAL_TYPE_TO_TAG(type)));
@@ -1199,8 +1207,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void computeEffectiveAddress(const BaseIndex& address, Register dest) {
         ScratchRegisterScope scratch(asMasm());
         ma_alu(address.base, lsl(address.index, address.scale), dest, OpAdd, LeaveCC);
-        if (address.offset)
+        if (address.offset) {
             ma_add(dest, Imm32(address.offset), dest, scratch, LeaveCC);
+        }
     }
     void floor(FloatRegister input, Register output, Label* handleNotAnInt);
     void floorf(FloatRegister input, Register output, Label* handleNotAnInt);
