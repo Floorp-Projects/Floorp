@@ -11,8 +11,6 @@
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 
-#define NS_SPELLCHECKER_CONTRACTID "@mozilla.org/spellchecker;1"
-
 #define NS_ISPELLCHECKER_IID                    \
 { /* 27bff957-b486-40ae-9f5d-af0cdd211868 */    \
 0x27bff957, 0xb486, 0x40ae, \
