@@ -20,8 +20,9 @@ MoveEmitterMIPSShared::emit(const MoveResolver& moves)
         pushedAtCycle_ = masm.framePushed();
     }
 
-    for (size_t i = 0; i < moves.numMoves(); i++)
+    for (size_t i = 0; i < moves.numMoves(); i++) {
         emit(moves.getMove(i));
+    }
 }
 
 Address
@@ -36,8 +37,9 @@ int32_t
 MoveEmitterMIPSShared::getAdjustedOffset(const MoveOperand& operand)
 {
     MOZ_ASSERT(operand.isMemoryOrEffectiveAddress());
-    if (operand.base() != StackPointer)
+    if (operand.base() != StackPointer) {
         return operand.disp();
+    }
 
     // Adjust offset if stack pointer has been moved.
     return operand.disp() + masm.framePushed() - pushedAtStart_;
@@ -64,12 +66,13 @@ MoveEmitterMIPSShared::emitMove(const MoveOperand& from, const MoveOperand& to)
         // Second scratch register should not be moved by MoveEmitter.
         MOZ_ASSERT(from.reg() != spilledReg_);
 
-        if (to.isGeneralReg())
+        if (to.isGeneralReg()) {
             masm.movePtr(from.reg(), to.reg());
-        else if (to.isMemory())
+        } else if (to.isMemory()) {
             masm.storePtr(from.reg(), getAdjustedAddress(to));
-        else
+        } else {
             MOZ_CRASH("Invalid emitMove arguments.");
+        }
     } else if (from.isMemory()) {
         if (to.isGeneralReg()) {
             masm.loadPtr(getAdjustedAddress(from), to.reg());
@@ -100,12 +103,13 @@ MoveEmitterMIPSShared::emitInt32Move(const MoveOperand &from, const MoveOperand 
         // Second scratch register should not be moved by MoveEmitter.
         MOZ_ASSERT(from.reg() != spilledReg_);
 
-        if (to.isGeneralReg())
+        if (to.isGeneralReg()) {
             masm.move32(from.reg(), to.reg());
-        else if (to.isMemory())
+        } else if (to.isMemory()) {
             masm.store32(from.reg(), getAdjustedAddress(to));
-        else
+        } else {
             MOZ_CRASH("Invalid emitInt32Move arguments.");
+        }
     } else if (from.isMemory()) {
         if (to.isGeneralReg()) {
             masm.load32(getAdjustedAddress(from), to.reg());
