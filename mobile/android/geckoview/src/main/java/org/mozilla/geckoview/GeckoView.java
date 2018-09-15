@@ -247,6 +247,7 @@ public class GeckoView extends FrameLayout {
             mSession.setFocused(false);
         }
         mSession = null;
+        mRuntime = null;
         return session;
     }
 
@@ -428,7 +429,7 @@ public class GeckoView extends FrameLayout {
     }
 
     private void restoreSession(final @Nullable GeckoSession savedSession) {
-        if (savedSession == null) {
+        if (savedSession == null || savedSession.equals(mSession)) {
             return;
         }
 

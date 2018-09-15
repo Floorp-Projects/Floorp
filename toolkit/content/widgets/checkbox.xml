@@ -11,10 +11,6 @@
 
   <binding id="checkbox"
     extends="chrome://global/content/bindings/general.xml#basetext">
-    <resources>
-      <stylesheet src="chrome://global/skin/checkbox.css"/>
-    </resources>
-
     <content>
       <xul:image class="checkbox-check" xbl:inherits="checked,disabled"/>
       <xul:hbox class="checkbox-label-box" flex="1">

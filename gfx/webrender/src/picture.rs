@@ -78,6 +78,29 @@ pub enum PictureSurface {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PictureId(pub u64);
 
+// TODO(gw): Having to generate globally unique picture
+//           ids for caching is not ideal. We should be
+//           able to completely remove this once we cache
+//           pictures based on their content, rather than
+//           the current cache key structure.
+pub struct PictureIdGenerator {
+    next: u64,
+}
+
+impl PictureIdGenerator {
+    pub fn new() -> Self {
+        PictureIdGenerator {
+            next: 0,
+        }
+    }
+
+    pub fn next(&mut self) -> PictureId {
+        let id = PictureId(self.next);
+        self.next += 1;
+        id
+    }
+}
+
 // Cache key that determines whether a pre-existing
 // picture in the texture cache matches the content
 // of the current picture.

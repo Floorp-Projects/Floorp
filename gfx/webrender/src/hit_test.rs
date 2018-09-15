@@ -3,12 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ClipMode, HitTestFlags, HitTestItem, HitTestResult, ItemTag, LayoutPoint};
-use api::{LayoutPrimitiveInfo, LayoutRect, PipelineId, WorldPoint};
+use api::{LayoutPrimitiveInfo, LayoutRect, PipelineId, VoidPtrToSizeFn, WorldPoint};
 use clip::{ClipNodeIndex, ClipChainNode, ClipNode, ClipItem, ClipStore};
 use clip::{ClipChainId, rounded_rectangle_contains_point};
 use clip_scroll_tree::{SpatialNodeIndex, ClipScrollTree};
 use internal_types::FastHashMap;
 use prim_store::ScrollNodeAndClipChain;
+use std::os::raw::c_void;
 use util::LayoutToWorldFastTransform;
 
 /// A copy of important clip scroll node data to use during hit testing. This a copy of
@@ -335,6 +336,21 @@ impl HitTester {
 
     pub fn get_pipeline_root(&self, pipeline_id: PipelineId) -> &HitTestSpatialNode {
         &self.spatial_nodes[self.pipeline_root_nodes[&pipeline_id].0]
+    }
+
+    // Reports the CPU heap usage of this HitTester struct.
+    pub fn malloc_size_of(&self, op: VoidPtrToSizeFn) -> usize {
+        let mut size = 0;
+        unsafe {
+            size += op(self.runs.as_ptr() as *const c_void);
+            size += op(self.spatial_nodes.as_ptr() as *const c_void);
+            size += op(self.clip_nodes.as_ptr() as *const c_void);
+            size += op(self.clip_chains.as_ptr() as *const c_void);
+            // We can't measure pipeline_root_nodes because we don't have the
+            // real machinery from the malloc_size_of crate. We could estimate
+            // it but it should generally be very small so we don't bother.
+        }
+        size
     }
 }
 

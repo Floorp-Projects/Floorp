@@ -157,6 +157,18 @@ ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
       (NS_SUCCEEDED(origin->SchemeIs("indexeddb", &isBehaved)) && isBehaved)) {
     rv = origin->GetAsciiSpec(aOriginNoSuffix);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    int32_t pos = aOriginNoSuffix.FindChar('?');
+    int32_t hashPos = aOriginNoSuffix.FindChar('#');
+
+    if (hashPos != kNotFound && (pos == kNotFound || hashPos < pos)) {
+      pos = hashPos;
+    }
+
+    if (pos != kNotFound) {
+      aOriginNoSuffix.Truncate(pos);
+    }
+
     // These URIs could technically contain a '^', but they never should.
     if (NS_WARN_IF(aOriginNoSuffix.FindChar('^', 0) != -1)) {
       aOriginNoSuffix.Truncate();

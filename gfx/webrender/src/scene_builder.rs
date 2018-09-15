@@ -10,6 +10,7 @@ use frame_builder::{FrameBuilderConfig, FrameBuilder};
 use clip_scroll_tree::ClipScrollTree;
 use display_list_flattener::DisplayListFlattener;
 use internal_types::{FastHashMap, FastHashSet};
+use picture::PictureIdGenerator;
 use resource_cache::FontInstanceMap;
 use render_backend::DocumentView;
 use renderer::{PipelineInfo, SceneBuilderHooks};
@@ -139,6 +140,7 @@ pub struct SceneBuilder {
     api_tx: MsgSender<ApiMsg>,
     config: FrameBuilderConfig,
     hooks: Option<Box<SceneBuilderHooks + Send>>,
+    picture_id_generator: PictureIdGenerator,
 }
 
 impl SceneBuilder {
@@ -157,6 +159,7 @@ impl SceneBuilder {
                 api_tx,
                 config,
                 hooks,
+                picture_id_generator: PictureIdGenerator::new(),
             },
             in_tx,
             out_rx,
@@ -224,7 +227,6 @@ impl SceneBuilder {
                 let mut new_scene = Scene::new();
 
                 let frame_builder = DisplayListFlattener::create_frame_builder(
-                    FrameBuilder::empty(),
                     &item.scene,
                     &mut clip_scroll_tree,
                     item.font_instances,
@@ -233,6 +235,7 @@ impl SceneBuilder {
                     &self.config,
                     &mut new_scene,
                     item.scene_id,
+                    &mut self.picture_id_generator,
                 );
 
                 built_scene = Some(BuiltScene {
@@ -300,7 +303,6 @@ impl SceneBuilder {
                 let mut new_scene = Scene::new();
 
                 let frame_builder = DisplayListFlattener::create_frame_builder(
-                    FrameBuilder::empty(),
                     &scene,
                     &mut clip_scroll_tree,
                     request.font_instances,
@@ -309,6 +311,7 @@ impl SceneBuilder {
                     &self.config,
                     &mut new_scene,
                     request.scene_id,
+                    &mut self.picture_id_generator,
                 );
 
                 built_scene = Some(BuiltScene {

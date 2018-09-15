@@ -13,6 +13,7 @@
 #include "gfxPrefs.h"
 #include "GLContextProvider.h"
 #include "GPUProcessHost.h"
+#include "GPUProcessManager.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
@@ -460,13 +461,30 @@ GPUParent::RecvNotifyGpuObservers(const nsCString& aTopic)
   return IPC_OK();
 }
 
+/* static */ void
+GPUParent::GetGPUProcessName(nsACString& aStr)
+{
+  auto processType = XRE_GetProcessType();
+  unsigned pid = 0;
+  if (processType == GeckoProcessType_GPU) {
+    pid = getpid();
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(processType == GeckoProcessType_Default);
+    pid = GPUProcessManager::Get()->GPUProcessPid();
+  }
+
+  nsPrintfCString processName("GPU (pid %u)", pid);
+  aStr.Assign(processName);
+}
+
 mozilla::ipc::IPCResult
 GPUParent::RecvRequestMemoryReport(const uint32_t& aGeneration,
                                    const bool& aAnonymize,
                                    const bool& aMinimizeMemoryUsage,
                                    const MaybeFileDesc& aDMDFile)
 {
-  nsPrintfCString processName("GPU (pid %u)", (unsigned)getpid());
+  nsAutoCString processName;
+  GetGPUProcessName(processName);
 
   mozilla::dom::MemoryReportRequestClient::Start(
     aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, processName);
