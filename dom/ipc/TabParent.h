@@ -417,6 +417,11 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvClearNativeTouchSequence(const uint64_t& aObserverId) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvSetPrefersReducedMotionOverrideForTest(const bool& aValue) override;
+  virtual mozilla::ipc::IPCResult
+  RecvResetPrefersReducedMotionOverrideForTest() override;
+
   void SendMouseEvent(const nsAString& aType, float aX, float aY,
                       int32_t aButton, int32_t aClickCount,
                       int32_t aModifiers, bool aIgnoreRootScrollFrame);

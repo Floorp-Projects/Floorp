@@ -1567,6 +1567,26 @@ TabParent::RecvClearNativeTouchSequence(const uint64_t& aObserverId)
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+TabParent::RecvSetPrefersReducedMotionOverrideForTest(const bool& aValue)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget) {
+    widget->SetPrefersReducedMotionOverrideForTest(aValue);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+TabParent::RecvResetPrefersReducedMotionOverrideForTest()
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget) {
+    widget->ResetPrefersReducedMotionOverrideForTest();
+  }
+  return IPC_OK();
+}
+
 void
 TabParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent)
 {

@@ -549,6 +549,9 @@ public:
 
   void SwipeFinished();
 
+  nsresult SetPrefersReducedMotionOverrideForTest(bool aValue) override;
+  nsresult ResetPrefersReducedMotionOverrideForTest() override;
+
 protected:
   virtual ~nsChildView();
 

@@ -4360,6 +4360,28 @@ nsDOMWindowUtils::EnsureDirtyRootFrame()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::SetPrefersReducedMotionOverrideForTest(bool aValue)
+{
+  nsIWidget* widget = GetWidget();
+  if (!widget) {
+    return NS_OK;
+  }
+
+  return widget->SetPrefersReducedMotionOverrideForTest(aValue);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::ResetPrefersReducedMotionOverrideForTest()
+{
+  nsIWidget* widget = GetWidget();
+  if (!widget) {
+    return NS_OK;
+  }
+
+  return widget->ResetPrefersReducedMotionOverrideForTest();
+}
+
 NS_INTERFACE_MAP_BEGIN(nsTranslationNodeList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsITranslationNodeList)
