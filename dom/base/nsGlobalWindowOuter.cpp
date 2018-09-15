@@ -2924,7 +2924,7 @@ nsIControllers*
 nsGlobalWindowOuter::GetControllersOuter(ErrorResult& aError)
 {
   if (!mControllers) {
-    mControllers = NS_NewXULControllers();
+    mControllers = new nsXULControllers();
     if (!mControllers) {
       aError.Throw(NS_ERROR_FAILURE);
       return nullptr;
