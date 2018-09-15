@@ -39,9 +39,11 @@ def get_dependent_loaded_tasks(config, loaded_tasks):
     ]
 
     # TODO Bug 1368484: Activate aarch64 once ready
-    non_aarch64_tasks = [
+    # TODO Bug 1490502: Activate x86-64 once ready
+    non_shipping_tasks = [
         task for task in android_tasks
-        if 'aarch64' not in task.attributes.get('build_platform', '')
+        if 'aarch64' not in task.attributes.get('build_platform', '') and
+           'x86_64' not in task.attributes.get('build_platform', '')
     ]
 
-    return non_aarch64_tasks
+    return non_shipping_tasks

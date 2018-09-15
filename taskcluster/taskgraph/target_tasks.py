@@ -474,6 +474,7 @@ def target_tasks_nightly_fennec(full_task_graph, parameters, graph_config):
                         'android-api-16-nightly',
                         'android-nightly',
                         'android-x86-nightly',
+                        'android-x86_64-nightly',
                         ):
             if not task.attributes.get('nightly', False):
                 return False
