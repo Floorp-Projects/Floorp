@@ -1,10 +1,8 @@
-import sys
+from wptserve.request import InputFile
 from io import BytesIO
-
 import pytest
 
-from wptserve.request import InputFile
-
+wptserve = pytest.importorskip("wptserve")
 bstr = b'This is a test document\nWith new lines\nSeveral in fact...'
 rfile = ''
 test_file = ''  # This will be used to test the InputFile functions against
@@ -120,8 +118,6 @@ def test_readlines():
     assert input_file.readlines() == test_file.readlines()
 
 
-@pytest.mark.xfail(sys.platform == "win32",
-                   reason="https://github.com/web-platform-tests/wpt/issues/12949")
 def test_readlines_file_bigger_than_buffer():
     old_max_buf = InputFile.max_buffer_size
     InputFile.max_buffer_size = 10
@@ -139,8 +135,6 @@ def test_iter():
         assert a == b
 
 
-@pytest.mark.xfail(sys.platform == "win32",
-                   reason="https://github.com/web-platform-tests/wpt/issues/12949")
 def test_iter_file_bigger_than_buffer():
     old_max_buf = InputFile.max_buffer_size
     InputFile.max_buffer_size = 10
