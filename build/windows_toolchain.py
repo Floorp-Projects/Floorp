@@ -24,7 +24,7 @@ from mozpack.mozjar import (
 )
 import mozpack.path as mozpath
 
-SDK_RELEASE = '10.0.15063.0'
+SDK_RELEASE = '10.0.17134.0'
 
 PATTERNS = [
     {
@@ -52,7 +52,7 @@ PATTERNS = [
         ],
     },
     {
-        'srcdir': '%(vs_path)s/VC/Tools/MSVC/14.13.26128',
+        'srcdir': '%(vs_path)s/VC/Tools/MSVC/14.15.26726',
         'dstdir': 'VC',
         'files': [
             # ATL is needed by Breakpad.
@@ -86,7 +86,7 @@ PATTERNS = [
         ],
     },
     {
-        'srcdir': '%(vs_path)s/VC/Redist/MSVC/14.13.26020',
+        'srcdir': '%(vs_path)s/VC/Redist/MSVC/14.15.26706',
         'dstdir': 'VC/redist',
         'files': [
             {

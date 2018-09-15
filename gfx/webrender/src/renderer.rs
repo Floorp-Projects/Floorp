@@ -13,6 +13,7 @@ use api::{BlobImageHandler, ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, Epoch, ExternalImageId};
 use api::{ExternalImageType, FontRenderMode, FrameMsg, ImageFormat, PipelineId};
 use api::{ImageRendering};
+use api::{MemoryReport, VoidPtrToSizeFn};
 use api::{RenderApiSender, RenderNotifier, TexelRect, TextureTarget};
 use api::{channel};
 use api::DebugCommand;
@@ -55,6 +56,7 @@ use std::collections::VecDeque;
 use std::collections::hash_map::Entry;
 use std::f32;
 use std::mem;
+use std::os::raw::c_void;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -1380,6 +1382,9 @@ pub struct Renderer {
     /// copy the WR output to.
     output_image_handler: Option<Box<OutputImageHandler>>,
 
+    /// Optional function pointer for memory reporting.
+    size_of_op: Option<VoidPtrToSizeFn>,
+
     // Currently allocated FBOs for output frames.
     output_targets: FastHashMap<u32, FrameOutput>,
 
@@ -1670,6 +1675,7 @@ impl Renderer {
                 Arc::new(worker.unwrap())
             });
         let sampler = options.sampler;
+        let size_of_op = options.size_of_op;
 
         let blob_image_handler = options.blob_image_handler.take();
         let thread_listener_for_render_backend = thread_listener.clone();
@@ -1751,6 +1757,7 @@ impl Renderer {
                 config,
                 recorder,
                 sampler,
+                size_of_op,
             );
             backend.run(backend_profile_counters);
             if let Some(ref thread_listener) = *thread_listener_for_render_backend {
@@ -1804,6 +1811,7 @@ impl Renderer {
             dither_matrix_texture,
             external_image_handler: None,
             output_image_handler: None,
+            size_of_op: options.size_of_op,
             output_targets: FastHashMap::default(),
             cpu_profiles: VecDeque::new(),
             gpu_profiles: VecDeque::new(),
@@ -4033,6 +4041,26 @@ impl Renderer {
         self.device.end_frame();
     }
 
+    fn size_of<T>(&self, ptr: *const T) -> usize {
+        let op = self.size_of_op.as_ref().unwrap();
+        unsafe { op(ptr as *const c_void) }
+    }
+
+    /// Collects a memory report.
+    pub fn report_memory(&self) -> MemoryReport {
+        let mut report = MemoryReport::default();
+        if let CacheBus::PixelBuffer{ref cpu_blocks, ..} = self.gpu_cache_texture.bus {
+            report.gpu_cache_cpu_mirror += self.size_of(cpu_blocks.as_ptr());
+        }
+
+        for (_id, doc) in &self.active_documents {
+            report.render_tasks += self.size_of(doc.frame.render_tasks.tasks.as_ptr());
+            report.render_tasks += self.size_of(doc.frame.render_tasks.task_data.as_ptr());
+        }
+
+        report
+    }
+
     // Sets the blend mode. Blend is unconditionally set if the "show overdraw" debugging mode is
     // enabled.
     fn set_blend(&self, mut blend: bool, framebuffer_kind: FramebufferKind) {
@@ -4192,6 +4220,7 @@ pub struct RendererOptions {
     pub blob_image_handler: Option<Box<BlobImageHandler>>,
     pub recorder: Option<Box<ApiRecordingReceiver>>,
     pub thread_listener: Option<Box<ThreadListener + Send + Sync>>,
+    pub size_of_op: Option<VoidPtrToSizeFn>,
     pub cached_programs: Option<Rc<ProgramCache>>,
     pub debug_flags: DebugFlags,
     pub renderer_id: Option<u64>,
@@ -4227,6 +4256,7 @@ impl Default for RendererOptions {
             blob_image_handler: None,
             recorder: None,
             thread_listener: None,
+            size_of_op: None,
             renderer_id: None,
             cached_programs: None,
             disable_dual_source_blending: false,

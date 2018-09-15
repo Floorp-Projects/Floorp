@@ -4982,8 +4982,6 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   nsPresContext* pc = PresContext();
   ComputedStyle* containerSC = Style();
   WritingMode wm = aState.mReflowInput->GetWritingMode();
-  LogicalMargin pad(aState.mReflowInput->ComputedLogicalPadding());
-  const LogicalPoint padStart(wm, pad.IStart(wm), pad.BStart(wm));
   const bool isGridItem = !!aGridItemInfo;
   MOZ_ASSERT(isGridItem == !aChild->IsPlaceholderFrame());
   LogicalRect cb(wm);
@@ -5046,14 +5044,14 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   } else {
     // By convention, for frames that perform CSS Box Alignment, we position
     // placeholder children at the start corner of their alignment container,
-    // and in this case that's usually the grid's padding box.
+    // and in this case that's usually the grid's content-box.
     // ("Usually" - the exception is when the grid *also* forms the
     // abs.pos. containing block. In that case, the alignment container isn't
-    // the padding box -- it's some grid area instead.  But that case doesn't
+    // the content-box -- it's some grid area instead.  But that case doesn't
     // require any special handling here, because we handle it later using a
     // special flag (STATIC_POS_IS_CB_ORIGIN) which will make us ignore the
     // placeholder's position entirely.)
-    cb = aContentArea - padStart;
+    cb = aContentArea;
     aChild->AddStateBits(PLACEHOLDER_STATICPOS_NEEDS_CSSALIGN);
   }
 

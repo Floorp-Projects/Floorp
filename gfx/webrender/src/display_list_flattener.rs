@@ -23,7 +23,7 @@ use gpu_types::BrushFlags;
 use hit_test::{HitTestingItem, HitTestingRun};
 use image::simplify_repeated_primitive;
 use internal_types::{FastHashMap, FastHashSet};
-use picture::{PictureCompositeMode, PictureId, PicturePrimitive};
+use picture::{PictureCompositeMode, PictureIdGenerator, PicturePrimitive};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor};
 use prim_store::{EdgeAaSegmentMask, ImageSource};
 use prim_store::{BorderSource, BrushSegment, PrimitiveContainer, PrimitiveIndex, PrimitiveStore};
@@ -34,7 +34,7 @@ use scene::{Scene, ScenePipeline, StackingContextHelpers};
 use spatial_node::{SpatialNodeType, StickyFrameInfo};
 use std::{f32, iter, mem};
 use tiling::{CompositeOps, ScrollbarPrimitive};
-use util::{MaxRect, RectHelpers, recycle_vec};
+use util::{MaxRect, RectHelpers};
 
 static DEFAULT_SCROLLBAR_COLOR: ColorF = ColorF {
     r: 0.3,
@@ -93,6 +93,9 @@ pub struct DisplayListFlattener<'a> {
     /// The ClipScrollTree that we are currently building during flattening.
     clip_scroll_tree: &'a mut ClipScrollTree,
 
+    /// A counter for generating unique picture ids.
+    picture_id_generator: &'a mut PictureIdGenerator,
+
     /// The map of all font instances.
     font_instances: FontInstanceMap,
 
@@ -128,13 +131,10 @@ pub struct DisplayListFlattener<'a> {
     /// The configuration to use for the FrameBuilder. We consult this in
     /// order to determine the default font.
     pub config: FrameBuilderConfig,
-
-    pub next_picture_id: u64,
 }
 
 impl<'a> DisplayListFlattener<'a> {
     pub fn create_frame_builder(
-        old_builder: FrameBuilder,
         scene: &Scene,
         clip_scroll_tree: &mut ClipScrollTree,
         font_instances: FontInstanceMap,
@@ -143,6 +143,7 @@ impl<'a> DisplayListFlattener<'a> {
         frame_builder_config: &FrameBuilderConfig,
         new_scene: &mut Scene,
         scene_id: u64,
+        picture_id_generator: &mut PictureIdGenerator,
     ) -> FrameBuilder {
         // We checked that the root pipeline is available on the render backend.
         let root_pipeline_id = scene.root_pipeline_id.unwrap();
@@ -159,14 +160,14 @@ impl<'a> DisplayListFlattener<'a> {
             config: *frame_builder_config,
             output_pipelines,
             id_to_index_mapper: ClipIdToIndexMapper::default(),
-            hit_testing_runs: recycle_vec(old_builder.hit_testing_runs),
-            scrollbar_prims: recycle_vec(old_builder.scrollbar_prims),
+            hit_testing_runs: Vec::new(),
+            scrollbar_prims: Vec::new(),
             shadow_stack: Vec::new(),
             sc_stack: Vec::new(),
-            next_picture_id: old_builder.next_picture_id,
             pipeline_clip_chain_stack: vec![ClipChainId::NONE],
-            prim_store: old_builder.prim_store.recycle(),
-            clip_store: old_builder.clip_store.recycle(),
+            prim_store: PrimitiveStore::new(),
+            clip_store: ClipStore::new(),
+            picture_id_generator,
         };
 
         flattener.push_root(
@@ -887,12 +888,6 @@ impl<'a> DisplayListFlattener<'a> {
         }
     }
 
-    fn get_next_picture_id(&mut self) -> PictureId {
-        let id = PictureId(self.next_picture_id);
-        self.next_picture_id += 1;
-        id
-    }
-
     pub fn push_stacking_context(
         &mut self,
         pipeline_id: PipelineId,
@@ -972,7 +967,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         // Add picture for this actual stacking context contents to render into.
         let leaf_picture = PicturePrimitive::new_image(
-            self.get_next_picture_id(),
+            self.picture_id_generator.next(),
             composite_mode,
             participating_in_3d_context,
             pipeline_id,
@@ -1001,7 +996,7 @@ impl<'a> DisplayListFlattener<'a> {
         // For each filter, create a new image with that composite mode.
         for filter in &composite_ops.filters {
             let mut filter_picture = PicturePrimitive::new_image(
-                self.get_next_picture_id(),
+                self.picture_id_generator.next(),
                 Some(PictureCompositeMode::Filter(*filter)),
                 false,
                 pipeline_id,
@@ -1026,7 +1021,7 @@ impl<'a> DisplayListFlattener<'a> {
         // Same for mix-blend-mode.
         if let Some(mix_blend_mode) = composite_ops.mix_blend_mode {
             let mut blend_picture = PicturePrimitive::new_image(
-                self.get_next_picture_id(),
+                self.picture_id_generator.next(),
                 Some(PictureCompositeMode::MixBlend(mix_blend_mode)),
                 false,
                 pipeline_id,
@@ -1053,7 +1048,7 @@ impl<'a> DisplayListFlattener<'a> {
             // that will be the container for all the planes and any
             // un-transformed content.
             let mut container_picture = PicturePrimitive::new_image(
-                self.get_next_picture_id(),
+                self.picture_id_generator.next(),
                 None,
                 false,
                 pipeline_id,
@@ -1328,7 +1323,7 @@ impl<'a> DisplayListFlattener<'a> {
         // detect this and mark the picture to be drawn directly into the
         // parent picture, which avoids an intermediate surface and blur.
         let shadow_pic = PicturePrimitive::new_image(
-            self.get_next_picture_id(),
+            self.picture_id_generator.next(),
             Some(PictureCompositeMode::Filter(FilterOp::Blur(std_deviation))),
             false,
             pipeline_id,

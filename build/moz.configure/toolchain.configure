@@ -217,8 +217,8 @@ set_config('XCODE_PATH', xcode_path)
 option('--with-compiler-wrapper', env='COMPILER_WRAPPER', nargs=1,
        help='Enable compiling with wrappers such as distcc and ccache')
 
-option('--with-ccache', env='CCACHE', nargs='?',
-       help='Enable compiling with ccache')
+js_option('--with-ccache', env='CCACHE', nargs='?',
+          help='Enable compiling with ccache')
 
 
 @depends_if('--with-ccache')
@@ -532,8 +532,8 @@ def check_compiler(compiler, language, target):
         elif info.type == 'clang-cl' and info.language_version != cxx14_version:
             append_flag('-std=c++14')
 
-    # We force clang-cl to emulate Visual C++ 2017 version 15.6.0
-    msvc_version = '19.13.26128'
+    # We force clang-cl to emulate Visual C++ 2017 version 15.8.4
+    msvc_version = '19.15.26726'
     if info.type == 'clang-cl' and info.version != msvc_version:
         # This flag is a direct clang-cl flag that doesn't need -Xclang,
         # add it directly.
@@ -1283,6 +1283,32 @@ set_config('WRAP_SYSTEM_INCLUDES', wrap_system_includes)
 set_config('VISIBILITY_FLAGS', visibility_flags)
 
 
+@depends(c_compiler, using_sccache)
+def depend_cflags(info, using_sccache):
+    if info.type not in ('clang-cl', 'msvc'):
+        return ['-MD', '-MP', '-MF $(MDDEPDIR)/$(@F).pp']
+    elif info.type == 'clang-cl':
+        # clang-cl doesn't accept the normal -MD -MP -MF options that clang
+        # does, but the underlying cc1 binary understands how to generate
+        # dependency files.  These options are based on analyzing what the
+        # normal clang driver sends to cc1 when given the "correct"
+        # dependency options.
+        return [
+            '-Xclang', '-MP',
+            '-Xclang', '-dependency-file',
+            '-Xclang', '$(MDDEPDIR)/$(@F).pp',
+            '-Xclang', '-MT',
+            '-Xclang', '$@'
+        ]
+    elif using_sccache:
+        # sccache supports a special flag to create depfiles
+        # by parsing MSVC's -showIncludes output.
+        return ['-deps$(MDDEPDIR)/$(@F).pp']
+
+
+set_config('_DEPEND_CFLAGS', depend_cflags)
+
+
 @depends(c_compiler, check_build_environment, target)
 @imports('multiprocessing')
 @imports(_from='__builtin__', _import='min')
@@ -1461,6 +1487,26 @@ def asan(value, _):
 
 add_old_configure_assignment('MOZ_ASAN', asan)
 
+# UBSAN
+# ==============================================================
+
+js_option('--enable-undefined-sanitizer',
+          nargs='*',
+          help='Enable UndefinedBehavior Sanitizer')
+
+@depends_if('--enable-undefined-sanitizer')
+def ubsan(options):
+    default_checks = [
+        'bool',
+        'bounds',
+        'vla-bound',
+    ]
+
+    checks = options if len(options) else default_checks
+
+    return ','.join(checks)
+
+add_old_configure_assignment('MOZ_UBSAN_CHECKS', ubsan)
 
 # Security Hardening
 # ==============================================================
