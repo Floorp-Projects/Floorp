@@ -4166,6 +4166,7 @@ nsFlexContainerFrame::ComputeCrossSize(const ReflowInput& aReflowInput,
   // Row-oriented case, with size-containment:
   // Behave as if we had no content and just use our MinBSize.
   if (aReflowInput.mStyleDisplay->IsContainSize()) {
+    *aIsDefinite = true;
     return aReflowInput.ComputedMinBSize();
   }
 
