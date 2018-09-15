@@ -113,6 +113,10 @@ nsLookAndFeel::NativeInit()
 void
 nsLookAndFeel::RefreshImpl()
 {
+  if (mShouldRetainCacheForTest) {
+    return;
+  }
+
   nsXPLookAndFeel::RefreshImpl();
 
   // We should only clear the cache if we're in the main browser process.
