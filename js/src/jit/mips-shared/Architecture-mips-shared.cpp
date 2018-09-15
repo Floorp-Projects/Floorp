@@ -30,19 +30,23 @@ get_mips_flags()
 #else
 # ifdef __linux__
     FILE* fp = fopen("/proc/cpuinfo", "r");
-    if (!fp)
+    if (!fp) {
         return flags;
+    }
 
     char buf[1024];
     memset(buf, 0, sizeof(buf));
     (void)fread(buf, sizeof(char), sizeof(buf) - 1, fp);
     fclose(fp);
-    if (strstr(buf, "FPU"))
+    if (strstr(buf, "FPU")) {
         flags |= HWCAP_FPU;
-    if (strstr(buf, "Loongson"))
+    }
+    if (strstr(buf, "Loongson")) {
         flags |= HWCAP_LOONGSON;
-    if (strstr(buf, "mips32r2") || strstr(buf, "mips64r2"))
+    }
+    if (strstr(buf, "mips32r2") || strstr(buf, "mips64r2")) {
         flags |= HWCAP_R2;
+    }
 # endif
 #endif // JS_SIMULATOR_MIPS32 || JS_SIMULATOR_MIPS64
     return flags;
@@ -75,8 +79,9 @@ Registers::Code
 Registers::FromName(const char* name)
 {
     for (size_t i = 0; i < Total; i++) {
-        if (strcmp(GetName(i), name) == 0)
+        if (strcmp(GetName(i), name) == 0) {
             return Code(i);
+        }
     }
 
     return Invalid;
