@@ -15,7 +15,7 @@
 #include "nsIAppShellService.h"
 #include "nsIAppStartup.h"
 #include "nsIBaseWindow.h"
-#include "nsICommandLineRunner.h"
+#include "nsCommandLine.h"
 #include "mozIDOMWindow.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
@@ -167,9 +167,7 @@ nsNativeAppSupportCocoa::ReOpen()
       char* argv[] = { nullptr };
 
       // use an empty command line to make the right kind(s) of window open
-      nsCOMPtr<nsICommandLineRunner> cmdLine
-        (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
-      NS_ENSURE_TRUE(cmdLine, NS_ERROR_FAILURE);
+      nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
 
       nsresult rv;
       rv = cmdLine->Init(0, argv, nullptr,
