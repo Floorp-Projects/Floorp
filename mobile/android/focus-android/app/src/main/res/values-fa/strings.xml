@@ -229,4 +229,5 @@
   <string name="tip_autocomplete_url">پرکردن خودکارURLs برای سایت های پربازدید شما\n نگاه داشتن بیشتر انگشت بر روی هر URL در نوار آدرس برای انجام این کار</string>
   <string name="tip_open_in_new_tab">بازکردن یک پیوند در زبانه جدید\n نگاه داشتن بیشتر انگشت برای باز کردن پیوند در صفحه</string>
   <string name="tip_request_desktop">ترجیح به دیدن نسخه رومیزی وب‌سایت؟%1$s فهرست &gt; درخواست نسخه رومیزی وب‌سایت</string>
+  <string name="tip_disable_tips">خاموش کردن نکات بر روی صفحه آغازین %1$s</string>
 </resources>

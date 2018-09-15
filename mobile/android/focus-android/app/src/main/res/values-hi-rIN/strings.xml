@@ -4,8 +4,8 @@
   <string name="action_ok">ठीक है</string>
   <string name="action_save">सहेजें</string>
   <string name="urlbar_hint">खोजें या पता दर्ज करें</string>
-  <string name="teaser">स्वचालित निजी ब्राउज़िंगl\nब्राउज़ करेंl मिटाएँl दोहराएँl</string>
-  <string name="feedback_erase">आपका ब्राउज़िंग इतिहास मिटा दिया गया हैl</string>
+  <string name="teaser">स्वचलित निजी ब्राउज़िंग।\nब्राउज़ करें। मिटाएँ। दोहराएँ।</string>
+  <string name="feedback_erase">आपका ब्राउज़िंग इतिहास मिटा दिया गया है।</string>
   <string name="search_hint">%1$s लिए खोजें</string>
   <string name="menu_share">साझा करें…</string>
   <string name="menu_report_site_issue">साइट समस्या की रिपोर्ट करें</string>
@@ -55,15 +55,15 @@
   <string name="preference_category_data_choices">आँकड़ा विकल्प</string>
   <string name="preference_autocomplete_title_remove">उपभोक्ता संशोधित URL हटाएँ</string>
   <string name="preference_autocomplete_learn_more">और जानें</string>
-  <string name="preference_autocomplete_custom_summary">उपभोक्ता संशोधित स्वत: पूर्ण URLs जोड़ें और प्रबंधित करेंl</string>
+  <string name="preference_autocomplete_custom_summary">उपभोक्ता संशोधित स्वत: पूर्ण URLs जोड़ें और प्रबंधित करें।</string>
   <string name="preference_autocomplete_add_title">जोड़ने के लिए URL</string>
   <string name="preference_autocomplete_add_hint">URL पेस्ट करें या दर्ज करें</string>
   <string name="preference_autocomplete_add_example2">उदाहरण: mozilla.org</string>
   <string name="preference_autocomplete_add_example">उदाहरण: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">नया उपभोक्ता संशोधित URL जोड़ा गयाl</string>
+  <string name="preference_autocomplete_add_confirmation">नया उपभोक्ता संशोधित URL जोड़ा गया।</string>
   <string name="preference_autocomplete_menu_remove">हटाएँ</string>
   <string name="preference_autocomplete_action_remove_content_description">हटाएँ</string>
-  <string name="preference_autocomplete_add_error">आपके द्वारा दर्ज URL की दोहरी जाँच करेंl</string>
+  <string name="preference_autocomplete_add_error">आपके द्वारा दर्ज URL की दोहरी जाँच करें।</string>
   <string name="preference_language">भाषा</string>
   <string name="preference_language_systemdefault">प्रणाली तयशुदा</string>
   <string name="preference_category_privacy">गोपनीयता</string>
@@ -80,9 +80,9 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">केवल तीसरे पक्ष की कुकीज़ बाधित करें</string>
   <string name="preference_privacy_should_block_cookies_yes_option">हाँ</string>
   <string name="preference_security_biometric">ऐप्प को अनलॉक करने के लिए फिंगरप्रिंट का इस्तेमाल करें</string>
-  <string name="preference_security_biometric_summary">यदि ऐप्प में पहले ही कोई URL खुली हो तो आपकी फिंगरप्रिंट %1$s को अनलॉक कर सकती है. गोपनीयता चालू हो जायेगी.</string>
+  <string name="preference_security_biometric_summary">यदि ऐप्प में पहले ही कोई URL खुली हो तो आपकी फिंगरप्रिंट %1$s को अनलॉक कर सकती है. गोपनीयता चालू हो जायेगी।</string>
   <string name="preference_privacy_secure_mode">तरक़ीब</string>
-  <string name="preference_privacy_stealth_summary">एक ऐप्प से दुसरे ऐप्प पर जाते समय वेबपृष्ठों को छिपाएं तथा स्क्रीनशॉट लेना ब्लॉक करें.</string>
+  <string name="preference_privacy_stealth_summary">एक ऐप्प से दुसरे ऐप्प पर जाते समय वेबपृष्ठों को छिपाएं तथा स्क्रीनशॉट लेना ब्लॉक करें।</string>
   <string name="preference_category_security">सुरक्षा</string>
   <string name="preference_category_performance">प्रदर्शन</string>
   <string name="preference_performance_block_webfonts">वेब लिपियों को अवरुद्ध करें</string>
@@ -93,7 +93,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">उपयोग डेटा भेजें</string>
   <string name="preference_mozilla_telemetry_summary">और अधिक जानें</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla मात्र वही एकत्रित करने का प्रयास करता है जिसकी हमें %1$s को बेहतर बनाने और सबको उपलब्ध कराने के लिए आवश्यकता हैl</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla मात्र वही एकत्रित करने का प्रयास करता है जिसकी हमें %1$s को बेहतर बनाने और सबको उपलब्ध कराने के लिए आवश्यकता है।</string>
   <string name="preference_privacy_notice">गोपनीयता सूचना</string>
   <string name="preference_about">%1$s के बारे में</string>
   <string name="preference_search_installed_search_engines">संस्थापित खोज इंजन</string>
@@ -107,9 +107,9 @@
   <string name="search_add_manually_string">उपयोग के लिए खोज स्ट्रिंग</string>
   <string name="search_add_manually_save">सहेजें</string>
   <string name="search_add_manually_example">उदाहरण: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">नया खोज इंजन संकलितl</string>
+  <string name="search_add_confirmation">नया खोज इंजन संकलित।</string>
   <string name="search_add_error_empty_name">खोज इंजन का नाम दर्ज करें</string>
-  <string name="search_add_error_duplicate_name">एक मौजूदा खोज इंजन पहले से उस नाम का उपयोग कर रहा हैl</string>
+  <string name="search_add_error_duplicate_name">एक मौजूदा खोज इंजन पहले से उस नाम का उपयोग कर रहा है।</string>
   <string name="search_add_error_empty_search">खोज स्ट्रिंग दर्ज करें</string>
   <string name="search_add_error_format">जाँचें कि खोज स्ट्रिंग उदाहरण संरूप से मेल खाती है</string>
   <string name="content_description_clear_input">इनपुट मिटाएँ</string>
@@ -129,48 +129,48 @@
   <string name="content_description_blocking_switch">ट्रैकर्स को अवरुद्ध करें</string>
   <string name="your_rights">आपके अधिकार</string>
   <string name="external_app_prompt_title">किसी अन्य अनुप्रयोग में लिंक खोलें</string>
-  <string name="external_app_prompt">आप इस लिंक को %2$s में खोलने के लिए %1$s को छोड़ सकते हैंl</string>
+  <string name="external_app_prompt">आप इस लिंक को %2$s में खोलने के लिए %1$s को छोड़ सकते हैं।</string>
   <string name="external_app_prompt_no_app_title">एक ऐप ढूंढें जो लिंक खोल सकता है</string>
-  <string name="external_app_prompt_no_app">आपके डिवाइस पर मौजूद कोई ऐप इस लिंक को खोलने में सक्षम नहीं है. आप एक एप के लिए %2$s की खोज हेतु %1$s को छोड़ सकते हैं जो कर सकता हैl</string>
+  <string name="external_app_prompt_no_app">आपके डिवाइस पर मौजूद कोई ऐप इस लिंक को खोलने में सक्षम नहीं है। आप एक एप के लिए %2$s की खोज हेतु %1$s को छोड़ सकते हैं जो कर सकता है।</string>
   <string name="external_multiple_apps_matched_exit">निजी ब्राउज़िंग से बाहर निकलें?</string>
   <string name="download_snackbar_finished">%1$s खत्म हुआ</string>
   <string name="download_snackbar_open">खोले</string>
-  <string name="download_dialog_warning"><![CDATA["%1$s इतिहास मिटाने के बाद भी डाउनलोड किया हुआ फाइल "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2344;&#2361;&#2368; &#2350;&#2367;&#2335;&#2375;&#2327;&#2366;</b>l]]></string>
+  <string name="download_dialog_warning"><![CDATA["%1$s इतिहास मिटाने के बाद भी डाउनलोड किया हुआ फाइल "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2344;&#2361;&#2368; &#2350;&#2367;&#2335;&#2375;&#2327;&#2366;</b>।]]></string>
   <string name="download_dialog_title">फाइल डाउनलोड करें</string>
   <string name="download_dialog_action_cancel">रद्द</string>
   <string name="download_dialog_action_download">डाउनलोड</string>
   <string name="errorpage_title">पृष्ठ की लोडिंग में समस्या</string>
   <string name="errorpage_refresh">पुन: प्रयास करें</string>
   <string name="error_connectionfailure_title">संपर्क करने में असमर्थ</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>&#2351;&#2361; &#2360;&#2366;&#2311;&#2335; &#2309;&#2360;&#2381;&#2341;&#2366;&#2312; &#2352;&#2370;&#2346; &#2360;&#2375; &#2309;&#2344;&#2369;&#2346;&#2354;&#2348;&#2381;&#2343; &#2351;&#2366; &#2348;&#2361;&#2369;&#2340; &#2357;&#2381;&#2351;&#2360;&#2381;&#2340; &#2361;&#2379; &#2360;&#2325;&#2340;&#2366; &#2361;&#2376;. &#2325;&#2369;&#2331; &#2361;&#2368; &#2325;&#2381;&#2359;&#2339;&#2379;&#2306; &#2350;&#2375;&#2306; &#2347;&#2367;&#2352; &#2360;&#2375; &#2346;&#2381;&#2352;&#2351;&#2366;&#2360; &#2325;&#2352;&#2375;&#2306;.</li>"\n        "<li>&#2351;&#2342;&#2367; &#2310;&#2346; &#2325;&#2379;&#2312; &#2346;&#2371;&#2359;&#2381;&#2336; &#2354;&#2379;&#2337; &#2325;&#2352;&#2344;&#2375; &#2350;&#2375;&#2306; &#2309;&#2360;&#2350;&#2352;&#2381;&#2341; &#2361;&#2376;&#2306;, &#2340;&#2379; &#2309;&#2346;&#2344;&#2375; &#2350;&#2379;&#2348;&#2366;&#2311;&#2354; &#2313;&#2346;&#2325;&#2352;&#2339; &#2325;&#2375; &#2337;&#2375;&#2335;&#2366; &#2351;&#2366; &#2357;&#2366;&#2312;-&#2347;&#2366;&#2312; &#2325;&#2344;&#2375;&#2325;&#2381;&#2358;&#2344; &#2325;&#2368; &#2332;&#2366;&#2305;&#2330; &#2325;&#2352;&#2375;&#2306;.</li>"\n      "</ul>]]></string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>&#2351;&#2361; &#2360;&#2366;&#2311;&#2335; &#2309;&#2360;&#2381;&#2341;&#2366;&#2312; &#2352;&#2370;&#2346; &#2360;&#2375; &#2309;&#2344;&#2369;&#2346;&#2354;&#2348;&#2381;&#2343; &#2351;&#2366; &#2348;&#2361;&#2369;&#2340; &#2357;&#2381;&#2351;&#2360;&#2381;&#2340; &#2361;&#2379; &#2360;&#2325;&#2340;&#2366; &#2361;&#2376;. &#2325;&#2369;&#2331; &#2361;&#2368; &#2325;&#2381;&#2359;&#2339;&#2379;&#2306; &#2350;&#2375;&#2306; &#2347;&#2367;&#2352; &#2360;&#2375; &#2346;&#2381;&#2352;&#2351;&#2366;&#2360; &#2325;&#2352;&#2375;&#2306;&#2404;</li>"\n        "<li>&#2351;&#2342;&#2367; &#2310;&#2346; &#2325;&#2379;&#2312; &#2346;&#2371;&#2359;&#2381;&#2336; &#2354;&#2379;&#2337; &#2325;&#2352;&#2344;&#2375; &#2350;&#2375;&#2306; &#2309;&#2360;&#2350;&#2352;&#2381;&#2341; &#2361;&#2376;&#2306;, &#2340;&#2379; &#2309;&#2346;&#2344;&#2375; &#2350;&#2379;&#2348;&#2366;&#2311;&#2354; &#2313;&#2346;&#2325;&#2352;&#2339; &#2325;&#2375; &#2337;&#2375;&#2335;&#2366; &#2351;&#2366; &#2357;&#2366;&#2312;-&#2347;&#2366;&#2312; &#2325;&#2344;&#2375;&#2325;&#2381;&#2358;&#2344; &#2325;&#2368; &#2332;&#2366;&#2305;&#2330; &#2325;&#2352;&#2375;&#2306;&#2404;</li>"\n      "</ul>]]></string>
   <string name="error_timeout_title">संपर्क समयबाह्य हो गया</string>
   <string name="error_hostLookup_title">सर्वर नहीं मिला</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li><strong>ww</strong>"&#2332;&#2376;&#2360;&#2368; &#2354;&#2367;&#2326;&#2367;&#2340; &#2340;&#2381;&#2352;&#2369;&#2335;&#2367;&#2351;&#2379;&#2306; &#2325;&#2375; &#2354;&#2367;&#2319; &#2346;&#2340;&#2375; &#2325;&#2368; &#2332;&#2366;&#2305;&#2330; &#2325;&#2352;&#2375;&#2306;. "<strong>www</strong>&#2325;&#2375; &#2348;&#2332;&#2366;&#2351; example.com. example.com</li>"\n        "<li>&#2351;&#2342;&#2367; &#2310;&#2346; &#2325;&#2367;&#2360;&#2368; &#2349;&#2368; &#2346;&#2371;&#2359;&#2381;&#2336; &#2354;&#2379;&#2337; &#2325;&#2352;&#2344;&#2375; &#2350;&#2375;&#2306; &#2309;&#2360;&#2350;&#2352;&#2381;&#2341; &#2361;&#2376;&#2306;, &#2340;&#2379; &#2309;&#2346;&#2344;&#2375; &#2313;&#2346;&#2325;&#2352;&#2339; &#2325;&#2375; &#2337;&#2375;&#2335;&#2366; &#2351;&#2366; &#2357;&#2366;&#2312;-&#2347;&#2366;&#2312; &#2325;&#2344;&#2375;&#2325;&#2381;&#2358;&#2344; &#2325;&#2368; &#2332;&#2366;&#2305;&#2330; &#2325;&#2352;&#2375;&#2306;&#2404;</li>"\n      "</ul>]]></string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li><strong>ww</strong>&#2332;&#2376;&#2360;&#2368; &#2354;&#2367;&#2326;&#2367;&#2340; &#2340;&#2381;&#2352;&#2369;&#2335;&#2367;&#2351;&#2379;&#2306; &#2325;&#2375; &#2354;&#2367;&#2319; &#2346;&#2340;&#2375; &#2325;&#2368; &#2332;&#2366;&#2305;&#2330; &#2325;&#2352;&#2375;&#2306;&#2404;<strong>www</strong>&#2325;&#2375; &#2348;&#2332;&#2366;&#2351; example.com. example.com</li>"\n        "<li>&#2351;&#2342;&#2367; &#2310;&#2346; &#2325;&#2367;&#2360;&#2368; &#2349;&#2368; &#2346;&#2371;&#2359;&#2381;&#2336; &#2354;&#2379;&#2337; &#2325;&#2352;&#2344;&#2375; &#2350;&#2375;&#2306; &#2309;&#2360;&#2350;&#2352;&#2381;&#2341; &#2361;&#2376;&#2306;, &#2340;&#2379; &#2309;&#2346;&#2344;&#2375; &#2313;&#2346;&#2325;&#2352;&#2339; &#2325;&#2375; &#2337;&#2375;&#2335;&#2366; &#2351;&#2366; &#2357;&#2366;&#2312;-&#2347;&#2366;&#2312; &#2325;&#2344;&#2375;&#2325;&#2381;&#2358;&#2344; &#2325;&#2368; &#2332;&#2366;&#2305;&#2330; &#2325;&#2352;&#2375;&#2306;&#2404;</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">पता वैध नहीं है</string>
-  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"&#2357;&#2375;&#2348; &#2346;&#2340;&#2375; &#2310;&#2350;&#2340;&#2380;&#2352; &#2346;&#2352; "<strong>http://www.example.com/</strong>" &#2325;&#2368; &#2340;&#2352;&#2361; &#2354;&#2367;&#2326;&#2375; &#2361;&#2379;&#2340;&#2375; &#2361;&#2376;&#2306;"</li>"\n  "<li>"&#2360;&#2369;&#2344;&#2367;&#2358;&#2381;&#2330;&#2367;&#2340; &#2325;&#2352;&#2375;&#2306; &#2325;&#2367; &#2310;&#2346; &#2309;&#2327;&#2381;&#2352;&#2340;&#2367;&#2351;&#2325; &#2360;&#2381;&#2354;&#2376;&#2358; &#2325;&#2366; &#2313;&#2346;&#2351;&#2379;&#2327; &#2325;&#2352; &#2352;&#2361;&#2375; &#2361;&#2376;&#2306; (&#2351;&#2366;&#2344;&#2368; "<strong>/</strong>)l</li>\n</ul>]]></string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"&#2357;&#2375;&#2348; &#2346;&#2340;&#2375; &#2310;&#2350;&#2340;&#2380;&#2352; &#2346;&#2352; "<strong>http://www.example.com/</strong>" &#2325;&#2368; &#2340;&#2352;&#2361; &#2354;&#2367;&#2326;&#2375; &#2361;&#2379;&#2340;&#2375; &#2361;&#2376;&#2306;"</li>"\n  "<li>"&#2360;&#2369;&#2344;&#2367;&#2358;&#2381;&#2330;&#2367;&#2340; &#2325;&#2352;&#2375;&#2306; &#2325;&#2367; &#2310;&#2346; &#2309;&#2327;&#2381;&#2352;&#2340;&#2367;&#2351;&#2325; &#2360;&#2381;&#2354;&#2376;&#2358; &#2325;&#2366; &#2313;&#2346;&#2351;&#2379;&#2327; &#2325;&#2352; &#2352;&#2361;&#2375; &#2361;&#2376;&#2306; (&#2351;&#2366;&#2344;&#2368; "<strong>/</strong>)&#2404;</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">पृष्ठ ठीक से पुनर्निर्देशित नहीं हो रहा है</string>
-  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#2325;&#2349;&#2368;-&#2325;&#2349;&#2368; &#2311;&#2360; &#2360;&#2350;&#2360;&#2381;&#2351;&#2366; &#2325;&#2366; &#2325;&#2366;&#2352;&#2339; &#2325;&#2369;&#2325;&#2368;&#2332;&#2364; &#2325;&#2379; &#2360;&#2381;&#2357;&#2368;&#2325;&#2366;&#2352; &#2325;&#2352;&#2344;&#2375; &#2360;&#2375; &#2350;&#2344;&#2366; &#2325;&#2352;&#2344;&#2366; &#2351;&#2366; &#2309;&#2325;&#2381;&#2359;&#2350; &#2325;&#2352;&#2344;&#2366; &#2361;&#2379; &#2360;&#2325;&#2340;&#2366; &#2361;&#2376;l</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#2325;&#2349;&#2368;-&#2325;&#2349;&#2368; &#2311;&#2360; &#2360;&#2350;&#2360;&#2381;&#2351;&#2366; &#2325;&#2366; &#2325;&#2366;&#2352;&#2339; &#2325;&#2369;&#2325;&#2368;&#2332;&#2364; &#2325;&#2379; &#2360;&#2381;&#2357;&#2368;&#2325;&#2366;&#2352; &#2325;&#2352;&#2344;&#2375; &#2360;&#2375; &#2350;&#2344;&#2366; &#2325;&#2352;&#2344;&#2366; &#2351;&#2366; &#2309;&#2325;&#2381;&#2359;&#2350; &#2325;&#2352;&#2344;&#2366; &#2361;&#2379; &#2360;&#2325;&#2340;&#2366; &#2361;&#2376;&#2404;</li>\n</ul>]]></string>
   <string name="error_unsupportedprotocol_title">पता समझा नहीं गया था</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#2310;&#2346;&#2325;&#2379; &#2311;&#2360; &#2346;&#2340;&#2375; &#2325;&#2379; &#2326;&#2379;&#2354;&#2344;&#2375; &#2325;&#2375; &#2354;&#2367;&#2319; &#2309;&#2344;&#2381;&#2351; &#2360;&#2377;&#2347;&#2364;&#2381;&#2335;&#2357;&#2375;&#2351;&#2352; &#2360;&#2306;&#2360;&#2381;&#2341;&#2366;&#2346;&#2367;&#2340; &#2325;&#2352;&#2344;&#2375; &#2325;&#2368; &#2310;&#2357;&#2358;&#2381;&#2351;&#2325;&#2340;&#2366; &#2361;&#2379; &#2360;&#2325;&#2340;&#2368; &#2361;&#2376;l</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#2310;&#2346;&#2325;&#2379; &#2311;&#2360; &#2346;&#2340;&#2375; &#2325;&#2379; &#2326;&#2379;&#2354;&#2344;&#2375; &#2325;&#2375; &#2354;&#2367;&#2319; &#2309;&#2344;&#2381;&#2351; &#2360;&#2377;&#2347;&#2364;&#2381;&#2335;&#2357;&#2375;&#2351;&#2352; &#2360;&#2306;&#2360;&#2381;&#2341;&#2366;&#2346;&#2367;&#2340; &#2325;&#2352;&#2344;&#2375; &#2325;&#2368; &#2310;&#2357;&#2358;&#2381;&#2351;&#2325;&#2340;&#2366; &#2361;&#2379; &#2360;&#2325;&#2340;&#2368; &#2361;&#2376;&#2404;</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">सुरक्षित संपर्क विफ़ल</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#2351;&#2361; &#2360;&#2352;&#2381;&#2357;&#2352; &#2325;&#2375; &#2325;&#2377;&#2344;&#2381;&#2347;&#2364;&#2367;&#2327;&#2352;&#2375;&#2358;&#2344; &#2350;&#2375;&#2306; &#2319;&#2325; &#2360;&#2350;&#2360;&#2381;&#2351;&#2366; &#2361;&#2379; &#2360;&#2325;&#2340;&#2368; &#2361;&#2376;, &#2351;&#2366; &#2351;&#2361; &#2361;&#2379; &#2360;&#2325;&#2340;&#2366; &#2361;&#2376;\n&#2325;&#2379;&#2312; &#2360;&#2352;&#2381;&#2357;&#2352; &#2325;&#2366; &#2346;&#2381;&#2352;&#2340;&#2367;&#2352;&#2370;&#2346;&#2339; &#2325;&#2352;&#2344;&#2375; &#2325;&#2366; &#2346;&#2381;&#2352;&#2351;&#2366;&#2360; &#2325;&#2352; &#2352;&#2361;&#2366; &#2361;&#2376;l</li>"\n  "<li>&#2309;&#2327;&#2352; &#2310;&#2346; &#2346;&#2370;&#2352;&#2381;&#2357; &#2350;&#2375;&#2306; &#2311;&#2360; &#2360;&#2352;&#2381;&#2357;&#2352; &#2360;&#2375; &#2360;&#2347;&#2354;&#2340;&#2366;&#2346;&#2370;&#2352;&#2381;&#2357;&#2325; &#2332;&#2369;&#2396; &#2330;&#2369;&#2325;&#2375; &#2361;&#2376;, &#2340;&#2379; &#2340;&#2381;&#2352;&#2369;&#2335;&#2367; &#2309;&#2360;&#2381;&#2341;&#2366;&#2351;&#2368; &#2361;&#2379; &#2360;&#2325;&#2340;&#2368; &#2361;&#2376;, &#2324;&#2352; &#2310;&#2346; &#2348;&#2366;&#2342; &#2350;&#2375;&#2306; &#2346;&#2369;&#2344;&#2307; &#2346;&#2381;&#2352;&#2351;&#2366;&#2360; &#2325;&#2352; &#2360;&#2325;&#2340;&#2375; &#2361;&#2376;&#2306;l</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#2351;&#2361; &#2360;&#2352;&#2381;&#2357;&#2352; &#2325;&#2375; &#2325;&#2377;&#2344;&#2381;&#2347;&#2364;&#2367;&#2327;&#2352;&#2375;&#2358;&#2344; &#2350;&#2375;&#2306; &#2319;&#2325; &#2360;&#2350;&#2360;&#2381;&#2351;&#2366; &#2361;&#2379; &#2360;&#2325;&#2340;&#2368; &#2361;&#2376;, &#2351;&#2366; &#2351;&#2361; &#2361;&#2379; &#2360;&#2325;&#2340;&#2366; &#2361;&#2376;\n&#2325;&#2379;&#2312; &#2360;&#2352;&#2381;&#2357;&#2352; &#2325;&#2366; &#2346;&#2381;&#2352;&#2340;&#2367;&#2352;&#2370;&#2346;&#2339; &#2325;&#2352;&#2344;&#2375; &#2325;&#2366; &#2346;&#2381;&#2352;&#2351;&#2366;&#2360; &#2325;&#2352; &#2352;&#2361;&#2366; &#2361;&#2376;&#2404;</li>"\n  "<li>&#2309;&#2327;&#2352; &#2310;&#2346; &#2346;&#2370;&#2352;&#2381;&#2357; &#2350;&#2375;&#2306; &#2311;&#2360; &#2360;&#2352;&#2381;&#2357;&#2352; &#2360;&#2375; &#2360;&#2347;&#2354;&#2340;&#2366;&#2346;&#2370;&#2352;&#2381;&#2357;&#2325; &#2332;&#2369;&#2396; &#2330;&#2369;&#2325;&#2375; &#2361;&#2376;, &#2340;&#2379; &#2340;&#2381;&#2352;&#2369;&#2335;&#2367; &#2309;&#2360;&#2381;&#2341;&#2366;&#2351;&#2368; &#2361;&#2379; &#2360;&#2325;&#2340;&#2368; &#2361;&#2376;, &#2324;&#2352; &#2310;&#2346; &#2348;&#2366;&#2342; &#2350;&#2375;&#2306; &#2346;&#2369;&#2344;&#2307; &#2346;&#2381;&#2352;&#2351;&#2366;&#2360; &#2325;&#2352; &#2360;&#2325;&#2340;&#2375; &#2361;&#2376;&#2306;&#2404;</li>\n</ul>]]></string>
   <string name="error_generic_title">ओह</string>
-  <string name="error_generic_message">हम किसी कारण से इस पृष्ठ लोड को नहीं कर सकतेl</string>
+  <string name="error_generic_message">हम किसी कारण से इस पृष्ठ लोड को नहीं कर सकते।</string>
   <string name="contextmenu_link_share">लिंक साझा करें</string>
   <string name="contextmenu_link_copy">लिंक के पते की प्रतिलिपि लें</string>
   <string name="contextmenu_image_share">चित्र साझा करें</string>
   <string name="contextmenu_image_copy">चित्र के पते की प्रतिलिपि लें</string>
   <string name="contextmenu_image_save">छवि सहेजें</string>
   <string name="contextmenu_open_in_new_tab">नए टैब में कड़ी खोलें</string>
-  <string name="contextmenu_image_warning"><![CDATA["सहेजे गए और साझा की गई छवियाँ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2361;&#2335;&#2366;&#2312; &#2344;&#2361;&#2368;&#2306; &#2332;&#2366;&#2319;&#2305;&#2327;&#2368;</b>" जब आप %1$s इतिहास को मिटाएँगेl"]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["सहेजे गए और साझा की गई छवियाँ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2361;&#2335;&#2366;&#2312; &#2344;&#2361;&#2368;&#2306; &#2332;&#2366;&#2319;&#2305;&#2327;&#2368;</b>" जब आप %1$s इतिहास को मिटाएँगे।"]]></string>
   <string name="firstrun_defaultbrowser_title">अपनी गोपनीयता को बढ़ाएँ</string>
-  <string name="firstrun_defaultbrowser_text2">निजी ब्राउज़िंग को अगले स्तर तक लेl विज्ञापन और अन्य सामग्री को ब्लॉक करे जो आपको सभी साइट को ट्रैक कर सकता हैं और पृष्ट लोड समय को बढ़ा देता हैंl</string>
+  <string name="firstrun_defaultbrowser_text2">निजी ब्राउज़िंग को अगले स्तर तक ले जाएँ। विज्ञापन और अन्य सामग्री को ब्लॉक करें जो आपको सभी साइट पर ट्रैक कर सकता है और पृष्ट लोड समय को बढ़ा देता है।</string>
   <string name="firstrun_search_title">आपका खोज, आपका रास्ता</string>
   <string name="firstrun_search_text">कुछ अलग खोज रहे हैं? सेटिंग्स में दूसरा डिफ़ॉल्ट खोज इंजन चुने।</string>
   <string name="firstrun_shortcut_title">अपने मुख्य स्क्रीन पर शॉर्टकट जोड़ें</string>
-  <string name="firstrun_shortcut_text">%1$s में अपनी पसंदीदा साइटों को तेज़ी से वापस जाएँl बस %1$s मेनू से \"मुख्य स्क्रीन पर जोड़ें\" का चयन करें।</string>
+  <string name="firstrun_shortcut_text">%1$s में अपनी पसंदीदा साइटों को तेज़ी से वापस जाएँ। बस %1$s मेनू से \"मुख्य स्क्रीन पर जोड़ें\" का चयन करें।</string>
   <string name="firstrun_privacy_title">गोपनीयता एक आदत बनाये</string>
-  <string name="firstrun_privacy_text">%1$s को अपने तयशुदा ब्राउज़र के रूप में सेट करें और जब आप अन्य ऐप्स से वेबपृष्ठ खोलते हैं तब निजी ब्राउज़िंग के फायदे प्राप्त करेंl</string>
+  <string name="firstrun_privacy_text">%1$s को अपने तयशुदा ब्राउज़र के रूप में सेट करें और जब आप अन्य ऐप्स से वेबपृष्ठ खोलते हैं तब निजी ब्राउज़िंग के फायदे प्राप्त करें।</string>
   <string name="firstrun_close_button">ठीक है, समझ गया!</string>
   <string name="firstrun_skip_button">छोड़ें</string>
   <string name="firstrun_next_button">अगला</string>
@@ -179,14 +179,14 @@
   <string name="dialog_addtohomescreen_action_cancel">रद्द करें</string>
   <string name="dialog_addtohomescreen_tracking_protection">शॉर्टकट अक्षम ट्रैकिंग सुरक्षा के साथ खुलेगा</string>
   <string name="notification_browsing_session_channel_name">निजी ब्राउज़िंग सत्र</string>
-  <string name="notification_browsing_session_channel_description">अधिसूचनाएँ आपको आपका %1$s सत्र एक टैप के साथ मिटाने देती हैंl आपको ऐप खोलने या ब्राउज़र में क्या चल रहा है, देखने की ज़रूरत नहीं हैl</string>
+  <string name="notification_browsing_session_channel_description">अधिसूचनाएँ आपको आपका %1$s सत्र एक टैप के साथ मिटाने देती हैं। आपको ऐप खोलने या ब्राउज़र में क्या चल रहा है, देखने की ज़रूरत नहीं है।</string>
   <string name="tabs_tray_action_erase">ब्राउज़िंग इतिहास मिटाएँ</string>
   <string name="download_firefox">Firefox डाउनलोड करें</string>
-  <string name="your_rights_content1">%1$s Mozilla और अन्य योगदानकर्ताओं द्वारा बनाया गया स्वतंत्र और मुक्त स्रोत सॉफ्टवेयर हैl</string>
-  <string name="your_rights_content2"><![CDATA["%1$s "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2350;&#2379;&#2332;&#2364;&#2367;&#2354;&#2366; &#2360;&#2366;&#2352;&#2381;&#2357;&#2332;&#2344;&#2367;&#2325; &#2354;&#2366;&#2311;&#2360;&#2375;&#2306;&#2360;</a>" और अन्य मुक्त स्रोत लाइसेंस के नियमों के अंतर्गत आपको उपलब्ध कराया जाता हैl"]]></string>
-  <string name="your_rights_content3"><![CDATA["आपको Mozilla Foundation अथवा Mozilla, Firefox या %1$s नाम या प्रतीकचिन्हों सहित किसी भी पक्ष के ट्रेडमार्कों के कोई भी अधिकार या लाइसेन्स प्रदान नहीं किए गए हैंl अतिरिक्त जानकारी "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2351;&#2361;&#2366;&#2305;</a>" मिल सकती हैl"]]></string>
-  <string name="your_rights_content4"><![CDATA["%1$s के लिए अतिरिक्त स्रोत कोड कई अन्य निशुल्क और मुक्त स्रोत "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2354;&#2366;&#2311;&#2360;&#2375;&#2344;&#2381;&#2360;&#2379;&#2306;</a>" के अंतर्गत उपलब्ध हैंl"]]></string>
-  <string name="your_rights_content5"><![CDATA["%1$s Disconnect, Inc. द्वारा प्रदत्त अवरुद्धसूची का भी उपयोग "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" के अंतर्गत पृथक और स्वतंत्र कार्यों के रूप में करता है, और "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#2351;&#2361;&#2366;&#2305;</a>" उपलब्ध हैl"]]></string>
+  <string name="your_rights_content1">%1$s Mozilla और अन्य योगदानकर्ताओं द्वारा बनाया गया स्वतंत्र और मुक्त स्रोत सॉफ्टवेयर है।</string>
+  <string name="your_rights_content2"><![CDATA["%1$s "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla &#2360;&#2366;&#2352;&#2381;&#2357;&#2332;&#2344;&#2367;&#2325; &#2354;&#2366;&#2311;&#2360;&#2375;&#2306;&#2360;</a>" और अन्य मुक्त स्रोत लाइसेंस के नियमों के अंतर्गत आपको उपलब्ध कराया जाता है।"]]></string>
+  <string name="your_rights_content3"><![CDATA["आपको Mozilla Foundation अथवा Mozilla, Firefox या %1$s नाम या प्रतीकचिन्हों सहित किसी भी पक्ष के ट्रेडमार्कों के कोई भी अधिकार या लाइसेन्स प्रदान नहीं किए गए हैं। अतिरिक्त जानकारी "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2351;&#2361;&#2366;&#2305;</a>" मिल सकती है।"]]></string>
+  <string name="your_rights_content4"><![CDATA["%1$s के लिए अतिरिक्त स्रोत कोड कई अन्य निशुल्क और मुक्त स्रोत "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#2354;&#2366;&#2311;&#2360;&#2375;&#2344;&#2381;&#2360;&#2379;&#2306;</a>" के अंतर्गत उपलब्ध हैं।"]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s Disconnect, Inc. द्वारा प्रदत्त अवरुद्धसूची का भी उपयोग "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" के अंतर्गत पृथक और स्वतंत्र कार्यों के रूप में करता है, और "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#2351;&#2361;&#2366;&#2305;</a>" उपलब्ध है।"]]></string>
   <string name="gv_prompt_username_hint">उपयोगकर्ता नाम</string>
   <string name="gv_prompt_password_hint">पासवर्ड</string>
   <string name="gv_prompt_clear">साफ करें</string>
