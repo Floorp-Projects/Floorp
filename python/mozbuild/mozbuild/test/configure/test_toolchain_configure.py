@@ -1498,12 +1498,12 @@ class WindowsCrossToolchainTest(BaseToolchainTest):
 
     def test_wsl_cross(self):
         paths = {
-            '/usr/bin/cl': VS_2017u6 + VS_PLATFORM_X86_64,
+            '/usr/bin/cl': VS_2017u8 + VS_PLATFORM_X86_64,
         }
         paths.update(LinuxToolchainTest.PATHS)
         self.do_toolchain_test(paths, {
-            'c_compiler': WindowsToolchainTest.VS_2017u6_RESULT,
-            'cxx_compiler': WindowsToolchainTest.VSXX_2017u6_RESULT,
+            'c_compiler': WindowsToolchainTest.VS_2017u8_RESULT,
+            'cxx_compiler': WindowsToolchainTest.VSXX_2017u8_RESULT,
             'host_c_compiler': self.DEFAULT_CLANG_RESULT,
             'host_cxx_compiler': self.DEFAULT_CLANGXX_RESULT,
         })
