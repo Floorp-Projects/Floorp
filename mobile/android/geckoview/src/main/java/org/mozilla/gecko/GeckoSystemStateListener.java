@@ -13,20 +13,20 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.InputDeviceUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
-public class GeckoInputDeviceListener
+public class GeckoSystemStateListener
         implements InputManager.InputDeviceListener {
-    private static final String LOGTAG = "GeckoInputDeviceListener";
+    private static final String LOGTAG = "GeckoSystemStateListener";
 
-    private static final GeckoInputDeviceListener listenerInstance = new GeckoInputDeviceListener();
+    private static final GeckoSystemStateListener listenerInstance = new GeckoSystemStateListener();
 
     private boolean initialized;
     private InputManager mInputManager;
 
-    public static GeckoInputDeviceListener getInstance() {
+    public static GeckoSystemStateListener getInstance() {
         return listenerInstance;
     }
 
-    private GeckoInputDeviceListener() {
+    private GeckoSystemStateListener() {
     }
 
     public synchronized void initialize(final Context context) {

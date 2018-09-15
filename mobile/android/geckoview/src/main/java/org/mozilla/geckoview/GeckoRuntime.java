@@ -23,7 +23,7 @@ import android.util.Log;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoInputDeviceListener;
+import org.mozilla.gecko.GeckoSystemStateListener;
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.PrefsHelper;
@@ -225,7 +225,7 @@ public final class GeckoRuntime implements Parcelable {
         // Initialize the system ClipboardManager by accessing it on the main thread.
         GeckoAppShell.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
 
-        GeckoInputDeviceListener.getInstance().initialize(context);
+        GeckoSystemStateListener.getInstance().initialize(context);
         return true;
     }
 
@@ -281,7 +281,7 @@ public final class GeckoRuntime implements Parcelable {
             Log.d(LOGTAG, "shutdown");
         }
 
-        GeckoInputDeviceListener.getInstance().shutdown();
+        GeckoSystemStateListener.getInstance().shutdown();
         GeckoThread.forceQuit();
     }
 
