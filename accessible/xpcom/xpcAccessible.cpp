@@ -16,7 +16,7 @@
 #include "xpcAccessibleDocument.h"
 
 #include "nsIMutableArray.h"
-#include "nsIPersistentProperties2.h"
+#include "nsPersistentProperties.h"
 
 using namespace mozilla::a11y;
 
@@ -416,8 +416,7 @@ xpcAccessible::GetAttributes(nsIPersistentProperties** aAttributes)
   AutoTArray<Attribute, 10> attrs;
   proxy->Attributes(&attrs);
 
-  nsCOMPtr<nsIPersistentProperties> props =
-    do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
+  nsCOMPtr<nsIPersistentProperties> props = new nsPersistentProperties();
   uint32_t attrCount = attrs.Length();
   nsAutoString unused;
   for (uint32_t i = 0; i < attrCount; i++) {
