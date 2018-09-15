@@ -1583,6 +1583,7 @@ MLGDeviceD3D11::SetPrimitiveTopology(MLGPrimitiveTopology aTopology)
     break;
   default:
     MOZ_ASSERT_UNREACHABLE("Unknown topology");
+    topology = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
     break;
   }
 
