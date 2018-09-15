@@ -12,29 +12,24 @@
 set -ex
 
 REMOTE=${1:-https://github.com/web-platform-tests/wpt}
-REF=${2:-master}
-REVISION=${3:-FETCH_HEAD}
+BRANCH=${2:-master}
+REV=${3:-FETCH_HEAD}
 BROWSER=${4:-all}
 CHANNEL=${5:-nightly}
 
 cd ~
 
-mkdir web-platform-tests
-cd web-platform-tests
-git init
-git remote add origin ${REMOTE}
-
 # Initially we just fetch 50 commits in order to save several minutes of fetching
-git fetch --quiet --depth=50 origin ${REF}
-
-if [[ ! `git rev-parse --verify -q ${REVISION}` ]];
+git clone ${REMOTE} --single-branch --branch ${BRANCH} --no-checkout -q --depth=50 web-platform-tests
+cd web-platform-tests
+if [[ ! `git rev-parse --verify -q ${REV}` ]];
 then
     # But if for some reason the commit under test isn't in that range, we give in and
     # fetch everything
     git fetch -q --unshallow ${REMOTE}
-    git rev-parse --verify ${REVISION}
+    git rev-parse --verify ${REV}
 fi
-git checkout -b build ${REVISION}
+git checkout -b build ${REV}
 
 sudo sh -c './wpt make-hosts-file >> /etc/hosts'
 

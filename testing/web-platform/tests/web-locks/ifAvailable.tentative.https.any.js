@@ -1,6 +1,5 @@
 // META: title=Web Locks API: ifAvailable option
 // META: script=resources/helpers.js
-// META: global=window,dedicatedworker,sharedworker,serviceworker
 
 'use strict';
 
