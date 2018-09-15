@@ -6,13 +6,17 @@ package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
+import org.mozilla.geckoview.GeckoView
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.util.Callbacks
 
+import android.os.Parcelable
+import android.support.test.InstrumentationRegistry
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
+import android.util.SparseArray
 
 import org.hamcrest.Matchers.*
 import org.junit.Test
@@ -223,6 +227,111 @@ class SessionLifecycleTest : BaseSessionTest() {
 
         assertThat("New session should receive navigation notifications",
                    onLocationCount, equalTo(1))
+    }
+
+    private fun testRestoreInstanceState(fromSession: GeckoSession?,
+                                         ontoSession: GeckoSession?) =
+            GeckoView(InstrumentationRegistry.getTargetContext()).apply {
+                id = 0
+                if (fromSession != null) {
+                    setSession(fromSession, sessionRule.runtime)
+                }
+
+                val state = SparseArray<Parcelable>()
+                saveHierarchyState(state)
+
+                if (ontoSession !== fromSession) {
+                    releaseSession()
+                    if (ontoSession != null) {
+                        setSession(ontoSession, sessionRule.runtime)
+                    }
+                }
+                restoreHierarchyState(state)
+            }
+
+    @ClosedSessionAtStart
+    @Test fun restoreInstanceState_noSessionOntoNoSession() {
+        val view = testRestoreInstanceState(null, null)
+        assertThat("View session is restored", view.session, nullValue())
+    }
+
+    @ClosedSessionAtStart
+    @Test fun restoreInstanceState_closedSessionOntoNoSession() {
+        val view = testRestoreInstanceState(mainSession, null)
+        assertThat("View session is restored", view.session, equalTo(mainSession))
+        assertThat("View session is closed", view.session?.isOpen, equalTo(false))
+    }
+
+    @Test fun restoreInstanceState_openSessionOntoNoSession() {
+        val view = testRestoreInstanceState(mainSession, null)
+        assertThat("View session is restored", view.session, equalTo(mainSession))
+        assertThat("View session is open", view.session?.isOpen, equalTo(true))
+        view.session?.reload()
+        sessionRule.waitForPageStop()
+    }
+
+    @ClosedSessionAtStart
+    @Test fun restoreInstanceState_noSessionOntoClosedSession() {
+        val view = testRestoreInstanceState(null, sessionRule.createClosedSession())
+        assertThat("View session is not restored", view.session, notNullValue())
+        assertThat("View session is closed", view.session?.isOpen, equalTo(false))
+    }
+
+    @ClosedSessionAtStart
+    @Test fun restoreInstanceState_closedSessionOntoClosedSession() {
+        val view = testRestoreInstanceState(mainSession, sessionRule.createClosedSession())
+        assertThat("View session is restored", view.session, equalTo(mainSession))
+        assertThat("View session is closed", view.session?.isOpen, equalTo(false))
+    }
+
+    @Test fun restoreInstanceState_openSessionOntoClosedSession() {
+        val view = testRestoreInstanceState(mainSession, sessionRule.createClosedSession())
+        assertThat("View session is restored", view.session, equalTo(mainSession))
+        assertThat("View session is open", view.session?.isOpen, equalTo(true))
+        view.session?.reload()
+        sessionRule.waitForPageStop()
+    }
+
+    @ClosedSessionAtStart
+    @Test fun restoreInstanceState_noSessionOntoOpenSession() {
+        val view = testRestoreInstanceState(null, sessionRule.createOpenSession())
+        assertThat("View session is not restored", view.session, notNullValue())
+        assertThat("View session is open", view.session?.isOpen, equalTo(true))
+        view.session?.reload()
+        sessionRule.waitForPageStop()
+    }
+
+    @ClosedSessionAtStart
+    @Test fun restoreInstanceState_closedSessionOntoOpenSession() {
+        val view = testRestoreInstanceState(mainSession, sessionRule.createOpenSession())
+        assertThat("View session is not restored", view.session, not(equalTo(mainSession)))
+        assertThat("View session is open", view.session?.isOpen, equalTo(true))
+        view.session?.reload()
+        sessionRule.waitForPageStop()
+    }
+
+    @Test fun restoreInstanceState_openSessionOntoOpenSession() {
+        val view = testRestoreInstanceState(mainSession, sessionRule.createOpenSession())
+        assertThat("View session is restored", view.session, equalTo(mainSession))
+        assertThat("View session is open", view.session?.isOpen, equalTo(true))
+        view.session?.reload()
+        sessionRule.waitForPageStop()
+    }
+
+    @ClosedSessionAtStart
+    @Test fun restoreInstanceState_sameClosedSession() {
+        val view = testRestoreInstanceState(mainSession, mainSession)
+        assertThat("View session is unchanged", view.session, equalTo(mainSession))
+        assertThat("View session is closed", view.session.isOpen, equalTo(false))
+    }
+
+    @Test fun restoreInstanceState_sameOpenSession() {
+        // We should keep the session open when restoring the same open session.
+        val view = testRestoreInstanceState(mainSession, mainSession)
+        assertThat("View session is unchanged", view.session, equalTo(mainSession))
+        assertThat("View session is open", view.session.isOpen, equalTo(true))
+        view.session.reload()
+        sessionRule.waitForPageStop()
     }
 
     @Test fun createFromParcel() {

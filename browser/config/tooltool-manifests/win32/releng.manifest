@@ -6,11 +6,11 @@
     "filename": "mozmake.exe"
   },
   {
-    "version": "Visual Studio 2017 15.6.6 / SDK 10.0.15063.0",
-    "digest": "c2f0e618877da50f862e5b0ceb13a9affd86490d3779c2b1cb5ba75ea0156adad6df950d1ffbc053d725361fd04b2e57ab17ed5b7b57ffb7f7de2cd82d6edb72",
-    "size": 309779013,
+    "version": "Visual Studio 2017 15.8.4 / SDK 10.0.17134.0",
+    "digest": "ecf1e03f6f98f86775059a43f9e7dc7e326f6643d7c08962d9f614e4f5a65b1ca63fa1cfeb0f1a3c2474bf0d4318dda960b378beb2a44ecf8a91111207f4ece5",
+    "size": 349626009,
     "algorithm": "sha512",
-    "filename": "vs2017_15.6.6.zip",
+    "filename": "vs2017_15.8.4.zip",
     "unpack": true
   },
   {

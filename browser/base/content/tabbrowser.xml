@@ -280,18 +280,18 @@
           if (!visibleTabs.length) {
             return;
           }
-          let selectedIndex = visibleTabs.indexOf(this.selectedItem);
-
+          let selectedTab = this.selectedItem;
+          let selectedIndex = visibleTabs.indexOf(selectedTab);
           if (this._beforeSelectedTab) {
             this._beforeSelectedTab.removeAttribute("beforeselected-visible");
           }
 
-          if (this.selectedItem.closing || selectedIndex <= 0) {
+          if (selectedTab.closing || selectedIndex <= 0) {
             this._beforeSelectedTab = null;
           } else {
             let beforeSelectedTab = visibleTabs[selectedIndex - 1];
             let separatedByScrollButton = this.getAttribute("overflow") == "true" &&
-              beforeSelectedTab.pinned && !this.selectedItem.pinned;
+              beforeSelectedTab.pinned && !selectedTab.pinned;
             if (!separatedByScrollButton) {
               this._beforeSelectedTab = beforeSelectedTab;
               this._beforeSelectedTab.setAttribute("beforeselected-visible",
