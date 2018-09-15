@@ -23,7 +23,7 @@
 #include "nsIWeakReference.h"
 #include "nsGTKToolkit.h"
 #include "nsICommandLineRunner.h"
-#include "nsICommandLine.h"
+#include "nsCommandLine.h"
 #include "nsString.h"
 #include "nsIFile.h"
 
@@ -155,12 +155,7 @@ const char*
 nsRemoteService::HandleCommandLine(const char* aBuffer, nsIDOMWindow* aWindow,
                                    uint32_t aTimestamp)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsICommandLineRunner> cmdline
-    (do_CreateInstance("@mozilla.org/toolkit/command-line;1", &rv));
-  if (NS_FAILED(rv))
-    return "509 internal error";
+  nsCOMPtr<nsICommandLineRunner> cmdline(new nsCommandLine());
 
   // the commandline property is constructed as an array of int32_t
   // followed by a series of null-terminated strings:
@@ -172,8 +167,8 @@ nsRemoteService::HandleCommandLine(const char* aBuffer, nsIDOMWindow* aWindow,
   const char *wd   = aBuffer + ((argc + 1) * sizeof(int32_t));
 
   nsCOMPtr<nsIFile> lf;
-  rv = NS_NewNativeLocalFile(nsDependentCString(wd), true,
-                             getter_AddRefs(lf));
+  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(wd), true,
+                                      getter_AddRefs(lf));
   if (NS_FAILED(rv))
     return "509 internal error";
 
