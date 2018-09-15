@@ -400,6 +400,11 @@ description#identity-popup-content-verifier,
   stroke: #d70022;
 }
 
+#identity-popup-content-blocking-content:not([contentBlockingUI]):not([enabled]) #identity-popup-content-blocking-disabled-label {
+  background-color: #b1b1b3;
+  stroke: #b1b1b3;
+}
+
 #identity-popup-content-blocking-content:not([enabled]) #identity-popup-content-blocking-disabled-label-exception {
   display: none;
 }
