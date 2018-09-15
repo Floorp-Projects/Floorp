@@ -28,7 +28,6 @@
 #include "nsCycleCollector.h"
 #include "nsObserverList.h"
 #include "nsObserverService.h"
-#include "nsProperties.h"
 #include "nsPersistentProperties.h"
 #include "nsScriptableInputStream.h"
 #include "nsBinaryStream.h"
@@ -210,8 +209,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableBase64Encoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVariantCC)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHashPropertyBagCC)
-
-NS_GENERIC_AGGREGATED_CONSTRUCTOR(nsProperties)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUUIDGenerator, Init)
 
