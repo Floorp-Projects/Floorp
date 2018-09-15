@@ -21,6 +21,9 @@ add_task(async function() {
 });
 
 async function performTests() {
+  // Force the old debugger UI since it's directly used (see Bug 1301705)
+  await pushPref("devtools.debugger.new-debugger-frontend", false);
+
   const { jsterm } = await openNewTabAndConsole(TEST_URI);
   const {
     autocompletePopup: popup,
@@ -57,12 +60,10 @@ async function performTests() {
     `"foo1Obj.prop2." gave the expected suggestions`);
 
   info("Opening Debugger");
-  await openDebugger();
-  const dbg = createDebuggerContext(toolbox);
+  const {panel} = await openDebugger();
 
   info("Waiting for pause");
-  await pauseDebugger(dbg);
-  const stackFrames = dbg.selectors.getCallStackFrames(dbg.getState());
+  const stackFrames = await pauseDebugger(panel);
 
   info("Opening Console again");
   await toolbox.selectTool("webconsole");
@@ -76,7 +77,7 @@ async function performTests() {
   await openDebugger();
 
   // Select the frame for the `firstCall` function.
-  await dbg.actions.selectFrame(stackFrames[1]);
+  stackFrames.selectFrame(1);
 
   info("openConsole");
   await toolbox.selectTool("webconsole");
@@ -108,10 +109,18 @@ function getPopupLabels(popup) {
   return popup.getItems().map(item => item.label);
 }
 
-async function pauseDebugger(dbg) {
-  info("Waiting for debugger to pause");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
-    content.wrappedJSObject.firstCall();
+function pauseDebugger(debuggerPanel) {
+  const debuggerWin = debuggerPanel.panelWin;
+  const debuggerController = debuggerWin.DebuggerController;
+  const thread = debuggerController.activeThread;
+
+  return new Promise(resolve => {
+    thread.addOneTimeListener("framesadded", () =>
+      resolve(debuggerController.StackFrames));
+
+    info("firstCall()");
+    ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+      content.wrappedJSObject.firstCall();
+    });
   });
-  await waitForPaused(dbg);
 }

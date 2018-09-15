@@ -5,7 +5,11 @@
  * Tests if the a function call's stack is properly displayed in the UI.
  */
 
-requestLongerTimeout(2);
+// Force the old debugger UI since it's directly used (see Bug 1301705)
+Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
+});
 
 async function ifTestingSupported() {
   const { target, panel } = await initCanvasDebuggerFrontend(SIMPLE_CANVAS_DEEP_STACK_URL);
@@ -66,8 +70,12 @@ async function ifTestingSupported() {
   await jumpedToSource;
 
   const toolbox = await gDevTools.getToolbox(target);
-  const dbg = createDebuggerContext(toolbox);
-  await validateDebuggerLocation(dbg, SIMPLE_CANVAS_DEEP_STACK_URL, 26);
+  const { panelWin: { DebuggerView: view } } = toolbox.getPanel("jsdebugger");
+
+  is(view.Sources.selectedValue, getSourceActor(view.Sources, SIMPLE_CANVAS_DEEP_STACK_URL),
+    "The expected source was shown in the debugger.");
+  is(view.editor.getCursor().line, 25,
+    "The expected source line is highlighted in the debugger.");
 
   await teardown(panel);
   finish();

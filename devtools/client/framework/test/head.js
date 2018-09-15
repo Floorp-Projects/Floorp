@@ -371,11 +371,3 @@ async function resizeWindow(toolbox, width, height) {
   hostWindow.resizeTo(toWidth, toHeight);
   await onResize;
 }
-
-function assertSelectedLocationInDebugger(debuggerPanel, line, column) {
-  const location = debuggerPanel._selectors.getSelectedLocation(
-    debuggerPanel._getState()
-  );
-  is(location.line, line);
-  is(location.column, column);
-}
