@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsICommandLineRunner.h"
+#include "nsCommandLine.h"
 
 #include "nsICategoryManager.h"
 #include "nsICommandLineHandler.h"
@@ -14,15 +14,11 @@
 #include "nsISimpleEnumerator.h"
 #include "mozilla/SimpleEnumerator.h"
 
-#include "nsCOMPtr.h"
-#include "mozilla/ModuleUtils.h"
-#include "nsISupportsImpl.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsNetUtil.h"
 #include "nsIFileProtocolHandler.h"
 #include "nsIURI.h"
 #include "nsUnicharUtils.h"
-#include "nsTArray.h"
 #include "nsTextFormatter.h"
 #include "nsXPCOMCID.h"
 #include "plstr.h"
@@ -46,37 +42,6 @@
   { 0x23bcc750, 0xdc20, 0x460b, { 0xb2, 0xd4, 0x74, 0xd8, 0xf5, 0x8d, 0x36, 0x15 } }
 
 using mozilla::SimpleEnumerator;
-
-class nsCommandLine final : public nsICommandLineRunner
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICOMMANDLINE
-  NS_DECL_NSICOMMANDLINERUNNER
-
-  nsCommandLine();
-
-protected:
-  ~nsCommandLine() = default;
-
-  typedef nsresult (*EnumerateHandlersCallback)(nsICommandLineHandler* aHandler,
-					nsICommandLine* aThis,
-					void *aClosure);
-  typedef nsresult (*EnumerateValidatorsCallback)(nsICommandLineValidator* aValidator,
-					nsICommandLine* aThis,
-					void *aClosure);
-
-  void appendArg(const char* arg);
-  MOZ_MUST_USE nsresult resolveShortcutURL(nsIFile* aFile, nsACString& outURL);
-  nsresult EnumerateHandlers(EnumerateHandlersCallback aCallback, void *aClosure);
-  nsresult EnumerateValidators(EnumerateValidatorsCallback aCallback, void *aClosure);
-
-  nsTArray<nsString>      mArgs;
-  uint32_t                mState;
-  nsCOMPtr<nsIFile>       mWorkingDir;
-  nsCOMPtr<nsIDOMWindow>  mWindowContext;
-  bool                    mPreventDefault;
-};
 
 nsCommandLine::nsCommandLine() :
   mState(STATE_INITIAL_LAUNCH),
@@ -617,25 +582,3 @@ nsCommandLine::GetHelpText(nsACString& aResult)
 
   return NS_OK;
 }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandLine)
-
-NS_DEFINE_NAMED_CID(NS_COMMANDLINE_CID);
-
-static const mozilla::Module::CIDEntry kCommandLineCIDs[] = {
-  { &kNS_COMMANDLINE_CID, false, nullptr, nsCommandLineConstructor },
-  { nullptr }
-};
-
-static const mozilla::Module::ContractIDEntry kCommandLineContracts[] = {
-  { "@mozilla.org/toolkit/command-line;1", &kNS_COMMANDLINE_CID },
-  { nullptr }
-};
-
-static const mozilla::Module kCommandLineModule = {
-  mozilla::Module::kVersion,
-  kCommandLineCIDs,
-  kCommandLineContracts
-};
-
-NSMODULE_DEFN(CommandLineModule) = &kCommandLineModule;

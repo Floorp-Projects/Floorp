@@ -31,6 +31,7 @@
 #include "plstr.h"
 #include "nsURLHelper.h"
 #include "nsThreadUtils.h"
+#include "nsThreadPool.h"
 #include "GetAddrInfo.h"
 #include "GeckoProfiler.h"
 #include "TRR.h"
@@ -632,7 +633,7 @@ nsHostResolver::Init()
                                                    0, 3600 * 1000);
     }
 
-    nsCOMPtr<nsIThreadPool> threadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
+    nsCOMPtr<nsIThreadPool> threadPool = new nsThreadPool();
     MOZ_ALWAYS_SUCCEEDS(threadPool->SetThreadLimit(MAX_RESOLVER_THREADS));
     MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadLimit(MAX_RESOLVER_THREADS));
     MOZ_ALWAYS_SUCCEEDS(threadPool->SetIdleThreadTimeout(poolTimeoutMs));
