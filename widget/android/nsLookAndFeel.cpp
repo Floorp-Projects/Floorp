@@ -21,6 +21,9 @@ AndroidSystemColors nsLookAndFeel::mSystemColors;
 bool nsLookAndFeel::mInitializedShowPassword = false;
 bool nsLookAndFeel::mShowPassword = true;
 
+bool nsLookAndFeel::mIsInPrefersReducedMotionForTest = false;
+bool nsLookAndFeel::mPrefersReducedMotionForTest = false;
+
 static const char16_t UNICODE_BULLET = 0x2022;
 
 nsLookAndFeel::nsLookAndFeel()
@@ -427,6 +430,10 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
             break;
 
         case eIntID_PrefersReducedMotion:
+            if (mIsInPrefersReducedMotionForTest) {
+              aResult = mPrefersReducedMotionForTest ? 1 : 0;
+              break;
+            }
             aResult =
               java::GeckoSystemStateListener::PrefersReducedMotion() ? 1 : 0;
             break;
