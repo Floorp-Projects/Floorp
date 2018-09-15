@@ -34,8 +34,7 @@ this.search = class extends ExtensionAPI {
       search: {
         async get() {
           await searchInitialized;
-          let engines = Services.search.getEngines();
-          let visibleEngines = engines.filter(engine => !engine.hidden);
+          let visibleEngines = Services.search.getVisibleEngines();
           return Promise.all(visibleEngines.map(async engine => {
             let favIconUrl;
             if (engine.iconURI) {
