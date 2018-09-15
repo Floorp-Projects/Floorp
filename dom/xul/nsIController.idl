@@ -36,29 +36,3 @@ interface nsICommandController : nsISupports
   void getSupportedCommands(out unsigned long count,
                             [array, size_is(count), retval] out string commands);
 };
-
-
-/*
-  An API for registering commands in groups, to allow for 
-  updating via nsIDOMWindow::UpdateCommands.
-*/
-interface nsISimpleEnumerator;
-
-[scriptable, uuid(9F82C404-1C7B-11D5-A73C-ECA43CA836FC)]
-interface nsIControllerCommandGroup : nsISupports
-{
-
-  void  addCommandToGroup(in string aCommand, in string aGroup);
-  void  removeCommandFromGroup(in string aCommand, in string aGroup);
-  
-  boolean isCommandInGroup(in string aCommand, in string aGroup);
-
-  /*
-    We should expose some methods that allow for enumeration.
-  */
-  nsISimpleEnumerator getGroupsEnumerator();
-  
-  nsISimpleEnumerator getEnumeratorForGroup(in string aGroup);
-
-};
-
