@@ -430,7 +430,7 @@ var paymentDialogWrapper = {
     }
     // Structures: Arrays
     if (Array.isArray(value)) {
-      let items = value.map(item => { this._serializeRequest(item); })
+      let items = value.map(item => this._serializeRequest(item))
                        .filter(item => item !== undefined);
       return items;
     }

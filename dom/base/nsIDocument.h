@@ -125,6 +125,7 @@ class Encoding;
 class ErrorResult;
 class EventStates;
 class EventListenerManager;
+struct FullscreenRequest;
 class PendingAnimationTracker;
 class ServoStyleSet;
 template<typename> class OwningNonNull;
@@ -160,7 +161,6 @@ class Event;
 class EventTarget;
 class FontFaceSet;
 class FrameRequestCallback;
-struct FullscreenRequest;
 class ImageTracker;
 class HTMLBodyElement;
 class HTMLSharedElement;
@@ -446,9 +446,9 @@ protected:
 
 public:
   typedef nsExternalResourceMap::ExternalResourceLoad ExternalResourceLoad;
+  typedef mozilla::FullscreenRequest FullscreenRequest;
   typedef mozilla::net::ReferrerPolicy ReferrerPolicyEnum;
   typedef mozilla::dom::Element Element;
-  typedef mozilla::dom::FullscreenRequest FullscreenRequest;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
 
@@ -1756,8 +1756,8 @@ public:
 
   // Do the "fullscreen element ready check" from the fullscreen spec.
   // It returns true if the given element is allowed to go into fullscreen.
-  bool FullscreenElementReadyCheck(Element* aElement,
-                                   mozilla::dom::CallerType aCallerType);
+  // It is responsive to dispatch "fullscreenerror" event when necessary.
+  bool FullscreenElementReadyCheck(const FullscreenRequest&);
 
   // This is called asynchronously by nsIDocument::AsyncRequestFullscreen()
   // to move this document into fullscreen mode if allowed.
@@ -1853,12 +1853,6 @@ public:
    * Returns whether there is any fullscreen request handled.
    */
   static bool HandlePendingFullscreenRequests(nsIDocument* aDocument);
-
-  /**
-   * Dispatch fullscreenerror event and report the failure message to
-   * the console.
-   */
-  void DispatchFullscreenError(const char* aMessage, nsINode* aTarget);
 
   void RequestPointerLock(Element* aElement, mozilla::dom::CallerType);
   bool SetPointerLock(Element* aElement, int aCursorStyle);
@@ -3793,7 +3787,7 @@ protected:
   // Apply the fullscreen state to the document, and trigger related
   // events. It returns false if the fullscreen element ready check
   // fails and nothing gets changed.
-  bool ApplyFullscreen(const FullscreenRequest& aRequest);
+  bool ApplyFullscreen(mozilla::UniquePtr<FullscreenRequest> aRequest);
 
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {

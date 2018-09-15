@@ -317,7 +317,9 @@ nsXPLookAndFeel::Shutdown()
   sInstance = nullptr;
 }
 
-nsXPLookAndFeel::nsXPLookAndFeel() : LookAndFeel()
+nsXPLookAndFeel::nsXPLookAndFeel()
+  : LookAndFeel()
+  , mShouldRetainCacheForTest(false)
 {
 }
 
@@ -1061,6 +1063,13 @@ void
 LookAndFeel::SetIntCache(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache)
 {
   return nsLookAndFeel::GetInstance()->SetIntCacheImpl(aLookAndFeelIntCache);
+}
+
+// static
+void
+LookAndFeel::SetShouldRetainCacheForTest(bool aValue)
+{
+  nsLookAndFeel::GetInstance()->SetShouldRetainCacheImplForTest(aValue);
 }
 
 } // namespace mozilla
