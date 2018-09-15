@@ -11,6 +11,12 @@
 var URL = `${URL_ROOT}doc_viewsource.html`;
 var JS_URL = `${URL_ROOT}code_math.js`;
 
+// Force the old debugger UI since it's directly used (see Bug 1301705)
+Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
+});
+
 async function viewSource() {
   const toolbox = await openNewTabAndToolbox(URL);
 
@@ -20,7 +26,14 @@ async function viewSource() {
   ok(debuggerPanel, "The debugger panel was opened.");
   is(toolbox.currentToolId, "jsdebugger", "The debugger panel was selected.");
 
-  assertSelectedLocationInDebugger(debuggerPanel, 2, undefined);
+  const { DebuggerView } = debuggerPanel.panelWin;
+  const Sources = DebuggerView.Sources;
+
+  is(Sources.selectedValue, getSourceActor(Sources, JS_URL),
+    "The correct source is shown in the debugger.");
+  is(DebuggerView.editor.getCursor().line + 1, 2,
+    "The correct line is highlighted in the debugger's source editor.");
+
   await closeToolboxAndTab(toolbox);
   finish();
 }
