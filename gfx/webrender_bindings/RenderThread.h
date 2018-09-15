@@ -13,6 +13,7 @@
 #include "base/message_loop.h"
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/UniquePtr.h"
@@ -25,6 +26,8 @@
 
 namespace mozilla {
 namespace wr {
+
+typedef MozPromise<MemoryReport, bool, true> MemoryReportPromise;
 
 class RendererOGL;
 class RenderTextureHost;
@@ -106,6 +109,11 @@ public:
   /// Can be called from any thread.
   static bool IsInRenderThread();
 
+  // Can be called from any thread. Dispatches an event to the Renderer thread
+  // to iterate over all Renderers, accumulates memory statistics, and resolves
+  // the return promise.
+  static RefPtr<MemoryReportPromise> AccumulateMemoryReport(MemoryReport aInitial);
+
   /// Can only be called from the render thread.
   void AddRenderer(wr::WindowId aWindowId, UniquePtr<RendererOGL> aRenderer);
 
@@ -186,6 +194,8 @@ private:
   void DeferredRenderTextureHostDestroy();
   void ShutDownTask(layers::SynchronousTask* aTask);
   void ProgramCacheTask();
+
+  void DoAccumulateMemoryReport(MemoryReport, const RefPtr<MemoryReportPromise::Private>&);
 
   ~RenderThread();
 

@@ -114,8 +114,7 @@ VertexInfo write_vertex(RectWithSize instance_rect,
     vec2 snap_offset = compute_snap_offset(
         clamped_local_pos,
         transform.m,
-        snap_rect,
-        vec2(0.5)
+        snap_rect
     );
 
     // Transform the current vertex to world space.

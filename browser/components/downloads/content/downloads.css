@@ -13,11 +13,6 @@
   -moz-user-focus: none;
 }
 
-#downloadsListBox > richlistitem.download-state[state="1"]:not([exists]) > .downloadButtonArea,
-#downloadsListBox > richlistitem.download-state[state="1"]:not([exists]) > toolbarseparator {
-  display: none;
-}
-
 #downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryProgress,
 #downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryDetails,
 #downloadsFooter:not([showingsummary]) #downloadsSummary {
@@ -65,6 +60,12 @@
 }
 
 /*** Visibility of controls inside download items ***/
+
+.download-state[buttonhidden] > toolbarseparator,
+.download-state[buttonhidden] > .downloadButton {
+  display: none;
+}
+
 .download-state:not(:-moz-any([state="6"], /* Blocked (parental) */
                               [state="8"], /* Blocked (dirty)    */
                               [state="9"]) /* Blocked (policy)   */)
@@ -123,7 +124,7 @@
   display: none;
 }
 
-/*** Visibility of download buttons ***/
+/*** Visibility of download button labels ***/
 
 .download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
                               [state="5"], /* Starting (queued)  */
@@ -131,47 +132,12 @@
                               [state="4"]) /* Paused             */)
                                            .downloadCancel,
 
-/* Blocked (dirty) downloads that have not been confirmed and
-   have temporary data, for the Malware case. */
-.download-state:not(          [state="8"]  /* Blocked (dirty)    */)
-                                           .downloadConfirmBlock,
-.download-state[state="8"]:not(.temporary-block)
-                                           .downloadConfirmBlock,
-.download-state[state="8"].temporary-block:not([verdict="Malware"])
-                                           .downloadConfirmBlock,
-
-/* Blocked (dirty) downloads that have not been confirmed and
-   have temporary data, for the Potentially Unwanted case. */
-.download-state:not(          [state="8"]  /* Blocked (dirty)    */)
-                                           .downloadChooseUnblock,
-.download-state[state="8"]:not(.temporary-block)
-                                           .downloadChooseUnblock,
-.download-state[state="8"].temporary-block:not([verdict="PotentiallyUnwanted"])
-                                           .downloadChooseUnblock,
-
-/* Blocked (dirty) downloads that have not been confirmed and
-   have temporary data, for the Uncommon case. */
-.download-state:not(          [state="8"]  /* Blocked (dirty)    */)
-                                           .downloadChooseOpen,
-.download-state[state="8"]:not(.temporary-block)
-                                           .downloadChooseOpen,
-.download-state[state="8"].temporary-block:not([verdict="Uncommon"])
-                                           .downloadChooseOpen,
-
 .download-state:not(:-moz-any([state="2"], /* Failed             */
                               [state="3"]) /* Canceled           */)
                                            .downloadRetry,
 
 .download-state:not(          [state="1"]  /* Finished           */)
-                                           .downloadShow,
-
-.download-state:-moz-any(     [state="6"], /* Blocked (parental) */
-                              [state="7"], /* Scanning           */
-                              [state="9"]) /* Blocked (policy)   */
-                                           > toolbarseparator,
-
-/* The "show blocked info" button is shown only in the downloads panel. */
-.downloadShowBlockedInfo
+                                           .downloadShow
 {
   display: none;
 }
@@ -185,26 +151,11 @@
 
 /*** Downloads panel multiview (main view and blocked-downloads subview) ***/
 
-/* Hide all the usual buttons. */
-#downloadsPanel-mainView .download-state[state="8"] .downloadCancel,
-#downloadsPanel-mainView .download-state[state="8"] .downloadConfirmBlock,
-#downloadsPanel-mainView .download-state[state="8"] .downloadChooseUnblock,
-#downloadsPanel-mainView .download-state[state="8"] .downloadChooseOpen,
-#downloadsPanel-mainView .download-state[state="8"] .downloadRetry,
-#downloadsPanel-mainView .download-state[state="8"] .downloadShow {
-  display: none;
-}
-
 /* Make the panel wide enough to show the download list items without improperly
    truncating them. */
 #downloadsPanel-multiView > .panel-viewcontainer,
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack {
   max-width: unset;
-}
-
-/* Show the "show blocked info" button. */
-#downloadsPanel-mainView .download-state[state="8"] .downloadShowBlockedInfo {
-  display: inline;
 }
 
 /* DownloadsSubview styles: */

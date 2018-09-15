@@ -5878,7 +5878,6 @@ pref("general.document_open_conversion_depth_limit", 20);
 // documentElement and document.body are passive by default.
 pref("dom.event.default_to_passive_touch_listeners", true);
 
-pref("browser.fastblock.enabled", false);
 // The amount of time (ms) since navigation start after which all
 // tracker connections will be cancelled.
 pref("browser.fastblock.timeout", 5000);

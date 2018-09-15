@@ -21,6 +21,7 @@ using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
 using struct nsHttpAtom from "nsHttp.h";
 using class mozilla::net::nsHttpResponseHead from "nsHttpResponseHead.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED from "DocumentAnalyticsTrackerFastBlocked.h";
 
 namespace mozilla {
 namespace net {
@@ -147,6 +148,7 @@ struct ParentLoadInfoForwarderArgs
   // Tracker information, currently used by FastBlock
   bool isTracker;
   bool isTrackerBlocked;
+  LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED trackerBlockedReason;
   bool documentHasUserInteracted;
 
   // IMPORTANT: when you add new properites here you must also update

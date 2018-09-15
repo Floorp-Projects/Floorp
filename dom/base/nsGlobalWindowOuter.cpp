@@ -217,6 +217,7 @@
 #include "prrng.h"
 #include "nsSandboxFlags.h"
 #include "nsBaseCommandController.h"
+#include "nsXULControllers.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/BrowserElementDictionariesBinding.h"
 #include "mozilla/dom/cache/CacheStorage.h"
@@ -313,9 +314,6 @@ static LazyLogModule gDOMLeakPRLogOuter("DOMLeakOuter");
 static int32_t              gOpenPopupSpamCount               = 0;
 
 nsGlobalWindowOuter::OuterWindowByIdTable *nsGlobalWindowOuter::sOuterWindowsById = nullptr;
-
-// CIDs
-static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 
 /* static */
 nsPIDOMWindowOuter*
@@ -2926,10 +2924,9 @@ nsIControllers*
 nsGlobalWindowOuter::GetControllersOuter(ErrorResult& aError)
 {
   if (!mControllers) {
-    nsresult rv;
-    mControllers = do_CreateInstance(kXULControllersCID, &rv);
-    if (NS_FAILED(rv)) {
-      aError.Throw(rv);
+    mControllers = NS_NewXULControllers();
+    if (!mControllers) {
+      aError.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
 
