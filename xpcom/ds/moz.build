@@ -62,6 +62,7 @@ EXPORTS += [
     'nsJSThingHashtable.h',
     'nsMathUtils.h',
     'nsPointerHashKeys.h',
+    'nsProperties.h',
     'nsQuickSort.h',
     'nsRefPtrHashtable.h',
     'nsSimpleEnumerator.h',
