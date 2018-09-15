@@ -1,5 +1,4 @@
-// META: title=Web Locks API: API not available in non-secure context
-// META: global=window,dedicatedworker,sharedworker
+// META title=Web Locks API: API not available in non-secure context
 
 'use strict';
 
