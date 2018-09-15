@@ -27,10 +27,11 @@ ABIArgGenerator::next(MIRType type)
       case MIRType::Int64:
       case MIRType::Pointer: {
         Register destReg;
-        if (GetIntArgReg(usedArgSlots_, &destReg))
+        if (GetIntArgReg(usedArgSlots_, &destReg)) {
             current_ = ABIArg(destReg);
-        else
+        } else {
             current_ = ABIArg(GetArgStackDisp(usedArgSlots_));
+        }
         usedArgSlots_++;
         break;
       }
@@ -38,14 +39,16 @@ ABIArgGenerator::next(MIRType type)
       case MIRType::Double: {
         FloatRegister destFReg;
         FloatRegister::ContentType contentType;
-        if (!usedArgSlots_)
+        if (!usedArgSlots_) {
             firstArgFloat = true;
+        }
         contentType = (type == MIRType::Double) ?
             FloatRegisters::Double : FloatRegisters::Single;
-        if (GetFloatArgReg(usedArgSlots_, &destFReg))
+        if (GetFloatArgReg(usedArgSlots_, &destFReg)) {
             current_ = ABIArg(FloatRegister(destFReg.id(), contentType));
-        else
+        } else {
             current_ = ABIArg(GetArgStackDisp(usedArgSlots_));
+        }
         usedArgSlots_++;
         break;
       }
@@ -101,8 +104,9 @@ Assembler::executableCopy(uint8_t* buffer, bool flushICache)
     MOZ_ASSERT(isFinished);
     m_buffer.executableCopy(buffer);
 
-    if (flushICache)
+    if (flushICache) {
         AutoFlushICache::setRange(uintptr_t(buffer), m_buffer.size());
+    }
 }
 
 uintptr_t

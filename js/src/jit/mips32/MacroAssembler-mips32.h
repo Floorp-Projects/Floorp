@@ -460,17 +460,19 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     CodeOffsetJump jumpWithPatch(RepatchLabel* label);
 
     void loadUnboxedValue(Address address, MIRType type, AnyRegister dest) {
-        if (dest.isFloat())
+        if (dest.isFloat()) {
             loadInt32OrDouble(address, dest.fpu());
-        else
+        } else {
             ma_lw(dest.gpr(), ToPayload(address));
+        }
     }
 
     void loadUnboxedValue(BaseIndex address, MIRType type, AnyRegister dest) {
-        if (dest.isFloat())
+        if (dest.isFloat()) {
             loadInt32OrDouble(address.base, address.index, dest.fpu(), address.scale);
-        else
+        } else {
             load32(ToPayload(address), dest.gpr());
+        }
     }
 
     template <typename T>
@@ -513,10 +515,12 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
             mozilla::Swap(d0, d1);
         }
 
-        if (s0 != d0)
+        if (s0 != d0) {
             move32(s0, d0);
-        if (s1 != d1)
+        }
+        if (s1 != d1) {
             move32(s1, d1);
+        }
     }
 
     void storeValue(ValueOperand val, Operand dst);
@@ -546,10 +550,11 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 #if MOZ_LITTLE_ENDIAN
     void pushValue(const Value& val) {
         push(Imm32(val.toNunboxTag()));
-        if (val.isGCThing())
+        if (val.isGCThing()) {
             push(ImmGCPtr(val.toGCThing()));
-        else
+        } else {
             push(Imm32(val.toNunboxPayload()));
+        }
     }
     void pushValue(JSValueType type, Register reg) {
         push(ImmTag(JSVAL_TYPE_TO_TAG(type)));
@@ -557,10 +562,11 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     }
 #else
     void pushValue(const Value& val) {
-        if (val.isGCThing())
+        if (val.isGCThing()) {
             push(ImmGCPtr(val.toGCThing()));
-        else
+        } else {
             push(Imm32(val.toNunboxPayload()));
+        }
         push(Imm32(val.toNunboxTag()));
     }
     void pushValue(JSValueType type, Register reg) {

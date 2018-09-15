@@ -172,11 +172,13 @@ class FloatRegister : public FloatRegisterMIPSShared
         return 2;
     }
     FloatRegister aliased(uint32_t aliasIdx) {
-        if (aliasIdx == 0)
+        if (aliasIdx == 0) {
             return *this;
+        }
         MOZ_ASSERT(aliasIdx == 1);
-        if (isDouble())
+        if (isDouble()) {
             return singleOverlay();
+        }
         return doubleOverlay();
     }
     uint32_t numAlignedAliased() const {
@@ -184,8 +186,9 @@ class FloatRegister : public FloatRegisterMIPSShared
     }
     FloatRegister alignedAliased(uint32_t aliasIdx) {
         MOZ_ASSERT(isDouble());
-        if (aliasIdx == 0)
+        if (aliasIdx == 0) {
             return *this;
+        }
         MOZ_ASSERT(aliasIdx == 1);
         return singleOverlay();
     }

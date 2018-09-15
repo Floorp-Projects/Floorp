@@ -132,10 +132,11 @@ CodeGenerator::visitCompareB(LCompareB* lir)
     Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
 
     // Load boxed boolean in ScratchRegister.
-    if (rhs->isConstant())
+    if (rhs->isConstant()) {
         masm.moveValue(rhs->toConstant()->toJSValue(), ValueOperand(ScratchRegister));
-    else
+    } else {
         masm.boxValue(JSVAL_TYPE_BOOLEAN, ToRegister(rhs), ScratchRegister);
+    }
 
     // Perform the comparison.
     masm.cmpPtrSet(cond, lhs.valueReg(), ScratchRegister, output);
@@ -151,10 +152,11 @@ CodeGenerator::visitCompareBAndBranch(LCompareBAndBranch* lir)
     MOZ_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
 
     // Load boxed boolean in ScratchRegister.
-    if (rhs->isConstant())
+    if (rhs->isConstant()) {
         masm.moveValue(rhs->toConstant()->toJSValue(), ValueOperand(ScratchRegister));
-    else
+    } else {
         masm.boxValue(JSVAL_TYPE_BOOLEAN, ToRegister(rhs), ScratchRegister);
+    }
 
     // Perform the comparison.
     Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
@@ -259,20 +261,22 @@ CodeGenerator::visitDivOrModI64(LDivOrModI64* lir)
         Label notOverflow;
         masm.branchPtr(Assembler::NotEqual, lhs, ImmWord(INT64_MIN), &notOverflow);
         masm.branchPtr(Assembler::NotEqual, rhs, ImmWord(-1), &notOverflow);
-        if (lir->mir()->isMod())
+        if (lir->mir()->isMod()) {
             masm.ma_xor(output, output);
-        else
+        } else {
             masm.wasmTrap(wasm::Trap::IntegerOverflow, lir->bytecodeOffset());
+        }
         masm.jump(&done);
         masm.bind(&notOverflow);
     }
 
     masm.as_ddiv(lhs, rhs);
 
-    if (lir->mir()->isMod())
+    if (lir->mir()->isMod()) {
         masm.as_mfhi(output);
-    else
+    } else {
         masm.as_mflo(output);
+    }
 
     masm.bind(&done);
 }
@@ -296,10 +300,11 @@ CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir)
 
     masm.as_ddivu(lhs, rhs);
 
-    if (lir->mir()->isMod())
+    if (lir->mir()->isMod()) {
         masm.as_mfhi(output);
-    else
+    } else {
         masm.as_mflo(output);
+    }
 
     masm.bind(&done);
 }
@@ -411,10 +416,11 @@ CodeGenerator::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
     const LAllocation* input = lir->getOperand(0);
     Register output = ToRegister(lir->output());
 
-    if (lir->mir()->isUnsigned())
+    if (lir->mir()->isUnsigned()) {
         masm.ma_dext(output, ToRegister(input), Imm32(0), Imm32(32));
-    else
+    } else {
         masm.ma_sll(output, ToRegister(input), Imm32(0));
+    }
 }
 
 void
@@ -424,10 +430,11 @@ CodeGenerator::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
     Register output = ToRegister(lir->output());
 
     if (lir->mir()->bottomHalf()) {
-        if (input->isMemory())
+        if (input->isMemory()) {
             masm.load32(ToAddress(input), output);
-        else
+        } else {
             masm.ma_sll(output, ToRegister(input), Imm32(0));
+        }
     } else {
         MOZ_CRASH("Not implemented.");
     }
@@ -497,19 +504,21 @@ CodeGenerator::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
     bool isSaturating = mir->isSaturating();
 
     if (fromType == MIRType::Double) {
-        if (mir->isUnsigned())
+        if (mir->isUnsigned()) {
             masm.wasmTruncateDoubleToUInt64(input, output, isSaturating, oolEntry, oolRejoin,
                                             InvalidFloatReg);
-        else
+        } else {
             masm.wasmTruncateDoubleToInt64(input, output, isSaturating, oolEntry, oolRejoin,
                                            InvalidFloatReg);
+        }
     } else {
-        if (mir->isUnsigned())
+        if (mir->isUnsigned()) {
             masm.wasmTruncateFloat32ToUInt64(input, output, isSaturating, oolEntry, oolRejoin,
                                              InvalidFloatReg);
-        else
+        } else {
             masm.wasmTruncateFloat32ToInt64(input, output, isSaturating, oolEntry, oolRejoin,
                                             InvalidFloatReg);
+        }
     }
 }
 
@@ -523,15 +532,17 @@ CodeGenerator::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
     MOZ_ASSERT(outputType == MIRType::Double || outputType == MIRType::Float32);
 
     if (outputType == MIRType::Double) {
-        if (lir->mir()->isUnsigned())
+        if (lir->mir()->isUnsigned()) {
             masm.convertUInt64ToDouble(input, output, Register::Invalid());
-        else
+        } else {
             masm.convertInt64ToDouble(input, output);
+        }
     } else {
-        if (lir->mir()->isUnsigned())
+        if (lir->mir()->isUnsigned()) {
             masm.convertUInt64ToFloat32(input, output, Register::Invalid());
-        else
+        } else {
             masm.convertInt64ToFloat32(input, output);
+        }
     }
 }
 

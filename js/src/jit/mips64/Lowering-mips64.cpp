@@ -107,8 +107,9 @@ LIRGenerator::visitUnbox(MUnbox* unbox)
 
     if (box->type() == MIRType::ObjectOrNull) {
         LUnboxObjectOrNull* lir = new(alloc()) LUnboxObjectOrNull(useRegisterAtStart(box));
-        if (unbox->fallible())
+        if (unbox->fallible()) {
             assignSnapshot(lir, unbox->bailoutKind());
+        }
         defineReuseInput(lir, unbox, 0);
         return;
     }
@@ -126,8 +127,9 @@ LIRGenerator::visitUnbox(MUnbox* unbox)
         lir = new(alloc()) LUnbox(useAtStart(box));
     }
 
-    if (unbox->fallible())
+    if (unbox->fallible()) {
         assignSnapshot(lir, unbox->bailoutKind());
+    }
 
     define(lir, unbox);
 }
