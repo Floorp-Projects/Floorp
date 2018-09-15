@@ -26,12 +26,13 @@
 #include "nsObjCExceptions.h"
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsICommandLineRunner.h"
+#include "nsCommandLine.h"
 #include "nsIMacDockSupport.h"
 #include "nsIStandaloneNativeMenu.h"
 #include "nsILocalFileMac.h"
 #include "nsString.h"
 #include "nsCommandLineServiceMac.h"
+#include "nsCommandLine.h"
 
 class AutoAutoreleasePool {
 public:
@@ -207,11 +208,7 @@ ProcessPendingGetURLAppleEvents()
   if (NS_FAILED(rv))
     return NO;
 
-  nsCOMPtr<nsICommandLineRunner> cmdLine(do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
-  if (!cmdLine) {
-    NS_ERROR("Couldn't create command line!");
-    return NO;
-  }
+  nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLinew());
 
   nsCString filePath;
   rv = inFile->GetNativePath(filePath);
@@ -362,11 +359,7 @@ ProcessPendingGetURLAppleEvents()
     if (CommandLineServiceMac::AddURLToCurrentCommandLine([urlString UTF8String]))
       return;
 
-    nsCOMPtr<nsICommandLineRunner> cmdLine(do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
-    if (!cmdLine) {
-      NS_ERROR("Couldn't create command line!");
-      return;
-    }
+    nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
     nsCOMPtr<nsIFile> workingDir;
     nsresult rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
     if (NS_FAILED(rv))
