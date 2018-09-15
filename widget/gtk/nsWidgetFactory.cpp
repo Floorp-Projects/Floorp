@@ -49,9 +49,6 @@
 #include "GfxInfoX11.h"
 #endif
 
-#include "nsNativeThemeGTK.h"
-#include "HeadlessThemeGTK.h"
-
 #include "nsIComponentRegistrar.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/gfx/2D.h"
@@ -73,39 +70,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISound, nsSound::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ScreenManager, ScreenManager::GetAddRefedSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageToPixbuf)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TaskbarProgress)
-
-
-// from nsWindow.cpp
-extern bool gDisableNativeTheme;
-
-static nsresult
-nsNativeThemeGTKConstructor(nsISupports *aOuter, REFNSIID aIID,
-                            void **aResult)
-{
-    nsresult rv;
-    nsCOMPtr<nsITheme> inst;
-
-    if (gDisableNativeTheme)
-        return NS_ERROR_NO_INTERFACE;
-
-    *aResult = nullptr;
-    if (nullptr != aOuter) {
-        rv = NS_ERROR_NO_AGGREGATION;
-        return rv;
-    }
-    if (gfxPlatform::IsHeadless()) {
-        inst = new HeadlessThemeGTK();
-    } else {
-        inst = new nsNativeThemeGTK();
-    }
-    if (nullptr == inst) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        return rv;
-    }
-    rv = inst->QueryInterface(aIID, aResult);
-
-    return rv;
-}
 
 #if defined(MOZ_X11)
 namespace mozilla {
@@ -214,7 +178,6 @@ NS_DEFINE_NAMED_CID(NS_DRAGSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_BIDIKEYBOARD_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
-NS_DEFINE_NAMED_CID(NS_THEMERENDERER_CID);
 #ifdef NS_PRINTING
 NS_DEFINE_NAMED_CID(NS_PRINTSETTINGSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTER_ENUMERATOR_CID);
@@ -248,7 +211,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_BIDIKEYBOARD_CID, false, nullptr, nsBidiKeyboardConstructor },
     { &kNS_SCREENMANAGER_CID, false, nullptr, ScreenManagerConstructor,
       Module::MAIN_PROCESS_ONLY },
-    { &kNS_THEMERENDERER_CID, false, nullptr, nsNativeThemeGTKConstructor },
 #ifdef NS_PRINTING
     { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintSettingsServiceGTKConstructor },
     { &kNS_PRINTER_ENUMERATOR_CID, false, nullptr, nsPrinterEnumeratorGTKConstructor },
@@ -284,7 +246,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
       Module::MAIN_PROCESS_ONLY },
     { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID,
       Module::MAIN_PROCESS_ONLY },
-    { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
 #ifdef NS_PRINTING
     { "@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID },
     { "@mozilla.org/gfx/printerenumerator;1", &kNS_PRINTER_ENUMERATOR_CID },
