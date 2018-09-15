@@ -5,8 +5,13 @@
 
 package org.mozilla.gecko;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.database.ContentObserver;
 import android.hardware.input.InputManager;
+import android.net.Uri;
+import android.os.Handler;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.InputDevice;
 import org.mozilla.gecko.annotation.WrapForJNI;
@@ -20,6 +25,8 @@ public class GeckoSystemStateListener
     private static final GeckoSystemStateListener listenerInstance = new GeckoSystemStateListener();
 
     private boolean initialized;
+    private ContentObserver mContentObserver;
+    private static Context sApplicationContext;
     private InputManager mInputManager;
 
     public static GeckoSystemStateListener getInstance() {
@@ -37,6 +44,18 @@ public class GeckoSystemStateListener
         mInputManager = (InputManager)
             context.getSystemService(Context.INPUT_SERVICE);
         mInputManager.registerInputDeviceListener(listenerInstance, ThreadUtils.getUiHandler());
+
+        sApplicationContext = context;
+        ContentResolver contentResolver = sApplicationContext.getContentResolver();
+        Uri animationSetting = Settings.System.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE);
+        mContentObserver = new ContentObserver(new Handler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                onDeviceChanged();
+            }
+        };
+        contentResolver.registerContentObserver(animationSetting, false, mContentObserver);
+
         initialized = true;
     }
 
@@ -52,8 +71,23 @@ public class GeckoSystemStateListener
         }
 
         mInputManager.unregisterInputDeviceListener(listenerInstance);
+
+        ContentResolver contentResolver = sApplicationContext.getContentResolver();
+        contentResolver.unregisterContentObserver(mContentObserver);
+
         initialized = false;
         mInputManager = null;
+        mContentObserver = null;
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
+    // For prefers-reduced-motion media queries feature.
+    private static boolean prefersReducedMotion() {
+        ContentResolver contentResolver = sApplicationContext.getContentResolver();
+
+        return Settings.Global.getFloat(contentResolver,
+                                        Settings.Global.ANIMATOR_DURATION_SCALE,
+                                        1) == 0.0f;
     }
 
     @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
