@@ -9,6 +9,7 @@ add_task(async function() {
     ["browser.contentblocking.enabled", true],
     ["browser.contentblocking.ui.enabled", true],
     ["browser.contentblocking.rejecttrackers.ui.enabled", true],
+    ["browser.fastblock.enabled", false],
     ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
     ["privacy.trackingprotection.enabled", false],
     ["privacy.trackingprotection.pbmode.enabled", false],
