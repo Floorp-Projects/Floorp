@@ -44,7 +44,7 @@
 #include "GeckoProfiler.h"
 #include "mozilla/EditorSpellCheck.h"
 #include "nsCommandLine.h"
-#include "nsCommandParams.h"
+#include "nsPersistentProperties.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -3248,6 +3248,15 @@ nsXPCComponents_Utils::CreatePrivateLoadContext(nsILoadContext** aLoadContext)
     NS_ENSURE_ARG_POINTER(aLoadContext);
     nsCOMPtr<nsILoadContext> loadContext = ::CreatePrivateLoadContext();
     loadContext.forget(aLoadContext);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::CreatePersistentProperties(nsIPersistentProperties** aPersistentProperties)
+{
+    NS_ENSURE_ARG_POINTER(aPersistentProperties);
+    nsCOMPtr<nsIPersistentProperties> props = new nsPersistentProperties();
+    props.forget(aPersistentProperties);
     return NS_OK;
 }
 

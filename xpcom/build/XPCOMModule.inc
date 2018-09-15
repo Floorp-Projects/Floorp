@@ -12,8 +12,6 @@
     COMPONENT(SCRIPTABLEBASE64ENCODER, nsScriptableBase64EncoderConstructor)
     COMPONENT(PIPE, nsPipeConstructor)
 
-    COMPONENT(PERSISTENTPROPERTIES, nsPersistentProperties::Create)
-
     COMPONENT(ARRAY, nsArrayBase::XPCOMConstructor)
     COMPONENT(CONSOLESERVICE, nsConsoleServiceConstructor)
     COMPONENT_M(OBSERVERSERVICE, nsObserverService::Create, Module::ALLOW_IN_GPU_PROCESS)
