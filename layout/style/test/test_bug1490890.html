@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1490890
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1490890</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #flex {
+      display: flex;
+      flex-direction: column;
+      height: 100px;
+      max-height: 100px;
+      overflow: hidden;
+      border: 1px solid black;
+    }
+    #overflowAuto {
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1490890">Mozilla Bug 1490890</a>
+<div id="display">
+  <div id="content">
+    <div id="flex">
+      <div id="overflowAuto">
+        <!-- Populated by test JS below: -->
+        <div id="tall"></div>
+      </div>
+      <div id="testNode">abc</div>
+    </div>
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/** Test for Bug 1490890 **/
+
+/**
+ * This test checks how many reflows are required, when we make a change inside
+ * a flex item, with a tall scrollable sibling flex item.
+ */
+
+const gUtils = SpecialPowers.getDOMWindowUtils(window);
+
+// The elements that we will modify here:
+const gTall = document.getElementById("tall");
+const gTestNode = document.getElementById("testNode");
+
+// Helper function to undo our modifications:
+function cleanup()
+{
+  gTall.firstChild.remove();
+  gTestNode.style = "";
+}
+
+// Flush layout & return the global frame-reflow-count
+function getReflowCount()
+{
+  let unusedVal = document.getElementById("flex").offsetHeight; // flush layout
+  return gUtils.framesReflowed;
+}
+
+// This function changes gTestNode to "display:none", and returns the number
+// of frames that need to be reflowed as a result of that tweak.
+function makeTweakAndCountReflows()
+{
+  let beforeCount = getReflowCount();
+  gTestNode.style.display = "none";
+  let afterCount = getReflowCount();
+
+  let numReflows = afterCount - beforeCount;
+  if (numReflows <= 0) {
+    ok(false, "something's wrong -- we should've reflowed *something*");
+  }
+  return numReflows;
+}
+
+// ACTUAL TEST LOGIC STARTS HERE
+// -----------------------------
+const testLineCount = 100;
+const refLineCount = 5000;
+
+// "Reference" measurement: put enough lines of text into gTall to trigger
+// a vertical scrollbar, and then see how many frames need to be reflowed
+// in response to a tweak in gTestNode:
+let text = document.createTextNode("a\n".repeat(testLineCount));
+gTall.appendChild(text);
+let numReferenceReflows = makeTweakAndCountReflows();
+cleanup();
+
+// "Test" measurement: put many more lines of text into gTall (many more than
+// for reference case), and then see how many frames need to be reflowed
+// in response to a tweak in gTestNode:
+text = document.createTextNode("a\n".repeat(refLineCount));
+gTall.appendChild(text);
+let numTestReflows = makeTweakAndCountReflows();
+cleanup();
+
+is(numTestReflows, numReferenceReflows,
+   "Tweak should trigger the same number of reflows regardless of " +
+   "how much content is present in descendant of sibling");
+</script>
+</pre>
+</body>
+</html>

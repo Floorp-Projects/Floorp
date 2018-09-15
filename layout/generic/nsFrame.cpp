@@ -5240,6 +5240,13 @@ nsFrame::MarkIntrinsicISizesDirty()
     CoordNeedsRecalc(metrics->mAscent);
   }
 
+  // If we're a flex item, clear our flex-item-specific cached measurements
+  // (which likely depended on our now-stale intrinsic isize).
+  auto* parentFrame = GetParent();
+  if (parentFrame && parentFrame->IsFlexContainerFrame()) {
+    DeleteProperty(CachedFlexMeasuringReflow());
+  }
+
   if (GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) {
     nsFontInflationData::MarkFontInflationDataTextDirty(this);
   }
