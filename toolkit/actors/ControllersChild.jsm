@@ -19,8 +19,7 @@ class ControllersChild extends ActorChild {
       case "ControllerCommands:DoWithParams":
         var data = message.data;
         if (this.docShell.isCommandEnabled(data.cmd)) {
-          var params = Cc["@mozilla.org/embedcomp/command-params;1"].
-                       createInstance(Ci.nsICommandParams);
+          var params = Cu.createCommandParams();
           for (var name in data.params) {
             var value = data.params[name];
             if (value.type == "long") {
