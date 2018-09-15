@@ -44,8 +44,9 @@ class BailoutStack
         return tableOffset_;
     }
     uint32_t frameSize() const {
-        if (frameClass() == FrameSizeClass::None())
+        if (frameClass() == FrameSizeClass::None()) {
             return frameSize_;
+        }
         return frameClass().frameSize();
     }
     MachineState machine() {
@@ -56,8 +57,9 @@ class BailoutStack
         return snapshotOffset_;
     }
     uint8_t* parentStackPointer() const {
-        if (frameClass() == FrameSizeClass::None())
+        if (frameClass() == FrameSizeClass::None()) {
             return (uint8_t*)this + sizeof(BailoutStack);
+        }
         return (uint8_t*)this + offsetof(BailoutStack, snapshotOffset_);
     }
 };
