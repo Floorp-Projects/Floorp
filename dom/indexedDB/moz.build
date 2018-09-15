@@ -107,7 +107,6 @@ LOCAL_INCLUDES += [
     '/dom/storage',
     '/ipc/glue',
     '/xpcom/build',
-    '/xpcom/threads',
 ]
 
 XPIDL_SOURCES += [

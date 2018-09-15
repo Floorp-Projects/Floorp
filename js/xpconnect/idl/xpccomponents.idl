@@ -720,6 +720,9 @@ interface nsIXPCComponents_Utils : nsISupports
 
     /* Create a spellchecker object. */
     nsIEditorSpellCheck createSpellChecker();
+
+    /* Create a commandline object. */
+    nsISupports createCommandLine();
 };
 
 /**

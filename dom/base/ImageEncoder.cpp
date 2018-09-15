@@ -14,7 +14,7 @@
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Unused.h"
 #include "gfxUtils.h"
-#include "nsIThreadPool.h"
+#include "nsThreadPool.h"
 #include "nsNetUtil.h"
 #include "nsXPCOMCIDInternal.h"
 #include "YCbCrUtils.h"
@@ -558,7 +558,7 @@ nsresult
 ImageEncoder::EnsureThreadPool()
 {
   if (!sThreadPool) {
-    nsCOMPtr<nsIThreadPool> threadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
+    nsCOMPtr<nsIThreadPool> threadPool = new nsThreadPool();
     sThreadPool = threadPool;
 
     if (!NS_IsMainThread()) {

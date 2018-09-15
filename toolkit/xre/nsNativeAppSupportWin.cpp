@@ -10,7 +10,7 @@
 #include "nsXULAppAPI.h"
 #include "nsString.h"
 #include "nsIBrowserDOMWindow.h"
-#include "nsICommandLineRunner.h"
+#include "nsCommandLine.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -1236,12 +1236,7 @@ nsNativeAppSupportWin::HandleCommandLine(const char* aCmdLineString,
     const char *p;
     nsAutoCString arg;
 
-    nsCOMPtr<nsICommandLineRunner> cmdLine
-        (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
-    if (!cmdLine) {
-        NS_ERROR("Couldn't create command line!");
-        return;
-    }
+    nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
 
     // Parse command line args according to MS spec
     // (see "Parsing C++ Command-Line Arguments" at
@@ -1480,9 +1475,7 @@ nsNativeAppSupportWin::OpenBrowserWindow()
     // open a new window if caller requested it or if anything above failed
 
     char* argv[] = { 0 };
-    nsCOMPtr<nsICommandLineRunner> cmdLine
-        (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
-    NS_ENSURE_TRUE(cmdLine, NS_ERROR_FAILURE);
+    nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
 
     rv = cmdLine->Init(0, argv, nullptr, nsICommandLine::STATE_REMOTE_EXPLICIT);
     NS_ENSURE_SUCCESS(rv, rv);

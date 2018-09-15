@@ -242,8 +242,6 @@ nsThreadManagerGetSingleton(nsISupports* aOuter,
   return nsThreadManager::get().QueryInterface(aIID, aInstancePtr);
 }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsThreadPool)
-
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = nullptr;
 bool gXPCOMShuttingDown = false;
 bool gXPCOMThreadsShutDown = false;
