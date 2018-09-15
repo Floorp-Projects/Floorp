@@ -1940,6 +1940,19 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   attribute ACString systemFont;
 
+
+  /**
+   * Simulate the system setting corresponding to 'prefers-reduced-motion'
+   * media queries feature is changed to 'on' or 'off'.
+   *
+   * Currently this function is available only on MacOSX.
+   */
+  void setPrefersReducedMotionOverrideForTest(in boolean aValue);
+  /**
+   * Reset the internal state to be used for above setPrefersReducedMotion.
+   */
+  void resetPrefersReducedMotionOverrideForTest();
+
   // These consts are only for testing purposes.
   const long DEFAULT_MOUSE_POINTER_ID = 0;
   const long DEFAULT_PEN_POINTER_ID   = 1;

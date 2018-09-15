@@ -579,6 +579,9 @@ parent:
     sync SetSystemFont(nsCString aFontName);
     sync GetSystemFont() returns (nsCString retval);
 
+    sync SetPrefersReducedMotionOverrideForTest(bool aValue);
+    sync ResetPrefersReducedMotionOverrideForTest();
+
 child:
     /**
      * Notify the remote browser that it has been Show()n on this
