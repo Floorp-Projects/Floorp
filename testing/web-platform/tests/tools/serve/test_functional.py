@@ -38,9 +38,8 @@ def server_subprocesses():
 
 @pytest.fixture()
 def tempfile_name():
-    fd, name = tempfile.mkstemp()
+    name = tempfile.mkstemp()[1]
     yield name
-    os.close(fd)
     os.remove(name)
 
 
