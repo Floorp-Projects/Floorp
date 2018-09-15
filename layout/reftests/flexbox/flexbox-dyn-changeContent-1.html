@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <meta charset="UTF-8">
+  <!-- This testcase ensures that we correctly re-evaluate the percent width on
+       the purple flex item "itemA", in response to the width of its flex
+       container changing due to the other item gaining some more content. -->
+  <style>
+    #flex {
+      display: inline-flex;
+      border: 1px solid black;
+    }
+    #itemA {
+      background: purple;
+      width: 50%;
+      flex: none;
+    }
+    #itemB {
+      background: lightblue;
+      flex: none;
+    }
+  </style>
+  <script>
+    function tweak() {
+      document.getElementById("itemB").innerText = "BBBBB";
+      document.documentElement.removeAttribute("class");
+    }
+    window.addEventListener("MozReftestInvalidate", tweak, false);
+  </script>
+</head>
+<body>
+  <div id="flex">
+    <div id="itemA"></div>
+    <div id="itemB">BB</div>
+  </div>
+</body>
+</html>

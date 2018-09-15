@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <meta charset="UTF-8">
+  <!-- This testcase ensures that we correctly re-evaluate the percent height
+       on the purple flex item "itemA", in response to the height of its flex
+       container being dynamically changed. -->
+  <style>
+    #flex {
+      display: inline-flex;
+      flex-direction: column;
+      border: 1px solid black;
+      max-width: 50px;
+      height: 60px;
+    }
+    #itemA {
+      background: purple;
+      height: 50%;
+      flex: none;
+    }
+    #itemB {
+      background: lightblue;
+      flex: none;
+    }
+  </style>
+  <script>
+    function tweak() {
+      document.getElementById("flex").style.height = "150px";
+      document.documentElement.removeAttribute("class");
+    }
+    window.addEventListener("MozReftestInvalidate", tweak, false);
+  </script>
+</head>
+<body>
+  <div id="flex">
+    <div id="itemA">A</div>
+    <div id="itemB">BB</div>
+  </div>
+</body>
+</html>

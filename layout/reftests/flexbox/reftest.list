@@ -31,6 +31,8 @@ fuzzy-if(cocoaWidget,0-1,0-2) random-if(winWidget||gtkWidget) skip-if(Android) =
 == flexbox-box-sizing-on-items-vert-1b.html flexbox-box-sizing-on-items-vert-1-ref.html
 
 # Tests for dynamic modifications of content inside/around a flex container
+== flexbox-dyn-changeContent-1.html flexbox-dyn-changeContent-1-ref.html
+== flexbox-dyn-changeContent-2.html flexbox-dyn-changeContent-2-ref.html
 == flexbox-dyn-changeFrameWidth-1.xhtml flexbox-dyn-changeFrameWidth-1-ref.xhtml
 == flexbox-dyn-changeFrameWidth-2.xhtml flexbox-dyn-changeFrameWidth-2-ref.xhtml
 == flexbox-dyn-changeFrameWidth-3.xhtml flexbox-dyn-changeFrameWidth-3-ref.xhtml
