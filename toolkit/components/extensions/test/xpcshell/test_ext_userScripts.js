@@ -111,14 +111,42 @@ add_task(async function test_userScripts_no_webext_apis() {
   async function background() {
     const matches = ["http://localhost/*/file_sample.html"];
 
-    const script = await browser.userScripts.register({
-      js: [{
+    const sharedCode = {code: "console.log(\"js code shared by multiple userScripts\");"};
+
+    let script = await browser.userScripts.register({
+      js: [sharedCode, {
         code: `
-          const webextAPINamespaces = this.browser ? Object.keys(this.browser) : undefined;
-          document.body.innerHTML = "userScript loaded - " + JSON.stringify(webextAPINamespaces);
+          window.addEventListener("load", () => {
+            const webextAPINamespaces = this.browser ? Object.keys(this.browser) : undefined;
+            document.body.innerHTML = "userScript loaded - " + JSON.stringify(webextAPINamespaces);
+          }, {once: true});
         `,
       }],
-      runAt: "document_end",
+      runAt: "document_start",
+      matches,
+      scriptMetadata: {
+        name: "test-user-script",
+        arrayProperty: ["el1"],
+        objectProperty: {nestedProp: "nestedValue"},
+        nullProperty: null,
+      },
+    });
+
+    // Unregister and then register the same js code again, to verify that the last registered
+    // userScript doesn't get assigned a revoked blob url (otherwise Extensioncontent.jsm
+    // ScriptCache raises an error because it fails to compile the revoked blob url and the user
+    // script will never be loaded).
+    script.unregister();
+    script = await browser.userScripts.register({
+      js: [sharedCode, {
+        code: `
+          window.addEventListener("load", () => {
+            const webextAPINamespaces = this.browser ? Object.keys(this.browser) : undefined;
+            document.body.innerHTML = "userScript loaded - " + JSON.stringify(webextAPINamespaces);
+          }, {once: true});
+        `,
+      }],
+      runAt: "document_start",
       matches,
       scriptMetadata: {
         name: "test-user-script",
@@ -129,10 +157,14 @@ add_task(async function test_userScripts_no_webext_apis() {
     });
 
     const scriptToRemove = await browser.userScripts.register({
-      js: [{
-        code: 'document.body.innerHTML = "unexpected unregistered userScript loaded";',
+      js: [sharedCode, {
+        code: `
+          window.addEventListener("load", () => {
+            document.body.innerHTML = "unexpected unregistered userScript loaded";
+          }, {once: true});
+        `,
       }],
-      runAt: "document_end",
+      runAt: "document_start",
       matches,
       scriptMetadata: {
         name: "user-script-to-remove",
@@ -144,19 +176,6 @@ add_task(async function test_userScripts_no_webext_apis() {
 
     // Remove the last registered user script.
     await scriptToRemove.unregister();
-
-    await browser.contentScripts.register({
-      js: [{
-        code: `
-          browser.test.sendMessage("page-loaded", {
-            textContent: document.body.textContent,
-            url: window.location.href,
-          }); true;
-        `,
-      }],
-      runAt: "document_end",
-      matches,
-    });
 
     browser.test.sendMessage("background-ready");
   }
@@ -181,10 +200,17 @@ add_task(async function test_userScripts_no_webext_apis() {
   info("Test content script loaded in a process created before any registered userScript");
   let url = `${BASE_URL}/file_sample.html#remote-false`;
   let contentPage = await ExtensionTestUtils.loadContentPage(url, {remote: false});
-  const reply = await extension.awaitMessage("page-loaded");
-  Assert.deepEqual(reply, {
+  let result = await contentPage.spawn(undefined, async () => {
+    return {
+      textContent: this.content.document.body.textContent,
+      url: this.content.location.href,
+      readyState: this.content.document.readyState,
+    };
+  });
+  Assert.deepEqual(result, {
     textContent: "userScript loaded - undefined",
     url,
+    readyState: "complete",
   }, "The userScript executed on the expected url and no access to the WebExtensions APIs");
   await contentPage.close();
 
@@ -196,11 +222,17 @@ add_task(async function test_userScripts_no_webext_apis() {
     info("Test content script loaded in a process created after the userScript has been registered");
     let url2 = `${BASE_URL}/file_sample.html#remote-true`;
     let contentPage2 = await ExtensionTestUtils.loadContentPage(url2, {remote: true});
-    // Load an url that matches and check that the userScripts has been loaded.
-    const reply2 = await extension.awaitMessage("page-loaded");
-    Assert.deepEqual(reply2, {
+    let result2 = await contentPage2.spawn(undefined, async () => {
+      return {
+        textContent: this.content.document.body.textContent,
+        url: this.content.location.href,
+        readyState: this.content.document.readyState,
+      };
+    });
+    Assert.deepEqual(result2, {
       textContent: "userScript loaded - undefined",
       url: url2,
+      readyState: "complete",
     }, "The userScript executed on the expected url and no access to the WebExtensions APIs");
     await contentPage2.close();
   }
