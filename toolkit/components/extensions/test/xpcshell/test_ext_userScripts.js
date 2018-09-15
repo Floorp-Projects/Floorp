@@ -154,6 +154,7 @@ add_task(async function test_userScripts_no_webext_apis() {
           }); true;
         `,
       }],
+      runAt: "document_end",
       matches,
     });
 
@@ -355,4 +356,78 @@ add_task(async function test_userScripts_exported_APIs() {
   await extension.unload();
 
   await contentPage.close();
+});
+
+// This test verify that a cached script is still able to catch the document
+// while it is still loading (when we do not block the document parsing as
+// we do for a non cached script).
+add_task(async function test_cached_userScript_on_document_start() {
+  function apiScript() {
+    browser.userScripts.setScriptAPIs({
+      sendTestMessage([name, params]) {
+        return browser.test.sendMessage(name, params);
+      },
+    });
+  }
+
+  async function background() {
+    function userScript() {
+      this.sendTestMessage("user-script-loaded", {
+        url: window.location.href,
+        documentReadyState: document.readyState,
+      });
+    }
+
+    await browser.userScripts.register({
+      js: [{
+        code: `(${userScript})();`,
+      }],
+      runAt: "document_start",
+      matches: [
+        "http://localhost/*/file_sample.html",
+      ],
+    });
+
+    browser.test.sendMessage("user-script-registered");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "http://localhost/*/file_sample.html",
+      ],
+      user_scripts: {
+        api_script: "api-script.js",
+      },
+    },
+    background,
+    files: {
+      "api-script.js": apiScript,
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("user-script-registered");
+
+  let url = `${BASE_URL}/file_sample.html`;
+  let contentPage = await ExtensionTestUtils.loadContentPage(url);
+
+  let msg = await extension.awaitMessage("user-script-loaded");
+  Assert.deepEqual(msg, {
+    url,
+    documentReadyState: "loading",
+  }, "Got the expected url and document.readyState from a non cached user script");
+
+  // Reload the page and check that the cached content script is still able to
+  // run on document_start.
+  await contentPage.loadURL(url);
+
+  let msgFromCached = await extension.awaitMessage("user-script-loaded");
+  Assert.deepEqual(msgFromCached, {
+    url,
+    documentReadyState: "loading",
+  }, "Got the expected url and document.readyState from a cached user script");
+
+  await contentPage.close();
+  await extension.unload();
 });
