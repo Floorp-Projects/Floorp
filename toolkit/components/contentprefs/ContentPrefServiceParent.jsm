@@ -12,10 +12,8 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "_methodsCallableFromChild",
                                "resource://gre/modules/ContentPrefUtils.jsm");
 
-let loadContext = Cc["@mozilla.org/loadcontext;1"].
-                    createInstance(Ci.nsILoadContext);
-let privateLoadContext = Cc["@mozilla.org/privateloadcontext;1"].
-                           createInstance(Ci.nsILoadContext);
+let loadContext = Cu.createLoadContext();
+let privateLoadContext = Cu.createPrivateLoadContext();
 
 function contextArg(context) {
   return (context && context.usePrivateBrowsing) ?

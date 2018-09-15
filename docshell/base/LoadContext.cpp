@@ -201,34 +201,27 @@ LoadContext::GetInterface(const nsIID& aIID, void** aResult)
   return NS_NOINTERFACE;
 }
 
-static nsresult
-CreateTestInstance(bool aPrivate, nsISupports *aOuter, REFNSIID aIID, void **aResult)
+static already_AddRefed<nsILoadContext>
+CreateInstance(bool aPrivate)
 {
-  // Shamelessly modified from NS_GENERIC_FACTORY_CONSTRUCTOR
-  *aResult = nullptr;
-
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
   OriginAttributes oa;
   oa.mPrivateBrowsingId = aPrivate ? 1 : 0;
 
-  RefPtr<LoadContext> lc = new LoadContext(oa);
+  nsCOMPtr<nsILoadContext> lc = new LoadContext(oa);
 
-  return lc->QueryInterface(aIID, aResult);
+  return lc.forget();
 }
 
-nsresult
-CreateTestLoadContext(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+already_AddRefed<nsILoadContext>
+CreateLoadContext()
 {
-  return CreateTestInstance(false, aOuter, aIID, aResult);
+  return CreateInstance(false);
 }
 
-nsresult
-CreatePrivateTestLoadContext(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+already_AddRefed<nsILoadContext>
+CreatePrivateLoadContext()
 {
-  return CreateTestInstance(true, aOuter, aIID, aResult);
+  return CreateInstance(true);
 }
 
 } // namespace mozilla
