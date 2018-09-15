@@ -74,8 +74,7 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
             clip_transform.m,
             local_clip_rect,
             RectWithSize(snap_positions.xy, snap_positions.zw - snap_positions.xy),
-            snap_positions,
-            vec2(0.5)
+            snap_positions
         );
 
         device_pos -= snap_offsets;

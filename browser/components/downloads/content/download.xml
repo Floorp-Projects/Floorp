@@ -48,65 +48,19 @@
                              xbl:inherits="mode=progressmode,value=progress,paused=progresspaused"/>
           <xul:description class="downloadDetails downloadDetailsNormal"
                            crop="end"
-                           xbl:inherits="value=status"/>
+                           xbl:inherits="value=status,tooltiptext=fullStatus"/>
           <xul:description class="downloadDetails downloadDetailsHover"
                            crop="end"
                            xbl:inherits="value=hoverStatus"/>
-          <xul:description class="downloadDetails downloadDetailsFull"
+          <xul:description class="downloadDetails downloadDetailsButtonHover"
                            crop="end"
-                           xbl:inherits="value=fullStatus,tooltiptext=fullStatus"/>
-          <xul:description class="downloadDetails downloadOpenFile"
-                           crop="end"
-                           value="&openFile.label;"/>
-          <xul:description class="downloadDetails downloadShowMoreInfo"
-                           crop="end"
-                           value="&showMoreInformation.label;"/>
-          <xul:stack class="downloadButtonLabels">
-            <xul:description class="downloadDetails downloadShow"
-                             crop="end"
-#ifdef XP_MACOSX
-                             value="&cmd.showMac.label;"
-#else
-                             value="&cmd.show.label;"
-#endif
-                             />
-            <xul:description class="downloadDetails downloadCancel"
-                             crop="end"
-                             value="&cancelDownload.label;"/>
-            <xul:description class="downloadDetails downloadRetry"
-                             crop="end"
-                             value="&retryDownload.label;"/>
-          </xul:stack>
+                           xbl:inherits="value=buttonHoverStatus"/>
         </xul:vbox>
       </xul:hbox>
       <xul:toolbarseparator />
-      <xul:stack class="downloadButtonArea">
-        <xul:button class="downloadButton downloadCancel downloadIconCancel"
-                    tooltiptext="&cmd.cancel.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_cancel');"/>
-        <xul:button class="downloadButton downloadRetry downloadIconRetry"
-                    tooltiptext="&cmd.retry.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_retry');"/>
-        <xul:button class="downloadButton downloadShow downloadIconShow"
-#ifdef XP_MACOSX
-                    tooltiptext="&cmd.showMac.label;"
-#else
-                    tooltiptext="&cmd.show.label;"
-#endif
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_show');"/>
-        <xul:button class="downloadButton downloadConfirmBlock downloadIconCancel"
-                    tooltiptext="&cmd.removeFile.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_confirmBlock');"/>
-        <xul:button class="downloadButton downloadChooseUnblock downloadIconShow"
-                    tooltiptext="&cmd.chooseUnblock.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_chooseUnblock');"/>
-        <xul:button class="downloadButton downloadChooseOpen downloadIconShow"
-                    tooltiptext="&cmd.chooseOpen.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_chooseOpen');"/>
-        <xul:button class="downloadButton downloadShowBlockedInfo"
-                    tooltiptext="&cmd.chooseUnblock.label;"
-                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_showBlockedInfo');"/>
-      </xul:stack>
+      <xul:button class="downloadButton"
+                  xbl:inherits="class=buttonclass,aria-label=buttonarialabel,tooltiptext=buttontooltiptext"
+                  oncommand="DownloadsView.onDownloadButton(event);"/>
     </content>
   </binding>
 

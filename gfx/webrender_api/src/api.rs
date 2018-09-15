@@ -9,6 +9,7 @@ use channel::{self, MsgSender, Payload, PayloadSender, PayloadSenderHelperMethod
 use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
+use std::os::raw::c_void;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::u32;
@@ -667,6 +668,8 @@ pub enum ApiMsg {
     ClearNamespace(IdNamespace),
     /// Flush from the caches anything that isn't necessary, to free some memory.
     MemoryPressure,
+    /// Collects a memory report.
+    ReportMemory(MsgSender<MemoryReport>),
     /// Change debugging options.
     DebugCommand(DebugCommand),
     /// Wakes the render backend's event loop up. Needed when an event is communicated
@@ -690,6 +693,7 @@ impl fmt::Debug for ApiMsg {
             ApiMsg::ExternalEvent(..) => "ApiMsg::ExternalEvent",
             ApiMsg::ClearNamespace(..) => "ApiMsg::ClearNamespace",
             ApiMsg::MemoryPressure => "ApiMsg::MemoryPressure",
+            ApiMsg::ReportMemory(..) => "ApiMsg::ReportMemory",
             ApiMsg::DebugCommand(..) => "ApiMsg::DebugCommand",
             ApiMsg::ShutDown => "ApiMsg::ShutDown",
             ApiMsg::WakeUp => "ApiMsg::WakeUp",
@@ -735,6 +739,34 @@ impl PipelineId {
     }
 }
 
+/// Collection of heap sizes, in bytes.
+#[repr(C)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct MemoryReport {
+    pub primitive_stores: usize,
+    pub clip_stores: usize,
+    pub gpu_cache_metadata: usize,
+    pub gpu_cache_cpu_mirror: usize,
+    pub render_tasks: usize,
+    pub hit_testers: usize,
+}
+
+impl ::std::ops::AddAssign for MemoryReport {
+    fn add_assign(&mut self, other: MemoryReport) {
+        self.primitive_stores += other.primitive_stores;
+        self.clip_stores += other.clip_stores;
+        self.gpu_cache_metadata += other.gpu_cache_metadata;
+        self.gpu_cache_cpu_mirror += other.gpu_cache_cpu_mirror;
+        self.render_tasks += other.render_tasks;
+        self.hit_testers += other.hit_testers;
+    }
+}
+
+/// A C function that takes a pointer to a heap allocation and returns its size.
+///
+/// This is borrowed from the malloc_size_of crate, upon which we want to avoid
+/// a dependency from WebRender.
+pub type VoidPtrToSizeFn = unsafe extern "C" fn(ptr: *const c_void) -> usize;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
@@ -895,6 +927,12 @@ impl RenderApi {
 
     pub fn notify_memory_pressure(&self) {
         self.api_sender.send(ApiMsg::MemoryPressure).unwrap();
+    }
+
+    pub fn report_memory(&self) -> MemoryReport {
+        let (tx, rx) = channel::msg_channel().unwrap();
+        self.api_sender.send(ApiMsg::ReportMemory(tx)).unwrap();
+        rx.recv().unwrap()
     }
 
     pub fn shut_down(&self) {

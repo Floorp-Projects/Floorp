@@ -37,6 +37,7 @@ AC_DEFUN([MOZ_SET_FRAMEPTR_FLAGS], [
           -n "$MOZ_DEBUG" -o \
           -n "$MOZ_MSAN" -o \
           -n "$MOZ_ASAN" -o \
+          -n "$MOZ_UBSAN" -o \
           "$OS_ARCH:$CPU_ARCH" = "WINNT:x86" -o \
 	  "$OS_ARCH:$CPU_ARCH" = "WINNT:aarch64"; then
     MOZ_FRAMEPTR_FLAGS="$MOZ_ENABLE_FRAME_PTR"

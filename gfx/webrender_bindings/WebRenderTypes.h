@@ -351,6 +351,23 @@ static inline wr::LayoutRect ToRoundedLayoutRect(const mozilla::LayoutDeviceRect
   return wr::ToLayoutRect(rect);
 }
 
+static inline wr::LayoutRect IntersectLayoutRect(const wr::LayoutRect& aRect,
+                                                 const wr::LayoutRect& aOther)
+{
+  wr::LayoutRect r;
+  r.origin.x = std::max(aRect.origin.x, aOther.origin.x);
+  r.origin.y = std::max(aRect.origin.y, aOther.origin.y);
+  r.size.width = std::min(aRect.origin.x + aRect.size.width,
+                          aOther.origin.x + aOther.size.width) - r.origin.x;
+  r.size.height = std::min(aRect.origin.y + aRect.size.height,
+                           aOther.origin.y + aOther.size.height) - r.origin.y;
+  if (r.size.width < 0 || r.size.height < 0) {
+    r.size.width = 0;
+    r.size.height = 0;
+  }
+  return r;
+}
+
 static inline wr::LayoutSize ToLayoutSize(const mozilla::LayoutDeviceSize& size)
 {
   wr::LayoutSize ls;

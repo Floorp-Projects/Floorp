@@ -25,6 +25,48 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
+var gDownloadElementButtons = {
+  cancel: {
+    commandName: "downloadsCmd_cancel",
+    l10nId: "download-cancel",
+    descriptionL10nId: "download-cancel-description",
+    iconClass: "downloadIconCancel",
+  },
+  retry: {
+    commandName: "downloadsCmd_retry",
+    l10nId: "download-retry",
+    descriptionL10nId: "download-retry-description",
+    iconClass: "downloadIconRetry",
+  },
+  show: {
+    commandName: "downloadsCmd_show",
+    l10nId: "download-show",
+    descriptionL10nId: "download-show-description",
+    iconClass: "downloadIconShow",
+  },
+  subviewOpenOrRemoveFile: {
+    commandName: "downloadsCmd_showBlockedInfo",
+    l10nId: "download-open-or-remove-file",
+    descriptionL10nId: "download-show-more-information-description",
+    iconClass: "downloadIconSubviewArrow",
+  },
+  askOpenOrRemoveFile: {
+    commandName: "downloadsCmd_chooseOpen",
+    l10nId: "download-open-or-remove-file",
+    iconClass: "downloadIconShow",
+  },
+  askRemoveFileOrAllow: {
+    commandName: "downloadsCmd_chooseUnblock",
+    l10nId: "download-remove-file-or-allow",
+    iconClass: "downloadIconShow",
+  },
+  removeFile: {
+    commandName: "downloadsCmd_confirmBlock",
+    l10nId: "download-remove-file",
+    iconClass: "downloadIconCancel",
+  },
+};
+
 var DownloadsViewUI = {
   /**
    * Returns true if the given string is the name of a command that can be
@@ -72,6 +114,17 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
    * The richlistitem for the download, initialized by the derived object.
    */
   element: null,
+
+  /**
+   * Returns a string from the downloads stringbundleset, which contains legacy
+   * strings that are loaded from DTD files instead of properties files. This
+   * won't be necessary once localization is converted to Fluent (bug 1452637).
+   */
+  string(l10nId) {
+    // These strings are not used often enough to require caching.
+    return this.element.ownerDocument.getElementById("downloadsStrings")
+                                     .getAttribute("string-" + l10nId);
+  },
 
   /**
    * URI string for the file type icon displayed in the download element.
@@ -145,6 +198,25 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     return this.__progressElement;
   },
 
+  showButton(type) {
+    let { commandName, l10nId, descriptionL10nId,
+          iconClass } = gDownloadElementButtons[type];
+
+    this.buttonCommandName = commandName;
+    let labelAttribute = this.isPanel ? "buttonarialabel" : "buttontooltiptext";
+    this.element.setAttribute(labelAttribute, this.string(l10nId));
+    if (this.isPanel && descriptionL10nId) {
+      this.element.setAttribute("buttonHoverStatus",
+                                this.string(descriptionL10nId));
+    }
+    this.element.setAttribute("buttonclass", "downloadButton " + iconClass);
+    this.element.removeAttribute("buttonhidden");
+  },
+
+  hideButton() {
+    this.element.setAttribute("buttonhidden", "true");
+  },
+
   /**
    * Processes a major state change in the user interface, then proceeds with
    * the normal progress update. This function is not called for every progress
@@ -155,6 +227,32 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     this.element.setAttribute("image", this.image);
     this.element.setAttribute("state",
                               DownloadsCommon.stateOfDownload(this.download));
+
+    // We have to check for download state properties in the specific order used
+    // here, which is the same used by stateOfDownload.
+    if (!this.download.stopped) {
+      this.showButton("cancel");
+    } else if (this.download.succeeded) {
+      // The button is updated in _updateProgress, since its presence also
+      // depends on state that doesn't trigger _updateState when it changes.
+    } else if (this.download.error) {
+      if (this.download.error.becauseBlockedByParentalControls) {
+        this.hideButton();
+      } else if (this.download.error.becauseBlockedByReputationCheck) {
+        // The button is updated in _updateProgress, since its presence also
+        // depends on state that doesn't trigger _updateState when it changes.
+      } else {
+        this.showButton("retry");
+      }
+    } else if (this.download.canceled) {
+      if (this.download.hasPartialData) {
+        this.showButton("cancel");
+      } else {
+        this.showButton("retry");
+      }
+    } else {
+      this.showButton("cancel");
+    }
 
     if (!this.download.succeeded && this.download.error &&
         this.download.error.becauseBlockedByReputationCheck) {
@@ -175,12 +273,34 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
    * namely the progress bar and the status line.
    */
   _updateProgress() {
+    // Handle major state changes that don't trigger _updateState. These states
+    // don't occur for in-progress downloads, thus performance is not affected.
     if (this.download.succeeded) {
-      // We only need to add or remove this attribute for succeeded downloads.
       if (this.download.target.exists) {
         this.element.setAttribute("exists", "true");
+        this.showButton("show");
       } else {
         this.element.removeAttribute("exists");
+        this.hideButton();
+      }
+    } else if (this.download.error &&
+               this.download.error.becauseBlockedByReputationCheck) {
+      if (!this.download.hasBlockedData) {
+        this.hideButton();
+      } else if (this.isPanel) {
+        this.showButton("subviewOpenOrRemoveFile");
+      } else {
+        switch (this.download.error.reputationCheckVerdict) {
+          case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
+            this.showButton("askOpenOrRemoveFile");
+            break;
+          case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
+            this.showButton("askRemoveFileOrAllow");
+            break;
+          default: // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
+            this.showButton("removeFile");
+            break;
+        }
       }
     }
 
@@ -212,9 +332,13 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     }
 
     let labels = this.statusLabels;
-    this.element.setAttribute("status", labels.status);
-    this.element.setAttribute("hoverStatus", labels.hoverStatus);
-    this.element.setAttribute("fullStatus", labels.fullStatus);
+    if (this.isPanel) {
+      this.element.setAttribute("status", labels.status);
+      this.element.setAttribute("hoverStatus", labels.hoverStatus);
+    } else {
+      this.element.setAttribute("status", labels.fullStatus);
+      this.element.setAttribute("fullStatus", labels.fullStatus);
+    }
   },
 
   lastEstimatedSecondsLeft: Infinity,
@@ -266,13 +390,17 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
         let sizeStrings = this.sizeStrings;
         stateLabel = sizeStrings.stateLabel;
         status = sizeStrings.status;
-        hoverStatus = status;
+        hoverStatus = this.string("download-open-file-description");
       } else if (this.download.canceled) {
         stateLabel = s.stateCanceled;
       } else if (this.download.error.becauseBlockedByParentalControls) {
         stateLabel = s.stateBlockedParentalControls;
       } else if (this.download.error.becauseBlockedByReputationCheck) {
         stateLabel = this.rawBlockedTitleAndDetails[0];
+        if (this.download.hasBlockedData) {
+          hoverStatus = this.string(
+            "download-show-more-information-description");
+        }
       } else {
         stateLabel = s.stateFailed;
       }
@@ -427,6 +555,10 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     if (DownloadsViewUI.isCommandName(aCommand)) {
       this[aCommand]();
     }
+  },
+
+  onButton() {
+    this.doCommand(this.buttonCommandName);
   },
 
   downloadsCmd_cancel() {

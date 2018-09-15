@@ -15,13 +15,13 @@ checkbox {
 }
 
 .checkbox-label {
-  margin: 1px 0 !important;
+  margin: 1px 0;
 }
 
 /* ..... disabled state ..... */
 
 checkbox[disabled="true"] {
-  color: GrayText !important;
+  color: GrayText;
 }
 
 /* ::::: checkmark image ::::: */

@@ -182,8 +182,8 @@ HistoryDownloadElementShell.prototype = {
  * Relays commands from the download.xml binding to the selected items.
  */
 const DownloadsView = {
-  onDownloadCommand(event, command) {
-    goDoCommand(command);
+  onDownloadButton(event) {
+    event.target.closest("richlistitem")._shell.onButton();
   },
 
   onDownloadClick() {},

@@ -95,6 +95,7 @@
              oncommand="PlacesOrganizer.forward();"/>
   </commandset>
 #include ../../downloads/content/downloadsCommands.inc.xul
+#include ../../downloads/content/downloadsStrings.inc.xul
 
   <keyset id="placesOrganizerKeyset">
     <!-- Instantiation Keys -->

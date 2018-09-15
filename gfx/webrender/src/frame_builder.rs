@@ -58,7 +58,6 @@ pub struct FrameBuilder {
     background_color: Option<ColorF>,
     window_size: DeviceUintSize,
     scene_id: u64,
-    pub next_picture_id: u64,
     pub prim_store: PrimitiveStore,
     pub clip_store: ClipStore,
     pub hit_testing_runs: Vec<HitTestingRun>,
@@ -128,6 +127,7 @@ impl<'a> PrimitiveContext<'a> {
 }
 
 impl FrameBuilder {
+    #[cfg(feature = "replay")]
     pub fn empty() -> Self {
         FrameBuilder {
             hit_testing_runs: Vec::new(),
@@ -138,7 +138,6 @@ impl FrameBuilder {
             window_size: DeviceUintSize::zero(),
             background_color: None,
             scene_id: 0,
-            next_picture_id: 0,
             config: FrameBuilderConfig {
                 enable_scrollbars: false,
                 default_font_render_mode: FontRenderMode::Mono,
@@ -166,7 +165,6 @@ impl FrameBuilder {
             window_size,
             scene_id,
             config: flattener.config,
-            next_picture_id: flattener.next_picture_id,
         }
     }
 

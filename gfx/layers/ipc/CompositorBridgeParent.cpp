@@ -1935,6 +1935,17 @@ CompositorBridgeParent::NotifyMemoryPressure()
   }
 }
 
+void
+CompositorBridgeParent::AccumulateMemoryReport(wr::MemoryReport* aReport)
+{
+  if (mWrBridge) {
+    RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
+    if (api) {
+      api->AccumulateMemoryReport(aReport);
+    }
+  }
+}
+
 RefPtr<WebRenderBridgeParent>
 CompositorBridgeParent::GetWebRenderBridgeParent() const
 {

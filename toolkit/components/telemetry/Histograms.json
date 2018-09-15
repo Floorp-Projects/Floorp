@@ -503,6 +503,15 @@
     "bug_numbers": [1135408],
     "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
+  "DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED": {
+    "record_in_processes": ["content"],
+    "expires_in_version": "67",
+    "alert_emails": ["seceng-telemetry@mozilla.com", "fxprivacyandsecurity@mozilla.com"],
+    "kind": "categorical",
+    "labels": ["other", "googleanalytics", "scorecardresearch", "hotjar", "newrelic", "nrdata", "crwdcntrl", "eyeota", "yahooanalytics", "statcounter", "v12group", "all"],
+    "bug_numbers": [1489252],
+    "description": "Number of top-level documents which have resources blocked by fastblock, categorized by analytics provider."
+  },
   "FETCH_IS_MAINTHREAD": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "50",

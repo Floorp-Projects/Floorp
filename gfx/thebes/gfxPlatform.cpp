@@ -631,6 +631,99 @@ static uint32_t GetSkiaGlyphCacheSize()
 }
 #endif
 
+class WebRenderMemoryReporter final : public nsIMemoryReporter {
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
+
+private:
+  ~WebRenderMemoryReporter() = default;
+};
+
+// Memory reporter for WebRender.
+//
+// The reporting within WebRender is manual and incomplete. We could do a much
+// more thorough job by depending on the malloc_size_of crate, but integrating
+// that into WebRender is tricky [1].
+//
+// So the idea is to start with manual reporting for the large allocations
+// detected by DMD, and see how much that can cover in practice (which may
+// require a few rounds of iteration). If that approach turns out to be
+// fundamentally insufficient, we can either duplicate more of the malloc_size_of
+// functionality in WebRender, or deal with the complexity of a gecko-only
+// crate dependency.
+//
+// [1] See https://bugzilla.mozilla.org/show_bug.cgi?id=1480293#c1
+struct WebRenderMemoryReporterHelper {
+  WebRenderMemoryReporterHelper(nsIHandleReportCallback* aCallback, nsISupports* aData)
+    : mCallback(aCallback), mData(aData)
+  {}
+  nsCOMPtr<nsIHandleReportCallback> mCallback;
+  nsCOMPtr<nsISupports> mData;
+
+  void Report(size_t aBytes, const char* aName) const
+  {
+    // Generally, memory reporters pass the empty string as the process name to
+    // indicate "current process". However, if we're using a GPU process, the
+    // measurements will actually take place in that process, and it's easier to
+    // just note that here rather than trying to invoke the memory reporter in
+    // the GPU process.
+    nsAutoCString processName;
+    if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+      GPUParent::GetGPUProcessName(processName);
+    }
+
+    nsPrintfCString path("explicit/gfx/webrender/%s", aName);
+    mCallback->Callback(processName, path,
+                        nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
+                        aBytes, EmptyCString(), mData);
+  }
+};
+
+static void
+FinishAsyncMemoryReport()
+{
+  nsCOMPtr<nsIMemoryReporterManager> imgr =
+    do_GetService("@mozilla.org/memory-reporter-manager;1");
+  if (imgr) {
+    imgr->EndReport();
+  }
+}
+
+NS_IMPL_ISUPPORTS(WebRenderMemoryReporter, nsIMemoryReporter)
+
+NS_IMETHODIMP
+WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                        nsISupports* aData, bool aAnonymize)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+  layers::CompositorManagerChild* manager = CompositorManagerChild::GetInstance();
+  if (!manager) {
+    FinishAsyncMemoryReport();
+    return NS_OK;
+  }
+
+  WebRenderMemoryReporterHelper helper(aHandleReport, aData);
+  manager->SendReportMemory(
+    [=](wr::MemoryReport aReport) {
+      helper.Report(aReport.primitive_stores, "primitive-stores");
+      helper.Report(aReport.clip_stores, "clip-stores");
+      helper.Report(aReport.gpu_cache_metadata, "gpu-cache/metadata");
+      helper.Report(aReport.gpu_cache_cpu_mirror, "gpu-cache/cpu-mirror");
+      helper.Report(aReport.render_tasks, "render-tasks");
+      helper.Report(aReport.hit_testers, "hit-testers");
+      FinishAsyncMemoryReport();
+    },
+    [](mozilla::ipc::ResponseRejectReason aReason) {
+      FinishAsyncMemoryReport();
+    }
+  );
+
+  return NS_OK;
+}
+
+
 void
 gfxPlatform::Init()
 {
@@ -823,6 +916,10 @@ gfxPlatform::Init()
     }
 
     RegisterStrongMemoryReporter(new GfxMemoryImageReporter());
+    if (XRE_IsParentProcess() && gfxVars::UseWebRender()) {
+      RegisterStrongAsyncMemoryReporter(new WebRenderMemoryReporter());
+    }
+
 #ifdef USE_SKIA
     RegisterStrongMemoryReporter(new SkMemoryReporter());
 #endif
