@@ -28,7 +28,6 @@
 #include "nsCycleCollector.h"
 #include "nsObserverList.h"
 #include "nsObserverService.h"
-#include "nsPersistentProperties.h"
 #include "nsScriptableInputStream.h"
 #include "nsBinaryStream.h"
 #include "nsStorageStream.h"
@@ -255,8 +254,6 @@ NS_DEFINE_NAMED_CID(NS_SECURITY_CONSOLE_MESSAGE_CID);
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsChromeRegistry,
                                          nsChromeRegistry::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChromeProtocolHandler)
-
-#define NS_PERSISTENTPROPERTIES_CID NS_IPERSISTENTPROPERTIES_CID /* sigh */
 
 static already_AddRefed<nsIFactory>
 CreateINIParserFactory(const mozilla::Module& aModule,
