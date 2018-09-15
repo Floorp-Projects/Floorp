@@ -741,6 +741,8 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvSetWindowName(const nsString& aName) override;
 
+  virtual mozilla::ipc::IPCResult RecvAllowScriptsToClose() override;
+
   virtual mozilla::ipc::IPCResult RecvSetOriginAttributes(const OriginAttributes& aOriginAttributes) override;
 
   virtual mozilla::ipc::IPCResult RecvSetWidgetNativeData(const WindowsHandle& aWidgetNativeData) override;

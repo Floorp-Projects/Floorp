@@ -2109,6 +2109,13 @@ nsFrameLoader::MaybeCreateDocShell()
     }
   }
 
+  // Allow scripts to close the docshell if specified.
+  if (win_private && mOwnerContent->IsXULElement(nsGkAtoms::browser) &&
+      mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::allowscriptstoclose,
+                                 nsGkAtoms::_true, eCaseMatters)) {
+    nsGlobalWindowOuter::Cast(win_private)->AllowScriptsToClose();
+  }
+
   // This is kinda whacky, this call doesn't really create anything,
   // but it must be called to make sure things are properly
   // initialized.
@@ -2702,13 +2709,19 @@ nsFrameLoader::TryRemoteBrowser()
     mParentSHistory = new ParentSHistory(this);
   }
 
-  // Send down the name of the browser through mRemoteBrowser if it is set.
-  // Only do this on xul:browsers for now.
+  // For xul:browsers, update some settings based on attributes:
   if (mOwnerContent->IsXULElement()) {
+    // Send down the name of the browser through mRemoteBrowser if it is set.
     nsAutoString frameName;
     mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, frameName);
     if (nsContentUtils::IsOverridingWindowName(frameName)) {
       Unused << mRemoteBrowser->SendSetWindowName(frameName);
+    }
+    // Allow scripts to close the window if the browser specified so:
+    if (mOwnerContent->AttrValueIs(kNameSpaceID_None,
+                                   nsGkAtoms::allowscriptstoclose,
+                                   nsGkAtoms::_true, eCaseMatters)) {
+      Unused << mRemoteBrowser->SendAllowScriptsToClose();
     }
   }
 

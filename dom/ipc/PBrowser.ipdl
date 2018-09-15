@@ -870,6 +870,11 @@ child:
     async SetWindowName(nsString aName);
 
     /**
+     * Tell the TabChild to allow scripts in the docshell to close the window.
+     */
+    async AllowScriptsToClose();
+
+    /**
      * Tell the TabChild what OriginAttributes it should inherit from. This must
      * be called before the first non-blank document is loaded in the TabChild.
      */

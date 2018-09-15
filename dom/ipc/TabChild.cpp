@@ -3384,6 +3384,16 @@ TabChild::RecvSetWindowName(const nsString& aName)
 }
 
 mozilla::ipc::IPCResult
+TabChild::RecvAllowScriptsToClose()
+{
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
+  if (window) {
+    nsGlobalWindowOuter::Cast(window)->AllowScriptsToClose();
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 TabChild::RecvSetOriginAttributes(const OriginAttributes& aOriginAttributes)
 {
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());

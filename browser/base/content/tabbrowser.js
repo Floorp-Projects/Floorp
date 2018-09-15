@@ -291,6 +291,9 @@ window._gBrowser = {
     let browser = this._createBrowser({uriIsAboutBlank: true, userContextId});
     browser.setAttribute("primary", "true");
     browser.setAttribute("blank", "true");
+    if (gBrowserAllowScriptsToCloseInitialTabs) {
+      browser.setAttribute("allowscriptstoclose", "true");
+    }
     browser.droppedLinkHandler = handleDroppedLink;
     browser.loadURI = _loadURI.bind(null, browser);
 
