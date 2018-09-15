@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GeckoInputDeviceListener_h
-#define GeckoInputDeviceListener_h
+#ifndef GeckoSystemStateListener_h
+#define GeckoSystemStateListener_h
 
 #include "GeneratedJNINatives.h"
 #include "nsIDocument.h"
@@ -15,10 +15,10 @@
 
 namespace mozilla {
 
-class GeckoInputDeviceListener final
-    : public java::GeckoInputDeviceListener::Natives<GeckoInputDeviceListener>
+class GeckoSystemStateListener final
+    : public java::GeckoSystemStateListener::Natives<GeckoSystemStateListener>
 {
-    GeckoInputDeviceListener() = delete;
+    GeckoSystemStateListener() = delete;
 
 public:
     static void
@@ -58,4 +58,4 @@ public:
 
 } // namespace mozilla
 
-#endif // GeckoInputDeviceListener_h
+#endif // GeckoSystemStateListener_h
