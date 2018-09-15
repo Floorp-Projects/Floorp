@@ -672,6 +672,11 @@ public:
    */
   static nsTArray<LookAndFeelInt> GetIntCache();
   static void SetIntCache(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache);
+  /**
+   * Set a flag indicating whether the cache should be cleared in RefreshImpl()
+   * or not.
+   */
+  static void SetShouldRetainCacheForTest(bool aValue);
 };
 
 } // namespace mozilla
