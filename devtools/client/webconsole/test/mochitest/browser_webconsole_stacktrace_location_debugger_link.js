@@ -21,7 +21,6 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 add_task(async function() {
   Services.prefs.setBoolPref("devtools.webconsole.filter.log", true);
   registerCleanupFunction(async function() {
-    Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
     Services.prefs.clearUserPref("devtools.webconsole.filter.log");
   });
 
