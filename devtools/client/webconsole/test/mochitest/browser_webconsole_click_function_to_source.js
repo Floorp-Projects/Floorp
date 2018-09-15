@@ -7,21 +7,19 @@
 
 "use strict";
 
-requestLongerTimeout(5);
-
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/" +
                  "test-click-function-to-source.html";
 
-const TEST_SCRIPT_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/" +
-                 "test-click-function-to-source.js";
+// Force the old debugger UI since it's directly used (see Bug 1301705)
+pushPref("devtools.debugger.new-debugger-frontend", false);
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Open the Debugger panel.");
-  await openDebugger();
+  const {panel} = await openDebugger();
+  const panelWin = panel.panelWin;
 
   info("And right after come back to the Console panel.");
   await openConsole();
@@ -36,13 +34,13 @@ add_task(async function() {
   ok(jumpIcon, "A jump to definition button is rendered, as expected");
 
   info("Click on the jump to definition button.");
+  const onEditorLocationSet = panelWin.once(panelWin.EVENTS.EDITOR_LOCATION_SET);
   jumpIcon.click();
+  await onEditorLocationSet;
 
-  const toolbox = gDevTools.getToolbox(hud.target);
-  const dbg = createDebuggerContext(toolbox);
-  await waitForSelectedSource(dbg, TEST_SCRIPT_URI);
-
-  const pendingLocation = dbg.selectors.getPendingSelectedLocation(dbg.getState());
-  const {line} = pendingLocation;
-  is(line, 9, "Debugger is open at the expected line");
+  const {editor} = panelWin.DebuggerView;
+  const {line, ch} = editor.getCursor();
+  // Source editor starts counting line and column numbers from 0.
+  is(line, 8, "Debugger is open at the expected line");
+  is(ch, 0, "Debugger is open at the expected character");
 });

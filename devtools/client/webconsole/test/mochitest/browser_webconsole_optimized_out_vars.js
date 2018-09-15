@@ -13,17 +13,27 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test-closure-optimized-out.html";
 
 add_task(async function() {
+  // Force the old debugger UI since it's directly used (see Bug 1301705)
+  await pushPref("devtools.debugger.new-debugger-frontend", false);
+
   const hud = await openNewTabAndConsole(TEST_URI);
-  await openDebugger();
+  const { toolbox, panel: debuggerPanel } = await openDebugger();
 
-  const toolbox = gDevTools.getToolbox(hud.target);
-  const dbg = createDebuggerContext(toolbox);
+  const sources = debuggerPanel.panelWin.DebuggerView.Sources;
+  await debuggerPanel.addBreakpoint({ actor: sources.values[0], line: 18 });
+  await ensureThreadClientState(debuggerPanel, "resumed");
 
-  await addBreakpoint(dbg, "test-closure-optimized-out.html", 18);
-  await waitForThreadEvents(dbg, "resumed");
+  const { FETCHED_SCOPES } = debuggerPanel.panelWin.EVENTS;
+  const fetchedScopes = debuggerPanel.panelWin.once(FETCHED_SCOPES);
 
   // Cause the debuggee to pause
-  await pauseDebugger(dbg);
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+    const button = content.document.querySelector("button");
+    button.click();
+  });
+
+  await fetchedScopes;
+  ok(true, "Scopes were fetched");
 
   await toolbox.selectTool("webconsole");
 
@@ -37,11 +47,13 @@ add_task(async function() {
   ok(true, "Optimized out message logged");
 });
 
-async function pauseDebugger(dbg) {
-  info("Waiting for debugger to pause");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
-    const button = content.document.querySelector("button");
-    button.click();
-  });
-  await waitForPaused(dbg);
+// Debugger helper functions adapted from devtools/client/debugger/test/head.js.
+
+async function ensureThreadClientState(debuggerPanel, state) {
+  const thread = debuggerPanel.panelWin.gThreadClient;
+  info(`Thread is: '${thread.state}'.`);
+  if (thread.state != state) {
+    info("Waiting for thread event: '${state}'.");
+    await thread.addOneTimeListener(state);
+  }
 }
