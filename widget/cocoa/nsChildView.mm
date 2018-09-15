@@ -3335,6 +3335,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
                                                name:NSSystemColorsDidChangeNotification
                                              object:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(systemMetricsChanged)
+                                               name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
+                                             object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(scrollbarSystemMetricChanged)
                                                name:NSPreferredScrollerStyleDidChangeNotification
                                              object:nil];
