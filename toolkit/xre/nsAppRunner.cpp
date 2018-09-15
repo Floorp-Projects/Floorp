@@ -59,7 +59,7 @@
 #include "nsIMutableArray.h"
 #include "nsICategoryManager.h"
 #include "nsIChromeRegistry.h"
-#include "nsICommandLineRunner.h"
+#include "nsCommandLine.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIConsoleService.h"
@@ -1595,10 +1595,7 @@ static void DumpArbitraryHelp()
     ScopedXPCOMStartup xpcom;
     xpcom.Initialize();
 
-    nsCOMPtr<nsICommandLineRunner> cmdline
-      (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
-    if (!cmdline)
-      return;
+    nsCOMPtr<nsICommandLineRunner> cmdline(new nsCommandLine());
 
     nsCString text;
     rv = cmdline->GetHelpText(text);
@@ -4673,8 +4670,7 @@ XREMain::XRE_mainRun()
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   if (!mShuttingDown) {
-    cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
-    NS_ENSURE_TRUE(cmdLine, NS_ERROR_FAILURE);
+    cmdLine = new nsCommandLine();
 
     rv = cmdLine->Init(gArgc, gArgv, workingDir,
                        nsICommandLine::STATE_INITIAL_LAUNCH);
@@ -4740,8 +4736,7 @@ XREMain::XRE_mainRun()
 #ifdef XP_MACOSX
     // we re-initialize the command-line service and do appleevents munging
     // after we are sure that we're not restarting
-    cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
-    NS_ENSURE_TRUE(cmdLine, NS_ERROR_FAILURE);
+    cmdLine = new nsCommandLine();
 
     CommandLineServiceMac::SetupMacCommandLine(gArgc, gArgv, false);
 

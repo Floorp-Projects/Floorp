@@ -42,6 +42,7 @@
 #include "nsScriptError.h"
 #include "GeckoProfiler.h"
 #include "mozilla/EditorSpellCheck.h"
+#include "nsCommandLine.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -3218,6 +3219,15 @@ nsXPCComponents_Utils::CreateSpellChecker(nsIEditorSpellCheck** aSpellChecker)
     nsCOMPtr<nsIEditorSpellCheck> spellChecker =
         new mozilla::EditorSpellCheck();
     spellChecker.forget(aSpellChecker);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::CreateCommandLine(nsISupports** aCommandLine)
+{
+    NS_ENSURE_ARG_POINTER(aCommandLine);
+    nsCOMPtr<nsISupports> commandLine = new nsCommandLine();
+    commandLine.forget(aCommandLine);
     return NS_OK;
 }
 
