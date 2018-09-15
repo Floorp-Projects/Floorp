@@ -17,7 +17,7 @@ var nostorePath = "/nostore" + suffix;
 var test410Path = "/test410" + suffix;
 var test404Path = "/test404" + suffix;
 
-var PrivateBrowsingLoadContext = Cc["@mozilla.org/privateloadcontext;1"].createInstance(Ci.nsILoadContext);
+var PrivateBrowsingLoadContext = Cu.createPrivateLoadContext();
 
 function make_channel(url, flags, usePrivateBrowsing) {
   var securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
