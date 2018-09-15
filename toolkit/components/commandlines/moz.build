@@ -20,6 +20,10 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'commandlines'
 
+EXPORTS += [
+    'nsCommandLine.h',
+]
+
 SOURCES += [
     'nsCommandLine.cpp',
 ]
