@@ -2482,6 +2482,25 @@ nsIWidget::GetEditCommands(nsIWidget::NativeKeyBindingsType aType,
   MOZ_ASSERT(aCommands.IsEmpty());
 }
 
+already_AddRefed<nsIBidiKeyboard>
+nsIWidget::CreateBidiKeyboard()
+{
+  if (XRE_IsContentProcess()) {
+    return CreateBidiKeyboardContentProcess();
+  } else {
+    return CreateBidiKeyboardInner();
+  }
+}
+
+#ifdef ANDROID
+already_AddRefed<nsIBidiKeyboard>
+nsIWidget::CreateBidiKeyboardInner()
+{
+  // no bidi keyboard implementation
+  return nullptr;
+}
+#endif
+
 namespace mozilla {
 namespace widget {
 
