@@ -1708,6 +1708,15 @@ class nsIWidget : public nsISupports
       return NS_ERROR_NOT_IMPLEMENTED;
     }
 
+    virtual nsresult SetPrefersReducedMotionOverrideForTest(bool aValue)
+    {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    virtual nsresult ResetPrefersReducedMotionOverrideForTest()
+    {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
 private:
   class LongTapInfo
   {

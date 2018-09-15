@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1486971
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1478519</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/AddTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1486971">Mozilla Bug 1486971</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script>
+'use strict';
+
+async function waitForFrame() {
+  return new Promise(resolve => {
+    window.requestAnimationFrame(resolve);
+  });
+}
+
+// Returns a Promise which will be resolved when the 'change' event is received
+// for the given media query string.
+async function promiseForChange(mediaQuery) {
+  return new Promise(resolve => {
+    window.matchMedia(mediaQuery).addEventListener('change', event => {
+      resolve(event.matches);
+    }, { once: true });
+  });
+}
+
+add_task(async () => {
+  SpecialPowers.DOMWindowUtils.setPrefersReducedMotionOverrideForTest(false);
+
+  // Need to wait a frame since MediaQuery changes are asynchronously processed.
+  await waitForFrame();
+
+  ok(!window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+     'Does not matches prefers-reduced-motion: reduced) when the system sets ' +
+     'prefers-reduced-motion false');
+  ok(!window.matchMedia('(prefers-reduced-motion)').matches,
+     'Does not matches (prefers-reduced-motion) when the system sets ' +
+     'prefers-reduced-motion false');
+  ok(window.matchMedia('(prefers-reduced-motion: no-preference)').matches,
+     'Matches (prefers-reduced-motion: no-preference) when the system sets ' +
+     'prefers-reduced-motion false');
+});
+
+add_task(async () => {
+  const reduce = promiseForChange('(prefers-reduced-motion: reduce)');
+  const booleanContext = promiseForChange('(prefers-reduced-motion)');
+  const noPreference = promiseForChange('(prefers-reduced-motion: no-preference)');
+
+  SpecialPowers.DOMWindowUtils.setPrefersReducedMotionOverrideForTest(true);
+
+  const [ reduceResult, booleanContextResult, noPreferenceResult ] =
+    await Promise.all([ reduce, booleanContext, noPreference ]);
+
+  ok(reduceResult,
+     'Matches (prefers-reduced-motion: reduced) when the system sets ' +
+     'prefers-reduced-motion true');
+  ok(booleanContextResult,
+     'Matches (prefers-reduced-motion) when the system sets ' +
+     'prefers-reduced-motion true');
+  ok(!noPreferenceResult,
+     'Does not matches (prefers-reduced-motion: no-preference) when the ' +
+     'system sets prefers-reduced-motion true');
+
+  SpecialPowers.DOMWindowUtils.resetPrefersReducedMotionOverrideForTest();
+});
+</script>
+</body>
+</html>
