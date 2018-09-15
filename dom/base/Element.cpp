@@ -65,6 +65,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/FullscreenRequest.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/RestyleManager.h"
@@ -3569,9 +3570,11 @@ GetFullscreenError(CallerType aCallerType)
   return nullptr;
 }
 
-void
-Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aError)
+already_AddRefed<Promise>
+Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aRv)
 {
+  auto request = FullscreenRequest::Create(this, aCallerType, aRv);
+  RefPtr<Promise> promise = request->GetPromise();
   // Only grant fullscreen requests if this is called from inside a trusted
   // event handler (i.e. inside an event handler for a user initiated event).
   // This stops the fullscreen from being abused similar to the popups of old,
@@ -3580,12 +3583,11 @@ Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aError)
   // Note that requests for fullscreen inside a web app's origin are exempt
   // from this restriction.
   if (const char* error = GetFullscreenError(aCallerType)) {
-    OwnerDoc()->DispatchFullscreenError(error, this);
-    return;
+    request->Reject(error);
+  } else {
+    OwnerDoc()->AsyncRequestFullscreen(std::move(request));
   }
-
-  auto request = MakeUnique<FullscreenRequest>(this, aCallerType);
-  OwnerDoc()->AsyncRequestFullscreen(std::move(request));
+  return promise.forget();
 }
 
 void

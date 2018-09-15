@@ -83,7 +83,7 @@ var PaymentTestUtils = {
      * @param {PaymentOptions} options
      */
     createAndShowRequest: ({methodData, details, options}) => {
-      const rq = new content.PaymentRequest(methodData, details, options);
+      const rq = new content.PaymentRequest(Cu.cloneInto(methodData, content), details, options);
       content.rq = rq; // assign it so we can retrieve it later
 
       const handle = content.windowUtils.setHandlingUserInput(true);

@@ -484,6 +484,14 @@ def get_compiler_info(compiler, language):
     )
 
 
+def same_arch_different_bits():
+    return (
+        ('x86', 'x86_64'),
+        ('ppc', 'ppc64'),
+        ('sparc', 'sparc64'),
+    )
+
+
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.configure.constants',
          _import='OS_preprocessor_checks')
@@ -543,14 +551,10 @@ def check_compiler(compiler, language, target):
                 # -m32 does not use -Xclang, so add it directly.
                 flags.append('-m32')
         elif info.type == 'gcc':
-            same_arch_different_bits = (
-                ('x86', 'x86_64'),
-                ('ppc', 'ppc64'),
-                ('sparc', 'sparc64'),
-            )
-            if (target.cpu, info.cpu) in same_arch_different_bits:
+            same_arch = same_arch_different_bits()
+            if (target.cpu, info.cpu) in same_arch:
                 append_flag('-m32')
-            elif (info.cpu, target.cpu) in same_arch_different_bits:
+            elif (info.cpu, target.cpu) in same_arch:
                 append_flag('-m64')
 
     if not info.kernel or info.kernel != target.kernel:
@@ -682,40 +686,75 @@ def toolchain_search_path(vc_compiler_path):
 
 
 @template
-def default_c_compilers(host_or_target):
+def default_c_compilers(host_or_target, other_c_compiler=None):
     '''Template defining the set of default C compilers for the host and
     target platforms.
     `host_or_target` is either `host` or `target` (the @depends functions
     from init.configure.
+    `other_c_compiler` is the `target` C compiler when `host_or_target` is `host`.
     '''
     assert host_or_target in (host, target)
 
+    other_c_compiler = () if other_c_compiler is None else (other_c_compiler,)
+
     @depends(host_or_target, target, toolchain_prefix, android_clang_compiler,
-             developer_options)
+             *other_c_compiler)
     def default_c_compilers(host_or_target, target, toolchain_prefix,
-                            android_clang_compiler, developer_options):
+                            android_clang_compiler, *other_c_compiler):
+        if host_or_target.kernel == 'WINNT':
+            supported = types = ('clang-cl', 'msvc', 'gcc', 'clang')
+        elif host_or_target.kernel == 'Darwin':
+            types = ('clang',)
+            supported = ('clang', 'gcc')
+        else:
+            supported = types = ('clang', 'gcc')
+
+        info = other_c_compiler[0] if other_c_compiler else None
+        if info and info.type in supported:
+            # When getting default C compilers for the host, we prioritize the
+            # same compiler as the target C compiler.
+            prioritized = info.compiler
+            if info.type == 'gcc':
+                same_arch = same_arch_different_bits()
+                if (target.cpu != host_or_target.cpu and
+                        (target.cpu, host_or_target.cpu) not in same_arch and
+                        (host_or_target.cpu, target.cpu) not in same_arch):
+                    # If the target C compiler is GCC, and it can't be used with
+                    # -m32/-m64 for the host, it's probably toolchain-prefixed,
+                    # so we prioritize a raw 'gcc' instead.
+                    prioritized = info.type
+            elif info.type == 'clang' and android_clang_compiler:
+                # Android NDK clangs do not function as host compiler, so
+                # prioritize a raw 'clang' instead.
+                prioritized = info.type
+
+            types = [prioritized] + [t for t in types if t != info.type]
+
         gcc = ('gcc',)
         if toolchain_prefix and host_or_target is target:
             gcc = tuple('%sgcc' % p for p in toolchain_prefix) + gcc
-        # Android sets toolchain_prefix and android_clang_compiler, but
-        # we want the latter to take precedence, because the latter can
-        # point at clang, which is what we want to use.
-        if android_clang_compiler and host_or_target is target:
-            return (android_clang_compiler,) + gcc
 
-        if host_or_target.kernel == 'WINNT':
-            return ('clang-cl', 'cl') + gcc + ('clang',)
-        if host_or_target.kernel == 'Darwin':
-            return ('clang',)
-        if developer_options:
-            return ('clang',) + gcc
-        return gcc + ('clang',)
+        result = []
+        for type in types:
+            # Android sets toolchain_prefix and android_clang_compiler, but
+            # we want the latter to take precedence, because the latter can
+            # point at clang, which is what we want to use.
+            if type == 'clang' and android_clang_compiler and host_or_target is target:
+                result.append(android_clang_compiler)
+            elif type == 'gcc':
+                result.extend(gcc)
+            elif type == 'msvc':
+                result.append('cl')
+            else:
+                result.append(type)
+
+        return tuple(result)
 
     return default_c_compilers
 
 
 @template
-def default_cxx_compilers(c_compiler):
+def default_cxx_compilers(c_compiler, other_c_compiler=None, other_cxx_compiler=None):
     '''Template defining the set of default C++ compilers for the host and
     target platforms.
     `c_compiler` is the @depends function returning a Compiler instance for
@@ -724,10 +763,25 @@ def default_cxx_compilers(c_compiler):
     Because the build system expects the C and C++ compilers to be from the
     same compiler suite, we derive the default C++ compilers from the C
     compiler that was found if none was provided.
+
+    We also factor in the target C++ compiler when getting the default host
+    C++ compiler, using the target C++ compiler if the host and target C
+    compilers are the same.
     '''
 
-    @depends(c_compiler)
-    def default_cxx_compilers(c_compiler):
+    assert (other_c_compiler is None) == (other_cxx_compiler is None)
+    if other_c_compiler is not None:
+        other_compilers = (other_c_compiler, other_cxx_compiler)
+    else:
+        other_compilers = ()
+
+    @depends(c_compiler, *other_compilers)
+    def default_cxx_compilers(c_compiler, *other_compilers):
+        if other_compilers:
+            other_c_compiler, other_cxx_compiler = other_compilers
+            if other_c_compiler.compiler == c_compiler.compiler:
+                return (other_cxx_compiler.compiler,)
+
         dir = os.path.dirname(c_compiler.compiler)
         file = os.path.basename(c_compiler.compiler)
 
@@ -777,8 +831,8 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     }[language, host_or_target]
 
     default_compilers = {
-        'C': lambda: default_c_compilers(host_or_target),
-        'C++': lambda: default_cxx_compilers(c_compiler),
+        'C': lambda: default_c_compilers(host_or_target, other_compiler),
+        'C++': lambda: default_cxx_compilers(c_compiler, other_c_compiler, other_compiler),
     }[language]()
 
     what = 'the %s %s compiler' % (host_or_target_str, language)
@@ -805,37 +859,6 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             compiler=without_flags[-1],
             flags=cmd[len(without_flags):],
         )
-
-    # Derive the host compiler from the corresponding target compiler when no
-    # explicit compiler was given and we're not cross compiling. For the C++
-    # compiler, though, prefer to derive from the host C compiler when it
-    # doesn't match the target C compiler.
-    # As a special case, since clang supports all kinds of targets in the same
-    # executable, when cross compiling with clang, default to the same compiler
-    # as the target compiler, resetting flags.  However, Android NDK clangs do
-    # not function as host compilers -- they're target compilers only -- so
-    # don't use clang target as host if the target OS is Android.
-    if host_or_target == host:
-        if other_c_compiler is not None:
-            args = (c_compiler, other_c_compiler)
-        else:
-            args = ()
-
-        @depends(provided_compiler, other_compiler, cross_compiling,
-                 target, *args)
-        def provided_compiler(value, other_compiler, cross_compiling,
-                              target, *args):
-            if value:
-                return value
-            c_compiler, other_c_compiler = args if args else (None, None)
-            if not cross_compiling and c_compiler == other_c_compiler:
-                return other_compiler
-            if cross_compiling and other_compiler.type == 'clang' and \
-                    target.os != 'Android':
-                return namespace(**{
-                    k: [] if k == 'flags' else v
-                    for k, v in other_compiler.__dict__.iteritems()
-                })
 
     # Normally, we'd use `var` instead of `_var`, but the interaction with
     # old-configure complicates things, and for now, we a) can't take the plain

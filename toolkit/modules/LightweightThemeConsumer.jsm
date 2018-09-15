@@ -197,7 +197,6 @@ LightweightThemeConsumer.prototype = {
 
     this._setExperiment(active, experiment, theme.experimental);
     _setImage(root, active, "--lwt-header-image", theme.headerURL);
-    _setImage(root, active, "--lwt-footer-image", theme.footerURL);
     _setImage(root, active, "--lwt-additional-images", theme.additionalBackgrounds);
     _setProperties(root, active, theme);
 
@@ -207,11 +206,6 @@ LightweightThemeConsumer.prototype = {
       root.removeAttribute("lwtheme");
       root.removeAttribute("lwthemetextcolor");
     }
-
-    if (active && theme.footerURL)
-      root.setAttribute("lwthemefooter", "true");
-    else
-      root.removeAttribute("lwthemefooter");
 
     let contentThemeData = _getContentProperties(this._doc, active, theme);
     Services.ppmm.sharedData.set(`theme/${this._winId}`, contentThemeData);

@@ -254,15 +254,15 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         # binary path; if testing on firefox the binary path already came from mozharness/pro;
         # otherwise the binary path is forwarded from cmd line arg (raptor_cmd_line_args)
         kw_options['app'] = self.app
-        if self.app == "firefox" or self.app == "geckoview":
+        if self.app == "firefox" or (self.app == "geckoview" and not self.run_local):
             binary_path = self.binary_path or self.config.get('binary_path')
             if not binary_path:
                 self.fatal("Raptor requires a path to the binary.")
             kw_options['binary'] = binary_path
-        else:
+        else:  # running on google chrome
             if not self.run_local:
-                # in production we aready installed google chrome, so set the binary path for arg
-                # when running locally a --binary arg as passed in, already in raptor_cmd_line_args
+                # when running locally we already set the chrome binary above in init; here
+                # in production we aready installed chrome, so set the binary path to our install
                 kw_options['binary'] = self.chrome_path
 
         # options overwritten from **kw

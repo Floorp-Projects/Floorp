@@ -21,7 +21,7 @@
 // This file lives in a seperate module (libplugin_child_interpose.dylib),
 // which will get loaded by the OS before any other modules when the plugin
 // child process is launched (from GeckoChildProcessHost::
-// PerformAsyncLaunchInternal()).  For this reason it shouldn't link in other
+// PerformAsyncLaunch()).  For this reason it shouldn't link in other
 // browser modules when loaded.  Instead it should use dlsym() to load
 // pointers to the methods it wants to call in other modules.
 

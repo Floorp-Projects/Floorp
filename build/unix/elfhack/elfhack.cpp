@@ -1083,7 +1083,7 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     // code section, so the overhead of the page alignment for section needs to be
     // accounted for.
     size_t align = first_executable->getSegmentByType(PT_LOAD)->getAlign();
-    size_t new_size = relhack->getSize() + relhackcode->getSize() + (relhackcode->getAddr() & (align - 1));
+    size_t new_size = relhack->getSize() + section->getSize() + relhackcode->getSize() + (relhackcode->getAddr() & (align - 1));
     if (!force && (new_size >= old_size || old_size - new_size < align)) {
         fprintf(stderr, "No gain. Skipping\n");
         return -1;
