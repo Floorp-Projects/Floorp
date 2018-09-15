@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "nsXPCOM.h"
 #include "nsXPCOMCIDInternal.h"
-#include "nsIThreadPool.h"
+#include "nsThreadPool.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIRunnable.h"
@@ -49,7 +49,7 @@ mozilla::Atomic<int> Task::sCount;
 
 TEST(ThreadPool, Main)
 {
-  nsCOMPtr<nsIThreadPool> pool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
+  nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
   EXPECT_TRUE(pool);
 
   for (int i = 0; i < 100; ++i) {
@@ -65,7 +65,7 @@ TEST(ThreadPool, Main)
 
 TEST(ThreadPool, Parallelism)
 {
-  nsCOMPtr<nsIThreadPool> pool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
+  nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
   EXPECT_TRUE(pool);
 
   // Dispatch and sleep to ensure we have an idle thread

@@ -31,6 +31,9 @@ XPCOMUtils.defineLazyServiceGetter(Svc, "mime",
                                    "@mozilla.org/mime;1",
                                    "nsIMIMEService");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "matchesCountLimit",
+  "accessibility.typeaheadfind.matchesCountLimit");
+
 var PdfjsChromeUtils = {
   // For security purposes when running remote, we restrict preferences
   // content can access.
@@ -61,6 +64,7 @@ var PdfjsChromeUtils = {
       this._mmg.addMessageListener("PDFJS:Parent:addEventListener", this);
       this._mmg.addMessageListener("PDFJS:Parent:removeEventListener", this);
       this._mmg.addMessageListener("PDFJS:Parent:updateControlState", this);
+      this._mmg.addMessageListener("PDFJS:Parent:updateMatchesCount", this);
 
       // Observer to handle shutdown.
       Services.obs.addObserver(this, "quit-application");
@@ -82,6 +86,7 @@ var PdfjsChromeUtils = {
       this._mmg.removeMessageListener("PDFJS:Parent:addEventListener", this);
       this._mmg.removeMessageListener("PDFJS:Parent:removeEventListener", this);
       this._mmg.removeMessageListener("PDFJS:Parent:updateControlState", this);
+      this._mmg.removeMessageListener("PDFJS:Parent:updateMatchesCount", this);
 
       Services.obs.removeObserver(this, "quit-application");
 
@@ -125,6 +130,8 @@ var PdfjsChromeUtils = {
 
       case "PDFJS:Parent:updateControlState":
         return this._updateControlState(aMsg);
+      case "PDFJS:Parent:updateMatchesCount":
+        return this._updateMatchesCount(aMsg);
       case "PDFJS:Parent:addEventListener":
         return this._addEventListener(aMsg);
       case "PDFJS:Parent:removeEventListener":
@@ -148,7 +155,40 @@ var PdfjsChromeUtils = {
         return;
       }
       fb.updateControlState(data.result, data.findPrevious);
+
+      const matchesCount = this._requestMatchesCount(data.matchesCount);
+      fb.onMatchesCountResult(matchesCount);
     });
+  },
+
+  _updateMatchesCount(aMsg) {
+    let data = aMsg.data;
+    let browser = aMsg.target;
+    let tabbrowser = browser.getTabBrowser();
+    let tab = tabbrowser.getTabForBrowser(browser);
+    tabbrowser.getFindBar(tab).then(fb => {
+      if (!fb) {
+        // The tab or window closed.
+        return;
+      }
+      const matchesCount = this._requestMatchesCount(data);
+      fb.onMatchesCountResult(matchesCount);
+    });
+  },
+
+  _requestMatchesCount(data) {
+    if (!data) {
+      return {current: 0, total: 0};
+    }
+    let result = {
+      current: data.current,
+      total: data.total,
+      limit: (typeof matchesCountLimit === "number" ? matchesCountLimit : 0),
+    };
+    if (result.total > result.limit) {
+      result.total = -1;
+    }
+    return result;
   },
 
   handleEvent(aEvent) {

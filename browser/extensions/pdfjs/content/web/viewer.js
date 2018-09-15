@@ -8985,7 +8985,9 @@ _app.PDFViewerApplication.externalServices = {
   updateFindControlState(data) {
     FirefoxCom.request('updateFindControlState', data);
   },
-  updateFindMatchesCount(data) {},
+  updateFindMatchesCount(data) {
+    FirefoxCom.request('updateFindMatchesCount', data);
+  },
   initPassiveLoading(callbacks) {
     let pdfDataRangeTransport;
     window.addEventListener('message', function windowMessage(e) {

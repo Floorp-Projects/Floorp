@@ -149,7 +149,7 @@ function run_test() {
     attribute: "callback"
   });
 
-  let cmdline = Cc["@mozilla.org/toolkit/command-line;1"].createInstance(Ci.nsICommandLine);
+  let cmdline = Cu.createCommandLine();
   test_twice(cmdline, {});
 
   test_twice(Object.getPrototypeOf(cmdline), {
