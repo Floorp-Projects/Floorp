@@ -17,6 +17,7 @@ interface nsICycleCollectorListener;
 interface nsIEditorSpellCheck;
 interface nsIFile;
 interface nsILoadContext;
+interface nsIPersistentProperties;
 interface nsIURI;
 interface nsIJSCID;
 interface nsIJSIID;
@@ -731,6 +732,9 @@ interface nsIXPCComponents_Utils : nsISupports
 
     /* Create a private loadcontext object. */
     nsILoadContext createPrivateLoadContext();
+
+    /* Create a persistent property object. */
+    nsIPersistentProperties createPersistentProperties();
 };
 
 /**
