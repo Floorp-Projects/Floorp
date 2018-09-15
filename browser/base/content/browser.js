@@ -248,6 +248,8 @@ var gMultiProcessBrowser =
         .QueryInterface(Ci.nsILoadContext)
         .useRemoteTabs;
 
+var gBrowserAllowScriptsToCloseInitialTabs = false;
+
 if (AppConstants.platform != "macosx") {
   var gEditUIVisible = true;
 }

@@ -12,10 +12,6 @@ var {
   promiseObserved,
 } = ExtensionUtils;
 
-const onXULFrameLoaderCreated = ({target}) => {
-  target.messageManager.sendAsyncMessage("AllowScriptsToClose", {});
-};
-
 /**
  * An event manager API provider which listens for a DOM event in any browser
  * window, and calls the given listener function whenever an event is received.
@@ -206,19 +202,15 @@ this.windows = class extends ExtensionAPI {
           // TODO: focused, type
 
           return new Promise(resolve => {
-            window.addEventListener("load", function() {
+            window.addEventListener("DOMContentLoaded", function() {
+              if (allowScriptsToClose) {
+                window.gBrowserAllowScriptsToCloseInitialTabs = true;
+              }
               resolve(promiseObserved("browser-delayed-startup-finished", win => win == window));
             }, {once: true});
           }).then(() => {
             if (["minimized", "fullscreen", "docked", "normal", "maximized"].includes(createData.state)) {
               win.state = createData.state;
-            }
-            if (allowScriptsToClose) {
-              for (let {linkedBrowser} of window.gBrowser.tabs) {
-                onXULFrameLoaderCreated({target: linkedBrowser});
-                // eslint-disable-next-line mozilla/balanced-listeners
-                linkedBrowser.addEventListener("XULFrameLoaderCreated", onXULFrameLoaderCreated);
-              }
             }
             if (createData.titlePreface !== null) {
               win.setTitlePreface(createData.titlePreface);
