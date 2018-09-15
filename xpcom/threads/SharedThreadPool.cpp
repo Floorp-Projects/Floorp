@@ -15,6 +15,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIThreadManager.h"
+#include "nsThreadPool.h"
 #ifdef XP_WIN
 #include "ThreadPoolCOMListener.h"
 #endif
@@ -225,11 +226,9 @@ SharedThreadPool::EnsureThreadLimitIsAtLeast(uint32_t aLimit)
 static already_AddRefed<nsIThreadPool>
 CreateThreadPool(const nsCString& aName)
 {
-  nsresult rv;
-  nsCOMPtr<nsIThreadPool> pool = do_CreateInstance(NS_THREADPOOL_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
 
-  rv = pool->SetName(aName);
+  nsresult rv = pool->SetName(aName);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   rv = pool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize);

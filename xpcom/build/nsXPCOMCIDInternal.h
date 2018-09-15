@@ -34,12 +34,6 @@
 #define NS_THREADMANAGER_CONTRACTID "@mozilla.org/thread-manager;1"
 
 /**
- * A thread pool component.
- * @implements nsIThreadPool
- */
-#define NS_THREADPOOL_CONTRACTID "@mozilla.org/thread-pool;1"
-
-/**
  * The contract id for the nsIXULAppInfo service.
  */
 #define XULAPPINFO_SERVICE_CONTRACTID \

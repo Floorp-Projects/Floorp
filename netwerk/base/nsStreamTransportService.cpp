@@ -16,7 +16,7 @@
 #include "nsIPipe.h"
 #include "nsITransport.h"
 #include "nsIObserverService.h"
-#include "nsIThreadPool.h"
+#include "nsThreadPool.h"
 #include "mozilla/Services.h"
 
 namespace mozilla {
@@ -204,7 +204,7 @@ nsStreamTransportService::~nsStreamTransportService()
 nsresult
 nsStreamTransportService::Init()
 {
-    mPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
+    mPool = new nsThreadPool();
     NS_ENSURE_STATE(mPool);
 
     // Configure the pool
