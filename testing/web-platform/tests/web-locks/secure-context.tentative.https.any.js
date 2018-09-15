@@ -1,5 +1,4 @@
 // META: title=Web Locks API: API requires secure context
-// META: global=window,dedicatedworker,sharedworker,serviceworker
 
 'use strict';
 

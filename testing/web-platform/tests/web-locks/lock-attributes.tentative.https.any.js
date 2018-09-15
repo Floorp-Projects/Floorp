@@ -1,5 +1,4 @@
 // META: title=Web Locks API: Lock Attributes
-// META: global=window,dedicatedworker,sharedworker,serviceworker
 
 'use strict';
 
