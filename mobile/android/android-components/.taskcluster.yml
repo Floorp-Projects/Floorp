@@ -67,7 +67,7 @@ tasks:
           && git fetch origin --tags
           && git config advice.detachedHead false
           && git checkout {{ event.version }}
-          && ./gradlew --no-daemon clean test detektCheck ktlint assembleRelease docs
+          && ./gradlew --no-daemon clean test detektCheck ktlint assembleRelease docs lint
           && python automation/taskcluster/release/fetch-bintray-api-key.py
           && ./gradlew bintrayUpload --debug
       features:
