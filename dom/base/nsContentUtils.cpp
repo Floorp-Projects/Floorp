@@ -183,7 +183,6 @@
 #include "nsIURIWithSpecialOrigin.h"
 #include "nsIURL.h"
 #include "nsIWebNavigation.h"
-#include "nsIWidget.h"
 #include "nsIWindowMediator.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
@@ -273,7 +272,7 @@ nsIContentPolicy *nsContentUtils::sContentPolicyService;
 bool nsContentUtils::sTriedToGetContentPolicy = false;
 RefPtr<mozilla::intl::LineBreaker> nsContentUtils::sLineBreaker;
 RefPtr<mozilla::intl::WordBreaker> nsContentUtils::sWordBreaker;
-StaticRefPtr<nsIBidiKeyboard> nsContentUtils::sBidiKeyboard;
+nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nullptr;
 uint32_t nsContentUtils::sScriptBlockerCount = 0;
 uint32_t nsContentUtils::sDOMNodeRemovedSuppressCount = 0;
 AutoTArray<nsCOMPtr<nsIRunnable>, 8>* nsContentUtils::sBlockedScriptRunners = nullptr;
@@ -1634,8 +1633,10 @@ nsIBidiKeyboard*
 nsContentUtils::GetBidiKeyboard()
 {
   if (!sBidiKeyboard) {
-    sBidiKeyboard = nsIWidget::CreateBidiKeyboard();
-    MOZ_ASSERT(sBidiKeyboard);
+    nsresult rv = CallGetService("@mozilla.org/widget/bidikeyboard;1", &sBidiKeyboard);
+    if (NS_FAILED(rv)) {
+      sBidiKeyboard = nullptr;
+    }
   }
   return sBidiKeyboard;
 }
@@ -1985,7 +1986,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sUUIDGenerator);
   sLineBreaker = nullptr;
   sWordBreaker = nullptr;
-  sBidiKeyboard = nullptr;
+  NS_IF_RELEASE(sBidiKeyboard);
 
   delete sAtomEventTable;
   sAtomEventTable = nullptr;

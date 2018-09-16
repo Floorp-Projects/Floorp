@@ -7,7 +7,6 @@
 #include "nsBidiKeyboard.h"
 #include "nsCocoaUtils.h"
 #include "TextInputHandler.h"
-#include "nsIWidget.h"
 
 // This must be the last include:
 #include "nsObjCExceptions.h"
@@ -40,11 +39,4 @@ NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(bool* aResult)
 {
   // not implemented yet
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// static
-already_AddRefed<nsIBidiKeyboard>
-nsIWidget::CreateBidiKeyboardInner()
-{
-  return do_AddRef(new nsBidiKeyboard());
 }

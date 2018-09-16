@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include "nsBidiKeyboard.h"
 #include "WidgetUtils.h"
-#include "nsIWidget.h"
 #include <tchar.h>
 
 NS_IMPL_ISUPPORTS(nsBidiKeyboard, nsIBidiKeyboard)
@@ -184,11 +183,4 @@ void
 nsBidiKeyboard::OnLayoutChange()
 {
   mozilla::widget::WidgetUtils::SendBidiKeyboardInfoToContent();
-}
-
-// static
-already_AddRefed<nsIBidiKeyboard>
-nsIWidget::CreateBidiKeyboardInner()
-{
-  return do_AddRef(new nsBidiKeyboard());
 }

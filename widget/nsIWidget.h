@@ -34,7 +34,6 @@
 #include "Units.h"
 
 // forward declarations
-class   nsIBidiKeyboard;
 class   nsIRollupListener;
 class   imgIContainer;
 class   nsIContent;
@@ -1747,9 +1746,6 @@ private:
 
   static void OnLongTapTimerCallback(nsITimer* aTimer, void* aClosure);
 
-  static already_AddRefed<nsIBidiKeyboard> CreateBidiKeyboardContentProcess();
-  static already_AddRefed<nsIBidiKeyboard> CreateBidiKeyboardInner();
-
   mozilla::UniquePtr<LongTapInfo> mLongTapTouchPoint;
   nsCOMPtr<nsITimer> mLongTapTimer;
   static int32_t sPointerIdCounter;
@@ -2136,8 +2132,6 @@ public:
      */
     virtual void RecvScreenPixels(mozilla::ipc::Shmem&& aMem, const ScreenIntSize& aSize) = 0;
 #endif
-
-    static already_AddRefed<nsIBidiKeyboard> CreateBidiKeyboard();
 
 protected:
     /**

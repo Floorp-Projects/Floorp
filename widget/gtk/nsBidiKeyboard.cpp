@@ -8,7 +8,6 @@
 #include "prlink.h"
 
 #include "nsBidiKeyboard.h"
-#include "nsIWidget.h"
 #include <gtk/gtk.h>
 
 NS_IMPL_ISUPPORTS(nsBidiKeyboard, nsIBidiKeyboard)
@@ -53,11 +52,4 @@ NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(bool* aResult)
 {
   // not implemented yet
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// static
-already_AddRefed<nsIBidiKeyboard>
-nsIWidget::CreateBidiKeyboardInner()
-{
-  return do_AddRef(new nsBidiKeyboard());
 }
