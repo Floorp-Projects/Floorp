@@ -10,7 +10,6 @@
 #include "gc/DeletePolicy.h"
 #include "vm/JSObject.h"
 #include "vm/Runtime.h"
-#include "vm/TypeInference.h"
 
 namespace js {
 
