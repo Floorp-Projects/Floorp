@@ -325,7 +325,7 @@ CompositorManagerParent::RecvReportMemory(ReportMemoryResolver&& aResolver)
       resolver(aReport);
     },
     [](bool) {
-      MOZ_ASSERT_UNREACHABLE();
+      MOZ_ASSERT_UNREACHABLE("MemoryReport promises are never rejected");
     }
   );
 
