@@ -10,6 +10,7 @@
 #include "mozilla/HashFunctions.h"
 
 #include <algorithm>
+#include <stdint.h>
 
 #include "jsfriendapi.h"
 #include "jstypes.h"
@@ -18,6 +19,29 @@
 #include "vm/StringType.h"
 
 namespace js {
+
+// Each IonScript has a unique compilation id. This is used to sweep/ignore
+// constraints for IonScripts that have been invalidated/destroyed.
+class IonCompilationId
+{
+    // Use two 32-bit integers instead of uint64_t to avoid 8-byte alignment on
+    // some 32-bit platforms.
+    uint32_t idLo_;
+    uint32_t idHi_;
+
+  public:
+    explicit IonCompilationId(uint64_t id)
+      : idLo_(id & UINT32_MAX),
+        idHi_(id >> 32)
+    {}
+    bool operator==(const IonCompilationId& other) const {
+        return idLo_ == other.idLo_ && idHi_ == other.idHi_;
+    }
+    bool operator!=(const IonCompilationId& other) const {
+        return !operator==(other);
+    }
+};
+
 namespace jit {
 
 typedef uint32_t RecoverOffset;
