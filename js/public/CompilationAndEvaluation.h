@@ -15,6 +15,7 @@
 
 #include "js/CompileOptions.h" // JS::CompileOptions, JS::ReadOnlyCompileOptions
 #include "js/RootingAPI.h" // JS::Handle, JS::MutableHandle
+#include "js/Value.h" // JS::Value and specializations of JS::*Handle-related types
 
 struct JSContext;
 class JSFunction;
@@ -26,7 +27,6 @@ namespace JS {
 template<typename T> class AutoVector;
 
 class SourceBufferHolder;
-union Value;
 
 } // namespace JS
 
@@ -119,11 +119,59 @@ Evaluate(JSContext* cx, AutoVector<JSObject*>& envChain, const ReadOnlyCompileOp
          SourceBufferHolder& srcBuf, MutableHandle<Value> rval);
 
 /**
- * Evaluate the given byte buffer in the scope of the current global of cx.
+ * Evaluate the provided UTF-8 data in the scope of the current global of |cx|,
+ * and return the completion value in |rval|.  If the data contains invalid
+ * UTF-8, an error is reported.
+ *
+ * The |options.utf8| flag is asserted to be true.  At a future time this flag
+ * will be removed and UTF-8-ness of source bytes will be entirely determined
+ * by which compilation function is called.
  */
 extern JS_PUBLIC_API(bool)
+EvaluateUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
+             const char* bytes, size_t length, MutableHandle<Value> rval);
+
+/**
+ * Evaluate the provided Latin-1 data (i.e. each byte directly corresponds to
+ * the same Unicode code point) in the scope of the current global of |cx|, and
+ * return the completion value in |rval|.
+ *
+ * The |options.utf8| flag is asserted to be false.  At a future time this flag
+ * will be removed and UTF-8-ness of source bytes will be entirely determined
+ * by which compilation function is called.
+ *
+ * This function may eventually be removed, such that *only* bytes containing
+ * UTF-8 source text may be directly compiled.  Avoid using it if you can.
+ */
+extern JS_PUBLIC_API(bool)
+EvaluateLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
+               const char* bytes, size_t length, MutableHandle<Value> rval);
+
+/**
+ * DEPRECATED
+ *
+ * Evaluate the provided data in the scope of the current global of |cx|, and
+ * return the completion value in |rval|.
+ *
+ * If |options.utf8|, the bytes are interpreted as UTF-8 data.  If the data
+ * contains any malformed UTF-8, an error is reported.
+ *
+ * Otherwise they are interpreted as Latin-1, i.e. each byte directly
+ * corresponds to the same Unicode code point.
+ *
+ * Do not use this API.  The JS::ReadOnlyCompileOptions::utf8 flag that
+ * indicates how to interpret |bytes| is currently being replaced by functions
+ * indicating an exact expected encoding.  If you have byte data to compile,
+ * you should use either JS::EvaluateUtf8 or JS::EvaluateLatin1 as appropriate.
+ */
+inline bool
 Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
-         const char* bytes, size_t length, MutableHandle<Value> rval);
+         const char* bytes, size_t length, MutableHandle<Value> rval)
+{
+    return options.utf8
+           ? EvaluateUtf8(cx, options, bytes, length, rval)
+           : EvaluateLatin1(cx, options, bytes, length, rval);
+}
 
 /**
  * Evaluate the UTF-8 contents of the file at the given path, and return the
