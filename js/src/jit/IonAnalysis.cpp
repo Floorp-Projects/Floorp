@@ -22,6 +22,7 @@
 #include "vm/BytecodeUtil-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
+#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -4367,7 +4368,7 @@ static bool
 AnalyzePoppedThis(JSContext* cx, ObjectGroup* group,
                   MDefinition* thisValue, MInstruction* ins, bool definitelyExecuted,
                   HandlePlainObject baseobj,
-                  Vector<TypeNewScript::Initializer>* initializerList,
+                  Vector<TypeNewScriptInitializer>* initializerList,
                   Vector<PropertyName*>* accessedProperties,
                   bool* phandled)
 {
@@ -4436,16 +4437,16 @@ AnalyzePoppedThis(JSContext* cx, ObjectGroup* group,
         for (int i = callerResumePoints.length() - 1; i >= 0; i--) {
             MResumePoint* rp = callerResumePoints[i];
             JSScript* script = rp->block()->info().script();
-            TypeNewScript::Initializer entry(TypeNewScript::Initializer::SETPROP_FRAME,
-                                             script->pcToOffset(rp->pc()));
+            TypeNewScriptInitializer entry(TypeNewScriptInitializer::SETPROP_FRAME,
+                                           script->pcToOffset(rp->pc()));
             if (!initializerList->append(entry)) {
                 return false;
             }
         }
 
         JSScript* script = ins->block()->info().script();
-        TypeNewScript::Initializer entry(TypeNewScript::Initializer::SETPROP,
-                                         script->pcToOffset(setprop->resumePoint()->pc()));
+        TypeNewScriptInitializer entry(TypeNewScriptInitializer::SETPROP,
+                                       script->pcToOffset(setprop->resumePoint()->pc()));
         if (!initializerList->append(entry)) {
             return false;
         }
@@ -4501,7 +4502,7 @@ CmpInstructions(const void* a, const void* b)
 bool
 jit::AnalyzeNewScriptDefiniteProperties(JSContext* cx, HandleFunction fun,
                                         ObjectGroup* group, HandlePlainObject baseobj,
-                                        Vector<TypeNewScript::Initializer>* initializerList)
+                                        Vector<TypeNewScriptInitializer>* initializerList)
 {
     MOZ_ASSERT(cx->zone()->types.activeAnalysis);
 

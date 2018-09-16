@@ -4065,11 +4065,14 @@ TypeNewScript::makeNativeVersion(JSContext* cx, TypeNewScript* newScript,
     nativeNewScript->function_ = newScript->function();
     nativeNewScript->templateObject_ = templateObject;
 
-    Initializer* cursor = newScript->initializerList;
-    while (cursor->kind != Initializer::DONE) { cursor++; }
+    TypeNewScriptInitializer* cursor = newScript->initializerList;
+    while (cursor->kind != TypeNewScriptInitializer::DONE) {
+        cursor++;
+    }
+
     size_t initializerLength = cursor - newScript->initializerList + 1;
 
-    nativeNewScript->initializerList = cx->pod_calloc<Initializer>(initializerLength);
+    nativeNewScript->initializerList = cx->pod_calloc<TypeNewScriptInitializer>(initializerLength);
     if (!nativeNewScript->initializerList) {
         return nullptr;
     }
@@ -4232,7 +4235,7 @@ TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group, bool* regenerate,
         return false;
     }
 
-    Vector<Initializer> initializerVector(cx);
+    Vector<TypeNewScriptInitializer> initializerVector(cx);
 
     RootedPlainObject templateRoot(cx, templateObject());
     RootedFunction fun(cx, function());
@@ -4277,13 +4280,14 @@ TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group, bool* regenerate,
             }
         }
 
-        Initializer done(Initializer::DONE, 0);
+        TypeNewScriptInitializer done(TypeNewScriptInitializer::DONE, 0);
 
         if (!initializerVector.append(done)) {
             return false;
         }
 
-        initializerList = group->zone()->pod_calloc<Initializer>(initializerVector.length());
+        initializerList =
+            group->zone()->pod_calloc<TypeNewScriptInitializer>(initializerVector.length());
         if (!initializerList) {
             ReportOutOfMemory(cx);
             return false;
@@ -4444,8 +4448,8 @@ TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx, ObjectGroup* g
         // Index in pcOffsets of the frame currently being checked for a SETPROP.
         int setpropDepth = callDepth;
 
-        for (Initializer* init = initializerList;; init++) {
-            if (init->kind == Initializer::SETPROP) {
+        for (TypeNewScriptInitializer* init = initializerList; ; init++) {
+            if (init->kind == TypeNewScriptInitializer::SETPROP) {
                 if (!pastProperty && pcOffsets[setpropDepth] < init->offset) {
                     // Have not yet reached this setprop.
                     break;
@@ -4454,7 +4458,7 @@ TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx, ObjectGroup* g
                 numProperties++;
                 pastProperty = false;
                 setpropDepth = callDepth;
-            } else if (init->kind == Initializer::SETPROP_FRAME) {
+            } else if (init->kind == TypeNewScriptInitializer::SETPROP_FRAME) {
                 if (!pastProperty) {
                     if (pcOffsets[setpropDepth] < init->offset) {
                         // Have not yet reached this inner call.
@@ -4471,7 +4475,7 @@ TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx, ObjectGroup* g
                     }
                 }
             } else {
-                MOZ_ASSERT(init->kind == Initializer::DONE);
+                MOZ_ASSERT(init->kind == TypeNewScriptInitializer::DONE);
                 finished = true;
                 break;
             }
