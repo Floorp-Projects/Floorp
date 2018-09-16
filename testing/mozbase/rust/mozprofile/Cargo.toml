@@ -1,7 +1,7 @@
 [package]
 name = "mozprofile"
-version = "0.3.0"
-authors = ["Mozilla Tools and Automation <auto-tools@mozilla.com>"]
+version = "0.4.0"
+authors = ["Mozilla"]
 description = "Library for working with Mozilla profiles."
 repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/rust/mozprofile"
 license = "MPL-2.0"
