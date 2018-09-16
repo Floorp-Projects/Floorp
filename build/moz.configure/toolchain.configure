@@ -967,23 +967,12 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                 'Only clang/llvm 3.9 or newer is supported.')
 
         if info.type == 'msvc':
-            if info.version < '19.13.26128':
+            if info.version < '19.15.26726':
                 raise FatalCheckError(
                     'This version (%s) of the MSVC compiler is not '
                     'supported.\n'
-                    'You must install Visual C++ 2017 Update 6 or '
-                    'Update 8 or later in order to build.\n'
-                    'See https://developer.mozilla.org/en/'
-                    'Windows_Build_Prerequisites' % info.version)
-
-            # MSVC version 15.7 and the previews for 15.8, at least,
-            # can't build Firefox.
-            if info.version >= '19.14.0' and info.version < '19.15.0':
-                raise FatalCheckError(
-                    'This version (%s) of the MSVC compiler is not '
-                    'supported due to compiler bugs.\n'
-                    'You must install Visual C++ 2017 Update 6 or '
-                    'Update 8 or later in order to build.\n'
+                    'You must install Visual C++ 2017 Update 8 or '
+                    'later in order to build.\n'
                     'See https://developer.mozilla.org/en/'
                     'Windows_Build_Prerequisites' % info.version)
 
