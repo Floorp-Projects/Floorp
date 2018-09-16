@@ -25,6 +25,7 @@
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "threading/ProtectedData.h" // js::ZoneData
+#include "vm/Shape.h"
 #include "vm/TypeSet.h"
 
 namespace js {
