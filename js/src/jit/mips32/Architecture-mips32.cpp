@@ -32,8 +32,9 @@ FloatRegisters::Encoding
 FloatRegisters::FromName(const char* name)
 {
     for (size_t i = 0; i < RegisterIdLimit; i++) {
-        if (strcmp(GetName(i), name) == 0)
+        if (strcmp(GetName(i), name) == 0) {
             return Encoding(i);
+        }
     }
 
     return Invalid;
@@ -43,8 +44,9 @@ FloatRegister
 FloatRegister::doubleOverlay() const
 {
     MOZ_ASSERT(isNotOdd());
-    if (isSingle())
+    if (isSingle()) {
         return FloatRegister(code_, Double);
+    }
     return *this;
 }
 
@@ -52,8 +54,9 @@ FloatRegister
 FloatRegister::singleOverlay() const
 {
     MOZ_ASSERT(isNotOdd());
-    if (isDouble())
+    if (isDouble()) {
         return FloatRegister(code_, Single);
+    }
     return *this;
 }
 
@@ -79,8 +82,9 @@ FloatRegister::GetPushSizeInBytes(const FloatRegisterSet& s)
 
     // Additional space needed by MacroAssembler::PushRegsInMask to ensure
     // correct alignment of double values.
-    if (ret)
+    if (ret) {
         ret += sizeof(double);
+    }
 
     return ret;
 }

@@ -113,8 +113,9 @@ class Registers {
 
     static Code FromName(const char* name) {
         for (size_t i = 0; i < Total; i++) {
-            if (strcmp(GetName(Code(i)), name) == 0)
+            if (strcmp(GetName(Code(i)), name) == 0) {
                 return Code(i);
+            }
         }
         return Invalid;
     }
@@ -222,8 +223,9 @@ class FloatRegisters {
 
     static Encoding FromName(const char* name) {
         for (size_t i = 0; i < Total; i++) {
-            if (strcmp(GetName(Encoding(i)), name) == 0)
+            if (strcmp(GetName(Encoding(i)), name) == 0) {
                 return Encoding(i);
+            }
         }
         return Invalid;
     }
@@ -373,10 +375,12 @@ struct FloatRegister {
 
     uint32_t size() const {
         MOZ_ASSERT(!isInvalid());
-        if (isSingle())
+        if (isSingle()) {
             return sizeof(float);
-        if (isDouble())
+        }
+        if (isDouble()) {
             return sizeof(double);
+        }
         MOZ_ASSERT(isSimd128());
         return 4 * sizeof(int32_t);
     }

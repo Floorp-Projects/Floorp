@@ -27,10 +27,11 @@ ABIArgGenerator::next(MIRType type)
     switch (type) {
       case MIRType::Int32:
       case MIRType::Pointer:
-        if (GetIntArgReg(usedArgSlots_, &destReg))
+        if (GetIntArgReg(usedArgSlots_, &destReg)) {
             current_ = ABIArg(destReg);
-        else
+        } else {
             current_ = ABIArg(usedArgSlots_ * sizeof(intptr_t));
+        }
         usedArgSlots_++;
         break;
       case MIRType::Int64:
@@ -41,8 +42,9 @@ ABIArgGenerator::next(MIRType type)
             current_ = ABIArg(a2, a3);
             usedArgSlots_ = 4;
         } else {
-            if (usedArgSlots_ < NumIntArgRegs)
+            if (usedArgSlots_ < NumIntArgRegs) {
                 usedArgSlots_ = NumIntArgRegs;
+            }
             usedArgSlots_ += usedArgSlots_ % 2;
             current_ = ABIArg(usedArgSlots_ * sizeof(intptr_t));
             usedArgSlots_ += 2;
@@ -57,8 +59,9 @@ ABIArgGenerator::next(MIRType type)
         } else if (useGPRForFloats_ && GetIntArgReg(usedArgSlots_, &destReg)) {
             current_ = ABIArg(destReg);
         } else {
-            if (usedArgSlots_ < NumIntArgRegs)
+            if (usedArgSlots_ < NumIntArgRegs) {
                 usedArgSlots_ = NumIntArgRegs;
+            }
             current_ = ABIArg(usedArgSlots_ * sizeof(intptr_t));
         }
         usedArgSlots_++;
@@ -75,8 +78,9 @@ ABIArgGenerator::next(MIRType type)
             current_ = ABIArg(a2, a3);
             usedArgSlots_ = 4;
         } else {
-            if (usedArgSlots_ < NumIntArgRegs)
+            if (usedArgSlots_ < NumIntArgRegs) {
                 usedArgSlots_ = NumIntArgRegs;
+            }
             usedArgSlots_ += usedArgSlots_ % 2;
             current_ = ABIArg(usedArgSlots_ * sizeof(intptr_t));
             usedArgSlots_ += 2;
@@ -134,8 +138,9 @@ Assembler::executableCopy(uint8_t* buffer, bool flushICache)
     MOZ_ASSERT(isFinished);
     m_buffer.executableCopy(buffer);
 
-    if (flushICache)
+    if (flushICache) {
         AutoFlushICache::setRange(uintptr_t(buffer), m_buffer.size());
+    }
 }
 
 uintptr_t

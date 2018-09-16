@@ -680,8 +680,9 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
     regs.take(cxreg);
 
     // If it isn't a tail call, then the return address needs to be saved
-    if (f.expectTailCall == NonTailCall)
+    if (f.expectTailCall == NonTailCall) {
         masm.pushReturnAddress();
+    }
 
     // We're aligned to an exit frame, so link it up.
     masm.loadJSContext(cxreg);
@@ -746,8 +747,9 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
     masm.reserveStack(outParamOffset);
     masm.movePtr(StackPointer, doubleArgs);
 
-    if (!generateTLEnterVM(masm, f))
+    if (!generateTLEnterVM(masm, f)) {
         return false;
+    }
 
     masm.setupAlignedABICall();
     masm.passABIArg(cxreg);
@@ -797,8 +799,9 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
 
     masm.callWithABI(f.wrapped, MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
-    if (!generateTLExitVM(masm, f))
+    if (!generateTLExitVM(masm, f)) {
         return false;
+    }
 
     // Test for failure.
     switch (f.failType()) {

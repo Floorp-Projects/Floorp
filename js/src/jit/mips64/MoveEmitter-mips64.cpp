@@ -138,10 +138,11 @@ MoveEmitterMIPS64::emitDoubleMove(const MoveOperand& from, const MoveOperand& to
             masm.storeDouble(from.floatReg(), getAdjustedAddress(to));
         }
     } else if (to.isFloatReg()) {
-        if (from.isMemory())
+        if (from.isMemory()) {
           masm.loadDouble(getAdjustedAddress(from), to.floatReg());
-        else
+        } else {
           masm.moveToDouble(from.reg(), to.floatReg());
+        }
     } else {
         MOZ_ASSERT(from.isMemory());
         MOZ_ASSERT(to.isMemory());

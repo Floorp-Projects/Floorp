@@ -185,8 +185,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         vixl::MacroAssembler::Push(ARMRegister(reg, 64));
     }
     void push(RegisterOrSP reg) {
-        if (IsHiddenSP(reg))
+        if (IsHiddenSP(reg)) {
             vixl::MacroAssembler::Push(sp);
+        }
         vixl::MacroAssembler::Push(toARMRegister(reg, 64));
     }
     void push(Register r0, Register r1) {
@@ -264,12 +265,14 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     // Update sp with the value of the current active stack pointer, if necessary.
     void syncStackPtr() {
-        if (!GetStackPointer64().Is(vixl::sp))
+        if (!GetStackPointer64().Is(vixl::sp)) {
             Mov(vixl::sp, GetStackPointer64());
+        }
     }
     void initStackPtr() {
-        if (!GetStackPointer64().Is(vixl::sp))
+        if (!GetStackPointer64().Is(vixl::sp)) {
             Mov(GetStackPointer64(), vixl::sp);
+        }
     }
     void storeValue(ValueOperand val, const Address& dest) {
         storePtr(val.valueReg(), dest);
@@ -349,10 +352,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
           case 8: {
             vixl::UseScratchRegisterScope temps(this);
             const Register scratch = temps.AcquireX().asUnsized();
-            if (type == JSVAL_TYPE_OBJECT)
+            if (type == JSVAL_TYPE_OBJECT) {
                 unboxObjectOrNull(value, scratch);
-            else
+            } else {
                 unboxNonDouble(value, scratch, type);
+            }
             storePtr(scratch, address);
             return;
           }
@@ -1477,8 +1481,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
             MOZ_ASSERT(!temps.IsAvailable(ScratchReg2_64));
             temps.Exclude(ScratchReg64);
 
-            if (cond != Equal && cond != NotEqual)
+            if (cond != Equal && cond != NotEqual) {
                 MOZ_CRASH("NYI: non-equality comparisons");
+            }
 
             // In the event that the tag is not encodable in a single cmp / teq instruction,
             // perform the xor that teq would use, this will leave the tag bits being
@@ -1815,14 +1820,16 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     // load: offset to the load instruction obtained by movePatchablePtr().
     void writeDataRelocation(ImmGCPtr ptr, BufferOffset load) {
-        if (ptr.value)
+        if (ptr.value) {
             dataRelocations_.writeUnsigned(load.getOffset());
+        }
     }
     void writeDataRelocation(const Value& val, BufferOffset load) {
         if (val.isGCThing()) {
             gc::Cell* cell = val.toGCThing();
-            if (cell && gc::IsInsideNursery(cell))
+            if (cell && gc::IsInsideNursery(cell)) {
                 embedsNurseryPointers_ = true;
+            }
             dataRelocations_.writeUnsigned(load.getOffset());
         }
     }
@@ -1839,8 +1846,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         ARMRegister index64(address.index, 64);
 
         Add(dest64, base64, Operand(index64, vixl::LSL, address.scale));
-        if (address.offset)
+        if (address.offset) {
             Add(dest64, dest64, Operand(address.offset));
+        }
     }
 
   public:
@@ -1890,10 +1898,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
             loadOffset = immPool64(ScratchReg2_64, uint64_t(target->raw()));
 
-            if (enabled)
+            if (enabled) {
                 blr(ScratchReg2_64);
-            else
+            } else {
                 nop();
+            }
         }
 
         addPendingJump(loadOffset, ImmPtr(target->raw()), RelocationKind::JITCODE);
@@ -1914,8 +1923,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
             cur += 4;
         }
 
-        if (cur->IsUncondB())
+        if (cur->IsUncondB()) {
             ret += cur->ImmPCRawOffset() << vixl::kInstructionSizeLog2;
+        }
 
         return ret;
     }
@@ -1940,8 +1950,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         checkARMRegAlignment(GetStackPointer64());
 
         // If another register is being used to track pushes, check sp explicitly.
-        if (!GetStackPointer64().Is(vixl::sp))
+        if (!GetStackPointer64().Is(vixl::sp)) {
             checkARMRegAlignment(vixl::sp);
+        }
 #endif
     }
 
@@ -1995,10 +2006,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     // Overwrites the payload bits of a dest register containing a Value.
     void movePayload(Register src, Register dest) {
         // Bfxil cannot be used with the zero register as a source.
-        if (src == rzr)
+        if (src == rzr) {
             And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(JSVAL_TAG_MASK));
-        else
+        } else {
             Bfxil(ARMRegister(dest, 64), ARMRegister(src, 64), 0, JSVAL_TAG_SHIFT);
+        }
     }
 
     // FIXME: Should be in Assembler?

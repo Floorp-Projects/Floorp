@@ -32,8 +32,9 @@ FloatRegisters::Encoding
 FloatRegisters::FromName(const char* name)
 {
     for (size_t i = 0; i < Total; i++) {
-        if (strcmp(GetName(Encoding(i)), name) == 0)
+        if (strcmp(GetName(Encoding(i)), name) == 0) {
             return Encoding(i);
+        }
     }
 
     return Invalid;
@@ -43,8 +44,9 @@ FloatRegister
 FloatRegister::singleOverlay() const
 {
     MOZ_ASSERT(!isInvalid());
-    if (kind_ == Codes::Double)
+    if (kind_ == Codes::Double) {
         return FloatRegister(reg_, Codes::Single);
+    }
     return *this;
 }
 
@@ -52,8 +54,9 @@ FloatRegister
 FloatRegister::doubleOverlay() const
 {
     MOZ_ASSERT(!isInvalid());
-    if (kind_ != Codes::Double)
+    if (kind_ != Codes::Double) {
         return FloatRegister(reg_, Codes::Double);
+    }
     return *this;
 }
 

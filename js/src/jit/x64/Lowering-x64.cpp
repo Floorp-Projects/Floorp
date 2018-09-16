@@ -100,8 +100,9 @@ LIRGenerator::visitUnbox(MUnbox* unbox)
 
     if (box->type() == MIRType::ObjectOrNull) {
         LUnboxObjectOrNull* lir = new(alloc()) LUnboxObjectOrNull(useRegisterAtStart(box));
-        if (unbox->fallible())
+        if (unbox->fallible()) {
             assignSnapshot(lir, unbox->bailoutKind());
+        }
         defineReuseInput(lir, unbox, 0);
         return;
     }
@@ -119,8 +120,9 @@ LIRGenerator::visitUnbox(MUnbox* unbox)
         lir = new(alloc()) LUnbox(useAtStart(box));
     }
 
-    if (unbox->fallible())
+    if (unbox->fallible()) {
         assignSnapshot(lir, unbox->bailoutKind());
+    }
 
     define(lir, unbox);
 }
@@ -229,10 +231,11 @@ LIRGenerator::visitWasmStore(MWasmStore* ins)
         break;
       case Scalar::Int64:
         // No way to encode an int64-to-memory move on x64.
-        if (value->isConstant() && value->type() != MIRType::Int64)
+        if (value->isConstant() && value->type() != MIRType::Int64) {
             valueAlloc = useOrConstantAtStart(value);
-        else
+        } else {
             valueAlloc = useRegisterAtStart(value);
+        }
         break;
       case Scalar::Float32:
       case Scalar::Float64:
@@ -387,12 +390,13 @@ LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
                                                    value,
                                                    bitOp ? temp() : LDefinition::BogusTemp());
 
-    if (reuseInput)
+    if (reuseInput) {
         defineReuseInput(lir, ins, LWasmAtomicBinopHeap::valueOp);
-    else if (bitOp)
+    } else if (bitOp) {
         defineFixed(lir, ins, LAllocation(AnyRegister(rax)));
-    else
+    } else {
         define(lir, ins);
+    }
 }
 
 void

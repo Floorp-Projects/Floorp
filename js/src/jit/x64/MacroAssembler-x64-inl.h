@@ -561,8 +561,9 @@ MacroAssembler::popcnt64(Register64 src64, Register64 dest64, Register tmp)
         return;
     }
 
-    if (src != dest)
+    if (src != dest) {
         movq(src, dest);
+    }
 
     MOZ_ASSERT(tmp != dest);
 
@@ -642,8 +643,9 @@ MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* succe
                "other condition codes not supported");
 
     branchPtr(cond, lhs.reg, ImmWord(val.value), success);
-    if (fail)
+    if (fail) {
         jump(fail);
+    }
 }
 
 void
@@ -657,8 +659,9 @@ MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* 
                "other condition codes not supported");
 
     branchPtr(cond, lhs.reg, rhs.reg, success);
-    if (fail)
+    if (fail) {
         jump(fail);
+    }
 }
 
 void
@@ -721,8 +724,9 @@ void
 MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
 {
     ScratchRegisterScope scratch(*this);
-    if (rhs != scratch)
+    if (rhs != scratch) {
         movePtr(rhs, scratch);
+    }
     // Instead of unboxing lhs, box rhs and do direct comparison with lhs.
     rshiftPtr(Imm32(1), scratch);
     branchPtr(cond, lhs, scratch, label);
@@ -863,14 +867,16 @@ MacroAssembler::spectreBoundsCheck32(Register index, Register length, Register m
     MOZ_ASSERT(index != scratch);
     MOZ_ASSERT(length != scratch);
 
-    if (JitOptions.spectreIndexMasking)
+    if (JitOptions.spectreIndexMasking) {
         move32(Imm32(0), scratch);
+    }
 
     cmp32(index, length);
     j(Assembler::AboveOrEqual, failure);
 
-    if (JitOptions.spectreIndexMasking)
+    if (JitOptions.spectreIndexMasking) {
         cmovCCl(Assembler::AboveOrEqual, scratch, index);
+    }
 }
 
 void
@@ -885,14 +891,16 @@ MacroAssembler::spectreBoundsCheck32(Register index, const Address& length, Regi
     MOZ_ASSERT(index != scratch);
     MOZ_ASSERT(length.base != scratch);
 
-    if (JitOptions.spectreIndexMasking)
+    if (JitOptions.spectreIndexMasking) {
         move32(Imm32(0), scratch);
+    }
 
     cmp32(index, Operand(length));
     j(Assembler::AboveOrEqual, failure);
 
-    if (JitOptions.spectreIndexMasking)
+    if (JitOptions.spectreIndexMasking) {
         cmovCCl(Assembler::AboveOrEqual, scratch, index);
+    }
 }
 
 // ========================================================================

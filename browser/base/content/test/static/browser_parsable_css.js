@@ -96,11 +96,6 @@ if (!Services.prefs.getBoolPref("layout.css.scrollbar-width.enabled")) {
 }
 
 let propNameWhitelist = [
-  // These are CSS custom properties that we found a definition of but
-  // no reference to.
-  // Bug 1441837
-  {propName: "--in-content-category-text-active",
-   isFromDevTools: false},
   // These custom properties are retrieved directly from CSSOM
   // in videocontrols.xml to get pre-defined style instead of computed
   // dimensions, which is why they are not referenced by CSS.

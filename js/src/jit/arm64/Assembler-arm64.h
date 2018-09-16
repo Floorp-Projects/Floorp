@@ -208,12 +208,14 @@ class Assembler : public vixl::Assembler
     }
 
     void copyJumpRelocationTable(uint8_t* dest) const {
-        if (jumpRelocations_.length())
+        if (jumpRelocations_.length()) {
             memcpy(dest, jumpRelocations_.buffer(), jumpRelocations_.length());
+        }
     }
     void copyDataRelocationTable(uint8_t* dest) const {
-        if (dataRelocations_.length())
+        if (dataRelocations_.length()) {
             memcpy(dest, dataRelocations_.buffer(), dataRelocations_.length());
+        }
     }
 
     size_t jumpRelocationTableBytes() const {
@@ -336,8 +338,9 @@ class Assembler : public vixl::Assembler
     void assertNoGCThings() const {
 #ifdef DEBUG
         MOZ_ASSERT(dataRelocations_.length() == 0);
-        for (auto& j : pendingJumps_)
+        for (auto& j : pendingJumps_) {
             MOZ_ASSERT(j.kind == RelocationKind::HARDCODED);
+        }
 #endif
     }
 
@@ -470,8 +473,9 @@ static constexpr Register WasmTableCallIndexReg = ABINonArgReg3;
 static inline bool
 GetIntArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
 {
-    if (usedIntArgs >= NumIntArgRegs)
+    if (usedIntArgs >= NumIntArgRegs) {
         return false;
+    }
     *out = Register::FromCode(usedIntArgs);
     return true;
 }
@@ -479,8 +483,9 @@ GetIntArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
 static inline bool
 GetFloatArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, FloatRegister* out)
 {
-    if (usedFloatArgs >= NumFloatArgRegs)
+    if (usedFloatArgs >= NumFloatArgRegs) {
         return false;
+    }
     *out = FloatRegister::FromCode(usedFloatArgs);
     return true;
 }
@@ -493,14 +498,16 @@ GetFloatArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, FloatRegister* out)
 static inline bool
 GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
 {
-    if (GetIntArgReg(usedIntArgs, usedFloatArgs, out))
+    if (GetIntArgReg(usedIntArgs, usedFloatArgs, out)) {
         return true;
+    }
     // Unfortunately, we have to assume things about the point at which
     // GetIntArgReg returns false, because we need to know how many registers it
     // can allocate.
     usedIntArgs -= NumIntArgRegs;
-    if (usedIntArgs >= NumCallTempNonArgRegs)
+    if (usedIntArgs >= NumCallTempNonArgRegs) {
         return false;
+    }
     *out = CallTempNonArgRegs[usedIntArgs];
     return true;
 }

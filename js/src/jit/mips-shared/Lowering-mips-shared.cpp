@@ -85,10 +85,12 @@ LIRGeneratorMIPSShared::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* l
         int64_t constant = rhs->toConstant()->toInt64();
         int32_t shift = mozilla::FloorLog2(constant);
         // See special cases in CodeGeneratorMIPSShared::visitMulI64
-        if (constant >= -1 && constant <= 2)
+        if (constant >= -1 && constant <= 2) {
             needsTemp = false;
-        if (int64_t(1) << shift == constant)
+        }
+        if (int64_t(1) << shift == constant) {
             needsTemp = false;
+        }
         if (mozilla::IsPowerOfTwo(static_cast<uint32_t>(constant + 1)) ||
             mozilla::IsPowerOfTwo(static_cast<uint32_t>(constant - 1)))
             reuseInput = false;
@@ -98,12 +100,14 @@ LIRGeneratorMIPSShared::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* l
     ins->setInt64Operand(INT64_PIECES,
                          (lhs != rhs || cannotAliasRhs) ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
 
-    if (needsTemp)
+    if (needsTemp) {
         ins->setTemp(0, temp());
-    if(reuseInput)
+    }
+    if (reuseInput) {
         defineInt64ReuseInput(ins, mir, 0);
-    else
+    } else {
         defineInt64(ins, mir);
+    }
 }
 
 template<size_t Temps>
@@ -113,8 +117,9 @@ LIRGeneratorMIPSShared::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT6
 {
 #ifdef JS_CODEGEN_MIPS32
     if (mir->isRotate()) {
-        if (!rhs->isConstant())
+        if (!rhs->isConstant()) {
             ins->setTemp(0, temp());
+        }
         ins->setInt64Operand(0, useInt64Register(lhs));
     } else {
         ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
@@ -129,10 +134,11 @@ LIRGeneratorMIPSShared::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT6
     ins->setOperand(INT64_PIECES, useRegisterOrConstant(rhs));
 
 #ifdef JS_CODEGEN_MIPS32
-    if (mir->isRotate())
+    if (mir->isRotate()) {
         defineInt64(ins, mir);
-    else
+    } else {
         defineInt64ReuseInput(ins, mir, 0);
+    }
 #else
     defineInt64ReuseInput(ins, mir, 0);
 #endif
@@ -206,16 +212,18 @@ LIRGeneratorMIPSShared::lowerDivI(MDiv* div)
         int32_t shift = FloorLog2(rhs);
         if (rhs > 0 && 1 << shift == rhs) {
             LDivPowTwoI* lir = new(alloc()) LDivPowTwoI(useRegister(div->lhs()), shift, temp());
-            if (div->fallible())
+            if (div->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             define(lir, div);
             return;
         }
     }
 
     LDivI* lir = new(alloc()) LDivI(useRegister(div->lhs()), useRegister(div->rhs()), temp());
-    if (div->fallible())
+    if (div->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
     define(lir, div);
 }
 
@@ -223,8 +231,9 @@ void
 LIRGeneratorMIPSShared::lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs)
 {
     LMulI* lir = new(alloc()) LMulI;
-    if (mul->fallible())
+    if (mul->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
 
     lowerForALU(lir, mul, lhs, rhs);
 }
@@ -242,8 +251,9 @@ LIRGeneratorMIPSShared::lowerModI(MMod* mod)
         int32_t shift = FloorLog2(rhs);
         if (rhs > 0 && 1 << shift == rhs) {
             LModPowTwoI* lir = new(alloc()) LModPowTwoI(useRegister(mod->lhs()), shift);
-            if (mod->fallible())
+            if (mod->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             define(lir, mod);
             return;
         } else if (shift < 31 && (1 << (shift + 1)) - 1 == rhs) {
@@ -251,8 +261,9 @@ LIRGeneratorMIPSShared::lowerModI(MMod* mod)
                                                     temp(LDefinition::GENERAL),
                                                     temp(LDefinition::GENERAL),
                                                     shift + 1);
-            if (mod->fallible())
+            if (mod->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             define(lir, mod);
             return;
         }
@@ -260,8 +271,9 @@ LIRGeneratorMIPSShared::lowerModI(MMod* mod)
     LModI* lir = new(alloc()) LModI(useRegister(mod->lhs()), useRegister(mod->rhs()),
                            temp(LDefinition::GENERAL));
 
-    if (mod->fallible())
+    if (mod->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
     define(lir, mod);
 }
 
@@ -322,25 +334,30 @@ LIRGenerator::visitWasmLoad(MWasmLoad* ins)
 
     LAllocation ptr;
 #ifdef JS_CODEGEN_MIPS32
-    if (ins->type() == MIRType::Int64)
+    if (ins->type() == MIRType::Int64) {
         ptr = useRegister(base);
-    else
-#endif
+    } else {
         ptr = useRegisterAtStart(base);
+    }
+#else
+    ptr = useRegisterAtStart(base);
+#endif
 
     if (IsUnaligned(ins->access())) {
         if (ins->type() == MIRType::Int64) {
             auto* lir = new(alloc()) LWasmUnalignedLoadI64(ptr, temp());
-            if (ins->access().offset())
+            if (ins->access().offset()) {
                 lir->setTemp(0, tempCopy(base, 0));
+            }
 
             defineInt64(lir, ins);
             return;
         }
 
         auto* lir = new(alloc()) LWasmUnalignedLoad(ptr, temp());
-        if (ins->access().offset())
+        if (ins->access().offset()) {
             lir->setTemp(0, tempCopy(base, 0));
+        }
 
         define(lir, ins);
         return;
@@ -356,16 +373,18 @@ LIRGenerator::visitWasmLoad(MWasmLoad* ins)
         }
 #endif
         auto* lir = new(alloc()) LWasmLoadI64(ptr);
-        if (ins->access().offset())
+        if (ins->access().offset()) {
             lir->setTemp(0, tempCopy(base, 0));
+        }
 
         defineInt64(lir, ins);
         return;
     }
 
     auto* lir = new(alloc()) LWasmLoad(ptr);
-    if (ins->access().offset())
+    if (ins->access().offset()) {
         lir->setTemp(0, tempCopy(base, 0));
+    }
 
     define(lir, ins);
 }
@@ -383,8 +402,9 @@ LIRGenerator::visitWasmStore(MWasmStore* ins)
         if (ins->access().type() == Scalar::Int64) {
             LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
             auto* lir = new(alloc()) LWasmUnalignedStoreI64(baseAlloc, valueAlloc, temp());
-            if (ins->access().offset())
+            if (ins->access().offset()) {
                 lir->setTemp(0, tempCopy(base, 0));
+            }
 
             add(lir, ins);
             return;
@@ -392,8 +412,9 @@ LIRGenerator::visitWasmStore(MWasmStore* ins)
 
         LAllocation valueAlloc = useRegisterAtStart(value);
         auto* lir = new(alloc()) LWasmUnalignedStore(baseAlloc, valueAlloc, temp());
-        if (ins->access().offset())
+        if (ins->access().offset()) {
             lir->setTemp(0, tempCopy(base, 0));
+        }
 
         add(lir, ins);
         return;
@@ -412,8 +433,9 @@ LIRGenerator::visitWasmStore(MWasmStore* ins)
         LAllocation baseAlloc = useRegisterAtStart(base);
         LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
         auto* lir = new(alloc()) LWasmStoreI64(baseAlloc, valueAlloc);
-        if (ins->access().offset())
+        if (ins->access().offset()) {
             lir->setTemp(0, tempCopy(base, 0));
+        }
 
         add(lir, ins);
         return;
@@ -422,8 +444,9 @@ LIRGenerator::visitWasmStore(MWasmStore* ins)
     LAllocation baseAlloc = useRegisterAtStart(base);
     LAllocation valueAlloc = useRegisterAtStart(value);
     auto* lir = new(alloc()) LWasmStore(baseAlloc, valueAlloc);
-    if (ins->access().offset())
+    if (ins->access().offset()) {
         lir->setTemp(0, tempCopy(base, 0));
+    }
 
     add(lir, ins);
 }
@@ -456,8 +479,9 @@ LIRGeneratorMIPSShared::lowerUDiv(MDiv* div)
     LUDivOrMod* lir = new(alloc()) LUDivOrMod;
     lir->setOperand(0, useRegister(lhs));
     lir->setOperand(1, useRegister(rhs));
-    if (div->fallible())
+    if (div->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
 
     define(lir, div);
 }
@@ -471,8 +495,9 @@ LIRGeneratorMIPSShared::lowerUMod(MMod* mod)
     LUDivOrMod* lir = new(alloc()) LUDivOrMod;
     lir->setOperand(0, useRegister(lhs));
     lir->setOperand(1, useRegister(rhs));
-    if (mod->fallible())
+    if (mod->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
 
     define(lir, mod);
 }
@@ -580,8 +605,9 @@ LIRGenerator::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayEl
     LDefinition offsetTemp = LDefinition::BogusTemp();
     LDefinition maskTemp = LDefinition::BogusTemp();
 
-    if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type()))
+    if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type())) {
         outTemp = temp();
+    }
 
     if (Scalar::byteSize(ins->arrayType()) < 4) {
         valueTemp = temp();
@@ -775,8 +801,9 @@ LIRGenerator::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* i
 
     LDefinition outTemp = LDefinition::BogusTemp();
 
-    if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type()))
+    if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type())) {
         outTemp = temp();
+    }
 
     LAtomicTypedArrayElementBinop* lir =
         new(alloc()) LAtomicTypedArrayElementBinop(elements, index, value, outTemp,
@@ -795,10 +822,11 @@ LIRGenerator::visitCopySign(MCopySign* ins)
     MOZ_ASSERT(lhs->type() == ins->type());
 
     LInstructionHelper<1, 2, 2>* lir;
-    if (lhs->type() == MIRType::Double)
+    if (lhs->type() == MIRType::Double) {
         lir = new(alloc()) LCopySignD();
-    else
+    } else {
         lir = new(alloc()) LCopySignF();
+    }
 
     lir->setTemp(0, temp());
     lir->setTemp(1, temp());

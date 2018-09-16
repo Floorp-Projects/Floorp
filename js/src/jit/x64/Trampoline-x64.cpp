@@ -537,8 +537,9 @@ PushBailoutFrame(MacroAssembler& masm, Register spArg)
         // the float registers to have the maximal possible size
         // (Simd128DataSize). To work around this, we just spill the double
         // registers by hand here, using the register dump offset directly.
-        for (GeneralRegisterBackwardIterator iter(AllRegs.gprs()); iter.more(); ++iter)
+        for (GeneralRegisterBackwardIterator iter(AllRegs.gprs()); iter.more(); ++iter) {
             masm.Push(*iter);
+        }
 
         masm.reserveStack(sizeof(RegisterDump::FPUArray));
         for (FloatRegisterBackwardIterator iter(AllRegs.fpus()); iter.more(); ++iter) {
@@ -675,8 +676,9 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
         break;
     }
 
-    if (!generateTLEnterVM(masm, f))
+    if (!generateTLEnterVM(masm, f)) {
         return false;
+    }
 
     masm.setupUnalignedABICall(regs.getAny());
     masm.passABIArg(cxreg);
@@ -687,10 +689,11 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
     for (uint32_t explicitArg = 0; explicitArg < f.explicitArgs; explicitArg++) {
         switch (f.argProperties(explicitArg)) {
           case VMFunction::WordByValue:
-            if (f.argPassedInFloatReg(explicitArg))
+            if (f.argPassedInFloatReg(explicitArg)) {
                 masm.passABIArg(MoveOperand(argsBase, argDisp), MoveOp::DOUBLE);
-            else
+            } else {
                 masm.passABIArg(MoveOperand(argsBase, argDisp), MoveOp::GENERAL);
+            }
             argDisp += sizeof(void*);
             break;
           case VMFunction::WordByRef:
@@ -705,13 +708,15 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
     }
 
     // Copy the implicit outparam, if any.
-    if (outReg != InvalidReg)
+    if (outReg != InvalidReg) {
         masm.passABIArg(outReg);
+    }
 
     masm.callWithABI(f.wrapped, MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
-    if (!generateTLExitVM(masm, f))
+    if (!generateTLExitVM(masm, f)) {
         return false;
+    }
 
     // Test for failure.
     switch (f.failType()) {
@@ -767,8 +772,9 @@ JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm, const VMFunct
 
     // Until C++ code is instrumented against Spectre, prevent speculative
     // execution from returning any private data.
-    if (f.returnsData() && JitOptions.spectreJitToCxxCalls)
+    if (f.returnsData() && JitOptions.spectreJitToCxxCalls) {
         masm.speculationBarrier();
+    }
 
     masm.leaveExitFrame();
     masm.retn(Imm32(sizeof(ExitFrameLayout) +

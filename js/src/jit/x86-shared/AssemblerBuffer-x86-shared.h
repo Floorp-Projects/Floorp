@@ -81,15 +81,17 @@ namespace jit {
             static_assert(sizeof(T) == 1,
                           "AssemblerBufferAllocPolicy should only be used with byte vectors");
             MOZ_ASSERT(oldSize <= MaxCodeBytesPerProcess);
-            if (MOZ_UNLIKELY(newSize > MaxCodeBytesPerProcess))
+            if (MOZ_UNLIKELY(newSize > MaxCodeBytesPerProcess)) {
                 return nullptr;
+            }
             return SystemAllocPolicy::pod_realloc<T>(p, oldSize, newSize);
         }
         template <typename T> T* pod_malloc(size_t numElems) {
             static_assert(sizeof(T) == 1,
                           "AssemblerBufferAllocPolicy should only be used with byte vectors");
-            if (MOZ_UNLIKELY(numElems > MaxCodeBytesPerProcess))
+            if (MOZ_UNLIKELY(numElems > MaxCodeBytesPerProcess)) {
                 return nullptr;
+            }
             return SystemAllocPolicy::pod_malloc<T>(numElems);
         }
     };
@@ -105,8 +107,9 @@ namespace jit {
         template<size_t size, typename T>
         MOZ_ALWAYS_INLINE void sizedAppend(T value)
         {
-            if (MOZ_UNLIKELY(!m_buffer.append(reinterpret_cast<unsigned char*>(&value), size)))
+            if (MOZ_UNLIKELY(!m_buffer.append(reinterpret_cast<unsigned char*>(&value), size))) {
                 oomDetected();
+            }
         }
 
     public:
@@ -117,8 +120,9 @@ namespace jit {
             // This should only be called with small |space| values to ensure
             // we don't overflow below.
             MOZ_ASSERT(space <= 16);
-            if (MOZ_UNLIKELY(!m_buffer.reserve(m_buffer.length() + space)))
+            if (MOZ_UNLIKELY(!m_buffer.reserve(m_buffer.length() + space))) {
                 oomDetected();
+            }
         }
 
         bool isAligned(size_t alignment) const

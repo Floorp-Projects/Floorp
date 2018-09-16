@@ -32,8 +32,9 @@ class LDivI : public LBinaryMath<1>
             }
             return mir()->canBeNegativeOverflow() ? "Truncate_NegativeOverflow" : "Truncate";
         }
-        if (mir()->canBeNegativeZero())
+        if (mir()->canBeNegativeZero()) {
             return mir()->canBeNegativeOverflow() ? "NegativeZero_NegativeOverflow" : "NegativeZero";
+        }
         return mir()->canBeNegativeOverflow() ? "NegativeOverflow" : nullptr;
     }
 
@@ -106,8 +107,9 @@ class LDivOrModConstantI : public LInstructionHelper<1, 1, 1>
         return static_cast<MBinaryArithInstruction*>(mir_);
     }
     bool canBeNegativeDividend() const {
-        if (mir_->isMod())
+        if (mir_->isMod()) {
             return mir_->toMod()->canBeNegativeDividend();
+        }
         return mir_->toDiv()->canBeNegativeDividend();
     }
 };
@@ -166,20 +168,23 @@ class LUDivOrMod : public LBinaryMath<1>
     }
 
     bool canBeDivideByZero() const {
-        if (mir_->isMod())
+        if (mir_->isMod()) {
             return mir_->toMod()->canBeDivideByZero();
+        }
         return mir_->toDiv()->canBeDivideByZero();
     }
 
     bool trapOnError() const {
-        if (mir_->isMod())
+        if (mir_->isMod()) {
             return mir_->toMod()->trapOnError();
+        }
         return mir_->toDiv()->trapOnError();
     }
 
     wasm::BytecodeOffset bytecodeOffset() const {
-        if (mir_->isMod())
+        if (mir_->isMod()) {
             return mir_->toMod()->bytecodeOffset();
+        }
         return mir_->toDiv()->bytecodeOffset();
     }
 };
@@ -210,18 +215,21 @@ class LUDivOrModConstant : public LInstructionHelper<1, 1, 1>
         return static_cast<MBinaryArithInstruction *>(mir_);
     }
     bool canBeNegativeDividend() const {
-        if (mir_->isMod())
+        if (mir_->isMod()) {
             return mir_->toMod()->canBeNegativeDividend();
+        }
         return mir_->toDiv()->canBeNegativeDividend();
     }
     bool trapOnError() const {
-        if (mir_->isMod())
+        if (mir_->isMod()) {
             return mir_->toMod()->trapOnError();
+        }
         return mir_->toDiv()->trapOnError();
     }
     wasm::BytecodeOffset bytecodeOffset() const {
-        if (mir_->isMod())
+        if (mir_->isMod()) {
             return mir_->toMod()->bytecodeOffset();
+        }
         return mir_->toDiv()->bytecodeOffset();
     }
 };

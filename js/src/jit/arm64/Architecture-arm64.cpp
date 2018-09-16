@@ -17,16 +17,20 @@ Registers::Code
 Registers::FromName(const char* name)
 {
     // Check for some register aliases first.
-    if (strcmp(name, "ip0") == 0)
+    if (strcmp(name, "ip0") == 0) {
         return ip0;
-    if (strcmp(name, "ip1") == 0)
+    }
+    if (strcmp(name, "ip1") == 0) {
         return ip1;
-    if (strcmp(name, "fp") == 0)
+    }
+    if (strcmp(name, "fp") == 0) {
         return fp;
+    }
 
     for (uint32_t i = 0; i < Total; i++) {
-        if (strcmp(GetName(Code(i)), name) == 0)
+        if (strcmp(GetName(Code(i)), name) == 0) {
             return Code(i);
+        }
     }
 
     return invalid_reg;
@@ -36,8 +40,9 @@ FloatRegisters::Code
 FloatRegisters::FromName(const char* name)
 {
     for (size_t i = 0; i < Total; i++) {
-        if (strcmp(GetName(Code(i)), name) == 0)
+        if (strcmp(GetName(Code(i)), name) == 0) {
             return Code(i);
+        }
     }
 
     return invalid_fpreg;
@@ -47,8 +52,9 @@ FloatRegisterSet
 FloatRegister::ReduceSetForPush(const FloatRegisterSet& s)
 {
     LiveFloatRegisterSet ret;
-    for (FloatRegisterIterator iter(s); iter.more(); ++iter)
+    for (FloatRegisterIterator iter(s); iter.more(); ++iter) {
         ret.addUnchecked(FromCode((*iter).encoding()));
+    }
     return ret.set();
 }
 

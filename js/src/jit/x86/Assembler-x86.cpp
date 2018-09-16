@@ -55,8 +55,9 @@ void
 Assembler::executableCopy(uint8_t* buffer, bool flushICache)
 {
     AssemblerX86Shared::executableCopy(buffer);
-    for (RelativePatch& rp : jumps_)
+    for (RelativePatch& rp : jumps_) {
         X86Encoding::SetRel32(buffer + rp.offset, rp.target);
+    }
 }
 
 class RelocationIterator
@@ -70,8 +71,9 @@ class RelocationIterator
     { }
 
     bool read() {
-        if (!reader_.more())
+        if (!reader_.more()) {
             return false;
+        }
         offset_ = reader_.readUnsigned();
         return true;
     }
