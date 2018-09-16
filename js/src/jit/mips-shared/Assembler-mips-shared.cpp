@@ -123,8 +123,9 @@ AssemblerMIPSShared::swapBuffer(wasm::Bytes& bytes)
     // Vector, not a linked-list of chunks, there's not much we can do other
     // than copy.
     MOZ_ASSERT(bytes.empty());
-    if (!bytes.resize(bytesNeeded()))
+    if (!bytes.resize(bytesNeeded())) {
         return false;
+    }
     m_buffer.executableCopy(bytes.begin());
     return true;
 }
@@ -144,15 +145,17 @@ AssemblerMIPSShared::PatchableJumpAddress(JitCode* code, uint32_t pe_)
 void
 AssemblerMIPSShared::copyJumpRelocationTable(uint8_t* dest)
 {
-    if (jumpRelocations_.length())
+    if (jumpRelocations_.length()) {
         memcpy(dest, jumpRelocations_.buffer(), jumpRelocations_.length());
+    }
 }
 
 void
 AssemblerMIPSShared::copyDataRelocationTable(uint8_t* dest)
 {
-    if (dataRelocations_.length())
+    if (dataRelocations_.length()) {
         memcpy(dest, dataRelocations_.buffer(), dataRelocations_.length());
+    }
 }
 
 AssemblerMIPSShared::Condition
@@ -282,8 +285,9 @@ AssemblerMIPSShared::bytesNeeded() const
 BufferOffset
 AssemblerMIPSShared::writeInst(uint32_t x, uint32_t* dest)
 {
-    if (dest == nullptr)
+    if (dest == nullptr) {
         return m_buffer.putInt(x);
+    }
 
     WriteInstStatic(x, dest);
     return BufferOffset();
@@ -311,15 +315,17 @@ AssemblerMIPSShared::nopAlign(int alignment)
     if (alignment == 8) {
         if (!m_buffer.isAligned(alignment)) {
             BufferOffset tmp = as_nop();
-            if (!ret.assigned())
+            if (!ret.assigned()) {
                 ret = tmp;
+            }
         }
     } else {
         MOZ_ASSERT((alignment & (alignment - 1)) == 0);
         while (size() & (alignment - 1)) {
             BufferOffset tmp = as_nop();
-            if (!ret.assigned())
+            if (!ret.assigned()) {
                 ret = tmp;
+            }
         }
     }
     return ret;
@@ -413,8 +419,9 @@ AssemblerMIPSShared::as_b(BOffImm16 off)
 InstImm
 AssemblerMIPSShared::getBranchCode(JumpOrCall jumpOrCall)
 {
-    if (jumpOrCall == BranchIsCall)
+    if (jumpOrCall == BranchIsCall) {
         return InstImm(op_regimm, zero, rt_bgezal, BOffImm16(0));
+    }
 
     return InstImm(op_beq, zero, zero, BOffImm16(0));
 }
@@ -1870,8 +1877,9 @@ AssemblerMIPSShared::bind(Label* label, BufferOffset boff)
         BufferOffset b(label);
         do {
             // Even a 0 offset may be invalid if we're out of memory.
-            if (oom())
+            if (oom()) {
                 return;
+            }
 
             Instruction* inst = editSrc(b);
 
@@ -1958,8 +1966,9 @@ uint8_t*
 AssemblerMIPSShared::NextInstruction(uint8_t* inst_, uint32_t* count)
 {
     Instruction* inst = reinterpret_cast<Instruction*>(inst_);
-    if (count != nullptr)
+    if (count != nullptr) {
         *count += sizeof(Instruction);
+    }
     return reinterpret_cast<uint8_t*>(inst->next());
 }
 
@@ -2010,10 +2019,11 @@ InstImm AssemblerMIPSShared::invertBranch(InstImm branch, BOffImm16 skipOffset)
 
         branch.setBOffImm16(skipOffset);
         rt = branch.extractRT();
-        if (rt & 0x1)
+        if (rt & 0x1) {
             branch.setRT((RTField) ((rt & ~0x1) << RTShift));
-        else
+        } else {
             branch.setRT((RTField) ((rt | 0x1) << RTShift));
+        }
         return branch;
       default:
         MOZ_CRASH("Error creating long branch.");

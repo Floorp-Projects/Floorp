@@ -47,15 +47,17 @@ MacroAssembler::moveGPR64ToDouble(Register64 src, FloatRegister dest)
 void
 MacroAssembler::move64To32(Register64 src, Register dest)
 {
-    if (src.low != dest)
+    if (src.low != dest) {
         move32(src.low, dest);
+    }
 }
 
 void
 MacroAssembler::move32To64ZeroExtend(Register src, Register64 dest)
 {
-    if (src != dest.low)
+    if (src != dest.low) {
         move32(src, dest.low);
+    }
     move32(Imm32(0), dest.high);
 }
 
@@ -76,8 +78,9 @@ MacroAssembler::move16To64SignExtend(Register src, Register64 dest)
 void
 MacroAssembler::move32To64SignExtend(Register src, Register64 dest)
 {
-    if (src != dest.low)
+    if (src != dest.low) {
         move32(src, dest.low);
+    }
     ma_sra(dest.high, dest.low, Imm32(31));
 }
 
@@ -99,10 +102,12 @@ MacroAssembler::andPtr(Imm32 imm, Register dest)
 void
 MacroAssembler::and64(Imm64 imm, Register64 dest)
 {
-    if (imm.low().value != int32_t(0xFFFFFFFF))
+    if (imm.low().value != int32_t(0xFFFFFFFF)) {
         and32(imm.low(), dest.low);
-    if (imm.hi().value != int32_t(0xFFFFFFFF))
+    }
+    if (imm.hi().value != int32_t(0xFFFFFFFF)) {
         and32(imm.hi(), dest.high);
+    }
 }
 
 void
@@ -115,19 +120,23 @@ MacroAssembler::and64(Register64 src, Register64 dest)
 void
 MacroAssembler::or64(Imm64 imm, Register64 dest)
 {
-    if (imm.low().value)
+    if (imm.low().value) {
         or32(imm.low(), dest.low);
-    if (imm.hi().value)
+    }
+    if (imm.hi().value) {
         or32(imm.hi(), dest.high);
+    }
 }
 
 void
 MacroAssembler::xor64(Imm64 imm, Register64 dest)
 {
-    if (imm.low().value)
+    if (imm.low().value) {
         xor32(imm.low(), dest.low);
-    if (imm.hi().value)
+    }
+    if (imm.hi().value) {
         xor32(imm.hi(), dest.high);
+    }
 }
 
 void
@@ -830,8 +839,9 @@ MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* succe
 
     Condition c = ma_cmp64(cond, lhs, val, SecondScratchReg);
     ma_b(SecondScratchReg, SecondScratchReg, success, c);
-    if (fail)
+    if (fail) {
         jump(fail);
+    }
 }
 
 void
@@ -839,8 +849,9 @@ MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* 
 {
     Condition c = ma_cmp64(cond, lhs, rhs, SecondScratchReg);
     ma_b(SecondScratchReg, SecondScratchReg, success, c);
-    if (fail)
+    if (fail) {
         jump(fail);
+    }
 }
 
 void
@@ -969,10 +980,11 @@ MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMag
     MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
     Label notMagic;
-    if (cond == Assembler::Equal)
+    if (cond == Assembler::Equal) {
         branchTestMagic(Assembler::NotEqual, valaddr, &notMagic);
-    else
+    } else {
         branchTestMagic(Assembler::NotEqual, valaddr, label);
+    }
 
     branch32(cond, ToPayload(valaddr), Imm32(why), label);
     bind(&notMagic);
@@ -1011,8 +1023,9 @@ void
 MacroAssemblerMIPSCompat::computeEffectiveAddress(const BaseIndex& address, Register dest)
 {
     computeScaledAddress(address, dest);
-    if (address.offset)
+    if (address.offset) {
         asMasm().addPtr(Imm32(address.offset), dest);
+    }
 }
 
 void

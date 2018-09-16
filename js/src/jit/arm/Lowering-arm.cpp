@@ -100,8 +100,9 @@ LIRGenerator::visitUnbox(MUnbox* unbox)
 
     if (inner->type() == MIRType::ObjectOrNull) {
         LUnboxObjectOrNull* lir = new(alloc()) LUnboxObjectOrNull(useRegisterAtStart(inner));
-        if (unbox->fallible())
+        if (unbox->fallible()) {
             assignSnapshot(lir, unbox->bailoutKind());
+        }
         defineReuseInput(lir, unbox, 0);
         return;
     }
@@ -115,8 +116,9 @@ LIRGenerator::visitUnbox(MUnbox* unbox)
 
     if (IsFloatingPointType(unbox->type())) {
         LUnboxFloatingPoint* lir = new(alloc()) LUnboxFloatingPoint(useBox(inner), unbox->type());
-        if (unbox->fallible())
+        if (unbox->fallible()) {
             assignSnapshot(lir, unbox->bailoutKind());
+        }
         define(lir, unbox);
         return;
     }
@@ -126,8 +128,9 @@ LIRGenerator::visitUnbox(MUnbox* unbox)
     lir->setOperand(0, usePayloadInRegisterAtStart(inner));
     lir->setOperand(1, useType(inner, LUse::REGISTER));
 
-    if (unbox->fallible())
+    if (unbox->fallible()) {
         assignSnapshot(lir, unbox->bailoutKind());
+    }
 
     // Types and payloads form two separate intervals. If the type becomes dead
     // before the payload, it could be used as a Value without the type being
@@ -217,16 +220,19 @@ LIRGeneratorARM::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDe
         int64_t constant = rhs->toConstant()->toInt64();
         int32_t shift = mozilla::FloorLog2(constant);
         // See special cases in CodeGeneratorARM::visitMulI64
-        if (constant >= -1 && constant <= 2)
+        if (constant >= -1 && constant <= 2) {
             needsTemp = false;
-        if (int64_t(1) << shift == constant)
+        }
+        if (int64_t(1) << shift == constant) {
             needsTemp = false;
+        }
     }
 
     ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
     ins->setInt64Operand(INT64_PIECES, useInt64OrConstant(rhs));
-    if (needsTemp)
+    if (needsTemp) {
         ins->setTemp(0, temp());
+    }
 
     defineInt64ReuseInput(ins, mir, 0);
 }
@@ -302,8 +308,9 @@ void
 LIRGeneratorARM::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
                                     MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
 {
-    if (mir->isRotate() && !rhs->isConstant())
+    if (mir->isRotate() && !rhs->isConstant()) {
         ins->setTemp(0, temp());
+    }
 
     ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
     ins->setOperand(INT64_PIECES, useRegisterOrConstant(rhs));
@@ -337,8 +344,9 @@ LIRGeneratorARM::lowerDivI(MDiv* div)
         int32_t shift = FloorLog2(rhs);
         if (rhs > 0 && 1 << shift == rhs) {
             LDivPowTwoI* lir = new(alloc()) LDivPowTwoI(useRegisterAtStart(div->lhs()), shift);
-            if (div->fallible())
+            if (div->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             define(lir, div);
             return;
         }
@@ -346,8 +354,9 @@ LIRGeneratorARM::lowerDivI(MDiv* div)
 
     if (HasIDIV()) {
         LDivI* lir = new(alloc()) LDivI(useRegister(div->lhs()), useRegister(div->rhs()), temp());
-        if (div->fallible())
+        if (div->fallible()) {
             assignSnapshot(lir, Bailout_DoubleOutput);
+        }
         define(lir, div);
         return;
     }
@@ -355,8 +364,9 @@ LIRGeneratorARM::lowerDivI(MDiv* div)
     LSoftDivI* lir = new(alloc()) LSoftDivI(useFixedAtStart(div->lhs(), r0),
                                             useFixedAtStart(div->rhs(), r1));
 
-    if (div->fallible())
+    if (div->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
 
     defineReturn(lir, div);
 }
@@ -365,8 +375,9 @@ void
 LIRGeneratorARM::lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs)
 {
     LMulI* lir = new(alloc()) LMulI;
-    if (mul->fallible())
+    if (mul->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
     lowerForALU(lir, mul, lhs, rhs);
 }
 
@@ -383,16 +394,18 @@ LIRGeneratorARM::lowerModI(MMod* mod)
         int32_t shift = FloorLog2(rhs);
         if (rhs > 0 && 1 << shift == rhs) {
             LModPowTwoI* lir = new(alloc()) LModPowTwoI(useRegister(mod->lhs()), shift);
-            if (mod->fallible())
+            if (mod->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             define(lir, mod);
             return;
         }
         if (shift < 31 && (1 << (shift+1)) - 1 == rhs) {
             MOZ_ASSERT(rhs);
             LModMaskI* lir = new(alloc()) LModMaskI(useRegister(mod->lhs()), temp(), temp(), shift+1);
-            if (mod->fallible())
+            if (mod->fallible()) {
                 assignSnapshot(lir, Bailout_DoubleOutput);
+            }
             define(lir, mod);
             return;
         }
@@ -400,8 +413,9 @@ LIRGeneratorARM::lowerModI(MMod* mod)
 
     if (HasIDIV()) {
         LModI* lir = new(alloc()) LModI(useRegister(mod->lhs()), useRegister(mod->rhs()), temp());
-        if (mod->fallible())
+        if (mod->fallible()) {
             assignSnapshot(lir, Bailout_DoubleOutput);
+        }
         define(lir, mod);
         return;
     }
@@ -410,8 +424,9 @@ LIRGeneratorARM::lowerModI(MMod* mod)
                                             useFixedAtStart(mod->rhs(), r1),
                                             temp());
 
-    if (mod->fallible())
+    if (mod->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
 
     defineReturn(lir, mod);
 }
@@ -536,8 +551,9 @@ LIRGeneratorARM::lowerUDiv(MDiv* div)
         LUDiv* lir = new(alloc()) LUDiv;
         lir->setOperand(0, useRegister(lhs));
         lir->setOperand(1, useRegister(rhs));
-        if (div->fallible())
+        if (div->fallible()) {
             assignSnapshot(lir, Bailout_DoubleOutput);
+        }
         define(lir, div);
         return;
     }
@@ -545,8 +561,9 @@ LIRGeneratorARM::lowerUDiv(MDiv* div)
     LSoftUDivOrMod* lir = new(alloc()) LSoftUDivOrMod(useFixedAtStart(lhs, r0),
                                                       useFixedAtStart(rhs, r1));
 
-    if (div->fallible())
+    if (div->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
 
     defineReturn(lir, div);
 }
@@ -561,8 +578,9 @@ LIRGeneratorARM::lowerUMod(MMod* mod)
         LUMod* lir = new(alloc()) LUMod;
         lir->setOperand(0, useRegister(lhs));
         lir->setOperand(1, useRegister(rhs));
-        if (mod->fallible())
+        if (mod->fallible()) {
             assignSnapshot(lir, Bailout_DoubleOutput);
+        }
         define(lir, mod);
         return;
     }
@@ -570,8 +588,9 @@ LIRGeneratorARM::lowerUMod(MMod* mod)
     LSoftUDivOrMod* lir = new(alloc()) LSoftUDivOrMod(useFixedAtStart(lhs, r0),
                                                       useFixedAtStart(rhs, r1));
 
-    if (mod->fallible())
+    if (mod->fallible()) {
         assignSnapshot(lir, Bailout_DoubleOutput);
+    }
 
     defineReturn(lir, mod);
 }
@@ -626,8 +645,9 @@ LIRGenerator::visitWasmLoad(MWasmLoad* ins)
             // For putting the low value in a GPR.
             temp2 = temp();
             // For putting the high value in a GPR.
-            if (ins->type() == MIRType::Double)
+            if (ins->type() == MIRType::Double) {
                 temp3 = temp();
+            }
         }
 
         auto* lir = new(alloc()) LWasmUnalignedLoad(ptr, ptrCopy, temp(), temp2, temp3);
@@ -637,15 +657,17 @@ LIRGenerator::visitWasmLoad(MWasmLoad* ins)
 
     if (ins->type() == MIRType::Int64) {
         auto* lir = new(alloc()) LWasmLoadI64(ptr);
-        if (ins->access().offset() || ins->access().type() == Scalar::Int64)
+        if (ins->access().offset() || ins->access().type() == Scalar::Int64) {
             lir->setTemp(0, tempCopy(base, 0));
+        }
         defineInt64(lir, ins);
         return;
     }
 
     auto* lir = new(alloc()) LWasmLoad(ptr);
-    if (ins->access().offset())
+    if (ins->access().offset()) {
         lir->setTemp(0, tempCopy(base, 0));
+    }
 
     define(lir, ins);
 }
@@ -696,8 +718,9 @@ LIRGenerator::visitWasmStore(MWasmStore* ins)
     if (ins->value()->type() == MIRType::Int64) {
         LInt64Allocation value = useInt64RegisterAtStart(ins->value());
         auto* lir = new(alloc()) LWasmStoreI64(ptr, value);
-        if (ins->access().offset() || ins->access().type() == Scalar::Int64)
+        if (ins->access().offset() || ins->access().type() == Scalar::Int64) {
             lir->setTemp(0, tempCopy(base, 0));
+        }
         add(lir, ins);
         return;
     }
@@ -705,8 +728,9 @@ LIRGenerator::visitWasmStore(MWasmStore* ins)
     LAllocation value = useRegisterAtStart(ins->value());
     auto* lir = new(alloc()) LWasmStore(ptr, value);
 
-    if (ins->access().offset())
+    if (ins->access().offset()) {
         lir->setTemp(0, tempCopy(base, 0));
+    }
 
     add(lir, ins);
 }
@@ -844,8 +868,9 @@ LIRGenerator::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* i
     LDefinition flagTemp = temp();
     LDefinition outTemp = LDefinition::BogusTemp();
 
-    if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type()))
+    if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type())) {
         outTemp = temp();
+    }
 
     // On arm, map flagTemp to temp1 and outTemp to temp2, at least for now.
 
@@ -876,8 +901,9 @@ LIRGenerator::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayEl
     const LAllocation newval = useRegister(ins->newval());
     const LAllocation oldval = useRegister(ins->oldval());
     LDefinition tempDef = LDefinition::BogusTemp();
-    if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type()))
+    if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type())) {
         tempDef = temp();
+    }
 
     LCompareExchangeTypedArrayElement* lir =
         new(alloc()) LCompareExchangeTypedArrayElement(elements, index, oldval, newval, tempDef);
@@ -1029,10 +1055,11 @@ LIRGenerator::visitCopySign(MCopySign* ins)
     MOZ_ASSERT(lhs->type() == ins->type());
 
     LInstructionHelper<1, 2, 2>* lir;
-    if (lhs->type() == MIRType::Double)
+    if (lhs->type() == MIRType::Double) {
         lir = new(alloc()) LCopySignD();
-    else
+    } else {
         lir = new(alloc()) LCopySignF();
+    }
 
     lir->setTemp(0, temp());
     lir->setTemp(1, temp());

@@ -97,8 +97,9 @@ LIRGenerator::visitUnbox(MUnbox* unbox)
 
     if (inner->type() == MIRType::ObjectOrNull) {
         LUnboxObjectOrNull* lir = new(alloc()) LUnboxObjectOrNull(useRegisterAtStart(inner));
-        if (unbox->fallible())
+        if (unbox->fallible()) {
             assignSnapshot(lir, unbox->bailoutKind());
+        }
         defineReuseInput(lir, unbox, 0);
         return;
     }
@@ -112,8 +113,9 @@ LIRGenerator::visitUnbox(MUnbox* unbox)
 
     if (IsFloatingPointType(unbox->type())) {
         LUnboxFloatingPoint* lir = new(alloc()) LUnboxFloatingPoint(useBox(inner), unbox->type());
-        if (unbox->fallible())
+        if (unbox->fallible()) {
             assignSnapshot(lir, unbox->bailoutKind());
+        }
         define(lir, unbox);
         return;
     }
@@ -131,18 +133,20 @@ LIRGenerator::visitUnbox(MUnbox* unbox)
         lir->setOperand(1, useType(inner, LUse::ANY));
     }
 
-    if (unbox->fallible())
+    if (unbox->fallible()) {
         assignSnapshot(lir, unbox->bailoutKind());
+    }
 
     // Types and payloads form two separate intervals. If the type becomes dead
     // before the payload, it could be used as a Value without the type being
     // recoverable. Unbox's purpose is to eagerly kill the definition of a type
     // tag, so keeping both alive (for the purpose of gcmaps) is unappealing.
     // Instead, we create a new virtual register.
-    if (reusePayloadReg)
+    if (reusePayloadReg) {
         defineReuseInput(lir, unbox, 0);
-    else
+    } else {
         define(lir, unbox);
+    }
 }
 
 void
@@ -234,17 +238,20 @@ LIRGeneratorX86::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDe
         int64_t constant = rhs->toConstant()->toInt64();
         int32_t shift = mozilla::FloorLog2(constant);
         // See special cases in CodeGeneratorX86Shared::visitMulI64.
-        if (constant >= -1 && constant <= 2)
+        if (constant >= -1 && constant <= 2) {
             needsTemp = false;
-        if (int64_t(1) << shift == constant)
+        }
+        if (int64_t(1) << shift == constant) {
             needsTemp = false;
+        }
     }
 
     // MulI64 on x86 needs output to be in edx, eax;
     ins->setInt64Operand(0, useInt64Fixed(lhs, Register64(edx, eax), /*useAtStart = */ true));
     ins->setInt64Operand(INT64_PIECES, useInt64OrConstant(rhs));
-    if (needsTemp)
+    if (needsTemp) {
         ins->setTemp(0, temp());
+    }
 
     defineInt64Fixed(ins, mir, LInt64Allocation(LAllocation(AnyRegister(edx)),
                                                 LAllocation(AnyRegister(eax))));
@@ -308,8 +315,9 @@ LIRGenerator::visitWasmLoad(MWasmLoad* ins)
     // pointer to a register only if that can't happen.
 
     LAllocation baseAlloc;
-    if (!base->isConstant() || !(base->toConstant()->isInt32(0) || ins->access().offset() == 0))
+    if (!base->isConstant() || !(base->toConstant()->isInt32(0) || ins->access().offset() == 0)) {
         baseAlloc = ins->type() == MIRType::Int64 ? useRegister(base) : useRegisterAtStart(base);
+    }
 
     if (ins->type() != MIRType::Int64) {
         auto* lir = new(alloc()) LWasmLoad(baseAlloc, useRegisterAtStart(memoryBase));
@@ -359,8 +367,9 @@ LIRGenerator::visitWasmStore(MWasmStore* ins)
     // pointer to a register only if that can't happen.
 
     LAllocation baseAlloc;
-    if (!base->isConstant() || !(base->toConstant()->isInt32(0) || ins->access().offset() == 0))
+    if (!base->isConstant() || !(base->toConstant()->isInt32(0) || ins->access().offset() == 0)) {
         baseAlloc = useRegisterAtStart(base);
+    }
 
     LAllocation valueAlloc;
     switch (ins->access().type()) {
@@ -534,10 +543,11 @@ LIRGenerator::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins)
         new(alloc()) LWasmAtomicExchangeHeap(base, value, useRegister(memoryBase));
 
     lir->setAddrTemp(temp());
-    if (byteSize(ins->access().type()) == 1)
+    if (byteSize(ins->access().type()) == 1) {
         defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
-    else
+    } else {
         define(lir, ins);
+    }
 }
 
 void
@@ -572,10 +582,11 @@ LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
 
     if (!ins->hasUses()) {
         LAllocation value;
-        if (byteArray && !ins->value()->isConstant())
+        if (byteArray && !ins->value()->isConstant()) {
             value = useFixed(ins->value(), ebx);
-        else
+        } else {
             value = useRegisterOrConstant(ins->value());
+        }
         LWasmAtomicBinopHeapForEffect* lir =
             new(alloc()) LWasmAtomicBinopHeapForEffect(useRegister(base), value, LDefinition::BogusTemp(),
                                                        useRegister(memoryBase));
@@ -622,12 +633,14 @@ LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
 
     if (byteArray) {
         value = useFixed(ins->value(), ebx);
-        if (bitOp)
+        if (bitOp) {
             tempDef = tempFixed(ecx);
+        }
     } else if (bitOp || ins->value()->isConstant()) {
         value = useRegisterOrConstant(ins->value());
-        if (bitOp)
+        if (bitOp) {
             tempDef = temp();
+        }
     } else {
         value = useRegisterAtStart(ins->value());
     }
@@ -637,12 +650,13 @@ LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins)
                                           useRegister(memoryBase));
 
     lir->setAddrTemp(temp());
-    if (byteArray || bitOp)
+    if (byteArray || bitOp) {
         defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
-    else if (ins->value()->isConstant())
+    } else if (ins->value()->isConstant()) {
         define(lir, ins);
-    else
+    } else {
         defineReuseInput(lir, ins, LWasmAtomicBinopHeap::valueOp);
+    }
 }
 
 void

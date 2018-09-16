@@ -125,8 +125,9 @@ MacroAssemblerCompat::handleFailureWithHandlerTail(void* handler, Label* profile
     // Reserve space for exception information.
     int64_t size = (sizeof(ResumeFromException) + 7) & ~7;
     Sub(GetStackPointer64(), GetStackPointer64(), Operand(size));
-    if (!GetStackPointer64().Is(sp))
+    if (!GetStackPointer64().Is(sp)) {
         Mov(sp, GetStackPointer64());
+    }
 
     Mov(x0, GetStackPointer64());
 
@@ -227,10 +228,11 @@ MacroAssemblerCompat::profilerEnterFrame(RegisterOrSP framePtr, Register scratch
 {
     asMasm().loadJSContext(scratch);
     loadPtr(Address(scratch, offsetof(JSContext, profilingActivation_)), scratch);
-    if (IsHiddenSP(framePtr))
+    if (IsHiddenSP(framePtr)) {
         storeStackPtr(Address(scratch, JitActivation::offsetOfLastProfilingFrame()));
-    else
+    } else {
         storePtr(AsRegister(framePtr), Address(scratch, JitActivation::offsetOfLastProfilingFrame()));
+    }
     storePtr(ImmPtr(nullptr), Address(scratch, JitActivation::offsetOfLastProfilingCallSite()));
 }
 
@@ -250,8 +252,9 @@ SelectGPReg(AnyRegister any, Register64 sixtyfour, unsigned size = 64)
 {
     MOZ_ASSERT(any.isValid() != (sixtyfour != Register64::Invalid()));
 
-    if (sixtyfour == Register64::Invalid())
+    if (sixtyfour == Register64::Invalid()) {
         return ARMRegister(any.gpr(), 32);
+    }
 
     return ARMRegister(sixtyfour.reg, size);
 }
@@ -278,8 +281,9 @@ MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Registe
 
     ARMRegister memoryBase(memoryBase_, 64);
     ARMRegister ptr(ptr_, 64);
-    if (offset)
+    if (offset) {
         Add(ptr, ptr, Operand(offset));
+    }
 
     asMasm().memoryBarrierBefore(access.sync());
 
@@ -305,10 +309,11 @@ MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Registe
             Ldrh(SelectGPReg(outany, out64), srcAddr);
             break;
           case Scalar::Int32:
-            if (out64 != Register64::Invalid())
+            if (out64 != Register64::Invalid()) {
                 Ldrsw(SelectGPReg(outany, out64), srcAddr);
-            else
+            } else {
                 Ldr(SelectGPReg(outany, out64, 32), srcAddr);
+            }
             break;
           case Scalar::Uint32:
             Ldr(SelectGPReg(outany, out64, 32), srcAddr);
@@ -343,8 +348,9 @@ MacroAssemblerCompat::wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyReg
 
     ARMRegister memoryBase(memoryBase_, 64);
     ARMRegister ptr(ptr_, 64);
-    if (offset)
+    if (offset) {
         Add(ptr, ptr, Operand(offset));
+    }
 
     asMasm().memoryBarrierBefore(access.sync());
 
@@ -399,10 +405,11 @@ MacroAssembler::reserveStack(uint32_t amount)
 void
 MacroAssembler::Push(RegisterOrSP reg)
 {
-    if (IsHiddenSP(reg))
+    if (IsHiddenSP(reg)) {
         push(sp);
-    else
+    } else {
         push(AsRegister(reg));
+    }
     adjustFrame(sizeof(intptr_t));
 }
 
@@ -462,18 +469,20 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
         uint32_t nextOffset = offset;
 
         for (size_t i = 0; i < 2 && iter.more(); i++) {
-            if (!ignore.has(*iter))
+            if (!ignore.has(*iter)) {
                 dest[i] = ARMFPRegister(*iter, 64);
+            }
             ++iter;
             nextOffset += sizeof(double);
         }
 
-        if (!dest[0].IsNone() && !dest[1].IsNone())
+        if (!dest[0].IsNone() && !dest[1].IsNone()) {
             Ldp(dest[0], dest[1], MemOperand(GetStackPointer64(), offset));
-        else if (!dest[0].IsNone())
+        } else if (!dest[0].IsNone()) {
             Ldr(dest[0], MemOperand(GetStackPointer64(), offset));
-        else if (!dest[1].IsNone())
+        } else if (!dest[1].IsNone()) {
             Ldr(dest[1], MemOperand(GetStackPointer64(), offset + sizeof(double)));
+        }
 
         offset = nextOffset;
     }
@@ -485,18 +494,20 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
         uint32_t nextOffset = offset;
 
         for (size_t i = 0; i < 2 && iter.more(); i++) {
-            if (!ignore.has(*iter))
+            if (!ignore.has(*iter)) {
                 dest[i] = ARMRegister(*iter, 64);
+            }
             ++iter;
             nextOffset += sizeof(uint64_t);
         }
 
-        if (!dest[0].IsNone() && !dest[1].IsNone())
+        if (!dest[0].IsNone() && !dest[1].IsNone()) {
             Ldp(dest[0], dest[1], MemOperand(GetStackPointer64(), offset));
-        else if (!dest[0].IsNone())
+        } else if (!dest[0].IsNone()) {
             Ldr(dest[0], MemOperand(GetStackPointer64(), offset));
-        else if (!dest[1].IsNone())
+        } else if (!dest[1].IsNone()) {
             Ldr(dest[1], MemOperand(GetStackPointer64(), offset + sizeof(uint64_t)));
+        }
 
         offset = nextOffset;
     }
@@ -788,8 +799,9 @@ MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm)
     reserveStack(*stackAdjust);
     {
         enoughMemory_ &= moveResolver_.resolve();
-        if (!enoughMemory_)
+        if (!enoughMemory_) {
             return;
+        }
         MoveEmitter emitter(*this);
         emitter.emit(moveResolver_);
         emitter.finish();
@@ -803,14 +815,16 @@ void
 MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result, bool callFromWasm)
 {
     // Call boundaries communicate stack via sp.
-    if (!GetStackPointer64().Is(sp))
+    if (!GetStackPointer64().Is(sp)) {
         Mov(GetStackPointer64(), sp);
+    }
 
     freeStack(stackAdjust);
 
     // Restore the stack pointer from entry.
-    if (dynamicAlignment_)
+    if (dynamicAlignment_) {
         Ldr(GetStackPointer64(), MemOperand(GetStackPointer64(), 0));
+    }
 
     // Restore LR.
     pop(lr);
@@ -903,8 +917,9 @@ MacroAssembler::moveValue(const TypedOrValueRegister& src, const ValueOperand& d
 void
 MacroAssembler::moveValue(const ValueOperand& src, const ValueOperand& dest)
 {
-    if (src == dest)
+    if (src == dest) {
         return;
+    }
     movePtr(src.valueReg(), dest.valueReg());
 }
 
@@ -926,8 +941,9 @@ MacroAssembler::moveValue(const Value& src, const ValueOperand& dest)
 void
 MacroAssembler::loadStoreBuffer(Register ptr, Register buffer)
 {
-    if (ptr != buffer)
+    if (ptr != buffer) {
         movePtr(ptr, buffer);
+    }
     orPtr(Imm32(gc::ChunkMask), buffer);
     loadPtr(Address(buffer, gc::ChunkStoreBufferOffsetFromLastByte), buffer);
 }
@@ -1036,20 +1052,22 @@ MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType value
     if ((valueType == MIRType::Int32 || valueType == MIRType::Boolean) && slotType == valueType) {
         if (value.constant()) {
             Value val = value.value();
-            if (valueType == MIRType::Int32)
+            if (valueType == MIRType::Int32) {
                 store32(Imm32(val.toInt32()), dest);
-            else
+            } else {
                 store32(Imm32(val.toBoolean() ? 1 : 0), dest);
+            }
         } else {
             store32(value.reg().typedReg().gpr(), dest);
         }
         return;
     }
 
-    if (value.constant())
+    if (value.constant()) {
         storeValue(value.value(), dest);
-    else
+    } else {
         storeValue(ValueTypeFromMIRType(valueType), value.reg().typedReg().gpr(), dest);
+    }
 
 }
 
@@ -1459,8 +1477,9 @@ R(Register r, Width w) {
 static MemOperand
 ComputePointerForAtomic(MacroAssembler& masm, const Address& address, Register scratch)
 {
-    if (address.offset == 0)
+    if (address.offset == 0) {
         return MemOperand(X(masm, address.base), 0);
+    }
 
     masm.Add(X(scratch), X(masm, address.base), address.offset);
     return MemOperand(X(scratch), 0);
@@ -1470,8 +1489,9 @@ static MemOperand
 ComputePointerForAtomic(MacroAssembler& masm, const BaseIndex& address, Register scratch)
 {
     masm.Add(X(scratch), X(masm, address.base), Operand(X(address.index), vixl::LSL, address.scale));
-    if (address.offset)
+    if (address.offset) {
         masm.Add(X(scratch), X(scratch), address.offset);
+    }
     return MemOperand(X(scratch), 0);
 }
 
@@ -1485,30 +1505,34 @@ SignOrZeroExtend(MacroAssembler& masm, Scalar::Type srcType, Width targetWidth, 
 
     switch (Scalar::byteSize(srcType)) {
       case 1:
-        if (signExtend)
+        if (signExtend) {
             masm.Sbfm(R(dest, targetWidth), R(src, targetWidth), 0, 7);
-        else
+        } else {
             masm.Ubfm(R(dest, targetWidth), R(src, targetWidth), 0, 7);
+        }
         break;
       case 2:
-        if (signExtend)
+        if (signExtend) {
             masm.Sbfm(R(dest, targetWidth), R(src, targetWidth), 0, 15);
-        else
+        } else {
             masm.Ubfm(R(dest, targetWidth), R(src, targetWidth), 0, 15);
+        }
         break;
       case 4:
         if (targetWidth == Width::_64) {
-            if (signExtend)
+            if (signExtend) {
                 masm.Sbfm(X(dest), X(src), 0, 31);
-            else
+            } else {
                 masm.Ubfm(X(dest), X(src), 0, 31);
+            }
         } else if (src != dest) {
             masm.Mov(R(dest, targetWidth), R(src, targetWidth));
         }
         break;
       case 8:
-        if (src != dest)
+        if (src != dest) {
             masm.Mov(R(dest, targetWidth), R(src, targetWidth));
+        }
         break;
       default:
         MOZ_CRASH();
@@ -1535,41 +1559,48 @@ LoadExclusive(MacroAssembler& masm, const wasm::MemoryAccessDesc* access,
       case 1: {
         {
             AutoForbidPools afp(&masm, /* max number of instructions in scope = */ 1);
-            if (access)
+            if (access) {
                 masm.append(*access, masm.currentOffset());
+            }
             masm.Ldxrb(W(dest), ptr);
         }
-        if (signExtend)
+        if (signExtend) {
             masm.Sbfm(R(dest, targetWidth), R(dest, targetWidth), 0, 7);
+        }
         break;
       }
       case 2: {
         {
             AutoForbidPools afp(&masm, /* max number of instructions in scope = */ 1);
-            if (access)
+            if (access) {
                 masm.append(*access, masm.currentOffset());
+            }
             masm.Ldxrh(W(dest), ptr);
         }
-        if (signExtend)
+        if (signExtend) {
             masm.Sbfm(R(dest, targetWidth), R(dest, targetWidth), 0, 15);
+        }
         break;
       }
       case 4: {
         {
             AutoForbidPools afp(&masm, /* max number of instructions in scope = */ 1);
-            if (access)
+            if (access) {
                 masm.append(*access, masm.currentOffset());
+            }
             masm.Ldxr(W(dest), ptr);
         }
-        if (targetWidth == Width::_64 && signExtend)
+        if (targetWidth == Width::_64 && signExtend) {
             masm.Sbfm(X(dest), X(dest), 0, 31);
+        }
         break;
       }
       case 8: {
         {
             AutoForbidPools afp(&masm, /* max number of instructions in scope = */ 1);
-            if (access)
+            if (access) {
                 masm.append(*access, masm.currentOffset());
+            }
             masm.Ldxr(X(dest), ptr);
         }
         break;
@@ -1683,8 +1714,9 @@ AtomicFetchOp(MacroAssembler& masm, const wasm::MemoryAccessDesc* access, Scalar
     }
     StoreExclusive(masm, type, scratch, temp, ptr);
     masm.Cbnz(W(scratch), &again);
-    if (wantResult)
+    if (wantResult) {
         SignOrZeroExtend(masm, type, targetWidth, output, output);
+    }
 
     masm.memoryBarrierAfter(sync);
 }
@@ -1971,10 +2003,11 @@ MacroAssembler::flexibleDivMod32(Register rhs, Register srcDest, Register remOut
     // Preserve src for remainder computation
     Mov(src, ARMRegister(srcDest, 32));
 
-    if (isUnsigned)
+    if (isUnsigned) {
         Udiv(ARMRegister(srcDest, 32), src, ARMRegister(rhs, 32));
-    else
+    } else {
         Sdiv(ARMRegister(srcDest, 32), src, ARMRegister(rhs, 32));
+    }
     //Compute remainder
     Mul(scratch, ARMRegister(srcDest, 32), ARMRegister(rhs, 32));
     Sub(ARMRegister(remOutput, 32), src, scratch);

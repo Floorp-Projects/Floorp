@@ -36,8 +36,9 @@ AssemblerBuffer::swap(Vector<uint8_t, 0, SystemAllocPolicy>& bytes)
     // NB: extractRawBuffer() only returns null if the Vector is using
     // inline storage and thus a malloc would be needed. In this case,
     // just make a simple copy.
-    if (!newBuffer)
+    if (!newBuffer) {
         return bytes.append(m_buffer.begin(), m_buffer.end());
+    }
 
     bytes.replaceRawBuffer((uint8_t*)newBuffer, newLength, newCapacity);
     return true;
@@ -53,8 +54,9 @@ js::jit::GenericAssembler::spew(const char* fmt, va_list va)
 
     int i = VsprintfLiteral(buf, fmt, va);
     if (i > -1) {
-        if (printer)
+        if (printer) {
             printer->printf("%s\n", buf);
+        }
         js::jit::JitSpew(js::jit::JitSpew_Codegen, "%s", buf);
     }
 }

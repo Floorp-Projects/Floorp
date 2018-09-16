@@ -46,8 +46,9 @@ js::jit::FloatRegister::ReduceSetForPush(const FloatRegisterSet& s)
     SetType bits = s.bits();
 
     // Ignore all SIMD register, if not supported.
-    if (!JitSupportsSimd())
+    if (!JitSupportsSimd()) {
         bits &= Codes::AllPhysMask * Codes::SpreadScalar;
+    }
 
     // Exclude registers which are already pushed with a larger type. High bits
     // are associated with larger register types. Thus we keep the set of

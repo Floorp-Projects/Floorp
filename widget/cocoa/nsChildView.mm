@@ -3119,6 +3119,10 @@ nsChildView::SetPrefersReducedMotionOverrideForTest(bool aValue)
   // it's set in the parent process.
   LookAndFeel::SetIntCache(lookAndFeelCache);
 
+  if (!nsCocoaFeatures::IsAtLeastVersion(10, 10)) {
+    return NS_ERROR_FAILURE;
+  }
+
   [[NSNotificationCenter defaultCenter]
      postNotificationName: NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
      object:nil];
@@ -3370,10 +3374,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
                                            selector:@selector(systemMetricsChanged)
                                                name:NSSystemColorsDidChangeNotification
                                              object:nil];
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(systemMetricsChanged)
-                                               name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
-                                             object:nil];
+
+  if (nsCocoaFeatures::IsAtLeastVersion(10, 10)) {
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(systemMetricsChanged)
+                                                 name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
+                                               object:nil];
+  }
+
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(scrollbarSystemMetricChanged)
                                                name:NSPreferredScrollerStyleDidChangeNotification

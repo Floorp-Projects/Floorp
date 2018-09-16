@@ -707,15 +707,17 @@ class Imm8 : public Operand2
 
     static datastore::Imm8mData EncodeImm(uint32_t imm) {
         // RotateLeft below may not be called with a shift of zero.
-        if (imm <= 0xFF)
+        if (imm <= 0xFF) {
             return datastore::Imm8mData(imm, 0);
+        }
 
         // An encodable integer has a maximum of 8 contiguous set bits,
         // with an optional wrapped left rotation to even bit positions.
         for (int rot = 1; rot < 16; rot++) {
             uint32_t rotimm = mozilla::RotateLeft(imm, rot * 2);
-            if (rotimm <= 0xFF)
+            if (rotimm <= 0xFF) {
                 return datastore::Imm8mData(rotimm, rot);
+            }
         }
         return datastore::Imm8mData();
     }
@@ -921,8 +923,9 @@ class EDtrAddr
     }
 #ifdef DEBUG
     Register maybeOffsetRegister() const {
-        if (data_ & IsImmEDTR)
+        if (data_ & IsImmEDTR) {
             return InvalidReg;
+        }
         return Register::FromCode(data_ & 0xf);
     }
 #endif
@@ -1000,8 +1003,9 @@ class BOffImm
       : data_((offset - 8) >> 2 & 0x00ffffff)
     {
         MOZ_ASSERT((offset & 0x3) == 0);
-        if (!IsInRange(offset))
+        if (!IsInRange(offset)) {
             MOZ_CRASH("BOffImm offset out of range");
+        }
     }
 
     explicit BOffImm()
@@ -1022,10 +1026,12 @@ class BOffImm
     }
 
     static bool IsInRange(int offset) {
-        if ((offset - 8) < -33554432)
+        if ((offset - 8) < -33554432) {
             return false;
-        if ((offset - 8) > 33554428)
+        }
+        if ((offset - 8) > 33554428) {
             return false;
+        }
         return true;
     }
 
@@ -1400,8 +1406,9 @@ class Assembler : public AssemblerShared
 
     void writeDataRelocation(BufferOffset offset, ImmGCPtr ptr) {
         if (ptr.value) {
-            if (gc::IsInsideNursery(ptr.value))
+            if (gc::IsInsideNursery(ptr.value)) {
                 embedsNurseryPointers_ = true;
+            }
             dataRelocations_.writeUnsigned(offset.getOffset());
         }
     }
@@ -1790,8 +1797,9 @@ class Assembler : public AssemblerShared
     void assertNoGCThings() const {
 #ifdef DEBUG
         MOZ_ASSERT(dataRelocations_.length() == 0);
-        for (auto& j : jumps_)
+        for (auto& j : jumps_) {
             MOZ_ASSERT(j.kind() == RelocationKind::HARDCODED);
+        }
 #endif
     }
 
@@ -1810,8 +1818,9 @@ class Assembler : public AssemblerShared
   protected:
     void addPendingJump(BufferOffset src, ImmPtr target, RelocationKind kind) {
         enoughMemory_ &= jumps_.append(RelativePatch(target.value, kind));
-        if (kind == RelocationKind::JITCODE)
+        if (kind == RelocationKind::JITCODE) {
             writeRelocation(src);
+        }
     }
 
   public:
@@ -2114,8 +2123,9 @@ class InstLDR : public InstDTR
 
     int32_t signedOffset() const {
         int32_t offset = encode() & 0xfff;
-        if (IsUp_(encode() & IsUp) != IsUp)
+        if (IsUp_(encode() & IsUp) != IsUp) {
             return -offset;
+        }
         return offset;
     }
     uint32_t* dest() const {
@@ -2349,8 +2359,9 @@ static const uint32_t NumFloatArgRegs = 16;
 static inline bool
 GetIntArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
 {
-    if (usedIntArgs >= NumIntArgRegs)
+    if (usedIntArgs >= NumIntArgRegs) {
         return false;
+    }
 
     *out = Register::FromCode(usedIntArgs);
     return true;
@@ -2364,15 +2375,17 @@ GetIntArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
 static inline bool
 GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
 {
-    if (GetIntArgReg(usedIntArgs, usedFloatArgs, out))
+    if (GetIntArgReg(usedIntArgs, usedFloatArgs, out)) {
         return true;
+    }
 
     // Unfortunately, we have to assume things about the point at which
     // GetIntArgReg returns false, because we need to know how many registers it
     // can allocate.
     usedIntArgs -= NumIntArgRegs;
-    if (usedIntArgs >= NumCallTempNonArgRegs)
+    if (usedIntArgs >= NumCallTempNonArgRegs) {
         return false;
+    }
 
     *out = CallTempNonArgRegs[usedIntArgs];
     return true;
@@ -2398,8 +2411,9 @@ static inline bool
 GetFloat32ArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, FloatRegister* out)
 {
     MOZ_ASSERT(UseHardFpABI());
-    if (usedFloatArgs >= NumFloatArgRegs)
+    if (usedFloatArgs >= NumFloatArgRegs) {
         return false;
+    }
     *out = VFPRegister(usedFloatArgs, VFPRegister::Single);
     return true;
 }
@@ -2408,8 +2422,9 @@ GetDoubleArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, FloatRegister* out
 {
     MOZ_ASSERT(UseHardFpABI());
     MOZ_ASSERT((usedFloatArgs % 2) == 0);
-    if (usedFloatArgs >= NumFloatArgRegs)
+    if (usedFloatArgs >= NumFloatArgRegs) {
         return false;
+    }
     *out = VFPRegister(usedFloatArgs>>1, VFPRegister::Double);
     return true;
 }
@@ -2431,8 +2446,9 @@ GetFloat32ArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t* p
     MOZ_ASSERT(UseHardFpABI());
     MOZ_ASSERT(usedFloatArgs >= NumFloatArgRegs);
     uint32_t intSlots = 0;
-    if (usedIntArgs > NumIntArgRegs)
+    if (usedIntArgs > NumIntArgRegs) {
         intSlots = usedIntArgs - NumIntArgRegs;
+    }
     uint32_t float32Slots = usedFloatArgs - NumFloatArgRegs;
     return (intSlots + float32Slots + *padding) * sizeof(intptr_t);
 }
