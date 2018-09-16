@@ -84,12 +84,6 @@ class BigInt final : public js::gc::TenuredCell
     static BigInt* mod(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
     static BigInt* pow(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
     static BigInt* neg(JSContext* cx, Handle<BigInt*> x);
-    static BigInt* lsh(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
-    static BigInt* rsh(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
-    static BigInt* bitAnd(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
-    static BigInt* bitXor(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
-    static BigInt* bitOr(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
-    static BigInt* bitNot(JSContext* cx, Handle<BigInt*> x);
 
     // Type-checking versions of arithmetic operations. These methods
     // must be called with at least one BigInt operand. Binary
@@ -102,12 +96,6 @@ class BigInt final : public js::gc::TenuredCell
     static bool mod(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs, MutableHandle<Value> res);
     static bool pow(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs, MutableHandle<Value> res);
     static bool neg(JSContext* cx, Handle<Value> operand, MutableHandle<Value> res);
-    static bool lsh(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs, MutableHandle<Value> res);
-    static bool rsh(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs, MutableHandle<Value> res);
-    static bool bitAnd(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs, MutableHandle<Value> res);
-    static bool bitXor(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs, MutableHandle<Value> res);
-    static bool bitOr(JSContext* cx, Handle<Value> lhs, Handle<Value> rhs, MutableHandle<Value> res);
-    static bool bitNot(JSContext* cx, Handle<Value> operand, MutableHandle<Value> res);
 
     static double numberValue(BigInt* x);
     static JSLinearString* toString(JSContext* cx, BigInt* x, uint8_t radix);
