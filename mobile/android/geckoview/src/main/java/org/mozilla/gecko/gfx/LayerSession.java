@@ -76,7 +76,7 @@ public class LayerSession {
         @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
         @Override protected native void disposeNative();
 
-        @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+        @WrapForJNI(calledFrom = "any", dispatchTo = "gecko")
         public native void attachNPZC(PanZoomController npzc);
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
