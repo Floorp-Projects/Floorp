@@ -232,6 +232,8 @@ pref("extensions.webextOptionalPermissionPrompts", true);
 pref("extensions.webextensions.base-content-security-policy", "script-src 'self' https://* moz-extension: blob: filesystem: 'unsafe-eval' 'unsafe-inline'; object-src 'self' https://* moz-extension: blob: filesystem:;");
 pref("extensions.webextensions.default-content-security-policy", "script-src 'self'; object-src 'self';");
 
+pref("extensions.webextensions.background-delayed-startup", true);
+
 pref("extensions.legacy.enabled", false);
 
 /* block popups by default, and notify the user about blocked popups */

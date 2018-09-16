@@ -326,8 +326,7 @@ GetUAWidgetScope(JSContext* cx, JSObject* contentScopeArg)
 {
     JS::RootedObject contentScope(cx, contentScopeArg);
     JSAutoRealm ar(cx, contentScope);
-    nsIPrincipal* principal =
-        nsJSPrincipals::get(JS_GetCompartmentPrincipals(js::GetObjectCompartment(contentScope)));
+    nsIPrincipal* principal = GetObjectPrincipal(contentScope);
 
     if (nsContentUtils::IsSystemPrincipal(principal)) {
         return JS::GetNonCCWObjectGlobal(contentScope);

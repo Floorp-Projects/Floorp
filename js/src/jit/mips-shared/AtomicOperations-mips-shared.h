@@ -174,8 +174,9 @@ js::jit::AtomicOperations::compareExchangeSeqCst(int64_t* addr, int64_t oldval, 
 {
     AddressGuard guard(addr);
     int64_t val = *addr;
-    if (val == oldval)
+    if (val == oldval) {
         *addr = newval;
+    }
     return val;
 }
 
@@ -185,8 +186,9 @@ js::jit::AtomicOperations::compareExchangeSeqCst(uint64_t* addr, uint64_t oldval
 {
     AddressGuard guard(addr);
     uint64_t val = *addr;
-    if (val == oldval)
+    if (val == oldval) {
         *addr = newval;
+    }
     return val;
 }
 

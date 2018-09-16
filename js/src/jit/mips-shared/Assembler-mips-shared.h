@@ -487,10 +487,12 @@ class BOffImm16
         MOZ_ASSERT(IsInRange(offset));
     }
     static bool IsInRange(int offset) {
-        if ((offset - 4) < int(unsigned(INT16_MIN) << 2))
+        if ((offset - 4) < int(unsigned(INT16_MIN) << 2)) {
             return false;
-        if ((offset - 4) > (INT16_MAX << 2))
+        }
+        if ((offset - 4) > (INT16_MAX << 2)) {
             return false;
+        }
         return true;
     }
     static const uint32_t INVALID = 0x00020000;
@@ -528,10 +530,12 @@ class JOffImm26
         MOZ_ASSERT(IsInRange(offset));
     }
     static bool IsInRange(int offset) {
-        if ((offset - 4) < -536870912)
+        if ((offset - 4) < -536870912) {
             return false;
-        if ((offset - 4) > 536870908)
+        }
+        if ((offset - 4) > 536870908) {
             return false;
+        }
         return true;
     }
     static const uint32_t INVALID = 0x20000000;
@@ -728,8 +732,9 @@ class MIPSBufferWithExecutableCopy : public MIPSBuffer
 {
   public:
     void executableCopy(uint8_t* buffer) {
-        if (this->oom())
+        if (this->oom()) {
             return;
+        }
 
         for (Slice* cur = head; cur != nullptr; cur = cur->getNext()) {
             memcpy(buffer, &cur->instructions, cur->length());
@@ -738,8 +743,9 @@ class MIPSBufferWithExecutableCopy : public MIPSBuffer
     }
 
     bool appendRawCode(const uint8_t* code, size_t numBytes) {
-        if (this->oom())
+        if (this->oom()) {
             return false;
+        }
         while (numBytes > SliceSize) {
             this->putBytes(SliceSize, code);
             numBytes -= SliceSize;
@@ -901,8 +907,9 @@ class AssemblerMIPSShared : public AssemblerShared
     // before to recover the pointer, and not after.
     void writeDataRelocation(ImmGCPtr ptr) {
         if (ptr.value) {
-            if (gc::IsInsideNursery(ptr.value))
+            if (gc::IsInsideNursery(ptr.value)) {
                 embedsNurseryPointers_ = true;
+            }
             dataRelocations_.writeUnsigned(nextOffset().getOffset());
         }
     }
@@ -910,8 +917,9 @@ class AssemblerMIPSShared : public AssemblerShared
     void assertNoGCThings() const {
 #ifdef DEBUG
         MOZ_ASSERT(dataRelocations_.length() == 0);
-        for (auto& j : jumps_)
+        for (auto& j : jumps_) {
             MOZ_ASSERT(j.kind == RelocationKind::HARDCODED);
+        }
 #endif
     }
 
@@ -948,8 +956,9 @@ class AssemblerMIPSShared : public AssemblerShared
 
         int i = VsprintfLiteral(buf, fmt, va);
         if (i > -1) {
-            if (printer)
+            if (printer) {
                 printer->printf("%s\n", buf);
+            }
             js::jit::JitSpew(js::jit::JitSpew_Codegen, "%s", buf);
         }
     }
@@ -1287,8 +1296,9 @@ class AssemblerMIPSShared : public AssemblerShared
     InstImm invertBranch(InstImm branch, BOffImm16 skipOffset);
     void addPendingJump(BufferOffset src, ImmPtr target, RelocationKind kind) {
         enoughMemory_ &= jumps_.append(RelativePatch(src, target.value, kind));
-        if (kind == RelocationKind::JITCODE)
+        if (kind == RelocationKind::JITCODE) {
             writeRelocation(src);
+        }
     }
 
     void addLongJump(BufferOffset src, BufferOffset dst) {
@@ -1569,12 +1579,14 @@ class InstGS : public Instruction
 inline bool
 IsUnaligned(const wasm::MemoryAccessDesc& access)
 {
-    if (!access.align())
+    if (!access.align()) {
         return false;
+    }
 
 #ifdef JS_CODEGEN_MIPS32
-    if (access.type() == Scalar::Int64 && access.align() >= 4)
+    if (access.type() == Scalar::Int64 && access.align() >= 4) {
         return false;
+    }
 #endif
 
     return access.align() < access.byteSize();

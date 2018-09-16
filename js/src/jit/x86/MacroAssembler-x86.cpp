@@ -25,11 +25,13 @@ using namespace js::jit;
 void
 MacroAssemblerX86::loadConstantDouble(double d, FloatRegister dest)
 {
-    if (maybeInlineDouble(d, dest))
+    if (maybeInlineDouble(d, dest)) {
         return;
+    }
     Double* dbl = getDouble(d);
-    if (!dbl)
+    if (!dbl) {
         return;
+    }
     masm.vmovsd_mr(nullptr, dest.encoding());
     propagateOOM(dbl->uses.append(CodeOffset(masm.size())));
 }
@@ -37,11 +39,13 @@ MacroAssemblerX86::loadConstantDouble(double d, FloatRegister dest)
 void
 MacroAssemblerX86::loadConstantFloat32(float f, FloatRegister dest)
 {
-    if (maybeInlineFloat(f, dest))
+    if (maybeInlineFloat(f, dest)) {
         return;
+    }
     Float* flt = getFloat(f);
-    if (!flt)
+    if (!flt) {
         return;
+    }
     masm.vmovss_mr(nullptr, dest.encoding());
     propagateOOM(flt->uses.append(CodeOffset(masm.size())));
 }
@@ -49,11 +53,13 @@ MacroAssemblerX86::loadConstantFloat32(float f, FloatRegister dest)
 void
 MacroAssemblerX86::loadConstantSimd128Int(const SimdConstant& v, FloatRegister dest)
 {
-    if (maybeInlineSimd128Int(v, dest))
+    if (maybeInlineSimd128Int(v, dest)) {
         return;
+    }
     SimdData* i4 = getSimdData(v);
-    if (!i4)
+    if (!i4) {
         return;
+    }
     masm.vmovdqa_mr(nullptr, dest.encoding());
     propagateOOM(i4->uses.append(CodeOffset(masm.size())));
 }
@@ -61,11 +67,13 @@ MacroAssemblerX86::loadConstantSimd128Int(const SimdConstant& v, FloatRegister d
 void
 MacroAssemblerX86::loadConstantSimd128Float(const SimdConstant& v, FloatRegister dest)
 {
-    if (maybeInlineSimd128Float(v, dest))
+    if (maybeInlineSimd128Float(v, dest)) {
         return;
+    }
     SimdData* f4 = getSimdData(v);
-    if (!f4)
+    if (!f4) {
         return;
+    }
     masm.vmovaps_mr(nullptr, dest.encoding());
     propagateOOM(f4->uses.append(CodeOffset(masm.size())));
 }
@@ -78,38 +86,47 @@ MacroAssemblerX86::finish()
     // their pipelines. See Intel performance guides.
     masm.ud2();
 
-    if (!doubles_.empty())
+    if (!doubles_.empty()) {
         masm.haltingAlign(sizeof(double));
+    }
     for (const Double& d : doubles_) {
         CodeOffset cst(masm.currentOffset());
-        for (CodeOffset use : d.uses)
+        for (CodeOffset use : d.uses) {
             addCodeLabel(CodeLabel(use, cst));
+        }
         masm.doubleConstant(d.value);
-        if (!enoughMemory_)
+        if (!enoughMemory_) {
             return;
+        }
     }
 
-    if (!floats_.empty())
+    if (!floats_.empty()) {
         masm.haltingAlign(sizeof(float));
+    }
     for (const Float& f : floats_) {
         CodeOffset cst(masm.currentOffset());
-        for (CodeOffset use : f.uses)
+        for (CodeOffset use : f.uses) {
             addCodeLabel(CodeLabel(use, cst));
+        }
         masm.floatConstant(f.value);
-        if (!enoughMemory_)
+        if (!enoughMemory_) {
             return;
+        }
     }
 
     // SIMD memory values must be suitably aligned.
-    if (!simds_.empty())
+    if (!simds_.empty()) {
         masm.haltingAlign(SimdMemoryAlignment);
+    }
     for (const SimdData& v : simds_) {
         CodeOffset cst(masm.currentOffset());
-        for (CodeOffset use : v.uses)
+        for (CodeOffset use : v.uses) {
             addCodeLabel(CodeLabel(use, cst));
+        }
         masm.simd128Constant(v.value.bytes());
-        if (!enoughMemory_)
+        if (!enoughMemory_) {
             return;
+        }
     }
 }
 
@@ -275,8 +292,9 @@ MacroAssembler::subFromStackPtr(Imm32 imm32)
             subl(Imm32(1), eax);
             j(Assembler::NonZero, &top);
             amountLeft -= fullPages * 4096;
-            if (amountLeft)
+            if (amountLeft) {
                 subl(Imm32(amountLeft), StackPointer);
+            }
 
             // Restore scratch register.
             movl(Operand(StackPointer, uint32_t(imm32.value) - 4), eax);
@@ -323,8 +341,9 @@ MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm)
     // Position all arguments.
     {
         enoughMemory_ &= moveResolver_.resolve();
-        if (!enoughMemory_)
+        if (!enoughMemory_) {
             return;
+        }
 
         MoveEmitter emitter(*this);
         emitter.emit(moveResolver_);
@@ -355,8 +374,9 @@ MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result, bool 
         }
     }
 
-    if (dynamicAlignment_)
+    if (dynamicAlignment_) {
         pop(esp);
+    }
 
 #ifdef DEBUG
     MOZ_ASSERT(inCall_);
@@ -398,8 +418,9 @@ MacroAssembler::moveValue(const TypedOrValueRegister& src, const ValueOperand& d
 
     if (!IsFloatingPointType(type)) {
         mov(ImmWord(MIRTypeToTag(type)), dest.typeReg());
-        if (reg.gpr() != dest.payloadReg())
+        if (reg.gpr() != dest.payloadReg()) {
             movl(reg.gpr(), dest.payloadReg());
+        }
         return;
     }
 
@@ -433,20 +454,23 @@ MacroAssembler::moveValue(const ValueOperand& src, const ValueOperand& dest)
         mozilla::Swap(d0, d1);
     }
 
-    if (s0 != d0)
+    if (s0 != d0) {
         movl(s0, d0);
-    if (s1 != d1)
+    }
+    if (s1 != d1) {
         movl(s1, d1);
+    }
 }
 
 void
 MacroAssembler::moveValue(const Value& src, const ValueOperand& dest)
 {
     movl(Imm32(src.toNunboxTag()), dest.typeReg());
-    if (src.isGCThing())
+    if (src.isGCThing()) {
         movl(ImmGCPtr(src.toGCThing()), dest.payloadReg());
-    else
+    } else {
         movl(Imm32(src.toNunboxPayload()), dest.payloadReg());
+    }
 }
 
 // ===============================================================
@@ -455,8 +479,9 @@ MacroAssembler::moveValue(const Value& src, const ValueOperand& dest)
 void
 MacroAssembler::loadStoreBuffer(Register ptr, Register buffer)
 {
-    if (ptr != buffer)
+    if (ptr != buffer) {
         movePtr(ptr, buffer);
+    }
     orPtr(Imm32(gc::ChunkMask), buffer);
     loadPtr(Address(buffer, gc::ChunkStoreBufferOffsetFromLastByte), buffer);
 }
@@ -543,10 +568,11 @@ MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
                                 const Value& rhs, Label* label)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    if (rhs.isGCThing())
+    if (rhs.isGCThing()) {
         cmpPtr(lhs.payloadReg(), ImmGCPtr(rhs.toGCThing()));
-    else
+    } else {
         cmpPtr(lhs.payloadReg(), ImmWord(rhs.toNunboxPayload()));
+    }
 
     if (cond == Equal) {
         Label done;
@@ -577,14 +603,16 @@ MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType value
     }
 
     // Store the type tag if needed.
-    if (valueType != slotType)
+    if (valueType != slotType) {
         storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), Operand(dest));
+    }
 
     // Store the payload.
-    if (value.constant())
+    if (value.constant()) {
         storePayload(value.value(), Operand(dest));
-    else
+    } else {
         storePayload(value.reg().typedReg().gpr(), Operand(dest));
+    }
 }
 
 template void
@@ -601,8 +629,9 @@ MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsC
 {
     cmp32(index, boundsCheckLimit);
     j(cond, label);
-    if (JitOptions.spectreIndexMasking)
+    if (JitOptions.spectreIndexMasking) {
         cmovCCl(cond, Operand(boundsCheckLimit), index);
+    }
 }
 
 void
@@ -610,8 +639,9 @@ MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCh
 {
     cmp32(index, Operand(boundsCheckLimit));
     j(cond, label);
-    if (JitOptions.spectreIndexMasking)
+    if (JitOptions.spectreIndexMasking) {
         cmovCCl(cond, Operand(boundsCheckLimit), index);
+    }
 }
 
 void
@@ -703,8 +733,9 @@ MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAdd
             MOZ_RELEASE_ASSERT(srcAddr.toBaseIndex().base != out.low &&
                                srcAddr.toBaseIndex().index != out.low);
         }
-        if (srcAddr.kind() == Operand::MEM_REG_DISP)
+        if (srcAddr.kind() == Operand::MEM_REG_DISP) {
             MOZ_RELEASE_ASSERT(srcAddr.toAddress().base != out.low);
+        }
 
         movl(LowWord(srcAddr), out.low);
 

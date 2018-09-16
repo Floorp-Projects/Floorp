@@ -247,8 +247,9 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void writeDataRelocation(const Value& val) {
         if (val.isGCThing()) {
             gc::Cell* cell = val.toGCThing();
-            if (cell && gc::IsInsideNursery(cell))
+            if (cell && gc::IsInsideNursery(cell)) {
                 embedsNurseryPointers_ = true;
+            }
             dataRelocations_.writeUnsigned(currentOffset());
         }
     }
@@ -506,21 +507,23 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
 
     template <typename T>
     void loadUnboxedValue(const T& address, MIRType type, AnyRegister dest) {
-        if (dest.isFloat())
+        if (dest.isFloat()) {
             loadInt32OrDouble(address, dest.fpu());
-        else if (type == MIRType::ObjectOrNull)
+        } else if (type == MIRType::ObjectOrNull) {
             unboxObjectOrNull(address, dest.gpr());
-        else
+        } else {
             unboxNonDouble(address, dest.gpr(), ValueTypeFromMIRType(type));
+        }
     }
 
     void storeUnboxedPayload(ValueOperand value, BaseIndex address, size_t nbytes, JSValueType type) {
         switch (nbytes) {
           case 8:
-            if (type == JSVAL_TYPE_OBJECT)
+            if (type == JSVAL_TYPE_OBJECT) {
                 unboxObjectOrNull(value, SecondScratchReg);
-            else
+            } else {
                 unboxNonDouble(value, SecondScratchReg, type);
+            }
             computeEffectiveAddress(address, ScratchRegister);
             as_sd(SecondScratchReg, ScratchRegister, 0);
             return;
@@ -537,10 +540,11 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void storeUnboxedPayload(ValueOperand value, Address address, size_t nbytes, JSValueType type) {
         switch (nbytes) {
           case 8:
-            if (type == JSVAL_TYPE_OBJECT)
+            if (type == JSVAL_TYPE_OBJECT) {
                 unboxObjectOrNull(value, SecondScratchReg);
-            else
+            } else {
                 unboxNonDouble(value, SecondScratchReg, type);
+            }
             storePtr(SecondScratchReg, address);
             return;
           case 4:

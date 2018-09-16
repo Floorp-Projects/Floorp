@@ -21,11 +21,13 @@ using namespace js::jit;
 void
 MacroAssemblerX64::loadConstantDouble(double d, FloatRegister dest)
 {
-    if (maybeInlineDouble(d, dest))
+    if (maybeInlineDouble(d, dest)) {
         return;
+    }
     Double* dbl = getDouble(d);
-    if (!dbl)
+    if (!dbl) {
         return;
+    }
     // The constants will be stored in a pool appended to the text (see
     // finish()), so they will always be a fixed distance from the
     // instructions which reference them. This allows the instructions to use
@@ -38,11 +40,13 @@ MacroAssemblerX64::loadConstantDouble(double d, FloatRegister dest)
 void
 MacroAssemblerX64::loadConstantFloat32(float f, FloatRegister dest)
 {
-    if (maybeInlineFloat(f, dest))
+    if (maybeInlineFloat(f, dest)) {
         return;
+    }
     Float* flt = getFloat(f);
-    if (!flt)
+    if (!flt) {
         return;
+    }
     // See comment in loadConstantDouble
     JmpSrc j = masm.vmovss_ripr(dest.encoding());
     propagateOOM(flt->uses.append(CodeOffset(j.offset())));
@@ -51,11 +55,13 @@ MacroAssemblerX64::loadConstantFloat32(float f, FloatRegister dest)
 void
 MacroAssemblerX64::loadConstantSimd128Int(const SimdConstant& v, FloatRegister dest)
 {
-    if (maybeInlineSimd128Int(v, dest))
+    if (maybeInlineSimd128Int(v, dest)) {
         return;
+    }
     SimdData* val = getSimdData(v);
-    if (!val)
+    if (!val) {
         return;
+    }
     JmpSrc j = masm.vmovdqa_ripr(dest.encoding());
     propagateOOM(val->uses.append(CodeOffset(j.offset())));
 }
@@ -63,11 +69,13 @@ MacroAssemblerX64::loadConstantSimd128Int(const SimdConstant& v, FloatRegister d
 void
 MacroAssemblerX64::loadConstantSimd128Float(const SimdConstant&v, FloatRegister dest)
 {
-    if (maybeInlineSimd128Float(v, dest))
+    if (maybeInlineSimd128Float(v, dest)) {
         return;
+    }
     SimdData* val = getSimdData(v);
-    if (!val)
+    if (!val) {
         return;
+    }
     JmpSrc j = masm.vmovaps_ripr(dest.encoding());
     propagateOOM(val->uses.append(CodeOffset(j.offset())));
 }
@@ -87,23 +95,26 @@ MacroAssemblerX64::bindOffsets(const MacroAssemblerX86Shared::UsesVector& uses)
 void
 MacroAssemblerX64::finish()
 {
-    if (!doubles_.empty())
+    if (!doubles_.empty()) {
         masm.haltingAlign(sizeof(double));
+    }
     for (const Double& d : doubles_) {
         bindOffsets(d.uses);
         masm.doubleConstant(d.value);
     }
 
-    if (!floats_.empty())
+    if (!floats_.empty()) {
         masm.haltingAlign(sizeof(float));
+    }
     for (const Float& f : floats_) {
         bindOffsets(f.uses);
         masm.floatConstant(f.value);
     }
 
     // SIMD memory values must be suitably aligned.
-    if (!simds_.empty())
+    if (!simds_.empty()) {
         masm.haltingAlign(SimdMemoryAlignment);
+    }
     for (const SimdData& v : simds_) {
         bindOffsets(v.uses);
         masm.simd128Constant(v.value.bytes());
@@ -285,8 +296,9 @@ MacroAssembler::subFromStackPtr(Imm32 imm32)
             subl(Imm32(1), scratch);
             j(Assembler::NonZero, &top);
             amountLeft -= fullPages * 4096;
-            if (amountLeft)
+            if (amountLeft) {
                 subq(Imm32(amountLeft), StackPointer);
+            }
         }
     }
 }
@@ -330,8 +342,9 @@ MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm)
     // Position all arguments.
     {
         enoughMemory_ &= moveResolver_.resolve();
-        if (!enoughMemory_)
+        if (!enoughMemory_) {
             return;
+        }
 
         MoveEmitter emitter(*this);
         emitter.emit(moveResolver_);
@@ -345,8 +358,9 @@ void
 MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result, bool cleanupArg)
 {
     freeStack(stackAdjust);
-    if (dynamicAlignment_)
+    if (dynamicAlignment_) {
         pop(rsp);
+    }
 
 #ifdef DEBUG
     MOZ_ASSERT(inCall_);
@@ -358,8 +372,9 @@ static bool
 IsIntArgReg(Register reg)
 {
     for (uint32_t i = 0; i < NumIntArgRegs; i++) {
-        if (IntArgRegs[i] == reg)
+        if (IntArgRegs[i] == reg) {
             return true;
+        }
     }
 
     return false;
@@ -435,8 +450,9 @@ MacroAssembler::moveValue(const TypedOrValueRegister& src, const ValueOperand& d
 void
 MacroAssembler::moveValue(const ValueOperand& src, const ValueOperand& dest)
 {
-    if (src == dest)
+    if (src == dest) {
         return;
+    }
     movq(src.valueReg(), dest.valueReg());
 }
 
@@ -453,8 +469,9 @@ MacroAssembler::moveValue(const Value& src, const ValueOperand& dest)
 void
 MacroAssembler::loadStoreBuffer(Register ptr, Register buffer)
 {
-    if (ptr != buffer)
+    if (ptr != buffer) {
         movePtr(ptr, buffer);
+    }
     orPtr(Imm32(gc::ChunkMask), buffer);
     loadPtr(Address(buffer, gc::ChunkStoreBufferOffsetFromLastByte), buffer);
 }
@@ -563,20 +580,22 @@ MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType value
     if ((valueType == MIRType::Int32 || valueType == MIRType::Boolean) && slotType == valueType) {
         if (value.constant()) {
             Value val = value.value();
-            if (valueType == MIRType::Int32)
+            if (valueType == MIRType::Int32) {
                 store32(Imm32(val.toInt32()), dest);
-            else
+            } else {
                 store32(Imm32(val.toBoolean() ? 1 : 0), dest);
+            }
         } else {
             store32(value.reg().typedReg().gpr(), dest);
         }
         return;
     }
 
-    if (value.constant())
+    if (value.constant()) {
         storeValue(value.value(), dest);
-    else
+    } else {
         storeValue(ValueTypeFromMIRType(valueType), value.reg().typedReg().gpr(), dest);
+    }
 }
 
 template void
@@ -909,8 +928,9 @@ MacroAssembler::wasmCompareExchange64(const wasm::MemoryAccessDesc& access, cons
                                       Register64 output)
 {
     MOZ_ASSERT(output.reg == rax);
-    if (expected != output)
+    if (expected != output) {
         movq(expected.reg, output.reg);
+    }
     append(access, size());
     lock_cmpxchgq(replacement.reg, Operand(mem));
 }
@@ -921,8 +941,9 @@ MacroAssembler::wasmCompareExchange64(const wasm::MemoryAccessDesc& access, cons
                                       Register64 output)
 {
     MOZ_ASSERT(output.reg == rax);
-    if (expected != output)
+    if (expected != output) {
         movq(expected.reg, output.reg);
+    }
     append(access, size());
     lock_cmpxchgq(replacement.reg, Operand(mem));
 }
@@ -931,8 +952,9 @@ void
 MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access, const Address& mem,
                                      Register64 value, Register64 output)
 {
-    if (value != output)
+    if (value != output) {
         movq(value.reg, output.reg);
+    }
     append(access, masm.size());
     xchgq(output.reg, Operand(mem));
 }
@@ -941,8 +963,9 @@ void
 MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access, const BaseIndex& mem,
                                      Register64 value, Register64 output)
 {
-    if (value != output)
+    if (value != output) {
         movq(value.reg, output.reg);
+    }
     append(access, masm.size());
     xchgq(output.reg, Operand(mem));
 }
@@ -953,13 +976,15 @@ WasmAtomicFetchOp64(MacroAssembler& masm, const wasm::MemoryAccessDesc access, A
                     Register value, const T& mem, Register temp, Register output)
 {
     if (op == AtomicFetchAddOp) {
-        if (value != output)
+        if (value != output) {
             masm.movq(value, output);
+        }
         masm.append(access, masm.size());
         masm.lock_xaddq(output, Operand(mem));
     } else if (op == AtomicFetchSubOp) {
-        if (value != output)
+        if (value != output) {
             masm.movq(value, output);
+        }
         masm.negq(output);
         masm.append(access, masm.size());
         masm.lock_xaddq(output, Operand(mem));

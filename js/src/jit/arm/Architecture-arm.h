@@ -474,33 +474,38 @@ class VFPRegister
         return VFPRegister(code, RegType(kind));
     }
     bool volatile_() const {
-        if (isDouble())
+        if (isDouble()) {
             return !!((1ULL << (code_ >> 1)) & FloatRegisters::VolatileMask);
+        }
         return !!((1ULL << code_) & FloatRegisters::VolatileMask);
     }
     const char* name() const {
-        if (isDouble())
+        if (isDouble()) {
             return FloatRegisters::GetDoubleName(Encoding(code_));
+        }
         return FloatRegisters::GetSingleName(Encoding(code_));
     }
     bool aliases(const VFPRegister& other) {
-        if (kind == other.kind)
+        if (kind == other.kind) {
             return code_ == other.code_;
+        }
         return doubleOverlay() == other.doubleOverlay();
     }
     static const int NumAliasedDoubles = 16;
     uint32_t numAliased() const {
         if (isDouble()) {
-            if (code_ < NumAliasedDoubles)
+            if (code_ < NumAliasedDoubles) {
                 return 3;
+            }
             return 1;
         }
         return 2;
     }
 
     VFPRegister aliased(uint32_t aliasIdx) {
-        if (aliasIdx == 0)
+        if (aliasIdx == 0) {
             return *this;
+        }
         if (isDouble()) {
             MOZ_ASSERT(code_ < NumAliasedDoubles);
             MOZ_ASSERT(aliasIdx <= 2);
@@ -511,8 +516,9 @@ class VFPRegister
     }
     uint32_t numAlignedAliased() const {
         if (isDouble()) {
-            if (code_ < NumAliasedDoubles)
+            if (code_ < NumAliasedDoubles) {
                 return 2;
+            }
             return 1;
         }
         // s1 has 0 other aligned aliases, 1 total.
@@ -525,8 +531,9 @@ class VFPRegister
     // stored there, but it is only stored at the location where it is aligned
     // e.g. at s0, not s1.
     VFPRegister alignedAliased(uint32_t aliasIdx) {
-        if (aliasIdx == 0)
+        if (aliasIdx == 0) {
             return *this;
+        }
         MOZ_ASSERT(aliasIdx == 1);
         if (isDouble()) {
             MOZ_ASSERT(code_ < NumAliasedDoubles);
@@ -557,8 +564,9 @@ class VFPRegister
     //
     SetType alignedOrDominatedAliasedSet() const {
         if (isSingle()) {
-            if (code_ % 2 != 0)
+            if (code_ % 2 != 0) {
                 return SetType(1) << code_;
+            }
             return (SetType(1) << code_) | (SetType(1) << (32 + code_ / 2));
         }
 

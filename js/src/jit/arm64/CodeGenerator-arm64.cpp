@@ -39,8 +39,9 @@ CodeGeneratorARM64::CodeGeneratorARM64(MIRGenerator* gen, LIRGraph* graph, Macro
 bool
 CodeGeneratorARM64::generateOutOfLineCode()
 {
-    if (!CodeGeneratorShared::generateOutOfLineCode())
+    if (!CodeGeneratorShared::generateOutOfLineCode()) {
         return false;
+    }
 
     if (deoptLabel_.used()) {
         // All non-table-based bailouts will go here.
@@ -88,8 +89,9 @@ CodeGenerator::visitTestIAndBranch(LTestIAndBranch* test)
         jumpToBlock(mirTrue, Assembler::NonZero);
     } else {
         jumpToBlock(mirFalse, Assembler::Zero);
-        if (!isNextBlock(mirTrue->lir()))
+        if (!isNextBlock(mirTrue->lir())) {
             jumpToBlock(mirTrue);
+        }
     }
 }
 
@@ -108,10 +110,11 @@ CodeGenerator::visitCompare(LCompare* comp)
         return;
     }
 
-    if (right->isConstant())
+    if (right->isConstant()) {
         masm.cmp32Set(cond, leftreg, Imm32(ToInt32(right)), defreg);
-    else
+    } else {
         masm.cmp32Set(cond, leftreg, ToRegister(right), defreg);
+    }
 }
 
 void
@@ -241,20 +244,24 @@ toXRegister(const T* a)
 Operand
 toWOperand(const LAllocation* a)
 {
-    if (a->isConstant())
+    if (a->isConstant()) {
         return Operand(ToInt32(a));
+    }
     return Operand(toWRegister(a));
 }
 
 vixl::CPURegister
 ToCPURegister(const LAllocation* a, Scalar::Type type)
 {
-    if (a->isFloatReg() && type == Scalar::Float64)
+    if (a->isFloatReg() && type == Scalar::Float64) {
         return ARMFPRegister(ToFloatRegister(a), 64);
-    if (a->isFloatReg() && type == Scalar::Float32)
+    }
+    if (a->isFloatReg() && type == Scalar::Float32) {
         return ARMFPRegister(ToFloatRegister(a), 32);
-    if (a->isGeneralReg())
+    }
+    if (a->isGeneralReg()) {
         return ARMRegister(ToRegister(a), 32);
+    }
     MOZ_CRASH("Unknown LAllocation");
 }
 
@@ -353,14 +360,16 @@ CodeGenerator::visitMulI(LMulI* ins)
 
             masm.move32(Imm32(constant), scratch);
             masm.mul32(lhsreg, scratch, ToRegister(dest), onOverflow, onZero);
-            if (onZero || onOverflow)
+            if (onZero || onOverflow) {
                 bailoutFrom(&bailout, ins->snapshot());
+            }
             return; // escape overflow check;
         }
 
         // Overflow check.
-        if (mul->canOverflow())
+        if (mul->canOverflow()) {
             bailoutIf(Assembler::Overflow, ins->snapshot());
+        }
     } else {
         Register rhsreg = ToRegister(rhs);
 
@@ -370,8 +379,9 @@ CodeGenerator::visitMulI(LMulI* ins)
         Label* onOverflow = mul->canOverflow() ? &bailout : nullptr;
 
         masm.mul32(lhsreg, rhsreg, ToRegister(dest), onOverflow, onZero);
-        if (onZero || onOverflow)
+        if (onZero || onOverflow) {
             bailoutFrom(&bailout, ins->snapshot());
+        }
     }
 }
 
@@ -500,10 +510,12 @@ CodeGenerator::visitPowHalfD(LPowHalfD* ins)
 MoveOperand
 CodeGeneratorARM64::toMoveOperand(const LAllocation a) const
 {
-    if (a.isGeneralReg())
+    if (a.isGeneralReg()) {
         return MoveOperand(ToRegister(a));
-    if (a.isFloatReg())
+    }
+    if (a.isFloatReg()) {
         return MoveOperand(ToFloatRegister(a));
+    }
     return MoveOperand(AsRegister(masm.getStackPointer()), ToStackOffset(a));
 }
 
@@ -929,8 +941,9 @@ CodeGeneratorARM64::generateInvalidateEpilogue()
 {
     // Ensure that there is enough space in the buffer for the OsiPoint patching
     // to occur. Otherwise, we could overwrite the invalidation epilogue.
-    for (size_t i = 0; i < sizeof(void*); i += Assembler::NopSize())
+    for (size_t i = 0; i < sizeof(void*); i += Assembler::NopSize()) {
         masm.nop();
+    }
 
     masm.bind(&invalidate_);
 

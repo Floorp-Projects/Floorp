@@ -81,8 +81,9 @@ MoveEmitterMIPS::completeCycle(const MoveOperand& from, const MoveOperand& to,
             masm.storeFloat32(temp, getAdjustedAddress(to));
         } else {
             uint32_t offset = 0;
-            if (from.floatReg().numAlignedAliased() == 1)
+            if (from.floatReg().numAlignedAliased() == 1) {
                 offset = sizeof(float);
+            }
             masm.loadFloat32(cycleSlot(slotId, offset), to.floatReg());
         }
         break;
