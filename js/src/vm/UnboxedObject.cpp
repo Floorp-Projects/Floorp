@@ -18,6 +18,7 @@
 #include "jit/MacroAssembler-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/Shape-inl.h"
+#include "vm/TypeInference-inl.h"
 
 using mozilla::ArrayLength;
 using mozilla::PodCopy;
