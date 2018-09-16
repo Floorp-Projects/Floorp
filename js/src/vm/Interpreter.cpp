@@ -2699,41 +2699,31 @@ CASE(JSOP_BINDVAR)
 }
 END_CASE(JSOP_BINDVAR)
 
+#define BITWISE_OP(OP)                                                        \
+    JS_BEGIN_MACRO                                                            \
+        int32_t i, j;                                                         \
+        if (!ToInt32(cx, REGS.stackHandleAt(-2), &i))                         \
+            goto error;                                                       \
+        if (!ToInt32(cx, REGS.stackHandleAt(-1), &j))                         \
+            goto error;                                                       \
+        i = i OP j;                                                           \
+        REGS.sp--;                                                            \
+        REGS.sp[-1].setInt32(i);                                              \
+    JS_END_MACRO
+
 CASE(JSOP_BITOR)
-{
-    MutableHandleValue lhs = REGS.stackHandleAt(-2);
-    MutableHandleValue rhs = REGS.stackHandleAt(-1);
-    MutableHandleValue res = REGS.stackHandleAt(-2);
-    if (!BitOr(cx, lhs, rhs, res)) {
-        goto error;
-    }
-    REGS.sp--;
-}
+    BITWISE_OP(|);
 END_CASE(JSOP_BITOR)
 
 CASE(JSOP_BITXOR)
-{
-    MutableHandleValue lhs = REGS.stackHandleAt(-2);
-    MutableHandleValue rhs = REGS.stackHandleAt(-1);
-    MutableHandleValue res = REGS.stackHandleAt(-2);
-    if (!BitXor(cx, lhs, rhs, res)) {
-        goto error;
-    }
-    REGS.sp--;
-}
+    BITWISE_OP(^);
 END_CASE(JSOP_BITXOR)
 
 CASE(JSOP_BITAND)
-{
-    MutableHandleValue lhs = REGS.stackHandleAt(-2);
-    MutableHandleValue rhs = REGS.stackHandleAt(-1);
-    MutableHandleValue res = REGS.stackHandleAt(-2);
-    if (!BitAnd(cx, lhs, rhs, res)) {
-        goto error;
-    }
-    REGS.sp--;
-}
+    BITWISE_OP(&);
 END_CASE(JSOP_BITAND)
+
+#undef BITWISE_OP
 
 CASE(JSOP_EQ)
     if (!LooseEqualityOp<true>(cx, REGS)) {
@@ -2843,36 +2833,34 @@ CASE(JSOP_GE)
 }
 END_CASE(JSOP_GE)
 
+#define SIGNED_SHIFT_OP(OP, TYPE)                                             \
+    JS_BEGIN_MACRO                                                            \
+        int32_t i, j;                                                         \
+        if (!ToInt32(cx, REGS.stackHandleAt(-2), &i))                         \
+            goto error;                                                       \
+        if (!ToInt32(cx, REGS.stackHandleAt(-1), &j))                         \
+            goto error;                                                       \
+        i = TYPE(i) OP (j & 31);                                              \
+        REGS.sp--;                                                            \
+        REGS.sp[-1].setInt32(i);                                              \
+    JS_END_MACRO
+
 CASE(JSOP_LSH)
-{
-    MutableHandleValue lhs = REGS.stackHandleAt(-2);
-    MutableHandleValue rhs = REGS.stackHandleAt(-1);
-    MutableHandleValue res = REGS.stackHandleAt(-2);
-    if (!BitLsh(cx, lhs, rhs, res)) {
-        goto error;
-    }
-    REGS.sp--;
-}
+    SIGNED_SHIFT_OP(<<, uint32_t);
 END_CASE(JSOP_LSH)
 
 CASE(JSOP_RSH)
-{
-    MutableHandleValue lhs = REGS.stackHandleAt(-2);
-    MutableHandleValue rhs = REGS.stackHandleAt(-1);
-    MutableHandleValue res = REGS.stackHandleAt(-2);
-    if (!BitRsh(cx, lhs, rhs, res)) {
-        goto error;
-    }
-    REGS.sp--;
-}
+    SIGNED_SHIFT_OP(>>, int32_t);
 END_CASE(JSOP_RSH)
+
+#undef SIGNED_SHIFT_OP
 
 CASE(JSOP_URSH)
 {
-    MutableHandleValue lhs = REGS.stackHandleAt(-2);
-    MutableHandleValue rhs = REGS.stackHandleAt(-1);
+    HandleValue lval = REGS.stackHandleAt(-2);
+    HandleValue rval = REGS.stackHandleAt(-1);
     MutableHandleValue res = REGS.stackHandleAt(-2);
-    if (!UrshOperation(cx, lhs, rhs, res)) {
+    if (!UrshOperation(cx, lval, rval, res)) {
         goto error;
     }
     REGS.sp--;
@@ -2961,11 +2949,12 @@ END_CASE(JSOP_NOT)
 
 CASE(JSOP_BITNOT)
 {
-    MutableHandleValue value = REGS.stackHandleAt(-1);
-    MutableHandleValue res = REGS.stackHandleAt(-1);
-    if (!BitNot(cx, value, res)) {
+    int32_t i;
+    HandleValue value = REGS.stackHandleAt(-1);
+    if (!BitNot(cx, value, &i)) {
         goto error;
     }
+    REGS.sp[-1].setInt32(i);
 }
 END_CASE(JSOP_BITNOT)
 
