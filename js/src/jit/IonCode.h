@@ -19,17 +19,17 @@
 #include "jit/IonTypes.h"
 #include "js/UbiNode.h"
 #include "vm/TraceLogging.h"
-#include "vm/TypeInference.h"
 
 namespace js {
 namespace jit {
 
-class MacroAssembler;
 class IonBuilder;
+class JitAllocPolicy;
 class JitCode;
+class MacroAssembler;
 
-typedef Vector<JSObject*, 4, JitAllocPolicy> ObjectVector;
-typedef Vector<TraceLoggerEvent, 0, SystemAllocPolicy> TraceLoggerEventVector;
+using ObjectVector = Vector<JSObject*, 4, JitAllocPolicy>;
+using TraceLoggerEventVector = Vector<TraceLoggerEvent, 0, SystemAllocPolicy>;
 
 // Header at start of raw code buffer
 struct JitCodeHeader
