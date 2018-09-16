@@ -163,13 +163,14 @@ bool
 RBitNot::recover(JSContext* cx, SnapshotIterator& iter) const
 {
     RootedValue operand(cx, iter.read());
-    RootedValue result(cx);
 
-    if (!js::BitNot(cx, &operand, &result)) {
+    int32_t result;
+    if (!js::BitNot(cx, operand, &result)) {
         return false;
     }
 
-    iter.storeInstructionResult(result);
+    RootedValue rootedResult(cx, js::Int32Value(result));
+    iter.storeInstructionResult(rootedResult);
     return true;
 }
 
@@ -189,14 +190,15 @@ RBitAnd::recover(JSContext* cx, SnapshotIterator& iter) const
 {
     RootedValue lhs(cx, iter.read());
     RootedValue rhs(cx, iter.read());
-    RootedValue result(cx);
+    int32_t result;
     MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
 
-    if (!js::BitAnd(cx, &lhs, &rhs, &result)) {
+    if (!js::BitAnd(cx, lhs, rhs, &result)) {
         return false;
     }
 
-    iter.storeInstructionResult(result);
+    RootedValue rootedResult(cx, js::Int32Value(result));
+    iter.storeInstructionResult(rootedResult);
     return true;
 }
 
@@ -216,14 +218,15 @@ RBitOr::recover(JSContext* cx, SnapshotIterator& iter) const
 {
     RootedValue lhs(cx, iter.read());
     RootedValue rhs(cx, iter.read());
-    RootedValue result(cx);
+    int32_t result;
     MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
 
-    if (!js::BitOr(cx, &lhs, &rhs, &result)) {
+    if (!js::BitOr(cx, lhs, rhs, &result)) {
         return false;
     }
 
-    iter.storeInstructionResult(result);
+    RootedValue asValue(cx, js::Int32Value(result));
+    iter.storeInstructionResult(asValue);
     return true;
 }
 
@@ -243,13 +246,14 @@ RBitXor::recover(JSContext* cx, SnapshotIterator& iter) const
 {
     RootedValue lhs(cx, iter.read());
     RootedValue rhs(cx, iter.read());
-    RootedValue result(cx);
 
-    if (!js::BitXor(cx, &lhs, &rhs, &result)) {
+    int32_t result;
+    if (!js::BitXor(cx, lhs, rhs, &result)) {
         return false;
     }
 
-    iter.storeInstructionResult(result);
+    RootedValue rootedResult(cx, js::Int32Value(result));
+    iter.storeInstructionResult(rootedResult);
     return true;
 }
 
@@ -269,14 +273,15 @@ RLsh::recover(JSContext* cx, SnapshotIterator& iter) const
 {
     RootedValue lhs(cx, iter.read());
     RootedValue rhs(cx, iter.read());
-    RootedValue result(cx);
+    int32_t result;
     MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
 
-    if (!js::BitLsh(cx, &lhs, &rhs, &result)) {
+    if (!js::BitLsh(cx, lhs, rhs, &result)) {
         return false;
     }
 
-    iter.storeInstructionResult(result);
+    RootedValue asValue(cx, js::Int32Value(result));
+    iter.storeInstructionResult(asValue);
     return true;
 }
 
@@ -296,14 +301,15 @@ RRsh::recover(JSContext* cx, SnapshotIterator& iter) const
 {
     RootedValue lhs(cx, iter.read());
     RootedValue rhs(cx, iter.read());
-    RootedValue result(cx);
     MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
 
-    if (!js::BitRsh(cx, &lhs, &rhs, &result)) {
+    int32_t result;
+    if (!js::BitRsh(cx, lhs, rhs, &result)) {
         return false;
     }
 
-    iter.storeInstructionResult(result);
+    RootedValue rootedResult(cx, js::Int32Value(result));
+    iter.storeInstructionResult(rootedResult);
     return true;
 }
 
@@ -326,7 +332,7 @@ RUrsh::recover(JSContext* cx, SnapshotIterator& iter) const
     MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
 
     RootedValue result(cx);
-    if (!js::UrshOperation(cx, &lhs, &rhs, &result)) {
+    if (!js::UrshOperation(cx, lhs, rhs, &result)) {
         return false;
     }
 
