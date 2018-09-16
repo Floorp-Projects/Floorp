@@ -1239,16 +1239,13 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
         window.mNPZCSupport.Detach();
     }
 
-    if (window.mLayerViewSupport &&
-            window.mLayerViewSupport->GetJavaCompositor() != aCompositor) {
+    if (window.mLayerViewSupport) {
         window.mLayerViewSupport.Detach();
     }
 
     auto compositor = LayerSession::Compositor::LocalRef(
             inst.Env(), LayerSession::Compositor::Ref::From(aCompositor));
-    if (!window.mLayerViewSupport) {
-        window.mLayerViewSupport.Attach(compositor, &window, compositor);
-    }
+    window.mLayerViewSupport.Attach(compositor, &window, compositor);
 
     MOZ_ASSERT(window.mAndroidView);
     window.mAndroidView->mEventDispatcher->Attach(
