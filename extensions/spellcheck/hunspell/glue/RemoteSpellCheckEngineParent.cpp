@@ -5,14 +5,14 @@
 
 #include "RemoteSpellCheckEngineParent.h"
 #include "mozilla/Unused.h"
-#include "nsISpellChecker.h"
+#include "mozilla/mozSpellChecker.h"
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 
 RemoteSpellcheckEngineParent::RemoteSpellcheckEngineParent()
 {
-  mSpellChecker = do_CreateInstance(NS_SPELLCHECKER_CONTRACTID);
+  mSpellChecker = mozSpellChecker::Create();
 }
 
 RemoteSpellcheckEngineParent::~RemoteSpellcheckEngineParent()
