@@ -13,6 +13,9 @@
 
 namespace js {
 
+struct AutoEnterAnalysis;
+class PreliminaryObjectArray;
+
 // Memory required for an unboxed value of a given type. Returns zero for types
 // which can't be used for unboxed objects.
 static inline size_t
@@ -44,17 +47,16 @@ UnboxedTypeNeedsPostBarrier(JSValueType type)
 class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
 {
   public:
-    struct Property {
-        PropertyName* name;
-        uint32_t offset;
-        JSValueType type;
+    struct Property
+    {
+        PropertyName* name = nullptr;
+        uint32_t offset = UINT32_MAX;
+        JSValueType type = JSVAL_TYPE_MAGIC;
 
-        Property()
-          : name(nullptr), offset(UINT32_MAX), type(JSVAL_TYPE_MAGIC)
-        {}
+        Property() = default;
     };
 
-    typedef Vector<Property, 0, SystemAllocPolicy> PropertyVector;
+    using PropertyVector = Vector<Property, 0, SystemAllocPolicy>;
 
   private:
     JS::Zone* zone_;
@@ -62,19 +64,19 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     // If objects in this group have ever been converted to native objects,
     // these store the corresponding native group and initial shape for such
     // objects. Type information for this object is reflected in nativeGroup.
-    GCPtrObjectGroup nativeGroup_;
-    GCPtrShape nativeShape_;
+    GCPtrObjectGroup nativeGroup_ = {};
+    GCPtrShape nativeShape_ = {};
 
     // Any script/pc which the associated group is created for.
-    GCPtrScript allocationScript_;
-    jsbytecode* allocationPc_;
+    GCPtrScript allocationScript_ = {};
+    jsbytecode* allocationPc_ = {};
 
     // If nativeGroup is set and this object originally had a TypeNewScript or
     // was keyed to an allocation site, this points to the group which replaced
     // this one. This link is only needed to keep the replacement group from
     // being GC'ed. If it were GC'ed and a new one regenerated later, that new
     // group might have a different allocation kind from this group.
-    GCPtrObjectGroup replacementGroup_;
+    GCPtrObjectGroup replacementGroup_ = {};
 
     // The following members are only used for unboxed plain objects.
 
@@ -82,45 +84,32 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     PropertyVector properties_;
 
     // Byte size of the data for objects with this layout.
-    size_t size_;
+    size_t size_ = 0;
 
     // Any 'new' script information associated with this layout.
-    TypeNewScript* newScript_;
+    TypeNewScript* newScript_ = nullptr;
 
     // List for use in tracing objects with this layout. This has the same
     // structure as the trace list on a TypeDescr.
-    int32_t* traceList_;
+    int32_t* traceList_ = nullptr;
 
     // If this layout has been used to construct script or JSON constant
     // objects, this code might be filled in to more quickly fill in objects
     // from an array of values.
-    GCPtrJitCode constructorCode_;
+    GCPtrJitCode constructorCode_ = {};
 
   public:
     explicit UnboxedLayout(JS::Zone* zone)
-      : zone_(zone), nativeGroup_(nullptr), nativeShape_(nullptr),
-        allocationScript_(nullptr), allocationPc_(nullptr), replacementGroup_(nullptr),
-        size_(0), newScript_(nullptr), traceList_(nullptr), constructorCode_(nullptr)
+      : zone_(zone)
     {}
+
+    inline ~UnboxedLayout();
 
     JS::Zone* zone() const { return zone_; }
 
     bool initProperties(const PropertyVector& properties, size_t size) {
         size_ = size;
         return properties_.appendAll(properties);
-    }
-
-    ~UnboxedLayout() {
-        if (newScript_) {
-            newScript_->clear();
-        }
-        js_delete(newScript_);
-        js_free(traceList_);
-
-        nativeGroup_.init(nullptr);
-        nativeShape_.init(nullptr);
-        replacementGroup_.init(nullptr);
-        constructorCode_.init(nullptr);
     }
 
     void detachFromRealm();

@@ -16,7 +16,7 @@
 #include "js/GCHashTable.h"
 #include "js/TypeDecls.h"
 #include "vm/TaggedProto.h"
-#include "vm/TypeInference.h"
+#include "vm/TypeSet.h"
 
 namespace js {
 
@@ -25,7 +25,6 @@ class UnboxedLayout;
 
 class PreliminaryObjectArrayWithTemplate;
 class TypeNewScript;
-class HeapTypeSet;
 class AutoClearTypeInferenceStateOnOOM;
 class AutoSweepObjectGroup;
 class CompilerConstraintList;
@@ -326,10 +325,7 @@ class ObjectGroup : public gc::TenuredCell
         setAddendum(Addendum_None, nullptr);
     }
 
-    bool hasUnanalyzedPreliminaryObjects() {
-        return (newScriptDontCheckGeneration() && !newScriptDontCheckGeneration()->analyzed()) ||
-               maybePreliminaryObjectsDontCheckGeneration();
-    }
+    inline bool hasUnanalyzedPreliminaryObjects();
 
     inline UnboxedLayout* maybeUnboxedLayout(const AutoSweepObjectGroup& sweep);
     inline UnboxedLayout& unboxedLayout(const AutoSweepObjectGroup& sweep);

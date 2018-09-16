@@ -13,6 +13,7 @@
 #include "vm/StringType.h"
 
 #include "vm/JSObject-inl.h"
+#include "vm/ObjectGroup-inl.h"
 #include "vm/TypeInference-inl.h"
 
 namespace js {
