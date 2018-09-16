@@ -6,33 +6,23 @@
 
 #include "mozilla/ModuleUtils.h"
 #include "mozHunspell.h"
-#include "mozSpellChecker.h"
 #include "mozPersonalDictionary.h"
 #include "nsIFile.h"
 
-#define NS_SPELLCHECKER_CID         \
-{ /* 8227f019-afc7-461e-b030-9f185d7a0e29 */    \
-0x8227F019, 0xAFC7, 0x461e,                     \
-{ 0xB0, 0x30, 0x9F, 0x18, 0x5D, 0x7A, 0x0E, 0x29} }
-
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozHunspell, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozSpellChecker, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozPersonalDictionary, Init)
 
 NS_DEFINE_NAMED_CID(MOZ_HUNSPELL_CID);
-NS_DEFINE_NAMED_CID(NS_SPELLCHECKER_CID);
 NS_DEFINE_NAMED_CID(MOZ_PERSONALDICTIONARY_CID);
 
 static const mozilla::Module::CIDEntry kSpellcheckCIDs[] = {
     { &kMOZ_HUNSPELL_CID, false, nullptr, mozHunspellConstructor },
-    { &kNS_SPELLCHECKER_CID, false, nullptr, mozSpellCheckerConstructor },
     { &kMOZ_PERSONALDICTIONARY_CID, false, nullptr, mozPersonalDictionaryConstructor },
     { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kSpellcheckContracts[] = {
     { MOZ_HUNSPELL_CONTRACTID, &kMOZ_HUNSPELL_CID },
-    { NS_SPELLCHECKER_CONTRACTID, &kNS_SPELLCHECKER_CID },
     { MOZ_PERSONALDICTIONARY_CONTRACTID, &kMOZ_PERSONALDICTIONARY_CID },
     { nullptr }
 };

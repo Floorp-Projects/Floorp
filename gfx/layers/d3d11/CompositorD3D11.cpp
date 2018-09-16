@@ -48,16 +48,6 @@ bool CanUsePartialPresents(ID3D11Device* aDevice);
 
 const FLOAT sBlendFactor[] = { 0, 0, 0, 0 };
 
-namespace TexSlot {
-  static const int RGB = 0;
-  static const int Y = 1;
-  static const int Cb = 2;
-  static const int Cr = 3;
-  static const int RGBWhite = 4;
-  static const int Mask = 5;
-  static const int Backdrop = 6;
-}
-
 CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent, widget::CompositorWidget* aWidget)
   : Compositor(aWidget, aParent)
   , mAttachments(nullptr)

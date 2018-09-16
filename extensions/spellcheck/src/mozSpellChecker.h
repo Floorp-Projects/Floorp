@@ -22,15 +22,20 @@ namespace mozilla {
 class RemoteSpellcheckEngineChild;
 } // namespace mozilla
 
-class mozSpellChecker : public nsISpellChecker
+class mozSpellChecker final : public nsISpellChecker
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(mozSpellChecker)
 
-  mozSpellChecker();
-
-  nsresult Init();
+  static already_AddRefed<mozSpellChecker>
+  Create()
+  {
+    RefPtr<mozSpellChecker> spellChecker = new mozSpellChecker();
+    nsresult rv = spellChecker->Init();
+    NS_ENSURE_SUCCESS(rv, nullptr);
+    return spellChecker.forget();
+  }
 
   // nsISpellChecker
   NS_IMETHOD SetDocument(mozilla::TextServicesDocument* aTextServicesDocument,
@@ -57,7 +62,10 @@ public:
   mozilla::TextServicesDocument* GetTextServicesDocument();
 
 protected:
+  mozSpellChecker();
   virtual ~mozSpellChecker();
+
+  nsresult Init();
 
   RefPtr<mozEnglishWordUtils> mConverter;
   RefPtr<mozilla::TextServicesDocument> mTextServicesDocument;

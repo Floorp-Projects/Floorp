@@ -323,9 +323,8 @@ EditorSpellCheck::CanSpellCheck(bool* aCanSpellCheck)
 {
   RefPtr<mozSpellChecker> spellChecker = mSpellChecker;
   if (!spellChecker) {
-    spellChecker = new mozSpellChecker();
-    DebugOnly<nsresult> rv = spellChecker->Init();
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    spellChecker = mozSpellChecker::Create();
+    MOZ_ASSERT(spellChecker);
   }
   nsTArray<nsString> dictList;
   nsresult rv = spellChecker->GetDictionaryList(&dictList);
@@ -389,7 +388,8 @@ EditorSpellCheck::InitSpellChecker(nsIEditor* aEditor,
   // mSpellChecker->GetTextServicesDocument().  Therefore, we need to
   // initialize them before calling TextServicesDocument::InitWithEditor()
   // since it calls EditorBase::AddEditActionListener().
-  mSpellChecker = new mozSpellChecker();
+  mSpellChecker = mozSpellChecker::Create();
+  MOZ_ASSERT(mSpellChecker);
   rv = mSpellChecker->SetDocument(textServicesDocument, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -432,9 +432,6 @@ EditorSpellCheck::InitSpellChecker(nsIEditor* aEditor,
       }
     }
   }
-
-  rv = mSpellChecker->Init();
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
   // do not fail if UpdateCurrentDictionary fails because this method may
   // succeed later.
   rv = UpdateCurrentDictionary(aCallback);
