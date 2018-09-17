@@ -41,10 +41,24 @@ private:
   virtual ~ChildDNSService() = default;
 
   void MOZ_ALWAYS_INLINE GetDNSRecordHashKey(const nsACString &aHost,
+                                             uint16_t aType,
                                              const OriginAttributes &aOriginAttributes,
                                              uint32_t aFlags,
                                              nsIDNSListener* aListener,
                                              nsACString &aHashKey);
+  nsresult AsyncResolveInternal(const nsACString        &hostname,
+                                uint16_t                 type,
+                                uint32_t                 flags,
+                                nsIDNSListener          *listener,
+                                nsIEventTarget          *target_,
+                                const OriginAttributes  &aOriginAttributes,
+                                nsICancelable          **result);
+  nsresult CancelAsyncResolveInternal(const nsACString       &aHostname,
+                                      uint16_t                aType,
+                                      uint32_t                aFlags,
+                                      nsIDNSListener         *aListener,
+                                      nsresult                aReason,
+                                      const OriginAttributes &aOriginAttributes);
 
   bool mFirstTime;
   bool mDisablePrefetch;

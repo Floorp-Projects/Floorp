@@ -98,6 +98,12 @@ class NrIceResolver
         cb_(cb), cb_arg_(cb_arg) {}
     NS_IMETHOD OnLookupComplete(nsICancelable *request, nsIDNSRecord *record,
                                 nsresult status) override;
+    NS_IMETHOD OnLookupByTypeComplete(nsICancelable *request,
+                                      nsIDNSByTypeRecord *res,
+                                      nsresult status) override
+    {
+      return NS_OK;
+    }
     int cancel();
     nsCOMPtr<nsICancelable> request_;
     NS_DECL_THREADSAFE_ISUPPORTS
