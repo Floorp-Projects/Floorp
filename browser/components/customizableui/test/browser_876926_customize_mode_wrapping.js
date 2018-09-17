@@ -5,7 +5,7 @@
 "use strict";
 
 const kXULWidgetId = "a-test-button"; // we'll create a button with this ID.
-const kAPIWidgetId = "save-page-button";
+const kAPIWidgetId = "feed-button";
 const kPanel = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
 const kToolbar = CustomizableUI.AREA_NAVBAR;
 const kVisiblePalette = "customization-palette";
