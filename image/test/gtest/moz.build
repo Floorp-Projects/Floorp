@@ -10,7 +10,6 @@ UNIFIED_SOURCES = [
     'Common.cpp',
     'TestADAM7InterpolatingFilter.cpp',
     'TestAnimationFrameBuffer.cpp',
-    'TestBlendAnimationFilter.cpp',
     'TestContainers.cpp',
     'TestCopyOnWrite.cpp',
     'TestDecoders.cpp',

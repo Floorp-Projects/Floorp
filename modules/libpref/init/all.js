@@ -4608,10 +4608,6 @@ pref("image.animated.decode-on-demand.threshold-kb", 20480);
 // animation's currently displayed frame.
 pref("image.animated.decode-on-demand.batch-size", 6);
 
-// Whether we should generate full frames at decode time or partial frames which
-// are combined at display time (historical behavior and default).
-pref("image.animated.generate-full-frames", false);
-
 // Resume an animated image from the last displayed frame rather than
 // advancing when out of view.
 pref("image.animated.resume-from-last-displayed", true);
