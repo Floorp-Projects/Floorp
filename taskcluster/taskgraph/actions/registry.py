@@ -99,6 +99,9 @@ def register_callback_action(name, title, symbol, description, order=10000,
         be displayed in the context menu for tasks that has
         ``task.tags.k == 'b' && task.tags.p = 'l'`` or ``task.tags.k = 't'``.
         Esentially, this allows filtering on ``task.tags``.
+
+        If this is a function, it is given the decision parameters and must return
+        a value of the form described above.
     available : function
         An optional function that given decision parameters decides if the
         action is available. Defaults to a function that always returns ``True``.
@@ -128,6 +131,11 @@ def register_callback_action(name, title, symbol, description, order=10000,
     assert isinstance(description, basestring), 'description must be a string'
     title = title.strip()
     description = description.strip()
+
+    # ensure that context is callable
+    if not callable(context):
+        context_value = context
+        context = lambda params: context_value  # noqa
 
     def register_callback(cb, cb_name=cb_name):
         assert isinstance(name, basestring), 'name must be a string'
@@ -184,7 +192,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
                 'name': name,
                 'title': title,
                 'description': description,
-                'context': context,
+                'context': context(parameters),
             }
             if schema:
                 rv['schema'] = schema(graph_config=graph_config) if callable(schema) else schema
