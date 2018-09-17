@@ -8,16 +8,10 @@
 
 #include "nsIAppStartupNotifier.h"
 
-class nsAppStartupNotifier : public nsIObserver
+class nsAppStartupNotifier final
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-
-    nsAppStartupNotifier();
-
-protected:
-    virtual ~nsAppStartupNotifier();
+  static nsresult NotifyObservers(const char* aTopic);
 };
 
 #endif /* nsAppStartupNotifier_h___ */

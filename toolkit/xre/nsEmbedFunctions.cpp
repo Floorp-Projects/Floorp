@@ -202,9 +202,7 @@ XRE_InitEmbedding2(nsIFile *aLibXULDirectory,
   // If the app wants to autoregister every time (for instance, if it's debug),
   // it can do so after we return from this function.
 
-  nsCOMPtr<nsIObserver> startupNotifier = new nsAppStartupNotifier();
-
-  startupNotifier->Observe(nullptr, APPSTARTUP_TOPIC, nullptr);
+  nsAppStartupNotifier::NotifyObservers(APPSTARTUP_TOPIC);
 
   return NS_OK;
 }
