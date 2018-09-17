@@ -4384,9 +4384,6 @@ extern JS_PUBLIC_API(void)
 JS_SetGCZeal(JSContext* cx, uint8_t zeal, uint32_t frequency);
 
 extern JS_PUBLIC_API(void)
-JS_UnsetGCZeal(JSContext* cx, uint8_t zeal);
-
-extern JS_PUBLIC_API(void)
 JS_ScheduleGC(JSContext* cx, uint32_t count);
 #endif
 
