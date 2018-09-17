@@ -286,6 +286,12 @@ RecordReflowStatus(bool aChildIsBlock, const nsReflowStatus& aFrameReflowStatus)
 }
 #endif
 
+static nscoord
+ResolveTextIndent(const nsStyleCoord& aStyle, nscoord aPercentageBasis)
+{
+  return nsLayoutUtils::ResolveToLength<false>(aStyle, aPercentageBasis);
+}
+
 NS_DECLARE_FRAME_PROPERTY_WITH_DTOR_NEVER_CALLED(OverflowLinesProperty,
                                                  nsBlockFrame::FrameLines)
 NS_DECLARE_FRAME_PROPERTY_FRAMELIST(OverflowOutOfFlowsProperty)
@@ -807,15 +813,8 @@ nsBlockFrame::GetMinISize(gfxContext *aRenderingContext)
       } else {
         if (!curFrame->GetPrevContinuation() &&
             line == curFrame->LinesBegin()) {
-          // Only add text-indent if it has no percentages; using a
-          // percentage basis of 0 unconditionally would give strange
-          // behavior for calc(10%-3px).
-          const nsStyleCoord &indent = StyleText()->mTextIndent;
-          if (indent.ConvertsToLength())
-            data.mCurrentLine += indent.ComputeCoordPercentCalc(0);
+          data.mCurrentLine += ::ResolveTextIndent(StyleText()->mTextIndent, 0);
         }
-        // XXX Bug NNNNNN Should probably handle percentage text-indent.
-
         data.mLine = &line;
         data.SetLineContainer(curFrame);
         nsIFrame *kid = line->mFirstChild;
@@ -906,20 +905,13 @@ nsBlockFrame::GetPrefISize(gfxContext *aRenderingContext)
       } else {
         if (!curFrame->GetPrevContinuation() &&
             line == curFrame->LinesBegin()) {
-          // Only add text-indent if it has no percentages; using a
-          // percentage basis of 0 unconditionally would give strange
-          // behavior for calc(10%-3px).
-          const nsStyleCoord &indent = StyleText()->mTextIndent;
-          if (indent.ConvertsToLength()) {
-            nscoord length = indent.ToLength();
-            if (length != 0) {
-              data.mCurrentLine += length;
-              data.mLineIsEmpty = false;
-            }
+          nscoord indent = ::ResolveTextIndent(StyleText()->mTextIndent, 0);
+          data.mCurrentLine += indent;
+          // XXXmats should the test below be indent > 0?
+          if (indent != nscoord(0)) {
+            data.mLineIsEmpty = false;
           }
         }
-        // XXX Bug NNNNNN Should probably handle percentage text-indent.
-
         data.mLine = &line;
         data.SetLineContainer(curFrame);
         nsIFrame *kid = line->mFirstChild;
@@ -984,16 +976,8 @@ nsBlockFrame::GetPrefWidthTightBounds(gfxContext* aRenderingContext,
       } else {
         if (!curFrame->GetPrevContinuation() &&
             line == curFrame->LinesBegin()) {
-          // Only add text-indent if it has no percentages; using a
-          // percentage basis of 0 unconditionally would give strange
-          // behavior for calc(10%-3px).
-          const nsStyleCoord &indent = StyleText()->mTextIndent;
-          if (indent.ConvertsToLength()) {
-            data.mCurrentLine += indent.ComputeCoordPercentCalc(0);
-          }
+          data.mCurrentLine += ::ResolveTextIndent(StyleText()->mTextIndent, 0);
         }
-        // XXX Bug NNNNNN Should probably handle percentage text-indent.
-
         data.mLine = &line;
         data.SetLineContainer(curFrame);
         nsIFrame *kid = line->mFirstChild;
