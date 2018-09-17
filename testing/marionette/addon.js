@@ -21,7 +21,7 @@ const ERRORS = {
 };
 
 async function installAddon(file) {
-  let install = await AddonManager.getInstallForFile(file);
+  let install = await AddonManager.getInstallForFile(file, null, {source: "internal"});
 
   if (install.error) {
     throw new UnknownError(ERRORS[install.error]);

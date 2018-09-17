@@ -1330,6 +1330,9 @@ TEST_F(Strings, append_literal_with_capacity)
   }
 }
 
+// The following test is intentionally not memory
+// checking-clean.
+#if !(defined(MOZ_HAVE_MEM_CHECKS) || defined(MOZ_MSAN))
 TEST_F(Strings, legacy_set_length_semantics)
 {
   const char* foobar = "foobar";
@@ -1337,8 +1340,9 @@ TEST_F(Strings, legacy_set_length_semantics)
   s.SetCapacity(2048);
   memcpy(s.BeginWriting(), foobar, strlen(foobar));
   s.SetLength(strlen(foobar));
-  EXPECT_TRUE(s.EqualsASCII(foobar));
+  EXPECT_FALSE(s.EqualsASCII(foobar));
 }
+#endif
 
 TEST_F(Strings, bulk_write)
 {

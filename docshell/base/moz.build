@@ -76,10 +76,12 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     'BrowsingContext.h',
+    'ChromeBrowsingContext.h'
 ]
 
 UNIFIED_SOURCES += [
     'BrowsingContext.cpp',
+    'ChromeBrowsingContext.cpp',
     'LoadContext.cpp',
     'nsAboutRedirector.cpp',
     'nsDefaultURIFixup.cpp',

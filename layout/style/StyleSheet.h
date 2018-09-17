@@ -363,6 +363,9 @@ public:
     return Inner().mCORSMode;
   }
 
+  // Set style sheet's Referrer Policy
+  void SetReferrerPolicy(net::ReferrerPolicy aReferrerPolicy);
+
   // Get this style sheet's Referrer Policy
   net::ReferrerPolicy GetReferrerPolicy() const
   {
@@ -463,6 +466,8 @@ private:
   // completely loaded. aRv will have an exception set if this function
   // returns false.
   bool AreRulesAvailable(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
+
+  already_AddRefed<URLExtraData> CreateURLExtraData() const;
 
 protected:
   // Internal methods which do not have security check and completeness check.

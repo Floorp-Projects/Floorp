@@ -107,6 +107,9 @@ public interface TelemetryContract {
         // When the user performs actions on the in-content network error page.
         NETERROR("neterror.1"),
 
+        // User actions related to a Progressive Web Application
+        PWA("pwa.1"),
+
         // VALUES BELOW THIS LINE ARE EXCLUSIVE TO TESTING.
         _TEST1("_test_event_1.1"),
         _TEST2("_test_event_2.1"),
