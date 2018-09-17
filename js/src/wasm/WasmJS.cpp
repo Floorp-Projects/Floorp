@@ -629,9 +629,9 @@ IsModuleObject(JSObject* obj, const Module** module)
 }
 
 static bool
-GetModuleArg(JSContext* cx, CallArgs args, const char* name, const Module** module)
+GetModuleArg(JSContext* cx, CallArgs args, uint32_t numRequired, const char* name, const Module** module)
 {
-    if (!args.requireAtLeast(cx, name, 1)) {
+    if (!args.requireAtLeast(cx, name, numRequired)) {
         return false;
     }
 
@@ -752,7 +752,7 @@ WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     const Module* module;
-    if (!GetModuleArg(cx, args, "WebAssembly.Module.imports", &module)) {
+    if (!GetModuleArg(cx, args, 1, "WebAssembly.Module.imports", &module)) {
         return false;
     }
 
@@ -826,7 +826,7 @@ WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     const Module* module;
-    if (!GetModuleArg(cx, args, "WebAssembly.Module.exports", &module)) {
+    if (!GetModuleArg(cx, args, 1, "WebAssembly.Module.exports", &module)) {
         return false;
     }
 
@@ -894,7 +894,7 @@ WasmModuleObject::customSections(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     const Module* module;
-    if (!GetModuleArg(cx, args, "WebAssembly.Module.customSections", &module)) {
+    if (!GetModuleArg(cx, args, 2, "WebAssembly.Module.customSections", &module)) {
         return false;
     }
 
@@ -1751,6 +1751,10 @@ WasmMemoryObject::growImpl(JSContext* cx, const CallArgs& args)
 {
     RootedWasmMemoryObject memory(cx, &args.thisv().toObject().as<WasmMemoryObject>());
 
+    if (!args.requireAtLeast(cx, "WebAssembly.Memory.grow", 1)) {
+        return false;
+    }
+
     uint32_t delta;
     if (!EnforceRangeU32(cx, args.get(0), UINT32_MAX, "Memory", "grow delta", &delta)) {
         return false;
@@ -2155,6 +2159,10 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
     RootedWasmTableObject tableObj(cx, &args.thisv().toObject().as<WasmTableObject>());
     const Table& table = tableObj->table();
 
+    if (!args.requireAtLeast(cx, "WebAssembly.Table.get", 1)) {
+        return false;
+    }
+
     uint32_t index;
     if (!ToTableIndex(cx, args.get(0), table, "get index", &index)) {
         return false;
@@ -2192,7 +2200,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
     RootedWasmTableObject tableObj(cx, &args.thisv().toObject().as<WasmTableObject>());
     Table& table = tableObj->table();
 
-    if (!args.requireAtLeast(cx, "set", 2)) {
+    if (!args.requireAtLeast(cx, "WebAssembly.Table.set", 2)) {
         return false;
     }
 
@@ -2242,6 +2250,10 @@ WasmTableObject::set(JSContext* cx, unsigned argc, Value* vp)
 WasmTableObject::growImpl(JSContext* cx, const CallArgs& args)
 {
     RootedWasmTableObject table(cx, &args.thisv().toObject().as<WasmTableObject>());
+
+    if (!args.requireAtLeast(cx, "WebAssembly.Table.grow", 1)) {
+        return false;
+    }
 
     uint32_t delta;
     if (!EnforceRangeU32(cx, args.get(0), UINT32_MAX, "Table", "grow delta", &delta)) {
@@ -2530,6 +2542,10 @@ WasmGlobalObject::valueGetter(JSContext* cx, unsigned argc, Value* vp)
 /* static */ bool
 WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args)
 {
+    if (!args.requireAtLeast(cx, "WebAssembly.Global setter", 1)) {
+        return false;
+    }
+
     RootedWasmGlobalObject global(cx, &args.thisv().toObject().as<WasmGlobalObject>());
     if (!global->isMutable()) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_GLOBAL_IMMUTABLE);
