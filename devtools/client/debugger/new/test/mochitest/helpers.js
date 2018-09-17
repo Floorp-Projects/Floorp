@@ -1328,3 +1328,16 @@ async function assertPreviews(dbg, previews) {
     dbg.actions.clearPreview();
   }
 }
+
+async function waitForSourceCount(dbg, i) {
+  // We are forced to wait until the DOM nodes appear because the
+  // source tree batches its rendering.
+  await waitUntil(() => {
+    return findAllElements(dbg, "sourceNodes").length === i;
+  }, `waiting for ${i} sources`);
+}
+
+async function assertSourceCount(dbg, count) {
+  await waitForSourceCount(dbg, count);
+  is(findAllElements(dbg, "sourceNodes").length, count, `${count} sources`);
+}
