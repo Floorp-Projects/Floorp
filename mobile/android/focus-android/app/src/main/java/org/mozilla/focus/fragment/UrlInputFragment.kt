@@ -534,7 +534,7 @@ class UrlInputFragment :
                 .setListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationStart(animation: Animator) {
                         if (reverse) {
-                            clearView.alpha = 0f
+                            clearView?.alpha = 0f
                         }
                     }
 
