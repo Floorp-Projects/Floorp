@@ -1369,11 +1369,14 @@ nsContainerFrame*
 nsLayoutUtils::LastContinuationWithChild(nsContainerFrame* aFrame)
 {
   MOZ_ASSERT(aFrame, "NULL frame pointer");
-  nsIFrame* f = aFrame->LastContinuation();
-  while (!f->PrincipalChildList().FirstChild() && f->GetPrevContinuation()) {
-    f = f->GetPrevContinuation();
+  for (auto f = aFrame->LastContinuation(); f; f = f->GetPrevContinuation()) {
+    for (nsIFrame::ChildListIterator lists(f); !lists.IsDone(); lists.Next()) {
+      if (MOZ_LIKELY(!lists.CurrentList().IsEmpty())) {
+        return static_cast<nsContainerFrame*>(f);
+      }
+    }
   }
-  return static_cast<nsContainerFrame*>(f);
+  return aFrame;
 }
 
 //static

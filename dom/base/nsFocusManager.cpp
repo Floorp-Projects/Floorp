@@ -298,6 +298,12 @@ nsFocusManager::IsFocused(nsIContent* aContent)
   return aContent == mFocusedElement;
 }
 
+bool
+nsFocusManager::IsTestMode()
+{
+  return sTestMode;
+}
+
 // get the current window for the given content node
 static nsPIDOMWindowOuter*
 GetCurrentWindow(nsIContent* aContent)

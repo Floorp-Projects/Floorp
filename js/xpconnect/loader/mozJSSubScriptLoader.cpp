@@ -178,9 +178,9 @@ PrepareScript(nsIURI* uri,
     // the lazy source loader doesn't know the encoding.
     options.setSourceIsLazy(true);
     if (wantGlobalScript) {
-        return JS::Compile(cx, options, buf, len, script);
+        return JS::CompileLatin1(cx, options, buf, len, script);
     }
-    return JS::CompileForNonSyntacticScope(cx, options, buf, len, script);
+    return JS::CompileLatin1ForNonSyntacticScope(cx, options, buf, len, script);
 }
 
 static bool
