@@ -333,7 +333,7 @@ test(() => {
     assertThrows(() => moduleCustomSections(), TypeError);
     assertThrows(() => moduleCustomSections(undefined), TypeError);
     assertThrows(() => moduleCustomSections({}), TypeError);
-    var arr = moduleCustomSections(emptyModule);
+    var arr = moduleCustomSections(emptyModule, "abracadabra");
     assert_equals(arr instanceof Array, true);
     assert_equals(arr.length, 0);
 }, "'WebAssembly.Module.customSections' method");
