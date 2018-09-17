@@ -323,6 +323,14 @@ LookupHelper::OnLookupComplete(nsICancelable *aRequest,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+LookupHelper::OnLookupByTypeComplete(nsICancelable *aRequest,
+                                     nsIDNSByTypeRecord *aRes,
+                                     nsresult aStatus)
+{
+    return NS_OK;
+}
+
 nsresult
 LookupHelper::ConstructAnswer(LookupArgument *aArgument)
 {

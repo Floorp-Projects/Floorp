@@ -696,21 +696,23 @@ NeckoParent::RecvSpeculativeConnect(const URIParams& aURI,
 }
 
 mozilla::ipc::IPCResult
-NeckoParent::RecvHTMLDNSPrefetch(const nsString& hostname,
+NeckoParent::RecvHTMLDNSPrefetch(const nsString& hostname, const bool& isHttps,
                                  const OriginAttributes& aOriginAttributes,
                                  const uint16_t& flags)
 {
-  nsHTMLDNSPrefetch::Prefetch(hostname, aOriginAttributes, flags);
+  nsHTMLDNSPrefetch::Prefetch(hostname, isHttps, aOriginAttributes, flags);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 NeckoParent::RecvCancelHTMLDNSPrefetch(const nsString& hostname,
+                                       const bool& isHttps,
                                        const OriginAttributes& aOriginAttributes,
                                        const uint16_t& flags,
                                        const nsresult& reason)
 {
-  nsHTMLDNSPrefetch::CancelPrefetch(hostname, aOriginAttributes, flags, reason);
+  nsHTMLDNSPrefetch::CancelPrefetch(hostname, isHttps, aOriginAttributes,
+                                    flags, reason);
   return IPC_OK();
 }
 

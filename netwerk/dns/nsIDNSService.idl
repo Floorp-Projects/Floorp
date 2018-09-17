@@ -67,6 +67,48 @@ interface nsIDNSService : nsISupports
                                 out nsICancelable    aResult);
 
     /**
+      * kicks off an asynchronous host lookup by type, e.g. TXT.
+      *
+      * @param aHostName
+      *        the hostname or IP-address-literal to resolve.
+      * @param aType
+      *        one of RESOLVE_TYPE_*.
+      * @param aFlags
+      *        a bitwise OR of the RESOLVE_ prefixed constants defined below
+      *        except RESOLVE_CANONICAL_NAME, RESOLVE_DISABLE_IPV6 and
+      *        RESOLVE_DISABLE_IPV4.
+      * @param aListener
+      *        the listener to be notified when the result is available.
+      * @param aListenerTarget
+      *        optional parameter (may be null).  if non-null, this parameter
+      *        specifies the nsIEventTarget of the thread on which the
+      *        listener's onLookupComplete should be called.  however, if this
+      *        parameter is null, then onLookupComplete will be called on an
+      *        unspecified thread (possibly recursively).
+      * @param aOriginAttributes
+      *        the originAttribute for this resolving, the DNS cache will be
+      *        separated according to this originAttributes.
+      *
+      * @return An object that can be used to cancel the host lookup.
+      */
+    [implicit_jscontext, optional_argc]
+    nsICancelable asyncResolveByType(in AUTF8String       aHostName,
+                                     in unsigned short    aType,
+                                     in unsigned long     aFlags,
+                                     in nsIDNSListener    aListener,
+                                     in nsIEventTarget    aListenerTarget,
+                                     in jsval             aOriginAttributes);
+
+    [notxpcom]
+    nsresult asyncResolveByTypeNative(in AUTF8String       aHostName,
+                                      in unsigned short    aType,
+                                      in unsigned long     aFlags,
+                                      in nsIDNSListener    aListener,
+                                      in nsIEventTarget    aListenerTarget,
+                                      in OriginAttributes  aOriginAttributes,
+                                      out nsICancelable    aResult);
+
+    /**
      * Attempts to cancel a previously requested async DNS lookup
      *
      * @param aHostName
@@ -81,8 +123,6 @@ interface nsIDNSService : nsISupports
      * @param aOriginAttributes
      *        the originAttribute for this resolving. This attribute is optional
      *        to avoid breaking add-ons.
-     *
-     * @return An object that can be used to cancel the host lookup.
      */
     [implicit_jscontext, optional_argc]
     void cancelAsyncResolve(in AUTF8String       aHostName,
@@ -97,6 +137,43 @@ interface nsIDNSService : nsISupports
                                       in nsIDNSListener    aListener,
                                       in nsresult          aReason,
                                       in OriginAttributes  aOriginAttributes);
+
+    /**
+     * Attempts to cancel a previously requested async DNS lookup
+     *
+     * @param aHostName
+     *        the hostname or IP-address-literal to resolve.
+     * @param  aType
+     *        one of RESOLVE_TYPE_*.
+     * @param aFlags
+     *        a bitwise OR of the RESOLVE_ prefixed constants defined below
+     *        except RESOLVE_CANONICAL_NAME, RESOLVE_DISABLE_IPV6 and
+     *        RESOLVE_DISABLE_IPV4.
+     * @param aListener
+     *        the original listener which was to be notified about the host lookup
+     *        result - used to match request information to requestor.
+     * @param aReason
+     *        nsresult reason for the cancellation
+     * @param aOriginAttributes
+     *        the originAttribute for this resolving. This attribute is optional
+     *        to avoid breaking add-ons.
+     *
+     */
+     [implicit_jscontext, optional_argc]
+     void cancelAsyncResolveByType(in AUTF8String       aHostName,
+                                   in unsigned short    aType,
+                                   in unsigned long     aFlags,
+                                   in nsIDNSListener    aListener,
+                                   in nsresult          aReason,
+                                   in jsval             aOriginAttributes);
+
+    [notxpcom]
+    nsresult cancelAsyncResolveByTypeNative(in AUTF8String       aHostName,
+                                            in unsigned short    aType,
+                                            in unsigned long     aFlags,
+                                            in nsIDNSListener    aListener,
+                                            in nsresult          aReason,
+                                            in OriginAttributes  aOriginAttributes);
 
     /**
      * called to synchronously resolve a hostname.
@@ -199,4 +276,12 @@ interface nsIDNSService : nsISupports
      * existing cache entry first (if existing) then make a new resolve.
      */
     const unsigned long RESOLVE_REFRESH_CACHE = (1 << 10);
+
+    /**
+     * This ure dns request types that are currently supported.
+     * RESOLVE_TYPE_DEFAULT is standard A/AAAA lookup
+     * The others (currently only TXT supported) are wireformat types
+     */
+    const unsigned long RESOLVE_TYPE_DEFAULT = 0;
+    const unsigned long RESOLVE_TYPE_TXT = 16;
 };
