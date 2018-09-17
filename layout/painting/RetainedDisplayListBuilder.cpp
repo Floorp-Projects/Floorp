@@ -660,6 +660,7 @@ RetainedDisplayListBuilder::MergeDisplayLists(
 
 static void
 TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
+  nsDisplayListBuilder* aBuilder,
   nsTArray<nsIFrame*>* aModifiedFrames,
   nsTArray<nsIFrame*>* aFramesWithProps,
   nsIFrame* aRootFrame)
@@ -682,6 +683,10 @@ TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
 
     if (flags & RetainedDisplayListData::FrameFlags::HasProps) {
       aFramesWithProps->AppendElement(frame);
+    }
+
+    if (flags & RetainedDisplayListData::FrameFlags::HadWillChange) {
+      aBuilder->RemoveFromWillChangeBudget(frame);
     }
   }
 
@@ -748,7 +753,7 @@ SubDocEnumCb(nsIDocument* aDocument, void* aData)
   nsIFrame* rootFrame = GetRootFrameForPainting(data->builder, aDocument);
   if (rootFrame) {
     TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
-      data->modifiedFrames, data->framesWithProps, rootFrame);
+      data->builder, data->modifiedFrames, data->framesWithProps, rootFrame);
 
     nsIDocument* innerDoc = rootFrame->PresShell()->GetDocument();
     if (innerDoc) {
@@ -763,14 +768,13 @@ GetModifiedAndFramesWithProps(nsDisplayListBuilder* aBuilder,
                               nsTArray<nsIFrame*>* aOutModifiedFrames,
                               nsTArray<nsIFrame*>* aOutFramesWithProps)
 {
-  MOZ_ASSERT(aBuilder->RootReferenceFrame());
+  nsIFrame* rootFrame = aBuilder->RootReferenceFrame();
+  MOZ_ASSERT(rootFrame);
 
   TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
-    aOutModifiedFrames, aOutFramesWithProps, aBuilder->RootReferenceFrame());
+    aBuilder, aOutModifiedFrames, aOutFramesWithProps, rootFrame);
 
-  nsIDocument* rootdoc =
-    aBuilder->RootReferenceFrame()->PresContext()->Document();
-
+  nsIDocument* rootdoc = rootFrame->PresContext()->Document();
   if (rootdoc) {
     CbData data = { aBuilder, aOutModifiedFrames, aOutFramesWithProps };
 
