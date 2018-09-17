@@ -371,17 +371,15 @@ JS::CompileFunction(JSContext* cx, AutoObjectVector& envChain,
 }
 
 JS_PUBLIC_API(bool)
-JS::CompileFunction(JSContext* cx, AutoObjectVector& envChain,
-                    const ReadOnlyCompileOptions& options,
-                    const char* name, unsigned nargs, const char* const* argnames,
-                    const char* bytes, size_t length, MutableHandleFunction fun)
+JS::CompileFunctionUtf8(JSContext* cx, AutoObjectVector& envChain,
+                        const ReadOnlyCompileOptions& options,
+                        const char* name, unsigned nargs, const char* const* argnames,
+                        const char* bytes, size_t length, MutableHandleFunction fun)
 {
-    char16_t* chars;
-    if (options.utf8) {
-        chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
-    } else {
-        chars = InflateString(cx, bytes, length);
-    }
+    MOZ_ASSERT(options.utf8,
+               "this function only compiles UTF-8 function text");
+
+    char16_t* chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     if (!chars) {
         return false;
     }

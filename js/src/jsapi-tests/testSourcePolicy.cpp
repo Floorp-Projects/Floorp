@@ -34,7 +34,7 @@ BEGIN_TEST(testBug795104)
     // mode, since it's not supported for functions.
     opts.setNoScriptRval(false);
 
-    CHECK(JS::CompileFunction(cx, emptyScopeChain, opts, "f", 0, nullptr, s, strLen, &fun));
+    CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, opts, "f", 0, nullptr, s, strLen, &fun));
     CHECK(fun);
 
     JS_free(cx, s);
