@@ -18,9 +18,6 @@ def test_null_response_value(session, mouse_chain):
     value = mouse_chain.click().perform()
     assert value is None
 
-    value = session.actions.release()
-    assert value is None
-
 
 def test_no_browsing_context(session, closed_window, mouse_chain):
     with pytest.raises(NoSuchWindowException):
@@ -91,7 +88,7 @@ def test_click_element_center(session, test_actions_page, mouse_chain):
             assert e["target"] == "outer"
 
 
-def test_click_navigation(session, url, release_actions):
+def test_click_navigation(session, url):
     destination = url("/webdriver/tests/actions/support/test_actions_wdspec.html")
     start = link_doc(destination)
 

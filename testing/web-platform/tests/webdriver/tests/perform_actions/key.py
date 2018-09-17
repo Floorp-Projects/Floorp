@@ -10,9 +10,6 @@ def test_null_response_value(session, key_chain):
     value = key_chain.key_up("a").perform()
     assert value is None
 
-    value = session.actions.release()
-    assert value is None
-
 
 def test_no_browsing_context(session, closed_window, key_chain):
     with pytest.raises(NoSuchWindowException):
