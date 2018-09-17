@@ -343,7 +343,7 @@ Decoder::AllocateFrameInternal(const gfx::IntSize& aOutputSize,
   bool nonPremult = bool(mSurfaceFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
   if (NS_FAILED(frame->InitForDecoder(aOutputSize, aFrameRect, aFormat,
                                       aPaletteDepth, nonPremult,
-                                      aAnimParams))) {
+                                      aAnimParams, ShouldBlendAnimation()))) {
     NS_WARNING("imgFrame::Init should succeed");
     return RawAccessFrameRef();
   }
