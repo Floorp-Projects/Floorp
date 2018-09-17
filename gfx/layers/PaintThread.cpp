@@ -197,7 +197,7 @@ PaintThread::UpdateRenderMode()
 }
 
 void
-PaintThread::QueuePaintTask(PaintTask* aTask)
+PaintThread::QueuePaintTask(UniquePtr<PaintTask>&& aTask)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aTask);
@@ -206,16 +206,16 @@ PaintThread::QueuePaintTask(PaintTask* aTask)
     aTask->mCapture->Dump();
   }
 
-  RefPtr<CompositorBridgeChild> cbc(CompositorBridgeChild::Get());
-  RefPtr<PaintTask> state(aTask);
+  MOZ_RELEASE_ASSERT(aTask->mCapture->hasOneRef());
 
-  cbc->NotifyBeginAsyncPaint(state);
+  RefPtr<CompositorBridgeChild> cbc(CompositorBridgeChild::Get());
+  cbc->NotifyBeginAsyncPaint(aTask.get());
 
   RefPtr<PaintThread> self = this;
   RefPtr<Runnable> task = NS_NewRunnableFunction("PaintThread::AsyncPaintTask",
-    [self, cbc, state]() -> void
+    [self, cbc, task = std::move(aTask)]() -> void
   {
-    self->AsyncPaintTask(cbc, state);
+    self->AsyncPaintTask(cbc, task.get());
   });
 
   nsIEventTarget* paintThread = mPaintWorkers ?

@@ -32,10 +32,10 @@ AnimationSurfaceProvider::AnimationSurfaceProvider(NotNull<RasterImage*> aImage,
   MOZ_ASSERT(!mDecoder->IsFirstFrameDecode(),
              "Use DecodedSurfaceProvider for single-frame image decodes");
 
-  // We still produce paletted surfaces for GIF which means the frames are
-  // smaller than one would expect for APNG. This may be removed if/when
-  // bug 1337111 lands and it is enabled by default.
-  size_t pixelSize = aDecoder->GetType() == DecoderType::GIF
+  // We may produce paletted surfaces for GIF which means the frames are smaller
+  // than one would expect.
+  size_t pixelSize = !aDecoder->ShouldBlendAnimation() &&
+                     aDecoder->GetType() == DecoderType::GIF
                      ? sizeof(uint8_t) : sizeof(uint32_t);
 
   // Calculate how many frames we need to decode in this animation before we

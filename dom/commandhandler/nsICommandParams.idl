@@ -91,9 +91,3 @@ interface nsICommandParams : nsISupports
 %}
 };
 
-// {f7fa4581-238e-11d5-a73c-ab64fb68f2bc}
-%{C++
-#define NS_COMMAND_PARAMS_CID { 0xf7fa4581, 0x238e, 0x11d5, { 0xa7, 0x3c, 0xab, 0x64, 0xfb, 0x68, 0xf2, 0xbc } }
-#define NS_COMMAND_PARAMS_CONTRACTID "@mozilla.org/embedcomp/command-params;1"
-%}
-
