@@ -52,7 +52,7 @@ add_task(async function() {
   is(rows.length, 2, "There should be 1 table chart row and a 1 header created.");
 
   ok(rows[1].querySelector(".table-chart-row-box.chart-colored-blob"),
-    "A colored blob exists for the firt row.");
+    "A colored blob exists for the first row.");
   is(rows[1].querySelectorAll("span")[0].getAttribute("name"), "size",
     "The first column of the first row exists.");
   is(rows[1].querySelectorAll("span")[1].getAttribute("name"), "label",

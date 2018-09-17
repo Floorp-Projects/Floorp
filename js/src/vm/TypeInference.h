@@ -84,8 +84,8 @@ class MOZ_RAII AutoSweepObjectGroup : public AutoSweepBase
 #endif
 
   public:
-    inline explicit AutoSweepObjectGroup(ObjectGroup* group);
-    inline AutoSweepObjectGroup(ObjectGroup* group, AutoClearTypeInferenceStateOnOOM& oom);
+    inline explicit AutoSweepObjectGroup(ObjectGroup* group,
+                                         AutoClearTypeInferenceStateOnOOM* oom = nullptr);
 #ifdef DEBUG
     inline ~AutoSweepObjectGroup();
 
@@ -104,8 +104,8 @@ class MOZ_RAII AutoSweepTypeScript : public AutoSweepBase
 #endif
 
   public:
-    inline explicit AutoSweepTypeScript(JSScript* script);
-    inline AutoSweepTypeScript(JSScript* script, AutoClearTypeInferenceStateOnOOM& oom);
+    inline explicit AutoSweepTypeScript(JSScript* script,
+                                        AutoClearTypeInferenceStateOnOOM* oom = nullptr);
 #ifdef DEBUG
     inline ~AutoSweepTypeScript();
 
@@ -414,7 +414,7 @@ class TypeZone
 
     void beginSweep(bool releaseTypes);
     void endSweep(JSRuntime* rt);
-    void clearAllNewScriptsOnOOM(AutoClearTypeInferenceStateOnOOM& oom);
+    void clearAllNewScriptsOnOOM();
 
     /* Mark a script as needing recompilation once inference has finished. */
     void addPendingRecompile(JSContext* cx, const RecompileInfo& info);

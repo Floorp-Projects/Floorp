@@ -280,78 +280,11 @@ xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
   fill: -moz-DialogText;
 }
 
-xul|*.help-button {
-  min-width: 16px;
-  margin-inline-end: 0;
-  border-width: 0;
-  background-image: none;
-  box-shadow: none;
-  list-style-image: url("chrome://global/skin/in-content/help-glyph.svg");
-  -moz-context-properties: fill, stroke, stroke-opacity;
-  fill: #999;
-  stroke: #999;
-  stroke-opacity: 0;
-}
-
-xul|*.help-button:not([disabled="true"]):hover {
-  background-image: none;
-  /* Override default button background */
-  background-color: transparent;
-  fill: white;
-  stroke: #808080;
-  stroke-opacity: 1;
-}
-
-xul|*.help-button:not([disabled="true"]):hover:active {
-  background-image: none;
-  /* Override default button background */
-  background-color: transparent;
-  stroke: #666;
-}
-
-xul|*.close-icon > xul|*.button-box,
-xul|*.help-button > xul|*.button-box {
+xul|*.close-icon > xul|*.button-box {
   padding-top: 0;
   padding-bottom: 0;
   padding-right: 0 !important;
   padding-left: 0 !important;
-}
-
-xul|*.help-button > xul|*.button-box > xul|*.button-icon {
-  width: 16px;
-  height: 16px;
-}
-
-xul|*.help-button > xul|*.button-box > xul|*.button-text {
-  display: none;
-}
-
-html|*.help-button {
-  width: 16px;
-  height: 16px;
-  border: 0;
-  padding: 0;
-  display: inline-block;
-  background-image: url("chrome://global/skin/in-content/help-glyph.svg");
-  -moz-context-properties: fill, stroke, stroke-opacity;
-  fill: #999;
-  stroke: #999;
-  stroke-opacity: 0;
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: contain;
-}
-
-html|*.help-button:hover {
-  fill: white;
-  stroke: #808080;
-  stroke-opacity: 1;
-  background-color: var(--in-content-category-background-hover);
-}
-
-html|*.help-button:hover:active {
-  stroke: #666;
-  background-color: var(--in-content-category-background-active);
 }
 
 html|*.numberbox-input::-moz-number-spin-box {

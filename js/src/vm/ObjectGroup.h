@@ -284,8 +284,7 @@ class ObjectGroup : public gc::TenuredCell
     }
 
     TypeNewScript* anyNewScript(const AutoSweepObjectGroup& sweep);
-    void detachNewScript(bool writeBarrier, ObjectGroup* replacement,
-                         AutoClearTypeInferenceStateOnOOM& oom);
+    void detachNewScript(bool writeBarrier, ObjectGroup* replacement);
 
     ObjectGroupFlags flagsDontCheckGeneration() const {
         return flags_;
@@ -470,7 +469,7 @@ class ObjectGroup : public gc::TenuredCell
     void markStateChange(const AutoSweepObjectGroup& sweep, JSContext* cx);
     void setFlags(const AutoSweepObjectGroup& sweep, JSContext* cx, ObjectGroupFlags flags);
     void markUnknown(const AutoSweepObjectGroup& sweep, JSContext* cx);
-    void maybeClearNewScriptOnOOM(AutoClearTypeInferenceStateOnOOM& oom);
+    void maybeClearNewScriptOnOOM();
     void clearNewScript(JSContext* cx, ObjectGroup* replacement = nullptr);
 
     void print(const AutoSweepObjectGroup& sweep);
@@ -479,7 +478,7 @@ class ObjectGroup : public gc::TenuredCell
     void traceChildren(JSTracer* trc);
 
     inline bool needsSweep();
-    void sweep(const AutoSweepObjectGroup& sweep, AutoClearTypeInferenceStateOnOOM& oom);
+    void sweep(const AutoSweepObjectGroup& sweep, AutoClearTypeInferenceStateOnOOM* oom);
 
   private:
     uint32_t generation() {

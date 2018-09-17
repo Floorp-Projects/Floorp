@@ -283,12 +283,8 @@ pref("devtools.webconsole.sidebarToggle", true);
 pref("devtools.webconsole.sidebarToggle", false);
 #endif
 
-// Enable CodeMirror in the JsTerm in Nightly builds
-#if defined(NIGHTLY_BUILD)
+// Enable CodeMirror in the JsTerm
 pref("devtools.webconsole.jsterm.codeMirror", true);
-#else
-pref("devtools.webconsole.jsterm.codeMirror", false);
-#endif
 
 // Enable console input reverse-search in Nightly builds
 #if defined(NIGHTLY_BUILD)

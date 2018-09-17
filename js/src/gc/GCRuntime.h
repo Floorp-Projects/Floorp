@@ -299,7 +299,6 @@ class GCRuntime
     }
     void getZealBits(uint32_t* zealBits, uint32_t* frequency, uint32_t* nextScheduled);
     void setZeal(uint8_t zeal, uint32_t frequency);
-    void unsetZeal(uint8_t zeal);
     bool parseAndSetZeal(const char* str);
     void setNextScheduled(uint32_t count);
     void verifyPreBarriers();

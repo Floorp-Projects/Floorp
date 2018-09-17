@@ -173,12 +173,6 @@
     "minbytes": 0,
     "maxbytes": 8192
   },
-  "{firefox}\\browser\\features\\aushelper@mozilla.org.xpi": {
-    "mincount": 0,
-    "maxcount": 2,
-    "minbytes": 0,
-    "maxbytes": 24576
-  },
   "{firefox}\\browser\\features\\flyweb@mozilla.org.xpi": {
     "mincount": 0,
     "maxcount": 2,

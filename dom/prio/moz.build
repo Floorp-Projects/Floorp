@@ -19,4 +19,6 @@ UNIFIED_SOURCES += [
     'PrioEncoder.cpp',
 ]
 
+TEST_DIRS += ['test/gtest']
+
 FINAL_LIBRARY = 'xul'

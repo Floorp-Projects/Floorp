@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 import os
+from copy import deepcopy
 
 import mozunit
 import pytest
@@ -12,12 +13,13 @@ import pytest
 from mozlint import pathutils
 
 here = os.path.abspath(os.path.dirname(__file__))
+root = os.path.join(here, 'filter')
 
 
 @pytest.fixture
 def filterpaths():
     lintargs = {
-        'root': os.path.join(here, 'filter'),
+        'root': root,
         'use_filters': True,
     }
     os.chdir(lintargs['root'])
@@ -28,14 +30,19 @@ def filterpaths():
             'exclude': exclude,
             'extensions': extensions,
         }
-        lintargs.update(kwargs)
-        return pathutils.filterpaths(paths, linter, **lintargs)
+        largs = deepcopy(lintargs)
+        largs.update(kwargs)
+        return pathutils.filterpaths(paths, linter, **largs)
 
     return inner
 
 
 def assert_paths(a, b):
-    assert set(a) == set([os.path.normpath(t) for t in b])
+    def normalize(p):
+        if not os.path.isabs(p):
+            p = os.path.join(root, p)
+        return os.path.normpath(p)
+    assert set(map(normalize, a)) == set(map(normalize, b))
 
 
 def test_no_filter(filterpaths):
@@ -47,7 +54,7 @@ def test_no_filter(filterpaths):
     }
 
     paths = filterpaths(**args)
-    assert set(paths) == set(args['paths'])
+    assert_paths(paths, args['paths'])
 
 
 def test_extensions(filterpaths):
@@ -62,31 +69,40 @@ def test_extensions(filterpaths):
     assert_paths(paths, ['a.py', 'subdir2/c.py'])
 
 
-def test_include_exclude(filterpaths):
-    args = {
+TEST_CASES = (
+    {
         'paths': ['a.js', 'subdir1/subdir3/d.js'],
         'include': ['.'],
         'exclude': ['subdir1'],
-    }
-
-    paths = filterpaths(**args)
-    assert_paths(paths, ['a.js'])
-
-    args['include'] = ['subdir1/subdir3']
-    paths = filterpaths(**args)
-    assert_paths(paths, ['subdir1/subdir3/d.js'])
-
-    args = {
+        'expected': ['a.js'],
+    },
+    {
+        'paths': ['a.js', 'subdir1/subdir3/d.js'],
+        'include': ['subdir1/subdir3'],
+        'exclude': ['subdir1'],
+        'expected': ['subdir1/subdir3/d.js'],
+    },
+    {
         'paths': ['.'],
         'include': ['**/*.py'],
         'exclude': ['**/c.py', 'subdir1/subdir3'],
-    }
-    paths = filterpaths(**args)
-    assert_paths(paths, ['a.py', 'subdir1/b.py'])
+        'expected': ['a.py', 'subdir1/b.py'],
+    },
+    {
+        'paths': ['a.py', 'a.js', 'subdir1/b.py', 'subdir2/c.py', 'subdir1/subdir3/d.py'],
+        'include': ['**/*.py'],
+        'exclude': ['**/c.py', 'subdir1/subdir3'],
+        'expected': ['a.py', 'subdir1/b.py'],
+    },
+)
 
-    args['paths'] = ['a.py', 'a.js', 'subdir1/b.py', 'subdir2/c.py', 'subdir1/subdir3/d.py']
-    paths = filterpaths(**args)
-    assert_paths(paths, ['a.py', 'subdir1/b.py'])
+
+@pytest.mark.parametrize('test', TEST_CASES)
+def test_include_exclude(filterpaths, test):
+    expected = test.pop('expected')
+
+    paths = filterpaths(**test)
+    assert_paths(paths, expected)
 
 
 if __name__ == '__main__':

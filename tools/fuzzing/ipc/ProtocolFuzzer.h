@@ -33,7 +33,7 @@ public:
   template<typename T>
   static void RemoveShmemFromProtocol(T* aProtocol, int32_t aId)
   {
-    GetToplevelState(aProtocol)->mShmemMap.Remove(aId);
+    GetToplevelState(aProtocol)->mShmemMap.RemoveIfPresent(aId);
   }
 
 private:
