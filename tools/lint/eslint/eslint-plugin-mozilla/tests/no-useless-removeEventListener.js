@@ -57,7 +57,10 @@ ruleTester.run("no-useless-removeEventListener", rule, {
     // Should not reject when there's 2 different variables
     "elt.addEventListener(event1, function listener() {" +
     "  elt.removeEventListener(event2, listener);" +
-    "});"
+    "});",
+
+    // Should not fail if this is a different type of event listener function.
+    "myfunc.addEventListener(listener);",
   ],
   invalid: [
     invalidCode("elt.addEventListener('click', function listener() {" +
