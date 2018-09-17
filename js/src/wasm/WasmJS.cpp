@@ -2078,17 +2078,17 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (!elementVal.isString()) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
-        return false;
-    }
-
-    JSLinearString* elementStr = elementVal.toString()->ensureLinear(cx);
+    RootedString elementStr(cx, ToString(cx, elementVal));
     if (!elementStr) {
         return false;
     }
 
-    if (!StringEqualsAscii(elementStr, "anyfunc")) {
+    RootedLinearString elementLinearStr(cx, elementStr->ensureLinear(cx));
+    if (!elementLinearStr) {
+        return false;
+    }
+
+    if (!StringEqualsAscii(elementLinearStr, "anyfunc")) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
         return false;
     }
