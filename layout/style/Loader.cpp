@@ -559,6 +559,25 @@ SheetLoadData::GetReferrerURI()
   return uri.forget();
 }
 
+void
+SheetLoadData::SetReferrerPolicyFromHeader(nsIChannel* aChannel)
+{
+  net::ReferrerPolicy policy =
+    nsContentUtils::GetReferrerPolicyFromChannel(aChannel);
+  if (policy == net::RP_Unset ||
+      policy == mSheet->GetReferrerPolicy()) {
+    return;
+  }
+
+  URIPrincipalReferrerPolicyAndCORSModeHashKey oldKey(mURI,
+                                                      mLoaderPrincipal,
+                                                      mSheet->GetCORSMode(),
+                                                      mSheet->GetReferrerPolicy());
+
+  mSheet->SetReferrerPolicy(policy);
+  mLoader->UpdateLoadingData(&oldKey, this);
+}
+
 static nsresult
 VerifySheetIntegrity(const SRIMetadata& aMetadata,
                      nsIChannel* aChannel,
@@ -605,7 +624,7 @@ SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
                                        const nsACString& aBytes2,
                                        nsIChannel* aChannel)
 {
-  LOG(("SheetLoadData::OnStreamComplete"));
+  LOG(("SheetLoadData::VerifySheetReadyToParse"));
   NS_ASSERTION(!mLoader->mSyncCallback, "Synchronous callback from necko");
 
   if (mIsCancelled) {
@@ -815,6 +834,8 @@ SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
     }
   }
 
+  SetReferrerPolicyFromHeader(aChannel);
+
   // Enough to set the URIs on mSheet, since any sibling datas we have share
   // the same mInner as mSheet and will thus get the same URI.
   mSheet->SetURIs(channelURI, originalURI, channelURI);
@@ -851,6 +872,25 @@ Loader::IsAlternateSheet(const nsAString& aTitle, bool aHasAlternateRel)
   }
 
   return IsAlternate::Yes;
+}
+
+void
+Loader::UpdateLoadingData(URIPrincipalReferrerPolicyAndCORSModeHashKey* aOldKey,
+                          SheetLoadData* aData)
+{
+  MOZ_ASSERT(mSheets, "Must have sheets!");
+  MOZ_ASSERT(aData->mIsLoading, "data must be loading");
+
+  DebugOnly<bool> removed = mSheets->mLoadingDatas.Remove(aOldKey);
+  MOZ_ASSERT(removed, "Can't find data to remove!!!");
+
+  URIPrincipalReferrerPolicyAndCORSModeHashKey
+    newKey(aData->mURI,
+           aData->mLoaderPrincipal,
+           aData->mSheet->GetCORSMode(),
+           aData->mSheet->GetReferrerPolicy());
+
+  mSheets->mLoadingDatas.Put(&newKey, aData);
 }
 
 nsresult
