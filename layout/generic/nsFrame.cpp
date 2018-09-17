@@ -986,6 +986,12 @@ nsIFrame::RemoveDisplayItemDataForDeletion()
 
   RetainedDisplayListData* data = GetOrSetRetainedDisplayListData(rootFrame);
 
+  if (MayHaveWillChangeBudget()) {
+    // Keep the frame in list, so it can be removed from the will-change budget.
+    data->Flags(this) = RetainedDisplayListData::FrameFlags::HadWillChange;
+    return;
+  }
+
   if (IsFrameModified() || HasOverrideDirtyRegion()) {
     // Remove deleted frames from RetainedDisplayListData.
     DebugOnly<bool> removed = data->Remove(this);
@@ -3486,7 +3492,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
        NS_FRAME_TOO_DEEP_IN_FRAME_TREE | NS_FRAME_IS_NONDISPLAY))
     return;
 
-  aBuilder->ClearWillChangeBudget(child);
+  aBuilder->RemoveFromWillChangeBudget(child);
 
   const bool shortcutPossible = aBuilder->IsPaintingToWindow() &&
      aBuilder->BuildCompositorHitTestInfo();
@@ -3563,7 +3569,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     isPlaceholder = true;
     nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(child);
     child = placeholder->GetOutOfFlowFrame();
-    aBuilder->ClearWillChangeBudget(child);
+    aBuilder->RemoveFromWillChangeBudget(child);
     NS_ASSERTION(child, "No out of flow frame?");
     // If 'child' is a pushed float then it's owned by a block that's not an
     // ancestor of the placeholder, and it will be painted by that block and
