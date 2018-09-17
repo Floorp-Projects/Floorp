@@ -1945,24 +1945,6 @@ nsWindow::UpdateOverscrollOffset(const float aX, const float aY)
     }
 }
 
-void
-nsWindow::SetSelectionDragState(bool aState)
-{
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (!mLayerViewSupport) {
-        return;
-    }
-
-    const auto& compositor = mLayerViewSupport->GetJavaCompositor();
-    DispatchToUiThread(
-            "nsWindow::SetSelectionDragState",
-            [compositor = LayerSession::Compositor::GlobalRef(compositor),
-             aState] {
-                compositor->OnSelectionCaretDrag(aState);
-            });
-}
-
 void *
 nsWindow::GetNativeData(uint32_t aDataType)
 {
