@@ -3700,11 +3700,15 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
       if (updateState == PartialUpdateResult::Failed) {
         list.DeleteAll(&builder);
+
+        builder.ClearRetainedWindowRegions();
+        builder.ClearWillChangeBudget();
+
         builder.EnterPresShell(aFrame);
         builder.SetDirtyRect(visibleRect);
-        builder.ClearRetainedWindowRegions();
         aFrame->BuildDisplayListForStackingContext(&builder, &list);
-        AddExtraBackgroundItems(builder, list, aFrame, canvasArea, visibleRegion, aBackstop);
+        AddExtraBackgroundItems(
+          builder, list, aFrame, canvasArea, visibleRegion, aBackstop);
 
         builder.LeavePresShell(aFrame, &list);
         updateState = PartialUpdateResult::Updated;
