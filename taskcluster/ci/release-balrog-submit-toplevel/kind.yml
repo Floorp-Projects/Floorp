@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+   - taskgraph.transforms.release:run_on_releases
    - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.scriptworker:add_balrog_scopes
    - taskgraph.transforms.task:transforms
@@ -66,11 +67,11 @@ jobs:
          tier: 1
          kind: build
 
-   # FIXME: (Bug 1487172) This task should only run on esr60-like branches
    firefox-bz2:
       name: submit-toplevel-firefox-release-to-balrog-bz2
       description: Submit toplevel Firefox release to balrog
       shipping-product: firefox
+      run-on-releases: [esr60]
       worker:
          product: firefox
          channel-names:
