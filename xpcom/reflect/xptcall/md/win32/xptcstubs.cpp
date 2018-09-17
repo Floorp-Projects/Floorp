@@ -165,21 +165,21 @@ asm(".text\n\t" \
     ".if	" #n " < 10\n\t" \
     ".globl     __ZN14nsXPTCStubBase5Stub" #n "Ev@4\n\t" \
     ".def       __ZN14nsXPTCStubBase5Stub" #n "Ev@4; \n\t" \
-    ".scl       3\n\t" \
+    ".scl       2\n\t" \
     ".type      46\n\t" \
     ".endef\n\t" \
     "__ZN14nsXPTCStubBase5Stub" #n "Ev@4:\n\t" \
     ".elseif	" #n " < 100\n\t" \
     ".globl     __ZN14nsXPTCStubBase6Stub" #n "Ev@4\n\t" \
     ".def       __ZN14nsXPTCStubBase6Stub" #n "Ev@4\n\t" \
-    ".scl       3\n\t" \
+    ".scl       2\n\t" \
     ".type      46\n\t" \
     ".endef\n\t" \
     "__ZN14nsXPTCStubBase6Stub" #n "Ev@4:\n\t" \
     ".elseif    " #n " < 1000\n\t" \
     ".globl     __ZN14nsXPTCStubBase7Stub" #n "Ev@4\n\t" \
     ".def       __ZN14nsXPTCStubBase7Stub" #n "Ev@4\n\t" \
-    ".scl       3\n\t" \
+    ".scl       2\n\t" \
     ".type      46\n\t" \
     ".endef\n\t" \
     "__ZN14nsXPTCStubBase7Stub" #n "Ev@4:\n\t" \
