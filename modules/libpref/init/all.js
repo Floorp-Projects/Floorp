@@ -5901,11 +5901,6 @@ pref("dom.events.asyncClipboard.dataTransfer", false);
 // Should only be enabled in tests
 pref("dom.events.testing.asyncClipboard", false);
 
-// Enable to correctly draw CSD window headerbar
-#if defined(MOZ_WIDGET_GTK)
-pref("mozilla.widget.use-argb-visuals", false);
-#endif
-
 #ifdef NIGHTLY_BUILD
 // Disable moz* APIs in DataTransfer
 pref("dom.datatransfer.mozAtAPIs", false);
