@@ -90,14 +90,9 @@ def make_task_description(config, jobs):
             job, job['dependencies']
         )
 
-        # Use the rc-google-play-track and rc-rollout-percentage in RC relpro flavors
-        if config.params['release_type'] == 'rc':
-            job['worker']['google-play-track'] = job['worker']['rc-google-play-track']
-            job['worker']['rollout-percentage'] = job['worker']['rc-rollout-percentage']
-
         resolve_keyed_by(
             job, 'worker.google-play-track', item_name=job['name'],
-            project=config.params['project']
+            **{'release-type': config.params['release_type']}
         )
         resolve_keyed_by(
             job, 'worker.commit', item_name=job['name'],
@@ -106,7 +101,7 @@ def make_task_description(config, jobs):
 
         resolve_keyed_by(
             job, 'worker.rollout-percentage', item_name=job['name'],
-            project=config.params['project']
+            **{'release-type': config.params['release_type']}
         )
 
         job['scopes'] = [get_push_apk_scope(config)]
@@ -158,8 +153,4 @@ def delete_non_required_fields(_, jobs):
     for job in jobs:
         del job['name']
         del job['dependent-tasks']
-
-        del(job['worker']['rc-google-play-track'])
-        del(job['worker']['rc-rollout-percentage'])
-
         yield job

@@ -68,7 +68,7 @@ PARAMETERS = {
     'release_partners': None,
     'release_partner_config': None,
     'release_partner_build_number': 1,
-    'release_type': '',
+    'release_type': 'nightly',
     'release_product': None,
     'target_tasks_method': 'default',
     'try_mode': None,

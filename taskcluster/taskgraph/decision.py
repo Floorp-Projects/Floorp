@@ -68,30 +68,35 @@ PER_PROJECT_PARAMETERS = {
         'target_tasks_method': 'mozilla_beta_tasks',
         'optimize_target_tasks': True,
         'include_nightly': True,
+        'release_type': 'beta',
     },
 
     'mozilla-release': {
         'target_tasks_method': 'mozilla_release_tasks',
         'optimize_target_tasks': True,
         'include_nightly': True,
+        'release_type': 'release',
     },
 
     'mozilla-esr60': {
         'target_tasks_method': 'mozilla_esr60_tasks',
         'optimize_target_tasks': True,
         'include_nightly': True,
+        'release_type': 'esr60',
     },
 
     'comm-beta': {
         'target_tasks_method': 'mozilla_beta_tasks',
         'optimize_target_tasks': True,
         'include_nightly': True,
+        'release_type': 'beta',
     },
 
     'comm-esr60': {
         'target_tasks_method': 'mozilla_esr60_tasks',
         'optimize_target_tasks': True,
         'include_nightly': True,
+        'release_type': 'release',
     },
 
     'pine': {
@@ -216,7 +221,7 @@ def get_decision_parameters(options):
     parameters['version'] = get_version()
     parameters['app_version'] = get_app_version()
     parameters['next_version'] = None
-    parameters['release_type'] = ''
+    parameters['release_type'] = 'nightly'
     parameters['release_eta'] = ''
     parameters['release_enable_partners'] = False
     parameters['release_partners'] = []
