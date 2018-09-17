@@ -1074,7 +1074,7 @@ win64-mingwclang/opt:
         - linux64-sccache
         - linux64-cbindgen
         - linux64-node
-        - linux64-clang-7-mingw
+        - linux64-clang-7-mingw-x64
         - linux64-mingw32-nsis
         - linux64-mingw32-fxc2
 
@@ -1110,6 +1110,6 @@ win64-mingwclang/debug:
         - linux64-sccache
         - linux64-cbindgen
         - linux64-node
-        - linux64-clang-7-mingw
+        - linux64-clang-7-mingw-x64
         - linux64-mingw32-nsis
         - linux64-mingw32-fxc2
