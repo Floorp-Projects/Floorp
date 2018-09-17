@@ -329,44 +329,6 @@ const CustomizableWidgets = [
     },
   },
   {
-    id: "feed-button",
-    type: "view",
-    viewId: "PanelUI-feeds",
-    tooltiptext: "feed-button.tooltiptext2",
-    onClick(aEvent) {
-      let win = aEvent.target.ownerGlobal;
-      let feeds = win.gBrowser.selectedBrowser.feeds;
-
-      // Here, we only care about the case where we have exactly 1 feed and the
-      // user clicked...
-      let isClick = (aEvent.button == 0 || aEvent.button == 1);
-      if (feeds && feeds.length == 1 && isClick) {
-        aEvent.preventDefault();
-        aEvent.stopPropagation();
-        win.FeedHandler.subscribeToFeed(feeds[0].href, aEvent);
-        CustomizableUI.hidePanelForNode(aEvent.target);
-      }
-    },
-    onViewShowing(aEvent) {
-      let doc = aEvent.target.ownerDocument;
-      let container = doc.getElementById("PanelUI-feeds");
-      let gotView = doc.defaultView.FeedHandler.buildFeedList(container, true);
-
-      // For no feeds or only a single one, don't show the panel.
-      if (!gotView) {
-        aEvent.preventDefault();
-        aEvent.stopPropagation();
-      }
-    },
-    onCreated(node) {
-      let win = node.ownerGlobal;
-      let selectedBrowser = win.gBrowser.selectedBrowser;
-      let feeds = selectedBrowser && selectedBrowser.feeds;
-      if (!feeds || !feeds.length) {
-        node.setAttribute("disabled", "true");
-      }
-    },
-  }, {
     id: "characterencoding-button",
     label: "characterencoding-button2.label",
     type: "view",
