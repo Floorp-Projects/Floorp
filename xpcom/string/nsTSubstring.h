@@ -9,6 +9,7 @@
 #define nsTSubstring_h
 
 #include "mozilla/Casting.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/MemoryReporting.h"
@@ -908,21 +909,60 @@ public:
    * past the current length (as returned by Length()) of the
    * string. Please use either BulkWrite() or SetLength()
    * instead.
+   *
+   * Note: SetCapacity() won't make the string shorter if
+   * called with an argument smaller than the length of the
+   * string.
+   *
+   * Note: You must not use previously obtained iterators
+   * or spans after calling SetCapacity().
    */
   void NS_FASTCALL SetCapacity(size_type aNewCapacity);
   MOZ_MUST_USE bool NS_FASTCALL SetCapacity(size_type aNewCapacity,
                                             const fallible_t&);
 
+  /**
+   * Changes the logical length of the string, potentially
+   * allocating a differently-sized buffer for the string.
+   *
+   * When making the string shorter, this method never
+   * reports allocation failure.
+   *
+   * Exposes uninitialized memory if the string got longer.
+   *
+   * If called with the argument 0, releases the
+   * heap-allocated buffer, if any. (But the no-argument
+   * overload of Truncate() is a more idiomatic and efficient
+   * option than SetLength(0).)
+   *
+   * Note: You must not use previously obtained iterators
+   * or spans after calling SetLength().
+   */
   void NS_FASTCALL SetLength(size_type aNewLength);
   MOZ_MUST_USE bool NS_FASTCALL SetLength(size_type aNewLength,
                                           const fallible_t&);
 
-  void Truncate(size_type aNewLength = 0)
+  /**
+   * Like SetLength() but asserts in that the string
+   * doesn't become longer. Never fails, so doesn't need a
+   * fallible variant.
+   *
+   * Note: You must not use previously obtained iterators
+   * or spans after calling Truncate().
+   */
+  void Truncate(size_type aNewLength)
   {
-    NS_ASSERTION(aNewLength <= base_string_type::mLength, "Truncate cannot make string longer");
-    SetLength(aNewLength);
+    MOZ_RELEASE_ASSERT(aNewLength <= base_string_type::mLength,
+                       "Truncate cannot make string longer");
+    mozilla::DebugOnly<bool> success = SetLength(aNewLength, mozilla::fallible);
+    MOZ_ASSERT(success);
   }
 
+  /**
+   * A more efficient overload for Truncate(0). Releases the
+   * heap-allocated buffer if any.
+   */
+  void Truncate();
 
   /**
    * buffer access
@@ -1333,6 +1373,29 @@ public:
                                  size_type aSuffixLength = 0,
                                  size_type aOldSuffixStart = 0,
                                  size_type aNewSuffixStart = 0);
+
+private:
+  /**
+   * Do not call this except from within FinishBulkWriteImpl() and
+   * SetCapacity().
+   */
+  MOZ_ALWAYS_INLINE void NS_FASTCALL FinishBulkWriteImplImpl(size_type aLength)
+  {
+    base_string_type::mData[aLength] = char_type(0);
+    base_string_type::mLength = aLength;
+#ifdef DEBUG
+    // ifdefed in order to avoid the call to Capacity() in non-debug
+    // builds.
+    //
+    // Our string is mutable, so Capacity() doesn't return zero.
+    // Capacity() doesn't include the space for the zero terminator,
+    // but we want to unitialize that slot, too. Since we start
+    // counting after the zero terminator the we just wrote above,
+    // we end up overwriting the space for terminator not reflected
+    // in the capacity number.
+    char_traits::uninitialize(base_string_type::mData + aLength + 1, Capacity() - aLength);
+#endif
+  }
 
 protected:
   /**
