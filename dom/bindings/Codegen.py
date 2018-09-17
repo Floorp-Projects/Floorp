@@ -4022,7 +4022,6 @@ class CGClearCachedValueMethod(CGAbstractMethod):
                 JSAutoRealm ar(aCx, obj);
                 if (!get_${name}(aCx, obj, aObject, args)) {
                   js::SetReservedSlot(obj, ${slotIndex}, oldValue);
-                  MOZ_CRASH("Looks like bug 1488480/1405521, with the getter failing");
                   return false;
                 }
                 return true;
@@ -6680,8 +6679,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             wrap = "%s(%s)" % (wrapMethod, wrapArgs)
             # Can only fail to wrap as a new-binding object if they already
             # threw an exception.
-            failed = ('MOZ_CRASH("Looks like bug 1488480/1405521, with getting the reflector failing");\n' +
-                      "MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
+            failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
                       exceptionCode)
         else:
             if descriptor.notflattened:
@@ -7845,7 +7843,6 @@ class CGPerSignatureCall(CGThing):
                 // Make a copy so that we don't do unnecessary wrapping on args.rval().
                 JS::Rooted<JS::Value> storedVal(cx, args.rval());
                 if (!${maybeWrap}(cx, &storedVal)) {
-                  MOZ_CRASH("Looks like bug 1488480/1405521, with the other MaybeWrap failing");
                   return false;
                 }
                 js::SetReservedSlot(slotStorage, slotIndex, storedVal);
@@ -7903,11 +7900,7 @@ class CGPerSignatureCall(CGThing):
                   $*{slotStorageSteps}
                 }
                 // And now make sure args.rval() is in the caller realm.
-                if (${maybeWrap}(cx, args.rval())) {
-                  return true;
-                }
-                MOZ_CRASH("Looks like bug 1488480/1405521, with the third MaybeWrap failing");
-                return false;
+                return ${maybeWrap}(cx, args.rval());
                 """,
                 conversionScope=conversionScope,
                 wrapCode=wrapCode,
@@ -8955,11 +8948,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                     args.rval().set(cachedVal);
                     // The cached value is in the compartment of slotStorage,
                     // so wrap into the caller compartment as needed.
-                    if (${maybeWrap}(cx, args.rval())) {
-                      return true;
-                    }
-                    MOZ_CRASH("Looks like bug 1488480/1405521, with cached value wrapping failing");
-                    return false;
+                    return ${maybeWrap}(cx, args.rval());
                   }
                 }
 
