@@ -55,7 +55,7 @@
 
 #include "nsIAppShellService.h"
 #include "nsIAppStartup.h"
-#include "nsIAppStartupNotifier.h"
+#include "nsAppStartupNotifier.h"
 #include "nsIMutableArray.h"
 #include "nsICategoryManager.h"
 #include "nsIChromeRegistry.h"
@@ -4629,9 +4629,7 @@ XREMain::XRE_mainRun()
   mDirProvider.InitializeUserPrefs();
 
   {
-    nsCOMPtr<nsIObserver> startupNotifier
-      (do_CreateInstance(NS_APPSTARTUPNOTIFIER_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIObserver> startupNotifier = new nsAppStartupNotifier();
 
     startupNotifier->Observe(nullptr, APPSTARTUP_TOPIC, nullptr);
   }
