@@ -2619,7 +2619,8 @@ MediaCacheStream::ReadBlockFromCache(AutoLock& aLock,
   // OffsetToBlockIndexUnchecked() is always non-negative.
   uint32_t index = OffsetToBlockIndexUnchecked(aOffset);
   int32_t cacheBlock = index < mBlocks.Length() ? mBlocks[index] : -1;
-  if (cacheBlock < 0) {
+  if (cacheBlock < 0 ||
+      (mStreamLength >= 0 && aOffset >= mStreamLength)) {
     // Not in the cache.
     return 0;
   }
@@ -2629,6 +2630,13 @@ MediaCacheStream::ReadBlockFromCache(AutoLock& aLock,
     // BLOCK_SIZE bytes.
     aBuffer = aBuffer.First(BLOCK_SIZE);
   }
+
+  if (mStreamLength >= 0 &&
+      aBuffer.Length() > uint32_t(mStreamLength - aOffset)) {
+    // Clamp reads to stream's length
+    aBuffer = aBuffer.First(mStreamLength - aOffset);
+  }
+
   // |BLOCK_SIZE - OffsetInBlock(aOffset)| <= BLOCK_SIZE
   int32_t bytesToRead =
     std::min<int32_t>(BLOCK_SIZE - OffsetInBlock(aOffset), aBuffer.Length());
