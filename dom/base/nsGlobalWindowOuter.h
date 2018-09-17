@@ -964,15 +964,6 @@ public:
 
   bool IsInModalState();
 
-  bool HasStorageAccess() const
-  {
-    return mHasStorageAccess;
-  }
-  void SetHasStorageAccess(bool aHasStorageAccess)
-  {
-    mHasStorageAccess = aHasStorageAccess;
-  }
-
   // Convenience functions for the many methods that need to scale
   // from device to CSS pixels or vice versa.  Note: if a presentation
   // context is not available, they will assume a 1:1 ratio.
@@ -1096,9 +1087,6 @@ protected:
   bool                   mAllowScriptsToClose : 1;
 
   bool mTopLevelOuterContentWindow : 1;
-
-  // whether storage access has been granted to this frame.
-  bool mHasStorageAccess : 1;
 
   nsCOMPtr<nsIScriptContext>    mContext;
   nsWeakPtr                     mOpener;
