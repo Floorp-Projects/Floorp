@@ -363,6 +363,9 @@ public:
     return Inner().mCORSMode;
   }
 
+  // Set style sheet's Referrer Policy
+  void SetReferrerPolicy(net::ReferrerPolicy aReferrerPolicy);
+
   // Get this style sheet's Referrer Policy
   net::ReferrerPolicy GetReferrerPolicy() const
   {

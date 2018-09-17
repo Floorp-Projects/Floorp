@@ -885,6 +885,12 @@ StyleSheet::SetMedia(dom::MediaList* aMedia)
 }
 
 void
+StyleSheet::SetReferrerPolicy(net::ReferrerPolicy aReferrerPolicy)
+{
+  Inner().mReferrerPolicy = aReferrerPolicy;
+}
+
+void
 StyleSheet::DropMedia()
 {
   if (mMedia) {
