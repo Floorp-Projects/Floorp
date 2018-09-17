@@ -6798,6 +6798,9 @@ void
 HTMLMediaElement::NotifyShutdownEvent()
 {
   mShuttingDown = true;
+  // Since target thread had been shutdown, it's no chance to execute the Then()
+  // afterward. Therefore, we should disconnect the request.
+  mAutoplayPermissionRequest.DisconnectIfExists();
   ResetState();
   AddRemoveSelfReference();
 }
