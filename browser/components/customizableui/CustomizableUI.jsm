@@ -55,7 +55,7 @@ const kSubviewEvents = [
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-var kVersion = 15;
+var kVersion = 14;
 
 /**
  * Buttons removed from built-ins by version they were removed. kVersion must be
@@ -63,7 +63,6 @@ var kVersion = 15;
  * version the button is removed in as the value.  e.g. "pocket-button": 5
  */
 var ObsoleteBuiltinButtons = {
-  "feed-button": 15,
 };
 
 /**

@@ -82,6 +82,7 @@ browser.jar:
 *       content/browser/pageinfo/pageInfo.xul         (content/pageinfo/pageInfo.xul)
         content/browser/pageinfo/pageInfo.js          (content/pageinfo/pageInfo.js)
         content/browser/pageinfo/pageInfo.css         (content/pageinfo/pageInfo.css)
+        content/browser/pageinfo/feeds.js             (content/pageinfo/feeds.js)
         content/browser/pageinfo/permissions.js       (content/pageinfo/permissions.js)
         content/browser/pageinfo/security.js          (content/pageinfo/security.js)
         content/browser/content-refreshblocker.js     (content/content-refreshblocker.js)

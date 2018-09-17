@@ -79,7 +79,7 @@ add_task(function() {
                                                    defaultPlacements: [] });
     CustomizableUI.registerArea("area-996899-2", { anchor: "PanelUI-menu-button",
                                                    type: CustomizableUI.TYPE_MENU_PANEL,
-                                                   defaultPlacements: ["new-window-button"] });
+                                                   defaultPlacements: ["feed-button"] });
   } catch (ex) {
     exceptionThrown = ex;
   }

@@ -9,6 +9,8 @@ const EXPORTED_SYMBOLS = ["LinkHandlerChild"];
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
+ChromeUtils.defineModuleGetter(this, "Feeds",
+  "resource:///modules/Feeds.jsm");
 ChromeUtils.defineModuleGetter(this, "FaviconLoader",
   "resource:///modules/FaviconLoader.jsm");
 
@@ -95,6 +97,7 @@ class LinkHandlerChild extends ActorChild {
 
     // Note: following booleans only work for the current link, not for the
     // whole content
+    let feedAdded = false;
     let iconAdded = false;
     let searchAdded = false;
     let rels = {};
@@ -105,6 +108,22 @@ class LinkHandlerChild extends ActorChild {
       let isRichIcon = false;
 
       switch (relVal) {
+        case "feed":
+        case "alternate":
+          if (!feedAdded && event.type == "DOMLinkAdded") {
+            if (!rels.feed && rels.alternate && rels.stylesheet)
+              break;
+
+            if (Feeds.isValidFeed(link, link.ownerDocument.nodePrincipal, "feed" in rels)) {
+              this.mm.sendAsyncMessage("Link:AddFeed", {
+                type: link.type,
+                href: link.href,
+                title: link.title,
+              });
+              feedAdded = true;
+            }
+          }
+          break;
         case "apple-touch-icon":
         case "apple-touch-icon-precomposed":
         case "fluid-icon":
