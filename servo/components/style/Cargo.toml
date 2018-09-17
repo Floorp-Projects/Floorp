@@ -22,7 +22,7 @@ use_bindgen = ["bindgen", "regex", "toml"]
 servo = ["serde", "style_traits/servo", "servo_atoms", "servo_config", "html5ever",
          "cssparser/serde", "encoding_rs", "malloc_size_of/servo", "arrayvec/use_union",
          "servo_url", "string_cache", "servo_channel"]
-gecko_debug = ["nsstring/gecko_debug"]
+gecko_debug = []
 
 [dependencies]
 app_units = "0.7"
