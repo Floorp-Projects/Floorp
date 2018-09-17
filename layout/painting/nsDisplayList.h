@@ -3359,7 +3359,7 @@ public:
   /**
    * Remove all items from the list and call their destructors.
    */
-  void DeleteAll(nsDisplayListBuilder* aBuilder);
+  virtual void DeleteAll(nsDisplayListBuilder* aBuilder);
 
   /**
    * @return the item at the top of the list, or null if the list is empty
@@ -3754,7 +3754,7 @@ public:
     return *this;
   }
 
-  void DeleteAll(nsDisplayListBuilder* aBuilder)
+  void DeleteAll(nsDisplayListBuilder* aBuilder) override
   {
     for (OldItemInfo& i : mOldItems) {
       if (i.mItem) {
