@@ -37,8 +37,6 @@ loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clip
 loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 loader.lazyRequireGetter(this, "getScreenshotFront", "devtools/shared/fronts/screenshot", true);
 loader.lazyRequireGetter(this, "saveScreenshot", "devtools/shared/screenshot/save");
-loader.lazyRequireGetter(this, "ChangesManager",
-"devtools/client/inspector/changes/ChangesManager");
 
 loader.lazyImporter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 
@@ -69,7 +67,6 @@ const THREE_PANE_ENABLED_PREF = "devtools.inspector.three-pane-enabled";
 const THREE_PANE_ENABLED_SCALAR = "devtools.inspector.three_pane_enabled";
 const THREE_PANE_CHROME_ENABLED_PREF = "devtools.inspector.chrome.three-pane-enabled";
 const TELEMETRY_EYEDROPPER_OPENED = "devtools.toolbar.eyedropper.opened";
-const TRACK_CHANGES_ENABLED = "devtools.inspector.changes.enabled";
 
 /**
  * Represents an open instance of the Inspector for a tab.
@@ -125,9 +122,6 @@ function Inspector(toolbox) {
 
   this.reflowTracker = new ReflowTracker(this._target);
   this.styleChangeTracker = new InspectorStyleChangeTracker(this);
-  if (Services.prefs.getBoolPref(TRACK_CHANGES_ENABLED)) {
-    this.changesManager = new ChangesManager(this);
-  }
 
   // Store the URL of the target page prior to navigation in order to ensure
   // telemetry counts in the Grid Inspector are not double counted on reload.
@@ -985,32 +979,6 @@ Inspector.prototype = {
       },
       defaultTab == fontId);
 
-    if (Services.prefs.getBoolPref(TRACK_CHANGES_ENABLED)) {
-      // Inject a lazy loaded react tab by exposing a fake React object
-      // with a lazy defined Tab thanks to `panel` being a function
-      const changesId = "changesview";
-      const changesTitle = INSPECTOR_L10N.getStr("inspector.sidebar.changesViewTitle");
-      this.sidebar.queueTab(
-        changesId,
-        changesTitle,
-        {
-          props: {
-            id: changesId,
-            title: changesTitle
-          },
-          panel: () => {
-            if (!this.changesView) {
-              const ChangesView =
-                this.browserRequire("devtools/client/inspector/changes/ChangesView");
-              this.changesView = new ChangesView(this, this.panelWin);
-            }
-
-            return this.changesView.provider;
-          }
-        },
-        defaultTab == changesId);
-    }
-
     this.sidebar.addAllQueuedTabs();
 
     // Persist splitter state in preferences.
@@ -1449,10 +1417,6 @@ Inspector.prototype = {
       this.layoutview.destroy();
     }
 
-    if (this.changesView) {
-      this.changesView.destroy();
-    }
-
     if (this.fontinspector) {
       this.fontinspector.destroy();
     }
@@ -1487,10 +1451,6 @@ Inspector.prototype = {
     this.breadcrumbs.destroy();
     this.reflowTracker.destroy();
     this.styleChangeTracker.destroy();
-
-    if (this.changesManager) {
-      this.changesManager.destroy();
-    }
 
     this._is3PaneModeChromeEnabled = null;
     this._is3PaneModeEnabled = null;

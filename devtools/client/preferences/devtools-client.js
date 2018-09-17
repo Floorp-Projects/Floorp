@@ -63,8 +63,6 @@ pref("devtools.inspector.shapesHighlighter.enabled", true);
 pref("devtools.inspector.fonteditor.enabled", true);
 // Enable the font highlight-on-hover feature
 pref("devtools.inspector.fonthighlighter.enabled", true);
-// Enable tracking of style changes and the Changes panel in the Inspector
-pref("devtools.inspector.changes.enabled", false);
 
 // Flexbox preferences
 // Enable the Flexbox highlighter in Nightly
