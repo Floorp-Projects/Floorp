@@ -676,7 +676,7 @@ forms-master-pw-use =
     .label = Use a master password
     .accesskey = U
 forms-master-pw-change =
-    .label = Change Master Password
+    .label = Change Master Password…
     .accesskey = M
 
 ## Privacy Section - History

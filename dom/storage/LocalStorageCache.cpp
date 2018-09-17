@@ -424,7 +424,7 @@ LocalStorageCache::SetItem(const LocalStorage* aStorage, const nsAString& aKey,
            static_cast<int64_t>(aOld.Length());
 
   if (!ProcessUsageDelta(aStorage, delta, aSource)) {
-    return NS_ERROR_DOM_QUOTA_REACHED;
+    return NS_ERROR_DOM_QUOTA_EXCEEDED_ERR;
   }
 
   if (aValue == aOld && DOMStringIsNull(aValue) == DOMStringIsNull(aOld)) {

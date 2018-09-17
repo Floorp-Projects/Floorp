@@ -8,6 +8,7 @@
 #define mozilla_dom_PrioEncoder_h
 
 #include "mozilla/dom/PrioEncoderBinding.h"
+#include "mozilla/dom/RootedDictionary.h"
 
 #include "mprio.h"
 

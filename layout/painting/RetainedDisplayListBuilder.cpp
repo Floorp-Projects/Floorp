@@ -41,6 +41,29 @@
 
 using namespace mozilla;
 
+RetainedDisplayListData*
+GetRetainedDisplayListData(nsIFrame* aRootFrame)
+{
+  RetainedDisplayListData* data =
+    aRootFrame->GetProperty(RetainedDisplayListData::DisplayListData());
+
+  return data;
+}
+
+RetainedDisplayListData*
+GetOrSetRetainedDisplayListData(nsIFrame* aRootFrame)
+{
+  RetainedDisplayListData* data = GetRetainedDisplayListData(aRootFrame);
+
+  if (!data) {
+    data = new RetainedDisplayListData();
+    aRootFrame->SetProperty(RetainedDisplayListData::DisplayListData(), data);
+  }
+
+  MOZ_ASSERT(data);
+  return data;
+}
+
 static void
 MarkFramesWithItemsAndImagesModified(nsDisplayList* aList)
 {
@@ -637,36 +660,37 @@ RetainedDisplayListBuilder::MergeDisplayLists(
 
 static void
 TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
+  nsDisplayListBuilder* aBuilder,
   nsTArray<nsIFrame*>* aModifiedFrames,
   nsTArray<nsIFrame*>* aFramesWithProps,
   nsIFrame* aRootFrame)
 {
   MOZ_ASSERT(aRootFrame);
 
-  nsTArray<nsIFrame*>* frames =
-    aRootFrame->GetProperty(nsIFrame::ModifiedFrameList());
+  RetainedDisplayListData* data = GetRetainedDisplayListData(aRootFrame);
 
-  if (frames) {
-    for (nsIFrame* f : *frames) {
-      if (f) {
-        aModifiedFrames->AppendElement(f);
-      }
-    }
-
-    frames->Clear();
+  if (!data) {
+    return;
   }
 
-  frames = aRootFrame->GetProperty(nsIFrame::OverriddenDirtyRectFrameList());
+  for (auto it = data->Iterator(); !it.Done(); it.Next()) {
+    nsIFrame* frame = it.Key();
+    const RetainedDisplayListData::FrameFlags& flags = it.Data();
 
-  if (frames) {
-    for (nsIFrame* f : *frames) {
-      if (f) {
-        aFramesWithProps->AppendElement(f);
-      }
+    if (flags & RetainedDisplayListData::FrameFlags::Modified) {
+      aModifiedFrames->AppendElement(frame);
     }
 
-    frames->Clear();
+    if (flags & RetainedDisplayListData::FrameFlags::HasProps) {
+      aFramesWithProps->AppendElement(frame);
+    }
+
+    if (flags & RetainedDisplayListData::FrameFlags::HadWillChange) {
+      aBuilder->RemoveFromWillChangeBudget(frame);
+    }
   }
+
+  data->Clear();
 }
 
 struct CbData
@@ -729,7 +753,7 @@ SubDocEnumCb(nsIDocument* aDocument, void* aData)
   nsIFrame* rootFrame = GetRootFrameForPainting(data->builder, aDocument);
   if (rootFrame) {
     TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
-      data->modifiedFrames, data->framesWithProps, rootFrame);
+      data->builder, data->modifiedFrames, data->framesWithProps, rootFrame);
 
     nsIDocument* innerDoc = rootFrame->PresShell()->GetDocument();
     if (innerDoc) {
@@ -744,14 +768,13 @@ GetModifiedAndFramesWithProps(nsDisplayListBuilder* aBuilder,
                               nsTArray<nsIFrame*>* aOutModifiedFrames,
                               nsTArray<nsIFrame*>* aOutFramesWithProps)
 {
-  MOZ_ASSERT(aBuilder->RootReferenceFrame());
+  nsIFrame* rootFrame = aBuilder->RootReferenceFrame();
+  MOZ_ASSERT(rootFrame);
 
   TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
-    aOutModifiedFrames, aOutFramesWithProps, aBuilder->RootReferenceFrame());
+    aBuilder, aOutModifiedFrames, aOutFramesWithProps, rootFrame);
 
-  nsIDocument* rootdoc =
-    aBuilder->RootReferenceFrame()->PresContext()->Document();
-
+  nsIDocument* rootdoc = rootFrame->PresContext()->Document();
   if (rootdoc) {
     CbData data = { aBuilder, aOutModifiedFrames, aOutFramesWithProps };
 
@@ -1230,6 +1253,11 @@ ClearFrameProps(nsTArray<nsIFrame*>& aFrames)
 class AutoClearFramePropsArray
 {
 public:
+  explicit AutoClearFramePropsArray(size_t aCapacity)
+    : mFrames(aCapacity)
+  {
+  }
+
   AutoClearFramePropsArray() = default;
 
   ~AutoClearFramePropsArray() { ClearFrameProps(mFrames); }
@@ -1268,7 +1296,7 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(
   // We set the override dirty regions during ComputeRebuildRegion or in
   // nsLayoutUtils::InvalidateForDisplayPortChange. The display port change also
   // marks the frame modified, so those regions are cleared here as well.
-  AutoClearFramePropsArray modifiedFrames;
+  AutoClearFramePropsArray modifiedFrames(64);
   AutoClearFramePropsArray framesWithProps;
   GetModifiedAndFramesWithProps(
     &mBuilder, &modifiedFrames.Frames(), &framesWithProps.Frames());

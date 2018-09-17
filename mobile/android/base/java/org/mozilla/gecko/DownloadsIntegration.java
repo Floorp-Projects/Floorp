@@ -106,6 +106,27 @@ public class DownloadsIntegration implements BundleEventListener
             return false;
         }
 
+        if (Versions.feature23Plus) {
+            // Bug 1280184:
+            // Starting from Android M, the system download manager has started to delete downloaded
+            // files if the download is removed from the download manager again or if the down-
+            // loading app is subsequently uninstalled, even if the files have been downloaded to a
+            // public folder on the shared storage.
+            // In Android O, this was changed to only clean up files in app-private directories and
+            // leave files e.g. in the public Downloads folder alone, but that fix only applies to
+            // files actually downloaded via the download manager. Files that are registered with
+            // the download manager after having been downloaded independently, as in our case, are
+            // still deleted unconditionally when the registering app is uninstalled.
+            // Additionally, starting from Android O Google has also started replacing the former
+            // user-facing part of the download manager, the Downloads app, with a new general file
+            // explorer-type app, whose "Downloads" view simply shows all files stored in the
+            // corresponding folder.
+            // Since that removes the only raison d'être of the downloads integration and we also
+            // don't want to delete user's downloads just because they're uninstalling us, we dis-
+            // able downloads integration again on all Android versions exhibiting this behaviour.
+            return false;
+        }
+
         int state = PackageManager.COMPONENT_ENABLED_STATE_DEFAULT;
         try {
             final PackageManager pm = GeckoAppShell.getApplicationContext()

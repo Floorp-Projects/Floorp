@@ -19,8 +19,7 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-  const hud = toolbox.getCurrentPanel().hud;
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   const jsterm = hud.jsterm;
 

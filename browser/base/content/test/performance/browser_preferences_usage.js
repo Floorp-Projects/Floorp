@@ -96,7 +96,7 @@ add_task(async function startup() {
       // This is accessed in debug only.
     },
     "extensions.getAddons.cache.enabled": {
-      min: 7,
+      min: 6,
       max: 55,
     },
 
