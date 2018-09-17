@@ -237,11 +237,17 @@ Compartment::getNonWrapperObjectForCurrentCompartment(JSContext* cx, MutableHand
     // see bug 809295.
     auto preWrap = cx->runtime()->wrapObjectCallbacks->preWrap;
     if (!CheckSystemRecursionLimit(cx)) {
+        if (obj->getClass()->isDOMClass()) {
+            MOZ_CRASH("Looks like bug 1488480/1405521, with system recursion limit failing in getNonWrapperObjectForCurrentCompartment");
+        }
         return false;
     }
     if (preWrap) {
         preWrap(cx, cx->global(), obj, objectPassedToWrap, obj);
         if (!obj) {
+            if (UncheckedUnwrap(objectPassedToWrap)->getClass()->isDOMClass()) {
+                MOZ_CRASH("Looks like bug 1488480/1405521, with preWrap failing in getNonWrapperObjectForCurrentCompartment");
+            }
             return false;
         }
     }
@@ -269,6 +275,9 @@ Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing, MutableHan
     auto wrap = cx->runtime()->wrapObjectCallbacks->wrap;
     RootedObject wrapper(cx, wrap(cx, existing, obj));
     if (!wrapper) {
+        if (key.toObject().getClass()->isDOMClass()) {
+            MOZ_CRASH("Looks like bug 1488480/1405521, with wrap() call failing in Compartment::getOrCreateWrapper");
+        }
         return false;
     }
 
@@ -284,6 +293,9 @@ Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing, MutableHan
         // reference to it.
         if (wrapper->is<CrossCompartmentWrapperObject>()) {
             NukeCrossCompartmentWrapper(cx, wrapper);
+        }
+        if (obj->getClass()->isDOMClass()) {
+            MOZ_CRASH("Looks like bug 1488480/1405521, with hashtable ops failing in  Compartment::getOrCreateWrapper");
         }
         return false;
     }
