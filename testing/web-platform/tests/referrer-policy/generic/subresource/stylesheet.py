@@ -14,6 +14,9 @@ def generate_payload(request, server_data):
     if type == 'image':
         return subresource.get_template("image.css.template") % {"id": request.GET["id"]}
 
+    elif type == 'font':
+        return subresource.get_template("font.css.template") % {"id": request.GET["id"]}
+
     elif type == 'svg':
         return subresource.get_template("svg.css.template") % {
             "id": request.GET["id"],
@@ -39,6 +42,10 @@ def generate_import_rule(request, server_data):
         "property": property
     }
 
+def generate_report_headers_payload(request, server_data):
+    stashed_data = request.server.stash.take(request.GET["id"])
+    return stashed_data
+
 def main(request, response):
     payload_generator = lambda data: generate_payload(request, data)
     content_type = "text/css"
@@ -59,4 +66,3 @@ def main(request, response):
         payload_generator = payload_generator,
         content_type = content_type,
         maybe_additional_headers = { "Referrer-Policy": referrer_policy })
-
