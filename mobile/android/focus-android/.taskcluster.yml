@@ -174,5 +174,5 @@ tasks:
       metadata:
         name: (Focus for Android) Decision task (${event.release.tag_name})
         description: Scheduling tasks for releasing Focus/Klar
-        owner: ${event.pull_request.user.login}@users.noreply.github.com
-        source: ${event.repository.url}
+        owner: ${event.sender.login}@users.noreply.github.com
+        source: ${event.repository.clone_url}
