@@ -533,9 +533,11 @@
         <xul:button anonid="menubutton"
                     type="menu"
                     class="popup-notification-button popup-notification-dropmarker"
+                    aria-label="&moreActionsButton.accessibleLabel;"
                     xbl:inherits="onpopupshown=dropmarkerpopupshown,hidden=dropmarkerhidden">
           <xul:menupopup anonid="menupopup"
                          position="after_end"
+                         aria-label="&moreActionsButton.accessibleLabel;"
                          xbl:inherits="oncommand=menucommand">
             <children/>
           </xul:menupopup>
