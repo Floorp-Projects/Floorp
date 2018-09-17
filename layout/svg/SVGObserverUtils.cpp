@@ -178,7 +178,17 @@ SVGIDRenderingObserver::SVGIDRenderingObserver(URLAndReferrerInfo* aURI,
   : mObservedElementTracker(this)
 {
   // Start watching the target element
-  mObservedElementTracker.Reset(aObservingContent, aURI, true, aReferenceImage);
+  nsCOMPtr<nsIURI> uri;
+  nsCOMPtr<nsIURI> referrer;
+  uint32_t referrerPolicy = mozilla::net::RP_Unset;
+  if (aURI) {
+    uri = aURI->GetURI();
+    referrer = aURI->GetReferrer();
+    referrerPolicy = aURI->GetReferrerPolicy();
+  }
+
+  mObservedElementTracker.Reset(aObservingContent, uri, referrer,
+                                referrerPolicy, true, aReferenceImage);
   StartObserving();
 }
 
