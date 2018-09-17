@@ -277,6 +277,15 @@ StyleSheet::SetDisabled(bool aDisabled)
   }
 }
 
+already_AddRefed<URLExtraData>
+StyleSheet::CreateURLExtraData() const
+{
+  RefPtr<URLExtraData> data = new URLExtraData(GetBaseURI(),
+                                               GetSheetURI(),
+                                               Principal(),
+                                               GetReferrerPolicy());
+  return data.forget();
+}
 StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
                                ReferrerPolicy aReferrerPolicy,
                                const SRIMetadata& aIntegrity,
@@ -1018,8 +1027,7 @@ StyleSheet::ParseSheet(css::Loader* aLoader,
   MOZ_ASSERT(aLoadData);
   MOZ_ASSERT(mParsePromise.IsEmpty());
   RefPtr<StyleSheetParsePromise> p = mParsePromise.Ensure(__func__);
-  Inner().mURLData =
-    new URLExtraData(GetBaseURI(), GetSheetURI(), Principal()); // RefPtr
+  Inner().mURLData = CreateURLExtraData(); // RefPtr
 
   const StyleUseCounters* useCounters = aLoader->GetDocument()
     ? aLoader->GetDocument()->GetStyleUseCounters()
@@ -1079,7 +1087,7 @@ StyleSheet::ParseSheetSync(css::Loader* aLoader,
     ? aLoader->GetDocument()->GetStyleUseCounters()
     : nullptr;
 
-  Inner().mURLData = new URLExtraData(GetBaseURI(), GetSheetURI(), Principal()); // RefPtr
+  Inner().mURLData = CreateURLExtraData(); // RefPtr
   Inner().mContents = Servo_StyleSheet_FromUTF8Bytes(aLoader,
                                                      this,
                                                      aLoadData,

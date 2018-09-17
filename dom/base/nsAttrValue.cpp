@@ -1737,12 +1737,13 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
     }
   }
 
-  RefPtr<URLExtraData> data = new URLExtraData(baseURI, docURI, principal);
-  RefPtr<DeclarationBlock> decl =
-    DeclarationBlock::FromCssText(aString,
-                                  data,
-                                  ownerDoc->GetCompatibilityMode(),
-                                  ownerDoc->CSSLoader());
+  RefPtr<URLExtraData> data = new URLExtraData(baseURI, docURI,
+                                               principal,
+                                               ownerDoc->GetReferrerPolicy());
+  RefPtr<DeclarationBlock> decl = DeclarationBlock::
+    FromCssText(aString, data,
+                ownerDoc->GetCompatibilityMode(),
+                ownerDoc->CSSLoader());
   if (!decl) {
     return false;
   }
