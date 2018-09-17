@@ -96,6 +96,16 @@ function updateDiff(diff = {}, change = {}) {
 const reducers = {
 
   [TRACK_CHANGE](state, { data }) {
+    const defaults = {
+      href: "",
+      selector: "",
+      tag: null,
+      add: null,
+      remove: null
+    };
+
+    data = { ...defaults, ...data };
+
     // Update the state in-place with data about a style change (no deep clone of state).
     // TODO: redefine state as a shallow object structure after figuring how to track
     // both CSS Declarations and CSS Rules and At-Rules (@media, @keyframes, etc).
