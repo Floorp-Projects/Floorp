@@ -361,7 +361,9 @@ ImageLoader::ClearFrames(nsPresContext* aPresContext)
 
 void
 ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
-                       nsIURI* aReferrer, ImageLoader::Image* aImage,
+                       nsIURI* aReferrer,
+                       mozilla::net::ReferrerPolicy aPolicy,
+                       ImageLoader::Image* aImage,
                        CORSMode aCorsMode)
 {
   NS_ASSERTION(aImage->mRequests.Count() == 0, "Huh?");
@@ -378,7 +380,7 @@ ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
   RefPtr<imgRequestProxy> request;
   nsresult rv = nsContentUtils::LoadImage(aURI, mDocument, mDocument,
                                           aOriginPrincipal, 0, aReferrer,
-                                          mDocument->GetReferrerPolicy(),
+                                          aPolicy,
                                           nullptr, loadFlags,
                                           NS_LITERAL_STRING("css"),
                                           getter_AddRefs(request));
