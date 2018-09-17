@@ -1084,6 +1084,7 @@ DoGetOrCreateDOMReflector(JSContext* cx, T* value,
       // At this point, obj is null, so just return false.
       // Callers seem to be testing JS_IsExceptionPending(cx) to
       // figure out whether WrapObject() threw.
+      MOZ_CRASH("Looks like bug 1488480/1405521, with WrapObject() on the C++ object  throwing");
       return false;
     }
 
@@ -1113,19 +1114,37 @@ DoGetOrCreateDOMReflector(JSContext* cx, T* value,
   rval.set(JS::ObjectValue(*obj));
 
   if (js::GetObjectCompartment(obj) == js::GetContextCompartment(cx)) {
-    return TypeNeedsOuterization<T>::value ? TryToOuterize(rval) : true;
+    if (!TypeNeedsOuterization<T>::value) {
+      return true;
+    }
+    if (TryToOuterize(rval)) {
+      return true;
+    }
+
+    MOZ_CRASH("Looks like bug 1488480/1405521, with TryToOuterize failing");
+    return false;
   }
 
   if (wrapBehavior == eDontWrapIntoContextCompartment) {
     if (TypeNeedsOuterization<T>::value) {
       JSAutoRealm ar(cx, obj);
-      return TryToOuterize(rval);
+      if (TryToOuterize(rval)) {
+        return true;
+      }
+
+      MOZ_CRASH("Looks like bug 1488480/1405521, with TryToOuterize failing");
+      return false;
     }
 
     return true;
   }
 
-  return JS_WrapValue(cx, rval);
+  if (JS_WrapValue(cx, rval)) {
+    return true;
+  }
+
+  MOZ_CRASH("Looks like bug 1488480/1405521, with JS_WrapValue failing");
+  return false;
 }
 
 } // namespace binding_detail
