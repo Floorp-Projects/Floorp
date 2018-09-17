@@ -612,7 +612,8 @@ JS::EvaluateUtf8Path(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
 
     CompileOptions options(cx, optionsArg);
     options.setFileAndLine(filename, 1);
+    MOZ_ASSERT(options.utf8);
 
-    return Evaluate(cx, options,
-                    reinterpret_cast<const char*>(buffer.begin()), buffer.length(), rval);
+    return EvaluateUtf8(cx, options,
+                        reinterpret_cast<const char*>(buffer.begin()), buffer.length(), rval);
 }
