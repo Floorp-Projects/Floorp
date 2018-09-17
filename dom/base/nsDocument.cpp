@@ -10613,8 +10613,105 @@ FullscreenRoots::IsEmpty()
   return !sInstance;
 }
 
+// Any fullscreen request waiting for the widget to finish being full-
+// screen is queued here. This is declared static instead of a member
+// of nsDocument because in the majority of time, there would be at most
+// one document requesting fullscreen. We shouldn't waste the space to
+// hold for it in every document.
+class PendingFullscreenRequestList
+{
+public:
+  PendingFullscreenRequestList() = delete;
+
+  static void Add(UniquePtr<FullscreenRequest> aRequest)
+  {
+    sList.insertBack(aRequest.release());
+  }
+
+  static const FullscreenRequest* GetLast()
+  {
+    return sList.getLast();
+  }
+
+  enum IteratorOption
+  {
+    // When we are committing fullscreen changes or preparing for
+    // that, we generally want to iterate all requests in the same
+    // window with eDocumentsWithSameRoot option.
+    eDocumentsWithSameRoot,
+    // If we are removing a document from the tree, we would only
+    // want to remove the requests from the given document and its
+    // descendants. For that case, use eInclusiveDescendants.
+    eInclusiveDescendants
+  };
+
+  class Iterator
+  {
+  public:
+    explicit Iterator(nsIDocument* aDoc, IteratorOption aOption)
+      : mCurrent(PendingFullscreenRequestList::sList.getFirst())
+      , mRootShellForIteration(aDoc->GetDocShell())
+    {
+      if (mCurrent) {
+        if (mRootShellForIteration && aOption == eDocumentsWithSameRoot) {
+          mRootShellForIteration->
+            GetRootTreeItem(getter_AddRefs(mRootShellForIteration));
+        }
+        SkipToNextMatch();
+      }
+    }
+
+    UniquePtr<FullscreenRequest> TakeAndNext()
+    {
+      auto thisRequest = TakeAndNextInternal();
+      SkipToNextMatch();
+      return thisRequest;
+    }
+    bool AtEnd() const { return mCurrent == nullptr; }
+
+  private:
+    UniquePtr<FullscreenRequest> TakeAndNextInternal()
+    {
+      UniquePtr<FullscreenRequest> thisRequest(mCurrent);
+      mCurrent = mCurrent->removeAndGetNext();
+      return thisRequest;
+    }
+    void SkipToNextMatch()
+    {
+      while (mCurrent) {
+        nsCOMPtr<nsIDocShellTreeItem>
+          docShell = mCurrent->Document()->GetDocShell();
+        if (!docShell) {
+          // Always automatically drop fullscreen requests which is from
+          // a document detached from the doc shell.
+          UniquePtr<FullscreenRequest> request = TakeAndNextInternal();
+          request->MayRejectPromise();
+        } else {
+          while (docShell && docShell != mRootShellForIteration) {
+            docShell->GetParent(getter_AddRefs(docShell));
+          }
+          if (!docShell) {
+            // We've gone over the root, but haven't find the target
+            // ancestor, so skip this item.
+            mCurrent = mCurrent->getNext();
+          } else {
+            break;
+          }
+        }
+      }
+    }
+
+    FullscreenRequest* mCurrent;
+    nsCOMPtr<nsIDocShellTreeItem> mRootShellForIteration;
+  };
+
+private:
+  static LinkedList<FullscreenRequest> sList;
+};
+
+/* static */ LinkedList<FullscreenRequest> PendingFullscreenRequestList::sList;
+
 } // end namespace mozilla.
-using mozilla::FullscreenRoots;
 
 nsIDocument*
 nsIDocument::GetFullscreenRoot()
@@ -11238,104 +11335,6 @@ nsIDocument::FullscreenElementReadyCheck(const FullscreenRequest& aRequest)
   }
   return true;
 }
-
-// Any fullscreen request waiting for the widget to finish being full-
-// screen is queued here. This is declared static instead of a member
-// of nsDocument because in the majority of time, there would be at most
-// one document requesting fullscreen. We shouldn't waste the space to
-// hold for it in every document.
-class PendingFullscreenRequestList
-{
-public:
-  static void Add(UniquePtr<FullscreenRequest> aRequest)
-  {
-    sList.insertBack(aRequest.release());
-  }
-
-  static const FullscreenRequest* GetLast()
-  {
-    return sList.getLast();
-  }
-
-  enum IteratorOption
-  {
-    // When we are committing fullscreen changes or preparing for
-    // that, we generally want to iterate all requests in the same
-    // window with eDocumentsWithSameRoot option.
-    eDocumentsWithSameRoot,
-    // If we are removing a document from the tree, we would only
-    // want to remove the requests from the given document and its
-    // descendants. For that case, use eInclusiveDescendants.
-    eInclusiveDescendants
-  };
-
-  class Iterator
-  {
-  public:
-    explicit Iterator(nsIDocument* aDoc, IteratorOption aOption)
-      : mCurrent(PendingFullscreenRequestList::sList.getFirst())
-      , mRootShellForIteration(aDoc->GetDocShell())
-    {
-      if (mCurrent) {
-        if (mRootShellForIteration && aOption == eDocumentsWithSameRoot) {
-          mRootShellForIteration->
-            GetRootTreeItem(getter_AddRefs(mRootShellForIteration));
-        }
-        SkipToNextMatch();
-      }
-    }
-
-    UniquePtr<FullscreenRequest> TakeAndNext()
-    {
-      auto thisRequest = TakeAndNextInternal();
-      SkipToNextMatch();
-      return thisRequest;
-    }
-    bool AtEnd() const { return mCurrent == nullptr; }
-
-  private:
-    UniquePtr<FullscreenRequest> TakeAndNextInternal()
-    {
-      UniquePtr<FullscreenRequest> thisRequest(mCurrent);
-      mCurrent = mCurrent->removeAndGetNext();
-      return thisRequest;
-    }
-    void SkipToNextMatch()
-    {
-      while (mCurrent) {
-        nsCOMPtr<nsIDocShellTreeItem>
-          docShell = mCurrent->Document()->GetDocShell();
-        if (!docShell) {
-          // Always automatically drop fullscreen requests which is from
-          // a document detached from the doc shell.
-          UniquePtr<FullscreenRequest> request = TakeAndNextInternal();
-          request->MayRejectPromise();
-        } else {
-          while (docShell && docShell != mRootShellForIteration) {
-            docShell->GetParent(getter_AddRefs(docShell));
-          }
-          if (!docShell) {
-            // We've gone over the root, but haven't find the target
-            // ancestor, so skip this item.
-            mCurrent = mCurrent->getNext();
-          } else {
-            break;
-          }
-        }
-      }
-    }
-
-    FullscreenRequest* mCurrent;
-    nsCOMPtr<nsIDocShellTreeItem> mRootShellForIteration;
-  };
-
-private:
-  PendingFullscreenRequestList() = delete;
-
-  static LinkedList<FullscreenRequest> sList;
-};
-
-/* static */ LinkedList<FullscreenRequest> PendingFullscreenRequestList::sList;
 
 static nsCOMPtr<nsPIDOMWindowOuter>
 GetRootWindow(nsIDocument* aDoc)
