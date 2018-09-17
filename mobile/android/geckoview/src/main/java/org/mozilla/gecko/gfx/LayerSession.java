@@ -483,6 +483,24 @@ public class LayerSession {
         mOverscroll.setDistance(y, OverscrollEdgeEffect.AXIS_Y);
     }
 
+    protected boolean mShouldPinOnScreen;
+
+    protected void setShouldPinOnScreen(final boolean pinned) {
+        if (DEBUG) {
+            ThreadUtils.assertOnUiThread();
+        }
+
+        if (mToolbar != null) {
+            mToolbar.setPinned(pinned, DynamicToolbarAnimator.PinReason.CARET_DRAG);
+        }
+        mShouldPinOnScreen = pinned;
+    }
+
+    /* package */ boolean shouldPinOnScreen() {
+        ThreadUtils.assertOnUiThread();
+        return mShouldPinOnScreen;
+    }
+
     /* package */ void onMetricsChanged(final float scrollX, final float scrollY,
                                         final float zoom) {
         if (DEBUG) {
