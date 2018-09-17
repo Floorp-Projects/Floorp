@@ -20,6 +20,7 @@
 <!ENTITY aboutPrivateBrowsing.info.saved.after2          " your:">
 <!ENTITY aboutPrivateBrowsing.info.downloads             "downloads">
 <!ENTITY aboutPrivateBrowsing.info.bookmarks             "bookmarks">
+<!ENTITY aboutPrivateBrowsing.info.clipboard             "copied text">
 <!ENTITY aboutPrivateBrowsing.note.before                "Private Browsing ">
 <!ENTITY aboutPrivateBrowsing.note.emphasize             "doesn’t make you anonymous">
 <!ENTITY aboutPrivateBrowsing.note.after                 " on the Internet. Your employer or Internet service provider can still know what page you visit.">
