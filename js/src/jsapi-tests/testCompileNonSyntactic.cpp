@@ -85,7 +85,7 @@ testCompile(bool nonSyntactic)
     CHECK(CompileForNonSyntacticScope(cx, options, buf, &script));
     CHECK_EQUAL(script->hasNonSyntacticScope(), true);
 
-    CHECK(CompileForNonSyntacticScope(cx, options, src, length, &script));
+    CHECK(CompileLatin1ForNonSyntacticScope(cx, options, src, length, &script));
     CHECK_EQUAL(script->hasNonSyntacticScope(), true);
 
     {
