@@ -213,6 +213,7 @@ imgFrame::imgFrame()
   , mPalettedImageData(nullptr)
   , mPaletteDepth(0)
   , mNonPremult(false)
+  , mIsFullFrame(false)
   , mCompositingFailed(false)
 {
 }
@@ -235,7 +236,8 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
                          SurfaceFormat aFormat,
                          uint8_t aPaletteDepth /* = 0 */,
                          bool aNonPremult /* = false */,
-                         const Maybe<AnimationParams>& aAnimParams /* = Nothing() */)
+                         const Maybe<AnimationParams>& aAnimParams /* = Nothing() */,
+                         bool aIsFullFrame /* = false */)
 {
   // Assert for properties that should be verified by decoders,
   // warn for properties related to bad content.
@@ -258,8 +260,10 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
     mTimeout = aAnimParams->mTimeout;
     mBlendMethod = aAnimParams->mBlendMethod;
     mDisposalMethod = aAnimParams->mDisposalMethod;
+    mIsFullFrame = aAnimParams->mFrameNum == 0 || aIsFullFrame;
   } else {
     mBlendRect = aRect;
+    mIsFullFrame = true;
   }
 
   // We only allow a non-trivial frame rect (i.e., a frame rect that doesn't
