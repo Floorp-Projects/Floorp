@@ -862,8 +862,6 @@ private:
   // Start the force-kill timer on shutdown.
   void StartForceKillTimer();
 
-  void OnGenerateMinidumpComplete(bool aDumpResult);
-
   // Ensure that the permissions for the giben Permission key are set in the
   // content process.
   //
