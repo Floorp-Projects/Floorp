@@ -55,7 +55,7 @@ testPreserveJitCode(bool preserveJitCode, unsigned remainingIonScripts)
 
     CHECK_EQUAL(countIonScripts(global), 0u);
 
-    const char* source =
+    static const char source[] =
         "var i = 0;\n"
         "var sum = 0;\n"
         "while (i < 10) {\n"
@@ -65,12 +65,14 @@ testPreserveJitCode(bool preserveJitCode, unsigned remainingIonScripts)
         "return sum;\n";
     unsigned length = strlen(source);
 
-    JS::RootedFunction fun(cx);
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, 1);
+    options.setUTF8(true);
+
+    JS::RootedFunction fun(cx);
     JS::AutoObjectVector emptyScopeChain(cx);
-    CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "f", 0, nullptr,
-			      source, length, &fun));
+    CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "f", 0, nullptr,
+                      			      source, length, &fun));
 
     RootedValue value(cx);
     for (unsigned i = 0; i < 1500; ++i) {

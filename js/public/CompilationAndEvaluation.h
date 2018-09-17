@@ -255,13 +255,13 @@ CompileFunction(JSContext* cx, AutoVector<JSObject*>& envChain,
                 SourceBufferHolder& srcBuf, MutableHandle<JSFunction*> fun);
 
 /**
- * Same as above, but taking a const char * for the function body.
+ * Same as above, but taking UTF-8 encoded const char* for the function body.
  */
 extern JS_PUBLIC_API(bool)
-CompileFunction(JSContext* cx, AutoVector<JSObject*>& envChain,
-                const ReadOnlyCompileOptions& options,
-                const char* name, unsigned nargs, const char* const* argnames,
-                const char* bytes, size_t length, MutableHandle<JSFunction*> fun);
+CompileFunctionUtf8(JSContext* cx, AutoVector<JSObject*>& envChain,
+                    const ReadOnlyCompileOptions& options,
+                    const char* name, unsigned nargs, const char* const* argnames,
+                    const char* utf8, size_t length, MutableHandle<JSFunction*> fun);
 
 /*
  * Associate an element wrapper and attribute name with a previously compiled
