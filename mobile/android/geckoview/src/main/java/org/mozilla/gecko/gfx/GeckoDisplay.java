@@ -53,4 +53,17 @@ public class GeckoDisplay {
     public void screenOriginChanged(final int left, final int top) {
         mSession.onScreenOriginChanged(left, top);
     }
+
+    /**
+     * Return whether the display should be pinned on the screen. When pinned, the display
+     * should not be moved on the screen due to animation, scrolling, etc. A common reason
+     * for the display being pinned is when the user is dragging a selection caret inside
+     * the display; normal user interaction would be disrupted in that case if the display
+     * was moved on screen.
+     *
+     * @return True if display should be pinned on the screen.
+     */
+    public boolean shouldPinOnScreen() {
+        return mSession.shouldPinOnScreen();
+    }
 }
