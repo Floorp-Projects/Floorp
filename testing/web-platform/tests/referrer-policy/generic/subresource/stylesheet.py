@@ -41,13 +41,22 @@ def generate_import_rule(request, server_data):
 
 def main(request, response):
     payload_generator = lambda data: generate_payload(request, data)
+    content_type = "text/css"
+    referrer_policy = "unsafe-url"
     if "import-rule" in request.GET:
         payload_generator = lambda data: generate_import_rule(request, data)
+
+    if "report-headers" in request.GET:
+        payload_generator = lambda data: generate_report_headers_payload(request, data)
+        content_type = 'application/json'
+
+    if "referrer-policy" in request.GET:
+        referrer_policy = request.GET["referrer-policy"]
 
     subresource.respond(
         request,
         response,
         payload_generator = payload_generator,
-        content_type = "text/css",
-        maybe_additional_headers = { "Referrer-Policy": "unsafe-url" })
+        content_type = content_type,
+        maybe_additional_headers = { "Referrer-Policy": referrer_policy })
 
