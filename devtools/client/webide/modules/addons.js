@@ -5,11 +5,12 @@
 "use strict";
 
 const {AddonManager} = require("resource://gre/modules/AddonManager.jsm");
+const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
-var ADB_LINK = Services.prefs.getCharPref("devtools.webide.adbAddonURL");
-var ADB_ADDON_ID = Services.prefs.getCharPref("devtools.webide.adbAddonID");
+var ADB_LINK = Services.prefs.getCharPref("devtools.webide.adbExtensionURL");
+var ADB_ADDON_ID = Services.prefs.getCharPref("devtools.webide.adbExtensionID");
 
 var platform = Services.appShell.hiddenDOMWindow.navigator.platform;
 var OS = "";
@@ -53,6 +54,7 @@ function Addon() {}
 Addon.prototype = {
   _status: "unknown",
   set status(value) {
+    Devices.adbExtensionInstalled = (value == "installed");
     if (this._status != value) {
       this._status = value;
       this.emit("update");

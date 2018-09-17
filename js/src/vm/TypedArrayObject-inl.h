@@ -28,6 +28,7 @@
 #include "vm/NativeObject.h"
 
 #include "gc/ObjectKind-inl.h"
+#include "vm/ObjectOperations-inl.h"
 
 namespace js {
 

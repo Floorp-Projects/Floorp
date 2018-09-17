@@ -15,6 +15,7 @@
 #include "vm/EnvironmentObject.h"
 
 #include "vm/JSObject-inl.h"
+#include "vm/NativeObject-inl.h"
 
 namespace js {
 

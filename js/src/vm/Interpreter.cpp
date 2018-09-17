@@ -63,6 +63,7 @@
 #include "vm/JSFunction-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "vm/ObjectOperations-inl.h"
 #include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"
 
