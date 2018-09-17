@@ -145,11 +145,13 @@ if CONFIG['NIGHTLY_BUILD']:
         'testErrorInterceptor.cpp',
     ]
 
-if CONFIG['JS_BUILD_BINAST'] and CONFIG['JS_STANDALONE']:
+if CONFIG['JS_BUILD_BINAST'] and CONFIG['JS_STANDALONE'] and not CONFIG['FUZZING']:
     # Standalone builds leave the source directory untouched,
     # which lets us run tests with the data files intact.
     # Otherwise, in the current state of the build system,
     # we can't have data files in js/src tests.
+    # Also, fuzzing builds modify the const matching in the
+    # token reader and hence affect the correctness of the tests.
     UNIFIED_SOURCES += [
         'testBinASTReader.cpp',
         'testBinTokenReaderTester.cpp'
