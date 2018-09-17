@@ -16,21 +16,25 @@ const Actions = require("../../actions/index");
 class SidebarItem extends PureComponent {
   static get propTypes() {
     return {
+      connectComponent: PropTypes.any,
       dispatch: PropTypes.func.isRequired,
       icon: PropTypes.string.isRequired,
       id: PropTypes.string.isRequired,
       isSelected: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
-      selectable: PropTypes.boolean,
+      runtimeId: PropTypes.string,
+      selectable: PropTypes.bool.isRequired,
+      type: PropTypes.string.isRequired,
     };
   }
 
   onItemClick() {
-    this.props.dispatch(Actions.selectPage(this.props.id));
+    const { id, dispatch, runtimeId } = this.props;
+    dispatch(Actions.selectPage(id, runtimeId));
   }
 
   render() {
-    const { icon, isSelected, name, selectable } = this.props;
+    const { connectComponent, icon, isSelected, name, selectable } = this.props;
 
     return dom.li(
       {
@@ -43,11 +47,16 @@ class SidebarItem extends PureComponent {
         onClick: selectable ? () => this.onItemClick() : null
       },
       dom.img({
-        className: "sidebar-item__icon" +
-                   (isSelected ? " sidebar-item__icon--selected" : ""),
+        className: "sidebar-item__icon",
         src: icon,
       }),
-      name
+      dom.span(
+        {
+          className: "ellipsis-text",
+          title: name,
+        },
+        name),
+      connectComponent ? connectComponent : null
     );
   }
 }

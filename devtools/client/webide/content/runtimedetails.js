@@ -77,15 +77,14 @@ function CheckLockState() {
 
   const sYes = Strings.GetStringFromName("runtimedetails_checkyes");
   const sNo = Strings.GetStringFromName("runtimedetails_checkno");
-  const sUnknown = Strings.GetStringFromName("runtimedetails_checkunknown");
   const sNotUSB = Strings.GetStringFromName("runtimedetails_notUSBDevice");
 
   flipCertPerfButton.setAttribute("disabled", "true");
   flipCertPerfAction.setAttribute("hidden", "true");
   adbRootAction.setAttribute("hidden", "true");
 
-  adbCheckResult.textContent = sUnknown;
-  devtoolsCheckResult.textContent = sUnknown;
+  adbCheckResult.textContent = "";
+  devtoolsCheckResult.textContent = "";
 
   if (AppManager.connection &&
       AppManager.connection.status == Connection.Status.CONNECTED) {
@@ -102,8 +101,6 @@ function CheckLockState() {
             adbRootAction.removeAttribute("hidden");
           }
         }, console.error);
-      } else {
-        adbCheckResult.textContent = sUnknown;
       }
     } else {
       adbCheckResult.textContent = sNotUSB;

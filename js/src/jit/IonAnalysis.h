@@ -203,7 +203,7 @@ ConvertLinearInequality(TempAllocator& alloc, MBasicBlock* block, const LinearSu
 MOZ_MUST_USE bool
 AnalyzeNewScriptDefiniteProperties(JSContext* cx, HandleFunction fun,
                                    ObjectGroup* group, HandlePlainObject baseobj,
-                                   Vector<TypeNewScript::Initializer>* initializerList);
+                                   Vector<TypeNewScriptInitializer>* initializerList);
 
 MOZ_MUST_USE bool
 AnalyzeArgumentsUsage(JSContext* cx, JSScript* script);

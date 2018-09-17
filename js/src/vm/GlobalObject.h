@@ -738,16 +738,8 @@ class GlobalObject : public NativeObject
     static bool addIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
                                   HandlePropertyName name, HandleValue value);
 
-    static bool setIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
-                                  HandlePropertyName name, HandleValue value)
-    {
-        MOZ_ASSERT(cx->runtime()->isSelfHostingGlobal(global));
-        RootedObject holder(cx, GlobalObject::getIntrinsicsHolder(cx, global));
-        if (!holder) {
-            return false;
-        }
-        return SetProperty(cx, holder, name, value);
-    }
+    static inline bool setIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
+                                         HandlePropertyName name, HandleValue value);
 
     static bool getSelfHostedFunction(JSContext* cx, Handle<GlobalObject*> global,
                                       HandlePropertyName selfHostedName, HandleAtom name,

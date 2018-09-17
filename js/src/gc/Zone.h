@@ -14,6 +14,7 @@
 #include "js/GCHashTable.h"
 #include "vm/MallocProvider.h"
 #include "vm/Runtime.h"
+#include "vm/TypeInference.h"
 
 namespace js {
 

@@ -19,22 +19,18 @@ CustomNative(JSContext* cx, unsigned argc, JS::Value* vp)
     return true;
 }
 
-static bool
-TryConstruct(JSContext* cx, const char* code, const char* filename, decltype(__LINE__) lineno,
-             JS::MutableHandleValue vp)
-{
-    JS::CompileOptions opts(cx);
-    opts.setFileAndLine(filename, lineno);
-    return JS::Evaluate(cx, opts, code, strlen(code), vp);
-}
-
 BEGIN_TEST(testCallArgs_isConstructing_native)
 {
     CHECK(JS_DefineFunction(cx, global, "customNative", CustomNative, 0, 0));
 
-    JS::RootedValue result(cx);
+    JS::CompileOptions opts(cx);
+    opts.setFileAndLine(__FILE__, __LINE__ + 4);
+    opts.setUTF8(true);
 
-    CHECK(!TryConstruct(cx, "new customNative();", __FILE__, __LINE__, &result));
+    JS::RootedValue result(cx);
+    static const char code[] = "new customNative();";
+    CHECK(!JS::EvaluateUtf8(cx, opts, code, strlen(code), &result));
+
     CHECK(JS_IsExceptionPending(cx));
     JS_ClearPendingException(cx);
 

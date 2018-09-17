@@ -11,8 +11,6 @@
 
 BEGIN_TEST(testGCOutOfMemory)
 {
-    JS::RootedValue root(cx);
-
     // Count the number of allocations until we hit OOM, and store it in 'max'.
     static const char source[] =
         "var max = 0; (function() {"
@@ -21,8 +19,12 @@ BEGIN_TEST(testGCOutOfMemory)
         "        array.push({});"
         "    array = []; array.push(0);"
         "})();";
+
     JS::CompileOptions opts(cx);
-    bool ok = JS::Evaluate(cx, opts, source, strlen(source), &root);
+    opts.setUTF8(true);
+
+    JS::RootedValue root(cx);
+    bool ok = JS::EvaluateUtf8(cx, opts, source, strlen(source), &root);
 
     /* Check that we get OOM. */
     CHECK(!ok);

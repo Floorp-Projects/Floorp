@@ -122,13 +122,13 @@ RuntimeList.prototype = {
     const usbListNode = doc.querySelector("#runtime-panel-usb");
     const wifiListNode = doc.querySelector("#runtime-panel-wifi");
     const otherListNode = doc.querySelector("#runtime-panel-other");
-    const noHelperNode = doc.querySelector("#runtime-panel-noadbhelper");
+    const noADBExtensionNode = doc.querySelector("#runtime-panel-noadbextension");
     const noUSBNode = doc.querySelector("#runtime-panel-nousbdevice");
 
-    if (Devices.helperAddonInstalled) {
-      noHelperNode.setAttribute("hidden", "true");
+    if (Devices.adbExtensionInstalled) {
+      noADBExtensionNode.setAttribute("hidden", "true");
     } else {
-      noHelperNode.removeAttribute("hidden");
+      noADBExtensionNode.removeAttribute("hidden");
     }
 
     const runtimeList = AppManager.runtimeList;
@@ -137,7 +137,7 @@ RuntimeList.prototype = {
       return;
     }
 
-    if (runtimeList.usb.length === 0 && Devices.helperAddonInstalled) {
+    if (runtimeList.usb.length === 0 && Devices.adbExtensionInstalled) {
       noUSBNode.removeAttribute("hidden");
     } else {
       noUSBNode.setAttribute("hidden", "true");

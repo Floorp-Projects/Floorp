@@ -18,10 +18,11 @@
 #include "frontend/FullParseHandler.h" // frontend::FullParseHandler
 #include "frontend/ParseContext.h" // frontend::UsedNameTracker
 #include "frontend/Parser.h" // frontend::Parser, frontend::ParseGoal
-#include "js/CharacterEncoding.h" // JS::UTF8CharsToNewTwoByteCharsZ
+#include "js/CharacterEncoding.h" // JS::UTF8Chars, JS::UTF8CharsToNewTwoByteCharsZ
 #include "js/RootingAPI.h" // JS::Rooted
 #include "js/SourceBufferHolder.h" // JS::SourceBufferHolder
 #include "js/TypeDecls.h" // JS::HandleObject, JS::MutableHandleScript
+#include "js/Value.h" // JS::Value
 #include "util/CompleteFile.h" // js::FileContents, js::ReadCompleteFile
 #include "util/StringBuffer.h" // js::StringBuffer
 #include "vm/Debugger.h" // js::Debugger
@@ -35,6 +36,8 @@ using JS::CompileOptions;
 using JS::HandleObject;
 using JS::ReadOnlyCompileOptions;
 using JS::SourceBufferHolder;
+using JS::UTF8Chars;
+using JS::UTF8CharsToNewTwoByteCharsZ;
 
 using namespace js;
 
@@ -73,7 +76,7 @@ CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
 {
     MOZ_ASSERT(options.utf8);
 
-    char16_t* chars = JS::UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
+    char16_t* chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     if (!chars) {
         return false;
     }
@@ -172,23 +175,7 @@ JS::CompileLatin1ForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOption
 }
 
 JS_PUBLIC_API(bool)
-JS_CompileScript(JSContext* cx, const char* bytes, size_t length,
-                 const JS::CompileOptions& options, MutableHandleScript script)
-{
-    return options.utf8
-           ? ::CompileUtf8(cx, options, bytes, length, script)
-           : ::CompileLatin1(cx, options, bytes, length, script);
-}
-
-JS_PUBLIC_API(bool)
-JS_CompileUCScript(JSContext* cx, JS::SourceBufferHolder& srcBuf,
-                   const JS::CompileOptions& options, MutableHandleScript script)
-{
-    return CompileSourceBuffer(cx, options, srcBuf, script);
-}
-
-JS_PUBLIC_API(bool)
-JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, size_t length)
+JS_Utf8BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, size_t length)
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
@@ -197,7 +184,7 @@ JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, siz
     cx->clearPendingException();
 
     JS::UniqueTwoByteChars chars
-        { JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(utf8, length), &length).get() };
+        { UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(utf8, length), &length).get() };
     if (!chars) {
         return true;
     }
@@ -559,40 +546,37 @@ Evaluate(JSContext* cx, AutoObjectVector& envChain, const ReadOnlyCompileOptions
 }
 
 extern JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
-             const char* bytes, size_t length, MutableHandleValue rval)
+JS::EvaluateUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
+                 const char* bytes, size_t length, MutableHandle<Value> rval)
 {
-    char16_t* chars;
-    if (options.utf8) {
-        chars = UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(bytes, length), &length).get();
-    } else {
-        chars = InflateString(cx, bytes, length);
-    }
+    MOZ_ASSERT(options.utf8,
+               "this function only compiles UTF-8 source text");
+
+    char16_t* chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     if (!chars) {
         return false;
     }
 
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::GiveOwnership);
     RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
-    bool ok = ::Evaluate(cx, ScopeKind::Global, globalLexical, options, srcBuf, rval);
-    return ok;
+    return ::Evaluate(cx, ScopeKind::Global, globalLexical, options, srcBuf, rval);
 }
 
-static bool
-Evaluate(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-         const char* filename, MutableHandleValue rval)
+extern JS_PUBLIC_API(bool)
+JS::EvaluateLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
+                   const char* bytes, size_t length, MutableHandle<Value> rval)
 {
-    FileContents buffer(cx);
-    {
-        AutoFile file;
-        if (!file.open(cx, filename) || !file.readAll(cx, buffer)) {
-            return false;
-        }
+    MOZ_ASSERT(!options.utf8,
+               "this function only compiles Latin-1 source text");
+
+    char16_t* chars = InflateString(cx, bytes, length);
+    if (!chars) {
+        return false;
     }
 
-    CompileOptions options(cx, optionsArg);
-    options.setFileAndLine(filename, 1);
-    return Evaluate(cx, options, reinterpret_cast<const char*>(buffer.begin()), buffer.length(), rval);
+    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::GiveOwnership);
+    RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
+    return ::Evaluate(cx, ScopeKind::Global, globalLexical, options, srcBuf, rval);
 }
 
 JS_PUBLIC_API(bool)
@@ -611,8 +595,24 @@ JS::Evaluate(JSContext* cx, AutoObjectVector& envChain, const ReadOnlyCompileOpt
 }
 
 JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-             const char* filename, MutableHandleValue rval)
+JS::EvaluateUtf8Path(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
+                     const char* filename, MutableHandleValue rval)
 {
-    return ::Evaluate(cx, optionsArg, filename, rval);
+    MOZ_ASSERT(optionsArg.utf8,
+               "this function only evaluates UTF-8 source text in the file at "
+               "the given path");
+
+    FileContents buffer(cx);
+    {
+        AutoFile file;
+        if (!file.open(cx, filename) || !file.readAll(cx, buffer)) {
+            return false;
+        }
+    }
+
+    CompileOptions options(cx, optionsArg);
+    options.setFileAndLine(filename, 1);
+
+    return Evaluate(cx, options,
+                    reinterpret_cast<const char*>(buffer.begin()), buffer.length(), rval);
 }
