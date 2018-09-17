@@ -126,7 +126,7 @@ class Encoding;
 class ErrorResult;
 class EventStates;
 class EventListenerManager;
-struct FullscreenRequest;
+class FullscreenRequest;
 class PendingAnimationTracker;
 class ServoStyleSet;
 template<typename> class OwningNonNull;
