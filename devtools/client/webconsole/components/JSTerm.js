@@ -193,6 +193,7 @@ class JSTerm extends Component {
         this.editor = new Editor({
           autofocus: true,
           enableCodeFolding: false,
+          autoCloseBrackets: false,
           gutters: [],
           lineWrapping: true,
           mode: Editor.modes.js,
