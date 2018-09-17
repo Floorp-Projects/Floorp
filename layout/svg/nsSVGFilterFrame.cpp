@@ -143,9 +143,14 @@ nsSVGFilterFrame::GetReferencedFilter()
     nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                               mContent->GetUncomposedDoc(), base);
 
-    property =
-      SVGObserverUtils::GetPaintingProperty(targetURI, this,
-                          SVGObserverUtils::HrefAsPaintingProperty());
+    // There's no clear refererer policy spec about non-CSS SVG resource references
+    // Bug 1415044 to investigate which referrer we should use
+    RefPtr<URLAndReferrerInfo> target =
+      new URLAndReferrerInfo(targetURI,
+                             mContent->OwnerDoc()->GetDocumentURI(),
+                             mContent->OwnerDoc()->GetReferrerPolicy());
+    property = SVGObserverUtils::GetPaintingProperty(target, this,
+      SVGObserverUtils::HrefAsPaintingProperty());
     if (!property)
       return nullptr;
   }
