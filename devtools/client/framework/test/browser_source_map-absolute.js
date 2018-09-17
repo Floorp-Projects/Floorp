@@ -16,6 +16,8 @@ const JS_URL = `${URL_ROOT}code_binary_search_absolute.js`;
 const ORIGINAL_URL = `${URL_ROOT}code_binary_search.coffee`;
 
 add_task(async function() {
+  await pushPref("devtools.debugger.new-debugger-frontend", true);
+
   const toolbox = await openNewTabAndToolbox(PAGE_URL, "jsdebugger");
   const service = toolbox.sourceMapURLService;
 
