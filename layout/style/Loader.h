@@ -69,6 +69,7 @@ public:
   {
     MOZ_COUNT_CTOR(URIPrincipalReferrerPolicyAndCORSModeHashKey);
   }
+
   URIPrincipalReferrerPolicyAndCORSModeHashKey(const URIPrincipalReferrerPolicyAndCORSModeHashKey& toCopy)
     : nsURIHashKey(toCopy),
       mPrincipal(toCopy.mPrincipal),
@@ -77,6 +78,9 @@ public:
   {
     MOZ_COUNT_CTOR(URIPrincipalReferrerPolicyAndCORSModeHashKey);
   }
+
+  explicit URIPrincipalReferrerPolicyAndCORSModeHashKey(css::SheetLoadData* aLoadData);
+
   ~URIPrincipalReferrerPolicyAndCORSModeHashKey()
   {
     MOZ_COUNT_DTOR(URIPrincipalReferrerPolicyAndCORSModeHashKey);
@@ -576,6 +580,11 @@ private:
   // transitively, as failed.  The idea is to mark as failed any load that was
   // directly or indirectly @importing the sheet this SheetLoadData represents.
   void MarkLoadTreeFailed(SheetLoadData* aLoadData);
+
+  // If there's Referrer-Policy reponse header, the loading data and key should
+  // be updated with the referer policy parsed from the header.
+  void UpdateLoadingData(URIPrincipalReferrerPolicyAndCORSModeHashKey* aOldKey,
+                         SheetLoadData* aData);
 
   struct Sheets {
     nsBaseHashtable<URIPrincipalReferrerPolicyAndCORSModeHashKey,

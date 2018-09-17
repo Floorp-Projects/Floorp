@@ -30,8 +30,8 @@ class ReverseSearchInput extends Component {
       dispatch: PropTypes.func.isRequired,
       hud: PropTypes.object.isRequired,
       reverseSearchResult: PropTypes.string,
-      reverseSearchTotalResults: PropTypes.Array,
-      reverseSearchResultPosition: PropTypes.int,
+      reverseSearchTotalResults: PropTypes.number,
+      reverseSearchResultPosition: PropTypes.number,
       visible: PropTypes.bool,
     };
   }
@@ -152,6 +152,7 @@ class ReverseSearchInput extends Component {
 
     return [
       dom.button({
+        key: "search-result-button-prev",
         className: "devtools-button search-result-button-prev",
         title: l10n.getFormatStr("webconsole.reverseSearch.result.previousButton.tooltip",
           [isMacOS ? "Ctrl + R" : "F9"]),
@@ -161,6 +162,7 @@ class ReverseSearchInput extends Component {
         }
       }),
       dom.button({
+        key: "search-result-button-next",
         className: "devtools-button search-result-button-next",
         title: l10n.getFormatStr("webconsole.reverseSearch.result.nextButton.tooltip",
           [isMacOS ? "Ctrl + S" : "Shift + F9"]),
@@ -194,7 +196,7 @@ class ReverseSearchInput extends Component {
           this.inputNode = node;
         },
         autoFocus: true,
-        placeHolder: l10n.getStr("webconsole.reverseSearch.input.placeHolder"),
+        placeholder: l10n.getStr("webconsole.reverseSearch.input.placeHolder"),
         className: "reverse-search-input devtools-monospace",
         onKeyDown: this.onInputKeyDown,
         onInput: ({target}) => dispatch(actions.reverseSearchInputChange(target.value))

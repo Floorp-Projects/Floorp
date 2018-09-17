@@ -54,6 +54,8 @@ where
     I: IntoIterator<Item = S>,
 {
     let mut cmd = Command::new(program);
+    cmd.env("HGPLAIN", "1");
+    cmd.env("GIT_CONFIG_NOSYSTEM", "1");
     for arg in args {
         cmd.arg(arg.as_ref());
     }

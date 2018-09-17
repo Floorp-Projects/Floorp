@@ -2932,6 +2932,8 @@ public:
 
     bool IsSameOrigin(nsIPrincipal* aOther) const;
 
+    bool MightBeWebContent() const;
+
     const mozilla::SiteIdentifier& SiteRef() const {
         return mSite;
     }

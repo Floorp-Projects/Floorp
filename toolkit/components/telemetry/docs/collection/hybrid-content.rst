@@ -263,7 +263,7 @@ Example:
 
   Mozilla.ContentTelemetry.initPromise();
 
-This function returns a Promise that gets resolved as soon as Hybrid Content Telemetry is correctly initialized and the value from ``canUpload`` can be reliably read.
+This function returns a Promise that gets resolved as soon as Hybrid Content Telemetry is correctly initialized and the value from ``canUpload`` can be reliably read. The promise will reject if Hybrid Content Telemetry is disabled or the host doesn't have enough privileges to use the API.
 
 ``Mozilla.ContentTelemetry.registerEvents()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
