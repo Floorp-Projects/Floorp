@@ -21,7 +21,6 @@ using namespace mozilla;
 TEST(TestEventTargetQI, ThreadPool)
 {
   nsCOMPtr<nsIThreadPool> thing = new nsThreadPool();
-  EXPECT_TRUE(thing);
 
   nsCOMPtr<nsISerialEventTarget> serial = do_QueryInterface(thing);
   EXPECT_FALSE(serial);

@@ -386,7 +386,7 @@ Load(JSContext* cx, unsigned argc, Value* vp)
                .setIsRunOnce(true);
         JS::Rooted<JSScript*> script(cx);
         JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
-        JS::Compile(cx, options, file, &script);
+        JS::CompileUtf8File(cx, options, file, &script);
         fclose(file);
         if (!script) {
             return false;
@@ -799,7 +799,7 @@ ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file, bool forceTTY)
                .setFileAndLine(filename, 1)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
-        if (!JS::Compile(cx, options, file, &script)) {
+        if (!JS::CompileUtf8File(cx, options, file, &script)) {
             return false;
         }
         return compileOnly || JS_ExecuteScript(cx, script, &unused);
