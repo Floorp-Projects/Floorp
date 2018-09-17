@@ -4629,9 +4629,7 @@ XREMain::XRE_mainRun()
   mDirProvider.InitializeUserPrefs();
 
   {
-    nsCOMPtr<nsIObserver> startupNotifier = new nsAppStartupNotifier();
-
-    startupNotifier->Observe(nullptr, APPSTARTUP_TOPIC, nullptr);
+    nsAppStartupNotifier::NotifyObservers(APPSTARTUP_TOPIC);
   }
 
   nsCOMPtr<nsIAppStartup> appStartup
