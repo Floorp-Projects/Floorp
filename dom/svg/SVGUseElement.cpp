@@ -20,6 +20,7 @@
 #include "mozilla/URLExtraData.h"
 #include "SVGObserverUtils.h"
 #include "nsSVGUseFrame.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Use)
 
@@ -326,10 +327,12 @@ SVGUseElement::UpdateShadowTree()
       newSVGElement->SetLength(nsGkAtoms::height, mLengthAttributes[ATTR_HEIGHT]);
   }
 
-  // Store the base URI
+  // The specs do not say which referrer policy we should use, pass RP_Unset for
+  // now
   mContentURLData = new URLExtraData(baseURI.forget(),
                                      do_AddRef(OwnerDoc()->GetDocumentURI()),
-                                     do_AddRef(NodePrincipal()));
+                                     do_AddRef(NodePrincipal()),
+                                     mozilla::net::RP_Unset);
 
   targetElement->AddMutationObserver(this);
 }
