@@ -65,7 +65,7 @@ jobs:
       bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64']
       bouncer-products: ['complete-mar-candidates', 'partial-mar-candidates']
       shipping-product: firefox
-      run-on-releases: ['rc']
+      run-on-releases: ['release-rc']
       treeherder:
          symbol: Rel(BncSub-RC)
          platform: firefox-release/opt
