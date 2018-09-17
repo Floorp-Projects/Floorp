@@ -540,6 +540,7 @@ load 1466638.html
 load 1467688.html
 load 1467964.html
 load 1469354.html
-load 1472027.html
 pref(layout.accessiblecaret.enabled,true) load 1472020.html
+load 1472027.html
+load 1489149.html
 load 1490037.html

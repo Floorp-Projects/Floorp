@@ -28,7 +28,7 @@ BEGIN_TEST(testExecuteInJSMEnvironment_Basic)
     options.setNoScriptRval(true);
 
     JS::RootedScript script(cx);
-    CHECK(JS::CompileForNonSyntacticScope(cx, options, src, sizeof(src)-1, &script));
+    CHECK(JS::CompileLatin1ForNonSyntacticScope(cx, options, src, sizeof(src) - 1, &script));
 
     JS::RootedObject varEnv(cx, js::NewJSMEnvironment(cx));
     JS::RootedObject lexEnv(cx, JS_ExtensibleLexicalEnvironment(varEnv));
@@ -88,7 +88,7 @@ BEGIN_TEST(testExecuteInJSMEnvironment_Callback)
     options.setNoScriptRval(true);
 
     JS::RootedScript script(cx);
-    CHECK(JS::CompileForNonSyntacticScope(cx, options, src, sizeof(src)-1, &script));
+    CHECK(JS::CompileLatin1ForNonSyntacticScope(cx, options, src, sizeof(src) - 1, &script));
 
     JS::RootedObject nsvo(cx, js::NewJSMEnvironment(cx));
     CHECK(nsvo);

@@ -313,3 +313,9 @@ nsNativeThemeAndroid::GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidget
 {
   return eUnknownTransparency;
 }
+
+already_AddRefed<nsITheme>
+NS_NewNativeTheme()
+{
+  return do_AddRef(new nsNativeThemeAndroid());
+}
