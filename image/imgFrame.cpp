@@ -108,22 +108,21 @@ ShouldUseHeap(const IntSize& aSize,
 static already_AddRefed<DataSourceSurface>
 AllocateBufferForImage(const IntSize& size,
                        SurfaceFormat format,
-                       bool aIsAnimated = false)
+                       bool aIsAnimated = false,
+                       bool aIsFullFrame = true)
 {
   int32_t stride = VolatileSurfaceStride(size, format);
 
-  if (ShouldUseHeap(size, stride, aIsAnimated)) {
+  if (gfxVars::GetUseWebRenderOrDefault() &&
+      gfxPrefs::ImageMemShared() && aIsFullFrame) {
+    RefPtr<SourceSurfaceSharedData> newSurf = new SourceSurfaceSharedData();
+    if (newSurf->Init(size, stride, format)) {
+      return newSurf.forget();
+    }
+  } else if (ShouldUseHeap(size, stride, aIsAnimated)) {
     RefPtr<SourceSurfaceAlignedRawData> newSurf =
       new SourceSurfaceAlignedRawData();
     if (newSurf->Init(size, format, false, 0, stride)) {
-      return newSurf.forget();
-    }
-  }
-
-  if (!aIsAnimated && gfxVars::GetUseWebRenderOrDefault()
-                   && gfxPrefs::ImageMemShared()) {
-    RefPtr<SourceSurfaceSharedData> newSurf = new SourceSurfaceSharedData();
-    if (newSurf->Init(size, stride, format)) {
       return newSurf.forget();
     }
   } else {
@@ -304,7 +303,8 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
     MOZ_ASSERT(!mLockedSurface, "Called imgFrame::InitForDecoder() twice?");
 
     bool postFirstFrame = aAnimParams && aAnimParams->mFrameNum > 0;
-    mRawSurface = AllocateBufferForImage(mFrameRect.Size(), mFormat, postFirstFrame);
+    mRawSurface = AllocateBufferForImage(mFrameRect.Size(), mFormat,
+                                         postFirstFrame, mIsFullFrame);
     if (!mRawSurface) {
       mAborted = true;
       return NS_ERROR_OUT_OF_MEMORY;
