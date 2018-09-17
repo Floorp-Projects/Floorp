@@ -9,8 +9,9 @@
 
 #include "vm/UnboxedObject.h"
 
+#include "vm/TypeInference.h"
+
 #include "gc/StoreBuffer-inl.h"
-#include "vm/ArrayObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 namespace js {

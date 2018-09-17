@@ -49,6 +49,8 @@ namespace jit {
 
 # define BASELINE_DISABLED_SCRIPT ((js::jit::BaselineScript*)0x1)
 
+class AutoKeepTypeScripts;
+class AutoSweepTypeScript;
 class BreakpointSite;
 class Debugger;
 class LazyScript;
@@ -56,6 +58,7 @@ class ModuleObject;
 class RegExpObject;
 class SourceCompressionTask;
 class Shape;
+class TypeScript;
 
 namespace frontend {
     struct BytecodeEmitter;

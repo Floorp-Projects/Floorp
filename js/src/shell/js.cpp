@@ -1198,9 +1198,9 @@ AddIntlExtras(JSContext* cx, unsigned argc, Value* vp)
 }
 #endif // ENABLE_INTL_API
 
-static bool
-EvalAndPrint(JSContext* cx, const char* bytes, size_t length,
-             int lineno, bool compileOnly)
+static MOZ_MUST_USE bool
+EvalUtf8AndPrint(JSContext* cx, const char* bytes, size_t length,
+                 int lineno, bool compileOnly)
 {
     // Eval.
     JS::CompileOptions options(cx);
@@ -1208,8 +1208,9 @@ EvalAndPrint(JSContext* cx, const char* bytes, size_t length,
            .setUTF8(true)
            .setIsRunOnce(true)
            .setFileAndLine("typein", lineno);
+
     RootedScript script(cx);
-    if (!JS::Compile(cx, options, bytes, length, &script)) {
+    if (!JS::CompileUtf8(cx, options, bytes, length, &script)) {
         return false;
     }
     if (compileOnly) {
@@ -1282,7 +1283,7 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, bool compileOnly)
                 hitEOF = true;
                 break;
             }
-        } while (!JS_BufferIsCompilableUnit(cx, cx->global(), buffer.begin(), buffer.length()));
+        } while (!JS_Utf8BufferIsCompilableUnit(cx, cx->global(), buffer.begin(), buffer.length()));
 
         if (hitEOF && buffer.empty()) {
             break;
@@ -1291,7 +1292,8 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, bool compileOnly)
         {
             // Report exceptions but keep going.
             AutoReportException are(cx);
-            (void) EvalAndPrint(cx, buffer.begin(), buffer.length(), startline, compileOnly);
+            mozilla::Unused <<
+                EvalUtf8AndPrint(cx, buffer.begin(), buffer.length(), startline, compileOnly);
         }
 
         // If a let or const fail to initialize they will remain in an unusable
@@ -1617,25 +1619,31 @@ LoadScript(JSContext* cx, unsigned argc, Value* vp, bool scriptRelative)
                                       "load");
             return false;
         }
+
         str = ResolvePath(cx, str, scriptRelative ? ScriptRelative : RootRelative);
         if (!str) {
             JS_ReportErrorASCII(cx, "unable to resolve path");
             return false;
         }
+
         UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
         if (!filename) {
             return false;
         }
+
         errno = 0;
+
         CompileOptions opts(cx);
         opts.setIntroductionType("js shell load")
             .setUTF8(true)
             .setIsRunOnce(true)
             .setNoScriptRval(true);
+
         RootedScript script(cx);
         RootedValue unused(cx);
-        if ((compileOnly && !CompileUtf8Path(cx, opts, filename.get(), &script)) ||
-            !Evaluate(cx, opts, filename.get(), &unused))
+        if (!(compileOnly
+              ? JS::CompileUtf8Path(cx, opts, filename.get(), &script)
+              : JS::EvaluateUtf8Path(cx, opts, filename.get(), &unused)))
         {
             return false;
         }
@@ -2336,7 +2344,8 @@ Run(JSContext* cx, unsigned argc, Value* vp)
                .setFileAndLine(filename.get(), 1)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
-        if (!JS_CompileUCScript(cx, srcBuf, options, &script)) {
+
+        if (!JS::Compile(cx, options, srcBuf, &script)) {
             return false;
         }
     }
@@ -4601,7 +4610,7 @@ Compile(JSContext* cx, unsigned argc, Value* vp)
     JS::SourceBufferHolder srcBuf(stableChars.twoByteRange().begin().get(),
                                   scriptContents->length(),
                                   JS::SourceBufferHolder::NoOwnership);
-    bool ok = JS_CompileUCScript(cx, srcBuf, options, &script);
+    bool ok = JS::Compile(cx, options, srcBuf, &script);
     args.rval().setUndefined();
     return ok;
 }

@@ -27,6 +27,7 @@ class App extends PureComponent {
       dispatch: PropTypes.func.isRequired,
       messageContexts: PropTypes.arrayOf(PropTypes.object).isRequired,
       networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
+      runtimes: PropTypes.array.isRequired,
       selectedPage: PropTypes.string.isRequired,
     };
   }
@@ -34,14 +35,17 @@ class App extends PureComponent {
   getSelectedPageComponent() {
     const { dispatch, networkLocations, selectedPage } = this.props;
 
+    if (!selectedPage) {
+      // No page selected.
+      return null;
+    }
+
     switch (selectedPage) {
-      case PAGES.THIS_FIREFOX:
-        return RuntimePage({ dispatch });
       case PAGES.CONNECT:
         return ConnectPage({ dispatch, networkLocations });
       default:
-        // Invalid page, blank.
-        return null;
+        // All pages except for the CONNECT page are RUNTIME pages.
+        return RuntimePage({ dispatch });
     }
   }
 
@@ -49,7 +53,7 @@ class App extends PureComponent {
     const {
       dispatch,
       messageContexts,
-      networkLocations,
+      runtimes,
       selectedPage,
     } = this.props;
 
@@ -57,7 +61,7 @@ class App extends PureComponent {
       { messages: messageContexts },
       dom.div(
         { className: "app" },
-        Sidebar({ dispatch, networkLocations, selectedPage }),
+        Sidebar({ dispatch, runtimes, selectedPage }),
         this.getSelectedPageComponent()
       )
     );
@@ -66,6 +70,7 @@ class App extends PureComponent {
 
 const mapStateToProps = state => {
   return {
+    runtimes: state.runtimes,
     networkLocations: state.ui.networkLocations,
     selectedPage: state.ui.selectedPage,
   };

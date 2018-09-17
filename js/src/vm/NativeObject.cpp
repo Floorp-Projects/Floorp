@@ -23,6 +23,7 @@
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/Shape-inl.h"
+#include "vm/TypeInference-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
 using namespace js;

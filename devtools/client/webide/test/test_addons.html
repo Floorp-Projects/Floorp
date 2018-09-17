@@ -42,20 +42,28 @@
         }
 
         (async function() {
-          ok(!Devices.helperAddonInstalled, "Helper not installed");
+          ok(!Devices.adbExtensionInstalled, "ADB extension not installed");
 
           const win = await openWebIDE(true);
 
-          ok(Devices.helperAddonInstalled, "Helper has been auto-installed");
+          // ADB is installed asynchronously after starting WebIDE.
+          while (!Devices.adbExtensionInstalled) {
+            await Devices.once("addon-status-updated");
+          }
+
+          ok(Devices.adbExtensionInstalled, "ADB extension has been auto-installed");
 
           await nextTick();
 
+          const addonDoc = getAddonsDocument(win);
           const w = addonDoc.querySelector(".warning");
           let display = addonDoc.defaultView.getComputedStyle(w).display;
           is(display, "none", "Warning about missing ADB hidden");
 
           await uninstallADBFromUI(addonDoc, "adb");
 
+          const docRuntime = getRuntimeDocument(win);
+          const panelNode = docRuntime.querySelector("#runtime-panel");
           items = panelNode.querySelectorAll(".runtime-panel-item-usb");
           is(items.length, 0, "No usb runtime listed");
 

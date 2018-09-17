@@ -11,8 +11,9 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const { PAGES } = require("../../constants");
+const { PAGES, RUNTIMES } = require("../../constants");
 
+const DeviceSidebarItemAction = createFactory(require("./DeviceSidebarItemAction"));
 const SidebarItem = createFactory(require("./SidebarItem"));
 const FIREFOX_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
 const CONNECT_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
@@ -21,15 +22,15 @@ const GLOBE_ICON = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg"
 class Sidebar extends PureComponent {
   static get propTypes() {
     return {
-      networkLocations: PropTypes.array.isRequired,
       dispatch: PropTypes.func.isRequired,
+      runtimes: PropTypes.array.isRequired,
       selectedPage: PropTypes.string.isRequired,
     };
   }
 
   renderDevices() {
-    const { dispatch, networkLocations } = this.props;
-    if (!networkLocations.length) {
+    const { dispatch, runtimes, selectedPage } = this.props;
+    if (!runtimes.networkRuntimes.length) {
       return Localized(
         {
           id: "about-debugging-sidebar-no-devices"
@@ -41,14 +42,28 @@ class Sidebar extends PureComponent {
         )
       );
     }
-    return networkLocations.map(location => SidebarItem({
-      id: "networklocation-" + location,
-      dispatch,
-      icon: GLOBE_ICON,
-      isSelected: false,
-      name: location,
-      selectable: false,
-    }));
+
+    return runtimes.networkRuntimes.map(runtime => {
+      const pageId = "networklocation-" + runtime.id;
+      const runtimeHasClient = !!runtime.client;
+
+      const connectComponent = DeviceSidebarItemAction({
+        connected: runtimeHasClient,
+        dispatch,
+        runtimeId: runtime.id,
+      });
+
+      return SidebarItem({
+        connectComponent,
+        id: pageId,
+        dispatch,
+        icon: GLOBE_ICON,
+        isSelected: selectedPage === pageId,
+        name: runtime.id,
+        runtimeId: runtime.id,
+        selectable: runtimeHasClient,
+      });
+    });
   }
 
   render() {
@@ -68,6 +83,7 @@ class Sidebar extends PureComponent {
             icon: FIREFOX_ICON,
             isSelected: PAGES.THIS_FIREFOX === selectedPage,
             name: "This Firefox",
+            runtimeId: RUNTIMES.THIS_FIREFOX,
             selectable: true,
           })
         ),

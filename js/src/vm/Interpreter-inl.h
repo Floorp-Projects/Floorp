@@ -17,8 +17,10 @@
 #include "vm/Realm.h"
 
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/GlobalObject-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/ObjectOperations-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/StringType-inl.h"
 #include "vm/UnboxedObject-inl.h"
