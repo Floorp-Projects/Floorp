@@ -653,7 +653,7 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
     rv = httpChannel->SetReferrerWithPolicy(aFontFaceSrc->mReferrer,
-                                            mDocument->GetReferrerPolicy());
+                                            aFontFaceSrc->mReferrerPolicy);
     Unused << NS_WARN_IF(NS_FAILED(rv));
 
     nsAutoCString accept("application/font-woff;q=0.9,*/*;q=0.8");
@@ -1211,7 +1211,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsACString& aFamilyName
           face->mURI = uri ? new gfxFontSrcURI(uri) : nullptr;
           URLValue* url = val.GetURLStructValue();
           face->mReferrer = url->mExtraData->GetReferrer();
-          face->mReferrerPolicy = set->mDocument->GetReferrerPolicy();
+          face->mReferrerPolicy = url->mExtraData->GetReferrerPolicy();
           face->mOriginPrincipal =
             new gfxFontSrcPrincipal(url->mExtraData->GetPrincipal());
           NS_ASSERTION(face->mOriginPrincipal, "null origin principal in @font-face rule");
