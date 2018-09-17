@@ -22,7 +22,6 @@
 #include "nsMenuBarListener.h"
 #include "nsString.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMXULLabelElement.h"
 #include "mozilla/EventStateManager.h"
 #include "nsITheme.h"
 #include "nsUnicharUtils.h"
@@ -200,17 +199,9 @@ bool
 nsTextBoxFrame::UpdateAccesskey(WeakFrame& aWeakThis)
 {
     nsAutoString accesskey;
-    nsCOMPtr<nsIDOMXULLabelElement> labelElement = do_QueryInterface(mContent);
-    NS_ENSURE_TRUE(aWeakThis.IsAlive(), false);
-    if (labelElement) {
-        // Accesskey may be stored on control.
-        labelElement->GetAccessKey(accesskey);
-        NS_ENSURE_TRUE(aWeakThis.IsAlive(), false);
-    } else {
-        mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::accesskey,
-                                       accesskey);
-    }
+    mContent->AsElement()->GetAttr(kNameSpaceID_None,
+                                   nsGkAtoms::accesskey,
+                                   accesskey);
 
     if (!accesskey.Equals(mAccessKey)) {
         // Need to get clean mTitle.
