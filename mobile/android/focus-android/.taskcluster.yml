@@ -146,7 +146,7 @@ tasks:
           - --login
           - -cx
           - >-
-            git fetch ${event.repository.clone_url} ${event.release.tag_name}
+            git fetch origin --tags
             && git config advice.detachedHead false
             && git checkout ${event.release.tag_name}
             && python tools/taskcluster/release.py \
