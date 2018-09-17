@@ -1574,6 +1574,13 @@ public class GeckoSession extends LayerSession
      * @param delegate SelectionActionDelegate instance or null to unset.
      */
     public void setSelectionActionDelegate(@Nullable SelectionActionDelegate delegate) {
+        if (getSelectionActionDelegate() != null) {
+            // When the delegate is changed or cleared, make sure onHideAction is called
+            // one last time to hide any existing selection action UI. Gecko doesn't keep
+            // track of the old delegate, so we can't rely on Gecko to do that for us.
+            getSelectionActionDelegate().onHideAction(
+                    this, GeckoSession.SelectionActionDelegate.HIDE_REASON_NO_SELECTION);
+        }
         mSelectionActionDelegate.setDelegate(delegate, this);
     }
 
