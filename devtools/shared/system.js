@@ -9,9 +9,6 @@ loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm", true);
-loader.lazyGetter(this, "screenManager", () => {
-  return Cc["@mozilla.org/gfx/screenmanager;1"].getService(Ci.nsIScreenManager);
-});
 loader.lazyGetter(this, "hostname", () => {
   try {
     // On some platforms (Linux according to try), this service does not exist and fails.
@@ -185,57 +182,4 @@ function getProfileLocation() {
   }
 }
 
-/**
- * Function for fetching screen dimensions and returning
- * an enum for Telemetry.
- */
-function getScreenDimensions() {
-  const width = {};
-  const height = {};
-
-  screenManager.primaryScreen.GetRect({}, {}, width, height);
-  const dims = width.value + "x" + height.value;
-
-  if (width.value < 800 || height.value < 600) {
-    return 0;
-  }
-  if (dims === "800x600") {
-    return 1;
-  }
-  if (dims === "1024x768") {
-    return 2;
-  }
-  if (dims === "1280x800") {
-    return 3;
-  }
-  if (dims === "1280x1024") {
-    return 4;
-  }
-  if (dims === "1366x768") {
-    return 5;
-  }
-  if (dims === "1440x900") {
-    return 6;
-  }
-  if (dims === "1920x1080") {
-    return 7;
-  }
-  if (dims === "2560×1440") {
-    return 8;
-  }
-  if (dims === "2560×1600") {
-    return 9;
-  }
-  if (dims === "2880x1800") {
-    return 10;
-  }
-  if (width.value > 2880 || height.value > 1800) {
-    return 12;
-  }
-
-  // Other dimension such as a VM.
-  return 11;
-}
-
 exports.getSystemInfo = getSystemInfo;
-exports.getScreenDimensions = getScreenDimensions;
