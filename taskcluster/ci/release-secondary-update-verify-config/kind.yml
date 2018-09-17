@@ -46,26 +46,10 @@ job-defaults:
          by-release-level:
             staging: dep
             production: null
-      include-version:
-         by-project:
-            birch: beta
-            mozilla-release: beta
-            default: null
-      last-watershed:
-         by-project:
-            birch: "56.0b3"
-            mozilla-release: "56.0b3"
-            default: null
-      mar-channel-id-override:
-         by-project:
-            birch: beta
-            mozilla-release: beta
-            default: null
-      channel:
-         by-project:
-            birch: "beta-localtest"
-            mozilla-release: "beta-localtest"
-            default: "default"
+      include-version: beta
+      last-watershed: "56.0b3"
+      mar-channel-id-override: beta
+      channel: "beta-localtest"
 
 jobs:
    firefox-secondary-linux:
