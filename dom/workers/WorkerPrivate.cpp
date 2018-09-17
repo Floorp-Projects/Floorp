@@ -3450,6 +3450,10 @@ WorkerPrivate::EnsureCSPEventListener()
     return false;
   }
 
+  if (mLoadInfo.mCSP) {
+    mLoadInfo.mCSP->SetEventListener(mCSPEventListener);
+  }
+
   return true;
 }
 
