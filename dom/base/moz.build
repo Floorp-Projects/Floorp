@@ -131,7 +131,7 @@ EXPORTS.mozilla += [
     'CORSMode.h',
     'FeedWriterEnabled.h',
     'FlushType.h',
-    'FullscreenRequest.h',
+    'FullscreenChange.h',
     'RangeBoundary.h',
     'SelectionChangeEventDispatcher.h',
     'TextInputProcessor.h',

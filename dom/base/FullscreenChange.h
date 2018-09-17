@@ -21,36 +21,18 @@
 
 namespace mozilla {
 
-struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
+class FullscreenChange : public LinkedListElement<FullscreenChange>
 {
-  typedef dom::Promise Promise;
+public:
+  FullscreenChange(const FullscreenChange&) = delete;
 
-  static UniquePtr<FullscreenRequest> Create(Element* aElement,
-                                             dom::CallerType aCallerType,
-                                             ErrorResult& aRv)
+  enum ChangeType
   {
-    RefPtr<Promise> promise = Promise::Create(aElement->GetOwnerGlobal(), aRv);
-    return WrapUnique(new FullscreenRequest(aElement, promise.forget(),
-                                            aCallerType, true));
-  }
+    eEnter,
+    eExit,
+  };
 
-  static UniquePtr<FullscreenRequest> CreateForRemote(Element* aElement)
-  {
-    return WrapUnique(new FullscreenRequest(aElement, nullptr,
-                                            dom::CallerType::NonSystem,
-                                            false));
-  }
-
-  FullscreenRequest(const FullscreenRequest&) = delete;
-
-  ~FullscreenRequest()
-  {
-    MOZ_COUNT_DTOR(FullscreenRequest);
-    MOZ_ASSERT_IF(mPromise,
-                  mPromise->State() != Promise::PromiseState::Pending);
-  }
-
-  dom::Element* Element() const { return mElement; }
+  ChangeType Type() const { return mType; }
   nsIDocument* Document() const { return mDocument; }
   dom::Promise* GetPromise() const { return mPromise; }
 
@@ -70,28 +52,78 @@ struct FullscreenRequest : public LinkedListElement<FullscreenRequest>
     }
   }
 
+protected:
+  typedef dom::Promise Promise;
+
+  FullscreenChange(ChangeType aType, nsIDocument* aDocument,
+                   already_AddRefed<Promise> aPromise)
+    : mType(aType)
+    , mDocument(aDocument)
+    , mPromise(aPromise)
+  {
+    MOZ_ASSERT(aDocument);
+  }
+
+  ~FullscreenChange()
+  {
+    MOZ_ASSERT_IF(mPromise,
+                  mPromise->State() != Promise::PromiseState::Pending);
+  }
+
+private:
+  ChangeType mType;
+  nsCOMPtr<nsIDocument> mDocument;
+  RefPtr<Promise> mPromise;
+};
+
+class FullscreenRequest : public FullscreenChange
+{
+public:
+  static const ChangeType kType = eEnter;
+
+  static UniquePtr<FullscreenRequest> Create(Element* aElement,
+                                             dom::CallerType aCallerType,
+                                             ErrorResult& aRv)
+  {
+    RefPtr<Promise> promise = Promise::Create(aElement->GetOwnerGlobal(), aRv);
+    return WrapUnique(new FullscreenRequest(aElement, promise.forget(),
+                                            aCallerType, true));
+  }
+
+  static UniquePtr<FullscreenRequest> CreateForRemote(Element* aElement)
+  {
+    return WrapUnique(new FullscreenRequest(aElement, nullptr,
+                                            dom::CallerType::NonSystem,
+                                            false));
+  }
+
+  ~FullscreenRequest()
+  {
+    MOZ_COUNT_DTOR(FullscreenRequest);
+  }
+
+  dom::Element* Element() const { return mElement; }
+
   // Reject the fullscreen request with the given reason.
   // It will dispatch the fullscreenerror event.
   void Reject(const char* aReason) const
   {
-    if (nsPresContext* presContext = mDocument->GetPresContext()) {
+    if (nsPresContext* presContext = Document()->GetPresContext()) {
       auto pendingEvent = MakeUnique<PendingFullscreenEvent>(
-          FullscreenEventType::Error, mDocument, mElement);
+          FullscreenEventType::Error, Document(), mElement);
       presContext->RefreshDriver()->
         ScheduleFullscreenEvent(std::move(pendingEvent));
     }
     MayRejectPromise();
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     NS_LITERAL_CSTRING("DOM"),
-                                    mDocument,
+                                    Document(),
                                     nsContentUtils::eDOM_PROPERTIES,
                                     aReason);
   }
 
 private:
   RefPtr<dom::Element> mElement;
-  RefPtr<nsIDocument> mDocument;
-  RefPtr<dom::Promise> mPromise;
 
 public:
   // This value should be true if the fullscreen request is
@@ -110,9 +142,8 @@ private:
                     already_AddRefed<dom::Promise> aPromise,
                     dom::CallerType aCallerType,
                     bool aShouldNotifyNewOrigin)
-    : mElement(aElement)
-    , mDocument(aElement->OwnerDoc())
-    , mPromise(aPromise)
+    : FullscreenChange(kType, aElement->OwnerDoc(), std::move(aPromise))
+    , mElement(aElement)
     , mCallerType(aCallerType)
     , mShouldNotifyNewOrigin(aShouldNotifyNewOrigin)
   {
