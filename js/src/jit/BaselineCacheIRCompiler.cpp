@@ -2375,6 +2375,8 @@ BaselineCacheIRCompiler::emitCallStringConcatResult()
     Register rhs = allocator.useRegister(masm, reader.stringOperandId());
     AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
+    allocator.discardStack(masm);
+
     AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch);
 

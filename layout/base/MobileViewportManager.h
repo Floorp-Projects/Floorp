@@ -53,7 +53,7 @@ public:
   void RequestReflow();
 
   /* Notify the MobileViewportManager that the resolution on the presShell was
-   * updated, and the SPCSPS needs to be updated. */
+   * updated, and the visual viewport size needs to be updated. */
   void ResolutionUpdated();
 
 private:
@@ -67,8 +67,8 @@ private:
    * need updating. */
   void RefreshViewportSize(bool aForceAdjustResolution);
 
-  /* Secondary main helper method to update just the SPCSPS. */
-  void RefreshSPCSPS();
+  /* Secondary main helper method to update just the visual viewport size. */
+  void RefreshVisualViewportSize();
 
   /* Helper to clamp the given zoom by the min/max in the viewport info. */
   mozilla::CSSToScreenScale ClampZoom(const mozilla::CSSToScreenScale& aZoom,
@@ -87,9 +87,8 @@ private:
                                              const mozilla::CSSSize& aViewport,
                                              const mozilla::Maybe<float>& aDisplayWidthChangeRatio);
 
-  /* Updates the scroll-position-clamping scrollport size */
-  void UpdateSPCSPS(const mozilla::ScreenIntSize& aDisplaySize,
-                    const mozilla::CSSToScreenScale& aZoom);
+  void UpdateVisualViewportSize(const mozilla::ScreenIntSize& aDisplaySize,
+                                const mozilla::CSSToScreenScale& aZoom);
 
   /* Updates the displayport margins for the presShell's root scrollable frame */
   void UpdateDisplayPortMargins();

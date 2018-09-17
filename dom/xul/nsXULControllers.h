@@ -19,7 +19,7 @@
 #include "nsCycleCollectionParticipant.h"
 
 /* non-XPCOM class for holding controllers and their IDs */
-class nsXULControllerData
+class nsXULControllerData final
 {
 public:
                             nsXULControllerData(uint32_t inControllerID, nsIController* inController)
@@ -42,20 +42,16 @@ public:
     nsCOMPtr<nsIController> mController;
 };
 
-
-already_AddRefed<nsIControllers> NS_NewXULControllers();
-
-class nsXULControllers : public nsIControllers
+class nsXULControllers final : public nsIControllers
 {
 public:
-    friend already_AddRefed<nsIControllers> NS_NewXULControllers();
+    nsXULControllers();
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULControllers, nsIControllers)
     NS_DECL_NSICONTROLLERS
 
 protected:
-    nsXULControllers();
     virtual ~nsXULControllers(void);
 
     void        DeleteControllers();

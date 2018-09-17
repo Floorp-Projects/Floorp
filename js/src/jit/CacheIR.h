@@ -266,6 +266,8 @@ extern const char* const CacheKindNames[];
     _(CallSetArrayLength)                 \
     _(CallProxySet)                       \
     _(CallProxySetByValue)                \
+    _(CallInt32ToString)                  \
+    _(CallNumberToString)                 \
                                           \
     /* The *Result ops load a value into the cache's result register. */ \
     _(LoadFixedSlotResult)                \
@@ -1032,6 +1034,18 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOperandId(id);
         writeOperandId(rhs);
         buffer_.writeByte(uint32_t(strict));
+    }
+    StringOperandId callInt32ToString(Int32OperandId id) {
+        StringOperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::CallInt32ToString, id);
+        writeOperandId(res);
+        return res;
+    }
+    StringOperandId callNumberToString(ValOperandId id) {
+        StringOperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::CallNumberToString, id);
+        writeOperandId(res);
+        return res;
     }
 
     void megamorphicLoadSlotResult(ObjOperandId obj, PropertyName* name, bool handleMissing) {
@@ -1975,6 +1989,7 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator
     bool tryAttachBitwise();
     bool tryAttachStringConcat();
     bool tryAttachStringObjectConcat();
+    bool tryAttachStringNumberConcat();
 
   public:
     BinaryArithIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode,
