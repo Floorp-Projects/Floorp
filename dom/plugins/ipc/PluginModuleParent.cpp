@@ -357,19 +357,13 @@ void
 mozilla::plugins::TakeFullMinidump(uint32_t aPluginId,
                                    base::ProcessId aContentProcessId,
                                    const nsAString& aBrowserDumpId,
-                                   std::function<void(nsString)>&& aCallback,
-                                   bool aAsync)
+                                   nsString& aDumpId)
 {
   PluginModuleChromeParent* chromeParent =
     PluginModuleChromeParentForId(aPluginId);
 
   if (chromeParent) {
-    chromeParent->TakeFullMinidump(aContentProcessId,
-                                   aBrowserDumpId,
-                                   std::move(aCallback),
-                                   aAsync);
-  } else {
-    aCallback(EmptyString());
+    chromeParent->TakeFullMinidump(aContentProcessId, aBrowserDumpId, aDumpId);
   }
 }
 
@@ -377,8 +371,7 @@ void
 mozilla::plugins::TerminatePlugin(uint32_t aPluginId,
                                   base::ProcessId aContentProcessId,
                                   const nsCString& aMonitorDescription,
-                                  const nsAString& aDumpId,
-                                  std::function<void(bool)>&& aCallback)
+                                  const nsAString& aDumpId)
 {
   PluginModuleChromeParent* chromeParent =
     PluginModuleChromeParentForId(aPluginId);
@@ -387,11 +380,7 @@ mozilla::plugins::TerminatePlugin(uint32_t aPluginId,
     chromeParent->TerminateChildProcess(MessageLoop::current(),
                                         aContentProcessId,
                                         aMonitorDescription,
-                                        aDumpId,
-                                        std::move(aCallback),
-                                        true); // Always runs asynchronously.
-  } else {
-    aCallback(true);
+                                        aDumpId);
   }
 }
 
@@ -587,7 +576,7 @@ PluginModuleChromeParent::InitCrashReporter()
     }
 
     {
-      mozilla::RecursiveMutexAutoLock lock(mCrashReporterMutex);
+      mozilla::MutexAutoLock lock(mCrashReporterMutex);
       mCrashReporter = MakeUnique<ipc::CrashReporterHost>(
         GeckoProcessType_Plugin,
         shmem,
@@ -727,7 +716,7 @@ void
 PluginModuleChromeParent::WriteExtraDataForMinidump()
 {
     // mCrashReporterMutex is already held by the caller
-    mCrashReporterMutex.AssertCurrentThreadIn();
+    mCrashReporterMutex.AssertCurrentThreadOwns();
 
     typedef nsDependentCString cstring;
 
@@ -1066,14 +1055,10 @@ PluginModuleChromeParent::ShouldContinueFromReplyTimeout()
     FinishHangUI();
 #endif // XP_WIN
 
-    // Terminate the child process synchronously because this function can be
-    // called in sync IPC.
     TerminateChildProcess(MessageLoop::current(),
                           mozilla::ipc::kInvalidProcessId,
                           NS_LITERAL_CSTRING("ModalHangUI"),
-                          EmptyString(),
-                          DummyCallback<bool>(),
-                          /* aAsync = */ false);
+                          EmptyString());
     GetIPCChannel()->CloseWithTimeout();
     return false;
 }
@@ -1098,141 +1083,55 @@ PluginModuleContentParent::OnExitedSyncSend()
 void
 PluginModuleChromeParent::TakeFullMinidump(base::ProcessId aContentPid,
                                            const nsAString& aBrowserDumpId,
-                                           std::function<void(nsString)>&& aCallback,
-                                           bool aAsync)
+                                           nsString& aDumpId)
 {
-    mozilla::RecursiveMutexAutoLock lock(mCrashReporterMutex);
+    mozilla::MutexAutoLock lock(mCrashReporterMutex);
 
-    if (!mCrashReporter || !mTakeFullMinidumpCallback.IsEmpty()) {
-        aCallback(EmptyString());
+    if (!mCrashReporter) {
         return;
     }
-    mTakeFullMinidumpCallback.Init(std::move(aCallback), aAsync);
 
-    nsString browserDumpId{aBrowserDumpId};
+    bool reportsReady = false;
 
     // Check to see if we already have a browser dump id - with e10s plugin
     // hangs we take this earlier (see ProcessHangMonitor) from a background
     // thread. We do this before we message the main thread about the hang
     // since the posted message will trash our browser stack state.
+    nsCOMPtr<nsIFile> browserDumpFile;
     if (CrashReporter::GetMinidumpForID(aBrowserDumpId,
-                                        getter_AddRefs(mBrowserDumpFile))) {
-
-        // Hold a ref to mPlugin to keep *this* alive until the callback runs.
-        RetainPluginRef();
-        std::function<void(bool)> callback =
-            [this, aContentPid, browserDumpId, aAsync](bool aResult) {
-                if (aAsync) {
-                    this->mCrashReporterMutex.Lock();
-                }
-
-                this->TakeBrowserAndPluginMinidumps(aResult,
-                                                    aContentPid,
-                                                    browserDumpId,
-                                                    aAsync);
-                if (aAsync) {
-                    this->mCrashReporterMutex.Unlock();
-                }
-
-                this->ReleasePluginRef();
-             };
+                                        getter_AddRefs(browserDumpFile))) {
         // We have a single browser report, generate a new plugin process parent
         // report and pair it up with the browser report handed in.
-        mCrashReporter->GenerateMinidumpAndPair(Process(), mBrowserDumpFile,
-                                                NS_LITERAL_CSTRING("browser"),
-                                                std::move(callback), aAsync);
-    } else {
-        TakeBrowserAndPluginMinidumps(false, aContentPid, browserDumpId, aAsync);
-    }
-}
+        reportsReady = mCrashReporter->GenerateMinidumpAndPair(
+          this,
+          browserDumpFile,
+          NS_LITERAL_CSTRING("browser"));
 
-void
-PluginModuleChromeParent::RetainPluginRef()
-{
-    if (!mPlugin) {
-        return;
+        if (!reportsReady) {
+          browserDumpFile = nullptr;
+          CrashReporter::DeleteMinidumpFilesForID(aBrowserDumpId);
+        }
     }
-
-    if (NS_IsMainThread()) {
-        mPlugin->AddRef();
-    } else {
-        // XXX We can't sync-dispatch to the main thread because doing that
-        // deadlocks when we are called from
-        // PluginHangUIParent::RecvUserResponse().
-        Unused << NS_DispatchToMainThread(
-            NewNonOwningRunnableMethod("nsNPAPIPlugin::AddRef",
-                                       mPlugin, &nsNPAPIPlugin::AddRef));
-    }
-}
-
-void
-PluginModuleChromeParent::ReleasePluginRef()
-{
-    if (!mPlugin) {
-        return;
-    }
-
-    if (NS_IsMainThread()) {
-        mPlugin->Release();
-    } else {
-        // Async release the reference to mPlugin.
-        Unused << NS_DispatchToMainThread(
-            NewNonOwningRunnableMethod("nsNPAPIPlugin::Release",
-                                       mPlugin, &nsNPAPIPlugin::Release));
-    }
-}
-
-void
-PluginModuleChromeParent::TakeBrowserAndPluginMinidumps(bool aReportsReady,
-                                                        base::ProcessId aContentPid,
-                                                        const nsAString& aBrowserDumpId,
-                                                        bool aAsync)
-{
-    mCrashReporterMutex.AssertCurrentThreadIn();
 
     // Generate crash report including plugin and browser process minidumps.
     // The plugin process is the parent report with additional dumps including
     // the browser process, content process when running under e10s, and
     // various flash subprocesses if we're the flash module.
-    if (!aReportsReady) {
-        mBrowserDumpFile = nullptr;
-        CrashReporter::DeleteMinidumpFilesForID(aBrowserDumpId);
-
-        nsString browserDumpId{aBrowserDumpId};
-
-        RetainPluginRef();
-        std::function<void(bool)> callback =
-            [this, aContentPid, browserDumpId](bool aResult) {
-                this->OnTakeFullMinidumpComplete(aResult,
-                                                 aContentPid,
-                                                 browserDumpId);
-                this->ReleasePluginRef();
-            };
-        mCrashReporter->GenerateMinidumpAndPair(Process(),
-                                                nullptr, // Pair with a dump of this process and thread.
-                                                NS_LITERAL_CSTRING("browser"),
-                                                std::move(callback),
-                                                aAsync);
-    } else {
-        OnTakeFullMinidumpComplete(aReportsReady, aContentPid, aBrowserDumpId);
+    if (!reportsReady) {
+        reportsReady = mCrashReporter->GenerateMinidumpAndPair(
+          this,
+          nullptr, // Pair with a dump of this process and thread.
+          NS_LITERAL_CSTRING("browser"));
     }
-}
 
-void
-PluginModuleChromeParent::OnTakeFullMinidumpComplete(bool aReportsReady,
-                                                     base::ProcessId aContentPid,
-                                                     const nsAString& aBrowserDumpId)
-{
-    mCrashReporterMutex.AssertCurrentThreadIn();
-
-    if (aReportsReady) {
-        nsString dumpId = mCrashReporter->MinidumpID();
+    if (reportsReady) {
+        aDumpId = mCrashReporter->MinidumpID();
         PLUGIN_LOG_DEBUG(
-                         ("generated paired browser/plugin minidumps: %s)",
-                          NS_ConvertUTF16toUTF8(dumpId).get()));
+                ("generated paired browser/plugin minidumps: %s)",
+                 NS_ConvertUTF16toUTF8(aDumpId).get()));
         nsAutoCString additionalDumps("browser");
         nsCOMPtr<nsIFile> pluginDumpFile;
-        if (GetMinidumpForID(dumpId, getter_AddRefs(pluginDumpFile))) {
+        if (GetMinidumpForID(aDumpId, getter_AddRefs(pluginDumpFile))) {
 #ifdef MOZ_CRASHREPORTER_INJECTOR
             // If we have handles to the flash sandbox processes on Windows,
             // include those minidumps as well.
@@ -1256,10 +1155,7 @@ PluginModuleChromeParent::OnTakeFullMinidumpComplete(bool aReportsReady,
         }
         mCrashReporter->AddAnnotation(Annotation::additional_minidumps,
                                       additionalDumps);
-
-        mTakeFullMinidumpCallback.Invoke(mCrashReporter->MinidumpID());
     } else {
-        mTakeFullMinidumpCallback.Invoke(EmptyString());
         NS_WARNING("failed to capture paired minidumps from hang");
     }
 }
@@ -1268,52 +1164,20 @@ void
 PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop,
                                                 base::ProcessId aContentPid,
                                                 const nsCString& aMonitorDescription,
-                                                const nsAString& aDumpId,
-                                                std::function<void(bool)>&& aCallback,
-                                                bool aAsync)
+                                                const nsAString& aDumpId)
 {
-    if (!mTerminateChildProcessCallback.IsEmpty()) {
-        aCallback(false);
-        return;
-    }
-    mTerminateChildProcessCallback.Init(std::move(aCallback), aAsync);
-
     // Start by taking a full minidump if necessary, this is done early
     // because it also needs to lock the mCrashReporterMutex and Mutex doesn't
     // support recursive locking.
+    nsAutoString dumpId;
     if (aDumpId.IsEmpty()) {
-
-      RetainPluginRef();
-      std::function<void(nsString)> callback =
-            [this, aMsgLoop, aMonitorDescription, aAsync](nsString aResult) {
-                if (aAsync) {
-                    this->mCrashReporterMutex.Lock();
-                }
-                this->TerminateChildProcessOnDumpComplete(aMsgLoop,
-                                                          aMonitorDescription);
-                if (aAsync) {
-                    this->mCrashReporterMutex.Unlock();
-                }
-
-                this->ReleasePluginRef();
-            };
-
-        TakeFullMinidump(aContentPid, EmptyString(), std::move(callback), aAsync);
-    } else {
-        TerminateChildProcessOnDumpComplete(aMsgLoop, aMonitorDescription);
+        TakeFullMinidump(aContentPid, EmptyString(), dumpId);
     }
-}
 
-void
-PluginModuleChromeParent::TerminateChildProcessOnDumpComplete(MessageLoop* aMsgLoop,
-                                                              const nsCString& aMonitorDescription)
-{
-    mCrashReporterMutex.AssertCurrentThreadIn();
-
+    mozilla::MutexAutoLock lock(mCrashReporterMutex);
     if (!mCrashReporter) {
         // If mCrashReporter is null then the hang has ended, the plugin module
         // is shutting down. There's nothing to do here.
-        mTerminateChildProcessCallback.Invoke(true);
         return;
     }
     mCrashReporter->AddAnnotation(Annotation::PluginHang, true);
@@ -1370,8 +1234,6 @@ PluginModuleChromeParent::TerminateChildProcessOnDumpComplete(MessageLoop* aMsgL
     if (!childOpened || !KillProcess(geckoChildProcess, 1, false)) {
         NS_WARNING("failed to kill subprocess!");
     }
-
-    mTerminateChildProcessCallback.Invoke(true);
 }
 
 bool
@@ -1522,7 +1384,7 @@ RemoveMinidump(nsIFile* minidump)
 void
 PluginModuleChromeParent::ProcessFirstMinidump()
 {
-    mozilla::RecursiveMutexAutoLock lock(mCrashReporterMutex);
+    mozilla::MutexAutoLock lock(mCrashReporterMutex);
 
     if (!mCrashReporter)
         return;

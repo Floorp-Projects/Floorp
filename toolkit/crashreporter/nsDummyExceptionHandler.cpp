@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <functional>
+
 #include "nsExceptionHandler.h"
 #include "nsExceptionHandlerUtils.h"
 
@@ -388,15 +390,14 @@ TakeMinidump(nsIFile** aResult, bool aMoveToPending)
   return false;
 }
 
-void
+bool
 CreateMinidumpsAndPair(ProcessHandle aTargetPid,
                        ThreadId aTargetBlamedThread,
                        const nsACString& aIncomingPairName,
                        nsIFile* aIncomingDumpToPair,
-                       nsIFile** aMainDumpOut,
-                       std::function<void(bool)>&& aCallback,
-                       bool aAsync)
+                       nsIFile** aTargetDumpOut)
 {
+  return false;
 }
 
 bool

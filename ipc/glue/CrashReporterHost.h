@@ -18,8 +18,6 @@
 namespace mozilla {
 namespace ipc {
 
-class GeckoChildProcessHost;
-
 // This is the newer replacement for CrashReporterParent. It is created in
 // response to a InitCrashReporter message on a top-level actor, and simply
 // holds the metadata shmem alive until the process ends. When the process
@@ -29,68 +27,12 @@ class CrashReporterHost
 {
   typedef mozilla::ipc::Shmem Shmem;
   typedef CrashReporter::AnnotationTable AnnotationTable;
-  typedef CrashReporter::ThreadId ThreadId;
 
 public:
 
-  template <typename T>
-  class CallbackWrapper {
-  public:
-    void Init(std::function<void(T)>&& aCallback, bool aAsync)
-    {
-      mCallback = std::move(aCallback);
-      mAsync = aAsync;
-      if (IsAsync()) {
-        // Don't call do_GetCurrentThread() if this is called synchronously
-        // because 1. it's unnecessary, and 2. more importantly, it might create
-        // one if called from a native thread, and the thread will be leaked.
-        mTargetThread = do_GetCurrentThread();
-      }
-    }
-
-    bool IsEmpty()
-    {
-      return !mCallback;
-    }
-
-    bool IsAsync()
-    {
-      return mAsync;
-    }
-
-    void Invoke(T aResult)
-    {
-      if (IsAsync()) {
-        decltype(mCallback) callback = std::move(mCallback);
-        mTargetThread->
-          Dispatch(NS_NewRunnableFunction("ipc::CrashReporterHost::CallbackWrapper::Invoke",
-                                          [callback, aResult](){
-                     callback(aResult);
-                   }), NS_DISPATCH_NORMAL);
-      } else {
-        MOZ_ASSERT(!mTargetThread);
-        mCallback(aResult);
-      }
-
-      Clear();
-    }
-
-  private:
-    void Clear()
-    {
-      mCallback = nullptr;
-      mTargetThread = nullptr;
-      mAsync = false;
-    }
-
-    bool mAsync;
-    std::function<void(T)> mCallback;
-    nsCOMPtr<nsIThread> mTargetThread;
-  };
-
   CrashReporterHost(GeckoProcessType aProcessType,
                     const Shmem& aShmem,
-                    ThreadId aThreadId);
+                    CrashReporter::ThreadId aThreadId);
 
   // Helper function for generating a crash report for a process that probably
   // crashed (i.e., had an AbnormalShutdown in ActorDestroy). Returns true if
@@ -112,15 +54,37 @@ public:
 
   // Generate a paired minidump. This does not take the crash report, as
   // GenerateCrashReport does. After this, FinalizeCrashReport may be called.
-  // Minidump(s) can be generated synchronously or asynchronously, specified in
-  // argument aAsync. When the operation completes, aCallback is invoked, where
-  // the callback argument denotes whether the operation succeeded.
-  void
-  GenerateMinidumpAndPair(GeckoChildProcessHost* aChildProcess,
-                          nsIFile* aMinidumpToPair,
-                          const nsACString& aPairName,
-                          std::function<void(bool)>&& aCallback,
-                          bool aAsync);
+  //
+  // This calls TakeCrashedChildMinidump and FinalizeCrashReport.
+  template <typename Toplevel>
+  bool GenerateMinidumpAndPair(Toplevel* aToplevelProtocol,
+                               nsIFile* aMinidumpToPair,
+                               const nsACString& aPairName)
+  {
+    ScopedProcessHandle childHandle;
+#ifdef XP_MACOSX
+    childHandle = aToplevelProtocol->Process()->GetChildTask();
+#else
+    if (!base::OpenPrivilegedProcessHandle(aToplevelProtocol->OtherPid(),
+                                           &childHandle.rwget()))
+    {
+      NS_WARNING("Failed to open child process handle.");
+      return false;
+    }
+#endif
+
+    nsCOMPtr<nsIFile> targetDump;
+    if (!CrashReporter::CreateMinidumpsAndPair(childHandle,
+                                               mThreadId,
+                                               aPairName,
+                                               aMinidumpToPair,
+                                               getter_AddRefs(targetDump)))
+    {
+      return false;
+    }
+
+    return CrashReporter::GetIDFromMinidump(targetDump, mDumpID);
+  }
 
   void AddAnnotation(CrashReporter::Annotation aKey, bool aValue);
   void AddAnnotation(CrashReporter::Annotation aKey, int aValue);
@@ -152,15 +116,13 @@ private:
     const nsString& aChildDumpID);
 
 private:
-  CallbackWrapper<bool> mCreateMinidumpCallback;
   GeckoProcessType mProcessType;
   Shmem mShmem;
-  ThreadId mThreadId;
+  CrashReporter::ThreadId mThreadId;
   time_t mStartTime;
   AnnotationTable mExtraAnnotations;
   nsString mDumpID;
   bool mFinalized;
-  nsCOMPtr<nsIFile> mTargetDump;
 };
 
 } // namespace ipc
