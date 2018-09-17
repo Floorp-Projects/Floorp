@@ -4102,18 +4102,14 @@ class PDFFindBar {
     }
     let matchesCountMsg = '',
         limit = MATCHES_COUNT_LIMIT;
-    if (total) {
+    if (total > 0) {
       if (total > limit) {
-        matchesCountMsg = this.l10n.get('find_matches_count_limit', {
-          n: limit,
-          limit: limit.toLocaleString()
-        }, 'More than {{limit}} match' + (limit !== 1 ? 'es' : ''));
+        matchesCountMsg = this.l10n.get('find_match_count_limit[other]', { limit }, 'More than {{limit}} matches');
       } else {
-        matchesCountMsg = this.l10n.get('find_matches_count', {
-          n: total,
-          current: current.toLocaleString(),
-          total: total.toLocaleString()
-        }, '{{current}} of {{total}} match' + (total !== 1 ? 'es' : ''));
+        matchesCountMsg = this.l10n.get('find_match_count[other]', {
+          current,
+          total
+        }, '{{current}} of {{total}} matches');
       }
     }
     Promise.resolve(matchesCountMsg).then(msg => {
@@ -4180,16 +4176,12 @@ var _pdf_find_utils = __webpack_require__(17);
 
 var _dom_events = __webpack_require__(10);
 
-var _ui_utils = __webpack_require__(2);
-
 const FindState = {
   FOUND: 0,
   NOT_FOUND: 1,
   WRAPPED: 2,
   PENDING: 3
 };
-const FIND_SCROLL_OFFSET_TOP = -50;
-const FIND_SCROLL_OFFSET_LEFT = -400;
 const FIND_TIMEOUT = 250;
 const CHARACTERS_TO_NORMALIZE = {
   '\u2018': '\'',
@@ -4206,38 +4198,49 @@ const CHARACTERS_TO_NORMALIZE = {
 };
 class PDFFindController {
   constructor({ pdfViewer, eventBus = (0, _dom_events.getGlobalEventBus)() }) {
-    this.pdfViewer = pdfViewer;
-    this.eventBus = eventBus;
+    this._pdfViewer = pdfViewer;
+    this._eventBus = eventBus;
     this.onUpdateResultsCount = null;
     this.onUpdateState = null;
     this.reset();
-    let replace = Object.keys(CHARACTERS_TO_NORMALIZE).join('');
-    this.normalizationRegex = new RegExp('[' + replace + ']', 'g');
+    const replace = Object.keys(CHARACTERS_TO_NORMALIZE).join('');
+    this._normalizationRegex = new RegExp(`[${replace}]`, 'g');
+  }
+  get pageMatches() {
+    return this._pageMatches;
+  }
+  get pageMatchesLength() {
+    return this._pageMatchesLength;
+  }
+  get selected() {
+    return this._selected;
+  }
+  get state() {
+    return this._state;
   }
   reset() {
-    this.startedTextExtraction = false;
-    this.extractTextPromises = [];
-    this.pendingFindMatches = Object.create(null);
     this.active = false;
-    this.pageContents = [];
-    this.pageMatches = [];
-    this.pageMatchesLength = null;
-    this.matchesCountTotal = 0;
-    this.selected = {
+    this._pageMatches = [];
+    this._pageMatchesLength = null;
+    this._state = null;
+    this._selected = {
       pageIdx: -1,
       matchIdx: -1
     };
-    this.offset = {
+    this._offset = {
       pageIdx: null,
       matchIdx: null
     };
-    this.pagesToSearch = null;
-    this.resumePageIdx = null;
-    this.state = null;
-    this.dirtyMatch = false;
-    this.findTimeout = null;
+    this._extractTextPromises = [];
+    this._pageContents = [];
+    this._matchesCountTotal = 0;
+    this._pagesToSearch = null;
+    this._pendingFindMatches = Object.create(null);
+    this._resumePageIdx = null;
+    this._dirtyMatch = false;
+    this._findTimeout = null;
     this._firstPagePromise = new Promise(resolve => {
-      const eventBus = this.eventBus;
+      const eventBus = this._eventBus;
       eventBus.on('pagesinit', function onPagesInit() {
         eventBus.off('pagesinit', onPagesInit);
         resolve();
@@ -4245,45 +4248,36 @@ class PDFFindController {
     });
   }
   executeCommand(cmd, state) {
-    if (this.state === null || cmd !== 'findagain') {
-      this.dirtyMatch = true;
+    if (this._state === null || cmd !== 'findagain') {
+      this._dirtyMatch = true;
     }
-    this.state = state;
+    this._state = state;
     this._updateUIState(FindState.PENDING);
     this._firstPagePromise.then(() => {
       this._extractText();
-      clearTimeout(this.findTimeout);
+      clearTimeout(this._findTimeout);
       if (cmd === 'find') {
-        this.findTimeout = setTimeout(this._nextMatch.bind(this), FIND_TIMEOUT);
+        this._findTimeout = setTimeout(this._nextMatch.bind(this), FIND_TIMEOUT);
       } else {
         this._nextMatch();
       }
     });
   }
-  updateMatchPosition(pageIndex, matchIndex, elements, beginIdx) {
-    if (this.selected.matchIdx === matchIndex && this.selected.pageIdx === pageIndex) {
-      let spot = {
-        top: FIND_SCROLL_OFFSET_TOP,
-        left: FIND_SCROLL_OFFSET_LEFT
-      };
-      (0, _ui_utils.scrollIntoView)(elements[beginIdx], spot, true);
-    }
-  }
   _normalize(text) {
-    return text.replace(this.normalizationRegex, function (ch) {
+    return text.replace(this._normalizationRegex, function (ch) {
       return CHARACTERS_TO_NORMALIZE[ch];
     });
   }
   _prepareMatches(matchesWithLength, matches, matchesLength) {
     function isSubTerm(matchesWithLength, currentIndex) {
-      let currentElem = matchesWithLength[currentIndex];
-      let nextElem = matchesWithLength[currentIndex + 1];
+      const currentElem = matchesWithLength[currentIndex];
+      const nextElem = matchesWithLength[currentIndex + 1];
       if (currentIndex < matchesWithLength.length - 1 && currentElem.match === nextElem.match) {
         currentElem.skipped = true;
         return true;
       }
       for (let i = currentIndex - 1; i >= 0; i--) {
-        let prevElem = matchesWithLength[i];
+        const prevElem = matchesWithLength[i];
         if (prevElem.skipped) {
           continue;
         }
@@ -4327,8 +4321,8 @@ class PDFFindController {
     return true;
   }
   _calculatePhraseMatch(query, pageIndex, pageContent, entireWord) {
-    let matches = [];
-    let queryLen = query.length;
+    const matches = [];
+    const queryLen = query.length;
     let matchIdx = -queryLen;
     while (true) {
       matchIdx = pageContent.indexOf(query, matchIdx + queryLen);
@@ -4340,14 +4334,14 @@ class PDFFindController {
       }
       matches.push(matchIdx);
     }
-    this.pageMatches[pageIndex] = matches;
+    this._pageMatches[pageIndex] = matches;
   }
   _calculateWordMatch(query, pageIndex, pageContent, entireWord) {
-    let matchesWithLength = [];
-    let queryArray = query.match(/\S+/g);
+    const matchesWithLength = [];
+    const queryArray = query.match(/\S+/g);
     for (let i = 0, len = queryArray.length; i < len; i++) {
-      let subquery = queryArray[i];
-      let subqueryLen = subquery.length;
+      const subquery = queryArray[i];
+      const subqueryLen = subquery.length;
       let matchIdx = -subqueryLen;
       while (true) {
         matchIdx = pageContent.indexOf(subquery, matchIdx + subqueryLen);
@@ -4364,21 +4358,18 @@ class PDFFindController {
         });
       }
     }
-    if (!this.pageMatchesLength) {
-      this.pageMatchesLength = [];
+    if (!this._pageMatchesLength) {
+      this._pageMatchesLength = [];
     }
-    this.pageMatchesLength[pageIndex] = [];
-    this.pageMatches[pageIndex] = [];
-    this._prepareMatches(matchesWithLength, this.pageMatches[pageIndex], this.pageMatchesLength[pageIndex]);
+    this._pageMatchesLength[pageIndex] = [];
+    this._pageMatches[pageIndex] = [];
+    this._prepareMatches(matchesWithLength, this._pageMatches[pageIndex], this._pageMatchesLength[pageIndex]);
   }
   _calculateMatch(pageIndex) {
-    let pageContent = this._normalize(this.pageContents[pageIndex]);
-    let query = this._normalize(this.state.query);
-    let caseSensitive = this.state.caseSensitive;
-    let phraseSearch = this.state.phraseSearch;
-    const entireWord = this.state.entireWord;
-    let queryLen = query.length;
-    if (queryLen === 0) {
+    let pageContent = this._normalize(this._pageContents[pageIndex]);
+    let query = this._normalize(this._state.query);
+    const { caseSensitive, entireWord, phraseSearch } = this._state;
+    if (query.length === 0) {
       return;
     }
     if (!caseSensitive) {
@@ -4391,91 +4382,87 @@ class PDFFindController {
       this._calculateWordMatch(query, pageIndex, pageContent, entireWord);
     }
     this._updatePage(pageIndex);
-    if (this.resumePageIdx === pageIndex) {
-      this.resumePageIdx = null;
+    if (this._resumePageIdx === pageIndex) {
+      this._resumePageIdx = null;
       this._nextPageMatch();
     }
-    const pageMatchesCount = this.pageMatches[pageIndex].length;
+    const pageMatchesCount = this._pageMatches[pageIndex].length;
     if (pageMatchesCount > 0) {
-      this.matchesCountTotal += pageMatchesCount;
+      this._matchesCountTotal += pageMatchesCount;
       this._updateUIResultsCount();
     }
   }
   _extractText() {
-    if (this.startedTextExtraction) {
+    if (this._extractTextPromises.length > 0) {
       return;
     }
-    this.startedTextExtraction = true;
-    this.pageContents.length = 0;
     let promise = Promise.resolve();
-    for (let i = 0, ii = this.pdfViewer.pagesCount; i < ii; i++) {
-      let extractTextCapability = (0, _pdfjsLib.createPromiseCapability)();
-      this.extractTextPromises[i] = extractTextCapability.promise;
+    for (let i = 0, ii = this._pdfViewer.pagesCount; i < ii; i++) {
+      const extractTextCapability = (0, _pdfjsLib.createPromiseCapability)();
+      this._extractTextPromises[i] = extractTextCapability.promise;
       promise = promise.then(() => {
-        return this.pdfViewer.getPageTextContent(i).then(textContent => {
-          let textItems = textContent.items;
-          let strBuf = [];
+        return this._pdfViewer.getPageTextContent(i).then(textContent => {
+          const textItems = textContent.items;
+          const strBuf = [];
           for (let j = 0, jj = textItems.length; j < jj; j++) {
             strBuf.push(textItems[j].str);
           }
-          this.pageContents[i] = strBuf.join('');
+          this._pageContents[i] = strBuf.join('');
           extractTextCapability.resolve(i);
         }, reason => {
-          console.error(`Unable to get page ${i + 1} text content`, reason);
-          this.pageContents[i] = '';
+          console.error(`Unable to get text content for page ${i + 1}`, reason);
+          this._pageContents[i] = '';
           extractTextCapability.resolve(i);
         });
       });
     }
   }
   _updatePage(index) {
-    if (this.selected.pageIdx === index) {
-      this.pdfViewer.currentPageNumber = index + 1;
+    if (this._selected.pageIdx === index) {
+      this._pdfViewer.currentPageNumber = index + 1;
     }
-    let page = this.pdfViewer.getPageView(index);
+    const page = this._pdfViewer.getPageView(index);
     if (page.textLayer) {
       page.textLayer.updateMatches();
     }
   }
   _nextMatch() {
-    let previous = this.state.findPrevious;
-    let currentPageIndex = this.pdfViewer.currentPageNumber - 1;
-    let numPages = this.pdfViewer.pagesCount;
+    const previous = this._state.findPrevious;
+    const currentPageIndex = this._pdfViewer.currentPageNumber - 1;
+    const numPages = this._pdfViewer.pagesCount;
     this.active = true;
-    if (this.dirtyMatch) {
-      this.dirtyMatch = false;
-      this.selected.pageIdx = this.selected.matchIdx = -1;
-      this.offset.pageIdx = currentPageIndex;
-      this.offset.matchIdx = null;
-      this.hadMatch = false;
-      this.resumePageIdx = null;
-      this.pageMatches = [];
-      this.matchesCountTotal = 0;
-      this.pageMatchesLength = null;
+    if (this._dirtyMatch) {
+      this._dirtyMatch = false;
+      this._selected.pageIdx = this._selected.matchIdx = -1;
+      this._offset.pageIdx = currentPageIndex;
+      this._offset.matchIdx = null;
+      this._resumePageIdx = null;
+      this._pageMatches.length = 0;
+      this._pageMatchesLength = null;
+      this._matchesCountTotal = 0;
       for (let i = 0; i < numPages; i++) {
         this._updatePage(i);
-        if (!(i in this.pendingFindMatches)) {
-          this.pendingFindMatches[i] = true;
-          this.extractTextPromises[i].then(pageIdx => {
-            delete this.pendingFindMatches[pageIdx];
+        if (!(i in this._pendingFindMatches)) {
+          this._pendingFindMatches[i] = true;
+          this._extractTextPromises[i].then(pageIdx => {
+            delete this._pendingFindMatches[pageIdx];
             this._calculateMatch(pageIdx);
           });
         }
       }
     }
-    if (this.state.query === '') {
+    if (this._state.query === '') {
       this._updateUIState(FindState.FOUND);
       return;
     }
-    if (this.resumePageIdx) {
+    if (this._resumePageIdx) {
       return;
     }
-    let offset = this.offset;
-    this.pagesToSearch = numPages;
+    const offset = this._offset;
+    this._pagesToSearch = numPages;
     if (offset.matchIdx !== null) {
-      let numPageMatches = this.pageMatches[offset.pageIdx].length;
+      const numPageMatches = this._pageMatches[offset.pageIdx].length;
       if (!previous && offset.matchIdx + 1 < numPageMatches || previous && offset.matchIdx > 0) {
-        this.hadMatch = true;
         offset.matchIdx = previous ? offset.matchIdx - 1 : offset.matchIdx + 1;
         this._updateMatch(true);
         return;
@@ -4485,11 +4472,10 @@ class PDFFindController {
     this._nextPageMatch();
   }
   _matchesReady(matches) {
-    let offset = this.offset;
-    let numMatches = matches.length;
-    let previous = this.state.findPrevious;
+    const offset = this._offset;
+    const numMatches = matches.length;
+    const previous = this._state.findPrevious;
     if (numMatches) {
-      this.hadMatch = true;
       offset.matchIdx = previous ? numMatches - 1 : 0;
       this._updateMatch(true);
       return true;
@@ -4497,7 +4483,7 @@ class PDFFindController {
     this._advanceOffsetPage(previous);
     if (offset.wrapped) {
       offset.matchIdx = null;
-      if (this.pagesToSearch < 0) {
+      if (this._pagesToSearch < 0) {
         this._updateMatch(false);
         return true;
       }
@@ -4505,25 +4491,25 @@ class PDFFindController {
     return false;
   }
   _nextPageMatch() {
-    if (this.resumePageIdx !== null) {
+    if (this._resumePageIdx !== null) {
       console.error('There can only be one pending page.');
     }
     let matches = null;
     do {
-      let pageIdx = this.offset.pageIdx;
-      matches = this.pageMatches[pageIdx];
+      const pageIdx = this._offset.pageIdx;
+      matches = this._pageMatches[pageIdx];
       if (!matches) {
-        this.resumePageIdx = pageIdx;
+        this._resumePageIdx = pageIdx;
         break;
       }
     } while (!this._matchesReady(matches));
   }
   _advanceOffsetPage(previous) {
-    let offset = this.offset;
-    let numPages = this.extractTextPromises.length;
+    const offset = this._offset;
+    const numPages = this._extractTextPromises.length;
     offset.pageIdx = previous ? offset.pageIdx - 1 : offset.pageIdx + 1;
     offset.matchIdx = null;
-    this.pagesToSearch--;
+    this._pagesToSearch--;
     if (offset.pageIdx >= numPages || offset.pageIdx < 0) {
       offset.pageIdx = previous ? numPages - 1 : 0;
       offset.wrapped = true;
@@ -4531,33 +4517,33 @@ class PDFFindController {
   }
   _updateMatch(found = false) {
     let state = FindState.NOT_FOUND;
-    let wrapped = this.offset.wrapped;
-    this.offset.wrapped = false;
+    const wrapped = this._offset.wrapped;
+    this._offset.wrapped = false;
     if (found) {
-      let previousPage = this.selected.pageIdx;
-      this.selected.pageIdx = this.offset.pageIdx;
-      this.selected.matchIdx = this.offset.matchIdx;
+      const previousPage = this._selected.pageIdx;
+      this.selected.pageIdx = this._offset.pageIdx;
+      this.selected.matchIdx = this._offset.matchIdx;
       state = wrapped ? FindState.WRAPPED : FindState.FOUND;
-      if (previousPage !== -1 && previousPage !== this.selected.pageIdx) {
+      if (previousPage !== -1 && previousPage !== this._selected.pageIdx) {
         this._updatePage(previousPage);
       }
     }
-    this._updateUIState(state, this.state.findPrevious);
-    if (this.selected.pageIdx !== -1) {
-      this._updatePage(this.selected.pageIdx);
+    this._updateUIState(state, this._state.findPrevious);
+    if (this._selected.pageIdx !== -1) {
+      this._updatePage(this._selected.pageIdx);
     }
   }
   _requestMatchesCount() {
-    const { pageIdx, matchIdx } = this.selected;
+    const { pageIdx, matchIdx } = this._selected;
     let current = 0,
-        total = this.matchesCountTotal;
+        total = this._matchesCountTotal;
     if (matchIdx !== -1) {
       for (let i = 0; i < pageIdx; i++) {
-        current += this.pageMatches[i] && this.pageMatches[i].length || 0;
+        current += this._pageMatches[i] && this._pageMatches[i].length || 0;
       }
       current += matchIdx + 1;
     }
-    if (current > total) {
+    if (current < 1 || current > total) {
       current = total = 0;
     }
     return {
@@ -7905,7 +7891,11 @@ var _dom_events = __webpack_require__(10);
 
 var _pdfjsLib = __webpack_require__(3);
 
+var _ui_utils = __webpack_require__(2);
+
 const EXPAND_DIVS_TIMEOUT = 300;
+const MATCH_SCROLL_OFFSET_TOP = -50;
+const MATCH_SCROLL_OFFSET_LEFT = -400;
 class TextLayerBuilder {
   constructor({ textLayerDiv, eventBus, pageIndex, viewport, findController = null, enhanceTextSelection = false }) {
     this.textLayerDiv = textLayerDiv;
@@ -8064,7 +8054,13 @@ class TextLayerBuilder {
       let isSelected = isSelectedPage && i === selectedMatchIdx;
       let highlightSuffix = isSelected ? ' selected' : '';
       if (this.findController) {
-        this.findController.updateMatchPosition(pageIdx, i, textDivs, begin.divIdx);
+        if (this.findController.selected.matchIdx === i && this.findController.selected.pageIdx === pageIdx) {
+          const spot = {
+            top: MATCH_SCROLL_OFFSET_TOP,
+            left: MATCH_SCROLL_OFFSET_LEFT
+          };
+          (0, _ui_utils.scrollIntoView)(textDivs[begin.divIdx], spot, true);
+        }
       }
       if (!prevEnd || begin.divIdx !== prevEnd.divIdx) {
         if (prevEnd !== null) {
