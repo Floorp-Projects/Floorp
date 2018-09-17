@@ -697,7 +697,7 @@ SVGGeometryFrame::GetMarkerProperties(SVGGeometryFrame *aFrame)
   NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame should be first continuation");
 
   MarkerProperties result;
-  nsCOMPtr<nsIURI> markerURL =
+  RefPtr<URLAndReferrerInfo> markerURL =
     SVGObserverUtils::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerStart);
   result.mMarkerStart =
     SVGObserverUtils::GetMarkerProperty(markerURL, aFrame,
