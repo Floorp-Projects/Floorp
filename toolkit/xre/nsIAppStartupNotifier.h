@@ -6,8 +6,6 @@
 #ifndef nsIAppStartupNotifier_h___
 #define nsIAppStartupNotifier_h___
 
-#include "nsIObserver.h"
-
 /*
  Some components need to be run at the startup of mozilla or embedding - to
  start new services etc.
