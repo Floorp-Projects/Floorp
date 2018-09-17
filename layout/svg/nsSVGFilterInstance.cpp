@@ -129,9 +129,14 @@ nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame)
 
   // aTargetFrame can be null if this filter belongs to a
   // CanvasRenderingContext2D.
-  nsCOMPtr<nsIURI> url = aTargetFrame
-    ? SVGObserverUtils::GetFilterURI(aTargetFrame, mFilter)
-    : mFilter.GetURL()->ResolveLocalRef(mTargetContent);
+  nsCOMPtr<nsIURI> url;
+  if(aTargetFrame) {
+    RefPtr<URLAndReferrerInfo> urlExtraReferrer =
+      SVGObserverUtils::GetFilterURI(aTargetFrame, mFilter);
+    url = urlExtraReferrer->GetURI();
+  } else {
+    url = mFilter.GetURL()->ResolveLocalRef(mTargetContent);
+  }
 
   if (!url) {
     MOZ_ASSERT_UNREACHABLE("an nsStyleFilter of type URL should have a non-null URL");
@@ -141,7 +146,10 @@ nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame)
   // Look up the filter element by URL.
   IDTracker filterElement;
   bool watch = false;
-  filterElement.Reset(mTargetContent, url, watch);
+  filterElement.Reset(mTargetContent, url,
+                      mFilter.GetURL()->mExtraData->GetReferrer(),
+                      mFilter.GetURL()->mExtraData->GetReferrerPolicy(),
+                      watch);
   Element* element = filterElement.get();
   if (!element) {
     // The URL points to no element.

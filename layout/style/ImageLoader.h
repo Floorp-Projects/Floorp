@@ -19,6 +19,7 @@
 #include "imgIRequest.h"
 #include "imgINotificationObserver.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 class imgIContainer;
 class nsIFrame;
@@ -77,7 +78,8 @@ public:
   void ClearFrames(nsPresContext* aPresContext);
 
   void LoadImage(nsIURI* aURI, nsIPrincipal* aPrincipal, nsIURI* aReferrer,
-                 Image* aCSSValue, CORSMode aCorsMode);
+                 mozilla::net::ReferrerPolicy aPolicy, Image* aCSSValue,
+                 CORSMode aCorsMode);
 
   void DestroyRequest(imgIRequest* aRequest);
 

@@ -533,7 +533,7 @@ nsExpatDriver::HandleEndDoctypeDecl()
     MaybeStopParser(rv);
   }
   
-  mInternalSubset.SetCapacity(0);
+  mInternalSubset.Truncate();
 
   return NS_OK;
 }

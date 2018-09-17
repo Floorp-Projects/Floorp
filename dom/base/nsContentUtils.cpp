@@ -8674,6 +8674,26 @@ nsContentUtils::GetReferrerPolicyFromHeader(const nsAString& aHeader)
 }
 
 // static
+net::ReferrerPolicy
+nsContentUtils::GetReferrerPolicyFromChannel(nsIChannel* aChannel)
+{
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (!httpChannel) {
+    return net::RP_Unset;
+  }
+
+  nsresult rv;
+  nsAutoCString headerValue;
+  rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("referrer-policy"),
+                                      headerValue);
+  if (NS_FAILED(rv) || headerValue.IsEmpty()) {
+    return net::RP_Unset;
+  }
+
+  return GetReferrerPolicyFromHeader(NS_ConvertUTF8toUTF16(headerValue));
+}
+
+// static
 bool
 nsContentUtils::IsNonSubresourceRequest(nsIChannel* aChannel)
 {

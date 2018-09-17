@@ -818,6 +818,8 @@ nsExternalResourceMap::nsExternalResourceMap()
 
 nsIDocument*
 nsExternalResourceMap::RequestResource(nsIURI* aURI,
+                                       nsIURI* aReferrer,
+                                       uint32_t aReferrerPolicy,
                                        nsINode* aRequestingNode,
                                        nsIDocument* aDisplayDocument,
                                        ExternalResourceLoad** aPendingLoad)
@@ -855,7 +857,8 @@ nsExternalResourceMap::RequestResource(nsIURI* aURI,
   RefPtr<PendingLoad> load(new PendingLoad(aDisplayDocument));
   loadEntry = load;
 
-  if (NS_FAILED(load->StartLoad(clone, aRequestingNode))) {
+  if (NS_FAILED(load->StartLoad(clone, aReferrer, aReferrerPolicy,
+                                aRequestingNode))) {
     // Make sure we don't thrash things by trying this load again, since
     // chances are it failed for good reasons (security check, etc).
     AddExternalResource(clone, nullptr, nullptr, aDisplayDocument);
@@ -1164,6 +1167,8 @@ nsExternalResourceMap::PendingLoad::OnStopRequest(nsIRequest* aRequest,
 
 nsresult
 nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
+                                              nsIURI* aReferrer,
+                                              uint32_t aReferrerPolicy,
                                               nsINode* aRequestingNode)
 {
   MOZ_ASSERT(aURI, "Must have a URI");
@@ -1182,6 +1187,12 @@ nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
                      nullptr, // aPerformanceStorage
                      loadGroup);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+  if (httpChannel) {
+    rv = httpChannel->SetReferrerWithPolicy(aReferrer, aReferrerPolicy);
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+  }
 
   mURI = aURI;
 
@@ -3739,11 +3750,13 @@ nsIDocument::DefaultStyleAttrURLData()
   nsIURI* baseURI = GetDocBaseURI();
   nsIURI* docURI = GetDocumentURI();
   nsIPrincipal* principal = NodePrincipal();
+  mozilla::net::ReferrerPolicy policy = GetReferrerPolicy();
   if (!mCachedURLData ||
       mCachedURLData->BaseURI() != baseURI ||
       mCachedURLData->GetReferrer() != docURI ||
+      mCachedURLData->GetReferrerPolicy() != policy ||
       mCachedURLData->GetPrincipal() != principal) {
-    mCachedURLData = new URLExtraData(baseURI, docURI, principal);
+    mCachedURLData = new URLExtraData(baseURI, docURI, principal, policy);
   }
   return mCachedURLData;
 }
@@ -6699,6 +6712,8 @@ nsIDocument::TryCancelFrameLoaderInitialization(nsIDocShell* aShell)
 
 nsIDocument*
 nsIDocument::RequestExternalResource(nsIURI* aURI,
+                                     nsIURI* aReferrer,
+                                     uint32_t aReferrerPolicy,
                                      nsINode* aRequestingNode,
                                      ExternalResourceLoad** aPendingLoad)
 {
@@ -6706,12 +6721,15 @@ nsIDocument::RequestExternalResource(nsIURI* aURI,
   MOZ_ASSERT(aRequestingNode, "Must have a node");
   if (mDisplayDocument) {
     return mDisplayDocument->RequestExternalResource(aURI,
+                                                     aReferrer,
+                                                     aReferrerPolicy,
                                                      aRequestingNode,
                                                      aPendingLoad);
   }
 
-  return mExternalResourceMap.RequestResource(aURI, aRequestingNode,
-                                              this, aPendingLoad);
+  return mExternalResourceMap.RequestResource(aURI, aReferrer, aReferrerPolicy,
+                                              aRequestingNode, this,
+                                              aPendingLoad);
 }
 
 void
@@ -11146,6 +11164,10 @@ GetFullscreenError(nsIDocument* aDoc, CallerType aCallerType)
     return "FullscreenDeniedDisabled";
   }
 
+  if (!aDoc->IsVisible()) {
+    return "FullscreenDeniedHidden";
+  }
+
   // Ensure that all containing elements are <iframe> and have
   // allowfullscreen attribute set.
   nsCOMPtr<nsIDocShell> docShell(aDoc->GetDocShell());
@@ -11182,10 +11204,6 @@ nsIDocument::FullscreenElementReadyCheck(const FullscreenRequest& aRequest)
   }
   if (const char* msg = GetFullscreenError(this, aRequest.mCallerType)) {
     aRequest.Reject(msg);
-    return false;
-  }
-  if (!IsVisible()) {
-    aRequest.Reject("FullscreenDeniedHidden");
     return false;
   }
   if (HasFullscreenSubDocument(this)) {

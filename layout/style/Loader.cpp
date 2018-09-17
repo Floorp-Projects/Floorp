@@ -64,6 +64,7 @@
 #include "mozilla/dom/SRICheck.h"
 
 #include "mozilla/Encoding.h"
+#include "mozilla/Logging.h"
 
 using namespace mozilla::dom;
 
@@ -96,11 +97,6 @@ using namespace mozilla::dom;
  *                     determination.
  */
 
-namespace mozilla {
-namespace css {
-
-#include "mozilla/Logging.h"
-
 static mozilla::LazyLogModule sCssLoaderLog("nsCSSLoader");
 
 static mozilla::LazyLogModule gSriPRLog("SRI");
@@ -131,6 +127,22 @@ static const char* const gStateStrings[] = {
   "eSheetLoading",
   "eSheetComplete"
 };
+
+namespace mozilla {
+
+URIPrincipalReferrerPolicyAndCORSModeHashKey::
+URIPrincipalReferrerPolicyAndCORSModeHashKey(css::SheetLoadData* aLoadData)
+  : nsURIHashKey(aLoadData->mURI)
+  , mPrincipal(aLoadData->mLoaderPrincipal)
+  , mCORSMode(aLoadData->mSheet->GetCORSMode())
+  , mReferrerPolicy(aLoadData->mSheet->GetReferrerPolicy())
+{
+  MOZ_COUNT_CTOR(URIPrincipalReferrerPolicyAndCORSModeHashKey);
+}
+} // namespace mozilla
+
+namespace mozilla {
+namespace css {
 
 /********************************
  * SheetLoadData implementation *
@@ -559,6 +571,25 @@ SheetLoadData::GetReferrerURI()
   return uri.forget();
 }
 
+void
+SheetLoadData::SetReferrerPolicyFromHeader(nsIChannel* aChannel)
+{
+  net::ReferrerPolicy policy =
+    nsContentUtils::GetReferrerPolicyFromChannel(aChannel);
+  if (policy == net::RP_Unset ||
+      policy == mSheet->GetReferrerPolicy()) {
+    return;
+  }
+
+  URIPrincipalReferrerPolicyAndCORSModeHashKey oldKey(mURI,
+                                                      mLoaderPrincipal,
+                                                      mSheet->GetCORSMode(),
+                                                      mSheet->GetReferrerPolicy());
+
+  mSheet->SetReferrerPolicy(policy);
+  mLoader->UpdateLoadingData(&oldKey, this);
+}
+
 static nsresult
 VerifySheetIntegrity(const SRIMetadata& aMetadata,
                      nsIChannel* aChannel,
@@ -605,7 +636,7 @@ SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
                                        const nsACString& aBytes2,
                                        nsIChannel* aChannel)
 {
-  LOG(("SheetLoadData::OnStreamComplete"));
+  LOG(("SheetLoadData::VerifySheetReadyToParse"));
   NS_ASSERTION(!mLoader->mSyncCallback, "Synchronous callback from necko");
 
   if (mIsCancelled) {
@@ -815,6 +846,8 @@ SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
     }
   }
 
+  SetReferrerPolicyFromHeader(aChannel);
+
   // Enough to set the URIs on mSheet, since any sibling datas we have share
   // the same mInner as mSheet and will thus get the same URI.
   mSheet->SetURIs(channelURI, originalURI, channelURI);
@@ -851,6 +884,20 @@ Loader::IsAlternateSheet(const nsAString& aTitle, bool aHasAlternateRel)
   }
 
   return IsAlternate::Yes;
+}
+
+void
+Loader::UpdateLoadingData(URIPrincipalReferrerPolicyAndCORSModeHashKey* aOldKey,
+                          SheetLoadData* aData)
+{
+  MOZ_ASSERT(mSheets, "Must have sheets!");
+  MOZ_ASSERT(aData->mIsLoading, "data must be loading");
+
+  DebugOnly<bool> removed = mSheets->mLoadingDatas.Remove(aOldKey);
+  MOZ_ASSERT(removed, "Can't find data to remove!!!");
+
+  URIPrincipalReferrerPolicyAndCORSModeHashKey newKey(aData);
+  mSheets->mLoadingDatas.Put(&newKey, aData);
 }
 
 nsresult
@@ -1374,10 +1421,8 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
 
   SheetLoadData* existingData = nullptr;
 
-  URIPrincipalReferrerPolicyAndCORSModeHashKey key(aLoadData->mURI,
-                                     aLoadData->mLoaderPrincipal,
-                                     aLoadData->mSheet->GetCORSMode(),
-                                     aLoadData->mSheet->GetReferrerPolicy());
+  URIPrincipalReferrerPolicyAndCORSModeHashKey key(aLoadData);
+
   if (aSheetState == eSheetLoading) {
     mSheets->mLoadingDatas.Get(&key, &existingData);
     NS_ASSERTION(existingData, "CreateSheet lied about the state");
@@ -1718,10 +1763,7 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, LoadDataArray& aDatasToNotify)
     LOG_URI("  Finished loading: '%s'", aLoadData->mURI);
     // Remove the data from the list of loading datas
     if (aLoadData->mIsLoading) {
-      URIPrincipalReferrerPolicyAndCORSModeHashKey key(aLoadData->mURI,
-                                         aLoadData->mLoaderPrincipal,
-                                         aLoadData->mSheet->GetCORSMode(),
-                                         aLoadData->mSheet->GetReferrerPolicy());
+      URIPrincipalReferrerPolicyAndCORSModeHashKey key(aLoadData);
 #ifdef DEBUG
       SheetLoadData *loadingData;
       NS_ASSERTION(
@@ -1806,10 +1848,7 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, LoadDataArray& aDatasToNotify)
     }
     else {
 #endif
-      URIPrincipalReferrerPolicyAndCORSModeHashKey key(aLoadData->mURI,
-                                         aLoadData->mLoaderPrincipal,
-                                         aLoadData->mSheet->GetCORSMode(),
-                                         aLoadData->mSheet->GetReferrerPolicy());
+      URIPrincipalReferrerPolicyAndCORSModeHashKey key(aLoadData);
       NS_ASSERTION(sheet->IsComplete(),
                    "Should only be caching complete sheets");
       mSheets->mCompleteSheets.Put(&key, sheet);
@@ -2052,10 +2091,7 @@ Loader::LoadStyleLink(const SheetInfo& aInfo, nsICSSLoaderObserver* aObserver)
       mSheets->mLoadingDatas.Count() != 0 &&
       !result.ShouldBlock()) {
     LOG(("  Deferring sheet load"));
-    URIPrincipalReferrerPolicyAndCORSModeHashKey key(data->mURI,
-                                                     data->mLoaderPrincipal,
-                                                     data->mSheet->GetCORSMode(),
-                                                     data->mSheet->GetReferrerPolicy());
+    URIPrincipalReferrerPolicyAndCORSModeHashKey key(data);
     mSheets->mPendingDatas.Put(&key, data);
 
     data->mMustNotify = true;

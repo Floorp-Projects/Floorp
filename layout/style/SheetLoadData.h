@@ -91,6 +91,8 @@ public:
                                    const nsACString& aBytes2,
                                    nsIChannel* aChannel);
 
+  void SetReferrerPolicyFromHeader(nsIChannel* aChannel);
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSITHREADOBSERVER
