@@ -108,21 +108,22 @@ ShouldUseHeap(const IntSize& aSize,
 static already_AddRefed<DataSourceSurface>
 AllocateBufferForImage(const IntSize& size,
                        SurfaceFormat format,
-                       bool aIsAnimated = false,
-                       bool aIsFullFrame = true)
+                       bool aIsAnimated = false)
 {
   int32_t stride = VolatileSurfaceStride(size, format);
 
-  if (gfxVars::GetUseWebRenderOrDefault() &&
-      gfxPrefs::ImageMemShared() && aIsFullFrame) {
-    RefPtr<SourceSurfaceSharedData> newSurf = new SourceSurfaceSharedData();
-    if (newSurf->Init(size, stride, format)) {
-      return newSurf.forget();
-    }
-  } else if (ShouldUseHeap(size, stride, aIsAnimated)) {
+  if (ShouldUseHeap(size, stride, aIsAnimated)) {
     RefPtr<SourceSurfaceAlignedRawData> newSurf =
       new SourceSurfaceAlignedRawData();
     if (newSurf->Init(size, format, false, 0, stride)) {
+      return newSurf.forget();
+    }
+  }
+
+  if (!aIsAnimated && gfxVars::GetUseWebRenderOrDefault()
+                   && gfxPrefs::ImageMemShared()) {
+    RefPtr<SourceSurfaceSharedData> newSurf = new SourceSurfaceSharedData();
+    if (newSurf->Init(size, stride, format)) {
       return newSurf.forget();
     }
   } else {
@@ -212,7 +213,6 @@ imgFrame::imgFrame()
   , mPalettedImageData(nullptr)
   , mPaletteDepth(0)
   , mNonPremult(false)
-  , mIsFullFrame(false)
   , mCompositingFailed(false)
 {
 }
@@ -235,8 +235,7 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
                          SurfaceFormat aFormat,
                          uint8_t aPaletteDepth /* = 0 */,
                          bool aNonPremult /* = false */,
-                         const Maybe<AnimationParams>& aAnimParams /* = Nothing() */,
-                         bool aIsFullFrame /* = false */)
+                         const Maybe<AnimationParams>& aAnimParams /* = Nothing() */)
 {
   // Assert for properties that should be verified by decoders,
   // warn for properties related to bad content.
@@ -249,20 +248,13 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
   mImageSize = aImageSize;
   mFrameRect = aRect;
 
-  // May be updated shortly after InitForDecoder by BlendAnimationFilter
-  // because it needs to take into consideration the previous frames to
-  // properly calculate. We start with the whole frame as dirty.
-  mDirtyRect = aRect;
-
   if (aAnimParams) {
     mBlendRect = aAnimParams->mBlendRect;
     mTimeout = aAnimParams->mTimeout;
     mBlendMethod = aAnimParams->mBlendMethod;
     mDisposalMethod = aAnimParams->mDisposalMethod;
-    mIsFullFrame = aAnimParams->mFrameNum == 0 || aIsFullFrame;
   } else {
     mBlendRect = aRect;
-    mIsFullFrame = true;
   }
 
   // We only allow a non-trivial frame rect (i.e., a frame rect that doesn't
@@ -303,8 +295,7 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
     MOZ_ASSERT(!mLockedSurface, "Called imgFrame::InitForDecoder() twice?");
 
     bool postFirstFrame = aAnimParams && aAnimParams->mFrameNum > 0;
-    mRawSurface = AllocateBufferForImage(mFrameRect.Size(), mFormat,
-                                         postFirstFrame, mIsFullFrame);
+    mRawSurface = AllocateBufferForImage(mFrameRect.Size(), mFormat, postFirstFrame);
     if (!mRawSurface) {
       mAborted = true;
       return NS_ERROR_OUT_OF_MEMORY;

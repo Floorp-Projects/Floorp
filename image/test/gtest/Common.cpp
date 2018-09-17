@@ -195,21 +195,20 @@ RectIsSolidColor(SourceSurface* aSurface,
   uint8_t* data = mapping.GetData();
   ASSERT_TRUE_OR_RETURN(data != nullptr, false);
 
-  BGRAColor pmColor = aColor.Premultiply();
   int32_t rowLength = mapping.GetStride();
   for (int32_t row = rect.Y(); row < rect.YMost(); ++row) {
     for (int32_t col = rect.X(); col < rect.XMost(); ++col) {
       int32_t i = row * rowLength + col * 4;
       if (aFuzz != 0) {
-        ASSERT_LE_OR_RETURN(abs(pmColor.mBlue - data[i + 0]), aFuzz, false);
-        ASSERT_LE_OR_RETURN(abs(pmColor.mGreen - data[i + 1]), aFuzz, false);
-        ASSERT_LE_OR_RETURN(abs(pmColor.mRed - data[i + 2]), aFuzz, false);
-        ASSERT_LE_OR_RETURN(abs(pmColor.mAlpha - data[i + 3]), aFuzz, false);
+        ASSERT_LE_OR_RETURN(abs(aColor.mBlue - data[i + 0]), aFuzz, false);
+        ASSERT_LE_OR_RETURN(abs(aColor.mGreen - data[i + 1]), aFuzz, false);
+        ASSERT_LE_OR_RETURN(abs(aColor.mRed - data[i + 2]), aFuzz, false);
+        ASSERT_LE_OR_RETURN(abs(aColor.mAlpha - data[i + 3]), aFuzz, false);
       } else {
-        ASSERT_EQ_OR_RETURN(pmColor.mBlue,  data[i + 0], false);
-        ASSERT_EQ_OR_RETURN(pmColor.mGreen, data[i + 1], false);
-        ASSERT_EQ_OR_RETURN(pmColor.mRed,   data[i + 2], false);
-        ASSERT_EQ_OR_RETURN(pmColor.mAlpha, data[i + 3], false);
+        ASSERT_EQ_OR_RETURN(aColor.mBlue,  data[i + 0], false);
+        ASSERT_EQ_OR_RETURN(aColor.mGreen, data[i + 1], false);
+        ASSERT_EQ_OR_RETURN(aColor.mRed,   data[i + 2], false);
+        ASSERT_EQ_OR_RETURN(aColor.mAlpha, data[i + 3], false);
       }
     }
   }
@@ -301,7 +300,6 @@ CreateTrivialDecoder()
   auto sourceBuffer = MakeNotNull<RefPtr<SourceBuffer>>();
   RefPtr<Decoder> decoder =
     DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
-                                           DefaultDecoderFlags(),
                                            DefaultSurfaceFlags());
   return decoder.forget();
 }

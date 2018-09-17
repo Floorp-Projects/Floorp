@@ -5,7 +5,6 @@
 #include "gtest/gtest.h"
 
 #include "Common.h"
-#include "AnimationSurfaceProvider.h"
 #include "Decoder.h"
 #include "DecoderFactory.h"
 #include "decoders/nsBMPDecoder.h"
@@ -116,7 +115,6 @@ void WithSingleChunkDecode(const ImageTestCase& aTestCase,
     DecoderFactory::GetDecoderType(aTestCase.mMimeType);
   RefPtr<Decoder> decoder =
     DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, aOutputSize,
-                                           DecoderFlags::FIRST_FRAME_ONLY,
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
   RefPtr<IDecodingTask> task = new AnonymousDecodingTask(WrapNotNull(decoder));
@@ -154,7 +152,6 @@ CheckDecoderMultiChunk(const ImageTestCase& aTestCase)
     DecoderFactory::GetDecoderType(aTestCase.mMimeType);
   RefPtr<Decoder> decoder =
     DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
-                                           DecoderFlags::FIRST_FRAME_ONLY,
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
   RefPtr<IDecodingTask> task = new AnonymousDecodingTask(WrapNotNull(decoder));
@@ -204,128 +201,6 @@ CheckDownscaleDuringDecode(const ImageTestCase& aTestCase)
     EXPECT_TRUE(RowsAreSolidColor(surface, 6, 3, BGRAColor::Red(), /* aFuzz = */ 27));
     EXPECT_TRUE(RowsAreSolidColor(surface, 11, 3, BGRAColor::Green(), /* aFuzz = */ 47));
     EXPECT_TRUE(RowsAreSolidColor(surface, 16, 4, BGRAColor::Red(), /* aFuzz = */ 27));
-  });
-}
-
-static void
-CheckAnimationDecoderResults(const ImageTestCase& aTestCase,
-                             AnimationSurfaceProvider* aProvider,
-                             Decoder* aDecoder)
-{
-  EXPECT_TRUE(aDecoder->GetDecodeDone());
-  EXPECT_EQ(bool(aTestCase.mFlags & TEST_CASE_HAS_ERROR),
-            aDecoder->HasError());
-
-  if (aTestCase.mFlags & TEST_CASE_HAS_ERROR) {
-    return;  // That's all we can check for bad images.
-  }
-
-  // The decoder should get the correct size.
-  IntSize size = aDecoder->Size();
-  EXPECT_EQ(aTestCase.mSize.width, size.width);
-  EXPECT_EQ(aTestCase.mSize.height, size.height);
-
-  if (aTestCase.mFlags & TEST_CASE_IGNORE_OUTPUT) {
-    return;
-  }
-
-  // Check the output.
-  AutoTArray<BGRAColor, 2> framePixels;
-  framePixels.AppendElement(BGRAColor::Green());
-  framePixels.AppendElement(BGRAColor(0x7F, 0x7F, 0x7F, 0xFF));
-
-  DrawableSurface drawableSurface(WrapNotNull(aProvider));
-  for (size_t i = 0; i < framePixels.Length(); ++i) {
-    nsresult rv = drawableSurface.Seek(i);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
-
-    // Check the first frame, all green.
-    RawAccessFrameRef rawFrame = drawableSurface->RawAccessRef();
-    RefPtr<SourceSurface> surface = rawFrame->GetSourceSurface();
-
-    // Verify that the resulting surfaces matches our expectations.
-    EXPECT_TRUE(surface->IsDataSourceSurface());
-    EXPECT_TRUE(surface->GetFormat() == SurfaceFormat::B8G8R8X8 ||
-                surface->GetFormat() == SurfaceFormat::B8G8R8A8);
-    EXPECT_EQ(aTestCase.mOutputSize, surface->GetSize());
-    EXPECT_TRUE(IsSolidColor(surface, framePixels[i],
-                             aTestCase.mFlags & TEST_CASE_IS_FUZZY ? 1 : 0));
-  }
-
-  // Should be no more frames.
-  nsresult rv = drawableSurface.Seek(framePixels.Length());
-  EXPECT_TRUE(NS_FAILED(rv));
-}
-
-template <typename Func>
-static void
-WithSingleChunkAnimationDecode(const ImageTestCase& aTestCase,
-                               Func aResultChecker)
-{
-  // Create an image.
-  RefPtr<Image> image =
-    ImageFactory::CreateAnonymousImage(nsDependentCString(aTestCase.mMimeType));
-  ASSERT_TRUE(!image->HasError());
-
-  NotNull<RefPtr<RasterImage>> rasterImage =
-    WrapNotNull(static_cast<RasterImage*>(image.get()));
-
-  nsCOMPtr<nsIInputStream> inputStream = LoadFile(aTestCase.mPath);
-  ASSERT_TRUE(inputStream != nullptr);
-
-  // Figure out how much data we have.
-  uint64_t length;
-  nsresult rv = inputStream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-
-  // Write the data into a SourceBuffer.
-  NotNull<RefPtr<SourceBuffer>> sourceBuffer = WrapNotNull(new SourceBuffer());
-  sourceBuffer->ExpectLength(length);
-  rv = sourceBuffer->AppendFromInputStream(inputStream, length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-  sourceBuffer->Complete(NS_OK);
-
-  // Create a metadata decoder first, because otherwise RasterImage will get
-  // unhappy about finding out the image is animated during a full decode.
-  DecoderType decoderType =
-    DecoderFactory::GetDecoderType(aTestCase.mMimeType);
-  RefPtr<IDecodingTask> task =
-    DecoderFactory::CreateMetadataDecoder(decoderType, rasterImage, sourceBuffer);
-  ASSERT_TRUE(task != nullptr);
-
-  // Run the metadata decoder synchronously.
-  task->Run();
-
-  // Create a decoder.
-  DecoderFlags decoderFlags = DecoderFlags::BLEND_ANIMATION;
-  SurfaceFlags surfaceFlags = DefaultSurfaceFlags();
-  RefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
-                                           decoderFlags, surfaceFlags);
-  ASSERT_TRUE(decoder != nullptr);
-
-  // Create an AnimationSurfaceProvider which will manage the decoding process
-  // and make this decoder's output available in the surface cache.
-  SurfaceKey surfaceKey =
-    RasterSurfaceKey(aTestCase.mOutputSize, surfaceFlags, PlaybackType::eAnimated);
-  RefPtr<AnimationSurfaceProvider> provider =
-    new AnimationSurfaceProvider(rasterImage,
-                                 surfaceKey,
-                                 WrapNotNull(decoder),
-                                 /* aCurrentFrame */ 0);
-
-  // Run the full decoder synchronously.
-  provider->Run();
-
-  // Call the lambda to verify the expected results.
-  aResultChecker(provider, decoder);
-}
-
-static void
-CheckAnimationDecoderSingleChunk(const ImageTestCase& aTestCase)
-{
-  WithSingleChunkAnimationDecode(aTestCase, [&](AnimationSurfaceProvider* aProvider, Decoder* aDecoder) {
-    CheckAnimationDecoderResults(aTestCase, aProvider, aDecoder);
   });
 }
 
@@ -440,11 +315,6 @@ TEST_F(ImageDecoders, AnimatedGIFMultiChunk)
   CheckDecoderMultiChunk(GreenFirstFrameAnimatedGIFTestCase());
 }
 
-TEST_F(ImageDecoders, AnimatedGIFWithBlendedFrames)
-{
-  CheckAnimationDecoderSingleChunk(GreenFirstFrameAnimatedGIFTestCase());
-}
-
 TEST_F(ImageDecoders, AnimatedPNGSingleChunk)
 {
   CheckDecoderSingleChunk(GreenFirstFrameAnimatedPNGTestCase());
@@ -453,11 +323,6 @@ TEST_F(ImageDecoders, AnimatedPNGSingleChunk)
 TEST_F(ImageDecoders, AnimatedPNGMultiChunk)
 {
   CheckDecoderMultiChunk(GreenFirstFrameAnimatedPNGTestCase());
-}
-
-TEST_F(ImageDecoders, AnimatedPNGWithBlendedFrames)
-{
-  CheckAnimationDecoderSingleChunk(GreenFirstFrameAnimatedPNGTestCase());
 }
 
 TEST_F(ImageDecoders, CorruptSingleChunk)

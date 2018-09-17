@@ -269,15 +269,6 @@ public:
   }
 
   /**
-   * Should blend the current frame with the previous frames to produce a
-   * complete frame instead of a partial frame for animated images.
-   */
-  bool ShouldBlendAnimation() const
-  {
-    return bool(mDecoderFlags & DecoderFlags::BLEND_ANIMATION);
-  }
-
-  /**
    * @return the number of complete animation frames which have been decoded so
    * far, if it has changed since the last call to TakeCompleteFrameCount();
    * otherwise, returns Nothing().
@@ -419,32 +410,6 @@ public:
                          : RawAccessFrameRef();
   }
 
-  /**
-   * For use during decoding only. Allows the BlendAnimationFilter to get the
-   * current frame we are producing for its animation parameters.
-   */
-  imgFrame* GetCurrentFrame()
-  {
-    MOZ_ASSERT(ShouldBlendAnimation());
-    return mCurrentFrame.get();
-  }
-
-  /**
-   * For use during decoding only. Allows the BlendAnimationFilter to get the
-   * frame it should be pulling the previous frame data from.
-   */
-  const RawAccessFrameRef& GetRestoreFrameRef() const
-  {
-    MOZ_ASSERT(ShouldBlendAnimation());
-    return mRestoreFrame;
-  }
-
-  const gfx::IntRect& GetRestoreDirtyRect() const
-  {
-    MOZ_ASSERT(ShouldBlendAnimation());
-    return mRestoreDirtyRect;
-  }
-
   bool HasFrameToTake() const { return mHasFrameToTake; }
   void ClearHasFrameToTake() {
     MOZ_ASSERT(mHasFrameToTake);
@@ -453,7 +418,6 @@ public:
 
 protected:
   friend class AutoRecordDecoderTelemetry;
-  friend class DecoderTestHelper;
   friend class nsICODecoder;
   friend class PalettedSurfaceSink;
   friend class SurfaceSink;
@@ -580,7 +544,7 @@ private:
                                           gfx::SurfaceFormat aFormat,
                                           uint8_t aPaletteDepth,
                                           const Maybe<AnimationParams>& aAnimParams,
-                                          RawAccessFrameRef&& aPreviousFrame);
+                                          imgFrame* aPreviousFrame);
 
 protected:
   Maybe<Downscaler> mDownscaler;
@@ -593,19 +557,9 @@ protected:
 private:
   RefPtr<RasterImage> mImage;
   Maybe<SourceBufferIterator> mIterator;
-
-  // The current frame the decoder is producing.
   RawAccessFrameRef mCurrentFrame;
-
-  // The complete frame to combine with the current partial frame to produce
-  // a complete current frame.
-  RawAccessFrameRef mRestoreFrame;
-
   ImageMetadata mImageMetadata;
-
-  gfx::IntRect mInvalidRect; // Tracks new rows as the current frame is decoded.
-  gfx::IntRect mRestoreDirtyRect; // Tracks an invalidation region between the
-                                  // restore frame and the previous frame.
+  gfx::IntRect mInvalidRect; // Tracks an invalidation region in the current frame.
   Maybe<gfx::IntSize> mOutputSize;  // The size of our output surface.
   Maybe<gfx::IntSize> mExpectedSize; // The expected size of the image.
   Progress mProgress;

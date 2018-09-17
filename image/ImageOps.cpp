@@ -225,9 +225,7 @@ ImageOps::DecodeToSurface(ImageBuffer* aBuffer,
   RefPtr<Decoder> decoder =
     DecoderFactory::CreateAnonymousDecoder(decoderType,
                                            WrapNotNull(sourceBuffer),
-                                           aSize,
-                                           DecoderFlags::FIRST_FRAME_ONLY,
-                                           ToSurfaceFlags(aFlags));
+                                           aSize, ToSurfaceFlags(aFlags));
   if (!decoder) {
     return nullptr;
   }
