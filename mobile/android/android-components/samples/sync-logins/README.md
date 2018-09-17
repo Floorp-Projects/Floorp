@@ -25,7 +25,7 @@ val syncException = SyncResult.fromException(Exception("Something went wrong"))
 
 One can attach `OnValueListener`s or `OnExceptionListener`s to an `SyncResult`. There are a few ways of chaining results in Kotlin:
 
-* Passing the listeners directly via `then`, with object expressions or otherwise: 
+* Passing the listeners directly via `then`, with object expressions or otherwise:
 
 	```kotlin
 	SyncResult.fromValue(42).then(object : OnValueListener<Integer, Void> {
@@ -52,7 +52,7 @@ One can attach `OnValueListener`s or `OnExceptionListener`s to an `SyncResult`. 
 	}, { exception: Exception ->
 		// handle the exception
 		return SyncResult<Void>()
-	}
+	})
 	```
 
 * Completing a chain via `whenComplete`:
