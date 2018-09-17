@@ -20,9 +20,6 @@ const EXPECTED_TARGET_PANES = [
 add_task(async function() {
   const { document, tab } = await openAboutDebugging();
 
-  // Wait until the client connection was established.
-  await waitUntil(() => document.querySelector(".js-runtime-page"));
-
   // Check that the selected sidebar item is "This Firefox"
   const selectedSidebarItem = document.querySelector(".js-sidebar-item-selected");
   ok(selectedSidebarItem, "An item is selected in the sidebar");
