@@ -169,8 +169,7 @@ class ProjectSearch extends _react.Component {
         className: (0, _classnames2.default)("file-result", {
           focused
         }),
-        key: file.sourceId,
-        onClick: e => setExpanded(file, !expanded)
+        key: file.sourceId
       }, _react2.default.createElement(_Svg2.default, {
         name: "arrow",
         className: (0, _classnames2.default)({

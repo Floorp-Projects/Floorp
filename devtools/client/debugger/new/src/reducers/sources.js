@@ -178,6 +178,10 @@ function getTextPropsFromAction(action) {
     };
   }
 
+  if (!action.value) {
+    return null;
+  }
+
   return {
     id: sourceId,
     text: action.value.text,
@@ -192,6 +196,11 @@ function getTextPropsFromAction(action) {
 
 function setSourceTextProps(state, action) {
   const source = getTextPropsFromAction(action);
+
+  if (!source) {
+    return state;
+  }
+
   return updateSources(state, [source]);
 }
 
