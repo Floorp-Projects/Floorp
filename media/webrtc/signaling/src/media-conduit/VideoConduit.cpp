@@ -469,6 +469,7 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall,
   , mRecvStreamStats(aStsThread)
   , mCallStats(aStsThread)
   , mSendingFramerate(DEFAULT_VIDEO_MAX_FRAMERATE)
+  , mActiveCodecMode(webrtc::kRealtimeVideo)
   , mCodecMode(webrtc::kRealtimeVideo)
   , mCall(aCall)
   , mSendStreamConfig(this) // 'this' is stored but not dereferenced in the constructor.
@@ -648,6 +649,8 @@ WebrtcVideoConduit::CreateSendStream()
   mSendStream->SetSource(this, webrtc::VideoSendStream::DegradationPreference::kBalanced);
 
   mEncoder = std::move(encoder);
+
+  mActiveCodecMode = mCodecMode;
 
   return kMediaConduitNoError;
 }
@@ -893,7 +896,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   // create a new webrtc::VideoSendStream, and restart.
   // Recreating on PayloadType change may be overkill, but is safe.
   if (mSendStream) {
-    if (!RequiresNewSendStream(*codecConfig)) {
+    if (!RequiresNewSendStream(*codecConfig) && mActiveCodecMode == mCodecMode) {
       mCurSendCodecConfig->mEncodingConstraints = codecConfig->mEncodingConstraints;
       mCurSendCodecConfig->mSimulcastEncodings = codecConfig->mSimulcastEncodings;
       mSendStream->ReconfigureVideoEncoder(mEncoderConfig.CopyConfig());
