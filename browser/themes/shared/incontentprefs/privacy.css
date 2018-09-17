@@ -127,21 +127,13 @@
   margin-inline-start: 25px !important;
 }
 
-#trackingProtectionMenu {
+#trackingProtectionMenu,
+#blockCookiesCB {
   margin-top: 0.75em;
 }
 
 #blockCookiesCBDeck {
   max-width: 444px;
-}
-
-#blockCookiesCBDeck:not([selectedIndex]) > .warning-description,
-#blockCookiesCBDeck[selectedIndex="0"] > .warning-description {
-  display: none;
-}
-
-#blockCookiesCBDeck > .warning-description {
-  margin-bottom: 0.75em !important;
 }
 
 #changeBlockListLink {
