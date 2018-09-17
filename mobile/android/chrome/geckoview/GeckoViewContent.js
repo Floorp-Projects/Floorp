@@ -49,6 +49,7 @@ class GeckoViewContent extends GeckoViewContentModule {
     addEventListener("pageshow", this, options);
     addEventListener("focusin", this, options);
     addEventListener("focusout", this, options);
+    addEventListener("mozcaretstatechanged", this, options);
 
     XPCOMUtils.defineLazyGetter(this, "_autoFill", () =>
         new GeckoViewAutoFill(this.eventDispatcher));
@@ -236,6 +237,7 @@ class GeckoViewContent extends GeckoViewContentModule {
     }
   }
 
+  // eslint-disable-next-line complexity
   handleEvent(aEvent) {
     debug `handleEvent: ${aEvent.type}`;
 
@@ -334,6 +336,14 @@ class GeckoViewContent extends GeckoViewContentModule {
       case "pageshow":
         if (aEvent.target === content.document && aEvent.persisted) {
           this._autoFill.scanDocument(aEvent.target);
+        }
+        break;
+      case "mozcaretstatechanged":
+        if (aEvent.reason === "presscaret" || aEvent.reason === "releasecaret") {
+          this.eventDispatcher.sendRequest({
+            type: "GeckoView:PinOnScreen",
+            pinned: aEvent.reason === "presscaret",
+          });
         }
         break;
     }
