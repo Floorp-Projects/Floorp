@@ -11164,6 +11164,10 @@ GetFullscreenError(nsIDocument* aDoc, CallerType aCallerType)
     return "FullscreenDeniedDisabled";
   }
 
+  if (!aDoc->IsVisible()) {
+    return "FullscreenDeniedHidden";
+  }
+
   // Ensure that all containing elements are <iframe> and have
   // allowfullscreen attribute set.
   nsCOMPtr<nsIDocShell> docShell(aDoc->GetDocShell());
@@ -11200,10 +11204,6 @@ nsIDocument::FullscreenElementReadyCheck(const FullscreenRequest& aRequest)
   }
   if (const char* msg = GetFullscreenError(this, aRequest.mCallerType)) {
     aRequest.Reject(msg);
-    return false;
-  }
-  if (!IsVisible()) {
-    aRequest.Reject("FullscreenDeniedHidden");
     return false;
   }
   if (HasFullscreenSubDocument(this)) {
