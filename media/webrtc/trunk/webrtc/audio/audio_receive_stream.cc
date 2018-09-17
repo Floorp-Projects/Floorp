@@ -102,6 +102,9 @@ AudioReceiveStream::AudioReceiveStream(
       channel_proxy_->SetReceiveAudioLevelIndicationStatus(true, extension.id);
     } else if (extension.uri == RtpExtension::kTransportSequenceNumberUri) {
       channel_proxy_->EnableReceiveTransportSequenceNumber(extension.id);
+    } else if (extension.uri == RtpExtension::kCsrcAudioLevelUri) {
+      channel_proxy_->SetReceiveCsrcAudioLevelIndicationStatus(true,
+                                                               extension.id);
     } else {
       RTC_NOTREACHED() << "Unsupported RTP extension.";
     }
