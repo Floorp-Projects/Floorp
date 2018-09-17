@@ -71,19 +71,23 @@ AutoplayPermissionManager::~AutoplayPermissionManager()
 }
 
 void
-AutoplayPermissionManager::DenyPlayRequest()
+AutoplayPermissionManager::DenyPlayRequestIfExists()
 {
-  PLAY_REQUEST_LOG("AutoplayPermissionManager %p DenyPlayRequest()", this);
-  mRequestDispatched = false;
-  mPromiseHolder.RejectIfExists(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR, __func__);
+  if (mRequestDispatched) {
+    PLAY_REQUEST_LOG("AutoplayPermissionManager %p DenyPlayRequest()", this);
+    mRequestDispatched = false;
+    mPromiseHolder.RejectIfExists(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR, __func__);
+  }
 }
 
 void
-AutoplayPermissionManager::ApprovePlayRequest()
+AutoplayPermissionManager::ApprovePlayRequestIfExists()
 {
-  PLAY_REQUEST_LOG("AutoplayPermissionManager %p ApprovePlayRequest()", this);
-  mRequestDispatched = false;
-  mPromiseHolder.ResolveIfExists(true, __func__);
+  if (mRequestDispatched) {
+    PLAY_REQUEST_LOG("AutoplayPermissionManager %p ApprovePlayRequest()", this);
+    mRequestDispatched = false;
+    mPromiseHolder.ResolveIfExists(true, __func__);
+  }
 }
 
 } // namespace mozilla
