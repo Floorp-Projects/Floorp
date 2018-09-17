@@ -14,7 +14,8 @@
             "optional": true,
             "properties": {
               "api_script": { "$ref": "manifest.ExtensionURL"}
-            }
+            },
+            "additionalProperties": { "$ref": "UnrecognizedProperty" }
           }
         }
       }
