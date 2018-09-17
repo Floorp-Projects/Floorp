@@ -15,11 +15,6 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers.js",
   this);
 
-/* import-globals-from ../../../debugger/new/test/mochitest/helpers/context.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers/context.js",
-  this);
-
 const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
 <test-component></test-component>
 <other-component>some-content</other-component>
