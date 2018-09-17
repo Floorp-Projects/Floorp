@@ -101,6 +101,8 @@ public final class GeckoSession extends LayerSession
     private String mId = UUID.randomUUID().toString().replace("-", "");
     /* package */ String getId() { return mId; }
 
+    private boolean mShouldPinOnScreen;
+
     /* package */ static abstract class CallbackResult<T> extends GeckoResult<T>
                                                           implements EventCallback {
         @Override
@@ -813,6 +815,7 @@ public final class GeckoSession extends LayerSession
     private class Listener implements BundleEventListener {
         /* package */ void registerListeners() {
             getEventDispatcher().registerUiThreadListener(this,
+                "GeckoView:PinOnScreen",
                 "GeckoView:Prompt",
                 null);
         }
@@ -824,7 +827,9 @@ public final class GeckoSession extends LayerSession
                 Log.d(LOGTAG, "handleMessage: event = " + event);
             }
 
-            if ("GeckoView:Prompt".equals(event)) {
+            if ("GeckoView:PinOnScreen".equals(event)) {
+                GeckoSession.this.setShouldPinOnScreen(message.getBoolean("pinned"));
+            } else if ("GeckoView:Prompt".equals(event)) {
                 handlePromptEvent(GeckoSession.this, message, callback);
             }
         }
@@ -1990,6 +1995,17 @@ public final class GeckoSession extends LayerSession
                 break;
             }
         }
+    }
+
+    @Override
+    protected void setShouldPinOnScreen(final boolean pinned) {
+        super.setShouldPinOnScreen(pinned);
+        mShouldPinOnScreen = pinned;
+    }
+
+    /* package */ boolean shouldPinOnScreen() {
+        ThreadUtils.assertOnUiThread();
+        return mShouldPinOnScreen;
     }
 
     public EventDispatcher getEventDispatcher() {
