@@ -6,8 +6,6 @@
 
 GeckoProgram('gdb-tests', linkage=None)
 
-include('../js-cxxflags.mozbuild')
-
 SOURCES += [
     # This file must not be unified with any of the test files, or the use()
     # and breakpoint() functions might get optimized out.
@@ -30,6 +28,8 @@ UNIFIED_SOURCES += [
     'tests/typedef-printers.cpp',
 ]
 
+DEFINES['EXPORT_JS_API'] = True
+
 LOCAL_INCLUDES += [
     '!..',
     '..',
@@ -40,6 +40,13 @@ USE_LIBS += [
 ]
 
 OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
+
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-shadow', '-fno-strict-aliasing']
+
+# This is intended as a temporary workaround to enable VS2015.
+if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+    CXXFLAGS += ['-wd4312']
 
 DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR
 FINAL_TARGET_PP_FILES += ['gdb-tests-gdb.py.in']
