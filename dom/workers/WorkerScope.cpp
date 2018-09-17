@@ -67,7 +67,8 @@ NS_CreateJSTimeoutHandler(JSContext* aCx,
 extern already_AddRefed<nsIScriptTimeoutHandler>
 NS_CreateJSTimeoutHandler(JSContext* aCx,
                           mozilla::dom::WorkerPrivate* aWorkerPrivate,
-                          const nsAString& aExpression);
+                          const nsAString& aExpression,
+                          mozilla::ErrorResult& aRv);
 
 namespace mozilla {
 namespace dom {
@@ -276,7 +277,7 @@ WorkerGlobalScope::SetTimeout(JSContext* aCx,
 
   nsCOMPtr<nsIScriptTimeoutHandler> handler =
     NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler, aArguments, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
+  if (!handler) {
     return 0;
   }
 
@@ -293,7 +294,11 @@ WorkerGlobalScope::SetTimeout(JSContext* aCx,
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   nsCOMPtr<nsIScriptTimeoutHandler> handler =
-    NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler);
+    NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler, aRv);
+  if (!handler) {
+    return 0;
+  }
+
   return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, false, aRv);
 }
 
@@ -334,7 +339,11 @@ WorkerGlobalScope::SetInterval(JSContext* aCx,
   Sequence<JS::Value> dummy;
 
   nsCOMPtr<nsIScriptTimeoutHandler> handler =
-    NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler);
+    NS_CreateJSTimeoutHandler(aCx, mWorkerPrivate, aHandler, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return 0;
+  }
+
   return mWorkerPrivate->SetTimeout(aCx, handler, aTimeout, true, aRv);
 }
 
