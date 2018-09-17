@@ -203,6 +203,7 @@ to create one or more tasks or run a specific piece of code like a test.
 
 Conditional Availability
 ........................
+
 The decision parameters ``taskgraph.parameters.Parameters`` passed to
 the callback are also available when the decision task generates the list of
 actions to be displayed in the user interface. When registering an action
@@ -227,6 +228,12 @@ The feature is illustrated below::
 Properties of ``parameters``  are documented in the
 :doc:`parameters section <parameters>`. You can also examine the
 ``parameters.yml`` artifact created by decisions tasks.
+
+Context can be similarly conditionalized by passing a function which returns
+the appropriate context::
+
+    context=lambda params:
+        [{}] if int(params['level']) < 3 else [{'worker-implementation': 'docker-worker'}],
 
 Creating Tasks
 --------------
