@@ -85,23 +85,6 @@ CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
     return CompileSourceBuffer(cx, options, source, script);
 }
 
-static bool
-CompileFile(JSContext* cx, const ReadOnlyCompileOptions& options,
-            FILE* fp, JS::MutableHandleScript script)
-{
-    FileContents buffer(cx);
-    if (!ReadCompleteFile(cx, fp, buffer)) {
-        return false;
-    }
-
-    return options.utf8
-           ? ::CompileUtf8(cx, options,
-                           reinterpret_cast<const char*>(buffer.begin()), buffer.length(), script)
-           : ::CompileLatin1(cx, options,
-                             reinterpret_cast<const char*>(buffer.begin()), buffer.length(),
-                             script);
-}
-
 bool
 JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
             SourceBufferHolder& srcBuf, JS::MutableHandleScript script)
@@ -131,7 +114,14 @@ JS::CompileUtf8File(JSContext* cx, const ReadOnlyCompileOptions& options,
 {
     MOZ_ASSERT(options.utf8,
                "options.utf8 must be set when JS::CompileUtf8File is called");
-    return CompileFile(cx, options, file, script);
+
+    FileContents buffer(cx);
+    if (!ReadCompleteFile(cx, file, buffer)) {
+        return false;
+    }
+
+    return ::CompileUtf8(cx, options,
+                         reinterpret_cast<const char*>(buffer.begin()), buffer.length(), script);
 }
 
 bool
