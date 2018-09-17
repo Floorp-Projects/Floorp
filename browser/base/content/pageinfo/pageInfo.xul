@@ -32,7 +32,6 @@
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/javascript" src="chrome://global/content/treeUtils.js"/>
   <script type="application/javascript" src="chrome://browser/content/pageinfo/pageInfo.js"/>
-  <script type="application/javascript" src="chrome://browser/content/pageinfo/feeds.js"/>
   <script type="application/javascript" src="chrome://browser/content/pageinfo/permissions.js"/>
   <script type="application/javascript" src="chrome://browser/content/pageinfo/security.js"/>
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
@@ -74,8 +73,6 @@
            oncommand="showTab('general');"/>
       <radio id="mediaTab"    label="&mediaTab;"    accesskey="&mediaTab.accesskey;"
            oncommand="showTab('media');" hidden="true"/>
-      <radio id="feedTab"     label="&feedTab;"     accesskey="&feedTab.accesskey;"
-           oncommand="showTab('feed');" hidden="true"/>
       <radio id="permTab"     label="&permTab;"     accesskey="&permTab.accesskey;"
            oncommand="showTab('perm');"/>
       <radio id="securityTab" label="&securityTab;" accesskey="&securityTab.accesskey;"
@@ -262,11 +259,6 @@
       <hbox pack="end">
         <button command="cmd_help" label="&helpButton.label;" dlgtype="help"/>
       </hbox>
-    </vbox>
-
-    <!-- Feeds -->
-    <vbox id="feedPanel">
-      <richlistbox id="feedListbox" flex="1"/>
     </vbox>
 
     <!-- Permissions -->

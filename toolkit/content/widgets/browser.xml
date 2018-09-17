@@ -516,10 +516,6 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            // Delete the feeds cache if we're hiding the topmost page
-            // (as opposed to one of its iframes).
-            if (this.feeds && aEvent.target == this.contentDocument)
-              this.feeds = null;
             if (!this.docShell || !this.fastFind)
               return;
             var tabBrowser = this.getTabBrowser();
@@ -900,9 +896,6 @@
 
           this._fastFind = null;
           this._webBrowserFind = null;
-
-          // The feeds cache can keep the document inside this browser alive.
-          this.feeds = null;
 
           this.lastURI = null;
 

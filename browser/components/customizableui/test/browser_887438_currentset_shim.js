@@ -29,10 +29,10 @@ add_task(function() {
 // Insert, then remove items
 add_task(function() {
   let currentSet = navbar.currentSet;
-  let newCurrentSet = currentSet.replace("home-button", "feed-button,sync-button,home-button");
+  let newCurrentSet = currentSet.replace("home-button", "new-window-button,sync-button,home-button");
   navbar.currentSet = newCurrentSet;
   is(newCurrentSet, navbar.currentSet, "Current set should match expected current set.");
-  let feedBtn = document.getElementById("feed-button");
+  let feedBtn = document.getElementById("new-window-button");
   let syncBtn = document.getElementById("sync-button");
   ok(feedBtn, "Feed button should have been added.");
   ok(syncBtn, "Sync button should have been added.");
@@ -54,10 +54,10 @@ add_task(function() {
 // Simultaneous insert/remove:
 add_task(function() {
   let currentSet = navbar.currentSet;
-  let newCurrentSet = currentSet.replace("home-button", "feed-button");
+  let newCurrentSet = currentSet.replace("home-button", "new-window-button");
   navbar.currentSet = newCurrentSet;
   is(newCurrentSet, navbar.currentSet, "Current set should match expected current set.");
-  let feedBtn = document.getElementById("feed-button");
+  let feedBtn = document.getElementById("new-window-button");
   ok(feedBtn, "Feed button should have been added.");
   let homeBtn = document.getElementById("home-button");
   ok(!homeBtn, "Home button should have been removed.");

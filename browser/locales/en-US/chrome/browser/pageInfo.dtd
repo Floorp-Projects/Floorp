@@ -44,9 +44,6 @@
 <!ENTITY  mediaSaveAs2.accesskey "e">
 <!ENTITY  mediaPreview          "Media Preview:">
 
-<!ENTITY  feedTab               "Feeds">
-<!ENTITY  feedTab.accesskey     "F">
-
 <!ENTITY  permTab               "Permissions">
 <!ENTITY  permTab.accesskey     "P">
 <!ENTITY  permissionsFor        "Permissions for:">
