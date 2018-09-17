@@ -25,6 +25,7 @@
 #include "vm/TaggedProto.h"
 
 #include "gc/Marking-inl.h"
+#include "vm/TypeInference-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
 using namespace js;

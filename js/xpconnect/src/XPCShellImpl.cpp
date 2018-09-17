@@ -730,20 +730,23 @@ my_GetErrorMessage(void* userRef, const unsigned errorNumber)
 }
 
 static bool
-ProcessLine(AutoJSAPI& jsapi, const char* buffer, int startline)
+ProcessUtf8Line(AutoJSAPI& jsapi, const char* buffer, int startline)
 {
     JSContext* cx = jsapi.cx();
-    JS::RootedScript script(cx);
-    JS::RootedValue result(cx);
     JS::CompileOptions options(cx);
     options.setFileAndLine("typein", startline)
-           .setIsRunOnce(true);
-    if (!JS_CompileScript(cx, buffer, strlen(buffer), options, &script)) {
+           .setIsRunOnce(true)
+           .setUTF8(true);
+
+    JS::RootedScript script(cx);
+    if (!JS::CompileUtf8(cx, options, buffer, strlen(buffer), &script)) {
         return false;
     }
     if (compileOnly) {
         return true;
     }
+
+    JS::RootedValue result(cx);
     if (!JS_ExecuteScript(cx, script, &result)) {
         return false;
     }
@@ -751,10 +754,12 @@ ProcessLine(AutoJSAPI& jsapi, const char* buffer, int startline)
     if (result.isUndefined()) {
         return true;
     }
-    RootedString str(cx);
-    if (!(str = ToString(cx, result))) {
+
+    RootedString str(cx, JS::ToString(cx, result));
+    if (!str) {
         return false;
     }
+
     JS::UniqueChars bytes = JS_EncodeStringToLatin1(cx, str);
     if (!bytes) {
         return false;
@@ -827,9 +832,9 @@ ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file, bool forceTTY)
             }
             bufp += strlen(bufp);
             lineno++;
-        } while (!JS_BufferIsCompilableUnit(cx, global, buffer, strlen(buffer)));
+        } while (!JS_Utf8BufferIsCompilableUnit(cx, global, buffer, strlen(buffer)));
 
-        if (!ProcessLine(jsapi, buffer, startline)) {
+        if (!ProcessUtf8Line(jsapi, buffer, startline)) {
             jsapi.ReportException();
         }
     } while (!hitEOF && !gQuitting);

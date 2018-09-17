@@ -3,12 +3,12 @@
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 pref("devtools.webide.templatesURL", "https://code.cdn.mozilla.net/templates/list.json");
-pref("devtools.webide.autoinstallADBHelper", true);
+pref("devtools.webide.autoinstallADBExtension", true);
 pref("devtools.webide.autoConnectRuntime", true);
 pref("devtools.webide.restoreLastProject", true);
 pref("devtools.webide.enableLocalRuntime", false);
-pref("devtools.webide.adbAddonURL", "https://ftp.mozilla.org/pub/mozilla.org/labs/fxos-simulator/adb-helper/#OS#/adbhelper-#OS#-latest.xpi");
-pref("devtools.webide.adbAddonID", "adbhelper@mozilla.org");
+pref("devtools.webide.adbExtensionURL", "https://ftp.mozilla.org/pub/mozilla.org/labs/devtools/adb-extension/#OS#/adb-extension-latest-#OS#.xpi");
+pref("devtools.webide.adbExtensionID", "adb@mozilla.org");
 pref("devtools.webide.lastConnectedRuntime", "");
 pref("devtools.webide.lastSelectedProject", "");
 pref("devtools.webide.zoom", "1");
