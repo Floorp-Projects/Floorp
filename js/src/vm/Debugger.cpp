@@ -5819,6 +5819,16 @@ DebuggerScript_getIsAsyncFunction(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+DebuggerScript_getIsModule(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get isModule)", args, obj);
+    DebuggerScriptReferent referent = GetScriptReferent(obj);
+    args.rval().setBoolean(referent.is<JSScript*>() &&
+                           referent.as<JSScript*>()->isModule());
+    return true;
+}
+
+static bool
 DebuggerScript_getDisplayName(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get displayName)", args, obj);
@@ -7420,6 +7430,7 @@ DebuggerScript_construct(JSContext* cx, unsigned argc, Value* vp)
 static const JSPropertySpec DebuggerScript_properties[] = {
     JS_PSG("isGeneratorFunction", DebuggerScript_getIsGeneratorFunction, 0),
     JS_PSG("isAsyncFunction", DebuggerScript_getIsAsyncFunction, 0),
+    JS_PSG("isModule", DebuggerScript_getIsModule, 0),
     JS_PSG("displayName", DebuggerScript_getDisplayName, 0),
     JS_PSG("url", DebuggerScript_getUrl, 0),
     JS_PSG("startLine", DebuggerScript_getStartLine, 0),
