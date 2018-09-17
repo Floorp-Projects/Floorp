@@ -50,17 +50,15 @@ job-defaults:
       # The devedition override can be removed after 58.0b1
       # is behind a watershed
       include-version:
-         by-project:
-            birch: nonbeta
-            jamun: esr
-            maple: beta
-            mozilla-beta: beta
-            mozilla-release: nonbeta
-            mozilla-esr60: esr
-            default: null
+         by-release-type:
+            beta: beta
+            release(-rc)?: nonbeta
+            esr60: esr
+            nightly: beta
       last-watershed:
-         by-project:
-            birch:
+         by-release-type:
+            beta: "56.0b3"
+            release(-rc)?:
                by-platform:
                   linux-.*: "57.0"
                   linux64-.*: "57.0"
@@ -68,25 +66,8 @@ job-defaults:
                   win32-.*: "56.0"
                   win64-.*: "56.0"
                   default: null
-            jamun: "56.0b3"
-            maple: "56.0b3"
-            mozilla-beta: "56.0b3"
-            mozilla-release:
-               by-platform:
-                  linux-.*: "57.0"
-                  linux64-.*: "57.0"
-                  macosx64-.*: "57.0"
-                  win32-.*: "56.0"
-                  win64-.*: "56.0"
-                  default: null
-            mozilla-esr52:
-               by-platform:
-                  macosx64: "45.9.0esr"
-                  win32: "45.3.0esr"
-                  win64: "45.3.0esr"
-                  default: null
-            mozilla-esr60: "52.0esr"
-            default: null
+            esr60: "52.0esr"
+            nightly: "default"
 
 jobs:
    firefox-linux:
@@ -103,19 +84,14 @@ jobs:
          platform: linux-i686
          updater-platform: linux-x86_64
          channel:
-            by-project:
-               birch: "release-localtest"
-               jamun: "beta-localtest"
-               maple: "beta-localtest"
-               mozilla-beta: "beta-localtest"
-               mozilla-release: "release-localtest"
-               mozilla-esr52: "esr-localtest"
-               mozilla-esr60: "esr-localtest"
-               default: "default"
+            by-release-type:
+               beta: "beta-localtest"
+               release(-rc)?: "release-localtest"
+               esr60: "esr-localtest"
+               nightly: "default"
          mar-channel-id-override:
-            by-project:
-               maple: beta
-               mozilla-beta: beta
+            by-release-type:
+               beta: beta
                default: null
 
    firefox-linux64:
@@ -132,19 +108,14 @@ jobs:
          platform: linux-x86_64
          updater-platform: linux-x86_64
          channel:
-            by-project:
-               birch: "release-localtest"
-               jamun: "beta-localtest"
-               maple: "beta-localtest"
-               mozilla-beta: "beta-localtest"
-               mozilla-release: "release-localtest"
-               mozilla-esr52: "esr-localtest"
-               mozilla-esr60: "esr-localtest"
-               default: "default"
+            by-release-type:
+               beta: "beta-localtest"
+               release(-rc)?: "release-localtest"
+               esr60: "esr-localtest"
+               nightly: "default"
          mar-channel-id-override:
-            by-project:
-               maple: beta
-               mozilla-beta: beta
+            by-release-type:
+               beta: beta
                default: null
 
    firefox-macosx64:
@@ -161,19 +132,14 @@ jobs:
          platform: mac
          updater-platform: linux-x86_64
          channel:
-            by-project:
-               birch: "release-localtest"
-               jamun: "beta-localtest"
-               maple: "beta-localtest"
-               mozilla-beta: "beta-localtest"
-               mozilla-release: "release-localtest"
-               mozilla-esr52: "esr-localtest"
-               mozilla-esr60: "esr-localtest"
-               default: "default"
+            by-release-type:
+               beta: "beta-localtest"
+               release(-rc)?: "release-localtest"
+               esr60: "esr-localtest"
+               nightly: "default"
          mar-channel-id-override:
-            by-project:
-               maple: beta
-               mozilla-beta: beta
+            by-release-type:
+               beta: beta
                default: null
 
    firefox-win32:
@@ -190,19 +156,14 @@ jobs:
          platform: win32
          updater-platform: linux-x86_64
          channel:
-            by-project:
-               birch: "release-localtest"
-               jamun: "beta-localtest"
-               maple: "beta-localtest"
-               mozilla-beta: "beta-localtest"
-               mozilla-release: "release-localtest"
-               mozilla-esr52: "esr-localtest"
-               mozilla-esr60: "esr-localtest"
-               default: "default"
+            by-release-type:
+               beta: "beta-localtest"
+               release(-rc)?: "release-localtest"
+               esr60: "esr-localtest"
+               nightly: "default"
          mar-channel-id-override:
-            by-project:
-               maple: beta
-               mozilla-beta: beta
+            by-release-type:
+               beta: beta
                default: null
 
    firefox-win64:
@@ -219,19 +180,14 @@ jobs:
          platform: win64
          updater-platform: linux-x86_64
          channel:
-            by-project:
-               birch: "release-localtest"
-               jamun: "beta-localtest"
-               maple: "beta-localtest"
-               mozilla-beta: "beta-localtest"
-               mozilla-release: "release-localtest"
-               mozilla-esr52: "esr-localtest"
-               mozilla-esr60: "esr-localtest"
-               default: "default"
+            by-release-type:
+               beta: "beta-localtest"
+               release(-rc)?: "release-localtest"
+               esr60: "esr-localtest"
+               nightly: "default"
          mar-channel-id-override:
-            by-project:
-               maple: beta
-               mozilla-beta: beta
+            by-release-type:
+               beta: beta
                default: null
 
    devedition-linux:
