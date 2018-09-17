@@ -2375,8 +2375,6 @@ public:
    */
   static bool AreRetainedDisplayListsEnabled();
 
-  static bool DisplayRootHasRetainedDisplayListBuilder(nsIFrame* aFrame);
-
   /**
    * Find a suitable scale for a element (aFrame's content) over the course of any
    * animations and transitions of the CSS transform property on the
