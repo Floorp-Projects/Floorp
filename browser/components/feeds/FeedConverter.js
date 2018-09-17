@@ -341,6 +341,12 @@ FeedResultService.prototype = {
                                        subtitle,
                                        feedHandler: "default" });
       break;
+    default:
+      // fall through
+    case "bookmarks":
+      Services.cpmm.sendAsyncMessage("FeedConverter:addLiveBookmark",
+                                     { spec, title });
+      break;
     }
   },
 

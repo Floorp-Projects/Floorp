@@ -3661,6 +3661,7 @@ var newWindowButtonObserver = {
 const DOMEventHandler = {
   init() {
     let mm = window.messageManager;
+    mm.addMessageListener("Link:AddFeed", this);
     mm.addMessageListener("Link:LoadingIcon", this);
     mm.addMessageListener("Link:SetIcon", this);
     mm.addMessageListener("Link:SetFailedIcon", this);
@@ -3670,6 +3671,11 @@ const DOMEventHandler = {
 
   receiveMessage(aMsg) {
     switch (aMsg.name) {
+      case "Link:AddFeed":
+        let link = {type: aMsg.data.type, href: aMsg.data.href, title: aMsg.data.title};
+        FeedHandler.addFeed(link, aMsg.target);
+        break;
+
       case "Link:LoadingIcon":
         if (aMsg.data.canUseForTab) {
           this.setPendingIcon(aMsg.target);
@@ -4702,6 +4708,9 @@ var XULBrowserWindow = {
         aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
 
       if (aRequest && aWebProgress.isTopLevel) {
+        // clear out feed data
+        browser.feeds = null;
+
         // clear out search-engine data
         browser.engines = null;
       }
@@ -4931,6 +4940,7 @@ var XULBrowserWindow = {
   },
 
   asyncUpdateUI() {
+    FeedHandler.updateFeeds();
     BrowserSearch.updateOpenSearchBadge();
   },
 
