@@ -31,5 +31,8 @@ async function openAboutDebugging(page, win) {
   info("Wait until the main about debugging container is available");
   await waitUntil(() => document.querySelector(".app"));
 
+  info("Wait until the client connection was established");
+  await waitUntil(() => document.querySelector(".js-runtime-page"));
+
   return { tab, document, window };
 }
