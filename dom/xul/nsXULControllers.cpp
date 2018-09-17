@@ -42,14 +42,6 @@ nsXULControllers::DeleteControllers()
   mControllers.Clear();
 }
 
-
-already_AddRefed<nsIControllers>
-NS_NewXULControllers()
-{
-  RefPtr<nsXULControllers> controllers = new nsXULControllers();
-  return controllers.forget();
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULControllers)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULControllers)

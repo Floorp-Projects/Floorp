@@ -118,7 +118,7 @@ MobileViewportManager::ResolutionUpdated()
     // can take it into account later on.
     SetRestoreResolution(mPresShell->GetResolution());
   }
-  RefreshSPCSPS();
+  RefreshVisualViewportSize();
 }
 
 NS_IMETHODIMP
@@ -285,8 +285,8 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
 }
 
 void
-MobileViewportManager::UpdateSPCSPS(const ScreenIntSize& aDisplaySize,
-                                    const CSSToScreenScale& aZoom)
+MobileViewportManager::UpdateVisualViewportSize(const ScreenIntSize& aDisplaySize,
+                                                const CSSToScreenScale& aZoom)
 {
   ScreenSize compositionSize(aDisplaySize);
   ScreenMargin scrollbars =
@@ -332,10 +332,10 @@ MobileViewportManager::UpdateDisplayPortMargins()
 }
 
 void
-MobileViewportManager::RefreshSPCSPS()
+MobileViewportManager::RefreshVisualViewportSize()
 {
   // This function is a subset of RefreshViewportSize, and only updates the
-  // SPCSPS.
+  // visual viewport size.
 
   if (!gfxPrefs::APZAllowZooming()) {
     return;
@@ -350,7 +350,7 @@ MobileViewportManager::RefreshSPCSPS()
   CSSToScreenScale zoom = ViewTargetAs<ScreenPixel>(cssToDev * res / ParentLayerToLayerScale(1),
     PixelCastJustification::ScreenIsParentLayerForRoot);
 
-  UpdateSPCSPS(displaySize, zoom);
+  UpdateVisualViewportSize(displaySize, zoom);
 }
 
 void
@@ -414,7 +414,7 @@ MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution)
     CSSToScreenScale zoom = UpdateResolution(viewportInfo, displaySize, viewport,
       displayWidthChangeRatio);
     MVM_LOG("%p: New zoom is %f\n", this, zoom.scale);
-    UpdateSPCSPS(displaySize, zoom);
+    UpdateVisualViewportSize(displaySize, zoom);
   }
   if (gfxPlatform::AsyncPanZoomEnabled()) {
     UpdateDisplayPortMargins();

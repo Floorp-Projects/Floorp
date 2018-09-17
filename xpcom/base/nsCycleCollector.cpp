@@ -164,8 +164,8 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/MruCache.h"
 #include "mozilla/SegmentedVector.h"
-#include "mozilla/Variant.h"
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectionNoteRootCallback.h"
@@ -2094,42 +2094,16 @@ private:
   nsAutoPtr<NodePool::Enumerator> mCurrNode;
   uint32_t mNoteChildCount;
 
-  class GraphCache
+  struct PtrInfoCache : public MruCache<void*, PtrInfo*, PtrInfoCache, 491>
   {
-  public:
-    // This either returns a pointer if present, or an index, if it isn't.
-    Variant<PtrInfo*, uint32_t> GetEntryOrIndex(void* aPtr)
+    static HashNumber Hash(const void* aKey) { return HashGeneric(aKey); }
+    static bool Match(const void* aKey, const PtrInfo* aVal)
     {
-      uint32_t hash = mozilla::HashGeneric(aPtr);
-      uint32_t index = hash % kCacheSize;
-      PtrInfo* result = mCache[index];
-      if (result && result->mPointer == aPtr) {
-        return AsVariant(result);
-      }
-
-      return AsVariant(index);
+      return aVal->mPointer == aKey;
     }
-
-    void Add(uint32_t aIndex, PtrInfo* aPtrInfo)
-    {
-      mCache[aIndex] = aPtrInfo;
-    }
-
-    void Remove(void* aPtr)
-    {
-      uint32_t hash = mozilla::HashGeneric(aPtr);
-      uint32_t index = hash % kCacheSize;
-      PtrInfo* pinfo = mCache[index];
-      if (pinfo && pinfo->mPointer == aPtr) {
-        mCache[index] = nullptr;
-      }
-    }
-  private:
-    const static uint32_t kCacheSize = 491;
-    PtrInfo* mCache[kCacheSize] = {0};
   };
 
-  GraphCache mGraphCache;
+  PtrInfoCache mGraphCache;
 
 public:
   CCGraphBuilder(CCGraph& aGraph,
@@ -2287,14 +2261,12 @@ CCGraphBuilder::AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant)
     return nullptr;
   }
 
-  Variant<PtrInfo*, uint32_t> cacheVariant = mGraphCache.GetEntryOrIndex(aPtr);
-  if (cacheVariant.is<PtrInfo*>()) {
-    MOZ_ASSERT(cacheVariant.as<PtrInfo*>()->mParticipant == aParticipant,
+  PtrInfoCache::Entry cached = mGraphCache.Lookup(aPtr);
+  if (cached) {
+    MOZ_ASSERT(cached.Data()->mParticipant == aParticipant,
                "nsCycleCollectionParticipant shouldn't change!");
-    return cacheVariant.as<PtrInfo*>();
+    return cached.Data();
   }
-
-  MOZ_ASSERT(cacheVariant.is<uint32_t>());
 
   PtrInfo* result;
   auto p = mGraph.mPtrInfoMap.lookupForAdd(aPtr);
@@ -2319,7 +2291,7 @@ CCGraphBuilder::AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant)
                "nsCycleCollectionParticipant shouldn't change!");
   }
 
-  mGraphCache.Add(cacheVariant.as<uint32_t>(), result);
+  cached.Set(result);
 
   return result;
 }

@@ -163,7 +163,7 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
   IntRect drawBounds = result.mRegionToDraw.GetBounds();
 
   if (result.mAsyncPaint) {
-    result.mAsyncTask = new PaintTask();
+    result.mAsyncTask.reset(new PaintTask());
   }
 
   // Try to acquire the back buffer, copy over contents if we are using a new buffer,

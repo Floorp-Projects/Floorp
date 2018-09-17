@@ -11,6 +11,7 @@
 
 interface xpcIJSWeakReference;
 interface nsIClassInfo;
+interface nsICommandParams;
 interface nsIComponentManager;
 interface nsICycleCollectorListener;
 interface nsIEditorSpellCheck;
@@ -723,6 +724,9 @@ interface nsIXPCComponents_Utils : nsISupports
 
     /* Create a commandline object. */
     nsISupports createCommandLine();
+
+    /* Create a command params object. */
+    nsICommandParams createCommandParams();
 };
 
 /**

@@ -108,6 +108,7 @@ CheckMetadata(const ImageTestCase& aTestCase,
   // Create a full decoder, so we can compare the result.
   decoder =
     DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
+                                           DecoderFlags::FIRST_FRAME_ONLY,
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
   task = new AnonymousDecodingTask(WrapNotNull(decoder));

@@ -8,12 +8,14 @@
 
 #include "nsIEffectiveTLDService.h"
 
+#include "nsHashKeys.h"
 #include "nsIMemoryReporter.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Dafsa.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/MruCache.h"
 
 class nsIIDNService;
 
@@ -55,22 +57,20 @@ private:
   // cache the result. During standard browsing the same domains are repeatedly
   // fed into |GetBaseDomainInternal| so this ends up being an effective
   // mitigation getting about a 99% hit rate with four tabs open.
-  //
-  // A size of 31 is used rather than a more logical power-of-two such as 32
-  // since it is a prime number and provides fewer collisions when when used
-  // with our hash algorithms.
-  static const uint32_t kTableSize = 31;
-  TLDCacheEntry mMruTable[kTableSize];
+  struct TldCache :
+    public mozilla::MruCache<nsACString, TLDCacheEntry, TldCache>
+  {
+    static mozilla::HashNumber Hash(const nsACString& aKey)
+    {
+      return mozilla::HashString(aKey);
+    }
+    static bool Match(const nsACString& aKey, const TLDCacheEntry& aVal)
+    {
+      return aKey == aVal.mHost;
+    }
+  };
 
-  /**
-   * Performs a lookup on the MRU table and provides a pointer to the hash
-   * entry that matched or should be used for adding this host.
-   *
-   * @param aHost The host to lookup.
-   * @param aEntry Out param, the entry in the MRU table to use.
-   * @return True if a match was found, false if there was a miss.
-   */
-  inline bool LookupForAdd(const nsACString& aHost, TLDCacheEntry** aEntry);
+  TldCache mMruTable;
 };
 
 #endif // EffectiveTLDService_h

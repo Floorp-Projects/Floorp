@@ -6,6 +6,7 @@
 
 #include "nsTArray.h"
 #include "gtest/gtest.h"
+#include "mozilla/ArrayUtils.h"
 
 using namespace mozilla;
 

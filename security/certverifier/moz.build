@@ -60,13 +60,11 @@ TEST_DIRS += [
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     # -Wall on clang-cl maps to -Weverything, which turns on way too
-    # much, so we're using -W4 instead, which is mapped to clang's
-    # -Wall -Wextra.
-    CXXFLAGS += ['-W4']
-else:
-    CXXFLAGS += ['-Wall']
+    # much, so we're passing through -Wall using -Xclang.
+    CXXFLAGS += ['-Xclang']
+CXXFLAGS += ['-Wall']
 
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+if CONFIG['CC_TYPE'] == 'msvc':
     # -Wall with Visual C++ enables too many problematic warnings
     CXXFLAGS += [
         '-wd4324', # structure was padded due to __declspec(align())
@@ -97,6 +95,13 @@ if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         '-wd4711', # function 'function' selected for inline expansion
         '-wd4820', # 'bytes' bytes padding added after construct 'member_name'
     ]
+
+    # Disable Spectre diagnostics only if optimization is disabled.
+    if not CONFIG['MOZ_OPTIMIZE']:
+        CXXFLAGS += [
+            '-wd5045', # Compiler will insert Spectre mitigation for memory
+                       # load if /Qspectre switch specified
+        ]
 
     # MSVC 2010's headers trigger these
     CXXFLAGS += [
@@ -129,7 +134,7 @@ if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
         '-wd4946', # reinterpret_cast used between related types
     ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
     CXXFLAGS += [
         '-Wextra',
         '-Wunreachable-code',
