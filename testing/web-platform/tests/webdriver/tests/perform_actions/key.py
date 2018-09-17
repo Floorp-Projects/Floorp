@@ -2,8 +2,8 @@ import pytest
 
 from webdriver.error import NoSuchWindowException
 
-from tests.actions.support.keys import Keys
-from tests.actions.support.refine import filter_dict, get_keys, get_events
+from tests.perform_actions.support.keys import Keys
+from tests.perform_actions.support.refine import filter_dict, get_events, get_keys
 
 
 def test_null_response_value(session, key_chain):

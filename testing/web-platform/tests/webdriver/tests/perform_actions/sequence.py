@@ -1,6 +1,6 @@
 # META: timeout=long
 
-from tests.actions.support.refine import get_keys, filter_dict, get_events
+from tests.perform_actions.support.refine import filter_dict, get_events, get_keys
 
 
 def test_perform_no_actions_send_no_events(session, key_reporter, key_chain):
