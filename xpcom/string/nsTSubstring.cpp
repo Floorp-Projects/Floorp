@@ -260,20 +260,7 @@ nsTSubstring<T>::FinishBulkWriteImpl(size_type aLength)
 {
   MOZ_ASSERT(aLength != UINT32_MAX, "OOM magic value passed as length.");
   if (aLength) {
-    this->mData[aLength] = char_type(0);
-    this->mLength = aLength;
-#ifdef DEBUG
-    // ifdefed in order to avoid the call to Capacity() in non-debug
-    // builds.
-    //
-    // Our string is mutable, so Capacity() doesn't return zero.
-    // Capacity() doesn't include the space for the zero terminator,
-    // but we want to unitialize that slot, too. Since we start
-    // counting after the zero terminator the we just wrote above,
-    // we end up overwriting the space for terminator not reflected
-    // in the capacity number.
-    char_traits::uninitialize(this->mData + aLength + 1, Capacity() - aLength);
-#endif
+    FinishBulkWriteImplImpl(aLength);
   } else {
     ::ReleaseData(this->mData, this->mDataFlags);
     SetToEmptyBuffer();
@@ -820,55 +807,35 @@ template <typename T>
 bool
 nsTSubstring<T>::SetCapacity(size_type aCapacity, const fallible_t&)
 {
-  // capacity does not include room for the terminating null char
+  size_type length = this->mLength;
+  // This method can no longer be used to shorten the
+  // logical length.
+  size_type capacity = XPCOM_MAX(aCapacity, length);
 
-  // Sadly, existing callers assume that it's valid to
-  // first call SetCapacity(), then write past mLength
-  // and then call SetLength() with the assumption that
-  // SetLength still preserves the written data past
-  // mLength!!!
-
-  size_type preserve;
-  if (this->mDataFlags & DataFlags::REFCOUNTED) {
-    nsStringBuffer* hdr = nsStringBuffer::FromData(this->mData);
-    preserve = (hdr->StorageSize() / sizeof(char_type)) - 1;
-  } else if (this->mDataFlags & DataFlags::INLINE) {
-    preserve = AsAutoString(this)->mInlineCapacity;
-  } else {
-    preserve = this->mLength;
-  }
-
-  if (preserve > aCapacity) {
-    preserve = aCapacity;
-  }
-
-  mozilla::Result<uint32_t, nsresult> r = StartBulkWriteImpl(aCapacity, preserve);
+  mozilla::Result<uint32_t, nsresult> r =
+    StartBulkWriteImpl(capacity, length, true);
   if (r.isErr()) {
     return false;
   }
-  if (r.unwrap()) {
-    // In the zero case StartBulkWrite already put the string
-    // in a valid state.
 
-    // Otherwise, instead of calling FinishBulkWrite,
-    // intentionally replicate the legacy semantics of
-    // this method:
-    // If requested capacity was smaller than the pre-existing
-    // length, set length to the requested capacity and
-    // zero-terminate there. Otherwise, zero-terminate at
-    // the requested capacity. (This latter behavior was
-    // designated as a legacy compatibility measure by the
-    // previous implementation of this method.)
-    if (aCapacity < this->mLength) {
-      // aCapacity not capacity for legacy reasons;
-      // maybe capacity would work, too.
-      this->mLength = aCapacity;
-    }
-    // Note that we can't write a terminator at
-    // mData[mLength], because doing so would overwrite
-    // data when this method is called from SetLength.
-    this->mData[aCapacity] = char_type(0);
+  if (MOZ_UNLIKELY(!capacity)) {
+    // Zero capacity was requested on a zero-length
+    // string. In this special case, we are pointing
+    // to the special empty buffer, which is already
+    // zero-terminated and not writable, so we must
+    // not attempt to zero-terminate it.
+    AssertValid();
+    return true;
   }
+
+  // FinishBulkWriteImpl with argument zero releases
+  // the heap-allocated buffer. However, SetCapacity()
+  // is a special case that allows mLength to be zero
+  // while a heap-allocated buffer exists.
+  // By calling FinishBulkWriteImplImpl, we skip the
+  // zero case handling that's inappropriate in the
+  // SetCapacity() case.
+  FinishBulkWriteImplImpl(length);
   return true;
 }
 
@@ -876,20 +843,34 @@ template <typename T>
 void
 nsTSubstring<T>::SetLength(size_type aLength)
 {
-  SetCapacity(aLength);
-  this->mLength = aLength;
+  if (!SetLength(aLength, mozilla::fallible)) {
+    AllocFailed(aLength);
+  }
 }
 
 template <typename T>
 bool
 nsTSubstring<T>::SetLength(size_type aLength, const fallible_t& aFallible)
 {
-  if (!SetCapacity(aLength, aFallible)) {
+  size_type preserve = XPCOM_MIN(aLength, this->mLength);
+  mozilla::Result<uint32_t, nsresult> r =
+    StartBulkWriteImpl(aLength, preserve, true);
+  if (r.isErr()) {
     return false;
   }
 
-  this->mLength = aLength;
+  FinishBulkWriteImpl(aLength);
+
   return true;
+}
+
+template<typename T>
+void
+nsTSubstring<T>::Truncate()
+{
+  ::ReleaseData(this->mData, this->mDataFlags);
+  SetToEmptyBuffer();
+  AssertValid();
 }
 
 template <typename T>
