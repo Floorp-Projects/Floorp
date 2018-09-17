@@ -3739,11 +3739,13 @@ nsIDocument::DefaultStyleAttrURLData()
   nsIURI* baseURI = GetDocBaseURI();
   nsIURI* docURI = GetDocumentURI();
   nsIPrincipal* principal = NodePrincipal();
+  mozilla::net::ReferrerPolicy policy = GetReferrerPolicy();
   if (!mCachedURLData ||
       mCachedURLData->BaseURI() != baseURI ||
       mCachedURLData->GetReferrer() != docURI ||
+      mCachedURLData->GetReferrerPolicy() != policy ||
       mCachedURLData->GetPrincipal() != principal) {
-    mCachedURLData = new URLExtraData(baseURI, docURI, principal);
+    mCachedURLData = new URLExtraData(baseURI, docURI, principal, policy);
   }
   return mCachedURLData;
 }

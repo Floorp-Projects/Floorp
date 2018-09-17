@@ -467,6 +467,8 @@ private:
   // returns false.
   bool AreRulesAvailable(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
 
+  already_AddRefed<URLExtraData> CreateURLExtraData() const;
+
 protected:
   // Internal methods which do not have security check and completeness check.
   uint32_t InsertRuleInternal(const nsAString& aRule,
