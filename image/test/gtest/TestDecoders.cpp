@@ -115,6 +115,7 @@ void WithSingleChunkDecode(const ImageTestCase& aTestCase,
     DecoderFactory::GetDecoderType(aTestCase.mMimeType);
   RefPtr<Decoder> decoder =
     DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, aOutputSize,
+                                           DecoderFlags::FIRST_FRAME_ONLY,
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
   RefPtr<IDecodingTask> task = new AnonymousDecodingTask(WrapNotNull(decoder));
@@ -152,6 +153,7 @@ CheckDecoderMultiChunk(const ImageTestCase& aTestCase)
     DecoderFactory::GetDecoderType(aTestCase.mMimeType);
   RefPtr<Decoder> decoder =
     DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
+                                           DecoderFlags::FIRST_FRAME_ONLY,
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
   RefPtr<IDecodingTask> task = new AnonymousDecodingTask(WrapNotNull(decoder));
