@@ -3,19 +3,6 @@
 
 // Tests that the source tree works.
 
-async function waitForSourceCount(dbg, i) {
-  // We are forced to wait until the DOM nodes appear because the
-  // source tree batches its rendering.
-  await waitUntil(() => {
-    return findAllElements(dbg, "sourceNodes").length === i;
-  }, `waiting for ${i} sources`);
-}
-
-async function assertSourceCount(dbg, count) {
-  await waitForSourceCount(dbg, count);
-  is(findAllElements(dbg, "sourceNodes").length, count, `${count} sources`);
-}
-
 function getLabel(dbg, index) {
   return findElement(dbg, "sourceNode", index)
     .textContent.trim()

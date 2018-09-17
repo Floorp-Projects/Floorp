@@ -112,10 +112,10 @@ function checkSelectedSource(sourceId) {
     dispatch,
     getState
   }) => {
-    const source = (0, _selectors.getSourceFromId)(getState(), sourceId);
+    const source = (0, _selectors.getSource)(getState(), sourceId);
     const pendingLocation = (0, _selectors.getPendingSelectedLocation)(getState());
 
-    if (!pendingLocation || !pendingLocation.url || !source.url) {
+    if (!pendingLocation || !pendingLocation.url || !source || !source.url) {
       return;
     }
 
@@ -141,7 +141,12 @@ function checkPendingBreakpoints(sourceId) {
     getState
   }) => {
     // source may have been modified by selectLocation
-    const source = (0, _selectors.getSourceFromId)(getState(), sourceId);
+    const source = (0, _selectors.getSource)(getState(), sourceId);
+
+    if (!source) {
+      return;
+    }
+
     const pendingBreakpoints = (0, _selectors.getPendingBreakpointsForSource)(getState(), source);
 
     if (pendingBreakpoints.length === 0) {
