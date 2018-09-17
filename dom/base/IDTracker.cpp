@@ -35,10 +35,9 @@ DocOrShadowFromContent(nsIContent& aContent)
 }
 
 void
-IDTracker::Reset(nsIContent* aFromContent,
-                 nsIURI* aURI,
-                 bool aWatch,
-                 bool aReferenceImage)
+IDTracker::Reset(nsIContent* aFromContent, nsIURI* aURI,nsIURI* aReferrer,
+                 uint32_t aReferrerPolicy,
+                 bool aWatch, bool aReferenceImage)
 {
   MOZ_ASSERT(aFromContent, "Reset() expects non-null content pointer");
 
@@ -115,8 +114,8 @@ IDTracker::Reset(nsIContent* aFromContent,
   rv = aURI->EqualsExceptRef(doc->GetDocumentURI(), &isEqualExceptRef);
   if (NS_FAILED(rv) || !isEqualExceptRef) {
     RefPtr<nsIDocument::ExternalResourceLoad> load;
-    doc = doc->RequestExternalResource(aURI, aFromContent,
-                                       getter_AddRefs(load));
+    doc = doc->RequestExternalResource(aURI, aReferrer, aReferrerPolicy,
+                                       aFromContent, getter_AddRefs(load));
     docOrShadow = doc;
     if (!doc) {
       if (!load || !aWatch) {
