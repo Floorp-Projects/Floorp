@@ -74,7 +74,6 @@ WebCryptoThreadPool::DispatchInternal(nsIRunnable* aRunnable)
     NS_ENSURE_TRUE(EnsureNSSInitializedChromeOrContent(), NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIThreadPool> pool(new nsThreadPool());
-    NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
 
     nsresult rv = pool->SetName(NS_LITERAL_CSTRING("SubtleCrypto"));
     NS_ENSURE_SUCCESS(rv, rv);

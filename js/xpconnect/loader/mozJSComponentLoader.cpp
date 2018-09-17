@@ -879,18 +879,18 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
             // don't early return for them here.
             auto buf = map.get<char>();
             if (reuseGlobal) {
-                CompileForNonSyntacticScope(cx, options, buf.get(), map.size(), &script);
+                CompileLatin1ForNonSyntacticScope(cx, options, buf.get(), map.size(), &script);
             } else {
-                Compile(cx, options, buf.get(), map.size(), &script);
+                CompileLatin1(cx, options, buf.get(), map.size(), &script);
             }
         } else {
             nsCString str;
             MOZ_TRY_VAR(str, ReadScript(aInfo));
 
             if (reuseGlobal) {
-                CompileForNonSyntacticScope(cx, options, str.get(), str.Length(), &script);
+                CompileLatin1ForNonSyntacticScope(cx, options, str.get(), str.Length(), &script);
             } else {
-                Compile(cx, options, str.get(), str.Length(), &script);
+                CompileLatin1(cx, options, str.get(), str.Length(), &script);
             }
         }
         // Propagate the exception, if one exists. Also, don't leave the stale

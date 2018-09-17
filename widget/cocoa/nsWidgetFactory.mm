@@ -82,12 +82,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(OSXNotificationCenter, Init)
 #include "nsMenuBarX.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeMenuServiceX)
 
-#include "nsBidiKeyboard.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-
-#include "nsNativeThemeCocoa.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeCocoa)
-
 #include "nsMacDockSupport.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacDockSupport)
 
@@ -120,8 +114,6 @@ NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_CLIPBOARD_CID);
 NS_DEFINE_NAMED_CID(NS_CLIPBOARDHELPER_CID);
 NS_DEFINE_NAMED_CID(NS_DRAGSERVICE_CID);
-NS_DEFINE_NAMED_CID(NS_BIDIKEYBOARD_CID);
-NS_DEFINE_NAMED_CID(NS_THEMERENDERER_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_DEVICE_CONTEXT_SPEC_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTSESSION_CID);
@@ -152,9 +144,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_CLIPBOARDHELPER_CID, false, NULL, nsClipboardHelperConstructor },
   { &kNS_DRAGSERVICE_CID, false, NULL, nsDragServiceConstructor,
     mozilla::Module::MAIN_PROCESS_ONLY },
-  { &kNS_BIDIKEYBOARD_CID, false, NULL, nsBidiKeyboardConstructor,
-    mozilla::Module::MAIN_PROCESS_ONLY },
-  { &kNS_THEMERENDERER_CID, false, NULL, nsNativeThemeCocoaConstructor },
   { &kNS_SCREENMANAGER_CID, false, NULL, ScreenManagerConstructor,
     mozilla::Module::MAIN_PROCESS_ONLY },
   { &kNS_DEVICE_CONTEXT_SPEC_CID, false, NULL, nsDeviceContextSpecXConstructor },
@@ -188,9 +177,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/widget/clipboardhelper;1", &kNS_CLIPBOARDHELPER_CID },
   { "@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID,
     mozilla::Module::MAIN_PROCESS_ONLY },
-  { "@mozilla.org/widget/bidikeyboard;1", &kNS_BIDIKEYBOARD_CID,
-    mozilla::Module::MAIN_PROCESS_ONLY },
-  { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
   { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID,
     mozilla::Module::MAIN_PROCESS_ONLY },
   { "@mozilla.org/gfx/devicecontextspec;1", &kNS_DEVICE_CONTEXT_SPEC_CID },

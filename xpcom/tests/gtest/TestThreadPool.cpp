@@ -50,7 +50,6 @@ mozilla::Atomic<int> Task::sCount;
 TEST(ThreadPool, Main)
 {
   nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
-  EXPECT_TRUE(pool);
 
   for (int i = 0; i < 100; ++i) {
     nsCOMPtr<nsIRunnable> task = new Task(i);
@@ -66,7 +65,6 @@ TEST(ThreadPool, Main)
 TEST(ThreadPool, Parallelism)
 {
   nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
-  EXPECT_TRUE(pool);
 
   // Dispatch and sleep to ensure we have an idle thread
   nsCOMPtr<nsIRunnable> r0 = new Runnable("TestRunnable");

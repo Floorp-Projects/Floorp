@@ -24,7 +24,7 @@
   </binding>
 
   <binding id="text-label" extends="chrome://global/content/bindings/text.xml#text-base">
-    <implementation implements="nsIDOMXULLabelElement">
+    <implementation>
       <property name="accessKey">
         <getter>
           <![CDATA[
@@ -56,7 +56,7 @@
     <content>
       <children/><html:span anonid="accessKeyParens"></html:span>
     </content>
-    <implementation implements="nsIDOMXULLabelElement">
+    <implementation>
       <constructor>
         <![CDATA[
           this.formatAccessKey(true);
@@ -76,6 +76,10 @@
             }
             if (control) {
               control.labelElement = this;
+              var controlAccessKey = control.getAttribute("accesskey");
+              if (controlAccessKey) {
+                this.setAttribute("accesskey", controlAccessKey);
+              }
             }
 
             var accessKey = this.accessKey;
@@ -234,14 +238,7 @@
       <property name="accessKey">
         <getter>
           <![CDATA[
-            var accessKey = null;
-            var labeledEl = this.labeledControlElement;
-            if (labeledEl) {
-              accessKey = labeledEl.getAttribute("accesskey");
-            }
-            if (!accessKey) {
-              accessKey = this.getAttribute("accesskey");
-            }
+            var accessKey = this.getAttribute("accesskey");
             return accessKey ? accessKey[0] : null;
           ]]>
         </getter>
@@ -277,7 +274,6 @@
           ]]>
         </setter>
       </property>
-
     </implementation>
 
     <handlers>
