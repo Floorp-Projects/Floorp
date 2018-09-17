@@ -5,10 +5,10 @@
 "use strict";
 
 const Services = require("Services");
-const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
 const {DebuggerServer} = require("devtools/server/main");
 const discovery = require("devtools/shared/discovery/discovery");
 const EventEmitter = require("devtools/shared/event-emitter");
+const {ADBScanner} = require("devtools/shared/adb/adb-scanner");
 const {RuntimeTypes} = require("devtools/client/webide/modules/runtime-types");
 const promise = require("promise");
 loader.lazyRequireGetter(this, "AuthenticationResult",
@@ -193,34 +193,7 @@ exports.RuntimeScanners = RuntimeScanners;
 
 /* SCANNERS */
 
-/**
- * This is a lazy ADB scanner shim which only tells the ADB Helper to start and
- * stop as needed.  The real scanner that lists devices lives in ADB Helper.
- * ADB Helper 0.8.0 and later wait until these signals are received before
- * starting ADB polling.  For earlier versions, they have no effect.
- */
-var LazyAdbScanner = {
-
-  enable() {
-    Devices.emit("adb-start-polling");
-  },
-
-  disable() {
-    Devices.emit("adb-stop-polling");
-  },
-
-  scan() {
-    return promise.resolve();
-  },
-
-  listRuntimes: function() {
-    return [];
-  }
-
-};
-
-EventEmitter.decorate(LazyAdbScanner);
-RuntimeScanners.add(LazyAdbScanner);
+RuntimeScanners.add(ADBScanner);
 
 var WiFiScanner = {
 

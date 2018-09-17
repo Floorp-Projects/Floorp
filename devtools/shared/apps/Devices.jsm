@@ -16,10 +16,10 @@ var addonInstalled = false;
 const Devices = {
   _devices: {},
 
-  get helperAddonInstalled() {
+  get adbExtensionInstalled() {
     return addonInstalled;
   },
-  set helperAddonInstalled(v) {
+  set adbExtensionInstalled(v) {
     addonInstalled = v;
     if (!addonInstalled) {
       for (const name in this._devices) {

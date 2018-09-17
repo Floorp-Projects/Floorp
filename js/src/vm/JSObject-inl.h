@@ -29,6 +29,7 @@
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "vm/JSAtom-inl.h"
+#include "vm/ObjectOperations-inl.h" // js::MaybeHasInterestingSymbolProperty
 #include "vm/Realm-inl.h"
 #include "vm/ShapedObject-inl.h"
 #include "vm/TypeInference-inl.h"
@@ -42,29 +43,6 @@ MaybeConvertUnboxedObjectToNative(JSContext* cx, JSObject* obj)
     if (obj->is<UnboxedPlainObject>()) {
         return UnboxedPlainObject::convertToNative(cx, obj);
     }
-    return true;
-}
-
-static MOZ_ALWAYS_INLINE bool
-ClassMayResolveId(const JSAtomState& names, const Class* clasp, jsid id, JSObject* maybeObj)
-{
-    MOZ_ASSERT_IF(maybeObj, maybeObj->getClass() == clasp);
-
-    if (!clasp->getResolve()) {
-        // Sanity check: we should only have a mayResolve hook if we have a
-        // resolve hook.
-        MOZ_ASSERT(!clasp->getMayResolve(), "Class with mayResolve hook but no resolve hook");
-        return false;
-    }
-
-    if (JSMayResolveOp mayResolve = clasp->getMayResolve()) {
-        // Tell the analysis our mayResolve hooks won't trigger GC.
-        JS::AutoSuppressGCAnalysis nogc;
-        if (!mayResolve(names, id, maybeObj)) {
-            return false;
-        }
-    }
-
     return true;
 }
 
@@ -197,144 +175,6 @@ JSObject::setGroup(js::ObjectGroup* group)
     MOZ_RELEASE_ASSERT(group);
     MOZ_ASSERT(!isSingleton());
     group_ = group;
-}
-
-
-/*** Standard internal methods *******************************************************************/
-
-inline bool
-js::GetPrototype(JSContext* cx, js::HandleObject obj, js::MutableHandleObject protop)
-{
-    if (obj->hasDynamicPrototype()) {
-        MOZ_ASSERT(obj->is<js::ProxyObject>());
-        return js::Proxy::getPrototype(cx, obj, protop);
-    }
-
-    protop.set(obj->taggedProto().toObjectOrNull());
-    return true;
-}
-
-inline bool
-js::IsExtensible(JSContext* cx, HandleObject obj, bool* extensible)
-{
-    if (obj->is<ProxyObject>()) {
-        MOZ_ASSERT(!cx->helperThread());
-        return Proxy::isExtensible(cx, obj, extensible);
-    }
-
-    *extensible = obj->nonProxyIsExtensible();
-
-    // If the following assertion fails, there's somewhere else a missing
-    // call to shrinkCapacityToInitializedLength() which needs to be found and
-    // fixed.
-    MOZ_ASSERT_IF(obj->isNative() && !*extensible,
-                  obj->as<NativeObject>().getDenseInitializedLength() ==
-                  obj->as<NativeObject>().getDenseCapacity());
-    return true;
-}
-
-inline bool
-js::HasProperty(JSContext* cx, HandleObject obj, PropertyName* name, bool* found)
-{
-    RootedId id(cx, NameToId(name));
-    return HasProperty(cx, obj, id, found);
-}
-
-inline bool
-js::GetElement(JSContext* cx, HandleObject obj, HandleValue receiver, uint32_t index,
-               MutableHandleValue vp)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id)) {
-        return false;
-    }
-    return GetProperty(cx, obj, receiver, id, vp);
-}
-
-inline bool
-js::GetElement(JSContext* cx, HandleObject obj, HandleObject receiver, uint32_t index,
-               MutableHandleValue vp)
-{
-    RootedValue receiverValue(cx, ObjectValue(*receiver));
-    return GetElement(cx, obj, receiverValue, index, vp);
-}
-
-inline bool
-js::GetElementNoGC(JSContext* cx, JSObject* obj, const Value& receiver, uint32_t index, Value* vp)
-{
-    if (obj->getOpsGetProperty()) {
-        return false;
-    }
-
-    if (index > JSID_INT_MAX) {
-        return false;
-    }
-    return GetPropertyNoGC(cx, obj, receiver, INT_TO_JSID(index), vp);
-}
-
-inline bool
-js::DeleteProperty(JSContext* cx, HandleObject obj, HandleId id, ObjectOpResult& result)
-{
-    MarkTypePropertyNonData(cx, obj, id);
-    if (DeletePropertyOp op = obj->getOpsDeleteProperty()) {
-        return op(cx, obj, id, result);
-    }
-    return NativeDeleteProperty(cx, obj.as<NativeObject>(), id, result);
-}
-
-inline bool
-js::DeleteElement(JSContext* cx, HandleObject obj, uint32_t index, ObjectOpResult& result)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id)) {
-        return false;
-    }
-    return DeleteProperty(cx, obj, id, result);
-}
-
-MOZ_ALWAYS_INLINE bool
-js::MaybeHasInterestingSymbolProperty(JSContext* cx, JSObject* obj, Symbol* symbol,
-                                      JSObject** holder)
-{
-    MOZ_ASSERT(symbol->isInterestingSymbol());
-
-    jsid id = SYMBOL_TO_JSID(symbol);
-    do {
-        if (obj->maybeHasInterestingSymbolProperty() ||
-            MOZ_UNLIKELY(ClassMayResolveId(cx->names(), obj->getClass(), id, obj)))
-        {
-            if (holder) {
-                *holder = obj;
-            }
-            return true;
-        }
-        obj = obj->staticPrototype();
-    } while (obj);
-
-    return false;
-}
-
-MOZ_ALWAYS_INLINE bool
-js::GetInterestingSymbolProperty(JSContext* cx, HandleObject obj, Symbol* sym, MutableHandleValue vp)
-{
-    JSObject* holder;
-    if (!MaybeHasInterestingSymbolProperty(cx, obj, sym, &holder)) {
-#ifdef DEBUG
-        RootedValue receiver(cx, ObjectValue(*obj));
-        RootedId id(cx, SYMBOL_TO_JSID(sym));
-        if (!GetProperty(cx, obj, receiver, id, vp)) {
-            return false;
-        }
-        MOZ_ASSERT(vp.isUndefined());
-#endif
-        vp.setUndefined();
-        return true;
-    }
-
-    RootedObject holderRoot(cx, holder);
-    RootedValue receiver(cx, ObjectValue(*obj));
-    RootedId id(cx, SYMBOL_TO_JSID(sym));
-    return GetProperty(cx, holderRoot, receiver, id, vp);
 }
 
 /* * */

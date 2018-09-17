@@ -159,12 +159,12 @@ class RuntimePage extends PureComponent {
 const mapStateToProps = state => {
   return {
     collapsibilities: state.ui.debugTargetCollapsibilities,
-    installedExtensions: state.runtime.installedExtensions,
-    otherWorkers: state.runtime.otherWorkers,
-    serviceWorkers: state.runtime.serviceWorkers,
-    sharedWorkers: state.runtime.sharedWorkers,
-    tabs: state.runtime.tabs,
-    temporaryExtensions: state.runtime.temporaryExtensions,
+    installedExtensions: state.debugTargets.installedExtensions,
+    otherWorkers: state.debugTargets.otherWorkers,
+    serviceWorkers: state.debugTargets.serviceWorkers,
+    sharedWorkers: state.debugTargets.sharedWorkers,
+    tabs: state.debugTargets.tabs,
+    temporaryExtensions: state.debugTargets.temporaryExtensions,
   };
 };
 

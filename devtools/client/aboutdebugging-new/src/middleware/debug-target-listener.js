@@ -7,8 +7,8 @@
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 
 const {
-  CONNECT_RUNTIME_SUCCESS,
-  DISCONNECT_RUNTIME_START,
+  UNWATCH_RUNTIME_START,
+  WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 const Actions = require("../actions/index");
 
@@ -53,8 +53,8 @@ function debugTargetListenerMiddleware(store) {
 
   return next => action => {
     switch (action.type) {
-      case CONNECT_RUNTIME_SUCCESS: {
-        const { client } = action;
+      case WATCH_RUNTIME_SUCCESS: {
+        const { client } = action.runtime;
         client.addListener("tabListChanged", onTabsUpdated);
         AddonManager.addAddonListener(extensionsListener);
         client.addListener("workerListChanged", onWorkersUpdated);
@@ -64,8 +64,8 @@ function debugTargetListenerMiddleware(store) {
         client.addListener("push-subscription-modified", onWorkersUpdated);
         break;
       }
-      case DISCONNECT_RUNTIME_START: {
-        const { client } = store.getState().runtime;
+      case UNWATCH_RUNTIME_START: {
+        const { client } = action.runtime;
         client.removeListener("tabListChanged", onTabsUpdated);
         AddonManager.removeAddonListener(extensionsListener);
         client.removeListener("workerListChanged", onWorkersUpdated);
