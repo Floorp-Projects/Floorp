@@ -188,6 +188,9 @@ public:
   uint32_t* GetPaletteData() const;
   uint8_t GetPaletteDepth() const { return mPaletteDepth; }
 
+  const IntRect& GetDirtyRect() const { return mDirtyRect; }
+  void SetDirtyRect(const IntRect& aDirtyRect) { mDirtyRect = aDirtyRect; }
+
   bool GetCompositingFailed() const;
   void SetCompositingFailed(bool val);
 
@@ -295,9 +298,31 @@ private: // data
   // Effectively const data, only mutated in the Init methods.
   //////////////////////////////////////////////////////////////////////////////
 
+  //! The size of the buffer we are decoding to.
   IntSize      mImageSize;
+
+  //! XXX(aosmond): This means something different depending on the context. We
+  //!               should correct this.
+  //!
+  //! There are several different contexts for mFrameRect:
+  //! - If for non-animated image, it will be originate at (0, 0) and matches
+  //!   the dimensions of mImageSize.
+  //! - If for an APNG, it also matches the above.
+  //! - If for a GIF which is producing full frames, it matches the above.
+  //! - If for a GIF which is producing partial frames, it matches mBlendRect.
   IntRect      mFrameRect;
+
+  //! The contents for the frame, as represented in the encoded image. This may
+  //! differ from mImageSize because it may be a partial frame. For the first
+  //! frame, this means we need to shift the data in place, and for animated
+  //! frames, it likely need to combine with a previous frame to get the full
+  //! contents.
   IntRect      mBlendRect;
+
+  //! This is the region that has changed between this frame and the previous
+  //! frame of an animation. For the first frame, this will be the same as
+  //! mFrameRect.
+  IntRect      mDirtyRect;
 
   //! The timeout for this frame.
   FrameTimeout mTimeout;
