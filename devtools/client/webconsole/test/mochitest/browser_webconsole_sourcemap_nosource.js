@@ -25,6 +25,9 @@ const PAGE_URL = `data:text/html,
 </html>`;
 
 add_task(async function() {
+  // Force the new debugger UI, in case this gets uplifted with the old
+  // debugger still turned on
+  await pushPref("devtools.debugger.new-debugger-frontend", true);
   await pushPref("devtools.source-map.client-service.enabled", true);
 
   const hud = await openNewTabAndConsole(PAGE_URL);

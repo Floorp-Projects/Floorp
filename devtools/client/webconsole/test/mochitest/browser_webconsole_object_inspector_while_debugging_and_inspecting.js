@@ -8,16 +8,12 @@
 
 "use strict";
 
-// Import helpers for the new debugger
-/* import-globals-from ../../../debugger/new/test/mochitest/helpers.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers.js",
-  this);
-
 const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-eval-in-stackframe.html";
 
 add_task(async function() {
+  // Force the old debugger UI since it's directly used (see Bug 1301705)
+  await pushPref("devtools.debugger.new-debugger-frontend", false);
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Switch to the debugger");
@@ -28,9 +24,7 @@ add_task(async function() {
   await gDevTools.showToolbox(target, "inspector");
 
   info("Call firstCall() and wait for the debugger statement to be reached.");
-  const toolbox = gDevTools.getToolbox(target);
-  const dbg = createDebuggerContext(toolbox);
-  await pauseDebugger(dbg);
+  await waitForFrameAdded();
 
   info("Switch back to the console");
   await gDevTools.showToolbox(target, "webconsole");
@@ -69,10 +63,16 @@ add_task(async function() {
   ok(oiNodes[2].textContent.includes(`<prototype>: Object { \u2026 }`));
 });
 
-async function pauseDebugger(dbg) {
-  info("Waiting for debugger to pause");
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
-    content.wrappedJSObject.firstCall();
+async function waitForFrameAdded() {
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolbox(target);
+  const thread = toolbox.threadClient;
+
+  info("Waiting for framesadded");
+  await new Promise(resolve => {
+    thread.addOneTimeListener("framesadded", resolve);
+    ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+      content.wrappedJSObject.firstCall();
+    });
   });
-  await waitForPaused(dbg);
 }

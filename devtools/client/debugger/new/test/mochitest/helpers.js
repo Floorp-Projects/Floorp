@@ -6,11 +6,6 @@
  * required from other panel test files.
  */
 
-// Import helpers for the new debugger
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers/context.js",
-  this);
-
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var { Task } = require("devtools/shared/task");
 var asyncStorage = require("devtools/shared/async-storage");
@@ -465,6 +460,23 @@ function isSelectedFrameSelected(dbg, state) {
   }
 
   return source.id == sourceId;
+}
+
+function createDebuggerContext(toolbox) {
+  const panel = toolbox.getPanel("jsdebugger");
+  const win = panel.panelWin;
+  const { store, client, selectors, actions } = panel.getVarsForTests();
+
+  return {
+    actions: actions,
+    selectors: selectors,
+    getState: store.getState,
+    store: store,
+    client: client,
+    toolbox: toolbox,
+    win: win,
+    panel: panel
+  };
 }
 
 /**
