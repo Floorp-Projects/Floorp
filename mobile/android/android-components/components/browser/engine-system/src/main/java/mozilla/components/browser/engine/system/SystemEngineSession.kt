@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.system
 import android.content.Context
 import android.os.Bundle
 import android.webkit.CookieManager
+import android.webkit.WebSettings
 import android.webkit.WebStorage
 import android.webkit.WebView
 import kotlinx.coroutines.experimental.launch
@@ -17,6 +18,7 @@ import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.ktx.kotlin.toBundle
 import java.lang.ref.WeakReference
+import kotlin.reflect.KProperty
 
 internal val additionalHeaders = mapOf(
     // For every request WebView sends a "X-requested-with" header with the package name of the
@@ -195,40 +197,91 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
         // or the global defaults.
         get() = internalSettings ?: defaultSettings ?: DefaultSettings()
 
+    class WebSetting<T>(private val get: () -> T, private val set: (T) -> Unit) {
+        operator fun getValue(thisRef: Any?, property: KProperty<*>): T = get()
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) = set(value)
+    }
+
     internal fun initSettings(): Settings {
-        currentView()?.settings?.let {
-            internalSettings = object : Settings {
-                override var javascriptEnabled: Boolean
-                    get() = it.javaScriptEnabled
-                    set(value) { it.javaScriptEnabled = value }
+        currentView()?.let { webView ->
+            webView.settings?.let { webSettings ->
+                // Explicitly set global defaults.
+                webSettings.setAppCacheEnabled(false)
+                webSettings.databaseEnabled = false
+                webSettings.saveFormData = false
+                webSettings.savePassword = false
 
-                override var domStorageEnabled: Boolean
-                    get() = it.domStorageEnabled
-                    set(value) { it.domStorageEnabled = value }
+                // We currently don't implement the callback to support turning this on.
+                webSettings.setGeolocationEnabled(false)
 
-                override var webFontsEnabled: Boolean
-                    get() = this@SystemEngineSession.webFontsEnabled
-                    set(value) { this@SystemEngineSession.webFontsEnabled = value }
+                // webViewSettings built-in zoom controls are the only supported ones, so they should be turned on.
+                webSettings.builtInZoomControls = true
 
-                override var trackingProtectionPolicy: TrackingProtectionPolicy?
-                    get() = if (trackingProtectionEnabled)
-                            TrackingProtectionPolicy.all()
-                        else
-                            TrackingProtectionPolicy.none()
-                    set(value) = value?.let { enableTrackingProtection(it) } ?: disableTrackingProtection()
-
-                override var requestInterceptor: RequestInterceptor? = null
-            }.apply {
-                defaultSettings?.let {
-                    this.javascriptEnabled = defaultSettings.javascriptEnabled
-                    this.domStorageEnabled = defaultSettings.domStorageEnabled
-                    this.webFontsEnabled = defaultSettings.webFontsEnabled
-                    this.trackingProtectionPolicy = defaultSettings.trackingProtectionPolicy
-                    this.requestInterceptor = defaultSettings.requestInterceptor
-                }
+                return initSettings(webView, webSettings)
             }
-            return internalSettings as Settings
         } ?: throw IllegalStateException("System engine session not initialized")
+    }
+
+    private fun initSettings(webView: WebView, s: WebSettings): Settings {
+        internalSettings = object : Settings() {
+            override var javascriptEnabled by WebSetting(s::getJavaScriptEnabled, s::setJavaScriptEnabled)
+            override var domStorageEnabled by WebSetting(s::getDomStorageEnabled, s::setDomStorageEnabled)
+            override var allowFileAccess by WebSetting(s::getAllowFileAccess, s::setAllowFileAccess)
+            override var allowContentAccess by WebSetting(s::getAllowContentAccess, s::setAllowContentAccess)
+            override var userAgentString by WebSetting(s::getUserAgentString, s::setUserAgentString)
+            override var displayZoomControls by WebSetting(s::getDisplayZoomControls, s::setDisplayZoomControls)
+            override var loadWithOverviewMode by WebSetting(s::getLoadWithOverviewMode, s::setLoadWithOverviewMode)
+            override var allowFileAccessFromFileURLs by WebSetting(
+                    s::getAllowFileAccessFromFileURLs, s::setAllowFileAccessFromFileURLs)
+            override var allowUniversalAccessFromFileURLs by WebSetting(
+                    s::getAllowUniversalAccessFromFileURLs, s::setAllowUniversalAccessFromFileURLs)
+            override var mediaPlaybackRequiresUserGesture by WebSetting(
+                    s::getMediaPlaybackRequiresUserGesture, s::setMediaPlaybackRequiresUserGesture)
+            override var javaScriptCanOpenWindowsAutomatically by WebSetting(
+                    s::getJavaScriptCanOpenWindowsAutomatically, s::setJavaScriptCanOpenWindowsAutomatically)
+
+            override var verticalScrollBarEnabled
+                get() = webView.isVerticalScrollBarEnabled
+                set(value) { webView.isVerticalScrollBarEnabled = value }
+
+            override var horizontalScrollBarEnabled
+                get() = webView.isHorizontalScrollBarEnabled
+                set(value) { webView.isHorizontalScrollBarEnabled = value }
+
+            override var webFontsEnabled
+                get() = this@SystemEngineSession.webFontsEnabled
+                set(value) { this@SystemEngineSession.webFontsEnabled = value }
+
+            override var trackingProtectionPolicy: TrackingProtectionPolicy?
+                get() = if (trackingProtectionEnabled)
+                    TrackingProtectionPolicy.all()
+                else
+                    TrackingProtectionPolicy.none()
+                set(value) = value?.let { enableTrackingProtection(it) } ?: disableTrackingProtection()
+
+            override var requestInterceptor: RequestInterceptor? = null
+        }.apply {
+            defaultSettings?.let {
+                javascriptEnabled = it.javascriptEnabled
+                domStorageEnabled = it.domStorageEnabled
+                webFontsEnabled = it.webFontsEnabled
+                displayZoomControls = it.displayZoomControls
+                loadWithOverviewMode = it.loadWithOverviewMode
+                trackingProtectionPolicy = it.trackingProtectionPolicy
+                requestInterceptor = it.requestInterceptor
+                userAgentString = it.userAgentString
+                mediaPlaybackRequiresUserGesture = it.mediaPlaybackRequiresUserGesture
+                javaScriptCanOpenWindowsAutomatically = it.javaScriptCanOpenWindowsAutomatically
+                allowFileAccess = it.allowFileAccess
+                allowContentAccess = it.allowContentAccess
+                allowUniversalAccessFromFileURLs = it.allowUniversalAccessFromFileURLs
+                allowFileAccessFromFileURLs = it.allowFileAccessFromFileURLs
+                verticalScrollBarEnabled = it.verticalScrollBarEnabled
+                horizontalScrollBarEnabled = it.horizontalScrollBarEnabled
+            }
+        }
+
+        return internalSettings as Settings
     }
 
     /**

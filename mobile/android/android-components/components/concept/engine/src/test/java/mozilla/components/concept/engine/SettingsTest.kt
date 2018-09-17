@@ -18,7 +18,7 @@ class SettingsTest {
 
     @Test
     fun testSettingsThrowByDefault() {
-        val settings = object : Settings { }
+        val settings = object : Settings() { }
 
         expectUnsupportedSettingException(
             { settings.javascriptEnabled },
@@ -30,7 +30,29 @@ class SettingsTest {
             { settings.trackingProtectionPolicy },
             { settings.trackingProtectionPolicy = TrackingProtectionPolicy.all() },
             { settings.requestInterceptor },
-            { settings.requestInterceptor = null }
+            { settings.requestInterceptor = null },
+            { settings.userAgentString },
+            { settings.userAgentString = null },
+            { settings.mediaPlaybackRequiresUserGesture },
+            { settings.mediaPlaybackRequiresUserGesture = false },
+            { settings.javaScriptCanOpenWindowsAutomatically },
+            { settings.javaScriptCanOpenWindowsAutomatically = false },
+            { settings.displayZoomControls },
+            { settings.displayZoomControls = false },
+            { settings.loadWithOverviewMode },
+            { settings.loadWithOverviewMode = false },
+            { settings.allowFileAccess },
+            { settings.allowFileAccess = false },
+            { settings.allowContentAccess },
+            { settings.allowContentAccess = false },
+            { settings.allowFileAccessFromFileURLs },
+            { settings.allowFileAccessFromFileURLs = false },
+            { settings.allowUniversalAccessFromFileURLs },
+            { settings.allowUniversalAccessFromFileURLs = false },
+            { settings.verticalScrollBarEnabled },
+            { settings.verticalScrollBarEnabled = false },
+            { settings.horizontalScrollBarEnabled },
+            { settings.horizontalScrollBarEnabled = false }
         )
     }
 
@@ -47,20 +69,53 @@ class SettingsTest {
         assertTrue(settings.javascriptEnabled)
         assertNull(settings.trackingProtectionPolicy)
         assertNull(settings.requestInterceptor)
+        assertNull(settings.userAgentString)
+        assertTrue(settings.mediaPlaybackRequiresUserGesture)
+        assertFalse(settings.javaScriptCanOpenWindowsAutomatically)
+        assertTrue(settings.displayZoomControls)
+        assertFalse(settings.loadWithOverviewMode)
+        assertTrue(settings.allowContentAccess)
+        assertTrue(settings.allowFileAccess)
+        assertFalse(settings.allowFileAccessFromFileURLs)
+        assertFalse(settings.allowUniversalAccessFromFileURLs)
+        assertTrue(settings.verticalScrollBarEnabled)
+        assertTrue(settings.horizontalScrollBarEnabled)
 
         val interceptor: RequestInterceptor = mock()
 
-        val trackingProtectionSettings = DefaultSettings(
+        val defaultSettings = DefaultSettings(
             javascriptEnabled = false,
             domStorageEnabled = false,
             webFontsEnabled = false,
             trackingProtectionPolicy = TrackingProtectionPolicy.all(),
-            requestInterceptor = interceptor)
+            requestInterceptor = interceptor,
+            userAgentString = "userAgent",
+            mediaPlaybackRequiresUserGesture = false,
+            javaScriptCanOpenWindowsAutomatically = true,
+            displayZoomControls = false,
+            loadWithOverviewMode = true,
+            allowContentAccess = false,
+            allowFileAccess = false,
+            allowFileAccessFromFileURLs = true,
+            allowUniversalAccessFromFileURLs = true,
+            verticalScrollBarEnabled = false,
+            horizontalScrollBarEnabled = false)
 
-        assertFalse(trackingProtectionSettings.domStorageEnabled)
-        assertFalse(trackingProtectionSettings.javascriptEnabled)
-        assertFalse(trackingProtectionSettings.webFontsEnabled)
-        assertEquals(TrackingProtectionPolicy.all(), trackingProtectionSettings.trackingProtectionPolicy)
-        assertEquals(interceptor, trackingProtectionSettings.requestInterceptor)
+        assertFalse(defaultSettings.domStorageEnabled)
+        assertFalse(defaultSettings.javascriptEnabled)
+        assertFalse(defaultSettings.webFontsEnabled)
+        assertEquals(TrackingProtectionPolicy.all(), defaultSettings.trackingProtectionPolicy)
+        assertEquals(interceptor, defaultSettings.requestInterceptor)
+        assertEquals("userAgent", defaultSettings.userAgentString)
+        assertFalse(defaultSettings.mediaPlaybackRequiresUserGesture)
+        assertTrue(defaultSettings.javaScriptCanOpenWindowsAutomatically)
+        assertFalse(defaultSettings.displayZoomControls)
+        assertTrue(defaultSettings.loadWithOverviewMode)
+        assertFalse(defaultSettings.allowContentAccess)
+        assertFalse(defaultSettings.allowFileAccess)
+        assertTrue(defaultSettings.allowFileAccessFromFileURLs)
+        assertTrue(defaultSettings.allowUniversalAccessFromFileURLs)
+        assertFalse(defaultSettings.verticalScrollBarEnabled)
+        assertFalse(defaultSettings.horizontalScrollBarEnabled)
     }
 }
