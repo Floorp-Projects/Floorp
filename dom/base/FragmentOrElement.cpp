@@ -440,7 +440,8 @@ nsIContent::GetURLDataForStyleAttr(nsIPrincipal* aSubjectPrincipal) const
     // TODO: Cache this?
     return MakeAndAddRef<URLExtraData>(OwnerDoc()->GetDocBaseURI(),
                                        OwnerDoc()->GetDocumentURI(),
-                                       aSubjectPrincipal);
+                                       aSubjectPrincipal,
+                                       OwnerDoc()->GetReferrerPolicy());
   }
   // This also ignores the case that SVG inside XBL binding.
   // But it is probably fine.

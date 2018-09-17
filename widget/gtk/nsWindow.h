@@ -429,6 +429,7 @@ public:
      */
     static CSDSupportLevel GetSystemCSDSupportLevel();
 
+    static bool TopLevelWindowUseARGBVisual();
     static bool GetTopLevelWindowActiveState(nsIFrame *aFrame);
 
 protected:

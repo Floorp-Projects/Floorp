@@ -37,6 +37,7 @@
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/ChromeBrowsingContext.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -1901,7 +1902,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
   a11y::AccessibleWrap::ReleaseContentProcessIdFor(ChildID());
 #endif
 
-  BrowsingContext::CleanupContexts(ChildID());
+  ChromeBrowsingContext::CleanupContexts(ChildID());
 }
 
 bool
@@ -5971,7 +5972,7 @@ ContentParent::RecvAttachBrowsingContext(
   const BrowsingContextId& aChildId,
   const nsString& aName)
 {
-  RefPtr<BrowsingContext> parent = BrowsingContext::Get(aParentId);
+  RefPtr<ChromeBrowsingContext> parent = ChromeBrowsingContext::Get(aParentId);
   if (aParentId && !parent) {
     // Unless 'aParentId' is 0 (which it is when the child is a root
     // BrowsingContext) there should always be a corresponding
@@ -5993,7 +5994,7 @@ ContentParent::RecvAttachBrowsingContext(
     return IPC_OK();
   }
 
-  if (parent && parent->OwnerProcessId() != ChildID()) {
+  if (parent && !parent->IsOwnedByProcess(ChildID())) {
     // Where trying attach a child BrowsingContext to a parent
     // BrowsingContext in another process. This is illegal since the
     // only thing that could create that child BrowsingContext is a
@@ -6031,7 +6032,7 @@ ContentParent::RecvAttachBrowsingContext(
   }
 
   if (!child) {
-    child = new BrowsingContext(aChildId, aName, Some(ChildID()));
+    child = ChromeBrowsingContext::Create(aChildId, aName, ChildID());
   }
   child->Attach(parent);
 
@@ -6042,7 +6043,7 @@ mozilla::ipc::IPCResult
 ContentParent::RecvDetachBrowsingContext(const BrowsingContextId& aContextId,
                                          const bool& aMoveToBFCache)
 {
-  RefPtr<BrowsingContext> context = BrowsingContext::Get(aContextId);
+  RefPtr<ChromeBrowsingContext> context = ChromeBrowsingContext::Get(aContextId);
 
   if (!context) {
     MOZ_LOG(BrowsingContext::GetLog(),
@@ -6052,7 +6053,7 @@ ContentParent::RecvDetachBrowsingContext(const BrowsingContextId& aContextId,
     return IPC_OK();
   }
 
-  if (context->OwnerProcessId() != ChildID()) {
+  if (!context->IsOwnedByProcess(ChildID())) {
     // Where trying to detach a child BrowsingContext in another child
     // process. This is illegal since the owner of the BrowsingContext
     // is the proccess with the in-process docshell, which is tracked

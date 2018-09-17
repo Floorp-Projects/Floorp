@@ -283,6 +283,8 @@ public:
    * nsIDocument::RequestExternalResource is documented to do.
    */
   nsIDocument* RequestResource(nsIURI* aURI,
+                               nsIURI* aReferrer,
+                               uint32_t aReferrerPolicy,
                                nsINode* aRequestingNode,
                                nsIDocument* aDisplayDocument,
                                ExternalResourceLoad** aPendingLoad);
@@ -348,8 +350,10 @@ protected:
      * Start aURI loading.  This will perform the necessary security checks and
      * so forth.
      */
-    nsresult StartLoad(nsIURI* aURI, nsINode* aRequestingNode);
-
+    nsresult StartLoad(nsIURI* aURI,
+                       nsIURI* aReferrer,
+                       uint32_t aReferrerPolicy,
+                       nsINode* aRequestingNode);
     /**
      * Set up an nsIContentViewer based on aRequest.  This is guaranteed to
      * put null in *aViewer and *aLoadGroup on all failures.
@@ -2541,10 +2545,14 @@ public:
    * one in the future.
    *
    * @param aURI the URI to get
+   * @param aReferrer the referrer of the request
+   * @param aReferrerPolicy the referrer policy of the request
    * @param aRequestingNode the node making the request
    * @param aPendingLoad the pending load for this request, if any
    */
   nsIDocument* RequestExternalResource(nsIURI* aURI,
+                                       nsIURI* aReferrer,
+                                       uint32_t aReferrerPolicy,
                                        nsINode* aRequestingNode,
                                        ExternalResourceLoad** aPendingLoad);
 

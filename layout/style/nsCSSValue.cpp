@@ -1440,6 +1440,7 @@ css::ImageValue::Initialize(nsIDocument* aDocument)
     loadingDoc->StyleImageLoader()->LoadImage(GetURI(),
                                               mExtraData->GetPrincipal(),
                                               mExtraData->GetReferrer(),
+                                              mExtraData->GetReferrerPolicy(),
                                               this,
                                               mCORSMode);
 

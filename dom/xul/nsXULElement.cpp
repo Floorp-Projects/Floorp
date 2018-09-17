@@ -1869,8 +1869,10 @@ nsXULPrototypeElement::SetAttrAt(uint32_t aPos, const nsAString& aValue,
         // TODO: If we implement Content Security Policy for chrome documents
         // as has been discussed, the CSP should be checked here to see if
         // inline styles are allowed to be applied.
+        // XXX No specific specs talk about xul and referrer policy, pass Unset
         RefPtr<URLExtraData> data =
-          new URLExtraData(aDocumentURI, aDocumentURI, principal);
+          new URLExtraData(aDocumentURI, aDocumentURI, principal,
+                           mozilla::net::RP_Unset);
         RefPtr<DeclarationBlock> declaration =
           DeclarationBlock::FromCssText(
             aValue, data, eCompatibility_FullStandards, nullptr);

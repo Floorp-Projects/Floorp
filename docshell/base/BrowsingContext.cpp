@@ -6,6 +6,7 @@
 
 #include "BrowsingContext.h"
 
+#include "mozilla/dom/ChromeBrowsingContext.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Assertions.h"
@@ -61,28 +62,6 @@ BrowsingContext::GetLog()
   return gBrowsingContextLog;
 }
 
-// TODO(farre): BrowsingContext::CleanupContexts starts from the list
-// of root BrowsingContexts. This isn't enough when separate
-// BrowsingContext nodes of a BrowsingContext tree not in a crashing
-// child process are from that process and thus needs to be
-// cleaned. [Bug 1472108]
-/* static */ void
-BrowsingContext::CleanupContexts(uint64_t aProcessId)
-{
-  if (sRootBrowsingContexts) {
-    RefPtr<BrowsingContext> context = sRootBrowsingContexts->getFirst();
-
-    while (context) {
-      RefPtr<BrowsingContext> next = context->getNext();
-      if (context->IsOwnedByProcess() &&
-          aProcessId == context->OwnerProcessId()) {
-        context->Detach();
-      }
-      context = next;
-    }
-  }
-}
-
 /* static */ already_AddRefed<BrowsingContext>
 BrowsingContext::Get(uint64_t aId)
 {
@@ -90,25 +69,34 @@ BrowsingContext::Get(uint64_t aId)
   return abc.forget();
 }
 
+/* static */ already_AddRefed<BrowsingContext>
+BrowsingContext::Create(nsIDocShell* aDocShell)
+{
+  RefPtr<BrowsingContext> context;
+  if (XRE_IsParentProcess()) {
+    context = new ChromeBrowsingContext(aDocShell);
+  } else {
+    // TODO(farre): will we ever create BrowsingContexts on processes
+    // other than content and parent?
+    MOZ_ASSERT(XRE_IsContentProcess());
+    context = new BrowsingContext(aDocShell);
+  }
+
+  return context.forget();
+}
+
 BrowsingContext::BrowsingContext(nsIDocShell* aDocShell)
   : mBrowsingContextId(nsContentUtils::GenerateBrowsingContextId())
-  , mProcessId(Nothing())
   , mDocShell(aDocShell)
 {
   sBrowsingContexts->Put(mBrowsingContextId, this);
 }
 
 BrowsingContext::BrowsingContext(uint64_t aBrowsingContextId,
-                                 const nsAString& aName,
-                                 const Maybe<uint64_t>& aProcessId)
+                const nsAString& aName)
   : mBrowsingContextId(aBrowsingContextId)
-  , mProcessId(aProcessId)
   , mName(aName)
 {
-  // mProcessId only really has a meaning in the parent process, where
-  // it keeps track of which BrowsingContext is actually holding the
-  // nsDocShell.
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess() || aProcessId.isNothing());
   sBrowsingContexts->Put(mBrowsingContextId, this);
 }
 
@@ -145,11 +133,11 @@ BrowsingContext::Attach(BrowsingContext* aParent)
     return;
   }
 
-  auto cc = dom::ContentChild::GetSingleton();
+  auto cc = ContentChild::GetSingleton();
   MOZ_DIAGNOSTIC_ASSERT(cc);
   cc->SendAttachBrowsingContext(
-    dom::BrowsingContextId(mParent ? mParent->Id() : 0),
-    dom::BrowsingContextId(Id()),
+    BrowsingContextId(mParent ? mParent->Id() : 0),
+    BrowsingContextId(Id()),
     mName);
 }
 
@@ -184,9 +172,9 @@ BrowsingContext::Detach()
     return;
   }
 
-  auto cc = dom::ContentChild::GetSingleton();
+  auto cc = ContentChild::GetSingleton();
   MOZ_DIAGNOSTIC_ASSERT(cc);
-  cc->SendDetachBrowsingContext(dom::BrowsingContextId(Id()),
+  cc->SendDetachBrowsingContext(BrowsingContextId(Id()),
                                 false /* aMoveToBFCache */);
 }
 
@@ -212,9 +200,9 @@ BrowsingContext::CacheChildren()
     return;
   }
 
-  auto cc = dom::ContentChild::GetSingleton();
+  auto cc = ContentChild::GetSingleton();
   MOZ_DIAGNOSTIC_ASSERT(cc);
-  cc->SendDetachBrowsingContext(dom::BrowsingContextId(Id()),
+  cc->SendDetachBrowsingContext(BrowsingContextId(Id()),
                                 true /* aMoveToBFCache */);
 }
 
@@ -222,13 +210,6 @@ bool
 BrowsingContext::IsCached()
 {
   return sCachedBrowsingContexts->Contains(Id());
-}
-
-uint64_t
-BrowsingContext::OwnerProcessId() const
-{
-  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  return mProcessId.value();
 }
 
 void
@@ -287,7 +268,25 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BrowsingContext, mDocShell, mChildren)
+NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren)
+  if (XRE_IsParentProcess()) {
+    ChromeBrowsingContext::Cast(tmp)->Unlink();
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowsingContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren)
+  if (XRE_IsParentProcess()) {
+    ChromeBrowsingContext::Cast(tmp)->Traverse(cb);
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(BrowsingContext)
+
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(BrowsingContext, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(BrowsingContext, Release)
 
