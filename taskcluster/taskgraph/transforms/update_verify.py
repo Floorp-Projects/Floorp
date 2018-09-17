@@ -43,7 +43,13 @@ def add_command(config, tasks):
             ]
             for thing in ("CHANNEL", "VERIFY_CONFIG", "BUILD_TOOLS_REPO"):
                 thing = "worker.env.{}".format(thing)
-                resolve_keyed_by(chunked, thing, thing, **config.params)
+                resolve_keyed_by(
+                    chunked, thing, thing,
+                    **{
+                        'project': config.params['project'],
+                        'release-type': config.params['release_type'],
+                    }
+                )
 
             update_verify_config = None
             for upstream in chunked.get("dependencies", {}).keys():

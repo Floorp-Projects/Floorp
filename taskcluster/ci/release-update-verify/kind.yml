@@ -50,14 +50,11 @@ jobs:
       worker:
          env:
             CHANNEL:
-               by-project:
-                  birch: "release-localtest"
-                  jamun: "beta-localtest"
-                  maple: "beta-localtest"
-                  mozilla-beta: "beta-localtest"
-                  mozilla-release: "release-localtest"
-                  mozilla-esr60: "esr-localtest"
-                  default: "default"
+               by-release-type:
+                  beta: "beta-localtest"
+                  release(-rc)?: "release-localtest"
+                  esr60: "esr-localtest"
+                  nightly: "nightly"
       treeherder:
          symbol: UV(UV)
          platform: linux64/opt
@@ -72,14 +69,11 @@ jobs:
       worker:
          env:
             CHANNEL:
-               by-project:
-                  birch: "release-localtest"
-                  jamun: "beta-localtest"
-                  maple: "beta-localtest"
-                  mozilla-beta: "beta-localtest"
-                  mozilla-release: "release-localtest"
-                  mozilla-esr60: "esr-localtest"
-                  default: "default"
+               by-release-type:
+                  beta: "beta-localtest"
+                  release(-rc)?: "release-localtest"
+                  esr60: "esr-localtest"
+                  nightly: "nightly"
       treeherder:
          symbol: UV(UV)
          platform: linux32/opt
@@ -94,14 +88,11 @@ jobs:
       worker:
          env:
             CHANNEL:
-               by-project:
-                  birch: "release-localtest"
-                  jamun: "beta-localtest"
-                  maple: "beta-localtest"
-                  mozilla-beta: "beta-localtest"
-                  mozilla-release: "release-localtest"
-                  mozilla-esr60: "esr-localtest"
-                  default: "default"
+               by-release-type:
+                  beta: "beta-localtest"
+                  release(-rc)?: "release-localtest"
+                  esr60: "esr-localtest"
+                  nightly: "nightly"
       treeherder:
          symbol: UV(UV)
          platform: windows2012-64/opt
@@ -116,14 +107,11 @@ jobs:
       worker:
          env:
             CHANNEL:
-               by-project:
-                  birch: "release-localtest"
-                  jamun: "beta-localtest"
-                  maple: "beta-localtest"
-                  mozilla-beta: "beta-localtest"
-                  mozilla-release: "release-localtest"
-                  mozilla-esr60: "esr-localtest"
-                  default: "default"
+               by-release-type:
+                  beta: "beta-localtest"
+                  release(-rc)?: "release-localtest"
+                  esr60: "esr-localtest"
+                  nightly: "nightly"
       treeherder:
          symbol: UV(UV)
          platform: windows2012-32/opt
@@ -138,14 +126,11 @@ jobs:
       worker:
          env:
             CHANNEL:
-               by-project:
-                  birch: "release-localtest"
-                  jamun: "beta-localtest"
-                  maple: "beta-localtest"
-                  mozilla-beta: "beta-localtest"
-                  mozilla-release: "release-localtest"
-                  mozilla-esr60: "esr-localtest"
-                  default: "default"
+               by-release-type:
+                  beta: "beta-localtest"
+                  release(-rc)?: "release-localtest"
+                  esr60: "esr-localtest"
+                  nightly: "nightly"
       treeherder:
          symbol: UV(UV)
          platform: osx-cross/opt
