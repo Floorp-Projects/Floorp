@@ -2896,6 +2896,16 @@ public:
                                                 mozilla::net::ReferrerPolicy aReferrerPolicy);
 
   /*
+   * If there is a Referrer-Policy response header in |aChannel|, parse a
+   * referrer policy from the header.
+   *
+   * @param the channel from which to get the Referrer-Policy header
+   * @return referrer policy from the response header in aChannel
+   */
+  static mozilla::net::ReferrerPolicy
+    GetReferrerPolicyFromChannel(nsIChannel* aChannel);
+
+  /*
    * Parse a referrer policy from a Referrer-Policy header
    * https://www.w3.org/TR/referrer-policy/#parse-referrer-policy-from-header
    *

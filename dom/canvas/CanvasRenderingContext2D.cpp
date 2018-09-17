@@ -2639,7 +2639,8 @@ CreateDeclarationForServo(nsCSSPropertyID aProperty,
   RefPtr<URLExtraData> data =
     new URLExtraData(aDocument->GetDocBaseURI(),
                      aDocument->GetDocumentURI(),
-                     aDocument->NodePrincipal());
+                     aDocument->NodePrincipal(),
+                     aDocument->GetReferrerPolicy());
 
   ServoCSSParser::ParsingEnvironment env(data,
                                          aDocument->GetCompatibilityMode(),

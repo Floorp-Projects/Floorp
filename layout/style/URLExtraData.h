@@ -12,6 +12,7 @@
 #include "mozilla/dom/URL.h"
 #include "mozilla/Move.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
@@ -23,9 +24,11 @@ struct URLExtraData
 {
   URLExtraData(already_AddRefed<nsIURI> aBaseURI,
                already_AddRefed<nsIURI> aReferrer,
-               already_AddRefed<nsIPrincipal> aPrincipal)
+               already_AddRefed<nsIPrincipal> aPrincipal,
+               net::ReferrerPolicy aReferrerPolicy)
     : mBaseURI(std::move(aBaseURI))
     , mReferrer(std::move(aReferrer))
+    , mReferrerPolicy(aReferrerPolicy)
     , mPrincipal(std::move(aPrincipal))
       // When we hold the URI data of a style sheet, mReferrer is always
       // equal to the sheet URI.
@@ -34,15 +37,18 @@ struct URLExtraData
     MOZ_ASSERT(mBaseURI);
   }
 
-  URLExtraData(nsIURI* aBaseURI, nsIURI* aReferrer, nsIPrincipal* aPrincipal)
+  URLExtraData(nsIURI* aBaseURI, nsIURI* aReferrer, nsIPrincipal* aPrincipal,
+               net::ReferrerPolicy aReferrerPolicy)
     : URLExtraData(do_AddRef(aBaseURI),
                    do_AddRef(aReferrer),
-                   do_AddRef(aPrincipal)) {}
+                   do_AddRef(aPrincipal),
+                   aReferrerPolicy) {}
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLExtraData)
 
   nsIURI* BaseURI() const { return mBaseURI; }
   nsIURI* GetReferrer() const { return mReferrer; }
+  net::ReferrerPolicy GetReferrerPolicy() const { return mReferrerPolicy;}
   nsIPrincipal* GetPrincipal() const { return mPrincipal; }
 
   static URLExtraData* Dummy() {
@@ -57,6 +63,7 @@ private:
 
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIURI> mReferrer;
+  net::ReferrerPolicy mReferrerPolicy;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   // True if mReferrer is a chrome:// URI.

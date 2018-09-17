@@ -100,18 +100,11 @@ class CustomRequestPanel extends Component {
 
     switch (evt.target.id) {
       case "custom-headers-value":
-        let customHeadersValue = val || "";
-        // Parse text representation of multiple HTTP headers
-        const headersArray = this.parseRequestText(customHeadersValue, "\\S+?", ":");
-        // Remove temp customHeadersValue while query string is parsable
-        if (customHeadersValue === "" ||
-          headersArray.length === customHeadersValue.split("\n").length) {
-          customHeadersValue = null;
-        }
         data = {
           requestHeaders: {
-            customHeadersValue,
-            headers: headersArray,
+            customHeadersValue: val || "",
+            // Parse text representation of multiple HTTP headers
+            headers: this.parseRequestText(val, "\\S+?", ":")
           },
         };
         break;

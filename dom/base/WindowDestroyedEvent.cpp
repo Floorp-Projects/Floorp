@@ -1,3 +1,9 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "WindowDestroyedEvent.h"
 
 #include "nsJSUtils.h"
@@ -9,17 +15,14 @@
 #include "nsToolkitCompsCID.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "xpcpublic.h"
 
 namespace mozilla {
 
-// Try to match compartments that are not web content by matching compartments
-// with principals that are either the system principal or an expanded principal.
-// This may not return true for all non-web-content compartments.
 struct BrowserCompartmentMatcher : public js::CompartmentFilter {
   bool match(JS::Compartment* aC) const override
   {
-    nsCOMPtr<nsIPrincipal> pc = nsJSPrincipals::get(JS_GetCompartmentPrincipals(aC));
-    return nsContentUtils::IsSystemOrExpandedPrincipal(pc);
+    return !xpc::MightBeWebContentCompartment(aC);
   }
 };
 
@@ -112,8 +115,11 @@ WindowDestroyedEvent::Run()
         AutoSafeJSContext cx;
         JS::Rooted<JSObject*> obj(cx, currentInner->FastGetGlobalJSObject());
         if (obj && !js::IsSystemRealm(js::GetNonCCWObjectRealm(obj))) {
-          JS::Compartment* cpt = js::GetObjectCompartment(obj);
-          nsCOMPtr<nsIPrincipal> pc = nsJSPrincipals::get(JS_GetCompartmentPrincipals(cpt));
+          JS::Realm* realm = js::GetNonCCWObjectRealm(obj);
+          JS::Compartment* cpt = JS::GetCompartmentForRealm(realm);
+
+          nsCOMPtr<nsIPrincipal> pc =
+            nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
 
           if (BasePrincipal::Cast(pc)->AddonPolicy()) {
             // We want to nuke all references to the add-on compartment.
