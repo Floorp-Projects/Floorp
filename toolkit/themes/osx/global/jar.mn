@@ -61,7 +61,6 @@ toolkit.jar:
   skin/classic/global/icons/panel-dropmarker.png                     (icons/panel-dropmarker.png)
   skin/classic/global/icons/search-textbox.svg                       (icons/search-textbox.svg)
   skin/classic/global/icons/searchfield-cancel.svg                   (icons/searchfield-cancel.svg)
-  skin/classic/global/icons/warning-16.png                           (icons/warning-16.png)
   skin/classic/global/icons/warning-64.png                           (icons/warning-64.png)
   skin/classic/global/icons/warning-large.png                        (icons/warning-large.png)
   skin/classic/global/icons/error-16.png                             (icons/error-16.png)
