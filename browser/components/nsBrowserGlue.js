@@ -308,12 +308,6 @@ let ACTORS = {
   if (!Services.prefs.getBoolPref("browser.startup.blankWindow", false))
     return;
 
-  // Until bug 1450626 and bug 1488384 are fixed, skip the blank window when
-  // using a non-default theme.
-  if (Services.prefs.getCharPref("lightweightThemes.selectedThemeID") !=
-        "default-theme@mozilla.org")
-    return;
-
   let store = Services.xulStore;
   let getValue = attr =>
     store.getValue(AppConstants.BROWSER_CHROME_URL, "main-window", attr);
