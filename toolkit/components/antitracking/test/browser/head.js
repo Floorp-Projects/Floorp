@@ -25,7 +25,7 @@ requestLongerTimeout(2);
 this.AntiTracking = {
   runTest(name, callbackTracking, callbackNonTracking, cleanupFunction, extraPrefs,
           windowOpenTest = true, userInteractionTest = true, expectedBlockingNotifications = true,
-          runInPrivateWindow = false) {
+          runInPrivateWindow = false, iframeSandbox = null) {
     // Here we want to test that a 3rd party context is simply blocked.
     this._createTask({
       name,
@@ -36,6 +36,7 @@ this.AntiTracking = {
       extraPrefs,
       expectedBlockingNotifications,
       runInPrivateWindow,
+      iframeSandbox,
     });
     this._createCleanupTask(cleanupFunction);
 
@@ -81,6 +82,7 @@ this.AntiTracking = {
           extraPrefs: [],
           expectedBlockingNotifications: false,
           runInPrivateWindow,
+          iframeSandbox,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -93,6 +95,7 @@ this.AntiTracking = {
           extraPrefs: [],
           expectedBlockingNotifications: false,
           runInPrivateWindow,
+          iframeSandbox,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -105,6 +108,7 @@ this.AntiTracking = {
           extraPrefs: [],
           expectedBlockingNotifications: false,
           runInPrivateWindow,
+          iframeSandbox,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -117,6 +121,7 @@ this.AntiTracking = {
           extraPrefs: [],
           expectedBlockingNotifications: false,
           runInPrivateWindow,
+          iframeSandbox,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -129,6 +134,7 @@ this.AntiTracking = {
           extraPrefs: [],
           expectedBlockingNotifications: false,
           runInPrivateWindow,
+          iframeSandbox,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -141,6 +147,7 @@ this.AntiTracking = {
           extraPrefs: [],
           expectedBlockingNotifications: false,
           runInPrivateWindow,
+          iframeSandbox,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -154,6 +161,7 @@ this.AntiTracking = {
           extraPrefs: [],
           expectedBlockingNotifications: false,
           runInPrivateWindow,
+          iframeSandbox,
         });
         this._createCleanupTask(cleanupFunction);
 
@@ -166,6 +174,7 @@ this.AntiTracking = {
           extraPrefs: [],
           expectedBlockingNotifications: false,
           runInPrivateWindow,
+          iframeSandbox,
         });
         this._createCleanupTask(cleanupFunction);
       } else {
@@ -178,6 +187,7 @@ this.AntiTracking = {
           extraPrefs: [],
           expectedBlockingNotifications: false,
           runInPrivateWindow,
+          iframeSandbox,
         });
         this._createCleanupTask(cleanupFunction);
       }
@@ -185,14 +195,16 @@ this.AntiTracking = {
       // Phase 2: Here we want to test that a third-party context doesn't
       // get blocked with when the same origin is opened through window.open().
       if (windowOpenTest) {
-        this._createWindowOpenTask(name, callbackTracking, callbackNonTracking, runInPrivateWindow, extraPrefs);
+        this._createWindowOpenTask(name, callbackTracking, callbackNonTracking,
+                                   runInPrivateWindow, iframeSandbox, extraPrefs);
         this._createCleanupTask(cleanupFunction);
       }
 
       // Phase 3: Here we want to test that a third-party context doesn't
       // get blocked with user interaction present
       if (userInteractionTest) {
-        this._createUserInteractionTask(name, callbackTracking, callbackNonTracking, runInPrivateWindow, extraPrefs);
+        this._createUserInteractionTask(name, callbackTracking, callbackNonTracking,
+                                        runInPrivateWindow, iframeSandbox, extraPrefs);
         this._createCleanupTask(cleanupFunction);
       }
     }
@@ -201,6 +213,7 @@ this.AntiTracking = {
   async _setupTest(win, cookieBehavior, blockingByContentBlocking, extraPrefs) {
     await SpecialPowers.flushPrefEnv();
     await SpecialPowers.pushPrefEnv({"set": [
+      ["dom.storage_access.enabled", true],
       ["browser.contentblocking.enabled", blockingByContentBlocking],
       ["network.cookie.cookieBehavior", cookieBehavior],
       ["privacy.trackingprotection.enabled", false],
@@ -222,7 +235,8 @@ this.AntiTracking = {
       info("Starting " + (options.cookieBehavior != BEHAVIOR_ACCEPT ? "blocking" : "non-blocking") + " cookieBehavior (" + options.cookieBehavior + ") and " +
                          (options.blockingByContentBlocking ? "blocking" : "non-blocking") + " contentBlocking with" +
                          (options.allowList ? "" : "out") + " allow list test " + options.name +
-                         " running in a " + (options.runInPrivateWindow ? "private" : "normal") + " window");
+                         " running in a " + (options.runInPrivateWindow ? "private" : "normal") + " window " +
+                         " with iframe sandbox set to " + options.iframeSandbox);
 
       let win = window;
       if (options.runInPrivateWindow) {
@@ -262,7 +276,8 @@ this.AntiTracking = {
       info("Creating a 3rd party content");
       await ContentTask.spawn(browser,
                               { page: TEST_3RD_PARTY_PAGE,
-                                callback: options.callback.toString() },
+                                callback: options.callback.toString(),
+                                iframeSandbox: options.iframeSandbox },
                               async function(obj) {
         await new content.Promise(resolve => {
           let ifr = content.document.createElement("iframe");
@@ -270,6 +285,9 @@ this.AntiTracking = {
             info("Sending code to the 3rd party content");
             ifr.contentWindow.postMessage(obj.callback, "*");
           };
+          if (typeof obj.iframeSandbox == "string") {
+            ifr.setAttribute("sandbox", obj.iframeSandbox);
+          }
 
           content.addEventListener("message", function msg(event) {
             if (event.data.type == "finish") {
@@ -326,7 +344,8 @@ this.AntiTracking = {
     });
   },
 
-  _createWindowOpenTask(name, blockingCallback, nonBlockingCallback, runInPrivateWindow, extraPrefs) {
+  _createWindowOpenTask(name, blockingCallback, nonBlockingCallback, runInPrivateWindow,
+                        iframeSandbox, extraPrefs) {
     add_task(async function() {
       info("Starting window-open test " + name);
 
@@ -355,6 +374,7 @@ this.AntiTracking = {
                               { page: pageURL,
                                 blockingCallback: blockingCallback.toString(),
                                 nonBlockingCallback: nonBlockingCallback.toString(),
+                                iframeSandbox,
                               },
                               async function(obj) {
         await new content.Promise(resolve => {
@@ -363,6 +383,9 @@ this.AntiTracking = {
             info("Sending code to the 3rd party content");
             ifr.contentWindow.postMessage(obj, "*");
           };
+          if (typeof obj.iframeSandbox == "string") {
+            ifr.setAttribute("sandbox", obj.iframeSandbox);
+          }
 
           content.addEventListener("message", function msg(event) {
             if (event.data.type == "finish") {
@@ -398,7 +421,8 @@ this.AntiTracking = {
     });
   },
 
-  _createUserInteractionTask(name, blockingCallback, nonBlockingCallback, runInPrivateWindow, extraPrefs) {
+  _createUserInteractionTask(name, blockingCallback, nonBlockingCallback,
+                             runInPrivateWindow, iframeSandbox, extraPrefs) {
     add_task(async function() {
       info("Starting user-interaction test " + name);
 
@@ -423,10 +447,14 @@ this.AntiTracking = {
                                 popup: TEST_POPUP_PAGE,
                                 blockingCallback: blockingCallback.toString(),
                                 nonBlockingCallback: nonBlockingCallback.toString(),
+                                iframeSandbox,
                               },
                               async function(obj) {
         let ifr = content.document.createElement("iframe");
         let loading = new content.Promise(resolve => { ifr.onload = resolve; });
+        if (typeof obj.iframeSandbox == "string") {
+          ifr.setAttribute("sandbox", obj.iframeSandbox);
+        }
         content.document.body.appendChild(ifr);
         ifr.src = obj.page;
         await loading;

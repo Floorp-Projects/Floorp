@@ -5797,7 +5797,7 @@ HTMLInputElement::GetControllers(ErrorResult& aRv)
   {
     if (!mControllers)
     {
-      mControllers = NS_NewXULControllers();
+      mControllers = new nsXULControllers();
       if (!mControllers) {
         aRv.Throw(NS_ERROR_FAILURE);
         return nullptr;

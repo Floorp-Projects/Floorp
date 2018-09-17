@@ -16,6 +16,7 @@
 #include "nsScreen.h"
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
+#include "nsICookieService.h"
 #include "nsIDOMStorageManager.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIWebProgressListener.h"
@@ -91,6 +92,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/ProcessHangMonitor.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/ThrottledEventQueue.h"
 #include "AudioChannelService.h"
 #include "nsAboutProtocolUtils.h"
@@ -829,6 +831,7 @@ nsGlobalWindowOuter::nsGlobalWindowOuter()
     mIsChrome(false),
     mAllowScriptsToClose(false),
     mTopLevelOuterContentWindow(false),
+    mHasStorageAccess(false),
     mSerial(0),
 #ifdef DEBUG
     mSetOpenerWindowCalled(false),
@@ -2015,6 +2018,25 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
   ReportLargeAllocStatus();
   mLargeAllocStatus = LargeAllocStatus::NONE;
 
+  mHasStorageAccess = false;
+  nsIURI* uri = aDocument->GetDocumentURI();
+  if (newInnerWindow) {
+    if (StaticPrefs::browser_contentblocking_enabled() &&
+        StaticPrefs::network_cookie_cookieBehavior() ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER &&
+        nsContentUtils::IsThirdPartyWindowOrChannel(newInnerWindow, nullptr,
+                                                    uri) &&
+        nsContentUtils::IsTrackingResourceWindow(newInnerWindow)) {
+      // Grant storage access by default if the first-party storage access
+      // permission has been granted already.
+      // Don't notify in this case, since we would be notifying the user needlessly.
+      mHasStorageAccess =
+        AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(newInnerWindow,
+                                                                uri,
+                                                                nullptr);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -2924,7 +2946,7 @@ nsIControllers*
 nsGlobalWindowOuter::GetControllersOuter(ErrorResult& aError)
 {
   if (!mControllers) {
-    mControllers = NS_NewXULControllers();
+    mControllers = new nsXULControllers();
     if (!mControllers) {
       aError.Throw(NS_ERROR_FAILURE);
       return nullptr;

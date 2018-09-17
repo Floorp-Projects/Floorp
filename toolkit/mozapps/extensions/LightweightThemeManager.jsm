@@ -78,25 +78,6 @@ var _defaultThemeIsInDarkMode = false;
 // the default theme is selected.
 var _defaultDarkThemeID = null;
 
-// Convert from the old storage format (in which the order of usedThemes
-// was combined with isThemeSelected to determine which theme was selected)
-// to the new one (where a selectedThemeID determines which theme is selected).
-(function() {
-  let wasThemeSelected = _prefs.getBoolPref("isThemeSelected", false);
-
-  if (wasThemeSelected) {
-    _prefs.clearUserPref("isThemeSelected");
-    let themes = [];
-    try {
-      themes = JSON.parse(_prefs.getStringPref("usedThemes"));
-    } catch (e) { }
-
-    if (Array.isArray(themes) && themes[0]) {
-      _prefs.setCharPref("selectedThemeID", themes[0].id);
-    }
-  }
-})();
-
 var LightweightThemeManager = {
   get name() {
     return "LightweightThemeManager";

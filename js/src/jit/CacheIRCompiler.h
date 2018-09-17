@@ -112,6 +112,8 @@ namespace jit {
     _(MegamorphicStoreSlot)               \
     _(MegamorphicHasPropResult)           \
     _(CallObjectHasSparseElementResult)   \
+    _(CallInt32ToString)                  \
+    _(CallNumberToString)                 \
     _(WrapResult)
 
 // Represents a Value on the Baseline frame's expression stack. Slot 0 is the

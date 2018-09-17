@@ -1138,7 +1138,7 @@ nsXULElement::GetControllers(ErrorResult& rv)
     if (! Controllers()) {
         nsExtendedDOMSlots* slots = ExtendedDOMSlots();
 
-        slots->mControllers = NS_NewXULControllers();
+        slots->mControllers = new nsXULControllers();
     }
 
     return Controllers();
