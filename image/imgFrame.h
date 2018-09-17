@@ -59,8 +59,7 @@ public:
                           SurfaceFormat aFormat,
                           uint8_t aPaletteDepth = 0,
                           bool aNonPremult = false,
-                          const Maybe<AnimationParams>& aAnimParams = Nothing(),
-                          bool aIsFullFrame = false);
+                          const Maybe<AnimationParams>& aAnimParams = Nothing());
 
   nsresult InitForAnimator(const nsIntSize& aSize,
                            SurfaceFormat aFormat)
@@ -69,12 +68,8 @@ public:
     AnimationParams animParams { frameRect, FrameTimeout::Forever(),
                                  /* aFrameNum */ 1, BlendMethod::OVER,
                                  DisposalMethod::NOT_SPECIFIED };
-    // We set aIsFullFrame to false because we don't want the compositing frame
-    // to be allocated into shared memory for WebRender. mIsFullFrame is only
-    // otherwise used for frames produced by Decoder, so it isn't relevant.
-    return InitForDecoder(aSize, frameRect, aFormat, /* aPaletteDepth */ 0,
-                          /* aNonPremult */ false, Some(animParams),
-                          /* aIsFullFrame */ false);
+    return InitForDecoder(aSize, frameRect,
+                          aFormat, 0, false, Some(animParams));
   }
 
 
@@ -193,11 +188,6 @@ public:
   uint32_t* GetPaletteData() const;
   uint8_t GetPaletteDepth() const { return mPaletteDepth; }
 
-  const IntRect& GetDirtyRect() const { return mDirtyRect; }
-  void SetDirtyRect(const IntRect& aDirtyRect) { mDirtyRect = aDirtyRect; }
-
-  bool IsFullFrame() const { return mIsFullFrame; }
-
   bool GetCompositingFailed() const;
   void SetCompositingFailed(bool val);
 
@@ -305,31 +295,9 @@ private: // data
   // Effectively const data, only mutated in the Init methods.
   //////////////////////////////////////////////////////////////////////////////
 
-  //! The size of the buffer we are decoding to.
   IntSize      mImageSize;
-
-  //! XXX(aosmond): This means something different depending on the context. We
-  //!               should correct this.
-  //!
-  //! There are several different contexts for mFrameRect:
-  //! - If for non-animated image, it will be originate at (0, 0) and matches
-  //!   the dimensions of mImageSize.
-  //! - If for an APNG, it also matches the above.
-  //! - If for a GIF which is producing full frames, it matches the above.
-  //! - If for a GIF which is producing partial frames, it matches mBlendRect.
   IntRect      mFrameRect;
-
-  //! The contents for the frame, as represented in the encoded image. This may
-  //! differ from mImageSize because it may be a partial frame. For the first
-  //! frame, this means we need to shift the data in place, and for animated
-  //! frames, it likely need to combine with a previous frame to get the full
-  //! contents.
   IntRect      mBlendRect;
-
-  //! This is the region that has changed between this frame and the previous
-  //! frame of an animation. For the first frame, this will be the same as
-  //! mFrameRect.
-  IntRect      mDirtyRect;
 
   //! The timeout for this frame.
   FrameTimeout mTimeout;
@@ -347,9 +315,6 @@ private: // data
 
   bool mNonPremult;
 
-  //! True if the frame has all of the data stored in it, false if it needs to
-  //! be combined with another frame (e.g. the previous frame) to be complete.
-  bool mIsFullFrame;
 
   //////////////////////////////////////////////////////////////////////////////
   // Main-thread-only mutable data.

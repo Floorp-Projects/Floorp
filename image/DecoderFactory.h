@@ -177,7 +177,6 @@ public:
    *                    smaller than the intrinsic size, the decoder will
    *                    downscale the image. If Nothing(), the output size will
    *                    be the intrinsic size.
-   * @param aDecoderFlags Flags specifying the behavior of this decoder.
    * @param aSurfaceFlags Flags specifying the type of output this decoder
    *                      should produce.
    */
@@ -185,7 +184,6 @@ public:
   CreateAnonymousDecoder(DecoderType aType,
                          NotNull<SourceBuffer*> aSourceBuffer,
                          const Maybe<gfx::IntSize>& aOutputSize,
-                         DecoderFlags aDecoderFlags,
                          SurfaceFlags aSurfaceFlags);
 
   /**

@@ -1286,10 +1286,6 @@ RasterImage::Decode(const IntSize& aSize,
   nsresult rv;
   bool animated = mAnimationState && aPlaybackType == PlaybackType::eAnimated;
   if (animated) {
-    if (gfxPrefs::ImageAnimatedGenerateFullFrames()) {
-      decoderFlags |= DecoderFlags::BLEND_ANIMATION;
-    }
-
     size_t currentFrame = mAnimationState->GetCurrentAnimationFrameIndex();
     rv = DecoderFactory::CreateAnimationDecoder(mDecoderType, WrapNotNull(this),
                                                 mSourceBuffer, mSize,

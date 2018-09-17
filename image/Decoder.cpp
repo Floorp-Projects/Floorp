@@ -291,7 +291,7 @@ Decoder::AllocateFrame(const gfx::IntSize& aOutputSize,
 {
   mCurrentFrame = AllocateFrameInternal(aOutputSize, aFrameRect, aFormat,
                                         aPaletteDepth, aAnimParams,
-                                        std::move(mCurrentFrame));
+                                        mCurrentFrame.get());
 
   if (mCurrentFrame) {
     mHasFrameToTake = true;
@@ -321,7 +321,7 @@ Decoder::AllocateFrameInternal(const gfx::IntSize& aOutputSize,
                                SurfaceFormat aFormat,
                                uint8_t aPaletteDepth,
                                const Maybe<AnimationParams>& aAnimParams,
-                               RawAccessFrameRef&& aPreviousFrame)
+                               imgFrame* aPreviousFrame)
 {
   if (HasError()) {
     return RawAccessFrameRef();
@@ -343,7 +343,7 @@ Decoder::AllocateFrameInternal(const gfx::IntSize& aOutputSize,
   bool nonPremult = bool(mSurfaceFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
   if (NS_FAILED(frame->InitForDecoder(aOutputSize, aFrameRect, aFormat,
                                       aPaletteDepth, nonPremult,
-                                      aAnimParams, ShouldBlendAnimation()))) {
+                                      aAnimParams))) {
     NS_WARNING("imgFrame::Init should succeed");
     return RawAccessFrameRef();
   }
@@ -374,27 +374,7 @@ Decoder::AllocateFrameInternal(const gfx::IntSize& aOutputSize,
 
     // Some GIFs are huge but only have a small area that they animate. We only
     // need to refresh that small area when frame 0 comes around again.
-    mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea,
-                                     ref->GetBoundedBlendRect());
-
-    if (ShouldBlendAnimation()) {
-      if (aPreviousFrame->GetDisposalMethod() !=
-          DisposalMethod::RESTORE_PREVIOUS) {
-        // If the new restore frame is the direct previous frame, then we know
-        // the dirty rect is composed only of the current frame's blend rect and
-        // the restore frame's clear rect (if applicable) which are handled in
-        // filters.
-        mRestoreFrame = std::move(aPreviousFrame);
-        mRestoreDirtyRect.SetBox(0, 0, 0, 0);
-      } else {
-        // We only need the previous frame's dirty rect, because while there may
-        // have been several frames between us and mRestoreFrame, the only areas
-        // that changed are the restore frame's clear rect, the current frame
-        // blending rect, and the previous frame's blending rect. All else is
-        // forgotten due to us restoring the same frame again.
-        mRestoreDirtyRect = aPreviousFrame->GetBoundedBlendRect();
-      }
-    }
+    mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea, frame->GetRect());
   }
 
   mFrameCount++;

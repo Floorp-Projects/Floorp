@@ -54,15 +54,11 @@ enum class SurfacePipeFlags
 
   FLIP_VERTICALLY     = 1 << 2,  // If set, flip the image vertically.
 
-  PROGRESSIVE_DISPLAY = 1 << 3,  // If set, we expect the image to be displayed
+  PROGRESSIVE_DISPLAY = 1 << 3   // If set, we expect the image to be displayed
                                  // progressively. This enables features that
                                  // result in a better user experience for
                                  // progressive display but which may be more
                                  // computationally expensive.
-
-  BLEND_ANIMATION     = 1 << 4   // If set, produce the next full frame of an
-                                 // animation instead of a partial frame to be
-                                 // blended later.
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SurfacePipeFlags)
 
@@ -105,7 +101,6 @@ public:
     const bool downscale = aInputSize != aOutputSize;
     const bool removeFrameRect =
       !aFrameRect.IsEqualEdges(nsIntRect(0, 0, aInputSize.width, aInputSize.height));
-    const bool blendAnimation = bool(aFlags & SurfacePipeFlags::BLEND_ANIMATION);
 
     // Don't interpolate if we're sure we won't show this surface to the user
     // until it's completely decoded. The final pass of an ADAM7 image doesn't
@@ -119,8 +114,6 @@ public:
       return Nothing();
     }
 
-    MOZ_ASSERT_IF(blendAnimation, aAnimParams);
-
     // Construct configurations for the SurfaceFilters. Note that the order of
     // these filters is significant. We want to deinterlace or interpolate raw
     // input rows, before any other transformations, and we want to remove the
@@ -130,7 +123,6 @@ public:
     DeinterlacingConfig<uint32_t> deinterlacingConfig { progressiveDisplay };
     ADAM7InterpolatingConfig interpolatingConfig;
     RemoveFrameRectConfig removeFrameRectConfig { aFrameRect };
-    BlendAnimationConfig blendAnimationConfig { aDecoder };
     DownscalingConfig downscalingConfig { aInputSize, aFormat };
     SurfaceConfig surfaceConfig { aDecoder, aOutputSize, aFormat,
                                   flipVertically, aAnimParams };
@@ -138,7 +130,6 @@ public:
     Maybe<SurfacePipe> pipe;
 
     if (downscale) {
-      MOZ_ASSERT(!blendAnimation);
       if (removeFrameRect) {
         if (deinterlace) {
           pipe = MakePipe(deinterlacingConfig, removeFrameRectConfig,
@@ -159,15 +150,7 @@ public:
         }
       }
     } else {  // (downscale is false)
-      if (blendAnimation) {
-        if (deinterlace) {
-          pipe = MakePipe(deinterlacingConfig, blendAnimationConfig, surfaceConfig);
-        } else if (adam7Interpolate) {
-          pipe = MakePipe(interpolatingConfig, blendAnimationConfig, surfaceConfig);
-        } else {  // (deinterlace and adam7Interpolate are false)
-          pipe = MakePipe(blendAnimationConfig, surfaceConfig);
-        }
-      } else if (removeFrameRect) {
+      if (removeFrameRect) {
         if (deinterlace) {
           pipe = MakePipe(deinterlacingConfig, removeFrameRectConfig, surfaceConfig);
         } else if (adam7Interpolate) {
@@ -175,7 +158,7 @@ public:
         } else {  // (deinterlace and adam7Interpolate are false)
           pipe = MakePipe(removeFrameRectConfig, surfaceConfig);
         }
-      } else {  // (blendAnimation and removeFrameRect is false)
+      } else {  // (removeFrameRect is false)
         if (deinterlace) {
           pipe = MakePipe(deinterlacingConfig, surfaceConfig);
         } else if (adam7Interpolate) {
