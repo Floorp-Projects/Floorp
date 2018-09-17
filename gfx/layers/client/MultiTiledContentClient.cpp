@@ -152,7 +152,7 @@ void ClientMultiTiledLayerBuffer::MaybeSyncTextures(const nsIntRegion& aPaintReg
     // texture IDs that we need to ensure are unused by the GPU before we
     // continue.
     if (!aPaintRegion.IsEmpty()) {
-      MOZ_ASSERT(mPaintTasks.size() == 0);
+      MOZ_ASSERT(mPaintTasks.IsEmpty());
       for (size_t i = 0; i < mRetainedTiles.Length(); ++i) {
         const TileCoordIntPoint tileCoord = aNewTiles.TileCoord(i);
 
@@ -220,7 +220,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
   MaybeSyncTextures(paintRegion, newTiles, scaledTileSize);
 
   if (!paintRegion.IsEmpty()) {
-    MOZ_ASSERT(mPaintTasks.size() == 0);
+    MOZ_ASSERT(mPaintTasks.IsEmpty());
 
     for (size_t i = 0; i < newTileCount; ++i) {
       const TileCoordIntPoint tileCoord = newTiles.TileCoord(i);
@@ -243,14 +243,14 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       dirtyRegion.OrWith(tileDrawRegion);
     }
 
-    if (!mPaintTiles.empty()) {
+    if (!mPaintTiles.IsEmpty()) {
       // Create a tiled draw target
       gfx::TileSet tileset;
-      for (size_t i = 0; i < mPaintTiles.size(); ++i) {
+      for (size_t i = 0; i < mPaintTiles.Length(); ++i) {
         mPaintTiles[i].mTileOrigin -= mTilingOrigin;
       }
-      tileset.mTiles = &mPaintTiles[0];
-      tileset.mTileCount = mPaintTiles.size();
+      tileset.mTiles = mPaintTiles.Elements();
+      tileset.mTileCount = mPaintTiles.Length();
       RefPtr<DrawTarget> drawTarget = gfx::Factory::CreateTiledDrawTarget(tileset);
       if (!drawTarget || !drawTarget->IsValid()) {
         gfxDevCrash(LogReason::InvalidContext) << "Invalid tiled draw target";
@@ -274,7 +274,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       }
 
       // Reset
-      mPaintTiles.clear();
+      mPaintTiles.Clear();
       mTilingOrigin = IntPoint(std::numeric_limits<int32_t>::max(),
                                std::numeric_limits<int32_t>::max());
     }
@@ -283,9 +283,10 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
     if (aFlags & TilePaintFlags::Async) {
       bool queuedTask = false;
 
-      for (const auto& state : mPaintTasks) {
-        if (!state->mCapture->IsEmpty()) {
-          PaintThread::Get()->QueuePaintTask(state);
+      while (!mPaintTasks.IsEmpty()) {
+        UniquePtr<PaintTask> task = mPaintTasks.PopLastElement();
+        if (!task->mCapture->IsEmpty()) {
+          PaintThread::Get()->QueuePaintTask(std::move(task));
           queuedTask = true;
         }
       }
@@ -294,7 +295,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
         mManager->SetQueuedAsyncPaints();
       }
 
-      mPaintTasks.clear();
+      mPaintTasks.Clear();
     }
 
     for (uint32_t i = 0; i < mRetainedTiles.Length(); ++i) {
@@ -386,14 +387,14 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   gfx::Tile paintTile;
   paintTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x, aTileOrigin.y);
   paintTile.mDrawTarget = backBuffer->mTarget;
-  mPaintTiles.push_back(paintTile);
+  mPaintTiles.AppendElement(paintTile);
 
   if (aFlags & TilePaintFlags::Async) {
-    RefPtr<PaintTask> task = new PaintTask();
+    UniquePtr<PaintTask> task(new PaintTask());
     task->mCapture = backBuffer->mCapture;
     task->mTarget = backBuffer->mBackBuffer;
     task->mClients = std::move(backBuffer->mTextureClients);
-    mPaintTasks.push_back(task);
+    mPaintTasks.AppendElement(std::move(task));
   } else {
     MOZ_RELEASE_ASSERT(backBuffer->mTarget == backBuffer->mBackBuffer);
     MOZ_RELEASE_ASSERT(backBuffer->mCapture == nullptr);

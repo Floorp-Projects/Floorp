@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/dom/CSPEvalChecker.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "nsCOMPtr.h"
@@ -45,7 +46,8 @@ public:
                            Function& aFunction,
                            nsTArray<JS::Heap<JS::Value>>&& aArguments);
   nsJSScriptTimeoutHandler(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-                           const nsAString& aExpression);
+                           const nsAString& aExpression, bool* aAllowEval,
+                           ErrorResult& aRv);
 
   virtual const nsAString& GetHandlerText() override;
 
@@ -163,54 +165,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsJSScriptTimeoutHandler)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSScriptTimeoutHandler)
 
-static bool
-CheckCSPForEval(JSContext* aCx, nsGlobalWindowInner* aWindow,
-                const nsAString& aExpression, ErrorResult& aError)
-{
-  // if CSP is enabled, and setTimeout/setInterval was called with a string,
-  // disable the registration and log an error
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
-  if (!doc) {
-    // if there's no document, we don't have to do anything.
-    return true;
-  }
-
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  aError = doc->NodePrincipal()->GetCsp(getter_AddRefs(csp));
-  if (aError.Failed()) {
-    return false;
-  }
-
-  if (!csp) {
-    return true;
-  }
-
-  bool allowsEval = true;
-  bool reportViolation = false;
-  aError = csp->GetAllowsEval(&reportViolation, &allowsEval);
-  if (aError.Failed()) {
-    return false;
-  }
-
-  if (reportViolation) {
-    // Get the calling location.
-    uint32_t lineNum = 0;
-    uint32_t columnNum = 0;
-    nsAutoString fileNameString;
-    if (!nsJSUtils::GetCallingLocation(aCx, fileNameString, &lineNum,
-                                       &columnNum)) {
-      fileNameString.AssignLiteral("unknown");
-    }
-
-    csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
-                             nullptr, // triggering element
-                             fileNameString, aExpression, lineNum, columnNum,
-                             EmptyString(), EmptyString());
-  }
-
-  return allowsEval;
-}
-
 nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler()
   : mLineNo(0)
   , mColumn(0)
@@ -252,8 +206,9 @@ nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(JSContext* aCx,
     return;
   }
 
-  *aAllowEval = CheckCSPForEval(aCx, aWindow, aExpression, aError);
-  if (aError.Failed() || !*aAllowEval) {
+  aError = CSPEvalChecker::CheckForWindow(aCx, aWindow, aExpression,
+                                          aAllowEval);
+  if (NS_WARN_IF(aError.Failed()) || !*aAllowEval) {
     return;
   }
 
@@ -276,13 +231,21 @@ nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(JSContext* aCx,
 
 nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler(JSContext* aCx,
                                                    WorkerPrivate* aWorkerPrivate,
-                                                   const nsAString& aExpression)
+                                                   const nsAString& aExpression,
+                                                   bool* aAllowEval,
+                                                   ErrorResult& aError)
   : mLineNo(0)
   , mColumn(0)
   , mExpr(aExpression)
 {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
+
+  aError = CSPEvalChecker::CheckForWorker(aCx, aWorkerPrivate, aExpression,
+                                          aAllowEval);
+  if (NS_WARN_IF(aError.Failed()) || !*aAllowEval) {
+    return;
+  }
 
   Init(aCx);
 }
@@ -376,9 +339,15 @@ NS_CreateJSTimeoutHandler(JSContext *aCx, WorkerPrivate* aWorkerPrivate,
 
 already_AddRefed<nsIScriptTimeoutHandler>
 NS_CreateJSTimeoutHandler(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-                          const nsAString& aExpression)
+                          const nsAString& aExpression, ErrorResult& aRv)
 {
+  bool allowEval = false;
   RefPtr<nsJSScriptTimeoutHandler> handler =
-    new nsJSScriptTimeoutHandler(aCx, aWorkerPrivate, aExpression);
+    new nsJSScriptTimeoutHandler(aCx, aWorkerPrivate, aExpression, &allowEval,
+                                 aRv);
+  if (aRv.Failed() || !allowEval) {
+    return nullptr;
+  }
+
   return handler.forget();
 }

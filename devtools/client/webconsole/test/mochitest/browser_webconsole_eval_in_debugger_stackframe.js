@@ -8,13 +8,16 @@
 
 "use strict";
 
+// Import helpers for the new debugger
+/* import-globals-from ../../../debugger/new/test/mochitest/helpers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers.js",
+  this);
+
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/mochitest/test-eval-in-stackframe.html";
 
 add_task(async function() {
-  // Force the old debugger UI since it's directly used (see Bug 1301705).
-  await pushPref("devtools.debugger.new-debugger-frontend", false);
-
   info("open the console");
   const hud = await openNewTabAndConsole(TEST_URI);
   const {jsterm} = hud;
@@ -32,8 +35,9 @@ add_task(async function() {
   ok(true, "'newFoo' is displayed after adding `foo2`");
 
   info("Open the debugger and then select the console again");
-  const {panel} = await openDebugger();
-  const {activeThread, StackFrames: stackFrames} = panel.panelWin.DebuggerController;
+  await openDebugger();
+  const toolbox = gDevTools.getToolbox(hud.target);
+  const dbg = createDebuggerContext(toolbox);
 
   await openConsole();
 
@@ -44,13 +48,9 @@ add_task(async function() {
 
   info("Select the debugger again");
   await openDebugger();
+  await pauseDebugger(dbg);
 
-  const onFirstCallFramesAdded = activeThread.addOneTimeListener("framesadded");
-  // firstCall calls secondCall, which has a debugger statement, so we'll be paused.
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-    content.wrappedJSObject.firstCall();
-  });
-  await onFirstCallFramesAdded;
+  const stackFrames = dbg.selectors.getCallStackFrames(dbg.getState());
 
   info("frames added, select the console again");
   await openConsole();
@@ -62,7 +62,9 @@ add_task(async function() {
 
   info("select the debugger and select the frame (1)");
   await openDebugger();
-  stackFrames.selectFrame(1);
+
+  await dbg.actions.selectFrame(stackFrames[1]);
+
   await openConsole();
 
   info("Check `foo + foo2 + foo3` value when paused on a given frame");
@@ -82,3 +84,11 @@ add_task(async function() {
     ok(!content.wrappedJSObject.foo3, "`foo3` was not added to the content window");
   });
 });
+
+async function pauseDebugger(dbg) {
+  info("Waiting for debugger to pause");
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+    content.wrappedJSObject.firstCall();
+  });
+  await waitForPaused(dbg);
+}

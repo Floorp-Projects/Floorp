@@ -2487,9 +2487,8 @@ nsIWidget::CreateBidiKeyboard()
 {
   if (XRE_IsContentProcess()) {
     return CreateBidiKeyboardContentProcess();
-  } else {
-    return CreateBidiKeyboardInner();
   }
+  return CreateBidiKeyboardInner();
 }
 
 #ifdef ANDROID

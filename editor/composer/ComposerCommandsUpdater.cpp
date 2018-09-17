@@ -281,8 +281,6 @@ ComposerCommandsUpdater::UpdateCommandGroup(const nsAString& aCommandGroup)
   NS_ENSURE_TRUE(commandUpdater, NS_ERROR_FAILURE);
 
 
-  // This hardcoded list of commands is temporary.
-  // This code should use nsIControllerCommandGroup.
   if (aCommandGroup.EqualsLiteral("undo")) {
     commandUpdater->CommandStatusChanged("cmd_undo");
     commandUpdater->CommandStatusChanged("cmd_redo");

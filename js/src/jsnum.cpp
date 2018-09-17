@@ -719,6 +719,17 @@ js::Int32ToString<CanGC>(JSContext* cx, int32_t si);
 template JSFlatString*
 js::Int32ToString<NoGC>(JSContext* cx, int32_t si);
 
+JSFlatString*
+js::Int32ToStringHelper(JSContext* cx, int32_t si)
+{
+    AutoUnsafeCallWithABI unsafe;
+    JSFlatString* res = Int32ToString<NoGC>(cx, si);
+    if (!res) {
+        cx->recoverFromOutOfMemory();
+    }
+    return res;
+}
+
 JSAtom*
 js::Int32ToAtom(JSContext* cx, int32_t si)
 {
@@ -1517,6 +1528,17 @@ js::NumberToString<CanGC>(JSContext* cx, double d);
 
 template JSString*
 js::NumberToString<NoGC>(JSContext* cx, double d);
+
+JSString*
+js::NumberToStringHelper(JSContext* cx, double d)
+{
+    AutoUnsafeCallWithABI unsafe;
+    JSString* res = NumberToString<NoGC>(cx, d);
+    if (!res) {
+        cx->recoverFromOutOfMemory();
+    }
+    return res;
+}
 
 JSAtom*
 js::NumberToAtom(JSContext* cx, double d)

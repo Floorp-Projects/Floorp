@@ -10,6 +10,7 @@
 
 #include "gtest/gtest.h"
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/2D.h"
@@ -75,11 +76,12 @@ struct BGRAColor
 {
   BGRAColor() : BGRAColor(0, 0, 0, 0) { }
 
-  BGRAColor(uint8_t aBlue, uint8_t aGreen, uint8_t aRed, uint8_t aAlpha)
+  BGRAColor(uint8_t aBlue, uint8_t aGreen, uint8_t aRed, uint8_t aAlpha, bool aPremultiplied = false)
     : mBlue(aBlue)
     , mGreen(aGreen)
     , mRed(aRed)
     , mAlpha(aAlpha)
+    , mPremultiplied(aPremultiplied)
   { }
 
   static BGRAColor Green() { return BGRAColor(0x00, 0xFF, 0x00, 0xFF); }
@@ -87,12 +89,30 @@ struct BGRAColor
   static BGRAColor Blue()   { return BGRAColor(0xFF, 0x00, 0x00, 0xFF); }
   static BGRAColor Transparent() { return BGRAColor(0x00, 0x00, 0x00, 0x00); }
 
-  uint32_t AsPixel() const { return gfxPackedPixel(mAlpha, mRed, mGreen, mBlue); }
+  BGRAColor Premultiply() const
+  {
+    if (!mPremultiplied) {
+      return BGRAColor(gfxPreMultiply(mBlue, mAlpha),
+                       gfxPreMultiply(mGreen, mAlpha),
+                       gfxPreMultiply(mRed, mAlpha),
+                       mAlpha,
+                       true);
+    }
+    return *this;
+  }
+
+  uint32_t AsPixel() const {
+    if (!mPremultiplied) {
+      return gfxPackedPixel(mAlpha, mRed, mGreen, mBlue);
+    }
+    return gfxPackedPixelNoPreMultiply(mAlpha, mRed, mGreen, mBlue);
+  }
 
   uint8_t mBlue;
   uint8_t mGreen;
   uint8_t mRed;
   uint8_t mAlpha;
+  bool mPremultiplied;
 };
 
 
@@ -241,7 +261,7 @@ already_AddRefed<Decoder> CreateTrivialDecoder();
  * @param aConfigs The configuration for the pipeline.
  */
 template <typename Func, typename... Configs>
-void WithFilterPipeline(Decoder* aDecoder, Func aFunc, const Configs&... aConfigs)
+void WithFilterPipeline(Decoder* aDecoder, Func aFunc, bool aFinish, const Configs&... aConfigs)
 {
   auto pipe = MakeUnique<typename detail::FilterPipeline<Configs...>::Type>();
   nsresult rv = pipe->Configure(aConfigs...);
@@ -249,10 +269,18 @@ void WithFilterPipeline(Decoder* aDecoder, Func aFunc, const Configs&... aConfig
 
   aFunc(aDecoder, pipe.get());
 
-  RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-  if (currentFrame) {
-    currentFrame->Finish();
+  if (aFinish) {
+    RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
+    if (currentFrame) {
+      currentFrame->Finish();
+    }
   }
+}
+
+template <typename Func, typename... Configs>
+void WithFilterPipeline(Decoder* aDecoder, Func aFunc, const Configs&... aConfigs)
+{
+  WithFilterPipeline(aDecoder, aFunc, true, aConfigs...);
 }
 
 /**
@@ -369,6 +397,31 @@ void CheckPalettedWritePixels(Decoder* aDecoder,
                               const Maybe<gfx::IntRect>& aOutputWriteRect = Nothing(),
                               uint8_t aFuzz = 0);
 
+///////////////////////////////////////////////////////////////////////////////
+// Decoder Helpers
+///////////////////////////////////////////////////////////////////////////////
+
+// Friend class of Decoder to access internals for tests.
+class MOZ_STACK_CLASS DecoderTestHelper final
+{
+public:
+  explicit DecoderTestHelper(Decoder* aDecoder)
+    : mDecoder(aDecoder)
+  { }
+
+  void PostIsAnimated(FrameTimeout aTimeout)
+  {
+    mDecoder->PostIsAnimated(aTimeout);
+  }
+
+  void PostFrameStop(Opacity aOpacity)
+  {
+    mDecoder->PostFrameStop(aOpacity);
+  }
+
+private:
+  Decoder* mDecoder;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test Data

@@ -70,6 +70,12 @@ elif CONFIG['CC_TYPE'] == 'msvc':
     # declaration of '*' hides class member
     '-wd4458',
   ]
+  # Disable Spectre diagnostics only if optimization is disabled.
+  if not CONFIG['MOZ_OPTIMIZE']:
+    CXXFLAGS += [
+      '-wd5045', # Compiler will insert Spectre mitigation for memory load if
+                 # /Qspectre switch specified
+    ]
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     AllowCompilerWarnings()  # workaround for bug 1090497
