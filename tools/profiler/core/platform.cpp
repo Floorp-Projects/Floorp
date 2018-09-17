@@ -1633,7 +1633,7 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
-  aWriter.IntProperty("version", 12);
+  aWriter.IntProperty("version", 13);
 
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -

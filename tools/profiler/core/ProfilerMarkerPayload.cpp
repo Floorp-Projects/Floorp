@@ -27,13 +27,20 @@ WriteTime(SpliceableJSONWriter& aWriter,
 }
 
 void
+ProfilerMarkerPayload::StreamType(const char* aMarkerType,
+                                  SpliceableJSONWriter& aWriter)
+{
+  MOZ_ASSERT(aMarkerType);
+  aWriter.StringProperty("type", aMarkerType);
+}
+
+void
 ProfilerMarkerPayload::StreamCommonProps(const char* aMarkerType,
                                          SpliceableJSONWriter& aWriter,
                                          const TimeStamp& aProcessStartTime,
                                          UniqueStacks& aUniqueStacks)
 {
-  MOZ_ASSERT(aMarkerType);
-  aWriter.StringProperty("type", aMarkerType);
+  StreamType(aMarkerType, aWriter);
   WriteTime(aWriter, aProcessStartTime, mStartTime, "startTime");
   WriteTime(aWriter, aProcessStartTime, mEndTime, "endTime");
   if (mStack) {
@@ -113,6 +120,7 @@ LayerTranslationMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                              const TimeStamp& aProcessStartTime,
                                              UniqueStacks& aUniqueStacks)
 {
+  StreamType("LayerTranslation", aWriter);
   const size_t bufferSize = 32;
   char buffer[bufferSize];
   SprintfLiteral(buffer, "%p", mLayer);
@@ -120,7 +128,6 @@ LayerTranslationMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.StringProperty("layer", buffer);
   aWriter.IntProperty("x", mPoint.x);
   aWriter.IntProperty("y", mPoint.y);
-  aWriter.StringProperty("category", "LayerTranslation");
 }
 
 void
@@ -128,9 +135,9 @@ VsyncMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                   const TimeStamp& aProcessStartTime,
                                   UniqueStacks& aUniqueStacks)
 {
+  StreamType("VsyncTimestamp", aWriter);
   aWriter.DoubleProperty("vsync",
                          (mVsyncTimestamp - aProcessStartTime).ToMilliseconds());
-  aWriter.StringProperty("category", "VsyncTimestamp");
 }
 
 static const char *GetNetworkState(NetworkLoadType aType)
@@ -185,6 +192,7 @@ ScreenshotPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                   const TimeStamp& aProcessStartTime,
                                   UniqueStacks& aUniqueStacks)
 {
+  StreamType("CompositorScreenshot", aWriter);
   aUniqueStacks.mUniqueStrings->WriteProperty(aWriter, "url", mScreenshotDataURL.get());
 
   char hexWindowID[32];
