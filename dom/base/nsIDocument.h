@@ -126,6 +126,7 @@ class Encoding;
 class ErrorResult;
 class EventStates;
 class EventListenerManager;
+class FullscreenExit;
 class FullscreenRequest;
 class PendingAnimationTracker;
 class ServoStyleSet;
@@ -1811,7 +1812,8 @@ public:
    * is no former fullscreen element, this exits fullscreen, moving the
    * top-level browser window out of fullscreen mode.
    */
-  void RestorePreviousFullscreenState();
+  void RestorePreviousFullscreenState(
+    mozilla::UniquePtr<mozilla::FullscreenExit>);
 
   /**
    * Returns true if this document is a fullscreen leaf document, i.e. it
@@ -3293,7 +3295,7 @@ public:
   {
     return !!GetFullscreenElement();
   }
-  void ExitFullscreen();
+  already_AddRefed<mozilla::dom::Promise> ExitFullscreen(ErrorResult&);
   void ExitPointerLock()
   {
     UnlockPointer(this);

@@ -109,7 +109,7 @@ function enter2(event) {
   // the full-screen element to the previous full-screen element. This causes
   // a fullscreenchange event.
   addFullscreenChangeContinuation("exit", exit2);
-  document.exitFullscreen();
+  promise = document.exitFullscreen();
 }
 
 function exit2(event) {
@@ -117,6 +117,7 @@ function exit2(event) {
      "Full-screen element should have rolled back.");
   is(iframe.contentDocument.fullscreenElement, null,
      "Full-screen element in subframe should be null");
+  assertPromiseResolved(promise, "in exit2");
   
   addFullscreenChangeContinuation("enter", enter3);
   promise = FULLSCREEN_ELEMENT.requestFullscreen();
