@@ -9,8 +9,7 @@
 const TEST_URI = "data:text/html;charset=utf8,<h1>test console.error with objects</h1>";
 
 add_task(async function() {
-  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-  const hud = toolbox.getCurrentPanel().hud;
+  const hud = await openNewTabAndConsole(TEST_URI);
 
   const onMessagesLogged = waitForMessage(hud, "myError");
   ContentTask.spawn(gBrowser.selectedBrowser, null, function() {

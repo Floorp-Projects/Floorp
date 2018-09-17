@@ -599,9 +599,13 @@ CompartmentOriginInfo::IsSameOrigin(nsIPrincipal* aOther) const
 void
 SetCompartmentChangedDocumentDomain(JS::Compartment* compartment)
 {
-    CompartmentPrivate* priv = CompartmentPrivate::Get(compartment);
-    MOZ_ASSERT(priv);
-    priv->originInfo.SetChangedDocumentDomain();
+    // Note: we call this for all compartments that contain realms with a
+    // particular principal. Not all of these compartments have a
+    // CompartmentPrivate (for instance the temporary compartment/realm
+    // created by the JS engine for off-thread parsing).
+    if (CompartmentPrivate* priv = CompartmentPrivate::Get(compartment)) {
+        priv->originInfo.SetChangedDocumentDomain();
+    }
 }
 
 JSObject*

@@ -1065,6 +1065,12 @@ nsGlobalWindowInner::~nsGlobalWindowInner()
     sInnerWindowsById->Remove(mWindowID);
   }
 
+  // If AutoplayPermissionManager is going to be destroyed before getting the
+  // request's result, we would treat it as user deny.
+  if (mAutoplayPermissionManager) {
+    mAutoplayPermissionManager->DenyPlayRequestIfExists();
+  }
+
   nsContentUtils::InnerOrOuterWindowDestroyed();
 
 #ifdef DEBUG
