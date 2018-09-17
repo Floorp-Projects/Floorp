@@ -580,6 +580,7 @@ private:
   RefPtr<WebrtcAudioConduit> mSyncedTo;
 
   // Main thread only.
+  webrtc::VideoCodecMode mActiveCodecMode;
   webrtc::VideoCodecMode mCodecMode;
 
   // WEBRTC.ORG Call API
