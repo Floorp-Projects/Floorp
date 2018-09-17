@@ -248,6 +248,11 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
   mImageSize = aImageSize;
   mFrameRect = aRect;
 
+  // May be updated shortly after InitForDecoder by BlendAnimationFilter
+  // because it needs to take into consideration the previous frames to
+  // properly calculate. We start with the whole frame as dirty.
+  mDirtyRect = aRect;
+
   if (aAnimParams) {
     mBlendRect = aAnimParams->mBlendRect;
     mTimeout = aAnimParams->mTimeout;
