@@ -148,32 +148,6 @@ EvaluateLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
                const char* bytes, size_t length, MutableHandle<Value> rval);
 
 /**
- * DEPRECATED
- *
- * Evaluate the provided data in the scope of the current global of |cx|, and
- * return the completion value in |rval|.
- *
- * If |options.utf8|, the bytes are interpreted as UTF-8 data.  If the data
- * contains any malformed UTF-8, an error is reported.
- *
- * Otherwise they are interpreted as Latin-1, i.e. each byte directly
- * corresponds to the same Unicode code point.
- *
- * Do not use this API.  The JS::ReadOnlyCompileOptions::utf8 flag that
- * indicates how to interpret |bytes| is currently being replaced by functions
- * indicating an exact expected encoding.  If you have byte data to compile,
- * you should use either JS::EvaluateUtf8 or JS::EvaluateLatin1 as appropriate.
- */
-inline bool
-Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
-         const char* bytes, size_t length, MutableHandle<Value> rval)
-{
-    return options.utf8
-           ? EvaluateUtf8(cx, options, bytes, length, rval)
-           : EvaluateLatin1(cx, options, bytes, length, rval);
-}
-
-/**
  * Evaluate the UTF-8 contents of the file at the given path, and return the
  * completion value in |rval|.  (The path itself is in the system encoding, not
  * [necessarily] UTF-8.)  If the contents contain any malformed UTF-8, an error
