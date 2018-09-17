@@ -543,10 +543,11 @@ task_description_schema = Schema({
         Optional('product'): basestring,
         Optional('platforms'): [basestring],
         Optional('release-eta'): basestring,
-        Optional('channel-names'): optionally_keyed_by('project', [basestring]),
+        Optional('channel-names'): optionally_keyed_by('release-type', [basestring]),
         Optional('require-mirrors'): bool,
-        Optional('publish-rules'): optionally_keyed_by('project', [int]),
-        Optional('rules-to-update'): optionally_keyed_by('project', [basestring]),
+        Optional('publish-rules'): optionally_keyed_by('release-type', 'release-level', [int]),
+        Optional('rules-to-update'): optionally_keyed_by(
+            'release-type', 'release-level', [basestring]),
         Optional('archive-domain'): optionally_keyed_by('release-level', basestring),
         Optional('download-domain'): optionally_keyed_by('release-level', basestring),
         Optional('blob-suffix'): basestring,
@@ -1159,7 +1160,7 @@ def build_balrog_payload(config, task, task_def):
                 resolve_keyed_by(
                     worker, prop, task['description'],
                     **{
-                        'project': config.params['project'],
+                        'release-type': config.params['release_type'],
                         'release-level': config.params.release_level(),
                     }
                 )
