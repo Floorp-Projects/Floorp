@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+   - taskgraph.transforms.release:run_on_releases
    - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.scriptworker:add_balrog_scopes
    - taskgraph.transforms.task:transforms
@@ -40,11 +41,11 @@ jobs:
          symbol: Rel(BSFx)
          tier: 1
          kind: build
-   # FIXME: (Bug 1487172) This task should only run on esr60-like branches
    firefox-bz2:
       description: Schedule Firefox publishing in balrog (bz2)
       name: release-firefox_schedule_publishing_in_balrog-bz2
       shipping-product: firefox
+      run-on-releases: [esr60]
       worker:
          product: firefox
          publish-rules:
