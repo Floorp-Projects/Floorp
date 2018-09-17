@@ -67,6 +67,7 @@ const THREE_PANE_ENABLED_PREF = "devtools.inspector.three-pane-enabled";
 const THREE_PANE_ENABLED_SCALAR = "devtools.inspector.three_pane_enabled";
 const THREE_PANE_CHROME_ENABLED_PREF = "devtools.inspector.chrome.three-pane-enabled";
 const TELEMETRY_EYEDROPPER_OPENED = "devtools.toolbar.eyedropper.opened";
+const TRACK_CHANGES_ENABLED = "devtools.inspector.changes.enabled";
 
 /**
  * Represents an open instance of the Inspector for a tab.
@@ -979,6 +980,32 @@ Inspector.prototype = {
       },
       defaultTab == fontId);
 
+    if (Services.prefs.getBoolPref(TRACK_CHANGES_ENABLED)) {
+      // Inject a lazy loaded react tab by exposing a fake React object
+      // with a lazy defined Tab thanks to `panel` being a function
+      const changesId = "changesview";
+      const changesTitle = INSPECTOR_L10N.getStr("inspector.sidebar.changesViewTitle");
+      this.sidebar.queueTab(
+        changesId,
+        changesTitle,
+        {
+          props: {
+            id: changesId,
+            title: changesTitle
+          },
+          panel: () => {
+            if (!this.changesView) {
+              const ChangesView =
+                this.browserRequire("devtools/client/inspector/changes/ChangesView");
+              this.changesView = new ChangesView(this, this.panelWin);
+            }
+
+            return this.changesView.provider;
+          }
+        },
+        defaultTab == changesId);
+    }
+
     this.sidebar.addAllQueuedTabs();
 
     // Persist splitter state in preferences.
@@ -1415,6 +1442,10 @@ Inspector.prototype = {
 
     if (this.layoutview) {
       this.layoutview.destroy();
+    }
+
+    if (this.changesView) {
+      this.changesView.destroy();
     }
 
     if (this.fontinspector) {
