@@ -2983,11 +2983,6 @@ JSRuntime::initSelfHosting(JSContext* cx)
      */
     AutoSelfHostingErrorReporter errorReporter(cx);
 
-    CompileOptions options(cx);
-    FillSelfHostingCompileOptions(options);
-
-    RootedValue rv(cx);
-
     uint32_t srcLen = GetRawScriptsSize();
 
     const unsigned char* compressed = compressedSources;
@@ -2999,7 +2994,12 @@ JSRuntime::initSelfHosting(JSContext* cx)
         return false;
     }
 
-    if (!Evaluate(cx, options, src.get(), srcLen, &rv)) {
+    CompileOptions options(cx);
+    FillSelfHostingCompileOptions(options);
+    options.setUTF8(true);
+
+    RootedValue rv(cx);
+    if (!EvaluateUtf8(cx, options, src.get(), srcLen, &rv)) {
         return false;
     }
 

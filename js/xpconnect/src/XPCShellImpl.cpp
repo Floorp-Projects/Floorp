@@ -1034,7 +1034,7 @@ ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc, XPCShellDirProvider* aDirPr
             JS::CompileOptions opts(cx);
             opts.setUTF8(true)
                 .setFileAndLine("-e", 1);
-            JS::Evaluate(cx, opts, argv[i], strlen(argv[i]), &rval);
+            JS::EvaluateUtf8(cx, opts, argv[i], strlen(argv[i]), &rval);
 
             isInteractive = false;
             break;

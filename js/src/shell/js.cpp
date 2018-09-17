@@ -940,6 +940,7 @@ InitModuleLoader(JSContext* cx)
     }
 
     CompileOptions options(cx);
+    options.setUTF8(true);
     options.setIntroductionType("shell module loader");
     options.setFileAndLine("shell/ModuleLoader.js", 1);
     options.setSelfHostingMode(false);
@@ -948,7 +949,7 @@ InitModuleLoader(JSContext* cx)
     options.strictOption = true;
 
     RootedValue rv(cx);
-    return Evaluate(cx, options, src.get(), srcLen, &rv);
+    return JS::EvaluateUtf8(cx, options, src.get(), srcLen, &rv);
 }
 
 static bool
@@ -9744,12 +9745,17 @@ ProcessArgs(JSContext* cx, OptionParser* op)
             filePaths.popFront();
         } else if (ccArgno < fpArgno && ccArgno < mpArgno && ccArgno < baArgno) {
             const char* code = codeChunks.front();
-            RootedValue rval(cx);
+
             JS::CompileOptions opts(cx);
             opts.setFileAndLine("-e", 1);
-            if (!JS::Evaluate(cx, opts, code, strlen(code), &rval)) {
+
+            // This might be upgradable to UTF-8, but for now keep assuming the
+            // worst.
+            RootedValue rval(cx);
+            if (!JS::EvaluateLatin1(cx, opts, code, strlen(code), &rval)) {
                 return false;
             }
+
             codeChunks.popFront();
             if (sc->quitting) {
                 break;

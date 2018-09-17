@@ -8,7 +8,6 @@
 
 BEGIN_TEST(testBug795104)
 {
-    JS::CompileOptions opts(cx);
     JS::RealmBehaviorsRef(cx->realm()).setDiscardSource(true);
 
     const size_t strLen = 60002;
@@ -19,11 +18,14 @@ BEGIN_TEST(testBug795104)
     memset(s + 1, 'x', strLen - 2);
     s[strLen - 1] = '"';
 
+    JS::CompileOptions opts(cx);
+    opts.setUTF8(true);
+
     // We don't want an rval for our Evaluate call
     opts.setNoScriptRval(true);
 
     JS::RootedValue unused(cx);
-    CHECK(JS::Evaluate(cx, opts, s, strLen, &unused));
+    CHECK(JS::EvaluateUtf8(cx, opts, s, strLen, &unused));
 
     JS::RootedFunction fun(cx);
     JS::AutoObjectVector emptyScopeChain(cx);
