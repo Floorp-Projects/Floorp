@@ -29,25 +29,9 @@ jobs:
       worker:
          product: firefox
          release-eta: ''
-         channel-names:
-            by-project:
-               birch: ["beta", "beta-localtest", "beta-cdntest"]
-               jamun: ["esr", "esr-localtest", "esr-cdntest"]
-               mozilla-release: ["beta", "beta-localtest", "beta-cdntest"]
-               mozilla-esr60: ["esr", "esr-localtest", "esr-cdntest"]
-               default: []
-         publish-rules:
-            by-project:
-               birch: [32]
-               mozilla-release: [32]
-               default: []
-         rules-to-update:
-            by-project:
-               birch: ["firefox-beta-cdntest", "firefox-beta-localtest"]
-               jamun: ["firefox-esr60-cdntest", "firefox-esr60-localtest"]
-               mozilla-release: ["firefox-beta-cdntest", "firefox-beta-localtest"]
-               mozilla-esr60: ["firefox-esr60-cdntest", "firefox-esr60-localtest"]
-               default: []
+         channel-names: ["beta", "beta-localtest", "beta-cdntest"]
+         publish-rules: [32]
+         rules-to-update: ["firefox-beta-cdntest", "firefox-beta-localtest"]
       treeherder:
          platform: linux64/opt
          symbol: Rel(BSFxRC)
