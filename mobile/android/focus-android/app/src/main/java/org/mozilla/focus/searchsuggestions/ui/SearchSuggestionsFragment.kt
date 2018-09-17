@@ -56,6 +56,7 @@ class SearchSuggestionsFragment : Fragment() {
 
         searchSuggestionsViewModel.searchQuery.observe(this, Observer {
             searchView.text = it
+            searchView.contentDescription = context!!.getString(R.string.search_hint, it)
         })
 
         searchSuggestionsViewModel.suggestions.observe(this, Observer { suggestions ->
@@ -241,10 +242,12 @@ private class SuggestionViewHolder(
         if (UrlUtils.isUrl(suggestionText.text.toString())) {
             val icon = ContextCompat.getDrawable(itemView.context, R.drawable.ic_link)
             icon?.setBounds(0, 0, size, size)
+            suggestionText.contentDescription = suggestionText.text
             suggestionText.setCompoundDrawables(icon, null, null, null)
         } else {
             val icon = ContextCompat.getDrawable(itemView.context, R.drawable.ic_search)
             icon?.setBounds(0, 0, size, size)
+            suggestionText.contentDescription = itemView.context.getString(R.string.search_hint, suggestionText.text)
             suggestionText.setCompoundDrawables(icon, null, null, null)
         }
         itemView.setOnClickListener { clickListener(suggestion.toString()) }
