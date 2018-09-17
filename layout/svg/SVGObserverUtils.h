@@ -38,6 +38,38 @@ class SVGFilterObserverList;
 namespace mozilla {
 
 /*
+ * This class contains URL and referrer information (referrer and referrer
+ * policy).
+ * We use it to pass to svg system instead of nsIURI. The object brings referrer
+ * and referrer policy so we can send correct Referer headers.
+ */
+class URLAndReferrerInfo
+{
+public:
+  URLAndReferrerInfo(nsIURI* aURI, nsIURI* aReferrer,
+                     mozilla::net::ReferrerPolicy aReferrerPolicy)
+    : mURI(aURI)
+    , mReferrer(aReferrer)
+    , mReferrerPolicy(aReferrerPolicy)
+ {
+   MOZ_ASSERT(aURI);
+ }
+
+  NS_INLINE_DECL_REFCOUNTING(URLAndReferrerInfo)
+
+  nsIURI* GetURI() { return mURI; }
+  nsIURI* GetReferrer() { return mReferrer; }
+  mozilla::net::ReferrerPolicy GetReferrerPolicy() { return mReferrerPolicy; }
+
+private:
+  ~URLAndReferrerInfo() = default;
+
+  nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIURI> mReferrer;
+  mozilla::net::ReferrerPolicy mReferrerPolicy;
+};
+
+/*
  * This interface allows us to be notified when a piece of SVG content is
  * re-rendered.
  *
@@ -138,7 +170,7 @@ public:
   typedef mozilla::dom::Element Element;
   typedef mozilla::dom::IDTracker IDTracker;
 
-  SVGIDRenderingObserver(nsIURI* aURI, nsIContent* aObservingContent,
+  SVGIDRenderingObserver(URLAndReferrerInfo* aURI, nsIContent* aObservingContent,
                          bool aReferenceImage);
   virtual ~SVGIDRenderingObserver();
 
@@ -208,7 +240,7 @@ class nsSVGRenderingObserverProperty : public SVGIDRenderingObserver
 public:
   NS_DECL_ISUPPORTS
 
-  nsSVGRenderingObserverProperty(nsIURI* aURI, nsIFrame *aFrame,
+  nsSVGRenderingObserverProperty(URLAndReferrerInfo* aURI, nsIFrame *aFrame,
                                  bool aReferenceImage)
     : SVGIDRenderingObserver(aURI, aFrame->GetContent(), aReferenceImage)
     , mFrameReference(aFrame)
@@ -241,7 +273,7 @@ protected:
 class SVGFilterObserver final : public SVGIDRenderingObserver
 {
 public:
-  SVGFilterObserver(nsIURI* aURI,
+  SVGFilterObserver(URLAndReferrerInfo* aURI,
                     nsIContent* aObservingContent,
                     SVGFilterObserverList* aFilterChainObserver)
     : SVGIDRenderingObserver(aURI, aObservingContent, false)
@@ -341,7 +373,7 @@ protected:
 class SVGMarkerObserver final: public nsSVGRenderingObserverProperty
 {
 public:
-  SVGMarkerObserver(nsIURI* aURI, nsIFrame* aFrame, bool aReferenceImage)
+  SVGMarkerObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame, bool aReferenceImage)
     : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
 
 protected:
@@ -351,7 +383,7 @@ protected:
 class SVGTextPathObserver final : public nsSVGRenderingObserverProperty
 {
 public:
-  SVGTextPathObserver(nsIURI* aURI, nsIFrame* aFrame, bool aReferenceImage)
+  SVGTextPathObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame, bool aReferenceImage)
     : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage)
     , mValid(true) {}
 
@@ -372,7 +404,7 @@ private:
 class nsSVGPaintingProperty final : public nsSVGRenderingObserverProperty
 {
 public:
-  nsSVGPaintingProperty(nsIURI* aURI, nsIFrame* aFrame, bool aReferenceImage)
+  nsSVGPaintingProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame, bool aReferenceImage)
     : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
 
 protected:
@@ -467,8 +499,8 @@ class SVGObserverUtils
 {
 public:
   typedef mozilla::dom::Element Element;
-  typedef nsInterfaceHashtable<nsURIHashKey, nsIMutationObserver>
-    URIObserverHashtable;
+  typedef nsInterfaceHashtable<nsRefPtrHashKey<URLAndReferrerInfo>,
+    nsIMutationObserver> URIObserverHashtable;
 
   using PaintingPropertyDescriptor =
     const mozilla::FramePropertyDescriptor<nsSVGPaintingProperty>*;
@@ -656,63 +688,64 @@ public:
    * Get an SVGMarkerObserver for the frame, creating a fresh one if necessary
    */
   static SVGMarkerObserver *
-  GetMarkerProperty(nsIURI* aURI, nsIFrame* aFrame,
+  GetMarkerProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
     const mozilla::FramePropertyDescriptor<SVGMarkerObserver>* aProperty);
   /**
    * Get an SVGTextPathObserver for the frame, creating a fresh one if necessary
    */
   static SVGTextPathObserver *
-  GetTextPathProperty(nsIURI* aURI, nsIFrame* aFrame,
+  GetTextPathProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
     const mozilla::FramePropertyDescriptor<SVGTextPathObserver>* aProperty);
   /**
    * Get an nsSVGPaintingProperty for the frame, creating a fresh one if necessary
    */
   static nsSVGPaintingProperty*
-  GetPaintingProperty(nsIURI* aURI, nsIFrame* aFrame,
+  GetPaintingProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
       const mozilla::FramePropertyDescriptor<nsSVGPaintingProperty>* aProperty);
   /**
    * Get an nsSVGPaintingProperty for the frame for that URI, creating a fresh
    * one if necessary
    */
   static nsSVGPaintingProperty*
-  GetPaintingPropertyForURI(nsIURI* aURI, nsIFrame* aFrame,
+  GetPaintingPropertyForURI(URLAndReferrerInfo* aURI,
+                            nsIFrame* aFrame,
                             URIObserverHashtablePropertyDescriptor aProp);
 
   /**
    * A helper function to resolve marker's URL.
    */
-  static already_AddRefed<nsIURI>
+  static already_AddRefed<URLAndReferrerInfo>
   GetMarkerURI(nsIFrame* aFrame,
                RefPtr<mozilla::css::URLValue> nsStyleSVG::* aMarker);
 
   /**
    * A helper function to resolve clip-path URL.
    */
-  static already_AddRefed<nsIURI>
+  static already_AddRefed<URLAndReferrerInfo>
   GetClipPathURI(nsIFrame* aFrame);
 
   /**
    * A helper function to resolve filter URL.
    */
-  static already_AddRefed<nsIURI>
+  static already_AddRefed<URLAndReferrerInfo>
   GetFilterURI(nsIFrame* aFrame, uint32_t aIndex);
 
   /**
    * A helper function to resolve filter URL.
    */
-  static already_AddRefed<nsIURI>
+  static already_AddRefed<URLAndReferrerInfo>
   GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter);
 
   /**
    * A helper function to resolve paint-server URL.
    */
-  static already_AddRefed<nsIURI>
+  static already_AddRefed<URLAndReferrerInfo>
   GetPaintURI(nsIFrame* aFrame, nsStyleSVGPaint nsStyleSVG::* aPaint);
 
   /**
    * A helper function to resolve SVG mask URL.
    */
-  static already_AddRefed<nsIURI>
+  static already_AddRefed<URLAndReferrerInfo>
   GetMaskURI(nsIFrame* aFrame, uint32_t aIndex);
 
   /**
