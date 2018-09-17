@@ -179,10 +179,13 @@ nsImageRenderer::PrepareImage()
         elementId,
         mForFrame->GetContent()->GetUncomposedDoc(),
         base);
-      nsSVGPaintingProperty* property =
-        SVGObserverUtils::GetPaintingPropertyForURI(
-          targetURI,
-          mForFrame->FirstContinuation(),
+      RefPtr<URLAndReferrerInfo> url = new URLAndReferrerInfo(
+        targetURI,
+        mForFrame->GetContent()->OwnerDoc()->GetDocumentURI(),
+        mForFrame->GetContent()->OwnerDoc()->GetReferrerPolicy());
+
+      nsSVGPaintingProperty* property = SVGObserverUtils::GetPaintingPropertyForURI(
+          url, mForFrame->FirstContinuation(),
           SVGObserverUtils::BackgroundImageProperty());
       if (!property) {
         mPrepareResult = ImgDrawResult::BAD_IMAGE;

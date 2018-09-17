@@ -20,6 +20,7 @@
 #include "SVGGeometryElement.h"
 #include "SVGUseElement.h"
 #include "ImageLoader.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 using namespace mozilla::dom;
 
@@ -171,13 +172,23 @@ SVGRenderingObserver::ContentRemoved(nsIContent* aChild,
  * benefits/necessity of maintaining a second observer list.
  */
 
-SVGIDRenderingObserver::SVGIDRenderingObserver(nsIURI* aURI,
+SVGIDRenderingObserver::SVGIDRenderingObserver(URLAndReferrerInfo* aURI,
                                                nsIContent* aObservingContent,
                                                bool aReferenceImage)
   : mObservedElementTracker(this)
 {
   // Start watching the target element
-  mObservedElementTracker.Reset(aObservingContent, aURI, true, aReferenceImage);
+  nsCOMPtr<nsIURI> uri;
+  nsCOMPtr<nsIURI> referrer;
+  uint32_t referrerPolicy = mozilla::net::RP_Unset;
+  if (aURI) {
+    uri = aURI->GetURI();
+    referrer = aURI->GetReferrer();
+    referrerPolicy = aURI->GetReferrerPolicy();
+  }
+
+  mObservedElementTracker.Reset(aObservingContent, uri, referrer,
+                                referrerPolicy, true, aReferenceImage);
   StartObserving();
 }
 
@@ -296,9 +307,19 @@ SVGFilterObserverList::SVGFilterObserverList(const nsTArray<nsStyleFilter>& aFil
 
     // aFilteredFrame can be null if this filter belongs to a
     // CanvasRenderingContext2D.
-    nsCOMPtr<nsIURI> filterURL = aFilteredFrame
-      ? SVGObserverUtils::GetFilterURI(aFilteredFrame, i)
-      : aFilters[i].GetURL()->ResolveLocalRef(aFilteredElement);
+    RefPtr<URLAndReferrerInfo> filterURL;
+    if (aFilteredFrame) {
+      filterURL = SVGObserverUtils::GetFilterURI(aFilteredFrame, i);
+    } else {
+      nsCOMPtr<nsIURI> resolvedURI =
+        aFilters[i].GetURL()->ResolveLocalRef(aFilteredElement);
+      if (resolvedURI) {
+        filterURL = new URLAndReferrerInfo(
+          resolvedURI,
+          aFilters[i].GetURL()->mExtraData->GetReferrer(),
+          aFilters[i].GetURL()->mExtraData->GetReferrerPolicy());
+      }
+    }
 
     RefPtr<SVGFilterObserver> observer =
       new SVGFilterObserver(filterURL, aFilteredElement, this);
@@ -391,10 +412,11 @@ SVGMaskObserverList::SVGMaskObserverList(nsIFrame* aFrame)
   const nsStyleSVGReset *svgReset = aFrame->StyleSVGReset();
 
   for (uint32_t i = 0; i < svgReset->mMask.mImageCount; i++) {
-    nsCOMPtr<nsIURI> maskUri = SVGObserverUtils::GetMaskURI(aFrame, i);
+    RefPtr<URLAndReferrerInfo> maskUri =
+      SVGObserverUtils::GetMaskURI(aFrame, i);
     bool hasRef = false;
     if (maskUri) {
-      maskUri->GetHasRef(&hasRef);
+      maskUri->GetURI()->GetHasRef(&hasRef);
     }
 
     // Accrording to maskUri, nsSVGPaintingProperty's ctor may trigger an
@@ -534,7 +556,7 @@ GetOrCreateMaskProperty(nsIFrame* aFrame)
 
 template<class T>
 static T*
-GetEffectProperty(nsIURI* aURI, nsIFrame* aFrame,
+GetEffectProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
   const mozilla::FramePropertyDescriptor<T>* aProperty)
 {
   if (!aURI)
@@ -550,7 +572,7 @@ GetEffectProperty(nsIURI* aURI, nsIFrame* aFrame,
 }
 
 SVGMarkerObserver*
-SVGObserverUtils::GetMarkerProperty(nsIURI* aURI, nsIFrame* aFrame,
+SVGObserverUtils::GetMarkerProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
   const mozilla::FramePropertyDescriptor<SVGMarkerObserver>* aProperty)
 {
   MOZ_ASSERT(aFrame->IsSVGGeometryFrame() &&
@@ -560,21 +582,22 @@ SVGObserverUtils::GetMarkerProperty(nsIURI* aURI, nsIFrame* aFrame,
 }
 
 SVGTextPathObserver*
-SVGObserverUtils::GetTextPathProperty(nsIURI* aURI, nsIFrame* aFrame,
+SVGObserverUtils::GetTextPathProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
   const mozilla::FramePropertyDescriptor<SVGTextPathObserver>* aProperty)
 {
   return GetEffectProperty(aURI, aFrame, aProperty);
 }
 
 nsSVGPaintingProperty*
-SVGObserverUtils::GetPaintingProperty(nsIURI* aURI, nsIFrame* aFrame,
+SVGObserverUtils::GetPaintingProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
   const mozilla::FramePropertyDescriptor<nsSVGPaintingProperty>* aProperty)
 {
   return GetEffectProperty(aURI, aFrame, aProperty);
 }
 
 nsSVGPaintingProperty*
-SVGObserverUtils::GetPaintingPropertyForURI(nsIURI* aURI, nsIFrame* aFrame,
+SVGObserverUtils::GetPaintingPropertyForURI(URLAndReferrerInfo* aURI,
+  nsIFrame* aFrame,
   URIObserverHashtablePropertyDescriptor aProperty)
 {
   if (!aURI)
@@ -607,7 +630,7 @@ SVGObserverUtils::GetEffectProperties(nsIFrame* aFrame)
   result.mFilterObservers = GetOrCreateFilterObserverListForCSS(aFrame);
 
   if (style->mClipPath.GetType() == StyleShapeSourceType::URL) {
-    nsCOMPtr<nsIURI> pathURI = SVGObserverUtils::GetClipPathURI(aFrame);
+    RefPtr<URLAndReferrerInfo> pathURI = SVGObserverUtils::GetClipPathURI(aFrame);
     result.mClipPath =
       GetPaintingProperty(pathURI, aFrame, ClipPathProperty());
   } else {
@@ -643,7 +666,7 @@ SVGObserverUtils::GetPaintServer(nsIFrame* aTargetFrame,
   if ((svgStyle->*aPaint).Type() != eStyleSVGPaintType_Server)
     return nullptr;
 
-  nsCOMPtr<nsIURI> paintServerURL =
+  RefPtr<URLAndReferrerInfo> paintServerURL =
     SVGObserverUtils::GetPaintURI(frame, aPaint);
   nsSVGPaintingProperty *property =
     SVGObserverUtils::GetPaintingProperty(paintServerURL, frame, aType);
@@ -767,7 +790,7 @@ SVGObserverUtils::UpdateEffects(nsIFrame* aFrame)
   if (aFrame->IsSVGGeometryFrame() &&
       static_cast<SVGGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
     // Set marker properties here to avoid reference loops
-    nsCOMPtr<nsIURI> markerURL =
+    RefPtr<URLAndReferrerInfo> markerURL =
       GetMarkerURI(aFrame, &nsStyleSVG::mMarkerStart);
     GetMarkerProperty(markerURL, aFrame, MarkerBeginProperty());
     markerURL = GetMarkerURI(aFrame, &nsStyleSVG::mMarkerMid);
@@ -994,7 +1017,7 @@ SVGObserverUtils::GetBaseURLForLocalRef(nsIContent* content, nsIURI* aDocURI)
   return baseURI.forget();
 }
 
-static already_AddRefed<nsIURI>
+static already_AddRefed<URLAndReferrerInfo>
 ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValueData* aURL)
 {
   MOZ_ASSERT(aFrame);
@@ -1003,27 +1026,42 @@ ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValueData* aURL)
     return nullptr;
   }
 
+  nsCOMPtr<nsIURI> uri = aURL->GetURI();
+  RefPtr<URLAndReferrerInfo> result;
+
   // Non-local-reference URL.
   if (!aURL->IsLocalRef()) {
-    nsCOMPtr<nsIURI> result = aURL->GetURI();
+    if (!uri) {
+      return nullptr;
+    }
+    result = new URLAndReferrerInfo(uri,
+                                    aURL->mExtraData->GetReferrer(),
+                                    aURL->mExtraData->GetReferrerPolicy());
     return result.forget();
   }
 
   nsCOMPtr<nsIURI> baseURI =
-    SVGObserverUtils::GetBaseURLForLocalRef(aFrame->GetContent(),
-                                            aURL->GetURI());
+    SVGObserverUtils::GetBaseURLForLocalRef(aFrame->GetContent(), uri);
 
-  return aURL->ResolveLocalRef(baseURI);
+  nsCOMPtr<nsIURI> resolvedURI = aURL->ResolveLocalRef(baseURI);
+  if (!resolvedURI) {
+    return nullptr;
+  }
+
+  result = new URLAndReferrerInfo(resolvedURI,
+                                  aURL->mExtraData->GetReferrer(),
+                                  aURL->mExtraData->GetReferrerPolicy());
+  return result.forget();
 }
 
-already_AddRefed<nsIURI>
+already_AddRefed<URLAndReferrerInfo>
 SVGObserverUtils::GetMarkerURI(nsIFrame* aFrame,
                                RefPtr<css::URLValue> nsStyleSVG::* aMarker)
 {
   return ResolveURLUsingLocalRef(aFrame, aFrame->StyleSVG()->*aMarker);
 }
 
-already_AddRefed<nsIURI>
+already_AddRefed<URLAndReferrerInfo>
 SVGObserverUtils::GetClipPathURI(nsIFrame* aFrame)
 {
   const nsStyleSVGReset* svgResetStyle = aFrame->StyleSVGReset();
@@ -1033,7 +1071,7 @@ SVGObserverUtils::GetClipPathURI(nsIFrame* aFrame)
   return ResolveURLUsingLocalRef(aFrame, url);
 }
 
-already_AddRefed<nsIURI>
+already_AddRefed<URLAndReferrerInfo>
 SVGObserverUtils::GetFilterURI(nsIFrame* aFrame, uint32_t aIndex)
 {
   const nsStyleEffects* effects = aFrame->StyleEffects();
@@ -1043,7 +1081,7 @@ SVGObserverUtils::GetFilterURI(nsIFrame* aFrame, uint32_t aIndex)
   return ResolveURLUsingLocalRef(aFrame, effects->mFilters[aIndex].GetURL());
 }
 
-already_AddRefed<nsIURI>
+already_AddRefed<URLAndReferrerInfo>
 SVGObserverUtils::GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter)
 {
   MOZ_ASSERT(aFrame->StyleEffects()->mFilters.Length());
@@ -1052,7 +1090,7 @@ SVGObserverUtils::GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter)
   return ResolveURLUsingLocalRef(aFrame, aFilter.GetURL());
 }
 
-already_AddRefed<nsIURI>
+already_AddRefed<URLAndReferrerInfo>
 SVGObserverUtils::GetPaintURI(nsIFrame* aFrame,
                               nsStyleSVGPaint nsStyleSVG::* aPaint)
 {
@@ -1064,13 +1102,13 @@ SVGObserverUtils::GetPaintURI(nsIFrame* aFrame,
                                  (svgStyle->*aPaint).GetPaintServer());
 }
 
-already_AddRefed<nsIURI>
+already_AddRefed<URLAndReferrerInfo>
 SVGObserverUtils::GetMaskURI(nsIFrame* aFrame, uint32_t aIndex)
 {
   const nsStyleSVGReset* svgReset = aFrame->StyleSVGReset();
   MOZ_ASSERT(svgReset->mMask.mLayers.Length() > aIndex);
 
-  mozilla::css::URLValueData* data =
+  css::URLValueData* data =
     svgReset->mMask.mLayers[aIndex].mImage.GetURLValue();
   return ResolveURLUsingLocalRef(aFrame, data);
 }

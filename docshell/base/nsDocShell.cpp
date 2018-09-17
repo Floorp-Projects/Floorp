@@ -474,7 +474,7 @@ nsDocShell::Init()
   rv = nsDocLoader::AddDocLoaderAsChildOfRoot(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mBrowsingContext = new BrowsingContext(this);
+  mBrowsingContext = BrowsingContext::Create(this);
 
   // Add as |this| a progress listener to itself.  A little weird, but
   // simpler than reproducing all the listener-notification logic in

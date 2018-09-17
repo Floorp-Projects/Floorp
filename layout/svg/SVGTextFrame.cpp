@@ -5010,8 +5010,15 @@ SVGTextFrame::GetTextPathGeometryElement(nsIFrame* aTextPathFrame)
     nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                               content->GetUncomposedDoc(), base);
 
+    // There's no clear refererer policy spec about non-CSS SVG resource references
+    // Bug 1415044 to investigate which referrer we should use
+    RefPtr<URLAndReferrerInfo> target =
+      new URLAndReferrerInfo(targetURI,
+                             mContent->OwnerDoc()->GetDocumentURI(),
+                             mContent->OwnerDoc()->GetReferrerPolicy());
+
     property = SVGObserverUtils::GetTextPathProperty(
-      targetURI,
+      target,
       aTextPathFrame,
       SVGObserverUtils::HrefAsTextPathProperty());
     if (!property)
