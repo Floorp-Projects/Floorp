@@ -151,6 +151,35 @@ private:
   }
 };
 
+class FullscreenExit : public FullscreenChange
+{
+public:
+  static const ChangeType kType = eExit;
+
+  static UniquePtr<FullscreenExit> Create(nsIDocument* aDoc, ErrorResult& aRv)
+  {
+    RefPtr<Promise> promise = Promise::Create(aDoc->GetOwnerGlobal(), aRv);
+    return WrapUnique(new FullscreenExit(aDoc, promise.forget()));
+  }
+
+  static UniquePtr<FullscreenExit> CreateForRemote(nsIDocument* aDoc)
+  {
+    return WrapUnique(new FullscreenExit(aDoc, nullptr));
+  }
+
+  ~FullscreenExit()
+  {
+    MOZ_COUNT_DTOR(FullscreenExit);
+  }
+
+private:
+  FullscreenExit(nsIDocument* aDoc, already_AddRefed<Promise> aPromise)
+    : FullscreenChange(kType, aDoc, std::move(aPromise))
+  {
+    MOZ_COUNT_CTOR(FullscreenExit);
+  }
+};
+
 } // namespace mozilla
 
 #endif // mozilla_FullscreenRequest_h

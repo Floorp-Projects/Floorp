@@ -10730,10 +10730,13 @@ nsIDocument::SetFullscreenRoot(nsIDocument* aRoot)
   mFullscreenRoot = do_GetWeakReference(aRoot);
 }
 
-void
-nsIDocument::ExitFullscreen()
+already_AddRefed<Promise>
+nsIDocument::ExitFullscreen(ErrorResult& aRv)
 {
-  RestorePreviousFullscreenState();
+  UniquePtr<FullscreenExit> exit = FullscreenExit::Create(this, aRv);
+  RefPtr<Promise> promise = exit->GetPromise();
+  RestorePreviousFullscreenState(std::move(exit));
+  return promise.forget();
 }
 
 static void
@@ -10905,6 +10908,14 @@ nsIDocument::ExitFullscreenInDocTree(nsIDocument* aMaybeNotARootDoc)
   // Unlock the pointer
   UnlockPointer();
 
+  // Resolve all promises which waiting for exit fullscreen.
+  PendingFullscreenChangeList::Iterator<FullscreenExit> iter(
+    aMaybeNotARootDoc, PendingFullscreenChangeList::eDocumentsWithSameRoot);
+  while (!iter.AtEnd()) {
+    UniquePtr<FullscreenExit> exit = iter.TakeAndNext();
+    exit->MayResolvePromise();
+  }
+
   nsCOMPtr<nsIDocument> root = aMaybeNotARootDoc->GetFullscreenRoot();
   if (!root || !root->FullscreenStackTop()) {
     // If a document was detached before exiting from fullscreen, it is
@@ -10948,12 +10959,13 @@ DispatchFullscreenNewOriginEvent(nsIDocument* aDoc)
 }
 
 void
-nsIDocument::RestorePreviousFullscreenState()
+nsIDocument::RestorePreviousFullscreenState(UniquePtr<FullscreenExit> aExit)
 {
   NS_ASSERTION(!FullscreenStackTop() || !FullscreenRoots::IsEmpty(),
     "Should have at least 1 fullscreen root when fullscreen!");
 
   if (!FullscreenStackTop() || !GetWindow() || FullscreenRoots::IsEmpty()) {
+    aExit->MayRejectPromise();
     return;
   }
 
@@ -10994,6 +11006,7 @@ nsIDocument::RestorePreviousFullscreenState()
       lastDoc->mFullscreenStack.Length() == 1) {
     // If we are fully exiting fullscreen, don't touch anything here,
     // just wait for the window to get out from fullscreen first.
+    PendingFullscreenChangeList::Add(std::move(aExit));
     AskWindowToExitFullscreen(this);
     return;
   }
@@ -11021,6 +11034,7 @@ nsIDocument::RestorePreviousFullscreenState()
   for (Element* e : Reversed(exitElements)) {
     DispatchFullscreenChange(e->OwnerDoc(), e);
   }
+  aExit->MayResolvePromise();
 
   MOZ_ASSERT(newFullscreenDoc, "If we were going to exit from fullscreen on "
              "all documents in this doctree, we should've asked the window to "
@@ -11229,7 +11243,8 @@ nsresult nsIDocument::RemoteFrameFullscreenChanged(Element* aFrameElement)
 
 nsresult nsIDocument::RemoteFrameFullscreenReverted()
 {
-  RestorePreviousFullscreenState();
+  UniquePtr<FullscreenExit> exit = FullscreenExit::CreateForRemote(this);
+  RestorePreviousFullscreenState(std::move(exit));
   return NS_OK;
 }
 
