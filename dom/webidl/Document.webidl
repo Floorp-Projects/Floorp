@@ -483,14 +483,6 @@ partial interface Document {
   Selection? getSelection();
 };
 
-// https://github.com/whatwg/html/issues/3338
-partial interface Document {
-  [Pref="dom.storage_access.enabled", Throws]
-  Promise<boolean> hasStorageAccess();
-  [Pref="dom.storage_access.enabled", Throws]
-  Promise<void> requestStorageAccess();
-};
-
 // Extension to give chrome JS the ability to determine whether
 // the user has interacted with the document or not.
 partial interface Document {
