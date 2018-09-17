@@ -69,6 +69,7 @@ public:
   {
     MOZ_COUNT_CTOR(URIPrincipalReferrerPolicyAndCORSModeHashKey);
   }
+
   URIPrincipalReferrerPolicyAndCORSModeHashKey(const URIPrincipalReferrerPolicyAndCORSModeHashKey& toCopy)
     : nsURIHashKey(toCopy),
       mPrincipal(toCopy.mPrincipal),
@@ -77,6 +78,9 @@ public:
   {
     MOZ_COUNT_CTOR(URIPrincipalReferrerPolicyAndCORSModeHashKey);
   }
+
+  explicit URIPrincipalReferrerPolicyAndCORSModeHashKey(css::SheetLoadData* aLoadData);
+
   ~URIPrincipalReferrerPolicyAndCORSModeHashKey()
   {
     MOZ_COUNT_DTOR(URIPrincipalReferrerPolicyAndCORSModeHashKey);
