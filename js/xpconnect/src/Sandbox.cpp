@@ -1878,13 +1878,6 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative* wrappe
         return ThrowAndFail(rv, cx, _retval);
     }
 
-    // We have this crazy behavior where wantXrays=false also implies that the
-    // returned sandbox is implicitly waived. We've stopped advertising it, but
-    // keep supporting it for now.
-    if (!options.wantXrays && !xpc::WrapperFactory::WaiveXrayAndWrap(cx, args.rval())) {
-        return NS_ERROR_UNEXPECTED;
-    }
-
     *_retval = true;
     return NS_OK;
 }

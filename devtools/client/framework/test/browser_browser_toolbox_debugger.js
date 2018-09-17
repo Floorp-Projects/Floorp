@@ -19,6 +19,7 @@ const { fetch } = require("devtools/shared/DevToolsUtils");
 
 const debuggerHeadURL = CHROME_URL_ROOT + "../../debugger/new/test/mochitest/head.js";
 const helpersURL = CHROME_URL_ROOT + "../../debugger/new/test/mochitest/helpers.js";
+const helpersContextURL = CHROME_URL_ROOT + "../../debugger/new/test/mochitest/helpers/context.js";
 const testScriptURL = CHROME_URL_ROOT + "test_browser_toolbox_debugger.js";
 
 add_task(async function runTest() {
@@ -124,14 +125,15 @@ add_task(async function runTest() {
   // Then inject new debugger head file
   let { content: debuggerHead } = await fetch(debuggerHeadURL);
 
-  // We remove its import of shared-head, which isn't available in browser toolbox process
-  // And isn't needed thanks to testHead's symbols
-  debuggerHead = debuggerHead.replace(/Services.scriptloader.loadSubScript[^\)]*\);/g, "");
-
   // Also include the debugger helpers which are separated from debugger's head to be
   // reused in other modules.
   const { content: debuggerHelpers } = await fetch(helpersURL);
-  debuggerHead = debuggerHead + debuggerHelpers;
+  const { content: debuggerContextHelpers } = await fetch(helpersContextURL);
+  debuggerHead = debuggerHead + debuggerContextHelpers + debuggerHelpers;
+
+  // We remove its import of shared-head, which isn't available in browser toolbox process
+  // And isn't needed thanks to testHead's symbols
+  debuggerHead = debuggerHead.replace(/Services.scriptloader.loadSubScript[^\)]*\);/g, "");
 
   // Finally, fetch the debugger test script that is going to be execute in the browser
   // toolbox process

@@ -3,12 +3,18 @@
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* import-globals-from ../../shared/test/shared-head.js */
+/* import-globals-from ../../debugger/new/test/mochitest/helpers/context.js */
 
 "use strict";
 
 // Load the shared-head file first.
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
+  this);
+
+// Import helpers for the new debugger
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers/context.js",
   this);
 
 var { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
@@ -172,4 +178,14 @@ function teardown({target}) {
 function getSourceActor(aSources, aURL) {
   const item = aSources.getItemForAttachment(a => a.source.url === aURL);
   return item ? item.value : null;
+}
+
+async function validateDebuggerLocation(dbg, url, line) {
+  const location = dbg.selectors.getSelectedLocation(dbg.getState());
+  const sourceUrl = dbg.selectors.getSelectedSource(dbg.getState()).url;
+
+  is(sourceUrl, url,
+    "The expected source was shown in the debugger.");
+  is(location.line, line,
+    "The expected source line is highlighted in the debugger.");
 }

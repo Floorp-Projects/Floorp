@@ -5825,6 +5825,9 @@ BinaryArithIRGenerator::tryAttachStub()
         return true;
     }
 
+    if (tryAttachStringNumberConcat())
+        return true;
+
 
     trackAttached(IRGenerator::NotAttached);
     return false;
@@ -6018,6 +6021,48 @@ BinaryArithIRGenerator::tryAttachInt32()
     }
 
     writer.returnFromIC();
+    return true;
+}
+
+
+bool
+BinaryArithIRGenerator::tryAttachStringNumberConcat()
+{
+    // Only Addition
+    if (op_ != JSOP_ADD)
+        return false;
+
+    if (!(lhs_.isString() && rhs_.isNumber()) &&
+        !(lhs_.isNumber() && rhs_.isString()))
+    {
+        return false;
+    }
+
+    ValOperandId lhsId(writer.setInputOperandId(0));
+    ValOperandId rhsId(writer.setInputOperandId(1));
+
+    auto guardToString = [&](ValOperandId id, HandleValue v) {
+        if (v.isString()) {
+            return writer.guardIsString(id);
+        }
+        if (v.isInt32()) {
+            Int32OperandId intId = writer.guardIsInt32(id);
+            return writer.callInt32ToString(intId);
+        }
+        // At this point we are creating an IC that will handle
+        // both Int32 and Double cases.
+        MOZ_ASSERT(v.isNumber());
+        writer.guardIsNumber(id);
+        return writer.callNumberToString(id);
+    };
+
+    StringOperandId lhsStrId = guardToString(lhsId, lhs_);
+    StringOperandId rhsStrId = guardToString(rhsId, rhs_);
+
+    writer.callStringConcatResult(lhsStrId, rhsStrId);
+
+    writer.returnFromIC();
+    trackAttached("BinaryArith.StringNumberConcat");
     return true;
 }
 

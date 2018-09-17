@@ -96,7 +96,7 @@ ClientPaintedLayer::FinishPaintState(PaintState& aState)
 {
   if (aState.mAsyncTask && !aState.mAsyncTask->mCapture->IsEmpty()) {
     ClientManager()->SetQueuedAsyncPaints();
-    PaintThread::Get()->QueuePaintTask(aState.mAsyncTask);
+    PaintThread::Get()->QueuePaintTask(std::move(aState.mAsyncTask));
   }
 }
 

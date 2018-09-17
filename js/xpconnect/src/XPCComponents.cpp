@@ -43,6 +43,7 @@
 #include "GeckoProfiler.h"
 #include "mozilla/EditorSpellCheck.h"
 #include "nsCommandLine.h"
+#include "nsCommandParams.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -3228,6 +3229,15 @@ nsXPCComponents_Utils::CreateCommandLine(nsISupports** aCommandLine)
     NS_ENSURE_ARG_POINTER(aCommandLine);
     nsCOMPtr<nsISupports> commandLine = new nsCommandLine();
     commandLine.forget(aCommandLine);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::CreateCommandParams(nsICommandParams** aCommandParams)
+{
+    NS_ENSURE_ARG_POINTER(aCommandParams);
+    nsCOMPtr<nsICommandParams> commandParams = new nsCommandParams();
+    commandParams.forget(aCommandParams);
     return NS_OK;
 }
 

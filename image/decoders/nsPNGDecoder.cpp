@@ -233,6 +233,10 @@ nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo)
     pipeFlags |= SurfacePipeFlags::PROGRESSIVE_DISPLAY;
   }
 
+  if (ShouldBlendAnimation()) {
+    pipeFlags |= SurfacePipeFlags::BLEND_ANIMATION;
+  }
+
   Maybe<SurfacePipe> pipe =
     SurfacePipeFactory::CreateSurfacePipe(this, Size(), OutputSize(),
                                           aFrameInfo.mFrameRect, mFormat,

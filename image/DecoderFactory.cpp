@@ -332,6 +332,7 @@ DecoderFactory::CreateDecoderForICOResource(DecoderType aType,
 DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
                                        NotNull<SourceBuffer*> aSourceBuffer,
                                        const Maybe<IntSize>& aOutputSize,
+                                       DecoderFlags aDecoderFlags,
                                        SurfaceFlags aSurfaceFlags)
 {
   if (aType == DecoderType::UNKNOWN) {
@@ -350,14 +351,7 @@ DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
   // or do any other expensive work that might be wasted.
   DecoderFlags decoderFlags = DecoderFlags::IMAGE_IS_TRANSIENT;
 
-  // Without an image, the decoder can't store anything in the SurfaceCache, so
-  // callers will only be able to retrieve the most recent frame via
-  // Decoder::GetCurrentFrame(). That means that anonymous decoders should
-  // always be first-frame-only decoders, because nobody ever wants the *last*
-  // frame.
-  decoderFlags |= DecoderFlags::FIRST_FRAME_ONLY;
-
-  decoder->SetDecoderFlags(decoderFlags);
+  decoder->SetDecoderFlags(aDecoderFlags | decoderFlags);
   decoder->SetSurfaceFlags(aSurfaceFlags);
 
   // Set an output size for downscale-during-decode if requested.

@@ -77,10 +77,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
 
         ok(Cu.evalInSandbox("('foo' in this.document);", sandbox),
            "can see expandos");
-        ok(("foo" in Cu.evalInSandbox("this.document", sandbox)),
-           "must see expandos in wrappers returned from the sandbox");
+        ok(!("foo" in Cu.evalInSandbox("this.document", sandbox)),
+           "must not see expandos in wrappers returned from the sandbox");
+        ok(("foo" in Cu.waiveXrays(Cu.evalInSandbox("this.document", sandbox))),
+           "must see expandos in waived wrappers returned from the sandbox");
 
-        ok(("foo" in sandbox.document),
+        ok(!("foo" in sandbox.document),
+           "must not see expandos in wrappers obtained from the sandbox");
+        ok("foo" in Cu.waiveXrays(sandbox.document),
            "must see expandos in wrappers obtained from the sandbox");
 
         testDone();
