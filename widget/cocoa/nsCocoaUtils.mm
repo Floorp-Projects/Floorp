@@ -1154,7 +1154,7 @@ nsCocoaUtils::GetEventTimeStamp(NSTimeInterval aEventTime)
 // define a copy of AVAuthorizationStatus to allow compilation on pre-10.14
 // SDK's. The enum values must match what is defined in the 10.14 SDK.
 // We use ASSERTS for 10.14 SDK builds to check the enum values match.
-enum GeckoAVAuthorizationStatus {
+enum GeckoAVAuthorizationStatus : NSInteger {
   GeckoAVAuthorizationStatusNotDetermined = 0,
   GeckoAVAuthorizationStatusRestricted = 1,
   GeckoAVAuthorizationStatusDenied = 2,
@@ -1225,7 +1225,8 @@ GetPermissionState(AVMediaType aMediaType, uint16_t& aState)
   }
 
   GeckoAVAuthorizationStatus authStatus =
-   [AVCaptureDevice authorizationStatusForMediaType:aMediaType];
+    static_cast<GeckoAVAuthorizationStatus>(
+      [AVCaptureDevice authorizationStatusForMediaType:aMediaType]);
   LogAuthorizationStatus(aMediaType, authStatus);
 
   // Convert GeckoAVAuthorizationStatus to nsIOSPermissionRequest const
