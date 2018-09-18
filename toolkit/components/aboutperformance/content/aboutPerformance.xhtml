@@ -108,6 +108,7 @@
       }
 
       #dispatch-table {
+        -moz-user-select: none;
         font-size: 1em;
         border: 1px solid var(--in-content-box-border-color);
         border-radius: 2px;
@@ -157,6 +158,14 @@
         background: url(chrome://devtools/skin/images/debugging-workers.svg) no-repeat 41px center;
         -moz-context-properties: fill;
         fill: #808080;
+      }
+
+      #dispatch-tbody > tr[selected] > td {
+        background-color: var(--in-content-item-selected);
+        color: var(--in-content-selected-text);
+      }
+      #dispatch-tbody > tr:hover {
+        background-color: var(--in-content-item-hover);
       }
 
       .options {

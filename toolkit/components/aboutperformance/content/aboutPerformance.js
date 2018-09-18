@@ -629,7 +629,7 @@ var State = {
         name = "Ghost windows";
       }
 
-      return ({windowId: id, name, image,
+      return ({id, name, image,
                totalDispatches: dispatches,
                totalDuration: tab.duration,
                durationSincePrevious: prev ? tab.duration - prev.duration : NaN,
@@ -956,6 +956,7 @@ var View = {
     row.appendChild(elt);
 
     this._fragment.appendChild(row);
+    return row;
   },
 };
 
@@ -963,6 +964,19 @@ var Control = {
   init() {
     this._initAutorefresh();
     this._initDisplayMode();
+    let tbody = document.getElementById("dispatch-tbody");
+    tbody.addEventListener("click", () => {
+      let row = event.target.parentNode;
+      if (this.selectedRow) {
+        this.selectedRow.removeAttribute("selected");
+      }
+      if (row.windowId) {
+        row.setAttribute("selected", "true");
+        this.selectedRow = row;
+      } else if (this.selectedRow) {
+        this.selectedRow = null;
+      }
+    });
   },
   async update() {
     let mode = this._displayMode;
@@ -987,8 +1001,15 @@ var Control = {
       // Make sure that we do not keep obsolete stuff around.
       View.DOMCache.trimTo(state.deltas);
     } else {
+
+      let selectedId = -1;
+      if (this.selectedRow) {
+        selectedId = this.selectedRow.windowId;
+        this.selectedRow = null;
+      }
+
       let counters = this._sortCounters(State.getCounters());
-      for (let {name, image, totalDispatches, dispatchesSincePrevious,
+      for (let {id, name, image, totalDispatches, dispatchesSincePrevious,
                 totalDuration, durationSincePrevious, children} of counters) {
         function dispatchesAndDuration(dispatches, duration) {
           let result = dispatches;
@@ -1002,11 +1023,17 @@ var Control = {
           }
           return result;
         }
-        View.appendRow(name,
-                       dispatchesAndDuration(totalDispatches, totalDuration),
-                       dispatchesAndDuration(dispatchesSincePrevious,
-                                             durationSincePrevious),
-                       null, image);
+        let row =
+          View.appendRow(name,
+                         dispatchesAndDuration(totalDispatches, totalDuration),
+                         dispatchesAndDuration(dispatchesSincePrevious,
+                                               durationSincePrevious),
+                         null, image);
+        row.windowId = id;
+        if (id == selectedId) {
+          row.setAttribute("selected", "true");
+          this.selectedRow = row;
+        }
         children.sort((a, b) => b.dispatchCount - a.dispatchCount);
         for (let row of children) {
           let host = row.host.replace(/^blob:https?:\/\//, "");
