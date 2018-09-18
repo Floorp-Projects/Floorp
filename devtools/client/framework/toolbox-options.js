@@ -84,7 +84,7 @@ OptionsPanel.prototype = {
   async open() {
     // For local debugging we need to make the target remote.
     if (!this.target.isRemote) {
-      await this.target.makeRemote();
+      await this.target.attach();
     }
 
     this.setupToolsList();
