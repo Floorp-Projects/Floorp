@@ -329,9 +329,9 @@ class UrlInputFragment :
             clearView?.visibility = View.VISIBLE
             searchViewContainer?.visibility = View.GONE
             addToAutocompelte?.visibility = View.VISIBLE
-            addToAutocompelte?.text = context?.resources?.getString(R.string.add_custom_autocomplete_label, urlView?.text)
+            val text = context?.resources?.getString(R.string.add_custom_autocomplete_label, urlView?.text)
+            addToAutocompelte?.text = text
         }
-
 
         addToAutocompelte.setOnClickListener {
             val url = urlView?.text.toString()

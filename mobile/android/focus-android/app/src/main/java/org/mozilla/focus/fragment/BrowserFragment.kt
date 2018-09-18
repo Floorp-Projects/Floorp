@@ -58,7 +58,6 @@ import org.mozilla.focus.activity.InstallFirefoxActivity
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.animation.TransitionDrawableGroup
 import org.mozilla.focus.architecture.NonNullObserver
-import org.mozilla.focus.autocomplete.AutocompleteQuickAddPopup
 import org.mozilla.focus.biometrics.BiometricAuthenticationDialogFragment
 import org.mozilla.focus.biometrics.BiometricAuthenticationHandler
 import org.mozilla.focus.biometrics.Biometrics
@@ -93,7 +92,6 @@ import org.mozilla.focus.widget.AnimatedProgressBar
 import org.mozilla.focus.widget.FloatingEraseButton
 import org.mozilla.focus.widget.FloatingSessionsButton
 import java.lang.ref.WeakReference
-import java.util.Objects
 
 /**
  * Fragment for displaying the browser UI.
@@ -115,7 +113,6 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
     private var popupTint: FrameLayout? = null
     private var swipeRefresh: SwipeRefreshLayout? = null
     private var menuWeakReference: WeakReference<BrowserMenu>? = WeakReference<BrowserMenu>(null)
-    private var autocompletePopupWeakReference = WeakReference<AutocompleteQuickAddPopup>(null)
 
     /**
      * Container for custom video views shown in fullscreen mode.
@@ -1235,11 +1232,6 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         blockView!!.visibility = if (enabled) View.GONE else View.VISIBLE
     }
 
-    private fun dismissAutocompletePopup() {
-        autocompletePopupWeakReference.get()?.dismiss()
-        autocompletePopupWeakReference.clear()
-    }
-
     override fun onLongClick(view: View): Boolean {
         // Detect long clicks on display_url
         if (view.id == R.id.display_url) {
@@ -1251,26 +1243,6 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                 clipBoard.primaryClip = ClipData.newRawUri("Uri", uri)
                 Toast.makeText(context, getString(R.string.custom_tab_copy_url_action), Toast.LENGTH_SHORT).show()
             }
-
-            val autocompletePopup = AutocompleteQuickAddPopup(context, urlView!!.text.toString())
-
-            // Show the Snackbar and dismiss the popup when a new URL is added.
-            autocompletePopup.onUrlAdded = fun(didAddSuccessfully: Boolean?) {
-                requireActivity().runOnUiThread {
-                    val messageId =
-                        if (didAddSuccessfully!!)
-                            R.string.preference_autocomplete_add_confirmation
-                        else
-                            R.string.preference_autocomplete_duplicate_url_error
-                    ViewUtils.showBrandedSnackbar(Objects.requireNonNull<View>(getView()), messageId, 0)
-                    dismissAutocompletePopup()
-                }
-
-                return Unit
-            }
-
-            autocompletePopup.show(urlView!!)
-            autocompletePopupWeakReference = WeakReference(autocompletePopup)
         }
 
         return false
