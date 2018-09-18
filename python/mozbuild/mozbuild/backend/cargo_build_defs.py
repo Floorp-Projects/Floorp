@@ -32,6 +32,9 @@ cargo_extra_outputs = {
     'num-integer': [
         'rust_out.o',
     ],
+    'num-traits': [
+        'rust_out.o',
+    ],
     'selectors': [
         'ascii_case_insensitive_html_attributes.rs',
     ],
