@@ -112,7 +112,6 @@ public:
 
   typedef nsTStringComparator<char_type> comparator_type;
 
-  typedef char_type* char_iterator; // TODO(erahm): convert all usages to just `iterator`
   typedef const char_type* const_char_iterator;
 
   typedef uint32_t index_type;

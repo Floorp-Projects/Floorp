@@ -437,11 +437,11 @@ nsScannerSharedSubstring::MakeMutable()
 
 // private helper function
 static inline
-nsAString::char_iterator&
-copy_multifragment_string( nsScannerIterator& first, const nsScannerIterator& last, nsAString::char_iterator& result )
+nsAString::iterator&
+copy_multifragment_string( nsScannerIterator& first, const nsScannerIterator& last, nsAString::iterator& result )
   {
     typedef nsCharSourceTraits<nsScannerIterator> source_traits;
-    typedef nsCharSinkTraits<nsAString::char_iterator> sink_traits;
+    typedef nsCharSinkTraits<nsAString::iterator> sink_traits;
 
     while ( first != last )
       {

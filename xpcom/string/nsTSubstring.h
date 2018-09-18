@@ -327,7 +327,6 @@ public:
 
   typedef typename base_string_type::comparator_type comparator_type;
 
-  typedef typename base_string_type::char_iterator char_iterator;
   typedef typename base_string_type::const_char_iterator const_char_iterator;
 
   typedef typename base_string_type::index_type index_type;
@@ -366,7 +365,7 @@ public:
    * the above paragraph says.
    */
 
-  char_iterator BeginWriting()
+  iterator BeginWriting()
   {
     if (!EnsureMutable()) {
       AllocFailed(base_string_type::mLength);
@@ -375,12 +374,12 @@ public:
     return base_string_type::mData;
   }
 
-  char_iterator BeginWriting(const fallible_t&)
+  iterator BeginWriting(const fallible_t&)
   {
-    return EnsureMutable() ? base_string_type::mData : char_iterator(0);
+    return EnsureMutable() ? base_string_type::mData : iterator(0);
   }
 
-  char_iterator EndWriting()
+  iterator EndWriting()
   {
     if (!EnsureMutable()) {
       AllocFailed(base_string_type::mLength);
@@ -389,27 +388,27 @@ public:
     return base_string_type::mData + base_string_type::mLength;
   }
 
-  char_iterator EndWriting(const fallible_t&)
+  iterator EndWriting(const fallible_t&)
   {
-    return EnsureMutable() ? (base_string_type::mData + base_string_type::mLength) : char_iterator(0);
+    return EnsureMutable() ? (base_string_type::mData + base_string_type::mLength) : iterator(0);
   }
 
-  char_iterator& BeginWriting(char_iterator& aIter)
+  iterator& BeginWriting(iterator& aIter)
   {
     return aIter = BeginWriting();
   }
 
-  char_iterator& BeginWriting(char_iterator& aIter, const fallible_t& aFallible)
+  iterator& BeginWriting(iterator& aIter, const fallible_t& aFallible)
   {
     return aIter = BeginWriting(aFallible);
   }
 
-  char_iterator& EndWriting(char_iterator& aIter)
+  iterator& EndWriting(iterator& aIter)
   {
     return aIter = EndWriting();
   }
 
-  char_iterator& EndWriting(char_iterator& aIter, const fallible_t& aFallible)
+  iterator& EndWriting(iterator& aIter, const fallible_t& aFallible)
   {
     return aIter = EndWriting(aFallible);
   }

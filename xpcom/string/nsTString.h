@@ -51,7 +51,6 @@ public:
 
   typedef typename substring_type::comparator_type comparator_type;
 
-  typedef typename substring_type::char_iterator char_iterator;
   typedef typename substring_type::const_char_iterator const_char_iterator;
 
   typedef typename substring_type::index_type index_type;
