@@ -463,10 +463,7 @@ public class Updater {
     private void showDownloadNotification(File downloadFile) {
 
         Intent notificationIntent = new Intent(UpdateServiceHelper.ACTION_APPLY_UPDATE);
-        notificationIntent.setClass(context, UserUpdatesReceiver.class);
-
         Intent cancelIntent = new Intent(UpdateServiceHelper.ACTION_CANCEL_DOWNLOAD);
-        cancelIntent.setClass(context, UserUpdatesReceiver.class);
 
         if (downloadFile != null)
             notificationIntent.putExtra(UpdateServiceHelper.EXTRA_PACKAGE_PATH_NAME, downloadFile.getAbsolutePath());
