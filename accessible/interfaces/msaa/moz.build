@@ -18,7 +18,7 @@ DEFINES['REGISTER_PROXY_DLL'] = True
 # of AccessibleMarshal.dll.
 DEFINES['PROXY_CLSID'] = 'IID_ISimpleDOMNode'
 
-DEFFILE = SRCDIR + '/AccessibleMarshal.def'
+DEFFILE = 'AccessibleMarshal.def'
 
 OS_LIBS += [
     'kernel32',

@@ -325,8 +325,10 @@ class TestRecursiveMakeBackend(BackendTester):
             'RCINCLUDE': [
                 'RCINCLUDE := bar.rc',
             ],
-            'DEFFILE': [
-                'DEFFILE := baz.def',
+            'EXTRA_DEPS': [
+                'EXTRA_DEPS += %s' % mozpath.join(mozpath.relpath(env.topsrcdir,
+                                                                  env.topobjdir),
+                                                  'baz.def'),
             ],
             'WIN32_EXE_LDFLAGS': [
                 'WIN32_EXE_LDFLAGS += -subsystem:console',

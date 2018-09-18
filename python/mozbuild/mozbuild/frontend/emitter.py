@@ -1036,7 +1036,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'RCFILE',
             'RESFILE',
             'RCINCLUDE',
-            'DEFFILE',
             'WIN32_EXE_LDFLAGS',
             'USE_EXTENSION_MANIFEST',
             'NO_JS_MANIFEST',
@@ -1067,13 +1066,28 @@ class TreeMetadataEmitter(LoggingMixin):
         if 'LDFLAGS' in context and context['LDFLAGS']:
             computed_link_flags.resolve_flags('MOZBUILD', context['LDFLAGS'])
 
-        deffile = context['DEFFILE']
-        if deffile and context.config.substs.get('OS_ARCH') == 'WINNT':
+        deffile = context.get('DEFFILE')
+        if deffile and context.config.substs.get('OS_TARGET') == 'WINNT':
+            if isinstance(deffile, SourcePath):
+                if not os.path.exists(deffile.full_path):
+                    raise SandboxValidationError(
+                        'Path specified in DEFFILE does not exist: %s '
+                        '(resolved to %s)' % (deffile,
+                        deffile.full_path), context)
+                path = mozpath.relpath(deffile.full_path, context.objdir)
+            else:
+                path = deffile.target_basename
+
+            # We don't have any better way to indicate that the def file
+            # is a dependency to whatever we're building beyond stuffing
+            # it into EXTRA_DEPS.
+            passthru.variables['EXTRA_DEPS'] = [path]
+
             if context.config.substs.get('GNU_CC'):
-                computed_link_flags.resolve_flags('DEFFILE', [deffile])
+                computed_link_flags.resolve_flags('DEFFILE', [path])
             else:
                 computed_link_flags.resolve_flags('DEFFILE',
-                                                  ['-DEF:' + deffile])
+                                                  ['-DEF:' + path])
 
         dist_install = context['DIST_INSTALL']
         if dist_install is True:
