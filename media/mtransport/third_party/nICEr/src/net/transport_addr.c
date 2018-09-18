@@ -99,12 +99,12 @@ int nr_transport_addr_fmt_ifname_addr_string(const nr_transport_addr *addr, char
     switch(addr->ip_version){
       case NR_IPV4:
         if (!inet_ntop(AF_INET, &addr->u.addr4.sin_addr,buffer,sizeof(buffer))) {
-           strncpy(buffer, "[error]", len);
+           strncpy(buffer, "[error]", sizeof(buffer));
         }
         break;
       case NR_IPV6:
         if (!inet_ntop(AF_INET6, &addr->u.addr6.sin6_addr,buffer,sizeof(buffer))) {
-           strncpy(buffer, "[error]", len);
+           strncpy(buffer, "[error]", sizeof(buffer));
         }
         break;
       default:
