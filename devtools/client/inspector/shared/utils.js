@@ -110,6 +110,43 @@ function createChild(parent, tagName, attributes = {}) {
 }
 
 /**
+ * Returns a selector of the Element Rep from the grip. This is based on the
+ * getElements() function in our devtools-reps component for a ElementNode.
+ *
+ * @param  {Object} grip
+ *         Grip-like object that can be used with Reps.
+ * @return {String} selector of the element node.
+ */
+function getSelectorFromGrip(grip) {
+  const {
+    attributes,
+    nodeName,
+    isAfterPseudoElement,
+    isBeforePseudoElement
+  } = grip.preview;
+
+  if (isAfterPseudoElement || isBeforePseudoElement) {
+    return `::${isAfterPseudoElement ? "after" : "before"}`;
+  }
+
+  let selector = nodeName;
+
+  if (attributes.id) {
+    selector += `#${attributes.id}`;
+  }
+
+  if (attributes.class) {
+    selector += attributes.class
+      .trim()
+      .split(/\s+/)
+      .map(cls => `.${cls}`)
+      .join("");
+  }
+
+  return selector;
+}
+
+/**
  * Log the provided error to the console and return a rejected Promise for
  * this error.
  *
@@ -160,6 +197,7 @@ exports.advanceValidate = advanceValidate;
 exports.appendText = appendText;
 exports.blurOnMultipleProperties = blurOnMultipleProperties;
 exports.createChild = createChild;
+exports.getSelectorFromGrip = getSelectorFromGrip;
 exports.promiseWarn = promiseWarn;
 exports.throttle = throttle;
 exports.translateNodeFrontToGrip = translateNodeFrontToGrip;
