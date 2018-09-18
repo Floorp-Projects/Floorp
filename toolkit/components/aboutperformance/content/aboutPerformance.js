@@ -678,6 +678,7 @@ var State = {
       let durationSincePrevious = NaN;
       let dispatchesSincePrevious = NaN;
       let dispatchesSinceStartOfBuffer = NaN;
+      let durationSinceStartOfBuffer = NaN;
       if (prev) {
         durationSincePrevious =
           duration - prev.duration - (prev.durationFromFormerChildren || 0);
@@ -687,11 +688,14 @@ var State = {
       if (oldest) {
         dispatchesSinceStartOfBuffer =
           dispatches - oldest.dispatchCount - (oldest.dispatchesFromFormerChildren || 0);
+        durationSinceStartOfBuffer =
+          duration - oldest.duration - (oldest.durationFromFormerChildren || 0);
       }
       return ({id, name, image,
                totalDispatches: dispatches, totalDuration: duration,
                durationSincePrevious, dispatchesSincePrevious,
-               dispatchesSinceStartOfBuffer, children});
+               durationSinceStartOfBuffer, dispatchesSinceStartOfBuffer,
+               children});
     });
   },
 };
@@ -992,24 +996,23 @@ var View = {
     tbody.appendChild(this._fragment);
     this._fragment = document.createDocumentFragment();
   },
-  appendRow(name, totalValue, recentValue, classes, image = "") {
+  appendRow(name, value, tooltip, classes, image = "") {
     let row = document.createElement("tr");
 
     let elt = document.createElement("td");
     elt.textContent = name;
-    row.appendChild(elt);
     if (image)
       elt.style.backgroundImage = `url('${image}')`;
     if (classes)
       elt.classList.add(...classes);
-
-    elt = document.createElement("td");
-    elt.textContent = totalValue;
     row.appendChild(elt);
 
     elt = document.createElement("td");
-    elt.textContent = recentValue;
+    elt.textContent = value;
     row.appendChild(elt);
+
+    if (tooltip)
+      row.title = tooltip;
 
     this._fragment.appendChild(row);
     return row;
@@ -1078,6 +1081,7 @@ var Control = {
       let counters = this._sortCounters(State.getCounters());
       for (let {id, name, image, totalDispatches, dispatchesSincePrevious,
                 totalDuration, durationSincePrevious, children} of counters) {
+
         function dispatchesAndDuration(dispatches, duration) {
           let result = dispatches;
           if (duration) {
@@ -1090,17 +1094,37 @@ var Control = {
           }
           return result;
         }
+
+        function formatTooltip(totalDispatches, totalDuration,
+                               dispatchesSincePrevious, durationSincePrevious) {
+          return `${dispatchesAndDuration(totalDispatches, totalDuration)} dispatches since load\n` +
+            `${dispatchesAndDuration(dispatchesSincePrevious, durationSincePrevious)} in the last seconds`;
+        }
+
+        let formatEnergyImpact = (dispatches, duration) => {
+          let energyImpact = this._computeEnergyImpact(dispatches, duration);
+          if (!energyImpact)
+            return "None";
+          energyImpact = Math.ceil(energyImpact * 100) / 100;
+          if (energyImpact < 1)
+            return `Low (${energyImpact})`;
+          if (energyImpact < 25)
+            return `Medium (${energyImpact})`;
+          return `High (${energyImpact})`;
+        };
+
         let row =
           View.appendRow(name,
-                         dispatchesAndDuration(totalDispatches, totalDuration),
-                         dispatchesAndDuration(dispatchesSincePrevious,
-                                               durationSincePrevious),
+                         formatEnergyImpact(dispatchesSincePrevious, durationSincePrevious),
+                         formatTooltip(totalDispatches, totalDuration,
+                                       dispatchesSincePrevious, durationSincePrevious),
                          null, image);
         row.windowId = id;
         if (id == selectedId) {
           row.setAttribute("selected", "true");
           this.selectedRow = row;
         }
+
         children.sort((a, b) => b.dispatchesSincePrevious - a.dispatchesSincePrevious);
         for (let row of children) {
           let host = row.host.replace(/^blob:https?:\/\//, "");
@@ -1110,12 +1134,15 @@ var Control = {
           if (row.isWorker)
             classes.push("worker");
           View.appendRow(row.host,
-                         dispatchesAndDuration(row.dispatchCount, row.duration),
-                         dispatchesAndDuration(row.dispatchesSincePrevious,
-                                               row.durationSincePrevious),
+                         formatEnergyImpact(row.dispatchesSincePrevious,
+                                            row.durationSincePrevious),
+                         formatTooltip(row.dispatchCount, row.duration,
+                                       row.dispatchesSincePrevious,
+                                       row.durationSincePrevious),
                          classes);
         }
       }
+
       View.commit();
     }
 
@@ -1124,12 +1151,29 @@ var Control = {
     // Inform watchers
     Services.obs.notifyObservers(null, UPDATE_COMPLETE_TOPIC, mode);
   },
+  _computeEnergyImpact(dispatches, duration) {
+    // 'Dispatches' doesn't make sense to users, and it's difficult to present
+    // two numbers in a meaningful way, so we need to somehow aggregate the
+    // dispatches and duration values we have.
+    // The current formula to aggregate the numbers assumes that the cost of
+    // a dispatch is equivalent to 1ms of CPU time.
+    // Dividing the result by the sampling interval and by 10 gives a number that
+    // looks like a familiar percentage to users, as fullying using one core will
+    // result in a number close to 100.
+    return Math.max(duration || 0, dispatches * 1000) / UPDATE_INTERVAL_MS / 10;
+  },
   _sortCounters(counters) {
     return counters.sort((a, b) => {
-      if (a.dispatchesSinceStartOfBuffer != b.dispatchesSinceStartOfBuffer)
-        return b.dispatchesSinceStartOfBuffer - a.dispatchesSinceStartOfBuffer;
-      if (a.totalDispatches != b.totalDispatches)
-        return b.totalDispatches - a.totalDispatches;
+      // Note: _computeEnergyImpact uses UPDATE_INTERVAL_MS which doesn't match
+      // the time between the most recent sample and the start of the buffer,
+      // BUFFER_DURATION_MS would be better, but the values is never displayed
+      // so this is OK.
+      let aEI = this._computeEnergyImpact(a.dispatchesSinceStartOfBuffer,
+                                          a.durationSinceStartOfBuffer);
+      let bEI = this._computeEnergyImpact(b.dispatchesSinceStartOfBuffer,
+                                          b.durationSinceStartOfBuffer);
+      if (aEI != bEI)
+        return bEI - aEI;
       return a.name.localeCompare(b.name);
     });
   },
