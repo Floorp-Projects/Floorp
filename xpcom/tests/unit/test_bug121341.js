@@ -9,7 +9,8 @@ function run_test() {
   });
   var inp = channel.open2();
 
-  var properties = Cu.createPersistentProperties();
+  var properties = Cc["@mozilla.org/persistent-properties;1"].
+                   createInstance(Ci.nsIPersistentProperties);
   properties.load(inp);
 
   var value;
@@ -55,7 +56,8 @@ function run_test() {
   });
   inp = channel2.open2();
 
-  var properties2 = Cu.createPersistentProperties();
+  var properties2 = Cc["@mozilla.org/persistent-properties;1"].
+                    createInstance(Ci.nsIPersistentProperties);
   try {
     properties2.load(inp);
     do_throw("load() didn't fail");

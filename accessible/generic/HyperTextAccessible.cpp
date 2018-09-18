@@ -25,7 +25,7 @@
 #include "nsFrameSelection.h"
 #include "nsILineIterator.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsPersistentProperties.h"
+#include "nsIPersistentProperties2.h"
 #include "nsIScrollableFrame.h"
 #include "nsIServiceManager.h"
 #include "nsITextControlElement.h"
@@ -880,7 +880,8 @@ HyperTextAccessible::TextAttributes(bool aIncludeDefAttrs, int32_t aOffset,
     return nullptr;
   }
 
-  RefPtr<nsPersistentProperties> attributes = new nsPersistentProperties();
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
 
   Accessible* accAtOffset = GetChildAtOffset(offset);
   if (!accAtOffset) {
@@ -924,7 +925,8 @@ HyperTextAccessible::TextAttributes(bool aIncludeDefAttrs, int32_t aOffset,
 already_AddRefed<nsIPersistentProperties>
 HyperTextAccessible::DefaultTextAttributes()
 {
-  RefPtr<nsPersistentProperties> attributes = new nsPersistentProperties();
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
 
   TextAttrsMgr textAttrsMgr(this);
   textAttrsMgr.GetAttributes(attributes);

@@ -11,7 +11,7 @@
 #include "IUnknownImpl.h"
 
 #include "nsIGfxInfo.h"
-#include "nsPersistentProperties.h"
+#include "nsIPersistentProperties2.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Services.h"
 
@@ -26,7 +26,8 @@ NS_IMPL_ISUPPORTS_INHERITED0(ApplicationAccessibleWrap,
 already_AddRefed<nsIPersistentProperties>
 ApplicationAccessibleWrap::NativeAttributes()
 {
-  RefPtr<nsPersistentProperties> attributes = new nsPersistentProperties();
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   if (gfxInfo) {

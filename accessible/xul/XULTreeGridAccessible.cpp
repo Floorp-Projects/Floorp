@@ -18,7 +18,7 @@
 
 #include "nsIBoxObject.h"
 #include "nsIMutableArray.h"
-#include "nsPersistentProperties.h"
+#include "nsIPersistentProperties2.h"
 #include "nsITreeSelection.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/dom/Element.h"
@@ -646,7 +646,8 @@ XULTreeGridCellAccessible::Selected()
 already_AddRefed<nsIPersistentProperties>
 XULTreeGridCellAccessible::NativeAttributes()
 {
-  RefPtr<nsPersistentProperties> attributes = new nsPersistentProperties();
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
 
   // "table-cell-index" attribute
   TableAccessible* table = Table();
