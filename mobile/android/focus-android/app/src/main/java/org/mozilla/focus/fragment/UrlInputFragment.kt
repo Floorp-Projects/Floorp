@@ -30,6 +30,8 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_urlinput.*
 import kotlinx.android.synthetic.main.fragment_urlinput.view.*
+import kotlinx.coroutines.experimental.launch
+import mozilla.components.browser.domains.CustomDomains
 import mozilla.components.browser.domains.DomainAutoCompleteProvider
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
@@ -57,6 +59,7 @@ import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
 import org.mozilla.focus.viewmodel.MainViewModel
 import org.mozilla.focus.whatsnew.WhatsNew
+import java.util.Objects
 
 class FocusCrashException : Exception()
 
@@ -329,6 +332,12 @@ class UrlInputFragment :
             addToAutocompelte?.text = context?.resources?.getString(R.string.add_custom_autocomplete_label, urlView?.text)
         }
 
+
+        addToAutocompelte.setOnClickListener {
+            val url = urlView?.text.toString()
+            addUrlToAutocomplete(url)
+        }
+
         updateTipsLabel()
     }
 
@@ -444,6 +453,31 @@ class UrlInputFragment :
 
         displayedPopupMenu?.dismissListener = {
             displayedPopupMenu = null
+        }
+    }
+
+    private fun addUrlToAutocomplete(url: String) {
+        var duplicateURL = false
+        val job = launch {
+            duplicateURL = CustomDomains.load(requireContext()).contains(url)
+
+            if (duplicateURL) return@launch
+            CustomDomains.add(requireContext(), url)
+
+            TelemetryWrapper.saveAutocompleteDomainEvent(TelemetryWrapper.AutoCompleteEventSource.QUICK_ADD)
+        }
+
+        job.invokeOnCompletion {
+            requireActivity().runOnUiThread {
+                val messageId =
+                        if (!duplicateURL)
+                            R.string.preference_autocomplete_add_confirmation
+                        else
+                            R.string.preference_autocomplete_duplicate_url_error
+
+                ViewUtils.showBrandedSnackbar(Objects.requireNonNull<View>(view), messageId, 0)
+                animateAndDismiss()
+            }
         }
     }
 
