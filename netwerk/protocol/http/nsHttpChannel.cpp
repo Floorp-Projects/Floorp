@@ -812,7 +812,6 @@ nsHttpChannel::CheckFastBlocked()
     }
 
     return engageFastBlock;
->>>>>>> graft
 }
 
 nsresult
