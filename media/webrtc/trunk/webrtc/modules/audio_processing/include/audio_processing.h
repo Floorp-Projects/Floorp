@@ -12,7 +12,8 @@
 #define MODULES_AUDIO_PROCESSING_INCLUDE_AUDIO_PROCESSING_H_
 
 // MSVC++ requires this to be set before any other includes to get M_PI.
-#define _USE_MATH_DEFINES
+// MOZILLA: this is already defined in mozilla-config.h
+// #define _USE_MATH_DEFINES
 
 #include <math.h>
 #include <stddef.h>  // size_t
