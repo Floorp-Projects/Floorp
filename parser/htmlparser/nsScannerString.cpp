@@ -437,11 +437,11 @@ nsScannerSharedSubstring::MakeMutable()
 
 // private helper function
 static inline
-nsAString::iterator&
-copy_multifragment_string( nsScannerIterator& first, const nsScannerIterator& last, nsAString::iterator& result )
+nsAString::char_iterator&
+copy_multifragment_string( nsScannerIterator& first, const nsScannerIterator& last, nsAString::char_iterator& result )
   {
     typedef nsCharSourceTraits<nsScannerIterator> source_traits;
-    typedef nsCharSinkTraits<nsAString::iterator> sink_traits;
+    typedef nsCharSinkTraits<nsAString::char_iterator> sink_traits;
 
     while ( first != last )
       {
@@ -459,8 +459,6 @@ CopyUnicodeTo( const nsScannerIterator& aSrcStart,
                const nsScannerIterator& aSrcEnd,
                nsAString& aDest )
   {
-    nsAString::iterator writer;
-
     mozilla::CheckedInt<nsAString::size_type> distance(Distance(aSrcStart, aSrcEnd));
     if (!distance.isValid()) {
       return false; // overflow detected
@@ -470,9 +468,9 @@ CopyUnicodeTo( const nsScannerIterator& aSrcStart,
       aDest.Truncate();
       return false; // out of memory
     }
-    aDest.BeginWriting(writer);
+    auto writer = aDest.BeginWriting();
     nsScannerIterator fromBegin(aSrcStart);
-    
+
     copy_multifragment_string(fromBegin, aSrcEnd, writer);
     return true;
   }
@@ -498,7 +496,6 @@ AppendUnicodeTo( const nsScannerIterator& aSrcStart,
                  const nsScannerIterator& aSrcEnd,
                  nsAString& aDest )
   {
-    nsAString::iterator writer;
     const nsAString::size_type oldLength = aDest.Length();
     CheckedInt<nsAString::size_type> newLen(Distance(aSrcStart, aSrcEnd));
     newLen += oldLength;
@@ -508,9 +505,10 @@ AppendUnicodeTo( const nsScannerIterator& aSrcStart,
 
     if (!aDest.SetLength(newLen.value(), mozilla::fallible))
       return false; // out of memory
-    aDest.BeginWriting(writer).advance(oldLength);
+    auto writer = aDest.BeginWriting();
+    std::advance(writer, oldLength);
     nsScannerIterator fromBegin(aSrcStart);
-    
+
     copy_multifragment_string(fromBegin, aSrcEnd, writer);
     return true;
   }
