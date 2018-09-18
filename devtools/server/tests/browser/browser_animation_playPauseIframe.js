@@ -22,27 +22,22 @@ add_task(async function() {
   const nodeInFrame2 = await getNodeInFrame(walker, "#i2", ".simple-animation");
 
   info("Pause all animations in the test document");
-  await toggleAndCheckStates(animations, nodeInFrame1, "paused");
-  await toggleAndCheckStates(animations, nodeInFrame2, "paused");
+  await animations.pauseAll();
+  await checkState(animations, nodeInFrame1, "paused");
+  await checkState(animations, nodeInFrame2, "paused");
 
   info("Play all animations in the test document");
-  await toggleAndCheckStates(animations, nodeInFrame1, "running");
-  await toggleAndCheckStates(animations, nodeInFrame2, "running");
+  await animations.playAll();
+  await checkState(animations, nodeInFrame1, "running");
+  await checkState(animations, nodeInFrame2, "running");
 
   await client.close();
   gBrowser.removeCurrentTab();
 });
 
-async function toggleAndCheckStates(animations, nodeFront, playState) {
-  const [player] = await animations.getAnimationPlayersForNode(nodeFront);
-
-  if (playState === "paused") {
-    await animations.pauseSome([player]);
-  } else {
-    await animations.playSome([player]);
-  }
-
+async function checkState(animations, nodeFront, playState) {
   info("Getting the AnimationPlayerFront for the test node");
+  const [player] = await animations.getAnimationPlayersForNode(nodeFront);
   await player.ready;
   const state = await player.getCurrentState();
   is(state.playState, playState,
