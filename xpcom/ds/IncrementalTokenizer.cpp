@@ -71,7 +71,7 @@ nsresult IncrementalTokenizer::FeedInput(nsIInputStream * aInput, uint32_t aCoun
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsCString::char_iterator buffer = mInput.BeginWriting() + remainder;
+    auto buffer = mInput.BeginWriting() + remainder;
 
     uint32_t read;
     rv = aInput->Read(buffer, load, &read);
