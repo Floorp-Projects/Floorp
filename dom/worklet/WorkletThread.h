@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CondVar.h"
-#include "mozilla/dom/Worklet.h"
+#include "mozilla/dom/WorkletImpl.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/TimeStamp.h"
