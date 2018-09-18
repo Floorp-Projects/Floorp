@@ -103,6 +103,10 @@ module.exports = [
     path: "webconsole/openwithcache.js",
     description: "Measure time to render last logged messages in console for a page with 100 logged messages"
   }, {
+    name: "console.typing",
+    path: "webconsole/typing.js",
+    description: "Measure time it takes to type something in the console input"
+  }, {
     name: "inspector.mutations",
     path: "inspector/mutations.js",
     description: "Measure the time to perform childList mutations when inspector is enabled"
