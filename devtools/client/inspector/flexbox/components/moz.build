@@ -12,5 +12,4 @@ DevToolsModules(
     'FlexItemList.js',
     'FlexItemSelector.js',
     'FlexItemSizingProperties.js',
-    'Header.js',
 )

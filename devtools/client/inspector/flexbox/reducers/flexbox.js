@@ -36,16 +36,11 @@ const reducers = {
   },
 
   [TOGGLE_FLEX_ITEM_SHOWN](flexbox, { nodeFront }) {
-    let flexItemShown = null;
-
-    // Get the NodeFront actor ID of the flex item.
-    if (nodeFront) {
-      const flexItem = flexbox.flexItems.find(item => item.nodeFront === nodeFront);
-      flexItemShown = flexItem.nodeFront.actorID;
-    }
+    const { flexItems } = flexbox;
+    const flexItemShown = flexItems.find(item => item.nodeFront === nodeFront);
 
     return Object.assign({}, flexbox, {
-      flexItemShown,
+      flexItemShown: flexItemShown ? flexItemShown.nodeFront.actorID : null,
     });
   },
 
