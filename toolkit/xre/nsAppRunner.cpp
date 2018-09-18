@@ -1648,48 +1648,6 @@ DumpHelp()
   DumpArbitraryHelp();
 }
 
-#if defined(DEBUG) && defined(XP_WIN)
-#ifdef DEBUG_warren
-#define _CRTDBG_MAP_ALLOC
-#endif
-// Set a CRT ReportHook function to capture and format MSCRT
-// warnings, errors and assertions.
-// See http://msdn.microsoft.com/en-US/library/74kabxyx(v=VS.80).aspx
-#include <stdio.h>
-#include <crtdbg.h>
-#include "mozilla/mozalloc_abort.h"
-static int MSCRTReportHook( int aReportType, char *aMessage, int *oReturnValue)
-{
-  *oReturnValue = 0; // continue execution
-
-  // Do not use fprintf or other functions which may allocate
-  // memory from the heap which may be corrupted. Instead,
-  // use fputs to output the leading portion of the message
-  // and use mozalloc_abort to emit the remainder of the
-  // message.
-
-  switch(aReportType) {
-  case 0:
-    fputs("\nWARNING: CRT WARNING", stderr);
-    fputs(aMessage, stderr);
-    fputs("\n", stderr);
-    break;
-  case 1:
-    fputs("\n###!!! ABORT: CRT ERROR ", stderr);
-    mozalloc_abort(aMessage);
-    break;
-  case 2:
-    fputs("\n###!!! ABORT: CRT ASSERT ", stderr);
-    mozalloc_abort(aMessage);
-    break;
-  }
-
-  // do not invoke the debugger
-  return 1;
-}
-
-#endif
-
 static inline void
 DumpVersion()
 {
@@ -1806,7 +1764,7 @@ RegisterApplicationRestartChanged(const char* aPref, void* aData) {
     // Excludes argv[0] because RegisterApplicationRestart adds the
     // executable name, replace that temporarily with -os-restarted
     char* exeName = gRestartArgv[0];
-    gRestartArgv[0] = "-os-restarted";
+    gRestartArgv[0] = const_cast<char*>("-os-restarted");
     wchar_t** restartArgvConverted =
       AllocConvertUTF8toUTF16Strings(gRestartArgc, gRestartArgv);
     gRestartArgv[0] = exeName;
@@ -5330,21 +5288,6 @@ SetupErrorHandling(const char* progname)
 
   SetErrorMode(realMode);
 
-#endif
-
-#if defined (DEBUG) && defined(XP_WIN)
-  // Send MSCRT Warnings, Errors and Assertions to stderr.
-  // See http://msdn.microsoft.com/en-us/library/1y71x448(v=VS.80).aspx
-  // and http://msdn.microsoft.com/en-us/library/a68f826y(v=VS.80).aspx.
-
-  _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-  _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
-  _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
-  _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
-  _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
-  _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
-
-  _CrtSetReportHook(MSCRTReportHook);
 #endif
 
   InstallSignalHandlers(progname);
