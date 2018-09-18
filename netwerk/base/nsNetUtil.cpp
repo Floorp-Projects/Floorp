@@ -2029,7 +2029,7 @@ NS_LoadPersistentPropertiesFromURISpec(nsIPersistentProperties **outResult,
     rv = channel->Open2(getter_AddRefs(in));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIPersistentProperties> properties = new nsPersistentProperties();
+    RefPtr<nsPersistentProperties> properties = new nsPersistentProperties();
     rv = properties->Load(in);
     NS_ENSURE_SUCCESS(rv, rv);
 
