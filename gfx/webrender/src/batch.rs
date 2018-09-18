@@ -1777,10 +1777,10 @@ impl ClipBatcher {
         transforms: &mut TransformPalette,
     ) {
         for i in 0 .. clip_node_range.count {
-            let (clip_node, flags, spatial_node_index) = clip_store.get_node_from_range(&clip_node_range, i);
+            let (clip_node, flags) = clip_store.get_node_from_range(&clip_node_range, i);
 
             let clip_transform_id = transforms.get_id(
-                spatial_node_index,
+                clip_node.spatial_node_index,
                 ROOT_SPATIAL_NODE_INDEX,
                 clip_scroll_tree,
             );

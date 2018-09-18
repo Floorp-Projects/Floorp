@@ -757,10 +757,6 @@ impl RenderBackend {
                         // We don't want to forward this message to the renderer.
                         return true;
                     }
-                    DebugCommand::EnableGpuCacheDebug(enable) => {
-                        self.gpu_cache.set_debug(enable);
-                        ResultMsg::DebugCommand(option)
-                    }
                     DebugCommand::FetchDocuments => {
                         let json = self.get_docs_for_debugger();
                         ResultMsg::DebugOutput(DebugOutput::FetchDocuments(json))
@@ -819,16 +815,6 @@ impl RenderBackend {
                     }
                     DebugCommand::ClearCaches(mask) => {
                         self.resource_cache.clear(mask);
-                        return true;
-                    }
-                    DebugCommand::SimulateLongSceneBuild(time_ms) => {
-                        self.scene_tx.send(SceneBuilderRequest::SimulateLongSceneBuild(time_ms)).unwrap();
-                        return true;
-                    }
-                    DebugCommand::SimulateLongLowPrioritySceneBuild(time_ms) => {
-                        self.low_priority_scene_tx.send(
-                            SceneBuilderRequest::SimulateLongLowPrioritySceneBuild(time_ms)
-                        ).unwrap();
                         return true;
                     }
                     _ => ResultMsg::DebugCommand(option),
