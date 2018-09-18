@@ -10082,7 +10082,8 @@ nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont, LookAndFeel::FontID aFontI
   nsAutoString systemFontName;
   if (LookAndFeel::GetFont(aFontID, systemFontName, fontStyle, devPerCSS)) {
     systemFontName.Trim("\"'");
-    aSystemFont->fontlist = FontFamilyList(systemFontName, eUnquotedName);
+    aSystemFont->fontlist =
+      FontFamilyList(NS_ConvertUTF16toUTF8(systemFontName), eUnquotedName);
     aSystemFont->fontlist.SetDefaultFontType(eFamily_none);
     aSystemFont->style = fontStyle.style;
     aSystemFont->systemFont = fontStyle.systemFont;

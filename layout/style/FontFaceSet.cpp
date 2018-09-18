@@ -295,8 +295,12 @@ FontFaceSet::FindMatchingFontFaces(const nsAString& aFont,
   nsTHashtable<nsPtrHashKey<FontFace>> matchingFaces;
 
   for (const FontFamilyName& fontFamilyName : familyList->mNames) {
+    if (!fontFamilyName.IsNamed()) {
+      continue;
+    }
+
     RefPtr<gfxFontFamily> family =
-      mUserFontSet->LookupFamily(NS_ConvertUTF16toUTF8(fontFamilyName.mName));
+      mUserFontSet->LookupFamily(nsAtomCString(fontFamilyName.mName));
 
     if (!family) {
       continue;
