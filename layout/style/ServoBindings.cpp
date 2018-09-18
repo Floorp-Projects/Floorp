@@ -1141,13 +1141,7 @@ Gecko_nsTArray_FontFamilyName_AppendNamed(nsTArray<FontFamilyName>* aNames,
                                           nsAtom* aName,
                                           bool aQuoted)
 {
-  FontFamilyName family;
-  aName->ToString(family.mName);
-  if (aQuoted) {
-    family.mType = eFamily_named_quoted;
-  }
-
-  aNames->AppendElement(family);
+  aNames->AppendElement(FontFamilyName(aName, aQuoted ? eQuotedName : eUnquotedName));
 }
 
 void

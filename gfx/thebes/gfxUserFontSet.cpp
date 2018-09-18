@@ -1081,11 +1081,10 @@ bool
 gfxUserFontSet::ContainsUserFontSetFonts(const FontFamilyList& aFontList) const
 {
     for (const FontFamilyName& name : aFontList.GetFontlist()->mNames) {
-        if (name.mType != eFamily_named &&
-            name.mType != eFamily_named_quoted) {
+        if (!name.IsNamed()) {
             continue;
         }
-        if (LookupFamily(NS_ConvertUTF16toUTF8(name.mName))) {
+        if (LookupFamily(nsAtomCString(name.mName))) {
             return true;
         }
     }
