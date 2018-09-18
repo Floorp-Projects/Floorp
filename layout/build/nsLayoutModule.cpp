@@ -24,7 +24,6 @@
 #include "nsIContentViewer.h"
 #include "nsIController.h"
 #include "nsIControllers.h"
-#include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIFactory.h"
 #include "nsIIdleService.h"
@@ -112,10 +111,6 @@ class nsIDocumentLoaderFactory;
 { 0x0ddf4df8, 0x4dbb, 0x4133, { 0x8b, 0x79, 0x9a, 0xfb, 0x96, 0x65, 0x14, 0xf5 } }
 
 #include "inDeepTreeWalker.h"
-
-#ifdef MOZ_XUL
-#include "XULDocument.h"
-#endif
 
 static void Shutdown();
 
@@ -324,10 +319,6 @@ MAKE_CTOR(CreateNewFrameTraversal,      nsIFrameTraversal,      NS_CreateFrameTr
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDeepTreeWalker)
 
 MAKE_CTOR2(CreateContentViewer,           nsIContentViewer,            NS_NewContentViewer)
-MAKE_CTOR(CreateHTMLDocument,             nsIDocument,                 NS_NewHTMLDocument)
-MAKE_CTOR(CreateXMLDocument,              nsIDocument,                 NS_NewXMLDocument)
-MAKE_CTOR(CreateSVGDocument,              nsIDocument,                 NS_NewSVGDocument)
-MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewImageDocument)
 MAKE_CTOR(CreateTextEncoder,              nsIDocumentEncoder,          NS_NewTextEncoder)
 MAKE_CTOR(CreateHTMLCopyTextEncoder,      nsIDocumentEncoder,          NS_NewHTMLCopyTextEncoder)
 MAKE_CTOR(CreateXMLContentSerializer,     nsIContentSerializer,        NS_NewXMLContentSerializer)
@@ -335,9 +326,6 @@ MAKE_CTOR(CreateHTMLContentSerializer,    nsIContentSerializer,        NS_NewHTM
 MAKE_CTOR(CreateXHTMLContentSerializer,   nsIContentSerializer,        NS_NewXHTMLContentSerializer)
 MAKE_CTOR(CreatePlainTextSerializer,      nsIContentSerializer,        NS_NewPlainTextSerializer)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
-#ifdef MOZ_XUL
-MAKE_CTOR(CreateXULDocument,              nsIDocument,                 NS_NewXULDocument)
-#endif
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
 MAKE_CTOR(CreateEventListenerService,     nsIEventListenerService,     NS_NewEventListenerService)
 MAKE_CTOR(CreateGlobalMessageManager,     nsISupports,                 NS_NewGlobalMessageManager)
@@ -345,8 +333,6 @@ MAKE_CTOR(CreateParentMessageManager,     nsISupports,                 NS_NewPar
 MAKE_CTOR(CreateChildMessageManager,      nsISupports,                 NS_NewChildProcessMessageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoDataProtocolContentPolicy)
-MAKE_CTOR(CreatePluginDocument,           nsIDocument,                 NS_NewPluginDocument)
-MAKE_CTOR(CreateVideoDocument,            nsIDocument,                 NS_NewVideoDocument)
 MAKE_CTOR(CreateFocusManager,             nsIFocusManager,      NS_NewFocusManager)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStyleSheetService, Init)
@@ -443,10 +429,6 @@ NS_DEFINE_NAMED_CID(NS_LAYOUT_DEBUGGER_CID);
 NS_DEFINE_NAMED_CID(NS_FRAMETRAVERSAL_CID);
 NS_DEFINE_NAMED_CID(IN_DEEPTREEWALKER_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENT_VIEWER_CID);
-NS_DEFINE_NAMED_CID(NS_HTMLDOCUMENT_CID);
-NS_DEFINE_NAMED_CID(NS_XMLDOCUMENT_CID);
-NS_DEFINE_NAMED_CID(NS_SVGDOCUMENT_CID);
-NS_DEFINE_NAMED_CID(NS_IMAGEDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_TEXT_ENCODER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLCOPY_TEXT_ENCODER_CID);
 NS_DEFINE_NAMED_CID(NS_XMLCONTENTSERIALIZER_CID);
@@ -458,16 +440,11 @@ NS_DEFINE_NAMED_CID(NS_SCRIPTABLEUNESCAPEHTML_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENTPOLICY_CID);
 NS_DEFINE_NAMED_CID(NS_DATADOCUMENTCONTENTPOLICY_CID);
 NS_DEFINE_NAMED_CID(NS_NODATAPROTOCOLCONTENTPOLICY_CID);
-#ifdef MOZ_XUL
-NS_DEFINE_NAMED_CID(NS_XULDOCUMENT_CID);
-#endif
 NS_DEFINE_NAMED_CID(NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_JSPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_JSURI_CID);
 NS_DEFINE_NAMED_CID(NS_JSURIMUTATOR_CID);
 NS_DEFINE_NAMED_CID(NS_PLUGINDOCLOADERFACTORY_CID);
-NS_DEFINE_NAMED_CID(NS_PLUGINDOCUMENT_CID);
-NS_DEFINE_NAMED_CID(NS_VIDEODOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_STYLESHEETSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_HOSTOBJECTURI_CID);
 NS_DEFINE_NAMED_CID(NS_HOSTOBJECTURIMUTATOR_CID);
@@ -535,10 +512,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_FRAMETRAVERSAL_CID, false, nullptr, CreateNewFrameTraversal },
   { &kIN_DEEPTREEWALKER_CID, false, nullptr, inDeepTreeWalkerConstructor },
   { &kNS_CONTENT_VIEWER_CID, false, nullptr, CreateContentViewer },
-  { &kNS_HTMLDOCUMENT_CID, false, nullptr, CreateHTMLDocument },
-  { &kNS_XMLDOCUMENT_CID, false, nullptr, CreateXMLDocument },
-  { &kNS_SVGDOCUMENT_CID, false, nullptr, CreateSVGDocument },
-  { &kNS_IMAGEDOCUMENT_CID, false, nullptr, CreateImageDocument },
   { &kNS_TEXT_ENCODER_CID, false, nullptr, CreateTextEncoder },
   { &kNS_HTMLCOPY_TEXT_ENCODER_CID, false, nullptr, CreateHTMLCopyTextEncoder },
   { &kNS_XMLCONTENTSERIALIZER_CID, false, nullptr, CreateXMLContentSerializer },
@@ -550,16 +523,11 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_CONTENTPOLICY_CID, false, nullptr, CreateContentPolicy },
   { &kNS_DATADOCUMENTCONTENTPOLICY_CID, false, nullptr, nsDataDocumentContentPolicyConstructor },
   { &kNS_NODATAPROTOCOLCONTENTPOLICY_CID, false, nullptr, nsNoDataProtocolContentPolicyConstructor },
-#ifdef MOZ_XUL
-  { &kNS_XULDOCUMENT_CID, false, nullptr, CreateXULDocument },
-#endif
   { &kNS_CONTENT_DOCUMENT_LOADER_FACTORY_CID, false, nullptr, CreateContentDLF },
   { &kNS_JSPROTOCOLHANDLER_CID, false, nullptr, nsJSProtocolHandler::Create },
   { &kNS_JSURI_CID, false, nullptr, nsJSURIMutatorConstructor }, // do_CreateInstance returns mutator
   { &kNS_JSURIMUTATOR_CID, false, nullptr, nsJSURIMutatorConstructor },
   { &kNS_PLUGINDOCLOADERFACTORY_CID, false, nullptr, CreateContentDLF },
-  { &kNS_PLUGINDOCUMENT_CID, false, nullptr, CreatePluginDocument },
-  { &kNS_VIDEODOCUMENT_CID, false, nullptr, CreateVideoDocument },
   { &kNS_STYLESHEETSERVICE_CID, false, nullptr, nsStyleSheetServiceConstructor },
   { &kNS_HOSTOBJECTURI_CID, false, nullptr, BlobURLMutatorConstructor }, // do_CreateInstance returns mutator
   { &kNS_HOSTOBJECTURIMUTATOR_CID, false, nullptr, BlobURLMutatorConstructor },
@@ -619,8 +587,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   XPCONNECT_CONTRACTS
   { "@mozilla.org/inspector/deep-tree-walker;1", &kIN_DEEPTREEWALKER_CID },
-  { "@mozilla.org/xml/xml-document;1", &kNS_XMLDOCUMENT_CID },
-  { "@mozilla.org/svg/svg-document;1", &kNS_SVGDOCUMENT_CID },
   { NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", &kNS_TEXT_ENCODER_CID },
   { NS_DOC_ENCODER_CONTRACTID_BASE "application/xml", &kNS_TEXT_ENCODER_CID },
   { NS_DOC_ENCODER_CONTRACTID_BASE "application/xhtml+xml", &kNS_TEXT_ENCODER_CID },
