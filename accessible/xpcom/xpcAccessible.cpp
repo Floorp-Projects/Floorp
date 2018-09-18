@@ -416,7 +416,7 @@ xpcAccessible::GetAttributes(nsIPersistentProperties** aAttributes)
   AutoTArray<Attribute, 10> attrs;
   proxy->Attributes(&attrs);
 
-  nsCOMPtr<nsIPersistentProperties> props = new nsPersistentProperties();
+  RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
   uint32_t attrCount = attrs.Length();
   nsAutoString unused;
   for (uint32_t i = 0; i < attrCount; i++) {
