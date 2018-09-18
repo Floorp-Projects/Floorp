@@ -63,16 +63,13 @@ pub struct ClipScrollTree {
     /// A list of transforms that establish new coordinate systems.
     /// Spatial nodes only establish a new coordinate system when
     /// they have a transform that is not a simple 2d translation.
-    coord_systems: Vec<CoordinateSystem>,
+    pub coord_systems: Vec<CoordinateSystem>,
 
     pub pending_scroll_offsets: FastHashMap<ExternalScrollId, (LayoutPoint, ScrollClamping)>,
 
     /// A set of pipelines which should be discarded the next time this
     /// tree is drained.
     pub pipelines_to_discard: FastHashSet<PipelineId>,
-
-    /// Temporary stack of nodes to update when traversing the tree.
-    nodes_to_update: Vec<(SpatialNodeIndex, TransformUpdateState)>,
 }
 
 #[derive(Clone)]
@@ -104,7 +101,6 @@ impl ClipScrollTree {
             coord_systems: Vec::new(),
             pending_scroll_offsets: FastHashMap::default(),
             pipelines_to_discard: FastHashSet::default(),
-            nodes_to_update: Vec::new(),
         }
     }
 
@@ -262,8 +258,8 @@ impl ClipScrollTree {
         self.coord_systems.clear();
         self.coord_systems.push(CoordinateSystem::root());
 
-        let root_node_index = self.root_reference_frame_index();
-        let state = TransformUpdateState {
+        let root_reference_frame_index = self.root_reference_frame_index();
+        let mut state = TransformUpdateState {
             parent_reference_frame_transform: LayoutVector2D::new(pan.x, pan.y).into(),
             parent_accumulated_scroll_offset: LayoutVector2D::zero(),
             nearest_scrolling_ancestor_offset: LayoutVector2D::zero(),
@@ -272,29 +268,52 @@ impl ClipScrollTree {
             coordinate_system_relative_scale_offset: ScaleOffset::identity(),
             invertible: true,
         };
-        debug_assert!(self.nodes_to_update.is_empty());
-        self.nodes_to_update.push((root_node_index, state));
 
-        while let Some((node_index, mut state)) = self.nodes_to_update.pop() {
+        self.update_node(
+            root_reference_frame_index,
+            &mut state,
+            &mut transform_palette,
+            scene_properties,
+        );
+
+        transform_palette
+    }
+
+    fn update_node(
+        &mut self,
+        node_index: SpatialNodeIndex,
+        state: &mut TransformUpdateState,
+        transform_palette: &mut TransformPalette,
+        scene_properties: &SceneProperties,
+    ) {
+        // TODO(gw): This is an ugly borrow check workaround to clone these.
+        //           Restructure this to avoid the clones!
+        let mut state = state.clone();
+        let node_children = {
             let node = match self.spatial_nodes.get_mut(node_index.0) {
                 Some(node) => node,
-                None => continue,
+                None => return,
             };
 
             node.update(&mut state, &mut self.coord_systems, scene_properties);
-            node.push_gpu_data(&mut transform_palette, node_index);
+            node.push_gpu_data(transform_palette, node_index);
 
-            if !node.children.is_empty() {
-                node.prepare_state_for_children(&mut state);
-                self.nodes_to_update.extend(node.children
-                    .iter()
-                    .rev()
-                    .map(|child_index| (*child_index, state.clone()))
-                );
+            if node.children.is_empty() {
+                return;
             }
-        }
 
-        transform_palette
+            node.prepare_state_for_children(&mut state);
+            node.children.clone()
+        };
+
+        for child_node_index in node_children {
+            self.update_node(
+                child_node_index,
+                &mut state,
+                transform_palette,
+                scene_properties,
+            );
+        }
     }
 
     pub fn finalize_and_apply_pending_scroll_offsets(&mut self, old_states: ScrollStates) {

@@ -659,22 +659,19 @@ struct TypedVector2D {
 
 using LayoutVector2D = TypedVector2D<float, LayoutPixel>;
 
-template<typename T, typename U>
-struct TypedSideOffsets2D {
-  T top;
-  T right;
-  T bottom;
-  T left;
+struct BorderWidths {
+  float left;
+  float top;
+  float right;
+  float bottom;
 
-  bool operator==(const TypedSideOffsets2D& aOther) const {
-    return top == aOther.top &&
+  bool operator==(const BorderWidths& aOther) const {
+    return left == aOther.left &&
+           top == aOther.top &&
            right == aOther.right &&
-           bottom == aOther.bottom &&
-           left == aOther.left;
+           bottom == aOther.bottom;
   }
 };
-
-using LayoutSideOffsets = TypedSideOffsets2D<float, LayoutPixel>;
 
 // Represents RGBA screen colors with floating point numbers.
 //
@@ -701,6 +698,21 @@ struct BorderSide {
   bool operator==(const BorderSide& aOther) const {
     return color == aOther.color &&
            style == aOther.style;
+  }
+};
+
+template<typename T, typename U>
+struct TypedSideOffsets2D {
+  T top;
+  T right;
+  T bottom;
+  T left;
+
+  bool operator==(const TypedSideOffsets2D& aOther) const {
+    return top == aOther.top &&
+           right == aOther.right &&
+           bottom == aOther.bottom &&
+           left == aOther.left;
   }
 };
 
@@ -1229,7 +1241,7 @@ void wr_dp_push_border(WrState *aState,
                        LayoutRect aRect,
                        LayoutRect aClip,
                        bool aIsBackfaceVisible,
-                       LayoutSideOffsets aWidths,
+                       BorderWidths aWidths,
                        BorderSide aTop,
                        BorderSide aRight,
                        BorderSide aBottom,
@@ -1242,7 +1254,7 @@ void wr_dp_push_border_gradient(WrState *aState,
                                 LayoutRect aRect,
                                 LayoutRect aClip,
                                 bool aIsBackfaceVisible,
-                                LayoutSideOffsets aWidths,
+                                BorderWidths aWidths,
                                 uint32_t aWidth,
                                 uint32_t aHeight,
                                 SideOffsets2D<uint32_t> aSlice,
@@ -1259,7 +1271,7 @@ void wr_dp_push_border_image(WrState *aState,
                              LayoutRect aRect,
                              LayoutRect aClip,
                              bool aIsBackfaceVisible,
-                             LayoutSideOffsets aWidths,
+                             BorderWidths aWidths,
                              WrImageKey aImage,
                              uint32_t aWidth,
                              uint32_t aHeight,
@@ -1274,7 +1286,7 @@ void wr_dp_push_border_radial_gradient(WrState *aState,
                                        LayoutRect aRect,
                                        LayoutRect aClip,
                                        bool aIsBackfaceVisible,
-                                       LayoutSideOffsets aWidths,
+                                       BorderWidths aWidths,
                                        LayoutPoint aCenter,
                                        LayoutSize aRadius,
                                        const GradientStop *aStops,

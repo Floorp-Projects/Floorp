@@ -19,8 +19,6 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::mem::replace;
 use time::precise_time_ns;
 use util::drain_filter;
-use std::thread;
-use std::time::Duration;
 
 /// Represents the work associated to a transaction before scene building.
 pub struct Transaction {
@@ -115,8 +113,6 @@ pub enum SceneBuilderRequest {
     WakeUp,
     Flush(MsgSender<()>),
     SetFrameBuilderConfig(FrameBuilderConfig),
-    SimulateLongSceneBuild(u32),
-    SimulateLongLowPrioritySceneBuild(u32),
     Stop,
     #[cfg(feature = "replay")]
     LoadScenes(Vec<LoadScene>),
@@ -145,7 +141,6 @@ pub struct SceneBuilder {
     config: FrameBuilderConfig,
     hooks: Option<Box<SceneBuilderHooks + Send>>,
     picture_id_generator: PictureIdGenerator,
-    simulate_slow_ms: u32,
 }
 
 impl SceneBuilder {
@@ -165,7 +160,6 @@ impl SceneBuilder {
                 config,
                 hooks,
                 picture_id_generator: PictureIdGenerator::new(),
-                simulate_slow_ms: 0,
             },
             in_tx,
             out_rx,
@@ -205,10 +199,6 @@ impl SceneBuilder {
                     // get the Stop when the RenderBackend loop is exiting.
                     break;
                 }
-                Ok(SceneBuilderRequest::SimulateLongSceneBuild(time_ms)) => {
-                    self.simulate_slow_ms = time_ms
-                }
-                Ok(SceneBuilderRequest::SimulateLongLowPrioritySceneBuild(_)) => {}
                 Err(_) => {
                     break;
                 }
@@ -345,10 +335,6 @@ impl SceneBuilder {
             |n| { n.notify(); },
         );
 
-        if self.simulate_slow_ms > 0 {
-            thread::sleep(Duration::from_millis(self.simulate_slow_ms as u64));
-        }
-
         Box::new(BuiltTransaction {
             document_id: txn.document_id,
             build_frame: txn.build_frame || built_scene.is_some(),
@@ -422,7 +408,6 @@ impl SceneBuilder {
 pub struct LowPrioritySceneBuilder {
     pub rx: Receiver<SceneBuilderRequest>,
     pub tx: Sender<SceneBuilderRequest>,
-    pub simulate_slow_ms: u32,
 }
 
 impl LowPrioritySceneBuilder {
@@ -439,9 +424,6 @@ impl LowPrioritySceneBuilder {
                 Ok(SceneBuilderRequest::Stop) => {
                     self.tx.send(SceneBuilderRequest::Stop).unwrap();
                     break;
-                }
-                Ok(SceneBuilderRequest::SimulateLongLowPrioritySceneBuild(time_ms)) => {
-                    self.simulate_slow_ms = time_ms;
                 }
                 Ok(other) => {
                     self.tx.send(other).unwrap();
@@ -460,10 +442,6 @@ impl LowPrioritySceneBuilder {
             |rasterizer| rasterizer.rasterize(&blob_requests),
         );
         txn.rasterized_blobs.append(&mut more_rasterized_blobs);
-
-        if self.simulate_slow_ms > 0 {
-            thread::sleep(Duration::from_millis(self.simulate_slow_ms as u64));
-        }
 
         txn
     }

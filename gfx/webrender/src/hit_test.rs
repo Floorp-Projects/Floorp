@@ -27,6 +27,9 @@ pub struct HitTestSpatialNode {
 }
 
 pub struct HitTestClipNode {
+    /// The positioning node for this clip node.
+    spatial_node: SpatialNodeIndex,
+
     /// A particular point must be inside all of these regions to be considered clipped in
     /// for the purposes of a hit test.
     region: HitTestRegion,
@@ -44,6 +47,7 @@ impl HitTestClipNode {
         };
 
         HitTestClipNode {
+            spatial_node: node.spatial_node_index,
             region,
         }
     }
@@ -175,14 +179,12 @@ impl HitTester {
             return false;
         }
 
-        if !self.is_point_clipped_in_for_clip_node(
-            point,
-            descriptor.clip_node_index,
-            descriptor.spatial_node_index,
-            test,
-        ) {
-            test.set_in_clip_chain_cache(clip_chain_id, ClippedIn::NotClippedIn);
-            return false;
+        for i in 0 .. descriptor.clip_item_range.count {
+            let clip_node_index = ClipNodeIndex(descriptor.clip_item_range.index.0 + i);
+            if !self.is_point_clipped_in_for_clip_node(point, clip_node_index, test) {
+                test.set_in_clip_chain_cache(clip_chain_id, ClippedIn::NotClippedIn);
+                return false;
+            }
         }
 
         test.set_in_clip_chain_cache(clip_chain_id, ClippedIn::ClippedIn);
@@ -193,7 +195,6 @@ impl HitTester {
         &self,
         point: WorldPoint,
         node_index: ClipNodeIndex,
-        spatial_node_index: SpatialNodeIndex,
         test: &mut HitTest
     ) -> bool {
         if let Some(clipped_in) = test.node_cache.get(&node_index) {
@@ -202,7 +203,7 @@ impl HitTester {
 
         let node = &self.clip_nodes[node_index.0 as usize];
         let transform = self
-            .spatial_nodes[spatial_node_index.0]
+            .spatial_nodes[node.spatial_node.0 as usize]
             .world_viewport_transform;
         let transformed_point = match transform
             .inverse()
