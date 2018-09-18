@@ -230,7 +230,9 @@ HTMLEditor::DoInlineTableEditingAction(const Element& aElement)
     DeleteTableColumn(1);
     hideUI = (colCount == 1);
   } else if (anonclass.EqualsLiteral("mozTableRemoveRow")) {
-    DeleteTableRow(1);
+    DebugOnly<nsresult> rv = DeleteSelectedTableRowsWithTransaction(1);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to delete the selected table row");
     hideUI = (rowCount == 1);
   } else {
     return NS_OK;
