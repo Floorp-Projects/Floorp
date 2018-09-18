@@ -1,16 +1,892 @@
-#[cfg(feature = "std")]
-use std::mem;
-#[cfg(feature = "std")]
-use std::ops::Neg;
-#[cfg(feature = "std")]
-use std::num::FpCategory;
+use core::mem;
+use core::num::FpCategory;
+use core::ops::Neg;
 
-// Used for default implementation of `epsilon`
-#[cfg(feature = "std")]
-use std::f32;
+use core::f32;
+use core::f64;
 
-#[cfg(feature = "std")]
-use {Num, NumCast};
+use {Num, NumCast, ToPrimitive};
+
+/// Generic trait for floating point numbers that works with `no_std`.
+///
+/// This trait implements a subset of the `Float` trait.
+pub trait FloatCore: Num + NumCast + Neg<Output = Self> + PartialOrd + Copy {
+    /// Returns positive infinity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T) {
+    ///     assert!(T::infinity() == x);
+    /// }
+    ///
+    /// check(f32::INFINITY);
+    /// check(f64::INFINITY);
+    /// ```
+    fn infinity() -> Self;
+
+    /// Returns negative infinity.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T) {
+    ///     assert!(T::neg_infinity() == x);
+    /// }
+    ///
+    /// check(f32::NEG_INFINITY);
+    /// check(f64::NEG_INFINITY);
+    /// ```
+    fn neg_infinity() -> Self;
+
+    /// Returns NaN.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    ///
+    /// fn check<T: FloatCore>() {
+    ///     let n = T::nan();
+    ///     assert!(n != n);
+    /// }
+    ///
+    /// check::<f32>();
+    /// check::<f64>();
+    /// ```
+    fn nan() -> Self;
+
+    /// Returns `-0.0`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(n: T) {
+    ///     let z = T::neg_zero();
+    ///     assert!(z.is_zero());
+    ///     assert!(T::one() / z == n);
+    /// }
+    ///
+    /// check(f32::NEG_INFINITY);
+    /// check(f64::NEG_INFINITY);
+    /// ```
+    fn neg_zero() -> Self;
+
+    /// Returns the smallest finite value that this type can represent.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T) {
+    ///     assert!(T::min_value() == x);
+    /// }
+    ///
+    /// check(f32::MIN);
+    /// check(f64::MIN);
+    /// ```
+    fn min_value() -> Self;
+
+    /// Returns the smallest positive, normalized value that this type can represent.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T) {
+    ///     assert!(T::min_positive_value() == x);
+    /// }
+    ///
+    /// check(f32::MIN_POSITIVE);
+    /// check(f64::MIN_POSITIVE);
+    /// ```
+    fn min_positive_value() -> Self;
+
+    /// Returns epsilon, a small positive value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T) {
+    ///     assert!(T::epsilon() == x);
+    /// }
+    ///
+    /// check(f32::EPSILON);
+    /// check(f64::EPSILON);
+    /// ```
+    fn epsilon() -> Self;
+
+    /// Returns the largest finite value that this type can represent.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T) {
+    ///     assert!(T::max_value() == x);
+    /// }
+    ///
+    /// check(f32::MAX);
+    /// check(f64::MAX);
+    /// ```
+    fn max_value() -> Self;
+
+    /// Returns `true` if the number is NaN.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, p: bool) {
+    ///     assert!(x.is_nan() == p);
+    /// }
+    ///
+    /// check(f32::NAN, true);
+    /// check(f32::INFINITY, false);
+    /// check(f64::NAN, true);
+    /// check(0.0f64, false);
+    /// ```
+    #[inline]
+    fn is_nan(self) -> bool {
+        self != self
+    }
+
+    /// Returns `true` if the number is infinite.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, p: bool) {
+    ///     assert!(x.is_infinite() == p);
+    /// }
+    ///
+    /// check(f32::INFINITY, true);
+    /// check(f32::NEG_INFINITY, true);
+    /// check(f32::NAN, false);
+    /// check(f64::INFINITY, true);
+    /// check(f64::NEG_INFINITY, true);
+    /// check(0.0f64, false);
+    /// ```
+    #[inline]
+    fn is_infinite(self) -> bool {
+        self == Self::infinity() || self == Self::neg_infinity()
+    }
+
+    /// Returns `true` if the number is neither infinite or NaN.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, p: bool) {
+    ///     assert!(x.is_finite() == p);
+    /// }
+    ///
+    /// check(f32::INFINITY, false);
+    /// check(f32::MAX, true);
+    /// check(f64::NEG_INFINITY, false);
+    /// check(f64::MIN_POSITIVE, true);
+    /// check(f64::NAN, false);
+    /// ```
+    #[inline]
+    fn is_finite(self) -> bool {
+        !(self.is_nan() || self.is_infinite())
+    }
+
+    /// Returns `true` if the number is neither zero, infinite, subnormal or NaN.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, p: bool) {
+    ///     assert!(x.is_normal() == p);
+    /// }
+    ///
+    /// check(f32::INFINITY, false);
+    /// check(f32::MAX, true);
+    /// check(f64::NEG_INFINITY, false);
+    /// check(f64::MIN_POSITIVE, true);
+    /// check(0.0f64, false);
+    /// ```
+    #[inline]
+    fn is_normal(self) -> bool {
+        self.classify() == FpCategory::Normal
+    }
+
+    /// Returns the floating point category of the number. If only one property
+    /// is going to be tested, it is generally faster to use the specific
+    /// predicate instead.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    /// use std::num::FpCategory;
+    ///
+    /// fn check<T: FloatCore>(x: T, c: FpCategory) {
+    ///     assert!(x.classify() == c);
+    /// }
+    ///
+    /// check(f32::INFINITY, FpCategory::Infinite);
+    /// check(f32::MAX, FpCategory::Normal);
+    /// check(f64::NAN, FpCategory::Nan);
+    /// check(f64::MIN_POSITIVE, FpCategory::Normal);
+    /// check(f64::MIN_POSITIVE / 2.0, FpCategory::Subnormal);
+    /// check(0.0f64, FpCategory::Zero);
+    /// ```
+    fn classify(self) -> FpCategory;
+
+    /// Returns the largest integer less than or equal to a number.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, y: T) {
+    ///     assert!(x.floor() == y);
+    /// }
+    ///
+    /// check(f32::INFINITY, f32::INFINITY);
+    /// check(0.9f32, 0.0);
+    /// check(1.0f32, 1.0);
+    /// check(1.1f32, 1.0);
+    /// check(-0.0f64, 0.0);
+    /// check(-0.9f64, -1.0);
+    /// check(-1.0f64, -1.0);
+    /// check(-1.1f64, -2.0);
+    /// check(f64::MIN, f64::MIN);
+    /// ```
+    #[inline]
+    fn floor(self) -> Self {
+        let f = self.fract();
+        if f.is_nan() || f.is_zero() {
+            self
+        } else if self < Self::zero() {
+            self - f - Self::one()
+        } else {
+            self - f
+        }
+    }
+
+    /// Returns the smallest integer greater than or equal to a number.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, y: T) {
+    ///     assert!(x.ceil() == y);
+    /// }
+    ///
+    /// check(f32::INFINITY, f32::INFINITY);
+    /// check(0.9f32, 1.0);
+    /// check(1.0f32, 1.0);
+    /// check(1.1f32, 2.0);
+    /// check(-0.0f64, 0.0);
+    /// check(-0.9f64, -0.0);
+    /// check(-1.0f64, -1.0);
+    /// check(-1.1f64, -1.0);
+    /// check(f64::MIN, f64::MIN);
+    /// ```
+    #[inline]
+    fn ceil(self) -> Self {
+        let f = self.fract();
+        if f.is_nan() || f.is_zero() {
+            self
+        } else if self > Self::zero() {
+            self - f + Self::one()
+        } else {
+            self - f
+        }
+    }
+
+    /// Returns the nearest integer to a number. Round half-way cases away from `0.0`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, y: T) {
+    ///     assert!(x.round() == y);
+    /// }
+    ///
+    /// check(f32::INFINITY, f32::INFINITY);
+    /// check(0.4f32, 0.0);
+    /// check(0.5f32, 1.0);
+    /// check(0.6f32, 1.0);
+    /// check(-0.4f64, 0.0);
+    /// check(-0.5f64, -1.0);
+    /// check(-0.6f64, -1.0);
+    /// check(f64::MIN, f64::MIN);
+    /// ```
+    #[inline]
+    fn round(self) -> Self {
+        let one = Self::one();
+        let h = Self::from(0.5).expect("Unable to cast from 0.5");
+        let f = self.fract();
+        if f.is_nan() || f.is_zero() {
+            self
+        } else if self > Self::zero() {
+            if f < h {
+                self - f
+            } else {
+                self - f + one
+            }
+        } else {
+            if -f < h {
+                self - f
+            } else {
+                self - f - one
+            }
+        }
+    }
+
+    /// Return the integer part of a number.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, y: T) {
+    ///     assert!(x.trunc() == y);
+    /// }
+    ///
+    /// check(f32::INFINITY, f32::INFINITY);
+    /// check(0.9f32, 0.0);
+    /// check(1.0f32, 1.0);
+    /// check(1.1f32, 1.0);
+    /// check(-0.0f64, 0.0);
+    /// check(-0.9f64, -0.0);
+    /// check(-1.0f64, -1.0);
+    /// check(-1.1f64, -1.0);
+    /// check(f64::MIN, f64::MIN);
+    /// ```
+    #[inline]
+    fn trunc(self) -> Self {
+        let f = self.fract();
+        if f.is_nan() {
+            self
+        } else {
+            self - f
+        }
+    }
+
+    /// Returns the fractional part of a number.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, y: T) {
+    ///     assert!(x.fract() == y);
+    /// }
+    ///
+    /// check(f32::MAX, 0.0);
+    /// check(0.75f32, 0.75);
+    /// check(1.0f32, 0.0);
+    /// check(1.25f32, 0.25);
+    /// check(-0.0f64, 0.0);
+    /// check(-0.75f64, -0.75);
+    /// check(-1.0f64, 0.0);
+    /// check(-1.25f64, -0.25);
+    /// check(f64::MIN, 0.0);
+    /// ```
+    #[inline]
+    fn fract(self) -> Self {
+        if self.is_zero() {
+            Self::zero()
+        } else {
+            self % Self::one()
+        }
+    }
+
+    /// Computes the absolute value of `self`. Returns `FloatCore::nan()` if the
+    /// number is `FloatCore::nan()`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, y: T) {
+    ///     assert!(x.abs() == y);
+    /// }
+    ///
+    /// check(f32::INFINITY, f32::INFINITY);
+    /// check(1.0f32, 1.0);
+    /// check(0.0f64, 0.0);
+    /// check(-0.0f64, 0.0);
+    /// check(-1.0f64, 1.0);
+    /// check(f64::MIN, f64::MAX);
+    /// ```
+    #[inline]
+    fn abs(self) -> Self {
+        if self.is_sign_positive() {
+            return self;
+        }
+        if self.is_sign_negative() {
+            return -self;
+        }
+        Self::nan()
+    }
+
+    /// Returns a number that represents the sign of `self`.
+    ///
+    /// - `1.0` if the number is positive, `+0.0` or `FloatCore::infinity()`
+    /// - `-1.0` if the number is negative, `-0.0` or `FloatCore::neg_infinity()`
+    /// - `FloatCore::nan()` if the number is `FloatCore::nan()`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, y: T) {
+    ///     assert!(x.signum() == y);
+    /// }
+    ///
+    /// check(f32::INFINITY, 1.0);
+    /// check(3.0f32, 1.0);
+    /// check(0.0f32, 1.0);
+    /// check(-0.0f64, -1.0);
+    /// check(-3.0f64, -1.0);
+    /// check(f64::MIN, -1.0);
+    /// ```
+    #[inline]
+    fn signum(self) -> Self {
+        if self.is_nan() {
+            Self::nan()
+        } else if self.is_sign_negative() {
+            -Self::one()
+        } else {
+            Self::one()
+        }
+    }
+
+    /// Returns `true` if `self` is positive, including `+0.0` and
+    /// `FloatCore::infinity()`, and since Rust 1.20 also
+    /// `FloatCore::nan()`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, p: bool) {
+    ///     assert!(x.is_sign_positive() == p);
+    /// }
+    ///
+    /// check(f32::INFINITY, true);
+    /// check(f32::MAX, true);
+    /// check(0.0f32, true);
+    /// check(-0.0f64, false);
+    /// check(f64::NEG_INFINITY, false);
+    /// check(f64::MIN_POSITIVE, true);
+    /// check(-f64::NAN, false);
+    /// ```
+    #[inline]
+    fn is_sign_positive(self) -> bool {
+        !self.is_sign_negative()
+    }
+
+    /// Returns `true` if `self` is negative, including `-0.0` and
+    /// `FloatCore::neg_infinity()`, and since Rust 1.20 also
+    /// `-FloatCore::nan()`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, p: bool) {
+    ///     assert!(x.is_sign_negative() == p);
+    /// }
+    ///
+    /// check(f32::INFINITY, false);
+    /// check(f32::MAX, false);
+    /// check(0.0f32, false);
+    /// check(-0.0f64, true);
+    /// check(f64::NEG_INFINITY, true);
+    /// check(f64::MIN_POSITIVE, false);
+    /// check(f64::NAN, false);
+    /// ```
+    #[inline]
+    fn is_sign_negative(self) -> bool {
+        let (_, _, sign) = self.integer_decode();
+        sign < 0
+    }
+
+    /// Returns the minimum of the two numbers.
+    ///
+    /// If one of the arguments is NaN, then the other argument is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, y: T, min: T) {
+    ///     assert!(x.min(y) == min);
+    /// }
+    ///
+    /// check(1.0f32, 2.0, 1.0);
+    /// check(f32::NAN, 2.0, 2.0);
+    /// check(1.0f64, -2.0, -2.0);
+    /// check(1.0f64, f64::NAN, 1.0);
+    /// ```
+    #[inline]
+    fn min(self, other: Self) -> Self {
+        if self.is_nan() {
+            return other;
+        }
+        if other.is_nan() {
+            return self;
+        }
+        if self < other {
+            self
+        } else {
+            other
+        }
+    }
+
+    /// Returns the maximum of the two numbers.
+    ///
+    /// If one of the arguments is NaN, then the other argument is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, y: T, min: T) {
+    ///     assert!(x.max(y) == min);
+    /// }
+    ///
+    /// check(1.0f32, 2.0, 2.0);
+    /// check(1.0f32, f32::NAN, 1.0);
+    /// check(-1.0f64, 2.0, 2.0);
+    /// check(-1.0f64, f64::NAN, -1.0);
+    /// ```
+    #[inline]
+    fn max(self, other: Self) -> Self {
+        if self.is_nan() {
+            return other;
+        }
+        if other.is_nan() {
+            return self;
+        }
+        if self > other {
+            self
+        } else {
+            other
+        }
+    }
+
+    /// Returns the reciprocal (multiplicative inverse) of the number.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, y: T) {
+    ///     assert!(x.recip() == y);
+    ///     assert!(y.recip() == x);
+    /// }
+    ///
+    /// check(f32::INFINITY, 0.0);
+    /// check(2.0f32, 0.5);
+    /// check(-0.25f64, -4.0);
+    /// check(-0.0f64, f64::NEG_INFINITY);
+    /// ```
+    #[inline]
+    fn recip(self) -> Self {
+        Self::one() / self
+    }
+
+    /// Raise a number to an integer power.
+    ///
+    /// Using this function is generally faster than using `powf`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    ///
+    /// fn check<T: FloatCore>(x: T, exp: i32, powi: T) {
+    ///     assert!(x.powi(exp) == powi);
+    /// }
+    ///
+    /// check(9.0f32, 2, 81.0);
+    /// check(1.0f32, -2, 1.0);
+    /// check(10.0f64, 20, 1e20);
+    /// check(4.0f64, -2, 0.0625);
+    /// check(-1.0f64, std::i32::MIN, 1.0);
+    /// ```
+    #[inline]
+    fn powi(mut self, mut exp: i32) -> Self {
+        if exp < 0 {
+            exp = exp.wrapping_neg();
+            self = self.recip();
+        }
+        // It should always be possible to convert a positive `i32` to a `usize`.
+        // Note, `i32::MIN` will wrap and still be negative, so we need to convert
+        // to `u32` without sign-extension before growing to `usize`.
+        super::pow(self, (exp as u32).to_usize().unwrap())
+    }
+
+    /// Converts to degrees, assuming the number is in radians.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(rad: T, deg: T) {
+    ///     assert!(rad.to_degrees() == deg);
+    /// }
+    ///
+    /// check(0.0f32, 0.0);
+    /// check(f32::consts::PI, 180.0);
+    /// check(f64::consts::FRAC_PI_4, 45.0);
+    /// check(f64::INFINITY, f64::INFINITY);
+    /// ```
+    fn to_degrees(self) -> Self;
+
+    /// Converts to radians, assuming the number is in degrees.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(deg: T, rad: T) {
+    ///     assert!(deg.to_radians() == rad);
+    /// }
+    ///
+    /// check(0.0f32, 0.0);
+    /// check(180.0, f32::consts::PI);
+    /// check(45.0, f64::consts::FRAC_PI_4);
+    /// check(f64::INFINITY, f64::INFINITY);
+    /// ```
+    fn to_radians(self) -> Self;
+
+    /// Returns the mantissa, base 2 exponent, and sign as integers, respectively.
+    /// The original number can be recovered by `sign * mantissa * 2 ^ exponent`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::float::FloatCore;
+    /// use std::{f32, f64};
+    ///
+    /// fn check<T: FloatCore>(x: T, m: u64, e: i16, s:i8) {
+    ///     let (mantissa, exponent, sign) = x.integer_decode();
+    ///     assert_eq!(mantissa, m);
+    ///     assert_eq!(exponent, e);
+    ///     assert_eq!(sign, s);
+    /// }
+    ///
+    /// check(2.0f32, 1 << 23, -22, 1);
+    /// check(-2.0f32, 1 << 23, -22, -1);
+    /// check(f32::INFINITY, 1 << 23, 105, 1);
+    /// check(f64::NEG_INFINITY, 1 << 52, 972, -1);
+    /// ```
+    fn integer_decode(self) -> (u64, i16, i8);
+}
+
+impl FloatCore for f32 {
+    constant! {
+        infinity() -> f32::INFINITY;
+        neg_infinity() -> f32::NEG_INFINITY;
+        nan() -> f32::NAN;
+        neg_zero() -> -0.0;
+        min_value() -> f32::MIN;
+        min_positive_value() -> f32::MIN_POSITIVE;
+        epsilon() -> f32::EPSILON;
+        max_value() -> f32::MAX;
+    }
+
+    #[inline]
+    fn integer_decode(self) -> (u64, i16, i8) {
+        integer_decode_f32(self)
+    }
+
+    #[inline]
+    #[cfg(not(feature = "std"))]
+    fn classify(self) -> FpCategory {
+        const EXP_MASK: u32 = 0x7f800000;
+        const MAN_MASK: u32 = 0x007fffff;
+
+        let bits: u32 = unsafe { mem::transmute(self) };
+        match (bits & MAN_MASK, bits & EXP_MASK) {
+            (0, 0) => FpCategory::Zero,
+            (_, 0) => FpCategory::Subnormal,
+            (0, EXP_MASK) => FpCategory::Infinite,
+            (_, EXP_MASK) => FpCategory::Nan,
+            _ => FpCategory::Normal,
+        }
+    }
+
+    #[inline]
+    #[cfg(not(feature = "std"))]
+    fn to_degrees(self) -> Self {
+        // Use a constant for better precision.
+        const PIS_IN_180: f32 = 57.2957795130823208767981548141051703_f32;
+        self * PIS_IN_180
+    }
+
+    #[inline]
+    #[cfg(not(feature = "std"))]
+    fn to_radians(self) -> Self {
+        self * (f32::consts::PI / 180.0)
+    }
+
+    #[cfg(feature = "std")]
+    forward! {
+        Self::is_nan(self) -> bool;
+        Self::is_infinite(self) -> bool;
+        Self::is_finite(self) -> bool;
+        Self::is_normal(self) -> bool;
+        Self::classify(self) -> FpCategory;
+        Self::floor(self) -> Self;
+        Self::ceil(self) -> Self;
+        Self::round(self) -> Self;
+        Self::trunc(self) -> Self;
+        Self::fract(self) -> Self;
+        Self::abs(self) -> Self;
+        Self::signum(self) -> Self;
+        Self::is_sign_positive(self) -> bool;
+        Self::is_sign_negative(self) -> bool;
+        Self::min(self, other: Self) -> Self;
+        Self::max(self, other: Self) -> Self;
+        Self::recip(self) -> Self;
+        Self::powi(self, n: i32) -> Self;
+        Self::to_degrees(self) -> Self;
+        Self::to_radians(self) -> Self;
+    }
+}
+
+impl FloatCore for f64 {
+    constant! {
+        infinity() -> f64::INFINITY;
+        neg_infinity() -> f64::NEG_INFINITY;
+        nan() -> f64::NAN;
+        neg_zero() -> -0.0;
+        min_value() -> f64::MIN;
+        min_positive_value() -> f64::MIN_POSITIVE;
+        epsilon() -> f64::EPSILON;
+        max_value() -> f64::MAX;
+    }
+
+    #[inline]
+    fn integer_decode(self) -> (u64, i16, i8) {
+        integer_decode_f64(self)
+    }
+
+    #[inline]
+    #[cfg(not(feature = "std"))]
+    fn classify(self) -> FpCategory {
+        const EXP_MASK: u64 = 0x7ff0000000000000;
+        const MAN_MASK: u64 = 0x000fffffffffffff;
+
+        let bits: u64 = unsafe { mem::transmute(self) };
+        match (bits & MAN_MASK, bits & EXP_MASK) {
+            (0, 0) => FpCategory::Zero,
+            (_, 0) => FpCategory::Subnormal,
+            (0, EXP_MASK) => FpCategory::Infinite,
+            (_, EXP_MASK) => FpCategory::Nan,
+            _ => FpCategory::Normal,
+        }
+    }
+
+    #[inline]
+    #[cfg(not(feature = "std"))]
+    fn to_degrees(self) -> Self {
+        // The division here is correctly rounded with respect to the true
+        // value of 180/π. (This differs from f32, where a constant must be
+        // used to ensure a correctly rounded result.)
+        self * (180.0 / f64::consts::PI)
+    }
+
+    #[inline]
+    #[cfg(not(feature = "std"))]
+    fn to_radians(self) -> Self {
+        self * (f64::consts::PI / 180.0)
+    }
+
+    #[cfg(feature = "std")]
+    forward! {
+        Self::is_nan(self) -> bool;
+        Self::is_infinite(self) -> bool;
+        Self::is_finite(self) -> bool;
+        Self::is_normal(self) -> bool;
+        Self::classify(self) -> FpCategory;
+        Self::floor(self) -> Self;
+        Self::ceil(self) -> Self;
+        Self::round(self) -> Self;
+        Self::trunc(self) -> Self;
+        Self::fract(self) -> Self;
+        Self::abs(self) -> Self;
+        Self::signum(self) -> Self;
+        Self::is_sign_positive(self) -> bool;
+        Self::is_sign_negative(self) -> bool;
+        Self::min(self, other: Self) -> Self;
+        Self::max(self, other: Self) -> Self;
+        Self::recip(self) -> Self;
+        Self::powi(self, n: i32) -> Self;
+        Self::to_degrees(self) -> Self;
+        Self::to_radians(self) -> Self;
+    }
+}
 
 // FIXME: these doctests aren't actually helpful, because they're using and
 // testing the inherent methods directly, not going through `Float`.
@@ -19,13 +895,7 @@ use {Num, NumCast};
 ///
 /// This trait is only available with the `std` feature.
 #[cfg(feature = "std")]
-pub trait Float
-    : Num
-    + Copy
-    + NumCast
-    + PartialOrd
-    + Neg<Output = Self>
-{
+pub trait Float: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     /// Returns the `NaN` value.
     ///
     /// ```
@@ -333,7 +1203,7 @@ pub trait Float
     fn signum(self) -> Self;
 
     /// Returns `true` if `self` is positive, including `+0.0`,
-    /// `Float::infinity()`, and with newer versions of Rust `f64::NAN`.
+    /// `Float::infinity()`, and since Rust 1.20 also `Float::nan()`.
     ///
     /// ```
     /// use num_traits::Float;
@@ -351,7 +1221,7 @@ pub trait Float
     fn is_sign_positive(self) -> bool;
 
     /// Returns `true` if `self` is negative, including `-0.0`,
-    /// `Float::neg_infinity()`, and with newer versions of Rust `-f64::NAN`.
+    /// `Float::neg_infinity()`, and since Rust 1.20 also `-Float::nan()`.
     ///
     /// ```
     /// use num_traits::Float;
@@ -369,8 +1239,10 @@ pub trait Float
     fn is_sign_negative(self) -> bool;
 
     /// Fused multiply-add. Computes `(self * a) + b` with only one rounding
-    /// error. This produces a more accurate result with better performance than
-    /// a separate multiplication operation followed by an add.
+    /// error, yielding a more accurate result than an unfused multiply-add.
+    ///
+    /// Using `mul_add` can be more performant than an unfused multiply-add if
+    /// the target architecture has a dedicated `fma` CPU instruction.
     ///
     /// ```
     /// use num_traits::Float;
@@ -907,10 +1779,8 @@ pub trait Float
     /// ```
     fn atanh(self) -> Self;
 
-
     /// Returns the mantissa, base 2 exponent, and sign as integers, respectively.
     /// The original number can be recovered by `sign * mantissa * 2 ^ exponent`.
-    /// The floating point encoding is documented in the [Reference][floating-point].
     ///
     /// ```
     /// use num_traits::Float;
@@ -928,201 +1798,22 @@ pub trait Float
     ///
     /// assert!(abs_difference < 1e-10);
     /// ```
-    /// [floating-point]: ../../../../../reference.html#machine-types
     fn integer_decode(self) -> (u64, i16, i8);
 }
 
 #[cfg(feature = "std")]
 macro_rules! float_impl {
-    ($T:ident $decode:ident) => (
+    ($T:ident $decode:ident) => {
         impl Float for $T {
-            #[inline]
-            fn nan() -> Self {
-                ::std::$T::NAN
-            }
-
-            #[inline]
-            fn infinity() -> Self {
-                ::std::$T::INFINITY
-            }
-
-            #[inline]
-            fn neg_infinity() -> Self {
-                ::std::$T::NEG_INFINITY
-            }
-
-            #[inline]
-            fn neg_zero() -> Self {
-                -0.0
-            }
-
-            #[inline]
-            fn min_value() -> Self {
-                ::std::$T::MIN
-            }
-
-            #[inline]
-            fn min_positive_value() -> Self {
-                ::std::$T::MIN_POSITIVE
-            }
-
-            #[inline]
-            fn epsilon() -> Self {
-                ::std::$T::EPSILON
-            }
-
-            #[inline]
-            fn max_value() -> Self {
-                ::std::$T::MAX
-            }
-
-            #[inline]
-            fn is_nan(self) -> bool {
-                <$T>::is_nan(self)
-            }
-
-            #[inline]
-            fn is_infinite(self) -> bool {
-                <$T>::is_infinite(self)
-            }
-
-            #[inline]
-            fn is_finite(self) -> bool {
-                <$T>::is_finite(self)
-            }
-
-            #[inline]
-            fn is_normal(self) -> bool {
-                <$T>::is_normal(self)
-            }
-
-            #[inline]
-            fn classify(self) -> FpCategory {
-                <$T>::classify(self)
-            }
-
-            #[inline]
-            fn floor(self) -> Self {
-                <$T>::floor(self)
-            }
-
-            #[inline]
-            fn ceil(self) -> Self {
-                <$T>::ceil(self)
-            }
-
-            #[inline]
-            fn round(self) -> Self {
-                <$T>::round(self)
-            }
-
-            #[inline]
-            fn trunc(self) -> Self {
-                <$T>::trunc(self)
-            }
-
-            #[inline]
-            fn fract(self) -> Self {
-                <$T>::fract(self)
-            }
-
-            #[inline]
-            fn abs(self) -> Self {
-                <$T>::abs(self)
-            }
-
-            #[inline]
-            fn signum(self) -> Self {
-                <$T>::signum(self)
-            }
-
-            #[inline]
-            fn is_sign_positive(self) -> bool {
-                <$T>::is_sign_positive(self)
-            }
-
-            #[inline]
-            fn is_sign_negative(self) -> bool {
-                <$T>::is_sign_negative(self)
-            }
-
-            #[inline]
-            fn mul_add(self, a: Self, b: Self) -> Self {
-                <$T>::mul_add(self, a, b)
-            }
-
-            #[inline]
-            fn recip(self) -> Self {
-                <$T>::recip(self)
-            }
-
-            #[inline]
-            fn powi(self, n: i32) -> Self {
-                <$T>::powi(self, n)
-            }
-
-            #[inline]
-            fn powf(self, n: Self) -> Self {
-                <$T>::powf(self, n)
-            }
-
-            #[inline]
-            fn sqrt(self) -> Self {
-                <$T>::sqrt(self)
-            }
-
-            #[inline]
-            fn exp(self) -> Self {
-                <$T>::exp(self)
-            }
-
-            #[inline]
-            fn exp2(self) -> Self {
-                <$T>::exp2(self)
-            }
-
-            #[inline]
-            fn ln(self) -> Self {
-                <$T>::ln(self)
-            }
-
-            #[inline]
-            fn log(self, base: Self) -> Self {
-                <$T>::log(self, base)
-            }
-
-            #[inline]
-            fn log2(self) -> Self {
-                <$T>::log2(self)
-            }
-
-            #[inline]
-            fn log10(self) -> Self {
-                <$T>::log10(self)
-            }
-
-            #[inline]
-            fn to_degrees(self) -> Self {
-                // NB: `f32` didn't stabilize this until 1.7
-                // <$T>::to_degrees(self)
-                self * (180. / ::std::$T::consts::PI)
-            }
-
-            #[inline]
-            fn to_radians(self) -> Self {
-                // NB: `f32` didn't stabilize this until 1.7
-                // <$T>::to_radians(self)
-                self * (::std::$T::consts::PI / 180.)
-            }
-
-            #[inline]
-            fn max(self, other: Self) -> Self {
-                <$T>::max(self, other)
-            }
-
-            #[inline]
-            fn min(self, other: Self) -> Self {
-                <$T>::min(self, other)
+            constant! {
+                nan() -> $T::NAN;
+                infinity() -> $T::INFINITY;
+                neg_infinity() -> $T::NEG_INFINITY;
+                neg_zero() -> -0.0;
+                min_value() -> $T::MIN;
+                min_positive_value() -> $T::MIN_POSITIVE;
+                epsilon() -> $T::EPSILON;
+                max_value() -> $T::MAX;
             }
 
             #[inline]
@@ -1132,111 +1823,66 @@ macro_rules! float_impl {
             }
 
             #[inline]
-            fn cbrt(self) -> Self {
-                <$T>::cbrt(self)
-            }
-
-            #[inline]
-            fn hypot(self, other: Self) -> Self {
-                <$T>::hypot(self, other)
-            }
-
-            #[inline]
-            fn sin(self) -> Self {
-                <$T>::sin(self)
-            }
-
-            #[inline]
-            fn cos(self) -> Self {
-                <$T>::cos(self)
-            }
-
-            #[inline]
-            fn tan(self) -> Self {
-                <$T>::tan(self)
-            }
-
-            #[inline]
-            fn asin(self) -> Self {
-                <$T>::asin(self)
-            }
-
-            #[inline]
-            fn acos(self) -> Self {
-                <$T>::acos(self)
-            }
-
-            #[inline]
-            fn atan(self) -> Self {
-                <$T>::atan(self)
-            }
-
-            #[inline]
-            fn atan2(self, other: Self) -> Self {
-                <$T>::atan2(self, other)
-            }
-
-            #[inline]
-            fn sin_cos(self) -> (Self, Self) {
-                <$T>::sin_cos(self)
-            }
-
-            #[inline]
-            fn exp_m1(self) -> Self {
-                <$T>::exp_m1(self)
-            }
-
-            #[inline]
-            fn ln_1p(self) -> Self {
-                <$T>::ln_1p(self)
-            }
-
-            #[inline]
-            fn sinh(self) -> Self {
-                <$T>::sinh(self)
-            }
-
-            #[inline]
-            fn cosh(self) -> Self {
-                <$T>::cosh(self)
-            }
-
-            #[inline]
-            fn tanh(self) -> Self {
-                <$T>::tanh(self)
-            }
-
-            #[inline]
-            fn asinh(self) -> Self {
-                <$T>::asinh(self)
-            }
-
-            #[inline]
-            fn acosh(self) -> Self {
-                <$T>::acosh(self)
-            }
-
-            #[inline]
-            fn atanh(self) -> Self {
-                <$T>::atanh(self)
-            }
-
-            #[inline]
             fn integer_decode(self) -> (u64, i16, i8) {
                 $decode(self)
             }
+
+            forward! {
+                Self::is_nan(self) -> bool;
+                Self::is_infinite(self) -> bool;
+                Self::is_finite(self) -> bool;
+                Self::is_normal(self) -> bool;
+                Self::classify(self) -> FpCategory;
+                Self::floor(self) -> Self;
+                Self::ceil(self) -> Self;
+                Self::round(self) -> Self;
+                Self::trunc(self) -> Self;
+                Self::fract(self) -> Self;
+                Self::abs(self) -> Self;
+                Self::signum(self) -> Self;
+                Self::is_sign_positive(self) -> bool;
+                Self::is_sign_negative(self) -> bool;
+                Self::mul_add(self, a: Self, b: Self) -> Self;
+                Self::recip(self) -> Self;
+                Self::powi(self, n: i32) -> Self;
+                Self::powf(self, n: Self) -> Self;
+                Self::sqrt(self) -> Self;
+                Self::exp(self) -> Self;
+                Self::exp2(self) -> Self;
+                Self::ln(self) -> Self;
+                Self::log(self, base: Self) -> Self;
+                Self::log2(self) -> Self;
+                Self::log10(self) -> Self;
+                Self::to_degrees(self) -> Self;
+                Self::to_radians(self) -> Self;
+                Self::max(self, other: Self) -> Self;
+                Self::min(self, other: Self) -> Self;
+                Self::cbrt(self) -> Self;
+                Self::hypot(self, other: Self) -> Self;
+                Self::sin(self) -> Self;
+                Self::cos(self) -> Self;
+                Self::tan(self) -> Self;
+                Self::asin(self) -> Self;
+                Self::acos(self) -> Self;
+                Self::atan(self) -> Self;
+                Self::atan2(self, other: Self) -> Self;
+                Self::sin_cos(self) -> (Self, Self);
+                Self::exp_m1(self) -> Self;
+                Self::ln_1p(self) -> Self;
+                Self::sinh(self) -> Self;
+                Self::cosh(self) -> Self;
+                Self::tanh(self) -> Self;
+                Self::asinh(self) -> Self;
+                Self::acosh(self) -> Self;
+                Self::atanh(self) -> Self;
+            }
         }
-    )
+    };
 }
 
-#[cfg(feature = "std")]
 fn integer_decode_f32(f: f32) -> (u64, i16, i8) {
     let bits: u32 = unsafe { mem::transmute(f) };
-    let sign: i8 = if bits >> 31 == 0 {
-        1
-    } else {
-        -1
-    };
+    let sign: i8 = if bits >> 31 == 0 { 1 } else { -1 };
     let mut exponent: i16 = ((bits >> 23) & 0xff) as i16;
     let mantissa = if exponent == 0 {
         (bits & 0x7fffff) << 1
@@ -1248,14 +1894,9 @@ fn integer_decode_f32(f: f32) -> (u64, i16, i8) {
     (mantissa as u64, exponent, sign)
 }
 
-#[cfg(feature = "std")]
 fn integer_decode_f64(f: f64) -> (u64, i16, i8) {
     let bits: u64 = unsafe { mem::transmute(f) };
-    let sign: i8 = if bits >> 63 == 0 {
-        1
-    } else {
-        -1
-    };
+    let sign: i8 = if bits >> 63 == 0 { 1 } else { -1 };
     let mut exponent: i16 = ((bits >> 52) & 0x7ff) as i16;
     let mantissa = if exponent == 0 {
         (bits & 0xfffffffffffff) << 1
@@ -1283,12 +1924,9 @@ macro_rules! float_const_impl {
     );
     (@float $T:ident, $($constant:ident,)+) => (
         impl FloatConst for $T {
-            $(
-                #[inline]
-                fn $constant() -> Self {
-                    ::core::$T::consts::$constant
-                }
-            )+
+            constant! {
+                $( $constant() -> $T::consts::$constant; )+
+            }
         }
     );
 }
@@ -1328,31 +1966,59 @@ float_const_impl! {
     SQRT_2,
 }
 
-#[cfg(all(test, feature = "std"))]
+#[cfg(test)]
 mod tests {
-    use Float;
+    use core::f64::consts;
+
+    const DEG_RAD_PAIRS: [(f64, f64); 7] = [
+        (0.0, 0.),
+        (22.5, consts::FRAC_PI_8),
+        (30.0, consts::FRAC_PI_6),
+        (45.0, consts::FRAC_PI_4),
+        (60.0, consts::FRAC_PI_3),
+        (90.0, consts::FRAC_PI_2),
+        (180.0, consts::PI),
+    ];
 
     #[test]
     fn convert_deg_rad() {
-        use core::f64::consts;
-
-        const DEG_RAD_PAIRS: [(f64, f64); 7] = [
-            (0.0, 0.),
-            (22.5, consts::FRAC_PI_8),
-            (30.0, consts::FRAC_PI_6),
-            (45.0, consts::FRAC_PI_4),
-            (60.0, consts::FRAC_PI_3),
-            (90.0, consts::FRAC_PI_2),
-            (180.0, consts::PI),
-        ];
+        use float::FloatCore;
 
         for &(deg, rad) in &DEG_RAD_PAIRS {
+            assert!((FloatCore::to_degrees(rad) - deg).abs() < 1e-6);
+            assert!((FloatCore::to_radians(deg) - rad).abs() < 1e-6);
+
+            let (deg, rad) = (deg as f32, rad as f32);
+            assert!((FloatCore::to_degrees(rad) - deg).abs() < 1e-5);
+            assert!((FloatCore::to_radians(deg) - rad).abs() < 1e-5);
+        }
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn convert_deg_rad_std() {
+        for &(deg, rad) in &DEG_RAD_PAIRS {
+            use Float;
+
             assert!((Float::to_degrees(rad) - deg).abs() < 1e-6);
             assert!((Float::to_radians(deg) - rad).abs() < 1e-6);
 
             let (deg, rad) = (deg as f32, rad as f32);
-            assert!((Float::to_degrees(rad) - deg).abs() < 1e-6);
-            assert!((Float::to_radians(deg) - rad).abs() < 1e-6);
+            assert!((Float::to_degrees(rad) - deg).abs() < 1e-5);
+            assert!((Float::to_radians(deg) - rad).abs() < 1e-5);
         }
+    }
+
+    #[test]
+    // This fails with the forwarded `std` implementation in Rust 1.8.
+    // To avoid the failure, the test is limited to `no_std` builds.
+    #[cfg(not(feature = "std"))]
+    fn to_degrees_rounding() {
+        use float::FloatCore;
+
+        assert_eq!(
+            FloatCore::to_degrees(1_f32),
+            57.2957795130823208767981548141051703
+        );
     }
 }

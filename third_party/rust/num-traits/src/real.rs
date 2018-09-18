@@ -1,6 +1,6 @@
 use std::ops::Neg;
 
-use {Num, NumCast, Float};
+use {Float, Num, NumCast};
 
 // NOTE: These doctests have the same issue as those in src/float.rs.
 // They're testing the inherent methods directly, and not those of `Real`.
@@ -12,13 +12,7 @@ use {Num, NumCast, Float};
 /// for a list of data types that could meaningfully implement this trait.
 ///
 /// This trait is only available with the `std` feature.
-pub trait Real
-    : Num
-    + Copy
-    + NumCast
-    + PartialOrd
-    + Neg<Output = Self>
-{
+pub trait Real: Num + Copy + NumCast + PartialOrd + Neg<Output = Self> {
     /// Returns the smallest finite value that this type can represent.
     ///
     /// ```
@@ -215,8 +209,10 @@ pub trait Real
     fn is_sign_negative(self) -> bool;
 
     /// Fused multiply-add. Computes `(self * a) + b` with only one rounding
-    /// error. This produces a more accurate result with better performance than
-    /// a separate multiplication operation followed by an add.
+    /// error, yielding a more accurate result than an unfused multiply-add.
+    ///
+    /// Using `mul_add` can be more performant than an unfused multiply-add if
+    /// the target architecture has a dedicated `fma` CPU instruction.
     ///
     /// ```
     /// use num_traits::real::Real;
@@ -782,145 +778,55 @@ pub trait Real
 }
 
 impl<T: Float> Real for T {
-    fn min_value() -> Self {
-        Self::min_value()
+    forward! {
+        Float::min_value() -> Self;
+        Float::min_positive_value() -> Self;
+        Float::epsilon() -> Self;
+        Float::max_value() -> Self;
     }
-    fn min_positive_value() -> Self {
-        Self::min_positive_value()
-    }
-    fn epsilon() -> Self {
-        Self::epsilon()
-    }
-    fn max_value() -> Self {
-        Self::max_value()
-    }
-    fn floor(self) -> Self {
-        self.floor()
-    }
-    fn ceil(self) -> Self {
-        self.ceil()
-    }
-    fn round(self) -> Self {
-        self.round()
-    }
-    fn trunc(self) -> Self {
-        self.trunc()
-    }
-    fn fract(self) -> Self {
-        self.fract()
-    }
-    fn abs(self) -> Self {
-        self.abs()
-    }
-    fn signum(self) -> Self {
-        self.signum()
-    }
-    fn is_sign_positive(self) -> bool {
-        self.is_sign_positive()
-    }
-    fn is_sign_negative(self) -> bool {
-        self.is_sign_negative()
-    }
-    fn mul_add(self, a: Self, b: Self) -> Self {
-        self.mul_add(a, b)
-    }
-    fn recip(self) -> Self {
-        self.recip()
-    }
-    fn powi(self, n: i32) -> Self {
-        self.powi(n)
-    }
-    fn powf(self, n: Self) -> Self {
-        self.powf(n)
-    }
-    fn sqrt(self) -> Self {
-        self.sqrt()
-    }
-    fn exp(self) -> Self {
-        self.exp()
-    }
-    fn exp2(self) -> Self {
-        self.exp2()
-    }
-    fn ln(self) -> Self {
-        self.ln()
-    }
-    fn log(self, base: Self) -> Self {
-        self.log(base)
-    }
-    fn log2(self) -> Self {
-        self.log2()
-    }
-    fn log10(self) -> Self {
-        self.log10()
-    }
-    fn to_degrees(self) -> Self {
-        self.to_degrees()
-    }
-    fn to_radians(self) -> Self {
-        self.to_radians()
-    }
-    fn max(self, other: Self) -> Self {
-        self.max(other)
-    }
-    fn min(self, other: Self) -> Self {
-        self.min(other)
-    }
-    fn abs_sub(self, other: Self) -> Self {
-        self.abs_sub(other)
-    }
-    fn cbrt(self) -> Self {
-        self.cbrt()
-    }
-    fn hypot(self, other: Self) -> Self {
-        self.hypot(other)
-    }
-    fn sin(self) -> Self {
-        self.sin()
-    }
-    fn cos(self) -> Self {
-        self.cos()
-    }
-    fn tan(self) -> Self {
-        self.tan()
-    }
-    fn asin(self) -> Self {
-        self.asin()
-    }
-    fn acos(self) -> Self {
-        self.acos()
-    }
-    fn atan(self) -> Self {
-        self.atan()
-    }
-    fn atan2(self, other: Self) -> Self {
-        self.atan2(other)
-    }
-    fn sin_cos(self) -> (Self, Self) {
-        self.sin_cos()
-    }
-    fn exp_m1(self) -> Self {
-        self.exp_m1()
-    }
-    fn ln_1p(self) -> Self {
-        self.ln_1p()
-    }
-    fn sinh(self) -> Self {
-        self.sinh()
-    }
-    fn cosh(self) -> Self {
-        self.cosh()
-    }
-    fn tanh(self) -> Self {
-        self.tanh()
-    }
-    fn asinh(self) -> Self {
-        self.asinh()
-    }
-    fn acosh(self) -> Self {
-        self.acosh()
-    }
-    fn atanh(self) -> Self {
-        self.atanh()
+    forward! {
+        Float::floor(self) -> Self;
+        Float::ceil(self) -> Self;
+        Float::round(self) -> Self;
+        Float::trunc(self) -> Self;
+        Float::fract(self) -> Self;
+        Float::abs(self) -> Self;
+        Float::signum(self) -> Self;
+        Float::is_sign_positive(self) -> bool;
+        Float::is_sign_negative(self) -> bool;
+        Float::mul_add(self, a: Self, b: Self) -> Self;
+        Float::recip(self) -> Self;
+        Float::powi(self, n: i32) -> Self;
+        Float::powf(self, n: Self) -> Self;
+        Float::sqrt(self) -> Self;
+        Float::exp(self) -> Self;
+        Float::exp2(self) -> Self;
+        Float::ln(self) -> Self;
+        Float::log(self, base: Self) -> Self;
+        Float::log2(self) -> Self;
+        Float::log10(self) -> Self;
+        Float::to_degrees(self) -> Self;
+        Float::to_radians(self) -> Self;
+        Float::max(self, other: Self) -> Self;
+        Float::min(self, other: Self) -> Self;
+        Float::abs_sub(self, other: Self) -> Self;
+        Float::cbrt(self) -> Self;
+        Float::hypot(self, other: Self) -> Self;
+        Float::sin(self) -> Self;
+        Float::cos(self) -> Self;
+        Float::tan(self) -> Self;
+        Float::asin(self) -> Self;
+        Float::acos(self) -> Self;
+        Float::atan(self) -> Self;
+        Float::atan2(self, other: Self) -> Self;
+        Float::sin_cos(self) -> (Self, Self);
+        Float::exp_m1(self) -> Self;
+        Float::ln_1p(self) -> Self;
+        Float::sinh(self) -> Self;
+        Float::cosh(self) -> Self;
+        Float::tanh(self) -> Self;
+        Float::asinh(self) -> Self;
+        Float::acosh(self) -> Self;
+        Float::atanh(self) -> Self;
     }
 }
