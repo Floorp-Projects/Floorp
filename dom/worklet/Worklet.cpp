@@ -33,8 +33,7 @@ class ExecutionRunnable final : public Runnable
 {
 public:
   ExecutionRunnable(WorkletFetchHandler* aHandler, Worklet::WorkletType aType,
-                    JS::UniqueTwoByteChars aScriptBuffer, size_t aScriptLength,
-                    const WorkletLoadInfo& aWorkletLoadInfo)
+                    JS::UniqueTwoByteChars aScriptBuffer, size_t aScriptLength)
     : Runnable("Worklet::ExecutionRunnable")
     , mHandler(aHandler)
     , mScriptBuffer(std::move(aScriptBuffer))
@@ -230,7 +229,7 @@ public:
     // Moving the ownership of the buffer
     nsCOMPtr<nsIRunnable> runnable =
       new ExecutionRunnable(this, mWorklet->Type(), std::move(scriptTextBuf),
-                            scriptTextLength, mWorklet->LoadInfo());
+                            scriptTextLength);
 
     RefPtr<WorkletThread> thread = mWorklet->GetOrCreateThread();
     if (!thread) {
