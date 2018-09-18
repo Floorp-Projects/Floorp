@@ -1195,6 +1195,7 @@ void
 TISInputSourceWrapper::WillDispatchKeyboardEvent(
                          NSEvent* aNativeKeyEvent,
                          const nsAString* aInsertString,
+                         uint32_t aIndexOfKeypress,
                          WidgetKeyboardEvent& aKeyEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -1217,12 +1218,12 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
        "aNativeKeyEvent=%p, aInsertString=%p (\"%s\"), "
-       "[aNativeKeyEvent characters]=\"%s\", "
+       "aIndexOfKeypress=%u, [aNativeKeyEvent characters]=\"%s\", "
        "aKeyEvent={ mMessage=%s, mCharCode=0x%X(%s) }, kbType=0x%X, "
        "IsOpenedIMEMode()=%s",
        this, aNativeKeyEvent, aInsertString,
        aInsertString ? GetCharacters(*aInsertString) : "",
-       GetCharacters([aNativeKeyEvent characters]),
+       aIndexOfKeypress, GetCharacters([aNativeKeyEvent characters]),
        GetGeckoKeyEventType(aKeyEvent), aKeyEvent.mCharCode,
        uniChar ? NS_ConvertUTF16toUTF8(&uniChar, 1).get() : "",
        static_cast<unsigned int>(kbType), TrueOrFalse(IsOpenedIMEMode())));
@@ -1236,8 +1237,10 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
   // is pressed, its value should indicate an ASCII character for backward
   // compatibility rather than inputting character without the modifiers.
   // Therefore, we need to modify mCharCode value here.
-  uint32_t charCode =
-    insertStringForCharCode.IsEmpty() ? 0 : insertStringForCharCode[0];
+  uint32_t charCode = 0;
+  if (aIndexOfKeypress < insertStringForCharCode.Length()) {
+    charCode = insertStringForCharCode[aIndexOfKeypress];
+  }
   aKeyEvent.SetCharCode(charCode);
 
   MOZ_LOG(gLog, LogLevel::Info,
@@ -3309,10 +3312,12 @@ IMEInputHandler::WillDispatchKeyboardEvent(
   if (KeyboardLayoutOverrideRef().mOverrideEnabled) {
     TISInputSourceWrapper tis;
     tis.InitByLayoutID(KeyboardLayoutOverrideRef().mKeyboardLayout, true);
-    tis.WillDispatchKeyboardEvent(nativeEvent, insertString, aKeyboardEvent);
+    tis.WillDispatchKeyboardEvent(nativeEvent, insertString, aIndexOfKeypress,
+                                  aKeyboardEvent);
   } else {
     TISInputSourceWrapper::CurrentInputSource().
-      WillDispatchKeyboardEvent(nativeEvent, insertString, aKeyboardEvent);
+      WillDispatchKeyboardEvent(nativeEvent, insertString, aIndexOfKeypress,
+                                aKeyboardEvent);
   }
 
   // Remove basic modifiers from keypress event because if they are included
