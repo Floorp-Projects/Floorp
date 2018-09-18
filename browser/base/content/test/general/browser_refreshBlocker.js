@@ -91,7 +91,7 @@ async function testRealRefresh(refreshPage, delay) {
   }, async function(browser) {
     await pushPrefs(["accessibility.blockautorefresh", true]);
 
-    BrowserTestUtils.loadURI(browser, refreshPage + "?p=" + TARGET_PAGE + "&d=" + delay);
+    browser.loadURI(refreshPage + "?p=" + TARGET_PAGE + "&d=" + delay);
     await BrowserTestUtils.browserLoaded(browser);
 
     // Once browserLoaded resolves, all nsIWebProgressListener callbacks

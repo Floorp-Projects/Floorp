@@ -16,7 +16,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html;charset=utf8,<p>test browser last window closing</p>");
+  gBrowser.loadURI("data:text/html;charset=utf8,<p>test browser last window closing</p>");
 }
 
 function runTests({ Scratchpad }) {

@@ -14,7 +14,6 @@
         title="112564 test">
 
   <script type="application/javascript"><![CDATA[
-    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     const LISTEN_EVENTS = ["load", "unload", "pageshow", "pagehide"];
 
     var gBrowser;
@@ -89,7 +88,7 @@
       gExpected = [{type: "pagehide", persisted: true},
                    {type: "load", title: "test1"},
                    {type: "pageshow", title: "test1", persisted: false}];
-      BrowserTestUtils.loadURI(gBrowser, test1DocURI);
+      gBrowser.loadURI(test1DocURI);
       yield undefined;
 
       var test2Doc = "data:text/html,<html><head><title>test2</title></head>" +
@@ -98,7 +97,7 @@
       gExpected = [{type: "pagehide", title: "test1", persisted: true},
                    {type: "load", title: "test2"},
                    {type: "pageshow", title: "test2", persisted: false}];
-      BrowserTestUtils.loadURI(gBrowser, test2Doc);
+      gBrowser.loadURI(test2Doc);
       yield undefined;
 
       // Now go back in history. First page has been cached.

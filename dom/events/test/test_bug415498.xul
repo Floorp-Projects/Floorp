@@ -20,7 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
 
   <pre id="test">
   <script class="testbody" type="application/javascript"><![CDATA[
-    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
     /** Test for Bug 415498 **/
     SimpleTest.waitForExplicitFinish();
@@ -65,7 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
 
       // 1) This document uses addEventListener to register a method throwing an exception
       var chromeDir = getRootDirectory(window.location.href);
-      BrowserTestUtils.loadURI(browser, chromeDir + "bug415498-doc1.html");
+      browser.loadURI(chromeDir + "bug415498-doc1.html");
       yield undefined;
 
       ok(verifyErrorReceived("HierarchyRequestError"),
@@ -74,7 +73,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
 
       // 2) This document sets window.onload to register a method throwing an exception
       var chromeDir = getRootDirectory(window.location.href);
-      BrowserTestUtils.loadURI(browser, chromeDir + "bug415498-doc2.html");
+      browser.loadURI(chromeDir + "bug415498-doc2.html");
       yield undefined;
 
       ok(verifyErrorReceived("HierarchyRequestError"),

@@ -12,7 +12,7 @@ function test() {
   pm.add(makeURI("http://example.org/"), "install", pm.ALLOW_ACTION);
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "bug645699.html");
+  gBrowser.loadURI(TESTROOT + "bug645699.html");
 }
 
 function allow_blocked(installInfo) {

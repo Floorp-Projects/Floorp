@@ -15,9 +15,7 @@ add_task(async function() {
       ok(true, "pageshow listener called: " + newwindow.gBrowser.currentURI.spec);
       resolve();
     });
-    selectedBrowser.loadURI("data:text/html,<h1 id='h1'>Select Me</h1>", {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+    selectedBrowser.loadURI("data:text/html,<h1 id='h1'>Select Me</h1>");
   });
 
   await SimpleTest.promiseFocus(newwindow);

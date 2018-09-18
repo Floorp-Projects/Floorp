@@ -1009,18 +1009,6 @@ function handleUriInChrome(aBrowser, aUri) {
   return false;
 }
 
-/* Creates a null principal using the userContextId
-   from the current selected tab or a passed in tab argument */
-function _createNullPrincipalFromTabUserContextId(tab = gBrowser.selectedTab) {
-  let userContextId;
-  if (tab.hasAttribute("usercontextid")) {
-    userContextId = tab.getAttribute("usercontextid");
-  }
-  return Services.scriptSecurityManager.createNullPrincipal({
-    userContextId,
-  });
-}
-
 // A shared function used by both remote and non-remote browser XBL bindings to
 // load a URI or redirect it to the correct process.
 function _loadURI(browser, uri, params = {}) {
@@ -1042,10 +1030,6 @@ function _loadURI(browser, uri, params = {}) {
     postData,
     userContextId,
   } = params || {};
-
-  if (!triggeringPrincipal) {
-    throw new Error("Must load with a triggering Principal");
-  }
 
   let {
     uriObject,
@@ -2415,10 +2399,6 @@ function BrowserTryToCloseWindow() {
 function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy,
                  userContextId, originPrincipal, forceAboutBlankViewerInCurrent,
                  triggeringPrincipal, allowInheritPrincipal = false) {
-  if (!triggeringPrincipal) {
-    throw new Error("Must load with a triggering Principal");
-  }
-
   try {
     openLinkIn(uri, "current",
                { referrerURI: referrer,
@@ -3160,12 +3140,10 @@ var BrowserOnClick = {
   },
 
   ignoreWarningLink(reason, blockedInfo) {
-    let triggeringPrincipal = Utils.deserializePrincipal(blockedInfo.triggeringPrincipal) || _createNullPrincipalFromTabUserContextId();
     // Allow users to override and continue through to the site,
     // but add a notify bar as a reminder, so that they don't lose
     // track after, e.g., tab switching.
     gBrowser.loadURI(gBrowser.currentURI.spec, {
-      triggeringPrincipal,
       flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
     });
 
@@ -3230,9 +3208,7 @@ var BrowserOnClick = {
  * when their own homepage is infected, we can get them somewhere safe.
  */
 function getMeOutOfHere() {
-  gBrowser.loadURI(getDefaultHomePage(), {
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(), // Also needs to load homepage
-  });
+  gBrowser.loadURI(getDefaultHomePage());
 }
 
 /**
@@ -3248,9 +3224,7 @@ function goBackFromErrorPage() {
   if (state.index == 1) {
     // If the unsafe page is the first or the only one in history, go to the
     // start page.
-    gBrowser.loadURI(getDefaultHomePage(), {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+    gBrowser.loadURI(getDefaultHomePage());
   } else {
     BrowserBack();
   }
@@ -3286,10 +3260,7 @@ function BrowserReloadWithFlags(reloadFlags) {
     // If the remoteness has changed, the new browser doesn't have any
     // information of what was loaded before, so we need to load the previous
     // URL again.
-    gBrowser.loadURI(url, {
-      flags: reloadFlags,
-      triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
-    });
+    gBrowser.loadURI(url, { flags: reloadFlags });
     return;
   }
 
@@ -7695,9 +7666,7 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams = {}) {
         }
 
         if (ignoreFragment == "whenComparingAndReplace" || replaceQueryString) {
-          browser.loadURI(aURI.spec, {
-            triggeringPrincipal: aOpenParams.triggeringPrincipal || _createNullPrincipalFromTabUserContextId(),
-          });
+          browser.loadURI(aURI.spec);
         }
 
         if (!doAdopt) {

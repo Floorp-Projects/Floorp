@@ -44,7 +44,7 @@ async function test_play_without_user_gesture() {
   info("- open new tab -");
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
-  BrowserTestUtils.loadURI(tab.linkedBrowser, VIDEO_PAGE);
+  tab.linkedBrowser.loadURI(VIDEO_PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   async function check_autoplay_keyword() {
@@ -82,7 +82,7 @@ async function test_play_with_user_gesture(gesture) {
   info("- open new tab -");
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
-  BrowserTestUtils.loadURI(tab.linkedBrowser, VIDEO_PAGE);
+  tab.linkedBrowser.loadURI(VIDEO_PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- simulate user gesture -");

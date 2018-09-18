@@ -59,7 +59,7 @@ add_task(async function step_3() {
 add_task(async function step_4() {
   info("Running step 4 - ensure we don't register subframes as open pages");
   let tab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(tab.linkedBrowser, 'data:text/html,<body><iframe src=""></iframe></body>');
+  tab.linkedBrowser.loadURI('data:text/html,<body><iframe src=""></iframe></body>');
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
@@ -82,7 +82,7 @@ add_task(async function step_6() {
   info("Running step 6 - check swapBrowsersAndCloseOther preserves registered switch-to-tab result");
   let tabToKeep = BrowserTestUtils.addTab(gBrowser);
   let tab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(tab.linkedBrowser, "about:mozilla");
+  tab.linkedBrowser.loadURI("about:mozilla");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   gBrowser.updateBrowserRemoteness(tabToKeep.linkedBrowser, tab.linkedBrowser.isRemoteBrowser);
@@ -132,7 +132,7 @@ function loadTab(tab, url) {
   });
 
   info("Loading page: " + url);
-  BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+  tab.linkedBrowser.loadURI(url);
   return Promise.all([ loaded, visited ]);
 }
 

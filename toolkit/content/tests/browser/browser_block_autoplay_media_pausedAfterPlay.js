@@ -38,7 +38,7 @@ add_task(async function setup_test_preference() {
 add_task(async function block_autoplay_media() {
   info("- open new background tab1, and check tab1's media suspend type -");
   let tab1 = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
-  BrowserTestUtils.loadURI(tab1.linkedBrowser, PAGE_SHOULD_NOT_PLAY);
+  tab1.linkedBrowser.loadURI(PAGE_SHOULD_NOT_PLAY);
   await BrowserTestUtils.browserLoaded(tab1.linkedBrowser);
   await ContentTask.spawn(tab1.linkedBrowser, SuspendedType.NONE_SUSPENDED,
                           check_audio_suspended);
@@ -48,7 +48,7 @@ add_task(async function block_autoplay_media() {
 
   info("- open new background tab2, and check tab2's media suspend type -");
   let tab2 = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
-  BrowserTestUtils.loadURI(tab2.linkedBrowser, PAGE_SHOULD_PLAY);
+  tab2.linkedBrowser.loadURI(PAGE_SHOULD_PLAY);
   await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
   await ContentTask.spawn(tab2.linkedBrowser, SuspendedType.SUSPENDED_BLOCK,
                           check_audio_suspended);

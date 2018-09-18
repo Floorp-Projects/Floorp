@@ -60,7 +60,7 @@ add_task(async function test_content_url_annotation() {
         }, true, true);
       });
     });
-    BrowserTestUtils.loadURI(browser, url);
+    browser.loadURI(url);
     await promise;
 
     // Crash the tab

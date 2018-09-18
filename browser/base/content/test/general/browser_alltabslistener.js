@@ -97,8 +97,8 @@ function test() {
     BrowserTestUtils.browserStopped(gBackgroundBrowser, kBasePage),
     BrowserTestUtils.browserStopped(gForegroundBrowser, kBasePage),
   ];
-  BrowserTestUtils.loadURI(gBackgroundBrowser, kBasePage);
-  BrowserTestUtils.loadURI(gForegroundBrowser, kBasePage);
+  gBackgroundBrowser.loadURI(kBasePage);
+  gForegroundBrowser.loadURI(kBasePage);
   Promise.all(promises).then(startTest1);
 }
 
@@ -107,7 +107,7 @@ function runTest(browser, url, next) {
   gAllNotificationsPos = 0;
   gNextTest = next;
   gTestBrowser = browser;
-  BrowserTestUtils.loadURI(browser, url);
+  browser.loadURI(url);
 }
 
 function startTest1() {

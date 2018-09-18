@@ -25,7 +25,7 @@ add_task(async function test1() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("loading test page: " + testPageURL);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL);
+  gBrowser.selectedBrowser.loadURI(testPageURL);
   await waitForMessage("InvalidStateError", gBrowser);
 
   is(getPermission(testPageURL, "indexedDB"),
@@ -52,7 +52,7 @@ add_task(async function test2() {
   win.gBrowser.selectedTab = BrowserTestUtils.addTab(win.gBrowser);
 
   info("loading test page: " + testPageURL);
-  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, testPageURL);
+  win.gBrowser.selectedBrowser.loadURI(testPageURL);
   await waitForMessage("InvalidStateError", win.gBrowser);
 
   is(getPermission(testPageURL, "indexedDB"),
@@ -78,7 +78,7 @@ add_task(async function test3() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("loading test page: " + testPageURL);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL);
+  gBrowser.selectedBrowser.loadURI(testPageURL);
   await waitForMessage("InvalidStateError", gBrowser);
 
   is(getPermission(testPageURL, "indexedDB"),

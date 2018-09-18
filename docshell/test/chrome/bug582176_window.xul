@@ -11,7 +11,7 @@
   <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
   <script type="application/javascript" src="docshell_helpers.js" />
   <script type="application/javascript"><![CDATA[
-    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+  
     // Define the generator-iterator for the tests.
     var tests = testIterator();
 
@@ -50,14 +50,14 @@
         getService(Ci.nsIObserverService);
       os.addObserver(observer, "content-document-global-created");
 
-      BrowserTestUtils.loadURI(browser, "http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html");
+      browser.loadURI("http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html");
       yield undefined;
       is(browser.contentWindow.testVar, undefined,
          "variable unexpectedly there already");
       browser.contentWindow.wrappedJSObject.testVar = 1;
       is(notificationCount, 1, "Should notify on first navigation");
 
-      BrowserTestUtils.loadURI(browser, "http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html?2");
+      browser.loadURI("http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html?2");
       yield undefined;
       is(browser.contentWindow.wrappedJSObject.testVar, undefined,
          "variable should no longer be there");
@@ -69,7 +69,7 @@
          "variable should still be there");
       is(notificationCount, 2, "Should not notify on back navigation");
 
-      BrowserTestUtils.loadURI(browser, "http://mochi.test:8888/tests/docshell/test/chrome/582176_xml.xml");
+      browser.loadURI("http://mochi.test:8888/tests/docshell/test/chrome/582176_xml.xml");
       yield undefined;
       is(browser.contentDocument.body.textContent, "xslt result",
          "Transform performed successfully");

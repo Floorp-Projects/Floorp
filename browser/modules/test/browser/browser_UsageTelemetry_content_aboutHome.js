@@ -52,7 +52,7 @@ add_task(async function test_abouthome_activitystream_simpleQuery() {
   let promiseAboutHomeSearchLoaded = BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "ContentSearchClient", true, null, true).then(() => false);
 
   info("Load about:home.");
-  BrowserTestUtils.loadURI(tab.linkedBrowser, "about:home");
+  tab.linkedBrowser.loadURI("about:home");
   info("Wait for ActivityStream search input.");
   await promiseAboutHomeSearchLoaded;
 

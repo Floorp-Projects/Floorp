@@ -25,7 +25,7 @@ function frame_script() {
  * Promise that resolves when the browser is no longer remote.
  */
 function prepareNonRemoteBrowser(aWindow, browser) {
-  BrowserTestUtils.loadURI(browser, NON_REMOTE_PAGE);
+  browser.loadURI(NON_REMOTE_PAGE);
   return BrowserTestUtils.browserLoaded(browser);
 }
 

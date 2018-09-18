@@ -14,7 +14,6 @@
         title="215405 test">
 
   <script type="application/javascript"><![CDATA[
-    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     var imports = [ "SimpleTest", "is", "isnot", "ok"];
     for (var name of imports) {
       window[name] = window.opener.wrappedJSObject[name];
@@ -62,7 +61,7 @@
       var testName = "[nostore]";
 
       // Load a page with a no-store header
-      BrowserTestUtils.loadURI(gBrowser, nostoreURI);
+      gBrowser.loadURI(nostoreURI);
       yield undefined;
 
 
@@ -88,7 +87,7 @@
       // Load a new document into the browser
       var simple = "data:text/html,<html><head><title>test2</title></head>" +
                      "<body>test2</body></html>";
-      BrowserTestUtils.loadURI(gBrowser, simple);
+      gBrowser.loadURI(simple);
       yield undefined;
 
 
@@ -112,7 +111,7 @@
 
       // Load a page with a no-cache header. This should not be
       // restricted like no-store (bug 567365)
-      BrowserTestUtils.loadURI(gBrowser, nocacheURI);
+      gBrowser.loadURI(nocacheURI);
       yield undefined;
 
 
@@ -135,7 +134,7 @@
       isnot(scrollY, originalYPosition,
             testName + " failed to scroll window vertically");
 
-      BrowserTestUtils.loadURI(gBrowser, simple);
+      gBrowser.loadURI(simple);
       yield undefined;
 
 

@@ -13,7 +13,8 @@
   let browser = win.gBrowser.selectedBrowser;
   await BrowserTestUtils.browserLoaded(browser);
 
-  BrowserTestUtils.loadURI(browser, "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/" +
+  browser.loadURI(
+    "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/" +
     "browser_privatebrowsing_localStorage_page2.html");
   await BrowserTestUtils.browserLoaded(browser);
 

@@ -17,10 +17,10 @@ function test() {
     BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
       openScratchpad(runTests);
     });
-    BrowserTestUtils.loadURI(gBrowser, "data:text/html,test context switch in Scratchpad tab 2");
+    gBrowser.loadURI("data:text/html,test context switch in Scratchpad tab 2");
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,test context switch in Scratchpad tab 1");
+  gBrowser.loadURI("data:text/html,test context switch in Scratchpad tab 1");
 }
 
 async function runTests() {
@@ -82,7 +82,7 @@ async function runTests2() {
   });
 
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(runTests3);
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,test context switch in Scratchpad location 2");
+  gBrowser.loadURI("data:text/html,test context switch in Scratchpad location 2");
 }
 
 function runTests3() {

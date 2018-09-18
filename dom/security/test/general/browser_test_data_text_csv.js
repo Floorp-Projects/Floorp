@@ -31,5 +31,5 @@ function test() {
      win.close();
      finish();
   });
-  BrowserTestUtils.loadURI(gBrowser, kTestURI);
+  gBrowser.loadURI(kTestURI);
 }

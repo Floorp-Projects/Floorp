@@ -208,7 +208,7 @@ var TestRunner = {
       gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
     }
     gBrowser.unpinTab(gBrowser.selectedTab);
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "data:text/html;charset=utf-8,<h1>Done!");
+    gBrowser.selectedBrowser.loadURI("data:text/html;charset=utf-8,<h1>Done!");
     browserWindow.restore();
     Services.prefs.clearUserPref("toolkit.cosmeticAnimations.enabled");
   },
