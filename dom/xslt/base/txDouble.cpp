@@ -179,8 +179,8 @@ void txDouble::toString(double aValue, nsAString& aDest)
     uint32_t oldlength = aDest.Length();
     if (!aDest.SetLength(oldlength + length, mozilla::fallible))
         return; // out of memory
-    nsAString::iterator dest;
-    aDest.BeginWriting(dest).advance(int32_t(oldlength));
+    auto dest = aDest.BeginWriting();
+    std::advance(dest, oldlength);
     if (aValue < 0) {
         *dest = '-'; ++dest;
     }

@@ -1511,10 +1511,8 @@ nsStandardURL::SetSpecWithEncoding(const nsACString &input,
     if (IsSpecialProtocol(filteredURI)) {
         // Bug 652186: Replace all backslashes with slashes when parsing paths
         // Stop when we reach the query or the hash.
-        nsAutoCString::iterator start;
-        nsAutoCString::iterator end;
-        filteredURI.BeginWriting(start);
-        filteredURI.EndWriting(end);
+        auto start = filteredURI.BeginWriting();
+        auto end = filteredURI.EndWriting();
         while (start != end) {
             if (*start == '?' || *start == '#') {
                 break;
@@ -2393,10 +2391,8 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
     if ((protocol.IsEmpty() && IsSpecialProtocol(baseProtocol)) ||
          IsSpecialProtocol(protocol)) {
 
-        nsAutoCString::iterator start;
-        nsAutoCString::iterator end;
-        buf.BeginWriting(start);
-        buf.EndWriting(end);
+        auto start = buf.BeginWriting();
+        auto end = buf.EndWriting();
         while (start != end) {
             if (*start == '?' || *start == '#') {
                 break;
