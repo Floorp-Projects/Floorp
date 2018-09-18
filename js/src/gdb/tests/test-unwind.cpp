@@ -52,7 +52,7 @@ FRAGMENT(unwind, simple) {
 
     JS::CompileOptions opts(cx);
     opts.setFileAndLine(__FILE__, line0 + 1);
-    opts.setUTF8(true);
+
     JS::Rooted<JS::Value> rval(cx);
     JS::EvaluateUtf8(cx, opts, bytes, strlen(bytes), &rval);
 

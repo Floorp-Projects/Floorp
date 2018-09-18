@@ -50,7 +50,6 @@ bool JSAPITest::exec(const char* utf8, const char* filename, int lineno)
 {
     JS::CompileOptions opts(cx);
     opts.setFileAndLine(filename, lineno);
-    opts.setUTF8(true);
 
     JS::RootedValue v(cx);
     return JS::EvaluateUtf8(cx, opts, utf8, strlen(utf8), &v) ||
@@ -61,7 +60,6 @@ bool JSAPITest::execDontReport(const char* utf8, const char* filename, int linen
 {
     JS::CompileOptions opts(cx);
     opts.setFileAndLine(filename, lineno);
-    opts.setUTF8(true);
 
     JS::RootedValue v(cx);
     return JS::EvaluateUtf8(cx, opts, utf8, strlen(utf8), &v);
@@ -72,7 +70,6 @@ bool JSAPITest::evaluate(const char* utf8, const char* filename, int lineno,
 {
     JS::CompileOptions opts(cx);
     opts.setFileAndLine(filename, lineno);
-    opts.setUTF8(true);
 
     return JS::EvaluateUtf8(cx, opts, utf8, strlen(utf8), vp) ||
            fail(JSAPITestString(utf8), filename, lineno);

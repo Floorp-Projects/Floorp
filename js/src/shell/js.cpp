@@ -872,7 +872,6 @@ RunFile(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
     {
         CompileOptions options(cx);
         options.setIntroductionType("js shell file")
-               .setUTF8(true)
                .setFileAndLine(filename, 1)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
@@ -940,7 +939,6 @@ InitModuleLoader(JSContext* cx)
     }
 
     CompileOptions options(cx);
-    options.setUTF8(true);
     options.setIntroductionType("shell module loader");
     options.setFileAndLine("shell/ModuleLoader.js", 1);
     options.setSelfHostingMode(false);
@@ -1206,7 +1204,6 @@ EvalUtf8AndPrint(JSContext* cx, const char* bytes, size_t length,
     // Eval.
     JS::CompileOptions options(cx);
     options.setIntroductionType("js shell interactive")
-           .setUTF8(true)
            .setIsRunOnce(true)
            .setFileAndLine("typein", lineno);
 
@@ -1636,7 +1633,6 @@ LoadScript(JSContext* cx, unsigned argc, Value* vp, bool scriptRelative)
 
         CompileOptions opts(cx);
         opts.setIntroductionType("js shell load")
-            .setUTF8(true)
             .setIsRunOnce(true)
             .setNoScriptRval(true);
 
@@ -3380,7 +3376,6 @@ DisassFile(JSContext* cx, unsigned argc, Value* vp)
     {
         CompileOptions options(cx);
         options.setIntroductionType("js shell disFile")
-               .setUTF8(true)
                .setFileAndLine(filename.get(), 1)
                .setIsRunOnce(true)
                .setNoScriptRval(true);

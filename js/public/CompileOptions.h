@@ -280,10 +280,6 @@ class JS_PUBLIC_API(OwningCompileOptions) final
         return *this;
     }
 
-    OwningCompileOptions& setUTF8(bool) {
-        return *this;
-    }
-
     OwningCompileOptions& setColumn(unsigned c) {
         column = c;
         return *this;
@@ -456,10 +452,6 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(CompileOptions) final
 
     CompileOptions& setMutedErrors(bool mute) {
         mutedErrors_ = mute;
-        return *this;
-    }
-
-    CompileOptions& setUTF8(bool) {
         return *this;
     }
 
