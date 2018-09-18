@@ -9,7 +9,7 @@ pub enum CompressionMethod
     /// The file is stored (no compression)
     Stored,
     /// The file is Deflated
-    #[cfg(feature = "flate2")]
+    #[cfg(feature = "deflate")]
     Deflated,
     /// File is compressed using BZIP2 algorithm
     #[cfg(feature = "bzip2")]
@@ -23,7 +23,7 @@ impl CompressionMethod {
     pub fn from_u16(val: u16) -> CompressionMethod {
         match val {
             0 => CompressionMethod::Stored,
-            #[cfg(feature = "flate2")]
+            #[cfg(feature = "deflate")]
             8 => CompressionMethod::Deflated,
             #[cfg(feature = "bzip2")]
             12 => CompressionMethod::Bzip2,
@@ -35,7 +35,7 @@ impl CompressionMethod {
     pub fn to_u16(self) -> u16 {
         match self {
             CompressionMethod::Stored => 0,
-            #[cfg(feature = "flate2")]
+            #[cfg(feature = "deflate")]
             CompressionMethod::Deflated => 8,
             #[cfg(feature = "bzip2")]
             CompressionMethod::Bzip2 => 12,
@@ -65,22 +65,22 @@ mod test {
         }
     }
 
-    #[cfg(all(not(feature = "bzip2"), feature = "flate2"))]
+    #[cfg(all(not(feature = "bzip2"), feature = "deflate"))]
     fn methods() -> Vec<CompressionMethod> {
         vec![CompressionMethod::Stored, CompressionMethod::Deflated]
     }
 
-    #[cfg(all(not(feature = "flate2"), feature = "bzip2"))]
+    #[cfg(all(not(feature = "deflate"), feature = "bzip2"))]
     fn methods() -> Vec<CompressionMethod> {
         vec![CompressionMethod::Stored, CompressionMethod::Bzip2]
     }
 
-    #[cfg(all(feature = "bzip2", feature = "flate2"))]
+    #[cfg(all(feature = "bzip2", feature = "deflate"))]
     fn methods() -> Vec<CompressionMethod> {
         vec![CompressionMethod::Stored, CompressionMethod::Deflated, CompressionMethod::Bzip2]
     }
 
-    #[cfg(all(not(feature = "bzip2"), not(feature = "flate2")))]
+    #[cfg(all(not(feature = "bzip2"), not(feature = "deflate")))]
     fn methods() -> Vec<CompressionMethod> {
         vec![CompressionMethod::Stored]
     }

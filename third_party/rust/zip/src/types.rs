@@ -28,7 +28,7 @@ impl System {
 pub const DEFAULT_VERSION: u8 = 46;
 
 /// Structure representing a ZIP file.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ZipFileData
 {
     /// Compatibility of the file attribute information
@@ -66,20 +66,9 @@ impl ZipFileData {
         let no_null_filename = match self.file_name.find('\0') {
             Some(index) => &self.file_name[0..index],
             None => &self.file_name,
-        }.to_string();
-
-        // zip files can contain both / and \ as separators regardless of the OS
-        // and as we want to return a sanitized PathBuf that only supports the
-        // OS separator let's convert incompatible separators to compatible ones
-        let separator = ::std::path::MAIN_SEPARATOR;
-        let opposite_separator = match separator {
-            '/' => '\\',
-            '\\' | _ => '/',
         };
-        let filename =
-            no_null_filename.replace(&opposite_separator.to_string(), &separator.to_string());
 
-        ::std::path::Path::new(&filename)
+        ::std::path::Path::new(no_null_filename)
             .components()
             .filter(|component| match *component {
                 ::std::path::Component::Normal(..) => true,

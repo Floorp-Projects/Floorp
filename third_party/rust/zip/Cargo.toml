@@ -12,7 +12,7 @@
 
 [package]
 name = "zip"
-version = "0.4.2"
+version = "0.3.3"
 authors = ["Mathijs van de Nes <git@mathijs.vd-nes.nl>"]
 description = "Library to support the reading and writing of zip files.\n"
 documentation = "http://mvdnes.github.io/rust-docs/zip-rs/zip/index.html"
@@ -25,6 +25,7 @@ optional = true
 
 [dependencies.flate2]
 version = "1.0"
+features = ["rust_backend"]
 optional = true
 default-features = false
 
@@ -41,6 +42,4 @@ version = "1.0"
 
 [features]
 default = ["bzip2", "deflate"]
-deflate = ["flate2", "flate2/rust_backend"]
-deflate-miniz = ["flate2", "flate2/miniz-sys"]
-deflate-zlib = ["flate2", "flate2/zlib"]
+deflate = ["flate2"]
