@@ -376,11 +376,12 @@ description#identity-popup-content-verifier,
 /* Disabled label */
 
 #identity-popup-content-blocking-disabled-label {
-  padding: 0px 5px;
+  padding: 2px 5px;
   border-radius: 3px;
   margin: 5px;
   display: none;
   color: #fff;
+  -moz-box-align: center;
 }
 
 #identity-popup-content-blocking-content[hasException] #identity-popup-content-blocking-disabled-label {
@@ -405,7 +406,6 @@ description#identity-popup-content-verifier,
 
 #identity-popup-content-blocking-disabled-label > label {
   margin: 0;
-  line-height: 18px;
 }
 
 #identity-popup-content-blocking-disabled-label > image {
