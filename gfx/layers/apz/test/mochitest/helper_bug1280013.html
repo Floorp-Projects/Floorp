@@ -47,7 +47,7 @@ function* test(testDriver) {
   // get the displayport for the subframe
   var utils = SpecialPowers.getDOMWindowUtils(window);
   var contentPaints = utils.getContentAPZTestData().paints;
-  var lastPaint = convertScrollFrameData(contentPaints[contentPaints.length - 1].scrollFrames);
+  var lastPaint = convertScrollFrameData(getLastNonemptyBucket(contentPaints).scrollFrames);
   var foundIt = 0;
   for (var scrollId in lastPaint) {
     if (('contentDescription' in lastPaint[scrollId]) &&
