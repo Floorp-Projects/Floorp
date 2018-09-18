@@ -1266,6 +1266,7 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
   mLastCanvasDatas.Clear();
   mLastAsr = nullptr;
   mBuilderDumpIndex = 0;
+  mContainsSVGGroup = false;
   MOZ_ASSERT(mDumpIndent == 0);
   mClipManager.BeginBuild(mManager, aBuilder);
 
@@ -1396,7 +1397,7 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
         // display items (like animated transforms / opacity) share the same
         // animated geometry root, so we can combine subsequent items of that
         // type into the same image.
-        mDoGrouping = true;
+        mContainsSVGGroup = mDoGrouping = true;
         GP("attempting to enter the grouping code\n");
       }
 
