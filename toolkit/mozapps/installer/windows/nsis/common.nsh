@@ -8132,7 +8132,7 @@
   Push $2
 
   ; Command line
-  StrCpy $0 ${CMDLINE}
+  StrCpy $0 "${CMDLINE}"
 
   ; STARTUPINFO
   System::Alloc 68
