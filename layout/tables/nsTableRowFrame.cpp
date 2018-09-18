@@ -213,7 +213,7 @@ nsTableRowFrame::AppendFrames(ChildListID  aListID,
   nsTableFrame* tableFrame = GetTableFrame();
   for (nsFrameList::Enumerator e(newCells) ; !e.AtEnd(); e.Next()) {
     nsIFrame *childFrame = e.get();
-    NS_ASSERTION(IS_TABLE_CELL(childFrame->Type()),
+    NS_ASSERTION(IsTableCell(childFrame->Type()),
                  "Not a table cell frame/pseudo frame construction failure");
     tableFrame->AppendCell(static_cast<nsTableCellFrame&>(*childFrame), GetRowIndex());
   }
@@ -253,7 +253,7 @@ nsTableRowFrame::InsertFrames(ChildListID  aListID,
   nsTArray<nsTableCellFrame*> cellChildren;
   for (nsFrameList::Enumerator e(newCells); !e.AtEnd(); e.Next()) {
     nsIFrame *childFrame = e.get();
-    NS_ASSERTION(IS_TABLE_CELL(childFrame->Type()),
+    NS_ASSERTION(IsTableCell(childFrame->Type()),
                  "Not a table cell frame/pseudo frame construction failure");
     cellChildren.AppendElement(static_cast<nsTableCellFrame*>(childFrame));
   }
@@ -454,7 +454,7 @@ nscoord nsTableRowFrame::GetRowBaseline(WritingMode aWM)
   nscoord ascent = 0;
   nsSize containerSize = GetSize();
   for (nsIFrame* childFrame : mFrames) {
-    if (IS_TABLE_CELL(childFrame->Type())) {
+    if (IsTableCell(childFrame->Type())) {
       nsIFrame* firstKid = childFrame->PrincipalChildList().FirstChild();
       ascent = std::max(ascent,
                         LogicalRect(aWM, firstKid->GetNormalRect(),

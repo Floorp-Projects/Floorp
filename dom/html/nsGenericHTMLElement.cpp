@@ -194,7 +194,7 @@ nsGenericHTMLElement::GetAccessKeyLabel(nsString& aLabel)
 }
 
 static bool
-IS_TABLE_CELL(LayoutFrameType frameType)
+IsTableCell(LayoutFrameType frameType)
 {
   return LayoutFrameType::TableCell == frameType ||
          LayoutFrameType::BCTableCell == frameType;
@@ -205,7 +205,7 @@ IsOffsetParent(nsIFrame* aFrame)
 {
   LayoutFrameType frameType = aFrame->Type();
 
-  if (IS_TABLE_CELL(frameType) || frameType == LayoutFrameType::Table) {
+  if (IsTableCell(frameType) || frameType == LayoutFrameType::Table) {
     // Per the IDL for Element, only td, th, and table are acceptable offsetParents
     // apart from body or positioned elements; we need to check the content type as
     // well as the frame type so we ignore anonymous tables created by an element

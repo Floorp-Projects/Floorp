@@ -683,7 +683,7 @@ ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
 
   // XXX Should we really need to null check mCBReflowInput?  (We do for
   // at least nsBoxFrame).
-  if (IS_TABLE_CELL(aFrameType) &&
+  if (IsTableCell(aFrameType) &&
       (mFlags.mSpecialBSizeReflow ||
        (mFrame->FirstInFlow()->GetStateBits() &
          NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) &&
@@ -763,7 +763,7 @@ ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
   // the special bsize reflow, since in that case it will already be
   // set correctly above if we need it set.
   if (!IsBResize() && mCBReflowInput &&
-      (IS_TABLE_CELL(mCBReflowInput->mFrame->Type()) ||
+      (IsTableCell(mCBReflowInput->mFrame->Type()) ||
        mCBReflowInput->mFlags.mHeightDependsOnAncestorCell) &&
       !mCBReflowInput->mFlags.mSpecialBSizeReflow &&
       dependsOnCBBSize) {
@@ -2252,7 +2252,7 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
       // to use the mComputedHeight of the cell instead of what the cell block passed in.
       // XXX It seems like this could lead to bugs with min-height and friends
       if (cbri->mParentReflowInput) {
-        if (IS_TABLE_CELL(cbri->mFrame->Type())) {
+        if (IsTableCell(cbri->mFrame->Type())) {
           // use the cell's computed block size
           cbSize.BSize(wm) = cbri->ComputedSize(wm).BSize(wm);
         }
@@ -2289,7 +2289,7 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
           // in quirks mode, get the cb height using the special quirk method
           if (!wm.IsVertical() &&
               eCompatibility_NavQuirks == aPresContext->CompatibilityMode()) {
-            if (!IS_TABLE_CELL(cbri->mFrame->Type())) {
+            if (!IsTableCell(cbri->mFrame->Type())) {
               cbSize.BSize(wm) = CalcQuirkContainingBlockHeight(cbri);
               if (cbSize.BSize(wm) == NS_AUTOHEIGHT) {
                 blockSizeUnit = eStyleUnit_Auto;

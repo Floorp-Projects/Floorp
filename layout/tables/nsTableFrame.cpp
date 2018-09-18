@@ -249,7 +249,7 @@ nsTableFrame::RegisterPositionedTablePart(nsIFrame* aFrame)
   // the potential to break sites that apply 'position: relative' to those
   // parts, expecting nothing to happen. We warn at the console to make tracking
   // down the issue easy.
-  if (!IS_TABLE_CELL(aFrame->Type())) {
+  if (!IsTableCell(aFrame->Type())) {
     nsIContent* content = aFrame->GetContent();
     nsPresContext* presContext = aFrame->PresContext();
     if (content && !presContext->HasWarnedAboutPositionedTableParts()) {
@@ -1883,7 +1883,7 @@ nsTableFrame::AncestorsHaveStyleBSize(const ReflowInput& aParentReflowInput)
   for (const ReflowInput* rs = &aParentReflowInput;
        rs && rs->mFrame; rs = rs->mParentReflowInput) {
     LayoutFrameType frameType = rs->mFrame->Type();
-    if (IS_TABLE_CELL(frameType) ||
+    if (IsTableCell(frameType) ||
         (LayoutFrameType::TableRow      == frameType) ||
         (LayoutFrameType::TableRowGroup == frameType)) {
       const nsStyleCoord &bsize = rs->mStylePosition->BSize(wm);
@@ -1905,7 +1905,7 @@ nsTableFrame::AncestorsHaveStyleBSize(const ReflowInput& aParentReflowInput)
 void
 nsTableFrame::CheckRequestSpecialBSizeReflow(const ReflowInput& aReflowInput)
 {
-  NS_ASSERTION(IS_TABLE_CELL(aReflowInput.mFrame->Type()) ||
+  NS_ASSERTION(IsTableCell(aReflowInput.mFrame->Type()) ||
                aReflowInput.mFrame->IsTableRowFrame() ||
                aReflowInput.mFrame->IsTableRowGroupFrame() ||
                aReflowInput.mFrame->IsTableFrame(),
@@ -1931,7 +1931,7 @@ nsTableFrame::RequestSpecialBSizeReflow(const ReflowInput& aReflowInput)
   // notify the frame and its ancestors of the special reflow, stopping at the containing table
   for (const ReflowInput* rs = &aReflowInput; rs && rs->mFrame; rs = rs->mParentReflowInput) {
     LayoutFrameType frameType = rs->mFrame->Type();
-    NS_ASSERTION(IS_TABLE_CELL(frameType) ||
+    NS_ASSERTION(IsTableCell(frameType) ||
                  LayoutFrameType::TableRow == frameType ||
                  LayoutFrameType::TableRowGroup == frameType ||
                  LayoutFrameType::Table == frameType,
