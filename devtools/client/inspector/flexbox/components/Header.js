@@ -87,11 +87,29 @@ class Header extends PureComponent {
   }
 
   render() {
-    const { highlighted } = this.props.flexbox;
+    const {
+      flexbox,
+      onToggleFlexItemShown,
+    } = this.props;
+    const {
+      flexItemShown,
+      highlighted,
+    } = flexbox;
 
     return (
       dom.div({ className: "flex-header devtools-monospace" },
-        dom.div({ className: "flex-header-content" },
+        flexItemShown ?
+          dom.button({
+            className: "flex-header-button-prev devtools-button",
+            onClick: () => onToggleFlexItemShown(),
+          })
+          :
+          null,
+        dom.div(
+          {
+            className: "flex-header-content" +
+                       (flexItemShown ? " flex-item-shown" : "")
+          },
           this.renderFlexContainer(),
           this.renderFlexItemSelector()
         ),
