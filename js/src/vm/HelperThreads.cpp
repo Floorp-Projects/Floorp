@@ -1331,14 +1331,17 @@ GlobalHelperThreadState::addSizeOfIncludingThis(JS::GlobalStats* stats,
         htStats.wasmCompile += task->sizeOfExcludingThis(mallocSizeOf);
     }
 
-    // Report number of helper threads.
+    // Report number of helper threads and memory usage of idle threads.
     MOZ_ASSERT(htStats.idleThreadCount == 0);
     if (threads) {
         for (auto& thread : *threads) {
             if (thread.idle()) {
                 htStats.idleThreadCount++;
+                htStats.stateData += thread.context()->sizeOfExcludingThis(mallocSizeOf);
             } else {
                 htStats.activeThreadCount++;
+                // We can't safely access active thread data, so skip reporting
+                // for now.
             }
         }
     }
@@ -2232,8 +2235,7 @@ HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked)
         AutoUnlockHelperThreadState unlock(locked);
         AutoSetContextRuntime ascr(runtime);
 
-        JSContext* cx = TlsContext.get();
-
+        JSContext* cx = context();
         Zone* zone = task->parseGlobal->zoneFromAnyThread();
         zone->setHelperThreadOwnerContext(cx);
         auto resetOwnerContext = mozilla::MakeScopeExit([&] {
@@ -2538,6 +2540,31 @@ HelperThread::AutoProfilerLabel::~AutoProfilerLabel()
     }
 }
 
+class HelperThread::AutoInitContext
+{
+    HelperThread* thread_;
+
+  public:
+    AutoInitContext(HelperThread* thread, const AutoLockHelperThreadState& lock)
+      : thread_(thread)
+    {
+        thread_->context_.emplace(nullptr, JS::ContextOptions());
+
+        JSContext* cx = thread_->context();
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        if (!cx->init(ContextKind::HelperThread)) {
+            oomUnsafe.crash("HelperThread JSContext::init()");
+        }
+
+        cx->setHelperThread(thread_);
+        JS_SetNativeStackQuota(cx, HELPER_STACK_QUOTA);
+    }
+
+    ~AutoInitContext() {
+        thread_->context_.reset();
+    }
+};
+
 void
 HelperThread::threadLoop()
 {
@@ -2548,15 +2575,7 @@ HelperThread::threadLoop()
 
     ensureRegisteredWithProfiler();
 
-    JSContext cx(nullptr, JS::ContextOptions());
-    {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!cx.init(ContextKind::HelperThread)) {
-            oomUnsafe.crash("HelperThread cx.init()");
-        }
-    }
-    cx.setHelperThread(this);
-    JS_SetNativeStackQuota(&cx, HELPER_STACK_QUOTA);
+    AutoInitContext init(this, lock);
 
     while (!terminate) {
         MOZ_ASSERT(idle());
@@ -2578,7 +2597,7 @@ HelperThread::threadLoop()
             mozilla::recordreplay::NotifyUnrecordedWait(WakeupAll);
         }
 
-        maybeFreeUnusedMemory(&cx);
+        maybeFreeUnusedMemory();
 
         // The selectors may depend on the HelperThreadState not changing
         // between task selection and task execution, in particular, on new
@@ -2616,10 +2635,11 @@ HelperThread::findHighestPriorityTask(const AutoLockHelperThreadState& locked)
 }
 
 void
-HelperThread::maybeFreeUnusedMemory(JSContext* cx)
+HelperThread::maybeFreeUnusedMemory()
 {
     MOZ_ASSERT(idle());
 
+    JSContext* cx = context();
     cx->tempLifoAlloc().releaseAll();
 
     if (shouldFreeUnusedMemory) {
