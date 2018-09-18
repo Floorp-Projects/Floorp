@@ -16,9 +16,6 @@ var URIs = [
   "ftp://example.org"
   ];
 
-let LoadContext = Components.Constructor("@mozilla.org/loadcontext;1");
-let PrivateLoadContext = Components.Constructor("@mozilla.org/privateloadcontext;1");
-
 function* getChannels() {
   for (let u of URIs) {
     yield NetUtil.newChannel({
@@ -70,7 +67,7 @@ add_test(function test_setPrivate_regular() {
  * Load context mandates private mode
  */
 add_test(function test_LoadContextPrivate() {
-  let ctx = new PrivateLoadContext();
+  let ctx = Cu.createPrivateLoadContext();
   for (let c of getChannels()) {
     c.notificationCallbacks = ctx;
     checkPrivate(c, true);
@@ -82,7 +79,7 @@ add_test(function test_LoadContextPrivate() {
  * Load context mandates regular mode
  */
 add_test(function test_LoadContextRegular() {
-  let ctx = new LoadContext();
+  let ctx = Cu.createLoadContext();
   for (let c of getChannels()) {
     c.notificationCallbacks = ctx;
     checkPrivate(c, false);

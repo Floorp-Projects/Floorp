@@ -12,15 +12,8 @@
 #include "nsAppStartupNotifier.h"
 #include "nsISimpleEnumerator.h"
 
-NS_IMPL_ISUPPORTS(nsAppStartupNotifier, nsIObserver)
-
-nsAppStartupNotifier::nsAppStartupNotifier()
-{
-}
-
-nsAppStartupNotifier::~nsAppStartupNotifier() = default;
-
-NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *someData)
+/* static */ nsresult
+nsAppStartupNotifier::NotifyObservers(const char* aTopic)
 {
     NS_ENSURE_ARG(aTopic);
     nsresult rv;
