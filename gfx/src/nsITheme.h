@@ -41,6 +41,10 @@ class IpcResourceUpdateQueue;
  #define NS_ITHEME_IID     \
 { 0x7329f760, 0x08cb, 0x450f, \
   { 0x82, 0x25, 0xda, 0xe7, 0x29, 0x09, 0x6d, 0xec } }
+// {0ae05515-cf7a-45a8-9e02-6556de7685b1}
+#define NS_THEMERENDERER_CID \
+{ 0x0ae05515, 0xcf7a, 0x45a8, \
+  { 0x9e, 0x02, 0x65, 0x56, 0xde, 0x76, 0x85, 0xb1 } }
 
 /**
  * nsITheme is a service that provides platform-specific native
@@ -229,6 +233,6 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITheme, NS_ITHEME_IID)
 
 // Creator function
-extern already_AddRefed<nsITheme> NS_NewNativeTheme();
+extern nsresult NS_NewNativeTheme(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 #endif

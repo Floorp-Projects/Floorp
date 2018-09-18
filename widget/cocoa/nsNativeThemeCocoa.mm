@@ -4971,9 +4971,3 @@ nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidgetTy
     return eUnknownTransparency;
   }
 }
-
-already_AddRefed<nsITheme>
-NS_NewNativeTheme()
-{
-  return do_AddRef(new nsNativeThemeCocoa());
-}
