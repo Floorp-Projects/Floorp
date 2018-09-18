@@ -48,7 +48,7 @@ class Flexbox extends PureComponent {
       flexItemShown,
     } = flexbox;
 
-    if (flexItemShown) {
+    if (flexItemShown || !flexItems.length) {
       return null;
     }
 
