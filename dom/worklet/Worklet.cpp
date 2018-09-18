@@ -14,6 +14,7 @@
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ScriptLoader.h"
+#include "mozilla/dom/WorkletImpl.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/SourceBufferHolder.h"
 #include "nsIInputStreamPump.h"
