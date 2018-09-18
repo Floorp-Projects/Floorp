@@ -565,15 +565,15 @@ ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
 		if test -f '$(srcdir)/$(notdir $@).manifest'; then \
-			echo 'Embedding manifest from $(srcdir)/$(notdir $@).manifest and $@.manifest'; \
-			$(MT) -NOLOGO -MANIFEST '$(win_srcdir)/$(notdir $@).manifest' $@.manifest -OUTPUTRESOURCE:$@\;1; \
+			echo 'Embedding manifest from $(srcdir_rel)/$(notdir $@).manifest and $@.manifest'; \
+			$(MT) -NOLOGO -MANIFEST '$(srcdir_rel)/$(notdir $@).manifest' $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		else \
 			echo 'Embedding manifest from $@.manifest'; \
 			$(MT) -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		fi; \
 	elif test -f '$(srcdir)/$(notdir $@).manifest'; then \
-		echo 'Embedding manifest from $(srcdir)/$(notdir $@).manifest'; \
-		$(MT) -NOLOGO -MANIFEST '$(win_srcdir)/$(notdir $@).manifest' -OUTPUTRESOURCE:$@\;1; \
+		echo 'Embedding manifest from $(srcdir_rel)/$(notdir $@).manifest'; \
+		$(MT) -NOLOGO -MANIFEST '$(srcdir_rel)/$(notdir $@).manifest' -OUTPUTRESOURCE:$@\;1; \
 	fi
 endif	# MSVC with manifest tool
 ifdef MOZ_PROFILE_GENERATE
@@ -600,15 +600,15 @@ ifeq (_WINNT,$(GNU_CC)_$(HOST_OS_ARCH))
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
 		if test -f '$(srcdir)/$(notdir $@).manifest'; then \
-			echo 'Embedding manifest from $(srcdir)/$(notdir $@).manifest and $@.manifest'; \
-			$(MT) -NOLOGO -MANIFEST '$(win_srcdir)/$(notdir $@).manifest' $@.manifest -OUTPUTRESOURCE:$@\;1; \
+			echo 'Embedding manifest from $(srcdir_rel)/$(notdir $@).manifest and $@.manifest'; \
+			$(MT) -NOLOGO -MANIFEST '$(srcdir_rel)/$(notdir $@).manifest' $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		else \
 			echo 'Embedding manifest from $@.manifest'; \
 			$(MT) -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		fi; \
 	elif test -f '$(srcdir)/$(notdir $@).manifest'; then \
-		echo 'Embedding manifest from $(srcdir)/$(notdir $@).manifest'; \
-		$(MT) -NOLOGO -MANIFEST '$(win_srcdir)/$(notdir $@).manifest' -OUTPUTRESOURCE:$@\;1; \
+		echo 'Embedding manifest from $(srcdir_rel)/$(notdir $@).manifest'; \
+		$(MT) -NOLOGO -MANIFEST '$(srcdir_rel)/$(notdir $@).manifest' -OUTPUTRESOURCE:$@\;1; \
 	fi
 endif	# MSVC with manifest tool
 else
@@ -639,7 +639,7 @@ ifdef MSMANIFEST_TOOL
 		$(MT) -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		rm -f $@.manifest; \
 	elif test -f '$(srcdir)/$(notdir $@).manifest'; then \
-		$(MT) -NOLOGO -MANIFEST '$(win_srcdir)/$(notdir $@).manifest' -OUTPUTRESOURCE:$@\;1; \
+		$(MT) -NOLOGO -MANIFEST '$(srcdir_rel)/$(notdir $@).manifest' -OUTPUTRESOURCE:$@\;1; \
 	fi
 endif	# MSVC with manifest tool
 else
@@ -717,15 +717,15 @@ ifdef MSMANIFEST_TOOL
 ifdef EMBED_MANIFEST_AT
 	@if test -f $@.manifest; then \
 		if test -f '$(srcdir)/$@.manifest'; then \
-			echo 'Embedding manifest from $(srcdir)/$@.manifest and $@.manifest'; \
-			$(MT) -NOLOGO -MANIFEST '$(win_srcdir)/$@.manifest' $@.manifest -OUTPUTRESOURCE:$@\;$(EMBED_MANIFEST_AT); \
+			echo 'Embedding manifest from $(srcdir_rel)/$@.manifest and $@.manifest'; \
+			$(MT) -NOLOGO -MANIFEST '$(srcdir_rel)/$@.manifest' $@.manifest -OUTPUTRESOURCE:$@\;$(EMBED_MANIFEST_AT); \
 		else \
 			echo 'Embedding manifest from $@.manifest'; \
 			$(MT) -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;$(EMBED_MANIFEST_AT); \
 		fi; \
 	elif test -f '$(srcdir)/$@.manifest'; then \
-		echo 'Embedding manifest from $(srcdir)/$@.manifest'; \
-		$(MT) -NOLOGO -MANIFEST '$(win_srcdir)/$@.manifest' -OUTPUTRESOURCE:$@\;$(EMBED_MANIFEST_AT); \
+		echo 'Embedding manifest from $(srcdir_rel)/$@.manifest'; \
+		$(MT) -NOLOGO -MANIFEST '$(srcdir_rel)/$@.manifest' -OUTPUTRESOURCE:$@\;$(EMBED_MANIFEST_AT); \
 	fi
 endif   # EMBED_MANIFEST_AT
 endif	# MSVC with manifest tool
