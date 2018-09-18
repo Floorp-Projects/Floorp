@@ -110,6 +110,7 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
     '/netwerk/protocol/viewsource',
     '/toolkit/components/browser',
+    '/toolkit/components/find',
     '/tools/profiler',
 ]
 
