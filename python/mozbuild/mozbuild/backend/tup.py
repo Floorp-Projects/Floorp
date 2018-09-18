@@ -184,6 +184,7 @@ class BackendTupfile(object):
         ]
         for srcs, compiler, flags, dash_c, prefix in compilers:
             for src in sorted(srcs):
+                self.export_icecc()
                 # AS can be set to $(CC), so we need to call expand_variables on
                 # the compiler to get the real value.
                 compiler_value = self.variables.get(compiler, self.environment.substs[compiler])
@@ -209,6 +210,9 @@ class BackendTupfile(object):
         # These are used by mach/mixin/process.py to determine the current
         # shell.
         self.export(['SHELL', 'MOZILLABUILD', 'COMSPEC'])
+
+    def export_icecc(self):
+        self.export(['ICECC_VERSION', 'ICECC_CC', 'ICECC_CXX'])
 
     def close(self):
         return self.fh.close()
@@ -671,6 +675,7 @@ class TupBackend(CommonBackend):
                                     (backend_file.host_library, self._gen_host_library)):
                 if var:
                     backend_file.export_shell()
+                    backend_file.export_icecc()
                     gen_method(backend_file)
             for obj in backend_file.delayed_generated_files:
                 self._process_generated_file(backend_file, obj)
