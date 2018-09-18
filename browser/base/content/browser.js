@@ -1699,8 +1699,7 @@ var gBrowserInit = {
             // See below for the semantics of window.arguments. Only the minimum is supported.
             userContextId: window.arguments[6],
             triggeringPrincipal: window.arguments[8] || Services.scriptSecurityManager.getSystemPrincipal(),
-            // For single-tab arguments, default to true because profileserver.py relies on it.
-            allowInheritPrincipal: window.arguments[9] != undefined ? window.arguments[9] : count === 1,
+            allowInheritPrincipal: window.arguments[9],
           });
         } catch (e) {}
       } else if (window.arguments.length >= 3) {
