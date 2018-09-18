@@ -11,6 +11,7 @@ add_task(async function() {
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   await theRightNumberOfPlayersIsReturned(walker, animations);
+  await playersCanBePausedAndResumed(walker, animations);
 
   await client.close();
   gBrowser.removeCurrentTab();
@@ -36,4 +37,27 @@ async function theRightNumberOfPlayersIsReturned(walker, animations) {
   players = await animations.getAnimationPlayersForNode(node);
   is(players.length, 1,
      "One animation player was returned for the transitioned node");
+}
+
+async function playersCanBePausedAndResumed(walker, animations) {
+  const node = await walker.querySelector(walker.rootNode, ".simple-animation");
+  const [player] = await animations.getAnimationPlayersForNode(node);
+  await player.ready();
+
+  ok(player.initialState,
+     "The player has an initialState");
+  ok(player.getCurrentState,
+     "The player has the getCurrentState method");
+  is(player.initialState.playState, "running",
+     "The animation is currently running");
+
+  await player.pause();
+  let state = await player.getCurrentState();
+  is(state.playState, "paused",
+     "The animation is now paused");
+
+  await player.play();
+  state = await player.getCurrentState();
+  is(state.playState, "running",
+     "The animation is now running again");
 }

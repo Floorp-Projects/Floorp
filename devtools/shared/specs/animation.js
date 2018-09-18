@@ -5,6 +5,7 @@
 
 const {
   Arg,
+  Option,
   RetVal,
   generateActorSpec,
   types
@@ -37,6 +38,36 @@ const animationPlayerSpec = generateActorSpec({
       request: {},
       response: {
         data: RetVal("json")
+      }
+    },
+    pause: {
+      request: {},
+      response: {}
+    },
+    play: {
+      request: {},
+      response: {}
+    },
+    ready: {
+      request: {},
+      response: {}
+    },
+    setCurrentTime: {
+      request: {
+        currentTime: Arg(0, "number")
+      },
+      response: {}
+    },
+    setPlaybackRate: {
+      request: {
+        currentTime: Arg(0, "number")
+      },
+      response: {}
+    },
+    getFrames: {
+      request: {},
+      response: {
+        frames: RetVal("json")
       }
     },
     getProperties: {
@@ -83,6 +114,29 @@ const animationsSpec = generateActorSpec({
         players: RetVal("array:animationplayer")
       }
     },
+    stopAnimationPlayerUpdates: {
+      request: {},
+      response: {}
+    },
+    pauseAll: {
+      request: {},
+      response: {}
+    },
+    playAll: {
+      request: {},
+      response: {}
+    },
+    toggleAll: {
+      request: {},
+      response: {}
+    },
+    toggleSeveral: {
+      request: {
+        players: Arg(0, "array:animationplayer"),
+        shouldPause: Arg(1, "boolean")
+      },
+      response: {}
+    },
     pauseSome: {
       request: {
         players: Arg(0, "array:animationplayer"),
@@ -100,6 +154,7 @@ const animationsSpec = generateActorSpec({
         players: Arg(0, "array:animationplayer"),
         time: Arg(1, "number"),
         shouldPause: Arg(2, "boolean"),
+        relativeToCreatedTime: Option(3, "boolean"),
       },
       response: {}
     },

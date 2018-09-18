@@ -20,6 +20,7 @@ add_task(async function() {
 async function playerHasCompleteStateAtAllTimes(walker, animations) {
   const node = await walker.querySelector(walker.rootNode, ".simple-animation");
   const [player] = await animations.getAnimationPlayersForNode(node);
+  await player.ready();
 
   // Get the list of state key names from the initialstate.
   const keys = Object.keys(player.initialState);
