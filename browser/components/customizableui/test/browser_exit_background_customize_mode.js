@@ -21,7 +21,7 @@ add_task(async function test_exit_background_customize_mode() {
   await BrowserTestUtils.switchTab(gBrowser, nonCustomizingTab);
   await finishedCustomizing;
 
-  BrowserTestUtils.loadURI(custTab.linkedBrowser, "http://example.com");
+  custTab.linkedBrowser.loadURI("http://example.com");
   await BrowserTestUtils.browserLoaded(custTab.linkedBrowser);
 
   Assert.equal(gBrowser.tabContainer.querySelector("tab[customizemode=true]"),

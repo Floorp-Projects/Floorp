@@ -214,7 +214,7 @@ add_task(async function test() {
   await ContentTask.spawn(newTab.linkedBrowser, null, frameScript);
 
   info("Opening URL");
-  BrowserTestUtils.loadURI(newTab.linkedBrowser, URL);
+  newTab.linkedBrowser.loadURI(URL);
 
   if (Services.sysinfo.getPropertyAsAString("name") == "Windows_NT") {
     info("Deactivating sanity checks under Windows (bug 1151240)");

@@ -169,9 +169,7 @@ function doPageNavigation(params) {
   }
   else if (uri) {
     gNavType = NAV_URI;
-    TestWindow.getBrowser().loadURI(uri, {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal()
-    });
+    TestWindow.getBrowser().loadURI(uri);
   }
   else if (reload) {
     gNavType = NAV_RELOAD;

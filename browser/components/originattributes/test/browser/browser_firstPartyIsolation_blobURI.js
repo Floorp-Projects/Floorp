@@ -22,7 +22,7 @@ add_task(async function test_blob_uri_inherit_oa_from_content() {
   // First we load a normal web page.
   let win = await BrowserTestUtils.openNewBrowserWindow({ remote: true });
   let browser = win.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(browser, BASE_URI);
+  browser.loadURI(BASE_URI);
   await BrowserTestUtils.browserLoaded(browser);
 
   // Then navigate to the blob: URI.

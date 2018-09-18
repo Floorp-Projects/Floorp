@@ -1792,9 +1792,7 @@ window._gBrowser = {
       browser.webProgress;
     }
 
-    browser.loadURI(BROWSER_NEW_TAB_URL, {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+    browser.loadURI(BROWSER_NEW_TAB_URL);
     browser.docShellIsActive = false;
     browser._urlbarFocused = true;
 

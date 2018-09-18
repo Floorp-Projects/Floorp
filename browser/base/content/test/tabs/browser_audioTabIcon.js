@@ -369,7 +369,7 @@ async function test_cross_process_load() {
     );
 
     // Go to a different process.
-    BrowserTestUtils.loadURI(browser, "about:mozilla");
+    browser.loadURI("about:mozilla");
     await BrowserTestUtils.browserLoaded(browser);
 
     await soundPlayingStoppedPromise;

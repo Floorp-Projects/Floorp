@@ -8,8 +8,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 var EXPORTED_SYMBOLS = ["BlockedSiteChild"];
 
 ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
-ChromeUtils.defineModuleGetter(this, "Utils",
-  "resource://gre/modules/sessionstore/Utils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "SafeBrowsing",
                                "resource://gre/modules/SafeBrowsing.jsm");
@@ -31,9 +29,7 @@ function getSiteBlockedErrorDetails(docShell) {
                              .finalize();
       }
 
-      let triggeringPrincipal = docShell.failedChannel.loadInfo ? Utils.serializePrincipal(docShell.failedChannel.loadInfo.triggeringPrincipal) : null;
       blockedInfo = { list: classifiedChannel.matchedList,
-                      triggeringPrincipal,
                       provider: classifiedChannel.matchedProvider,
                       uri: reportUri.asciiSpec };
     }

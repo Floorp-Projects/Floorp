@@ -11,7 +11,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test run() and display() in Scratchpad");
+  gBrowser.loadURI("data:text/html,<p>test run() and display() in Scratchpad");
 }
 
 function runTests() {

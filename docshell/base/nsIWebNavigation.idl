@@ -300,7 +300,8 @@ interface nsIWebNavigation : nsISupports
    * @param aTriggeringPrincipal
    *        The principal that initiated the load of aURI. If omitted docShell
    *        tries to create a codeBasePrincipal from aReferrer if not null. If
-   *        aReferrer is also null docShell won't perform a load.
+   *        aReferrer is also null docShell peforms a load using the
+   *        SystemPrincipal as the triggeringPrincipal.
    */
   void loadURIWithOptions(in AString                  aURI,
                           in unsigned long            aLoadFlags,

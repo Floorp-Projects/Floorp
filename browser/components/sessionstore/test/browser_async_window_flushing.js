@@ -97,7 +97,7 @@ add_task(async function test_remove_uninteresting_window() {
   // site.
   let tab = newWin.gBrowser.selectedTab;
   let browser = tab.linkedBrowser;
-  BrowserTestUtils.loadURI(browser, PAGE);
+  browser.loadURI(PAGE);
 
   await BrowserTestUtils.browserLoaded(browser, false, PAGE);
   await TabStateFlusher.flush(browser);
@@ -157,7 +157,7 @@ add_task(async function test_synchronously_remove_window_state() {
   // interesting.
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   let browser = newWin.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(browser, PAGE);
+  browser.loadURI(PAGE);
   await BrowserTestUtils.browserLoaded(browser, false, PAGE);
   await TabStateFlusher.flush(browser);
 

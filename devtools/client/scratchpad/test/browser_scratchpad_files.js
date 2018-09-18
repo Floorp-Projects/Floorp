@@ -19,7 +19,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test file open and save in Scratchpad");
+  gBrowser.loadURI("data:text/html,<p>test file open and save in Scratchpad");
 }
 
 function runTests() {
