@@ -76,7 +76,7 @@ add_task(async function session_storage() {
     "sessionStorage data for mochi.test has been duplicated correctly");
 
   // Check that loading a new URL discards data.
-  BrowserTestUtils.loadURI(browser2, "http://mochi.test:8888/");
+  browser2.loadURI("http://mochi.test:8888/");
   await promiseBrowserLoaded(browser2);
   await TabStateFlusher.flush(browser2);
 
@@ -86,7 +86,7 @@ add_task(async function session_storage() {
   ok(!storage["http://example.com"], "storage data was discarded");
 
   // Check that loading a new URL discards data.
-  BrowserTestUtils.loadURI(browser2, "about:mozilla");
+  browser2.loadURI("about:mozilla");
   await promiseBrowserLoaded(browser2);
   await TabStateFlusher.flush(browser2);
 

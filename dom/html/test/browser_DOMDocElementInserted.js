@@ -16,7 +16,7 @@ add_task(async function() {
     return deferred.promise;
   });
 
-  BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
+  tab.linkedBrowser.loadURI(uri);
   let loadedURI = await eventPromise;
   is(loadedURI, uri, "Should have seen the event for the right URI");
 

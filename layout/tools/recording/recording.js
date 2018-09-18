@@ -40,7 +40,5 @@ this.OnRecordingLoad = function OnRecordingLoad(win) {
 
     var args = window.arguments[0].wrappedJSObject;
 
-    gBrowser.loadURI(args.uri, {
-      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
-    });
+    gBrowser.loadURI(args.uri);
 };

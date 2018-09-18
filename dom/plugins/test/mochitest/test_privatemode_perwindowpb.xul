@@ -20,7 +20,6 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
-ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -60,14 +59,14 @@ function runTestsCallback() {
     whenDelayedStartupFinished(win, function () {
       win.addEventListener("DOMContentLoaded", function onInnerLoad() {
         if (win.content.location.href == "about:privatebrowsing") {
-          BrowserTestUtils.loadURI(win.gBrowser, contentPage)
+          win.gBrowser.loadURI(contentPage);
           return;
         }
         win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
         win.gBrowser.selectedBrowser.focus();
         SimpleTest.executeSoon(function() { aCallback(win); });
       }, true);
-      SimpleTest.executeSoon(function() { BrowserTestUtils.loadURI(win.gBrowser, contentPage); });
+      SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
     });
   }
 

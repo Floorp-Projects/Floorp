@@ -4,7 +4,7 @@ let testURL = "https://example.com/browser/" +
 add_task(async function() {
   // Load a page registering a protocol handler.
   let browser = gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(browser, testURL);
+  browser.loadURI(testURL);
   await BrowserTestUtils.browserLoaded(browser, false, testURL);
 
   // Register the protocol handler by clicking the notificationbar button.

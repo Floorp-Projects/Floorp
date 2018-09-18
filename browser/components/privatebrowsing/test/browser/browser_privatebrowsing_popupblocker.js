@@ -46,7 +46,7 @@ add_task(async function test() {
 
     }, {once: true});
 
-    BrowserTestUtils.loadURI(aWindow.gBrowser.selectedBrowser, testURI);
+    aWindow.gBrowser.selectedBrowser.loadURI(testURI);
   }
 
   let win1 = await BrowserTestUtils.openNewBrowserWindow();

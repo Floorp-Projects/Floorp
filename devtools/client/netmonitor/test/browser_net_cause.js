@@ -100,7 +100,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   const wait = waitForNetworkEvents(monitor, EXPECTED_REQUESTS.length);
-  BrowserTestUtils.loadURI(tab.linkedBrowser, CAUSE_URL);
+  tab.linkedBrowser.loadURI(CAUSE_URL);
   await wait;
 
   const requests = getSortedRequests(store.getState());

@@ -21,7 +21,7 @@ function test() {
   if (!gMultiProcessBrowser)
     expectUncaughtException();
 
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 
 function page_loaded(result) {

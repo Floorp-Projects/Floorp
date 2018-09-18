@@ -83,14 +83,11 @@
       // Load a page with a no-cache header, followed by a simple page
       // On pagehide, first page should report it is not being persisted
       var test1DocURI = "http://mochi.test:8888/tests/docshell/test/chrome/92598_nostore.html";
-      var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
       gExpected = [{type: "pagehide", persisted: true},
                    {type: "load", title: "test1"},
                    {type: "pageshow", title: "test1", persisted: false}];
-      gBrowser.loadURI(test1DocURI, {
-        triggeringPrincipal: systemPrincipal,
-      });
+      gBrowser.loadURI(test1DocURI);
       yield undefined;
 
       var test2Doc = "data:text/html,<html><head><title>test2</title></head>" +
@@ -100,9 +97,7 @@
                    {type: "unload", title: "test1"},
                    {type: "load", title: "test2"},
                    {type: "pageshow", title: "test2", persisted: false}];
-      gBrowser.loadURI(test2Doc, {
-        triggeringPrincipal: systemPrincipal,
-      });
+      gBrowser.loadURI(test2Doc);
       yield undefined;
 
       // Now go back in history. First page should not have been cached.
