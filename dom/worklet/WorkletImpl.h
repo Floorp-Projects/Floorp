@@ -60,8 +60,9 @@ private:
 /**
  * WorkletImpl is accessed from both the worklet's parent thread (on which the
  * Worklet object lives) and the worklet's execution thread.  It is owned by
- * Worklet.  No parent thread cycle collected objects are owned indefinitely
- * by WorkletImpl because WorkletImpl is not cycle collected.
+ * Worklet and WorkletGlobalScope.  No parent thread cycle collected objects
+ * are owned indefinitely by WorkletImpl because WorkletImpl is not cycle
+ * collected.
  */
 class WorkletImpl
 {
