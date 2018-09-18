@@ -29,7 +29,7 @@ function test() {
 
     let { tabs } = yield listTabs(client);
     let targetTab = findTab(tabs, TAB_URL);
-    yield attachTab(client, targetTab);
+    yield attachTarget(client, targetTab);
 
     yield testGetAllocationStack(client, targetTab, tab);
 

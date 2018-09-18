@@ -476,7 +476,7 @@ TabTarget.prototype = {
 
     // Attach the target actor
     const attachTarget = async () => {
-      const [response, tabClient] = await this._client.attachTab(this._form.actor);
+      const [response, tabClient] = await this._client.attachTarget(this._form.actor);
       this.activeTab = tabClient;
       this.threadActor = response.threadActor;
     };
