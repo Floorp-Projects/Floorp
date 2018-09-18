@@ -64,6 +64,13 @@ public:
   /// the texture itself requires it.
   virtual void UnlockAfterComposition(TextureHost* aTexture);
 
+  /// This is used for client storage support on OSX. On Nvidia hardware, it
+  /// seems that if we glDeleteTextures on a texture too early, even if we've
+  /// waited on the texture with glFinishObjectAPPLE, we'll see visual defects.
+  /// This just holds a reference to the texture until ReadUnlockTextures,
+  /// but we don't need to unlock it since we have already done so.
+  void ReferenceUntilAfterComposition(TextureHost* aTexture);
+
   /// Most compositor backends operate asynchronously under the hood. This
   /// means that when a layer stops using a texture it is often desirable to
   /// wait for the end of the next composition before NotifyNotUsed() call.
@@ -130,6 +137,9 @@ protected:
 private:
   // An array of locks that will need to be unlocked after the next composition.
   nsTArray<RefPtr<TextureHost>> mUnlockAfterComposition;
+
+  // See ReferenceUntilAfterComposition.
+  nsTArray<RefPtr<TextureHost>> mReferenceUntilAfterComposition;
 
   // An array of TextureHosts that will need to call NotifyNotUsed() after the next composition.
   nsTArray<RefPtr<TextureHost>> mNotifyNotUsedAfterComposition;
