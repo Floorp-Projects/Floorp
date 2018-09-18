@@ -1479,10 +1479,10 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const FontFamilyName& aFamily,
 
 static void
 AppendFallbacks(nsTArray<FontFamilyName>& aNames,
-                const nsTArray<nsString>& aFallbacks)
+                const nsTArray<nsCString>& aFallbacks)
 {
-  for (const nsString& fallback : aFallbacks) {
-    aNames.AppendElement(FontFamilyName(NS_ConvertUTF16toUTF8(fallback),
+  for (const nsCString& fallback : aFallbacks) {
+    aNames.AppendElement(FontFamilyName(fallback,
                                         eUnquotedName));
   }
 }
@@ -1491,7 +1491,7 @@ AppendFallbacks(nsTArray<FontFamilyName>& aNames,
 // when no generic present
 static void
 InsertMathFallbacks(FontFamilyList& aFamilyList,
-                    nsTArray<nsString>& aFallbacks)
+                    nsTArray<nsCString>& aFallbacks)
 {
   nsTArray<FontFamilyName> mergedList;
 
@@ -1652,7 +1652,7 @@ nsMathMLChar::StretchInternal(nsIFrame*                aForFrame,
 
     // really shouldn't be doing things this way but for now
     // insert fallbacks into the list
-    AutoTArray<nsString, 16> mathFallbacks;
+    AutoTArray<nsCString, 16> mathFallbacks;
     gfxFontUtils::GetPrefsFontList("font.name.serif.x-math", mathFallbacks);
     gfxFontUtils::AppendPrefsFontList("font.name-list.serif.x-math",
                                       mathFallbacks);
