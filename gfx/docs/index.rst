@@ -12,6 +12,7 @@ information about graphics and the graphics team at Mozilla.
 
    GraphicsOverview
    LayersHistory
+   OffMainThreadPainting
    AsyncPanZoom
    AdvancedLayers
    Silk

@@ -15,8 +15,8 @@ var gPublicLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoad
 var gPrivateLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoader);
 gPrivateLoader.QueryInterface(Ci.imgICache).respectPrivacyNotifications();
 
-var nonPrivateLoadContext = Cc["@mozilla.org/loadcontext;1"].createInstance(Ci.nsILoadContext);
-var privateLoadContext = Cc["@mozilla.org/privateloadcontext;1"].createInstance(Ci.nsILoadContext);
+var nonPrivateLoadContext = Cu.createLoadContext();
+var privateLoadContext = Cu.createPrivateLoadContext();
 
 function imageHandler(metadata, response) {
   gHits++;

@@ -8,22 +8,10 @@
 
 #include "nsIAppStartupNotifier.h"
 
-// {1F59B001-02C9-11d5-AE76-CC92F7DB9E03}
-#define NS_APPSTARTUPNOTIFIER_CID \
-   { 0x1f59b001, 0x2c9, 0x11d5, { 0xae, 0x76, 0xcc, 0x92, 0xf7, 0xdb, 0x9e, 0x3 } }
-
-class nsAppStartupNotifier : public nsIObserver
+class nsAppStartupNotifier final
 {
 public:
-    NS_DEFINE_STATIC_CID_ACCESSOR( NS_APPSTARTUPNOTIFIER_CID )
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-
-    nsAppStartupNotifier();
-
-protected:
-    virtual ~nsAppStartupNotifier();
+  static nsresult NotifyObservers(const char* aTopic);
 };
 
 #endif /* nsAppStartupNotifier_h___ */
