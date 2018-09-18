@@ -5,8 +5,7 @@
 set -ex
 
 export TRAVIS_RUST_VERSION
-for TRAVIS_RUST_VERSION in 1.8.0 stable beta nightly; do
+for TRAVIS_RUST_VERSION in 1.8.0 1.15.0 1.20.0 stable beta nightly; do
     run="rustup run $TRAVIS_RUST_VERSION"
-    $run cargo build --verbose
     $run $PWD/ci/test_full.sh
 done
