@@ -3237,7 +3237,7 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::CreateLoadContext(nsILoadContext** aLoadContext)
 {
     NS_ENSURE_ARG_POINTER(aLoadContext);
-    nsCOMPtr<nsILoadContext> loadContext = CreateLoadContext();
+    nsCOMPtr<nsILoadContext> loadContext = ::CreateLoadContext();
     loadContext.forget(aLoadContext);
     return NS_OK;
 }
@@ -3246,7 +3246,7 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::CreatePrivateLoadContext(nsILoadContext** aLoadContext)
 {
     NS_ENSURE_ARG_POINTER(aLoadContext);
-    nsCOMPtr<nsILoadContext> loadContext = CreatePrivateLoadContext();
+    nsCOMPtr<nsILoadContext> loadContext = ::CreatePrivateLoadContext();
     loadContext.forget(aLoadContext);
     return NS_OK;
 }
