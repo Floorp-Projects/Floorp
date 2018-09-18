@@ -15,6 +15,15 @@
 #include "jit/JitFrames.h"
 #include "jit/MoveResolver.h"
 
+#ifdef _M_ARM64
+#ifdef move32
+#undef move32
+#endif
+#ifdef move64
+#undef move64
+#endif
+#endif
+
 namespace js {
 namespace jit {
 
