@@ -24,17 +24,17 @@ class NetworkLocationsList extends PureComponent {
       this.props.networkLocations.map(location =>
         dom.li(
           {
-            className: "connect-page__network-location"
+            className: "connect-page__network-location js-network-location"
           },
           dom.span(
             {
-              className: "ellipsis-text"
+              className: "ellipsis-text js-network-location-value"
             },
             location
           ),
           dom.button(
             {
-              className: "aboutdebugging-button",
+              className: "aboutdebugging-button js-network-location-remove-button",
               onClick: () => {
                 this.props.dispatch(Actions.removeNetworkLocation(location));
               }
