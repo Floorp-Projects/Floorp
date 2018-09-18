@@ -159,9 +159,7 @@ SubDialog.prototype = {
         }
       };
       this._frame.addEventListener("load", onBlankLoad);
-      this._frame.loadURI("about:blank", {
-        triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
-      });
+      this._frame.loadURI("about:blank");
     }, 0);
   },
 

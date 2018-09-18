@@ -201,9 +201,7 @@ add_task(async function testShiftMiddleClick() {
 
 add_task(async function testRightClick() {
   preTabNo = gBrowser.tabs.length;
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:blank", {
-    triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
-  });
+  gBrowser.selectedBrowser.loadURI("about:blank");
   await new Promise(resolve => {
     setTimeout(function() {
       is(gBrowser.tabs.length, preTabNo, "RightClick did not open new tab");
@@ -257,9 +255,7 @@ add_task(async function asyncCleanup() {
   while (gBrowser.tabs.length != 1) {
     gBrowser.removeTab(gBrowser.tabs[0], {animate: false});
   }
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:blank", {
-    triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
-  });
+  gBrowser.selectedBrowser.loadURI("about:blank");
   await promiseRemoveEngine();
 });
 

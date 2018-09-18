@@ -7,7 +7,7 @@
 <body>
 
 <script type="application/javascript">
-ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+
 var mainWindow;
 
 var contentPage = "http://mochi.test:8888/chrome/dom/workers/test/empty.html";
@@ -17,7 +17,7 @@ function testOnWindow(aIsPrivate, aCallback) {
   win.addEventListener("load", function() {
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
       if (win.content.location.href != contentPage) {
-        BrowserTestUtils.loadURI(win.gBrowser, contentPage);
+        win.gBrowser.loadURI(contentPage);
         return;
       }
 
@@ -26,7 +26,7 @@ function testOnWindow(aIsPrivate, aCallback) {
     }, true);
 
     if (!aIsPrivate) {
-      BrowserTestUtils.loadURI(win.gBrowser, contentPage);
+      win.gBrowser.loadURI(contentPage);
     }
   }, {capture: true, once: true});
 }

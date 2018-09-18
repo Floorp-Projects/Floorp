@@ -69,7 +69,7 @@ add_task(async function() {
 
   let promiseLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
                                                      false, "http://example.com/");
-  BrowserTestUtils.loadURI(gBrowser, "http://example.com/");
+  gBrowser.loadURI("http://example.com/");
   await promiseLoaded;
 
   await testCopy("example.com", "http://example.com/");

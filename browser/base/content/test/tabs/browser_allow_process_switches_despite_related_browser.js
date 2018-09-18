@@ -26,7 +26,7 @@ add_task(async function() {
   let viewSourceBrowser = viewSourceTab.linkedBrowser;
   let promiseLoad =
     BrowserTestUtils.browserLoaded(viewSourceBrowser, false, uriString);
-  BrowserTestUtils.loadURI(viewSourceBrowser, uriString);
+  viewSourceBrowser.loadURI(uriString);
   let href = await promiseLoad;
   is(href, uriString,
     "Check file:// URI loads in a browser that was previously for view-source");

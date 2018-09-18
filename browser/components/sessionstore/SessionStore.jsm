@@ -2960,11 +2960,7 @@ var SessionStoreInternal = {
     // a flash of the about:tabcrashed page after selecting
     // the revived tab.
     aTab.removeAttribute("crashed");
-    browser.loadURI("about:blank", {
-      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
-        userContextId: aTab.userContextId,
-      }),
-    });
+    browser.loadURI("about:blank");
 
     let data = TabState.collect(aTab, TAB_CUSTOM_VALUES.get(aTab));
     this.restoreTab(aTab, data, {

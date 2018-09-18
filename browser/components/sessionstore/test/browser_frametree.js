@@ -20,7 +20,7 @@ add_task(async function test_frametree() {
   is(await countNonDynamicFrames(browser), 0, "no child frames");
 
   // Navigate to a frameset.
-  BrowserTestUtils.loadURI(browser, URL_FRAMESET);
+  browser.loadURI(URL_FRAMESET);
   await promiseBrowserLoaded(browser);
 
   // The frameset has two frames.

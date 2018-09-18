@@ -46,5 +46,5 @@ function test() {
     }, {capture: true, once: true});
   });
 
-  BrowserTestUtils.loadURI(gBrowser, URI);
+  gBrowser.loadURI(URI);
 }

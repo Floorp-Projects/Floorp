@@ -10,7 +10,7 @@ function wait_for_event(browser, event) {
 }
 
 async function test_on_browser(url, browser) {
-  BrowserTestUtils.loadURI(browser, url);
+  browser.loadURI(url);
   await wait_for_event(browser, "DOMAudioPlaybackStarted");
   await wait_for_event(browser, "DOMAudioPlaybackStopped");
 }

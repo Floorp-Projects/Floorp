@@ -33,7 +33,7 @@ async function runTest(url) {
 
   // Wait for the UI to indicate that audio is being played back.
   let promise = BrowserTestUtils.waitForAttribute("soundplaying", newTab, "true");
-  BrowserTestUtils.loadURI(newBrowser, url);
+  newBrowser.loadURI(url);
   await promise;
 
   // Put the tab in the background.

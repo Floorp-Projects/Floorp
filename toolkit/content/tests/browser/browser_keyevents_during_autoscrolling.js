@@ -62,7 +62,7 @@ add_task(async function() {
   var dataUri = 'data:text/html,<body style="height:10000px;"></body>';
 
   let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURI(gBrowser, dataUri);
+  gBrowser.loadURI(dataUri);
   await loadedPromise;
 
   await SimpleTest.promiseFocus(gBrowser.selectedBrowser);

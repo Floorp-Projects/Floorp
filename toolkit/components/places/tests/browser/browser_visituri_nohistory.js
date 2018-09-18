@@ -28,7 +28,7 @@ add_task(async function() {
   await SpecialPowers.popPrefEnv();
 
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURI(gBrowser, FINAL_URL);
+  gBrowser.loadURI(FINAL_URL);
   await browserLoadedPromise;
 
   let subject = await visitUriPromise;

@@ -45,7 +45,7 @@ async function test_permission_propagation(testName, testSrc, layersNum) {
     info("- open new tab -");
     let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                           "about:blank");
-    BrowserTestUtils.loadURI(tab.linkedBrowser, testSrc);
+    tab.linkedBrowser.loadURI(testSrc);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
     // If the frame isn't activated, the video play will fail.

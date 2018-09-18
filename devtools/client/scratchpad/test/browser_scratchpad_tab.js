@@ -15,7 +15,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,Scratchpad test for the Tab key, bug 660560");
+  gBrowser.loadURI("data:text/html,Scratchpad test for the Tab key, bug 660560");
 }
 
 function runTests() {

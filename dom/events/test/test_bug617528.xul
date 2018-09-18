@@ -17,7 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=617528
   </body>
 
   <script type="application/javascript"><![CDATA[
-    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     var _window;
     var browser;
 
@@ -40,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=617528
     </div>\
   </body>\
 </html>';
-      BrowserTestUtils.loadURI(browser, uri);
+      browser.loadURI(uri);
     }
 
     function onPageShow() {

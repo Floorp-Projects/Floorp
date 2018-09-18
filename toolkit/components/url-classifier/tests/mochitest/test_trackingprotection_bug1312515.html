@@ -24,7 +24,6 @@ var contentPage = "http://www.itisatrap.org/chrome/toolkit/components/url-classi
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
 function testOnWindow(aPrivate, aCallback) {
@@ -34,7 +33,7 @@ function testOnWindow(aPrivate, aCallback) {
                             subject => subject == win).then(() => {
       win.addEventListener("DOMContentLoaded", function onInnerLoad() {
         if (win.content.location.href != contentPage) {
-          BrowserTestUtils.loadURI(win.gBrowser, contentPage);
+          win.gBrowser.loadURI(contentPage);
           return;
         }
         win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
@@ -44,7 +43,7 @@ function testOnWindow(aPrivate, aCallback) {
           SimpleTest.executeSoon(function() { aCallback(win); });
         }, false, true);
       }, true);
-      SimpleTest.executeSoon(function() { BrowserTestUtils.loadURI(win.gBrowser, contentPage); });
+      SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
     });
   }, {capture: true, once: true});
 }
