@@ -701,24 +701,45 @@ HTMLEditor::InsertTableRow(int32_t aNumber,
   return NS_OK;
 }
 
-// Editor helper only
-// XXX Code changed for bug 217717 and now we don't need aSelection param
-//     TODO: Remove aSelection param
 nsresult
-HTMLEditor::DeleteTable2(Element* aTable,
-                         Selection* aSelection)
+HTMLEditor::DeleteTableElementAndChildrenWithTransaction(Selection& aSelection,
+                                                         Element& aTableElement)
 {
-  NS_ENSURE_TRUE(aTable, NS_ERROR_NULL_POINTER);
+  // Block selectionchange event.  It's enough to dispatch selectionchange
+  // event immediately after removing the table element.
+  {
+    AutoHideSelectionChanges hideSelection(&aSelection);
 
-  // Select the table
-  nsresult rv = ClearSelection();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    // Select the <table> element after clear current selection.
+    if (aSelection.RangeCount()) {
+      nsresult rv = aSelection.RemoveAllRangesTemporarily();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    RefPtr<nsRange> range = new nsRange(&aTableElement);
+    ErrorResult error;
+    range->SelectNode(aTableElement, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+    aSelection.AddRange(*range, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+
+#ifdef DEBUG
+    range = aSelection.GetRangeAt(0);
+    MOZ_ASSERT(range);
+    MOZ_ASSERT(range->GetStartContainer() == aTableElement.GetParent());
+    MOZ_ASSERT(range->GetEndContainer() == aTableElement.GetParent());
+    MOZ_ASSERT(range->GetChildAtStartOffset() == &aTableElement);
+    MOZ_ASSERT(range->GetChildAtEndOffset() == aTableElement.GetNextSibling());
+#endif // #ifdef DEBUG
   }
-  rv = AppendNodeToSelectionAsRange(aTable);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = DeleteSelectionAsSubAction(eNext, eStrip);
+  nsresult rv = DeleteSelectionAsSubAction(eNext, eStrip);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -733,10 +754,19 @@ HTMLEditor::DeleteTable()
   nsresult rv = GetCellContext(getter_AddRefs(selection),
                                getter_AddRefs(table),
                                nullptr, nullptr, nullptr, nullptr, nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (NS_WARN_IF(!selection) || NS_WARN_IF(!table)) {
+    return NS_ERROR_FAILURE;
+  }
 
   AutoPlaceholderBatch beginBatching(this);
-  return DeleteTable2(table, selection);
+  rv = DeleteTableElementAndChildrenWithTransaction(*selection, *table);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -830,10 +860,10 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
             nextRow = nextSelectedCellIndexes.mRow;
             startColIndex = nextSelectedCellIndexes.mColumn;
           }
-          // Delete entire row
-          rv = DeleteRow(table, startRowIndex);
-          NS_ENSURE_SUCCESS(rv, rv);
-
+          rv = DeleteTableRowWithTransaction(*table, startRowIndex);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
           if (cell) {
             // For the next cell: Subtract 1 for row we deleted
             startRowIndex = nextRow - 1;
@@ -939,12 +969,19 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
         }
 
         if (tableSize.mRowCount == 1) {
-          return DeleteTable2(table, selection);
+          rv = DeleteTableElementAndChildrenWithTransaction(*selection, *table);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+          return NS_OK;
         }
 
-        // We need to call DeleteTableRow to handle cells with rowspan
-        rv = DeleteTableRow(1);
-        NS_ENSURE_SUCCESS(rv, rv);
+        // We need to call DeleteSelectedTableRowsWithTransaction() to handle
+        // cells with rowspan attribute.
+        rv = DeleteSelectedTableRowsWithTransaction(1);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       } else {
         // More than 1 cell in the row
 
@@ -1056,9 +1093,13 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
                                getter_AddRefs(cell),
                                nullptr, nullptr,
                                &startRowIndex, &startColIndex);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Don't fail if no cell found
-  NS_ENSURE_TRUE(table && cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (NS_WARN_IF(!table) || NS_WARN_IF(!cell)) {
+    // Don't fail if no cell found.
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  }
 
   ErrorResult error;
   TableSize tableSize(*this, *table, error);
@@ -1070,7 +1111,14 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
 
   // Shortcut the case of deleting all columns in table
   if (!startColIndex && aNumber >= tableSize.mColumnCount) {
-    return DeleteTable2(table, selection);
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
+    rv = DeleteTableElementAndChildrenWithTransaction(*selection, *table);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
   }
 
   // Check for counts too high
@@ -1205,14 +1253,24 @@ HTMLEditor::DeleteColumn(Element* aTable,
 
           if (tableSize.mRowCount == 1) {
             RefPtr<Selection> selection = GetSelection();
-            NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-            return DeleteTable2(aTable, selection);
+            if (NS_WARN_IF(!selection)) {
+              return NS_ERROR_FAILURE;
+            }
+            rv = DeleteTableElementAndChildrenWithTransaction(*selection,
+                                                              *aTable);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
+            return NS_OK;
           }
 
-          // Delete the row by placing caret in cell we were to delete
-          // We need to call DeleteTableRow to handle cells with rowspan
-          rv = DeleteRow(aTable, startRowIndex);
-          NS_ENSURE_SUCCESS(rv, rv);
+          // Delete the row by placing caret in cell we were to delete.
+          // We need to call DeleteTableRowWithTransaction() to handle cells
+          // with rowspan.
+          rv = DeleteTableRowWithTransaction(*aTable, startRowIndex);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
 
           // Note that we don't incremenet rowIndex
           // since a row was deleted and "next"
@@ -1235,7 +1293,18 @@ HTMLEditor::DeleteColumn(Element* aTable,
 }
 
 NS_IMETHODIMP
-HTMLEditor::DeleteTableRow(int32_t aNumber)
+HTMLEditor::DeleteTableRow(int32_t aNumberOfRowsToDelete)
+{
+  nsresult rv = DeleteSelectedTableRowsWithTransaction(aNumberOfRowsToDelete);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::DeleteSelectedTableRowsWithTransaction(
+              int32_t aNumberOfRowsToDelete)
 {
   RefPtr<Selection> selection;
   RefPtr<Element> table;
@@ -1249,9 +1318,9 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  if (NS_WARN_IF(!table) || NS_WARN_IF(!cell)) {
+  if (NS_WARN_IF(!selection) || NS_WARN_IF(!table) || NS_WARN_IF(!cell)) {
     // Don't fail if no cell found.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+    return NS_OK;
   }
 
   ErrorResult error;
@@ -1260,16 +1329,21 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
     return error.StealNSResult();
   }
 
-  // Shortcut the case of deleting all rows in table
-  if (!startRowIndex && aNumber >= tableSize.mRowCount) {
-    return DeleteTable2(table, selection);
-  }
-
   AutoPlaceholderBatch beginBatching(this);
+
   // Prevent rules testing until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eDeleteNode,
                                       nsIEditor::eNext);
+
+  // Shortcut the case of deleting all rows in table
+  if (!startRowIndex && aNumberOfRowsToDelete >= tableSize.mRowCount) {
+    rv = DeleteTableElementAndChildrenWithTransaction(*selection, *table);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+  }
 
   RefPtr<Element> firstSelectedCellElement =
     GetFirstSelectedTableCellElement(*selection, error);
@@ -1277,8 +1351,9 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
     return error.StealNSResult();
   }
 
-  uint32_t rangeCount = selection->RangeCount();
-  if (firstSelectedCellElement && rangeCount > 1) {
+  MOZ_ASSERT(selection->RangeCount());
+
+  if (firstSelectedCellElement && selection->RangeCount() > 1) {
     // Fetch indexes again - may be different for selected cells
     CellIndexes firstCellIndexes(*firstSelectedCellElement, error);
     if (NS_WARN_IF(error.Failed())) {
@@ -1295,56 +1370,63 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
   // Don't change selection during deletions
   AutoTransactionsConserveSelection dontChangeSelection(*this);
 
-  if (firstSelectedCellElement && rangeCount > 1) {
-    // Use selected cells to determine what rows to delete
-    cell = firstSelectedCellElement;
+  // XXX Perhaps, the following loops should collect <tr> elements to remove
+  //     first, then, remove them from the DOM tree since mutation event
+  //     listener may change the DOM tree during the loops.
 
-    while (cell) {
-      if (cell != firstSelectedCellElement) {
-        CellIndexes cellIndexes(*cell, error);
-        if (NS_WARN_IF(error.Failed())) {
-          return error.StealNSResult();
-        }
-        startRowIndex = cellIndexes.mRow;
-        startColIndex = cellIndexes.mColumn;
-      }
-      // Find the next cell in a different row
-      // to continue after we delete this row
-      int32_t nextRow = startRowIndex;
-      while (nextRow == startRowIndex) {
-        cell = GetNextSelectedTableCellElement(*selection, error);
-        if (NS_WARN_IF(error.Failed())) {
-          return error.StealNSResult();
-        }
-        if (!cell) {
-          break;
-        }
-        CellIndexes cellIndexes(*cell, error);
-        if (NS_WARN_IF(error.Failed())) {
-          return error.StealNSResult();
-        }
-        nextRow = cellIndexes.mRow;
-        startColIndex = cellIndexes.mColumn;
-      }
-      // Delete entire row
-      rv = DeleteRow(table, startRowIndex);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  } else {
-    // Check for counts too high
-    aNumber = std::min(aNumber, (tableSize.mRowCount - startRowIndex));
-    for (int32_t i = 0; i < aNumber; i++) {
-      nsresult rv = DeleteRow(table, startRowIndex);
+  // If 2 or more cells are not selected, removing rows starting from
+  // a row which contains first selection range.
+  if (!firstSelectedCellElement || selection->RangeCount() == 1) {
+    int32_t rowCountToRemove =
+      std::min(aNumberOfRowsToDelete, tableSize.mRowCount - startRowIndex);
+    for (int32_t i = 0; i < rowCountToRemove; i++) {
+      nsresult rv = DeleteTableRowWithTransaction(*table, startRowIndex);
       // If failed in current row, try the next
-      if (NS_FAILED(rv)) {
+      if (NS_WARN_IF(NS_FAILED(rv))) {
         startRowIndex++;
       }
-
-      // Check if there's a cell in the "next" row
+      // Check if there's a cell in the "next" row.
       cell = GetTableCellElementAt(*table, startRowIndex, startColIndex);
       if (!cell) {
         return NS_OK;
       }
+    }
+    return NS_OK;
+  }
+
+  // If 2 or more cells are selected, remove all rows which contain selected
+  // cells.  I.e., we ignore aNumberOfRowsToDelete in this case.
+  for (cell = firstSelectedCellElement; cell;) {
+    if (cell != firstSelectedCellElement) {
+      CellIndexes cellIndexes(*cell, error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
+      startRowIndex = cellIndexes.mRow;
+      startColIndex = cellIndexes.mColumn;
+    }
+    // Find the next cell in a different row
+    // to continue after we delete this row
+    int32_t nextRow = startRowIndex;
+    while (nextRow == startRowIndex) {
+      cell = GetNextSelectedTableCellElement(*selection, error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
+      if (!cell) {
+        break;
+      }
+      CellIndexes cellIndexes(*cell, error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
+      nextRow = cellIndexes.mRow;
+      startColIndex = cellIndexes.mColumn;
+    }
+    // Delete the row containing selected cell(s).
+    rv = DeleteTableRowWithTransaction(*table, startRowIndex);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
   return NS_OK;
@@ -1352,94 +1434,102 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
 
 // Helper that doesn't batch or change the selection
 nsresult
-HTMLEditor::DeleteRow(Element* aTable,
-                      int32_t aRowIndex)
+HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
+                                          int32_t aRowIndex)
 {
-  if (NS_WARN_IF(!aTable)) {
-    return NS_ERROR_INVALID_ARG;
+  ErrorResult error;
+  TableSize tableSize(*this, aTableElement, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
   }
-
-  RefPtr<Element> cell;
-  RefPtr<Element> cellInDeleteRow;
-  int32_t startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
-  bool    isSelected;
-  int32_t colIndex = 0;
 
   // Prevent rules testing until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(*
                                       this, EditSubAction::eDeleteNode,
                                       nsIEditor::eNext);
 
-  // The list of cells we will change rowspan in
-  //  and the new rowspan values for each
-  nsTArray<RefPtr<Element> > spanCellList;
-  nsTArray<int32_t> newSpanList;
-
-  ErrorResult error;
-  TableSize tableSize(*this, *aTable, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
   // Scan through cells in row to do rowspan adjustments
-  // Note that after we delete row, startRowIndex will point to the
-  //   cells in the next row to be deleted
-  do {
-    if (aRowIndex >= tableSize.mRowCount ||
-        colIndex >= tableSize.mColumnCount) {
-      break;
-    }
+  // Note that after we delete row, startRowIndex will point to the cells in
+  // the next row to be deleted.
 
+  // The list of cells we will change rowspan in and the new rowspan values
+  // for each.
+  struct MOZ_STACK_CLASS SpanCell final
+  {
+    RefPtr<Element> mElement;
+    int32_t mNewRowSpanValue;
+
+    SpanCell(Element* aSpanCellElement,
+             int32_t aNewRowSpanValue)
+      : mElement(aSpanCellElement)
+      , mNewRowSpanValue(aNewRowSpanValue)
+    {
+    }
+  };
+  AutoTArray<SpanCell, 10> spanCellArray;
+  RefPtr<Element> cellInDeleteRow;
+  int32_t columnIndex = 0;
+  while (aRowIndex < tableSize.mRowCount &&
+         columnIndex < tableSize.mColumnCount) {
+    RefPtr<Element> cell;
+    int32_t startRowIndex = 0, startColIndex = 0;
+    int32_t rowSpan = 0, colSpan = 0;
+    int32_t actualRowSpan = 0, actualColSpan = 0;
+    bool isSelected = false;
     nsresult rv =
-      GetCellDataAt(aTable, aRowIndex, colIndex, getter_AddRefs(cell),
+      GetCellDataAt(&aTableElement, aRowIndex, columnIndex,
+                    getter_AddRefs(cell),
                     &startRowIndex, &startColIndex, &rowSpan, &colSpan,
                     &actualRowSpan, &actualColSpan, &isSelected);
     // We don't fail if we don't find a cell, so this must be real bad
-    if (NS_FAILED(rv)) {
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    // Compensate for cells that don't start or extend below the row we are deleting
-    if (cell) {
-      if (startRowIndex < aRowIndex) {
-        // Cell starts in row above us
-        // Decrease its rowspan to keep table rectangular
-        //  but we don't need to do this if rowspan=0,
-        //  since it will automatically adjust
-        if (rowSpan > 0) {
-          // Build list of cells to change rowspan
-          // We can't do it now since it upsets cell map,
-          //  so we will do it after deleting the row
-          spanCellList.AppendElement(cell);
-          newSpanList.AppendElement(std::max((aRowIndex - startRowIndex), actualRowSpan-1));
-        }
-      } else {
-        if (rowSpan > 1) {
-          // Cell spans below row to delete, so we must insert new cells to
-          // keep rows below.  Note that we test "rowSpan" so we don't do this
-          // if rowSpan = 0 (automatic readjustment).
-          int32_t aboveRowToInsertNewCellInto = aRowIndex - startRowIndex + 1;
-          int32_t numOfRawSpanRemainingBelow = actualRowSpan - 1;
-          rv = SplitCellIntoRows(aTable, startRowIndex, startColIndex,
-                                 aboveRowToInsertNewCellInto,
-                                 numOfRawSpanRemainingBelow, nullptr);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-        if (!cellInDeleteRow) {
-          cellInDeleteRow = cell; // Reference cell to find row to delete
+    if (!cell) {
+      break;
+    }
+    // Compensate for cells that don't start or extend below the row we are
+    // deleting.
+    if (startRowIndex < aRowIndex) {
+      // If a cell starts in row above us, decrease its rowspan to keep table
+      // rectangular but we don't need to do this if rowspan=0, since it will
+      // be automatically adjusted.
+      if (rowSpan > 0) {
+        // Build list of cells to change rowspan.  We can't do it now since
+        // it upsets cell map, so we will do it after deleting the row.
+        int32_t newRowSpanValue =
+          std::max(aRowIndex - startRowIndex, actualRowSpan - 1);
+        spanCellArray.AppendElement(SpanCell(cell, newRowSpanValue));
+      }
+    } else {
+      if (rowSpan > 1) {
+        // Cell spans below row to delete, so we must insert new cells to
+        // keep rows below.  Note that we test "rowSpan" so we don't do this
+        // if rowSpan = 0 (automatic readjustment).
+        int32_t aboveRowToInsertNewCellInto = aRowIndex - startRowIndex + 1;
+        int32_t numOfRawSpanRemainingBelow = actualRowSpan - 1;
+        rv = SplitCellIntoRows(&aTableElement, startRowIndex, startColIndex,
+                               aboveRowToInsertNewCellInto,
+                               numOfRawSpanRemainingBelow, nullptr);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
         }
       }
-      // Skip over other columns spanned by this cell
-      colIndex += actualColSpan;
+      if (!cellInDeleteRow) {
+        cellInDeleteRow = cell; // Reference cell to find row to delete
+      }
     }
-  } while (cell);
+    // Skip over other columns spanned by this cell
+    columnIndex += actualColSpan;
+  }
 
   // Things are messed up if we didn't find a cell in the row!
   if (NS_WARN_IF(!cellInDeleteRow)) {
     return NS_ERROR_FAILURE;
   }
 
-  // Delete the entire row
+  // Delete the entire row.
   RefPtr<Element> parentRow =
     GetElementOrParentByTagNameInternal(*nsGkAtoms::tr, *cellInDeleteRow);
   if (parentRow) {
@@ -1449,14 +1539,14 @@ HTMLEditor::DeleteRow(Element* aTable,
     }
   }
 
-  // Now we can set new rowspans for cells stored above
-  for (uint32_t i = 0, n = spanCellList.Length(); i < n; i++) {
-    Element* cellPtr = spanCellList[i];
-    if (cellPtr) {
-      nsresult rv = SetRowSpan(cellPtr, newSpanList[i]);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+  // Now we can set new rowspans for cells stored above.
+  for (SpanCell& spanCell : spanCellArray) {
+    if (NS_WARN_IF(!spanCell.mElement)) {
+      continue;
+    }
+    nsresult rv = SetRowSpan(spanCell.mElement, spanCell.mNewRowSpanValue);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
   return NS_OK;

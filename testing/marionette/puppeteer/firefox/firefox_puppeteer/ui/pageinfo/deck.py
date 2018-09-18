@@ -19,8 +19,7 @@ class Deck(UIBaseLib):
 
         :returns: :class:`Panel` instance
         """
-        mapping = {'feedPanel': FeedPanel,
-                   'generalPanel': GeneralPanel,
+        mapping = {'generalPanel': GeneralPanel,
                    'mediaPanel': MediaPanel,
                    'permPanel': PermissionsPanel,
                    'securityPanel': SecurityPanel
@@ -30,14 +29,6 @@ class Deck(UIBaseLib):
         return mapping.get(panel_id, Panel)(self.marionette, self.window, panel)
 
     # Properties for visual elements of the deck #
-
-    @property
-    def feed(self):
-        """The :class:`FeedPanel` instance for the feed panel.
-
-        :returns: :class:`FeedPanel` instance.
-        """
-        return self._create_panel_for_id('feedPanel')
 
     @property
     def general(self):
@@ -137,10 +128,6 @@ class PageInfoPanel(Panel):
         """
         name = self.element.get_property('id').split('Panel')[0]
         return self.window.window_element.find_element(By.ID, name + 'Tab')
-
-
-class FeedPanel(PageInfoPanel):
-    pass
 
 
 class GeneralPanel(PageInfoPanel):

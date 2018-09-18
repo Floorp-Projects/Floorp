@@ -8,12 +8,12 @@ CustomizableUI.createWidget({id: "cui-panel-item-to-drag-to", defaultArea: Custo
 // Dragging an item from the palette to another button in the panel should work.
 add_task(async function() {
   await startCustomizing();
-  let btn = document.getElementById("feed-button");
+  let btn = document.getElementById("new-window-button");
   let placements = getAreaWidgetIds(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
   let lastButtonIndex = placements.length - 1;
   let lastButton = placements[lastButtonIndex];
-  let placementsAfterInsert = placements.slice(0, lastButtonIndex).concat(["feed-button", lastButton]);
+  let placementsAfterInsert = placements.slice(0, lastButtonIndex).concat(["new-window-button", lastButton]);
   let lastButtonNode = document.getElementById(lastButton);
   simulateItemDrag(btn, lastButtonNode, "start");
   assertAreaPlacements(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, placementsAfterInsert);
@@ -28,11 +28,11 @@ add_task(async function() {
 add_task(async function() {
   CustomizableUI.addWidgetToArea("cui-panel-item-to-drag-to", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
   await startCustomizing();
-  let btn = document.getElementById("feed-button");
+  let btn = document.getElementById("new-window-button");
   let panel = document.getElementById(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
   let placements = getAreaWidgetIds(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
-  let placementsAfterAppend = placements.concat(["feed-button"]);
+  let placementsAfterAppend = placements.concat(["new-window-button"]);
   simulateItemDrag(btn, panel);
   assertAreaPlacements(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, placementsAfterAppend);
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
@@ -49,12 +49,12 @@ add_task(async function() {
     CustomizableUI.removeWidgetFromArea(widgetIds.shift());
   }
   await startCustomizing();
-  let btn = document.getElementById("feed-button");
+  let btn = document.getElementById("new-window-button");
   let panel = document.getElementById(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
   assertAreaPlacements(panel.id, []);
 
-  let placementsAfterAppend = ["feed-button"];
+  let placementsAfterAppend = ["new-window-button"];
   simulateItemDrag(btn, panel);
   assertAreaPlacements(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, placementsAfterAppend);
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
