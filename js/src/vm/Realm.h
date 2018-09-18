@@ -320,7 +320,7 @@ class JS::Realm : public JS::shadow::Realm
     // Object group tables and other state in the realm. This is private to
     // enforce use of ObjectGroupRealm::get(group)/getForNewObject(cx).
     js::ObjectGroupRealm objectGroups_;
-    friend js::ObjectGroupRealm& js::ObjectGroupRealm::get(js::ObjectGroup* group);
+    friend js::ObjectGroupRealm& js::ObjectGroupRealm::get(const js::ObjectGroup* group);
     friend js::ObjectGroupRealm& js::ObjectGroupRealm::getForNewObject(JSContext* cx);
 
     // The global environment record's [[VarNames]] list that contains all

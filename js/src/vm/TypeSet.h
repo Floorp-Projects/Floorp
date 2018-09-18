@@ -435,14 +435,14 @@ class TypeSet
         return Type(type);
     }
 
-    static inline Type ObjectType(JSObject* obj);
-    static inline Type ObjectType(ObjectGroup* group);
-    static inline Type ObjectType(ObjectKey* key);
+    static inline Type ObjectType(const JSObject* obj);
+    static inline Type ObjectType(const ObjectGroup* group);
+    static inline Type ObjectType(const ObjectKey* key);
 
     static const char* NonObjectTypeString(Type type);
 
-    static JS::UniqueChars TypeString(Type type);
-    static JS::UniqueChars ObjectGroupString(ObjectGroup* group);
+    static JS::UniqueChars TypeString(const Type type);
+    static JS::UniqueChars ObjectGroupString(const ObjectGroup* group);
 
   public:
     void print(FILE* fp = stderr);
