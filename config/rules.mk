@@ -47,7 +47,7 @@ EXEC			= exec
 # prints out failed commands anyway, so ELOG just makes things worse by
 # forcing shell invocations.
 ifneq (,$(findstring -s, $(filter-out --%, $(MAKEFLAGS))))
-  ELOG := $(EXEC) sh $(BUILD_TOOLS)/print-failed-commands.sh
+  ELOG := $(EXEC) sh $(MOZILLA_DIR)/build/unix/print-failed-commands.sh
 else
   ELOG :=
 endif # -s
