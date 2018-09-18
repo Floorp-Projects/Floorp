@@ -7,7 +7,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 /* import-globals-from ../../../../toolkit/content/globalOverlay.js */
 /* import-globals-from ../../../../toolkit/content/contentAreaUtils.js */
 /* import-globals-from ../../../../toolkit/content/treeUtils.js */
-/* import-globals-from feeds.js */
+/* import-globals-from ../utilityOverlay.js */
 /* import-globals-from permissions.js */
 /* import-globals-from security.js */
 
@@ -333,12 +333,6 @@ function loadPageInfo(frameOuterWindowID, imageElement, browser) {
   browser = browser || window.opener.gBrowser.selectedBrowser;
   let mm = browser.messageManager;
 
-  gStrings["application/rss+xml"]  = gBundle.getString("feedRss");
-  gStrings["application/atom+xml"] = gBundle.getString("feedAtom");
-  gStrings["text/xml"]             = gBundle.getString("feedXML");
-  gStrings["application/xml"]      = gBundle.getString("feedXML");
-  gStrings["application/rdf+xml"]  = gBundle.getString("feedXML");
-
   let imageInfo = imageElement;
 
   // Look for pageInfoListener in content.js. Sends message to listener with arguments.
@@ -346,7 +340,7 @@ function loadPageInfo(frameOuterWindowID, imageElement, browser) {
 
   let pageInfoData;
 
-  // Get initial pageInfoData needed to display the general, feeds, permission and security tabs.
+  // Get initial pageInfoData needed to display the general, permission and security tabs.
   mm.addMessageListener("PageInfo:data", function onmessage(message) {
     mm.removeMessageListener("PageInfo:data", onmessage);
     pageInfoData = message.data;
@@ -365,7 +359,6 @@ function loadPageInfo(frameOuterWindowID, imageElement, browser) {
     document.getElementById("main-window").setAttribute("relatedUrl", docInfo.location);
 
     makeGeneralTab(pageInfoData.metaViewRows, docInfo);
-    initFeedTab(pageInfoData.feeds);
     onLoadPermission(uri, principal);
     securityOnLoad(uri, windowInfo);
   });
@@ -409,11 +402,6 @@ function resetPageInfo(args) {
   gImageView.clear();
   gImageHash = {};
 
-  /* Reset Feeds Tab */
-  var feedListbox = document.getElementById("feedListbox");
-  while (feedListbox.firstChild)
-    feedListbox.firstChild.remove();
-
   /* Call registered overlay reset functions */
   onResetRegistry.forEach(function(func) { func(); });
 
@@ -435,7 +423,6 @@ function doHelpButton() {
   const helpTopics = {
     "generalPanel":  "pageinfo_general",
     "mediaPanel":    "pageinfo_media",
-    "feedPanel":     "pageinfo_feed",
     "permPanel":     "pageinfo_permissions",
     "securityPanel": "pageinfo_security",
   };

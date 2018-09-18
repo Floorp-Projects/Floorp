@@ -452,6 +452,28 @@ public:
     */
   Element* GetActiveEditingHost() const;
 
+  /** Insert a string as quoted text
+    * (whose representation is dependant on the editor type),
+    * replacing the selected text (if any).
+    *
+    * @param aQuotedText    The actual text to be quoted
+    * @parem aNodeInserted  Return the node which was inserted.
+    */
+  nsresult InsertAsQuotation(const nsAString& aQuotedText,
+                             nsINode** aNodeInserted);
+
+  /**
+   * Inserts a plaintext string at the current location,
+   * with special processing for lines beginning with ">",
+   * which will be treated as mail quotes and inserted
+   * as plaintext quoted blocks.
+   * If the selection is not collapsed, the selection is deleted
+   * and the insertion takes place at the resulting collapsed selection.
+   *
+   * @param aString   the string to be inserted
+   */
+   nsresult InsertTextWithQuotations(const nsAString& aStringToInsert);
+
 protected: // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
@@ -1530,9 +1552,40 @@ protected: // Shouldn't be used by friend classes
                       Element** aNewCell);
 
   /**
+   * DeleteSelectedTableRowsWithTransaction() removes <tr> elements.
+   * If only one cell element is selected or first selection range is
+   * in a cell, removes <tr> elements starting from a <tr> element
+   * containing the selected cell or first selection range.
+   * If 2 or more cell elements are selected, all <tr> elements
+   * which contains selected cell(s).  In this case, aNumberOfRowsToDelete
+   * is ignored.
+   * If there is no selection ranges, returns error.
+   * If selection is not in a cell element, this does not return error,
+   * just does nothing.
+   *
+   * @param aNumberOfRowsToDelete   Number of rows to remove.  This is ignored
+   *                                if 2 or more cells are selected.
+   */
+  nsresult
+  DeleteSelectedTableRowsWithTransaction(int32_t aNumberOfRowsToDelete);
+
+  /**
+   * DeleteTableRowWithTransaction() removes a <tr> element whose index in
+   * the <table> is aRowIndex.
+   * This method adjusts rowspan attribute value if the <tr> element contains
+   * cells which spans rows.
+   *
+   * @param aTableElement       The <table> element which contains the
+   *                            <tr> element which you want to remove.
+   * @param aRowIndex           Index of the <tr> element which you want to
+   *                            remove.  0 is the first row.
+   */
+  nsresult
+  DeleteTableRowWithTransaction(Element& aTableElement, int32_t aRowIndex);
+
+  /**
    * Helpers that don't touch the selection or do batch transactions.
    */
-  nsresult DeleteRow(Element* aTable, int32_t aRowIndex);
   nsresult DeleteColumn(Element* aTable, int32_t aColIndex);
   nsresult DeleteCellContents(Element* aCell);
 
@@ -1543,7 +1596,17 @@ protected: // Shouldn't be used by friend classes
                       RefPtr<Element> aCellToMerge,
                       bool aDeleteCellToMerge);
 
-  nsresult DeleteTable2(Element* aTable, Selection* aSelection);
+  /**
+   * DeleteTableElementAndChildren() removes aTableElement (and its children)
+   * from the DOM tree with transaction.
+   *
+   * @param aSelection      The normal Selection for the editor.
+   * @param aTableElement   The <table> element which you want to remove.
+   */
+  nsresult
+  DeleteTableElementAndChildrenWithTransaction(Selection& aSelection,
+                                               Element& aTableElement);
+
   nsresult SetColSpan(Element* aCell, int32_t aColSpan);
   nsresult SetRowSpan(Element* aCell, int32_t aRowSpan);
 
