@@ -201,6 +201,9 @@ DLL_BLOCKLIST_ENTRY("gdkbfltdll64.dll", MAKE_VERSION(1, 0, 14141, 240))
 DLL_BLOCKLIST_ENTRY("dbroverlayiconnotbackuped.dll", MAKE_VERSION(1, 8, 0, 9))
 DLL_BLOCKLIST_ENTRY("dbroverlayiconbackuped.dll", MAKE_VERSION(1, 8, 0, 9))
 
+// NVIDIA nView Desktop Management causes crashes, bug 1465787
+DLL_BLOCKLIST_ENTRY("nviewh64.dll", MAKE_VERSION(6, 14, 10, 14847))
+
 DLL_BLOCKLIST_DEFINITIONS_END
 
 #endif // mozilla_WindowsDllBlocklistDefs_h
