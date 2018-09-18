@@ -962,16 +962,16 @@ public:
 
     // parse a simple list of font family names into
     // an array of strings
-    static void ParseFontList(const nsAString& aFamilyList,
-                              nsTArray<nsString>& aFontList);
+    static void ParseFontList(const nsACString& aFamilyList,
+                              nsTArray<nsCString>& aFontList);
 
     // for a given font list pref name, append list of font names
     static void AppendPrefsFontList(const char *aPrefName,
-                                    nsTArray<nsString>& aFontList);
+                                    nsTArray<nsCString>& aFontList);
 
     // for a given font list pref name, initialize a list of font names
     static void GetPrefsFontList(const char *aPrefName, 
-                                 nsTArray<nsString>& aFontList);
+                                 nsTArray<nsCString>& aFontList);
 
     // generate a unique font name
     static nsresult MakeUniqueUserFontName(nsAString& aName);

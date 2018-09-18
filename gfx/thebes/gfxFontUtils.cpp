@@ -824,19 +824,19 @@ gfxFontUtils::MapCharToGlyph(const uint8_t *aCmapBuf, uint32_t aBufLength,
     return gid;
 }
 
-void gfxFontUtils::ParseFontList(const nsAString& aFamilyList,
-                                 nsTArray<nsString>& aFontList)
+void gfxFontUtils::ParseFontList(const nsACString& aFamilyList,
+                                 nsTArray<nsCString>& aFontList)
 {
-    const char16_t kComma = char16_t(',');
+    const char kComma = ',';
 
     // append each font name to the list
-    nsAutoString fontname;
-    const char16_t *p, *p_end;
+    nsAutoCString fontname;
+    const char *p, *p_end;
     aFamilyList.BeginReading(p);
     aFamilyList.EndReading(p_end);
 
      while (p < p_end) {
-        const char16_t *nameStart = p;
+        const char *nameStart = p;
         while (++p != p_end && *p != kComma)
         /* nothing */ ;
 
@@ -853,11 +853,11 @@ void gfxFontUtils::ParseFontList(const nsAString& aFamilyList,
 }
 
 void gfxFontUtils::AppendPrefsFontList(const char *aPrefName,
-                                       nsTArray<nsString>& aFontList)
+                                       nsTArray<nsCString>& aFontList)
 {
     // get the list of single-face font families
-    nsAutoString fontlistValue;
-    nsresult rv = Preferences::GetString(aPrefName, fontlistValue);
+    nsAutoCString fontlistValue;
+    nsresult rv = Preferences::GetCString(aPrefName, fontlistValue);
     if (NS_FAILED(rv)) {
         return;
     }
@@ -866,7 +866,7 @@ void gfxFontUtils::AppendPrefsFontList(const char *aPrefName,
 }
 
 void gfxFontUtils::GetPrefsFontList(const char *aPrefName,
-                                    nsTArray<nsString>& aFontList)
+                                    nsTArray<nsCString>& aFontList)
 {
     aFontList.Clear();
     AppendPrefsFontList(aPrefName, aFontList);

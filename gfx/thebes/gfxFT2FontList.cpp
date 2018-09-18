@@ -1536,14 +1536,14 @@ gfxFT2FontList::GetSystemFontList(InfallibleTArray<FontListEntry>* retValue)
 static void
 LoadSkipSpaceLookupCheck(nsTHashtable<nsCStringHashKey>& aSkipSpaceLookupCheck)
 {
-    AutoTArray<nsString, 5> skiplist;
+    AutoTArray<nsCString, 5> skiplist;
     gfxFontUtils::GetPrefsFontList(
         "font.whitelist.skip_default_features_space_check",
         skiplist);
     uint32_t numFonts = skiplist.Length();
     for (uint32_t i = 0; i < numFonts; i++) {
         ToLowerCase(skiplist[i]);
-        aSkipSpaceLookupCheck.PutEntry(NS_ConvertUTF16toUTF8(skiplist[i]));
+        aSkipSpaceLookupCheck.PutEntry(skiplist[i]);
     }
 }
 
