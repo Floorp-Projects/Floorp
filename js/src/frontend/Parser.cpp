@@ -10919,6 +10919,10 @@ GeneralParser<ParseHandler, CharT>::importExpr(YieldHandling yieldHandling)
 
         MUST_MATCH_TOKEN_MOD(TokenKind::RightParen, TokenStream::Operand, JSMSG_PAREN_AFTER_ARGS);
 
+        if (!abortIfSyntaxParser()) {
+            return null();
+        }
+
         return handler.newCallImport(importHolder, arg);
     } else {
         error(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT, TokenKindToDesc(next));
