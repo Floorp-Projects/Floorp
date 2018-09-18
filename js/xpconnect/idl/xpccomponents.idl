@@ -16,6 +16,8 @@ interface nsIComponentManager;
 interface nsICycleCollectorListener;
 interface nsIEditorSpellCheck;
 interface nsIFile;
+interface nsILoadContext;
+interface nsIPersistentProperties;
 interface nsIURI;
 interface nsIJSCID;
 interface nsIJSIID;
@@ -725,8 +727,14 @@ interface nsIXPCComponents_Utils : nsISupports
     /* Create a commandline object. */
     nsISupports createCommandLine();
 
-    /* Create a command params object. */
-    nsICommandParams createCommandParams();
+    /* Create a loadcontext object. */
+    nsILoadContext createLoadContext();
+
+    /* Create a private loadcontext object. */
+    nsILoadContext createPrivateLoadContext();
+
+    /* Create a persistent property object. */
+    nsIPersistentProperties createPersistentProperties();
 };
 
 /**

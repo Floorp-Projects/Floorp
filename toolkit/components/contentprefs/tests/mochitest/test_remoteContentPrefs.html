@@ -13,10 +13,9 @@
   <script type="application/javascript">
     "use strict";
 
-    let loadContext = SpecialPowers.Cc["@mozilla.org/loadcontext;1"].
-                        createInstance(SpecialPowers.Ci.nsILoadContext);
-    let privateLoadContext = SpecialPowers.Cc["@mozilla.org/privateloadcontext;1"].
-                        createInstance(SpecialPowers.Ci.nsILoadContext);
+    let Cu = SpecialPowers.Cu;
+    let loadContext = Cu.createLoadContext();
+    let privateLoadContext = Cu.createPrivateLoadContext();
 
     SimpleTest.waitForExplicitFinish();
 
@@ -191,8 +190,7 @@
 
         cps.addObserverForName("test", prefObserver);
 
-        let privateLoadContext = Cc["@mozilla.org/privateloadcontext;1"].
-                            createInstance(Ci.nsILoadContext);
+        let privateLoadContext = Cu.createPrivateLoadContext();
         cps.set("http://mochi.test", "test", 42, privateLoadContext);
         let event = await observed.promise;
         tester.is(event.name, "test", "got the right event");
