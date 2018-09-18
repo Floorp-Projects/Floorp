@@ -179,7 +179,7 @@ function getAddonActorForId(aClient, aAddonId) {
 
 async function attachTargetActorForUrl(aClient, aUrl) {
   let grip = await getTargetActorForUrl(aClient, aUrl);
-  let [ response ] = await aClient.attachTab(grip.actor);
+  let [ response ] = await aClient.attachTarget(grip.actor);
   return [grip, response];
 }
 
@@ -1085,9 +1085,9 @@ function findTab(tabs, url) {
   return null;
 }
 
-function attachTab(client, tab) {
+function attachTarget(client, tab) {
   info("Attaching to tab with url '" + tab.url + "'.");
-  return client.attachTab(tab.actor);
+  return client.attachTarget(tab.actor);
 }
 
 function listWorkers(tabClient) {
@@ -1297,7 +1297,7 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
 
   let tab = await addTab(TAB_URL);
   let { tabs } = await listTabs(client);
-  let [, tabClient] = await attachTab(client, findTab(tabs, TAB_URL));
+  let [, tabClient] = await attachTarget(client, findTab(tabs, TAB_URL));
 
   await createWorkerInTab(tab, WORKER_URL);
 
