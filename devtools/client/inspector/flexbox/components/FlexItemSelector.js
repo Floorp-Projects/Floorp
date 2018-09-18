@@ -12,7 +12,6 @@ const {
   translateNodeFrontToGrip,
 } = require("devtools/client/inspector/shared/utils");
 
-// Reps
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep } = REPS;
 const ElementNode = REPS.ElementNode;
@@ -62,21 +61,17 @@ class FlexItemSelector extends PureComponent {
     const { flexItem } = this.props;
 
     return (
-      dom.div({ className: "flex-item-selector-wrapper" },
-        dom.button(
-          {
-            id: "flex-item-selector",
-            className: "devtools-button devtools-dropdown-button",
-            onClick: this.onShowFlexItemMenu,
-          },
-          Rep(
-            {
-              defaultRep: ElementNode,
-              mode: MODE.TINY,
-              object: translateNodeFrontToGrip(flexItem.nodeFront)
-            }
-          )
-        )
+      dom.button(
+        {
+          id: "flex-item-selector",
+          className: "devtools-button devtools-dropdown-button",
+          onClick: this.onShowFlexItemMenu,
+        },
+        Rep({
+          defaultRep: ElementNode,
+          mode: MODE.TINY,
+          object: translateNodeFrontToGrip(flexItem.nodeFront),
+        })
       )
     );
   }
