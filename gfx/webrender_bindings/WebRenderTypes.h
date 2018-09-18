@@ -486,9 +486,9 @@ static inline wr::BorderRadius ToBorderRadius(const mozilla::LayoutDeviceSize& t
   return br;
 }
 
-static inline wr::BorderWidths ToBorderWidths(float top, float right, float bottom, float left)
+static inline wr::LayoutSideOffsets ToBorderWidths(float top, float right, float bottom, float left)
 {
-  wr::BorderWidths bw;
+  wr::LayoutSideOffsets bw;
   bw.top = top;
   bw.right = right;
   bw.bottom = bottom;
