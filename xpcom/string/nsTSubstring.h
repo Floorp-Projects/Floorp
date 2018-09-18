@@ -431,28 +431,6 @@ public:
   int64_t ToInteger64(nsresult* aErrorCode, uint32_t aRadix = 10) const;
 
   /**
-   * deprecated writing iterators
-   */
-
-  iterator& BeginWriting(iterator& aIter)
-  {
-    char_type* data = BeginWriting();
-    aIter.mStart = data;
-    aIter.mEnd = data + base_string_type::mLength;
-    aIter.mPosition = aIter.mStart;
-    return aIter;
-  }
-
-  iterator& EndWriting(iterator& aIter)
-  {
-    char_type* data = BeginWriting();
-    aIter.mStart = data;
-    aIter.mEnd = data + base_string_type::mLength;
-    aIter.mPosition = aIter.mEnd;
-    return aIter;
-  }
-
-  /**
    * assignment
    */
 
