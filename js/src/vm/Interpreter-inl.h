@@ -803,76 +803,124 @@ GreaterThanOrEqualOperation(JSContext* cx, MutableHandleValue lhs, MutableHandle
 }
 
 static MOZ_ALWAYS_INLINE bool
-BitNot(JSContext* cx, HandleValue in, int* out)
+BitNot(JSContext* cx, MutableHandleValue in, MutableHandleValue out)
 {
-    int i;
-    if (!ToInt32(cx, in, &i)) {
+    if (!ToInt32OrBigInt(cx, in)) {
         return false;
     }
-    *out = ~i;
+
+#ifdef ENABLE_BIGINT
+    if (in.isBigInt()) {
+        return BigInt::bitNot(cx, in, out);
+    }
+#endif
+
+    out.setInt32(~in.toInt32());
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
-BitXor(JSContext* cx, HandleValue lhs, HandleValue rhs, int* out)
+BitXor(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue out)
 {
-    int left, right;
-    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right)) {
+    if (!ToInt32OrBigInt(cx, lhs) || !ToInt32OrBigInt(cx, rhs)) {
         return false;
     }
-    *out = left ^ right;
+
+#ifdef ENABLE_BIGINT
+    if (lhs.isBigInt() || rhs.isBigInt()) {
+        return BigInt::bitXor(cx, lhs, rhs, out);
+    }
+#endif
+
+    out.setInt32(lhs.toInt32() ^ rhs.toInt32());
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
-BitOr(JSContext* cx, HandleValue lhs, HandleValue rhs, int* out)
+BitOr(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue out)
 {
-    int left, right;
-    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right)) {
+    if (!ToInt32OrBigInt(cx, lhs) || !ToInt32OrBigInt(cx, rhs)) {
         return false;
     }
-    *out = left | right;
+
+#ifdef ENABLE_BIGINT
+    if (lhs.isBigInt() || rhs.isBigInt()) {
+        return BigInt::bitOr(cx, lhs, rhs, out);
+    }
+#endif
+
+    out.setInt32(lhs.toInt32() | rhs.toInt32());
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
-BitAnd(JSContext* cx, HandleValue lhs, HandleValue rhs, int* out)
+BitAnd(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue out)
 {
-    int left, right;
-    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right)) {
+    if (!ToInt32OrBigInt(cx, lhs) || !ToInt32OrBigInt(cx, rhs)) {
         return false;
     }
-    *out = left & right;
+
+#ifdef ENABLE_BIGINT
+    if (lhs.isBigInt() || rhs.isBigInt()) {
+        return BigInt::bitAnd(cx, lhs, rhs, out);
+    }
+#endif
+
+    out.setInt32(lhs.toInt32() & rhs.toInt32());
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
-BitLsh(JSContext* cx, HandleValue lhs, HandleValue rhs, int* out)
+BitLsh(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue out)
 {
-    int32_t left, right;
-    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right)) {
+    if (!ToInt32OrBigInt(cx, lhs) || !ToInt32OrBigInt(cx, rhs)) {
         return false;
     }
-    *out = uint32_t(left) << (right & 31);
+
+#ifdef ENABLE_BIGINT
+    if (lhs.isBigInt() || rhs.isBigInt()) {
+        return BigInt::lsh(cx, lhs, rhs, out);
+    }
+#endif
+
+    out.setInt32(lhs.toInt32() << (rhs.toInt32() & 31));
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
-BitRsh(JSContext* cx, HandleValue lhs, HandleValue rhs, int* out)
+BitRsh(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue out)
 {
-    int32_t left, right;
-    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right)) {
+    if (!ToInt32OrBigInt(cx, lhs) || !ToInt32OrBigInt(cx, rhs)) {
         return false;
     }
-    *out = left >> (right & 31);
+
+#ifdef ENABLE_BIGINT
+    if (lhs.isBigInt() || rhs.isBigInt()) {
+        return BigInt::rsh(cx, lhs, rhs, out);
+    }
+#endif
+
+    out.setInt32(lhs.toInt32() >> (rhs.toInt32() & 31));
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
-UrshOperation(JSContext* cx, HandleValue lhs, HandleValue rhs, MutableHandleValue out)
+UrshOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue out)
 {
+#ifdef ENABLE_BIGINT
+    if (!ToNumeric(cx, lhs) || !ToNumeric(cx, rhs)) {
+        return false;
+    }
+
+    if (lhs.isBigInt() || rhs.isBigInt()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_BIGINT_TO_NUMBER);
+        return false;
+    }
+#endif
+
     uint32_t left;
-    int32_t  right;
+    int32_t right;
     if (!ToUint32(cx, lhs, &left) || !ToInt32(cx, rhs, &right)) {
         return false;
     }

@@ -2862,7 +2862,7 @@ class LBitNotI : public LInstructionHelper<1, 1, 0>
 };
 
 // Call a VM function to perform a BITNOT operation.
-class LBitNotV : public LCallInstructionHelper<1, BOX_PIECES, 0>
+class LBitNotV : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES, 0>
 {
   public:
     LIR_HEADER(BitNotV)
@@ -2927,7 +2927,7 @@ class LBitOpI64 : public LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>
 };
 
 // Call a VM function to perform a bitwise operation.
-class LBitOpV : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
+class LBitOpV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
 {
     JSOp jsop_;
 
