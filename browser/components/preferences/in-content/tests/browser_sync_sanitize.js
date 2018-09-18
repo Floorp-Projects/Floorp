@@ -10,6 +10,9 @@ const {AsyncShutdown} = ChromeUtils.import("resource://gre/modules/AsyncShutdown
 
 const {SyncDisconnect, SyncDisconnectInternal} = ChromeUtils.import("resource://services-sync/SyncDisconnect.jsm", {});
 
+var fxAccountsCommon = {};
+ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", fxAccountsCommon);
+
 // Use sinon for mocking.
 Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
 registerCleanupFunction(() => {
@@ -120,6 +123,9 @@ add_task(async function testDisconnectNoSanitize() {
     Assert.equal(spySignout.callCount, 1, "should have disconnected");
     Assert.equal(spyBrowser.callCount, 0, "should not sanitized browser data");
     Assert.equal(Weave.Service.startOver.callCount, 1, "should have reset sync");
+
+    Assert.ok(Services.prefs.prefHasUserValue(fxAccountsCommon.PREF_LAST_FXA_USER),
+              "should still have the last-fxa-user pref as we didn't sanitize");
   });
 });
 
@@ -184,6 +190,8 @@ add_task(async function testSanitizeSync() {
     Assert.equal(spyBrowser.callCount, 0, "should not sanitize the browser");
     Assert.equal(spySignout.callCount, 1, "should have signed out of FxA");
     Assert.equal(Weave.Service.startOver.callCount, 1, "should have reset sync");
+    Assert.ok(!Services.prefs.prefHasUserValue(fxAccountsCommon.PREF_LAST_FXA_USER),
+              "should have cleared the last-fxa-user pref as we sanitized");
   });
 });
 
@@ -213,6 +221,8 @@ add_task(async function testSanitizeBrowser() {
     Assert.equal(spyBrowser.callCount, 1, "should have sanitized the browser");
     Assert.equal(spySync.callCount, 0, "should not have sanitized Sync");
     Assert.equal(spySignout.callCount, 1, "should have signed out of FxA");
+    Assert.ok(Services.prefs.prefHasUserValue(fxAccountsCommon.PREF_LAST_FXA_USER),
+              "should not have cleared the last-fxa-user pref as we only sanitized non-sync");
   });
 });
 
@@ -238,6 +248,9 @@ add_task(async function testDisconnectAlreadyRunning() {
 });
 
 async function runTestWithSanitizeDialog(test) {
+  // always set the pref which indicates a user has previously signed in.
+  Services.prefs.setStringPref(fxAccountsCommon.PREF_LAST_FXA_USER, "something");
+
   await openPreferencesViaOpenPreferencesAPI("paneSync", {leaveOpen: true});
 
   let doc = gBrowser.contentDocument;

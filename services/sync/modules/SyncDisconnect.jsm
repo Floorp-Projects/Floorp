@@ -8,11 +8,16 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
   Log: "resource://gre/modules/Log.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   fxAccounts: "resource://gre/modules/FxAccounts.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
+  return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", {});
 });
 
 this.EXPORTED_SYMBOLS = ["SyncDisconnect"];
@@ -89,6 +94,11 @@ this.SyncDisconnectInternal = {
           }
         }
       }
+      // Reset the pref which is used to show a warning when a different user
+      // signs in - this is no longer a concern now that we've removed the
+      // data from the profile.
+      Services.prefs.clearUserPref(FxAccountsCommon.PREF_LAST_FXA_USER);
+
       log.info("Finished wiping sync data");
     } catch (ex) {
       log.error("Failed to sanitize Sync data", ex);
