@@ -639,15 +639,6 @@ TRRService::CompleteLookup(nsHostRecord *rec, nsresult status, AddrInfo *aNewRRS
   return LOOKUP_OK;
 }
 
-AHostResolver::LookupStatus
-TRRService::CompleteLookupByType(nsHostRecord *, nsresult,
-                                 const nsTArray<nsCString> *aResult,
-                                 uint32_t aTtl,
-                                 bool aPb)
-{
-  return LOOKUP_OK;
-}
-
 #undef LOG
 
 } // namespace net

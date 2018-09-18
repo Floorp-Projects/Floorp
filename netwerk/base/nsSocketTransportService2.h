@@ -120,13 +120,6 @@ public:
                                                        !mSleepPhase; }
     PRIntervalTime MaxTimeForPrClosePref() {return mMaxTimeForPrClosePref; }
 
-    bool IsEsniEnabled() { return mEsniEnabled && !mTrustedMitmDetected &&
-                                  !mNotTrustedMitmDetected; }
-
-    void SetNotTrustedMitmDetected() {
-      mNotTrustedMitmDetected = true;
-    }
-
 protected:
 
     virtual ~nsSocketTransportService();
@@ -310,10 +303,6 @@ private:
 #endif
 
     void TryRepairPollableEvent();
-
-    bool mEsniEnabled;
-    bool mTrustedMitmDetected;
-    bool mNotTrustedMitmDetected;
 };
 
 extern nsSocketTransportService *gSocketTransportService;

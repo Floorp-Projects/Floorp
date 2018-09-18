@@ -20,7 +20,6 @@ enum TrrType {
   TRRTYPE_NS = 2,
   TRRTYPE_CNAME = 5,
   TRRTYPE_AAAA = 28,
-  TRRTYPE_TXT = 16,
 };
 
 class DOHaddr : public LinkedListElement<DOHaddr> {
@@ -79,7 +78,6 @@ public:
     , mFailed(false)
     , mCnameLoop(kCnameChaseMax)
     , mAllowRFC1918(false)
-    , mTxtTtl(UINT32_MAX)
   {
     mHost = aRec->host;
     mPB = aRec->pb;
@@ -102,7 +100,6 @@ public:
     , mPB(aPB)
     , mCnameLoop(aLoopCount)
     , mAllowRFC1918(false)
-    , mTxtTtl(UINT32_MAX)
   {
 
   }
@@ -117,7 +114,6 @@ public:
     , mPB(aPB)
     , mCnameLoop(kCnameChaseMax)
     , mAllowRFC1918(false)
-    , mTxtTtl(UINT32_MAX)
   { }
 
   // to verify a domain
@@ -134,7 +130,6 @@ public:
     , mPB(aPB)
     , mCnameLoop(kCnameChaseMax)
     , mAllowRFC1918(false)
-    , mTxtTtl(UINT32_MAX)
   { }
 
   NS_IMETHOD Run() override;
@@ -177,8 +172,6 @@ private:
   nsCString mCname;
   uint32_t mCnameLoop; // loop detection counter
   bool mAllowRFC1918;
-  nsTArray<nsCString> mTxt;
-  uint32_t mTxtTtl;
 };
 
 } // namespace net

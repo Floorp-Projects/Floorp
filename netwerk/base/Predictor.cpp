@@ -98,8 +98,6 @@ static const uint8_t kRollingLoadOffset = 12;
 static const int32_t kMaxPrefetchRollingLoadCount = 20;
 static const uint32_t kFlagsMask = ((1 << kRollingLoadOffset) - 1);
 
-static bool sEsniEnabled = false;
-
 // ID Extensions for cache entries
 #define PREDICTOR_ORIGIN_EXTENSION "predictor-origin"
 
@@ -145,14 +143,6 @@ NS_IMETHODIMP
 Predictor::DNSListener::OnLookupComplete(nsICancelable *request,
                                          nsIDNSRecord *rec,
                                          nsresult status)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Predictor::DNSListener::OnLookupByTypeComplete(nsICancelable *request,
-                                               nsIDNSByTypeRecord *res,
-                                               nsresult status)
 {
   return NS_OK;
 }
@@ -463,8 +453,6 @@ Predictor::Init()
 
   mDnsService = do_GetService("@mozilla.org/network/dns-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  Preferences::AddBoolVarCache(&sEsniEnabled, "network.security.esni.enabled");
 
   mInitialized = true;
 
@@ -1434,22 +1422,6 @@ Predictor::RunPredictions(nsIURI *referrer,
                                      nsIDNSService::RESOLVE_SPECULATE),
                                     mDNSListener, nullptr, originAttributes,
                                     getter_AddRefs(tmpCancelable));
-
-    bool isHttps;
-    uri->SchemeIs("https", &isHttps);
-    // Fetch esni keys if needed.
-    if (sEsniEnabled && isHttps) {
-      nsAutoCString esniHost;
-      esniHost.Append("_esni.");
-      esniHost.Append(hostname);
-      mDnsService->AsyncResolveByTypeNative(esniHost,
-                                            nsIDNSService::RESOLVE_TYPE_TXT,
-                                            (nsIDNSService::RESOLVE_PRIORITY_MEDIUM |
-                                             nsIDNSService::RESOLVE_SPECULATE),
-                                            mDNSListener, nullptr, originAttributes,
-                                            getter_AddRefs(tmpCancelable));
-    }
-
     predicted = true;
     if (verifier) {
       PREDICTOR_LOG(("    sending preresolve verification"));

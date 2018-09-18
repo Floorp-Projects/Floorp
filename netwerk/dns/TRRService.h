@@ -44,7 +44,6 @@ public:
   uint32_t GetRequestTimeout() { return mTRRTimeout; }
 
   LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb) override;
-  LookupStatus CompleteLookupByType(nsHostRecord *, nsresult, const nsTArray<nsCString> *, uint32_t, bool pb) override;
   void TRRBlacklist(const nsACString &host, bool privateBrowsing, bool aParentsToo);
   bool IsTRRBlacklisted(const nsACString &host, bool privateBrowsing, bool fullhost);
 

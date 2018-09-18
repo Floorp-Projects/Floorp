@@ -1007,62 +1007,6 @@ nsNSSSocketInfo::CloseSocketAndDestroy()
   return PR_SUCCESS;
 }
 
-NS_IMETHODIMP
-nsNSSSocketInfo::GetEsniTxt(nsACString & aEsniTxt)
-{
-  aEsniTxt = mEsniTxt;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::SetEsniTxt(const nsACString & aEsniTxt)
-{
-  mEsniTxt = aEsniTxt;
-
-  if (mEsniTxt.Length()) {
-    fprintf(stderr,"\n\nTODO - SSL_EnableSNI() [%s] (%d bytes)\n",
-            mEsniTxt.get(), mEsniTxt.Length());
-
-#if 0
-    if (SECSuccess != SSL_EnableESNI(mFd,
-                                     reinterpret_cast<const PRUint8*>(mEsniTxt.get()),
-                                     mEsniTxt.Length(), "dummy.invalid")) {
-      return NS_ERROR_FAILURE;
-    }
-#endif
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::GetServerRootCertIsBuiltInRoot(bool *aIsBuiltInRoot)
-{
-  *aIsBuiltInRoot = false;
-
-  if (!HasServerCert()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsCOMPtr<nsIX509CertList> certList;
-  nsresult rv = GetSucceededCertChain(getter_AddRefs(certList));
-  if (NS_SUCCEEDED(rv)) {
-    if (!certList) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    RefPtr<nsNSSCertList> nssCertList = certList->GetCertList();
-    nsCOMPtr<nsIX509Cert> cert;
-    rv = nssCertList->GetRootCertificate(cert);
-    if (NS_SUCCEEDED(rv)) {
-      if (!cert) {
-        return NS_ERROR_NOT_AVAILABLE;
-      }
-      rv = cert->GetIsBuiltInRoot(aIsBuiltInRoot);
-    }
-  }
-  return rv;
-}
-
 #if defined(DEBUG_SSL_VERBOSE) && defined(DUMP_BUFFER)
 // Dumps a (potentially binary) buffer using SSM_DEBUG.  (We could have used
 // the version in ssltrace.c, but that's specifically tailored to SSLTRACE.)

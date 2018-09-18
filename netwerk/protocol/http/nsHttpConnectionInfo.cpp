@@ -50,7 +50,6 @@ nsHttpConnectionInfo::nsHttpConnectionInfo(const nsACString &originHost,
                                            const OriginAttributes &originAttributes,
                                            bool endToEndSSL)
     : mRoutedPort(443)
-    , mLessThanTls13(false)
 {
     Init(originHost, originPort, npnToken, username, proxyInfo, originAttributes, endToEndSSL);
 }
@@ -63,7 +62,6 @@ nsHttpConnectionInfo::nsHttpConnectionInfo(const nsACString &originHost,
                                            const OriginAttributes &originAttributes,
                                            const nsACString &routedHost,
                                            int32_t routedPort)
-  : mLessThanTls13(false)
 {
     mEndToEndSSL = true; // so DefaultPort() works
     mRoutedPort = routedPort == -1 ? DefaultPort() : routedPort;
