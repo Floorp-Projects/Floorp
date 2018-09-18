@@ -44,6 +44,7 @@
 
 class nsGenericHTMLElement;
 class nsIJSID;
+class nsIDocument;
 
 namespace mozilla {
 
@@ -53,6 +54,7 @@ namespace dom {
 class CustomElementReactionsStack;
 class MessageManagerGlobal;
 template<typename KeyType, typename ValueType> class Record;
+class Location;
 
 nsresult
 UnwrapArgImpl(JSContext* cx, JS::Handle<JSObject*> src, const nsIID& iid,
@@ -1060,7 +1062,29 @@ struct CheckWrapperCacheTracing<T, true>
 void
 AssertReflectorHasGivenProto(JSContext* aCx, JSObject* aReflector,
                              JS::Handle<JSObject*> aGivenProto);
+
 #endif // DEBUG
+
+template <class T>
+MOZ_ALWAYS_INLINE void
+CrashIfDocumentOrLocationWrapFailed()
+{
+  // Do nothing.
+}
+
+template<>
+MOZ_ALWAYS_INLINE void
+CrashIfDocumentOrLocationWrapFailed<nsIDocument>()
+{
+  MOZ_CRASH("Looks like bug 1488480/1405521, with WrapObject() on nsIDocument throwing");
+}
+
+template<>
+MOZ_ALWAYS_INLINE void
+CrashIfDocumentOrLocationWrapFailed<Location>()
+{
+  MOZ_CRASH("Looks like bug 1488480/1405521, with WrapObject() on Location throwing");
+}
 
 template <class T, GetOrCreateReflectorWrapBehavior wrapBehavior>
 MOZ_ALWAYS_INLINE bool
@@ -1084,6 +1108,7 @@ DoGetOrCreateDOMReflector(JSContext* cx, T* value,
       // At this point, obj is null, so just return false.
       // Callers seem to be testing JS_IsExceptionPending(cx) to
       // figure out whether WrapObject() threw.
+      CrashIfDocumentOrLocationWrapFailed<T>();
       return false;
     }
 
@@ -1113,19 +1138,35 @@ DoGetOrCreateDOMReflector(JSContext* cx, T* value,
   rval.set(JS::ObjectValue(*obj));
 
   if (js::GetObjectCompartment(obj) == js::GetContextCompartment(cx)) {
-    return TypeNeedsOuterization<T>::value ? TryToOuterize(rval) : true;
+    if (!TypeNeedsOuterization<T>::value) {
+      return true;
+    }
+    if (TryToOuterize(rval)) {
+      return true;
+    }
+
+    return false;
   }
 
   if (wrapBehavior == eDontWrapIntoContextCompartment) {
     if (TypeNeedsOuterization<T>::value) {
       JSAutoRealm ar(cx, obj);
-      return TryToOuterize(rval);
+      if (TryToOuterize(rval)) {
+        return true;
+      }
+
+      return false;
     }
 
     return true;
   }
 
-  return JS_WrapValue(cx, rval);
+  if (JS_WrapValue(cx, rval)) {
+    return true;
+  }
+
+  MOZ_CRASH("Looks like bug 1488480/1405521, with JS_WrapValue failing");
+  return false;
 }
 
 } // namespace binding_detail

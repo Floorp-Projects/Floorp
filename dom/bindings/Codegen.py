@@ -4015,6 +4015,14 @@ class CGClearCachedValueMethod(CGAbstractMethod):
             saveMember = (
                 "JS::Rooted<JS::Value> oldValue(aCx, js::GetReservedSlot(obj, %s));\n" %
                 slotIndex)
+            if self.descriptor.name == "Document" or self.descriptor.name == "Location":
+                maybeCrash = dedent(
+                    """
+                    MOZ_CRASH("Looks like bug 1488480/1405521, with the getter failing");
+                    """)
+            else:
+                maybeCrash = ""
+
             regetMember = fill(
                 """
                 JS::Rooted<JS::Value> temp(aCx);
@@ -4022,12 +4030,14 @@ class CGClearCachedValueMethod(CGAbstractMethod):
                 JSAutoRealm ar(aCx, obj);
                 if (!get_${name}(aCx, obj, aObject, args)) {
                   js::SetReservedSlot(obj, ${slotIndex}, oldValue);
+                  $*{maybeCrash}
                   return false;
                 }
                 return true;
                 """,
                 name=self.member.identifier.name,
-                slotIndex=slotIndex)
+                slotIndex=slotIndex,
+                maybeCrash=maybeCrash)
         else:
             declObj = "JSObject* obj;\n"
             noopRetval = ""
@@ -6681,6 +6691,11 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             # threw an exception.
             failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
                       exceptionCode)
+
+            if descriptor.name == "Document" or descriptor.name == "Location":
+                failed = (
+                    'MOZ_CRASH("Looks like bug 1488480/1405521, with getting the reflector failing");\n' +
+                    failed)
         else:
             if descriptor.notflattened:
                 getIID = "&NS_GET_IID(%s), " % descriptor.nativeType
@@ -7836,6 +7851,14 @@ class CGPerSignatureCall(CGThing):
                                               "args.rval().isObject()")
                 postConversionSteps += freezeValue.define()
 
+            if self.descriptor.name == "Window":
+                maybeCrash = dedent(
+                    """
+                    MOZ_CRASH("Looks like bug 1488480/1405521, with the other MaybeWrap failing");
+                    """)
+            else:
+                maybeCrash = ""
+
             # slotStorageSteps are steps that run once we have entered the
             # slotStorage compartment.
             slotStorageSteps= fill(
@@ -7843,11 +7866,13 @@ class CGPerSignatureCall(CGThing):
                 // Make a copy so that we don't do unnecessary wrapping on args.rval().
                 JS::Rooted<JS::Value> storedVal(cx, args.rval());
                 if (!${maybeWrap}(cx, &storedVal)) {
+                  $*{maybeCrash}
                   return false;
                 }
                 js::SetReservedSlot(slotStorage, slotIndex, storedVal);
                 """,
-                maybeWrap=getMaybeWrapValueFuncForType(self.idlNode.type))
+                maybeWrap=getMaybeWrapValueFuncForType(self.idlNode.type),
+                maybeCrash=maybeCrash)
 
             checkForXray = mayUseXrayExpandoSlots(self.descriptor, self.idlNode)
 
@@ -7885,6 +7910,14 @@ class CGPerSignatureCall(CGThing):
             else:
                 conversionScope = "slotStorage"
 
+            if self.descriptor.name == "Window":
+                maybeCrash = dedent(
+                    """
+                    MOZ_CRASH("Looks like bug 1488480/1405521, with the third MaybeWrap failing");
+                    """)
+            else:
+                maybeCrash = ""
+
             wrapCode = fill(
                 """
                 {
@@ -7900,13 +7933,18 @@ class CGPerSignatureCall(CGThing):
                   $*{slotStorageSteps}
                 }
                 // And now make sure args.rval() is in the caller realm.
-                return ${maybeWrap}(cx, args.rval());
+                if (${maybeWrap}(cx, args.rval())) {
+                  return true;
+                }
+                $*{maybeCrash}
+                return false;
                 """,
                 conversionScope=conversionScope,
                 wrapCode=wrapCode,
                 postConversionSteps=postConversionSteps,
                 slotStorageSteps=slotStorageSteps,
-                maybeWrap=getMaybeWrapValueFuncForType(self.idlNode.type))
+                maybeWrap=getMaybeWrapValueFuncForType(self.idlNode.type),
+                maybeCrash=maybeCrash)
         return wrapCode
 
     def define(self):
@@ -8938,6 +8976,14 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                     """,
                     slotIndex=memberReservedSlot(self.attr, self.descriptor))
 
+            if self.descriptor.name == "Window":
+                maybeCrash = dedent(
+                    """
+                    MOZ_CRASH("Looks like bug 1488480/1405521, with cached value wrapping failing");
+                    """)
+            else:
+                maybeCrash = ""
+                
             prefix += fill(
                 """
                 MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(js::GetObjectClass(slotStorage)) > slotIndex);
@@ -8948,12 +8994,17 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                     args.rval().set(cachedVal);
                     // The cached value is in the compartment of slotStorage,
                     // so wrap into the caller compartment as needed.
-                    return ${maybeWrap}(cx, args.rval());
+                    if (${maybeWrap}(cx, args.rval())) {
+                      return true;
+                    }
+                    $*{maybeCrash}
+                    return false;
                   }
                 }
 
                 """,
-                maybeWrap=getMaybeWrapValueFuncForType(self.attr.type))
+                maybeWrap=getMaybeWrapValueFuncForType(self.attr.type),
+                maybeCrash=maybeCrash)
         else:
             prefix = ""
 
