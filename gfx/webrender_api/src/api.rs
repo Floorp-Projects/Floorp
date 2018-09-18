@@ -608,8 +608,6 @@ pub enum DebugCommand {
     EnableTextureCacheDebug(bool),
     /// Display intermediate render targets on screen.
     EnableRenderTargetDebug(bool),
-    /// Display the contents of GPU cache.
-    EnableGpuCacheDebug(bool),
     /// Display GPU timing results.
     EnableGpuTimeQueries(bool),
     /// Display GPU overdraw results
@@ -640,12 +638,6 @@ pub enum DebugCommand {
     ClearCaches(ClearCache),
     /// Invalidate GPU cache, forcing the update from the CPU mirror.
     InvalidateGpuCache,
-    /// Causes the scene builder to pause for a given amount of miliseconds each time it
-    /// processes a transaction.
-    SimulateLongSceneBuild(u32),
-    /// Causes the low priority scene builder to pause for a given amount of miliseconds
-    /// each time it processes a transaction.
-    SimulateLongLowPrioritySceneBuild(u32),
 }
 
 #[derive(Clone, Deserialize, Serialize)]

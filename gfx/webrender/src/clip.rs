@@ -102,11 +102,21 @@ enum ClipResult {
     Partial,
 }
 
+// A clip item range represents one or more ClipItem structs.
+// They are stored in a contiguous array inside the ClipStore,
+// and identified by an (offset, count).
+#[derive(Debug, Copy, Clone)]
+pub struct ClipItemRange {
+    pub index: ClipNodeIndex,
+    pub count: u32,
+}
+
 // A clip node is a single clip source, along with some
 // positioning information and implementation details
 // that control where the GPU data for this clip source
 // can be found.
 pub struct ClipNode {
+    pub spatial_node_index: SpatialNodeIndex,
     pub item: ClipItem,
     pub gpu_cache_handle: GpuCacheHandle,
 }
@@ -122,7 +132,7 @@ bitflags! {
 // Identifier for a clip chain. Clip chains are stored
 // in a contiguous array in the clip store. They are
 // identified by a simple index into that array.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ClipChainId(pub u32);
 
 // The root of each clip chain is the NONE id. The
@@ -137,8 +147,7 @@ impl ClipChainId {
 // and a link to a parent clip chain node, or ClipChainId::NONE.
 #[derive(Clone)]
 pub struct ClipChainNode {
-    pub clip_node_index: ClipNodeIndex,
-    pub spatial_node_index: SpatialNodeIndex,
+    pub clip_item_range: ClipItemRange,
     pub parent_clip_chain_id: ClipChainId,
 }
 
@@ -157,29 +166,21 @@ pub struct ClipNodeIndex(pub u32);
 #[derive(Clone, Copy, Debug, PartialEq, Hash, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct ClipNodeInstance {
-    index_and_flags: u32,
-    spatial_node_index: u32,
-}
+pub struct ClipNodeInstance(pub u32);
 
 impl ClipNodeInstance {
-    fn new(
-        index: ClipNodeIndex,
-        flags: ClipNodeFlags,
-        spatial_node_index: SpatialNodeIndex,
-    ) -> ClipNodeInstance {
-        ClipNodeInstance {
-            index_and_flags: (index.0 & 0x00ffffff) | ((flags.bits() as u32) << 24),
-            spatial_node_index: spatial_node_index.0 as u32,
-        }
+    fn new(index: ClipNodeIndex, flags: ClipNodeFlags) -> ClipNodeInstance {
+        ClipNodeInstance(
+            (index.0 & 0x00ffffff) | ((flags.bits() as u32) << 24)
+        )
     }
 
     fn flags(&self) -> ClipNodeFlags {
-        ClipNodeFlags::from_bits_truncate((self.index_and_flags >> 24) as u8)
+        ClipNodeFlags::from_bits_truncate((self.0 >> 24) as u8)
     }
 
     fn index(&self) -> usize {
-        (self.index_and_flags & 0x00ffffff) as usize
+        (self.0 & 0x00ffffff) as usize
     }
 }
 
@@ -210,7 +211,6 @@ enum ClipSpaceConversion {
 struct ClipNodeInfo {
     conversion: ClipSpaceConversion,
     node_index: ClipNodeIndex,
-    spatial_node_index: SpatialNodeIndex,
     has_non_root_coord_system: bool,
 }
 
@@ -349,55 +349,56 @@ impl ClipStore {
         }
     }
 
+    pub fn add_clip_items(
+        &mut self,
+        clip_items: Vec<ClipItem>,
+        spatial_node_index: SpatialNodeIndex,
+    ) -> ClipItemRange {
+        debug_assert!(!clip_items.is_empty());
+
+        let range = ClipItemRange {
+            index: ClipNodeIndex(self.clip_nodes.len() as u32),
+            count: clip_items.len() as u32,
+        };
+
+        let nodes = clip_items
+            .into_iter()
+            .map(|item| {
+                ClipNode {
+                    item,
+                    spatial_node_index,
+                    gpu_cache_handle: GpuCacheHandle::new(),
+                }
+            });
+
+        self.clip_nodes.extend(nodes);
+        range
+    }
+
     pub fn get_clip_chain(&self, clip_chain_id: ClipChainId) -> &ClipChainNode {
         &self.clip_chain_nodes[clip_chain_id.0 as usize]
     }
 
-    pub fn add_clip_chain_node_index(
+    pub fn add_clip_chain(
         &mut self,
-        clip_node_index: ClipNodeIndex,
-        spatial_node_index: SpatialNodeIndex,
+        clip_item_range: ClipItemRange,
         parent_clip_chain_id: ClipChainId,
     ) -> ClipChainId {
         let id = ClipChainId(self.clip_chain_nodes.len() as u32);
         self.clip_chain_nodes.push(ClipChainNode {
-            clip_node_index,
-            spatial_node_index,
+            clip_item_range,
             parent_clip_chain_id,
         });
         id
-    }
-
-    pub fn add_clip_chain_node(
-        &mut self,
-        item: ClipItem,
-        spatial_node_index: SpatialNodeIndex,
-        parent_clip_chain_id: ClipChainId,
-    ) -> ClipChainId {
-        let clip_node_index = ClipNodeIndex(self.clip_nodes.len() as u32);
-        self.clip_nodes.push(ClipNode {
-            item,
-            gpu_cache_handle: GpuCacheHandle::new(),
-        });
-
-        self.add_clip_chain_node_index(
-            clip_node_index,
-            spatial_node_index,
-            parent_clip_chain_id,
-        )
     }
 
     pub fn get_node_from_range(
         &self,
         node_range: &ClipNodeRange,
         index: u32,
-    ) -> (&ClipNode, ClipNodeFlags, SpatialNodeIndex) {
+    ) -> (&ClipNode, ClipNodeFlags) {
         let instance = self.clip_node_indices[(node_range.first + index) as usize];
-        (
-            &self.clip_nodes[instance.index()],
-            instance.flags(),
-            SpatialNodeIndex(instance.spatial_node_index as usize),
-        )
+        (&self.clip_nodes[instance.index()], instance.flags())
     }
 
     pub fn get_node_from_range_mut(
@@ -456,26 +457,32 @@ impl ClipStore {
         // for each clip chain node
         while current_clip_chain_id != ClipChainId::NONE {
             let clip_chain_node = &self.clip_chain_nodes[current_clip_chain_id.0 as usize];
+            let node_count = clip_chain_node.clip_item_range.count;
 
-            // Check if any clip node index should actually be
-            // handled during compositing of a rasterization root.
-            match self.clip_node_collectors.iter_mut().find(|c| {
-                clip_chain_node.spatial_node_index < c.raster_root
-            }) {
-                Some(collector) => {
-                    collector.insert(current_clip_chain_id);
-                }
-                None => {
-                    if !add_clip_node_to_current_chain(
-                        clip_chain_node.clip_node_index,
-                        clip_chain_node.spatial_node_index,
-                        spatial_node_index,
-                        &mut local_clip_rect,
-                        &mut self.clip_node_info,
-                        &self.clip_nodes,
-                        clip_scroll_tree,
-                    ) {
-                        return None;
+            // for each clip node (clip source) in this clip chain node
+            for i in 0 .. node_count {
+                let clip_node_index = ClipNodeIndex(clip_chain_node.clip_item_range.index.0 + i);
+                let clip_node = &self.clip_nodes[clip_node_index.0 as usize];
+
+                // Check if any clip node index should actually be
+                // handled during compositing of a rasterization root.
+                match self.clip_node_collectors.iter_mut().find(|c| {
+                    clip_node.spatial_node_index < c.raster_root
+                }) {
+                    Some(collector) => {
+                        collector.insert(clip_node_index);
+                    }
+                    None => {
+                        if !add_clip_node_to_current_chain(
+                            clip_node_index,
+                            spatial_node_index,
+                            &mut local_clip_rect,
+                            &mut self.clip_node_info,
+                            &self.clip_nodes,
+                            clip_scroll_tree,
+                        ) {
+                            return None;
+                        }
                     }
                 }
             }
@@ -486,15 +493,9 @@ impl ClipStore {
         // Add any collected clips from primitives that should be
         // handled as part of this rasterization root.
         if let Some(clip_node_collector) = clip_node_collector {
-            for clip_chain_id in &clip_node_collector.clips {
-                let (clip_node_index, clip_spatial_node_index) = {
-                    let clip_chain_node = &self.clip_chain_nodes[clip_chain_id.0 as usize];
-                    (clip_chain_node.clip_node_index, clip_chain_node.spatial_node_index)
-                };
-
+            for clip_node_index in &clip_node_collector.clips {
                 if !add_clip_node_to_current_chain(
-                    clip_node_index,
-                    clip_spatial_node_index,
+                    *clip_node_index,
                     spatial_node_index,
                     &mut local_clip_rect,
                     &mut self.clip_node_info,
@@ -596,12 +597,8 @@ impl ClipStore {
                     };
 
                     // Store this in the index buffer for this clip chain instance.
-                    let instance = ClipNodeInstance::new(
-                        node_info.node_index,
-                        flags,
-                        node_info.spatial_node_index,
-                    );
-                    self.clip_node_indices.push(instance);
+                    self.clip_node_indices
+                        .push(ClipNodeInstance::new(node_info.node_index, flags));
 
                     has_non_root_coord_system |= node_info.has_non_root_coord_system;
                 }
@@ -1122,7 +1119,7 @@ pub fn project_inner_rect(
 #[derive(Debug)]
 pub struct ClipNodeCollector {
     raster_root: SpatialNodeIndex,
-    clips: FastHashSet<ClipChainId>,
+    clips: FastHashSet<ClipNodeIndex>,
 }
 
 impl ClipNodeCollector {
@@ -1137,9 +1134,9 @@ impl ClipNodeCollector {
 
     pub fn insert(
         &mut self,
-        clip_chain_id: ClipChainId,
+        clip_node_index: ClipNodeIndex,
     ) {
-        self.clips.insert(clip_chain_id);
+        self.clips.insert(clip_node_index);
     }
 }
 
@@ -1148,7 +1145,6 @@ impl ClipNodeCollector {
 // results in the entire primitive being culled out.
 fn add_clip_node_to_current_chain(
     clip_node_index: ClipNodeIndex,
-    clip_spatial_node_index: SpatialNodeIndex,
     spatial_node_index: SpatialNodeIndex,
     local_clip_rect: &mut LayoutRect,
     clip_node_info: &mut Vec<ClipNodeInfo>,
@@ -1156,12 +1152,12 @@ fn add_clip_node_to_current_chain(
     clip_scroll_tree: &ClipScrollTree,
 ) -> bool {
     let clip_node = &clip_nodes[clip_node_index.0 as usize];
-    let clip_spatial_node = &clip_scroll_tree.spatial_nodes[clip_spatial_node_index.0];
+    let clip_spatial_node = &clip_scroll_tree.spatial_nodes[clip_node.spatial_node_index.0 as usize];
     let ref_spatial_node = &clip_scroll_tree.spatial_nodes[spatial_node_index.0];
 
     // Determine the most efficient way to convert between coordinate
     // systems of the primitive and clip node.
-    let conversion = if spatial_node_index == clip_spatial_node_index {
+    let conversion = if spatial_node_index == clip_node.spatial_node_index {
         Some(ClipSpaceConversion::Local)
     } else if ref_spatial_node.coordinate_system_id == clip_spatial_node.coordinate_system_id {
         let scale_offset = ref_spatial_node
@@ -1172,7 +1168,7 @@ fn add_clip_node_to_current_chain(
         Some(ClipSpaceConversion::ScaleOffset(scale_offset))
     } else {
         let xf = clip_scroll_tree.get_relative_transform(
-            clip_spatial_node_index,
+            clip_node.spatial_node_index,
             ROOT_SPATIAL_NODE_INDEX,
         );
 
@@ -1215,7 +1211,6 @@ fn add_clip_node_to_current_chain(
         clip_node_info.push(ClipNodeInfo {
             conversion,
             node_index: clip_node_index,
-            spatial_node_index: clip_spatial_node_index,
             has_non_root_coord_system: clip_spatial_node.coordinate_system_id != CoordinateSystemId::root(),
         })
     }

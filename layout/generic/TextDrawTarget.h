@@ -448,7 +448,7 @@ public:
     MOZ_RELEASE_ASSERT(aPattern.GetType() == PatternType::COLOR &&
                        aStrokeOptions.mDashLength == 0);
 
-    wr::LayoutSideOffsets widths = {
+    wr::BorderWidths widths = {
         aStrokeOptions.mLineWidth,
         aStrokeOptions.mLineWidth,
         aStrokeOptions.mLineWidth,

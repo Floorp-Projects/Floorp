@@ -232,13 +232,6 @@ pub enum GpuCacheUpdate {
     },
 }
 
-pub struct GpuDebugChunk {
-    pub address: GpuCacheAddress,
-    pub fresh: bool,
-    pub tag: u8,
-    pub size: u16,
-}
-
 #[must_use]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -253,9 +246,6 @@ pub struct GpuCacheUpdateList {
     /// A flat list of GPU blocks that are pending upload
     /// to GPU memory.
     pub blocks: Vec<GpuBlockData>,
-    /// Whole state GPU block metadata for debugging.
-    #[cfg_attr(feature = "serde", serde(skip))]
-    pub debug_chunks: Vec<GpuDebugChunk>,
 }
 
 // Holds the free lists of fixed size blocks. Mostly
@@ -545,9 +535,6 @@ pub struct GpuCache {
     /// Number of blocks requested this frame that don't
     /// need to be re-uploaded.
     saved_block_count: usize,
-    /// True if the Renderer expects to receive the metadata
-    /// about GPU blocks with on each update.
-    in_debug: bool,
 }
 
 impl GpuCache {
@@ -556,7 +543,6 @@ impl GpuCache {
             frame_id: FrameId::new(0),
             texture: Texture::new(),
             saved_block_count: 0,
-            in_debug: false,
         }
     }
 
@@ -657,29 +643,9 @@ impl GpuCache {
         GpuCacheUpdateList {
             frame_id: self.frame_id,
             height: self.texture.height,
-            debug_chunks: if self.in_debug {
-                self.texture.updates
-                    .iter()
-                    .map(|update| match *update {
-                        GpuCacheUpdate::Copy { address, block_index, block_count } => GpuDebugChunk {
-                            address,
-                            fresh: self.frame_id == self.texture.blocks[block_index].last_access_time,
-                            tag: 0, //TODO
-                            size: block_count.min(0xFFFF) as u16,
-                        }
-                    })
-                    .collect()
-            } else {
-                Vec::new()
-            },
             updates: mem::replace(&mut self.texture.updates, Vec::new()),
             blocks: mem::replace(&mut self.texture.pending_blocks, Vec::new()),
         }
-    }
-
-    /// Enable GPU block debugging.
-    pub fn set_debug(&mut self, enable: bool) {
-        self.in_debug = enable;
     }
 
     /// Get the actual GPU address in the texture for a given slot ID.

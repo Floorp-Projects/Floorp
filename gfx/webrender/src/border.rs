@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, BorderSide, BorderStyle, ColorF, ColorU, DeviceRect, DeviceSize};
-use api::{LayoutSizeAu, LayoutSideOffsets, LayoutPrimitiveInfo, LayoutToDeviceScale};
+use api::{BorderRadius, BorderSide, BorderStyle, BorderWidths, ColorF};
+use api::{ColorU, DeviceRect, DeviceSize, LayoutSizeAu, LayoutPrimitiveInfo, LayoutToDeviceScale};
 use api::{DeviceVector2D, DevicePoint, DeviceIntSize, LayoutRect, LayoutSize, NormalBorder};
 use app_units::Au;
 use ellipse::Ellipse;
@@ -75,8 +75,8 @@ pub struct BorderWidthsAu {
     pub bottom: Au,
 }
 
-impl From<LayoutSideOffsets> for BorderWidthsAu {
-    fn from(widths: LayoutSideOffsets) -> Self {
+impl From<BorderWidths> for BorderWidthsAu {
+    fn from(widths: BorderWidths) -> Self {
         BorderWidthsAu {
             left: Au::from_f32_px(widths.left),
             top: Au::from_f32_px(widths.top),
@@ -117,7 +117,7 @@ pub struct BorderCacheKey {
 }
 
 impl BorderCacheKey {
-    pub fn new(border: &NormalBorder, widths: &LayoutSideOffsets) -> Self {
+    pub fn new(border: &NormalBorder, widths: &BorderWidths) -> Self {
         BorderCacheKey {
             left: border.left.into(),
             top: border.top.into(),
@@ -125,7 +125,7 @@ impl BorderCacheKey {
             bottom: border.bottom.into(),
             widths: (*widths).into(),
             radius: border.radius.into(),
-            scale: Au(0),
+            scale: Au::from_f32_px(0.0),
         }
     }
 }
@@ -180,7 +180,7 @@ impl<'a> DisplayListFlattener<'a> {
         &mut self,
         info: &LayoutPrimitiveInfo,
         border: &NormalBorder,
-        widths: &LayoutSideOffsets,
+        widths: &BorderWidths,
         clip_and_scroll: ScrollNodeAndClipChain,
     ) {
         let mut border = *border;
@@ -528,63 +528,10 @@ pub struct BorderSegmentInfo {
     widths: DeviceSize,
 }
 
-bitflags! {
-    /// Whether we depend on the available size for the border (effectively in
-    /// the local rect of the primitive), and in which direction.
-    ///
-    /// Note that this relies on the corners being only dependent on the border
-    /// widths and radius.
-    ///
-    /// This is not just a single boolean to allow instance caching for border
-    /// boxes where one of the directions differ but not the one on the affected
-    /// border is.
-    ///
-    /// This allows sharing instances for stuff like paragraphs of different
-    /// heights separated by horizontal borders.
-    pub struct AvailableSizeDependence : u8 {
-        /// There's a dependence on the vertical direction, that is, at least
-        /// one of the right or left edges is dashed or dotted.
-        const VERTICAL = 1 << 0;
-        /// Same but for the horizontal direction.
-        const HORIZONTAL = 1 << 1;
-    }
-}
-
-/// This is the data that describes a single border with (up to) four sides and
-/// four corners.
-///
-/// This object gets created for each border primitive at least once. Note,
-/// however, that the instances this produces via `build_instances()` can and
-/// will be shared by multiple borders, as long as they share the same cache
-/// key.
-///
-/// Segments, however, also get build once per primitive.
-///
-/// So the important invariant to preserve when going through this code is that
-/// the result of `build_instances()` would remain invariant for a given cache
-/// key.
-///
-/// That means, then, that `border_segments` can't depend at all on something
-/// that isn't on the key like the available_size, while the brush segments can
-/// (and will, since we skip painting empty segments caused by things like edges
-/// getting constrained by huge border-radius).
-///
-/// Note that the cache key is not only `BorderCacheKey`, but also a
-/// `size` from `RenderTaskCacheKey`, which will always be zero unless
-/// `available_size_dependence` is non-empty, which is effectively just dashed
-/// and dotted borders for now, since the spacing between the dash and dots
-/// changes depending on that size.
 #[derive(Debug)]
 pub struct BorderRenderTaskInfo {
     pub border_segments: Vec<BorderSegmentInfo>,
     pub size: DeviceIntSize,
-    pub available_size_dependence: AvailableSizeDependence,
-}
-
-#[derive(PartialEq, Eq)]
-enum DependsOnAvailableSize {
-    No,
-    Yes,
 }
 
 /// Information needed to place and draw a border edge.
@@ -596,8 +543,6 @@ struct EdgeInfo {
     local_size: f32,
     /// Size in device pixels needed in the render task.
     device_size: f32,
-    /// Whether this edge depends on the available size.
-    depends_on_available_size: bool,
 }
 
 impl EdgeInfo {
@@ -605,13 +550,11 @@ impl EdgeInfo {
         local_offset: f32,
         local_size: f32,
         device_size: f32,
-        depends_on_avail_size: DependsOnAvailableSize,
-    ) -> Self {
-        Self {
+    ) -> EdgeInfo {
+        EdgeInfo {
             local_offset,
             local_size,
             device_size,
-            depends_on_available_size: depends_on_avail_size == DependsOnAvailableSize::Yes,
         }
     }
 }
@@ -651,7 +594,7 @@ fn get_edge_info(
 ) -> EdgeInfo {
     // To avoid division by zero below.
     if side_width <= 0.0 {
-        return EdgeInfo::new(0.0, 0.0, 0.0, DependsOnAvailableSize::No);
+        return EdgeInfo::new(0.0, 0.0, 0.0);
     }
 
     match style {
@@ -660,12 +603,12 @@ fn get_edge_info(
             let (half_dash, _num_half_dashes) =
                 compute_half_dash(side_width, avail_size);
             let device_size = (2.0 * 2.0 * half_dash * scale).round();
-            EdgeInfo::new(0., avail_size, device_size, DependsOnAvailableSize::Yes)
+            EdgeInfo::new(0., avail_size, device_size)
         }
         BorderStyle::Dotted => {
             let dot_and_space_size = 2.0 * side_width;
             if avail_size < dot_and_space_size * 0.75 {
-                return EdgeInfo::new(0.0, 0.0, 0.0, DependsOnAvailableSize::Yes);
+                return EdgeInfo::new(0.0, 0.0, 0.0);
             }
             let approx_dot_count = avail_size / dot_and_space_size;
             let dot_count = approx_dot_count.floor().max(1.0);
@@ -673,10 +616,10 @@ fn get_edge_info(
             let extra_space = avail_size - used_size;
             let device_size = dot_and_space_size * scale;
             let offset = (extra_space * 0.5).round();
-            EdgeInfo::new(offset, used_size, device_size, DependsOnAvailableSize::Yes)
+            EdgeInfo::new(offset, used_size, device_size)
         }
         _ => {
-            EdgeInfo::new(0.0, avail_size, 8.0, DependsOnAvailableSize::No)
+            EdgeInfo::new(0.0, avail_size, 8.0)
         }
     }
 }
@@ -685,7 +628,7 @@ impl BorderRenderTaskInfo {
     pub fn new(
         rect: &LayoutRect,
         border: &NormalBorder,
-        widths: &LayoutSideOffsets,
+        widths: &BorderWidths,
         scale: LayoutToDeviceScale,
         brush_segments: &mut Vec<BrushSegment>,
     ) -> Option<Self> {
@@ -761,7 +704,6 @@ impl BorderRenderTaskInfo {
             rect.size.height - local_size_tr.height - local_size_br.height,
             scale.0,
         );
-
         let inner_height = left_edge_info.device_size.max(right_edge_info.device_size).ceil();
 
         let size = DeviceSize::new(
@@ -771,19 +713,6 @@ impl BorderRenderTaskInfo {
 
         if size.width == 0.0 || size.height == 0.0 {
             return None;
-        }
-
-        let mut size_dependence = AvailableSizeDependence::empty();
-        if top_edge_info.depends_on_available_size ||
-            bottom_edge_info.depends_on_available_size
-        {
-            size_dependence.insert(AvailableSizeDependence::HORIZONTAL);
-        }
-
-        if left_edge_info.depends_on_available_size ||
-            right_edge_info.depends_on_available_size
-        {
-            size_dependence.insert(AvailableSizeDependence::VERTICAL);
         }
 
         add_edge_segment(
@@ -965,31 +894,7 @@ impl BorderRenderTaskInfo {
         Some(BorderRenderTaskInfo {
             border_segments,
             size: size.to_i32(),
-            available_size_dependence: size_dependence,
         })
-    }
-
-    /// Returns the cache key size for this task, based on our available size
-    /// dependence computed earlier.
-    #[inline]
-    pub fn cache_key_size(
-        &self,
-        local_size: &LayoutSize,
-        scale: LayoutToDeviceScale,
-    ) -> DeviceIntSize {
-        let mut size = DeviceIntSize::zero();
-        if self.available_size_dependence.is_empty() {
-            return size;
-        }
-
-        let device_size = (*local_size * scale).to_i32();
-        if self.available_size_dependence.contains(AvailableSizeDependence::VERTICAL) {
-            size.height = device_size.height;
-        }
-        if self.available_size_dependence.contains(AvailableSizeDependence::HORIZONTAL) {
-            size.width = device_size.width;
-        }
-        size
     }
 
     pub fn build_instances(&self, border: &NormalBorder) -> Vec<BorderInstance> {
@@ -1043,7 +948,7 @@ impl BorderRenderTaskInfo {
     /// blurrier.
     pub fn get_max_scale(
         radii: &BorderRadius,
-        widths: &LayoutSideOffsets
+        widths: &BorderWidths
     ) -> LayoutToDeviceScale {
         let r = radii.top_left.width
             .max(radii.top_left.height)
@@ -1069,10 +974,6 @@ fn add_brush_segment(
     edge_flags: EdgeAaSegmentMask,
     brush_segments: &mut Vec<BrushSegment>,
 ) {
-    if image_rect.size.width <= 0. || image_rect.size.width <= 0. {
-        return;
-    }
-
     brush_segments.push(
         BrushSegment::new(
             image_rect,

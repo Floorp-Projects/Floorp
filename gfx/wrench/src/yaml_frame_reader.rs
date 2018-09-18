@@ -819,7 +819,12 @@ impl YamlFrameReader {
             .as_vec_f32()
             .expect("borders must have width(s)");
         let widths = broadcast(&widths, 4);
-        let widths = LayoutSideOffsets::new(widths[0], widths[3], widths[2], widths[1]);
+        let widths = BorderWidths {
+            top: widths[0],
+            left: widths[1],
+            bottom: widths[2],
+            right: widths[3],
+        };
         let border_details = if let Some(border_type) = item["border-type"].as_str() {
             match border_type {
                 "normal" => {

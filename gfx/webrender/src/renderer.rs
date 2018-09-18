@@ -27,15 +27,11 @@ use device::{ExternalTexture, FBOId, TextureSlot};
 use device::{FileWatcherHandler, ShaderError, TextureFilter,
              VertexUsageHint, VAO, VBO, CustomVAO};
 use device::{ProgramCache, ReadPixelsFormat};
-#[cfg(feature = "debug_renderer")]
-use euclid::rect;
-use euclid::Transform3D;
+use euclid::{rect, Transform3D};
 use frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use gleam::gl;
 use glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
 use gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
-#[cfg(feature = "debug_renderer")]
-use gpu_cache::GpuDebugChunk;
 #[cfg(feature = "pathfinder")]
 use gpu_glyph_renderer::GpuGlyphRenderer;
 use internal_types::{SourceTexture, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
@@ -231,7 +227,6 @@ bitflags! {
         const NEW_FRAME_INDICATOR   = 1 << 9;
         const NEW_SCENE_INDICATOR   = 1 << 10;
         const SHOW_OVERDRAW         = 1 << 11;
-        const GPU_CACHE_DBG         = 1 << 12;
     }
 }
 
@@ -247,6 +242,7 @@ fn flag_changed(before: DebugFlags, after: DebugFlags, select: DebugFlags) -> Op
 #[derive(Copy, Clone, Debug)]
 pub enum ShaderColorMode {
     FromRenderPassMode = 0,
+
     Alpha = 1,
     SubpixelConstantTextColor = 2,
     SubpixelWithBgColorPass0 = 3,
@@ -1363,8 +1359,6 @@ pub struct Renderer {
     transforms_texture: VertexDataTexture,
     render_task_texture: VertexDataTexture,
     gpu_cache_texture: CacheTexture,
-    #[cfg(feature = "debug_renderer")]
-    gpu_cache_debug_chunks: Vec<GpuDebugChunk>,
 
     gpu_cache_frame_id: FrameId,
     gpu_cache_overflow: bool,
@@ -1716,7 +1710,6 @@ impl Renderer {
             let lp_builder = LowPrioritySceneBuilder {
                 rx: low_priority_scene_rx,
                 tx: scene_tx.clone(),
-                simulate_slow_ms: 0,
             };
 
             thread::Builder::new().name(lp_scene_thread_name.clone()).spawn(move || {
@@ -1823,8 +1816,6 @@ impl Renderer {
             cpu_profiles: VecDeque::new(),
             gpu_profiles: VecDeque::new(),
             gpu_cache_texture,
-            #[cfg(feature = "debug_renderer")]
-            gpu_cache_debug_chunks: Vec::new(),
             gpu_cache_frame_id: FrameId::new(0),
             gpu_cache_overflow: false,
             texture_cache_upload_pbo,
@@ -1923,11 +1914,7 @@ impl Renderer {
                     self.pending_texture_updates.push(texture_update_list);
                     self.backend_profile_counters = profile_counters;
                 }
-                ResultMsg::UpdateGpuCache(mut list) => {
-                    #[cfg(feature = "debug_renderer")]
-                    {
-                        self.gpu_cache_debug_chunks = mem::replace(&mut list.debug_chunks, Vec::new());
-                    }
+                ResultMsg::UpdateGpuCache(list) => {
                     self.pending_gpu_cache_updates.push(list);
                 }
                 ResultMsg::UpdateResources {
@@ -2163,9 +2150,6 @@ impl Renderer {
             DebugCommand::EnableRenderTargetDebug(enable) => {
                 self.set_debug_flag(DebugFlags::RENDER_TARGET_DBG, enable);
             }
-            DebugCommand::EnableGpuCacheDebug(enable) => {
-                self.set_debug_flag(DebugFlags::GPU_CACHE_DBG, enable);
-            }
             DebugCommand::EnableGpuTimeQueries(enable) => {
                 self.set_debug_flag(DebugFlags::GPU_TIME_QUERIES, enable);
             }
@@ -2202,9 +2186,7 @@ impl Renderer {
             DebugCommand::LoadCapture(..) => {
                 panic!("Capture commands are not welcome here! Did you build with 'capture' feature?")
             }
-            DebugCommand::ClearCaches(_)
-            | DebugCommand::SimulateLongSceneBuild(_)
-            | DebugCommand::SimulateLongLowPrioritySceneBuild(_) => {}
+            DebugCommand::ClearCaches(_) => {}
             DebugCommand::InvalidateGpuCache => {
                 match self.gpu_cache_texture.bus {
                     CacheBus::PixelBuffer { ref mut rows, .. } => {
@@ -2495,7 +2477,6 @@ impl Renderer {
                 height: gpu_cache_height,
                 blocks: vec![[1f32; 4].into()],
                 updates: Vec::new(),
-                debug_chunks: Vec::new(),
             });
         }
 
@@ -3476,7 +3457,6 @@ impl Renderer {
             height: self.gpu_cache_texture.get_height(),
             blocks: Vec::new(),
             updates: Vec::new(),
-            debug_chunks: Vec::new(),
         };
 
         for deferred_resolve in deferred_resolves {
@@ -3807,16 +3787,13 @@ impl Renderer {
         }
 
         self.texture_resolver.end_frame();
+        if let Some(framebuffer_size) = framebuffer_size {
+            self.draw_render_target_debug(framebuffer_size);
+            self.draw_texture_cache_debug(framebuffer_size);
+        }
 
         #[cfg(feature = "debug_renderer")]
-        {
-            if let Some(framebuffer_size) = framebuffer_size {
-                self.draw_render_target_debug(framebuffer_size);
-                self.draw_texture_cache_debug(framebuffer_size);
-                self.draw_gpu_cache_debug(framebuffer_size);
-            }
-            self.draw_epoch_debug();
-        }
+        self.draw_epoch_debug();
 
         // Garbage collect any frame outputs that weren't used this frame.
         let device = &mut self.device;
@@ -3875,7 +3852,6 @@ impl Renderer {
         write_profile(filename);
     }
 
-    #[cfg(feature = "debug_renderer")]
     fn draw_render_target_debug(&mut self, framebuffer_size: DeviceUintSize) {
         if !self.debug_flags.contains(DebugFlags::RENDER_TARGET_DBG) {
             return;
@@ -3914,7 +3890,6 @@ impl Renderer {
         }
     }
 
-    #[cfg(feature = "debug_renderer")]
     fn draw_texture_cache_debug(&mut self, framebuffer_size: DeviceUintSize) {
         if !self.debug_flags.contains(DebugFlags::TEXTURE_CACHE_DBG) {
             return;
@@ -3974,7 +3949,7 @@ impl Renderer {
 
         let debug_renderer = match self.debug.get_mut(&mut self.device) {
             Some(render) => render,
-            None => return,
+            None => { return; }
         };
 
         let dy = debug_renderer.line_height();
@@ -4001,44 +3976,6 @@ impl Renderer {
             ColorU::new(25, 25, 25, 200),
             ColorU::new(51, 51, 51, 200),
         );
-    }
-
-    #[cfg(feature = "debug_renderer")]
-    fn draw_gpu_cache_debug(&mut self, framebuffer_size: DeviceUintSize) {
-        if !self.debug_flags.contains(DebugFlags::GPU_CACHE_DBG) {
-            return;
-        }
-
-        let debug_renderer = match self.debug.get_mut(&mut self.device) {
-            Some(render) => render,
-            None => return,
-        };
-
-        let (x_off, y_off) = (30f32, 30f32);
-        //let x_end = framebuffer_size.width as f32 - x_off;
-        let y_end = framebuffer_size.height as f32 - y_off;
-        debug_renderer.add_quad(
-            x_off,
-            y_off,
-            x_off + MAX_VERTEX_TEXTURE_WIDTH as f32,
-            y_end,
-            ColorU::new(80, 80, 80, 80),
-            ColorU::new(80, 80, 80, 80),
-        );
-
-        for chunk in &self.gpu_cache_debug_chunks {
-            let color = match chunk.tag {
-                _ => ColorU::new(250, 0, 0, 200),
-            };
-            debug_renderer.add_quad(
-                x_off + chunk.address.u as f32,
-                y_off + chunk.address.v as f32,
-                x_off + chunk.address.u as f32 + chunk.size as f32,
-                y_off + chunk.address.v as f32 + 1.0,
-                color,
-                color,
-            );
-        }
     }
 
     /// Pass-through to `Device::read_pixels_into`, used by Gecko's WR bindings.
