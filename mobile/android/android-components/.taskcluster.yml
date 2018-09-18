@@ -55,8 +55,9 @@ tasks:
     scopes:
       - "secrets:get:project/android-components/publish"
     payload:
-      maxRunTime: 3600
+      maxRunTime: 7200
       deadline: "{{ '2 hours' | $fromNow }}"
+      expires: "{{ '1 year' | $fromNow }}"
       image: 'mozillamobile/android-components:1.4'
       command:
         - /bin/bash
@@ -67,11 +68,134 @@ tasks:
           && git fetch origin --tags
           && git config advice.detachedHead false
           && git checkout {{ event.version }}
-          && ./gradlew --no-daemon clean test detektCheck ktlint assembleRelease docs lint
+          && ./gradlew --no-daemon clean test detektCheck ktlint assembleRelease docs lint uploadArchives zipMavenArtifacts
           && python automation/taskcluster/release/fetch-bintray-api-key.py
           && ./gradlew bintrayUpload --debug
       features:
         taskclusterProxy: true
+
+      artifacts:
+        public/build/lib.dataprotect.maven.zip:
+          path: /build/android-components/components/lib/dataprotect/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/support.test.maven.zip:
+          path: /build/android-components/components/support/test/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/support.ktx.maven.zip:
+          path: /build/android-components/components/support/ktx/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/support.utils.maven.zip:
+          path: /build/android-components/components/support/utils/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/support.base.maven.zip:
+          path: /build/android-components/components/support/base/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/concept.engine.maven.zip:
+          path: /build/android-components/components/concept/engine/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/concept.toolbar.maven.zip:
+          path: /build/android-components/components/concept/toolbar/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/concept.tabstray.maven.zip:
+          path: /build/android-components/components/concept/tabstray/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/browser.engine-gecko.maven.zip:
+          path: /build/android-components/components/browser/engine-gecko/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/browser.engine-gecko-beta.maven.zip:
+          path: /build/android-components/components/browser/engine-gecko-beta/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/browser.engine-gecko-nightly.maven.zip:
+          path: /build/android-components/components/browser/engine-gecko-nightly/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/browser.engine-system.maven.zip:
+          path: /build/android-components/components/browser/engine-system/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/browser.session.maven.zip:
+          path: /build/android-components/components/browser/session/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/browser.menu.maven.zip:
+          path: /build/android-components/components/browser/menu/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/browser.toolbar.maven.zip:
+          path: /build/android-components/components/browser/toolbar/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/browser.tabstray.maven.zip:
+          path: /build/android-components/components/browser/tabstray/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/browser.errorpages.maven.zip:
+          path: /build/android-components/components/browser/errorpages/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/browser.search.maven.zip:
+          path: /build/android-components/components/browser/search/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/browser.domains.maven.zip:
+          path: /build/android-components/components/browser/domains/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/service.telemetry.maven.zip:
+          path: /build/android-components/components/service/telemetry/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/service.sync-logins.maven.zip:
+          path: /build/android-components/components/service/sync-logins/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/service.fretboard.maven.zip:
+          path: /build/android-components/components/service/fretboard/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/service.firefox-accounts.maven.zip:
+          path: /build/android-components/components/service/firefox-accounts/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/feature.tabs.maven.zip:
+          path: /build/android-components/components/feature/tabs/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/feature.session.maven.zip:
+          path: /build/android-components/components/feature/session/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/feature.toolbar.maven.zip:
+          path: /build/android-components/components/feature/toolbar/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/feature.search.maven.zip:
+          path: /build/android-components/components/feature/search/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/ui.colors.maven.zip:
+          path: /build/android-components/components/ui/colors/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/ui.autocomplete.maven.zip:
+          path: /build/android-components/components/ui/autocomplete/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/ui.icons.maven.zip:
+          path: /build/android-components/components/ui/icons/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+
     metadata:
       name: Android Components - Release ({{ event.version }})
       description: Building and publishing release versions.
