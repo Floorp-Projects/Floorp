@@ -154,11 +154,22 @@ class EngineRecord {
     // so we need to keep both it and when.
     this.startTime = tryGetMonotonicTimestamp();
     this.name = name;
+
+    // This allows cases like bookmarks-buffered to have a separate name from
+    // the bookmarks engine.
+    let engineImpl = Weave.Service.engineManager.get(name);
+    if (engineImpl && engineImpl.overrideTelemetryName) {
+      this.overrideTelemetryName = engineImpl.overrideTelemetryName;
+    }
   }
 
   toJSON() {
-    let result = Object.assign({}, this);
-    delete result.startTime;
+    let result = { name: this.overrideTelemetryName || this.name };
+    let properties = ["took", "status", "failureReason", "incoming", "outgoing",
+      "validation"];
+    for (let property of properties) {
+      result[property] = this[property];
+    }
     return result;
   }
 
@@ -169,12 +180,6 @@ class EngineRecord {
     }
     if (error) {
       this.failureReason = SyncTelemetry.transformError(error);
-    }
-    // This allows cases like bookmarks-buffered to have a separate name from
-    // the bookmarks engine.
-    let engineImpl = Weave.Service.engineManager.get(this.name);
-    if (engineImpl && engineImpl.overrideTelemetryName) {
-      this.name = engineImpl.overrideTelemetryName;
     }
   }
 

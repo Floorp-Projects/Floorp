@@ -44,10 +44,14 @@ SteamEngine.prototype = {
   _storeObj: SteamStore,
   _trackerObj: SteamTracker,
   _errToThrow: null,
+  problemsToReport: null,
   async _sync() {
     if (this._errToThrow) {
       throw this._errToThrow;
     }
+  },
+  getValidator() {
+    return new SteamValidator();
   },
 };
 
@@ -56,6 +60,31 @@ function BogusEngine(service) {
 }
 
 BogusEngine.prototype = Object.create(SteamEngine.prototype);
+
+class SteamValidator {
+  async canValidate() {
+    return true;
+  }
+
+  async validate(engine) {
+    return {
+      problems: new SteamValidationProblemData(engine.problemsToReport),
+      version: 1,
+      duration: 0,
+      recordCount: 0,
+    };
+  }
+}
+
+class SteamValidationProblemData {
+  constructor(problemsToReport = []) {
+    this.problemsToReport = problemsToReport;
+  }
+
+  getSummary() {
+    return this.problemsToReport;
+  }
+}
 
 async function cleanAndGo(engine, server) {
   await engine._tracker.clearChangedIDs();
@@ -394,7 +423,7 @@ add_task(async function test_engine_fail_weird_errors() {
 
 
 add_task(async function test_overrideTelemetryName() {
-  enableValidationPrefs();
+  enableValidationPrefs(["steam"]);
 
   await Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
@@ -403,10 +432,33 @@ add_task(async function test_overrideTelemetryName() {
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
+  const problemsToReport = [
+    { name: "someProblem", count: 123 },
+    { name: "anotherProblem", count: 456 },
+  ];
+
   try {
+    info("Sync with validation problems");
+    engine.problemsToReport = problemsToReport;
     let ping = await sync_and_validate_telem(true);
-    ok(ping.engines.find(e => e.name === "steam-but-better"));
+    let enginePing = ping.engines.find(e => e.name === "steam-but-better");
+    ok(enginePing);
     ok(!ping.engines.find(e => e.name === "steam"));
+
+    deepEqual(enginePing.validation, {
+      version: 1,
+      checked: 0,
+      problems: problemsToReport,
+    }, "Should include validation report with overridden name");
+
+    info("Sync without validation problems");
+    engine.problemsToReport = null;
+    ping = await sync_and_validate_telem(true);
+    enginePing = ping.engines.find(e => e.name === "steam-but-better");
+    ok(enginePing);
+    ok(!ping.engines.find(e => e.name === "steam"));
+    ok(!enginePing.validation,
+      "Should not include validation report when there are no problems");
   } finally {
     await cleanAndGo(engine, server);
     await Service.engineManager.unregister(engine);
