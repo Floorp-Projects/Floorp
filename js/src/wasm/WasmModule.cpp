@@ -889,6 +889,83 @@ Module::instantiateGlobals(JSContext* cx, HandleValVector globalImportValues,
     return true;
 }
 
+SharedCode
+Module::getDebugEnabledCode() const
+{
+    MOZ_ASSERT(metadata().debugEnabled);
+    MOZ_ASSERT(debugUnlinkedCode_);
+    MOZ_ASSERT(debugLinkData_);
+
+    // The first time through, use the pre-linked code in the module but
+    // mark it as having been claimed. Subsequently, instantiate the copy of the
+    // code bytes that we keep around for debugging instead, because the
+    // debugger may patch the pre-linked code at any time.
+    if (debugCodeClaimed_.compareExchange(false, true)) {
+        return code_;
+    }
+
+    Tier tier = Tier::Baseline;
+    auto segment = ModuleSegment::create(tier, *debugUnlinkedCode_, *debugLinkData_);
+    if (!segment) {
+        return nullptr;
+    }
+
+    UniqueMetadataTier metadataTier = js::MakeUnique<MetadataTier>(tier);
+    if (!metadataTier || !metadataTier->clone(metadata(tier))) {
+        return nullptr;
+    }
+
+    auto codeTier = js::MakeUnique<CodeTier>(std::move(metadataTier), std::move(segment));
+    if (!codeTier) {
+        return nullptr;
+    }
+
+    JumpTables jumpTables;
+    if (!jumpTables.init(CompileMode::Once, codeTier->segment(), metadata(tier).codeRanges)) {
+        return nullptr;
+    }
+
+    DataSegmentVector dataSegments;
+    if (!dataSegments.appendAll(code_->dataSegments())) {
+        return nullptr;
+    }
+
+    ElemSegmentVector elemSegments;
+    for (const ElemSegment& seg : code_->elemSegments()) {
+        ElemSegment clone;
+        clone.tableIndex = seg.tableIndex;
+        clone.offsetIfActive = seg.offsetIfActive;
+
+        MOZ_ASSERT(clone.elemFuncIndices.empty());
+        if (!clone.elemFuncIndices.appendAll(seg.elemFuncIndices)) {
+            return nullptr;
+        }
+
+        MOZ_ASSERT(clone.elemCodeRangeIndices1_.empty());
+        if (!clone.elemCodeRangeIndices1_.appendAll(seg.elemCodeRangeIndices1_)) {
+            return nullptr;
+        }
+
+        MOZ_ASSERT(clone.elemCodeRangeIndices2_.empty());
+        MOZ_ASSERT(seg.elemCodeRangeIndices2_.empty());
+
+        if (!elemSegments.append(std::move(clone))) {
+            return nullptr;
+        }
+    }
+
+    MutableCode debugCode = js_new<Code>(std::move(codeTier),
+                                         metadata(),
+                                         std::move(jumpTables),
+                                         std::move(dataSegments),
+                                         std::move(elemSegments));
+    if (!debugCode || !debugCode->initialize(*bytecode_, *debugLinkData_)) {
+        return nullptr;
+    }
+
+    return debugCode;
+}
+
 static bool
 GetFunctionExport(JSContext* cx,
                   HandleWasmInstanceObject instanceObj,
@@ -1018,80 +1095,15 @@ Module::instantiate(JSContext* cx,
         return false;
     }
 
+    // Debugging mutates code (for traps, stepping, etc) and thus may need to
+    // clone the code on each instantiation.
+
     SharedCode code(code_);
-
     if (metadata().debugEnabled) {
-        MOZ_ASSERT(debugUnlinkedCode_);
-        MOZ_ASSERT(debugLinkData_);
-
-        // The first time through, use the pre-linked code in the module but
-        // mark it as busy. Subsequently, instantiate the copy of the code
-        // bytes that we keep around for debugging instead, because the debugger
-        // may patch the pre-linked code at any time.
-        if (!debugCodeClaimed_.compareExchange(false, true)) {
-            Tier tier = Tier::Baseline;
-            auto segment = ModuleSegment::create(tier, *debugUnlinkedCode_, *debugLinkData_);
-            if (!segment) {
-                ReportOutOfMemory(cx);
-                return false;
-            }
-
-            UniqueMetadataTier metadataTier = js::MakeUnique<MetadataTier>(tier);
-            if (!metadataTier || !metadataTier->clone(metadata(tier))) {
-                return false;
-            }
-
-            auto codeTier = js::MakeUnique<CodeTier>(std::move(metadataTier), std::move(segment));
-            if (!codeTier) {
-                return false;
-            }
-
-            JumpTables jumpTables;
-            if (!jumpTables.init(CompileMode::Once, codeTier->segment(), metadata(tier).codeRanges)) {
-                return false;
-            }
-
-            DataSegmentVector dataSegments;
-            if (!dataSegments.appendAll(code_->dataSegments()))
-                return false;
-
-            ElemSegmentVector elemSegments;
-            for (const ElemSegment& seg : code_->elemSegments()) {
-                // This (debugging) code path is called only for tier 1.
-                MOZ_ASSERT(seg.elemCodeRangeIndices2_.empty());
-
-                // ElemSegment doesn't have a (fallible) copy constructor,
-                // so we have to clone it "by hand".
-                ElemSegment clone;
-                clone.tableIndex = seg.tableIndex;
-                clone.offsetIfActive = seg.offsetIfActive;
-
-                MOZ_ASSERT(clone.elemFuncIndices.empty());
-                if (!clone.elemFuncIndices.appendAll(seg.elemFuncIndices))
-                    return false;
-
-                MOZ_ASSERT(clone.elemCodeRangeIndices1_.empty());
-                if (!clone.elemCodeRangeIndices1_.appendAll(seg.elemCodeRangeIndices1_))
-                    return false;
-
-                MOZ_ASSERT(clone.elemCodeRangeIndices2_.empty());
-                if (!clone.elemCodeRangeIndices2_.appendAll(seg.elemCodeRangeIndices2_))
-                    return false;
-
-                if (!elemSegments.append(std::move(clone)))
-                    return false;
-            }
-
-            MutableCode debugCode = js_new<Code>(std::move(codeTier), metadata(),
-                                                 std::move(jumpTables),
-                                                 std::move(dataSegments),
-                                                 std::move(elemSegments));
-            if (!debugCode || !debugCode->initialize(*bytecode_, *debugLinkData_)) {
-                ReportOutOfMemory(cx);
-                return false;
-            }
-
-            code = debugCode;
+        code = getDebugEnabledCode();
+        if (!code) {
+            ReportOutOfMemory(cx);
+            return false;
         }
     }
 
