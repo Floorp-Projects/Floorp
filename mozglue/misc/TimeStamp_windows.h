@@ -11,6 +11,24 @@
 
 namespace mozilla {
 
+/**
+ * The [mt] unit:
+ *
+ * Many values are kept in ticks of the Performance Counter x 1000,
+ * further just referred as [mt], meaning milli-ticks.
+ *
+ * This is needed to preserve maximum precision of the performance frequency
+ * representation.  GetTickCount64 values in milliseconds are multiplied with
+ * frequency per second.  Therefore we need to multiply QPC value by 1000 to
+ * have the same units to allow simple arithmentic with both QPC and GTC.
+ */
+#define ms2mt(x) ((x) * mozilla::GetQueryPerformanceFrequencyPerSec())
+#define mt2ms(x) ((x) / mozilla::GetQueryPerformanceFrequencyPerSec())
+#define mt2ms_f(x) (double(x) / mozilla::GetQueryPerformanceFrequencyPerSec())
+
+MFBT_API uint64_t
+GetQueryPerformanceFrequencyPerSec();
+
 class TimeStamp;
 
 class TimeStampValue
