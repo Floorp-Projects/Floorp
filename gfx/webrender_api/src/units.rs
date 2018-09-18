@@ -77,6 +77,7 @@ pub type LayoutPoint3D = TypedPoint3D<f32, LayoutPixel>;
 pub type LayoutVector2D = TypedVector2D<f32, LayoutPixel>;
 pub type LayoutVector3D = TypedVector3D<f32, LayoutPixel>;
 pub type LayoutSize = TypedSize2D<f32, LayoutPixel>;
+pub type LayoutSideOffsets = TypedSideOffsets2D<f32, LayoutPixel>;
 
 /// Geometry in the document's coordinate space (logical pixels).
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
