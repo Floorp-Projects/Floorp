@@ -17,7 +17,7 @@
 
           // Searching for the toolbox palette in the toolbar binding because
           // toolbars are constructed first.
-          let toolbox = this.closest("toolbox");
+          let toolbox = this.toolbox;
           if (toolbox && !toolbox.palette) {
             for (let node of toolbox.children) {
               if (node.localName == "toolbarpalette") {
@@ -80,6 +80,28 @@
             this._customizationTarget = this;
 
           return this._customizationTarget;
+        ]]></getter>
+      </property>
+
+      <property name="toolbox" readonly="true">
+        <getter><![CDATA[
+          if (this._toolbox)
+            return this._toolbox;
+
+          let toolboxId = this.getAttribute("toolboxid");
+          if (toolboxId) {
+            let toolbox = document.getElementById(toolboxId);
+            if (toolbox) {
+              this._toolbox = toolbox;
+            }
+          }
+
+          if (!this._toolbox && this.parentNode &&
+              this.parentNode.localName == "toolbox") {
+            this._toolbox = this.parentNode;
+          }
+
+          return this._toolbox;
         ]]></getter>
       </property>
 
@@ -148,6 +170,18 @@
 
   <binding id="toolbar-menubar-stub">
     <implementation>
+      <property name="toolbox" readonly="true">
+        <getter><![CDATA[
+          if (this._toolbox)
+            return this._toolbox;
+
+          if (this.parentNode && this.parentNode.localName == "toolbox") {
+            this._toolbox = this.parentNode;
+          }
+
+          return this._toolbox;
+        ]]></getter>
+      </property>
       <property name="currentSet" readonly="true">
         <getter><![CDATA[
           return this.getAttribute("defaultset");
