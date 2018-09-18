@@ -10,7 +10,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Feeds: "resource:///modules/Feeds.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
@@ -34,7 +33,6 @@ class PageInfoChild extends ActorChild {
 
     let pageInfoData = {metaViewRows: this.getMetaInfo(document),
                         docInfo: this.getDocumentInfo(document),
-                        feeds: this.getFeedsInfo(document, strings),
                         windowInfo: this.getWindowInfo(window)};
 
     message.target.sendAsyncMessage("PageInfo:data", pageInfoData);
@@ -96,36 +94,6 @@ class PageInfoChild extends ActorChild {
     docInfo.isContentWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(document.ownerGlobal);
 
     return docInfo;
-  }
-
-  getFeedsInfo(document, strings) {
-    let feeds = [];
-    // Get the feeds from the page.
-    let linkNodes = document.getElementsByTagName("link");
-    let length = linkNodes.length;
-    for (let i = 0; i < length; i++) {
-      let link = linkNodes[i];
-      if (!link.href) {
-        continue;
-      }
-      let rel = link.rel && link.rel.toLowerCase();
-      let rels = {};
-
-      if (rel) {
-        for (let relVal of rel.split(/\s+/)) {
-          rels[relVal] = true;
-        }
-      }
-
-      if (rels.feed || (link.type && rels.alternate && !rels.stylesheet)) {
-        let type = Feeds.isValidFeed(link, document.nodePrincipal, "feed" in rels);
-        if (type) {
-          type = strings[type] || strings["application/rss+xml"];
-          feeds.push([link.title, type, link.href]);
-        }
-      }
-    }
-    return feeds;
   }
 
   // Only called once to get the media tab's media elements from the content page.
