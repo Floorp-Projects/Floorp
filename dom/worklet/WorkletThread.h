@@ -38,9 +38,6 @@ public:
   static void
   AssertIsOnWorkletThread();
 
-  static JSPrincipals*
-  GetWorkerPrincipal();
-
   JSContext*
   GetJSContext() const;
 
