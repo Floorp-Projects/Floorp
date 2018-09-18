@@ -102,6 +102,7 @@ GeneratorObject::finalSuspend(HandleObject obj)
 GeneratorObject*
 js::GetGeneratorObjectForFrame(JSContext* cx, AbstractFramePtr frame)
 {
+    cx->check(frame);
     MOZ_ASSERT(frame.isFunctionFrame() &&
                (frame.callee()->isGenerator() || frame.callee()->isAsync()));
 
