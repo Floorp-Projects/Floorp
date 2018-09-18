@@ -311,6 +311,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               break;
             case KeyEvent.DOM_VK_TAB:
               this.userSelectionBehavior = "tab";
+              // The user is explicitly making a selection, so the popup
+              // should get accessibility focus.
+              this.popup.richlistbox.suppressMenuItemEvent = false;
               break;
             case KeyEvent.DOM_VK_UP:
             case KeyEvent.DOM_VK_DOWN:
@@ -318,6 +321,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             case KeyEvent.DOM_VK_PAGE_DOWN:
               if (this.userSelectionBehavior != "tab")
                 this.userSelectionBehavior = "arrow";
+              // The user is explicitly making a selection, so the popup
+              // should get accessibility focus.
+              this.popup.richlistbox.suppressMenuItemEvent = false;
               break;
           }
           if (!this.popup.disableKeyNavigation) {
@@ -1756,6 +1762,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             } else {
               this.removeAttribute("usertyping");
             }
+            // If the popup already had accessibility focus, bring it back to
+            // the input, since the user is editing.
+            if (!this.popup.richlistbox.suppressMenuItemEvent &&
+                this.popup.richlistbox.currentItem) {
+              this.popup.richlistbox.currentItem._fireEvent("DOMMenuItemInactive");
+            }
+            // The user is typing, so don't give accessibility focus to the
+            // popup, even if an item gets automatically selected.
+            this.popup.richlistbox.suppressMenuItemEvent = true;
             // Only wait for a result when we are sure to get one.  In some
             // cases, like when pasting the same exact text, we may not fire
             // a new search and we won't get a result.
@@ -2434,6 +2449,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             window.windowUtils.getBoundsWithoutFlushing(document.getElementById("nav-bar")).bottom -
             window.windowUtils.getBoundsWithoutFlushing(aInput).bottom);
 
+          if (!this.richlistbox.suppressMenuItemEvent && this.richlistbox.currentItem) {
+            // The richlistbox fired a DOMMenuItemActive for accessibility,
+            // but because the popup isn't open yet, accessibility will ignore
+            // it. Therefore, fire it again once the popup opens.
+            this.addEventListener("popupshown", () => {
+              this.richlistbox.currentItem._fireEvent("DOMMenuItemActive");
+            }, {once: true});
+          }
+
           this.openPopup(aElement, "after_start", 0, yOffset, false, false);
 
           // Do this immediately after we've requested the popup to open. This
@@ -2726,11 +2750,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             // If nothing is selected yet, select the first result if it is a
             // pre-selected "heuristic" result.  (See UnifiedComplete.js.)
             if (this.selectedIndex == -1 && this._isFirstResultHeuristic) {
-              // Don't fire DOMMenuItemActive so that screen readers still see
-              // the input as being focused.
-              this.richlistbox.suppressMenuItemEvent = true;
               this.input.controller.setInitiallySelectedIndex(0);
-              this.richlistbox.suppressMenuItemEvent = false;
             }
             // If this is the first time we get the result from the current
             // search and we are not in the private context, we can speculatively
