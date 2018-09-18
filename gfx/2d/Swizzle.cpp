@@ -10,6 +10,10 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 
+#ifdef USE_SSE2
+#include "mozilla/SSE.h"
+#endif
+
 #ifdef BUILD_ARM_NEON
 #include "mozilla/arm.h"
 #endif
@@ -299,7 +303,7 @@ PremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcForma
 #define FORMAT_CASE_CALL(...) __VA_ARGS__(aSrc, srcGap, aDst, dstGap, size)
 
 #ifdef USE_SSE2
-  switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
+  if (mozilla::supports_sse2()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
   PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
   PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8X8)
   PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
@@ -428,7 +432,7 @@ UnpremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFor
 #define FORMAT_CASE_CALL(...) __VA_ARGS__(aSrc, srcGap, aDst, dstGap, size)
 
 #ifdef USE_SSE2
-  switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
+  if (mozilla::supports_sse2()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
   UNPREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
   UNPREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
   UNPREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
@@ -729,7 +733,7 @@ SwizzleData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFormat,
 #define FORMAT_CASE_CALL(...) __VA_ARGS__(aSrc, srcGap, aDst, dstGap, size)
 
 #ifdef USE_SSE2
-  switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
+  if (mozilla::supports_sse2()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
   SWIZZLE_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
   SWIZZLE_SSE2(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8X8)
   SWIZZLE_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
