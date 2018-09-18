@@ -168,7 +168,9 @@ PerformanceCounter()
   LARGE_INTEGER pc;
   ::QueryPerformanceCounter(&pc);
 
-  if (!sHasStableTSC) {
+  // As an experiment, we want to have a monotonicity sentinel
+  // even if the TSC is reported as stable.
+  if (true || !sHasStableTSC) {
     // This is a simple go-backward protection for faulty hardware
     AutoCriticalSection lock(&sTimeStampLock);
 
