@@ -317,6 +317,7 @@ class BuildBackend(LoggingMixin):
             top_srcdir=obj.topsrcdir,
             topobjdir=obj.topobjdir,
             srcdir=srcdir,
+            srcdir_rel=mozpath.relpath(srcdir, mozpath.dirname(obj.output_path)),
             relativesrcdir=mozpath.relpath(srcdir, obj.topsrcdir) or '.',
             DEPTH=mozpath.relpath(obj.topobjdir, mozpath.dirname(obj.output_path)) or '.',
         )
