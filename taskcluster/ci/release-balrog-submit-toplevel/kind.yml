@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+   - taskgraph.transforms.release:run_on_releases
    - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.scriptworker:add_balrog_scopes
    - taskgraph.transforms.task:transforms
@@ -33,31 +34,30 @@ jobs:
       worker:
          product: firefox
          channel-names:
-            by-project:
-               maple: ["beta", "beta-localtest", "beta-cdntest"]
-               birch: ["release", "release-localtest", "release-cdntest"]
-               jamun: ["esr", "esr-localtest", "esr-cdntest"]
-               mozilla-beta: ["beta", "beta-localtest", "beta-cdntest"]
-               mozilla-release: ["release", "release-localtest", "release-cdntest"]
-               mozilla-esr60: ["esr", "esr-localtest", "esr-cdntest"]
+            by-release-type:
+               beta: ["beta", "beta-localtest", "beta-cdntest"]
+               release(-rc)?: ["release", "release-localtest", "release-cdntest"]
+               esr60: ["esr", "esr-localtest", "esr-cdntest"]
                default: []
          publish-rules:
-            by-project:
-               maple: [32]
-               birch: [145]
-               jamun: [724]
-               mozilla-beta: [32]
-               mozilla-release: [145]
-               mozilla-esr60: [806]
-               default: []
+            by-release-level:
+               production:
+                  by-release-type:
+                     beta: [32]
+                     release(-rc)?: [145]
+                     esr60: [806]
+                     default: []
+               staging:
+                  by-release-type:
+                     beta: [32]
+                     release(-rc)?: [145]
+                     esr60: [724]
+                     default: []
          rules-to-update:
-            by-project:
-               maple: ["firefox-beta-cdntest", "firefox-beta-localtest"]
-               birch: ["firefox-release-cdntest", "firefox-release-localtest"]
-               jamun: ["firefox-esr60-cdntest", "firefox-esr60-localtest"]
-               mozilla-beta: ["firefox-beta-cdntest", "firefox-beta-localtest"]
-               mozilla-release: ["firefox-release-cdntest", "firefox-release-localtest"]
-               mozilla-esr60: ["firefox-esr60-cdntest", "firefox-esr60-localtest"]
+            by-release-type:
+               beta: ["firefox-beta-cdntest", "firefox-beta-localtest"]
+               release(-rc)?: ["firefox-release-cdntest", "firefox-release-localtest"]
+               esr60: ["firefox-esr60-cdntest", "firefox-esr60-localtest"]
                default: []
          platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
       treeherder:
@@ -66,25 +66,19 @@ jobs:
          tier: 1
          kind: build
 
-   # FIXME: (Bug 1487172) This task should only run on esr60-like branches
    firefox-bz2:
       name: submit-toplevel-firefox-release-to-balrog-bz2
       description: Submit toplevel Firefox release to balrog
       shipping-product: firefox
+      run-on-releases: [esr60]
       worker:
          product: firefox
-         channel-names:
-            by-project:
-               mozilla-esr60: ["esr", "esr-localtest", "esr-cdntest"]
-               default: []
+         channel-names: ["esr", "esr-localtest", "esr-cdntest"]
          publish-rules:
-            by-project:
-               mozilla-esr60: [521]
-               default: []
-         rules-to-update:
-            by-project:
-               mozilla-esr60: ["esr52-cdntest", "esr52-localtest"]
-               default: []
+            by-release-level:
+               production: [521]
+               staging: [521]
+         rules-to-update: ["esr52-cdntest", "esr52-localtest"]
          platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
          blob-suffix: -bz2
          complete-mar-filename-pattern: '%s-%s.bz2.complete.mar'
@@ -99,23 +93,12 @@ jobs:
       name: submit-toplevel-devedition-release-to-balrog
       description: submit toplevel Devedition release to balrog
       shipping-product: devedition
+      run-on-releases: [beta]
       worker:
          product: devedition
-         channel-names:
-            by-project:
-               maple: ["aurora", "aurora-localtest", "aurora-cdntest"]
-               mozilla-beta: ["aurora", "aurora-localtest", "aurora-cdntest"]
-               default: []
-         publish-rules:
-            by-project:
-               maple: [10]
-               mozilla-beta: [10]
-               default: []
-         rules-to-update:
-            by-project:
-               maple: ["devedition-cdntest", "devedition-localtest"]
-               mozilla-beta: ["devedition-cdntest", "devedition-localtest"]
-               default: []
+         channel-names: ["aurora", "aurora-localtest", "aurora-cdntest"]
+         publish-rules: [10]
+         rules-to-update: ["devedition-cdntest", "devedition-localtest"]
          platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
       treeherder:
          platform: devedition-release/opt

@@ -723,9 +723,11 @@ if CONFIG['JS_BUILD_BINAST']:
 
     # Instrument BinAST files for fuzzing as we have a fuzzing target for BinAST.
     if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
+        SOURCES['frontend/BinSource-auto.cpp'].flags += libfuzzer_flags
         SOURCES['frontend/BinSource.cpp'].flags += libfuzzer_flags
         SOURCES['frontend/BinToken.cpp'].flags += libfuzzer_flags
-        SOURCES['frontend/BinTokenReaderTester.cpp'].flags += libfuzzer_flags
+        SOURCES['frontend/BinTokenReaderBase.cpp'].flags += libfuzzer_flags
+        SOURCES['frontend/BinTokenReaderMultipart.cpp'].flags += libfuzzer_flags
 
 # Wasm code should use WASM_HUGE_MEMORY instead of JS_CODEGEN_X64
 # so that it is easy to use the huge-mapping optimization for other

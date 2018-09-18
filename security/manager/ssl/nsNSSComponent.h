@@ -84,7 +84,7 @@ private:
   void ImportEnterpriseRoots();
   void UnloadEnterpriseRoots();
 
-  void MaybeEnableFamilySafetyCompatibility();
+  void MaybeEnableFamilySafetyCompatibility(uint32_t familySafetyMode);
   void UnloadFamilySafetyRoot();
 
   nsresult TrustLoaded3rdPartyRoots();
