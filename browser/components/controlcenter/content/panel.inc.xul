@@ -52,7 +52,7 @@
             class="identity-popup-section"
             when-connection="not-secure secure secure-ev secure-cert-user-overridden extension">
         <vbox id="identity-popup-content-blocking-content" flex="1">
-          <hbox>
+          <hbox align="start">
             <label id="tracking-protection-label"
                    class="identity-popup-headline"
                    flex="1">&trackingProtection.title;</label>
@@ -62,9 +62,11 @@
             <hbox id="identity-popup-content-blocking-disabled-label">
               <image/>
               <label id="identity-popup-content-blocking-disabled-label-exception"
-                     tooltiptext="&contentBlocking.exception.tooltip;">&contentBlocking.disabled.label;</label>
+                     value="&contentBlocking.disabled.label;"
+                     tooltiptext="&contentBlocking.exception.tooltip;"/>
               <label id="identity-popup-content-blocking-disabled-label-global"
-                     tooltiptext="&contentBlocking.disabled.tooltip;">&contentBlocking.disabled.label;</label>
+                     value="&contentBlocking.disabled.label;"
+                     tooltiptext="&contentBlocking.disabled.tooltip;"/>
             </hbox>
             <toolbarbutton id="tracking-protection-preferences-button"
                            class="identity-popup-preferences-button subviewbutton"
