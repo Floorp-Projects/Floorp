@@ -45,10 +45,12 @@ public:
   }
 
 private:
+  // Modified only in constructor.
   uint64_t mOuterWindowID;
-  uint64_t mInnerWindowID;
-  bool mDumpEnabled;
-  OriginAttributes mOriginAttributes;
+  const uint64_t mInnerWindowID;
+  const bool mDumpEnabled;
+  const OriginAttributes mOriginAttributes;
+  // Accessed on only worklet parent thread.
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   friend class WorkletImpl;
@@ -95,6 +97,8 @@ private:
               WorkletType aWorkletType);
   ~WorkletImpl();
 
+  // The only WorkletLoadInfo member modified is mPrincipal which is accessed
+  // on only the parent thread.
   WorkletLoadInfo mWorkletLoadInfo;
   const WorkletType mWorkletType;
 
