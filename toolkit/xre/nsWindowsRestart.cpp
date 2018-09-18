@@ -114,7 +114,7 @@ WinLaunchChild(const wchar_t *exePath,
 
   STARTUPINFOW si = {0};
   si.cb = sizeof(STARTUPINFOW);
-  si.lpDesktop = L"winsta0\\Default";
+  si.lpDesktop = const_cast<LPWSTR>(L"winsta0\\Default");
   PROCESS_INFORMATION pi = {0};
 
   if (userToken == nullptr) {
