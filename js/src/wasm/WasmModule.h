@@ -83,6 +83,7 @@ class Module : public JS::WasmModule
                       Handle<FunctionVector> funcImports,
                       HandleWasmMemoryObject memory,
                       HandleValVector globalImportValues) const;
+    SharedCode getDebugEnabledCode() const;
 
     class Tier2GeneratorTaskImpl;
 
