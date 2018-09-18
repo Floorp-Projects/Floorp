@@ -212,10 +212,6 @@ toolbar[brighttext] {
   list-style-image: url("chrome://browser/skin/tab.svg");
 }
 
-#feed-button {
-  list-style-image: url("chrome://browser/skin/feed.svg");
-}
-
 #characterencoding-button {
   list-style-image: url("chrome://browser/skin/characterEncoding.svg");
 }
