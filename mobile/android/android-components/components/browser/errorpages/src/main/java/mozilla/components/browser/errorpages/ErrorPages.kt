@@ -1,14 +1,15 @@
 package mozilla.components.browser.errorpages
 
 import android.content.Context
+import android.support.annotation.RawRes
 import android.support.annotation.StringRes
-import android.webkit.WebViewClient
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 object ErrorPages {
+
     /**
      * Enum containing all supported error types that we can display an error page for.
      */
@@ -16,93 +17,160 @@ object ErrorPages {
         @StringRes val titleRes: Int,
         @StringRes val messageRes: Int
     ) {
-        GENERIC(
-                R.string.error_generic_title,
-                R.string.error_generic_message),
-        CONNECTION_FAILURE(
-                R.string.error_connectionfailure_title,
-                R.string.error_connectionfailure_message),
-        HOST_LOOKUP(
-                R.string.error_hostLookup_title,
-                R.string.error_hostLookup_message),
-        CONNECT(
-                R.string.error_connect_title,
-                R.string.error_connect_message),
-        TIMEOUT(
-                R.string.error_timeout_title,
-                R.string.error_timeout_message),
-        REDIRECT_LOOP(
-                R.string.error_redirectLoop_title,
-                R.string.error_redirectLoop_message),
-        UNSUPPORTED_PROTOCOL(
-                R.string.error_unsupportedprotocol_title,
-                R.string.error_unsupportedprotocol_message),
-        MALFORMED_URI(
-                R.string.error_malformedURI_title,
-                R.string.error_malformedURI_message),
-        FAILED_SSL_HANDSHAKE(
-                R.string.error_sslhandshake_title,
-                R.string.error_sslhandshake_message)
+        UNKNOWN(
+            R.string.error_generic_title,
+            R.string.error_generic_message
+        ),
+        ERROR_SECURITY_SSL(
+            R.string.error_security_ssl_title,
+            R.string.error_security_ssl_message
+        ),
+        ERROR_SECURITY_BAD_CERT(
+            R.string.error_security_bad_cert_title,
+            R.string.error_security_bad_cert_message
+        ),
+        ERROR_NET_INTERRUPT(
+            R.string.error_net_interrupt_title,
+            R.string.error_net_interrupt_message
+        ),
+        ERROR_NET_TIMEOUT(
+            R.string.error_net_timeout_title,
+            R.string.error_net_timeout_message
+        ),
+        ERROR_CONNECTION_REFUSED(
+            R.string.error_connection_failure_title,
+            R.string.error_connection_failure_message
+        ),
+        ERROR_UNKNOWN_SOCKET_TYPE(
+            R.string.error_unknown_socket_type_title,
+            R.string.error_unknown_socket_type_message
+        ),
+        ERROR_REDIRECT_LOOP(
+            R.string.error_redirect_loop_title,
+            R.string.error_redirect_loop_message
+        ),
+        ERROR_OFFLINE(
+            R.string.error_offline_title,
+            R.string.error_offline_message
+        ),
+        ERROR_PORT_BLOCKED(
+            R.string.error_port_blocked_title,
+            R.string.error_port_blocked_message
+        ),
+        ERROR_NET_RESET(
+            R.string.error_net_reset_title,
+            R.string.error_net_reset_message
+        ),
+        ERROR_UNSAFE_CONTENT_TYPE(
+            R.string.error_unsafe_content_type_title,
+            R.string.error_unsafe_content_type_message
+        ),
+        ERROR_CORRUPTED_CONTENT(
+            R.string.error_corrupted_content_title,
+            R.string.error_corrupted_content_message
+        ),
+        ERROR_CONTENT_CRASHED(
+            R.string.error_content_crashed_title,
+            R.string.error_content_crashed_message
+        ),
+        ERROR_INVALID_CONTENT_ENCODING(
+            R.string.error_invalid_content_encoding_title,
+            R.string.error_invalid_content_encoding_message
+        ),
+        ERROR_UNKNOWN_HOST(
+            R.string.error_unknown_host_title,
+            R.string.error_unknown_host_message
+        ),
+        ERROR_MALFORMED_URI(
+            R.string.error_malformed_uri_title,
+            R.string.error_malformed_uri_message
+        ),
+        ERROR_UNKNOWN_PROTOCOL(
+            R.string.error_unknown_protocol_title,
+            R.string.error_unknown_protocol_message
+        ),
+        ERROR_FILE_NOT_FOUND(
+            R.string.error_file_not_found_title,
+            R.string.error_file_not_found_message
+        ),
+        ERROR_FILE_ACCESS_DENIED(
+            R.string.error_file_access_denied_title,
+            R.string.error_file_access_denied_message
+        ),
+        ERROR_PROXY_CONNECTION_REFUSED(
+            R.string.error_proxy_connection_refused_title,
+            R.string.error_proxy_connection_refused_message
+        ),
+        ERROR_UNKNOWN_PROXY_HOST(
+            R.string.error_unknown_proxy_host_title,
+            R.string.error_unknown_proxy_host_message
+        ),
+        ERROR_SAFEBROWSING_MALWARE_URI(
+            R.string.error_safe_browsing_malware_uri_title,
+            R.string.error_safe_browsing_malware_uri_message
+        ),
+        ERROR_SAFEBROWSING_UNWANTED_URI(
+            R.string.error_safe_browsing_unwanted_uri_title,
+            R.string.error_safe_browsing_unwanted_uri_message
+        ),
+        ERROR_SAFEBROWSING_HARMFUL_URI(
+            R.string.error_safe_harmful_uri_title,
+            R.string.error_safe_harmful_uri_message
+        ),
+        ERROR_SAFEBROWSING_PHISHING_URI(
+            R.string.error_safe_phishing_uri_title,
+            R.string.error_safe_phishing_uri_message
+        )
     }
 
     /**
-     * Map a WebView error code (WebViewClient.ERROR_*) to an element of the ErrorType enum.
+     * Load and generate error page for the given error type and html/css resources
      */
-    fun mapWebViewErrorCodeToErrorType(errorCode: Int): ErrorType =
-        // Chromium's mapping (internal error code, to Android WebView error code) is described at:
-        // https://goo.gl/vspwct (ErrorCodeConversionHelper.java)
-        when (errorCode) {
-            WebViewClient.ERROR_UNKNOWN -> ErrorType.CONNECTION_FAILURE
+    fun createErrorPage(
+        context: Context,
+        errorType: ErrorType,
+        @RawRes htmlRes: Int? = null,
+        @RawRes cssRes: Int? = null
+    ): String {
+        @RawRes val htmlResource: Int = htmlRes ?: R.raw.error_pages
+        @RawRes val cssResource: Int = cssRes ?: R.raw.error_style
 
-            // This is probably the most commonly shown error. If there's no network, we inevitably
-            // show this.
-            WebViewClient.ERROR_HOST_LOOKUP -> ErrorType.HOST_LOOKUP
-
-            WebViewClient.ERROR_CONNECT -> ErrorType.CONNECT
-
-            // It's unclear what this actually means - it's not well documented. Based on looking at
-            // ErrorCodeConversionHelper this could happen if networking is disabled during load, in which
-            // case the generic error is good enough:
-            WebViewClient.ERROR_IO -> ErrorType.CONNECTION_FAILURE
-
-            WebViewClient.ERROR_TIMEOUT -> ErrorType.TIMEOUT
-
-            WebViewClient.ERROR_REDIRECT_LOOP -> ErrorType.REDIRECT_LOOP
-
-            WebViewClient.ERROR_UNSUPPORTED_SCHEME -> ErrorType.UNSUPPORTED_PROTOCOL
-
-            WebViewClient.ERROR_FAILED_SSL_HANDSHAKE -> ErrorType.FAILED_SSL_HANDSHAKE
-
-            WebViewClient.ERROR_BAD_URL -> ErrorType.MALFORMED_URI
-
-            // Seems to be an indication of OOM, insufficient resources, or too many queued DNS queries
-            WebViewClient.ERROR_TOO_MANY_REQUESTS -> ErrorType.GENERIC
-
-            // There's no mapping for the following errors yet. At the time this library was
-            // extracted from Focus we didn't use any of those errors.
-            // WebViewClient.ERROR_UNSUPPORTED_AUTH_SCHEME
-            // WebViewClient.ERROR_AUTHENTICATION
-            // WebViewClient.ERROR_FILE
-            // WebViewClient.ERROR_FILE_NOT_FOUND
-
-            else -> throw IllegalArgumentException("No error type definition for error code $errorCode")
-    }
-
-    /**
-     * Load and generate error page for the given error type.
-     */
-    fun createErrorPage(context: Context, errorType: ErrorType): String {
-        val css = context.resources.openRawResource(R.raw.errorpage_style).bufferedReader().use {
+        val css = context.resources.openRawResource(cssResource).bufferedReader().use {
             it.readText()
         }
 
-        return context.resources.openRawResource(R.raw.errorpage)
-                .bufferedReader()
-                .use { it.readText() }
-                .replace("%page-title%", context.getString(R.string.errorpage_title))
-                .replace("%button%", context.getString(R.string.errorpage_refresh))
-                .replace("%messageShort%", context.getString(errorType.titleRes))
-                .replace("%messageLong%", context.getString(errorType.messageRes))
-                .replace("%css%", css)
+        return context.resources.openRawResource(htmlResource)
+            .bufferedReader()
+            .use { it.readText() }
+            .replace("%pageTitle%", context.getString(R.string.errorpage_title))
+            .replace("%button%", context.getString(R.string.errorpage_refresh))
+            .replace("%messageShort%", context.getString(errorType.titleRes))
+            .replace("%messageLong%", context.getString(errorType.messageRes))
+            .replace("%css%", css)
+    }
+
+    /**
+     * Load and generate a private browsing page for the given url and html/css resources
+     */
+    fun createPrivateBrowsingPage(
+        context: Context,
+        url: String,
+        @RawRes htmlRes: Int? = null,
+        @RawRes cssRes: Int? = null
+    ): String {
+        @RawRes val htmlResource: Int = htmlRes ?: R.raw.private_mode
+        @RawRes val cssResource: Int = cssRes ?: R.raw.private_style
+
+        val css = context.resources.openRawResource(cssResource).bufferedReader().use {
+            it.readText()
+        }
+
+        return context.resources.openRawResource(htmlResource)
+            .bufferedReader()
+            .use { it.readText() }
+            .replace("%pageTitle%", context.getString(R.string.private_browsing_title))
+            .replace("%pageBody%", context.getString(R.string.private_browsing_body))
+            .replace("%privateBrowsingSupportUrl%", url)
+            .replace("%css%", css)
     }
 }

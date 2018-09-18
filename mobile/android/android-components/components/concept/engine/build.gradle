@@ -23,12 +23,12 @@ android {
 
 dependencies {
     implementation Deps.kotlin_stdlib
-
     implementation Deps.support_annotations
 
     // We expose this as API because we are using Observable in our public API and do not want every
     // consumer to have to manually import "base".
     api project(':support-base')
+    api project(':browser-errorpages')
 
     testImplementation Deps.testing_junit
     testImplementation Deps.testing_robolectric

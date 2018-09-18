@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml" class="error">
+    <head>
+        <title>%pageTitle%</title>
+        <style>%css%</style>
+    </head>
+    <body>
+        <div id="errorPageContainer">
+            <!-- Error Title -->
+            <div id="errorTitle">
+                <h1 class="errorTitleText">%messageShort%</h1>
+            </div>
+
+            <!-- LONG CONTENT (the section most likely to require scrolling) -->
+            <div id="errorLongContent">
+                <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
+                <div id="errorLongDesc">%messageLong%</div>
+            </div>
+
+            <!-- Retry Button -->
+            <br/>
+            <button id="errorTryAgain" onclick="window.location.reload();">%button%</button>
+        </div>
+    </body>
+</html>

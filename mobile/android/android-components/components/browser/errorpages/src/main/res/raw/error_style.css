@@ -1,0 +1,141 @@
+:root {
+    --color-steel: #434c58;
+    --color-driftwood: #f4f4f4;
+    --color-dusk: #556f8e;
+    --color-void: #232426;
+    --color-text: #fff;
+}
+
+*,
+*:before,
+*:after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+* {
+    font: 20px/1.2em BlinkMacSystemFont, -apple-system, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+html,
+body {
+    align-items: center;
+    background: var(--color-driftwood);
+    display: grid;
+    grid-template-rows: auto;
+    height: 100%;
+    justify-items: center;
+    width: 100%;
+}
+
+h1 {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0 0 0.5em;
+    position: relative;
+}
+
+strong {
+    font-weight: bold;
+}
+
+ol,
+ul {
+    list-style-position: inside;
+    margin: 1em 0;
+}
+
+ol,
+ul,
+p {
+    margin: 1em 0;
+}
+
+ol:first-child,
+ul:first-child,
+p:first-child {
+    margin-top: 0;
+}
+
+ol:last-child,
+ul:last-child,
+p:last-child {
+    margin-bottom: 0;
+}
+
+ol {
+    list-style-type: decimal;
+}
+
+li {
+    margin: 0.6em 0;
+    padding-left: 1em;
+    text-indent: -1em;
+}
+
+p {
+    line-height: 1.5em;
+}
+
+a {
+    color: var(--color-dusk);
+    font-size: inherit;
+}
+
+button {
+    background: var(--color-steel);
+    border-radius: 10px;
+    border: 2px solid var(--color-steel);
+    color: var(--color-text);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 900;
+    height: 3em;
+    padding: 0 1em;
+}
+
+button:hover {
+    background: transparent;
+    color: var(--color-steel);
+}
+
+button:active {
+    background: var(--color-void);
+    border-color: var(--color-void);
+    color: var(--color-text);
+}
+
+#errorPageContainer {
+    grid-column-start: 1;
+    width: 75%;
+}
+
+#securityOverrideContent {
+    background: var(--color-text);
+    border: 2px solid var(--color-steel);
+    padding: 1em;
+}
+
+#errorIcon {
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    height: 50px;
+    width: 50px;
+}
+
+[data-error='dnsNotFound'] #errorIcon {
+    background-image: url(../images/icon-errorpage-servernotfound.svg);
+}
+
+[data-error='nssBadCert'] body,
+[data-error='nssFailure2'] body {
+    background-image: url(../images/icon-errorpage-thisconnectionisuntrusted.svg);
+    background-repeat: repeat-x;
+}
+
+[data-error='nssBadCert'] #errorIcon,
+[data-error='nssFailure2'] #errorIcon {
+    background-image: url(../images/icon-errorpage-secureconnectionfailed.svg);
+}

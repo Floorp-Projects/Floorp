@@ -8,6 +8,8 @@ import android.content.Context
 import android.util.AttributeSet
 import android.webkit.WebSettings
 import android.webkit.WebView
+import android.webkit.WebViewClient
+import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -48,6 +50,49 @@ class SystemEngine(
      * See [Engine.name]
      */
     override fun name(): String = "System"
+
+    /**
+     * See [Engine.errorTypeFromCode]
+     */
+    override fun errorTypeFromCode(errorCode: Int, errorCategory: Int?): ErrorPages.ErrorType =
+    // Chromium's mapping (internal error code, to Android WebView error code) is described at:
+    // https://goo.gl/vspwct (ErrorCodeConversionHelper.java)
+        when (errorCode) {
+            WebViewClient.ERROR_UNKNOWN -> ErrorPages.ErrorType.UNKNOWN
+
+            // This is probably the most commonly shown error. If there's no network, we inevitably
+            // show this.
+            WebViewClient.ERROR_HOST_LOOKUP -> ErrorPages.ErrorType.ERROR_UNKNOWN_HOST
+
+            WebViewClient.ERROR_CONNECT -> ErrorPages.ErrorType.ERROR_CONNECTION_REFUSED
+
+            // It's unclear what this actually means - it's not well documented. Based on looking at
+            // ErrorCodeConversionHelper this could happen if networking is disabled during load, in which
+            // case the generic error is good enough:
+            WebViewClient.ERROR_IO -> ErrorPages.ErrorType.ERROR_CONNECTION_REFUSED
+
+            WebViewClient.ERROR_TIMEOUT -> ErrorPages.ErrorType.ERROR_NET_TIMEOUT
+
+            WebViewClient.ERROR_REDIRECT_LOOP -> ErrorPages.ErrorType.ERROR_REDIRECT_LOOP
+
+            WebViewClient.ERROR_UNSUPPORTED_SCHEME -> ErrorPages.ErrorType.ERROR_UNKNOWN_PROTOCOL
+
+            WebViewClient.ERROR_FAILED_SSL_HANDSHAKE -> ErrorPages.ErrorType.ERROR_SECURITY_SSL
+
+            WebViewClient.ERROR_BAD_URL -> ErrorPages.ErrorType.ERROR_MALFORMED_URI
+
+            // Seems to be an indication of OOM, insufficient resources, or too many queued DNS queries
+            WebViewClient.ERROR_TOO_MANY_REQUESTS -> ErrorPages.ErrorType.UNKNOWN
+
+            // There's no mapping for the following errors yet. At the time this library was
+            // extracted from Focus we didn't use any of those errors.
+            // WebViewClient.ERROR_UNSUPPORTED_AUTH_SCHEME
+            // WebViewClient.ERROR_AUTHENTICATION
+            // WebViewClient.ERROR_FILE
+            // WebViewClient.ERROR_FILE_NOT_FOUND
+
+            else -> throw IllegalArgumentException("No error type definition for error code $errorCode")
+        }
 
     /**
      * See [Engine.settings]

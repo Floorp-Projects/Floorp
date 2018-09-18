@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.content.Context
 import android.util.AttributeSet
+import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
@@ -37,6 +38,13 @@ class GeckoEngine(
     }
 
     override fun name(): String = "Gecko"
+
+    /**
+     * See [Engine.errorTypeFromCode]
+     */
+    override fun errorTypeFromCode(errorCode: Int, errorCategory: Int?): ErrorPages.ErrorType {
+        throw IllegalArgumentException("No error categories defined in this version")
+    }
 
     /**
      * See [Engine.settings]
