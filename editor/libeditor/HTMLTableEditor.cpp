@@ -1260,16 +1260,17 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
     return error.StealNSResult();
   }
 
-  // Shortcut the case of deleting all rows in table
-  if (!startRowIndex && aNumber >= tableSize.mRowCount) {
-    return DeleteTable2(table, selection);
-  }
-
   AutoPlaceholderBatch beginBatching(this);
+
   // Prevent rules testing until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eDeleteNode,
                                       nsIEditor::eNext);
+
+  // Shortcut the case of deleting all rows in table
+  if (!startRowIndex && aNumber >= tableSize.mRowCount) {
+    return DeleteTable2(table, selection);
+  }
 
   RefPtr<Element> firstSelectedCellElement =
     GetFirstSelectedTableCellElement(*selection, error);
