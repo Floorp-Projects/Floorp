@@ -43,6 +43,7 @@ async function getAnimationStateForNode(walker, animations, selector, playerInde
   const node = await walker.querySelector(walker.rootNode, selector);
   const players = await animations.getAnimationPlayersForNode(node);
   const player = players[playerIndex];
+  await player.ready();
   const state = await player.getCurrentState();
   return state;
 }

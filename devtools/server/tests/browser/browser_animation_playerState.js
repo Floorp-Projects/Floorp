@@ -73,10 +73,8 @@ async function playerStateIsCorrect(walker, animations) {
   is(state.playState, "running", "Transition playState is correct");
   is(state.playbackRate, 1, "Transition playbackRate is correct");
   is(state.type, "csstransition", "Transition type is correct");
-  // check easing in properties
-  let properties = await player.getProperties();
-  is(properties.length, 1, "Length of animated properties is correct");
-  let keyframes = properties[0].values;
+  // chech easing in keyframe
+  let keyframes = await player.getFrames();
   is(keyframes.length, 2, "Transition length of keyframe is correct");
   is(keyframes[0].easing,
      "ease-out", "Transition kerframes's easing is correct");
@@ -96,8 +94,7 @@ async function playerStateIsCorrect(walker, animations) {
   is(state.playState, "running", "The 2nd animation's playState is correct");
   is(state.playbackRate, 1, "The 2nd animation's playbackRate is correct");
   // chech easing in keyframe
-  properties = await player.getProperties();
-  keyframes = properties[0].values;
+  keyframes = await player.getFrames();
   is(keyframes.length, 2, "The 2nd animation's length of keyframe is correct");
   is(keyframes[0].easing,
      "ease-out", "The 2nd animation's easing of kerframes is correct");
@@ -121,5 +118,6 @@ async function getAnimationPlayerForNode(walker, animations, nodeSelector, index
   const node = await walker.querySelector(walker.rootNode, nodeSelector);
   const players = await animations.getAnimationPlayersForNode(node);
   const player = players[index];
+  await player.ready();
   return player;
 }
