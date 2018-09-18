@@ -977,6 +977,17 @@ var Control = {
         this.selectedRow = null;
       }
     });
+    tbody.addEventListener("dblclick", () => {
+      let id = parseInt(event.target.parentNode.windowId);
+      if (isNaN(id))
+        return;
+      let found = tabFinder.get(id);
+      if (!found || !found.tabbrowser)
+        return;
+      let {tabbrowser, tab} = found;
+      tabbrowser.selectedTab = tab;
+      tabbrowser.ownerGlobal.focus();
+    });
   },
   async update() {
     let mode = this._displayMode;
