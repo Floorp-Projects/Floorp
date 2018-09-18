@@ -852,7 +852,7 @@ var CustomizableUIInternal = {
       }
 
       if (currentNode) {
-        let palette = window.gNavToolbox ? window.gNavToolbox.palette : null;
+        let palette = aAreaNode.toolbox ? aAreaNode.toolbox.palette : null;
         let limit = currentNode.previousElementSibling;
         let node = container.lastElementChild;
         while (node && node != limit) {
@@ -1002,6 +1002,7 @@ var CustomizableUIInternal = {
 
     let document = aPanelContents.ownerDocument;
 
+    aPanelContents.toolbox = document.getElementById("navigator-toolbox");
     aPanelContents.customizationTarget = aPanelContents;
 
     this.addPanelCloseListeners(this._getPanelForNode(aPanelContents));
@@ -1072,7 +1073,7 @@ var CustomizableUIInternal = {
       if (gPalette.has(aWidgetId) || this.isSpecialWidget(aWidgetId)) {
         container.removeChild(widgetNode);
       } else {
-        window.gNavToolbox.palette.appendChild(widgetNode);
+        areaNode.toolbox.palette.appendChild(widgetNode);
       }
       this.notifyListeners("onWidgetAfterDOMChange", widgetNode, null, container, true);
 
@@ -1111,8 +1112,8 @@ var CustomizableUIInternal = {
     this.registerBuildWindow(window);
 
     // Also register this build area's toolbox.
-    if (window.gNavToolbox) {
-      gBuildWindows.get(window).add(window.gNavToolbox);
+    if (aNode.toolbox) {
+      gBuildWindows.get(window).add(aNode.toolbox);
     }
 
     if (!gBuildAreas.has(aArea)) {
@@ -1398,7 +1399,7 @@ var CustomizableUIInternal = {
                          node.parentNode : node;
         // Check if we're in a customization target, or in the palette:
         if ((parent.customizationTarget == nodeInArea.parentNode &&
-             gBuildWindows.get(aWindow).has(aWindow.gNavToolbox)) ||
+             gBuildWindows.get(aWindow).has(parent.toolbox)) ||
             aWindow.gNavToolbox.palette == nodeInArea.parentNode) {
           // Normalize the removable attribute. For backwards compat, if
           // the widget is not located in a toolbox palette then absence
@@ -4234,6 +4235,7 @@ function OverflowableToolbar(aToolbarNode) {
   let doc = this._toolbar.ownerDocument;
   this._target = this._toolbar.customizationTarget;
   this._list = doc.getElementById(this._toolbar.getAttribute("overflowtarget"));
+  this._list.toolbox = this._toolbar.toolbox;
   this._list.customizationTarget = this._list;
 
   let window = this._toolbar.ownerGlobal;
