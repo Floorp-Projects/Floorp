@@ -149,7 +149,7 @@ asm(".text\n\t"
     "push       %ecx\n\t"
     "movl       8(%ebp), %eax\n\t"
     "push       %eax\n\t"
-    "call       _PrepareAndDispatch@16\n\t"
+    "call       \"_PrepareAndDispatch@16\"\n\t"
     "mov        4(%ebp), %edx\n\t"
     "mov        -4(%ebp), %ecx\n\t"
     "add        $8, %ecx\n\t"
@@ -165,21 +165,21 @@ asm(".text\n\t" \
     ".if	" #n " < 10\n\t" \
     ".globl     __ZN14nsXPTCStubBase5Stub" #n "Ev@4\n\t" \
     ".def       __ZN14nsXPTCStubBase5Stub" #n "Ev@4; \n\t" \
-    ".scl       3\n\t" \
+    ".scl       2\n\t" \
     ".type      46\n\t" \
     ".endef\n\t" \
     "__ZN14nsXPTCStubBase5Stub" #n "Ev@4:\n\t" \
     ".elseif	" #n " < 100\n\t" \
     ".globl     __ZN14nsXPTCStubBase6Stub" #n "Ev@4\n\t" \
     ".def       __ZN14nsXPTCStubBase6Stub" #n "Ev@4\n\t" \
-    ".scl       3\n\t" \
+    ".scl       2\n\t" \
     ".type      46\n\t" \
     ".endef\n\t" \
     "__ZN14nsXPTCStubBase6Stub" #n "Ev@4:\n\t" \
     ".elseif    " #n " < 1000\n\t" \
     ".globl     __ZN14nsXPTCStubBase7Stub" #n "Ev@4\n\t" \
     ".def       __ZN14nsXPTCStubBase7Stub" #n "Ev@4\n\t" \
-    ".scl       3\n\t" \
+    ".scl       2\n\t" \
     ".type      46\n\t" \
     ".endef\n\t" \
     "__ZN14nsXPTCStubBase7Stub" #n "Ev@4:\n\t" \

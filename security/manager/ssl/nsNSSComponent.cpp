@@ -558,6 +558,7 @@ nsNSSComponent::UnloadFamilySafetyRoot()
 // 1: only attempt to detect Family Safety mode (don't import the root)
 // 2: detect Family Safety mode and import the root
 const char* kFamilySafetyModePref = "security.family_safety.mode";
+const uint32_t kFamilySafetyModeDefault = 0;
 
 // The telemetry gathered by this function is as follows:
 // 0-2: the value of the Family Safety mode pref
@@ -567,16 +568,12 @@ const char* kFamilySafetyModePref = "security.family_safety.mode";
 // 6: failed to import the Family Safety root
 // 7: successfully imported the root
 void
-nsNSSComponent::MaybeEnableFamilySafetyCompatibility()
+nsNSSComponent::MaybeEnableFamilySafetyCompatibility(uint32_t familySafetyMode)
 {
 #ifdef XP_WIN
   if (!(IsWin8Point1OrLater() && !IsWin10OrLater())) {
     return;
   }
-  // Disabled by default.
-  const uint32_t FAMILY_SAFETY_MODE_DEFAULT = 0;
-  uint32_t familySafetyMode = Preferences::GetUint(kFamilySafetyModePref,
-                                                   FAMILY_SAFETY_MODE_DEFAULT);
   if (familySafetyMode > 2) {
     familySafetyMode = 0;
   }
@@ -781,10 +778,12 @@ class LoadLoadableRootsTask final : public Runnable
 {
 public:
   explicit LoadLoadableRootsTask(nsNSSComponent* nssComponent,
-                                 bool importEnterpriseRoots)
+                                 bool importEnterpriseRoots,
+                                 uint32_t familySafetyMode)
     : Runnable("LoadLoadableRootsTask")
     , mNSSComponent(nssComponent)
     , mImportEnterpriseRoots(importEnterpriseRoots)
+    , mFamilySafetyMode(familySafetyMode)
   {
     MOZ_ASSERT(nssComponent);
   }
@@ -798,6 +797,7 @@ private:
   nsresult LoadLoadableRoots();
   RefPtr<nsNSSComponent> mNSSComponent;
   bool mImportEnterpriseRoots;
+  uint32_t mFamilySafetyMode;
   nsCOMPtr<nsIThread> mThread;
 };
 
@@ -858,6 +858,7 @@ LoadLoadableRootsTask::Run()
   if (mImportEnterpriseRoots) {
     mNSSComponent->ImportEnterpriseRoots();
   }
+  mNSSComponent->MaybeEnableFamilySafetyCompatibility(mFamilySafetyMode);
   nsresult rv = mNSSComponent->TrustLoaded3rdPartyRoots();
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Error,
@@ -1870,14 +1871,6 @@ nsNSSComponent::InitializeNSS()
 
   DisableMD5();
 
-  // Note that this function does not change the trust of any loaded 3rd party
-  // roots. Because we're initializing the nsNSSComponent, and because if the
-  // user has a master password set on the softoken it could cause the
-  // authentication dialog to come up, we could conceivably re-enter
-  // nsNSSComponent initialization, which would be bad. Instead, we set the
-  // trust when the load loadable roots task finishes (below).
-  MaybeEnableFamilySafetyCompatibility();
-
   ConfigureTLSSessionIdentifiers();
 
   bool requireSafeNegotiation =
@@ -1969,8 +1962,10 @@ nsNSSComponent::InitializeNSS()
 
     bool importEnterpriseRoots = Preferences::GetBool(kEnterpriseRootModePref,
                                                       false);
+    uint32_t familySafetyMode = Preferences::GetUint(kFamilySafetyModePref,
+                                                     kFamilySafetyModeDefault);
     RefPtr<LoadLoadableRootsTask> loadLoadableRootsTask(
-      new LoadLoadableRootsTask(this, importEnterpriseRoots));
+      new LoadLoadableRootsTask(this, importEnterpriseRoots, familySafetyMode));
     rv = loadLoadableRootsTask->Dispatch();
     if (NS_FAILED(rv)) {
       return rv;
@@ -2126,7 +2121,9 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
       // When the pref changes, it is safe to change the trust of 3rd party
       // roots in the same event tick that they're loaded.
       UnloadFamilySafetyRoot();
-      MaybeEnableFamilySafetyCompatibility();
+      uint32_t familySafetyMode = Preferences::GetUint(
+        kFamilySafetyModePref, kFamilySafetyModeDefault);
+      MaybeEnableFamilySafetyCompatibility(familySafetyMode);
       TrustLoaded3rdPartyRoots();
     } else if (prefName.EqualsLiteral("security.content.signature.root_hash")) {
       MutexAutoLock lock(mMutex);

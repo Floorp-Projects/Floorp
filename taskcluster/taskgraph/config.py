@@ -43,7 +43,7 @@ graph_config_schema = Schema({
         Required('flavors'): {basestring: {
             Required('product'): basestring,
             Required('target-tasks-method'): basestring,
-            Optional('release-type'): basestring,
+            Optional('is-rc'): bool,
             Optional('rebuild-kinds'): [basestring],
             Optional('version-bump'): bool,
             Optional('partial-updates'): bool,

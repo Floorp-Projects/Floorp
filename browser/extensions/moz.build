@@ -19,9 +19,3 @@ if CONFIG['MOZ_MORTAR']:
     DIRS += [
         'mortar',
     ]
-
-# Add ASan reporter system add-on if requested
-if CONFIG['MOZ_ASAN_REPORTER']:
-    DIRS += [
-        'asan-reporter',
-    ]

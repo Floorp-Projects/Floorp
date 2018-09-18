@@ -367,6 +367,9 @@ add_task(async function test_doorhanger_new_window() {
     useAddonManager: "temporary",
   });
   let ext2 = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.test.sendMessage("url", browser.runtime.getURL("ext2.html"));
+    },
     manifest: {
       chrome_settings_overrides: {homepage: "ext2.html"},
       name: "Ext2",
@@ -377,13 +380,13 @@ add_task(async function test_doorhanger_new_window() {
 
   await ext1.startup();
   await ext2.startup();
+  let url = await ext2.awaitMessage("url");
 
   await SpecialPowers.pushPrefEnv({set: [["browser.startup.page", 1]]});
 
-  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
+  let windowOpenedPromise = BrowserTestUtils.waitForNewWindow({url});
   let win = OpenBrowserWindow();
   await windowOpenedPromise;
-  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
   let doc = win.document;
   let description = doc.getElementById("extension-homepage-notification-description");
   let panel = doc.getElementById("extension-notification-panel");
