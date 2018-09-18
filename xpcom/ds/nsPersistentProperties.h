@@ -25,9 +25,6 @@ public:
   NS_DECL_NSIPROPERTIES
   NS_DECL_NSIPERSISTENTPROPERTIES
 
-  static MOZ_MUST_USE nsresult
-  Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 private:

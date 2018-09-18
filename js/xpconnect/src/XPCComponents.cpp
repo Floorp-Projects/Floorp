@@ -20,6 +20,7 @@
 #include "js/StructuredClone.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
+#include "mozilla/LoadContext.h"
 #include "mozilla/Preferences.h"
 #include "nsJSEnvironment.h"
 #include "mozilla/TimeStamp.h"
@@ -43,7 +44,7 @@
 #include "GeckoProfiler.h"
 #include "mozilla/EditorSpellCheck.h"
 #include "nsCommandLine.h"
-#include "nsCommandParams.h"
+#include "nsPersistentProperties.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -3233,11 +3234,29 @@ nsXPCComponents_Utils::CreateCommandLine(nsISupports** aCommandLine)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::CreateCommandParams(nsICommandParams** aCommandParams)
+nsXPCComponents_Utils::CreateLoadContext(nsILoadContext** aLoadContext)
 {
-    NS_ENSURE_ARG_POINTER(aCommandParams);
-    nsCOMPtr<nsICommandParams> commandParams = new nsCommandParams();
-    commandParams.forget(aCommandParams);
+    NS_ENSURE_ARG_POINTER(aLoadContext);
+    nsCOMPtr<nsILoadContext> loadContext = ::CreateLoadContext();
+    loadContext.forget(aLoadContext);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::CreatePrivateLoadContext(nsILoadContext** aLoadContext)
+{
+    NS_ENSURE_ARG_POINTER(aLoadContext);
+    nsCOMPtr<nsILoadContext> loadContext = ::CreatePrivateLoadContext();
+    loadContext.forget(aLoadContext);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::CreatePersistentProperties(nsIPersistentProperties** aPersistentProperties)
+{
+    NS_ENSURE_ARG_POINTER(aPersistentProperties);
+    nsCOMPtr<nsIPersistentProperties> props = new nsPersistentProperties();
+    props.forget(aPersistentProperties);
     return NS_OK;
 }
 

@@ -44,7 +44,7 @@
 #include "nsINode.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIOfflineCacheUpdate.h"
-#include "nsIPersistentProperties2.h"
+#include "nsPersistentProperties.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsIPropertyBag2.h"
 #include "nsIProtocolProxyService.h"
@@ -2029,9 +2029,7 @@ NS_LoadPersistentPropertiesFromURISpec(nsIPersistentProperties **outResult,
     rv = channel->Open2(getter_AddRefs(in));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIPersistentProperties> properties =
-      do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIPersistentProperties> properties = new nsPersistentProperties();
     rv = properties->Load(in);
     NS_ENSURE_SUCCESS(rv, rv);
 
