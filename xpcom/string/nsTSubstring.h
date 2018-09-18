@@ -393,26 +393,6 @@ public:
     return EnsureMutable() ? (base_string_type::mData + base_string_type::mLength) : iterator(0);
   }
 
-  iterator& BeginWriting(iterator& aIter)
-  {
-    return aIter = BeginWriting();
-  }
-
-  iterator& BeginWriting(iterator& aIter, const fallible_t& aFallible)
-  {
-    return aIter = BeginWriting(aFallible);
-  }
-
-  iterator& EndWriting(iterator& aIter)
-  {
-    return aIter = EndWriting();
-  }
-
-  iterator& EndWriting(iterator& aIter, const fallible_t& aFallible)
-  {
-    return aIter = EndWriting(aFallible);
-  }
-
   /**
    * Perform string to int conversion.
    * @param   aErrorCode will contain error if one occurs
