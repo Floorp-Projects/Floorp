@@ -98,11 +98,25 @@
   align-items: center;
   height: 32px;
   border-bottom: 1px solid var(--theme-splitter-color);
-  padding-inline-start: 20px;
+  padding: 0 3px;
+}
+
+.flex-header-button-prev::before {
+  background-image: url("chrome://devtools/skin/images/arrowhead-left.svg");
+  background-size: 16px;
 }
 
 .flex-header-content {
   flex: 1;
+  padding-top: 2px;
+  padding-inline-start: 20px;
+  -moz-user-select: none;
+}
+
+.flex-header-content.flex-item-shown {
+  display: flex;
+  justify-content: center;
+  padding: 0;
 }
 
 /**
