@@ -6,6 +6,8 @@ package org.mozilla.focus.tips
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import org.mozilla.focus.R.string.app_name
 import org.mozilla.focus.R.string.tip_add_to_homescreen
@@ -64,13 +66,18 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             val appName = context.resources.getString(app_name)
             val id = tip_set_default_browser
             val name = context.resources.getString(id, appName)
+            val browsers = Browsers(context, Browsers.TRADITIONAL_BROWSER_URL)
 
             val shouldDisplayDefaultBrowser = {
                 !Browsers(context, Browsers.TRADITIONAL_BROWSER_URL).isDefaultBrowser(context)
             }
 
             val deepLinkDefaultBrowser = {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                if (!browsers.hasDefaultBrowser(context)) {
+                    // Open in method:
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL))
+                    context.startActivity(intent)
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     SupportUtils.openDefaultAppsSettings(context)
                 } else {
                     SupportUtils.openDefaultBrowserSumoPage(context)

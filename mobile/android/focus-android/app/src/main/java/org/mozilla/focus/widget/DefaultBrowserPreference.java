@@ -5,6 +5,8 @@
 package org.mozilla.focus.widget;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceViewHolder;
@@ -58,8 +60,14 @@ public class DefaultBrowserPreference extends Preference {
     @Override
     public void onClick() {
         final Context context = getContext();
+        final Browsers browsers = new Browsers(getContext(), Browsers.TRADITIONAL_BROWSER_URL);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        if (!browsers.hasDefaultBrowser(context)) {
+
+            // Open in method:
+            Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL));
+            getContext().startActivity(i);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             SupportUtils.INSTANCE.openDefaultAppsSettings(context);
         } else {
             SupportUtils.INSTANCE.openDefaultBrowserSumoPage(context);

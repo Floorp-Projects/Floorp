@@ -242,6 +242,11 @@ public class Browsers {
 
     }
 
+    // Does the user have any browser as their default?
+    public boolean hasDefaultBrowser(Context context) {
+        return defaultBrowser != null;
+    }
+
     public ActivityInfo[] getInstalledBrowsers() {
         final Collection<ActivityInfo> collection = browsers.values();
 

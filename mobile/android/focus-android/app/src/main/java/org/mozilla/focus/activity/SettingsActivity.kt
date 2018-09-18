@@ -13,6 +13,7 @@ import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.settings.MozillaSettingsFragment
 import org.mozilla.focus.settings.SettingsFragment
 import org.mozilla.focus.settings.PrivacySecuritySettingsFragment
+import org.mozilla.focus.settings.GeneralSettingsFragment
 
 class SettingsActivity : LocaleAwareAppCompatActivity(), BaseSettingsFragment.ActionBarUpdater {
 
@@ -21,6 +22,7 @@ class SettingsActivity : LocaleAwareAppCompatActivity(), BaseSettingsFragment.Ac
         val ACTIVITY_RESULT_LOCALE_CHANGED = 1
         const val SHOULD_OPEN_PRIVACY_EXTRA = "shouldOpenPrivacy"
         const val SHOULD_OPEN_MOZILLA_EXTRA = "shouldOpenMozilla"
+        const val SHOULD_OPEN_GENERAL_EXTRA = "shouldOpenGeneral"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +41,10 @@ class SettingsActivity : LocaleAwareAppCompatActivity(), BaseSettingsFragment.Ac
             } else if (intent?.extras?.getBoolean(SHOULD_OPEN_MOZILLA_EXTRA) == true) {
                 supportFragmentManager.beginTransaction()
                         .replace(R.id.container, MozillaSettingsFragment())
+                        .commit()
+            } else if (intent?.extras?.getBoolean(SHOULD_OPEN_GENERAL_EXTRA) == true) {
+                supportFragmentManager.beginTransaction()
+                        .replace(R.id.container, GeneralSettingsFragment())
                         .commit()
             }
         } else if (savedInstanceState == null) {

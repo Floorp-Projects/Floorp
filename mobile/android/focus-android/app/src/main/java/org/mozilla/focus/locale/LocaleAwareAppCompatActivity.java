@@ -89,6 +89,12 @@ public abstract class LocaleAwareAppCompatActivity
         startActivityForResult(settingsIntent, 0);
     }
 
+    public void openGeneralSettings() {
+        final Intent settingsIntent = new Intent(this, SettingsActivity.class);
+        settingsIntent.putExtra(SettingsActivity.SHOULD_OPEN_GENERAL_EXTRA, true);
+        startActivityForResult(settingsIntent, 0);
+    }
+
     public void openMozillaSettings() {
         final Intent settingsIntent = new Intent(this, SettingsActivity.class);
         settingsIntent.putExtra(SettingsActivity.SHOULD_OPEN_MOZILLA_EXTRA, true);
