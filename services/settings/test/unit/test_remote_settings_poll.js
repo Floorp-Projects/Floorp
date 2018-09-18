@@ -78,11 +78,11 @@ add_task(async function test_check_success() {
   }]));
 
   // add a test kinto client that will respond to lastModified information
-  // for a collection called 'test-collection'
+  // for a collection called 'test-collection'.
+  // Let's use a bucket that is not the default one (`test-bucket`).
+  Services.prefs.setCharPref("services.settings.test_bucket", "test-bucket");
+  const c = RemoteSettings("test-collection", { bucketNamePref: "services.settings.test_bucket" });
   let maybeSyncCalled = false;
-  const c = RemoteSettings("test-collection", {
-    bucketName: "test-bucket",
-  });
   c.maybeSync = () => { maybeSyncCalled = true; };
 
   // Ensure that the remote-settings-changes-polled notification works
@@ -210,7 +210,7 @@ add_task(async function test_success_with_partial_list() {
       last_modified: 42,
       host: "localhost",
       bucket: "main",
-      collection: "test-collection",
+      collection: "poll-test-collection",
     }];
     if (request.queryString == `_since=${encodeURIComponent('"42"')}`) {
       response.write(JSON.stringify({
@@ -228,14 +228,14 @@ add_task(async function test_success_with_partial_list() {
   }
   server.registerPathHandler(CHANGES_PATH, partialList);
 
-  const c = RemoteSettings("test-collection");
+  const c = RemoteSettings("poll-test-collection");
   let maybeSyncCount = 0;
   c.maybeSync = () => { maybeSyncCount++; };
 
   await RemoteSettings.pollChanges();
   await RemoteSettings.pollChanges();
 
-  // On the second call, the server does not mention the test-collection
+  // On the second call, the server does not mention the poll-test-collection
   // and maybeSync() is not called.
   Assert.equal(maybeSyncCount, 1, "maybeSync should not be called twice");
 });

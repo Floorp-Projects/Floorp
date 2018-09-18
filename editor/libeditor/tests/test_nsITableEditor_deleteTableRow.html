@@ -1,0 +1,290 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Test for nsITableEditor.deleteTableRow()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+</div>
+<div id="content" contenteditable>out of table<table><tr><td>default content</td></tr></table></div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editor = document.getElementById("content");
+  let selection = document.getSelection();
+
+  selection.collapse(editor.firstChild, 0);
+  getTableEditor().deleteTableRow(1);
+  is(editor.innerHTML, "out of table<table><tbody><tr><td>default content</td></tr></tbody></table>",
+     "nsITableEditor.deleteTableRow(1) should do nothing if selection is not in <table>");
+
+  selection.removeAllRanges();
+  try {
+    getTableEditor().deleteTableRow(1);
+    ok(false, "getTableEditor().deleteTableRow(1) without selection ranges should throw exception");
+  } catch (e) {
+    ok(true, "getTableEditor().deleteTableRow(1) without selection ranges should throw exception");
+  }
+
+  // If a cell is selected and the argument is less than number of rows,
+  // specified number of rows should be removed starting from the row
+  // containing the selected cell.  But if the argument is same or
+  // larger than actual number of rows when a cell in the first row is
+  // selected, the <table> should be removed.
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
+  let range = document.createRange();
+  range.selectNode(document.getElementById("select"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(1);
+  is(editor.innerHTML, "<table><tbody><tr><td>cell2-1</td><td>cell2-2</td></tr></tbody></table>",
+     "nsITableEditor.deleteTableRow(1) should delete the first row when a cell in the first row is selected");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(1);
+  is(editor.innerHTML, "<table><tbody><tr><td>cell1-1</td><td>cell1-2</td></tr></tbody></table>",
+     "nsITableEditor.deleteTableRow(1) should delete the second row when a cell in the second row is selected");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(2);
+  is(editor.innerHTML, "",
+     "nsITableEditor.deleteTableRow(2) should delete the <table> since there is only 2 rows");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(3);
+  is(editor.innerHTML, "",
+     "nsITableEditor.deleteTableRow(3) should delete the <table> when argument is larger than actual number of rows");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(2);
+  is(editor.innerHTML, "<table><tbody><tr><td>cell1-1</td><td>cell1-2</td></tr></tbody></table>",
+     "nsITableEditor.deleteTableRow(2) should delete the second row containing selected cell and next row");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(3);
+  is(editor.innerHTML, "<table><tbody><tr><td>cell1-1</td><td>cell1-2</td></tr></tbody></table>",
+     "nsITableEditor.deleteTableRow(3) should delete the second row (containing selected cell) and the third row even though the argument is larger than the rows");
+
+  // Similar to selected a cell, when selection is in a cell, the cell should
+  // treated as selected.
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
+  editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
+  range = document.createRange();
+  range.selectNode(document.getElementById("select").firstChild);
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(1);
+  is(editor.innerHTML, "<table><tbody><tr><td>cell2-1</td><td>cell2-2</td></tr></tbody></table>",
+     "nsITableEditor.deleteTableRow(1) should delete the first row when a cell in the first row contains selection range");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr></table>';
+  editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
+  range = document.createRange();
+  range.selectNode(document.getElementById("select").firstChild);
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(1);
+  is(editor.innerHTML, "<table><tbody><tr><td>cell1-1</td><td>cell1-2</td></tr></tbody></table>",
+     "nsITableEditor.deleteTableRow(1) should delete the second row when a cell in the second row contains selection range");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
+  editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
+  range = document.createRange();
+  range.selectNode(document.getElementById("select").firstChild);
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(2);
+  is(editor.innerHTML, "",
+     "nsITableEditor.deleteTableRow(2) should delete the <table> since there is only 2 rows");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
+  editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
+  range = document.createRange();
+  range.selectNode(document.getElementById("select").firstChild);
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(3);
+  is(editor.innerHTML, "",
+     "nsITableEditor.deleteTableRow(3) should delete the <table> when argument is larger than actual number of rows");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
+  editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
+  range = document.createRange();
+  range.selectNode(document.getElementById("select").firstChild);
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(2);
+  is(editor.innerHTML, "<table><tbody><tr><td>cell1-1</td><td>cell1-2</td></tr></tbody></table>",
+     "nsITableEditor.deleteTableRow(2) should delete the second row containing a cell containing selection range and next row");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
+  editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
+  range = document.createRange();
+  range.selectNode(document.getElementById("select").firstChild);
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(3);
+  is(editor.innerHTML, "<table><tbody><tr><td>cell1-1</td><td>cell1-2</td></tr></tbody></table>",
+     "nsITableEditor.deleteTableRow(3) should delete the second row (containing selection range) and the third row even though the argument is larger than the rows");
+
+  // The argument should be ignored when 2 or more cells are selected.
+  // XXX If the argument is less than number of rows and cells in all rows are
+  //     selected, only all rows are removed.  However, this leaves empty <table>
+  //     element.  Is this expected?
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td id="select1">cell1-1</td><td>cell1-2</td></tr><tr><td id="select2">cell2-1</td><td>cell2-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select1"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("select2"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(1);
+  is(editor.innerHTML, "<table><tbody></tbody></table>",
+     "nsITableEditor.deleteTableRow(1) should delete all rows if every row's cell is selected");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td id="select1">cell1-1</td><td>cell1-2</td></tr><tr><td id="select2">cell2-1</td><td>cell2-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select1"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("select2"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(2);
+  is(editor.innerHTML, "",
+     "nsITableEditor.deleteTableRow(2) should delete the <table> since 2 is number of rows of the <table>");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td id="select1">cell1-1</td><td id="select2">cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select1"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("select2"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(2);
+  is(editor.innerHTML, "",
+     "nsITableEditor.deleteTableRow(2) should delete the <table> since 2 is number of rows of the <table>");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td id="select1">cell1-1</td><td>cell1-2</td></tr><tr><td id="select2">cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select1"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("select2"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(1);
+  is(editor.innerHTML, "<table><tbody><tr><td>cell3-1</td><td>cell3-2</td></tr></tbody></table>",
+     "nsITableEditor.deleteTableRow(1) should delete first 2 rows because cells in the both rows are selected");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td id="select1">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr><tr><td id="select2">cell3-1</td><td>cell3-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select1"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("select2"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(1);
+  is(editor.innerHTML, "<table><tbody><tr><td>cell2-1</td><td>cell2-2</td></tr></tbody></table>",
+     "nsITableEditor.deleteTableRow(1) should delete the first and the last rows because cells in the both rows are selected");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td id="select" rowspan="2">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(1);
+  is(editor.innerHTML, '<table><tbody><tr><td valign="top"><br></td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></tbody></table>',
+     "nsITableEditor.deleteTableRow(1) with a selected cell is rowspan=\"2\" should delete the first row and add empty cell to the second row");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td id="select" rowspan="3">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-2</td></tr><tr><td>cell3-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(1);
+  is(editor.innerHTML, '<table><tbody><tr><td rowspan="2" valign="top"><br></td><td>cell2-2</td></tr><tr><td>cell3-2</td></tr></tbody></table>',
+     "nsITableEditor.deleteTableRow(1) with a selected cell is rowspan=\"3\" should delete the first row and add empty cell whose rowspan is 2 to the second row");
+
+  // XXX Must be buggy case.  When removing a row which does not have a cell due
+  //     to rowspan, the rowspan is not changed properly.
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td rowspan="3">cell1-1</td><td>cell1-2</td></tr><tr><td id="select1">cell2-2</td></tr><tr><td>cell3-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select1"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(1);
+  is(editor.innerHTML, '<table><tbody><tr><td rowspan="1">cell1-1</td><td>cell1-2</td></tr><tr><td>cell3-2</td></tr></tbody></table>',
+     "nsITableEditor.deleteTableRow(1) with selected cell in the second row should delete the second row and the row span should be adjusted");
+
+  selection.removeAllRanges();
+  editor.innerHTML =
+    '<table><tr><td rowspan="2">cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
+  range = document.createRange();
+  range.selectNode(document.getElementById("select"));
+  selection.addRange(range);
+  getTableEditor().deleteTableRow(1);
+  is(editor.innerHTML, '<table><tbody><tr><td rowspan="1">cell1-1</td><td>cell1-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></tbody></table>',
+     "nsITableEditor.deleteTableRow(1) with selected cell in the second row should delete the second row and the row span should be adjusted");
+
+  SimpleTest.finish();
+});
+
+function getTableEditor() {
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(SpecialPowers.Ci.nsITableEditor);
+}
+
+</script>
+</body>
+
+</html>

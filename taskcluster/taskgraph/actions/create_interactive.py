@@ -7,6 +7,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
+import re
 
 from .util import (
     create_tasks,
@@ -24,6 +25,44 @@ on revision {revision} in {repo}. Click the button below to connect to the
 task. You may need to wait for it to begin running.
 '''
 
+###
+# Security Concerns
+#
+# An "interactive task" is, quite literally, shell access to a worker. That
+# is limited by being in a Docker container, but we assume that Docker has
+# bugs so we do not want to rely on container isolation exclusively.
+#
+# Interactive tasks should never be allowed on hosts that build binaries
+# leading to a release -- level 3 builders.
+#
+# Users must not be allowed to create interactive tasks for tasks above
+# their own level.
+#
+# Interactive tasks must not have any routes that might make them appear
+# in the index to be used by other production tasks.
+#
+# Interactive tasks should not be able to write to any docker-worker caches.
+
+SCOPE_WHITELIST = [
+    # this is not actually secret, and just about everything needs it
+    re.compile(r'^secrets:get:project/taskcluster/gecko/hgfingerprint$'),
+    # public downloads are OK
+    re.compile(r'^docker-worker:relengapi-proxy:tooltool.download.public$'),
+    # level-appropriate secrets are generally necessary to run a task; these
+    # also are "not that secret" - most of them are built into the resulting
+    # binary and could be extracted by someone with `strings`.
+    re.compile(r'^secrets:get:project/releng/gecko/build/level-[0-9]/\*'),
+]
+
+
+def context(params):
+    # available for any docker-worker tasks at levels 1, 2; and for
+    # test tasks on level 3 (level-3 builders are firewalled off)
+    if int(params['level']) < 3:
+        return [{'worker-implementation': 'docker-worker'}]
+    else:
+        return [{'worker-implementation': 'docker-worker', 'kind': 'test'}],
+
 
 @register_callback_action(
     title='Create Interactive Task',
@@ -35,7 +74,7 @@ task. You may need to wait for it to begin running.
         'Create a a copy of the task that you can interact with'
     ),
     order=50,
-    context=[{'worker-implementation': 'docker-worker'}],
+    context=context,
     schema={
         'type': 'object',
         'properties': {
@@ -77,15 +116,18 @@ def create_interactive_action(parameters, graph_config, input, task_group_id, ta
         task_def['deadline'] = {'relative-datestamp': '12 hours'}
         task_def['created'] = {'relative-datestamp': '0 hours'}
         task_def['expires'] = {'relative-datestamp': '1 day'}
+
+        # filter scopes with the SCOPE_WHITELIST
+        task.task['scopes'] = [s for s in task.task.get('scopes', [])
+                               if any(p.match(s) for p in SCOPE_WHITELIST)]
+
         payload = task_def['payload']
+
+        # make sure the task runs for long enough..
         payload['maxRunTime'] = max(3600 * 3, payload.get('maxRunTime', 0))
 
-        # no caches
-        task_def['scopes'] = [s for s in task_def['scopes']
-                              if not s.startswith('docker-worker:cache:')]
+        # no caches or artifacts
         payload['cache'] = {}
-
-        # no artifacts
         payload['artifacts'] = {}
 
         # enable interactive mode
@@ -100,6 +142,7 @@ def create_interactive_action(parameters, graph_config, input, task_group_id, ta
                                    parameters, modifier=edit)
 
     taskId = label_to_taskid[label]
+    logger.info('Created interactive task {}; sending notification'.format(taskId))
 
     if input and 'notify' in input:
         email = input['notify']

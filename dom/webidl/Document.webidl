@@ -269,10 +269,10 @@ partial interface Document {
   [BinaryName="fullscreenEnabled", NeedsCallerType]
   readonly attribute boolean mozFullScreenEnabled;
 
-  [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
-  void exitFullscreen();
-  [BinaryName="exitFullscreen"]
-  void mozCancelFullScreen();
+  [Throws, Func="nsDocument::IsUnprefixedFullscreenEnabled"]
+  Promise<void> exitFullscreen();
+  [Throws, BinaryName="exitFullscreen"]
+  Promise<void> mozCancelFullScreen();
 
   // Events handlers
   [Func="nsDocument::IsUnprefixedFullscreenEnabled"]

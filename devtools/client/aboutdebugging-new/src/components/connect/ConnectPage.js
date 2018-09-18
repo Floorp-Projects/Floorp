@@ -75,7 +75,7 @@ class ConnectPage extends PureComponent {
   render() {
     return dom.article(
       {
-        className: "page connect-page",
+        className: "page connect-page js-connect-page",
       },
       dom.h1(
         {

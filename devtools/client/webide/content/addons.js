@@ -69,7 +69,7 @@ function BuildItem(addon, type) {
   switch (type) {
     case "adb":
       li.setAttribute("addon", type);
-      name.textContent = Strings.GetStringFromName("addons_adb_label2");
+      name.textContent = "ADB Extension";
       break;
   }
 

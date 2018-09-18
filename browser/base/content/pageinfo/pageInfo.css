@@ -12,14 +12,6 @@
   display: none;
 }
 
-#feedListbox richlistitem {
-  -moz-box-orient: vertical;
-}
-
-#feedListbox richlistitem:not([selected="true"]) .feed-subscribe {
-  display: none;
-}
-
 groupbox[closed="true"] > .groupbox-body {
   visibility: collapse;
 }

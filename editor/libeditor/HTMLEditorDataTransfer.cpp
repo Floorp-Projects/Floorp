@@ -1669,16 +1669,6 @@ HTMLEditor::CanPasteTransferable(nsITransferable* aTransferable)
   return false;
 }
 
-NS_IMETHODIMP
-HTMLEditor::PasteAsQuotation(int32_t aClipboardType)
-{
-  if (NS_WARN_IF(aClipboardType != nsIClipboard::kGlobalClipboard &&
-                 aClipboardType != nsIClipboard::kSelectionClipboard)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  return HTMLEditor::PasteAsQuotationAsAction(aClipboardType);
-}
-
 nsresult
 HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType)
 {
@@ -1790,7 +1780,7 @@ HTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType)
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
 {
   // The whole operation should be undoable in one transaction:
@@ -1895,7 +1885,7 @@ HTMLEditor::InsertTextWithQuotationsInternal(const nsAString& aStringToInsert)
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
                               nsINode** aNodeInserted)
 {

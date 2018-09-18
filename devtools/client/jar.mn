@@ -243,6 +243,7 @@ devtools.jar:
     skin/images/cubic-bezier-swatch.png (themes/images/cubic-bezier-swatch.png)
     skin/images/cubic-bezier-swatch@2x.png (themes/images/cubic-bezier-swatch@2x.png)
     skin/fonts.css (themes/fonts.css)
+    skin/changes.css (themes/changes.css)
     skin/computed.css (themes/computed.css)
     skin/layout.css (themes/layout.css)
     skin/images/arrow-e.png (themes/images/arrow-e.png)

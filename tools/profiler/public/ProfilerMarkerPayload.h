@@ -59,6 +59,7 @@ public:
   mozilla::TimeStamp GetStartTime() const { return mStartTime; }
 
 protected:
+  void StreamType(const char* aMarkerType, SpliceableJSONWriter& aWriter);
   void StreamCommonProps(const char* aMarkerType,
                          SpliceableJSONWriter& aWriter,
                          const mozilla::TimeStamp& aProcessStartTime,

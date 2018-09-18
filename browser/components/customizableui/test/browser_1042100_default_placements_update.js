@@ -7,7 +7,7 @@
 // don't try this at home, kids.
 function test() {
   // Customize something to make sure stuff changed:
-  CustomizableUI.addWidgetToArea("feed-button", CustomizableUI.AREA_NAVBAR);
+  CustomizableUI.addWidgetToArea("save-page-button", CustomizableUI.AREA_NAVBAR);
 
   // Check what version we're on:
   let CustomizableUIBSPass = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});

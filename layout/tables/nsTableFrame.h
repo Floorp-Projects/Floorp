@@ -37,7 +37,7 @@ class StackingContextHelper;
 struct BCPropertyData;
 
 static inline bool
-IS_TABLE_CELL(mozilla::LayoutFrameType frameType)
+IsTableCell(mozilla::LayoutFrameType frameType)
 {
   return frameType == mozilla::LayoutFrameType::TableCell ||
          frameType == mozilla::LayoutFrameType::BCTableCell;

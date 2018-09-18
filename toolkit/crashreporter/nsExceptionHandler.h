@@ -17,7 +17,6 @@
 
 #include "CrashAnnotations.h"
 
-#include <functional>
 #include <stddef.h>
 #include <stdint.h>
 #include "nsError.h"
@@ -238,14 +237,11 @@ ThreadId CurrentThreadId();
  *   aIncomingDumpToPair.
  * @return bool indicating success or failure
  */
-void
-CreateMinidumpsAndPair(ProcessHandle aTargetPid,
-                       ThreadId aTargetBlamedThread,
-                       const nsACString& aIncomingPairName,
-                       nsIFile* aIncomingDumpToPair,
-                       nsIFile** aTargetDumpOut,
-                       std::function<void(bool)>&& aCallback,
-                       bool aAsync);
+bool CreateMinidumpsAndPair(ProcessHandle aTargetPid,
+                            ThreadId aTargetBlamedThread,
+                            const nsACString& aIncomingPairName,
+                            nsIFile* aIncomingDumpToPair,
+                            nsIFile** aTargetDumpOut);
 
 // Create an additional minidump for a child of a process which already has
 // a minidump (|parentMinidump|).
