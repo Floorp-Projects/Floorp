@@ -277,6 +277,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize, mLastDisplayListSize);
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
   wr::usize builderDumpIndex = 0;
+  bool containsSVGGroup = false;
   bool dumpEnabled = mWebRenderCommandBuilder.ShouldDumpDisplayList();
   if (dumpEnabled) {
     printf_stderr("-- WebRender display list build --\n");
@@ -296,6 +297,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
                                                     contentSize,
                                                     aFilters);
     builderDumpIndex = mWebRenderCommandBuilder.GetBuilderDumpIndex();
+    containsSVGGroup = mWebRenderCommandBuilder.GetContainsSVGGroup();
   } else {
     // ViewToPaint does not have frame yet, then render only background clolor.
     MOZ_ASSERT(!aDisplayListBuilder && aBackground);
@@ -356,7 +358,8 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   {
     AUTO_PROFILER_TRACING("Paint", "ForwardDPTransaction");
     WrBridge()->EndTransaction(contentSize, dl, resourceUpdates, size.ToUnknownSize(),
-                               mLatestTransactionId, mScrollData, refreshStart, mTransactionStart);
+                               mLatestTransactionId, mScrollData, containsSVGGroup,
+                               refreshStart, mTransactionStart);
   }
 
   mTransactionStart = TimeStamp();
