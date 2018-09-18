@@ -1,22 +1,18 @@
-// This is a part of rust-chrono.
-// Copyright (c) 2015, Kang Seonghoon.
+// This is a part of Chrono.
 // See README.md and LICENSE.txt for details.
 
 //! A collection of parsed date and time items.
 //! They can be constructed incrementally while being checked for consistency.
 
-use num::traits::ToPrimitive;
+use num_traits::ToPrimitive;
+use oldtime::Duration as OldDuration;
 
 use {Datelike, Timelike};
 use Weekday;
 use div::div_rem;
-use duration::Duration;
-use offset::{TimeZone, Offset, LocalResult};
-use offset::fixed::FixedOffset;
-use naive::date::NaiveDate;
-use naive::time::NaiveTime;
-use naive::datetime::NaiveDateTime;
-use datetime::DateTime;
+use offset::{TimeZone, Offset, LocalResult, FixedOffset};
+use naive::{NaiveDate, NaiveTime, NaiveDateTime};
+use DateTime;
 use super::{ParseResult, OUT_OF_RANGE, IMPOSSIBLE, NOT_ENOUGH};
 
 /// Parsed parts of date and time. There are two classes of methods:
@@ -45,13 +41,13 @@ pub struct Parsed {
     /// Year modulo 100. Implies that the year is >= 1 BCE when set.
     pub year_mod_100: Option<i32>,
 
-    /// Year in the [ISO week date](../../naive/date/index.html#week-date).
+    /// Year in the [ISO week date](../naive/struct.NaiveDate.html#week-date).
     ///
     /// This can be negative unlike [`isoyear_div_100`](#structfield.isoyear_div_100) and
     /// [`isoyear_mod_100`](#structfield.isoyear_mod_100) fields.
     pub isoyear: Option<i32>,
 
-    /// Year in the [ISO week date](../../naive/date/index.html#week-date), divided by 100.
+    /// Year in the [ISO week date](../naive/struct.NaiveDate.html#week-date), divided by 100.
     /// Implies that the year is >= 1 BCE when set.
     ///
     /// Due to the common usage, if this field is missing but
@@ -59,7 +55,7 @@ pub struct Parsed {
     /// it is inferred to 19 when `isoyear_mod_100 >= 70` and 20 otherwise.
     pub isoyear_div_100: Option<i32>,
 
-    /// Year in the [ISO week date](../../naive/date/index.html#week-date), modulo 100.
+    /// Year in the [ISO week date](../naive/struct.NaiveDate.html#week-date), modulo 100.
     /// Implies that the year is >= 1 BCE when set.
     pub isoyear_mod_100: Option<i32>,
 
@@ -74,7 +70,7 @@ pub struct Parsed {
     /// (0--53, 1--53 or 1--52 depending on the year).
     pub week_from_mon: Option<u32>,
 
-    /// [ISO week number](../../naive/date/index.html#week-date)
+    /// [ISO week number](../naive/struct.NaiveDate.html#week-date)
     /// (1--52 or 1--53 depending on the year).
     pub isoweek: Option<u32>,
 
@@ -109,6 +105,9 @@ pub struct Parsed {
 
     /// Offset from the local time to UTC, in seconds.
     pub offset: Option<i32>,
+
+    /// A dummy field to make this type not fully destructible (required for API stability).
+    _dummy: (),
 }
 
 /// Checks if `old` is either empty or has the same value to `new` (i.e. "consistent"),
@@ -122,14 +121,23 @@ fn set_if_consistent<T: PartialEq>(old: &mut Option<T>, new: T) -> ParseResult<(
     }
 }
 
+impl Default for Parsed {
+    fn default() -> Parsed {
+        Parsed {
+            year: None, year_div_100: None, year_mod_100: None, isoyear: None,
+            isoyear_div_100: None, isoyear_mod_100: None, month: None,
+            week_from_sun: None, week_from_mon: None, isoweek: None, weekday: None,
+            ordinal: None, day: None, hour_div_12: None, hour_mod_12: None, minute: None,
+            second: None, nanosecond: None, timestamp: None, offset: None,
+            _dummy: (),
+        }
+    }
+}
+
 impl Parsed {
     /// Returns the initial value of parsed parts.
     pub fn new() -> Parsed {
-        Parsed { year: None, year_div_100: None, year_mod_100: None, isoyear: None,
-                 isoyear_div_100: None, isoyear_mod_100: None, month: None,
-                 week_from_sun: None, week_from_mon: None, isoweek: None, weekday: None,
-                 ordinal: None, day: None, hour_div_12: None, hour_mod_12: None, minute: None,
-                 second: None, nanosecond: None, timestamp: None, offset: None }
+        Parsed::default()
     }
 
     /// Tries to set the [`year`](#structfield.year) field from given value.
@@ -324,7 +332,10 @@ impl Parsed {
 
         // verify the ISO week date.
         let verify_isoweekdate = |date: NaiveDate| {
-            let (isoyear, isoweek, weekday) = date.isoweekdate();
+            let week = date.iso_week();
+            let isoyear = week.year();
+            let isoweek = week.week();
+            let weekday = date.weekday();
             let (isoyear_div_100, isoyear_mod_100) = if isoyear >= 0 {
                 let (q, r) = div_rem(isoyear, 100);
                 (Some(q), Some(r))
@@ -383,7 +394,7 @@ impl Parsed {
                 if week_from_sun > 53 { return Err(OUT_OF_RANGE); } // can it overflow?
                 let ndays = firstweek + (week_from_sun as i32 - 1) * 7 +
                             weekday.num_days_from_sunday() as i32;
-                let date = try!(newyear.checked_add(Duration::days(ndays as i64))
+                let date = try!(newyear.checked_add_signed(OldDuration::days(i64::from(ndays)))
                                        .ok_or(OUT_OF_RANGE));
                 if date.year() != year { return Err(OUT_OF_RANGE); } // early exit for correct error
 
@@ -408,7 +419,7 @@ impl Parsed {
                 if week_from_mon > 53 { return Err(OUT_OF_RANGE); } // can it overflow?
                 let ndays = firstweek + (week_from_mon as i32 - 1) * 7 +
                             weekday.num_days_from_monday() as i32;
-                let date = try!(newyear.checked_add(Duration::days(ndays as i64))
+                let date = try!(newyear.checked_add_signed(OldDuration::days(i64::from(ndays)))
                                        .ok_or(OUT_OF_RANGE));
                 if date.year() != year { return Err(OUT_OF_RANGE); } // early exit for correct error
 
@@ -491,7 +502,7 @@ impl Parsed {
 
             // verify the timestamp field if any
             // the following is safe, `timestamp` is very limited in range
-            let timestamp = datetime.timestamp() - offset as i64;
+            let timestamp = datetime.timestamp() - i64::from(offset);
             if let Some(given_timestamp) = self.timestamp {
                 // if `datetime` represents a leap second, it might be off by one second.
                 if given_timestamp != timestamp &&
@@ -514,7 +525,7 @@ impl Parsed {
             }
 
             // reconstruct date and time fields from timestamp
-            let ts = try!(timestamp.checked_add(offset as i64).ok_or(OUT_OF_RANGE));
+            let ts = try!(timestamp.checked_add(i64::from(offset)).ok_or(OUT_OF_RANGE));
             let datetime = NaiveDateTime::from_timestamp_opt(ts, 0);
             let mut datetime = try!(datetime.ok_or(OUT_OF_RANGE));
 
@@ -527,19 +538,18 @@ impl Parsed {
                     // it's okay, just do not try to overwrite the existing field.
                     59 => {}
                     // `datetime` is known to be off by one second.
-                    0 => { datetime = datetime - Duration::seconds(1); }
+                    0 => { datetime -= OldDuration::seconds(1); }
                     // otherwise it is impossible.
                     _ => return Err(IMPOSSIBLE)
                 }
                 // ...and we have the correct candidates for other fields.
             } else {
-                try!(parsed.set_second(datetime.second() as i64));
+                try!(parsed.set_second(i64::from(datetime.second())));
             }
-            try!(parsed.set_year   (datetime.year()    as i64));
-            try!(parsed.set_ordinal(datetime.ordinal() as i64)); // more efficient than ymd
-            try!(parsed.set_hour   (datetime.hour()    as i64));
-            try!(parsed.set_minute (datetime.minute()  as i64));
-            try!(parsed.set_nanosecond(0)); // no nanosecond precision in timestamp
+            try!(parsed.set_year   (i64::from(datetime.year())));
+            try!(parsed.set_ordinal(i64::from(datetime.ordinal()))); // more efficient than ymd
+            try!(parsed.set_hour   (i64::from(datetime.hour())));
+            try!(parsed.set_minute (i64::from(datetime.minute())));
 
             // validate other fields (e.g. week) and return
             let date = try!(parsed.to_naive_date());
@@ -555,7 +565,7 @@ impl Parsed {
 
     /// Returns a parsed fixed time zone offset out of given fields.
     pub fn to_fixed_offset(&self) -> ParseResult<FixedOffset> {
-        self.offset.and_then(|offset| FixedOffset::east_opt(offset)).ok_or(OUT_OF_RANGE)
+        self.offset.and_then(FixedOffset::east_opt).ok_or(OUT_OF_RANGE)
     }
 
     /// Returns a parsed timezone-aware date and time out of given fields.
@@ -593,20 +603,13 @@ impl Parsed {
             let nanosecond = self.nanosecond.unwrap_or(0);
             let dt = NaiveDateTime::from_timestamp_opt(timestamp, nanosecond);
             let dt = try!(dt.ok_or(OUT_OF_RANGE));
-
-            // we cannot handle offsets larger than i32 at all. give up if so.
-            // we can instead make `to_naive_datetime_with_offset` to accept i64, but this makes
-            // the algorithm too complex and tons of edge cases. i32 should be enough for all.
-            let offset = tz.offset_from_utc_datetime(&dt).local_minus_utc().num_seconds();
-            guessed_offset = try!(offset.to_i32().ok_or(OUT_OF_RANGE));
+            guessed_offset = tz.offset_from_utc_datetime(&dt).fix().local_minus_utc();
         }
 
         // checks if the given `DateTime` has a consistent `Offset` with given `self.offset`.
         let check_offset = |dt: &DateTime<Tz>| {
             if let Some(offset) = self.offset {
-                let delta = dt.offset().local_minus_utc().num_seconds();
-                // if `delta` does not fit in `i32`, it cannot equal to `self.offset` anyway.
-                delta.to_i32() == Some(offset)
+                dt.offset().fix().local_minus_utc() == offset
             } else {
                 true
             }
@@ -637,11 +640,8 @@ mod tests {
     use super::super::{OUT_OF_RANGE, IMPOSSIBLE, NOT_ENOUGH};
     use Datelike;
     use Weekday::*;
-    use naive::date::{self, NaiveDate};
-    use naive::time::NaiveTime;
-    use offset::TimeZone;
-    use offset::utc::UTC;
-    use offset::fixed::FixedOffset;
+    use naive::{MIN_DATE, MAX_DATE, NaiveDate, NaiveTime};
+    use offset::{TimeZone, Utc, FixedOffset};
 
     #[test]
     fn test_parsed_set_fields() {
@@ -760,7 +760,7 @@ mod tests {
                    ymd(0, 1, 1));
         assert_eq!(parse!(year_div_100: -1, year_mod_100: 42, month: 1, day: 1),
                    Err(OUT_OF_RANGE));
-        let max_year = date::MAX.year();
+        let max_year = MAX_DATE.year();
         assert_eq!(parse!(year_div_100: max_year / 100,
                           year_mod_100: max_year % 100, month: 1, day: 1),
                    ymd(max_year, 1, 1));
@@ -932,7 +932,7 @@ mod tests {
                    ymdhmsn(2012,2,3, 5,6,7,890_123_456));
         assert_eq!(parse!(timestamp: 0), ymdhms(1970,1,1, 0,0,0));
         assert_eq!(parse!(timestamp: 1, nanosecond: 0), ymdhms(1970,1,1, 0,0,1));
-        assert_eq!(parse!(timestamp: 1, nanosecond: 1), Err(IMPOSSIBLE));
+        assert_eq!(parse!(timestamp: 1, nanosecond: 1), ymdhmsn(1970,1,1, 0,0,1, 1));
         assert_eq!(parse!(timestamp: 1_420_000_000), ymdhms(2014,12,31, 4,26,40));
         assert_eq!(parse!(timestamp: -0x1_0000_0000), ymdhms(1833,11,24, 17,31,44));
 
@@ -958,15 +958,18 @@ mod tests {
                    ymdhmsn(2014,12,31, 4,26,40,12_345_678));
 
         // more timestamps
-        let max_days_from_year_1970 = date::MAX - NaiveDate::from_ymd(1970,1,1);
-        let year_0_from_year_1970 = NaiveDate::from_ymd(0,1,1) - NaiveDate::from_ymd(1970,1,1);
-        let min_days_from_year_1970 = date::MIN - NaiveDate::from_ymd(1970,1,1);
+        let max_days_from_year_1970 =
+            MAX_DATE.signed_duration_since(NaiveDate::from_ymd(1970,1,1));
+        let year_0_from_year_1970 =
+            NaiveDate::from_ymd(0,1,1).signed_duration_since(NaiveDate::from_ymd(1970,1,1));
+        let min_days_from_year_1970 =
+            MIN_DATE.signed_duration_since(NaiveDate::from_ymd(1970,1,1));
         assert_eq!(parse!(timestamp: min_days_from_year_1970.num_seconds()),
-                   ymdhms(date::MIN.year(),1,1, 0,0,0));
+                   ymdhms(MIN_DATE.year(),1,1, 0,0,0));
         assert_eq!(parse!(timestamp: year_0_from_year_1970.num_seconds()),
                    ymdhms(0,1,1, 0,0,0));
         assert_eq!(parse!(timestamp: max_days_from_year_1970.num_seconds() + 86399),
-                   ymdhms(date::MAX.year(),12,31, 23,59,59));
+                   ymdhms(MAX_DATE.year(),12,31, 23,59,59));
 
         // leap seconds #1: partial fields
         assert_eq!(parse!(second: 59, timestamp: 1_341_100_798), Err(IMPOSSIBLE));
@@ -1038,7 +1041,7 @@ mod tests {
                           minute: 42, second: 4, nanosecond: 12_345_678, offset: -9876),
                    ymdhmsn(2014,12,31, 1,42,4,12_345_678, -9876));
         assert_eq!(parse!(year: 2015, ordinal: 1, hour_div_12: 0, hour_mod_12: 4,
-                          minute: 26, second: 40, nanosecond: 12_345_678, offset: 86400),
+                          minute: 26, second: 40, nanosecond: 12_345_678, offset: 86_400),
                    Err(OUT_OF_RANGE)); // `FixedOffset` does not support such huge offset
     }
 
@@ -1051,11 +1054,11 @@ mod tests {
         }
 
         // single result from ymdhms
-        assert_eq!(parse!(UTC;
+        assert_eq!(parse!(Utc;
                           year: 2014, ordinal: 365, hour_div_12: 0, hour_mod_12: 4,
                           minute: 26, second: 40, nanosecond: 12_345_678, offset: 0),
-                   Ok(UTC.ymd(2014, 12, 31).and_hms_nano(4, 26, 40, 12_345_678)));
-        assert_eq!(parse!(UTC;
+                   Ok(Utc.ymd(2014, 12, 31).and_hms_nano(4, 26, 40, 12_345_678)));
+        assert_eq!(parse!(Utc;
                           year: 2014, ordinal: 365, hour_div_12: 1, hour_mod_12: 1,
                           minute: 26, second: 40, nanosecond: 12_345_678, offset: 32400),
                    Err(IMPOSSIBLE));
@@ -1070,9 +1073,9 @@ mod tests {
                                               .and_hms_nano(13, 26, 40, 12_345_678)));
 
         // single result from timestamp
-        assert_eq!(parse!(UTC; timestamp: 1_420_000_000, offset: 0),
-                   Ok(UTC.ymd(2014, 12, 31).and_hms(4, 26, 40)));
-        assert_eq!(parse!(UTC; timestamp: 1_420_000_000, offset: 32400),
+        assert_eq!(parse!(Utc; timestamp: 1_420_000_000, offset: 0),
+                   Ok(Utc.ymd(2014, 12, 31).and_hms(4, 26, 40)));
+        assert_eq!(parse!(Utc; timestamp: 1_420_000_000, offset: 32400),
                    Err(IMPOSSIBLE));
         assert_eq!(parse!(FixedOffset::east(32400); timestamp: 1_420_000_000, offset: 0),
                    Err(IMPOSSIBLE));
