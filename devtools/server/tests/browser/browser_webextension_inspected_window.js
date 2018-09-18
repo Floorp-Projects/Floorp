@@ -32,7 +32,7 @@ async function setup(pageUrl) {
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   const form = await connectDebuggerClient(client);
 
-  const [, tabClient] = await client.attachTab(form.actor);
+  const [, tabClient] = await client.attachTarget(form.actor);
 
   const [, consoleClient] = await client.attachConsole(form.consoleActor, []);
 
