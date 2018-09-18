@@ -12,8 +12,7 @@ webidl Storage;
 
 /**
  * General purpose interface that has two implementations, for localStorage
- * resp. sessionStorage with "@mozilla.org/dom/localStorage-manager;1" resp.
- * "@mozilla.org/dom/sessionStorage-manager;1" contract IDs.
+ * with "@mozilla.org/dom/localStorage-manager;1".
  */
 [scriptable, uuid(a20c742e-3ed1-44fb-b897-4080a75b1662)]
 interface nsIDOMStorageManager : nsISupports

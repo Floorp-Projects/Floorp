@@ -69,7 +69,6 @@
 #include "mozilla/dom/network/UDPSocketChild.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
-#include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/StorageActivityService.h"
 #include "mozilla/dom/WorkerDebuggerManager.h"
 #include "mozilla/dom/Notification.h"
@@ -175,7 +174,6 @@ already_AddRefed<nsIPresentationService> NS_CreatePresentationService();
 typedef mozilla::dom::BlobURL::Mutator BlobURLMutator;
 NS_GENERIC_FACTORY_CONSTRUCTOR(BlobURLMutator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(LocalStorageManager)
-NS_GENERIC_FACTORY_CONSTRUCTOR(SessionStorageManager)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(DOMRequestService,
                                          DOMRequestService::FactoryCreate)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(QuotaManagerService,
@@ -474,7 +472,6 @@ NS_DEFINE_NAMED_CID(NS_STYLESHEETSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_HOSTOBJECTURI_CID);
 NS_DEFINE_NAMED_CID(NS_HOSTOBJECTURIMUTATOR_CID);
 NS_DEFINE_NAMED_CID(NS_SDBCONNECTION_CID);
-NS_DEFINE_NAMED_CID(NS_DOMSESSIONSTORAGEMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_DOMLOCALSTORAGEMANAGER_CID);
 NS_DEFINE_NAMED_CID(DOMREQUEST_SERVICE_CID);
 NS_DEFINE_NAMED_CID(QUOTAMANAGER_SERVICE_CID);
@@ -567,7 +564,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_HOSTOBJECTURI_CID, false, nullptr, BlobURLMutatorConstructor }, // do_CreateInstance returns mutator
   { &kNS_HOSTOBJECTURIMUTATOR_CID, false, nullptr, BlobURLMutatorConstructor },
   { &kNS_SDBCONNECTION_CID, false, nullptr, SDBConnection::Create },
-  { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, nullptr, SessionStorageManagerConstructor },
   { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, nullptr, LocalStorageManagerConstructor },
   { &kDOMREQUEST_SERVICE_CID, false, nullptr, DOMRequestServiceConstructor },
   { &kQUOTAMANAGER_SERVICE_CID, false, nullptr, QuotaManagerServiceConstructor },
@@ -650,7 +646,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_STYLESHEETSERVICE_CONTRACTID, &kNS_STYLESHEETSERVICE_CID },
   { NS_SDBCONNECTION_CONTRACTID, &kNS_SDBCONNECTION_CID },
   { "@mozilla.org/dom/localStorage-manager;1", &kNS_DOMLOCALSTORAGEMANAGER_CID },
-  { "@mozilla.org/dom/sessionStorage-manager;1", &kNS_DOMSESSIONSTORAGEMANAGER_CID },
   { DOMREQUEST_SERVICE_CONTRACTID, &kDOMREQUEST_SERVICE_CID },
   { QUOTAMANAGER_SERVICE_CONTRACTID, &kQUOTAMANAGER_SERVICE_CID },
   { SERVICEWORKERMANAGER_CONTRACTID, &kSERVICEWORKERMANAGER_CID },
