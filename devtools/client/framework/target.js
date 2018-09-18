@@ -45,7 +45,13 @@ const TargetFactory = exports.TargetFactory = {
   },
 
   /**
-   * Constructor a target for the given tab.
+   * Instantiate a target for the given tab.
+   *
+   * This will automatically:
+   * - spawn a DebuggerServer in the parent process,
+   * - create a DebuggerClient and connect it to this local DebuggerServer,
+   * - call RootActor's `getTab` request to retrieve the FrameTargetActor's form,
+   * - instantiate a TabTarget instance.
    *
    * @param {XULTab} tab
    *        The tab to use in creating a new target.
@@ -109,7 +115,7 @@ const TargetFactory = exports.TargetFactory = {
     let targetPromise = promiseTargets.get(options);
     if (targetPromise == null) {
       const target = new TabTarget(options);
-      targetPromise = target.makeRemote().then(() => target);
+      targetPromise = target.attach().then(() => target);
       promiseTargets.set(options, targetPromise);
     }
     return targetPromise;
@@ -456,77 +462,68 @@ TabTarget.prototype = {
   },
 
   /**
-   * Adds remote protocol capabilities to the target, so that it can be used
-   * for tools that support the Remote Debugging Protocol even for local
-   * connections.
+   * Attach the target and its console actor.
+   *
+   * This method will mainly call `attach` request on the target actor as well
+   * as the console actor.
+   * For webextension, it also preliminary converts addonTargetActor to a
+   * WebExtensionTargetActor.
    */
-  makeRemote: async function() {
-    if (this._remote) {
-      return this._remote;
+  attach() {
+    if (this._attach) {
+      return this._attach;
     }
 
-    if (this._form.isWebExtension &&
-        this.client.mainRoot.traits.webExtensionAddonConnect) {
-      // The addonTargetActor form is related to a WebExtensionActor instance,
-      // which isn't a target actor on its own, it is an actor living in the parent
-      // process with access to the addon metadata, it can control the addon (e.g.
-      // reloading it) and listen to the AddonManager events related to the lifecycle of
-      // the addon (e.g. when the addon is disabled or uninstalled).
-      // To retrieve the target actor instance, we call its "connect" method, (which
-      // fetches the target actor form from a WebExtensionTargetActor instance).
-      const {form} = await this._client.request({
-        to: this._form.actor, type: "connect",
-      });
+    // Attach the target actor
+    const attachTarget = async () => {
+      const [response, tabClient] = await this._client.attachTab(this._form.actor);
+      this.activeTab = tabClient;
+      this.threadActor = response.threadActor;
+    };
 
-      this._form = form;
-      this._url = form.url;
-      this._title = form.title;
-    }
+    // Attach the console actor
+    const attachConsole = async () => {
+      const [, consoleClient] = await this._client.attachConsole(
+        this._form.consoleActor, []);
+      this.activeConsole = consoleClient;
 
-    this._setupRemoteListeners();
+      this._onInspectObject = packet => this.emit("inspect-object", packet);
+      this.activeConsole.on("inspectObject", this._onInspectObject);
+    };
 
-    this._remote = new Promise((resolve, reject) => {
-      const attachTab = async () => {
-        try {
-          const [response, tabClient] = await this._client.attachTab(this._form.actor);
-          this.activeTab = tabClient;
-          this.threadActor = response.threadActor;
-        } catch (e) {
-          reject("Unable to attach to the tab: " + e);
-          return;
-        }
-        attachConsole();
-      };
+    this._attach = (async () => {
+      if (this._form.isWebExtension &&
+          this.client.mainRoot.traits.webExtensionAddonConnect) {
+        // The addonTargetActor form is related to a WebExtensionActor instance,
+        // which isn't a target actor on its own, it is an actor living in the parent
+        // process with access to the addon metadata, it can control the addon (e.g.
+        // reloading it) and listen to the AddonManager events related to the lifecycle of
+        // the addon (e.g. when the addon is disabled or uninstalled).
+        // To retrieve the target actor instance, we call its "connect" method, (which
+        // fetches the target actor form from a WebExtensionTargetActor instance).
+        const {form} = await this._client.request({
+          to: this._form.actor, type: "connect",
+        });
 
-      const onConsoleAttached = ([response, consoleClient]) => {
-        this.activeConsole = consoleClient;
-
-        this._onInspectObject = packet => this.emit("inspect-object", packet);
-        this.activeConsole.on("inspectObject", this._onInspectObject);
-
-        resolve(null);
-      };
-
-      const attachConsole = () => {
-        this._client.attachConsole(this._form.consoleActor, [])
-          .then(onConsoleAttached, response => {
-            reject(
-              `Unable to attach to the console [${response.error}]: ${response.message}`);
-          });
-      };
-
-      if (this.isBrowsingContext) {
-        // In the remote debugging case, the protocol connection will have been
-        // already initialized in the connection screen code.
-        attachTab();
-      } else {
-        // AddonActor and chrome debugging on RootActor doesn't inherit from
-        // BrowsingContextTargetActor and doesn't need to be attached.
-        attachConsole();
+        this._form = form;
+        this._url = form.url;
+        this._title = form.title;
       }
-    });
 
-    return this._remote;
+      this._setupRemoteListeners();
+
+      // AddonActor and chrome debugging on RootActor don't inherit from
+      // BrowsingContextTargetActor (i.e. this.isBrowsingContext=false) and don't need
+      // to be attached.
+      if (this.isBrowsingContext) {
+        await attachTarget();
+      }
+
+      // But all target actor have a console actor to attach
+      return attachConsole();
+    })();
+
+    return this._attach;
   },
 
   /**
@@ -731,7 +728,7 @@ TabTarget.prototype = {
     this._client = null;
     this._tab = null;
     this._form = null;
-    this._remote = null;
+    this._attach = null;
     this._root = null;
     this._title = null;
     this._url = null;
@@ -845,7 +842,7 @@ WorkerTarget.prototype = {
     return undefined;
   },
 
-  makeRemote: function() {
+  attach: function() {
     return Promise.resolve();
   },
 
