@@ -10,6 +10,9 @@
 #include "mozilla/dom/WorkletGlobalScope.h"
 
 namespace mozilla {
+
+class WorkletImpl;
+
 namespace dom {
 
 class VoidFunction;
@@ -17,7 +20,7 @@ class VoidFunction;
 class AudioWorkletGlobalScope final : public WorkletGlobalScope
 {
 public:
-  AudioWorkletGlobalScope();
+  explicit AudioWorkletGlobalScope(WorkletImpl* aImpl);
 
   bool
   WrapGlobalObject(JSContext* aCx,
