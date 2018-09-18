@@ -174,35 +174,35 @@ var PluginBlocklistClient;
 
 function initialize() {
   OneCRLBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_COLLECTION), {
-    bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
+    bucketNamePref: PREF_BLOCKLIST_BUCKET,
     lastCheckTimePref: PREF_BLOCKLIST_ONECRL_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_SIGNER),
   });
   OneCRLBlocklistClient.on("sync", updateCertBlocklist);
 
   AddonBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_COLLECTION), {
-    bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
+    bucketNamePref: PREF_BLOCKLIST_BUCKET,
     lastCheckTimePref: PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_SIGNER),
     filterFunc: targetAppFilter,
   });
 
   PluginBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_COLLECTION), {
-    bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
+    bucketNamePref: PREF_BLOCKLIST_BUCKET,
     lastCheckTimePref: PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_SIGNER),
     filterFunc: targetAppFilter,
   });
 
   GfxBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_COLLECTION), {
-    bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
+    bucketNamePref: PREF_BLOCKLIST_BUCKET,
     lastCheckTimePref: PREF_BLOCKLIST_GFX_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_SIGNER),
     filterFunc: targetAppFilter,
   });
 
   PinningBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_COLLECTION), {
-    bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_BUCKET),
+    bucketNamePref: PREF_BLOCKLIST_PINNING_BUCKET,
     lastCheckTimePref: PREF_BLOCKLIST_PINNING_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_SIGNER),
   });

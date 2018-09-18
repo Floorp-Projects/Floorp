@@ -270,6 +270,22 @@ add_task(async function test_inspect_with_blocklist_clients() {
 });
 add_task(clear_state);
 
+add_task(async function test_bucketname_changes_when_bucket_pref_changes() {
+  for (const { client } of gBlocklistClients) {
+    equal(client.bucketName, "blocklists");
+  }
+  equal(BlocklistClients.PinningBlocklistClient.bucketName, "pinning");
+
+  Services.prefs.setCharPref("services.blocklist.bucket", "blocklists-preview");
+  Services.prefs.setCharPref("services.blocklist.pinning.bucket", "pinning-preview");
+
+  for (const { client } of gBlocklistClients) {
+    equal(client.bucketName, "blocklists-preview", client.identifier);
+  }
+  equal(BlocklistClients.PinningBlocklistClient.bucketName, "pinning-preview");
+});
+add_task(clear_state);
+
 
 // get a response for a given request from sample data
 function getSampleResponse(req, port) {
