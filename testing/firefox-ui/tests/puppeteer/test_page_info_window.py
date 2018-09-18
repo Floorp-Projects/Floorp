@@ -23,9 +23,6 @@ class TestPageInfoWindow(PuppeteerMixin, MarionetteTestCase):
 
         self.assertEqual(page_info.deck.element.get_property('localName'), 'deck')
 
-        # feed panel
-        self.assertEqual(page_info.deck.feed.element.get_property('localName'), 'vbox')
-
         # general panel
         self.assertEqual(page_info.deck.general.element.get_property('localName'), 'vbox')
 
