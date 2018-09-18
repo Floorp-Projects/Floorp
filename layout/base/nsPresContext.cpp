@@ -1634,7 +1634,7 @@ nsITheme*
 nsPresContext::GetTheme()
 {
   if (!sNoTheme && !mTheme) {
-    mTheme = NS_NewNativeTheme();
+    mTheme = do_GetService("@mozilla.org/chrome/chrome-native-theme;1");
     if (!mTheme)
       sNoTheme = true;
   }
