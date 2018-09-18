@@ -228,6 +228,6 @@
   <string name="tip_set_default_browser">Otevírejte v aplikaci %1$s všechny odkazy\n Nastavte si %1$s jako výchozí prohlížeč</string>
   <string name="tip_autocomplete_url">Nechcete si doplňovat nejpoužívanější adresy\n Podržte prst na adrese v adresním řádku</string>
   <string name="tip_open_in_new_tab">Otevírejte si odkazy v novém panelu\n Podržte prst na jakémkoliv odkazu na stránce</string>
-  <string name="tip_request_desktop">Chcete vidět verzi stránky pro počítače?%1$sNabídka &gt; Verze stránky pro počítač</string>
+  <string name="tip_request_desktop">Chcete vidět verzi stránky pro počítače?%1$s Nabídka &gt; Verze stránky pro počítač</string>
   <string name="tip_disable_tips">Vypnout tipy na domovské stránce aplikace %1$s</string>
 </resources>
