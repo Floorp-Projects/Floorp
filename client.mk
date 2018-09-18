@@ -82,7 +82,8 @@ build::
 	# Start a new server, ensuring it gets the jobserver file descriptors
 	# from make (but don't use the + prefix when make -n is used, so that
 	# the command doesn't run in that case)
-	$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env RUST_LOG=sccache::compiler=debug SCCACHE_ERROR_LOG=$(OBJDIR)/dist/sccache.log $(MOZBUILD_MANAGE_SCCACHE_DAEMON) --start-server
+	mkdir -p $(UPLOAD_PATH)
+	$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env RUST_LOG=sccache=debug SCCACHE_ERROR_LOG=$(UPLOAD_PATH)/sccache.log $(MOZBUILD_MANAGE_SCCACHE_DAEMON) --start-server
 endif
 
 ####################################
