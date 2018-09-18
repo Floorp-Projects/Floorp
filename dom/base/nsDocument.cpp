@@ -5295,8 +5295,7 @@ AssertContentPrivilegedAboutPageHasCSP(nsIURI* aDocumentURI, nsIPrincipal* aPrin
 
   // Potentially init the legacy whitelist of about URIs without a CSP.
   static StaticAutoPtr<nsTArray<nsCString>> sLegacyAboutPagesWithNoCSP;
-  if (!sLegacyAboutPagesWithNoCSP ||
-      Preferences::GetBool("csp.overrule_content_privileged_about_uris_without_csp_whitelist")) {
+  if (!sLegacyAboutPagesWithNoCSP) {
     sLegacyAboutPagesWithNoCSP = new nsTArray<nsCString>();
     nsAutoCString legacyAboutPages;
     Preferences::GetCString("csp.content_privileged_about_uris_without_csp",
@@ -5334,10 +5333,6 @@ AssertContentPrivilegedAboutPageHasCSP(nsIURI* aDocumentURI, nsIPrincipal* aPrin
      if (policyCount > 0) {
        csp->GetPolicyString(0, parsedPolicyStr);
      }
-  }
-  if (Preferences::GetBool("csp.overrule_content_privileged_about_uris_without_csp_whitelist")) {
-    NS_ASSERTION(parsedPolicyStr.Find("default-src") >= 0, "about: page must have a CSP");
-    return;
   }
   MOZ_ASSERT(parsedPolicyStr.Find("default-src") >= 0,
     "about: page must contain a CSP including default-src");
