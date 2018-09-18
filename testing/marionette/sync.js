@@ -271,15 +271,15 @@ function MessageManagerDestroyedPromise(messageManager) {
  * Throttle until the main thread is idle and `window` has performed
  * an animation frame (in that order).
  *
- * @param {ChromeWindow} window
+ * @param {ChromeWindow} win
  *     Window to request the animation frame from.
  *
  * @return Promise
  */
-function IdlePromise(window) {
+function IdlePromise(win) {
   return new Promise(resolve => {
     Services.tm.idleDispatchToMainThread(() => {
-      window.requestAnimationFrame(resolve);
+      win.requestAnimationFrame(resolve);
     });
   });
 }
