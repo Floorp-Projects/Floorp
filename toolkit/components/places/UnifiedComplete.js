@@ -20,6 +20,44 @@ const {
   MATCH_BEGINNING_CASE_SENSITIVE,
 } = Ci.mozIPlacesAutoComplete;
 
+// Values for browser.urlbar.insertMethod
+const INSERTMETHOD = {
+  APPEND: 0, // Just append new results.
+  MERGE_RELATED: 1, // Merge previous and current results if search strings are related
+  MERGE: 2, // Always merge previous and current results
+};
+
+// Prefs are defined as [pref name, default value] or [pref name, [default
+// value, nsIPrefBranch getter method name]].  In the former case, the getter
+// method name is inferred from the typeof the default value.
+const PREF_URLBAR_BRANCH = "browser.urlbar.";
+const PREF_URLBAR_DEFAULTS = new Map([
+  ["autocomplete.enabled", true],
+  ["autoFill", true],
+  ["autoFill.searchEngines", false],
+  ["autoFill.stddevMultiplier", [0.0, "getFloatPref"]],
+  ["restyleSearches", false],
+  ["delay", 50],
+  ["matchBehavior", MATCH_BOUNDARY_ANYWHERE],
+  ["filter.javascript", true],
+  ["maxRichResults", 10],
+  ["suggest.history", true],
+  ["suggest.bookmark", true],
+  ["suggest.openpage", true],
+  ["suggest.history.onlyTyped", false],
+  ["suggest.searches", false],
+  ["maxCharsForSearchSuggestions", 20],
+  ["maxHistoricalSearchSuggestions", 0],
+  ["usepreloadedtopurls.enabled", true],
+  ["usepreloadedtopurls.expire_days", 14],
+  ["matchBuckets", "suggestion:4,general:Infinity"],
+  ["matchBucketsSearch", ""],
+  ["insertMethod", INSERTMETHOD.MERGE_RELATED],
+]);
+const PREF_OTHER_DEFAULTS = new Map([
+  ["keyword.enabled", true],
+]);
+
 // AutoComplete query type constants.
 // Describes the various types of queries that we can process rows for.
 const QUERYTYPE_FILTERED            = 0;
@@ -37,6 +75,12 @@ const TELEMETRY_1ST_RESULT = "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS";
 const TELEMETRY_6_FIRST_RESULTS = "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS";
 // The default frecency value used when inserting matches with unknown frecency.
 const FRECENCY_DEFAULT = 1000;
+
+// Extensions are allowed to add suggestions if they have registered a keyword
+// with the omnibox API. This is the maximum number of suggestions an extension
+// is allowed to add for a given search string.
+// This value includes the heuristic result.
+const MAXIMUM_ALLOWED_EXTENSION_MATCHES = 6;
 
 // After this time, we'll give up waiting for the extension to return matches.
 const MAXIMUM_ALLOWED_EXTENSION_TIME_MS = 3000;
@@ -91,6 +135,35 @@ const TOKEN_TO_BEHAVIOR_MAP = new Map([
   ["#", "title"],
   ["@", "url"],
 ]);
+
+const MATCHTYPE = {
+  HEURISTIC: "heuristic",
+  GENERAL: "general",
+  SUGGESTION: "suggestion",
+  EXTENSION: "extension",
+};
+
+// Buckets for match insertion.
+// Every time a new match is returned, we go through each bucket in array order,
+// and look for the first one having available space for the given match type.
+// Each bucket is an array containing the following indices:
+//   0: The match type of the acceptable entries.
+//   1: available number of slots in this bucket.
+// There are different matchBuckets definition for different contexts, currently
+// a general one (matchBuckets) and a search one (matchBucketsSearch).
+//
+// First buckets. Anything with an Infinity frecency ends up here.
+const DEFAULT_BUCKETS_BEFORE = [
+  [MATCHTYPE.HEURISTIC, 1],
+  [MATCHTYPE.EXTENSION, MAXIMUM_ALLOWED_EXTENSION_MATCHES - 1],
+];
+// => USER DEFINED BUCKETS WILL BE INSERTED HERE <=
+//
+// Catch-all buckets. Anything remaining ends up here.
+const DEFAULT_BUCKETS_AFTER = [
+  [MATCHTYPE.SUGGESTION, Infinity],
+  [MATCHTYPE.GENERAL, Infinity],
+];
 
 // If a URL starts with one of these prefixes, then we don't provide search
 // suggestions for it.
@@ -334,17 +407,15 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
-  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
-  PlacesRemoteTabsAutocompleteProvider: "resource://gre/modules/PlacesRemoteTabsAutocompleteProvider.jsm",
-  PlacesSearchAutocompleteProvider: "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  ProfileAge: "resource://gre/modules/ProfileAge.jsm",
-  Sqlite: "resource://gre/modules/Sqlite.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+  Sqlite: "resource://gre/modules/Sqlite.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
+  PlacesSearchAutocompleteProvider: "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
+  PlacesRemoteTabsAutocompleteProvider: "resource://gre/modules/PlacesRemoteTabsAutocompleteProvider.jsm",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+  ProfileAge: "resource://gre/modules/ProfileAge.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "syncUsernamePref",
@@ -482,6 +553,175 @@ XPCOMUtils.defineLazyGetter(this, "SwitchToTabStorage", () => Object.seal({
     this._queue.clear();
   },
 }));
+
+/**
+ * This helper keeps track of preferences and their updates.
+ */
+XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
+  let branch = Services.prefs.getBranch(PREF_URLBAR_BRANCH);
+  let types = ["history", "bookmark", "openpage", "searches"];
+  let prefTypes = new Map([["boolean", "Bool"], ["string", "Char"], ["number", "Int"]]);
+
+  function readPref(pref) {
+    let prefs = branch;
+    let def = PREF_URLBAR_DEFAULTS.get(pref);
+    if (def === undefined) {
+      prefs = Services.prefs;
+      def = PREF_OTHER_DEFAULTS.get(pref);
+    }
+    if (def === undefined)
+      throw new Error("Trying to access an unknown pref " + pref);
+    let getterName;
+    if (!Array.isArray(def)) {
+      getterName = `get${prefTypes.get(typeof def)}Pref`;
+    } else {
+      if (def.length != 2) {
+        throw new Error("Malformed pref def: " + pref);
+      }
+      [def, getterName] = def;
+    }
+    return prefs[getterName](pref, def);
+  }
+
+  function getPrefValue(pref) {
+    switch (pref) {
+      case "matchBuckets": {
+        // Convert from pref char format to an array and add the default buckets.
+        let val = readPref(pref);
+        try {
+          val = PlacesUtils.convertMatchBucketsStringToArray(val);
+        } catch (ex) {
+          val = PlacesUtils.convertMatchBucketsStringToArray(PREF_URLBAR_DEFAULTS.get(pref));
+        }
+        return [ ...DEFAULT_BUCKETS_BEFORE,
+                ...val,
+                ...DEFAULT_BUCKETS_AFTER ];
+      }
+      case "matchBucketsSearch": {
+        // Convert from pref char format to an array and add the default buckets.
+        let val = readPref(pref);
+        if (val) {
+          // Convert from pref char format to an array and add the default buckets.
+          try {
+            val = PlacesUtils.convertMatchBucketsStringToArray(val);
+            return [ ...DEFAULT_BUCKETS_BEFORE,
+                    ...val,
+                    ...DEFAULT_BUCKETS_AFTER ];
+          } catch (ex) { /* invalid format, will just return matchBuckets */ }
+        }
+        return store.get("matchBuckets");
+      }
+      case "suggest.history.onlyTyped": {
+        // If history is not set, onlyTyped value should be ignored.
+        return store.get("suggest.history") && readPref(pref);
+      }
+      case "defaultBehavior": {
+        let val = 0;
+        for (let type of [...types, "history.onlyTyped"]) {
+          let behavior = type == "history.onlyTyped" ? "TYPED" : type.toUpperCase();
+          val |= store.get("suggest." + type) &&
+                      Ci.mozIPlacesAutoComplete["BEHAVIOR_" + behavior];
+        }
+        return val;
+      }
+      case "emptySearchDefaultBehavior": {
+        // Further restrictions to apply for "empty searches" (searching for "").
+        // The empty behavior is typed history, if history is enabled. Otherwise,
+        // it is bookmarks, if they are enabled. If both history and bookmarks are
+        // disabled, it defaults to open pages.
+        let val = Ci.mozIPlacesAutoComplete.BEHAVIOR_RESTRICT;
+        if (store.get("suggest.history")) {
+          val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_HISTORY |
+                Ci.mozIPlacesAutoComplete.BEHAVIOR_TYPED;
+        } else if (store.get("suggest.bookmark")) {
+          val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_BOOKMARK;
+        } else {
+          val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_OPENPAGE;
+        }
+        return val;
+      }
+      case "matchBehavior": {
+        // Validate matchBehavior; default to MATCH_BOUNDARY_ANYWHERE.
+        let val = readPref(pref);
+        if (![MATCH_ANYWHERE, MATCH_BOUNDARY, MATCH_BEGINNING].includes(val)) {
+          val = MATCH_BOUNDARY_ANYWHERE;
+        }
+        return val;
+      }
+    }
+    return readPref(pref);
+  }
+
+  // Used to keep some pref values linked.
+  // TODO: remove autocomplete.enabled and rely only on suggest.* prefs once we
+  // can drop legacy add-ons compatibility.
+  let linkingPrefs = false;
+  function updateLinkedPrefs(changedPref = "") {
+    // Avoid re-entrance.
+    if (linkingPrefs)
+      return;
+    linkingPrefs = true;
+    try {
+      if (changedPref.startsWith("suggest.")) {
+        // A suggest pref changed, fix autocomplete.enabled.
+        branch.setBoolPref("autocomplete.enabled",
+                          types.some(type => store.get("suggest." + type)));
+      } else if (store.get("autocomplete.enabled")) {
+        // If autocomplete is enabled and all of the suggest.* prefs are disabled,
+        // reset the suggest.* prefs to their default value.
+        if (types.every(type => !store.get("suggest." + type))) {
+          for (let type of types) {
+            let def = PREF_URLBAR_DEFAULTS.get("suggest." + type);
+            branch.setBoolPref("suggest." + type, def);
+          }
+        }
+      } else {
+        // If autocomplete is disabled, deactivate all suggest preferences.
+        for (let type of types) {
+          branch.setBoolPref("suggest." + type, false);
+        }
+      }
+    } finally {
+      linkingPrefs = false;
+    }
+  }
+
+  let store = {
+    _map: new Map(),
+    get(pref) {
+      if (!this._map.has(pref))
+        this._map.set(pref, getPrefValue(pref));
+      return this._map.get(pref);
+    },
+    observe(subject, topic, data) {
+      let pref = data.replace(PREF_URLBAR_BRANCH, "");
+      if (!PREF_URLBAR_DEFAULTS.has(pref) && !PREF_OTHER_DEFAULTS.has(pref))
+        return;
+      this._map.delete(pref);
+      // Some prefs may influence others.
+      if (pref == "matchBuckets") {
+        this._map.delete("matchBucketsSearch");
+      } else if (pref == "suggest.history") {
+        this._map.delete("suggest.history.onlyTyped");
+      }
+      if (pref == "autocomplete.enabled" || pref.startsWith("suggest.")) {
+        this._map.delete("defaultBehavior");
+        this._map.delete("emptySearchDefaultBehavior");
+        updateLinkedPrefs(pref);
+      }
+    },
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsIObserver,
+      Ci.nsISupportsWeakReference,
+    ]),
+  };
+  Services.prefs.addObserver(PREF_URLBAR_BRANCH, store, true);
+  Services.prefs.addObserver("keyword.enabled", store, true);
+
+  // On startup we must check that some prefs are linked.
+  updateLinkedPrefs();
+  return store;
+});
 
 // Preloaded Sites related
 
@@ -657,10 +897,10 @@ function Search(searchString, searchParam, autocompleteListener,
   this._searchString = Services.textToSubURI.unEscapeURIForUI("UTF-8", suffix);
   this._strippedPrefix = prefix.toLowerCase();
 
-  this._matchBehavior = UrlbarPrefs.get("matchBehavior");
+  this._matchBehavior = Prefs.get("matchBehavior");
   // Set the default behavior for this search.
-  this._behavior = this._searchString ? UrlbarPrefs.get("defaultBehavior")
-                                      : UrlbarPrefs.get("emptySearchDefaultBehavior");
+  this._behavior = this._searchString ? Prefs.get("defaultBehavior")
+                                      : Prefs.get("emptySearchDefaultBehavior");
 
   let params = new Set(searchParam.split(" "));
   this._enableActions = params.has("enable-actions");
@@ -706,13 +946,13 @@ function Search(searchString, searchParam, autocompleteListener,
   for (let i = 0; previousResult && i < previousResult.matchCount; ++i) {
     let style = previousResult.getStyleAt(i);
     if (style.includes("heuristic")) {
-      this._previousSearchMatchTypes.push(UrlbarUtils.MATCHTYPE.HEURISTIC);
+      this._previousSearchMatchTypes.push(MATCHTYPE.HEURISTIC);
     } else if (style.includes("suggestion")) {
-      this._previousSearchMatchTypes.push(UrlbarUtils.MATCHTYPE.SUGGESTION);
+      this._previousSearchMatchTypes.push(MATCHTYPE.SUGGESTION);
     } else if (style.includes("extension")) {
-      this._previousSearchMatchTypes.push(UrlbarUtils.MATCHTYPE.EXTENSION);
+      this._previousSearchMatchTypes.push(MATCHTYPE.EXTENSION);
     } else {
-      this._previousSearchMatchTypes.push(UrlbarUtils.MATCHTYPE.GENERAL);
+      this._previousSearchMatchTypes.push(MATCHTYPE.GENERAL);
     }
   }
 
@@ -733,7 +973,7 @@ function Search(searchString, searchParam, autocompleteListener,
   this._usedPlaceIds = new Set();
 
   // Counters for the number of matches per MATCHTYPE.
-  this._counts = Object.values(UrlbarUtils.MATCHTYPE)
+  this._counts = Object.values(MATCHTYPE)
                        .reduce((o, p) => { o[p] = 0; return o; }, {});
 }
 
@@ -822,7 +1062,7 @@ Search.prototype = {
     // Set the right JavaScript behavior based on our preference.  Note that the
     // preference is whether or not we should filter JavaScript, and the
     // behavior is if we should search it or not.
-    if (!UrlbarPrefs.get("filter.javascript")) {
+    if (!Prefs.get("filter.javascript")) {
       this.setBehavior("javascript");
     }
 
@@ -920,7 +1160,7 @@ Search.prototype = {
     this._addingHeuristicFirstMatch = true;
     let hasHeuristic = await this._matchFirstHeuristicResult(conn);
     this._addingHeuristicFirstMatch = false;
-    this._cleanUpNonCurrentMatches(UrlbarUtils.MATCHTYPE.HEURISTIC);
+    this._cleanUpNonCurrentMatches(MATCHTYPE.HEURISTIC);
     if (!this.pending)
       return;
 
@@ -930,7 +1170,7 @@ Search.prototype = {
     // Though, if there's no heuristic result, we start searching immediately,
     // since autocomplete may be waiting for us.
     if (hasHeuristic) {
-      await this._sleep(UrlbarPrefs.get("delay"));
+      await this._sleep(Prefs.get("delay"));
       if (!this.pending)
         return;
     }
@@ -952,7 +1192,7 @@ Search.prototype = {
     if (this._enableActions && this._searchTokens.length > 0) {
       // Limit the string sent for search suggestions to a maximum length.
       let searchString = this._searchTokens.join(" ")
-                             .substr(0, UrlbarPrefs.get("maxCharsForSearchSuggestions"));
+                             .substr(0, Prefs.get("maxCharsForSearchSuggestions"));
       // Avoid fetching suggestions if they are not required, private browsing
       // mode is enabled, or the search string may expose sensitive information.
       if (this.hasBehavior("searches") && !this._inPrivateWindow &&
@@ -961,7 +1201,7 @@ Search.prototype = {
         if (this.hasBehavior("restrict")) {
           // Wait for the suggestions to be added.
           await searchSuggestionsCompletePromise;
-          this._cleanUpNonCurrentMatches(UrlbarUtils.MATCHTYPE.SUGGESTION);
+          this._cleanUpNonCurrentMatches(MATCHTYPE.SUGGESTION);
           // We're done if we're restricting to search suggestions.
           // Notify the result completion then stop the search.
           this._autocompleteSearch.finishSearch(true);
@@ -971,7 +1211,7 @@ Search.prototype = {
     }
     // In any case, clear previous suggestions.
     searchSuggestionsCompletePromise.then(() => {
-      this._cleanUpNonCurrentMatches(UrlbarUtils.MATCHTYPE.SUGGESTION);
+      this._cleanUpNonCurrentMatches(MATCHTYPE.SUGGESTION);
     });
 
     // Run the adaptive query first.
@@ -1006,27 +1246,26 @@ Search.prototype = {
 
     // If we have some unused adaptive matches, add them now.
     while (this._extraAdaptiveRows.length &&
-           this._currentMatchCount < UrlbarPrefs.get("maxRichResults")) {
+           this._currentMatchCount < Prefs.get("maxRichResults")) {
       this._addFilteredQueryMatch(this._extraAdaptiveRows.shift());
     }
 
     // If we have some unused remote tab matches, add them now.
     while (this._extraRemoteTabRows.length &&
-          this._currentMatchCount < UrlbarPrefs.get("maxRichResults")) {
+          this._currentMatchCount < Prefs.get("maxRichResults")) {
       this._addMatch(this._extraRemoteTabRows.shift());
     }
 
     // Ideally we should wait until MATCH_BOUNDARY_ANYWHERE, but that query
     // may be really slow and we may end up showing old results for too long.
-    this._cleanUpNonCurrentMatches(UrlbarUtils.MATCHTYPE.GENERAL);
+    this._cleanUpNonCurrentMatches(MATCHTYPE.GENERAL);
 
     // If we do not have enough results, and our match type is
     // MATCH_BOUNDARY_ANYWHERE, search again with MATCH_ANYWHERE to get more
     // results.
-    let count = this._counts[UrlbarUtils.MATCHTYPE.GENERAL] +
-                this._counts[UrlbarUtils.MATCHTYPE.HEURISTIC];
+    let count = this._counts[MATCHTYPE.GENERAL] + this._counts[MATCHTYPE.HEURISTIC];
     if (this._matchBehavior == MATCH_BOUNDARY_ANYWHERE &&
-        count < UrlbarPrefs.get("maxRichResults")) {
+        count < Prefs.get("maxRichResults")) {
       this._matchBehavior = MATCH_ANYWHERE;
       for (let [query, params] of [ this._adaptiveQuery,
                                     this._searchQuery ]) {
@@ -1044,16 +1283,16 @@ Search.prototype = {
   },
 
   async _checkPreloadedSitesExpiry() {
-    if (!UrlbarPrefs.get("usepreloadedtopurls.enabled"))
+    if (!Prefs.get("usepreloadedtopurls.enabled"))
       return;
     let profileCreationDate = await ProfileAgeCreatedPromise;
     let daysSinceProfileCreation = (Date.now() - profileCreationDate) / MS_PER_DAY;
-    if (daysSinceProfileCreation > UrlbarPrefs.get("usepreloadedtopurls.expire_days"))
+    if (daysSinceProfileCreation > Prefs.get("usepreloadedtopurls.expire_days"))
       Services.prefs.setBoolPref("browser.urlbar.usepreloadedtopurls.enabled", false);
   },
 
   _matchPreloadedSites() {
-    if (!UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
+    if (!Prefs.get("usepreloadedtopurls.enabled")) {
       return;
     }
 
@@ -1078,7 +1317,7 @@ Search.prototype = {
   },
 
   _matchPreloadedSiteForAutofill() {
-    if (!UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
+    if (!Prefs.get("usepreloadedtopurls.enabled")) {
       return false;
     }
 
@@ -1177,8 +1416,7 @@ Search.prototype = {
         try {
           new URL(this._originalSearchString);
         } catch (ex) {
-          if (UrlbarPrefs.get("keyword.enabled") &&
-              !looksLikeUrl(this._originalSearchString, true)) {
+          if (Prefs.get("keyword.enabled") && !looksLikeUrl(this._originalSearchString, true)) {
             this._addingHeuristicFirstMatch = false;
             await this._matchCurrentSearchEngine();
             this._addingHeuristicFirstMatch = true;
@@ -1205,8 +1443,8 @@ Search.prototype = {
       PlacesSearchAutocompleteProvider.getSuggestionController(
         searchString,
         this._inPrivateWindow,
-        UrlbarPrefs.get("maxHistoricalSearchSuggestions"),
-        UrlbarPrefs.get("maxRichResults") - UrlbarPrefs.get("maxHistoricalSearchSuggestions"),
+        Prefs.get("maxHistoricalSearchSuggestions"),
+        Prefs.get("maxRichResults") - Prefs.get("maxHistoricalSearchSuggestions"),
         this._userContextId
       );
     return this._searchSuggestionController.fetchCompletePromise.then(() => {
@@ -1341,7 +1579,7 @@ Search.prototype = {
   },
 
   async _matchSearchEngineDomain() {
-    if (!UrlbarPrefs.get("autoFill.searchEngines")) {
+    if (!Prefs.get("autoFill.searchEngines")) {
       return false;
     }
     if (!this._searchString) {
@@ -1430,9 +1668,8 @@ Search.prototype = {
   },
 
   _addExtensionMatch(content, comment) {
-    let count = this._counts[UrlbarUtils.MATCHTYPE.EXTENSION] +
-                this._counts[UrlbarUtils.MATCHTYPE.HEURISTIC];
-    if (count >= UrlbarUtils.MAXIMUM_ALLOWED_EXTENSION_MATCHES) {
+    let count = this._counts[MATCHTYPE.EXTENSION] + this._counts[MATCHTYPE.HEURISTIC];
+    if (count >= MAXIMUM_ALLOWED_EXTENSION_MATCHES) {
       return;
     }
 
@@ -1445,7 +1682,7 @@ Search.prototype = {
       icon: "chrome://browser/content/extension.svg",
       style: "action extension",
       frecency: Infinity,
-      type: UrlbarUtils.MATCHTYPE.EXTENSION,
+      type: MATCHTYPE.EXTENSION,
     });
   },
 
@@ -1470,7 +1707,7 @@ Search.prototype = {
     };
     if (suggestion) {
       match.style += " suggestion";
-      match.type = UrlbarUtils.MATCHTYPE.SUGGESTION;
+      match.type = MATCHTYPE.SUGGESTION;
     }
 
     this._addMatch(match);
@@ -1489,7 +1726,7 @@ Search.prototype = {
     // matches may appear stale for a long time.
     // This is necessary because WebExtensions don't have a method to notify
     // that they are done providing results, so they could be pending forever.
-    setTimeout(() => this._cleanUpNonCurrentMatches(UrlbarUtils.MATCHTYPE.EXTENSION), 100);
+    setTimeout(() => this._cleanUpNonCurrentMatches(MATCHTYPE.EXTENSION), 100);
 
     // Since the extension has no way to signale when it's done pushing
     // results, we add a timeout racing with the addition.
@@ -1545,8 +1782,7 @@ Search.prototype = {
       fixupInfo = Services.uriFixup.getFixupURIInfo(searchUrl,
                                                     flags);
     } catch (e) {
-      if (e.result == Cr.NS_ERROR_MALFORMED_URI &&
-          !UrlbarPrefs.get("keyword.enabled")) {
+      if (e.result == Cr.NS_ERROR_MALFORMED_URI && !Prefs.get("keyword.enabled")) {
         let value = PlacesUtils.mozActionURI("visiturl", {
           url: searchUrl,
           input: searchUrl,
@@ -1635,9 +1871,8 @@ Search.prototype = {
     }
     // If the search has been canceled by the user or by _addMatch, or we
     // fetched enough results, we can stop the underlying Sqlite query.
-    let count = this._counts[UrlbarUtils.MATCHTYPE.GENERAL] +
-                this._counts[UrlbarUtils.MATCHTYPE.HEURISTIC];
-    if (!this.pending || count >= UrlbarPrefs.get("maxRichResults")) {
+    let count = this._counts[MATCHTYPE.GENERAL] + this._counts[MATCHTYPE.HEURISTIC];
+    if (!this.pending || count >= Prefs.get("maxRichResults")) {
       cancel();
     }
   },
@@ -1676,9 +1911,9 @@ Search.prototype = {
       throw new Error("Frecency not provided");
 
     if (this._addingHeuristicFirstMatch)
-      match.type = UrlbarUtils.MATCHTYPE.HEURISTIC;
+      match.type = MATCHTYPE.HEURISTIC;
     else if (typeof match.type != "string")
-      match.type = UrlbarUtils.MATCHTYPE.GENERAL;
+      match.type = MATCHTYPE.GENERAL;
 
     // A search could be canceled between a query start and its completion,
     // in such a case ensure we won't notify any result for it.
@@ -1688,7 +1923,7 @@ Search.prototype = {
     match.style = match.style || "favicon";
 
     // Restyle past searches, unless they are bookmarks or special results.
-    if (UrlbarPrefs.get("restyleSearches") && match.style == "favicon") {
+    if (Prefs.get("restyleSearches") && match.style == "favicon") {
       this._maybeRestyleSearchMatch(match);
     }
 
@@ -1718,7 +1953,7 @@ Search.prototype = {
       TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, this);
     if (this._currentMatchCount == 6)
       TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, this);
-    this.notifyResult(true, match.type == UrlbarUtils.MATCHTYPE.HEURISTIC);
+    this.notifyResult(true, match.type == MATCHTYPE.HEURISTIC);
   },
 
   _getInsertIndexForMatch(match) {
@@ -1743,8 +1978,7 @@ Search.prototype = {
             isDupe = true;
             // Don't replace the match if the existing one is heuristic and the
             // new one is a switchtab, instead also add the switchtab match.
-            if (matchType == UrlbarUtils.MATCHTYPE.HEURISTIC &&
-                action.type == "switchtab") {
+            if (matchType == MATCHTYPE.HEURISTIC && action.type == "switchtab") {
               isDupe = false;
               // Since we allow to insert a dupe in this case, we must continue
               // checking the next matches to be sure we won't insert more than
@@ -1779,9 +2013,9 @@ Search.prototype = {
     // the first added match (the heuristic one).
     if (!this._buckets) {
       // Convert the buckets to readable objects with a count property.
-      let buckets = match.type == UrlbarUtils.MATCHTYPE.HEURISTIC &&
-                    match.style.includes("searchengine") ? UrlbarPrefs.get("matchBucketsSearch")
-                                                         : UrlbarPrefs.get("matchBuckets");
+      let buckets = match.type == MATCHTYPE.HEURISTIC &&
+                    match.style.includes("searchengine") ? Prefs.get("matchBucketsSearch")
+                                                         : Prefs.get("matchBuckets");
       // - available is the number of available slots in the bucket
       // - insertIndex is the index of the first available slot in the bucket
       // - count is the number of matches in the bucket, note that it also
@@ -1837,7 +2071,7 @@ Search.prototype = {
    * Removes matches from a previous search, that are no more returned by the
    * current search
    * @param type
-   *        The UrlbarUtils.MATCHTYPE to clean up.
+   *        The MATCHTYPE to clean up.
    * @param [optional] notify
    *        Whether to notify a result change.
    */
@@ -1949,7 +2183,7 @@ Search.prototype = {
     // Note: ideally adaptive results should have their own provider and the
     // results muxer should decide what to show.  But that's too complex to
     // support in the current code, so that's left for a future refactoring.
-    if (this._adaptiveCount < Math.ceil(UrlbarPrefs.get("maxRichResults") / 4)) {
+    if (this._adaptiveCount < Math.ceil(Prefs.get("maxRichResults") / 4)) {
       this._addFilteredQueryMatch(row);
     } else {
       this._extraAdaptiveRows.push(row);
@@ -2095,7 +2329,7 @@ Search.prototype = {
         userContextId: this._userContextId,
         // Limit the query to the the maximum number of desired results.
         // This way we can avoid doing more work than needed.
-        maxResults: UrlbarPrefs.get("maxRichResults"),
+        maxResults: Prefs.get("maxRichResults"),
       },
     ];
   },
@@ -2117,7 +2351,7 @@ Search.prototype = {
         // original search string.
         searchString: this._keywordSubstitutedSearchString,
         userContextId: this._userContextId,
-        maxResults: UrlbarPrefs.get("maxRichResults"),
+        maxResults: Prefs.get("maxRichResults"),
       },
     ];
   },
@@ -2138,7 +2372,7 @@ Search.prototype = {
         matchBehavior: this._matchBehavior,
         searchBehavior: this._behavior,
         userContextId: this._userContextId,
-        maxResults: UrlbarPrefs.get("maxRichResults"),
+        maxResults: Prefs.get("maxRichResults"),
       },
     ];
   },
@@ -2148,7 +2382,7 @@ Search.prototype = {
    */
   get _shouldAutofill() {
     // First of all, check for the autoFill pref.
-    if (!UrlbarPrefs.get("autoFill"))
+    if (!Prefs.get("autoFill"))
       return false;
 
     if (this._searchTokens.length != 1)
@@ -2198,7 +2432,7 @@ Search.prototype = {
     let opts = {
       query_type: QUERYTYPE_AUTOFILL_ORIGIN,
       searchString: searchStr.toLowerCase(),
-      stddevMultiplier: UrlbarPrefs.get("autoFill.stddevMultiplier"),
+      stddevMultiplier: Prefs.get("autoFill.stddevMultiplier"),
     };
 
     let bookmarked = this.hasBehavior("bookmark") &&
@@ -2252,7 +2486,7 @@ Search.prototype = {
       query_type: QUERYTYPE_AUTOFILL_URL,
       revHost,
       strippedURL,
-      stddevMultiplier: UrlbarPrefs.get("autoFill.stddevMultiplier"),
+      stddevMultiplier: Prefs.get("autoFill.stddevMultiplier"),
     };
 
     let bookmarked = this.hasBehavior("bookmark") &&
@@ -2322,7 +2556,13 @@ Search.prototype = {
 // component @mozilla.org/autocomplete/search;1?name=unifiedcomplete
 
 function UnifiedComplete() {
-  if (UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
+  // Make sure the preferences are initialized as soon as possible.
+  // If the value of browser.urlbar.autocomplete.enabled is set to false,
+  // then all the other suggest preferences for history, bookmarks and
+  // open pages should be set to false.
+  Prefs;
+
+  if (Prefs.get("usepreloadedtopurls.enabled")) {
     // force initializing the profile age check
     // to ensure the off-main-thread-IO happens ASAP
     // and we don't have to wait for it when doing an autocomplete lookup
@@ -2352,8 +2592,7 @@ UnifiedComplete.prototype = {
    * @rejects javascript exception.
    */
   getDatabaseHandle() {
-    if (UrlbarPrefs.get("autocomplete.enabled") &&
-        !this._promiseDatabase) {
+    if (Prefs.get("autocomplete.enabled") && !this._promiseDatabase) {
       this._promiseDatabase = (async () => {
         let conn = await PlacesUtils.promiseLargeCacheDBConnection();
 
@@ -2425,8 +2664,8 @@ UnifiedComplete.prototype = {
     // would not be returned by the current one, thus once the current search is
     // complete, we remove those stale matches with _cleanUpNonCurrentMatches().
     let previousResult = null;
-    let insertMethod = UrlbarPrefs.get("insertMethod");
-    if (this._currentSearch && insertMethod != UrlbarUtils.INSERTMETHOD.APPEND) {
+    let insertMethod = Prefs.get("insertMethod");
+    if (this._currentSearch && insertMethod != INSERTMETHOD.APPEND) {
       let result = this._currentSearch._result;
       // Only reuse the previous result when one of the search strings is an
       // extension of the other one.  We could expand this to any case, but
@@ -2436,7 +2675,7 @@ UnifiedComplete.prototype = {
                            searchString.length > 0 &&
                            (previousSearchString.includes(searchString) ||
                             searchString.includes(previousSearchString));
-      if (insertMethod == UrlbarUtils.INSERTMETHOD.MERGE || stringsRelated) {
+      if (insertMethod == INSERTMETHOD.MERGE || stringsRelated) {
         previousResult = result;
       }
     }
@@ -2447,7 +2686,7 @@ UnifiedComplete.prototype = {
 
     // If we are not enabled, we need to return now.  Notice we need an empty
     // result regardless, so we still create the Search object.
-    if (!UrlbarPrefs.get("autocomplete.enabled")) {
+    if (!Prefs.get("autocomplete.enabled")) {
       this.finishSearch(true);
       return;
     }
