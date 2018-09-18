@@ -39,7 +39,7 @@ WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPri
 
 WorkletLoadInfo::~WorkletLoadInfo()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mPrincipal || NS_IsMainThread());
 }
 
 // ---------------------------------------------------------------------------
