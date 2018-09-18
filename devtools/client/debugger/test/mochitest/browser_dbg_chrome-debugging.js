@@ -46,7 +46,7 @@ function testParentProcessTargetActor() {
     gClient.addListener("newGlobal", onNewGlobal);
 
     let actor = aResponse.form.actor;
-    gClient.attachTab(actor).then(([response, tabClient]) => {
+    gClient.attachTarget(actor).then(([response, tabClient]) => {
       tabClient.attachThread(null).then(([aResponse, aThreadClient]) => {
         gThreadClient = aThreadClient;
         gThreadClient.addListener("newSource", onNewSource);
