@@ -21,7 +21,6 @@
     "libtool": "/builds/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin11-libtool",
     "ld": "/builds/worker/workspace/build/src/clang/bin/clang",
     "patches": [
-      "static-llvm-symbolizer.patch",
       "compiler-rt-cross-compile.patch",
       "compiler-rt-no-codesign.patch",
       "r322401.patch",
