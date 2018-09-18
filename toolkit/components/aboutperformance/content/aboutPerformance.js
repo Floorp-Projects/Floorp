@@ -577,7 +577,7 @@ var State = {
       // Temporarily set to false to avoid doing several lookups if a site has
       // several subframes on the same domain.
       this._trackingState.set(host, false);
-      if (host.startsWith("about:"))
+      if (host.startsWith("about:") || host.startsWith("moz-nullprincipal"))
         return false;
 
       let principal =
