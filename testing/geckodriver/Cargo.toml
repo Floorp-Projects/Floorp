@@ -10,7 +10,7 @@ publish = false
 
 [dependencies]
 base64 = "0.9"
-chrono = "0.4.6"
+chrono = "^0.2"
 clap = { version = "^2.19", default-features = false, features = ["suggestions", "wrap_help"] }
 hyper = "0.12"
 lazy_static = "1.0"
@@ -24,7 +24,7 @@ serde_json = "1.0"
 serde_derive = "1.0"
 uuid = { version = "0.5", features = ["v4"] }
 webdriver = { path = "../webdriver" }
-zip = "0.4"
+zip = "0.3"
 
 [[bin]]
 name = "geckodriver"

@@ -1,7 +1,7 @@
-use core::num::Wrapping;
 use core::ops::Neg;
+use core::{f32, f64};
+use core::num::Wrapping;
 
-use float::FloatCore;
 use Num;
 
 /// Useful functions for signed numbers (i.e. numbers that can be negative).
@@ -74,12 +74,7 @@ macro_rules! signed_impl {
 
 signed_impl!(isize i8 i16 i32 i64);
 
-#[cfg(has_i128)]
-signed_impl!(i128);
-
-impl<T: Signed> Signed for Wrapping<T>
-where
-    Wrapping<T>: Num + Neg<Output = Wrapping<T>>,
+impl<T: Signed> Signed for Wrapping<T> where Wrapping<T>: Num + Neg<Output=Wrapping<T>>
 {
     #[inline]
     fn abs(&self) -> Self {
@@ -97,23 +92,33 @@ where
     }
 
     #[inline]
-    fn is_positive(&self) -> bool {
-        self.0.is_positive()
-    }
+    fn is_positive(&self) -> bool { self.0.is_positive() }
 
     #[inline]
-    fn is_negative(&self) -> bool {
-        self.0.is_negative()
-    }
+    fn is_negative(&self) -> bool { self.0.is_negative() }
 }
 
 macro_rules! signed_float_impl {
-    ($t:ty) => {
+    ($t:ty, $nan:expr, $inf:expr, $neg_inf:expr) => {
         impl Signed for $t {
             /// Computes the absolute value. Returns `NAN` if the number is `NAN`.
             #[inline]
+            #[cfg(feature = "std")]
             fn abs(&self) -> $t {
-                FloatCore::abs(*self)
+                (*self).abs()
+            }
+
+            /// Computes the absolute value. Returns `NAN` if the number is `NAN`.
+            #[inline]
+            #[cfg(not(feature = "std"))]
+            fn abs(&self) -> $t {
+                if self.is_positive() {
+                    *self
+                } else if self.is_negative() {
+                    -*self
+                } else {
+                    $nan
+                }
             }
 
             /// The positive difference of two numbers. Returns `0.0` if the number is
@@ -121,11 +126,7 @@ macro_rules! signed_float_impl {
             /// and `other` is returned.
             #[inline]
             fn abs_sub(&self, other: &$t) -> $t {
-                if *self <= *other {
-                    0.
-                } else {
-                    *self - *other
-                }
+                if *self <= *other { 0. } else { *self - *other }
             }
 
             /// # Returns
@@ -134,27 +135,42 @@ macro_rules! signed_float_impl {
             /// - `-1.0` if the number is negative, `-0.0` or `NEG_INFINITY`
             /// - `NAN` if the number is NaN
             #[inline]
+            #[cfg(feature = "std")]
             fn signum(&self) -> $t {
-                FloatCore::signum(*self)
+                use Float;
+                Float::signum(*self)
+            }
+
+            /// # Returns
+            ///
+            /// - `1.0` if the number is positive, `+0.0` or `INFINITY`
+            /// - `-1.0` if the number is negative, `-0.0` or `NEG_INFINITY`
+            /// - `NAN` if the number is NaN
+            #[inline]
+            #[cfg(not(feature = "std"))]
+            fn signum(&self) -> $t {
+                if self.is_positive() {
+                    1.0
+                } else if self.is_negative() {
+                    -1.0
+                } else {
+                    $nan
+                }
             }
 
             /// Returns `true` if the number is positive, including `+0.0` and `INFINITY`
             #[inline]
-            fn is_positive(&self) -> bool {
-                FloatCore::is_sign_positive(*self)
-            }
+            fn is_positive(&self) -> bool { *self > 0.0 || (1.0 / *self) == $inf }
 
             /// Returns `true` if the number is negative, including `-0.0` and `NEG_INFINITY`
             #[inline]
-            fn is_negative(&self) -> bool {
-                FloatCore::is_sign_negative(*self)
-            }
+            fn is_negative(&self) -> bool { *self < 0.0 || (1.0 / *self) == $neg_inf }
         }
-    };
+    }
 }
 
-signed_float_impl!(f32);
-signed_float_impl!(f64);
+signed_float_impl!(f32, f32::NAN, f32::INFINITY, f32::NEG_INFINITY);
+signed_float_impl!(f64, f64::NAN, f64::INFINITY, f64::NEG_INFINITY);
 
 /// Computes the absolute value.
 ///
@@ -188,10 +204,7 @@ pub fn abs_sub<T: Signed>(x: T, y: T) -> T {
 /// * `0` if the number is zero
 /// * `1` if the number is positive
 /// * `-1` if the number is negative
-#[inline(always)]
-pub fn signum<T: Signed>(value: T) -> T {
-    value.signum()
-}
+#[inline(always)] pub fn signum<T: Signed>(value: T) -> T { value.signum() }
 
 /// A trait for values which cannot be negative
 pub trait Unsigned: Num {}
@@ -203,14 +216,8 @@ macro_rules! empty_trait_impl {
 }
 
 empty_trait_impl!(Unsigned for usize u8 u16 u32 u64);
-#[cfg(has_i128)]
-empty_trait_impl!(Unsigned for u128);
 
-impl<T: Unsigned> Unsigned for Wrapping<T>
-where
-    Wrapping<T>: Num,
-{
-}
+impl<T: Unsigned> Unsigned for Wrapping<T> where Wrapping<T>: Num {}
 
 #[test]
 fn unsigned_wrapping_is_unsigned() {

@@ -1,95 +1,8 @@
-# Release 0.2.6 (2018-09-13)
+# Release 0.2.0
 
-- [Documented that `pow(0, 0)` returns `1`][79].  Mathematically, this is not
-  strictly defined, but the current behavior is a pragmatic choice that has
-  precedent in Rust `core` for the primitives and in many other languages.
-- [The new `WrappingShl` and `WrappingShr` traits][81] will wrap the shift count
-  if it exceeds the bit size of the type.
-
-**Contributors**: @cuviper, @edmccard, @meltinglava
-
-[79]: https://github.com/rust-num/num-traits/pull/79
-[81]: https://github.com/rust-num/num-traits/pull/81
-
-# Release 0.2.5 (2018-06-20)
-
-- [Documentation for `mul_add` now clarifies that it's not always faster.][70]
-- [The default methods in `FromPrimitive` and `ToPrimitive` are more robust.][73]
-
-**Contributors**: @cuviper, @frewsxcv
-
-[70]: https://github.com/rust-num/num-traits/pull/70
-[73]: https://github.com/rust-num/num-traits/pull/73
-
-# Release 0.2.4 (2018-05-11)
-
-- [Support for 128-bit integers is now automatically detected and enabled.][69]
-  Setting the `i128` crate feature now causes the build script to panic if such
-  support is not detected.
-
-**Contributors**: @cuviper
-
-[69]: https://github.com/rust-num/num-traits/pull/69
-
-# Release 0.2.3 (2018-05-10)
-
-- [The new `CheckedNeg` and `CheckedRem` traits][63] perform checked `Neg` and
-  `Rem`, returning `Some(output)` or `None` on overflow.
-- [The `no_std` implementation of `FloatCore::to_degrees` for `f32`][61] now
-  uses a constant for greater accuracy, mirroring [rust#47919].  (With `std` it
-  just calls the inherent `f32::to_degrees` in the standard library.)
-- [The new `MulAdd` and `MulAddAssign` traits][59] perform a fused multiply-
-  add.  For integer types this is just a convenience, but for floating point
-  types this produces a more accurate result than the separate operations.
-- [All applicable traits are now implemented for 128-bit integers][60] starting
-  with Rust 1.26, enabled by the new `i128` crate feature.  The `FromPrimitive`
-  and `ToPrimitive` traits now also have corresponding 128-bit methods, which
-  default to converting via 64-bit integers for compatibility.
-
-**Contributors**: @cuviper, @LEXUGE, @regexident, @vks
-
-[59]: https://github.com/rust-num/num-traits/pull/59
-[60]: https://github.com/rust-num/num-traits/pull/60
-[61]: https://github.com/rust-num/num-traits/pull/61
-[63]: https://github.com/rust-num/num-traits/pull/63
-[rust#47919]: https://github.com/rust-lang/rust/pull/47919
-
-# Release 0.2.2 (2018-03-18)
-
-- [Casting from floating point to integers now returns `None` on overflow][52],
-  avoiding [rustc's undefined behavior][rust-10184]. This applies to the `cast`
-  function and the traits `NumCast`, `FromPrimitive`, and `ToPrimitive`.
-
-**Contributors**: @apopiak, @cuviper, @dbarella
-
-[52]: https://github.com/rust-num/num-traits/pull/52
-[rust-10184]: https://github.com/rust-lang/rust/issues/10184
-
-
-# Release 0.2.1 (2018-03-01)
-
-- [The new `FloatCore` trait][32] offers a subset of `Float` for `#![no_std]` use.
-  [This includes everything][41] except the transcendental functions and FMA.
-- [The new `Inv` trait][37] returns the multiplicative inverse, or reciprocal.
-- [The new `Pow` trait][37] performs exponentiation, much like the existing `pow`
-  function, but with generic exponent types.
-- [The new `One::is_one` method][39] tests if a value equals 1.  Implementers
-  should override this method if there's a more efficient way to check for 1,
-  rather than comparing with a temporary `one()`.
-
-**Contributors**: @clarcharr, @cuviper, @vks
-
-[32]: https://github.com/rust-num/num-traits/pull/32
-[37]: https://github.com/rust-num/num-traits/pull/37
-[39]: https://github.com/rust-num/num-traits/pull/39
-[41]: https://github.com/rust-num/num-traits/pull/41
-
-
-# Release 0.2.0 (2018-02-06)
-
-- **breaking change**: [There is now a `std` feature][30], enabled by default, along
+- **breaking change**: There is now a `std` feature, enabled by default, along
   with the implication that building *without* this feature makes this a
-  `#![no_std]` crate.
+  `#[no_std]` crate.
   - The `Float` and `Real` traits are only available when `std` is enabled.
   - Otherwise, the API is unchanged, and num-traits 0.1.43 now re-exports its
     items from num-traits 0.2 for compatibility (the [semver-trick]).
@@ -97,17 +10,12 @@
 **Contributors**: @cuviper, @termoshtt, @vks
 
 [semver-trick]: https://github.com/dtolnay/semver-trick
-[30]: https://github.com/rust-num/num-traits/pull/30
 
+# Release 0.1.43
 
-# Release 0.1.43 (2018-02-06)
+- All items are now re-exported from num-traits 0.2 for compatibility.
 
-- All items are now [re-exported from num-traits 0.2][31] for compatibility.
-
-[31]: https://github.com/rust-num/num-traits/pull/31
-
-
-# Release 0.1.42 (2018-01-22)
+# Release 0.1.42
 
 - [num-traits now has its own source repository][num-356] at [rust-num/num-traits][home].
 - [`ParseFloatError` now implements `Display`][22].
