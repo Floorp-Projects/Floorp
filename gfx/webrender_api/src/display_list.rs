@@ -13,18 +13,18 @@ use std::io::{Read, Write};
 use std::marker::PhantomData;
 use std::{io, mem, ptr, slice};
 use time::precise_time_ns;
-use {AlphaType, BorderDetails, BorderDisplayItem, BorderRadius, BorderWidths, BoxShadowClipMode};
+use {AlphaType, BorderDetails, BorderDisplayItem, BorderRadius, BoxShadowClipMode};
 use {BoxShadowDisplayItem, ClipAndScrollInfo, ClipChainId, ClipChainItem, ClipDisplayItem, ClipId};
 use {ColorF, ComplexClipRegion, DisplayItem, ExtendMode, ExternalScrollId, FilterOp};
 use {FontInstanceKey, GlyphInstance, GlyphOptions, GlyphRasterSpace, Gradient, GradientBuilder};
 use {GradientDisplayItem, GradientStop, IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask};
-use {ImageRendering, LayoutPoint, LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform};
-use {LayoutVector2D, LineDisplayItem, LineOrientation, LineStyle, MixBlendMode, PipelineId};
-use {PropertyBinding, PushReferenceFrameDisplayListItem, PushStackingContextDisplayItem};
-use {RadialGradient, RadialGradientDisplayItem, RectangleDisplayItem, ReferenceFrame};
-use {ScrollFrameDisplayItem, ScrollSensitivity, Shadow, SpecificDisplayItem, StackingContext};
-use {StickyFrameDisplayItem, StickyOffsetBounds, TextDisplayItem, TransformStyle, YuvColorSpace};
-use {YuvData, YuvImageDisplayItem};
+use {ImageRendering, LayoutPoint, LayoutPrimitiveInfo, LayoutRect, LayoutSideOffsets, LayoutSize};
+use {LayoutTransform, LayoutVector2D, LineDisplayItem, LineOrientation, LineStyle, MixBlendMode};
+use {PipelineId, PropertyBinding, PushReferenceFrameDisplayListItem};
+use {PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
+use {RectangleDisplayItem, ReferenceFrame, ScrollFrameDisplayItem, ScrollSensitivity, Shadow};
+use {SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, StickyOffsetBounds};
+use {TextDisplayItem, TransformStyle, YuvColorSpace, YuvData, YuvImageDisplayItem};
 
 // We don't want to push a long text-run. If a text-run is too long, split it into several parts.
 // This needs to be set to (renderer::MAX_VERTEX_TEXTURE_WIDTH - VECS_PER_TEXT_RUN) * 2
@@ -1154,7 +1154,7 @@ impl DisplayListBuilder {
     pub fn push_border(
         &mut self,
         info: &LayoutPrimitiveInfo,
-        widths: BorderWidths,
+        widths: LayoutSideOffsets,
         details: BorderDetails,
     ) {
         let item = SpecificDisplayItem::Border(BorderDisplayItem { details, widths });
