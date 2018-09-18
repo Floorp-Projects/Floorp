@@ -727,6 +727,9 @@ interface nsIXPCComponents_Utils : nsISupports
     /* Create a commandline object. */
     nsISupports createCommandLine();
 
+    /* Create a command params object. */
+    nsICommandParams createCommandParams();
+
     /* Create a loadcontext object. */
     nsILoadContext createLoadContext();
 
