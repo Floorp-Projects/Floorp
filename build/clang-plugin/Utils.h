@@ -5,6 +5,7 @@
 #ifndef Utils_h__
 #define Utils_h__
 
+#include "CustomAttributes.h"
 #include "ThirdPartyPaths.h"
 #include "plugin.h"
 
@@ -333,25 +334,12 @@ inline const FieldDecl *getBaseRefCntMember(QualType T) {
   return Clazz ? getBaseRefCntMember(Clazz) : 0;
 }
 
-inline bool hasCustomAnnotation(const Decl *D, StringRef Spelling) {
-  iterator_range<specific_attr_iterator<AnnotateAttr>> Attrs =
-      D->specific_attrs<AnnotateAttr>();
-
-  for (AnnotateAttr *Attr : Attrs) {
-    if (Attr->getAnnotation() == Spelling) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 inline bool isPlacementNew(const CXXNewExpr *Expression) {
   // Regular new expressions aren't placement new
   if (Expression->getNumPlacementArgs() == 0)
     return false;
   const FunctionDecl *Declaration = Expression->getOperatorNew();
-  if (Declaration && hasCustomAnnotation(Declaration, "moz_heap_allocator")) {
+  if (Declaration && hasCustomAttribute<moz_heap_allocator>(Declaration)) {
     return false;
   }
   return true;

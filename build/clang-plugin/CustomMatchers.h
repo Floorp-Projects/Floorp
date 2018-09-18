@@ -14,19 +14,19 @@ namespace ast_matchers {
 /// This matcher will match any function declaration that is declared as a heap
 /// allocator.
 AST_MATCHER(FunctionDecl, heapAllocator) {
-  return hasCustomAnnotation(&Node, "moz_heap_allocator");
+  return hasCustomAttribute<moz_heap_allocator>(&Node);
 }
 
 /// This matcher will match any declaration that is marked as not accepting
 /// arithmetic expressions in its arguments.
 AST_MATCHER(Decl, noArithmeticExprInArgs) {
-  return hasCustomAnnotation(&Node, "moz_no_arith_expr_in_arg");
+  return hasCustomAttribute<moz_no_arith_expr_in_arg>(&Node);
 }
 
 /// This matcher will match any C++ class that is marked as having a trivial
 /// constructor and destructor.
 AST_MATCHER(CXXRecordDecl, hasTrivialCtorDtor) {
-  return hasCustomAnnotation(&Node, "moz_trivial_ctor_dtor");
+  return hasCustomAttribute<moz_trivial_ctor_dtor>(&Node);
 }
 
 /// This matcher will match lvalue-ref-qualified methods.
@@ -56,19 +56,19 @@ AST_MATCHER(Expr, isTemporary) {
 /// This matcher will match any method declaration that is marked as returning
 /// a pointer deleted by the destructor of the class.
 AST_MATCHER(CXXMethodDecl, noDanglingOnTemporaries) {
-  return hasCustomAnnotation(&Node, "moz_no_dangling_on_temporaries");
+  return hasCustomAttribute<moz_no_dangling_on_temporaries>(&Node);
 }
 
 /// This matcher will match any function declaration that is marked to prohibit
 /// calling AddRef or Release on its return value.
 AST_MATCHER(FunctionDecl, hasNoAddRefReleaseOnReturnAttr) {
-  return hasCustomAnnotation(&Node, "moz_no_addref_release_on_return");
+  return hasCustomAttribute<moz_no_addref_release_on_return>(&Node);
 }
 
 /// This matcher will match any function declaration that is marked as being
 /// allowed to run script.
 AST_MATCHER(FunctionDecl, hasCanRunScriptAnnotation) {
-  return hasCustomAnnotation(&Node, "moz_can_run_script");
+  return hasCustomAttribute<moz_can_run_script>(&Node);
 }
 
 /// This matcher will match all arithmetic binary operators.
@@ -156,7 +156,7 @@ AST_MATCHER(CXXRecordDecl, isRefCounted) { return isClassRefCounted(&Node); }
 AST_MATCHER(QualType, hasVTable) { return typeHasVTable(Node); }
 
 AST_MATCHER(CXXRecordDecl, hasNeedsNoVTableTypeAttr) {
-  return hasCustomAnnotation(&Node, "moz_needs_no_vtable_type");
+  return hasCustomAttribute<moz_needs_no_vtable_type>(&Node);
 }
 
 /// This matcher will select classes which are non-memmovable
@@ -166,12 +166,12 @@ AST_MATCHER(QualType, isNonMemMovable) {
 
 /// This matcher will select classes which require a memmovable template arg
 AST_MATCHER(CXXRecordDecl, needsMemMovableTemplateArg) {
-  return hasCustomAnnotation(&Node, "moz_needs_memmovable_type");
+  return hasCustomAttribute<moz_needs_memmovable_type>(&Node);
 }
 
 /// This matcher will select classes which require all members to be memmovable
 AST_MATCHER(CXXRecordDecl, needsMemMovableMembers) {
-  return hasCustomAnnotation(&Node, "moz_needs_memmovable_members");
+  return hasCustomAttribute<moz_needs_memmovable_members>(&Node);
 }
 
 AST_MATCHER(CXXConstructorDecl, isInterestingImplicitCtor) {
@@ -198,7 +198,7 @@ AST_MATCHER_P(Expr, ignoreTrivials, internal::Matcher<Expr>, InnerMatcher) {
 // We can't call this "isImplicit" since it clashes with an existing matcher in
 // clang.
 AST_MATCHER(CXXConstructorDecl, isMarkedImplicit) {
-  return hasCustomAnnotation(&Node, "moz_implicit");
+  return hasCustomAttribute<moz_implicit>(&Node);
 }
 
 AST_MATCHER(CXXRecordDecl, isConcreteClass) { return !Node.isAbstract(); }
@@ -206,7 +206,7 @@ AST_MATCHER(CXXRecordDecl, isConcreteClass) { return !Node.isAbstract(); }
 AST_MATCHER(QualType, autoNonAutoableType) {
   if (const AutoType *T = Node->getContainedAutoType()) {
     if (const CXXRecordDecl *Rec = T->getAsCXXRecordDecl()) {
-      return hasCustomAnnotation(Rec, "moz_non_autoable");
+      return hasCustomAttribute<moz_non_autoable>(Rec);
     }
   }
   return false;
@@ -258,7 +258,7 @@ AST_MATCHER(QualType, isSmartPtrToRefCounted) {
 
   D = D->getCanonicalDecl();
 
-  return D && hasCustomAnnotation(D, "moz_is_smartptr_to_refcounted");
+  return D && hasCustomAttribute<moz_is_smartptr_to_refcounted>(D);
 }
 
 AST_MATCHER(CXXRecordDecl, hasBaseClasses) {
@@ -270,7 +270,7 @@ AST_MATCHER(CXXRecordDecl, hasBaseClasses) {
 
 AST_MATCHER(CXXMethodDecl, isRequiredBaseMethod) {
   const CXXMethodDecl *Decl = Node.getCanonicalDecl();
-  return Decl && hasCustomAnnotation(Decl, "moz_required_base_method");
+  return Decl && hasCustomAttribute<moz_required_base_method>(Decl);
 }
 
 AST_MATCHER(CXXMethodDecl, isNonVirtual) {
@@ -280,7 +280,7 @@ AST_MATCHER(CXXMethodDecl, isNonVirtual) {
 
 AST_MATCHER(FunctionDecl, isMozMustReturnFromCaller) {
   const FunctionDecl *Decl = Node.getCanonicalDecl();
-  return Decl && hasCustomAnnotation(Decl, "moz_must_return_from_caller");
+  return Decl && hasCustomAttribute<moz_must_return_from_caller>(Decl);
 }
 
 #if CLANG_VERSION_FULL < 309

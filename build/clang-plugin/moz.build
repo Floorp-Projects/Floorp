@@ -12,6 +12,7 @@ HOST_SOURCES += [
     'ArithmeticArgChecker.cpp',
     'AssertAssignmentChecker.cpp',
     'CanRunScriptChecker.cpp',
+    'CustomAttributes.cpp',
     'CustomTypeAnnotation.cpp',
     'DanglingOnTemporaryChecker.cpp',
     'DiagnosticsMatcher.cpp',

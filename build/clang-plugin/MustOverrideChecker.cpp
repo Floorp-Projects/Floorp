@@ -34,7 +34,7 @@ void MustOverrideChecker::check(const MatchFinder::MatchResult &Result) {
     }
     Parent = Parent->getDefinition();
     for (const auto &M : Parent->methods()) {
-      if (hasCustomAnnotation(M, "moz_must_override"))
+      if (hasCustomAttribute<moz_must_override>(M))
         MustOverrides.push_back(M);
     }
   }

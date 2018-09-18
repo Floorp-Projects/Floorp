@@ -7,7 +7,7 @@
 #include "CustomTypeAnnotation.h"
 
 CustomTypeAnnotation MustUse =
-    CustomTypeAnnotation("moz_must_use_type", "must-use");
+    CustomTypeAnnotation(moz_must_use_type, "must-use");
 
 void MustUseChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(switchCase().bind("switchcase"), this);

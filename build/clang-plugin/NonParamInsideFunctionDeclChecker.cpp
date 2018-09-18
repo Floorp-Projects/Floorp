@@ -7,7 +7,7 @@
 
 class NonParamAnnotation : public CustomTypeAnnotation {
 public:
-  NonParamAnnotation() : CustomTypeAnnotation("moz_non_param", "non-param"){};
+  NonParamAnnotation() : CustomTypeAnnotation(moz_non_param, "non-param"){};
 
 protected:
   // Adding alignas(_) on a struct implicitly marks it as MOZ_NON_PARAM, due to

@@ -110,7 +110,7 @@ void FuncSetCallback::run(const MatchFinder::MatchResult &Result) {
   const FunctionDecl *Func;
   if (auto *Lambda = Result.Nodes.getNodeAs<LambdaExpr>("lambda")) {
     Func = Lambda->getCallOperator();
-    if (!Func || !hasCustomAnnotation(Func, "moz_can_run_script"))
+    if (!Func || !hasCustomAttribute<moz_can_run_script>(Func))
       return;
   } else {
     Func = Result.Nodes.getNodeAs<FunctionDecl>("canRunScriptFunction");
@@ -211,7 +211,7 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   // Bindings.
   if (ParentFunction &&
       (CanRunScriptFuncs.count(ParentFunction) ||
-       hasCustomAnnotation(ParentFunction, "moz_can_run_script_boundary"))) {
+       hasCustomAttribute<moz_can_run_script_boundary>(ParentFunction))) {
     ParentFunction = nullptr;
   }
 
@@ -236,7 +236,7 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   // If the parent function is not marked as MOZ_CAN_RUN_SCRIPT, we emit an
   // error and a not indicating it.
   if (ParentFunction) {
-    assert(!hasCustomAnnotation(ParentFunction, "moz_can_run_script") &&
+    assert(!hasCustomAttribute<moz_can_run_script>(ParentFunction) &&
            "Matcher missed something");
 
     diag(CallRange.getBegin(), ErrorNonCanRunScriptParent, DiagnosticIDs::Error)
