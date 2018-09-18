@@ -555,6 +555,21 @@ FileReader::ClearProgressEventTimer()
 }
 
 void
+FileReader::FreeFileData()
+{
+  if (mFileData) {
+    if (mDataFormat == FILE_AS_ARRAYBUFFER) {
+      js_free(mFileData);
+    } else {
+      free(mFileData);
+    }
+    mFileData = nullptr;
+  }
+
+  mDataLen = 0;
+}
+
+void
 FileReader::FreeDataAndDispatchSuccess()
 {
   FreeFileData();
