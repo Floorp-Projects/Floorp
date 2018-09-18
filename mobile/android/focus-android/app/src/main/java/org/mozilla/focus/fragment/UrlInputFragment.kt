@@ -154,7 +154,7 @@ class UrlInputFragment :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        model = ViewModelProviders.of(activity!!).get(MainViewModel::class.java)
+        model = ViewModelProviders.of(requireActivity()).get(MainViewModel::class.java)
         searchSuggestionsViewModel = ViewModelProviders.of(this).get(SearchSuggestionsViewModel::class.java)
 
         PreferenceManager.getDefaultSharedPreferences(context)
@@ -636,12 +636,12 @@ class UrlInputFragment :
         var triggerHandled = true
 
         when (input) {
-            "l10n:tip:1" -> updateSubtitle(Tip.createTrackingProtectionTip(context!!))
-            "l10n:tip:2" -> updateSubtitle(Tip.createHomescreenTip(context!!))
-            "l10n:tip:3" -> updateSubtitle(Tip.createDefaultBrowserTip(context!!))
-            "l10n:tip:4" -> updateSubtitle(Tip.createAutocompleteURLTip(context!!))
-            "l10n:tip:5" -> updateSubtitle(Tip.createOpenInNewTabTip(context!!))
-            "l10n:tip:6" -> updateSubtitle(Tip.createRequestDesktopTip(context!!))
+            "l10n:tip:1" -> updateSubtitle(Tip.createTrackingProtectionTip(requireContext()))
+            "l10n:tip:2" -> updateSubtitle(Tip.createHomescreenTip(requireContext()))
+            "l10n:tip:3" -> updateSubtitle(Tip.createDefaultBrowserTip(requireContext()))
+            "l10n:tip:4" -> updateSubtitle(Tip.createAutocompleteURLTip(requireContext()))
+            "l10n:tip:5" -> updateSubtitle(Tip.createOpenInNewTabTip(requireContext()))
+            "l10n:tip:6" -> updateSubtitle(Tip.createRequestDesktopTip(requireContext()))
             else -> triggerHandled = false
         }
 
@@ -695,7 +695,7 @@ class UrlInputFragment :
     private fun openUrl(url: String, searchTerms: String?) {
         session?.searchTerms = searchTerms
 
-        val fragmentManager = activity!!.supportFragmentManager
+        val fragmentManager = requireActivity().supportFragmentManager
 
         // Replace all fragments with a fresh browser fragment. This means we either remove the
         // HomeFragment with an UrlInputFragment on top or an old BrowserFragment with an

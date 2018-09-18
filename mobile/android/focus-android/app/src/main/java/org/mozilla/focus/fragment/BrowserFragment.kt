@@ -170,9 +170,9 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
 
         if (biometricController == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            Biometrics.hasFingerprintHardware(context!!)
+            Biometrics.hasFingerprintHardware(requireContext())
         ) {
-            biometricController = BiometricAuthenticationHandler(context!!)
+            biometricController = BiometricAuthenticationHandler(requireContext())
         }
 
         val sessionUUID = arguments!!.getString(ARGUMENT_SESSION_UUID) ?: throw IllegalAccessError("No session exists")
@@ -201,14 +201,14 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         super.onPause()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            Settings.getInstance(context!!).shouldUseBiometrics() &&
-            Biometrics.hasFingerprintHardware(context!!)
+            Settings.getInstance(requireContext()).shouldUseBiometrics() &&
+            Biometrics.hasFingerprintHardware(requireContext())
         ) {
             biometricController!!.stopListening()
             view!!.alpha = 0f
         }
 
-        context!!.unregisterReceiver(downloadBroadcastReceiver)
+        requireContext().unregisterReceiver(downloadBroadcastReceiver)
 
         if (isFullscreen) {
             getWebView()?.exitFullscreen()
@@ -437,7 +437,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             closeButton.setImageBitmap(customTabConfig.closeButtonIcon)
         } else {
             // Always set the icon in case it's been overridden by a previous CT invocation
-            val closeIcon = DrawableUtils.loadAndTintDrawable(context!!, R.drawable.ic_close, textColor)
+            val closeIcon = DrawableUtils.loadAndTintDrawable(requireContext(), R.drawable.ic_close, textColor)
 
             closeButton.setImageDrawable(closeIcon)
         }
@@ -474,7 +474,13 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
             val shareButton = view.findViewById<ImageButton>(R.id.customtab_actionbutton)
             shareButton.visibility = View.VISIBLE
-            shareButton.setImageDrawable(DrawableUtils.loadAndTintDrawable(context!!, R.drawable.ic_share, textColor))
+            shareButton.setImageDrawable(
+                DrawableUtils.loadAndTintDrawable(
+                    requireContext(),
+                    R.drawable.ic_share,
+                    textColor
+                )
+            )
             shareButton.contentDescription = getString(R.string.menu_share)
             shareButton.setOnClickListener { shareCurrentUrl() }
         }
@@ -482,7 +488,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         // We need to tint some icons.. We already tinted the close button above. Let's tint our other icons too.
         securityView!!.setColorFilter(textColor)
 
-        val menuIcon = DrawableUtils.loadAndTintDrawable(context!!, R.drawable.ic_menu, textColor)
+        val menuIcon = DrawableUtils.loadAndTintDrawable(requireContext(), R.drawable.ic_menu, textColor)
         menuView!!.setImageDrawable(menuIcon)
     }
 
@@ -532,7 +538,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             override fun onRequestDesktopStateChanged(shouldRequestDesktop: Boolean) {}
 
             override fun onLongPress(hitTarget: IWebView.HitTarget) {
-                WebContextMenu.show(activity!!, this, hitTarget)
+                WebContextMenu.show(requireActivity(), this, hitTarget)
             }
 
             override fun onEnterFullScreen(callback: IWebView.FullscreenCallback, view: View?) {
@@ -592,7 +598,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
             override fun onDownloadStart(download: Download) {
                 if (PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(
-                        context!!,
+                        requireContext(),
                         Manifest.permission.WRITE_EXTERNAL_STORAGE
                     )
                 ) {
@@ -754,7 +760,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
     }
 
     override fun onCreateViewCalled() {
-        manager = context!!.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        manager = requireContext().getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         downloadBroadcastReceiver = DownloadBroadcastReceiver(browserContainer, manager)
 
         val webView = getWebView()
@@ -765,10 +771,10 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         super.onResume()
 
         val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        context!!.registerReceiver(downloadBroadcastReceiver, filter)
+        requireContext().registerReceiver(downloadBroadcastReceiver, filter)
 
         if (pendingDownload != null && PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(
-                context!!,
+                requireContext(),
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
             )
         ) {
@@ -784,8 +790,8 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            Settings.getInstance(context!!).shouldUseBiometrics() &&
-            Biometrics.hasFingerprintHardware(context!!)
+            Settings.getInstance(requireContext()).shouldUseBiometrics() &&
+            Biometrics.hasFingerprintHardware(requireContext())
         ) {
             displayBiometricPromptIfNeeded()
         } else {
@@ -795,7 +801,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private fun displayBiometricPromptIfNeeded() {
-        val fragmentManager = activity!!.supportFragmentManager
+        val fragmentManager = requireActivity().supportFragmentManager
 
         // Check that we need to auth and that the fragment isn't already displayed
         if (biometricController!!.needsAuth) {
@@ -884,9 +890,9 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                 // If there are no other sessions then we remove the whole task because otherwise
                 // the old session might still be partially visible in the app switcher.
                 if (!SessionManager.getInstance().hasSession()) {
-                    activity!!.finishAndRemoveTask()
+                    requireActivity().finishAndRemoveTask()
                 } else {
-                    activity!!.finish()
+                    requireActivity().finish()
                 }
 
                 // We can't show a snackbar outside of the app. So let's show a toast instead.
@@ -963,7 +969,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                 val urlFragment = UrlInputFragment
                     .createWithSession(session!!, urlView!!)
 
-                activity!!.supportFragmentManager
+                requireActivity().supportFragmentManager
                     .beginTransaction()
                     .add(R.id.container, urlFragment, UrlInputFragment.FRAGMENT_TAG)
                     .commit()
@@ -976,7 +982,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             }
 
             R.id.tabs -> {
-                activity!!.supportFragmentManager
+                requireActivity().supportFragmentManager
                     .beginTransaction()
                     .add(R.id.container, SessionsSheetFragment(), SessionsSheetFragment.FRAGMENT_TAG)
                     .commit()
@@ -1028,7 +1034,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             R.id.settings -> (activity as LocaleAwareAppCompatActivity).openPreferences()
 
             R.id.open_default -> {
-                val browsers = Browsers(context!!, url)
+                val browsers = Browsers(requireContext(), url)
 
                 val defaultBrowser = browsers.defaultBrowser
                     ?: // We only add this menu item when a third party default exists, in
@@ -1047,13 +1053,13 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             }
 
             R.id.open_select_browser -> {
-                val browsers = Browsers(context!!, url)
+                val browsers = Browsers(requireContext(), url)
 
                 val apps = browsers.installedBrowsers
                 val store = if (browsers.hasFirefoxBrandedBrowserInstalled())
                     null
                 else
-                    InstallFirefoxActivity.resolveAppStore(context!!)
+                    InstallFirefoxActivity.resolveAppStore(requireContext())
 
                 val fragment = OpenWithFragment.newInstance(
                     apps,
@@ -1067,7 +1073,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
             R.id.customtab_close -> {
                 erase()
-                activity!!.finish()
+                requireActivity().finish()
 
                 TelemetryWrapper.closeCustomTabEvent()
             }
@@ -1076,7 +1082,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
             R.id.help_trackers -> SessionManager.getInstance().createSession(
                 Source.MENU,
-                SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.TRACKERS)
+                SupportUtils.getSumoURLForTopic(requireContext(), SupportUtils.SumoTopic.TRACKERS)
             )
 
             R.id.add_to_homescreen -> {
@@ -1197,7 +1203,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         if (enabled) {
             PreferenceManager.getDefaultSharedPreferences(context).edit()
                 .putBoolean(
-                    context!!.getString(R.string.has_requested_desktop),
+                    requireContext().getString(R.string.has_requested_desktop),
                     true
                 ).apply()
         }
@@ -1210,7 +1216,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         if (session!!.loading.value!!) {
             return
         }
-        val securityPopup = PopupUtils.createSecurityPopup(context!!, session!!)
+        val securityPopup = PopupUtils.createSecurityPopup(requireContext(), session!!)
         if (securityPopup != null) {
             securityPopup.setOnDismissListener { popupTint!!.visibility = View.GONE }
             securityPopup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -1218,7 +1224,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             securityPopup.isTouchable = true
             securityPopup.isFocusable = true
             securityPopup.elevation = resources.getDimension(R.dimen.menu_elevation)
-            val offsetY = context!!.resources.getDimensionPixelOffset(R.dimen.doorhanger_offsetY)
+            val offsetY = requireContext().resources.getDimensionPixelOffset(R.dimen.doorhanger_offsetY)
             securityPopup.showAtLocation(urlBar, Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, offsetY)
             popupTint!!.visibility = View.VISIBLE
         }
@@ -1250,7 +1256,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
             // Show the Snackbar and dismiss the popup when a new URL is added.
             autocompletePopup.onUrlAdded = fun(didAddSuccessfully: Boolean?) {
-                activity!!.runOnUiThread {
+                requireActivity().runOnUiThread {
                     val messageId =
                         if (didAddSuccessfully!!)
                             R.string.preference_autocomplete_add_confirmation
