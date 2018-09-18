@@ -1020,7 +1020,9 @@ ContentEventHandler::GenerateFlatFontRanges(const RawRange& aRawRange,
           const FontFamilyName& fontName = fontList.IsEmpty() ?
             FontFamilyName(fontList.GetDefaultFontType()) :
             fontList.GetFontlist()->mNames[0];
-          fontName.AppendToString(fontRange->mFontName, false);
+          nsAutoCString name;
+          fontName.AppendToString(name, false);
+          AppendUTF8toUTF16(name, fontRange->mFontName);
           fontRange->mFontSize =
             frame->PresContext()->AppUnitsToDevPixels(font.size);
         }
