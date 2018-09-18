@@ -122,6 +122,7 @@ WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
                                      const gfx::IntSize& aSize,
                                      TransactionId aTransactionId,
                                      const WebRenderScrollData& aScrollData,
+                                     bool aContainsSVGGroup,
                                      const mozilla::TimeStamp& aRefreshStartTime,
                                      const mozilla::TimeStamp& aTxnStartTime)
 {
@@ -146,7 +147,7 @@ WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
                            GetFwdTransactionId(), aTransactionId,
                            aContentSize, dlData, aDL.dl_desc, aScrollData,
                            std::move(resourceUpdates), std::move(smallShmems), largeShmems,
-                           mIdNamespace, aRefreshStartTime, aTxnStartTime, fwdTime);
+                           mIdNamespace, aContainsSVGGroup, aRefreshStartTime, aTxnStartTime, fwdTime);
 
   mParentCommands.Clear();
   mDestroyedActors.Clear();
