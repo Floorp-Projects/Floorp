@@ -18,7 +18,7 @@ function run_test() {
 
     const { tabs } = await listTabs(client);
     const tab = findTab(tabs, "test");
-    const [, tabClient] = await attachTab(client, tab);
+    const [, tabClient] = await attachTarget(client, tab);
 
     const [, threadClient] = await attachThread(tabClient);
     await resume(threadClient);
