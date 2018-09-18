@@ -139,7 +139,7 @@ TypeSet::ObjectKey::maybeCompartment()
 }
 
 /* static */ inline TypeSet::Type
-TypeSet::ObjectType(JSObject* obj)
+TypeSet::ObjectType(const JSObject* obj)
 {
     if (obj->isSingleton()) {
         return Type(uintptr_t(obj) | 1);
@@ -148,7 +148,7 @@ TypeSet::ObjectType(JSObject* obj)
 }
 
 /* static */ inline TypeSet::Type
-TypeSet::ObjectType(ObjectGroup* group)
+TypeSet::ObjectType(const ObjectGroup* group)
 {
     if (group->singleton()) {
         return Type(uintptr_t(group->singleton()) | 1);
@@ -157,7 +157,7 @@ TypeSet::ObjectType(ObjectGroup* group)
 }
 
 /* static */ inline TypeSet::Type
-TypeSet::ObjectType(ObjectKey* obj)
+TypeSet::ObjectType(const ObjectKey* obj)
 {
     return Type(uintptr_t(obj));
 }
