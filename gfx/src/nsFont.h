@@ -17,17 +17,9 @@
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "nsColor.h"                    // for nsColor and NS_RGBA
 #include "nsCoord.h"                    // for nscoord
-#include "nsStringFwd.h"                // for nsAString
-#include "nsString.h"               // for nsString
 #include "nsTArray.h"                   // for nsTArray
 
 struct gfxFontStyle;
-
-// XXX we need a method to enumerate all of the possible fonts on the
-// system across family, weight, style, size, etc. But not here!
-
-// Enumerator callback function. Return false to stop
-typedef bool (*nsFontFamilyEnumFunc)(const nsString& aFamily, bool aGeneric, void *aData);
 
 // IDs for generic fonts
 // NOTE: 0, 1 are reserved for the special IDs of the default variable
