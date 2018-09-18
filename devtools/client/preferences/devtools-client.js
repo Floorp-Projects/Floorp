@@ -65,14 +65,14 @@ pref("devtools.inspector.fonteditor.enabled", true);
 pref("devtools.inspector.fonthighlighter.enabled", true);
 
 // Flexbox preferences
-// Enable the Flexbox highlighter in Nightly
+// Enable the Flexbox highlighter and inspector panel in Nightly
 #if defined(NIGHTLY_BUILD)
 pref("devtools.inspector.flexboxHighlighter.enabled", true);
+pref("devtools.flexboxinspector.enabled", true);
 #else
 pref("devtools.inspector.flexboxHighlighter.enabled", false);
-#endif
-// Enable the Flexbox Inspector panel
 pref("devtools.flexboxinspector.enabled", false);
+#endif
 
 // Grid highlighter preferences
 pref("devtools.gridinspector.gridOutlineMaxColumns", 50);
