@@ -177,8 +177,8 @@ raptor-gdocs-firefox:
     description: "Raptor gdocs on Firefox"
     try-name: raptor-gdocs-firefox
     treeherder-symbol: Rap(gdocs)
-    run-on-projects: ['try', 'mozilla-central']
-    max-run-time: 1800
+    run-on-projects: ['try', 'mozilla-central', 'mozilla-inbound', 'autoland']
+    max-run-time: 1200
     mozharness:
         extra-options:
             - --test=raptor-gdocs
