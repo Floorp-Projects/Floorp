@@ -21,7 +21,6 @@ BEGIN_TEST(testGCOutOfMemory)
         "})();";
 
     JS::CompileOptions opts(cx);
-    opts.setUTF8(true);
 
     JS::RootedValue root(cx);
     bool ok = JS::EvaluateUtf8(cx, opts, source, strlen(source), &root);

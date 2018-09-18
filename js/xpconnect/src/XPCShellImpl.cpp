@@ -381,8 +381,7 @@ Load(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
         JS::CompileOptions options(cx);
-        options.setUTF8(true)
-               .setFileAndLine(filename.get(), 1)
+        options.setFileAndLine(filename.get(), 1)
                .setIsRunOnce(true);
         JS::Rooted<JSScript*> script(cx);
         JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
@@ -735,8 +734,7 @@ ProcessUtf8Line(AutoJSAPI& jsapi, const char* buffer, int startline)
     JSContext* cx = jsapi.cx();
     JS::CompileOptions options(cx);
     options.setFileAndLine("typein", startline)
-           .setIsRunOnce(true)
-           .setUTF8(true);
+           .setIsRunOnce(true);
 
     JS::RootedScript script(cx);
     if (!JS::CompileUtf8(cx, options, buffer, strlen(buffer), &script)) {
@@ -800,8 +798,7 @@ ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file, bool forceTTY)
         JS::RootedScript script(cx);
         JS::RootedValue unused(cx);
         JS::CompileOptions options(cx);
-        options.setUTF8(true)
-               .setFileAndLine(filename, 1)
+        options.setFileAndLine(filename, 1)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
         if (!JS::CompileUtf8File(cx, options, file, &script)) {
@@ -1032,8 +1029,8 @@ ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc, XPCShellDirProvider* aDirPr
             }
 
             JS::CompileOptions opts(cx);
-            opts.setUTF8(true)
-                .setFileAndLine("-e", 1);
+            opts.setFileAndLine("-e", 1);
+
             JS::EvaluateUtf8(cx, opts, argv[i], strlen(argv[i]), &rval);
 
             isInteractive = false;

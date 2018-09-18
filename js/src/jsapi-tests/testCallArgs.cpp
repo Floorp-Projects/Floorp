@@ -25,7 +25,6 @@ BEGIN_TEST(testCallArgs_isConstructing_native)
 
     JS::CompileOptions opts(cx);
     opts.setFileAndLine(__FILE__, __LINE__ + 4);
-    opts.setUTF8(true);
 
     JS::RootedValue result(cx);
     static const char code[] = "new customNative();";

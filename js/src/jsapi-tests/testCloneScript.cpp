@@ -44,7 +44,6 @@ BEGIN_TEST(test_cloneScript)
 
         JS::CompileOptions options(cx);
         options.setFileAndLine(__FILE__, 1);
-        options.setUTF8(true);
 
         JS::RootedFunction fun(cx);
         JS::AutoObjectVector emptyScopeChain(cx);
@@ -128,7 +127,6 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
 
         JS::CompileOptions options(cx);
         options.setFileAndLine(__FILE__, 1);
-        options.setUTF8(true);
 
         JS::RootedFunction fun(cx);
         JS::AutoObjectVector emptyScopeChain(cx);

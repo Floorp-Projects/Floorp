@@ -44,7 +44,6 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript)
 {
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    options.setUTF8(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileUtf8(cx, options, code, code_size, &script));
@@ -57,7 +56,6 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript_empty)
 {
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    options.setUTF8(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileUtf8(cx, options, "", 0, &script));
@@ -70,7 +68,6 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScriptForPrincipals)
 {
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    options.setUTF8(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileUtf8(cx, options, code, code_size, &script));
@@ -128,7 +125,6 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile)
 
     JS::CompileOptions options(cx);
     options.setFileAndLine(script_filename, 1);
-    options.setUTF8(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileUtf8Path(cx, options, script_filename, &script));
@@ -147,7 +143,6 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile_empty)
 
     JS::CompileOptions options(cx);
     options.setFileAndLine(script_filename, 1);
-    options.setUTF8(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileUtf8Path(cx, options, script_filename, &script));
@@ -166,7 +161,6 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle)
 
     JS::CompileOptions options(cx);
     options.setFileAndLine("temporary file", 1);
-    options.setUTF8(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileUtf8File(cx, options, script_stream, &script));
@@ -181,7 +175,6 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle_empty)
 
     JS::CompileOptions options(cx);
     options.setFileAndLine("empty temporary file", 1);
-    options.setUTF8(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileUtf8File(cx, options, script_stream, &script));
@@ -198,7 +191,6 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandleForPrincip
 
     JS::CompileOptions options(cx);
     options.setFileAndLine("temporary file", 1);
-    options.setUTF8(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileUtf8File(cx, options, script_stream, &script));
@@ -214,7 +206,6 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, CloneAndExecuteScript)
 
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    options.setUTF8(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileUtf8(cx, options, "val", 3, &script));

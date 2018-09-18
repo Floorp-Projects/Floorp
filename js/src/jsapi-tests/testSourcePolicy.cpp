@@ -19,7 +19,6 @@ BEGIN_TEST(testBug795104)
     s[strLen - 1] = '"';
 
     JS::CompileOptions opts(cx);
-    opts.setUTF8(true);
 
     // We don't want an rval for our Evaluate call
     opts.setNoScriptRval(true);
