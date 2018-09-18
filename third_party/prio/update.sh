@@ -1,20 +1,18 @@
 #!/bin/sh
 
-# Script to update the mozilla in-tree copy of the Prio library.
-# Run this within the /third_party/prio directory of the source tree.
+# Script to update the mozilla in-tree copy of the libprio library.
+# Run this within the /third_party/libprio directory of the source tree.
 
 MY_TEMP_DIR=`mktemp -d -t libprio_update.XXXXXX` || exit 1
 
-VERSION=1.0
+COMMIT="488da2d729d73f18ed45add59edd18b257e1ceaa"
 
-git clone https://github.com/mozilla/libprio ${MY_TEMP_DIR}/libprio
-git -C ${MY_TEMP_DIR}/libprio checkout ${VERSION}
+git clone -n https://github.com/mozilla/libprio ${MY_TEMP_DIR}/libprio
+git -C ${MY_TEMP_DIR}/libprio checkout ${COMMIT}
 
-COMMIT=$(git -C ${MY_TEMP_DIR}/libprio rev-parse HEAD)
-perl -p -i -e "s/(\d+\.)(\d+\.)(\d+)/${VERSION}/" README-mozilla;
-perl -p -i -e "s/\[commit [0-9a-f]{40}\]/[commit ${COMMIT}]/" README-mozilla;
-
-FILES="LICENSE README.md SConstruct browser-test include pclient prio ptest"
+FILES="include prio"
+VERSION=$(git -C ${MY_TEMP_DIR}/libprio describe --tags)
+perl -p -i -e "s/Current version: \S+ \[commit [0-9a-f]{40}\]/Current version: ${VERSION} [commit ${COMMIT}]/" README-mozilla
 
 for f in $FILES; do
     rm -rf $f
@@ -24,9 +22,9 @@ done
 rm -rf ${MY_TEMP_DIR}
 
 hg revert -r . moz.build
-hg addremove
+hg addremove .
 
 echo "###"
-echo "### Updated Prio to $COMMIT."
+echo "### Updated libprio to $COMMIT."
 echo "### Remember to verify and commit the changes to source control!"
 echo "###"
