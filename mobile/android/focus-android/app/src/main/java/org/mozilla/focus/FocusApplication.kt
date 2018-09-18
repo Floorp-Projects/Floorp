@@ -56,44 +56,44 @@ class FocusApplication : LocaleAwareApplication() {
 
         PreferenceManager.setDefaultValues(this, R.xml.settings, false)
 
-        loadExperiments()
+        runBlocking {
+            loadExperiments()
 
-        enableStrictMode()
+            enableStrictMode()
 
-        Components.searchEngineManager.apply {
-            launch(IO) {
-                load(this@FocusApplication)
+            Components.searchEngineManager.apply {
+                launch(IO) {
+                    load(this@FocusApplication)
+                }
+
+                registerForLocaleUpdates(this@FocusApplication)
             }
 
-            registerForLocaleUpdates(this@FocusApplication)
+            WebViewProvider.determineEngine(this@FocusApplication)
+
+            TelemetryWrapper.init(this@FocusApplication)
+            AdjustHelper.setupAdjustIfNeeded(this@FocusApplication)
+
+            visibilityLifeCycleCallback = VisibilityLifeCycleCallback(this@FocusApplication)
+            registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
+
+            val sessions = SessionManager.getInstance().sessions
+            sessions.observeForever(NotificationSessionObserver(this@FocusApplication))
+            sessions.observeForever(TelemetrySessionObserver())
+            sessions.observeForever(CleanupSessionObserver(this@FocusApplication))
+
+            val customTabSessions = SessionManager.getInstance().customTabSessions
+            customTabSessions.observeForever(TelemetrySessionObserver())
         }
-
-        WebViewProvider.determineEngine(this)
-
-        TelemetryWrapper.init(this)
-        AdjustHelper.setupAdjustIfNeeded(this)
-
-        visibilityLifeCycleCallback = VisibilityLifeCycleCallback(this)
-        registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
-
-        val sessions = SessionManager.getInstance().sessions
-        sessions.observeForever(NotificationSessionObserver(this))
-        sessions.observeForever(TelemetrySessionObserver())
-        sessions.observeForever(CleanupSessionObserver(this))
-
-        val customTabSessions = SessionManager.getInstance().customTabSessions
-        customTabSessions.observeForever(TelemetrySessionObserver())
     }
 
-    private fun loadExperiments() {
+    private suspend fun loadExperiments() {
         val experimentsFile = File(filesDir, EXPERIMENTS_JSON_FILENAME)
         val experimentSource = KintoExperimentSource(
                 EXPERIMENTS_BASE_URL, EXPERIMENTS_BUCKET_NAME, EXPERIMENTS_COLLECTION_NAME)
         fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile))
-        runBlocking {
-            withTimeoutOrNull(FRETBOARD_BLOCKING_DISK_READ_TIMEOUT) {
-                fretboard.loadExperiments() // load current settings from disk
-            }
+        withTimeoutOrNull(FRETBOARD_BLOCKING_DISK_READ_TIMEOUT) {
+            fretboard.loadExperiments() // load current settings from disk
         }
         launch(IO) {
             fretboard.updateExperiments() // then update disk and memory from the network
