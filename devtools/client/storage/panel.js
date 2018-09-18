@@ -39,7 +39,7 @@ class StoragePanel {
     let targetPromise;
     // We always interact with the target as if it were remote
     if (!this.target.isRemote) {
-      targetPromise = this.target.makeRemote();
+      targetPromise = this.target.attach();
     } else {
       targetPromise = Promise.resolve(this.target);
     }
