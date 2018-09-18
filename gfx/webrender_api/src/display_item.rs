@@ -8,6 +8,7 @@ use euclid::{SideOffsets2D, TypedRect};
 use std::ops::Not;
 use {ColorF, FontInstanceKey, GlyphOptions, ImageKey, LayoutPixel, LayoutPoint};
 use {LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D, PipelineId, PropertyBinding};
+use LayoutSideOffsets;
 
 
 // NOTE: some of these structs have an "IMPLICIT" comment.
@@ -277,7 +278,7 @@ impl NormalBorder {
     /// Normalizes a border so that we don't render disallowed stuff, like inset
     /// borders that are less than two pixels wide.
     #[inline]
-    pub fn normalize(&mut self, widths: &BorderWidths) {
+    pub fn normalize(&mut self, widths: &LayoutSideOffsets) {
         #[inline]
         fn renders_small_border_solid(style: BorderStyle) -> bool {
             match style {
@@ -364,7 +365,7 @@ pub enum BorderDetails {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BorderDisplayItem {
-    pub widths: BorderWidths,
+    pub widths: LayoutSideOffsets,
     pub details: BorderDetails,
 }
 
@@ -382,15 +383,6 @@ pub struct BorderRadius {
     pub top_right: LayoutSize,
     pub bottom_left: LayoutSize,
     pub bottom_right: LayoutSize,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-pub struct BorderWidths {
-    pub left: f32,
-    pub top: f32,
-    pub right: f32,
-    pub bottom: f32,
 }
 
 #[repr(C)]
