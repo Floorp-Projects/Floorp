@@ -44,6 +44,7 @@
 #include "GeckoProfiler.h"
 #include "mozilla/EditorSpellCheck.h"
 #include "nsCommandLine.h"
+#include "nsCommandParams.h"
 #include "nsPersistentProperties.h"
 
 using namespace mozilla;
