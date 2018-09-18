@@ -1,0 +1,170 @@
+        public/build/lib.dataprotect.maven.zip:
+          path: /build/android-components/components/lib/dataprotect/build/target.maven.zip
+          name: lib-dataprotect
+          old_artifact_id: dataprotect
+          new_group_id: org.mozilla.components
+        public/build/support.test.maven.zip:
+          path: /build/android-components/components/support/test/build/target.maven.zip
+          name: support-test
+          old_artifact_id: test
+          new_group_id: org.mozilla.components
+        public/build/support.ktx.maven.zip:
+          path: /build/android-components/components/support/ktx/build/target.maven.zip
+          name: support-ktx
+          old_artifact_id: ktx
+          new_group_id: org.mozilla.components
+        public/build/support.utils.maven.zip:
+          path: /build/android-components/components/support/utils/build/target.maven.zip
+          name: support-utils
+          old_artifact_id: utils
+          new_group_id: org.mozilla.components
+        public/build/support.base.maven.zip:
+          path: /build/android-components/components/support/base/build/target.maven.zip
+          name: support-base
+          old_artifact_id: base
+          new_group_id: org.mozilla.components
+        public/build/concept.engine.maven.zip:
+          path: /build/android-components/components/concept/engine/build/target.maven.zip
+          name: concept-engine
+          old_artifact_id: engine
+          new_group_id: org.mozilla.components
+        public/build/concept.toolbar.maven.zip:
+          path: /build/android-components/components/concept/toolbar/build/target.maven.zip
+          name: concept-toolbar
+          old_artifact_id: abstract-toolbar
+          new_group_id: org.mozilla.components
+        public/build/concept.tabstray.maven.zip:
+          path: /build/android-components/components/concept/tabstray/build/target.maven.zip
+          name: concept-tabstray
+          old_artifact_id: concept-tabstray
+          new_group_id: org.mozilla.components
+        public/build/browser.engine-gecko.maven.zip:
+          path: /build/android-components/components/browser/engine-gecko/build/target.maven.zip
+          name: browser-engine-gecko
+          old_artifact_id: engine-gecko
+          new_group_id: org.mozilla.components
+        public/build/browser.engine-gecko-beta.maven.zip:
+          path: /build/android-components/components/browser/engine-gecko-beta/build/target.maven.zip
+          name: browser-engine-gecko-beta
+          old_artifact_id: engine-gecko-beta
+          new_group_id: org.mozilla.components
+        public/build/browser.engine-gecko-nightly.maven.zip:
+          path: /build/android-components/components/browser/engine-gecko-nightly/build/target.maven.zip
+          name: browser-engine-gecko-nightly
+          old_artifact_id: engine-gecko-nightly
+          new_group_id: org.mozilla.components
+        public/build/browser.engine-system.maven.zip:
+          path: /build/android-components/components/browser/engine-system/build/target.maven.zip
+          name: browser-engine-system
+          old_artifact_id: engine-system
+          new_group_id: org.mozilla.components
+        public/build/browser.session.maven.zip:
+          path: /build/android-components/components/browser/session/build/target.maven.zip
+          name: browser-session
+          old_artifact_id: session
+          new_group_id: org.mozilla.components
+        public/build/browser.menu.maven.zip:
+          path: /build/android-components/components/browser/menu/build/target.maven.zip
+          name: browser-menu
+          old_artifact_id: menu
+          new_group_id: org.mozilla.components
+        public/build/browser.toolbar.maven.zip:
+          path: /build/android-components/components/browser/toolbar/build/target.maven.zip
+          name: browser-toolbar
+          old_artifact_id: toolbar
+          new_group_id: org.mozilla.components
+        public/build/browser.tabstray.maven.zip:
+          path: /build/android-components/components/browser/tabstray/build/target.maven.zip
+          name: browser-tabstray
+          old_artifact_id: tabstray
+          new_group_id: org.mozilla.components
+        public/build/browser.errorpages.maven.zip:
+          path: /build/android-components/components/browser/errorpages/build/target.maven.zip
+          name: browser-errorpages
+          old_artifact_id: errorpages
+          new_group_id: org.mozilla.components
+        public/build/browser.search.maven.zip:
+          path: /build/android-components/components/browser/search/build/target.maven.zip
+          name: browser-search
+          old_artifact_id: search
+          new_group_id: org.mozilla.components
+        public/build/browser.domains.maven.zip:
+          path: /build/android-components/components/browser/domains/build/target.maven.zip
+          name: browser-domains
+          old_artifact_id: domains
+          new_group_id: org.mozilla.components
+        public/build/service.telemetry.maven.zip:
+          path: /build/android-components/components/service/telemetry/build/target.maven.zip
+          name: service-telemetry
+          old_artifact_id: telemetry
+          new_group_id: org.mozilla.components
+        public/build/service.sync-logins.maven.zip:
+          path: /build/android-components/components/service/sync-logins/build/target.maven.zip
+          name: service-sync-logins
+          old_artifact_id: sync-logins
+          new_group_id: org.mozilla.components
+        public/build/service.fretboard.maven.zip:
+          path: /build/android-components/components/service/fretboard/build/target.maven.zip
+          name: service-fretboard
+          old_artifact_id: fretboard
+          new_group_id: org.mozilla.components
+        public/build/service.firefox-accounts.maven.zip:
+          path: /build/android-components/components/service/firefox-accounts/build/target.maven.zip
+          name: service-firefox-accounts
+          old_artifact_id: fxa
+          new_group_id: org.mozilla.components
+        public/build/feature.tabs.maven.zip:
+          path: /build/android-components/components/feature/tabs/build/target.maven.zip
+          name: feature-tabs
+          old_artifact_id: feature-tabs
+          new_group_id: org.mozilla.components
+        public/build/feature.session.maven.zip:
+          path: /build/android-components/components/feature/session/build/target.maven.zip
+          name: feature-session
+          old_artifact_id: feature-session
+          new_group_id: org.mozilla.components
+        public/build/feature.toolbar.maven.zip:
+          path: /build/android-components/components/feature/toolbar/build/target.maven.zip
+          name: feature-toolbar
+          old_artifact_id: feature-toolbar
+          new_group_id: org.mozilla.components
+        public/build/feature.search.maven.zip:
+          path: /build/android-components/components/feature/search/build/target.maven.zip
+          name: feature-search
+          old_artifact_id: feature-search
+          new_group_id: org.mozilla.components
+        public/build/feature.intent.maven.zip:
+          path: /build/android-components/components/feature/intent/build/target.maven.zip
+          name: feature-intent
+          old_artifact_id: feature-intent
+          new_group_id: org.mozilla.components
+        public/build/ui.colors.maven.zip:
+          path: /build/android-components/components/ui/colors/build/target.maven.zip
+          name: ui-colors
+          old_artifact_id: colors
+          new_group_id: org.mozilla.components
+        public/build/ui.autocomplete.maven.zip:
+          path: /build/android-components/components/ui/autocomplete/build/target.maven.zip
+          name: ui-autocomplete
+          old_artifact_id: autocomplete
+          new_group_id: org.mozilla.components
+        public/build/ui.icons.maven.zip:
+          path: /build/android-components/components/ui/icons/build/target.maven.zip
+          name: ui-icons
+          old_artifact_id: icons
+          new_group_id: org.mozilla.components
+        public/build/ui.fonts.maven.zip:
+          path: /build/android-components/components/ui/fonts/build/target.maven.zip
+          name: ui-fonts
+          old_artifact_id: fonts
+          new_group_id: org.mozilla.components
+        public/build/ui.progress.maven.zip:
+          path: /build/android-components/components/ui/progress/build/target.maven.zip
+          name: ui-progress
+          old_artifact_id: progress
+          new_group_id: org.mozilla.components
+        public/build/ui.tabcounter.maven.zip:
+          path: /build/android-components/components/ui/tabcounter/build/target.maven.zip
+          name: ui-tabcounter
+          old_artifact_id: tabcounter
+          new_group_id: org.mozilla.components

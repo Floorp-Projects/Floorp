@@ -133,6 +133,7 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
         exclude '**/*maven-metadata.xml*'
 
         archiveName "target.maven.zip"
+        includeEmptyDirs = false
         destinationDir(file("${project.buildDir}"))
     }
 }

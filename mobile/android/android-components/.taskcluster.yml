@@ -46,16 +46,22 @@ tasks:
 ####################################################################################################
 # Task: Release
 ####################################################################################################
-  - provisionerId: '{{ taskcluster.docker.provisionerId }}'
-    workerType: '{{ taskcluster.docker.workerType }}'
+  - provisionerId: aws-provisioner-v1
+    workerType: gecko-focus
     extra:
       github:
         events:
           - release
     scopes:
       - "secrets:get:project/android-components/publish"
+      - "project:mobile:android-components:releng:beetmover:bucket:maven-production"
+      - "project:mobile:android-components:releng:beetmover:action:push-to-maven"
+      - "queue:create-task:aws-provisioner-v1/github-worker"
+      - "queue:create-task:lowest:aws-provisioner-v1/gecko-focus"
+      - "queue:scheduler-id:taskcluster-github"
+      - "queue:create-task:lowest:scriptworker-prov-v1/mobile-beetmover-v1"
     payload:
-      maxRunTime: 7200
+      maxRunTime: 600
       deadline: "{{ '2 hours' | $fromNow }}"
       image: 'mozillamobile/android-components:1.4'
       command:
@@ -67,13 +73,26 @@ tasks:
           && git fetch origin --tags
           && git config advice.detachedHead false
           && git checkout {{ event.version }}
-          && ./gradlew --no-daemon clean test detektCheck ktlint assembleRelease docs
-          && python automation/taskcluster/release/fetch-bintray-api-key.py
-          && ./gradlew bintrayUpload --debug
+          && pip install pyyaml
+          && python automation/taskcluster/decision_task_release.py --version "{{ event.version }}"
       features:
         taskclusterProxy: true
+        chainOfTrust: true
+      artifacts:
+        public/task-graph.json:
+          type: file
+          path: /build/android-components/task-graph.json
+          expires: "{{ '1 year' | $fromNow }}"
+        public/actions.json:
+          type: file
+          path: /build/android-components/actions.json
+          expires: "{{ '1 year' | $fromNow }}"
+        public/parameters.yml:
+          type: file
+          path: /build/android-components/parameters.yml
+          expires: "{{ '1 year' | $fromNow }}"
     metadata:
-      name: Android Components - Release ({{ event.version }})
-      description: Building and publishing release versions.
+      name: Android Components - Decision task
+      description: Build and publish release versions.
       owner: '{{ event.head.user.email }}'
       source: '{{ event.head.repo.url }}'

@@ -2,18 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+"""
+Decision task for pull requests
+"""
+
 import datetime
-import json
 import os
 import taskcluster
 import re
 import subprocess
 import sys
 
+import lib.tasks
 
-"""
-Decision task for pull requests
-"""
 
 TASK_ID = os.environ.get('TASK_ID')
 REPO_URL = os.environ.get('GITHUB_HEAD_REPO_URL')
@@ -24,24 +25,16 @@ PR_TITLE = os.environ.get('GITHUB_PULL_TITLE', '')
 # If we see this text inside a pull request title then we will not execute any tasks for this PR.
 SKIP_TASKS_TRIGGER = '[ci skip]'
 
+
 def fetch_module_names():
     process = subprocess.Popen(["./gradlew", "--no-daemon", "printModules"], stdout=subprocess.PIPE)
     (output, err) = process.communicate()
     exit_code = process.wait()
-    
+
     if exit_code is not 0:
         print "Gradle command returned error:", exit_code
 
     return re.findall('module: (.*)', output, re.M)
-
-
-def schedule_task(queue, taskId, task):
-    print "TASK", taskId
-    print json.dumps(task, indent=4, separators=(',', ': '))
-
-    result = queue.createTask(taskId, task)
-    print "RESULT", taskId
-    print json.dumps(result, indent=4, separators=(',', ': '))
 
 
 def create_task(name, description, command):
@@ -124,7 +117,7 @@ if __name__ == "__main__":
     for module in modules:
         task = create_module_task(module)
         task_id = taskcluster.slugId()
-        schedule_task(queue, task_id, task)
-    
-    schedule_task(queue, taskcluster.slugId(), create_detekt_task())
-    schedule_task(queue, taskcluster.slugId(), create_ktlint_task())
+        lib.tasks.schedule_task(queue, task_id, task)
+
+    lib.tasks.schedule_task(queue, taskcluster.slugId(), create_detekt_task())
+    lib.tasks.schedule_task(queue, taskcluster.slugId(), create_ktlint_task())
