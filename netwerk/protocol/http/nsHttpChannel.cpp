@@ -6421,6 +6421,21 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     mListener = listener;
     mListenerContext = context;
 
+    // PauseTask/DelayHttpChannel queuing
+    if (!DelayHttpChannelQueue::AttemptQueueChannel(this)) {
+        // If fuzzyfox is disabled; or adding to the queue failed, the channel must continue.
+        AsyncOpenFinal(TimeStamp::Now());
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsHttpChannel::AsyncOpenFinal(TimeStamp aTimeStamp)
+{
+    // Added due to PauseTask/DelayHttpChannel
+    nsresult rv;
+
     if (mLoadGroup)
         mLoadGroup->AddRequest(this, nullptr);
 
@@ -6429,7 +6444,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     // that to complete would mean we don't include proxy resolution in the
     // timing.
     if (!mAsyncOpenTimeOverriden) {
-      mAsyncOpenTime = TimeStamp::Now();
+      mAsyncOpenTime = aTimeStamp;
     }
 
     // Remember we have Authorization header set here.  We need to check on it
