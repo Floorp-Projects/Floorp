@@ -25,7 +25,7 @@ WebAudioEditorPanel.prototype = {
 
     // Local debugging needs to make the target remote.
     if (!this.target.isRemote) {
-      targetPromise = this.target.makeRemote();
+      targetPromise = this.target.attach();
     } else {
       targetPromise = Promise.resolve(this.target);
     }
