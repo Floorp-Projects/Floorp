@@ -153,9 +153,6 @@ CODFILE=$(basename $(@F)).cod
 endif
 
 endif # !GNU_CC
-
-EXTRA_DEPS += $(DEFFILE)
-
 endif # WINNT
 
 ifeq (arm-Darwin,$(CPU_ARCH)-$(OS_TARGET))

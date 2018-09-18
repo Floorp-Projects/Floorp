@@ -30,7 +30,7 @@ if CONFIG['MOZ_UBSAN']:
     ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':
-    DEFFILE = 'mozglue.def'
+    DEFFILE = '!mozglue.def'
     # We'll break the DLL blocklist if we immediately load user32.dll
     DELAYLOAD_DLLS += [
         'user32.dll',
