@@ -11,10 +11,6 @@
 
   <binding id="toolbarbutton" display="xul:button"
            extends="chrome://global/content/bindings/button.xml#button-base">
-    <resources>
-      <stylesheet src="chrome://global/skin/toolbarbutton.css"/>
-    </resources>
-
     <content>
       <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,type,consumeanchor,triggeringprincipal=iconloadingprincipal"/>

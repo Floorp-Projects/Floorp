@@ -13,7 +13,7 @@ toolbar[brighttext] {
 
 .toolbarbutton-animatable-box,
 .toolbarbutton-1 {
-  color: inherit;
+  color: inherit !important;
   -moz-context-properties: fill, fill-opacity;
   fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
