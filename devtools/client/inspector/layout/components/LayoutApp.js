@@ -9,8 +9,13 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  getSelectorFromGrip,
+  translateNodeFrontToGrip,
+} = require("devtools/client/inspector/shared/utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
+const Accordion = createFactory(require("./Accordion"));
 const BoxModel = createFactory(require("devtools/client/inspector/boxmodel/components/BoxModel"));
 const Flexbox = createFactory(require("devtools/client/inspector/flexbox/components/Flexbox"));
 const Grid = createFactory(require("devtools/client/inspector/grids/components/Grid"));
@@ -18,8 +23,6 @@ const Grid = createFactory(require("devtools/client/inspector/grids/components/G
 const BoxModelTypes = require("devtools/client/inspector/boxmodel/types");
 const FlexboxTypes = require("devtools/client/inspector/flexbox/types");
 const GridTypes = require("devtools/client/inspector/grids/types");
-
-const Accordion = createFactory(require("./Accordion"));
 
 const BOXMODEL_STRINGS_URI = "devtools/client/locales/boxmodel.properties";
 const BOXMODEL_L10N = new LocalizationHelper(BOXMODEL_STRINGS_URI);
@@ -59,6 +62,21 @@ class LayoutApp extends PureComponent {
     };
   }
 
+  getFlexboxHeader() {
+    const { flexbox } = this.props;
+
+    if (!flexbox.actorID) {
+      // No flex container or flex item selected.
+      return LAYOUT_L10N.getStr("flexbox.header");
+    } else if (!flexbox.flexItemShown) {
+      // No flex item selected.
+      return LAYOUT_L10N.getStr("flexbox.flexContainer");
+    }
+
+    const grip = translateNodeFrontToGrip(flexbox.nodeFront);
+    return LAYOUT_L10N.getFormatStr("flexbox.flexItemOf", getSelectorFromGrip(grip));
+  }
+
   render() {
     let items = [
       {
@@ -88,7 +106,7 @@ class LayoutApp extends PureComponent {
         {
           component: Flexbox,
           componentProps: this.props,
-          header: LAYOUT_L10N.getStr("flexbox.header"),
+          header: this.getFlexboxHeader(),
           opened: Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
           onToggled: () => {
             const opened =  Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF);
