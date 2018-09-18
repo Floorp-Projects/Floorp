@@ -16,11 +16,6 @@
 
 #include "nsString.h"
 
-#define NS_WEB_BROWSER_FIND_CONTRACTID "@mozilla.org/embedcomp/find;1"
-
-#define NS_WEB_BROWSER_FIND_CID \
-  {0x57cf9383, 0x3405, 0x11d5, {0xbe, 0x5b, 0xaa, 0x20, 0xfa, 0x2c, 0xf3, 0x7c}}
-
 class nsIDOMWindow;
 
 class nsIDocShell;
