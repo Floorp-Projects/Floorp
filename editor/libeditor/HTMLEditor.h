@@ -1570,9 +1570,22 @@ protected: // Shouldn't be used by friend classes
   DeleteSelectedTableRowsWithTransaction(int32_t aNumberOfRowsToDelete);
 
   /**
+   * DeleteTableRowWithTransaction() removes a <tr> element whose index in
+   * the <table> is aRowIndex.
+   * This method adjusts rowspan attribute value if the <tr> element contains
+   * cells which spans rows.
+   *
+   * @param aTableElement       The <table> element which contains the
+   *                            <tr> element which you want to remove.
+   * @param aRowIndex           Index of the <tr> element which you want to
+   *                            remove.  0 is the first row.
+   */
+  nsresult
+  DeleteTableRowWithTransaction(Element& aTableElement, int32_t aRowIndex);
+
+  /**
    * Helpers that don't touch the selection or do batch transactions.
    */
-  nsresult DeleteRow(Element* aTable, int32_t aRowIndex);
   nsresult DeleteColumn(Element* aTable, int32_t aColIndex);
   nsresult DeleteCellContents(Element* aCell);
 
