@@ -303,7 +303,7 @@ nsRect
   // GetPostFilterBounds below!  See bug 1494263.
   // TODO: we should really return an empty rect for eHasRefsSomeInvalid since
   // in that case we disable painting of the element.
-  if (SVGObserverUtils::GetAndObserveFilters(aFrame, nullptr) ==
+  if (SVGObserverUtils::GetAndObserveFilters(firstFrame, nullptr) ==
         SVGObserverUtils::eHasRefsSomeInvalid) {
     return aPreEffectsOverflowRect;
   }
