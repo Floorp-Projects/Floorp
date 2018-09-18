@@ -106,7 +106,6 @@ class JS_PUBLIC_API(TransitiveCompileOptions)
 
   public:
     // POD options.
-    bool utf8 = false;
     bool selfHostingMode = false;
     bool canLazilyParse = true;
     bool strictOption = false;
@@ -281,8 +280,7 @@ class JS_PUBLIC_API(OwningCompileOptions) final
         return *this;
     }
 
-    OwningCompileOptions& setUTF8(bool u) {
-        utf8 = u;
+    OwningCompileOptions& setUTF8(bool) {
         return *this;
     }
 
@@ -461,8 +459,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(CompileOptions) final
         return *this;
     }
 
-    CompileOptions& setUTF8(bool u) {
-        utf8 = u;
+    CompileOptions& setUTF8(bool) {
         return *this;
     }
 
