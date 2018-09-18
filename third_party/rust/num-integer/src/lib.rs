@@ -9,27 +9,16 @@
 // except according to those terms.
 
 //! Integer trait and functions.
-//!
-//! ## Compatibility
-//!
-//! The `num-integer` crate is tested for rustc 1.8 and greater.
-
-#![doc(html_root_url = "https://docs.rs/num-integer/0.1")]
-
-#![no_std]
-#[cfg(feature = "std")]
-extern crate std;
+#![doc(html_logo_url = "https://rust-num.github.io/num/rust-logo-128x128-blk-v2.png",
+       html_favicon_url = "https://rust-num.github.io/num/favicon.ico",
+       html_root_url = "https://rust-num.github.io/num/",
+       html_playground_url = "http://play.integer32.com/")]
 
 extern crate num_traits as traits;
 
-use core::ops::Add;
-use core::mem;
+use std::ops::Add;
 
 use traits::{Num, Signed};
-
-mod roots;
-pub use roots::Roots;
-pub use roots::{sqrt, cbrt, nth_root};
 
 pub trait Integer: Sized + Num + PartialOrd + Ord + Eq {
     /// Floored integer division.
@@ -99,7 +88,7 @@ pub trait Integer: Sized + Num + PartialOrd + Ord + Eq {
     /// Deprecated, use `is_multiple_of` instead.
     fn divides(&self, other: &Self) -> bool;
 
-    /// Returns `true` if `self` is a multiple of `other`.
+    /// Returns `true` if `other` is a multiple of `self`.
     ///
     /// # Examples
     ///
@@ -280,7 +269,7 @@ macro_rules! impl_integer_for_isize {
 
                 while m != 0 {
                     m >>= m.trailing_zeros();
-                    if n > m { mem::swap(&mut n, &mut m) }
+                    if n > m { ::std::mem::swap(&mut n, &mut m) }
                     m -= n;
                 }
 
@@ -325,7 +314,6 @@ macro_rules! impl_integer_for_isize {
         #[cfg(test)]
         mod $test_mod {
             use Integer;
-            use core::mem;
 
             /// Checks that the division rule holds for:
             ///
@@ -403,7 +391,7 @@ macro_rules! impl_integer_for_isize {
             fn test_gcd_cmp_with_euclidean() {
                 fn euclidean_gcd(mut m: $T, mut n: $T) -> $T {
                     while m != 0 {
-                        mem::swap(&mut m, &mut n);
+                        ::std::mem::swap(&mut m, &mut n);
                         m %= n;
                     }
 
@@ -507,8 +495,6 @@ impl_integer_for_isize!(i16, test_integer_i16);
 impl_integer_for_isize!(i32, test_integer_i32);
 impl_integer_for_isize!(i64, test_integer_i64);
 impl_integer_for_isize!(isize, test_integer_isize);
-#[cfg(has_i128)]
-impl_integer_for_isize!(i128, test_integer_i128);
 
 macro_rules! impl_integer_for_usize {
     ($T:ty, $test_mod:ident) => (
@@ -542,7 +528,7 @@ macro_rules! impl_integer_for_usize {
 
                 while m != 0 {
                     m >>= m.trailing_zeros();
-                    if n > m { mem::swap(&mut n, &mut m) }
+                    if n > m { ::std::mem::swap(&mut n, &mut m) }
                     m -= n;
                 }
 
@@ -589,7 +575,6 @@ macro_rules! impl_integer_for_usize {
         #[cfg(test)]
         mod $test_mod {
             use Integer;
-            use core::mem;
 
             #[test]
             fn test_div_mod_floor() {
@@ -617,7 +602,7 @@ macro_rules! impl_integer_for_usize {
             fn test_gcd_cmp_with_euclidean() {
                 fn euclidean_gcd(mut m: $T, mut n: $T) -> $T {
                     while m != 0 {
-                        mem::swap(&mut m, &mut n);
+                        ::std::mem::swap(&mut m, &mut n);
                         m %= n;
                     }
                     n
@@ -681,8 +666,6 @@ impl_integer_for_usize!(u16, test_integer_u16);
 impl_integer_for_usize!(u32, test_integer_u32);
 impl_integer_for_usize!(u64, test_integer_u64);
 impl_integer_for_usize!(usize, test_integer_usize);
-#[cfg(has_i128)]
-impl_integer_for_usize!(u128, test_integer_u128);
 
 /// An iterator over binomial coefficients.
 pub struct IterBinomial<T> {
@@ -836,10 +819,9 @@ fn test_iter_binomial() {
     macro_rules! check_simple {
         ($t:ty) => { {
             let n: $t = 3;
-            let expected = [1, 3, 3, 1];
-            for (b, &e) in IterBinomial::new(n).zip(&expected) {
-                assert_eq!(b, e);
-            }
+            let c: Vec<_> = IterBinomial::new(n).collect();
+            let expected = vec![1, 3, 3, 1];
+            assert_eq!(c, expected);
         } }
     }
 
@@ -855,8 +837,9 @@ fn test_iter_binomial() {
     macro_rules! check_binomial {
         ($t:ty, $n:expr) => { {
             let n: $t = $n;
+            let c: Vec<_> = IterBinomial::new(n).collect();
             let mut k: $t = 0;
-            for b in IterBinomial::new(n) {
+            for b in c {
                 assert_eq!(b, binomial(n, k));
                 k += 1;
             }

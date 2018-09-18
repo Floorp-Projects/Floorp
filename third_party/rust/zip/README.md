@@ -20,6 +20,7 @@ Supported compression formats:
 
 Currently unsupported zip extensions:
 
+* Most of ZIP64, although there is some support for archives with more than 65535 files
 * Encryption
 * Multi-disk
 
@@ -32,26 +33,14 @@ With all default features:
 
 ```toml
 [dependencies]
-zip = "0.4"
+zip = "0.3"
 ```
 
 Without the default features:
 
 ```toml
 [dependencies]
-zip = { version = "0.4", default-features = false }
-```
-
-You can further control the backend of `deflate` compression method with these features:
-* `deflate` (enabled by default) uses [miniz_oxide](https://github.com/Frommi/miniz_oxide)
-* `deflate-miniz` uses [miniz](https://github.com/richgel999/miniz)
-* `deflate-zlib` uses zlib
-
-For example:
-
-```toml
-[dependencies]
-zip = { version = "0.4", features = ["deflate-zlib"], default-features = false }
+zip = { version = "0.3", default-features = false }
 ```
 
 Examples
@@ -62,4 +51,3 @@ See the [examples directory](examples) for:
    * how to write a directory of files to a zip (using [walkdir](https://github.com/BurntSushi/walkdir)).
    * How to extract a zip file.
    * How to extract a single file from a zip.
-   * How to read a zip from the standard input.

@@ -15,51 +15,47 @@
 //! The `num-traits` crate is tested for rustc 1.8 and greater.
 
 #![doc(html_root_url = "https://docs.rs/num-traits/0.2")]
-#![deny(unconditional_recursion)]
-#![no_std]
-#[cfg(feature = "std")]
-extern crate std;
 
-use core::fmt;
+#![deny(unconditional_recursion)]
+
+#![cfg_attr(not(feature = "std"), no_std)]
+#[cfg(feature = "std")]
+extern crate core;
+
+use core::ops::{Add, Sub, Mul, Div, Rem};
+use core::ops::{AddAssign, SubAssign, MulAssign, DivAssign, RemAssign};
 use core::num::Wrapping;
-use core::ops::{Add, Div, Mul, Rem, Sub};
-use core::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
+use core::fmt;
 
 pub use bounds::Bounded;
 #[cfg(feature = "std")]
 pub use float::Float;
 pub use float::FloatConst;
-// pub use real::{FloatCore, Real}; // NOTE: Don't do this, it breaks `use num_traits::*;`.
-pub use cast::{cast, AsPrimitive, FromPrimitive, NumCast, ToPrimitive};
-pub use identities::{one, zero, One, Zero};
-pub use int::PrimInt;
-pub use ops::checked::{
-    CheckedAdd, CheckedDiv, CheckedMul, CheckedNeg, CheckedRem, CheckedShl, CheckedShr, CheckedSub,
-};
-pub use ops::inv::Inv;
-pub use ops::mul_add::{MulAdd, MulAddAssign};
+// pub use real::Real; // NOTE: Don't do this, it breaks `use num_traits::*;`.
+pub use identities::{Zero, One, zero, one};
+pub use ops::checked::{CheckedAdd, CheckedSub, CheckedMul, CheckedDiv, CheckedShl, CheckedShr};
+pub use ops::wrapping::{WrappingAdd, WrappingMul, WrappingSub};
 pub use ops::saturating::Saturating;
-pub use ops::wrapping::{WrappingAdd, WrappingMul, WrappingShl, WrappingShr, WrappingSub};
-pub use pow::{checked_pow, pow, Pow};
-pub use sign::{abs, abs_sub, signum, Signed, Unsigned};
+pub use sign::{Signed, Unsigned, abs, abs_sub, signum};
+pub use cast::{AsPrimitive, FromPrimitive, ToPrimitive, NumCast, cast};
+pub use int::PrimInt;
+pub use pow::{pow, checked_pow};
 
-#[macro_use]
-mod macros;
-
-pub mod bounds;
-pub mod cast;
-pub mod float;
 pub mod identities;
-pub mod int;
+pub mod sign;
 pub mod ops;
-pub mod pow;
+pub mod bounds;
+pub mod float;
 #[cfg(feature = "std")]
 pub mod real;
-pub mod sign;
+pub mod cast;
+pub mod int;
+pub mod pow;
 
 /// The base trait for numeric types, covering `0` and `1` values,
 /// comparisons, basic numeric operations, and string conversion.
-pub trait Num: PartialEq + Zero + One + NumOps {
+pub trait Num: PartialEq + Zero + One + NumOps
+{
     type FromStrRadixErr;
 
     /// Convert from a string and radix <= 36.
@@ -81,81 +77,68 @@ pub trait Num: PartialEq + Zero + One + NumOps {
 /// The trait for types implementing basic numeric operations
 ///
 /// This is automatically implemented for types which implement the operators.
-pub trait NumOps<Rhs = Self, Output = Self>:
-    Add<Rhs, Output = Output>
+pub trait NumOps<Rhs = Self, Output = Self>
+    : Add<Rhs, Output = Output>
     + Sub<Rhs, Output = Output>
     + Mul<Rhs, Output = Output>
     + Div<Rhs, Output = Output>
     + Rem<Rhs, Output = Output>
-{
-}
+{}
 
 impl<T, Rhs, Output> NumOps<Rhs, Output> for T
-where
-    T: Add<Rhs, Output = Output>
-        + Sub<Rhs, Output = Output>
-        + Mul<Rhs, Output = Output>
-        + Div<Rhs, Output = Output>
-        + Rem<Rhs, Output = Output>,
-{
-}
+where T: Add<Rhs, Output = Output>
+       + Sub<Rhs, Output = Output>
+       + Mul<Rhs, Output = Output>
+       + Div<Rhs, Output = Output>
+       + Rem<Rhs, Output = Output>
+{}
 
 /// The trait for `Num` types which also implement numeric operations taking
 /// the second operand by reference.
 ///
 /// This is automatically implemented for types which implement the operators.
 pub trait NumRef: Num + for<'r> NumOps<&'r Self> {}
-impl<T> NumRef for T
-where
-    T: Num + for<'r> NumOps<&'r T>,
-{
-}
+impl<T> NumRef for T where T: Num + for<'r> NumOps<&'r T> {}
 
 /// The trait for references which implement numeric operations, taking the
 /// second operand either by value or by reference.
 ///
 /// This is automatically implemented for types which implement the operators.
 pub trait RefNum<Base>: NumOps<Base, Base> + for<'r> NumOps<&'r Base, Base> {}
-impl<T, Base> RefNum<Base> for T
-where
-    T: NumOps<Base, Base> + for<'r> NumOps<&'r Base, Base>,
-{
-}
+impl<T, Base> RefNum<Base> for T where T: NumOps<Base, Base> + for<'r> NumOps<&'r Base, Base> {}
 
 /// The trait for types implementing numeric assignment operators (like `+=`).
 ///
 /// This is automatically implemented for types which implement the operators.
-pub trait NumAssignOps<Rhs = Self>:
-    AddAssign<Rhs> + SubAssign<Rhs> + MulAssign<Rhs> + DivAssign<Rhs> + RemAssign<Rhs>
-{
-}
+pub trait NumAssignOps<Rhs = Self>
+    : AddAssign<Rhs>
+    + SubAssign<Rhs>
+    + MulAssign<Rhs>
+    + DivAssign<Rhs>
+    + RemAssign<Rhs>
+{}
 
 impl<T, Rhs> NumAssignOps<Rhs> for T
-where
-    T: AddAssign<Rhs> + SubAssign<Rhs> + MulAssign<Rhs> + DivAssign<Rhs> + RemAssign<Rhs>,
-{
-}
+where T: AddAssign<Rhs>
+       + SubAssign<Rhs>
+       + MulAssign<Rhs>
+       + DivAssign<Rhs>
+       + RemAssign<Rhs>
+{}
 
 /// The trait for `Num` types which also implement assignment operators.
 ///
 /// This is automatically implemented for types which implement the operators.
 pub trait NumAssign: Num + NumAssignOps {}
-impl<T> NumAssign for T
-where
-    T: Num + NumAssignOps,
-{
-}
+impl<T> NumAssign for T where T: Num + NumAssignOps {}
 
 /// The trait for `NumAssign` types which also implement assignment operations
 /// taking the second operand by reference.
 ///
 /// This is automatically implemented for types which implement the operators.
 pub trait NumAssignRef: NumAssign + for<'r> NumAssignOps<&'r Self> {}
-impl<T> NumAssignRef for T
-where
-    T: NumAssign + for<'r> NumAssignOps<&'r T>,
-{
-}
+impl<T> NumAssignRef for T where T: NumAssign + for<'r> NumAssignOps<&'r T> {}
+
 
 macro_rules! int_trait_impl {
     ($name:ident for $($t:ty)*) => ($(
@@ -171,22 +154,18 @@ macro_rules! int_trait_impl {
     )*)
 }
 int_trait_impl!(Num for usize u8 u16 u32 u64 isize i8 i16 i32 i64);
-#[cfg(has_i128)]
-int_trait_impl!(Num for u128 i128);
 
 impl<T: Num> Num for Wrapping<T>
-where
-    Wrapping<T>: Add<Output = Wrapping<T>>
-        + Sub<Output = Wrapping<T>>
-        + Mul<Output = Wrapping<T>>
-        + Div<Output = Wrapping<T>>
-        + Rem<Output = Wrapping<T>>,
+    where Wrapping<T>:
+          Add<Output = Wrapping<T>> + Sub<Output = Wrapping<T>>
+        + Mul<Output = Wrapping<T>> + Div<Output = Wrapping<T>> + Rem<Output = Wrapping<T>>
 {
     type FromStrRadixErr = T::FromStrRadixErr;
     fn from_str_radix(str: &str, radix: u32) -> Result<Self, Self::FromStrRadixErr> {
         T::from_str_radix(str, radix).map(Wrapping)
     }
 }
+
 
 #[derive(Debug)]
 pub enum FloatErrorKind {
@@ -455,8 +434,7 @@ fn check_numref_ops() {
 #[test]
 fn check_refnum_ops() {
     fn compute<T: Copy>(x: &T, y: T) -> T
-    where
-        for<'a> &'a T: RefNum<T>,
+        where for<'a> &'a T: RefNum<T>
     {
         &(&(&(&(x * y) / y) % y) + y) - y
     }
@@ -466,8 +444,7 @@ fn check_refnum_ops() {
 #[test]
 fn check_refref_ops() {
     fn compute<T>(x: &T, y: &T) -> T
-    where
-        for<'a> &'a T: RefNum<T>,
+        where for<'a> &'a T: RefNum<T>
     {
         &(&(&(&(x * y) / y) % y) + y) - y
     }
