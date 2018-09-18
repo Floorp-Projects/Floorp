@@ -9,6 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { translateNodeFrontToGrip } = require("devtools/client/inspector/shared/utils");
 
+// Reps
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep } = REPS;
 const ElementNode = REPS.ElementNode;
@@ -37,11 +38,13 @@ class FlexItem extends PureComponent {
             className: "devtools-button devtools-monospace",
             onClick: () => onToggleFlexItemShown(nodeFront),
           },
-          Rep({
-            defaultRep: ElementNode,
-            mode: MODE.TINY,
-            object: translateNodeFrontToGrip(nodeFront),
-          })
+          Rep(
+            {
+              defaultRep: ElementNode,
+              mode: MODE.TINY,
+              object: translateNodeFrontToGrip(nodeFront)
+            }
+          )
         )
       )
     );

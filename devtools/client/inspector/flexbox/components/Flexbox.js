@@ -9,6 +9,9 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
+loader.lazyGetter(this, "FlexContainer", function() {
+  return createFactory(require("./FlexContainer"));
+});
 loader.lazyGetter(this, "FlexContainerProperties", function() {
   return createFactory(require("./FlexContainerProperties"));
 });
@@ -17,9 +20,6 @@ loader.lazyGetter(this, "FlexItemList", function() {
 });
 loader.lazyGetter(this, "FlexItemSizingProperties", function() {
   return createFactory(require("./FlexItemSizingProperties"));
-});
-loader.lazyGetter(this, "Header", function() {
-  return createFactory(require("./Header"));
 });
 
 const Types = require("../types");
@@ -48,7 +48,7 @@ class Flexbox extends PureComponent {
       flexItemShown,
     } = flexbox;
 
-    if (flexItemShown || !flexItems.length) {
+    if (flexItemShown) {
       return null;
     }
 
@@ -97,7 +97,7 @@ class Flexbox extends PureComponent {
 
     return (
       dom.div({ id: "layout-flexbox-container" },
-        Header({
+        FlexContainer({
           flexbox,
           getSwatchColorPickerTooltip,
           onHideBoxModelHighlighter,

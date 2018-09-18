@@ -97,34 +97,10 @@
   flex-direction: column;
 }
 
-/**
- * Header
- */
-
-.flex-header {
-  display: flex;
-  align-items: center;
-  height: 32px;
+.flex-container {
   border-bottom: 1px solid var(--theme-splitter-color);
-  padding: 0 3px;
-}
-
-.flex-header-button-prev::before {
-  background-image: url("chrome://devtools/skin/images/arrowhead-left.svg");
-  background-size: 16px;
-}
-
-.flex-header-content {
-  flex: 1;
-  padding-top: 2px;
+  padding: 5px 0;
   padding-inline-start: 20px;
-  -moz-user-select: none;
-}
-
-.flex-header-content.flex-item-shown {
-  display: flex;
-  justify-content: center;
-  padding: 0;
 }
 
 /**
@@ -147,6 +123,24 @@
 /**
  * Flex Item Selector
  */
+
+.flex-item-selector-wrapper {
+  margin-inline-start: 25px;
+  position: relative;
+}
+
+.flex-item-selector-wrapper::before {
+  position: absolute;
+  left: -12px;
+  top: 3px;
+  content: '';
+  display: block;
+  border-left: 0.5px solid var(--flex-item-selector-wrapper-border-color);
+  height: 0.8em;
+  border-bottom: 0.5px solid var(--flex-item-selector-wrapper-border-color);
+  width: 10px;
+}
+
 
 #flex-item-selector {
   background-position: right 4px center;
