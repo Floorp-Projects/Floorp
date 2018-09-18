@@ -21,7 +21,6 @@
 #include "nsICSSLoaderObserver.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDOMEventListener.h"
-#include "nsIEditorBlobListener.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIEditorStyleSheets.h"
 #include "nsIHTMLAbsPosEditor.h"
@@ -1490,7 +1489,7 @@ protected: // Shouldn't be used by friend classes
   MaybeCollapseSelectionAtFirstEditableNode(
     bool aIgnoreIfSelectionInEditingHost);
 
-  class BlobReader final : public nsIEditorBlobListener
+  class BlobReader final
   {
   public:
     BlobReader(dom::BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
@@ -1498,8 +1497,11 @@ protected: // Shouldn't be used by friend classes
                nsINode* aDestinationNode, int32_t aDestOffset,
                bool aDoDeleteSelection);
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIEDITORBLOBLISTENER
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BlobReader)
+    NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(BlobReader)
+
+    nsresult OnResult(const nsACString& aResult);
+    nsresult OnError(const nsAString& aErrorName);
 
   private:
     ~BlobReader()
@@ -2265,6 +2267,7 @@ protected:
   friend class EditorBase;
   friend class EmptyEditableFunctor;
   friend class HTMLEditRules;
+  friend class SlurpBlobEventListener;
   friend class TextEditor;
   friend class WSRunObject;
 };
