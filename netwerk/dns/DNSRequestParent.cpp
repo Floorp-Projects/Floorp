@@ -50,7 +50,6 @@ DNSRequestParent::DoAsyncResolve(const nsACString &hostname,
 
 mozilla::ipc::IPCResult
 DNSRequestParent::RecvCancelDNSRequest(const nsCString& hostName,
-                                       const uint16_t& type,
                                        const OriginAttributes& originAttributes,
                                        const uint32_t& flags,
                                        const nsresult& reason)
@@ -58,15 +57,9 @@ DNSRequestParent::RecvCancelDNSRequest(const nsCString& hostName,
   nsresult rv;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    if (type == nsIDNSService::RESOLVE_TYPE_DEFAULT) {
-      rv = dns->CancelAsyncResolveNative(hostName, flags,
-                                         this, reason,
-                                         originAttributes);
-    } else {
-      rv = dns->CancelAsyncResolveByTypeNative(hostName, type, flags,
-                                               this, reason,
-                                               originAttributes);
-    }
+    rv = dns->CancelAsyncResolveNative(hostName, flags,
+                                       this, reason,
+                                       originAttributes);
   }
   return IPC_OK();
 }
@@ -131,26 +124,7 @@ DNSRequestParent::OnLookupComplete(nsICancelable *request,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-DNSRequestParent::OnLookupByTypeComplete(nsICancelable      *aRequest,
-                                         nsIDNSByTypeRecord *aRes,
-                                         nsresult            aStatus)
-{
-  if (mIPCClosed) {
-    // nothing to do: child probably crashed
-    return NS_OK;
-  }
 
-  if (NS_SUCCEEDED(aStatus)) {
-    nsTArray<nsCString> rec;
-    aRes->GetRecords(rec);
-    Unused << SendLookupCompleted(DNSRequestResponse(rec));
-  } else {
-    Unused << SendLookupCompleted(DNSRequestResponse(aStatus));
-  }
-  mIPCClosed = true;
-  return NS_OK;
-}
 
 } // namespace net
 } // namespace mozilla

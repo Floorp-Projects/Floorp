@@ -12,7 +12,6 @@ DIRS += [
 ]
 
 XPIDL_SOURCES += [
-    'nsIDNSByTypeRecord.idl',
     'nsIDNSListener.idl',
     'nsIDNSRecord.idl',
     'nsIDNSService.idl',

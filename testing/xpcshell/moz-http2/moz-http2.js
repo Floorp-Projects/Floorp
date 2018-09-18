@@ -758,32 +758,6 @@ function handleRequest(req, res) {
     return;
   }
 
-  // for use with test_esni_dns_fetch.js
-  else if (u.pathname === "/esni-dns") {
-    content = new Buffer("0000" +
-                         "8180" +
-                         "0001" + // QDCOUNT
-                         "0001" + // ANCOUNT
-                         "00000000" + // NSCOUNT + ARCOUNT
-                         "055F65736E69076578616D706C6503636F6D00" + // esni.example.com
-                         "00100001" + // question type (TXT) + question class (IN)
-
-                         "C00C" + // name pointer to .example.com
-                         "0010" + // type (TXT)
-                         "0001" + // class
-                         "00000037" + // TTL
-                         "0021" + // RDLENGTH
-                         "2062586B67646D39705932556761584D6762586B676347467A63336476636D513D", // esni keys.
-                         "hex");
-
-    res.setHeader('Content-Type', 'application/dns-message');
-    res.setHeader('Content-Length', content.length);
-    res.writeHead(200);
-    res.write(content);
-    res.end("");
-    return;
-  }
-
   else if (u.pathname === "/.well-known/http-opportunistic") {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Content-Type', 'application/json');
