@@ -541,10 +541,12 @@ protected:
   explicit ConsoleWorkletRunnable(Console* aConsole)
     : Runnable("dom::console::ConsoleWorkletRunnable")
     , mConsole(aConsole)
-    , mWorkletThread(WorkletThread::Get())
   {
     WorkletThread::AssertIsOnWorkletThread();
-    MOZ_ASSERT(mWorkletThread);
+    nsCOMPtr<WorkletGlobalScope> global = do_QueryInterface(mConsole->mGlobal);
+    MOZ_ASSERT(global);
+    mWorkletImpl = global->Impl();
+    MOZ_ASSERT(mWorkletImpl);
   }
 
   ~ConsoleWorkletRunnable() override = default;
@@ -557,7 +559,7 @@ protected:
     if (NS_IsMainThread()) {
       RunOnMainThread();
       RefPtr<ConsoleWorkletRunnable> runnable(this);
-      return mWorkletThread->DispatchRunnable(runnable.forget());
+      return mWorkletImpl->DispatchRunnable(runnable.forget());
     }
 
     WorkletThread::AssertIsOnWorkletThread();
@@ -579,7 +581,7 @@ protected:
   // This must be released on the worker thread.
   RefPtr<Console> mConsole;
 
-  RefPtr<WorkletThread> mWorkletThread;
+  RefPtr<WorkletImpl> mWorkletImpl;
 };
 
 // This runnable appends a CallData object into the Console queue running on
@@ -591,12 +593,6 @@ public:
   Create(Console* aConsole, ConsoleCallData* aConsoleData)
   {
     WorkletThread::AssertIsOnWorkletThread();
-
-    RefPtr<WorkletThread> workletThread = WorkletThread::Get();
-    MOZ_ASSERT(workletThread);
-
-    aConsoleData->SetIDs(workletThread->GetWorkletLoadInfo().OuterWindowID(),
-                         workletThread->GetWorkletLoadInfo().InnerWindowID());
 
     RefPtr<ConsoleCallDataWorkletRunnable> runnable =
       new ConsoleCallDataWorkletRunnable(aConsole, aConsoleData);
@@ -619,6 +615,9 @@ private:
     MOZ_ASSERT(aCallData);
     aCallData->AssertIsOnOwningThread();
 
+    const WorkletLoadInfo& loadInfo = mWorkletImpl->LoadInfo();
+    mCallData->SetIDs(loadInfo.OuterWindowID(), loadInfo.InnerWindowID());
+
     // Marking this CallData as in use.
     mCallData->mStatus = ConsoleCallData::eInUse;
   }
@@ -634,8 +633,7 @@ private:
     AutoSafeJSContext cx;
 
     JSObject* sandbox =
-      mConsole->GetOrCreateSandbox(cx,
-                                   mWorkletThread->GetWorkletLoadInfo().Principal());
+      mConsole->GetOrCreateSandbox(cx, mWorkletImpl->LoadInfo().Principal());
     JS::Rooted<JSObject*> global(cx, sandbox);
     if (NS_WARN_IF(!global)) {
       return;
@@ -918,8 +916,7 @@ private:
     AutoSafeJSContext cx;
 
     JSObject* sandbox =
-      mConsole->GetOrCreateSandbox(cx,
-                                   mWorkletThread->GetWorkletLoadInfo().Principal());
+      mConsole->GetOrCreateSandbox(cx, mWorkletImpl->LoadInfo().Principal());
     JS::Rooted<JSObject*> global(cx, sandbox);
     if (NS_WARN_IF(!global)) {
       return;
@@ -1580,7 +1577,9 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 #endif
     }
   } else if (WorkletThread::IsOnWorkletThread()) {
-    oa = WorkletThread::Get()->GetWorkletLoadInfo().OriginAttributesRef();
+    nsCOMPtr<WorkletGlobalScope> global = do_QueryInterface(mGlobal);
+    MOZ_ASSERT(global);
+    oa = global->Impl()->LoadInfo().OriginAttributesRef();
   } else {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
