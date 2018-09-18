@@ -63,26 +63,20 @@ static const DWORD kDefaultTimeIncrement = 156001;
 // Global variables, not changing at runtime
 // ----------------------------------------------------------------------------
 
-/**
- * The [mt] unit:
- *
- * Many values are kept in ticks of the Performance Coutner x 1000,
- * further just referred as [mt], meaning milli-ticks.
- *
- * This is needed to preserve maximum precision of the performance frequency
- * representation.  GetTickCount64 values in milliseconds are multiplied with
- * frequency per second.  Therefor we need to multiply QPC value by 1000 to
- * have the same units to allow simple arithmentic with both QPC and GTC.
- */
-
-#define ms2mt(x) ((x) * sFrequencyPerSec)
-#define mt2ms(x) ((x) / sFrequencyPerSec)
-#define mt2ms_f(x) (double(x) / sFrequencyPerSec)
-
 // Result of QueryPerformanceFrequency
 // We use default of 1 for the case we can't use QueryPerformanceCounter
 // to make mt/ms conversions work despite that.
-static LONGLONG sFrequencyPerSec = 1;
+static uint64_t sFrequencyPerSec = 1;
+
+namespace mozilla {
+
+MFBT_API uint64_t
+GetQueryPerformanceFrequencyPerSec()
+{
+  return sFrequencyPerSec;
+}
+
+}
 
 // How much we are tolerant to GTC occasional loose of resoltion.
 // This number says how many multiples of the minimal GTC resolution
