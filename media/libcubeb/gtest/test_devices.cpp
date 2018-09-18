@@ -205,3 +205,48 @@ TEST(cubeb, enumerate_devices)
 
   cubeb_stream_destroy(stream);
 }
+
+TEST(cubeb, stream_get_current_device)
+{
+  cubeb * ctx = NULL;
+  int r = common_init(&ctx, "Cubeb audio test");
+  ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
+
+  std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
+    cleanup_cubeb_at_exit(ctx, cubeb_destroy);
+
+  fprintf(stdout, "Getting current devices for backend %s\n",
+    cubeb_get_backend_id(ctx));
+
+  cubeb_stream * stream = NULL;
+  cubeb_stream_params input_params;
+  cubeb_stream_params output_params;
+
+  input_params.format = output_params.format = CUBEB_SAMPLE_FLOAT32NE;
+  input_params.rate = output_params.rate = 48000;
+  input_params.channels = output_params.channels = 1;
+  input_params.layout = output_params.layout = CUBEB_LAYOUT_MONO;
+  input_params.prefs = output_params.prefs = CUBEB_STREAM_PREF_NONE;
+
+  r = cubeb_stream_init(ctx, &stream, "Cubeb duplex",
+                        NULL, &input_params, NULL, &output_params,
+                        1024, data_cb_duplex, state_cb_duplex, nullptr);
+  ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb stream";
+  std::unique_ptr<cubeb_stream, decltype(&cubeb_stream_destroy)>
+    cleanup_stream_at_exit(stream, cubeb_stream_destroy);
+
+  cubeb_device * device;
+  r = cubeb_stream_get_current_device(stream, &device);
+  if (r == CUBEB_ERROR_NOT_SUPPORTED) {
+    fprintf(stderr, "Getting current device is not supported"
+                    " for this backend, skipping this test.\n");
+    return;
+  }
+  ASSERT_EQ(r, CUBEB_OK) << "Error getting current devices";
+
+  fprintf(stdout, "Current output device: %s\n", device->output_name);
+  fprintf(stdout, "Current input device: %s\n", device->input_name);
+
+  r = cubeb_stream_device_destroy(stream, device);
+  ASSERT_EQ(r, CUBEB_OK) << "Error destroying current devices";
+}
