@@ -135,4 +135,12 @@ WorkletImpl::TerminateThread()
   mWorkletLoadInfo.mPrincipal = nullptr;
 }
 
+nsresult
+WorkletImpl::DispatchRunnable(already_AddRefed<nsIRunnable> aRunnable)
+{
+  // TODO: bug 1492011 re ConsoleWorkletRunnable.
+  MOZ_ASSERT(mWorkletThread);
+  return mWorkletThread->DispatchRunnable(std::move(aRunnable));
+}
+
 } // namespace mozilla

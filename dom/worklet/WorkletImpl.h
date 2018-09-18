@@ -12,6 +12,7 @@
 
 class nsPIDOMWindowInner;
 class nsIPrincipal;
+class nsIRunnable;
 
 namespace mozilla {
 
@@ -91,7 +92,11 @@ public:
   already_AddRefed<dom::WorkletGlobalScope> CreateGlobalScope(JSContext* aCx);
 
   // Any thread.
+
   const WorkletLoadInfo& LoadInfo() const { return mWorkletLoadInfo; }
+
+  // Use DispatchRunnable only when the thread is known to already exist.
+  nsresult DispatchRunnable(already_AddRefed<nsIRunnable> aRunnable);
 
 private:
   WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
