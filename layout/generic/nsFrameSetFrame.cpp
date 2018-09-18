@@ -296,7 +296,6 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
 
     RefPtr<ComputedStyle> kidSC =
       shell->StyleSet()->ResolveStyleFor(child->AsElement(),
-                                         mComputedStyle,
                                          LazyComputeBehavior::Allow);
 
     nsIFrame* frame;

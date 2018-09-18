@@ -380,7 +380,6 @@ ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
 
 already_AddRefed<ComputedStyle>
 ServoStyleSet::ResolveStyleFor(Element* aElement,
-                               ComputedStyle* aParentContext,
                                LazyComputeBehavior aMayCompute)
 {
   if (aMayCompute == LazyComputeBehavior::Allow) {
