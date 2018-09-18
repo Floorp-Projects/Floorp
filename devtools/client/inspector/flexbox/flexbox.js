@@ -272,16 +272,21 @@ class FlexboxInspector {
   }
 
   /**
-   * Handler for a change in the input checkbox in the FlexItem component.
-   * Toggles on/off the flex item highlighter for the provided flex item element.
+   * Handler for a change in the input checkbox in the FlexItem and Header component.
+   * Toggles on/off the flex item highlighter for the provided flex item element and
+   * changes the selection to the given node.
    *
-   * @param  {NodeFront} node
+   * @param  {NodeFront|null} node
    *         The NodeFront of the flex item element for which the flex item is toggled
    *         on/off for.
    */
   onToggleFlexItemShown(node) {
     this.highlighters.toggleFlexItemHighlighter(node);
     this.store.dispatch(toggleFlexItemShown(node));
+
+    if (node) {
+      this.selection.setNodeFront(node);
+    }
   }
 
   /**
