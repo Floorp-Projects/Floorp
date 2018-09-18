@@ -2996,7 +2996,6 @@ JSRuntime::initSelfHosting(JSContext* cx)
 
     CompileOptions options(cx);
     FillSelfHostingCompileOptions(options);
-    options.setUTF8(true);
 
     RootedValue rv(cx);
     if (!EvaluateUtf8(cx, options, src.get(), srcLen, &rv)) {

@@ -73,7 +73,6 @@ BEGIN_TEST(testChromeBuffer)
 
             JS::CompileOptions options(cx);
             options.setFileAndLine("", 0);
-            options.setUTF8(true);
 
             JS::AutoObjectVector emptyScopeChain(cx);
             CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "trusted", 1, &paramName,
@@ -98,7 +97,6 @@ BEGIN_TEST(testChromeBuffer)
 
         JS::CompileOptions options(cx);
         options.setFileAndLine("", 0);
-        options.setUTF8(true);
 
         JS::AutoObjectVector emptyScopeChain(cx);
         CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "untrusted", 1, &paramName,
@@ -133,7 +131,6 @@ BEGIN_TEST(testChromeBuffer)
 
             JS::CompileOptions options(cx);
             options.setFileAndLine("", 0);
-            options.setUTF8(true);
 
             JS::AutoObjectVector emptyScopeChain(cx);
             CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "trusted", 1, &paramName,
@@ -154,7 +151,6 @@ BEGIN_TEST(testChromeBuffer)
 
         JS::CompileOptions options(cx);
         options.setFileAndLine("", 0);
-        options.setUTF8(true);
 
         JS::AutoObjectVector emptyScopeChain(cx);
         CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "untrusted", 1, &paramName,
@@ -176,7 +172,6 @@ BEGIN_TEST(testChromeBuffer)
 
             JS::CompileOptions options(cx);
             options.setFileAndLine("", 0);
-            options.setUTF8(true);
 
             JS::AutoObjectVector emptyScopeChain(cx);
             CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "trusted", 0, nullptr,
@@ -197,7 +192,6 @@ BEGIN_TEST(testChromeBuffer)
 
         JS::CompileOptions options(cx);
         options.setFileAndLine("", 0);
-        options.setUTF8(true);
 
         JS::AutoObjectVector emptyScopeChain(cx);
         CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "untrusted", 1, &paramName,

@@ -30,7 +30,6 @@ BEGIN_TEST(testScriptInfo)
 
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, startLine);
-    options.setUTF8(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileUtf8(cx, options, code, strlen(code), &script));
