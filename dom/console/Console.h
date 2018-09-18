@@ -48,12 +48,6 @@ public:
   CreateForWorklet(JSContext* aCx, uint64_t aOuterWindowID,
                    uint64_t aInnerWindowID, ErrorResult& aRv);
 
-  // WebIDL methods
-  nsPIDOMWindowInner* GetParentObject() const
-  {
-    return mWindow;
-  }
-
   static void
   Log(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
