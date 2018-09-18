@@ -123,10 +123,6 @@ let propNameWhitelist = [
    isFromDevTools: false},
   {propName: "--positionDurationBox-width-long",
    isFromDevTools: false},
-  // Used on Linux
-  {propName: "--in-content-box-background-odd",
-   platforms: ["win", "macosx"],
-   isFromDevTools: false},
 
   // These variables are used in a shorthand, but the CSS parser deletes the values
   // when expanding the shorthands. See https://github.com/w3c/csswg-drafts/issues/2515
