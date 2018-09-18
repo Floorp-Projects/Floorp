@@ -4,11 +4,30 @@
 
 package org.mozilla.gecko.tests;
 
+import org.mozilla.gecko.Experiments;
+import org.mozilla.gecko.switchboard.Preferences;
+
 /* Tests the working of Settings menu:
  *  Traverses through every setting item and tests it.
  */
 
 public class testSettingsPages extends OldBaseTest {
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+
+        Preferences.setOverrideValue(getInstrumentation().getTargetContext(),
+                Experiments.WHATSNEW_NOTIFICATION, true);
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        Preferences.clearOverrideValue(getInstrumentation().getTargetContext(),
+                Experiments.WHATSNEW_NOTIFICATION);
+
+        super.tearDown();
+    }
 
     public void testSettingsPages() {
         blockForGeckoReady();
