@@ -360,6 +360,7 @@ class JSTerm extends Component {
         });
 
         this.editor.on("changes", this._inputEventHandler);
+        this.editor.on("beforeChange", this._onBeforeChange);
         this.editor.appendToLocalElement(this.node);
         const cm = this.editor.codeMirror;
         cm.on("paste", (_, event) => this.props.onPaste(event));
@@ -736,6 +737,16 @@ class JSTerm extends Component {
     }
 
     return this.inputNode ? this.inputNode.selectionStart : null;
+  }
+
+  /**
+   * Even handler for the "beforeChange" event fired by codeMirror. This event is fired
+   * when codeMirror is about to make a change to its DOM representation.
+   */
+  _onBeforeChange() {
+    // clear the completionText before the change is done to prevent a visual glitch.
+    // See Bug 1491776.
+    this.setAutoCompletionText("");
   }
 
   /**
