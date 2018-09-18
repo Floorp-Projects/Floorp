@@ -596,20 +596,12 @@ AudioDestinationNode::WindowAudioCaptureChanged(bool aCapture)
 nsresult
 AudioDestinationNode::CreateAudioChannelAgent()
 {
-  if (mIsOffline) {
+  if (mIsOffline || mAudioChannelAgent) {
     return NS_OK;
   }
 
-  nsresult rv = NS_OK;
-  if (mAudioChannelAgent) {
-    rv = mAudioChannelAgent->NotifyStoppedPlaying();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
   mAudioChannelAgent = new AudioChannelAgent();
-  rv = mAudioChannelAgent->InitWithWeakCallback(GetOwner(), this);
+  nsresult rv = mAudioChannelAgent->InitWithWeakCallback(GetOwner(), this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
