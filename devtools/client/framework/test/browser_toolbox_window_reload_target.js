@@ -20,7 +20,7 @@ function test() {
   addTab(TEST_URL).then(async () => {
     target = await TargetFactory.forTab(gBrowser.selectedTab);
 
-    target.makeRemote().then(() => {
+    target.attach().then(() => {
       toolIDs = gDevTools.getToolDefinitionArray()
                   .filter(def => def.isTargetSupported(target))
                   .map(def => def.id);

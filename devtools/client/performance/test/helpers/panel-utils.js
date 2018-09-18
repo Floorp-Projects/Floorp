@@ -24,7 +24,7 @@ exports.initPanelInTab = async function({ tool, tab }) {
   dump(`Initializing a ${tool} panel.\n`);
 
   const target = await TargetFactory.forTab(tab);
-  await target.makeRemote();
+  await target.attach();
 
   // Open a toolbox and wait for the connection to the performance actors
   // to be opened. This is necessary because of the WebConsole's
