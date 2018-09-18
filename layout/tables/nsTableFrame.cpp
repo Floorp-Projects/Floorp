@@ -7554,7 +7554,7 @@ BCBlockDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
 
   // All border style is set to none except left side. So setting the widths of
   // each side to width of rect is fine.
-  wr::BorderWidths borderWidths = wr::ToBorderWidths(roundedRect.size.width,
+  wr::LayoutSideOffsets borderWidths = wr::ToBorderWidths(roundedRect.size.width,
                                                      roundedRect.size.width,
                                                      roundedRect.size.width,
                                                      roundedRect.size.width);
@@ -7841,7 +7841,7 @@ BCInlineDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
 
   // All border style is set to none except top side. So setting the widths of
   // each side to height of rect is fine.
-  wr::BorderWidths borderWidths = wr::ToBorderWidths(roundedRect.size.height,
+  wr::LayoutSideOffsets borderWidths = wr::ToBorderWidths(roundedRect.size.height,
                                                      roundedRect.size.height,
                                                      roundedRect.size.height,
                                                      roundedRect.size.height);
@@ -8086,7 +8086,7 @@ nsTableFrame::CreateWebRenderCommandsForBCBorders(wr::DisplayListBuilder& aBuild
 
   LayoutDeviceRect allBorderRect;
   wr::BorderSide wrSide[4];
-  wr::BorderWidths wrWidths;
+  wr::LayoutSideOffsets wrWidths;
   wr::BorderRadius borderRadii = wr::EmptyBorderRadius();
   bool backfaceIsVisible = false;
   NS_FOR_CSS_SIDES(side) {
