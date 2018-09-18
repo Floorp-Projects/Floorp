@@ -622,6 +622,18 @@ fn render<'a>(
                         wrench.renderer.toggle_debug_flags(DebugFlags::SHOW_OVERDRAW);
                         do_render = true;
                     }
+                    VirtualKeyCode::G => {
+                        // go through the API so that we reach the render backend
+                        wrench.api.send_debug_cmd(DebugCommand::EnableGpuCacheDebug(
+                            !wrench.renderer.get_debug_flags().contains(webrender::DebugFlags::GPU_CACHE_DBG)
+                        ));
+                        // force scene rebuild to see the full set of used GPU cache entries
+                        let mut txn = Transaction::new();
+                        txn.set_root_pipeline(wrench.root_pipeline_id);
+                        wrench.api.send_transaction(wrench.document_id, txn);
+
+                        do_frame = true;
+                    }
                     VirtualKeyCode::R => {
                         wrench.set_page_zoom(ZoomFactor::new(1.0));
                         do_frame = true;
