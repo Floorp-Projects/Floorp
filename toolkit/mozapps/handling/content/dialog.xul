@@ -45,8 +45,8 @@
   <description id="remember-text"/>
 
   <hbox class="dialog-button-box" pack="end">
-    <button dlgtype="cancel" icon="cancel" class="dialog-button"/>
-    <button dlgtype="accept" label="&accept;" icon="open" class="dialog-button"/>
+    <button dlgtype="cancel" class="dialog-button"/>
+    <button dlgtype="accept" label="&accept;" class="dialog-button"/>
   </hbox>
 
 </dialog>
