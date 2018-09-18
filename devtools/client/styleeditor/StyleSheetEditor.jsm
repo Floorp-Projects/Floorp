@@ -11,6 +11,7 @@ const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {}
 const Editor = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
 const {shortSource, prettifyCSS} = require("devtools/shared/inspector/css-logic");
+const {throttle} = require("devtools/shared/throttle");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
@@ -47,6 +48,9 @@ const UNUSED_CLASS = "cm-unused-line";
 // How much time should the mouse be still before the selector at that position
 // gets highlighted?
 const SELECTOR_HIGHLIGHT_TIMEOUT = 500;
+
+// Minimum delay between firing two media-rules-changed events.
+const EMIT_MEDIA_RULES_THROTTLING = 500;
 
 /**
  * StyleSheetEditor controls the editor linked to a particular StyleSheet
@@ -105,7 +109,6 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker, highlighter) {
 
   this._onPropertyChange = this._onPropertyChange.bind(this);
   this._onError = this._onError.bind(this);
-  this._onMediaRuleMatchesChange = this._onMediaRuleMatchesChange.bind(this);
   this._onMediaRulesChanged = this._onMediaRulesChanged.bind(this);
   this._onStyleApplied = this._onStyleApplied.bind(this);
   this.checkLinkedFileForChanges = this.checkLinkedFileForChanges.bind(this);
@@ -114,6 +117,9 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker, highlighter) {
   this.updateStyleSheet = this.updateStyleSheet.bind(this);
   this._updateStyleSheet = this._updateStyleSheet.bind(this);
   this._onMouseMove = this._onMouseMove.bind(this);
+
+  this.emitMediaRulesChanged =
+    throttle(this.emitMediaRulesChanged, EMIT_MEDIA_RULES_THROTTLING, this);
 
   this._focusOnSourceEditorReady = false;
   this.cssSheet.on("property-change", this._onPropertyChange);
@@ -380,21 +386,21 @@ StyleSheetEditor.prototype = {
       return;
     }
     for (const rule of this.mediaRules) {
-      rule.off("matches-change", this._onMediaRuleMatchesChange);
+      rule.off("matches-change", this.emitMediaRulesChanged);
       rule.destroy();
     }
     this.mediaRules = rules;
 
     for (const rule of rules) {
-      rule.on("matches-change", this._onMediaRuleMatchesChange);
+      rule.on("matches-change", this.emitMediaRulesChanged);
     }
-    this.emit("media-rules-changed", rules);
+    this.emitMediaRulesChanged();
   },
 
   /**
    * Forward media-rules-changed event from stylesheet.
    */
-  _onMediaRuleMatchesChange: function() {
+  emitMediaRulesChanged: function() {
     this.emit("media-rules-changed", this.mediaRules);
   },
 
