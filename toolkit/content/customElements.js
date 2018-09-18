@@ -11,6 +11,7 @@
 {
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const gXULDOMParser = new DOMParser();
 gXULDOMParser.forceEnableXULXBL();
@@ -83,11 +84,16 @@ class MozXULElement extends XULElement {
   static insertFTLIfNeeded(path) {
     let container = document.head || document.querySelector("linkset");
     if (!container) {
-      if (document.contentType != "application/vnd.mozilla.xul+xml") {
+      if (document.contentType == "application/vnd.mozilla.xul+xml") {
+        container = document.createXULElement("linkset");
+        document.documentElement.appendChild(container);
+      } else if (document.documentURI == AppConstants.BROWSER_CHROME_URL) {
+        // Special case for browser.xhtml. Here `document.head` is null, so
+        // just insert the link at the end of the window.
+        container = document.documentElement;
+      } else {
         throw new Error("Attempt to inject localization link before document.head is available");
       }
-      container = document.createXULElement("linkset");
-      document.documentElement.appendChild(container);
     }
 
     for (let link of container.querySelectorAll("link")) {
