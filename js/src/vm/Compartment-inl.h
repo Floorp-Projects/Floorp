@@ -92,6 +92,9 @@ JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp)
 
     JS::RootedObject obj(cx, &vp.toObject());
     if (!wrap(cx, &obj)) {
+        if (js::UncheckedUnwrap(&vp.toObject())->getClass()->isDOMClass()) {
+            MOZ_CRASH("Looks like bug 1488480/1405521, with the object version of Compartment::wrap failing");
+        }
         return false;
     }
     vp.setObject(*obj);
