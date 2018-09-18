@@ -26,4 +26,6 @@ Error and stacktrace produced by client.
 <!--
 See https://searchfox.org/mozilla-central/source/testing/geckodriver/doc/TraceLogs.md
 for how to produce a trace-level log.
+
+For trace logs with more than 20 lines please add its contents as attachment.
 -->
