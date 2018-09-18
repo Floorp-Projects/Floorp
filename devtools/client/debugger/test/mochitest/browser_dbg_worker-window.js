@@ -22,7 +22,7 @@ add_task(async function() {
 
   let tab = await addTab(TAB_URL);
   let { tabs } = await listTabs(client);
-  let [, tabClient] = await attachTab(client, findTab(tabs, TAB_URL));
+  let [, tabClient] = await attachTarget(client, findTab(tabs, TAB_URL));
 
   await listWorkers(tabClient);
   await createWorkerInTab(tab, WORKER_URL);

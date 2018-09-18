@@ -177,9 +177,9 @@ function findTab(tabs, title) {
   return null;
 }
 
-function attachTab(client, tab) {
+function attachTarget(client, tab) {
   dump("Attaching to tab with title '" + tab.title + "'.\n");
-  return client.attachTab(tab.actor);
+  return client.attachTarget(tab.actor);
 }
 
 function waitForNewSource(threadClient, url) {
@@ -357,7 +357,7 @@ function getTestTab(client, title, callback) {
 // response packet and a TabClient instance referring to that tab.
 function attachTestTab(client, title, callback) {
   getTestTab(client, title, function(tab) {
-    client.attachTab(tab.actor).then(([response, tabClient]) => {
+    client.attachTarget(tab.actor).then(([response, tabClient]) => {
       callback(response, tabClient);
     });
   });
