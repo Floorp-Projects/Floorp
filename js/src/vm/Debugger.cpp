@@ -1838,9 +1838,6 @@ Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp)
     MOZ_ASSERT(hook);
     MOZ_ASSERT(hook->isCallable());
 
-    Maybe<AutoRealm> ar;
-    ar.emplace(cx, object);
-
     RootedValue scriptFrame(cx);
 
     FrameIter iter(cx);
@@ -1852,6 +1849,9 @@ Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp)
         MOZ_ASSERT(genObj->isRunning() || genObj->isClosing());
     }
 #endif
+
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, object);
 
     if (!getFrame(cx, iter, &scriptFrame))
         return reportUncaughtException(ar);
