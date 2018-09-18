@@ -87,10 +87,10 @@ WorkletImpl::CreateGlobalScope(JSContext* aCx)
 
   switch (mWorkletType) {
     case eAudioWorklet:
-      scope = new dom::AudioWorkletGlobalScope();
+      scope = new dom::AudioWorkletGlobalScope(this);
       break;
     case ePaintWorklet:
-      scope = new dom::PaintWorkletGlobalScope();
+      scope = new dom::PaintWorkletGlobalScope(this);
       break;
   }
 

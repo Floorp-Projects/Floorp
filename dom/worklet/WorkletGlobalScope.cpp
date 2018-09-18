@@ -6,6 +6,7 @@
 
 #include "WorkletGlobalScope.h"
 #include "mozilla/dom/WorkletGlobalScopeBinding.h"
+#include "mozilla/dom/WorkletImpl.h"
 #include "mozilla/dom/Console.h"
 
 namespace mozilla {
@@ -34,7 +35,12 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkletGlobalScope)
   NS_INTERFACE_MAP_ENTRY(WorkletGlobalScope)
 NS_INTERFACE_MAP_END
 
-WorkletGlobalScope::WorkletGlobalScope() = default;
+WorkletGlobalScope::WorkletGlobalScope(WorkletImpl* aImpl)
+  : mImpl(aImpl)
+{
+}
+
+WorkletGlobalScope::~WorkletGlobalScope() = default;
 
 JSObject*
 WorkletGlobalScope::WrapObject(JSContext* aCx,
