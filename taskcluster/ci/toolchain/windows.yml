@@ -123,7 +123,7 @@ win64-rust-1.28:
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TW64(rust)
+        symbol: TW64(rust-1.28)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -136,6 +136,30 @@ win64-rust-1.28:
         script: repack_rust.py
         arguments: [
             '--channel', '1.28.0',
+            '--host', 'x86_64-pc-windows-msvc',
+            '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
+        ]
+        toolchain-artifact: public/build/rustc.tar.bz2
+
+win64-rust-1.29:
+    description: "rust repack"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW64(rust)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: toolchain-build}
+        max-run-time: 7200
+        env:
+            UPLOAD_DIR: artifacts
+    run:
+        using: toolchain-script
+        script: repack_rust.py
+        arguments: [
+            '--channel', '1.29.0',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
@@ -184,7 +208,7 @@ win64-node:
         arguments: ['win64']
         toolchain-artifact: public/build/node.tar.bz2
 
-win32-rust-1.28:
+win32-rust-1.29:
     description: "rust repack"
     treeherder:
         kind: build
@@ -201,14 +225,14 @@ win32-rust-1.28:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.28.0',
+            '--channel', '1.29.0',
             '--host', 'i686-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
         ]
         toolchain-alias: win32-rust
         toolchain-artifact: public/build/rustc.tar.bz2
 
-mingw32-rust-1.28:
+mingw32-rust-1.29:
     description: "rust repack"
     treeherder:
         kind: build
@@ -225,7 +249,7 @@ mingw32-rust-1.28:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.28.0',
+            '--channel', '1.29.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'i686-pc-windows-gnu',
