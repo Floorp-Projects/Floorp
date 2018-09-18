@@ -112,6 +112,8 @@ public:
   using nsGenericHTMLFrameElement::GetContentDocument;
   using nsGenericHTMLFrameElement::GetContentWindow;
 
+  NS_FORWARD_NSIFRAMELOADEROWNER(nsGenericHTMLFrameElement::)
+
 protected:
   virtual ~HTMLFrameElement();
 
