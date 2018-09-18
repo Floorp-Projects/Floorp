@@ -58,3 +58,13 @@ interface nsIPersistentProperties : nsIProperties
 %}
 };
 
+
+%{C++
+
+#define NS_IPERSISTENTPROPERTIES_CID \
+{ 0x2245e573, 0x9464, 0x11d2, \
+  { 0x9b, 0x8b, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
+
+#define NS_PERSISTENTPROPERTIES_CONTRACTID "@mozilla.org/persistent-properties;1"
+
+%}

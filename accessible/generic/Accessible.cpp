@@ -65,7 +65,6 @@
 #include "nsIServiceManager.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsAttrName.h"
-#include "nsPersistentProperties.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/BasicEvents.h"
@@ -1020,7 +1019,8 @@ Accessible::Attributes()
 already_AddRefed<nsIPersistentProperties>
 Accessible::NativeAttributes()
 {
-  RefPtr<nsPersistentProperties> attributes = new nsPersistentProperties();
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
 
   nsAutoString unused;
 
