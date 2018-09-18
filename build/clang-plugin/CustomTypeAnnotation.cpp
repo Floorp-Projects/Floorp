@@ -6,16 +6,16 @@
 #include "Utils.h"
 
 CustomTypeAnnotation StackClass =
-    CustomTypeAnnotation("moz_stack_class", "stack");
+    CustomTypeAnnotation(moz_stack_class, "stack");
 CustomTypeAnnotation GlobalClass =
-    CustomTypeAnnotation("moz_global_class", "global");
+    CustomTypeAnnotation(moz_global_class, "global");
 CustomTypeAnnotation NonHeapClass =
-    CustomTypeAnnotation("moz_nonheap_class", "non-heap");
-CustomTypeAnnotation HeapClass = CustomTypeAnnotation("moz_heap_class", "heap");
+    CustomTypeAnnotation(moz_nonheap_class, "non-heap");
+CustomTypeAnnotation HeapClass = CustomTypeAnnotation(moz_heap_class, "heap");
 CustomTypeAnnotation NonTemporaryClass =
-    CustomTypeAnnotation("moz_non_temporary_class", "non-temporary");
+    CustomTypeAnnotation(moz_non_temporary_class, "non-temporary");
 CustomTypeAnnotation TemporaryClass =
-    CustomTypeAnnotation("moz_temporary_class", "temporary");
+    CustomTypeAnnotation(moz_temporary_class, "temporary");
 
 void CustomTypeAnnotation::dumpAnnotationReason(BaseCheck &Check, QualType T,
                                                 SourceLocation Loc) {
@@ -74,7 +74,7 @@ void CustomTypeAnnotation::dumpAnnotationReason(BaseCheck &Check, QualType T,
 CustomTypeAnnotation::AnnotationReason
 CustomTypeAnnotation::directAnnotationReason(QualType T) {
   if (const TagDecl *D = T->getAsTagDecl()) {
-    if (hasCustomAnnotation(D, Spelling)) {
+    if (hasCustomAttribute(D, Attribute)) {
       AnnotationReason Reason = {T, RK_Direct, nullptr, ""};
       return Reason;
     }
@@ -127,8 +127,8 @@ CustomTypeAnnotation::directAnnotationReason(QualType T) {
 
       // Recurse into template arguments if the annotation
       // MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS is present
-      if (hasCustomAnnotation(
-              Declaration, "moz_inherit_type_annotations_from_template_args")) {
+      if (hasCustomAttribute<moz_inherit_type_annotations_from_template_args>(
+              Declaration)) {
         const ClassTemplateSpecializationDecl *Spec =
             dyn_cast<ClassTemplateSpecializationDecl>(Declaration);
         if (Spec) {
