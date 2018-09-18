@@ -68,15 +68,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "gCanFrameFeeds",
   "browser.feeds.unsafelyFrameFeeds", false);
 
 function FeedWriter() {
-  this._selectedApp = undefined;
-  this._selectedAppMenuItem = null;
-  this._subscribeCallback = null;
-  this._defaultHandlerMenuItem = null;
-
   Services.telemetry.scalarAdd("browser.feeds.preview_loaded", 1);
-
-  XPCOMUtils.defineLazyGetter(this, "_mm",
-                              () => this._window.docShell.messageManager);
 }
 
 FeedWriter.prototype = {
@@ -146,24 +138,6 @@ FeedWriter.prototype = {
     return this._bundle.GetStringFromName(key);
   },
 
-  _setCheckboxCheckedState(aValue) {
-    let checkbox = this._document.getElementById("alwaysUse");
-    if (checkbox) {
-      // see checkbox.xml, xbl bindings are not applied within the sandbox! TODO
-      let change = (aValue != (checkbox.getAttribute("checked") == "true"));
-      if (aValue)
-        checkbox.setAttribute("checked", "true");
-      else
-        checkbox.removeAttribute("checked");
-
-      if (change) {
-        let event = this._document.createEvent("Events");
-        event.initEvent("CheckboxStateChange", true, true);
-        checkbox.dispatchEvent(event);
-      }
-    }
-  },
-
    /**
    * Returns a date suitable for displaying in the feed preview.
    * If the date cannot be parsed, the return value is "false".
@@ -191,25 +165,6 @@ FeedWriter.prototype = {
       this.__dateFormatter = new Services.intl.DateTimeFormat(undefined, dtOptions);
     }
     return this.__dateFormatter;
-  },
-
-  /**
-   * Returns the feed type.
-   */
-  __feedType: null,
-  _getFeedType() {
-    if (this.__feedType != null)
-      return this.__feedType;
-
-    try {
-      // grab the feed because it's got the feed.type in it.
-      let container = this._getContainer();
-      let feed = container.QueryInterface(Ci.nsIFeed);
-      this.__feedType = feed.type;
-      return feed.type;
-    } catch (ex) { }
-
-    return Ci.nsIFeed.TYPE_FEED;
   },
 
   /**
@@ -473,234 +428,6 @@ FeedWriter.prototype = {
   },
 
   /**
-   * Get moz-icon url for a file
-   * @param   file
-   *          A nsIFile object for which the moz-icon:// is returned
-   * @returns moz-icon url of the given file as a string
-   */
-  _getFileIconURL(file) {
-    let fph = Services.io.getProtocolHandler("file")
-                 .QueryInterface(Ci.nsIFileProtocolHandler);
-    let urlSpec = fph.getURLSpecFromFile(file);
-    return "moz-icon://" + urlSpec + "?size=16";
-  },
-
-  /**
-   * Displays a prompt from which the user may choose a (client) feed reader.
-   * @param aCallback the callback method, passes in true if a feed reader was
-   *        selected, false otherwise.
-   */
-  _chooseClientApp(aCallback) {
-    this._subscribeCallback = aCallback;
-    this._mm.sendAsyncMessage("FeedWriter:ChooseClientApp",
-                              { title: this._getString("chooseApplicationDialogTitle"),
-                                feedType: this._getFeedType() });
-  },
-
-  _setSubscribeUsingLabel() {
-    let stringLabel = "subscribeFeedUsing";
-    switch (this._getFeedType()) {
-      case Ci.nsIFeed.TYPE_VIDEO:
-        stringLabel = "subscribeVideoPodcastUsing";
-        break;
-
-      case Ci.nsIFeed.TYPE_AUDIO:
-        stringLabel = "subscribeAudioPodcastUsing";
-        break;
-    }
-
-    let subscribeUsing = this._document.getElementById("subscribeUsingDescription");
-    let textNode = this._document.createTextNode(this._getString(stringLabel));
-    subscribeUsing.insertBefore(textNode, subscribeUsing.firstChild);
-  },
-
-  _setAlwaysUseLabel() {
-    let checkbox = this._document.getElementById("alwaysUse");
-    if (checkbox && this._handlersList) {
-      let handlerName = this._handlersList.selectedOptions[0]
-                            .textContent;
-      let stringLabel = "alwaysUseForFeeds";
-      switch (this._getFeedType()) {
-        case Ci.nsIFeed.TYPE_VIDEO:
-          stringLabel = "alwaysUseForVideoPodcasts";
-          break;
-
-        case Ci.nsIFeed.TYPE_AUDIO:
-          stringLabel = "alwaysUseForAudioPodcasts";
-          break;
-      }
-
-      let label = this._getFormattedString(stringLabel, [handlerName]);
-
-      let checkboxText = this._document.getElementById("checkboxText");
-      if (checkboxText.lastChild.nodeType == checkboxText.TEXT_NODE) {
-        checkboxText.lastChild.textContent = label;
-      } else {
-        LOG("FeedWriter._setAlwaysUseLabel: Expected textNode as lastChild of alwaysUse label");
-        let textNode = this._document.createTextNode(label);
-        checkboxText.appendChild(textNode);
-      }
-    }
-  },
-
-  // EventListener
-  handleEvent(event) {
-    if (event.target.ownerDocument != this._document) {
-      LOG("FeedWriter.handleEvent: Someone passed the feed writer as a listener to the events of another document!");
-      return;
-    }
-
-    switch (event.type) {
-      case "click":
-        if (event.target.id == "subscribeButton") {
-          this.subscribe();
-        }
-      break;
-      case "change":
-        LOG("Change fired");
-        if (event.target.selectedOptions[0].id == "chooseApplicationMenuItem") {
-          this._chooseClientApp(() => {
-            // Select the (per-prefs) selected handler if no application
-            // was selected
-            LOG("Selected handler after callback");
-            this._setAlwaysUseLabel();
-          });
-        } else {
-          this._setAlwaysUseLabel();
-        }
-        break;
-    }
-  },
-
-  _setSelectedHandlerResponse(handler) {
-    LOG(`Selecting handler response ${handler}`);
-    switch (handler) {
-      case "client":
-      case "default":
-        // do nothing, these are handled by the onchange event
-        break;
-      case "bookmarks":
-      default: {
-        let liveBookmarksMenuItem = this._document.getElementById("liveBookmarksMenuItem");
-        if (liveBookmarksMenuItem)
-          liveBookmarksMenuItem.selected = true;
-      }
-    }
-  },
-
-  _initSubscriptionUI(setupMessage) {
-    if (!this._handlersList)
-      return;
-    LOG("UI init");
-
-    let feedType = this._getFeedType();
-
-    // change the background
-    let header = this._document.getElementById("feedHeader");
-    switch (feedType) {
-      case Ci.nsIFeed.TYPE_VIDEO:
-        header.className = "videoPodcastBackground";
-        break;
-
-      case Ci.nsIFeed.TYPE_AUDIO:
-        header.className = "audioPodcastBackground";
-        break;
-
-      default:
-        header.className = "feedBackground";
-    }
-
-    let liveBookmarksMenuItem = this._document.getElementById("liveBookmarksMenuItem");
-
-    // Last-selected application
-    let menuItem = liveBookmarksMenuItem.cloneNode(false);
-    menuItem.removeAttribute("selected");
-    menuItem.setAttribute("id", "selectedAppMenuItem");
-    menuItem.setAttribute("handlerType", "client");
-
-    // Hide the menuitem until we select an app
-    menuItem.style.display = "none";
-    this._selectedAppMenuItem = menuItem;
-
-    this._handlersList.appendChild(this._selectedAppMenuItem);
-
-    // Create the menuitem for the default reader, but don't show/populate it until
-    // we get confirmation of what it is from the parent
-    menuItem = liveBookmarksMenuItem.cloneNode(false);
-    menuItem.removeAttribute("selected");
-    menuItem.setAttribute("id", "defaultHandlerMenuItem");
-    menuItem.setAttribute("handlerType", "client");
-    menuItem.style.display = "none";
-
-    this._defaultHandlerMenuItem = menuItem;
-    this._handlersList.appendChild(this._defaultHandlerMenuItem);
-
-    // "Choose Application..." menuitem
-    menuItem = liveBookmarksMenuItem.cloneNode(false);
-    menuItem.removeAttribute("selected");
-    menuItem.setAttribute("id", "chooseApplicationMenuItem");
-    menuItem.textContent = this._getString("chooseApplicationMenuItem");
-
-    this._handlersList.appendChild(menuItem);
-
-    this._setSelectedHandlerResponse(setupMessage.reader.handler);
-
-    if (setupMessage.defaultMenuItem) {
-      LOG(`Setting default menu item ${setupMessage.defaultMenuItem}`);
-      this._setApplicationLauncherMenuItem(this._defaultHandlerMenuItem, setupMessage.defaultMenuItem);
-    }
-    if (setupMessage.selectedMenuItem) {
-      LOG(`Setting selected menu item ${setupMessage.selectedMenuItem}`);
-      this._setApplicationLauncherMenuItem(this._selectedAppMenuItem, setupMessage.selectedMenuItem);
-    }
-
-    // "Subscribe using..."
-    this._setSubscribeUsingLabel();
-
-    // "Always use..." checkbox initial state
-    this._setCheckboxCheckedState(setupMessage.reader.alwaysUse);
-    this._setAlwaysUseLabel();
-
-    // We update the "Always use.." checkbox label whenever the selected item
-    // in the list is changed
-    this._handlersList.addEventListener("change", this);
-
-    // Set up the "Subscribe Now" button
-    this._document.getElementById("subscribeButton")
-        .addEventListener("click", this);
-
-    // first-run ui
-    if (setupMessage.showFirstRunUI) {
-      let textfeedinfo1, textfeedinfo2;
-      switch (feedType) {
-        case Ci.nsIFeed.TYPE_VIDEO:
-          textfeedinfo1 = "feedSubscriptionVideoPodcast1";
-          textfeedinfo2 = "feedSubscriptionVideoPodcast2";
-          break;
-        case Ci.nsIFeed.TYPE_AUDIO:
-          textfeedinfo1 = "feedSubscriptionAudioPodcast1";
-          textfeedinfo2 = "feedSubscriptionAudioPodcast2";
-          break;
-        default:
-          textfeedinfo1 = "feedSubscriptionFeed1";
-          textfeedinfo2 = "feedSubscriptionFeed2";
-      }
-
-      let feedinfo1 = this._document.getElementById("feedSubscriptionInfo1");
-      let feedinfo1Str = this._getString(textfeedinfo1);
-      let feedinfo2 = this._document.getElementById("feedSubscriptionInfo2");
-      let feedinfo2Str = this._getString(textfeedinfo2);
-
-      feedinfo1.textContent = feedinfo1Str;
-      feedinfo2.textContent = feedinfo2Str;
-
-      header.setAttribute("firstrun", "true");
-
-      this._mm.sendAsyncMessage("FeedWriter:ShownFirstRun");
-    }
-  },
-
-  /**
    * Returns the original URI object of the feed and ensures that this
    * component is only ever invoked from the preview document.
    * @param aWindow
@@ -735,7 +462,6 @@ FeedWriter.prototype = {
   _document: null,
   _feedURI: null,
   _feedPrincipal: null,
-  _handlersList: null,
 
   // BrowserFeedWriter WebIDL methods
   init(aWindow) {
@@ -749,73 +475,10 @@ FeedWriter.prototype = {
 
     this._window = window;
     this._document = window.document;
-    this._handlersList = this._document.getElementById("handlersMenuList");
 
     this._feedPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(this._feedURI, {});
 
     LOG("Subscribe Preview: feed uri = " + this._window.location.href);
-
-
-    this._mm.addMessageListener("FeedWriter:PreferenceUpdated", this);
-    this._mm.addMessageListener("FeedWriter:SetApplicationLauncherMenuItem", this);
-    this._mm.addMessageListener("FeedWriter:GetSubscriptionUIResponse", this);
-
-    const feedType = this._getFeedType();
-    this._mm.sendAsyncMessage("FeedWriter:GetSubscriptionUI",
-                              { feedType });
-  },
-
-  receiveMessage(msg) {
-    if (!this._window) {
-      // this._window is null unless this.init was called with a trusted
-      // window object.
-      return;
-    }
-    LOG(`received message from parent ${msg.name}`);
-    switch (msg.name) {
-      case "FeedWriter:PreferenceUpdated":
-        // This is called when browser-feeds.js spots a pref change
-        // This will happen when
-        // - about:preferences#general changes
-        // - another feed reader page changes the preference
-        // - when this page itself changes the select and there isn't a redirect
-        //   bookmarks and launching an external app means the page stays open after subscribe
-        const feedType = this._getFeedType();
-        LOG(`Got prefChange! ${JSON.stringify(msg.data)} current type: ${feedType}`);
-        let feedTypePref = msg.data.default;
-        if (feedType in msg.data) {
-          feedTypePref = msg.data[feedType];
-        }
-        LOG(`Got pref ${JSON.stringify(feedTypePref)}`);
-        this._setCheckboxCheckedState(feedTypePref.alwaysUse);
-        this._setSelectedHandlerResponse(feedTypePref.handler);
-        this._setAlwaysUseLabel();
-        break;
-      case "FeedWriter:GetSubscriptionUIResponse":
-        // Set up the subscription UI
-        this._initSubscriptionUI(msg.data);
-        break;
-      case "FeedWriter:SetApplicationLauncherMenuItem":
-        LOG(`FeedWriter:SetApplicationLauncherMenuItem - picked ${msg.data.name}`);
-        this._setApplicationLauncherMenuItem(this._selectedAppMenuItem, msg.data.name);
-        // Potentially a bit racy, but I don't think we can get into a state where this callback is set and
-        // we're not coming back from ChooseClientApp in browser-feeds.js
-        if (this._subscribeCallback) {
-          this._subscribeCallback();
-          this._subscribeCallback = null;
-        }
-        break;
-    }
-  },
-
-  _setApplicationLauncherMenuItem(menuItem, aName) {
-    /* unselect all handlers */
-    [...this._handlersList.children].forEach((option) => {
-      option.removeAttribute("selected");
-    });
-    menuItem.textContent = aName;
-    menuItem.style.display = "";
-    menuItem.selected = true;
   },
 
   writeContent() {
@@ -840,21 +503,12 @@ FeedWriter.prototype = {
     if (!this._window) {
       return;
     }
-    this._document.getElementById("subscribeButton")
-        .removeEventListener("click", this);
-    this._handlersList
-        .removeEventListener("change", this);
     this._document = null;
     this._window = null;
-    this._handlersList = null;
 
     this._removeFeedFromCache();
     this.__bundle = null;
     this._feedURI = null;
-
-    this._selectedApp = undefined;
-    this._selectedAppMenuItem = null;
-    this._defaultHandlerMenuItem = null;
   },
 
   _removeFeedFromCache() {
@@ -863,69 +517,6 @@ FeedWriter.prototype = {
                         getService(Ci.nsIFeedResultService);
       feedService.removeFeedResult(this._feedURI);
       this._feedURI = null;
-    }
-  },
-
-  subscribe() {
-    if (!this._window) {
-      return;
-    }
-    let feedType = this._getFeedType();
-
-    // Subscribe to the feed using the selected handler and save prefs
-    let defaultHandler = "reader";
-    let useAsDefault = this._document.getElementById("alwaysUse").getAttribute("checked");
-
-    let selectedItem = this._handlersList.selectedOptions[0];
-    let subscribeCallback = () => {
-      let feedReader = null;
-      let settings = {
-        feedType,
-        useAsDefault,
-        // Pull the title and subtitle out of the document
-        feedTitle: this._document.getElementById(TITLE_ID).textContent,
-        feedSubtitle: this._document.getElementById(SUBTITLE_ID).textContent,
-        feedLocation: this._window.location.href,
-      };
-      switch (selectedItem.id) {
-        case "selectedAppMenuItem":
-          feedReader = "client";
-          break;
-        case "defaultHandlerMenuItem":
-          feedReader = "default";
-          break;
-        case "liveBookmarksMenuItem":
-          defaultHandler = "bookmarks";
-          feedReader = "bookmarks";
-          break;
-      }
-      settings.reader = feedReader;
-
-      // If "Always use..." is checked, we should set PREF_*SELECTED_ACTION
-      // to either "reader" (If an application is selected),
-      // or to "bookmarks" (if the live bookmarks option is selected).
-      // Otherwise, we should set it to "ask"
-      if (!useAsDefault) {
-        defaultHandler = "ask";
-      }
-      settings.action = defaultHandler;
-      LOG(`FeedWriter:SetFeedPrefsAndSubscribe - ${JSON.stringify(settings)}`);
-      this._mm.sendAsyncMessage("FeedWriter:SetFeedPrefsAndSubscribe",
-                                settings);
-    };
-
-    // Show the file picker before subscribing if the
-    // choose application menuitem was chosen using the keyboard
-    if (selectedItem.id == "chooseApplicationMenuItem") {
-      this._chooseClientApp(aResult => {
-        if (aResult) {
-          selectedItem =
-            this._handlersList.selectedOptions[0];
-          subscribeCallback();
-        }
-      });
-    } else {
-      subscribeCallback();
     }
   },
 
