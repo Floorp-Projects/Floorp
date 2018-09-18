@@ -33,7 +33,7 @@ add_task(async function() {
     ],
   });
 
-  BrowserTestUtils.loadURI(browser, "about:sessionrestore");
+  browser.loadURI("about:sessionrestore");
   await BrowserTestUtils.browserLoaded(browser, false, "about:sessionrestore");
   doc = browser.contentDocument;
 

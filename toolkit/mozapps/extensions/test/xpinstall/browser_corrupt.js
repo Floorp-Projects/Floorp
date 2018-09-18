@@ -13,7 +13,7 @@ function test() {
     "Corrupt XPI": TESTROOT + "corrupt.xpi",
   }));
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 
 function download_failed(install) {

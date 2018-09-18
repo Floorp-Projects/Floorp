@@ -22,10 +22,7 @@ function startTest() {
     BrowserTestUtils.browserLoaded(browser, false, url).then(() => {
       func();
     });
-    browser.loadURI(url, {
-      flags,
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+    browser.loadURI(url, { flags });
   }
 
   // Load a normal http URL

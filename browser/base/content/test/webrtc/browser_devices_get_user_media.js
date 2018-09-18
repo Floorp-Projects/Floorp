@@ -531,7 +531,7 @@ var gTests = [
   run: async function checkNoAlwaysOnHttp() {
     // Load an http page instead of the https version.
     let browser = gBrowser.selectedBrowser;
-    BrowserTestUtils.loadURI(browser, browser.documentURI.spec.replace("https://", "http://"));
+    browser.loadURI(browser.documentURI.spec.replace("https://", "http://"));
     await BrowserTestUtils.browserLoaded(browser);
 
     // Initially set both permissions to 'allow'.

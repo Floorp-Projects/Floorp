@@ -124,7 +124,6 @@ global.replaceUrlInTab = (gBrowser, tab, url) => {
   let loaded = waitForTabLoaded(tab, url);
   gBrowser.loadURI(url, {
     flags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(), // This is safe from this functions usage however it would be preferred not to dot his.
   });
   return loaded;
 };

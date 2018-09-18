@@ -107,7 +107,7 @@ function addTab(aURI, aCallback) {
 function navigateTo(aURI) {
   let browser = gBrowser.selectedBrowser;
   BrowserTestUtils.browserLoaded(browser).then(next);
-  BrowserTestUtils.loadURI(browser, aURI);
+  browser.loadURI(aURI);
 }
 
 /**

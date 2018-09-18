@@ -303,7 +303,7 @@ var FullZoomHelper = {
           resolve();
       });
 
-      BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+      tab.linkedBrowser.loadURI(url);
     });
   },
 

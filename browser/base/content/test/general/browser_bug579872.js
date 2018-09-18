@@ -24,5 +24,5 @@ function test() {
     gBrowser.removeTab(gBrowser.tabs[1]); // example.org tab
     finish();
   }
-  BrowserTestUtils.loadURI(newTab.linkedBrowser, "http://example.com");
+  newTab.linkedBrowser.loadURI("http://example.com");
 }

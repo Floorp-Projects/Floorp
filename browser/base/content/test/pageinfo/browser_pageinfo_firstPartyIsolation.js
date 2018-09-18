@@ -74,7 +74,7 @@ async function test() {
   let url = "https://example.com/browser/browser/base/content/test/pageinfo/image.html";
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, url);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  gBrowser.selectedBrowser.loadURI(url);
   await loadPromise;
 
   // Pass a dummy imageElement, if there isn't an imageElement, pageInfo.js
