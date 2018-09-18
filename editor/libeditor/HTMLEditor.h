@@ -1552,6 +1552,24 @@ protected: // Shouldn't be used by friend classes
                       Element** aNewCell);
 
   /**
+   * DeleteSelectedTableRowsWithTransaction() removes <tr> elements.
+   * If only one cell element is selected or first selection range is
+   * in a cell, removes <tr> elements starting from a <tr> element
+   * containing the selected cell or first selection range.
+   * If 2 or more cell elements are selected, all <tr> elements
+   * which contains selected cell(s).  In this case, aNumberOfRowsToDelete
+   * is ignored.
+   * If there is no selection ranges, returns error.
+   * If selection is not in a cell element, this does not return error,
+   * just does nothing.
+   *
+   * @param aNumberOfRowsToDelete   Number of rows to remove.  This is ignored
+   *                                if 2 or more cells are selected.
+   */
+  nsresult
+  DeleteSelectedTableRowsWithTransaction(int32_t aNumberOfRowsToDelete);
+
+  /**
    * Helpers that don't touch the selection or do batch transactions.
    */
   nsresult DeleteRow(Element* aTable, int32_t aRowIndex);
@@ -1565,7 +1583,17 @@ protected: // Shouldn't be used by friend classes
                       RefPtr<Element> aCellToMerge,
                       bool aDeleteCellToMerge);
 
-  nsresult DeleteTable2(Element* aTable, Selection* aSelection);
+  /**
+   * DeleteTableElementAndChildren() removes aTableElement (and its children)
+   * from the DOM tree with transaction.
+   *
+   * @param aSelection      The normal Selection for the editor.
+   * @param aTableElement   The <table> element which you want to remove.
+   */
+  nsresult
+  DeleteTableElementAndChildrenWithTransaction(Selection& aSelection,
+                                               Element& aTableElement);
+
   nsresult SetColSpan(Element* aCell, int32_t aColSpan);
   nsresult SetRowSpan(Element* aCell, int32_t aRowSpan);
 

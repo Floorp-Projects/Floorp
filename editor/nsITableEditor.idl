@@ -62,7 +62,23 @@ interface nsITableEditor : nsISupports
     */
   void deleteTableCell(in long  aNumber);
   void deleteTableColumn(in long  aNumber);
-  void deleteTableRow(in long  aNumber);
+
+  /**
+   * deleteTableRow() removes <tr> elements.
+   * If only one cell element is selected or first selection range is
+   * in a cell, removes <tr> elements starting from a <tr> element
+   * containing the selected cell or first selection range.
+   * If 2 or more cell elements are selected, all <tr> elements
+   * which contains selected cell(s).  In this case, aNumberOfRowsToDelete
+   * is ignored.
+   * If there is no selection ranges, throws exception.
+   * If selection is not in a cell element, just does nothing without
+   * throwing exception.
+   *
+   * @param aNumberOfRowsToDelete   Number of rows to remove.  This is ignored
+   *                                if 2 or more cells are selected.
+   */
+  void deleteTableRow(in long aNumberOfRowsToDelete);
 
   /** Table Selection methods
     * Selecting a row or column actually
