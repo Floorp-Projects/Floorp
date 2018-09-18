@@ -40,6 +40,7 @@
 #include "mozilla/dom/StereoPannerNodeBinding.h"
 #include "mozilla/dom/WaveShaperNodeBinding.h"
 #include "mozilla/dom/Worklet.h"
+#include "mozilla/dom/WorkletImpl.h"
 
 #include "AudioBuffer.h"
 #include "AudioBufferSourceNode.h"
@@ -603,7 +604,8 @@ AudioContext::GetAudioWorklet(ErrorResult& aRv)
       return nullptr;
     }
 
-    mWorklet = new Worklet(window, principal, Worklet::eAudioWorklet);
+    mWorklet =
+      WorkletImpl::CreateWorklet(window, principal, WorkletImpl::eAudioWorklet);
   }
 
   return mWorklet;
