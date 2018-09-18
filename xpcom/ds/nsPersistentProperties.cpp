@@ -459,17 +459,6 @@ nsPersistentProperties::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   return aMallocSizeOf(this) + n;
 }
 
-nsresult
-nsPersistentProperties::Create(nsISupports* aOuter, REFNSIID aIID,
-                               void** aResult)
-{
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
-  return props->QueryInterface(aIID, aResult);
-}
-
 NS_IMPL_ISUPPORTS(nsPersistentProperties, nsIPersistentProperties, nsIProperties)
 
 NS_IMETHODIMP

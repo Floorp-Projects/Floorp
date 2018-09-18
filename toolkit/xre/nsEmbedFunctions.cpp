@@ -16,7 +16,7 @@
 #include "prenv.h"
 
 #include "nsIAppShell.h"
-#include "nsIAppStartupNotifier.h"
+#include "nsAppStartupNotifier.h"
 #include "nsIDirectoryService.h"
 #include "nsIFile.h"
 #include "nsIToolkitChromeRegistry.h"
@@ -202,12 +202,7 @@ XRE_InitEmbedding2(nsIFile *aLibXULDirectory,
   // If the app wants to autoregister every time (for instance, if it's debug),
   // it can do so after we return from this function.
 
-  nsCOMPtr<nsIObserver> startupNotifier
-    (do_CreateInstance(NS_APPSTARTUPNOTIFIER_CONTRACTID));
-  if (!startupNotifier)
-    return NS_ERROR_FAILURE;
-
-  startupNotifier->Observe(nullptr, APPSTARTUP_TOPIC, nullptr);
+  nsAppStartupNotifier::NotifyObservers(APPSTARTUP_TOPIC);
 
   return NS_OK;
 }
