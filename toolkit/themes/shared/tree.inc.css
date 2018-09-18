@@ -29,6 +29,14 @@ treechildren::-moz-tree-row(multicol, odd) {
   background-color: -moz-oddtreerow;
 }
 
+%ifdef XP_WIN
+@media (-moz-windows-default-theme) {
+  treechildren::-moz-tree-row(hover) {
+    background-color: hsla(0,0%,50%,.15);
+  }
+}
+%endif
+
 treechildren::-moz-tree-row(selected) {
   background-color: -moz-cellhighlight;
 }
