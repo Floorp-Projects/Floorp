@@ -360,7 +360,7 @@ protected:
 
     // figure out which families fontconfig maps a generic to
     // (aGeneric assumed already lowercase)
-    PrefFontList* FindGenericFamilies(const nsAString& aGeneric,
+    PrefFontList* FindGenericFamilies(const nsCString& aGeneric,
                                       nsAtom* aLanguage);
 
     // are all pref font settings set to use fontconfig generics?
