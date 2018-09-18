@@ -5,6 +5,7 @@ add_task(async function() {
 
   await SpecialPowers.flushPrefEnv();
   await SpecialPowers.pushPrefEnv({"set": [
+    ["browser.fastblock.enabled", false],
     ["privacy.trackingprotection.enabled", false],
     ["privacy.trackingprotection.pbmode.enabled", false],
     ["privacy.trackingprotection.annotate_channels", true],

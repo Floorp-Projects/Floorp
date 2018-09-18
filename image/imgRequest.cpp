@@ -37,6 +37,7 @@
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
 #include "imgIRequest.h"
+#include "nsProperties.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Telemetry.h"
@@ -108,7 +109,7 @@ imgRequest::Init(nsIURI *aURI,
   MOZ_ASSERT(aRequest, "No request");
   MOZ_ASSERT(aChannel, "No channel");
 
-  mProperties = do_CreateInstance("@mozilla.org/properties;1");
+  mProperties = new nsProperties();
   mURI = aURI;
   mFinalURI = aFinalURI;
   mRequest = aRequest;

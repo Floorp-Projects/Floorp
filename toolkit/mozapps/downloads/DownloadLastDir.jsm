@@ -32,10 +32,8 @@ var EXPORTED_SYMBOLS = [ "DownloadLastDir" ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-let nonPrivateLoadContext = Cc["@mozilla.org/loadcontext;1"].
-                              createInstance(Ci.nsILoadContext);
-let privateLoadContext = Cc["@mozilla.org/privateloadcontext;1"].
-                              createInstance(Ci.nsILoadContext);
+let nonPrivateLoadContext = Cu.createLoadContext();
+let privateLoadContext = Cu.createPrivateLoadContext();
 
 var observer = {
   QueryInterface: ChromeUtils.generateQI(["nsIObserver",

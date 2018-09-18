@@ -6,8 +6,6 @@
 #ifndef nsIAppStartupNotifier_h___
 #define nsIAppStartupNotifier_h___
 
-#include "nsIObserver.h"
-
 /*
  Some components need to be run at the startup of mozilla or embedding - to
  start new services etc.
@@ -41,8 +39,6 @@
  APPSTARTUP_CATEGORY and notify them that startup has begun
  and release them.
 */
-
-#define NS_APPSTARTUPNOTIFIER_CONTRACTID "@mozilla.org/embedcomp/appstartup-notifier;1"
 
 #define APPSTARTUP_CATEGORY "app-startup"
 #define APPSTARTUP_TOPIC    "app-startup"
