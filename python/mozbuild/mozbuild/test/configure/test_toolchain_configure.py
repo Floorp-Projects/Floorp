@@ -901,55 +901,18 @@ class WindowsToolchainTest(BaseToolchainTest):
         '/usr/bin/clang++-3.3': CLANGXX_3_3 + CLANG_PLATFORM_X86_WIN,
     }
 
-    VS_2013u2_RESULT = (
-        'This version (18.00.30501) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or Update 8 or later'
-        ' in order to build.\n'
+    VS_FAILURE_MESSAGE = (
+        'This version (%s) of the MSVC compiler is not supported.\nYou must'
+        ' install Visual C++ 2017 Update 8 or later in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
-    VS_2013u3_RESULT = (
-        'This version (18.00.30723) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or Update 8 or later'
-        ' in order to build.\n'
-        'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
-    VS_2015_RESULT = (
-        'This version (19.00.23026) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or Update 8 or later'
-        ' in order to build.\n'
-        'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
-    VS_2015u1_RESULT = (
-        'This version (19.00.23506) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or Update 8 or later'
-        ' in order to build.\n'
-        'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
-    VS_2015u2_RESULT = (
-        'This version (19.00.23918) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or Update 8 or later'
-        ' in order to build.\n'
-        'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
-    VS_2015u3_RESULT = (
-        'This version (19.00.24213) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or Update 8 or later'
-        ' in order to build.\n'
-        'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
-    VS_2017u4_RESULT = (
-        'This version (19.11.25547) of the MSVC compiler is not supported.\n'
-        'You must install Visual C++ 2017 Update 6 or Update 8 or later'
-        ' in order to build.\n'
-        'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
-    VS_2017u6_RESULT = CompilerResult(
-        flags=[],
-        version='19.13.26128',
-        type='msvc',
-        compiler='/opt/VS_2017u6/bin/cl',
-        language='C',
-    )
-    VSXX_2017u6_RESULT = CompilerResult(
-        flags=[],
-        version='19.13.26128',
-        type='msvc',
-        compiler='/opt/VS_2017u6/bin/cl',
-        language='C++',
-    )
+    VS_2013u2_RESULT = VS_FAILURE_MESSAGE % '18.00.30501'
+    VS_2013u3_RESULT = VS_FAILURE_MESSAGE % '18.00.30723'
+    VS_2015_RESULT = VS_FAILURE_MESSAGE % '19.00.23026'
+    VS_2015u1_RESULT = VS_FAILURE_MESSAGE % '19.00.23506'
+    VS_2015u2_RESULT = VS_FAILURE_MESSAGE % '19.00.23918'
+    VS_2015u3_RESULT = VS_FAILURE_MESSAGE % '19.00.24213'
+    VS_2017u4_RESULT = VS_FAILURE_MESSAGE % '19.11.25547'
+    VS_2017u6_RESULT = VS_FAILURE_MESSAGE % '19.13.26128'
     VS_2017u8_RESULT = CompilerResult(
         flags=[],
         version='19.15.26726',
@@ -1005,15 +968,13 @@ class WindowsToolchainTest(BaseToolchainTest):
             'cxx_compiler': self.VSXX_2017u8_RESULT,
         })
 
+    def test_unsupported_msvc(self):
         self.do_toolchain_test(self.PATHS, {
             'c_compiler': self.VS_2017u6_RESULT,
-            'cxx_compiler': self.VSXX_2017u6_RESULT,
         }, environ={
             'CC': '/opt/VS_2017u6/bin/cl',
-            'CXX': '/opt/VS_2017u6/bin/cl',
         })
 
-    def test_unsupported_msvc(self):
         self.do_toolchain_test(self.PATHS, {
             'c_compiler': self.VS_2017u4_RESULT,
         }, environ={
