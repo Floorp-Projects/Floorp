@@ -56,6 +56,8 @@ public:
   already_AddRefed<Console>
   GetConsole(JSContext* aCx, ErrorResult& aRv);
 
+  WorkletImpl* Impl() const { return mImpl; }
+
   void
   Dump(const Optional<nsAString>& aString) const;
 

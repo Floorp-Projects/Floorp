@@ -497,6 +497,7 @@ private:
   friend class ConsoleProfileWorkletRunnable;
   friend class ConsoleRunnable;
   friend class ConsoleWorkerRunnable;
+  friend class ConsoleWorkletRunnable;
 };
 
 } // namespace dom
