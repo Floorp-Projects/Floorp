@@ -781,8 +781,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec,
     // approxLen should be correct or 1 high
     if (!mSpec.SetLength(approxLen+1, fallible)) // buf needs a trailing '\0' below
         return NS_ERROR_OUT_OF_MEMORY;
-    char *buf;
-    mSpec.BeginWriting(buf);
+    char *buf = mSpec.BeginWriting();
     uint32_t i = 0;
     int32_t diff = 0;
 
