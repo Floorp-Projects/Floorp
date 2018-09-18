@@ -1342,15 +1342,6 @@ class BuildReader(object):
 
         r = {}
 
-        # Only do wildcard matching if the '*' character is present.
-        # Otherwise, mozpath.match will match directories, which we've
-        # arbitrarily chosen to not allow.
-        def path_matches_pattern(relpath, pattern):
-            if pattern == relpath:
-                return True
-
-            return '*' in pattern and mozpath.match(relpath, pattern)
-
         for path, ctxs in paths.items():
             # Should be normalized by read_relevant_mozbuilds.
             assert '\\' not in path
@@ -1373,7 +1364,13 @@ class BuildReader(object):
                 else:
                     relpath = path
 
-                if any(path_matches_pattern(relpath, p) for p in ctx.patterns):
+                pattern = ctx.pattern
+
+                # Only do wildcard matching if the '*' character is present.
+                # Otherwise, mozpath.match will match directories, which we've
+                # arbitrarily chosen to not allow.
+                if pattern == relpath or \
+                        ('*' in pattern and mozpath.match(relpath, pattern)):
                     flags += ctx
 
             if not any([flags.test_tags, flags.test_files, flags.test_flavors]):
