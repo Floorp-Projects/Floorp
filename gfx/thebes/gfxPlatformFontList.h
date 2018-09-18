@@ -520,7 +520,7 @@ protected:
 
     void
     GetFontFamiliesFromGenericFamilies(
-        nsTArray<nsString>& aGenericFamilies,
+        nsTArray<nsCString>& aGenericFamilies,
         nsAtom* aLangGroup,
         nsTArray<RefPtr<gfxFontFamily>>* aFontFamilies);
 
