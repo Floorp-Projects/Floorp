@@ -1523,6 +1523,11 @@ BrowserGlue.prototype = {
       UnsubmittedCrashHandler.scheduleCheckForUnsubmittedCrashReports();
     }
 
+    if (AppConstants.ASAN_REPORTER) {
+      ChromeUtils.import("resource:///modules/AsanReporter.jsm");
+      AsanReporter.init();
+    }
+
     if (AppConstants.platform == "win") {
       Services.tm.idleDispatchToMainThread(() => {
         // For Windows 7, initialize the jump list module.

@@ -40,6 +40,9 @@ with Files("test/unit/test_SitePermissions.js"):
 with Files("AboutNewTab.jsm"):
     BUG_COMPONENT = ("Firefox", "New Tab Page")
 
+with Files("AsanReporter.jsm"):
+    BUG_COMPONENT = ("Firefox Build System", "General")
+
 with Files('AsyncTabSwitcher.jsm'):
     BUG_COMPONENT = ('Firefox', 'Tabbed Browser')
 
@@ -147,6 +150,11 @@ EXTRA_JS_MODULES += [
     'webrtcUI.jsm',
     'ZoomUI.jsm',
 ]
+
+if CONFIG['MOZ_ASAN_REPORTER']:
+    EXTRA_JS_MODULES += [
+        'AsanReporter.jsm',
+    ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXTRA_JS_MODULES += [

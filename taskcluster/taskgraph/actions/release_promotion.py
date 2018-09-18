@@ -279,7 +279,8 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     parameters['build_number'] = int(input['build_number'])
     parameters['next_version'] = next_version
     parameters['release_history'] = release_history
-    parameters['release_type'] = promotion_config.get('release-type', '')
+    if promotion_config.get('is-rc'):
+        parameters['release_type'] += '-rc'
     parameters['release_eta'] = input.get('release_eta', '')
     parameters['release_enable_partners'] = release_enable_partners
     parameters['release_partners'] = input.get('release_partners')

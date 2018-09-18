@@ -28,15 +28,10 @@ jobs:
          upstream-artifacts:  # see transforms
          google-play-track:
             # See https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
-            by-project:
-               mozilla-central: 'beta'
-               mozilla-beta: 'rollout'
-               mozilla-release: 'rollout'
-               default: 'internal'
-         rc-google-play-track:
-            by-project:
-               mozilla-release: 'rollout'
-               birch: 'rollout'
+            by-release-type:
+               nightly: 'beta'
+               beta: 'rollout'
+               release(-rc)?: 'rollout'
                default: 'internal'
          implementation: push-apk
          commit:
@@ -44,16 +39,12 @@ jobs:
                production: true
                staging: false
          rollout-percentage:
-            by-project:
+            by-release-type:
                # XXX Please make sure to change PUSH_APK_GOOGLE_PLAY_TRACT to
                # 'rollout' if you add a new supported project
-               mozilla-release: 10
-               mozilla-beta: 10
-               default: null
-         rc-rollout-percentage:
-            by-project:
-               mozilla-release: 5
-               birch: 5
+               release: 10
+               release-rc: 5
+               beta: 10
                default: null
       requires: all-resolved
       scopes:  # see transforms

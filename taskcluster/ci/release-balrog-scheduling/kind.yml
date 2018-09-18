@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+   - taskgraph.transforms.release:run_on_releases
    - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.scriptworker:add_balrog_scopes
    - taskgraph.transforms.task:transforms
@@ -27,30 +28,32 @@ jobs:
       worker:
          product: firefox
          publish-rules:
-            by-project:
-               maple: [32]
-               birch: [145]
-               jamun: [724]
-               mozilla-beta: [32]
-               mozilla-release: [145]
-               mozilla-esr60: [806]
-               default: []
+            by-release-level:
+               production:
+                  by-release-type:
+                     beta: [32]
+                     release: [145]
+                     esr60: [806]
+                     default: []
+               staging:
+                  by-release-type:
+                     beta: [32]
+                     release: [145]
+                     esr60: [724]
+                     default: []
       treeherder:
          platform: firefox-release/opt
          symbol: Rel(BSFx)
          tier: 1
          kind: build
-   # FIXME: (Bug 1487172) This task should only run on esr60-like branches
    firefox-bz2:
       description: Schedule Firefox publishing in balrog (bz2)
       name: release-firefox_schedule_publishing_in_balrog-bz2
       shipping-product: firefox
+      run-on-releases: [esr60]
       worker:
          product: firefox
-         publish-rules:
-            by-project:
-               mozilla-esr60: [521]
-               default: []
+         publish-rules: [521]
          blob-suffix: -bz2
       treeherder:
          platform: firefox-release/opt
@@ -63,11 +66,7 @@ jobs:
       shipping-product: devedition
       worker:
          product: devedition
-         publish-rules:
-            by-project:
-               maple: [10]
-               mozilla-beta: [10]
-               default: []
+         publish-rules: [10]
       treeherder:
          platform: devedition-release/opt
          symbol: Rel(BSDev)

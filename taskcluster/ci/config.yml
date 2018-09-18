@@ -141,7 +141,7 @@ release-promotion:
             target-tasks-method: promote_desktop
         promote_firefox_rc:
             product: firefox
-            release-type: rc
+            is-rc: true
             target-tasks-method: promote_desktop
             partial-updates: true
         push_devedition:
@@ -163,7 +163,7 @@ release-promotion:
             version-bump: true
         ship_fennec_rc:
             product: fennec
-            release-type: rc
+            is-rc: true
             target-tasks-method: ship_fennec
         ship_firefox:
             product: firefox
@@ -172,7 +172,7 @@ release-promotion:
             partial-updates: true
         ship_firefox_rc:
             product: firefox
-            release-type: rc
+            is-rc: true
             target-tasks-method: ship_desktop
             partial-updates: true
 
