@@ -225,6 +225,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'topobjdir := %s' % env.topobjdir,
             'topsrcdir := %s' % env.topsrcdir,
             'srcdir := %s' % env.topsrcdir,
+            'srcdir_rel := %s' % mozpath.relpath(env.topsrcdir, env.topobjdir),
             'VPATH := %s' % env.topsrcdir,
             'relativesrcdir := .',
             'include $(DEPTH)/config/autoconf.mk',
@@ -242,7 +243,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertTrue(os.path.exists(p))
 
         lines = [l.strip() for l in open(p, 'rt').readlines()]
-        self.assertEqual(len(lines), 10)
+        self.assertEqual(len(lines), 11)
 
         self.assertTrue(lines[0].startswith('# THIS FILE WAS AUTOMATICALLY'))
 
