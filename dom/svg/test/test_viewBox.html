@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1396642
+-->
+<head>
+  <title>Test for Bug 1396642</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1396642">Mozilla Bug 1396642</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<div id="svg"></div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function runTest()
+{
+  var testsElement = $("svg");
+
+  // Turn for instance `2.3` into `230` (px). Round to avoid floating point
+  // issues.
+  const scale = (number) => Math.round(100 * number);
+
+  const widths = [2, 2.3, 2.5, 2.8];
+  const heights = [3, 3.3, 3.5, 3.8];
+
+  for (const width of widths) {
+    for (const height of heights) {
+      const variations = [
+        {width, height},
+        {width: "auto", height},
+        {width, height: "auto"},
+        {width: "auto", height: "auto"},
+      ];
+
+      for (const variation of variations) {
+        const svgWrapperElement = document.createElement("div");
+        svgWrapperElement.style.width =
+          variation.width === "auto" && variation.height === "auto"
+            ? `${scale(width)}px`
+            : "auto";
+
+        const svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svgElement.setAttribute("viewBox", `0 0 ${width} ${height}`);
+        svgElement.style.width =
+          typeof variation.width === "number"
+            ? `${scale(variation.width)}px`
+            : variation.width;
+        svgElement.style.height =
+          typeof variation.height === "number"
+            ? `${scale(variation.height)}px`
+            : variation.height;
+
+        svgWrapperElement.appendChild(svgElement);
+
+        testsElement.appendChild(svgWrapperElement);
+
+        const rect = svgElement.getBoundingClientRect();
+        const actual = {
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        };
+        const expected = {
+          width: scale(width),
+          height: scale(height),
+        };
+
+        isfuzzy(expected.width, actual.width, 0.001, "checking width");
+        isfuzzy(expected.height, actual.height, 0.001, "checking height");
+      }
+    }
+  }
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", runTest);
+</script>
+</pre>
+</body>
+</html>
