@@ -4,10 +4,6 @@
 
 %include ../../../shared/in-content/common.inc.css
 
-:root {
-  --in-content-box-background-odd: transparent;
-}
-
 xul|caption {
   background-color: transparent;
 }
