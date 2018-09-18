@@ -1069,9 +1069,9 @@ class Files(SubContext):
             """),
     }
 
-    def __init__(self, parent, *patterns):
+    def __init__(self, parent, pattern=None):
         super(Files, self).__init__(parent)
-        self.patterns = patterns
+        self.pattern = pattern
         self.finalized = set()
         self.test_files = set()
         self.test_tags = set()
