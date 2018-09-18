@@ -75,22 +75,6 @@ html|input[type="checkbox"]:-moz-focusring + html|label:before {
   outline: 1px dotted;
 }
 
-xul|treechildren::-moz-tree-row(multicol, odd) {
-  background-color: var(--in-content-box-background-odd);
-}
-
-/* These rules are duplicated from common.inc.css
- * because above -moz-tree-row(multicol, odd) rule
- * overrides also hover/selected states.
- */
-xul|treechildren::-moz-tree-row(hover) {
-  background-color: var(--in-content-item-hover);
-}
-
-xul|treechildren::-moz-tree-row(selected) {
-  background-color: var(--in-content-item-selected);
-}
-
 html|button {
   /* XUL button min-width */
   min-width: 6.3em;

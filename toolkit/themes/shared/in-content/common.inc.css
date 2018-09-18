@@ -709,6 +709,10 @@ xul|treechildren::-moz-tree-row {
   background-image: none;
 }
 
+xul|treechildren::-moz-tree-row(multicol, odd) {
+  background-color: var(--in-content-box-background-odd);
+}
+
 html|select[size][multiple] > html|option:hover,
 xul|treechildren::-moz-tree-row(hover) {
   background-color: var(--in-content-item-hover);
