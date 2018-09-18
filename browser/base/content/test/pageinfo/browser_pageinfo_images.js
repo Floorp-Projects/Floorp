@@ -28,7 +28,7 @@ function test() {
     }, {capture: true, once: true});
   });
 
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser,
+  gBrowser.selectedBrowser.loadURI(
     "data:text/html," +
     "<html>" +
     "  <head>" +

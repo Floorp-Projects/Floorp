@@ -33,7 +33,7 @@ add_task(async function clearURLBarAfterParentProcessURLInExistingTab() {
     newTabBrowser.addEventListener("Initialized", async function() {
       resolve(gBrowser.selectedTab);
     }, {capture: true, once: true});
-    BrowserTestUtils.loadURI(newTabBrowser, "about:preferences");
+    newTabBrowser.loadURI("about:preferences");
   });
   document.getElementById("home-button").click();
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, HomePage.get());

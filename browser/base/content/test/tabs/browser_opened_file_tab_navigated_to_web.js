@@ -36,7 +36,7 @@ add_task(async function() {
   let openedBrowser = openedTab.linkedBrowser;
 
   // Ensure that new file:// tab can be navigated to web content.
-  BrowserTestUtils.loadURI(openedBrowser, "http://example.org/");
+  openedBrowser.loadURI(WEB_ADDRESS);
   let href = await BrowserTestUtils.browserLoaded(openedBrowser, false, WEB_ADDRESS);
   is(href, WEB_ADDRESS,
      "Check that new file:// page has navigated successfully to web content");

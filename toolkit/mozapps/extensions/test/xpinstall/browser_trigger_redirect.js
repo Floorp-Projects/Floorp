@@ -11,7 +11,7 @@ function test() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "triggerredirect.html");
+  gBrowser.loadURI(TESTROOT + "triggerredirect.html");
 }
 
 function confirm_install(panel) {

@@ -10,7 +10,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html;charset=utf8,<p>test long string in Scratchpad</p>");
+  gBrowser.loadURI("data:text/html;charset=utf8,<p>test long string in Scratchpad</p>");
 }
 
 function runTests() {

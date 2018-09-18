@@ -27,7 +27,7 @@ var clickTest = async function(tab) {
 };
 
 function loadURI(tab, url) {
-  BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+  tab.linkedBrowser.loadURI(url);
   return BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 }
 

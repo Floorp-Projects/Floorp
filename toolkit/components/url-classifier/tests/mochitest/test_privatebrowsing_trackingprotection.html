@@ -31,9 +31,7 @@ function testOnWindow(aPrivate) {
                               subject => subject == win).then(() => {
         win.addEventListener("DOMContentLoaded", function onInnerLoad() {
           if (win.content.location.href != contentPage) {
-            win.gBrowser.loadURI(contentPage, {
-              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
-            });
+            win.gBrowser.loadURI(contentPage);
             return;
           }
           win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
@@ -46,9 +44,7 @@ function testOnWindow(aPrivate) {
           }, false, true);
         }, true);
         SimpleTest.executeSoon(function() {
-          win.gBrowser.loadURI(contentPage, {
-            triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
-          });
+          win.gBrowser.loadURI(contentPage);
         });
       });
     }, {capture: true, once: true});

@@ -390,7 +390,7 @@ add_test(async function() {
   info("Part 1");
   is_in_list(aManager, "addons://list/plugin", false, false);
 
-  BrowserTestUtils.loadURI(gBrowser, "http://example.com/");
+  gBrowser.loadURI("http://example.com/");
   wait_for_page_show(gBrowser.selectedBrowser).then(() => {
     info("Part 2");
 

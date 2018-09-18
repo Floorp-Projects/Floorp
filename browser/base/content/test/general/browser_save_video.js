@@ -12,7 +12,7 @@ add_task(async function() {
   var fileName;
 
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURI(gBrowser, "http://mochi.test:8888/browser/browser/base/content/test/general/web_video.html");
+  gBrowser.loadURI("http://mochi.test:8888/browser/browser/base/content/test/general/web_video.html");
   await loadPromise;
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown");

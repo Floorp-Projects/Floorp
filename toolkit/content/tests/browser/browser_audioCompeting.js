@@ -58,13 +58,13 @@ add_task(async function cross_tabs_audio_competing() {
   info("- open tab 1 in foreground -");
   let tab1 = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                          "about:blank");
-  BrowserTestUtils.loadURI(tab1.linkedBrowser, PAGE);
+  tab1.linkedBrowser.loadURI(PAGE);
   await waitForTabPlayingEvent(tab1, true);
 
   info("- open tab 2 in foreground -");
   let tab2 = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
-  BrowserTestUtils.loadURI(tab2.linkedBrowser, PAGE);
+  tab2.linkedBrowser.loadURI(PAGE);
   await waitForTabPlayingEvent(tab1, false);
 
   info("- open tab 3 in foreground -");
@@ -87,7 +87,7 @@ add_task(async function within_one_tab_audio_competing() {
   info("- open tab and play audio1 -");
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
-  BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE);
+  tab.linkedBrowser.loadURI(PAGE);
   await waitForTabPlayingEvent(tab, true);
 
   info("- play audio2 in the same tab -");

@@ -6,7 +6,6 @@ var imports = [ "SimpleTest", "is", "isnot", "ok", "onerror", "todo",
 for (var name of imports) {
   window[name] = window.opener.wrappedJSObject[name];
 }
-ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
 /**
  * Define global constants and variables.
@@ -170,7 +169,7 @@ function doPageNavigation(params) {
   }
   else if (uri) {
     gNavType = NAV_URI;
-    BrowserTestUtils.loadURI(TestWindow.getBrowser(), uri);
+    TestWindow.getBrowser().loadURI(uri);
   }
   else if (reload) {
     gNavType = NAV_RELOAD;

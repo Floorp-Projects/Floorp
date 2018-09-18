@@ -22,7 +22,6 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
 var baseURL = "http://mochi.test:8888/chrome/dom/tests/mochitest/beacon/";
 
@@ -55,7 +54,7 @@ function beginTest() {
       ok(true, "cookie set by beacon request in normal window");
       testOnPrivateWindow();
     }, "cookie-changed");
-    BrowserTestUtils.loadURI(aNormalWindow.gBrowser.selectedBrowser, baseURL + "file_beaconCookies.html");
+    aNormalWindow.gBrowser.selectedBrowser.loadURI(baseURL + "file_beaconCookies.html");
   });
 }
 
@@ -66,7 +65,7 @@ function testOnPrivateWindow() {
       ok(true, "private cookie set by beacon request in private window");
       cleanup();
     }, "private-cookie-changed");
-    BrowserTestUtils.loadURI(aPrivateWindow.gBrowser.selectedBrowser, baseURL + "file_beaconCookies.html");
+    aPrivateWindow.gBrowser.selectedBrowser.loadURI(baseURL + "file_beaconCookies.html");
   });
 }
 

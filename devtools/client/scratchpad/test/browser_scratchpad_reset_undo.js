@@ -28,7 +28,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test that undo get's reset after file load in Scratchpad");
+  gBrowser.loadURI("data:text/html,<p>test that undo get's reset after file load in Scratchpad");
 }
 
 function runTests() {

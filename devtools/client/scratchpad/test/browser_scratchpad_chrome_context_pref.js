@@ -15,7 +15,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,Scratchpad test for bug 646070 - chrome context preference");
+  gBrowser.loadURI("data:text/html,Scratchpad test for bug 646070 - chrome context preference");
 }
 
 function runTests() {

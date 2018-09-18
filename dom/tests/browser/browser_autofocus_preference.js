@@ -4,7 +4,7 @@ add_task(async function() {
   const url = "data:text/html,<!DOCTYPE html><html><body><input autofocus><button autofocus></button><textarea autofocus></textarea><select autofocus></select></body></html>";
 
   let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  gBrowser.selectedBrowser.loadURI(url);
   await loadedPromise;
 
   await new Promise(resolve => executeSoon(resolve));
