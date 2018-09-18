@@ -22,11 +22,6 @@ this.EXPORTED_SYMBOLS = ["event"];
 // TODO(ato): Document!
 let seenEvent = false;
 
-function getDOMWindowUtils(win) {
-  // this assumes we are operating in chrome space
-  return win.windowUtils;
-}
-
 event.MouseEvents = {
   click: 0,
   dblclick: 1,
@@ -77,119 +72,6 @@ event.DoubleClickTracker = {
   cancelTimer() {
     dblclickTimer.cancel();
   },
-};
-
-/**
- * Sends a mouse event to given target.
- *
- * @param {MouseEvent} mouseEvent
- *     Event to send.
- * @param {(DOMElement|string)} target
- *     Target of event.  Can either be an element or the ID of an element.
- * @param {Window} win
- *     Window object.
- *
- * @throws {TypeError}
- *     If the event is unsupported.
- */
-event.sendMouseEvent = function(mouseEvent, target, win) {
-  if (!event.MouseEvents.hasOwnProperty(mouseEvent.type)) {
-    throw new TypeError("Unsupported event type: " + mouseEvent.type);
-  }
-
-  if (!target.nodeType && typeof target != "string") {
-    throw new TypeError(
-        "Target can only be a DOM element or a string: " + target);
-  }
-
-  if (!target.nodeType) {
-    target = win.document.getElementById(target);
-  } else {
-    win = win || target.ownerGlobal;
-  }
-
-  let ev = win.document.createEvent("MouseEvent");
-
-  let view = win;
-
-  let detail = mouseEvent.detail;
-  if (!detail) {
-    if (mouseEvent.type in ["click", "mousedown", "mouseup"]) {
-      detail = 1;
-    } else if (mouseEvent.type == "dblclick") {
-      detail = 2;
-    } else {
-      detail = 0;
-    }
-  }
-
-  let screenX = mouseEvent.screenX || 0;
-  let screenY = mouseEvent.screenY || 0;
-  let clientX = mouseEvent.clientX || 0;
-  let clientY = mouseEvent.clientY || 0;
-  let ctrlKey = mouseEvent.ctrlKey || false;
-  let altKey = mouseEvent.altKey || false;
-  let shiftKey = mouseEvent.shiftKey || false;
-  let metaKey = mouseEvent.metaKey || false;
-  let button = mouseEvent.button || 0;
-  let relatedTarget = mouseEvent.relatedTarget || null;
-
-  ev.initMouseEvent(
-      mouseEvent.type,
-      /* canBubble */ true,
-      /* cancelable */ true,
-      view,
-      detail,
-      screenX,
-      screenY,
-      clientX,
-      clientY,
-      ctrlKey,
-      altKey,
-      shiftKey,
-      metaKey,
-      button,
-      relatedTarget);
-};
-
-/**
- * Send character to the currently focused element.
- *
- * This function handles casing of characters (sends the right charcode,
- * and sends a shift key for uppercase chars).  No other modifiers are
- * handled at this point.
- *
- * For now this method only works for English letters (lower and upper
- * case) and the digits 0-9.
- */
-event.sendChar = function(char, win) {
-  // DOM event charcodes match ASCII (JS charcodes) for a-zA-Z0-9
-  let hasShift = (char == char.toUpperCase());
-  event.synthesizeKey(char, {shiftKey: hasShift}, win);
-};
-
-/**
- * Send string to the focused element.
- *
- * For now this method only works for English letters (lower and upper
- * case) and the digits 0-9.
- */
-event.sendString = function(string, win) {
-  for (let i = 0; i < string.length; ++i) {
-    event.sendChar(string.charAt(i), win);
-  }
-};
-
-/**
- * Send the non-character key to the focused element.
- *
- * The name of the key should be the part that comes after "DOM_VK_"
- * in the KeyboardEvent constant name for this key.  No modifiers are
- * handled at this point.
- */
-event.sendKey = function(key, win) {
-  let keyName = "VK_" + key.toUpperCase();
-  event.synthesizeKey(keyName, {shiftKey: false}, win);
 };
 
 // TODO(ato): Unexpose this when action.Chain#emitMouseEvent
@@ -265,7 +147,7 @@ event.synthesizeMouse = function(element, offsetX, offsetY, opts, win) {
  *     Window object.
  */
 event.synthesizeMouseAtPoint = function(left, top, opts, win) {
-  let domutils = getDOMWindowUtils(win);
+  let domutils = win.windowUtils;
 
   let button = opts.button || 0;
   let clickCount = opts.clickCount || 1;
@@ -330,20 +212,6 @@ event.synthesizeMouseAtPoint = function(left, top, opts, win) {
         isWidgetEventSynthesized,
         buttons);
   }
-};
-
-/**
- * Call event.synthesizeMouse with coordinates at the centre of the
- * target.
- */
-event.synthesizeMouseAtCenter = function(element, event, win) {
-  let rect = element.getBoundingClientRect();
-  event.synthesizeMouse(
-      element,
-      rect.width / 2,
-      rect.height / 2,
-      event,
-      win);
 };
 
 /* eslint-disable */
@@ -955,82 +823,6 @@ event.synthesizeMouseExpectEvent = function(
       expectedEvent,
       eventHandler,
       testName);
-};
-
-/**
- * Similar to synthesizeKey except that a test is performed to see if
- * an event is fired at the right target as a result.
- *
- * @param {string} key
- *     Key to synthesise.
- * @param {Object.<string, ?>} ev
- *     Object which may contain the properties shiftKey, ctrlKey, altKey,
- *     metaKey, accessKey, type.
- * @param {Element} expectedTarget
- *     Expected originalTarget of the event.
- * @param {DOMEvent} expectedEvent
- *     Expected type of the event, such as "select".
- * @param {string} testName
- *     Test name when outputing results
- * @param {Window} win
- *     Window object.
- *
- * To test that an event is not fired, use an expected type preceded by an
- * exclamation mark, such as "!select".
- *
- * aWindow is optional, and defaults to the current window object.
- */
-event.synthesizeKeyExpectEvent = function(
-    key, ev, expectedTarget, expectedEvent, testName, win) {
-
-  let eventHandler = expectEvent_(
-      expectedTarget,
-      expectedEvent,
-      testName);
-  event.synthesizeKey(key, ev, win);
-  checkExpectedEvent_(
-      expectedTarget,
-      expectedEvent,
-      eventHandler,
-      testName);
-};
-
-/**
- * Synthesize a query selected text event.
- *
- * @param {Window} win
- *     Window object.
- *
- * @return {(nsIQueryContentEventResult|null)}
- *     Event's result, or null if it failed.
- */
-event.synthesizeQuerySelectedText = function(win) {
-  let domutils = getDOMWindowUtils(win);
-  return domutils.sendQueryContentEvent(
-      domutils.QUERY_SELECTED_TEXT, 0, 0, 0, 0);
-};
-
-/**
- * Synthesize a selection set event.
- *
- * @param {number} offset
- *     Character offset.  0 means the first character in the selection
- *     root.
- * @param {number} length
- *     Length of the text.  If the length is too long, the extra length
- *     is ignored.
- * @param {boolean} reverse
- *     If true, the selection is from |aOffset + aLength| to |aOffset|.
- *     Otherwise, from |aOffset| to |aOffset + aLength|.
- * @param {Window} win
- *     Window object.
- *
- * @return boolean
- *     True, if succeeded.  Otherwise false.
- */
-event.synthesizeSelectionSet = function(offset, length, reverse, win) {
-  let domutils = getDOMWindowUtils(win);
-  return domutils.sendSelectionSetEvent(offset, length, reverse);
 };
 
 const KEYCODES_LOOKUP = {
