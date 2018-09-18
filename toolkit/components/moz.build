@@ -36,6 +36,7 @@ DIRS += [
     'filewatcher',
     'finalizationwitness',
     'find',
+    'fuzzyfox',
     'jsoncpp/src/lib_json',
     'lz4',
     'mediasniffer',
