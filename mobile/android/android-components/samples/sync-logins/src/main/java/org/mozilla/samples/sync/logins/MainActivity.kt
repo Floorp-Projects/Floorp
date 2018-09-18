@@ -111,7 +111,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             }
 
             val appFiles = this.applicationContext.getExternalFilesDir(null)
-            val logins = SyncLoginsClient(appFiles.absolutePath + "/logins.mentatdb")
+            val logins = SyncLoginsClient(appFiles.absolutePath + "/logins.sqlite")
             val tokenServer = account!!.getTokenServerEndpointURL()!!
             logins.syncAndGetPasswords(oauthInfo, tokenServer).thenCatch { e ->
                 SyncResult.fromException(e)
