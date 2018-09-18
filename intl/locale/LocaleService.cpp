@@ -149,21 +149,21 @@ LocaleService::NegotiateAppLocales(nsTArray<nsCString>& aRetVal)
 
     NegotiateLanguages(requestedLocales, availableLocales, defaultLocale,
                        LangNegStrategy::Filtering, aRetVal);
-  } else {
-    // In content process, we will not do any language negotiation.
-    // Instead, the language is set manually by SetAppLocales.
+  }
+
+  nsAutoCString lastFallbackLocale;
+  GetLastFallbackLocale(lastFallbackLocale);
+
+  if (!aRetVal.Contains(lastFallbackLocale)) {
+    // This part is used in one of the two scenarios:
     //
-    // If this method has been called, it means that we did not fire
-    // SetAppLocales yet (happens during initialization).
-    // In that case, all we can do is return the default or last fallback locale.
-    //
-    // We will return last fallback here, to avoid having to trigger reading
-    // `update.locale` for default locale.
-    //
-    // Once SetAppLocales will be called later, it'll fire an event
-    // allowing callers to update the locale.
-    nsAutoCString lastFallbackLocale;
-    GetLastFallbackLocale(lastFallbackLocale);
+    // a) We're in a client mode, and no locale has been set yet,
+    //    so we need to return last fallback locale temporarily.
+    // b) We're in a server mode, and the last fallback locale was excluded
+    //    when negotiating against the requested locales.
+    //    Since we currently package it as a last fallback at build
+    //    time, we should also add it at the end of the list at
+    //    runtime.
     aRetVal.AppendElement(lastFallbackLocale);
   }
 }
