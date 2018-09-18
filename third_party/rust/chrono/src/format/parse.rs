@@ -1,5 +1,4 @@
-// This is a part of rust-chrono.
-// Copyright (c) 2015, Kang Seonghoon.
+// This is a part of Chrono.
 // Portions copyright (c) 2015, John Nagle.
 // See README.md and LICENSE.txt for details.
 
@@ -10,7 +9,7 @@ use std::usize;
 use Weekday;
 
 use super::scan;
-use super::{Parsed, ParseResult, Item};
+use super::{Parsed, ParseResult, Item, InternalFixed, InternalInternal};
 use super::{OUT_OF_RANGE, INVALID, TOO_SHORT, TOO_LONG, BAD_FORMAT};
 
 fn set_weekday_with_num_days_from_sunday(p: &mut Parsed, v: i64) -> ParseResult<()> {
@@ -86,7 +85,7 @@ fn parse_rfc2822<'a>(parsed: &mut Parsed, mut s: &'a str) -> ParseResult<(&'a st
     s = s.trim_left();
 
     if let Ok((s_, weekday)) = scan::short_weekday(s) {
-        if !s_.starts_with(",") { return Err(INVALID); }
+        if !s_.starts_with(',') { return Err(INVALID); }
         s = &s_[1..];
         try!(parsed.set_weekday(weekday));
     }
@@ -94,7 +93,7 @@ fn parse_rfc2822<'a>(parsed: &mut Parsed, mut s: &'a str) -> ParseResult<(&'a st
     s = s.trim_left();
     try!(parsed.set_day(try_consume!(scan::number(s, 1, 2))));
     s = try!(scan::space(s)); // mandatory
-    try!(parsed.set_month(1 + try_consume!(scan::short_month0(s)) as i64));
+    try!(parsed.set_month(1 + i64::from(try_consume!(scan::short_month0(s)))));
     s = try!(scan::space(s)); // mandatory
 
     // distinguish two- and three-digit years from four-digit years
@@ -113,16 +112,14 @@ fn parse_rfc2822<'a>(parsed: &mut Parsed, mut s: &'a str) -> ParseResult<(&'a st
     try!(parsed.set_hour(try_consume!(scan::number(s, 2, 2))));
     s = try!(scan::char(s.trim_left(), b':')).trim_left(); // *S ":" *S
     try!(parsed.set_minute(try_consume!(scan::number(s, 2, 2))));
-    s = s.trim_left();
-    if !s.is_empty() { // [ ":" *S 2DIGIT ]
-        s = try!(scan::char(s, b':')).trim_left();
-        try!(parsed.set_second(try_consume!(scan::number(s, 2, 2))));
+    if let Ok(s_) = scan::char(s.trim_left(), b':') { // [ ":" *S 2DIGIT ]
+        try!(parsed.set_second(try_consume!(scan::number(s_, 2, 2))));
     }
 
     s = try!(scan::space(s)); // mandatory
     if let Some(offset) = try_consume!(scan::timezone_offset_2822(s)) {
         // only set the offset when it is definitely known (i.e. not `-0000`)
-        try!(parsed.set_offset(offset as i64));
+        try!(parsed.set_offset(i64::from(offset)));
     }
 
     Ok((s, ()))
@@ -177,14 +174,14 @@ fn parse_rfc3339<'a>(parsed: &mut Parsed, mut s: &'a str) -> ParseResult<(&'a st
     try!(parsed.set_minute(try_consume!(scan::number(s, 2, 2))));
     s = try!(scan::char(s, b':'));
     try!(parsed.set_second(try_consume!(scan::number(s, 2, 2))));
-    if s.starts_with(".") {
+    if s.starts_with('.') {
         let nanosecond = try_consume!(scan::nanosecond(&s[1..]));
         try!(parsed.set_nanosecond(nanosecond));
     }
 
     let offset = try_consume!(scan::timezone_offset_zulu(s, |s| scan::char(s, b':')));
-    if offset <= -86400 || offset >= 86400 { return Err(OUT_OF_RANGE); }
-    try!(parsed.set_offset(offset as i64));
+    if offset <= -86_400 || offset >= 86_400 { return Err(OUT_OF_RANGE); }
+    try!(parsed.set_offset(i64::from(offset)));
 
     Ok((s, ()))
 }
@@ -219,15 +216,21 @@ pub fn parse<'a, I>(parsed: &mut Parsed, mut s: &str, items: I) -> ParseResult<(
                 s = &s[prefix.len()..];
             }
 
-            Item::Space(_) => {
+            Item::OwnedLiteral(ref prefix) => {
+                if s.len() < prefix.len() { return Err(TOO_SHORT); }
+                if !s.starts_with(&prefix[..]) { return Err(INVALID); }
+                s = &s[prefix.len()..];
+            }
+
+            Item::Space(_) | Item::OwnedSpace(_) => {
                 s = s.trim_left();
             }
 
             Item::Numeric(spec, _pad) => {
                 use super::Numeric::*;
+                type Setter = fn(&mut Parsed, i64) -> ParseResult<()>;
 
-                let (width, signed, set): (usize, bool,
-                                           fn(&mut Parsed, i64) -> ParseResult<()>) = match spec {
+                let (width, signed, set): (usize, bool, Setter) = match spec {
                     Year           => (4, true, Parsed::set_year),
                     YearDiv100     => (2, false, Parsed::set_year_div_100),
                     YearMod100     => (2, false, Parsed::set_year_mod_100),
@@ -248,14 +251,17 @@ pub fn parse<'a, I>(parsed: &mut Parsed, mut s: &str, items: I) -> ParseResult<(
                     Second         => (2, false, Parsed::set_second),
                     Nanosecond     => (9, false, Parsed::set_nanosecond),
                     Timestamp      => (usize::MAX, false, Parsed::set_timestamp),
+
+                    // for the future expansion
+                    Internal(ref int) => match int._dummy {},
                 };
 
                 s = s.trim_left();
                 let v = if signed {
-                    if s.starts_with("-") {
+                    if s.starts_with('-') {
                         let v = try_consume!(scan::number(&s[1..], 1, usize::MAX));
                         try!(0i64.checked_sub(v).ok_or(OUT_OF_RANGE))
-                    } else if s.starts_with("+") {
+                    } else if s.starts_with('+') {
                         try_consume!(scan::number(&s[1..], 1, usize::MAX))
                     } else {
                         // if there is no explicit sign, we respect the original `width`
@@ -273,12 +279,12 @@ pub fn parse<'a, I>(parsed: &mut Parsed, mut s: &str, items: I) -> ParseResult<(
                 match spec {
                     ShortMonthName => {
                         let month0 = try_consume!(scan::short_month0(s));
-                        try!(parsed.set_month(month0 as i64 + 1));
+                        try!(parsed.set_month(i64::from(month0) + 1));
                     }
 
                     LongMonthName => {
                         let month0 = try_consume!(scan::short_or_long_month0(s));
-                        try!(parsed.set_month(month0 as i64 + 1));
+                        try!(parsed.set_month(i64::from(month0) + 1));
                     }
 
                     ShortWeekdayName => {
@@ -302,11 +308,29 @@ pub fn parse<'a, I>(parsed: &mut Parsed, mut s: &str, items: I) -> ParseResult<(
                         s = &s[2..];
                     }
 
-                    Nanosecond | Nanosecond3 | Nanosecond6 | Nanosecond9=> {
-                        if s.starts_with(".") {
+                    Nanosecond | Nanosecond3 | Nanosecond6 | Nanosecond9 => {
+                        if s.starts_with('.') {
                             let nano = try_consume!(scan::nanosecond(&s[1..]));
                             try!(parsed.set_nanosecond(nano));
                         }
+                    }
+
+                    Internal(InternalFixed { val: InternalInternal::Nanosecond3NoDot }) => {
+                        if s.len() < 3 { return Err(TOO_SHORT); }
+                        let nano = try_consume!(scan::nanosecond_fixed(s, 3));
+                        try!(parsed.set_nanosecond(nano));
+                    }
+
+                    Internal(InternalFixed { val: InternalInternal::Nanosecond6NoDot }) => {
+                        if s.len() < 6 { return Err(TOO_SHORT); }
+                        let nano = try_consume!(scan::nanosecond_fixed(s, 6));
+                        try!(parsed.set_nanosecond(nano));
+                    }
+
+                    Internal(InternalFixed { val: InternalInternal::Nanosecond9NoDot }) => {
+                        if s.len() < 9 { return Err(TOO_SHORT); }
+                        let nano = try_consume!(scan::nanosecond_fixed(s, 9));
+                        try!(parsed.set_nanosecond(nano));
                     }
 
                     TimezoneName => return Err(BAD_FORMAT),
@@ -314,13 +338,18 @@ pub fn parse<'a, I>(parsed: &mut Parsed, mut s: &str, items: I) -> ParseResult<(
                     TimezoneOffsetColon | TimezoneOffset => {
                         let offset = try_consume!(scan::timezone_offset(s.trim_left(),
                                                                         scan::colon_or_space));
-                        try!(parsed.set_offset(offset as i64));
+                        try!(parsed.set_offset(i64::from(offset)));
                     }
 
                     TimezoneOffsetColonZ | TimezoneOffsetZ => {
                         let offset = try_consume!(scan::timezone_offset_zulu(s.trim_left(),
                                                                              scan::colon_or_space));
-                        try!(parsed.set_offset(offset as i64));
+                        try!(parsed.set_offset(i64::from(offset)));
+                    }
+                    Internal(InternalFixed { val: InternalInternal::TimezoneOffsetPermissive }) => {
+                        let offset = try_consume!(scan::timezone_offset_permissive(
+                            s.trim_left(), scan::colon_or_space));
+                        try!(parsed.set_offset(i64::from(offset)));
                     }
 
                     RFC2822 => try_consume!(parse_rfc2822(parsed, s)),
@@ -359,9 +388,11 @@ fn test_parse() {
         ($fmt:expr, $items:expr; $err:tt) => (
             assert_eq!(parse_all($fmt, &$items), Err($err))
         );
-        ($fmt:expr, $items:expr; $($k:ident: $v:expr),*) => (
-            assert_eq!(parse_all($fmt, &$items), Ok(Parsed { $($k: Some($v),)* ..Parsed::new() }))
-        );
+        ($fmt:expr, $items:expr; $($k:ident: $v:expr),*) => (#[allow(unused_mut)] {
+            let mut expected = Parsed::new();
+            $(expected.$k = Some($v);)*
+            assert_eq!(parse_all($fmt, &$items), Ok(expected))
+        });
     }
 
     // empty string
@@ -521,6 +552,39 @@ fn test_parse() {
     check!(".  4",          [fix!(Nanosecond)]; INVALID);
     check!("  .4",          [fix!(Nanosecond)]; TOO_LONG); // no automatic trimming
 
+    // fixed: nanoseconds without the dot
+    check!("",             [internal_fix!(Nanosecond3NoDot)]; TOO_SHORT);
+    check!("0",            [internal_fix!(Nanosecond3NoDot)]; TOO_SHORT);
+    check!("4",            [internal_fix!(Nanosecond3NoDot)]; TOO_SHORT);
+    check!("42",           [internal_fix!(Nanosecond3NoDot)]; TOO_SHORT);
+    check!("421",          [internal_fix!(Nanosecond3NoDot)]; nanosecond: 421_000_000);
+    check!("42143",        [internal_fix!(Nanosecond3NoDot), num!(Second)]; nanosecond: 421_000_000, second: 43);
+    check!("42195",        [internal_fix!(Nanosecond3NoDot)]; TOO_LONG);
+    check!("4x",           [internal_fix!(Nanosecond3NoDot)]; TOO_SHORT);
+    check!("  4",          [internal_fix!(Nanosecond3NoDot)]; INVALID);
+    check!(".421",         [internal_fix!(Nanosecond3NoDot)]; INVALID);
+
+    check!("",             [internal_fix!(Nanosecond6NoDot)]; TOO_SHORT);
+    check!("0",            [internal_fix!(Nanosecond6NoDot)]; TOO_SHORT);
+    check!("42195",        [internal_fix!(Nanosecond6NoDot)]; TOO_SHORT);
+    check!("421950",       [internal_fix!(Nanosecond6NoDot)]; nanosecond: 421_950_000);
+    check!("000003",       [internal_fix!(Nanosecond6NoDot)]; nanosecond: 3000);
+    check!("000000",       [internal_fix!(Nanosecond6NoDot)]; nanosecond: 0);
+    check!("4x",           [internal_fix!(Nanosecond6NoDot)]; TOO_SHORT);
+    check!("     4",       [internal_fix!(Nanosecond6NoDot)]; INVALID);
+    check!(".42100",       [internal_fix!(Nanosecond6NoDot)]; INVALID);
+
+    check!("",             [internal_fix!(Nanosecond9NoDot)]; TOO_SHORT);
+    check!("42195",        [internal_fix!(Nanosecond9NoDot)]; TOO_SHORT);
+    check!("421950803",    [internal_fix!(Nanosecond9NoDot)]; nanosecond: 421_950_803);
+    check!("000000003",    [internal_fix!(Nanosecond9NoDot)]; nanosecond: 3);
+    check!("42195080354",  [internal_fix!(Nanosecond9NoDot), num!(Second)]; nanosecond: 421_950_803, second: 54); // don't skip digits that come after the 9
+    check!("421950803547", [internal_fix!(Nanosecond9NoDot)]; TOO_LONG);
+    check!("000000000",    [internal_fix!(Nanosecond9NoDot)]; nanosecond: 0);
+    check!("00000000x",    [internal_fix!(Nanosecond9NoDot)]; INVALID);
+    check!("        4",    [internal_fix!(Nanosecond9NoDot)]; INVALID);
+    check!(".42100000",    [internal_fix!(Nanosecond9NoDot)]; INVALID);
+
     // fixed: timezone offsets
     check!("+00:00",    [fix!(TimezoneOffset)]; offset: 0);
     check!("-00:00",    [fix!(TimezoneOffset)]; offset: 0);
@@ -559,6 +623,10 @@ fn test_parse() {
     check!("zulu",      [fix!(TimezoneOffsetZ), lit!("ulu")]; offset: 0);
     check!("+1234ulu",  [fix!(TimezoneOffsetZ), lit!("ulu")]; offset: 754 * 60);
     check!("+12:34ulu", [fix!(TimezoneOffsetZ), lit!("ulu")]; offset: 754 * 60);
+    check!("Z",         [internal_fix!(TimezoneOffsetPermissive)]; offset: 0);
+    check!("z",         [internal_fix!(TimezoneOffsetPermissive)]; offset: 0);
+    check!("+12:00",    [internal_fix!(TimezoneOffsetPermissive)]; offset: 12 * 60 * 60);
+    check!("+12",       [internal_fix!(TimezoneOffsetPermissive)]; offset: 12 * 60 * 60);
     check!("???",       [fix!(TimezoneName)]; BAD_FORMAT); // not allowed
 
     // some practical examples
@@ -567,6 +635,11 @@ fn test_parse() {
             num!(Hour), lit!(":"), num!(Minute), lit!(":"), num!(Second), fix!(TimezoneOffset)];
            year: 2015, month: 2, day: 4, hour_div_12: 1, hour_mod_12: 2,
            minute: 37, second: 5, offset: 32400);
+    check!("20150204143705567",
+            [num!(Year), num!(Month), num!(Day),
+            num!(Hour), num!(Minute), num!(Second), internal_fix!(Nanosecond3NoDot)];
+            year: 2015, month: 2, day: 4, hour_div_12: 1, hour_mod_12: 2,
+            minute: 37, second: 5, nanosecond: 567000000);
     check!("Mon, 10 Jun 2013 09:32:37 GMT",
            [fix!(ShortWeekdayName), lit!(","), sp!(" "), num!(Day), sp!(" "),
             fix!(ShortMonthName), sp!(" "), num!(Year), sp!(" "), num!(Hour), lit!(":"),
@@ -590,8 +663,8 @@ fn test_parse() {
 #[cfg(test)]
 #[test]
 fn test_rfc2822() {
-    use datetime::DateTime;
-    use offset::fixed::FixedOffset;
+    use DateTime;
+    use offset::FixedOffset;
     use super::*;
     use super::NOT_ENOUGH;
 
@@ -600,6 +673,7 @@ fn test_rfc2822() {
         ("Tue, 20 Jan 2015 17:35:20 -0800", Ok("Tue, 20 Jan 2015 17:35:20 -0800")), // normal case
         ("20 Jan 2015 17:35:20 -0800", Ok("Tue, 20 Jan 2015 17:35:20 -0800")),  // no day of week
         ("20 JAN 2015 17:35:20 -0800", Ok("Tue, 20 Jan 2015 17:35:20 -0800")),  // upper case month
+        ("Tue, 20 Jan 2015 17:35 -0800", Ok("Tue, 20 Jan 2015 17:35:00 -0800")), // no second
         ("11 Sep 2001 09:45:00 EST", Ok("Tue, 11 Sep 2001 09:45:00 -0500")),
         ("30 Feb 2015 17:35:20 -0800", Err(OUT_OF_RANGE)),      // bad day of month
         ("Tue, 20 Jan 2015", Err(TOO_SHORT)),                   // omitted fields
@@ -642,40 +716,40 @@ fn test_rfc2822() {
 #[cfg(test)]
 #[test]
 fn parse_rfc850() {
-    use ::{UTC, TimeZone};
+    use ::{Utc, TimeZone};
 
     static RFC850_FMT: &'static str =  "%A, %d-%b-%y %T GMT";
 
     let dt_str = "Sunday, 06-Nov-94 08:49:37 GMT";
-    let dt = UTC.ymd(1994, 11, 6).and_hms(8, 49, 37);
+    let dt = Utc.ymd(1994, 11, 6).and_hms(8, 49, 37);
 
     // Check that the format is what we expect
     assert_eq!(dt.format(RFC850_FMT).to_string(), dt_str);
 
     // Check that it parses correctly
-    assert_eq!(Ok(dt), UTC.datetime_from_str("Sunday, 06-Nov-94 08:49:37 GMT", RFC850_FMT));
+    assert_eq!(Ok(dt), Utc.datetime_from_str("Sunday, 06-Nov-94 08:49:37 GMT", RFC850_FMT));
 
     // Check that the rest of the weekdays parse correctly (this test originally failed because
     // Sunday parsed incorrectly).
     let testdates = [
-        (UTC.ymd(1994, 11, 7).and_hms(8, 49, 37),  "Monday, 07-Nov-94 08:49:37 GMT"),
-        (UTC.ymd(1994, 11, 8).and_hms(8, 49, 37),  "Tuesday, 08-Nov-94 08:49:37 GMT"),
-        (UTC.ymd(1994, 11, 9).and_hms(8, 49, 37),  "Wednesday, 09-Nov-94 08:49:37 GMT"),
-        (UTC.ymd(1994, 11, 10).and_hms(8, 49, 37), "Thursday, 10-Nov-94 08:49:37 GMT"),
-        (UTC.ymd(1994, 11, 11).and_hms(8, 49, 37), "Friday, 11-Nov-94 08:49:37 GMT"),
-        (UTC.ymd(1994, 11, 12).and_hms(8, 49, 37), "Saturday, 12-Nov-94 08:49:37 GMT"),
+        (Utc.ymd(1994, 11, 7).and_hms(8, 49, 37),  "Monday, 07-Nov-94 08:49:37 GMT"),
+        (Utc.ymd(1994, 11, 8).and_hms(8, 49, 37),  "Tuesday, 08-Nov-94 08:49:37 GMT"),
+        (Utc.ymd(1994, 11, 9).and_hms(8, 49, 37),  "Wednesday, 09-Nov-94 08:49:37 GMT"),
+        (Utc.ymd(1994, 11, 10).and_hms(8, 49, 37), "Thursday, 10-Nov-94 08:49:37 GMT"),
+        (Utc.ymd(1994, 11, 11).and_hms(8, 49, 37), "Friday, 11-Nov-94 08:49:37 GMT"),
+        (Utc.ymd(1994, 11, 12).and_hms(8, 49, 37), "Saturday, 12-Nov-94 08:49:37 GMT"),
     ];
 
     for val in &testdates {
-        assert_eq!(Ok(val.0), UTC.datetime_from_str(val.1, RFC850_FMT));
+        assert_eq!(Ok(val.0), Utc.datetime_from_str(val.1, RFC850_FMT));
     }
 }
 
 #[cfg(test)]
 #[test]
 fn test_rfc3339() {
-    use datetime::DateTime;
-    use offset::fixed::FixedOffset;
+    use DateTime;
+    use offset::FixedOffset;
     use super::*;
 
     // Test data - (input, Ok(expected result after parse and format) or Err(error code))

@@ -29,6 +29,9 @@ cargo_extra_outputs = {
         'midl.o',
         'mdb.o',
     ],
+    'num-integer': [
+        'rust_out.o',
+    ],
     'selectors': [
         'ascii_case_insensitive_html_attributes.rs',
     ],
