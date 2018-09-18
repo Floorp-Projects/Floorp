@@ -3150,14 +3150,6 @@ WebSocketChannel::OnLookupComplete(nsICancelable *aRequest,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-WebSocketChannel::OnLookupByTypeComplete(nsICancelable      *aRequest,
-                                         nsIDNSByTypeRecord *aRes,
-                                         nsresult            aStatus)
-{
-  return NS_OK;
-}
-
 // nsIProtocolProxyCallback
 NS_IMETHODIMP
 WebSocketChannel::OnProxyAvailable(nsICancelable *aRequest, nsIChannel *aChannel,

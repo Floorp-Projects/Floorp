@@ -1103,14 +1103,6 @@ PendingSend::OnLookupComplete(nsICancelable *request,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PendingSend::OnLookupByTypeComplete(nsICancelable      *aRequest,
-                                    nsIDNSByTypeRecord *aRes,
-                                    nsresult            aStatus)
-{
-  return NS_OK;
-}
-
 class PendingSendStream : public nsIDNSListener
 {
 public:
@@ -1149,14 +1141,6 @@ PendingSendStream::OnLookupComplete(nsICancelable *request,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PendingSendStream::OnLookupByTypeComplete(nsICancelable *aRequest,
-                                          nsIDNSByTypeRecord *aRes,
-                                          nsresult aStatus)
-{
   return NS_OK;
 }
 

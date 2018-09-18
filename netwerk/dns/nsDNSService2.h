@@ -61,21 +61,6 @@ private:
                                 nsIIDNService    *aIDN,
                                 nsACString       &aACE);
 
-    nsresult AsyncResolveInternal(const nsACString        &aHostname,
-                                  uint16_t                 type,
-                                  uint32_t                 flags,
-                                  nsIDNSListener          *aListener,
-                                  nsIEventTarget          *target_,
-                                  const mozilla::OriginAttributes  &aOriginAttributes,
-                                  nsICancelable          **result);
-
-    nsresult CancelAsyncResolveInternal(const nsACString       &aHostname,
-                                        uint16_t                aType,
-                                        uint32_t                aFlags,
-                                        nsIDNSListener         *aListener,
-                                        nsresult                aReason,
-                                        const mozilla::OriginAttributes &aOriginAttributes);
-
     nsresult ResolveInternal(const nsACString &aHostname,
                              uint32_t flags,
                              const mozilla::OriginAttributes &aOriginAttributes,
