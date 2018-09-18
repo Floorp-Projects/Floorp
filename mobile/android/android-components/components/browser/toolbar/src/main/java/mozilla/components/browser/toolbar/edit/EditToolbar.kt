@@ -41,7 +41,7 @@ class EditToolbar(
         background = null
         setLines(1)
         textSize = URL_TEXT_SIZE
-        inputType = InputType.TYPE_TEXT_VARIATION_URI
+        inputType = InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT
 
         val padding = resources.pxToDp(URL_PADDING_DP)
         setPadding(padding, padding, padding, padding)
