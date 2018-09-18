@@ -37,6 +37,8 @@ loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clip
 loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
 loader.lazyRequireGetter(this, "getScreenshotFront", "devtools/shared/fronts/screenshot", true);
 loader.lazyRequireGetter(this, "saveScreenshot", "devtools/shared/screenshot/save");
+loader.lazyRequireGetter(this, "ChangesManager",
+"devtools/client/inspector/changes/ChangesManager");
 
 loader.lazyImporter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 
@@ -123,6 +125,9 @@ function Inspector(toolbox) {
 
   this.reflowTracker = new ReflowTracker(this._target);
   this.styleChangeTracker = new InspectorStyleChangeTracker(this);
+  if (Services.prefs.getBoolPref(TRACK_CHANGES_ENABLED)) {
+    this.changesManager = new ChangesManager(this);
+  }
 
   // Store the URL of the target page prior to navigation in order to ensure
   // telemetry counts in the Grid Inspector are not double counted on reload.
@@ -1482,6 +1487,10 @@ Inspector.prototype = {
     this.breadcrumbs.destroy();
     this.reflowTracker.destroy();
     this.styleChangeTracker.destroy();
+
+    if (this.changesManager) {
+      this.changesManager.destroy();
+    }
 
     this._is3PaneModeChromeEnabled = null;
     this._is3PaneModeEnabled = null;
