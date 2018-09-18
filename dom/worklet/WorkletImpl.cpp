@@ -116,7 +116,7 @@ WorkletImpl::GetOrCreateThread()
 
   if (!mWorkletThread) {
     // Thread creation. FIXME: this will change.
-    mWorkletThread = dom::WorkletThread::Create(mWorkletLoadInfo);
+    mWorkletThread = dom::WorkletThread::Create();
   }
 
   return mWorkletThread;
