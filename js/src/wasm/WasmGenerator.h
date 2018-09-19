@@ -199,9 +199,10 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool finishTask(CompileTask* task);
     bool launchBatchCompile();
     bool finishOutstandingTask();
-    bool finishCode();
+    bool finishCodegen();
+    bool finishMetadataTier();
+    UniqueCodeTier finishCodeTier();
     bool finishMetadata(const ShareableBytes& bytecode);
-    UniqueModuleSegment finish(const ShareableBytes& bytecode);
 
     bool isAsmJS() const { return env_->isAsmJS(); }
     Tier tier() const { return env_->tier(); }
