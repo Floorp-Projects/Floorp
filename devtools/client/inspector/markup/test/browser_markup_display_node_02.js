@@ -46,6 +46,23 @@ const TEST_DATA = [
     }
   },
   {
+    desc: "Reusing the 'grid' node, updating the display to 'grid again",
+    selector: "#grid",
+    before: {
+      visible: false
+    },
+    changeStyle: async function(testActor) {
+      await testActor.eval(`
+        let node = document.getElementById("grid");
+        node.style.display = "grid";
+      `);
+    },
+    after: {
+      textContent: "grid",
+      visible: true
+    }
+  },
+  {
     desc: "Showing a 'grid' node by changing its style property",
     selector: "#block",
     before: {
