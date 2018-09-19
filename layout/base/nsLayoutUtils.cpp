@@ -480,6 +480,14 @@ nsLayoutUtils::AreRetainedDisplayListsEnabled()
 }
 
 bool
+nsLayoutUtils::DisplayRootHasRetainedDisplayListBuilder(nsIFrame* aFrame)
+{
+  const nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(aFrame);
+  MOZ_ASSERT(displayRoot);
+  return displayRoot->HasProperty(RetainedDisplayListBuilder::Cached());
+}
+
+bool
 nsLayoutUtils::GPUImageScalingEnabled()
 {
   static bool sGPUImageScalingEnabled;
@@ -1188,15 +1196,8 @@ nsLayoutUtils::InvalidateForDisplayPortChange(nsIContent* aContent,
     // rect properties on so we can find the frame later to remove the properties.
     frame->SchedulePaint();
 
-    if (!nsLayoutUtils::AreRetainedDisplayListsEnabled()) {
-      return;
-    }
-
-    nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(frame);
-    RetainedDisplayListBuilder* retainedBuilder =
-      displayRoot->GetProperty(RetainedDisplayListBuilder::Cached());
-
-    if (!retainedBuilder) {
+    if (!nsLayoutUtils::AreRetainedDisplayListsEnabled() ||
+        !nsLayoutUtils::DisplayRootHasRetainedDisplayListBuilder(frame)) {
       return;
     }
 
@@ -1208,18 +1209,12 @@ nsLayoutUtils::InvalidateForDisplayPortChange(nsIContent* aContent,
       frame->SetProperty(nsDisplayListBuilder::DisplayListBuildingDisplayPortRect(), rect);
       frame->SetHasOverrideDirtyRegion(true);
 
-      nsIFrame* rootFrame = frame->PresContext()->PresShell()->GetRootFrame();
+      nsIFrame* rootFrame = frame->PresShell()->GetRootFrame();
       MOZ_ASSERT(rootFrame);
 
-      nsTArray<nsIFrame*>* frames =
-        rootFrame->GetProperty(nsIFrame::OverriddenDirtyRectFrameList());
-
-      if (!frames) {
-        frames = new nsTArray<nsIFrame*>();
-        rootFrame->SetProperty(nsIFrame::OverriddenDirtyRectFrameList(), frames);
-      }
-
-      frames->AppendElement(frame);
+      RetainedDisplayListData* data =
+        GetOrSetRetainedDisplayListData(rootFrame);
+      data->Flags(frame) |= RetainedDisplayListData::FrameFlags::HasProps;
     }
 
     if (aHadDisplayPort) {
@@ -3705,11 +3700,15 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
       if (updateState == PartialUpdateResult::Failed) {
         list.DeleteAll(&builder);
+
+        builder.ClearRetainedWindowRegions();
+        builder.ClearWillChangeBudget();
+
         builder.EnterPresShell(aFrame);
         builder.SetDirtyRect(visibleRect);
-        builder.ClearRetainedWindowRegions();
         aFrame->BuildDisplayListForStackingContext(&builder, &list);
-        AddExtraBackgroundItems(builder, list, aFrame, canvasArea, visibleRegion, aBackstop);
+        AddExtraBackgroundItems(
+          builder, list, aFrame, canvasArea, visibleRegion, aBackstop);
 
         builder.LeavePresShell(aFrame, &list);
         updateState = PartialUpdateResult::Updated;

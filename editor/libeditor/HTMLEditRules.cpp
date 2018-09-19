@@ -2352,7 +2352,7 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
                                                      error);
   if (cellElement) {
     error.SuppressException();
-    nsresult rv = HTMLEditorRef().DeleteTableCellContents();
+    nsresult rv = HTMLEditorRef().DeleteTableCellContentsWithTransaction();
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }

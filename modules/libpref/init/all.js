@@ -1199,15 +1199,10 @@ pref("extensions.spellcheck.inline.max-misspellings", 500);
 // can change some styles with them.  This means that only Firefox users may
 // get unexpected result of some web apps if they assume that users cannot
 // change such styles.
-#ifdef EARLY_BETA_OR_EARLIER
 pref("editor.resizing.enabled_by_default", false);
 pref("editor.inline_table_editing.enabled_by_default", false);
 pref("editor.positioning.enabled_by_default", false);
-#else
-pref("editor.resizing.enabled_by_default", true);
-pref("editor.inline_table_editing.enabled_by_default", true);
-pref("editor.positioning.enabled_by_default", true);
-#endif
+
 // Whether inserting <div> when typing Enter in a block element which can
 // contain <div>.  If false, inserts <br> instead.
 pref("editor.use_div_for_default_newlines",  true);

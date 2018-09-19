@@ -7,9 +7,9 @@
 #ifndef mozilla_dom_PaymentResponse_h
 #define mozilla_dom_PaymentResponse_h
 
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/PaymentResponseBinding.h" // PaymentComplete
 #include "nsPIDOMWindow.h"
-#include "nsWrapperCache.h"
 #include "nsITimer.h"
 
 namespace mozilla {
@@ -19,12 +19,15 @@ class PaymentAddress;
 class PaymentRequest;
 class Promise;
 
-class PaymentResponse final : public nsITimerCallback,
-                              public nsWrapperCache
+class PaymentResponse final
+  : public DOMEventTargetHelper
+  , public nsITimerCallback
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PaymentResponse)
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(PaymentResponse,
+                                                         DOMEventTargetHelper)
 
   NS_IMETHOD Notify(nsITimer* aTimer) override;
 
@@ -38,11 +41,6 @@ public:
                   const nsAString& aPayerName,
                   const nsAString& aPayerEmail,
                   const nsAString& aPayerPhone);
-
-  nsPIDOMWindowInner* GetParentObject() const
-  {
-    return mOwner;
-  }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -69,6 +67,12 @@ public:
 
   void RespondComplete();
 
+  IMPL_EVENT_HANDLER(payerdetailchange);
+
+  nsresult UpdatePayerDetail(const nsAString& aPayerName,
+                             const nsAString& aPayerEmail,
+                             const nsAString& aPayerPhone);
+
   already_AddRefed<Promise> Retry(JSContext* aCx,
                                   const PaymentValidationErrors& errorField,
                                   ErrorResult& aRv);
@@ -87,8 +91,9 @@ protected:
 
   nsresult ValidatePaymentValidationErrors(const PaymentValidationErrors& aErrors);
 
+  nsresult DispatchUpdateEvent(const nsAString& aType);
+
 private:
-  nsCOMPtr<nsPIDOMWindowInner> mOwner;
   bool mCompleteCalled;
   PaymentRequest* mRequest;
   nsString mRequestId;

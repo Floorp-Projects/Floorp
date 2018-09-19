@@ -1060,6 +1060,7 @@ nsDisplayListBuilder::EndFrame()
   NS_ASSERTION(!mInInvalidSubtree,
                "Someone forgot to cleanup mInInvalidSubtree!");
   mFrameToAnimatedGeometryRootMap.Clear();
+  mAGRBudgetSet.Clear();
   mActiveScrolledRoots.Clear();
   FreeClipChains();
   FreeTemporaryItems();
@@ -2120,29 +2121,20 @@ nsDisplayListBuilder::AddToWillChangeBudget(nsIFrame* aFrame,
     return true; // Already accounted
   }
 
-  nsPresContext* key = aFrame->PresContext();
-  DocumentWillChangeBudget budget;
-  auto willChangeBudgetEntry = mWillChangeBudget.LookupForAdd(key);
-  if (willChangeBudgetEntry) {
-    // We have an existing entry.
-    budget = willChangeBudgetEntry.Data();
-  } else {
-    budget = DocumentWillChangeBudget();
-    willChangeBudgetEntry.OrInsert([&budget]() { return budget; });
-  }
-
-  nsRect area = aFrame->PresContext()->GetVisibleArea();
+  nsPresContext* presContext = aFrame->PresContext();
+  nsRect area = presContext->GetVisibleArea();
   uint32_t budgetLimit = nsPresContext::AppUnitsToIntCSSPixels(area.width) *
                          nsPresContext::AppUnitsToIntCSSPixels(area.height);
-
   uint32_t cost = GetLayerizationCost(aSize);
+
+  DocumentWillChangeBudget& budget = mWillChangeBudget.GetOrInsert(presContext);
+
   bool onBudget =
     (budget.mBudget + cost) / gWillChangeAreaMultiplier < budgetLimit;
 
   if (onBudget) {
     budget.mBudget += cost;
-    willChangeBudgetEntry.Data() = budget;
-    mWillChangeBudgetSet.Put(aFrame, cost);
+    mWillChangeBudgetSet.Put(aFrame, FrameWillChangeBudget(presContext, cost));
     aFrame->SetMayHaveWillChangeBudget(true);
   }
 
@@ -2179,23 +2171,29 @@ nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
 }
 
 void
-nsDisplayListBuilder::ClearWillChangeBudget(nsIFrame* aFrame)
+nsDisplayListBuilder::RemoveFromWillChangeBudget(nsIFrame* aFrame)
 {
-  if (!aFrame->MayHaveWillChangeBudget()) {
-    return;
-  }
-  aFrame->SetMayHaveWillChangeBudget(false);
+  FrameWillChangeBudget* frameBudget = mWillChangeBudgetSet.GetValue(aFrame);
 
-  uint32_t cost = 0;
-  if (!mWillChangeBudgetSet.Get(aFrame, &cost)) {
+  if (!frameBudget) {
     return;
   }
+
+  DocumentWillChangeBudget* budget =
+    mWillChangeBudget.GetValue(frameBudget->mPresContext);
+
+  if (budget) {
+    budget->mBudget -= frameBudget->mUsage;
+  }
+
   mWillChangeBudgetSet.Remove(aFrame);
+}
 
-  DocumentWillChangeBudget& budget =
-    mWillChangeBudget.GetOrInsert(aFrame->PresContext());
-  MOZ_ASSERT(budget.mBudget >= cost);
-  budget.mBudget -= cost;
+void
+nsDisplayListBuilder::ClearWillChangeBudget()
+{
+  mWillChangeBudgetSet.Clear();
+  mWillChangeBudget.Clear();
 }
 
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
@@ -3619,8 +3617,9 @@ nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
   return InitData{ aBuilder,         aFrame,
                    aBackgroundStyle, image,
                    aBackgroundRect,  state.mFillArea,
-                   state.mDestArea,  aLayer,
-                   isRasterImage,    shouldFixToViewport };
+                   state.mDestArea,  state.mRepeatSize,
+                   aLayer,           isRasterImage,
+                   shouldFixToViewport };
 }
 
 nsDisplayBackgroundImage::nsDisplayBackgroundImage(
@@ -3634,6 +3633,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(
   , mBackgroundRect(aInitData.backgroundRect)
   , mFillRect(aInitData.fillArea)
   , mDestRect(aInitData.destArea)
+  , mRepeatSize(aInitData.repeatSize)
   , mLayer(aInitData.layer)
   , mIsRasterImage(aInitData.isRasterImage)
   , mShouldFixToViewport(aInitData.shouldFixToViewport)
@@ -4095,11 +4095,6 @@ nsDisplayBackgroundImage::CanOptimizeToImageLayer(
     return false;
   }
 
-  // We currently can't handle tiled backgrounds.
-  if (!mDestRect.Contains(mFillRect)) {
-    return false;
-  }
-
   // For 'contain' and 'cover', we allow any pixel of the image to be sampled
   // because there isn't going to be any spriting/atlasing going on.
   const nsStyleImageLayers::Layer& layer =
@@ -4118,6 +4113,12 @@ nsRect
 nsDisplayBackgroundImage::GetDestRect() const
 {
   return mDestRect;
+}
+
+nsSize
+nsDisplayBackgroundImage::GetRepeatSize() const
+{
+  return mRepeatSize;
 }
 
 already_AddRefed<imgIContainer>
@@ -4811,12 +4812,17 @@ nsDisplayImageContainer::ConfigureLayer(
   const LayoutDeviceRect destRect(
     LayoutDeviceIntRect::FromAppUnitsToNearest(GetDestRect(), factor));
 
+  float xScale = destRect.width / containerSize.width;
+  float yScale = destRect.height / containerSize.height;
+
   const LayoutDevicePoint p = destRect.TopLeft();
   Matrix transform = Matrix::Translation(p.x + aParameters.mOffset.x,
                                          p.y + aParameters.mOffset.y);
-  transform.PreScale(destRect.width / containerSize.width,
-                     destRect.height / containerSize.height);
+  transform.PreScale(xScale, yScale);
   aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
+  aLayer->SetRepeatSize(GetRepeatSize().ScaleToNearestPixels(1.0f / xScale,
+                                                             1.0f / yScale,
+                                                             factor));
 }
 
 already_AddRefed<ImageContainer>

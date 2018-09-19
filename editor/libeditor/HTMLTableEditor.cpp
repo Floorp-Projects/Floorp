@@ -770,7 +770,17 @@ HTMLEditor::DeleteTable()
 }
 
 NS_IMETHODIMP
-HTMLEditor::DeleteTableCell(int32_t aNumber)
+HTMLEditor::DeleteTableCell(int32_t aNumberOfCellsToDelete)
+{
+  nsresult rv = DeleteTableCellWithTransaction(aNumberOfCellsToDelete);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete)
 {
   RefPtr<Selection> selection;
   RefPtr<Element> table;
@@ -789,7 +799,7 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
   }
   if (NS_WARN_IF(!table) || NS_WARN_IF(!cell)) {
     // Don't fail if we didn't find a table or cell.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+    return NS_OK;
   }
 
   AutoPlaceholderBatch beginBatching(this);
@@ -805,169 +815,40 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
     return error.StealNSResult();
   }
 
-  // When 2 or more cells are selected, ignore aNumber and use selected cells.
-  if (firstSelectedCellElement && selection->RangeCount() > 1) {
-    ErrorResult error;
-    TableSize tableSize(*this, *table, error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
+  MOZ_ASSERT(selection->RangeCount());
 
-    CellIndexes firstCellIndexes(*firstSelectedCellElement, error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-    cell = firstSelectedCellElement;
-    startRowIndex = firstCellIndexes.mRow;
-    startColIndex = firstCellIndexes.mColumn;
+  TableSize tableSize(*this, *table, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
 
-    // The setCaret object will call AutoSelectionSetterAfterTableEdit in its
-    // destructor
-    AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
-                                               startColIndex, ePreviousColumn,
-                                               false);
-    AutoTransactionsConserveSelection dontChangeSelection(*this);
+  MOZ_ASSERT(!tableSize.IsEmpty());
 
-    bool    checkToDeleteRow = true;
-    bool    checkToDeleteColumn = true;
-    while (cell) {
-      bool deleteRow = false;
-      bool deleteCol = false;
-
-      if (checkToDeleteRow) {
-        // Optimize to delete an entire row
-        // Clear so we don't repeat AllCellsInRowSelected within the same row
-        checkToDeleteRow = false;
-
-        deleteRow =
-          AllCellsInRowSelected(table, startRowIndex, tableSize.mColumnCount);
-        if (deleteRow) {
-          // First, find the next cell in a different row
-          //   to continue after we delete this row
-          int32_t nextRow = startRowIndex;
-          while (nextRow == startRowIndex) {
-            cell = GetNextSelectedTableCellElement(*selection, error);
-            if (NS_WARN_IF(error.Failed())) {
-              return error.StealNSResult();
-            }
-            if (!cell) {
-              break;
-            }
-            CellIndexes nextSelectedCellIndexes(*cell, error);
-            if (NS_WARN_IF(error.Failed())) {
-              return error.StealNSResult();
-            }
-            nextRow = nextSelectedCellIndexes.mRow;
-            startColIndex = nextSelectedCellIndexes.mColumn;
-          }
-          rv = DeleteTableRowWithTransaction(*table, startRowIndex);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-          if (cell) {
-            // For the next cell: Subtract 1 for row we deleted
-            startRowIndex = nextRow - 1;
-            // Set true since we know we will look at a new row next
-            checkToDeleteRow = true;
-          }
-        }
-      }
-      if (!deleteRow) {
-        if (checkToDeleteColumn) {
-          // Optimize to delete an entire column
-          // Clear this so we don't repeat AllCellsInColSelected within the same Col
-          checkToDeleteColumn = false;
-
-          deleteCol =
-            AllCellsInColumnSelected(table, startColIndex,
-                                     tableSize.mColumnCount);
-          if (deleteCol) {
-            // First, find the next cell in a different column
-            //   to continue after we delete this column
-            int32_t nextCol = startColIndex;
-            while (nextCol == startColIndex) {
-              cell = GetNextSelectedTableCellElement(*selection, error);
-              if (NS_WARN_IF(error.Failed())) {
-                return error.StealNSResult();
-              }
-              if (!cell) {
-                break;
-              }
-              CellIndexes nextSelectedCellIndexes(*cell, error);
-              if (NS_WARN_IF(error.Failed())) {
-                return error.StealNSResult();
-              }
-              startRowIndex = nextSelectedCellIndexes.mRow;
-              nextCol = nextSelectedCellIndexes.mColumn;
-            }
-            // Delete all cells which belong to the column.
-            rv = DeleteTableColumnWithTransaction(*table, startColIndex);
-            NS_ENSURE_SUCCESS(rv, rv);
-            if (cell) {
-              // For the next cell, subtract 1 for col. deleted
-              startColIndex = nextCol - 1;
-              // Set true since we know we will look at a new column next
-              checkToDeleteColumn = true;
-            }
-          }
-        }
-        if (!deleteCol) {
-          // First get the next cell to delete
-          RefPtr<Element> nextCell =
-            GetNextSelectedTableCellElement(*selection, error);
-          if (NS_WARN_IF(error.Failed())) {
-            return error.StealNSResult();
-          }
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          // Then delete the cell
-          rv = DeleteNodeWithTransaction(*cell);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-
-          // The next cell to delete
-          if (nextCell) {
-            CellIndexes nextCellIndexes(*nextCell, error);
-            if (NS_WARN_IF(error.Failed())) {
-              return error.StealNSResult();
-            }
-            startRowIndex = nextCellIndexes.mRow;
-            startColIndex = nextCellIndexes.mColumn;
-          }
-          cell = nextCell;
-        }
-      }
-    }
-  } else {
-    ErrorResult error;
-    for (int32_t i = 0; i < aNumber; i++) {
+  // If only one cell is selected or no cell is selected, remove cells
+  // starting from the first selected cell or a cell containing first
+  // selection range.
+  if (!firstSelectedCellElement || selection->RangeCount() == 1) {
+    for (int32_t i = 0; i < aNumberOfCellsToDelete; i++) {
       rv = GetCellContext(getter_AddRefs(selection),
                           getter_AddRefs(table),
                           getter_AddRefs(cell),
                           nullptr, nullptr,
                           &startRowIndex, &startColIndex);
-      NS_ENSURE_SUCCESS(rv, rv);
-      // Don't fail if no cell found
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       if (NS_WARN_IF(!table) || NS_WARN_IF(!cell)) {
-        return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+        // Don't fail if no cell found
+        return NS_OK;
       }
 
-      if (GetNumberOfCellsInRow(*table, startRowIndex) == 1) {
-        Element* parentRow =
-          GetElementOrParentByTagNameInternal(*nsGkAtoms::tr, *cell);
-        if (NS_WARN_IF(!parentRow)) {
-          return NS_ERROR_FAILURE;
-        }
+      int32_t numberOfCellsInRow = GetNumberOfCellsInRow(*table, startRowIndex);
+      NS_WARNING_ASSERTION(numberOfCellsInRow >= 0,
+        "Failed to count number of cells in the row");
 
-        // We should delete the row instead,
-        //  but first check if its the only row left
-        //  so we can delete the entire table
-        TableSize tableSize(*this, *table, error);
-        if (NS_WARN_IF(error.Failed())) {
-          return error.StealNSResult();
-        }
-
+      if (numberOfCellsInRow == 1) {
+        // Remove <tr> or <table> if we're removing all cells in the row or
+        // the table.
         if (tableSize.mRowCount == 1) {
           rv = DeleteTableElementAndChildrenWithTransaction(*selection, *table);
           if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -982,28 +863,201 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
-      } else {
-        // More than 1 cell in the row
 
-        // The setCaret object will call AutoSelectionSetterAfterTableEdit in its
-        // destructor
-        AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
-                                                   startColIndex, ePreviousColumn,
-                                                   false);
-        AutoTransactionsConserveSelection dontChangeSelection(*this);
-        rv = DeleteNodeWithTransaction(*cell);
-        // If we fail, don't try to delete any more cells???
+        // Adjust table rows simply.  In strictly speaking, we should
+        // recompute table size with the latest layout information since
+        // mutation event listener may have changed the DOM tree. However,
+        // this is not in usual path of Firefox.  So, we can assume that
+        // there are no mutation event listeners.
+        MOZ_ASSERT(tableSize.mRowCount);
+        tableSize.mRowCount--;
+        continue;
+      }
+
+      // The setCaret object will call AutoSelectionSetterAfterTableEdit in its
+      // destructor
+      AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
+                                                 startColIndex,
+                                                 ePreviousColumn, false);
+      AutoTransactionsConserveSelection dontChangeSelection(*this);
+
+      // XXX Removing cell element causes not adjusting colspan.
+      rv = DeleteNodeWithTransaction(*cell);
+      // If we fail, don't try to delete any more cells???
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      // Note that we don't refer column number in this loop.  So, it must
+      // be safe not to recompute table size since number of row is synced
+      // above.
+    }
+    return NS_OK;
+  }
+
+  // When 2 or more cells are selected, ignore aNumberOfCellsToRemove and
+  // remove all selected cells.
+  CellIndexes firstCellIndexes(*firstSelectedCellElement, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  cell = firstSelectedCellElement;
+  startRowIndex = firstCellIndexes.mRow;
+  startColIndex = firstCellIndexes.mColumn;
+
+  // The setCaret object will call AutoSelectionSetterAfterTableEdit in its
+  // destructor
+  AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
+                                             startColIndex, ePreviousColumn,
+                                             false);
+  AutoTransactionsConserveSelection dontChangeSelection(*this);
+
+  bool checkToDeleteRow = true;
+  bool checkToDeleteColumn = true;
+  while (cell) {
+    if (checkToDeleteRow) {
+      // Optimize to delete an entire row
+      // Clear so we don't repeat AllCellsInRowSelected within the same row
+      checkToDeleteRow = false;
+      if (AllCellsInRowSelected(table, startRowIndex, tableSize.mColumnCount)) {
+        // First, find the next cell in a different row to continue after we
+        // delete this row.
+        int32_t nextRow = startRowIndex;
+        while (nextRow == startRowIndex) {
+          cell = GetNextSelectedTableCellElement(*selection, error);
+          if (NS_WARN_IF(error.Failed())) {
+            return error.StealNSResult();
+          }
+          if (!cell) {
+            break;
+          }
+          CellIndexes nextSelectedCellIndexes(*cell, error);
+          if (NS_WARN_IF(error.Failed())) {
+            return error.StealNSResult();
+          }
+          nextRow = nextSelectedCellIndexes.mRow;
+          startColIndex = nextSelectedCellIndexes.mColumn;
+        }
+        if (tableSize.mRowCount == 1) {
+          rv = DeleteTableElementAndChildrenWithTransaction(*selection, *table);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+          return NS_OK;
+        }
+        rv = DeleteTableRowWithTransaction(*table, startRowIndex);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
+        // Adjust table rows simply.  In strictly speaking, we should
+        // recompute table size with the latest layout information since
+        // mutation event listener may have changed the DOM tree. However,
+        // this is not in usual path of Firefox.  So, we can assume that
+        // there are no mutation event listeners.
+        MOZ_ASSERT(tableSize.mRowCount);
+        tableSize.mRowCount--;
+        if (!cell) {
+          break;
+        }
+        // For the next cell: Subtract 1 for row we deleted
+        startRowIndex = nextRow - 1;
+        // Set true since we know we will look at a new row next
+        checkToDeleteRow = true;
+        continue;
       }
     }
+
+    if (checkToDeleteColumn) {
+      // Optimize to delete an entire column
+      // Clear this so we don't repeat AllCellsInColSelected within the same Col
+      checkToDeleteColumn = false;
+      if (AllCellsInColumnSelected(table, startColIndex,
+                                   tableSize.mColumnCount)) {
+        // First, find the next cell in a different column to continue after
+        // we delete this column.
+        int32_t nextCol = startColIndex;
+        while (nextCol == startColIndex) {
+          cell = GetNextSelectedTableCellElement(*selection, error);
+          if (NS_WARN_IF(error.Failed())) {
+            return error.StealNSResult();
+          }
+          if (!cell) {
+            break;
+          }
+          CellIndexes nextSelectedCellIndexes(*cell, error);
+          if (NS_WARN_IF(error.Failed())) {
+            return error.StealNSResult();
+          }
+          startRowIndex = nextSelectedCellIndexes.mRow;
+          nextCol = nextSelectedCellIndexes.mColumn;
+        }
+        // Delete all cells which belong to the column.
+        rv = DeleteTableColumnWithTransaction(*table, startColIndex);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        // Adjust table columns simply.  In strictly speaking, we should
+        // recompute table size with the latest layout information since
+        // mutation event listener may have changed the DOM tree. However,
+        // this is not in usual path of Firefox.  So, we can assume that
+        // there are no mutation event listeners.
+        MOZ_ASSERT(tableSize.mColumnCount);
+        tableSize.mColumnCount--;
+        if (!cell) {
+          break;
+        }
+        // For the next cell, subtract 1 for col. deleted
+        startColIndex = nextCol - 1;
+        // Set true since we know we will look at a new column next
+        checkToDeleteColumn = true;
+        continue;
+      }
+    }
+
+    // First get the next cell to delete
+    RefPtr<Element> nextCell =
+      GetNextSelectedTableCellElement(*selection, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+
+    // Then delete the cell
+    rv = DeleteNodeWithTransaction(*cell);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!nextCell) {
+      return NS_OK;
+    }
+
+    CellIndexes nextCellIndexes(*nextCell, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+    startRowIndex = nextCellIndexes.mRow;
+    startColIndex = nextCellIndexes.mColumn;
+    cell = std::move(nextCell);
+    // When table cell is removed, table size of column may be changed.
+    // For example, if there are 2 rows, one has 2 cells, the other has
+    // 3 cells, tableSize.mColumnCount is 3.  When this removes a cell
+    // in the latter row, mColumnCount should be come 2.  However, we
+    // don't use mColumnCount in this loop, so, this must be okay for now.
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLEditor::DeleteTableCellContents()
+{
+  nsresult rv = DeleteTableCellContentsWithTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::DeleteTableCellContentsWithTransaction()
 {
   RefPtr<Selection> selection;
   RefPtr<Element> table;
@@ -1014,9 +1068,13 @@ HTMLEditor::DeleteTableCellContents()
                                getter_AddRefs(cell),
                                nullptr, nullptr,
                                &startRowIndex, &startColIndex);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Don't fail if no cell found
-  NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (NS_WARN_IF(!selection) || NS_WARN_IF(!cell)) {
+    // Don't fail if no cell found.
+    return NS_OK;
+  }
 
 
   AutoPlaceholderBatch beginBatching(this);
@@ -1024,7 +1082,7 @@ HTMLEditor::DeleteTableCellContents()
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eDeleteNode,
                                       nsIEditor::eNext);
-  //Don't let Rules System change the selection
+  // Don't let Rules System change the selection
   AutoTransactionsConserveSelection dontChangeSelection(*this);
 
   ErrorResult error;
@@ -1035,7 +1093,6 @@ HTMLEditor::DeleteTableCellContents()
   }
 
   if (firstSelectedCellElement) {
-    ErrorResult error;
     CellIndexes firstCellIndexes(*firstSelectedCellElement, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
@@ -1050,32 +1107,19 @@ HTMLEditor::DeleteTableCellContents()
                                              false);
 
   while (cell) {
-    DeleteCellContents(cell);
-    if (firstSelectedCellElement) {
-      // We doing a selected cells, so do all of them
-      cell = GetNextSelectedTableCellElement(*selection, error);
-      if (NS_WARN_IF(error.Failed())) {
-        return error.StealNSResult();
-      }
-    } else {
-      cell = nullptr;
+    DebugOnly<nsresult> rv = DeleteAllChildrenWithTransaction(*cell);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to remove all children of the cell element");
+    // If selection is not in cell-select mode, we should remove only the cell
+    // which contains first selection range.
+    if (!firstSelectedCellElement) {
+      return NS_OK;
     }
-  }
-  return NS_OK;
-}
-
-nsresult
-HTMLEditor::DeleteCellContents(Element* aCell)
-{
-  // Prevent rules testing until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::eDeleteNode,
-                                      nsIEditor::eNext);
-
-  while (nsCOMPtr<nsINode> child = aCell->GetLastChild()) {
-    nsresult rv = DeleteNodeWithTransaction(*child);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    // If there are 2 or more selected cells, keep handling the other selected
+    // cells.
+    cell = GetNextSelectedTableCellElement(*selection, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
     }
   }
   return NS_OK;
@@ -1252,7 +1296,9 @@ HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
         // Cell is in column to be deleted, but must have colspan > 1,
         // so delete contents of cell instead of cell itself (We must have
         // reset colspan above).
-        DeleteCellContents(cell);
+        DebugOnly<nsresult> rv = DeleteAllChildrenWithTransaction(*cell);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+          "Failed to remove all children of the cell element");
       }
       // Skip rows which the removed cell spanned.
       rowIndex += actualRowSpan - 1;

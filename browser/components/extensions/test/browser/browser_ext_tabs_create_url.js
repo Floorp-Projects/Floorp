@@ -3,10 +3,17 @@
 "use strict";
 
 add_task(async function test_urlbar_focus() {
+  // Disable preloaded new tab because the urlbar is automatically focused when
+  // a preloaded new tab is opened, while this test is supposed to test that the
+  // implementation of tabs.create automatically focuses the urlbar of new tabs.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.newtab.preload", false]],
+  });
+
   const extension = ExtensionTestUtils.loadExtension({
     background() {
-      browser.tabs.onUpdated.addListener(function onUpdated(_, info) {
-        if (info.status === "complete") {
+      browser.tabs.onUpdated.addListener(function onUpdated(_, info, tab) {
+        if (info.status === "complete" && tab.url !== "about:blank") {
           browser.test.sendMessage("complete");
           browser.tabs.onUpdated.removeListener(onUpdated);
         }

@@ -829,12 +829,14 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
     nsIFrame* rootFrame = shell->GetRootFrame();
     MOZ_ASSERT(rootFrame);
     if (this != rootFrame) {
-      nsTArray<nsIFrame*>* modifiedFrames =
-        rootFrame->GetProperty(nsIFrame::ModifiedFrameList());
-      if (modifiedFrames) {
-        MOZ_ASSERT(!modifiedFrames->Contains(this),
-                   "A dtor added this frame to ModifiedFrameList");
-      }
+      const RetainedDisplayListData* data =
+        GetRetainedDisplayListData(rootFrame);
+
+      const bool inModifiedList = data &&
+        (data->GetFlags(this) & RetainedDisplayListData::FrameFlags::Modified);
+
+      MOZ_ASSERT(!inModifiedList,
+                 "A dtor added this frame to modified frames list!");
     }
   }
 #endif
@@ -965,36 +967,36 @@ nsIFrame::RemoveDisplayItemDataForDeletion()
     delete items;
   }
 
-  if (IsFrameModified()) {
-    nsIFrame* rootFrame = PresShell()->GetRootFrame();
-    MOZ_ASSERT(rootFrame);
-
-    nsTArray<nsIFrame*>* modifiedFrames =
-      rootFrame->GetProperty(nsIFrame::ModifiedFrameList());
-    MOZ_ASSERT(modifiedFrames);
-
-    for (auto& frame : *modifiedFrames) {
-      if (frame == this) {
-        frame = nullptr;
-        break;
-      }
-    }
+  if (!nsLayoutUtils::AreRetainedDisplayListsEnabled()) {
+    // Retained display lists are disabled, no need to update
+    // RetainedDisplayListData.
+    return;
   }
 
-  if (HasOverrideDirtyRegion()) {
-    nsIFrame* rootFrame = PresShell()->GetRootFrame();
-    MOZ_ASSERT(rootFrame);
+  const bool updateData =
+    IsFrameModified() || HasOverrideDirtyRegion() || MayHaveWillChangeBudget();
 
-    nsTArray<nsIFrame*>* frames =
-      rootFrame->GetProperty(nsIFrame::OverriddenDirtyRectFrameList());
-    MOZ_ASSERT(frames);
+  if (!updateData) {
+    // No RetainedDisplayListData to update.
+    return;
+  }
 
-    for (auto& frame : *frames) {
-      if (frame == this) {
-        frame = nullptr;
-        break;
-      }
-    }
+  nsIFrame* rootFrame = PresShell()->GetRootFrame();
+  MOZ_ASSERT(rootFrame);
+
+  RetainedDisplayListData* data = GetOrSetRetainedDisplayListData(rootFrame);
+
+  if (MayHaveWillChangeBudget()) {
+    // Keep the frame in list, so it can be removed from the will-change budget.
+    data->Flags(this) = RetainedDisplayListData::FrameFlags::HadWillChange;
+    return;
+  }
+
+  if (IsFrameModified() || HasOverrideDirtyRegion()) {
+    // Remove deleted frames from RetainedDisplayListData.
+    DebugOnly<bool> removed = data->Remove(this);
+    MOZ_ASSERT(removed,
+               "Frame had flags set, but it was not found in DisplayListData!");
   }
 }
 
@@ -1017,13 +1019,7 @@ nsIFrame::MarkNeedsDisplayItemRebuild()
     return;
   }
 
-  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
-  MOZ_ASSERT(displayRoot);
-
-  RetainedDisplayListBuilder* retainedBuilder =
-    displayRoot->GetProperty(RetainedDisplayListBuilder::Cached());
-
-  if (!retainedBuilder) {
+  if (!nsLayoutUtils::DisplayRootHasRetainedDisplayListBuilder(this)) {
     return;
   }
 
@@ -1034,35 +1030,12 @@ nsIFrame::MarkNeedsDisplayItemRebuild()
     return;
   }
 
-  nsTArray<nsIFrame*>* modifiedFrames =
-    rootFrame->GetProperty(nsIFrame::ModifiedFrameList());
-
-  if (!modifiedFrames) {
-    modifiedFrames = new nsTArray<nsIFrame*>();
-    rootFrame->SetProperty(nsIFrame::ModifiedFrameList(), modifiedFrames);
-  }
-
-  if (this == rootFrame) {
-    // If this is the root frame, then marking us as needing a display
-    // item rebuild implies the same for all our descendents. Clear them
-    // all out to reduce the number of modified frames we keep around.
-    for (nsIFrame* f : *modifiedFrames) {
-      if (f) {
-        f->SetFrameIsModified(false);
-      }
-    }
-    modifiedFrames->Clear();
-  } else if (modifiedFrames->Length() > gfxPrefs::LayoutRebuildFrameLimit()) {
-    // If the list starts getting too big, then just mark the root frame
-    // as needing a rebuild.
-    rootFrame->MarkNeedsDisplayItemRebuild();
-    return;
-  }
-
-  modifiedFrames->AppendElement(this);
-
-  MOZ_ASSERT(PresContext()->LayoutPhaseCount(eLayoutPhase_DisplayListBuilding) == 0);
+  RetainedDisplayListData* data = GetOrSetRetainedDisplayListData(rootFrame);
+  data->Flags(this) |= RetainedDisplayListData::FrameFlags::Modified;
   SetFrameIsModified(true);
+
+  MOZ_ASSERT(
+    PresContext()->LayoutPhaseCount(eLayoutPhase_DisplayListBuilding) == 0);
 
   // Hopefully this is cheap, but we could use a frame state bit to note
   // the presence of dependencies to speed it up.
@@ -3519,7 +3492,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
        NS_FRAME_TOO_DEEP_IN_FRAME_TREE | NS_FRAME_IS_NONDISPLAY))
     return;
 
-  aBuilder->ClearWillChangeBudget(child);
+  aBuilder->RemoveFromWillChangeBudget(child);
 
   const bool shortcutPossible = aBuilder->IsPaintingToWindow() &&
      aBuilder->BuildCompositorHitTestInfo();
@@ -3596,7 +3569,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     isPlaceholder = true;
     nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(child);
     child = placeholder->GetOutOfFlowFrame();
-    aBuilder->ClearWillChangeBudget(child);
+    aBuilder->RemoveFromWillChangeBudget(child);
     NS_ASSERTION(child, "No out of flow frame?");
     // If 'child' is a pushed float then it's owned by a block that's not an
     // ancestor of the placeholder, and it will be painted by that block and
