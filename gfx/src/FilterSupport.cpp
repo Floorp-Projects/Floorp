@@ -844,9 +844,11 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
         eComponentTransferFunctionB,
         eComponentTransferFunctionA
       };
+      const AttributeMap* rgbFunctionAttributes =
+        atts.MaybeGetAttributeMap(eComponentTransferFunctionRGB);
       for (int32_t i = 0; i < 4; i++) {
-        AttributeMap functionAttributes =
-          atts.GetAttributeMap(componentFunctionNames[i]);
+        const AttributeMap& functionAttributes = i < 3 && rgbFunctionAttributes ?
+          *rgbFunctionAttributes : atts.GetAttributeMap(componentFunctionNames[i]);
         ConvertComponentTransferFunctionToFilter(functionAttributes, i, aDT,
           filters[0], filters[1], filters[2], filters[3]);
       }
@@ -1072,7 +1074,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       bool isSpecular =
         aDescription.Type() == PrimitiveType::SpecularLighting;
 
-      AttributeMap lightAttributes = atts.GetAttributeMap(eLightingLight);
+      const AttributeMap& lightAttributes = atts.GetAttributeMap(eLightingLight);
 
       if (lightAttributes.GetUint(eLightType) == eLightTypeNone) {
         return nullptr;
@@ -1619,7 +1621,7 @@ FilterSupport::PostFilterExtentsForPrimitive(const FilterPrimitiveDescription& a
 
     case PrimitiveType::ComponentTransfer:
     {
-      AttributeMap functionAttributes =
+      const AttributeMap& functionAttributes =
         atts.GetAttributeMap(eComponentTransferFunctionA);
       if (ResultOfZeroUnderTransferFunction(functionAttributes) > 0.0f) {
         return aDescription.PrimitiveSubregion();
@@ -1875,6 +1877,34 @@ FilterPrimitiveDescription::operator=(const FilterPrimitiveDescription& aOther)
   return *this;
 }
 
+FilterPrimitiveDescription::FilterPrimitiveDescription(FilterPrimitiveDescription&& aOther)
+ : mType(aOther.mType)
+ , mAttributes(std::move(aOther.mAttributes))
+ , mInputPrimitives(std::move(aOther.mInputPrimitives))
+ , mFilterPrimitiveSubregion(aOther.mFilterPrimitiveSubregion)
+ , mFilterSpaceBounds(aOther.mFilterSpaceBounds)
+ , mInputColorSpaces(std::move(aOther.mInputColorSpaces))
+ , mOutputColorSpace(aOther.mOutputColorSpace)
+ , mIsTainted(aOther.mIsTainted)
+{
+}
+
+FilterPrimitiveDescription&
+FilterPrimitiveDescription::operator=(FilterPrimitiveDescription&& aOther)
+{
+  if (this != &aOther) {
+    mType = aOther.mType;
+    mAttributes = std::move(aOther.mAttributes);
+    mInputPrimitives = std::move(aOther.mInputPrimitives);
+    mFilterPrimitiveSubregion = aOther.mFilterPrimitiveSubregion;
+    mFilterSpaceBounds = aOther.mFilterSpaceBounds;
+    mInputColorSpaces = std::move(aOther.mInputColorSpaces);
+    mOutputColorSpace = aOther.mOutputColorSpace;
+    mIsTainted = aOther.mIsTainted;
+  }
+  return *this;
+}
+
 bool
 FilterPrimitiveDescription::operator==(const FilterPrimitiveDescription& aOther) const
 {
@@ -1902,6 +1932,7 @@ FilterDescription::operator==(const FilterDescription& aOther) const
 // used by AttributeMap.
 struct FilterAttribute {
   FilterAttribute(const FilterAttribute& aOther);
+
   ~FilterAttribute();
 
   bool operator==(const FilterAttribute& aOther) const;
@@ -1940,10 +1971,18 @@ struct FilterAttribute {
   MAKE_CONSTRUCTOR_AND_ACCESSOR_CLASS(Matrix5x4)
   MAKE_CONSTRUCTOR_AND_ACCESSOR_CLASS(Point3D)
   MAKE_CONSTRUCTOR_AND_ACCESSOR_CLASS(Color)
-  MAKE_CONSTRUCTOR_AND_ACCESSOR_CLASS(AttributeMap)
 
 #undef MAKE_CONSTRUCTOR_AND_ACCESSOR_BASIC
 #undef MAKE_CONSTRUCTOR_AND_ACCESSOR_CLASS
+
+  explicit FilterAttribute(AttributeMap&& aValue)
+   : mType(AttributeType::eAttributeMap), mAttributeMap(new AttributeMap(aValue))
+  {}
+
+  AttributeMap* AsAttributeMap() {
+    MOZ_ASSERT(mType == AttributeType::eAttributeMap);
+    return mAttributeMap;
+  }
 
   FilterAttribute(const float* aValue, uint32_t aLength)
    : mType(AttributeType::eFloats)
@@ -2110,6 +2149,21 @@ AttributeMap::operator=(const AttributeMap& aOther)
   return *this;
 }
 
+AttributeMap::AttributeMap(AttributeMap&& aOther)
+{
+  mMap.SwapElements(aOther.mMap);
+}
+
+AttributeMap&
+AttributeMap::operator=(AttributeMap&& aOther)
+{
+  if (this != &aOther) {
+    mMap.Clear();
+    mMap.SwapElements(aOther.mMap);
+  }
+  return *this;
+}
+
 bool
 AttributeMap::operator==(const AttributeMap& aOther) const
 {
@@ -2179,10 +2233,32 @@ MAKE_ATTRIBUTE_HANDLERS_CLASS(Matrix)
 MAKE_ATTRIBUTE_HANDLERS_CLASS(Matrix5x4)
 MAKE_ATTRIBUTE_HANDLERS_CLASS(Point3D)
 MAKE_ATTRIBUTE_HANDLERS_CLASS(Color)
-MAKE_ATTRIBUTE_HANDLERS_CLASS(AttributeMap)
 
 #undef MAKE_ATTRIBUTE_HANDLERS_BASIC
 #undef MAKE_ATTRIBUTE_HANDLERS_CLASS
+
+const AttributeMap sEmptyAttributeMap;
+
+const AttributeMap&
+AttributeMap::GetAttributeMap(AttributeName aName) const {
+  Attribute* value = mMap.Get(aName);
+  return value ? *value->AsAttributeMap() : sEmptyAttributeMap;
+}
+
+const AttributeMap*
+AttributeMap::MaybeGetAttributeMap(AttributeName aName) const {
+  Attribute* value = mMap.Get(aName);
+  if (value) {
+    return value->AsAttributeMap();
+  } else {
+    return nullptr;
+  }
+}
+
+void
+AttributeMap::Set(AttributeName aName, AttributeMap&& aValue) {
+  mMap.Put(aName, new Attribute(std::move(aValue)));
+}
 
 const nsTArray<float>&
 AttributeMap::GetFloats(AttributeName aName) const
