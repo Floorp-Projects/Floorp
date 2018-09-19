@@ -747,9 +747,10 @@ nsSVGIntegrationUtils::IsMaskResourceReady(nsIFrame* aFrame)
 {
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
-  SVGObserverUtils::EffectProperties effectProperties =
-    SVGObserverUtils::GetEffectProperties(firstFrame);
-  nsTArray<nsSVGMaskFrame*> maskFrames = effectProperties.GetMaskFrames();
+  nsTArray<nsSVGMaskFrame*> maskFrames;
+  // XXX check return value?
+  SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
+
   const nsStyleSVGReset* svgReset = firstFrame->StyleSVGReset();
 
   for (uint32_t i = 0; i < maskFrames.Length(); i++) {
@@ -803,11 +804,6 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
   }
 
   gfxContext& ctx = aParams.ctx;
-  nsIFrame* firstFrame =
-    nsLayoutUtils::FirstContinuationOrIBSplitSibling(frame);
-  SVGObserverUtils::EffectProperties effectProperties =
-    SVGObserverUtils::GetEffectProperties(firstFrame);
-
   RefPtr<DrawTarget> maskTarget = ctx.GetDrawTarget();
 
   if (maskUsage.shouldGenerateMaskLayer &&
@@ -823,7 +819,12 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
                                                      SurfaceFormat::A8);
   }
 
-  nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
+  nsIFrame* firstFrame =
+    nsLayoutUtils::FirstContinuationOrIBSplitSibling(frame);
+  nsTArray<nsSVGMaskFrame*> maskFrames;
+  // XXX check return value?
+  SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
+
   AutoPopGroup autoPop;
   bool shouldPushOpacity = (maskUsage.opacity != 1.0) &&
                            (maskFrames.Length() != 1);
@@ -924,19 +925,18 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams, const T& aPa
   gfxContext& context = aParams.ctx;
   gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(&context);
 
-  /* Properties are added lazily and may have been removed by a restyle,
-     so make sure all applicable ones are set again. */
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(frame);
-  SVGObserverUtils::EffectProperties effectProperties =
-    SVGObserverUtils::GetEffectProperties(firstFrame);
 
   nsSVGClipPathFrame* clipPathFrame;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveClipPath(firstFrame, &clipPathFrame);
 
+  nsTArray<nsSVGMaskFrame*> maskFrames;
+  // XXX check return value?
+  SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
+
   gfxMatrix cssPxToDevPxMatrix = nsSVGUtils::GetCSSPxToDevPxMatrix(frame);
-  nsTArray<nsSVGMaskFrame*> maskFrames = effectProperties.GetMaskFrames();
 
   bool shouldGenerateMask = (maskUsage.opacity != 1.0f ||
                              maskUsage.shouldGenerateClipMaskLayer ||

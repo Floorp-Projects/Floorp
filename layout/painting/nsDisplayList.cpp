@@ -9572,9 +9572,9 @@ ComputeMaskGeometry(PaintFramesParams& aParams)
 
   const nsStyleSVGReset* svgReset = firstFrame->StyleSVGReset();
 
-  SVGObserverUtils::EffectProperties effectProperties =
-    SVGObserverUtils::GetEffectProperties(firstFrame);
-  nsTArray<nsSVGMaskFrame*> maskFrames = effectProperties.GetMaskFrames();
+  nsTArray<nsSVGMaskFrame*> maskFrames;
+  // XXX check return value?
+  SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
 
   if (maskFrames.Length() == 0) {
     return;
@@ -9715,12 +9715,11 @@ nsDisplayMasksAndClipPaths::IsValidMask() {
 
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
-  SVGObserverUtils::EffectProperties effectProperties =
-    SVGObserverUtils::GetEffectProperties(firstFrame);
 
   if (SVGObserverUtils::GetAndObserveClipPath(firstFrame, nullptr) ==
         SVGObserverUtils::eHasRefsSomeInvalid ||
-      effectProperties.HasInvalidMask()) {
+      SVGObserverUtils::GetAndObserveMasks(firstFrame, nullptr) ==
+        SVGObserverUtils::eHasRefsSomeInvalid) {
     return false;
   }
 
@@ -10035,8 +10034,6 @@ nsDisplayMasksAndClipPaths::PrintEffects(nsACString& aTo)
 {
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
-  SVGObserverUtils::EffectProperties effectProperties =
-    SVGObserverUtils::GetEffectProperties(firstFrame);
   bool first = true;
   aTo += " effects=(";
   if (mFrame->StyleEffects()->mOpacity != 1.0f && mHandleOpacity) {
@@ -10061,7 +10058,9 @@ nsDisplayMasksAndClipPaths::PrintEffects(nsACString& aTo)
     first = false;
   }
 
-  nsTArray<nsSVGMaskFrame*> masks = effectProperties.GetMaskFrames();
+  nsTArray<nsSVGMaskFrame*> masks;
+  // XXX check return value?
+  SVGObserverUtils::GetAndObserveMasks(firstFrame, &masks);
   if (!masks.IsEmpty() && masks[0]) {
     if (!first) {
       aTo += ", ";

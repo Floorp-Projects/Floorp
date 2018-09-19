@@ -566,20 +566,6 @@ nsSVGPaintingProperty::OnRenderingChange()
   }
 }
 
-static SVGMaskObserverList*
-GetOrCreateMaskProperty(nsIFrame* aFrame)
-{
-  SVGMaskObserverList *prop =
-    aFrame->GetProperty(SVGObserverUtils::MaskProperty());
-  if (prop)
-    return prop;
-
-  prop = new SVGMaskObserverList(aFrame);
-  NS_ADDREF(prop);
-  aFrame->SetProperty(SVGObserverUtils::MaskProperty(), prop);
-  return prop;
-}
-
 static already_AddRefed<URLAndReferrerInfo>
 ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValueData* aURL)
 {
@@ -673,6 +659,8 @@ SVGObserverUtils::GetMarkerFrames(nsIFrame* aMarkedFrame,
 static SVGFilterObserverListForCSSProp*
 GetOrCreateFilterObserverListForCSS(nsIFrame* aFrame)
 {
+  MOZ_ASSERT(!aFrame->GetPrevContinuation(), "Require first continuation");
+
   const nsStyleEffects* effects = aFrame->StyleEffects();
   if (!effects->HasFilters()) {
     return nullptr;
@@ -757,6 +745,8 @@ SVGObserverUtils::DetachFromCanvasContext(nsISupports* aAutoObserver)
 static nsSVGPaintingProperty*
 GetOrCreateClipPathObserver(nsIFrame* aClippedFrame)
 {
+  MOZ_ASSERT(!aClippedFrame->GetPrevContinuation(), "Require first continuation");
+
   const nsStyleSVGReset* svgStyleReset = aClippedFrame->StyleSVGReset();
   if (svgStyleReset->mClipPath.GetType() != StyleShapeSourceType::URL) {
     return nullptr;
@@ -791,6 +781,71 @@ SVGObserverUtils::GetAndObserveClipPath(nsIFrame* aClippedFrame,
     *aClipPathFrame = frame;
   }
   return frame ? eHasRefsAllValid : eHasNoRefs;
+}
+
+static SVGMaskObserverList*
+GetOrCreateMaskObserverList(nsIFrame* aMaskedFrame)
+{
+  MOZ_ASSERT(!aMaskedFrame->GetPrevContinuation(), "Require first continuation");
+
+  const nsStyleSVGReset* style = aMaskedFrame->StyleSVGReset();
+  if (!style->HasMask()) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(style->mMask.mImageCount > 0);
+
+  SVGMaskObserverList* prop =
+    aMaskedFrame->GetProperty(SVGObserverUtils::MaskProperty());
+  if (prop) {
+    return prop;
+  }
+  prop = new SVGMaskObserverList(aMaskedFrame);
+  NS_ADDREF(prop);
+  aMaskedFrame->SetProperty(SVGObserverUtils::MaskProperty(), prop);
+  return prop;
+}
+
+SVGObserverUtils::ReferenceState
+SVGObserverUtils::GetAndObserveMasks(nsIFrame* aMaskedFrame,
+                                     nsTArray<nsSVGMaskFrame*>* aMaskFrames)
+{
+  SVGMaskObserverList* observerList = GetOrCreateMaskObserverList(aMaskedFrame);
+  if (!observerList) {
+    return eHasNoRefs;
+  }
+
+  const nsTArray<RefPtr<nsSVGPaintingProperty>>& observers =
+    observerList->GetObservers();
+  if (observers.IsEmpty()) {
+    return eHasNoRefs;
+  }
+
+  ReferenceState state = eHasRefsAllValid;
+
+  for (size_t i = 0; i < observers.Length(); i++) {
+    bool frameTypeOK = true;
+    nsSVGMaskFrame* maskFrame = static_cast<nsSVGMaskFrame*>(
+      observers[i]->GetAndObserveReferencedFrame(LayoutFrameType::SVGMask,
+                                                 &frameTypeOK));
+    MOZ_ASSERT(!maskFrame || frameTypeOK);
+    // XXXjwatt: this looks fishy
+    if (!frameTypeOK) {
+      // We can not find the specific SVG mask resource in the downloaded SVG
+      // document. There are two possibilities:
+      // 1. The given resource id is invalid.
+      // 2. The given resource id refers to a viewbox.
+      //
+      // Hand it over to the style image.
+      observerList->ResolveImage(i);
+      state = eHasRefsSomeInvalid;
+    }
+    if (aMaskFrames) {
+      aMaskFrames->AppendElement(maskFrame);
+    }
+  }
+
+  return state;
 }
 
 SVGGeometryElement*
@@ -838,7 +893,7 @@ SVGObserverUtils::InitiateResourceDocLoads(nsIFrame* aFrame)
   // make aFrame start observing the referenced frames.
   Unused << GetOrCreateFilterObserverListForCSS(aFrame);
   Unused << GetOrCreateClipPathObserver(aFrame);
-  Unused << GetEffectProperties(aFrame);
+  Unused << GetOrCreateMaskObserverList(aFrame);
 }
 
 void
@@ -919,21 +974,6 @@ SVGObserverUtils::GetPaintingPropertyForURI(URLAndReferrerInfo* aURI,
   return prop;
 }
 
-SVGObserverUtils::EffectProperties
-SVGObserverUtils::GetEffectProperties(nsIFrame* aFrame)
-{
-  NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame should be first continuation");
-
-  EffectProperties result;
-  const nsStyleSVGReset *style = aFrame->StyleSVGReset();
-
-  MOZ_ASSERT(style->mMask.mImageCount > 0);
-  result.mMaskObservers = style->HasMask()
-                          ? GetOrCreateMaskProperty(aFrame) : nullptr;
-
-  return result;
-}
-
 nsSVGPaintServerFrame *
 SVGObserverUtils::GetPaintServer(nsIFrame* aTargetFrame,
                                  nsStyleSVGPaint nsStyleSVG::* aPaint)
@@ -976,60 +1016,6 @@ SVGObserverUtils::GetPaintServer(nsIFrame* aTargetFrame,
     return nullptr;
 
   return static_cast<nsSVGPaintServerFrame*>(result);
-}
-
-nsTArray<nsSVGMaskFrame *>
-SVGObserverUtils::EffectProperties::GetMaskFrames()
-{
-  nsTArray<nsSVGMaskFrame *> result;
-  if (!mMaskObservers) {
-    return result;
-  }
-
-  bool ok = true;
-  const nsTArray<RefPtr<nsSVGPaintingProperty>>& observers =
-    mMaskObservers->GetObservers();
-  for (size_t i = 0; i < observers.Length(); i++) {
-    nsSVGMaskFrame* maskFrame = static_cast<nsSVGMaskFrame*>(
-      observers[i]->GetAndObserveReferencedFrame(LayoutFrameType::SVGMask, &ok));
-    MOZ_ASSERT(!maskFrame || ok);
-    if (!ok) {
-      // We can not find the specific SVG mask resource in the downloaded SVG
-      // document. There are two possibilities:
-      // 1. The given resource id is invalid.
-      // 2. The given resource id refers to a viewbox.
-      //
-      // Hand it over to the style image.
-      mMaskObservers->ResolveImage(i);
-    }
-    result.AppendElement(maskFrame);
-  }
-
-  return result;
-}
-
-bool
-SVGObserverUtils::EffectProperties::HasNoOrValidEffects()
-{
-  return HasNoOrValidMask();
-}
-
-bool
-SVGObserverUtils::EffectProperties::HasNoOrValidMask()
-{
-  if (mMaskObservers) {
-    bool ok = true;
-    const nsTArray<RefPtr<nsSVGPaintingProperty>>& observers =
-      mMaskObservers->GetObservers();
-    for (size_t i = 0; i < observers.Length(); i++) {
-      observers[i]->GetAndObserveReferencedFrame(LayoutFrameType::SVGMask, &ok);
-      if (!ok) {
-        return false;
-      }
-    }
-  }
-
-  return true;
 }
 
 void

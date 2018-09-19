@@ -581,46 +581,6 @@ public:
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(BackgroundImageProperty,
                                       URIObserverHashtable)
 
-  struct EffectProperties {
-    SVGMaskObserverList* mMaskObservers;
-
-    /**
-     * @return an array which contains all SVG mask frames.
-     */
-    nsTArray<nsSVGMaskFrame*> GetMaskFrames();
-
-    /*
-     * @return true if all effects we have are valid or we have no effect
-     * at all.
-     */
-    bool HasNoOrValidEffects();
-
-    /*
-     * @return true if we have any invalid effect.
-     */
-    bool HasInvalidEffects() {
-      return !HasNoOrValidEffects();
-    }
-
-    /*
-     * @return true if we either do not have mask or all masks we have
-     * are valid.
-     */
-    bool HasNoOrValidMask();
-
-    /*
-     * @return true if we have an invalid mask.
-     */
-    bool HasInvalidMask() {
-      return !HasNoOrValidMask();
-    }
-  };
-
-  /**
-   * @param aFrame should be the first continuation
-   */
-  static EffectProperties GetEffectProperties(nsIFrame* aFrame);
-
   /**
    * Ensures that that if the given frame requires any resources that are in
    * SVG resource documents that the loading of those documents is initiated.
@@ -794,6 +754,22 @@ public:
   static ReferenceState
   GetAndObserveClipPath(nsIFrame* aClippedFrame,
                         nsSVGClipPathFrame** aClipPathFrame);
+
+  /**
+   * If masking is applied to aMaskedFrame, gets an array of any SVG masks
+   * that are referenced, setting up aMaskFrames as a rendering observer of
+   * those masks (if any).
+   *
+   * NOTE! A return value of eHasNoRefs does NOT mean that there are no masks
+   * to be applied, only that there are no references to SVG mask elements.
+   *
+   * Note that, unlike for filters, a reference to an ID that doesn't exist
+   * is not invalid for clip-path or mask.  We will return eHasNoRefs in that
+   * case.
+   */
+  static ReferenceState
+  GetAndObserveMasks(nsIFrame* aMaskedFrame,
+                     nsTArray<nsSVGMaskFrame*>* aMaskFrames);
 
   /**
    * Get the SVGGeometryElement that is referenced by aTextPathFrame, and make
