@@ -21,6 +21,7 @@ Test the completion-error-page component
             data-suggestion-heading="Sample suggestion heading"
             data-suggestion-1="Sample suggestion"
             data-suggestion-2="Sample suggestion"
+            data-suggestion-3="Sample suggestion"
             data-branding-label="Sample Brand"
             data-done-button-label="OK"></completion-error-page>
   </p>
@@ -45,6 +46,8 @@ add_task(async function test_no_values() {
      "Suggestion 1 set on page");
   is(page.dataset["suggestion-2"], "Sample suggestion",
      "Suggestion 2 set on page");
+  is(page.dataset["suggestion-3"], "Sample suggestion",
+     "Suggestion 3 set on page");
   is(page.dataset.brandingLabel, "Sample Brand", "Branding string set");
 
   page.dataset.pageTitle = "Oh noes! **host-name** is having an issue";
