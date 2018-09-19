@@ -58,7 +58,7 @@ function onPageLoad() {
 function test() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(onPageLoad, false, "about:logo");
-  gBrowser.loadURI("about:logo");
+  BrowserTestUtils.loadURI(gBrowser, "about:logo");
 
   waitForExplicitFinish();
 }

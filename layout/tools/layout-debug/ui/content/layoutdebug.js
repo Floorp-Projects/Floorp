@@ -110,10 +110,15 @@ function OnLDBLoad()
   gDebugger = Cc[NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID].
                   createInstance(nsILayoutDebuggingTools);
 
-  if (window.arguments && window.arguments[0])
-    gBrowser.loadURI(window.arguments[0]);
-  else
-    gBrowser.loadURI("about:blank");
+  if (window.arguments && window.arguments[0]) {
+    gBrowser.loadURI(window.arguments[0], {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+  } else {
+    gBrowser.loadURI("about:blank", {
+      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+    });
+  }
 
   gDebugger.init(gBrowser.contentWindow);
 
@@ -161,7 +166,9 @@ function openFile()
   fp.open(rv => {
     if (rv == nsIFilePicker.returnOK && fp.fileURL.spec &&
         fp.fileURL.spec.length > 0) {
-      gBrowser.loadURI(fp.fileURL.spec);
+      gBrowser.loadURI(fp.fileURL.spec, {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
     }
   });
 }

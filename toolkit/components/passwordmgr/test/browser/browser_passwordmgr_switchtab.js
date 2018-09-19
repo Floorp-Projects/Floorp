@@ -34,7 +34,7 @@ add_task(async function test() {
   });
 
   BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => finish());
-  tab.linkedBrowser.loadURI("http://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs");
+  BrowserTestUtils.loadURI(tab.linkedBrowser, "http://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs");
 
   });
 });

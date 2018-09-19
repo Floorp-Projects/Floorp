@@ -36,7 +36,7 @@ function promiseTabLoadEvent(tab, url) {
   let browser = tab.linkedBrowser;
 
   if (url) {
-    browser.loadURI(url);
+    BrowserTestUtils.loadURI(browser, url);
   }
 
   return BrowserTestUtils.browserLoaded(browser, false, url);

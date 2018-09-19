@@ -10,7 +10,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  gBrowser.loadURI("data:text/html;charset=utf8,<p>test inspect() in Scratchpad</p>");
+  BrowserTestUtils.loadURI(gBrowser, "data:text/html;charset=utf8,<p>test inspect() in Scratchpad</p>");
 }
 
 function runTests() {

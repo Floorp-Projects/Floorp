@@ -22,7 +22,7 @@ add_task(async function() {
     tab2 = BrowserTestUtils.addTab(gBrowser);
     await promiseBrowserLoaded(tab2.linkedBrowser);
     await setUsePrivateBrowsing(tab2.linkedBrowser, true);
-    tab2.linkedBrowser.loadURI(URL_PRIVATE);
+    BrowserTestUtils.loadURI(tab2.linkedBrowser, URL_PRIVATE);
     await promiseBrowserLoaded(tab2.linkedBrowser);
 
     info("Flush to make sure chrome received all data.");

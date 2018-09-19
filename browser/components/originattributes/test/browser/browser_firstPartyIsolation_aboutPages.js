@@ -106,7 +106,7 @@ add_task(async function test_remote_window_open_data_uri2() {
   // The iframe test2.html will fetch test2.js, which will have cookies.
   const DATA_URI = `data:text/html,
                     <iframe id="iframe1" src="http://mochi.test:8888/browser/browser/components/originattributes/test/browser/test2.html"></iframe>`;
-  browser.loadURI(DATA_URI);
+  BrowserTestUtils.loadURI(browser, DATA_URI);
   await BrowserTestUtils.browserLoaded(browser, true);
 
   await ContentTask.spawn(browser, {}, async function() {

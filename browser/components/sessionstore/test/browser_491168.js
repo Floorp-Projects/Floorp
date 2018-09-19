@@ -17,7 +17,10 @@ add_task(async function() {
 
   // Load a new URI with a specific referrer.
   let referrerURI = Services.io.newURI(REFERRER1);
-  browser.loadURI("http://example.org", { referrerURI });
+  browser.loadURI("http://example.org", {
+    referrerURI,
+    triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+  });
   await promiseBrowserLoaded(browser);
 
   await TabStateFlusher.flush(browser);

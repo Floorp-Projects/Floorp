@@ -18,7 +18,7 @@ add_task(async function() {
 
   info("Navigate to a URL supporting remote process");
   const onLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  gBrowser.loadURI(URL_2);
+  BrowserTestUtils.loadURI(gBrowser, URL_2);
   await onLoaded;
 
   is(tab.linkedBrowser.getAttribute("remote"), "true", "Navigated to a data: URI and switching to remote");

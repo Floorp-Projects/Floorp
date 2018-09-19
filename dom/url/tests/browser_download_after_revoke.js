@@ -46,5 +46,5 @@ function test () {
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(onLoad);
 
   info("Loading download page...");
-  gBrowser.loadURI("http://example.com/browser/dom/url/tests/empty.html");
+  BrowserTestUtils.loadURI(gBrowser, "http://example.com/browser/dom/url/tests/empty.html");
 }

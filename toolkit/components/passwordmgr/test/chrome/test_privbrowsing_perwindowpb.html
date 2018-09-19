@@ -213,7 +213,7 @@ function testOnWindow(aIsPrivate, aCallback) {
     whenDelayedStartupFinished(win, function() {
       win.addEventListener("DOMContentLoaded", function onInnerLoad() {
         if (win.content.location.href != contentPage) {
-          win.gBrowser.loadURI(contentPage);
+          BrowserTestUtils.loadURI(win.gBrowser, contentPage);
           return;
         }
         win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
@@ -224,7 +224,7 @@ function testOnWindow(aIsPrivate, aCallback) {
           SimpleTest.executeSoon(function() { aCallback(win); });
         }, false, true);
       }, true);
-      SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
+      SimpleTest.executeSoon(function() { BrowserTestUtils.loadURI(win.gBrowser, contentPage); });
     });
   }, {capture: true, once: true});
 }

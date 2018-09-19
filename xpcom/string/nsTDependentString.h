@@ -42,7 +42,6 @@ public:
 
   typedef typename base_string_type::comparator_type comparator_type;
 
-  typedef typename base_string_type::char_iterator char_iterator;
   typedef typename base_string_type::const_char_iterator const_char_iterator;
 
   typedef typename base_string_type::index_type index_type;

@@ -463,8 +463,8 @@ nsLinebreakConverter::ConvertStringLineBreaks(nsString& aIoString,
 
   // remember the old buffer in case
   // we blow it away later
-  nsString::char_iterator stringBuf;
-  if (!aIoString.BeginWriting(stringBuf, mozilla::fallible)) {
+  auto stringBuf = aIoString.BeginWriting(mozilla::fallible);
+  if (!stringBuf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
