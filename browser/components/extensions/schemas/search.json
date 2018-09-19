@@ -56,7 +56,6 @@
       {
         "name": "search",
         "type": "function",
-        "requireUserInput": true,
         "description": "Perform a search.",
         "async": true,
         "parameters": [
