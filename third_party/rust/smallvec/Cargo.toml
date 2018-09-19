@@ -12,7 +12,7 @@
 
 [package]
 name = "smallvec"
-version = "0.6.3"
+version = "0.6.5"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 description = "'Small vector' optimization: store up to a small number of items on the stack"
 documentation = "http://doc.servo.org/smallvec/"
