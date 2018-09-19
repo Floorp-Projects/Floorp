@@ -2,10 +2,6 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!DOCTYPE window [
-<!ENTITY % toolboxDTD SYSTEM "chrome://devtools/locale/toolbox.dtd" >
- %toolboxDTD;
-]>
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
@@ -17,32 +13,6 @@
         windowtype="devtools:toolbox"
         width="900" height="320"
         persist="screenX screenY width height sizemode">
-
-  <commandset id="toolbox-commandset">
-    <command id="toolbox-cmd-close" oncommand="window.close();"/>
-  </commandset>
-
-  <keyset id="toolbox-keyset">
-    <key id="toolbox-key-close"
-         key="&closeCmd.key;"
-         command="toolbox-cmd-close"
-         modifiers="accel"/>
-    <key id="toolbox-key-toggle"
-         key="&toggleToolbox.key;"
-         command="toolbox-cmd-close"
-         modifiers="accel,shift"
-         disabled="true"/>
-    <key id="toolbox-key-toggle-osx"
-         key="&toggleToolbox.key;"
-         command="toolbox-cmd-close"
-         modifiers="accel,alt"
-         disabled="true"/>
-    <key id="toolbox-key-toggle-F12"
-         keycode="&toggleToolboxF12.keycode;"
-         keytext="&toggleToolboxF12.keytext;"
-         command="toolbox-cmd-close"/>
-  </keyset>
-
   <tooltip id="aHTMLTooltip" page="true"/>
   <iframe id="toolbox-iframe" flex="1" forceOwnRefreshDriver="" tooltip="aHTMLTooltip"></iframe>
 </window>
