@@ -1021,6 +1021,8 @@ class VideoFrameEmitter {
     }
     this._helper = new CaptureStreamTestHelper2D(width, height);
     this._canvas = this._helper.createAndAppendElement('canvas', 'source_canvas');
+    this._canvas.width = width;
+    this._canvas.height = height;
     this._color1 = color1 ? color1 : this._helper.green;
     this._color2 = color2 ? color2 : this._helper.red;
     // Make sure this is initted
@@ -1045,6 +1047,11 @@ class VideoFrameEmitter {
     } catch (e) {
       // ignore; stream might have shut down
     }
+  }
+
+  size(width, height) {
+    this._canvas.width = width;
+    this._canvas.height = height;
   }
 
   start() {

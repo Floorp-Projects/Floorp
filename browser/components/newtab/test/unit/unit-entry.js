@@ -39,7 +39,7 @@ const TEST_GLOBAL = {
   AddonManager: {
     getActiveAddons() {
       return Promise.resolve({addons: [], fullData: false});
-    }
+    },
   },
   AppConstants: {MOZILLA_OFFICIAL: true},
   ChromeUtils: {
@@ -50,7 +50,7 @@ const TEST_GLOBAL = {
         return {RemoteSettings: TEST_GLOBAL.RemoteSettings};
       }
       return {};
-    }
+    },
   },
   Components: {isSuccessCode: () => true},
   // eslint-disable-next-line object-shorthand
@@ -63,7 +63,7 @@ const TEST_GLOBAL = {
       },
       removeObserver() {},
       SOURCES: {},
-      TYPE_BOOKMARK: {}
+      TYPE_BOOKMARK: {},
     },
     "@mozilla.org/browser/nav-history-service;1": {
       addObserver() {},
@@ -75,17 +75,17 @@ const TEST_GLOBAL = {
       },
       insert() {},
       markPageAsTyped() {},
-      removeObserver() {}
-    }
+      removeObserver() {},
+    },
   },
   Ci: {
     nsIHttpChannel: {REFERRER_POLICY_UNSAFE_URL: 5},
-    nsITimer: {TYPE_ONE_SHOT: 1}
+    nsITimer: {TYPE_ONE_SHOT: 1},
   },
   Cu: {
     importGlobalProperties() {},
     now: () => window.performance.now(),
-    reportError() {}
+    reportError() {},
   },
   dump() {},
   fetch() {},
@@ -98,7 +98,7 @@ const TEST_GLOBAL = {
     },
     get history() {
       return TEST_GLOBAL.Cc["@mozilla.org/browser/nav-history-service;1"];
-    }
+    },
   },
   PluralForm: {get() {}},
   Preferences: FakePrefs,
@@ -108,21 +108,21 @@ const TEST_GLOBAL = {
     locale: {
       getAppLocaleAsLangTag() { return "en-US"; },
       getAppLocalesAsLangTags() {},
-      negotiateLanguages() {}
+      negotiateLanguages() {},
     },
     urlFormatter: {formatURL: str => str, formatURLPref: str => str},
     mm: {
       addMessageListener: (msg, cb) => cb(),
-      removeMessageListener() {}
+      removeMessageListener() {},
     },
     appShell: {hiddenDOMWindow: {performance: new FakePerformance()}},
     obs: {
       addObserver() {},
-      removeObserver() {}
+      removeObserver() {},
     },
     telemetry: {
       setEventRecordingEnabled: () => {},
-      recordEvent: eventDetails => {}
+      recordEvent: eventDetails => {},
     },
     console: {logStringMessage: () => {}},
     prefs: {
@@ -145,17 +145,17 @@ const TEST_GLOBAL = {
           setBoolPref() {},
           setIntPref() {},
           setStringPref() {},
-          clearUserPref() {}
+          clearUserPref() {},
         };
-      }
+      },
     },
     tm: {
       dispatchToMainThread: cb => cb(),
-      idleDispatchToMainThread: cb => cb()
+      idleDispatchToMainThread: cb => cb(),
     },
     eTLD: {
       getBaseDomain({spec}) { return spec.match(/\/([^/]+)/)[1]; },
-      getPublicSuffix() {}
+      getPublicSuffix() {},
     },
     io: {
       newURI: spec => ({
@@ -163,26 +163,26 @@ const TEST_GLOBAL = {
           setRef: ref => ({
             finalize: () => ({
               ref,
-              spec
-            })
-          })
+              spec,
+            }),
+          }),
         }),
-        spec
-      })
+        spec,
+      }),
     },
     search: {
       init(cb) { cb(); },
       getVisibleEngines: () => [{identifier: "google"}, {identifier: "bing"}],
       defaultEngine: {identifier: "google"},
-      currentEngine: {identifier: "google", searchForm: "https://www.google.com/search?q=&ie=utf-8&oe=utf-8&client=firefox-b"}
+      currentEngine: {identifier: "google", searchForm: "https://www.google.com/search?q=&ie=utf-8&oe=utf-8&client=firefox-b"},
     },
     scriptSecurityManager: {
       createNullPrincipal() {},
-      getSystemPrincipal() {}
+      getSystemPrincipal() {},
     },
     wm: {getMostRecentWindow: () => window, getEnumerator: () => []},
     ww: {registerNotification() {}, unregisterNotification() {}},
-    appinfo: {appBuildID: "20180710100040"}
+    appinfo: {appBuildID: "20180710100040"},
   },
   XPCOMUtils: {
     defineLazyGetter(object, name, f) {
@@ -196,12 +196,12 @@ const TEST_GLOBAL = {
     defineLazyModuleGetter() {},
     defineLazyModuleGetters() {},
     defineLazyServiceGetter() {},
-    generateQI() { return {}; }
+    generateQI() { return {}; },
   },
   EventEmitter,
   ShellService: {isDefaultBrowser: () => true},
-  FilterExpressions: {eval() { return Promise.resolve(true); }},
-  RemoteSettings() { return {get() { return Promise.resolve([]); }}; }
+  FilterExpressions: {eval() { return Promise.resolve(false); }},
+  RemoteSettings() { return {get() { return Promise.resolve([]); }}; },
 };
 overrider.set(TEST_GLOBAL);
 

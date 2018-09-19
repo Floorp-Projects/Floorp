@@ -89,9 +89,9 @@ SVGFEBlendElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                            nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   uint32_t mode = mEnumAttributes[MODE].GetAnimValue();
-  FilterPrimitiveDescription descr(PrimitiveType::Blend);
-  descr.Attributes().Set(eBlendBlendmode, mode);
-  return descr;
+  BlendAttributes attributes;
+  attributes.mBlendMode = mode;
+  return FilterPrimitiveDescription(AsVariant(std::move(attributes)));
 }
 
 bool

@@ -55,7 +55,7 @@ protected:
   virtual ~nsSVGFE() {}
 
 public:
-  typedef mozilla::gfx::AttributeMap AttributeMap;
+  typedef mozilla::gfx::PrimitiveAttributes PrimitiveAttributes;
 
   ColorSpace
   GetInputColorSpace(int32_t aInputIndex, ColorSpace aUnchangedInputColorSpace) {
@@ -198,11 +198,11 @@ protected:
   virtual NumberPairAttributesInfo GetNumberPairInfo() override;
   virtual StringAttributesInfo GetStringInfo() override;
 
-  AttributeMap ComputeLightAttributes(nsSVGFilterInstance* aInstance);
+  mozilla::gfx::LightType ComputeLightAttributes(nsSVGFilterInstance* aInstance,
+                                                 nsTArray<float>& aFloatAttributes);
 
-  FilterPrimitiveDescription
-    AddLightingAttributes(const FilterPrimitiveDescription& aDescription,
-                          nsSVGFilterInstance* aInstance);
+  bool AddLightingAttributes(mozilla::gfx::DiffuseLightingAttributes* aAttributes,
+                             nsSVGFilterInstance* aInstance);
 
   enum { SURFACE_SCALE, DIFFUSE_CONSTANT, SPECULAR_CONSTANT, SPECULAR_EXPONENT };
   nsSVGNumber2 mNumberAttributes[4];
@@ -229,10 +229,10 @@ protected:
     : SVGFELightElementBase(aNodeInfo) {}
 
 public:
-  typedef gfx::AttributeMap AttributeMap;
+  typedef gfx::PrimitiveAttributes PrimitiveAttributes;
 
-  virtual AttributeMap
-    ComputeLightAttributes(nsSVGFilterInstance* aInstance) = 0;
+  virtual mozilla::gfx::LightType ComputeLightAttributes(nsSVGFilterInstance* aInstance,
+                                                         nsTArray<float>& aFloatAttributes) = 0;
 };
 
 } // namespace dom

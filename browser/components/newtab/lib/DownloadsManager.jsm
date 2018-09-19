@@ -53,7 +53,7 @@ this.DownloadsManager = class DownloadsManager {
       title: element.displayName,
       description,
       referrer: downloadedItem.source.referrer,
-      date_added: downloadedItem.endTime
+      date_added: downloadedItem.endTime,
     };
   }
 

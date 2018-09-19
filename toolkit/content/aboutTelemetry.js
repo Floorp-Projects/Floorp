@@ -2074,10 +2074,11 @@ function onLoad() {
 
   adjustHeaderState();
 
+  urlStateRestore();
+
   // Update ping data when async Telemetry init is finished.
   Telemetry.asyncFetchTelemetryData(async () => {
     await PingPicker.update();
-    urlStateRestore();
   });
 }
 

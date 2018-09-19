@@ -67,7 +67,7 @@ async function setup({shippingRequired, payerRequired}) {
       currency: "USD",
       value: 20,
     },
-    selected: false,
+    selected: true,
   }] : null;
   state.request.paymentOptions.requestShipping = shippingRequired;
   state.request.paymentOptions.requestPayerName = payerRequired;
@@ -98,7 +98,7 @@ async function setup({shippingRequired, payerRequired}) {
       "address-level2": "Mountain View",
       "country": "US",
       "guid": "abcdef1234",
-      "name": "Mrs. Fields",
+      "name": "Jane Fields",
     },
   } : {};
   state.savedBasicCards = {
@@ -123,8 +123,13 @@ async function setup({shippingRequired, payerRequired}) {
 function selectFirstItemOfPicker(picker) {
   picker.dropdown.popupBox.focus();
   let options = picker.dropdown.popupBox.children;
+  if (options[0].selected) {
+    ok(false, `"${options[0].textContent}" was already selected`);
+    return;
+  }
   info(`Selecting "${options[0].textContent}" from the options`);
-  synthesizeKey(options[0].textContent, {});
+
+  synthesizeKey(options[0].textContent.trim().split(/\s+/)[0], {});
   ok(picker.dropdown.selectedOption, `Option should be selected for ${picker.localName}`);
 }
 
@@ -132,7 +137,12 @@ function selectLastItemOfPicker(picker) {
   picker.dropdown.popupBox.focus();
   let options = picker.dropdown.popupBox.children;
   let lastOption = options[options.length - 1];
-  synthesizeKey(lastOption.textContent, {});
+  if (lastOption.selected) {
+    ok(false, `"${lastOption.textContent}" was already selected`);
+    return;
+  }
+
+  synthesizeKey(lastOption.textContent.trim().split(/\s+/)[0], {});
   ok(picker.dropdown.selectedOption, `Option should be selected for ${picker.localName}`);
 }
 
@@ -187,14 +197,19 @@ add_task(async function runTests() {
     // Individually toggle each picker to see how the missing fields affects Pay button.
     for (let picker of testCase.pickers) {
       // There is no "invalid" option for shipping options.
-      if (picker != allPickers.shippingOption) {
-        stateChangedPromise = promiseStateChange(el1.requestStore);
-        selectLastItemOfPicker(picker);
-        await stateChangedPromise;
-
-        ok(payButton.disabled, "Button is disabled when selected option has missing fields");
+      if (picker == allPickers.shippingOption) {
+        continue;
       }
+      info(`picker: ${picker.localName} with className: ${picker.className}`);
 
+      // Setup the invalid state
+      stateChangedPromise = promiseStateChange(el1.requestStore);
+      selectLastItemOfPicker(picker);
+      await stateChangedPromise;
+
+      ok(payButton.disabled, "Button is disabled when selected option has missing fields");
+
+      // Now setup the valid state
       stateChangedPromise = promiseStateChange(el1.requestStore);
       selectFirstItemOfPicker(picker);
       await stateChangedPromise;

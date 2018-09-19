@@ -1,0 +1,20 @@
+# vim:set ts=8 sw=8 sts=8 noet:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# For changes here, also consider ../Makefile.in
+
+include $(topsrcdir)/config/rules.mk
+
+tools::
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+	# Copy for xpcshell tests
+	$(NSINSTALL) -D $(FINAL_TARGET)/updater-dep.app
+	rsync -a -C --exclude '*.in' $(srcdir)/../macbuild/Contents $(FINAL_TARGET)/updater-dep.app
+	sed -e 's/%APP_NAME%/$(MOZ_APP_DISPLAYNAME)/' $(srcdir)/../macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
+	  iconv -f UTF-8 -t UTF-16 > $(FINAL_TARGET)/updater-dep.app/Contents/Resources/English.lproj/InfoPlist.strings
+	$(NSINSTALL) -D $(FINAL_TARGET)/updater-dep.app/Contents/MacOS
+	$(NSINSTALL) $(FINAL_TARGET)/updater-dep $(FINAL_TARGET)/updater-dep.app/Contents/MacOS
+	mv $(FINAL_TARGET)/updater-dep.app/Contents/MacOS/updater-dep $(FINAL_TARGET)/updater-dep.app/Contents/MacOS/org.mozilla.updater
+endif

@@ -306,20 +306,20 @@ nsFilterInstance::BuildPrimitives(const nsTArray<nsStyleFilter>& aFilterChain,
                                   nsIFrame* aTargetFrame,
                                   bool aFilterInputIsTainted)
 {
-  NS_ASSERTION(!mPrimitiveDescriptions.Length(),
-               "expected to start building primitives from scratch");
+  nsTArray<FilterPrimitiveDescription> primitiveDescriptions;
 
   for (uint32_t i = 0; i < aFilterChain.Length(); i++) {
     bool inputIsTainted =
-      mPrimitiveDescriptions.IsEmpty() ? aFilterInputIsTainted :
-        mPrimitiveDescriptions.LastElement().IsTainted();
-    nsresult rv = BuildPrimitivesForFilter(aFilterChain[i], aTargetFrame, inputIsTainted);
+      primitiveDescriptions.IsEmpty() ? aFilterInputIsTainted :
+        primitiveDescriptions.LastElement().IsTainted();
+    nsresult rv = BuildPrimitivesForFilter(aFilterChain[i], aTargetFrame, inputIsTainted,
+                                           primitiveDescriptions);
     if (NS_FAILED(rv)) {
       return rv;
     }
   }
 
-  mFilterDescription = FilterDescription(mPrimitiveDescriptions);
+  mFilterDescription = FilterDescription(std::move(primitiveDescriptions));
 
   return NS_OK;
 }
@@ -327,7 +327,8 @@ nsFilterInstance::BuildPrimitives(const nsTArray<nsStyleFilter>& aFilterChain,
 nsresult
 nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter,
                                            nsIFrame* aTargetFrame,
-                                           bool aInputIsTainted)
+                                           bool aInputIsTainted,
+                                           nsTArray<FilterPrimitiveDescription>& aPrimitiveDescriptions)
 {
   NS_ASSERTION(mUserSpaceToFilterSpaceScale.width > 0.0f &&
                mFilterSpaceToUserSpaceScale.height > 0.0f,
@@ -343,7 +344,7 @@ nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter,
       return NS_ERROR_FAILURE;
     }
 
-    return svgFilterInstance.BuildPrimitives(mPrimitiveDescriptions, mInputImages,
+    return svgFilterInstance.BuildPrimitives(aPrimitiveDescriptions, mInputImages,
                                              aInputIsTainted);
   }
 
@@ -357,7 +358,7 @@ nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter,
   nsCSSFilterInstance cssFilterInstance(aFilter, shadowFallbackColor,
                                         mTargetBounds,
                                         mFrameSpaceInCSSPxToFilterSpaceTransform);
-  return cssFilterInstance.BuildPrimitives(mPrimitiveDescriptions, aInputIsTainted);
+  return cssFilterInstance.BuildPrimitives(aPrimitiveDescriptions, aInputIsTainted);
 }
 
 static void
@@ -376,8 +377,9 @@ UpdateNeededBounds(const nsIntRegion& aRegion, nsIntRect& aBounds)
 void
 nsFilterInstance::ComputeNeededBoxes()
 {
-  if (mPrimitiveDescriptions.IsEmpty())
+  if (mFilterDescription.mPrimitives.IsEmpty()) {
     return;
+  }
 
   nsIntRegion sourceGraphicNeededRegion;
   nsIntRegion fillPaintNeededRegion;
@@ -498,7 +500,7 @@ nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams, float a
 {
   MOZ_ASSERT(mTargetFrame, "Need a frame for rendering");
 
-  if (mPrimitiveDescriptions.IsEmpty()) {
+  if (mFilterDescription.mPrimitives.IsEmpty()) {
     // An filter without any primitive. Treat it as success and paint nothing.
     return;
   }
@@ -528,7 +530,7 @@ nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams, float a
 nsRegion
 nsFilterInstance::ComputePostFilterDirtyRegion()
 {
-  if (mPreFilterDirtyRegion.IsEmpty() || mPrimitiveDescriptions.IsEmpty()) {
+  if (mPreFilterDirtyRegion.IsEmpty() || mFilterDescription.mPrimitives.IsEmpty()) {
     return nsRegion();
   }
 
@@ -541,7 +543,7 @@ nsFilterInstance::ComputePostFilterDirtyRegion()
 nsRect
 nsFilterInstance::ComputePostFilterExtents()
 {
-  if (mPrimitiveDescriptions.IsEmpty()) {
+  if (mFilterDescription.mPrimitives.IsEmpty()) {
     return nsRect();
   }
 
@@ -560,11 +562,11 @@ nsFilterInstance::ComputeSourceNeededRect()
 nsIntRect
 nsFilterInstance::OutputFilterSpaceBounds() const
 {
-  uint32_t numPrimitives = mPrimitiveDescriptions.Length();
+  uint32_t numPrimitives = mFilterDescription.mPrimitives.Length();
   if (numPrimitives <= 0)
     return nsIntRect();
 
-  return mPrimitiveDescriptions[numPrimitives - 1].PrimitiveSubregion();
+  return mFilterDescription.mPrimitives[numPrimitives - 1].PrimitiveSubregion();
 }
 
 nsIntRect

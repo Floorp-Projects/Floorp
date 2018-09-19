@@ -6,7 +6,6 @@ config = {
         'build',
         'check-test',
         'valgrind-test',
-        #'update',
     ],
     'stage_platform': 'linux64-valgrind',
     #### 64 bit build specific #####

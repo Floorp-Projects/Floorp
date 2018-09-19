@@ -26,7 +26,6 @@ sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 from mozharness.base.errors import HgErrorList
 from mozharness.base.python import VirtualenvMixin, virtualenv_config_options
 from mozharness.base.vcs.vcsbase import MercurialScript
-from mozharness.mozilla.updates.balrog import BalrogMixin
 from mozharness.mozilla.automation import AutomationMixin
 from mozharness.mozilla.repo_manipulation import MercurialRepoManipulationMixin
 
@@ -37,7 +36,7 @@ VALID_MIGRATION_BEHAVIORS = (
 
 
 # GeckoMigration {{{1
-class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
+class GeckoMigration(MercurialScript, VirtualenvMixin,
                      AutomationMixin, MercurialRepoManipulationMixin):
     config_options = [
         [['--hg-user', ], {
@@ -53,24 +52,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             "type": "string",
             "default": None,
             "help": "The user to push to hg.mozilla.org as.",
-        }],
-        [['--balrog-api-root', ], {
-            "action": "store",
-            "dest": "balrog_api_root",
-            "type": "string",
-            "help": "Specify Balrog API root URL.",
-        }],
-        [['--balrog-username', ], {
-            "action": "store",
-            "dest": "balrog_username",
-            "type": "string",
-            "help": "Specify what user to connect to Balrog with.",
-        }],
-        [['--balrog-credentials-file', ], {
-            "action": "store",
-            "dest": "balrog_credentials_file",
-            "type": "string",
-            "help": "The file containing the Balrog credentials.",
         }],
         [['--remove-locale', ], {
             "action": "extend",
@@ -89,7 +70,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
                 'create-virtualenv',
                 'clean-repos',
                 'pull',
-                'lock-update-paths',
                 'set_push_to_ssh',
                 'migrate',
                 'bump_second_digit',
@@ -473,9 +453,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             "vcs": "hg",
         }] + self.query_repos()
         super(GeckoMigration, self).pull(repos=repos)
-
-    def lock_update_paths(self):
-        self.lock_balrog_rules(self.config["balrog_rules_to_lock"])
 
     def migrate(self):
         """ Perform the migration.

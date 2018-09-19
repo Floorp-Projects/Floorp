@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {getDomain} = ChromeUtils.import("resource://activity-stream/lib/TippyTopProvider.jsm", {});
 const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
@@ -80,7 +78,7 @@ async function fetchVisitPaths(url) {
 
   const visits = await NewTabUtils.activityStreamProvider.executePlacesQuery(query, {
     columns: ["visit_id", "url"],
-    params: {url}
+    params: {url},
   });
   return visits;
 }

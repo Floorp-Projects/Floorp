@@ -17,18 +17,18 @@ module.exports = Object.assign({}, webpackConfig, {
   output: {
     path: path.join(__dirname, "bin"),
     filename: "prerender.js",
-    libraryTarget: "commonjs2"
+    libraryTarget: "commonjs2",
   },
   externals: {
     "prop-types": "commonjs prop-types",
     "react": "commonjs react",
-    "react-dom": "commonjs react-dom"
+    "react-dom": "commonjs react-dom",
   },
   plugins: [
     new webpack.BannerPlugin(banner),
     // fluent-react is expecting a browser environment and `document` is not
     // available in our prerendering step.
     // https://github.com/projectfluent/fluent.js/blob/2f10bdef682b6e9dad482d96ebaaeec9f7631bb9/fluent-react/src/markup.js#L3
-    new webpack.DefinePlugin({document: {createElement: () => {}}})
-  ]
+    new webpack.DefinePlugin({document: {createElement: () => {}}}),
+  ],
 });
