@@ -31,8 +31,8 @@ int av1_get_pred_context_switchable_interp(const MACROBLOCKD *xd, int dir) {
   const MB_MODE_INFO *const mbmi = xd->mi[0];
   const int ctx_offset =
       (mbmi->ref_frame[1] > INTRA_FRAME) * INTER_FILTER_COMP_OFFSET;
-  MV_REFERENCE_FRAME ref_frame =
-      (dir < 2) ? mbmi->ref_frame[0] : mbmi->ref_frame[1];
+  assert(dir == 0 || dir == 1);
+  const MV_REFERENCE_FRAME ref_frame = mbmi->ref_frame[0];
   // Note:
   // The mode info data structure has a one element border above and to the
   // left of the entries corresponding to real macroblocks.

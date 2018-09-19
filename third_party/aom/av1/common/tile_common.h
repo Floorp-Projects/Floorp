@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_TILE_COMMON_H_
-#define AV1_COMMON_TILE_COMMON_H_
+#ifndef AOM_AV1_COMMON_TILE_COMMON_H_
+#define AOM_AV1_COMMON_TILE_COMMON_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,6 +44,9 @@ void av1_get_tile_n_bits(int mi_cols, int *min_log2_tile_cols,
 // tiles horizontally or vertically in the frame.
 int get_tile_size(int mi_frame_size, int log2_tile_num, int *ntiles);
 
+int av1_get_sb_rows_in_tile(struct AV1Common *cm, TileInfo tile);
+int av1_get_sb_cols_in_tile(struct AV1Common *cm, TileInfo tile);
+
 typedef struct {
   int left, top, right, bottom;
 } AV1PixelRect;
@@ -66,4 +69,4 @@ void av1_calculate_tile_rows(struct AV1Common *const cm);
 }  // extern "C"
 #endif
 
-#endif  // AV1_COMMON_TILE_COMMON_H_
+#endif  // AOM_AV1_COMMON_TILE_COMMON_H_

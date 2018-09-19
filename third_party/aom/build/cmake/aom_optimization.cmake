@@ -193,13 +193,13 @@ function(test_nasm)
 endfunction()
 
 # Adds build command for generation of rtcd C source files using
-# build/make/rtcd.pl. $config is the input perl file, $output is the output C
+# build/cmake/rtcd.pl. $config is the input perl file, $output is the output C
 # include file, $source is the C source file, and $symbol is used for the symbol
 # argument passed to rtcd.pl.
 function(add_rtcd_build_step config output source symbol)
   add_custom_command(OUTPUT ${output}
                      COMMAND ${PERL_EXECUTABLE} ARGS
-                             "${AOM_ROOT}/build/make/rtcd.pl"
+                             "${AOM_ROOT}/build/cmake/rtcd.pl"
                              --arch=${AOM_TARGET_CPU}
                              --sym=${symbol} ${AOM_RTCD_FLAGS}
                              --config=${AOM_CONFIG_DIR}/config/aom_config.h

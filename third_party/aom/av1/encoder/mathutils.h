@@ -9,6 +9,9 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
+#ifndef AOM_AV1_ENCODER_MATHUTILS_H_
+#define AOM_AV1_ENCODER_MATHUTILS_H_
+
 #include <memory.h>
 #include <math.h>
 #include <stdio.h>
@@ -23,7 +26,7 @@ static INLINE int linsolve(int n, double *A, int stride, double *b, double *x) {
   double c;
   // Forward elimination
   for (k = 0; k < n - 1; k++) {
-    // Bring the largest magitude to the diagonal position
+    // Bring the largest magnitude to the diagonal position
     for (i = n - 1; i > k; i--) {
       if (fabs(A[(i - 1) * stride + k]) < fabs(A[i * stride + k])) {
         for (j = 0; j < n; j++) {
@@ -352,3 +355,5 @@ static INLINE int SVD(double *U, double *W, double *V, double *matx, int M,
 
   return 0;
 }
+
+#endif  // AOM_AV1_ENCODER_MATHUTILS_H_

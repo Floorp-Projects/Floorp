@@ -13,13 +13,27 @@
 
 #include "config/aom_dsp_rtcd.h"
 
-#include "aom_dsp/aom_convolve.h"
 #include "aom_dsp/x86/convolve_avx2.h"
 #include "aom_dsp/x86/convolve_common_intrin.h"
 #include "aom_dsp/x86/convolve_sse4_1.h"
 #include "aom_dsp/aom_dsp_common.h"
 #include "aom_dsp/aom_filter.h"
 #include "av1/common/convolve.h"
+
+static INLINE __m256i unpack_weights_avx2(ConvolveParams *conv_params) {
+  const int w0 = conv_params->fwd_offset;
+  const int w1 = conv_params->bck_offset;
+  const __m256i wt0 = _mm256_set1_epi16(w0);
+  const __m256i wt1 = _mm256_set1_epi16(w1);
+  const __m256i wt = _mm256_unpacklo_epi16(wt0, wt1);
+  return wt;
+}
+
+static INLINE __m256i load_line2_avx2(const void *a, const void *b) {
+  return _mm256_permute2x128_si256(
+      _mm256_castsi128_si256(_mm_loadu_si128((__m128i *)a)),
+      _mm256_castsi128_si256(_mm_loadu_si128((__m128i *)b)), 0x20);
+}
 
 void av1_jnt_convolve_x_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
                              int dst_stride0, int w, int h,
@@ -34,11 +48,7 @@ void av1_jnt_convolve_x_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
   const int fo_horiz = filter_params_x->taps / 2 - 1;
   const uint8_t *const src_ptr = src - fo_horiz;
   const int bits = FILTER_BITS - conv_params->round_1;
-  const int w0 = conv_params->fwd_offset;
-  const int w1 = conv_params->bck_offset;
-  const __m256i wt0 = _mm256_set1_epi16(w0);
-  const __m256i wt1 = _mm256_set1_epi16(w1);
-  const __m256i wt = _mm256_unpacklo_epi16(wt0, wt1);
+  const __m256i wt = unpack_weights_avx2(conv_params);
   const int do_average = conv_params->do_average;
   const int use_jnt_comp_avg = conv_params->use_jnt_comp_avg;
   const int offset_0 =
@@ -68,13 +78,11 @@ void av1_jnt_convolve_x_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
   (void)subpel_y_q4;
 
   for (i = 0; i < h; i += 2) {
+    const uint8_t *src_data = src_ptr + i * src_stride;
+    CONV_BUF_TYPE *dst_data = dst + i * dst_stride;
     for (j = 0; j < w; j += 8) {
-      const __m256i data = _mm256_permute2x128_si256(
-          _mm256_castsi128_si256(
-              _mm_loadu_si128((__m128i *)(&src_ptr[i * src_stride + j]))),
-          _mm256_castsi128_si256(_mm_loadu_si128(
-              (__m128i *)(&src_ptr[i * src_stride + j + src_stride]))),
-          0x20);
+      const __m256i data =
+          load_line2_avx2(&src_data[j], &src_data[j + src_stride]);
 
       __m256i res = convolve_lowbd_x(data, coeffs, filt);
 
@@ -86,13 +94,8 @@ void av1_jnt_convolve_x_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
 
       // Accumulate values into the destination buffer
       if (do_average) {
-        const __m256i data_ref_0 = _mm256_permute2x128_si256(
-            _mm256_castsi128_si256(
-                _mm_loadu_si128((__m128i *)(&dst[i * dst_stride + j]))),
-            _mm256_castsi128_si256(_mm_loadu_si128(
-                (__m128i *)(&dst[i * dst_stride + j + dst_stride]))),
-            0x20);
-
+        const __m256i data_ref_0 =
+            load_line2_avx2(&dst_data[j], &dst_data[j + dst_stride]);
         const __m256i comp_avg_res =
             comp_avg(&data_ref_0, &res_unsigned, &wt, use_jnt_comp_avg);
 
@@ -141,11 +144,7 @@ void av1_jnt_convolve_y_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
   const __m256i round_const =
       _mm256_set1_epi32((1 << conv_params->round_1) >> 1);
   const __m128i round_shift = _mm_cvtsi32_si128(conv_params->round_1);
-  const int w0 = conv_params->fwd_offset;
-  const int w1 = conv_params->bck_offset;
-  const __m256i wt0 = _mm256_set1_epi16(w0);
-  const __m256i wt1 = _mm256_set1_epi16(w1);
-  const __m256i wt = _mm256_unpacklo_epi16(wt0, wt1);
+  const __m256i wt = unpack_weights_avx2(conv_params);
   const int do_average = conv_params->do_average;
   const int use_jnt_comp_avg = conv_params->use_jnt_comp_avg;
   const int offset_0 =
@@ -172,72 +171,35 @@ void av1_jnt_convolve_y_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
   for (j = 0; j < w; j += 16) {
     const uint8_t *data = &src_ptr[j];
     __m256i src6;
-
     // Load lines a and b. Line a to lower 128, line b to upper 128
-    const __m256i src_01a = _mm256_permute2x128_si256(
-        _mm256_castsi128_si256(
-            _mm_loadu_si128((__m128i *)(data + 0 * src_stride))),
-        _mm256_castsi128_si256(
-            _mm_loadu_si128((__m128i *)(data + 1 * src_stride))),
-        0x20);
-
-    const __m256i src_12a = _mm256_permute2x128_si256(
-        _mm256_castsi128_si256(
-            _mm_loadu_si128((__m128i *)(data + 1 * src_stride))),
-        _mm256_castsi128_si256(
-            _mm_loadu_si128((__m128i *)(data + 2 * src_stride))),
-        0x20);
-
-    const __m256i src_23a = _mm256_permute2x128_si256(
-        _mm256_castsi128_si256(
-            _mm_loadu_si128((__m128i *)(data + 2 * src_stride))),
-        _mm256_castsi128_si256(
-            _mm_loadu_si128((__m128i *)(data + 3 * src_stride))),
-        0x20);
-
-    const __m256i src_34a = _mm256_permute2x128_si256(
-        _mm256_castsi128_si256(
-            _mm_loadu_si128((__m128i *)(data + 3 * src_stride))),
-        _mm256_castsi128_si256(
-            _mm_loadu_si128((__m128i *)(data + 4 * src_stride))),
-        0x20);
-
-    const __m256i src_45a = _mm256_permute2x128_si256(
-        _mm256_castsi128_si256(
-            _mm_loadu_si128((__m128i *)(data + 4 * src_stride))),
-        _mm256_castsi128_si256(
-            _mm_loadu_si128((__m128i *)(data + 5 * src_stride))),
-        0x20);
-
-    src6 = _mm256_castsi128_si256(
-        _mm_loadu_si128((__m128i *)(data + 6 * src_stride)));
-    const __m256i src_56a = _mm256_permute2x128_si256(
-        _mm256_castsi128_si256(
-            _mm_loadu_si128((__m128i *)(data + 5 * src_stride))),
-        src6, 0x20);
-
-    s[0] = _mm256_unpacklo_epi8(src_01a, src_12a);
-    s[1] = _mm256_unpacklo_epi8(src_23a, src_34a);
-    s[2] = _mm256_unpacklo_epi8(src_45a, src_56a);
-
-    s[4] = _mm256_unpackhi_epi8(src_01a, src_12a);
-    s[5] = _mm256_unpackhi_epi8(src_23a, src_34a);
-    s[6] = _mm256_unpackhi_epi8(src_45a, src_56a);
+    {
+      __m256i src_ab[7];
+      __m256i src_a[7];
+      src_a[0] = _mm256_castsi128_si256(_mm_loadu_si128((__m128i *)data));
+      for (int kk = 0; kk < 6; ++kk) {
+        data += src_stride;
+        src_a[kk + 1] =
+            _mm256_castsi128_si256(_mm_loadu_si128((__m128i *)data));
+        src_ab[kk] = _mm256_permute2x128_si256(src_a[kk], src_a[kk + 1], 0x20);
+      }
+      src6 = src_a[6];
+      s[0] = _mm256_unpacklo_epi8(src_ab[0], src_ab[1]);
+      s[1] = _mm256_unpacklo_epi8(src_ab[2], src_ab[3]);
+      s[2] = _mm256_unpacklo_epi8(src_ab[4], src_ab[5]);
+      s[4] = _mm256_unpackhi_epi8(src_ab[0], src_ab[1]);
+      s[5] = _mm256_unpackhi_epi8(src_ab[2], src_ab[3]);
+      s[6] = _mm256_unpackhi_epi8(src_ab[4], src_ab[5]);
+    }
 
     for (i = 0; i < h; i += 2) {
-      data = &src_ptr[i * src_stride + j];
-      const __m256i src_67a = _mm256_permute2x128_si256(
-          src6,
-          _mm256_castsi128_si256(
-              _mm_loadu_si128((__m128i *)(data + 7 * src_stride))),
-          0x20);
+      data = &src_ptr[(i + 7) * src_stride + j];
+      const __m256i src7 =
+          _mm256_castsi128_si256(_mm_loadu_si128((__m128i *)data));
+      const __m256i src_67a = _mm256_permute2x128_si256(src6, src7, 0x20);
 
       src6 = _mm256_castsi128_si256(
-          _mm_loadu_si128((__m128i *)(data + 8 * src_stride)));
-      const __m256i src_78a = _mm256_permute2x128_si256(
-          _mm256_castsi128_si256(
-              _mm_loadu_si128((__m128i *)(data + 7 * src_stride))),
-          src6, 0x20);
+          _mm_loadu_si128((__m128i *)(data + src_stride)));
+      const __m256i src_78a = _mm256_permute2x128_si256(src7, src6, 0x20);
 
       s[3] = _mm256_unpacklo_epi8(src_67a, src_78a);
       s[7] = _mm256_unpackhi_epi8(src_67a, src_78a);
@@ -266,13 +228,8 @@ void av1_jnt_convolve_y_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
 
       if (w - j < 16) {
         if (do_average) {
-          const __m256i data_ref_0 = _mm256_permute2x128_si256(
-              _mm256_castsi128_si256(
-                  _mm_loadu_si128((__m128i *)(&dst[i * dst_stride + j]))),
-              _mm256_castsi128_si256(_mm_loadu_si128(
-                  (__m128i *)(&dst[i * dst_stride + j + dst_stride]))),
-              0x20);
-
+          const __m256i data_ref_0 = load_line2_avx2(
+              &dst[i * dst_stride + j], &dst[i * dst_stride + j + dst_stride]);
           const __m256i comp_avg_res =
               comp_avg(&data_ref_0, &res_lo_unsigned, &wt, use_jnt_comp_avg);
 
@@ -325,19 +282,12 @@ void av1_jnt_convolve_y_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
             _mm256_add_epi16(res_hi_round, offset_const_2);
 
         if (do_average) {
-          const __m256i data_ref_0_lo = _mm256_permute2x128_si256(
-              _mm256_castsi128_si256(
-                  _mm_loadu_si128((__m128i *)(&dst[i * dst_stride + j]))),
-              _mm256_castsi128_si256(_mm_loadu_si128(
-                  (__m128i *)(&dst[i * dst_stride + j + dst_stride]))),
-              0x20);
+          const __m256i data_ref_0_lo = load_line2_avx2(
+              &dst[i * dst_stride + j], &dst[i * dst_stride + j + dst_stride]);
 
-          const __m256i data_ref_0_hi = _mm256_permute2x128_si256(
-              _mm256_castsi128_si256(
-                  _mm_loadu_si128((__m128i *)(&dst[i * dst_stride + j + 8]))),
-              _mm256_castsi128_si256(_mm_loadu_si128(
-                  (__m128i *)(&dst[i * dst_stride + j + 8 + dst_stride]))),
-              0x20);
+          const __m256i data_ref_0_hi =
+              load_line2_avx2(&dst[i * dst_stride + j + 8],
+                              &dst[i * dst_stride + j + 8 + dst_stride]);
 
           const __m256i comp_avg_res_lo =
               comp_avg(&data_ref_0_lo, &res_lo_unsigned, &wt, use_jnt_comp_avg);
@@ -404,11 +354,7 @@ void av1_jnt_convolve_2d_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
   const int fo_vert = filter_params_y->taps / 2 - 1;
   const int fo_horiz = filter_params_x->taps / 2 - 1;
   const uint8_t *const src_ptr = src - fo_vert * src_stride - fo_horiz;
-  const int w0 = conv_params->fwd_offset;
-  const int w1 = conv_params->bck_offset;
-  const __m256i wt0 = _mm256_set1_epi16(w0);
-  const __m256i wt1 = _mm256_set1_epi16(w1);
-  const __m256i wt = _mm256_unpacklo_epi16(wt0, wt1);
+  const __m256i wt = unpack_weights_avx2(conv_params);
   const int do_average = conv_params->do_average;
   const int use_jnt_comp_avg = conv_params->use_jnt_comp_avg;
   const int offset_0 =
@@ -442,15 +388,14 @@ void av1_jnt_convolve_2d_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
   for (j = 0; j < w; j += 8) {
     /* Horizontal filter */
     {
+      const uint8_t *src_h = src_ptr + j;
       for (i = 0; i < im_h; i += 2) {
-        __m256i data = _mm256_castsi128_si256(
-            _mm_loadu_si128((__m128i *)&src_ptr[(i * src_stride) + j]));
+        __m256i data =
+            _mm256_castsi128_si256(_mm_loadu_si128((__m128i *)src_h));
         if (i + 1 < im_h)
           data = _mm256_inserti128_si256(
-              data,
-              _mm_loadu_si128(
-                  (__m128i *)&src_ptr[(i * src_stride) + j + src_stride]),
-              1);
+              data, _mm_loadu_si128((__m128i *)(src_h + src_stride)), 1);
+        src_h += (src_stride << 1);
         __m256i res = convolve_lowbd_x(data, coeffs_x, filt);
 
         res = _mm256_sra_epi16(_mm256_add_epi16(res, round_const_h),
@@ -500,13 +445,9 @@ void av1_jnt_convolve_2d_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
           const __m256i res_unsigned = _mm256_add_epi16(res_16b, offset_const);
 
           if (do_average) {
-            const __m256i data_ref_0 = _mm256_permute2x128_si256(
-                _mm256_castsi128_si256(
-                    _mm_loadu_si128((__m128i *)(&dst[i * dst_stride + j]))),
-                _mm256_castsi128_si256(_mm_loadu_si128(
-                    (__m128i *)(&dst[i * dst_stride + j + dst_stride]))),
-                0x20);
-
+            const __m256i data_ref_0 =
+                load_line2_avx2(&dst[i * dst_stride + j],
+                                &dst[i * dst_stride + j + dst_stride]);
             const __m256i comp_avg_res =
                 comp_avg(&data_ref_0, &res_unsigned, &wt, use_jnt_comp_avg);
 
@@ -534,12 +475,9 @@ void av1_jnt_convolve_2d_avx2(const uint8_t *src, int src_stride, uint8_t *dst0,
           const __m256i res_unsigned = _mm256_add_epi16(res_16b, offset_const);
 
           if (do_average) {
-            const __m256i data_ref_0 = _mm256_permute2x128_si256(
-                _mm256_castsi128_si256(
-                    _mm_loadu_si128((__m128i *)(&dst[i * dst_stride + j]))),
-                _mm256_castsi128_si256(_mm_loadu_si128(
-                    (__m128i *)(&dst[i * dst_stride + j + dst_stride]))),
-                0x20);
+            const __m256i data_ref_0 =
+                load_line2_avx2(&dst[i * dst_stride + j],
+                                &dst[i * dst_stride + j + dst_stride]);
 
             const __m256i comp_avg_res =
                 comp_avg(&data_ref_0, &res_unsigned, &wt, use_jnt_comp_avg);
@@ -598,11 +536,7 @@ void av1_jnt_convolve_2d_copy_avx2(const uint8_t *src, int src_stride,
   const __m128i left_shift = _mm_cvtsi32_si128(bits);
   const int do_average = conv_params->do_average;
   const int use_jnt_comp_avg = conv_params->use_jnt_comp_avg;
-  const int w0 = conv_params->fwd_offset;
-  const int w1 = conv_params->bck_offset;
-  const __m256i wt0 = _mm256_set1_epi16(w0);
-  const __m256i wt1 = _mm256_set1_epi16(w1);
-  const __m256i wt = _mm256_unpacklo_epi16(wt0, wt1);
+  const __m256i wt = unpack_weights_avx2(conv_params);
   const __m256i zero = _mm256_setzero_si256();
 
   const int offset_0 =
@@ -663,13 +597,8 @@ void av1_jnt_convolve_2d_copy_avx2(const uint8_t *src, int src_stride,
 
         // Accumulate values into the destination buffer
         if (do_average) {
-          const __m256i data_ref_0 = _mm256_permute2x128_si256(
-              _mm256_castsi128_si256(
-                  _mm_loadu_si128((__m128i *)(&dst[i * dst_stride + j]))),
-              _mm256_castsi128_si256(_mm_loadu_si128(
-                  (__m128i *)(&dst[i * dst_stride + j + dst_stride]))),
-              0x20);
-
+          const __m256i data_ref_0 = load_line2_avx2(
+              &dst[i * dst_stride + j], &dst[i * dst_stride + j + dst_stride]);
           const __m256i comp_avg_res =
               comp_avg(&data_ref_0, &res_unsigned, &wt, use_jnt_comp_avg);
 

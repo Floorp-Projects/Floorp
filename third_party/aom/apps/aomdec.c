@@ -40,6 +40,7 @@
 #include "common/webmdec.h"
 #endif
 
+#include "common/rawenc.h"
 #include "common/y4menc.h"
 
 #if CONFIG_LIBYUV
@@ -83,8 +84,6 @@ static const arg_def_t outputfile =
     ARG_DEF("o", "output", 1, "Output file name pattern (see below)");
 static const arg_def_t threadsarg =
     ARG_DEF("t", "threads", 1, "Max threads to use");
-static const arg_def_t rowmtarg =
-    ARG_DEF(NULL, "row-mt", 1, "Enable row based multi-threading");
 static const arg_def_t verbosearg =
     ARG_DEF("v", "verbose", 0, "Show version string");
 static const arg_def_t scalearg =
@@ -99,29 +98,23 @@ static const arg_def_t framestatsarg =
     ARG_DEF(NULL, "framestats", 1, "Output per-frame stats (.csv format)");
 static const arg_def_t outbitdeptharg =
     ARG_DEF(NULL, "output-bit-depth", 1, "Output bit-depth for decoded frames");
-static const arg_def_t tilem = ARG_DEF(NULL, "tile-mode", 1,
-                                       "Tile coding mode "
-                                       "(0 for normal tile coding mode)");
-static const arg_def_t tiler = ARG_DEF(NULL, "tile-row", 1,
-                                       "Row index of tile to decode "
-                                       "(-1 for all rows)");
-static const arg_def_t tilec = ARG_DEF(NULL, "tile-column", 1,
-                                       "Column index of tile to decode "
-                                       "(-1 for all columns)");
 static const arg_def_t isannexb =
     ARG_DEF(NULL, "annexb", 0, "Bitstream is in Annex-B format");
 static const arg_def_t oppointarg = ARG_DEF(
     NULL, "oppoint", 1, "Select an operating point of a scalable bitstream");
 static const arg_def_t outallarg = ARG_DEF(
     NULL, "all-layers", 0, "Output all decoded frames of a scalable bitstream");
+static const arg_def_t skipfilmgrain =
+    ARG_DEF(NULL, "skip-film-grain", 0, "Skip film grain application");
 
 static const arg_def_t *all_args[] = {
-  &help,        &codecarg,       &use_yv12,    &use_i420,   &flipuvarg,
-  &rawvideo,    &noblitarg,      &progressarg, &limitarg,   &skiparg,
-  &postprocarg, &summaryarg,     &outputfile,  &threadsarg, &rowmtarg,
-  &verbosearg,  &scalearg,       &fb_arg,      &md5arg,     &framestatsarg,
-  &continuearg, &outbitdeptharg, &tilem,       &tiler,      &tilec,
-  &isannexb,    &oppointarg,     &outallarg,   NULL
+  &help,           &codecarg,   &use_yv12,      &use_i420,
+  &flipuvarg,      &rawvideo,   &noblitarg,     &progressarg,
+  &limitarg,       &skiparg,    &postprocarg,   &summaryarg,
+  &outputfile,     &threadsarg, &verbosearg,    &scalearg,
+  &fb_arg,         &md5arg,     &framestatsarg, &continuearg,
+  &outbitdeptharg, &isannexb,   &oppointarg,    &outallarg,
+  &skipfilmgrain,  NULL
 };
 
 #if CONFIG_LIBYUV
@@ -251,44 +244,6 @@ static int read_frame(struct AvxDecInputContext *input, uint8_t **buf,
       return obudec_read_temporal_unit(input->obu_ctx, buf, bytes_in_buffer,
                                        buffer_size);
     default: return 1;
-  }
-}
-
-static void update_image_md5(const aom_image_t *img, const int planes[3],
-                             MD5Context *md5) {
-  int i, y;
-
-  for (i = 0; i < 3; ++i) {
-    const int plane = planes[i];
-    const unsigned char *buf = img->planes[plane];
-    const int stride = img->stride[plane];
-    const int w = aom_img_plane_width(img, plane) *
-                  ((img->fmt & AOM_IMG_FMT_HIGHBITDEPTH) ? 2 : 1);
-    const int h = aom_img_plane_height(img, plane);
-
-    for (y = 0; y < h; ++y) {
-      MD5Update(md5, buf, w);
-      buf += stride;
-    }
-  }
-}
-
-static void write_image_file(const aom_image_t *img, const int *planes,
-                             const int num_planes, FILE *file) {
-  int i, y;
-  const int bytes_per_sample = ((img->fmt & AOM_IMG_FMT_HIGHBITDEPTH) ? 2 : 1);
-
-  for (i = 0; i < num_planes; ++i) {
-    const int plane = planes[i];
-    const unsigned char *buf = img->planes[plane];
-    const int stride = img->stride[plane];
-    const int w = aom_img_plane_width(img, plane);
-    const int h = aom_img_plane_height(img, plane);
-
-    for (y = 0; y < h; ++y) {
-      fwrite(buf, bytes_per_sample, w, file);
-      buf += stride;
-    }
   }
 }
 
@@ -505,16 +460,13 @@ static int main_loop(int argc, const char **argv_) {
   int opt_raw = 0;
   aom_codec_dec_cfg_t cfg = { 0, 0, 0, CONFIG_LOWBITDEPTH, { 1 } };
   unsigned int output_bit_depth = 0;
-  unsigned int tile_mode = 0;
   unsigned int is_annexb = 0;
-  int tile_row = -1;
-  int tile_col = -1;
   int frames_corrupted = 0;
   int dec_flags = 0;
   int do_scale = 0;
   int operating_point = 0;
   int output_all_layers = 0;
-  unsigned int row_mt = 0;
+  int skip_film_grain = 0;
   aom_image_t *scaled_img = NULL;
   aom_image_t *img_shifted = NULL;
   int frame_avail, got_data, flush_decoder = 0;
@@ -611,8 +563,6 @@ static int main_loop(int argc, const char **argv_) {
             cfg.threads);
       }
 #endif
-    } else if (arg_match(&arg, &rowmtarg, argi)) {
-      row_mt = arg_parse_uint(&arg);
     } else if (arg_match(&arg, &verbosearg, argi)) {
       quiet = 0;
     } else if (arg_match(&arg, &scalearg, argi)) {
@@ -623,19 +573,15 @@ static int main_loop(int argc, const char **argv_) {
       keep_going = 1;
     } else if (arg_match(&arg, &outbitdeptharg, argi)) {
       output_bit_depth = arg_parse_uint(&arg);
-    } else if (arg_match(&arg, &tilem, argi)) {
-      tile_mode = arg_parse_int(&arg);
     } else if (arg_match(&arg, &isannexb, argi)) {
       is_annexb = 1;
       input.obu_ctx->is_annexb = 1;
-    } else if (arg_match(&arg, &tiler, argi)) {
-      tile_row = arg_parse_int(&arg);
-    } else if (arg_match(&arg, &tilec, argi)) {
-      tile_col = arg_parse_int(&arg);
     } else if (arg_match(&arg, &oppointarg, argi)) {
       operating_point = arg_parse_int(&arg);
     } else if (arg_match(&arg, &outallarg, argi)) {
       output_all_layers = 1;
+    } else if (arg_match(&arg, &skipfilmgrain, argi)) {
+      skip_film_grain = 1;
     } else {
       argj++;
     }
@@ -739,27 +685,8 @@ static int main_loop(int argc, const char **argv_) {
 
   if (!quiet) fprintf(stderr, "%s\n", decoder.name);
 
-#if CONFIG_AV1_DECODER
-  if (aom_codec_control(&decoder, AV1_SET_TILE_MODE, tile_mode)) {
-    fprintf(stderr, "Failed to set decode_tile_mode: %s\n",
-            aom_codec_error(&decoder));
-    goto fail;
-  }
-
   if (aom_codec_control(&decoder, AV1D_SET_IS_ANNEXB, is_annexb)) {
     fprintf(stderr, "Failed to set is_annexb: %s\n", aom_codec_error(&decoder));
-    goto fail;
-  }
-
-  if (aom_codec_control(&decoder, AV1_SET_DECODE_TILE_ROW, tile_row)) {
-    fprintf(stderr, "Failed to set decode_tile_row: %s\n",
-            aom_codec_error(&decoder));
-    goto fail;
-  }
-
-  if (aom_codec_control(&decoder, AV1_SET_DECODE_TILE_COL, tile_col)) {
-    fprintf(stderr, "Failed to set decode_tile_col: %s\n",
-            aom_codec_error(&decoder));
     goto fail;
   }
 
@@ -776,11 +703,11 @@ static int main_loop(int argc, const char **argv_) {
     goto fail;
   }
 
-  if (aom_codec_control(&decoder, AV1D_SET_ROW_MT, row_mt)) {
-    fprintf(stderr, "Failed to set row_mt: %s\n", aom_codec_error(&decoder));
+  if (aom_codec_control(&decoder, AV1D_SET_SKIP_FILM_GRAIN, skip_film_grain)) {
+    fprintf(stderr, "Failed to set skip_film_grain: %s\n",
+            aom_codec_error(&decoder));
     goto fail;
   }
-#endif
 
   if (arg_skip) fprintf(stderr, "Skipping first %d frames.\n", arg_skip);
   while (arg_skip) {
@@ -903,6 +830,8 @@ static int main_loop(int argc, const char **argv_) {
             scaled_img =
                 aom_img_alloc(NULL, img->fmt, render_width, render_height, 16);
             scaled_img->bit_depth = img->bit_depth;
+            scaled_img->monochrome = img->monochrome;
+            scaled_img->csp = img->csp;
           }
 
           if (img->d_w != scaled_img->d_w || img->d_h != scaled_img->d_h) {
@@ -936,11 +865,15 @@ static int main_loop(int argc, const char **argv_) {
               aom_img_free(img_shifted);
               img_shifted = NULL;
             }
+            if (img_shifted) {
+              img_shifted->monochrome = img->monochrome;
+            }
             if (!img_shifted) {
               img_shifted =
                   aom_img_alloc(NULL, shifted_fmt, img->d_w, img->d_h, 16);
               img_shifted->bit_depth = output_bit_depth;
               img_shifted->monochrome = img->monochrome;
+              img_shifted->csp = img->csp;
             }
             if (output_bit_depth > img->bit_depth) {
               aom_img_upshift(img_shifted, img,
@@ -956,8 +889,7 @@ static int main_loop(int argc, const char **argv_) {
         aom_input_ctx.width = img->d_w;
         aom_input_ctx.height = img->d_h;
 
-        int num_planes = (!use_y4m && opt_raw && img->monochrome) ? 1 : 3;
-
+        int num_planes = (opt_raw && img->monochrome) ? 1 : 3;
         if (single_file) {
           if (use_y4m) {
             char y4m_buf[Y4M_BUFFER_SIZE] = { 0 };
@@ -966,8 +898,8 @@ static int main_loop(int argc, const char **argv_) {
               // Y4M file header
               len = y4m_write_file_header(
                   y4m_buf, sizeof(y4m_buf), aom_input_ctx.width,
-                  aom_input_ctx.height, &aom_input_ctx.framerate, img->fmt,
-                  img->bit_depth);
+                  aom_input_ctx.height, &aom_input_ctx.framerate,
+                  img->monochrome, img->csp, img->fmt, img->bit_depth);
               if (do_md5) {
                 MD5Update(&md5_ctx, (md5byte *)y4m_buf, (unsigned int)len);
               } else {
@@ -979,8 +911,10 @@ static int main_loop(int argc, const char **argv_) {
             len = y4m_write_frame_header(y4m_buf, sizeof(y4m_buf));
             if (do_md5) {
               MD5Update(&md5_ctx, (md5byte *)y4m_buf, (unsigned int)len);
+              y4m_update_image_md5(img, planes, &md5_ctx);
             } else {
               fputs(y4m_buf, outfile);
+              y4m_write_image_file(img, planes, outfile);
             }
           } else {
             if (frame_out == 1) {
@@ -1004,24 +938,31 @@ static int main_loop(int argc, const char **argv_) {
                 }
               }
             }
-          }
-
-          if (do_md5) {
-            update_image_md5(img, planes, &md5_ctx);
-          } else {
-            write_image_file(img, planes, num_planes, outfile);
+            if (do_md5) {
+              raw_update_image_md5(img, planes, num_planes, &md5_ctx);
+            } else {
+              raw_write_image_file(img, planes, num_planes, outfile);
+            }
           }
         } else {
           generate_filename(outfile_pattern, outfile_name, PATH_MAX, img->d_w,
                             img->d_h, frame_in);
           if (do_md5) {
             MD5Init(&md5_ctx);
-            update_image_md5(img, planes, &md5_ctx);
+            if (use_y4m) {
+              y4m_update_image_md5(img, planes, &md5_ctx);
+            } else {
+              raw_update_image_md5(img, planes, num_planes, &md5_ctx);
+            }
             MD5Final(md5_digest, &md5_ctx);
             print_md5(md5_digest, outfile_name);
           } else {
             outfile = open_outfile(outfile_name);
-            write_image_file(img, planes, num_planes, outfile);
+            if (use_y4m) {
+              y4m_write_image_file(img, planes, outfile);
+            } else {
+              raw_write_image_file(img, planes, num_planes, outfile);
+            }
             fclose(outfile);
           }
         }

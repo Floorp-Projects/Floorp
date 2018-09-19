@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef WARNINGS_H_
-#define WARNINGS_H_
+#ifndef AOM_COMMON_WARNINGS_H_
+#define AOM_COMMON_WARNINGS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,4 +31,4 @@ void check_encoder_config(int disable_prompt,
 }  // extern "C"
 #endif
 
-#endif  // WARNINGS_H_
+#endif  // AOM_COMMON_WARNINGS_H_

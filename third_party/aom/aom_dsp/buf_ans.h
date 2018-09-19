@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_BUF_ANS_H_
-#define AOM_DSP_BUF_ANS_H_
+#ifndef AOM_AOM_DSP_BUF_ANS_H_
+#define AOM_AOM_DSP_BUF_ANS_H_
 // Buffered forward ANS writer.
 // Symbols are written to the writer in forward (decode) order and serialized
 // backwards due to ANS's stack like behavior.
@@ -133,4 +133,4 @@ static INLINE int buf_ans_write_end(struct BufAnsCoder *const c) {
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
-#endif  // AOM_DSP_BUF_ANS_H_
+#endif  // AOM_AOM_DSP_BUF_ANS_H_

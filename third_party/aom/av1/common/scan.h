@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_SCAN_H_
-#define AV1_COMMON_SCAN_H_
+#ifndef AOM_AV1_COMMON_SCAN_H_
+#define AOM_AV1_COMMON_SCAN_H_
 
 #include "aom/aom_integer.h"
 #include "aom_ports/mem.h"
@@ -52,4 +52,4 @@ static INLINE const SCAN_ORDER *get_scan(TX_SIZE tx_size, TX_TYPE tx_type) {
 }  // extern "C"
 #endif
 
-#endif  // AV1_COMMON_SCAN_H_
+#endif  // AOM_AV1_COMMON_SCAN_H_

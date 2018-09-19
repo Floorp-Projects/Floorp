@@ -1,6 +1,6 @@
 // This file is generated. Do not edit.
-#ifndef AOM_RTCD_H_
-#define AOM_RTCD_H_
+#ifndef AV1_RTCD_H_
+#define AV1_RTCD_H_
 
 #ifdef RTCD_C
 #define RTCD_EXTERN
@@ -141,6 +141,27 @@ void av1_highbd_dr_prediction_z2_c(uint16_t *dst, ptrdiff_t stride, int bw, int 
 void av1_highbd_dr_prediction_z3_c(uint16_t *dst, ptrdiff_t stride, int bw, int bh, const uint16_t *above, const uint16_t *left, int upsample_left, int dx, int dy, int bd);
 #define av1_highbd_dr_prediction_z3 av1_highbd_dr_prediction_z3_c
 
+void av1_highbd_inv_txfm_add_c(const tran_low_t *dqcoeff, uint8_t *dst, int stride, const TxfmParam *txfm_param);
+#define av1_highbd_inv_txfm_add av1_highbd_inv_txfm_add_c
+
+void av1_highbd_inv_txfm_add_16x16_c(const tran_low_t *dqcoeff, uint8_t *dst, int stride, const TxfmParam *txfm_param);
+#define av1_highbd_inv_txfm_add_16x16 av1_highbd_inv_txfm_add_16x16_c
+
+void av1_highbd_inv_txfm_add_16x8_c(const tran_low_t *dqcoeff, uint8_t *dst, int stride, const TxfmParam *txfm_param);
+#define av1_highbd_inv_txfm_add_16x8 av1_highbd_inv_txfm_add_16x8_c
+
+void av1_highbd_inv_txfm_add_32x32_c(const tran_low_t *dqcoeff, uint8_t *dst, int stride, const TxfmParam *txfm_param);
+#define av1_highbd_inv_txfm_add_32x32 av1_highbd_inv_txfm_add_32x32_c
+
+void av1_highbd_inv_txfm_add_4x4_c(const tran_low_t *dqcoeff, uint8_t *dst, int stride, const TxfmParam *txfm_param);
+#define av1_highbd_inv_txfm_add_4x4 av1_highbd_inv_txfm_add_4x4_c
+
+void av1_highbd_inv_txfm_add_8x16_c(const tran_low_t *dqcoeff, uint8_t *dst, int stride, const TxfmParam *txfm_param);
+#define av1_highbd_inv_txfm_add_8x16 av1_highbd_inv_txfm_add_8x16_c
+
+void av1_highbd_inv_txfm_add_8x8_c(const tran_low_t *dqcoeff, uint8_t *dst, int stride, const TxfmParam *txfm_param);
+#define av1_highbd_inv_txfm_add_8x8 av1_highbd_inv_txfm_add_8x8_c
+
 void av1_highbd_iwht4x4_16_add_c(const tran_low_t *input, uint8_t *dest, int dest_stride, int bd);
 #define av1_highbd_iwht4x4_16_add av1_highbd_iwht4x4_16_add_c
 
@@ -237,9 +258,9 @@ void av1_jnt_convolve_x_c(const uint8_t *src, int src_stride, uint8_t *dst, int 
 void av1_jnt_convolve_y_c(const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride, int w, int h, const InterpFilterParams *filter_params_x, const InterpFilterParams *filter_params_y, const int subpel_x_q4, const int subpel_y_q4, ConvolveParams *conv_params);
 #define av1_jnt_convolve_y av1_jnt_convolve_y_c
 
-void av1_selfguided_restoration_c(const uint8_t *dgd8, int width, int height,
-                                  int dgd_stride, int32_t *flt0, int32_t *flt1, int flt_stride,
-                                  int sgr_params_idx, int bit_depth, int highbd);
+int av1_selfguided_restoration_c(const uint8_t *dgd8, int width, int height,
+                                 int dgd_stride, int32_t *flt0, int32_t *flt1, int flt_stride,
+                                 int sgr_params_idx, int bit_depth, int highbd);
 #define av1_selfguided_restoration av1_selfguided_restoration_c
 
 void av1_upsample_intra_edge_c(uint8_t *p, int sz);
@@ -293,7 +314,7 @@ cfl_predict_lbd_fn get_predict_lbd_fn_c(TX_SIZE tx_size);
 cfl_subtract_average_fn get_subtract_average_fn_c(TX_SIZE tx_size);
 #define get_subtract_average_fn get_subtract_average_fn_c
 
-void aom_rtcd(void);
+void av1_rtcd(void);
 
 #include "config/aom_config.h"
 

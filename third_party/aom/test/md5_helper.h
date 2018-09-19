@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef TEST_MD5_HELPER_H_
-#define TEST_MD5_HELPER_H_
+#ifndef AOM_TEST_MD5_HELPER_H_
+#define AOM_TEST_MD5_HELPER_H_
 
 #include "aom/aom_decoder.h"
 #include "common/md5_utils.h"
@@ -73,4 +73,4 @@ class MD5 {
 
 }  // namespace libaom_test
 
-#endif  // TEST_MD5_HELPER_H_
+#endif  // AOM_TEST_MD5_HELPER_H_

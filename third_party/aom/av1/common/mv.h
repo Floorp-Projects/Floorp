@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_MV_H_
-#define AV1_COMMON_MV_H_
+#ifndef AOM_AV1_COMMON_MV_H_
+#define AOM_AV1_COMMON_MV_H_
 
 #include "av1/common/common.h"
 #include "av1/common/common_data.h"
@@ -56,7 +56,7 @@ typedef struct mv32 {
 #define WARPEDDIFF_PREC_BITS (WARPEDMODEL_PREC_BITS - WARPEDPIXEL_PREC_BITS)
 
 /* clang-format off */
-typedef enum {
+typedef enum ATTRIBUTE_PACKED {
   IDENTITY = 0,      // identity transformation, 0-parameter
   TRANSLATION = 1,   // translational motion 2-parameter
   ROTZOOM = 2,       // simplified affine with rotation + zoom only, 4-parameter
@@ -298,4 +298,4 @@ static INLINE void clamp_mv(MV *mv, int min_col, int max_col, int min_row,
 }  // extern "C"
 #endif
 
-#endif  // AV1_COMMON_MV_H_
+#endif  // AOM_AV1_COMMON_MV_H_

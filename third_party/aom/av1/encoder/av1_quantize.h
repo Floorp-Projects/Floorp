@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_QUANTIZE_H_
-#define AV1_ENCODER_QUANTIZE_H_
+#ifndef AOM_AV1_ENCODER_AV1_QUANTIZE_H_
+#define AOM_AV1_ENCODER_AV1_QUANTIZE_H_
 
 #include "config/aom_config.h"
 
@@ -145,4 +145,4 @@ void av1_highbd_quantize_dc_facade(const tran_low_t *coeff_ptr,
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_QUANTIZE_H_
+#endif  // AOM_AV1_ENCODER_AV1_QUANTIZE_H_

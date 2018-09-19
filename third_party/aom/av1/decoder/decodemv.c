@@ -94,42 +94,26 @@ static int read_delta_qindex(AV1_COMMON *cm, const MACROBLOCKD *xd,
   }
   return reduced_delta_qindex;
 }
-static int read_delta_lflevel(AV1_COMMON *cm, const MACROBLOCKD *xd,
-                              aom_reader *r, int lf_id,
-                              MB_MODE_INFO *const mbmi, int mi_col,
+static int read_delta_lflevel(const AV1_COMMON *const cm, aom_reader *r,
+                              aom_cdf_prob *const cdf,
+                              const MB_MODE_INFO *const mbmi, int mi_col,
                               int mi_row) {
-  int sign, abs, reduced_delta_lflevel = 0;
-  BLOCK_SIZE bsize = mbmi->sb_type;
+  int reduced_delta_lflevel = 0;
+  const BLOCK_SIZE bsize = mbmi->sb_type;
   const int b_col = mi_col & (cm->seq_params.mib_size - 1);
   const int b_row = mi_row & (cm->seq_params.mib_size - 1);
   const int read_delta_lf_flag = (b_col == 0 && b_row == 0);
-  FRAME_CONTEXT *ec_ctx = xd->tile_ctx;
 
   if ((bsize != cm->seq_params.sb_size || mbmi->skip == 0) &&
       read_delta_lf_flag) {
-    if (cm->delta_lf_multi) {
-      assert(lf_id >= 0 &&
-             lf_id < (av1_num_planes(cm) > 1 ? FRAME_LF_COUNT
-                                             : FRAME_LF_COUNT - 2));
-      abs = aom_read_symbol(r, ec_ctx->delta_lf_multi_cdf[lf_id],
-                            DELTA_LF_PROBS + 1, ACCT_STR);
-    } else {
-      abs = aom_read_symbol(r, ec_ctx->delta_lf_cdf, DELTA_LF_PROBS + 1,
-                            ACCT_STR);
-    }
+    int abs = aom_read_symbol(r, cdf, DELTA_LF_PROBS + 1, ACCT_STR);
     const int smallval = (abs < DELTA_LF_SMALL);
     if (!smallval) {
       const int rem_bits = aom_read_literal(r, 3, ACCT_STR) + 1;
       const int thr = (1 << rem_bits) + 1;
       abs = aom_read_literal(r, rem_bits, ACCT_STR) + thr;
     }
-
-    if (abs) {
-      sign = aom_read_bit(r, ACCT_STR);
-    } else {
-      sign = 1;
-    }
-
+    const int sign = abs ? aom_read_bit(r, ACCT_STR) : 1;
     reduced_delta_lflevel = sign ? -abs : abs;
   }
   return reduced_delta_lflevel;
@@ -618,19 +602,22 @@ static void read_filter_intra_mode_info(const AV1_COMMON *const cm,
 void av1_read_tx_type(const AV1_COMMON *const cm, MACROBLOCKD *xd, int blk_row,
                       int blk_col, TX_SIZE tx_size, aom_reader *r) {
   MB_MODE_INFO *mbmi = xd->mi[0];
-  const int inter_block = is_inter_block(mbmi);
-  FRAME_CONTEXT *ec_ctx = xd->tile_ctx;
-
   const int txk_type_idx =
       av1_get_txk_type_index(mbmi->sb_type, blk_row, blk_col);
   TX_TYPE *tx_type = &mbmi->txk_type[txk_type_idx];
+  *tx_type = DCT_DCT;
 
-  const TX_SIZE square_tx_size = txsize_sqr_map[tx_size];
-  if (get_ext_tx_types(tx_size, inter_block, cm->reduced_tx_set_used) > 1 &&
-      ((!cm->seg.enabled && cm->base_qindex > 0) ||
-       (cm->seg.enabled && xd->qindex[mbmi->segment_id] > 0)) &&
-      !mbmi->skip &&
-      !segfeature_active(&cm->seg, mbmi->segment_id, SEG_LVL_SKIP)) {
+  // No need to read transform type if block is skipped.
+  if (mbmi->skip || segfeature_active(&cm->seg, mbmi->segment_id, SEG_LVL_SKIP))
+    return;
+
+  // No need to read transform type for lossless mode(qindex==0).
+  const int qindex =
+      cm->seg.enabled ? xd->qindex[mbmi->segment_id] : cm->base_qindex;
+  if (qindex <= 0) return;
+
+  const int inter_block = is_inter_block(mbmi);
+  if (get_ext_tx_types(tx_size, inter_block, cm->reduced_tx_set_used) > 1) {
     const TxSetType tx_set_type =
         av1_get_ext_tx_set_type(tx_size, inter_block, cm->reduced_tx_set_used);
     const int eset =
@@ -639,23 +626,22 @@ void av1_read_tx_type(const AV1_COMMON *const cm, MACROBLOCKD *xd, int blk_row,
     // there is no need to read the tx_type
     assert(eset != 0);
 
+    const TX_SIZE square_tx_size = txsize_sqr_map[tx_size];
+    FRAME_CONTEXT *ec_ctx = xd->tile_ctx;
     if (inter_block) {
       *tx_type = av1_ext_tx_inv[tx_set_type][aom_read_symbol(
           r, ec_ctx->inter_ext_tx_cdf[eset][square_tx_size],
           av1_num_ext_tx_set[tx_set_type], ACCT_STR)];
     } else {
-      PREDICTION_MODE intra_dir;
-      if (mbmi->filter_intra_mode_info.use_filter_intra)
-        intra_dir =
-            fimode_to_intradir[mbmi->filter_intra_mode_info.filter_intra_mode];
-      else
-        intra_dir = mbmi->mode;
+      const PREDICTION_MODE intra_mode =
+          mbmi->filter_intra_mode_info.use_filter_intra
+              ? fimode_to_intradir[mbmi->filter_intra_mode_info
+                                       .filter_intra_mode]
+              : mbmi->mode;
       *tx_type = av1_ext_tx_inv[tx_set_type][aom_read_symbol(
-          r, ec_ctx->intra_ext_tx_cdf[eset][square_tx_size][intra_dir],
+          r, ec_ctx->intra_ext_tx_cdf[eset][square_tx_size][intra_mode],
           av1_num_ext_tx_set[tx_set_type], ACCT_STR)];
     }
-  } else {
-    *tx_type = DCT_DCT;
   }
 }
 
@@ -720,6 +706,43 @@ static void read_intrabc_info(AV1_COMMON *const cm, MACROBLOCKD *const xd,
   }
 }
 
+// If delta q is present, reads delta_q index.
+// Also reads delta_q loop filter levels, if present.
+static void read_delta_q_params(AV1_COMMON *const cm, MACROBLOCKD *const xd,
+                                const int mi_row, const int mi_col,
+                                aom_reader *r) {
+  if (cm->delta_q_present_flag) {
+    MB_MODE_INFO *const mbmi = xd->mi[0];
+    xd->current_qindex +=
+        read_delta_qindex(cm, xd, r, mbmi, mi_col, mi_row) * cm->delta_q_res;
+    /* Normative: Clamp to [1,MAXQ] to not interfere with lossless mode */
+    xd->current_qindex = clamp(xd->current_qindex, 1, MAXQ);
+    FRAME_CONTEXT *const ec_ctx = xd->tile_ctx;
+    if (cm->delta_lf_present_flag) {
+      if (cm->delta_lf_multi) {
+        const int frame_lf_count =
+            av1_num_planes(cm) > 1 ? FRAME_LF_COUNT : FRAME_LF_COUNT - 2;
+        for (int lf_id = 0; lf_id < frame_lf_count; ++lf_id) {
+          const int tmp_lvl =
+              xd->delta_lf[lf_id] +
+              read_delta_lflevel(cm, r, ec_ctx->delta_lf_multi_cdf[lf_id], mbmi,
+                                 mi_col, mi_row) *
+                  cm->delta_lf_res;
+          mbmi->delta_lf[lf_id] = xd->delta_lf[lf_id] =
+              clamp(tmp_lvl, -MAX_LOOP_FILTER, MAX_LOOP_FILTER);
+        }
+      } else {
+        const int tmp_lvl = xd->delta_lf_from_base +
+                            read_delta_lflevel(cm, r, ec_ctx->delta_lf_cdf,
+                                               mbmi, mi_col, mi_row) *
+                                cm->delta_lf_res;
+        mbmi->delta_lf_from_base = xd->delta_lf_from_base =
+            clamp(tmp_lvl, -MAX_LOOP_FILTER, MAX_LOOP_FILTER);
+      }
+    }
+  }
+}
+
 static void read_intra_frame_mode_info(AV1_COMMON *const cm,
                                        MACROBLOCKD *const xd, int mi_row,
                                        int mi_col, aom_reader *r) {
@@ -743,33 +766,7 @@ static void read_intra_frame_mode_info(AV1_COMMON *const cm,
 
   read_cdef(cm, r, xd, mi_col, mi_row);
 
-  if (cm->delta_q_present_flag) {
-    xd->current_qindex +=
-        read_delta_qindex(cm, xd, r, mbmi, mi_col, mi_row) * cm->delta_q_res;
-    /* Normative: Clamp to [1,MAXQ] to not interfere with lossless mode */
-    xd->current_qindex = clamp(xd->current_qindex, 1, MAXQ);
-    if (cm->delta_lf_present_flag) {
-      if (cm->delta_lf_multi) {
-        const int frame_lf_count =
-            av1_num_planes(cm) > 1 ? FRAME_LF_COUNT : FRAME_LF_COUNT - 2;
-        for (int lf_id = 0; lf_id < frame_lf_count; ++lf_id) {
-          const int tmp_lvl =
-              xd->delta_lf[lf_id] +
-              read_delta_lflevel(cm, xd, r, lf_id, mbmi, mi_col, mi_row) *
-                  cm->delta_lf_res;
-          mbmi->delta_lf[lf_id] = xd->delta_lf[lf_id] =
-              clamp(tmp_lvl, -MAX_LOOP_FILTER, MAX_LOOP_FILTER);
-        }
-      } else {
-        const int tmp_lvl =
-            xd->delta_lf_from_base +
-            read_delta_lflevel(cm, xd, r, -1, mbmi, mi_col, mi_row) *
-                cm->delta_lf_res;
-        mbmi->delta_lf_from_base = xd->delta_lf_from_base =
-            clamp(tmp_lvl, -MAX_LOOP_FILTER, MAX_LOOP_FILTER);
-      }
-    }
-  }
+  read_delta_q_params(cm, xd, mi_row, mi_col, r);
 
   mbmi->current_qindex = xd->current_qindex;
 
@@ -1402,7 +1399,7 @@ static void read_inter_block_mode_info(AV1Decoder *const pbi,
   mbmi->motion_mode = SIMPLE_TRANSLATION;
   if (is_motion_variation_allowed_bsize(mbmi->sb_type) && !mbmi->skip_mode &&
       !has_second_ref(mbmi))
-    mbmi->num_proj_ref[0] = findSamples(cm, xd, mi_row, mi_col, pts, pts_inref);
+    mbmi->num_proj_ref = findSamples(cm, xd, mi_row, mi_col, pts, pts_inref);
   av1_count_overlappable_neighbors(cm, xd, mi_row, mi_col);
 
   if (mbmi->ref_frame[1] != INTRA_FRAME)
@@ -1463,20 +1460,20 @@ static void read_inter_block_mode_info(AV1Decoder *const pbi,
   read_mb_interp_filter(cm, xd, mbmi, r);
 
   if (mbmi->motion_mode == WARPED_CAUSAL) {
-    mbmi->wm_params[0].wmtype = DEFAULT_WMTYPE;
-    mbmi->wm_params[0].invalid = 0;
+    mbmi->wm_params.wmtype = DEFAULT_WMTYPE;
+    mbmi->wm_params.invalid = 0;
 
-    if (mbmi->num_proj_ref[0] > 1)
-      mbmi->num_proj_ref[0] = selectSamples(&mbmi->mv[0].as_mv, pts, pts_inref,
-                                            mbmi->num_proj_ref[0], bsize);
+    if (mbmi->num_proj_ref > 1)
+      mbmi->num_proj_ref = selectSamples(&mbmi->mv[0].as_mv, pts, pts_inref,
+                                         mbmi->num_proj_ref, bsize);
 
-    if (find_projection(mbmi->num_proj_ref[0], pts, pts_inref, bsize,
+    if (find_projection(mbmi->num_proj_ref, pts, pts_inref, bsize,
                         mbmi->mv[0].as_mv.row, mbmi->mv[0].as_mv.col,
-                        &mbmi->wm_params[0], mi_row, mi_col)) {
+                        &mbmi->wm_params, mi_row, mi_col)) {
 #if WARPED_MOTION_DEBUG
       printf("Warning: unexpected warped model from aomenc\n");
 #endif
-      mbmi->wm_params[0].invalid = 1;
+      mbmi->wm_params.invalid = 1;
     }
   }
 
@@ -1512,33 +1509,7 @@ static void read_inter_frame_mode_info(AV1Decoder *const pbi,
 
   read_cdef(cm, r, xd, mi_col, mi_row);
 
-  if (cm->delta_q_present_flag) {
-    xd->current_qindex +=
-        read_delta_qindex(cm, xd, r, mbmi, mi_col, mi_row) * cm->delta_q_res;
-    /* Normative: Clamp to [1,MAXQ] to not interfere with lossless mode */
-    xd->current_qindex = clamp(xd->current_qindex, 1, MAXQ);
-    if (cm->delta_lf_present_flag) {
-      if (cm->delta_lf_multi) {
-        const int frame_lf_count =
-            av1_num_planes(cm) > 1 ? FRAME_LF_COUNT : FRAME_LF_COUNT - 2;
-        for (int lf_id = 0; lf_id < frame_lf_count; ++lf_id) {
-          const int tmp_lvl =
-              xd->delta_lf[lf_id] +
-              read_delta_lflevel(cm, xd, r, lf_id, mbmi, mi_col, mi_row) *
-                  cm->delta_lf_res;
-          mbmi->delta_lf[lf_id] = xd->delta_lf[lf_id] =
-              clamp(tmp_lvl, -MAX_LOOP_FILTER, MAX_LOOP_FILTER);
-        }
-      } else {
-        const int tmp_lvl =
-            xd->delta_lf_from_base +
-            read_delta_lflevel(cm, xd, r, -1, mbmi, mi_col, mi_row) *
-                cm->delta_lf_res;
-        mbmi->delta_lf_from_base = xd->delta_lf_from_base =
-            clamp(tmp_lvl, -MAX_LOOP_FILTER, MAX_LOOP_FILTER);
-      }
-    }
-  }
+  read_delta_q_params(cm, xd, mi_row, mi_col, r);
 
   if (!mbmi->skip_mode)
     inter_block = read_is_inter_block(cm, xd, mbmi->segment_id, r);

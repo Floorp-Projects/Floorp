@@ -127,6 +127,22 @@ void av1_tile_set_col(TileInfo *tile, const AV1_COMMON *cm, int col) {
   assert(tile->mi_col_end > tile->mi_col_start);
 }
 
+int av1_get_sb_rows_in_tile(AV1_COMMON *cm, TileInfo tile) {
+  int mi_rows_aligned_to_sb = ALIGN_POWER_OF_TWO(
+      tile.mi_row_end - tile.mi_row_start, cm->seq_params.mib_size_log2);
+  int sb_rows = mi_rows_aligned_to_sb >> cm->seq_params.mib_size_log2;
+
+  return sb_rows;
+}
+
+int av1_get_sb_cols_in_tile(AV1_COMMON *cm, TileInfo tile) {
+  int mi_cols_aligned_to_sb = ALIGN_POWER_OF_TWO(
+      tile.mi_col_end - tile.mi_col_start, cm->seq_params.mib_size_log2);
+  int sb_cols = mi_cols_aligned_to_sb >> cm->seq_params.mib_size_log2;
+
+  return sb_cols;
+}
+
 int get_tile_size(int mi_frame_size, int log2_tile_num, int *ntiles) {
   // Round the frame up to a whole number of max superblocks
   mi_frame_size = ALIGN_POWER_OF_TWO(mi_frame_size, MAX_MIB_SIZE_LOG2);

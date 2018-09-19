@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_CFL_H_
-#define AV1_COMMON_CFL_H_
+#ifndef AOM_AV1_COMMON_CFL_H_
+#define AOM_AV1_COMMON_CFL_H_
 
 #include "av1/common/blockd.h"
 #include "av1/common/onyxc_int.h"
@@ -299,4 +299,4 @@ void cfl_predict_hbd_null(const int16_t *pred_buf_q3, uint16_t *dst,
     return pred[tx_size % TX_SIZES_ALL];                                  \
   }
 
-#endif  // AV1_COMMON_CFL_H_
+#endif  // AOM_AV1_COMMON_CFL_H_

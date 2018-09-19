@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_TXFM_H_
-#define AV1_TXFM_H_
+#ifndef AOM_AV1_COMMON_AV1_TXFM_H_
+#define AOM_AV1_COMMON_AV1_TXFM_H_
 
 #include <assert.h>
 #include <math.h>
@@ -39,7 +39,7 @@ extern const int32_t av1_sinpi_arr_data[7][5];
 static const int cos_bit_min = 10;
 static const int cos_bit_max = 16;
 
-static const int NewSqrt2Bits = 12;
+#define NewSqrt2Bits ((int32_t)12)
 // 2^12 * sqrt(2)
 static const int32_t NewSqrt2 = 5793;
 // 2^12 / sqrt(2)
@@ -64,7 +64,7 @@ static INLINE int32_t range_check_value(int32_t value, int8_t bit) {
 #endif  // CONFIG_COEFFICIENT_RANGE_CHECKING
 #if DO_RANGE_CHECK_CLAMP
   bit = AOMMIN(bit, 31);
-  return clamp(value, (1 << (bit - 1)) - 1, -(1 << (bit - 1)));
+  return clamp(value, -(1 << (bit - 1)), (1 << (bit - 1)) - 1);
 #endif  // DO_RANGE_CHECK_CLAMP
   (void)bit;
   return value;
@@ -78,10 +78,25 @@ static INLINE int32_t round_shift(int64_t value, int bit) {
 static INLINE int32_t half_btf(int32_t w0, int32_t in0, int32_t w1, int32_t in1,
                                int bit) {
   int64_t result_64 = (int64_t)(w0 * in0) + (int64_t)(w1 * in1);
+  int64_t intermediate = result_64 + (1LL << (bit - 1));
+  // NOTE(david.barker): The value 'result_64' may not necessarily fit
+  // into 32 bits. However, the result of this function is nominally
+  // ROUND_POWER_OF_TWO_64(result_64, bit)
+  // and that is required to fit into stage_range[stage] many bits
+  // (checked by range_check_buf()).
+  //
+  // Here we've unpacked that rounding operation, and it can be shown
+  // that the value of 'intermediate' here *does* fit into 32 bits
+  // for any conformant bitstream.
+  // The upshot is that, if you do all this calculation using
+  // wrapping 32-bit arithmetic instead of (non-wrapping) 64-bit arithmetic,
+  // then you'll still get the correct result.
+  // To provide a check on this logic, we assert that 'intermediate'
+  // would fit into an int32 if range checking is enabled.
 #if CONFIG_COEFFICIENT_RANGE_CHECKING
-  assert(result_64 >= INT32_MIN && result_64 <= INT32_MAX);
+  assert(intermediate >= INT32_MIN && intermediate <= INT32_MAX);
 #endif
-  return round_shift(result_64, bit);
+  return (int32_t)(intermediate >> bit);
 }
 
 static INLINE uint16_t highbd_clip_pixel_add(uint16_t dest, tran_high_t trans,
@@ -206,9 +221,12 @@ static INLINE int get_txw_idx(TX_SIZE tx_size) {
 static INLINE int get_txh_idx(TX_SIZE tx_size) {
   return tx_size_high_log2[tx_size] - tx_size_high_log2[0];
 }
+
+void av1_range_check_buf(int32_t stage, const int32_t *input,
+                         const int32_t *buf, int32_t size, int8_t bit);
 #define MAX_TXWH_IDX 5
 #ifdef __cplusplus
 }
 #endif  // __cplusplus
 
-#endif  // AV1_TXFM_H_
+#endif  // AOM_AV1_COMMON_AV1_TXFM_H_

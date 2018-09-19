@@ -9,9 +9,9 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef _V256_INTRINSICS_H
-#define _V256_INTRINSICS_H
+#ifndef AOM_AOM_DSP_SIMD_V256_INTRINSICS_ARM_H_
+#define AOM_AOM_DSP_SIMD_V256_INTRINSICS_ARM_H_
 
 #include "aom_dsp/simd/v256_intrinsics_v128.h"
 
-#endif /* _V256_INTRINSICS_H */
+#endif  // AOM_AOM_DSP_SIMD_V256_INTRINSICS_ARM_H_

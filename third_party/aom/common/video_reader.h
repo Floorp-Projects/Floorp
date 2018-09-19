@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef VIDEO_READER_H_
-#define VIDEO_READER_H_
+#ifndef AOM_COMMON_VIDEO_READER_H_
+#define AOM_COMMON_VIDEO_READER_H_
 
 #include "common/video_common.h"
 
@@ -54,4 +54,4 @@ const AvxVideoInfo *aom_video_reader_get_info(AvxVideoReader *reader);
 }  // extern "C"
 #endif
 
-#endif  // VIDEO_READER_H_
+#endif  // AOM_COMMON_VIDEO_READER_H_

@@ -37,13 +37,10 @@
 
 #include "aom/aom_encoder.h"
 #include "aom/aomcx.h"
+#include "aom_scale/yv12config.h"
 #include "av1/common/enums.h"
-
 #include "common/tools_common.h"
 #include "common/video_writer.h"
-
-#define MAX_EXTERNAL_REFERENCES 128
-#define AOM_BORDER_IN_PIXELS 288
 
 static const char *exec_name;
 

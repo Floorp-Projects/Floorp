@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_DECODER_DECODER_H_
-#define AV1_DECODER_DECODER_H_
+#ifndef AOM_AV1_DECODER_DECODER_H_
+#define AOM_AV1_DECODER_DECODER_H_
 
 #include "config/aom_config.h"
 
@@ -55,6 +55,11 @@ typedef struct ThreadData {
   CB_BUFFER cb_buffer_base;
   uint8_t *mc_buf[2];
   int32_t mc_buf_size;
+  int mc_buf_use_highbd;  // Boolean: whether the byte pointers stored in
+                          // mc_buf were converted from highbd pointers.
+
+  CONV_BUF_TYPE *tmp_conv_dst;
+  uint8_t *tmp_obmc_bufs[2];
 
   decode_block_visitor_fn_t read_coeffs_tx_intra_block_visit;
   decode_block_visitor_fn_t predict_and_recon_intra_block_visit;
@@ -199,6 +204,7 @@ typedef struct AV1Decoder {
   int tg_start;  // First tile in the current tilegroup
   int tg_size_bit_offset;
   int sequence_header_ready;
+  int sequence_header_changed;
 #if CONFIG_INSPECTION
   aom_inspect_cb inspect_cb;
   void *inspect_ctx;
@@ -308,4 +314,4 @@ typedef void (*block_visitor_fn_t)(AV1Decoder *const pbi, ThreadData *const td,
 }  // extern "C"
 #endif
 
-#endif  // AV1_DECODER_DECODER_H_
+#endif  // AOM_AV1_DECODER_DECODER_H_

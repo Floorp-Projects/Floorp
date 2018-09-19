@@ -14,7 +14,7 @@ use warnings;
 use 5.010;
 use Getopt::Long;
 
-my $git_desc;
+my $git_desc = '';
 my $version_data;
 my $version_filename;
 GetOptions('version_data=s' => \$version_data,
@@ -68,7 +68,7 @@ if (length($git_desc) > 0) {
 open(my $version_file, '>', $version_filename) or
   die("Cannot open $version_filename: $!");
 
-my $version_packed = "((VERSION_MAJOR<<16)|(VERSION_MINOR<<8)|(VERSION_PATCH))";
+my $version_packed = "((VERSION_MAJOR << 16) | (VERSION_MINOR << 8) | (VERSION_PATCH))";
 my $year = (localtime)[5] + 1900;
 my $lic_block = << "EOF";
 /*
@@ -91,7 +91,8 @@ $lic_block
 #define VERSION_MINOR $version_minor
 #define VERSION_PATCH $version_patch
 #define VERSION_EXTRA \"$version_extra\"
-#define VERSION_PACKED $version_packed
+#define VERSION_PACKED \\
+  $version_packed
 #define VERSION_STRING_NOSP \"$git_desc\"
 #define VERSION_STRING \" $git_desc\"
 EOF
@@ -102,7 +103,8 @@ $lic_block
 #define VERSION_MINOR $version_minor
 #define VERSION_PATCH $version_patch
 #define VERSION_EXTRA \"$version_extra\"
-#define VERSION_PACKED $version_packed
+#define VERSION_PACKED \\
+  $version_packed
 #define VERSION_STRING_NOSP \"v$version_string\"
 #define VERSION_STRING \" v$version_string\"
 EOF

@@ -108,3 +108,53 @@ const int8_t av1_txfm_stage_num_list[TXFM_TYPES] = {
   1,   // TXFM_TYPE_IDENTITY16
   1,   // TXFM_TYPE_IDENTITY32
 };
+
+void av1_range_check_buf(int32_t stage, const int32_t *input,
+                         const int32_t *buf, int32_t size, int8_t bit) {
+#if CONFIG_COEFFICIENT_RANGE_CHECKING
+  const int64_t max_value = (1LL << (bit - 1)) - 1;
+  const int64_t min_value = -(1LL << (bit - 1));
+
+  int in_range = 1;
+
+  for (int i = 0; i < size; ++i) {
+    if (buf[i] < min_value || buf[i] > max_value) {
+      in_range = 0;
+    }
+  }
+
+  if (!in_range) {
+    fprintf(stderr, "Error: coeffs contain out-of-range values\n");
+    fprintf(stderr, "size: %d\n", size);
+    fprintf(stderr, "stage: %d\n", stage);
+    fprintf(stderr, "allowed range: [%" PRId64 ";%" PRId64 "]\n", min_value,
+            max_value);
+
+    fprintf(stderr, "coeffs: ");
+
+    fprintf(stderr, "[");
+    for (int j = 0; j < size; j++) {
+      if (j > 0) fprintf(stderr, ", ");
+      fprintf(stderr, "%d", input[j]);
+    }
+    fprintf(stderr, "]\n");
+
+    fprintf(stderr, "   buf: ");
+
+    fprintf(stderr, "[");
+    for (int j = 0; j < size; j++) {
+      if (j > 0) fprintf(stderr, ", ");
+      fprintf(stderr, "%d", buf[j]);
+    }
+    fprintf(stderr, "]\n\n");
+  }
+
+  assert(in_range);
+#else
+  (void)stage;
+  (void)input;
+  (void)buf;
+  (void)size;
+  (void)bit;
+#endif
+}

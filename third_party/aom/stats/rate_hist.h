@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef RATE_HIST_H_
-#define RATE_HIST_H_
+#ifndef AOM_STATS_RATE_HIST_H_
+#define AOM_STATS_RATE_HIST_H_
 
 #include "aom/aom_encoder.h"
 
@@ -38,4 +38,4 @@ void show_rate_histogram(struct rate_hist *hist, const aom_codec_enc_cfg_t *cfg,
 }  // extern "C"
 #endif
 
-#endif  // RATE_HIST_H_
+#endif  // AOM_STATS_RATE_HIST_H_

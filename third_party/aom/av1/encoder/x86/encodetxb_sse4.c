@@ -14,43 +14,55 @@
 #include <smmintrin.h>  /* SSE4.1 */
 
 #include "aom/aom_integer.h"
-#include "aom_dsp/x86/mem_sse2.h"
 #include "av1/common/onyxc_int.h"
 #include "av1/common/txb_common.h"
+#include "aom_dsp/x86/synonyms.h"
 
 void av1_txb_init_levels_sse4_1(const tran_low_t *const coeff, const int width,
                                 const int height, uint8_t *const levels) {
   const int stride = width + TX_PAD_HOR;
-  memset(levels - TX_PAD_TOP * stride, 0,
-         sizeof(*levels) * TX_PAD_TOP * stride);
-  memset(levels + stride * height, 0,
-         sizeof(*levels) * (TX_PAD_BOTTOM * stride + TX_PAD_END));
-
   const __m128i zeros = _mm_setzero_si128();
+
+  const int32_t pre_len = sizeof(*levels) * TX_PAD_TOP * stride;
+  uint8_t *pre_buf = levels - TX_PAD_TOP * stride;
+  uint8_t *pre_buf_end = pre_buf + pre_len;
+  do {
+    _mm_storeu_si128((__m128i *)(pre_buf), zeros);
+    pre_buf += 16;
+  } while (pre_buf < pre_buf_end);
+
+  const int32_t bottom_len = sizeof(*levels) * (TX_PAD_BOTTOM * stride);
+  uint8_t *bottom_buf = levels + stride * height;
+  uint8_t *bottom_buf_end = bottom_buf + bottom_len;
+  do {
+    _mm_storeu_si128((__m128i *)(bottom_buf), zeros);
+    bottom_buf += 16;
+  } while (bottom_buf < bottom_buf_end);
+
   int i = 0;
   uint8_t *ls = levels;
   const tran_low_t *cf = coeff;
   if (width == 4) {
     do {
-      const __m128i coeffA = _mm_load_si128((__m128i *)(cf));
-      const __m128i coeffB = _mm_load_si128((__m128i *)(cf + width));
+      const __m128i coeffA = xx_loadu_128(cf);
+      const __m128i coeffB = xx_loadu_128(cf + 4);
       const __m128i coeffAB = _mm_packs_epi32(coeffA, coeffB);
       const __m128i absAB = _mm_abs_epi16(coeffAB);
       const __m128i absAB8 = _mm_packs_epi16(absAB, zeros);
       const __m128i lsAB = _mm_unpacklo_epi32(absAB8, zeros);
-      _mm_storeu_si128((__m128i *)ls, lsAB);
+      xx_storeu_128(ls, lsAB);
       ls += (stride << 1);
       cf += (width << 1);
       i += 2;
     } while (i < height);
   } else if (width == 8) {
     do {
-      const __m128i coeffA = _mm_load_si128((__m128i *)(cf));
-      const __m128i coeffB = _mm_load_si128((__m128i *)(cf + 4));
+      const __m128i coeffA = xx_loadu_128(cf);
+      const __m128i coeffB = xx_loadu_128(cf + 4);
       const __m128i coeffAB = _mm_packs_epi32(coeffA, coeffB);
       const __m128i absAB = _mm_abs_epi16(coeffAB);
       const __m128i absAB8 = _mm_packs_epi16(absAB, zeros);
-      _mm_storeu_si128((__m128i *)ls, absAB8);
+      xx_storeu_128(ls, absAB8);
       ls += stride;
       cf += width;
       i += 1;
@@ -59,16 +71,16 @@ void av1_txb_init_levels_sse4_1(const tran_low_t *const coeff, const int width,
     do {
       int j = 0;
       do {
-        const __m128i coeffA = _mm_load_si128((__m128i *)(cf));
-        const __m128i coeffB = _mm_load_si128((__m128i *)(cf + 4));
-        const __m128i coeffC = _mm_load_si128((__m128i *)(cf + 8));
-        const __m128i coeffD = _mm_load_si128((__m128i *)(cf + 12));
+        const __m128i coeffA = xx_loadu_128(cf);
+        const __m128i coeffB = xx_loadu_128(cf + 4);
+        const __m128i coeffC = xx_loadu_128(cf + 8);
+        const __m128i coeffD = xx_loadu_128(cf + 12);
         const __m128i coeffAB = _mm_packs_epi32(coeffA, coeffB);
         const __m128i coeffCD = _mm_packs_epi32(coeffC, coeffD);
         const __m128i absAB = _mm_abs_epi16(coeffAB);
         const __m128i absCD = _mm_abs_epi16(coeffCD);
         const __m128i absABCD = _mm_packs_epi16(absAB, absCD);
-        _mm_storeu_si128((__m128i *)(ls + j), absABCD);
+        xx_storeu_128(ls + j, absABCD);
         j += 16;
         cf += 16;
       } while (j < width);

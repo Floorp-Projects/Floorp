@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef _V256_INTRINSICS_H
-#define _V256_INTRINSICS_H
+#ifndef AOM_AOM_DSP_SIMD_V256_INTRINSICS_H_
+#define AOM_AOM_DSP_SIMD_V256_INTRINSICS_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -373,4 +373,4 @@ SIMD_INLINE uint64_t v256_ssd_s16_sum(ssd256_internal_s16 s) {
   return c_v256_ssd_s16_sum(s);
 }
 
-#endif /* _V256_INTRINSICS_H */
+#endif  // AOM_AOM_DSP_SIMD_V256_INTRINSICS_H_

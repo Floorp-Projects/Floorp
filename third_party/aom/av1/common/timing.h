@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_TIMING_H_
-#define AOM_TIMING_H_
+#ifndef AOM_AV1_COMMON_TIMING_H_
+#define AOM_AV1_COMMON_TIMING_H_
 
 #include "aom/aom_integer.h"
 #include "av1/common/enums.h"
@@ -56,4 +56,4 @@ void set_resource_availability_parameters(
 int64_t max_level_bitrate(BITSTREAM_PROFILE seq_profile, int seq_level_idx,
                           int seq_tier);
 
-#endif  // AOM_TIMING_H_
+#endif  // AOM_AV1_COMMON_TIMING_H_

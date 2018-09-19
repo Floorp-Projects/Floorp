@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_ENTROPY_H_
-#define AV1_COMMON_ENTROPY_H_
+#ifndef AOM_AV1_COMMON_ENTROPY_H_
+#define AOM_AV1_COMMON_ENTROPY_H_
 
 #include "config/aom_config.h"
 
@@ -178,4 +178,4 @@ static INLINE TX_SIZE get_txsize_entropy_ctx(TX_SIZE txsize) {
 }  // extern "C"
 #endif
 
-#endif  // AV1_COMMON_ENTROPY_H_
+#endif  // AOM_AV1_COMMON_ENTROPY_H_

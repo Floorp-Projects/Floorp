@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_PORTS_ARM_H_
-#define AOM_PORTS_ARM_H_
+#ifndef AOM_AOM_PORTS_ARM_H_
+#define AOM_AOM_PORTS_ARM_H_
 #include <stdlib.h>
 
 #include "config/aom_config.h"
@@ -26,7 +26,7 @@ extern "C" {
 /*ARMv7 optional NEON instructions.*/
 #define HAS_NEON 0x04
 
-int arm_cpu_caps(void);
+int aom_arm_cpu_caps(void);
 
 // Earlier gcc compilers have issues with some neon intrinsics
 #if !defined(__clang__) && defined(__GNUC__) && __GNUC__ == 4 && \
@@ -38,4 +38,4 @@ int arm_cpu_caps(void);
 }  // extern "C"
 #endif
 
-#endif  // AOM_PORTS_ARM_H_
+#endif  // AOM_AOM_PORTS_ARM_H_

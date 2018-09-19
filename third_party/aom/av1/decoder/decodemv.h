@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_DECODER_DECODEMV_H_
-#define AV1_DECODER_DECODEMV_H_
+#ifndef AOM_AV1_DECODER_DECODEMV_H_
+#define AOM_AV1_DECODER_DECODEMV_H_
 
 #include "aom_dsp/bitreader.h"
 
@@ -32,4 +32,4 @@ void av1_read_mode_info(AV1Decoder *const pbi, MACROBLOCKD *xd,
 void av1_read_tx_type(const AV1_COMMON *const cm, MACROBLOCKD *xd, int blk_row,
                       int blk_col, TX_SIZE tx_size, aom_reader *r);
 
-#endif  // AV1_DECODER_DECODEMV_H_
+#endif  // AOM_AV1_DECODER_DECODEMV_H_

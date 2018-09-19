@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_ALLOCCOMMON_H_
-#define AV1_COMMON_ALLOCCOMMON_H_
+#ifndef AOM_AV1_COMMON_ALLOCCOMMON_H_
+#define AOM_AV1_COMMON_ALLOCCOMMON_H_
 
 #define INVALID_IDX -1  // Invalid buffer index.
 
@@ -45,4 +45,4 @@ int av1_get_MBs(int width, int height);
 }  // extern "C"
 #endif
 
-#endif  // AV1_COMMON_ALLOCCOMMON_H_
+#endif  // AOM_AV1_COMMON_ALLOCCOMMON_H_

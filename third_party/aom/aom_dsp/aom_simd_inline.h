@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_AOM_SIMD_INLINE_H_
-#define AOM_DSP_AOM_SIMD_INLINE_H_
+#ifndef AOM_AOM_DSP_AOM_SIMD_INLINE_H_
+#define AOM_AOM_DSP_AOM_SIMD_INLINE_H_
 
 #include "aom/aom_integer.h"
 
@@ -18,4 +18,4 @@
 #define SIMD_INLINE static AOM_FORCE_INLINE
 #endif
 
-#endif  // AOM_DSP_AOM_SIMD_INLINE_H_
+#endif  // AOM_AOM_DSP_AOM_SIMD_INLINE_H_

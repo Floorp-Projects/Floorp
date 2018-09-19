@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_LOOKAHEAD_H_
-#define AV1_ENCODER_LOOKAHEAD_H_
+#ifndef AOM_AV1_ENCODER_LOOKAHEAD_H_
+#define AOM_AV1_ENCODER_LOOKAHEAD_H_
 
 #include "aom_scale/yv12config.h"
 #include "aom/aom_integer.h"
@@ -103,4 +103,4 @@ unsigned int av1_lookahead_depth(struct lookahead_ctx *ctx);
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_LOOKAHEAD_H_
+#endif  // AOM_AV1_ENCODER_LOOKAHEAD_H_

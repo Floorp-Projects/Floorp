@@ -393,7 +393,7 @@ static void y4m_convert_42xpaldv_42xjpeg(y4m_input *_y4m, unsigned char *_dst,
 }
 
 /*Perform vertical filtering to reduce a single plane from 4:2:2 to 4:2:0.
-  This is used as a helper by several converation routines.*/
+  This is used as a helper by several conversion routines.*/
 static void y4m_422jpeg_420jpeg_helper(unsigned char *_dst,
                                        const unsigned char *_src, int _c_w,
                                        int _c_h) {

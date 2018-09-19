@@ -13,8 +13,8 @@
  * \brief Describes the aom image descriptor and associated operations
  *
  */
-#ifndef AOM_AOM_IMAGE_H_
-#define AOM_AOM_IMAGE_H_
+#ifndef AOM_AOM_AOM_IMAGE_H_
+#define AOM_AOM_AOM_IMAGE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -328,4 +328,4 @@ int aom_img_plane_height(const aom_image_t *img, int plane);
 }  // extern "C"
 #endif
 
-#endif  // AOM_AOM_IMAGE_H_
+#endif  // AOM_AOM_AOM_IMAGE_H_

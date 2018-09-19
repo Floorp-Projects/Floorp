@@ -205,13 +205,8 @@ void EncoderTest::RunLoop(VideoSource *video) {
 
     ASSERT_FALSE(::testing::Test::HasFatalFailure());
 
-    unsigned long dec_init_flags = 0;  // NOLINT
-    // Use fragment decoder if encoder outputs partitions.
-    // NOTE: fragment decoder and partition encoder are only supported by VP8.
-    if (init_flags_ & AOM_CODEC_USE_OUTPUT_PARTITION)
-      dec_init_flags |= AOM_CODEC_USE_INPUT_FRAGMENTS;
     testing::internal::scoped_ptr<Decoder> decoder(
-        codec_->CreateDecoder(dec_cfg, dec_init_flags));
+        codec_->CreateDecoder(dec_cfg, 0 /* flags */));
 #if CONFIG_AV1_DECODER
     if (decoder->IsAV1()) {
       // Set dec_cfg.tile_row = -1 and dec_cfg.tile_col = -1 so that the whole
@@ -266,12 +261,6 @@ void EncoderTest::RunLoop(VideoSource *video) {
 
           default: break;
         }
-      }
-
-      // Flush the decoder when there are no more fragments.
-      if ((init_flags_ & AOM_CODEC_USE_OUTPUT_PARTITION) && has_dxdata) {
-        const aom_codec_err_t res_dec = decoder->DecodeFrame(NULL, 0);
-        if (!HandleDecodeResult(res_dec, decoder.get())) break;
       }
 
       if (has_dxdata && has_cxdata) {

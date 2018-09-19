@@ -36,7 +36,7 @@ static uint16_t inv_recenter_finite_nonneg(uint16_t n, uint16_t r, uint16_t v) {
 uint16_t aom_read_primitive_quniform_(aom_reader *r,
                                       uint16_t n ACCT_STR_PARAM) {
   if (n <= 1) return 0;
-  const int l = get_msb(n - 1) + 1;
+  const int l = get_msb(n) + 1;
   const int m = (1 << l) - n;
   const int v = aom_read_literal(r, l - 1, ACCT_STR_NAME);
   return v < m ? v : (v << 1) - m + aom_read_bit(r, ACCT_STR_NAME);
@@ -45,7 +45,7 @@ uint16_t aom_read_primitive_quniform_(aom_reader *r,
 static uint16_t aom_rb_read_primitive_quniform(struct aom_read_bit_buffer *rb,
                                                uint16_t n) {
   if (n <= 1) return 0;
-  const int l = get_msb(n - 1) + 1;
+  const int l = get_msb(n) + 1;
   const int m = (1 << l) - n;
   const int v = aom_rb_read_literal(rb, l - 1);
   return v < m ? v : (v << 1) - m + aom_rb_read_bit(rb);
@@ -120,14 +120,4 @@ int16_t aom_rb_read_signed_primitive_refsubexpfin(
   ref += n - 1;
   const uint16_t scaled_n = (n << 1) - 1;
   return aom_rb_read_primitive_refsubexpfin(rb, scaled_n, k, ref) - n + 1;
-}
-
-uint32_t aom_rb_read_uvlc(struct aom_read_bit_buffer *rb) {
-  int leading_zeros = 0;
-  while (!aom_rb_read_bit(rb)) ++leading_zeros;
-  // Maximum 32 bits.
-  if (leading_zeros >= 32) return UINT32_MAX;
-  const uint32_t base = (1u << leading_zeros) - 1;
-  const uint32_t value = aom_rb_read_literal(rb, leading_zeros);
-  return base + value;
 }

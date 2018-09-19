@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_X86_MEM_SSE2_H_
-#define AOM_DSP_X86_MEM_SSE2_H_
+#ifndef AOM_AOM_DSP_X86_MEM_SSE2_H_
+#define AOM_AOM_DSP_X86_MEM_SSE2_H_
 
 #include <emmintrin.h>  // SSE2
 
@@ -39,4 +39,4 @@ static INLINE __m128i load_8bit_8x2_to_1_reg_sse2(const void *const src,
   return dst;
 }
 
-#endif  // AOM_DSP_X86_MEM_SSE2_H_
+#endif  // AOM_AOM_DSP_X86_MEM_SSE2_H_

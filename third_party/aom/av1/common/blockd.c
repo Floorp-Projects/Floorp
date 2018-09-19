@@ -28,66 +28,6 @@ PREDICTION_MODE av1_above_block_mode(const MB_MODE_INFO *above_mi) {
   return above_mi->mode;
 }
 
-void av1_foreach_transformed_block_in_plane(
-    const MACROBLOCKD *const xd, BLOCK_SIZE bsize, int plane,
-    foreach_transformed_block_visitor visit, void *arg) {
-  const struct macroblockd_plane *const pd = &xd->plane[plane];
-  // block and transform sizes, in number of 4x4 blocks log 2 ("*_b")
-  // 4x4=0, 8x8=2, 16x16=4, 32x32=6, 64x64=8
-  // transform size varies per plane, look it up in a common way.
-  const TX_SIZE tx_size = av1_get_tx_size(plane, xd);
-  const BLOCK_SIZE plane_bsize =
-      get_plane_block_size(bsize, pd->subsampling_x, pd->subsampling_y);
-  const uint8_t txw_unit = tx_size_wide_unit[tx_size];
-  const uint8_t txh_unit = tx_size_high_unit[tx_size];
-  const int step = txw_unit * txh_unit;
-  int i = 0, r, c;
-
-  // If mb_to_right_edge is < 0 we are in a situation in which
-  // the current block size extends into the UMV and we won't
-  // visit the sub blocks that are wholly within the UMV.
-  const int max_blocks_wide = max_block_wide(xd, plane_bsize, plane);
-  const int max_blocks_high = max_block_high(xd, plane_bsize, plane);
-
-  int blk_row, blk_col;
-
-  const BLOCK_SIZE max_unit_bsize =
-      get_plane_block_size(BLOCK_64X64, pd->subsampling_x, pd->subsampling_y);
-  int mu_blocks_wide = block_size_wide[max_unit_bsize] >> tx_size_wide_log2[0];
-  int mu_blocks_high = block_size_high[max_unit_bsize] >> tx_size_high_log2[0];
-  mu_blocks_wide = AOMMIN(max_blocks_wide, mu_blocks_wide);
-  mu_blocks_high = AOMMIN(max_blocks_high, mu_blocks_high);
-
-  // Keep track of the row and column of the blocks we use so that we know
-  // if we are in the unrestricted motion border.
-  for (r = 0; r < max_blocks_high; r += mu_blocks_high) {
-    const int unit_height = AOMMIN(mu_blocks_high + r, max_blocks_high);
-    // Skip visiting the sub blocks that are wholly within the UMV.
-    for (c = 0; c < max_blocks_wide; c += mu_blocks_wide) {
-      const int unit_width = AOMMIN(mu_blocks_wide + c, max_blocks_wide);
-      for (blk_row = r; blk_row < unit_height; blk_row += txh_unit) {
-        for (blk_col = c; blk_col < unit_width; blk_col += txw_unit) {
-          visit(plane, i, blk_row, blk_col, plane_bsize, tx_size, arg);
-          i += step;
-        }
-      }
-    }
-  }
-}
-
-void av1_foreach_transformed_block(const MACROBLOCKD *const xd,
-                                   BLOCK_SIZE bsize, int mi_row, int mi_col,
-                                   foreach_transformed_block_visitor visit,
-                                   void *arg, const int num_planes) {
-  for (int plane = 0; plane < num_planes; ++plane) {
-    if (!is_chroma_reference(mi_row, mi_col, bsize,
-                             xd->plane[plane].subsampling_x,
-                             xd->plane[plane].subsampling_y))
-      continue;
-    av1_foreach_transformed_block_in_plane(xd, bsize, plane, visit, arg);
-  }
-}
-
 void av1_set_contexts(const MACROBLOCKD *xd, struct macroblockd_plane *pd,
                       int plane, BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
                       int has_eob, int aoff, int loff) {
@@ -158,6 +98,10 @@ void av1_setup_block_planes(MACROBLOCKD *xd, int ss_x, int ss_y,
     xd->plane[i].plane_type = get_plane_type(i);
     xd->plane[i].subsampling_x = i ? ss_x : 0;
     xd->plane[i].subsampling_y = i ? ss_y : 0;
+  }
+  for (i = num_planes; i < MAX_MB_PLANE; i++) {
+    xd->plane[i].subsampling_x = 1;
+    xd->plane[i].subsampling_y = 1;
   }
 }
 

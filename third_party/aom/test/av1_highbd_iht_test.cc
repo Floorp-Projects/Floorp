@@ -14,10 +14,12 @@
 #include "config/av1_rtcd.h"
 
 #include "test/acm_random.h"
+#include "test/av1_txfm_test.h"
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
 #include "av1/common/enums.h"
+#include "av1/common/scan.h"
 #include "aom_dsp/aom_dsp_common.h"
 #include "aom_ports/mem.h"
 
@@ -142,55 +144,8 @@ using ::testing::make_tuple;
 #define PARAM_LIST_4X4                                   \
   &av1_fwd_txfm2d_4x4_c, &av1_inv_txfm2d_add_4x4_sse4_1, \
       &av1_inv_txfm2d_add_4x4_c, 16
-#define PARAM_LIST_8X8                                   \
-  &av1_fwd_txfm2d_8x8_c, &av1_inv_txfm2d_add_8x8_sse4_1, \
-      &av1_inv_txfm2d_add_8x8_c, 64
-#define PARAM_LIST_16X16                                     \
-  &av1_fwd_txfm2d_16x16_c, &av1_inv_txfm2d_add_16x16_sse4_1, \
-      &av1_inv_txfm2d_add_16x16_c, 256
-#define PARAM_LIST_64X64                                     \
-  &av1_fwd_txfm2d_64x64_c, &av1_inv_txfm2d_add_64x64_sse4_1, \
-      &av1_inv_txfm2d_add_64x64_c, 4096
 
 const IHbdHtParam kArrayIhtParam[] = {
-  // 16x16
-  make_tuple(PARAM_LIST_16X16, DCT_DCT, 10),
-  make_tuple(PARAM_LIST_16X16, DCT_DCT, 12),
-  make_tuple(PARAM_LIST_16X16, ADST_DCT, 10),
-  make_tuple(PARAM_LIST_16X16, ADST_DCT, 12),
-  make_tuple(PARAM_LIST_16X16, DCT_ADST, 10),
-  make_tuple(PARAM_LIST_16X16, DCT_ADST, 12),
-  make_tuple(PARAM_LIST_16X16, ADST_ADST, 10),
-  make_tuple(PARAM_LIST_16X16, ADST_ADST, 12),
-  make_tuple(PARAM_LIST_16X16, FLIPADST_DCT, 10),
-  make_tuple(PARAM_LIST_16X16, FLIPADST_DCT, 12),
-  make_tuple(PARAM_LIST_16X16, DCT_FLIPADST, 10),
-  make_tuple(PARAM_LIST_16X16, DCT_FLIPADST, 12),
-  make_tuple(PARAM_LIST_16X16, FLIPADST_FLIPADST, 10),
-  make_tuple(PARAM_LIST_16X16, FLIPADST_FLIPADST, 12),
-  make_tuple(PARAM_LIST_16X16, ADST_FLIPADST, 10),
-  make_tuple(PARAM_LIST_16X16, ADST_FLIPADST, 12),
-  make_tuple(PARAM_LIST_16X16, FLIPADST_ADST, 10),
-  make_tuple(PARAM_LIST_16X16, FLIPADST_ADST, 12),
-  // 8x8
-  make_tuple(PARAM_LIST_8X8, DCT_DCT, 10),
-  make_tuple(PARAM_LIST_8X8, DCT_DCT, 12),
-  make_tuple(PARAM_LIST_8X8, ADST_DCT, 10),
-  make_tuple(PARAM_LIST_8X8, ADST_DCT, 12),
-  make_tuple(PARAM_LIST_8X8, DCT_ADST, 10),
-  make_tuple(PARAM_LIST_8X8, DCT_ADST, 12),
-  make_tuple(PARAM_LIST_8X8, ADST_ADST, 10),
-  make_tuple(PARAM_LIST_8X8, ADST_ADST, 12),
-  make_tuple(PARAM_LIST_8X8, FLIPADST_DCT, 10),
-  make_tuple(PARAM_LIST_8X8, FLIPADST_DCT, 12),
-  make_tuple(PARAM_LIST_8X8, DCT_FLIPADST, 10),
-  make_tuple(PARAM_LIST_8X8, DCT_FLIPADST, 12),
-  make_tuple(PARAM_LIST_8X8, FLIPADST_FLIPADST, 10),
-  make_tuple(PARAM_LIST_8X8, FLIPADST_FLIPADST, 12),
-  make_tuple(PARAM_LIST_8X8, ADST_FLIPADST, 10),
-  make_tuple(PARAM_LIST_8X8, ADST_FLIPADST, 12),
-  make_tuple(PARAM_LIST_8X8, FLIPADST_ADST, 10),
-  make_tuple(PARAM_LIST_8X8, FLIPADST_ADST, 12),
   // 4x4
   make_tuple(PARAM_LIST_4X4, DCT_DCT, 10),
   make_tuple(PARAM_LIST_4X4, DCT_DCT, 12),
@@ -210,27 +165,151 @@ const IHbdHtParam kArrayIhtParam[] = {
   make_tuple(PARAM_LIST_4X4, ADST_FLIPADST, 12),
   make_tuple(PARAM_LIST_4X4, FLIPADST_ADST, 10),
   make_tuple(PARAM_LIST_4X4, FLIPADST_ADST, 12),
-  make_tuple(PARAM_LIST_64X64, DCT_DCT, 10),
-  make_tuple(PARAM_LIST_64X64, DCT_DCT, 12),
 };
 
 INSTANTIATE_TEST_CASE_P(SSE4_1, AV1HighbdInvHTNxN,
                         ::testing::ValuesIn(kArrayIhtParam));
 #endif  // HAVE_SSE4_1
 
-#if HAVE_AVX2
-#define PARAM_LIST_32X32                                   \
-  &av1_fwd_txfm2d_32x32_c, &av1_inv_txfm2d_add_32x32_avx2, \
-      &av1_inv_txfm2d_add_32x32_c, 1024
+typedef void (*HighbdInvTxfm2dFunc)(const int32_t *input, uint8_t *output,
+                                    int stride, const TxfmParam *txfm_param);
 
-const IHbdHtParam kArrayIhtParam32x32[] = {
-  // 32x32
-  make_tuple(PARAM_LIST_32X32, DCT_DCT, 10),
-  make_tuple(PARAM_LIST_32X32, DCT_DCT, 12),
+typedef ::testing::tuple<const HighbdInvTxfm2dFunc> AV1HighbdInvTxfm2dParam;
+class AV1HighbdInvTxfm2d
+    : public ::testing::TestWithParam<AV1HighbdInvTxfm2dParam> {
+ public:
+  virtual void SetUp() { target_func_ = GET_PARAM(0); }
+  void RunAV1InvTxfm2dTest(TX_TYPE tx_type, TX_SIZE tx_size, int run_times,
+                           int bit_depth);
+
+ private:
+  HighbdInvTxfm2dFunc target_func_;
 };
 
-INSTANTIATE_TEST_CASE_P(AVX2, AV1HighbdInvHTNxN,
-                        ::testing::ValuesIn(kArrayIhtParam32x32));
+void AV1HighbdInvTxfm2d::RunAV1InvTxfm2dTest(TX_TYPE tx_type_, TX_SIZE tx_size_,
+                                             int run_times, int bit_depth_) {
+  FwdTxfm2dFunc fwd_func_ = libaom_test::fwd_txfm_func_ls[tx_size_];
+  TxfmParam txfm_param;
+  const int BLK_WIDTH = 64;
+  const int BLK_SIZE = BLK_WIDTH * BLK_WIDTH;
+  DECLARE_ALIGNED(16, int16_t, input[BLK_SIZE]) = { 0 };
+  DECLARE_ALIGNED(32, int32_t, inv_input[BLK_SIZE]) = { 0 };
+  DECLARE_ALIGNED(32, uint16_t, output[BLK_SIZE]) = { 0 };
+  DECLARE_ALIGNED(32, uint16_t, ref_output[BLK_SIZE]) = { 0 };
+  int stride = BLK_WIDTH;
+  int rows = tx_size_high[tx_size_];
+  int cols = tx_size_wide[tx_size_];
+  const int rows_nonezero = AOMMIN(32, rows);
+  const int cols_nonezero = AOMMIN(32, cols);
+  const uint16_t mask = (1 << bit_depth_) - 1;
+  run_times /= (rows * cols);
+  run_times = AOMMAX(1, run_times);
+  const SCAN_ORDER *scan_order = get_default_scan(tx_size_, tx_type_);
+  const int16_t *scan = scan_order->scan;
+  const int16_t eobmax = rows_nonezero * cols_nonezero;
+  ACMRandom rnd(ACMRandom::DeterministicSeed());
+  int randTimes = run_times == 1 ? (eobmax) : 1;
 
-#endif  // HAVE_AVX2
+  txfm_param.tx_type = tx_type_;
+  txfm_param.tx_size = tx_size_;
+  txfm_param.lossless = 0;
+  txfm_param.bd = bit_depth_;
+  txfm_param.is_hbd = 1;
+  txfm_param.tx_set_type = EXT_TX_SET_ALL16;
+
+  for (int cnt = 0; cnt < randTimes; ++cnt) {
+    for (int r = 0; r < BLK_WIDTH; ++r) {
+      for (int c = 0; c < BLK_WIDTH; ++c) {
+        input[r * cols + c] = (rnd.Rand16() & mask) - (rnd.Rand16() & mask);
+        output[r * stride + c] = rnd.Rand16() & mask;
+
+        ref_output[r * stride + c] = output[r * stride + c];
+      }
+    }
+    fwd_func_(input, inv_input, stride, tx_type_, bit_depth_);
+
+    // produce eob input by setting high freq coeffs to zero
+    const int eob = AOMMIN(cnt + 1, eobmax);
+    for (int i = eob; i < eobmax; i++) {
+      inv_input[scan[i]] = 0;
+    }
+    txfm_param.eob = eob;
+    aom_usec_timer ref_timer, test_timer;
+
+    aom_usec_timer_start(&ref_timer);
+    for (int i = 0; i < run_times; ++i) {
+      av1_highbd_inv_txfm_add_c(inv_input, CONVERT_TO_BYTEPTR(ref_output),
+                                stride, &txfm_param);
+    }
+    aom_usec_timer_mark(&ref_timer);
+    const int elapsed_time_c =
+        static_cast<int>(aom_usec_timer_elapsed(&ref_timer));
+
+    aom_usec_timer_start(&test_timer);
+    for (int i = 0; i < run_times; ++i) {
+      target_func_(inv_input, CONVERT_TO_BYTEPTR(output), stride, &txfm_param);
+    }
+    aom_usec_timer_mark(&test_timer);
+    const int elapsed_time_simd =
+        static_cast<int>(aom_usec_timer_elapsed(&test_timer));
+    if (run_times > 10) {
+      printf(
+          "txfm_size[%d] \t txfm_type[%d] \t c_time=%d \t simd_time=%d \t "
+          "gain=%d \n",
+          tx_size_, tx_type_, elapsed_time_c, elapsed_time_simd,
+          (elapsed_time_c / elapsed_time_simd));
+    } else {
+      for (int r = 0; r < rows; ++r) {
+        for (int c = 0; c < cols; ++c) {
+          ASSERT_EQ(ref_output[r * stride + c], output[r * stride + c])
+              << "[" << r << "," << c << "] " << cnt
+              << " tx_size: " << static_cast<int>(tx_size_)
+              << " tx_type: " << tx_type_ << " eob " << eob;
+        }
+      }
+    }
+  }
+}
+
+TEST_P(AV1HighbdInvTxfm2d, match) {
+  int bitdepth_ar[2] = { 10, 12 };
+  for (int k = 0; k < 2; ++k) {
+    int bd = bitdepth_ar[k];
+    for (int j = 0; j < (int)(TX_SIZES_ALL); ++j) {
+      for (int i = 0; i < (int)TX_TYPES; ++i) {
+        if (libaom_test::IsTxSizeTypeValid(static_cast<TX_SIZE>(j),
+                                           static_cast<TX_TYPE>(i))) {
+          RunAV1InvTxfm2dTest(static_cast<TX_TYPE>(i), static_cast<TX_SIZE>(j),
+                              1, bd);
+        }
+      }
+    }
+  }
+}
+
+TEST_P(AV1HighbdInvTxfm2d, DISABLED_Speed) {
+  int bitdepth_ar[2] = { 10, 12 };
+  for (int k = 0; k < 2; ++k) {
+    int bd = bitdepth_ar[k];
+    for (int j = 0; j < (int)(TX_SIZES_ALL); ++j) {
+      for (int i = 0; i < (int)TX_TYPES; ++i) {
+        if (libaom_test::IsTxSizeTypeValid(static_cast<TX_SIZE>(j),
+                                           static_cast<TX_TYPE>(i))) {
+          RunAV1InvTxfm2dTest(static_cast<TX_TYPE>(i), static_cast<TX_SIZE>(j),
+                              1000000, bd);
+        }
+      }
+    }
+  }
+}
+
+#if HAVE_SSE4_1
+INSTANTIATE_TEST_CASE_P(SSE4_1, AV1HighbdInvTxfm2d,
+                        ::testing::Values(av1_highbd_inv_txfm_add_sse4_1));
+#endif
+
+#if HAVE_AVX2
+INSTANTIATE_TEST_CASE_P(AVX2, AV1HighbdInvTxfm2d,
+                        ::testing::Values(av1_highbd_inv_txfm_add_avx2));
+#endif
 }  // namespace

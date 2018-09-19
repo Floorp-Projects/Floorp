@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef AOMENC_H_
-#define AOMENC_H_
+#ifndef AOM_APPS_AOMENC_H_
+#define AOM_APPS_AOMENC_H_
 
 #include "aom/aom_encoder.h"
 
@@ -47,7 +47,6 @@ struct AvxEncoderConfig {
   enum TestDecodeFatality test_decode;
   int have_framerate;
   struct aom_rational framerate;
-  int out_part;
   int debug;
   int show_q_hist_buckets;
   int show_rate_hist_buckets;
@@ -60,4 +59,4 @@ struct AvxEncoderConfig {
 }  // extern "C"
 #endif
 
-#endif  // AOMENC_H_
+#endif  // AOM_APPS_AOMENC_H_

@@ -1,0 +1,14 @@
+Name: vector
+URL: https://github.com/goldsborough/vector
+Version: commit-id: 40efe82
+License: MIT
+License File: LICENSE
+
+Description:
+A feature-complete, generic and customizable resizable
+array implementation in pure C that supports almost
+the entire C++ std::vector API, including iterators.
+
+Local Modifications:
+Renamed some functions to fit in with the AOMedia
+naming convention.

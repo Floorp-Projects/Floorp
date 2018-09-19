@@ -9,6 +9,9 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
+#ifndef AOM_AV1_COMMON_TOKEN_CDFS_H_
+#define AOM_AV1_COMMON_TOKEN_CDFS_H_
+
 #include "config/aom_config.h"
 
 #include "av1/common/entropy.h"
@@ -3548,3 +3551,5 @@ static const aom_cdf_prob av1_default_coeff_base_eob_multi_cdfs
                                         { AOM_CDF3(10923, 21845) },
                                         { AOM_CDF3(10923, 21845) },
                                         { AOM_CDF3(10923, 21845) } } } } };
+
+#endif  // AOM_AV1_COMMON_TOKEN_CDFS_H_
