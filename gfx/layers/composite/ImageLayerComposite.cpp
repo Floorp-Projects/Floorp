@@ -103,11 +103,31 @@ ImageLayerComposite::RenderLayer(const IntRect& aClipRect,
   RenderWithAllMasks(this, mCompositor, aClipRect,
                      [&](EffectChain& effectChain, const IntRect& clipRect) {
     mImageHost->SetTextureSourceProvider(mCompositor);
-    mImageHost->Composite(mCompositor, this, effectChain,
-                          GetEffectiveOpacity(),
-                          GetEffectiveTransformForBuffer(),
-                          GetSamplingFilter(),
-                          clipRect);
+
+    const IntRect destRect(IntPoint(0, 0), mImageHost->GetImageSize());
+    const IntRect fillRect = mVisibleRegion.GetBounds().ToUnknownRect();
+    const IntPoint topLeft = GetTopLeftTilePos(destRect, fillRect, mRepeatSize);
+
+    for (int x = topLeft.x; x < fillRect.XMost(); x += mRepeatSize.width) {
+      for (int y = topLeft.y; y < fillRect.YMost(); y += mRepeatSize.height) {
+        Matrix4x4 tileTransform = GetEffectiveTransformForBuffer();
+        tileTransform.PreTranslate(x - destRect.x, y - destRect.y, 0);
+
+        mImageHost->Composite(mCompositor, this, effectChain,
+                              GetEffectiveOpacity(),
+                              tileTransform,
+                              GetSamplingFilter(),
+                              clipRect);
+
+        if (!mRepeatSize.height) {
+          break;
+        }
+      }
+      if (!mRepeatSize.width) {
+        break;
+      }
+    }
+
   });
   mImageHost->BumpFlashCounter();
 }
