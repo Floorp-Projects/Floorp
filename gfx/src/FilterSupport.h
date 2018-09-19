@@ -87,158 +87,333 @@ const unsigned short SVG_FECOMPOSITE_OPERATOR_ATOP = 4;
 const unsigned short SVG_FECOMPOSITE_OPERATOR_XOR = 5;
 const unsigned short SVG_FECOMPOSITE_OPERATOR_ARITHMETIC = 6;
 
-enum AttributeName {
-  eBlendBlendmode = 0,
-  eMorphologyRadii,
-  eMorphologyOperator,
-  eColorMatrixType,
-  eColorMatrixValues,
-  eFloodColor,
-  eTileSourceRect,
-  eOpacityOpacity,
-  // In many cases R, G, and B will all use an identical
-  // attribute map - in this case we can reduce unnecessary
-  // copying by having one shared AttributeName
-  eComponentTransferFunctionRGB,
-  eComponentTransferFunctionR,
-  eComponentTransferFunctionG,
-  eComponentTransferFunctionB,
-  eComponentTransferFunctionA,
-  eComponentTransferFunctionType,
-  eComponentTransferFunctionTableValues,
-  eComponentTransferFunctionSlope,
-  eComponentTransferFunctionIntercept,
-  eComponentTransferFunctionAmplitude,
-  eComponentTransferFunctionExponent,
-  eComponentTransferFunctionOffset,
-  eConvolveMatrixKernelSize,
-  eConvolveMatrixKernelMatrix,
-  eConvolveMatrixDivisor,
-  eConvolveMatrixBias,
-  eConvolveMatrixTarget,
-  eConvolveMatrixEdgeMode,
-  eConvolveMatrixKernelUnitLength,
-  eConvolveMatrixPreserveAlpha,
-  eOffsetOffset,
-  eDropShadowStdDeviation,
-  eDropShadowOffset,
-  eDropShadowColor,
-  eDisplacementMapScale,
-  eDisplacementMapXChannel,
-  eDisplacementMapYChannel,
-  eTurbulenceOffset,
-  eTurbulenceBaseFrequency,
-  eTurbulenceNumOctaves,
-  eTurbulenceSeed,
-  eTurbulenceStitchable,
-  eTurbulenceType,
-  eCompositeOperator,
-  eCompositeCoefficients,
-  eGaussianBlurStdDeviation,
-  eLightingLight,
-  eLightingSurfaceScale,
-  eLightingKernelUnitLength,
-  eLightingColor,
-  eDiffuseLightingDiffuseConstant,
-  eSpecularLightingSpecularConstant,
-  eSpecularLightingSpecularExponent,
-  eLightType,
-  eLightTypeNone,
-  eLightTypePoint,
-  eLightTypeSpot,
-  eLightTypeDistant,
-  ePointLightPosition,
-  eSpotLightPosition,
-  eSpotLightPointsAt,
-  eSpotLightFocus,
-  eSpotLightLimitingConeAngle,
-  eDistantLightAzimuth,
-  eDistantLightElevation,
-  eImageInputIndex,
-  eImageFilter,
-  eImageNativeSize,
-  eImageSubregion,
-  eImageTransform,
-  eLastAttributeName
-};
-
 class DrawTarget;
 class SourceSurface;
 struct FilterAttribute;
 
-enum class AttributeType {
-  eBool,
-  eUint,
-  eFloat,
-  eSize,
-  eIntSize,
-  eIntPoint,
-  eMatrix,
-  eMatrix5x4,
-  ePoint3D,
-  eColor,
-  eAttributeMap,
-  eFloats,
-  Max
-};
-
 // Limits
 const float kMaxStdDeviation = 500;
 
-// A class that stores values of different types, keyed by an attribute name.
-// The Get*() methods assert that they're called for the same type that the
-// attribute was Set() with.
-// AttributeMaps can be nested because AttributeMap is a valid attribute type.
-class AttributeMap final {
-public:
-  AttributeMap();
-  AttributeMap(const AttributeMap& aOther);
-  AttributeMap& operator=(const AttributeMap& aOther);
-  AttributeMap(AttributeMap&& aOther);
-  AttributeMap& operator=(AttributeMap&& aOther);
-  bool operator==(const AttributeMap& aOther) const;
-  bool operator!=(const AttributeMap& aOther) const
-  {
-    return !(*this == aOther);
-  }
-  ~AttributeMap();
-
-  void Set(AttributeName aName, bool aValue);
-  void Set(AttributeName aName, uint32_t aValue);
-  void Set(AttributeName aName, float aValue);
-  void Set(AttributeName aName, const Size& aValue);
-  void Set(AttributeName aName, const IntSize& aValue);
-  void Set(AttributeName aName, const IntPoint& aValue);
-  void Set(AttributeName aName, const Matrix& aValue);
-  void Set(AttributeName aName, const Matrix5x4& aValue);
-  void Set(AttributeName aName, const Point3D& aValue);
-  void Set(AttributeName aName, const Color& aValue);
-  void Set(AttributeName aName, AttributeMap&& aValue);
-  void Set(AttributeName aName, const float* aValues, int32_t aLength);
-
-  bool GetBool(AttributeName aName) const;
-  uint32_t GetUint(AttributeName aName) const;
-  float GetFloat(AttributeName aName) const;
-  Size GetSize(AttributeName aName) const;
-  IntSize GetIntSize(AttributeName aName) const;
-  IntPoint GetIntPoint(AttributeName aName) const;
-  Matrix GetMatrix(AttributeName aName) const;
-  Matrix5x4 GetMatrix5x4(AttributeName aName) const;
-  Point3D GetPoint3D(AttributeName aName) const;
-  Color GetColor(AttributeName aName) const;
-  const AttributeMap& GetAttributeMap(AttributeName aName) const;
-  const AttributeMap* MaybeGetAttributeMap(AttributeName aName) const;
-  const nsTArray<float>& GetFloats(AttributeName aName) const;
-
-  uint32_t Count() const;
-
-  nsClassHashtable<nsUint32HashKey, FilterAttribute>::Iterator ConstIter() const;
-
-  static AttributeType GetType(FilterAttribute* aAttribute);
-
-private:
-  mutable nsClassHashtable<nsUint32HashKey, FilterAttribute>  mMap;
+enum class PrimitiveType {
+  Empty = 0,
+  Blend,
+  Morphology,
+  ColorMatrix,
+  Flood,
+  Tile,
+  ComponentTransfer,
+  Opacity,
+  ConvolveMatrix,
+  Offset,
+  DisplacementMap,
+  Turbulence,
+  Composite,
+  Merge,
+  Image,
+  GaussianBlur,
+  DropShadow,
+  DiffuseLighting,
+  SpecularLighting,
+  ToAlpha,
+  Max
 };
+
+// Simple PrimitiveAttributes:
+
+struct EmptyAttributes {
+  bool operator==(const EmptyAttributes& aOther) const {
+    return true;
+  }
+};
+
+struct BlendAttributes {
+  uint32_t mBlendMode;
+
+  bool operator==(const BlendAttributes& aOther) const {
+    return mBlendMode == aOther.mBlendMode;
+  }
+};
+
+struct MorphologyAttributes {
+  uint32_t mOperator;
+  Size mRadii;
+
+  bool operator==(const MorphologyAttributes& aOther) const {
+    return mOperator == aOther.mOperator &&
+           mRadii == aOther.mRadii;
+  }
+};
+
+struct FloodAttributes {
+  Color mColor;
+
+  bool operator==(const FloodAttributes& aOther) const {
+    return mColor == aOther.mColor;
+  }
+};
+
+struct TileAttributes {
+  bool operator==(const TileAttributes& aOther) const {
+    return true;
+  }
+};
+
+struct OpacityAttributes {
+  float mOpacity;
+
+  bool operator==(const OpacityAttributes& aOther) const {
+    return mOpacity == aOther.mOpacity;
+  }
+};
+
+struct OffsetAttributes {
+  IntPoint mValue;
+
+  bool operator==(const OffsetAttributes& aOther) const {
+    return mValue == aOther.mValue;
+  }
+};
+
+struct DisplacementMapAttributes {
+  float mScale;
+  uint32_t mXChannel;
+  uint32_t mYChannel;
+
+  bool operator==(const DisplacementMapAttributes& aOther) const {
+    return mScale == aOther.mScale &&
+           mXChannel == aOther.mXChannel &&
+           mYChannel == aOther.mYChannel;
+  }
+};
+
+struct TurbulenceAttributes {
+  IntPoint mOffset;
+  Size mBaseFrequency;
+  float mSeed;
+  uint32_t mOctaves;
+  bool mStitchable;
+  uint32_t mType;
+
+  bool operator==(const TurbulenceAttributes& aOther) const {
+    return mOffset == aOther.mOffset &&
+           mBaseFrequency == aOther.mBaseFrequency &&
+           mSeed == aOther.mSeed &&
+           mOctaves == aOther.mOctaves &&
+           mStitchable == aOther.mStitchable &&
+           mType == aOther.mType;
+  }
+};
+
+struct MergeAttributes {
+  bool operator==(const MergeAttributes& aOther) const {
+    return true;
+  }
+};
+
+struct ImageAttributes {
+  uint32_t mFilter;
+  uint32_t mInputIndex;
+  Matrix mTransform;
+
+  bool operator==(const ImageAttributes& aOther) const {
+    return mFilter == aOther.mFilter &&
+           mInputIndex == aOther.mInputIndex &&
+           mTransform.ExactlyEquals(aOther.mTransform);
+  }
+};
+
+struct GaussianBlurAttributes {
+  Size mStdDeviation;
+
+  bool operator==(const GaussianBlurAttributes& aOther) const {
+    return mStdDeviation == aOther.mStdDeviation;
+  }
+};
+
+struct DropShadowAttributes {
+  Size mStdDeviation;
+  IntPoint mOffset;
+  Color mColor;
+
+  bool operator==(const DropShadowAttributes& aOther) const {
+    return mStdDeviation == aOther.mStdDeviation &&
+           mOffset == aOther.mOffset &&
+           mColor == aOther.mColor;
+  }
+};
+
+struct ToAlphaAttributes {
+  bool operator==(const ToAlphaAttributes& aOther) const {
+    return true;
+  }
+};
+
+// Complex PrimitiveAttributes:
+
+class ImplicitlyCopyableFloatArray : public nsTArray<float>
+{
+public:
+  ImplicitlyCopyableFloatArray() : nsTArray<float>() {}
+
+  ImplicitlyCopyableFloatArray(ImplicitlyCopyableFloatArray&& aOther)
+  : nsTArray<float>(std::move(aOther)) {}
+
+  ImplicitlyCopyableFloatArray& operator=(ImplicitlyCopyableFloatArray&& aOther)
+  {
+    nsTArray<float>::operator=(std::move(aOther));
+    return *this;
+  }
+
+  ImplicitlyCopyableFloatArray(const ImplicitlyCopyableFloatArray& aOther) = default;
+
+  ImplicitlyCopyableFloatArray& operator=(const ImplicitlyCopyableFloatArray& aOther)
+  {
+    nsTArray<float>::operator=(aOther);
+    return *this;
+  }
+};
+
+struct ColorMatrixAttributes {
+  uint32_t mType;
+  ImplicitlyCopyableFloatArray mValues;
+
+  bool operator==(const ColorMatrixAttributes& aOther) const {
+    return mType == aOther.mType &&
+           mValues == aOther.mValues;
+  }
+};
+
+// If the types for G and B are SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN,
+// assume the R values are RGB - this lets us avoid copies.
+const uint32_t kChannelROrRGB = 0;
+const uint32_t kChannelG = 1;
+const uint32_t kChannelB = 2;
+const uint32_t kChannelA = 3;
+
+const uint32_t kComponentTransferSlopeIndex = 0;
+const uint32_t kComponentTransferInterceptIndex = 1;
+
+const uint32_t kComponentTransferAmplitudeIndex = 0;
+const uint32_t kComponentTransferExponentIndex = 1;
+const uint32_t kComponentTransferOffsetIndex = 2;
+
+struct ComponentTransferAttributes {
+  uint8_t mTypes[4];
+  ImplicitlyCopyableFloatArray mValues[4];
+
+  bool operator==(const ComponentTransferAttributes& aOther) const {
+    return mTypes[0] == aOther.mTypes[0] &&
+           mTypes[1] == aOther.mTypes[1] &&
+           mTypes[2] == aOther.mTypes[2] &&
+           mTypes[3] == aOther.mTypes[3] &&
+           mValues[0] == aOther.mValues[0] &&
+           mValues[1] == aOther.mValues[1] &&
+           mValues[2] == aOther.mValues[2] &&
+           mValues[3] == aOther.mValues[3];
+  }
+};
+
+struct ConvolveMatrixAttributes {
+  IntSize mKernelSize;
+  ImplicitlyCopyableFloatArray mKernelMatrix;
+  float mDivisor;
+  float mBias;
+  IntPoint mTarget;
+  uint32_t mEdgeMode;
+  Size mKernelUnitLength;
+  bool mPreserveAlpha;
+
+  bool operator==(const ConvolveMatrixAttributes& aOther) const {
+    return mKernelSize == aOther.mKernelSize &&
+           mKernelMatrix == aOther.mKernelMatrix &&
+           mDivisor == aOther.mDivisor &&
+           mBias == aOther.mBias &&
+           mTarget == aOther.mTarget &&
+           mEdgeMode == aOther.mEdgeMode &&
+           mKernelUnitLength == aOther.mKernelUnitLength &&
+           mPreserveAlpha == aOther.mPreserveAlpha;
+  }
+};
+
+struct CompositeAttributes {
+  uint32_t mOperator;
+  ImplicitlyCopyableFloatArray mCoefficients;
+
+  bool operator==(const CompositeAttributes& aOther) const {
+    return mOperator == aOther.mOperator &&
+           mCoefficients == aOther.mCoefficients;
+  }
+};
+
+enum class LightType {
+  None = 0,
+  Point,
+  Spot,
+  Distant,
+  Max,
+};
+
+const uint32_t kDistantLightAzimuthIndex = 0;
+const uint32_t kDistantLightElevationIndex = 1;
+const uint32_t kDistantLightNumAttributes = 2;
+
+const uint32_t kPointLightPositionXIndex = 0;
+const uint32_t kPointLightPositionYIndex = 1;
+const uint32_t kPointLightPositionZIndex = 2;
+const uint32_t kPointLightNumAttributes = 3;
+
+const uint32_t kSpotLightPositionXIndex = 0;
+const uint32_t kSpotLightPositionYIndex = 1;
+const uint32_t kSpotLightPositionZIndex = 2;
+const uint32_t kSpotLightPointsAtXIndex = 3;
+const uint32_t kSpotLightPointsAtYIndex = 4;
+const uint32_t kSpotLightPointsAtZIndex = 5;
+const uint32_t kSpotLightFocusIndex = 6;
+const uint32_t kSpotLightLimitingConeAngleIndex = 7;
+const uint32_t kSpotLightNumAttributes = 8;
+
+struct DiffuseLightingAttributes {
+  LightType mLightType;
+  ImplicitlyCopyableFloatArray mLightValues;
+  float mSurfaceScale;
+  Size mKernelUnitLength;
+  Color mColor;
+  float mLightingConstant;
+  float mSpecularExponent;
+
+  bool operator==(const DiffuseLightingAttributes& aOther) const {
+    return mLightType == aOther.mLightType &&
+           mLightValues == aOther.mLightValues &&
+           mSurfaceScale == aOther.mSurfaceScale &&
+           mKernelUnitLength == aOther.mKernelUnitLength &&
+           mColor == aOther.mColor;
+  }
+};
+
+struct SpecularLightingAttributes : public DiffuseLightingAttributes {
+};
+
+typedef Variant<
+  EmptyAttributes,
+  BlendAttributes,
+  MorphologyAttributes,
+  ColorMatrixAttributes,
+  FloodAttributes,
+  TileAttributes,
+  ComponentTransferAttributes,
+  OpacityAttributes,
+  ConvolveMatrixAttributes,
+  OffsetAttributes,
+  DisplacementMapAttributes,
+  TurbulenceAttributes,
+  CompositeAttributes,
+  MergeAttributes,
+  ImageAttributes,
+  GaussianBlurAttributes,
+  DropShadowAttributes,
+  DiffuseLightingAttributes,
+  SpecularLightingAttributes,
+  ToAlphaAttributes> PrimitiveAttributes;
 
 enum class ColorSpace {
   SRGB,
@@ -277,30 +452,6 @@ public:
   AlphaModel mAlphaModel;
 };
 
-enum class PrimitiveType {
-  Empty = 0,
-  Blend,
-  Morphology,
-  ColorMatrix,
-  Flood,
-  Tile,
-  ComponentTransfer,
-  Opacity,
-  ConvolveMatrix,
-  Offset,
-  DisplacementMap,
-  Turbulence,
-  Composite,
-  Merge,
-  Image,
-  GaussianBlur,
-  DropShadow,
-  DiffuseLighting,
-  SpecularLighting,
-  ToAlpha,
-  Max
-};
-
 /**
  * A data structure to carry attributes for a given primitive that's part of a
  * filter. Will be serializable via IPDL, so it must not contain complex
@@ -325,8 +476,8 @@ public:
 
   PrimitiveType Type() const { return mType; }
   void SetType(PrimitiveType aType) { mType = aType; }
-  const AttributeMap& Attributes() const { return mAttributes; }
-  AttributeMap& Attributes() { return mAttributes; }
+  const PrimitiveAttributes& Attributes() const { return mAttributes; }
+  PrimitiveAttributes& Attributes() { return mAttributes; }
 
   IntRect PrimitiveSubregion() const { return mFilterPrimitiveSubregion; }
   IntRect FilterSpaceBounds() const { return mFilterSpaceBounds; }
@@ -387,7 +538,7 @@ public:
 
 private:
   PrimitiveType mType;
-  AttributeMap mAttributes;
+  PrimitiveAttributes mAttributes;
   nsTArray<int32_t> mInputPrimitives;
   IntRect mFilterPrimitiveSubregion;
   IntRect mFilterSpaceBounds;

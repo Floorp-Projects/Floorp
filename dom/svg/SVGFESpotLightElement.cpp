@@ -58,26 +58,25 @@ SVGFESpotLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 
 //----------------------------------------------------------------------
 
-AttributeMap
-SVGFESpotLightElement::ComputeLightAttributes(nsSVGFilterInstance* aInstance)
+LightType
+SVGFESpotLightElement::ComputeLightAttributes(nsSVGFilterInstance* aInstance,
+                                              nsTArray<float>& aFloatAttributes)
 {
-  Point3D lightPos, pointsAt;
-  float specularExponent, limitingConeAngle;
-  GetAnimatedNumberValues(&lightPos.x, &lightPos.y, &lightPos.z,
-                          &pointsAt.x, &pointsAt.y, &pointsAt.z,
-                          &specularExponent, &limitingConeAngle,
+  aFloatAttributes.SetLength(kSpotLightNumAttributes);
+  GetAnimatedNumberValues(&aFloatAttributes[kSpotLightPositionXIndex],
+                          &aFloatAttributes[kSpotLightPositionYIndex],
+                          &aFloatAttributes[kSpotLightPositionZIndex],
+                          &aFloatAttributes[kSpotLightPointsAtXIndex],
+                          &aFloatAttributes[kSpotLightPointsAtYIndex],
+                          &aFloatAttributes[kSpotLightPointsAtZIndex],
+                          &aFloatAttributes[kSpotLightFocusIndex],
+                          &aFloatAttributes[kSpotLightLimitingConeAngleIndex],
                           nullptr);
   if (!mNumberAttributes[SVGFESpotLightElement::LIMITING_CONE_ANGLE].IsExplicitlySet()) {
-    limitingConeAngle = 90;
+    aFloatAttributes[kSpotLightLimitingConeAngleIndex] = 90;
   }
 
-  AttributeMap map;
-  map.Set(eLightType, (uint32_t)eLightTypeSpot);
-  map.Set(eSpotLightPosition, aInstance->ConvertLocation(lightPos));
-  map.Set(eSpotLightPointsAt, aInstance->ConvertLocation(pointsAt));
-  map.Set(eSpotLightFocus, specularExponent);
-  map.Set(eSpotLightLimitingConeAngle, limitingConeAngle);
-  return map;
+  return LightType::Spot;
 }
 
 already_AddRefed<SVGAnimatedNumber>

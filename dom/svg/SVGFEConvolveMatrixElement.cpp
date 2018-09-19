@@ -239,16 +239,17 @@ SVGFEConvolveMatrixElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstan
   }
 
   FilterPrimitiveDescription descr(PrimitiveType::ConvolveMatrix);
-  AttributeMap& atts = descr.Attributes();
-  atts.Set(eConvolveMatrixKernelSize, IntSize(orderX, orderY));
-  atts.Set(eConvolveMatrixKernelMatrix, &kernelMatrix[0], kmLength);
-  atts.Set(eConvolveMatrixDivisor, divisor);
-  atts.Set(eConvolveMatrixBias, bias);
-  atts.Set(eConvolveMatrixTarget, IntPoint(targetX, targetY));
-  atts.Set(eConvolveMatrixEdgeMode, edgeMode);
-  atts.Set(eConvolveMatrixKernelUnitLength, kernelUnitLength);
-  atts.Set(eConvolveMatrixPreserveAlpha, preserveAlpha);
+  ConvolveMatrixAttributes atts;
+  atts.mKernelSize = IntSize(orderX, orderY);
+  atts.mKernelMatrix.AppendElements(&kernelMatrix[0], kmLength);
+  atts.mDivisor = divisor;
+  atts.mBias = bias;
+  atts.mTarget = IntPoint(targetX, targetY);
+  atts.mEdgeMode = edgeMode;
+  atts.mKernelUnitLength = kernelUnitLength;
+  atts.mPreserveAlpha = preserveAlpha;
 
+  descr.Attributes() = AsVariant(std::move(atts));
   return descr;
 }
 

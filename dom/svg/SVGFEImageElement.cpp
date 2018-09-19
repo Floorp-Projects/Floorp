@@ -253,13 +253,15 @@ SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   SamplingFilter samplingFilter = nsLayoutUtils::GetSamplingFilterForFrame(frame);
 
   FilterPrimitiveDescription descr(PrimitiveType::Image);
-  descr.Attributes().Set(eImageFilter, (uint32_t)samplingFilter);
-  descr.Attributes().Set(eImageTransform, TM);
+  ImageAttributes atts;
+  atts.mFilter = (uint32_t)samplingFilter;
+  atts.mTransform = TM;
 
   // Append the image to aInputImages and store its index in the description.
   size_t imageIndex = aInputImages.Length();
   aInputImages.AppendElement(image);
-  descr.Attributes().Set(eImageInputIndex, (uint32_t)imageIndex);
+  atts.mInputIndex = (uint32_t)imageIndex;
+  descr.Attributes() = AsVariant(std::move(atts));
 
   return descr;
 }

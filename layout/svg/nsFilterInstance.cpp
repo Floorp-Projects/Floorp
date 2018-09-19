@@ -499,7 +499,6 @@ void
 nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams, float aOpacity)
 {
   MOZ_ASSERT(mTargetFrame, "Need a frame for rendering");
-  MOZ_ASSERT(mInitialized);
 
   if (mFilterDescription.mPrimitives.IsEmpty()) {
     // An filter without any primitive. Treat it as success and paint nothing.
@@ -531,8 +530,6 @@ nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams, float a
 nsRegion
 nsFilterInstance::ComputePostFilterDirtyRegion()
 {
-  MOZ_ASSERT(mInitialized);
-
   if (mPreFilterDirtyRegion.IsEmpty() || mFilterDescription.mPrimitives.IsEmpty()) {
     return nsRegion();
   }
@@ -546,8 +543,6 @@ nsFilterInstance::ComputePostFilterDirtyRegion()
 nsRect
 nsFilterInstance::ComputePostFilterExtents()
 {
-  MOZ_ASSERT(mInitialized);
-
   if (mFilterDescription.mPrimitives.IsEmpty()) {
     return nsRect();
   }
@@ -567,8 +562,6 @@ nsFilterInstance::ComputeSourceNeededRect()
 nsIntRect
 nsFilterInstance::OutputFilterSpaceBounds() const
 {
-  MOZ_ASSERT(mInitialized);
-
   uint32_t numPrimitives = mFilterDescription.mPrimitives.Length();
   if (numPrimitives <= 0)
     return nsIntRect();

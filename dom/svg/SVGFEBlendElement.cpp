@@ -90,7 +90,9 @@ SVGFEBlendElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
 {
   uint32_t mode = mEnumAttributes[MODE].GetAnimValue();
   FilterPrimitiveDescription descr(PrimitiveType::Blend);
-  descr.Attributes().Set(eBlendBlendmode, mode);
+  BlendAttributes attributes;
+  attributes.mBlendMode = mode;
+  descr.Attributes() = AsVariant(attributes);
   return descr;
 }
 
