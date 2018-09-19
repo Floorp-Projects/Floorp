@@ -63,7 +63,7 @@ toolbar[brighttext] {
 }
 
 .toolbarbutton-1 > .toolbarbutton-icon {
-  margin-inline-end: 0 !important;
+  margin-inline-end: 0;
 }
 
 .toolbarbutton-1 > .toolbarbutton-icon,
