@@ -140,13 +140,11 @@ xul|tabs {
 xul|tab {
   -moz-appearance: none;
   margin-top: 0;
-  padding: 4px 20px;
+  padding: 4px 20px 0 !important;
   min-height: 44px;
   color: inherit;
   background-color: var(--in-content-page-background);
-  border-width: 0;
-  /* !important overrides tabbox.css RTL and visuallyselected rules */
-  border-radius: 0 !important;
+  border-bottom: 4px solid transparent;
   transition: background-color 50ms ease 0s;
 }
 
@@ -156,8 +154,7 @@ xul|tab:hover {
 
 xul|tab[selected] {
   background-color: var(--in-content-box-background-hover);
-  padding-bottom: 0; /* compensate the 4px border */
-  border-bottom: 4px solid var(--in-content-border-highlight);
+  border-bottom-color: var(--in-content-border-highlight);
 }
 
 /* html buttons */
