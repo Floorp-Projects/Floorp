@@ -1815,7 +1815,9 @@ public:
    */
   bool IsInWillChangeBudget(nsIFrame* aFrame, const nsSize& aSize);
 
-  void ClearWillChangeBudget(nsIFrame* aFrame);
+  void RemoveFromWillChangeBudget(nsIFrame* aFrame);
+
+  void ClearWillChangeBudget();
 
   void EnterSVGEffectsContents(nsDisplayList* aHoistedItemsStorage);
   void ExitSVGEffectsContents();
@@ -2040,13 +2042,19 @@ private:
 
   struct FrameWillChangeBudget
   {
-    FrameWillChangeBudget(nsIFrame* aFrame, uint32_t aUsage)
-      : mFrame(aFrame)
+    FrameWillChangeBudget()
+      : mPresContext(nullptr)
+      , mUsage(0)
+    {
+    }
+
+    FrameWillChangeBudget(nsPresContext* aPresContext, uint32_t aUsage)
+      : mPresContext(aPresContext)
       , mUsage(aUsage)
     {
     }
 
-    nsIFrame* mFrame;
+    nsPresContext* mPresContext;
     uint32_t mUsage;
   };
 
@@ -2084,7 +2092,8 @@ private:
 
   // Any frame listed in this set is already counted in the budget
   // and thus is in-budget.
-  nsDataHashtable<nsPtrHashKey<nsIFrame>, uint32_t> mWillChangeBudgetSet;
+  nsDataHashtable<nsPtrHashKey<nsIFrame>, FrameWillChangeBudget>
+    mWillChangeBudgetSet;
 
   // Area of animated geometry root budget already allocated
   uint32_t mUsedAGRBudget;
