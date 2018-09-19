@@ -24,6 +24,8 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
+import kotlin.reflect.full.functions
+import kotlin.reflect.jvm.isAccessible
 
 @RunWith(RobolectricTestRunner::class)
 class FretboardTest {
@@ -483,5 +485,61 @@ class FretboardTest {
         `when`(storage.retrieve()).thenReturn(ExperimentsSnapshot(listOf(), null))
         val fretboard = Fretboard(source, storage)
         fretboard.updateExperiments()
+    }
+
+    @Test
+    fun testGetUserBucket() {
+        val context = mock(Context::class.java)
+        val sharedPrefs = mock(SharedPreferences::class.java)
+        val prefsEditor = mock(SharedPreferences.Editor::class.java)
+        val experimentSource = mock(ExperimentSource::class.java)
+        val experimentStorage = mock(ExperimentStorage::class.java)
+        `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
+        `when`(prefsEditor.putBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenReturn(prefsEditor)
+        `when`(prefsEditor.putString(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).thenReturn(prefsEditor)
+        `when`(context.getSharedPreferences(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(sharedPrefs)
+        `when`(sharedPrefs.getString(ArgumentMatchers.anyString(), ArgumentMatchers.isNull()))
+                .thenReturn("a94b1dab-030e-4b13-be15-cc80c1eda8b3")
+        val fretboard = Fretboard(experimentSource, experimentStorage)
+        assertTrue(fretboard.getUserBucket(context) == 54)
+    }
+
+    @Test
+    fun testEvenDistribution() {
+        val context = mock(Context::class.java)
+        val sharedPrefs = mock(SharedPreferences::class.java)
+        val prefsEditor = mock(SharedPreferences.Editor::class.java)
+        `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
+        `when`(prefsEditor.putBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenReturn(prefsEditor)
+        `when`(prefsEditor.putString(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).thenReturn(prefsEditor)
+        `when`(context.getSharedPreferences(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(sharedPrefs)
+
+        val distribution = (1..1000).map {
+            val experimentEvaluator = ExperimentEvaluator()
+            val f = experimentEvaluator::class.functions.find { it.name == "getUserBucket" }
+            f!!.isAccessible = true
+            f.call(experimentEvaluator, context) as Int
+        }
+
+        distribution
+                .groupingBy { it }
+                .eachCount()
+                .forEach {
+                    assertTrue(it.value in 0..25)
+                }
+
+        distribution
+                .groupingBy { it / 10 }
+                .eachCount()
+                .forEach {
+                    assertTrue(it.value in 50..150)
+                }
+
+        distribution
+                .groupingBy { it / 50 }
+                .eachCount()
+                .forEach {
+                    assertTrue(it.value in 350..650)
+                }
     }
 }

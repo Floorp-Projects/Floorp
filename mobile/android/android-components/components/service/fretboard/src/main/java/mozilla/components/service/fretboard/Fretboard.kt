@@ -183,6 +183,16 @@ class Fretboard(
         evaluator.clearAllOverridesNow(context)
     }
 
+    /**
+     * Returns the user bucket number used to determine whether the user
+     * is in or out of the experiment
+     *
+     * @param context context
+     */
+    fun getUserBucket(context: Context): Int {
+        return evaluator.getUserBucket(context)
+    }
+
     companion object {
         private const val LOG_TAG = "fretboard"
     }

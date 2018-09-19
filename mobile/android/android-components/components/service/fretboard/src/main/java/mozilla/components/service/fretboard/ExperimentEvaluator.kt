@@ -89,7 +89,7 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
             userBucket < experiment.bucket.max)
     }
 
-    private fun getUserBucket(context: Context): Int {
+    fun getUserBucket(context: Context): Int {
         val uuid = DeviceUuidFactory(context).uuid
         val crc = CRC32()
         crc.update(uuid.toByteArray())
