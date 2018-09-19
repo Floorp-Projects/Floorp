@@ -199,10 +199,6 @@ child:
                               IPCPaymentAddress aAddress);
   async ChangeShippingOption(nsString aRequestId,
                              nsString aOption);
-  async ChangePayerDetail(nsString aRequestId,
-                          nsString aPayerName,
-                          nsString aPayerEmail,
-                          nsString aPayerPhone);
 };
 
 } // end of namespace dom
