@@ -802,6 +802,7 @@ STATIC_ATOMS = [
     Atom("onpagehide", "onpagehide"),
     Atom("onpageshow", "onpageshow"),
     Atom("onpaste", "onpaste"),
+    Atom("onpayerdetailchange", "onpayerdetailchange"),
     Atom("onpaymentmethodchange", "onpaymentmethodchange"),
     Atom("onpointerlockchange", "onpointerlockchange"),
     Atom("onpointerlockerror", "onpointerlockerror"),
