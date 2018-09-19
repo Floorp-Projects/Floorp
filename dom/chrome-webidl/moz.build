@@ -50,6 +50,7 @@ WEBIDL_FILES = [
     'WebExtensionContentScript.webidl',
     'WebExtensionPolicy.webidl',
     'XULFrameElement.webidl',
+    'XULMenuElement.webidl',
     'XULScrollElement.webidl'
 ]
 

@@ -252,24 +252,20 @@ function goNextStepSync() {
 function openMenu(menu) {
   if ("open" in menu) {
     menu.open = true;
+  } else if (menu.hasMenu()) {
+    menu.openMenu(true);
   } else {
-    var bo = menu.boxObject;
-    if (bo instanceof MenuBoxObject)
-      bo.openMenu(true);
-    else
-      synthesizeMouse(menu, 4, 4, { });
+    synthesizeMouse(menu, 4, 4, { });
   }
 }
 
 function closeMenu(menu, popup) {
   if ("open" in menu) {
     menu.open = false;
+  } else if (menu.hasMenu()) {
+    menu.openMenu(false);
   } else {
-    var bo = menu.boxObject;
-    if (bo instanceof MenuBoxObject)
-      bo.openMenu(false);
-    else
-      popup.hidePopup();
+    popup.hidePopup();
   }
 }
 
@@ -291,7 +287,7 @@ function checkOpen(menuid, testname) {
   var menu = document.getElementById(menuid);
   if ("open" in menu)
     ok(menu.open, testname + " " + menuid + " menu is open");
-  else if (menu.boxObject instanceof MenuBoxObject)
+  else if (menu.hasMenu())
     ok(menu.getAttribute("open") == "true", testname + " " + menuid + " menu is open");
 }
 
@@ -299,7 +295,7 @@ function checkClosed(menuid, testname) {
   var menu = document.getElementById(menuid);
   if ("open" in menu)
     ok(!menu.open, testname + " " + menuid + " menu is open");
-  else if (menu.boxObject instanceof MenuBoxObject)
+  else if (menu.hasMenu())
     ok(!menu.hasAttribute("open"), testname + " " + menuid + " menu is closed");
 }
 

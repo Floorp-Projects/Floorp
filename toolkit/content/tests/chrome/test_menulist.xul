@@ -218,7 +218,7 @@ function test_menulist_open(element, scroller)
 
   synthesizeMouse(element.menupopup.childNodes[1], 2, 2, { type: "mousemove" });
   synthesizeMouse(element.menupopup.childNodes[1], 6, 6, { type: "mousemove" });
-  is(element.menuBoxObject.activeChild, item, "activeChild after menu highlight " + element.id);
+  is(element.activeChild, item, "activeChild after menu highlight " + element.id);
   is(element.selectedIndex, 0, "selectedIndex after menu highlight " + element.id);
   is(scroller.scrollTop, 0, "scroll position after menu highlight " + element.id);
 

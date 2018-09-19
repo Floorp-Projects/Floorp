@@ -27,6 +27,7 @@
 #include "nsDisplayList.h"
 #include "nsContainerFrame.h"
 #include "nsContentUtils.h"
+#include "nsXULPopupManager.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
