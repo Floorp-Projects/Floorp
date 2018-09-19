@@ -6,63 +6,62 @@ tests for mozfile.load
 
 from __future__ import absolute_import
 
-import mozhttpd
-import os
-import tempfile
-import unittest
-
 import mozunit
+import pytest
+
+from wptserve.handlers import handler
+from wptserve.server import WebTestHttpd
 
 from mozfile import load
 
 
-class TestLoad(unittest.TestCase):
-    """test the load function"""
+@pytest.fixture(name="httpd_url")
+def fixture_httpd_url():
+    """Yield a started WebTestHttpd server."""
 
-    def test_http(self):
-        """test with mozhttpd and a http:// URL"""
+    @handler
+    def example(request, response):
+        """Example request handler."""
+        body = b"example"
+        return (
+            200,
+            [("Content-type", "text/plain"), ("Content-length", len(body))],
+            body,
+        )
 
-        def example(request):
-            """example request handler"""
-            body = 'example'
-            return (200, {'Content-type': 'text/plain',
-                          'Content-length': len(body)
-                          }, body)
+    httpd = WebTestHttpd(host="127.0.0.1", routes=[("GET", "*", example)])
 
-        host = '127.0.0.1'
-        httpd = mozhttpd.MozHttpd(host=host,
-                                  urlhandlers=[{'method': 'GET',
-                                                'path': '.*',
-                                                'function': example}])
-        try:
-            httpd.start(block=False)
-            content = load(httpd.get_url()).read()
-            self.assertEqual(content, 'example')
-        finally:
-            httpd.stop()
-
-    def test_file_path(self):
-        """test loading from file path"""
-        try:
-            # create a temporary file
-            tmp = tempfile.NamedTemporaryFile(delete=False)
-            tmp.write('foo bar')
-            tmp.close()
-
-            # read the file
-            contents = file(tmp.name).read()
-            self.assertEqual(contents, 'foo bar')
-
-            # read the file with load and a file path
-            self.assertEqual(load(tmp.name).read(), contents)
-
-            # read the file with load and a file URL
-            self.assertEqual(load('file://%s' % tmp.name).read(), contents)
-        finally:
-            # remove the tempfile
-            if os.path.exists(tmp.name):
-                os.remove(tmp.name)
+    httpd.start(block=False)
+    yield httpd.get_url()
+    httpd.stop()
 
 
-if __name__ == '__main__':
+def test_http(httpd_url):
+    """Test with WebTestHttpd and a http:// URL."""
+    content = load(httpd_url).read()
+    assert content == b"example"
+
+
+@pytest.fixture(name="temporary_file")
+def fixture_temporary_file(tmpdir):
+    """Yield a path to a temporary file."""
+    foobar = tmpdir.join("foobar.txt")
+    foobar.write("hello world")
+
+    yield str(foobar)
+
+    foobar.remove()
+
+
+def test_file_path(temporary_file):
+    """Test loading from a file path."""
+    assert load(temporary_file).read() == "hello world"
+
+
+def test_file_url(temporary_file):
+    """Test loading from a file URL."""
+    assert load("file://%s" % temporary_file).read() == "hello world"
+
+
+if __name__ == "__main__":
     mozunit.main()
