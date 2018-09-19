@@ -2173,6 +2173,7 @@ menuseparator {
   padding: 0 2px;
 }
 
+.objectBox-accessible.clickable,
 .objectBox-node.clickable {
   cursor: pointer;
 }
@@ -2198,6 +2199,7 @@ menuseparator {
   color: var(--comment-node-color);
 }
 
+.accessible-role,
 .tag-name {
   color: var(--object-color);
 }
@@ -2274,8 +2276,9 @@ menuseparator {
 }
 
 /******************************************************************************/
-/* Open DOMNode in inspector button */
+/* Open DOMNode in inspector or Accessible in accessibility inspector button */
 
+button.open-accessibility-inspector,
 button.open-inspector {
   mask: url("chrome://devtools/skin/images/devtools-reps/open-inspector.svg") no-repeat;
   display: inline-block;
@@ -2286,8 +2289,10 @@ button.open-inspector {
   cursor: pointer;
 }
 
+.objectBox-accessible:hover .open-accessibility-inspector,
 .objectBox-node:hover .open-inspector,
 .objectBox-textNode:hover .open-inspector,
+.open-accessibility-inspector:hover,
 .open-inspector:hover {
   background-color: var(--theme-highlight-blue);
 }
@@ -3991,11 +3996,6 @@ html[dir="rtl"] .object-node {
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
-}
-
-.welcomebox__searchSources,
-.welcomebox__searchProject {
-  transition: color 0.15s linear;
 }
 
 .welcomebox__searchSources:hover,

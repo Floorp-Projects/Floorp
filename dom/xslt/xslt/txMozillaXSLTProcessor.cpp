@@ -38,8 +38,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
-
 /**
  * Output Handler Factories
  */
@@ -1108,9 +1106,10 @@ txMozillaXSLTProcessor::reportError(nsresult aResult,
 void
 txMozillaXSLTProcessor::notifyError()
 {
-    nsCOMPtr<nsIDocument> document = do_CreateInstance(kXMLDocumentCID);
-    if (!document) {
-        return;
+    nsCOMPtr<nsIDocument> document;
+    {
+      nsresult rv = NS_NewXMLDocument(getter_AddRefs(document));
+      NS_ENSURE_SUCCESS_VOID(rv);
     }
 
     URIUtils::ResetWithSource(document, mSource);

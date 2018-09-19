@@ -17,14 +17,8 @@ here = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_profileprint(tmpdir):
-    """
-    test the summary function
-    """
-
-    keys = set(['Files', 'Path', 'user.js'])
-    ff_prefs = mozprofile.FirefoxProfile.preferences  # shorthand
-    pref_string = '\n'.join(['%s: %s' % (key, ff_prefs[key])
-                             for key in sorted(ff_prefs.keys())])
+    """Test the summary function."""
+    keys = set(['Files', 'Path'])
 
     tmpdir = tmpdir.strpath
     profile = mozprofile.FirefoxProfile(tmpdir)
@@ -33,7 +27,6 @@ def test_profileprint(tmpdir):
 
     assert parts['Path'] == tmpdir
     assert set(parts.keys()) == keys
-    assert pref_string == parts['user.js'].strip()
 
 
 def test_str_cast():

@@ -228,8 +228,10 @@ class Editor extends _react.PureComponent {
       return;
     }
 
+    (0, _editor.startOperation)();
     (0, _ui.resizeBreakpointGutter)(this.state.editor.codeMirror);
     (0, _ui.resizeToggleButton)(this.state.editor.codeMirror);
+    (0, _editor.endOperation)();
   }
 
   componentWillUpdate(nextProps) {
@@ -260,8 +262,10 @@ class Editor extends _react.PureComponent {
       codeMirror
     } = editor;
     const codeMirrorWrapper = codeMirror.getWrapperElement();
+    (0, _editor.startOperation)();
     (0, _ui.resizeBreakpointGutter)(codeMirror);
     (0, _ui.resizeToggleButton)(codeMirror);
+    (0, _editor.endOperation)();
     codeMirror.on("gutterClick", this.onGutterClick); // Set code editor wrapper to be focusable
 
     codeMirrorWrapper.tabIndex = 0;

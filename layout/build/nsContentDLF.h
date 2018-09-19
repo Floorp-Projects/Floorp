@@ -32,11 +32,12 @@ public:
 
   nsresult InitUAStyleSheet();
 
+  typedef already_AddRefed<nsIDocument> (*DocumentCreator)();
   nsresult CreateDocument(const char* aCommand,
                           nsIChannel* aChannel,
                           nsILoadGroup* aLoadGroup,
                           nsIDocShell* aContainer,
-                          const nsCID& aDocumentCID,
+                          DocumentCreator aDocumentCreator,
                           nsIStreamListener** aDocListener,
                           nsIContentViewer** aContentViewer);
 

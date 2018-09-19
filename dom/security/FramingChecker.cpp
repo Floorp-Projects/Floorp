@@ -15,6 +15,7 @@
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
 #include "mozilla/dom/nsCSPUtils.h"
+#include "mozilla/NullPrincipal.h"
 
 using namespace mozilla;
 
@@ -255,12 +256,14 @@ FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryObject(aDocShell));
         if (webNav) {
           nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->GetLoadInfo();
-          nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo
-            ? loadInfo->TriggeringPrincipal()
-            : nsContentUtils::GetSystemPrincipal();
+          MOZ_ASSERT(loadInfo);
+
+          RefPtr<NullPrincipal> principal =
+            NullPrincipal::CreateWithInheritedAttributes(
+              loadInfo->TriggeringPrincipal());
           webNav->LoadURI(NS_LITERAL_STRING("about:blank"),
                           0, nullptr, nullptr, nullptr,
-                          triggeringPrincipal);
+                          principal);
         }
       }
       return false;

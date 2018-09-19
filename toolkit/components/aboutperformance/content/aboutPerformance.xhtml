@@ -108,6 +108,7 @@
       }
 
       #dispatch-table {
+        -moz-user-select: none;
         font-size: 1em;
         border: 1px solid var(--in-content-box-border-color);
         border-radius: 2px;
@@ -159,6 +160,14 @@
         fill: #808080;
       }
 
+      #dispatch-tbody > tr[selected] > td {
+        background-color: var(--in-content-item-selected);
+        color: var(--in-content-selected-text);
+      }
+      #dispatch-tbody > tr:hover {
+        background-color: var(--in-content-item-hover);
+      }
+
       .options {
         width: 100%;
       }
@@ -192,8 +201,7 @@
         <thead>
           <tr>
             <td>Tab title</td>
-            <td>Dispatches and runtime since load</td>
-            <td>Dispatches in the last seconds</td>
+            <td>Energy Impact</td>
           </tr>
         </thead>
         <tbody id="dispatch-tbody"></tbody>

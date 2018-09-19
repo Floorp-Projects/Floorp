@@ -8,8 +8,10 @@ profile_files = [
     'common/*',
     'perf/*',
     'profiles.json',
+    'profileserver/*',
     'reftest/*',
     'unittest/*',
+    'web-platform/*'
 ]
 
 TEST_HARNESS_FILES.reftest.profile_data += profile_files

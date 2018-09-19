@@ -50,7 +50,6 @@ if __name__ == '__main__':
 
         prefpaths = [os.path.join(profile_data_dir, profile, 'user.js')
                      for profile in base_profiles]
-        prefpaths.append(os.path.join(build.topsrcdir, "build", "pgo", "prefs_override.js"))
 
         prefs = {}
         for path in prefpaths:

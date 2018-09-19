@@ -461,8 +461,7 @@ ElemSegment::serializedSize() const
 {
     return sizeof(tableIndex) +
            sizeof(offsetIfActive) +
-           SerializedPodVectorSize(elemFuncIndices) +
-           SerializedPodVectorSize(elemCodeRangeIndices(Tier::Serialized));
+           SerializedPodVectorSize(elemFuncIndices);
 }
 
 uint8_t*
@@ -471,7 +470,6 @@ ElemSegment::serialize(uint8_t* cursor) const
     cursor = WriteBytes(cursor, &tableIndex, sizeof(tableIndex));
     cursor = WriteBytes(cursor, &offsetIfActive, sizeof(offsetIfActive));
     cursor = SerializePodVector(cursor, elemFuncIndices);
-    cursor = SerializePodVector(cursor, elemCodeRangeIndices(Tier::Serialized));
     return cursor;
 }
 
@@ -480,16 +478,43 @@ ElemSegment::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &tableIndex, sizeof(tableIndex))) &&
     (cursor = ReadBytes(cursor, &offsetIfActive, sizeof(offsetIfActive))) &&
-    (cursor = DeserializePodVector(cursor, &elemFuncIndices)) &&
-    (cursor = DeserializePodVector(cursor, &elemCodeRangeIndices(Tier::Serialized)));
+    (cursor = DeserializePodVector(cursor, &elemFuncIndices));
     return cursor;
 }
 
 size_t
 ElemSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return elemFuncIndices.sizeOfExcludingThis(mallocSizeOf) +
-           elemCodeRangeIndices(Tier::Serialized).sizeOfExcludingThis(mallocSizeOf);
+    return elemFuncIndices.sizeOfExcludingThis(mallocSizeOf);
+}
+
+size_t
+DataSegment::serializedSize() const
+{
+    return sizeof(offsetIfActive) +
+           SerializedPodVectorSize(bytes);
+}
+
+uint8_t*
+DataSegment::serialize(uint8_t* cursor) const
+{
+    cursor = WriteBytes(cursor, &offsetIfActive, sizeof(offsetIfActive));
+    cursor = SerializePodVector(cursor, bytes);
+    return cursor;
+}
+
+const uint8_t*
+DataSegment::deserialize(const uint8_t* cursor)
+{
+    (cursor = ReadBytes(cursor, &offsetIfActive, sizeof(offsetIfActive))) &&
+    (cursor = DeserializePodVector(cursor, &bytes));
+    return cursor;
+}
+
+size_t
+DataSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    return bytes.sizeOfExcludingThis(mallocSizeOf);
 }
 
 //  Heap length on ARM should fit in an ARM immediate. We approximate the set

@@ -1677,6 +1677,7 @@ class RecursiveMakeBackend(CommonBackend):
             pp.handleLine(b'topobjdir := @topobjdir@\n')
             pp.handleLine(b'topsrcdir := @top_srcdir@\n')
             pp.handleLine(b'srcdir := @srcdir@\n')
+            pp.handleLine(b'srcdir_rel := @srcdir_rel@\n')
             pp.handleLine(b'VPATH := @srcdir@\n')
             pp.handleLine(b'relativesrcdir := @relativesrcdir@\n')
             pp.handleLine(b'include $(DEPTH)/config/@autoconfmk@\n')
