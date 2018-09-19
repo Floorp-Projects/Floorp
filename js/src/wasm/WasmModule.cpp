@@ -39,14 +39,17 @@ using namespace js::wasm;
 
 class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask
 {
-    SharedModule            module_;
     SharedCompileArgs       compileArgs_;
+    SharedBytes             bytecode_;
+    SharedModule            module_;
     Atomic<bool>            cancelled_;
 
   public:
-    Tier2GeneratorTaskImpl(Module& module, const CompileArgs& compileArgs)
-      : module_(&module),
-        compileArgs_(&compileArgs),
+    Tier2GeneratorTaskImpl(const CompileArgs& compileArgs, const ShareableBytes& bytecode,
+                           Module& module)
+      : compileArgs_(&compileArgs),
+        bytecode_(&bytecode),
+        module_(&module),
         cancelled_(false)
     {}
 
@@ -59,16 +62,16 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask
     }
 
     void execute() override {
-        CompileTier2(*compileArgs_, *module_, &cancelled_);
+        CompileTier2(*compileArgs_, bytecode_->bytes, *module_, &cancelled_);
     }
 };
 
 void
-Module::startTier2(const CompileArgs& args)
+Module::startTier2(const CompileArgs& args, const ShareableBytes& bytecode)
 {
     MOZ_ASSERT(!testingTier2Active_);
 
-    auto task = MakeUnique<Tier2GeneratorTaskImpl>(*this, args);
+    auto task = MakeUnique<Tier2GeneratorTaskImpl>(args, bytecode, *this);
     if (!task) {
         return;
     }
@@ -209,13 +212,6 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
 
     const uint8_t* cursor = begin;
 
-    // Temporary. (asm.js doesn't save bytecode)
-    MOZ_RELEASE_ASSERT(maybeMetadata->isAsmJS());
-    MutableBytes bytecode = js_new<ShareableBytes>();
-    if (!bytecode) {
-        return nullptr;
-    }
-
     LinkData linkData(Tier::Serialized);
     cursor = linkData.deserialize(cursor);
     if (!cursor) {
@@ -280,8 +276,7 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
                           std::move(structTypes),
                           std::move(dataSegments),
                           std::move(elemSegments),
-                          std::move(customSections),
-                          *bytecode);
+                          std::move(customSections));
 }
 
 /* virtual */ JSObject*
@@ -389,8 +384,7 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
              SizeOfVectorExcludingThis(structTypes_, mallocSizeOf) +
              SizeOfVectorExcludingThis(dataSegments_, mallocSizeOf) +
              SizeOfVectorExcludingThis(elemSegments_, mallocSizeOf) +
-             SizeOfVectorExcludingThis(customSections_, mallocSizeOf) +
-             bytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
+             SizeOfVectorExcludingThis(customSections_, mallocSizeOf);
 
     if (debugUnlinkedCode_) {
         *data += debugUnlinkedCode_->sizeOfExcludingThis(mallocSizeOf);
