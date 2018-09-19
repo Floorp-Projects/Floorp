@@ -408,6 +408,9 @@ class XPIState {
     if (saved.currentModifiedTime && saved.currentModifiedTime != this.lastModifiedTime) {
       this.lastModifiedTime = saved.currentModifiedTime;
       this.changed = true;
+    } else if (saved.currentModifiedTime === null) {
+      this.missing = true;
+      this.changed = true;
     }
   }
 
