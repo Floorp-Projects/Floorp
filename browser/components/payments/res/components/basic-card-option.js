@@ -17,8 +17,8 @@ export default class BasicCardOption extends ObservedPropertiesMixin(RichOption)
       "cc-exp",
       "cc-name",
       "cc-number",
+      "cc-type",
       "guid",
-      "type", // XXX Bug 1429181.
     ];
   }
 
@@ -29,14 +29,14 @@ export default class BasicCardOption extends ObservedPropertiesMixin(RichOption)
   constructor() {
     super();
 
-    for (let name of ["cc-name", "cc-number", "cc-exp", "type"]) {
+    for (let name of ["cc-name", "cc-number", "cc-exp", "cc-type"]) {
       this[`_${name}`] = document.createElement("span");
       this[`_${name}`].classList.add(name);
     }
   }
 
   connectedCallback() {
-    for (let name of ["cc-name", "cc-number", "cc-exp", "type"]) {
+    for (let name of ["cc-name", "cc-number", "cc-exp", "cc-type"]) {
       this.appendChild(this[`_${name}`]);
     }
     super.connectedCallback();
@@ -47,14 +47,16 @@ export default class BasicCardOption extends ObservedPropertiesMixin(RichOption)
     let ccNumber = basicCard["cc-number"] || "";
     let ccExp = basicCard["cc-exp"] || "";
     let ccName = basicCard["cc-name"] || "";
-    return ccNumber + " " + ccExp + " " + ccName;
+    // XXX: Bug 1491040, displaying cc-type in this context may need its own localized string
+    let ccType = basicCard["cc-type"] || "";
+    return `${ccType} ${ccNumber} ${ccExp} ${ccName}`;
   }
 
   render() {
     this["_cc-name"].textContent = this.ccName;
     this["_cc-number"].textContent = this.ccNumber;
     this["_cc-exp"].textContent = this.ccExp;
-    this._type.textContent = this.type;
+    this["_cc-type"].textContent = this.ccType;
   }
 }
 

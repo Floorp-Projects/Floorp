@@ -2,7 +2,7 @@
   "title": "ProviderResponse",
   "description": "A response object for remote providers of AS Router",
   "type": "object",
-  "version": "0.1.0",
+  "version": "6.1.0",
   "properties": {
     "messages": {
       "type": "array",

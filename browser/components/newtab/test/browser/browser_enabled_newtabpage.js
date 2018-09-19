@@ -3,7 +3,7 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 function checkSpec(uri, check, message) {
   const {spec} = NetUtil.newChannel({
     loadUsingSystemPrincipal: true,
-    uri
+    uri,
   }).URI;
 
   info(`got ${spec} for ${uri}`);

@@ -40,17 +40,17 @@ SVGFEFloodElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                            const nsTArray<bool>& aInputsAreTainted,
                                            nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
-  FilterPrimitiveDescription descr(PrimitiveType::Flood);
+  FloodAttributes atts;
   nsIFrame* frame = GetPrimaryFrame();
   if (frame) {
     const nsStyleSVGReset* styleSVGReset = frame->Style()->StyleSVGReset();
     Color color(Color::FromABGR(styleSVGReset->mFloodColor.CalcColor(frame)));
     color.a *= styleSVGReset->mFloodOpacity;
-    descr.Attributes().Set(eFloodColor, color);
+    atts.mColor = color;
   } else {
-    descr.Attributes().Set(eFloodColor, Color());
+    atts.mColor = Color();
   }
-  return descr;
+  return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 
 //----------------------------------------------------------------------

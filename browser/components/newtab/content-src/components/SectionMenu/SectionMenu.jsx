@@ -30,7 +30,7 @@ export class _SectionMenu extends React.PureComponent {
           if (userEvent) {
             props.dispatch(ac.UserEvent({
               event: userEvent,
-              source: props.source
+              source: props.source,
             }));
           }
         };

@@ -412,7 +412,6 @@ You can set this by specifying --test-url URL
                                     parent_dir=dirs['abs_work_dir'],
                                     error_level=FATAL)
         self.installer_path = os.path.realpath(source)
-        self.set_property("build_url", self.installer_url)
 
     def _download_and_extract_symbols(self):
         dirs = self.query_abs_dirs()
@@ -435,7 +434,6 @@ You can set this by specifying --test-url URL
             if not self.symbols_path:
                 self.symbols_path = os.path.join(dirs['abs_work_dir'], 'symbols')
 
-            self.set_property("symbols_url", self.symbols_url)
             if self.symbols_url:
                 self.download_unpack(self.symbols_url, self.symbols_path)
 

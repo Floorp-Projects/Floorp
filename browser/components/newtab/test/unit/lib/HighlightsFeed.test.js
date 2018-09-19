@@ -34,9 +34,9 @@ describe("Highlights Feed", () => {
       activityStreamLinks: {
         getHighlights: sandbox.spy(() => Promise.resolve(links)),
         deletePocketEntry: sandbox.spy(() => Promise.resolve({})),
-        archivePocketEntry: sandbox.spy(() => Promise.resolve({}))
+        archivePocketEntry: sandbox.spy(() => Promise.resolve({})),
       },
-      activityStreamProvider: {_processHighlights: sandbox.spy(l => l.slice(0, 1))}
+      activityStreamProvider: {_processHighlights: sandbox.spy(l => l.slice(0, 1))},
     };
     sectionsManagerStub = {
       onceInitialized: sinon.stub().callsFake(callback => callback()),
@@ -44,23 +44,23 @@ describe("Highlights Feed", () => {
       disableSection: sinon.spy(),
       updateSection: sinon.spy(),
       updateSectionCard: sinon.spy(),
-      sections: new Map([["highlights", {id: "highlights"}]])
+      sections: new Map([["highlights", {id: "highlights"}]]),
     };
     downloadsManagerStub = sinon.stub().returns({
       getDownloads: () => [{"url": "https://site.com/download"}],
       onAction: sinon.spy(),
-      init: sinon.spy()
+      init: sinon.spy(),
     });
     fakeScreenshot = {
       getScreenshotForURL: sandbox.spy(() => Promise.resolve(FAKE_IMAGE)),
       maybeCacheScreenshot: Screenshots.maybeCacheScreenshot,
-      _shouldGetScreenshots: sinon.stub().returns(true)
+      _shouldGetScreenshots: sinon.stub().returns(true),
     };
     filterAdultStub = sinon.stub().returns([]);
     shortURLStub = sinon.stub().callsFake(site => site.url.match(/\/([^/]+)/)[1]);
     fakePageThumbs = {
       addExpirationFilter: sinon.stub(),
-      removeExpirationFilter: sinon.stub()
+      removeExpirationFilter: sinon.stub(),
     };
 
     globals.set("NewTabUtils", fakeNewTabUtils);
@@ -71,7 +71,7 @@ describe("Highlights Feed", () => {
       "lib/SectionsManager.jsm": {SectionsManager: sectionsManagerStub},
       "lib/Screenshots.jsm": {Screenshots: fakeScreenshot},
       "common/Dedupe.jsm": {Dedupe},
-      "lib/DownloadsManager.jsm": {DownloadsManager: downloadsManagerStub}
+      "lib/DownloadsManager.jsm": {DownloadsManager: downloadsManagerStub},
     }));
     sandbox.spy(global.Services.obs, "addObserver");
     sandbox.spy(global.Services.obs, "removeObserver");
@@ -83,11 +83,11 @@ describe("Highlights Feed", () => {
         Prefs: {values: {"filterAdult": false, "section.highlights.includePocket": false, "section.highlights.includeDownloads": false}},
         TopSites: {
           initialized: true,
-          rows: Array(12).fill(null).map((v, i) => ({url: `http://www.topsite${i}.com`}))
+          rows: Array(12).fill(null).map((v, i) => ({url: `http://www.topsite${i}.com`})),
         },
-        Sections: [{id: "highlights", initialized: false}]
+        Sections: [{id: "highlights", initialized: false}],
       },
-      subscribe: sinon.stub().callsFake(cb => { cb(); return () => {}; })
+      subscribe: sinon.stub().callsFake(cb => { cb(); return () => {}; }),
     };
     links = FAKE_LINKS;
   });
@@ -229,7 +229,7 @@ describe("Highlights Feed", () => {
         {url: "https://site3.com", type: "history", date_added: Date.now() - 60}, // append at the end
         {url: "https://site4.com", type: "pocket", date_added: Date.now()}, // newest highlight
         {url: "https://site5.com", type: "pocket", date_added: Date.now() - 100}, // 5th newest
-        {url: "https://site6.com", type: "bookmark", bookmarkGuid: "1234", date_added: Date.now() - 40} // 2nd newest
+        {url: "https://site6.com", type: "bookmark", bookmarkGuid: "1234", date_added: Date.now() - 40}, // 2nd newest
       ];
 
       let highlights = await fetchHighlights();
@@ -283,7 +283,7 @@ describe("Highlights Feed", () => {
         {url: "https://mozilla.org"},
         {url: "http://www.topsite0.com"},
         {url: "http://www.topsite1.com"},
-        {url: "http://www.topsite2.com"}
+        {url: "http://www.topsite2.com"},
       ];
 
       const highlights = await fetchHighlights();
@@ -294,7 +294,7 @@ describe("Highlights Feed", () => {
     it("should include bookmark but not history already in Top Sites", async () => {
       links = [
         {url: "http://www.topsite0.com", type: "bookmark"},
-        {url: "http://www.topsite1.com", type: "history"}
+        {url: "http://www.topsite1.com", type: "history"},
       ];
 
       const highlights = await fetchHighlights();
@@ -305,7 +305,7 @@ describe("Highlights Feed", () => {
     it("should not include history of same hostname as a bookmark", async () => {
       links = [
         {url: "https://site.com/bookmark", type: "bookmark"},
-        {url: "https://site.com/history", type: "history"}
+        {url: "https://site.com/history", type: "history"},
       ];
 
       const highlights = await fetchHighlights();
@@ -317,7 +317,7 @@ describe("Highlights Feed", () => {
       links = [
         {url: "https://site.com/first", type: "history"},
         {url: "https://site.com/second", type: "history"},
-        {url: "https://other", type: "history"}
+        {url: "https://other", type: "history"},
       ];
 
       const highlights = await fetchHighlights();
@@ -330,7 +330,7 @@ describe("Highlights Feed", () => {
       links = [
         {url: "https://site.com/bookmark", type: "bookmark"},
         {url: "https://site.com/pocket", type: "pocket"},
-        {url: "https://site.com/download", type: "download"}
+        {url: "https://site.com/download", type: "download"},
       ];
 
       const highlights = await fetchHighlights();
@@ -356,7 +356,7 @@ describe("Highlights Feed", () => {
     it("should not include downloads when includeDownloads pref is false", async () => {
       links = [
         {url: "https://site.com/bookmark", type: "bookmark"},
-        {url: "https://site.com/pocket", type: "pocket"}
+        {url: "https://site.com/pocket", type: "pocket"},
       ];
 
       // Check that we don't have the downloaded item in highlights
@@ -371,7 +371,7 @@ describe("Highlights Feed", () => {
       feed.store.state.Prefs.values["section.highlights.includeDownloads"] = true;
       links = [
         {url: "https://site.com/bookmark", type: "bookmark"},
-        {url: "https://site.com/pocket", type: "pocket"}
+        {url: "https://site.com/pocket", type: "pocket"},
       ];
 
       // Check that we did get the downloaded item in highlights
@@ -387,7 +387,7 @@ describe("Highlights Feed", () => {
       feed.store.state.Prefs.values["section.highlights.includeDownloads"] = true;
       feed.downloadsManager.getDownloads = () => [
         {"url": "https://site1.com/download"},
-        {"url": "https://site2.com/download"}
+        {"url": "https://site2.com/download"},
       ];
       links = [{url: "https://site.com/bookmark", type: "bookmark"}];
 
@@ -402,12 +402,12 @@ describe("Highlights Feed", () => {
     it("should sort bookmarks, pocket, and downloads chronologically", async () => {
       feed.store.state.Prefs.values["section.highlights.includeDownloads"] = true;
       feed.downloadsManager.getDownloads = () => [
-        {url: "https://site1.com/download", type: "download", date_added: Date.now()}
+        {url: "https://site1.com/download", type: "download", date_added: Date.now()},
       ];
       links = [
         {url: "https://site.com/bookmark", type: "bookmark", date_added: Date.now() - 10000},
         {url: "https://site2.com/pocket", type: "pocket", date_added: Date.now() - 5000},
-        {url: "https://site3.com/visited", type: "history", date_added: Date.now()}
+        {url: "https://site3.com/visited", type: "history", date_added: Date.now()},
       ];
 
       // Check that the higlights are ordered chronologically by their 'date_added'
@@ -488,7 +488,7 @@ describe("Highlights Feed", () => {
     it("should capture the image, if available", async () => {
       await fetchImage({
         preview_image_url: FAKE_IMAGE_URL,
-        url: FAKE_URL
+        url: FAKE_URL,
       });
 
       assert.calledOnce(fakeScreenshot.getScreenshotForURL);
@@ -503,7 +503,7 @@ describe("Highlights Feed", () => {
     it("should call SectionsManager.updateSectionCard with the right arguments", async () => {
       await fetchImage({
         preview_image_url: FAKE_IMAGE_URL,
-        url: FAKE_URL
+        url: FAKE_URL,
       });
 
       assert.calledOnce(sectionsManagerStub.updateSectionCard);
@@ -512,7 +512,7 @@ describe("Highlights Feed", () => {
     it("should not update the card with the image", async () => {
       const card = {
         preview_image_url: FAKE_IMAGE_URL,
-        url: FAKE_URL
+        url: FAKE_URL,
       };
 
       await feed.fetchImage(card);

@@ -20,6 +20,7 @@
   const video = document.getElementById("video");
   const statusOverlay = getElementWithinVideo(video, "statusOverlay");
   const statusIcon = getElementWithinVideo(video, "statusIcon");
+  const statusLabelErrorNoSource = getElementWithinVideo(video, "errorNoSource");
 
   add_task(async function setup() {
     await new Promise(resolve => window.addEventListener("load", resolve, {once: true}));
@@ -52,6 +53,8 @@
     ok(!statusOverlay.hidden, `statusOverlay should show when ${errorType}`);
     is(statusOverlay.getAttribute("error"), errorType, `statusOverlay should have correct error state: ${errorType}`);
     is(statusIcon.getAttribute("type"), "error", `should show error icon when ${errorType}`);
+    isnot(statusLabelErrorNoSource.getBoundingClientRect().height, 0,
+      "errorNoSource status label should be visible.");
   });
 </script>
 </pre>

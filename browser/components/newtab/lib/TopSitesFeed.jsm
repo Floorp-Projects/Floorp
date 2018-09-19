@@ -18,7 +18,7 @@ const {
   SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF,
   SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
   checkHasSearchEngine,
-  getSearchProvider
+  getSearchProvider,
 } = ChromeUtils.import("resource://activity-stream/lib/SearchShortcuts.jsm", {});
 
 ChromeUtils.defineModuleGetter(this, "filterAdult",
@@ -49,7 +49,7 @@ const SEARCH_FILTERS = [
   "yahoo",
   "bing",
   "ask",
-  "duckduckgo"
+  "duckduckgo",
 ];
 
 function getShortURLForCurrentSearch() {
@@ -60,7 +60,7 @@ function getShortURLForCurrentSearch() {
 this.TopSitesFeed = class TopSitesFeed {
   constructor() {
     this._tippyTopProvider = new TippyTopProvider();
-    this._currentSearchHostname = null;
+    XPCOMUtils.defineLazyGetter(this, "_currentSearchHostname", getShortURLForCurrentSearch);
     this.dedupe = new Dedupe(this._dedupeKey);
     this.frecentCache = new LinksCache(NewTabUtils.activityStreamLinks,
       "getTopSites", CACHED_LINK_PROPS_TO_MIGRATE, (oldOptions, newOptions) =>
@@ -77,19 +77,18 @@ this.TopSitesFeed = class TopSitesFeed {
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
     this.refresh({broadcast: true});
     Services.obs.addObserver(this, "browser-search-engine-modified");
-    XPCOMUtils.defineLazyGetter(this, "_currentSearchHostname", getShortURLForCurrentSearch);
   }
 
   uninit() {
     PageThumbs.removeExpirationFilter(this);
     Services.obs.removeObserver(this, "browser-search-engine-modified");
-    this._currentSearchHostname = null;
   }
 
   observe(subj, topic, data) {
     // We should update the current top sites if the search engine has been changed since
     // the search engine that gets filtered out of top sites has changed.
     if (topic === "browser-search-engine-modified" && data === "engine-current" && this.store.getState().Prefs.values[NO_DEFAULT_SEARCH_TILE_EXP_PREF]) {
+      delete this._currentSearchHostname;
       this._currentSearchHostname = getShortURLForCurrentSearch();
       this.refresh({broadcast: true});
     }
@@ -108,7 +107,7 @@ this.TopSitesFeed = class TopSitesFeed {
       for (const url of sites.split(",")) {
         const site = {
           isDefault: true,
-          url
+          url,
         };
         site.hostname = shortURL(site);
         DEFAULT_TOP_SITES.push(site);
@@ -223,14 +222,14 @@ this.TopSitesFeed = class TopSitesFeed {
     const frecent = (await this.frecentCache.request({
       // We need to overquery due to the top 5 alexa search + default search possibly being removed
       numItems: numItems + SEARCH_FILTERS.length + 1,
-      topsiteFrecency: FRECENCY_THRESHOLD
+      topsiteFrecency: FRECENCY_THRESHOLD,
     }))
     .reduce((validLinks, link) => {
       const hostname = shortURL(link);
       if (!this.isExperimentOnAndLinkFilteredSearch(hostname)) {
         validLinks.push({
           ...(searchShortcutsExperiment ? this.topSiteToSearchTopSite(link) : link),
-          hostname
+          hostname,
         });
       }
       return validLinks;
@@ -251,7 +250,7 @@ this.TopSitesFeed = class TopSitesFeed {
         }
         return [
           ...topsites,
-          searchShortcutsExperiment ? this.topSiteToSearchTopSite(link) : link
+          searchShortcutsExperiment ? this.topSiteToSearchTopSite(link) : link,
         ];
       }, []);
 
@@ -390,7 +389,7 @@ this.TopSitesFeed = class TopSitesFeed {
     }, []);
     this.store.dispatch(ac.BroadcastToContent({
       type: at.UPDATE_SEARCH_SHORTCUTS,
-      data: {searchShortcuts}
+      data: {searchShortcuts},
     }));
   }
 
@@ -402,7 +401,7 @@ this.TopSitesFeed = class TopSitesFeed {
     return {
       ...site,
       searchTopSite: true,
-      label: searchProvider.keyword
+      label: searchProvider.keyword,
     };
   }
 
@@ -440,7 +439,7 @@ this.TopSitesFeed = class TopSitesFeed {
     await Screenshots.maybeCacheScreenshot(link, url, "screenshot",
       screenshot => this.store.dispatch(ac.BroadcastToContent({
         data: {screenshot, url: link.url},
-        type: at.SCREENSHOT_UPDATED
+        type: at.SCREENSHOT_UPDATED,
       })));
   }
 
@@ -453,14 +452,14 @@ this.TopSitesFeed = class TopSitesFeed {
     const preview = await Screenshots.getScreenshotForURL(url) || "";
     this.store.dispatch(ac.OnlyToOneContent({
       data: {url, preview},
-      type: at.PREVIEW_RESPONSE
+      type: at.PREVIEW_RESPONSE,
     }, target));
   }
 
   _requestRichIcon(url) {
     this.store.dispatch({
       type: at.RICH_ICON_MISSING,
-      data: {url}
+      data: {url},
     });
   }
 
