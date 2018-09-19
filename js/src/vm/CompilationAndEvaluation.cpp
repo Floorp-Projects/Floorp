@@ -59,8 +59,6 @@ static bool
 CompileLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
               const char* bytes, size_t length, JS::MutableHandleScript script)
 {
-    MOZ_ASSERT(!options.utf8);
-
     char16_t* chars = InflateString(cx, bytes, length);
     if (!chars) {
         return false;
@@ -74,8 +72,6 @@ static bool
 CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
             const char* bytes, size_t length, JS::MutableHandleScript script)
 {
-    MOZ_ASSERT(options.utf8);
-
     char16_t* chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     if (!chars) {
         return false;
@@ -83,23 +79,6 @@ CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
 
     SourceBufferHolder source(chars, length, SourceBufferHolder::GiveOwnership);
     return CompileSourceBuffer(cx, options, source, script);
-}
-
-static bool
-CompileFile(JSContext* cx, const ReadOnlyCompileOptions& options,
-            FILE* fp, JS::MutableHandleScript script)
-{
-    FileContents buffer(cx);
-    if (!ReadCompleteFile(cx, fp, buffer)) {
-        return false;
-    }
-
-    return options.utf8
-           ? ::CompileUtf8(cx, options,
-                           reinterpret_cast<const char*>(buffer.begin()), buffer.length(), script)
-           : ::CompileLatin1(cx, options,
-                             reinterpret_cast<const char*>(buffer.begin()), buffer.length(),
-                             script);
 }
 
 bool
@@ -113,7 +92,6 @@ bool
 JS::CompileLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
                   const char* bytes, size_t length, JS::MutableHandleScript script)
 {
-    MOZ_ASSERT(!options.utf8);
     return ::CompileLatin1(cx, options, bytes, length, script);
 }
 
@@ -121,7 +99,6 @@ bool
 JS::CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
                 const char* bytes, size_t length, JS::MutableHandleScript script)
 {
-    MOZ_ASSERT(options.utf8);
     return ::CompileUtf8(cx, options, bytes, length, script);
 }
 
@@ -129,19 +106,19 @@ bool
 JS::CompileUtf8File(JSContext* cx, const ReadOnlyCompileOptions& options,
                     FILE* file, JS::MutableHandleScript script)
 {
-    MOZ_ASSERT(options.utf8,
-               "options.utf8 must be set when JS::CompileUtf8File is called");
-    return CompileFile(cx, options, file, script);
+    FileContents buffer(cx);
+    if (!ReadCompleteFile(cx, file, buffer)) {
+        return false;
+    }
+
+    return ::CompileUtf8(cx, options,
+                         reinterpret_cast<const char*>(buffer.begin()), buffer.length(), script);
 }
 
 bool
 JS::CompileUtf8Path(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
             const char* filename, JS::MutableHandleScript script)
 {
-    MOZ_ASSERT(optionsArg.utf8,
-               "this function only compiles UTF-8 source text in the file at "
-               "the given path");
-
     AutoFile file;
     if (!file.open(cx, filename)) {
         return false;
@@ -166,11 +143,9 @@ JS::CompileLatin1ForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOption
                                       const char* bytes, size_t length,
                                       JS::MutableHandleScript script)
 {
-    MOZ_ASSERT(!optionsArg.utf8,
-               "this function only compiles Latin-1 source text");
-
     CompileOptions options(cx, optionsArg);
     options.setNonSyntacticScope(true);
+
     return ::CompileLatin1(cx, options, bytes, length, script);
 }
 
@@ -371,17 +346,12 @@ JS::CompileFunction(JSContext* cx, AutoObjectVector& envChain,
 }
 
 JS_PUBLIC_API(bool)
-JS::CompileFunction(JSContext* cx, AutoObjectVector& envChain,
-                    const ReadOnlyCompileOptions& options,
-                    const char* name, unsigned nargs, const char* const* argnames,
-                    const char* bytes, size_t length, MutableHandleFunction fun)
+JS::CompileFunctionUtf8(JSContext* cx, AutoObjectVector& envChain,
+                        const ReadOnlyCompileOptions& options,
+                        const char* name, unsigned nargs, const char* const* argnames,
+                        const char* bytes, size_t length, MutableHandleFunction fun)
 {
-    char16_t* chars;
-    if (options.utf8) {
-        chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
-    } else {
-        chars = InflateString(cx, bytes, length);
-    }
+    char16_t* chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     if (!chars) {
         return false;
     }
@@ -549,9 +519,6 @@ extern JS_PUBLIC_API(bool)
 JS::EvaluateUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
                  const char* bytes, size_t length, MutableHandle<Value> rval)
 {
-    MOZ_ASSERT(options.utf8,
-               "this function only compiles UTF-8 source text");
-
     char16_t* chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     if (!chars) {
         return false;
@@ -566,9 +533,6 @@ extern JS_PUBLIC_API(bool)
 JS::EvaluateLatin1(JSContext* cx, const ReadOnlyCompileOptions& options,
                    const char* bytes, size_t length, MutableHandle<Value> rval)
 {
-    MOZ_ASSERT(!options.utf8,
-               "this function only compiles Latin-1 source text");
-
     char16_t* chars = InflateString(cx, bytes, length);
     if (!chars) {
         return false;
@@ -598,10 +562,6 @@ JS_PUBLIC_API(bool)
 JS::EvaluateUtf8Path(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
                      const char* filename, MutableHandleValue rval)
 {
-    MOZ_ASSERT(optionsArg.utf8,
-               "this function only evaluates UTF-8 source text in the file at "
-               "the given path");
-
     FileContents buffer(cx);
     {
         AutoFile file;
@@ -613,6 +573,6 @@ JS::EvaluateUtf8Path(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
     CompileOptions options(cx, optionsArg);
     options.setFileAndLine(filename, 1);
 
-    return Evaluate(cx, options,
-                    reinterpret_cast<const char*>(buffer.begin()), buffer.length(), rval);
+    return EvaluateUtf8(cx, options,
+                        reinterpret_cast<const char*>(buffer.begin()), buffer.length(), rval);
 }

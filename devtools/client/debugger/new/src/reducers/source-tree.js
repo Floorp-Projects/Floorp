@@ -7,12 +7,6 @@ exports.InitialState = InitialState;
 exports.default = update;
 exports.getExpandedState = getExpandedState;
 
-var _makeRecord = require("../utils/makeRecord");
-
-var _makeRecord2 = _interopRequireDefault(_makeRecord);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -22,20 +16,26 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @module reducers/source-tree
  */
 function InitialState() {
-  return (0, _makeRecord2.default)({
+  return {
     expanded: null
-  })();
+  };
 }
 
 function update(state = InitialState(), action) {
   switch (action.type) {
     case "SET_EXPANDED_STATE":
-      return state.set("expanded", action.expanded);
+      return updateExpanded(state, action);
   }
 
   return state;
 }
 
+function updateExpanded(state, action) {
+  return { ...state,
+    expanded: new Set(action.expanded)
+  };
+}
+
 function getExpandedState(state) {
-  return state.sourceTree.get("expanded");
+  return state.sourceTree.expanded;
 }

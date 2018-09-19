@@ -178,7 +178,7 @@ struct ModuleEnvironment
     MaybeSectionRange         codeSection;
 
     // Fields decoded as part of the wasm module tail:
-    DataSegmentVector         dataSegments;
+    DataSegmentEnvVector      dataSegments;
     Maybe<NameInBytecode>     moduleName;
     NameInBytecodeVector      funcNames;
     CustomSectionVector       customSections;

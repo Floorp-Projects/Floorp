@@ -158,9 +158,10 @@ Load(JSContext *cx,
             JS_ReportErrorUTF8(cx, "cannot open file '%s' for reading", filename.get());
             return false;
         }
+
         JS::CompileOptions options(cx);
-        options.setUTF8(true)
-               .setFileAndLine(filename.get(), 1);
+        options.setFileAndLine(filename.get(), 1);
+
         JS::Rooted<JSScript*> script(cx);
         bool ok = JS::CompileUtf8File(cx, options, file, &script);
         fclose(file);
@@ -301,8 +302,8 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
         ungetc(ch, file);
 
         JS::CompileOptions options(cx);
-        options.setUTF8(true)
-               .setFileAndLine(filename, 1);
+        options.setFileAndLine(filename, 1);
+
         JS::Rooted<JSScript*> script(cx);
         if (JS::CompileUtf8File(cx, options, file, &script))
             (void)JS_ExecuteScript(cx, script, &result);
@@ -338,7 +339,6 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
 
         JS::CompileOptions options(cx);
         options.setFileAndLine("typein", startline);
-        options.setUTF8(true);
 
         JS::Rooted<JSScript*> script(cx);
         if (JS::CompileUtf8(cx, options, buffer, strlen(buffer), &script)) {

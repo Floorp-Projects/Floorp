@@ -5,9 +5,10 @@
 use api::{AlphaType, BorderRadius, BuiltDisplayList, ClipMode, ColorF, PictureRect};
 use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, ExtendMode, DeviceRect, PictureToRasterTransform};
 use api::{FilterOp, GlyphInstance, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag, TileOffset};
-use api::{GlyphRasterSpace, LayoutPoint, LayoutRect, LayoutSize, LayoutToWorldTransform, LayoutVector2D};
-use api::{PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat, DeviceIntSideOffsets, WorldPixel};
-use api::{BorderWidths, BoxShadowClipMode, LayoutToWorldScale, NormalBorder, WorldRect, PicturePixel, RasterPixel};
+use api::{GlyphRasterSpace, LayoutPoint, LayoutRect, LayoutSideOffsets, LayoutSize, LayoutToWorldTransform};
+use api::{LayoutVector2D, PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat};
+use api::{DeviceIntSideOffsets, WorldPixel, BoxShadowClipMode, LayoutToWorldScale, NormalBorder, WorldRect};
+use api::{PicturePixel, RasterPixel};
 use app_units::Au;
 use border::{BorderCacheKey, BorderRenderTaskInfo};
 use clip_scroll_tree::{ClipScrollTree, CoordinateSystemId, SpatialNodeIndex};
@@ -350,7 +351,7 @@ pub enum BorderSource {
         cache_key: BorderCacheKey,
         task_info: Option<BorderRenderTaskInfo>,
         border: NormalBorder,
-        widths: BorderWidths,
+        widths: LayoutSideOffsets,
     },
 }
 
@@ -442,7 +443,7 @@ impl BrushKind {
 
     // Construct a brush that is a border with `border` style and `widths`
     // dimensions.
-    pub fn new_border(mut border: NormalBorder, widths: BorderWidths) -> BrushKind {
+    pub fn new_border(mut border: NormalBorder, widths: LayoutSideOffsets) -> BrushKind {
         // FIXME(emilio): Is this the best place to do this?
         border.normalize(&widths);
 
@@ -522,14 +523,14 @@ pub struct BrushSegment {
 
 impl BrushSegment {
     pub fn new(
-        rect: LayoutRect,
+        local_rect: LayoutRect,
         may_need_clip_mask: bool,
         edge_flags: EdgeAaSegmentMask,
         extra_data: [f32; 4],
         brush_flags: BrushFlags,
-    ) -> BrushSegment {
-        BrushSegment {
-            local_rect: rect,
+    ) -> Self {
+        Self {
+            local_rect,
             clip_task_id: BrushSegmentTaskId::Opaque,
             may_need_clip_mask,
             edge_flags,
@@ -2073,7 +2074,9 @@ fn write_brush_segment_description(
     // Segment the primitive on all the local-space clip sources that we can.
     let mut local_clip_count = 0;
     for i in 0 .. clip_chain.clips_range.count {
-        let (clip_node, flags) = frame_state.clip_store.get_node_from_range(&clip_chain.clips_range, i);
+        let (clip_node, flags, _) = frame_state
+            .clip_store
+            .get_node_from_range(&clip_chain.clips_range, i);
 
         // If this clip item is positioned by another positioning node, its relative position
         // could change during scrolling. This means that we would need to resegment. Instead
@@ -2851,14 +2854,21 @@ impl Primitive {
             let max_scale = BorderRenderTaskInfo::get_max_scale(&border.radius, &widths);
             scale.0 = scale.0.min(max_scale.0);
             let scale_au = Au::from_f32_px(scale.0);
+
+            // NOTE(emilio): This `needs_update` relies on the local rect for a
+            // given primitive being immutable. If that changes, this code
+            // should probably handle changes to it as well, retaining the old
+            // size in cache_key.
             let needs_update = scale_au != cache_key.scale;
+
             let mut new_segments = Vec::new();
 
+            let local_rect = &self.metadata.local_rect;
             if needs_update {
                 cache_key.scale = scale_au;
 
                 *task_info = BorderRenderTaskInfo::new(
-                    &self.metadata.local_rect,
+                    local_rect,
                     border,
                     widths,
                     scale,
@@ -2869,7 +2879,7 @@ impl Primitive {
             *handle = task_info.as_ref().map(|task_info| {
                 frame_state.resource_cache.request_render_task(
                     RenderTaskCacheKey {
-                        size: DeviceIntSize::zero(),
+                        size: task_info.cache_key_size(&local_rect.size, scale),
                         kind: RenderTaskCacheKeyKind::Border(cache_key.clone()),
                     },
                     frame_state.gpu_cache,

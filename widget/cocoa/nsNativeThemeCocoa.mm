@@ -3942,7 +3942,7 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
 
       wr::BorderRadius borderRadius = wr::EmptyBorderRadius();
       float borderWidth = presContext->CSSPixelsToDevPixels(1.0f);
-      wr::BorderWidths borderWidths =
+      wr::LayoutSideOffsets borderWidths =
         wr::ToBorderWidths(borderWidth, borderWidth, borderWidth, borderWidth);
 
       mozilla::Range<const wr::BorderSide> wrsides(side, 4);
@@ -3965,7 +3965,7 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
 
       wr::BorderRadius borderRadius = wr::EmptyBorderRadius();
       float borderWidth = presContext->CSSPixelsToDevPixels(1.0f);
-      wr::BorderWidths borderWidths =
+      wr::LayoutSideOffsets borderWidths =
         wr::ToBorderWidths(borderWidth, borderWidth, borderWidth, borderWidth);
 
       mozilla::Range<const wr::BorderSide> wrsides(side, 4);
@@ -4970,10 +4970,4 @@ nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidgetTy
   default:
     return eUnknownTransparency;
   }
-}
-
-already_AddRefed<nsITheme>
-NS_NewNativeTheme()
-{
-  return do_AddRef(new nsNativeThemeCocoa());
 }

@@ -212,9 +212,7 @@ void
 PreallocatedProcessManagerImpl::RemoveBlocker(ContentParent* aParent)
 {
   uint64_t childID = aParent->ChildID();
-  // This does not assert that the entry existed so that removal is
-  // idempotent; this makes it easier to handle error cases and
-  // preallocated processes themselves (which aren't blockers).
+  MOZ_ASSERT(mBlockers.Contains(childID));
   mBlockers.RemoveEntry(childID);
   if (!mPreallocatedProcess && mBlockers.IsEmpty()) {
     AllocateAfterDelay();

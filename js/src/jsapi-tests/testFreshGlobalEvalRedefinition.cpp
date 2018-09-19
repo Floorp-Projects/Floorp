@@ -40,9 +40,11 @@ BEGIN_TEST(testRedefineGlobalEval)
     CHECK(JS_GetProperty(cx, g, "Object", &v));
 
     static const char data[] = "Object.defineProperty(this, 'eval', { configurable: false });";
+
     JS::CompileOptions opts(cx);
-    CHECK(JS::Evaluate(cx, opts.setFileAndLine(__FILE__, __LINE__),
-                       data, mozilla::ArrayLength(data) - 1, &v));
+
+    CHECK(JS::EvaluateUtf8(cx, opts.setFileAndLine(__FILE__, __LINE__),
+                           data, mozilla::ArrayLength(data) - 1, &v));
 
     return true;
 }

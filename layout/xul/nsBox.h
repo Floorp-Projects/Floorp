@@ -8,7 +8,6 @@
 #define nsBox_h___
 
 #include "mozilla/Attributes.h"
-#include "mozilla/StaticPtr.h"
 #include "nsIFrame.h"
 
 class nsITheme;
@@ -80,7 +79,7 @@ protected:
   nsresult EndXULLayout(nsBoxLayoutState& aState);
 
   static bool gGotTheme;
-  static mozilla::StaticRefPtr<nsITheme> gTheme;
+  static nsITheme* gTheme;
 
   enum eMouseThrough {
     unset,

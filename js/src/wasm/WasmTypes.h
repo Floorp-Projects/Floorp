@@ -138,6 +138,21 @@ typedef Vector<Type, 0, SystemAllocPolicy> VectorName;
     const uint8_t* deserialize(const uint8_t* cursor) override;                 \
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
 
+template <class T>
+struct SerializableRefPtr : RefPtr<T>
+{
+    using RefPtr<T>::operator=;
+
+    SerializableRefPtr() = default;
+
+    template <class U>
+    MOZ_IMPLICIT SerializableRefPtr(U&& u)
+      : RefPtr<T>(std::forward<U>(u))
+    {}
+
+    WASM_DECLARE_SERIALIZABLE(SerializableRefPtr)
+};
+
 // This reusable base class factors out the logic for a resource that is shared
 // by multiple instances/modules but should only be counted once when computing
 // about:memory stats.
@@ -860,6 +875,7 @@ class InitExpr
     };
 
   private:
+    // Note: all this private data is currently (de)serialized via memcpy().
     Kind kind_;
     union U {
         LitVal val_;
@@ -1088,122 +1104,80 @@ class GlobalDesc
 
 typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
 
-// ElemSegment represents an element segment in the module where each element
-// describes both its function index and its code range.
-//
-// The codeRangeIndices are laid out in a nondeterminstic order as a result of
-// parallel compilation.
-//
-// NB: if you add members to this, or change the type of existing ones,
-// remember to update the ElemSegment copying code in Module::instantiate
-// accordingly.
+// When a ElemSegment is "passive" it is shared between a wasm::Module and its
+// wasm::Instances. To allow each segment to be released as soon as the last
+// Instance table.drops it and the Module is destroyed, each ElemSegment is
+// individually atomically ref-counted.
 
-struct ElemSegment
+struct ElemSegment : AtomicRefCounted<ElemSegment>
 {
     uint32_t tableIndex;
     Maybe<InitExpr> offsetIfActive;
     Uint32Vector elemFuncIndices;
-    Uint32Vector elemCodeRangeIndices1_;
-    mutable Uint32Vector elemCodeRangeIndices2_;
 
-    ElemSegment() = default;
-    ElemSegment(uint32_t tableIndex, Maybe<InitExpr>&& offsetIfActive,
-                Uint32Vector&& elemFuncIndices)
-      : tableIndex(tableIndex),
-        offsetIfActive(std::move(offsetIfActive)),
-        elemFuncIndices(std::move(elemFuncIndices))
-    {}
-
-    Uint32Vector& elemCodeRangeIndices(Tier t) {
-        switch (t) {
-          case Tier::Baseline:
-            return elemCodeRangeIndices1_;
-          case Tier::Ion:
-            return elemCodeRangeIndices2_;
-          default:
-            MOZ_CRASH("No such tier");
-        }
+    bool active() const {
+        return !!offsetIfActive;
     }
 
-    const Uint32Vector& elemCodeRangeIndices(Tier t) const {
-        switch (t) {
-          case Tier::Baseline:
-            return elemCodeRangeIndices1_;
-          case Tier::Ion:
-            return elemCodeRangeIndices2_;
-          default:
-            MOZ_CRASH("No such tier");
-        }
+    InitExpr offset() const {
+        return *offsetIfActive;
     }
 
-    void setTier2(Uint32Vector&& elemCodeRangeIndices) const {
-        MOZ_ASSERT(elemCodeRangeIndices2_.length() == 0);
-        elemCodeRangeIndices2_ = std::move(elemCodeRangeIndices);
+    size_t length() const {
+        return elemFuncIndices.length();
     }
 
     WASM_DECLARE_SERIALIZABLE(ElemSegment)
 };
 
-// The ElemSegmentVector is laid out in a deterministic order.
+typedef RefPtr<ElemSegment> MutableElemSegment;
+typedef SerializableRefPtr<const ElemSegment> SharedElemSegment;
+typedef Vector<SharedElemSegment, 0, SystemAllocPolicy> ElemSegmentVector;
 
-typedef Vector<ElemSegment, 0, SystemAllocPolicy> ElemSegmentVector;
+// DataSegmentEnv holds the initial results of decoding a data segment from the
+// bytecode and is stored in the ModuleEnvironment during compilation. When
+// compilation completes, (non-Env) DataSegments are created and stored in
+// the wasm::Module which contain copies of the data segment payload. This
+// allows non-compilation uses of wasm validation to avoid expensive copies.
+//
+// When a DataSegment is "passive" it is shared between a wasm::Module and its
+// wasm::Instances. To allow each segment to be released as soon as the last
+// Instance mem.drops it and the Module is destroyed, each DataSegment is
+// individually atomically ref-counted.
 
-// DataSegment describes the offset of a data segment in the bytecode that is
-// to be copied at a given offset into linear memory upon instantiation.
-
-struct DataSegment
+struct DataSegmentEnv
 {
     Maybe<InitExpr> offsetIfActive;
     uint32_t bytecodeOffset;
     uint32_t length;
 };
 
-typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
+typedef Vector<DataSegmentEnv, 0, SystemAllocPolicy> DataSegmentEnvVector;
 
-// A pairing of entry point and instance pointer, used for lazy table
-// initialisation.
-
-struct WasmCallee
+struct DataSegment : AtomicRefCounted<DataSegment>
 {
-    WasmCallee() : instance(nullptr), entry(nullptr) {}
-    WasmCallee(const Instance* instance, void* entry)
-      : instance(instance),
-        entry(entry)
+    Maybe<InitExpr> offsetIfActive;
+    Bytes bytes;
+
+    DataSegment() = default;
+    explicit DataSegment(const DataSegmentEnv& src)
+      : offsetIfActive(src.offsetIfActive)
     {}
-    // The instance associated with the code address.
-    const Instance* instance;
-    // The table entry code address.
-    void* entry;
+
+    bool active() const {
+        return !!offsetIfActive;
+    }
+
+    InitExpr offset() const {
+        return *offsetIfActive;
+    }
+
+    WASM_DECLARE_SERIALIZABLE(DataSegment)
 };
 
-// Support for passive data and element segments -- lazy initialisation.
-//
-// At instantiation time, we prepare the required initialising data for each
-// passive segment, copying it into new memory.  This is done separately for
-// data segments and elem segments.  We also create a vector of pointers to
-// this copied data, with nullptr for entries corresponding to active
-// segments.  This vector has the same length as the vector of data/elem
-// segments respectively in the originating module.
-//
-// The vector of pointers and the prepared data are owned by the instance
-// that is constructed.  We have to do this so that the initialising data is
-// available at run time in the instance, in particular to
-// Instance::{mem,table}{Init,Drop}.
-//
-// The final structures have type DataSegmentInitVector and
-// ElemSegmentInitVector respectively.
-
-typedef  Vector<uint8_t,    0, SystemAllocPolicy>  DataSegmentInit;
-typedef  Vector<WasmCallee, 0, SystemAllocPolicy>  ElemSegmentInit;
-
-// We store (unique) pointers rather than references to the initialising
-// vectors in order that they can be incrementally freed as we execute
-// {memory,table}.drop instructions.
-
-typedef  Vector<UniquePtr<DataSegmentInit>, 0, SystemAllocPolicy>
-         DataSegmentInitVector;
-typedef  Vector<UniquePtr<ElemSegmentInit>, 0, SystemAllocPolicy>
-         ElemSegmentInitVector;
+typedef RefPtr<DataSegment> MutableDataSegment;
+typedef SerializableRefPtr<const DataSegment> SharedDataSegment;
+typedef Vector<SharedDataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 
 // FuncTypeIdDesc describes a function type that can be used by call_indirect
 // and table-entry prologues to structurally compare whether the caller and
@@ -2033,11 +2007,10 @@ struct FuncImportTls
     // for bidirectional registration purposes.
     jit::BaselineScript* baselineScript;
 
-    // A GC pointer which keeps the callee alive. For imported wasm functions,
-    // this points to the wasm function's WasmInstanceObject. For all other
-    // imported functions, 'obj' points to the JSFunction.
-    GCPtrObject obj;
-    static_assert(sizeof(GCPtrObject) == sizeof(void*), "for JIT access");
+    // A GC pointer which keeps the callee alive and is used to recover import
+    // values for lazy table initialization.
+    GCPtrFunction fun;
+    static_assert(sizeof(GCPtrFunction) == sizeof(void*), "for JIT access");
 };
 
 // TableTls describes the region of wasm global memory allocated in the

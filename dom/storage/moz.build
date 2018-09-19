@@ -15,6 +15,7 @@ EXPORTS.mozilla.dom += [
     'StorageActivityService.h',
     'StorageIPC.h',
     'StorageNotifierService.h',
+    'StorageObserver.h',
     'StorageUtils.h',
 ]
 

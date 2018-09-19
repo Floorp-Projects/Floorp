@@ -273,7 +273,7 @@ const WHITELIST_FUNCTIONS: &'static [&'static str] = &[
     "JS::CallOriginalPromiseThen",
     "JS::CallOriginalPromiseResolve",
     "JS::CallOriginalPromiseReject",
-    "JS::CompileFunction",
+    "JS::CompileFunctionUtf8",
     "JS::Construct",
     "JS::ContextOptionsRef",
     "JS_CopyPropertiesFrom",

@@ -8,7 +8,7 @@ GeckoSharedLibrary('IA2Marshal', linkage=None)
 
 DEFINES['REGISTER_PROXY_DLL'] = True
 
-DEFFILE = SRCDIR + '/IA2Marshal.def'
+DEFFILE = 'IA2Marshal.def'
 
 OS_LIBS += [
     'uuid',

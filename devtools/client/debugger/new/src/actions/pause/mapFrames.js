@@ -47,7 +47,12 @@ function mapDisplayNames(frames, getState) {
       return frame;
     }
 
-    const source = (0, _selectors.getSourceFromId)(getState(), frame.location.sourceId);
+    const source = (0, _selectors.getSource)(getState(), frame.location.sourceId);
+
+    if (!source) {
+      return frame;
+    }
+
     const symbols = (0, _selectors.getSymbols)(getState(), source);
 
     if (!symbols || !symbols.functions) {
@@ -72,8 +77,8 @@ function isWasmOriginalSourceFrame(frame, getState) {
     return false;
   }
 
-  const generatedSource = (0, _selectors.getSourceFromId)(getState(), frame.generatedLocation.sourceId);
-  return generatedSource.isWasm;
+  const generatedSource = (0, _selectors.getSource)(getState(), frame.generatedLocation.sourceId);
+  return Boolean(generatedSource && generatedSource.isWasm);
 }
 
 async function expandFrames(frames, sourceMaps, getState) {
