@@ -307,8 +307,9 @@ SVGComponentTransferFunctionElement::Offset()
   return mNumberAttributes[OFFSET].ToDOMAnimatedNumber(this);
 }
 
-AttributeMap
-SVGComponentTransferFunctionElement::ComputeAttributes()
+void
+SVGComponentTransferFunctionElement::ComputeAttributes(int32_t aChannel,
+                                                       ComponentTransferAttributes& aAttributes)
 {
   uint32_t type = mEnumAttributes[TYPE].GetAnimValue();
 
@@ -319,19 +320,28 @@ SVGComponentTransferFunctionElement::ComputeAttributes()
   const SVGNumberList &tableValues =
     mNumberListAttributes[TABLEVALUES].GetAnimValue();
 
-  AttributeMap map;
-  map.Set(eComponentTransferFunctionType, type);
-  map.Set(eComponentTransferFunctionSlope, slope);
-  map.Set(eComponentTransferFunctionIntercept, intercept);
-  map.Set(eComponentTransferFunctionAmplitude, amplitude);
-  map.Set(eComponentTransferFunctionExponent, exponent);
-  map.Set(eComponentTransferFunctionOffset, offset);
-  if (tableValues.Length()) {
-    map.Set(eComponentTransferFunctionTableValues, &tableValues[0], tableValues.Length());
-  } else {
-    map.Set(eComponentTransferFunctionTableValues, nullptr, 0);
+  aAttributes.mTypes[aChannel] = (uint8_t)type;
+  switch (type) {
+    case SVG_FECOMPONENTTRANSFER_TYPE_LINEAR: {
+      aAttributes.mValues[aChannel].SetLength(2);
+      aAttributes.mValues[aChannel][kComponentTransferSlopeIndex] = slope;
+      aAttributes.mValues[aChannel][kComponentTransferInterceptIndex] = intercept;
+      break;
+    }
+    case SVG_FECOMPONENTTRANSFER_TYPE_GAMMA: {
+      aAttributes.mValues[aChannel].SetLength(3);
+      aAttributes.mValues[aChannel][kComponentTransferAmplitudeIndex] = amplitude;
+      aAttributes.mValues[aChannel][kComponentTransferExponentIndex] = exponent;
+      aAttributes.mValues[aChannel][kComponentTransferOffsetIndex] = offset;
+      break;
+    }
+    case SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE:
+    case SVG_FECOMPONENTTRANSFER_TYPE_TABLE: {
+      aAttributes.mValues[aChannel].AppendElements(&tableValues[0],
+                                                                      tableValues.Length());
+      break;
+    }
   }
-  return map;
 }
 
 //----------------------------------------------------------------------
@@ -467,8 +477,9 @@ nsSVGFELightingElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
-AttributeMap
-nsSVGFELightingElement::ComputeLightAttributes(nsSVGFilterInstance* aInstance)
+LightType
+nsSVGFELightingElement::ComputeLightAttributes(nsSVGFilterInstance* aInstance,
+                                               nsTArray<float>& aFloatAttributes)
 {
   // find specified light
   for (nsCOMPtr<nsIContent> child = nsINode::GetFirstChild();
@@ -477,22 +488,21 @@ nsSVGFELightingElement::ComputeLightAttributes(nsSVGFilterInstance* aInstance)
     if (child->IsAnyOfSVGElements(nsGkAtoms::feDistantLight,
                                   nsGkAtoms::fePointLight,
                                   nsGkAtoms::feSpotLight)) {
-      return static_cast<SVGFELightElement*>(child.get())->ComputeLightAttributes(aInstance);
+      return static_cast<SVGFELightElement*>(child.get())->ComputeLightAttributes(aInstance,
+                                                                                  aFloatAttributes);
     }
   }
 
-  AttributeMap map;
-  map.Set(eLightType, (uint32_t)eLightTypeNone);
-  return map;
+  return LightType::None;
 }
 
-FilterPrimitiveDescription
-nsSVGFELightingElement::AddLightingAttributes(const FilterPrimitiveDescription& aDescription,
+bool
+nsSVGFELightingElement::AddLightingAttributes(mozilla::gfx::DiffuseLightingAttributes* aAttributes,
                                               nsSVGFilterInstance* aInstance)
 {
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) {
-    return FilterPrimitiveDescription(PrimitiveType::Empty);
+    return false;
   }
 
   const nsStyleSVGReset* styleSVGReset = frame->Style()->StyleSVGReset();
@@ -505,15 +515,16 @@ nsSVGFELightingElement::AddLightingAttributes(const FilterPrimitiveDescription& 
   if (kernelUnitLength.width <= 0 || kernelUnitLength.height <= 0) {
     // According to spec, A negative or zero value is an error. See link below for details.
     // https://www.w3.org/TR/SVG/filters.html#feSpecularLightingKernelUnitLengthAttribute
-    return FilterPrimitiveDescription(PrimitiveType::Empty);
+    return false;
   }
 
-  FilterPrimitiveDescription descr = aDescription;
-  descr.Attributes().Set(eLightingLight, ComputeLightAttributes(aInstance));
-  descr.Attributes().Set(eLightingSurfaceScale, surfaceScale);
-  descr.Attributes().Set(eLightingKernelUnitLength, kernelUnitLength);
-  descr.Attributes().Set(eLightingColor, color);
-  return descr;
+  aAttributes->mLightType =
+    ComputeLightAttributes(aInstance, aAttributes->mLightValues);
+  aAttributes->mSurfaceScale = surfaceScale;
+  aAttributes->mKernelUnitLength = kernelUnitLength;
+  aAttributes->mColor = color;
+
+  return true;
 }
 
 bool

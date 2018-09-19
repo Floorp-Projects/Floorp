@@ -4,7 +4,7 @@
 
 // Microsoft Visual C++ generated resource script.
 //
-#ifdef TEST_UPDATER
+#if defined(TEST_UPDATER) || defined(DEP_UPDATER)
 #include "../resource.h"
 #define MANIFEST_PATH "../updater.exe.manifest"
 #define COMCTL32_MANIFEST_PATH "../updater.exe.comctl32.manifest"

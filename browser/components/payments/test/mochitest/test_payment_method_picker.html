@@ -52,6 +52,7 @@ add_task(async function test_initialSet() {
         "cc-exp-year": 2017,
         "cc-name": "John Doe",
         "cc-number": "************9999",
+        "cc-type": "mastercard",
         "guid": "48bnds6854t",
       },
       "68gjdh354j": {
@@ -60,6 +61,7 @@ add_task(async function test_initialSet() {
         "cc-exp-year": 2017,
         "cc-name": "J Smith",
         "cc-number": "***********1234",
+        "cc-type": "visa",
         "guid": "68gjdh354j",
       },
       "123456789abc": {
@@ -90,6 +92,7 @@ add_task(async function test_update() {
         "cc-exp-year": 2017,
         // cc-name was cleared which means it's not returned
         "cc-number": "************9876",
+        "cc-type": "amex",
         "guid": "48bnds6854t",
       },
       "68gjdh354j": {
@@ -98,6 +101,7 @@ add_task(async function test_update() {
         "cc-exp-year": 2017,
         "cc-name": "J Smith",
         "cc-number": "***********1234",
+        "cc-type": "visa",
         "guid": "68gjdh354j",
       },
       "123456789abc": {
@@ -152,7 +156,7 @@ add_task(async function test_change_selected_card() {
 
   await SimpleTest.promiseFocus();
   picker1.dropdown.popupBox.focus();
-  synthesizeKey("***********1234", {});
+  synthesizeKey("visa", {});
   await asyncElementRendered();
   ok(true, "Focused the security code field");
   ok(!picker1.open, "Picker should be closed");
@@ -187,6 +191,7 @@ add_task(async function test_delete() {
         "cc-exp-year": 2017,
         "cc-name": "J Smith",
         "cc-number": "***********1234",
+        "cc-type": "visa",
         "guid": "68gjdh354j",
       },
       "123456789abc": {

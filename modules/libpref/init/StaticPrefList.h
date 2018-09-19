@@ -194,6 +194,13 @@ VARCACHE_PREF(
 // Note, this is not currently safe to use for normal browsing yet.
 PREF("dom.serviceWorkers.parent_intercept", bool, false)
 
+// Whether a user gesture is required to call PaymentRequest.prototype.show().
+VARCACHE_PREF(
+  "dom.payments.request.user_interaction_required",
+  dom_payments_request_user_interaction_required,
+  bool, true
+)
+
 // Time in milliseconds for PaymentResponse to wait for
 // the Web page to call complete().
 VARCACHE_PREF(

@@ -8,6 +8,7 @@
 
 #include "AudioConduit.h"
 #include "VideoConduit.h"
+#include "VideoStreamFactory.h"
 #include "YuvStamper.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/media/MediaUtils.h"
@@ -84,12 +85,12 @@ static const char* kRedPayloadName = "red";
 // the encoder.
 #define SCALER_BUFFER_POOL_SIZE 5
 
-// Convert (SI) kilobits/sec to (SI) bits/sec
-#define KBPS(kbps) kbps * 1000
+// The pixel alignment to use for the highest resolution layer when simulcast
+// is active and one or more layers are being scaled.
+#define SIMULCAST_RESOLUTION_ALIGNMENT 16
 
 // 32 bytes is what WebRTC CodecInst expects
 const unsigned int WebrtcVideoConduit::CODEC_PLNAME_SIZE = 32;
-static const int kViEMinCodecBitrate_bps = KBPS(30);
 
 template<typename T>
 T MinIgnoreZero(const T& a, const T& b)
@@ -578,6 +579,9 @@ WebrtcVideoConduit::ConfigureCodecMode(webrtc::VideoCodecMode mode)
   if (mode == webrtc::VideoCodecMode::kRealtimeVideo ||
       mode == webrtc::VideoCodecMode::kScreensharing) {
     mCodecMode = mode;
+    if (mVideoStreamFactory) {
+      mVideoStreamFactory->SetCodecMode(mCodecMode);
+    }
     return kMediaConduitNoError;
   }
 
@@ -797,116 +801,6 @@ CodecsDifferent(const nsTArray<UniquePtr<VideoCodecConfig>>& a,
   return false;
 }
 
-std::vector<webrtc::VideoStream>
-WebrtcVideoConduit::VideoStreamFactory::CreateEncoderStreams(
-  int width, int height, const webrtc::VideoEncoderConfig& config)
-{
-  size_t streamCount = config.number_of_streams;
-  webrtc::VideoCodecMode codecMode = mConduit->mCodecMode;
-
-  // Disallow odd width and height, they will cause aspect ratio checks to
-  // fail in the webrtc.org code. We can hit transient states after window
-  // sharing ends where odd resolutions are requested for the camera.
-  streamCount = std::min(streamCount, static_cast<size_t>(
-                         1 + std::min(CountTrailingZeroes32(width),
-                                      CountTrailingZeroes32(height))));
-
-  // We only allow one layer when screensharing
-  if (codecMode == webrtc::VideoCodecMode::kScreensharing) {
-    streamCount = 1;
-  }
-
-  std::vector<webrtc::VideoStream> streams;
-  streams.reserve(streamCount);
-  MOZ_ASSERT(mConduit);
-  MutexAutoLock lock(mConduit->mMutex);
-
-  // XXX webrtc.org code has a restriction on simulcast layers that each
-  // layer must be 1/2 the dimension of the previous layer - not sure why.
-  // This means we can't use scaleResolutionBy/scaleDownBy (yet), even if
-  // the user specified it.  The one exception is that we can apply it on
-  // the full-resolution stream (which also happens to handle the
-  // non-simulcast usage case). NOTE: we make an assumption here, not in the
-  // spec, that the first stream is the full-resolution stream.
-#if 0
-  // XXX What we'd like to do for each simulcast stream...
-  if (simulcastEncoding.constraints.scaleDownBy > 1.0) {
-    uint32_t new_width = width / simulcastEncoding.constraints.scaleDownBy;
-    uint32_t new_height = height / simulcastEncoding.constraints.scaleDownBy;
-
-    if (new_width != width || new_height != height) {
-      if (streamCount == 1) {
-        CSFLogVerbose(LOGTAG, "%s: ConstrainPreservingAspectRatio", __FUNCTION__);
-        // Use less strict scaling in unicast. That way 320x240 / 3 = 106x79.
-        ConstrainPreservingAspectRatio(new_width, new_height,
-                                       &width, &height);
-      } else {
-        CSFLogVerbose(LOGTAG, "%s: ConstrainPreservingAspectRatioExact", __FUNCTION__);
-        // webrtc.org supposedly won't tolerate simulcast unless every stream
-        // is exactly the same aspect ratio. 320x240 / 3 = 80x60.
-        ConstrainPreservingAspectRatioExact(new_width * new_height,
-                                            &width, &height);
-      }
-    }
-  }
-#endif
-
-  for (size_t idx = streamCount - 1; streamCount > 0; idx--, streamCount--) {
-    webrtc::VideoStream video_stream;
-    // Stream dimensions must be divisable by 2^(n-1), where n is the number of layers.
-    // Each lower resolution layer is 1/2^(n-1) of the size of largest layer,
-    // where n is the number of the layer
-
-    // width/height will be overridden on the first frame; they must be 'sane' for
-    // SetSendCodec()
-    video_stream.width = width >> idx;
-    video_stream.height = height >> idx;
-    // We want to ensure this picks up the current framerate, so indirect
-    video_stream.max_framerate = mConduit->mSendingFramerate;
-
-    auto& simulcastEncoding = mConduit->mCurSendCodecConfig->mSimulcastEncodings[idx];
-    MOZ_ASSERT(simulcastEncoding.constraints.scaleDownBy >= 1.0);
-
-    mConduit->SelectBitrates(
-      video_stream.width, video_stream.height,
-      simulcastEncoding.constraints.maxBr, video_stream);
-
-    video_stream.max_qp = kQpMax;
-    video_stream.SetRid(simulcastEncoding.rid);
-
-    // leave vector temporal_layer_thresholds_bps empty for non-simulcast
-    video_stream.temporal_layer_thresholds_bps.clear();
-    if (config.number_of_streams > 1) {
-      // XXX Note: in simulcast.cc in upstream code, the array value is
-      // 3(-1) for all streams, though it's in an array, except for screencasts,
-      // which use 1 (i.e 2 layers).
-
-      // Oddly, though this is a 'bps' array, nothing really looks at the
-      // values for normal video, just the size of the array to know the
-      // number of temporal layers.
-      // For VideoEncoderConfig::ContentType::kScreen, though, in
-      // video_codec_initializer.cc it uses [0] to set the target bitrate
-      // for the screenshare.
-      if (codecMode == webrtc::VideoCodecMode::kScreensharing) {
-        video_stream.temporal_layer_thresholds_bps.push_back(video_stream.target_bitrate_bps);
-      } else {
-        video_stream.temporal_layer_thresholds_bps.resize(2);
-      }
-      // XXX Bug 1390215 investigate using more of
-      // simulcast.cc:GetSimulcastConfig() or our own algorithm to replace it
-    }
-
-    if (mConduit->mCurSendCodecConfig->mName == "H264") {
-      if (mConduit->mCurSendCodecConfig->mEncodingConstraints.maxMbps > 0) {
-        // Not supported yet!
-        CSFLogError(LOGTAG, "%s H.264 max_mbps not supported yet", __FUNCTION__);
-      }
-    }
-    streams.push_back(video_stream);
-  }
-  return streams;
-}
-
 /**
  * Note: Setting the send-codec on the Video Engine will restart the encoder,
  * sets up new SSRC and reset RTP_RTCP module with the new codec setting.
@@ -935,8 +829,8 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
 
   size_t streamCount = std::min(codecConfig->mSimulcastEncodings.size(),
                                 (size_t)webrtc::kMaxSimulcastStreams);
-  CSFLogDebug(LOGTAG, "%s for VideoConduit:%p stream count:%d", __FUNCTION__,
-              this, static_cast<int>(streamCount));
+  CSFLogDebug(LOGTAG, "%s for VideoConduit:%p stream count:%zu", __FUNCTION__,
+              this, streamCount);
 
   mSendingFramerate = 0;
   mEncoderConfig.ClearStreams();
@@ -957,7 +851,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   // So we can comply with b=TIAS/b=AS/maxbr=X when input resolution changes
   mNegotiatedMaxBitrate = codecConfig->mTias;
 
-  if (mLastWidth == 0 && mMinBitrateEstimate) {
+  if (mLastWidth == 0 && mMinBitrateEstimate != 0) {
     // Only do this at the start; use "have we send a frame" as a reasonable stand-in.
     // min <= start <= max (which can be -1, note!)
     webrtc::Call::Config::BitrateConfig config;
@@ -972,13 +866,16 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     mCall->Call()->SetBitrateConfig(config);
   }
 
-  // NOTE: the lifetime of this object MUST be less than the lifetime of the Conduit
-  mEncoderConfig.SetVideoStreamFactory(
-    new rtc::RefCountedObject<WebrtcVideoConduit::VideoStreamFactory>(
-      codecConfig->mName, this));
+  mVideoStreamFactory =
+    new rtc::RefCountedObject<VideoStreamFactory>(
+      *codecConfig, mCodecMode,
+      mMinBitrate, mStartBitrate, mPrefMaxBitrate,
+      mNegotiatedMaxBitrate, mSendingFramerate);
+  mEncoderConfig.SetVideoStreamFactory(mVideoStreamFactory.get());
 
   // Reset the VideoAdapter. SelectResolution will ensure limits are set.
-  mVideoAdapter = MakeUnique<cricket::VideoAdapter>();
+  mVideoAdapter = MakeUnique<cricket::VideoAdapter>(
+    streamCount > 1 ? SIMULCAST_RESOLUTION_ALIGNMENT : 1);
   mVideoAdapter->OnScaleResolutionBy(
     (streamCount >= 1 && codecConfig->mSimulcastEncodings[0].constraints.scaleDownBy > 1.0) ?
       rtc::Optional<float>(codecConfig->mSimulcastEncodings[0].constraints.scaleDownBy) :
@@ -994,7 +891,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   // for the GMP H.264 encoder/decoder!!
   mEncoderConfig.SetMinTransmitBitrateBps(0);
   // Expected max number of encodings
-  mEncoderConfig.SetMaxEncodings(codecConfig->mSimulcastEncodings.size());
+  mEncoderConfig.SetMaxEncodings(streamCount);
 
   // If only encoder stream attibutes have been changed, there is no need to stop,
   // create a new webrtc::VideoSendStream, and restart.
@@ -1917,89 +1814,6 @@ WebrtcVideoConduit::CreateEncoder(webrtc::VideoCodecType aType,
   return encoder;
 }
 
-#define MB_OF(w,h) ((unsigned int)((((w+15)>>4))*((unsigned int)((h+15)>>4))))
-// For now, try to set the max rates well above the knee in the curve.
-// Chosen somewhat arbitrarily; it's hard to find good data oriented for
-// realtime interactive/talking-head recording.  These rates assume
-// 30fps.
-
-// XXX Populate this based on a pref (which we should consider sorting because
-// people won't assume they need to).
-static WebrtcVideoConduit::ResolutionAndBitrateLimits kResolutionAndBitrateLimits[] = {
-  {MB_OF(1920, 1200), KBPS(1500), KBPS(2000), KBPS(10000)}, // >HD (3K, 4K, etc)
-  {MB_OF(1280, 720), KBPS(1200), KBPS(1500), KBPS(5000)}, // HD ~1080-1200
-  {MB_OF(800, 480), KBPS(600), KBPS(800), KBPS(2500)}, // HD ~720
-  {MB_OF(480, 270), KBPS(150), KBPS(500), KBPS(2000)}, // WVGA
-  {tl::Max<MB_OF(400, 240), MB_OF(352, 288)>::value, KBPS(125), KBPS(300), KBPS(1300)}, // VGA
-  {MB_OF(176, 144), KBPS(100), KBPS(150), KBPS(500)}, // WQVGA, CIF
-  {0 , KBPS(40), KBPS(80), KBPS(250)} // QCIF and below
-};
-
-static WebrtcVideoConduit::ResolutionAndBitrateLimits
-GetLimitsFor(unsigned int aWidth, unsigned int aHeight, int aCapBps = 0)
-{
-  // max bandwidth should be proportional (not linearly!) to resolution, and
-  // proportional (perhaps linearly, or close) to current frame rate.
-  int fs = MB_OF(aWidth, aHeight);
-
-  for (const auto& resAndLimits : kResolutionAndBitrateLimits) {
-    if (fs > resAndLimits.resolution_in_mb &&
-        // pick the highest range where at least start rate is within cap
-        // (or if we're at the end of the array).
-        (aCapBps == 0 ||
-         resAndLimits.start_bitrate_bps <= aCapBps ||
-         resAndLimits.resolution_in_mb == 0)) {
-      return resAndLimits;
-    }
-  }
-
-  MOZ_CRASH("Loop should have handled fallback");
-}
-
-void
-WebrtcVideoConduit::SelectBitrates(
-  unsigned short width, unsigned short height, int cap,
-  webrtc::VideoStream& aVideoStream)
-{
-  mMutex.AssertCurrentThreadOwns();
-
-  int& out_min = aVideoStream.min_bitrate_bps;
-  int& out_start = aVideoStream.target_bitrate_bps;
-  int& out_max = aVideoStream.max_bitrate_bps;
-
-  ResolutionAndBitrateLimits resAndLimits = GetLimitsFor(width, height);
-  out_min = MinIgnoreZero(resAndLimits.min_bitrate_bps, cap);
-  out_start = MinIgnoreZero(resAndLimits.start_bitrate_bps, cap);
-  out_max = MinIgnoreZero(resAndLimits.max_bitrate_bps, cap);
-
-  // Note: mNegotiatedMaxBitrate is the max transport bitrate - it applies to
-  // a single codec encoding, but should also apply to the sum of all
-  // simulcast layers in this encoding!  So sum(layers.maxBitrate) <=
-  // mNegotiatedMaxBitrate
-  // Note that out_max already has had mPrefMaxBitrate applied to it
-  out_max = MinIgnoreZero((int)mNegotiatedMaxBitrate, out_max);
-  out_min = std::min(out_min, out_max);
-  out_start = std::min(out_start, out_max);
-
-  if (mMinBitrate && mMinBitrate > out_min) {
-    out_min = mMinBitrate;
-  }
-  // If we try to set a minimum bitrate that is too low, ViE will reject it.
-  out_min = std::max(kViEMinCodecBitrate_bps, out_min);
-  out_max = std::max(kViEMinCodecBitrate_bps, out_max);
-  if (mStartBitrate && mStartBitrate > out_start) {
-    out_start = mStartBitrate;
-  }
-
-  // Ensure that min <= start <= max
-  if (out_min > out_max) {
-    out_min = out_max;
-  }
-  out_start = std::min(out_max, std::max(out_start, out_min));
-
-  MOZ_ASSERT(mPrefMaxBitrate == 0 || out_max <= mPrefMaxBitrate);
-}
-
 // XXX we need to figure out how to feed back changes in preferred capture
 // resolution to the getUserMedia source.
 void
@@ -2040,6 +1854,7 @@ WebrtcVideoConduit::SelectSendResolution(
     CSFLogDebug(LOGTAG, "%s: framerate changing to %u (from %u)",
                 __FUNCTION__, framerate, mSendingFramerate);
     mSendingFramerate = framerate;
+    mVideoStreamFactory->SetSendingFramerate(mSendingFramerate);
   }
 }
 
@@ -2613,7 +2428,7 @@ WebrtcVideoConduit::VideoEncoderConfigBuilder::SetEncoderSpecificSettings(
 }
 
 void
-WebrtcVideoConduit::VideoEncoderConfigBuilder::SetVideoStreamFactory(rtc::scoped_refptr<WebrtcVideoConduit::VideoStreamFactory> aFactory)
+WebrtcVideoConduit::VideoEncoderConfigBuilder::SetVideoStreamFactory(rtc::scoped_refptr<VideoStreamFactory> aFactory)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
