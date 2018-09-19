@@ -12,14 +12,12 @@ import android.view.ViewTreeObserver
  */
 class OneShotOnPreDrawListener(
     private val view: View,
-    private inline val onPreDraw: (view: View) -> Unit
+    private inline val onPreDraw: (view: View) -> Boolean
 ) : ViewTreeObserver.OnPreDrawListener {
 
     override fun onPreDraw(): Boolean {
         view.viewTreeObserver.removeOnPreDrawListener(this)
 
-        onPreDraw(view)
-
-        return true
+        return onPreDraw(view)
     }
 }

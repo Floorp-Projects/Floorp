@@ -21,7 +21,6 @@ import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.webkit.URLUtil
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -54,6 +53,7 @@ import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
+import org.mozilla.focus.utils.OneShotOnPreDrawListener
 import org.mozilla.focus.viewmodel.MainViewModel
 import org.mozilla.focus.whatsnew.WhatsNew
 import java.util.Objects
@@ -280,17 +280,9 @@ class UrlInputFragment :
         urlView?.inputType = urlView.inputType or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
 
         if (urlInputContainerView != null) {
-            urlInputContainerView.viewTreeObserver.addOnPreDrawListener(object :
-                ViewTreeObserver.OnPreDrawListener {
-                override fun onPreDraw(): Boolean {
-                    if (urlInputContainerView != null) {
-                        urlInputContainerView.viewTreeObserver.removeOnPreDrawListener(this)
-                    }
-
-                    animateFirstDraw()
-
-                    return true
-                }
+            urlInputContainerView.viewTreeObserver.addOnPreDrawListener(OneShotOnPreDrawListener(urlInputContainerView) {
+                animateFirstDraw()
+                true
             })
         }
 
@@ -389,13 +381,9 @@ class UrlInputFragment :
             displayedPopupMenu?.let {
                 it.dismiss()
 
-                menuView.viewTreeObserver.addOnPreDrawListener (object : ViewTreeObserver.OnPreDrawListener {
-                    override fun onPreDraw(): Boolean {
-                        menuView.viewTreeObserver.removeOnPreDrawListener(this)
-                        showHomeMenu(menuView)
-
-                        return false
-                    }
+                menuView.viewTreeObserver.addOnPreDrawListener (OneShotOnPreDrawListener(menuView) {
+                    showHomeMenu(menuView)
+                    false
                 })
             }
         }
