@@ -3715,7 +3715,7 @@ IonBuilder::arithTryBinaryStub(bool* emitted, JSOp op,
       case JSOP_MUL:
       case JSOP_DIV:
       case JSOP_MOD:
-        stub = MBinaryCache::New(alloc(), left, right);
+        stub = MBinaryCache::New(alloc(), left, right, MIRType::Value);
         break;
       default:
         MOZ_CRASH("unsupported arith");
@@ -6470,14 +6470,10 @@ IonBuilder::compareTryBinaryStub(bool* emitted, MDefinition* left, MDefinition* 
         return Ok();
     }
 
-    MBinaryCache* stub = MBinaryCache::New(alloc(), left, right);
+    MBinaryCache* stub = MBinaryCache::New(alloc(), left, right, MIRType::Boolean);
     current->add(stub);
     current->push(stub);
     MOZ_TRY(resumeAfter(stub));
-
-    MUnbox* unbox = MUnbox::New(alloc(), current->pop(), MIRType::Boolean, MUnbox::Infallible);
-    current->add(unbox);
-    current->push(unbox);
 
     trackOptimizationSuccess();
     *emitted = true;
