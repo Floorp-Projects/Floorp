@@ -431,11 +431,8 @@ var TelemetryReportingPolicyImpl = {
     }
     firstRunPolicyURL = Services.urlFormatter.formatURL(firstRunPolicyURL);
 
-    let win;
-    try {
-      const { BrowserWindowTracker } = ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm", {});
-      win = BrowserWindowTracker.getTopWindow();
-    } catch (e) {}
+    const { BrowserWindowTracker } = ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm", {});
+    let win = BrowserWindowTracker.getTopWindow();
 
     if (!win) {
       this._log.info("Couldn't find browser window to open first-run page. Falling back to infobar.");
