@@ -314,6 +314,16 @@ async function dndToolTab(toolbox, dragTarget, dropTarget, passedTargets = []) {
     EventUtils.synthesizeMouse(containerEl, 0, 0,
                                { type: "mouseout" }, containerEl.ownerGlobal);
   }
+
+  // Wait for updating the preference.
+  await new Promise(resolve => {
+    const onUpdated = () => {
+      Services.prefs.removeObserver("devtools.toolbox.tabsOrder", onUpdated);
+      resolve();
+    };
+
+    Services.prefs.addObserver("devtools.toolbox.tabsOrder", onUpdated);
+  });
 }
 
 function assertToolTabOrder(toolbox, expectedOrder) {

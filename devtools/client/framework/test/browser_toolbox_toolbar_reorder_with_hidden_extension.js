@@ -83,7 +83,7 @@ add_task(async function() {
 
   await extension.startup();
 
-  let tab = await addTab("about:blank");
+  const tab = await addTab("about:blank");
   const toolbox = await openToolboxForTab(tab, "webconsole", Toolbox.HostType.BOTTOM);
   await extension.awaitMessage("devtools-page-ready");
 
@@ -95,26 +95,18 @@ add_task(async function() {
     assertToolTabPreferenceOrder(expectedOrder);
   }
 
-  info("Check ordering preference after destroying toolbox");
-  let target = gDevTools.getTargetForTab(tab);
-  await gDevTools.closeToolbox(target);
-  await target.destroy();
-  assertExtensionExistence(true);
-
-  info("Check ordering preference after uninstalling hidden addon");
+  info("Test ordering preference after uninstalling hidden addon");
+  const startingOrder = ["inspector", EXTENSION, "webconsole", "jsdebugger", "styleeditor",
+                         "performance", "memory", "netmonitor", "storage", "accessibility"];
+  const dragTarget = "webconsole";
+  const dropTarget = "inspector";
+  const expectedOrder = ["webconsole", "inspector", "jsdebugger", "styleeditor",
+                         "performance", "memory", "netmonitor", "storage", "accessibility"];
+  prepareTestWithHiddenExtension(toolbox, startingOrder);
   await extension.unload();
-  tab = await addTab("about:blank");
-  await openToolboxForTab(tab, "webconsole", Toolbox.HostType.BOTTOM);
-  target = gDevTools.getTargetForTab(tab);
-  await gDevTools.closeToolbox(target);
-  assertExtensionExistence(false);
+  await dndToolTab(toolbox, dragTarget, dropTarget);
+  assertToolTabPreferenceOrder(expectedOrder);
 });
-
-function assertExtensionExistence(shouldExist) {
-  const ids = Services.prefs.getCharPref("devtools.toolbox.tabsOrder").split(",");
-  is(ids.includes(EXTENSION), shouldExist,
-     `Hidden extension id should ${shouldExist ? "" : "not "}exist`);
-}
 
 function prepareTestWithHiddenExtension(toolbox, startingOrder) {
   Services.prefs.setCharPref("devtools.toolbox.tabsOrder", startingOrder.join(","));
