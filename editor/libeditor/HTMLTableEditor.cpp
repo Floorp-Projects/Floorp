@@ -817,6 +817,13 @@ HTMLEditor::DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete)
 
   MOZ_ASSERT(selection->RangeCount());
 
+  TableSize tableSize(*this, *table, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
+  MOZ_ASSERT(!tableSize.IsEmpty());
+
   // If only one cell is selected or no cell is selected, remove cells
   // starting from the first selected cell or a cell containing first
   // selection range.
@@ -842,11 +849,6 @@ HTMLEditor::DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete)
       if (numberOfCellsInRow == 1) {
         // Remove <tr> or <table> if we're removing all cells in the row or
         // the table.
-        TableSize tableSize(*this, *table, error);
-        if (NS_WARN_IF(error.Failed())) {
-          return error.StealNSResult();
-        }
-
         if (tableSize.mRowCount == 1) {
           rv = DeleteTableElementAndChildrenWithTransaction(*selection, *table);
           if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -861,6 +863,14 @@ HTMLEditor::DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete)
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
+
+        // Adjust table rows simply.  In strictly speaking, we should
+        // recompute table size with the latest layout information since
+        // mutation event listener may have changed the DOM tree. However,
+        // this is not in usual path of Firefox.  So, we can assume that
+        // there are no mutation event listeners.
+        MOZ_ASSERT(tableSize.mRowCount);
+        tableSize.mRowCount--;
         continue;
       }
 
@@ -877,17 +887,15 @@ HTMLEditor::DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete)
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
+      // Note that we don't refer column number in this loop.  So, it must
+      // be safe not to recompute table size since number of row is synced
+      // above.
     }
     return NS_OK;
   }
 
   // When 2 or more cells are selected, ignore aNumberOfCellsToRemove and
   // remove all selected cells.
-  TableSize tableSize(*this, *table, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
   CellIndexes firstCellIndexes(*firstSelectedCellElement, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
@@ -929,10 +937,24 @@ HTMLEditor::DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete)
           nextRow = nextSelectedCellIndexes.mRow;
           startColIndex = nextSelectedCellIndexes.mColumn;
         }
+        if (tableSize.mRowCount == 1) {
+          rv = DeleteTableElementAndChildrenWithTransaction(*selection, *table);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+          return NS_OK;
+        }
         rv = DeleteTableRowWithTransaction(*table, startRowIndex);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
+        // Adjust table rows simply.  In strictly speaking, we should
+        // recompute table size with the latest layout information since
+        // mutation event listener may have changed the DOM tree. However,
+        // this is not in usual path of Firefox.  So, we can assume that
+        // there are no mutation event listeners.
+        MOZ_ASSERT(tableSize.mRowCount);
+        tableSize.mRowCount--;
         if (!cell) {
           break;
         }
@@ -973,6 +995,13 @@ HTMLEditor::DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete)
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
+        // Adjust table columns simply.  In strictly speaking, we should
+        // recompute table size with the latest layout information since
+        // mutation event listener may have changed the DOM tree. However,
+        // this is not in usual path of Firefox.  So, we can assume that
+        // there are no mutation event listeners.
+        MOZ_ASSERT(tableSize.mColumnCount);
+        tableSize.mColumnCount--;
         if (!cell) {
           break;
         }
@@ -1008,6 +1037,11 @@ HTMLEditor::DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete)
     startRowIndex = nextCellIndexes.mRow;
     startColIndex = nextCellIndexes.mColumn;
     cell = std::move(nextCell);
+    // When table cell is removed, table size of column may be changed.
+    // For example, if there are 2 rows, one has 2 cells, the other has
+    // 3 cells, tableSize.mColumnCount is 3.  When this removes a cell
+    // in the latter row, mColumnCount should be come 2.  However, we
+    // don't use mColumnCount in this loop, so, this must be okay for now.
   }
   return NS_OK;
 }
