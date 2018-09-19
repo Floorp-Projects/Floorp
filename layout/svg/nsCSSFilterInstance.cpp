@@ -122,7 +122,7 @@ nsCSSFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
   SetBounds(descr, aPrimitiveDescrs);
 
   // Add this primitive to the filter chain.
-  aPrimitiveDescrs.AppendElement(descr);
+  aPrimitiveDescrs.AppendElement(std::move(descr));
   return NS_OK;
 }
 
@@ -165,15 +165,13 @@ nsCSSFilterInstance::SetAttributesForBrightness(FilterPrimitiveDescription& aDes
                       (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_LINEAR);
   brightnessAttrs.Set(eComponentTransferFunctionSlope, value);
   brightnessAttrs.Set(eComponentTransferFunctionIntercept, 0.0f);
-  aDescr.Attributes().Set(eComponentTransferFunctionR, brightnessAttrs);
-  aDescr.Attributes().Set(eComponentTransferFunctionG, brightnessAttrs);
-  aDescr.Attributes().Set(eComponentTransferFunctionB, brightnessAttrs);
+  aDescr.Attributes().Set(eComponentTransferFunctionRGB, std::move(brightnessAttrs));
 
   // Set identity transfer function for A.
   AttributeMap identityAttrs;
   identityAttrs.Set(eComponentTransferFunctionType,
                     (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY);
-  aDescr.Attributes().Set(eComponentTransferFunctionA, identityAttrs);
+  aDescr.Attributes().Set(eComponentTransferFunctionA, std::move(identityAttrs));
 
   return NS_OK;
 }
@@ -191,15 +189,13 @@ nsCSSFilterInstance::SetAttributesForContrast(FilterPrimitiveDescription& aDescr
                     (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_LINEAR);
   contrastAttrs.Set(eComponentTransferFunctionSlope, value);
   contrastAttrs.Set(eComponentTransferFunctionIntercept, intercept);
-  aDescr.Attributes().Set(eComponentTransferFunctionR, contrastAttrs);
-  aDescr.Attributes().Set(eComponentTransferFunctionG, contrastAttrs);
-  aDescr.Attributes().Set(eComponentTransferFunctionB, contrastAttrs);
+  aDescr.Attributes().Set(eComponentTransferFunctionRGB, std::move(contrastAttrs));
 
   // Set identity transfer function for A.
   AttributeMap identityAttrs;
   identityAttrs.Set(eComponentTransferFunctionType,
                     (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY);
-  aDescr.Attributes().Set(eComponentTransferFunctionA, identityAttrs);
+  aDescr.Attributes().Set(eComponentTransferFunctionA, std::move(identityAttrs));
 
   return NS_OK;
 }
@@ -272,15 +268,13 @@ nsCSSFilterInstance::SetAttributesForInvert(FilterPrimitiveDescription& aDescr)
   invertAttrs.Set(eComponentTransferFunctionType,
                   (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_TABLE);
   invertAttrs.Set(eComponentTransferFunctionTableValues, invertTableValues, 2);
-  aDescr.Attributes().Set(eComponentTransferFunctionR, invertAttrs);
-  aDescr.Attributes().Set(eComponentTransferFunctionG, invertAttrs);
-  aDescr.Attributes().Set(eComponentTransferFunctionB, invertAttrs);
+  aDescr.Attributes().Set(eComponentTransferFunctionRGB, std::move(invertAttrs));
 
   // Set identity transfer function for A.
   AttributeMap identityAttrs;
   identityAttrs.Set(eComponentTransferFunctionType,
                     (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY);
-  aDescr.Attributes().Set(eComponentTransferFunctionA, identityAttrs);
+  aDescr.Attributes().Set(eComponentTransferFunctionA, std::move(identityAttrs));
 
   return NS_OK;
 }

@@ -440,7 +440,7 @@ nsSVGFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
       descr.SetOutputColorSpace(filter->GetOutputColorSpace());
     }
 
-    aPrimitiveDescrs.AppendElement(descr);
+    aPrimitiveDescrs.AppendElement(std::move(descr));
     uint32_t primitiveDescrIndex = aPrimitiveDescrs.Length() - 1;
 
     nsAutoString str;

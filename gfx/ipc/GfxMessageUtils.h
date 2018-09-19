@@ -819,9 +819,18 @@ struct ParamTraits<mozilla::gfx::AttributeMap>
         HANDLE_TYPE(mozilla::gfx::Matrix5x4, Matrix5x4)
         HANDLE_TYPE(mozilla::gfx::Point3D, Point3D)
         HANDLE_TYPE(mozilla::gfx::Color, Color)
-        HANDLE_TYPE(mozilla::gfx::AttributeMap, AttributeMap)
 
 #undef HANDLE_TYPE
+
+        case mozilla::gfx::AttributeType::eAttributeMap:
+        {
+          mozilla::gfx::AttributeMap value;
+          if (!ReadParam(aMsg, aIter, &value)) {
+            return false;
+          }
+          aResult->Set(name, std::move(value));
+          break;
+        }
 
         case mozilla::gfx::AttributeType::eFloats:
         {
