@@ -42,10 +42,11 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                 this.account = it
                 account?.getProfile()
             }, {
-                Config.custom(CONFIG_URL).whenComplete { value: Config ->
-                    account = FirefoxAccount(value, CLIENT_ID, REDIRECT_URL)
+                Config.custom(CONFIG_URL).then { value: Config ->
+                    val acct = FirefoxAccount(value, CLIENT_ID, REDIRECT_URL)
+                    account = acct
+                    acct.getProfile()
                 }
-                FxaResult()
             }).whenComplete {
                 val txtView: TextView = findViewById(R.id.txtView)
                 runOnUiThread {

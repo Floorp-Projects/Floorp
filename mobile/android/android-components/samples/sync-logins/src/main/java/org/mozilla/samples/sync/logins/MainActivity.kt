@@ -54,11 +54,12 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                 this.account = it
                 account?.getProfile()
             }, {
-                Config.custom(CONFIG_URL).whenComplete { value: Config ->
+                Config.custom(CONFIG_URL).then { value: Config ->
                     account = FirefoxAccount(value, CLIENT_ID, REDIRECT_URL)
+                    account?.getProfile()
                 }
-                FxaResult()
             }).whenComplete {
+                // Use profile...
             }
         }
 
