@@ -62,5 +62,5 @@ export class TopSiteFormInput extends React.PureComponent {
 TopSiteFormInput.defaultProps = {
   showClearButton: false,
   value: "",
-  validationError: false,
+  validationError: false
 };

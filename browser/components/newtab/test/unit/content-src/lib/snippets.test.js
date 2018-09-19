@@ -3,7 +3,7 @@ import {
   addSnippetsSubscriber,
   SNIPPETS_UPDATE_INTERVAL_MS,
   SnippetsMap,
-  SnippetsProvider,
+  SnippetsProvider
 } from "content-src/lib/snippets.js";
 import {combineReducers, createStore} from "redux";
 import {GlobalOverrider} from "test/unit/utils";
@@ -445,19 +445,18 @@ describe("addSnippetsSubscriber", () => {
   let store;
   let sandbox;
   let snippets;
-
+  function setSnippetEnabledPref(value) {
+    store.dispatch({type: at.PREF_CHANGED, data: {name: "feeds.snippets", value}});
+  }
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
     store = createStore(combineReducers(reducers));
     sandbox.spy(store, "subscribe");
+    setSnippetEnabledPref(true);
     ({snippets} = addSnippetsSubscriber(store));
 
-    sandbox.stub(snippets, "init").callsFake(() => {
-      snippets.initialized = true;
-    }).resolves();
-    sandbox.stub(snippets, "uninit").callsFake(() => {
-      snippets.initialized = false;
-    });
+    sandbox.stub(snippets, "init").resolves();
+    sandbox.stub(snippets, "uninit");
   });
   afterEach(async () => {
     sandbox.restore();
@@ -466,83 +465,54 @@ describe("addSnippetsSubscriber", () => {
     }
     delete global.gSnippetsMap;
   });
-  // it should initialize if:
-  // as router and snippets feed are both on.
-  // disable snippets is false
-
-  function setConditions({
-    snippetsFeedInitialized = true,
-    asrIntialized = true,
-    allowLegacySnippets = true,
-    forceDisablePrefOn = false,
-    userPrefOn = true,
-  } = {}) {
-    [
-      // The snippets feed should be initialized;
-      snippetsFeedInitialized && {type: at.SNIPPETS_DATA, data: {}},
-      // ASR should be initialized;
-      asrIntialized && {type: at.AS_ROUTER_INITIALIZED, data: {}},
-      // Allow legacy snippets pref should be true in ASRouterPreferences
-      {type: at.AS_ROUTER_PREF_CHANGED, data: {allowLegacySnippets}},
-      // Force disable pref is on
-      {type: at.PREF_CHANGED, data: {name: "disableSnippets", value: forceDisablePrefOn}},
-      // Is the user setting for snippets on?
-      {type: at.PREF_CHANGED, data: {name: "feeds.snippets", value: userPrefOn}},
-    ].filter(a => a).forEach(action => store.dispatch(action));
-  }
-
-  it("should initialize when snippets feed when all conditions are met (seee default for setConditions)", () => {
-    setConditions();
+  it("should initialize feeds.snippets pref is true and SnippetsProvider if .initialize is true", () => {
+    store.dispatch({type: at.SNIPPETS_DATA, data: {}});
     assert.calledOnce(snippets.init);
   });
-  it("should not initialize if snippets feed has not been initialized", () => {
-    setConditions({snippetsFeedInitialized: false});
+  it("should not initialize if feeds.snippets pref is true and .initialize is false", () => {
+    store.dispatch({type: "FOO"});
 
     assert.calledOnce(store.subscribe);
     assert.notCalled(snippets.init);
   });
-  it("should not initialize if ASR has not been initialized", () => {
-    setConditions({asrIntialized: false});
-
-    assert.calledOnce(store.subscribe);
-    assert.notCalled(snippets.init);
-  });
-
   it("should not initialize if disableSnippets pref is true", () => {
-    setConditions({forceDisablePrefOn: true});
+    store.dispatch({type: at.PREF_CHANGED, data: {name: "disableSnippets", value: true}});
+    store.dispatch({type: at.SNIPPETS_DATA, data: {}});
 
     assert.calledOnce(store.subscribe);
     assert.notCalled(snippets.init);
   });
-  it("should uninitialize if disableSnippets pref has been changed to true", async () => {
-    setConditions();
-    snippets.initialized = true;
-    setConditions({forceDisablePrefOn: true});
-    assert.calledOnce(snippets.uninit);
-  });
-
-  it("should not initialize if user pref is false", () => {
-    setConditions({userPrefOn: false});
+  it("should not initialize if feeds.snippets pref is false", () => {
+    setSnippetEnabledPref(false);
     store.dispatch({type: at.SNIPPETS_DATA, data: {}});
     assert.notCalled(snippets.init);
   });
-  it("should uninitialize if the user pref has been changed to false", async () => {
-    setConditions();
+  it("should uninitialize SnippetsProvider if SnippetsProvider has been initialized and feeds.snippets pref is false", async () => {
+    await store.dispatch({type: at.SNIPPETS_DATA, data: {}});
     snippets.initialized = true;
-    setConditions({userPrefOn: false});
+    setSnippetEnabledPref(false);
     assert.calledOnce(snippets.uninit);
   });
-
-  it("should not initialize if allowLegacySnippets is false", () => {
-    setConditions({allowLegacySnippets: false});
+  it("should uninitialize SnippetsProvider if SnippetsProvider has been initialized and disableSnippets pref is true", async () => {
+    await store.dispatch({type: at.SNIPPETS_DATA, data: {}});
+    snippets.initialized = true;
+    store.dispatch({type: at.PREF_CHANGED, data: {name: "disableSnippets", value: true}});
+    assert.calledOnce(snippets.uninit);
+  });
+  it("should not initialize snippets if asrouterExperimentEnabled pref and snippets message provider pref are true", () => {
+    store.dispatch({type: at.PREF_CHANGED, data: {name: "asrouterExperimentEnabled", value: true}});
+    store.dispatch({type: at.PREF_CHANGED, data: {name: "asrouter.messageProviders", value: JSON.stringify([{id: "snippets", enabled: true}])}});
+    store.dispatch({type: at.SNIPPETS_DATA, data: {}});
 
     assert.calledOnce(store.subscribe);
     assert.notCalled(snippets.init);
   });
-  it("should uninitialize if allowLegacySnippets is changed to false", async () => {
-    setConditions();
-    snippets.initialized = true;
-    setConditions({allowLegacySnippets: false});
-    assert.calledOnce(snippets.uninit);
+  it("should only initialize snippets if asrouterExperimentEnabled pref and snippets message provider pref are both false", () => {
+    store.dispatch({type: at.PREF_CHANGED, data: {name: "asrouterExperimentEnabled", value: false}});
+    store.dispatch({type: at.PREF_CHANGED, data: {name: "asrouter.messageProviders", value: JSON.stringify([{id: "snippets", enabled: false}])}});
+    store.dispatch({type: at.SNIPPETS_DATA, data: {}});
+
+    assert.calledOnce(store.subscribe);
+    assert.calledOnce(snippets.init);
   });
 });

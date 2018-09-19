@@ -16,14 +16,14 @@ describe("TippyTopProvider", () => {
         "url": "https://www.facebook.com/",
         "image_url": "facebook-com.png",
         "background_color": "#3b5998",
-        "domain": "facebook.com",
+        "domain": "facebook.com"
       }, {
         "title": "gmail",
         "urls": ["https://www.gmail.com/", "https://mail.google.com"],
         "image_url": "gmail-com.png",
         "background_color": "#000000",
-        "domain": "gmail.com",
-      }]),
+        "domain": "gmail.com"
+      }])
     });
     instance = new TippyTopProvider();
     await instance.init();

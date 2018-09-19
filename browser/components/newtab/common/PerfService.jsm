@@ -22,7 +22,7 @@ if (typeof Services !== "undefined") {
   // task.
   usablePerfObj = {
     now() {},
-    mark() {},
+    mark() {}
   };
 }
 
@@ -118,7 +118,7 @@ _PerfService.prototype = {
 
     let mostRecentEntry = entries[entries.length - 1];
     return this._perf.timeOrigin + mostRecentEntry.startTime;
-  },
+  }
 };
 
 this.perfService = new _PerfService();

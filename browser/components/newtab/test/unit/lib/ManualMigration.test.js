@@ -20,7 +20,7 @@ describe("ManualMigration", () => {
     migrationWizardStub = sinon.stub();
     let fakeMigrationUtils = {
       showMigrationWizard: migrationWizardStub,
-      MIGRATION_ENTRYPOINT_NEWTAB: "MIGRATION_ENTRYPOINT_NEWTAB",
+      MIGRATION_ENTRYPOINT_NEWTAB: "MIGRATION_ENTRYPOINT_NEWTAB"
     };
 
     fakeProfileAge = function() {};
@@ -29,7 +29,7 @@ describe("ManualMigration", () => {
         return new Promise(resolve => {
           resolve(Date.now());
         });
-      },
+      }
     };
 
     sandbox = sinon.sandbox.create();
@@ -43,12 +43,12 @@ describe("ManualMigration", () => {
     prefs = {
       "migrationExpired": FAKE_MIGRATION_EXPIRED,
       "migrationLastShownDate": FAKE_MIGRATION_LAST_SHOWN_DATE,
-      "migrationRemainingDays": FAKE_MIGRATION_REMAINING_DAYS,
+      "migrationRemainingDays": FAKE_MIGRATION_REMAINING_DAYS
     };
     dispatch = sinon.stub();
     instance.store = {
       dispatch,
-      getState: sinon.stub().returns({Prefs: {values: prefs}}),
+      getState: sinon.stub().returns({Prefs: {values: prefs}})
     };
   });
 
@@ -66,7 +66,7 @@ describe("ManualMigration", () => {
     it("should call expireIfNecessary on PREFS_INITIAL_VALUE", () => {
       const action = {
         type: at.PREFS_INITIAL_VALUES,
-        data: {migrationExpired: true},
+        data: {migrationExpired: true}
       };
 
       const expireStub = sinon.stub(instance, "expireIfNecessary");
@@ -79,7 +79,7 @@ describe("ManualMigration", () => {
       const action = {
         type: at.MIGRATION_START,
         _target: {browser: {ownerGlobal: "browser.xul"}},
-        data: {migrationExpired: false},
+        data: {migrationExpired: false}
       };
 
       instance.onAction(action);
@@ -109,7 +109,7 @@ describe("ManualMigration", () => {
     it("should call isMigrationMessageExpired if migrationExpired is false", () => {
       const action = {
         type: at.PREFS_INITIAL_VALUES,
-        data: {migrationExpired: false},
+        data: {migrationExpired: false}
       };
 
       const stub = sinon.stub(instance, "isMigrationMessageExpired");
@@ -137,7 +137,7 @@ describe("ManualMigration", () => {
       it("should check migrationLastShownDate (case: yesterday)", async () => {
         const action = {
           type: at.PREFS_INITIAL_VALUES,
-          data: {migrationExpired: false},
+          data: {migrationExpired: false}
         };
         let today = new Date();
         let yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
@@ -151,7 +151,7 @@ describe("ManualMigration", () => {
       it("should update the migration prefs", async () => {
         const action = {
           type: at.PREFS_INITIAL_VALUES,
-          data: {migrationExpired: false},
+          data: {migrationExpired: false}
         };
         let today = new Date();
         let yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
@@ -192,7 +192,7 @@ describe("ManualMigration", () => {
             return new Promise(resolve => {
               resolve(someDaysAgo.valueOf());
             });
-          },
+          }
         };
         prefs.migrationLastShownDate = someDaysAgo.valueOf() / 1000;
         prefs.migrationRemainingDays = 2;
@@ -208,7 +208,7 @@ describe("ManualMigration", () => {
             return new Promise(resolve => {
               resolve(someDaysAgo.valueOf());
             });
-          },
+          }
         };
 
         const result = await instance.isMigrationMessageExpired();

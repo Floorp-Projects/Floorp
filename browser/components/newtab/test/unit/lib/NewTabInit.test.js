@@ -22,7 +22,7 @@ describe("NewTabInit", () => {
   describe("early / simulated new tabs", () => {
     const simulateTabInit = portID => instance.onAction({
       type: at.NEW_TAB_INIT,
-      data: {portID, simulated: true},
+      data: {portID, simulated: true}
     });
     beforeEach(() => {
       simulateTabInit("foo");

@@ -27,7 +27,7 @@ describe("ActivityStreamMessageChannel", () => {
     override.withArgs(false).returns(null);
     globals.set("AboutNewTab", {
       override,
-      reset: globals.sandbox.spy(),
+      reset: globals.sandbox.spy()
     });
     globals.set("RemotePages", RP);
     dispatch = globals.sandbox.spy();
@@ -35,24 +35,6 @@ describe("ActivityStreamMessageChannel", () => {
   });
 
   afterEach(() => globals.restore());
-
-  describe("portID validation", () => {
-    let sandbox;
-    beforeEach(() => {
-      sandbox = sinon.sandbox.create();
-      sandbox.spy(global.Cu, "reportError");
-    });
-    afterEach(() => {
-      sandbox.restore();
-    });
-    it("should log errors for an invalid portID", () => {
-      mm.validatePortID({});
-      mm.validatePortID({});
-      mm.validatePortID({});
-
-      assert.equal(global.Cu.reportError.callCount, 3);
-    });
-  });
 
   it("should exist", () => {
     assert.ok(ActivityStreamMessageChannel);
@@ -110,14 +92,14 @@ describe("ActivityStreamMessageChannel", () => {
           loaded: false,
           portID: "inited",
           simulated: true,
-          browser: {getAttribute: () => "preloaded"},
+          browser: {getAttribute: () => "preloaded"}
         });
         RPmessagePorts.push({
           url: "about:sheep",
           loaded: true,
           portID: "loaded",
           simulated: true,
-          browser: {getAttribute: () => "preloaded"},
+          browser: {getAttribute: () => "preloaded"}
         });
 
         mm.simulateMessagesForExistingTabs();
@@ -171,16 +153,16 @@ describe("ActivityStreamMessageChannel", () => {
   describe("Message handling", () => {
     describe("#getTargetById", () => {
       it("should get an id if it exists", () => {
-        const t = {portID: "foo:1"};
+        const t = {portID: "foo"};
         mm.createChannel();
         mm.channel.messagePorts.push(t);
-        assert.equal(mm.getTargetById("foo:1"), t);
+        assert.equal(mm.getTargetById("foo"), t);
       });
       it("should return null if the target doesn't exist", () => {
-        const t = {portID: "foo:2"};
+        const t = {portID: "foo"};
         mm.createChannel();
         mm.channel.messagePorts.push(t);
-        assert.equal(mm.getTargetById("bar:3"), null);
+        assert.equal(mm.getTargetById("bar"), null);
       });
     });
     describe("#getPreloadedBrowser", () => {
@@ -189,8 +171,8 @@ describe("ActivityStreamMessageChannel", () => {
           browser: {
             getAttribute() {
               return "preloaded";
-            },
-          },
+            }
+          }
         };
         mm.createChannel();
         mm.channel.messagePorts.push(port);
@@ -201,8 +183,8 @@ describe("ActivityStreamMessageChannel", () => {
           browser: {
             getAttribute() {
               return "preloaded";
-            },
-          },
+            }
+          }
         };
         mm.createChannel();
         mm.channel.messagePorts.push(port);
@@ -214,8 +196,8 @@ describe("ActivityStreamMessageChannel", () => {
           browser: {
             getAttribute() {
               return "consumed";
-            },
-          },
+            }
+          }
         };
         mm.createChannel();
         mm.channel.messagePorts.push(port);
@@ -231,7 +213,7 @@ describe("ActivityStreamMessageChannel", () => {
 
         assert.calledWith(mm.onActionFromContent, {
           type: at.NEW_TAB_INIT,
-          data: t,
+          data: t
         });
       });
     });
@@ -272,7 +254,7 @@ describe("ActivityStreamMessageChannel", () => {
         const expectedAction = {
           type: action.data.type,
           data: action.data.data,
-          _target: {portID: "foo"},
+          _target: {portID: "foo"}
         };
         mm.onMessage(action);
         assert.calledWith(mm.onActionFromContent, expectedAction, "foo");
@@ -282,19 +264,19 @@ describe("ActivityStreamMessageChannel", () => {
   describe("Sending and broadcasting", () => {
     describe("#send", () => {
       it("should send a message on the right port", () => {
-        const t = {portID: "foo:3", sendAsyncMessage: sinon.spy()};
+        const t = {portID: "foo", sendAsyncMessage: sinon.spy()};
         mm.createChannel();
         mm.channel.messagePorts = [t];
-        const action = ac.AlsoToOneContent({type: "HELLO"}, "foo:3");
-        mm.send(action);
+        const action = ac.AlsoToOneContent({type: "HELLO"}, "foo");
+        mm.send(action, "foo");
         assert.calledWith(t.sendAsyncMessage, DEFAULT_OPTIONS.outgoingMessageName, action);
       });
       it("should not throw if the target isn't around", () => {
         mm.createChannel();
         // port is not added to the channel
-        const action = ac.AlsoToOneContent({type: "HELLO"}, "foo:4");
+        const action = ac.AlsoToOneContent({type: "HELLO"}, "foo");
 
-        assert.doesNotThrow(() => mm.send(action));
+        assert.doesNotThrow(() => mm.send(action, "foo"));
       });
     });
     describe("#broadcast", () => {
@@ -311,9 +293,9 @@ describe("ActivityStreamMessageChannel", () => {
           browser: {
             getAttribute() {
               return "preloaded";
-            },
+            }
           },
-          sendAsyncMessage: sinon.spy(),
+          sendAsyncMessage: sinon.spy()
         };
         mm.createChannel();
         mm.channel.messagePorts.push(port);
@@ -326,9 +308,9 @@ describe("ActivityStreamMessageChannel", () => {
           browser: {
             getAttribute() {
               return "preloaded";
-            },
+            }
           },
-          sendAsyncMessage: sinon.spy(),
+          sendAsyncMessage: sinon.spy()
         };
         mm.createChannel();
         mm.channel.messagePorts.push(port);
@@ -341,9 +323,9 @@ describe("ActivityStreamMessageChannel", () => {
           browser: {
             getAttribute() {
               return "consumed";
-            },
+            }
           },
-          sendAsyncMessage: sinon.spy(),
+          sendAsyncMessage: sinon.spy()
         };
         mm.createChannel();
         mm.channel.messagePorts.push(port);
@@ -355,7 +337,7 @@ describe("ActivityStreamMessageChannel", () => {
   });
   describe("Handling actions", () => {
     describe("#onActionFromContent", () => {
-      beforeEach(() => mm.onActionFromContent({type: "FOO"}, "foo:5"));
+      beforeEach(() => mm.onActionFromContent({type: "FOO"}, "foo"));
       it("should dispatch a AlsoToMain action", () => {
         assert.calledOnce(dispatch);
         const [action] = dispatch.firstCall.args;
@@ -363,7 +345,7 @@ describe("ActivityStreamMessageChannel", () => {
       });
       it("should have the right fromTarget", () => {
         const [action] = dispatch.firstCall.args;
-        assert.equal(action.meta.fromTarget, "foo:5", "meta.fromTarget");
+        assert.equal(action.meta.fromTarget, "foo", "meta.fromTarget");
       });
     });
     describe("#middleware", () => {
