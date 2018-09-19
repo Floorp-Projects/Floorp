@@ -401,11 +401,7 @@
 
           var panel = this._selectedPanel;
           this._selectedPanel = this.children[val];
-
-          if (this.getAttribute("async") != "true") {
-            this.setAttribute("selectedIndex", val);
-          }
-
+          this.setAttribute("selectedIndex", val);
           if (this._selectedPanel != panel) {
             var event = document.createEvent("Events");
             event.initEvent("select", true, true);
