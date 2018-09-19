@@ -27,6 +27,7 @@
 // Desktop
 #include "nsFilePicker.h" // needs to be included before other shobjidl.h includes
 #include "nsColorPicker.h"
+#include "nsNativeThemeWin.h"
 // Content processes
 #include "nsFilePickerProxy.h"
 
@@ -131,6 +132,7 @@ NS_DEFINE_NAMED_CID(NS_COLORPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
+NS_DEFINE_NAMED_CID(NS_THEMERENDERER_CID);
 NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_CLIPBOARD_CID);
 NS_DEFINE_NAMED_CID(NS_CLIPBOARDHELPER_CID);
@@ -162,6 +164,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_SCREENMANAGER_CID, false, nullptr, ScreenManagerConstructor,
     Module::MAIN_PROCESS_ONLY },
   { &kNS_GFXINFO_CID, false, nullptr, GfxInfoConstructor, Module::ALLOW_IN_GPU_PROCESS },
+  { &kNS_THEMERENDERER_CID, false, nullptr, NS_NewNativeTheme },
   { &kNS_IDLE_SERVICE_CID, false, nullptr, nsIdleServiceWinConstructor },
   { &kNS_CLIPBOARD_CID, false, nullptr, nsClipboardConstructor, Module::MAIN_PROCESS_ONLY },
   { &kNS_CLIPBOARDHELPER_CID, false, nullptr, nsClipboardHelperConstructor },
@@ -193,6 +196,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/widget/appshell/win;1", &kNS_APPSHELL_CID, Module::ALLOW_IN_GPU_PROCESS },
   { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID, Module::MAIN_PROCESS_ONLY },
   { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID, Module::ALLOW_IN_GPU_PROCESS },
+  { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
   { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },
   { "@mozilla.org/widget/clipboard;1", &kNS_CLIPBOARD_CID, Module::MAIN_PROCESS_ONLY },
   { "@mozilla.org/widget/clipboardhelper;1", &kNS_CLIPBOARDHELPER_CID },

@@ -171,6 +171,6 @@ OS_LIBS += [
 #    '/WX',
 #]
 
-DEFFILE = SRCDIR + '/../../checkout/src/libGLESv2/libGLESv2_autogen.def'
+DEFFILE = '../../checkout/src/libGLESv2/libGLESv2_autogen.def'
 RCFILE = '../../checkout/src/libGLESv2/libGLESv2.rc'
 GeckoSharedLibrary('libGLESv2', linkage=None)

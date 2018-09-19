@@ -24,6 +24,7 @@ class FlexboxInspector {
   constructor(inspector, window) {
     this.document = window.document;
     this.inspector = inspector;
+    this.selection = inspector.selection;
     this.store = inspector.store;
     this.walker = inspector.walker;
 
@@ -85,7 +86,7 @@ class FlexboxInspector {
       this.highlighters.off("flexbox-highlighter-shown", this.onHighlighterShown);
     }
 
-    this.inspector.selection.off("new-node-front", this.onUpdatePanel);
+    this.selection.off("new-node-front", this.onUpdatePanel);
     this.inspector.sidebar.off("select", this.onSidebarSelect);
     this.inspector.off("new-root", this.onUpdatePanel);
 
@@ -96,6 +97,7 @@ class FlexboxInspector {
     this.hasGetCurrentFlexbox = null;
     this.inspector = null;
     this.layoutInspector = null;
+    this.selection = null;
     this.store = null;
     this.walker = null;
   }
@@ -180,14 +182,14 @@ class FlexboxInspector {
   async onReflow() {
     if (!this.isPanelVisible() ||
         !this.store ||
-        !this.inspector.selection.nodeFront ||
+        !this.selection.nodeFront ||
         !this.hasGetCurrentFlexbox) {
       return;
     }
 
     try {
       const flexboxFront = await this.layoutInspector.getCurrentFlexbox(
-        this.inspector.selection.nodeFront);
+        this.selection.nodeFront);
 
       // Clear the flexbox panel if there is no flex container for the current node
       // selection.
@@ -243,14 +245,14 @@ class FlexboxInspector {
   onSidebarSelect() {
     if (!this.isPanelVisible()) {
       this.inspector.reflowTracker.untrackReflows(this, this.onReflow);
-      this.inspector.selection.off("new-node-front", this.onUpdatePanel);
       this.inspector.off("new-root", this.onUpdatePanel);
+      this.selection.off("new-node-front", this.onUpdatePanel);
       return;
     }
 
     this.inspector.reflowTracker.trackReflows(this, this.onReflow);
-    this.inspector.selection.on("new-node-front", this.onUpdatePanel);
     this.inspector.on("new-root", this.onUpdatePanel);
+    this.selection.on("new-node-front", this.onUpdatePanel);
 
     this.update();
   }
@@ -270,16 +272,21 @@ class FlexboxInspector {
   }
 
   /**
-   * Handler for a change in the input checkbox in the FlexItem component.
-   * Toggles on/off the flex item highlighter for the provided flex item element.
+   * Handler for a change in the input checkbox in the FlexItem and Header component.
+   * Toggles on/off the flex item highlighter for the provided flex item element and
+   * changes the selection to the given node.
    *
-   * @param  {NodeFront} node
+   * @param  {NodeFront|null} node
    *         The NodeFront of the flex item element for which the flex item is toggled
    *         on/off for.
    */
   onToggleFlexItemShown(node) {
     this.highlighters.toggleFlexItemHighlighter(node);
     this.store.dispatch(toggleFlexItemShown(node));
+
+    if (node) {
+      this.selection.setNodeFront(node);
+    }
   }
 
   /**
@@ -307,7 +314,7 @@ class FlexboxInspector {
     // selected.
     if (!this.inspector ||
         !this.store ||
-        !this.inspector.selection.nodeFront ||
+        !this.selection.nodeFront ||
         !this.hasGetCurrentFlexbox) {
       return;
     }
@@ -316,7 +323,7 @@ class FlexboxInspector {
       // Fetch the current flexbox if no flexbox front was passed into this update.
       if (!flexboxFront) {
         flexboxFront = await this.layoutInspector.getCurrentFlexbox(
-          this.inspector.selection.nodeFront);
+          this.selection.nodeFront);
       }
 
       // Clear the flexbox panel if there is no flex container for the current node
@@ -335,15 +342,23 @@ class FlexboxInspector {
           ["containerEl"]);
       }
 
-      // Fetch the flex items for the given flex container and the flex item NodeFronts.
-      const flexItems = [];
+      // Fetch the flex items for the given flex container.
       const flexItemFronts = await flexboxFront.getFlexItems();
+      const flexItems = [];
+      let flexItemShown = null;
 
       for (const flexItemFront of flexItemFronts) {
+        // Fetch the NodeFront of the flex items.
         let itemNodeFront = flexItemFront.nodeFront;
         if (!itemNodeFront) {
           itemNodeFront = await this.walker.getNodeFromActor(flexItemFront.actorID,
             ["element"]);
+        }
+
+        // If the current selected node is a flex item, display its flex item sizing
+        // properties.
+        if (!flexItemShown && itemNodeFront === this.selection.nodeFront) {
+          flexItemShown = itemNodeFront.actorID;
         }
 
         flexItems.push({
@@ -362,16 +377,6 @@ class FlexboxInspector {
       const hostname = parseURL(currentUrl).hostname || parseURL(currentUrl).protocol;
       const customColors = await this.getCustomFlexboxColors();
       const color = customColors[hostname] ? customColors[hostname] : FLEXBOX_COLOR;
-
-      const { flexbox } = this.store.getState();
-      let { flexItemShown } = flexbox;
-
-      // Check if the flex item shown still exists in the list of flex items, otherwise
-      // set the flex item shown to null.
-      if (flexItemShown &&
-          !flexItemFronts.find(item => item.nodeFront.actorID === flexItemShown)) {
-        flexItemShown = null;
-      }
 
       this.store.dispatch(updateFlexbox({
         actorID: flexboxFront.actorID,

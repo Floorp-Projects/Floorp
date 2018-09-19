@@ -4446,12 +4446,16 @@ nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
 // from nsWindow.cpp
 extern bool gDisableNativeTheme;
 
-already_AddRefed<nsITheme>
-NS_NewNativeTheme()
+nsresult NS_NewNativeTheme(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   if (gDisableNativeTheme)
-    return nullptr;
+    return NS_ERROR_NO_INTERFACE;
 
-  nsCOMPtr<nsITheme> theme = new nsNativeThemeWin();
-  return theme.forget();
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+
+  nsNativeThemeWin* theme = new nsNativeThemeWin();
+  if (!theme)
+    return NS_ERROR_OUT_OF_MEMORY;
+  return theme->QueryInterface(aIID, aResult);
 }

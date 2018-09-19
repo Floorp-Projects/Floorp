@@ -78,12 +78,14 @@ function gutterMenu({
         closeConditionalPanel();
       }
     },
+    accelerator: L10N.getStr("toggleBreakpoint.key"),
     ...(breakpoint ? gutterItems.removeBreakpoint : gutterItems.addBreakpoint)
   };
   const conditionalBreakpoint = {
     accesskey: L10N.getStr("editor.addConditionalBreakpoint.accesskey"),
     disabled: false,
     click: () => openConditionalPanel(line),
+    accelerator: L10N.getStr("toggleCondPanel.key"),
     ...(breakpoint && breakpoint.condition ? gutterItems.editConditional : gutterItems.addConditional)
   };
   const items = [toggleBreakpointItem, conditionalBreakpoint];

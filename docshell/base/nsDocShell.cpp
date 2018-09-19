@@ -51,6 +51,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ServiceWorkerInterceptController.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
+#include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -2467,8 +2468,7 @@ nsDocShell::TopSessionStorageManager()
   }
 
   if (!mSessionStorageManager) {
-    mSessionStorageManager =
-      do_CreateInstance("@mozilla.org/dom/sessionStorage-manager;1");
+    mSessionStorageManager = new SessionStorageManager();
   }
 
   return mSessionStorageManager;

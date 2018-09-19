@@ -52,6 +52,8 @@ class Module : public JS::WasmModule
     const ImportVector      imports_;
     const ExportVector      exports_;
     const StructTypeVector  structTypes_;
+    const DataSegmentVector dataSegments_;
+    const ElemSegmentVector elemSegments_;
     const SharedBytes       bytecode_;
 
     // These fields are only meaningful when code_->metadata().debugEnabled.
@@ -83,6 +85,7 @@ class Module : public JS::WasmModule
                       Handle<FunctionVector> funcImports,
                       HandleWasmMemoryObject memory,
                       HandleValVector globalImportValues) const;
+    SharedCode getDebugEnabledCode() const;
 
     class Tier2GeneratorTaskImpl;
 
@@ -91,6 +94,8 @@ class Module : public JS::WasmModule
            ImportVector&& imports,
            ExportVector&& exports,
            StructTypeVector&& structTypes,
+           DataSegmentVector&& dataSegments,
+           ElemSegmentVector&& elemSegments,
            const ShareableBytes& bytecode,
            UniqueConstBytes debugUnlinkedCode = nullptr,
            UniqueLinkData debugLinkData = nullptr)
@@ -98,6 +103,8 @@ class Module : public JS::WasmModule
         imports_(std::move(imports)),
         exports_(std::move(exports)),
         structTypes_(std::move(structTypes)),
+        dataSegments_(std::move(dataSegments)),
+        elemSegments_(std::move(elemSegments)),
         bytecode_(&bytecode),
         debugCodeClaimed_(false),
         debugUnlinkedCode_(std::move(debugUnlinkedCode)),
@@ -134,7 +141,7 @@ class Module : public JS::WasmModule
     // be installed and made visible.
 
     void startTier2(const CompileArgs& args);
-    bool finishTier2(const LinkData& linkData, UniqueCodeTier tier2, ModuleEnvironment&& env2);
+    bool finishTier2(const LinkData& linkData2, UniqueCodeTier code2);
 
     void testingBlockOnTier2Complete() const;
     bool testingTier2Active() const { return testingTier2Active_; }
@@ -165,15 +172,6 @@ class Module : public JS::WasmModule
 };
 
 typedef RefPtr<Module> SharedModule;
-
-// Compute the (entry point, instance pointer) pair for an entry in the
-// function-indices vector of an element segment.  |instance| must be the
-// Instance* that will eventually own the resulting WasmCallee.
-void
-ComputeWasmCallee(const Code& code, const Instance* instance,
-                  Handle<FunctionVector> funcImports,
-                  uint32_t funcIndexIndex, const Table& table,
-                  const ElemSegment& seg, WasmCallee* out);
 
 // JS API implementations:
 

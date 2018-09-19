@@ -29,14 +29,13 @@ function mapScopes(scopes, frame) {
     client,
     sourceMaps
   }) {
-    const generatedSource = (0, _selectors.getSourceFromId)(getState(), frame.generatedLocation.sourceId);
-    const source = (0, _selectors.getSourceFromId)(getState(), frame.location.sourceId);
-    const shouldMapScopes = _prefs.features.mapScopes && !generatedSource.isWasm && !source.isPrettyPrinted && !(0, _devtoolsSourceMap.isGeneratedId)(frame.location.sourceId);
+    const generatedSource = (0, _selectors.getSource)(getState(), frame.generatedLocation.sourceId);
+    const source = (0, _selectors.getSource)(getState(), frame.location.sourceId);
     await dispatch({
       type: "MAP_SCOPES",
       frame,
       [_promise.PROMISE]: async function () {
-        if (!shouldMapScopes) {
+        if (!_prefs.features.mapScopes || !source || !generatedSource || generatedSource.isWasm || source.isPrettyPrinted || (0, _devtoolsSourceMap.isGeneratedId)(frame.location.sourceId)) {
           return null;
         }
 

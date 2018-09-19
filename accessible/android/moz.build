@@ -1,0 +1,33 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.a11y += ['AccessibleWrap.h',
+    'HyperTextAccessibleWrap.h',
+]
+
+SOURCES += [
+    'AccessibleWrap.cpp',
+    'Platform.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/accessible/base',
+    '/accessible/generic',
+    '/accessible/html',
+    '/accessible/ipc',
+    '/accessible/ipc/other',
+    '/accessible/xul',
+    '/dom/base',
+    '/widget',
+    '/widget/android',
+]
+
+FINAL_LIBRARY = 'xul'
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']

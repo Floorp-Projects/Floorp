@@ -164,12 +164,7 @@ private:
 
   void OnLoadEndArrayBuffer();
 
-  void FreeFileData()
-  {
-    free(mFileData);
-    mFileData = nullptr;
-    mDataLen = 0;
-  }
+  void FreeFileData();
 
   nsresult IncreaseBusyCounter();
   void DecreaseBusyCounter();

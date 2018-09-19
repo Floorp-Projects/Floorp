@@ -33,7 +33,7 @@ function checkFinished() {
 // 1) test XFO with CSP
 var csp_testframe = document.getElementById("csp_testframe");
 csp_testframe.onload = function() {
-  var msg = csp_testframe.contentWindow.document.getElementById("cspmessage");
+  var msg = csp_testframe.contentDocument.getElementById("cspmessage");
   is(msg.innerHTML, "Ignoring XFO because of CSP", "Loading frame with with XFO and CSP");
   checkFinished();
 }
@@ -45,8 +45,7 @@ csp_testframe.src = "file_ignore_xfo.html";
 // 2) test XFO with CSP_RO
 var csp_ro_testframe = document.getElementById("csp_ro_testframe");
 csp_ro_testframe.onload = function() {
-  var msg = csp_ro_testframe.contentWindow.document.getElementById("cspmessage");
-  is(msg, null, "Blocking frame with with XFO and CSP_RO");
+  is(csp_ro_testframe.contentDocument, null, "Blocking frame with with XFO and CSP_RO");
   checkFinished();
 }
 csp_ro_testframe.onerror = function() {

@@ -2202,6 +2202,10 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
         return d.fail("too many elem segments");
     }
 
+    if (!env->elemSegments.reserve(numSegments)) {
+        return false;
+    }
+
     for (uint32_t i = 0; i < numSegments; i++) {
         uint32_t initializerKind;
         if (!d.readVarU32(&initializerKind)) {
@@ -2219,7 +2223,13 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
             return d.fail("elem segment requires a table section");
         }
 
-        Maybe<InitExpr> offsetIfActive;
+        MutableElemSegment seg = js_new<ElemSegment>();
+        if (!seg) {
+            return false;
+        }
+
+        seg->tableIndex = 0;
+
         if (initializerKind == uint32_t(InitializerKind::Active)) {
             InitExpr offset;
             if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
@@ -2227,7 +2237,7 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
             {
                 return false;
             }
-            offsetIfActive.emplace(offset);
+            seg->offsetIfActive.emplace(offset);
         }
 
         uint32_t numElems;
@@ -2239,17 +2249,16 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
             return d.fail("too many table elements");
         }
 
-        Uint32Vector elemFuncIndices;
-        if (!elemFuncIndices.resize(numElems)) {
+        if (!seg->elemFuncIndices.reserve(numElems)) {
             return false;
         }
 
         for (uint32_t i = 0; i < numElems; i++) {
-            if (!d.readVarU32(&elemFuncIndices[i])) {
+            uint32_t funcIndex;
+            if (!d.readVarU32(&funcIndex)) {
                 return d.fail("failed to read element function index");
             }
 
-            uint32_t funcIndex = elemFuncIndices[i];
             if (funcIndex >= env->numFuncs()) {
                 return d.fail("table element out of range");
             }
@@ -2263,17 +2272,16 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
 
 #ifdef WASM_PRIVATE_REFTYPES
             if (env->tables[0].importedOrExported &&
-                !FuncTypeIsJSCompatible(d, *env->funcTypes[elemFuncIndices[i]]))
+                !FuncTypeIsJSCompatible(d, *env->funcTypes[funcIndex]))
             {
                 return false;
             }
 #endif
+
+            seg->elemFuncIndices.infallibleAppend(funcIndex);
         }
 
-        if (!env->elemSegments.emplaceBack(0, std::move(offsetIfActive),
-                                           std::move(elemFuncIndices))) {
-            return false;
-        }
+        env->elemSegments.infallibleAppend(std::move(seg));
     }
 
     return d.finishSection(*range, "elem");
@@ -2463,7 +2471,7 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
             return d.fail("data segment requires a memory section");
         }
 
-        DataSegment seg;
+        DataSegmentEnv seg;
         if (initializerKind == uint32_t(InitializerKind::Active)) {
             InitExpr segOffset;
             if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
