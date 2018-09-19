@@ -1060,6 +1060,7 @@ nsDisplayListBuilder::EndFrame()
   NS_ASSERTION(!mInInvalidSubtree,
                "Someone forgot to cleanup mInInvalidSubtree!");
   mFrameToAnimatedGeometryRootMap.Clear();
+  mAGRBudgetSet.Clear();
   mActiveScrolledRoots.Clear();
   FreeClipChains();
   FreeTemporaryItems();
@@ -2120,29 +2121,20 @@ nsDisplayListBuilder::AddToWillChangeBudget(nsIFrame* aFrame,
     return true; // Already accounted
   }
 
-  nsPresContext* key = aFrame->PresContext();
-  DocumentWillChangeBudget budget;
-  auto willChangeBudgetEntry = mWillChangeBudget.LookupForAdd(key);
-  if (willChangeBudgetEntry) {
-    // We have an existing entry.
-    budget = willChangeBudgetEntry.Data();
-  } else {
-    budget = DocumentWillChangeBudget();
-    willChangeBudgetEntry.OrInsert([&budget]() { return budget; });
-  }
-
-  nsRect area = aFrame->PresContext()->GetVisibleArea();
+  nsPresContext* presContext = aFrame->PresContext();
+  nsRect area = presContext->GetVisibleArea();
   uint32_t budgetLimit = nsPresContext::AppUnitsToIntCSSPixels(area.width) *
                          nsPresContext::AppUnitsToIntCSSPixels(area.height);
-
   uint32_t cost = GetLayerizationCost(aSize);
+
+  DocumentWillChangeBudget& budget = mWillChangeBudget.GetOrInsert(presContext);
+
   bool onBudget =
     (budget.mBudget + cost) / gWillChangeAreaMultiplier < budgetLimit;
 
   if (onBudget) {
     budget.mBudget += cost;
-    willChangeBudgetEntry.Data() = budget;
-    mWillChangeBudgetSet.Put(aFrame, cost);
+    mWillChangeBudgetSet.Put(aFrame, FrameWillChangeBudget(presContext, cost));
     aFrame->SetMayHaveWillChangeBudget(true);
   }
 
@@ -2179,23 +2171,29 @@ nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
 }
 
 void
-nsDisplayListBuilder::ClearWillChangeBudget(nsIFrame* aFrame)
+nsDisplayListBuilder::RemoveFromWillChangeBudget(nsIFrame* aFrame)
 {
-  if (!aFrame->MayHaveWillChangeBudget()) {
-    return;
-  }
-  aFrame->SetMayHaveWillChangeBudget(false);
+  FrameWillChangeBudget* frameBudget = mWillChangeBudgetSet.GetValue(aFrame);
 
-  uint32_t cost = 0;
-  if (!mWillChangeBudgetSet.Get(aFrame, &cost)) {
+  if (!frameBudget) {
     return;
   }
+
+  DocumentWillChangeBudget* budget =
+    mWillChangeBudget.GetValue(frameBudget->mPresContext);
+
+  if (budget) {
+    budget->mBudget -= frameBudget->mUsage;
+  }
+
   mWillChangeBudgetSet.Remove(aFrame);
+}
 
-  DocumentWillChangeBudget& budget =
-    mWillChangeBudget.GetOrInsert(aFrame->PresContext());
-  MOZ_ASSERT(budget.mBudget >= cost);
-  budget.mBudget -= cost;
+void
+nsDisplayListBuilder::ClearWillChangeBudget()
+{
+  mWillChangeBudgetSet.Clear();
+  mWillChangeBudget.Clear();
 }
 
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
